@@ -70,12 +70,13 @@ build: .build-post
 	$(EXTERN_RESOURCE_DIR)/hdf5/install.sh $(EXTERN_DIST_DIR);\
 	$(EXTERN_RESOURCE_DIR)/snmp/install.sh $(EXTERN_DIST_DIR);\
 	$(EXTERN_RESOURCE_DIR)/log4cpp/install.sh $(EXTERN_DIST_DIR);\
+	$(EXTERN_RESOURCE_DIR)/cppunit/install.sh $(EXTERN_DIST_DIR);\
 	fi
 
 .build-post: .build-impl
 # Add your post 'build' code here...
 	@$(MKDIR) -p  $(DIST_DIR)/include/karabo/core
-	@$(MKDIR) -p  $(DIST_DIR)/include/karabo/io
+	@$(MKDIR) -p  $(DIST_DIR)/include/karabo/io/hdf5
 	@$(MKDIR) -p  $(DIST_DIR)/include/karabo/log
 	@$(MKDIR) -p  $(DIST_DIR)/include/karabo/net
 	@$(MKDIR) -p  $(DIST_DIR)/include/karabo/python

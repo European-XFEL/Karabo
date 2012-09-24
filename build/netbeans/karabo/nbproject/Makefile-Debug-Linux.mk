@@ -21,8 +21,8 @@ FC=gfortran
 AS=as
 
 # Macros
-CND_PLATFORM=GNU-Linux-x86
-CND_DLIB_EXT=so
+CND_PLATFORM=GNU-MacOSX
+CND_DLIB_EXT=dylib
 CND_CONF=Debug-Linux
 CND_DISTDIR=dist
 CND_BUILDDIR=build
@@ -160,7 +160,7 @@ LDLIBSOPTIONS=-L${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/extern/lib -lboost_da
 
 ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/lib/libkarabo.${CND_DLIB_EXT}: ${OBJECTFILES}
 	${MKDIR} -p ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/lib
-	${LINK.cc} -shared -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/lib/libkarabo.${CND_DLIB_EXT} -fPIC ${OBJECTFILES} ${LDLIBSOPTIONS} 
+	${LINK.cc} -dynamiclib -install_name libkarabo.${CND_DLIB_EXT} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/lib/libkarabo.${CND_DLIB_EXT} -fPIC ${OBJECTFILES} ${LDLIBSOPTIONS} 
 
 ${OBJECTDIR}/_ext/163556830/HashDatabase.o: ../../../src/karabo/core/HashDatabase.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/163556830
@@ -644,7 +644,7 @@ ${OBJECTDIR}/_ext/1060241295/FixedLengthArray.o: ../../../src/karabo/io/hdf5/Fix
 .build-tests-conf: .build-conf ${TESTFILES}
 ${TESTDIR}/TestFiles/f1: ${TESTDIR}/_ext/759890946/Factory_Test.o ${TESTDIR}/_ext/759890946/Hash_Test.o ${TESTDIR}/_ext/759890946/utilTestRunner.o ${OBJECTFILES:%.o=%_nomain.o}
 	${MKDIR} -p ${TESTDIR}/TestFiles
-	${LINK.cc}   -o ${TESTDIR}/TestFiles/f1 $^ ${LDLIBSOPTIONS} -Wl,-rpath,${KARABO_EXTERN}/lib -lcppunit 
+	${LINK.cc}   -o ${TESTDIR}/TestFiles/f1 $^ ${LDLIBSOPTIONS} -lcppunit 
 
 
 ${TESTDIR}/_ext/759890946/Factory_Test.o: ../../../src/karabo/tests/Factory_Test.cc 
