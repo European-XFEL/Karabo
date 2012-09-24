@@ -4,10 +4,19 @@ The supported OS are:
     SL5/6
     Ubuntu 10.04 LTS
     Ubuntu 11.10
+    Mac OS
+    Windows 7 (64 bit)
 
 Other distributions like Fedora or Suse may still work.
 
-(1) Installation
+(1) Dependencies
+
+    If you have Ubuntu type:
+
+        sudo apt-get install build-essential subversion cmake doxygen libnss3-dev libnspr4-dev libX11-dev python-dev zlib1g-dev python-qt4 python-qwt5-qt4
+
+
+(2) Installation
 
     If you have root permissions on your computer, go to the directory of this README file and type:
 
