@@ -883,14 +883,6 @@ namespace exfel {
             template< class Element, class T> friend class DefaultValue;
         };
 
-        /**
-         * Python binding. Explicit template initializations.
-         */
-        template Hash::Hash(const std::string&, const Schema&);
-        template Schema& Hash::getFromPath<Schema>(const std::string&, std::string);
-        template const Schema& Hash::getFromPath<const Schema>(const std::string&, std::string);
-        template void Hash::setFromPath(const std::string&, const Schema&, std::string);
-
     } // namespace util
 } // namespace exfel
 

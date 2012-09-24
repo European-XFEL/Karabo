@@ -115,19 +115,6 @@ namespace exfel {
             };
 
 
-            template class FLArrayFilterVector<signed char>;
-            template class FLArrayFilterVector<short>;
-            template class FLArrayFilterVector<int>;
-            template class FLArrayFilterVector<long long>;
-            template class FLArrayFilterVector<unsigned char>;
-            template class FLArrayFilterVector<unsigned short>;
-            template class FLArrayFilterVector<unsigned int>;
-            template class FLArrayFilterVector<unsigned long long>;
-            template class FLArrayFilterVector<float>;
-            template class FLArrayFilterVector<double>;
-            template class FLArrayFilterVector<std::string>;
-            // std::vector<bool> is not supported because it is broken
-
             typedef FLArrayFilterVector<signed char> Int8VectorFLArrayFilter;
             typedef FLArrayFilterVector<short> Int16VectorFLArrayFilter;
             typedef FLArrayFilterVector<int> Int32VectorFLArrayFilter;

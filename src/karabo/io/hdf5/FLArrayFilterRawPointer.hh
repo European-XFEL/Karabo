@@ -52,19 +52,6 @@ namespace exfel {
 
             };
 
-            template class FLArrayFilterRawPointer<signed char>;
-            template class FLArrayFilterRawPointer<short>;
-            template class FLArrayFilterRawPointer<int>;
-            template class FLArrayFilterRawPointer<long long>;
-            template class FLArrayFilterRawPointer<unsigned char>;
-            template class FLArrayFilterRawPointer<unsigned short>;
-            template class FLArrayFilterRawPointer<unsigned int>;
-            template class FLArrayFilterRawPointer<unsigned long long>;
-            template class FLArrayFilterRawPointer<float>;
-            template class FLArrayFilterRawPointer<double>;
-            template class FLArrayFilterRawPointer<std::string>;
-            template class FLArrayFilterRawPointer<bool>;
-
             typedef FLArrayFilterRawPointer<signed char> Int8RawPointerFLArrayFilter;
             typedef FLArrayFilterRawPointer<short> Int16RawPointerFLArrayFilter;
             typedef FLArrayFilterRawPointer<int> Int32RawPointerFLArrayFilter;

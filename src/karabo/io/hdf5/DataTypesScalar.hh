@@ -49,19 +49,6 @@ namespace exfel {
 
             };
 
-            template class DataTypesScalar<signed char>;
-            template class DataTypesScalar<short>;
-            template class DataTypesScalar<int>;
-            template class DataTypesScalar<long long>;
-            template class DataTypesScalar<unsigned char>;
-            template class DataTypesScalar<unsigned short>;
-            template class DataTypesScalar<unsigned int>;
-            template class DataTypesScalar<unsigned long long>;
-            template class DataTypesScalar<float>;
-            template class DataTypesScalar<double>;
-            template class DataTypesScalar<std::string>;
-            template class DataTypesScalar<bool>;
-
             typedef DataTypesScalar<signed char> Int8ScalarDataTypes;
             typedef DataTypesScalar<short> Int16ScalarDataTypes;
             typedef DataTypesScalar<int> Int32ScalarDataTypes;
