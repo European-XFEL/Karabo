@@ -1,0 +1,131 @@
+/*
+ * $Id: File.hh 5395 2012-03-07 16:10:07Z wegerk $
+ *
+ * Author: <krzysztof.wrona@xfel.eu>
+ *
+ * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
+ */
+
+
+#ifndef EXFEL_IO_File_HH
+#define	EXFEL_IO_File_HH
+
+#include "Table.hh"
+#include "DataFormat.hh"
+#include "RecordFormat.hh"
+#include <boost/filesystem.hpp>
+#include <boost/shared_ptr.hpp>
+#include <hdf5/hdf5.h>
+#include <hdf5/H5Cpp.h>
+#include <hdf5/hdf5_hl.h>
+
+/**
+ * The main European XFEL namespace
+ */
+namespace exfel {
+
+  /**
+   * Namespace for package io
+   */
+  namespace io {
+
+    namespace hdf5 {
+      class Table;
+
+      /**
+       * Class representing physical Hdf5 file.
+       * Each File may contain any number of Tables.
+       */
+      class File {
+      public:
+
+        EXFEL_CLASSINFO(File, "Hdf5", "1.0")
+        EXFEL_FACTORY_BASE_CLASS
+
+        File();
+        File(const boost::filesystem::path& filename);
+        virtual ~File();
+
+
+        static void expectedParameters(exfel::util::Schema& expected);
+        void configure(const exfel::util::Hash& input);
+
+        enum AccessMode {
+          TRUNCATE,
+          EXCLUSIVE,
+          APPEND,
+          READONLY
+        };
+
+        /**
+         * Open a file. The following modes are supported.
+         *
+         * \li \c TRUNCATE Truncate file if exists.
+         * \li \c EXCLUSIVE Fails to open a file if already exists.
+         * \li \c APPEND Appending records to file is possible, new table cannot be created.
+         * \li \c READONLY Readonly mode.
+         */
+        void open(File::AccessMode mode);
+
+        /**
+         * Create new table in the file.
+         * @param name Table name. It can be a path with "/" as separator.
+         * @param dataFormat Object describing data format.
+         * @param chunkSize Chunk size is the same for each dataset in the table.
+         * @return Pointer to Table. 
+         *
+         * @see DataFormat::expectedParameters.
+         */
+        boost::shared_ptr<Table> createTable(const std::string& name, const exfel::io::hdf5::DataFormat::Pointer dataFormat, size_t chunkSize = 1);
+
+        /**
+         * Open existing table in the file.
+         * @param name Table name. It can be a path with "/" as separator.       
+         *
+         * The following rules apply to data format:
+         * 
+         * \li If the description is stored in the file as a group attribute it is taken from it.
+         * \li If not (true for files written by different software) the best attempt to discover the data format is
+         *  made.
+         */
+        boost::shared_ptr<Table> getTable(const std::string& name);
+
+        /**
+         * Open existing table in the file.
+         * @param name Table name. It can be a path with "/" as separator.       
+         * @param dataFormat Object describing data format.
+         * 
+         * 
+         * This function passes the data format and forces to overwrite any existing definition in the file. 
+         * No attempt is made to discover format from the file content.
+         * This can be useful if one wants to read only certain datasets.
+         * Client is fully responsible to make sure that the supplied format is compatible with stored data.
+         */
+        boost::shared_ptr<Table> getTable(const std::string& name, exfel::io::hdf5::DataFormat::Pointer dataFormat);
+
+
+
+        /**
+         * Close the file. When the file was opened in any mode which allowed modification all data are flushed.
+         */
+        void close();
+
+
+
+      private:
+
+        boost::filesystem::path m_filename;
+        boost::shared_ptr<H5::H5File> m_h5file;
+        AccessMode m_accMode;
+
+        boost::shared_ptr<Table> createReadOnlyTablePointer(const std::string& name);
+
+
+      };
+    }
+  }
+}
+
+EXFEL_REGISTER_FACTORY_BASE_HH(exfel::io::hdf5::File, TEMPLATE_IO, DECLSPEC_IO)
+
+#endif	/* EXFEL_IO_File_HH */

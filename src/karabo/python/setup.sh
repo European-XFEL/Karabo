@@ -1,0 +1,1 @@
+export PYTHONPATH=/data1/wrona/exfelSuite-head-Ubuntu_9.100-i686/exfelPackages/mainFramework/pyexfel/build/local/lib/debug:/data1/wrona/exfelSuite-head-Ubuntu_9.100-i686/exfelPackages/mainFramework/pyexfel/src
