@@ -502,7 +502,7 @@
       <folder path="f2/f3">
         <ccTool>
           <incDir>
-            <pElem>${KARABO_EXTERN}/include/hdf5</pElem>
+            <pElem>${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/extern/include/hdf5</pElem>
           </incDir>
         </ccTool>
       </folder>
@@ -531,6 +531,8 @@
           <output>${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/lib/libkarabo.${CND_DLIB_EXT}</output>
           <linkerAddLib>
             <pElem>${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/extern/lib</pElem>
+            <pElem>/opt/local/lib/nss</pElem>
+            <pElem>/opt/local/lib/nspr</pElem>
           </linkerAddLib>
           <linkerLibItems>
             <linkerLibLibItem>boost_date_time</linkerLibLibItem>
@@ -550,15 +552,13 @@
             <linkerLibLibItem>python2.6</linkerLibLibItem>
             <linkerLibLibItem>netsnmp</linkerLibLibItem>
             <linkerLibStdlibItem>CppUnit</linkerLibStdlibItem>
-            <linkerLibStdlibItem>CppUnit</linkerLibStdlibItem>
-            <linkerLibStdlibItem>CppUnit</linkerLibStdlibItem>
           </linkerLibItems>
         </linkerTool>
       </compileType>
       <folder path="f2/f3">
         <ccTool>
           <incDir>
-            <pElem>${KARABO_EXTERN}/include/hdf5</pElem>
+            <pElem>${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/extern/include/hdf5</pElem>
           </incDir>
         </ccTool>
       </folder>
@@ -596,6 +596,8 @@
           <output>${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/lib/libkarabo.${CND_DLIB_EXT}</output>
           <linkerAddLib>
             <pElem>${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/extern/lib</pElem>
+            <pElem>/opt/local/lib/nss</pElem>
+            <pElem>/opt/local/lib/nspr</pElem>
           </linkerAddLib>
           <linkerLibItems>
             <linkerLibLibItem>boost_date_time</linkerLibLibItem>
@@ -620,7 +622,7 @@
       <folder path="f2/f3">
         <ccTool>
           <incDir>
-            <pElem>${KARABO_EXTERN}/include/hdf5</pElem>
+            <pElem>${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/extern/include/hdf5</pElem>
           </incDir>
         </ccTool>
       </folder>

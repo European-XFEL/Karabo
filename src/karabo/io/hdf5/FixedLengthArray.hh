@@ -306,23 +306,6 @@ namespace exfel {
 
             };
 
-
-
-
-            //explicit instantiation
-            template class FixedLengthArray<signed char>;
-            template class FixedLengthArray<short>;
-            template class FixedLengthArray<int>;
-            template class FixedLengthArray<long long>;
-            template class FixedLengthArray<unsigned char>;
-            template class FixedLengthArray<unsigned short>;
-            template class FixedLengthArray<unsigned int>;
-            template class FixedLengthArray<unsigned long long>;
-            template class FixedLengthArray<double>;
-            template class FixedLengthArray<float>;
-            template class FixedLengthArray<bool>;
-            template class FixedLengthArray<std::string>;
-
             // typedefs
             typedef FixedLengthArray<signed char> Int8ArrayElement;
             typedef FixedLengthArray<short> Int16ArrayElement;

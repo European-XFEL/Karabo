@@ -240,21 +240,6 @@ namespace exfel {
 
             };
 
-
-            //explicit instantiation
-            template class Scalar<signed char>;
-            template class Scalar<short>;
-            template class Scalar<int>;
-            template class Scalar<long long>;
-            template class Scalar<unsigned char>;
-            template class Scalar<unsigned short>;
-            template class Scalar<unsigned int>;
-            template class Scalar<unsigned long long>;
-            template class Scalar<double>;
-            template class Scalar<float>;
-            template class Scalar<bool>;
-            template class Scalar<std::string>;
-
             // typedefs
             typedef Scalar<signed char> Int8Element;
             typedef Scalar<short> Int16Element;

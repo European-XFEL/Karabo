@@ -182,20 +182,6 @@ namespace exfel {
 
       };
 
-
-      template class FLArrayFilterArrayView<signed char>;
-      template class FLArrayFilterArrayView<short>;
-      template class FLArrayFilterArrayView<int>;
-      template class FLArrayFilterArrayView<long long>;
-      template class FLArrayFilterArrayView<unsigned char>;
-      template class FLArrayFilterArrayView<unsigned short>;
-      template class FLArrayFilterArrayView<unsigned int>;
-      template class FLArrayFilterArrayView<unsigned long long>;
-      template class FLArrayFilterArrayView<float>;
-      template class FLArrayFilterArrayView<double>;
-      template class FLArrayFilterArrayView<std::string>;
-      template class FLArrayFilterArrayView<bool>;
-
       typedef FLArrayFilterArrayView<signed char> Int8ArrayViewFLArrayFilter;
       typedef FLArrayFilterArrayView<short> Int16ArrayViewFLArrayFilter;
       typedef FLArrayFilterArrayView<int> Int32ArrayViewFLArrayFilter;

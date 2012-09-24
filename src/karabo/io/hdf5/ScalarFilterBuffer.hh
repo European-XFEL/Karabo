@@ -149,20 +149,6 @@ namespace exfel {
 
             };
 
-
-            template class ScalarFilterBufferArrayView<signed char>;
-            template class ScalarFilterBufferArrayView<short>;
-            template class ScalarFilterBufferArrayView<int>;
-            template class ScalarFilterBufferArrayView<long long>;
-            template class ScalarFilterBufferArrayView<unsigned char>;
-            template class ScalarFilterBufferArrayView<unsigned short>;
-            template class ScalarFilterBufferArrayView<unsigned int>;
-            template class ScalarFilterBufferArrayView<unsigned long long>;
-            template class ScalarFilterBufferArrayView<float>;
-            template class ScalarFilterBufferArrayView<double>;
-            template class ScalarFilterBufferArrayView<std::string>;
-            template class ScalarFilterBufferArrayView<bool>;
-
             typedef ScalarFilterBufferArrayView<signed char> Int8ArrayViewScalarFilter;
             typedef ScalarFilterBufferArrayView<short> Int16ArrayViewScalarFilter;
             typedef ScalarFilterBufferArrayView<int> Int32ArrayViewScalarFilter;
