@@ -1,0 +1,304 @@
+/* 
+ * File:   ComWrap.hh
+ * Author: <burkhard.heisen@xfel.eu>
+ *
+ * Created on July 11, 2012, 11:22 AM
+ */
+
+#ifndef EXFEL_PYEXFEL_DEVCOM_HH
+#define	EXFEL_PYEXFEL_DEVCOM_HH
+
+#include <boost/python.hpp>
+#include <boost/function.hpp>
+#include <exfel/core/DeviceClient.hh>
+
+#include "SignalSlotableWrap.hh"
+#include "HashWrap.hh"
+
+namespace bp = boost::python;
+
+namespace exfel {
+
+    namespace pyexfel {
+
+        class DeviceClientWrap : public exfel::core::DeviceClient {
+        public:
+
+            DeviceClientWrap(const std::string& connectionType = "Jms", const exfel::util::Hash& connectionParameters = exfel::util::Hash()) :
+            DeviceClient(boost::shared_ptr<exfel::xms::SignalSlotable>(new SignalSlotableWrap(DeviceClient::generateOwnInstanceId(), connectionType, connectionParameters))),
+            m_isVerbose(true) {
+                m_signalSlotableWrap = boost::static_pointer_cast<SignalSlotableWrap > (m_signalSlotable);
+            }
+
+            ~DeviceClientWrap() {
+            }
+
+            bp::list getAvailableInstancesPy() {
+                return m_signalSlotableWrap->getAvailableInstancesPy();
+            }
+
+            bp::list getDeviceServersPy() {
+                return HashWrap::stdVector2pyList(this->getDeviceServers());
+            }
+
+            bp::list getDeviceClassesPy(const std::string& deviceServerInstanceId) {
+                return HashWrap::stdVector2pyList(this->getDeviceClasses(deviceServerInstanceId));
+            }
+
+            bp::list getDevicesPy() {
+                return HashWrap::stdVector2pyList(this->getDevices());
+            }
+
+            bp::list getDeviceParametersPy(const std::string& instanceId, const std::string& key = "", const std::string& keySep = "") {
+                return HashWrap::stdVector2pyList(this->getDeviceParameters(instanceId, key, keySep));
+            }
+
+            bp::list getDeviceParametersFlatPy(const std::string& instanceId, const std::string& keySep = "") {
+                return HashWrap::stdVector2pyList(this->getDeviceParametersFlat(instanceId, keySep));
+            }
+
+            bp::list getCurrentlySettablePropertiesPy(const std::string& instanceId, const std::string& keySep = "") {
+                return HashWrap::stdVector2pyList(this->getCurrentlySettableProperties(instanceId, keySep));
+            }
+
+            bp::list getCurrentlyExecutableCommandsPy(const std::string& instanceId, const std::string& keySep = "") {
+                return HashWrap::stdVector2pyList(this->getCurrentlyExecutableCommands(instanceId, keySep));
+            }
+
+            bp::list getAllowedStatesPy(const std::string& instanceId, const std::string& key, const std::string& keySep = "") {
+                return HashWrap::stdVector2pyList(this->getAllowedStates(instanceId, key, keySep));
+            }
+
+            bp::list getValueOptionsPy(const std::string& instanceId, const std::string& key, const std::string& keySep = "") {
+                return HashWrap::stdVector2pyList(this->getValueOptions(instanceId, key, keySep));
+            }
+
+            bp::object getPy(const std::string& instanceId, const std::string& key, const std::string& keySep = ".") {
+                return HashWrap::pythonGetFromPath(this->cacheAndGetConfiguration(instanceId), key, keySep);
+            }
+
+            void registerMonitor(const std::string& instanceId, const bp::object& callbackFunction, const bp::object& userData = bp::object()) {
+                boost::mutex::scoped_lock lock(m_deviceChangedHandlersMutex);
+                this->cacheAndGetConfiguration(instanceId);
+                if (hasattr(callbackFunction, "__self__")) {
+                      bp::object selfObject(callbackFunction.attr("__self__"));
+                      std::string funcName(bp::extract<std::string>(callbackFunction.attr("__name__")));
+                      m_deviceChangedHandlers.setFromPath(instanceId + "._function", funcName);
+                      m_deviceChangedHandlers.setFromPath(instanceId + "._selfObject", selfObject.ptr());
+                } else {
+                    m_deviceChangedHandlers.setFromPath(instanceId + "._function", callbackFunction.ptr());
+                }
+                if (!userData.is_none()) m_deviceChangedHandlers.setFromPath(instanceId + "._userData", userData);
+            }
+            
+            bool registerMonitor(const std::string& instanceId, const std::string& key, const bp::object& callbackFunction, const bp::object& userData = bp::object()) {
+                exfel::util::Schema schema = this->getSchema(instanceId);
+                if (schema.hasKey(key)) {
+                    boost::mutex::scoped_lock lock(m_propertyChangedHandlersMutex);
+                    this->cacheAndGetConfiguration(instanceId);
+                    if (hasattr(callbackFunction, "__self__")) {
+                        bp::object selfObject(callbackFunction.attr("__self__"));
+                        std::string funcName(bp::extract<std::string>(callbackFunction.attr("__name__")));
+                        m_propertyChangedHandlers.setFromPath(instanceId + "." + key + "._function", funcName);
+                        m_propertyChangedHandlers.setFromPath(instanceId + "." + key + "._selfObject", selfObject.ptr());
+                    } else {
+                        m_propertyChangedHandlers.setFromPath(instanceId + "." + key + "._function", callbackFunction.ptr());
+                    }
+                    if (!userData.is_none())  m_propertyChangedHandlers.setFromPath(instanceId + "." + key + "._userData", userData);
+                    return true;
+                } else {
+                    return false;
+                }
+            }
+        
+            bp::tuple setWaitPy(const std::string& instanceId, const std::string& key, const bp::object& value, const std::string& keySep = ".", int timeout = -1) {
+                exfel::util::Hash tmp;
+                HashWrap::pythonSetFromPath(tmp, key, value, keySep);
+                std::pair<bool, std::string> result = this->setWait(instanceId, tmp, timeout);
+                return bp::make_tuple(result.first, result.second);
+            }
+
+            void setNoWaitPy(const std::string& instanceId, const std::string& key, const bp::object& value, const std::string& keySep = ".") {
+                exfel::util::Hash tmp;
+                HashWrap::pythonSetFromPath(tmp, key, value, keySep);
+                this->setNoWait(instanceId, tmp);
+            }
+
+            void executeNoWaitPy0(std::string instanceId, const std::string& functionName) {
+                m_signalSlotableWrap->call(instanceId, functionName);
+            }
+
+            void executeNoWaitPy1(std::string instanceId, const std::string& functionName, const bp::object& a1) const {
+                m_signalSlotableWrap->callPy1(instanceId, functionName, a1);
+            }
+
+            void executeNoWaitPy2(std::string instanceId, const std::string& functionName, const bp::object& a1, const bp::object& a2) const {
+                m_signalSlotableWrap->callPy2(instanceId, functionName, a1, a2);
+            }
+
+            void executeNoWaitPy3(std::string instanceId, const std::string& functionName, const bp::object& a1, const bp::object& a2, const bp::object& a3) const {
+                m_signalSlotableWrap->callPy3(instanceId, functionName, a1, a2, a3);
+            }
+
+            void executeNoWaitPy4(std::string instanceId, const std::string& functionName, const bp::object& a1, const bp::object& a2, const bp::object& a3, const bp::object& a4) const {
+                m_signalSlotableWrap->callPy4(instanceId, functionName, a1, a2, a3, a4);
+            }
+
+            bp::tuple executeWaitPy0(std::string instanceId, const std::string& functionName, int timeout = -1) {
+                std::pair<bool, std::string> result = this->executeWait(instanceId, functionName, timeout);
+                return bp::make_tuple(result.first, result.second);
+            }
+
+            bp::tuple executeWaitPy1(std::string instanceId, const std::string& functionName, const bp::object& a1, int timeout = -1) const {
+                if (timeout == -1) timeout = m_defaultTimeout;
+
+                bp::tuple result;
+
+                try {
+                    result = m_signalSlotableWrap->requestPy1(instanceId, functionName, a1).waitForReply(timeout);
+                } catch (const exfel::util::Exception& e) {
+                    return bp::make_tuple(false, e.userFriendlyMsg());
+                }
+                return bp::make_tuple(true, result[0]);
+            }
+
+            bp::tuple executeWaitPy2(std::string instanceId, const std::string& functionName, const bp::object& a1, const bp::object& a2, int timeout = -1) const {
+                if (timeout == -1) timeout = m_defaultTimeout;
+
+                bp::tuple result;
+
+                try {
+                    result = m_signalSlotableWrap->requestPy2(instanceId, functionName, a1, a2).waitForReply(timeout);
+                } catch (const exfel::util::Exception& e) {
+                    return bp::make_tuple(false, e.userFriendlyMsg());
+                }
+                return bp::make_tuple(true, result[0]);
+            }
+
+            bp::tuple executeWaitPy3(std::string instanceId, const std::string& functionName, const bp::object& a1, const bp::object& a2, const bp::object& a3, int timeout = -1) const {
+                if (timeout == -1) timeout = m_defaultTimeout;
+
+                bp::tuple result;
+
+                try {
+                    result = m_signalSlotableWrap->requestPy3(instanceId, functionName, a1, a2, a3).waitForReply(timeout);
+                } catch (const exfel::util::Exception& e) {
+                    return bp::make_tuple(false, e.userFriendlyMsg());
+                }
+                return bp::make_tuple(true, result[0]);
+            }
+
+            bp::tuple executeWaitPy4(std::string instanceId, const std::string& functionName, const bp::object& a1, const bp::object& a2, const bp::object& a3, const bp::object& a4, int timeout = -1) const {
+                if (timeout == -1) timeout = m_defaultTimeout;
+
+                bp::tuple result;
+
+                try {
+                    result = m_signalSlotableWrap->requestPy4(instanceId, functionName, a1, a2, a3, a4).waitForReply(timeout);
+                } catch (const exfel::util::Exception& e) {
+                    return bp::make_tuple(false, e.userFriendlyMsg());
+                }
+                return bp::make_tuple(true, result[0]);
+            }
+
+        private:
+            
+            static bool hasattr(bp::object obj, const std::string& attrName) {
+                // NOTE: There seems to be different implementations of the Python C-API around
+                // Some use a char* some other a const char* -> char* is the always compiling alternative
+                return PyObject_HasAttrString(obj.ptr(), const_cast<char*>(attrName.c_str()));
+            }
+            
+            void notifyDeviceChangedMonitors(const exfel::util::Hash& hash, const std::string& instanceId) {
+                boost::mutex::scoped_lock lock(m_deviceChangedHandlersMutex);
+                exfel::util::Hash::const_iterator it = m_deviceChangedHandlers.find(instanceId);
+                if (it != m_deviceChangedHandlers.end()) {
+                    const exfel::util::Hash& entry = m_deviceChangedHandlers.get<exfel::util::Hash > (it);
+                    exfel::util::Hash::const_iterator itFunc = entry.find("_function");
+                    exfel::util::Hash::const_iterator itSelfObject = entry.find("_selfObject");
+                    exfel::util::Hash::const_iterator itData = entry.find("_userData");
+                    
+                    PyGILState_STATE gstate = PyGILState_Ensure();
+                    try {
+                        if (itSelfObject != entry.end()) {
+                            if (itData != entry.end()) {
+                                bp::call_method<void>(entry.get<PyObject*>("_selfObject"), entry.get<std::string>("_function").c_str(), instanceId, hash, entry.get<bp::object > ("_userData"));
+                            } else {
+                                bp::call_method<void>(entry.get<PyObject*>("_selfObject"), entry.get<std::string>("_function").c_str(), instanceId, hash);
+                            }
+                        } else {
+                            if (itData != entry.end()) {
+                                bp::call<void>(entry.get<PyObject*>("_function"), instanceId, hash, entry.get<bp::object > ("_userData"));
+                            } else {
+                                bp::call<void>(entry.get<PyObject*>("_function"), instanceId, hash);
+                            }
+                        }
+                        
+                        PyGILState_Release(gstate);
+                        
+                    } catch (const exfel::util::Exception& e) {
+                        std::cout << e.userFriendlyMsg();
+                        PyGILState_Release(gstate);
+                    }
+                }
+            }
+
+            void notifyPropertyChangedMonitors(const exfel::util::Hash& hash, const std::string& instanceId) {
+                boost::mutex::scoped_lock lock(m_propertyChangedHandlersMutex);
+                if (m_propertyChangedHandlers.has(instanceId)) {
+                    this->callMonitor(instanceId, m_propertyChangedHandlers.get<exfel::util::Hash > (instanceId), hash);
+                }
+            }
+
+            void callMonitor(const std::string& instanceId, const exfel::util::Hash& registered, const exfel::util::Hash& current, std::string path = "") {
+                for (exfel::util::Hash::const_iterator it = current.begin(); it != current.end(); ++it) {
+                    std::string currentPath = it->first;
+                    if (!path.empty()) currentPath = path + "." + it->first;
+                    if (registered.hasFromPath(currentPath)) {
+                        const exfel::util::Hash& entry = registered.getFromPath<exfel::util::Hash > (currentPath);
+                        exfel::util::Hash::const_iterator itFunc = entry.find("_function");
+                        exfel::util::Hash::const_iterator itSelfObject = entry.find("_selfObject");
+                        exfel::util::Hash::const_iterator itData = entry.find("_userData");
+
+                        PyGILState_STATE gstate = PyGILState_Ensure();
+
+                        try {
+                            if (itSelfObject != entry.end()) {
+                                if (itData != entry.end()) {
+                                    bp::call_method<void>(entry.get<PyObject*>("_selfObject"), entry.get<std::string>("_function").c_str(), instanceId, currentPath, HashWrap::pythonGetArgIt(current, it), entry.get<bp::object > ("_userData"));
+                                } else {
+                                    bp::call_method<void>(entry.get<PyObject*>("_selfObject"), entry.get<std::string>("_function").c_str(), instanceId, currentPath, HashWrap::pythonGetArgIt(current, it));
+                                }
+                            } 
+                            else {
+                                if (itData != entry.end()) {
+                                    bp::call<void>(entry.get<PyObject*>("_function"), instanceId, currentPath, HashWrap::pythonGetArgIt(current, it), entry.get<bp::object > ("_userData"));
+                                } else {
+                                    bp::call<void>(entry.get<PyObject*>("_function"), instanceId, currentPath, HashWrap::pythonGetArgIt(current, it));
+                                }
+                            }
+
+                            PyGILState_Release(gstate);
+
+                        } catch (const exfel::util::Exception& e) {
+                            std::cout << e.userFriendlyMsg();
+                            PyGILState_Release(gstate);
+                        }
+                        
+                        if (current.is<exfel::util::Hash > (it)) callMonitor(instanceId, registered, current.get<exfel::util::Hash > (it), currentPath);
+                    }
+                }
+            }
+
+        private: // members
+
+            bool m_isVerbose;
+
+            boost::shared_ptr<SignalSlotableWrap> m_signalSlotableWrap;
+
+        };
+    }
+}
+
+#endif	/* EXFEL_PYEXFEL_SIGNALSLOTABLE_HH */
+

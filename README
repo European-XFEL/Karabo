@@ -1,0 +1,17 @@
+This is the README file gives instructions on how to build the karabo framework.
+
+The supported OS are: 
+    SL5/6
+    Ubuntu 10.04 LTS
+    Ubuntu 11.10
+
+Other distributions like Fedora or Suse may still work.
+
+(1) Installation
+
+    If you have root permissions on your computer, go to the directory of this README file and type:
+
+    sudo install.sh
+
+
+

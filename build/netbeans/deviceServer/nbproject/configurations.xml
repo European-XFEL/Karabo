@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configurationDescriptor version="84">
+  <logicalFolder name="root" displayName="root" projectFiles="true" kind="ROOT">
+    <logicalFolder name="HeaderFiles"
+                   displayName="Header Files"
+                   projectFiles="true">
+    </logicalFolder>
+    <logicalFolder name="ResourceFiles"
+                   displayName="Resource Files"
+                   projectFiles="true">
+    </logicalFolder>
+    <logicalFolder name="SourceFiles"
+                   displayName="Source Files"
+                   projectFiles="true">
+      <itemPath>../../../src/deviceServer/deviceServer.cc</itemPath>
+    </logicalFolder>
+    <logicalFolder name="TestFiles"
+                   displayName="Test Files"
+                   projectFiles="false"
+                   kind="TEST_LOGICAL_FOLDER">
+    </logicalFolder>
+    <logicalFolder name="ExternalFiles"
+                   displayName="Important Files"
+                   projectFiles="false"
+                   kind="IMPORTANT_FILES_FOLDER">
+      <itemPath>Makefile</itemPath>
+    </logicalFolder>
+  </logicalFolder>
+  <projectmakefile>Makefile</projectmakefile>
+  <confs>
+    <conf name="Debug-Linux" type="1">
+      <toolsSet>
+        <remote-sources-mode>LOCAL_SOURCES</remote-sources-mode>
+        <compilerSet>default</compilerSet>
+      </toolsSet>
+      <compileType>
+        <ccTool>
+          <incDir>
+            <pElem>../../../src</pElem>
+            <pElem>${KARABO}/extern/include</pElem>
+          </incDir>
+        </ccTool>
+        <linkerTool>
+          <linkerAddLib>
+            <pElem>${KARABO}/extern/lib</pElem>
+          </linkerAddLib>
+          <linkerDynSerch>
+            <pElem>../lib</pElem>
+            <pElem>../extern/lib</pElem>
+            <pElem>${KARABO}/lib</pElem>
+            <pElem>${KARABO}/extern/lib</pElem>
+          </linkerDynSerch>
+          <linkerLibItems>
+            <linkerLibProjectItem>
+              <makeArtifact PL="../karabo"
+                            CT="2"
+                            CN="Debug-Linux"
+                            AC="true"
+                            BL="false"
+                            WD="../karabo"
+                            BC="${MAKE} -j12 -f Makefile CONF=Debug-Linux"
+                            CC="${MAKE} -j12 -f Makefile CONF=Debug-Linux clean"
+                            OP="${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/lib/libkarabo.${CND_DLIB_EXT}">
+              </makeArtifact>
+            </linkerLibProjectItem>
+            <linkerLibLibItem>boost_date_time</linkerLibLibItem>
+            <linkerLibLibItem>boost_filesystem</linkerLibLibItem>
+            <linkerLibLibItem>boost_python</linkerLibLibItem>
+            <linkerLibLibItem>boost_regex</linkerLibLibItem>
+            <linkerLibLibItem>boost_signals</linkerLibLibItem>
+            <linkerLibLibItem>boost_system</linkerLibLibItem>
+            <linkerLibLibItem>boost_thread</linkerLibLibItem>
+            <linkerLibLibItem>hdf5</linkerLibLibItem>
+            <linkerLibLibItem>hdf5_cpp</linkerLibLibItem>
+            <linkerLibLibItem>hdf5_hl</linkerLibLibItem>
+            <linkerLibLibItem>hdf5_hl_cpp</linkerLibLibItem>
+            <linkerLibLibItem>log4cpp</linkerLibLibItem>
+            <linkerLibLibItem>netsnmp</linkerLibLibItem>
+            <linkerLibLibItem>netsnmpagent</linkerLibLibItem>
+            <linkerLibLibItem>netsnmphelpers</linkerLibLibItem>
+            <linkerLibLibItem>netsnmpmibs</linkerLibLibItem>
+            <linkerLibLibItem>netsnmptrapd</linkerLibLibItem>
+            <linkerLibLibItem>openmqc</linkerLibLibItem>
+          </linkerLibItems>
+        </linkerTool>
+      </compileType>
+      <packaging>
+        <packType>Tar</packType>
+        <packFileList>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}bin/${OUTPUT_BASENAME}"
+                            from="${OUTPUT_PATH}"
+                            perm="755"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="Dir"
+                            to="${PACKAGE_TOP_DIR}lib"
+                            from="../karabo/${CND_DIST}/${CND_CONF}/${CND_PLATFORM}/lib"
+                            perm="755"
+                            owner="root"
+                            group="bin"/>
+        </packFileList>
+      </packaging>
+    </conf>
+    <conf name="Release-Linux" type="1">
+      <toolsSet>
+        <remote-sources-mode>LOCAL_SOURCES</remote-sources-mode>
+        <compilerSet>default</compilerSet>
+      </toolsSet>
+      <compileType>
+        <cTool>
+          <developmentMode>5</developmentMode>
+        </cTool>
+        <ccTool>
+          <developmentMode>5</developmentMode>
+          <incDir>
+            <pElem>../../../src</pElem>
+            <pElem>${KARABO}/extern/include</pElem>
+          </incDir>
+        </ccTool>
+        <fortranCompilerTool>
+          <developmentMode>5</developmentMode>
+        </fortranCompilerTool>
+        <asmTool>
+          <developmentMode>5</developmentMode>
+        </asmTool>
+        <linkerTool>
+          <linkerAddLib>
+            <pElem>${KARABO}/extern/lib</pElem>
+          </linkerAddLib>
+          <linkerDynSerch>
+            <pElem>../lib</pElem>
+            <pElem>../extern/lib</pElem>
+            <pElem>${KARABO}/lib</pElem>
+            <pElem>${KARABO}/extern/lib</pElem>
+          </linkerDynSerch>
+        </linkerTool>
+      </compileType>
+    </conf>
+  </confs>
+</configurationDescriptor>
