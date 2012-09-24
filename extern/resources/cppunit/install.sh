@@ -25,19 +25,18 @@ cd ${DIR}
 #
 ###
 
-OPENMQC_DIR=openmqc_4_4_0
+DEP_DIR=cppunit-1.12.1
 
-echo "Building $OPENMQC_DIR..."
-if [ ! -d $OPENMQC_DIR ]; then
+if [ ! -d $DEP_DIR ]; then
+    echo "Building $DEP_DIR..."
     echo "Unpacking files, please wait..."
-    tar -xzf ${OPENMQC_DIR}.tar.gz
+    tar -xzf ${DEP_DIR}.tar.gz
 fi
-
-cd $OPENMQC_DIR
-make -j CONF=$(uname -s)
-
-cp -rf include/openmqc $INSTALL_PREFIX/include
-cp -rf lib $INSTALL_PREFIX
-echo "done"
+  cd $DEP_DIR
+  ./configure --prefix=`pwd`/cppunit
+  make -j 2>&1 | tee make.log
+  make install
+  cp -rf cppunit/include ${INSTALL_PREFIX}
+  cp -rf cppunit/lib ${INSTALL_PREFIX}
 
 cd $CWD
