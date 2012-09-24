@@ -21,8 +21,8 @@ FC=gfortran
 AS=as
 
 # Macros
-CND_PLATFORM=GNU-MacOSX
-CND_DLIB_EXT=dylib
+CND_PLATFORM=GNU-Linux-x86
+CND_DLIB_EXT=so
 CND_CONF=Release-Darwin
 CND_DISTDIR=dist
 CND_BUILDDIR=build
@@ -160,7 +160,7 @@ LDLIBSOPTIONS=-L${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/extern/lib -L/opt/loc
 
 ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/lib/libkarabo.${CND_DLIB_EXT}: ${OBJECTFILES}
 	${MKDIR} -p ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/lib
-	${LINK.cc} -dynamiclib -install_name libkarabo.${CND_DLIB_EXT} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/lib/libkarabo.${CND_DLIB_EXT} -fPIC ${OBJECTFILES} ${LDLIBSOPTIONS} 
+	${LINK.cc} -shared -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/lib/libkarabo.${CND_DLIB_EXT} -fPIC ${OBJECTFILES} ${LDLIBSOPTIONS} 
 
 ${OBJECTDIR}/_ext/163556830/HashDatabase.o: ../../../src/karabo/core/HashDatabase.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/163556830
