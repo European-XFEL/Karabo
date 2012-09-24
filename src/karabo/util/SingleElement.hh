@@ -1,0 +1,48 @@
+/*
+ * $Id$
+ *
+ * File:   SingleElement.hh
+ * Author: <wp76@xfel.eu>
+ *
+ * Created on July 1, 2011, 11:49 AM
+ *
+ * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
+ */
+
+
+#ifndef EXFEL_UTIL_SINGLEELEMENT_HH
+#define	EXFEL_UTIL_SINGLEELEMENT_HH
+
+#include "GenericElement.hh"
+
+namespace exfel {
+    namespace util {
+
+        template<class BASE, class DERIVED = BASE>
+        class SINGLE_ELEMENT : public GenericElement<SINGLE_ELEMENT<BASE, DERIVED>, std::string > {
+            std::string m_classId;
+
+        public:
+
+            SINGLE_ELEMENT(Schema& expected) : GenericElement<SINGLE_ELEMENT<BASE, DERIVED>, std::string >(expected) {
+                m_classId = DERIVED::classInfo().getClassId();
+                this->initializeElementPointer(this);
+            }
+
+            
+            void build() {
+                using namespace boost;
+                if (m_classId.empty()) {
+                    throw PARAMETER_EXCEPTION("classId is missing, use the .classId() function");
+                }
+                this->m_element.singleElementType(BASE::expectedParameters(m_classId, this->m_expected->getAccessMode(), this->m_expected->getCurrentState(), this->m_element.get<std::string > ("key")));
+                this->m_element.displayType(BASE::classInfo().getClassName());
+                //alternatively we can take 'classId' instead of 'className' (to be shown as displayType element in expected parameters) :
+                //this->m_element.displayType(BASE::classInfo().getClassId()); 
+            }
+        };
+    }
+}
+
+#endif
+

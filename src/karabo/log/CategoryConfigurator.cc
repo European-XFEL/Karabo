@@ -1,0 +1,103 @@
+/*
+ * $Id: CategoryConfigurator.cc 4647 2011-11-04 16:21:02Z heisenb@DESY.DE $
+ *
+ * File:   CategoryConfigurator.cc
+ * Author: <krzysztof.wrona@xfel.eu>
+ *
+ * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
+ */
+
+#include "CategoryConfigurator.hh"
+#include <log4cpp/Category.hh>
+
+using namespace std;
+using namespace log4cpp;
+using namespace exfel::util;
+
+namespace exfel {
+  namespace log {
+
+    CategoryConfigurator::CategoryConfigurator() {
+    }
+
+    CategoryConfigurator::~CategoryConfigurator() {
+    }
+
+    void CategoryConfigurator::expectedParameters(Schema& expected) {
+
+
+
+      STRING_ELEMENT(expected)
+              .key("name")
+              .description("Category name")
+              .displayedName("Name")
+              .assignmentMandatory()
+              .commit();
+
+      STRING_ELEMENT(expected)
+              .key("priority")
+              .description("Priority")
+              .displayedName("Priority")
+              .options("DEBUG INFO WARN ERROR")
+              .assignmentOptional().defaultValue("INFO")
+              .commit();
+
+      BOOL_ELEMENT(expected)
+              .key("additivity")
+              .displayedName("Additivity")
+              .description("Set additivity for the category")
+              .assignmentOptional().defaultValue(true)
+              .commit();
+
+
+      LIST_ELEMENT<AppenderConfigurator > (expected)
+              .key("appenders")
+              .displayedName("Appender")
+              .description("Configures additional appenders for the category")
+              .assignmentOptional().noDefaultValue()
+              .commit();
+
+    }
+
+    void CategoryConfigurator::configure(const Hash& input) {
+
+      configureName(input);
+      configurePriority(input);
+      configureAdditivity(input);
+      configureAppenders(input);
+    }
+
+    void CategoryConfigurator::setup() {
+
+      Category& log = Category::getInstance(m_name);
+      log.setPriority(m_level);
+      log.setAdditivity(m_additivity);
+      for (size_t i = 0; i < m_appenderConfigurators.size(); ++i) {
+        log.addAppender(m_appenderConfigurators[i]->getConfigured());
+      }
+    }
+
+    void CategoryConfigurator::configureName(const Hash& input) {
+      m_name = input.get<string > ("name");
+    }
+
+    void CategoryConfigurator::configurePriority(const Hash& input) {
+      string level = input.get<string > ("priority");
+      m_level = log4cpp::Priority::getPriorityValue(level);
+    }
+
+    void CategoryConfigurator::configureAdditivity(const Hash& input) {
+      m_additivity = input.get<bool > ("additivity");
+    }
+
+    void CategoryConfigurator::configureAppenders(const Hash& input) {
+      // appenders in category are optional
+      if (input.has("appenders")) {
+        m_appenderConfigurators = AppenderConfigurator::createList("appenders", input);
+      }
+    }
+
+    EXFEL_REGISTER_ONLY_ME_CC(CategoryConfigurator)
+
+  }
+}
