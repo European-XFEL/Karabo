@@ -49,17 +49,23 @@ MKDIR=mkdir
 CP=cp
 CCADMIN=CCadmin
 
+# Platform
+CURRENT_PLATFORM=`uname -s`-`uname -m`
+
 # Fallback solution if KARABO_EXTERN is not set
-KARABO_EXTERN ?= $(CND_BASEDIR)/../../../extern
+KARABO_EXTERN ?=$(CND_BASEDIR)/../../../extern
 EXTERN_RESOURCE_DIR = $(KARABO_EXTERN)/resources
+EXTERN_DIST_DIR = $(KARABO_EXTERN)/extern/$(CND_PLATFORM_$(CONF))
 DIST_DIR = $(CND_BASEDIR)/$(CND_DISTDIR)/$(CONF)/$(CND_PLATFORM_$(CONF))
-EXTERN_DIST_DIR = $(DIST_DIR)/extern
 
 # build
 build: .build-post
 
 .build-pre:
 # Add your pre 'build' code here...
+	if [ "$(CMD_BUILD)" = "y" ];\
+	then $(CP) -f nbproject/Makefile-$(CONF)-$(CURRENT_PLATFORM).mk nbproject/Makefile-$(CONF).mk;\
+	fi
 	@if test -d $(EXTERN_DIST_DIR);\
 	then echo "### External dependencies already installed ###";\
 	else $(MKDIR) -p $(EXTERN_DIST_DIR)/include;\
@@ -75,6 +81,10 @@ build: .build-post
 
 .build-post: .build-impl
 # Add your post 'build' code here...
+	if [ "$(CMD_BUILD)" != "y" ];\
+	then $(CP) -f $(CND_BASEDIR)/nbproject/Makefile-variables.mk $(CND_BASEDIR)/nbproject/Makefile-variables-$(CURRENT_PLATFORM).mk;\
+	$(CP) -f $(CND_BASEDIR)/nbproject/Makefile-$(CONF).mk $(CND_BASEDIR)/nbproject/Makefile-$(CONF)-$(CURRENT_PLATFORM).mk;\
+	fi
 	@$(MKDIR) -p  $(DIST_DIR)/include/karabo/core
 	@$(MKDIR) -p  $(DIST_DIR)/include/karabo/io/hdf5
 	@$(MKDIR) -p  $(DIST_DIR)/include/karabo/log
@@ -167,4 +177,8 @@ help: .help-post
 include nbproject/Makefile-impl.mk
 
 # include project make variables
-include nbproject/Makefile-variables.mk
+ifdef ($(CMD_BUILD),y)
+	include nbproject/Makefile-variables-$(CURRENT_PLATFORM).mk
+else
+	include nbproject/Makefile-variables.mk
+endif
