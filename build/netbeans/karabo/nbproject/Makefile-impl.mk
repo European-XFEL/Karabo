@@ -27,11 +27,11 @@ CLEAN_SUBPROJECTS=${CLEAN_SUBPROJECTS_${SUBPROJECTS}}
 PROJECTNAME=karabo
 
 # Active Configuration
-DEFAULTCONF=Debug-Linux
+DEFAULTCONF=Debug
 CONF=${DEFAULTCONF}
 
 # All Configurations
-ALLCONFS=Debug-Linux Release-Linux Debug-Darwin Release-Darwin 
+ALLCONFS=Debug Release 
 
 
 # build

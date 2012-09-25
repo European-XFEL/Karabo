@@ -14,19 +14,11 @@
             </sourceRootList>
             <confList>
                 <confElem>
-                    <name>Debug-Linux</name>
+                    <name>Debug</name>
                     <type>2</type>
                 </confElem>
                 <confElem>
-                    <name>Release-Linux</name>
-                    <type>2</type>
-                </confElem>
-                <confElem>
-                    <name>Debug-Darwin</name>
-                    <type>2</type>
-                </confElem>
-                <confElem>
-                    <name>Release-Darwin</name>
+                    <name>Release</name>
                     <type>2</type>
                 </confElem>
             </confList>
