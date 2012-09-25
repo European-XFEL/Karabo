@@ -346,13 +346,13 @@
         <ccTool>
           <incDir>
             <pElem>../../../src</pElem>
-            <pElem>${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/extern/include</pElem>
+            <pElem>${EXTERN_DIST_DIR}/include</pElem>
           </incDir>
         </ccTool>
         <linkerTool>
           <output>${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/lib/libkarabo.${CND_DLIB_EXT}</output>
           <linkerAddLib>
-            <pElem>${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/extern/lib</pElem>
+            <pElem>${EXTERN_DIST_DIR}/lib</pElem>
             <pElem>/opt/local/lib/nss</pElem>
             <pElem>/opt/local/lib/nspr</pElem>
           </linkerAddLib>
@@ -371,7 +371,7 @@
             <linkerLibLibItem>log4cpp</linkerLibLibItem>
             <linkerLibLibItem>openmqc</linkerLibLibItem>
             <linkerLibLibItem>ssl3</linkerLibLibItem>
-            <linkerLibLibItem>python2.6</linkerLibLibItem>
+            <linkerLibLibItem>${PYTHON_LIB}</linkerLibLibItem>
             <linkerLibLibItem>netsnmp</linkerLibLibItem>
             <linkerLibStdlibItem>CppUnit</linkerLibStdlibItem>
           </linkerLibItems>
@@ -380,7 +380,7 @@
       <folder path="f2/f3">
         <ccTool>
           <incDir>
-            <pElem>${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/extern/include/hdf5</pElem>
+            <pElem>${EXTERN_DIST_DIR}/include/hdf5</pElem>
           </incDir>
         </ccTool>
       </folder>
@@ -405,7 +405,7 @@
           <developmentMode>5</developmentMode>
           <incDir>
             <pElem>../../../src</pElem>
-            <pElem>${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/extern/include</pElem>
+            <pElem>${EXTERN_DIST_DIR}/include</pElem>
           </incDir>
         </ccTool>
         <fortranCompilerTool>
@@ -417,7 +417,7 @@
         <linkerTool>
           <output>${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/lib/libkarabo.${CND_DLIB_EXT}</output>
           <linkerAddLib>
-            <pElem>${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/extern/lib</pElem>
+            <pElem>${EXTERN_DIST_DIR}/lib</pElem>
             <pElem>/opt/local/lib/nss</pElem>
             <pElem>/opt/local/lib/nspr</pElem>
           </linkerAddLib>
@@ -436,15 +436,16 @@
             <linkerLibLibItem>log4cpp</linkerLibLibItem>
             <linkerLibLibItem>openmqc</linkerLibLibItem>
             <linkerLibLibItem>ssl3</linkerLibLibItem>
-            <linkerLibLibItem>python2.6</linkerLibLibItem>
+            <linkerLibLibItem>${PYTHON_LIB}</linkerLibLibItem>
             <linkerLibLibItem>netsnmp</linkerLibLibItem>
+            <linkerLibStdlibItem>CppUnit</linkerLibStdlibItem>
           </linkerLibItems>
         </linkerTool>
       </compileType>
       <folder path="f2/f3">
         <ccTool>
           <incDir>
-            <pElem>${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/extern/include/hdf5</pElem>
+            <pElem>${EXTERN_DIST_DIR}/include/hdf5</pElem>
           </incDir>
         </ccTool>
       </folder>
