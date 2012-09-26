@@ -373,6 +373,7 @@
             <linkerLibLibItem>ssl3</linkerLibLibItem>
             <linkerLibLibItem>${PYTHON_LIB}</linkerLibLibItem>
             <linkerLibLibItem>netsnmp</linkerLibLibItem>
+            <linkerLibLibItem>rt</linkerLibLibItem>
             <linkerLibStdlibItem>CppUnit</linkerLibStdlibItem>
           </linkerLibItems>
         </linkerTool>

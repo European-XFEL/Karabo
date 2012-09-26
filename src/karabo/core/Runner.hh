@@ -46,9 +46,9 @@ namespace exfel {
                 try {
 
                     exfel::util::Hash configuration = parseCommandLine(argc, argv);      
-
-                    if (!configuration.empty())
-                        instancePointer = T::create(configuration);                    
+                    
+                    if (!configuration.has("--"))
+                        instancePointer = T::create(T::classInfo().getClassId(), configuration);                    
 
                     return instancePointer;
 
@@ -64,21 +64,18 @@ namespace exfel {
                 using namespace std;
                 using namespace exfel::util;
                 try {
-                    if (argc == 1) {
-                        showUsage(std::string(argv[0]));
-                        return Hash();
-                    }
+                    if (argc == 1) return Hash();
                     // Check first argument
                     std::string firstArg(argv[1]);
                     if (firstArg.substr(0, 2) == "--") {
                         processOption(firstArg.substr(2), argc, argv);
-                        return Hash();
+                        return Hash("--");
                     } else if (firstArg.substr(0, 1) == "-") {
                         processOption(firstArg.substr(1), argc, argv);
-                        return Hash();
+                        return Hash("--");
                     } else if (firstArg == "help") {
                         processOption(firstArg, argc, argv);
-                        return Hash();
+                        return Hash("--");
                     } else {
 
                         std::vector<Hash> userInputs;
@@ -158,12 +155,14 @@ namespace exfel {
             static void showUsage(const std::string& programName, const std::string& classId = "") {
                 printXfelWelcome();
                 std::cout << "Usage: " << programName << " <configuration>\n" << std::endl;
+                std::string runnableType = T::classInfo().getClassName();
                 if (classId.empty()) {
                     std::cout << "The <configuration> reflects a set of (hierarchical) key-value types." << std::endl;
-                    std::cout << "and can be given as: \n(1) .xml file\n(2) .libconfig file\n(3) command line input.\n" << std::endl;
-                    std::cout << "Example: <key> = a.b, <value> = foo\n(1)\n<a>\n <b>foo</b>\n</a>\n\n";
-                    std::cout << "(3) a.b=foo\n\n";
-                    std::cout << "Following " << T::classInfo().getClassName() << " <choice>s are availble: " << std::endl;
+                    std::cout << "You can supply <configuration> information as xml file or as command-line input or a combination of both.\n" << std::endl;
+                    std::cout << "Example:\nAssume the key \"" << runnableType << ".someThreshold\" and a corresponding value \"4.2\".\nThe corresponding xml file should look like this:\n" << std::endl;
+                    std::cout << "  \"<" << runnableType << "><someThreshold>4.2</someThreshold></" << runnableType << ">\"\n\nIf you saved the file under \"config.xml\" you should then type:\n  '" << programName << " config.xml'\n\n\n";
+                    std::cout << "For the same configuration given as command line arguments you should type:\n  '" << programName << " " << runnableType << ".someThreshold=\"4.2\"'\n\n";
+                    std::cout << "Following " << T::classInfo().getClassName() << " <choice>s are available: " << std::endl;
                     T::help();
                     std::cout << "\nType: '" << programName << " help <choice>' for help on a specific choice" << std::endl;
                     std::cout << "Type: '" << programName << " --create-xsd <choice>' to generate full description of all parameters (in xml schema format)" << std::endl;
