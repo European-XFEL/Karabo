@@ -7,8 +7,8 @@
  */
 
 
-#ifndef EXFEL_IO_HDF5_FLARRAYFILTERVECTOR_HH
-#define	EXFEL_IO_HDF5_FLARRAYFILTERVECTOR_HH
+#ifndef KARABO_IO_HDF5_FLARRAYFILTERVECTOR_HH
+#define	KARABO_IO_HDF5_FLARRAYFILTERVECTOR_HH
 
 #include "FLArrayFilter.hh"
 #include "DataTypes.hh"
@@ -18,7 +18,7 @@
 /**
  * The main European XFEL namespace
  */
-namespace exfel {
+namespace karabo {
 
     /**
      * Namespace for package io
@@ -33,7 +33,7 @@ namespace exfel {
                     public FLArrayFilter<T>, public DataTypes {
             public:
 
-                EXFEL_CLASSINFO(FLArrayFilterVector, typeid (CONT<T>).name(), "1.0")
+                KARABO_CLASSINFO(FLArrayFilterVector, typeid (CONT<T>).name(), "1.0")
 
                 FLArrayFilterVector() {
                 }
@@ -63,10 +63,10 @@ namespace exfel {
 
             template<>
             class FLArrayFilterVector<std::string, std::vector > :
-            public exfel::io::hdf5::FLArrayFilter<std::string>, public exfel::io::hdf5::DataTypes {
+            public karabo::io::hdf5::FLArrayFilter<std::string>, public karabo::io::hdf5::DataTypes {
             public:
 
-                EXFEL_CLASSINFO(FLArrayFilterVector, typeid (std::vector<std::string>).name(), "1.0")
+                KARABO_CLASSINFO(FLArrayFilterVector, typeid (std::vector<std::string>).name(), "1.0")
 
                 FLArrayFilterVector() {
                 }
@@ -132,4 +132,4 @@ namespace exfel {
     }
 }
 
-#endif	/* EXFEL_IO_HDF5_FLARRAYFILTERVECTOR_HH */
+#endif	/* KARABO_IO_HDF5_FLARRAYFILTERVECTOR_HH */

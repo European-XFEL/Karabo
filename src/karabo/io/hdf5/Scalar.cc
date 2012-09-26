@@ -8,24 +8,24 @@
 
 
 #include "Scalar.hh"
-using namespace exfel::io;
+using namespace karabo::io;
 
-namespace exfel {
+namespace karabo {
   namespace io {
     namespace hdf5 {
 
-      EXFEL_REGISTER_FACTORY_CC(RecordElement, Int8Element)
-      EXFEL_REGISTER_FACTORY_CC(RecordElement, Int16Element)
-      EXFEL_REGISTER_FACTORY_CC(RecordElement, Int32Element)
-      EXFEL_REGISTER_FACTORY_CC(RecordElement, Int64Element)
-      EXFEL_REGISTER_FACTORY_CC(RecordElement, UInt8Element)
-      EXFEL_REGISTER_FACTORY_CC(RecordElement, UInt16Element)
-      EXFEL_REGISTER_FACTORY_CC(RecordElement, UInt32Element)
-      EXFEL_REGISTER_FACTORY_CC(RecordElement, UInt64Element)
-      EXFEL_REGISTER_FACTORY_CC(RecordElement, BoolElement)
-      EXFEL_REGISTER_FACTORY_CC(RecordElement, StringElement)
-      EXFEL_REGISTER_FACTORY_CC(RecordElement, FloatElement)
-      EXFEL_REGISTER_FACTORY_CC(RecordElement, DoubleElement)
+      KARABO_REGISTER_FACTORY_CC(RecordElement, Int8Element)
+      KARABO_REGISTER_FACTORY_CC(RecordElement, Int16Element)
+      KARABO_REGISTER_FACTORY_CC(RecordElement, Int32Element)
+      KARABO_REGISTER_FACTORY_CC(RecordElement, Int64Element)
+      KARABO_REGISTER_FACTORY_CC(RecordElement, UInt8Element)
+      KARABO_REGISTER_FACTORY_CC(RecordElement, UInt16Element)
+      KARABO_REGISTER_FACTORY_CC(RecordElement, UInt32Element)
+      KARABO_REGISTER_FACTORY_CC(RecordElement, UInt64Element)
+      KARABO_REGISTER_FACTORY_CC(RecordElement, BoolElement)
+      KARABO_REGISTER_FACTORY_CC(RecordElement, StringElement)
+      KARABO_REGISTER_FACTORY_CC(RecordElement, FloatElement)
+      KARABO_REGISTER_FACTORY_CC(RecordElement, DoubleElement)
     }
   }
 }

@@ -7,8 +7,8 @@
  */
 
 
-#ifndef EXFEL_IO_COLUMN_HH
-#define	EXFEL_IO_COLUMN_HH
+#ifndef KARABO_IO_COLUMN_HH
+#define	KARABO_IO_COLUMN_HH
 
 #include <string>
 #include <vector>
@@ -16,7 +16,7 @@
 #include <karabo/util/Hash.hh>
 #include "Table.hh"
 
-namespace exfel {
+namespace karabo {
     namespace io {
         namespace hdf5 {
 
@@ -25,7 +25,7 @@ namespace exfel {
             class Column { 
             public:
 
-                Column(const std::string& key, boost::shared_ptr<exfel::io::hdf5::Table> table) :
+                Column(const std::string& key, boost::shared_ptr<karabo::io::hdf5::Table> table) :
                 m_arrayView(table->getCache<T>(key)),
                 m_table(table) {
                 }
@@ -43,13 +43,13 @@ namespace exfel {
                 
             private:
 
-                exfel::io::ArrayView<T>& m_arrayView;             
-                boost::shared_ptr<exfel::io::hdf5::Table> m_table;
+                karabo::io::ArrayView<T>& m_arrayView;             
+                boost::shared_ptr<karabo::io::hdf5::Table> m_table;
             };
         }
     }
 }
 
 
-#endif	/* EXFEL_IO_COLUMN_HH */
+#endif	/* KARABO_IO_COLUMN_HH */
 

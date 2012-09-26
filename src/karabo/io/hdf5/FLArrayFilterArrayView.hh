@@ -7,8 +7,8 @@
  */
 
 
-#ifndef EXFEL_IO_HDF5_FLARRAYFILTERARRAYVIEW_HH
-#define	EXFEL_IO_HDF5_FLARRAYFILTERARRAYVIEW_HH
+#ifndef KARABO_IO_HDF5_FLARRAYFILTERARRAYVIEW_HH
+#define	KARABO_IO_HDF5_FLARRAYFILTERARRAYVIEW_HH
 
 #include "FLArrayFilter.hh"
 #include "DataTypes.hh"
@@ -19,7 +19,7 @@
 /**
  * The main European XFEL namespace
  */
-namespace exfel {
+namespace karabo {
 
   /**
    * Namespace for package io
@@ -32,12 +32,12 @@ namespace exfel {
       // Here we pre-define filters for writing and reading Array types
       // and discovering Array properties (DataTypes)
 
-      template<typename T, template <typename ELEM> class CONT = exfel::io::ArrayView >
+      template<typename T, template <typename ELEM> class CONT = karabo::io::ArrayView >
       class FLArrayFilterArrayView :
       public FLArrayFilter<T>, public DataTypes {
       public:
 
-        EXFEL_CLASSINFO(FLArrayFilterArrayView, typeid (CONT<T>).name(), "1.0")
+        KARABO_CLASSINFO(FLArrayFilterArrayView, typeid (CONT<T>).name(), "1.0")
 
         FLArrayFilterArrayView() {
         }
@@ -69,11 +69,11 @@ namespace exfel {
       };
 
       template<>
-      class FLArrayFilterArrayView<std::string, exfel::io::ArrayView> :
+      class FLArrayFilterArrayView<std::string, karabo::io::ArrayView> :
       public FLArrayFilter<std::string>, public DataTypes {
       public:
 
-        EXFEL_CLASSINFO(FLArrayFilterArrayView, typeid (exfel::io::ArrayView<std::string>).name(), "1.0")
+        KARABO_CLASSINFO(FLArrayFilterArrayView, typeid (karabo::io::ArrayView<std::string>).name(), "1.0")
 
         FLArrayFilterArrayView() {
         }
@@ -82,7 +82,7 @@ namespace exfel {
         }
 
         ArrayDimensions getDims(const boost::any& any) {
-          const exfel::io::ArrayView<std::string>& arr = boost::any_cast<exfel::io::ArrayView<std::string> > (any);
+          const karabo::io::ArrayView<std::string>& arr = boost::any_cast<karabo::io::ArrayView<std::string> > (any);
           return arr.getDims();
         }
 
@@ -91,13 +91,13 @@ namespace exfel {
         }
 
         void write(const FixedLengthArray<std::string>& element, const boost::any& any, const ArrayDimensions& dims) {
-          const exfel::io::ArrayView<std::string>& av = *(boost::any_cast<exfel::io::ArrayView<std::string> >(&any));
+          const karabo::io::ArrayView<std::string>& av = *(boost::any_cast<karabo::io::ArrayView<std::string> >(&any));
           const std::string* strPtr = &av[0];
           element.write(strPtr);
         }
 
         void read(const FixedLengthArray<std::string>& element, boost::any& any, ArrayDimensions& dims) {
-          exfel::io::ArrayView<std::string>& av = *(boost::any_cast<exfel::io::ArrayView<std::string> >(&any));
+          karabo::io::ArrayView<std::string>& av = *(boost::any_cast<karabo::io::ArrayView<std::string> >(&any));
           std::string* str = &av[0];
 
           // calculate number of strings to be read.
@@ -123,11 +123,11 @@ namespace exfel {
       };
 
       template<>
-      class FLArrayFilterArrayView<bool, exfel::io::ArrayView> :
+      class FLArrayFilterArrayView<bool, karabo::io::ArrayView> :
       public FLArrayFilter<bool>, public DataTypes {
       public:
 
-        EXFEL_CLASSINFO(FLArrayFilterArrayView, typeid (exfel::io::ArrayView<bool>).name(), "1.0")
+        KARABO_CLASSINFO(FLArrayFilterArrayView, typeid (karabo::io::ArrayView<bool>).name(), "1.0")
 
         FLArrayFilterArrayView() {
         }
@@ -136,7 +136,7 @@ namespace exfel {
         }
 
         ArrayDimensions getDims(const boost::any& any) {
-          const exfel::io::ArrayView<bool>& arr = boost::any_cast < exfel::io::ArrayView<bool> > (any);
+          const karabo::io::ArrayView<bool>& arr = boost::any_cast < karabo::io::ArrayView<bool> > (any);
           return arr.getDims();
         }
 
@@ -145,7 +145,7 @@ namespace exfel {
         }
 
         void write(const FixedLengthArray<bool>& element, const boost::any& any, const ArrayDimensions& dims) {
-          const exfel::io::ArrayView<bool>& av = *(boost::any_cast < exfel::io::ArrayView<bool> >(&any));
+          const karabo::io::ArrayView<bool>& av = *(boost::any_cast < karabo::io::ArrayView<bool> >(&any));
           const bool* boolPtr = &av[0];
           unsigned long long totalSize = dims.getNumberOfElements();
           boost::shared_array<unsigned char> out(new unsigned char[totalSize]);
@@ -157,7 +157,7 @@ namespace exfel {
         }
 
         void read(const FixedLengthArray<bool>& element, boost::any& any, ArrayDimensions& dims) {
-          exfel::io::ArrayView<bool>& av = *(boost::any_cast < exfel::io::ArrayView<bool> >(&any));
+          karabo::io::ArrayView<bool>& av = *(boost::any_cast < karabo::io::ArrayView<bool> >(&any));
           bool* str = &av[0];
 
           // calculate number of strings to be read.

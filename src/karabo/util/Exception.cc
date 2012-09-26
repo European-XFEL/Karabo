@@ -15,7 +15,7 @@
 
 using namespace std;
 
-namespace exfel {
+namespace karabo {
     namespace util {
 
         using namespace boost::posix_time;
@@ -34,7 +34,7 @@ namespace exfel {
             path pf(filename);
             bool collect = false;
             for (path::iterator it = pf.begin(); it != pf.end(); it++) {
-                if (it->string() == "exfel" || it->string() == "src" || collect) {
+                if (it->string() == "karabo" || it->string() == "src" || collect) {
                     if (collect) {
                         m_exceptionInfo.filename += "/" + it->generic_string();
                     } else {
@@ -70,14 +70,14 @@ namespace exfel {
             Exception::m_trace.clear();
         }
 
-//        void Exception::rethrow(const exfel::util::Exception& exception) {
+//        void Exception::rethrow(const karabo::util::Exception& exception) {
 //            Exception::memorize();
 //            throw exception;
 //        }
 
         void Exception::memorize() {
 
-#define EXFEL_EXCEPTION(CLASS) Exception::ExceptionInfo myException; \
+#define KARABO_EXCEPTION(CLASS) Exception::ExceptionInfo myException; \
   myException.type = CLASS; \
   myException.message = string(e.what()); \
   myException.filename = ""; \
@@ -91,23 +91,23 @@ namespace exfel {
             } catch (Exception& e) { // ---- Forwarded exception is of our own type ----
                 Exception::addToTrace(e.m_exceptionInfo);
             } catch (std::invalid_argument& e) { // ---- Forward exception is a standard exception ----
-                EXFEL_EXCEPTION("std::invalid_argument");
+                KARABO_EXCEPTION("std::invalid_argument");
             } catch (std::out_of_range& e) {
-                EXFEL_EXCEPTION("std::out_of_range");
+                KARABO_EXCEPTION("std::out_of_range");
             } catch (std::logic_error& e) {
-                EXFEL_EXCEPTION("std::logic_error");
+                KARABO_EXCEPTION("std::logic_error");
             } catch (std::bad_alloc& e) {
-                EXFEL_EXCEPTION("std::bad_alloc");
+                KARABO_EXCEPTION("std::bad_alloc");
             } catch (std::bad_cast& e) {
-                EXFEL_EXCEPTION("std::bad_cast");
+                KARABO_EXCEPTION("std::bad_cast");
             } catch (std::bad_typeid& e) {
-                EXFEL_EXCEPTION("std::bad_typeid");
+                KARABO_EXCEPTION("std::bad_typeid");
             } catch (std::ios_base::failure& e) {
-                EXFEL_EXCEPTION("std::ios_base::failure");
+                KARABO_EXCEPTION("std::ios_base::failure");
             } catch (std::bad_exception& e) {
-                EXFEL_EXCEPTION("std::bad_exception");
+                KARABO_EXCEPTION("std::bad_exception");
             } catch (std::exception& e) {
-                EXFEL_EXCEPTION("std::exception");
+                KARABO_EXCEPTION("std::exception");
             } catch (boost::exception& e) { // ---- Forwarded exception is a boost exception ----
                 Exception::ExceptionInfo myException;
                 myException.type = "boost:exception";
@@ -207,4 +207,4 @@ namespace exfel {
             return os.str();
         }
     } // namespace util
-} // namespace exfel
+} // namespace karabo

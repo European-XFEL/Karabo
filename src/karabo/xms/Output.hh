@@ -10,14 +10,14 @@
  */
 
 
-#ifndef EXFEL_XMS_OUTPUT_HH
-#define	EXFEL_XMS_OUTPUT_HH
+#ifndef KARABO_XMS_OUTPUT_HH
+#define	KARABO_XMS_OUTPUT_HH
 
 #include <karabo/util/Factory.hh>
 
 #include "AbstractOutput.hh"
 
-namespace exfel {
+namespace karabo {
 
     namespace xms {
 
@@ -25,9 +25,9 @@ namespace exfel {
         class Output : public AbstractOutput {
         public:
 
-            EXFEL_CLASSINFO(Output, "Output", "1.0")
+            KARABO_CLASSINFO(Output, "Output", "1.0")
             
-            EXFEL_FACTORY_BASE_CLASS
+            KARABO_FACTORY_BASE_CLASS
 
             Output() {
             }
@@ -39,7 +39,7 @@ namespace exfel {
              * Necessary method as part of the factory/configuration system
              * @param expected [out] Description of expected parameters for this object (Schema)
              */
-            static void expectedParameters(exfel::util::Schema& expected) {
+            static void expectedParameters(karabo::util::Schema& expected) {
                 
                 AbstractOutput::expectedParameters(expected);
             }
@@ -48,15 +48,15 @@ namespace exfel {
              * If this object is constructed using the factory/configuration system this method is called
              * @param input Validated (@see expectedParameters) and default-filled configuration
              */
-            void configure(const exfel::util::Hash & input) {
+            void configure(const karabo::util::Hash & input) {
             }
             
             virtual void write(const T& object) = 0;
         };
         
         
-        typedef exfel::xms::Output<exfel::util::Hash > HashOutput;
-        typedef exfel::xms::Output<std::string> FileWrapOutput;
+        typedef karabo::xms::Output<karabo::util::Hash > HashOutput;
+        typedef karabo::xms::Output<std::string> FileWrapOutput;
     }
 }
 

@@ -7,22 +7,22 @@
  */
 
 
-#ifndef EXFEL_IO_TYPETRAITS_HH
-#define	EXFEL_IO_TYPETRAITS_HH
+#ifndef KARABO_IO_TYPETRAITS_HH
+#define	KARABO_IO_TYPETRAITS_HH
 
 #include <string>
 #include <hdf5/hdf5.h>
 #include <hdf5/H5Cpp.h>
 #include "../ArrayView.hh"
 
-namespace exfel {
+namespace karabo {
     namespace io {
         namespace hdf5 {
 
             struct ScalarTypeTraits {
 
                 template<typename T> static std::string classId(const T& var = T()) {
-                    // see exfel/util/Type.hh for explanation of similar case
+                    // see karabo/util/Type.hh for explanation of similar case
                     return this_type_is_not_supported_by_purpose(var);
                 }
             };
@@ -43,7 +43,7 @@ namespace exfel {
             struct ArrayTypeTraits {
 
                 template<typename T> static std::string classId(const T& var = T()) {
-                    // see exfel/util/Type.hh for explanation of similar case
+                    // see karabo/util/Type.hh for explanation of similar case
                     return this_type_is_not_supported_by_purpose(var);
                 }
             };
@@ -175,5 +175,5 @@ namespace exfel {
 }
 
 
-#endif	/* EXFEL_IO_TYPETRAITS_HH */
+#endif	/* KARABO_IO_TYPETRAITS_HH */
 

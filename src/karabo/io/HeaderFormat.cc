@@ -7,12 +7,12 @@
 #include "HeaderFormat.hh"
 
 
-EXFEL_REGISTER_FACTORY_CC(exfel::io::Format<exfel::util::Hash>, exfel::io::HeaderFormat)
+KARABO_REGISTER_FACTORY_CC(karabo::io::Format<karabo::util::Hash>, karabo::io::HeaderFormat)
 
 using namespace std;
-using namespace exfel::util;
+using namespace karabo::util;
 
-namespace exfel {
+namespace karabo {
     namespace io {
 
         void HeaderFormat::expectedParameters(Schema& expected) {

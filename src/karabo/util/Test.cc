@@ -20,7 +20,7 @@ using namespace boost::filesystem;
 using namespace std;
 
 
-namespace exfel {
+namespace karabo {
   namespace util {
 
     void Test::init(const string& funcSig, int argc, char** argv) {

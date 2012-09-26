@@ -11,14 +11,14 @@
 #include "ReconfigurableFsm.hh"
 
 using namespace std;
-using namespace exfel::util;
-using namespace exfel::xms;
+using namespace karabo::util;
+using namespace karabo::xms;
 using namespace log4cpp;
 
-namespace exfel {
+namespace karabo {
     namespace core {
 
-        void ReconfigurableFsm::expectedParameters(exfel::util::Schema& expected) {
+        void ReconfigurableFsm::expectedParameters(karabo::util::Schema& expected) {
             
             SLOT_ELEMENT(expected).key("slotEndError")
                     .displayedName("Reset")
@@ -27,7 +27,7 @@ namespace exfel {
                     .commit();
         }
 
-        void ReconfigurableFsm::configure(const exfel::util::Hash& input) {
+        void ReconfigurableFsm::configure(const karabo::util::Hash& input) {
             SLOT0(slotEndError)
         }
 

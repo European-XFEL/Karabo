@@ -14,24 +14,24 @@
 
 using namespace std;
 
-namespace exfel {
+namespace karabo {
   namespace log {
 
     SimpleLayoutConfigurator::SimpleLayoutConfigurator() { }
 
     SimpleLayoutConfigurator::~SimpleLayoutConfigurator() { }
 
-    void SimpleLayoutConfigurator::expectedParameters(exfel::util::Schema& expected) {
+    void SimpleLayoutConfigurator::expectedParameters(karabo::util::Schema& expected) {
     }
 
-    void SimpleLayoutConfigurator::configure(const exfel::util::Hash& input) {
+    void SimpleLayoutConfigurator::configure(const karabo::util::Hash& input) {
     }
 
     log4cpp::Layout* SimpleLayoutConfigurator::create(){
       return new log4cpp::SimpleLayout();
     }
 
-    EXFEL_REGISTER_FACTORY_CC(LayoutConfigurator, SimpleLayoutConfigurator)
+    KARABO_REGISTER_FACTORY_CC(LayoutConfigurator, SimpleLayoutConfigurator)
 
   } 
 } 

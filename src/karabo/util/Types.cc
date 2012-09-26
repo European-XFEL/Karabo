@@ -16,7 +16,7 @@
 
 using namespace std;
 
-namespace exfel {
+namespace karabo {
   namespace util {
 
     // Instantiation of static member

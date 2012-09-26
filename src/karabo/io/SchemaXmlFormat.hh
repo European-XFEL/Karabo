@@ -9,8 +9,8 @@
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
 
-#ifndef EXFEL_IO_HASHXMLFORMAT_HH
-#define	EXFEL_IO_HASHXMLFORMAT_HH
+#ifndef KARABO_IO_HASHXMLFORMAT_HH
+#define	KARABO_IO_HASHXMLFORMAT_HH
 
 #include <karabo/xml/tinyxml.h>
 
@@ -19,18 +19,18 @@
 
 #include "Format.hh"
 
-namespace exfel {
+namespace karabo {
 
     namespace io {
 
         /**
          * The SchemaXmlFormat class.
          */
-        class DECLSPEC_IO SchemaXmlFormat : public Format<exfel::util::Schema> {
+        class DECLSPEC_IO SchemaXmlFormat : public Format<karabo::util::Schema> {
             
         public:
 
-            EXFEL_CLASSINFO(SchemaXmlFormat, "Xml", "1.0")
+            KARABO_CLASSINFO(SchemaXmlFormat, "Xml", "1.0")
 
             SchemaXmlFormat() {
             };
@@ -38,28 +38,28 @@ namespace exfel {
             virtual ~SchemaXmlFormat() {
             };
 
-            static void expectedParameters(exfel::util::Schema& expected);
+            static void expectedParameters(karabo::util::Schema& expected);
 
-            void configure(const exfel::util::Hash& input);
+            void configure(const karabo::util::Hash& input);
 
             /**
              * Reading a configuration file.
              * Function reads configuration file (XML Document) and
-             * creates an object of the class exfel::util::Schema
+             * creates an object of the class karabo::util::Schema
              * @param in Input parameter representing XML document
-             * @param out Output parameter representing object of the class exfel::util::Schema
+             * @param out Output parameter representing object of the class karabo::util::Schema
              */
-            void convert(std::stringstream& in, exfel::util::Schema& out);
+            void convert(std::stringstream& in, karabo::util::Schema& out);
 
 
             /**
              * Writing a configuration file.
-             * Function gets as input an object of the class exfel::util::Schema
+             * Function gets as input an object of the class karabo::util::Schema
              * and creates a configuration file in XML format.
-             * @param in Input parameter representing an object of the class exfel::util::Schema
+             * @param in Input parameter representing an object of the class karabo::util::Schema
              * @param out Output parameter representing constructed XML Document
              */
-            void convert(const exfel::util::Schema& in, std::stringstream& out);
+            void convert(const karabo::util::Schema& in, std::stringstream& out);
 
 
         private: // members
@@ -74,18 +74,18 @@ namespace exfel {
             
         private: // functions
 
-            void removeNamespaceAttribute(exfel::tinyxml::TiXmlNode*);
+            void removeNamespaceAttribute(karabo::tinyxml::TiXmlNode*);
 
-            void r_readXmlDocument(exfel::tinyxml::TiXmlNode*, exfel::util::Schema&);
+            void r_readXmlDocument(karabo::tinyxml::TiXmlNode*, karabo::util::Schema&);
 
-            void readArrayElement(exfel::tinyxml::TiXmlElement* nodeElement, const std::string& arrayType, exfel::util::Schema& data) const;
+            void readArrayElement(karabo::tinyxml::TiXmlElement* nodeElement, const std::string& arrayType, karabo::util::Schema& data) const;
 
             /**
-             * Recursive function for creating an XML document from an object of the class exfel::util::Schema
-             * @param data Input parameter representing the object of the class exfel::util::Schema
+             * Recursive function for creating an XML document from an object of the class karabo::util::Schema
+             * @param data Input parameter representing the object of the class karabo::util::Schema
              * @param pTheElement Input parameter is an XML element (as defined by TinyXml) that will be recursively constructed
              */
-            void r_createXmlFile(const exfel::util::Schema& data, exfel::tinyxml::TiXmlElement* pTheElement);
+            void r_createXmlFile(const karabo::util::Schema& data, karabo::tinyxml::TiXmlElement* pTheElement);
 
             /**
              * Constructing an XML element from the given VECTOR-datastructure.
@@ -101,21 +101,21 @@ namespace exfel {
              */
 
             template<class T>
-            void fillXmlElementWithItems(const char* typeOfElement, const std::string& nameOfElement, const exfel::util::Schema& data, exfel::tinyxml::TiXmlElement* pTheElement) const {
+            void fillXmlElementWithItems(const char* typeOfElement, const std::string& nameOfElement, const karabo::util::Schema& data, karabo::tinyxml::TiXmlElement* pTheElement) const {
 
                 try {
 
-                    exfel::tinyxml::TiXmlElement* newElement = new exfel::tinyxml::TiXmlElement(nameOfElement.c_str());
+                    karabo::tinyxml::TiXmlElement* newElement = new karabo::tinyxml::TiXmlElement(nameOfElement.c_str());
 
                     newElement->SetAttribute("dataType", typeOfElement);
 
                     const std::vector<T>& arrayOfElements = data.get<std::vector<T> >(nameOfElement);
 
                     BOOST_FOREACH(T elem, arrayOfElements) {
-                        exfel::tinyxml::TiXmlElement* itemElement = new exfel::tinyxml::TiXmlElement("item");
+                        karabo::tinyxml::TiXmlElement* itemElement = new karabo::tinyxml::TiXmlElement("item");
                         newElement->LinkEndChild(itemElement);
-                        std::string elemAsString = exfel::util::String::toString(elem);
-                        exfel::tinyxml::TiXmlText* text = new exfel::tinyxml::TiXmlText(elemAsString.c_str());
+                        std::string elemAsString = karabo::util::String::toString(elem);
+                        karabo::tinyxml::TiXmlText* text = new karabo::tinyxml::TiXmlText(elemAsString.c_str());
                         itemElement->LinkEndChild(text);
                     }
 
@@ -126,21 +126,21 @@ namespace exfel {
 
             }//SchemaXmlFormat::fillXmlElementWithItems
 
-            void fillXmlElementINT8(const char* typeOfElement, const std::string& nameOfElement, const exfel::util::Schema& data, exfel::tinyxml::TiXmlElement* pTheElement) const;
+            void fillXmlElementINT8(const char* typeOfElement, const std::string& nameOfElement, const karabo::util::Schema& data, karabo::tinyxml::TiXmlElement* pTheElement) const;
 
-            void fillXmlElementUINT8(const char* typeOfElement, const std::string& nameOfElement, const exfel::util::Schema& data, exfel::tinyxml::TiXmlElement* pTheElement) const;
+            void fillXmlElementUINT8(const char* typeOfElement, const std::string& nameOfElement, const karabo::util::Schema& data, karabo::tinyxml::TiXmlElement* pTheElement) const;
             
-            void fillXmlElementCHAR(const char* typeOfElement, const std::string& nameOfElement, const exfel::util::Schema& data, exfel::tinyxml::TiXmlElement* pTheElement) const;
+            void fillXmlElementCHAR(const char* typeOfElement, const std::string& nameOfElement, const karabo::util::Schema& data, karabo::tinyxml::TiXmlElement* pTheElement) const;
 
-            void fillXmlElementWithItemsBool(const char* typeOfElement, const std::string& nameOfElement, const exfel::util::Schema& data, exfel::tinyxml::TiXmlElement* pTheElement) const;
+            void fillXmlElementWithItemsBool(const char* typeOfElement, const std::string& nameOfElement, const karabo::util::Schema& data, karabo::tinyxml::TiXmlElement* pTheElement) const;
 
-            void fillXmlElementWithItemsUINT8(const char* typeOfElement, const std::string& nameOfElement, const exfel::util::Schema& data, exfel::tinyxml::TiXmlElement* pTheElement) const;
+            void fillXmlElementWithItemsUINT8(const char* typeOfElement, const std::string& nameOfElement, const karabo::util::Schema& data, karabo::tinyxml::TiXmlElement* pTheElement) const;
 
-            void fillXmlElementWithItemsINT8(const char* typeOfElement, const std::string& nameOfElement, const exfel::util::Schema& data, exfel::tinyxml::TiXmlElement* pTheElement) const;
+            void fillXmlElementWithItemsINT8(const char* typeOfElement, const std::string& nameOfElement, const karabo::util::Schema& data, karabo::tinyxml::TiXmlElement* pTheElement) const;
             
-            void fillXmlElementWithItemsCHAR(const char* typeOfElement, const std::string& nameOfElement, const exfel::util::Schema& data, exfel::tinyxml::TiXmlElement* pTheElement) const;
+            void fillXmlElementWithItemsCHAR(const char* typeOfElement, const std::string& nameOfElement, const karabo::util::Schema& data, karabo::tinyxml::TiXmlElement* pTheElement) const;
         };
     } // namespace io
-} // namespace exfel
+} // namespace karabo
 
 #endif	

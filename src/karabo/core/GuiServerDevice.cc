@@ -10,16 +10,16 @@
 #include "GuiServerDevice.hh"
 
 using namespace std;
-using namespace exfel::util;
-using namespace exfel::core;
-using namespace exfel::net;
-using namespace exfel::io;
+using namespace karabo::util;
+using namespace karabo::core;
+using namespace karabo::net;
+using namespace karabo::io;
 using namespace log4cpp;
 
-namespace exfel {
+namespace karabo {
     namespace core {
 
-        EXFEL_REGISTER_FACTORY_CC(Device, GuiServerDevice)
+        KARABO_REGISTER_FACTORY_CC(Device, GuiServerDevice)
 
         void GuiServerDevice::expectedParameters(Schema& expected) {
 
@@ -30,7 +30,7 @@ namespace exfel {
                     .assignmentOptional().defaultValue(44444)
                     .commit();
 
-            CHOICE_ELEMENT<exfel::net::BrokerConnection > (expected)
+            CHOICE_ELEMENT<karabo::net::BrokerConnection > (expected)
                     .key("loggerConnection")
                     .displayedName("Logger Connection")
                     .description("Configuration of the connection for the distributed logging system")
@@ -85,28 +85,28 @@ namespace exfel {
         
         void GuiServerDevice::startServer() {
             log() << Priority::INFO << "Starting the XFEL GuiServer";
-            m_dataConnection->startAsync(boost::bind(&exfel::core::GuiServerDevice::onConnect, this, _1));
+            m_dataConnection->startAsync(boost::bind(&karabo::core::GuiServerDevice::onConnect, this, _1));
             // Use one thread currently (you may start this multiple time for having more threads doing the work)
-            boost::thread(boost::bind(&exfel::net::IOService::run, m_ioService));
+            boost::thread(boost::bind(&karabo::net::IOService::run, m_ioService));
             
              // Start the logging thread
             m_loggerChannel = m_loggerConnection->start();
             m_loggerChannel->setFilter("target = 'log'");
-            m_loggerChannel->readAsyncStringHash(boost::bind(&exfel::core::GuiServerDevice::onLog, this, _1, _2, _3));
-            boost::thread(boost::bind(&exfel::net::BrokerIOService::work, m_loggerIoService));
+            m_loggerChannel->readAsyncStringHash(boost::bind(&karabo::core::GuiServerDevice::onLog, this, _1, _2, _3));
+            boost::thread(boost::bind(&karabo::net::BrokerIOService::work, m_loggerIoService));
         }
 
         
-        void GuiServerDevice::onConnect(exfel::net::Channel::Pointer channel) {
+        void GuiServerDevice::onConnect(karabo::net::Channel::Pointer channel) {
             log() << Priority::INFO << "Incoming connection";
-            channel->readAsyncStringHash(boost::bind(&exfel::core::GuiServerDevice::onRead, this, _1, _2, _3));
-            channel->setErrorHandler(boost::bind(&exfel::core::GuiServerDevice::onError, this, _1, _2));
-            m_dataConnection->startAsync(boost::bind(&exfel::core::GuiServerDevice::onConnect, this, _1));
+            channel->readAsyncStringHash(boost::bind(&karabo::core::GuiServerDevice::onRead, this, _1, _2, _3));
+            channel->setErrorHandler(boost::bind(&karabo::core::GuiServerDevice::onError, this, _1, _2));
+            m_dataConnection->startAsync(boost::bind(&karabo::core::GuiServerDevice::onConnect, this, _1));
             registerConnect(channel);
         }
         
 
-        void GuiServerDevice::onRead(exfel::net::Channel::Pointer channel, const std::string& body, const exfel::util::Hash& header) {
+        void GuiServerDevice::onRead(karabo::net::Channel::Pointer channel, const std::string& body, const karabo::util::Hash& header) {
             // GUI communication scenarios could go here 
             if (header.has("type")) {
                 string type = header.get<string > ("type");
@@ -133,11 +133,11 @@ namespace exfel {
             } else {
                 log() << Priority::WARN << "Ignoring request";
             }
-            channel->readAsyncStringHash(boost::bind(&exfel::core::GuiServerDevice::onRead, this, _1, _2, _3));
+            channel->readAsyncStringHash(boost::bind(&karabo::core::GuiServerDevice::onRead, this, _1, _2, _3));
         }
 
 
-        void GuiServerDevice::onLogin(exfel::net::Channel::Pointer channel, const std::string& body) {
+        void GuiServerDevice::onLogin(karabo::net::Channel::Pointer channel, const std::string& body) {
             Hash bodyHash = m_xmlSerializer->unserialize(body);
             // Check valid login
             log() << Priority::INFO << "Login request of user: " << bodyHash.get<string > ("username");
@@ -147,20 +147,20 @@ namespace exfel {
         }
 
 
-        void GuiServerDevice::onRefreshInstance(exfel::net::Channel::Pointer channel, const exfel::util::Hash& header) {
+        void GuiServerDevice::onRefreshInstance(karabo::net::Channel::Pointer channel, const karabo::util::Hash& header) {
             string instanceId = header.get<string > ("instanceId");
             call(instanceId, "slotRefresh");
         }
 
 
-        void GuiServerDevice::onReconfigure(const exfel::util::Hash& header, const std::string& body) {
+        void GuiServerDevice::onReconfigure(const karabo::util::Hash& header, const std::string& body) {
             Hash bodyHash = m_xmlSerializer->unserialize(body);
             string instanceId = header.get<string > ("instanceId");
             call(instanceId, "slotReconfigure", bodyHash);
         }
 
 
-        void GuiServerDevice::onInitDevice(const exfel::util::Hash& header, const std::string& body) {
+        void GuiServerDevice::onInitDevice(const karabo::util::Hash& header, const std::string& body) {
             Hash config = m_xmlSerializer->unserialize(body);
             string instanceId = header.get<string > ("instanceId");
             log() << Priority::INFO << "Incoming request to start device instance on server " << instanceId;
@@ -168,7 +168,7 @@ namespace exfel {
         }
 
 
-        void GuiServerDevice::onSlotCommand(const exfel::util::Hash& header, const std::string& body) {
+        void GuiServerDevice::onSlotCommand(const karabo::util::Hash& header, const std::string& body) {
             Hash config = m_xmlSerializer->unserialize(body);
             string instanceId = header.get<string > ("instanceId");
             string slotName = config.get<string > ("name");
@@ -176,10 +176,10 @@ namespace exfel {
         }
 
 
-        void GuiServerDevice::onNewVisibleDeviceInstance(exfel::net::Channel::Pointer channel, const exfel::util::Hash& header) {
+        void GuiServerDevice::onNewVisibleDeviceInstance(karabo::net::Channel::Pointer channel, const karabo::util::Hash& header) {
             string instanceId = header.get<string > ("instanceId");
             boost::mutex::scoped_lock lock(m_channelMutex);
-            std::map<exfel::net::Channel::Pointer, std::set<std::string> >::iterator it = m_channels.find(channel);
+            std::map<karabo::net::Channel::Pointer, std::set<std::string> >::iterator it = m_channels.find(channel);
             if ( it != m_channels.end() ) {
                 it->second.insert(instanceId);
             }
@@ -188,104 +188,104 @@ namespace exfel {
         }
 
 
-        void GuiServerDevice::onRemoveVisibleDeviceInstance(exfel::net::Channel::Pointer channel, const exfel::util::Hash& header){
+        void GuiServerDevice::onRemoveVisibleDeviceInstance(karabo::net::Channel::Pointer channel, const karabo::util::Hash& header){
             string instanceId = header.get<string > ("instanceId");
             boost::mutex::scoped_lock lock(m_channelMutex);
-            std::map<exfel::net::Channel::Pointer, std::set<std::string> >::iterator it = m_channels.find(channel);
+            std::map<karabo::net::Channel::Pointer, std::set<std::string> >::iterator it = m_channels.find(channel);
             if ( it != m_channels.end() ) {
                 it->second.erase(instanceId);
             }
         }
         
-        void GuiServerDevice::onKillDeviceServerInstance(const exfel::util::Hash& header, const std::string& body) {
+        void GuiServerDevice::onKillDeviceServerInstance(const karabo::util::Hash& header, const std::string& body) {
              string instanceId = header.get<string > ("instanceId");
              call(instanceId, "slotKillDeviceServerInstance");
         }
 
-        void GuiServerDevice::onKillDeviceInstance(const exfel::util::Hash& header, const std::string& body) {
+        void GuiServerDevice::onKillDeviceInstance(const karabo::util::Hash& header, const std::string& body) {
             log() << Priority::INFO << "Broadcasting availability of new device-server instance";
              string deviceServerInstanceId = header.get<string > ("devSrvInsId");
              string deviceInstanceId = header.get<string>("devInsId");
              call(deviceServerInstanceId, "slotKillDeviceInstance", deviceInstanceId);
         }
 
-        void GuiServerDevice::slotNewNode(const exfel::util::Hash& row) {
+        void GuiServerDevice::slotNewNode(const karabo::util::Hash& row) {
             log() << Priority::DEBUG << "Broadcasting availability of new nodes";
             Hash header("type", "newNode");
             boost::mutex::scoped_lock lock(m_channelMutex);
             // Broadcast to all GUIs
-            typedef std::map< exfel::net::Channel::Pointer, std::set<std::string> >::const_iterator channelIterator;
+            typedef std::map< karabo::net::Channel::Pointer, std::set<std::string> >::const_iterator channelIterator;
             for (channelIterator it = m_channels.begin(); it != m_channels.end(); ++it) {
                 it->first->write(row, header);
             }
         }
 
 
-        void GuiServerDevice::slotNewDeviceServerInstance(const exfel::util::Hash& row) {
+        void GuiServerDevice::slotNewDeviceServerInstance(const karabo::util::Hash& row) {
             log() << Priority::DEBUG << "Broadcasting availability of new device-server instance";
             Hash header("type", "newDeviceServerInstance");
              boost::mutex::scoped_lock lock(m_channelMutex);
             // Broadcast to all GUIs
-            typedef std::map< exfel::net::Channel::Pointer, std::set<std::string> >::const_iterator channelIterator;
+            typedef std::map< karabo::net::Channel::Pointer, std::set<std::string> >::const_iterator channelIterator;
             for (channelIterator it = m_channels.begin(); it != m_channels.end(); ++it) {
                 it->first->write(row, header);
             }
         }
 
 
-        void GuiServerDevice::slotNewDeviceClass(const exfel::util::Hash& row) {
+        void GuiServerDevice::slotNewDeviceClass(const karabo::util::Hash& row) {
             log() << Priority::DEBUG << "Broadcasting availability of new device class";
             Hash header("type", "newDeviceClass");
             boost::mutex::scoped_lock lock(m_channelMutex);
             // Broadcast to all GUIs
-            typedef std::map< exfel::net::Channel::Pointer, std::set<std::string> >::const_iterator channelIterator;
+            typedef std::map< karabo::net::Channel::Pointer, std::set<std::string> >::const_iterator channelIterator;
             for (channelIterator it = m_channels.begin(); it != m_channels.end(); ++it) {
                 it->first->write(row, header);
             }
         }
 
 
-        void GuiServerDevice::slotNewDeviceInstance(const exfel::util::Hash& row) {
+        void GuiServerDevice::slotNewDeviceInstance(const karabo::util::Hash& row) {
             log() << Priority::DEBUG << "Broadcasting availability of new device instance";
             Hash header("type", "newDeviceInstance");
             boost::mutex::scoped_lock lock(m_channelMutex);
             // Broadcast to all GUIs
-            typedef std::map< exfel::net::Channel::Pointer, std::set<std::string> >::const_iterator channelIterator;
+            typedef std::map< karabo::net::Channel::Pointer, std::set<std::string> >::const_iterator channelIterator;
             for (channelIterator it = m_channels.begin(); it != m_channels.end(); ++it) {
                 it->first->write(row, header);
             }
         }
 
 
-        void GuiServerDevice::slotUpdateDeviceServerInstance(const exfel::util::Hash& row) {
+        void GuiServerDevice::slotUpdateDeviceServerInstance(const karabo::util::Hash& row) {
             log() << Priority::DEBUG << "Broadcasting update of device server instance";
             Hash header("type", "updateDeviceServerInstance");
             boost::mutex::scoped_lock lock(m_channelMutex);
             // Broadcast to all GUIs
-            typedef std::map< exfel::net::Channel::Pointer, std::set<std::string> >::const_iterator channelIterator;
+            typedef std::map< karabo::net::Channel::Pointer, std::set<std::string> >::const_iterator channelIterator;
             for (channelIterator it = m_channels.begin(); it != m_channels.end(); ++it) {
                 it->first->write(row, header);
             }
         }
 
 
-        void GuiServerDevice::slotUpdateDeviceInstance(const exfel::util::Hash& row) {
+        void GuiServerDevice::slotUpdateDeviceInstance(const karabo::util::Hash& row) {
             log() << Priority::DEBUG << "Broadcasting update of device instance";
             Hash header("type", "updateDeviceInstance");
             boost::mutex::scoped_lock lock(m_channelMutex);
             // Broadcast to all GUIs
-            typedef std::map< exfel::net::Channel::Pointer, std::set<std::string> >::const_iterator channelIterator;
+            typedef std::map< karabo::net::Channel::Pointer, std::set<std::string> >::const_iterator channelIterator;
             for (channelIterator it = m_channels.begin(); it != m_channels.end(); ++it) {
                 it->first->write(row, header);
             }
         }
 
 
-        void GuiServerDevice::slotChanged(const exfel::util::Hash& what, const std::string& instanceId, const std::string& classId) {
+        void GuiServerDevice::slotChanged(const karabo::util::Hash& what, const std::string& instanceId, const std::string& classId) {
             Hash header("type", "change", "instanceId", instanceId, "classId", classId);
             boost::mutex::scoped_lock lock(m_channelMutex);
             // Broadcast to all GUIs
-            typedef std::map< exfel::net::Channel::Pointer, std::set<std::string> >::const_iterator channelIterator;
+            typedef std::map< karabo::net::Channel::Pointer, std::set<std::string> >::const_iterator channelIterator;
             for (channelIterator it = m_channels.begin(); it != m_channels.end(); ++it) {
                 // Optimization: broadcast only to visible DeviceInstances
                 if ( it->second.find(instanceId) != it->second.end() ) {
@@ -295,11 +295,11 @@ namespace exfel {
         }
 
         
-        void GuiServerDevice::onLog(exfel::net::BrokerChannel::Pointer channel, const std::string& logMessage, const exfel::util::Hash& header) {
+        void GuiServerDevice::onLog(karabo::net::BrokerChannel::Pointer channel, const std::string& logMessage, const karabo::util::Hash& header) {
             Hash h("type", "log");
             boost::mutex::scoped_lock lock(m_channelMutex);
             // Broadcast to all GUIs
-            typedef std::map< exfel::net::Channel::Pointer, std::set<std::string> >::const_iterator channelIterator;
+            typedef std::map< karabo::net::Channel::Pointer, std::set<std::string> >::const_iterator channelIterator;
             for (channelIterator it = m_channels.begin(); it != m_channels.end(); ++it) {
                 it->first->write(logMessage, h);
             }
@@ -313,7 +313,7 @@ namespace exfel {
             std::string message = timeStamp + " | ERROR | " + instanceId + " | " + shortMessage + " | " + detailedMessage + "#";
             boost::mutex::scoped_lock lock(m_channelMutex);
             // Broadcast to all GUIs
-            typedef std::map< exfel::net::Channel::Pointer, std::set<std::string> >::const_iterator channelIterator;
+            typedef std::map< karabo::net::Channel::Pointer, std::set<std::string> >::const_iterator channelIterator;
             for (channelIterator it = m_channels.begin(); it != m_channels.end(); ++it) {
                 it->first->write(message, header);
             }
@@ -327,7 +327,7 @@ namespace exfel {
             std::string message = timeStamp + " | WARNING | " + instanceId + " | " + warnMessage + " | Priority: " + priority + "#";
             boost::mutex::scoped_lock lock(m_channelMutex);
             // Broadcast to all GUIs
-            typedef std::map< exfel::net::Channel::Pointer, std::set<std::string> >::const_iterator channelIterator;
+            typedef std::map< karabo::net::Channel::Pointer, std::set<std::string> >::const_iterator channelIterator;
             for (channelIterator it = m_channels.begin(); it != m_channels.end(); ++it) {
                 it->first->write(message, header);
             }
@@ -341,7 +341,7 @@ namespace exfel {
             std::string message = timeStamp + " | ALARM | " + instanceId + " | " + alarmMessage + " | Priority: " + priority + "#";
             boost::mutex::scoped_lock lock(m_channelMutex);
             // Broadcast to all GUIs
-            typedef std::map< exfel::net::Channel::Pointer, std::set<std::string> >::const_iterator channelIterator;
+            typedef std::map< karabo::net::Channel::Pointer, std::set<std::string> >::const_iterator channelIterator;
             for (channelIterator it = m_channels.begin(); it != m_channels.end(); ++it) {
                 it->first->write(message, header);
             }
@@ -353,14 +353,14 @@ namespace exfel {
             Hash header("type", "schemaUpdated", "instanceId", instanceId, "classId", classId);
             boost::mutex::scoped_lock lock(m_channelMutex);
             // Broadcast to all GUIs
-            typedef std::map< exfel::net::Channel::Pointer, std::set<std::string> >::const_iterator channelIterator;
+            typedef std::map< karabo::net::Channel::Pointer, std::set<std::string> >::const_iterator channelIterator;
             for (channelIterator it = m_channels.begin(); it != m_channels.end(); ++it) {
                 it->first->write(schema, header);
             }
         }
 
 
-        void GuiServerDevice::sendCurrentIds(exfel::net::Channel::Pointer channel) {
+        void GuiServerDevice::sendCurrentIds(karabo::net::Channel::Pointer channel) {
 
             log() << Priority::DEBUG << "Providing instance information...";
 
@@ -370,22 +370,22 @@ namespace exfel {
             HashDatabase::ResultType result;
 
             vector<Hash >& node = root.bindReference<vector<Hash> >("Node");
-            EXFEL_DB_SELECT(result, "id,name", "Node", true);
+            KARABO_DB_SELECT(result, "id,name", "Node", true);
             node = result;
             result.clear();
 
             vector<Hash>& deviceServerInstance = root.bindReference<vector<Hash> >("DeviceServerInstance");
-            EXFEL_DB_SELECT(result, "id,instanceId,status,nodId", "DeviceServerInstance", true);
+            KARABO_DB_SELECT(result, "id,instanceId,status,nodId", "DeviceServerInstance", true);
             deviceServerInstance = result;
             result.clear();
 
             vector<Hash >& deviceClass = root.bindReference<vector<Hash> >("DeviceClass");
-            EXFEL_DB_SELECT(result, "id,name,schema,devSerInsId", "DeviceClass", true);
+            KARABO_DB_SELECT(result, "id,name,schema,devSerInsId", "DeviceClass", true);
             deviceClass = result;
             result.clear();
 
             vector<Hash >& deviceInstance = root.bindReference<vector<Hash> >("DeviceInstance");
-            EXFEL_DB_SELECT(result, "id,instanceId,devClaId,schema", "DeviceInstance", true);
+            KARABO_DB_SELECT(result, "id,instanceId,devClaId,schema", "DeviceInstance", true);
             deviceInstance = result;
             result.clear();
             
@@ -395,16 +395,16 @@ namespace exfel {
         }
 
 
-        void GuiServerDevice::registerConnect(const exfel::net::Channel::Pointer & channel) {
+        void GuiServerDevice::registerConnect(const karabo::net::Channel::Pointer & channel) {
             boost::mutex::scoped_lock lock(m_channelMutex);
             m_channels[channel] = std::set<std::string>();
         }
 
 
-        void GuiServerDevice::onError(exfel::net::Channel::Pointer channel, const std::string & errorMessage) {
+        void GuiServerDevice::onError(karabo::net::Channel::Pointer channel, const std::string & errorMessage) {
             boost::mutex::scoped_lock lock(m_channelMutex);
             // TODO Fork on error message
-            std::map<exfel::net::Channel::Pointer, std::set<std::string> >::iterator it = m_channels.find(channel);
+            std::map<karabo::net::Channel::Pointer, std::set<std::string> >::iterator it = m_channels.find(channel);
             if ( it != m_channels.end() ) {
                 it->first->close(); // This closes socket and unregisters channel from connection
                 m_channels.erase(it);

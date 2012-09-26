@@ -10,11 +10,11 @@
 
 #include "InterInstanceInput.hh"
 
-namespace exfel {
+namespace karabo {
     namespace xms {
         
-        EXFEL_REGISTER_FACTORY_2_CC(AbstractInput, Input<exfel::util::Hash >, InterInstanceInput<exfel::util::Hash>)
-        EXFEL_REGISTER_FACTORY_CC(Input<exfel::util::Hash >, InterInstanceInput<exfel::util::Hash>)
+        KARABO_REGISTER_FACTORY_2_CC(AbstractInput, Input<karabo::util::Hash >, InterInstanceInput<karabo::util::Hash>)
+        KARABO_REGISTER_FACTORY_CC(Input<karabo::util::Hash >, InterInstanceInput<karabo::util::Hash>)
                 
     }
 }

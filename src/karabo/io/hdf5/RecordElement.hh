@@ -9,8 +9,8 @@
 
 
 
-#ifndef EXFEL_IO_RECORDELEMENT_HH
-#define	EXFEL_IO_RECORDELEMENT_HH
+#ifndef KARABO_IO_RECORDELEMENT_HH
+#define	KARABO_IO_RECORDELEMENT_HH
 
 #include <karabo/util/Factory.hh>
 #include <karabo/util/Hash.hh>
@@ -20,7 +20,7 @@
 #include "../iodll.hh"
 
 
-namespace exfel {
+namespace karabo {
     namespace io {
 
         /*
@@ -34,12 +34,12 @@ namespace exfel {
          */
         class RecordElement : public boost::enable_shared_from_this<RecordElement> {
         public:
-            EXFEL_CLASSINFO(RecordElement, "RecordElement", "1.0")
-            EXFEL_FACTORY_BASE_CLASS
+            KARABO_CLASSINFO(RecordElement, "RecordElement", "1.0")
+            KARABO_FACTORY_BASE_CLASS
 
 
-            static void expectedParameters(exfel::util::Schema& expected);
-            void configure(const exfel::util::Hash& input);
+            static void expectedParameters(karabo::util::Schema& expected);
+            void configure(const karabo::util::Hash& input);
 
             RecordElement() {
                 //      m_writeFilter = boost::shared_ptr<WriteFilter > ();
@@ -65,7 +65,7 @@ namespace exfel {
              *   b => Hash
              *     c => RecordElement
              */
-            virtual void getElement(exfel::util::Hash& element);
+            virtual void getElement(karabo::util::Hash& element);
 
             /**
              * Create UNLIMITED CHUNKED HDF5 dataset.
@@ -96,7 +96,7 @@ namespace exfel {
              * @param data Hash with data to be written.
              * @param recordId Record number (numbering starts from 0)
              */
-            virtual void write(const exfel::util::Hash& data, hsize_t recordId) = 0;
+            virtual void write(const karabo::util::Hash& data, hsize_t recordId) = 0;
 
 
 
@@ -111,7 +111,7 @@ namespace exfel {
              * @param recordId Record number (numbering starts from 0)
              * @param len Number of values to be written
              */
-            virtual void write(const exfel::util::Hash& data, hsize_t recordId, hsize_t len) = 0;
+            virtual void write(const karabo::util::Hash& data, hsize_t recordId, hsize_t len) = 0;
 
             /**
              * Allocate memory for single record
@@ -119,14 +119,14 @@ namespace exfel {
              * If the entry exist assume the memory is allocated. This can be used when client delivers own buffers.
              * @param data Hash where the data will be stored when using read function
              */
-            virtual void allocate(exfel::util::Hash& data) = 0;
+            virtual void allocate(karabo::util::Hash& data) = 0;
 
             /**
              * allocate memory for len number of records
              * @param data Hash where the data will be stored when using read function
              * @param len number of records to be allocated
              */
-            virtual void allocate(exfel::util::Hash& buffer, size_t len) = 0;
+            virtual void allocate(karabo::util::Hash& buffer, size_t len) = 0;
 
             /*
              * Read data from the dataset. Hash structure is filled with the key, value pair.
@@ -138,16 +138,16 @@ namespace exfel {
              * @param data Hash to be filled
              * @param recordId Record number (numbering starts from 0)
              */
-            virtual void read(exfel::util::Hash& data, hsize_t recordId) = 0;
+            virtual void read(karabo::util::Hash& data, hsize_t recordId) = 0;
 
 
-            virtual void read(exfel::util::Hash& data, hsize_t recordId, hsize_t len) = 0;
+            virtual void read(karabo::util::Hash& data, hsize_t recordId, hsize_t len) = 0;
 
 
 
-            virtual void readAttributes(exfel::util::Hash& attributes);
+            virtual void readAttributes(karabo::util::Hash& attributes);
 
-            //      void addFilter(exfel::io::WriteFilter::Pointer filter) {
+            //      void addFilter(karabo::io::WriteFilter::Pointer filter) {
             //        m_writeFilter->add(filter);
             //      }
 
@@ -185,7 +185,7 @@ namespace exfel {
 
             virtual void selectFileRecord(hsize_t recordId, hsize_t len = 1);
 
-            virtual void readSpecificAttributes(exfel::util::Hash& attributes);
+            virtual void readSpecificAttributes(karabo::util::Hash& attributes);
 
             inline static H5::DataSpace getBufferDataSpace(hsize_t len) {
                 hsize_t dims[1];
@@ -201,7 +201,7 @@ namespace exfel {
     }
 }
 
-EXFEL_REGISTER_FACTORY_BASE_HH(exfel::io::RecordElement, TEMPLATE_IO, DECLSPEC_IO)
+KARABO_REGISTER_FACTORY_BASE_HH(karabo::io::RecordElement, TEMPLATE_IO, DECLSPEC_IO)
 
-#endif	/* EXFEL_IO_RECORDELEMENT_HH */
+#endif	/* KARABO_IO_RECORDELEMENT_HH */
 

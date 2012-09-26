@@ -14,11 +14,11 @@
 #include "log4cpp/Layout.hh"
 #include "LayoutConfigurator.hh"
 using namespace std;
-using namespace exfel::util;
+using namespace karabo::util;
 using namespace log4cpp;
 
 
-namespace exfel {
+namespace karabo {
   namespace log {
 
     void AppenderConfigurator::expectedParameters(Schema& expected) {

@@ -9,12 +9,12 @@
  */
 
 
-#ifndef EXFEL_UTIL_MONITORABLEELEMENT_HH
-#define	EXFEL_UTIL_MONITORABLEELEMENT_HH
+#ifndef KARABO_UTIL_MONITORABLEELEMENT_HH
+#define	KARABO_UTIL_MONITORABLEELEMENT_HH
 
 #include "ComplexElement.hh"
 
-namespace exfel {
+namespace karabo {
   namespace util {
 
     template <class T>

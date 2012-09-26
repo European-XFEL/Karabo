@@ -7,8 +7,8 @@
  */
 
 
-#ifndef EXFEL_IO_File_HH
-#define	EXFEL_IO_File_HH
+#ifndef KARABO_IO_File_HH
+#define	KARABO_IO_File_HH
 
 #include "Table.hh"
 #include "DataFormat.hh"
@@ -22,7 +22,7 @@
 /**
  * The main European XFEL namespace
  */
-namespace exfel {
+namespace karabo {
 
   /**
    * Namespace for package io
@@ -39,16 +39,16 @@ namespace exfel {
       class File {
       public:
 
-        EXFEL_CLASSINFO(File, "Hdf5", "1.0")
-        EXFEL_FACTORY_BASE_CLASS
+        KARABO_CLASSINFO(File, "Hdf5", "1.0")
+        KARABO_FACTORY_BASE_CLASS
 
         File();
         File(const boost::filesystem::path& filename);
         virtual ~File();
 
 
-        static void expectedParameters(exfel::util::Schema& expected);
-        void configure(const exfel::util::Hash& input);
+        static void expectedParameters(karabo::util::Schema& expected);
+        void configure(const karabo::util::Hash& input);
 
         enum AccessMode {
           TRUNCATE,
@@ -76,7 +76,7 @@ namespace exfel {
          *
          * @see DataFormat::expectedParameters.
          */
-        boost::shared_ptr<Table> createTable(const std::string& name, const exfel::io::hdf5::DataFormat::Pointer dataFormat, size_t chunkSize = 1);
+        boost::shared_ptr<Table> createTable(const std::string& name, const karabo::io::hdf5::DataFormat::Pointer dataFormat, size_t chunkSize = 1);
 
         /**
          * Open existing table in the file.
@@ -101,7 +101,7 @@ namespace exfel {
          * This can be useful if one wants to read only certain datasets.
          * Client is fully responsible to make sure that the supplied format is compatible with stored data.
          */
-        boost::shared_ptr<Table> getTable(const std::string& name, exfel::io::hdf5::DataFormat::Pointer dataFormat);
+        boost::shared_ptr<Table> getTable(const std::string& name, karabo::io::hdf5::DataFormat::Pointer dataFormat);
 
 
 
@@ -126,6 +126,6 @@ namespace exfel {
   }
 }
 
-EXFEL_REGISTER_FACTORY_BASE_HH(exfel::io::hdf5::File, TEMPLATE_IO, DECLSPEC_IO)
+KARABO_REGISTER_FACTORY_BASE_HH(karabo::io::hdf5::File, TEMPLATE_IO, DECLSPEC_IO)
 
-#endif	/* EXFEL_IO_File_HH */
+#endif	/* KARABO_IO_File_HH */

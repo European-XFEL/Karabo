@@ -5,7 +5,7 @@
  *
  * Modified by <burkhard.heisen@xfel.eu>
  *   Added getLogCategory()
- *   Extended EXFEL_CLASSINFO macro to contain fully qualified class name and class version
+ *   Extended KARABO_CLASSINFO macro to contain fully qualified class name and class version
  *
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
@@ -21,7 +21,7 @@
 using namespace std;
 
 
-namespace exfel {
+namespace karabo {
   namespace util {
 
     ClassInfo::ClassInfo(const std::string& classId, const std::string& signature, const std::string& classVersion) :
@@ -54,9 +54,9 @@ namespace exfel {
 
     void ClassInfo::initClassNameAndSpace(const std::string& signature) {
       #if defined(_WIN32)
-        boost::regex re("class exfel::util::ClassInfo __cdecl\\s(.+)::(.+)::classInfo");
+        boost::regex re("class karabo::util::ClassInfo __cdecl\\s(.+)::(.+)::classInfo");
       #else
-        boost::regex re("static exfel::util::ClassInfo\\s*(.+)::(.+)::classInfo");
+        boost::regex re("static karabo::util::ClassInfo\\s*(.+)::(.+)::classInfo");
       #endif
       boost::smatch what;
       bool result = boost::regex_search(signature, what, re);

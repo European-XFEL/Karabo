@@ -12,14 +12,14 @@
 
 
 using namespace std;
-using namespace exfel::util;
+using namespace karabo::util;
 using namespace boost;
 
-namespace exfel {
+namespace karabo {
   namespace io {
     namespace hdf5 {
 
-      EXFEL_REGISTER_ONLY_ME_CC(RecordFormat)
+      KARABO_REGISTER_ONLY_ME_CC(RecordFormat)
 
       void RecordFormat::expectedParameters(Schema& expected) {
 

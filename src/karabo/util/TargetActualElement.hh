@@ -9,12 +9,12 @@
  */
 
 
-#ifndef EXFEL_UTIL_TARGETACTUALELEMENT_HH
-#define	EXFEL_UTIL_TARGETACTUALELEMENT_HH
+#ifndef KARABO_UTIL_TARGETACTUALELEMENT_HH
+#define	KARABO_UTIL_TARGETACTUALELEMENT_HH
 
 #include "ComplexElement.hh"
 
-namespace exfel {
+namespace karabo {
   namespace util {
 
     template <class T, class A = T>

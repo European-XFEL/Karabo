@@ -17,15 +17,15 @@
 #include "../ioProfiler.hh"
 
 using namespace std;
-using namespace exfel::util;
+using namespace karabo::util;
 using namespace H5;
 using namespace boost;
 
-namespace exfel {
+namespace karabo {
     namespace io {
         namespace hdf5 {
 
-            EXFEL_REGISTER_ONLY_ME_CC(Table)
+            KARABO_REGISTER_ONLY_ME_CC(Table)
 
 
             Table::~Table() {
@@ -73,7 +73,7 @@ namespace exfel {
                 defineRecordFormat(dataFormat);
             }
 
-            void Table::openReadOnly(const exfel::io::hdf5::DataFormat::Pointer dataFormat) {
+            void Table::openReadOnly(const karabo::io::hdf5::DataFormat::Pointer dataFormat) {
 
                 m_dataFormat = dataFormat;
                 try {
@@ -118,12 +118,12 @@ namespace exfel {
                 if (m_useCache) initializeCache();
             }
 
-            void Table::append(const exfel::util::Hash& data) {
+            void Table::append(const karabo::util::Hash& data) {
                 size_t recordNumber = m_numberOfRecords;
                 write(data, recordNumber);
             }
 
-            void Table::write(const exfel::util::Hash& data, size_t recordNumber) {
+            void Table::write(const karabo::util::Hash& data, size_t recordNumber) {
 
                 if (recordNumber >= m_numberOfRecords && recordNumber % m_chunkSize == 0) {
                     m_h5file->flush(H5F_SCOPE_GLOBAL);
@@ -136,7 +136,7 @@ namespace exfel {
                 updateNumberOfRecordsAttribute();
             }
 
-            void Table::writeBuffer(const exfel::util::Hash& data, size_t recordNumber, size_t len) {
+            void Table::writeBuffer(const karabo::util::Hash& data, size_t recordNumber, size_t len) {
 
                 size_t missingRecords = recordNumber + len - m_numberOfRecords;
                 tracer << "recordNumber: " << recordNumber << " len: " << len << endl
@@ -147,30 +147,30 @@ namespace exfel {
                     //r_extendRecordSpace(missingRecords, m_recordFormatHash);
                 }
 
-                EXFEL_PROFILER_TABLE1
+                KARABO_PROFILER_TABLE1
 
                 if (missingRecords > 0) {
 
-                    EXFEL_PROFILER_START_TABLE1("flush")
+                    KARABO_PROFILER_START_TABLE1("flush")
                     m_h5file->flush(H5F_SCOPE_GLOBAL);
-                    EXFEL_PROFILER_STOP_TABLE1
+                    KARABO_PROFILER_STOP_TABLE1
 
                     for (size_t j = 0; j < m_recordFormatVector.size(); ++j) {
-                        EXFEL_PROFILER_START_TABLE1("getElement")
+                        KARABO_PROFILER_START_TABLE1("getElement")
                                 const boost::any& anyElement = *(m_recordFormatVector[j]);
                         boost::shared_ptr<RecordElement> element = boost::any_cast<boost::shared_ptr<RecordElement> >(anyElement);
-                        EXFEL_PROFILER_STOP_TABLE1
-                        EXFEL_PROFILER_START_TABLE1("extend")
+                        KARABO_PROFILER_STOP_TABLE1
+                        KARABO_PROFILER_START_TABLE1("extend")
                         element->extend(missingRecords);
-                        EXFEL_PROFILER_STOP_TABLE1
-                        EXFEL_PROFILER_START_TABLE1("write");
+                        KARABO_PROFILER_STOP_TABLE1
+                        KARABO_PROFILER_START_TABLE1("write");
                         element->write(data, recordNumber, len);
-                        EXFEL_PROFILER_STOP_TABLE1
+                        KARABO_PROFILER_STOP_TABLE1
                     }
 
-                    EXFEL_PROFILER_REPORT_TABLE1("getElement")
-                    EXFEL_PROFILER_REPORT_TABLE1("extend")
-                    EXFEL_PROFILER_REPORT_TABLE1("write")
+                    KARABO_PROFILER_REPORT_TABLE1("getElement")
+                    KARABO_PROFILER_REPORT_TABLE1("extend")
+                    KARABO_PROFILER_REPORT_TABLE1("write")
 
 
 
@@ -191,11 +191,11 @@ namespace exfel {
                 updateNumberOfRecordsAttribute();
             }
 
-            void Table::allocate(exfel::util::Hash& data) {
+            void Table::allocate(karabo::util::Hash& data) {
                 r_allocate(data, m_recordFormatHash);
             }
 
-            void Table::allocate(exfel::util::Hash& data, size_t len) {
+            void Table::allocate(karabo::util::Hash& data, size_t len) {
                 r_allocate(data, len, m_recordFormatHash);
             }
 
@@ -204,7 +204,7 @@ namespace exfel {
                 r_read(data, recordNumber, m_recordFormatHash);
             }
 
-            void Table::readBuffer(exfel::util::Hash& data, size_t recordNumber, size_t len) {
+            void Table::readBuffer(karabo::util::Hash& data, size_t recordNumber, size_t len) {
                 r_read(data, recordNumber, len, m_recordFormatHash);
             }
 
@@ -301,7 +301,7 @@ namespace exfel {
                 m_chunkSize = r_getChunkSize(m_recordFormatHash);
             }
 
-            void Table::saveTableFormatAsAttribute(const exfel::io::hdf5::DataFormat::Pointer dataFormat) {
+            void Table::saveTableFormatAsAttribute(const karabo::io::hdf5::DataFormat::Pointer dataFormat) {
 
                 try {
 
@@ -325,7 +325,7 @@ namespace exfel {
                 }
             }
 
-            void Table::readTableFormatFromAttribute(exfel::util::Hash& dataFormatConfig) {
+            void Table::readTableFormatFromAttribute(karabo::util::Hash& dataFormatConfig) {
 
                 try {
                     // read the format from group attribute
@@ -378,7 +378,7 @@ namespace exfel {
                 r_refreshRecordFormatVector(m_recordFormatHash, m_recordFormatVector);
             }
 
-            void Table::r_refreshRecordFormatVector(const exfel::util::Hash& recordFormat, std::vector< const boost::any*>& recordFormatVector) {
+            void Table::r_refreshRecordFormatVector(const karabo::util::Hash& recordFormat, std::vector< const boost::any*>& recordFormatVector) {
                 for (Hash::const_iterator it = recordFormat.begin(); it != recordFormat.end(); ++it) {
                     if (recordFormat.getTypeAsId(it) == Types::HASH) {
                         r_refreshRecordFormatVector(recordFormat.get<Hash > (it), recordFormatVector);
@@ -417,7 +417,7 @@ namespace exfel {
                 }
             }
 
-            void Table::r_write(const exfel::util::Hash& data, size_t recordNumber, const Hash& recordFormat) {
+            void Table::r_write(const karabo::util::Hash& data, size_t recordNumber, const Hash& recordFormat) {
 
                 for (Hash::const_iterator it = recordFormat.begin(); it != recordFormat.end(); ++it) {
                     const string& key = it->first;
@@ -430,7 +430,7 @@ namespace exfel {
                 }
             }
 
-            void Table::r_write(const exfel::util::Hash& data, size_t recordNumber, size_t len, const Hash& recordFormat) {
+            void Table::r_write(const karabo::util::Hash& data, size_t recordNumber, size_t len, const Hash& recordFormat) {
 
                 for (Hash::const_iterator it = recordFormat.begin(); it != recordFormat.end(); ++it) {
                     const string& key = it->first;
@@ -455,7 +455,7 @@ namespace exfel {
                 }
             }
 
-            void Table::r_allocate(exfel::util::Hash& data, const exfel::util::Hash& recordFormat) {
+            void Table::r_allocate(karabo::util::Hash& data, const karabo::util::Hash& recordFormat) {
 
                 for (Hash::const_iterator it = recordFormat.begin(); it != recordFormat.end(); ++it) {
                     const string& key = it->first;
@@ -471,7 +471,7 @@ namespace exfel {
                 }
             }
 
-            void Table::r_allocate(exfel::util::Hash& data, size_t len, const exfel::util::Hash& recordFormat) {
+            void Table::r_allocate(karabo::util::Hash& data, size_t len, const karabo::util::Hash& recordFormat) {
 
                 for (Hash::const_iterator it = recordFormat.begin(); it != recordFormat.end(); ++it) {
                     const string& key = it->first;
@@ -487,7 +487,7 @@ namespace exfel {
                 }
             }
 
-            void Table::r_read(exfel::util::Hash& data, size_t recordNumber, const Hash & recordFormat) {
+            void Table::r_read(karabo::util::Hash& data, size_t recordNumber, const Hash & recordFormat) {
                 for (Hash::const_iterator it = recordFormat.begin(); it != recordFormat.end(); ++it) {
                     const string& key = it->first;
                     if (recordFormat.getTypeAsId(it) == Types::HASH) {
@@ -499,7 +499,7 @@ namespace exfel {
                 }
             }
 
-            void Table::r_read(exfel::util::Hash& data, size_t recordNumber, size_t len, const Hash & recordFormat) {
+            void Table::r_read(karabo::util::Hash& data, size_t recordNumber, size_t len, const Hash & recordFormat) {
                 for (Hash::const_iterator it = recordFormat.begin(); it != recordFormat.end(); ++it) {
                     const string& key = it->first;
                     if (recordFormat.getTypeAsId(it) == Types::HASH) {
@@ -511,7 +511,7 @@ namespace exfel {
                 }
             }
 
-            void Table::r_readAttributes(exfel::util::Hash& attr, const Hash & recordFormat) {
+            void Table::r_readAttributes(karabo::util::Hash& attr, const Hash & recordFormat) {
                 for (Hash::const_iterator it = recordFormat.begin(); it != recordFormat.end(); ++it) {
                     const string& key = it->first;
                     if (recordFormat.getTypeAsId(it) == Types::HASH) {

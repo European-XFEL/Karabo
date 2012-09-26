@@ -6,8 +6,8 @@
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
 
-#ifndef EXFEL_IO_ARRAYVIEW_HH
-#define	EXFEL_IO_ARRAYVIEW_HH
+#ifndef KARABO_IO_ARRAYVIEW_HH
+#define	KARABO_IO_ARRAYVIEW_HH
 
 #include <vector>
 #include <cassert>
@@ -15,7 +15,7 @@
 #include <boost/shared_array.hpp>
 #include <karabo/util/Exception.hh>
 
-namespace exfel {
+namespace karabo {
     namespace io {
 
         /**

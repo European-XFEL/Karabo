@@ -7,15 +7,15 @@
  */
 
 
-#ifndef EXFEL_CORE_MASTERDEVICE_HH
-#define	EXFEL_CORE_MASTERDEVICE_HH
+#ifndef KARABO_CORE_MASTERDEVICE_HH
+#define	KARABO_CORE_MASTERDEVICE_HH
 
 #include "Device.hh"
 
 /**
  * The main European XFEL namespace
  */
-namespace exfel {
+namespace karabo {
 
     /**
      * Namespace for package core
@@ -25,16 +25,16 @@ namespace exfel {
         class MasterDevice : public Device {
         public:
 
-            EXFEL_CLASSINFO(MasterDevice, "MasterDevice", "1.0")
+            KARABO_CLASSINFO(MasterDevice, "MasterDevice", "1.0")
 
             MasterDevice() : Device(this) {
             }
 
             virtual ~MasterDevice();
 
-            static void expectedParameters(exfel::util::Schema& expected);
+            static void expectedParameters(karabo::util::Schema& expected);
 
-            void configure(const exfel::util::Hash& input);
+            void configure(const karabo::util::Hash& input);
 
             void run();
 
@@ -48,11 +48,11 @@ namespace exfel {
 
             void slotNewDeviceServerAvailable(const std::string& hostname, const std::string& deviceServerInstanceId);
 
-            void slotNewStandaloneDeviceInstanceAvailable(const std::string& hostname, const exfel::util::Hash& config, const std::string& deviceInstanceId, const std::string& xsd);
+            void slotNewStandaloneDeviceInstanceAvailable(const std::string& hostname, const karabo::util::Hash& config, const std::string& deviceInstanceId, const std::string& xsd);
 
             void slotNewDeviceClassAvailable(const std::string& deviceServerInstanceId, const std::string& classId, const std::string& xsd);
 
-            void slotNewDeviceInstanceAvailable(const std::string& deviceInstanceId, const exfel::util::Hash& config);
+            void slotNewDeviceInstanceAvailable(const std::string& deviceInstanceId, const karabo::util::Hash& config);
 
             void slotSchemaUpdated(const std::string& schema, const std::string& instanceId, const std::string& classId);
 

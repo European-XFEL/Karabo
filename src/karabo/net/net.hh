@@ -8,8 +8,8 @@
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
 
-#ifndef EXFEL_NET_NET_HH
-#define	EXFEL_NET_NET_HH
+#ifndef KARABO_NET_NET_HH
+#define	KARABO_NET_NET_HH
 
 #include "BrokerConnection.hh"
 #include "Service.hh"
@@ -19,5 +19,5 @@
 #include "IOService.hh"
 #include "Channel.hh"
 
-#endif	/* EXFEL_NET_NET_HH */
+#endif	/* KARABO_NET_NET_HH */
 

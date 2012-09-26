@@ -9,8 +9,8 @@
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
 
-#ifndef EXFEL_IO_READER_HH
-#define	EXFEL_IO_READER_HH
+#ifndef KARABO_IO_READER_HH
+#define	KARABO_IO_READER_HH
 
 #include <karabo/util/Factory.hh>
 #include "iodll.hh"
@@ -18,7 +18,7 @@
 /**
  * The main European XFEL namespace
  */
-namespace exfel {
+namespace karabo {
 
     /**
      * Namespace for package io
@@ -37,9 +37,9 @@ namespace exfel {
             
             public:
 
-            EXFEL_CLASSINFO(Reader<Tdata>, "Reader", "1.0")
+            KARABO_CLASSINFO(Reader<Tdata>, "Reader", "1.0")
 
-            EXFEL_FACTORY_BASE_CLASS
+            KARABO_FACTORY_BASE_CLASS
 
             Reader() {
             }
@@ -58,9 +58,9 @@ namespace exfel {
         };    
 
     } // namespace io
-} // namespace exfel
+} // namespace karabo
 
-EXFEL_REGISTER_FACTORY_BASE_HH(exfel::io::Reader<exfel::util::Hash>, TEMPLATE_IO, DECLSPEC_IO)
-EXFEL_REGISTER_FACTORY_BASE_HH(exfel::io::Reader<exfel::util::Schema>, TEMPLATE_IO, DECLSPEC_IO)
+KARABO_REGISTER_FACTORY_BASE_HH(karabo::io::Reader<karabo::util::Hash>, TEMPLATE_IO, DECLSPEC_IO)
+KARABO_REGISTER_FACTORY_BASE_HH(karabo::io::Reader<karabo::util::Schema>, TEMPLATE_IO, DECLSPEC_IO)
 
-#endif	/* EXFEL_IO_READER_HH */
+#endif	/* KARABO_IO_READER_HH */

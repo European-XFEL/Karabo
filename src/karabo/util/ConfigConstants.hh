@@ -7,12 +7,12 @@
  */
 
 
-#ifndef EXFEL_UTIL_ACCESSTYPE_HH
-#define	EXFEL_UTIL_ACCESSTYPE_HH
+#ifndef KARABO_UTIL_ACCESSTYPE_HH
+#define	KARABO_UTIL_ACCESSTYPE_HH
 
 #include <string>
 
-namespace exfel {
+namespace karabo {
     namespace util {
 
         enum AccessType {
@@ -40,5 +40,5 @@ namespace exfel {
 }
 
 
-#endif	/* EXFEL_UTIL_ACCESSTYPE_HH */
+#endif	/* KARABO_UTIL_ACCESSTYPE_HH */
 

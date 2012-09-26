@@ -9,8 +9,8 @@
  */
 
 
-#ifndef EXFEL_NET_BROKERCONNECTION_HH
-#define	EXFEL_NET_BROKERCONNECTION_HH
+#ifndef KARABO_NET_BROKERCONNECTION_HH
+#define	KARABO_NET_BROKERCONNECTION_HH
 
 #include <string>
 #include <boost/signals2.hpp>
@@ -24,7 +24,7 @@
 /**
  * The main European XFEL namespace
  */
-namespace exfel {
+namespace karabo {
 
     /**
      * Namespace for package net
@@ -48,20 +48,20 @@ namespace exfel {
 
         public:
 
-            EXFEL_CLASSINFO(BrokerConnection, "Connection", "1.0")
-            EXFEL_FACTORY_BASE_CLASS
+            KARABO_CLASSINFO(BrokerConnection, "Connection", "1.0")
+            KARABO_FACTORY_BASE_CLASS
 
             typedef boost::function<void (BrokerChannelPointer) > ConnectionHandler;
 
 
-            typedef exfel::io::Format<exfel::util::Hash> HashFormat;
+            typedef karabo::io::Format<karabo::util::Hash> HashFormat;
 
             virtual ~BrokerConnection() {
             }
 
-            static void expectedParameters(exfel::util::Schema& expected);
+            static void expectedParameters(karabo::util::Schema& expected);
 
-            void configure(const exfel::util::Hash& input);
+            void configure(const karabo::util::Hash& input);
 
             /**
              * Starts the connection
@@ -134,9 +134,9 @@ namespace exfel {
 
         private: // functions
 
-            void hashToString(const exfel::util::Hash& hash, std::string& serializedHash);
+            void hashToString(const karabo::util::Hash& hash, std::string& serializedHash);
 
-            void stringToHash(const std::string& serializedHash, exfel::util::Hash& hash);
+            void stringToHash(const std::string& serializedHash, karabo::util::Hash& hash);
 
             void unregisterChannel(BrokerChannelPointer channel) {
                 boost::mutex::scoped_lock lock(m_channelMutex);
@@ -169,6 +169,6 @@ namespace exfel {
     }
 }
 
-EXFEL_REGISTER_FACTORY_BASE_HH(exfel::net::BrokerConnection, TEMPLATE_NET, DECLSPEC_NET)
+KARABO_REGISTER_FACTORY_BASE_HH(karabo::net::BrokerConnection, TEMPLATE_NET, DECLSPEC_NET)
 
-#endif	/* EXFEL_NET_ACONNECTION_HH */
+#endif	/* KARABO_NET_ACONNECTION_HH */

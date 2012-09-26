@@ -7,8 +7,8 @@
 
 #include "AsioIOService.hh"
 
-namespace exfel {
+namespace karabo {
     namespace net {
-        EXFEL_REGISTER_FACTORY_CC(AbstractIOService, AsioIOService)
+        KARABO_REGISTER_FACTORY_CC(AbstractIOService, AsioIOService)
     }
 }

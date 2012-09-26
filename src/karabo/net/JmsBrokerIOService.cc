@@ -11,10 +11,10 @@
 #include "JmsBrokerIOService.hh"
 #include "JmsBrokerChannel.hh"
 
-namespace exfel {
+namespace karabo {
     namespace net {
 
-        EXFEL_REGISTER_FACTORY_CC(AbstractIOService, JmsBrokerIOService)
+        KARABO_REGISTER_FACTORY_CC(AbstractIOService, JmsBrokerIOService)
 
         //int JmsBrokerIOService::m_threadCount = 0;
         
@@ -42,7 +42,7 @@ namespace exfel {
             boost::mutex::scoped_lock lock(m_mutex);
             if (m_textMessageChannels.empty()) return false;
             for (size_t i = 0; i < m_textMessageChannels.size(); ++i) {
-                m_threadGroup.create_thread(boost::bind(&exfel::net::JmsBrokerChannel::listenForTextMessages, m_textMessageChannels[i]));
+                m_threadGroup.create_thread(boost::bind(&karabo::net::JmsBrokerChannel::listenForTextMessages, m_textMessageChannels[i]));
             }
             m_textMessageChannels.clear();
             return true;
@@ -52,7 +52,7 @@ namespace exfel {
             boost::mutex::scoped_lock lock(m_mutex);
             if (m_binaryMessageChannels.empty()) return false;
             for (size_t i = 0; i < m_binaryMessageChannels.size(); ++i) {
-                m_threadGroup.create_thread(boost::bind(&exfel::net::JmsBrokerChannel::listenForBinaryMessages, m_binaryMessageChannels[i]));
+                m_threadGroup.create_thread(boost::bind(&karabo::net::JmsBrokerChannel::listenForBinaryMessages, m_binaryMessageChannels[i]));
             }
             m_binaryMessageChannels.clear();
             return true;
@@ -62,7 +62,7 @@ namespace exfel {
             boost::mutex::scoped_lock lock(m_mutex);
             if (m_waitHandlers.empty()) return false;
             for (size_t i = 0; i < m_waitHandlers.size(); ++i) {
-                m_threadGroup.create_thread(boost::bind(&exfel::net::JmsBrokerChannel::deadlineTimer, m_waitHandlers[i].get<0>(), m_waitHandlers[i].get<1>(), m_waitHandlers[i].get<2>()));
+                m_threadGroup.create_thread(boost::bind(&karabo::net::JmsBrokerChannel::deadlineTimer, m_waitHandlers[i].get<0>(), m_waitHandlers[i].get<1>(), m_waitHandlers[i].get<2>()));
             }
             m_waitHandlers.clear();
             return true;
@@ -89,7 +89,7 @@ namespace exfel {
             if (m_status == IDLE || m_status == STOPPED || m_status == RUNNING) {
                 m_textMessageChannels.push_back(channel);
             } else if (m_status == WORKING) {
-                m_threadGroup.create_thread(boost::bind(&exfel::net::JmsBrokerChannel::listenForTextMessages, channel));
+                m_threadGroup.create_thread(boost::bind(&karabo::net::JmsBrokerChannel::listenForTextMessages, channel));
             }
         }
 
@@ -98,7 +98,7 @@ namespace exfel {
             if (m_status == IDLE || m_status == STOPPED || m_status == RUNNING) {
                 m_binaryMessageChannels.push_back(channel);
             } else if (m_status == WORKING) {
-                m_threadGroup.create_thread(boost::bind(&exfel::net::JmsBrokerChannel::listenForBinaryMessages, channel));
+                m_threadGroup.create_thread(boost::bind(&karabo::net::JmsBrokerChannel::listenForBinaryMessages, channel));
             }
         }
 
@@ -107,7 +107,7 @@ namespace exfel {
             if (m_status == IDLE || m_status == STOPPED || m_status == RUNNING) {
                 m_waitHandlers.push_back(boost::tuple<JmsBrokerChannel*, WaitHandler, int>(channel, handler, milliseconds));
             } else if (m_status == WORKING) {
-                m_threadGroup.create_thread(boost::bind(&exfel::net::JmsBrokerChannel::deadlineTimer, channel, handler, milliseconds));
+                m_threadGroup.create_thread(boost::bind(&karabo::net::JmsBrokerChannel::deadlineTimer, channel, handler, milliseconds));
             }
         }
     }

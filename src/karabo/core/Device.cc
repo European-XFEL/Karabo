@@ -15,14 +15,14 @@
 
 #include "Device.hh"
 
-namespace exfel {
+namespace karabo {
     namespace core {
 
         using namespace log4cpp;
         using namespace std;
-        using namespace exfel::util;
-        using namespace exfel::io;
-        using namespace exfel::net;
+        using namespace karabo::util;
+        using namespace karabo::io;
+        using namespace karabo::net;
 
         std::map<std::string, int> Device::m_instanceCountPerDeviceServer;
         boost::mutex Device::m_instanceCountMutex;
@@ -31,7 +31,7 @@ namespace exfel {
             decreaseInstanceCount();
         }
 
-        void Device::expectedParameters(exfel::util::Schema& expected) {
+        void Device::expectedParameters(karabo::util::Schema& expected) {
 
             CHOICE_ELEMENT<BrokerConnection > (expected).key("connection")
                     .displayedName("Connection")
@@ -69,7 +69,7 @@ namespace exfel {
                     .commit();
         }
 
-        void Device::configure(const exfel::util::Hash& input) {
+        void Device::configure(const karabo::util::Hash& input) {
             try {
 
                 // Speed access to own classId
@@ -98,7 +98,7 @@ namespace exfel {
                 }
 
                 // Setup logger
-                m_log = &(exfel::log::Logger::logger(devInstId));
+                m_log = &(karabo::log::Logger::logger(devInstId));
 
                 // Split the configuration parameters into three pots
                 m_initialParameters = m_expectedInitialParameters.validate(tmp, true, false, true).get<Hash > (m_classId);
@@ -114,13 +114,13 @@ namespace exfel {
                 SIGNAL4("signalErrorFound", string, string, string, string); // timeStamp, shortMsg, longMsg, instanceId
                 SIGNAL2("signalBadReconfiguration", string, string); // shortMsg, instanceId 
                 SIGNAL2("signalNoTransition", string, string);
-                SIGNAL3("signalChanged", exfel::util::Hash, string, string); // changeHash, instanceId, classId
+                SIGNAL3("signalChanged", karabo::util::Hash, string, string); // changeHash, instanceId, classId
                 SIGNAL4("signalWarning", string, string, string, string); // timeStamp, warnMsg, instanceId, priority
                 SIGNAL4("signalAlarm", string, string, string, string); // timeStamp, alarmMsg, instanceId, priority
                 SIGNAL3("signalSchemaUpdated", string, string, string); // schema, instanceId, classId
                 SIGNAL2("signalDeviceInstanceGone", string, string) /* DeviceServerInstanceId, deviceInstanceId */
 
-                SLOT1(slotReconfigure, exfel::util::Hash)
+                SLOT1(slotReconfigure, karabo::util::Hash)
                 SLOT0(slotRefresh)
                 SLOT1(slotGetSchema, bool); // onlyCurrentState
                 SLOT0(slotKillDeviceInstance)
@@ -172,7 +172,7 @@ namespace exfel {
         }
         
 
-        exfel::util::Schema Device::getFullSchema() const {
+        karabo::util::Schema Device::getFullSchema() const {
             if (!m_injectedExpectedParameters.empty())
                 return Schema(m_allExpectedParameters).addExternalSchema(m_injectedExpectedParameters);
             else return m_allExpectedParameters;
@@ -244,7 +244,7 @@ namespace exfel {
             reply(all);
         }
 
-        void Device::slotReconfigure(const exfel::util::Hash& newConfiguration) {
+        void Device::slotReconfigure(const karabo::util::Hash& newConfiguration) {
 
             if (newConfiguration.empty()) return;
 
@@ -257,7 +257,7 @@ namespace exfel {
                 // Give device-implementer a chance to specifically react on reconfiguration event by polymorphically calling back
                 try {
                     onReconfigure(m_incomingValidatedReconfiguration);
-                } catch (const exfel::util::Exception& e) {
+                } catch (const karabo::util::Exception& e) {
                     onException(e.userFriendlyMsg(), e.detailedMsg());
                     reply(false, e.userFriendlyMsg());
                     return;
@@ -269,7 +269,7 @@ namespace exfel {
             reply(result.first, result.second);
         }
 
-        std::pair<bool, std::string> Device::validate(const exfel::util::Hash& newConfiguration) {
+        std::pair<bool, std::string> Device::validate(const karabo::util::Hash& newConfiguration) {
             // Retrieve the current state of the device instance
             const string& currentState = get<string > ("state");
             Schema& whiteList = getStateDependentSchema(currentState);
@@ -294,13 +294,13 @@ namespace exfel {
             // Check cache, whether a special set of state-dependent expected parameters was created before
             map<string, Schema>::iterator it = m_stateDependendSchema.find(currentState);
             if (it == m_stateDependendSchema.end()) { // No
-                it = m_stateDependendSchema.insert(make_pair(currentState, Device::expectedParameters(m_classId, exfel::util::WRITE, currentState))).first; // New one
+                it = m_stateDependendSchema.insert(make_pair(currentState, Device::expectedParameters(m_classId, karabo::util::WRITE, currentState))).first; // New one
                 if (!m_injectedExpectedParameters.empty()) it->second.addExternalSchema(m_injectedExpectedParameters);
             }
             return it->second;
         }
 
-        void Device::applyReconfiguration(const exfel::util::Hash& user) {
+        void Device::applyReconfiguration(const karabo::util::Hash& user) {
             boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
             //m_incomingValidatedReconfiguration = m_incomingValidatedReconfiguration.unflatten();
             m_reconfigurableParameters.update(m_incomingValidatedReconfiguration);
@@ -325,15 +325,15 @@ namespace exfel {
         }
 
         void Device::triggerErrorFound(const std::string& shortMessage, const std::string& detailedMessage) const {
-            emit("signalErrorFound", exfel::util::Time::getCurrentDateTime(), shortMessage, detailedMessage, getInstanceId());
+            emit("signalErrorFound", karabo::util::Time::getCurrentDateTime(), shortMessage, detailedMessage, getInstanceId());
         }
 
         void Device::triggerWarning(const std::string& warningMessage, const std::string& priority) const {
-            emit("signalWarning", exfel::util::Time::getCurrentDateTime(), warningMessage, getInstanceId(), priority);
+            emit("signalWarning", karabo::util::Time::getCurrentDateTime(), warningMessage, getInstanceId(), priority);
         }
 
         void Device::triggerAlarm(const std::string& alarmMessage, const std::string& priority) const {
-            emit("signalAlarm", exfel::util::Time::getCurrentDateTime(), alarmMessage, getInstanceId(), priority);
+            emit("signalAlarm", karabo::util::Time::getCurrentDateTime(), alarmMessage, getInstanceId(), priority);
         }
     }
 }

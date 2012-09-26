@@ -82,7 +82,7 @@ distribution.
 		#define TIXML_SSCANF   sscanf
 	#endif
 #endif	
-namespace exfel {
+namespace karabo {
 
     namespace tinyxml {
 

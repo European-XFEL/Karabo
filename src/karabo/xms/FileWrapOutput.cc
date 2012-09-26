@@ -10,11 +10,11 @@
 
 #include "FileWrapOutput.hh"
 
-namespace exfel {
+namespace karabo {
     namespace xms {
 
-        EXFEL_REGISTER_FACTORY_2_CC(AbstractOutput, Output<std::string >, FileWrapDeviceOutput)
-        EXFEL_REGISTER_FACTORY_CC(Output<std::string >, FileWrapDeviceOutput)
+        KARABO_REGISTER_FACTORY_2_CC(AbstractOutput, Output<std::string >, FileWrapDeviceOutput)
+        KARABO_REGISTER_FACTORY_CC(Output<std::string >, FileWrapDeviceOutput)
         
         
 

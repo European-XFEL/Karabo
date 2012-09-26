@@ -7,14 +7,14 @@
  */
 
 
-#ifndef EXFEL_IO_ARRAYDIMENSIONS_HH
-#define	EXFEL_IO_ARRAYDIMENSIONS_HH
+#ifndef KARABO_IO_ARRAYDIMENSIONS_HH
+#define	KARABO_IO_ARRAYDIMENSIONS_HH
 
 #include <vector>
 #include <karabo/util/Factory.hh>
 #include "iodll.hh"
 
-namespace exfel {
+namespace karabo {
     namespace io {
 
         /**
@@ -24,7 +24,7 @@ namespace exfel {
             typedef unsigned long long ull64;
         public:
 
-            EXFEL_CLASSINFO(ArrayDimensions, "ArrayDimensions", "1.0")
+            KARABO_CLASSINFO(ArrayDimensions, "ArrayDimensions", "1.0")
 
             ArrayDimensions() : std::vector<ull64>() {
             }
@@ -88,7 +88,7 @@ namespace exfel {
     }
 }
 
-EXFEL_REGISTER_FACTORY_BASE_HH(exfel::io::ArrayDimensions, TEMPLATE_IO, DECLSPEC_IO)
+KARABO_REGISTER_FACTORY_BASE_HH(karabo::io::ArrayDimensions, TEMPLATE_IO, DECLSPEC_IO)
 
 #endif	
 

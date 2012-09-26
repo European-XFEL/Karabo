@@ -9,7 +9,7 @@
 
 #include "Hash_Test.hh"
 
-using namespace exfel::util;
+using namespace karabo::util;
 
 CPPUNIT_TEST_SUITE_REGISTRATION(Hash_Test);
 

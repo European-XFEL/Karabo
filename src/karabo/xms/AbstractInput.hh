@@ -10,22 +10,22 @@
  */
 
 
-#ifndef EXFEL_XMS_ABSTRACTINPUT_HH
-#define	EXFEL_XMS_ABSTRACTINPUT_HH
+#ifndef KARABO_XMS_ABSTRACTINPUT_HH
+#define	KARABO_XMS_ABSTRACTINPUT_HH
 
 #include <boost/function.hpp>
 
 #include <karabo/util/Factory.hh>
 
-namespace exfel {
+namespace karabo {
 
     namespace xms {
 
         class AbstractInput : public boost::enable_shared_from_this<AbstractInput> {
         public:
 
-            EXFEL_CLASSINFO(AbstractInput, "AbstractInput", "1.0")
-            EXFEL_FACTORY_BASE_CLASS
+            KARABO_CLASSINFO(AbstractInput, "AbstractInput", "1.0")
+            KARABO_FACTORY_BASE_CLASS
 
             typedef boost::function<void (const boost::shared_ptr<AbstractInput>&) > IOEventHandler;
             typedef boost::function<void (const boost::shared_ptr<AbstractInput>&) > CanReadEventHandler;
@@ -40,8 +40,8 @@ namespace exfel {
              * Necessary method as part of the factory/configuration system
              * @param expected [out] Description of expected parameters for this object (Schema)
              */
-            static void expectedParameters(exfel::util::Schema& expected) {
-                using namespace exfel::util;
+            static void expectedParameters(karabo::util::Schema& expected) {
+                using namespace karabo::util;
 
                 UINT32_ELEMENT(expected).key("minData")
                         .displayedName("Minimum number of data")
@@ -55,7 +55,7 @@ namespace exfel {
              * If this object is constructed using the factory/configuration system this method is called
              * @param input Validated (@see expectedParameters) and default-filled configuration
              */
-            void configure(const exfel::util::Hash& input) {
+            void configure(const karabo::util::Hash& input) {
                 input.get("minData", m_nData);
             }
             
@@ -79,15 +79,15 @@ namespace exfel {
                 return false;
             }
 
-            virtual std::vector<exfel::util::Hash> getConnectedOutputChannels() {
-                return std::vector<exfel::util::Hash > ();
+            virtual std::vector<karabo::util::Hash> getConnectedOutputChannels() {
+                return std::vector<karabo::util::Hash > ();
             }
 
-            virtual void connectNow(const exfel::util::Hash& outputChannelInfo) {
+            virtual void connectNow(const karabo::util::Hash& outputChannelInfo) {
             }
 
-            virtual exfel::util::Hash getIOStatus() const {
-                return exfel::util::Hash();
+            virtual karabo::util::Hash getIOStatus() const {
+                return karabo::util::Hash();
             }
 
             virtual bool canCompute() {

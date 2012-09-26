@@ -9,8 +9,8 @@
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
 
-#ifndef EXFEL_CORE_RUNNER_HH
-#define	EXFEL_CORE_RUNNER_HH
+#ifndef KARABO_CORE_RUNNER_HH
+#define	KARABO_CORE_RUNNER_HH
 
 #include <log4cpp/Category.hh>
 #include <karabo/util/Factory.hh>
@@ -21,7 +21,7 @@
 /**
  * The main European XFEL namespace
  */
-namespace exfel {
+namespace karabo {
 
     /**
      * Namespace for package xip
@@ -35,9 +35,9 @@ namespace exfel {
         class Runner {
         public:
 
-            EXFEL_CLASSINFO(Runner, "Runner", "1.0")
+            KARABO_CLASSINFO(Runner, "Runner", "1.0")
 
-            EXFEL_FACTORY_BASE_CLASS
+            KARABO_FACTORY_BASE_CLASS
 
             static typename T::Pointer instantiate(int argc, char** argv) {
 
@@ -45,14 +45,14 @@ namespace exfel {
 
                 try {
 
-                    exfel::util::Hash configuration = parseCommandLine(argc, argv);      
+                    karabo::util::Hash configuration = parseCommandLine(argc, argv);      
                     
                     if (!configuration.has("--"))
                         instancePointer = T::create(T::classInfo().getClassId(), configuration);                    
 
                     return instancePointer;
 
-                } catch (const exfel::util::Exception& e) {
+                } catch (const karabo::util::Exception& e) {
                     std::cout << e.userFriendlyMsg() << std::endl;
                     return instancePointer;
                 }
@@ -60,9 +60,9 @@ namespace exfel {
 
         private:
 
-            static exfel::util::Hash parseCommandLine(int argc, char** argv) {
+            static karabo::util::Hash parseCommandLine(int argc, char** argv) {
                 using namespace std;
-                using namespace exfel::util;
+                using namespace karabo::util;
                 try {
                     if (argc == 1) return Hash();
                     // Check first argument
@@ -84,16 +84,16 @@ namespace exfel {
                         // Check whether first argument is a file
                         boost::filesystem::path possibleFile(token);
                         if (boost::filesystem::exists(possibleFile)) {
-                            exfel::util::Hash c;
+                            karabo::util::Hash c;
                             c.setFromPath("TextFile.filename", possibleFile);
-                            exfel::io::Reader<exfel::util::Hash>::Pointer in = exfel::io::Reader<exfel::util::Hash>::create(c);
-                            exfel::util::Hash tmp;
+                            karabo::io::Reader<karabo::util::Hash>::Pointer in = karabo::io::Reader<karabo::util::Hash>::create(c);
+                            karabo::util::Hash tmp;
                             in->read(tmp);
                             classId = tmp.begin()->first;
                         } else {
                             classId = token.substr(0, token.find_first_of("."));
                         }
-                        exfel::util::Schema schema = T::expectedParameters(classId);
+                        karabo::util::Schema schema = T::expectedParameters(classId);
 
                         for (int i = 1; i < argc; ++i) {
                             std::string token(argv[i]);
@@ -105,8 +105,8 @@ namespace exfel {
                         // Auto load configuration
                         string autoLoadFile("autoload.xml");
                         if (boost::filesystem::exists(autoLoadFile)) {
-                            exfel::util::Hash autoConfig;
-                            exfel::io::Reader<exfel::util::Hash>::create("TextFile", Hash("filename", autoLoadFile))->read(autoConfig);
+                            karabo::util::Hash autoConfig;
+                            karabo::io::Reader<karabo::util::Hash>::create("TextFile", Hash("filename", autoLoadFile))->read(autoConfig);
                             userInputs.push_back(autoConfig);
                         }
 
@@ -127,9 +127,9 @@ namespace exfel {
                     if (argc > 2) {
                         std::string classId = std::string(argv[2]);
                         classId.substr(0, classId.find_first_of("."));
-                        exfel::util::Schema schema = T::expectedParameters(classId, exfel::util::READ | exfel::util::WRITE | exfel::util::INIT);
+                        karabo::util::Schema schema = T::expectedParameters(classId, karabo::util::READ | karabo::util::WRITE | karabo::util::INIT);
                         std::cout << std::endl << "Generating list of expected parameters. Writing output to file: " << classId << ".xsd " << std::endl << std::endl;
-                        exfel::io::Writer<exfel::util::Schema>::Pointer out = exfel::io::Writer<exfel::util::Schema>::create(exfel::util::Hash("TextFile.filename", classId + ".xsd"));
+                        karabo::io::Writer<karabo::util::Schema>::Pointer out = karabo::io::Writer<karabo::util::Schema>::create(karabo::util::Hash("TextFile.filename", classId + ".xsd"));
                         out->write(schema);
                     } else {
                         std::cout << "Expecting command line input, telling for whom the xsd file should be generated." << std::endl;
@@ -147,8 +147,8 @@ namespace exfel {
                 }
             }
 
-            static void saveConfiguration(const exfel::util::Hash & config) {
-                exfel::io::Writer<exfel::util::Hash>::Pointer out = exfel::io::Writer<exfel::util::Hash>::create(exfel::util::Hash("TextFile.filename", "lastConfiguration.xml"));
+            static void saveConfiguration(const karabo::util::Hash & config) {
+                karabo::io::Writer<karabo::util::Hash>::Pointer out = karabo::io::Writer<karabo::util::Hash>::create(karabo::util::Hash("TextFile.filename", "lastConfiguration.xml"));
                 out->write(config);
             }
 
@@ -172,12 +172,12 @@ namespace exfel {
                 std::cout << std::endl;
             }
 
-            static void readToken(const std::string& token, exfel::util::Hash & config) {
+            static void readToken(const std::string& token, karabo::util::Hash & config) {
                 boost::filesystem::path possibleFile(token);
                 if (boost::filesystem::exists(possibleFile)) {
-                    exfel::util::Hash c;
+                    karabo::util::Hash c;
                     c.setFromPath("TextFile.filename", possibleFile);
-                    exfel::io::Reader<exfel::util::Hash>::Pointer in = exfel::io::Reader<exfel::util::Hash>::create(c);
+                    karabo::io::Reader<karabo::util::Hash>::Pointer in = karabo::io::Reader<karabo::util::Hash>::create(c);
                     in->read(config);
                 } else {
                     size_t pos = token.find_first_of("=");
@@ -193,12 +193,12 @@ namespace exfel {
                             boost::trim(value);
                             std::vector<std::string> tokens;
                             boost::split(tokens, value, boost::is_any_of(" "));
-                            config.setFromPath(key, exfel::util::Hash());
+                            config.setFromPath(key, karabo::util::Hash());
 
                             BOOST_FOREACH(std::string subToken, tokens) {
                                 boost::trim(subToken);
                                 if (!subToken.empty()) {
-                                    readToken(subToken, config.getFromPath<exfel::util::Hash > (key));
+                                    readToken(subToken, config.getFromPath<karabo::util::Hash > (key));
                                 }
                             }
                         } else {
@@ -208,7 +208,7 @@ namespace exfel {
                 }
             }
 
-            static void addToConfig(const std::string& key, std::string value, exfel::util::Hash & config) {
+            static void addToConfig(const std::string& key, std::string value, karabo::util::Hash & config) {
                 boost::trim(value);
                 if (value == "") {
                     config.setFromPath(key);

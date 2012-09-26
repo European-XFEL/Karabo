@@ -9,18 +9,18 @@
  */
 
 
-#ifndef EXFEL_CORE_STARTSTOPFSM_HH
-#define	EXFEL_CORE_STARTSTOPFSM_HH
+#ifndef KARABO_CORE_STARTSTOPFSM_HH
+#define	KARABO_CORE_STARTSTOPFSM_HH
 
 #include "Device.hh"
 
-namespace exfel {
+namespace karabo {
     namespace core {
 
-        class StartStopFsm : public exfel::core::Device {
+        class StartStopFsm : public karabo::core::Device {
         public:
 
-            EXFEL_CLASSINFO(StartStopFsm, "StartStopFsm", "1.0")
+            KARABO_CLASSINFO(StartStopFsm, "StartStopFsm", "1.0")
 
             template <class Derived>
             StartStopFsm(Derived* derived) : Device(derived) {
@@ -29,9 +29,9 @@ namespace exfel {
             virtual ~StartStopFsm() {
             }
 
-            static void expectedParameters(exfel::util::Schema& expected);
+            static void expectedParameters(karabo::util::Schema& expected);
 
-            void configure(const exfel::util::Hash& input);
+            void configure(const karabo::util::Hash& input);
             
             virtual void run();
 
@@ -43,74 +43,74 @@ namespace exfel {
 
             // Standard events
 
-            EXFEL_FSM_EVENT2(m_fsm, ErrorFoundEvent, onException, std::string, std::string)
+            KARABO_FSM_EVENT2(m_fsm, ErrorFoundEvent, onException, std::string, std::string)
 
-            EXFEL_FSM_EVENT0(m_fsm, EndErrorEvent, slotEndError)
+            KARABO_FSM_EVENT0(m_fsm, EndErrorEvent, slotEndError)
 
-            EXFEL_FSM_EVENT0(m_fsm, StartEvent, slotStart)
+            KARABO_FSM_EVENT0(m_fsm, StartEvent, slotStart)
 
-            EXFEL_FSM_EVENT0(m_fsm, StopEvent, slotStop)
+            KARABO_FSM_EVENT0(m_fsm, StopEvent, slotStop)
 
             /**************************************************************/
             /*                        States                              */
             /**************************************************************/
 
-            EXFEL_FSM_STATE_V_EE(ErrorState, errorStateOnEntry, errorStateOnExit)
+            KARABO_FSM_STATE_V_EE(ErrorState, errorStateOnEntry, errorStateOnExit)
             
-            EXFEL_FSM_STATE_V_EE(InitializationState, initializationStateOnEntry, initializationStateOnExit)
+            KARABO_FSM_STATE_V_EE(InitializationState, initializationStateOnEntry, initializationStateOnExit)
 
-            EXFEL_FSM_STATE_V_EE(StartedState, startedStateOnEntry, startedStateOnExit)
+            KARABO_FSM_STATE_V_EE(StartedState, startedStateOnEntry, startedStateOnExit)
 
-            EXFEL_FSM_STATE_V_EE(StoppedState, stoppedStateOnEntry, stoppedStateOnExit)
+            KARABO_FSM_STATE_V_EE(StoppedState, stoppedStateOnEntry, stoppedStateOnExit)
 
             /**************************************************************/
             /*                    Transition Actions                      */
             /**************************************************************/
 
-            EXFEL_FSM_V_ACTION0(StartAction, startAction)
+            KARABO_FSM_V_ACTION0(StartAction, startAction)
 
-            EXFEL_FSM_V_ACTION0(StopAction, stopAction)
+            KARABO_FSM_V_ACTION0(StopAction, stopAction)
 
             /**************************************************************/
             /*                      AllOkState Machine                    */
             /**************************************************************/
 
-            EXFEL_FSM_TABLE_BEGIN(AllOkStateTransitionTable)
+            KARABO_FSM_TABLE_BEGIN(AllOkStateTransitionTable)
             //  Source-State      Event    Target-State    Action     Guard
             Row< StoppedState, StartEvent, StartedState, StartAction, none >,
             Row< StartedState, StopEvent, StoppedState, StopAction, none >
-            EXFEL_FSM_TABLE_END
+            KARABO_FSM_TABLE_END
 
             //                       Name      Transition-Table           Initial-State  Context
-            EXFEL_FSM_STATE_MACHINE(AllOkState, AllOkStateTransitionTable, StoppedState, Self)
+            KARABO_FSM_STATE_MACHINE(AllOkState, AllOkStateTransitionTable, StoppedState, Self)
 
             /**************************************************************/
             /*                      Top Machine                         */
             /**************************************************************/
 
             //  Source-State    Event        Target-State    Action         Guard
-            EXFEL_FSM_TABLE_BEGIN(StartStopMachineTransitionTable)
+            KARABO_FSM_TABLE_BEGIN(StartStopMachineTransitionTable)
             Row< InitializationState, none, AllOkState, none, none >,
             Row< AllOkState, ErrorFoundEvent, ErrorState, ErrorFoundAction, none >,
             Row< ErrorState, EndErrorEvent, AllOkState, none, none >
-            EXFEL_FSM_TABLE_END
+            KARABO_FSM_TABLE_END
 
 
             //                                 Name                   Transition-Table       Initial-State Context
-            EXFEL_FSM_STATE_MACHINE(StartStopMachine, StartStopMachineTransitionTable, InitializationState, Self)
+            KARABO_FSM_STATE_MACHINE(StartStopMachine, StartStopMachineTransitionTable, InitializationState, Self)
 
 
             void startStateMachine() {
 
-                EXFEL_FSM_CREATE_MACHINE(StartStopMachine, m_fsm);
-                EXFEL_FSM_SET_CONTEXT_TOP(this, m_fsm)
-                EXFEL_FSM_SET_CONTEXT_SUB(this, m_fsm, AllOkState)
-                EXFEL_FSM_START_MACHINE(m_fsm)
+                KARABO_FSM_CREATE_MACHINE(StartStopMachine, m_fsm);
+                KARABO_FSM_SET_CONTEXT_TOP(this, m_fsm)
+                KARABO_FSM_SET_CONTEXT_SUB(this, m_fsm, AllOkState)
+                KARABO_FSM_START_MACHINE(m_fsm)
             }
 
 
             // Override this function if you need to handle the reconfigured data (e.g. send to a hardware)
-            virtual void onReconfigure(exfel::util::Hash& incomingReconfiguration) {
+            virtual void onReconfigure(karabo::util::Hash& incomingReconfiguration) {
             }
 
 
@@ -119,7 +119,7 @@ namespace exfel {
             
         private: // members
 
-            EXFEL_FSM_DECLARE_MACHINE(StartStopMachine, m_fsm);
+            KARABO_FSM_DECLARE_MACHINE(StartStopMachine, m_fsm);
 
         };
 

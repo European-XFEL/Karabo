@@ -9,8 +9,8 @@
  */
 
 
-#ifndef EXFEL_IO_TEXTFILEWRITER_HH
-#define	EXFEL_IO_TEXTFILEWRITER_HH
+#ifndef KARABO_IO_TEXTFILEWRITER_HH
+#define	KARABO_IO_TEXTFILEWRITER_HH
 
 #include <iosfwd>
 #include <fstream>
@@ -23,7 +23,7 @@
 /**
  * The main European XFEL namespace
  */
-namespace exfel {
+namespace karabo {
 
   /**
    * Namespace for package packageName
@@ -37,7 +37,7 @@ namespace exfel {
     class TextFileWriter : public Writer<Tdata> {
     public:
 
-      EXFEL_CLASSINFO(TextFileWriter<Tdata>, "TextFile", "1.0")
+      KARABO_CLASSINFO(TextFileWriter<Tdata>, "TextFile", "1.0")
 
       typedef boost::shared_ptr<Format<Tdata> > FormatPointer;
 
@@ -51,9 +51,9 @@ namespace exfel {
         }
       }
 
-      static void expectedParameters(exfel::util::Schema& expected) {
+      static void expectedParameters(karabo::util::Schema& expected) {
 
-        using namespace exfel::util;
+        using namespace karabo::util;
 
         PATH_ELEMENT(expected).key("filename")
                 .description("Name of the file to be written")
@@ -75,7 +75,7 @@ namespace exfel {
                 .commit();
       }
 
-      void configure(const exfel::util::Hash& input) {
+      void configure(const karabo::util::Hash& input) {
         input.get("filename", m_filename);
         input.get("writeMode", m_writeMode);
         if (input.has("format")) {
@@ -96,7 +96,7 @@ namespace exfel {
       void guessAndSetFormat() {
         
         using namespace std;
-        using namespace exfel::util;
+        using namespace karabo::util;
 
         vector<string> keys = Factory<Format<Tdata> >::getRegisteredKeys();
         string extension = m_filename.extension().string().substr(1);
@@ -141,6 +141,6 @@ namespace exfel {
     };
 
   } // namespace io
-} // namespace exfel
+} // namespace karabo
 
 #endif

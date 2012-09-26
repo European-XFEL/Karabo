@@ -5,14 +5,14 @@
  * Created on June 2, 2011, 11:16 AM
  */
 
-#ifndef EXFEL_NET_BROKERIOSERVICE_HH
-#define	EXFEL_NET_BROKERIOSERVICE_HH
+#ifndef KARABO_NET_BROKERIOSERVICE_HH
+#define	KARABO_NET_BROKERIOSERVICE_HH
 
 #include <boost/shared_ptr.hpp>
 #include <karabo/util/ClassInfo.hh>
 #include "AbstractIOService.hh"
 
-namespace exfel {
+namespace karabo {
     namespace net {
 
         class BrokerConnection;
@@ -20,9 +20,9 @@ namespace exfel {
         class BrokerIOService {
         public:
 
-            EXFEL_CLASSINFO(BrokerIOService, "BrokerIOService", "1.0")
+            KARABO_CLASSINFO(BrokerIOService, "BrokerIOService", "1.0")
 
-            friend class exfel::net::BrokerConnection;
+            friend class karabo::net::BrokerConnection;
 
             typedef boost::shared_ptr<BrokerIOService> Pointer;
 
@@ -70,5 +70,5 @@ namespace exfel {
     }
 }
 
-#endif	/* EXFEL_NET_IOSERVICE_HH */
+#endif	/* KARABO_NET_IOSERVICE_HH */
 

@@ -8,8 +8,8 @@
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
 
-#ifndef EXFEL_XMS_XMSDLL_HH
-#define	EXFEL_XMS_XMSDLL_HH
+#ifndef KARABO_XMS_XMSDLL_HH
+#define	KARABO_XMS_XMSDLL_HH
 
 /********************************************
  *         Disable Specific Warnings         *

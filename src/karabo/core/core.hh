@@ -8,8 +8,8 @@
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
 
-#ifndef EXFEL_CORE_CORE_HH
-#define	EXFEL_CORE_CORE_HH
+#ifndef KARABO_CORE_CORE_HH
+#define	KARABO_CORE_CORE_HH
 
 #include "Runner.hh"
 #include "Application.hh"
@@ -18,5 +18,5 @@
 #include "DeviceServer.hh"
 #include "Device.hh"
 
-#endif	/* EXFEL_CORE_CORE_HH */
+#endif	/* KARABO_CORE_CORE_HH */
 

@@ -7,8 +7,8 @@
  */
 
 
-#ifndef EXFEL_IO_FIXEDLENGTHARRAY_HH
-#define	EXFEL_IO_FIXEDLENGTHARRAY_HH
+#ifndef KARABO_IO_FIXEDLENGTHARRAY_HH
+#define	KARABO_IO_FIXEDLENGTHARRAY_HH
 
 #include "RecordElement.hh"
 #include "TypeTraits.hh"
@@ -24,7 +24,7 @@
 /**
  * The main European XFEL namespace
  */
-namespace exfel {
+namespace karabo {
 
     /**
      * Namespace for package io
@@ -37,7 +37,7 @@ namespace exfel {
             class FixedLengthArray : public RecordElement {
             public:
 
-                EXFEL_CLASSINFO(FixedLengthArray, ArrayTypeTraits::classId<T>(), "1.1")
+                KARABO_CLASSINFO(FixedLengthArray, ArrayTypeTraits::classId<T>(), "1.1")
 
                 FixedLengthArray() {
                     // H5::ArrayType needs scalar space
@@ -47,9 +47,9 @@ namespace exfel {
                 virtual ~FixedLengthArray() {
                 }
 
-                static void expectedParameters(exfel::util::Schema& expected) {
+                static void expectedParameters(karabo::util::Schema& expected) {
 
-                    exfel::util::VECTOR_UINT64_ELEMENT(expected)
+                    karabo::util::VECTOR_UINT64_ELEMENT(expected)
                             .key("dims")
                             .displayedName("Dimensions")
                             .description("Array dimensions.")
@@ -57,7 +57,7 @@ namespace exfel {
                             .commit();
 
                     // deprecated - use dims instead
-                    exfel::util::INT32_ELEMENT(expected)
+                    karabo::util::INT32_ELEMENT(expected)
                             .key("size")
                             .displayedName("Array size")
                             .description("Size of the array")
@@ -66,7 +66,7 @@ namespace exfel {
                             .reconfigurable()
                             .commit();
 
-                    exfel::util::INT32_ELEMENT(expected)
+                    karabo::util::INT32_ELEMENT(expected)
                             .key("chunkCacheSize")
                             .displayedName("chunk cache size")
                             .description("Size of the chunk cache in MB. 0 effectively means disabling the cache")
@@ -78,7 +78,7 @@ namespace exfel {
 
                 }
 
-                void configure(const exfel::util::Hash& input) {
+                void configure(const karabo::util::Hash& input) {
 
                     // TODO
                     // size is deprecated - will be removed soon
@@ -124,11 +124,11 @@ namespace exfel {
                     }
                 }
 
-                void write(const exfel::util::Hash& data, hsize_t recordId) {
+                void write(const karabo::util::Hash& data, hsize_t recordId) {
 
                     try {
                         selectFileRecord(recordId);
-                        exfel::util::Hash::const_iterator it = data.find(m_key);
+                        karabo::util::Hash::const_iterator it = data.find(m_key);
                         if (it == data.end()) { // TODO: do we need here to check if iterator is ok, is this performance issue
                             throw PARAMETER_EXCEPTION("Invalid key in the Hash");
                         }
@@ -164,10 +164,10 @@ namespace exfel {
                     m_dataSet.write(ptr, ArrayTypes::getHdf5NativeType<U > (m_dims), mds, m_fileDataSpace);
                 }
 
-                void write(const exfel::util::Hash& data, hsize_t recordId, hsize_t len) {
+                void write(const karabo::util::Hash& data, hsize_t recordId, hsize_t len) {
                     try {
                         selectFileRecord(recordId, len);
-                        exfel::util::Hash::const_iterator it = data.find(m_key);
+                        karabo::util::Hash::const_iterator it = data.find(m_key);
                         const boost::any& any = data.getAny(it);
                         if (!m_bufferFilter) {
                             //std::cout << "creating a filter" << std::endl;
@@ -180,7 +180,7 @@ namespace exfel {
 
                 }
 
-                void allocate(exfel::util::Hash & data) {
+                void allocate(karabo::util::Hash & data) {
 
                     if (!data.has(m_key)) {
                         // if element is not set allocate memory
@@ -188,12 +188,12 @@ namespace exfel {
                         ArrayView<T> av(arr, m_dims);
                         data.set(m_key, av);
                     }
-                    exfel::util::Hash::iterator it = data.find(m_key);
+                    karabo::util::Hash::iterator it = data.find(m_key);
                     boost::any& any = data.getAny(it);
                     m_filter = FLArrayFilter<T>::createDefault(any.type().name());
                 }
 
-                void allocate(exfel::util::Hash& buffer, size_t len) {
+                void allocate(karabo::util::Hash& buffer, size_t len) {
 
 
                     boost::shared_array<T> arr(new T[m_size * len]);
@@ -210,9 +210,9 @@ namespace exfel {
                     //av.getVectorOfArrayViews(vec);
                 }
 
-                void read(exfel::util::Hash& data, hsize_t recordId) {
+                void read(karabo::util::Hash& data, hsize_t recordId) {
                     selectFileRecord(recordId);
-                    exfel::util::Hash::iterator it = data.find(m_key);
+                    karabo::util::Hash::iterator it = data.find(m_key);
                     boost::any& any = data.getAny(it);
                     //tracer << "READING type=" << any.type().name() << std::endl;
                     m_filter->read(*this, any, m_dims);
@@ -221,13 +221,13 @@ namespace exfel {
 
                 // buffered reading
 
-                void read(exfel::util::Hash& data, hsize_t recordId, hsize_t len) {
+                void read(karabo::util::Hash& data, hsize_t recordId, hsize_t len) {
 
                     // "any" must contain a vector of ArrayView's of type T
                     // and it must be a continues block of memory to fit all elements of the vector (single buffer)
                     try {
                         selectFileRecord(recordId, len);
-                        exfel::util::Hash::iterator it = data.find(m_key);
+                        karabo::util::Hash::iterator it = data.find(m_key);
                         boost::any& any = data.getAny(it);
                         if (!m_bufferFilter) {
                             //std::cout << "creating read filter" << std::endl;
@@ -285,7 +285,7 @@ namespace exfel {
                     }
                 }
 
-                void readSpecificAttributes(exfel::util::Hash& attributes) {
+                void readSpecificAttributes(karabo::util::Hash& attributes) {
                     attributes.setFromPath(m_key + ".rank", static_cast<int> (m_dims.size()));
                     attributes.setFromPath(m_key + ".dims", m_dims);
                     attributes.setFromPath(m_key + ".typeCategory", "FixedLengthArray");
@@ -324,4 +324,4 @@ namespace exfel {
     }
 }
 
-#endif	/* EXFEL_IO_FIXEDLENGTHARRAY_HH */
+#endif	/* KARABO_IO_FIXEDLENGTHARRAY_HH */

@@ -10,13 +10,13 @@
 #include "TestDevice.hh"
 
 using namespace std;
-using namespace exfel::util;
+using namespace karabo::util;
 using namespace log4cpp;
 
-namespace exfel {
+namespace karabo {
     namespace core {
 
-        EXFEL_REGISTER_FACTORY_2_CC(Device, ReconfigurableFsm, TestDevice)
+        KARABO_REGISTER_FACTORY_2_CC(Device, ReconfigurableFsm, TestDevice)
 
 
         TestDevice::~TestDevice() {
@@ -46,7 +46,7 @@ namespace exfel {
                     .assignmentMandatory()
                     .commit();
 
-            //      CHOICE_ELEMENT<exfel::net::Connection>(expected).key("device")
+            //      CHOICE_ELEMENT<karabo::net::Connection>(expected).key("device")
             //              .displayedName("Device")
             //              .description("The device the motor will move with")
             //              .assignmentMandatory()
@@ -129,14 +129,14 @@ namespace exfel {
             //              .actualAlias(wstring(L"SensorTemperature"))
             //              .commit();
             //      
-            //      LIST_ELEMENT<exfel::net::Connection> (expected).key("listElement")
+            //      LIST_ELEMENT<karabo::net::Connection> (expected).key("listElement")
             //              .displayedName("List Element")
             //              .description("List element for testing")
             //              .reconfigurable()
             //              .assignmentOptional().defaultValue("Jms")
             //              .commit();
             //      
-            //      NON_EMPTY_LIST_ELEMENT<exfel::net::Connection> (expected).key("NonEmptyLListElement")
+            //      NON_EMPTY_LIST_ELEMENT<karabo::net::Connection> (expected).key("NonEmptyLListElement")
             //              .displayedName("Non Empty List Element")
             //              .description("Non Empty List element for testing")
             //              .reconfigurable()
@@ -144,7 +144,7 @@ namespace exfel {
             //              .commit();
             //      
             //      
-            //      SINGLE_ELEMENT<exfel::net::Connection>(expected).key("singleElement")
+            //      SINGLE_ELEMENT<karabo::net::Connection>(expected).key("singleElement")
             //              .classId("Udp")
             //              .displayedName("Single Element")
             //              .description("Single element for testing")

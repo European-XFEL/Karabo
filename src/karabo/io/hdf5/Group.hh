@@ -9,22 +9,22 @@
 
 
 
-#ifndef EXFEL_IO_GROUP_HH
-#define	EXFEL_IO_GROUP_HH
+#ifndef KARABO_IO_GROUP_HH
+#define	KARABO_IO_GROUP_HH
 
 #include <karabo/util/Factory.hh>
 #include "../iodll.hh"
 
 #include <string>
 
-namespace exfel {
+namespace karabo {
   namespace io {
 
 
     class Group {
     public:
-      EXFEL_CLASSINFO(Group, "Group", "1.0")
-      EXFEL_FACTORY_BASE_CLASS
+      KARABO_CLASSINFO(Group, "Group", "1.0")
+      KARABO_FACTORY_BASE_CLASS
 
 
       virtual ~Group(){
@@ -38,8 +38,8 @@ namespace exfel {
         return m_path;
       }
 
-      static void expectedParameters(exfel::util::Schema& expected);
-      void configure(const exfel::util::Hash& input);
+      static void expectedParameters(karabo::util::Schema& expected);
+      void configure(const karabo::util::Hash& input);
     
     private:
 
@@ -50,7 +50,7 @@ namespace exfel {
   }
 }
 
-EXFEL_REGISTER_FACTORY_BASE_HH(exfel::io::Group, TEMPLATE_IO, DECLSPEC_IO)
+KARABO_REGISTER_FACTORY_BASE_HH(karabo::io::Group, TEMPLATE_IO, DECLSPEC_IO)
 
-#endif	/* EXFEL_IO_GROUP_HH */
+#endif	/* KARABO_IO_GROUP_HH */
 

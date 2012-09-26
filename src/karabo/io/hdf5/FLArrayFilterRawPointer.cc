@@ -11,22 +11,22 @@
 
 
 
-namespace exfel {
+namespace karabo {
   namespace io {
     namespace hdf5 {
 
-      EXFEL_REGISTER_FACTORY_CC(FLArrayFilter<signed char>, Int8RawPointerFLArrayFilter)
-      EXFEL_REGISTER_FACTORY_CC(FLArrayFilter<short>, Int16RawPointerFLArrayFilter)
-      EXFEL_REGISTER_FACTORY_CC(FLArrayFilter<int>, Int32RawPointerFLArrayFilter)
-      EXFEL_REGISTER_FACTORY_CC(FLArrayFilter<long long>, Int64RawPointerFLArrayFilter)
-      EXFEL_REGISTER_FACTORY_CC(FLArrayFilter<unsigned char>, UInt8RawPointerFLArrayFilter)
-      EXFEL_REGISTER_FACTORY_CC(FLArrayFilter<unsigned short>, UInt16RawPointerFLArrayFilter)
-      EXFEL_REGISTER_FACTORY_CC(FLArrayFilter<unsigned int>, UInt32RawPointerFLArrayFilter)
-      EXFEL_REGISTER_FACTORY_CC(FLArrayFilter<unsigned long long>, UInt64RawPointerFLArrayFilter)
-      EXFEL_REGISTER_FACTORY_CC(FLArrayFilter<float>, FloatRawPointerFLArrayFilter)
-      EXFEL_REGISTER_FACTORY_CC(FLArrayFilter<double>, DoubleRawPointerFLArrayFilter)
-      EXFEL_REGISTER_FACTORY_CC(FLArrayFilter<std::string>, StringRawPointerFLArrayFilter)
-      EXFEL_REGISTER_FACTORY_CC(FLArrayFilter<bool>, BoolRawPointerFLArrayFilter)
+      KARABO_REGISTER_FACTORY_CC(FLArrayFilter<signed char>, Int8RawPointerFLArrayFilter)
+      KARABO_REGISTER_FACTORY_CC(FLArrayFilter<short>, Int16RawPointerFLArrayFilter)
+      KARABO_REGISTER_FACTORY_CC(FLArrayFilter<int>, Int32RawPointerFLArrayFilter)
+      KARABO_REGISTER_FACTORY_CC(FLArrayFilter<long long>, Int64RawPointerFLArrayFilter)
+      KARABO_REGISTER_FACTORY_CC(FLArrayFilter<unsigned char>, UInt8RawPointerFLArrayFilter)
+      KARABO_REGISTER_FACTORY_CC(FLArrayFilter<unsigned short>, UInt16RawPointerFLArrayFilter)
+      KARABO_REGISTER_FACTORY_CC(FLArrayFilter<unsigned int>, UInt32RawPointerFLArrayFilter)
+      KARABO_REGISTER_FACTORY_CC(FLArrayFilter<unsigned long long>, UInt64RawPointerFLArrayFilter)
+      KARABO_REGISTER_FACTORY_CC(FLArrayFilter<float>, FloatRawPointerFLArrayFilter)
+      KARABO_REGISTER_FACTORY_CC(FLArrayFilter<double>, DoubleRawPointerFLArrayFilter)
+      KARABO_REGISTER_FACTORY_CC(FLArrayFilter<std::string>, StringRawPointerFLArrayFilter)
+      KARABO_REGISTER_FACTORY_CC(FLArrayFilter<bool>, BoolRawPointerFLArrayFilter)
 
     }
   }

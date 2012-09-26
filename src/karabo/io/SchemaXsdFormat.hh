@@ -9,8 +9,8 @@
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
 
-#ifndef EXFEL_IO_XMLFORMAT_HH
-#define	EXFEL_IO_XMLFORMAT_HH
+#ifndef KARABO_IO_XMLFORMAT_HH
+#define	KARABO_IO_XMLFORMAT_HH
 
 #include <karabo/xml/tinyxml.h>
 #include <karabo/util/Factory.hh>
@@ -18,17 +18,17 @@
 
 #include "Format.hh"
 
-namespace exfel {
+namespace karabo {
 
     namespace io {
 
         /**
          * The MasterConfigXsdFormat class.
          */
-        class SchemaXsdFormat : public Format<exfel::util::Schema> {
+        class SchemaXsdFormat : public Format<karabo::util::Schema> {
         public:
 
-            EXFEL_CLASSINFO(SchemaXsdFormat, "Xsd", "1.0")
+            KARABO_CLASSINFO(SchemaXsdFormat, "Xsd", "1.0")
 
             SchemaXsdFormat() {
             };
@@ -36,28 +36,28 @@ namespace exfel {
             virtual ~SchemaXsdFormat() {
             };
 
-            static void expectedParameters(exfel::util::Schema& expected);
+            static void expectedParameters(karabo::util::Schema& expected);
 
-            void configure(const exfel::util::Hash& input);
+            void configure(const karabo::util::Hash& input);
 
             /**
              * Reading a configuration file.
              * Function reads configuration file (XML Document) and
-             * creates an object of the class exfel::util::Hash
+             * creates an object of the class karabo::util::Hash
              * @param in Input parameter representing XML document
-             * @param out Output parameter representing object of the class exfel::util::Hash
+             * @param out Output parameter representing object of the class karabo::util::Hash
              */
-            void convert(std::stringstream& in, exfel::util::Schema& out);
+            void convert(std::stringstream& in, karabo::util::Schema& out);
 
 
             /**
              * Writing a configuration file.
-             * Function gets as input an object of the class exfel::util::Hash
+             * Function gets as input an object of the class karabo::util::Hash
              * and creates a configuration file in XML format.
-             * @param in Input parameter representing an object of the class exfel::util::Hash
+             * @param in Input parameter representing an object of the class karabo::util::Hash
              * @param out Output parameter representing constructed XML Document
              */
-            void convert(const exfel::util::Schema& in, std::stringstream& out);
+            void convert(const karabo::util::Schema& in, std::stringstream& out);
 
         private: // members
 
@@ -67,17 +67,17 @@ namespace exfel {
 
         private: // functions
 
-            void r_writeXmlExpectedObject(const exfel::util::Schema& expected, exfel::tinyxml::TiXmlElement* pTheElement);
+            void r_writeXmlExpectedObject(const karabo::util::Schema& expected, karabo::tinyxml::TiXmlElement* pTheElement);
 
-            void setAssignmentTypeInXml(exfel::tinyxml::TiXmlElement* element, exfel::util::Schema::AssignmentType at);
+            void setAssignmentTypeInXml(karabo::tinyxml::TiXmlElement* element, karabo::util::Schema::AssignmentType at);
 
-            void setAppearenceSequenceTag(const exfel::util::Schema& complex, exfel::tinyxml::TiXmlElement* complexTypeTag, int minOccurs);
+            void setAppearenceSequenceTag(const karabo::util::Schema& complex, karabo::tinyxml::TiXmlElement* complexTypeTag, int minOccurs);
 
-            void setAppearenceAllTag(const exfel::util::Schema& complex, exfel::tinyxml::TiXmlElement* complexTypeTag, int minOccurs);
+            void setAppearenceAllTag(const karabo::util::Schema& complex, karabo::tinyxml::TiXmlElement* complexTypeTag, int minOccurs);
 
-            std::string rewriteTypeToXsd(const exfel::util::Types::Type typeOfElement);
+            std::string rewriteTypeToXsd(const karabo::util::Types::Type typeOfElement);
         };
     } // namespace io
-} // namespace exfel
+} // namespace karabo
 
-#endif	/* EXFEL_PACKAGENAME_XMLFORMAT_HH */
+#endif	/* KARABO_PACKAGENAME_XMLFORMAT_HH */

@@ -9,8 +9,8 @@
 
 
 
-#ifndef EXFEL_IO_RECORDFORMAT_HH
-#define	EXFEL_IO_RECORDFORMAT_HH
+#ifndef KARABO_IO_RECORDFORMAT_HH
+#define	KARABO_IO_RECORDFORMAT_HH
 
 #include <vector>
 #include <boost/shared_ptr.hpp>
@@ -23,7 +23,7 @@
 
 #include <string>
 
-namespace exfel {
+namespace karabo {
   namespace io {
     namespace hdf5 {
       class DataFormat;
@@ -32,15 +32,15 @@ namespace exfel {
         friend class DataFormat;
       public:
 
-        EXFEL_CLASSINFO(RecordFormat, "RecordFormat", "1.0")
-        EXFEL_FACTORY_BASE_CLASS
+        KARABO_CLASSINFO(RecordFormat, "RecordFormat", "1.0")
+        KARABO_FACTORY_BASE_CLASS
 
       private:
         std::vector<Group::Pointer > m_groupList;
         std::string m_root;
-        exfel::util::Hash m_config;
+        karabo::util::Hash m_config;
 
-        exfel::util::Hash m_recordElementHash;
+        karabo::util::Hash m_recordElementHash;
 
 
         void buildRecordFormat(const std::vector<DataBlock::Pointer>& dataBlockList);
@@ -51,18 +51,18 @@ namespace exfel {
         }
 
 
-        static void expectedParameters(exfel::util::Schema& expected);
-        void configure(const exfel::util::Hash& input);
+        static void expectedParameters(karabo::util::Schema& expected);
+        void configure(const karabo::util::Hash& input);
 
-        void getHash(exfel::util::Hash&);
-        exfel::util::Hash getConfig();
+        void getHash(karabo::util::Hash&);
+        karabo::util::Hash getConfig();
 
       };
     }
   }
 }
 
-EXFEL_REGISTER_FACTORY_BASE_HH(exfel::io::hdf5::RecordFormat, TEMPLATE_IO, DECLSPEC_IO)
+KARABO_REGISTER_FACTORY_BASE_HH(karabo::io::hdf5::RecordFormat, TEMPLATE_IO, DECLSPEC_IO)
 
-#endif	/* EXFEL_IO_RECORDFORMAT_HH */
+#endif	/* KARABO_IO_RECORDFORMAT_HH */
 

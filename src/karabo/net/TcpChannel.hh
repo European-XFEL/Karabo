@@ -5,8 +5,8 @@
  * Created on June 3, 2011, 6:01 PM
  */
 
-#ifndef EXFEL_NET_TCPCHANNEL_HH
-#define	EXFEL_NET_TCPCHANNEL_HH
+#ifndef KARABO_NET_TCPCHANNEL_HH
+#define	KARABO_NET_TCPCHANNEL_HH
 
 #include <boost/enable_shared_from_this.hpp>
 #include "Channel.hh"
@@ -14,13 +14,13 @@
 
 
 
-namespace exfel {
+namespace karabo {
     namespace net {
 
         class TcpChannel : public Channel, public boost::enable_shared_from_this<TcpChannel> {
         public:
 
-            EXFEL_CLASSINFO(TcpChannel, "TcpChannel", "1.0")
+            KARABO_CLASSINFO(TcpChannel, "TcpChannel", "1.0")
 
             typedef boost::shared_ptr<TcpChannel> Pointer;
 
@@ -32,7 +32,7 @@ namespace exfel {
             }
 
             virtual void read(char*& data, size_t& size);
-            virtual void read(char*& data, size_t& size, exfel::util::Hash& header);
+            virtual void read(char*& data, size_t& size, karabo::util::Hash& header);
 
             virtual void readAsyncRaw(char*& data, size_t& size, const ReadRawHandler& handler);
             virtual void readAsyncVector(const Channel::ReadVectorHandler& handler);
@@ -42,15 +42,15 @@ namespace exfel {
             virtual void readAsyncStringHash(const ReadStringHashHandler& handler);
 
             virtual void write(const char* data, const size_t& size);
-            virtual void write(const char* data, const size_t& size, const exfel::util::Hash& header);
+            virtual void write(const char* data, const size_t& size, const karabo::util::Hash& header);
 
             virtual void writeAsyncRaw(const char* data, const size_t& size, const WriteCompleteHandler& handler);
             virtual void writeAsyncVector(const std::vector<char>& data, const WriteCompleteHandler& handler);
             virtual void writeAsyncString(const std::string& data, const WriteCompleteHandler& handler);
-            virtual void writeAsyncHash(const exfel::util::Hash& data, const WriteCompleteHandler& handler);
-            virtual void writeAsyncRawHash(const char* data, const size_t& size, const exfel::util::Hash& header, const WriteCompleteHandler& handler);
-            virtual void writeAsyncVectorHash(const std::vector<char>& data, const exfel::util::Hash& header, const WriteCompleteHandler& handler);
-            virtual void writeAsyncStringHash(const std::string& data, const exfel::util::Hash& header, const WriteCompleteHandler& handler);
+            virtual void writeAsyncHash(const karabo::util::Hash& data, const WriteCompleteHandler& handler);
+            virtual void writeAsyncRawHash(const char* data, const size_t& size, const karabo::util::Hash& header, const WriteCompleteHandler& handler);
+            virtual void writeAsyncVectorHash(const std::vector<char>& data, const karabo::util::Hash& header, const WriteCompleteHandler& handler);
+            virtual void writeAsyncStringHash(const std::string& data, const karabo::util::Hash& header, const WriteCompleteHandler& handler);
 
             virtual void waitAsync(int milliseconds, const WaitHandler& handler);
 
@@ -103,5 +103,5 @@ namespace exfel {
     }
 }
 
-#endif	/* EXFEL_NET_TCPCHANNEL_HH */
+#endif	/* KARABO_NET_TCPCHANNEL_HH */
 

@@ -5,22 +5,22 @@
  * Created on June 3, 2011, 12:04 PM
  */
 
-#ifndef EXFEL_NET_ABSTRACTIOSERVICE_HH
-#define	EXFEL_NET_ABSTRACTIOSERVICE_HH
+#ifndef KARABO_NET_ABSTRACTIOSERVICE_HH
+#define	KARABO_NET_ABSTRACTIOSERVICE_HH
 
 #include <boost/shared_ptr.hpp>
 #include <karabo/util/Factory.hh>
 #include <karabo/util/Hash.hh>
 #include "netdll.hh"
 
-namespace exfel {
+namespace karabo {
     namespace net {
 
         class AbstractIOService {
         public:
 
-            EXFEL_CLASSINFO(AbstractIOService, "AbstractIOService", "1.0")
-            EXFEL_FACTORY_BASE_CLASS
+            KARABO_CLASSINFO(AbstractIOService, "AbstractIOService", "1.0")
+            KARABO_FACTORY_BASE_CLASS
 
             virtual void run() = 0;
             
@@ -35,7 +35,7 @@ namespace exfel {
     }
 }
 
-EXFEL_REGISTER_FACTORY_BASE_HH(exfel::net::AbstractIOService, TEMPLATE_NET, DECLSPEC_NET)
+KARABO_REGISTER_FACTORY_BASE_HH(karabo::net::AbstractIOService, TEMPLATE_NET, DECLSPEC_NET)
 
-#endif	/* EXFEL_NET_ABSTRACTIOSERVICE_HH */
+#endif	/* KARABO_NET_ABSTRACTIOSERVICE_HH */
 

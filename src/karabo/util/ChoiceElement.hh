@@ -10,12 +10,12 @@
  */
 
 
-#ifndef EXFEL_UTIL_CHOICEELEMENT_HH
-#define	EXFEL_UTIL_CHOICEELEMENT_HH
+#ifndef KARABO_UTIL_CHOICEELEMENT_HH
+#define	KARABO_UTIL_CHOICEELEMENT_HH
 
 #include "GenericElement.hh"
 
-namespace exfel {
+namespace karabo {
   namespace util {
 
     template<class T >

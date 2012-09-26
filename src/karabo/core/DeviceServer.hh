@@ -8,8 +8,8 @@
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
 
-#ifndef EXFEL_CORE_DEVICESERVER_HH
-#define	EXFEL_CORE_DEVICESERVER_HH
+#ifndef KARABO_CORE_DEVICESERVER_HH
+#define	KARABO_CORE_DEVICESERVER_HH
 
 #include <karabo/util/Factory.hh>
 #include <karabo/util/PluginLoader.hh>
@@ -22,7 +22,7 @@
 /**
  * The main European XFEL namespace
  */
-namespace exfel {
+namespace karabo {
 
     /**
      * Namespace for package core
@@ -32,23 +32,23 @@ namespace exfel {
         /**
          * The DeviceServer class.
          */
-        class DeviceServer : public exfel::xms::SignalSlotable {
+        class DeviceServer : public karabo::xms::SignalSlotable {
             
             typedef std::map<std::string, boost::thread*> DeviceInstanceMap;
             
             
         public:
 
-            EXFEL_CLASSINFO(DeviceServer, "DeviceServer", "1.0")
-            EXFEL_FACTORY_BASE_CLASS
+            KARABO_CLASSINFO(DeviceServer, "DeviceServer", "1.0")
+            KARABO_FACTORY_BASE_CLASS
 
             DeviceServer();
 
             virtual ~DeviceServer();
 
-            static void expectedParameters(exfel::util::Schema&);
+            static void expectedParameters(karabo::util::Schema&);
 
-            void configure(const exfel::util::Hash&);
+            void configure(const karabo::util::Hash&);
 
             void run();
             
@@ -56,108 +56,108 @@ namespace exfel {
             /*                 Special Functions                          */
             /**************************************************************/
            
-            EXFEL_FSM_LOGGER(log, log4cpp::CategoryStream, log4cpp::Priority::DEBUG)                    
+            KARABO_FSM_LOGGER(log, log4cpp::CategoryStream, log4cpp::Priority::DEBUG)                    
                     
-            EXFEL_FSM_ON_EXCEPTION(errorFound)
+            KARABO_FSM_ON_EXCEPTION(errorFound)
 
-            EXFEL_FSM_NO_TRANSITION_V_ACTION(noStateTransition)
+            KARABO_FSM_NO_TRANSITION_V_ACTION(noStateTransition)
             
-            EXFEL_FSM_ON_CURRENT_STATE_CHANGE(updateCurrentState)
+            KARABO_FSM_ON_CURRENT_STATE_CHANGE(updateCurrentState)
 
             /**************************************************************/
             /*                        Events                              */
             /**************************************************************/
 
             // Standard events
-            EXFEL_FSM_EVENT2(m_fsm, ErrorFoundEvent, errorFound, std::string, std::string)
+            KARABO_FSM_EVENT2(m_fsm, ErrorFoundEvent, errorFound, std::string, std::string)
 
-            EXFEL_FSM_EVENT0(m_fsm, EndErrorEvent, endError)
+            KARABO_FSM_EVENT0(m_fsm, EndErrorEvent, endError)
 
-            EXFEL_FSM_EVENT0(m_fsm, NewPluginAvailableEvent, newPluginAvailable)
+            KARABO_FSM_EVENT0(m_fsm, NewPluginAvailableEvent, newPluginAvailable)
 
-            EXFEL_FSM_EVENT0(m_fsm, InbuildDevicesAvailableEvent, inbuildDevicesAvailable)
+            KARABO_FSM_EVENT0(m_fsm, InbuildDevicesAvailableEvent, inbuildDevicesAvailable)
 
-            EXFEL_FSM_EVENT1(m_fsm, StartDeviceEvent, slotStartDevice, exfel::util::Hash)
+            KARABO_FSM_EVENT1(m_fsm, StartDeviceEvent, slotStartDevice, karabo::util::Hash)
             
-            EXFEL_FSM_EVENT1(m_fsm, RegistrationOkEvent, slotRegistrationOk, std::string)
+            KARABO_FSM_EVENT1(m_fsm, RegistrationOkEvent, slotRegistrationOk, std::string)
             
-            EXFEL_FSM_EVENT1(m_fsm, RegistrationFailedEvent, slotRegistrationFailed, std::string)
+            KARABO_FSM_EVENT1(m_fsm, RegistrationFailedEvent, slotRegistrationFailed, std::string)
                       
             /**************************************************************/
             /*                        States                              */
             /**************************************************************/
 
-            EXFEL_FSM_STATE_V_E(RegistrationState, registrationStateOnEntry)
+            KARABO_FSM_STATE_V_E(RegistrationState, registrationStateOnEntry)
             
-            EXFEL_FSM_STATE(ErrorState)
+            KARABO_FSM_STATE(ErrorState)
 
-            EXFEL_FSM_STATE_V_E(IdleState, idleStateOnEntry)
+            KARABO_FSM_STATE_V_E(IdleState, idleStateOnEntry)
 
-            EXFEL_FSM_STATE(ServingState)
+            KARABO_FSM_STATE(ServingState)
 
             /**************************************************************/
             /*                    Transition  Actions                      */
             /**************************************************************/
 
-            EXFEL_FSM_V_ACTION2(ErrorFoundAction, errorFoundAction, std::string, std::string)
+            KARABO_FSM_V_ACTION2(ErrorFoundAction, errorFoundAction, std::string, std::string)
 
-            EXFEL_FSM_V_ACTION0(EndErrorAction, endErrorAction)
+            KARABO_FSM_V_ACTION0(EndErrorAction, endErrorAction)
 
-            EXFEL_FSM_V_ACTION0(NotifyNewDeviceAction, notifyNewDeviceAction)
+            KARABO_FSM_V_ACTION0(NotifyNewDeviceAction, notifyNewDeviceAction)
 
-            EXFEL_FSM_V_ACTION1(StartDeviceAction, startDeviceAction, exfel::util::Hash)
+            KARABO_FSM_V_ACTION1(StartDeviceAction, startDeviceAction, karabo::util::Hash)
             
-            EXFEL_FSM_V_ACTION1(RegistrationFailedAction, registrationFailed, std::string)
+            KARABO_FSM_V_ACTION1(RegistrationFailedAction, registrationFailed, std::string)
             
-            EXFEL_FSM_V_ACTION1(RegistrationOkAction, registrationOk, std::string)
+            KARABO_FSM_V_ACTION1(RegistrationOkAction, registrationOk, std::string)
             
             /**************************************************************/
             /*                      AllOk Machine                         */
             /**************************************************************/
 
-            EXFEL_FSM_TABLE_BEGIN(AllOkStateTransitionTable)
+            KARABO_FSM_TABLE_BEGIN(AllOkStateTransitionTable)
             Row< RegistrationState, RegistrationOkEvent, IdleState, RegistrationOkAction, none>,
             Row< RegistrationState, RegistrationFailedEvent, ErrorState, RegistrationFailedAction, none>,
             Row< IdleState, NewPluginAvailableEvent, none, NotifyNewDeviceAction, none >,
             Row< IdleState, InbuildDevicesAvailableEvent, none, NotifyNewDeviceAction, none >,
             Row< IdleState, StartDeviceEvent, ServingState, StartDeviceAction, none >,
             Row< ServingState, StartDeviceEvent, none, StartDeviceAction, none>
-            EXFEL_FSM_TABLE_END
+            KARABO_FSM_TABLE_END
             
             //                       Name          Transition-Table     Initial-State  Context
-            EXFEL_FSM_STATE_MACHINE(AllOkState, AllOkStateTransitionTable, RegistrationState, Self)
+            KARABO_FSM_STATE_MACHINE(AllOkState, AllOkStateTransitionTable, RegistrationState, Self)
 
 
             /**************************************************************/
             /*                      Top Machine                           */
             /**************************************************************/
 
-            EXFEL_FSM_TABLE_BEGIN(DeviceServerMachineTransitionTable)
+            KARABO_FSM_TABLE_BEGIN(DeviceServerMachineTransitionTable)
             Row< AllOkState, ErrorFoundEvent, ErrorState, ErrorFoundAction, none >,
             Row< ErrorState, EndErrorEvent, AllOkState, EndErrorAction, none >
-            EXFEL_FSM_TABLE_END
+            KARABO_FSM_TABLE_END
 
             
-            EXFEL_FSM_STATE_MACHINE(DeviceServerMachine, DeviceServerMachineTransitionTable, AllOkState, Self)
+            KARABO_FSM_STATE_MACHINE(DeviceServerMachine, DeviceServerMachineTransitionTable, AllOkState, Self)
 
 
             void startStateMachine() {
 
-                EXFEL_FSM_CREATE_MACHINE(DeviceServerMachine, m_fsm);
+                KARABO_FSM_CREATE_MACHINE(DeviceServerMachine, m_fsm);
 
-                EXFEL_FSM_SET_CONTEXT_TOP(this, m_fsm);
-                EXFEL_FSM_SET_CONTEXT_SUB(this, m_fsm, AllOkState);
+                KARABO_FSM_SET_CONTEXT_TOP(this, m_fsm);
+                KARABO_FSM_SET_CONTEXT_SUB(this, m_fsm, AllOkState);
                         
-                EXFEL_FSM_START_MACHINE(m_fsm);
+                KARABO_FSM_START_MACHINE(m_fsm);
             }
             
             
 
         private: // Functions
             
-            void loadLogger(const exfel::util::Hash& input);
+            void loadLogger(const karabo::util::Hash& input);
 
-            void loadPluginLoader(const exfel::util::Hash& input);
+            void loadPluginLoader(const karabo::util::Hash& input);
             
             void stopDeviceServer();
 
@@ -179,9 +179,9 @@ namespace exfel {
             
             log4cpp::Category* m_log;
             
-            EXFEL_FSM_DECLARE_MACHINE(DeviceServerMachine, m_fsm);
+            KARABO_FSM_DECLARE_MACHINE(DeviceServerMachine, m_fsm);
 
-            exfel::util::PluginLoader::Pointer m_pluginLoader;
+            karabo::util::PluginLoader::Pointer m_pluginLoader;
             boost::thread m_pluginThread;
             bool m_deviceServerStopped;
 
@@ -189,22 +189,22 @@ namespace exfel {
             unsigned int m_nameRequestTimeout;
             bool m_gotName;
 
-            exfel::util::Hash m_availableDevices;
-            std::vector<exfel::util::Hash> m_autoStart;
+            karabo::util::Hash m_availableDevices;
+            std::vector<karabo::util::Hash> m_autoStart;
             boost::thread_group m_deviceThreads;
             DeviceInstanceMap m_deviceInstanceMap;
             
-            exfel::io::Format<exfel::util::Schema>::Pointer m_format;
+            karabo::io::Format<karabo::util::Schema>::Pointer m_format;
             
             std::string m_devSrvInstId;
-            exfel::net::BrokerConnection::Pointer m_connection;
+            karabo::net::BrokerConnection::Pointer m_connection;
             
-            exfel::util::Hash m_connectionConfig;
+            karabo::util::Hash m_connectionConfig;
             
         };
     } 
 } 
 
-EXFEL_REGISTER_FACTORY_BASE_HH(exfel::core::DeviceServer, TEMPLATE_CORE, DECLSPEC_CORE)
+KARABO_REGISTER_FACTORY_BASE_HH(karabo::core::DeviceServer, TEMPLATE_CORE, DECLSPEC_CORE)
 
 #endif

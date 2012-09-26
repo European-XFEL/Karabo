@@ -10,12 +10,12 @@
  */
 
 
-#ifndef EXFEL_UTIL_SIMPLEELEMENT_HH
-#define	EXFEL_UTIL_SIMPLEELEMENT_HH
+#ifndef KARABO_UTIL_SIMPLEELEMENT_HH
+#define	KARABO_UTIL_SIMPLEELEMENT_HH
 
 #include "GenericElement.hh"
 
-namespace exfel {
+namespace karabo {
     namespace util {
 
         /**

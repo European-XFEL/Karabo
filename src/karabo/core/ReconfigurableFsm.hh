@@ -9,12 +9,12 @@
  */
 
 
-#ifndef EXFEL_CORE_RECONFIGURABLEFSM_HH
-#define	EXFEL_CORE_RECONFIGURABLEFSM_HH
+#ifndef KARABO_CORE_RECONFIGURABLEFSM_HH
+#define	KARABO_CORE_RECONFIGURABLEFSM_HH
 
 #include "Device.hh"
 
-namespace exfel {
+namespace karabo {
     namespace core {
         
         /**
@@ -28,7 +28,7 @@ namespace exfel {
          * 
          * @code
          * 
-         * void onReconfigure(const exfel::util::Hash& incomingConfiguration);
+         * void onReconfigure(const karabo::util::Hash& incomingConfiguration);
          * 
          * void allOkStateOnEntry();
          * void allOkStateOnExit();            
@@ -38,10 +38,10 @@ namespace exfel {
          * @endcode
          * 
          */
-        class ReconfigurableFsm : public exfel::core::Device {
+        class ReconfigurableFsm : public karabo::core::Device {
         public:
 
-            EXFEL_CLASSINFO(ReconfigurableFsm, "ReconfigurableFsm", "1.0")
+            KARABO_CLASSINFO(ReconfigurableFsm, "ReconfigurableFsm", "1.0")
 
             template <class Derived>
             ReconfigurableFsm(Derived* derived) : Device(derived) {
@@ -50,9 +50,9 @@ namespace exfel {
             virtual ~ReconfigurableFsm() {
             }
 
-            static void expectedParameters(exfel::util::Schema& expected);
+            static void expectedParameters(karabo::util::Schema& expected);
 
-            void configure(const exfel::util::Hash& input);
+            void configure(const karabo::util::Hash& input);
             
             virtual void run();
 
@@ -64,17 +64,17 @@ namespace exfel {
 
             // Standard events
 
-            EXFEL_FSM_EVENT2(m_fsm, ErrorFoundEvent, onException, std::string, std::string)
+            KARABO_FSM_EVENT2(m_fsm, ErrorFoundEvent, onException, std::string, std::string)
 
-            EXFEL_FSM_EVENT0(m_fsm, EndErrorEvent, slotEndError)
+            KARABO_FSM_EVENT0(m_fsm, EndErrorEvent, slotEndError)
 
             /**************************************************************/
             /*                        States                              */
             /**************************************************************/
 
-            EXFEL_FSM_STATE_V_EE(AllOkState, allOkStateOnEntry, allOkStateOnExit)
+            KARABO_FSM_STATE_V_EE(AllOkState, allOkStateOnEntry, allOkStateOnExit)
 
-            EXFEL_FSM_STATE_V_EE(ErrorState, errorStateOnEntry, errorStateOnExit)
+            KARABO_FSM_STATE_V_EE(ErrorState, errorStateOnEntry, errorStateOnExit)
 
             /**************************************************************/
             /*                    Transition Actions                      */
@@ -87,37 +87,37 @@ namespace exfel {
             /**************************************************************/
 
             //  Source-State    Event        Target-State    Action         Guard
-            EXFEL_FSM_TABLE_BEGIN(ReconfigureMachineTransitionTable)
+            KARABO_FSM_TABLE_BEGIN(ReconfigureMachineTransitionTable)
             Row< AllOkState, ErrorFoundEvent, ErrorState, ErrorFoundAction, none >,
             Row< ErrorState, EndErrorEvent, AllOkState, none, none >
-            EXFEL_FSM_TABLE_END
+            KARABO_FSM_TABLE_END
 
 
             //                                 Name                   Transition-Table       Initial-State Context
-            EXFEL_FSM_STATE_MACHINE(ReconfigureDeviceMachine, ReconfigureMachineTransitionTable, AllOkState, Self)
+            KARABO_FSM_STATE_MACHINE(ReconfigureDeviceMachine, ReconfigureMachineTransitionTable, AllOkState, Self)
 
 
             void startStateMachine() {
 
-                EXFEL_FSM_CREATE_MACHINE(ReconfigureDeviceMachine, m_fsm);
-                EXFEL_FSM_SET_CONTEXT_TOP(this, m_fsm)
-                EXFEL_FSM_START_MACHINE(m_fsm)
+                KARABO_FSM_CREATE_MACHINE(ReconfigureDeviceMachine, m_fsm);
+                KARABO_FSM_SET_CONTEXT_TOP(this, m_fsm)
+                KARABO_FSM_START_MACHINE(m_fsm)
             }
 
 
             // Override this function if you need to handle the reconfigured data (e.g. send to a hardware)
 
-            virtual void onReconfigure(exfel::util::Hash& incomingReconfiguration) {
+            virtual void onReconfigure(karabo::util::Hash& incomingReconfiguration) {
             }
 
 
         private: // functions
 
-            void applyReconfiguration(const exfel::util::Hash& reconfiguration);
+            void applyReconfiguration(const karabo::util::Hash& reconfiguration);
 
         private:
 
-            EXFEL_FSM_DECLARE_MACHINE(ReconfigureDeviceMachine, m_fsm);
+            KARABO_FSM_DECLARE_MACHINE(ReconfigureDeviceMachine, m_fsm);
 
         };
 

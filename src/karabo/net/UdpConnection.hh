@@ -7,8 +7,8 @@
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
 
-#ifndef EXFEL_NET_AUDPCONNECTION_HH
-#define	EXFEL_NET_AUDPCONNECTION_HH
+#ifndef KARABO_NET_AUDPCONNECTION_HH
+#define	KARABO_NET_AUDPCONNECTION_HH
 
 #include <boost/shared_ptr.hpp>
 #include <boost/asio.hpp>
@@ -25,7 +25,7 @@
 /**
  * The main European XFEL namespace
  */
-namespace exfel {
+namespace karabo {
 
     /**
      * Name space for package net
@@ -39,18 +39,18 @@ namespace exfel {
         typedef boost::shared_ptr<boost::asio::ip::udp::resolver> BoostUdpResolverPointer;
 
         class UdpConnection : public Connection {
-            friend class exfel::net::UdpChannel;
+            friend class karabo::net::UdpChannel;
 
         public:
 
-            EXFEL_CLASSINFO(UdpConnection, "Udp", "1.0")
+            KARABO_CLASSINFO(UdpConnection, "Udp", "1.0")
 
             UdpConnection();
 
             virtual ~UdpConnection() {
             }
-            static void expectedParameters(exfel::util::Schema& expected);
-            void configure(const exfel::util::Hash& input);
+            static void expectedParameters(karabo::util::Schema& expected);
+            void configure(const karabo::util::Hash& input);
             virtual ChannelPointer start();
             virtual void stop();
             virtual void close();
@@ -81,5 +81,5 @@ namespace exfel {
 }
 
 
-#endif	/* EXFEL_NET_AUDPCONNECTION_HH */
+#endif	/* KARABO_NET_AUDPCONNECTION_HH */
 

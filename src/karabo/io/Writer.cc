@@ -11,10 +11,10 @@
 
 #include "Writer.hh"
 
-namespace exfel {
+namespace karabo {
   namespace io {
 
     using namespace std;
-    using namespace exfel::util;
+    using namespace karabo::util;
   } // namespace packageName
-} // namespace exfel
+} // namespace karabo

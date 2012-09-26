@@ -10,8 +10,8 @@
  */
 
 
-#ifndef EXFEL_NET_ATCPCONNECTION_HH
-#define	EXFEL_NET_ATCPCONNECTION_HH
+#ifndef KARABO_NET_ATCPCONNECTION_HH
+#define	KARABO_NET_ATCPCONNECTION_HH
 
 #include <boost/shared_ptr.hpp>
 #include <boost/enable_shared_from_this.hpp>
@@ -25,7 +25,7 @@
 /**
  * The main European XFEL namespace
  */
-namespace exfel {
+namespace karabo {
 
     /**
      * Namespace for package net
@@ -51,16 +51,16 @@ namespace exfel {
 
         public:
 
-            EXFEL_CLASSINFO(TcpConnection, "Tcp", "1.0")
+            KARABO_CLASSINFO(TcpConnection, "Tcp", "1.0")
 
             TcpConnection();
 
             virtual ~TcpConnection() {
             }
 
-            static void expectedParameters(exfel::util::Schema& expected);
+            static void expectedParameters(karabo::util::Schema& expected);
 
-            void configure(const exfel::util::Hash& input);
+            void configure(const karabo::util::Hash& input);
 
             /**
              * Starts the connection
@@ -112,4 +112,4 @@ namespace exfel {
     }
 }
 
-#endif	/* EXFEL_NET_ATCPCONNECTION_HH */
+#endif	/* KARABO_NET_ATCPCONNECTION_HH */

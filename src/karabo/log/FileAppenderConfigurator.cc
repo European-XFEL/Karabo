@@ -16,11 +16,11 @@
 #include <string>
 #include <iostream>
 
-using namespace exfel::util;
+using namespace karabo::util;
 using namespace log4cpp;
 
 
-namespace exfel {
+namespace karabo {
   namespace log {
 
     FileAppenderConfigurator::FileAppenderConfigurator() {
@@ -68,15 +68,15 @@ namespace exfel {
       configureAccessMode(input);
     }
 
-    void FileAppenderConfigurator::configureFilename(const exfel::util::Hash& input) {
+    void FileAppenderConfigurator::configureFilename(const karabo::util::Hash& input) {
       m_fileName = input.get<boost::filesystem::path > ("filename");
     }
 
-    void FileAppenderConfigurator::configureAppendMode(const exfel::util::Hash& input) {
+    void FileAppenderConfigurator::configureAppendMode(const karabo::util::Hash& input) {
       m_append = input.get<bool>("append");
     }
 
-    void FileAppenderConfigurator::configureAccessMode(const exfel::util::Hash& input) {
+    void FileAppenderConfigurator::configureAccessMode(const karabo::util::Hash& input) {
       m_accessMode = input.getNumeric<mode_t > ("mode");
     }
 
@@ -92,7 +92,7 @@ namespace exfel {
       return m_accessMode;
     }
 
-    EXFEL_REGISTER_FACTORY_CC(AppenderConfigurator, FileAppenderConfigurator)
+    KARABO_REGISTER_FACTORY_CC(AppenderConfigurator, FileAppenderConfigurator)
 
 
 

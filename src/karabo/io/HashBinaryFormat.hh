@@ -5,12 +5,12 @@
  * Created on June 14, 2011, 5:27 PM
  */
 
-#ifndef EXFEL_IO_HASHBINARYFORMAT_HH
-#define	EXFEL_IO_HASHBINARYFORMAT_HH
+#ifndef KARABO_IO_HASHBINARYFORMAT_HH
+#define	KARABO_IO_HASHBINARYFORMAT_HH
 
 #include "HashBaseFormat.hh"
 
-namespace exfel {
+namespace karabo {
     namespace io {
 
         class HashBinaryFormat : public HashBaseFormat {
@@ -62,11 +62,11 @@ namespace exfel {
 
             virtual int readKey(std::istream& is, std::string& path) = 0;
             virtual void writeKey(std::ostream& os, const std::string& path) = 0;
-            virtual int readType(std::istream& is, exfel::util::Types::Type& id) = 0;
-            virtual void writeType(std::ostream& os, exfel::util::Types::Type id) = 0;
+            virtual int readType(std::istream& is, karabo::util::Types::Type& id) = 0;
+            virtual void writeType(std::ostream& os, karabo::util::Types::Type id) = 0;
         };
     }
 }
 
-#endif	/* EXFEL_IO_HASHBINARYFORMAT_HH */
+#endif	/* KARABO_IO_HASHBINARYFORMAT_HH */
 

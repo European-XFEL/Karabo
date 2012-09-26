@@ -10,14 +10,14 @@
 #include <karabo/xms/SlotElement.hh>
 
 using namespace std;
-using namespace exfel::util;
-using namespace exfel::xms;
+using namespace karabo::util;
+using namespace karabo::xms;
 using namespace log4cpp;
 
-namespace exfel {
+namespace karabo {
     namespace core {
         
-        void StartStopFsm::expectedParameters(exfel::util::Schema& expected) {
+        void StartStopFsm::expectedParameters(karabo::util::Schema& expected) {
             
             SLOT_ELEMENT(expected).key("slotStart")
                     .displayedName("Start")
@@ -39,7 +39,7 @@ namespace exfel {
                     .commit();
         }
         
-        void StartStopFsm::configure(const exfel::util::Hash& input) {
+        void StartStopFsm::configure(const karabo::util::Hash& input) {
             SLOT0(slotEndError)
             SLOT0(slotStart)
             SLOT0(slotStop)

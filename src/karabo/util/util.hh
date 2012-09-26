@@ -8,8 +8,8 @@
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
 
-#ifndef EXFEL_UTIL_UTIL_HH
-#define	EXFEL_UTIL_UTIL_HH
+#ifndef KARABO_UTIL_UTIL_HH
+#define	KARABO_UTIL_UTIL_HH
 
 #include "String.hh"
 #include "Hash.hh"
@@ -38,5 +38,5 @@
 #include "GeneralDefines.hh"
 #include "CArray.hh"
 
-#endif	/* EXFEL_UTIL_UTIL_HH */
+#endif	/* KARABO_UTIL_UTIL_HH */
 

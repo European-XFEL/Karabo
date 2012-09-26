@@ -9,11 +9,11 @@
 
 #include <karabo/xms/SignalSlotable.hh>
 
-#ifndef EXFEL_CORE_DEVCOM_HH
-#define	EXFEL_CORE_DEVCOM_HH
+#ifndef KARABO_CORE_DEVCOM_HH
+#define	KARABO_CORE_DEVCOM_HH
 
 
-namespace exfel {
+namespace karabo {
 
     namespace core {
 
@@ -24,29 +24,29 @@ namespace exfel {
          */
         class DeviceClient {
             
-            typedef std::map<std::string, exfel::util::Schema> FullSchemaCache;
+            typedef std::map<std::string, karabo::util::Schema> FullSchemaCache;
             
-            typedef std::map<std::string, std::map< std::string, exfel::util::Schema > > CurrentStateSchemaCache;
+            typedef std::map<std::string, std::map< std::string, karabo::util::Schema > > CurrentStateSchemaCache;
 
-            typedef std::map<std::string, exfel::util::Hash> ConfigurationCache;
+            typedef std::map<std::string, karabo::util::Hash> ConfigurationCache;
             
-            typedef std::vector<exfel::util::Hash> DbTableCache;
+            typedef std::vector<karabo::util::Hash> DbTableCache;
 
             typedef std::map<std::string, unsigned int> InstanceUsage;
 
             
         public:
 
-            EXFEL_CLASSINFO(DeviceClient, "DeviceClient", "1.0")
+            KARABO_CLASSINFO(DeviceClient, "DeviceClient", "1.0")
 
                    
-            DeviceClient(const std::string& connectionType = "Jms", const exfel::util::Hash& connectionParameters = exfel::util::Hash());
+            DeviceClient(const std::string& connectionType = "Jms", const karabo::util::Hash& connectionParameters = karabo::util::Hash());
 
             /**
              * Constructor using instantiated signalSlotable class (shared communication)
              * @param signalSlotable An instance of the SignalSlotable lass
              */
-            DeviceClient(const boost::shared_ptr<exfel::xms::SignalSlotable>& signalSlotable);
+            DeviceClient(const boost::shared_ptr<karabo::xms::SignalSlotable>& signalSlotable);
 
             virtual ~DeviceClient();
 
@@ -71,9 +71,9 @@ namespace exfel {
              * @param instanceId Device instance id
              * @return full Schema
              */
-            const exfel::util::Schema& getSchema(const std::string& instanceId, const std::string& key = "", const std::string& keySep = "");
+            const karabo::util::Schema& getSchema(const std::string& instanceId, const std::string& key = "", const std::string& keySep = "");
             
-            const exfel::util::Schema& getCurrentlyWritableSchema(const std::string& instanceId);
+            const karabo::util::Schema& getCurrentlyWritableSchema(const std::string& instanceId);
             
             std::vector<std::string> getDeviceServers();
             
@@ -129,9 +129,9 @@ namespace exfel {
             
             std::vector<std::string> getValueOptions(const std::string& instanceId, const std::string& key, const std::string& keySep = "");
             
-            void instantiateNoWait(const std::string& serverInstanceId, const std::string& classId, const exfel::util::Hash& configuration);
+            void instantiateNoWait(const std::string& serverInstanceId, const std::string& classId, const karabo::util::Hash& configuration);
 
-            std::pair<bool, std::string> instantiateWait(const std::string& serverInstanceId, const std::string& classId, const exfel::util::Hash& configuration = exfel::util::Hash(), int timeout = -1);
+            std::pair<bool, std::string> instantiateWait(const std::string& serverInstanceId, const std::string& classId, const karabo::util::Hash& configuration = karabo::util::Hash(), int timeout = -1);
 
             void kill(const std::string& instanceId);
 
@@ -145,13 +145,13 @@ namespace exfel {
                 return cacheAndGetConfiguration(instanceId).getFromPath(key, value);
             }
 
-            const exfel::util::Hash& get(const std::string& instanceId);
+            const karabo::util::Hash& get(const std::string& instanceId);
 
-            void get(const std::string& instanceId, exfel::util::Hash& hash);
+            void get(const std::string& instanceId, karabo::util::Hash& hash);
 
             template <class ValueType>
             bool registerMonitor(const std::string& instanceId, const std::string& key, const boost::function<void (const ValueType&, const std::string&) >& callbackFunction) {
-                exfel::util::Schema schema = this->getSchema(instanceId);
+                karabo::util::Schema schema = this->getSchema(instanceId);
                 if (schema.hasKey(key)) {
                     boost::mutex::scoped_lock lock(m_propertyChangedHandlersMutex);
                     this->cacheAndGetConfiguration(instanceId);
@@ -164,7 +164,7 @@ namespace exfel {
             
             template <class ValueType, class UserDataType>
             bool registerMonitor(const std::string& instanceId, const std::string& key, const boost::function<void (const ValueType&, const std::string&, const boost::any&) >& callbackFunction, const UserDataType& userData) {
-                exfel::util::Schema schema = this->getSchema(instanceId);
+                karabo::util::Schema schema = this->getSchema(instanceId);
                 if (schema.hasKey(key)) {
                     boost::mutex::scoped_lock lock(m_propertyChangedHandlersMutex);
                     this->cacheAndGetConfiguration(instanceId);
@@ -178,10 +178,10 @@ namespace exfel {
 
             void unregisterMonitor(const std::string& instanceId, const std::string& key);
 
-            void registerMonitor(const std::string& instanceId, const boost::function<void (const exfel::util::Hash&, const std::string&)>& callbackFunction);
+            void registerMonitor(const std::string& instanceId, const boost::function<void (const karabo::util::Hash&, const std::string&)>& callbackFunction);
             
             template <class UserDataType>
-            void registerMonitor(const std::string& instanceId, const boost::function<void (const exfel::util::Hash&, const std::string&, const boost::any&)>& callbackFunction, const UserDataType& userData) {
+            void registerMonitor(const std::string& instanceId, const boost::function<void (const karabo::util::Hash&, const std::string&, const boost::any&)>& callbackFunction, const UserDataType& userData) {
                 boost::mutex::scoped_lock lock(m_deviceChangedHandlersMutex);
                 // Make sure we are caching this instanceId
                 this->cacheAndGetConfiguration(instanceId);
@@ -193,21 +193,21 @@ namespace exfel {
 
             template <class T>
             std::pair<bool, std::string> setWait(const std::string& instanceId, const std::string& key, const T& value, const std::string& keySep = ".", int timeout = -1) const {
-                exfel::util::Hash tmp;
+                karabo::util::Hash tmp;
                 tmp.setFromPath(key, value, keySep);
                 return setWait(instanceId, tmp, timeout);
             }
 
             template <class T>
             void setNoWait(const std::string& instanceId, const std::string& key, const T& value, const std::string& keySep = ".") const {
-                exfel::util::Hash tmp;
+                karabo::util::Hash tmp;
                 tmp.setFromPath(key, value, keySep);
                 setNoWait(instanceId, tmp);
             }
 
-            std::pair<bool, std::string> setWait(const std::string& instanceId, const exfel::util::Hash& values, int timeout = -1) const;
+            std::pair<bool, std::string> setWait(const std::string& instanceId, const karabo::util::Hash& values, int timeout = -1) const;
 
-            void setNoWait(const std::string& instanceId, const exfel::util::Hash& values) const;
+            void setNoWait(const std::string& instanceId, const karabo::util::Hash& values) const;
 
             void executeNoWait(const std::string& instanceId, const std::string& command) {
                 m_signalSlotable->call(instanceId, command);
@@ -241,7 +241,7 @@ namespace exfel {
 
                 try {
                     m_signalSlotable->request(instanceId, command).timeout(timeout).receive(text);
-                } catch (const exfel::util::Exception& e) {
+                } catch (const karabo::util::Exception& e) {
                     text = e.userFriendlyMsg();
                     ok = false;
                 }
@@ -257,7 +257,7 @@ namespace exfel {
 
                 try {
                     m_signalSlotable->request(instanceId, command, a1).timeout(timeout).receive(text);
-                } catch (const exfel::util::Exception& e) {
+                } catch (const karabo::util::Exception& e) {
                     text = e.userFriendlyMsg();
                     ok = false;
                 }
@@ -273,7 +273,7 @@ namespace exfel {
 
                 try {
                     m_signalSlotable->request(instanceId, command, a1, a2).timeout(timeout).receive(text);
-                } catch (const exfel::util::Exception& e) {
+                } catch (const karabo::util::Exception& e) {
                     text = e.userFriendlyMsg();
                     ok = false;
                 }
@@ -289,7 +289,7 @@ namespace exfel {
 
                 try {
                     m_signalSlotable->request(instanceId, command, a1, a2, a3).timeout(timeout).receive(text);
-                } catch (const exfel::util::Exception& e) {
+                } catch (const karabo::util::Exception& e) {
                     text = e.userFriendlyMsg();
                     ok = false;
                 }
@@ -305,7 +305,7 @@ namespace exfel {
 
                 try {
                     m_signalSlotable->request(instanceId, command, a1, a2, a3, a4).timeout(timeout).receive(text);
-                } catch (const exfel::util::Exception& e) {
+                } catch (const karabo::util::Exception& e) {
                     text = e.userFriendlyMsg();
                     ok = false;
                 }
@@ -320,15 +320,15 @@ namespace exfel {
             
             std::vector<std::string> getSubDeviceParameters(const std::string& instanceId, const std::string& key, const std::string& keySep);
             
-            const exfel::util::Schema& getSchemaForParameter(const std::string& instanceId, const std::string& key, const std::string& keySep);
+            const karabo::util::Schema& getSchemaForParameter(const std::string& instanceId, const std::string& key, const std::string& keySep);
             
-            const exfel::util::Schema& getCurrentlyWritableSchemaForParameter(const std::string& instanceId, const std::string& key, const std::string& keySep);
+            const karabo::util::Schema& getCurrentlyWritableSchemaForParameter(const std::string& instanceId, const std::string& key, const std::string& keySep);
             
-            exfel::util::Schema& cacheAndGetFullSchema(const std::string& instanceId);
+            karabo::util::Schema& cacheAndGetFullSchema(const std::string& instanceId);
             
-            exfel::util::Schema& cacheAndGetCurrentlyWritableSchema(const std::string& instanceId);
+            karabo::util::Schema& cacheAndGetCurrentlyWritableSchema(const std::string& instanceId);
 
-            const exfel::util::Hash& cacheAndGetConfiguration(const std::string& instanceId);
+            const karabo::util::Hash& cacheAndGetConfiguration(const std::string& instanceId);
             
             const DbTableCache& cacheAndGetDeviceServers();
             
@@ -340,27 +340,27 @@ namespace exfel {
 
             void refreshInstanceUsage(const std::string& instanceId);
 
-            virtual void slotChanged(const exfel::util::Hash& hash, const std::string& instanceId);
+            virtual void slotChanged(const karabo::util::Hash& hash, const std::string& instanceId);
             
-            virtual void slotNewDeviceServerInstance(const exfel::util::Hash& hash);
+            virtual void slotNewDeviceServerInstance(const karabo::util::Hash& hash);
             
-            virtual void slotUpdateDeviceServerInstance(const exfel::util::Hash& hash);
+            virtual void slotUpdateDeviceServerInstance(const karabo::util::Hash& hash);
             
-            virtual void slotNewDeviceInstance(const exfel::util::Hash& hash);
+            virtual void slotNewDeviceInstance(const karabo::util::Hash& hash);
             
-            virtual void slotUpdateDeviceInstance(const exfel::util::Hash& hash);
+            virtual void slotUpdateDeviceInstance(const karabo::util::Hash& hash);
             
-            virtual void notifyDeviceChangedMonitors(const exfel::util::Hash& hash, const std::string& instanceId);
+            virtual void notifyDeviceChangedMonitors(const karabo::util::Hash& hash, const std::string& instanceId);
 
-            virtual void notifyPropertyChangedMonitors(const exfel::util::Hash& hash, const std::string& instanceId);
+            virtual void notifyPropertyChangedMonitors(const karabo::util::Hash& hash, const std::string& instanceId);
 
-            void castAndCall(const std::string& instanceId, const exfel::util::Hash& registered, const exfel::util::Hash& current, std::string path = "") const;
+            void castAndCall(const std::string& instanceId, const karabo::util::Hash& registered, const karabo::util::Hash& current, std::string path = "") const;
 
             virtual void clearCacheAndDisconnect(const std::string& instanceId);
             
         protected: // members
 
-            boost::shared_ptr<exfel::xms::SignalSlotable> m_signalSlotable;
+            boost::shared_ptr<karabo::xms::SignalSlotable> m_signalSlotable;
 
             bool m_isShared;
 
@@ -380,9 +380,9 @@ namespace exfel {
 
             InstanceUsage m_instanceUsage;
 
-            exfel::util::Hash m_deviceChangedHandlers;
+            karabo::util::Hash m_deviceChangedHandlers;
 
-            exfel::util::Hash m_propertyChangedHandlers;
+            karabo::util::Hash m_propertyChangedHandlers;
 
             boost::mutex m_schemaCacheMutex;
 

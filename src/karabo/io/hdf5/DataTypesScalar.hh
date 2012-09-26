@@ -7,8 +7,8 @@
  */
 
 
-#ifndef EXFEL_IO_HDF5_DATATYPESSCALAR_HH
-#define	EXFEL_IO_HDF5_DATATYPESSCALAR_HH
+#ifndef KARABO_IO_HDF5_DATATYPESSCALAR_HH
+#define	KARABO_IO_HDF5_DATATYPESSCALAR_HH
 
 #include "DataTypes.hh"
 #include "FixedLengthArray.hh"
@@ -18,7 +18,7 @@
 /**
  * The main European XFEL namespace
  */
-namespace exfel {
+namespace karabo {
 
     /**
      * Namespace for package io
@@ -31,7 +31,7 @@ namespace exfel {
             class DataTypesScalar : public DataTypes {
             public:
 
-                EXFEL_CLASSINFO(DataTypesScalar, typeid (T).name(), "1.0")
+                KARABO_CLASSINFO(DataTypesScalar, typeid (T).name(), "1.0")
 
                 DataTypesScalar() {
                 }

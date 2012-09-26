@@ -8,12 +8,12 @@
 #include "TcpChannel.hh"
 #include "AsioIOService.hh"
 
-namespace exfel {
+namespace karabo {
     namespace net {
 
         using namespace std;
         using namespace boost::asio;
-        using namespace exfel::util;
+        using namespace karabo::util;
 
         TcpChannel::TcpChannel(TcpConnection& c) :
         Channel(c),
@@ -237,7 +237,7 @@ namespace exfel {
                 if (!e) {
                     Hash hash;
                     if (m_inboundData.size() > 0) {
-                        using namespace exfel::io;
+                        using namespace karabo::io;
                         string s(m_inboundData.begin(), m_inboundData.end());
                         stringToHash(s, hash);
                     }
@@ -349,7 +349,7 @@ namespace exfel {
                 if (!e) {
                     Hash hash;
                     if (m_inboundHeader.size() > 0) {
-                        using namespace exfel::io;
+                        using namespace karabo::io;
                         string s(m_inboundHeader.begin(), m_inboundHeader.end());
                         stringToHash(s, hash);
                     }
@@ -408,7 +408,7 @@ namespace exfel {
                 if (!e) {
                     Hash hash;
                     if (m_inboundHeader.size() > 0) {
-                        using namespace exfel::io;
+                        using namespace karabo::io;
                         string s(m_inboundHeader.begin(), m_inboundHeader.end());
                         stringToHash(s, hash);
                     }
@@ -448,7 +448,7 @@ namespace exfel {
 
         void TcpChannel::write(const char* data, const size_t& dsize, const Hash& header) {
             try {
-                using namespace exfel::io;
+                using namespace karabo::io;
                 string s;
                 hashToString(header, s);
                 write(data, dsize, s.c_str(), s.size());
@@ -527,7 +527,7 @@ namespace exfel {
 
         void TcpChannel::writeAsyncHash(const Hash& data, const Channel::WriteCompleteHandler& handler) {
             try {
-                using namespace exfel::io;
+                using namespace karabo::io;
                 string s;
                 hashToString(data, s);
                 writeAsyncString(s, handler);
@@ -536,9 +536,9 @@ namespace exfel {
             }
         }
 
-        void TcpChannel::writeAsyncRawHash(const char* data, const size_t& size, const exfel::util::Hash& header, const WriteCompleteHandler& handler) {
+        void TcpChannel::writeAsyncRawHash(const char* data, const size_t& size, const karabo::util::Hash& header, const WriteCompleteHandler& handler) {
             try {
-                using namespace exfel::io;
+                using namespace karabo::io;
                 string s;
                 if (!header.empty()) {
                     hashToString(header, s);
@@ -568,7 +568,7 @@ namespace exfel {
 
         void TcpChannel::writeAsyncVectorHash(const std::vector<char>& data, const Hash& header, const Channel::WriteCompleteHandler& handler) {
             try {
-                using namespace exfel::io;
+                using namespace karabo::io;
                 string s;
                 if (!header.empty()) {
                     hashToString(header, s);

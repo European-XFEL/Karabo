@@ -7,8 +7,8 @@
  */
 
 
-#ifndef EXFEL_IO_SCALAR_HH
-#define	EXFEL_IO_SCALAR_HH
+#ifndef KARABO_IO_SCALAR_HH
+#define	KARABO_IO_SCALAR_HH
 
 #include "RecordElement.hh"
 #include "TypeTraits.hh"
@@ -21,7 +21,7 @@
 /**
  * The main European XFEL namespace
  */
-namespace exfel {
+namespace karabo {
 
     namespace io {
 
@@ -69,10 +69,10 @@ namespace exfel {
             };
 
             template<class T>
-            class Scalar : public exfel::io::RecordElement {
+            class Scalar : public karabo::io::RecordElement {
             public:
 
-                EXFEL_CLASSINFO(Scalar, ScalarTypeTraits::classId<T>(), "1.0")
+                KARABO_CLASSINFO(Scalar, ScalarTypeTraits::classId<T>(), "1.0")
 
                 Scalar() {
                     m_memoryDataSpace = scalarDataSpace();
@@ -93,10 +93,10 @@ namespace exfel {
 
                 }
 
-                void write(const exfel::util::Hash& data, hsize_t recordId) {
+                void write(const karabo::util::Hash& data, hsize_t recordId) {
 
                     //here we do not use filters, for performance reason (?)
-                    exfel::util::Hash::const_iterator it = data.find(m_key);
+                    karabo::util::Hash::const_iterator it = data.find(m_key);
                     if (it == data.end()) { // TODO: do we need here to check if iterator is ok, is this performance issue
                         throw PARAMETER_EXCEPTION("Invalid key in the Hash");
                     }
@@ -108,32 +108,32 @@ namespace exfel {
                     }
                 }
 
-                void write(const exfel::util::Hash& data, hsize_t recordId, hsize_t len) {
+                void write(const karabo::util::Hash& data, hsize_t recordId, hsize_t len) {
 
-                    EXFEL_PROFILER_SCALAR1
+                    KARABO_PROFILER_SCALAR1
 
                     try {
-                        EXFEL_PROFILER_START_SCALAR1("select")
+                        KARABO_PROFILER_START_SCALAR1("select")
                         selectFileRecord(recordId, len);
-                        EXFEL_PROFILER_STOP_SCALAR1
-                        EXFEL_PROFILER_START_SCALAR1("find")
-                        exfel::util::Hash::const_iterator it = data.find(m_key);
-                        EXFEL_PROFILER_STOP_SCALAR1
-                        EXFEL_PROFILER_START_SCALAR1("any")
+                        KARABO_PROFILER_STOP_SCALAR1
+                        KARABO_PROFILER_START_SCALAR1("find")
+                        karabo::util::Hash::const_iterator it = data.find(m_key);
+                        KARABO_PROFILER_STOP_SCALAR1
+                        KARABO_PROFILER_START_SCALAR1("any")
                         const boost::any& any = data.getAny(it);
-                        EXFEL_PROFILER_STOP_SCALAR1
+                        KARABO_PROFILER_STOP_SCALAR1
 
                         if (!m_filter) {
                             tracer << "creating a filter" << std::endl;
                             m_filter = ScalarFilter<T>::createDefault(any.type().name());
                         }
-                        EXFEL_PROFILER_START_SCALAR1("filter")
+                        KARABO_PROFILER_START_SCALAR1("filter")
                         m_filter->write(*this, any, len);
-                        EXFEL_PROFILER_STOP_SCALAR1
-                        EXFEL_PROFILER_REPORT_SCALAR1("select")
-                        EXFEL_PROFILER_REPORT_SCALAR1("find")
-                        EXFEL_PROFILER_REPORT_SCALAR1("any")
-                        EXFEL_PROFILER_REPORT_SCALAR1("filter")
+                        KARABO_PROFILER_STOP_SCALAR1
+                        KARABO_PROFILER_REPORT_SCALAR1("select")
+                        KARABO_PROFILER_REPORT_SCALAR1("find")
+                        KARABO_PROFILER_REPORT_SCALAR1("any")
+                        KARABO_PROFILER_REPORT_SCALAR1("filter")
                     } catch (...) {
                         RETHROW
                     }
@@ -180,18 +180,18 @@ namespace exfel {
                     }
                 }
 
-                inline void allocate(exfel::util::Hash & data) {
+                inline void allocate(karabo::util::Hash & data) {
                     data.set(m_key, T());
                 }
 
-                inline void allocate(exfel::util::Hash& buffer, size_t len) {
+                inline void allocate(karabo::util::Hash& buffer, size_t len) {
                     // check if one can use bindReference here
                     boost::shared_array<T> arr(new T[len]);
                     ArrayView<T> av(arr, len);
                     buffer.set(m_key, av);                                        
                 }
 
-                inline void read(exfel::util::Hash& data, hsize_t recordId) {
+                inline void read(karabo::util::Hash& data, hsize_t recordId) {
                     T& value = data.get<T > (m_key);
                     readValue(value, recordId);
                 }
@@ -208,10 +208,10 @@ namespace exfel {
 
                 // buffered reading
 
-                void read(exfel::util::Hash& data, hsize_t recordId, hsize_t len) {
+                void read(karabo::util::Hash& data, hsize_t recordId, hsize_t len) {
                     try {
                         selectFileRecord(recordId, len);
-                        exfel::util::Hash::iterator it = data.find(m_key);
+                        karabo::util::Hash::iterator it = data.find(m_key);
                         boost::any& any = data.getAny(it);
                         if (!m_filter) {
                             tracer << "creating read filter" << std::endl;
@@ -224,7 +224,7 @@ namespace exfel {
 
                 }
 
-                inline void readSpecificAttributes(exfel::util::Hash& attributes) {
+                inline void readSpecificAttributes(karabo::util::Hash& attributes) {
                     attributes.setFromPath(m_key + ".rank", 0);
                     attributes.setFromPath(m_key + ".typeCategory", "Scalar");
                 }
@@ -259,4 +259,4 @@ namespace exfel {
     }
 }
 
-#endif	/* EXFEL_IO_SCALAR_HH */
+#endif	/* KARABO_IO_SCALAR_HH */

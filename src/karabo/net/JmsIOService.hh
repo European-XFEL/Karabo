@@ -8,15 +8,15 @@
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
 
-#ifndef EXFEL_NET_JMSIOSERVICE_HH
-#define	EXFEL_NET_JMSIOSERVICE_HH
+#ifndef KARABO_NET_JMSIOSERVICE_HH
+#define	KARABO_NET_JMSIOSERVICE_HH
 
 #include "AbstractIOService.hh"
 
 /**
  * The main European XFEL namespace
  */
-namespace exfel {
+namespace karabo {
 
     namespace net {
 
@@ -33,7 +33,7 @@ namespace exfel {
             typedef boost::shared_ptr<Channel> ChannelPointer;
             typedef boost::function<void (ChannelPointer) > WaitHandler;
 
-            EXFEL_CLASSINFO(JmsIOService, "Jms", "1.0")
+            KARABO_CLASSINFO(JmsIOService, "Jms", "1.0")
 
             JmsIOService() : m_status(IDLE) {
             }
@@ -88,7 +88,7 @@ namespace exfel {
         };
 
     } // namespace net
-} // namespace exfel
+} // namespace karabo
 
 #endif 
 

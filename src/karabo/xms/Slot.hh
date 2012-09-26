@@ -8,8 +8,8 @@
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
 
-#ifndef EXFEL_XMS_SLOT_HH
-#define	EXFEL_XMS_SLOT_HH
+#ifndef KARABO_XMS_SLOT_HH
+#define	KARABO_XMS_SLOT_HH
 
 #include <boost/type_traits.hpp>
 
@@ -18,7 +18,7 @@
 /**
  * The main European XFEL namespace
  */
-namespace exfel {
+namespace karabo {
 
     /**
      * Namespace for package io
@@ -31,7 +31,7 @@ namespace exfel {
         class Slot {
         protected:
 
-            Slot(SignalSlotable* signalSlotable, const exfel::net::BrokerChannel::Pointer& channel, const std::string& slotInstanceId, const std::string& slotFunction)
+            Slot(SignalSlotable* signalSlotable, const karabo::net::BrokerChannel::Pointer& channel, const std::string& slotInstanceId, const std::string& slotFunction)
             : m_signalSlotable(signalSlotable), m_channel(channel), m_slotInstanceId(slotInstanceId + "|"), m_slotFunction(slotFunction + "|") {
                 std::string filterCondition;
                 //if (!slotInstanceId.empty()) filterCondition = "slotInstanceId LIKE '%" + m_slotInstanceId + "%' AND ";
@@ -42,19 +42,19 @@ namespace exfel {
             virtual ~Slot() {
             }
 
-            void handlePossibleReply(const exfel::util::Hash& header);
+            void handlePossibleReply(const karabo::util::Hash& header);
             
             void startSlotProcessing();
             
             void stopSlotProcessing();
 
             template <class T>
-            const T& getAndCast(const std::string& key, const exfel::util::Hash& hash) const {
+            const T& getAndCast(const std::string& key, const karabo::util::Hash& hash) const {
                 return hash.get<T > (key);
             }
             
             SignalSlotable* m_signalSlotable;
-            exfel::net::BrokerChannel::Pointer m_channel;
+            karabo::net::BrokerChannel::Pointer m_channel;
             std::string m_slotInstanceId;
             std::string m_slotFunction;
 
@@ -62,16 +62,16 @@ namespace exfel {
         
         // This one does appropriate conversions for a boolean target type
         template <>
-        const bool& Slot::getAndCast(const std::string& key, const exfel::util::Hash& hash) const;
+        const bool& Slot::getAndCast(const std::string& key, const karabo::util::Hash& hash) const;
        
         class Slot0 : public Slot {
             typedef boost::function<void () > SlotHandler;
 
         public:
 
-            EXFEL_CLASSINFO(Slot0, "Slot0", "1.0")
+            KARABO_CLASSINFO(Slot0, "Slot0", "1.0")
 
-            Slot0(SignalSlotable* signalSlotable, const exfel::net::BrokerChannel::Pointer& channel, const std::string& slotInstanceId, const std::string& slotFunction)
+            Slot0(SignalSlotable* signalSlotable, const karabo::net::BrokerChannel::Pointer& channel, const std::string& slotInstanceId, const std::string& slotFunction)
             : Slot(signalSlotable, channel, slotInstanceId, slotFunction) {
                 m_channel->readAsyncHashHash(boost::bind(&Slot0::callRegisteredSlotFunctions, this, _1, _2, _3));
             }
@@ -85,7 +85,7 @@ namespace exfel {
 
         private:
 
-            void callRegisteredSlotFunctions(exfel::net::BrokerChannel::Pointer /*channel*/, const exfel::util::Hash& body, const exfel::util::Hash& header) {
+            void callRegisteredSlotFunctions(karabo::net::BrokerChannel::Pointer /*channel*/, const karabo::util::Hash& body, const karabo::util::Hash& header) {
                 startSlotProcessing();
                 for (size_t i = 0; i < m_slotHandlers.size(); ++i) {
                     m_slotHandlers[i]();
@@ -103,9 +103,9 @@ namespace exfel {
 
         public:
 
-            EXFEL_CLASSINFO(Slot1, "Slot1", "1.0")
+            KARABO_CLASSINFO(Slot1, "Slot1", "1.0")
 
-            Slot1(SignalSlotable* signalSlotable, const exfel::net::BrokerChannel::Pointer& channel, const std::string& slotInstanceId, const std::string& slotFunction)
+            Slot1(SignalSlotable* signalSlotable, const karabo::net::BrokerChannel::Pointer& channel, const std::string& slotInstanceId, const std::string& slotFunction)
             : Slot(signalSlotable, channel, slotInstanceId, slotFunction) {
                 m_channel->readAsyncHashHash(boost::bind(&Slot1::callRegisteredSlotFunctions, this, _1, _2, _3));
             }
@@ -119,7 +119,7 @@ namespace exfel {
 
         private:
 
-            void callRegisteredSlotFunctions(exfel::net::BrokerChannel::Pointer /*channel*/, const exfel::util::Hash& body, const exfel::util::Hash& header) {
+            void callRegisteredSlotFunctions(karabo::net::BrokerChannel::Pointer /*channel*/, const karabo::util::Hash& body, const karabo::util::Hash& header) {
                 try {
                     startSlotProcessing();
                     const A1& a1 = getAndCast<A1>("a1", body);
@@ -128,8 +128,8 @@ namespace exfel {
                         handlePossibleReply(header);
                     }
                     stopSlotProcessing();
-                } catch (const exfel::util::CastException& e) {
-                    exfel::util::Exception::addToTrace(e);
+                } catch (const karabo::util::CastException& e) {
+                    karabo::util::Exception::addToTrace(e);
                     std::cout << SIGNALSLOT_EXCEPTION("Received incompatible argument (see above) for slot \"" + m_slotFunction + "\". Check your connection!") << std::endl;
                     stopSlotProcessing();
                 }
@@ -144,9 +144,9 @@ namespace exfel {
 
         public:
 
-            EXFEL_CLASSINFO(Slot2, "Slot2", "1.0")
+            KARABO_CLASSINFO(Slot2, "Slot2", "1.0")
 
-            Slot2(SignalSlotable* signalSlotable, const exfel::net::BrokerChannel::Pointer& channel, const std::string& slotInstanceId, const std::string& slotFunction)
+            Slot2(SignalSlotable* signalSlotable, const karabo::net::BrokerChannel::Pointer& channel, const std::string& slotInstanceId, const std::string& slotFunction)
             : Slot(signalSlotable, channel, slotInstanceId, slotFunction) {
                 m_channel->readAsyncHashHash(boost::bind(&Slot2::callRegisteredSlotFunctions, this, _1, _2, _3));
             }
@@ -160,7 +160,7 @@ namespace exfel {
 
         private:
 
-            void callRegisteredSlotFunctions(exfel::net::BrokerChannel::Pointer /*channel*/, const exfel::util::Hash& body, const exfel::util::Hash& header) {
+            void callRegisteredSlotFunctions(karabo::net::BrokerChannel::Pointer /*channel*/, const karabo::util::Hash& body, const karabo::util::Hash& header) {
                 try {
                     startSlotProcessing();
                     const A1& a1 = getAndCast<A1>("a1", body);
@@ -170,8 +170,8 @@ namespace exfel {
                         handlePossibleReply(header);
                     }
                     stopSlotProcessing();
-                } catch (const exfel::util::CastException& e) {
-                    exfel::util::Exception::addToTrace(e);
+                } catch (const karabo::util::CastException& e) {
+                    karabo::util::Exception::addToTrace(e);
                     std::cout << SIGNALSLOT_EXCEPTION("Received incompatible arguments (see above) for slot \"" + m_slotFunction + "\". Check your connection!") << std::endl;
                     stopSlotProcessing();
                 }
@@ -186,9 +186,9 @@ namespace exfel {
 
         public:
 
-            EXFEL_CLASSINFO(Slot3, "Slot3", "1.0")
+            KARABO_CLASSINFO(Slot3, "Slot3", "1.0")
 
-            Slot3(SignalSlotable* signalSlotable, const exfel::net::BrokerChannel::Pointer& channel, const std::string& slotInstanceId, const std::string& slotFunction)
+            Slot3(SignalSlotable* signalSlotable, const karabo::net::BrokerChannel::Pointer& channel, const std::string& slotInstanceId, const std::string& slotFunction)
             : Slot(signalSlotable, channel, slotInstanceId, slotFunction) {
                 m_channel->readAsyncHashHash(boost::bind(&Slot3::callRegisteredSlotFunctions, this, _1, _2, _3));
             }
@@ -202,7 +202,7 @@ namespace exfel {
 
         private:
 
-            void callRegisteredSlotFunctions(exfel::net::BrokerChannel::Pointer /*channel*/, const exfel::util::Hash& body, const exfel::util::Hash& header) {
+            void callRegisteredSlotFunctions(karabo::net::BrokerChannel::Pointer /*channel*/, const karabo::util::Hash& body, const karabo::util::Hash& header) {
                 try {
                     startSlotProcessing();
                     const A1& a1 = getAndCast<A1 > ("a1", body);
@@ -213,8 +213,8 @@ namespace exfel {
                         handlePossibleReply(header);
                     }
                     stopSlotProcessing();
-                } catch (const exfel::util::CastException& e) {
-                    exfel::util::Exception::addToTrace(e);
+                } catch (const karabo::util::CastException& e) {
+                    karabo::util::Exception::addToTrace(e);
                     std::cout << SIGNALSLOT_EXCEPTION("Received incompatible arguments (see above) for slot \"" + m_slotFunction + "\". Check your connection!") << std::endl;
                     stopSlotProcessing();
                 }
@@ -229,9 +229,9 @@ namespace exfel {
 
         public:
 
-            EXFEL_CLASSINFO(Slot4, "Slot4", "1.0")
+            KARABO_CLASSINFO(Slot4, "Slot4", "1.0")
 
-            Slot4(SignalSlotable* signalSlotable, const exfel::net::BrokerChannel::Pointer& channel, const std::string& slotInstanceId, const std::string& slotFunction)
+            Slot4(SignalSlotable* signalSlotable, const karabo::net::BrokerChannel::Pointer& channel, const std::string& slotInstanceId, const std::string& slotFunction)
             : Slot(signalSlotable, channel, slotInstanceId, slotFunction) {
                 m_channel->readAsyncHashHash(boost::bind(&Slot4::callRegisteredSlotFunctions, this, _1, _2, _3));
             }
@@ -245,7 +245,7 @@ namespace exfel {
 
         private:
 
-            void callRegisteredSlotFunctions(exfel::net::BrokerChannel::Pointer /*channel*/, const exfel::util::Hash& body, const exfel::util::Hash& header) {
+            void callRegisteredSlotFunctions(karabo::net::BrokerChannel::Pointer /*channel*/, const karabo::util::Hash& body, const karabo::util::Hash& header) {
                 try {
                     startSlotProcessing();
                     const A1& a1 = getAndCast<A1 > ("a1", body);
@@ -257,8 +257,8 @@ namespace exfel {
                         handlePossibleReply(header);
                     }
                     stopSlotProcessing();
-                } catch (const exfel::util::CastException& e) {
-                    exfel::util::Exception::addToTrace(e);
+                } catch (const karabo::util::CastException& e) {
+                    karabo::util::Exception::addToTrace(e);
                     std::cout << SIGNALSLOT_EXCEPTION("Received incompatible arguments (see above) for slot \"" + m_slotFunction + "\". Check your connection!") << std::endl;
                     stopSlotProcessing();
                 }
@@ -267,6 +267,6 @@ namespace exfel {
         };
 
     } // namespace xms
-} // namespace exfel
+} // namespace karabo
 
 #endif

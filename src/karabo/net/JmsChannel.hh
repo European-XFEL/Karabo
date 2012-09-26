@@ -10,8 +10,8 @@
  */
 
 
-#ifndef EXFEL_NET_JMSCHANNEL_HH
-#define	EXFEL_NET_JMSCHANNEL_HH
+#ifndef KARABO_NET_JMSCHANNEL_HH
+#define	KARABO_NET_JMSCHANNEL_HH
 
 #include <boost/signals2.hpp>
 
@@ -35,7 +35,7 @@
 /**
  * The main European XFEL namespace
  */
-namespace exfel {
+namespace karabo {
 
     /**
      * Namespace for package msg
@@ -54,13 +54,13 @@ namespace exfel {
             
             typedef boost::shared_ptr<JmsIOService> JmsIOServicePointer;
 
-            typedef exfel::io::Format<exfel::util::Hash> HashFormat;
+            typedef karabo::io::Format<karabo::util::Hash> HashFormat;
 
             typedef boost::signals2::signal<void (Channel::Pointer, const std::string&) > SignalError;
 
         public:
 
-            EXFEL_CLASSINFO(JmsChannel, "JmsChannel", "1.0")
+            KARABO_CLASSINFO(JmsChannel, "JmsChannel", "1.0")
 
             JmsChannel(AJmsConnection& connection);
 
@@ -90,11 +90,11 @@ namespace exfel {
              * @param data text content of the message
              * @param header properties of the read message
              */
-            void read(std::string& data, exfel::util::Hash& header);
+            void read(std::string& data, karabo::util::Hash& header);
 
-            void read(exfel::util::Hash& body, exfel::util::Hash& header);
+            void read(karabo::util::Hash& body, karabo::util::Hash& header);
             
-            //void read(const char* data, const size_t& dataSize, const exfel::util::Hash& header);
+            //void read(const char* data, const size_t& dataSize, const karabo::util::Hash& header);
 
 
             void readAsyncStringHash(const ReadStringHashHandler& readHandler);
@@ -109,7 +109,7 @@ namespace exfel {
              * @param data The textual data (body) of the message
              * @param header The list of properties to be send as JMS properties
              */
-            void write(const std::string& data, const exfel::util::Hash& header);
+            void write(const std::string& data, const karabo::util::Hash& header);
 
             /**
              * Low level writing within the JMS framework
@@ -117,9 +117,9 @@ namespace exfel {
              * @param data The binary data (body) of the message
              * @param header The list of properties to be send as JMS properties
              */
-            void write(const char* data, const size_t& size, const exfel::util::Hash& header);
+            void write(const char* data, const size_t& size, const karabo::util::Hash& header);
 
-            void write(const exfel::util::Hash& data, const exfel::util::Hash& header);
+            void write(const karabo::util::Hash& data, const karabo::util::Hash& header);
 
             void waitAsync(int milliseconds, const WaitHandler& handler);
 
@@ -192,17 +192,17 @@ namespace exfel {
              */
             bool signalIncomingBinaryMessage();
 
-            void setProperties(const exfel::util::Hash& properties, const MQPropertiesHandle& propertiesHandle);
+            void setProperties(const karabo::util::Hash& properties, const MQPropertiesHandle& propertiesHandle);
 
-            void getProperties(exfel::util::Hash& properties, const MQPropertiesHandle& propertiesHandle) const;
+            void getProperties(karabo::util::Hash& properties, const MQPropertiesHandle& propertiesHandle) const;
 
             std::string prepareSelector() const;
 
-            void rawHash2HashHash(Channel::Pointer channel, const char* data, const size_t& size, const exfel::util::Hash& header);
+            void rawHash2HashHash(Channel::Pointer channel, const char* data, const size_t& size, const karabo::util::Hash& header);
 
         };
 
     } // namespace packageName
-} // namespace exfel
+} // namespace karabo
 
 #endif	

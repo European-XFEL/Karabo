@@ -5,14 +5,14 @@
  * Created on June 2, 2011, 6:45 PM
  */
 
-#ifndef EXFEL_NET_ASIOIOSERVICE_HH
-#define	EXFEL_NET_ASIOIOSERVICE_HH
+#ifndef KARABO_NET_ASIOIOSERVICE_HH
+#define	KARABO_NET_ASIOIOSERVICE_HH
 
 #include <boost/shared_ptr.hpp>
 #include <boost/asio.hpp>
 #include "AbstractIOService.hh"
 
-namespace exfel {
+namespace karabo {
     namespace net {
 
         typedef boost::shared_ptr<boost::asio::io_service> BoostIOServicePointer;
@@ -21,7 +21,7 @@ namespace exfel {
         class AsioIOService : public AbstractIOService {
         public:
 
-            EXFEL_CLASSINFO(AsioIOService, "Asio", "1.0")
+            KARABO_CLASSINFO(AsioIOService, "Asio", "1.0")
 
             AsioIOService() : m_ioservice(new boost::asio::io_service) {
             }
@@ -59,5 +59,5 @@ namespace exfel {
     }
 }
 
-#endif	/* EXFEL_NET_ASIOIOSERVICE_HH */
+#endif	/* KARABO_NET_ASIOIOSERVICE_HH */
 

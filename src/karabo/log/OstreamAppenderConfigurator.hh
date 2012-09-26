@@ -10,8 +10,8 @@
  */
 
 
-#ifndef EXFEL_LOGCONFIG_OSTREAMAPPENDERCONFIGURATOR_HH
-#define	EXFEL_LOGCONFIG_OSTREAMAPPENDERCONFIGURATOR_HH
+#ifndef KARABO_LOGCONFIG_OSTREAMAPPENDERCONFIGURATOR_HH
+#define	KARABO_LOGCONFIG_OSTREAMAPPENDERCONFIGURATOR_HH
 
 #include "AppenderConfigurator.hh"
 #include <karabo/util/Factory.hh>
@@ -20,7 +20,7 @@
 /**
  * The main European XFEL namespace
  */
-namespace exfel {
+namespace karabo {
 
   /**
    * Namespace for package log
@@ -29,7 +29,7 @@ namespace exfel {
 
     class OstreamAppenderConfigurator : public AppenderConfigurator {
     public:
-      EXFEL_CLASSINFO(OstreamAppenderConfigurator, "Ostream", "1.0")
+      KARABO_CLASSINFO(OstreamAppenderConfigurator, "Ostream", "1.0")
 
       OstreamAppenderConfigurator();
 
@@ -37,8 +37,8 @@ namespace exfel {
 
       log4cpp::Appender* create();
 
-      static void expectedParameters(exfel::util::Schema& expected);
-      void configure(const exfel::util::Hash& input);
+      static void expectedParameters(karabo::util::Schema& expected);
+      void configure(const karabo::util::Hash& input);
 
     private:
       std::string m_out;
@@ -49,4 +49,4 @@ namespace exfel {
   }
 }
 
-#endif	/* EXFEL_LOGCONFIG_OSTREAMAPPENDERCONFIGURATOR_HH */
+#endif	/* KARABO_LOGCONFIG_OSTREAMAPPENDERCONFIGURATOR_HH */

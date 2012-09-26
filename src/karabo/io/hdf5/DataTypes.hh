@@ -9,14 +9,14 @@
 
 
 
-#ifndef EXFEL_IO_HDF5_DATATYPES_HH
-#define	EXFEL_IO_HDF5_DATATYPES_HH
+#ifndef KARABO_IO_HDF5_DATATYPES_HH
+#define	KARABO_IO_HDF5_DATATYPES_HH
 
 #include <karabo/util/Factory.hh>
 #include "../iodll.hh"
 
 
-namespace exfel {
+namespace karabo {
   
   namespace io {
     
@@ -30,13 +30,13 @@ namespace exfel {
       class DataTypes {
       public:
 
-        EXFEL_CLASSINFO(DataTypes, "DataTypes", "1.0")
-        EXFEL_FACTORY_BASE_CLASS
+        KARABO_CLASSINFO(DataTypes, "DataTypes", "1.0")
+        KARABO_FACTORY_BASE_CLASS
 
         virtual ~DataTypes() {
         }
 
-        virtual exfel::io::ArrayDimensions getDims(const boost::any& any) = 0;  
+        virtual karabo::io::ArrayDimensions getDims(const boost::any& any) = 0;  
         virtual std::string getElementClassId() = 0;
       };
           
@@ -44,7 +44,7 @@ namespace exfel {
   }
 }
 
-EXFEL_REGISTER_FACTORY_BASE_HH(exfel::io::hdf5::DataTypes, TEMPLATE_IO, DECLSPEC_IO)
+KARABO_REGISTER_FACTORY_BASE_HH(karabo::io::hdf5::DataTypes, TEMPLATE_IO, DECLSPEC_IO)
 
 #endif	
 

@@ -12,9 +12,9 @@
 
 
 using namespace std;
-using namespace exfel::util;
+using namespace karabo::util;
 
-namespace exfel {
+namespace karabo {
   namespace log {
 
     RollingFileAppenderConfigurator::RollingFileAppenderConfigurator() {
@@ -68,7 +68,7 @@ namespace exfel {
               isAppendMode(), getAccessMode());
     }
 
-    void RollingFileAppenderConfigurator::configureMaxSize(const exfel::util::Hash& input) {
+    void RollingFileAppenderConfigurator::configureMaxSize(const karabo::util::Hash& input) {
 
       const unsigned int KILO = 1024;
       const unsigned int MEGA = 1024 * KILO;
@@ -84,11 +84,11 @@ namespace exfel {
 
     }
 
-    void RollingFileAppenderConfigurator::configureMaxBackupIndex(const exfel::util::Hash& input) {
+    void RollingFileAppenderConfigurator::configureMaxBackupIndex(const karabo::util::Hash& input) {
       m_maxBackupIndex = input.getNumeric<unsigned short>("maxBackupIndex");
     }
 
-    EXFEL_REGISTER_FACTORY_2_CC(AppenderConfigurator, FileAppenderConfigurator, RollingFileAppenderConfigurator)
+    KARABO_REGISTER_FACTORY_2_CC(AppenderConfigurator, FileAppenderConfigurator, RollingFileAppenderConfigurator)
 
   }
 }

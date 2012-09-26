@@ -20,7 +20,7 @@
 using namespace std;
 using namespace boost;
 
-namespace exfel {
+namespace karabo {
     namespace util {
 
         string Hash::getAsString(const const_iterator& it) const {
@@ -624,6 +624,6 @@ namespace exfel {
         }
 
     } // namespace util
-} // namespace exfel
+} // namespace karabo
 
 

@@ -8,8 +8,8 @@
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
 
-#ifndef EXFEL_IO_IO_HH
-#define	EXFEL_IO_IO_HH
+#ifndef KARABO_IO_IO_HH
+#define	KARABO_IO_IO_HH
 
 #include "Reader.hh"
 #include "Writer.hh"
@@ -20,5 +20,5 @@
 #include "MasterConfigXsdFormat.hh"
 #include "ArrayView.hh"
 
-#endif	/* EXFEL_IO_IO_HH */
+#endif	/* KARABO_IO_IO_HH */
 

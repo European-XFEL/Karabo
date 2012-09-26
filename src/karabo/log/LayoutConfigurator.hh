@@ -9,8 +9,8 @@
 
 
 
-#ifndef EXFEL_LOGCONFIG_LAYOUTCONFIGURATOR_HH
-#define	EXFEL_LOGCONFIG_LAYOUTCONFIGURATOR_HH
+#ifndef KARABO_LOGCONFIG_LAYOUTCONFIGURATOR_HH
+#define	KARABO_LOGCONFIG_LAYOUTCONFIGURATOR_HH
 
 #include <karabo/util/Factory.hh>
 #include "logdll.hh"
@@ -19,7 +19,7 @@ namespace log4cpp {
   class Layout;
 }
 
-namespace exfel {
+namespace karabo {
 
   namespace util {
     class Hash;
@@ -30,8 +30,8 @@ namespace exfel {
     class LayoutConfigurator {
     public:
 
-      EXFEL_CLASSINFO(LayoutConfigurator, "Layout", "1.0")
-      EXFEL_FACTORY_BASE_CLASS
+      KARABO_CLASSINFO(LayoutConfigurator, "Layout", "1.0")
+      KARABO_FACTORY_BASE_CLASS
       virtual ~LayoutConfigurator() {
       }
       virtual log4cpp::Layout* create() = 0;
@@ -40,7 +40,7 @@ namespace exfel {
   }
 }
 
-EXFEL_REGISTER_FACTORY_BASE_HH(exfel::log::LayoutConfigurator, TEMPLATE_LOG, DECLSPEC_LOG)
+KARABO_REGISTER_FACTORY_BASE_HH(karabo::log::LayoutConfigurator, TEMPLATE_LOG, DECLSPEC_LOG)
 
-#endif	/* EXFEL_LOGCONFIG_LAYOUTCONFIGURATOR_HH */
+#endif	/* KARABO_LOGCONFIG_LAYOUTCONFIGURATOR_HH */
 

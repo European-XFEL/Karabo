@@ -14,11 +14,11 @@
 
 
 using namespace std;
-using namespace exfel::util;
+using namespace karabo::util;
 using namespace H5;
 using namespace boost;
 
-namespace exfel {
+namespace karabo {
     namespace io {
 
 	void RecordElement::expectedParameters(Schema& expected) {
@@ -149,12 +149,12 @@ namespace exfel {
 	    m_dataSetProperties->setChunk(1, chunkDims);
 	}
 
-	void RecordElement::readAttributes(exfel::util::Hash& attributes) {
+	void RecordElement::readAttributes(karabo::util::Hash& attributes) {
 	    attributes.setFromPath(m_key + ".type", this->getClassInfo().getClassId());
 	    readSpecificAttributes(attributes);
 	}
 
-	void RecordElement::readSpecificAttributes(exfel::util::Hash& attributes) {
+	void RecordElement::readSpecificAttributes(karabo::util::Hash& attributes) {
 	}
 
 	void RecordElement::selectFileRecord(hsize_t recordId, hsize_t len) {

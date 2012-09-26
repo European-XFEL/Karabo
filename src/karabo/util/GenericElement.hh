@@ -9,12 +9,12 @@
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
 
-#ifndef EXFEL_UTIL_GENERICELEMENT_HH
-#define	EXFEL_UTIL_GENERICELEMENT_HH
+#ifndef KARABO_UTIL_GENERICELEMENT_HH
+#define	KARABO_UTIL_GENERICELEMENT_HH
 
 #include "Schema.hh"
 
-namespace exfel {
+namespace karabo {
     namespace util {
 
         // forward declaration

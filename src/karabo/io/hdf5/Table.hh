@@ -7,8 +7,8 @@
  */
 
 
-#ifndef EXFEL_IO_TABLE_HH
-#define	EXFEL_IO_TABLE_HH
+#ifndef KARABO_IO_TABLE_HH
+#define	KARABO_IO_TABLE_HH
 
 #include "File.hh"
 #include "DataFormat.hh"
@@ -25,7 +25,7 @@
 /**
  * The main European XFEL namespace
  */
-namespace exfel {
+namespace karabo {
 
     /**
      * Namespace for package io
@@ -43,8 +43,8 @@ namespace exfel {
 
             public:
 
-                EXFEL_CLASSINFO(Table, "Hdf5", "1.0")
-                EXFEL_FACTORY_BASE_CLASS
+                KARABO_CLASSINFO(Table, "Hdf5", "1.0")
+                KARABO_FACTORY_BASE_CLASS
 
 
                 /**
@@ -57,27 +57,27 @@ namespace exfel {
 
 
                 /**
-                 * Defines expected parameters. This function is part of the factory mechanism implemented in exfel::util package.
+                 * Defines expected parameters. This function is part of the factory mechanism implemented in karabo::util package.
                  * @param expected Schema object which is filled definition of expected parameters
                  */
-                static void expectedParameters(exfel::util::Schema& expected);
+                static void expectedParameters(karabo::util::Schema& expected);
 
                 /**
                  * Configures newly created object
                  * @param input validated configuration data
                  */
-                void configure(const exfel::util::Hash& input);
+                void configure(const karabo::util::Hash& input);
 
 
 
-                //void select(exfel::util::Hash& activeElementsHash);
+                //void select(karabo::util::Hash& activeElementsHash);
 
                 /*
                  * Write a single record to the table at position recordNumber
                  * @param data Hash object representing data record structure in file
                  * @param recordNumber record numbers in table start from zero
                  */
-                void write(const exfel::util::Hash& data, size_t recordNumber);
+                void write(const karabo::util::Hash& data, size_t recordNumber);
 
 
                 /**
@@ -86,25 +86,25 @@ namespace exfel {
                  * Each element of the hash must be a std::vector (?filters) of appropriate 
                  * type with len number of elements
                  */
-                void writeBuffer(const exfel::util::Hash& data, size_t recordNumber, size_t len);
+                void writeBuffer(const karabo::util::Hash& data, size_t recordNumber, size_t len);
 
                 /**
                  * Append data record to the end of the table.
                  * @param data Hash object representing data record structure in file
                  */
-                void append(const exfel::util::Hash& data);
+                void append(const karabo::util::Hash& data);
 
 
-                void allocate(exfel::util::Hash& data);
+                void allocate(karabo::util::Hash& data);
 
-                void allocate(exfel::util::Hash& data, size_t len);
+                void allocate(karabo::util::Hash& data, size_t len);
 
                 /**
                  * Read data record from the table.
                  * @param data Hash object filled with values read from the table.
                  * @param recordNumber Number identifying record to be read. Record numbers start from 0.
                  */
-                void read(exfel::util::Hash& data, size_t recordNumber);
+                void read(karabo::util::Hash& data, size_t recordNumber);
 
                 /**
                  * Buffered reading
@@ -112,10 +112,10 @@ namespace exfel {
                  * @param recordNumber
                  * @param 
                  */
-                void readBuffer(exfel::util::Hash& data, size_t recordNumber, size_t len);
+                void readBuffer(karabo::util::Hash& data, size_t recordNumber, size_t len);
 
                 void read(size_t recordNumber);
-                void readAttributes(exfel::util::Hash & attr);
+                void readAttributes(karabo::util::Hash & attr);
 
                 size_t getNumberOfRecords();
 
@@ -123,33 +123,33 @@ namespace exfel {
 
             private:
 
-                void openNew(const exfel::io::hdf5::DataFormat::Pointer dataFormat);
-                //void openReadOnly(const exfel::util::Hash& dataFormatConfig = exfel::util::Hash());
-                void openReadOnly(const exfel::io::hdf5::DataFormat::Pointer dataFormat);
+                void openNew(const karabo::io::hdf5::DataFormat::Pointer dataFormat);
+                //void openReadOnly(const karabo::util::Hash& dataFormatConfig = karabo::util::Hash());
+                void openReadOnly(const karabo::io::hdf5::DataFormat::Pointer dataFormat);
                 void openReadOnly();
 
                 void refreshRecordFormatVector();
-                void r_refreshRecordFormatVector(const exfel::util::Hash& recordFormat, std::vector< const boost::any*>& recordVector);
+                void r_refreshRecordFormatVector(const karabo::util::Hash& recordFormat, std::vector< const boost::any*>& recordVector);
 
-                void r_defineStructure(const exfel::util::Hash& recordFormat, boost::shared_ptr<H5::Group> group);
-                void r_openStructure(const exfel::util::Hash& recordFormat, boost::shared_ptr<H5::Group> group);
-                void r_write(const exfel::util::Hash& data, size_t recordNumber, const exfel::util::Hash& dataSetsInfo);
-                void r_write(const exfel::util::Hash& data, size_t recordNumber, size_t len, const exfel::util::Hash& dataSetsInfo);
-                void r_read(exfel::util::Hash& data, size_t recordNumber, const exfel::util::Hash& dataSetsDescription);
-                void r_read(exfel::util::Hash& data, size_t recordNumber, size_t len, const exfel::util::Hash& dataSetsDescription);
-                void r_readAttributes(exfel::util::Hash & attributes, const exfel::util::Hash& dataSetsDescription);
-                void r_extendRecordSpace(size_t len, const exfel::util::Hash& recordDescription);
-                void r_filter(const exfel::util::Hash& discovered, const exfel::util::Hash& selection, exfel::util::Hash& output);
-                hsize_t r_calculateNumberOfRecords(const exfel::util::Hash& recordFormat, bool firstTime = true);
-                hsize_t r_getChunkSize(const exfel::util::Hash& recordFormat, bool firstTime = true);
+                void r_defineStructure(const karabo::util::Hash& recordFormat, boost::shared_ptr<H5::Group> group);
+                void r_openStructure(const karabo::util::Hash& recordFormat, boost::shared_ptr<H5::Group> group);
+                void r_write(const karabo::util::Hash& data, size_t recordNumber, const karabo::util::Hash& dataSetsInfo);
+                void r_write(const karabo::util::Hash& data, size_t recordNumber, size_t len, const karabo::util::Hash& dataSetsInfo);
+                void r_read(karabo::util::Hash& data, size_t recordNumber, const karabo::util::Hash& dataSetsDescription);
+                void r_read(karabo::util::Hash& data, size_t recordNumber, size_t len, const karabo::util::Hash& dataSetsDescription);
+                void r_readAttributes(karabo::util::Hash & attributes, const karabo::util::Hash& dataSetsDescription);
+                void r_extendRecordSpace(size_t len, const karabo::util::Hash& recordDescription);
+                void r_filter(const karabo::util::Hash& discovered, const karabo::util::Hash& selection, karabo::util::Hash& output);
+                hsize_t r_calculateNumberOfRecords(const karabo::util::Hash& recordFormat, bool firstTime = true);
+                hsize_t r_getChunkSize(const karabo::util::Hash& recordFormat, bool firstTime = true);
 
-                void r_allocate(exfel::util::Hash& data, const exfel::util::Hash& dataSetsDescription);
-                void r_allocate(exfel::util::Hash& data, size_t len, const exfel::util::Hash& dataSetsDescription);
+                void r_allocate(karabo::util::Hash& data, const karabo::util::Hash& dataSetsDescription);
+                void r_allocate(karabo::util::Hash& data, size_t len, const karabo::util::Hash& dataSetsDescription);
 
-                void r_copyFromCache(exfel::util::Hash& data, size_t recordNumber, const exfel::util::Hash& recordFormat);
+                void r_copyFromCache(karabo::util::Hash& data, size_t recordNumber, const karabo::util::Hash& recordFormat);
                 // calback method for used by discover function
                 static herr_t fileInfo(hid_t loc_id, const char *name, const H5O_info_t *info, void *opdata);
-                void discover(exfel::io::hdf5::DataFormat::Pointer& discovered, std::string groupName);
+                void discover(karabo::io::hdf5::DataFormat::Pointer& discovered, std::string groupName);
 
 
                 void updateNumberOfRecordsAttribute();
@@ -160,9 +160,9 @@ namespace exfel {
                 void createInitialNumberOfRecordsAttribute();
                 void createSchemaVersionAttribute();
 
-                void saveTableFormatAsAttribute(const exfel::io::hdf5::DataFormat::Pointer dataFormat);
-                void readTableFormatFromAttribute(exfel::util::Hash& dataFormatConfig);
-                void defineRecordFormat(const exfel::io::hdf5::DataFormat::Pointer dataFormat);
+                void saveTableFormatAsAttribute(const karabo::io::hdf5::DataFormat::Pointer dataFormat);
+                void readTableFormatFromAttribute(karabo::util::Hash& dataFormatConfig);
+                void defineRecordFormat(const karabo::io::hdf5::DataFormat::Pointer dataFormat);
                 void openRecordStructure();
 
 
@@ -174,8 +174,8 @@ namespace exfel {
                 }
 
                 template <class T>
-                exfel::io::ArrayView<T>& getCache(const std::string& key) {
-                    return m_cache.getFromPath<exfel::io::ArrayView<T> >(key, "/");
+                karabo::io::ArrayView<T>& getCache(const std::string& key) {
+                    return m_cache.getFromPath<karabo::io::ArrayView<T> >(key, "/");
                 }
                 
                 inline size_t updateCache(size_t recordNumber) {
@@ -204,7 +204,7 @@ namespace exfel {
 
 
                 // selected record format in Hash representation
-                exfel::util::Hash m_recordFormatHash;
+                karabo::util::Hash m_recordFormatHash;
 
                 // we can try to optimize it  using std::vector<boost::any*> m_recordFormatVector; 
                 // which would contain pointers to Hash elements 
@@ -212,9 +212,9 @@ namespace exfel {
                 std::vector<const boost::any*> m_recordFormatVector;
 
                 // activated elements in Hash representation
-                exfel::util::Hash m_activatedElements; // not used at the moment
+                karabo::util::Hash m_activatedElements; // not used at the moment
 
-                exfel::util::Hash m_readData;
+                karabo::util::Hash m_readData;
 
                 hsize_t m_chunkSize;
                 hsize_t m_numberOfRecords;
@@ -224,7 +224,7 @@ namespace exfel {
 
                 // caching (read ahead)
                 bool m_useCache;
-                exfel::util::Hash m_cache;
+                karabo::util::Hash m_cache;
                 unsigned long long m_cacheStart;
                 unsigned long long m_cacheEnd;
                 unsigned long long m_cacheSize;
@@ -236,6 +236,6 @@ namespace exfel {
     }
 }
 
-EXFEL_REGISTER_FACTORY_BASE_HH(exfel::io::hdf5::Table, TEMPLATE_IO, DECLSPEC_IO)
+KARABO_REGISTER_FACTORY_BASE_HH(karabo::io::hdf5::Table, TEMPLATE_IO, DECLSPEC_IO)
 
-#endif	/* EXFEL_IO_TABLE_HH */
+#endif	/* KARABO_IO_TABLE_HH */

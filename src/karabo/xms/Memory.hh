@@ -11,13 +11,13 @@
 
 
 
-#ifndef EXFEL_XMS_MEMORY_HH
-#define	EXFEL_XMS_MEMORY_HH
+#ifndef KARABO_XMS_MEMORY_HH
+#define	KARABO_XMS_MEMORY_HH
 
 #include <karabo/util/Factory.hh>
 #include <karabo/io/BinarySerializer.hh>
 
-namespace exfel {
+namespace karabo {
     namespace xms {
         
         
@@ -38,7 +38,7 @@ namespace exfel {
             typedef std::vector< Data > Chunks;
             typedef std::vector< Chunks > Channels;
             
-            typedef std::pair<std::vector<char>, exfel::util::Hash> SerializedChunk;
+            typedef std::pair<std::vector<char>, karabo::util::Hash> SerializedChunk;
             typedef boost::shared_ptr<SerializedChunk> SerializedChunkPointer;
             typedef std::vector< SerializedChunkPointer > SerializedChunks;
             typedef std::vector< SerializedChunks > SerializedChannels;
@@ -56,7 +56,7 @@ namespace exfel {
             
             static boost::mutex m_accessMutex;
             
-            static boost::shared_ptr<exfel::io::BinarySerializer<DataType> > m_serializer;
+            static boost::shared_ptr<karabo::io::BinarySerializer<DataType> > m_serializer;
             
             static const int MAX_N_CHANNELS = 2048;
             static const int MAX_N_CHUNKS = 2048;
@@ -66,7 +66,7 @@ namespace exfel {
 
         public:
 
-            EXFEL_CLASSINFO(Memory, "Memory", "1.0")
+            KARABO_CLASSINFO(Memory, "Memory", "1.0")
             
             static void write(const DataType& data, const size_t channelIdx, const size_t chunkIdx) {
                 m_cache[channelIdx][chunkIdx].push_back(DataPointer(new DataType(data)));
@@ -146,8 +146,8 @@ namespace exfel {
                 return m_cache[channelIdx][chunkIdx];
             }
             
-            static void readAsContiguosBlock(std::vector<char>& buffer, exfel::util::Hash& header, const size_t channelIdx, const size_t chunkIdx) {
-                if(!m_serializer) m_serializer = exfel::io::BinarySerializer<DataType>::create("Default");
+            static void readAsContiguosBlock(std::vector<char>& buffer, karabo::util::Hash& header, const size_t channelIdx, const size_t chunkIdx) {
+                if(!m_serializer) m_serializer = karabo::io::BinarySerializer<DataType>::create("Default");
                 const Data& data = m_cache[channelIdx][chunkIdx];
                 std::vector<char> serializedDataElement;
                 std::vector<unsigned int> byteSizes(data.size());
@@ -174,13 +174,13 @@ namespace exfel {
                 m_serializedCache[channelIdx][chunkIdx] = scp;
             }
             
-            static const std::pair<std::vector<char>, exfel::util::Hash>& readContiguousBlockCache(const size_t channelIdx, const size_t chunkIdx) {
+            static const std::pair<std::vector<char>, karabo::util::Hash>& readContiguousBlockCache(const size_t channelIdx, const size_t chunkIdx) {
                 return *(m_serializedCache[channelIdx][chunkIdx]);
             }
             
-            static void writeAsContiguosBlock(const std::vector<char>& buffer, const exfel::util::Hash& header, const size_t channelIdx, const size_t chunkIdx) {
+            static void writeAsContiguosBlock(const std::vector<char>& buffer, const karabo::util::Hash& header, const size_t channelIdx, const size_t chunkIdx) {
                 unsigned int nData = header.get<unsigned int>("nData");
-                if(!m_serializer) m_serializer = exfel::io::BinarySerializer<DataType>::create("Default");
+                if(!m_serializer) m_serializer = karabo::io::BinarySerializer<DataType>::create("Default");
                 const std::vector<unsigned int>& byteSizes = header.get<std::vector<unsigned int> >("byteSizes");
                 Data& chunkData = m_cache[channelIdx][chunkIdx];
                 size_t chunkDataIdx = chunkData.size();
@@ -243,7 +243,7 @@ namespace exfel {
 
         public:
 
-            EXFEL_CLASSINFO(Memory, "Memory", "1.0")
+            KARABO_CLASSINFO(Memory, "Memory", "1.0")
             
             static void write(const DataType& data, const size_t channelIdx, const size_t chunkIdx) {
                 m_cache[channelIdx][chunkIdx].push_back(DataPointer(new DataType(data)));
@@ -323,7 +323,7 @@ namespace exfel {
                 return m_cache[channelIdx][chunkIdx];
             }
             
-            static void readAsContiguosBlock(std::vector<char>& buffer, exfel::util::Hash& header, const size_t channelIdx, const size_t chunkIdx) {
+            static void readAsContiguosBlock(std::vector<char>& buffer, karabo::util::Hash& header, const size_t channelIdx, const size_t chunkIdx) {
                 const Data& data = m_cache[channelIdx][chunkIdx];
                 std::vector<char> serializedDataElement;
                 std::vector<unsigned int> byteSizes(data.size());
@@ -343,7 +343,7 @@ namespace exfel {
                 
             }
             
-            static void writeAsContiguosBlock(const std::vector<char>& buffer, const exfel::util::Hash& header, const size_t channelIdx, const size_t chunkIdx) {
+            static void writeAsContiguosBlock(const std::vector<char>& buffer, const karabo::util::Hash& header, const size_t channelIdx, const size_t chunkIdx) {
                 unsigned int nData = header.get<unsigned int>("nData");
                 const std::vector<unsigned int>& byteSizes = header.get<std::vector<unsigned int> >("byteSizes");
                 m_cache[channelIdx][chunkIdx] = Data(nData);
@@ -400,7 +400,7 @@ namespace exfel {
         boost::mutex Memory<T>::m_accessMutex;
         
         template <class T>
-        boost::shared_ptr<exfel::io::BinarySerializer<T> > Memory<T>::m_serializer;
+        boost::shared_ptr<karabo::io::BinarySerializer<T> > Memory<T>::m_serializer;
     }
 }
 

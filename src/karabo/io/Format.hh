@@ -9,8 +9,8 @@
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
 
-#ifndef EXFEL_IO_FORMAT_HH
-#define	EXFEL_IO_FORMAT_HH
+#ifndef KARABO_IO_FORMAT_HH
+#define	KARABO_IO_FORMAT_HH
 
 #include <sstream>
 #include <karabo/util/Factory.hh>
@@ -19,16 +19,16 @@
 /**
  * The main European XFEL namespace
  */
-namespace exfel {
+namespace karabo {
   namespace io {
 
     template <class Tdata>
     class Format {
     public:
 
-      EXFEL_CLASSINFO(Format, "Format", "1.0")
+      KARABO_CLASSINFO(Format, "Format", "1.0")
 
-      EXFEL_FACTORY_BASE_CLASS
+      KARABO_FACTORY_BASE_CLASS
 
       /**
        * Converts from data object to buffer
@@ -67,6 +67,6 @@ namespace exfel {
   } 
 } 
 
-EXFEL_REGISTER_FACTORY_BASE_HH(exfel::io::Format<exfel::util::Hash>, TEMPLATE_IO, DECLSPEC_IO)
+KARABO_REGISTER_FACTORY_BASE_HH(karabo::io::Format<karabo::util::Hash>, TEMPLATE_IO, DECLSPEC_IO)
 
 #endif

@@ -10,8 +10,8 @@
  */
 
 
-#ifndef EXFEL_NET_AJMSCONNECTION_HH
-#define	EXFEL_NET_AJMSCONNECTION_HH
+#ifndef KARABO_NET_AJMSCONNECTION_HH
+#define	KARABO_NET_AJMSCONNECTION_HH
 
 #include <openmqc/mqcrt.h>
 #include <karabo/util/Factory.hh>
@@ -22,7 +22,7 @@
 /**
  * The main European XFEL namespace
  */
-namespace exfel {
+namespace karabo {
 
   /**
    * Namespace for package msg
@@ -35,7 +35,7 @@ namespace exfel {
     class AJmsConnection : public Connection {
     public:
 
-      EXFEL_CLASSINFO(AJmsConnection, "Jms", "1.0")
+      KARABO_CLASSINFO(AJmsConnection, "Jms", "1.0")
       
       friend class JmsChannel;
 
@@ -43,9 +43,9 @@ namespace exfel {
       
       ~AJmsConnection();
 
-      static void expectedParameters(exfel::util::Schema& expected);
+      static void expectedParameters(karabo::util::Schema& expected);
 
-      void configure(const exfel::util::Hash& input);
+      void configure(const karabo::util::Hash& input);
 
       Channel::Pointer start();
 
@@ -87,6 +87,6 @@ namespace exfel {
 
 
   } // namespace net
-} // namespace exfel
+} // namespace karabo
 
-#endif	/* EXFEL_NET_AJMSCONNECTION_HH */
+#endif	/* KARABO_NET_AJMSCONNECTION_HH */

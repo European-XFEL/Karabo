@@ -24,22 +24,21 @@
 
 #include "Device.hh"
 #include "DeviceServer.hh"
-#include "Application.hh"
 
 
-namespace exfel {
+namespace karabo {
 
     namespace core {
 
         using namespace std;
-        using namespace exfel::util;
-        using namespace exfel::io;
-        using namespace exfel::log;
-        using namespace exfel::net;
-        using namespace exfel::xms;
+        using namespace karabo::util;
+        using namespace karabo::io;
+        using namespace karabo::log;
+        using namespace karabo::net;
+        using namespace karabo::xms;
         using namespace log4cpp;
 
-        EXFEL_REGISTER_ONLY_ME_CC(DeviceServer)
+        KARABO_REGISTER_ONLY_ME_CC(DeviceServer)
 
         DeviceServer::DeviceServer() : m_log(0) {
             Hash config("Xsd.indentation", -1);
@@ -103,7 +102,7 @@ namespace exfel {
 //                    .commit();
         }
 
-        void DeviceServer::configure(const exfel::util::Hash& input) {
+        void DeviceServer::configure(const karabo::util::Hash& input) {
 
             input.get("isMaster", m_isMaster);
 
@@ -159,7 +158,7 @@ namespace exfel {
             }
             
             // Initialize category
-            m_log = &(exfel::log::Logger::logger(m_devSrvInstId));
+            m_log = &(karabo::log::Logger::logger(m_devSrvInstId));
             
             log() << Priority::INFO << "Starting European XFEL DeviceServer on host: " << boost::asio::ip::host_name();
 
@@ -236,7 +235,7 @@ namespace exfel {
                     inbuildDevicesAvailable();
                 }
                 log() << Priority::INFO << "Keep watching directory: " << m_pluginLoader->getPluginDirectory() << " for Device plugins";
-                m_pluginThread = boost::thread(boost::bind(&exfel::core::DeviceServer::scanPlugins, this));
+                m_pluginThread = boost::thread(boost::bind(&karabo::core::DeviceServer::scanPlugins, this));
             }
         }
 
@@ -247,7 +246,7 @@ namespace exfel {
             BOOST_FOREACH(string device, devices) {
                 if (!m_availableDevices.has(device)) {
                     std::stringstream stream;
-                    m_format->convert(Device::expectedParameters(device, exfel::util::READ | exfel::util::WRITE | exfel::util::INIT), stream);
+                    m_format->convert(Device::expectedParameters(device, karabo::util::READ | karabo::util::WRITE | karabo::util::INIT), stream);
                     m_availableDevices.set(device, Hash("mustNotify", true, "xsd", stream.str()));
                 }
             }
@@ -291,7 +290,7 @@ namespace exfel {
 
         }
 
-        void DeviceServer::startDeviceAction(const exfel::util::Hash& config) {
+        void DeviceServer::startDeviceAction(const karabo::util::Hash& config) {
             try {
                 log() << Priority::INFO << "Trying to start device with the following configuration:\n" << config;
                 
@@ -300,7 +299,7 @@ namespace exfel {
                 modifiedConfig.get<Hash>(modifiedConfig.begin()).set("devSrvInstId", m_devSrvInstId);
                                 
                 Device::Pointer device = Device::create(modifiedConfig);
-                boost::thread* t = m_deviceThreads.create_thread(boost::bind(&exfel::core::Device::run, device));
+                boost::thread* t = m_deviceThreads.create_thread(boost::bind(&karabo::core::Device::run, device));
                 
                 // Associate deviceInstance with its thread
                 string deviceInstanceId = device->getInstanceId();

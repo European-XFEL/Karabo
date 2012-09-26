@@ -14,17 +14,17 @@
 #include "SnmpChannel.hh"
 
 using namespace std;
-using namespace exfel::util;
+using namespace karabo::util;
 
-namespace exfel {
+namespace karabo {
     namespace net {
 
-        EXFEL_REGISTER_FACTORY_CC(Connection, SnmpConnection)
+        KARABO_REGISTER_FACTORY_CC(Connection, SnmpConnection)
 
         SnmpConnection::SnmpConnection() {
         }
 
-        void SnmpConnection::expectedParameters(exfel::util::Schema& expected) {
+        void SnmpConnection::expectedParameters(karabo::util::Schema& expected) {
 
             STRING_ELEMENT(expected)
                     .key("hostname")
@@ -81,7 +81,7 @@ namespace exfel {
                     .commit();
         }
 
-        void SnmpConnection::configure(const exfel::util::Hash& input) {
+        void SnmpConnection::configure(const karabo::util::Hash& input) {
             setIOServiceType("Snmp");
             //m_snmp_service = boost::static_pointer_cast<SnmpService > (m_service->service());
 

@@ -19,12 +19,12 @@
 #include "SignalSlotable.hh"
 
 
-namespace exfel {
+namespace karabo {
     namespace xms {
 
         using namespace std;
-        using namespace exfel::util;
-        using namespace exfel::net;
+        using namespace karabo::util;
+        using namespace karabo::net;
 
         // Static initializations
         std::set<int> SignalSlotable::m_reconnectIntervals = std::set<int>();
@@ -41,7 +41,7 @@ namespace exfel {
         SignalSlotable::~SignalSlotable() {
         }
 
-        void SignalSlotable::init(const exfel::net::BrokerConnection::Pointer& connection, const std::string& instanceId, int heartbeatRate) {
+        void SignalSlotable::init(const karabo::net::BrokerConnection::Pointer& connection, const std::string& instanceId, int heartbeatRate) {
 
             m_connection = connection;
             m_instanceId = instanceId;
@@ -157,7 +157,7 @@ namespace exfel {
             if (emitHeartbeat) {
                 m_sendHeartbeats = true;
                 // Send heartbeat and sleep for m_timeToLive seconds
-                boost::thread heartbeatThread(boost::bind(&exfel::xms::SignalSlotable::emitHeartbeat, this));
+                boost::thread heartbeatThread(boost::bind(&karabo::xms::SignalSlotable::emitHeartbeat, this));
                 m_ioService->work(); // blocks
                 m_sendHeartbeats = false;
                 heartbeatThread.join();
@@ -217,8 +217,8 @@ namespace exfel {
             std::vector<string> signals;
             try {
                 request(instanceId, "slotGetAvailableFunctions", "signals").timeout(100).receive(signals);
-            } catch (const exfel::util::TimeoutException&) {
-                exfel::util::Exception::clearTrace();
+            } catch (const karabo::util::TimeoutException&) {
+                karabo::util::Exception::clearTrace();
                 cout << "ERROR:  The requested instanceId \"" << instanceId << "\" is currently not available." << endl;
             }
             return signals;
@@ -228,8 +228,8 @@ namespace exfel {
             std::vector<string> slots;
             try {
                 request(instanceId, "slotGetAvailableFunctions", "slots").timeout(100).receive(slots);
-            } catch (const exfel::util::TimeoutException&) {
-                exfel::util::Exception::clearTrace();
+            } catch (const karabo::util::TimeoutException&) {
+                karabo::util::Exception::clearTrace();
                 cout << "ERROR:  The requested instanceId \"" << instanceId << "\" is currently not available." << endl;
             }
             return slots;
@@ -274,7 +274,7 @@ namespace exfel {
             return m_instanceId;
         }
 
-        void SignalSlotable::autoConnectAllSignals(const exfel::util::Hash& config, const std::string signalRegularExpression) {
+        void SignalSlotable::autoConnectAllSignals(const karabo::util::Hash& config, const std::string signalRegularExpression) {
             try {
                 for (Hash::const_iterator it = config.begin(); it != config.end(); ++it) {
                     const boost::regex e(signalRegularExpression);
@@ -290,7 +290,7 @@ namespace exfel {
             }
         }
 
-        void SignalSlotable::autoConnectAllSlots(const exfel::util::Hash& config, const std::string slotRegularExpression) {
+        void SignalSlotable::autoConnectAllSlots(const karabo::util::Hash& config, const std::string slotRegularExpression) {
             try {
                 for (Hash::const_iterator it = config.begin(); it != config.end(); ++it) {
                     const boost::regex e(slotRegularExpression);
@@ -368,8 +368,8 @@ namespace exfel {
                     if (!signalExists) {
                         if (isVerbose) cout << "WARN  : The requested signal \"" << signalFunction << "\" is currently not available on signal-instanceId \"" << signalInstanceId << "\"." << endl;
                     }
-                } catch (const exfel::util::TimeoutException&) {
-                    exfel::util::Exception::clearTrace();
+                } catch (const karabo::util::TimeoutException&) {
+                    karabo::util::Exception::clearTrace();
                     signalExists = false;
                     if (isVerbose) cout << "WARN  : The requested signal-instanceId \"" << signalInstanceId << "\" is currently not available." << endl;
                 }
@@ -419,8 +419,8 @@ namespace exfel {
                     if (!slotExists) {
                         if (isVerbose) cout << "WARN  : The requested slot \"" << slotFunction << "\" is currently not available on slot-instanceId \"" << slotInstanceId << "\"." << endl;
                     }
-                } catch (const exfel::util::TimeoutException&) {
-                    exfel::util::Exception::clearTrace();
+                } catch (const karabo::util::TimeoutException&) {
+                    karabo::util::Exception::clearTrace();
                     slotExists = false;
                     if (isVerbose) cout << "WARN  : The requested slot-instanceId \"" << slotInstanceId << "\" is currently not available." << endl;
                 }
@@ -573,8 +573,8 @@ namespace exfel {
                     if (!signalExists) {
                         if (isVerbose) cout << "WARN  : The requested signal \"" << signalFunction << "\" is currently not available on signal-instanceId \"" << signalInstanceId << "\"." << endl;
                     }
-                } catch (const exfel::util::TimeoutException&) {
-                    exfel::util::Exception::clearTrace();
+                } catch (const karabo::util::TimeoutException&) {
+                    karabo::util::Exception::clearTrace();
                     signalExists = false;
                     if (isVerbose) cout << "WARN  : The requested signal-instanceId \"" << signalInstanceId << "\" is currently not available." << endl;
                 }
@@ -609,7 +609,7 @@ namespace exfel {
             }
         }
 
-        void SignalSlotable::connectionNotAvailable(const std::string& instanceId, const std::vector<exfel::util::Hash>& connections) {
+        void SignalSlotable::connectionNotAvailable(const std::string& instanceId, const std::vector<karabo::util::Hash>& connections) {
             std::cout << "Instance \"" << instanceId << "\" is not available, the following connection will thus not work: " << std::endl;
             for (size_t i = 0; i < connections.size(); ++i) {
                 const Hash& connection = connections[i];
@@ -621,7 +621,7 @@ namespace exfel {
             }
         }
 
-        void SignalSlotable::connectionAvailableAgain(const std::string& instanceId, const std::vector<exfel::util::Hash>& connections) {
+        void SignalSlotable::connectionAvailableAgain(const std::string& instanceId, const std::vector<karabo::util::Hash>& connections) {
             std::cout << "Previously unavailable instance \"" << instanceId << "\" is now available, the following connections are established: " << std::endl;
             for (size_t i = 0; i < connections.size(); ++i) {
                 const Hash& connection = connections[i];
@@ -720,7 +720,7 @@ namespace exfel {
             }
         }
 
-        void SignalSlotable::connectionLost(const std::string& instanceId, const std::vector<exfel::util::Hash>& connections) {
+        void SignalSlotable::connectionLost(const std::string& instanceId, const std::vector<karabo::util::Hash>& connections) {
             //std::cout << "Instance \"" << instanceId << "\" is not available, the following connection will thus not work: " << std::endl;
             for (size_t i = 0; i < connections.size(); ++i) {
                 const Hash& connection = connections[i];
@@ -737,7 +737,7 @@ namespace exfel {
             connectionNotAvailable(instanceId, connections);
         }
 
-        Hash SignalSlotable::prepareConnectionNotAvailableInformation(const exfel::util::Hash& hash) const {
+        Hash SignalSlotable::prepareConnectionNotAvailableInformation(const karabo::util::Hash& hash) const {
             Hash result;
             for (Hash::const_iterator jt = hash.begin(); jt != hash.end(); ++jt) {
                 const AssocType& associates = hash.get< AssocType > (jt);
@@ -783,15 +783,15 @@ namespace exfel {
             }
         }
 
-        std::pair<bool, exfel::util::Hash> SignalSlotable::digestPotentialReply() {
+        std::pair<bool, karabo::util::Hash> SignalSlotable::digestPotentialReply() {
             boost::mutex::scoped_lock lock(m_replyMutex);
             Replies::iterator it = m_replies.find(boost::this_thread::get_id());
-            std::pair<bool, exfel::util::Hash> ret;
+            std::pair<bool, karabo::util::Hash> ret;
             if (it != m_replies.end()) {
                 ret = std::make_pair(true, it->second);
                 m_replies.erase(it);
             } else {
-                ret = std::make_pair(false, exfel::util::Hash());
+                ret = std::make_pair(false, karabo::util::Hash());
             }
             return ret;
         }
@@ -802,18 +802,18 @@ namespace exfel {
                 AbstractInput::Pointer channel = it->second;
                 if (channel->needsDeviceConnection()) {
                     // Loop connected outputs
-                    std::vector<exfel::util::Hash> outputChannels = channel->getConnectedOutputChannels();
+                    std::vector<karabo::util::Hash> outputChannels = channel->getConnectedOutputChannels();
                     for (size_t j = 0; j < outputChannels.size(); ++j) {
                         const std::string& instanceId = outputChannels[j].get<string > ("instanceId");
                         const std::string& channelId = outputChannels[j].get<string > ("channelId");
                         bool channelExists;
-                        exfel::util::Hash reply;
+                        karabo::util::Hash reply;
                         int sleep = 1;
                         while (true) {
                             try {
                                 this->request(instanceId, "slotGetOutputChannelInformation", channelId, static_cast<int> (getpid())).timeout(1000).receive(channelExists, reply);
-                            } catch (exfel::util::TimeoutException&) {
-                                exfel::util::Exception::clearTrace();
+                            } catch (karabo::util::TimeoutException&) {
+                                karabo::util::Exception::clearTrace();
                                 std::cout << "Could not find instanceId \"" + instanceId + "\" for IO connection" << std::endl;
                                 std::cout << "Trying again in " << sleep << " seconds." << std::endl;
                                 boost::this_thread::sleep(boost::posix_time::seconds(sleep));
@@ -835,7 +835,7 @@ namespace exfel {
         void SignalSlotable::slotGetOutputChannelInformation(const std::string& ioChannelId, const int& processId) {
             OutputChannels::const_iterator it = m_outputChannels.find(ioChannelId);
             if (it != m_outputChannels.end()) {
-                exfel::util::Hash h(it->second->getInformation());
+                karabo::util::Hash h(it->second->getInformation());
                 if (processId == static_cast<int> (getpid())) {
                     h.set("memoryLocation", "local");
                 } else {
@@ -843,10 +843,10 @@ namespace exfel {
                 }
                 reply(true, h);
             } else {
-                reply(false, exfel::util::Hash());
+                reply(false, karabo::util::Hash());
             }
         }
 
 
     } // namespace xms
-} // namespace exfel
+} // namespace karabo

@@ -8,8 +8,8 @@
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
 
-#ifndef EXFEL_XMS_DEVICEOUTPUT_HH
-#define	EXFEL_XMS_DEVICEOUTPUT_HH
+#ifndef KARABO_XMS_DEVICEOUTPUT_HH
+#define	KARABO_XMS_DEVICEOUTPUT_HH
 
 #include <boost/asio.hpp>
 
@@ -24,7 +24,7 @@
 /**
  * The main European XFEL namespace
  */
-namespace exfel {
+namespace karabo {
 
     namespace xms {
 
@@ -33,26 +33,26 @@ namespace exfel {
          */
         template <class T>
         class InterInstanceOutput : public Output<T> {
-            typedef boost::shared_ptr<exfel::net::Channel> TcpChannelPointer;
+            typedef boost::shared_ptr<karabo::net::Channel> TcpChannelPointer;
 
             /*
-             * InputChannelInfo (exfel::util::Hash)
+             * InputChannelInfo (karabo::util::Hash)
              * 
              *     memoryLocation (std::string) [local/remote]
              *     dataDistribution (std::string) [distribute/copy]
              *     tcpChannel (TcpChannelPointer)
              *
              */
-            typedef exfel::util::Hash InputChannelInfo;
+            typedef karabo::util::Hash InputChannelInfo;
 
             /*
-             * InputChannels (exfel::util::Hash)
+             * InputChannels (karabo::util::Hash)
              * 
-             * instanceId (exfel::util::Hash)
+             * instanceId (karabo::util::Hash)
              *     InputChannelInfo (s.a.)
              *
              */
-            typedef exfel::util::Hash InputChannels;
+            typedef karabo::util::Hash InputChannels;
 
             typedef std::deque< InputChannelInfo > InputChannelQueue;
 
@@ -63,7 +63,7 @@ namespace exfel {
 
         public:
 
-            EXFEL_CLASSINFO(InterInstanceOutput, "DeviceOutput-" + T::classInfo().getClassId(), "1.0")
+            KARABO_CLASSINFO(InterInstanceOutput, "DeviceOutput-" + T::classInfo().getClassId(), "1.0")
 
             /**
              * Default constructor.
@@ -81,8 +81,8 @@ namespace exfel {
              * Necessary method as part of the factory/configuration system
              * @param expected [out] Description of expected parameters for this object (Schema)
              */
-            static void expectedParameters(exfel::util::Schema& expected) {
-                using namespace exfel::util;
+            static void expectedParameters(karabo::util::Schema& expected) {
+                using namespace karabo::util;
 
                 STRING_ELEMENT(expected).key("noInputShared")
                         .displayedName("No Input (Shared)")
@@ -105,7 +105,7 @@ namespace exfel {
              * If this object is constructed using the factory/configuration system this method is called
              * @param input Validated (@see expectedParameters) and default-filled configuration
              */
-            void configure(const exfel::util::Hash& input) {
+            void configure(const karabo::util::Hash& input) {
 
                 input.get("noInputShared", m_onNoSharedInputChannelAvailable);
                 input.get("noInputCopy", m_onNoCopiedInputChannelAvailable);
@@ -119,14 +119,14 @@ namespace exfel {
                 while (tryAgain > 0) {
                     try {
                         m_ownPort = Statics::generateServerPort();
-                        exfel::util::Hash h("Tcp.type", "server", "Tcp.port", m_ownPort);
-                        m_dataConnection = exfel::net::Connection::create(h);
-                        m_dataConnection->setErrorHandler(boost::bind(&exfel::xms::InterInstanceOutput<T>::onTcpConnectionError, this, _1, _2));
+                        karabo::util::Hash h("Tcp.type", "server", "Tcp.port", m_ownPort);
+                        m_dataConnection = karabo::net::Connection::create(h);
+                        m_dataConnection->setErrorHandler(boost::bind(&karabo::xms::InterInstanceOutput<T>::onTcpConnectionError, this, _1, _2));
                         m_dataIOService = m_dataConnection->getIOService();
-                        m_dataConnection->startAsync(boost::bind(&exfel::xms::InterInstanceOutput<T>::onTcpConnect, this, _1));
+                        m_dataConnection->startAsync(boost::bind(&karabo::xms::InterInstanceOutput<T>::onTcpConnect, this, _1));
 
                         // Start data thread
-                        m_dataThread = boost::thread(boost::bind(&exfel::net::IOService::run, m_dataIOService));
+                        m_dataThread = boost::thread(boost::bind(&karabo::net::IOService::run, m_dataIOService));
 
                     } catch (...) {
                         if (tryAgain > 0) {
@@ -147,8 +147,8 @@ namespace exfel {
 
             }
 
-            exfel::util::Hash getInformation() const {
-                return exfel::util::Hash("connectionType", "tcp", "hostname", boost::asio::ip::host_name(), "port", m_ownPort);
+            karabo::util::Hash getInformation() const {
+                return karabo::util::Hash("connectionType", "tcp", "hostname", boost::asio::ip::host_name(), "port", m_ownPort);
             }
 
             void write(const T& data) {
@@ -157,9 +157,9 @@ namespace exfel {
 
             void onTcpConnect(TcpChannelPointer channel) {
                 std::cout << "Connection established" << std::endl;
-                channel->setErrorHandler(boost::bind(&exfel::xms::InterInstanceOutput<T>::onTcpChannelError, this, _1, _2));
-                channel->readAsyncHash(boost::bind(&exfel::xms::InterInstanceOutput<T>::onTcpChannelRead, this, _1, _2));
-                m_dataConnection->startAsync(boost::bind(&exfel::xms::InterInstanceOutput<T>::onTcpConnect, this, _1));
+                channel->setErrorHandler(boost::bind(&karabo::xms::InterInstanceOutput<T>::onTcpChannelError, this, _1, _2));
+                channel->readAsyncHash(boost::bind(&karabo::xms::InterInstanceOutput<T>::onTcpChannelRead, this, _1, _2));
+                m_dataConnection->startAsync(boost::bind(&karabo::xms::InterInstanceOutput<T>::onTcpConnect, this, _1));
             }
 
             void onTcpConnectionError(TcpChannelPointer, const std::string& errorMessage) {
@@ -170,7 +170,7 @@ namespace exfel {
                 std::cout << errorMessage << std::endl;
             }
             
-            void onTcpChannelRead(TcpChannelPointer channel, const exfel::util::Hash& message) {
+            void onTcpChannelRead(TcpChannelPointer channel, const karabo::util::Hash& message) {
 
                 std::string reason;
                 if (message.has("reason")) message.get<std::string > ("reason", reason);
@@ -184,7 +184,7 @@ namespace exfel {
                         std::string dataDistribution = message.get<std::string > ("dataDistribution");
                         std::string memoryLocation = message.get<std::string > ("memoryLocation");
 
-                        exfel::util::Hash info;
+                        karabo::util::Hash info;
                         info.set("memoryLocation", memoryLocation);
                         info.set("tcpChannel", channel);
 
@@ -208,7 +208,7 @@ namespace exfel {
                     }
 
                 }
-                channel->readAsyncHash(boost::bind(&exfel::xms::InterInstanceOutput<T>::onTcpChannelRead, this, _1, _2));
+                channel->readAsyncHash(boost::bind(&karabo::xms::InterInstanceOutput<T>::onTcpChannelRead, this, _1, _2));
             }
 
             void onInputAvailable(const std::string& instanceId) {
@@ -216,11 +216,11 @@ namespace exfel {
 
 
                 if (m_sharedInputs.has(instanceId)) {
-                    InputChannelInfo channelInfo = m_sharedInputs.get<exfel::util::Hash > (instanceId);
+                    InputChannelInfo channelInfo = m_sharedInputs.get<karabo::util::Hash > (instanceId);
                     pushShareNext(channelInfo);
                     std::cout << "New (shared) input on instance " << instanceId << " available for writing " << std::endl;
                 } else if (m_copiedInputs.has(instanceId)) {
-                    InputChannelInfo channelInfo = m_copiedInputs.get<exfel::util::Hash > (instanceId);
+                    InputChannelInfo channelInfo = m_copiedInputs.get<karabo::util::Hash > (instanceId);
                     pushCopyNext(channelInfo);
                     std::cout << "New (copied) input on instance " << instanceId << " available for writing " << std::endl;
                 } else {
@@ -354,7 +354,7 @@ namespace exfel {
                 const TcpChannelPointer& tcpChannel = channelInfo.get<TcpChannelPointer > ("tcpChannel");
 
                 // Synchronous write as it takes no time here
-                tcpChannel->write(std::vector<char>(), exfel::util::Hash("channelId", m_channelId, "chunkId", chunkId));
+                tcpChannel->write(std::vector<char>(), karabo::util::Hash("channelId", m_channelId, "chunkId", chunkId));
             }
 
             void distributeRemote(const unsigned int& chunkId, const InputChannelInfo& channelInfo) {
@@ -362,10 +362,10 @@ namespace exfel {
                 const TcpChannelPointer& tcpChannel = channelInfo.get<TcpChannelPointer > ("tcpChannel");
 
                 registerAsyncWrite(tcpChannel, chunkId);
-                const std::pair< std::vector<char>, exfel::util::Hash>& entry = getAsyncWriteData(chunkId);
+                const std::pair< std::vector<char>, karabo::util::Hash>& entry = getAsyncWriteData(chunkId);
                 std::cout << "Going to distribute " << entry.first.size() << " bytes of data" << std::endl;
                 std::cout << "With header: " << entry.second << std::endl;
-                tcpChannel->writeAsyncVectorHash(entry.first, entry.second, boost::bind(&exfel::xms::InterInstanceOutput<T>::onWriteCompleted, this, _1));
+                tcpChannel->writeAsyncVectorHash(entry.first, entry.second, boost::bind(&karabo::xms::InterInstanceOutput<T>::onWriteCompleted, this, _1));
                 //m_activeTcpChannel->write(entry.first, entry.second);
             }
 
@@ -385,7 +385,7 @@ namespace exfel {
                 m_currentWritersCountMutex.unlock();
             }
 
-            const std::pair<std::vector<char>, exfel::util::Hash>& getAsyncWriteData(const unsigned int& chunkId) {
+            const std::pair<std::vector<char>, karabo::util::Hash>& getAsyncWriteData(const unsigned int& chunkId) {
                 return Memory<T>::readContiguousBlockCache(m_channelId, chunkId);
             }
 
@@ -468,7 +468,7 @@ namespace exfel {
 
                 // Synchronous write as it takes no time here
                 // Writing no data signals input to read from memory
-                tcpChannel->write(std::vector<char>(), exfel::util::Hash("channelId", m_channelId, "chunkId", chunkId));
+                tcpChannel->write(std::vector<char>(), karabo::util::Hash("channelId", m_channelId, "chunkId", chunkId));
             }
 
             void copyRemote(const unsigned int& chunkId, const InputChannelInfo& channelInfo) {
@@ -476,10 +476,10 @@ namespace exfel {
                 const TcpChannelPointer& tcpChannel = channelInfo.get<TcpChannelPointer > ("tcpChannel");
 
                 registerAsyncWrite(tcpChannel, chunkId);
-                const std::pair< std::vector<char>, exfel::util::Hash>& entry = getAsyncWriteData(chunkId);
+                const std::pair< std::vector<char>, karabo::util::Hash>& entry = getAsyncWriteData(chunkId);
                 std::cout << "Going to copy " << entry.first.size() << " bytes of data" << std::endl;
                 std::cout << "With header: " << entry.second << std::endl;
-                tcpChannel->writeAsyncVectorHash(entry.first, entry.second, boost::bind(&exfel::xms::InterInstanceOutput<T>::onWriteCompleted, this, _1));
+                tcpChannel->writeAsyncVectorHash(entry.first, entry.second, boost::bind(&karabo::xms::InterInstanceOutput<T>::onWriteCompleted, this, _1));
             }
 
 
@@ -488,9 +488,9 @@ namespace exfel {
             // Server related
             unsigned int m_ownPort;
 
-            exfel::net::Connection::Pointer m_dataConnection;
+            karabo::net::Connection::Pointer m_dataConnection;
             //TcpChannelPointer m_dataChannel;
-            exfel::net::IOService::Pointer m_dataIOService;
+            karabo::net::IOService::Pointer m_dataIOService;
             boost::thread m_dataThread;
 
             std::string m_onNoSharedInputChannelAvailable;
@@ -513,7 +513,7 @@ namespace exfel {
 
             // Copy out
             std::vector<char> m_buffer;
-            exfel::util::Hash m_header;
+            karabo::util::Hash m_header;
             int m_count;
 
             unsigned int m_channelId;

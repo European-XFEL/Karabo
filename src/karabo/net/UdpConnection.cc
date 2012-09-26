@@ -19,18 +19,18 @@
 
 using namespace std;
 using namespace boost::asio;
-using namespace exfel::util;
+using namespace karabo::util;
 using boost::asio::ip::udp;
 
-namespace exfel {
+namespace karabo {
     namespace net {
 
-        EXFEL_REGISTER_FACTORY_CC(Connection, UdpConnection)
+        KARABO_REGISTER_FACTORY_CC(Connection, UdpConnection)
 
         UdpConnection::UdpConnection() {
         }
 
-        void UdpConnection::expectedParameters(exfel::util::Schema& expected) {
+        void UdpConnection::expectedParameters(karabo::util::Schema& expected) {
             STRING_ELEMENT(expected)
                     .key("type")
                     .displayedName("Connection Type")
@@ -61,7 +61,7 @@ namespace exfel {
                 .commit();
         }
 
-        void UdpConnection::configure(const exfel::util::Hash& input) {
+        void UdpConnection::configure(const karabo::util::Hash& input) {
             // Create a private IOService in case the user has not given us an external one
             if (!m_service) {
                 m_service = IOService::Pointer(new IOService);

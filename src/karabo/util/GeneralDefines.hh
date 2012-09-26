@@ -8,10 +8,10 @@
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
 
-#ifndef EXFEL_UTIL_GENERALDEFINES_HH
-#define	EXFEL_UTIL_GENERALDEFINES_HH
+#ifndef KARABO_UTIL_GENERALDEFINES_HH
+#define	KARABO_UTIL_GENERALDEFINES_HH
 
-namespace exfel {
+namespace karabo {
   namespace util {
     
     /********************************************
@@ -30,7 +30,7 @@ namespace exfel {
      ********************************************/
     
 #if defined(_WIN32) && defined(__DLL__)
-#define EXFEL_API __declspec(dllexport)
+#define KARABO_API __declspec(dllexport)
 #define TEMPLATE_DLL
 #elif defined(unix)        || defined(__unix)      || defined(__unix__) \
  || defined(linux)       || defined(__linux)     || defined(__linux__) \
@@ -40,9 +40,9 @@ namespace exfel {
  || defined(sgi)         || defined(__sgi) \
  || defined(__MACOSX__)  || defined(__APPLE__) \
  || defined(__CYGWIN__)
-#define EXFEL_API
+#define KARABO_API
 #else
-#define EXFEL_API __declspec(dllimport)
+#define KARABO_API __declspec(dllimport)
 #define TEMPLATE_DLL extern
 #endif
 
@@ -57,5 +57,5 @@ namespace exfel {
 
 
 
-#endif	/* EXFEL_PACKAGENAME_GENERALDEFINES_HH */
+#endif	/* KARABO_PACKAGENAME_GENERALDEFINES_HH */
 

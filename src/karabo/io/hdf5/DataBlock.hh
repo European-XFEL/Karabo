@@ -9,28 +9,28 @@
 
 
 
-#ifndef EXFEL_IO_DATABLOCK_HH
-#define	EXFEL_IO_DATABLOCK_HH
+#ifndef KARABO_IO_DATABLOCK_HH
+#define	KARABO_IO_DATABLOCK_HH
 
 #include "RecordElement.hh"
 
 #include <string>
 
-namespace exfel {
+namespace karabo {
   namespace io {
 
 
     class DataBlock {
     public:
-      EXFEL_CLASSINFO(DataBlock, "DataBlock", "1.0")
-      EXFEL_FACTORY_BASE_CLASS
+      KARABO_CLASSINFO(DataBlock, "DataBlock", "1.0")
+      KARABO_FACTORY_BASE_CLASS
 
 
       virtual ~DataBlock(){
       }
       
-      static void expectedParameters(exfel::util::Schema& expected);
-      void configure(const exfel::util::Hash& input);
+      static void expectedParameters(karabo::util::Schema& expected);
+      void configure(const karabo::util::Hash& input);
       
       
       /*
@@ -43,12 +43,12 @@ namespace exfel {
       /*
        *  Get Hash representation of the DataBlock
        */ 
-      void getHash(exfel::util::Hash&) const;
+      void getHash(karabo::util::Hash&) const;
      
       /*
        * Get the Hash object used for creation
        */
-      exfel::util::Hash getConfig() const;
+      karabo::util::Hash getConfig() const;
       
       /*
        * Make a deep copy of the original DataBlock.
@@ -58,15 +58,15 @@ namespace exfel {
     
     private:
       std::string m_name;
-      std::vector<exfel::io::RecordElement::Pointer > m_elementList;
-      exfel::util::Hash m_config;
+      std::vector<karabo::io::RecordElement::Pointer > m_elementList;
+      karabo::util::Hash m_config;
       
 
     };
   }
 }
 
-EXFEL_REGISTER_FACTORY_BASE_HH(exfel::io::DataBlock, TEMPLATE_IO, DECLSPEC_IO)
+KARABO_REGISTER_FACTORY_BASE_HH(karabo::io::DataBlock, TEMPLATE_IO, DECLSPEC_IO)
 
-#endif	/* EXFEL_IO_DATABLOCK_HH */
+#endif	/* KARABO_IO_DATABLOCK_HH */
 

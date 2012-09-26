@@ -7,8 +7,8 @@
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
 
-#ifndef EXFEL_NET_UDPCHANNEL_HH
-#define	EXFEL_NET_UDPCHANNEL_HH
+#ifndef KARABO_NET_UDPCHANNEL_HH
+#define	KARABO_NET_UDPCHANNEL_HH
 
 #include <boost/enable_shared_from_this.hpp>
 #include "Channel.hh"
@@ -16,13 +16,13 @@
 
 
 
-namespace exfel {
+namespace karabo {
     namespace net {
 
         class UdpChannel : public Channel, public boost::enable_shared_from_this<UdpChannel> {
         public:
 
-            EXFEL_CLASSINFO(UdpChannel, "UdpChannel", "1.0")
+            KARABO_CLASSINFO(UdpChannel, "UdpChannel", "1.0")
 
             typedef boost::shared_ptr<UdpChannel> Pointer;
 
@@ -91,5 +91,5 @@ namespace exfel {
     }
 }
 
-#endif	/* EXFEL_NET_UDPCHANNEL_HH */
+#endif	/* KARABO_NET_UDPCHANNEL_HH */
 

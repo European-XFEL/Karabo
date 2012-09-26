@@ -16,10 +16,10 @@
 #include "JmsBrokerIOService.hh"
 
 using namespace std;
-using namespace exfel::util;
+using namespace karabo::util;
 using namespace boost::signals2;
 
-namespace exfel {
+namespace karabo {
     namespace net {
 
         JmsBrokerChannel::JmsBrokerChannel(JmsBrokerConnection& connection) : BrokerChannel(connection), m_jmsConnection(connection), m_filterCondition(""),
@@ -108,7 +108,7 @@ namespace exfel {
             }
         }
 
-        void JmsBrokerChannel::read(exfel::util::Hash& body, exfel::util::Hash& header) {
+        void JmsBrokerChannel::read(karabo::util::Hash& body, karabo::util::Hash& header) {
             std::string s;
             try {
                 this->read(s, header);
@@ -308,7 +308,7 @@ namespace exfel {
 
         void JmsBrokerChannel::readAsyncHashHash(const ReadHashHashHandler& handler) {
             m_readHashHashHandler = handler;
-            readAsyncRawHash(boost::bind(&exfel::net::JmsBrokerChannel::rawHash2HashHash, this, _1, _2, _3, _4));
+            readAsyncRawHash(boost::bind(&karabo::net::JmsBrokerChannel::rawHash2HashHash, this, _1, _2, _3, _4));
         }
 
         void JmsBrokerChannel::listenForBinaryMessages() {
@@ -408,7 +408,7 @@ namespace exfel {
 
                 // Add some default properties
                 Hash properties(header);
-                properties.set<long long>("__timestamp", exfel::util::Time::getMsSinceEpoch());
+                properties.set<long long>("__timestamp", karabo::util::Time::getMsSinceEpoch());
                 setProperties(properties, propertiesHandle);
 
                 MQ_SAFE_CALL(MQSetMessageProperties(messageHandle, propertiesHandle))
@@ -445,7 +445,7 @@ namespace exfel {
 
                 // Add some default properties
                 Hash properties(header);
-                properties.set<long long>("__timestamp", exfel::util::Time::getMsSinceEpoch());
+                properties.set<long long>("__timestamp", karabo::util::Time::getMsSinceEpoch());
                 setProperties(properties, propertiesHandle);
 
                 MQ_SAFE_CALL(MQSetMessageProperties(messageHandle, propertiesHandle))
@@ -467,7 +467,7 @@ namespace exfel {
             }
         }
 
-        void JmsBrokerChannel::write(const exfel::util::Hash& data, const exfel::util::Hash& header) {
+        void JmsBrokerChannel::write(const karabo::util::Hash& data, const karabo::util::Hash& header) {
             string s;
             string format = getHashFormat();
             Hash modifiedHeader(header);
@@ -545,7 +545,7 @@ namespace exfel {
             unregisterChannel(shared_from_this());
         }
 
-        void JmsBrokerChannel::rawHash2HashHash(BrokerChannel::Pointer channel, const char* data, const size_t& size, const exfel::util::Hash& header) {
+        void JmsBrokerChannel::rawHash2HashHash(BrokerChannel::Pointer channel, const char* data, const size_t& size, const karabo::util::Hash& header) {
             Hash h;
             if (m_jmsConnection.m_autoDetectMessageFormat) {
                 stringstream ss(string(data, size));
@@ -567,4 +567,4 @@ namespace exfel {
             m_readHashHashHandler(channel, h, header);
         }
     } // namespace net
-} // namespace exfel
+} // namespace karabo

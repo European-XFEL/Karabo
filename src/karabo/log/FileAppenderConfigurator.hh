@@ -12,8 +12,8 @@
 
 
 
-#ifndef EXFEL_LOGCONFIG_FILEAPPENDERCONFIGURATOR_HH
-#define	EXFEL_LOGCONFIG_FILEAPPENDERCONFIGURATOR_HH
+#ifndef KARABO_LOGCONFIG_FILEAPPENDERCONFIGURATOR_HH
+#define	KARABO_LOGCONFIG_FILEAPPENDERCONFIGURATOR_HH
 
 #include "AppenderConfigurator.hh"
 #include <boost/filesystem.hpp>
@@ -26,7 +26,7 @@ namespace log4cpp {
 /**
  * The main European XFEL namespace
  */
-namespace exfel {
+namespace karabo {
 
   namespace util {
     class Hash;
@@ -41,13 +41,13 @@ namespace exfel {
      */
     class FileAppenderConfigurator : public AppenderConfigurator {
     public:
-      EXFEL_CLASSINFO(FileAppenderConfigurator, "File", "1.0")
+      KARABO_CLASSINFO(FileAppenderConfigurator, "File", "1.0")
 
       FileAppenderConfigurator();
       virtual ~FileAppenderConfigurator();
 
-      static void expectedParameters(exfel::util::Schema& expected);
-      void configure(const exfel::util::Hash& input);
+      static void expectedParameters(karabo::util::Schema& expected);
+      void configure(const karabo::util::Hash& input);
 
       const boost::filesystem::path& getFilename() const;
       bool isAppendMode() const;
@@ -56,9 +56,9 @@ namespace exfel {
     protected:
       virtual log4cpp::Appender* create();
 
-      void configureFilename(const exfel::util::Hash& input);
-      void configureAppendMode(const exfel::util::Hash& input);
-      void configureAccessMode(const exfel::util::Hash& input);
+      void configureFilename(const karabo::util::Hash& input);
+      void configureAppendMode(const karabo::util::Hash& input);
+      void configureAccessMode(const karabo::util::Hash& input);
 
     private:
 
@@ -70,4 +70,4 @@ namespace exfel {
   }
 }
 
-#endif	/* EXFEL_LOGCONFIG_FILEAPPENDERCONFIGURATOR_HH */
+#endif	/* KARABO_LOGCONFIG_FILEAPPENDERCONFIGURATOR_HH */

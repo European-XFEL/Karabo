@@ -10,13 +10,13 @@
 #include "DemoDevice1.hh"
 
 using namespace std;
-using namespace exfel::util;
+using namespace karabo::util;
 using namespace log4cpp;
 
-namespace exfel {
+namespace karabo {
     namespace core {
 
-        EXFEL_REGISTER_FACTORY_2_CC(Device, ReconfigurableFsm, DemoDevice1)
+        KARABO_REGISTER_FACTORY_2_CC(Device, ReconfigurableFsm, DemoDevice1)
 
 
         DemoDevice1::~DemoDevice1() {
@@ -67,7 +67,7 @@ namespace exfel {
         }
 
         
-        void DemoDevice1::onReconfigure(exfel::util::Hash& incomingReconfiguration) {
+        void DemoDevice1::onReconfigure(karabo::util::Hash& incomingReconfiguration) {
             // Current state
             string firstWord = get<string>("firstWord");
             string secondWord = get<string>("secondWord");

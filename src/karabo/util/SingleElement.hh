@@ -10,12 +10,12 @@
  */
 
 
-#ifndef EXFEL_UTIL_SINGLEELEMENT_HH
-#define	EXFEL_UTIL_SINGLEELEMENT_HH
+#ifndef KARABO_UTIL_SINGLEELEMENT_HH
+#define	KARABO_UTIL_SINGLEELEMENT_HH
 
 #include "GenericElement.hh"
 
-namespace exfel {
+namespace karabo {
     namespace util {
 
         template<class BASE, class DERIVED = BASE>

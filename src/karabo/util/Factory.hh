@@ -10,8 +10,8 @@
  */
 
 
-#ifndef EXFEL_UTIL_FACTORY_HH
-#define	EXFEL_UTIL_FACTORY_HH
+#ifndef KARABO_UTIL_FACTORY_HH
+#define	KARABO_UTIL_FACTORY_HH
 
 
 #include <boost/shared_ptr.hpp>
@@ -32,7 +32,7 @@
 #include "ConfigConstants.hh"
 
 
-namespace exfel {
+namespace karabo {
     namespace util {
 
         /**
@@ -50,7 +50,7 @@ namespace exfel {
          * the registration mechanism easy to use in the client code several macros are defined.
          *
          * The Factory class is typically not used directly in the client code, but rather the class which defines
-         * the interface should define static methods by including an appropriate macro (EXFEL_FACTORY_BASE_CLASS)
+         * the interface should define static methods by including an appropriate macro (KARABO_FACTORY_BASE_CLASS)
          */
         template< class BaseType>
         class Factory {
@@ -70,7 +70,7 @@ namespace exfel {
              */
             BaseTypePointer makeObject(const Hash& user, const std::string& classId, bool assert) {
                 if (assert) {
-                    exfel::util::Schema master;
+                    karabo::util::Schema master;
                     Schema& tmp = master.initParameterDescription(classId);
                     expectedParameters(tmp); // This changes master
                     Hash working = master.validate(user);
@@ -87,8 +87,8 @@ namespace exfel {
              *  @return boost shared pointer to BaseType
              */
             static boost::shared_ptr< BaseType > createDefault(const std::string& classId) {
-                boost::shared_ptr<exfel::util::Factory<BaseType> > concreteMaker =
-                        exfel::util::GenericFactory<exfel::util::Factory<BaseType> >::getInstance().create(classId);
+                boost::shared_ptr<karabo::util::Factory<BaseType> > concreteMaker =
+                        karabo::util::GenericFactory<karabo::util::Factory<BaseType> >::getInstance().create(classId);
                 return concreteMaker->makeDefaultConstructedObject();
             }
 
@@ -99,17 +99,17 @@ namespace exfel {
              *  @param assert if set to true config is validated against expected parameters
              *  @return boost shared pointer to BaseType
              */
-            static boost::shared_ptr< BaseType > create(const exfel::util::Hash& config, bool assert = true) {
+            static boost::shared_ptr< BaseType > create(const karabo::util::Hash& config, bool assert = true) {
                 if (config.empty()) throw PARAMETER_EXCEPTION("Empty configuration object handed to factory");
                 const std::string & classId = config.begin()->first; // Root key encodes classId for factory
-                boost::shared_ptr<exfel::util::Factory<BaseType> > concreteMaker =
-                        exfel::util::GenericFactory<exfel::util::Factory<BaseType> >::getInstance().create(classId);
+                boost::shared_ptr<karabo::util::Factory<BaseType> > concreteMaker =
+                        karabo::util::GenericFactory<karabo::util::Factory<BaseType> >::getInstance().create(classId);
                 return concreteMaker->makeObject(config, classId, assert);
             }
             
-            static boost::shared_ptr< BaseType > create(const std::string& classId, const exfel::util::Hash& params, bool assert = true) {
-                boost::shared_ptr<exfel::util::Factory<BaseType> > concreteMaker =
-                        exfel::util::GenericFactory<exfel::util::Factory<BaseType> >::getInstance().create(classId);
+            static boost::shared_ptr< BaseType > create(const std::string& classId, const karabo::util::Hash& params, bool assert = true) {
+                boost::shared_ptr<karabo::util::Factory<BaseType> > concreteMaker =
+                        karabo::util::GenericFactory<karabo::util::Factory<BaseType> >::getInstance().create(classId);
                 Hash config(classId, params);
                 return concreteMaker->makeObject(config, classId, assert);
             }
@@ -117,13 +117,13 @@ namespace exfel {
             /**
              * Creates and configures object using part of the Hash tree referenced by "key".
              */
-            static boost::shared_ptr< BaseType > createChoice(const std::string& key, const exfel::util::Hash& input, bool assert = true) {
-                exfel::util::GenericFactory<exfel::util::Factory<BaseType> >& gf = exfel::util::GenericFactory<exfel::util::Factory<BaseType> >::getInstance();
+            static boost::shared_ptr< BaseType > createChoice(const std::string& key, const karabo::util::Hash& input, bool assert = true) {
+                karabo::util::GenericFactory<karabo::util::Factory<BaseType> >& gf = karabo::util::GenericFactory<karabo::util::Factory<BaseType> >::getInstance();
                 std::string classId;
                 if (gf.has(key)) {
                     classId = key;
-                    boost::shared_ptr<exfel::util::Factory<BaseType> > concreteMaker =
-                            exfel::util::GenericFactory<exfel::util::Factory<BaseType> >::getInstance().create(classId);
+                    boost::shared_ptr<karabo::util::Factory<BaseType> > concreteMaker =
+                            karabo::util::GenericFactory<karabo::util::Factory<BaseType> >::getInstance().create(classId);
                     return concreteMaker->makeObject(Hash(classId, input.get<Hash > (key)), classId, assert);
                 } else {
                     if (!input.has(key)) {
@@ -131,21 +131,21 @@ namespace exfel {
                     } else {
                         const Hash& createInfo = input.get<Hash > (key);
                         classId = createInfo.begin()->first;
-                        boost::shared_ptr<exfel::util::Factory<BaseType> > concreteMaker =
-                                exfel::util::GenericFactory<exfel::util::Factory<BaseType> >::getInstance().create(classId);
+                        boost::shared_ptr<karabo::util::Factory<BaseType> > concreteMaker =
+                                karabo::util::GenericFactory<karabo::util::Factory<BaseType> >::getInstance().create(classId);
                         return concreteMaker->makeObject(createInfo, classId, assert);
                     }
                 }
             }
 
-            static boost::shared_ptr< BaseType > createSingle(const std::string& key, const std::string& classId, const exfel::util::Hash& input, bool assert = true) {
-                boost::shared_ptr<exfel::util::Factory<BaseType> > concreteMaker =
-                        exfel::util::GenericFactory<exfel::util::Factory<BaseType> >::getInstance().create(classId);
-                return concreteMaker->makeObject(Hash(classId, input.get<exfel::util::Hash > (key)), classId, assert);
+            static boost::shared_ptr< BaseType > createSingle(const std::string& key, const std::string& classId, const karabo::util::Hash& input, bool assert = true) {
+                boost::shared_ptr<karabo::util::Factory<BaseType> > concreteMaker =
+                        karabo::util::GenericFactory<karabo::util::Factory<BaseType> >::getInstance().create(classId);
+                return concreteMaker->makeObject(Hash(classId, input.get<karabo::util::Hash > (key)), classId, assert);
             }
 
-            static std::vector<boost::shared_ptr<BaseType> > createList(const std::string& key, const exfel::util::Hash& input, bool assert = true) {
-                const std::vector<exfel::util::Hash>& configs = input.get < std::vector<exfel::util::Hash> > (key);
+            static std::vector<boost::shared_ptr<BaseType> > createList(const std::string& key, const karabo::util::Hash& input, bool assert = true) {
+                const std::vector<karabo::util::Hash>& configs = input.get < std::vector<karabo::util::Hash> > (key);
                 std::vector<boost::shared_ptr<BaseType> > objects(configs.size());
                 for (size_t i = 0; i < configs.size(); ++i) {
                     objects[i] = create(configs[i], assert);
@@ -162,8 +162,8 @@ namespace exfel {
              *  @param classId concrete class name
              *  @return shared pointer to the factory for BaseType objects
              */
-            static boost::shared_ptr<exfel::util::Factory<BaseType> > createFactoryFor(const std::string& classId) {
-                return exfel::util::GenericFactory<exfel::util::Factory<BaseType> >::getInstance().create(classId);
+            static boost::shared_ptr<karabo::util::Factory<BaseType> > createFactoryFor(const std::string& classId) {
+                return karabo::util::GenericFactory<karabo::util::Factory<BaseType> >::getInstance().create(classId);
             }
 
             /**
@@ -174,7 +174,7 @@ namespace exfel {
              * @param at access type
              * @param displayedClassId defines configuration key for single element factory
              */
-            static Schema expectedParameters(const std::string& classId, exfel::util::AccessType at, const std::string& currentState, const std::string& displayedClassId) {
+            static Schema expectedParameters(const std::string& classId, karabo::util::AccessType at, const std::string& currentState, const std::string& displayedClassId) {
                 std::string key(classId);
                 if (!displayedClassId.empty()) key = displayedClassId;
                 Schema expected;
@@ -189,7 +189,7 @@ namespace exfel {
              * @param at access type        
              * @return description of expected parameters
              */
-            static Schema expectedParameters(exfel::util::AccessType at, const std::string& currentState) {
+            static Schema expectedParameters(karabo::util::AccessType at, const std::string& currentState) {
                 Schema schema;
                 std::vector<std::string> keys = getRegisteredKeys();
                 for (size_t i = 0; i < keys.size(); ++i) {
@@ -206,7 +206,7 @@ namespace exfel {
              *
              */
             static std::vector<std::string> getRegisteredKeys() {
-                return exfel::util::GenericFactory<exfel::util::Factory<BaseType> >::getInstance().getKeysAsVector();
+                return karabo::util::GenericFactory<karabo::util::Factory<BaseType> >::getInstance().getKeysAsVector();
             }
 
         protected:
@@ -214,7 +214,7 @@ namespace exfel {
             /**
              * Defines expected parameters
              */
-            virtual void expectedParameters(exfel::util::Schema& expected) {
+            virtual void expectedParameters(karabo::util::Schema& expected) {
                 throw NOT_SUPPORTED_EXCEPTION("The object to be created DOES NOT implement the expectedParameters functions, you may only default construct this object");
             }
 
@@ -250,7 +250,7 @@ namespace exfel {
         class ConcreteFactory : public Factory<BaseClass> {
         private:
             // used for self registering
-            static const exfel::util::RegisterInFactory< exfel::util::Factory<BaseClass >,
+            static const karabo::util::RegisterInFactory< karabo::util::Factory<BaseClass >,
             ConcreteFactory<BaseClass, DerivedClass, configureBase, configureDerived >, DerivedClass > registerMe;
 
         protected:
@@ -268,12 +268,12 @@ namespace exfel {
         class ConcreteFactory<BaseClass, DerivedClass, false, true > : public Factory<BaseClass> {
         private:
             // used for self registering
-            static const exfel::util::RegisterInFactory< exfel::util::Factory<BaseClass >,
+            static const karabo::util::RegisterInFactory< karabo::util::Factory<BaseClass >,
             ConcreteFactory<BaseClass, DerivedClass, false, true >, DerivedClass > registerMe;
 
         public:
 
-            void expectedParameters(exfel::util::Schema& expected) {
+            void expectedParameters(karabo::util::Schema& expected) {
                 DerivedClass::expectedParameters(expected);
             }
 
@@ -295,12 +295,12 @@ namespace exfel {
         class ConcreteFactory<BaseClass, DerivedClass, true, false > : public Factory<BaseClass> {
         private:
             // used for self registering
-            static const exfel::util::RegisterInFactory< exfel::util::Factory<BaseClass >,
+            static const karabo::util::RegisterInFactory< karabo::util::Factory<BaseClass >,
             ConcreteFactory<BaseClass, DerivedClass, true, false >, DerivedClass > registerMe;
 
         public:
 
-            void expectedParameters(exfel::util::Schema& expected) {
+            void expectedParameters(karabo::util::Schema& expected) {
                 BaseClass::expectedParameters(expected);
             }
 
@@ -322,12 +322,12 @@ namespace exfel {
         class ConcreteFactory<BaseClass, DerivedClass, true, true > : public Factory<BaseClass> {
         private:
             // used for self registering
-            static const exfel::util::RegisterInFactory< exfel::util::Factory<BaseClass >,
+            static const karabo::util::RegisterInFactory< karabo::util::Factory<BaseClass >,
             ConcreteFactory<BaseClass, DerivedClass, true, true >, DerivedClass > registerMe;
 
         public:
 
-            void expectedParameters(exfel::util::Schema& expected) {
+            void expectedParameters(karabo::util::Schema& expected) {
                 BaseClass::expectedParameters(expected);
                 DerivedClass::expectedParameters(expected);
             }
@@ -351,7 +351,7 @@ namespace exfel {
 
         template<class Base, class Middle, class Derived, bool configureBase, bool configureMiddle, bool configureDerived>
         class ConcreteFactoryThirdLevel : public Factory<Base> {
-            static const exfel::util::RegisterInFactory< exfel::util::Factory<Base >,
+            static const karabo::util::RegisterInFactory< karabo::util::Factory<Base >,
             ConcreteFactoryThirdLevel<Base, Middle, Derived, configureBase, configureMiddle, configureDerived >, Derived > registerMe;
 
         protected:
@@ -363,10 +363,10 @@ namespace exfel {
 
         template<class Base, class Middle, class Derived>
         class ConcreteFactoryThirdLevel<Base, Middle, Derived, false, false, true > : public Factory<Base> {
-            static const exfel::util::RegisterInFactory< exfel::util::Factory<Base >,
+            static const karabo::util::RegisterInFactory< karabo::util::Factory<Base >,
             ConcreteFactoryThirdLevel<Base, Middle, Derived, false, false, true >, Derived > registerMe;
 
-            void expectedParameters(exfel::util::Schema& expected) {
+            void expectedParameters(karabo::util::Schema& expected) {
                 Derived::expectedParameters(expected);
             }
         protected:
@@ -381,10 +381,10 @@ namespace exfel {
 
         template<class Base, class Middle, class Derived>
         class ConcreteFactoryThirdLevel<Base, Middle, Derived, false, true, false > : public Factory<Base> {
-            static const exfel::util::RegisterInFactory< exfel::util::Factory<Base >,
+            static const karabo::util::RegisterInFactory< karabo::util::Factory<Base >,
             ConcreteFactoryThirdLevel<Base, Middle, Derived, false, true, false >, Derived > registerMe;
 
-            void expectedParameters(exfel::util::Schema& expected) {
+            void expectedParameters(karabo::util::Schema& expected) {
                 Middle::expectedParameters(expected);
             }
         protected:
@@ -400,10 +400,10 @@ namespace exfel {
 
         template<class Base, class Middle, class Derived>
         class ConcreteFactoryThirdLevel<Base, Middle, Derived, true, false, false > : public Factory<Base> {
-            static const exfel::util::RegisterInFactory< exfel::util::Factory<Base >,
+            static const karabo::util::RegisterInFactory< karabo::util::Factory<Base >,
             ConcreteFactoryThirdLevel<Base, Middle, Derived, true, false, false >, Derived > registerMe;
 
-            void expectedParameters(exfel::util::Schema& expected) {
+            void expectedParameters(karabo::util::Schema& expected) {
                 Base::expectedParameters(expected);
             }
         protected:
@@ -418,10 +418,10 @@ namespace exfel {
 
         template<class Base, class Middle, class Derived>
         class ConcreteFactoryThirdLevel<Base, Middle, Derived, false, true, true > : public Factory<Base> {
-            static const exfel::util::RegisterInFactory< exfel::util::Factory<Base >,
+            static const karabo::util::RegisterInFactory< karabo::util::Factory<Base >,
             ConcreteFactoryThirdLevel<Base, Middle, Derived, false, true, true >, Derived > registerMe;
 
-            void expectedParameters(exfel::util::Schema& expected) {
+            void expectedParameters(karabo::util::Schema& expected) {
                 Middle::expectedParameters(expected);
                 Derived::expectedParameters(expected);
             }
@@ -439,10 +439,10 @@ namespace exfel {
 
         template<class Base, class Middle, class Derived>
         class ConcreteFactoryThirdLevel<Base, Middle, Derived, true, false, true > : public Factory<Base> {
-            static const exfel::util::RegisterInFactory< exfel::util::Factory<Base >,
+            static const karabo::util::RegisterInFactory< karabo::util::Factory<Base >,
             ConcreteFactoryThirdLevel<Base, Middle, Derived, true, false, true >, Derived > registerMe;
 
-            void expectedParameters(exfel::util::Schema& expected) {
+            void expectedParameters(karabo::util::Schema& expected) {
                 Base::expectedParameters(expected);
                 Derived::expectedParameters(expected);
             }
@@ -459,10 +459,10 @@ namespace exfel {
 
         template<class Base, class Middle, class Derived>
         class ConcreteFactoryThirdLevel<Base, Middle, Derived, true, true, false > : public Factory<Base> {
-            static const exfel::util::RegisterInFactory< exfel::util::Factory<Base >,
+            static const karabo::util::RegisterInFactory< karabo::util::Factory<Base >,
             ConcreteFactoryThirdLevel<Base, Middle, Derived, true, true, false >, Derived > registerMe;
 
-            void expectedParameters(exfel::util::Schema& expected) {
+            void expectedParameters(karabo::util::Schema& expected) {
                 Base::expectedParameters(expected);
                 Middle::expectedParameters(expected);
             }
@@ -480,10 +480,10 @@ namespace exfel {
 
         template<class Base, class Middle, class Derived>
         class ConcreteFactoryThirdLevel<Base, Middle, Derived, true, true, true > : public Factory<Base> {
-            static const exfel::util::RegisterInFactory< exfel::util::Factory<Base >,
+            static const karabo::util::RegisterInFactory< karabo::util::Factory<Base >,
             ConcreteFactoryThirdLevel<Base, Middle, Derived, true, true, true >, Derived > registerMe;
 
-            void expectedParameters(exfel::util::Schema& expected) {
+            void expectedParameters(karabo::util::Schema& expected) {
                 Base::expectedParameters(expected);
                 Middle::expectedParameters(expected);
                 Derived::expectedParameters(expected);
@@ -508,7 +508,7 @@ namespace exfel {
         /**************************************************************/
         template<class Base, class Second, class Third, class Derived, bool configureBase, bool configureSecond, bool configureThird, bool configureDerived>
         class ConcreteFactoryFourthLevel : public Factory<Base> {
-            static const exfel::util::RegisterInFactory< exfel::util::Factory<Base >,
+            static const karabo::util::RegisterInFactory< karabo::util::Factory<Base >,
             ConcreteFactoryFourthLevel<Base, Second, Third, Derived, configureBase, configureSecond, configureThird, configureDerived >, Derived > registerMe;
 
         protected:
@@ -521,10 +521,10 @@ namespace exfel {
         
         template<class Base, class Second, class Third, class Derived>
         class ConcreteFactoryFourthLevel<Base, Second, Third, Derived, false, false, false, true > : public Factory<Base> {
-            static const exfel::util::RegisterInFactory< exfel::util::Factory<Base >,
+            static const karabo::util::RegisterInFactory< karabo::util::Factory<Base >,
             ConcreteFactoryFourthLevel<Base, Second, Third, Derived, false, false, false, true >, Derived > registerMe;
 
-            void expectedParameters(exfel::util::Schema& expected) {
+            void expectedParameters(karabo::util::Schema& expected) {
                 Derived::expectedParameters(expected);
             }
         protected:
@@ -539,10 +539,10 @@ namespace exfel {
 
         template<class Base, class Second, class Third, class Derived>
         class ConcreteFactoryFourthLevel<Base, Second, Third, Derived, false, false, true, false > : public Factory<Base> {
-            static const exfel::util::RegisterInFactory< exfel::util::Factory<Base >,
+            static const karabo::util::RegisterInFactory< karabo::util::Factory<Base >,
             ConcreteFactoryFourthLevel<Base, Second, Third, Derived, false, false, true, false >, Derived > registerMe;
 
-            void expectedParameters(exfel::util::Schema& expected) {
+            void expectedParameters(karabo::util::Schema& expected) {
                 //Base::expectedParameters(expected);
                 //Second::expectedParameters(expected);
                 Third::expectedParameters(expected);
@@ -565,10 +565,10 @@ namespace exfel {
 
         template<class Base, class Second, class Third, class Derived>
         class ConcreteFactoryFourthLevel<Base, Second, Third, Derived, false, true, false, false > : public Factory<Base> {
-            static const exfel::util::RegisterInFactory< exfel::util::Factory<Base >,
+            static const karabo::util::RegisterInFactory< karabo::util::Factory<Base >,
             ConcreteFactoryFourthLevel<Base, Second, Third, Derived, false, true, false, false >, Derived > registerMe;
 
-            void expectedParameters(exfel::util::Schema& expected) {
+            void expectedParameters(karabo::util::Schema& expected) {
                 //Base::expectedParameters(expected);
                 Second::expectedParameters(expected);
                 //Third::expectedParameters(expected);
@@ -591,10 +591,10 @@ namespace exfel {
 
         template<class Base, class Second, class Third, class Derived>
         class ConcreteFactoryFourthLevel<Base, Second, Third, Derived, true, false, false, false > : public Factory<Base> {
-            static const exfel::util::RegisterInFactory< exfel::util::Factory<Base >,
+            static const karabo::util::RegisterInFactory< karabo::util::Factory<Base >,
             ConcreteFactoryFourthLevel<Base, Second, Third, Derived, true, false, false, false >, Derived > registerMe;
 
-            void expectedParameters(exfel::util::Schema& expected) {
+            void expectedParameters(karabo::util::Schema& expected) {
                 Base::expectedParameters(expected);
                 //Second::expectedParameters(expected);
                 //Third::expectedParameters(expected);
@@ -617,10 +617,10 @@ namespace exfel {
 
         template<class Base, class Second, class Third, class Derived>
         class ConcreteFactoryFourthLevel<Base, Second, Third, Derived, false, false, true, true > : public Factory<Base> {
-            static const exfel::util::RegisterInFactory< exfel::util::Factory<Base >,
+            static const karabo::util::RegisterInFactory< karabo::util::Factory<Base >,
             ConcreteFactoryFourthLevel<Base, Second, Third, Derived, false, false, true, true >, Derived > registerMe;
 
-            void expectedParameters(exfel::util::Schema& expected) {
+            void expectedParameters(karabo::util::Schema& expected) {
                 //Base::expectedParameters(expected);
                 //Second::expectedParameters(expected);
                 Third::expectedParameters(expected);
@@ -643,10 +643,10 @@ namespace exfel {
         
         template<class Base, class Second, class Third, class Derived>
         class ConcreteFactoryFourthLevel<Base, Second, Third, Derived, false, true, false, true > : public Factory<Base> {
-            static const exfel::util::RegisterInFactory< exfel::util::Factory<Base >,
+            static const karabo::util::RegisterInFactory< karabo::util::Factory<Base >,
             ConcreteFactoryFourthLevel<Base, Second, Third, Derived, false, true, false, true >, Derived > registerMe;
 
-            void expectedParameters(exfel::util::Schema& expected) {
+            void expectedParameters(karabo::util::Schema& expected) {
                 //Base::expectedParameters(expected);
                 Second::expectedParameters(expected);
                 //Third::expectedParameters(expected);
@@ -669,10 +669,10 @@ namespace exfel {
         
         template<class Base, class Second, class Third, class Derived>
         class ConcreteFactoryFourthLevel<Base, Second, Third, Derived, true, false, false, true > : public Factory<Base> {
-            static const exfel::util::RegisterInFactory< exfel::util::Factory<Base >,
+            static const karabo::util::RegisterInFactory< karabo::util::Factory<Base >,
             ConcreteFactoryFourthLevel<Base, Second, Third, Derived, true, false, false, true >, Derived > registerMe;
 
-            void expectedParameters(exfel::util::Schema& expected) {
+            void expectedParameters(karabo::util::Schema& expected) {
                 Base::expectedParameters(expected);
                 //Second::expectedParameters(expected);
                 //Third::expectedParameters(expected);
@@ -695,10 +695,10 @@ namespace exfel {
         
         template<class Base, class Second, class Third, class Derived>
         class ConcreteFactoryFourthLevel<Base, Second, Third, Derived, false, true, true, false > : public Factory<Base> {
-            static const exfel::util::RegisterInFactory< exfel::util::Factory<Base >,
+            static const karabo::util::RegisterInFactory< karabo::util::Factory<Base >,
             ConcreteFactoryFourthLevel<Base, Second, Third, Derived, false, true, true, false >, Derived > registerMe;
 
-            void expectedParameters(exfel::util::Schema& expected) {
+            void expectedParameters(karabo::util::Schema& expected) {
                 //Base::expectedParameters(expected);
                 Second::expectedParameters(expected);
                 Third::expectedParameters(expected);
@@ -721,10 +721,10 @@ namespace exfel {
         
         template<class Base, class Second, class Third, class Derived>
         class ConcreteFactoryFourthLevel<Base, Second, Third, Derived, true, false, true, false > : public Factory<Base> {
-            static const exfel::util::RegisterInFactory< exfel::util::Factory<Base >,
+            static const karabo::util::RegisterInFactory< karabo::util::Factory<Base >,
             ConcreteFactoryFourthLevel<Base, Second, Third, Derived, true, false, true, false >, Derived > registerMe;
 
-            void expectedParameters(exfel::util::Schema& expected) {
+            void expectedParameters(karabo::util::Schema& expected) {
                 Base::expectedParameters(expected);
                 //Second::expectedParameters(expected);
                 Third::expectedParameters(expected);
@@ -747,10 +747,10 @@ namespace exfel {
         
         template<class Base, class Second, class Third, class Derived>
         class ConcreteFactoryFourthLevel<Base, Second, Third, Derived, true, true, false, false > : public Factory<Base> {
-            static const exfel::util::RegisterInFactory< exfel::util::Factory<Base >,
+            static const karabo::util::RegisterInFactory< karabo::util::Factory<Base >,
             ConcreteFactoryFourthLevel<Base, Second, Third, Derived, true, true, false, false >, Derived > registerMe;
 
-            void expectedParameters(exfel::util::Schema& expected) {
+            void expectedParameters(karabo::util::Schema& expected) {
                 Base::expectedParameters(expected);
                 Second::expectedParameters(expected);
                 //Third::expectedParameters(expected);
@@ -773,10 +773,10 @@ namespace exfel {
         
         template<class Base, class Second, class Third, class Derived>
         class ConcreteFactoryFourthLevel<Base, Second, Third, Derived, false, true, true, true > : public Factory<Base> {
-            static const exfel::util::RegisterInFactory< exfel::util::Factory<Base >,
+            static const karabo::util::RegisterInFactory< karabo::util::Factory<Base >,
             ConcreteFactoryFourthLevel<Base, Second, Third, Derived, false, true, true, true >, Derived > registerMe;
 
-            void expectedParameters(exfel::util::Schema& expected) {
+            void expectedParameters(karabo::util::Schema& expected) {
                 //Base::expectedParameters(expected);
                 Second::expectedParameters(expected);
                 Third::expectedParameters(expected);
@@ -799,10 +799,10 @@ namespace exfel {
         
         template<class Base, class Second, class Third, class Derived>
         class ConcreteFactoryFourthLevel<Base, Second, Third, Derived, true, false, true, true > : public Factory<Base> {
-            static const exfel::util::RegisterInFactory< exfel::util::Factory<Base >,
+            static const karabo::util::RegisterInFactory< karabo::util::Factory<Base >,
             ConcreteFactoryFourthLevel<Base, Second, Third, Derived, true, false, true, true >, Derived > registerMe;
 
-            void expectedParameters(exfel::util::Schema& expected) {
+            void expectedParameters(karabo::util::Schema& expected) {
                 Base::expectedParameters(expected);
                 //Second::expectedParameters(expected);
                 Third::expectedParameters(expected);
@@ -825,10 +825,10 @@ namespace exfel {
         
         template<class Base, class Second, class Third, class Derived>
         class ConcreteFactoryFourthLevel<Base, Second, Third, Derived, true, true, false, true > : public Factory<Base> {
-            static const exfel::util::RegisterInFactory< exfel::util::Factory<Base >,
+            static const karabo::util::RegisterInFactory< karabo::util::Factory<Base >,
             ConcreteFactoryFourthLevel<Base, Second, Third, Derived, true, true, false, true >, Derived > registerMe;
 
-            void expectedParameters(exfel::util::Schema& expected) {
+            void expectedParameters(karabo::util::Schema& expected) {
                 Base::expectedParameters(expected);
                 Second::expectedParameters(expected);
                 //Third::expectedParameters(expected);
@@ -851,10 +851,10 @@ namespace exfel {
         
         template<class Base, class Second, class Third, class Derived>
         class ConcreteFactoryFourthLevel<Base, Second, Third, Derived, true, true, true, false > : public Factory<Base> {
-            static const exfel::util::RegisterInFactory< exfel::util::Factory<Base >,
+            static const karabo::util::RegisterInFactory< karabo::util::Factory<Base >,
             ConcreteFactoryFourthLevel<Base, Second, Third, Derived, true, true, true, false >, Derived > registerMe;
 
-            void expectedParameters(exfel::util::Schema& expected) {
+            void expectedParameters(karabo::util::Schema& expected) {
                 Base::expectedParameters(expected);
                 Second::expectedParameters(expected);
                 Third::expectedParameters(expected);
@@ -877,10 +877,10 @@ namespace exfel {
 
         template<class Base, class Second, class Third, class Derived>
         class ConcreteFactoryFourthLevel<Base, Second, Third, Derived, true, true, true, true > : public Factory<Base> {
-            static const exfel::util::RegisterInFactory< exfel::util::Factory<Base >,
+            static const karabo::util::RegisterInFactory< karabo::util::Factory<Base >,
             ConcreteFactoryFourthLevel<Base, Second, Third, Derived, true, true, true, true >, Derived > registerMe;
 
-            void expectedParameters(exfel::util::Schema& expected) {
+            void expectedParameters(karabo::util::Schema& expected) {
                 Base::expectedParameters(expected);
                 Second::expectedParameters(expected);
                 Third::expectedParameters(expected);
@@ -912,12 +912,12 @@ namespace exfel {
         class SingleClassFactory : public Factory<ConfigureMe> {
         private:
             // used for self registering
-            static const exfel::util::RegisterInFactory< exfel::util::Factory<ConfigureMe >,
+            static const karabo::util::RegisterInFactory< karabo::util::Factory<ConfigureMe >,
             SingleClassFactory<ConfigureMe>, ConfigureMe > registerMe;
 
         public:
 
-            void expectedParameters(exfel::util::Schema& expected) {
+            void expectedParameters(karabo::util::Schema& expected) {
                 ConfigureMe::expectedParameters(expected);
             }
 
@@ -938,133 +938,133 @@ namespace exfel {
         
         // This macro should be called in header file, inside public section of the class declaration
         // but only for the base classes as used within Factory  (see tests/Vehicle.hh)
-#define EXFEL_FACTORY_BASE_CLASS \
+#define KARABO_FACTORY_BASE_CLASS \
 typedef boost::shared_ptr<Self > Pointer;\
 \
-static boost::shared_ptr<Self > create(const exfel::util::Hash& config){\
-return exfel::util::Factory< Self >::create(config); }\
+static boost::shared_ptr<Self > create(const karabo::util::Hash& config){\
+return karabo::util::Factory< Self >::create(config); }\
 \
-static boost::shared_ptr<Self > create(const std::string& classId, const exfel::util::Hash& parameters = exfel::util::Hash()){\
-return exfel::util::Factory< Self >::create(classId, parameters); }\
+static boost::shared_ptr<Self > create(const std::string& classId, const karabo::util::Hash& parameters = karabo::util::Hash()){\
+return karabo::util::Factory< Self >::create(classId, parameters); }\
 \
 static boost::shared_ptr<Self > createDefault(const std::string& classId){\
-return exfel::util::Factory< Self >::createDefault(classId); }\
+return karabo::util::Factory< Self >::createDefault(classId); }\
 \
-static boost::shared_ptr< Self > createSingle(const std::string& key, const std::string& classId, const exfel::util::Hash& input){\
-return exfel::util::Factory< Self >::createSingle(key, classId, input); }\
+static boost::shared_ptr< Self > createSingle(const std::string& key, const std::string& classId, const karabo::util::Hash& input){\
+return karabo::util::Factory< Self >::createSingle(key, classId, input); }\
 \
-static boost::shared_ptr< Self > createChoice(const std::string& key, const exfel::util::Hash& input){\
-return exfel::util::Factory< Self >::createChoice(key, input); }\
+static boost::shared_ptr< Self > createChoice(const std::string& key, const karabo::util::Hash& input){\
+return karabo::util::Factory< Self >::createChoice(key, input); }\
 \
-static std::vector<boost::shared_ptr< Self > > createList(const std::string& key, const exfel::util::Hash& input){\
-return exfel::util::Factory< Self >::createList(key, input); }\
+static std::vector<boost::shared_ptr< Self > > createList(const std::string& key, const karabo::util::Hash& input){\
+return karabo::util::Factory< Self >::createList(key, input); }\
 \
-static exfel::util::Schema expectedParameters(exfel::util::AccessType at = exfel::util::INIT|exfel::util::WRITE, const std::string& currentState = ""){\
-return exfel::util::Factory< Self >::expectedParameters(at, currentState); }\
+static karabo::util::Schema expectedParameters(karabo::util::AccessType at = karabo::util::INIT|karabo::util::WRITE, const std::string& currentState = ""){\
+return karabo::util::Factory< Self >::expectedParameters(at, currentState); }\
 \
-static exfel::util::Schema expectedParameters(const std::string& classId, exfel::util::AccessType at = exfel::util::INIT|exfel::util::WRITE, const std::string& currentState = "", const std::string& displayedClassId = "") {\
-return exfel::util::Factory< Self >::expectedParameters(classId, at, currentState, displayedClassId); }\
+static karabo::util::Schema expectedParameters(const std::string& classId, karabo::util::AccessType at = karabo::util::INIT|karabo::util::WRITE, const std::string& currentState = "", const std::string& displayedClassId = "") {\
+return karabo::util::Factory< Self >::expectedParameters(classId, at, currentState, displayedClassId); }\
 \
-static exfel::util::Schema initialParameters(const std::string& classId, const std::string& currentState = "", const std::string& displayedClassId = ""){\
-return exfel::util::Factory< Self >::expectedParameters(classId, exfel::util::INIT, currentState, displayedClassId);}\
+static karabo::util::Schema initialParameters(const std::string& classId, const std::string& currentState = "", const std::string& displayedClassId = ""){\
+return karabo::util::Factory< Self >::expectedParameters(classId, karabo::util::INIT, currentState, displayedClassId);}\
 \
-static exfel::util::Schema initialParameters(){\
-return exfel::util::Factory< Self >::expectedParameters(exfel::util::WRITE, ""); }\
+static karabo::util::Schema initialParameters(){\
+return karabo::util::Factory< Self >::expectedParameters(karabo::util::WRITE, ""); }\
 \
-static exfel::util::Schema monitorableParameters(const std::string& classId, const std::string& currentState = "", const std::string& displayedClassId = ""){\
-return exfel::util::Factory< Self >::expectedParameters(classId, exfel::util::READ, currentState, displayedClassId);}\
+static karabo::util::Schema monitorableParameters(const std::string& classId, const std::string& currentState = "", const std::string& displayedClassId = ""){\
+return karabo::util::Factory< Self >::expectedParameters(classId, karabo::util::READ, currentState, displayedClassId);}\
 \
-static exfel::util::Schema monitorableParameters(){\
-return exfel::util::Factory< Self >::expectedParameters(exfel::util::READ, ""); }\
+static karabo::util::Schema monitorableParameters(){\
+return karabo::util::Factory< Self >::expectedParameters(karabo::util::READ, ""); }\
 \
-static exfel::util::Schema reconfigurableParameters(const std::string& classId, const std::string& currentState = "", const std::string& displayedClassId = ""){\
-return exfel::util::Factory< Self >::expectedParameters(classId, exfel::util::WRITE, currentState, displayedClassId); }\
+static karabo::util::Schema reconfigurableParameters(const std::string& classId, const std::string& currentState = "", const std::string& displayedClassId = ""){\
+return karabo::util::Factory< Self >::expectedParameters(classId, karabo::util::WRITE, currentState, displayedClassId); }\
 \
-static exfel::util::Schema reconfigurableParameters(){\
-return exfel::util::Factory< Self >::expectedParameters(exfel::util::WRITE, ""); }\
+static karabo::util::Schema reconfigurableParameters(){\
+return karabo::util::Factory< Self >::expectedParameters(karabo::util::WRITE, ""); }\
 \
 static void help(const std::string& classId = ""){\
-return exfel::util::Factory< Self >::expectedParameters(exfel::util::INIT|exfel::util::WRITE|exfel::util::READ, "").help(classId); }
+return karabo::util::Factory< Self >::expectedParameters(karabo::util::INIT|karabo::util::WRITE|karabo::util::READ, "").help(classId); }
 
 #ifdef _WIN32
-#define EXFEL_REGISTER_FACTORY_BASE_HH(baseClass, templateExtern, declspecExtern) \
+#define KARABO_REGISTER_FACTORY_BASE_HH(baseClass, templateExtern, declspecExtern) \
 templateExtern template class declspecExtern \
-exfel::util::GenericFactory<exfel::util::Factory<baseClass > >;
+karabo::util::GenericFactory<karabo::util::Factory<baseClass > >;
 #else
-#define EXFEL_REGISTER_FACTORY_BASE_HH(baseClass, templateExtern, declspecExtern)
+#define KARABO_REGISTER_FACTORY_BASE_HH(baseClass, templateExtern, declspecExtern)
 #endif
 
 // This macro can be used only in the implementation files (*.cc) of derived class. It makes self registration of the
 // derivedClass factory in the baseClass factory specific registry.
-#define EXFEL_REGISTER_FACTORY_CC(baseClass, derivedClass) \
+#define KARABO_REGISTER_FACTORY_CC(baseClass, derivedClass) \
     template<> \
-    const exfel::util::RegisterInFactory< \
-        exfel::util::Factory<baseClass>, \
-        exfel::util::ConcreteFactory< \
+    const karabo::util::RegisterInFactory< \
+        karabo::util::Factory<baseClass>, \
+        karabo::util::ConcreteFactory< \
             baseClass, \
             derivedClass, \
-            exfel::util::ConfigureTraits<baseClass, exfel::util::Hash>::hasFunction, \
-            exfel::util::ConfigureTraits<derivedClass, exfel::util::Hash>::hasFunction >, \
+            karabo::util::ConfigureTraits<baseClass, karabo::util::Hash>::hasFunction, \
+            karabo::util::ConfigureTraits<derivedClass, karabo::util::Hash>::hasFunction >, \
         derivedClass > \
-    exfel::util::ConcreteFactory< \
+    karabo::util::ConcreteFactory< \
         baseClass, \
         derivedClass, \
-        exfel::util::ConfigureTraits<baseClass, exfel::util::Hash>::hasFunction, \
-        exfel::util::ConfigureTraits<derivedClass, exfel::util::Hash>::hasFunction >::registerMe(1);
+        karabo::util::ConfigureTraits<baseClass, karabo::util::Hash>::hasFunction, \
+        karabo::util::ConfigureTraits<derivedClass, karabo::util::Hash>::hasFunction >::registerMe(1);
 
 
-#define EXFEL_REGISTER_FACTORY_2_CC(BaseClass, MiddleClass, DerivedClass) \
+#define KARABO_REGISTER_FACTORY_2_CC(BaseClass, MiddleClass, DerivedClass) \
     template<> \
-    const exfel::util::RegisterInFactory< \
-        exfel::util::Factory<BaseClass>, \
-        exfel::util::ConcreteFactoryThirdLevel< \
+    const karabo::util::RegisterInFactory< \
+        karabo::util::Factory<BaseClass>, \
+        karabo::util::ConcreteFactoryThirdLevel< \
             BaseClass, \
             MiddleClass, \
             DerivedClass, \
-            exfel::util::ConfigureTraits<BaseClass, exfel::util::Hash>::hasFunction, \
-            exfel::util::ConfigureTraits<MiddleClass, exfel::util::Hash>::hasFunction, \
-            exfel::util::ConfigureTraits<DerivedClass, exfel::util::Hash>::hasFunction >, \
+            karabo::util::ConfigureTraits<BaseClass, karabo::util::Hash>::hasFunction, \
+            karabo::util::ConfigureTraits<MiddleClass, karabo::util::Hash>::hasFunction, \
+            karabo::util::ConfigureTraits<DerivedClass, karabo::util::Hash>::hasFunction >, \
         DerivedClass > \
-    exfel::util::ConcreteFactoryThirdLevel< \
+    karabo::util::ConcreteFactoryThirdLevel< \
         BaseClass, \
         MiddleClass, \
         DerivedClass, \
-        exfel::util::ConfigureTraits<BaseClass, exfel::util::Hash>::hasFunction, \
-        exfel::util::ConfigureTraits<MiddleClass, exfel::util::Hash>::hasFunction, \
-        exfel::util::ConfigureTraits<DerivedClass, exfel::util::Hash>::hasFunction >::registerMe(1);
+        karabo::util::ConfigureTraits<BaseClass, karabo::util::Hash>::hasFunction, \
+        karabo::util::ConfigureTraits<MiddleClass, karabo::util::Hash>::hasFunction, \
+        karabo::util::ConfigureTraits<DerivedClass, karabo::util::Hash>::hasFunction >::registerMe(1);
 
 
-#define EXFEL_REGISTER_FACTORY_3_CC(BaseClass, SecondClass, ThirdClass, DerivedClass) \
+#define KARABO_REGISTER_FACTORY_3_CC(BaseClass, SecondClass, ThirdClass, DerivedClass) \
     template<> \
-    const exfel::util::RegisterInFactory< \
-        exfel::util::Factory<BaseClass>, \
-        exfel::util::ConcreteFactoryFourthLevel< \
+    const karabo::util::RegisterInFactory< \
+        karabo::util::Factory<BaseClass>, \
+        karabo::util::ConcreteFactoryFourthLevel< \
             BaseClass, \
             SecondClass, \
             ThirdClass, \
             DerivedClass, \
-            exfel::util::ConfigureTraits<BaseClass, exfel::util::Hash>::hasFunction, \
-            exfel::util::ConfigureTraits<SecondClass, exfel::util::Hash>::hasFunction, \
-            exfel::util::ConfigureTraits<ThirdClass, exfel::util::Hash>::hasFunction, \
-            exfel::util::ConfigureTraits<DerivedClass, exfel::util::Hash>::hasFunction >, \
+            karabo::util::ConfigureTraits<BaseClass, karabo::util::Hash>::hasFunction, \
+            karabo::util::ConfigureTraits<SecondClass, karabo::util::Hash>::hasFunction, \
+            karabo::util::ConfigureTraits<ThirdClass, karabo::util::Hash>::hasFunction, \
+            karabo::util::ConfigureTraits<DerivedClass, karabo::util::Hash>::hasFunction >, \
         DerivedClass > \
-    exfel::util::ConcreteFactoryFourthLevel< \
+    karabo::util::ConcreteFactoryFourthLevel< \
         BaseClass, \
         SecondClass, \
         ThirdClass, \
         DerivedClass, \
-        exfel::util::ConfigureTraits<BaseClass, exfel::util::Hash>::hasFunction, \
-        exfel::util::ConfigureTraits<SecondClass, exfel::util::Hash>::hasFunction, \
-        exfel::util::ConfigureTraits<ThirdClass, exfel::util::Hash>::hasFunction, \
-        exfel::util::ConfigureTraits<DerivedClass, exfel::util::Hash>::hasFunction >::registerMe(1);       
+        karabo::util::ConfigureTraits<BaseClass, karabo::util::Hash>::hasFunction, \
+        karabo::util::ConfigureTraits<SecondClass, karabo::util::Hash>::hasFunction, \
+        karabo::util::ConfigureTraits<ThirdClass, karabo::util::Hash>::hasFunction, \
+        karabo::util::ConfigureTraits<DerivedClass, karabo::util::Hash>::hasFunction >::registerMe(1);       
         
-#define EXFEL_REGISTER_ONLY_ME_CC(configureMe) \
+#define KARABO_REGISTER_ONLY_ME_CC(configureMe) \
     template<> \
-    const exfel::util::RegisterInFactory< \
-        exfel::util::Factory<configureMe>, \
-        exfel::util::SingleClassFactory<configureMe>, \
+    const karabo::util::RegisterInFactory< \
+        karabo::util::Factory<configureMe>, \
+        karabo::util::SingleClassFactory<configureMe>, \
         configureMe > \
-    exfel::util::SingleClassFactory<configureMe>::registerMe(1);
+    karabo::util::SingleClassFactory<configureMe>::registerMe(1);
     }
 }
 

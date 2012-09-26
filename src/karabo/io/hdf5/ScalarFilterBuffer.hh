@@ -7,8 +7,8 @@
  */
 
 
-#ifndef EXFEL_IO_HDF5_SCALARFILTERBUFFER_HH
-#define	EXFEL_IO_HDF5_SCALARFILTERBUFFER_HH
+#ifndef KARABO_IO_HDF5_SCALARFILTERBUFFER_HH
+#define	KARABO_IO_HDF5_SCALARFILTERBUFFER_HH
 
 #include "ScalarFilter.hh"
 #include "TypeTraits.hh"
@@ -18,7 +18,7 @@
 /**
  * The main European XFEL namespace
  */
-namespace exfel {
+namespace karabo {
 
     /**
      * Namespace for package io
@@ -30,15 +30,15 @@ namespace exfel {
             // Here we pre-define filters for writing and reading Array types (InputData)
             // and discovering Array properties (InputDataType)
 
-            template<typename T, template <typename ELEM> class CONT = exfel::io::ArrayView >
+            template<typename T, template <typename ELEM> class CONT = karabo::io::ArrayView >
             class ScalarFilterBufferArrayView :
-            public exfel::io::hdf5::ScalarFilter<T> {
+            public karabo::io::hdf5::ScalarFilter<T> {
             public:
 
                 // important!
                 // registration key is the rtti name
 
-                EXFEL_CLASSINFO(ScalarFilterBufferArrayView, typeid (CONT<T>).name(), "1.0")
+                KARABO_CLASSINFO(ScalarFilterBufferArrayView, typeid (CONT<T>).name(), "1.0")
 
                 ScalarFilterBufferArrayView() {
                 }
@@ -47,16 +47,16 @@ namespace exfel {
                 }
 
                 void write(const Scalar<T>& element, const boost::any& any, const size_t len) {
-                    EXFEL_PROFILER_SCALARFILTERBUFFER1
-                    EXFEL_PROFILER_START_SCALARFILTERBUFFER1("getPointer")
+                    KARABO_PROFILER_SCALARFILTERBUFFER1
+                    KARABO_PROFILER_START_SCALARFILTERBUFFER1("getPointer")
                     const CONT<T>& av = *(boost::any_cast<CONT<T> >(&any));
                     const T* rawPtr = &av[0];
-                    EXFEL_PROFILER_STOP_SCALARFILTERBUFFER1
-                    EXFEL_PROFILER_START_SCALARFILTERBUFFER1("writeBuffer")
+                    KARABO_PROFILER_STOP_SCALARFILTERBUFFER1
+                    KARABO_PROFILER_START_SCALARFILTERBUFFER1("writeBuffer")
                     element.writeBuffer(rawPtr, len);
-                    EXFEL_PROFILER_STOP_SCALARFILTERBUFFER1
-                    EXFEL_PROFILER_REPORT_SCALARFILTERBUFFER1("getPointer")
-                    EXFEL_PROFILER_REPORT_SCALARFILTERBUFFER1("writeBuffer")
+                    KARABO_PROFILER_STOP_SCALARFILTERBUFFER1
+                    KARABO_PROFILER_REPORT_SCALARFILTERBUFFER1("getPointer")
+                    KARABO_PROFILER_REPORT_SCALARFILTERBUFFER1("writeBuffer")
                     
                 }
 
@@ -69,11 +69,11 @@ namespace exfel {
             };
 
             template<>
-            class ScalarFilterBufferArrayView<std::string, exfel::io::ArrayView> :
-            public exfel::io::hdf5::ScalarFilter<std::string> {
+            class ScalarFilterBufferArrayView<std::string, karabo::io::ArrayView> :
+            public karabo::io::hdf5::ScalarFilter<std::string> {
             public:
 
-                EXFEL_CLASSINFO(ScalarFilterBufferArrayView, typeid (exfel::io::ArrayView<std::string>).name(), "1.0")
+                KARABO_CLASSINFO(ScalarFilterBufferArrayView, typeid (karabo::io::ArrayView<std::string>).name(), "1.0")
 
                 ScalarFilterBufferArrayView() {
                 }
@@ -82,13 +82,13 @@ namespace exfel {
                 }
 
                 void write(const Scalar<std::string>& element, const boost::any& any, const size_t len) {
-                    const exfel::io::ArrayView<std::string>& av = *(boost::any_cast<exfel::io::ArrayView<std::string> >(&any));
+                    const karabo::io::ArrayView<std::string>& av = *(boost::any_cast<karabo::io::ArrayView<std::string> >(&any));
                     const std::string* strPtr = &av[0];
                     element.writeBuffer(strPtr, len);
                 }
 
                 void read(const Scalar<std::string>& element, boost::any& any, size_t len) {
-                    exfel::io::ArrayView<std::string>& av = *(boost::any_cast<exfel::io::ArrayView<std::string> >(&any));
+                    karabo::io::ArrayView<std::string>& av = *(boost::any_cast<karabo::io::ArrayView<std::string> >(&any));
                     std::string* str = &av[0];
                     // declare temporary array of char pointers
                     boost::shared_array<char*> arrChar = boost::shared_array<char*>(new char*[len]);
@@ -106,11 +106,11 @@ namespace exfel {
             };
 
             template<>
-            class ScalarFilterBufferArrayView<bool, exfel::io::ArrayView> :
-            public exfel::io::hdf5::ScalarFilter<bool> {
+            class ScalarFilterBufferArrayView<bool, karabo::io::ArrayView> :
+            public karabo::io::hdf5::ScalarFilter<bool> {
             public:
 
-                EXFEL_CLASSINFO(ScalarFilterBufferArrayView, typeid (exfel::io::ArrayView<bool>).name(), "1.0")
+                KARABO_CLASSINFO(ScalarFilterBufferArrayView, typeid (karabo::io::ArrayView<bool>).name(), "1.0")
 
                 ScalarFilterBufferArrayView() {
                 }
@@ -119,7 +119,7 @@ namespace exfel {
                 }
 
                 void write(const Scalar<bool>& element, const boost::any& any, const size_t len) {
-                    const exfel::io::ArrayView<bool>& av = *(boost::any_cast < exfel::io::ArrayView<bool> >(&any));
+                    const karabo::io::ArrayView<bool>& av = *(boost::any_cast < karabo::io::ArrayView<bool> >(&any));
                     const bool* boolPtr = &av[0];
 
                     boost::shared_array<unsigned char> out(new unsigned char[len]);
@@ -131,7 +131,7 @@ namespace exfel {
                 }
 
                 void read(const Scalar<bool>& element, boost::any& any, size_t len) {
-                    exfel::io::ArrayView<bool>& av = *(boost::any_cast < exfel::io::ArrayView<bool> >(&any));
+                    karabo::io::ArrayView<bool>& av = *(boost::any_cast < karabo::io::ArrayView<bool> >(&any));
                     bool* str = &av[0];
 
                     // declare temporary array of char pointers
@@ -164,13 +164,13 @@ namespace exfel {
 
             template<typename T >
             class ScalarFilterBufferVector :
-            public exfel::io::hdf5::ScalarFilter<T> {
+            public karabo::io::hdf5::ScalarFilter<T> {
             public:
 
                 // important!
                 // registration key is the rtti name
 
-                EXFEL_CLASSINFO(ScalarFilterBufferVector, typeid (std::vector<T>).name(), "1.0")
+                KARABO_CLASSINFO(ScalarFilterBufferVector, typeid (std::vector<T>).name(), "1.0")
 
                 ScalarFilterBufferVector() {
                 }
@@ -195,13 +195,13 @@ namespace exfel {
 
             template<>
             class ScalarFilterBufferVector<std::string> :
-            public exfel::io::hdf5::ScalarFilter<std::string> {
+            public karabo::io::hdf5::ScalarFilter<std::string> {
             public:
 
                 // important!
                 // registration key is the rtti name
 
-                EXFEL_CLASSINFO(ScalarFilterBufferVector, typeid (std::vector<std::string>).name(), "1.0")
+                KARABO_CLASSINFO(ScalarFilterBufferVector, typeid (std::vector<std::string>).name(), "1.0")
 
                 ScalarFilterBufferVector() {
                 }
@@ -227,13 +227,13 @@ namespace exfel {
 
                         template<>
             class ScalarFilterBufferVector<bool> :
-            public exfel::io::hdf5::ScalarFilter<bool> {
+            public karabo::io::hdf5::ScalarFilter<bool> {
             public:
 
                 // important!
                 // registration key is the rtti name
 
-                EXFEL_CLASSINFO(ScalarFilterBufferVector, typeid (std::vector<bool>).name(), "1.0")
+                KARABO_CLASSINFO(ScalarFilterBufferVector, typeid (std::vector<bool>).name(), "1.0")
 
                 ScalarFilterBufferVector() {
                 }
@@ -291,10 +291,10 @@ namespace exfel {
             //      template<typename T,
             //              template <typename ELEM, typename = std::allocator<ELEM> > class CONT = std::vector >
             //              class InputDataImplVector :
-            //              public exfel::io::hdf5::InputData<T>, public exfel::io::hdf5::InputDataType {
+            //              public karabo::io::hdf5::InputData<T>, public karabo::io::hdf5::InputDataType {
             //      public:
             //
-            //        EXFEL_CLASSINFO(InputDataImplVector, typeid (CONT<T>).name(), "1.0")
+            //        KARABO_CLASSINFO(InputDataImplVector, typeid (CONT<T>).name(), "1.0")
             //
             //        InputDataImplVector() {
             //        }
@@ -324,10 +324,10 @@ namespace exfel {
             //
             //      template<>
             //      class InputDataImplVector<std::string, std::vector > :
-            //      public exfel::io::hdf5::InputData<std::string>, public exfel::io::hdf5::InputDataType {
+            //      public karabo::io::hdf5::InputData<std::string>, public karabo::io::hdf5::InputDataType {
             //      public:
             //
-            //        EXFEL_CLASSINFO(InputDataImplVector, typeid (std::vector<std::string>).name(), "1.0")
+            //        KARABO_CLASSINFO(InputDataImplVector, typeid (std::vector<std::string>).name(), "1.0")
             //
             //        InputDataImplVector() {
             //        }
@@ -403,10 +403,10 @@ namespace exfel {
             //
             //      template<typename T>
             //      class InputDataImplDeque :
-            //      public exfel::io::hdf5::InputData<T>, public exfel::io::hdf5::InputDataType {
+            //      public karabo::io::hdf5::InputData<T>, public karabo::io::hdf5::InputDataType {
             //      public:
             //
-            //        EXFEL_CLASSINFO(InputDataImplDeque, typeid (std::deque<T>).name(), "1.0")
+            //        KARABO_CLASSINFO(InputDataImplDeque, typeid (std::deque<T>).name(), "1.0")
             //
             //        InputDataImplDeque() {
             //        }
@@ -475,10 +475,10 @@ namespace exfel {
             //
             //      template<typename T>
             //      class InputDataImplRawPointer :
-            //      public exfel::io::hdf5::InputData<T> {
+            //      public karabo::io::hdf5::InputData<T> {
             //      public:
             //
-            //        EXFEL_CLASSINFO(InputDataImplRawPointer, typeid (T*).name(), "1.0")
+            //        KARABO_CLASSINFO(InputDataImplRawPointer, typeid (T*).name(), "1.0")
             //
             //        InputDataImplRawPointer() {
             //        }
@@ -530,10 +530,10 @@ namespace exfel {
             //
             //      template<typename T, typename U >
             //      class InputDataImplVectorTypeConverter :
-            //      public exfel::io::hdf5::InputData<T> {
+            //      public karabo::io::hdf5::InputData<T> {
             //      public:
             //
-            //        EXFEL_CLASSINFO(InputDataImplVectorTypeConverter, typeid (std::vector<U>).name(), "1.0")
+            //        KARABO_CLASSINFO(InputDataImplVectorTypeConverter, typeid (std::vector<U>).name(), "1.0")
             //
             //        InputDataImplVectorTypeConverter() {
             //        }
@@ -563,4 +563,4 @@ namespace exfel {
     }
 }
 
-#endif	/* EXFEL_IO_HDF5_INPUTDATAIMPL_HH */
+#endif	/* KARABO_IO_HDF5_INPUTDATAIMPL_HH */

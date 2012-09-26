@@ -12,12 +12,12 @@
 #include "AJmsConnection.hh"
 
 using namespace std;
-using namespace exfel::util;
+using namespace karabo::util;
 
-namespace exfel {
+namespace karabo {
     namespace net {
 
-        //EXFEL_REGISTER_FACTORY_CC(Connection, AJmsConnection)
+        //KARABO_REGISTER_FACTORY_CC(Connection, AJmsConnection)
 
         AJmsConnection::AJmsConnection() {
             // Invalidate connectionHandle initially for defensive programming reasons
@@ -178,7 +178,7 @@ namespace exfel {
 
         }
 
-        void AJmsConnection::configure(const exfel::util::Hash& input) {
+        void AJmsConnection::configure(const karabo::util::Hash& input) {
 
             setIOServiceType("Jms");
 
@@ -284,4 +284,4 @@ namespace exfel {
 
 
     } // namespace net
-} // namespace exfel
+} // namespace karabo

@@ -17,11 +17,11 @@
 #include "log4cpp/Appender.hh"
 
 using namespace std;
-using namespace exfel::util;
+using namespace karabo::util;
 using namespace log4cpp;
 
 
-namespace exfel {
+namespace karabo {
     namespace log {
 
         // Static initialization of logMutex
@@ -100,6 +100,6 @@ namespace exfel {
             }
         }
 
-        EXFEL_REGISTER_ONLY_ME_CC(Logger)
+        KARABO_REGISTER_ONLY_ME_CC(Logger)
     }
 }

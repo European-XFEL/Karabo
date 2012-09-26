@@ -1,11 +1,11 @@
 #include <karabo/util/Factory.hh>
 #include "StringStreamReader.hh"
 
-//namespace exfel {
+//namespace karabo {
   //namespace io {
 
-    EXFEL_REGISTER_FACTORY_CC(exfel::io::Reader<exfel::util::Hash>, exfel::io::StringStreamReader<exfel::util::Hash> )
+    KARABO_REGISTER_FACTORY_CC(karabo::io::Reader<karabo::util::Hash>, karabo::io::StringStreamReader<karabo::util::Hash> )
 
   //} // namespace io
-//} // namespace exfel
+//} // namespace karabo
 

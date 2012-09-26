@@ -10,16 +10,16 @@
 #include "NetworkAppender.hh"
 
 using namespace log4cpp;
-using namespace exfel::util;
+using namespace karabo::util;
 
-namespace exfel {
+namespace karabo {
     namespace log {
 
-        NetworkAppender::NetworkAppender(const std::string& name, const exfel::net::BrokerChannel::Pointer& channel) :
+        NetworkAppender::NetworkAppender(const std::string& name, const karabo::net::BrokerChannel::Pointer& channel) :
         LayoutAppender(name), m_channel(channel), m_ok(true) {
             
             // Start thread
-            m_thread = boost::thread(boost::bind(&exfel::log::NetworkAppender::checkLogCache, this));
+            m_thread = boost::thread(boost::bind(&karabo::log::NetworkAppender::checkLogCache, this));
         }
 
         NetworkAppender::~NetworkAppender() {
@@ -51,7 +51,7 @@ namespace exfel {
                     boost::this_thread::sleep(boost::posix_time::milliseconds(1000));
                 }
                 
-            } catch(const exfel::util::Exception& e) {
+            } catch(const karabo::util::Exception& e) {
                 std::cout << e;
             }
         }

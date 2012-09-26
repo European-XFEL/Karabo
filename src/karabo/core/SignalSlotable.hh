@@ -8,8 +8,8 @@
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
 
-#ifndef EXFEL_CORE_SIGNALSLOTABLE_HH
-#define	EXFEL_CORE_SIGNALSLOTABLE_HH
+#ifndef KARABO_CORE_SIGNALSLOTABLE_HH
+#define	KARABO_CORE_SIGNALSLOTABLE_HH
 
 #include <log4cpp/Category.hh>
 
@@ -20,7 +20,7 @@
 /**
  * The main European XFEL namespace
  */
-namespace exfel {
+namespace karabo {
 
   namespace core {
     
@@ -40,8 +40,8 @@ namespace exfel {
     class SignalSlotable {
     public:
 
-      EXFEL_CLASSINFO(SignalSlotable, "SignalSlotable", "1.0")
-      EXFEL_FACTORY_BASE_CLASS
+      KARABO_CLASSINFO(SignalSlotable, "SignalSlotable", "1.0")
+      KARABO_FACTORY_BASE_CLASS
 
       /**
        * Slots may be of three different types:
@@ -88,7 +88,7 @@ namespace exfel {
 
       SignalSlotable();
 
-      SignalSlotable(const exfel::net::BrokerConnection::Pointer& connection, const std::string& instanceId, int heartbeatRate = 5);
+      SignalSlotable(const karabo::net::BrokerConnection::Pointer& connection, const std::string& instanceId, int heartbeatRate = 5);
 
       virtual ~SignalSlotable() {
       }
@@ -97,13 +97,13 @@ namespace exfel {
        * Necessary method as part of the factory/configuration system
        * @param expected [out] Description of expected parameters for this object (Master)
        */
-      static void expectedParameters(exfel::util::Config& expected);
+      static void expectedParameters(karabo::util::Config& expected);
 
       /**
        * If this object is constructed using the factory/configuration system this method is called
        * @param input Validated (@see expectedParameters) and default-filled configuration
        */
-      void configure(const exfel::util::Config& input);
+      void configure(const karabo::util::Config& input);
 
       /**
        * Access to the identification of the current host
@@ -162,9 +162,9 @@ namespace exfel {
         std::cout << "Component is back: " << networkId << std::endl;
       }
 
-      virtual void connectionNotAvailable(const std::string& slotNetworkId, const exfel::util::Hash& affectedSignals, const exfel::util::Hash& affectedSlots);
+      virtual void connectionNotAvailable(const std::string& slotNetworkId, const karabo::util::Hash& affectedSignals, const karabo::util::Hash& affectedSlots);
 
-      virtual void connectionAvailableAgain(const std::string& slotNetworkId, const exfel::util::Hash& affectedSignals, const exfel::util::Hash& affectedSlots);
+      virtual void connectionAvailableAgain(const std::string& slotNetworkId, const karabo::util::Hash& affectedSignals, const karabo::util::Hash& affectedSlots);
 
       void ping() const;
 
@@ -286,7 +286,7 @@ namespace exfel {
        * @param config Config object as obtained by the configure method
        * @param signalRegularExpression A perl-regular expression for the signal key
        */
-      void autoConnectAllSignals(const exfel::util::Config& config, const std::string signalRegularExpression = "^signal.*");
+      void autoConnectAllSignals(const karabo::util::Config& config, const std::string signalRegularExpression = "^signal.*");
 
       /**
        * This function finds all slot keys within a Config object (non-recursive) by a regular expression.
@@ -295,7 +295,7 @@ namespace exfel {
        * @param config Config object as obtained by the configure method
        * @param slotRegularExpression A perl-regular expression for the signal key
        */
-      void autoConnectAllSlots(const exfel::util::Config& config, const std::string slotRegularExpression = "^slot.*");
+      void autoConnectAllSlots(const karabo::util::Config& config, const std::string slotRegularExpression = "^slot.*");
 
       /**
        * Emits a void signal.
@@ -393,9 +393,9 @@ namespace exfel {
         std::string signature(composeSignature(funcName));
         // Have to use a shared pointer here because a boost::signal2 is non-copyable
         boost::shared_ptr < boost::signals2::signal<void ()> > p(new boost::signals2::signal<void ()>);
-        boost::shared_ptr<exfel::xms::Signal> s(new exfel::xms::Signal(signature, m_signalService));
+        boost::shared_ptr<karabo::xms::Signal> s(new karabo::xms::Signal(signature, m_signalService));
         // Boost manual: By default, bind makes a copy of the provided function object (i.e. here a copy of a pointer)
-        p->connect(boost::bind(&exfel::xms::Signal::emit0, s));
+        p->connect(boost::bind(&karabo::xms::Signal::emit0, s));
         m_signalFunctions.set(signature, p);
         m_signalInstances[signature] = s;
       }
@@ -405,8 +405,8 @@ namespace exfel {
 
         std::string signature(composeSignature<A1 > (funcName));
         boost::shared_ptr < boost::signals2::signal<void (const A1&) > > p(new boost::signals2::signal<void (const A1&) >);
-        boost::shared_ptr<exfel::xms::Signal> s(new exfel::xms::Signal(signature, m_signalService));
-        p->connect(boost::bind(&exfel::xms::Signal::emit1<A1>, s, _1));
+        boost::shared_ptr<karabo::xms::Signal> s(new karabo::xms::Signal(signature, m_signalService));
+        p->connect(boost::bind(&karabo::xms::Signal::emit1<A1>, s, _1));
         m_signalFunctions.set(signature, p);
         m_signalInstances[signature] = s;
       }
@@ -416,8 +416,8 @@ namespace exfel {
 
         std::string signature(composeSignature<A1, A2 > (funcName));
         boost::shared_ptr < boost::signals2::signal<void (const A1&, const A2&) > > p(new boost::signals2::signal<void (const A1&, const A2&) >);
-        boost::shared_ptr<exfel::xms::Signal> s(new exfel::xms::Signal(signature, m_signalService));
-        p->connect(boost::bind(&exfel::xms::Signal::emit2<A1, A2>, s, _1, _2));
+        boost::shared_ptr<karabo::xms::Signal> s(new karabo::xms::Signal(signature, m_signalService));
+        p->connect(boost::bind(&karabo::xms::Signal::emit2<A1, A2>, s, _1, _2));
         m_signalFunctions.set(signature, p);
         m_signalInstances[signature] = s;
       }
@@ -427,8 +427,8 @@ namespace exfel {
 
         std::string signature(composeSignature<A1, A2, A3 > (funcName));
         boost::shared_ptr < boost::signals2::signal<void (const A1&, const A2&, const A3&) > > p(new boost::signals2::signal<void (const A1&, const A2&, const A3&) >);
-        boost::shared_ptr<exfel::xms::Signal> s(new exfel::xms::Signal(signature, m_signalService));
-        p->connect(boost::bind(&exfel::xms::Signal::emit3<A1, A2, A3>, s, _1, _2, _3));
+        boost::shared_ptr<karabo::xms::Signal> s(new karabo::xms::Signal(signature, m_signalService));
+        p->connect(boost::bind(&karabo::xms::Signal::emit3<A1, A2, A3>, s, _1, _2, _3));
         m_signalFunctions.set(signature, p);
         m_signalInstances[signature] = s;
       }
@@ -438,8 +438,8 @@ namespace exfel {
 
         std::string signature(composeSignature<A1, A2, A3, A4 > (funcName));
         boost::shared_ptr < boost::signals2::signal<void (const A1&, const A2&, const A3&, const A4&) > > p(new boost::signals2::signal<void (const A1&, const A2&, const A3&, const A4&) >);
-        boost::shared_ptr<exfel::xms::Signal> s(new exfel::xms::Signal(signature, m_signalService));
-        p->connect(boost::bind(&exfel::xms::Signal::emit4<A1, A2, A3, A4>, s, _1, _2, _3, _4));
+        boost::shared_ptr<karabo::xms::Signal> s(new karabo::xms::Signal(signature, m_signalService));
+        p->connect(boost::bind(&karabo::xms::Signal::emit4<A1, A2, A3, A4>, s, _1, _2, _3, _4));
         m_signalFunctions.set(signature, p);
         m_signalInstances[signature] = s;
       }
@@ -447,11 +447,11 @@ namespace exfel {
       void registerSlot(const boost::function<void () >& slot, const std::string& funcName, const SlotType& slotType = SPECIFIC) {
         std::string slotId = composeSignature(funcName, slotType);
         if (m_slotServices.find(slotId) != m_slotServices.end()) return; // Already registered
-        exfel::net::Service::Pointer service = m_connection->createService(); // New Service
-        boost::shared_ptr<exfel::xms::Slot0> s(new exfel::xms::Slot0(service, slotId)); // New Slot
+        karabo::net::Service::Pointer service = m_connection->createService(); // New Service
+        boost::shared_ptr<karabo::xms::Slot0> s(new karabo::xms::Slot0(service, slotId)); // New Slot
         s->processAsync(slot); // Bind user's slot-function to Slot
         m_slots.push_back(s); // Keep Slot alive
-        m_threadGroup.create_thread(boost::bind(&exfel::net::Service::run, service)); // Start thread for Service's run
+        m_threadGroup.create_thread(boost::bind(&karabo::net::Service::run, service)); // Start thread for Service's run
         m_slotServices[slotId] = service; // Store Service using slotId as key
       }
 
@@ -460,11 +460,11 @@ namespace exfel {
         std::string slotId = composeSignature<A1 > (funcName, slotType);
         //std::cout << slotId << std::endl;
         if (m_slotServices.find(slotId) != m_slotServices.end()) return;
-        exfel::net::Service::Pointer service = m_connection->createService();
-        boost::shared_ptr<exfel::xms::Slot1<A1> > s(new exfel::xms::Slot1<A1 > (service, slotId));
+        karabo::net::Service::Pointer service = m_connection->createService();
+        boost::shared_ptr<karabo::xms::Slot1<A1> > s(new karabo::xms::Slot1<A1 > (service, slotId));
         s->processAsync(slot);
         m_slots.push_back(s);
-        m_threadGroup.create_thread(boost::bind(&exfel::net::Service::run, service));
+        m_threadGroup.create_thread(boost::bind(&karabo::net::Service::run, service));
         m_slotServices[slotId] = service;
       }
 
@@ -472,11 +472,11 @@ namespace exfel {
       void registerSlot(const boost::function<void (const A1&, const A2&) >& slot, const std::string& funcName, const SlotType& slotType = SPECIFIC) {
         std::string slotId = composeSignature<A1, A2 > (funcName, slotType);
         if (m_slotServices.find(slotId) != m_slotServices.end()) return;
-        exfel::net::Service::Pointer service = m_connection->createService();
-        boost::shared_ptr<exfel::xms::Slot2<A1, A2> > s(new exfel::xms::Slot2<A1, A2 > (service, slotId));
+        karabo::net::Service::Pointer service = m_connection->createService();
+        boost::shared_ptr<karabo::xms::Slot2<A1, A2> > s(new karabo::xms::Slot2<A1, A2 > (service, slotId));
         s->processAsync(slot);
         m_slots.push_back(s);
-        m_threadGroup.create_thread(boost::bind(&exfel::net::Service::run, service));
+        m_threadGroup.create_thread(boost::bind(&karabo::net::Service::run, service));
         m_slotServices[slotId] = service;
       }
 
@@ -484,11 +484,11 @@ namespace exfel {
       void registerSlot(const boost::function<void (const A1&, const A2&, const A3&) >& slot, const std::string& funcName, const SlotType& slotType = SPECIFIC) {
         std::string slotId = composeSignature<A1, A2, A3 > (funcName, slotType);
         if (m_slotServices.find(slotId) != m_slotServices.end()) return;
-        exfel::net::Service::Pointer service = m_connection->createService();
-        boost::shared_ptr<exfel::xms::Slot3<A1, A2, A3> > s(new exfel::xms::Slot3<A1, A2, A3 > (service, slotId));
+        karabo::net::Service::Pointer service = m_connection->createService();
+        boost::shared_ptr<karabo::xms::Slot3<A1, A2, A3> > s(new karabo::xms::Slot3<A1, A2, A3 > (service, slotId));
         s->processAsync(slot);
         m_slots.push_back(s);
-        m_threadGroup.create_thread(boost::bind(&exfel::net::Service::run, service));
+        m_threadGroup.create_thread(boost::bind(&karabo::net::Service::run, service));
         m_slotServices[slotId] = service;
       }
 
@@ -496,11 +496,11 @@ namespace exfel {
       void registerSlot(const boost::function<void (const A1&, const A2&, const A3&, const A4&) >& slot, const std::string& funcName, const SlotType& slotType = SPECIFIC) {
         std::string slotId = composeSignature<A1, A2, A3, A4 > (funcName, slotType);
         if (m_slotServices.find(slotId) != m_slotServices.end()) return;
-        exfel::net::Service::Pointer service = m_connection->createService();
-        boost::shared_ptr<exfel::xms::Slot4<A1, A2, A3, A4> > s(new exfel::xms::Slot4<A1, A2, A3, A4 > (service, slotId));
+        karabo::net::Service::Pointer service = m_connection->createService();
+        boost::shared_ptr<karabo::xms::Slot4<A1, A2, A3, A4> > s(new karabo::xms::Slot4<A1, A2, A3, A4 > (service, slotId));
         s->processAsync(slot);
         m_slots.push_back(s);
-        m_threadGroup.create_thread(boost::bind(&exfel::net::Service::run, service));
+        m_threadGroup.create_thread(boost::bind(&karabo::net::Service::run, service));
         m_slotServices[slotId] = service;
       }
       
@@ -563,8 +563,8 @@ namespace exfel {
       template <class A1>
       std::string prepareFunctionSignature(const std::string& funcName) const {
         std::string f(boost::trim_copy(funcName));
-        const int typeFormat = exfel::util::Types::FORMAT_INTERN;
-        exfel::util::Types& t = exfel::util::Types::getInstance();
+        const int typeFormat = karabo::util::Types::FORMAT_INTERN;
+        karabo::util::Types& t = karabo::util::Types::getInstance();
         std::string a1 = t.getTypeAsString<A1, typeFormat > ();
         return f + "-" + a1;
       }
@@ -572,8 +572,8 @@ namespace exfel {
       template <class A1, class A2>
       std::string prepareFunctionSignature(const std::string& funcName) const {
         std::string f(boost::trim_copy(funcName));
-        const int typeFormat = exfel::util::Types::FORMAT_INTERN;
-        exfel::util::Types& t = exfel::util::Types::getInstance();
+        const int typeFormat = karabo::util::Types::FORMAT_INTERN;
+        karabo::util::Types& t = karabo::util::Types::getInstance();
         std::string a1 = t.getTypeAsString<A1, typeFormat > ();
         std::string a2 = t.getTypeAsString<A2, typeFormat > ();
         return f + "-" + a1 + "-" + a2;
@@ -582,8 +582,8 @@ namespace exfel {
       template <class A1, class A2, class A3>
       std::string prepareFunctionSignature(const std::string& funcName) const {
         std::string f(boost::trim_copy(funcName));
-        exfel::util::Types& t = exfel::util::Types::getInstance();
-        const int typeFormat = exfel::util::Types::FORMAT_INTERN;
+        karabo::util::Types& t = karabo::util::Types::getInstance();
+        const int typeFormat = karabo::util::Types::FORMAT_INTERN;
         std::string a1 = t.getTypeAsString<A1, typeFormat> ();
         std::string a2 = t.getTypeAsString<A2, typeFormat> ();
         std::string a3 = t.getTypeAsString<A3, typeFormat> ();
@@ -593,8 +593,8 @@ namespace exfel {
       template <class A1, class A2, class A3, class A4>
       std::string prepareFunctionSignature(const std::string& funcName) const {
         std::string f(boost::trim_copy(funcName));
-        exfel::util::Types& t = exfel::util::Types::getInstance();
-        const int typeFormat = exfel::util::Types::FORMAT_INTERN;
+        karabo::util::Types& t = karabo::util::Types::getInstance();
+        const int typeFormat = karabo::util::Types::FORMAT_INTERN;
         std::string a1 = t.getTypeAsString<A1, typeFormat> ();
         std::string a2 = t.getTypeAsString<A2, typeFormat> ();
         std::string a3 = t.getTypeAsString<A3, typeFormat> ();
@@ -631,24 +631,24 @@ namespace exfel {
 
       void addTrackedComponent(const std::string& networkId);
 
-      exfel::util::Hash prepareConnectionNotAvailableInformation(const exfel::util::Hash& signals) const;
+      karabo::util::Hash prepareConnectionNotAvailableInformation(const karabo::util::Hash& signals) const;
 
       void slotTryReconnectNow();
 
     private: // Member variables
 
-      typedef boost::shared_ptr<exfel::xms::Signal> SignalInstancePointer;
+      typedef boost::shared_ptr<karabo::xms::Signal> SignalInstancePointer;
       typedef std::map<std::string, SignalInstancePointer> SignalInstances;
       typedef SignalInstances::const_iterator SignalInstancesConstIt;
       SignalInstances m_signalInstances;
 
       boost::thread_group m_threadGroup;
-      exfel::net::BrokerConnection::Pointer m_connection;
-      exfel::net::Service::Pointer m_signalService;
-      exfel::util::Hash m_signalFunctions;
+      karabo::net::BrokerConnection::Pointer m_connection;
+      karabo::net::Service::Pointer m_signalService;
+      karabo::util::Hash m_signalFunctions;
       std::vector<boost::any> m_slots;
 
-      typedef std::map<std::string, exfel::net::Service::Pointer> SlotServices;
+      typedef std::map<std::string, karabo::net::Service::Pointer> SlotServices;
       typedef SlotServices::const_iterator SlotServicesConstIt;
       SlotServices m_slotServices;
 
@@ -656,7 +656,7 @@ namespace exfel {
       typedef std::set<AssocEntry> AssocType;
       typedef AssocType::const_iterator AssocTypeConstIterator;
 
-      exfel::util::Hash m_trackedComponents;
+      karabo::util::Hash m_trackedComponents;
       int m_timeToLive;
       static std::set<int> m_reconnectIntervals;
       
@@ -667,6 +667,6 @@ namespace exfel {
     };
 
   } // namespace core
-} // namespace exfel
+} // namespace karabo
 
 #endif
