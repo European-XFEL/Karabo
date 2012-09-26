@@ -444,6 +444,7 @@
           <incDir>
             <pElem>../../../src</pElem>
             <pElem>${EXTERN_DIST_DIR}/include</pElem>
+            <pElem>/usr/include/${PYTHON_LIB}</pElem>
           </incDir>
         </ccTool>
         <fortranCompilerTool>
@@ -476,6 +477,7 @@
             <linkerLibLibItem>ssl3</linkerLibLibItem>
             <linkerLibLibItem>${PYTHON_LIB}</linkerLibLibItem>
             <linkerLibLibItem>netsnmp</linkerLibLibItem>
+            <linkerLibLibItem>rt</linkerLibLibItem>
             <linkerLibStdlibItem>CppUnit</linkerLibStdlibItem>
           </linkerLibItems>
         </linkerTool>
