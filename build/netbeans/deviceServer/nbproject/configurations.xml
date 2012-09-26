@@ -28,7 +28,7 @@
   </logicalFolder>
   <projectmakefile>Makefile</projectmakefile>
   <confs>
-    <conf name="Debug-Linux" type="1">
+    <conf name="Debug" type="1">
       <toolsSet>
         <remote-sources-mode>LOCAL_SOURCES</remote-sources-mode>
         <compilerSet>default</compilerSet>
@@ -37,29 +37,31 @@
         <ccTool>
           <incDir>
             <pElem>../../../src</pElem>
-            <pElem>${KARABO}/extern/include</pElem>
+            <pElem>${EXTERN_DIST_DIR}/include</pElem>
+            <pElem>${KARABO_DIST_DIR}/include</pElem>
           </incDir>
         </ccTool>
         <linkerTool>
+          <output>${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/karabo-deviceserver</output>
           <linkerAddLib>
-            <pElem>${KARABO}/extern/lib</pElem>
+            <pElem>${EXTERN_DIST_DIR}/lib</pElem>
           </linkerAddLib>
           <linkerDynSerch>
             <pElem>../lib</pElem>
             <pElem>../extern/lib</pElem>
-            <pElem>${KARABO}/lib</pElem>
-            <pElem>${KARABO}/extern/lib</pElem>
+            <pElem>${KARABO_DIST_DIR}/lib</pElem>
+            <pElem>${EXTERN_DIST_DIR}/lib</pElem>
           </linkerDynSerch>
           <linkerLibItems>
             <linkerLibProjectItem>
               <makeArtifact PL="../karabo"
                             CT="2"
-                            CN="Debug-Linux"
+                            CN="Debug"
                             AC="true"
-                            BL="false"
+                            BL="true"
                             WD="../karabo"
-                            BC="${MAKE} -j12 -f Makefile CONF=Debug-Linux"
-                            CC="${MAKE} -j12 -f Makefile CONF=Debug-Linux clean"
+                            BC="${MAKE} -j12 -f Makefile CONF=Debug"
+                            CC="${MAKE} -j12 -f Makefile CONF=Debug clean"
                             OP="${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/lib/libkarabo.${CND_DLIB_EXT}">
               </makeArtifact>
             </linkerLibProjectItem>
@@ -102,7 +104,7 @@
         </packFileList>
       </packaging>
     </conf>
-    <conf name="Release-Linux" type="1">
+    <conf name="Release" type="1">
       <toolsSet>
         <remote-sources-mode>LOCAL_SOURCES</remote-sources-mode>
         <compilerSet>default</compilerSet>
@@ -115,7 +117,8 @@
           <developmentMode>5</developmentMode>
           <incDir>
             <pElem>../../../src</pElem>
-            <pElem>${KARABO}/extern/include</pElem>
+            <pElem>${EXTERN_DIST_DIR}/include</pElem>
+            <pElem>${KARABO_DIST_DIR}/include</pElem>
           </incDir>
         </ccTool>
         <fortranCompilerTool>
@@ -125,15 +128,49 @@
           <developmentMode>5</developmentMode>
         </asmTool>
         <linkerTool>
+          <output>${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/karabo-deviceserver</output>
           <linkerAddLib>
-            <pElem>${KARABO}/extern/lib</pElem>
+            <pElem>${EXTERN_DIST_DIR}/lib</pElem>
           </linkerAddLib>
           <linkerDynSerch>
             <pElem>../lib</pElem>
             <pElem>../extern/lib</pElem>
-            <pElem>${KARABO}/lib</pElem>
-            <pElem>${KARABO}/extern/lib</pElem>
+            <pElem>${KARABO_DIST_DIR}/lib</pElem>
+            <pElem>${EXTERN_DIST_DIR}/lib</pElem>
           </linkerDynSerch>
+          <linkerLibItems>
+            <linkerLibProjectItem>
+              <makeArtifact PL="../karabo"
+                            CT="2"
+                            CN="Release"
+                            AC="false"
+                            BL="true"
+                            WD="../karabo"
+                            BC="${MAKE} -j12 -f Makefile CONF=Release"
+                            CC="${MAKE} -j12 -f Makefile CONF=Release clean"
+                            OP="${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/lib/libkarabo.${CND_DLIB_EXT}">
+              </makeArtifact>
+            </linkerLibProjectItem>
+            <linkerLibLibItem>boost_date_time</linkerLibLibItem>
+            <linkerLibLibItem>boost_filesystem</linkerLibLibItem>
+            <linkerLibLibItem>boost_python</linkerLibLibItem>
+            <linkerLibLibItem>boost_regex</linkerLibLibItem>
+            <linkerLibLibItem>boost_signals</linkerLibLibItem>
+            <linkerLibLibItem>boost_system</linkerLibLibItem>
+            <linkerLibLibItem>boost_thread</linkerLibLibItem>
+            <linkerLibLibItem>cppunit</linkerLibLibItem>
+            <linkerLibLibItem>hdf5</linkerLibLibItem>
+            <linkerLibLibItem>hdf5_cpp</linkerLibLibItem>
+            <linkerLibLibItem>hdf5_hl</linkerLibLibItem>
+            <linkerLibLibItem>hdf5_hl_cpp</linkerLibLibItem>
+            <linkerLibLibItem>log4cpp</linkerLibLibItem>
+            <linkerLibLibItem>netsnmp</linkerLibLibItem>
+            <linkerLibLibItem>netsnmpagent</linkerLibLibItem>
+            <linkerLibLibItem>netsnmphelpers</linkerLibLibItem>
+            <linkerLibLibItem>netsnmpmibs</linkerLibLibItem>
+            <linkerLibLibItem>netsnmptrapd</linkerLibLibItem>
+            <linkerLibLibItem>openmqc</linkerLibLibItem>
+          </linkerLibItems>
         </linkerTool>
       </compileType>
     </conf>

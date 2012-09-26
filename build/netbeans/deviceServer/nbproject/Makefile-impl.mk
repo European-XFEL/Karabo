@@ -27,11 +27,11 @@ CLEAN_SUBPROJECTS=${CLEAN_SUBPROJECTS_${SUBPROJECTS}}
 PROJECTNAME=deviceServer
 
 # Active Configuration
-DEFAULTCONF=Debug-Linux
+DEFAULTCONF=Debug
 CONF=${DEFAULTCONF}
 
 # All Configurations
-ALLCONFS=Debug-Linux Release-Linux 
+ALLCONFS=Debug Release 
 
 
 # build
