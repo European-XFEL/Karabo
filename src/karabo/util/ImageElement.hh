@@ -13,6 +13,8 @@
 #define	KARABO_UTIL_IMAGEELEMENT_HH
 
 #include "ComplexElement.hh"
+#include "SimpleElement.hh"
+#include "VectorElement.hh"
 
 namespace karabo {
     namespace util {
