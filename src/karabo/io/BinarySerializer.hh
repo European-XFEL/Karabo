@@ -9,14 +9,14 @@
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
 
-#ifndef EXFEL_IO_BINARYSERIALIZER_HH
-#define	EXFEL_IO_BINARYSERIALIZER_HH
+#ifndef KARABO_IO_BINARYSERIALIZER_HH
+#define	KARABO_IO_BINARYSERIALIZER_HH
 
 #include <vector>
 
 #include <karabo/util/Factory.hh>
 
-namespace exfel {
+namespace karabo {
     namespace io {
         
         template <class T>
@@ -24,9 +24,9 @@ namespace exfel {
             
             public:
                 
-                EXFEL_CLASSINFO(BinarySerializer, "BinarySerializer", "1.0")
+                KARABO_CLASSINFO(BinarySerializer, "BinarySerializer", "1.0")
                 
-                EXFEL_FACTORY_BASE_CLASS
+                KARABO_FACTORY_BASE_CLASS
                 
                 virtual void save(const T& object, std::vector<char>& archive) = 0;
                 

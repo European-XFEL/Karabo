@@ -10,8 +10,8 @@
  */
 
 
-#ifndef EXFEL_UTIL_EXCEPTION_HH
-#define	EXFEL_UTIL_EXCEPTION_HH
+#ifndef KARABO_UTIL_EXCEPTION_HH
+#define	KARABO_UTIL_EXCEPTION_HH
 
 #include <boost/shared_ptr.hpp>
 #include <boost/thread.hpp>
@@ -25,7 +25,7 @@
 
 #include "utildll.hh"
 
-namespace exfel {
+namespace karabo {
 
     namespace util {
 
@@ -238,11 +238,11 @@ namespace exfel {
             Exception(message, "Propagated Exception", filename, function, lineNumber) {
             }
         };
-#define PROPAGATED_EXCEPTION(msg) exfel::util::PropagatedException(msg, __FILE__, BOOST_CURRENT_FUNCTION, __LINE__)
+#define PROPAGATED_EXCEPTION(msg) karabo::util::PropagatedException(msg, __FILE__, BOOST_CURRENT_FUNCTION, __LINE__)
 
         // Convenience defines
-#define RETHROW exfel::util::Exception::rethrow(PROPAGATED_EXCEPTION(""));
-#define RETHROW_AS(exception) exfel::util::Exception::rethrow(exception);
+#define RETHROW karabo::util::Exception::rethrow(PROPAGATED_EXCEPTION(""));
+#define RETHROW_AS(exception) karabo::util::Exception::rethrow(exception);
 
         // ---- Fundamental Exceptions
 
@@ -256,7 +256,7 @@ namespace exfel {
             Exception(message, "Parameter Exception", filename, function, lineNumber) {
             }
         };
-#define PARAMETER_EXCEPTION(msg) exfel::util::ParameterException(msg, __FILE__, BOOST_CURRENT_FUNCTION, __LINE__)
+#define PARAMETER_EXCEPTION(msg) karabo::util::ParameterException(msg, __FILE__, BOOST_CURRENT_FUNCTION, __LINE__)
 
         /**
          *  The LogicException handles exceptions that are raised by any unexpected logical behaviour
@@ -268,7 +268,7 @@ namespace exfel {
             Exception(message, "Logic Exception", filename, function, lineNumber) {
             }
         };
-#define LOGIC_EXCEPTION(msg) exfel::util::LogicException(msg, __FILE__, BOOST_CURRENT_FUNCTION, __LINE__)
+#define LOGIC_EXCEPTION(msg) karabo::util::LogicException(msg, __FILE__, BOOST_CURRENT_FUNCTION, __LINE__)
 
         /**
          * The NotImplementedException handles exceptions that are raised due to unimplemented functions/class calls
@@ -280,7 +280,7 @@ namespace exfel {
             Exception(message, "Not implemented", filename, function, lineNumber) {
             }
         };
-#define NOT_IMPLEMENTED_EXCEPTION(msg) exfel::util::NotImplementedException(msg, __FILE__, BOOST_CURRENT_FUNCTION, __LINE__)
+#define NOT_IMPLEMENTED_EXCEPTION(msg) karabo::util::NotImplementedException(msg, __FILE__, BOOST_CURRENT_FUNCTION, __LINE__)
 
         /**
          * The NotImplementedException handles exceptions that are raised by requesting unsupported features
@@ -292,7 +292,7 @@ namespace exfel {
             Exception(message, "Call not supported", filename, function, lineNumber) {
             }
         };
-#define NOT_SUPPORTED_EXCEPTION(msg) exfel::util::NotSupportedException(msg, __FILE__, BOOST_CURRENT_FUNCTION, __LINE__)
+#define NOT_SUPPORTED_EXCEPTION(msg) karabo::util::NotSupportedException(msg, __FILE__, BOOST_CURRENT_FUNCTION, __LINE__)
 
         /**
          * The CastException handles exceptions that are raised due to illegal type castings
@@ -304,7 +304,7 @@ namespace exfel {
             Exception(message, "Cast Exception", filename, function, lineNumber) {
             }
         };
-#define CAST_EXCEPTION(msg) exfel::util::CastException(msg, __FILE__, BOOST_CURRENT_FUNCTION, __LINE__)
+#define CAST_EXCEPTION(msg) karabo::util::CastException(msg, __FILE__, BOOST_CURRENT_FUNCTION, __LINE__)
 
         // ---- Image Exceptions
 
@@ -321,7 +321,7 @@ namespace exfel {
             ImageException(const std::string& message, const std::string& type, const std::string& filename, const std::string& function,
                     int lineNumber) : Exception(message, type, filename, function, lineNumber) {
             }
-#define IMAGE_EXCEPTION(msg) exfel::util::ImageException(msg, __FILE__, BOOST_CURRENT_FUNCTION, __LINE__)
+#define IMAGE_EXCEPTION(msg) karabo::util::ImageException(msg, __FILE__, BOOST_CURRENT_FUNCTION, __LINE__)
         };
 
         /**
@@ -334,7 +334,7 @@ namespace exfel {
             ImageException(message, "Image Dimension Exception", filename, function, lineNumber) {
             }
         };
-#define IMAGE_DIMENSION_EXCEPTION(msg) exfel::util::ImageDimensionException(msg, __FILE__, BOOST_CURRENT_FUNCTION, __LINE__)
+#define IMAGE_DIMENSION_EXCEPTION(msg) karabo::util::ImageDimensionException(msg, __FILE__, BOOST_CURRENT_FUNCTION, __LINE__)
 
         /**
          * The ImageFormatException handles exceptions raised due to unsupported image formats
@@ -346,7 +346,7 @@ namespace exfel {
             ImageException(message, "Image Format Exception", filename, function, lineNumber) {
             }
         };
-#define IMAGE_FORMAT_EXCEPTION(msg) exfel::util::ImageFormatException(msg, __FILE__, BOOST_CURRENT_FUNCTION, __LINE__)
+#define IMAGE_FORMAT_EXCEPTION(msg) karabo::util::ImageFormatException(msg, __FILE__, BOOST_CURRENT_FUNCTION, __LINE__)
 
         /**
          * The ImageTypeException handles exceptions raised due to imcompatible image types
@@ -358,7 +358,7 @@ namespace exfel {
             ImageException(message, "Image Type Exception", filename, function, lineNumber) {
             }
         };
-#define IMAGE_TYPE_EXCEPTION(msg) exfel::util::ImageTypeException(msg, __FILE__, BOOST_CURRENT_FUNCTION, __LINE__)
+#define IMAGE_TYPE_EXCEPTION(msg) karabo::util::ImageTypeException(msg, __FILE__, BOOST_CURRENT_FUNCTION, __LINE__)
 
         /**
          * The InitException handles exceptions raised during any initialization procedures
@@ -374,7 +374,7 @@ namespace exfel {
                     int lineNumber) : Exception(message, type, filename, function, lineNumber) {
             }
         };
-#define INIT_EXCEPTION(msg) exfel::util::InitException(msg, __FILE__, BOOST_CURRENT_FUNCTION, __LINE__)
+#define INIT_EXCEPTION(msg) karabo::util::InitException(msg, __FILE__, BOOST_CURRENT_FUNCTION, __LINE__)
 
         /**
          * The MemoryInitException handles exceptions raised during any memory initializations
@@ -386,7 +386,7 @@ namespace exfel {
             InitException(message, "Memory init Exception", filename, function, lineNumber) {
             }
         };
-#define MEMORY_INIT_EXCEPTION(msg) exfel::util::MemoryInitException(msg, __FILE__, BOOST_CURRENT_FUNCTION, __LINE__)
+#define MEMORY_INIT_EXCEPTION(msg) karabo::util::MemoryInitException(msg, __FILE__, BOOST_CURRENT_FUNCTION, __LINE__)
 
         // ---- IO Exceptions
 
@@ -404,7 +404,7 @@ namespace exfel {
             Exception(message, type, filename, function, lineNumber) {
             }
         };
-#define IO_EXCEPTION(msg) exfel::util::IOException(msg, __FILE__, BOOST_CURRENT_FUNCTION, __LINE__)
+#define IO_EXCEPTION(msg) karabo::util::IOException(msg, __FILE__, BOOST_CURRENT_FUNCTION, __LINE__)
 
         class HdfIOException : public IOException {
         public:
@@ -413,7 +413,7 @@ namespace exfel {
             IOException(message, "HdfIOException", filename, function, lineNumber) {
             }
         };
-#define HDF_IO_EXCEPTION(msg) exfel::util::HdfIOException(msg, __FILE__, BOOST_CURRENT_FUNCTION, __LINE__)
+#define HDF_IO_EXCEPTION(msg) karabo::util::HdfIOException(msg, __FILE__, BOOST_CURRENT_FUNCTION, __LINE__)
 
         /**
          * FileNotFoundIOException
@@ -425,7 +425,7 @@ namespace exfel {
             IOException(message, "FileNotFound IOException", filename, function, lineNumber) {
             }
         };
-#define FILENOTFOUND_IO_EXCEPTION(msg) exfel::util::FileNotFoundIOException(msg, __FILE__, BOOST_CURRENT_FUNCTION, __LINE__)
+#define FILENOTFOUND_IO_EXCEPTION(msg) karabo::util::FileNotFoundIOException(msg, __FILE__, BOOST_CURRENT_FUNCTION, __LINE__)
 
         /**
          * The MQException handles exceptions that are caused by the JMS openMQ c-client implementation
@@ -437,7 +437,7 @@ namespace exfel {
             Exception(message, "OpenMq Exception", filename, function, lineNumber) {
             }
         };
-#define OPENMQ_EXCEPTION(msg) exfel::util::OpenMqException(msg, __FILE__, BOOST_CURRENT_FUNCTION, __LINE__)
+#define OPENMQ_EXCEPTION(msg) karabo::util::OpenMqException(msg, __FILE__, BOOST_CURRENT_FUNCTION, __LINE__)
 
         /**
          * The MessageException handles exceptions that are caused during messaging
@@ -449,7 +449,7 @@ namespace exfel {
             Exception(message, "Message Exception", filename, function, lineNumber) {
             }
         };
-#define MESSAGE_EXCEPTION(msg) exfel::util::MessageException(msg, __FILE__, BOOST_CURRENT_FUNCTION, __LINE__)
+#define MESSAGE_EXCEPTION(msg) karabo::util::MessageException(msg, __FILE__, BOOST_CURRENT_FUNCTION, __LINE__)
 
         /**
          * PythonException
@@ -461,7 +461,7 @@ namespace exfel {
             Exception(message, "Python Exception", filename, function, lineNumber) {
             }
         };
-#define PYTHON_EXCEPTION(msg) exfel::util::PythonException(msg, __FILE__, BOOST_CURRENT_FUNCTION, __LINE__)
+#define PYTHON_EXCEPTION(msg) karabo::util::PythonException(msg, __FILE__, BOOST_CURRENT_FUNCTION, __LINE__)
 
         /**
          * The CudaException handles exceptions that are caused by the NVIDIA CUDA runtime
@@ -473,7 +473,7 @@ namespace exfel {
             Exception(message, "GPU (NVIDIA CUDA) Exception", filename, function, lineNumber) {
             }
         };
-#define CUDA_EXCEPTION(msg) exfel::util::CudaException(msg, __FILE__, BOOST_CURRENT_FUNCTION, __LINE__)
+#define CUDA_EXCEPTION(msg) karabo::util::CudaException(msg, __FILE__, BOOST_CURRENT_FUNCTION, __LINE__)
 
         /**
          * The HardwareException handles exceptions that are caused by any connected hardware
@@ -485,7 +485,7 @@ namespace exfel {
             Exception(message, "Hardware Exception", filename, function, lineNumber) {
             }
         };
-#define HARDWARE_EXCEPTION(msg) exfel::util::HardwareException(msg, __FILE__, BOOST_CURRENT_FUNCTION, __LINE__)
+#define HARDWARE_EXCEPTION(msg) karabo::util::HardwareException(msg, __FILE__, BOOST_CURRENT_FUNCTION, __LINE__)
 
         /**
          * The HardwareException handles exceptions that are caused by any connected hardware
@@ -497,7 +497,7 @@ namespace exfel {
             Exception(message, "Reconfigure Exception", filename, function, lineNumber) {
             }
         };
-#define RECONFIGURE_EXCEPTION(msg) exfel::util::ReconfigureException(msg, __FILE__, BOOST_CURRENT_FUNCTION, __LINE__)
+#define RECONFIGURE_EXCEPTION(msg) karabo::util::ReconfigureException(msg, __FILE__, BOOST_CURRENT_FUNCTION, __LINE__)
 
         /**
          * The HardwareException handles exceptions that are caused by any connected hardware
@@ -509,7 +509,7 @@ namespace exfel {
             Exception(message, "SignalSlot Exception", filename, function, lineNumber) {
             }
         };
-#define SIGNALSLOT_EXCEPTION(msg) exfel::util::SignalSlotException(msg, __FILE__, BOOST_CURRENT_FUNCTION, __LINE__)
+#define SIGNALSLOT_EXCEPTION(msg) karabo::util::SignalSlotException(msg, __FILE__, BOOST_CURRENT_FUNCTION, __LINE__)
 
         /**
          * The NetworkException handles exceptions that are caused by network protocol related libraries (BoostAsio, SNMP, OpenMQ,...)
@@ -521,7 +521,7 @@ namespace exfel {
             Exception(message, "Network Exception", filename, function, lineNumber) {
             }
         };
-#define NETWORK_EXCEPTION(msg) exfel::util::NetworkException(msg, __FILE__, BOOST_CURRENT_FUNCTION, __LINE__)
+#define NETWORK_EXCEPTION(msg) karabo::util::NetworkException(msg, __FILE__, BOOST_CURRENT_FUNCTION, __LINE__)
 
         /**
          * The TimeoutException handles exceptions that are caused by time out events
@@ -533,7 +533,7 @@ namespace exfel {
             Exception(message, "Timeout Exception", filename, function, lineNumber) {
             }
         };
-#define TIMEOUT_EXCEPTION(msg) exfel::util::TimeoutException(msg, __FILE__, BOOST_CURRENT_FUNCTION, __LINE__)
+#define TIMEOUT_EXCEPTION(msg) karabo::util::TimeoutException(msg, __FILE__, BOOST_CURRENT_FUNCTION, __LINE__)
 
         /**
          * DoocsException
@@ -545,11 +545,11 @@ namespace exfel {
             Exception(message, "DOOCS Exception", filename, function, lineNumber) {
             }
         };
-#define DOOCS_EXCEPTION(msg) exfel::util::DoocsException(msg, __FILE__, BOOST_CURRENT_FUNCTION, __LINE__)
+#define DOOCS_EXCEPTION(msg) karabo::util::DoocsException(msg, __FILE__, BOOST_CURRENT_FUNCTION, __LINE__)
 
     } // namespace exception
 
-} // namespace exfel
+} // namespace karabo
 
-#endif	/* EXFEL_UTIL_EXCEPTION_HH */
+#endif	/* KARABO_UTIL_EXCEPTION_HH */
 

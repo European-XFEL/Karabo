@@ -16,18 +16,18 @@
 
 #include "SchemaXsdFormat.hh"
 
-EXFEL_REGISTER_FACTORY_CC(exfel::io::Format<exfel::util::Schema>, exfel::io::SchemaXsdFormat)
+KARABO_REGISTER_FACTORY_CC(karabo::io::Format<karabo::util::Schema>, karabo::io::SchemaXsdFormat)
 
-namespace exfel {
+namespace karabo {
     namespace io {
 
         using namespace std;
-        using namespace exfel::util;
-        using namespace exfel::tinyxml;
+        using namespace karabo::util;
+        using namespace karabo::tinyxml;
 
         
 
-        void SchemaXsdFormat::expectedParameters(exfel::util::Schema& expected) {
+        void SchemaXsdFormat::expectedParameters(karabo::util::Schema& expected) {
 
             INT32_ELEMENT(expected)
                     .key("indentation")
@@ -47,7 +47,7 @@ namespace exfel {
                     .commit();
         }
 
-        void SchemaXsdFormat::configure(const exfel::util::Hash& input) {
+        void SchemaXsdFormat::configure(const karabo::util::Hash& input) {
             if (input.has("indentation")) {
                 input.get("indentation", m_indentation);
             } else {
@@ -59,9 +59,9 @@ namespace exfel {
         /**
          * Reading a configuration file.
          * Function reads configuration file (XML Document) and
-         * creates an object of the class exfel::util::Hash
+         * creates an object of the class karabo::util::Hash
          * @param in Input parameter representing XML document
-         * @param out Output parameter representing object of the class exfel::util::Hash
+         * @param out Output parameter representing object of the class karabo::util::Hash
          */
         void SchemaXsdFormat::convert(stringstream& in, Schema& out) {
             throw NOT_IMPLEMENTED_EXCEPTION("Reading (de-serialization) of .xsd file into Schema objects is currently not implemented");
@@ -69,9 +69,9 @@ namespace exfel {
 
         /**
          * Writing a configuration file.
-         * Function gets as input an object of the class exfel::util::Hash
+         * Function gets as input an object of the class karabo::util::Hash
          * and creates a configuration file in XML format.
-         * @param in Input parameter representing an object of the class exfel::util::Hash
+         * @param in Input parameter representing an object of the class karabo::util::Hash
          * @param out Output parameter representing constructed XML Document
          */
         void SchemaXsdFormat::convert(const Schema& in, stringstream& out) {
@@ -90,7 +90,7 @@ namespace exfel {
 
             TiXmlElement* schemaElem = new TiXmlElement("xs:schema");
             schemaElem->SetAttribute("xmlns:xs", "http://www.w3.org/2001/XMLSchema");
-            schemaElem->SetAttribute("xmlns:a", "http://www.exfel.eu");
+            schemaElem->SetAttribute("xmlns:a", "http://www.karabo.eu");
             doc.LinkEndChild(schemaElem);
 
             //creating xsd-description of root element
@@ -454,4 +454,4 @@ namespace exfel {
             }
         }
     } // namespace io
-} // namespace exfel
+} // namespace karabo

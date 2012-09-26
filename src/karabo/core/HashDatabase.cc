@@ -11,15 +11,15 @@
 #include <karabo/io/Reader.hh>
 #include "HashDatabase.hh"
 
-namespace exfel {
+namespace karabo {
     namespace core {
         
         using namespace log4cpp;
         using namespace std;
-        using namespace exfel::util;
-        using namespace exfel::io;
+        using namespace karabo::util;
+        using namespace karabo::io;
         
-        exfel::util::Hash HashDatabase::m_database; 
+        karabo::util::Hash HashDatabase::m_database; 
         boost::mutex HashDatabase::m_databaseMutex;
         
         
@@ -27,8 +27,8 @@ namespace exfel {
             
             boost::mutex::scoped_lock lock(m_databaseMutex);
             
-            if (boost::filesystem::exists(EXFEL_DB_FILE)) {
-                Reader<Hash>::create("TextFile", Hash("filename", EXFEL_DB_FILE))->read(m_database);
+            if (boost::filesystem::exists(KARABO_DB_FILE)) {
+                Reader<Hash>::create("TextFile", Hash("filename", KARABO_DB_FILE))->read(m_database);
                 return true;
             }
             return false;
@@ -103,14 +103,14 @@ namespace exfel {
         void HashDatabase::saveDatabase() {
             boost::mutex::scoped_lock lock(m_databaseMutex);
             Hash p;
-            p.setFromPath("filename", EXFEL_DB_FILE);
+            p.setFromPath("filename", KARABO_DB_FILE);
             p.setFromPath("format.Xml.printDataType", true);
             Writer<Hash>::create("TextFile", p)->write(m_database);
         }
         
-        unsigned int HashDatabase::insert(const std::string& tableName, exfel::util::Hash keyValuePairs) {
+        unsigned int HashDatabase::insert(const std::string& tableName, karabo::util::Hash keyValuePairs) {
             boost::mutex::scoped_lock lock(m_databaseMutex);
-            Hash& database = m_database.get<Hash > (EXFEL_DB_NAME);
+            Hash& database = m_database.get<Hash > (KARABO_DB_NAME);
             vector<Hash>& table = database.get<vector<Hash> > (tableName);
             
             unsigned int id = 0;

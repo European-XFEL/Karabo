@@ -8,8 +8,8 @@
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
 
-#ifndef EXFEL_IO_WRITER_HH
-#define	EXFEL_IO_WRITER_HH
+#ifndef KARABO_IO_WRITER_HH
+#define	KARABO_IO_WRITER_HH
 
 #include <karabo/util/Factory.hh>
 #include "iodll.hh"
@@ -17,7 +17,7 @@
 /**
  * The main European XFEL namespace
  */
-namespace exfel {
+namespace karabo {
     namespace io {
 
         /**
@@ -27,9 +27,9 @@ namespace exfel {
         class Writer {
         public:
 
-            EXFEL_CLASSINFO(Writer<Tdata>, "Writer", "1.0")
+            KARABO_CLASSINFO(Writer<Tdata>, "Writer", "1.0")
 
-            EXFEL_FACTORY_BASE_CLASS
+            KARABO_FACTORY_BASE_CLASS
 
             Writer() {
             }
@@ -47,7 +47,7 @@ namespace exfel {
     }
 }
 
-EXFEL_REGISTER_FACTORY_BASE_HH(exfel::io::Writer<exfel::util::Hash>, TEMPLATE_IO, DECLSPEC_IO)
-EXFEL_REGISTER_FACTORY_BASE_HH(exfel::io::Writer<exfel::util::Schema>, TEMPLATE_IO, DECLSPEC_IO)
+KARABO_REGISTER_FACTORY_BASE_HH(karabo::io::Writer<karabo::util::Hash>, TEMPLATE_IO, DECLSPEC_IO)
+KARABO_REGISTER_FACTORY_BASE_HH(karabo::io::Writer<karabo::util::Schema>, TEMPLATE_IO, DECLSPEC_IO)
 
 #endif

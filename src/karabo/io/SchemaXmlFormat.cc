@@ -15,16 +15,16 @@
 
 #include "SchemaXmlFormat.hh"
 
-EXFEL_REGISTER_FACTORY_CC(exfel::io::Format<exfel::util::Schema>, exfel::io::SchemaXmlFormat)
+KARABO_REGISTER_FACTORY_CC(karabo::io::Format<karabo::util::Schema>, karabo::io::SchemaXmlFormat)
 
-namespace exfel {
+namespace karabo {
     namespace io {
         
         using namespace std;
-        using namespace exfel::util;
-        using namespace exfel::tinyxml;
+        using namespace karabo::util;
+        using namespace karabo::tinyxml;
 
-        void SchemaXmlFormat::expectedParameters(exfel::util::Schema& expected) {
+        void SchemaXmlFormat::expectedParameters(karabo::util::Schema& expected) {
 
             INT32_ELEMENT(expected)
                     .key("indentation")
@@ -60,7 +60,7 @@ namespace exfel {
                     .commit();
         }
 
-        void SchemaXmlFormat::configure(const exfel::util::Hash& input) {
+        void SchemaXmlFormat::configure(const karabo::util::Hash& input) {
 
             input.get("indentation", m_indentation);
             input.get("printDataType", m_printDataType);
@@ -71,9 +71,9 @@ namespace exfel {
         /**
          * Reading a configuration file.
          * Function reads configuration file (XML Document) and
-         * creates an object of the class exfel::util::Schema
+         * creates an object of the class karabo::util::Schema
          * @param in Input parameter representing XML document
-         * @param out Output parameter representing object of the class exfel::util::Schema
+         * @param out Output parameter representing object of the class karabo::util::Schema
          */
         void SchemaXmlFormat::convert(stringstream& in, Schema& out) {
             try {
@@ -219,9 +219,9 @@ namespace exfel {
 
         /**
          * Writing a configuration file.
-         * Function gets as input an object of the class exfel::util::Schema
+         * Function gets as input an object of the class karabo::util::Schema
          * and creates a configuration file in XML format.
-         * @param in Input parameter representing an object of the class exfel::util::Schema
+         * @param in Input parameter representing an object of the class karabo::util::Schema
          * @param out Output parameter representing constructed XML Document
          */
         void SchemaXmlFormat::convert(const Schema& in, stringstream& out) {
@@ -248,7 +248,7 @@ namespace exfel {
                 r_createXmlFile(in.get<Schema > (rootKey), rootElem);
             } else {//If there are no Schema root element here, create artificial root
                 // Create artificial root
-                TiXmlElement* rootElem = new TiXmlElement("exfel");
+                TiXmlElement* rootElem = new TiXmlElement("karabo");
                 rootElem->SetAttribute("artificial", ""); // Flag this root as being artificial
                 doc.LinkEndChild(rootElem);
                 r_createXmlFile(in, rootElem);
@@ -258,8 +258,8 @@ namespace exfel {
         }
 
         /**
-         * Recursive function for creating an XML document from an object of the class exfel::util::Schema
-         * @param data Input parameter representing the object of the class exfel::util::Schema
+         * Recursive function for creating an XML document from an object of the class karabo::util::Schema
+         * @param data Input parameter representing the object of the class karabo::util::Schema
          * @param pTheElement Input parameter is an XML element (as defined by TinyXml) that will be recursively constructed
          */
         void SchemaXmlFormat::r_createXmlFile(const Schema& data, TiXmlElement* pTheElement) {
@@ -383,49 +383,49 @@ namespace exfel {
 
         } //SchemaXmlFormat::r_createXmlFile
 
-        void SchemaXmlFormat::fillXmlElementUINT8(const char* typeOfElement, const std::string& nameOfElement, const exfel::util::Schema& data, TiXmlElement* pTheElement) const {
+        void SchemaXmlFormat::fillXmlElementUINT8(const char* typeOfElement, const std::string& nameOfElement, const karabo::util::Schema& data, TiXmlElement* pTheElement) const {
 
             TiXmlElement* newElement = new TiXmlElement(nameOfElement.c_str());
             if (m_printDataType) {
                 newElement->SetAttribute("dataType", typeOfElement);
             }
             int x = data.get<unsigned char>(nameOfElement);
-            std::string elemAsString = exfel::util::String::toString(x);
+            std::string elemAsString = karabo::util::String::toString(x);
             TiXmlText* text = new TiXmlText(elemAsString.c_str());
             newElement->LinkEndChild(text);
 
             pTheElement->LinkEndChild(newElement);
         }
 
-        void SchemaXmlFormat::fillXmlElementINT8(const char* typeOfElement, const std::string& nameOfElement, const exfel::util::Schema& data, TiXmlElement* pTheElement) const {
+        void SchemaXmlFormat::fillXmlElementINT8(const char* typeOfElement, const std::string& nameOfElement, const karabo::util::Schema& data, TiXmlElement* pTheElement) const {
 
             TiXmlElement* newElement = new TiXmlElement(nameOfElement.c_str());
             if (m_printDataType) {
                 newElement->SetAttribute("dataType", typeOfElement);
             }
             int x = data.get<signed char>(nameOfElement);
-            std::string elemAsString = exfel::util::String::toString(x);
+            std::string elemAsString = karabo::util::String::toString(x);
             TiXmlText* text = new TiXmlText(elemAsString.c_str());
             newElement->LinkEndChild(text);
 
             pTheElement->LinkEndChild(newElement);
         }
 
-        void SchemaXmlFormat::fillXmlElementCHAR(const char* typeOfElement, const std::string& nameOfElement, const exfel::util::Schema& data, TiXmlElement* pTheElement) const {
+        void SchemaXmlFormat::fillXmlElementCHAR(const char* typeOfElement, const std::string& nameOfElement, const karabo::util::Schema& data, TiXmlElement* pTheElement) const {
 
             TiXmlElement* newElement = new TiXmlElement(nameOfElement.c_str());
             if (m_printDataType) {
                 newElement->SetAttribute("dataType", typeOfElement);
             }
             int x = data.get<char>(nameOfElement);
-            std::string elemAsString = exfel::util::String::toString(x);
+            std::string elemAsString = karabo::util::String::toString(x);
             TiXmlText* text = new TiXmlText(elemAsString.c_str());
             newElement->LinkEndChild(text);
 
             pTheElement->LinkEndChild(newElement);
         }
 
-        void SchemaXmlFormat::fillXmlElementWithItemsBool(const char* typeOfElement, const std::string& nameOfElement, const exfel::util::Schema& data, TiXmlElement* pTheElement) const {
+        void SchemaXmlFormat::fillXmlElementWithItemsBool(const char* typeOfElement, const std::string& nameOfElement, const karabo::util::Schema& data, TiXmlElement* pTheElement) const {
 
             try {
 
@@ -438,7 +438,7 @@ namespace exfel {
                 BOOST_FOREACH(bool elem, arrayOfElements) {
                     TiXmlElement* itemElement = new TiXmlElement("item");
                     newElement->LinkEndChild(itemElement);
-                    std::string elemAsString = exfel::util::String::toString(elem);
+                    std::string elemAsString = karabo::util::String::toString(elem);
                     TiXmlText* text = new TiXmlText(elemAsString.c_str());
                     itemElement->LinkEndChild(text);
                 }
@@ -450,7 +450,7 @@ namespace exfel {
 
         }//SchemaXmlFormat::fillXmlBoolDeque
 
-        void SchemaXmlFormat::fillXmlElementWithItemsUINT8(const char* typeOfElement, const std::string& nameOfElement, const exfel::util::Schema& data, TiXmlElement* pTheElement) const {
+        void SchemaXmlFormat::fillXmlElementWithItemsUINT8(const char* typeOfElement, const std::string& nameOfElement, const karabo::util::Schema& data, TiXmlElement* pTheElement) const {
 
             try {
 
@@ -463,7 +463,7 @@ namespace exfel {
                     int x = elem;
                     TiXmlElement* itemElement = new TiXmlElement("item");
                     newElement->LinkEndChild(itemElement);
-                    std::string elemAsString = exfel::util::String::toString(x);
+                    std::string elemAsString = karabo::util::String::toString(x);
                     TiXmlText* text = new TiXmlText(elemAsString.c_str());
                     itemElement->LinkEndChild(text);
 
@@ -474,7 +474,7 @@ namespace exfel {
             }
         }
 
-        void SchemaXmlFormat::fillXmlElementWithItemsINT8(const char* typeOfElement, const std::string& nameOfElement, const exfel::util::Schema& data, TiXmlElement* pTheElement) const {
+        void SchemaXmlFormat::fillXmlElementWithItemsINT8(const char* typeOfElement, const std::string& nameOfElement, const karabo::util::Schema& data, TiXmlElement* pTheElement) const {
 
             try {
 
@@ -487,7 +487,7 @@ namespace exfel {
                     int x = elem;
                     TiXmlElement* itemElement = new TiXmlElement("item");
                     newElement->LinkEndChild(itemElement);
-                    std::string elemAsString = exfel::util::String::toString(x);
+                    std::string elemAsString = karabo::util::String::toString(x);
                     TiXmlText* text = new TiXmlText(elemAsString.c_str());
                     itemElement->LinkEndChild(text);
 
@@ -498,7 +498,7 @@ namespace exfel {
             }
         }
 
-        void SchemaXmlFormat::fillXmlElementWithItemsCHAR(const char* typeOfElement, const std::string& nameOfElement, const exfel::util::Schema& data, TiXmlElement* pTheElement) const {
+        void SchemaXmlFormat::fillXmlElementWithItemsCHAR(const char* typeOfElement, const std::string& nameOfElement, const karabo::util::Schema& data, TiXmlElement* pTheElement) const {
 
             try {
 
@@ -511,7 +511,7 @@ namespace exfel {
                     int x = elem;
                     TiXmlElement* itemElement = new TiXmlElement("item");
                     newElement->LinkEndChild(itemElement);
-                    std::string elemAsString = exfel::util::String::toString(x);
+                    std::string elemAsString = karabo::util::String::toString(x);
                     TiXmlText* text = new TiXmlText(elemAsString.c_str());
                     itemElement->LinkEndChild(text);
 
@@ -523,4 +523,4 @@ namespace exfel {
         }
 
     } // namespace io
-} // namespace exfel
+} // namespace karabo

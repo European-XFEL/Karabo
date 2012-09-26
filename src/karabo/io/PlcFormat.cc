@@ -12,12 +12,12 @@
 
 using namespace std;
 using namespace boost::assign;
-using namespace exfel::util;
+using namespace karabo::util;
 
 // TODO Currently taken out
-//EXFEL_REGISTER_FACTORY_CC(exfel::io::Format<exfel::util::Hash>, exfel::io::PlcFormat) 
+//KARABO_REGISTER_FACTORY_CC(karabo::io::Format<karabo::util::Hash>, karabo::io::PlcFormat) 
 
-namespace exfel {
+namespace karabo {
     namespace io {
 
         struct PlcTypeMap {
@@ -53,8 +53,8 @@ namespace exfel {
                 VECTOR_FLOAT // std::vector<std::float>
             };
 
-            static std::map<exfel::util::Types::Type, Type> toProType;
-            static std::map<Type, exfel::util::Types::Type> fromProType;
+            static std::map<karabo::util::Types::Type, Type> toProType;
+            static std::map<Type, karabo::util::Types::Type> fromProType;
         };
 
         void PlcFormat::expectedParameters(Schema& expected) {

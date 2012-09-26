@@ -11,12 +11,12 @@
 #include <net-snmp/net-snmp-includes.h>
 
 using namespace std;
-using namespace exfel::util;
+using namespace karabo::util;
 
-namespace exfel {
+namespace karabo {
     namespace net {
 
-        EXFEL_REGISTER_FACTORY_CC(AbstractIOService, SnmpIOService)
+        KARABO_REGISTER_FACTORY_CC(AbstractIOService, SnmpIOService)
 
         void SnmpIOService::run() {
 

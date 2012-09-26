@@ -7,15 +7,15 @@
  */
 
 
-#ifndef EXFEL_UTIL_CLASSINFO_HH
-#define	EXFEL_UTIL_CLASSINFO_HH
+#ifndef KARABO_UTIL_CLASSINFO_HH
+#define	KARABO_UTIL_CLASSINFO_HH
 
 #include <string>
 #include <boost/current_function.hpp>
 
 #include "utildll.hh"
 
-namespace exfel {
+namespace karabo {
   namespace util {
 
     class DECLSPEC_UTIL ClassInfo {
@@ -44,9 +44,9 @@ namespace exfel {
 
 // This macro should be called in header file, inside public section of the class declaration (see tests/BobbyCar.hh)
 // It provides two methods which can be used for type introspection. The macro can be used in any class.
-#define EXFEL_CLASSINFO(className, classId, classVersion)\
-static exfel::util::ClassInfo classInfo() { return exfel::util::ClassInfo(classId, BOOST_CURRENT_FUNCTION, classVersion); } \
-virtual exfel::util::ClassInfo getClassInfo() const { return classInfo(); } \
+#define KARABO_CLASSINFO(className, classId, classVersion)\
+static karabo::util::ClassInfo classInfo() { return karabo::util::ClassInfo(classId, BOOST_CURRENT_FUNCTION, classVersion); } \
+virtual karabo::util::ClassInfo getClassInfo() const { return classInfo(); } \
 typedef className Self;
 
 
@@ -54,5 +54,5 @@ typedef className Self;
 }
 
 
-#endif	/* EXFEL_UTIL_CLASSINFO_HH */
+#endif	/* KARABO_UTIL_CLASSINFO_HH */
 

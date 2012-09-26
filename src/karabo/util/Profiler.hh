@@ -18,7 +18,7 @@
 #include "Timer.hh"
 #include "utildll.hh"
 
-namespace exfel {
+namespace karabo {
     namespace util {
 
         class DECLSPEC_UTIL Profiler {

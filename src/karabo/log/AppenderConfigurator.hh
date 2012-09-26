@@ -11,8 +11,8 @@
 
 
 
-#ifndef EXFEL_LOGCONFIG_APPENDERCONFIGURATOR_HH
-#define	EXFEL_LOGCONFIG_APPENDERCONFIGURATOR_HH
+#ifndef KARABO_LOGCONFIG_APPENDERCONFIGURATOR_HH
+#define	KARABO_LOGCONFIG_APPENDERCONFIGURATOR_HH
 #include <string>
 #include <karabo/util/Factory.hh>
 #include <log4cpp/Appender.hh>
@@ -20,13 +20,13 @@
 #include <log4cpp/Layout.hh>
 #include "logdll.hh"
 
-namespace exfel {
+namespace karabo {
   namespace log {
 
     class AppenderConfigurator {
     public:
-      EXFEL_CLASSINFO(AppenderConfigurator, "Appender", "1.0")
-      EXFEL_FACTORY_BASE_CLASS
+      KARABO_CLASSINFO(AppenderConfigurator, "Appender", "1.0")
+      KARABO_FACTORY_BASE_CLASS
       
     private:
 
@@ -57,20 +57,20 @@ namespace exfel {
 
       virtual log4cpp::Appender* getConfigured();
 
-      static void expectedParameters(exfel::util::Schema& expected);
-      void configure(const exfel::util::Hash& input);
+      static void expectedParameters(karabo::util::Schema& expected);
+      void configure(const karabo::util::Hash& input);
 
     private:
-      void configureName(const exfel::util::Hash& input);
-      void configureThreshold(const exfel::util::Hash& input);
-      void configureLayout(const exfel::util::Hash& input);
+      void configureName(const karabo::util::Hash& input);
+      void configureThreshold(const karabo::util::Hash& input);
+      void configureLayout(const karabo::util::Hash& input);
 
 
     };
   }
 }
 
-EXFEL_REGISTER_FACTORY_BASE_HH(exfel::log::AppenderConfigurator, TEMPLATE_LOG, DECLSPEC_LOG)
+KARABO_REGISTER_FACTORY_BASE_HH(karabo::log::AppenderConfigurator, TEMPLATE_LOG, DECLSPEC_LOG)
 
-#endif	/* EXFEL_LOGCONFIG_APPENDERCONFIGURATOR_HH */
+#endif	/* KARABO_LOGCONFIG_APPENDERCONFIGURATOR_HH */
 

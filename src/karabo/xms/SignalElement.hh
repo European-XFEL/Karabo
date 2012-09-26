@@ -9,24 +9,24 @@
  */
 
 
-#ifndef EXFEL_UTIL_SIGNALELEMENT_HH
-#define	EXFEL_UTIL_SIGNALELEMENT_HH
+#ifndef KARABO_UTIL_SIGNALELEMENT_HH
+#define	KARABO_UTIL_SIGNALELEMENT_HH
 
 #include <karabo/util/ComplexElement.hh>
 
-namespace exfel {
+namespace karabo {
     namespace xms {
 
         class SignalElement {
             
         protected:
 
-            exfel::util::ComplexElement m_outerElement;
-            exfel::util::SimpleElement<std::vector<std::string> > m_connectedSlots;
+            karabo::util::ComplexElement m_outerElement;
+            karabo::util::SimpleElement<std::vector<std::string> > m_connectedSlots;
             
         public:
 
-            SignalElement(exfel::util::Schema& expected) : m_outerElement(exfel::util::ComplexElement(expected)) {
+            SignalElement(karabo::util::Schema& expected) : m_outerElement(karabo::util::ComplexElement(expected)) {
                 m_outerElement.reconfigureAndRead();
                 m_connectedSlots.key("connectedSlots");
                 m_connectedSlots.displayedName("Connected Slots");
@@ -76,7 +76,7 @@ namespace exfel {
             }
 
             void commit() {
-                exfel::util::Schema& innerElement = m_outerElement.commit();
+                karabo::util::Schema& innerElement = m_outerElement.commit();
                 m_connectedSlots.commit(innerElement);
             }
         };

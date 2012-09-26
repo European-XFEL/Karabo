@@ -15,11 +15,11 @@
 #include "log4cpp/OstreamAppender.hh"
 
 using namespace std;
-using namespace exfel::util;
+using namespace karabo::util;
 using namespace log4cpp;
 
 
-namespace exfel {
+namespace karabo {
   namespace log {
 
     OstreamAppenderConfigurator::OstreamAppenderConfigurator() {
@@ -54,7 +54,7 @@ namespace exfel {
       m_out = input.get<string > ("output");
     }
 
-    EXFEL_REGISTER_FACTORY_CC(AppenderConfigurator, OstreamAppenderConfigurator)
+    KARABO_REGISTER_FACTORY_CC(AppenderConfigurator, OstreamAppenderConfigurator)
 
   }
 }

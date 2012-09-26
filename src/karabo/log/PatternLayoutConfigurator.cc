@@ -13,11 +13,11 @@
 
 
 using namespace std;
-using namespace exfel::util;
+using namespace karabo::util;
 using log4cpp::Layout;
 using log4cpp::PatternLayout;
 
-namespace exfel {
+namespace karabo {
   namespace log {
 
     PatternLayoutConfigurator::PatternLayoutConfigurator() {
@@ -49,7 +49,7 @@ namespace exfel {
       return layout;
     }
 
-    EXFEL_REGISTER_FACTORY_CC(LayoutConfigurator, PatternLayoutConfigurator)
+    KARABO_REGISTER_FACTORY_CC(LayoutConfigurator, PatternLayoutConfigurator)
 
   }
 }

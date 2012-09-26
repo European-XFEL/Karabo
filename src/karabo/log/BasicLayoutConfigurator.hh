@@ -8,15 +8,15 @@
  */
 
 
-#ifndef EXFEL_LOGCONFIG_BASICLAYOUTCONFIGURATOR_HH
-#define	EXFEL_LOGCONFIG_BASICLAYOUTCONFIGURATOR_HH
+#ifndef KARABO_LOGCONFIG_BASICLAYOUTCONFIGURATOR_HH
+#define	KARABO_LOGCONFIG_BASICLAYOUTCONFIGURATOR_HH
 
 #include "LayoutConfigurator.hh"
 #include <karabo/util/Factory.hh>
 /**
  * The main European XFEL namespace
  */
-namespace exfel {
+namespace karabo {
 
   /**
    * Namespace for package log
@@ -26,18 +26,18 @@ namespace exfel {
     class BasicLayoutConfigurator : public LayoutConfigurator {
     public:
       
-      EXFEL_CLASSINFO(BasicLayoutConfigurator, "Basic", "1.0")
+      KARABO_CLASSINFO(BasicLayoutConfigurator, "Basic", "1.0")
 
       BasicLayoutConfigurator();
       virtual ~BasicLayoutConfigurator();
       log4cpp::Layout* create();
 
-      static void expectedParameters(exfel::util::Schema& expected);
-      void configure(const exfel::util::Hash& input);
+      static void expectedParameters(karabo::util::Schema& expected);
+      void configure(const karabo::util::Hash& input);
 
     };
 
   }
 }
 
-#endif	/* EXFEL_LOGCONFIG_BASICLAYOUTCONFIGURATOR_HH */
+#endif	/* KARABO_LOGCONFIG_BASICLAYOUTCONFIGURATOR_HH */

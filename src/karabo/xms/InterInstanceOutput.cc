@@ -10,11 +10,11 @@
 
 #include "InterInstanceOutput.hh"
 
-namespace exfel {
+namespace karabo {
     namespace xms {
 
-        EXFEL_REGISTER_FACTORY_2_CC(AbstractOutput, Output<exfel::util::Hash >, InterInstanceOutput<exfel::util::Hash>)
-        EXFEL_REGISTER_FACTORY_CC(Output<exfel::util::Hash >, InterInstanceOutput<exfel::util::Hash>)
+        KARABO_REGISTER_FACTORY_2_CC(AbstractOutput, Output<karabo::util::Hash >, InterInstanceOutput<karabo::util::Hash>)
+        KARABO_REGISTER_FACTORY_CC(Output<karabo::util::Hash >, InterInstanceOutput<karabo::util::Hash>)
         
     }
 }

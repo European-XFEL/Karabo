@@ -11,7 +11,7 @@
 
 #include "Memory.hh"
 
-namespace exfel {
+namespace karabo {
     namespace xms {
 
        // Static initializations of specialized members

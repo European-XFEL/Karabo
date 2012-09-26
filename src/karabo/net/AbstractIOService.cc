@@ -1,6 +1,6 @@
 #include "AbstractIOService.hh"
 
-namespace exfel {
+namespace karabo {
     namespace net {
      
     }

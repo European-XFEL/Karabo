@@ -9,19 +9,19 @@
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
 
-#ifndef EXFEL_CORE_HASHDATABASE_HH
-#define	EXFEL_CORE_HASHDATABASE_HH
+#ifndef KARABO_CORE_HASHDATABASE_HH
+#define	KARABO_CORE_HASHDATABASE_HH
 
 #include "Device.hh"
 
 // TODO This whole class could be moved to IO-Package from a dependency point of view
 
 
-namespace exfel {
+namespace karabo {
     namespace core {
 
-#define EXFEL_DB_NAME "Database"
-#define EXFEL_DB_FILE "database.xml"
+#define KARABO_DB_NAME "Database"
+#define KARABO_DB_FILE "database.xml"
 
         
         
@@ -29,7 +29,7 @@ namespace exfel {
             
         public: // functions
             
-            typedef std::vector<exfel::util::Hash> ResultType;
+            typedef std::vector<karabo::util::Hash> ResultType;
 
             static bool readDatabase();
             
@@ -37,11 +37,11 @@ namespace exfel {
 
             static void saveDatabase();
             
-            static unsigned int insert(const std::string& tableName, exfel::util::Hash keyValuePairs);
+            static unsigned int insert(const std::string& tableName, karabo::util::Hash keyValuePairs);
             
         public: // members
             
-            static exfel::util::Hash m_database;
+            static karabo::util::Hash m_database;
             
             static boost::mutex m_databaseMutex;
             
@@ -49,19 +49,19 @@ namespace exfel {
     }
 }
 
-#define EXFEL_DB_READ HashDatabase::readDatabase();
+#define KARABO_DB_READ HashDatabase::readDatabase();
 
-#define EXFEL_DB_SETUP HashDatabase::setupDatabase();
+#define KARABO_DB_SETUP HashDatabase::setupDatabase();
 
-#define EXFEL_DB_SAVE HashDatabase::saveDatabase();
+#define KARABO_DB_SAVE HashDatabase::saveDatabase();
 
-#define EXFEL_DB_INSERT(tableName, keyValuePairs) HashDatabase::insert(tableName, keyValuePairs);
+#define KARABO_DB_INSERT(tableName, keyValuePairs) HashDatabase::insert(tableName, keyValuePairs);
 
-#define EXFEL_DB_SELECT(result, what, tableName, condition) { \
+#define KARABO_DB_SELECT(result, what, tableName, condition) { \
     boost::mutex::scoped_lock lock(HashDatabase::m_databaseMutex); \
     std::vector<std::string> _fields; \
     boost::split(_fields, what, boost::is_any_of(",")); \
-    Hash& database = HashDatabase::m_database.get<Hash > (EXFEL_DB_NAME); \
+    Hash& database = HashDatabase::m_database.get<Hash > (KARABO_DB_NAME); \
     vector<Hash>& _table = database.get<vector<Hash> >(tableName); \
     Hash resultSet; \
     for (size_t i = 0; i < _table.size(); ++i) { \
@@ -79,9 +79,9 @@ namespace exfel {
     } \
 }
 
-#define EXFEL_DB_UPDATE(tableName, keyValuePairs, condition) { \
+#define KARABO_DB_UPDATE(tableName, keyValuePairs, condition) { \
     boost::mutex::scoped_lock lock(HashDatabase::m_databaseMutex); \
-    Hash& database = HashDatabase::m_database.get<Hash > (EXFEL_DB_NAME); \
+    Hash& database = HashDatabase::m_database.get<Hash > (KARABO_DB_NAME); \
     vector<Hash>& table = database.get<vector<Hash> >(tableName); \
     for (size_t i = 0; i < table.size(); ++i) { \
         Hash& row = table[i]; \
@@ -91,9 +91,9 @@ namespace exfel {
     } \
 }
 
-#define EXFEL_DB_DELETE(tableName, condition) { \
+#define KARABO_DB_DELETE(tableName, condition) { \
     boost::mutex::scoped_lock lock(HashDatabase::m_databaseMutex); \
-    Hash& database = HashDatabase::m_database.get<Hash > (EXFEL_DB_NAME); \
+    Hash& database = HashDatabase::m_database.get<Hash > (KARABO_DB_NAME); \
     vector<Hash>& table = database.get<vector<Hash> >(tableName); \
     if (table.size() > 0) { \
         vector<vector<Hash>::iterator > toBeDeleted; \

@@ -8,38 +8,38 @@
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
 
-#ifndef EXFEL_IO_LATEXFORMAT_HH
-#define	EXFEL_IO_LATEXFORMAT_HH
+#ifndef KARABO_IO_LATEXFORMAT_HH
+#define	KARABO_IO_LATEXFORMAT_HH
 
 #include <karabo/util/Factory.hh>
 #include <boost/foreach.hpp>
 
 #include "Format.hh"
 
-namespace exfel {
+namespace karabo {
 
   namespace io {
 
     /**
      * The LatexFormat class.
      */
-    class LatexFormat : public Format<exfel::util::Schema> {
+    class LatexFormat : public Format<karabo::util::Schema> {
     public:
       
-      EXFEL_CLASSINFO(LatexFormat, "Latex", "1.0")
+      KARABO_CLASSINFO(LatexFormat, "Latex", "1.0")
 
       LatexFormat() {
       };
 
-      static void expectedParameters(exfel::util::Schema& expected);
+      static void expectedParameters(karabo::util::Schema& expected);
        
-      void configure(const exfel::util::Hash& input);
+      void configure(const karabo::util::Hash& input);
 
-      void convert(std::stringstream& in, exfel::util::Schema& out);
+      void convert(std::stringstream& in, karabo::util::Schema& out);
 
-      void convert(const exfel::util::Schema& in, std::stringstream& out);
+      void convert(const karabo::util::Schema& in, std::stringstream& out);
 
-      void formatExpectedParameters(const exfel::util::Schema& expected, std::stringstream& stream) const;
+      void formatExpectedParameters(const karabo::util::Schema& expected, std::stringstream& stream) const;
 
       virtual ~LatexFormat() {
       };
@@ -47,6 +47,6 @@ namespace exfel {
     private:
     };
   } // namespace io
-} // namespace exfel
+} // namespace karabo
 
 #endif	

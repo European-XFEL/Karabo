@@ -11,11 +11,11 @@
 #include "TextFileReader.hh"
 
 
-//namespace exfel {
+//namespace karabo {
   //namespace io {
 
-    EXFEL_REGISTER_FACTORY_CC(exfel::io::Reader<exfel::util::Hash>, exfel::io::TextFileReader<exfel::util::Hash> )
-    EXFEL_REGISTER_FACTORY_CC(exfel::io::Reader<exfel::util::Schema>, exfel::io::TextFileReader<exfel::util::Schema>)
+    KARABO_REGISTER_FACTORY_CC(karabo::io::Reader<karabo::util::Hash>, karabo::io::TextFileReader<karabo::util::Hash> )
+    KARABO_REGISTER_FACTORY_CC(karabo::io::Reader<karabo::util::Schema>, karabo::io::TextFileReader<karabo::util::Schema>)
    
   //} // namespace io
-//} // namespace exfel
+//} // namespace karabo

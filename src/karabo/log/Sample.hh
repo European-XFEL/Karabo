@@ -8,13 +8,13 @@
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
 
-#ifndef EXFEL_LOG_SAMPLE_HH
-#define EXFEL_LOG_SAMPLE_HH
+#ifndef KARABO_LOG_SAMPLE_HH
+#define KARABO_LOG_SAMPLE_HH
 
 /**
  *  Defines top level namespace for European XFEL software
  */
-namespace exfel {
+namespace karabo {
   /**
    *  Defines namespace for log package
    */
@@ -31,6 +31,6 @@ namespace exfel {
       
     };
   } // namespace log
-} // namespace exfel
+} // namespace karabo
 
-#endif // EXFEL_LOG_SAMPLE_HH
+#endif // KARABO_LOG_SAMPLE_HH

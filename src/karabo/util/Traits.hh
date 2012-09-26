@@ -10,10 +10,10 @@
  */
 
 
-#ifndef EXFEL_UTIL_TRAITS_HH
-#define	EXFEL_UTIL_TRAITS_HH
+#ifndef KARABO_UTIL_TRAITS_HH
+#define	KARABO_UTIL_TRAITS_HH
 
-namespace exfel {
+namespace karabo {
   namespace util {
 
     template<class Class, class Argument, void (Class::*)(const Argument&)>
@@ -37,5 +37,5 @@ namespace exfel {
 
 
 
-#endif	/* EXFEL_UTIL_TRAITS_HH */
+#endif	/* KARABO_UTIL_TRAITS_HH */
 

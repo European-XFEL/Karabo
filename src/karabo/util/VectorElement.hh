@@ -10,12 +10,12 @@
  */
 
 
-#ifndef EXFEL_UTIL_VECTORELEMENT_HH
-#define	EXFEL_UTIL_VECTORELEMENT_HH
+#ifndef KARABO_UTIL_VECTORELEMENT_HH
+#define	KARABO_UTIL_VECTORELEMENT_HH
 
 #include "GenericElement.hh"
 
-namespace exfel {
+namespace karabo {
     namespace util {
 
         template<typename T,

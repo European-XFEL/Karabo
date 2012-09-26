@@ -5,8 +5,8 @@
  * Created on June 14, 2011, 11:40 AM
  */
 
-#ifndef EXFEL_IO_HASHBASEFORMAT_HH
-#define	EXFEL_IO_HASHBASEFORMAT_HH
+#ifndef KARABO_IO_HASHBASEFORMAT_HH
+#define	KARABO_IO_HASHBASEFORMAT_HH
 
 #include <istream>
 #include <ostream>
@@ -15,16 +15,16 @@
 #include <karabo/util/Hash.hh>
 #include "Format.hh"
 
-namespace exfel {
+namespace karabo {
     namespace io {
 
-        class HashBaseFormat : public Format<exfel::util::Hash> {
-            Format<exfel::util::Schema>::Pointer m_schemaFormat;
+        class HashBaseFormat : public Format<karabo::util::Hash> {
+            Format<karabo::util::Schema>::Pointer m_schemaFormat;
 
         public:
 
             HashBaseFormat() {
-                m_schemaFormat = Format<exfel::util::Schema>::create("Xml");
+                m_schemaFormat = Format<karabo::util::Schema>::create("Xml");
             }
 
             virtual ~HashBaseFormat() {
@@ -42,7 +42,7 @@ namespace exfel {
                 os.write(reinterpret_cast<const char*> (buffer), size);
             }
 
-            int readHashValue(std::istream& is, exfel::util::Hash& value, const std::string& sep) {
+            int readHashValue(std::istream& is, karabo::util::Hash& value, const std::string& sep) {
                 int hashLength;
                 int size = readFrom(is, &hashLength, sizeof (int));
                 std::string sbuf;
@@ -58,7 +58,7 @@ namespace exfel {
                 return size;
             }
 
-            void writeHashValue(std::ostream& os, const exfel::util::Hash& hash, const std::string& sep) {
+            void writeHashValue(std::ostream& os, const karabo::util::Hash& hash, const std::string& sep) {
                 std::stringstream out(std::stringstream::out);
                 writeStream(out, hash, sep);
                 const std::string& value = out.str();
@@ -67,21 +67,21 @@ namespace exfel {
                 this->writeTo(os, value.c_str(), vlen);
             }
 
-            int readVectorHash(std::istream& is, std::vector<exfel::util::Hash>& values, const std::string& sep) {
+            int readVectorHash(std::istream& is, std::vector<karabo::util::Hash>& values, const std::string& sep) {
                 int vsize;
                 int size = this->readFrom(is, &vsize, sizeof (int)); // read vector size
                 for (int i = 0; i < vsize; i++) {
-                    exfel::util::Hash value;
+                    karabo::util::Hash value;
                     size += this->readHashValue(is, value, sep); // read Hash object
                     values.push_back(value); // put it into vector
                 }
                 return size;
             }
 
-            void writeVectorHash(std::ostream& os, const std::vector<exfel::util::Hash>& values, const std::string& sep) {
+            void writeVectorHash(std::ostream& os, const std::vector<karabo::util::Hash>& values, const std::string& sep) {
                 int vlen = values.size();
                 this->writeTo(os, &vlen, sizeof (int)); // write number of entries in vector<Hash>
-                for (std::vector<exfel::util::Hash>::const_iterator it = values.begin(); it != values.end(); it++) {
+                for (std::vector<karabo::util::Hash>::const_iterator it = values.begin(); it != values.end(); it++) {
                     writeHashValue(os, *it, sep); // from hash to os
                 }
             }
@@ -94,8 +94,8 @@ namespace exfel {
 
             virtual int readKey(std::istream& is, std::string& path) = 0;
             virtual void writeKey(std::ostream& os, const std::string& path) = 0;
-            virtual int readType(std::istream& is, exfel::util::Types::Type& id) = 0;
-            virtual void writeType(std::ostream& os, exfel::util::Types::Type id) = 0;
+            virtual int readType(std::istream& is, karabo::util::Types::Type& id) = 0;
+            virtual void writeType(std::ostream& os, karabo::util::Types::Type id) = 0;
 
         protected:
 
@@ -144,7 +144,7 @@ namespace exfel {
                 writeTo(os, &(*it), vlen * sizeof (bool));
             }
 
-            void readStream(std::istream& is, exfel::util::Hash& hash, const std::string& sep) {
+            void readStream(std::istream& is, karabo::util::Hash& hash, const std::string& sep) {
                 // calculate the size of a stream
                 is.seekg(0, std::istream::end);
                 int streamSize = is.tellg();
@@ -157,7 +157,7 @@ namespace exfel {
                     streamSize -= rc;
                     if (streamSize <= 0) break;
 
-                    exfel::util::Types::Type id;
+                    karabo::util::Types::Type id;
                     rc = this->readType(is, id);
 
                     if (rc <= 0) break;
@@ -167,203 +167,203 @@ namespace exfel {
                     if (is.tellg() < 0) break;
 
                     switch (id) {
-                        case exfel::util::Types::BOOL:
+                        case karabo::util::Types::BOOL:
                         {
                             bool value;
                             rc = this->readValue<bool>(is, value);
                             hash.setFromPath(path, value, sep);
                             break;
                         }
-                        case exfel::util::Types::CHAR:
+                        case karabo::util::Types::CHAR:
                         {
                             char value;
                             rc = this->readValue<char>(is, value);
                             hash.setFromPath(path, value, sep);
                             break;
                         }
-                        case exfel::util::Types::INT8:
+                        case karabo::util::Types::INT8:
                         {
                             signed char value;
                             rc = this->readValue<signed char>(is, value);
                             hash.setFromPath(path, value, sep);
                             break;
                         }
-                        case exfel::util::Types::UINT8:
+                        case karabo::util::Types::UINT8:
                         {
                             unsigned char value;
                             rc = this->readValue<unsigned char>(is, value);
                             hash.setFromPath(path, value, sep);
                             break;
                         }
-                        case exfel::util::Types::INT16:
+                        case karabo::util::Types::INT16:
                         {
                             short value;
                             rc = this->readValue<short>(is, value);
                             hash.setFromPath(path, value, sep);
                             break;
                         }
-                        case exfel::util::Types::UINT16:
+                        case karabo::util::Types::UINT16:
                         {
                             unsigned short value;
                             rc = this->readValue<unsigned short>(is, value);
                             hash.setFromPath(path, value, sep);
                             break;
                         }
-                        case exfel::util::Types::INT32:
+                        case karabo::util::Types::INT32:
                         {
                             int value;
                             rc = this->readValue<int>(is, value);
                             hash.setFromPath(path, value, sep);
                             break;
                         }
-                        case exfel::util::Types::UINT32:
+                        case karabo::util::Types::UINT32:
                         {
                             unsigned int value;
                             rc = this->readValue<unsigned int>(is, value);
                             hash.setFromPath(path, value, sep);
                             break;
                         }
-                        case exfel::util::Types::INT64:
+                        case karabo::util::Types::INT64:
                         {
                             long long value;
                             rc = this->readValue<long long>(is, value);
                             hash.setFromPath(path, value, sep);
                             break;
                         }
-                        case exfel::util::Types::UINT64:
+                        case karabo::util::Types::UINT64:
                         {
                             unsigned long long value;
                             rc = this->readValue<unsigned long long>(is, value);
                             hash.setFromPath(path, value, sep);
                             break;
                         }
-                        case exfel::util::Types::FLOAT:
+                        case karabo::util::Types::FLOAT:
                         {
                             float value;
                             rc = this->readValue<float>(is, value);
                             hash.setFromPath(path, value, sep);
                             break;
                         }
-                        case exfel::util::Types::DOUBLE:
+                        case karabo::util::Types::DOUBLE:
                         {
                             double value;
                             rc = this->readValue<double>(is, value);
                             hash.setFromPath(path, value, sep);
                             break;
                         }
-                        case exfel::util::Types::STRING:
+                        case karabo::util::Types::STRING:
                         {
                             std::string value;
                             rc = this->readStringValue(is, value);
                             hash.setFromPath(path, value, sep);
                             break;
                         }
-                        case exfel::util::Types::HASH:
+                        case karabo::util::Types::HASH:
                         {
-                            exfel::util::Hash value;
+                            karabo::util::Hash value;
                             rc = this->readHashValue(is, value, sep);
                             hash.setFromPath(path, value, sep);
                             break;
                         }
-                        case exfel::util::Types::VECTOR_STRING:
+                        case karabo::util::Types::VECTOR_STRING:
                         {
                             std::vector<std::string> value;
                             rc = this->readVectorString(is, value);
                             hash.setFromPath(path, value, sep);
                             break;
                         }
-                        case exfel::util::Types::VECTOR_CHAR:
+                        case karabo::util::Types::VECTOR_CHAR:
                         {
                             std::vector<char> value;
                             rc = this->readVectorValue<char>(is, value);
                             hash.setFromPath(path, value, sep);
                             break;
                         }
-                        case exfel::util::Types::VECTOR_INT8:
+                        case karabo::util::Types::VECTOR_INT8:
                         {
                             std::vector<signed char> value;
                             rc = this->readVectorValue<signed char>(is, value);
                             hash.setFromPath(path, value, sep);
                             break;
                         }
-                        case exfel::util::Types::VECTOR_UINT8:
+                        case karabo::util::Types::VECTOR_UINT8:
                         {
                             std::vector<unsigned char> value;
                             rc = this->readVectorValue<unsigned char>(is, value);
                             hash.setFromPath(path, value, sep);
                             break;
                         }
-                        case exfel::util::Types::VECTOR_INT16:
+                        case karabo::util::Types::VECTOR_INT16:
                         {
                             std::vector<short> value;
                             rc = this->readVectorValue<short>(is, value);
                             hash.setFromPath(path, value, sep);
                             break;
                         }
-                        case exfel::util::Types::VECTOR_UINT16:
+                        case karabo::util::Types::VECTOR_UINT16:
                         {
                             std::vector<unsigned short> value;
                             rc = this->readVectorValue<unsigned short>(is, value);
                             hash.setFromPath(path, value, sep);
                             break;
                         }
-                        case exfel::util::Types::VECTOR_INT32:
+                        case karabo::util::Types::VECTOR_INT32:
                         {
                             std::vector<int> value;
                             rc = this->readVectorValue<int>(is, value);
                             hash.setFromPath(path, value, sep);
                             break;
                         }
-                        case exfel::util::Types::VECTOR_UINT32:
+                        case karabo::util::Types::VECTOR_UINT32:
                         {
                             std::vector<unsigned int> value;
                             rc = this->readVectorValue<unsigned int>(is, value);
                             hash.setFromPath(path, value, sep);
                             break;
                         }
-                        case exfel::util::Types::VECTOR_INT64:
+                        case karabo::util::Types::VECTOR_INT64:
                         {
                             std::vector<long long> value;
                             rc = this->readVectorValue<long long>(is, value);
                             hash.setFromPath(path, value, sep);
                             break;
                         }
-                        case exfel::util::Types::VECTOR_UINT64:
+                        case karabo::util::Types::VECTOR_UINT64:
                         {
                             std::vector<unsigned long long> value;
                             rc = this->readVectorValue<unsigned long long>(is, value);
                             hash.setFromPath(path, value, sep);
                             break;
                         }
-                        case exfel::util::Types::VECTOR_BOOL:
+                        case karabo::util::Types::VECTOR_BOOL:
                         {
                             std::deque<bool> value;
                             rc = this->readVectorOfBoolValue(is, value);
                             hash.setFromPath(path, value, sep);
                             break;
                         }
-                        case exfel::util::Types::VECTOR_DOUBLE:
+                        case karabo::util::Types::VECTOR_DOUBLE:
                         {
                             std::vector<double> value;
                             rc = this->readVectorValue<double>(is, value);
                             hash.setFromPath(path, value, sep);
                             break;
                         }
-                        case exfel::util::Types::VECTOR_FLOAT:
+                        case karabo::util::Types::VECTOR_FLOAT:
                         {
                             std::vector<float> value;
                             rc = this->readVectorValue<float>(is, value);
                             hash.setFromPath(path, value, sep);
                             break;
                         }
-                        case exfel::util::Types::VECTOR_HASH:
+                        case karabo::util::Types::VECTOR_HASH:
                         {
-                            std::vector<exfel::util::Hash> value;
+                            std::vector<karabo::util::Hash> value;
                             rc = this->readVectorHash(is, value, sep);
                             hash.setFromPath(path, value, sep);
                             break;
                         }
-                        case exfel::util::Types::SCHEMA:
+                        case karabo::util::Types::SCHEMA:
                         {
                             std::string value;
                             rc = this->readStringValue(is, value);
@@ -380,183 +380,183 @@ namespace exfel {
                 }
             }
 
-            void l_writeStream(std::ostream& os, const exfel::util::Hash& hash, exfel::util::Hash::const_iterator& it, const std::string& key, const std::string& sep) {
+            void l_writeStream(std::ostream& os, const karabo::util::Hash& hash, karabo::util::Hash::const_iterator& it, const std::string& key, const std::string& sep) {
                 writeKey(os, key);
-                exfel::util::Types::Type id = hash.getTypeAsId(it);
+                karabo::util::Types::Type id = hash.getTypeAsId(it);
                 this->writeType(os, id);
                 switch (id) {
-                    case exfel::util::Types::STRING:
-                    case exfel::util::Types::CONST_CHAR_PTR:
+                    case karabo::util::Types::STRING:
+                    case karabo::util::Types::CONST_CHAR_PTR:
                     {
                         std::string value = hash.getAsString(it);
                         this->writeStringValue(os, value);
                         break;
                     }
-                    case exfel::util::Types::HASH:
+                    case karabo::util::Types::HASH:
                     {
-                        const exfel::util::Hash& value = hash.get<exfel::util::Hash > (it);
+                        const karabo::util::Hash& value = hash.get<karabo::util::Hash > (it);
                         this->writeHashValue(os, value, sep);
                         break;
                     }
-                    case exfel::util::Types::VECTOR_HASH:
+                    case karabo::util::Types::VECTOR_HASH:
                     {
-                        const std::vector<exfel::util::Hash>& values = hash.get<std::vector<exfel::util::Hash> > (it);
+                        const std::vector<karabo::util::Hash>& values = hash.get<std::vector<karabo::util::Hash> > (it);
                         this->writeVectorHash(os, values, sep);
                         break;
                     }
-                    case exfel::util::Types::VECTOR_CHAR:
+                    case karabo::util::Types::VECTOR_CHAR:
                     {
                         const std::vector<char>& values = hash.get<std::vector<char> > (it);
                         this->writeVectorValue<char>(os, values);
                         break;
                     }
-                    case exfel::util::Types::VECTOR_INT8:
+                    case karabo::util::Types::VECTOR_INT8:
                     {
                         const std::vector<signed char>& values = hash.get < std::vector<signed char> > (it);
                         this->writeVectorValue<signed char>(os, values);
                         break;
                     }
-                    case exfel::util::Types::VECTOR_UINT8:
+                    case karabo::util::Types::VECTOR_UINT8:
                     {
                         const std::vector<unsigned char>& values = hash.get<std::vector<unsigned char> > (it);
                         this->writeVectorValue<unsigned char>(os, values);
                         break;
                     }
-                    case exfel::util::Types::VECTOR_INT16:
+                    case karabo::util::Types::VECTOR_INT16:
                     {
                         const std::vector<short>& values = hash.get<std::vector<short> > (it);
                         this->writeVectorValue<short>(os, values);
                         break;
                     }
-                    case exfel::util::Types::VECTOR_UINT16:
+                    case karabo::util::Types::VECTOR_UINT16:
                     {
                         const std::vector<unsigned short>& values = hash.get<std::vector<unsigned short> > (it);
                         this->writeVectorValue<unsigned short>(os, values);
                         break;
                     }
-                    case exfel::util::Types::VECTOR_INT32:
+                    case karabo::util::Types::VECTOR_INT32:
                     {
                         const std::vector<int>& values = hash.get<std::vector<int> > (it);
                         this->writeVectorValue<int>(os, values);
                         break;
                     }
-                    case exfel::util::Types::VECTOR_UINT32:
+                    case karabo::util::Types::VECTOR_UINT32:
                     {
                         const std::vector<unsigned int>& values = hash.get<std::vector<unsigned int> > (it);
                         this->writeVectorValue<unsigned int>(os, values);
                         break;
                     }
-                    case exfel::util::Types::VECTOR_INT64:
+                    case karabo::util::Types::VECTOR_INT64:
                     {
                         const std::vector<long long>& values = hash.get<std::vector<long long> > (it);
                         this->writeVectorValue<long long>(os, values);
                         break;
                     }
-                    case exfel::util::Types::VECTOR_UINT64:
+                    case karabo::util::Types::VECTOR_UINT64:
                     {
                         const std::vector<unsigned long long>& values = hash.get<std::vector<unsigned long long> > (it);
                         this->writeVectorValue<unsigned long long>(os, values);
                         break;
                     }
-                    case exfel::util::Types::VECTOR_FLOAT:
+                    case karabo::util::Types::VECTOR_FLOAT:
                     {
                         const std::vector<float>& values = hash.get<std::vector<float> > (it);
                         this->writeVectorValue<float>(os, values);
                         break;
                     }
-                    case exfel::util::Types::VECTOR_DOUBLE:
+                    case karabo::util::Types::VECTOR_DOUBLE:
                     {
                         const std::vector<double>& values = hash.get<std::vector<double> > (it);
                         this->writeVectorValue<double>(os, values);
                         break;
                     }
-                    case exfel::util::Types::VECTOR_STRING:
+                    case karabo::util::Types::VECTOR_STRING:
                     {
                         const std::vector<std::string>& values = hash.get<std::vector<std::string> > (it);
                         this->writeVectorString(os, values);
                         break;
                     }
-                    case exfel::util::Types::VECTOR_BOOL:
+                    case karabo::util::Types::VECTOR_BOOL:
                     {
                         const std::deque<bool>& values = hash.get < std::deque<bool> >(it);
                         this->writeVectorOfBoolValue(os, values);
                         break;
                     }
-                    case exfel::util::Types::BOOL:
+                    case karabo::util::Types::BOOL:
                     {
                         bool value = hash.get<bool > (it);
                         this->writeValue<bool >(os, value);
                         break;
                     }
-                    case exfel::util::Types::CHAR:
+                    case karabo::util::Types::CHAR:
                     {
                         char value = hash.get<char>(it);
                         this->writeValue<char >(os, value);
                         break;
                     }
-                    case exfel::util::Types::INT8:
+                    case karabo::util::Types::INT8:
                     {
                         signed char value = hash.get<signed char>(it);
                         this->writeValue<signed char >(os, value);
                         break;
                     }
-                    case exfel::util::Types::UINT8:
+                    case karabo::util::Types::UINT8:
                     {
                         unsigned char value = hash.get<unsigned char>(it);
                         this->writeValue<unsigned char >(os, value);
                         break;
                     }
-                    case exfel::util::Types::INT16:
+                    case karabo::util::Types::INT16:
                     {
                         short value = hash.get<short>(it);
                         this->writeValue<short >(os, value);
                         break;
                     }
-                    case exfel::util::Types::UINT16:
+                    case karabo::util::Types::UINT16:
                     {
                         unsigned short value = hash.get<unsigned short>(it);
                         this->writeValue<unsigned short >(os, value);
                         break;
                     }
-                    case exfel::util::Types::INT32:
+                    case karabo::util::Types::INT32:
                     {
                         int value = hash.get<int>(it);
                         this->writeValue<int >(os, value);
                         break;
                     }
-                    case exfel::util::Types::UINT32:
+                    case karabo::util::Types::UINT32:
                     {
                         unsigned int value = hash.get<unsigned int>(it);
                         this->writeValue<unsigned int >(os, value);
                         break;
                     }
-                    case exfel::util::Types::INT64:
+                    case karabo::util::Types::INT64:
                     {
                         long long value = hash.get<long long>(it);
                         this->writeValue<long long >(os, value);
                         break;
                     }
-                    case exfel::util::Types::UINT64:
+                    case karabo::util::Types::UINT64:
                     {
                         unsigned long long value = hash.get<unsigned long long>(it);
                         this->writeValue<unsigned long long >(os, value);
                         break;
                     }
-                    case exfel::util::Types::FLOAT:
+                    case karabo::util::Types::FLOAT:
                     {
                         float value = hash.get<float>(it);
                         this->writeValue<float >(os, value);
                         break;
                     }
-                    case exfel::util::Types::DOUBLE:
+                    case karabo::util::Types::DOUBLE:
                     {
                         double value = hash.get<double>(it);
                         this->writeValue<double >(os, value);
                         break;
                     }
-                    case exfel::util::Types::SCHEMA:
+                    case karabo::util::Types::SCHEMA:
                     {
-                        std::string value = m_schemaFormat->serialize(hash.get<exfel::util::Schema > (it));
+                        std::string value = m_schemaFormat->serialize(hash.get<karabo::util::Schema > (it));
                         this->writeStringValue(os, value);
                         break;
                     }
@@ -566,24 +566,24 @@ namespace exfel {
                 }
             }
 
-            void r_writeStream(std::ostream& os, const exfel::util::Hash& hash, const std::string& prefix, const std::string& sep) {
-                for (exfel::util::Hash::const_iterator it = hash.begin(); it != hash.end(); ++it) {
+            void r_writeStream(std::ostream& os, const karabo::util::Hash& hash, const std::string& prefix, const std::string& sep) {
+                for (karabo::util::Hash::const_iterator it = hash.begin(); it != hash.end(); ++it) {
                     std::string key = it->first;
-                    exfel::util::Types::Type id = hash.getTypeAsId(it);
-                    if (id == exfel::util::Types::HASH) {
-                        r_writeStream(os, hash.get<exfel::util::Hash > (it), prefix + key + sep, sep);
+                    karabo::util::Types::Type id = hash.getTypeAsId(it);
+                    if (id == karabo::util::Types::HASH) {
+                        r_writeStream(os, hash.get<karabo::util::Hash > (it), prefix + key + sep, sep);
                     } else {
                         l_writeStream(os, hash, it, prefix + key, sep);
                     }
                 }
             }
 
-            void writeStream(std::ostream& os, const exfel::util::Hash& hash, const std::string& sep) {
+            void writeStream(std::ostream& os, const karabo::util::Hash& hash, const std::string& sep) {
                 this->r_writeStream(os, hash, std::string(""), sep);
             }
         };
     }
 }
 
-#endif	/* EXFEL_IO_HASHBASEFORMAT_HH */
+#endif	/* KARABO_IO_HASHBASEFORMAT_HH */
 

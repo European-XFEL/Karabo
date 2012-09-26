@@ -8,8 +8,8 @@
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
 
-#ifndef EXFEL_IO_TEXTFILEREADER_HH
-#define	EXFEL_IO_TEXTFILEREADER_HH
+#ifndef KARABO_IO_TEXTFILEREADER_HH
+#define	KARABO_IO_TEXTFILEREADER_HH
 
 #include <iosfwd>
 #include <fstream>
@@ -24,7 +24,7 @@
 /**
  * The main European XFEL namespace
  */
-namespace exfel {
+namespace karabo {
 
   /**
    * Namespace for package io
@@ -35,10 +35,10 @@ namespace exfel {
     class TextFileReader : public Reader<Tdata> {
     public:
 
-      EXFEL_CLASSINFO(TextFileReader<Tdata>, "TextFile", "1.0")
+      KARABO_CLASSINFO(TextFileReader<Tdata>, "TextFile", "1.0")
 
       typedef boost::shared_ptr<Format<Tdata> > FormatPointer;
-      typedef exfel::util::Factory<Format<Tdata> > FormatFactory;
+      typedef karabo::util::Factory<Format<Tdata> > FormatFactory;
 
       TextFileReader() {
       }
@@ -50,9 +50,9 @@ namespace exfel {
         }
       }
 
-     static void expectedParameters(exfel::util::Schema& expected) {
+     static void expectedParameters(karabo::util::Schema& expected) {
 
-        using namespace exfel::util;
+        using namespace karabo::util;
 
         PATH_ELEMENT(expected).key("filename")
                 .description("Name of the file to be read")
@@ -68,7 +68,7 @@ namespace exfel {
       }
 
    
-      void configure(const exfel::util::Hash& input) {
+      void configure(const karabo::util::Hash& input) {
         input.get("filename", m_filename);
         if (input.has("format")) {
           m_format = Format<Tdata>::createChoice("format", input);
@@ -80,7 +80,7 @@ namespace exfel {
       void guessAndSetFormat() {
 
         using namespace std;
-        using namespace exfel::util;
+        using namespace karabo::util;
 
         vector<string> keys = FormatFactory::getRegisteredKeys();
         string extension = m_filename.extension().string().substr(1);
@@ -128,6 +128,6 @@ namespace exfel {
       FormatPointer m_format;
     };
   } // namespace io
-} // namespace exfel
+} // namespace karabo
 
-#endif	/* EXFEL_IO_TEXTFILEREADER_HH */
+#endif	/* KARABO_IO_TEXTFILEREADER_HH */

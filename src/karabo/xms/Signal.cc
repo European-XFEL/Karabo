@@ -10,8 +10,8 @@
 
 #include "Signal.hh"
 
-namespace exfel {
+namespace karabo {
   namespace xms {
 
   } // namespace xms
-} // namespace exfel
+} // namespace karabo

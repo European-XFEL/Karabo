@@ -28,7 +28,7 @@
 #include "Timer.hh"
 
 
-namespace exfel {
+namespace karabo {
     namespace util {
 
         ///    Implementation

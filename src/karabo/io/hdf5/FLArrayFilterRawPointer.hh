@@ -7,8 +7,8 @@
  */
 
 
-#ifndef EXFEL_IO_HDF5_FLARRAYFILTERRAWPOINTER_HH
-#define	EXFEL_IO_HDF5_FLARRAYFILTERRAWPOINTER_HH
+#ifndef KARABO_IO_HDF5_FLARRAYFILTERRAWPOINTER_HH
+#define	KARABO_IO_HDF5_FLARRAYFILTERRAWPOINTER_HH
 
 #include "FLArrayFilter.hh"
 #include "TypeTraits.hh"
@@ -18,7 +18,7 @@
 /**
  * The main European XFEL namespace
  */
-namespace exfel {
+namespace karabo {
 
     /**
      * Namespace for package io
@@ -32,7 +32,7 @@ namespace exfel {
             public FLArrayFilter<T> {
             public:
 
-                EXFEL_CLASSINFO(FLArrayFilterRawPointer, typeid (T*).name(), "1.0")
+                KARABO_CLASSINFO(FLArrayFilterRawPointer, typeid (T*).name(), "1.0")
 
                 FLArrayFilterRawPointer() {
                 }
@@ -73,4 +73,4 @@ namespace exfel {
     }
 }
 
-#endif	/* EXFEL_IO_HDF5_FLARRAYFILTERRAWPOINTER_HH */
+#endif	/* KARABO_IO_HDF5_FLARRAYFILTERRAWPOINTER_HH */

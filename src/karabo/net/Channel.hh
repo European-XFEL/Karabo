@@ -5,8 +5,8 @@
  * Created on June 1, 2011, 5:02 PM
  */
 
-#ifndef EXFEL_NET_CHANNEL_HH
-#define	EXFEL_NET_CHANNEL_HH
+#ifndef KARABO_NET_CHANNEL_HH
+#define	KARABO_NET_CHANNEL_HH
 
 #include <boost/shared_ptr.hpp>
 #include <boost/function.hpp>
@@ -21,7 +21,7 @@
 /**
  * The main European XFEL namespace
  */
-namespace exfel {
+namespace karabo {
 
     /**
      * Namespace for package net
@@ -31,18 +31,18 @@ namespace exfel {
         class Channel {
         public:
 
-            EXFEL_CLASSINFO(Channel, "Channel", "1.0")
+            KARABO_CLASSINFO(Channel, "Channel", "1.0")
 
             typedef boost::shared_ptr<Channel> Pointer;
             typedef boost::function<void (Channel::Pointer, const char*, const size_t&) > ReadRawHandler;
             typedef boost::function<void (Channel::Pointer, const std::vector<char>&) > ReadVectorHandler;
             typedef boost::function<void (Channel::Pointer, const std::string&) > ReadStringHandler;
-            typedef boost::function<void (Channel::Pointer, const exfel::util::Hash&) > ReadHashHandler;
+            typedef boost::function<void (Channel::Pointer, const karabo::util::Hash&) > ReadHashHandler;
 
-            typedef boost::function<void (Channel::Pointer, const char*, const size_t&, const exfel::util::Hash&) > ReadRawHashHandler;
-            typedef boost::function<void (Channel::Pointer, const std::vector<char>&, const exfel::util::Hash&) > ReadVectorHashHandler;
-            typedef boost::function<void (Channel::Pointer, const std::string&, const exfel::util::Hash&) > ReadStringHashHandler;
-            typedef boost::function<void (Channel::Pointer, const exfel::util::Hash&, const exfel::util::Hash&) > ReadHashHashHandler;
+            typedef boost::function<void (Channel::Pointer, const char*, const size_t&, const karabo::util::Hash&) > ReadRawHashHandler;
+            typedef boost::function<void (Channel::Pointer, const std::vector<char>&, const karabo::util::Hash&) > ReadVectorHashHandler;
+            typedef boost::function<void (Channel::Pointer, const std::string&, const karabo::util::Hash&) > ReadStringHashHandler;
+            typedef boost::function<void (Channel::Pointer, const karabo::util::Hash&, const karabo::util::Hash&) > ReadHashHashHandler;
 
             typedef boost::function<void (Channel::Pointer) > WriteCompleteHandler;
 
@@ -109,7 +109,7 @@ namespace exfel {
              * The hash will be updated accordingly.
              * @return void 
              */
-            virtual void read(exfel::util::Hash& data) {
+            virtual void read(karabo::util::Hash& data) {
                 char* raw = 0;
                 size_t size = 0;
                 read(raw, size);
@@ -129,7 +129,7 @@ namespace exfel {
              * @param size Size (in bytes) of the memory block
              * @param header Hash that will be automatically updated
              */
-            virtual void read(char*& data, size_t& size, exfel::util::Hash& header) {
+            virtual void read(char*& data, size_t& size, karabo::util::Hash& header) {
                 throw NOT_SUPPORTED_EXCEPTION("Not implemented");
             }
 
@@ -141,7 +141,7 @@ namespace exfel {
              * The vector data and hash header will be updated accordingly.
              * @return void 
              */
-            virtual void read(std::vector<char>& data, exfel::util::Hash& header) {
+            virtual void read(std::vector<char>& data, karabo::util::Hash& header) {
                 char* raw = 0;
                 size_t size;
                 read(raw, size, header);
@@ -157,16 +157,16 @@ namespace exfel {
              * The string data and hash header will be updated accordingly.
              * @return void 
              */
-            virtual void read(std::string& data, exfel::util::Hash& header) {
+            virtual void read(std::string& data, karabo::util::Hash& header) {
                 char* raw = 0;
                 size_t size;
                 read(raw, size, header);
                 data.assign(raw, size);
             }
 
-            virtual void read(exfel::util::Hash& body, exfel::util::Hash& header) {
+            virtual void read(karabo::util::Hash& body, karabo::util::Hash& header) {
                 std::string s;
-                exfel::util::Hash h;
+                karabo::util::Hash h;
                 read(s, header);
                 if (s.size() > 0) {
                     stringToHash(s, body);
@@ -187,17 +187,17 @@ namespace exfel {
 
             virtual void readAsyncVector(const ReadVectorHandler& handler) {
                 m_readVectorHandler = handler;
-                readAsyncRaw(boost::bind(&exfel::net::Channel::raw2Vector, this, _1, _2, _3));
+                readAsyncRaw(boost::bind(&karabo::net::Channel::raw2Vector, this, _1, _2, _3));
             }
 
             virtual void readAsyncString(const ReadStringHandler& handler) {
                 m_readStringHandler = handler;
-                readAsyncRaw(boost::bind(&exfel::net::Channel::raw2String, this, _1, _2, _3));
+                readAsyncRaw(boost::bind(&karabo::net::Channel::raw2String, this, _1, _2, _3));
             }
 
             virtual void readAsyncHash(const ReadHashHandler& handler) {
                 m_readHashHandler = handler;
-                readAsyncRaw(boost::bind(&exfel::net::Channel::raw2Hash, this, _1, _2, _3));
+                readAsyncRaw(boost::bind(&karabo::net::Channel::raw2Hash, this, _1, _2, _3));
             }
 
             //**************************************************************/
@@ -210,17 +210,17 @@ namespace exfel {
 
             virtual void readAsyncVectorHash(const ReadVectorHashHandler& handler) {
                 m_readVectorHashHandler = handler;
-                readAsyncRawHash(boost::bind(&exfel::net::Channel::rawHash2VectorHash, this, _1, _2, _3, _4));
+                readAsyncRawHash(boost::bind(&karabo::net::Channel::rawHash2VectorHash, this, _1, _2, _3, _4));
             }
 
             virtual void readAsyncStringHash(const ReadStringHashHandler& handler) {
                 m_readStringHashHandler = handler;
-                readAsyncRawHash(boost::bind(&exfel::net::Channel::rawHash2StringHash, this, _1, _2, _3, _4));
+                readAsyncRawHash(boost::bind(&karabo::net::Channel::rawHash2StringHash, this, _1, _2, _3, _4));
             }
 
             virtual void readAsyncHashHash(const ReadHashHashHandler& handler) {
                 m_readHashHashHandler = handler;
-                readAsyncRawHash(boost::bind(&exfel::net::Channel::rawHash2HashHash, this, _1, _2, _3, _4));
+                readAsyncRawHash(boost::bind(&karabo::net::Channel::rawHash2HashHash, this, _1, _2, _3, _4));
             }
 
             //**************************************************************/
@@ -239,7 +239,7 @@ namespace exfel {
                 write(data.c_str(), data.size());
             }
 
-            virtual void write(const exfel::util::Hash& data) {
+            virtual void write(const karabo::util::Hash& data) {
                 std::string s;
                 hashToString(data, s);
                 write(s);
@@ -249,19 +249,19 @@ namespace exfel {
             //*              Synchronous Write - With Header               */
             //**************************************************************/
 
-            virtual void write(const char* data, const size_t& size, const exfel::util::Hash& header) {
+            virtual void write(const char* data, const size_t& size, const karabo::util::Hash& header) {
                 throw NOT_SUPPORTED_EXCEPTION("Not implemented!");
             }
 
-            virtual void write(const std::vector<char>& data, const exfel::util::Hash& header) {
+            virtual void write(const std::vector<char>& data, const karabo::util::Hash& header) {
                 write(static_cast<const char*>(&data[0]), data.size(), header);
             }
 
-            virtual void write(const std::string& data, const exfel::util::Hash& header) {
+            virtual void write(const std::string& data, const karabo::util::Hash& header) {
                 write(data.c_str(), data.size(), header);
             }
 
-            virtual void write(const exfel::util::Hash& data, const exfel::util::Hash& header) {
+            virtual void write(const karabo::util::Hash& data, const karabo::util::Hash& header) {
                 std::string s;
                 hashToString(data, s);
                 write(s, header);
@@ -283,7 +283,7 @@ namespace exfel {
                 throw NOT_SUPPORTED_EXCEPTION("Not implemented!");
             }
 
-            virtual void writeAsyncHash(const exfel::util::Hash& data, const WriteCompleteHandler& handler) {
+            virtual void writeAsyncHash(const karabo::util::Hash& data, const WriteCompleteHandler& handler) {
                 throw NOT_SUPPORTED_EXCEPTION("Not implemented!");
             }
 
@@ -291,19 +291,19 @@ namespace exfel {
             //*              Asynchronous Write - With Header              */
             //**************************************************************/
 
-            virtual void writeAsyncRawHash(const char* data, const size_t& size, const exfel::util::Hash& header, const WriteCompleteHandler& handler) {
+            virtual void writeAsyncRawHash(const char* data, const size_t& size, const karabo::util::Hash& header, const WriteCompleteHandler& handler) {
                 throw NOT_SUPPORTED_EXCEPTION("Not implemented!");
             }
 
-            virtual void writeAsyncVectorHash(const std::vector<char>& data, const exfel::util::Hash& header, const WriteCompleteHandler& handler) {
+            virtual void writeAsyncVectorHash(const std::vector<char>& data, const karabo::util::Hash& header, const WriteCompleteHandler& handler) {
                 throw NOT_SUPPORTED_EXCEPTION("Not implemented!");
             }
 
-            virtual void writeAsyncStringHash(const std::string& data, const exfel::util::Hash& header, const WriteCompleteHandler& handler) {
+            virtual void writeAsyncStringHash(const std::string& data, const karabo::util::Hash& header, const WriteCompleteHandler& handler) {
                 throw NOT_SUPPORTED_EXCEPTION("Not implemented!");
             }
 
-            virtual void writeAsyncHashHash(const exfel::util::Hash& data, const exfel::util::Hash& header, const WriteCompleteHandler& handler) {
+            virtual void writeAsyncHashHash(const karabo::util::Hash& data, const karabo::util::Hash& header, const WriteCompleteHandler& handler) {
                 throw NOT_SUPPORTED_EXCEPTION("Not implemented!");
             }
 
@@ -330,11 +330,11 @@ namespace exfel {
 
         protected: // functions
 
-            void hashToString(const exfel::util::Hash& hash, std::string& serializedHash) {
+            void hashToString(const karabo::util::Hash& hash, std::string& serializedHash) {
                 m_connection.hashToString(hash, serializedHash);
             }
 
-            void stringToHash(const std::string& serializedHash, exfel::util::Hash& hash) {
+            void stringToHash(const std::string& serializedHash, karabo::util::Hash& hash) {
                 m_connection.stringToHash(serializedHash, hash);
             }
 
@@ -365,26 +365,26 @@ namespace exfel {
             }
 
             void raw2Hash(Channel::Pointer channel, const char* data, const size_t& size) {
-                exfel::util::Hash h;
+                karabo::util::Hash h;
                 std::string s(data, size);
                 stringToHash(s, h);
                 m_readHashHandler(channel, h);
             }
 
-            void rawHash2VectorHash(Channel::Pointer channel, const char* data, const size_t& size, const exfel::util::Hash& header) {
+            void rawHash2VectorHash(Channel::Pointer channel, const char* data, const size_t& size, const karabo::util::Hash& header) {
                 std::vector<char> v;
                 v.resize(size);
                 memcpy(&v[0], data, size);
                 m_readVectorHashHandler(channel, v, header);
             }
 
-            void rawHash2StringHash(Channel::Pointer channel, const char* data, const size_t& size, const exfel::util::Hash& header) {
+            void rawHash2StringHash(Channel::Pointer channel, const char* data, const size_t& size, const karabo::util::Hash& header) {
                 std::string s(data, size);
                 m_readStringHashHandler(channel, s, header);
             }
 
-            void rawHash2HashHash(Channel::Pointer channel, const char* data, const size_t& size, const exfel::util::Hash& header) {
-                exfel::util::Hash h;
+            void rawHash2HashHash(Channel::Pointer channel, const char* data, const size_t& size, const karabo::util::Hash& header) {
+                karabo::util::Hash h;
                 std::string s(data, size);
                 stringToHash(s, h);
                 m_readHashHashHandler(channel, h, header);
@@ -409,5 +409,5 @@ namespace exfel {
     }
 }
 
-#endif	/* EXFEL_NET_CHANNEL_HH */
+#endif	/* KARABO_NET_CHANNEL_HH */
 

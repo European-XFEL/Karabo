@@ -17,11 +17,11 @@
 #include "SnmpConnection.hh"
 #include "SnmpIOService.hh"
 
-namespace exfel {
+namespace karabo {
     namespace net {
 
         using namespace std;
-        using namespace exfel::util;
+        using namespace karabo::util;
 
         //        static string oidToString(const oid* name, size_t namelen);
 

@@ -8,15 +8,15 @@
  */
 
 
-#ifndef EXFEL_LOGCONFIG_PATTERNLAYOUTCONFIGURATOR_HH
-#define	EXFEL_LOGCONFIG_PATTERNLAYOUTCONFIGURATOR_HH
+#ifndef KARABO_LOGCONFIG_PATTERNLAYOUTCONFIGURATOR_HH
+#define	KARABO_LOGCONFIG_PATTERNLAYOUTCONFIGURATOR_HH
 
 #include "LayoutConfigurator.hh"
 #include <karabo/util/Factory.hh>
 /**
  * The main European XFEL namespace
  */
-namespace exfel {
+namespace karabo {
 
   /**
    * Namespace for package log
@@ -25,14 +25,14 @@ namespace exfel {
 
     class PatternLayoutConfigurator : public LayoutConfigurator {
     public:
-      EXFEL_CLASSINFO(PatternLayoutConfigurator, "Pattern", "1.0")
+      KARABO_CLASSINFO(PatternLayoutConfigurator, "Pattern", "1.0")
 
       PatternLayoutConfigurator();
       virtual ~PatternLayoutConfigurator();
       log4cpp::Layout* create();
 
-      static void expectedParameters(exfel::util::Schema& expected);
-      void configure(const exfel::util::Hash& input);
+      static void expectedParameters(karabo::util::Schema& expected);
+      void configure(const karabo::util::Hash& input);
 
     private:
       std::string m_pattern;
@@ -42,4 +42,4 @@ namespace exfel {
   }
 }
 
-#endif	/* EXFEL_LOGCONFIG_PATTERNLAYOUTCONFIGURATOR_HH */
+#endif	/* KARABO_LOGCONFIG_PATTERNLAYOUTCONFIGURATOR_HH */

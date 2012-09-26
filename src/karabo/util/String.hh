@@ -10,8 +10,8 @@
  */
 
 
-#ifndef EXFEL_UTIL_STRING_HH
-#define	EXFEL_UTIL_STRING_HH
+#ifndef KARABO_UTIL_STRING_HH
+#define	KARABO_UTIL_STRING_HH
 
 #include <string>
 #include <sstream>
@@ -21,7 +21,7 @@
 #include <functional> 
 #include <stdlib.h>
 
-namespace exfel {
+namespace karabo {
     namespace util {
 
         /**
@@ -174,7 +174,7 @@ namespace exfel {
         };
 
     } // namespace util
-} // namespace exfel
+} // namespace karabo
 
-#endif	/* EXFEL_UTIL_STRING_HH */
+#endif	/* KARABO_UTIL_STRING_HH */
 

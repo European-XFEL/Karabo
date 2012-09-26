@@ -9,12 +9,12 @@
  */
 
 
-#ifndef EXFEL_UTIL_IMAGEELEMENT_HH
-#define	EXFEL_UTIL_IMAGEELEMENT_HH
+#ifndef KARABO_UTIL_IMAGEELEMENT_HH
+#define	KARABO_UTIL_IMAGEELEMENT_HH
 
 #include "ComplexElement.hh"
 
-namespace exfel {
+namespace karabo {
     namespace util {
 
         template <class T>

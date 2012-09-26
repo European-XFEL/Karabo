@@ -8,8 +8,8 @@
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
 
-#ifndef EXFEL_CORE_SIGNALSLOTABLE_HH
-#define	EXFEL_CORE_SIGNALSLOTABLE_HH
+#ifndef KARABO_CORE_SIGNALSLOTABLE_HH
+#define	KARABO_CORE_SIGNALSLOTABLE_HH
 
 #include <karabo/util/Factory.hh>
 #include <karabo/net/BrokerConnection.hh>
@@ -24,7 +24,7 @@
 /**
  * The main European XFEL namespace
  */
-namespace exfel {
+namespace karabo {
 
     namespace xms {
 
@@ -47,18 +47,18 @@ namespace exfel {
             friend class Slot;
 
             // Internally used typedefs
-            typedef boost::shared_ptr<exfel::xms::Signal> SignalInstancePointer;
+            typedef boost::shared_ptr<karabo::xms::Signal> SignalInstancePointer;
             typedef std::map<std::string, SignalInstancePointer> SignalInstances;
             typedef SignalInstances::const_iterator SignalInstancesConstIt;
 
-            typedef boost::shared_ptr<exfel::xms::Slot> SlotInstancePointer;
+            typedef boost::shared_ptr<karabo::xms::Slot> SlotInstancePointer;
             typedef std::map<std::string, SlotInstancePointer> SlotInstances;
             typedef SlotInstances::const_iterator SlotInstancesConstIt;
 
-            typedef std::map<std::string, exfel::net::BrokerChannel::Pointer> SlotChannels;
+            typedef std::map<std::string, karabo::net::BrokerChannel::Pointer> SlotChannels;
             typedef SlotChannels::const_iterator SlotChannelsConstIt;
             
-            typedef std::map<boost::thread::id, exfel::util::Hash> Replies;
+            typedef std::map<boost::thread::id, karabo::util::Hash> Replies;
 
             typedef std::pair<std::string, int> AssocEntry;
             typedef std::set<AssocEntry> AssocType;
@@ -73,7 +73,7 @@ namespace exfel {
 
         public:
 
-            EXFEL_CLASSINFO(SignalSlotable, "SignalSlotable", "1.0")
+            KARABO_CLASSINFO(SignalSlotable, "SignalSlotable", "1.0")
 
             /**
              * Slots may be of two different types:
@@ -113,11 +113,11 @@ namespace exfel {
             SignalSlotable();
 
 
-            SignalSlotable(const exfel::net::BrokerConnection::Pointer& connection, const std::string& instanceId, int heartbeatRate = 5);
+            SignalSlotable(const karabo::net::BrokerConnection::Pointer& connection, const std::string& instanceId, int heartbeatRate = 5);
 
             virtual ~SignalSlotable();
 
-            void init(const exfel::net::BrokerConnection::Pointer& connection, const std::string& instanceId, int heartbeatRate = 5);
+            void init(const karabo::net::BrokerConnection::Pointer& connection, const std::string& instanceId, int heartbeatRate = 5);
 
             /**
              * This function will block the main-thread.
@@ -152,7 +152,7 @@ namespace exfel {
 
             void trackExistenceOfInstance(const std::string& instanceId);
 
-            exfel::net::BrokerConnection::Pointer getConnection() const;
+            karabo::net::BrokerConnection::Pointer getConnection() const;
 
             virtual void instanceNotAvailable(const std::string& instanceId) {
                 std::cout << "Instance is not available: " << instanceId << std::endl;
@@ -162,9 +162,9 @@ namespace exfel {
                 std::cout << "Instance is back: " << instanceId << std::endl;
             }
 
-            virtual void connectionNotAvailable(const std::string& instanceId, const std::vector<exfel::util::Hash>& connections);
+            virtual void connectionNotAvailable(const std::string& instanceId, const std::vector<karabo::util::Hash>& connections);
 
-            virtual void connectionAvailableAgain(const std::string& instanceId, const std::vector<exfel::util::Hash>& connections);
+            virtual void connectionAvailableAgain(const std::string& instanceId, const std::vector<karabo::util::Hash>& connections);
 
             const std::vector<std::string>& getAvailableInstances();
 
@@ -284,7 +284,7 @@ namespace exfel {
              * @param config Hash object as obtained by the configure method
              * @param signalRegularExpression A perl-regular expression for the signal key
              */
-            void autoConnectAllSignals(const exfel::util::Hash& config, const std::string signalRegularExpression = "^signal.*");
+            void autoConnectAllSignals(const karabo::util::Hash& config, const std::string signalRegularExpression = "^signal.*");
 
             /**
              * This function finds all slot keys within a Hash object (non-recursive) by a regular expression.
@@ -293,7 +293,7 @@ namespace exfel {
              * @param config Hash object as obtained by the configure method
              * @param slotRegularExpression A perl-regular expression for the signal key
              */
-            void autoConnectAllSlots(const exfel::util::Hash& config, const std::string slotRegularExpression = "^slot.*");
+            void autoConnectAllSlots(const karabo::util::Hash& config, const std::string slotRegularExpression = "^slot.*");
 
             /**
              * Emits a void signal.
@@ -445,77 +445,77 @@ namespace exfel {
 
             void reply() {
                 if (!m_isProcessingSlot) return;
-                registerReply(exfel::util::Hash());
+                registerReply(karabo::util::Hash());
             }
 
             template <class A1>
             void reply(const A1& a1) {
                 if (!m_isProcessingSlot) return;
-                registerReply(exfel::util::Hash("a1", a1));
+                registerReply(karabo::util::Hash("a1", a1));
             }
 
             template <class A1, class A2>
             void reply(const A1& a1, const A2& a2) {
                 if (!m_isProcessingSlot) return;
-                registerReply(exfel::util::Hash("a1", a1, "a2", a2));
+                registerReply(karabo::util::Hash("a1", a1, "a2", a2));
             }
 
             template <class A1, class A2, class A3>
             void reply(const A1& a1, const A2& a2, const A3& a3) {
                 if (!m_isProcessingSlot) return;
-                registerReply(exfel::util::Hash("a1", a1, "a2", a2, "a3", a3));
+                registerReply(karabo::util::Hash("a1", a1, "a2", a2, "a3", a3));
             }
 
             template <class A1, class A2, class A3, class A4>
             void reply(const A1& a1, const A2& a2, const A3& a3, A4& a4) {
                 if (!m_isProcessingSlot) return;
-                registerReply(exfel::util::Hash("a1", a1, "a2", a2, "a3", a3, "a4", a4));
+                registerReply(karabo::util::Hash("a1", a1, "a2", a2, "a3", a3, "a4", a4));
             }
 
             void registerSignal(const std::string& funcName) {
                 if (m_signalInstances.find(funcName) != m_signalInstances.end()) return; // Already registered
-                boost::shared_ptr<exfel::xms::Signal> s(new exfel::xms::Signal(m_signalChannel, m_instanceId, funcName));
-                boost::function<void() > f(boost::bind(&exfel::xms::Signal::emit0, s));
+                boost::shared_ptr<karabo::xms::Signal> s(new karabo::xms::Signal(m_signalChannel, m_instanceId, funcName));
+                boost::function<void() > f(boost::bind(&karabo::xms::Signal::emit0, s));
                 storeSignal(funcName, s, f);
             }
 
             template <class A1>
             void registerSignal(const std::string& funcName) {
                 if (m_signalInstances.find(funcName) != m_signalInstances.end()) return;
-                boost::shared_ptr<exfel::xms::Signal> s(new exfel::xms::Signal(m_signalChannel, m_instanceId, funcName));
-                boost::function<void (const A1&) > f(boost::bind(&exfel::xms::Signal::emit1<A1>, s, _1));
+                boost::shared_ptr<karabo::xms::Signal> s(new karabo::xms::Signal(m_signalChannel, m_instanceId, funcName));
+                boost::function<void (const A1&) > f(boost::bind(&karabo::xms::Signal::emit1<A1>, s, _1));
                 storeSignal(funcName, s, f);
             }
 
             template <class A1, class A2>
             void registerSignal(const std::string& funcName) {
                 if (m_signalInstances.find(funcName) != m_signalInstances.end()) return;
-                boost::shared_ptr<exfel::xms::Signal> s(new exfel::xms::Signal(m_signalChannel, m_instanceId, funcName));
-                boost::function<void (const A1&, const A2&) > f(boost::bind(&exfel::xms::Signal::emit2<A1, A2>, s, _1, _2));
+                boost::shared_ptr<karabo::xms::Signal> s(new karabo::xms::Signal(m_signalChannel, m_instanceId, funcName));
+                boost::function<void (const A1&, const A2&) > f(boost::bind(&karabo::xms::Signal::emit2<A1, A2>, s, _1, _2));
                 storeSignal(funcName, s, f);
             }
 
             template <class A1, class A2, class A3>
             void registerSignal(const std::string& funcName) {
                 if (m_signalInstances.find(funcName) != m_signalInstances.end()) return;
-                boost::shared_ptr<exfel::xms::Signal> s(new exfel::xms::Signal(m_signalChannel, m_instanceId, funcName));
-                boost::function<void (const A1&, const A2&, const A3&) > f(boost::bind(&exfel::xms::Signal::emit3<A1, A2, A3>, s, _1, _2, _3));
+                boost::shared_ptr<karabo::xms::Signal> s(new karabo::xms::Signal(m_signalChannel, m_instanceId, funcName));
+                boost::function<void (const A1&, const A2&, const A3&) > f(boost::bind(&karabo::xms::Signal::emit3<A1, A2, A3>, s, _1, _2, _3));
                 storeSignal(funcName, s, f);
             }
 
             template <class A1, class A2, class A3, class A4>
             void registerSignal(const std::string& funcName) {
                 if (m_signalInstances.find(funcName) != m_signalInstances.end()) return;
-                boost::shared_ptr<exfel::xms::Signal> s(new exfel::xms::Signal(m_signalChannel, m_instanceId, funcName));
-                boost::function<void (const A1&, const A2&, const A3&, const A4&) > f(boost::bind(&exfel::xms::Signal::emit4<A1, A2, A3, A4>, s, _1, _2, _3, _4));
+                boost::shared_ptr<karabo::xms::Signal> s(new karabo::xms::Signal(m_signalChannel, m_instanceId, funcName));
+                boost::function<void (const A1&, const A2&, const A3&, const A4&) > f(boost::bind(&karabo::xms::Signal::emit4<A1, A2, A3, A4>, s, _1, _2, _3, _4));
                 storeSignal(funcName, s, f);
             }
 
             void registerSlot(const boost::function<void () >& slot, const std::string& funcName, const SlotType& slotType = SPECIFIC) {
                 if (m_slotInstances.find(funcName) != m_slotInstances.end()) return; // Already registered
-                exfel::net::BrokerChannel::Pointer channel = m_connection->createChannel(); // New BrokerChannel
+                karabo::net::BrokerChannel::Pointer channel = m_connection->createChannel(); // New BrokerChannel
                 std::string instanceId = prepareInstanceId(slotType);
-                boost::shared_ptr<exfel::xms::Slot0> s(new exfel::xms::Slot0(this, channel, instanceId, funcName)); // New specific slot
+                boost::shared_ptr<karabo::xms::Slot0> s(new karabo::xms::Slot0(this, channel, instanceId, funcName)); // New specific slot
                 s->registerSlotFunction(slot); // Bind user's slot-function to Slot
                 storeSlot(funcName, s, channel); // Keep slot and his channel alive
             }
@@ -523,9 +523,9 @@ namespace exfel {
             template <class A1>
             void registerSlot(const boost::function<void (const A1&) >& slot, const std::string& funcName, const SlotType& slotType = SPECIFIC) {
                 if (m_slotInstances.find(funcName) != m_slotInstances.end()) return;
-                exfel::net::BrokerChannel::Pointer channel = m_connection->createChannel();
+                karabo::net::BrokerChannel::Pointer channel = m_connection->createChannel();
                 std::string instanceId = prepareInstanceId(slotType);
-                boost::shared_ptr<exfel::xms::Slot1<A1> > s(new exfel::xms::Slot1<A1 > (this, channel, instanceId, funcName));
+                boost::shared_ptr<karabo::xms::Slot1<A1> > s(new karabo::xms::Slot1<A1 > (this, channel, instanceId, funcName));
                 s->registerSlotFunction(slot);
                 storeSlot(funcName, s, channel);
             }
@@ -533,9 +533,9 @@ namespace exfel {
             template <class A1, class A2>
             void registerSlot(const boost::function<void (const A1&, const A2&) >& slot, const std::string& funcName, const SlotType& slotType = SPECIFIC) {
                 if (m_slotInstances.find(funcName) != m_slotInstances.end()) return;
-                exfel::net::BrokerChannel::Pointer channel = m_connection->createChannel();
+                karabo::net::BrokerChannel::Pointer channel = m_connection->createChannel();
                 std::string instanceId = prepareInstanceId(slotType);
-                boost::shared_ptr<exfel::xms::Slot2<A1, A2> > s(new exfel::xms::Slot2<A1, A2 > (this, channel, instanceId, funcName));
+                boost::shared_ptr<karabo::xms::Slot2<A1, A2> > s(new karabo::xms::Slot2<A1, A2 > (this, channel, instanceId, funcName));
                 s->registerSlotFunction(slot);
                 storeSlot(funcName, s, channel);
             }
@@ -543,9 +543,9 @@ namespace exfel {
             template <class A1, class A2, class A3>
             void registerSlot(const boost::function<void (const A1&, const A2&, const A3&) >& slot, const std::string& funcName, const SlotType& slotType = SPECIFIC) {
                 if (m_slotInstances.find(funcName) != m_slotInstances.end()) return;
-                exfel::net::BrokerChannel::Pointer channel = m_connection->createChannel();
+                karabo::net::BrokerChannel::Pointer channel = m_connection->createChannel();
                 std::string instanceId = prepareInstanceId(slotType);
-                boost::shared_ptr<exfel::xms::Slot3<A1, A2, A3> > s(new exfel::xms::Slot3<A1, A2, A3 > (this, channel, instanceId, funcName));
+                boost::shared_ptr<karabo::xms::Slot3<A1, A2, A3> > s(new karabo::xms::Slot3<A1, A2, A3 > (this, channel, instanceId, funcName));
                 s->registerSlotFunction(slot);
                 storeSlot(funcName, s, channel);
             }
@@ -553,27 +553,27 @@ namespace exfel {
             template <class A1, class A2, class A3, class A4>
             void registerSlot(const boost::function<void (const A1&, const A2&, const A3&, const A4&) >& slot, const std::string& funcName, const SlotType& slotType = SPECIFIC) {
                 if (m_slotInstances.find(funcName) != m_slotInstances.end()) return;
-                exfel::net::BrokerChannel::Pointer channel = m_connection->createChannel();
+                karabo::net::BrokerChannel::Pointer channel = m_connection->createChannel();
                 std::string instanceId = prepareInstanceId(slotType);
-                boost::shared_ptr<exfel::xms::Slot4<A1, A2, A3, A4> > s(new exfel::xms::Slot4<A1, A2, A3, A4 > (this, channel, instanceId, funcName));
+                boost::shared_ptr<karabo::xms::Slot4<A1, A2, A3, A4> > s(new karabo::xms::Slot4<A1, A2, A3, A4 > (this, channel, instanceId, funcName));
                 s->registerSlotFunction(slot);
                 storeSlot(funcName, s, channel);
             }
             
             template <class InputType>
-            boost::shared_ptr<InputType > createInputChannel(const std::string& name, const exfel::util::Hash input, const InputAvailableHandler& onInputAvailable = InputAvailableHandler()) {
-                using namespace exfel::util;
+            boost::shared_ptr<InputType > createInputChannel(const std::string& name, const karabo::util::Hash input, const InputAvailableHandler& onInputAvailable = InputAvailableHandler()) {
+                using namespace karabo::util;
                 AbstractInput::Pointer channel = AbstractInput::createChoice(name, input);
                 channel->setInstanceId(m_instanceId);
-                //channel->registerCanReadEventHandler(boost::bind(&exfel::xip::Algorithm::canReadEvent, this, _1));
+                //channel->registerCanReadEventHandler(boost::bind(&karabo::xip::Algorithm::canReadEvent, this, _1));
                 channel->registerIOEventHandler(onInputAvailable);
                 m_inputChannels[name] = channel;
                 return boost::static_pointer_cast<InputType >(channel);
             }
             
             template <class OutputType>
-            boost::shared_ptr<OutputType > createOutputChannel(const std::string& name, const exfel::util::Hash& input, const OutputPossibleHandler& onOutputPossible = OutputPossibleHandler()) {
-                using namespace exfel::util;
+            boost::shared_ptr<OutputType > createOutputChannel(const std::string& name, const karabo::util::Hash& input, const OutputPossibleHandler& onOutputPossible = OutputPossibleHandler()) {
+                using namespace karabo::util;
                 AbstractOutput::Pointer channel = AbstractOutput::createChoice(name, input);
                 channel->setInstanceId(m_instanceId);
                 channel->registerIOEventHandler(onOutputPossible);
@@ -605,14 +605,14 @@ namespace exfel {
                 m_emitFunctions.set(signalFunction, emitFunction);
             }
 
-            void storeSlot(const std::string& slotFunction, const SlotInstancePointer& slotInstance, exfel::net::BrokerChannel::Pointer slotChannel) {
+            void storeSlot(const std::string& slotFunction, const SlotInstancePointer& slotInstance, karabo::net::BrokerChannel::Pointer slotChannel) {
                 m_slotInstances[slotFunction] = slotInstance;
                 m_slotChannels[slotFunction] = slotChannel;
             }
 
             template <class TFunc>
             void retrieveEmitFunction(const std::string& signalFunction, TFunc& emitFunction) const {
-                exfel::util::Hash::const_iterator it = m_emitFunctions.find(signalFunction);
+                karabo::util::Hash::const_iterator it = m_emitFunctions.find(signalFunction);
                 // Check whether signal was registered at all
                 if (it != m_emitFunctions.end()) {
                     // Check whether requested function is of proper arity
@@ -626,7 +626,7 @@ namespace exfel {
                 }
             }
             
-            void registerReply(const exfel::util::Hash& reply) {
+            void registerReply(const karabo::util::Hash& reply) {
                 boost::mutex::scoped_lock lock(m_replyMutex);
                 m_replies[boost::this_thread::get_id()] = reply;
             }
@@ -637,7 +637,7 @@ namespace exfel {
 
         private: // Functions
             
-            std::pair<bool, exfel::util::Hash> digestPotentialReply();
+            std::pair<bool, karabo::util::Hash> digestPotentialReply();
             
 
             void setSlotProcessingFlag(const bool flag) {
@@ -686,13 +686,13 @@ namespace exfel {
 
             void addTrackedComponent(const std::string& networkId);
 
-            exfel::util::Hash prepareConnectionNotAvailableInformation(const exfel::util::Hash& signals) const;
+            karabo::util::Hash prepareConnectionNotAvailableInformation(const karabo::util::Hash& signals) const;
 
             void slotTryReconnectNow();
 
             void slotGetAvailableFunctions(const std::string& type);
             
-            void connectionLost(const std::string& instanceId, const std::vector<exfel::util::Hash>& connections);
+            void connectionLost(const std::string& instanceId, const std::vector<karabo::util::Hash>& connections);
             
             // IO channel related
             
@@ -706,24 +706,24 @@ namespace exfel {
             SignalInstances m_signalInstances;
             SlotInstances m_slotInstances;
 
-            exfel::net::BrokerIOService::Pointer m_ioService;
-            exfel::net::BrokerConnection::Pointer m_connection;
-            exfel::net::BrokerChannel::Pointer m_signalChannel;
+            karabo::net::BrokerIOService::Pointer m_ioService;
+            karabo::net::BrokerConnection::Pointer m_connection;
+            karabo::net::BrokerChannel::Pointer m_signalChannel;
 
             // Reply/Request related
-            exfel::net::BrokerChannel::Pointer m_requestChannel;
+            karabo::net::BrokerChannel::Pointer m_requestChannel;
             Replies m_replies;
             boost::mutex m_replyMutex;
 
             boost::mutex m_isProcessingSlotMutex;
             bool m_isProcessingSlot;
 
-            exfel::util::Hash m_emitFunctions;
+            karabo::util::Hash m_emitFunctions;
             std::vector<boost::any> m_slots;
 
             SlotChannels m_slotChannels;
 
-            exfel::util::Hash m_trackedComponents;
+            karabo::util::Hash m_trackedComponents;
             int m_timeToLive;
             static std::set<int> m_reconnectIntervals;
 
@@ -745,6 +745,6 @@ namespace exfel {
         };
 
     } // namespace xms
-} // namespace exfel
+} // namespace karabo
 
 #endif

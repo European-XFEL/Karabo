@@ -9,8 +9,8 @@
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
 
-#ifndef EXFEL_CORE_MODULE_HH
-#define	EXFEL_CORE_MODULE_HH
+#ifndef KARABO_CORE_MODULE_HH
+#define	KARABO_CORE_MODULE_HH
 
 #include <karabo/util/Factory.hh>
 #include <karabo/io/Reader.hh>
@@ -19,7 +19,7 @@
 /**
  * The main European XFEL namespace
  */
-namespace exfel {
+namespace karabo {
 
   namespace core {
 
@@ -29,13 +29,13 @@ namespace exfel {
     class Module {
     public:
 
-      EXFEL_CLASSINFO(Module, "Module", "1.0")
-      EXFEL_FACTORY_BASE_CLASS
+      KARABO_CLASSINFO(Module, "Module", "1.0")
+      KARABO_FACTORY_BASE_CLASS
       
       Module() {
       }
 
-      static void expectedParameters(exfel::util::Schema& expected) {
+      static void expectedParameters(karabo::util::Schema& expected) {
       }
 
       virtual ~Module() {
@@ -52,8 +52,8 @@ namespace exfel {
 
 
   } // namespace core
-} // namespace exfel
+} // namespace karabo
 
-EXFEL_REGISTER_FACTORY_BASE_HH(exfel::core::Module, TEMPLATE_CORE, DECLSPEC_CORE)
+KARABO_REGISTER_FACTORY_BASE_HH(karabo::core::Module, TEMPLATE_CORE, DECLSPEC_CORE)
 
 #endif

@@ -9,12 +9,12 @@
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
 
-#ifndef EXFEL_UTIL_LISTELEMENT_HH
-#define	EXFEL_UTIL_LISTELEMENT_HH
+#ifndef KARABO_UTIL_LISTELEMENT_HH
+#define	KARABO_UTIL_LISTELEMENT_HH
 
 #include "GenericElement.hh"
 
-namespace exfel {
+namespace karabo {
   namespace util {
 
     template<class T>
@@ -54,5 +54,5 @@ namespace exfel {
 
 
 
-#endif	/* EXFEL_PACKAGENAME_LISTELEMENT_HH */
+#endif	/* KARABO_PACKAGENAME_LISTELEMENT_HH */
 

@@ -9,14 +9,14 @@
 
 
 
-#ifndef EXFEL_IO_HDF5_FLARRAYFILTERBUFFER_HH
-#define	EXFEL_IO_HDF5_FLARRAYFILTERBUFFER_HH
+#ifndef KARABO_IO_HDF5_FLARRAYFILTERBUFFER_HH
+#define	KARABO_IO_HDF5_FLARRAYFILTERBUFFER_HH
 
 #include <karabo/util/Factory.hh>
 #include "../iodll.hh"
 
 
-namespace exfel {
+namespace karabo {
 
   namespace io {
 
@@ -31,8 +31,8 @@ namespace exfel {
       class FLArrayFilterBuffer {
       public:
 
-        EXFEL_CLASSINFO(FLArrayFilterBuffer, "FLArrayFilterBuffer", "1.0")
-        EXFEL_FACTORY_BASE_CLASS
+        KARABO_CLASSINFO(FLArrayFilterBuffer, "FLArrayFilterBuffer", "1.0")
+        KARABO_FACTORY_BASE_CLASS
 
         virtual ~FLArrayFilterBuffer() {
         }
@@ -46,7 +46,7 @@ namespace exfel {
   }
 }
 
-EXFEL_REGISTER_FACTORY_BASE_HH(exfel::io::hdf5::FLArrayFilterBuffer<exfel::util::Hash>, TEMPLATE_IO, DECLSPEC_IO)
+KARABO_REGISTER_FACTORY_BASE_HH(karabo::io::hdf5::FLArrayFilterBuffer<karabo::util::Hash>, TEMPLATE_IO, DECLSPEC_IO)
 
-#endif	/* EXFEL_IO_HDF5_FLARRAYFILTER_HH */
+#endif	/* KARABO_IO_HDF5_FLARRAYFILTER_HH */
 

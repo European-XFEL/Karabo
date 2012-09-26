@@ -13,9 +13,9 @@
 #include <log4cpp/BasicLayout.hh>
 
 using namespace std;
-using namespace exfel::util;
+using namespace karabo::util;
 
-namespace exfel {
+namespace karabo {
   namespace log {
    
 
@@ -35,7 +35,7 @@ namespace exfel {
       return new log4cpp::BasicLayout();
     }
 
-    EXFEL_REGISTER_FACTORY_CC(LayoutConfigurator, BasicLayoutConfigurator)
+    KARABO_REGISTER_FACTORY_CC(LayoutConfigurator, BasicLayoutConfigurator)
 
   }
 }

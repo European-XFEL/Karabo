@@ -12,9 +12,9 @@
 
 using namespace std;
 using namespace log4cpp;
-using namespace exfel::util;
+using namespace karabo::util;
 
-namespace exfel {
+namespace karabo {
   namespace log {
 
     CategoryConfigurator::CategoryConfigurator() {
@@ -97,7 +97,7 @@ namespace exfel {
       }
     }
 
-    EXFEL_REGISTER_ONLY_ME_CC(CategoryConfigurator)
+    KARABO_REGISTER_ONLY_ME_CC(CategoryConfigurator)
 
   }
 }

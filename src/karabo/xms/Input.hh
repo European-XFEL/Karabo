@@ -10,26 +10,26 @@
  */
 
 
-#ifndef EXFEL_XMS_INPUT_HH
-#define	EXFEL_XMS_INPUT_HH
+#ifndef KARABO_XMS_INPUT_HH
+#define	KARABO_XMS_INPUT_HH
 
 #include "AbstractInput.hh"
 
-namespace exfel {
+namespace karabo {
     namespace xms {
 
         template <class T>
         class Input : public AbstractInput {
         public:
 
-            EXFEL_CLASSINFO(Input, "Input", "1.0")
-            EXFEL_FACTORY_BASE_CLASS
+            KARABO_CLASSINFO(Input, "Input", "1.0")
+            KARABO_FACTORY_BASE_CLASS
 
             /**
              * Necessary method as part of the factory/configuration system
              * @param expected [out] Description of expected parameters for this object (Schema)
              */
-            static void expectedParameters(exfel::util::Schema& expected) {
+            static void expectedParameters(karabo::util::Schema& expected) {
                 
                 AbstractInput::expectedParameters(expected);
             }
@@ -38,7 +38,7 @@ namespace exfel {
              * If this object is constructed using the factory/configuration system this method is called
              * @param input Validated (@see expectedParameters) and default-filled configuration
              */
-            void configure(const exfel::util::Hash & input) {
+            void configure(const karabo::util::Hash & input) {
             }
             
        
@@ -48,12 +48,12 @@ namespace exfel {
             
         };
         
-        typedef exfel::xms::Input<exfel::util::Hash > HashInput;
-        typedef exfel::xms::Input<std::string> FileWrapInput;
+        typedef karabo::xms::Input<karabo::util::Hash > HashInput;
+        typedef karabo::xms::Input<std::string> FileWrapInput;
     }
 }
 
 
 
-#endif	/* EXFEL_PACKAGENAME_INPUT_HH */
+#endif	/* KARABO_PACKAGENAME_INPUT_HH */
 

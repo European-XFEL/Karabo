@@ -15,13 +15,13 @@
 
 
 using namespace std;
-using namespace exfel::util;
+using namespace karabo::util;
 
-namespace exfel {
+namespace karabo {
   namespace io {
     namespace hdf5 {
 
-      EXFEL_REGISTER_ONLY_ME_CC(DataFormat)
+      KARABO_REGISTER_ONLY_ME_CC(DataFormat)
 
       void DataFormat::expectedParameters(Schema& expected) {
 

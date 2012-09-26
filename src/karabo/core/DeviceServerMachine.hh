@@ -9,8 +9,8 @@
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
 
-#ifndef EXFEL_CORE_DEVICESERVERMACHINE_HH
-#define	EXFEL_CORE_DEVICESERVERMACHINE_HH
+#ifndef KARABO_CORE_DEVICESERVERMACHINE_HH
+#define	KARABO_CORE_DEVICESERVERMACHINE_HH
 
 #include "FsmMacros.hh"
 #include "DeviceServerLogic.hh"
@@ -18,7 +18,7 @@
 /**
  * The main European XFEL namespace
  */
-namespace exfel {
+namespace karabo {
 
   namespace core {
     
@@ -41,7 +41,7 @@ namespace exfel {
 
       FSM_EVENT0(InbuildDevicesAvailableEvent)
 
-      FSM_EVENT1(StartDeviceEvent, exfel::util::Config)
+      FSM_EVENT1(StartDeviceEvent, karabo::util::Config)
 
 
       /**************************************************************/
@@ -102,6 +102,6 @@ namespace exfel {
 
     }
   } // namespace core
-} // namespace exfel
+} // namespace karabo
 
-#endif // EXFEL_CORE_DEVICESERVERMACHINE_HH
+#endif // KARABO_CORE_DEVICESERVERMACHINE_HH

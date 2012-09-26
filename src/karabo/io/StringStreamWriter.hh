@@ -14,7 +14,7 @@
 #include "Format.hh"
 #include "Writer.hh"
 
-namespace exfel {
+namespace karabo {
     namespace io {
 
         /**
@@ -26,7 +26,7 @@ namespace exfel {
         class StringStreamWriter : public Writer<T> {
         public:
 
-            EXFEL_CLASSINFO(StringStreamWriter<T>, "StringStream", "1.0")
+            KARABO_CLASSINFO(StringStreamWriter<T>, "StringStream", "1.0")
 
             typedef boost::shared_ptr<Format<T> > FormatPointer;
 
@@ -39,9 +39,9 @@ namespace exfel {
             virtual ~StringStreamWriter()
             {}
             
-            static void expectedParameters(exfel::util::Schema& expected) {
+            static void expectedParameters(karabo::util::Schema& expected) {
 
-                using namespace exfel::util;
+                using namespace karabo::util;
 
                 CHOICE_ELEMENT<Format<T> > (expected).key("format")
                         .displayedName("Format")
@@ -55,7 +55,7 @@ namespace exfel {
                         .commit();
             }
 
-            void configure(const exfel::util::Hash& input) {
+            void configure(const karabo::util::Hash& input) {
                 if (input.has("format")) {
                     m_format = Format<T>::createChoice("format", input);
                 }

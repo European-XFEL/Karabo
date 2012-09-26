@@ -7,15 +7,15 @@
  */
 
 
-#ifndef EXFEL_UTIL_TEST_HH
-#define	EXFEL_UTIL_TEST_HH
+#ifndef KARABO_UTIL_TEST_HH
+#define	KARABO_UTIL_TEST_HH
 
 #include <string>
 #include <iostream>
 #include <boost/current_function.hpp>
 #include "Exception.hh"
 
-namespace exfel {
+namespace karabo {
   namespace util {
 
     class DECLSPEC_UTIL Test {
@@ -47,5 +47,5 @@ namespace exfel {
 }
 
 
-#endif	/* EXFEL_UTIL_TEST_HH */
+#endif	/* KARABO_UTIL_TEST_HH */
 

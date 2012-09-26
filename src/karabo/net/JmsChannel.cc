@@ -16,10 +16,10 @@
 #include "JmsIOService.hh"
 
 using namespace std;
-using namespace exfel::util;
+using namespace karabo::util;
 using namespace boost::signals2;
 
-namespace exfel {
+namespace karabo {
     namespace net {
 
         JmsChannel::JmsChannel(AJmsConnection& connection) : Channel(connection), m_jmsConnection(connection), m_filterCondition(""),
@@ -100,7 +100,7 @@ namespace exfel {
             }
         }
 
-        void JmsChannel::read(exfel::util::Hash& body, exfel::util::Hash& header) {
+        void JmsChannel::read(karabo::util::Hash& body, karabo::util::Hash& header) {
             std::string s;
             try {
                 this->read(s, header);
@@ -302,7 +302,7 @@ namespace exfel {
 
         void JmsChannel::readAsyncHashHash(const ReadHashHashHandler& handler) {
             m_readHashHashHandler = handler;
-            readAsyncRawHash(boost::bind(&exfel::net::JmsChannel::rawHash2HashHash, this, _1, _2, _3, _4));
+            readAsyncRawHash(boost::bind(&karabo::net::JmsChannel::rawHash2HashHash, this, _1, _2, _3, _4));
         }
 
         void JmsChannel::listenForBinaryMessages() {
@@ -404,7 +404,7 @@ namespace exfel {
 
                 // Add some default properties
                 Hash properties(header);
-                properties.set<long long>("__timestamp", exfel::util::Time::getMsSinceEpoch());
+                properties.set<long long>("__timestamp", karabo::util::Time::getMsSinceEpoch());
                 setProperties(properties, propertiesHandle);
 
                 MQ_SAFE_CALL(MQSetMessageProperties(messageHandle, propertiesHandle))
@@ -441,7 +441,7 @@ namespace exfel {
 
                 // Add some default properties
                 Hash properties(header);
-                properties.set<long long>("__timestamp", exfel::util::Time::getMsSinceEpoch());
+                properties.set<long long>("__timestamp", karabo::util::Time::getMsSinceEpoch());
                 setProperties(properties, propertiesHandle);
 
                 MQ_SAFE_CALL(MQSetMessageProperties(messageHandle, propertiesHandle))
@@ -463,7 +463,7 @@ namespace exfel {
             }
         }
 
-        void JmsChannel::write(const exfel::util::Hash& data, const exfel::util::Hash& header) {
+        void JmsChannel::write(const karabo::util::Hash& data, const karabo::util::Hash& header) {
             string s;
             string format = getHashFormat();
             Hash modifiedHeader(header);
@@ -541,7 +541,7 @@ namespace exfel {
             unregisterChannel(shared_from_this());
         }
 
-        void JmsChannel::rawHash2HashHash(Channel::Pointer channel, const char* data, const size_t& size, const exfel::util::Hash& header) {
+        void JmsChannel::rawHash2HashHash(Channel::Pointer channel, const char* data, const size_t& size, const karabo::util::Hash& header) {
             Hash h;
             if (m_jmsConnection.m_autoDetectMessageFormat) {
                 stringstream ss(string(data, size));
@@ -563,4 +563,4 @@ namespace exfel {
             m_readHashHashHandler(channel, h, header);
         }
     } // namespace net
-} // namespace exfel
+} // namespace karabo

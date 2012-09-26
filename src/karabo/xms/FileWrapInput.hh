@@ -8,8 +8,8 @@
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
 
-#ifndef EXFEL_XMS_FILEWRAPDEVICEINPUT_HH
-#define	EXFEL_XMS_FILEWRAPDEVICEINPUT_HH
+#ifndef KARABO_XMS_FILEWRAPDEVICEINPUT_HH
+#define	KARABO_XMS_FILEWRAPDEVICEINPUT_HH
 
 #include <fstream>
 
@@ -23,7 +23,7 @@
 /**
  * The main European XFEL namespace
  */
-namespace exfel {
+namespace karabo {
 
     namespace xms {
 
@@ -33,7 +33,7 @@ namespace exfel {
         class FileWrapDeviceInput : public Input<std::string > {
         public:
 
-            EXFEL_CLASSINFO(FileWrapDeviceInput, "FileWrapDeviceInput", "1.0")
+            KARABO_CLASSINFO(FileWrapDeviceInput, "FileWrapDeviceInput", "1.0")
 
             /**
              * Default constructor.
@@ -47,8 +47,8 @@ namespace exfel {
              * Necessary method as part of the factory/configuration system
              * @param expected [out] Description of expected parameters for this object (Schema)
              */
-            static void expectedParameters(exfel::util::Schema& expected) {
-                using namespace exfel::util;
+            static void expectedParameters(karabo::util::Schema& expected) {
+                using namespace karabo::util;
 
 
                 VECTOR_STRING_ELEMENT(expected).key("connectedOutputChannels")
@@ -64,14 +64,14 @@ namespace exfel {
              * If this object is constructed using the factory/configuration system this method is called
              * @param input Validated (@see expectedParameters) and default-filled configuration
              */
-            void configure(const exfel::util::Hash & input) {
+            void configure(const karabo::util::Hash & input) {
 
                 std::vector<std::string> connectedOutputChannels;
                 input.get("connectedOutputChannels", connectedOutputChannels);
                 for (size_t i = 0; i < connectedOutputChannels.size(); ++i) {
                     std::vector<std::string> tmp;
                     boost::split(tmp, connectedOutputChannels[i], boost::is_any_of("/"));
-                    m_connectedOutputChannels.push_back(exfel::util::Hash("instanceId", tmp[0], "channelId", tmp[1]));
+                    m_connectedOutputChannels.push_back(karabo::util::Hash("instanceId", tmp[0], "channelId", tmp[1]));
                 }
 
                 m_channelId = Memory<std::vector<char> >::registerChannel();
@@ -79,7 +79,7 @@ namespace exfel {
                 m_inactiveChunk = Memory<std::vector<char> >::registerChunk(m_channelId);
             }
 
-            std::vector<exfel::util::Hash> getConnectedOutputChannels() {
+            std::vector<karabo::util::Hash> getConnectedOutputChannels() {
                 return m_connectedOutputChannels;
             }
 
@@ -96,7 +96,7 @@ namespace exfel {
                 return Memory<std::vector<char> >::size(m_channelId, m_activeChunk);
             }
 
-            void connectNow(const std::string& instanceId, const exfel::util::Hash& outputChannelInfo) {
+            void connectNow(const std::string& instanceId, const karabo::util::Hash& outputChannelInfo) {
 
                 std::string connectionType = outputChannelInfo.get<std::string > ("connectionType");
                 std::string memoryLocation = outputChannelInfo.get<std::string > ("memoryLocation");
@@ -104,14 +104,14 @@ namespace exfel {
                 if (connectionType == "tcp") {
 
                     // Prepare connection configuration given output channel information
-                    exfel::util::Hash config = prepareConnectionConfiguration(outputChannelInfo);
+                    karabo::util::Hash config = prepareConnectionConfiguration(outputChannelInfo);
 
-                    exfel::net::Connection::Pointer tcpConnection = exfel::net::Connection::create(config); // Instantiate
+                    karabo::net::Connection::Pointer tcpConnection = karabo::net::Connection::create(config); // Instantiate
                     startConnection(tcpConnection, instanceId, memoryLocation); // Start
 
                     if (!m_tcpIoService) {
                         m_tcpIoService = tcpConnection->getIOService();
-                        m_tcpIoServiceThread = boost::thread(boost::bind(&exfel::net::IOService::run, m_tcpIoService));
+                        m_tcpIoServiceThread = boost::thread(boost::bind(&karabo::net::IOService::run, m_tcpIoService));
                     } else {
                         tcpConnection->setIOService(m_tcpIoService);
                     }
@@ -119,30 +119,30 @@ namespace exfel {
                 }
             }
 
-            exfel::util::Hash prepareConnectionConfiguration(const exfel::util::Hash& serverInfo) const {
+            karabo::util::Hash prepareConnectionConfiguration(const karabo::util::Hash& serverInfo) const {
                 const std::string& hostname = serverInfo.get<std::string > ("hostname");
                 const unsigned int& port = serverInfo.get<unsigned int>("port");
-                return exfel::util::Hash("Tcp.type", "client", "Tcp.hostname", hostname, "Tcp.port", port);
+                return karabo::util::Hash("Tcp.type", "client", "Tcp.hostname", hostname, "Tcp.port", port);
             }
 
-            void startConnection(exfel::net::Connection::Pointer connection, const std::string& instanceId, const std::string& memoryLocation) {
-                //connection->setErrorHandler(&exfel::xms::FileWrapDeviceInput<std::vector<char> >::onTcpConnectionError, this, _1, _2);
-                exfel::net::Channel::Pointer channel = connection->start();
-                channel->setErrorHandler(boost::bind(&exfel::xms::FileWrapDeviceInput::onTcpChannelError, this, _1, _2));
-                channel->write(exfel::util::Hash("instanceId", instanceId, "memoryLocation", memoryLocation)); // Say hello!
-                channel->readAsyncVectorHash(boost::bind(&exfel::xms::FileWrapDeviceInput::onTcpChannelRead, this, _1, _2, _3));
+            void startConnection(karabo::net::Connection::Pointer connection, const std::string& instanceId, const std::string& memoryLocation) {
+                //connection->setErrorHandler(&karabo::xms::FileWrapDeviceInput<std::vector<char> >::onTcpConnectionError, this, _1, _2);
+                karabo::net::Channel::Pointer channel = connection->start();
+                channel->setErrorHandler(boost::bind(&karabo::xms::FileWrapDeviceInput::onTcpChannelError, this, _1, _2));
+                channel->write(karabo::util::Hash("instanceId", instanceId, "memoryLocation", memoryLocation)); // Say hello!
+                channel->readAsyncVectorHash(boost::bind(&karabo::xms::FileWrapDeviceInput::onTcpChannelRead, this, _1, _2, _3));
                 m_tcpConnections.push_back(connection); // TODO check whether really needed
             }
 
-            void onTcpConnectionError(exfel::net::Channel::Pointer, const std::string& errorMessage) {
+            void onTcpConnectionError(karabo::net::Channel::Pointer, const std::string& errorMessage) {
                 std::cout << errorMessage << std::endl;
             }
 
-            void onTcpChannelError(exfel::net::Channel::Pointer, const std::string& errorMessage) {
+            void onTcpChannelError(karabo::net::Channel::Pointer, const std::string& errorMessage) {
                 std::cout << errorMessage << std::endl;
             }
 
-            void onTcpChannelRead(exfel::net::Channel::Pointer channel, const std::vector<char>& data, const exfel::util::Hash& header) {
+            void onTcpChannelRead(karabo::net::Channel::Pointer channel, const std::vector<char>& data, const karabo::util::Hash& header) {
                 //boost::mutex::scoped_lock lock(m_mutex);
                 std::cout << "Receiving " << data.size() << " bytes of data" << std::endl;
                 if (data.size() == 0 && header.has("channelId") && header.has("chunkId")) { // Local memory
@@ -164,7 +164,7 @@ namespace exfel {
                     this->triggerIOEvent();
                 }
 
-                channel->readAsyncVectorHash(boost::bind(&exfel::xms::FileWrapDeviceInput::onTcpChannelRead, this, _1, _2, _3));
+                channel->readAsyncVectorHash(boost::bind(&karabo::xms::FileWrapDeviceInput::onTcpChannelRead, this, _1, _2, _3));
             }
 
             bool canCompute() {
@@ -181,7 +181,7 @@ namespace exfel {
 
         private: // members
 
-            std::vector<exfel::util::Hash> m_connectedOutputChannels;
+            std::vector<karabo::util::Hash> m_connectedOutputChannels;
 
             unsigned int m_channelId;
 
@@ -190,8 +190,8 @@ namespace exfel {
             int m_activeChunk;
             int m_inactiveChunk;
 
-            exfel::net::IOService::Pointer m_tcpIoService;
-            std::deque<exfel::net::Connection::Pointer> m_tcpConnections;
+            karabo::net::IOService::Pointer m_tcpIoService;
+            std::deque<karabo::net::Connection::Pointer> m_tcpConnections;
             boost::thread m_tcpIoServiceThread;
 
 
