@@ -9,8 +9,8 @@
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
 
-#ifndef EXFEL_UTIL_PLUGINLOADER_HH
-#define	EXFEL_UTIL_PLUGINLOADER_HH
+#ifndef KARABO_UTIL_PLUGINLOADER_HH
+#define	KARABO_UTIL_PLUGINLOADER_HH
 
 #include "Schema.hh"
 
@@ -18,7 +18,7 @@
 /**
  * The main European XFEL namespace
  */
-namespace exfel {
+namespace karabo {
 
   /**
    * Namespace for package packageName
@@ -31,8 +31,8 @@ namespace exfel {
     class PluginLoader {
     public:
 
-      EXFEL_CLASSINFO(PluginLoader, "PluginLoader", "1.0")
-      EXFEL_FACTORY_BASE_CLASS
+      KARABO_CLASSINFO(PluginLoader, "PluginLoader", "1.0")
+      KARABO_FACTORY_BASE_CLASS
 
       PluginLoader() {
       };
@@ -40,9 +40,9 @@ namespace exfel {
       PluginLoader(const boost::filesystem::path& pluginDirectory) : m_pluginDirectory(pluginDirectory) {
       }
 
-      static void expectedParameters(exfel::util::Schema& expected);
+      static void expectedParameters(karabo::util::Schema& expected);
 
-      void configure(const exfel::util::Hash& input);
+      void configure(const karabo::util::Hash& input);
 
       virtual ~PluginLoader() {
       };
@@ -61,8 +61,8 @@ namespace exfel {
 
     };
   } // namespace util
-} // namespace exfel
+} // namespace karabo
 
-EXFEL_REGISTER_FACTORY_BASE_HH(exfel::util::PluginLoader, TEMPLATE_UTIL, DECLSPEC_UTIL)
+KARABO_REGISTER_FACTORY_BASE_HH(karabo::util::PluginLoader, TEMPLATE_UTIL, DECLSPEC_UTIL)
 
-#endif	/* EXFEL_PACKAGENAME_PLUGINLOADER_HH */
+#endif	/* KARABO_PACKAGENAME_PLUGINLOADER_HH */

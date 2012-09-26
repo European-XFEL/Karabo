@@ -8,8 +8,8 @@
  */
 
 
-#ifndef EXFEL_LOGCONFIG_CATEGORYCONFIGURATOR_HH
-#define	EXFEL_LOGCONFIG_CATEGORYCONFIGURATOR_HH
+#ifndef KARABO_LOGCONFIG_CATEGORYCONFIGURATOR_HH
+#define	KARABO_LOGCONFIG_CATEGORYCONFIGURATOR_HH
 
 
 
@@ -24,7 +24,7 @@
 /**
  * The main European XFEL namespace
  */
-namespace exfel {
+namespace karabo {
 
   /**
    * Namespace for package log
@@ -38,28 +38,28 @@ namespace exfel {
       std::vector<AppenderConfigurator::Pointer> m_appenderConfigurators;
 
     public:
-      EXFEL_CLASSINFO(CategoryConfigurator, "Category", "1.0")
-      EXFEL_FACTORY_BASE_CLASS
+      KARABO_CLASSINFO(CategoryConfigurator, "Category", "1.0")
+      KARABO_FACTORY_BASE_CLASS
 
       CategoryConfigurator();
       virtual ~CategoryConfigurator();
 
       void setup();
 
-      static void expectedParameters(exfel::util::Schema& expected);
-      void configure(const exfel::util::Hash& input);
+      static void expectedParameters(karabo::util::Schema& expected);
+      void configure(const karabo::util::Hash& input);
 
     private:
 
-      void configureName(const exfel::util::Hash& input);
-      void configurePriority(const exfel::util::Hash& input);
-      void configureAdditivity(const exfel::util::Hash& input);
-      void configureAppenders(const exfel::util::Hash& input);
+      void configureName(const karabo::util::Hash& input);
+      void configurePriority(const karabo::util::Hash& input);
+      void configureAdditivity(const karabo::util::Hash& input);
+      void configureAppenders(const karabo::util::Hash& input);
     };
 
   }
 }
 
-EXFEL_REGISTER_FACTORY_BASE_HH(exfel::log::CategoryConfigurator, TEMPLATE_LOG, DECLSPEC_LOG)
+KARABO_REGISTER_FACTORY_BASE_HH(karabo::log::CategoryConfigurator, TEMPLATE_LOG, DECLSPEC_LOG)
 
-#endif	/* EXFEL_LOGCONFIG_CATEGORYCONFIGURATOR_HH */
+#endif	/* KARABO_LOGCONFIG_CATEGORYCONFIGURATOR_HH */

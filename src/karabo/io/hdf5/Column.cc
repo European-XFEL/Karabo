@@ -13,7 +13,7 @@
 
 using namespace std;
 
-namespace exfel {
+namespace karabo {
     namespace io {
 	namespace hdf5 {
 

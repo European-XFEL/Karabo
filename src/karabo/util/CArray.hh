@@ -5,10 +5,10 @@
  * Created on August 2, 2011, 3:53 PM
  */
 
-#ifndef EXFEL_UTIL_CARRAY_HH
-#define	EXFEL_UTIL_CARRAY_HH
+#ifndef KARABO_UTIL_CARRAY_HH
+#define	KARABO_UTIL_CARRAY_HH
 
-namespace exfel {
+namespace karabo {
   namespace util {
 
     template<typename T>
@@ -46,5 +46,5 @@ namespace exfel {
   }
 }
 
-#endif	/* EXFEL_UTIL_CARRAY_HH */
+#endif	/* KARABO_UTIL_CARRAY_HH */
 

@@ -9,8 +9,8 @@
  * Copyright (C) 2010 European XFEL GmbH Hamburg. All rights reserved.
  */
 
-#ifndef EXFEL_UTIL_TYPES_HH
-#define	EXFEL_UTIL_TYPES_HH
+#ifndef KARABO_UTIL_TYPES_HH
+#define	KARABO_UTIL_TYPES_HH
 
 #include <string>
 #include <map>
@@ -30,7 +30,7 @@ namespace boost {
     }
 }
 
-namespace exfel {
+namespace karabo {
     namespace util {
 
         class Schema;
@@ -260,9 +260,9 @@ namespace exfel {
     } // namespace util
 
     // Convenience
-    typedef exfel::util::Types::Format TypeFormat;
+    typedef karabo::util::Types::Format TypeFormat;
 
-} // namespace exfel
+} // namespace karabo
 
-#endif	/* EXFEL_UTIL_TYPES_HH */
+#endif	/* KARABO_UTIL_TYPES_HH */
 

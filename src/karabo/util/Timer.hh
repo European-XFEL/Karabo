@@ -21,7 +21,7 @@ typedef int clockid_t;
 #include <boost/date_time.hpp>
 #include "utildll.hh"
 
-namespace exfel {
+namespace karabo {
     namespace util {
 
         //--< high_resolution_timer >---------------------------------------------------

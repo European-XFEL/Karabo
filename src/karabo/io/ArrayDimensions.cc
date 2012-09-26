@@ -9,5 +9,5 @@
 
 #include "ArrayDimensions.hh"
 
-//EXFEL_REGISTER_ONLY_ME_CC(exfel::io::ArrayDimensions)
+//KARABO_REGISTER_ONLY_ME_CC(karabo::io::ArrayDimensions)
         

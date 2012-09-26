@@ -17,10 +17,10 @@
 #include "PluginLoader.hh"
 
 
-namespace exfel {
+namespace karabo {
   namespace util {
 
-    EXFEL_REGISTER_ONLY_ME_CC(PluginLoader)
+    KARABO_REGISTER_ONLY_ME_CC(PluginLoader)
 
     using namespace std;
     using namespace boost;
@@ -101,4 +101,4 @@ namespace exfel {
       return hasNewPlugins;
     }
   } // namespace util
-} // namespace exfel
+} // namespace karabo

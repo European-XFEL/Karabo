@@ -8,8 +8,8 @@
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
 
-#ifndef EXFEL_CORE_DEVICE_HH
-#define	EXFEL_CORE_DEVICE_HH
+#ifndef KARABO_CORE_DEVICE_HH
+#define	KARABO_CORE_DEVICE_HH
 
 #include <log4cpp/Category.hh>
 
@@ -23,24 +23,24 @@
 /**
  * The main European XFEL namespace
  */
-namespace exfel {
+namespace karabo {
 
     namespace core {
 
         // Convenient logging
-#define EXFEL_LOG_DEBUG log() << log4cpp::Priority::DEBUG 
-#define EXFEL_LOG_INFO  log() << log4cpp::Priority::INFO 
-#define EXFEL_LOG_WARN  log() << log4cpp::Priority::WARN 
-#define EXFEL_LOG_ERROR log() << log4cpp::Priority::ERROR 
+#define KARABO_LOG_DEBUG log() << log4cpp::Priority::DEBUG 
+#define KARABO_LOG_INFO  log() << log4cpp::Priority::INFO 
+#define KARABO_LOG_WARN  log() << log4cpp::Priority::WARN 
+#define KARABO_LOG_ERROR log() << log4cpp::Priority::ERROR 
 
         /**
          * The Device class.
          */
-        class Device : public exfel::xms::SignalSlotable {
+        class Device : public karabo::xms::SignalSlotable {
         public:
 
-            EXFEL_CLASSINFO(Device, "Device", "1.0")
-            EXFEL_FACTORY_BASE_CLASS
+            KARABO_CLASSINFO(Device, "Device", "1.0")
+            KARABO_FACTORY_BASE_CLASS
 
             template <class Derived>
             Device(Derived*) : m_log(0) {
@@ -48,14 +48,14 @@ namespace exfel {
                 m_expectedInitialParameters = Device::initialParameters(Derived::classInfo().getClassId());
                 m_expectedReconfigurableParameters = Device::reconfigurableParameters(Derived::classInfo().getClassId());
                 m_expectedMonitoredParameters = Device::monitorableParameters(Derived::classInfo().getClassId());
-                m_allExpectedParameters = Device::expectedParameters(Derived::classInfo().getClassId(), exfel::util::READ | exfel::util::WRITE | exfel::util::INIT);
+                m_allExpectedParameters = Device::expectedParameters(Derived::classInfo().getClassId(), karabo::util::READ | karabo::util::WRITE | karabo::util::INIT);
             }
 
             virtual ~Device();
 
-            static void expectedParameters(exfel::util::Schema& expected);
+            static void expectedParameters(karabo::util::Schema& expected);
 
-            void configure(const exfel::util::Hash& input);
+            void configure(const karabo::util::Hash& input);
 
             /**
              * Updates the state of the device. This function automatically notifies any observers.
@@ -80,7 +80,7 @@ namespace exfel {
                     log() << log4cpp::Priority::WARN << "Illegal trial to set parameter (" + key + ") which was not described in the expectedParameters section";
                 }
                 // Automatically inform the distributed system
-                exfel::util::Hash config(key, value);
+                karabo::util::Hash config(key, value);
                 emit("signalChanged", config, getInstanceId(), m_classId);
             }
 
@@ -90,13 +90,13 @@ namespace exfel {
              * any observers.
              * @param config Hash of updated internal parameters (must be declared in the expectedParameters function)
              */
-            void set(const exfel::util::Hash& hash) {
+            void set(const karabo::util::Hash& hash) {
 
                 boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
 
                 // Flatten for safety
-                exfel::util::Hash flat = hash.flatten();
-                exfel::util::Hash::iterator it = flat.begin();
+                karabo::util::Hash flat = hash.flatten();
+                karabo::util::Hash::iterator it = flat.begin();
                 while (it != flat.end()) {
                     const std::string& key = it->first;
                     if (m_expectedMonitoredParameters.hasKey(key)) {
@@ -176,20 +176,20 @@ namespace exfel {
              * Retrieves all expected parameters of this device
              * @return Schema object containing all expected parameters
              */
-            exfel::util::Schema getFullSchema() const;
+            karabo::util::Schema getFullSchema() const;
             
             /**
              * Retrieves the description of a selected parameter
              * @param key The key of the parameter
              * @return A schema instance containing further information to the parameter
              */
-            //exfel::util::Schema getParameterDescription(const std::string& key);
+            //karabo::util::Schema getParameterDescription(const std::string& key);
             
             /**
              * Add external schema descriptions to current schema containers
              * @param schema
              */
-            void appendSchema(const exfel::util::Schema& schema) {
+            void appendSchema(const karabo::util::Schema& schema) {
                 boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
                 m_stateDependendSchema.clear();
                 m_injectedExpectedParameters.addExternalSchema(schema);
@@ -200,14 +200,14 @@ namespace exfel {
              * add additional (dynamic) descriptions
              * @param schema
              */
-            void updateSchema(const exfel::util::Schema& schema) {
+            void updateSchema(const karabo::util::Schema& schema) {
                 std::cout << "Update Schema requested" << std::endl;
                 injectSchema(schema);
                 std::cout << "Injected..." << std::endl;
                 // Notify the distributed system
-                exfel::util::Hash config("Xsd.indentation", -1);
+                karabo::util::Hash config("Xsd.indentation", -1);
                 std::stringstream stream;
-                exfel::io::Format<exfel::util::Schema>::create(config)->convert(getFullSchema(), stream);
+                karabo::io::Format<karabo::util::Schema>::create(config)->convert(getFullSchema(), stream);
                  std::cout << "Serialized..." << std::endl;
                 emit("signalSchemaUpdated", stream.str(), getInstanceId(), m_classId);
                 log() << log4cpp::Priority::INFO << "Schema updated";
@@ -238,7 +238,7 @@ namespace exfel {
                 if (m_allExpectedParameters.hasAlias(alias)) {
                     return m_allExpectedParameters.alias2key(alias);
                 } else {
-                    throw PARAMETER_EXCEPTION("The provided alias (" + exfel::util::String::toString(alias) + ") was not described in the expectedParameters section");
+                    throw PARAMETER_EXCEPTION("The provided alias (" + karabo::util::String::toString(alias) + ") was not described in the expectedParameters section");
                 }
             }
 
@@ -282,13 +282,13 @@ namespace exfel {
             }
 
 
-            exfel::util::Hash getInitialParameters() const;
+            karabo::util::Hash getInitialParameters() const;
 
-            exfel::util::Hash getReconfigurableParameters() const;
+            karabo::util::Hash getReconfigurableParameters() const;
 
-            exfel::util::Hash getMonitorableParameters() const;
+            karabo::util::Hash getMonitorableParameters() const;
 
-            exfel::util::Hash getCurrentConfiguration() const;
+            karabo::util::Hash getCurrentConfiguration() const;
 
             const std::string& getDeviceServerInstanceId() const {
                 return m_devSrvInstId;
@@ -296,10 +296,10 @@ namespace exfel {
 
             template <class T>
             void reconfigure(const std::string& instanceId, const std::string& key, const T& value) {
-                reconfigure(instanceId, exfel::util::Hash(key, value));
+                reconfigure(instanceId, karabo::util::Hash(key, value));
             }
 
-            void reconfigure(const std::string& instanceId, const exfel::util::Hash& configuration);
+            void reconfigure(const std::string& instanceId, const karabo::util::Hash& configuration);
 
             /**
              * This function will typically be called by the DeviceServer (or directly within the startDevice application).
@@ -310,7 +310,7 @@ namespace exfel {
             
         protected: // Functions and Classes
             
-            virtual void onReconfigure(exfel::util::Hash& incomingReconfiguration) {
+            virtual void onReconfigure(karabo::util::Hash& incomingReconfiguration) {
             }
 
             virtual void onException(const std::string& userMessage, const std::string& detailedMessage) {
@@ -321,13 +321,13 @@ namespace exfel {
             }
 
             template <class T>
-            bool ensureSoftwareHardwareConsistency(const std::string key, const T& targetValue, const T& actualValue, exfel::util::Hash& configuration) {
+            bool ensureSoftwareHardwareConsistency(const std::string key, const T& targetValue, const T& actualValue, karabo::util::Hash& configuration) {
                 // TODO One should maybe think of a more sophisticated method than converting to string and compare those...
-                if (exfel::util::String::toString(targetValue) != exfel::util::String::toString(actualValue)) {
+                if (karabo::util::String::toString(targetValue) != karabo::util::String::toString(actualValue)) {
 
                     std::ostringstream msg;
                     msg << "Hardware rejected to accept (re-)configuration for key \"" << key << "\" to target \""
-                            << exfel::util::String::toString(targetValue) << "\". Actual value is \"" << exfel::util::String::toString(actualValue) << "\"";
+                            << karabo::util::String::toString(targetValue) << "\". Actual value is \"" << karabo::util::String::toString(actualValue) << "\"";
                     log() << log4cpp::Priority::WARN << msg.str();
                     emit("signalBadReconfiguration", msg.str(), getInstanceId());
                     configuration.set(key, actualValue);
@@ -343,45 +343,45 @@ namespace exfel {
             /*                 Some FSM convenience                       */
             /**************************************************************/
 
-            EXFEL_FSM_ON_EXCEPTION(onException)
+            KARABO_FSM_ON_EXCEPTION(onException)
 
-            EXFEL_FSM_LOGGER(log, log4cpp::CategoryStream, log4cpp::Priority::DEBUG)
+            KARABO_FSM_LOGGER(log, log4cpp::CategoryStream, log4cpp::Priority::DEBUG)
 
-            EXFEL_FSM_NO_TRANSITION_V_ACTION(noStateTransition)
+            KARABO_FSM_NO_TRANSITION_V_ACTION(noStateTransition)
 
-            EXFEL_FSM_ON_CURRENT_STATE_CHANGE(updateCurrentState)
+            KARABO_FSM_ON_CURRENT_STATE_CHANGE(updateCurrentState)
 
-            EXFEL_FSM_V_ACTION2(ErrorFoundAction, errorFoundAction, std::string, std::string)
+            KARABO_FSM_V_ACTION2(ErrorFoundAction, errorFoundAction, std::string, std::string)
 
         protected: // Members
 
-            exfel::util::Hash m_initialParameters;
-            exfel::util::Hash m_reconfigurableParameters;
-            exfel::util::Hash m_monitoredParameters;
+            karabo::util::Hash m_initialParameters;
+            karabo::util::Hash m_reconfigurableParameters;
+            karabo::util::Hash m_monitoredParameters;
 
-            exfel::util::Schema m_expectedInitialParameters;
-            exfel::util::Schema m_expectedReconfigurableParameters;
-            exfel::util::Schema m_expectedMonitoredParameters;
-            exfel::util::Schema m_allExpectedParameters;
+            karabo::util::Schema m_expectedInitialParameters;
+            karabo::util::Schema m_expectedReconfigurableParameters;
+            karabo::util::Schema m_expectedMonitoredParameters;
+            karabo::util::Schema m_allExpectedParameters;
             
-            exfel::util::Schema m_injectedExpectedParameters;
+            karabo::util::Schema m_injectedExpectedParameters;
 
 
         private: // Functions
 
             void slotRefresh();
 
-            void slotReconfigure(const exfel::util::Hash& reconfiguration);
+            void slotReconfigure(const karabo::util::Hash& reconfiguration);
             
             void slotGetSchema(const bool& onlyCurrentState);
             
             void slotKillDeviceInstance();
 
-            std::pair<bool, std::string> validate(const exfel::util::Hash& reconfiguration);
+            std::pair<bool, std::string> validate(const karabo::util::Hash& reconfiguration);
             
-            exfel::util::Schema& getStateDependentSchema(const std::string& currentState);
+            karabo::util::Schema& getStateDependentSchema(const std::string& currentState);
 
-            void applyReconfiguration(const exfel::util::Hash& reconfiguration);
+            void applyReconfiguration(const karabo::util::Hash& reconfiguration);
 
             void increaseInstanceCount();
 
@@ -455,7 +455,7 @@ namespace exfel {
              * add additional (dynamic) descriptions
              * @param schema
              */
-            void injectSchema(const exfel::util::Schema& schema) {
+            void injectSchema(const karabo::util::Schema& schema) {
                 boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
                 m_stateDependendSchema.clear();
                 m_injectedExpectedParameters.clear();
@@ -467,10 +467,10 @@ namespace exfel {
             std::string m_classId;
             std::string m_devSrvInstId;
 
-            std::map<std::string, exfel::util::Schema> m_stateDependendSchema;
+            std::map<std::string, karabo::util::Schema> m_stateDependendSchema;
             boost::mutex m_stateDependendSchemaMutex;
             
-            exfel::util::Hash m_incomingValidatedReconfiguration;
+            karabo::util::Hash m_incomingValidatedReconfiguration;
             boost::mutex m_objectStateChangeMutex;
 
             log4cpp::Category* m_log;
@@ -482,6 +482,6 @@ namespace exfel {
     }
 }
 
-EXFEL_REGISTER_FACTORY_BASE_HH(exfel::core::Device, TEMPLATE_CORE, DECLSPEC_CORE)
+KARABO_REGISTER_FACTORY_BASE_HH(karabo::core::Device, TEMPLATE_CORE, DECLSPEC_CORE)
 
 #endif

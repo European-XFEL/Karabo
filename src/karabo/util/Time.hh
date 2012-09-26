@@ -9,15 +9,15 @@
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
 
-#ifndef EXFEL_UTIL_TIME_HH
-#define	EXFEL_UTIL_TIME_HH
+#ifndef KARABO_UTIL_TIME_HH
+#define	KARABO_UTIL_TIME_HH
 
 #include <boost/date_time/local_time/local_time.hpp>
 
 /**
  * The main European XFEL namespace
  */
-namespace exfel {
+namespace karabo {
 
   /**
    * Namespace for package packageName
@@ -51,6 +51,6 @@ namespace exfel {
     };
 
   } // namespace util
-} // namespace exfel
+} // namespace karabo
 
-#endif	/* EXFEL_UTIL_TIME_HH */
+#endif	/* KARABO_UTIL_TIME_HH */

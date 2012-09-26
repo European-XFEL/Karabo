@@ -8,12 +8,12 @@
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
 
-#ifndef EXFEL_UTIL_OVERWRITEELEMENT_HH
-#define	EXFEL_UTIL_OVERWRITEELEMENT_HH
+#ifndef KARABO_UTIL_OVERWRITEELEMENT_HH
+#define	KARABO_UTIL_OVERWRITEELEMENT_HH
 
 #include "Schema.hh"
 
-namespace exfel {
+namespace karabo {
     namespace util {
 
         class OverwriteElement {

@@ -10,8 +10,8 @@
  */
 
 
-#ifndef EXFEL_UTIL_MASTERCONFIG_HH
-#define	EXFEL_UTIL_MASTERCONFIG_HH
+#ifndef KARABO_UTIL_MASTERCONFIG_HH
+#define	KARABO_UTIL_MASTERCONFIG_HH
 
 #include <boost/algorithm/string.hpp>
 #include <boost/foreach.hpp>
@@ -28,7 +28,7 @@
 /**
  * The main European XFEL namespace
  */
-namespace exfel {
+namespace karabo {
 
     /**
      * Namespace for package util
@@ -884,6 +884,6 @@ namespace exfel {
         };
 
     } // namespace util
-} // namespace exfel
+} // namespace karabo
 
-#endif	/* EXFEL_UTIL_MASTERCONFIG_HH */
+#endif	/* KARABO_UTIL_MASTERCONFIG_HH */

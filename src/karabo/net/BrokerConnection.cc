@@ -12,14 +12,14 @@
 
 #include <karabo/io/Format.hh>
 
-namespace exfel {
+namespace karabo {
     namespace net {
 
-        using namespace exfel::util;
+        using namespace karabo::util;
 
         void BrokerConnection::expectedParameters(Schema& expected) {
 
-            CHOICE_ELEMENT<exfel::io::Format<exfel::util::Hash> > (expected)
+            CHOICE_ELEMENT<karabo::io::Format<karabo::util::Hash> > (expected)
                     .key("hashSerialization")
                     .displayedName("Hash Serialization")
                     .description("Decides which protocol should be used in order to transfer a Hash object")
@@ -41,7 +41,7 @@ namespace exfel {
                     .commit();
         }
 
-        void BrokerConnection::configure(const exfel::util::Hash& input) {
+        void BrokerConnection::configure(const karabo::util::Hash& input) {
 
             m_hashFormat = HashFormat::createChoice("hashSerialization", input);
 
@@ -69,22 +69,22 @@ namespace exfel {
             m_service->setService(serviceType);
         }
 
-        void BrokerConnection::hashToString(const exfel::util::Hash& hash, std::string& serializedHash) {
+        void BrokerConnection::hashToString(const karabo::util::Hash& hash, std::string& serializedHash) {
             std::stringstream out;
             try {
                 m_hashFormat->convert(hash, out);
-            } catch (const exfel::util::Exception& e) {
+            } catch (const karabo::util::Exception& e) {
                 std::cout << e << std::endl;
             }
             
             serializedHash.assign(out.str());
         }
 
-        void BrokerConnection::stringToHash(const std::string& serializedHash, exfel::util::Hash& hash) {
+        void BrokerConnection::stringToHash(const std::string& serializedHash, karabo::util::Hash& hash) {
             std::stringstream in(serializedHash);
             m_hashFormat->convert(in, hash);
         }
 
     } // namespace net
-} // namespace exfel
+} // namespace karabo
 

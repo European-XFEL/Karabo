@@ -20,7 +20,7 @@
 
 using namespace std;
 
-namespace exfel {
+namespace karabo {
   namespace util {
 
     template<>

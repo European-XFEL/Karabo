@@ -11,13 +11,13 @@
 #include "HashBinarySerializer.hh"
 #include "Format.hh"
 
-namespace exfel {
+namespace karabo {
     namespace io {
         
-        EXFEL_REGISTER_FACTORY_CC(BinarySerializer<exfel::util::Hash>, HashBinarySerializer)
+        KARABO_REGISTER_FACTORY_CC(BinarySerializer<karabo::util::Hash>, HashBinarySerializer)
                 
         HashBinarySerializer::HashBinarySerializer() {
-            m_hashFormat = Format<exfel::util::Hash>::create("Bin");
+            m_hashFormat = Format<karabo::util::Hash>::create("Bin");
         }
 
 

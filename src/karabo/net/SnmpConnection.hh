@@ -5,8 +5,8 @@
  * Created on July 15, 2011, 2:30 PM
  */
 
-#ifndef EXFEL_NET_SNMPCONNECTION_HH
-#define	EXFEL_NET_SNMPCONNECTION_HH
+#ifndef KARABO_NET_SNMPCONNECTION_HH
+#define	KARABO_NET_SNMPCONNECTION_HH
 
 #include <boost/shared_ptr.hpp>
 #include <string>
@@ -19,7 +19,7 @@
 /**
  * The main European XFEL namespace
  */
-namespace exfel {
+namespace karabo {
 
     /**
      * Namespace for package net
@@ -46,7 +46,7 @@ namespace exfel {
 
         public:
 
-            EXFEL_CLASSINFO(SnmpConnection, "Snmp", "1.0")
+            KARABO_CLASSINFO(SnmpConnection, "Snmp", "1.0")
 
 
             SnmpConnection();
@@ -54,9 +54,9 @@ namespace exfel {
             virtual ~SnmpConnection() {
             }
 
-            static void expectedParameters(exfel::util::Schema& expected);
+            static void expectedParameters(karabo::util::Schema& expected);
 
-            void configure(const exfel::util::Hash& input);
+            void configure(const karabo::util::Hash& input);
 
             /**
              * Starts the connection
@@ -95,10 +95,10 @@ namespace exfel {
             long m_version;
             std::string m_community;
             std::string m_aliasMode;
-            exfel::util::Schema m_schema;
+            karabo::util::Schema m_schema;
         };
     }
 }
 
-#endif	/* EXFEL_NET_SNMPCONNECTION_HH */
+#endif	/* KARABO_NET_SNMPCONNECTION_HH */
 

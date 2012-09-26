@@ -16,7 +16,7 @@
 #include <time.h>
 
 
-namespace exfel {
+namespace karabo {
   namespace util {
 
     using namespace boost::posix_time;
@@ -44,4 +44,4 @@ namespace exfel {
     }
     
   } // namespace packageName
-} // namespace exfel
+} // namespace karabo

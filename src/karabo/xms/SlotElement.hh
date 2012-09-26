@@ -9,13 +9,13 @@
  */
 
 
-#ifndef EXFEL_UTIL_SLOTELEMENT_HH
-#define	EXFEL_UTIL_SLOTELEMENT_HH
+#ifndef KARABO_UTIL_SLOTELEMENT_HH
+#define	KARABO_UTIL_SLOTELEMENT_HH
 
 #include <karabo/util/ComplexElement.hh>
 #include <karabo/util/SimpleElement.hh>
 
-namespace exfel {
+namespace karabo {
     namespace xms {
 
         template <class Derived>
@@ -23,12 +23,12 @@ namespace exfel {
             
             protected:
 
-            exfel::util::ComplexElement m_outerElement;
-            exfel::util::SimpleElement<std::vector<std::string> > m_connectedSignals;
+            karabo::util::ComplexElement m_outerElement;
+            karabo::util::SimpleElement<std::vector<std::string> > m_connectedSignals;
 
         public:
 
-            SlotElementBase(exfel::util::Schema& expected) : m_outerElement(exfel::util::ComplexElement(expected)) {
+            SlotElementBase(karabo::util::Schema& expected) : m_outerElement(karabo::util::ComplexElement(expected)) {
                 m_outerElement.initAndRead();
                 m_outerElement.displayType("Slot");
                 m_connectedSignals.key("connectedSignals");
@@ -100,11 +100,11 @@ namespace exfel {
         class SLOT_ELEMENT : public SlotElementBase<SLOT_ELEMENT> {
             
         public:
-            SLOT_ELEMENT(exfel::util::Schema& expected) : SlotElementBase<SLOT_ELEMENT>(expected) {
+            SLOT_ELEMENT(karabo::util::Schema& expected) : SlotElementBase<SLOT_ELEMENT>(expected) {
             }
             
             void commit() {
-                exfel::util::Schema& innerElement = this->m_outerElement.commit();
+                karabo::util::Schema& innerElement = this->m_outerElement.commit();
                 this->m_connectedSignals.commit(innerElement);
             }
             
@@ -115,11 +115,11 @@ namespace exfel {
         template <class A1>
         class SLOT_ELEMENT1 : public SlotElementBase<SLOT_ELEMENT1<A1> > {
             
-            exfel::util::SimpleElement<A1> m_arg1;
+            karabo::util::SimpleElement<A1> m_arg1;
             
         public:
             
-            SLOT_ELEMENT1(exfel::util::Schema& expected) : SlotElementBase<SLOT_ELEMENT1<A1> >(expected) {
+            SLOT_ELEMENT1(karabo::util::Schema& expected) : SlotElementBase<SLOT_ELEMENT1<A1> >(expected) {
                 m_arg1.key("arg1");
                 m_arg1.displayedName("Argument 1");
                 m_arg1.reconfigurable();
@@ -137,7 +137,7 @@ namespace exfel {
             }
             
             void commit() {
-                exfel::util::Schema& innerElement = this->m_outerElement.commit();
+                karabo::util::Schema& innerElement = this->m_outerElement.commit();
                 this->m_connectedSignals.commit(innerElement);
                 m_arg1.commit(innerElement);
             }

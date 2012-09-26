@@ -8,8 +8,8 @@
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
 
-#ifndef EXFEL_UTIL_GENERICFACTORY_HH
-#define EXFEL_UTIL_GENERICFACTORY_HH
+#ifndef KARABO_UTIL_GENERICFACTORY_HH
+#define KARABO_UTIL_GENERICFACTORY_HH
 
 
 #include <string>
@@ -22,7 +22,7 @@
 #include "Exception.hh"
 #include "String.hh"
 
-namespace exfel {
+namespace karabo {
     namespace util {
 
         /**
@@ -33,9 +33,9 @@ namespace exfel {
          * In fact, this template is used by Factory template to obtain factory for specific type.
          * In other words GenericFactory creates factories. For example a declaration may look like:
          * @code
-         * exfel::util::GenericFactory<exfel::util::Factory<BaseType> >
+         * karabo::util::GenericFactory<karabo::util::Factory<BaseType> >
          * @endcode
-         * which means ManufacturedType is equal exfel::util::Factory<BaseType>
+         * which means ManufacturedType is equal karabo::util::Factory<BaseType>
          * @tparam ManufacturedType Type of objects to be constructed by this factory
          * @tparam ClassIdKey  Type of the keys for registry (default std::string)
          */

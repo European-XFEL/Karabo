@@ -8,24 +8,24 @@
 
 
 #include "FixedLengthArray.hh"
-using namespace exfel::io;
+using namespace karabo::io;
 
-namespace exfel {
+namespace karabo {
   namespace io {
     namespace hdf5 {
 
-    EXFEL_REGISTER_FACTORY_CC(RecordElement, Int8ArrayElement)
-    EXFEL_REGISTER_FACTORY_CC(RecordElement, Int16ArrayElement)
-    EXFEL_REGISTER_FACTORY_CC(RecordElement, Int32ArrayElement)
-    EXFEL_REGISTER_FACTORY_CC(RecordElement, Int64ArrayElement)
-    EXFEL_REGISTER_FACTORY_CC(RecordElement, UInt8ArrayElement)
-    EXFEL_REGISTER_FACTORY_CC(RecordElement, UInt16ArrayElement)
-    EXFEL_REGISTER_FACTORY_CC(RecordElement, UInt32ArrayElement)
-    EXFEL_REGISTER_FACTORY_CC(RecordElement, UInt64ArrayElement)
-    EXFEL_REGISTER_FACTORY_CC(RecordElement, BoolArrayElement)
-    EXFEL_REGISTER_FACTORY_CC(RecordElement, StringArrayElement)
-    EXFEL_REGISTER_FACTORY_CC(RecordElement, FloatArrayElement)
-    EXFEL_REGISTER_FACTORY_CC(RecordElement, DoubleArrayElement)
+    KARABO_REGISTER_FACTORY_CC(RecordElement, Int8ArrayElement)
+    KARABO_REGISTER_FACTORY_CC(RecordElement, Int16ArrayElement)
+    KARABO_REGISTER_FACTORY_CC(RecordElement, Int32ArrayElement)
+    KARABO_REGISTER_FACTORY_CC(RecordElement, Int64ArrayElement)
+    KARABO_REGISTER_FACTORY_CC(RecordElement, UInt8ArrayElement)
+    KARABO_REGISTER_FACTORY_CC(RecordElement, UInt16ArrayElement)
+    KARABO_REGISTER_FACTORY_CC(RecordElement, UInt32ArrayElement)
+    KARABO_REGISTER_FACTORY_CC(RecordElement, UInt64ArrayElement)
+    KARABO_REGISTER_FACTORY_CC(RecordElement, BoolArrayElement)
+    KARABO_REGISTER_FACTORY_CC(RecordElement, StringArrayElement)
+    KARABO_REGISTER_FACTORY_CC(RecordElement, FloatArrayElement)
+    KARABO_REGISTER_FACTORY_CC(RecordElement, DoubleArrayElement)
 
     }
   }

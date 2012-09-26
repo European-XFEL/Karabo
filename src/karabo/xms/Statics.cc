@@ -10,7 +10,7 @@
 
 #include "Statics.hh"
 
-namespace exfel {
+namespace karabo {
     namespace xms {
 
         boost::uuids::random_generator Statics::m_uuidGenerator;

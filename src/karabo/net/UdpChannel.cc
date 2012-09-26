@@ -18,15 +18,15 @@
 #include "UdpChannel.hh"
 #include "UdpConnection.hh"
 
-namespace exfel {
+namespace karabo {
     namespace net {
 
         using namespace std;
         using namespace boost::asio;
-        using namespace exfel::util;
+        using namespace karabo::util;
 
 
-        //EXFEL_REGISTER_FACTORY_CC(Channel, UdpChannel)
+        //KARABO_REGISTER_FACTORY_CC(Channel, UdpChannel)
 
         UdpChannel::UdpChannel(UdpConnection& c) :
         Channel(c),

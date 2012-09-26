@@ -5,8 +5,8 @@
  * Created on July 14, 2011, 5:54 PM
  */
 
-#ifndef EXFEL_NET_SNMPCHANNEL_HH
-#define	EXFEL_NET_SNMPCHANNEL_HH
+#ifndef KARABO_NET_SNMPCHANNEL_HH
+#define	KARABO_NET_SNMPCHANNEL_HH
 
 #include "Channel.hh"
 
@@ -17,7 +17,7 @@
 
 //#include "SnmpIOService.hh"
 
-namespace exfel {
+namespace karabo {
     namespace net {
 
         class SnmpConnection;
@@ -32,7 +32,7 @@ namespace exfel {
 
         public:
 
-            EXFEL_CLASSINFO(SnmpChannel, "SnmpChannel", "1.0")
+            KARABO_CLASSINFO(SnmpChannel, "SnmpChannel", "1.0")
 
             typedef boost::shared_ptr<SnmpChannel> Pointer;
 
@@ -50,19 +50,19 @@ namespace exfel {
                 return shared_from_this();
             }
 
-            virtual void read(std::vector<char>& cmd, exfel::util::Hash& hash);
-            virtual void read(std::string& cmd, exfel::util::Hash& hash);
-            virtual void read(exfel::util::Hash& hash);
+            virtual void read(std::vector<char>& cmd, karabo::util::Hash& hash);
+            virtual void read(std::string& cmd, karabo::util::Hash& hash);
+            virtual void read(karabo::util::Hash& hash);
             
             virtual void readAsyncVectorHash(const ReadVectorHashHandler& handler);
             
-            virtual void write(const std::vector<char>& cmd, const exfel::util::Hash& hash);
-            virtual void write(const std::string& cmd, const exfel::util::Hash& hash);
-            virtual void write(const exfel::util::Hash& hash);
+            virtual void write(const std::vector<char>& cmd, const karabo::util::Hash& hash);
+            virtual void write(const std::string& cmd, const karabo::util::Hash& hash);
+            virtual void write(const karabo::util::Hash& hash);
             
-            virtual void writeAsyncVectorHash(const std::vector<char>& cmd, const exfel::util::Hash& hash, const WriteCompleteHandler& handler);
-            virtual void writeAsyncStringHash(const std::string& cmd, const exfel::util::Hash& hash, const WriteCompleteHandler& handler);
-            virtual void writeAsyncHash(const exfel::util::Hash& hash, const WriteCompleteHandler& handler);
+            virtual void writeAsyncVectorHash(const std::vector<char>& cmd, const karabo::util::Hash& hash, const WriteCompleteHandler& handler);
+            virtual void writeAsyncStringHash(const std::string& cmd, const karabo::util::Hash& hash, const WriteCompleteHandler& handler);
+            virtual void writeAsyncHash(const karabo::util::Hash& hash, const WriteCompleteHandler& handler);
 
             virtual void setErrorHandler(const ErrorHandler& handler); 
                 
@@ -76,10 +76,10 @@ namespace exfel {
             static int async_snmpwalkbulk_callback(int op, snmp_session *sp, int reqid, snmp_pdu *response, void *cbdata);
 
             void requestMoreDataAsync();
-            void convertVarbindToHash(netsnmp_variable_list* v, exfel::util::Hash& hash);
-            void read_snmpget(exfel::util::Hash& hash);
-            void read_snmpwalk(exfel::util::Hash& hash);
-            void read_snmpwalkbulk(exfel::util::Hash& hash);
+            void convertVarbindToHash(netsnmp_variable_list* v, karabo::util::Hash& hash);
+            void read_snmpget(karabo::util::Hash& hash);
+            void read_snmpwalk(karabo::util::Hash& hash);
+            void read_snmpwalkbulk(karabo::util::Hash& hash);
 
         private:
             /*
@@ -119,7 +119,7 @@ namespace exfel {
             size_t m_namelen;
             oid m_endoid[MAX_OID_LEN];
             size_t m_endlen;
-            exfel::util::Hash m_output;
+            karabo::util::Hash m_output;
             std::string m_command;
             ReadVectorHashHandler m_complete;
         };
@@ -127,5 +127,5 @@ namespace exfel {
     }
 }
 
-#endif	/* EXFEL_NET_SNMPCHANNEL_HH */
+#endif	/* KARABO_NET_SNMPCHANNEL_HH */
 

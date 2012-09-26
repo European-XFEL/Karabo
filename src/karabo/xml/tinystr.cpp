@@ -31,7 +31,7 @@ distribution.
 
 #include "tinystr.h"
 
-namespace exfel {
+namespace karabo {
 
     namespace tinyxml {
 

@@ -8,8 +8,8 @@
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
 
-#ifndef EXFEL_IO_IODLL_HH
-#define	EXFEL_IO_IODLL_HH
+#ifndef KARABO_IO_IODLL_HH
+#define	KARABO_IO_IODLL_HH
 
 /********************************************
  *         Disable Specific Warnings         *

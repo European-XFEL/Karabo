@@ -9,8 +9,8 @@
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
 
-#ifndef EXFEL_XMS_REQUEST_HH
-#define	EXFEL_XMS_REQUEST_HH
+#ifndef KARABO_XMS_REQUEST_HH
+#define	KARABO_XMS_REQUEST_HH
 
 #include <boost/uuid/uuid.hpp>            // uuid class
 #include <boost/uuid/uuid_generators.hpp> // generators
@@ -20,15 +20,15 @@
 #include <karabo/util/Factory.hh>
 #include <karabo/net/BrokerChannel.hh>
 
-namespace exfel {
+namespace karabo {
     namespace xms {
 
         class Requestor {
         public:
 
-            EXFEL_CLASSINFO(Requestor, "Requestor", "1.0")
+            KARABO_CLASSINFO(Requestor, "Requestor", "1.0")
 
-            Requestor(const exfel::net::BrokerChannel::Pointer& channel, const std::string& requestInstanceId) :
+            Requestor(const karabo::net::BrokerChannel::Pointer& channel, const std::string& requestInstanceId) :
             m_channel(channel), m_requestInstanceId(requestInstanceId), m_replyId(generateUUID()), m_isRequested(false), m_isReceived(false) {
             }
             
@@ -70,14 +70,14 @@ namespace exfel {
            
             Requestor& receive() {
                 try {
-                    exfel::util::Hash body, header;
+                    karabo::util::Hash body, header;
                     sendRequest();
                     receiveResponse(body, header);
-                } catch (const exfel::util::TimeoutException&) {
+                } catch (const karabo::util::TimeoutException&) {
                     RETHROW_AS(TIMEOUT_EXCEPTION("Response timed out"));
-                } catch (const exfel::util::CastException&) {
+                } catch (const karabo::util::CastException&) {
                     RETHROW_AS(CAST_EXCEPTION("Received unexpected (incompatible) response type"));
-                } catch (const exfel::util::NetworkException&) {
+                } catch (const karabo::util::NetworkException&) {
                     RETHROW_AS(NETWORK_EXCEPTION("Could not send request"));
                 }
                 return *this;
@@ -86,15 +86,15 @@ namespace exfel {
             template <class A1>
             Requestor& receive(A1& a1) {
                 try {
-                    exfel::util::Hash body, header;
+                    karabo::util::Hash body, header;
                     sendRequest();
                     receiveResponse(body, header);
                     a1 = body.get<A1 > ("a1");
-                } catch (const exfel::util::TimeoutException&) {
+                } catch (const karabo::util::TimeoutException&) {
                     RETHROW_AS(TIMEOUT_EXCEPTION("Response timed out"));
-                } catch (const exfel::util::CastException&) {
+                } catch (const karabo::util::CastException&) {
                     RETHROW_AS(CAST_EXCEPTION("Received unexpected (incompatible) response type"));
-                } catch (const exfel::util::NetworkException&) {
+                } catch (const karabo::util::NetworkException&) {
                     RETHROW_AS(NETWORK_EXCEPTION("Could not send request"));
                 }
                 return *this;
@@ -103,16 +103,16 @@ namespace exfel {
             template <class A1, class A2>
             Requestor& receive(A1& a1, A2& a2) {
                 try {
-                    exfel::util::Hash body, header;
+                    karabo::util::Hash body, header;
                     sendRequest();
                     receiveResponse(body, header);
                     a1 = body.get<A1 > ("a1");
                     a2 = body.get<A2 > ("a2");
-                } catch (const exfel::util::TimeoutException&) {
+                } catch (const karabo::util::TimeoutException&) {
                     RETHROW_AS(TIMEOUT_EXCEPTION("Response timed out"));
-                } catch (const exfel::util::CastException&) {
+                } catch (const karabo::util::CastException&) {
                     RETHROW_AS(CAST_EXCEPTION("Received unexpected (incompatible) response type"));
-                } catch (const exfel::util::NetworkException&) {
+                } catch (const karabo::util::NetworkException&) {
                     RETHROW_AS(NETWORK_EXCEPTION("Could not send request"));
                 }
                 return *this;
@@ -121,17 +121,17 @@ namespace exfel {
             template <class A1, class A2, class A3>
             Requestor& receive(A1& a1, A2& a2, A3& a3) {
                 try {
-                    exfel::util::Hash body, header;
+                    karabo::util::Hash body, header;
                     sendRequest();
                     receiveResponse(body, header);
                     a1 = body.get<A1 > ("a1");
                     a2 = body.get<A2 > ("a2");
                     a3 = body.get<A3 > ("a3");
-                } catch (const exfel::util::TimeoutException&) {
+                } catch (const karabo::util::TimeoutException&) {
                     RETHROW_AS(TIMEOUT_EXCEPTION("Response timed out"));
-                } catch (const exfel::util::CastException&) {
+                } catch (const karabo::util::CastException&) {
                     RETHROW_AS(CAST_EXCEPTION("Received unexpected (incompatible) response type"));
-                } catch (const exfel::util::NetworkException&) {
+                } catch (const karabo::util::NetworkException&) {
                     RETHROW_AS(NETWORK_EXCEPTION("Could not send request"));
                 }
                 return *this;
@@ -140,18 +140,18 @@ namespace exfel {
             template <class A1, class A2, class A3, class A4>
             Requestor& receive(A1& a1, A2& a2, A3& a3, A4& a4) {
                 try {
-                    exfel::util::Hash body, header;
+                    karabo::util::Hash body, header;
                     sendRequest();
                     receiveResponse(body, header);
                     a1 = body.get<A1 > ("a1");
                     a2 = body.get<A2 > ("a2");
                     a3 = body.get<A3 > ("a3");
                     a4 = body.get<A4 > ("a4");
-                } catch (const exfel::util::TimeoutException&) {
+                } catch (const karabo::util::TimeoutException&) {
                     RETHROW_AS(TIMEOUT_EXCEPTION("Response timed out"));
-                } catch (const exfel::util::CastException&) {
+                } catch (const karabo::util::CastException&) {
                     RETHROW_AS(CAST_EXCEPTION("Received unexpected (incompatible) response type"));
-                } catch (const exfel::util::NetworkException&) {
+                } catch (const karabo::util::NetworkException&) {
                     RETHROW_AS(NETWORK_EXCEPTION("Could not send request"));
                 }
                 return *this;
@@ -236,7 +236,7 @@ namespace exfel {
                 }
             }
 
-            void receiveResponse(exfel::util::Hash& body, exfel::util::Hash& header) {
+            void receiveResponse(karabo::util::Hash& body, karabo::util::Hash& header) {
                 try {
                     if (m_isReceived) throw SIGNALSLOT_EXCEPTION("You have to send a request before you can receive a response");
                     m_channel->read(body, header);
@@ -249,15 +249,15 @@ namespace exfel {
 
         protected: // members
 
-            exfel::net::BrokerChannel::Pointer m_channel;
+            karabo::net::BrokerChannel::Pointer m_channel;
             std::string m_requestInstanceId;
 
             std::string m_replyId;
             bool m_isRequested;
             bool m_isReceived;
 
-            exfel::util::Hash m_header;
-            exfel::util::Hash m_body;
+            karabo::util::Hash m_header;
+            karabo::util::Hash m_body;
 
             static boost::uuids::random_generator m_uuidGenerator;
 

@@ -9,8 +9,8 @@
 
 
 
-#ifndef EXFEL_IO_HDF5_SCALARFILTER_HH
-#define	EXFEL_IO_HDF5_SCALARFILTER_HH
+#ifndef KARABO_IO_HDF5_SCALARFILTER_HH
+#define	KARABO_IO_HDF5_SCALARFILTER_HH
 
 #include <karabo/util/Factory.hh>
 #include "../ArrayView.hh"
@@ -18,7 +18,7 @@
 
 
 
-namespace exfel {
+namespace karabo {
   
   namespace io {
         
@@ -31,8 +31,8 @@ namespace exfel {
       class ScalarFilter {
       public:
 
-        EXFEL_CLASSINFO(ScalarFilter, "ScalarFilter", "1.0")
-        EXFEL_FACTORY_BASE_CLASS
+        KARABO_CLASSINFO(ScalarFilter, "ScalarFilter", "1.0")
+        KARABO_FACTORY_BASE_CLASS
 
         virtual ~ScalarFilter() {
         }
@@ -45,7 +45,7 @@ namespace exfel {
   }
 }
 
-EXFEL_REGISTER_FACTORY_BASE_HH(exfel::io::hdf5::ScalarFilter<exfel::util::Hash>, TEMPLATE_IO, DECLSPEC_IO)
+KARABO_REGISTER_FACTORY_BASE_HH(karabo::io::hdf5::ScalarFilter<karabo::util::Hash>, TEMPLATE_IO, DECLSPEC_IO)
 
-#endif	/* EXFEL_IO_HDF5_SCALARFILTER_HH */
+#endif	/* KARABO_IO_HDF5_SCALARFILTER_HH */
 

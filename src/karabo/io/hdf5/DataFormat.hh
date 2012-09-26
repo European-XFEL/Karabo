@@ -9,8 +9,8 @@
 
 
 
-#ifndef EXFEL_IO_HDF5_DATAFORMAT_HH
-#define	EXFEL_IO_HDF5_DATAFORMAT_HH
+#ifndef KARABO_IO_HDF5_DATAFORMAT_HH
+#define	KARABO_IO_HDF5_DATAFORMAT_HH
 
 #include <karabo/util/Factory.hh>
 #include "RecordFormat.hh"
@@ -19,15 +19,15 @@
 
 #include <string>
 
-namespace exfel {
+namespace karabo {
   namespace io {
     namespace hdf5 {
 
       class DataFormat {
       public:
 
-        EXFEL_CLASSINFO(DataFormat, "DataFormat", "1.0")
-        EXFEL_FACTORY_BASE_CLASS
+        KARABO_CLASSINFO(DataFormat, "DataFormat", "1.0")
+        KARABO_FACTORY_BASE_CLASS
 
 
 
@@ -37,21 +37,21 @@ namespace exfel {
         virtual ~DataFormat() {
         }
 
-        static void expectedParameters(exfel::util::Schema& expected);
-        void configure(const exfel::util::Hash& input);
+        static void expectedParameters(karabo::util::Schema& expected);
+        void configure(const karabo::util::Hash& input);
 
-        static DataFormat::Pointer discoverFromData(const exfel::util::Hash& data);        
+        static DataFormat::Pointer discoverFromData(const karabo::util::Hash& data);        
         const RecordFormat::Pointer getRecordFormat();
-        const exfel::util::Hash& getConfig() const;
+        const karabo::util::Hash& getConfig() const;
         
 
 
       private:
-        exfel::util::Hash m_config;
+        karabo::util::Hash m_config;
 
 
         static std::string getClassIdAsString(const boost::any& any);        
-        static exfel::io::ArrayDimensions arraySize(const boost::any& any);
+        static karabo::io::ArrayDimensions arraySize(const boost::any& any);
 
 
 
@@ -62,7 +62,7 @@ namespace exfel {
   }
 }
 
-EXFEL_REGISTER_FACTORY_BASE_HH(exfel::io::hdf5::DataFormat, TEMPLATE_IO, DECLSPEC_IO)
+KARABO_REGISTER_FACTORY_BASE_HH(karabo::io::hdf5::DataFormat, TEMPLATE_IO, DECLSPEC_IO)
 
-#endif	/* EXFEL_IO_HDF5_DATAFORMAT_HH */
+#endif	/* KARABO_IO_HDF5_DATAFORMAT_HH */
 

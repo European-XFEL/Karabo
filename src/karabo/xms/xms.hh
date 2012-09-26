@@ -8,8 +8,8 @@
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
 
-#ifndef EXFEL_XMS_XMS_HH
-#define	EXFEL_XMS_XMS_HH
+#ifndef KARABO_XMS_XMS_HH
+#define	KARABO_XMS_XMS_HH
 
 #include "MessageHeader.hh"
 #include "Message.hh"
@@ -24,5 +24,5 @@
 #include "Slot.hh"
 #include "SignalSlotable.hh"
 
-#endif	/* EXFEL_XMS_XMS_HH */
+#endif	/* KARABO_XMS_XMS_HH */
 

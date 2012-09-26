@@ -56,7 +56,7 @@ distribution.
 #define TIXML_EXPLICIT
 #endif
 
-namespace exfel {
+namespace karabo {
 
     namespace tinyxml {
 

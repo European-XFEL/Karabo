@@ -8,12 +8,12 @@
 #include "NetworkAppenderConfigurator.hh"
 #include "NetworkAppender.hh"
 
-using namespace exfel::util;
+using namespace karabo::util;
 
-namespace exfel {
+namespace karabo {
     namespace log {
 
-        EXFEL_REGISTER_FACTORY_CC(AppenderConfigurator, NetworkAppenderConfigurator)
+        KARABO_REGISTER_FACTORY_CC(AppenderConfigurator, NetworkAppenderConfigurator)
 
         NetworkAppenderConfigurator::NetworkAppenderConfigurator() {
         }
@@ -27,7 +27,7 @@ namespace exfel {
 
         void NetworkAppenderConfigurator::expectedParameters(Schema& expected) {
 
-            CHOICE_ELEMENT<exfel::net::BrokerConnection > (expected)
+            CHOICE_ELEMENT<karabo::net::BrokerConnection > (expected)
                     .key("connection")
                     .displayedName("Connection")
                     .description("Connection")
@@ -38,7 +38,7 @@ namespace exfel {
         }
 
         void NetworkAppenderConfigurator::configure(const Hash& input) {
-            m_connection = exfel::net::BrokerConnection::createChoice("connection", input);
+            m_connection = karabo::net::BrokerConnection::createChoice("connection", input);
             m_connection->start();
         }
 

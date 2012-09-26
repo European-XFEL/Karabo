@@ -9,21 +9,21 @@
 
 
 
-#ifndef EXFEL_IO_FILE_HH
-#define	EXFEL_IO_FILE_HH
+#ifndef KARABO_IO_FILE_HH
+#define	KARABO_IO_FILE_HH
 
 #include <karabo/util/Factory.hh>
 #include "RecordFormat.hh"
 
 
-namespace exfel {
+namespace karabo {
   namespace io {
 
 
     class File {
     public:
-      EXFEL_CLASSINFO(File, "File", "1.0")
-      EXFEL_FACTORY_BASE_CLASS
+      KARABO_CLASSINFO(File, "File", "1.0")
+      KARABO_FACTORY_BASE_CLASS
 
     private:
 
@@ -35,10 +35,10 @@ namespace exfel {
       virtual ~File(){
       }
       
-      //virtual void openNew(exfel::io::RecordFormat::Pointer dataSetDescription) = 0;
-      virtual void openReadOnly(const exfel::util::Hash& dataSetDescription) = 0;
-      virtual void read(exfel::util::Hash& data) = 0;
-      virtual void write(const exfel::util::Hash& data) = 0; 
+      //virtual void openNew(karabo::io::RecordFormat::Pointer dataSetDescription) = 0;
+      virtual void openReadOnly(const karabo::util::Hash& dataSetDescription) = 0;
+      virtual void read(karabo::util::Hash& data) = 0;
+      virtual void write(const karabo::util::Hash& data) = 0; 
       virtual void close() = 0;
 
 
@@ -46,7 +46,7 @@ namespace exfel {
   }
 }
 
-EXFEL_REGISTER_FACTORY_BASE_HH(exfel::io::File, TEMPLATE_IO, DECLSPEC_IO)
+KARABO_REGISTER_FACTORY_BASE_HH(karabo::io::File, TEMPLATE_IO, DECLSPEC_IO)
 
-#endif	/* EXFEL_IO_FILE_HH */
+#endif	/* KARABO_IO_FILE_HH */
 

@@ -8,8 +8,8 @@
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
 
-#ifndef EXFEL_NET_NETDLL_HH
-#define	EXFEL_NET_NETDLL_HH
+#ifndef KARABO_NET_NETDLL_HH
+#define	KARABO_NET_NETDLL_HH
 
 /********************************************
  *         Disable Specific Warnings         *

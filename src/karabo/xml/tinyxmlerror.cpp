@@ -24,7 +24,7 @@ distribution.
 
 #include "tinyxml.h"
 
-namespace exfel {
+namespace karabo {
 
     namespace tinyxml {
 

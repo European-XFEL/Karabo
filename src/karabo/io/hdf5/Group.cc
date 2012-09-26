@@ -12,13 +12,13 @@
 
 
 using namespace std;
-using namespace exfel::util;
+using namespace karabo::util;
 using namespace boost;
 
-namespace exfel {
+namespace karabo {
   namespace io {
 
-    EXFEL_REGISTER_ONLY_ME_CC(Group)
+    KARABO_REGISTER_ONLY_ME_CC(Group)
 
     void Group::expectedParameters(Schema& expected) {
 

@@ -7,8 +7,8 @@
  */
 
 
-#ifndef EXFEL_IO_WRITEBUFFER_HH
-#define	EXFEL_IO_WRITEBUFFER_HH
+#ifndef KARABO_IO_WRITEBUFFER_HH
+#define	KARABO_IO_WRITEBUFFER_HH
 
 #include <string>
 #include <vector>
@@ -26,12 +26,12 @@
 #define tracer if(1); else std::cerr
 #endif
 
-namespace exfel {
+namespace karabo {
     namespace io {
 
         class WriteBuffer {
         public:
-            typedef boost::function< void (const exfel::util::Hash&, size_t&) > WriteHandler;
+            typedef boost::function< void (const karabo::util::Hash&, size_t&) > WriteHandler;
 
 
         public:
@@ -47,22 +47,22 @@ namespace exfel {
             }
 
             template<class T>
-            size_t defineArrayColumn(const std::string& key, exfel::io::ArrayDimensions dims) {
+            size_t defineArrayColumn(const std::string& key, karabo::io::ArrayDimensions dims) {
 
 
                 // only for format discovery
-                exfel::io::ArrayView<T > recordView(0, dims);
+                karabo::io::ArrayView<T > recordView(0, dims);
                 m_record.setFromPath(key, recordView, "/");
 
 
                 // allocates own memory for buffer in a continues block                                
                 //dims.insert(dims.begin(), static_cast<unsigned long long> (m_capacity));
-                exfel::io::ArrayDimensions bufDims(m_capacity);
-                exfel::io::ArrayView< exfel::io::ArrayView<T> > arrayView(bufDims);
+                karabo::io::ArrayDimensions bufDims(m_capacity);
+                karabo::io::ArrayView< karabo::io::ArrayView<T> > arrayView(bufDims);
                 m_buffer.setFromPath(key, arrayView, "/");
                 
 
-                exfel::util::Hash::iterator it = m_buffer.find(key);
+                karabo::util::Hash::iterator it = m_buffer.find(key);
                 if (it != m_buffer.end()) {
                     m_keyNumber.push_back(&(m_buffer.getAny(it)));
                     m_keys.push_back(key);
@@ -76,13 +76,13 @@ namespace exfel {
 
 
 
-                exfel::io::ArrayDimensions dims(m_size);
-                exfel::io::ArrayView<T > arrayView(dims);
+                karabo::io::ArrayDimensions dims(m_size);
+                karabo::io::ArrayView<T > arrayView(dims);
                 m_buffer.setFromPath(key, arrayView, "/");
 
                 m_record.setFromPath(key, T(), "/");
 
-                exfel::util::Hash::iterator it = m_buffer.find(key);
+                karabo::util::Hash::iterator it = m_buffer.find(key);
                 if (it != m_buffer.end()) {
                     m_keyNumber.push_back(&(m_buffer.getAny(it)));
                     m_keys.push_back(key);
@@ -97,29 +97,29 @@ namespace exfel {
             template<class T>
             void set(size_t keyNumber, const T& value) {
                 boost::any* anyElement = m_keyNumber[keyNumber];
-                if (anyElement->type() != typeid (exfel::io::ArrayView<T>)) {
-                    const exfel::util::Types& types = exfel::util::Types::getInstance();
-                    exfel::util::Hash::const_iterator it = m_record.find(m_keys[keyNumber]);
+                if (anyElement->type() != typeid (karabo::io::ArrayView<T>)) {
+                    const karabo::util::Types& types = karabo::util::Types::getInstance();
+                    karabo::util::Hash::const_iterator it = m_record.find(m_keys[keyNumber]);
                     std::ostringstream os;
                     os << "Expected " << types.getTypeAsString(m_record.getAny(it).type()) << " type";
                     throw CAST_EXCEPTION(os.str());
                 }
-                exfel::io::ArrayView<T>& av = *(boost::any_cast<exfel::io::ArrayView<T> >(anyElement));
+                karabo::io::ArrayView<T>& av = *(boost::any_cast<karabo::io::ArrayView<T> >(anyElement));
                 av[m_index] = value;                
             }
 
             template<class T>
-            void setArray(size_t keyNumber, exfel::io::ArrayView<T>& value) {
+            void setArray(size_t keyNumber, karabo::io::ArrayView<T>& value) {
                 
                 boost::any* anyElement = m_keyNumber[keyNumber];
-                if (anyElement->type() != typeid (exfel::io::ArrayView<exfel::io::ArrayView<T> >)) {
-                    const exfel::util::Types& types = exfel::util::Types::getInstance();
-                    exfel::util::Hash::const_iterator it = m_record.find(m_keys[keyNumber]);
+                if (anyElement->type() != typeid (karabo::io::ArrayView<karabo::io::ArrayView<T> >)) {
+                    const karabo::util::Types& types = karabo::util::Types::getInstance();
+                    karabo::util::Hash::const_iterator it = m_record.find(m_keys[keyNumber]);
                     std::ostringstream os;
                     os << "Expected " << types.getTypeAsString(m_record.getAny(it).type()) << " type";
                     throw CAST_EXCEPTION(os.str());
                 }
-                exfel::io::ArrayView<exfel::io::ArrayView<T> >& av = *(boost::any_cast<exfel::io::ArrayView<exfel::io::ArrayView<T> > >(anyElement));
+                karabo::io::ArrayView<karabo::io::ArrayView<T> >& av = *(boost::any_cast<karabo::io::ArrayView<karabo::io::ArrayView<T> > >(anyElement));
                 av[m_index] = value;
             }
 
@@ -152,8 +152,8 @@ namespace exfel {
             size_t m_index;
             std::vector<boost::any* > m_keyNumber;
             std::vector<std::string > m_keys;
-            exfel::util::Hash m_buffer;
-            exfel::util::Hash m_record;
+            karabo::util::Hash m_buffer;
+            karabo::util::Hash m_record;
 
 
 
@@ -162,10 +162,10 @@ namespace exfel {
 
         namespace hdf5 {
 
-            class WriteBuffer : public exfel::io::WriteBuffer {
+            class WriteBuffer : public karabo::io::WriteBuffer {
             public:
 
-                WriteBuffer(File& file, const std::string& tableName, size_t size) : exfel::io::WriteBuffer(size), m_file(file), m_tableName(tableName) {
+                WriteBuffer(File& file, const std::string& tableName, size_t size) : karabo::io::WriteBuffer(size), m_file(file), m_tableName(tableName) {
                 }
 
                 virtual ~WriteBuffer() {
@@ -184,7 +184,7 @@ namespace exfel {
  
             private:
 
-                void write(const exfel::util::Hash& data, size_t size) {
+                void write(const karabo::util::Hash& data, size_t size) {
                     static size_t recordNumber = 0;
                     tracer << "writing Hash of vectors of sizes: " << size << " at position " << recordNumber << std::endl;
                     m_table->writeBuffer(data, recordNumber, size);
@@ -193,8 +193,8 @@ namespace exfel {
 
 
 
-                exfel::io::hdf5::File& m_file;
-                exfel::io::hdf5::Table::Pointer m_table;
+                karabo::io::hdf5::File& m_file;
+                karabo::io::hdf5::Table::Pointer m_table;
                 std::string m_tableName;
 
 
@@ -204,5 +204,5 @@ namespace exfel {
 }
 
 
-#endif	/* EXFEL_IO_WRITEBUFFER_HH */
+#endif	/* KARABO_IO_WRITEBUFFER_HH */
 

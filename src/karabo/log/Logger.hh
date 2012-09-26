@@ -11,8 +11,8 @@
 
 
 
-#ifndef EXFEL_LOGCONFIG_LOGGER_HH
-#define	EXFEL_LOGCONFIG_LOGGER_HH
+#ifndef KARABO_LOGCONFIG_LOGGER_HH
+#define	KARABO_LOGCONFIG_LOGGER_HH
 
 #include <vector>
 #include <string>
@@ -29,7 +29,7 @@
 /**
  * The main European XFEL namespace
  */
-namespace exfel {
+namespace karabo {
 
     //forward declarations    
     namespace util {
@@ -52,22 +52,22 @@ namespace exfel {
         class Logger {
         public:
 
-            EXFEL_CLASSINFO(Logger, "Logger", "1.0")
-            EXFEL_FACTORY_BASE_CLASS
+            KARABO_CLASSINFO(Logger, "Logger", "1.0")
+            KARABO_FACTORY_BASE_CLASS
 
             virtual ~Logger() {
             }
 
             /*
              *  Defines the parameters needed to configure log4cpp.
-             *  @see exfel::util::Hash and @see exfel::util::Factory
+             *  @see karabo::util::Hash and @see karabo::util::Factory
              */
-            static void expectedParameters(exfel::util::Schema& expected);
+            static void expectedParameters(karabo::util::Schema& expected);
 
             /*
-             *  This method is called by exfel::util::Factory
+             *  This method is called by karabo::util::Factory
              */
-            void configure(const exfel::util::Hash& input);
+            void configure(const karabo::util::Hash& input);
 
             /*
              * This initializes the logger.
@@ -77,7 +77,7 @@ namespace exfel {
             
             /*
              * This returns a log category reference, automatically configured using the type instrospection system
-             * CAVEAT: This function only works for classes that declare the EXFEL_CLASSINFO macro!
+             * CAVEAT: This function only works for classes that declare the KARABO_CLASSINFO macro!
              */
             template <class Class>
             static log4cpp::Category& logger() {
@@ -101,14 +101,14 @@ namespace exfel {
             std::vector<CategoryConfiguratorPointer> m_categories;
             static boost::mutex m_logMutex;
 
-            void configureAppenders(const exfel::util::Hash& input);
-            void configurePriority(const exfel::util::Hash& input);
-            void configureCategories(const exfel::util::Hash& input);
+            void configureAppenders(const karabo::util::Hash& input);
+            void configurePriority(const karabo::util::Hash& input);
+            void configureCategories(const karabo::util::Hash& input);
 
         };
     }
 }
 
-EXFEL_REGISTER_FACTORY_BASE_HH(exfel::log::Logger, TEMPLATE_LOG, DECLSPEC_LOG)
+KARABO_REGISTER_FACTORY_BASE_HH(karabo::log::Logger, TEMPLATE_LOG, DECLSPEC_LOG)
 
-#endif	/* EXFEL_LOGCONFIG_LOGGER_HH */
+#endif	/* KARABO_LOGCONFIG_LOGGER_HH */

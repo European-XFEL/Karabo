@@ -9,20 +9,20 @@
  */
 #include "LatexFormat.hh"
 
-EXFEL_REGISTER_FACTORY_CC(exfel::io::Format<exfel::util::Schema>, exfel::io::LatexFormat)
+KARABO_REGISTER_FACTORY_CC(karabo::io::Format<karabo::util::Schema>, karabo::io::LatexFormat)
 
-namespace exfel {
+namespace karabo {
     namespace io {
 
         using namespace std;
-        using namespace exfel::util;
+        using namespace karabo::util;
 
-        typedef Format<exfel::util::Schema> FormatConfigStringStream;
+        typedef Format<karabo::util::Schema> FormatConfigStringStream;
 
-        void LatexFormat::expectedParameters(exfel::util::Schema& expected) {
+        void LatexFormat::expectedParameters(karabo::util::Schema& expected) {
         }
 
-        void LatexFormat::configure(const exfel::util::Hash& input) {
+        void LatexFormat::configure(const karabo::util::Hash& input) {
         }
 
         void LatexFormat::convert(stringstream& in, Schema& out) {
@@ -143,4 +143,4 @@ namespace exfel {
             }
         }
     } // namespace io
-} // namespace exfel
+} // namespace karabo

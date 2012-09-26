@@ -16,7 +16,7 @@
 #include "Exception.hh"
 #include "Schema.hh"
 
-namespace exfel {
+namespace karabo {
     namespace util {
 
         using namespace std;
@@ -1473,4 +1473,4 @@ namespace exfel {
         }
 
     } // namespace util
-} // namespace exfel
+} // namespace karabo

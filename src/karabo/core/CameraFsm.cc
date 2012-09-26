@@ -10,14 +10,14 @@
 #include <karabo/xms/SlotElement.hh>
 
 using namespace std;
-using namespace exfel::util;
-using namespace exfel::xms;
+using namespace karabo::util;
+using namespace karabo::xms;
 using namespace log4cpp;
 
-namespace exfel {
+namespace karabo {
     namespace core {
         
-        void CameraFsm::expectedParameters(exfel::util::Schema& expected) {
+        void CameraFsm::expectedParameters(karabo::util::Schema& expected) {
             
             SLOT_ELEMENT(expected).key("slotEndError")
                     .displayedName("Reset")
@@ -44,7 +44,7 @@ namespace exfel {
                     .commit();
         }
         
-        void CameraFsm::configure(const exfel::util::Hash& input) {
+        void CameraFsm::configure(const karabo::util::Hash& input) {
             SLOT0(slotEndError)
             SLOT0(slotAcquire)
             SLOT0(slotStop)

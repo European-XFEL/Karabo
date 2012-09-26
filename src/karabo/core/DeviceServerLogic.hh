@@ -10,12 +10,12 @@
  */
 
 
-#ifndef EXFEL_CORE_DEVICESERVERLOGIC_HH
-#define	EXFEL_CORE_DEVICESERVERLOGIC_HH
+#ifndef KARABO_CORE_DEVICESERVERLOGIC_HH
+#define	KARABO_CORE_DEVICESERVERLOGIC_HH
 
 #include "StateMachine.hh"
 
-namespace exfel {
+namespace karabo {
 
   namespace core {
 
@@ -26,7 +26,7 @@ namespace exfel {
 
     public:
 
-      EXFEL_CLASSINFO("DeviceServerStateMachine");
+      KARABO_CLASSINFO("DeviceServerStateMachine");
 
       DeviceServerLogic(){}
 
@@ -46,7 +46,7 @@ namespace exfel {
 
       void slotInbuildDevicesAvailableEvent();
 
-      void slotStartDeviceEvent(const exfel::util::Config&);
+      void slotStartDeviceEvent(const karabo::util::Config&);
 
       void slotTimeoutEvent(const std::string&);
 
@@ -74,7 +74,7 @@ namespace exfel {
 
       virtual void notifyNewDeviceAction() {}
 
-      virtual void startDeviceAction(const exfel::util::Config&) {}
+      virtual void startDeviceAction(const karabo::util::Config&) {}
 
     private:
 
@@ -86,6 +86,6 @@ namespace exfel {
     };
 
   } // namespace core
-} // namespace exfel
+} // namespace karabo
 
 #endif 

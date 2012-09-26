@@ -11,38 +11,38 @@
 
 
 using namespace std;
-using namespace exfel::util;
+using namespace karabo::util;
 
-namespace exfel {
+namespace karabo {
   namespace io {
     namespace hdf5 {
 
 
-      EXFEL_REGISTER_FACTORY_CC(FLArrayFilter<signed char>, Int8VectorFLArrayFilter)
-      EXFEL_REGISTER_FACTORY_CC(FLArrayFilter<short>, Int16VectorFLArrayFilter)
-      EXFEL_REGISTER_FACTORY_CC(FLArrayFilter<int>, Int32VectorFLArrayFilter)
-      EXFEL_REGISTER_FACTORY_CC(FLArrayFilter<long long>, Int64VectorFLArrayFilter)
-      EXFEL_REGISTER_FACTORY_CC(FLArrayFilter<unsigned char>, UInt8VectorFLArrayFilter)
-      EXFEL_REGISTER_FACTORY_CC(FLArrayFilter<unsigned short>, UInt16VectorFLArrayFilter)
-      EXFEL_REGISTER_FACTORY_CC(FLArrayFilter<unsigned int>, UInt32VectorFLArrayFilter)
-      EXFEL_REGISTER_FACTORY_CC(FLArrayFilter<unsigned long long>, UInt64VectorFLArrayFilter)
-      EXFEL_REGISTER_FACTORY_CC(FLArrayFilter<float>, FloatVectorFLArrayFilter)
-      EXFEL_REGISTER_FACTORY_CC(FLArrayFilter<double>, DoubleVectorFLArrayFilter)
-      EXFEL_REGISTER_FACTORY_CC(FLArrayFilter<std::string>, StringVectorFLArrayFilter)
+      KARABO_REGISTER_FACTORY_CC(FLArrayFilter<signed char>, Int8VectorFLArrayFilter)
+      KARABO_REGISTER_FACTORY_CC(FLArrayFilter<short>, Int16VectorFLArrayFilter)
+      KARABO_REGISTER_FACTORY_CC(FLArrayFilter<int>, Int32VectorFLArrayFilter)
+      KARABO_REGISTER_FACTORY_CC(FLArrayFilter<long long>, Int64VectorFLArrayFilter)
+      KARABO_REGISTER_FACTORY_CC(FLArrayFilter<unsigned char>, UInt8VectorFLArrayFilter)
+      KARABO_REGISTER_FACTORY_CC(FLArrayFilter<unsigned short>, UInt16VectorFLArrayFilter)
+      KARABO_REGISTER_FACTORY_CC(FLArrayFilter<unsigned int>, UInt32VectorFLArrayFilter)
+      KARABO_REGISTER_FACTORY_CC(FLArrayFilter<unsigned long long>, UInt64VectorFLArrayFilter)
+      KARABO_REGISTER_FACTORY_CC(FLArrayFilter<float>, FloatVectorFLArrayFilter)
+      KARABO_REGISTER_FACTORY_CC(FLArrayFilter<double>, DoubleVectorFLArrayFilter)
+      KARABO_REGISTER_FACTORY_CC(FLArrayFilter<std::string>, StringVectorFLArrayFilter)
       // std::vector<bool> is not supported
 
 
-      EXFEL_REGISTER_FACTORY_CC(DataTypes, Int8VectorFLArrayFilter)
-      EXFEL_REGISTER_FACTORY_CC(DataTypes, Int16VectorFLArrayFilter)
-      EXFEL_REGISTER_FACTORY_CC(DataTypes, Int32VectorFLArrayFilter)
-      EXFEL_REGISTER_FACTORY_CC(DataTypes, Int64VectorFLArrayFilter)
-      EXFEL_REGISTER_FACTORY_CC(DataTypes, UInt8VectorFLArrayFilter)
-      EXFEL_REGISTER_FACTORY_CC(DataTypes, UInt16VectorFLArrayFilter)
-      EXFEL_REGISTER_FACTORY_CC(DataTypes, UInt32VectorFLArrayFilter)
-      EXFEL_REGISTER_FACTORY_CC(DataTypes, UInt64VectorFLArrayFilter)
-      EXFEL_REGISTER_FACTORY_CC(DataTypes, FloatVectorFLArrayFilter)
-      EXFEL_REGISTER_FACTORY_CC(DataTypes, DoubleVectorFLArrayFilter)
-      EXFEL_REGISTER_FACTORY_CC(DataTypes, StringVectorFLArrayFilter)
+      KARABO_REGISTER_FACTORY_CC(DataTypes, Int8VectorFLArrayFilter)
+      KARABO_REGISTER_FACTORY_CC(DataTypes, Int16VectorFLArrayFilter)
+      KARABO_REGISTER_FACTORY_CC(DataTypes, Int32VectorFLArrayFilter)
+      KARABO_REGISTER_FACTORY_CC(DataTypes, Int64VectorFLArrayFilter)
+      KARABO_REGISTER_FACTORY_CC(DataTypes, UInt8VectorFLArrayFilter)
+      KARABO_REGISTER_FACTORY_CC(DataTypes, UInt16VectorFLArrayFilter)
+      KARABO_REGISTER_FACTORY_CC(DataTypes, UInt32VectorFLArrayFilter)
+      KARABO_REGISTER_FACTORY_CC(DataTypes, UInt64VectorFLArrayFilter)
+      KARABO_REGISTER_FACTORY_CC(DataTypes, FloatVectorFLArrayFilter)
+      KARABO_REGISTER_FACTORY_CC(DataTypes, DoubleVectorFLArrayFilter)
+      KARABO_REGISTER_FACTORY_CC(DataTypes, StringVectorFLArrayFilter)
 
     }
   }

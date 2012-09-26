@@ -13,7 +13,7 @@
 
 using namespace std;
 
-namespace exfel {
+namespace karabo {
     namespace xms {
         
         boost::uuids::random_generator Requestor::m_uuidGenerator;

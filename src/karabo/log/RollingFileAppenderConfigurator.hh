@@ -8,8 +8,8 @@
  */
 
 
-#ifndef EXFEL_LOGCONFIG_ROLLINGFILEAPPENDERCONFIGURATOR_HH
-#define	EXFEL_LOGCONFIG_ROLLINGFILEAPPENDERCONFIGURATOR_HH
+#ifndef KARABO_LOGCONFIG_ROLLINGFILEAPPENDERCONFIGURATOR_HH
+#define	KARABO_LOGCONFIG_ROLLINGFILEAPPENDERCONFIGURATOR_HH
 
 #include "FileAppenderConfigurator.hh"
 #include <karabo/util/Factory.hh>
@@ -22,7 +22,7 @@ namespace log4cpp {
 /**
  * The main European XFEL namespace
  */
-namespace exfel {
+namespace karabo {
 
   /**
    * Namespace for package log
@@ -37,24 +37,24 @@ namespace exfel {
 
     public:
 
-      EXFEL_CLASSINFO(RollingFileAppenderConfigurator, "RollingFile", "1.0")
+      KARABO_CLASSINFO(RollingFileAppenderConfigurator, "RollingFile", "1.0")
 
       RollingFileAppenderConfigurator();
       virtual ~RollingFileAppenderConfigurator();
 
 
-      static void expectedParameters(exfel::util::Schema& expected);
-      void configure(const exfel::util::Hash& input);
+      static void expectedParameters(karabo::util::Schema& expected);
+      void configure(const karabo::util::Hash& input);
 
       log4cpp::Appender* create();
       
     private:
-      void configureMaxSize(const exfel::util::Hash& input);
-      void configureMaxBackupIndex(const exfel::util::Hash& input);
+      void configureMaxSize(const karabo::util::Hash& input);
+      void configureMaxBackupIndex(const karabo::util::Hash& input);
       
     };
 
   }
 }
 
-#endif	/* EXFEL_LOGCONFIG_ROLLINGFILEAPPENDERCONFIGURATOR_HH */
+#endif	/* KARABO_LOGCONFIG_ROLLINGFILEAPPENDERCONFIGURATOR_HH */

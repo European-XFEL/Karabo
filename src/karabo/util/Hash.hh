@@ -9,8 +9,8 @@
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
 
-#ifndef EXFEL_UTIL_HASH_HH
-#define EXFEL_UTIL_HASH_HH
+#ifndef KARABO_UTIL_HASH_HH
+#define KARABO_UTIL_HASH_HH
 
 #include <map>
 #include <string>
@@ -29,7 +29,7 @@
 #include "ClassInfo.hh"
 
 // Forwarding python wrapper
-namespace exfel {
+namespace karabo {
     namespace pyexfel {
         class HashWrap;
     }
@@ -38,7 +38,7 @@ namespace exfel {
 /*!
  *  Defines top level namespace for European XFEL software
  */
-namespace exfel {
+namespace karabo {
 
     namespace util {
 
@@ -85,11 +85,11 @@ namespace exfel {
          * @endcode
          */
         class DECLSPEC_UTIL Hash : public std::map<std::string, boost::any> {
-            friend class exfel::pyexfel::HashWrap;
+            friend class karabo::pyexfel::HashWrap;
 
         public:
 
-            EXFEL_CLASSINFO(Hash, "Hash", "1.0")
+            KARABO_CLASSINFO(Hash, "Hash", "1.0")
 
             /**
              * Use default constructor to create an empty hash

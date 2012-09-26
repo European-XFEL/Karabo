@@ -10,11 +10,11 @@
 
 #include "TextFileWriter.hh"
 
-//namespace exfel {
+//namespace karabo {
   //namespace io {
 
-    EXFEL_REGISTER_FACTORY_CC(exfel::io::Writer<exfel::util::Hash>, exfel::io::TextFileWriter<exfel::util::Hash>)
-    EXFEL_REGISTER_FACTORY_CC(exfel::io::Writer<exfel::util::Schema>, exfel::io::TextFileWriter<exfel::util::Schema>)
+    KARABO_REGISTER_FACTORY_CC(karabo::io::Writer<karabo::util::Hash>, karabo::io::TextFileWriter<karabo::util::Hash>)
+    KARABO_REGISTER_FACTORY_CC(karabo::io::Writer<karabo::util::Schema>, karabo::io::TextFileWriter<karabo::util::Schema>)
             
 	//} // namespace io
-//} // namespace exfel
+//} // namespace karabo

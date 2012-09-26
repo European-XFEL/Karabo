@@ -9,7 +9,7 @@
 
 #include "Profiler.hh"
 
-namespace exfel {
+namespace karabo {
     namespace util {
 
         Profiler::Period::Period() : m_name(std::string("")), m_open(false), m_level(0) {

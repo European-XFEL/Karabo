@@ -5,19 +5,19 @@
  * Created on July 15, 2011, 11:46 AM
  */
 
-#ifndef EXFEL_NET_SNMPIOSERVICE_HH
-#define	EXFEL_NET_SNMPIOSERVICE_HH
+#ifndef KARABO_NET_SNMPIOSERVICE_HH
+#define	KARABO_NET_SNMPIOSERVICE_HH
 
 #include "AbstractIOService.hh"
 
-namespace exfel {
+namespace karabo {
     namespace net {
 
         class SnmpIOService : public AbstractIOService {
             
         public:
 
-            EXFEL_CLASSINFO(SnmpIOService, "Snmp", "1.0")
+            KARABO_CLASSINFO(SnmpIOService, "Snmp", "1.0")
 
             SnmpIOService() : m_expectedReplies(0) {
             }
@@ -43,5 +43,5 @@ namespace exfel {
     }
 }
 
-#endif	/* EXFEL_NET_SNMPIOSERVICE_HH */
+#endif	/* KARABO_NET_SNMPIOSERVICE_HH */
 

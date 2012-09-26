@@ -8,8 +8,8 @@
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
 
-#ifndef EXFEL_CORE_COREDLL_HH
-#define	EXFEL_CORE_COREDLL_HH
+#ifndef KARABO_CORE_COREDLL_HH
+#define	KARABO_CORE_COREDLL_HH
 
 /********************************************
  *         Disable Specific Warnings         *

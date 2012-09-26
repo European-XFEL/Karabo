@@ -7,15 +7,15 @@
  */
 
 
-#ifndef EXFEL_CORE_LOWLEVELCONTROLDEVICE_HH
-#define	EXFEL_CORE_LOWLEVELCONTROLDEVICE_HH
+#ifndef KARABO_CORE_LOWLEVELCONTROLDEVICE_HH
+#define	KARABO_CORE_LOWLEVELCONTROLDEVICE_HH
 
 #include "Device.hh"
 
 /**
  * The main European XFEL namespace
  */
-namespace exfel {
+namespace karabo {
 
   /**
    * Namespace for package core
@@ -27,13 +27,13 @@ namespace exfel {
 
     public:
 
-      EXFEL_CLASSINFO("LowLevelControlDevice")
+      KARABO_CLASSINFO("LowLevelControlDevice")
 
       LowLevelControlDevice() : Device(this){}
       virtual ~LowLevelControlDevice();
 
-      static void expectedParameters(exfel::util::Config& expected);
-      void configure(const exfel::util::Config& input);
+      static void expectedParameters(karabo::util::Config& expected);
+      void configure(const karabo::util::Config& input);
 
       void run();
 
@@ -47,4 +47,4 @@ namespace exfel {
   }
 }
 
-#endif	/* EXFEL_CORE_LOWLEVELCONTROLDEVICE_HH */
+#endif	/* KARABO_CORE_LOWLEVELCONTROLDEVICE_HH */

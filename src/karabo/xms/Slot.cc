@@ -12,14 +12,14 @@
 
 #include "Slot.hh"
 
-namespace exfel {
+namespace karabo {
     namespace xms {
 
-        void Slot::handlePossibleReply(const exfel::util::Hash& header) {
-            std::pair<bool, exfel::util::Hash> possibleReply = m_signalSlotable->digestPotentialReply();
+        void Slot::handlePossibleReply(const karabo::util::Hash& header) {
+            std::pair<bool, karabo::util::Hash> possibleReply = m_signalSlotable->digestPotentialReply();
             if (possibleReply.first) {
                 if (header.has("replyTo")) {
-                    exfel::util::Hash replyHeader("replyFrom", header.get<std::string > ("replyTo"));
+                    karabo::util::Hash replyHeader("replyFrom", header.get<std::string > ("replyTo"));
                     m_channel->write(possibleReply.second, replyHeader);
                 }
             }
@@ -34,9 +34,9 @@ namespace exfel {
         }
         
         template <>
-        const bool& Slot::getAndCast(const std::string& key, const exfel::util::Hash& hash) const {
+        const bool& Slot::getAndCast(const std::string& key, const karabo::util::Hash& hash) const {
             //std::cout << "int -> boolean caster in action..." << std::endl;
-            exfel::util::Hash::const_iterator it = hash.find(key);
+            karabo::util::Hash::const_iterator it = hash.find(key);
             if (it != hash.end()) {
                 if (hash.is<int>(it)) {
                     // TODO Check portability
@@ -49,4 +49,4 @@ namespace exfel {
             }
         }
     } // namespace xms
-} // namespace exfel
+} // namespace karabo

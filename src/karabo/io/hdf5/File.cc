@@ -13,14 +13,14 @@
 #include "../Writer.hh"
 
 using namespace std;
-using namespace exfel::util;
+using namespace karabo::util;
 using namespace H5;
 
-namespace exfel {
+namespace karabo {
   namespace io {
     namespace hdf5 {
 
-      EXFEL_REGISTER_ONLY_ME_CC(File)
+      KARABO_REGISTER_ONLY_ME_CC(File)
 
       File::File() : m_filename("") {
       }
@@ -87,7 +87,7 @@ namespace exfel {
         return table;
       }
 
-      Table::Pointer File::getTable(const std::string& name, const exfel::io::hdf5::DataFormat::Pointer dataFormat) {
+      Table::Pointer File::getTable(const std::string& name, const karabo::io::hdf5::DataFormat::Pointer dataFormat) {
         Table::Pointer table = createReadOnlyTablePointer(name);
         table->openReadOnly(dataFormat);
         return table;

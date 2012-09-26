@@ -11,12 +11,12 @@
 
 
 using namespace std;
-using namespace exfel::util;
+using namespace karabo::util;
 
-namespace exfel {
+namespace karabo {
   namespace io {
 
-    EXFEL_REGISTER_ONLY_ME_CC(DataBlock)
+    KARABO_REGISTER_ONLY_ME_CC(DataBlock)
 
     void DataBlock::expectedParameters(Schema& expected) {
 
