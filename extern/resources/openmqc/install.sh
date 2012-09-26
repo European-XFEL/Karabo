@@ -36,7 +36,7 @@ fi
 cd $OPENMQC_DIR
 make -j CONF=$(uname -s) CMD=y
 
-cp -rf include/openmqc $INSTALL_PREFIX/include
+cp -rf include/openmqc $INSTALL_PREFIX/include/
 cp -rf lib $INSTALL_PREFIX
 echo "done"
 
