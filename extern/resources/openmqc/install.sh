@@ -34,7 +34,7 @@ if [ ! -d $OPENMQC_DIR ]; then
 fi
 
 cd $OPENMQC_DIR
-make -j CONF=$(uname -s)
+make -j CONF=$(uname -s) CMD=y
 
 cp -rf include/openmqc $INSTALL_PREFIX/include
 cp -rf lib $INSTALL_PREFIX
