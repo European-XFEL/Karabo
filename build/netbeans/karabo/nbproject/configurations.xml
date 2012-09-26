@@ -3,7 +3,6 @@
   <logicalFolder name="root" displayName="root" projectFiles="true" kind="ROOT">
     <logicalFolder name="f7" displayName="core" projectFiles="true">
       <logicalFolder name="f1" displayName="Header Files" projectFiles="true">
-        <itemPath>../../../src/karabo/core/Application.hh</itemPath>
         <itemPath>../../../src/karabo/core/CameraFsm.hh</itemPath>
         <itemPath>../../../src/karabo/core/DemoDevice1.hh</itemPath>
         <itemPath>../../../src/karabo/core/DemoDevice2.hh</itemPath>
@@ -208,8 +207,45 @@
     </logicalFolder>
     <logicalFolder name="f8" displayName="python" projectFiles="true">
       <logicalFolder name="f1" displayName="Header Files" projectFiles="true">
+        <itemPath>../../../src/karabo/python/DefaultValueVectorWrap.hh</itemPath>
+        <itemPath>../../../src/karabo/python/DeviceClientWrap.hh</itemPath>
+        <itemPath>../../../src/karabo/python/HashWrap.hh</itemPath>
+        <itemPath>../../../src/karabo/python/MemberSlotWrap.hh</itemPath>
+        <itemPath>../../../src/karabo/python/PythonFactoryMacros.hh</itemPath>
+        <itemPath>../../../src/karabo/python/PythonMacros.hh</itemPath>
+        <itemPath>../../../src/karabo/python/RequestorWrap.hh</itemPath>
+        <itemPath>../../../src/karabo/python/SignalSlotableWrap.hh</itemPath>
+        <itemPath>../../../src/karabo/python/SignalWrap.hh</itemPath>
+        <itemPath>../../../src/karabo/python/SlotWrap.hh</itemPath>
       </logicalFolder>
       <logicalFolder name="f2" displayName="Source Files" projectFiles="true">
+        <itemPath>../../../src/karabo/python/HashWrap.cc</itemPath>
+        <itemPath>../../../src/karabo/python/PyCoreDeviceClient.cc</itemPath>
+        <itemPath>../../../src/karabo/python/PyIoFormat.cc</itemPath>
+        <itemPath>../../../src/karabo/python/PyIoReader.cc</itemPath>
+        <itemPath>../../../src/karabo/python/PyIoReaderSimple.cc</itemPath>
+        <itemPath>../../../src/karabo/python/PyIoWriter.cc</itemPath>
+        <itemPath>../../../src/karabo/python/PyIoWriterSimple.cc</itemPath>
+        <itemPath>../../../src/karabo/python/PyLogLogger.cc</itemPath>
+        <itemPath>../../../src/karabo/python/PyUtilChoiceElement.cc</itemPath>
+        <itemPath>../../../src/karabo/python/PyUtilClassInfo.cc</itemPath>
+        <itemPath>../../../src/karabo/python/PyUtilComplexElement.cc</itemPath>
+        <itemPath>../../../src/karabo/python/PyUtilHash.cc</itemPath>
+        <itemPath>../../../src/karabo/python/PyUtilImageElement.cc</itemPath>
+        <itemPath>../../../src/karabo/python/PyUtilListElement.cc</itemPath>
+        <itemPath>../../../src/karabo/python/PyUtilNonEmptyListElement.cc</itemPath>
+        <itemPath>../../../src/karabo/python/PyUtilOverwriteElement.cc</itemPath>
+        <itemPath>../../../src/karabo/python/PyUtilSchema.cc</itemPath>
+        <itemPath>../../../src/karabo/python/PyUtilSchemaSimple.cc</itemPath>
+        <itemPath>../../../src/karabo/python/PyUtilSimpleAnyElement.cc</itemPath>
+        <itemPath>../../../src/karabo/python/PyUtilSingleElement.cc</itemPath>
+        <itemPath>../../../src/karabo/python/PyUtilTargetActualElement.cc</itemPath>
+        <itemPath>../../../src/karabo/python/PyUtilTypes.cc</itemPath>
+        <itemPath>../../../src/karabo/python/PyVectorContainer.cc</itemPath>
+        <itemPath>../../../src/karabo/python/PyXmsRequestor.cc</itemPath>
+        <itemPath>../../../src/karabo/python/PyXmsSignalSlotable.cc</itemPath>
+        <itemPath>../../../src/karabo/python/PyXmsSlotElement.cc</itemPath>
+        <itemPath>../../../src/karabo/python/pyexfel.cc</itemPath>
       </logicalFolder>
     </logicalFolder>
     <logicalFolder name="f1" displayName="util" projectFiles="true">
@@ -347,6 +383,7 @@
           <incDir>
             <pElem>../../../src</pElem>
             <pElem>${EXTERN_DIST_DIR}/include</pElem>
+            <pElem>/usr/include/${PYTHON_LIB}</pElem>
           </incDir>
         </ccTool>
         <linkerTool>

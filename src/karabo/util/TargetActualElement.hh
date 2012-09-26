@@ -13,6 +13,7 @@
 #define	KARABO_UTIL_TARGETACTUALELEMENT_HH
 
 #include "ComplexElement.hh"
+#include "SimpleElement.hh"
 
 namespace karabo {
   namespace util {

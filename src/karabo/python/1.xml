@@ -1,0 +1,30 @@
+<?xml version="1.0" ?>
+<Application xmlns="http://xfel.eu/config">
+  <Logger>
+    <appenders dataType="LIST">
+      <item>
+        <Ostream>
+          <layout>
+            <Simple />
+          </layout>
+          <name>default</name>
+          <output>STDERR</output>
+          <treshold>NOTSET</treshold>
+        </Ostream>
+      </item>
+    </appenders>
+    <priority>DEBUG</priority>
+  </Logger>
+  <modules dataType="LIST">
+    <item>
+      <ModulePy>
+        <pymodule>
+          <Sum>
+            <a>10</a>
+            <b>1135</b>
+          </Sum>
+        </pymodule>
+      </ModulePy>
+    </item>
+  </modules>
+</Application>
