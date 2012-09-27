@@ -382,18 +382,22 @@
         <ccTool>
           <incDir>
             <pElem>../../../src</pElem>
+            <pElem>${EXTERN_DIST_DIR}/include/python2.7</pElem>
             <pElem>${EXTERN_DIST_DIR}/include</pElem>
-            <pElem>/usr/include/${PYTHON_LIB}</pElem>
           </incDir>
         </ccTool>
         <linkerTool>
           <output>${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/lib/libkarabo.${CND_DLIB_EXT}</output>
           <linkerAddLib>
-            <pElem>${EXTERN_DIST_DIR}/lib</pElem>
             <pElem>/opt/local/lib/nss</pElem>
             <pElem>/opt/local/lib/nspr</pElem>
+            <pElem>${EXTERN_DIST_DIR}/lib</pElem>
           </linkerAddLib>
+          <linkerDynSerch>
+            <pElem>\$$ORIGIN/../extern/lib</pElem>
+          </linkerDynSerch>
           <linkerLibItems>
+            <linkerLibLibItem>boost_chrono</linkerLibLibItem>
             <linkerLibLibItem>boost_date_time</linkerLibLibItem>
             <linkerLibLibItem>boost_filesystem</linkerLibLibItem>
             <linkerLibLibItem>boost_python</linkerLibLibItem>
@@ -401,20 +405,930 @@
             <linkerLibLibItem>boost_signals</linkerLibLibItem>
             <linkerLibLibItem>boost_system</linkerLibLibItem>
             <linkerLibLibItem>boost_thread</linkerLibLibItem>
+            <linkerLibLibItem>cppunit</linkerLibLibItem>
             <linkerLibLibItem>hdf5</linkerLibLibItem>
             <linkerLibLibItem>hdf5_cpp</linkerLibLibItem>
             <linkerLibLibItem>hdf5_hl</linkerLibLibItem>
             <linkerLibLibItem>hdf5_hl_cpp</linkerLibLibItem>
             <linkerLibLibItem>log4cpp</linkerLibLibItem>
-            <linkerLibLibItem>openmqc</linkerLibLibItem>
-            <linkerLibLibItem>ssl3</linkerLibLibItem>
-            <linkerLibLibItem>${PYTHON_LIB}</linkerLibLibItem>
             <linkerLibLibItem>netsnmp</linkerLibLibItem>
-            <linkerLibLibItem>rt</linkerLibLibItem>
-            <linkerLibStdlibItem>CppUnit</linkerLibStdlibItem>
+            <linkerLibLibItem>netsnmpagent</linkerLibLibItem>
+            <linkerLibLibItem>netsnmphelpers</linkerLibLibItem>
+            <linkerLibLibItem>netsnmpmibs</linkerLibLibItem>
+            <linkerLibLibItem>netsnmptrapd</linkerLibLibItem>
+            <linkerLibLibItem>openmqc</linkerLibLibItem>
+            <linkerLibLibItem>python2.7</linkerLibLibItem>
           </linkerLibItems>
         </linkerTool>
       </compileType>
+      <packaging>
+        <packType>Tar</packType>
+        <output>${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/package/karabo.tar.gz</output>
+        <additionalOptions>-vz</additionalOptions>
+        <packTopDir>karabo</packTopDir>
+        <packFileList>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}lib/libkarabo.so"
+                            from="dist/Debug/GNU-Linux-x86/lib/libkarabo.so"
+                            perm="755"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}bin/karabo-deviceserver"
+                            from="../deviceServer/dist/Debug/GNU-Linux-x86/karabo-deviceserver"
+                            perm="755"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}bin/karabo-brokermessagelogger"
+                            from="../brokerMessageLogger/dist/Debug/GNU-Linux-x86/karabo-brokermessagelogger"
+                            perm="755"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/core/HashDatabase.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/core/HashDatabase.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/core/coredll.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/core/coredll.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/core/Application.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/core/Application.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/core/DeviceServerLogic.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/core/DeviceServerLogic.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/core/StartStopFsm.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/core/StartStopFsm.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/core/Device.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/core/Device.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/core/CameraFsm.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/core/CameraFsm.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/core/DeviceServer.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/core/DeviceServer.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/core/core.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/core/core.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/core/Runner.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/core/Runner.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/core/MasterDevice.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/core/MasterDevice.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/core/Module.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/core/Module.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/core/DeviceServerMachine.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/core/DeviceServerMachine.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/core/ReconfigurableFsm.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/core/ReconfigurableFsm.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/core/GuiServerDevice.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/core/GuiServerDevice.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/core/DemoDevice1.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/core/DemoDevice1.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/core/SignalSlotable.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/core/SignalSlotable.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/core/TestDevice.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/core/TestDevice.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/core/DemoDevice2.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/core/DemoDevice2.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/core/DeviceClient.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/core/DeviceClient.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/core/LowLevelControlDevice.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/core/LowLevelControlDevice.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/core/FsmMacros.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/core/FsmMacros.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/xms/SlotElement.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/xms/SlotElement.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/xms/Slot.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/xms/Slot.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/xms/InterInstanceOutput.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/xms/InterInstanceOutput.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/xms/Output.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/xms/Output.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/xms/FileWrapInput.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/xms/FileWrapInput.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/xms/xms.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/xms/xms.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/xms/Input.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/xms/Input.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/xms/SignalElement.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/xms/SignalElement.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/xms/InterInstanceInput.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/xms/InterInstanceInput.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/xms/Statics.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/xms/Statics.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/xms/AbstractInput.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/xms/AbstractInput.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/xms/xmsdll.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/xms/xmsdll.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/xms/FileWrapOutput.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/xms/FileWrapOutput.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/xms/Requestor.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/xms/Requestor.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/xms/SignalSlotable.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/xms/SignalSlotable.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/xms/Signal.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/xms/Signal.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/xms/Memory.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/xms/Memory.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/xms/AbstractOutput.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/xms/AbstractOutput.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/log/Logger.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/log/Logger.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/log/SimpleLayoutConfigurator.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/log/SimpleLayoutConfigurator.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/log/NetworkAppenderConfigurator.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/log/NetworkAppenderConfigurator.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/log/Sample.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/log/Sample.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/log/NetworkAppender.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/log/NetworkAppender.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/log/BasicLayoutConfigurator.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/log/BasicLayoutConfigurator.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/log/logdll.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/log/logdll.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/log/LayoutConfigurator.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/log/LayoutConfigurator.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/log/PatternLayoutConfigurator.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/log/PatternLayoutConfigurator.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/log/FileAppenderConfigurator.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/log/FileAppenderConfigurator.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/log/RollingFileAppenderConfigurator.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/log/RollingFileAppenderConfigurator.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/log/AppenderConfigurator.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/log/AppenderConfigurator.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/log/CategoryConfigurator.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/log/CategoryConfigurator.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/log/OstreamAppenderConfigurator.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/log/OstreamAppenderConfigurator.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/util/Test.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/util/Test.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/util/PluginLoader.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/util/PluginLoader.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/util/utildll.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/util/utildll.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/util/ComplexElement.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/util/ComplexElement.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/util/Exception.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/util/Exception.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/util/TargetActualElement.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/util/TargetActualElement.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/util/SingleElement.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/util/SingleElement.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/util/CArray.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/util/CArray.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/util/Hash.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/util/Hash.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/util/Time.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/util/Time.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/util/GenericElement.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/util/GenericElement.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/util/util.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/util/util.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/util/Types.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/util/Types.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/util/MonitorableElement.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/util/MonitorableElement.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/util/ClassInfo.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/util/ClassInfo.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/util/OverwriteElement.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/util/OverwriteElement.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/util/String.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/util/String.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/util/Factory.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/util/Factory.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/util/Schema.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/util/Schema.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/util/VectorElement.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/util/VectorElement.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/util/Timer.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/util/Timer.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/util/GenericFactory.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/util/GenericFactory.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/util/ListElement.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/util/ListElement.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/util/Profiler.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/util/Profiler.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/util/ImageElement.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/util/ImageElement.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/util/SimpleElement.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/util/SimpleElement.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/util/ChoiceElement.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/util/ChoiceElement.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/util/Traits.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/util/Traits.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/util/GeneralDefines.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/util/GeneralDefines.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/util/ConfigConstants.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/util/ConfigConstants.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/python/RequestorWrap.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/python/RequestorWrap.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/python/PythonMacros.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/python/PythonMacros.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/python/SignalWrap.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/python/SignalWrap.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/python/MemberSlotWrap.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/python/MemberSlotWrap.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/python/ModulePy.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/python/ModulePy.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/python/ReaderPy.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/python/ReaderPy.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/python/SignalSlotableWrap.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/python/SignalSlotableWrap.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/python/ReconfigurableFsmWrap.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/python/ReconfigurableFsmWrap.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/python/HashWrap.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/python/HashWrap.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/python/Wrapper.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/python/Wrapper.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/python/PythonFactoryMacros.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/python/PythonFactoryMacros.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/python/WriterPy.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/python/WriterPy.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/python/DefaultValueVectorWrap.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/python/DefaultValueVectorWrap.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/python/PythonLoader.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/python/PythonLoader.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/python/DeviceClientWrap.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/python/DeviceClientWrap.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/python/SlotWrap.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/python/SlotWrap.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/net/TcpConnection.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/net/TcpConnection.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/net/IOService.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/net/IOService.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/net/JmsBrokerIOService.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/net/JmsBrokerIOService.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/net/AbstractIOService.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/net/AbstractIOService.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/net/AJmsConnection.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/net/AJmsConnection.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/net/Channel.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/net/Channel.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/net/JmsBrokerConnection.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/net/JmsBrokerConnection.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/net/BrokerConnection.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/net/BrokerConnection.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/net/UdpConnection.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/net/UdpConnection.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/net/UdpChannel.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/net/UdpChannel.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/net/BrokerIOService.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/net/BrokerIOService.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/net/AsioIOService.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/net/AsioIOService.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/net/netdll.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/net/netdll.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/net/SnmpIOService.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/net/SnmpIOService.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/net/JmsIOService.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/net/JmsIOService.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/net/JmsBrokerChannel.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/net/JmsBrokerChannel.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/net/net.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/net/net.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/net/BrokerChannel.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/net/BrokerChannel.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/net/SnmpChannel.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/net/SnmpChannel.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/net/TcpChannel.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/net/TcpChannel.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/net/JmsChannel.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/net/JmsChannel.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/net/Connection.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/net/Connection.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/net/SnmpConnection.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/net/SnmpConnection.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/xml/xmldll.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/xml/xmldll.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/io/Reader.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/io/Reader.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/io/Writer.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/io/Writer.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/io/StringStreamWriter.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/io/StringStreamWriter.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/io/TextFileWriter.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/io/TextFileWriter.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/io/HashBinarySerializer.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/io/HashBinarySerializer.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/io/HashBinaryFormat.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/io/HashBinaryFormat.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/io/ArrayDimensions.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/io/ArrayDimensions.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/io/ioProfiler.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/io/ioProfiler.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/io/BinarySerializer.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/io/BinarySerializer.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/io/TextFileReader.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/io/TextFileReader.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/io/HeaderFormat.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/io/HeaderFormat.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/io/Format.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/io/Format.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/io/HashBaseFormat.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/io/HashBaseFormat.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/io/LatexFormat.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/io/LatexFormat.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/io/io.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/io/io.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/io/File.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/io/File.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/io/ArrayView.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/io/ArrayView.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/io/PlcFormat.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/io/PlcFormat.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/io/SchemaXmlFormat.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/io/SchemaXmlFormat.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/io/iodll.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/io/iodll.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/io/HashXmlFormat.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/io/HashXmlFormat.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/io/SchemaXsdFormat.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/io/SchemaXsdFormat.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}include/karabo/io/StringStreamReader.hh"
+                            from="dist/Debug/GNU-Linux-x86/include/karabo/io/StringStreamReader.hh"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+        </packFileList>
+      </packaging>
       <folder path="f2/f3">
         <ccTool>
           <incDir>
@@ -443,8 +1357,8 @@
           <developmentMode>5</developmentMode>
           <incDir>
             <pElem>../../../src</pElem>
+            <pElem>${EXTERN_DIST_DIR}/include/python2.7</pElem>
             <pElem>${EXTERN_DIST_DIR}/include</pElem>
-            <pElem>/usr/include/${PYTHON_LIB}</pElem>
           </incDir>
         </ccTool>
         <fortranCompilerTool>
@@ -456,11 +1370,15 @@
         <linkerTool>
           <output>${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/lib/libkarabo.${CND_DLIB_EXT}</output>
           <linkerAddLib>
-            <pElem>${EXTERN_DIST_DIR}/lib</pElem>
             <pElem>/opt/local/lib/nss</pElem>
             <pElem>/opt/local/lib/nspr</pElem>
+            <pElem>${EXTERN_DIST_DIR}/lib</pElem>
           </linkerAddLib>
+          <linkerDynSerch>
+            <pElem>\$$ORIGIN/../extern/lib</pElem>
+          </linkerDynSerch>
           <linkerLibItems>
+            <linkerLibLibItem>boost_chrono</linkerLibLibItem>
             <linkerLibLibItem>boost_date_time</linkerLibLibItem>
             <linkerLibLibItem>boost_filesystem</linkerLibLibItem>
             <linkerLibLibItem>boost_python</linkerLibLibItem>
@@ -468,20 +1386,33 @@
             <linkerLibLibItem>boost_signals</linkerLibLibItem>
             <linkerLibLibItem>boost_system</linkerLibLibItem>
             <linkerLibLibItem>boost_thread</linkerLibLibItem>
+            <linkerLibLibItem>cppunit</linkerLibLibItem>
             <linkerLibLibItem>hdf5</linkerLibLibItem>
             <linkerLibLibItem>hdf5_cpp</linkerLibLibItem>
             <linkerLibLibItem>hdf5_hl</linkerLibLibItem>
             <linkerLibLibItem>hdf5_hl_cpp</linkerLibLibItem>
             <linkerLibLibItem>log4cpp</linkerLibLibItem>
-            <linkerLibLibItem>openmqc</linkerLibLibItem>
-            <linkerLibLibItem>ssl3</linkerLibLibItem>
-            <linkerLibLibItem>${PYTHON_LIB}</linkerLibLibItem>
             <linkerLibLibItem>netsnmp</linkerLibLibItem>
-            <linkerLibLibItem>rt</linkerLibLibItem>
-            <linkerLibStdlibItem>CppUnit</linkerLibStdlibItem>
+            <linkerLibLibItem>netsnmpagent</linkerLibLibItem>
+            <linkerLibLibItem>netsnmphelpers</linkerLibLibItem>
+            <linkerLibLibItem>netsnmpmibs</linkerLibLibItem>
+            <linkerLibLibItem>netsnmptrapd</linkerLibLibItem>
+            <linkerLibLibItem>openmqc</linkerLibLibItem>
+            <linkerLibLibItem>python2.7</linkerLibLibItem>
           </linkerLibItems>
         </linkerTool>
       </compileType>
+      <packaging>
+        <packType>Tar</packType>
+        <packFileList>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}lib/${OUTPUT_BASENAME}"
+                            from="${OUTPUT_PATH}"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+        </packFileList>
+      </packaging>
       <folder path="f2/f3">
         <ccTool>
           <incDir>
