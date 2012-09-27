@@ -12,7 +12,7 @@
     <logicalFolder name="SourceFiles"
                    displayName="Source Files"
                    projectFiles="true">
-      <itemPath>../../../src/deviceServer/deviceServer.cc</itemPath>
+      <itemPath>../../../src/brokerMessageLogger/brokerMessageLogger.cc</itemPath>
     </logicalFolder>
     <logicalFolder name="TestFiles"
                    displayName="Test Files"
@@ -36,20 +36,16 @@
       <compileType>
         <ccTool>
           <incDir>
-            <pElem>../../../src</pElem>
             <pElem>${EXTERN_DIST_DIR}/include</pElem>
             <pElem>${KARABO_DIST_DIR}/include</pElem>
           </incDir>
         </ccTool>
         <linkerTool>
-          <output>${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/karabo-deviceserver</output>
+          <output>${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/karabo-brokermessagelogger</output>
           <linkerAddLib>
             <pElem>${EXTERN_DIST_DIR}/lib</pElem>
+            <pElem>${KARABO_DIST_DIR}/lib</pElem>
           </linkerAddLib>
-          <linkerDynSerch>
-            <pElem>\$$ORIGIN/../lib</pElem>
-            <pElem>\$$ORIGIN/../extern/lib</pElem>
-          </linkerDynSerch>
           <linkerLibItems>
             <linkerLibProjectItem>
               <makeArtifact PL="../karabo"
@@ -63,7 +59,6 @@
                             OP="${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/lib/libkarabo.${CND_DLIB_EXT}">
               </makeArtifact>
             </linkerLibProjectItem>
-            <linkerLibLibItem>boost_chrono</linkerLibLibItem>
             <linkerLibLibItem>boost_date_time</linkerLibLibItem>
             <linkerLibLibItem>boost_filesystem</linkerLibLibItem>
             <linkerLibLibItem>boost_python</linkerLibLibItem>
@@ -83,27 +78,9 @@
             <linkerLibLibItem>netsnmpmibs</linkerLibLibItem>
             <linkerLibLibItem>netsnmptrapd</linkerLibLibItem>
             <linkerLibLibItem>openmqc</linkerLibLibItem>
-            <linkerLibLibItem>python2.7</linkerLibLibItem>
           </linkerLibItems>
         </linkerTool>
       </compileType>
-      <packaging>
-        <packType>Tar</packType>
-        <packFileList>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}bin/${OUTPUT_BASENAME}"
-                            from="${OUTPUT_PATH}"
-                            perm="755"
-                            owner="root"
-                            group="bin"/>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}lib/libkarabo.so"
-                            from="../karabo/dist/Debug/GNU-Linux-x86/lib/libkarabo.so"
-                            perm="755"
-                            owner="root"
-                            group="bin"/>
-        </packFileList>
-      </packaging>
     </conf>
     <conf name="Release" type="1">
       <toolsSet>
@@ -117,7 +94,6 @@
         <ccTool>
           <developmentMode>5</developmentMode>
           <incDir>
-            <pElem>../../../src</pElem>
             <pElem>${EXTERN_DIST_DIR}/include</pElem>
             <pElem>${KARABO_DIST_DIR}/include</pElem>
           </incDir>
@@ -129,30 +105,24 @@
           <developmentMode>5</developmentMode>
         </asmTool>
         <linkerTool>
-          <output>${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/karabo-deviceserver</output>
+          <output>${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/karabo-brokermessagelogger</output>
           <linkerAddLib>
             <pElem>${EXTERN_DIST_DIR}/lib</pElem>
-          </linkerAddLib>
-          <linkerDynSerch>
-            <pElem>../lib</pElem>
-            <pElem>../extern/lib</pElem>
             <pElem>${KARABO_DIST_DIR}/lib</pElem>
-            <pElem>${EXTERN_DIST_DIR}/lib</pElem>
-          </linkerDynSerch>
+          </linkerAddLib>
           <linkerLibItems>
             <linkerLibProjectItem>
               <makeArtifact PL="../karabo"
                             CT="2"
                             CN="Release"
-                            AC="true"
+                            AC="false"
                             BL="true"
                             WD="../karabo"
-                            BC="${MAKE} -j6 -f Makefile CONF=Release"
-                            CC="${MAKE} -j6 -f Makefile CONF=Release clean"
+                            BC="${MAKE} -j12 -f Makefile CONF=Release"
+                            CC="${MAKE} -j12 -f Makefile CONF=Release clean"
                             OP="${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/lib/libkarabo.${CND_DLIB_EXT}">
               </makeArtifact>
             </linkerLibProjectItem>
-            <linkerLibLibItem>boost_chrono</linkerLibLibItem>
             <linkerLibLibItem>boost_date_time</linkerLibLibItem>
             <linkerLibLibItem>boost_filesystem</linkerLibLibItem>
             <linkerLibLibItem>boost_python</linkerLibLibItem>
@@ -172,7 +142,6 @@
             <linkerLibLibItem>netsnmpmibs</linkerLibLibItem>
             <linkerLibLibItem>netsnmptrapd</linkerLibLibItem>
             <linkerLibLibItem>openmqc</linkerLibLibItem>
-            <linkerLibLibItem>${PYTHON_LIB}</linkerLibLibItem>
           </linkerLibItems>
         </linkerTool>
       </compileType>
