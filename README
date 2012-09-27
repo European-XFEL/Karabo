@@ -1,26 +1,182 @@
-This is the README file gives instructions on how to build the karabo framework.
+#
+# Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
+# 
+
+This README file gives instructions on how to build the karabo framework.
 
 The supported OS are: 
-    SL5/6
+    SL 5/6
+    Fedora 16/17
     Ubuntu 10.04 LTS
-    Ubuntu 11.10
-    Mac OS
+    Ubuntu 11.x
+    Ubuntu 12.04 LTS
+    MacOS (Snow Leopard)
     Windows 7 (64 bit)
 
 Other distributions like Fedora or Suse may still work.
 
+------------------------------------------------------------------------------------------------------------------------------------------------------------------
 (1) Dependencies
+------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-    If you have Ubuntu type:
+    ########## Ubuntu ##########
 
-        sudo apt-get install build-essential subversion cmake doxygen libnss3-dev libnspr4-dev libX11-dev python-dev zlib1g-dev python-qt4 python-qwt5-qt4
+    Type:
 
-
-(2) Installation
-
-    If you have root permissions on your computer, go to the directory of this README file and type:
-
-    sudo install.sh
+        sudo apt-get install build-essential subversion doxygen libnss3-dev libnspr4-dev libX11-dev python-dev zlib1g-dev python-qt4 python-qwt5-qt4
 
 
+    For karabo-gui on Ubuntu you need:
+
+        sudo apt-get install python-qt4 python-qwt5-qt4 python-qt4-sql python-numpy python-setuptools libqt4-sql-sqlite python-guiqwt python-guidata
+
+
+    The two last packages python-guiqwt and python-guidata are available on Ubuntu 12.04, 
+    but on previous Ubuntu 10.04 you need to install them using python easy_install tool:
+        
+      sudo apt-get install gfortran
+      sudo easy_install guiqwt
+      sudo easy_install guidata
+
+
+    A better tool is python-pip (it has proper uninstall command),then in this case:
+
+      sudo apt-get install python-pip gfortran
+      sudo pip install guiqwt
+      sudo pip install guidata
+
+
+
+    ########## SL5/6, Fedora16/17 ##########
+
+    Type:
+
+        yum groupinstall "Development tools" 
+        
+        yum install subversion cmake doxygen python-devel nspr-devel nss-devel zlib-devel libX11-devel
+
+        yum --enablerepo=epel install PyQt4 PyQwt
+
+
+    For karabo-gui on SL6:
+
+    If you have already installed these packages with the following command:
+     
+        yum --enablerepo=epel install PyQt4 PyQwt PyQt4-webkit
+
+
+    then the best thing will be to uninstall them first:
+   
+        yum remove PyQt4 PyQwt PyQt4-webkit
+
+
+    and then run:
+
+        yum  --enablerepo=epel install qtwebkit qt-mobility PyQt4 PyQwt qwt sip python-guidata guiqwt
+
+
+    Explanation: Initially, PyQt4 was from SL repo, PyQwt from epel repo and PyQt4-webkit from epel repo providing missing webkit module. 
+                 Now we have newer versions of these packages in our exfel repo (webkit is again within PyQt4), together with needed dependencies, 
+                 like sip and qwt (webkit module requires dependencies qtwebkit and qt-mobility from epel repo). 
+                 For guiqwt and guidata new packages are created in exfel repo. numpy and scipy dependency is installed by default.
+
+
+    For karabo-gui on Fedora16/17 type:
+
+        yum install PyQt4 PyQwt
+
+
+    For other rpm based systems (Fedora) currently there are no guiqwt and guidata packages, so the only method is to use easy_install or preferably the newer method with pip-python command 
+    (it includes better uninstall command), like it was described above for Ubuntu 10.04: 
+
+        yum install numpy numpy-f2py gcc-gfortran
+
+
+    then for easy_install
+
+        yum install python-setuptools
+        easy_install guiqwt
+        easy install guidata
+
+
+    or for pip
+
+        yum install python-pip   
+        pip-python install guiqwt
+        pip-python install guidata
+
+
+    Comment: if you have compat libraries for gcc3 (with g77 fortran compiler) there is still a problem as both easy_install and pip discovers first g77 fortran compiler 
+             and not gfortran nad then fails with compilation. The workaround would be to download guiqwt package and follow README file within this package:
+
+            If gfortran is not your default Fortran compiler:
+                python setup.py build --fcompiler=gfortran install
+            or if it fails, you may try the following:
+                python setup.py build_ext --fcompiler=gnu95 build install
+
+
+    NOTE: karabo-gui doesn't work on SL5!
+
+
+
+    ########## MacOS ##########
+
+    To be done....
+
+
+ ------------------------------------------------------------------------------------------------------------------------------------------------------------------
+(2) Building & Code-Development
+------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+    ### Building from command-line ###
+
+    Karabo and its subprojects are located in the build folder. Under any Linux or MacOS platform navigate to:
+
+        cd build/netbeans
+
+
+    you will find the karabo project and its related tools in this folder. For building simply navigate to a subfolder and type:
+
+        make CMD=y CONF=Debug
+
+    or 
+
+        make CMD=y CONF=Release 
+
+
+    for debug of release configuration, respectively.
+    HINT: Append the "-j" option to either build command for high-speed parallel build
+
+
+
+    ### Coding and building ###
+
+    We use NetBeans 7.2 or higher as an IDE. Simply open the corresponding projects in the build/netbeans folder and start coding/compiling using NetBeans.
+
+
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------------
+(3) Accessing the SVN repository
+------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+    For accessing SVN repository from non-DESY machine via kerberos authentication 
+    (just to avoid typying password every svn command or storing it in plain text) 
+    you need also 
+
+      Ubuntu:    sudo apt-get install krb5-user
+      
+      Fedora:    yum install krb5-workstation
+
+    and copy /etc/krb5.conf from any DESY machine to your local machine (not needed, but doesn't harm)
+    If you want to use the functionality of passwordless ssh to exfl servers or workgroup servers, make sure you have
+    in /etc/ssh/ssh_config or add in $HOME/.ssh/ssh_config the following lines:
+
+    Host *
+      GSSAPIAuthentication yes
+      GSSAPIDelegateCredentials yes
+
+    If you get question about default REALM during kerberos installation type 
+
+      DESY.DE
 

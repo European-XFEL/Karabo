@@ -42,12 +42,15 @@ if [ ! -d $BOOST_DIR ]; then
     tar -xzf ${BOOST_DIR}.tar.gz
 fi
     cd $BOOST_DIR
-    if [ ! -f bjam ]; then
-        ./bootstrap.sh --with-libraries=$BOOST_LIBRARIES  2>&1 | tee configure.log
-        ./bjam -j $num_cores 2>&1 | tee make.log
-    fi
-    cp -rf boost $INSTALL_PREFIX/include
-    cp -rf stage/lib $INSTALL_PREFIX
+    
+    ./bootstrap.sh --prefix=boost_1_51_0 --libdir=boost_1_51_0/lib --with-libraries=$BOOST_LIBRARIES  2>&1 | tee configure.log
+
+    echo "using python : 2.7 : $INSTALL_PREFIX ;" >> project-config.jam
+    
+    ./b2 -a variant=release -j$num_cores install 2>&1 | tee make.log
+
+    cp -rf boost_1_51_0/include/ $INSTALL_PREFIX
+    cp -rf boost_1_51_0/lib/ $INSTALL_PREFIX
     echo "done"
 
 
