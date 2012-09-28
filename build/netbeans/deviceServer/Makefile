@@ -58,9 +58,7 @@ $(CP) -f nbproject/Karabo-variables-$(CURRENT_PLATFORM).mk nbproject/Makefile-va
 endif
 
 # Custom Karabo variables
-KARABO_DIST_DIR = $(CND_BASEDIR)/../karabo/$(CND_DISTDIR)/$(CONF)/$(CND_PLATFORM_$(CONF))
-KARABO_EXTERN ?= $(CND_BASEDIR)/../../../extern
-EXTERN_DIST_DIR = $(KARABO_EXTERN)/$(CND_PLATFORM_$(CONF))
+KARABO ?= $(CND_BASEDIR)/../karabo/$(CND_DISTDIR)/$(CONF)/$(CND_PLATFORM_$(CONF))
 
 
 # build

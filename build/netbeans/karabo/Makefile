@@ -58,7 +58,7 @@ $(CP) -f nbproject/Karabo-variables-$(CURRENT_PLATFORM).mk nbproject/Makefile-va
 endif
 
 # Custom Karabo variables
-KARABO_DIST_DIR = $(CND_BASEDIR)/$(CND_DISTDIR)/$(CONF)/$(CND_PLATFORM_$(CONF))
+KARABO = $(CND_BASEDIR)/$(CND_DISTDIR)/$(CONF)/$(CND_PLATFORM_$(CONF))
 KARABO_EXTERN ?= $(CND_BASEDIR)/../../../extern
 EXTERN_DIST_DIR = $(KARABO_EXTERN)/$(CND_PLATFORM_$(CONF))
 
@@ -85,7 +85,7 @@ build: .build-post
 	@if test -d $(EXTERN_DIST_DIR);\
 	then echo "### Found external dependencies, skipping build";\
 	else ./.installExtern.sh $(KARABO_EXTERN) $(EXTERN_DIST_DIR);\
-	ln -sf -T ${EXTERN_DIST_DIR} ${KARABO_DIST_DIR}/extern;\
+	ln -sf -T ${EXTERN_DIST_DIR} ${KARABO}/extern;\
 	fi
 
 .build-post: .build-impl
@@ -97,28 +97,28 @@ build: .build-post
 	fi
 
 # Add your post 'build' code here...
-	@$(MKDIR) -p  $(KARABO_DIST_DIR)/include/karabo/core
-	@$(MKDIR) -p  $(KARABO_DIST_DIR)/include/karabo/io/hdf5
-	@$(MKDIR) -p  $(KARABO_DIST_DIR)/include/karabo/log
-	@$(MKDIR) -p  $(KARABO_DIST_DIR)/include/karabo/net
-	@$(MKDIR) -p  $(KARABO_DIST_DIR)/include/karabo/python
-	@$(MKDIR) -p  $(KARABO_DIST_DIR)/include/karabo/util
-	@$(MKDIR) -p  $(KARABO_DIST_DIR)/include/karabo/xml
-	@$(MKDIR) -p  $(KARABO_DIST_DIR)/include/karabo/xms
-	@$(CP) $(CND_BASEDIR)/../../../src/karabo/core/*.hh $(KARABO_DIST_DIR)/include/karabo/core
-	@$(CP) $(CND_BASEDIR)/../../../src/karabo/io/*.hh $(KARABO_DIST_DIR)/include/karabo/io
-	@$(CP) $(CND_BASEDIR)/../../../src/karabo/log/*.hh $(KARABO_DIST_DIR)/include/karabo/log
-	@$(CP) $(CND_BASEDIR)/../../../src/karabo/net/*.hh $(KARABO_DIST_DIR)/include/karabo/net
-	@$(CP) $(CND_BASEDIR)/../../../src/karabo/python/*.hh $(KARABO_DIST_DIR)/include/karabo/python
-	@$(CP) $(CND_BASEDIR)/../../../src/karabo/util/*.hh $(KARABO_DIST_DIR)/include/karabo/util
-	@$(CP) $(CND_BASEDIR)/../../../src/karabo/xml/*.hh $(KARABO_DIST_DIR)/include/karabo/xml
-	@$(CP) $(CND_BASEDIR)/../../../src/karabo/xms/*.hh $(KARABO_DIST_DIR)/include/karabo/xms
+	@$(MKDIR) -p  $(KARABO)/include/karabo/core
+	@$(MKDIR) -p  $(KARABO)/include/karabo/io/hdf5
+	@$(MKDIR) -p  $(KARABO)/include/karabo/log
+	@$(MKDIR) -p  $(KARABO)/include/karabo/net
+	@$(MKDIR) -p  $(KARABO)/include/karabo/python
+	@$(MKDIR) -p  $(KARABO)/include/karabo/util
+	@$(MKDIR) -p  $(KARABO)/include/karabo/xml
+	@$(MKDIR) -p  $(KARABO)/include/karabo/xms
+	@$(CP) $(CND_BASEDIR)/../../../src/karabo/core/*.hh $(KARABO)/include/karabo/core
+	@$(CP) $(CND_BASEDIR)/../../../src/karabo/io/*.hh $(KARABO)/include/karabo/io
+	@$(CP) $(CND_BASEDIR)/../../../src/karabo/log/*.hh $(KARABO)/include/karabo/log
+	@$(CP) $(CND_BASEDIR)/../../../src/karabo/net/*.hh $(KARABO)/include/karabo/net
+	@$(CP) $(CND_BASEDIR)/../../../src/karabo/python/*.hh $(KARABO)/include/karabo/python
+	@$(CP) $(CND_BASEDIR)/../../../src/karabo/util/*.hh $(KARABO)/include/karabo/util
+	@$(CP) $(CND_BASEDIR)/../../../src/karabo/xml/*.hh $(KARABO)/include/karabo/xml
+	@$(CP) $(CND_BASEDIR)/../../../src/karabo/xms/*.hh $(KARABO)/include/karabo/xms
 
 # Force extern re-build
 .PHONY: extern
 extern:
 	@./.installExtern.sh $(KARABO_EXTERN) $(EXTERN_DIST_DIR) $(LIBS)
-	@ln -sf -T $(EXTERN_DIST_DIR) $(KARABO_DIST_DIR)/extern
+	@ln -sf -T $(EXTERN_DIST_DIR) $(KARABO)/extern
 
 # clean
 clean: .clean-post

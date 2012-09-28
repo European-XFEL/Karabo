@@ -37,14 +37,14 @@
         <ccTool>
           <incDir>
             <pElem>../../../src</pElem>
-            <pElem>${EXTERN_DIST_DIR}/include</pElem>
-            <pElem>${KARABO_DIST_DIR}/include</pElem>
+            <pElem>${KARABO}/extern/include</pElem>
+            <pElem>${KARABO}/include</pElem>
           </incDir>
         </ccTool>
         <linkerTool>
           <output>${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/karabo-deviceserver</output>
           <linkerAddLib>
-            <pElem>${EXTERN_DIST_DIR}/lib</pElem>
+            <pElem>${KARABO}/extern/lib</pElem>
           </linkerAddLib>
           <linkerDynSerch>
             <pElem>\$$ORIGIN/../lib</pElem>
@@ -118,8 +118,8 @@
           <developmentMode>5</developmentMode>
           <incDir>
             <pElem>../../../src</pElem>
-            <pElem>${EXTERN_DIST_DIR}/include</pElem>
-            <pElem>${KARABO_DIST_DIR}/include</pElem>
+            <pElem>${KARABO}/extern/include</pElem>
+            <pElem>${KARABO}/include</pElem>
           </incDir>
         </ccTool>
         <fortranCompilerTool>
@@ -131,13 +131,11 @@
         <linkerTool>
           <output>${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/karabo-deviceserver</output>
           <linkerAddLib>
-            <pElem>${EXTERN_DIST_DIR}/lib</pElem>
+            <pElem>${KARABO}/extern/lib</pElem>
           </linkerAddLib>
           <linkerDynSerch>
-            <pElem>../lib</pElem>
-            <pElem>../extern/lib</pElem>
-            <pElem>${KARABO_DIST_DIR}/lib</pElem>
-            <pElem>${EXTERN_DIST_DIR}/lib</pElem>
+            <pElem>\$$ORIGIN/../lib</pElem>
+            <pElem>\$$ORIGIN/../extern/lib</pElem>
           </linkerDynSerch>
           <linkerLibItems>
             <linkerLibProjectItem>
