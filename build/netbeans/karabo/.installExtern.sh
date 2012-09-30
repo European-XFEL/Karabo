@@ -2,18 +2,18 @@
 
 CWD=$(pwd)
 
-DEPENDENCIES=( python2.7 boost openmqc hdf5 snmp log4cpp cppunit )
+DEPENDENCIES=( python2.7 sip pyqt4 pyqwt5 boost openmqc hdf5 snmp log4cpp cppunit )
 
 # $1 EXTERN_DIR      Path to karabo extern folder
 # $2 INSTALL_PREFIX  Installation prefix
-# $3 LIBS            Specified libraries (optional)
+# $3 WHAT            Specified libraries (optional)
 EXTERN_DIR=$1
 INSTALL_PREFIX=$2
 shift;shift
-LIBS=$@
+WHAT=$@
 
-if [ "$LIBS" != "" ]; then
-    DEPENDENCIES=( $LIBS )
+if [ "$WHAT" != "" ]; then
+    DEPENDENCIES=( $WHAT )
 fi
 
 for i in "${DEPENDENCIES[@]}"

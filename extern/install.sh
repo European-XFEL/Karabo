@@ -21,8 +21,13 @@ mkdir -p $INSTALL_PREFIX/bin
 NUM_CORES=2
 # Find number of cores on machine
 if [ "$(uname -s)" = "Linux" ]; then
-    NUM_CORESs=`grep "processor" /proc/cpuinfo | wc -l`
+    NUM_CORES=`grep "processor" /proc/cpuinfo | wc -l`
+    NUM_CORES=$(($NUM_CORES*2/3))
 fi
+
+echo
+echo "### INFO Building is preferentially parallelized into $NUM_CORES threads."
+echo
 
 RESOURCE_PATH=resources/$RESOURCE_NAME
 if [ -d $RESOURCE_PATH ]; then

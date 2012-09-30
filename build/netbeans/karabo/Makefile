@@ -85,8 +85,9 @@ build: .build-post
 # Check whether external dependencies are installed, if not build them
 	@if test -d $(EXTERN_DIST_DIR);\
 	then echo "### Found external dependencies, skipping build";\
-	else ./.installExtern.sh $(KARABO_EXTERN) $(EXTERN_DIST_DIR);\
-	ln -sf -T ${EXTERN_DIST_DIR} ${KARABO}/extern;\
+	else mkdir -p $(KARABO);\
+	./.installExtern.sh $(KARABO_EXTERN) $(EXTERN_DIST_DIR);\
+	ln -sf $(EXTERN_DIST_DIR) $(KARABO)/extern;\
 	fi
 
 .build-post: .build-impl
@@ -118,8 +119,9 @@ build: .build-post
 # Force extern re-build
 .PHONY: extern
 extern:
-	@./.installExtern.sh $(KARABO_EXTERN) $(EXTERN_DIST_DIR) $(LIBS)
-	@ln -sf -T $(EXTERN_DIST_DIR) $(KARABO)/extern
+	@mkdir -p $(KARABO)
+	@./.installExtern.sh $(KARABO_EXTERN) $(EXTERN_DIST_DIR) $(WHAT)
+	@ln -sf $(EXTERN_DIST_DIR) $(KARABO)/extern
 
 # clean
 clean: .clean-post

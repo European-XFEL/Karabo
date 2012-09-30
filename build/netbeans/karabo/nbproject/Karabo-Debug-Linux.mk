@@ -47,7 +47,6 @@ OBJECTFILES= \
 	${OBJECTDIR}/_ext/1103112890/TcpChannel.o \
 	${OBJECTDIR}/_ext/1103112890/BrokerConnection.o \
 	${OBJECTDIR}/_ext/1060241295/ScalarFilterBuffer.o \
-	${OBJECTDIR}/_ext/2117156511/PyIoWriterSimple.o \
 	${OBJECTDIR}/_ext/163556830/DemoDevice1.o \
 	${OBJECTDIR}/_ext/1103122747/SignalSlotable.o \
 	${OBJECTDIR}/_ext/1103112890/Connection.o \
@@ -83,7 +82,6 @@ OBJECTFILES= \
 	${OBJECTDIR}/_ext/163016059/Timer.o \
 	${OBJECTDIR}/_ext/2117156511/PyUtilSimpleAnyElement.o \
 	${OBJECTDIR}/_ext/2117156511/PyCoreDeviceClient.o \
-	${OBJECTDIR}/_ext/2117156511/PyIoReaderSimple.o \
 	${OBJECTDIR}/_ext/1103122747/Statics.o \
 	${OBJECTDIR}/_ext/1072794519/TextFileWriter.o \
 	${OBJECTDIR}/_ext/1103112890/SnmpChannel.o \
@@ -248,11 +246,6 @@ ${OBJECTDIR}/_ext/1060241295/ScalarFilterBuffer.o: ../../../src/karabo/io/hdf5/S
 	${MKDIR} -p ${OBJECTDIR}/_ext/1060241295
 	${RM} $@.d
 	$(COMPILE.cc) -g -I${EXTERN_DIST_DIR}/include/hdf5 -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1060241295/ScalarFilterBuffer.o ../../../src/karabo/io/hdf5/ScalarFilterBuffer.cc
-
-${OBJECTDIR}/_ext/2117156511/PyIoWriterSimple.o: ../../../src/karabo/python/PyIoWriterSimple.cc 
-	${MKDIR} -p ${OBJECTDIR}/_ext/2117156511
-	${RM} $@.d
-	$(COMPILE.cc) -g -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/2117156511/PyIoWriterSimple.o ../../../src/karabo/python/PyIoWriterSimple.cc
 
 ${OBJECTDIR}/_ext/163556830/DemoDevice1.o: ../../../src/karabo/core/DemoDevice1.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/163556830
@@ -428,11 +421,6 @@ ${OBJECTDIR}/_ext/2117156511/PyCoreDeviceClient.o: ../../../src/karabo/python/Py
 	${MKDIR} -p ${OBJECTDIR}/_ext/2117156511
 	${RM} $@.d
 	$(COMPILE.cc) -g -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/2117156511/PyCoreDeviceClient.o ../../../src/karabo/python/PyCoreDeviceClient.cc
-
-${OBJECTDIR}/_ext/2117156511/PyIoReaderSimple.o: ../../../src/karabo/python/PyIoReaderSimple.cc 
-	${MKDIR} -p ${OBJECTDIR}/_ext/2117156511
-	${RM} $@.d
-	$(COMPILE.cc) -g -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/2117156511/PyIoReaderSimple.o ../../../src/karabo/python/PyIoReaderSimple.cc
 
 ${OBJECTDIR}/_ext/1103122747/Statics.o: ../../../src/karabo/xms/Statics.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1103122747
@@ -983,19 +971,6 @@ ${OBJECTDIR}/_ext/1060241295/ScalarFilterBuffer_nomain.o: ${OBJECTDIR}/_ext/1060
 	    ${CP} ${OBJECTDIR}/_ext/1060241295/ScalarFilterBuffer.o ${OBJECTDIR}/_ext/1060241295/ScalarFilterBuffer_nomain.o;\
 	fi
 
-${OBJECTDIR}/_ext/2117156511/PyIoWriterSimple_nomain.o: ${OBJECTDIR}/_ext/2117156511/PyIoWriterSimple.o ../../../src/karabo/python/PyIoWriterSimple.cc 
-	${MKDIR} -p ${OBJECTDIR}/_ext/2117156511
-	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/2117156511/PyIoWriterSimple.o`; \
-	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
-	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
-	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
-	then  \
-	    ${RM} $@.d;\
-	    $(COMPILE.cc) -g -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/2117156511/PyIoWriterSimple_nomain.o ../../../src/karabo/python/PyIoWriterSimple.cc;\
-	else  \
-	    ${CP} ${OBJECTDIR}/_ext/2117156511/PyIoWriterSimple.o ${OBJECTDIR}/_ext/2117156511/PyIoWriterSimple_nomain.o;\
-	fi
-
 ${OBJECTDIR}/_ext/163556830/DemoDevice1_nomain.o: ${OBJECTDIR}/_ext/163556830/DemoDevice1.o ../../../src/karabo/core/DemoDevice1.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/163556830
 	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/163556830/DemoDevice1.o`; \
@@ -1449,19 +1424,6 @@ ${OBJECTDIR}/_ext/2117156511/PyCoreDeviceClient_nomain.o: ${OBJECTDIR}/_ext/2117
 	    $(COMPILE.cc) -g -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/2117156511/PyCoreDeviceClient_nomain.o ../../../src/karabo/python/PyCoreDeviceClient.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/2117156511/PyCoreDeviceClient.o ${OBJECTDIR}/_ext/2117156511/PyCoreDeviceClient_nomain.o;\
-	fi
-
-${OBJECTDIR}/_ext/2117156511/PyIoReaderSimple_nomain.o: ${OBJECTDIR}/_ext/2117156511/PyIoReaderSimple.o ../../../src/karabo/python/PyIoReaderSimple.cc 
-	${MKDIR} -p ${OBJECTDIR}/_ext/2117156511
-	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/2117156511/PyIoReaderSimple.o`; \
-	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
-	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
-	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
-	then  \
-	    ${RM} $@.d;\
-	    $(COMPILE.cc) -g -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/2117156511/PyIoReaderSimple_nomain.o ../../../src/karabo/python/PyIoReaderSimple.cc;\
-	else  \
-	    ${CP} ${OBJECTDIR}/_ext/2117156511/PyIoReaderSimple.o ${OBJECTDIR}/_ext/2117156511/PyIoReaderSimple_nomain.o;\
 	fi
 
 ${OBJECTDIR}/_ext/1103122747/Statics_nomain.o: ${OBJECTDIR}/_ext/1103122747/Statics.o ../../../src/karabo/xms/Statics.cc 
