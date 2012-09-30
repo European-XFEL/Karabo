@@ -22,7 +22,9 @@ do
     $EXTERN_DIR/install.sh $i $INSTALL_PREFIX
     rv=$?
     if [ $rv -ne 0 ]; then 
-        echo " ### PROBLEMS building $i, exiting... ###"
+        echo 
+        echo "### PROBLEMS building $i, exiting... ###"
+        echo
         exit $rv
     fi
 done
