@@ -18,18 +18,39 @@ mkdir -p $INSTALL_PREFIX/include
 mkdir -p $INSTALL_PREFIX/lib
 mkdir -p $INSTALL_PREFIX/bin
 
-RESOURCE_PATH=$DIR/resources/$RESOURCE_NAME
+NUM_CORES=2
+# Find number of cores on machine
+if [ "$(uname -s)" = "Linux" ]; then
+    NUM_CORESs=`grep "processor" /proc/cpuinfo | wc -l`
+fi
+
+RESOURCE_PATH=resources/$RESOURCE_NAME
 if [ -d $RESOURCE_PATH ]; then
-    $RESOURCE_PATH/install.sh $INSTALL_PREFIX
-    rv=$?
+    cd $RESOURCE_PATH
+    source build.config
+    if [ ! $CUSTOM_BUILD ]; then
+        echo; echo "### Extracting $RESOURCE_NAME..." | tee -a $CWD/installExtern.log
+        $EXTRACT_COMMAND
+        if [ $? -ne 0 ]; then exit $?; fi
+        cd $DEP_NAME
+        echo; echo "### Conifguring $RESOURCE_NAME..." | tee -a $CWD/installExtern.log
+        echo $CONFIGURE_COMMAND
+        eval $CONFIGURE_COMMAND 2>&1 | tee -a configure.log
+        if [ $? -ne 0 ]; then exit $?; fi
+        echo; echo "### Compiling $RESOURCE_NAME..." | tee -a $CWD/installExtern.log
+        eval $MAKE_COMMAND  2>&1 | tee -a $CWD/installExtern.log
+        if [ $? -ne 0 ]; then exit $?; fi
+        eval $INSTALL_COMMAND
+    fi
+    cd $DIR
 else
     echo
     echo "### ERROR  Resource $RESOURCE_NAME does not exist."
     echo
-    rv=1
+    exit 1
 fi
 
 cd $CWD
 
-exit $rv
+exit 0
 
