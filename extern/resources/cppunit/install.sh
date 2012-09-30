@@ -5,33 +5,10 @@ CWD=$(pwd)
 DIR=`dirname $0`
 cd ${DIR}
 
-###
-#
-# Any dependency must install headers to:
-#
-#    $INSTALL_PREFIX/include
-#
-# and libraries to:
-#
-#    $INSTALL_PREFIX/lib
-#
-# Optionally binaries can be installed to:
-#
-#    $INSTALL_PREFIX/bin
-#
-# And documentation to:
-#
-#    $INSTALL_PREFIX/doc
-#
-###
+echo "Building $DEP_DIR..."
+echo "Unpacking files, please wait..."
+tar -xzf ${DEP_DIR}.tar.gz
 
-DEP_DIR=cppunit-1.12.1
-
-if [ ! -d $DEP_DIR ]; then
-    echo "Building $DEP_DIR..."
-    echo "Unpacking files, please wait..."
-    tar -xzf ${DEP_DIR}.tar.gz
-fi
   cd $DEP_DIR
   ./configure --prefix=`pwd`/cppunit
   make -j 2>&1 | tee make.log

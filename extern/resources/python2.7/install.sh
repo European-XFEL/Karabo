@@ -36,7 +36,7 @@ fi
   mkdir -p `pwd`/python2.7/include
   mkdir -p `pwd`/python2.7/bin
 
-  ./configure --prefix=`pwd`/python2.7 --enable-unicode=ucs4 --enable-shared LDFLAGS="-Wl,-rpath $INSTALL_PREFIX/lib"
+  ./configure --prefix=`pwd`/python2.7 --enable-unicode=ucs4 --enable-shared LDFLAGS="-Wl,-rpath \$ORIGIN/../lib"
   make -j 2>&1 | tee make.log
   make -j install
   cp -rf python2.7/include ${INSTALL_PREFIX}
