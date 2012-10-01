@@ -16,6 +16,7 @@ from mainwindow import MainWindow
 
 from PyQt4.QtGui import *
 
+
 def scanWidgetPlugins():
     #TODO: start in thread
     
@@ -41,7 +42,7 @@ if __name__ == '__main__':
 #        "background-color: rgb(110,110,110);"
 #        "margin-bottom: 0px;"
 #        "}")
-    
+
     scanWidgetPlugins()
         
     window = MainWindow()
