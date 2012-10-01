@@ -1,27 +1,14 @@
-__author__="wegerk"
-__date__ ="$Jun 8, 2012 9:11:47 AM$"
+from cx_Freeze import setup, Executable
 
-from setuptools import setup,find_packages
+#packages = ["displaywidgets", "editablewidgets"]
+build_exe_options = {"packages": ["displaywidgets", "editablewidgets"]}
 
-setup (
-  name = 'gui',
-  version = '0.1',
-  packages = find_packages(),
+setup(
+        name = "karabo-gui",
+        version = "0.1",
+        description = "The GUI for the KARABO framework.",
+        #options = {"build_exe": {"includes": includes}},
+        options = {"build_exe": build_exe_options},
+        executables = [Executable("karabo-gui.py")]
+     )
 
-  # Declare your packages' dependencies here, for eg:
-  install_requires=['foo>=3'],
-
-  # Fill in these to make your Egg ready for upload to
-  # PyPI
-  author = 'wegerk',
-  author_email = '',
-
-  summary = 'Just another Python package for the cheese shop',
-  url = '',
-  license = '',
-  long_description= 'Long description of the package',
-
-  # could also include long_description, download_url, classifiers, etc.
-
-  
-)
