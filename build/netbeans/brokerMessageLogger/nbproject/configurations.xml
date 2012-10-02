@@ -41,7 +41,7 @@
           </incDir>
         </ccTool>
         <linkerTool>
-          <output>${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/karabo-brokermessagelogger</output>
+          <output>${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/bin/karabo-brokermessagelogger</output>
           <linkerAddLib>
             <pElem>${KARABO}/extern/lib</pElem>
           </linkerAddLib>
@@ -110,7 +110,7 @@
           <developmentMode>5</developmentMode>
         </asmTool>
         <linkerTool>
-          <output>${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/karabo-brokermessagelogger</output>
+          <output>${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/bin/karabo-brokermessagelogger</output>
           <linkerAddLib>
             <pElem>${KARABO}/extern/lib</pElem>
           </linkerAddLib>
