@@ -117,11 +117,16 @@ build: .build-post
 	@$(CP) $(CND_BASEDIR)/../../../src/karabo/xms/*.hh $(KARABO)/include/karabo/xms
 
 # Force extern re-build
-.PHONY: extern
+.PHONY: extern package
 extern:
 	@mkdir -p $(KARABO)
 	@./.installExtern.sh $(KARABO_EXTERN) $(EXTERN_DIST_DIR) $(WHAT)
 	@ln -sf $(EXTERN_DIST_DIR) $(KARABO)/extern
+
+# Package
+.PHONY: package
+package:
+	@./package.sh $(CND_DISTDIR) $(CONF) $(CND_PLATFORM_$(CONF))
 
 # clean
 clean: .clean-post
