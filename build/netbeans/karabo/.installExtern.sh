@@ -2,7 +2,12 @@
 
 CWD=$(pwd)
 
-DEPENDENCIES=( python2.7 sip pyqt4 pyqwt5 ipython boost openmqc hdf5 snmp log4cpp cppunit )
+DEPENDENCIES_Linux=( python2.7 sip pyqt4 pyqwt5 ipython boost openmqc hdf5 snmp log4cpp cppunit )
+DEPENDENCIES_Darwin=( boost openmqc hdf5 snmp log4cpp cppunit )
+
+#################################################################################################
+
+DEPENDENCIES=$(eval echo $`echo DEPENDENCIES_$(uname -s)`)
 
 # $1 EXTERN_DIR      Path to karabo extern folder
 # $2 INSTALL_PREFIX  Installation prefix
