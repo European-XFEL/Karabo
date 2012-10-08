@@ -75,7 +75,7 @@ build: .build-post
 
 .build-post: .build-impl
 # Add your post 'build' code here...
-
+	@$(CP) -rf $(CND_DISTDIR)/$(CONF)/$(CND_PLATFORM_$(CONF))/bin $(KARABO)
 
 # clean
 clean: .clean-post
