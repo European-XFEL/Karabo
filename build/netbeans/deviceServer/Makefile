@@ -61,7 +61,6 @@ endif
 # Custom Karabo variables
 KARABO ?= $(CND_BASEDIR)/../karabo/$(CND_DISTDIR)/$(CONF)/$(CND_PLATFORM_$(CONF))
 
-
 # build
 build: .build-post
 
@@ -77,6 +76,7 @@ build: .build-post
 
 .build-post: .build-impl
 # Add your post 'build' code here...
+	@$(CP) -rf $(CND_DISTDIR)/$(CONF)/$(CND_PLATFORM_$(CONF))/bin $(KARABO)
 
 
 # clean

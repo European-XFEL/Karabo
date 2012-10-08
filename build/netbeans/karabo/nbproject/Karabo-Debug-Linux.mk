@@ -52,15 +52,15 @@ OBJECTFILES= \
 	${OBJECTDIR}/_ext/1103112890/Connection.o \
 	${OBJECTDIR}/_ext/2117156511/PyUtilTargetActualElement.o \
 	${OBJECTDIR}/_ext/1072794519/TextFileReader.o \
-	${OBJECTDIR}/_ext/1103122740/tinyxmlparser.o \
-	${OBJECTDIR}/_ext/163016059/ClassInfo.o \
-	${OBJECTDIR}/_ext/1103111265/RollingFileAppenderConfigurator.o \
 	${OBJECTDIR}/_ext/163556830/MasterDevice.o \
+	${OBJECTDIR}/_ext/1103122740/tinyxmlparser.o \
 	${OBJECTDIR}/_ext/163016059/Exception.o \
 	${OBJECTDIR}/_ext/2117156511/PyUtilHash.o \
 	${OBJECTDIR}/_ext/1103122747/Memory.o \
+	${OBJECTDIR}/_ext/163016059/ClassInfo.o \
 	${OBJECTDIR}/_ext/163556830/CameraFsm.o \
 	${OBJECTDIR}/_ext/2117156511/PyUtilComplexElement.o \
+	${OBJECTDIR}/_ext/1103111265/RollingFileAppenderConfigurator.o \
 	${OBJECTDIR}/_ext/1072794519/Writer.o \
 	${OBJECTDIR}/_ext/163016059/Types.o \
 	${OBJECTDIR}/_ext/2117156511/PyUtilSingleElement.o \
@@ -101,9 +101,9 @@ OBJECTFILES= \
 	${OBJECTDIR}/_ext/2117156511/PyVectorContainer.o \
 	${OBJECTDIR}/_ext/163016059/Time.o \
 	${OBJECTDIR}/_ext/2117156511/pyexfel.o \
-	${OBJECTDIR}/_ext/1060241295/RecordFormat.o \
 	${OBJECTDIR}/_ext/1103122740/tinyxml.o \
 	${OBJECTDIR}/_ext/1060241295/Table.o \
+	${OBJECTDIR}/_ext/1060241295/RecordFormat.o \
 	${OBJECTDIR}/_ext/1060241295/DataBlock.o \
 	${OBJECTDIR}/_ext/1072794519/StringStreamWriter.o \
 	${OBJECTDIR}/_ext/1103122747/FileWrapInput.o \
@@ -273,25 +273,15 @@ ${OBJECTDIR}/_ext/1072794519/TextFileReader.o: ../../../src/karabo/io/TextFileRe
 	${RM} $@.d
 	$(COMPILE.cc) -g -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1072794519/TextFileReader.o ../../../src/karabo/io/TextFileReader.cc
 
-${OBJECTDIR}/_ext/1103122740/tinyxmlparser.o: ../../../src/karabo/xml/tinyxmlparser.cpp 
-	${MKDIR} -p ${OBJECTDIR}/_ext/1103122740
-	${RM} $@.d
-	$(COMPILE.cc) -g -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1103122740/tinyxmlparser.o ../../../src/karabo/xml/tinyxmlparser.cpp
-
-${OBJECTDIR}/_ext/163016059/ClassInfo.o: ../../../src/karabo/util/ClassInfo.cc 
-	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
-	${RM} $@.d
-	$(COMPILE.cc) -g -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163016059/ClassInfo.o ../../../src/karabo/util/ClassInfo.cc
-
-${OBJECTDIR}/_ext/1103111265/RollingFileAppenderConfigurator.o: ../../../src/karabo/log/RollingFileAppenderConfigurator.cc 
-	${MKDIR} -p ${OBJECTDIR}/_ext/1103111265
-	${RM} $@.d
-	$(COMPILE.cc) -g -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1103111265/RollingFileAppenderConfigurator.o ../../../src/karabo/log/RollingFileAppenderConfigurator.cc
-
 ${OBJECTDIR}/_ext/163556830/MasterDevice.o: ../../../src/karabo/core/MasterDevice.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/163556830
 	${RM} $@.d
 	$(COMPILE.cc) -g -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163556830/MasterDevice.o ../../../src/karabo/core/MasterDevice.cc
+
+${OBJECTDIR}/_ext/1103122740/tinyxmlparser.o: ../../../src/karabo/xml/tinyxmlparser.cpp 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1103122740
+	${RM} $@.d
+	$(COMPILE.cc) -g -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1103122740/tinyxmlparser.o ../../../src/karabo/xml/tinyxmlparser.cpp
 
 ${OBJECTDIR}/_ext/163016059/Exception.o: ../../../src/karabo/util/Exception.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
@@ -308,6 +298,11 @@ ${OBJECTDIR}/_ext/1103122747/Memory.o: ../../../src/karabo/xms/Memory.cc
 	${RM} $@.d
 	$(COMPILE.cc) -g -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1103122747/Memory.o ../../../src/karabo/xms/Memory.cc
 
+${OBJECTDIR}/_ext/163016059/ClassInfo.o: ../../../src/karabo/util/ClassInfo.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
+	${RM} $@.d
+	$(COMPILE.cc) -g -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163016059/ClassInfo.o ../../../src/karabo/util/ClassInfo.cc
+
 ${OBJECTDIR}/_ext/163556830/CameraFsm.o: ../../../src/karabo/core/CameraFsm.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/163556830
 	${RM} $@.d
@@ -317,6 +312,11 @@ ${OBJECTDIR}/_ext/2117156511/PyUtilComplexElement.o: ../../../src/karabo/python/
 	${MKDIR} -p ${OBJECTDIR}/_ext/2117156511
 	${RM} $@.d
 	$(COMPILE.cc) -g -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/2117156511/PyUtilComplexElement.o ../../../src/karabo/python/PyUtilComplexElement.cc
+
+${OBJECTDIR}/_ext/1103111265/RollingFileAppenderConfigurator.o: ../../../src/karabo/log/RollingFileAppenderConfigurator.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1103111265
+	${RM} $@.d
+	$(COMPILE.cc) -g -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1103111265/RollingFileAppenderConfigurator.o ../../../src/karabo/log/RollingFileAppenderConfigurator.cc
 
 ${OBJECTDIR}/_ext/1072794519/Writer.o: ../../../src/karabo/io/Writer.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1072794519
@@ -518,11 +518,6 @@ ${OBJECTDIR}/_ext/2117156511/pyexfel.o: ../../../src/karabo/python/pyexfel.cc
 	${RM} $@.d
 	$(COMPILE.cc) -g -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/2117156511/pyexfel.o ../../../src/karabo/python/pyexfel.cc
 
-${OBJECTDIR}/_ext/1060241295/RecordFormat.o: ../../../src/karabo/io/hdf5/RecordFormat.cc 
-	${MKDIR} -p ${OBJECTDIR}/_ext/1060241295
-	${RM} $@.d
-	$(COMPILE.cc) -g -I${EXTERN_DIST_DIR}/include/hdf5 -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1060241295/RecordFormat.o ../../../src/karabo/io/hdf5/RecordFormat.cc
-
 ${OBJECTDIR}/_ext/1103122740/tinyxml.o: ../../../src/karabo/xml/tinyxml.cpp 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1103122740
 	${RM} $@.d
@@ -532,6 +527,11 @@ ${OBJECTDIR}/_ext/1060241295/Table.o: ../../../src/karabo/io/hdf5/Table.cc
 	${MKDIR} -p ${OBJECTDIR}/_ext/1060241295
 	${RM} $@.d
 	$(COMPILE.cc) -g -I${EXTERN_DIST_DIR}/include/hdf5 -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1060241295/Table.o ../../../src/karabo/io/hdf5/Table.cc
+
+${OBJECTDIR}/_ext/1060241295/RecordFormat.o: ../../../src/karabo/io/hdf5/RecordFormat.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1060241295
+	${RM} $@.d
+	$(COMPILE.cc) -g -I${EXTERN_DIST_DIR}/include/hdf5 -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1060241295/RecordFormat.o ../../../src/karabo/io/hdf5/RecordFormat.cc
 
 ${OBJECTDIR}/_ext/1060241295/DataBlock.o: ../../../src/karabo/io/hdf5/DataBlock.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1060241295
@@ -1059,45 +1059,6 @@ ${OBJECTDIR}/_ext/1072794519/TextFileReader_nomain.o: ${OBJECTDIR}/_ext/10727945
 	    ${CP} ${OBJECTDIR}/_ext/1072794519/TextFileReader.o ${OBJECTDIR}/_ext/1072794519/TextFileReader_nomain.o;\
 	fi
 
-${OBJECTDIR}/_ext/1103122740/tinyxmlparser_nomain.o: ${OBJECTDIR}/_ext/1103122740/tinyxmlparser.o ../../../src/karabo/xml/tinyxmlparser.cpp 
-	${MKDIR} -p ${OBJECTDIR}/_ext/1103122740
-	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/1103122740/tinyxmlparser.o`; \
-	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
-	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
-	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
-	then  \
-	    ${RM} $@.d;\
-	    $(COMPILE.cc) -g -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1103122740/tinyxmlparser_nomain.o ../../../src/karabo/xml/tinyxmlparser.cpp;\
-	else  \
-	    ${CP} ${OBJECTDIR}/_ext/1103122740/tinyxmlparser.o ${OBJECTDIR}/_ext/1103122740/tinyxmlparser_nomain.o;\
-	fi
-
-${OBJECTDIR}/_ext/163016059/ClassInfo_nomain.o: ${OBJECTDIR}/_ext/163016059/ClassInfo.o ../../../src/karabo/util/ClassInfo.cc 
-	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
-	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/163016059/ClassInfo.o`; \
-	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
-	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
-	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
-	then  \
-	    ${RM} $@.d;\
-	    $(COMPILE.cc) -g -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163016059/ClassInfo_nomain.o ../../../src/karabo/util/ClassInfo.cc;\
-	else  \
-	    ${CP} ${OBJECTDIR}/_ext/163016059/ClassInfo.o ${OBJECTDIR}/_ext/163016059/ClassInfo_nomain.o;\
-	fi
-
-${OBJECTDIR}/_ext/1103111265/RollingFileAppenderConfigurator_nomain.o: ${OBJECTDIR}/_ext/1103111265/RollingFileAppenderConfigurator.o ../../../src/karabo/log/RollingFileAppenderConfigurator.cc 
-	${MKDIR} -p ${OBJECTDIR}/_ext/1103111265
-	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/1103111265/RollingFileAppenderConfigurator.o`; \
-	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
-	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
-	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
-	then  \
-	    ${RM} $@.d;\
-	    $(COMPILE.cc) -g -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1103111265/RollingFileAppenderConfigurator_nomain.o ../../../src/karabo/log/RollingFileAppenderConfigurator.cc;\
-	else  \
-	    ${CP} ${OBJECTDIR}/_ext/1103111265/RollingFileAppenderConfigurator.o ${OBJECTDIR}/_ext/1103111265/RollingFileAppenderConfigurator_nomain.o;\
-	fi
-
 ${OBJECTDIR}/_ext/163556830/MasterDevice_nomain.o: ${OBJECTDIR}/_ext/163556830/MasterDevice.o ../../../src/karabo/core/MasterDevice.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/163556830
 	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/163556830/MasterDevice.o`; \
@@ -1109,6 +1070,19 @@ ${OBJECTDIR}/_ext/163556830/MasterDevice_nomain.o: ${OBJECTDIR}/_ext/163556830/M
 	    $(COMPILE.cc) -g -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163556830/MasterDevice_nomain.o ../../../src/karabo/core/MasterDevice.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/163556830/MasterDevice.o ${OBJECTDIR}/_ext/163556830/MasterDevice_nomain.o;\
+	fi
+
+${OBJECTDIR}/_ext/1103122740/tinyxmlparser_nomain.o: ${OBJECTDIR}/_ext/1103122740/tinyxmlparser.o ../../../src/karabo/xml/tinyxmlparser.cpp 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1103122740
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/1103122740/tinyxmlparser.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} $@.d;\
+	    $(COMPILE.cc) -g -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1103122740/tinyxmlparser_nomain.o ../../../src/karabo/xml/tinyxmlparser.cpp;\
+	else  \
+	    ${CP} ${OBJECTDIR}/_ext/1103122740/tinyxmlparser.o ${OBJECTDIR}/_ext/1103122740/tinyxmlparser_nomain.o;\
 	fi
 
 ${OBJECTDIR}/_ext/163016059/Exception_nomain.o: ${OBJECTDIR}/_ext/163016059/Exception.o ../../../src/karabo/util/Exception.cc 
@@ -1150,6 +1124,19 @@ ${OBJECTDIR}/_ext/1103122747/Memory_nomain.o: ${OBJECTDIR}/_ext/1103122747/Memor
 	    ${CP} ${OBJECTDIR}/_ext/1103122747/Memory.o ${OBJECTDIR}/_ext/1103122747/Memory_nomain.o;\
 	fi
 
+${OBJECTDIR}/_ext/163016059/ClassInfo_nomain.o: ${OBJECTDIR}/_ext/163016059/ClassInfo.o ../../../src/karabo/util/ClassInfo.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/163016059/ClassInfo.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} $@.d;\
+	    $(COMPILE.cc) -g -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163016059/ClassInfo_nomain.o ../../../src/karabo/util/ClassInfo.cc;\
+	else  \
+	    ${CP} ${OBJECTDIR}/_ext/163016059/ClassInfo.o ${OBJECTDIR}/_ext/163016059/ClassInfo_nomain.o;\
+	fi
+
 ${OBJECTDIR}/_ext/163556830/CameraFsm_nomain.o: ${OBJECTDIR}/_ext/163556830/CameraFsm.o ../../../src/karabo/core/CameraFsm.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/163556830
 	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/163556830/CameraFsm.o`; \
@@ -1174,6 +1161,19 @@ ${OBJECTDIR}/_ext/2117156511/PyUtilComplexElement_nomain.o: ${OBJECTDIR}/_ext/21
 	    $(COMPILE.cc) -g -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/2117156511/PyUtilComplexElement_nomain.o ../../../src/karabo/python/PyUtilComplexElement.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/2117156511/PyUtilComplexElement.o ${OBJECTDIR}/_ext/2117156511/PyUtilComplexElement_nomain.o;\
+	fi
+
+${OBJECTDIR}/_ext/1103111265/RollingFileAppenderConfigurator_nomain.o: ${OBJECTDIR}/_ext/1103111265/RollingFileAppenderConfigurator.o ../../../src/karabo/log/RollingFileAppenderConfigurator.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1103111265
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/1103111265/RollingFileAppenderConfigurator.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} $@.d;\
+	    $(COMPILE.cc) -g -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1103111265/RollingFileAppenderConfigurator_nomain.o ../../../src/karabo/log/RollingFileAppenderConfigurator.cc;\
+	else  \
+	    ${CP} ${OBJECTDIR}/_ext/1103111265/RollingFileAppenderConfigurator.o ${OBJECTDIR}/_ext/1103111265/RollingFileAppenderConfigurator_nomain.o;\
 	fi
 
 ${OBJECTDIR}/_ext/1072794519/Writer_nomain.o: ${OBJECTDIR}/_ext/1072794519/Writer.o ../../../src/karabo/io/Writer.cc 
@@ -1696,19 +1696,6 @@ ${OBJECTDIR}/_ext/2117156511/pyexfel_nomain.o: ${OBJECTDIR}/_ext/2117156511/pyex
 	    ${CP} ${OBJECTDIR}/_ext/2117156511/pyexfel.o ${OBJECTDIR}/_ext/2117156511/pyexfel_nomain.o;\
 	fi
 
-${OBJECTDIR}/_ext/1060241295/RecordFormat_nomain.o: ${OBJECTDIR}/_ext/1060241295/RecordFormat.o ../../../src/karabo/io/hdf5/RecordFormat.cc 
-	${MKDIR} -p ${OBJECTDIR}/_ext/1060241295
-	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/1060241295/RecordFormat.o`; \
-	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
-	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
-	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
-	then  \
-	    ${RM} $@.d;\
-	    $(COMPILE.cc) -g -I${EXTERN_DIST_DIR}/include/hdf5 -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1060241295/RecordFormat_nomain.o ../../../src/karabo/io/hdf5/RecordFormat.cc;\
-	else  \
-	    ${CP} ${OBJECTDIR}/_ext/1060241295/RecordFormat.o ${OBJECTDIR}/_ext/1060241295/RecordFormat_nomain.o;\
-	fi
-
 ${OBJECTDIR}/_ext/1103122740/tinyxml_nomain.o: ${OBJECTDIR}/_ext/1103122740/tinyxml.o ../../../src/karabo/xml/tinyxml.cpp 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1103122740
 	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/1103122740/tinyxml.o`; \
@@ -1733,6 +1720,19 @@ ${OBJECTDIR}/_ext/1060241295/Table_nomain.o: ${OBJECTDIR}/_ext/1060241295/Table.
 	    $(COMPILE.cc) -g -I${EXTERN_DIST_DIR}/include/hdf5 -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1060241295/Table_nomain.o ../../../src/karabo/io/hdf5/Table.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/1060241295/Table.o ${OBJECTDIR}/_ext/1060241295/Table_nomain.o;\
+	fi
+
+${OBJECTDIR}/_ext/1060241295/RecordFormat_nomain.o: ${OBJECTDIR}/_ext/1060241295/RecordFormat.o ../../../src/karabo/io/hdf5/RecordFormat.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1060241295
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/1060241295/RecordFormat.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} $@.d;\
+	    $(COMPILE.cc) -g -I${EXTERN_DIST_DIR}/include/hdf5 -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1060241295/RecordFormat_nomain.o ../../../src/karabo/io/hdf5/RecordFormat.cc;\
+	else  \
+	    ${CP} ${OBJECTDIR}/_ext/1060241295/RecordFormat.o ${OBJECTDIR}/_ext/1060241295/RecordFormat_nomain.o;\
 	fi
 
 ${OBJECTDIR}/_ext/1060241295/DataBlock_nomain.o: ${OBJECTDIR}/_ext/1060241295/DataBlock.o ../../../src/karabo/io/hdf5/DataBlock.cc 
