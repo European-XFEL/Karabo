@@ -47,8 +47,8 @@ namespace karabo {
 
                     karabo::util::Hash configuration = parseCommandLine(argc, argv);      
                     
-                    if (!configuration.has("--"))
-                        instancePointer = T::create(T::classInfo().getClassId(), configuration);                    
+                    if (!configuration.empty())
+                        instancePointer = T::create(configuration);        
 
                     return instancePointer;
 
@@ -64,18 +64,21 @@ namespace karabo {
                 using namespace std;
                 using namespace karabo::util;
                 try {
-                    if (argc == 1) return Hash();
+                    if (argc == 1) {
+                        showUsage(std::string(argv[0]));
+                        return Hash();
+                    }
                     // Check first argument
                     std::string firstArg(argv[1]);
                     if (firstArg.substr(0, 2) == "--") {
                         processOption(firstArg.substr(2), argc, argv);
-                        return Hash("--");
+                        return Hash();
                     } else if (firstArg.substr(0, 1) == "-") {
                         processOption(firstArg.substr(1), argc, argv);
-                        return Hash("--");
+                        return Hash();
                     } else if (firstArg == "help") {
                         processOption(firstArg, argc, argv);
-                        return Hash("--");
+                        return Hash();
                     } else {
 
                         std::vector<Hash> userInputs;
