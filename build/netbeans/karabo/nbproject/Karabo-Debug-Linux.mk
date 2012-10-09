@@ -47,7 +47,6 @@ OBJECTFILES= \
 	${OBJECTDIR}/_ext/1103112890/TcpChannel.o \
 	${OBJECTDIR}/_ext/1103112890/BrokerConnection.o \
 	${OBJECTDIR}/_ext/1060241295/ScalarFilterBuffer.o \
-	${OBJECTDIR}/_ext/163556830/DemoDevice1.o \
 	${OBJECTDIR}/_ext/1103122747/SignalSlotable.o \
 	${OBJECTDIR}/_ext/1103112890/Connection.o \
 	${OBJECTDIR}/_ext/2117156511/PyUtilTargetActualElement.o \
@@ -86,7 +85,6 @@ OBJECTFILES= \
 	${OBJECTDIR}/_ext/1072794519/TextFileWriter.o \
 	${OBJECTDIR}/_ext/1103112890/SnmpChannel.o \
 	${OBJECTDIR}/_ext/1072794519/StringStreamReader.o \
-	${OBJECTDIR}/_ext/163556830/DemoDevice2.o \
 	${OBJECTDIR}/_ext/1072794519/HashBinarySerializer.o \
 	${OBJECTDIR}/_ext/1103112890/SnmpIOService.o \
 	${OBJECTDIR}/_ext/163016059/Profiler.o \
@@ -247,11 +245,6 @@ ${OBJECTDIR}/_ext/1060241295/ScalarFilterBuffer.o: ../../../src/karabo/io/hdf5/S
 	${MKDIR} -p ${OBJECTDIR}/_ext/1060241295
 	${RM} $@.d
 	$(COMPILE.cc) -g -I${EXTERN_DIST_DIR}/include/hdf5 -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1060241295/ScalarFilterBuffer.o ../../../src/karabo/io/hdf5/ScalarFilterBuffer.cc
-
-${OBJECTDIR}/_ext/163556830/DemoDevice1.o: ../../../src/karabo/core/DemoDevice1.cc 
-	${MKDIR} -p ${OBJECTDIR}/_ext/163556830
-	${RM} $@.d
-	$(COMPILE.cc) -g -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163556830/DemoDevice1.o ../../../src/karabo/core/DemoDevice1.cc
 
 ${OBJECTDIR}/_ext/1103122747/SignalSlotable.o: ../../../src/karabo/xms/SignalSlotable.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1103122747
@@ -442,11 +435,6 @@ ${OBJECTDIR}/_ext/1072794519/StringStreamReader.o: ../../../src/karabo/io/String
 	${MKDIR} -p ${OBJECTDIR}/_ext/1072794519
 	${RM} $@.d
 	$(COMPILE.cc) -g -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1072794519/StringStreamReader.o ../../../src/karabo/io/StringStreamReader.cc
-
-${OBJECTDIR}/_ext/163556830/DemoDevice2.o: ../../../src/karabo/core/DemoDevice2.cc 
-	${MKDIR} -p ${OBJECTDIR}/_ext/163556830
-	${RM} $@.d
-	$(COMPILE.cc) -g -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163556830/DemoDevice2.o ../../../src/karabo/core/DemoDevice2.cc
 
 ${OBJECTDIR}/_ext/1072794519/HashBinarySerializer.o: ../../../src/karabo/io/HashBinarySerializer.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1072794519
@@ -994,19 +982,6 @@ ${OBJECTDIR}/_ext/1060241295/ScalarFilterBuffer_nomain.o: ${OBJECTDIR}/_ext/1060
 	    ${CP} ${OBJECTDIR}/_ext/1060241295/ScalarFilterBuffer.o ${OBJECTDIR}/_ext/1060241295/ScalarFilterBuffer_nomain.o;\
 	fi
 
-${OBJECTDIR}/_ext/163556830/DemoDevice1_nomain.o: ${OBJECTDIR}/_ext/163556830/DemoDevice1.o ../../../src/karabo/core/DemoDevice1.cc 
-	${MKDIR} -p ${OBJECTDIR}/_ext/163556830
-	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/163556830/DemoDevice1.o`; \
-	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
-	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
-	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
-	then  \
-	    ${RM} $@.d;\
-	    $(COMPILE.cc) -g -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163556830/DemoDevice1_nomain.o ../../../src/karabo/core/DemoDevice1.cc;\
-	else  \
-	    ${CP} ${OBJECTDIR}/_ext/163556830/DemoDevice1.o ${OBJECTDIR}/_ext/163556830/DemoDevice1_nomain.o;\
-	fi
-
 ${OBJECTDIR}/_ext/1103122747/SignalSlotable_nomain.o: ${OBJECTDIR}/_ext/1103122747/SignalSlotable.o ../../../src/karabo/xms/SignalSlotable.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1103122747
 	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/1103122747/SignalSlotable.o`; \
@@ -1499,19 +1474,6 @@ ${OBJECTDIR}/_ext/1072794519/StringStreamReader_nomain.o: ${OBJECTDIR}/_ext/1072
 	    $(COMPILE.cc) -g -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1072794519/StringStreamReader_nomain.o ../../../src/karabo/io/StringStreamReader.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/1072794519/StringStreamReader.o ${OBJECTDIR}/_ext/1072794519/StringStreamReader_nomain.o;\
-	fi
-
-${OBJECTDIR}/_ext/163556830/DemoDevice2_nomain.o: ${OBJECTDIR}/_ext/163556830/DemoDevice2.o ../../../src/karabo/core/DemoDevice2.cc 
-	${MKDIR} -p ${OBJECTDIR}/_ext/163556830
-	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/163556830/DemoDevice2.o`; \
-	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
-	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
-	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
-	then  \
-	    ${RM} $@.d;\
-	    $(COMPILE.cc) -g -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163556830/DemoDevice2_nomain.o ../../../src/karabo/core/DemoDevice2.cc;\
-	else  \
-	    ${CP} ${OBJECTDIR}/_ext/163556830/DemoDevice2.o ${OBJECTDIR}/_ext/163556830/DemoDevice2_nomain.o;\
 	fi
 
 ${OBJECTDIR}/_ext/1072794519/HashBinarySerializer_nomain.o: ${OBJECTDIR}/_ext/1072794519/HashBinarySerializer.o ../../../src/karabo/io/HashBinarySerializer.cc 

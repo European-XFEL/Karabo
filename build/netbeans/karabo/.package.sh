@@ -5,8 +5,7 @@ CONF=$2
 PLATFORM=$3
 OS=$(uname -s)
 MACHINE=$(uname -m)
-PACKAGEDIR=$(pwd)/tmp/karabo-$OS-$MACHINE
-
+PACKAGEDIR=$(pwd)/../../../package/karabo-$CONF-$OS-$MACHINE
 
 if [ -d $PACKAGEDIR ]; then rm -rf $PACKAGEDIR; fi
 mkdir -p $PACKAGEDIR
@@ -35,4 +34,8 @@ cp -rf $DISTDIR/$OS/lib $PACKAGEDIR/
 
 # Tar it
 cd $PACKAGEDIR/../
-tar -zcf karabo-$OS-$MACHINE.tar.gz karabo-$OS-$MACHINE
+tar -zcf karabo-$CONF-$OS-$MACHINE.tar.gz karabo-$CONF-$OS-$MACHINE
+
+echo 
+echo "Successfully created package: $PACKAGEDIR"
+echo
