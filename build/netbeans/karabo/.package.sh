@@ -26,8 +26,14 @@ cd ../brokerMessageLogger
 make -j4 CONF=$CONF CMD=y
 cp -rf $DISTDIR/$CONF/$PLATFORM/bin $PACKAGEDIR/
 
-# gui
+# pythonGui
 cd ../pythonGui
+./build.sh
+cp -rf $DISTDIR/$OS/bin $PACKAGEDIR/
+cp -rf $DISTDIR/$OS/lib $PACKAGEDIR/
+
+# pythonCli
+cd ../pythonCli
 ./build.sh
 cp -rf $DISTDIR/$OS/bin $PACKAGEDIR/
 cp -rf $DISTDIR/$OS/lib $PACKAGEDIR/
