@@ -7,7 +7,11 @@ DEPENDENCIES_Darwin=( boost openmqc hdf5 snmp log4cpp cppunit )
 
 #################################################################################################
 
-DEPENDENCIES=$(eval echo $`echo DEPENDENCIES_$(uname -s)`)
+if [ "$(uname -s)" = "Linux" ]; then
+    DEPENDENCIES=( ${DEPENDENCIES_Linux[@]} )
+elif [ "$(uname -s)" = "Darwin" ]; then
+    DEPENDENCIES=( ${DEPENDENCIES_Darwin[@]} )
+fi
 
 # $1 EXTERN_DIR      Path to karabo extern folder
 # $2 INSTALL_PREFIX  Installation prefix
