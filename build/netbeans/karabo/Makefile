@@ -121,7 +121,9 @@ build: .build-post
 extern:
 	@mkdir -p $(KARABO)
 	@./.installExtern.sh $(KARABO_EXTERN) $(EXTERN_DIST_DIR) $(WHAT)
-	@ln -sf $(EXTERN_DIST_DIR) $(KARABO)/extern
+	@cd $(KARABO)
+	@ln -sf $(EXTERN_DIST_DIR) extern
+	@cd -
 
 # Package
 .PHONY: package
