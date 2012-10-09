@@ -23,7 +23,7 @@ Other distributions like Fedora or Suse may still work.
 
     Type:
 
-        sudo apt-get install build-essential subversion doxygen libnss3-dev libnspr4-dev libX11-dev python-dev zlib1g-dev python-qt4 python-qwt5-qt4
+        sudo apt-get install build-essential doxygen libnss3-dev libnspr4-dev libX11-dev zlib1g-dev libsqlite3-dev libqt4 libqt4-sql-sqlite
 
 
     For karabo-gui on Ubuntu you need:

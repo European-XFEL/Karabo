@@ -3,8 +3,8 @@
 from libkarabo import DeviceClient as CppDeviceClient
 from libkarabo import Hash
 
-import IPython.ipapi
-ip = IPython.ipapi.get()
+import IPython.core.ipapi
+ip = IPython.core.ipapi.get()
 import re
 
 # Create one instance (global singleton) of a DeviceClient
