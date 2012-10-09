@@ -27,7 +27,7 @@ make -j4 CONF=$CONF CMD=y
 cp -rf $DISTDIR/$CONF/$PLATFORM/bin $PACKAGEDIR/
 
 # gui
-cd ../gui
+cd ../pythonGui
 ./build.sh
 cp -rf $DISTDIR/$OS/bin $PACKAGEDIR/
 cp -rf $DISTDIR/$OS/lib $PACKAGEDIR/
