@@ -11,7 +11,7 @@ cat > karabo-cli <<End-of-file
 CWD=\$(pwd)
 cd \$(dirname \$0)/../lib/pythonCli
 export PYTHONPATH=../
-../../extern/bin/ipython -i deviceClient.py
+../../extern/bin/python ipython.py -i deviceClient.py
 cd \$CWD
 End-of-file
 chmod u+x karabo-cli
