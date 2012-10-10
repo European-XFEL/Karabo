@@ -5,14 +5,27 @@ CONF=$2
 PLATFORM=$3
 OS=$(uname -s)
 MACHINE=$(uname -m)
-PACKAGEDIR=$(pwd)/../../../package/karabo-$CONF-$OS-$MACHINE
-NUM_CORES=2
-# Find number of cores on machine
-if [ "$(uname -s)" = "Linux" ]; then
-    NUM_CORES=`grep "processor" /proc/cpuinfo | wc -l`
-    NUM_CORES=$(($NUM_CORES*2/3))
+tmp=$(svn info ../../../ | grep URL)
+VERSION=${tmp##*/}
+if [ "$VERSION" = "trunk" ]; then
+    tmp=$(svn info ../../../ | grep Revision)
+    VERSION=r${tmp##*: }
 fi
-echo "### INFO Building is preferentially parallelized into $NUM_CORES threads."
+PACKAGENAME=karabo
+
+if [ "$OS" = "Linux" ]; then
+    DISTRO_ID=$(lsb_release -is)
+    DISTRO_RELEASE=$(lsb_release -rs)
+    tmp=`grep "processor" /proc/cpuinfo | wc -l`
+    NUM_CORES=$(($tmp*2/3))
+elif [  "$OS" = "Linux" ]; then
+    DISTRO_ID=MacOSX
+    DISTRO_RELEASE=$(uname -r)
+    NUM_CORES=2
+fi
+EXTRACT_SCRIPT=$(pwd)/.extract.sh
+PACKAGEDIR=$(pwd)/../../../package/$CONF/$DISTRO_ID/$DISTRO_RELEASE/$MACHINE/$PACKAGENAME
+INSTALLSCRIPT=karabo-${VERSION}-${CONF}-${DISTRO_ID}-${DISTRO_RELEASE}-${MACHINE}.sh
 
 if [ -d $PACKAGEDIR ]; then rm -rf $PACKAGEDIR; fi
 mkdir -p $PACKAGEDIR
@@ -47,7 +60,11 @@ cp -rf $DISTDIR/$OS/lib $PACKAGEDIR/
 
 # Tar it
 cd $PACKAGEDIR/../
-tar -zcf karabo-$CONF-$OS-$MACHINE.tar.gz karabo-$CONF-$OS-$MACHINE
+tar -zcf ${PACKAGENAME}.tar.gz $PACKAGENAME
+
+# Create installation script
+cat $EXTRACT_SCRIPT ${PACKAGENAME}.tar.gz > $INSTALLSCRIPT
+chmod +x $INSTALLSCRIPT
 
 echo 
 echo "Successfully created package: $PACKAGEDIR"
