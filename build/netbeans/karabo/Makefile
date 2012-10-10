@@ -77,7 +77,7 @@ build: .build-post
 # Check whether external dependencies are installed, if not build them
 	@if test -d $(EXTERN_DISTDIR);\
 	then echo "### Found external dependencies, skipping build";\
-	cd $(KARABO); ln -sf ../../../../../../extern/$(CND_PLATFORM_$(CONF)) extern; cd -;\
+	if [ ! -h ${KARABO}/extern ]; then cd $(KARABO); ln -sf ../../../../../../extern/$(CND_PLATFORM_$(CONF)) extern; cd -; fi;\
 	else ./.installExtern.sh $(EXTERN_DIR) $(EXTERN_DISTDIR);\
 	fi
 
