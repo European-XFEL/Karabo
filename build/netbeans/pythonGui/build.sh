@@ -8,11 +8,16 @@ cat > karabo-gui <<End-of-file
 #
 # This file was automatically generated. Do not edit.
 #
+# Author: <burkhard.heisen@xfel.eu>
+#
 CWD=\$(pwd)
 cd \$(dirname \$0)/../lib/pythonGui
 export PYTHONPATH=../
-../../extern/bin/python karabo-gui.py
+export LD_LIBRARY_PATH=../../extern/lib
+export PATH=../../extern/bin
+python karabo-gui.py
 cd \$CWD
+
 End-of-file
 chmod u+x karabo-gui
 cd ../lib
