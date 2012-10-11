@@ -15,36 +15,15 @@ The supported OS are:
 
 Other distributions like Fedora or Suse may still work.
 
-------------------------------------------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------
 (1) Dependencies
-------------------------------------------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------
 
     ########## Ubuntu ##########
 
     Type:
 
-        sudo apt-get install build-essential doxygen libnss3-dev libnspr4-dev libX11-dev zlib1g-dev libsqlite3-dev libqt4 libqt4-sql-sqlite
-
-
-    For karabo-gui on Ubuntu you need:
-
-        sudo apt-get install python-qt4 python-qwt5-qt4 python-qt4-sql python-numpy python-setuptools libqt4-sql-sqlite python-guiqwt python-guidata
-
-
-    The two last packages python-guiqwt and python-guidata are available on Ubuntu 12.04, 
-    but on previous Ubuntu 10.04 you need to install them using python easy_install tool:
-        
-      sudo apt-get install gfortran
-      sudo easy_install guiqwt
-      sudo easy_install guidata
-
-
-    A better tool is python-pip (it has proper uninstall command),then in this case:
-
-      sudo apt-get install python-pip gfortran
-      sudo pip install guiqwt
-      sudo pip install guidata
-
+        sudo apt-get install build-essential doxygen libnss3-dev libnspr4-dev libX11-dev zlib1g-dev libsqlite3-dev libreadline-dev
 
 
     ########## SL5/6, Fedora16/17 ##########
