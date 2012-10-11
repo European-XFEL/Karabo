@@ -170,7 +170,7 @@
             <linkerLibLibItem>netsnmpmibs</linkerLibLibItem>
             <linkerLibLibItem>netsnmptrapd</linkerLibLibItem>
             <linkerLibLibItem>openmqc</linkerLibLibItem>
-            <linkerLibLibItem>${PYTHON_LIB}</linkerLibLibItem>
+            <linkerLibLibItem>python2.7</linkerLibLibItem>
           </linkerLibItems>
         </linkerTool>
       </compileType>
