@@ -1,13 +1,15 @@
-#!/bin/bash
 echo
-echo " ##########################################"
-echo " #              INSTALLATION              #"
-echo " #                                        #"
-echo " #  Karabo - The European XFEL Framework  #"
-echo " ##########################################"
+echo " #####################################################################"
+echo "                                INSTALLATION"
+echo                                           
+echo "                 Karabo - The European XFEL Software Framework"
+echo "                              Version: $VERSION"
+echo                                            
+echo " #####################################################################"
 echo
 echo " NOTE: This installer will NOT change any settings on your machine."
-echo "       Installation will be limited to a directory (\"karabo\") under the specified path."
+echo "       Installation will be limited to a directory (\"karabo-$VERSION\")" 
+echo "       under the specified path."
 echo
 echo -n " Installation path [$HOME]: "
 read dir
@@ -29,7 +31,7 @@ tail -n +$SKIP $THIS | tar -xz
 echo " done."
 echo
 echo
-echo " Karabo was successfully installed to: $installDir/karabo"
+echo " Karabo was successfully installed to: $installDir/karabo-$VERSION"
 echo " TIP: Simply delete $installDir/karabo for a complete de-installation."
 echo
 exit 0
