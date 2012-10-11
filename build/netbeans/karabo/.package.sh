@@ -11,7 +11,7 @@ if [ "$VERSION" = "trunk" ]; then
     tmp=$(svn info ../../../ | grep Revision)
     VERSION=r${tmp##*: }
 fi
-PACKAGENAME=karabo
+PACKAGENAME=karabo-$VERSION
 
 if [ "$OS" = "Linux" ]; then
     DISTRO_ID=$(lsb_release -is)
@@ -63,7 +63,7 @@ cd $PACKAGEDIR/../
 tar -zcf ${PACKAGENAME}.tar.gz $PACKAGENAME
 
 # Create installation script
-cat $EXTRACT_SCRIPT ${PACKAGENAME}.tar.gz > $INSTALLSCRIPT
+echo -e '#!/bin/bash\n'"VERSION=$VERSION" | cat - $EXTRACT_SCRIPT ${PACKAGENAME}.tar.gz > $INSTALLSCRIPT
 chmod +x $INSTALLSCRIPT
 
 echo 
