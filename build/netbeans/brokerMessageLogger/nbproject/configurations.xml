@@ -48,6 +48,7 @@
           <linkerDynSerch>
             <pElem>\$$ORIGIN/../lib</pElem>
             <pElem>\$$ORIGIN/../extern/lib</pElem>
+            <pElem>${KARABO}/extern/lib</pElem>
           </linkerDynSerch>
           <linkerLibItems>
             <linkerLibProjectItem>
@@ -117,6 +118,7 @@
           <linkerDynSerch>
             <pElem>\$$ORIGIN/../lib</pElem>
             <pElem>\$$ORIGIN/../extern/lib</pElem>
+            <pElem>${KARABO}/extern/lib</pElem>
           </linkerDynSerch>
           <linkerLibItems>
             <linkerLibProjectItem>
