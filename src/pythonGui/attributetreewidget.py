@@ -16,7 +16,7 @@ import attributetreewidgetitem
 import editableapplylatercomponent
 from enums import ConfigChangeTypes
 from enums import NavigationItemTypes
-from libpyexfelportable import *
+from libkarabo import *
 from manager import Manager
 
 from PyQt4.QtCore import *
