@@ -283,6 +283,8 @@ namespace karabo {
             log() << Priority::INFO << "New device class \"" << devClassId << "\" on device-server \"" << devSrvInstId << "\" available";
             // Skip myself
             if (devClassId == getClassInfo().getClassId()) return;
+            // Skip inbuilt GuiServer
+            if (devClassId == "GuiServerDevice") return;
             
             vector<Hash> result;
             KARABO_DB_SELECT(result, "id", "DeviceServerInstance", row.get<string>("instanceId") == devSrvInstId);
