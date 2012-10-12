@@ -23,7 +23,7 @@ __all__ = ["Notifier", "Manager"]
 from datanotifier import DataNotifier
 from enums import NavigationItemTypes
 from enums import ConfigChangeTypes
-from libpyexfelportable import *
+from libkarabo import *
 from navigationhierarchymodel import NavigationHierarchyModel
 from singleton import Singleton
 from sqldatabase import SqlDatabase
