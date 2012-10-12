@@ -16,7 +16,7 @@ import const
 
 from basetreewidgetitem import BaseTreeWidgetItem
 from displaycomponent import DisplayComponent
-from libpyexfelportable import *
+from libkarabo import *
 from manager import Manager
 
 from PyQt4.QtCore import *
