@@ -22,7 +22,7 @@ __all__ = ["EditableListElement"]
 
 
 from editablewidget import EditableWidget
-from libpyexfelportable import *
+from libkarabo import *
 from manager import Manager
 from stringlistedit import StringListEdit
 
