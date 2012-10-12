@@ -73,7 +73,6 @@ OBJECTFILES= \
 	${OBJECTDIR}/_ext/1072794519/PlcFormat.o \
 	${OBJECTDIR}/_ext/2117156511/PyUtilTypes.o \
 	${OBJECTDIR}/_ext/1103111265/PatternLayoutConfigurator.o \
-	${OBJECTDIR}/_ext/163556830/TestDevice.o \
 	${OBJECTDIR}/_ext/1060241295/RecordElement.o \
 	${OBJECTDIR}/_ext/1103112890/AsioIOService.o \
 	${OBJECTDIR}/_ext/2117156511/PyXmsSignalSlotable.o \
@@ -375,11 +374,6 @@ ${OBJECTDIR}/_ext/1103111265/PatternLayoutConfigurator.o: ../../../src/karabo/lo
 	${MKDIR} -p ${OBJECTDIR}/_ext/1103111265
 	${RM} $@.d
 	$(COMPILE.cc) -g -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1103111265/PatternLayoutConfigurator.o ../../../src/karabo/log/PatternLayoutConfigurator.cc
-
-${OBJECTDIR}/_ext/163556830/TestDevice.o: ../../../src/karabo/core/TestDevice.cc 
-	${MKDIR} -p ${OBJECTDIR}/_ext/163556830
-	${RM} $@.d
-	$(COMPILE.cc) -g -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163556830/TestDevice.o ../../../src/karabo/core/TestDevice.cc
 
 ${OBJECTDIR}/_ext/1060241295/RecordElement.o: ../../../src/karabo/io/hdf5/RecordElement.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1060241295
@@ -1318,19 +1312,6 @@ ${OBJECTDIR}/_ext/1103111265/PatternLayoutConfigurator_nomain.o: ${OBJECTDIR}/_e
 	    $(COMPILE.cc) -g -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1103111265/PatternLayoutConfigurator_nomain.o ../../../src/karabo/log/PatternLayoutConfigurator.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/1103111265/PatternLayoutConfigurator.o ${OBJECTDIR}/_ext/1103111265/PatternLayoutConfigurator_nomain.o;\
-	fi
-
-${OBJECTDIR}/_ext/163556830/TestDevice_nomain.o: ${OBJECTDIR}/_ext/163556830/TestDevice.o ../../../src/karabo/core/TestDevice.cc 
-	${MKDIR} -p ${OBJECTDIR}/_ext/163556830
-	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/163556830/TestDevice.o`; \
-	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
-	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
-	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
-	then  \
-	    ${RM} $@.d;\
-	    $(COMPILE.cc) -g -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163556830/TestDevice_nomain.o ../../../src/karabo/core/TestDevice.cc;\
-	else  \
-	    ${CP} ${OBJECTDIR}/_ext/163556830/TestDevice.o ${OBJECTDIR}/_ext/163556830/TestDevice_nomain.o;\
 	fi
 
 ${OBJECTDIR}/_ext/1060241295/RecordElement_nomain.o: ${OBJECTDIR}/_ext/1060241295/RecordElement.o ../../../src/karabo/io/hdf5/RecordElement.cc 

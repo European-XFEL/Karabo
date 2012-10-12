@@ -112,13 +112,10 @@ extern:
 
 # Package
 package:
-	@./.package.sh $(CND_DISTDIR) $(CONF) $(CND_PLATFORM_$(CONF))
+	@./.package.sh $(CND_DISTDIR) $(CONF) $(CND_PLATFORM_$(CONF)) tar
 
-cmd:
-	@echo "### Generating makefile from latest availabe successful built on this platform"
-	@$(CP) -f nbproject/Karabo-$(CONF)-$(CURRENT_PLATFORM).mk nbproject/Makefile-$(CONF).mk
-	@$(CP) -f nbproject/Karabo-impl-$(CURRENT_PLATFORM).mk nbproject/Makefile-impl.mk
-	@$(CP) -f nbproject/Karabo-variables-$(CURRENT_PLATFORM).mk nbproject/Makefile-variables.mk
+install:
+	@./.package.sh $(CND_DISTDIR) $(CONF) $(CND_PLATFORM_$(CONF)) install
 
 # clean
 clean: .clean-post

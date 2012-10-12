@@ -9,10 +9,9 @@ echo " #####################################################################"
 echo
 echo " NOTE: This installer will NOT change any settings on your machine."
 echo "       Installation will be limited to a directory (\"karabo-$VERSION\")" 
-echo "       under the specified path."
+echo "       under the specified path and a $HOME/.karabo for private settings."
 echo
-echo -n " Installation path [$HOME]: "
-read dir
+read -e -p " Installation path [$HOME]: " dir
 echo
 installDir=$HOME
 if [ "$dir" != "" ]; then
@@ -28,11 +27,12 @@ THIS=`pwd`/$0
 cd $installDir
 tail -n +$SKIP $THIS | tar -xz
 # Any script here will happen after the tar file extract.
+mkdir -p $HOME/.karabo
+echo $installDir/karabo-$VERSION > $HOME/.karabo/karaboFramework
 echo " done."
 echo
 echo
 echo " Karabo was successfully installed to: $installDir/karabo-$VERSION"
-echo " TIP: Simply delete $installDir/karabo for a complete de-installation."
 echo
 exit 0
 # NOTE: Don't place any newline characters after the last line below.

@@ -18,7 +18,6 @@
         <itemPath>../../../src/karabo/core/Runner.hh</itemPath>
         <itemPath>../../../src/karabo/core/SignalSlotable.hh</itemPath>
         <itemPath>../../../src/karabo/core/StartStopFsm.hh</itemPath>
-        <itemPath>../../../src/karabo/core/TestDevice.hh</itemPath>
         <itemPath>../../../src/karabo/core/core.hh</itemPath>
         <itemPath>../../../src/karabo/core/coredll.hh</itemPath>
       </logicalFolder>
@@ -32,7 +31,6 @@
         <itemPath>../../../src/karabo/core/MasterDevice.cc</itemPath>
         <itemPath>../../../src/karabo/core/ReconfigurableFsm.cc</itemPath>
         <itemPath>../../../src/karabo/core/StartStopFsm.cc</itemPath>
-        <itemPath>../../../src/karabo/core/TestDevice.cc</itemPath>
       </logicalFolder>
     </logicalFolder>
     <logicalFolder name="f2" displayName="io" projectFiles="true">
