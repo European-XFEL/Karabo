@@ -1,0 +1,119 @@
+#############################################################################
+# Author: <kerstin.weger@xfel.eu>
+# Created on May 8, 2012
+# Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
+#############################################################################
+
+
+"""This module contains a class which inherits from a BaseTreeWidgetItem and represents
+   an image item and its parameters.
+"""
+
+__all__ = ["ImageTreeWidgetItem"]
+
+
+import const
+
+from basetreewidgetitem import BaseTreeWidgetItem
+from displaycomponent import DisplayComponent
+from libpyexfelportable import *
+from manager import Manager
+
+from PyQt4.QtCore import *
+from PyQt4.QtGui import *
+
+class ImageTreeWidgetItem(BaseTreeWidgetItem):
+    
+    def __init__(self, key, parent, parentItem=None):
+        
+        super(ImageTreeWidgetItem, self).__init__(key, parent, parentItem)
+        
+        self.setIcon(0, QIcon(":image"))
+        
+        self.displayComponent = DisplayComponent("Image Element", key=self.internalKey)
+        self.treeWidget().setItemWidget(self, 1, self.displayComponent.widget)
+        self.treeWidget().resizeColumnToContents(1)
+        
+        # Initialize image data as Hash
+        self.__imgData = Hash()
+        self.__imgData.set("dimX", 0)
+        self.__imgData.set("dimY", 0)
+        self.__imgData.set("dimZ", 0)
+        self.__imgData.set("dimC", 0)
+        self.__imgData.set("pixelArray", [])
+
+
+    # TODO: complete implementation
+    def copy(self, parentItem, keyName=str()):
+        copyItem = ImageTreeWidgetItem(self.internalKey, self.treeWidget(), parentItem)
+        #copyItem.setIcon(0, self.icon(0))
+        copyItem.setText(0, self.text(0))
+        
+        copyKeyName = str()
+        if len(keyName) < 1 :
+            copyItem.internalKey = self.internalKey
+        else :
+            copyItem.internalKey = keyName + "." + self.internalKey
+        
+        # copying children as well
+        for i in range(self.childCount()) :
+            self.child(i).copy(copyItem, copyKeyName)
+
+        return copyItem
+
+
+### getter & setter functions ###
+    def _setEnabled(self, enabled):
+        pass
+    enabled = property(fset=_setEnabled)
+
+
+    def _setText(self, text):
+        self.setText(0, text)
+    displayText = property(fset=_setText)
+
+
+    def _getDimX(self):
+        return self.__imgData.get('dimX')
+    def _setDimX(self, dimX):
+        self.__imgData.set('dimX', dimX)
+    dimX = property(fget=_getDimX, fset=_setDimX)
+
+
+    def _getDimY(self):
+        return self.__imgData.get('dimY')
+    def _setDimY(self, dimY):
+        self.__imgData.set('dimY', dimY)
+    dimY = property(fget=_getDimY, fset=_setDimY)
+
+
+    def _getDimZ(self):
+        return self.__imgData.get('dimZ')
+    def _setDimZ(self, dimZ):
+        self.__imgData.set('dimZ', dimZ)
+    dimZ = property(fget=_getDimZ, fset=_setDimZ)
+
+
+    def _getDimC(self):
+        return self.__imgData.get('dimC')
+    def _setDimC(self, dimC):
+        self.__imgData.set('dimC', dimC)
+    dimC = property(fget=_getDimC, fset=_setDimC)
+
+
+    def _getPixelArray(self):
+        return self.__imgData.get('pixelArray')
+    def _setPixelArray(self, pixelArray):
+        self.__imgData.set('pixelArray', pixelArray)
+    pixelArray = property(fget=_setPixelArray, fset=_setPixelArray)
+
+
+    def _getImageData(self):
+        return self.__imgData
+    imageData = property(fget=_getImageData)
+
+
+### public functions ###
+    def setReadOnly(self, readOnly):
+        BaseTreeWidgetItem.setReadOnly(self, readOnly)
+

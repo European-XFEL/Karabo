@@ -1,0 +1,169 @@
+#############################################################################
+# Author: <kerstin.weger@xfel.eu>
+# Created on April 27, 2012
+# Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
+#############################################################################
+
+
+"""This module contains a class which inherits from a QTreeWidgetItem and represents
+   a base class item for the AttributeTreeWidget.
+   
+   Inherited by: AttributeTreeWidgetItem, ImageTreeWidgetItem, SlotTreeWidgetItem
+"""
+
+__all__ = ["BaseTreeWidgetItem"]
+
+
+import const
+
+from manager import Manager
+
+from PyQt4.QtCore import *
+from PyQt4.QtGui import *
+
+class BaseTreeWidgetItem(QTreeWidgetItem):
+    
+    def __init__(self, key, parent, parentItem=None):
+        
+        prevInternalKey = QString()
+        if parentItem is not None :
+            super(BaseTreeWidgetItem, self).__init__(parentItem)
+            prevInternalKey = parentItem.internalKey
+        else :
+            super(BaseTreeWidgetItem, self).__init__(parent)
+            prevInternalKey = parent.instanceKey
+        
+        self.internalKey = prevInternalKey + "." + key
+
+        # The components can be defined in Subclasses
+        self.__displayComponent = None
+        self.__editableComponent = None
+
+        self.classAlias = None
+        self.descriptionIndex = -1
+        self.updateNeeded = True
+        self.allowedStates = []
+        
+        self.mItem = None
+
+
+    # TODO: complete implementation
+    def copy(self, parentItem, keyName=str()):
+        copyItem = AttributeTreeWidgetItem(self.internalKey, self.treeWidget(), parentItem)
+        #copyItem.setIcon(0, self.icon(0))
+        copyItem.setText(0, self.text(0))
+        
+        copyKeyName = str()
+        if len(keyName) < 1 :
+            copyItem.internalKey = self.internalKey
+        else :
+            copyItem.internalKey = keyName + "." + self.internalKey
+        
+        copyItem.updateNeeded = self.updateNeeded
+
+        # copying children as well
+        for i in range(self.childCount()) :
+            self.child(i).copy(copyItem, copyKeyName)
+
+        return copyItem
+
+
+### getter and setter functions ###
+    def _getClassAlias(self):
+        return self.data(0, const.CLASS_ALIAS).toPyObject()
+    def _setClassAlias(self, alias):
+        self.setData(0, const.CLASS_ALIAS, alias)
+    classAlias = property(fget=_getClassAlias, fset=_setClassAlias)
+
+
+    # Returns the display component of the item
+    def _displayComponent(self):
+        return self.__displayComponent
+    def _setDisplayComponent(self, component):
+        self.__displayComponent = component
+    displayComponent = property(fget=_displayComponent, fset=_setDisplayComponent)
+
+
+    # Returns the editable component of the item
+    def _editableComponent(self):
+        return self.__editableComponent
+    def _setEditableComponent(self, component):
+        self.__editableComponent = component
+    editableComponent = property(fget=_editableComponent, fset=_setEditableComponent)
+
+
+    def _internalKey(self):
+        return self.data(0, const.INTERNAL_KEY).toPyObject()
+    def _setInternalKey(self, key):
+        self.setData(0, const.INTERNAL_KEY, key)
+    internalKey = property(fget=_internalKey, fset=_setInternalKey)
+
+
+    def _updateNeeded(self):
+        return self.data(0, const.UPDATE_NEEDED).toPyObject()
+    def _setUpdateNeeded(self, updateNeeded):
+        self.setData(0, const.UPDATE_NEEDED, updateNeeded)
+    updateNeeded = property(fget=_updateNeeded, fset=_setUpdateNeeded)
+
+
+    def _allowedStates(self):
+        return self.data(0, const.ALLOWED_STATE).toPyObject()
+    def _setAllowedStates(self, state):
+        self.setData(0, const.ALLOWED_STATE, state)
+    allowedStates = property(fget=_allowedStates, fset=_setAllowedStates)
+
+
+    def _isChoiceElement(self):
+        return self.data(0, const.IS_CHOICE_ELEMENT).toPyObject()
+    def _setIsChoiceElement(self, isChoiceElemet):
+        self.setData(0, const.IS_CHOICE_ELEMENT, isChoiceElemet)
+    isChoiceElement = property(fget=_isChoiceElement, fset=_setIsChoiceElement)
+
+
+    def _descriptionIndex(self):
+        index = self.data(0, const.DESCRIPTION_INDEX).toPyObject()
+        return index
+    def _setDescriptionIndex(self, index):
+        self.setData(0, const.DESCRIPTION_INDEX, index)
+    descriptionIndex = property(fget=_descriptionIndex, fset=_setDescriptionIndex)
+
+
+### public functions ###
+    def unregisterEditableComponent(self):
+        if self.editableComponent:
+            Manager().unregisterEditableComponent(self.internalKey, self.editableComponent)
+
+
+    def unregisterDisplayComponent(self):
+        if self.displayComponent:
+            Manager().unregisterDisplayComponent(self.internalKey, self.displayComponent)
+
+
+    def updateState(self, state):
+        if len(self.allowedStates) < 1:
+            return
+        
+        if state in self.allowedStates:
+            self.enabled = True
+        else:
+            self.enabled = False
+
+
+    def showContextMenu(self):
+        if self.mItem is None:
+            return
+
+        self.mItem.exec_(QCursor.pos())
+
+
+    def setErrorState(self, isError):
+        if self.displayComponent:
+            self.displayComponent.setErrorState(isError)
+
+
+    def setReadOnly(self, readOnly):
+        if readOnly is True:
+            self.setFlags(self.flags() & ~Qt.ItemIsEnabled)
+        else:
+            self.setFlags(self.flags() | Qt.ItemIsEnabled)
+
