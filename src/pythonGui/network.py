@@ -12,7 +12,7 @@
 __all__ = ["Network"]
 
 
-from libpyexfelportable import *
+from libkarabo import *
 from logindialog import LoginDialog
 from manager import Manager
 from struct import *
