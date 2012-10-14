@@ -58,8 +58,8 @@
                             AC="true"
                             BL="true"
                             WD="../karabo"
-                            BC="${MAKE} -j12 -f Makefile CONF=Debug"
-                            CC="${MAKE} -j12 -f Makefile CONF=Debug clean"
+                            BC="${MAKE} -f Makefile CONF=Debug"
+                            CC="${MAKE} -f Makefile CONF=Debug clean"
                             OP="${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/lib/libkarabo.${CND_DLIB_EXT}">
               </makeArtifact>
             </linkerLibProjectItem>
@@ -128,8 +128,8 @@
                             AC="false"
                             BL="true"
                             WD="../karabo"
-                            BC="${MAKE} -j6 -f Makefile CONF=Release"
-                            CC="${MAKE} -j6 -f Makefile CONF=Release clean"
+                            BC="${MAKE} -f Makefile CONF=Release"
+                            CC="${MAKE} -f Makefile CONF=Release clean"
                             OP="${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/lib/libkarabo.${CND_DLIB_EXT}">
               </makeArtifact>
             </linkerLibProjectItem>
