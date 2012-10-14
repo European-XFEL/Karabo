@@ -3,7 +3,7 @@
 CWD=$(pwd)
 
 DEPENDENCIES_Linux=( python2.7 sip pyqt4 pyqwt5 ipython qt4 boost openmqc hdf5 snmp log4cpp cppunit )
-DEPENDENCIES_Darwin=( boost openmqc hdf5 snmp log4cpp cppunit )
+DEPENDENCIES_Darwin=( pythonBundleMacOSX boost openmqc hdf5 snmp log4cpp cppunit )
 
 #################################################################################################
 
