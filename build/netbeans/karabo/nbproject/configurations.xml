@@ -466,6 +466,13 @@
           </preprocessorList>
         </ccTool>
       </folder>
+      <folder path="f4/f1">
+        <ccTool>
+          <preprocessorList>
+            <Elem>LINUX</Elem>
+          </preprocessorList>
+        </ccTool>
+      </folder>
     </conf>
     <conf name="Release" type="2">
       <toolsSet>
