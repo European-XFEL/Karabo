@@ -1,0 +1,72 @@
+<?xml version="1.0" ?>
+<application>
+    <misc>
+        <bigint>9.22337e+18</bigint>
+        <item>lsf</item>
+        <emptyelem></emptyelem>
+        <bitmask>8131</bitmask>
+        <columns>Last Name, First Name, MI</columns>
+        <vectint DATATYPE="VECTOR_INT32"> 5 , 10 , 15 </vectint>
+        <vectdouble DATATYPE="VECTOR_DOUBLE"> 5.1 , 11.11 , 7.7 </vectdouble>
+        <vectfloat DATATYPE="VECTOR_FLOAT"> 5.111 , 11.111 , 7.777 </vectfloat>
+       <arraydouble DATATYPE="ARRAY_DOUBLE">
+           <item> 2.2 </item>
+           <item> 4.4 </item>
+           <item> 5.5 </item>
+       </arraydouble>
+       <arrayfloat DATATYPE="ARRAY_FLOAT">
+           <item> 2.22 </item>
+           <item> 4.44 </item>
+           <item> 5.55 </item>
+       </arrayfloat>
+       <arrayelem dataType="ARRAY">
+            <item>Last Name</item>
+            <item>First Name</item>
+            <item>MI</item>
+        </arrayelem>
+        <sAxisName dataType="ARRAY_STRING">
+            <item>Parrot is an exotic bird</item>
+            <item>Data processing</item>
+            <item>Data transmission as an asynchronous task!</item>
+        </sAxisName>
+        <arraynext dataType="ARRAY_INT32">
+           <item> 1 </item>
+           <item> 10 </item>
+           <item> 20 </item>
+        </arraynext>
+        <pi>3.14159</pi>
+    </misc>
+    <listelem dataType="LIST">
+      <item>
+       <elem1>
+            <a dataType="INT32">1</a>
+            <b>2</b>
+            <c>Hallo</c>
+        </elem1>
+       </item>
+       <item>
+        <elem2>
+            <d>100</d>
+            <e dataType="DOUBLE">3.14159</e>
+        </elem2>
+       </item>
+       <item>
+        <elem3>
+            <x dataType="UINT64">500</x>
+            <y dataType="DOUBLE">3.14159</y>
+        </elem3>
+       </item>
+    </listelem>
+    <window>
+        <pos>
+            <number>123.450000</number>
+            <y dataType="INT32">250</y>
+        </pos>
+        <size>
+            <h dataType="INT32">480</h>
+            <w>640</w>
+        </size>
+        <title dataType="STRING">My Application</title>
+    </window>
+</application>
+
