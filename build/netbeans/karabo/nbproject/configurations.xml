@@ -419,7 +419,9 @@
             <linkerLibLibItem>netsnmptrapd</linkerLibLibItem>
             <linkerLibLibItem>openmqc</linkerLibLibItem>
             <linkerLibLibItem>python2.7</linkerLibLibItem>
+            <linkerLibLibItem>dl</linkerLibLibItem>
             <linkerLibLibItem>rt</linkerLibLibItem>
+            <linkerLibLibItem>pthread</linkerLibLibItem>
           </linkerLibItems>
         </linkerTool>
       </compileType>
