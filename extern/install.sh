@@ -49,19 +49,19 @@ if [ -d $RESOURCE_PATH ]; then
     source build.config
     if [ ! $CUSTOM_BUILD ]; then
 
-        echo -e "\n### Extracting $RESOURCE_NAME" | tee -a $CWD/installExtern.log
+        echo -e "\n### Extracting $RESOURCE_NAME"
         safeRunCommand "$EXTRACT_COMMAND"
         cd $DEP_NAME
 
-        echo -e "\n### Configuring $RESOURCE_NAME" | tee -a $CWD/installExtern.log
-        echo $CONFIGURE_COMMAND
-        safeRunCommand "$CONFIGURE_COMMAND 2>&1 | tee -a configure.log"
+        echo -e "\n### Configuring $RESOURCE_NAME"
+        #echo $CONFIGURE_COMMAND
+        safeRunCommand "$CONFIGURE_COMMAND"
 
-        echo -e "\n### Compiling $RESOURCE_NAME" | tee -a $CWD/installExtern.log
-        safeRunCommand "$MAKE_COMMAND  2>&1 | tee -a $CWD/installExtern.log"
+        echo -e "\n### Compiling $RESOURCE_NAME"
+        safeRunCommand "$MAKE_COMMAND"
 
-	echo -e "\n### Installing $RESOURCE_NAME" | tee -a $CWD/installExtern.log
-        safeRunCommand "$INSTALL_COMMAND 2>&1 | tee -a $CWD/installExtern.log"
+	echo -e "\n### Installing $RESOURCE_NAME"
+        safeRunCommand "$INSTALL_COMMAND"
     fi
     cd $DIR
 else
