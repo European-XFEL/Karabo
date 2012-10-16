@@ -1,0 +1,83 @@
+<?xml version="1.0" ?>
+<application xmlns="http://xfel.eu/config" datatype="HASH">
+  <listelem dataType="LIST">
+    <item>
+      <elem1 datatype="HASH">
+        <a dataType="INT32">1</a>
+        <b dataType="STRING">2</b>
+        <c dataType="STRING">Hallo</c>
+      </elem1>
+    </item>
+    <item>
+      <elem2 datatype="HASH">
+        <d dataType="STRING">100</d>
+        <e dataType="DOUBLE">3.141590</e>
+      </elem2>
+    </item>
+    <item>
+      <elem3 datatype="HASH">
+        <x dataType="UINT64">500</x>
+        <y dataType="DOUBLE">3.141590</y>
+      </elem3>
+    </item>
+  </listelem>
+  <misc datatype="HASH">
+    <arraydouble dataType="ARRAY_DOUBLE">
+      <item>2.20</item>
+      <item>4.40</item>
+      <item>5.50</item>
+    </arraydouble>
+    <arrayelem dataType="ARRAY_STRING">
+      <item>Last Name</item>
+      <item>First Name</item>
+      <item>MI</item>
+    </arrayelem>
+    <arrayfloat dataType="ARRAY_FLOAT">
+      <item>2.22</item>
+      <item>4.44</item>
+      <item>5.55</item>
+    </arrayfloat>
+    <arraynext dataType="ARRAY_INT32">
+      <item>1</item>
+      <item>10</item>
+      <item>20</item>
+    </arraynext>
+    <bigint dataType="STRING">9.22337e+18</bigint>
+    <bitmask dataType="STRING">8131</bitmask>
+    <columns dataType="STRING">Last Name, First Name, MI</columns>
+    <emptyelem dataType="STRING"></emptyelem>
+    <item dataType="STRING">lsf</item>
+    <pi dataType="STRING">3.14159</pi>
+    <sAxisName dataType="ARRAY_STRING">
+      <item>Parrot is an exotic bird</item>
+      <item>Data processing</item>
+      <item>Data transmission as an asynchronous task!</item>
+    </sAxisName>
+    <vectdouble dataType="ARRAY_DOUBLE">
+      <item>5.10</item>
+      <item>11.11</item>
+      <item>7.70</item>
+    </vectdouble>
+    <vectfloat dataType="ARRAY_FLOAT">
+      <item>5.11</item>
+      <item>11.11</item>
+      <item>7.78</item>
+    </vectfloat>
+    <vectint dataType="ARRAY_INT32">
+      <item>5</item>
+      <item>10</item>
+      <item>15</item>
+    </vectint>
+  </misc>
+  <window datatype="HASH">
+    <pos datatype="HASH">
+      <number dataType="STRING">123.450000</number>
+      <y dataType="INT32">250</y>
+    </pos>
+    <size datatype="HASH">
+      <h dataType="INT32">480</h>
+      <w dataType="STRING">640</w>
+    </size>
+    <title dataType="STRING">My Application</title>
+  </window>
+</application>
