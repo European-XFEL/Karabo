@@ -85,20 +85,20 @@ class UserAttributeCustomFrame(QFrame):
         self._setupContextMenu()
 
 
-    def mouseMoveEvent(self, event):
+    #def mouseMoveEvent(self, event):
         # Drag is not started when customviewwidget does not allow it
-        if not self.parent().isTransformWidgetActive:
-            return
+        #if not self.parent().isTransformWidgetActive:
+        #    return
         
-        if event.buttons() != Qt.LeftButton:
-            return
+    #    if event.buttons() != Qt.LeftButton:
+    #        return
         
-        mimeData = QMimeData()
-        drag = QDrag(self)
-        drag.setMimeData(mimeData)
-        drag.start()
+    #    mimeData = QMimeData()
+    #    drag = QDrag(self)
+    #    drag.setMimeData(mimeData)
+    #    drag.start()
         
-        QFrame.mouseMoveEvent(self, event)
+    #    QFrame.mouseMoveEvent(self, event)
 
 
 # Drop event
@@ -269,8 +269,8 @@ class UserAttributeCustomFrame(QFrame):
         oldWidget.deleteLater()
         self.__layout.removeWidget(oldWidget)
         self.__layout.insertWidget(index, self.__displayComponent.widget)
-        self.adjustSize()
-
+        #self.adjustSize()
+        
 
     def onRemove(self):
         # Remove items from layout

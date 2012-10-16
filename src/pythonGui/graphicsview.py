@@ -11,6 +11,7 @@ __all__ = ["GraphicsView"]
 
 from layoutcomponents.graphicsproxywidget import GraphicsProxyWidget
 from layoutcomponents.line import Line
+from layoutcomponents.nodebase import NodeBase
 from layoutcomponents.rectangle import Rectangle
 from userattributecustomframe import UserAttributeCustomFrame
 from userdevicecustomframe import UserDeviceCustomFrame
@@ -34,13 +35,20 @@ class GraphicsView(QGraphicsView):
         
         self.__line = None
         self.__rect = None
-
-        # States whether the widget is draggable
-        self.__isTransformActive = True
+        
+        self.__isEditableMode = False
         
         self.setAcceptDrops(True)
         self.setDragMode(QGraphicsView.RubberBandDrag)
         self.setRenderHints(QPainter.Antialiasing | QPainter.TextAntialiasing)
+
+
+    # Sets all items editable or not
+    def setEditableMode(self, isEditableMode):
+        self.__isEditableMode = isEditableMode
+        for item in self.items():
+            if isinstance(item, NodeBase):
+                item.isEditable = isEditableMode
 
 
     def _getMode(self):
@@ -48,13 +56,6 @@ class GraphicsView(QGraphicsView):
     def _setMode(self, mode):
         self.__mode = mode
     mode = property(fget=_getMode, fset=_setMode)
-
-
-    def _getTransformActive(self):
-        return self.__isTransformActive
-    def _setTransformActive(self, active):
-        self.__isTransformActive = active
-    isTransformWidgetActive = property(fget=_getTransformActive, fset=_setTransformActive)
 
 
     def addItem(self, item):
@@ -65,8 +66,13 @@ class GraphicsView(QGraphicsView):
 
 ### protected ###
     def wheelEvent(self, event):
-        factor = 1.41 ** (-event.delta() / 240.0)
-        self.scale(factor, factor)
+        #factor = 1.41 ** (-event.delta() / 240.0)
+        factor = 1.0 + (0.2 * qAbs(event.delta()) / 120.0)
+        if event.delta() > 0:
+            self.scale(factor, factor)
+        else:
+            factor = 1.0/factor
+            self.scale(factor, factor)
 
 
     def mousePressEvent(self, event):
@@ -78,14 +84,12 @@ class GraphicsView(QGraphicsView):
         pos = QPointF(self.mapToScene(event.pos()))
         if self.__mode == self.InsertLine:
             self.__line = Line()
-            # Must be moved to correct position to get the item's position right
-            self.__line.moveBy(pos.x(), pos.y())
             self.addItem(self.__line)
+            self.__line.setPos(pos.x(), pos.y())
         elif self.__mode == self.InsertRect:
             self.__rect = Rectangle()
-            # Must be moved to correct position to get the item's position right
-            self.__rect.moveBy(pos.x(), pos.y())
             self.addItem(self.__rect)
+            self.__rect.setPos(pos.x(), pos.y())
 
         QGraphicsView.mousePressEvent(self, event)
 
@@ -174,13 +178,22 @@ class GraphicsView(QGraphicsView):
                     userCustomFrame.signalRemoveUserAttributeCustomFrame.connect(self.onRemoveUserCustomFrame)
                 
                 proxyWidget = GraphicsProxyWidget(userCustomFrame)
-                centerPos = proxyWidget.boundingRect().center()
-                proxyWidget.setTransformOriginPoint(centerPos)
-
-                pos = self._getWidgetCenterPosition(QPointF(self.mapFromGlobal(QCursor.pos())), centerPos.x(), centerPos.y())
-                proxyWidget.setPos(pos)
-                
+                proxyWidget.isEditable = self.__isEditableMode
                 self.addItem(proxyWidget)
+
+                bRect = proxyWidget.boundingRect()
+                leftPos = bRect.topLeft()
+                leftPos = proxyWidget.mapToScene(leftPos)
+                centerPos = bRect.center()
+                centerPos = proxyWidget.mapToScene(centerPos)
+
+                offset = centerPos-leftPos
+
+                pos = event.pos()
+                scenePos = self.mapToScene(pos)
+                scenePos = scenePos-offset
+                
+                proxyWidget.setPos(scenePos)
             #else:
             #    pos = self._getWidgetCenterPosition(self.mapFromGlobal(QCursor.pos()), source.width()/2, source.height()/2)
             #    source.move(pos)
@@ -194,6 +207,7 @@ class GraphicsView(QGraphicsView):
         pos.setX(pos.x()-centerX)
         pos.setY(pos.y()-centerY)
         return pos
+
 
 ### slots ###
     def onRemoveUserCustomFrame(self, userCustomFrame):
