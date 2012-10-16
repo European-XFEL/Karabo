@@ -57,20 +57,24 @@ class CustomXmlReader(QXmlStreamReader):
                     item = None
                     if type == "Text":
                         item = Text()
+                        self.__scene.addItem(item)
                         item.setPos(QPointF(posX, posY))
                     elif type == "Link":
                         item = Link()
+                        self.__scene.addItem(item)
                         item.setPos(QPointF(posX, posY))
                     elif type == "Arrow":
                         item = Arrow()
+                        self.__scene.addItem(item)
                         item.setPos(QPointF(posX, posY))
                     elif type == "Line":
                         item = Line()
+                        self.__scene.addItem(item)
                         item.setPos(QPointF(posX, posY))
                     elif type == "Rectangle":
                         item = Rectangle()
+                        self.__scene.addItem(item)
                         item.setPos(QPointF(posX, posY))
-                    self.__scene.addItem(item)
                     
                     self.processGraphicsItem(item)
             elif tokenType == QXmlStreamReader.EndElement and tagName == "GraphicsItemList":
@@ -80,8 +84,8 @@ class CustomXmlReader(QXmlStreamReader):
     def processItemAttributes(self):
         type = self.attributes().value("type").toString()
         
-        posX = self.attributes().value("posX").toString().toInt()
-        posY = self.attributes().value("posY").toString().toInt()
+        posX = self.attributes().value("posX").toString().toDouble()
+        posY = self.attributes().value("posY").toString().toDouble()
         
         return [type, posX[0], posY[0]]
 

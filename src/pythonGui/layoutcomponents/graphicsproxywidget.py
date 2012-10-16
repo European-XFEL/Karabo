@@ -40,15 +40,40 @@ class GraphicsProxyWidget(NodeBase, QGraphicsProxyWidget):
 
 ### protected ###
     def mouseMoveEvent(self, event):
-        QGraphicsItem.mouseMoveEvent(self, event)
+        if self.isEditable == True:
+            QGraphicsProxyWidget.mouseMoveEvent(self, event)
+        else:
+            QGraphicsItem.mouseMoveEvent(self, event)
 
 
     def mousePressEvent(self, event):
-        QGraphicsItem.mousePressEvent(self, event)
+        if self.isEditable == True:
+            QGraphicsProxyWidget.mousePressEvent(self, event)
+        else:
+            QGraphicsItem.mousePressEvent(self, event)
 
 
     def mouseReleaseEvent(self, event):
-        QGraphicsItem.mouseReleaseEvent(self, event)
+        if self.isEditable == True:
+            QGraphicsProxyWidget.mouseReleaseEvent(self, event)
+        else:
+            QGraphicsItem.mouseReleaseEvent(self, event)
+
+
+    #def keyPressEvent(self, event):
+    #    print "keyPressEvent"
+    #    if self.isEditable == True:
+    #        QGraphicsProxyWidget.keyPressEvent(self, event)
+    #    else:
+    #        QGraphicsItem.keyPressEvent(self, event)
+
+
+    #def keyReleaseEvent(self, event):
+    #    print "keyReleaseEvent"
+    #    if self.isEditable == True:
+    #        QGraphicsProxyWidget.keyReleaseEvent(self, event)
+    #    else:
+    #        QGraphicsItem.keyReleaseEvent(self, event)
 
 
     def contextMenuEvent(self, event):

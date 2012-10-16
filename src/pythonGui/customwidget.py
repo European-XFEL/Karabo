@@ -83,11 +83,8 @@ class CustomWidget(QWidget):
     scene = property(fget=_getScene)
 
 
-    def _getTransformActive(self):
-        return self.__view.isTransformActive
-    def _setTransformActive(self, active):
-        self.__view.isTransformActive = active
-    isTransformWidgetActive = property(fget=_getTransformActive, fset=_setTransformActive)
+    def setEditableMode(self, isEditableMode):
+        self.__view.setEditableMode(isEditableMode)
 
 
     # All selected items of the scene are returned
@@ -412,6 +409,10 @@ class CustomWidget(QWidget):
         if len(items) < 1:
             return
 
+        # Unselect all selected items
+        for item in items:
+            item.setSelected(False)
+
         itemGroup = self.__scene.createItemGroup(items)
         itemGroup.setFlags(QGraphicsItem.ItemIsMovable | QGraphicsItem.ItemIsSelectable)
         itemGroup.setSelected(True)
@@ -423,9 +424,14 @@ class CustomWidget(QWidget):
         if len(items) < 1:
             return
         
+        childItems = []
         for item in items:
             if isinstance(item, QGraphicsItemGroup):
+                childItems = item.childItems()
                 self.__scene.destroyItemGroup(item)
+        # Select all items again
+		for childItem in childItems:
+		    childItem.setSelected(True)
 
 
     # Increments self.__maxZ value, and then sets the currently selected item's z
@@ -467,6 +473,7 @@ class CustomWidget(QWidget):
     # to scale smaller or larger depending on which way the wheel is rolled
     def onZoom(self, value):
         factor = value / 100.0
+        print "onZoom", factor
         matrix = self.__view.matrix()
         matrix.reset()
         matrix.scale(factor, factor)
