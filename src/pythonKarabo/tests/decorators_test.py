@@ -1,12 +1,10 @@
 # To change this template, choose Tools | Templates
 # and open the template in the editor.
 
-__author__="esenov"
-__date__ ="$Aug 2, 2012 12:41:16 PM$"
-
 import unittest
-from exfel_decorators import schemamethod
-from libpyexfel import *
+
+from karabo_decorators import schemamethod
+from libkarabo import *
 
 class ExampleClass(object):
 
@@ -34,14 +32,25 @@ class ExampleClass(object):
         e.readOnly().commit()
 
 
-class CheckExpectedParameters(unittest.TestCase):
+class  Decorators_TestCase(unittest.TestCase):
+    #def setUp(self):
+    #    self.foo = Decorators_()
+    #
 
-    def runTest(self):
-        print "\n================================= CheckExpectedParameters =================================\n"
+    #def tearDown(self):
+    #    self.foo.dispose()
+    #    self.foo = None
+
+    def test_decorators_(self):
         schema = ExampleClass.expectedParameters()
-        print schema
-        schema = ExampleClass.expectedParameters(AccessType(INIT|READ|WRITE))
-        print schema
+        #assert x != y;
+        self.assertEqual(schema.hasKey("firstWord"),    True, "expectedParameters failed -- no 'firstWord' key found")
+        self.assertEqual(schema.hasKey("secondWord"),   True, "expectedParameters failed -- no 'secondWord' key found")
+        self.assertEqual(schema.hasKey("multiply"),     True, "expectedParameters failed -- no 'multiply' key found")
+        self.assertEqual(schema.hasKey("composedWord"), True, "expectedParameters failed -- no 'composedWord' key found")
+        self.assertEqual(schema.hasKey("thirdWord"),    False,"expectedParameters failed -- 'thirdWord' key was found")
+        #self.fail("TODO: Write test")
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     unittest.main()
+

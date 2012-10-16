@@ -1,8 +1,6 @@
-'''
-Created on Jul 26, 2012
+# To change this template, choose Tools | Templates
+# and open the template in the editor.
 
-@author: esenov
-'''
 import unittest
 from fsm import EXFEL_FSM_NO_TRANSITION_ACTION, EXFEL_FSM_EVENT2, EXFEL_FSM_EVENT0, EXFEL_FSM_INTERRUPT_STATE_EE
 from fsm import EXFEL_FSM_STATE_EE, EXFEL_FSM_ACTION0, EXFEL_FSM_STATE_MACHINE, EXFEL_FSM_CREATE_MACHINE
@@ -146,175 +144,47 @@ class ParallelMachine(object):
     def endErrorAAction(self): pass
     def endErrorBAction(self): pass
 
-    def pstate(self):
-        print '>>>>>>>>>>>>>>>>', self.fsm.get_state(), '<<<<<<<<<<<<<<<<'
 
+class  Parallel_machine_TestCase(unittest.TestCase):
+    def setUp(self):
+        self.pm = ParallelMachine()
+    #
 
-class TestParallelMachine(ParallelMachine):
-    
-    def __init__(self):
-        super(TestParallelMachine, self).__init__()
-        
-    def noStateTransition(self):
-        print "No transition"
-    
-    def onException(self, m1, m2):
-        print '-> TestParallelMachine.onException()',m1,'--',m2
-        
-    def endErrorEvent(self):
-        print '-> TestParallelMachine.endErrorEvent'
-        
-    def goto1Event(self):
-        print '-> TestParallelMachine.goto1Event'
-        
-    def goto2Event(self):
-        print '-> TestParallelMachine.goto2Event'
-        
-    def goto3Event(self):
-        print '-> TestParallelMachine.goto3Event'
-        
-    def goto4Event(self):
-        print '-> TestParallelMachine.goto4Event'
-        
-    def goto5Event(self):
-        print '-> TestParallelMachine.goto5Event'
-        
-    def errorStateOnEntry(self):
-        print '--------> TestParallelMachine.errorStateOnEntry'
-        
-    def errorStateOnExit(self):
-        print '--------> TestParallelMachine.errorStateOnExit'
-        
-    def allOkOnEntry(self):
-        print '--------> TestParallelMachine.allOkOnEntry'
-        
-    def allOkOnExit(self):
-        print '--------> TestParallelMachine.allOkOnExit'
-        
-    def initializeAOnEntry(self):
-        print '--------> TestParallelMachine.initializeAOnEntry'
-        
-    def initializeAOnExit(self):
-        print '--------> TestParallelMachine.initializeAOnExit'
-        
-    def initializeBOnEntry(self):
-        print '--------> TestParallelMachine.initializeBOnEntry'
-        
-    def initializeBOnExit(self):
-        print '--------> TestParallelMachine.initializeBOnExit'
-        
-    def state1OnEntry(self):
-        print '--------> TestParallelMachine.state1OnEntry'
-        
-    def state1OnExit(self):
-        print '--------> TestParallelMachine.state1OnExit'
-        
-    def state2OnEntry(self):
-        print '--------> TestParallelMachine.state2OnEntry'
-        
-    def state2OnExit(self):
-        print '--------> TestParallelMachine.state2OnExit'
-        
-    def state3OnEntry(self):
-        print '--------> TestParallelMachine.state3OnEntry'
-        
-    def state3OnExit(self):
-        print '--------> TestParallelMachine.state3OnExit'
-        
-    def state4OnEntry(self):
-        print '--------> TestParallelMachine.state4OnEntry'
-        
-    def state4OnExit(self):
-        print '--------> TestParallelMachine.state4OnExit'
-        
-    def state5OnEntry(self):
-        print '--------> TestParallelMachine.state5OnEntry'
-        
-    def state5OnExit(self):
-        print '--------> TestParallelMachine.state5OnExit'
-        
-    def initializeAtoTaskA(self):
-        print '****----> TestParallelMachine.initializeAtoTaskA'
-        
-    def initializeBtoTaskB(self):
-        print '****----> TestParallelMachine.initializeBtoTaskB'
-        
-    def state1toState2(self):
-        print '****----> TestParallelMachine.state1toState2'
-        
-    def state2toState1(self):
-        print '****----> TestParallelMachine.state2toState1'
-        
-    def state2toState3(self):
-        print '****----> TestParallelMachine.state2toState3'
-        
-    def state3toState2(self):
-        print '****----> TestParallelMachine.state3toState2'
-        
-    def state4toState5(self):
-        print '****----> TestParallelMachine.state4toState5'
-        
-    def state5toState4(self):
-        print '****----> TestParallelMachine.state5toState4'
-        
-    def errorFoundAAction(self):
-        print '****----> TestParallelMachine.errorFoundAAction'
-        
-    def errorFoundBAction(self):
-        print '****----> TestParallelMachine.errorFoundBAction'
-        
-    def endErrorAAction(self):
-        print '****----> TestParallelMachine.endErrorAAction'
-        
-    def endErrorBAction(self):
-        print '****----> TestParallelMachine.endErrorBAction'
+    def tearDown(self):
+        self.pm = None
 
-    def start(self):
-        self.fsm.start()
-        
-    def stop(self):
-        self.fsm.stop()
-        
     def event(self, event_name, event_arg):
-        print '>>> Input event: %r' % event_name
-        self.fsm.process_event(event_instance(event_name,event_arg))
+        self.pm.fsm.process_event(event_instance(event_name,event_arg))
         
-        
-
-class Test(unittest.TestCase):
-
-
-    def testParallelMachine(self):
-        print "\n================================= testParallelMachine =================================\n"
-        p = TestParallelMachine()
-        p.start()
-        p.pstate()
-        assert p.fsm.get_state() == "[TaskA.[State1:AllOk]:TaskB.[State4:AllOk]]", 'Assert failed!'
-        p.event('GoTo2',())
-        assert p.fsm.get_state() == "[TaskA.[State2:AllOk]:TaskB.[State4:AllOk]]", 'Assert failed!'
-        p.event('GoTo5',())
-        assert p.fsm.get_state() == "[TaskA.[State2:AllOk]:TaskB.[State5:AllOk]]", 'Assert failed!'
-        p.event('ErrorFoundA',('Timeout','Hardware not responding'))
-        assert p.fsm.get_state() == "[TaskA.[State2:ErrorA]:TaskB.[State5:AllOk]]", 'Assert failed'
-        p.event('GoTo4',())
-        assert p.fsm.get_state() == "[TaskA.[State2:ErrorA]:TaskB.[State4:AllOk]]", 'Assert failed'
-        p.event('GoTo5',())
-        assert p.fsm.get_state() == "[TaskA.[State2:ErrorA]:TaskB.[State5:AllOk]]", 'Assert failed'
-        p.event('GoTo3',())
-        assert p.fsm.get_state() == "[TaskA.[State2:ErrorA]:TaskB.[State5:AllOk]]", 'Assert failed'
-        p.event('EndErrorB',())
-        assert p.fsm.get_state() == "[TaskA.[State2:ErrorA]:TaskB.[State5:AllOk]]", 'Assert failed'
-        p.event('EndErrorA',())
-        assert p.fsm.get_state() == "[TaskA.[State2:AllOk]:TaskB.[State5:AllOk]]", 'Assert failed'
-        p.event('GoTo3',())
-        assert p.fsm.get_state() == "[TaskA.[State3:AllOk]:TaskB.[State5:AllOk]]", 'Assert failed'
-        p.event('GoTo2',())
-        assert p.fsm.get_state() == "[TaskA.[State2:AllOk]:TaskB.[State5:AllOk]]", 'Assert failed'
-        p.event('GoTo1',())
-        assert p.fsm.get_state() == "[TaskA.[State1:AllOk]:TaskB.[State5:AllOk]]", 'Assert failed'
-        p.stop()
+    def test_parallel_machine_(self):
+        fsm = self.pm.fsm
+        fsm.start()
+        self.assertEqual(fsm.get_state(), "[TaskA.[State1:AllOk]:TaskB.[State4:AllOk]]", 'Assert failed!')
+        self.event('GoTo2',())
+        self.assertEqual(fsm.get_state(), "[TaskA.[State2:AllOk]:TaskB.[State4:AllOk]]", 'Assert failed!')
+        self.event('GoTo5',())
+        self.assertEqual(fsm.get_state(), "[TaskA.[State2:AllOk]:TaskB.[State5:AllOk]]", 'Assert failed!')
+        self.event('ErrorFoundA',('Timeout','Hardware not responding'))
+        self.assertEqual(fsm.get_state(), "[TaskA.[State2:ErrorA]:TaskB.[State5:AllOk]]", 'Assert failed')
+        self.event('GoTo4',())
+        self.assertEqual(fsm.get_state(), "[TaskA.[State2:ErrorA]:TaskB.[State4:AllOk]]", 'Assert failed')
+        self.event('GoTo5',())
+        self.assertEqual(fsm.get_state(), "[TaskA.[State2:ErrorA]:TaskB.[State5:AllOk]]", 'Assert failed')
+        self.event('GoTo3',())
+        self.assertEqual(fsm.get_state(), "[TaskA.[State2:ErrorA]:TaskB.[State5:AllOk]]", 'Assert failed')
+        self.event('EndErrorB',())
+        self.assertEqual(fsm.get_state(), "[TaskA.[State2:ErrorA]:TaskB.[State5:AllOk]]", 'Assert failed')
+        self.event('EndErrorA',())
+        self.assertEqual(fsm.get_state(), "[TaskA.[State2:AllOk]:TaskB.[State5:AllOk]]", 'Assert failed')
+        self.event('GoTo3',())
+        self.assertEqual(fsm.get_state(), "[TaskA.[State3:AllOk]:TaskB.[State5:AllOk]]", 'Assert failed')
+        self.event('GoTo2',())
+        self.assertEqual(fsm.get_state(), "[TaskA.[State2:AllOk]:TaskB.[State5:AllOk]]", 'Assert failed')
+        self.event('GoTo1',())
+        self.assertEqual(fsm.get_state(), "[TaskA.[State1:AllOk]:TaskB.[State5:AllOk]]", 'Assert failed')
+        fsm.stop()
 
 
-if __name__ == "__main__":
-    #import sys;sys.argv = ['', 'Test.testName']
+if __name__ == '__main__':
     unittest.main()
+
