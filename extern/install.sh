@@ -1,5 +1,19 @@
 #!/bin/bash
 
+safeRunCommand() {
+    typeset cmnd="$*"
+    typeset ret_code
+
+    echo cmnd=$cmnd
+    eval $cmnd
+    ret_code=$?
+    if [ $ret_code != 0 ]; then
+	printf "Error : [%d] when executing command: '$cmnd'" $ret_code
+	exit $ret_code
+    fi
+}
+
+
 CWD=$(pwd)
 DIR=$(dirname $0)
 cd $DIR
@@ -34,18 +48,20 @@ if [ -d $RESOURCE_PATH ]; then
     cd $RESOURCE_PATH
     source build.config
     if [ ! $CUSTOM_BUILD ]; then
-        echo; echo "### Extracting $RESOURCE_NAME..." | tee -a $CWD/installExtern.log
-        $EXTRACT_COMMAND
-        if [ $? -ne 0 ]; then exit $?; fi
+
+        echo -e "\n### Extracting $RESOURCE_NAME" | tee -a $CWD/installExtern.log
+        safeRunCommand "$EXTRACT_COMMAND"
         cd $DEP_NAME
-        echo; echo "### Conifguring $RESOURCE_NAME..." | tee -a $CWD/installExtern.log
+
+        echo -e "\n### Configuring $RESOURCE_NAME" | tee -a $CWD/installExtern.log
         echo $CONFIGURE_COMMAND
-        eval $CONFIGURE_COMMAND 2>&1 | tee -a configure.log
-        if [ $? -ne 0 ]; then exit $?; fi
-        echo; echo "### Compiling $RESOURCE_NAME..." | tee -a $CWD/installExtern.log
-        eval $MAKE_COMMAND  2>&1 | tee -a $CWD/installExtern.log
-        if [ $? -ne 0 ]; then exit $?; fi
-        eval $INSTALL_COMMAND
+        safeRunCommand "$CONFIGURE_COMMAND 2>&1 | tee -a configure.log"
+
+        echo -e "\n### Compiling $RESOURCE_NAME" | tee -a $CWD/installExtern.log
+        safeRunCommand "$MAKE_COMMAND  2>&1 | tee -a $CWD/installExtern.log"
+
+	echo -e "\n### Installing $RESOURCE_NAME" | tee -a $CWD/installExtern.log
+        safeRunCommand "$INSTALL_COMMAND 2>&1 | tee -a $CWD/installExtern.log"
     fi
     cd $DIR
 else

@@ -244,6 +244,7 @@ namespace karabo {
             log() << Priority::DEBUG << "Devices available: " << String::sequenceToString(devices);
 
             BOOST_FOREACH(string device, devices) {
+                if (device == "MasterDevice" || device == "GuiServerDevice") continue;
                 if (!m_availableDevices.has(device)) {
                     std::stringstream stream;
                     m_format->convert(Device::expectedParameters(device, karabo::util::READ | karabo::util::WRITE | karabo::util::INIT), stream);
