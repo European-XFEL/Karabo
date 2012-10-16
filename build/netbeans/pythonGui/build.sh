@@ -14,6 +14,7 @@ CWD=\$(pwd)
 cd \$(dirname \$0)/../lib/pythonGui
 export PYTHONPATH=../
 export LD_LIBRARY_PATH=../../extern/lib
+export DYLD_LIBRARY_PATH=../../extern/lib
 export PATH=../../extern/bin
 python karabo-gui.py
 cd \$CWD

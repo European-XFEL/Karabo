@@ -19,7 +19,7 @@ if [ "$OS" = "Linux" ]; then
     DISTRO_RELEASE=$(lsb_release -rs)
     tmp=`grep "processor" /proc/cpuinfo | wc -l`
     NUM_CORES=$(($tmp*2/3))
-elif [  "$OS" = "Linux" ]; then
+elif [  "$OS" = "Darwin" ]; then
     DISTRO_ID=MacOSX
     DISTRO_RELEASE=$(uname -r)
     NUM_CORES=2
@@ -36,6 +36,11 @@ make -j$NUM_CORES CONF=$CONF
 cp -rf $DISTDIR/$CONF/$PLATFORM/lib $PACKAGEDIR/
 cp -rf $DISTDIR/$CONF/$PLATFORM/include $PACKAGEDIR/
 cp -rf ../../../extern/$PLATFORM $PACKAGEDIR/extern
+if [ $OS = "Darwin" ]; then
+    cd $PACKAGEDIR/lib
+    ln -s libkarabo.dylib libkarabo.so
+    cd -
+fi
 
 # deviceServer
 cd ../deviceServer
