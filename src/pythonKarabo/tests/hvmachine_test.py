@@ -1,8 +1,6 @@
-'''
-Created on Jul 27, 2012
+# To change this template, choose Tools | Templates
+# and open the template in the editor.
 
-@author: esenov
-'''
 import unittest
 from fsm import EXFEL_FSM_EVENT0, EXFEL_FSM_EVENT2, EXFEL_FSM_ACTION0, EXFEL_FSM_ACTION2, EXFEL_FSM_NO_TRANSITION_ACTION
 from fsm import EXFEL_FSM_STATE, EXFEL_FSM_STATE_E, EXFEL_FSM_STATE_EE, EXFEL_FSM_STATE_MACHINE_EE, EXFEL_FSM_GUARD0
@@ -91,7 +89,7 @@ class HvMachine(object):
     def slotLevelReachedEvent(self): pass
     
     # default action methods
-    def errorFoundAction(self, m1, m2): print 'Error found:', m1, m2
+    def errorFoundAction(self, m1, m2): pass
     def voltChangingAction(self): pass
     def levelReachedAction(self): pass
 
@@ -109,58 +107,42 @@ class HvMachine(object):
     def onStateExit(self):        pass
     def initializeHardware(self): pass
         
-    
 
-class TestMachine(HvMachine):
-    def __init__(self):
-        super(TestMachine,self).__init__()
-        print 'TestMachine constructor'
-    
-    # actions
-    def voltChangingAction(self): print "******> TestMachine.voltChangingAction()"
-    def levelReachedAction(self): print "******> TestMachine.levelReachedAction()"
-    def noTransition(self):       print "*> TestMachine.noTransition()"
-    
-    def offStateEntry(self):      print "------> TestMachine.offStateEntry()"
-    def changingStateEntry(self): print "---------> TestMachine.changingStateEntry()"
-    def changingStateExit(self):  print "---------> TestMachine.changingStateExit()"
-    def onStateEntry(self):       print "------> TestMachine.onStateEntry()"
-    def onStateExit(self):        print "------> TestMachine.onStateExit()"
-    def initializeHardware(self): print "-> TestMachine.initializeHardware()"
+class  Hvmachine_TestCase(unittest.TestCase):
+    def setUp(self):
+        self.hv = HvMachine()
 
-    def test(self):
-        self.fsm.start()
-        print "1.  Current state is", self.fsm.get_state()
-        self.fsm.process_event(event_instance('SwitchOnEvent', ()))
-        print "2.  Current state is", self.fsm.get_state()
-        self.fsm.process_event(event_instance('LevelReachedEvent', ()))
-        print "3.  Current state is", self.fsm.get_state()
-        self.fsm.process_event(event_instance('VoltChangingEvent', ()))
-        print "4.  Current state is", self.fsm.get_state()
-        self.fsm.process_event(event_instance('LevelReachedEvent', ()))
-        print "5.  Current state is", self.fsm.get_state()
-        self.fsm.process_event(event_instance('VoltChangingEvent', ()))
-        print "6.  Current state is", self.fsm.get_state()
-        self.fsm.process_event(event_instance('ErrorFoundEvent',('Timeout happened', 'Hardware device not responded')))
-        print "7.  Current state is", self.fsm.get_state()
-        self.fsm.process_event(event_instance('EndErrorEvent', ()))
-        print "8.  Current state is", self.fsm.get_state()
-        self.fsm.process_event(event_instance('VoltChangingEvent', ()))                      
-        print "9.  Current state is", self.fsm.get_state()
-        self.fsm.process_event(event_instance('LevelReachedEvent', ()))
-        print "10. Current state is", self.fsm.get_state()
-        self.fsm.process_event(event_instance('SwitchOffEvent',()))
-        print "11. Current state is", self.fsm.get_state()
+    def tearDown(self):
+    #    self.foo.dispose()
+        self.hv = None
 
+    def test_hvmachine_(self):
+        fsm = self.hv.fsm
+        fsm.start()
+        self.assertEqual(fsm.get_state(), "AllOkState.OffState", "failure -- not 'AllOkState.OffState'")
+        fsm.process_event(event_instance('SwitchOnEvent', ()))
+        self.assertEqual(fsm.get_state(), "AllOkState.OnState.ChangingState", "failure -- not 'AllOkState.OnState.ChangingState'")
+        fsm.process_event(event_instance('LevelReachedEvent', ()))
+        self.assertEqual(fsm.get_state(), "AllOkState.OnState.StableState", "failure -- not 'AllOkState.OnState.StableState'")
+        fsm.process_event(event_instance('VoltChangingEvent', ()))
+        self.assertEqual(fsm.get_state(), "AllOkState.OnState.ChangingState", "failure -- not 'AllOkState.OnState.ChangingState'")
+        fsm.process_event(event_instance('LevelReachedEvent', ()))
+        self.assertEqual(fsm.get_state(), "AllOkState.OnState.StableState", "failure -- not 'AllOkState.OnState.StableState'")
+        fsm.process_event(event_instance('VoltChangingEvent', ()))
+        self.assertEqual(fsm.get_state(), "AllOkState.OnState.ChangingState", "failure -- not 'AllOkState.OnState.ChangingState'")
+        fsm.process_event(event_instance('ErrorFoundEvent',('Timeout happened', 'Hardware device not responded')))
+        self.assertEqual(fsm.get_state(), "ErrorState", "failure -- not 'ErrorState'")
+        fsm.process_event(event_instance('EndErrorEvent', ()))
+        self.assertEqual(fsm.get_state(), "AllOkState.OffState", "failure -- not 'AllOkState.OffState'")
+        fsm.process_event(event_instance('VoltChangingEvent', ()))
+        self.assertEqual(fsm.get_state(), "AllOkState.OnState.ChangingState", "failure -- not 'AllOkState.OnState.ChangingState'")
+        fsm.process_event(event_instance('LevelReachedEvent', ()))
+        self.assertEqual(fsm.get_state(), "AllOkState.OnState.StableState", "failure -- not 'AllOkState.OnState.StableState'")
+        fsm.process_event(event_instance('SwitchOffEvent',()))
+        self.assertEqual(fsm.get_state(), "AllOkState.OffState", "failure -- not 'AllOkState.OffState'")
+        #print fsm.get_state()
+        #self.fail("TODO: Write test")
 
-class Test(unittest.TestCase):
-
-    def testHvMachine(self):
-        print "\n================================= testHvMachine =================================\n"
-        m = TestMachine()
-        m.test()
-
-
-if __name__ == "__main__":
-    #import sys;sys.argv = ['', 'Test.testHvMachine']
+if __name__ == '__main__':
     unittest.main()
+
