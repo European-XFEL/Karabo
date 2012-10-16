@@ -24,7 +24,7 @@ class GraphicsProxyWidget(NodeBase, QGraphicsProxyWidget):
         super(GraphicsProxyWidget, self).__init__()
 
         self._setWidget(widget)
-        self.setFlags(QGraphicsItem.ItemIsMovable | QGraphicsItem.ItemIsSelectable)
+        self.setFlags(QGraphicsItem.ItemIsMovable | QGraphicsItem.ItemIsSelectable | QGraphicsItem.ItemIsFocusable)
 
 
     def __del__(self):
