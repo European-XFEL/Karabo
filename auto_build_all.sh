@@ -20,7 +20,7 @@ echo -e "\n\n### Fetching dependencies from ${DISTRO_ID}'s package management sy
 sleep 2
 
 if [ "$DISTRO_ID" == "Ubuntu" ]; then
-    sudo apt-get install subversion krb5-user build-essential doxygen libqt4-dev libnss3-dev libnspr4-dev libreadline-dev libsqlite3-dev libX11-dev zlib1g-dev libXext-dev gfortran liblapack-dev
+    sudo apt-get install subversion build-essential doxygen libqt4-dev libnss3-dev libnspr4-dev libreadline-dev libsqlite3-dev libX11-dev zlib1g-dev libXext-dev gfortran liblapack-dev
 fi
 
 echo -e "\n\n### Starting compilation (using $NUM_CORES threads) and packaging of the karaboFramework. ###\n\n"
