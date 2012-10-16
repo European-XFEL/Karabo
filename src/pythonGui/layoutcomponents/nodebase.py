@@ -24,6 +24,7 @@ class NodeBase(object):
         super(NodeBase, self).__init__()
         
         self.__links = set()
+        self.__isEditable = False
 
 
     def __del__(self):
@@ -50,4 +51,12 @@ class NodeBase(object):
     def trackItems(self):
         for link in self.__links:
             link.trackItems()
+
+
+    # States whether the node is editable or not
+    def _isEditable(self):
+        return self.__isEditable
+    def _setEditable(self, isEditable):
+        self.__isEditable = isEditable
+    isEditable = property(fget=_isEditable, fset=_setEditable)
 
