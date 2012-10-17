@@ -16,7 +16,7 @@ PACKAGENAME=karabo-$VERSION
 
 NUM_CORES=2
 if [ "$OS" = "Linux" ]; then
-    DISTRO_ID=$(lsb_release -is)
+    DISTRO_ID=( $(lsb_release -is) )
     DISTRO_RELEASE=$(lsb_release -rs)
     NUM_CORES=`grep "processor" /proc/cpuinfo | wc -l`
     if [ "$NUM_CORES" -gt "8" ]; then NUM_CORES=8; fi
