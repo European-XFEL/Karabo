@@ -41,11 +41,11 @@ class GraphicsProxyWidget(NodeBase, QGraphicsProxyWidget):
 ### protected ###
     def paint(self, painter, option, widget):
         if self.isSelected():
-            pen = QPen()
-            pen.setStyle(Qt.DotLine)
-            pen.setWidth(2)
+            pen = painter.pen()
+            pen.setStyle(Qt.DashLine)
             painter.setPen(pen)
-            rect = self.subWidgetRect(self.embeddedWidget)
+            #rect = self.subWidgetRect(self.embeddedWidget)
+            rect = self.boundingRect()
             painter.drawRect(rect)
         QGraphicsProxyWidget.paint(self, painter, option, widget)
 
