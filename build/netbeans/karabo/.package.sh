@@ -52,6 +52,11 @@ cd ../brokerMessageLogger
 make -j$NUM_CORES CONF=$CONF CMD=y
 cp -rf $DISTDIR/$CONF/$PLATFORM/bin $PACKAGEDIR/
 
+# pythonKarabo
+cd ../pythonKarabo
+./build.sh
+cp -rf $DISTDIR/$OS/lib $PACKAGEDIR/
+
 # pythonGui
 cd ../pythonGui
 ./build.sh
