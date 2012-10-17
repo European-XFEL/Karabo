@@ -16,13 +16,12 @@ import threading
 import time
 import inspect
 
-from device_server_fsm import DeviceServerFsm
 from fsm import event_instance, ParameterException
 from python_device import *
 from karabo_decorators import schemamethod
 from libkarabo import *
 
-class DeviceServer(DeviceServerFsm):
+class DeviceServer(object):
     '''
     Device server
     '''
@@ -55,6 +54,68 @@ class DeviceServer(DeviceServerFsm):
         e.key("pluginsDir").displayedName("Plugins dir").description("Directory inspected for plugins")
         e.assignmentOptional().defaultValue(os.environ['PWD'] + '/plugins').reconfigurable().commit()
     
+    def setupFsm(self):
+        '''
+        Description of state machine
+        '''
+        #**************************************************************
+        #*                        Events                              *
+        #**************************************************************
+        
+        EXFEL_FSM_EVENT2('ErrorFoundEvent', self.errorFound, str, str)
+        EXFEL_FSM_EVENT0('EndErrorEvent', self.endError)
+        EXFEL_FSM_EVENT0('NewPluginAvailableEvent', self.newPluginAvailable)
+        EXFEL_FSM_EVENT0('InbuildDevicesAvailableEvent', self.inbuildDevicesAvailable)
+        EXFEL_FSM_EVENT1('StartDeviceEvent', self.slotStartDevice, Hash)
+        EXFEL_FSM_EVENT1('RegistrationOkEvent', self.slotRegistrationOk, str)
+        EXFEL_FSM_EVENT1('RegistrationFailedEvent', self.slotRegistrationFailed, str)
+
+        #**************************************************************
+        #*                        States                              *
+        #**************************************************************
+
+        EXFEL_FSM_STATE_E('RegistrationState', self.registrationStateOnEntry)
+        EXFEL_FSM_STATE('ErrorState')
+        EXFEL_FSM_STATE_E('IdleState', self.idleStateOnEntry)
+        EXFEL_FSM_STATE('ServingState')
+
+        #**************************************************************
+        #*                    Transition Actions                      *
+        #**************************************************************
+
+        EXFEL_FSM_ACTION2('ErrorFoundAction', self.errorFoundAction, str, str)
+        EXFEL_FSM_ACTION0('EndErrorAction', self.endErrorAction)
+        EXFEL_FSM_ACTION0('NotifyNewDeviceAction', self.notifyNewDeviceAction)
+        EXFEL_FSM_ACTION1('StartDeviceAction', self.startDeviceAction, Hash)
+        EXFEL_FSM_ACTION1('RegistrationFailedAction', self.registrationFailed, str)
+        EXFEL_FSM_ACTION1('RegistrationOkAction', self.registrationOk, str)
+        
+        EXFEL_FSM_NO_TRANSITION_ACTION(self.noStateTransition)
+            
+        #**************************************************************
+        #*                      AllOk Machine                         *
+        #**************************************************************
+
+        AllOkSTT = [
+                    ('RegistrationState', 'RegistrationOkEvent',     'IdleState',  'RegistrationOkAction',     'none'),
+                    ('RegistrationState', 'RegistrationFailedEvent', 'ErrorState', 'RegistrationFailedAction', 'none'),
+                    ('IdleState',         'NewPluginAvailableEvent', 'none',       'NotifyNewDeviceAction',    'none'),
+                    ('IdleState',    'InbuildDevicesAvailableEvent', 'none',       'NotifyNewDeviceAction',    'none'),
+                    ('IdleState',         'StartDeviceEvent',      'ServingState', 'StartDeviceAction',        'none'),
+                    ('ServingState',      'StartDeviceEvent',        'none',       'StartDeviceAction',        'none')
+                   ]
+        
+        EXFEL_FSM_STATE_MACHINE('AllOkState', AllOkSTT, 'RegistrationState')
+        
+        DeviceServerMachineSTT=[
+                                ('AllOkState', 'ErrorFoundEvent', 'ErrorState', 'ErrorFoundAction', 'none'),
+                                ('ErrorState', 'EndErrorEvent',   'AllOkState', 'EndErrorAction',   'none')
+                               ]
+        
+        EXFEL_FSM_STATE_MACHINE('DeviceServerMachine', DeviceServerMachineSTT, 'AllOkState')
+        
+        return EXFEL_FSM_CREATE_MACHINE('DeviceServerMachine')
+        
 
     class PluginLoader(object):
         
@@ -114,6 +175,8 @@ class DeviceServer(DeviceServerFsm):
     def __init__(self, input):
         '''Constructor'''
         super(DeviceServer, self).__init__()
+        # describe FSM
+        self.fsm = self.setupFsm()
         cls = self.__class__
         self._classId = cls.__name__
         self.ss = None
