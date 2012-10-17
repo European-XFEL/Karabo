@@ -44,17 +44,18 @@ fi
 
 # deviceServer
 cd ../deviceServer
-make -j$NUM_CORES CONF=$CONF CMD=y
+make -j$NUM_CORES CONF=$CONF
 cp -rf $DISTDIR/$CONF/$PLATFORM/bin $PACKAGEDIR/
 
 # brokerMessageLogger
 cd ../brokerMessageLogger
-make -j$NUM_CORES CONF=$CONF CMD=y
+make -j$NUM_CORES CONF=$CONF
 cp -rf $DISTDIR/$CONF/$PLATFORM/bin $PACKAGEDIR/
 
 # pythonKarabo
 cd ../pythonKarabo
 ./build.sh
+cp -rf $DISTDIR/$OS/bin $PACKAGEDIR/
 cp -rf $DISTDIR/$OS/lib $PACKAGEDIR/
 
 # pythonGui
