@@ -20,8 +20,8 @@ from PyQt4.QtGui import *
 class GraphicsProxyWidget(NodeBase, QGraphicsProxyWidget):
 
 
-    def __init__(self, widget=None):
-        super(GraphicsProxyWidget, self).__init__()
+    def __init__(self, isEditable, widget=None):
+        super(GraphicsProxyWidget, self).__init__(isEditable)
 
         self._setWidget(widget)
         self.setFlags(QGraphicsItem.ItemIsMovable | QGraphicsItem.ItemIsSelectable | QGraphicsItem.ItemIsFocusable)
@@ -48,8 +48,10 @@ class GraphicsProxyWidget(NodeBase, QGraphicsProxyWidget):
 
     def mousePressEvent(self, event):
         if self.isEditable == True:
+            self.setFlag(QGraphicsItem.ItemIsFocusable, True)
             QGraphicsProxyWidget.mousePressEvent(self, event)
         else:
+            self.setFlag(QGraphicsItem.ItemIsFocusable, False)
             QGraphicsItem.mousePressEvent(self, event)
 
 
@@ -58,22 +60,6 @@ class GraphicsProxyWidget(NodeBase, QGraphicsProxyWidget):
             QGraphicsProxyWidget.mouseReleaseEvent(self, event)
         else:
             QGraphicsItem.mouseReleaseEvent(self, event)
-
-
-    #def keyPressEvent(self, event):
-    #    print "keyPressEvent"
-    #    if self.isEditable == True:
-    #        QGraphicsProxyWidget.keyPressEvent(self, event)
-    #    else:
-    #        QGraphicsItem.keyPressEvent(self, event)
-
-
-    #def keyReleaseEvent(self, event):
-    #    print "keyReleaseEvent"
-    #    if self.isEditable == True:
-    #        QGraphicsProxyWidget.keyReleaseEvent(self, event)
-    #    else:
-    #        QGraphicsItem.keyReleaseEvent(self, event)
 
 
     def contextMenuEvent(self, event):
