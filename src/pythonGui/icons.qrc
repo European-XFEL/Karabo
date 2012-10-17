@@ -70,6 +70,7 @@
     <file alias="temperature">icons/vacuum/thermometer.png</file>
     <file alias="pressureswitch">icons/vacuum/48-Valve-Electromagnetic.png</file>
     <file alias="maxigauge">icons/vacuum/76-Vacuum-Control-Unit-with-Digital-Indicator.png</file>
+    <file alias="grid-edit">icons/grid-edit-128x128.png</file>
 </qresource>
 
 </RCC>

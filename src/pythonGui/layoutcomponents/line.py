@@ -12,15 +12,16 @@
 __all__ = ["Line"]
 
 from layoutcomponents.linedialog import LineDialog
+from layoutcomponents.nodebase import NodeBase
 
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 
 
-class Line(QGraphicsLineItem):
+class Line(NodeBase, QGraphicsLineItem):
 
-    def __init__(self):
-        super(Line, self).__init__()
+    def __init__(self, isEditable):
+        super(Line, self).__init__(isEditable)
         
         # Always start from origin
         line = QLineF(QPointF(), QPointF())
@@ -74,6 +75,24 @@ class Line(QGraphicsLineItem):
 
 
 ### protected ###
+    def mouseMoveEvent(self, event):
+        if self.isEditable == True:
+            return
+        QGraphicsLineItem.mouseMoveEvent(self, event)
+
+
+    def mousePressEvent(self, event):
+        if self.isEditable == True:
+            return
+        QGraphicsLineItem.mousePressEvent(self, event)
+
+
+    def mouseReleaseEvent(self, event):
+        if self.isEditable == True:
+            return
+        QGraphicsLineItem.mouseReleaseEvent(self, event)
+
+
     def mouseDoubleClickEvent(self, event):
         lineDialog = LineDialog(None, self)
         if lineDialog.exec_() == QDialog.Rejected:
@@ -84,3 +103,4 @@ class Line(QGraphicsLineItem):
         self.setStyle(lineDialog.penStyle())
         self.setColor(lineDialog.lineColor())
 
+        QGraphicsLineItem.mouseDoubleClickEvent(self, event)

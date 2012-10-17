@@ -43,9 +43,18 @@ class GraphicsView(QGraphicsView):
         self.setRenderHints(QPainter.Antialiasing | QPainter.TextAntialiasing)
 
 
+    def _getEditableMode(self):
+        return self.__isEditableMode
+    isEditableMode = property(fget=_getEditableMode)
+
+
     # Sets all items editable or not
     def setEditableMode(self, isEditableMode):
         self.__isEditableMode = isEditableMode
+        if self.__isEditableMode:
+            self.scene().setBackgroundBrush(QBrush(QPixmap(':grid-edit')))
+        else:
+            self.scene().setBackgroundBrush(QBrush())
         for item in self.items():
             if isinstance(item, NodeBase):
                 item.isEditable = isEditableMode
@@ -83,11 +92,11 @@ class GraphicsView(QGraphicsView):
         # set their position correctly for later purposes!!!
         pos = QPointF(self.mapToScene(event.pos()))
         if self.__mode == self.InsertLine:
-            self.__line = Line()
+            self.__line = Line(self.__isEditableMode)
             self.addItem(self.__line)
             self.__line.setPos(pos.x(), pos.y())
         elif self.__mode == self.InsertRect:
-            self.__rect = Rectangle()
+            self.__rect = Rectangle(self.__isEditableMode)
             self.addItem(self.__rect)
             self.__rect.setPos(pos.x(), pos.y())
 
@@ -177,8 +186,7 @@ class GraphicsView(QGraphicsView):
                     userCustomFrame = UserAttributeCustomFrame(item.classAlias, item=item, key=key, parent=self, navigationItemType=navigationItemType)
                     userCustomFrame.signalRemoveUserAttributeCustomFrame.connect(self.onRemoveUserCustomFrame)
                 
-                proxyWidget = GraphicsProxyWidget(userCustomFrame)
-                proxyWidget.isEditable = self.__isEditableMode
+                proxyWidget = GraphicsProxyWidget(self.__isEditableMode, userCustomFrame)
                 self.addItem(proxyWidget)
 
                 bRect = proxyWidget.boundingRect()
