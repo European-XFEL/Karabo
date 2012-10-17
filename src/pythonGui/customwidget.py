@@ -194,7 +194,7 @@ class CustomWidget(QWidget):
         if textDialog.exec_() == QDialog.Rejected:
             return
         
-        textItem = Text()
+        textItem = Text(self.__view.isEditableMode)
         textItem.setText(textDialog.text())
         textItem.setFont(textDialog.font())
         textItem.setTextColor(textDialog.textColor())

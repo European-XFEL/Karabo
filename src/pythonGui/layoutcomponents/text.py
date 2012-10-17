@@ -21,8 +21,8 @@ from PyQt4.QtGui import *
 
 class Text(NodeBase, QGraphicsItem):
 
-    def __init__(self):
-        super(Text, self).__init__()
+    def __init__(self, isEditable):
+        super(Text, self).__init__(isEditable)
         
         self.__font = QFont()
         self.__text = str()
@@ -112,6 +112,25 @@ class Text(NodeBase, QGraphicsItem):
 
         
 ### protected ###
+### protected ###
+    def mouseMoveEvent(self, event):
+        if self.isEditable == True:
+            return
+        QGraphicsItem.mouseMoveEvent(self, event)
+
+
+    def mousePressEvent(self, event):
+        if self.isEditable == True:
+            return
+        QGraphicsItem.mousePressEvent(self, event)
+
+
+    def mouseReleaseEvent(self, event):
+        if self.isEditable == True:
+            return
+        QGraphicsItem.mouseReleaseEvent(self, event)
+
+
     def mouseDoubleClickEvent(self, event):
         #text = QInputDialog.getText(event.widget(), "Edit Text", "Enter new text:", QLineEdit.Normal, self.__text)
         #if len(text[0]) > 0:
@@ -126,6 +145,8 @@ class Text(NodeBase, QGraphicsItem):
         self.setTextColor(textDialog.textColor())
         self.setBackgroundColor(textDialog.backgroundColor())
         self.setOutlineColor(textDialog.outlineColor())
+
+        QGraphicsItem.mouseDoubleClickEvent(self, event)
 
 
     def itemChange(self, change, value):

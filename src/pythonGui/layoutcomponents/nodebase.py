@@ -20,11 +20,11 @@ __all__ = ["NodeBase"]
 
 class NodeBase(object):
 
-    def __init__(self):
+    def __init__(self, isEditable):
         super(NodeBase, self).__init__()
         
         self.__links = set()
-        self.__isEditable = False
+        self.__isEditable = isEditable
 
 
     def __del__(self):

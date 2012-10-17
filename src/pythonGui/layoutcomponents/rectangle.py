@@ -20,8 +20,8 @@ from PyQt4.QtGui import *
 
 class Rectangle(NodeBase, QGraphicsRectItem):
 
-    def __init__(self):
-        super(Rectangle, self).__init__()
+    def __init__(self, isEditable):
+        super(Rectangle, self).__init__(isEditable)
         
         # Always start from origin
         self.setRect(0, 0, 0, 0)
@@ -31,4 +31,23 @@ class Rectangle(NodeBase, QGraphicsRectItem):
 
     def __del__(self):
         NodeBase.__del__(self)
+
+
+### protected ###
+    def mouseMoveEvent(self, event):
+        if self.isEditable == True:
+            return
+        QGraphicsRectItem.mouseMoveEvent(self, event)
+
+
+    def mousePressEvent(self, event):
+        if self.isEditable == True:
+            return
+        QGraphicsRectItem.mousePressEvent(self, event)
+
+
+    def mouseReleaseEvent(self, event):
+        if self.isEditable == True:
+            return
+        QGraphicsRectItem.mouseReleaseEvent(self, event)
 
