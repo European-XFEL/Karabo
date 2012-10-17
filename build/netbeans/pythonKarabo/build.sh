@@ -11,7 +11,7 @@ cat > karabo-pythondeviceserver <<End-of-file
 # Author: <burkhard.heisen@xfel.eu>
 #
 CWD=\$(pwd)
-cd \$(dirname \$0)/../lib/pythonDeviceServer
+cd \$(dirname \$0)/../lib/pythonKarabo
 export PYTHONPATH=../
 export LD_LIBRARY_PATH=../../extern/lib
 export DYLD_LIBRARY_PATH=../../extern/lib
