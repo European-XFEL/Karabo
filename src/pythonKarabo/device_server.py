@@ -141,7 +141,7 @@ class DeviceServer(object):
     
     class Launcher(threading.Thread):
     
-        def __init__(self, modname, clsname, conf):
+        def __init__(self, pluginsdir, modname, clsname, conf):
             threading.Thread.__init__(self)
             filename = "/tmp/" + modname + "." + clsname + ".configuration.xml"
             cfg = Hash("TextFile.filename", filename, "TextFile.format.Xml.indentation", 2)
@@ -151,7 +151,7 @@ class DeviceServer(object):
                 self.device = conf.getFromPath(clsname + ".devInstId")
             except RuntimeError, e:
                 print e
-            self.script = "../src/" + modname + ".py"
+            self.script = os.path.realpath(pluginsdir + "/" + modname + ".py")
             self.args = [self.script, modname, clsname, filename]
         
         def run(self):
@@ -373,7 +373,7 @@ class DeviceServer(object):
         except RuntimeError, e:
             self.log.WARN("Wrong input configuration for class '{}': {}".format(classId, e.message))
             return
-        launcher = DeviceServer.Launcher(module_name, classId, modified).start()
+        launcher = DeviceServer.Launcher(self.pluginsDir, module_name, classId, modified).start()
         self.deviceInstanceMap[devInstId] = launcher
         
 
