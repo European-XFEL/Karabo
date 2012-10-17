@@ -39,6 +39,17 @@ class GraphicsProxyWidget(NodeBase, QGraphicsProxyWidget):
 
 
 ### protected ###
+    def paint(self, painter, option, widget):
+        if self.isSelected():
+            pen = QPen()
+            pen.setStyle(Qt.DotLine)
+            pen.setWidth(2)
+            painter.setPen(pen)
+            rect = self.subWidgetRect(self.embeddedWidget)
+            painter.drawRect(rect)
+        QGraphicsProxyWidget.paint(self, painter, option, widget)
+
+
     def mouseMoveEvent(self, event):
         if self.isEditable == True:
             QGraphicsProxyWidget.mouseMoveEvent(self, event)
