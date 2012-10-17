@@ -1,5 +1,11 @@
 #!/bin/bash
 
+# Script for automated building and packaging of the entire karaboFramework
+#
+# Author: <burkhard.heisen@xfel.eu>
+#
+
+
 # Make sure we are in correct directory
 cd $(dirname $0)
 
@@ -19,6 +25,7 @@ fi
 echo -e "\n\n### Fetching dependencies from ${DISTRO_ID}'s package management system. ###\n\n"
 sleep 2
 
+# Platform specific sections here
 if [ "$DISTRO_ID" == "Ubuntu" ]; then
     sudo apt-get install subversion build-essential doxygen libqt4-dev libnss3-dev libnspr4-dev libreadline-dev libsqlite3-dev libX11-dev zlib1g-dev libXext-dev gfortran liblapack-dev
 fi
