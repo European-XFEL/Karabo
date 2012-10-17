@@ -42,7 +42,7 @@
           </incDir>
         </ccTool>
         <linkerTool>
-          <output>${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/bin/karabo-deviceserver</output>
+          <output>${KARABO}/bin/deviceserver</output>
           <linkerAddLib>
             <pElem>${KARABO}/extern/lib</pElem>
           </linkerAddLib>
