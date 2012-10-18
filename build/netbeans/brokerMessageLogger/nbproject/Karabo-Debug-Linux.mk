@@ -71,7 +71,7 @@ ${OBJECTDIR}/_ext/496226620/brokerMessageLogger.o: ../../../src/brokerMessageLog
 
 # Subprojects
 .build-subprojects:
-	cd ../karabo && ${MAKE} -j12 -f Makefile CONF=Debug
+	cd ../karabo && ${MAKE} -f Makefile CONF=Debug
 
 # Clean Targets
 .clean-conf: ${CLEAN_SUBPROJECTS}
@@ -80,7 +80,7 @@ ${OBJECTDIR}/_ext/496226620/brokerMessageLogger.o: ../../../src/brokerMessageLog
 
 # Subprojects
 .clean-subprojects:
-	cd ../karabo && ${MAKE} -j12 -f Makefile CONF=Debug clean
+	cd ../karabo && ${MAKE} -f Makefile CONF=Debug clean
 
 # Enable dependency checking
 .dep.inc: .depcheck-impl
