@@ -22,10 +22,11 @@ from PyQt4.QtGui import *
 
 class CustomXmlReader(QXmlStreamReader):
 
-    def __init__(self, scene):
+    def __init__(self, scene, isEditableMode):
         super(CustomXmlReader, self).__init__()
         
         self.__scene = scene
+        self.__isEditableMode = isEditableMode
 
 
     def read(self, data):
@@ -52,11 +53,10 @@ class CustomXmlReader(QXmlStreamReader):
             if tokenType == QXmlStreamReader.StartElement:
                 if tagName == "GraphicsItem":
                     type, posX, posY = self.processItemAttributes()
-                    print "processGraphicsItem", type
                     
                     item = None
                     if type == "Text":
-                        item = Text()
+                        item = Text(self.__isEditableMode)
                         self.__scene.addItem(item)
                         item.setPos(QPointF(posX, posY))
                     elif type == "Link":
@@ -68,11 +68,11 @@ class CustomXmlReader(QXmlStreamReader):
                         self.__scene.addItem(item)
                         item.setPos(QPointF(posX, posY))
                     elif type == "Line":
-                        item = Line()
+                        item = Line(self.__isEditableMode)
                         self.__scene.addItem(item)
                         item.setPos(QPointF(posX, posY))
                     elif type == "Rectangle":
-                        item = Rectangle()
+                        item = Rectangle(self.__isEditableMode)
                         self.__scene.addItem(item)
                         item.setPos(QPointF(posX, posY))
                     
