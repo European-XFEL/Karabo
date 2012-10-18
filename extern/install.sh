@@ -42,6 +42,13 @@ echo
 echo "### INFO Building is preferentially parallelized into $NUM_CORES threads."
 echo
 
+OS=$(uname -s)
+if [ "$OS" = "Linux" ]; then
+    DISTRO_ID=( $(lsb_release -is) )
+    DISTRO_RELEASE=$(lsb_release -rs)
+fi
+
+
 RESOURCE_PATH=resources/$RESOURCE_NAME
 if [ -d $RESOURCE_PATH ]; then
     cd $RESOURCE_PATH
