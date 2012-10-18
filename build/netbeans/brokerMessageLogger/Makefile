@@ -58,7 +58,7 @@ $(CP) -f nbproject/Karabo-impl-$(CURRENT_PLATFORM).mk nbproject/Makefile-impl.mk
 $(CP) -f nbproject/Karabo-variables-$(CURRENT_PLATFORM).mk nbproject/Makefile-variables.mk)
 endif
 
-KARABO ?= $(CND_BASEDIR)/../karabo/$(CND_DISTDIR)/$(CONF)/$(CND_PLATFORM_$(CONF))
+KARABO = $(CND_BASEDIR)/../karabo/$(CND_DISTDIR)/$(CONF)/$(CND_PLATFORM_$(CONF))
 
 # build
 build: .build-post
