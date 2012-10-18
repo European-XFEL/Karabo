@@ -20,10 +20,10 @@ from PyQt4.QtGui import *
 class GraphicsProxyWidget(NodeBase, QGraphicsProxyWidget):
 
 
-    def __init__(self, isEditable, widget=None):
+    def __init__(self, isEditable, widget):
         super(GraphicsProxyWidget, self).__init__(isEditable)
 
-        self._setWidget(widget)
+        self.setWidget(widget)
         self.setFlags(QGraphicsItem.ItemIsMovable | QGraphicsItem.ItemIsSelectable | QGraphicsItem.ItemIsFocusable)
 
 
@@ -31,20 +31,14 @@ class GraphicsProxyWidget(NodeBase, QGraphicsProxyWidget):
         NodeBase.__del__(self)
 
 
-    def _setWidget(self, widget):
-        self.setWidget(widget)
-    def _getWidget(self):
-        return self.widget()
-    embeddedWidget = property(fget=_getWidget, fset=_setWidget)
-
-
 ### protected ###
     def paint(self, painter, option, widget):
-        if self.isSelected():
+        # Hack: self.parentItem() can only be a QGraphicsItemGroup
+        if self.isSelected() and (self.parentItem() is None):
             pen = painter.pen()
             pen.setStyle(Qt.DashLine)
             painter.setPen(pen)
-            #rect = self.subWidgetRect(self.embeddedWidget)
+            #painter.setBrush(QColor(255,255,200))
             rect = self.boundingRect()
             painter.drawRect(rect)
         QGraphicsProxyWidget.paint(self, painter, option, widget)
@@ -74,6 +68,8 @@ class GraphicsProxyWidget(NodeBase, QGraphicsProxyWidget):
 
 
     def contextMenuEvent(self, event):
-        pos = event.pos()
-        self.embeddedWidget.showContextMenu(QPoint(pos.x(), pos.y()))
+        self.scene().clearSelection()
+        self.setSelected(True)
+        
+        self.widget().showContextMenu(event.screenPos())
 
