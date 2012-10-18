@@ -28,6 +28,8 @@ sleep 2
 # Platform specific sections here
 if [ "$DISTRO_ID" == "Ubuntu" ]; then
     sudo apt-get install subversion build-essential doxygen libqt4-dev libnss3-dev libnspr4-dev libreadline-dev libsqlite3-dev libX11-dev zlib1g-dev libXext-dev gfortran liblapack-dev
+elif [ "$DISTRO_ID" == "Scientific" ]; then
+    echo -e "\n\n### install necessary devel packages: ###\n yum install sqlite-devel sqlite \n yum --enablerepo=epel install qtwebkit-devel \n\n"
 fi
 
 echo -e "\n\n### Starting compilation (using $NUM_CORES threads) and packaging of the karaboFramework. ###\n\n"
