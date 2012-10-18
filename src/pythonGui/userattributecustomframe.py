@@ -57,7 +57,8 @@ class UserAttributeCustomFrame(QFrame):
             itemText = keys[0]
         self.__displayName = QLabel(itemText)
         self.__layout.addWidget(self.__displayName)
-        self.__mMain = None
+        
+        self.__contextMenu = None
         
         navigationItemType = params.get(QString('navigationItemType'))
         if navigationItemType is None:
@@ -176,54 +177,54 @@ class UserAttributeCustomFrame(QFrame):
     def _setupContextMenu(self):
         self.setContextMenuPolicy(Qt.DefaultContextMenu)#CustomContextMenu)
         
-        # Main menu
-        self.__mMain = QMenu(self)
+        # Populate context menu
+        self.__contextMenu = QMenu()
         
         if self.__displayComponent:
             # Sub menu for widget type change
-            self.__mChangeDisplay = QMenu("Change display widget", self)
+            self.__mChangeDisplay = QMenu("Change display widget")
             widgetAliases = DisplayWidget.getAliasesViaCategory(self, self.__displayComponent.widgetCategory)
             for i in range(len(widgetAliases)):
                 acChangeDisplay = self.__mChangeDisplay.addAction(widgetAliases[i])
                 acChangeDisplay.triggered.connect(self.onChangeDisplayWidget)
-            self.__mMain.addMenu(self.__mChangeDisplay)
+            self.__contextMenu.addMenu(self.__mChangeDisplay)
         
         if self.__editableComponent:
             # Sub menu for widget type change
-            self.__mChangeEditable = QMenu("Change editable widget", self)
+            self.__mChangeEditable = QMenu("Change editable widget")
             widgetAliases = EditableWidget.getAliasesViaCategory(self, self.__editableComponent.widgetCategory)
             for i in range(len(widgetAliases)):
                 acChangeEditable = self.__mChangeEditable.addAction(widgetAliases[i])
                 acChangeEditable.triggered.connect(self.onChangeEditableWidget)
-            self.__mMain.addMenu(self.__mChangeEditable)
+            self.__contextMenu.addMenu(self.__mChangeEditable)
         
-        self.__mMain.addSeparator()
+        self.__contextMenu.addSeparator()
         
         if self.__displayComponent:
             # Sub menu for widget type change
-            self.__mChangeVacuum = QMenu("Change vacuum widget", self)
+            self.__mChangeVacuum = QMenu("Change vacuum widget")
             widgetAliases = VacuumWidget.getAliasesViaCategory(self, "State")
             for i in range(len(widgetAliases)):
                 acChangeVacuum = self.__mChangeVacuum.addAction(widgetAliases[i])
                 acChangeVacuum.triggered.connect(self.onChangeVacuumWidget)
-            self.__mMain.addMenu(self.__mChangeVacuum)
+            self.__contextMenu.addMenu(self.__mChangeVacuum)
         
-        self.__mMain.addSeparator()
+        self.__contextMenu.addSeparator()
         
         text = "Remove widget"
         self.__acRemove = QAction(QIcon(":no"), text, self)
         self.__acRemove.setStatusTip(text)
         self.__acRemove.setToolTip(text)
         self.__acRemove.triggered.connect(self.onRemove)
-        self.__mMain.addAction(self.__acRemove)
+        self.__contextMenu.addAction(self.__acRemove)
 
 
     def showContextMenu(self, pos):
-        if self.__mMain is None:
+        if self.__contextMenu is None:
             return
         
-        self.__mMain.move(pos)
-        self.__mMain.show()
+        self.__contextMenu.move(pos)
+        self.__contextMenu.show()
 
 
     def _clearLayout(self, layout):
