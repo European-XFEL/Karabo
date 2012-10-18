@@ -230,7 +230,6 @@ class DeviceServer(object):
         self.ss.connect("", "signalNewDeviceClassAvailable", "*", "slotNewDeviceClassAvailable", ConnectionType.NO_TRACK, False)
         self.ss.connect("", "signalNewDeviceInstanceAvailable", "*", "slotNewDeviceInstanceAvailable", ConnectionType.NO_TRACK, False)
 
-
     def run(self):
         self.fsm.start()
         while self.running:
@@ -249,11 +248,9 @@ class DeviceServer(object):
                         self.ss.call("*", "slotDeviceServerInstanceGone", self._devSrvInstId)
                         self.stopDeviceServer()
             time.sleep(3)
-                    
     
     def stopDeviceServer(self):
         self.running = False
-        
     
     def scanPlugins(self):
         modules = self.pluginLoader.update()   # just list of modules in plugins dir
@@ -290,7 +287,6 @@ class DeviceServer(object):
                 self.newPluginAvailable()
             except RuntimeError, e:
                 self.log.ERROR("Failure while building schema for class {}: {}".format(classId, e.message))
-
     
     def _getListOfClasses(self, tree, outList):
         (cl, bases) = tree[0]
@@ -299,27 +295,21 @@ class DeviceServer(object):
         if len(tree) == 1:
             return
         self._getListOfClasses(tree[1], outList)
-        
     
     def errorFound(self, m1, m2):
         self.fsm.process_event(event_instance('ErrorFoundEvent', (m1, m2,)))
-
     
     def endError(self):
         self.fsm.process_event(event_instance('EndErrorEvent', ()))
-
     
     def newPluginAvailable(self):
         self.fsm.process_event(event_instance('NewPluginAvailableEvent', ()))
     
-    
     def inbuildDevicesAvailable(self):
         self.fsm.process_event(event_instance('InbuildDevicesAvailableEvent', ()))
-
     
     def slotStartDevice(self, h):
         self.fsm.process_event(event_instance('StartDeviceEvent', (h,)))
-
     
     def slotRegistrationOk(self, a1):
         self.fsm.process_event(event_instance('RegistrationOkEvent', (a1,)))
@@ -375,7 +365,6 @@ class DeviceServer(object):
             return
         launcher = DeviceServer.Launcher(self.pluginsDir, module_name, classId, modified).start()
         self.deviceInstanceMap[devInstId] = launcher
-        
 
     def _generateDefaultDeviceInstanceId(self, devClassId):
         cls = self.__class__
@@ -392,14 +381,12 @@ class DeviceServer(object):
             _domain = tokens.pop(0) + "-" + tokens.pop()
             _id = _domain + "/" + devClassId + "/" + str(_index)
             return _id
-            
-    
+     
     def slotKillDeviceServerInstance(self):
         self.log.INFO("Received kill signal")
         for devInstId in self.deviceInstanceMap.keys():
             self.ss.call(devInstId, "slotKillDeviceInstance")
         self.selfDestroyFlag = True
-        
         
     def slotKillDeviceInstance(self, id):
         self.log.INFO("Received kill signal for device {}".format(id))
@@ -410,11 +397,9 @@ class DeviceServer(object):
 
     def registrationFailed(self, a1):
         self.log.WARN("{}".format(a1))
-
     
     def registrationOk(self, a1):
         self.log.INFO("Master says: {}".format(a1))
-
     
     def noStateTransition(self):
         self.log.DEBUG("No transition")
