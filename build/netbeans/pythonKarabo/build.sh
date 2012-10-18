@@ -10,14 +10,14 @@ cat > karabo-pythondeviceserver <<End-of-file
 #
 # Author: <burkhard.heisen@xfel.eu>
 #
-CWD=\$(pwd)
-cd \$(dirname \$0)/../lib/pythonKarabo
-export PYTHONPATH=../
-export LD_LIBRARY_PATH=../../extern/lib
-export DYLD_LIBRARY_PATH=../../extern/lib
-export PATH=../../extern/bin
-python device_server.py
-cd \$CWD
+
+# $(dirname $0) <==> $KARABO/bin
+karabo=\$(dirname \$0)/..
+export PYTHONPATH=\$karabo/lib
+export LD_LIBRARY_PATH=\$karabo/extern/lib
+export DYLD_LIBRARY_PATH=\$karabo/extern/lib
+export PATH=\$karabo/extern/bin
+python \$karabo/lib/pythonKarabo/device_server.py
 
 End-of-file
 chmod u+x karabo-pythondeviceserver
