@@ -135,7 +135,7 @@ class DeviceServer(object):
                 path = self.plugins + "/" + m.string      # path to module source
                 if path.endswith(".pyc"):                 # skip compiled version
                     continue
-                modules.append(name)
+                modules.append((name, path,))
             return modules
             
     
@@ -254,10 +254,13 @@ class DeviceServer(object):
     
     def scanPlugins(self):
         modules = self.pluginLoader.update()   # just list of modules in plugins dir
-        for name in modules:
+        for name, path in modules:
             if name in self.availableModules:
                 continue
             try:
+                dname = os.path.dirname( os.path.realpath(path) )
+                if dname not in sys.path:
+                    sys.path.append(dname)
                 module = __import__(name)
             except ImportError,e:
                 self.log.WARN("scanPlugins: Cannot import module {} -- {}".format(name,e))
