@@ -11,10 +11,9 @@ cat > karabo-pythondeviceserver <<End-of-file
 # Author: <burkhard.heisen@xfel.eu>
 #
 
-# $(dirname $0) <==> $KARABO/bin
 karabo=\$(dirname \$0)/..
-export PYTHONPATH=\$karabo/lib\:\$karabo/lib/pythonKarabo
-export LD_LIBRARY_PATH=\$karabo/extern/lib
+export PYTHONPATH=\$PYTHONPATH\:\$karabo/lib\:\$karabo/lib/pythonKarabo
+export LD_LIBRARY_PATH=\$LD_LIBRARY_PATH\:\$karabo/extern/lib
 export DYLD_LIBRARY_PATH=\$karabo/extern/lib
 export PATH=\$karabo/extern/bin
 python \$karabo/lib/pythonKarabo/device_server.py
