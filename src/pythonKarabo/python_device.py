@@ -385,7 +385,7 @@ class PythonDevice(object):
                 self.onReconfigure(self._incomingValidatedReconfiguration)
             except Exception,e:
                 self.onException("Python Exception happened", str(e))
-                self._ss.reply(false, str(e))
+                self._ss.reply(False, str(e))
                 return
             self._applyReconfiguration(self._incomingValidatedReconfiguration)
         self._ss.reply(result, error)
