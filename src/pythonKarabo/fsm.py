@@ -22,59 +22,59 @@ _actions_ = {'none':(NOOP, ())}
 _guards_ = {'none':(GNOOP, ())}
 _machines_ = {'none':None}
 # events
-def EXFEL_FSM_EVENT0(name, f):                 _events_[name] = (f, ())
-def EXFEL_FSM_EVENT1(name, f, a1):             _events_[name] = (f, (a1,))
-def EXFEL_FSM_EVENT2(name, f, a1, a2):         _events_[name] = (f, (a1, a2))
-def EXFEL_FSM_EVENT3(name, f, a1, a2, a3):     _events_[name] = (f, (a1, a2, a3))
-def EXFEL_FSM_EVENT4(name, f, a1, a2, a3, a4): _events_[name] = (f, (a1, a2, a3, a4))
+def KARABO_FSM_EVENT0(name, f):                 _events_[name] = (f, ())
+def KARABO_FSM_EVENT1(name, f, a1):             _events_[name] = (f, (a1,))
+def KARABO_FSM_EVENT2(name, f, a1, a2):         _events_[name] = (f, (a1, a2))
+def KARABO_FSM_EVENT3(name, f, a1, a2, a3):     _events_[name] = (f, (a1, a2, a3))
+def KARABO_FSM_EVENT4(name, f, a1, a2, a3, a4): _events_[name] = (f, (a1, a2, a3, a4))
 # states
-def EXFEL_FSM_STATE(name):                       _states_[name] = (NOOP, NOOP)
-def EXFEL_FSM_STATE_E(name, on_entry):           _states_[name] = (on_entry, NOOP)
-def EXFEL_FSM_STATE_EE(name, on_entry, on_exit): _states_[name] = (on_entry, on_exit)
+def KARABO_FSM_STATE(name):                       _states_[name] = (NOOP, NOOP)
+def KARABO_FSM_STATE_E(name, on_entry):           _states_[name] = (on_entry, NOOP)
+def KARABO_FSM_STATE_EE(name, on_entry, on_exit): _states_[name] = (on_entry, on_exit)
 
-def EXFEL_FSM_INTERRUPT_STATE(name, event):
+def KARABO_FSM_INTERRUPT_STATE(name, event):
     _states_[name] = (NOOP, NOOP)
     _interrupts_[name] = event
     
-def EXFEL_FSM_INTERRUPT_STATE_E(name, event, on_entry):
+def KARABO_FSM_INTERRUPT_STATE_E(name, event, on_entry):
     _states_[name] = (on_entry, NOOP)
     _interrupts_[name] = event
 
-def EXFEL_FSM_INTERRUPT_STATE_EE(name, event, on_entry, on_exit):
+def KARABO_FSM_INTERRUPT_STATE_EE(name, event, on_entry, on_exit):
     _states_[name] = (on_entry, on_exit)
     _interrupts_[name] = event
     
 # actions
 # associate Action class with action function
 
-def EXFEL_FSM_ACTION0(name, f):                 _actions_[name] = (f, ())
-def EXFEL_FSM_ACTION1(name, f, a1):             _actions_[name] = (f, (a1,))
-def EXFEL_FSM_ACTION2(name, f, a1, a2):         _actions_[name] = (f, (a1, a2))   
-def EXFEL_FSM_ACTION3(name, f, a1, a2, a3):     _actions_[name] = (f, (a1, a2, a3))
-def EXFEL_FSM_ACTION4(name, f, a1, a2, a3, a4): _actions_[name] = (f, (a1, a2, a3, a4))
+def KARABO_FSM_ACTION0(name, f):                 _actions_[name] = (f, ())
+def KARABO_FSM_ACTION1(name, f, a1):             _actions_[name] = (f, (a1,))
+def KARABO_FSM_ACTION2(name, f, a1, a2):         _actions_[name] = (f, (a1, a2))   
+def KARABO_FSM_ACTION3(name, f, a1, a2, a3):     _actions_[name] = (f, (a1, a2, a3))
+def KARABO_FSM_ACTION4(name, f, a1, a2, a3, a4): _actions_[name] = (f, (a1, a2, a3, a4))
   
-def EXFEL_FSM_NO_TRANSITION_ACTION(f):          _actions_["NoTransition"] = (f, ())
+def KARABO_FSM_NO_TRANSITION_ACTION(f):          _actions_["NoTransition"] = (f, ())
     
 # guards
 
-def EXFEL_FSM_GUARD0(name, f):                 _guards_[name] = (f, ())
-def EXFEL_FSM_GUARD1(name, f, a1):             _guards_[name] = (f, (a1,))
-def EXFEL_FSM_GUARD2(name, f, a1, a2):         _guards_[name] = (f, (a1, a2))
-def EXFEL_FSM_GUARD3(name, f, a1, a2, a3):     _guards_[name] = (f, (a1, a2, a3))
-def EXFEL_FSM_GUARD4(name, f, a1, a2, a3, a4): _guards_[name] = (f, (a1, a2, a3, a4))
+def KARABO_FSM_GUARD0(name, f):                 _guards_[name] = (f, ())
+def KARABO_FSM_GUARD1(name, f, a1):             _guards_[name] = (f, (a1,))
+def KARABO_FSM_GUARD2(name, f, a1, a2):         _guards_[name] = (f, (a1, a2))
+def KARABO_FSM_GUARD3(name, f, a1, a2, a3):     _guards_[name] = (f, (a1, a2, a3))
+def KARABO_FSM_GUARD4(name, f, a1, a2, a3, a4): _guards_[name] = (f, (a1, a2, a3, a4))
 
 # machines
 
-def EXFEL_FSM_STATE_MACHINE(name, stt, initial):
+def KARABO_FSM_STATE_MACHINE(name, stt, initial):
     _machines_[name] = (stt, initial, NOOP, NOOP)
 
-def EXFEL_FSM_STATE_MACHINE_E(name, stt, initial, on_entry):
+def KARABO_FSM_STATE_MACHINE_E(name, stt, initial, on_entry):
     _machines_[name] = (stt, initial, on_entry, NOOP)
 
-def EXFEL_FSM_STATE_MACHINE_EE(name, stt, initial, on_entry, on_exit):
+def KARABO_FSM_STATE_MACHINE_EE(name, stt, initial, on_entry, on_exit):
     _machines_[name] = (stt, initial, on_entry, on_exit)
        
-def EXFEL_FSM_CREATE_MACHINE(name):
+def KARABO_FSM_CREATE_MACHINE(name):
     (_stt, _initial, _on_entry, _on_exit) = _machines_[name]
     cls = type(name, (StateMachine,), {})
     return cls(None, _stt, _initial, on_entry=_on_entry, on_exit=_on_exit)

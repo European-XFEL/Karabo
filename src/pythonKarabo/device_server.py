@@ -62,35 +62,35 @@ class DeviceServer(object):
         #*                        Events                              *
         #**************************************************************
         
-        EXFEL_FSM_EVENT2('ErrorFoundEvent', self.errorFound, str, str)
-        EXFEL_FSM_EVENT0('EndErrorEvent', self.endError)
-        EXFEL_FSM_EVENT0('NewPluginAvailableEvent', self.newPluginAvailable)
-        EXFEL_FSM_EVENT0('InbuildDevicesAvailableEvent', self.inbuildDevicesAvailable)
-        EXFEL_FSM_EVENT1('StartDeviceEvent', self.slotStartDevice, Hash)
-        EXFEL_FSM_EVENT1('RegistrationOkEvent', self.slotRegistrationOk, str)
-        EXFEL_FSM_EVENT1('RegistrationFailedEvent', self.slotRegistrationFailed, str)
+        KARABO_FSM_EVENT2('ErrorFoundEvent', self.errorFound, str, str)
+        KARABO_FSM_EVENT0('EndErrorEvent', self.endError)
+        KARABO_FSM_EVENT0('NewPluginAvailableEvent', self.newPluginAvailable)
+        KARABO_FSM_EVENT0('InbuildDevicesAvailableEvent', self.inbuildDevicesAvailable)
+        KARABO_FSM_EVENT1('StartDeviceEvent', self.slotStartDevice, Hash)
+        KARABO_FSM_EVENT1('RegistrationOkEvent', self.slotRegistrationOk, str)
+        KARABO_FSM_EVENT1('RegistrationFailedEvent', self.slotRegistrationFailed, str)
 
         #**************************************************************
         #*                        States                              *
         #**************************************************************
 
-        EXFEL_FSM_STATE_E('RegistrationState', self.registrationStateOnEntry)
-        EXFEL_FSM_STATE('ErrorState')
-        EXFEL_FSM_STATE_E('IdleState', self.idleStateOnEntry)
-        EXFEL_FSM_STATE('ServingState')
+        KARABO_FSM_STATE_E('RegistrationState', self.registrationStateOnEntry)
+        KARABO_FSM_STATE('ErrorState')
+        KARABO_FSM_STATE_E('IdleState', self.idleStateOnEntry)
+        KARABO_FSM_STATE('ServingState')
 
         #**************************************************************
         #*                    Transition Actions                      *
         #**************************************************************
 
-        EXFEL_FSM_ACTION2('ErrorFoundAction', self.errorFoundAction, str, str)
-        EXFEL_FSM_ACTION0('EndErrorAction', self.endErrorAction)
-        EXFEL_FSM_ACTION0('NotifyNewDeviceAction', self.notifyNewDeviceAction)
-        EXFEL_FSM_ACTION1('StartDeviceAction', self.startDeviceAction, Hash)
-        EXFEL_FSM_ACTION1('RegistrationFailedAction', self.registrationFailed, str)
-        EXFEL_FSM_ACTION1('RegistrationOkAction', self.registrationOk, str)
+        KARABO_FSM_ACTION2('ErrorFoundAction', self.errorFoundAction, str, str)
+        KARABO_FSM_ACTION0('EndErrorAction', self.endErrorAction)
+        KARABO_FSM_ACTION0('NotifyNewDeviceAction', self.notifyNewDeviceAction)
+        KARABO_FSM_ACTION1('StartDeviceAction', self.startDeviceAction, Hash)
+        KARABO_FSM_ACTION1('RegistrationFailedAction', self.registrationFailed, str)
+        KARABO_FSM_ACTION1('RegistrationOkAction', self.registrationOk, str)
         
-        EXFEL_FSM_NO_TRANSITION_ACTION(self.noStateTransition)
+        KARABO_FSM_NO_TRANSITION_ACTION(self.noStateTransition)
             
         #**************************************************************
         #*                      AllOk Machine                         *
@@ -105,16 +105,16 @@ class DeviceServer(object):
                     ('ServingState',      'StartDeviceEvent',        'none',       'StartDeviceAction',        'none')
                    ]
         
-        EXFEL_FSM_STATE_MACHINE('AllOkState', AllOkSTT, 'RegistrationState')
+        KARABO_FSM_STATE_MACHINE('AllOkState', AllOkSTT, 'RegistrationState')
         
         DeviceServerMachineSTT=[
                                 ('AllOkState', 'ErrorFoundEvent', 'ErrorState', 'ErrorFoundAction', 'none'),
                                 ('ErrorState', 'EndErrorEvent',   'AllOkState', 'EndErrorAction',   'none')
                                ]
         
-        EXFEL_FSM_STATE_MACHINE('DeviceServerMachine', DeviceServerMachineSTT, 'AllOkState')
+        KARABO_FSM_STATE_MACHINE('DeviceServerMachine', DeviceServerMachineSTT, 'AllOkState')
         
-        return EXFEL_FSM_CREATE_MACHINE('DeviceServerMachine')
+        return KARABO_FSM_CREATE_MACHINE('DeviceServerMachine')
         
 
     class PluginLoader(object):
