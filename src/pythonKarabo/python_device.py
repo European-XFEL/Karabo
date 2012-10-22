@@ -533,7 +533,7 @@ class PythonDevice(object):
             "signalAlarm", self.getCurrentDateTime(), alarmMessage,
             self._devInstId, priority)
 
-def launch():
+def launchPythonDevice():
     modname, clsname, configuration = PythonDevice.parseCommandLine(sys.argv)
     demo = PythonDevice.create(modname, clsname, configuration)
     demo.run()
