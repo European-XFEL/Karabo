@@ -47,7 +47,7 @@ void ReaderWriter_Test::setUp() {
 void ReaderWriter_Test::testWritingReadingBinaryFormat() {
     string plcstr;
     plcstr.clear();
-    //WritingBinaryFormat >>>>>>
+    //TEST 1. WritingBinaryFormat >>>>>>
     Hash c;
     plcstr.clear();
     c.setFromPath("StringStream.format.Bin");
@@ -56,7 +56,7 @@ void ReaderWriter_Test::testWritingReadingBinaryFormat() {
     out->write(hash);
     CPPUNIT_ASSERT(plcstr.length() == 289);
 
-    //ReadingBinaryFormat >>>>>>>
+    //TEST 2. ReadingBinaryFormat >>>>>>>
     Hash c2;
     Hash hash2;
     c2.setFromPath("StringStream.format.Bin");
@@ -80,7 +80,7 @@ void ReaderWriter_Test::testWritingReadingBinaryFormat() {
 
 void ReaderWriter_Test::testWritingReadingXmlFormat() {
 
-    //TEST 1. ReadingXmlFormat >>>>>>
+    //TEST 3. ReadingXmlFormat >>>>>>
     //read from file  'xmlForReading_readonly.xml' (stored in 'resources' directory) XML-Format 
     //and create configuration object 'configuration'
     Hash configuration, conf, confw;
@@ -94,7 +94,7 @@ void ReaderWriter_Test::testWritingReadingXmlFormat() {
     //cout << "Reading file " << conf.getFromPath<string > ("TextFile.filename") << ". Created object 'configuration': " << endl;
     //cout << configuration << endl;
 
-    //TEST 2. Check created configuration object 'configuration' >>>>>>
+    //TEST 4. Check created configuration object 'configuration' >>>>>>
     CPPUNIT_ASSERT(configuration.has("application")); //contains element 'application'
     CPPUNIT_ASSERT(configuration.size() == 1);   //contains one element ('application')
     CPPUNIT_ASSERT(!configuration.has("columns")); //contains no element 'columns'
@@ -102,11 +102,9 @@ void ReaderWriter_Test::testWritingReadingXmlFormat() {
     Hash u = configuration.get<Hash>("application");
     CPPUNIT_ASSERT(u.has("window")); //'application' contains element 'windows'
     std::vector<int> vecInt = u.getFromPath<std::vector<int> >("misc.vectint");
-    cout<<"vecint 0: " << vecInt[0];
-    cout<<"vecint 1: " << vecInt[1];
-    cout<<"vecint 2: " << vecInt[2];
-    CPPUNIT_ASSERT(vecInt[0]==5);
-    //TEST 3. WritingXmlFormat >>>>>>
+    CPPUNIT_ASSERT(vecInt[0] == 5);
+
+    //TEST 5. WritingXmlFormat >>>>>>
     //write configuration object 'configuration' into newly created file 'newTestXml.xml'
 
     //Default: simple data types will not be written into XML.
@@ -167,7 +165,7 @@ void ReaderWriter_Test::testWritingSchema() {
     //This test takes as a test-schema the expected parameters of 'TextFileReader' class   
     Schema schemaForTest = Reader<Hash>::expectedParameters("TextFile");
     
-    //Writing Schema into Stream (Xsd format).   
+    //TEST 6. Writing Schema into Stream (Xsd format).   
     //Test-schema will be written into xsd-file 'expectedParamsTextFile.xsd'
     
     Hash input;
@@ -218,7 +216,7 @@ void ReaderWriter_Test::testWritingSchema() {
         cout << "Error opening etalon file " << fnameEtalon << endl;
     }
     
-    //Writing Schema into Stream (Xsd format).
+    //TEST 7. Writing Schema into Stream (Xsd format).
     //Test-schema will be written into xsd-file 'expectedParamsTextFile.xsd'
     
     string outputString;
