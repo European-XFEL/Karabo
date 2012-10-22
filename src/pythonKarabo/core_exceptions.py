@@ -5,5 +5,6 @@ __author__="esenov"
 __date__ ="$Sep 5, 2012 4:34:33 PM$"
 
 class FsmException(Exception): pass
-class ParameterException(FsmException): pass
+class ParameterException(Exception): pass
+class LogicException(Exception): pass
 class TransitionError(FsmException): pass
