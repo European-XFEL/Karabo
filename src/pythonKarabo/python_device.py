@@ -210,15 +210,29 @@ class PythonDevice(object):
                 try:
                     if self._expectedMonitoredParameters.hasKey(key):
                         self.checkWarningsAndAlarms(key,value)
-                        self._monitoredParameters.setFromPath(key,value)
+                        if type(value) is bool:
+                            self._monitoredParameters.setFromPathAsBool(key,value)
+                        else:
+                            self._monitoredParameters.setFromPath(key,value)
                     elif self._expectedReconfigurableParameters.hasKey(key):
-                        self._reconfigurableParameters.setFromPath(key, value)
+                        if type(value) is bool:
+                            print 'PythonDevice.set as bool the key=', key, ' and value=', value
+                            self._reconfigurableParameters.setFromPathAsBool(key, value)
+                        else:
+                            self._reconfigurableParameters.setFromPath(key, value)
                     elif self._expectedInitialParameters.hasKey(key):
-                        self._initialParameters.setFromPath(key, value)
+                        if type(value) is bool:
+                            self._initialParameters.setFromPathAsBool(key, value)
+                        else:
+                            self._initialParameters.setFromPath(key, value)
                     else:
                         self.log.WARN("Illegal trial to set parameter ({})"
                             " which was not described in the expectedParameters section".format(key))
-                    config = Hash(key,value)
+                    config = Hash()
+                    if type(value) is bool:
+                        config.setAsBool(key,value)
+                    else:
+                        config.set(key,value)
                     self._ss.emit("signalChanged", config, self._devInstId, self._classId)
                 except RuntimeError,e:
                     self.log.ERROR("{}".format(e))
@@ -232,11 +246,20 @@ class PythonDevice(object):
                     value = flat.getFromPath(key)
                     if self._expectedMonitoredParameters.hasKey(key):
                         self.checkWarningsAndAlarms(key, value)
-                        self._monitoredParameters.setFromPath(key, value)
+                        if type(value) == bool:
+                            self._monitoredParameters.setFromPathAsBool(key,value)
+                        else:                        
+                            self._monitoredParameters.setFromPath(key, value)
                     elif self._expectedReconfigurableParameters.hasKey(key):
-                        self._reconfigurableParameters.setFromPath(key, value)
+                        if type(value) == bool:
+                            self._reconfigurableParameters.setFromPathAsBool(key, value)
+                        else:
+                            self._reconfigurableParameters.setFromPath(key, value)
                     elif self._expectedInitialParameters.hasKey(key):
-                        self._initialParameters.setFromPath(key, value)
+                        if type(value) == bool:
+                            self._initialParameters.setFromPathAsBool(key, value)
+                        else:
+                            self._initialParameters.setFromPath(key, value)
                     else:
                         self.log.WARN("Illegal trial to set parameter ({})"
                             " which was not described in the expectedParameters section".format(key))
@@ -509,3 +532,9 @@ class PythonDevice(object):
         self._ss.emit(
             "signalAlarm", self.getCurrentDateTime(), alarmMessage,
             self._devInstId, priority)
+
+def launch():
+    modname, clsname, configuration = PythonDevice.parseCommandLine(sys.argv)
+    demo = PythonDevice.create(modname, clsname, configuration)
+    demo.run()
+    
