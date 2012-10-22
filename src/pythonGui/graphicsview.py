@@ -12,8 +12,16 @@ __all__ = ["GraphicsView"]
 from customxmlreader import CustomXmlReader
 from customxmlwriter import CustomXmlWriter
 
+from displaycomponent import DisplayComponent
+
+from enums import NavigationItemTypes
+
 from layoutcomponents.arrow import Arrow
+from editableapplylatercomponent import EditableApplyLaterComponent
+from editablenoapplycomponent import EditableNoApplyComponent
+from layoutcomponents.graphicscustomitem import GraphicsCustomItem
 from layoutcomponents.graphicsproxywidget import GraphicsProxyWidget
+from layoutcomponents.graphicsproxywidgetcontainer import GraphicsProxyWidgetContainer
 from layoutcomponents.line import Line
 from layoutcomponents.link import Link
 from layoutcomponents.linkbase import LinkBase
@@ -22,8 +30,8 @@ from layoutcomponents.rectangle import Rectangle
 from layoutcomponents.text import Text
 from layoutcomponents.textdialog import TextDialog
 
-from userattributecustomframe import UserAttributeCustomFrame
-from userdevicecustomframe import UserDeviceCustomFrame
+#from userattributecustomframe import UserAttributeCustomFrame
+#from userdevicecustomframe import UserDeviceCustomFrame
 
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
@@ -215,7 +223,7 @@ class GraphicsView(QGraphicsView):
             return
         
         link = Link(items[0], items[1])
-        self.__scene._addItem(link)
+        self.__scene.addItem(link)
 
     
     # Add an arrow, if exactely 2 items are selected
@@ -225,7 +233,7 @@ class GraphicsView(QGraphicsView):
             return
         
         arrowLink = Arrow(items[0], items[1])
-        self.__scene._addItem(arrowLink)
+        self.__scene.addItem(arrowLink)
 
 
     # Cut is two-part process: copy selected items and remove item from scene
@@ -276,6 +284,11 @@ class GraphicsView(QGraphicsView):
                 topLeft = rect.topLeft()
                 stream << QString("Rectangle") << QString("%1,%2,%3,%4").arg(topLeft.x()).arg(topLeft.y()).arg(rect.width()).arg(rect.height()) \
                                                << QString("\n")
+            elif isinstance(item, GraphicsProxyWidget):
+                print "GraphicsProxyWidget"
+                embeddedWidget = item.widget()
+                print "embeddedWidget", embeddedWidget
+                
 
 
     # The copied item data is extracted and the items are instantiated with the
@@ -342,6 +355,8 @@ class GraphicsView(QGraphicsView):
                         rectItem.setRect(rect)
                     self._setupItem(rectItem)
                     rectItem.setTransformOriginPoint(rectItem.boundingRect().center())
+                elif isinstance(item, GraphicsProxyWidget):
+                    print "GraphicsProxyWidget"
                 
                 itemData.clear()
                 continue
@@ -386,7 +401,7 @@ class GraphicsView(QGraphicsView):
 
 
     # Scales all selected items up (so far) : TODO use value
-    def scale(self): # value
+    def scaleSelectedItems(self): # value
         for item in self.selectedItems():
             item.scale(1.5, 1.5)
 
@@ -460,14 +475,15 @@ class GraphicsView(QGraphicsView):
 
 
 ### protected ###
-    def wheelEvent(self, event):
-        #factor = 1.41 ** (-event.delta() / 240.0)
-        factor = 1.0 + (0.2 * qAbs(event.delta()) / 120.0)
-        if event.delta() > 0:
-            self.scale(factor, factor)
-        else:
-            factor = 1.0/factor
-            self.scale(factor, factor)
+    #def wheelEvent(self, event):
+    #    #factor = 1.41 ** (-event.delta() / 240.0)
+    #    factor = 1.0 + (0.2 * qAbs(event.delta()) / 120.0)
+    #    if event.delta() > 0:
+    #        self.scale(factor, factor)
+    #    else:
+    #        factor = 1.0/factor
+    #        self.scale(factor, factor)
+    #    QGraphicsView.wheelEvent(self, event)
 
 
     def mousePressEvent(self, event):
@@ -532,21 +548,14 @@ class GraphicsView(QGraphicsView):
             event.setDropAction(Qt.MoveAction)
             event.accept()
         
-        QWidget.dragEnterEvent(self, event)
+        QGraphicsView.dragEnterEvent(self, event)
 
 
     def dragMoveEvent(self, event):
         #print "GraphicsView.dragMoveEvent"
 
-    #    source = event.source()
-    #    if source is not None and not event.mimeData().hasHtml():
-    #        pos = self._getWidgetCenterPosition(self.mapFromGlobal(QCursor.pos()), source.width()/2, source.height()/2)
-    #        source.move(pos)
-
         event.setDropAction(Qt.MoveAction)
         event.accept()
-        
-        QWidget.dragMoveEvent(self, event)
 
 
     def dropEvent(self, event):
@@ -554,46 +563,130 @@ class GraphicsView(QGraphicsView):
         
         source = event.source()
         if source is not None:
-            if event.mimeData().hasHtml():
-                type = event.mimeData().html()
-                data = event.mimeData().data("data")
-                data = data.split(',')
-                
-                if len(data) < 2:
-                    return
-                
-                # Drop from NavigationTreeView or AttributeTreeWidget?
-                if type == "NavigationTreeView":
-                    userCustomFrame = UserDeviceCustomFrame(key=data[0], displayName=data[1], parent=self)
-                elif type == "AttributeTreeWidget":
-                    key = data[0]
-                    item = source.getAttributeTreeWidgetItemByKey(key)
-                    navigationItemType = source.getNavigationItemType()
-                    userCustomFrame = UserAttributeCustomFrame(item.classAlias, item=item, key=key, parent=self, navigationItemType=navigationItemType)
-                    userCustomFrame.signalRemoveUserAttributeCustomFrame.connect(self.onRemoveUserCustomFrame)
-                
-                proxyWidget = GraphicsProxyWidget(self.__isEditableMode, userCustomFrame)
-                self._addItem(proxyWidget)
+            customItem = None
+            mimeData = event.mimeData()
+            # Source type
+            sourceType = mimeData.data("sourceType")
+            # Drop from NavigationTreeView or AttributeTreeWidget?
+            if sourceType == "NavigationTreeView":
+                # Internal key
+                internalKey = QString(mimeData.data("internalKey"))
+                # Display name
+                displayName = QString(mimeData.data("displayName"))
+                customItem = GraphicsCustomItem(self.__isEditableMode, displayName)
+                offset = QPointF()
+            elif sourceType == "AttributeTreeWidget":
+                # Internal key
+                internalKey = QString(mimeData.data("internalKey"))
+                # Display name
+                displayName = QString(mimeData.data("displayName"))
+                # Display component?
+                hasDisplayComponent = mimeData.data("hasDisplayComponent").toInt()
+                if hasDisplayComponent[1]:
+                    hasDisplayComponent = hasDisplayComponent[0]
+                # Editable component?
+                hasEditableComponent = mimeData.data("hasEditableComponent").toInt()
+                if hasEditableComponent[1]:
+                    hasEditableComponent = hasEditableComponent[0]
+                # Navigation item type
+                navigationItemType = mimeData.data("navigationItemType").toInt()
+                if navigationItemType[1]:
+                    navigationItemType = navigationItemType[0]
+                # Class alias
+                classAlias = QString(mimeData.data("classAlias"))
 
-                bRect = proxyWidget.boundingRect()
+                # Get item using internal key - needed for values in correct type
+                item = source.getAttributeTreeWidgetItemByKey(internalKey)
+
+                # Width and height of the complete customItem
+                width = 0
+                height = 0
+
+                # Init graphics items
+                layout = QGraphicsLinearLayout()
+                layout.setContentsMargins(5,5,5,5)
+                
+                # Label
+                label = QLabel(displayName)
+                label.setAttribute(Qt.WA_NoSystemBackground, True)
+                labelProxyWidget = GraphicsProxyWidget(self.__isEditableMode, label)
+                layout.addItem(labelProxyWidget)
+                layout.setAlignment(labelProxyWidget, Qt.AlignVCenter)
+                # Recalculate width and height of the whole item
+                itemGeometry = labelProxyWidget.geometry()
+                width += itemGeometry.width()
+                if height < itemGeometry.height():
+                    height = itemGeometry.height()
+                
+                # Does key concern state of device?
+                keys = str(internalKey).split('.', 1)
+                isStateToDisplay = keys[1] == "state"
+                
+                # Display widget
+                if hasDisplayComponent:
+                    # Display value
+                    displayValue = item.displayComponent.value
+                    
+                    displayComponent = DisplayComponent(classAlias, key=internalKey, value=displayValue)
+                    displayComponent.widget.setAttribute(Qt.WA_NoSystemBackground, True)
+                    displayProxyWidget = GraphicsProxyWidget(self.__isEditableMode, displayComponent.widget, displayComponent, isStateToDisplay)
+                    layout.addItem(displayProxyWidget)
+                    layout.setAlignment(displayProxyWidget, Qt.AlignVCenter)
+                    # Recalculate width and height of the whole item
+                    itemGeometry = displayProxyWidget.geometry()
+                    width += itemGeometry.width()
+                    if height < itemGeometry.height():
+                        height = itemGeometry.height()
+                
+                # Editable widget
+                if hasEditableComponent:
+                    # Editable value
+                    editableValue = item.editableComponent.value
+                    
+                    if navigationItemType is NavigationItemTypes.DEVICE_CLASS:
+                        editableComponent = EditableNoApplyComponent(classAlias, key=internalKey, value=editableValue)
+                    elif navigationItemType is NavigationItemTypes.DEVICE_INSTANCE:
+                        editableComponent = EditableApplyLaterComponent(classAlias, key=internalKey, value=editableValue)
+                        editableComponent.isEditableValueInit = False
+                    
+                    editableComponent.widget.setAttribute(Qt.WA_NoSystemBackground, True)
+                    editableProxyWidget = GraphicsProxyWidget(self.__isEditableMode, editableComponent.widget, editableComponent, isStateToDisplay)
+                    layout.addItem(editableProxyWidget)
+                    layout.setAlignment(editableProxyWidget, Qt.AlignVCenter)
+                    # Recalculate width and height of the whole item
+                    itemGeometry = editableProxyWidget.geometry()
+                    width += itemGeometry.width()
+                    if height < itemGeometry.height():
+                        height = itemGeometry.height()
+                
+                customItem = GraphicsProxyWidgetContainer(self.__isEditableMode)
+                customItem.setLayout(layout)
+                # Set correct geometry for customItem - important for positioning
+                customItem.setGeometry(QRectF(0, 0, width, height))
+                
+                # Calculations to position item center-oriented
+                bRect = customItem.boundingRect()
                 leftPos = bRect.topLeft()
-                leftPos = proxyWidget.mapToScene(leftPos)
+                leftPos = customItem.mapToScene(leftPos)
                 centerPos = bRect.center()
-                centerPos = proxyWidget.mapToScene(centerPos)
-
+                centerPos = customItem.mapToScene(centerPos)
                 offset = centerPos-leftPos
+            
+            if customItem is None: return
+            
+            # Add created item to scene
+            self._addItem(customItem)
 
-                pos = event.pos()
-                scenePos = self.mapToScene(pos)
-                scenePos = scenePos-offset
-                
-                proxyWidget.setPos(scenePos)
-            #else:
-            #    pos = self._getWidgetCenterPosition(self.mapFromGlobal(QCursor.pos()), source.width()/2, source.height()/2)
-            #    source.move(pos)
+            pos = event.pos()
+            scenePos = self.mapToScene(pos)
+            scenePos = scenePos-offset
+
+            customItem.setPos(scenePos)
 
         event.setDropAction(Qt.MoveAction)
         event.accept()
+        
+        QGraphicsView.dropEvent(self, event)
 
 
     def _getWidgetCenterPosition(self, pos, centerX, centerY):
@@ -609,6 +702,7 @@ class GraphicsView(QGraphicsView):
         if userCustomFrame is None:
             return
         userCustomFrame.deleteLater()
+
 
     # Called whenever an item of the scene is un-/selected
     def onSceneSelectionChanged(self):
