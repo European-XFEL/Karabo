@@ -36,7 +36,12 @@ class DisplayComponent(BaseComponent):
             key = params.get('key')
         Manager().registerDisplayComponent(key, self)
         
+        self.__compositeWidget = QWidget()
+        hLayout = QHBoxLayout(self.__compositeWidget)
+        hLayout.setContentsMargins(0,0,0,0)
+
         self.__displayWidget = DisplayWidget.create(classAlias, **params)
+        hLayout.addWidget(self.__displayWidget.widget)
 
 
 ### getter and setter functions ###
@@ -47,7 +52,7 @@ class DisplayComponent(BaseComponent):
 
     # Returns the actual widget which is part of the composition
     def _getWidget(self):
-        return self.__displayWidget.widget
+        return self.__compositeWidget
     widget = property(fget=_getWidget)
 
 
@@ -88,12 +93,26 @@ class DisplayComponent(BaseComponent):
 
     def changeWidget(self, classAlias):
         self.__initParams['value'] = self.value
+        
+        layout = self.__compositeWidget.layout()
+        oldWidget = self.__displayWidget.widget
+        oldWidget.deleteLater()
+        layout.removeWidget(oldWidget)
+        
         self.__displayWidget = DisplayWidget.create(classAlias, **self.__initParams)
+        layout.addWidget(self.__displayWidget.widget)
 
 
     def changeToVacuumWidget(self, classAlias):
         self.__initParams['value'] = self.value
+        
+        layout = self.__compositeWidget.layout()
+        oldWidget = self.__displayWidget.widget
+        oldWidget.deleteLater()
+        layout.removeWidget(oldWidget)
+        
         self.__displayWidget = VacuumWidget.create(classAlias, **self.__initParams)
+        layout.addWidget(self.__displayWidget.widget)
 
 
 ### slots ###

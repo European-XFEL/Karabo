@@ -163,7 +163,7 @@ class CustomWidget(QWidget):
 
     # Scales all selected items up (so far) : TODO use value
     def scale(self): # value
-        self.__view.scale()
+        self.__view.scaleSelectedItems()
 
 
     def groupItems(self):
@@ -191,7 +191,6 @@ class CustomWidget(QWidget):
     # to scale smaller or larger depending on which way the wheel is rolled
     def onZoom(self, value):
         factor = value / 100.0
-        print "onZoom", factor
         matrix = self.__view.matrix()
         matrix.reset()
         matrix.scale(factor, factor)

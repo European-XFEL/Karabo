@@ -110,8 +110,7 @@ class Text(NodeBase, QGraphicsItem):
         painter.setPen(self.__textColor)
         painter.drawText(rect, Qt.AlignCenter, self.__text)
 
-        
-### protected ###
+
 ### protected ###
     def mouseMoveEvent(self, event):
         if self.isEditable == True:

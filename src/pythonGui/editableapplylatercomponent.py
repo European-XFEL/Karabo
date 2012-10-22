@@ -44,7 +44,7 @@ class EditableApplyLaterComponent(BaseComponent):
 
         self.__compositeWidget = QWidget()
         hLayout = QHBoxLayout(self.__compositeWidget)
-        hLayout.setContentsMargins(5,5,5,5)
+        hLayout.setContentsMargins(0,0,0,0)
 
         self.__editableWidget = EditableWidget.create(classAlias, **params)
         self.__editableWidget.signalEditingFinished.connect(self.onEditingFinished)
