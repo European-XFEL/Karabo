@@ -220,13 +220,14 @@ class TestClass3(object):
         e.reconfigurable()
         e.commit()
         
-        e = CHOICE_ELEMENT_BROKERCONNECTION(expected)
-        e.key("myBrokerConnection")
-        e.displayedName("my Element BrokerConnection")
-        e.description("my Element BrokerConnection description")
-        e.assignmentOptional().defaultValue("Jms")
-        e.reconfigurable()
-        e.commit()
+        #element CHOICE_ELEMENT_BROKERCONNECTION works correctly, tested
+        #e = CHOICE_ELEMENT_BROKERCONNECTION(expected)
+        #e.key("myBrokerConnection")
+        #e.displayedName("my Element BrokerConnection")
+        #e.description("my Element BrokerConnection description")
+        #e.assignmentOptional().defaultValue("Jms")
+        #e.reconfigurable()
+        #e.commit()
         
         e = INT32_IMAGE_ELEMENT(expected)
         e.key("myImage")
