@@ -48,8 +48,8 @@ class NavigationTreeView(QTreeView):
 
 
 ### protected ###
-    def mouseMoveEvent(self, event):
-        QTreeView.mouseMoveEvent(self, event)
+    def mousePressEvent(self, event):
+        QTreeView.mousePressEvent(self, event)
         
         if event.buttons() != Qt.LeftButton:
             return
@@ -78,11 +78,19 @@ class NavigationTreeView(QTreeView):
                 displayName = itemInfo.get('devClaId')
 
         mimeData = QMimeData()
-        mimeData.setHtml("NavigationTreeView")
-        if internalKey is not None:
-            mimeData.setText(internalKey)
-            data = QString(internalKey + "," + displayName)
-            mimeData.setData("data", data.toLatin1())
+        #mimeData.setHtml("NavigationTreeView")
+        #if internalKey is not None:
+        #    mimeData.setText(internalKey)
+        #    data = QString(internalKey + "," + displayName)
+        #    mimeData.setData("data", data.toLatin1())
+
+        # Put necessary data in MimeData:
+        # Source type
+        mimeData.setData("sourceType", "NavigationTreeView")
+        # Internal key
+        mimeData.setData("internalKey", QString(internalKey).toAscii())
+        # Display name
+        mimeData.setData("displayName", QString(displayName).toAscii())
 
         drag = QDrag(self)
         drag.setMimeData(mimeData)

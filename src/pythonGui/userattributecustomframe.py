@@ -175,8 +175,6 @@ class UserAttributeCustomFrame(QFrame):
 
 
     def _setupContextMenu(self):
-        self.setContextMenuPolicy(Qt.DefaultContextMenu)#CustomContextMenu)
-        
         # Populate context menu
         self.__contextMenu = QMenu()
         
@@ -292,9 +290,4 @@ class UserAttributeCustomFrame(QFrame):
         
         # Inform CustomViewWidget to delete this instance
         self.signalRemoveUserAttributeCustomFrame.emit(self)
-
-
-    #def onChangeWidgetType(self):
-    #    action = self.sender()
-    #    print "change to:", action.text()
 

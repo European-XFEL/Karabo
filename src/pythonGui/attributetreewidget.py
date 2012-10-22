@@ -36,6 +36,7 @@ class AttributeTreeWidget(QTreeWidget):
         self.__configPanel = configPanel
 
         self.setWordWrap(True)
+        self.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.setSelectionMode(QAbstractItemView.ExtendedSelection)
         #self.setSortingEnabled(True)
         self.sortByColumn(0, Qt.AscendingOrder)
@@ -48,8 +49,8 @@ class AttributeTreeWidget(QTreeWidget):
 
 
 ### protected ###
-    def mouseMoveEvent(self, event):
-        QTreeWidget.mouseMoveEvent(self, event)
+    def mousePressEvent(self, event):
+        QTreeWidget.mousePressEvent(self, event)
         
         if event.buttons() != Qt.LeftButton:
             return
@@ -73,10 +74,6 @@ class AttributeTreeWidget(QTreeWidget):
 
     def getAttributeTreeWidgetItemByKey(self, key):
         return self.__configPanel.getAttributeTreeWidgetItemByKey(key)
-
-    
-    def getNavigationItemType(self):
-        return self.__configPanel.getNavigationItemType()
 
 
     def stateUpdated(self, state):
@@ -197,14 +194,33 @@ class AttributeTreeWidget(QTreeWidget):
         if item is not None:
             mimeData = QMimeData()
             
-            keys = str(item.internalKey).split('.', 1)
-            instanceId = keys[0]
-            attributeKey = keys[1]
+            #keys = str(item.internalKey).split('.', 1)
+            #instanceId = keys[0]
+            #attributeKey = keys[1]
             
-            mimeData.setText(instanceId + "/" + attributeKey)
-            mimeData.setHtml("AttributeTreeWidget")
-            data = QString(item.internalKey + "," + item.text(0))
-            mimeData.setData("data", data.toLatin1())
+            #mimeData.setText(instanceId + "/" + attributeKey)
+            #mimeData.setHtml("AttributeTreeWidget")
+            #data = QString(item.internalKey + "," + item.text(0))
+            #mimeData.setData("data", data.toLatin1())
+            
+            # Put necessary data in MimeData:
+            # Source type
+            mimeData.setData("sourceType", "AttributeTreeWidget")
+            # Internal key
+            mimeData.setData("internalKey", QString(item.internalKey).toAscii())
+            # Display name
+            mimeData.setData("displayName", item.text(0).toAscii())
+            # Display component?
+            navigationItemType = self.__configPanel.getNavigationItemType()
+            hasDisplayComponent = navigationItemType == NavigationItemTypes.DEVICE_INSTANCE
+            mimeData.setData("hasDisplayComponent", QString("%1").arg(hasDisplayComponent).toAscii())
+            # Editable component?
+            hasEditableComponent = item.editableComponent is not None
+            mimeData.setData("hasEditableComponent", QString("%1").arg(hasEditableComponent).toAscii())
+            # Navigation item type
+            mimeData.setData("navigationItemType", QString("%1").arg(navigationItemType).toAscii())
+            # Class alias
+            mimeData.setData("classAlias", QString("%1").arg(item.classAlias).toAscii())
             
             drag = QDrag(self)
             drag.setMimeData(mimeData)

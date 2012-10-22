@@ -37,7 +37,7 @@ class EditableNoApplyComponent(BaseComponent):
         
         self.__compositeWidget = QWidget()
         self.__layout = QHBoxLayout(self.__compositeWidget)
-        self.__layout.setContentsMargins(5,5,5,5)
+        self.__layout.setContentsMargins(0,0,0,0)
         
         self.__editableWidget = EditableWidget.create(classAlias, **params)
         self.__editableWidget.signalEditingFinished.connect(self.onEditingFinished)
