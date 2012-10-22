@@ -283,14 +283,14 @@ class  Schema_TestCase(unittest.TestCase):
         compare = filecmp.cmp(self.resourcesdir+"/TestClass1_etalon.xsd", "/tmp/TestClass1.xsd")
         self.assertEqual(compare, True, "Schema written into file '/tmp/TestClass1.xsd' differs from etalon file 'TestClass1_etalon.xsd' ")
         
-        self.assertEqual(s1.hasKey("myInt"), True, "Check that schema 's1' has key 'myInt' ")
-        self.assertEqual(s1.hasAlias("testAlias"), True, "Check that schema 's1' has alias 'testAlias' ")
-        self.assertEqual(s1.hasAlias(10), True, "Check that schema 's1' has alias '10' ")
-        self.assertEqual(s1.hasAlias(5.5), True, "Check that schema 's1' has alias '5.5' ")
-        self.assertEqual(s1.keyHasAlias("myInt"), True, "Check that key 'myInt' of the schema 's1' has alias")
-        self.assertEqual(s1.keyHasAlias("myUInt"), True, "Check that key 'myUInt' of the schema 's1' has alias")
-        self.assertEqual(s1.keyHasAlias("myIntLong"), True, "Check that key 'myIntLong' of the schema 's1' has alias")
-        self.assertEqual(s1.keyHasAlias("myBool"), False, "Check that key 'myBool' of the schema 's1' has no alias")
+        self.assertTrue(s1.hasKey("myInt"), "Check that schema 's1' has key 'myInt' ")
+        self.assertTrue(s1.hasAlias("testAlias"), "Check that schema 's1' has alias 'testAlias' ")
+        self.assertTrue(s1.hasAlias(10), "Check that schema 's1' has alias '10' ")
+        self.assertTrue(s1.hasAlias(5.5), "Check that schema 's1' has alias '5.5' ")
+        self.assertTrue(s1.keyHasAlias("myInt"), "Check that key 'myInt' of the schema 's1' has alias")
+        self.assertTrue(s1.keyHasAlias("myUInt"), "Check that key 'myUInt' of the schema 's1' has alias")
+        self.assertTrue(s1.keyHasAlias("myIntLong"), "Check that key 'myIntLong' of the schema 's1' has alias")
+        self.assertFalse(s1.keyHasAlias("myBool"), "Check that key 'myBool' of the schema 's1' has no alias")
     
     def test_schema2_(self):
         s2 = TestClass2.expectedParameters()
@@ -300,7 +300,7 @@ class  Schema_TestCase(unittest.TestCase):
         compare = filecmp.cmp(self.resourcesdir+"/TestClass2_etalon.xsd", "/tmp/TestClass2.xsd")
         self.assertEqual(compare, True, "Schema written into file '/tmp/TestClass2.xsd' differs from etalon file 'TestClass2_etalon.xsd' ")
         
-        self.assertEqual(s2.hasKey("myVecString"), True, "Check that schema of 'TestClass2' has key 'myVecString' ")
+        self.assertTrue(s2.hasKey("myVecString"), "Check that schema of 'TestClass2' has key 'myVecString' ")
         print "get help : \n", s2.help("myVecString")
 
         print "====================================================="
@@ -312,8 +312,8 @@ class  Schema_TestCase(unittest.TestCase):
 
         compare = filecmp.cmp(self.resourcesdir+"/TestClass3_etalon.xsd", "/tmp/TestClass3.xsd")
         self.assertEqual(compare, True, "Schema written into file '/tmp/TestClass3.xsd' differs from etalon file 'TestClass3_etalon.xsd' ")
-        self.assertEqual(s3.hasKey("myImage"), True, "Check that schema of 'TestClass3' has key 'myImage' ")
-        self.assertEqual(s3.hasKey("anyInternalElemKey"), True, "Check that schema of 'TestClass3' has key 'anyInternalElemKey' ")
+        self.assertTrue(s3.hasKey("myImage"), "Check that schema of 'TestClass3' has key 'myImage' ")
+        self.assertTrue(s3.hasKey("anyInternalElemKey"), "Check that schema of 'TestClass3' has key 'anyInternalElemKey' ")
 
 if __name__ == '__main__':
     unittest.main()
