@@ -80,8 +80,8 @@ void ReaderWriter_Test::testWritingReadingBinaryFormat() {
 
 void ReaderWriter_Test::testWritingReadingXmlFormat() {
 
-    //ReadingXmlFormat >>>>>>
-    //read from file  'xmlForReading.xml' (stored in 'resources' directory) XML-Format 
+    //TEST 1. ReadingXmlFormat >>>>>>
+    //read from file  'xmlForReading_readonly.xml' (stored in 'resources' directory) XML-Format 
     //and create configuration object 'configuration'
     Hash configuration, conf, confw;
 
@@ -94,7 +94,19 @@ void ReaderWriter_Test::testWritingReadingXmlFormat() {
     //cout << "Reading file " << conf.getFromPath<string > ("TextFile.filename") << ". Created object 'configuration': " << endl;
     //cout << configuration << endl;
 
-    //WritingXmlFormat >>>>>>
+    //TEST 2. Check created configuration object 'configuration' >>>>>>
+    CPPUNIT_ASSERT(configuration.has("application")); //contains element 'application'
+    CPPUNIT_ASSERT(configuration.size() == 1);   //contains one element ('application')
+    CPPUNIT_ASSERT(!configuration.has("columns")); //contains no element 'columns'
+    
+    Hash u = configuration.get<Hash>("application");
+    CPPUNIT_ASSERT(u.has("window")); //'application' contains element 'windows'
+    std::vector<int> vecInt = u.getFromPath<std::vector<int> >("misc.vectint");
+    cout<<"vecint 0: " << vecInt[0];
+    cout<<"vecint 1: " << vecInt[1];
+    cout<<"vecint 2: " << vecInt[2];
+    CPPUNIT_ASSERT(vecInt[0]==5);
+    //TEST 3. WritingXmlFormat >>>>>>
     //write configuration object 'configuration' into newly created file 'newTestXml.xml'
 
     //Default: simple data types will not be written into XML.

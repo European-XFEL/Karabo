@@ -61,6 +61,7 @@
         <pos>
             <number>123.450000</number>
             <y dataType="INT32">250</y>
+            <z dataType="BOOL">TRUE</z>
         </pos>
         <size>
             <h dataType="INT32">480</h>
