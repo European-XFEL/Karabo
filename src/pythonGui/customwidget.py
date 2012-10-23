@@ -57,8 +57,8 @@ class CustomWidget(QWidget):
 
 
 ### public functions ###
-    def setEditableMode(self, isEditableMode):
-        self.__view.setEditableMode(isEditableMode)
+    def setDesignMode(self, isDesignMode):
+        self.__view.setDesignMode(isDesignMode)
 
 
     # Returns true, when items has been copied; otherwise false

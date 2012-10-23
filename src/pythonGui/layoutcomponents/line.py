@@ -76,19 +76,19 @@ class Line(NodeBase, QGraphicsLineItem):
 
 ### protected ###
     def mouseMoveEvent(self, event):
-        if self.isEditable == True:
+        if self.isDesignMode == False:
             return
         QGraphicsLineItem.mouseMoveEvent(self, event)
 
 
     def mousePressEvent(self, event):
-        if self.isEditable == True:
+        if self.isDesignMode == False:
             return
         QGraphicsLineItem.mousePressEvent(self, event)
 
 
     def mouseReleaseEvent(self, event):
-        if self.isEditable == True:
+        if self.isDesignMode == False:
             return
         QGraphicsLineItem.mouseReleaseEvent(self, event)
 

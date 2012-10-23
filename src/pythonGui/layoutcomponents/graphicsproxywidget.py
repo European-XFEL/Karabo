@@ -28,8 +28,8 @@ from PyQt4.QtGui import *
 class GraphicsProxyWidget(NodeBase, QGraphicsProxyWidget):
 
 
-    def __init__(self, isEditable, widget, component=None, isStateToDisplay=False):
-        super(GraphicsProxyWidget, self).__init__(isEditable)
+    def __init__(self, isDesignMode, widget, component=None, isStateToDisplay=False):
+        super(GraphicsProxyWidget, self).__init__(isDesignMode)
 
         self.__component = component
         
@@ -42,7 +42,6 @@ class GraphicsProxyWidget(NodeBase, QGraphicsProxyWidget):
 
 
     def __del__(self):
-        print "__del__", self
         NodeBase.__del__(self)
 
 
@@ -102,22 +101,16 @@ class GraphicsProxyWidget(NodeBase, QGraphicsProxyWidget):
 
 
     def mouseMoveEvent(self, event):
-        #print "QGraphicsProxyWidget.mouseMoveEvent", self.isEditable
-        if self.isEditable == True:
+        #print "QGraphicsProxyWidget.mouseMoveEvent", self.isDesignMode
+        if self.isDesignMode == False:
             QGraphicsProxyWidget.mouseMoveEvent(self, event)
         else:
             QGraphicsItem.mouseMoveEvent(self, event)
 
 
     def mousePressEvent(self, event):
-        #print "QGraphicsProxyWidget.mousePressEvent", self.isEditable
-        if (event.button() == Qt.RightButton):
-            # If item is in GraphicsProxyWidgetContainer - forward event
-            parentItem = self.parentItem()
-            if parentItem:
-                parentItem.mousePressEvent(event)
-        
-        if self.isEditable == True:
+        #print "QGraphicsProxyWidget.mousePressEvent", self.isDesignMode
+        if self.isDesignMode == False:
             self.setFlag(QGraphicsItem.ItemIsFocusable, True)
             QGraphicsProxyWidget.mousePressEvent(self, event)
         else:
@@ -126,8 +119,8 @@ class GraphicsProxyWidget(NodeBase, QGraphicsProxyWidget):
 
 
     def mouseReleaseEvent(self, event):
-        #print "QGraphicsProxyWidget.mouseReleaseEvent", self.isEditable
-        if self.isEditable == True:
+        #print "QGraphicsProxyWidget.mouseReleaseEvent", self.isDesignMode
+        if self.isDesignMode == False:
             QGraphicsProxyWidget.mouseReleaseEvent(self, event)
         else:
             QGraphicsItem.mouseReleaseEvent(self, event)

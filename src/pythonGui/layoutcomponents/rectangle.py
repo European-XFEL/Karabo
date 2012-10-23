@@ -35,19 +35,19 @@ class Rectangle(NodeBase, QGraphicsRectItem):
 
 ### protected ###
     def mouseMoveEvent(self, event):
-        if self.isEditable == True:
+        if self.isDesignMode == False:
             return
         QGraphicsRectItem.mouseMoveEvent(self, event)
 
 
     def mousePressEvent(self, event):
-        if self.isEditable == True:
+        if self.isDesignMode == False:
             return
         QGraphicsRectItem.mousePressEvent(self, event)
 
 
     def mouseReleaseEvent(self, event):
-        if self.isEditable == True:
+        if self.isDesignMode == False:
             return
         QGraphicsRectItem.mouseReleaseEvent(self, event)
 
