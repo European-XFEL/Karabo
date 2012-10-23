@@ -5,7 +5,7 @@
 #############################################################################
 
 
-"""This module contains a class which representsa dialog to set the properties
+"""This module contains a class which represents a dialog to set the properties
    for a Text component of the middle panel. """
 
 __all__ = ["TextDialog"]

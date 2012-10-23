@@ -59,7 +59,7 @@ class LineDialog(QDialog):
 
         layout = QVBoxLayout()
         layout.addLayout(formLayout)
-        layout.addWidget(self.__buttonBox)#, 0, 0, 1, 6)
+        layout.addWidget(self.__buttonBox)
         self.setLayout(layout)
         
         self.__buttonBox.accepted.connect(self.onOkClicked)

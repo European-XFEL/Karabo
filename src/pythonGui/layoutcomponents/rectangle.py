@@ -11,8 +11,8 @@
 
 __all__ = ["Rectangle"]
 
-
 from layoutcomponents.nodebase import NodeBase
+from layoutcomponents.rectangledialog import RectangleDialog
 
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
@@ -23,6 +23,8 @@ class Rectangle(NodeBase, QGraphicsRectItem):
     def __init__(self, isEditable):
         super(Rectangle, self).__init__(isEditable)
         
+        self.setBrush(QBrush(Qt.white, Qt.SolidPattern))
+        
         # Always start from origin
         self.setRect(0, 0, 0, 0)
         
@@ -31,6 +33,26 @@ class Rectangle(NodeBase, QGraphicsRectItem):
 
     def __del__(self):
         NodeBase.__del__(self)
+
+
+    def setOutlineColor(self, color):
+        pen = self.pen()
+        pen.setColor(color)
+        self.setPen(pen)
+
+
+    def outlineColor(self):
+        return self.pen().color()
+
+
+    def setBackgroundColor(self, color):
+        brush = self.brush()
+        brush.setColor(color)
+        self.setBrush(brush)
+
+
+    def backgroundColor(self):
+        return self.brush().color()
 
 
 ### protected ###
@@ -50,4 +72,15 @@ class Rectangle(NodeBase, QGraphicsRectItem):
         if self.isDesignMode == False:
             return
         QGraphicsRectItem.mouseReleaseEvent(self, event)
+
+
+    def mouseDoubleClickEvent(self, event):
+        rectDialog = RectangleDialog(None, self)
+        if rectDialog.exec_() == QDialog.Rejected:
+            return
+        
+        self.setBackgroundColor(rectDialog.backgroundColor())
+        self.setOutlineColor(rectDialog.outlineColor())
+ 
+        QGraphicsRectItem.mouseDoubleClickEvent(self, event)
 
