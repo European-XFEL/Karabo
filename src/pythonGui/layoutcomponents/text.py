@@ -113,19 +113,19 @@ class Text(NodeBase, QGraphicsItem):
 
 ### protected ###
     def mouseMoveEvent(self, event):
-        if self.isEditable == True:
+        if self.isDesignMode == False:
             return
         QGraphicsItem.mouseMoveEvent(self, event)
 
 
     def mousePressEvent(self, event):
-        if self.isEditable == True:
+        if self.isDesignMode == False:
             return
         QGraphicsItem.mousePressEvent(self, event)
 
 
     def mouseReleaseEvent(self, event):
-        if self.isEditable == True:
+        if self.isDesignMode == False:
             return
         QGraphicsItem.mouseReleaseEvent(self, event)
 
