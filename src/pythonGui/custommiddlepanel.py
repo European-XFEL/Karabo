@@ -49,13 +49,13 @@ class CustomMiddlePanel(QWidget):
 
 
     def setupActions(self):
-        text = "Edit mode"
-        self.__acEditableMode = QAction(QIcon(":transform"), text, self)
-        self.__acEditableMode.setToolTip(text)
-        self.__acEditableMode.setStatusTip(text)
-        self.__acEditableMode.setCheckable(True)
-        self.__acEditableMode.setChecked(False)
-        self.__acEditableMode.toggled.connect(self.onEditableModeChanged)
+        text = "Change to control mode"
+        self.__acDesignMode = QAction(QIcon(":transform"), text, self)
+        self.__acDesignMode.setToolTip(text)
+        self.__acDesignMode.setStatusTip(text)
+        self.__acDesignMode.setCheckable(True)
+        self.__acDesignMode.setChecked(True)
+        self.__acDesignMode.toggled.connect(self.onDesignModeChanged)
 
         text = "Open"
         self.__acOpen = QAction(QIcon(":open"), text, self)
@@ -190,7 +190,7 @@ class CustomMiddlePanel(QWidget):
 
 
     def setupToolBar(self, toolBar):
-        toolBar.addAction(self.__acEditableMode)
+        toolBar.addAction(self.__acDesignMode)
         
         toolBar.addSeparator()
         toolBar.addAction(self.__acOpen)
@@ -273,15 +273,15 @@ class CustomMiddlePanel(QWidget):
 
 
 ### slots ###
-    def onEditableModeChanged(self, isChecked):
+    def onDesignModeChanged(self, isChecked):
         if isChecked:
-            text = "Edit mode"
+            text = "Change to control mode"
         else:
-            text = "View mode"
+            text = "Change to design mode"
         
-        self.__acEditableMode.setToolTip(text)
-        self.__acEditableMode.setStatusTip(text)
-        self.__customWidget.setEditableMode(isChecked)
+        self.__acDesignMode.setToolTip(text)
+        self.__acDesignMode.setStatusTip(text)
+        self.__customWidget.setDesignMode(isChecked)
 
 
     def onOpen(self):

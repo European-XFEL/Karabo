@@ -20,17 +20,15 @@ __all__ = ["NodeBase"]
 
 class NodeBase(object):
 
-    def __init__(self, isEditable):
+    def __init__(self, isDesignMode):
         super(NodeBase, self).__init__()
         
         self.__links = set()
-        self.__isEditable = isEditable
+        self.__isDesignMode = isDesignMode
 
 
     def __del__(self):
-        print "NodeBase.__del__", self.__links
         for link in self.__links:
-            print "del link"
             del link
 
 
@@ -54,9 +52,9 @@ class NodeBase(object):
 
 
     # States whether the node is editable or not
-    def _isEditable(self):
-        return self.__isEditable
-    def _setEditable(self, isEditable):
-        self.__isEditable = isEditable
-    isEditable = property(fget=_isEditable, fset=_setEditable)
+    def _isDesignMode(self):
+        return self.__isDesignMode
+    def _setDesignMode(self, isDesignMode):
+        self.__isDesignMode = isDesignMode
+    isDesignMode = property(fget=_isDesignMode, fset=_setDesignMode)
 

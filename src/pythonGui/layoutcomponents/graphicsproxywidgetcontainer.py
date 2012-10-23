@@ -75,34 +75,26 @@ class GraphicsProxyWidgetContainer(NodeBase, QGraphicsWidget):
 
 
     def mouseMoveEvent(self, event):
-        #print "QGraphicsWidget.mouseMoveEvent", event.button()
-        if self.isEditable == True:
+        #print "QGraphicsWidget.mouseMoveEvent", self.isDesignMode
+        if self.isDesignMode == False:
             QGraphicsWidget.mouseMoveEvent(self, event)
         else:
             QGraphicsItem.mouseMoveEvent(self, event)
 
 
     def mousePressEvent(self, event):
-        #print "QGraphicsWidget.mousePressEvent", event.button()
-        if event.button() == Qt.RightButton:
-            self._showContextMenu(event.screenPos())
-            return
-        
-        if self.isEditable == True:
+        #print "QGraphicsWidget.mousePressEvent", self.isDesignMode
+        if self.isDesignMode == False:
             self.setFlag(QGraphicsItem.ItemIsMovable, False)
             QGraphicsWidget.mousePressEvent(self, event)
         else:
-            self.setFlag(QGraphicsItem.ItemIsFocusable, False)
+            self.setFlag(QGraphicsItem.ItemIsMovable, True)
             QGraphicsItem.mousePressEvent(self, event)
 
 
     def mouseReleaseEvent(self, event):
-        #print "QGraphicsWidget.mouseReleaseEvent", event.button()
-        if event.button() == Qt.RightButton:
-            self._showContextMenu(event.screenPos())
-            return
-
-        if self.isEditable == True:
+        #print "QGraphicsWidget.mouseReleaseEvent", self.isDesignMode
+        if self.isDesignMode == False:
             QGraphicsWidget.mouseReleaseEvent(self, event)
         else:
             QGraphicsItem.mouseReleaseEvent(self, event)
@@ -144,6 +136,7 @@ class GraphicsProxyWidgetContainer(NodeBase, QGraphicsWidget):
             # Add item to scene
             self.scene().addItem(item)
             scenePos = self.mapToScene(pos)
+            item.adjustSize()
             item.setPos(scenePos)
         self.deleteLater()
         self.scene().removeItem(self)

@@ -58,7 +58,7 @@ class GraphicsView(QGraphicsView):
         self.__line = None
         self.__rect = None
         
-        self.__isEditableMode = False
+        self.setDesignMode(True)
         
         self.__minZ = 0
         self.__maxZ = 0
@@ -81,21 +81,21 @@ class GraphicsView(QGraphicsView):
     mode = property(fget=_getMode, fset=_setMode)
 
 
-    def _getEditableMode(self):
-        return self.__isEditableMode
-    isEditableMode = property(fget=_getEditableMode)
+    def _getDesignMode(self):
+        return self.__isDesignMode
+    isDesignMode = property(fget=_getDesignMode)
 
 
-    # Sets all items editable or not
-    def setEditableMode(self, isEditableMode):
-        self.__isEditableMode = isEditableMode
-        if self.__isEditableMode:
+    # Sets all items in design or control mode
+    def setDesignMode(self, isDesignMode):
+        self.__isDesignMode = isDesignMode
+        if self.__isDesignMode:
             self.scene().setBackgroundBrush(QBrush(QPixmap(':grid-edit')))
         else:
             self.scene().setBackgroundBrush(QBrush())
         for item in self.items():
             if isinstance(item, NodeBase):
-                item.isEditable = isEditableMode
+                item.isDesignMode = isDesignMode
 
 
     # Returns true, when items has been copied; otherwise false
@@ -182,7 +182,7 @@ class GraphicsView(QGraphicsView):
             xmlContent += str(file.readLine())
         
         self.__scene.clear()
-        CustomXmlReader(self.__scene, self.__isEditableMode).read(xmlContent)
+        CustomXmlReader(self.__scene, self.__isDesignMode).read(xmlContent)
 
 
     # Save active view to file
@@ -205,7 +205,7 @@ class GraphicsView(QGraphicsView):
         if textDialog.exec_() == QDialog.Rejected:
             return
         
-        textItem = Text(self.__isEditableMode)
+        textItem = Text(self.__isDesignMode)
         textItem.setText(textDialog.text())
         textItem.setFont(textDialog.font())
         textItem.setTextColor(textDialog.textColor())
@@ -308,7 +308,7 @@ class GraphicsView(QGraphicsView):
                 # Create item
                 type = itemData.first()
                 if type == "Text" and itemData.count() == 6:
-                    textItem = Text(self.__isEditableMode)
+                    textItem = Text(self.__isDesignMode)
                     textItem.setText(itemData[1])
                     font = QFont()
                     font.fromString(itemData[2])
@@ -322,7 +322,7 @@ class GraphicsView(QGraphicsView):
                 elif type == "Arrow":
                     print "Arrow"
                 elif type == "Line" and itemData.count() == 6:
-                    lineItem = Line(self.__isEditableMode)
+                    lineItem = Line(self.__isDesignMode)
                     # Get line coordinates
                     lineCoords = itemData[1].split(",")
                     if len(lineCoords) == 4:
@@ -347,7 +347,7 @@ class GraphicsView(QGraphicsView):
                     self._setupItem(lineItem)
                     lineItem.setTransformOriginPoint(lineItem.boundingRect().center())
                 elif type == "Rectangle" and itemData.count() == 2:
-                    rectItem = Rectangle(self.__isEditableMode)
+                    rectItem = Rectangle(self.__isDesignMode)
                     rectData = itemData[1].split(",")
                     if len(rectData) == 4:
                         rect = QRectF(rectData[0].toFloat()[0], rectData[1].toFloat()[0], \
@@ -494,11 +494,11 @@ class GraphicsView(QGraphicsView):
         # set their position correctly for later purposes!!!
         pos = QPointF(self.mapToScene(event.pos()))
         if self.__mode == self.InsertLine:
-            self.__line = Line(self.__isEditableMode)
+            self.__line = Line(self.__isDesignMode)
             self._addItem(self.__line)
             self.__line.setPos(pos.x(), pos.y())
         elif self.__mode == self.InsertRect:
-            self.__rect = Rectangle(self.__isEditableMode)
+            self.__rect = Rectangle(self.__isDesignMode)
             self._addItem(self.__rect)
             self.__rect.setPos(pos.x(), pos.y())
 
@@ -573,7 +573,7 @@ class GraphicsView(QGraphicsView):
                 internalKey = QString(mimeData.data("internalKey"))
                 # Display name
                 displayName = QString(mimeData.data("displayName"))
-                customItem = GraphicsCustomItem(self.__isEditableMode, displayName)
+                customItem = GraphicsCustomItem(self.__isDesignMode, displayName)
                 offset = QPointF()
             elif sourceType == "AttributeTreeWidget":
                 # Internal key
@@ -609,9 +609,9 @@ class GraphicsView(QGraphicsView):
                 # Label
                 label = QLabel(displayName)
                 label.setAttribute(Qt.WA_NoSystemBackground, True)
-                labelProxyWidget = GraphicsProxyWidget(self.__isEditableMode, label)
+                labelProxyWidget = GraphicsProxyWidget(self.__isDesignMode, label)
                 layout.addItem(labelProxyWidget)
-                layout.setAlignment(labelProxyWidget, Qt.AlignVCenter)
+                layout.setAlignment(labelProxyWidget, Qt.AlignCenter)
                 # Recalculate width and height of the whole item
                 itemGeometry = labelProxyWidget.geometry()
                 width += itemGeometry.width()
@@ -629,9 +629,9 @@ class GraphicsView(QGraphicsView):
                     
                     displayComponent = DisplayComponent(classAlias, key=internalKey, value=displayValue)
                     displayComponent.widget.setAttribute(Qt.WA_NoSystemBackground, True)
-                    displayProxyWidget = GraphicsProxyWidget(self.__isEditableMode, displayComponent.widget, displayComponent, isStateToDisplay)
+                    displayProxyWidget = GraphicsProxyWidget(self.__isDesignMode, displayComponent.widget, displayComponent, isStateToDisplay)
                     layout.addItem(displayProxyWidget)
-                    layout.setAlignment(displayProxyWidget, Qt.AlignVCenter)
+                    layout.setAlignment(displayProxyWidget, Qt.AlignCenter)
                     # Recalculate width and height of the whole item
                     itemGeometry = displayProxyWidget.geometry()
                     width += itemGeometry.width()
@@ -650,16 +650,16 @@ class GraphicsView(QGraphicsView):
                         editableComponent.isEditableValueInit = False
                     
                     editableComponent.widget.setAttribute(Qt.WA_NoSystemBackground, True)
-                    editableProxyWidget = GraphicsProxyWidget(self.__isEditableMode, editableComponent.widget, editableComponent, isStateToDisplay)
+                    editableProxyWidget = GraphicsProxyWidget(self.__isDesignMode, editableComponent.widget, editableComponent, isStateToDisplay)
                     layout.addItem(editableProxyWidget)
-                    layout.setAlignment(editableProxyWidget, Qt.AlignVCenter)
+                    layout.setAlignment(editableProxyWidget, Qt.AlignCenter)
                     # Recalculate width and height of the whole item
                     itemGeometry = editableProxyWidget.geometry()
                     width += itemGeometry.width()
                     if height < itemGeometry.height():
                         height = itemGeometry.height()
                 
-                customItem = GraphicsProxyWidgetContainer(self.__isEditableMode)
+                customItem = GraphicsProxyWidgetContainer(self.__isDesignMode)
                 customItem.setLayout(layout)
                 # Set correct geometry for customItem - important for positioning
                 customItem.setGeometry(QRectF(0, 0, width, height))
