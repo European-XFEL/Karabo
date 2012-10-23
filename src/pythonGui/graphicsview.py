@@ -612,6 +612,7 @@ class GraphicsView(QGraphicsView):
                 labelProxyWidget = GraphicsProxyWidget(self.__isDesignMode, label)
                 layout.addItem(labelProxyWidget)
                 layout.setAlignment(labelProxyWidget, Qt.AlignCenter)
+                labelProxyWidget.setTransformOriginPoint(labelProxyWidget.boundingRect().center())
                 # Recalculate width and height of the whole item
                 itemGeometry = labelProxyWidget.geometry()
                 width += itemGeometry.width()
@@ -632,6 +633,7 @@ class GraphicsView(QGraphicsView):
                     displayProxyWidget = GraphicsProxyWidget(self.__isDesignMode, displayComponent.widget, displayComponent, isStateToDisplay)
                     layout.addItem(displayProxyWidget)
                     layout.setAlignment(displayProxyWidget, Qt.AlignCenter)
+                    displayProxyWidget.setTransformOriginPoint(displayProxyWidget.boundingRect().center())
                     # Recalculate width and height of the whole item
                     itemGeometry = displayProxyWidget.geometry()
                     width += itemGeometry.width()
@@ -653,6 +655,7 @@ class GraphicsView(QGraphicsView):
                     editableProxyWidget = GraphicsProxyWidget(self.__isDesignMode, editableComponent.widget, editableComponent, isStateToDisplay)
                     layout.addItem(editableProxyWidget)
                     layout.setAlignment(editableProxyWidget, Qt.AlignCenter)
+                    editableProxyWidget.setTransformOriginPoint(editableProxyWidget.boundingRect().center())
                     # Recalculate width and height of the whole item
                     itemGeometry = editableProxyWidget.geometry()
                     width += itemGeometry.width()
@@ -680,7 +683,8 @@ class GraphicsView(QGraphicsView):
             pos = event.pos()
             scenePos = self.mapToScene(pos)
             scenePos = scenePos-offset
-
+            
+            customItem.setTransformOriginPoint(centerPos)
             customItem.setPos(scenePos)
 
         event.setDropAction(Qt.MoveAction)
