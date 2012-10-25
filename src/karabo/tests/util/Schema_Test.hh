@@ -23,10 +23,18 @@ class Schema_Test : public CPPUNIT_NS::TestFixture {
 public:
     Schema_Test();
     virtual ~Schema_Test();
+    void setUp();
+    karabo::util::Schema sch;
 
 private:
     void settingExpectedParameters(karabo::util::Schema&);
     void testHasKey();
+    void testKeyHasAlias();
+    void testHasAlias();
+    void testAliasIsOfType();
+    void testParameterIsOfType();
+    void testKey2Alias();
+    void testAlias2Key();
 };
 
 #endif	/* SCHEMA_TEST_HH */
