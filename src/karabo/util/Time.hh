@@ -50,6 +50,21 @@ namespace karabo {
    
     };
 
+    /**
+     * Placeholder for later timestamp
+     */
+    class Timestamp {
+        
+        unsigned long long getAsTrainId() const {
+            return 0;
+        }
+        
+        unsigned long long getAsMsSinceEpoch() const {
+            return 0;
+        }
+        
+    };
+
   } // namespace util
 } // namespace karabo
 
