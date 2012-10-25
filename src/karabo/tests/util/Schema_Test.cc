@@ -64,7 +64,6 @@ void Schema_Test::settingExpectedParameters(Schema& expected) {
 void Schema_Test::setUp() {
     Schema& tmp = sch.initParameterDescription("test", READ | WRITE | INIT);
     settingExpectedParameters(tmp);
-    cout << "Schema sch: \n" << sch << endl;
 }
 
 void Schema_Test::testHasKey() {
@@ -127,5 +126,35 @@ void Schema_Test::testAlias2Key() {
     CPPUNIT_ASSERT(sch.alias2key(10) == "exampleKey2");
     CPPUNIT_ASSERT(sch.alias2key(5.5) == "exampleKey3");
     CPPUNIT_ASSERT(sch.alias2key("exampleAlias4") == "exampleKey4");
+
+}
+
+void Schema_Test::testGetAccessMode() {
+
+    CPPUNIT_ASSERT(sch.getAccessMode() == 7);
+
+}
+
+void Schema_Test::testHasParameters() {
+
+    CPPUNIT_ASSERT(sch.hasParameters());
+
+}
+
+void Schema_Test::testHasRoot() {
+
+    CPPUNIT_ASSERT(sch.hasRoot());
+
+}
+
+void Schema_Test::testGetRoot() {
+
+    CPPUNIT_ASSERT(sch.getRoot() == "test");
+
+}
+
+void Schema_Test::testIsAttribute() {
+
+    CPPUNIT_ASSERT(sch.isAttribute());
 
 }
