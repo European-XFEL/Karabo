@@ -59,17 +59,80 @@
     <file alias="line">icons/line-32x32.png</file>
     <file alias="arrow">icons/arrow-32x32.png</file>
     <file alias="rect">icons/rect-32x32.png</file>
-    <file alias="motor">icons/vacuum/66-Linear-Motion-Leadthrough-Flangemounted.png</file>
-    <file alias="valve">icons/vacuum/36-Valve-Shut-off-Element.png</file>
-    <file alias="shutoffvalve">icons/vacuum/37-Valve-Shut-off.png</file>
-    <file alias="rightanglevalve">icons/vacuum/38-Right-Angle-Valve.png</file>
-    <file alias="pressuregauge">icons/vacuum/72-Vacuum-Gauge.png</file>
-    <file alias="membranepump">icons/vacuum/5-Diaphragm-Vacuum-Pump.png</file>
-    <file alias="turbopump">icons/vacuum/17-Turbo-Molecular-Pump.png</file>
-    <file alias="cryocooler">icons/vacuum/1-Cryopump.png</file>
-    <file alias="temperature">icons/vacuum/thermometer.png</file>
-    <file alias="pressureswitch">icons/vacuum/48-Valve-Electromagnetic.png</file>
-    <file alias="maxigauge">icons/vacuum/76-Vacuum-Control-Unit-with-Digital-Indicator.png</file>
+    
+    <file alias="cryocooler">icons/vacuum/cryo-cooler.png</file>
+    <file alias="cryocooler-green">icons/vacuum/cryo-cooler-green.png</file>
+    <file alias="cryocooler-orange">icons/vacuum/cryo-cooler-orange.png</file>
+    <file alias="cryocooler-red">icons/vacuum/cryo-cooler-red.png</file>
+    <file alias="cryocooler-yellow">icons/vacuum/cryo-cooler-yellow.png</file>
+    
+    <file alias="hydraulicvalve">icons/vacuum/hydraulic-valve.png</file>
+    <file alias="hydraulicvalve-green">icons/vacuum/hydraulic-valve-green.png</file>
+    <file alias="hydraulicvalve-orange">icons/vacuum/hydraulic-valve-orange.png</file>
+    <file alias="hydraulicvalve-red">icons/vacuum/hydraulic-valve-red.png</file>
+    <file alias="hydraulicvalve-yellow">icons/vacuum/hydraulic-valve-yellow.png</file>
+    
+    <file alias="maxigauge">icons/vacuum/maxi-gauge.png</file>
+    <file alias="maxigauge-green">icons/vacuum/maxi-gauge-green.png</file>
+    <file alias="maxigauge-orange">icons/vacuum/maxi-gauge-orange.png</file>
+    <file alias="maxigauge-red">icons/vacuum/maxi-gauge-red.png</file>
+    <file alias="maxigauge-yellow">icons/vacuum/maxi-gauge-yellow.png</file>
+    
+    <file alias="membranepump">icons/vacuum/membrane-pump.png</file>
+    <file alias="membranepump-green">icons/vacuum/membrane-pump-green.png</file>
+    <file alias="membranepump-orange">icons/vacuum/membrane-pump-orange.png</file>
+    <file alias="membranepump-red">icons/vacuum/membrane-pump-red.png</file>
+    <file alias="membranepump-yellow">icons/vacuum/membrane-pump-yellow.png</file>
+
+    <file alias="motor">icons/vacuum/motor.png</file>
+    <file alias="motor-green">icons/vacuum/motor-green.png</file>
+    <file alias="motor-orange">icons/vacuum/motor-orange.png</file>
+    <file alias="motor-red">icons/vacuum/motor-red.png</file>
+    <file alias="motor-yellow">icons/vacuum/motor-yellow.png</file>
+
+    <file alias="pressuregauge">icons/vacuum/pressure-gauge.png</file>
+    <file alias="pressuregauge-green">icons/vacuum/pressure-gauge-green.png</file>
+    <file alias="pressuregauge-orange">icons/vacuum/pressure-gauge-orange.png</file>
+    <file alias="pressuregauge-red">icons/vacuum/pressure-gauge-red.png</file>
+    <file alias="pressuregauge-yellow">icons/vacuum/pressure-gauge-yellow.png</file>
+
+    <file alias="pressureswitch">icons/vacuum/pressure-switch.png</file>
+    <file alias="pressureswitch-green">icons/vacuum/pressure-switch-green.png</file>
+    <file alias="pressureswitch-orange">icons/vacuum/pressure-switch-orange.png</file>
+    <file alias="pressureswitch-red">icons/vacuum/pressure-switch-red.png</file>
+    <file alias="pressureswitch-yellow">icons/vacuum/pressure-switch-yellow.png</file>
+
+    <file alias="rightanglevalve">icons/vacuum/rightangle-valve.png</file>
+    <file alias="rightanglevalve-green">icons/vacuum/rightangle-valve-green.png</file>
+    <file alias="rightanglevalve-orange">icons/vacuum/rightangle-valve-orange.png</file>
+    <file alias="rightanglevalve-red">icons/vacuum/rightangle-valve-red.png</file>
+    <file alias="rightanglevalve-yellow">icons/vacuum/rightangle-valve-yellow.png</file>
+
+    <file alias="shutoffvalve">icons/vacuum/shutoff-valve.png</file>
+    <file alias="shutoffvalve-green">icons/vacuum/shutoff-valve-green.png</file>
+    <file alias="shutoffvalve-orange">icons/vacuum/shutoff-valve-orange.png</file>
+    <file alias="shutoffvalve-red">icons/vacuum/shutoff-valve-red.png</file>
+    <file alias="shutoffvalve-yellow">icons/vacuum/shutoff-valve-yellow.png</file>
+
+    <file alias="thermometer">icons/vacuum/thermometer.png</file>
+    <file alias="thermometer-green">icons/vacuum/thermometer-green.png</file>
+    <file alias="thermometer-orange">icons/vacuum/thermometer-orange.png</file>
+    <file alias="thermometer-red">icons/vacuum/thermometer-red.png</file>
+    <file alias="thermometer-yellow">icons/vacuum/thermometer-yellow.png</file>
+
+    <file alias="turbopump">icons/vacuum/turbo-pump.png</file>
+    <file alias="turbopump-green">icons/vacuum/turbo-pump-green.png</file>
+    <file alias="turbopump-orange">icons/vacuum/turbo-pump-orange.png</file>
+    <file alias="turbopump-red">icons/vacuum/turbo-pump-red.png</file>
+    <file alias="turbopump-yellow">icons/vacuum/turbo-pump-yellow.png</file>
+    <file alias="turbopump-green-yellow">icons/vacuum/turbo-pump-green-yellow.png</file>
+
+    <file alias="valve">icons/vacuum/valve.png</file>
+    <file alias="valve-green">icons/vacuum/valve-green.png</file>
+    <file alias="valve-orange">icons/vacuum/valve-orange.png</file>
+    <file alias="valve-red">icons/vacuum/valve-red.png</file>
+    <file alias="valve-yellow">icons/vacuum/valve-yellow.png</file>
+
     <file alias="grid-edit">icons/grid-edit-128x128.png</file>
 </qresource>
 

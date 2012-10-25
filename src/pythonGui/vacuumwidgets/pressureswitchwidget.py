@@ -41,13 +41,9 @@ class PressureSwitchWidget(VacuumWidget):
         
         self.__value = None
         
-        # Get image representation for value
-        self.__pixmap = QPixmap(":pressureswitch")
-        
         self.__label = QLabel()
-        self.__label.setPixmap(self.__pixmap)
-        self.__label.setMaximumWidth(self.__pixmap.width())
-        self.__label.setMaximumHeight(self.__pixmap.height())
+        # Get image representation for value
+        self._setPixmap(QPixmap(":pressureswitch"))
         self.setErrorState(False)
         
         self.__key = params.get(QString('key'))
@@ -90,6 +86,12 @@ class PressureSwitchWidget(VacuumWidget):
     value = property(fget=_value)
 
 
+    def _setPixmap(self, pixmap):
+        self.__label.setPixmap(pixmap)
+        self.__label.setMaximumWidth(pixmap.width())
+        self.__label.setMaximumHeight(pixmap.height())
+
+
     def setErrorState(self, isError):
         if isError is True:
             self.__label.setStyleSheet("QLabel { background-color : rgba(255,155,155,128); }") # light red
@@ -107,7 +109,15 @@ class PressureSwitchWidget(VacuumWidget):
 
 
     def valueChanged(self, key, value, timestamp=None):
-        print "PressureSwitchWidget.valueChanged"
+        print "PressureSwitchWidget.valueChanged", key, value
+        if value == "Changing...":
+            self._setPixmap(QPixmap(":pressureswitch-orange"))
+        elif ("On" in value) or ("on" in value):
+            self._setPixmap(QPixmap(":pressureswitch-green"))
+        elif ("Off" in value) or ("off" in value):
+            self._setPixmap(QPixmap(":pressureswitch-yellow"))
+        elif ("Error" in value) or ("error" in value):
+            self._setPixmap(QPixmap(":pressureswitch-red"))
 
 
     class Maker:
