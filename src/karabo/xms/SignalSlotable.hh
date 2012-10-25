@@ -127,12 +127,7 @@ namespace karabo {
 
             void stopEventLoop();
 
-            /**
-             * Sets the id that identifies a specific instance making use of signals and slots
-             * @param instanceId
-             */
-            //virtual void setInstanceId(const std::string& instanceId);
-
+            
             /**
              * Access to the identification of the current instance using signals and slots
              * @return instanceId

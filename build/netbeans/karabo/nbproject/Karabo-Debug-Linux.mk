@@ -175,7 +175,7 @@ FFLAGS=
 ASFLAGS=
 
 # Link Libraries and Options
-LDLIBSOPTIONS=-L/opt/local/lib/nss -L/opt/local/lib/nspr -L${KARABO}/extern/lib -Wl,-rpath,\$$ORIGIN/../extern/lib -lboost_chrono -lboost_date_time -lboost_filesystem -lboost_python -lboost_regex -lboost_signals -lboost_system -lboost_thread -lcppunit -lhdf5 -lhdf5_cpp -lhdf5_hl -lhdf5_hl_cpp -llog4cpp -lnetsnmp -lnetsnmpagent -lnetsnmphelpers -lnetsnmpmibs -lnetsnmptrapd -lopenmqc -lpython2.7 -ldl -lrt -lpthread
+LDLIBSOPTIONS=-L/opt/local/lib/nss -L/opt/local/lib/nspr -L${KARABO}/extern/lib -Wl,-rpath,\$$ORIGIN/../extern/lib -lboost_chrono -lboost_date_time -lboost_filesystem -lboost_python -lboost_regex -lboost_signals -lboost_system -lboost_thread -lcppunit -lhdf5 -lhdf5_cpp -lhdf5_hl -lhdf5_hl_cpp -llog4cpp -lnetsnmp -lnetsnmpagent -lnetsnmphelpers -lnetsnmpmibs -lnetsnmptrapd -lopenmqc -lpython2.7 -ldl -lrt -lpthread -lX11
 
 # Build Targets
 .build-conf: ${BUILD_SUBPROJECTS}

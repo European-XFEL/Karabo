@@ -93,6 +93,7 @@ build: .build-post
 	@$(MKDIR) -p  $(KARABO)/include/karabo/net
 	@$(MKDIR) -p  $(KARABO)/include/karabo/python
 	@$(MKDIR) -p  $(KARABO)/include/karabo/util
+	@$(MKDIR) -p  $(KARABO)/include/karabo/xip
 	@$(MKDIR) -p  $(KARABO)/include/karabo/xml
 	@$(MKDIR) -p  $(KARABO)/include/karabo/xms
 	@$(CP) $(CND_BASEDIR)/../../../src/karabo/core/*.hh $(KARABO)/include/karabo/core
@@ -101,6 +102,7 @@ build: .build-post
 	@$(CP) $(CND_BASEDIR)/../../../src/karabo/net/*.hh $(KARABO)/include/karabo/net
 	@$(CP) $(CND_BASEDIR)/../../../src/karabo/python/*.hh $(KARABO)/include/karabo/python
 	@$(CP) $(CND_BASEDIR)/../../../src/karabo/util/*.hh $(KARABO)/include/karabo/util
+	@$(CP) $(CND_BASEDIR)/../../../src/karabo/xip/*.h* $(KARABO)/include/karabo/xip
 	@$(CP) $(CND_BASEDIR)/../../../src/karabo/xml/*.hh $(KARABO)/include/karabo/xml
 	@$(CP) $(CND_BASEDIR)/../../../src/karabo/xms/*.hh $(KARABO)/include/karabo/xms
 

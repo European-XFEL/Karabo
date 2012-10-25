@@ -286,6 +286,19 @@
         <itemPath>../../../src/karabo/util/Types.cc</itemPath>
       </logicalFolder>
     </logicalFolder>
+    <logicalFolder name="f9" displayName="xip" projectFiles="true" kind="ROOT">
+      <logicalFolder name="f1"
+                     displayName="Header Files"
+                     projectFiles="true"
+                     kind="ROOT">
+        <itemPath>../../../src/karabo/xip/CImg.h</itemPath>
+      </logicalFolder>
+      <logicalFolder name="f2"
+                     displayName="Source Files"
+                     projectFiles="true"
+                     kind="ROOT">
+      </logicalFolder>
+    </logicalFolder>
     <logicalFolder name="f3" displayName="xml" projectFiles="true">
       <itemPath>../../../src/karabo/xml/tinystr.cpp</itemPath>
       <itemPath>../../../src/karabo/xml/tinystr.h</itemPath>
@@ -422,6 +435,7 @@
             <linkerLibLibItem>dl</linkerLibLibItem>
             <linkerLibLibItem>rt</linkerLibLibItem>
             <linkerLibLibItem>pthread</linkerLibLibItem>
+            <linkerLibLibItem>X11</linkerLibLibItem>
           </linkerLibItems>
         </linkerTool>
       </compileType>
@@ -533,7 +547,10 @@
             <linkerLibLibItem>netsnmptrapd</linkerLibLibItem>
             <linkerLibLibItem>openmqc</linkerLibLibItem>
             <linkerLibLibItem>python2.7</linkerLibLibItem>
+            <linkerLibLibItem>dl</linkerLibLibItem>
             <linkerLibLibItem>rt</linkerLibLibItem>
+            <linkerLibLibItem>pthread</linkerLibLibItem>
+            <linkerLibLibItem>X11</linkerLibLibItem>
           </linkerLibItems>
         </linkerTool>
       </compileType>
