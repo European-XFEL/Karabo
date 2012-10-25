@@ -18,6 +18,13 @@
 class Schema_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST_SUITE(Schema_Test);
     CPPUNIT_TEST(testHasKey);
+    CPPUNIT_TEST(testKeyHasAlias);
+    CPPUNIT_TEST(testHasAlias);
+    CPPUNIT_TEST(testAliasIsOfType);
+    CPPUNIT_TEST(testParameterIsOfType);
+    CPPUNIT_TEST(testKey2Alias);
+    CPPUNIT_TEST(testAlias2Key);
+            
     CPPUNIT_TEST_SUITE_END();
 
 public:
