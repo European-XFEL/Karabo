@@ -674,6 +674,7 @@ class GraphicsView(QGraphicsView):
                 centerPos = bRect.center()
                 centerPos = customItem.mapToScene(centerPos)
                 offset = centerPos-leftPos
+                customItem.setTransformOriginPoint(centerPos)
             
             if customItem is None: return
             
@@ -684,7 +685,6 @@ class GraphicsView(QGraphicsView):
             scenePos = self.mapToScene(pos)
             scenePos = scenePos-offset
             
-            customItem.setTransformOriginPoint(centerPos)
             customItem.setPos(scenePos)
 
         event.setDropAction(Qt.MoveAction)
