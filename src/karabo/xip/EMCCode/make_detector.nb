@@ -1,0 +1,191 @@
+(* Content-type: application/mathematica *)
+
+(*** Wolfram Notebook File ***)
+(* http://www.wolfram.com/nb *)
+
+(* CreatedBy='Mathematica 6.0' *)
+
+(*CacheID: 234*)
+(* Internal cache information:
+NotebookFileLineBreakTest
+NotebookFileLineBreakTest
+NotebookDataPosition[       145,          7]
+NotebookDataLength[      6225,        182]
+NotebookOptionsPosition[      5841,        165]
+NotebookOutlinePosition[      6199,        181]
+CellTagsIndexPosition[      6156,        178]
+WindowFrame->Normal
+ContainsDynamic->False*)
+
+(* Beginning of Notebook Content *)
+Notebook[{
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"qmin", "=", 
+   RowBox[{"1.4302966531242025`", 
+    RowBox[{"(", 
+     RowBox[{"qmax", "/", "R"}], ")"}]}]}], ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"theta", "=", 
+   RowBox[{"Pi", "/", "4."}]}], ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"L", "=", 
+   RowBox[{"Floor", "[", 
+    RowBox[{"qmax", " ", 
+     RowBox[{
+      RowBox[{"Cos", "[", 
+       RowBox[{"theta", "/", "2"}], "]"}], "/", 
+      RowBox[{"Cos", "[", "theta", "]"}]}]}], "]"}]}], ";"}]}], "Input",
+ CellChangeTimes->{{3.4324797482077637`*^9, 3.432479749285816*^9}, 
+   3.436964129336635*^9, {3.436964166026709*^9, 3.436964167248064*^9}, {
+   3.43696419726223*^9, 3.43696425289231*^9}, {3.4464487228021517`*^9, 
+   3.4464487237763844`*^9}, {3.446449070240404*^9, 3.4464490708066587`*^9}, {
+   3.449913471576193*^9, 3.44991354734445*^9}, {3.449913759033399*^9, 
+   3.449913763737343*^9}}],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{
+   RowBox[{"beamstop", "=", 
+    RowBox[{"Select", "[", 
+     RowBox[{
+      RowBox[{"Flatten", "[", 
+       RowBox[{
+        RowBox[{"Table", "[", 
+         RowBox[{
+          RowBox[{"{", 
+           RowBox[{"i", ",", "j", ",", "k"}], "}"}], ",", 
+          RowBox[{"{", 
+           RowBox[{"i", ",", 
+            RowBox[{"-", 
+             RowBox[{"Floor", "[", "qmin", "]"}]}], ",", 
+            RowBox[{"Floor", "[", "qmin", "]"}]}], "}"}], ",", 
+          RowBox[{"{", 
+           RowBox[{"j", ",", 
+            RowBox[{"-", 
+             RowBox[{"Floor", "[", "qmin", "]"}]}], ",", 
+            RowBox[{"Floor", "[", "qmin", "]"}]}], "}"}], ",", 
+          RowBox[{"{", 
+           RowBox[{"k", ",", 
+            RowBox[{"-", 
+             RowBox[{"Floor", "[", "qmin", "]"}]}], ",", 
+            RowBox[{"Floor", "[", "qmin", "]"}]}], "}"}]}], "]"}], ",", "2"}],
+        "]"}], ",", 
+      RowBox[{
+       RowBox[{
+        RowBox[{"Norm", "[", "#", "]"}], "<=", "qmin"}], "&"}]}], "]"}]}], 
+   ";"}], "\[IndentingNewLine]"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"{", 
+    RowBox[{"pixels2D", ",", "pixels"}], "}"}], "=", 
+   RowBox[{"Transpose", "[", 
+    RowBox[{"Select", "[", 
+     RowBox[{
+      RowBox[{"Flatten", "[", 
+       RowBox[{
+        RowBox[{"Table", "[", 
+         RowBox[{
+          RowBox[{"{", 
+           RowBox[{
+            RowBox[{"{", 
+             RowBox[{"i", ",", "j"}], "}"}], ",", 
+            RowBox[{
+             RowBox[{
+              RowBox[{"{", 
+               RowBox[{"i", ",", "j", ",", " ", 
+                RowBox[{"L", " ", 
+                 RowBox[{"Cot", "[", "theta", "]"}]}]}], "}"}], "/", 
+              RowBox[{"Sqrt", "[", 
+               RowBox[{"1", "+", 
+                RowBox[{
+                 RowBox[{"(", 
+                  RowBox[{
+                   RowBox[{"i", "^", "2"}], "+", 
+                   RowBox[{"j", "^", "2"}]}], ")"}], "/", 
+                 RowBox[{
+                  RowBox[{"(", 
+                   RowBox[{"L", " ", 
+                    RowBox[{"Cot", "[", "theta", "]"}]}], ")"}], "^", 
+                  "2"}]}]}], "]"}]}], "-", 
+             RowBox[{"{", 
+              RowBox[{"0", ",", "0", ",", 
+               RowBox[{"L", " ", 
+                RowBox[{"Cot", "[", "theta", "]"}]}]}], "}"}]}]}], "}"}], ",",
+           
+          RowBox[{"{", 
+           RowBox[{"i", ",", 
+            RowBox[{"-", "L"}], ",", "L"}], "}"}], ",", 
+          RowBox[{"{", 
+           RowBox[{"j", ",", 
+            RowBox[{"-", "L"}], ",", "L"}], "}"}]}], "]"}], ",", "1"}], "]"}],
+       ",", 
+      RowBox[{
+       RowBox[{"qmin", "<", 
+        RowBox[{"Norm", "[", 
+         RowBox[{"#", "[", 
+          RowBox[{"[", "2", "]"}], "]"}], "]"}], "<", "qmax"}], "&"}]}], 
+     "]"}], "]"}]}], ";"}]}], "Input",
+ CellChangeTimes->{{3.436964275023377*^9, 3.436964276175576*^9}, 
+   3.446443360087432*^9, {3.446443643723187*^9, 3.446443649449747*^9}, {
+   3.446443693589127*^9, 3.446443720790859*^9}, {3.446444015347458*^9, 
+   3.446444111902603*^9}, 3.446444360920895*^9, {3.449916535333707*^9, 
+   3.449916548799444*^9}, {3.4499166068914948`*^9, 3.449916612096583*^9}, {
+   3.450097970342649*^9, 3.4500979745746517`*^9}}],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"Export", "[", 
+   RowBox[{
+    RowBox[{
+     RowBox[{"NotebookDirectory", "[", "]"}], "<>", "\"\<detector.dat\>\""}], 
+    ",", 
+    RowBox[{"Prepend", "[", 
+     RowBox[{
+      RowBox[{"Join", "[", 
+       RowBox[{"pixels", ",", "beamstop"}], "]"}], ",", 
+      RowBox[{"{", 
+       RowBox[{"qmax", ",", 
+        RowBox[{"Length", "[", "pixels", "]"}], ",", 
+        RowBox[{"Length", "[", "beamstop", "]"}]}], "}"}]}], "]"}]}], "]"}], 
+  ";"}]], "Input",
+ CellChangeTimes->{{3.4331735317619877`*^9, 3.4331735541077147`*^9}, {
+  3.433173877796546*^9, 3.4331738889464703`*^9}, {3.433173935018718*^9, 
+  3.4331739498997583`*^9}, {3.433516123215302*^9, 3.43351616163848*^9}, {
+  3.43464913324769*^9, 3.43464913798103*^9}, {3.436964295034692*^9, 
+  3.436964295153924*^9}, {3.443175035371591*^9, 3.44317505024219*^9}}],
+
+Cell[BoxData[
+ RowBox[{"Graphics3D", "[", 
+  RowBox[{
+   RowBox[{"Map", "[", 
+    RowBox[{"Cuboid", ",", "pixels"}], "]"}], ",", 
+   RowBox[{"Boxed", "\[Rule]", "False"}]}], "]"}]], "Input",
+ CellChangeTimes->{{3.4324807800622*^9, 3.43248084324725*^9}}]
+},
+WindowSize->{988, 716},
+WindowMargins->{{269, Automatic}, {Automatic, 41}},
+Magnification->1.5,
+FrontEndVersion->"6.0 for Mac OS X x86 (32-bit) (March 13, 2008)",
+StyleDefinitions->"Default.nb"
+]
+(* End of Notebook Content *)
+
+(* Internal cache information *)
+(*CellTagsOutline
+CellTagsIndex->{}
+*)
+(*CellTagsIndex
+CellTagsIndex->{}
+*)
+(*NotebookFileOutline
+Notebook[{
+Cell[568, 21, 909, 22, 87, "Input"],
+Cell[1480, 45, 3249, 88, 294, "Input"],
+Cell[4732, 135, 849, 20, 64, "Input"],
+Cell[5584, 157, 253, 6, 40, "Input"]
+}
+]
+*)
+
+(* End of internal cache information *)

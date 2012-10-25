@@ -24,11 +24,7 @@ namespace karabo {
         using namespace karabo::io;
         using namespace karabo::net;
 
-        std::map<std::string, int> Device::m_instanceCountPerDeviceServer;
-        boost::mutex Device::m_instanceCountMutex;
-
         Device::~Device() {
-            decreaseInstanceCount();
         }
 
         void Device::expectedParameters(karabo::util::Schema& expected) {
@@ -54,13 +50,13 @@ namespace karabo {
                     .init()
                     .advanced()
                     .commit();
-            
+
             STRING_ELEMENT(expected).key("devClaId")
                     .displayedName("Device Class Id")
                     .description("The (factory)-name of the class of this device")
                     .readOnly()
                     .commit();
-            
+
             STRING_ELEMENT(expected).key("state")
                     .displayedName("State")
                     .description("The current state the device is in")
@@ -74,16 +70,13 @@ namespace karabo {
 
                 // Speed access to own classId
                 m_classId = getClassInfo().getClassId();
-                
+
                 // Speed access to device-server instance
                 if (input.has("devSrvInstId")) {
                     input.get("devSrvInstId", m_devSrvInstId);
                 } else {
                     m_devSrvInstId = "";
                 }
-
-                // Increase instance count
-                increaseInstanceCount();
 
                 // Construct needed for splitting the parameters (validate function needs this)
                 Hash tmp(m_classId, input);
@@ -93,7 +86,7 @@ namespace karabo {
                 if (input.has("devInstId")) {
                     input.get("devInstId", devInstId);
                 } else { // No devInstId given
-                    devInstId = generateDefaultDeviceInstanceId();
+                    devInstId = "__none__"; // TODO Implement
                     tmp.setFromPath(m_classId + ".devInstId", devInstId);
                 }
 
@@ -135,7 +128,7 @@ namespace karabo {
                 connectN("", "signalSchemaUpdated", "*", "slotSchemaUpdated");
                 connectN("", "signalDeviceInstanceGone", "*", "slotDeviceInstanceGone");
 
-                log() << Priority::INFO << "Starting up " << m_classId << " on networkId " << getInstanceId();
+                KARABO_LOG_INFO << "Starting up " << m_classId << " on networkId " << getInstanceId();
 
                 if (m_devSrvInstId == boost::asio::ip::host_name()) {
                     std::stringstream stream;
@@ -143,7 +136,7 @@ namespace karabo {
                     Format<Schema>::create(config)->convert(m_allExpectedParameters, stream);
                     call("*", "slotNewStandaloneDeviceInstanceAvailable", boost::asio::ip::host_name(), tmp, getInstanceId(), stream.str());
                 }
-                
+
                 set("devClaId", m_classId);
 
 
@@ -152,16 +145,6 @@ namespace karabo {
             }
         }
 
-        void Device::increaseInstanceCount() {
-            boost::mutex::scoped_lock lock(m_instanceCountMutex);
-            m_instanceCountPerDeviceServer[m_devSrvInstId]++;
-        }
-
-        void Device::decreaseInstanceCount() {
-            boost::mutex::scoped_lock lock(m_instanceCountMutex);
-            m_instanceCountPerDeviceServer[m_devSrvInstId]--;
-        }
-        
         void Device::slotGetSchema(const bool& onlyCurrentState) {
             if (onlyCurrentState) {
                 const string& currentState = get<string > ("state");
@@ -170,23 +153,11 @@ namespace karabo {
                 reply(m_allExpectedParameters);
             }
         }
-        
 
         karabo::util::Schema Device::getFullSchema() const {
             if (!m_injectedExpectedParameters.empty())
                 return Schema(m_allExpectedParameters).addExternalSchema(m_injectedExpectedParameters);
             else return m_allExpectedParameters;
-        }
-
-        std::string Device::generateDefaultDeviceInstanceId() {
-            boost::mutex::scoped_lock lock(m_instanceCountMutex);
-            string index = String::toString(m_instanceCountPerDeviceServer[m_devSrvInstId]);
-            // Prepare shortened Device-Server name
-            vector<string> tokens;
-            if (m_devSrvInstId.empty()) return boost::asio::ip::host_name() + "/" + m_classId + "/" + index;
-            boost::split(tokens, m_devSrvInstId, boost::is_any_of("/"));
-            string domain(tokens.front() + "-" + tokens.back());
-            return domain + "/" + m_classId + "/" + index;
         }
 
         log4cpp::Category& Device::log() {
@@ -227,7 +198,7 @@ namespace karabo {
             // Reply new state to interested event initiators
             reply(state);
         }
-        
+
         void Device::slotKillDeviceInstance() {
             log() << Priority::INFO << "Device is going down...";
             onKill(); // Give devices a chance to react
@@ -276,11 +247,11 @@ namespace karabo {
             Hash config(m_classId, newConfiguration); // Validator needs classId as root item
             log() << Priority::DEBUG << "Incoming reconfiguration:\n" << newConfiguration;
             try {
-                
-                config = whiteList.validate(config, false, false, false, true); 
+
+                config = whiteList.validate(config, false, false, false, true);
 
             } catch (const ParameterException& e) {
-                string errorText =  e.userFriendlyMsg() + " in state: \"" + currentState + "\"";
+                string errorText = e.userFriendlyMsg() + " in state: \"" + currentState + "\"";
                 log() << Priority::ERROR << errorText;
                 return make_pair(false, errorText);
             }
@@ -288,7 +259,7 @@ namespace karabo {
             log() << Priority::DEBUG << "Validated reconfiguration:\n" << m_incomingValidatedReconfiguration;
             return make_pair(true, "");
         }
-        
+
         Schema& Device::getStateDependentSchema(const std::string& currentState) {
             boost::mutex::scoped_lock lock(m_stateDependendSchemaMutex);
             // Check cache, whether a special set of state-dependent expected parameters was created before

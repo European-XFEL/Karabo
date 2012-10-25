@@ -68,7 +68,7 @@ namespace karabo {
                 boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
 
                 if (m_expectedMonitoredParameters.hasKey(key)) {
-                        checkWarningsAndAlarms(key, value);
+                    checkWarningsAndAlarms(key, value);
                     m_monitoredParameters.setFromPath(key, value);
                 } else if (m_expectedReconfigurableParameters.hasKey(key)) {
                     m_reconfigurableParameters.setFromPath(key, value);
@@ -139,7 +139,7 @@ namespace karabo {
                     throw PARAMETER_EXCEPTION("Illegal trial to get parameter (" + key + ") which was not described in the expectedParameters section");
                 }
             }
-            
+
             /**
              * Checks the type of any device parameter (that was defined in the expectedParameters function)
              * TODO: This does not support complex/nested types yet.
@@ -150,14 +150,14 @@ namespace karabo {
             bool is(const std::string& key) {
                 boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
                 if (m_monitoredParameters.has(key)) {
-                    return m_monitoredParameters.is<T>(key);
+                    return m_monitoredParameters.is<T > (key);
                 } else if (m_reconfigurableParameters.has(key)) {
-                    return m_reconfigurableParameters.is<T>(key);
-                } else if (m_initialParameters.has(key)) {      
-                    return m_initialParameters.is<T>(key);
+                    return m_reconfigurableParameters.is<T > (key);
+                } else if (m_initialParameters.has(key)) {
+                    return m_initialParameters.is<T > (key);
                 } else {
                     throw PARAMETER_EXCEPTION("Illegal trial to get parameter (" + key + ") which was not described in the expectedParameters section");
-                }       
+                }
             }
 
             /**
@@ -172,19 +172,13 @@ namespace karabo {
              */
             log4cpp::Category& log();
 
+
             /**
              * Retrieves all expected parameters of this device
              * @return Schema object containing all expected parameters
              */
             karabo::util::Schema getFullSchema() const;
-            
-            /**
-             * Retrieves the description of a selected parameter
-             * @param key The key of the parameter
-             * @return A schema instance containing further information to the parameter
-             */
-            //karabo::util::Schema getParameterDescription(const std::string& key);
-            
+
             /**
              * Add external schema descriptions to current schema containers
              * @param schema
@@ -208,10 +202,9 @@ namespace karabo {
                 karabo::util::Hash config("Xsd.indentation", -1);
                 std::stringstream stream;
                 karabo::io::Format<karabo::util::Schema>::create(config)->convert(getFullSchema(), stream);
-                 std::cout << "Serialized..." << std::endl;
+                std::cout << "Serialized..." << std::endl;
                 emit("signalSchemaUpdated", stream.str(), getInstanceId(), m_classId);
                 log() << log4cpp::Priority::INFO << "Schema updated";
-                // emit("signalSchemaUpdated", schema, 
             }
 
             /**
@@ -278,7 +271,7 @@ namespace karabo {
              */
             template <class T>
             bool parameterIsOfType(const std::string& key) {
-                return m_allExpectedParameters.parameterIsOfType<T>(key);
+                return m_allExpectedParameters.parameterIsOfType<T > (key);
             }
 
 
@@ -307,34 +300,19 @@ namespace karabo {
              * the device into an event driven mode of operation.
              */
             virtual void run() = 0;
-            
+
         protected: // Functions and Classes
-            
+
             virtual void onReconfigure(karabo::util::Hash& incomingReconfiguration) {
             }
 
             virtual void onException(const std::string& userMessage, const std::string& detailedMessage) {
                 std::cout << "ERROR: " << userMessage << std::endl;
             }
-            
+
             virtual void onKill() {
             }
 
-            template <class T>
-            bool ensureSoftwareHardwareConsistency(const std::string key, const T& targetValue, const T& actualValue, karabo::util::Hash& configuration) {
-                // TODO One should maybe think of a more sophisticated method than converting to string and compare those...
-                if (karabo::util::String::toString(targetValue) != karabo::util::String::toString(actualValue)) {
-
-                    std::ostringstream msg;
-                    msg << "Hardware rejected to accept (re-)configuration for key \"" << key << "\" to target \""
-                            << karabo::util::String::toString(targetValue) << "\". Actual value is \"" << karabo::util::String::toString(actualValue) << "\"";
-                    log() << log4cpp::Priority::WARN << msg.str();
-                    emit("signalBadReconfiguration", msg.str(), getInstanceId());
-                    configuration.set(key, actualValue);
-                    return false;
-                } else return true;
-            }
-            
             void triggerErrorFound(const std::string& shortMessage, const std::string& detailedMessage) const;
             void triggerWarning(const std::string& warningMessage, const std::string& priority) const;
             void triggerAlarm(const std::string& alarmMessage, const std::string& priority) const;
@@ -363,7 +341,7 @@ namespace karabo {
             karabo::util::Schema m_expectedReconfigurableParameters;
             karabo::util::Schema m_expectedMonitoredParameters;
             karabo::util::Schema m_allExpectedParameters;
-            
+
             karabo::util::Schema m_injectedExpectedParameters;
 
 
@@ -372,13 +350,13 @@ namespace karabo {
             void slotRefresh();
 
             void slotReconfigure(const karabo::util::Hash& reconfiguration);
-            
+
             void slotGetSchema(const bool& onlyCurrentState);
-            
+
             void slotKillDeviceInstance();
 
             std::pair<bool, std::string> validate(const karabo::util::Hash& reconfiguration);
-            
+
             karabo::util::Schema& getStateDependentSchema(const std::string& currentState);
 
             void applyReconfiguration(const karabo::util::Hash& reconfiguration);
@@ -388,7 +366,7 @@ namespace karabo {
             void decreaseInstanceCount();
 
             std::string generateDefaultDeviceInstanceId();
-            
+
             template <class T>
             void checkWarningsAndAlarms(const std::string& key, const T& value) {
                 size_t pos = key.find_last_of(".");
@@ -431,25 +409,6 @@ namespace karabo {
                 }
             }
 
-            // Prevent the compiler from generating check functions for vectors
-
-            template <class T>
-            void checkWarningsAndAlarms(const std::string& key, const std::vector<T>& value) {
-
-            }
-            
-            /**
-             * The current schema is cleared.
-             */
-            void clearSchema() {
-                m_stateDependendSchema.clear();
-
-                m_expectedInitialParameters.clear();
-                m_expectedReconfigurableParameters.clear();
-                m_expectedMonitoredParameters.clear();
-                m_allExpectedParameters.clear();
-            }
-            
             /**
              * Replace existing schema descriptions by static (hard coded in expectedParameters) part and
              * add additional (dynamic) descriptions
@@ -469,15 +428,11 @@ namespace karabo {
 
             std::map<std::string, karabo::util::Schema> m_stateDependendSchema;
             boost::mutex m_stateDependendSchemaMutex;
-            
+
             karabo::util::Hash m_incomingValidatedReconfiguration;
             boost::mutex m_objectStateChangeMutex;
 
             log4cpp::Category* m_log;
-
-            static std::map<std::string, int> m_instanceCountPerDeviceServer;
-            static boost::mutex m_instanceCountMutex;
-
         };
     }
 }

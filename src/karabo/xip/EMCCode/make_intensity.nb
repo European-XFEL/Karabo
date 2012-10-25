@@ -1,0 +1,104 @@
+(* Content-type: application/mathematica *)
+
+(*** Wolfram Notebook File ***)
+(* http://www.wolfram.com/nb *)
+
+(* CreatedBy='Mathematica 6.0' *)
+
+(*CacheID: 234*)
+(* Internal cache information:
+NotebookFileLineBreakTest
+NotebookFileLineBreakTest
+NotebookDataPosition[       145,          7]
+NotebookDataLength[      3146,         95]
+NotebookOptionsPosition[      2803,         79]
+NotebookOutlinePosition[      3161,         95]
+CellTagsIndexPosition[      3118,         92]
+WindowFrame->Normal
+ContainsDynamic->False*)
+
+(* Beginning of Notebook Content *)
+Notebook[{
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"intensity", "=", 
+   RowBox[{"RotateRight", "[", 
+    RowBox[{
+     RowBox[{
+      RowBox[{"Abs", "[", 
+       RowBox[{"Fourier", "[", 
+        RowBox[{"PadRight", "[", 
+         RowBox[{"density", ",", 
+          RowBox[{"{", 
+           RowBox[{
+            RowBox[{
+             RowBox[{"2", "qmax"}], "+", "1"}], ",", 
+            RowBox[{
+             RowBox[{"2", "qmax"}], "+", "1"}], ",", 
+            RowBox[{
+             RowBox[{"2", "qmax"}], "+", "1"}]}], "}"}]}], "]"}], "]"}], 
+       "]"}], "^", "2"}], ",", 
+     RowBox[{"{", 
+      RowBox[{"qmax", ",", "qmax", ",", "qmax"}], "}"}]}], "]"}]}], 
+  ";"}]], "Input",
+ CellChangeTimes->{{3.432561783668436*^9, 3.432561785922709*^9}, {
+   3.432563087596898*^9, 3.432563107600724*^9}, {3.432563153908967*^9, 
+   3.432563159885528*^9}, 3.433171230080841*^9}],
+
+Cell[BoxData[
+ RowBox[{"Graphics", "[", 
+  RowBox[{"Raster", "[", 
+   RowBox[{"200", 
+    RowBox[{"intensity", "[", 
+     RowBox[{"[", 
+      RowBox[{"qmax", "+", "1"}], "]"}], "]"}]}], "]"}], "]"}]], "Input",
+ CellChangeTimes->{{3.434364058507495*^9, 3.4343641261045017`*^9}, 
+   3.434364401040516*^9, {3.434649310556406*^9, 3.434649337645954*^9}, {
+   3.434729980603177*^9, 3.434729984980673*^9}, {3.4348983149166*^9, 
+   3.434898319366087*^9}, {3.434920912271061*^9, 3.434920931900435*^9}, {
+   3.4349210275287323`*^9, 3.434921044877529*^9}, {3.434921204135528*^9, 
+   3.434921212485009*^9}, {3.4351430394075327`*^9, 3.435143048919505*^9}, {
+   3.435150898280819*^9, 3.4351509102920637`*^9}, {3.435328965981381*^9, 
+   3.435328966250893*^9}, {3.436965267951084*^9, 3.436965268103743*^9}, {
+   3.449922251266124*^9, 3.449922256254991*^9}}],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"Export", "[", 
+   RowBox[{
+    RowBox[{
+     RowBox[{"NotebookDirectory", "[", "]"}], "<>", "\"\<intensity.dat\>\""}],
+     ",", 
+    RowBox[{"Flatten", "[", 
+     RowBox[{"intensity", ",", "1"}], "]"}]}], "]"}], ";"}]], "Input",
+ CellChangeTimes->{
+  3.433172991759769*^9, 3.433424098292533*^9, {3.43349767206574*^9, 
+   3.433497674126801*^9}, {3.4346496307708597`*^9, 3.434649634161854*^9}, {
+   3.436964815622369*^9, 3.4369648157678537`*^9}, {3.443175105457247*^9, 
+   3.443175118940535*^9}}]
+},
+WindowSize->{1102, 695},
+WindowMargins->{{147, Automatic}, {Automatic, 1}},
+Magnification->1.5,
+FrontEndVersion->"6.0 for Mac OS X x86 (32-bit) (March 13, 2008)",
+StyleDefinitions->"Default.nb"
+]
+(* End of Notebook Content *)
+
+(* Internal cache information *)
+(*CellTagsOutline
+CellTagsIndex->{}
+*)
+(*CellTagsIndex
+CellTagsIndex->{}
+*)
+(*NotebookFileOutline
+Notebook[{
+Cell[568, 21, 854, 24, 64, "Input"],
+Cell[1425, 47, 841, 15, 40, "Input"],
+Cell[2269, 64, 530, 13, 40, "Input"]
+}
+]
+*)
+
+(* End of internal cache information *)

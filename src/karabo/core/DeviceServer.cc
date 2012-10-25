@@ -297,8 +297,14 @@ namespace karabo {
                 
                 // Inject device-server information
                 Hash modifiedConfig(config);
-                modifiedConfig.get<Hash>(modifiedConfig.begin()).set("devSrvInstId", m_devSrvInstId);
-                                
+                Hash& tmp = modifiedConfig.get<Hash>(modifiedConfig.begin());
+                tmp.set("devSrvInstId", m_devSrvInstId);
+                // Apply sensible default in case no device instance id is supplied
+                if (!tmp.has("devInstId")) {
+                    std::string classId = modifiedConfig.begin()->first;    
+                    std::string devInstId = this->generateDefaultDeviceInstanceId(classId);
+                    tmp.set("devInstId", devInstId);
+                }
                 Device::Pointer device = Device::create(modifiedConfig);
                 boost::thread* t = m_deviceThreads.create_thread(boost::bind(&karabo::core::Device::run, device));
                 
@@ -369,6 +375,15 @@ namespace karabo {
                 m_deviceInstanceMap.erase(it);
                 log() << Priority::INFO << "Device: " << instanceId << " finally died";
             }
+        }
+        
+        std::string DeviceServer::generateDefaultDeviceInstanceId(const std::string& classId) {
+            string index = String::toString(m_deviceInstanceMap.size()+1);
+            // Prepare shortened Device-Server name
+            vector<string> tokens;
+            boost::split(tokens, m_devSrvInstId, boost::is_any_of("/"));
+            string domain(tokens.front() + "-" + tokens.back());
+            return domain + "/" + classId + "/" + index;
         }
     } 
 } 

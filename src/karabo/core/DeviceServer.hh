@@ -174,7 +174,9 @@ namespace karabo {
             void slotKillDeviceServerInstance();
             
             void slotKillDeviceInstance(const std::string& instanceId);
-
+            
+            std::string generateDefaultDeviceInstanceId(const std::string& classId);
+            
         private: // Member variables
             
             log4cpp::Category* m_log;
@@ -193,13 +195,14 @@ namespace karabo {
             std::vector<karabo::util::Hash> m_autoStart;
             boost::thread_group m_deviceThreads;
             DeviceInstanceMap m_deviceInstanceMap;
-            
+                        
             karabo::io::Format<karabo::util::Schema>::Pointer m_format;
             
             std::string m_devSrvInstId;
             karabo::net::BrokerConnection::Pointer m_connection;
             
             karabo::util::Hash m_connectionConfig;
+            
             
         };
     } 

@@ -1,0 +1,258 @@
+(* Content-type: application/mathematica *)
+
+(*** Wolfram Notebook File ***)
+(* http://www.wolfram.com/nb *)
+
+(* CreatedBy='Mathematica 6.0' *)
+
+(*CacheID: 234*)
+(* Internal cache information:
+NotebookFileLineBreakTest
+NotebookFileLineBreakTest
+NotebookDataPosition[       145,          7]
+NotebookDataLength[      8750,        249]
+NotebookOptionsPosition[      8480,        235]
+NotebookOutlinePosition[      8837,        251]
+CellTagsIndexPosition[      8794,        248]
+WindowFrame->Normal
+ContainsDynamic->False*)
+
+(* Beginning of Notebook Content *)
+Notebook[{
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{
+   RowBox[{"smooth", "[", "x_", "]"}], ":=", 
+   RowBox[{"Chop", "[", 
+    RowBox[{"InverseFourier", "[", 
+     RowBox[{
+      RowBox[{"Fourier", "[", "x", "]"}], " ", "filter"}], "]"}], "]"}]}], 
+  "\[IndentingNewLine]"}], "\n", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"binaryContrast", "[", "x_", "]"}], ":=", 
+   RowBox[{"Module", "[", 
+    RowBox[{
+     RowBox[{"{", 
+      RowBox[{
+       RowBox[{"y", "=", 
+        RowBox[{"mask", " ", "x"}]}], ",", "v"}], "}"}], ",", 
+     "\[IndentingNewLine]", 
+     RowBox[{
+      RowBox[{"v", "=", 
+       RowBox[{
+        RowBox[{
+         RowBox[{
+          RowBox[{"#", "[", 
+           RowBox[{"[", 
+            RowBox[{"Ordering", "[", 
+             RowBox[{"#", ",", 
+              RowBox[{"{", 
+               RowBox[{"-", 
+                RowBox[{"Round", "[", 
+                 RowBox[{"frac", " ", 
+                  RowBox[{"Length", "[", "support", "]"}]}], "]"}]}], "}"}]}],
+              "]"}], "]"}], "]"}], "[", 
+          RowBox[{"[", "1", "]"}], "]"}], "&"}], "[", 
+        RowBox[{"Flatten", "[", "y", "]"}], "]"}]}], ";", 
+      "\[IndentingNewLine]", 
+      RowBox[{"Map", "[", 
+       RowBox[{
+        RowBox[{
+         RowBox[{"If", "[", 
+          RowBox[{
+           RowBox[{"#", ">", "v"}], ",", "1.", ",", "0"}], "]"}], "&"}], ",", 
+        "y", ",", 
+        RowBox[{"{", "3", "}"}]}], "]"}]}]}], "\[IndentingNewLine]", "]"}]}], 
+  "\[IndentingNewLine]"}], "\n", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"renderStack", "[", "x_", "]"}], ":=", 
+   RowBox[{"GraphicsArray", "[", 
+    RowBox[{"Map", "[", 
+     RowBox[{
+      RowBox[{
+       RowBox[{"Graphics", "[", 
+        RowBox[{
+         RowBox[{"Raster", "[", 
+          RowBox[{"1", "-", "#"}], "]"}], ",", 
+         RowBox[{"Frame", "\[Rule]", "True"}], ",", 
+         RowBox[{"FrameTicks", "\[Rule]", "False"}]}], "]"}], "&"}], ",", 
+      RowBox[{"Take", "[", 
+       RowBox[{"x", ",", "size", ",", "size", ",", "size"}], "]"}]}], "]"}], 
+    "]"}]}], "\[IndentingNewLine]"}], "\n", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"renderSlice", "[", "x_", "]"}], ":=", 
+   RowBox[{"Graphics", "[", 
+    RowBox[{
+     RowBox[{"Raster", "[", 
+      RowBox[{"1", "-", 
+       RowBox[{"Take", "[", 
+        RowBox[{
+         RowBox[{"x", "[", 
+          RowBox[{"[", 
+           RowBox[{"radius", "+", "1"}], "]"}], "]"}], ",", "size", ",", 
+         "size"}], "]"}]}], "]"}], ",", 
+     RowBox[{"Frame", "\[Rule]", "True"}], ",", 
+     RowBox[{"FrameTicks", "\[Rule]", "False"}]}], "]"}]}], 
+  "\[IndentingNewLine]"}], "\n", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"invert", "[", "x_", "]"}], ":=", 
+   RowBox[{"RotateRight", "[", 
+    RowBox[{
+     RowBox[{"Chop", "[", 
+      RowBox[{"InverseFourier", "[", 
+       RowBox[{"Conjugate", "[", 
+        RowBox[{"Fourier", "[", 
+         RowBox[{"RotateLeft", "[", 
+          RowBox[{"x", ",", 
+           RowBox[{"{", 
+            RowBox[{"radius", ",", "radius", ",", "radius"}], "}"}]}], "]"}], 
+         "]"}], "]"}], "]"}], "]"}], ",", 
+     RowBox[{"{", 
+      RowBox[{"radius", ",", "radius", ",", "radius"}], "}"}]}], "]"}]}], 
+  "\[IndentingNewLine]"}], "\n", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"render3D", "[", "x_", "]"}], ":=", 
+   RowBox[{"Module", "[", 
+    RowBox[{
+     RowBox[{"{", "y", "}"}], ",", "\[IndentingNewLine]", 
+     RowBox[{
+      RowBox[{"y", "=", 
+       RowBox[{"Chop", "[", 
+        RowBox[{"InverseFourier", "[", 
+         RowBox[{"RotateLeft", "[", 
+          RowBox[{
+           RowBox[{"PadLeft", "[", 
+            RowBox[{
+             RowBox[{"PadRight", "[", 
+              RowBox[{
+               RowBox[{"RotateRight", "[", 
+                RowBox[{
+                 RowBox[{"Fourier", "[", "x", "]"}], ",", 
+                 RowBox[{"{", 
+                  RowBox[{"radius", ",", "radius", ",", "radius"}], "}"}]}], 
+                "]"}], ",", 
+               RowBox[{"{", 
+                RowBox[{
+                 RowBox[{"size", "+", "radius"}], ",", 
+                 RowBox[{"size", "+", "radius"}], ",", 
+                 RowBox[{"size", "+", "radius"}]}], "}"}]}], "]"}], ",", 
+             RowBox[{"{", 
+              RowBox[{
+               RowBox[{"size", "+", 
+                RowBox[{"2", "radius"}]}], ",", 
+               RowBox[{"size", "+", 
+                RowBox[{"2", "radius"}]}], "\[IndentingNewLine]", ",", 
+               RowBox[{"size", "+", 
+                RowBox[{"2", "radius"}]}]}], "}"}]}], "]"}], ",", 
+           RowBox[{"{", 
+            RowBox[{
+             RowBox[{"2", "radius"}], ",", 
+             RowBox[{"2", "radius"}], ",", 
+             RowBox[{"2", "radius"}]}], "}"}]}], "]"}], "]"}], "]"}]}], ";", 
+      "\[IndentingNewLine]", "\[IndentingNewLine]", 
+      RowBox[{"ListContourPlot3D", "[", 
+       RowBox[{"y", ",", 
+        RowBox[{"Contours", "\[Rule]", 
+         RowBox[{"{", 
+          RowBox[{".5", 
+           RowBox[{"Max", "[", "y", "]"}]}], "}"}]}], ",", 
+        RowBox[{"Mesh", "\[Rule]", "None"}], ",", 
+        RowBox[{"Axes", "\[Rule]", "False"}], ",", 
+        RowBox[{"Boxed", "\[Rule]", "False"}], ",", 
+        RowBox[{"BoxRatios", "\[Rule]", "Automatic"}], ",", 
+        RowBox[{"SphericalRegion", "\[Rule]", "True"}], ",", 
+        RowBox[{"PreserveImageOptions", "\[Rule]", "True"}]}], "]"}]}]}], 
+    "\[IndentingNewLine]", "]"}]}], "\n"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"render3D", "[", 
+   RowBox[{"x_", ",", "v_"}], "]"}], ":=", 
+  RowBox[{"Module", "[", 
+   RowBox[{
+    RowBox[{"{", "y", "}"}], ",", "\[IndentingNewLine]", 
+    RowBox[{
+     RowBox[{"y", "=", 
+      RowBox[{"Chop", "[", 
+       RowBox[{"InverseFourier", "[", 
+        RowBox[{"RotateLeft", "[", 
+         RowBox[{
+          RowBox[{"PadLeft", "[", 
+           RowBox[{
+            RowBox[{"PadRight", "[", 
+             RowBox[{
+              RowBox[{"RotateRight", "[", 
+               RowBox[{
+                RowBox[{"Fourier", "[", "x", "]"}], ",", 
+                RowBox[{"{", 
+                 RowBox[{"radius", ",", "radius", ",", "radius"}], "}"}]}], 
+               "]"}], ",", 
+              RowBox[{"{", 
+               RowBox[{
+                RowBox[{"size", "+", "radius"}], ",", 
+                RowBox[{"size", "+", "radius"}], ",", 
+                RowBox[{"size", "+", "radius"}]}], "}"}]}], "]"}], ",", 
+            RowBox[{"{", 
+             RowBox[{
+              RowBox[{"size", "+", 
+               RowBox[{"2", "radius"}]}], ",", 
+              RowBox[{"size", "+", 
+               RowBox[{"2", "radius"}]}], "\[IndentingNewLine]", ",", 
+              RowBox[{"size", "+", 
+               RowBox[{"2", "radius"}]}]}], "}"}]}], "]"}], ",", 
+          RowBox[{"{", 
+           RowBox[{
+            RowBox[{"2", "radius"}], ",", 
+            RowBox[{"2", "radius"}], ",", 
+            RowBox[{"2", "radius"}]}], "}"}]}], "]"}], "]"}], "]"}]}], ";", 
+     "\[IndentingNewLine]", "\[IndentingNewLine]", 
+     RowBox[{"ListContourPlot3D", "[", 
+      RowBox[{"y", ",", 
+       RowBox[{"Contours", "\[Rule]", 
+        RowBox[{"{", 
+         RowBox[{"v", " ", 
+          RowBox[{
+           RowBox[{"(", 
+            RowBox[{"size", "/", 
+             RowBox[{"(", 
+              RowBox[{"size", "+", 
+               RowBox[{"2", "radius"}]}], ")"}]}], ")"}], "^", 
+           RowBox[{"(", 
+            RowBox[{"3", "/", "2"}], ")"}]}]}], "}"}]}], ",", 
+       RowBox[{"Mesh", "\[Rule]", "None"}], ",", 
+       RowBox[{"Axes", "\[Rule]", "False"}], ",", 
+       RowBox[{"Boxed", "\[Rule]", "False"}], ",", 
+       RowBox[{"BoxRatios", "\[Rule]", "Automatic"}], ",", 
+       RowBox[{"SphericalRegion", "\[Rule]", "True"}], ",", 
+       RowBox[{"PreserveImageOptions", "\[Rule]", "True"}]}], "]"}]}]}], 
+   "\[IndentingNewLine]", "]"}]}]}], "Input",
+ CellChangeTimes->{{3.447389386807078*^9, 3.447389412797472*^9}, {
+  3.449917385492261*^9, 3.4499174081950207`*^9}, {3.4499175387659473`*^9, 
+  3.449917572723259*^9}}]
+},
+WindowSize->{903, 688},
+WindowMargins->{{318, Automatic}, {Automatic, 0}},
+Magnification->1.5,
+FrontEndVersion->"6.0 for Mac OS X x86 (32-bit) (March 13, 2008)",
+StyleDefinitions->"Default.nb"
+]
+(* End of Notebook Content *)
+
+(* Internal cache information *)
+(*CellTagsOutline
+CellTagsIndex->{}
+*)
+(*CellTagsIndex
+CellTagsIndex->{}
+*)
+(*NotebookFileOutline
+Notebook[{
+Cell[568, 21, 7908, 212, 1198, "Input"]
+}
+]
+*)
+
+(* End of internal cache information *)
