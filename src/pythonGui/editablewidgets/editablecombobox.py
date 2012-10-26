@@ -49,7 +49,7 @@ class EditableComboBox(EditableWidget):
             self.__valueType = params.get('valueType')
         
         self.__comboBox.installEventFilter(self)
-        self.__comboBox.currentIndexChanged.connect(self.onEditingFinished)
+        self.connect(self.__comboBox, SIGNAL("currentIndexChanged(QString)"), self.onEditingFinished)
         
         # Minimum and maximum number of associated keys, 1 by default for each
         self.__minMaxAssociatedKeys = (1,1) # tuple<min,max>
