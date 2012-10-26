@@ -16,7 +16,7 @@
 #include <karabo/util/ImageElement.hh>
 
 class Schema_Test : public CPPUNIT_NS::TestFixture {
-    CPPUNIT_TEST_SUITE(Schema_Test);   
+    CPPUNIT_TEST_SUITE(Schema_Test);
     CPPUNIT_TEST(testHasKey);
     CPPUNIT_TEST(testKeyHasAlias);
     CPPUNIT_TEST(testHasAlias);
@@ -26,10 +26,12 @@ class Schema_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST(testAlias2Key);
     CPPUNIT_TEST(testGetAccessMode);
     CPPUNIT_TEST(testHasParameters);
+    CPPUNIT_TEST(testGetAllParameters);
     CPPUNIT_TEST(testHasRoot);
     CPPUNIT_TEST(testGetRoot);
     CPPUNIT_TEST(testIsAttribute);
-         
+    CPPUNIT_TEST(testPerKeyFunctionality);
+        
     CPPUNIT_TEST_SUITE_END();
 
 public:
@@ -40,6 +42,7 @@ public:
 
 private:
     void settingExpectedParameters(karabo::util::Schema&);
+    void oneElementExpectParams(karabo::util::Schema&);
     void testHasKey();
     void testKeyHasAlias();
     void testHasAlias();
@@ -49,9 +52,11 @@ private:
     void testAlias2Key();
     void testGetAccessMode();
     void testHasParameters();
+    void testGetAllParameters();
     void testHasRoot();
     void testGetRoot();
     void testIsAttribute();
+    void testPerKeyFunctionality();
 };
 
 #endif	/* SCHEMA_TEST_HH */
