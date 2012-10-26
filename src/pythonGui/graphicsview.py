@@ -15,6 +15,7 @@ from customxmlwriter import CustomXmlWriter
 from displaycomponent import DisplayComponent
 
 from enums import NavigationItemTypes
+from graphicsscene import GraphicsScene
 
 from layoutcomponents.arrow import Arrow
 from editableapplylatercomponent import EditableApplyLaterComponent
@@ -48,7 +49,7 @@ class GraphicsView(QGraphicsView):
     def __init__(self):
         super(GraphicsView, self).__init__()
         
-        self.__scene = QGraphicsScene(0, 0, 600, 500)
+        self.__scene = GraphicsScene(0, 0, 600, 500)
         self.__scene.selectionChanged.connect(self.onSceneSelectionChanged)
         self.setScene(self.__scene)
 
@@ -421,6 +422,28 @@ class GraphicsView(QGraphicsView):
         self.bringToFront()
 
 
+    def horizontalLayout(self):
+        items = self.selectedItems()
+        if len(items) < 1:
+            return
+        self._createGraphicsItemContainer(Qt.Horizontal, items)
+
+
+    def verticalLayout(self):
+        items = self.selectedItems()
+        if len(items) < 1:
+            return
+        self._createGraphicsItemContainer(Qt.Vertical, items)
+
+
+    def breakLayout(self):
+        items = self.selectedItems()
+        if len(items) < 1:
+            return
+        for item in items:
+            self.__scene.breakLayout(item)
+
+
     def unGroupItems(self):
         items = self.selectedItems()
         if len(items) < 1:
@@ -472,6 +495,41 @@ class GraphicsView(QGraphicsView):
         items = self.selectedItems()
         for item in items:
             item.setZValue(z)
+
+
+    # Creates and returns container item
+    def _createGraphicsItemContainer(self, orientation, items):
+        # Initialize layout
+        layout = QGraphicsLinearLayout(orientation)
+        layout.setContentsMargins(5,5,5,5)
+        
+        width = 0
+        height = 0
+        for item in items:
+            if isinstance(item, QGraphicsLayoutItem) is False:
+                continue
+            
+            item.setFlag(QGraphicsItem.ItemIsMovable, False)
+            item.setFlag(QGraphicsItem.ItemIsSelectable, False)
+            
+            layout.addItem(item)
+            layout.setAlignment(item, Qt.AlignCenter)
+
+            # Recalculate width and height of the whole item
+            itemGeometry = item.geometry()
+            width += itemGeometry.width()
+            if height < itemGeometry.height():
+                height = itemGeometry.height()
+
+        # Create container item for items in layout
+        containerItem = GraphicsProxyWidgetContainer(self.__isDesignMode)
+        containerItem.setLayout(layout)
+        # Set correct geometry for customItem - important for positioning
+        containerItem.setGeometry(QRectF(0, 0, width, height))
+        # Add created item to scene
+        self._addItem(containerItem)
+        
+        return containerItem
 
 
 ### protected ###
@@ -575,6 +633,8 @@ class GraphicsView(QGraphicsView):
                 displayName = QString(mimeData.data("displayName"))
                 customItem = GraphicsCustomItem(self.__isDesignMode, displayName)
                 offset = QPointF()
+                # Add created item to scene
+                self._addItem(customItem)
             elif sourceType == "AttributeTreeWidget":
                 # Internal key
                 internalKey = QString(mimeData.data("internalKey"))
@@ -598,26 +658,16 @@ class GraphicsView(QGraphicsView):
                 # Get item using internal key - needed for values in correct type
                 item = source.getAttributeTreeWidgetItemByKey(internalKey)
 
-                # Width and height of the complete customItem
-                width = 0
-                height = 0
-
-                # Init graphics items
-                layout = QGraphicsLinearLayout()
-                layout.setContentsMargins(5,5,5,5)
+                # List stored all items for layout
+                items = []
                 
                 # Label
                 label = QLabel(displayName)
                 label.setAttribute(Qt.WA_NoSystemBackground, True)
                 labelProxyWidget = GraphicsProxyWidget(self.__isDesignMode, label)
-                layout.addItem(labelProxyWidget)
-                layout.setAlignment(labelProxyWidget, Qt.AlignCenter)
                 labelProxyWidget.setTransformOriginPoint(labelProxyWidget.boundingRect().center())
-                # Recalculate width and height of the whole item
-                itemGeometry = labelProxyWidget.geometry()
-                width += itemGeometry.width()
-                if height < itemGeometry.height():
-                    height = itemGeometry.height()
+                # Add item to itemlist
+                items.append(labelProxyWidget)
                 
                 # Does key concern state of device?
                 keys = str(internalKey).split('.', 1)
@@ -631,14 +681,9 @@ class GraphicsView(QGraphicsView):
                     displayComponent = DisplayComponent(classAlias, key=internalKey, value=displayValue)
                     displayComponent.widget.setAttribute(Qt.WA_NoSystemBackground, True)
                     displayProxyWidget = GraphicsProxyWidget(self.__isDesignMode, displayComponent.widget, displayComponent, isStateToDisplay)
-                    layout.addItem(displayProxyWidget)
-                    layout.setAlignment(displayProxyWidget, Qt.AlignCenter)
                     displayProxyWidget.setTransformOriginPoint(displayProxyWidget.boundingRect().center())
-                    # Recalculate width and height of the whole item
-                    itemGeometry = displayProxyWidget.geometry()
-                    width += itemGeometry.width()
-                    if height < itemGeometry.height():
-                        height = itemGeometry.height()
+                    # Add item to itemlist
+                    items.append(displayProxyWidget)
                 
                 # Editable widget
                 if hasEditableComponent:
@@ -653,20 +698,12 @@ class GraphicsView(QGraphicsView):
                     
                     editableComponent.widget.setAttribute(Qt.WA_NoSystemBackground, True)
                     editableProxyWidget = GraphicsProxyWidget(self.__isDesignMode, editableComponent.widget, editableComponent, isStateToDisplay)
-                    layout.addItem(editableProxyWidget)
-                    layout.setAlignment(editableProxyWidget, Qt.AlignCenter)
                     editableProxyWidget.setTransformOriginPoint(editableProxyWidget.boundingRect().center())
-                    # Recalculate width and height of the whole item
-                    itemGeometry = editableProxyWidget.geometry()
-                    width += itemGeometry.width()
-                    if height < itemGeometry.height():
-                        height = itemGeometry.height()
-                
-                customItem = GraphicsProxyWidgetContainer(self.__isDesignMode)
-                customItem.setLayout(layout)
-                # Set correct geometry for customItem - important for positioning
-                customItem.setGeometry(QRectF(0, 0, width, height))
-                
+                    # Add item to itemlist
+                    items.append(editableProxyWidget)
+
+                customItem = self._createGraphicsItemContainer(Qt.Horizontal, items)
+
                 # Calculations to position item center-oriented
                 bRect = customItem.boundingRect()
                 leftPos = bRect.topLeft()
@@ -677,9 +714,6 @@ class GraphicsView(QGraphicsView):
                 customItem.setTransformOriginPoint(centerPos)
             
             if customItem is None: return
-            
-            # Add created item to scene
-            self._addItem(customItem)
 
             pos = event.pos()
             scenePos = self.mapToScene(pos)
