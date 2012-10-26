@@ -170,6 +170,18 @@ class CustomWidget(QWidget):
         self.__view.groupItems()
 
 
+    def horizontalLayout(self):
+        self.__view.horizontalLayout()
+
+
+    def verticalLayout(self):
+        self.__view.verticalLayout()
+
+
+    def breakLayout(self):
+        self.__view.breakLayout()
+
+
     def unGroupItems(self):
         self.__view.unGroupItems()
 

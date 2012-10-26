@@ -139,7 +139,7 @@ class DisplayChoiceElement(DisplayWidget):
 
 
 ### slots ###
-    def onEditingFinished(self):
+    def onEditingFinished(self, index):
         #if self._applyVisible() is True:
             # device instance
         #    self.applyEnabled = True
@@ -147,7 +147,6 @@ class DisplayChoiceElement(DisplayWidget):
             # device class
         #    self.signalDeviceClassValueChanged.emit(self.item.internalKey, self.value)
         
-        index = self.__comboBox.currentIndex()
         if index > -1 and index < len(self.childItemList) :
             for i in range(len(self.childItemList)) :
                 item = self.childItemList[i]

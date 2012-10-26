@@ -32,7 +32,7 @@ class LoginDialog(QDialog):
         self.__cbSelectConnection.addItem("Direct broker connection")
         hLayout.addWidget(self.__leSelectConnection)
         hLayout.addWidget(self.__cbSelectConnection)
-        self.__cbSelectConnection.currentIndexChanged.connect(self.onSelectConnectionChanged)
+        self.connect(self.__cbSelectConnection, SIGNAL("currentIndexChanged(QString)"), self.onSelectConnectionChanged)
         
         self.__hLine = QFrame(self)
         #self.__hLine.setGeometry(QRect(320, 150, 118, 3))
@@ -108,6 +108,6 @@ class LoginDialog(QDialog):
             self._showEasterEgg(False)
 
 
-    def onSelectConnectionChanged(self, var):
-        print "onSelectConnectionChanged", var
+    def onSelectConnectionChanged(self, value):
+        print "onSelectConnectionChanged", value
 

@@ -164,8 +164,7 @@ class EditableChoiceElement(EditableWidget):
 
 
 ### slots ###
-    def onEditingFinished(self):
-        index = self.__comboBox.currentIndex()
+    def onEditingFinished(self, index):
         if index > -1 and index < len(self.childItemList):
             self._updateChoiceItems(index)
         self.valueEditingFinished(self.__key, self.value)

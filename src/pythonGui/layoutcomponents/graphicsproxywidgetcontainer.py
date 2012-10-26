@@ -117,27 +117,7 @@ class GraphicsProxyWidgetContainer(NodeBase, QGraphicsWidget):
 
 
     def onBreakLayout(self):
-        extractedItems = []
-        nbItems = self.layout().count()
-        while nbItems > 0:
-            nbItems -= 1
-            
-            item = self.layout().itemAt(nbItems)
-            pos = item.pos()
-
-            item.setFlag(QGraphicsItem.ItemIsMovable, True)
-            item.setFlag(QGraphicsItem.ItemIsSelectable, True)
-            extractedItems.append(item)
-            
-            # Remove item from layout
-            self.layout().removeItem(item)
-            # Remove item
-            self.scene().removeItem(item)
-            # Add item to scene
-            self.scene().addItem(item)
-            scenePos = self.mapToScene(pos)
-            item.adjustSize()
-            item.setPos(scenePos)
+        self.scene().breakLayout(self)
         self.deleteLater()
         self.scene().removeItem(self)
 

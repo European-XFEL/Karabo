@@ -166,6 +166,30 @@ class CustomMiddlePanel(QWidget):
         self.__acGroupItems.setToolTip(text)
         self.__acGroupItems.triggered.connect(self.onGroupItems)
         
+        text = "Horizontal layout"
+        self.__acHLayout = QAction(text, self)
+        self.__acHLayout.setStatusTip(text)
+        self.__acHLayout.setToolTip(text)
+        self.__acHLayout.triggered.connect(self.onHorizontalLayout)
+        
+        text = "Vertical layout"
+        self.__acVLayout = QAction(text, self)
+        self.__acVLayout.setStatusTip(text)
+        self.__acVLayout.setToolTip(text)
+        self.__acVLayout.triggered.connect(self.onVerticalLayout)
+        
+        text = "Break layout"
+        self.__acBreakLayout = QAction(text, self)
+        self.__acBreakLayout.setStatusTip(text)
+        self.__acBreakLayout.setToolTip(text)
+        self.__acBreakLayout.triggered.connect(self.onBreakLayout)
+        
+        self.__mGroupInLayout = QMenu("Group selected items in")
+        self.__mGroupInLayout.addAction(self.__acHLayout)
+        self.__mGroupInLayout.addAction(self.__acVLayout)
+        self.__mGroupInLayout.addSeparator()
+        self.__mGroupInLayout.addAction(self.__acBreakLayout)
+        
         text = "Ungroup selected items"
         self.__acUnGroupItems = QAction(QIcon(":ungroup"), text, self)
         self.__acUnGroupItems.setStatusTip(text)
@@ -174,6 +198,7 @@ class CustomMiddlePanel(QWidget):
         
         self.__mGroup = QMenu()
         self.__mGroup.addAction(self.__acGroupItems)
+        self.__mGroup.addMenu(self.__mGroupInLayout)
         self.__mGroup.addAction(self.__acUnGroupItems)
         self.__tbGroup.setMenu(self.__mGroup)
         
@@ -261,6 +286,7 @@ class CustomMiddlePanel(QWidget):
         
         self.__tbGroup.setDisabled(not isItemGroup and len(self.__customWidget.selectedItems()) < 2)
         self.__acGroupItems.setDisabled(isItemGroup)
+        self.__mGroupInLayout.setDisabled(isItemGroup)
         self.__acUnGroupItems.setDisabled(not isItemGroup)
 
 
@@ -340,6 +366,18 @@ class CustomMiddlePanel(QWidget):
 
     def onGroupItems(self):
         self.__customWidget.groupItems()
+
+
+    def onHorizontalLayout(self):
+        self.__customWidget.horizontalLayout()
+
+
+    def onVerticalLayout(self):
+        self.__customWidget.verticalLayout()
+
+
+    def onBreakLayout(self):
+        self.__customWidget.breakLayout()
 
 
     def onUnGroupItems(self):

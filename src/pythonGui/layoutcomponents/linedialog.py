@@ -107,7 +107,7 @@ class LineDialog(QDialog):
             self.__buttonBox.button(QDialogButtonBox.Ok).setEnabled(True)
 
 
-    def onDashTypeChanged(self):
+    def onDashTypeChanged(self, index):
         self.__buttonBox.button(QDialogButtonBox.Ok).setEnabled(True)
 
 
