@@ -75,6 +75,11 @@ namespace karabo {
              * Destructor.
              */
             virtual ~InterInstanceOutput() {
+                if (m_dataThread.joinable()) {
+                    m_dataConnection->close();
+                    m_dataIOService->stop();
+                    m_dataThread.join();
+                }
             }
 
             /**
@@ -168,8 +173,9 @@ namespace karabo {
 
             void onTcpChannelError(TcpChannelPointer, const std::string& errorMessage) {
                 std::cout << errorMessage << std::endl;
+                
             }
-            
+
             void onTcpChannelRead(TcpChannelPointer channel, const karabo::util::Hash& message) {
 
                 std::string reason;
@@ -213,12 +219,14 @@ namespace karabo {
 
             void onInputAvailable(const std::string& instanceId) {
 
-
-
                 if (m_sharedInputs.has(instanceId)) {
                     InputChannelInfo channelInfo = m_sharedInputs.get<karabo::util::Hash > (instanceId);
                     pushShareNext(channelInfo);
                     std::cout << "New (shared) input on instance " << instanceId << " available for writing " << std::endl;
+                    if (m_finishedSharedChunkIds.size() > 0 ) {
+                        this->autoDistributeQueue();
+                        return;
+                    }
                 } else if (m_copiedInputs.has(instanceId)) {
                     InputChannelInfo channelInfo = m_copiedInputs.get<karabo::util::Hash > (instanceId);
                     pushCopyNext(channelInfo);
@@ -229,12 +237,48 @@ namespace karabo {
                 this->triggerIOEvent();
             }
 
+            void pushShareNext(const InputChannelInfo& info) {
+                boost::mutex::scoped_lock lock(m_nextInputMutex);
+                m_shareNext.push_back(info);
+            }
+
+            InputChannelInfo popShareNext() {
+                InputChannelInfo info = m_shareNext.front();
+                m_shareNext.pop_front();
+                return info;
+            }
+
+            void pushCopyNext(const InputChannelInfo& info) {
+                boost::mutex::scoped_lock lock(m_nextInputMutex);
+                m_copyNext.push_back(info);
+            }
+
+            InputChannelInfo popCopyNext() {
+                InputChannelInfo info = m_copyNext.front();
+                m_copyNext.pop_front();
+                return info;
+            }
+
             bool canCompute() {
                 boost::mutex::scoped_lock lock(m_nextInputMutex);
                 return !m_shareNext.empty();
             }
-
+            
+            void autoDistributeQueue() {
+                boost::mutex::scoped_lock lock(m_nextInputMutex);
+                std::cout << "Auto-distributing queued data" << std::endl;
+                unsigned int chunkId = popSharedChunkId();
+                InputChannelInfo channelInfo = popShareNext();
+                if (channelInfo.get<std::string > ("memoryLocation") == "local") {
+                    distributeLocal(chunkId, channelInfo);
+                } else {
+                    distributeRemote(chunkId, channelInfo);
+                }
+            }
+            
             void update() {
+
+                // TODO This function must be thread safe
 
                 std::cout << "update" << std::endl;
 
@@ -247,62 +291,13 @@ namespace karabo {
                 m_chunkId = Memory<T>::registerChunk(m_channelId);
             }
 
-            void pushShareNext(const InputChannelInfo& info) {
-                boost::mutex::scoped_lock lock(m_nextInputMutex);
-                m_shareNext.push_back(info);
-            }
-
-            InputChannelInfo popShareNext() {
-                boost::mutex::scoped_lock lock(m_nextInputMutex);
-                InputChannelInfo info = m_shareNext.front();
-                m_shareNext.pop_front();
-                return info;
-            }
-
-            void pushCopyNext(const InputChannelInfo& info) {
-                boost::mutex::scoped_lock lock(m_nextInputMutex);
-                m_copyNext.push_back(info);
-            }
-
-            InputChannelInfo popCopyNext() {
-                boost::mutex::scoped_lock lock(m_nextInputMutex);
-                InputChannelInfo info = m_copyNext.front();
-                m_copyNext.pop_front();
-                return info;
-            }
-
-            void pushSharedChunkId(const unsigned int& chunkId) {
-                boost::mutex::scoped_lock lock(m_chunkIdsMutex);
-                m_finishedSharedChunkIds.push_back(chunkId);
-            }
-
-            unsigned int popSharedChunkId() {
-                boost::mutex::scoped_lock lock(m_chunkIdsMutex);
-                unsigned int chunkId = m_finishedSharedChunkIds.front();
-                m_finishedSharedChunkIds.pop_front();
-                return chunkId;
-            }
-
-            void pushCopiedChunkId(const unsigned int& chunkId) {
-                boost::mutex::scoped_lock lock(m_chunkIdsMutex);
-                m_finishedCopiedChunkIds.push_back(chunkId);
-            }
-
-            unsigned int popCopiedChunkId() {
-                boost::mutex::scoped_lock lock(m_chunkIdsMutex);
-                unsigned int chunkId = m_finishedCopiedChunkIds.front();
-                m_finishedCopiedChunkIds.pop_front();
-                return chunkId;
-            }
-
             void distribute() {
-
-                // Save currently written chunkId
-                pushSharedChunkId(m_chunkId);
 
                 bool goOn = checkAndHandleSharedInputs();
 
                 if (goOn) {
+                    boost::mutex::scoped_lock lock(m_nextInputMutex);
+                    
                     std::cout << "finishedChunks " << m_finishedSharedChunkIds.size() << " shareNext " << m_shareNext.size() << std::endl;
                     while (!m_finishedSharedChunkIds.empty() && !m_shareNext.empty()) {
 
@@ -320,33 +315,58 @@ namespace karabo {
             }
 
             bool checkAndHandleSharedInputs() {
+
+                // If no shared input channels are registered at all, we do not go on
+                if (m_sharedInputs.empty()) return false;
+
+                // If shared inputs channels are available for distribution go on
                 if (!m_shareNext.empty()) {
+                    pushSharedChunkId(m_chunkId);
                     return true;
-                } else {
-                    // React as configured
-                    if (m_onNoSharedInputChannelAvailable == "drop") {
-                        std::cout << "Dropping (shared) data package with chunkId: " << m_chunkId << std::endl;
-                        popSharedChunkId();
-                        return false;
-                    }
-                    if (m_onNoSharedInputChannelAvailable == "throw") {
-                        throw IO_EXCEPTION("Can not write accumulated data because no (shared) input is available");
-                        return false;
-                    }
-                    if (m_onNoSharedInputChannelAvailable == "queue") {
-                        std::cout << "Queuing (shared) data package with chunkId: " << m_chunkId << std::endl;
-                        return false;
-                    }
-                    if (m_onNoSharedInputChannelAvailable == "wait") {
-                        std::cout << "Waiting for available input channel..." << std::flush;
-                        while (m_shareNext.empty()) {
-                            boost::this_thread::sleep(boost::posix_time::millisec(500));
-                        }
-                        std::cout << "found one, distributing now" << std::endl;
-                        return true;
-                    }
+                }
+
+                // There are shared inputs registered but currently not available -> react as configured
+                if (m_onNoSharedInputChannelAvailable == "drop") {
+                    std::cout << "Dropping (shared) data package with chunkId: " << m_chunkId << std::endl;
                     return false;
                 }
+
+                if (m_onNoSharedInputChannelAvailable == "throw") {
+                    throw IO_EXCEPTION("Can not write accumulated data because no (shared) input is available");
+                    return false;
+                }
+
+                if (m_onNoSharedInputChannelAvailable == "queue") {
+                    std::cout << "Queuing (shared) data package with chunkId: " << m_chunkId << std::endl;
+                    pushSharedChunkId(m_chunkId);
+                    return false;
+                }
+
+                if (m_onNoSharedInputChannelAvailable == "wait") {
+                    std::cout << "Waiting for available (shared) input channel..." << std::flush;
+                    pushSharedChunkId(m_chunkId);
+                    while (m_shareNext.empty()) {
+                        boost::this_thread::sleep(boost::posix_time::millisec(500));
+                    }
+                    std::cout << "found one, distributing now" << std::endl;
+                    return true;
+                }
+
+                // We should never be here!!
+                throw LOGIC_EXCEPTION("Output channel case internally misconfigured, ask BH");
+                return false;
+            }
+
+            void pushSharedChunkId(const unsigned int& chunkId) {
+                boost::mutex::scoped_lock lock(m_chunkIdsMutex);
+                m_finishedSharedChunkIds.push_back(chunkId);
+            }
+
+            unsigned int popSharedChunkId() {
+                boost::mutex::scoped_lock lock(m_chunkIdsMutex);
+                unsigned int chunkId = m_finishedSharedChunkIds.front();
+                m_finishedSharedChunkIds.pop_front();
+                return chunkId;
             }
 
             void distributeLocal(const unsigned int& chunkId, const InputChannelInfo& channelInfo) {
@@ -411,56 +431,72 @@ namespace karabo {
 
             void copy() {
 
-                if (!m_copiedInputs.empty()) {
+                bool goOn = checkAndHandleCopiedInputs();
 
-                    // Save currently written chunkId
-                    pushCopiedChunkId(m_chunkId);
+                if (goOn) {
+                    boost::mutex::scoped_lock lock(m_nextInputMutex);
+                    
+                    unsigned int chunkId = popCopiedChunkId();
 
-                    bool goOn = checkAndHandleCopiedInputs();
-
-                    if (goOn) {
-
-                        unsigned int chunkId = popCopiedChunkId();
-                        
-                        while (!m_copyNext.empty()) {
-                            InputChannelInfo channelInfo = popCopyNext();
-                            if (channelInfo.get<std::string > ("memoryLocation") == "local") {
-                                copyLocal(chunkId, channelInfo);
-                            } else {
-                                copyRemote(chunkId, channelInfo);
-                            }
+                    while (!m_copyNext.empty()) {
+                        InputChannelInfo channelInfo = popCopyNext();
+                        if (channelInfo.get<std::string > ("memoryLocation") == "local") {
+                            copyLocal(chunkId, channelInfo);
+                        } else {
+                            copyRemote(chunkId, channelInfo);
                         }
                     }
                 }
             }
 
             bool checkAndHandleCopiedInputs() {
+
+                // If no copied input channels are registered at all, we do not go on
+                if (m_copiedInputs.empty()) return false;
+                
+                // If all copied inputs channels are available for distribution go on
                 if (m_copyNext.size() == m_copiedInputs.size()) {
+                    pushCopiedChunkId(m_chunkId);
                     return true;
-                } else {
-                    // React as configured
-                    if (m_onNoCopiedInputChannelAvailable == "drop") {
-                        std::cout << "Dropping (copied) data package for " << m_copiedInputs.size() - m_copyNext.size() << " connected inputs" << std::endl;
-                        return true;
-                    }
-                    if (m_onNoCopiedInputChannelAvailable == "throw") {
-                        throw IO_EXCEPTION("Can not write accumulated data because not all (shared) inputs are available");
-                        return false;
-                    }
-                    //                    if (m_onNoCopiedInputChannelAvailable == "queue") {
-                    //                        std::cout << "Queuing (copied) data package with chunkId: " << m_chunkId << std::endl;
-                    //                        return false;
-                    //                    }
-                    if (m_onNoCopiedInputChannelAvailable == "wait") {
-                        std::cout << "Waiting for all copy input channels to be available..." << std::flush;
-                        while (m_copyNext.size() != m_copiedInputs.size()) {
-                            boost::this_thread::sleep(boost::posix_time::millisec(500));
-                        }
-                        std::cout << "found all, copying now" << std::endl;
-                        return true;
-                    }
+                }
+
+                // React as configured
+                if (m_onNoCopiedInputChannelAvailable == "drop") {
+                    std::cout << "Dropping (copied) data package for " << m_copiedInputs.size() - m_copyNext.size() << " connected inputs" << std::endl;
+                    pushCopiedChunkId(m_chunkId);
+                    return true;
+                }
+                if (m_onNoCopiedInputChannelAvailable == "throw") {
+                    throw IO_EXCEPTION("Can not write accumulated data because not all (shared) inputs are available");
                     return false;
                 }
+                //                    if (m_onNoCopiedInputChannelAvailable == "queue") {
+                //                        std::cout << "Queuing (copied) data package with chunkId: " << m_chunkId << std::endl;
+                //                        return false;
+                //                    }
+                if (m_onNoCopiedInputChannelAvailable == "wait") {
+                    std::cout << "Waiting for all copy input channels to be available... " << std::flush;
+                    pushCopiedChunkId(m_chunkId);
+                    while (m_copyNext.size() != m_copiedInputs.size()) {
+                        boost::this_thread::sleep(boost::posix_time::millisec(500));
+                    }
+                    std::cout << "found all, copying now" << std::endl;
+                    return true;
+                }
+                return false;
+
+            }
+
+            void pushCopiedChunkId(const unsigned int& chunkId) {
+                boost::mutex::scoped_lock lock(m_chunkIdsMutex);
+                m_finishedCopiedChunkIds.push_back(chunkId);
+            }
+
+            unsigned int popCopiedChunkId() {
+                boost::mutex::scoped_lock lock(m_chunkIdsMutex);
+                unsigned int chunkId = m_finishedCopiedChunkIds.front();
+                m_finishedCopiedChunkIds.pop_front();
+                return chunkId;
             }
 
             void copyLocal(const unsigned int& chunkId, const InputChannelInfo& channelInfo) {

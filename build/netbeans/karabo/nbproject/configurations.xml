@@ -16,7 +16,6 @@
         <itemPath>../../../src/karabo/core/Module.hh</itemPath>
         <itemPath>../../../src/karabo/core/ReconfigurableFsm.hh</itemPath>
         <itemPath>../../../src/karabo/core/Runner.hh</itemPath>
-        <itemPath>../../../src/karabo/core/SignalSlotable.hh</itemPath>
         <itemPath>../../../src/karabo/core/StartStopFsm.hh</itemPath>
         <itemPath>../../../src/karabo/core/core.hh</itemPath>
         <itemPath>../../../src/karabo/core/coredll.hh</itemPath>

@@ -156,12 +156,12 @@ namespace karabo {
                 }
                 if (Memory<std::vector<char> >::size(m_channelId, m_inactiveChunk) < this->getMinimumNumberOfData()) {
                     std::cout << "can read more data" << std::endl;
-                    this->triggerCanReadEvent();
+                    //this->triggerCanReadEvent();
                 } else if (Memory<std::vector<char> >::size(m_channelId, m_activeChunk) == 0) {
                     std::swap(m_activeChunk, m_inactiveChunk);
                     std::cout << "swapped buffers, can read more" << std::endl;
-                    this->triggerCanReadEvent();
-                    this->triggerIOEvent();
+                    //this->triggerCanReadEvent();
+                    //this->triggerIOEvent();
                 }
 
                 channel->readAsyncVectorHash(boost::bind(&karabo::xms::FileWrapDeviceInput::onTcpChannelRead, this, _1, _2, _3));

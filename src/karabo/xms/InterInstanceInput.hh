@@ -56,7 +56,7 @@ namespace karabo {
 
                 VECTOR_STRING_ELEMENT(expected).key("connectedOutputChannels")
                         .displayedName("Connected Output Channels")
-                        .description("Defines the inter-device connectivity for p-2-p data transfer (use format: <instanceId>/<channelName>)")
+                        .description("Defines the inter-device connectivity for p-2-p data transfer (use format: <instanceId>@<channelName>)")
                         .assignmentMandatory()
                         .init()
                         .commit();
@@ -80,7 +80,7 @@ namespace karabo {
                 input.get("connectedOutputChannels", connectedOutputChannels);
                 for (size_t i = 0; i < connectedOutputChannels.size(); ++i) {
                     std::vector<std::string> tmp;
-                    boost::split(tmp, connectedOutputChannels[i], boost::is_any_of("/"));
+                    boost::split(tmp, connectedOutputChannels[i], boost::is_any_of("@"));
                     m_connectedOutputChannels.push_back(karabo::util::Hash("instanceId", tmp[0], "channelId", tmp[1]));
                 }
 
@@ -181,7 +181,7 @@ namespace karabo {
                     std::swap(m_activeChunk, m_inactiveChunk);
                     std::cout << "swapped buffers, can read more" << std::endl;
                     notifyOutputChannelForPossibleRead(channel);
-                    this->triggerIOEvent();
+                    this->template triggerIOEvent< Input<T> >();
                 }
 
                 channel->readAsyncVectorHash(boost::bind(&karabo::xms::InterInstanceInput<T>::onTcpChannelRead, this, _1, _2, _3));
