@@ -45,6 +45,11 @@ class GraphicsProxyWidget(NodeBase, QGraphicsProxyWidget):
         NodeBase.__del__(self)
 
 
+    def destroy(self):
+        if self.__component:
+            self.__component.destroy()
+
+
 ### private ###
     def _setupContextMenu(self, isStateToDisplay):
         # Populate context menu
@@ -138,6 +143,9 @@ class GraphicsProxyWidget(NodeBase, QGraphicsProxyWidget):
 
 ### Slots ###
     def onChangeWidget(self):
+        if self.__component is None:
+            return
+        
         action = self.sender()
         # Change display or editable widget
         self.__component.changeWidget(action.text())
@@ -145,6 +153,8 @@ class GraphicsProxyWidget(NodeBase, QGraphicsProxyWidget):
 
 
     def onChangeVacuumWidget(self):
+        if self.__component is None:
+            return
         action = self.sender()
         # Change vacuum widget
         self.__component.changeToVacuumWidget(action.text())

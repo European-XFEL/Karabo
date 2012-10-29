@@ -388,6 +388,8 @@ class GraphicsView(QGraphicsView):
                 print "Link or Arrow removed"
             elif isinstance(item, Line):
                 print "Line removed"
+            elif isinstance(item, GraphicsProxyWidgetContainer) or isinstance(item, GraphicsProxyWidget):
+                item.destroy()
             
             self.__scene.removeItem(item)
             del item
