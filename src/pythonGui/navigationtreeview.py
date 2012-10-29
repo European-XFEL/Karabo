@@ -78,11 +78,6 @@ class NavigationTreeView(QTreeView):
                 displayName = itemInfo.get('devClaId')
 
         mimeData = QMimeData()
-        #mimeData.setHtml("NavigationTreeView")
-        #if internalKey is not None:
-        #    mimeData.setText(internalKey)
-        #    data = QString(internalKey + "," + displayName)
-        #    mimeData.setData("data", data.toLatin1())
 
         # Put necessary data in MimeData:
         # Source type
