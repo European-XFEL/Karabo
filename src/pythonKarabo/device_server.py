@@ -378,7 +378,8 @@ class DeviceServer(object):
             _index = cls.instanceCountPerDeviceServer[self._devSrvInstId]
             if self._devSrvInstId == "":
                 #myHostName, someList, myHostAddrList = socket.gethostbyaddr(socket.gethostname())
-                myHostName = socket.gethostname()
+                possiblyFullHostName = socket.gethostname()
+                myHostName, dotsep, domainName = possiblyFullHostName.partition('.')
                 return myHostName + "/" + devClassId + "/" + str(_index)
             tokens = self._devSrvInstId.split("/")
             _domain = tokens.pop(0) + "-" + tokens.pop()
