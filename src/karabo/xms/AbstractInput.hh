@@ -14,7 +14,7 @@
 #define	KARABO_XMS_ABSTRACTINPUT_HH
 
 #include <boost/function.hpp>
-
+#include <boost/any.hpp>
 #include <karabo/util/Factory.hh>
 
 namespace karabo {
@@ -67,11 +67,13 @@ namespace karabo {
                 return m_instanceId;
             }
 
-            void registerIOEventHandler(const IOEventHandler& ioEventHandler) {
+            template <class InputType>
+            void registerIOEventHandler(const boost::function<void (const boost::shared_ptr<InputType>&) >& ioEventHandler) {
                 m_ioEventHandler = ioEventHandler;
             }
             
-            void registerCanReadEventHandler( const CanReadEventHandler& canReadEventHandler) {
+            template <class T>
+            void registerCanReadEventHandler( const boost::function<void (const boost::shared_ptr<T>&) >& canReadEventHandler) {
                 m_canReadEventHandler = canReadEventHandler;
             }
 
@@ -106,12 +108,14 @@ namespace karabo {
                 return m_nData;
             }
 
-            void triggerCanReadEvent() {
-                if (m_canReadEventHandler) m_canReadEventHandler(shared_from_this());
-            }
+//            template <class T>
+//            void triggerCanReadEvent() {
+//                if (m_canReadEventHandler) boost::any_cast<boost::function<void (const boost::shared_ptr<T>&) > >(m_canReadEventHandler)(boost::static_pointer_cast< T >(shared_from_this()));
+//            }
             
+            template <class InputType>
             void triggerIOEvent() {
-                if(m_ioEventHandler) m_ioEventHandler(shared_from_this());
+                if(!m_ioEventHandler.empty()) (boost::any_cast<boost::function<void (const boost::shared_ptr<InputType>&) > >(m_ioEventHandler))(boost::static_pointer_cast< InputType >(shared_from_this()));
             }
             
         private:
@@ -119,8 +123,8 @@ namespace karabo {
             unsigned int m_nData;
             std::string m_instanceId;
 
-            CanReadEventHandler m_canReadEventHandler;
-            IOEventHandler m_ioEventHandler;
+            boost::any m_canReadEventHandler;
+            boost::any m_ioEventHandler;
 
 
 

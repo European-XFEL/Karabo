@@ -40,7 +40,7 @@ namespace karabo {
 
         KARABO_REGISTER_ONLY_ME_CC(DeviceServer)
 
-        DeviceServer::DeviceServer() : m_log(0) {
+        DeviceServer::DeviceServer() : m_log(0), m_deviceInstanceCount(0) {
             Hash config("Xsd.indentation", -1);
             m_format = Format<Schema>::create(config);
         }
@@ -378,7 +378,7 @@ namespace karabo {
         }
         
         std::string DeviceServer::generateDefaultDeviceInstanceId(const std::string& classId) {
-            string index = String::toString(m_deviceInstanceMap.size()+1);
+            string index = String::toString(++m_deviceInstanceCount);
             // Prepare shortened Device-Server name
             vector<string> tokens;
             boost::split(tokens, m_devSrvInstId, boost::is_any_of("/"));
