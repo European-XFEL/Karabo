@@ -192,6 +192,8 @@ namespace karabo {
             }
 
             string instanceId = hostname + "/DeviceServer/" + String::toString(result.size());
+            this->sanifyDeviceServerInstanceId(instanceId); 
+            
             log() << Priority::INFO << "This will be the " << result.size() + 1 << " device-server online on host \"" << hostname << "\"";
             log() << Priority::INFO << "Device-Server instance id will be: " << instanceId;
 
@@ -205,7 +207,13 @@ namespace karabo {
             trackExistenceOfInstance(instanceId);
             reply(instanceId);
         }
-
+        
+        void MasterDevice::sanifyDeviceServerInstanceId(std::string& originalInstanceId) const {
+            for (std::string::iterator it = originalInstanceId.begin(); it != originalInstanceId.end(); ++it) {
+                if ((*it) == '.') (*it) = '-';
+            }
+        }
+        
         void MasterDevice::slotNewDeviceServerAvailable(const std::string& hostname, const std::string& devSrvInstId) {
             log() << Priority::INFO << "New device-server from host \"" << hostname << "\" wants to register with id \"" << devSrvInstId << "\"";
 

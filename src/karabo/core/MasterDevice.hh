@@ -74,7 +74,9 @@ namespace karabo {
              * Tracks the existence of all device server AND device instances.
              */
             void trackInstances();
-
+            
+            void sanifyDeviceServerInstanceId(std::string& originalInstanceId) const;
+                        
         private: // Members
 
         };
