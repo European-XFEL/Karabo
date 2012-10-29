@@ -195,6 +195,7 @@ namespace karabo {
             std::vector<karabo::util::Hash> m_autoStart;
             boost::thread_group m_deviceThreads;
             DeviceInstanceMap m_deviceInstanceMap;
+            unsigned int m_deviceInstanceCount;
                         
             karabo::io::Format<karabo::util::Schema>::Pointer m_format;
             

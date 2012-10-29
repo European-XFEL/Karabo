@@ -556,7 +556,7 @@ namespace karabo {
             }
             
             template <class InputType>
-            boost::shared_ptr<InputType > createInputChannel(const std::string& name, const karabo::util::Hash input, const InputAvailableHandler& onInputAvailable = InputAvailableHandler()) {
+            boost::shared_ptr<InputType > createInputChannel(const std::string& name, const karabo::util::Hash input, const boost::function<void (const boost::shared_ptr<InputType>&) >& onInputAvailable = boost::function<void (const boost::shared_ptr<InputType>&) >()) {
                 using namespace karabo::util;
                 AbstractInput::Pointer channel = AbstractInput::createChoice(name, input);
                 channel->setInstanceId(m_instanceId);

@@ -15,7 +15,8 @@ read -e -p " Installation path [$HOME]: " dir
 echo
 installDir=$HOME
 if [ "$dir" != "" ]; then
-    installDir=$dir
+    # Always reslove to absolute path
+    installDir=$(dirname `[[ $dir = /* ]] && echo "$dir" || echo "$PWD/${dir#./}"`)
     mkdir -p $installDir
 fi
 echo -n " Extracting files, please wait..."
