@@ -11,6 +11,8 @@
 
 __all__ = ["GraphicsProxyWidgetContainer"]
 
+
+from layoutcomponents.graphicsproxywidget import GraphicsProxyWidget
 from layoutcomponents.nodebase import NodeBase
 
 from PyQt4.QtCore import *
@@ -25,6 +27,16 @@ class GraphicsProxyWidgetContainer(NodeBase, QGraphicsWidget):
         self.setFlags(QGraphicsItem.ItemIsMovable | QGraphicsItem.ItemIsSelectable)
         
         self._setupContextMenu()
+
+
+    def destroy(self):
+        layout = self.layout()
+        nbItems = layout.count()
+        while nbItems > 0:
+            nbItems -= 1
+            item = layout.itemAt(nbItems)
+            if isinstance(item, GraphicsProxyWidget):
+                item.destroy()
 
 
     def _setupContextMenu(self):
