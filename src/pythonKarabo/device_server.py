@@ -410,7 +410,8 @@ class DeviceServer(object):
         
 
 if __name__ == '__main__':
-    myHost = socket.gethostname()
+    myFullHost = socket.gethostname()
+    myHost, dotsep, domainName = myFullHost.partition('.')
     devSrvId = myHost + "/" + "DeviceServer" + "/0" 
     conf = Hash('DeviceServer.devSrvInstId', devSrvId)
     schema = DeviceServer.expectedParameters()

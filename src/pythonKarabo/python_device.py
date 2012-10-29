@@ -144,7 +144,8 @@ class PythonDevice(object):
             self.log.INFO("Starting up {} on networkId {}".format(self._classId, self._devInstId))
             
             #myHostName, someList, myHostAddrList = socket.gethostbyaddr(socket.gethostname())
-            myHostName = socket.gethostname()
+            myFullHostName = socket.gethostname()
+            myHostName, dotsep, domainName = myFullHostName.partition('.')
             if self._devSrvInstId == myHostName:
                 xsd = self.__class__.convertToXsd(self._allExpectedParameters)
                 self._ss.call("*", "slotNewStandaloneDeviceInstanceAvailable", myHostName, tmp, self._ss.getInstanceId(), xsd)
@@ -488,7 +489,8 @@ class PythonDevice(object):
             _index = cls.instanceCountPerDeviceServer[self._devSrvInstId]
             if self._devSrvInstId == "":
                 #myHostName, someList, myHostAddrList = socket.gethostbyaddr(socket.gethostname())
-                myHostName = socket.gethostname()
+                myFullHostName = socket.gethostname()
+                myHostName, dotsep, domainName = myFullHostName.partition('.')
                 return myHostName + "/" + self._classId + "/" + str(_index)
             tokens = self._devSrvInstId.split("/")
             _domain = tokens.pop(0) + "-" + tokens.pop()
