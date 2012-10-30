@@ -20,7 +20,8 @@ class ClassInfo_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST(testGetClassId);
     CPPUNIT_TEST(testGetClassName);
     CPPUNIT_TEST(testGetNamespace);
-
+    CPPUNIT_TEST(testAnotherUsage);
+    
     CPPUNIT_TEST_SUITE_END();
 
 public:
@@ -32,6 +33,7 @@ private:
     void testGetClassId();
     void testGetClassName();
     void testGetNamespace();
+    void testAnotherUsage();
 };
 
 #endif	/* CLASSINFO_TEST_HH */
