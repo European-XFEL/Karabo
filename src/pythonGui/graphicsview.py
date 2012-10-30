@@ -577,8 +577,8 @@ class GraphicsView(QGraphicsView):
             pos = QPointF(pos.x()-rectPos.x(), pos.y()-rectPos.y())
             newRect = QRectF(QPointF(), QPointF(pos))
             self.__rect.setRect(newRect)
-        elif self.__mode == self.MoveItem:
-            QGraphicsView.mouseMoveEvent(self, event)
+        #elif self.__mode == self.MoveItem:
+        QGraphicsView.mouseMoveEvent(self, event)
 
 
     def mouseReleaseEvent(self, event):
@@ -605,7 +605,6 @@ class GraphicsView(QGraphicsView):
         
         source = event.source()
         if (source is not None) and (source is not self):
-            event.setDropAction(Qt.MoveAction)
             event.accept()
         
         QGraphicsView.dragEnterEvent(self, event)
@@ -613,9 +612,8 @@ class GraphicsView(QGraphicsView):
 
     def dragMoveEvent(self, event):
         #print "GraphicsView.dragMoveEvent"
-
-        event.setDropAction(Qt.MoveAction)
         event.accept()
+        #QGraphicsView.dragMoveEvent(self, event)
 
 
     def dropEvent(self, event):
@@ -723,7 +721,6 @@ class GraphicsView(QGraphicsView):
             
             customItem.setPos(scenePos)
 
-        event.setDropAction(Qt.MoveAction)
         event.accept()
         
         QGraphicsView.dropEvent(self, event)

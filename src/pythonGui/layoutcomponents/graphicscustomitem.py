@@ -20,7 +20,7 @@ class GraphicsCustomItem(QGraphicsItem):
 
     def __init__(self, isEditable, text):
         super(GraphicsCustomItem, self).__init__()
-
+        
         self.__font = QFont()
         self.__text = text
 
