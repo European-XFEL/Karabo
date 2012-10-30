@@ -56,3 +56,15 @@ void ClassInfo_Test::testGetNamespace() {
 
 }
 
+void ClassInfo_Test::testAnotherUsage() {
+
+    ClassInfo classInfo = BobbyCar::classInfo();
+    string classId = classInfo.getClassId();
+    string className = classInfo.getClassName();
+    string nameSpace = classInfo.getNamespace();
+    
+    CPPUNIT_ASSERT(classId == "BobbyCar");
+    CPPUNIT_ASSERT(className == "BobbyCar");
+    CPPUNIT_ASSERT(nameSpace == "karabo::util");
+   
+}
