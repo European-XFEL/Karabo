@@ -31,6 +31,8 @@ class GraphicsProxyWidget(NodeBase, QGraphicsProxyWidget):
     def __init__(self, isDesignMode, widget, component=None, isStateToDisplay=False):
         super(GraphicsProxyWidget, self).__init__(isDesignMode)
 
+        #self.setAcceptDrops(True)
+        
         self.__component = component
         
         self.setWidget(widget)
@@ -129,6 +131,21 @@ class GraphicsProxyWidget(NodeBase, QGraphicsProxyWidget):
             QGraphicsProxyWidget.mouseReleaseEvent(self, event)
         else:
             QGraphicsItem.mouseReleaseEvent(self, event)
+
+
+    #def dragEnterEvent(self, event):
+    #    print "GraphicsProxyWidget.dragEnterEvent"
+    #    QGraphicsProxyWidget.dragEnterEvent(self, event)
+
+
+    #def dragMoveEvent(self, event):
+    #    print "GraphicsProxyWidget.dragMoveEvent"
+    #    QGraphicsProxyWidget.dragMoveEvent(self, event)
+
+
+    #def dropEvent(self, event):
+    #    print "GraphicsProxyWidget.dropEvent"
+    #    QGraphicsProxyWidget.dropEvent(self, event)
 
 
     def contextMenuEvent(self, event):
