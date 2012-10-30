@@ -29,7 +29,9 @@ void ClassInfo_Test::setUp() {
     Hash c;
     c.setFromPath("BobbyCar.name", "Auto");
     c.setFromPath("BobbyCar.equipment", "Radio");
-
+    c.setFromPath("BobbyCar.shape.Circle.name", "MyCircle");
+    c.setFromPath("BobbyCar.MyCircle.name", "MyCircleInBobbycar");
+    
     vp = Vehicle::create(c);
     vp->start();
 
