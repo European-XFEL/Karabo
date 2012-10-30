@@ -14,6 +14,7 @@
 #include <karabo/util/SimpleElement.hh>
 #include <karabo/util/VectorElement.hh>
 #include <karabo/util/ImageElement.hh>
+#include <karabo/xms/SlotElement.hh>
 
 class Schema_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST_SUITE(Schema_Test);
@@ -32,6 +33,7 @@ class Schema_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST(testIsAttribute);
     CPPUNIT_TEST(testPerKeyFunctionality);
     CPPUNIT_TEST(testAccessType);
+    CPPUNIT_TEST(testGetCurrentState);
     
     CPPUNIT_TEST_SUITE_END();
 
@@ -44,6 +46,7 @@ public:
 private:
     void settingExpectedParameters(karabo::util::Schema&);
     void oneElementExpectParams(karabo::util::Schema&);
+    void slotElementExpectParams(karabo::util::Schema&);
     void testHasKey();
     void testKeyHasAlias();
     void testHasAlias();
@@ -59,6 +62,7 @@ private:
     void testIsAttribute();
     void testPerKeyFunctionality();
     void testAccessType();
+    void testGetCurrentState();
 };
 
 #endif	/* SCHEMA_TEST_HH */

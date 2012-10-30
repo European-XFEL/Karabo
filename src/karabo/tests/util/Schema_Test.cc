@@ -9,6 +9,7 @@
 
 using namespace std;
 using namespace karabo::util;
+using namespace karabo::xms;
 
 CPPUNIT_TEST_SUITE_REGISTRATION(Schema_Test);
 
@@ -57,6 +58,16 @@ void Schema_Test::settingExpectedParameters(Schema& expected) {
     FLOAT_IMAGE_ELEMENT(expected).key("image")
             .displayedName("Image")
             .description("Image")
+            .commit();
+
+}
+
+void Schema_Test::slotElementExpectParams(Schema& expected) {
+    
+    SLOT_ELEMENT(expected).key("slotTest")
+            .displayedName("Reset")
+            .description("Resets the camera in case of an error")
+            .allowedStates("stateTest")
             .commit();
 
 }
@@ -140,8 +151,17 @@ void Schema_Test::testAlias2Key() {
 }
 
 void Schema_Test::testGetAccessMode() {
-    
+
     CPPUNIT_ASSERT(sch.getAccessMode() == (READ | WRITE | INIT));
+
+}
+
+void Schema_Test::testGetCurrentState() {
+    Schema s;
+    Schema& tmp = s.initParameterDescription("testS", READ | WRITE | INIT, "stateNew");
+
+    string str = s.getCurrentState();    
+    CPPUNIT_ASSERT(str == "stateNew"); 
 
 }
 
@@ -163,7 +183,7 @@ void Schema_Test::testGetAllParameters() {
     CPPUNIT_ASSERT(vecStr[8] == "image.dimY");
     CPPUNIT_ASSERT(vecStr[9] == "image.dimZ");
     CPPUNIT_ASSERT(vecStr[10] == "image.pixelArray");
-    
+
 }
 
 void Schema_Test::testHasRoot() {
@@ -185,108 +205,125 @@ void Schema_Test::testIsAttribute() {
 }
 
 void Schema_Test::testPerKeyFunctionality() {
+    
+    //tests for Schema containing one STRING_ELEMENT
     Schema testSch;
     Schema& tmp = testSch.initParameterDescription("testSchema", READ | WRITE | INIT);
     oneElementExpectParams(tmp);
-   
+
     CPPUNIT_ASSERT(testSch.hasRoot());
     string node = testSch.getRoot();
     CPPUNIT_ASSERT(node == "testSchema");
-    
+
     CPPUNIT_ASSERT(testSch.isNode());
-    
+
     CPPUNIT_ASSERT(testSch.hasParameters());
     Schema schemaParams = testSch.getParameters();
-    
+
     CPPUNIT_ASSERT(!schemaParams.isNode());
-    
+
     for (Schema::const_iterator it = schemaParams.begin(); it != schemaParams.end(); it++) {
 
         //Fetch individual description
-        const Schema& desc = schemaParams.get<Schema>(it);
+        const Schema& desc = schemaParams.get<Schema > (it);
 
         CPPUNIT_ASSERT(desc.hasKey());
         string key = desc.getKey();
         CPPUNIT_ASSERT(key == "testKey");
-        
+
         CPPUNIT_ASSERT(desc.hasAssignment());
         Schema::AssignmentType assignment = desc.getAssignment();
         CPPUNIT_ASSERT(assignment == 0);
         CPPUNIT_ASSERT(assignment == karabo::util::Schema::OPTIONAL_PARAM);
-        
+
         CPPUNIT_ASSERT(!desc.isCommand());
         CPPUNIT_ASSERT(desc.isAttribute());
         CPPUNIT_ASSERT(desc.isLeaf());
         CPPUNIT_ASSERT(!desc.isNode());
-        
+
         CPPUNIT_ASSERT(desc.isAccessReconfigurable());
         CPPUNIT_ASSERT(desc.isAssignmentOptional());
-        
-        CPPUNIT_ASSERT(desc.isValueOfType<string>());
+
+        CPPUNIT_ASSERT(desc.isValueOfType<string > ());
 
         Types::Type valueType = desc.getValueType();
         CPPUNIT_ASSERT(valueType == Types::STRING);
-        
+
         CPPUNIT_ASSERT(desc.getValueTypeAsString() == "STRING");
-        
+
         CPPUNIT_ASSERT(desc.hasDisplayedName());
         CPPUNIT_ASSERT(desc.getDisplayedName() == "sample Displayed Name");
-        
+
         CPPUNIT_ASSERT(!desc.hasDisplayType());
-        
+
         CPPUNIT_ASSERT(desc.hasDescription());
         CPPUNIT_ASSERT(desc.getDescription() == "sample Description");
-                
+
         CPPUNIT_ASSERT(!desc.hasValueOptions());
-        
+
         CPPUNIT_ASSERT(!desc.hasAllowedStates());
-        
+
         CPPUNIT_ASSERT(desc.hasAccess());
         AccessType access = desc.getAccess();
         CPPUNIT_ASSERT(access == WRITE);
-            
+
         CPPUNIT_ASSERT(desc.hasDefaultValue());
-        CPPUNIT_ASSERT(desc.getDefaultValue<string>() == "Some default string");
-        
+        CPPUNIT_ASSERT(desc.getDefaultValue<string > () == "Some default string");
+
         CPPUNIT_ASSERT(desc.hasAlias());
-        string alias = desc.getAlias<string>();
+        string alias = desc.getAlias<string > ();
         CPPUNIT_ASSERT(alias == "testAlias");
-        
+
         CPPUNIT_ASSERT(!desc.hasUnitName());
-        CPPUNIT_ASSERT(!desc.hasUnitSymbol());       
+        CPPUNIT_ASSERT(!desc.hasUnitSymbol());
     }
+    
+    //tests for Schema containing one SLOT_ELEMENT
+    Schema slotSch;
+    Schema& slt = slotSch.initParameterDescription("slotSchema", READ | WRITE | INIT);
+    slotElementExpectParams(slt);
+    
+    Schema schParams = slotSch.getParameters();
+    for (Schema::const_iterator it = schParams.begin(); it != schParams.end(); it++) {
+        const Schema& desc = schParams.get<Schema > (it);
+        CPPUNIT_ASSERT(desc.hasAllowedStates());
+        
+        vector<string> allowedStates = desc.getAllowedStates();
+        CPPUNIT_ASSERT(allowedStates[0] == "stateTest");
+    }
+    
 }
 
 void Schema_Test::testAccessType() {
 
     Schema sch1;
     Schema& tmp1 = sch1.initParameterDescription("testDefault");
-    AccessType at1= sch1.getAccessMode();
+    AccessType at1 = sch1.getAccessMode();
     CPPUNIT_ASSERT(at1 == (WRITE | INIT));
-     
+
     Schema sch2;
     Schema& tmp2 = sch2.initParameterDescription("testR", READ);
-    AccessType at2= sch2.getAccessMode();
+    AccessType at2 = sch2.getAccessMode();
     CPPUNIT_ASSERT(at2 == READ);
-    
+
     Schema sch3;
     Schema& tmp3 = sch3.initParameterDescription("testW", WRITE);
-    AccessType at3= sch3.getAccessMode();
+    AccessType at3 = sch3.getAccessMode();
     CPPUNIT_ASSERT(at3 == WRITE);
-            
+
     Schema sch4;
     Schema& tmp4 = sch4.initParameterDescription("testI", INIT);
-    AccessType at4= sch4.getAccessMode();
+    AccessType at4 = sch4.getAccessMode();
     CPPUNIT_ASSERT(at4 == INIT);
-    
+
     Schema sch5;
     Schema& tmp5 = sch5.initParameterDescription("testRW", READ | WRITE);
-    AccessType at5= sch5.getAccessMode();
+    AccessType at5 = sch5.getAccessMode();
     CPPUNIT_ASSERT(at5 == (READ | WRITE));
-    
+
     Schema sch6;
     Schema& tmp6 = sch6.initParameterDescription("testRWI", READ | WRITE | INIT);
-    AccessType at6= sch6.getAccessMode();
+    AccessType at6 = sch6.getAccessMode();
     CPPUNIT_ASSERT(at6 == (READ | WRITE | INIT));
-    
+
 }

@@ -10,6 +10,10 @@
  */
 
 #include "BobbyCar.hh"
+#include "Shape.hh"
+#include "Circle.hh"
+#include <karabo/util/ChoiceElement.hh>
+#include <karabo/util/SingleElement.hh>
 
 using namespace std;
 
@@ -43,6 +47,21 @@ namespace karabo {
               .options("Radio,AirCondition,Navigation")
               .assignmentOptional().defaultValue("Radio")
               .reconfigurable()
+              .commit();
+      
+      CHOICE_ELEMENT<ConfigurableShape > (expected)
+              .key("shape")
+              .displayedName("Car shape")
+              .description("Describe the shape of the car (artificial param)")
+              .assignmentOptional().defaultValue("Circle")
+              .reconfigurable()
+              .commit();
+
+      SINGLE_ELEMENT<ConfigurableShape, ConfigurableCircle > (expected)
+              .key("MyCircle")
+              .description("The circle as SINGLE_ELEMENT")
+              .displayedName("Circle")
+              .assignmentOptional().defaultValue("Circle")
               .commit();
       
     }
