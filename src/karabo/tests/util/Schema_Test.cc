@@ -81,7 +81,7 @@ void Schema_Test::testHasKey() {
     CPPUNIT_ASSERT(sch.hasKey("exampleKey1"));
     CPPUNIT_ASSERT(sch.hasKey("exampleKey2"));
     CPPUNIT_ASSERT(sch.hasKey("image"));
-
+    CPPUNIT_ASSERT(sch.hasKey("image.pixelArray"));
     CPPUNIT_ASSERT(!sch.hasKey("abcd"));
 
 }
@@ -140,8 +140,8 @@ void Schema_Test::testAlias2Key() {
 }
 
 void Schema_Test::testGetAccessMode() {
-
-    CPPUNIT_ASSERT(sch.getAccessMode() == 7);
+    
+    CPPUNIT_ASSERT(sch.getAccessMode() == (READ | WRITE | INIT));
 
 }
 
@@ -154,14 +154,16 @@ void Schema_Test::testHasParameters() {
 void Schema_Test::testGetAllParameters() {
 
     vector<string> vecStr = sch.getAllParameters();
-    //uncomment for check:
-    //for (int i=0; i < vecStr.size(); i++) {
-    // cout << "vecStr[" <<i<<"]=" << vecStr[i] <<endl;
-    //}
-    CPPUNIT_ASSERT(vecStr[0] == "exampleKey1");
-    CPPUNIT_ASSERT(vecStr[5] == "image");
-    CPPUNIT_ASSERT(vecStr[10] == "image.pixelArray");
 
+    CPPUNIT_ASSERT(vecStr[0] == "exampleKey1");
+    CPPUNIT_ASSERT(vecStr[4] == "exampleKey5");
+    CPPUNIT_ASSERT(vecStr[5] == "image");
+    CPPUNIT_ASSERT(vecStr[6] == "image.dimC");
+    CPPUNIT_ASSERT(vecStr[7] == "image.dimX");
+    CPPUNIT_ASSERT(vecStr[8] == "image.dimY");
+    CPPUNIT_ASSERT(vecStr[9] == "image.dimZ");
+    CPPUNIT_ASSERT(vecStr[10] == "image.pixelArray");
+    
 }
 
 void Schema_Test::testHasRoot() {
@@ -223,7 +225,6 @@ void Schema_Test::testPerKeyFunctionality() {
         CPPUNIT_ASSERT(desc.isValueOfType<string>());
 
         Types::Type valueType = desc.getValueType();
-        CPPUNIT_ASSERT(valueType == 14);
         CPPUNIT_ASSERT(valueType == Types::STRING);
         
         CPPUNIT_ASSERT(desc.getValueTypeAsString() == "STRING");
@@ -242,7 +243,6 @@ void Schema_Test::testPerKeyFunctionality() {
         
         CPPUNIT_ASSERT(desc.hasAccess());
         AccessType access = desc.getAccess();
-        CPPUNIT_ASSERT(access == 4);
         CPPUNIT_ASSERT(access == WRITE);
             
         CPPUNIT_ASSERT(desc.hasDefaultValue());
@@ -253,6 +253,40 @@ void Schema_Test::testPerKeyFunctionality() {
         CPPUNIT_ASSERT(alias == "testAlias");
         
         CPPUNIT_ASSERT(!desc.hasUnitName());
-        CPPUNIT_ASSERT(!desc.hasUnitSymbol());
+        CPPUNIT_ASSERT(!desc.hasUnitSymbol());       
     }
+}
+
+void Schema_Test::testAccessType() {
+
+    Schema sch1;
+    Schema& tmp1 = sch1.initParameterDescription("testDefault");
+    AccessType at1= sch1.getAccessMode();
+    CPPUNIT_ASSERT(at1 == (WRITE | INIT));
+     
+    Schema sch2;
+    Schema& tmp2 = sch2.initParameterDescription("testR", READ);
+    AccessType at2= sch2.getAccessMode();
+    CPPUNIT_ASSERT(at2 == READ);
+    
+    Schema sch3;
+    Schema& tmp3 = sch3.initParameterDescription("testW", WRITE);
+    AccessType at3= sch3.getAccessMode();
+    CPPUNIT_ASSERT(at3 == WRITE);
+            
+    Schema sch4;
+    Schema& tmp4 = sch4.initParameterDescription("testI", INIT);
+    AccessType at4= sch4.getAccessMode();
+    CPPUNIT_ASSERT(at4 == INIT);
+    
+    Schema sch5;
+    Schema& tmp5 = sch5.initParameterDescription("testRW", READ | WRITE);
+    AccessType at5= sch5.getAccessMode();
+    CPPUNIT_ASSERT(at5 == (READ | WRITE));
+    
+    Schema sch6;
+    Schema& tmp6 = sch6.initParameterDescription("testRWI", READ | WRITE | INIT);
+    AccessType at6= sch6.getAccessMode();
+    CPPUNIT_ASSERT(at6 == (READ | WRITE | INIT));
+    
 }
