@@ -1,7 +1,7 @@
 /*
  * $Id: Circle.hh 4643 2011-11-04 16:04:16Z heisenb@DESY.DE $
  *
- * File:   Shape.hh
+ * File:   Circle.hh
  * Author: <burkhard.heisen@xfel.eu>
  *
  * Created on August 6, 2010, 5:41 PM
@@ -9,26 +9,22 @@
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
 
-#include <string>
-#include <sstream>
-
-#include <karabo/util/Factory.hh>
-#include <karabo/util/Schema.hh>
-#include "Shape.hh"
-
-
 #ifndef KARABO_UTIL_CIRCLE_HH
 #define	KARABO_UTIL_CIRCLE_HH
+
+#include <string>
+#include <sstream>
+#include <karabo/util/Factory.hh>
+#include "Shape.hh"
 
 namespace karabo {
   namespace util {
 
     /**
-     * Circle class.
+     * Circle class. Used for test
      */
     class Circle : public Shape {
       std::string color;
-
 
     public:
 
@@ -49,9 +45,6 @@ namespace karabo {
         return ss.str();
       }
 
-
-    private:
-
     };
 
     /**
@@ -62,7 +55,9 @@ namespace karabo {
      */
     class ConfigurableCircle : public ConfigurableShape {
     public:
+      
       KARABO_CLASSINFO(ConfigurableCircle, "Circle", "1.0")
+      
       ConfigurableCircle() {
       }
       virtual ~ConfigurableCircle() {}
@@ -71,11 +66,12 @@ namespace karabo {
        * Get all needed parameters from Schema object and setup the class
        */
       void configure(const Hash& conf) {
-        Hash circle = conf.get<Hash > ("Circle");
-        std::string color = circle.get<std::string > ("color");
-        if (circle.has("name")) {
-          m_name = circle.get<std::string > ("name");
-        }
+//        Hash circle = conf.get<Hash > ("Circle");
+//        std::string color = circle.get<std::string > ("color");
+//        if (circle.has("name")) {
+//          m_name = circle.get<std::string > ("name");
+//        }
+        std::string color = "green";
         m_shape = boost::shared_ptr<Circle > (new Circle(m_name, color));
       }
 
@@ -85,12 +81,20 @@ namespace karabo {
        *  @param Schema& expected object to be filled
        */
       static void expectedParameters(Schema& expected) {
-        //TODO: implement
+          
+            INT32_ELEMENT(expected)
+                .key("radius")
+                .displayedName("CircleRadius")
+                .description("Circle Radius description")
+                .assignmentOptional().defaultValue(10)
+                .init()
+                .commit();
+                
       }
     };
 
-  }
-}
+  } // namepspace util
+} // namespace karabo
 
 #endif	/* KARABO_UTIL_CIRCLE_HH */
 

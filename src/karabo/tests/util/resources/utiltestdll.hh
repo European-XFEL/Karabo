@@ -8,8 +8,8 @@
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
 
-#ifndef EXFEL_UTILTEST_UTILTESTDLL_HH
-#define	EXFEL_UTILTEST_UTILTESTDLL_HH
+#ifndef KARABO_UTILTEST_UTILTESTDLL_HH
+#define	KARABO_UTILTEST_UTILTESTDLL_HH
 
 /********************************************
  *         Disable Specific Warnings         *
