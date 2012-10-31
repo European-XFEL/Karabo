@@ -13,6 +13,9 @@
 #include <karabo/util/Schema.hh>
 #include "resources/BobbyCar.hh"
 #include "resources/Vehicle.hh"
+#include "resources/Shape.hh"
+#include "resources/Circle.hh"
+#include "resources/Rectangle.hh"
 
 class ClassInfo_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST_SUITE(ClassInfo_Test);
@@ -21,6 +24,7 @@ class ClassInfo_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST(testGetClassName);
     CPPUNIT_TEST(testGetNamespace);
     CPPUNIT_TEST(testAnotherUsage);
+    CPPUNIT_TEST(testGetRegisteredKeys);
     
     CPPUNIT_TEST_SUITE_END();
 
@@ -34,6 +38,7 @@ private:
     void testGetClassName();
     void testGetNamespace();
     void testAnotherUsage();
+    void testGetRegisteredKeys();
 };
 
 #endif	/* CLASSINFO_TEST_HH */
