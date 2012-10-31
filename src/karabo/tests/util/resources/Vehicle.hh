@@ -32,7 +32,6 @@ namespace karabo {
 
       static void expectedParameters(karabo::util::Schema& expected) {
 
-
         STRING_ELEMENT(expected)
                 .key("color")
                 .displayedName("Color")
@@ -40,7 +39,7 @@ namespace karabo {
                 .options("red,blue,green,orange")
                 .assignmentOptional().defaultValue("red")
                 .alias(1)
-                .init() // was I
+                .init()
                 .commit()
                 ;
       }
@@ -51,8 +50,6 @@ namespace karabo {
 
       virtual void reconfigure(const karabo::util::Hash& input) {
       };
-
-
 
     protected:
 

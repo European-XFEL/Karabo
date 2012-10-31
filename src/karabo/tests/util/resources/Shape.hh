@@ -9,7 +9,6 @@
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
 
-
 #ifndef KARABO_UTIL_SHAPE_HH
 #define	KARABO_UTIL_SHAPE_HH
 
@@ -85,7 +84,7 @@ namespace karabo {
   }
 }
 
-KARABO_REGISTER_FACTORY_BASE_HH(exfel::util::ConfigurableShape, TEMPLATE_UTILTEST, DECLSPEC_UTILTEST)
+KARABO_REGISTER_FACTORY_BASE_HH(karabo::util::ConfigurableShape, TEMPLATE_UTILTEST, DECLSPEC_UTILTEST)
 
 #endif	
 

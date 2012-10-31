@@ -21,20 +21,27 @@ ClassInfo_Test::~ClassInfo_Test() {
 
 void ClassInfo_Test::setUp() {
 
-    Schema ex;
-    Schema& tmp = ex.initParameterDescription("test");
-
-    BobbyCar::expectedParameters(tmp);
-
     Hash c;
     c.setFromPath("BobbyCar.name", "Auto");
     c.setFromPath("BobbyCar.equipment", "Radio");
-    c.setFromPath("BobbyCar.shape.Circle.name", "MyCircle");
-    c.setFromPath("BobbyCar.MyCircle.name", "MyCircleInBobbycar");
+   
+    //Rectangle>>>>>>>>
+    c.setFromPath("BobbyCar.shape.Rectangle.name", "top rectangle");
+    c.setFromPath("BobbyCar.shape.Rectangle.a", 2.0 );
+    c.setFromPath("BobbyCar.shape.Rectangle.b", 3.0 );
+    c.setFromPath("BobbyCar.shape.Rectangle.position", 11.5 );
+    //<<<<<<<<Rectangle
     
+    //Circle >>>>>
+    //c.setFromPath("BobbyCar.shape.Circle.name", "top circle");
+    //c.setFromPath("BobbyCar.shape.Circle.radius", 15);
+    //<<<<<< Circle
+    
+    c.setFromPath("BobbyCar.MyCircle.name", "MyCircleInBobbycar");
+
     vp = Vehicle::create(c);
     vp->start();
-
+    
 }
 
 void ClassInfo_Test::testGetClassId() {
@@ -64,9 +71,20 @@ void ClassInfo_Test::testAnotherUsage() {
     string classId = classInfo.getClassId();
     string className = classInfo.getClassName();
     string nameSpace = classInfo.getNamespace();
-    
+
     CPPUNIT_ASSERT(classId == "BobbyCar");
     CPPUNIT_ASSERT(className == "BobbyCar");
     CPPUNIT_ASSERT(nameSpace == "karabo::util");
-   
+
+}
+
+void ClassInfo_Test::testGetRegisteredKeys() {
+
+    vector<string> keys = Factory<Vehicle>::getRegisteredKeys();
+    cout << "\n Registered keys for Factory<Vehicle> " << endl;
+    for (size_t i = 0; i < keys.size(); ++i) {
+        cout << keys[i] << endl;
+    }
+    CPPUNIT_ASSERT(keys[0] == "BobbyCar");
+    
 }
