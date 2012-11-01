@@ -8,13 +8,13 @@
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
 
-#include "FileWrapInput.hh"
+#include "FileWrapNetworkInput.hh"
 
 namespace karabo {
     namespace xms {
         
-        KARABO_REGISTER_FACTORY_2_CC(AbstractInput, Input<std::string >, FileWrapDeviceInput)
-        KARABO_REGISTER_FACTORY_CC(Input<std::string >, FileWrapDeviceInput)
+        KARABO_REGISTER_FACTORY_2_CC(AbstractInput, Input<std::string >, FileWrapNetworkInput)
+        KARABO_REGISTER_FACTORY_CC(Input<std::string >, FileWrapNetworkInput)
                 
     }
 }
