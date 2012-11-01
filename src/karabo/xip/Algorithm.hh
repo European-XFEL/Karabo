@@ -17,17 +17,11 @@
 #include <karabo/core/Device.hh>
 #include <karabo/xms/SlotElement.hh>
 
-//#include "Output.hh"
-//#include "Input.hh"
-
 namespace karabo {
 
     namespace xip {
 
         class Algorithm : public karabo::core::Device {
-            
-            typedef std::map<std::string, AbstractInput::Pointer> InputChannels;
-            typedef std::map<std::string, AbstractOutput::Pointer> OutputChannels;
             
         public:
 

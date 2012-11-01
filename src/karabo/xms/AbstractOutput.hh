@@ -14,7 +14,7 @@
 #define	KARABO_XMS_ABSTRACTOUTPUT_HH
 
 #include <boost/function.hpp>
-
+#include <boost/any.hpp>
 #include <karabo/util/Factory.hh>
 
 namespace karabo {
@@ -26,8 +26,6 @@ namespace karabo {
 
             KARABO_CLASSINFO(AbstractOutput, "AbstractOutput", "1.0")
             KARABO_FACTORY_BASE_CLASS
-
-            typedef boost::function<void (const boost::shared_ptr<AbstractOutput>&) > IOEventHandler;
 
             AbstractOutput() {
             }
@@ -58,7 +56,8 @@ namespace karabo {
                 return m_instanceId;
             }
 
-            void registerIOEventHandler(const IOEventHandler& ioEventHandler) {
+             template <class OutputType>
+            void registerIOEventHandler(const boost::function<void (const boost::shared_ptr<OutputType>&) >& ioEventHandler) {
                 m_ioEventHandler = ioEventHandler;
             }
 
@@ -73,17 +72,18 @@ namespace karabo {
             virtual void update() {
             }
 
-            virtual bool canCompute() = 0;
+            virtual bool canCompute() const = 0;
 
         protected:
 
+            template <class OutputType>
             void triggerIOEvent() {
-                if (m_ioEventHandler) m_ioEventHandler(shared_from_this());
+                if (!m_ioEventHandler.empty()) (boost::any_cast<boost::function<void (const boost::shared_ptr<OutputType>&) > >(m_ioEventHandler))(boost::static_pointer_cast< OutputType >(shared_from_this()));
             }
 
         private:
 
-            IOEventHandler m_ioEventHandler;
+            boost::any m_ioEventHandler;
             std::string m_instanceId;
         };
     }

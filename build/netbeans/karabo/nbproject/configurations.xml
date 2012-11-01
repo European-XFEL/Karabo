@@ -305,12 +305,12 @@
       <logicalFolder name="f1" displayName="Header Files" projectFiles="true">
         <itemPath>../../../src/karabo/xms/AbstractInput.hh</itemPath>
         <itemPath>../../../src/karabo/xms/AbstractOutput.hh</itemPath>
-        <itemPath>../../../src/karabo/xms/FileWrapInput.hh</itemPath>
-        <itemPath>../../../src/karabo/xms/FileWrapOutput.hh</itemPath>
+        <itemPath>../../../src/karabo/xms/FileWrapNetworkInput.hh</itemPath>
+        <itemPath>../../../src/karabo/xms/FileWrapNetworkOutput.hh</itemPath>
         <itemPath>../../../src/karabo/xms/Input.hh</itemPath>
-        <itemPath>../../../src/karabo/xms/InterInstanceInput.hh</itemPath>
-        <itemPath>../../../src/karabo/xms/InterInstanceOutput.hh</itemPath>
         <itemPath>../../../src/karabo/xms/Memory.hh</itemPath>
+        <itemPath>../../../src/karabo/xms/NetworkInput.hh</itemPath>
+        <itemPath>../../../src/karabo/xms/NetworkOutput.hh</itemPath>
         <itemPath>../../../src/karabo/xms/Output.hh</itemPath>
         <itemPath>../../../src/karabo/xms/Requestor.hh</itemPath>
         <itemPath>../../../src/karabo/xms/Signal.hh</itemPath>
@@ -323,11 +323,11 @@
         <itemPath>../../../src/karabo/xms/xmsdll.hh</itemPath>
       </logicalFolder>
       <logicalFolder name="f2" displayName="Source Files" projectFiles="true">
-        <itemPath>../../../src/karabo/xms/FileWrapInput.cc</itemPath>
-        <itemPath>../../../src/karabo/xms/FileWrapOutput.cc</itemPath>
-        <itemPath>../../../src/karabo/xms/InterInstanceInput.cc</itemPath>
-        <itemPath>../../../src/karabo/xms/InterInstanceOutput.cc</itemPath>
+        <itemPath>../../../src/karabo/xms/FileWrapNetworkInput.cc</itemPath>
+        <itemPath>../../../src/karabo/xms/FileWrapNetworkOutput.cc</itemPath>
         <itemPath>../../../src/karabo/xms/Memory.cc</itemPath>
+        <itemPath>../../../src/karabo/xms/NetworkInput.cc</itemPath>
+        <itemPath>../../../src/karabo/xms/NetworkOutput.cc</itemPath>
         <itemPath>../../../src/karabo/xms/Requestor.cc</itemPath>
         <itemPath>../../../src/karabo/xms/Signal.cc</itemPath>
         <itemPath>../../../src/karabo/xms/SignalSlotable.cc</itemPath>

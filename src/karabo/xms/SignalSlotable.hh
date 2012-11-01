@@ -576,6 +576,14 @@ namespace karabo {
                 return boost::static_pointer_cast<OutputType >(channel);
             }
             
+            const InputChannels& getInputChannels() const {
+                return m_inputChannels;
+            }
+            
+            const OutputChannels& getOutputChannels() const {
+                return m_outputChannels;
+            }
+            
             void connectInputChannels();
             
         protected: // Functions

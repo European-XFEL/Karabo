@@ -26,7 +26,7 @@ namespace karabo {
        
         boost::mutex Memory<std::vector<char> >::m_accessMutex;
         
-       
+        Memory<std::vector<char> >::SerializedChannels Memory<std::vector<char> >::m_serializedCache = Memory<std::vector<char> >::SerializedChannels(MAX_N_CHANNELS, Memory<std::vector<char> >::SerializedChunks(MAX_N_CHUNKS));
        
 
     }
