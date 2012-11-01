@@ -227,6 +227,11 @@ namespace karabo {
             typedef std::vector< Data > Chunks;
             typedef std::vector< Chunks > Channels;
             
+            typedef std::pair<std::vector<char>, karabo::util::Hash> SerializedChunk;
+            typedef boost::shared_ptr<SerializedChunk> SerializedChunkPointer;
+            typedef std::vector< SerializedChunkPointer > SerializedChunks;
+            typedef std::vector< SerializedChunks > SerializedChannels;
+            
             static std::map<std::string, size_t> m_name2Idx;
 
             static std::vector<std::vector<bool> > m_chunkStatus;
@@ -234,6 +239,7 @@ namespace karabo {
 
             static Channels m_cache;
             static boost::mutex m_accessMutex;
+            static SerializedChannels m_serializedCache;
             
             static const int MAX_N_CHANNELS = 2048;
             static const int MAX_N_CHUNKS = 2048;
@@ -325,7 +331,6 @@ namespace karabo {
             
             static void readAsContiguosBlock(std::vector<char>& buffer, karabo::util::Hash& header, const size_t channelIdx, const size_t chunkIdx) {
                 const Data& data = m_cache[channelIdx][chunkIdx];
-                std::vector<char> serializedDataElement;
                 std::vector<unsigned int> byteSizes(data.size());
                 size_t offset = 0;
                 size_t idx = 0;
@@ -341,6 +346,20 @@ namespace karabo {
                 header.set<unsigned int>("nData", data.size());
                 header.set<std::vector<unsigned int> >("byteSizes", byteSizes);
                 
+            }
+            
+            static void cacheAsContiguousBlock(const size_t channelIdx, const size_t chunkIdx) {
+                SerializedChunkPointer scp = SerializedChunkPointer(new SerializedChunk);
+                Memory<std::vector<char> >::readAsContiguosBlock(scp->first, scp->second, channelIdx, chunkIdx);
+                m_serializedCache[channelIdx][chunkIdx] = scp;
+            }
+            
+            static const std::pair<std::vector<char>, karabo::util::Hash>& readContiguousBlockCache(const size_t channelIdx, const size_t chunkIdx) {
+                return *(m_serializedCache[channelIdx][chunkIdx]);
+            }
+            
+            static void clearContiguousBlockCache(const size_t channelIdx, const size_t chunkIdx) {
+               m_serializedCache[channelIdx][chunkIdx] = SerializedChunkPointer();
             }
             
             static void writeAsContiguosBlock(const std::vector<char>& buffer, const karabo::util::Hash& header, const size_t channelIdx, const size_t chunkIdx) {

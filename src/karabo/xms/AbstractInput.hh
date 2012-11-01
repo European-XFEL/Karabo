@@ -27,9 +27,6 @@ namespace karabo {
             KARABO_CLASSINFO(AbstractInput, "AbstractInput", "1.0")
             KARABO_FACTORY_BASE_CLASS
 
-            typedef boost::function<void (const boost::shared_ptr<AbstractInput>&) > IOEventHandler;
-            typedef boost::function<void (const boost::shared_ptr<AbstractInput>&) > CanReadEventHandler;
-
             AbstractInput() {
             }
 
@@ -72,11 +69,6 @@ namespace karabo {
                 m_ioEventHandler = ioEventHandler;
             }
             
-            template <class T>
-            void registerCanReadEventHandler( const boost::function<void (const boost::shared_ptr<T>&) >& canReadEventHandler) {
-                m_canReadEventHandler = canReadEventHandler;
-            }
-
             virtual bool needsDeviceConnection() const {
                 return false;
             }
@@ -92,7 +84,7 @@ namespace karabo {
                 return karabo::util::Hash();
             }
 
-            virtual bool canCompute() {
+            virtual bool canCompute() const {
                 return true;
             }
 
@@ -108,11 +100,6 @@ namespace karabo {
                 return m_nData;
             }
 
-//            template <class T>
-//            void triggerCanReadEvent() {
-//                if (m_canReadEventHandler) boost::any_cast<boost::function<void (const boost::shared_ptr<T>&) > >(m_canReadEventHandler)(boost::static_pointer_cast< T >(shared_from_this()));
-//            }
-            
             template <class InputType>
             void triggerIOEvent() {
                 if(!m_ioEventHandler.empty()) (boost::any_cast<boost::function<void (const boost::shared_ptr<InputType>&) > >(m_ioEventHandler))(boost::static_pointer_cast< InputType >(shared_from_this()));
@@ -123,7 +110,6 @@ namespace karabo {
             unsigned int m_nData;
             std::string m_instanceId;
 
-            boost::any m_canReadEventHandler;
             boost::any m_ioEventHandler;
 
 
