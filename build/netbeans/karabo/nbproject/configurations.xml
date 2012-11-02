@@ -349,6 +349,22 @@
         <itemPath>../../../src/karabo/tests/io/ioTestRunner.cc</itemPath>
         <itemPath>../../../src/karabo/tests/io/resources/xmlForReading_readonly.xml</itemPath>
       </logicalFolder>
+      <logicalFolder name="f4"
+                     displayName="nettcp_test"
+                     projectFiles="true"
+                     kind="TEST">
+        <itemPath>../../../src/karabo/tests/nettcp/TcpNetworking_Test.cc</itemPath>
+        <itemPath>../../../src/karabo/tests/nettcp/TcpNetworking_Test.hh</itemPath>
+        <itemPath>../../../src/karabo/tests/nettcp/nettcpTestRunner.cc</itemPath>
+      </logicalFolder>
+      <logicalFolder name="f3"
+                     displayName="netudp_test"
+                     projectFiles="true"
+                     kind="TEST">
+        <itemPath>../../../src/karabo/tests/netudp/UdpNetworking_Test.cc</itemPath>
+        <itemPath>../../../src/karabo/tests/netudp/UdpNetworking_Test.hh</itemPath>
+        <itemPath>../../../src/karabo/tests/netudp/netudpTestRunner.cc</itemPath>
+      </logicalFolder>
       <logicalFolder name="f1"
                      displayName="util_test"
                      projectFiles="true"
@@ -363,6 +379,8 @@
         <itemPath>../../../src/karabo/tests/util/Factory_Test.hh</itemPath>
         <itemPath>../../../src/karabo/tests/util/Hash_Test.cc</itemPath>
         <itemPath>../../../src/karabo/tests/util/Hash_Test.hh</itemPath>
+        <itemPath>../../../src/karabo/tests/util/resources/Rectangle.cc</itemPath>
+        <itemPath>../../../src/karabo/tests/util/resources/Rectangle.hh</itemPath>
         <itemPath>../../../src/karabo/tests/util/Schema_Test.cc</itemPath>
         <itemPath>../../../src/karabo/tests/util/Schema_Test.hh</itemPath>
         <itemPath>../../../src/karabo/tests/util/resources/Shape.hh</itemPath>
@@ -472,6 +490,33 @@
       <folder path="TestFiles/f2">
         <linkerTool>
           <output>${TESTDIR}/TestFiles/f2</output>
+        </linkerTool>
+      </folder>
+      <folder path="TestFiles/f3">
+        <cTool>
+          <incDir>
+            <pElem>.</pElem>
+          </incDir>
+        </cTool>
+        <ccTool>
+          <incDir>
+            <pElem>.</pElem>
+          </incDir>
+        </ccTool>
+        <linkerTool>
+          <output>${TESTDIR}/TestFiles/f3</output>
+          <linkerLibItems>
+            <linkerLibStdlibItem>CppUnit</linkerLibStdlibItem>
+            <linkerLibStdlibItem>CppUnit</linkerLibStdlibItem>
+          </linkerLibItems>
+        </linkerTool>
+      </folder>
+      <folder path="TestFiles/f4">
+        <linkerTool>
+          <output>${TESTDIR}/TestFiles/f4</output>
+          <linkerLibItems>
+            <linkerLibStdlibItem>CppUnit</linkerLibStdlibItem>
+          </linkerLibItems>
         </linkerTool>
       </folder>
       <folder path="f2/f3">
