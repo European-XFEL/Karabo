@@ -112,7 +112,7 @@ class PressureGaugeWidget(VacuumWidget):
         print "PressureGaugeWidget.valueChanged", key, value
         if value == "Changing...":
             self._setPixmap(QPixmap(":pressuregauge-orange"))
-        elif ("On" in value) or ("on" in value):
+        elif ("On" in value) or ("on" in value) or ("AllOk" in value):
             self._setPixmap(QPixmap(":pressuregauge-green"))
         elif ("Off" in value) or ("off" in value):
             self._setPixmap(QPixmap(":pressuregauge-yellow"))
