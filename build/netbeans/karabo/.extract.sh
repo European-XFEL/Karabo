@@ -16,7 +16,7 @@ echo
 installDir=$HOME
 if [ "$dir" != "" ]; then
     # Always reslove to absolute path
-    installDir=$(dirname `[[ $dir = /* ]] && echo "$dir" || echo "$PWD/${dir#./}"`)
+    installDir=`[[ $dir = /* ]] && echo "$dir" || echo "$PWD/${dir#./}"`
     mkdir -p $installDir
 fi
 echo -n " Extracting files, please wait..."
