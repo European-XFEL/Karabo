@@ -24,24 +24,24 @@ void ClassInfo_Test::setUp() {
     Hash c;
     c.setFromPath("BobbyCar.name", "Auto");
     c.setFromPath("BobbyCar.equipment", "Radio");
-   
+
     //Rectangle>>>>>>>>
     c.setFromPath("BobbyCar.shape.Rectangle.name", "top rectangle");
-    c.setFromPath("BobbyCar.shape.Rectangle.a", 2.0 );
-    c.setFromPath("BobbyCar.shape.Rectangle.b", 3.0 );
-    c.setFromPath("BobbyCar.shape.Rectangle.position", 11.5 );
+    c.setFromPath("BobbyCar.shape.Rectangle.a", 2.0);
+    c.setFromPath("BobbyCar.shape.Rectangle.b", 3.0);
+    c.setFromPath("BobbyCar.shape.Rectangle.position", 11.5);
     //<<<<<<<<Rectangle
-    
+
     //Circle >>>>>
     //c.setFromPath("BobbyCar.shape.Circle.name", "top circle");
     //c.setFromPath("BobbyCar.shape.Circle.radius", 15);
     //<<<<<< Circle
-    
+
     c.setFromPath("BobbyCar.MyCircle.name", "MyCircleInBobbycar");
 
     vp = Vehicle::create(c);
     vp->start();
-    
+
 }
 
 void ClassInfo_Test::testGetClassId() {
@@ -86,5 +86,11 @@ void ClassInfo_Test::testGetRegisteredKeys() {
         cout << keys[i] << endl;
     }
     CPPUNIT_ASSERT(keys[0] == "BobbyCar");
-    
+
+}
+
+void ClassInfo_Test::testExpectedParameters() {
+    Schema expected = Vehicle::expectedParameters();
+    vector<string> keys = expected.getKeysAsVector();  
+    CPPUNIT_ASSERT(keys[0] == "BobbyCar");
 }
