@@ -11,6 +11,7 @@
 
 #include <cppunit/extensions/HelperMacros.h>
 #include <karabo/util/Schema.hh>
+#include <karabo/util/Hash.hh>
 #include "resources/BobbyCar.hh"
 #include "resources/Vehicle.hh"
 #include "resources/Shape.hh"
@@ -25,6 +26,7 @@ class ClassInfo_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST(testGetNamespace);
     CPPUNIT_TEST(testAnotherUsage);
     CPPUNIT_TEST(testGetRegisteredKeys);
+    CPPUNIT_TEST(testExpectedParameters);
     
     CPPUNIT_TEST_SUITE_END();
 
@@ -39,6 +41,7 @@ private:
     void testGetNamespace();
     void testAnotherUsage();
     void testGetRegisteredKeys();
+    void testExpectedParameters();
 };
 
 #endif	/* CLASSINFO_TEST_HH */
