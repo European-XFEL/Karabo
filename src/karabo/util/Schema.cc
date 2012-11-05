@@ -414,7 +414,7 @@ namespace karabo {
                 const std::string& root = this->getRoot();
                 if (!injected.has(root)) {
                     injected.set(root, Hash());
-                    r_injectDefaults(*this, injected.get<Hash>(root));
+                    r_injectDefaults(*this, injected.get<Hash > (root));
                 } else {
                     r_injectDefaults(*this, injected);
                 }
@@ -423,7 +423,7 @@ namespace karabo {
             }
             return injected;
         }
-        
+
         Hash Schema::injectUnrootedDefaults(const Hash& user) const {
             Hash injected(user);
             if (this->hasRoot()) {
@@ -433,11 +433,11 @@ namespace karabo {
             }
             return injected;
         }
-        
+
         void Schema::r_injectDefaults(const Schema& schema, Hash& hash) const {
 
             if (schema.hasParameters()) {
-                
+
                 const Schema& parameters = schema.getParameters();
                 for (Schema::const_iterator it = parameters.begin(); it != parameters.end(); ++it) {
 
@@ -449,21 +449,21 @@ namespace karabo {
                         if (it != parameter.end()) {
                             if (!hash.has(key)) hash[key] = it->second;
                         }
-                        
+
                     } else if (parameter.isNode()) {
                         const std::string& root = parameter.getRoot();
                         if (!hash.has(root)) hash.set(root, Hash());
                         r_injectDefaults(parameter, hash.get<Hash > (root));
-                        
+
                     } else if (parameter.isChoiceOfNodes()) {
                         const std::string& key = parameter.getKey();
                         if (parameter.hasDefaultValue()) {
                             const std::string& defaultNode = parameter.getDefaultValue<std::string > ();
                             std::string path = key + "." + defaultNode;
                             if (!hash.has(key)) hash.setFromPath(path, Hash());
-                            r_injectDefaults(parameter.getParameters().get<Schema>(defaultNode), hash.getFromPath<Hash > (path));
+                            r_injectDefaults(parameter.getParameters().get<Schema > (defaultNode), hash.getFromPath<Hash > (path));
                         }
-                        
+
                     } else if (parameter.isListOfNodes() || parameter.isNonEmptyListOfNodes()) {
                         const std::string& key = parameter.getKey();
                         if (parameter.hasDefaultValue()) {
@@ -472,14 +472,14 @@ namespace karabo {
                                 const std::string& defaultNode = defaultNodes[i];
                                 std::string path = key + "." + defaultNode;
                                 if (!hash.hasFromPath(path)) hash.setFromPath(path, Hash());
-                                r_injectDefaults(parameter.getParameters().get<Schema>(defaultNode), hash.getFromPath<Hash > (path));
+                                r_injectDefaults(parameter.getParameters().get<Schema > (defaultNode), hash.getFromPath<Hash > (path));
                             }
                         }
                     }
                 }
             }
         }
- 
+
         void Schema::r_validate(const Schema& schema, Hash& user, Hash& working, ostringstream& report, string scope) const {
 
             const string& node = schema.getRoot();
@@ -1466,6 +1466,11 @@ namespace karabo {
                 for (Schema::const_iterator it = elements.begin(); it != elements.end(); it++) {
                     const Schema& description = elements.get<Schema > (it);
                     Schema::processingDescription(description, stream);
+                }
+            } else {
+                std::vector<std::string> keys = schema.getKeysAsVector();
+                for (size_t i = 0; i < keys.size(); i++) {
+                    os << keys[i] << endl;
                 }
             }
             os << stream.str();
