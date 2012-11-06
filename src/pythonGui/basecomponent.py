@@ -63,6 +63,18 @@ class BaseComponent(QObject):
     widget = property(fget=_getWidget)
 
 
+    def _getKeys(self):
+        raise NotImplementedError, "BaseComponent._getKeys"
+    keys = property(fget=_getKeys)
+
+
+    def _getValue(self):
+        raise NotImplementedError, "BaseComponent._getValue"
+    def _setValue(self, value):
+        raise NotImplementedError, "BaseComponent._setValue"
+    value = property(fget=_getValue, fset=_setValue)
+
+
     # Triggered by DataNotifier signalUpdateComponent
     def onValueChanged(self, key, value):
         raise NotImplementedError, "BaseComponent.onValueChanged"

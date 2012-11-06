@@ -181,15 +181,24 @@ class GraphicsProxyWidget(NodeBase, QGraphicsProxyWidget):
         # Change display or editable widget
         self.__component.changeWidget(action.text())
         self.adjustSize()
+        
+        parentWidget = self.parentWidget()
+        if parentWidget:
+            parentWidget.adjustSize()
 
 
     def onChangeVacuumWidget(self):
         if self.__component is None:
             return
+        
         action = self.sender()
         # Change vacuum widget
         self.__component.changeToVacuumWidget(action.text())
         self.adjustSize()
+        
+        parentWidget = self.parentWidget()
+        if parentWidget:
+            parentWidget.adjustSize()
 
 
     #def onRemove(self):

@@ -24,31 +24,30 @@ class DataNotifier(QObject):
     def __init__(self, key, component):
         super(DataNotifier, self).__init__()
         
-        self.__components = set()
+        self.__components = [] # list of components
         self.addComponent(key, component)
 
 
     def addComponent(self, key, component):
         # Connect signals
         self.signalUpdateComponent.connect(component.onValueChanged)
-        #self.signalAddKey.connect(widget.onAddKey)
-        #self.signalRemoveKey.connect(widget.onRemoveKey)
         
-        # Add widget to set and emit signalAddKey to widget
-        self.__components.add(component)
-        #self.signalAddKey.emit(key)
+        if len(self.__components) > 0:
+            value = self.__components[0].value
+            if value:
+                self.signalUpdateComponent.emit(key, value)
+        
+        # Add widget to list
+        self.__components.append(component)
 
 
     def removeComponent(self, key, component):
-        # Remove widget from set and emit signalRemoveKey to widget
+        # Remove widget from set
         if component in self.__components:
             self.__components.remove(component)
-        #self.signalRemoveKey.emit(key)
         
         # Disconnect signals
         self.signalUpdateComponent.disconnect(component.onValueChanged)
-        #self.signalAddKey.disconnect(widget.onAddKey)
-        #self.signalRemoveKey.disconnect(widget.onRemoveKey)
 
 
     def updateDisplayValue(self, key, value):
