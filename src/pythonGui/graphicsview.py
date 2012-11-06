@@ -667,9 +667,6 @@ class GraphicsView(QGraphicsView):
                 # Class alias
                 classAlias = QString(mimeData.data("classAlias"))
 
-                # Get item using internal key - needed for values in correct type
-                item = source.getAttributeTreeWidgetItemByKey(internalKey)
-
                 # List stored all items for layout
                 items = []
                 
@@ -687,10 +684,7 @@ class GraphicsView(QGraphicsView):
                 
                 # Display widget
                 if hasDisplayComponent:
-                    # Display value
-                    displayValue = item.displayComponent.value
-                    
-                    displayComponent = DisplayComponent(classAlias, key=internalKey, value=displayValue)
+                    displayComponent = DisplayComponent(classAlias, key=internalKey)
                     displayComponent.widget.setAttribute(Qt.WA_NoSystemBackground, True)
                     displayProxyWidget = GraphicsProxyWidget(self.__isDesignMode, displayComponent.widget, displayComponent, isStateToDisplay)
                     displayProxyWidget.setTransformOriginPoint(displayProxyWidget.boundingRect().center())
@@ -699,13 +693,10 @@ class GraphicsView(QGraphicsView):
                 
                 # Editable widget
                 if hasEditableComponent:
-                    # Editable value
-                    editableValue = item.editableComponent.value
-                    
                     if navigationItemType is NavigationItemTypes.DEVICE_CLASS:
-                        editableComponent = EditableNoApplyComponent(classAlias, key=internalKey, value=editableValue)
+                        editableComponent = EditableNoApplyComponent(classAlias, key=internalKey)
                     elif navigationItemType is NavigationItemTypes.DEVICE_INSTANCE:
-                        editableComponent = EditableApplyLaterComponent(classAlias, key=internalKey, value=editableValue)
+                        editableComponent = EditableApplyLaterComponent(classAlias, key=internalKey)
                         editableComponent.isEditableValueInit = False
                     
                     editableComponent.widget.setAttribute(Qt.WA_NoSystemBackground, True)

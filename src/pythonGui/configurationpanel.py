@@ -526,7 +526,7 @@ class ConfigurationPanel(QWidget):
 
 
     def onNavigationItemChanged(self, itemInfo):
-        #print "ConfigurationPanel.itemChanged"
+        #print "ConfigurationPanel.itemChanged", itemInfo
         type = itemInfo.get(QString('type'))
         if type is None:
             type = itemInfo.get('type')

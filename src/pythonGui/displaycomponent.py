@@ -29,26 +29,26 @@ class DisplayComponent(BaseComponent):
         
         self.__initParams = params
         
+        self.__compositeWidget = QWidget()
+        hLayout = QHBoxLayout(self.__compositeWidget)
+        hLayout.setContentsMargins(0,0,0,0)
+
+        widgetFactory = params.get(QString('widgetFactory'))
+        if widgetFactory is None:
+            widgetFactory = params.get('widgetFactory')
+        
+        if widgetFactory is None or (widgetFactory == "DisplayWidget"):
+            self.__displayWidget = DisplayWidget.create(classAlias, **params)
+        elif widgetFactory == "VacuumWidget":
+            self.__displayWidget = VacuumWidget.create(classAlias, **params)
+        
+        hLayout.addWidget(self.__displayWidget.widget)
+        
         # Use key to register component to manager
         key = params.get(QString('key'))
         if key is None:
             key = params.get('key')
         Manager().registerDisplayComponent(key, self)
-        
-        self.__compositeWidget = QWidget()
-        hLayout = QHBoxLayout(self.__compositeWidget)
-        hLayout.setContentsMargins(0,0,0,0)
-
-        widgetType = params.get(QString('widgetType'))
-        if widgetType is None:
-            widgetType = params.get('widgetType')
-        
-        if widgetType is None or (widgetType == "DisplayWidget"):
-            self.__displayWidget = DisplayWidget.create(classAlias, **params)
-        elif widgetType == "VacuumWidget":
-            self.__displayWidget = VacuumWidget.create(classAlias, **params)
-        
-        hLayout.addWidget(self.__displayWidget.widget)
 
 
 ### getter and setter functions ###
@@ -114,6 +114,11 @@ class DisplayComponent(BaseComponent):
         
         self.__displayWidget = DisplayWidget.create(classAlias, **self.__initParams)
         layout.addWidget(self.__displayWidget.widget)
+        self.__compositeWidget.adjustSize()
+        
+        # Refresh new widget...
+        for key in self.__displayWidget.keys:
+            Manager().onRefreshInstance(key)
 
 
     def changeToVacuumWidget(self, classAlias):
@@ -127,6 +132,11 @@ class DisplayComponent(BaseComponent):
         
         self.__displayWidget = VacuumWidget.create(classAlias, **self.__initParams)
         layout.addWidget(self.__displayWidget.widget)
+        self.__compositeWidget.adjustSize()
+        
+        # Refresh new widget...
+        for key in self.__displayWidget.keys:
+            Manager().onRefreshInstance(key)
 
 
 ### slots ###
