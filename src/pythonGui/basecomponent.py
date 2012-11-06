@@ -23,8 +23,10 @@ class BaseComponent(QObject):
     signalValueChanged = pyqtSignal(str, object) # key, value
 
 
-    def __init__(self, **params):
+    def __init__(self, classAlias):
         super(BaseComponent, self).__init__()
+        
+        self.__classAlias = classAlias
         
         # Describes the category of the widget, widget can contain only values
         # of same category
@@ -38,9 +40,21 @@ class BaseComponent(QObject):
         self.__windowPosition = None
 
 
+    def _getClassAlias(self):
+        return self.__classAlias
+    def _setClassAlias(self, classAlias):
+        self.__classAlias = classAlias
+    classAlias = property(fget=_getClassAlias, fset=_setClassAlias)
+
+
     def _getWidgetCategory(self):
         raise NotImplementedError, "BaseComponent._getWidgetCategory"
     widgetCategory = property(fget=_getWidgetCategory)
+
+
+    def _getWidgetFactory(self):
+        raise NotImplementedError, "BaseComponent._getWidgetFactory"
+    widgetFactory = property(fget=_getWidgetFactory)
 
 
     # Returns the actual widget which is part of the composition
