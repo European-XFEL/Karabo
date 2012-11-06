@@ -24,7 +24,7 @@ class ChoiceComponent(BaseComponent):
 
 
     def __init__(self, classAlias, **params):
-        super(ChoiceComponent, self).__init__()
+        super(ChoiceComponent, self).__init__(classAlias)
         
         # Use key to register component to manager
         key = params.get(QString('key'))
@@ -48,6 +48,11 @@ class ChoiceComponent(BaseComponent):
     def _getWidgetCategory(self):
         return self.__choiceWidget.category
     widgetCategory = property(fget=_getWidgetCategory)
+
+
+    def _getWidgetFactory(self):
+        return self.__choiceWidget
+    widgetFactory = property(fget=_getWidgetFactory)
 
 
     # Returns the actual widget which is part of the composition

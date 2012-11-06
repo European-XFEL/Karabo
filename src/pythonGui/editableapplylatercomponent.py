@@ -28,7 +28,7 @@ class EditableApplyLaterComponent(BaseComponent):
 
 
     def __init__(self, classAlias, **params):
-        super(EditableApplyLaterComponent, self).__init__()
+        super(EditableApplyLaterComponent, self).__init__(classAlias)
 
         # Use key to register component to manager
         key = params.get(QString('key'))
@@ -36,7 +36,6 @@ class EditableApplyLaterComponent(BaseComponent):
             key = params.get('key')
         Manager().registerEditableComponent(key, self)
 
-        self.__classAlias = classAlias
         self.__initParams = params
 
         self.__isEditableValueInit = True
@@ -116,7 +115,7 @@ class EditableApplyLaterComponent(BaseComponent):
 
 
     def copy(self):
-        copyComponent = EditableApplyLaterComponent(self.__classAlias, **self.__initParams)
+        copyComponent = EditableApplyLaterComponent(self.classAlias, **self.__initParams)
         return copyComponent
 
 
@@ -124,6 +123,11 @@ class EditableApplyLaterComponent(BaseComponent):
     def _getWidgetCategory(self):
         return self.__editableWidget.category
     widgetCategory = property(fget=_getWidgetCategory)
+
+
+    def _getWidgetFactory(self):
+        return self.__editableWidget
+    widgetFactory = property(fget=_getWidgetFactory)
 
 
     # Returns the actual widget which is part of the composition
@@ -250,6 +254,9 @@ class EditableApplyLaterComponent(BaseComponent):
 
 
     def changeWidget(self, classAlias):
+        self.classAlias = classAlias
+        self.__initParams['value'] = self.value
+        
         layout = self.__compositeWidget.layout()
         
         oldWidget = self.__editableWidget.widget
@@ -257,7 +264,6 @@ class EditableApplyLaterComponent(BaseComponent):
         oldWidget.deleteLater()
         layout.removeWidget(oldWidget)
         
-        self.__initParams['value'] = self.value
         # Disconnect signal from old widget
         self.__editableWidget.signalEditingFinished.disconnect(self.onEditingFinished)
         self.__editableWidget = EditableWidget.create(classAlias, **self.__initParams)

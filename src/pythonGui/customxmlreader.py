@@ -10,7 +10,15 @@
 
 __all__ = ["CustomXmlReader"]
 
+
+from displaycomponent import DisplayComponent
+
+from editableapplylatercomponent import EditableApplyLaterComponent
+from editablenoapplycomponent import EditableNoApplyComponent
+
 from layoutcomponents.arrow import Arrow
+from layoutcomponents.graphicsproxywidget import GraphicsProxyWidget
+from layoutcomponents.graphicsproxywidgetcontainer import GraphicsProxyWidgetContainer
 from layoutcomponents.line import Line
 from layoutcomponents.link import Link
 from layoutcomponents.rectangle import Rectangle
@@ -22,11 +30,10 @@ from PyQt4.QtGui import *
 
 class CustomXmlReader(QXmlStreamReader):
 
-    def __init__(self, scene, isEditableMode):
+    def __init__(self, view):
         super(CustomXmlReader, self).__init__()
         
-        self.__scene = scene
-        self.__isEditableMode = isEditableMode
+        self.__view = view
 
 
     def read(self, data):
@@ -52,36 +59,45 @@ class CustomXmlReader(QXmlStreamReader):
 
             if tokenType == QXmlStreamReader.StartElement:
                 if tagName == "GraphicsItem":
-                    type, posX, posY = self.processItemAttributes()
+                    type, posX, posY = self._processItemAttributes()
                     
                     item = None
                     if type == "Text":
-                        item = Text(self.__isEditableMode)
-                        self.__scene.addItem(item)
+                        item = Text(self.__view.isDesignMode)
+                        self.__view.scene().addItem(item)
                         item.setPos(QPointF(posX, posY))
+                        self._processGraphicsItem(item)
                     elif type == "Link":
                         item = Link()
-                        self.__scene.addItem(item)
+                        self.__view.scene().addItem(item)
                         item.setPos(QPointF(posX, posY))
+                        self._processGraphicsItem(item)
                     elif type == "Arrow":
                         item = Arrow()
-                        self.__scene.addItem(item)
+                        self.__view.scene().addItem(item)
                         item.setPos(QPointF(posX, posY))
+                        self._processGraphicsItem(item)
                     elif type == "Line":
-                        item = Line(self.__isEditableMode)
-                        self.__scene.addItem(item)
+                        item = Line(self.__view.isDesignMode)
+                        self.__view.scene().addItem(item)
                         item.setPos(QPointF(posX, posY))
+                        self._processGraphicsItem(item)
                     elif type == "Rectangle":
-                        item = Rectangle(self.__isEditableMode)
-                        self.__scene.addItem(item)
+                        item = Rectangle(self.__view.isDesignMode)
+                        self.__view.scene().addItem(item)
                         item.setPos(QPointF(posX, posY))
-                    
-                    self.processGraphicsItem(item)
+                        self._processGraphicsItem(item)
+                    elif type == "GraphicsProxyWidgetContainer":
+                        self._processGraphicsProxyWidgetContainer(posX, posY)
+                    elif type == "GraphicsProxyWidget":
+                        item = self._processGraphicsProxyWidget(posX, posY)
+                        item.setFlags(QGraphicsItem.ItemIsMovable | QGraphicsItem.ItemIsSelectable)
+                        self.__view.scene().addItem(item)
             elif tokenType == QXmlStreamReader.EndElement and tagName == "GraphicsItemList":
                 break
 
 
-    def processItemAttributes(self):
+    def _processItemAttributes(self):
         type = self.attributes().value("type").toString()
         
         posX = self.attributes().value("posX").toString().toDouble()
@@ -90,7 +106,7 @@ class CustomXmlReader(QXmlStreamReader):
         return [type, posX[0], posY[0]]
 
 
-    def processGraphicsItem(self, item):
+    def _processGraphicsItem(self, item):
         if item is None:
             return
         
@@ -154,6 +170,141 @@ class CustomXmlReader(QXmlStreamReader):
                             rect = QRectF(rectData[0].toFloat()[0], rectData[1].toFloat()[0], \
                                           rectData[2].toFloat()[0], rectData[3].toFloat()[0])
                             item.setRect(rect)
+                    
             elif tokenType == QXmlStreamReader.EndElement and tagName == "GraphicsItem":
                 break
+
+
+    def _processGraphicsProxyWidgetContainer(self, posX, posY):
+        
+        layoutOrientation = None
+        
+        while self.atEnd() == False:
+            tokenType = self.readNext()
+            tagName = self.name()
+            if tokenType == QXmlStreamReader.StartElement:
+                if tagName == "layoutOrientation":
+                    self.readNext()
+                    layoutOrientation = self.text().toString().toInt()
+                    if layoutOrientation[1]:
+                        layoutOrientation = layoutOrientation[0]
+                elif tagName == "GraphicsProxyItems":
+                    self._processGraphicsProxyItemList(layoutOrientation, posX, posY)
+                    
+            elif tokenType == QXmlStreamReader.EndElement and tagName == "GraphicsItem":
+                break
+
+
+    def _processGraphicsProxyItemList(self, orientation, posX, posY):
+
+        proxyItems = []
+        while self.atEnd() == False:
+            tokenType = self.readNext()
+            tagName = self.name()
+            
+            if tokenType == QXmlStreamReader.StartElement:
+                if tagName == "GraphicsItem":
+                    self.readNext()
+                    type, itemPosX, itemPosY = self._processItemAttributes()
+                    proxyItems.append(self._processGraphicsProxyWidget(itemPosX, itemPosY))
+            
+            elif tokenType == QXmlStreamReader.EndElement and tagName == "GraphicsProxyItems":
+                break
+        
+        customTuple = self.__view.createGraphicsItemContainer(orientation, proxyItems)
+        container = customTuple[0]
+        #offset = customTuple[1]
+        
+        #pos = QPoint(posX, posY)
+        #scenePos = self.__view.mapToScene(pos)
+        #scenePos = scenePos-offset
+        #container.setPos(scenePos)
+        container.setPos(QPointF(posX, posY))
+
+
+    def _processGraphicsProxyWidget(self, posX, posY):
+        
+        componentType = None
+        widgetType = None
+        text = None
+        classAlias = None
+        internalKeys = None
+        
+        while self.atEnd() == False:
+            tokenType = self.readNext()
+            tagName = self.name()
+    
+            if tokenType == QXmlStreamReader.StartElement:
+                if tagName == "componentType":
+                    self.readNext()
+                    componentType = self.text().toString()
+                elif tagName == "widgetType":
+                    self.readNext()
+                    widgetType = self.text().toString()
+                elif tagName == "Text":
+                    self.readNext()
+                    text = self.text().toString()
+                elif tagName == "classAlias":
+                    self.readNext()
+                    classAlias = self.text().toString()
+                elif tagName == "internalKeys":
+                    self.readNext()
+                    internalKeys = self.text().toString()
+            
+            elif tokenType == QXmlStreamReader.EndElement and tagName == "GraphicsItem":
+                break
+        
+        #print ""
+        #print componentType, widgetType, text, classAlias, internalKeys
+        #print ""
+        
+        internalKey = None
+        isStateToDisplay = False
+        if internalKeys is not None:
+            internalKey = str(internalKeys).split(',')
+            
+            if len(internalKey) == 1:
+                internalKey = internalKey[0]
+
+            # Does key concern state of device?
+            keys = str(internalKey).split('.', 1)
+            isStateToDisplay = (keys[1] == "state")
+        
+        proxyItem = None
+        # Create GraphicsProxyWidget
+        if componentType == "Label":
+            # Label
+            label = QLabel(text)
+            label.setAttribute(Qt.WA_NoSystemBackground, True)
+            proxyItem = GraphicsProxyWidget(self.__view.isDesignMode, label)
+            proxyItem.setTransformOriginPoint(proxyItem.boundingRect().center())
+        elif componentType == "DisplayComponent":
+            # Display value
+            #displayValue = item.displayComponent.value
+
+            displayComponent = DisplayComponent(classAlias, key=internalKey, widgetType=widgetType)
+            displayComponent.widget.setAttribute(Qt.WA_NoSystemBackground, True)
+            proxyItem = GraphicsProxyWidget(self.__view.isDesignMode, displayComponent.widget, displayComponent, isStateToDisplay)
+            proxyItem.setTransformOriginPoint(proxyItem.boundingRect().center())
+        elif componentType == "EditableNoApplyComponent":
+            # Editable value
+            #editableValue = item.editableComponent.value
+
+            editableComponent = EditableNoApplyComponent(classAlias, key=internalKey, widgetType=widgetType)
+            editableComponent.widget.setAttribute(Qt.WA_NoSystemBackground, True)
+            proxyItem = GraphicsProxyWidget(self.__view.isDesignMode, editableComponent.widget, editableComponent, isStateToDisplay)
+            proxyItem.setTransformOriginPoint(proxyItem.boundingRect().center())
+        elif componentType == "EditableApplyLaterComponent":
+            # Editable value
+            #editableValue = item.editableComponent.value
+            
+            editableComponent = EditableApplyLaterComponent(classAlias, key=internalKey, widgetType=widgetType)
+            editableComponent.isEditableValueInit = False
+            editableComponent.widget.setAttribute(Qt.WA_NoSystemBackground, True)
+            proxyItem = GraphicsProxyWidget(self.__view.isDesignMode, editableComponent.widget, editableComponent, isStateToDisplay)
+            proxyItem.setTransformOriginPoint(proxyItem.boundingRect().center())
+               
+        proxyItem.setPos(QPointF(posX, posY))
+        
+        return proxyItem
 

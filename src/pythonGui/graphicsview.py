@@ -170,7 +170,7 @@ class GraphicsView(QGraphicsView):
 
     # Open saved view from file
     def openSceneFromFile(self):
-        filename = QFileDialog.getOpenFileName(None, "Open Saved Configuration", QDir.tempPath(), "SCENE (*.scene)")
+        filename = QFileDialog.getOpenFileName(None, "Open saved view", QDir.tempPath(), "SCENE (*.scene)")
         if filename.isEmpty():
             return
         
@@ -183,7 +183,7 @@ class GraphicsView(QGraphicsView):
             xmlContent += str(file.readLine())
         
         self.__scene.clear()
-        CustomXmlReader(self.__scene, self.__isDesignMode).read(xmlContent)
+        CustomXmlReader(self).read(xmlContent)
 
 
     # Save active view to file
@@ -285,10 +285,11 @@ class GraphicsView(QGraphicsView):
                 topLeft = rect.topLeft()
                 stream << QString("Rectangle") << QString("%1,%2,%3,%4").arg(topLeft.x()).arg(topLeft.y()).arg(rect.width()).arg(rect.height()) \
                                                << QString("\n")
+            elif isinstance(item, GraphicsProxyWidgetContainer):
+                print "GraphicsProxyWidgetContainer"
             elif isinstance(item, GraphicsProxyWidget):
                 print "GraphicsProxyWidget"
                 embeddedWidget = item.widget()
-                print "embeddedWidget", embeddedWidget
                 
 
 
@@ -356,7 +357,9 @@ class GraphicsView(QGraphicsView):
                         rectItem.setRect(rect)
                     self._setupItem(rectItem)
                     rectItem.setTransformOriginPoint(rectItem.boundingRect().center())
-                elif isinstance(item, GraphicsProxyWidget):
+                elif type == "GraphicsProxyWidgetContainer":
+                    print "GraphicsProxyWidgetContainer"
+                elif type == "GraphicsProxyWidget":
                     print "GraphicsProxyWidget"
                 
                 itemData.clear()
@@ -428,14 +431,14 @@ class GraphicsView(QGraphicsView):
         items = self.selectedItems()
         if len(items) < 1:
             return
-        self._createGraphicsItemContainer(Qt.Horizontal, items)
+        self.createGraphicsItemContainer(Qt.Horizontal, items)
 
 
     def verticalLayout(self):
         items = self.selectedItems()
         if len(items) < 1:
             return
-        self._createGraphicsItemContainer(Qt.Vertical, items)
+        self.createGraphicsItemContainer(Qt.Vertical, items)
 
 
     def breakLayout(self):
@@ -500,7 +503,7 @@ class GraphicsView(QGraphicsView):
 
 
     # Creates and returns container item
-    def _createGraphicsItemContainer(self, orientation, items):
+    def createGraphicsItemContainer(self, orientation, items):
         # Initialize layout
         layout = QGraphicsLinearLayout(orientation)
         layout.setContentsMargins(5,5,5,5)
@@ -526,12 +529,21 @@ class GraphicsView(QGraphicsView):
         # Create container item for items in layout
         containerItem = GraphicsProxyWidgetContainer(self.__isDesignMode)
         containerItem.setLayout(layout)
-        # Set correct geometry for customItem - important for positioning
+        # Set correct geometry for containerItem - important for positioning
         containerItem.setGeometry(QRectF(0, 0, width, height))
         # Add created item to scene
         self._addItem(containerItem)
         
-        return containerItem
+        # Calculations to position item center-oriented
+        bRect = containerItem.boundingRect()
+        leftPos = bRect.topLeft()
+        leftPos = containerItem.mapToScene(leftPos)
+        centerPos = bRect.center()
+        centerPos = containerItem.mapToScene(centerPos)
+        offset = centerPos-leftPos
+        containerItem.setTransformOriginPoint(centerPos)
+        
+        return (containerItem, offset)
 
 
 ### protected ###
@@ -702,16 +714,9 @@ class GraphicsView(QGraphicsView):
                     # Add item to itemlist
                     items.append(editableProxyWidget)
 
-                customItem = self._createGraphicsItemContainer(Qt.Horizontal, items)
-
-                # Calculations to position item center-oriented
-                bRect = customItem.boundingRect()
-                leftPos = bRect.topLeft()
-                leftPos = customItem.mapToScene(leftPos)
-                centerPos = bRect.center()
-                centerPos = customItem.mapToScene(centerPos)
-                offset = centerPos-leftPos
-                customItem.setTransformOriginPoint(centerPos)
+                customTuple = self.createGraphicsItemContainer(Qt.Horizontal, items)
+                customItem = customTuple[0]
+                offset = customTuple[1]
             
             if customItem is None: return
 

@@ -25,9 +25,8 @@ class DisplayComponent(BaseComponent):
 
 
     def __init__(self, classAlias, **params):
-        super(DisplayComponent, self).__init__()
+        super(DisplayComponent, self).__init__(classAlias)
         
-        self.__classAlias = classAlias
         self.__initParams = params
         
         # Use key to register component to manager
@@ -40,7 +39,15 @@ class DisplayComponent(BaseComponent):
         hLayout = QHBoxLayout(self.__compositeWidget)
         hLayout.setContentsMargins(0,0,0,0)
 
-        self.__displayWidget = DisplayWidget.create(classAlias, **params)
+        widgetType = params.get(QString('widgetType'))
+        if widgetType is None:
+            widgetType = params.get('widgetType')
+        
+        if widgetType is None or (widgetType == "DisplayWidget"):
+            self.__displayWidget = DisplayWidget.create(classAlias, **params)
+        elif widgetType == "VacuumWidget":
+            self.__displayWidget = VacuumWidget.create(classAlias, **params)
+        
         hLayout.addWidget(self.__displayWidget.widget)
 
 
@@ -48,6 +55,11 @@ class DisplayComponent(BaseComponent):
     def _getWidgetCategory(self):
         return self.__displayWidget.category
     widgetCategory = property(fget=_getWidgetCategory)
+
+
+    def _getWidgetFactory(self):
+        return self.__displayWidget
+    widgetFactory = property(fget=_getWidgetFactory)
 
 
     # Returns the actual widget which is part of the composition
@@ -92,6 +104,7 @@ class DisplayComponent(BaseComponent):
 
 
     def changeWidget(self, classAlias):
+        self.classAlias = classAlias
         self.__initParams['value'] = self.value
         
         layout = self.__compositeWidget.layout()
@@ -104,6 +117,7 @@ class DisplayComponent(BaseComponent):
 
 
     def changeToVacuumWidget(self, classAlias):
+        self.classAlias = classAlias
         self.__initParams['value'] = self.value
         
         layout = self.__compositeWidget.layout()

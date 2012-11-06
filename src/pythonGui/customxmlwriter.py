@@ -10,8 +10,16 @@
 
 __all__ = ["CustomXmlWriter"]
 
+import displaycomponent
+import displaywidget
+import editablewidget
+import editableapplylatercomponent
+import editablenoapplycomponent
+import vacuumwidget
 
 from layoutcomponents.arrow import Arrow
+from layoutcomponents.graphicsproxywidget import GraphicsProxyWidget
+from layoutcomponents.graphicsproxywidgetcontainer import GraphicsProxyWidgetContainer
 from layoutcomponents.line import Line
 from layoutcomponents.link import Link
 from layoutcomponents.rectangle import Rectangle
@@ -47,54 +55,126 @@ class CustomXmlWriter(QXmlStreamWriter):
         self.writeStartElement("GraphicsItemList")
         
         for item in self.__scene.items():
-            self.writeStartElement("GraphicsItem")
             
-            if isinstance(item, Text):
-                self.writeAttribute("type", "Text")
-                self.writeAttribute("posX", QString.number(item.x()))
-                self.writeAttribute("posY", QString.number(item.y()))
-                
-                # Save additional text item data
-                self.writeTextElement("text", item.text())
-                self.writeTextElement("font", item.font().toString())
-                self.writeTextElement("textColor", item.textColor().name())
-                self.writeTextElement("outlineColor", item.outlineColor().name())
-                self.writeTextElement("backgroundColor", item.backgroundColor().name())
-            elif isinstance(item, Link):
-                self.writeAttribute("type", "Link")
-                self.writeAttribute("posX", QString.number(item.x()))
-                self.writeAttribute("posY", QString.number(item.y()))
-            elif isinstance(item, Arrow):
-                self.writeAttribute("type", "Arrow")
-                self.writeAttribute("posX", QString.number(item.x()))
-                self.writeAttribute("posY", QString.number(item.y()))
-            elif isinstance(item, Line):
-                self.writeAttribute("type", "Line")
-                self.writeAttribute("posX", QString.number(item.x()))
-                self.writeAttribute("posY", QString.number(item.y()))
-                
-                # Save additional line item data
-                line = item.line()
-                self.writeTextElement("lineCoords", QString("%1,%2,%3,%4").arg(line.x1()).arg(line.y1()).arg(line.x2()).arg(line.y2()))
-                self.writeTextElement("length", QString.number(item.length()))
-                self.writeTextElement("width", QString.number(item.widthF()))
-                self.writeTextElement("style", QString.number(item.style()))
-                self.writeTextElement("color", item.color().name())
-            elif isinstance(item, Rectangle):
-                self.writeAttribute("type", "Rectangle")
-                self.writeAttribute("posX", QString.number(item.x()))
-                self.writeAttribute("posY", QString.number(item.y()))
-                
-                # Save addition rectangle item data
-                rect = item.rect()
-                topLeft = rect.topLeft()
-                self.writeTextElement("rectCoords", QString("%1,%2,%3,%4").arg(topLeft.x()).arg(topLeft.y()).arg(rect.width()).arg(rect.height()))
-            
-            self.writeEndElement() # End of GraphicsItem
+            if isinstance(item, GraphicsProxyWidget):
+                if item.parentWidget() is None:
+                    self.writeStartElement("GraphicsItem")
+                    
+                    self.writeAttribute("type", "GraphicsProxyWidget")
+                    self.writeGraphicsProxyItem(item)
+                    self.writeEndElement()
+            else:
+                self.writeStartElement("GraphicsItem")
+
+                if isinstance(item, Text):
+                    self.writeAttribute("type", "Text")
+                    self.writeAttribute("posX", QString.number(item.x()))
+                    self.writeAttribute("posY", QString.number(item.y()))
+
+                    # Save additional text item data
+                    self.writeTextElement("text", item.text())
+                    self.writeTextElement("font", item.font().toString())
+                    self.writeTextElement("textColor", item.textColor().name())
+                    self.writeTextElement("outlineColor", item.outlineColor().name())
+                    self.writeTextElement("backgroundColor", item.backgroundColor().name())
+                elif isinstance(item, Link):
+                    self.writeAttribute("type", "Link")
+                    self.writeAttribute("posX", QString.number(item.x()))
+                    self.writeAttribute("posY", QString.number(item.y()))
+                elif isinstance(item, Arrow):
+                    self.writeAttribute("type", "Arrow")
+                    self.writeAttribute("posX", QString.number(item.x()))
+                    self.writeAttribute("posY", QString.number(item.y()))
+                elif isinstance(item, Line):
+                    self.writeAttribute("type", "Line")
+                    self.writeAttribute("posX", QString.number(item.x()))
+                    self.writeAttribute("posY", QString.number(item.y()))
+
+                    # Save additional line item data
+                    line = item.line()
+                    self.writeTextElement("lineCoords", QString("%1,%2,%3,%4").arg(line.x1()).arg(line.y1()).arg(line.x2()).arg(line.y2()))
+                    self.writeTextElement("length", QString.number(item.length()))
+                    self.writeTextElement("width", QString.number(item.widthF()))
+                    self.writeTextElement("style", QString.number(item.style()))
+                    self.writeTextElement("color", item.color().name())
+                elif isinstance(item, Rectangle):
+                    self.writeAttribute("type", "Rectangle")
+                    self.writeAttribute("posX", QString.number(item.x()))
+                    self.writeAttribute("posY", QString.number(item.y()))
+
+                    # Save addition rectangle item data
+                    rect = item.rect()
+                    topLeft = rect.topLeft()
+                    self.writeTextElement("rectCoords", QString("%1,%2,%3,%4").arg(topLeft.x()).arg(topLeft.y()).arg(rect.width()).arg(rect.height()))
+                elif isinstance(item, GraphicsProxyWidgetContainer):
+                    self.writeAttribute("type", "GraphicsProxyWidgetContainer")
+                    self.writeAttribute("posX", QString.number(item.x()))
+                    self.writeAttribute("posY", QString.number(item.y()))
+
+                    layout = item.layout()
+                    self.writeTextElement("layoutOrientation", QString.number(layout.orientation()))
+
+                    nbItems =layout.count()
+                    if nbItems > 0:
+                        self.writeStartElement("GraphicsProxyItems")
+                        for i in xrange(nbItems):
+                            proxyItem = layout.itemAt(i)
+
+                            if not proxyItem:
+                                continue
+
+                            self.writeStartElement("GraphicsItem")
+                            self.writeGraphicsProxyItem(proxyItem)
+                            self.writeEndElement() # End of GraphicsItem
+                        self.writeEndElement() # End of GraphicsProxyItems
+                self.writeEndElement() # End of GraphicsItem
 
         self.writeEndElement()  # End of GraphicsItemList  
         self.writeEndElement()  # End of SceneData
 
         self.writeEndDocument()
         infoFile.close()
+
+
+    def writeGraphicsProxyItem(self, proxyItem):
+        
+        component = proxyItem.component
+        embeddedWidget = proxyItem.widget()
+
+        if component is None and isinstance(embeddedWidget, QLabel):
+            self.writeAttribute("posX", QString.number(proxyItem.x()))
+            self.writeAttribute("posY", QString.number(proxyItem.y()))
+
+            self.writeTextElement("componentType", "Label")
+            self.writeTextElement("widgetType", "Label")
+
+            self.writeTextElement("Text", embeddedWidget.text())
+        else:
+            self.writeAttribute("posX", QString.number(proxyItem.x()))
+            self.writeAttribute("posY", QString.number(proxyItem.y()))
+            
+            widgetFactory = component.widgetFactory
+            if isinstance(component, displaycomponent.DisplayComponent):
+                self.writeTextElement("componentType", "DisplayComponent")
+                if isinstance(widgetFactory, displaywidget.DisplayWidget):
+                    self.writeTextElement("widgetType", "DisplayWidget")
+                elif isinstance(widgetFactory, vacuumwidget.VacuumWidget):
+                    self.writeTextElement("widgetType", "VacuumWidget")
+            elif isinstance(component, editablenoapplycomponent.EditableNoApplyComponent):
+                self.writeTextElement("componentType", "EditableNoApplyComponent")
+                if isinstance(widgetFactory, editablewidget.EditableWidget):
+                    self.writeTextElement("widgetType", "EditableWidget")
+            elif isinstance(component, editableapplylatercomponent.EditableApplyLaterComponent):
+                self.writeTextElement("componentType", "EditableApplyLaterComponent")
+                if isinstance(widgetFactory, editablewidget.EditableWidget):
+                    self.writeTextElement("widgetType", "EditableWidget")
+
+            self.writeTextElement("classAlias", component.classAlias)
+            keyString = str()
+            nbKeys = len(component.keys)
+            for i in xrange(nbKeys):
+                keyString += component.keys[i]
+                if i != (nbKeys-1):
+                    keyString += ","
+            self.writeTextElement("internalKeys", keyString)
 
