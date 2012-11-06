@@ -323,7 +323,7 @@ class Manager(Singleton):
 
 
     def onFileOpen(self, configChangeType, instanceId, devClaId=str()):
-        filename = QFileDialog.getOpenFileName(None, "Open Saved Configuration", QDir.tempPath(), "XML (*.xml)")
+        filename = QFileDialog.getOpenFileName(None, "Open saved configuration", QDir.tempPath(), "XML (*.xml)")
         if filename.isEmpty():
             return
         

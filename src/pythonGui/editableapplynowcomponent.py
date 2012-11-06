@@ -24,7 +24,7 @@ class EditableApplyNowComponent(BaseComponent):
 
 
     def __init__(self, classAlias, **params):
-        super(EditableApplyNowComponent, self).__init__()
+        super(EditableApplyNowComponent, self).__init__(classAlias)
 
         # Use key to register component to manager
         key = params.get(QString('key'))
@@ -32,7 +32,6 @@ class EditableApplyNowComponent(BaseComponent):
             key = params.get('key')
         Manager().registerEditableComponent(key, self)
 
-        self.__classAlias = classAlias
         self.__initParams = params
 
         self.__compositeWidget = QWidget()
@@ -53,7 +52,7 @@ class EditableApplyNowComponent(BaseComponent):
 
 
     def copy(self):
-        copyComponent = EditableApplyNowComponent(self.__classAlias, **self.__initParams)
+        copyComponent = EditableApplyNowComponent(self.classAlias, **self.__initParams)
         return copyComponent
 
 
@@ -61,6 +60,11 @@ class EditableApplyNowComponent(BaseComponent):
     def _getWidgetCategory(self):
         return self.__editableWidget.category
     widgetCategory = property(fget=_getWidgetCategory)
+
+
+    def _getWidgetFactory(self):
+        return self.__editableWidget
+    widgetFactory = property(fget=_getWidgetFactory)
 
 
     # Returns the actual widget which is part of the composition
@@ -101,6 +105,9 @@ class EditableApplyNowComponent(BaseComponent):
 
 
     def changeWidget(self, classAlias):
+        self.classAlias = classAlias
+        self.__initParams['value'] = self.value
+        
         layout = self.__compositeWidget.layout()
         
         oldWidget = self.__editableWidget.widget
@@ -108,7 +115,6 @@ class EditableApplyNowComponent(BaseComponent):
         oldWidget.deleteLater()
         layout.removeWidget(oldWidget)
         
-        self.__initParams['value'] = self.value
         # Disconnect signal from old widget
         self.__editableWidget.signalEditingFinished.disconnect(self.onEditingFinished)
         self.__editableWidget = EditableWidget.create(classAlias, **self.__initParams)

@@ -63,8 +63,6 @@ class DisplayWidget(QObject):
                     # Register widget info in dictionary (<alias,category>) => 1 to 1 connection
                     if not DisplayWidget.aliasToCategory.has_key(alias):
                         DisplayWidget.aliasToCategory[alias] = category
-                    else:
-                        print "+++ DisplayWidget.aliasToCategory.has_key", alias
 
                     if not DisplayWidget.aliasConcreteClass.has_key(alias):
                         DisplayWidget.aliasConcreteClass[alias] = (modulename,className)

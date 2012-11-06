@@ -12,6 +12,7 @@ __all__ = ["GraphicsProxyWidget"]
 
 
 import displaycomponent
+import displaywidget
 from displaywidget import DisplayWidget
 
 import editableapplylatercomponent
@@ -19,6 +20,7 @@ import editablenoapplycomponent
 from editablewidget import EditableWidget
 
 from layoutcomponents.nodebase import NodeBase
+import vacuumwidget
 from vacuumwidget import VacuumWidget
 
 from PyQt4.QtCore import *
@@ -52,6 +54,12 @@ class GraphicsProxyWidget(NodeBase, QGraphicsProxyWidget):
             self.__component.destroy()
 
 
+    # Returns the component of this graphics proxy widget
+    def _getComponent(self):
+        return self.__component
+    component = property(fget=_getComponent)
+
+
 ### private ###
     def _setupContextMenu(self, isStateToDisplay):
         # Populate context menu
@@ -60,7 +68,13 @@ class GraphicsProxyWidget(NodeBase, QGraphicsProxyWidget):
         # Sub menu for widget type change
         self.__mChangeWidget = QMenu("Change widget")
         if isinstance(self.__component, displaycomponent.DisplayComponent):
-            widgetAliases = DisplayWidget.getAliasesViaCategory(self, self.__component.widgetCategory)
+            widgetAliases = None
+            widgetFactory = self.__component.widgetFactory
+            if isinstance(widgetFactory, displaywidget.DisplayWidget):
+                widgetAliases = DisplayWidget.getAliasesViaCategory(self, self.__component.widgetCategory)
+            elif isinstance(widgetFactory, vacuumwidget.VacuumWidget):
+                widgetAliases = VacuumWidget.getAliasesViaCategory(self, self.__component.widgetCategory)
+            
             for i in range(len(widgetAliases)):
                 acChangeWidget = self.__mChangeWidget.addAction(widgetAliases[i])
                 acChangeWidget.triggered.connect(self.onChangeWidget)
