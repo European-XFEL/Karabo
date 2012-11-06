@@ -26,12 +26,6 @@ class EditableNoApplyComponent(BaseComponent):
     def __init__(self, classAlias, **params):
         super(EditableNoApplyComponent, self).__init__(classAlias)
         
-        # Use key to register component to manager
-        key = params.get(QString('key'))
-        if key is None:
-            key = params.get('key')
-        Manager().registerEditableComponent(key, self)
-        
         self.__initParams = params
         
         self.__compositeWidget = QWidget()
@@ -49,6 +43,12 @@ class EditableNoApplyComponent(BaseComponent):
             self.__layout.addWidget(QLabel(unitSymbol))
         
         self.signalValueChanged.connect(Manager().onDeviceClassValueChanged)
+        
+        # Use key to register component to manager
+        key = params.get(QString('key'))
+        if key is None:
+            key = params.get('key')
+        Manager().registerEditableComponent(key, self)
 
 
     def copy(self):
@@ -121,6 +121,7 @@ class EditableNoApplyComponent(BaseComponent):
         # Connect signal to new widget
         self.__editableWidget.signalEditingFinished.connect(self.onEditingFinished)
         layout.insertWidget(index, self.__editableWidget.widget)
+        self.__compositeWidget.adjustSize()
 
 
 ### slots ###

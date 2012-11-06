@@ -70,6 +70,7 @@ class CustomXmlWriter(QXmlStreamWriter):
                     self.writeAttribute("type", "Text")
                     self.writeAttribute("posX", QString.number(item.x()))
                     self.writeAttribute("posY", QString.number(item.y()))
+                    self.writeAttribute("posZ", QString.number(item.zValue()))
 
                     # Save additional text item data
                     self.writeTextElement("text", item.text())
@@ -81,14 +82,17 @@ class CustomXmlWriter(QXmlStreamWriter):
                     self.writeAttribute("type", "Link")
                     self.writeAttribute("posX", QString.number(item.x()))
                     self.writeAttribute("posY", QString.number(item.y()))
+                    self.writeAttribute("posZ", QString.number(item.zValue()))
                 elif isinstance(item, Arrow):
                     self.writeAttribute("type", "Arrow")
                     self.writeAttribute("posX", QString.number(item.x()))
                     self.writeAttribute("posY", QString.number(item.y()))
+                    self.writeAttribute("posZ", QString.number(item.zValue()))
                 elif isinstance(item, Line):
                     self.writeAttribute("type", "Line")
                     self.writeAttribute("posX", QString.number(item.x()))
                     self.writeAttribute("posY", QString.number(item.y()))
+                    self.writeAttribute("posZ", QString.number(item.zValue()))
 
                     # Save additional line item data
                     line = item.line()
@@ -101,6 +105,7 @@ class CustomXmlWriter(QXmlStreamWriter):
                     self.writeAttribute("type", "Rectangle")
                     self.writeAttribute("posX", QString.number(item.x()))
                     self.writeAttribute("posY", QString.number(item.y()))
+                    self.writeAttribute("posZ", QString.number(item.zValue()))
 
                     # Save addition rectangle item data
                     rect = item.rect()
@@ -110,6 +115,7 @@ class CustomXmlWriter(QXmlStreamWriter):
                     self.writeAttribute("type", "GraphicsProxyWidgetContainer")
                     self.writeAttribute("posX", QString.number(item.x()))
                     self.writeAttribute("posY", QString.number(item.y()))
+                    self.writeAttribute("posZ", QString.number(item.zValue()))
 
                     layout = item.layout()
                     self.writeTextElement("layoutOrientation", QString.number(layout.orientation()))
@@ -144,30 +150,32 @@ class CustomXmlWriter(QXmlStreamWriter):
         if component is None and isinstance(embeddedWidget, QLabel):
             self.writeAttribute("posX", QString.number(proxyItem.x()))
             self.writeAttribute("posY", QString.number(proxyItem.y()))
+            self.writeAttribute("posZ", QString.number(proxyItem.zValue()))
 
             self.writeTextElement("componentType", "Label")
-            self.writeTextElement("widgetType", "Label")
+            self.writeTextElement("widgetFactory", "Label")
 
             self.writeTextElement("Text", embeddedWidget.text())
         else:
             self.writeAttribute("posX", QString.number(proxyItem.x()))
             self.writeAttribute("posY", QString.number(proxyItem.y()))
+            self.writeAttribute("posZ", QString.number(proxyItem.zValue()))
             
             widgetFactory = component.widgetFactory
             if isinstance(component, displaycomponent.DisplayComponent):
                 self.writeTextElement("componentType", "DisplayComponent")
                 if isinstance(widgetFactory, displaywidget.DisplayWidget):
-                    self.writeTextElement("widgetType", "DisplayWidget")
+                    self.writeTextElement("widgetFactory", "DisplayWidget")
                 elif isinstance(widgetFactory, vacuumwidget.VacuumWidget):
-                    self.writeTextElement("widgetType", "VacuumWidget")
+                    self.writeTextElement("widgetFactory", "VacuumWidget")
             elif isinstance(component, editablenoapplycomponent.EditableNoApplyComponent):
                 self.writeTextElement("componentType", "EditableNoApplyComponent")
                 if isinstance(widgetFactory, editablewidget.EditableWidget):
-                    self.writeTextElement("widgetType", "EditableWidget")
+                    self.writeTextElement("widgetFactory", "EditableWidget")
             elif isinstance(component, editableapplylatercomponent.EditableApplyLaterComponent):
                 self.writeTextElement("componentType", "EditableApplyLaterComponent")
                 if isinstance(widgetFactory, editablewidget.EditableWidget):
-                    self.writeTextElement("widgetType", "EditableWidget")
+                    self.writeTextElement("widgetFactory", "EditableWidget")
 
             self.writeTextElement("classAlias", component.classAlias)
             keyString = str()
