@@ -146,6 +146,8 @@ namespace karabo {
             
             void onKillDeviceInstance(const karabo::util::Hash& header, const std::string& body);
             
+            void onCreateNewDeviceClassPlugin(const karabo::util::Hash& header, const std::string& body);
+            
             void onSlotCommand(const karabo::util::Hash& header, const std::string& body);
             
             void onNewVisibleDeviceInstance(karabo::net::Channel::Pointer channel, const karabo::util::Hash& header);
