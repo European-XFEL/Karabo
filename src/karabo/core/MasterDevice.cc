@@ -50,6 +50,8 @@ namespace karabo {
                     
             GLOBAL_SLOT2(slotSelect, string, string)
             
+            GLOBAL_SLOT3(slotCreateNewDeviceClassPlugin, string, string, string)
+            
 //            SIGNAL1("signalNewNode", Hash)
 //            connectN("", "signalNewNode", "*", "slotNewNode");
 //            
@@ -419,6 +421,26 @@ namespace karabo {
             KARABO_DB_SELECT(result, fields, table, true);
             reply(result);
             
+        }
+        
+        void MasterDevice::slotCreateNewDeviceClassPlugin(const std::string& devSerInsId, const std::string& devClaId, const std::string& newDevClaId) {
+            vector<Hash> result;
+            
+            KARABO_DB_SELECT(result, "id", "DeviceServerInstance", row.get<string>("instanceId") == devSerInsId);
+            unsigned int id;
+            if (result.size() == 1) {
+                result[0].get("id", id);
+            }
+
+            result.clear();
+            KARABO_DB_SELECT(result, "id,schema", "DeviceClass", row.get<string>("name") == devClaId && row.get<unsigned int>("devSerInsId") == id);
+            
+            string schema;
+            if (result.size() == 1) {
+                result[0].get("schema", schema);
+            }
+
+            slotNewDeviceClassAvailable(devSerInsId, newDevClaId, schema);
         }
     }
 }
