@@ -128,6 +128,8 @@ namespace karabo {
                     onKillDeviceServerInstance(header, body);
                 } else if (type == "killDeviceInstance") {
                     onKillDeviceInstance(header, body);
+                } else if (type == "createNewDeviceClassPlugin") {
+                    onCreateNewDeviceClassPlugin(header, body);
                 }
 
             } else {
@@ -204,11 +206,20 @@ namespace karabo {
 
         void GuiServerDevice::onKillDeviceInstance(const karabo::util::Hash& header, const std::string& body) {
             log() << Priority::INFO << "Broadcasting availability of new device-server instance";
-             string deviceServerInstanceId = header.get<string > ("devSrvInsId");
-             string deviceInstanceId = header.get<string>("devInsId");
-             call(deviceServerInstanceId, "slotKillDeviceInstance", deviceInstanceId);
+            string deviceServerInstanceId = header.get<string > ("devSrvInsId");
+            string deviceInstanceId = header.get<string>("devInsId");
+            call(deviceServerInstanceId, "slotKillDeviceInstance", deviceInstanceId);
         }
 
+        void GuiServerDevice::onCreateNewDeviceClassPlugin(const karabo::util::Hash& header, const std::string& body) {
+            log() << Priority::INFO << "Broadcasting availability of new device class";
+            Hash bodyHash = m_xmlSerializer->unserialize(body);
+            string devSrvInsId = bodyHash.get<string > ("devSrvInsId");
+            string devClaId = bodyHash.get<string>("devClaId");
+            string newDevClaId = bodyHash.get<string>("newDevClaId");
+            call("*", "slotCreateNewDeviceClassPlugin", devSrvInsId, devClaId, newDevClaId);
+        }
+        
         void GuiServerDevice::slotNewNode(const karabo::util::Hash& row) {
             log() << Priority::DEBUG << "Broadcasting availability of new nodes";
             Hash header("type", "newNode");

@@ -70,6 +70,9 @@ namespace karabo {
 
             void instanceAvailableAgain(const std::string& networkId);
             
+            void slotCreateNewDeviceClassPlugin(const std::string& devSerInsId, const std::string& devClaId, const std::string& newDevClaId);
+
+            
             /**
              * Tracks the existence of all device server AND device instances.
              */
