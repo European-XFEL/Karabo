@@ -182,7 +182,7 @@ class GraphicsView(QGraphicsView):
         while file.atEnd() == False:
             xmlContent += str(file.readLine())
         
-        self.__scene.clear()
+        self.removeItems(self.items())
         CustomXmlReader(self).read(xmlContent)
 
 
@@ -380,23 +380,38 @@ class GraphicsView(QGraphicsView):
                                                 QMessageBox.No):
             return
         
+        self.removeItems(items)
+
+
+    def removeItems(self, items):
         while items:
             item = items.pop()
             if isinstance(item, Text) or isinstance(item, Rectangle):
                 for link in item.links():
                     if link in items:
+                        # Remove item from list - prevent double deletion
                         items.remove(link)
                     self.__scene.removeItem(link)
             elif isinstance(item, Link) or isinstance(item, Arrow):
                 print "Link or Arrow removed"
             elif isinstance(item, Line):
                 print "Line removed"
-            elif isinstance(item, GraphicsProxyWidgetContainer) or isinstance(item, GraphicsProxyWidget):
+            elif isinstance(item, GraphicsProxyWidgetContainer):
+                layout = item.layout()
+                for i in xrange(layout.count()):
+                    proxyItem = layout.itemAt(i)
+                    proxyItem.destroy()
+                    if proxyItem in items:
+                        # Remove item from list - prevent double deletion
+                        items.remove(proxyItem)
+                    self.__scene.removeItem(proxyItem)
+                item.destroy()
+            elif isinstance(item, GraphicsProxyWidget):
                 item.destroy()
             
             self.__scene.removeItem(item)
             del item
-        
+
 
     # Rotates all selected items around 30 degrees
     def rotate(self):
