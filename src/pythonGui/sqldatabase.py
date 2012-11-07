@@ -114,6 +114,15 @@ class SqlDatabase(object):
             print "An error occurred while opening the database connection."
 
 
+    def getDeviceServerInstanceById(self, devSerInsId):
+        queryText = "SELECT name FROM tDeviceServerInstance WHERE id="+ str(devSerInsId) +";"
+        query = QSqlQuery()
+        query.exec_(queryText)
+        while query.next():
+            return query.value(0).toString()
+        return None
+
+
     def closeConnection(self):
         print "Close database connection"
         # Clear database

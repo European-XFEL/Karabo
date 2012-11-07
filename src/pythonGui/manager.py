@@ -442,6 +442,18 @@ class Manager(Singleton):
 
 
     def onNewDeviceClass(self, itemInfo):
+        className = itemInfo.get(QString('name'))
+        if className is None:
+            className = itemInfo.get('name')
+        
+        devSerInsId = itemInfo.get(QString('refId'))
+        if devSerInsId is None:
+            devSerInsId = itemInfo.get('refId')
+        devSerInsName = self.__sqlDatabase.getDeviceServerInstanceById(devSerInsId)
+        
+        # Remove device class data from internal hash
+        self._setFromPath(devSerInsName + "+" + className, Hash())
+        
         itemInfo['type'] = NavigationItemTypes.DEVICE_CLASS
         itemInfo['refType'] = NavigationItemTypes.DEVICE_SERVER_INSTANCE
         self.__notifier.signalNewNavigationItem.emit(itemInfo)

@@ -216,7 +216,7 @@ class NavigationHierarchyModel(SqlTreeModel):
         status = itemInfo.get(QString('status'))
         if status is None:
             status = itemInfo.get('status')
-            
+
         sqlQuery = QSqlQuery()
         queryText = "UPDATE tDeviceServerInstance SET status='" + status + "' WHERE id=" + str(id) + ";"
         sqlQuery.exec_(queryText)
