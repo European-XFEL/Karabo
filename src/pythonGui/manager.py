@@ -322,7 +322,7 @@ class Manager(Singleton):
         self.__notifier.signalConflictStateChanged.emit(hasConflict)
 
 
-    def onFileOpen(self, configChangeType, instanceId, devClaId=str()):
+    def onFileOpen(self, configChangeType, internalKey, devClaId=str()):
         filename = QFileDialog.getOpenFileName(None, "Open saved configuration", QDir.tempPath(), "XML (*.xml)")
         if filename.isEmpty():
             return
@@ -339,7 +339,10 @@ class Manager(Singleton):
         serializer = FormatHash.create("Xml", Hash())
         config = serializer.unserialize(xmlContent).getFromPath(devClaId)
 
-        self._changeHash(instanceId, config, configChangeType)
+        # Remove old data from internal hash
+        self._setFromPath(internalKey, Hash())
+        # Update internal hash with new data for internalKey
+        self._changeHash(internalKey, config, configChangeType)
 
 
     def initDevice(self, devSerInsId, devClaId, internalKey):
@@ -462,6 +465,7 @@ class Manager(Singleton):
         if name is None:
             name = itemInfo.get('name')
         
+        # Remove device server data from internal hash
         self._setFromPath(name, Hash())
         self.__notifier.signalUpdateDeviceServerInstance.emit(itemInfo)
         self.__notifier.signalUpdateDeviceServerInstanceFinished.emit(itemInfo)

@@ -18,6 +18,7 @@ import editablenoapplycomponent
 import vacuumwidget
 
 from layoutcomponents.arrow import Arrow
+from layoutcomponents.graphicscustomitem import GraphicsCustomItem
 from layoutcomponents.graphicsproxywidget import GraphicsProxyWidget
 from layoutcomponents.graphicsproxywidgetcontainer import GraphicsProxyWidgetContainer
 from layoutcomponents.line import Line
@@ -62,7 +63,8 @@ class CustomXmlWriter(QXmlStreamWriter):
                     
                     self.writeAttribute("type", "GraphicsProxyWidget")
                     self.writeGraphicsProxyItem(item)
-                    self.writeEndElement()
+                    
+                    self.writeEndElement() # End of GraphicsItem
             else:
                 self.writeStartElement("GraphicsItem")
 
@@ -133,6 +135,15 @@ class CustomXmlWriter(QXmlStreamWriter):
                             self.writeGraphicsProxyItem(proxyItem)
                             self.writeEndElement() # End of GraphicsItem
                         self.writeEndElement() # End of GraphicsProxyItems
+                elif isinstance(item, GraphicsCustomItem):
+                    print "GraphicsCustomItem"
+                    #self.writeAttribute("type", "GraphicsCustomItem")
+                    #self.writeAttribute("posX", QString.number(item.x()))
+                    #self.writeAttribute("posY", QString.number(item.y()))
+                    #self.writeAttribute("posZ", QString.number(item.zValue()))
+                    
+                    #self.writeTextElement("text", item.text())
+                                
                 self.writeEndElement() # End of GraphicsItem
 
         self.writeEndElement()  # End of GraphicsItemList  
