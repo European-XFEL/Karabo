@@ -102,7 +102,7 @@ class EditableCheckBox(EditableWidget):
             return
         
         checkState = Qt.Checked
-        if (value is True) or (value == "true"):
+        if (value is True) or (value == "true") or (value == 1):
             checkState = Qt.Checked
         else:
             checkState = Qt.Unchecked
