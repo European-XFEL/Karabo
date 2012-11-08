@@ -43,6 +43,7 @@ class CustomXmlWriter(QXmlStreamWriter):
         # Open infoFile
         infoFile = QFile(filename)
         if infoFile.open(QIODevice.WriteOnly | QIODevice.Text) == False:
+            QMessageBox.critical(None, "Save scene", "Creating the component project file failed!")
             raise Exception, "Creating the component project file failed!"
 
         self.setDevice(infoFile)
