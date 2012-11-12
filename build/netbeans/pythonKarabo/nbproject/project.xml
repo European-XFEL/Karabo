@@ -5,7 +5,7 @@
         <data xmlns="http://nbpython.dev.java.net/ns/php-project/1">
             <name>pythonKarabo</name>
             <sources>
-                <root id="src.pythonKarabo.dir"/>
+                <root id="pythonKarabo.dir" name="KaraboSources"/>
             </sources>
             <tests/>
         </data>

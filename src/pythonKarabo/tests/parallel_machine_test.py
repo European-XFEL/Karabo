@@ -2,8 +2,8 @@
 # and open the template in the editor.
 
 import unittest
-from fsm import EXFEL_FSM_NO_TRANSITION_ACTION, EXFEL_FSM_EVENT2, EXFEL_FSM_EVENT0, EXFEL_FSM_INTERRUPT_STATE_EE
-from fsm import EXFEL_FSM_STATE_EE, EXFEL_FSM_ACTION0, EXFEL_FSM_STATE_MACHINE, EXFEL_FSM_CREATE_MACHINE
+from fsm import KARABO_FSM_NO_TRANSITION_ACTION, KARABO_FSM_EVENT2, KARABO_FSM_EVENT0, KARABO_FSM_INTERRUPT_STATE_EE
+from fsm import KARABO_FSM_STATE_EE, KARABO_FSM_ACTION0, KARABO_FSM_STATE_MACHINE, KARABO_FSM_CREATE_MACHINE
 from fsm import event_instance
 
 
@@ -16,58 +16,58 @@ class ParallelMachine(object):
         '''
         Constructor
         '''
-        EXFEL_FSM_NO_TRANSITION_ACTION(self.noStateTransition)
+        KARABO_FSM_NO_TRANSITION_ACTION(self.noStateTransition)
 
         #**************************************************************
         #*                        Events                              *
         #**************************************************************
 
-        EXFEL_FSM_EVENT2('ErrorFoundA', self.onException, str, str)
-        EXFEL_FSM_EVENT0('EndErrorA', self.endErrorEvent)
-        EXFEL_FSM_EVENT2('ErrorFoundB', self.onException, str, str)
-        EXFEL_FSM_EVENT0('EndErrorB', self.endErrorEvent)
-        EXFEL_FSM_EVENT0('GoTo1', self.goto1Event)
-        EXFEL_FSM_EVENT0('GoTo2', self.goto2Event)
-        EXFEL_FSM_EVENT0('GoTo3', self.goto3Event)
-        EXFEL_FSM_EVENT0('GoTo4', self.goto4Event)
-        EXFEL_FSM_EVENT0('GoTo5', self.goto5Event)
+        KARABO_FSM_EVENT2(self, 'ErrorFoundA', 'onExceptionA')
+        KARABO_FSM_EVENT0(self, 'EndErrorA', 'endErrorEventA')
+        KARABO_FSM_EVENT2(self, 'ErrorFoundB', 'onExceptionB')
+        KARABO_FSM_EVENT0(self, 'EndErrorB', 'endErrorEventB')
+        KARABO_FSM_EVENT0(self, 'GoTo1', 'goto1Event')
+        KARABO_FSM_EVENT0(self, 'GoTo2', 'goto2Event')
+        KARABO_FSM_EVENT0(self, 'GoTo3', 'goto3Event')
+        KARABO_FSM_EVENT0(self, 'GoTo4', 'goto4Event')
+        KARABO_FSM_EVENT0(self, 'GoTo5', 'goto5Event')
 
         #**************************************************************
         #*                        States                              *
         #**************************************************************
 
-        EXFEL_FSM_INTERRUPT_STATE_EE('ErrorA', 'EndErrorA', self.errorStateOnEntry, self.errorStateOnExit)
-        EXFEL_FSM_INTERRUPT_STATE_EE('ErrorB', 'EndErrorB', self.errorStateOnEntry, self.errorStateOnExit)
+        KARABO_FSM_INTERRUPT_STATE_EE('ErrorA', 'EndErrorA', self.errorStateOnEntry, self.errorStateOnExit)
+        KARABO_FSM_INTERRUPT_STATE_EE('ErrorB', 'EndErrorB', self.errorStateOnEntry, self.errorStateOnExit)
             
-        EXFEL_FSM_STATE_EE('AllOk', self.allOkOnEntry, self.allOkOnExit)
+        KARABO_FSM_STATE_EE('AllOk', self.allOkOnEntry, self.allOkOnExit)
 
-        EXFEL_FSM_STATE_EE('InitializeA', self.initializeAOnEntry, self.initializeAOnExit)
-        EXFEL_FSM_STATE_EE('InitializeB', self.initializeBOnEntry, self.initializeBOnExit)
+        KARABO_FSM_STATE_EE('InitializeA', self.initializeAOnEntry, self.initializeAOnExit)
+        KARABO_FSM_STATE_EE('InitializeB', self.initializeBOnEntry, self.initializeBOnExit)
             
-        EXFEL_FSM_STATE_EE('State1', self.state1OnEntry, self.state1OnExit)
-        EXFEL_FSM_STATE_EE('State2', self.state2OnEntry, self.state2OnExit)
-        EXFEL_FSM_STATE_EE('State3', self.state3OnEntry, self.state3OnExit)
-        EXFEL_FSM_STATE_EE('State4', self.state4OnEntry, self.state4OnExit)
-        EXFEL_FSM_STATE_EE('State5', self.state5OnEntry, self.state5OnExit)
+        KARABO_FSM_STATE_EE('State1', self.state1OnEntry, self.state1OnExit)
+        KARABO_FSM_STATE_EE('State2', self.state2OnEntry, self.state2OnExit)
+        KARABO_FSM_STATE_EE('State3', self.state3OnEntry, self.state3OnExit)
+        KARABO_FSM_STATE_EE('State4', self.state4OnEntry, self.state4OnExit)
+        KARABO_FSM_STATE_EE('State5', self.state5OnEntry, self.state5OnExit)
 
         #**************************************************************
         #*                    Transition Actions                      *
         #**************************************************************
 
-        EXFEL_FSM_ACTION0('InitializeAtoTaskA', self.initializeAtoTaskA)
-        EXFEL_FSM_ACTION0('InitializeBtoTaskB', self.initializeBtoTaskB)
+        KARABO_FSM_ACTION0('InitializeAtoTaskA', self.initializeAtoTaskA)
+        KARABO_FSM_ACTION0('InitializeBtoTaskB', self.initializeBtoTaskB)
             
-        EXFEL_FSM_ACTION0('State1toState2', self.state1toState2)
-        EXFEL_FSM_ACTION0('State2toState1', self.state2toState1)
-        EXFEL_FSM_ACTION0('State2toState3', self.state2toState3)
-        EXFEL_FSM_ACTION0('State3toState2', self.state3toState2)
-        EXFEL_FSM_ACTION0('State4toState5', self.state4toState5)
-        EXFEL_FSM_ACTION0('State5toState4', self.state5toState4)
+        KARABO_FSM_ACTION0('State1toState2', self.state1toState2)
+        KARABO_FSM_ACTION0('State2toState1', self.state2toState1)
+        KARABO_FSM_ACTION0('State2toState3', self.state2toState3)
+        KARABO_FSM_ACTION0('State3toState2', self.state3toState2)
+        KARABO_FSM_ACTION0('State4toState5', self.state4toState5)
+        KARABO_FSM_ACTION0('State5toState4', self.state5toState4)
 
-        EXFEL_FSM_ACTION0('ErrorFoundAAction', self.errorFoundAAction)
-        EXFEL_FSM_ACTION0('ErrorFoundBAction', self.errorFoundBAction)
-        EXFEL_FSM_ACTION0('EndErrorAAction', self.endErrorAAction)
-        EXFEL_FSM_ACTION0('EndErrorBAction', self.endErrorBAction)
+        KARABO_FSM_ACTION0('ErrorFoundAAction', self.errorFoundAAction)
+        KARABO_FSM_ACTION0('ErrorFoundBAction', self.errorFoundBAction)
+        KARABO_FSM_ACTION0('EndErrorAAction', self.endErrorAAction)
+        KARABO_FSM_ACTION0('EndErrorBAction', self.endErrorBAction)
             
         #**************************************************************
         #*                        Guards                              *
@@ -85,7 +85,7 @@ class ParallelMachine(object):
                     ('ErrorA','EndErrorA','AllOk','EndErrorAAction','none')
                    ]
             
-        EXFEL_FSM_STATE_MACHINE('TaskA', taskAStt, ('State1','AllOk'))
+        KARABO_FSM_STATE_MACHINE('TaskA', taskAStt, ('State1','AllOk'))
             
         taskBStt = [
                     ('State4','GoTo5','State5','State4toState5','none'),
@@ -94,25 +94,19 @@ class ParallelMachine(object):
                     ('ErrorB','EndErrorB','AllOk','EndErrorBAction','none')
                    ]
             
-        EXFEL_FSM_STATE_MACHINE('TaskB', taskBStt, ('State4','AllOk'))
+        KARABO_FSM_STATE_MACHINE('TaskB', taskBStt, ('State4','AllOk'))
             
         topStt = [
                   ('InitializeA','none','TaskA','InitializeAtoTaskA','none'),
                   ('InitializeB','none','TaskB','InitializeBtoTaskB','none')
                  ]
         
-        EXFEL_FSM_STATE_MACHINE('TopFsm', topStt, ('InitializeA','InitializeB'))
+        KARABO_FSM_STATE_MACHINE('TopFsm', topStt, ('InitializeA','InitializeB'))
         
-        self.fsm = EXFEL_FSM_CREATE_MACHINE('TopFsm')
+        self.fsm = KARABO_FSM_CREATE_MACHINE('TopFsm')
 
     def noStateTransition(self): pass
-    def onException(self,msg1,msg2): pass
-    def endErrorEvent(self): pass
-    def goto1Event(self): pass
-    def goto2Event(self): pass
-    def goto3Event(self): pass
-    def goto4Event(self): pass
-    def goto5Event(self): pass
+
     def errorStateOnEntry(self): pass
     def errorStateOnExit(self): pass
     def allOkOnEntry(self): pass
@@ -143,6 +137,9 @@ class ParallelMachine(object):
     def errorFoundBAction(self): pass
     def endErrorAAction(self): pass
     def endErrorBAction(self): pass
+    def processEvent(self, event):
+        self.fsm.process_event(event)
+
 
 
 class  Parallel_machine_TestCase(unittest.TestCase):
@@ -160,27 +157,27 @@ class  Parallel_machine_TestCase(unittest.TestCase):
         fsm = self.pm.fsm
         fsm.start()
         self.assertEqual(fsm.get_state(), "[TaskA.[State1:AllOk]:TaskB.[State4:AllOk]]", 'Assert failed!')
-        self.event('GoTo2',())
+        self.pm.goto2Event()
         self.assertEqual(fsm.get_state(), "[TaskA.[State2:AllOk]:TaskB.[State4:AllOk]]", 'Assert failed!')
-        self.event('GoTo5',())
+        self.pm.goto5Event()
         self.assertEqual(fsm.get_state(), "[TaskA.[State2:AllOk]:TaskB.[State5:AllOk]]", 'Assert failed!')
-        self.event('ErrorFoundA',('Timeout','Hardware not responding'))
+        self.pm.onExceptionA('Timeout','Hardware not responding')
         self.assertEqual(fsm.get_state(), "[TaskA.[State2:ErrorA]:TaskB.[State5:AllOk]]", 'Assert failed')
-        self.event('GoTo4',())
+        self.pm.goto4Event()
         self.assertEqual(fsm.get_state(), "[TaskA.[State2:ErrorA]:TaskB.[State4:AllOk]]", 'Assert failed')
-        self.event('GoTo5',())
+        self.pm.goto5Event()
         self.assertEqual(fsm.get_state(), "[TaskA.[State2:ErrorA]:TaskB.[State5:AllOk]]", 'Assert failed')
-        self.event('GoTo3',())
+        self.pm.goto3Event()
         self.assertEqual(fsm.get_state(), "[TaskA.[State2:ErrorA]:TaskB.[State5:AllOk]]", 'Assert failed')
-        self.event('EndErrorB',())
+        self.pm.endErrorEventB()
         self.assertEqual(fsm.get_state(), "[TaskA.[State2:ErrorA]:TaskB.[State5:AllOk]]", 'Assert failed')
-        self.event('EndErrorA',())
+        self.pm.endErrorEventA()
         self.assertEqual(fsm.get_state(), "[TaskA.[State2:AllOk]:TaskB.[State5:AllOk]]", 'Assert failed')
-        self.event('GoTo3',())
+        self.pm.goto3Event()
         self.assertEqual(fsm.get_state(), "[TaskA.[State3:AllOk]:TaskB.[State5:AllOk]]", 'Assert failed')
-        self.event('GoTo2',())
+        self.pm.goto2Event()
         self.assertEqual(fsm.get_state(), "[TaskA.[State2:AllOk]:TaskB.[State5:AllOk]]", 'Assert failed')
-        self.event('GoTo1',())
+        self.pm.goto1Event()
         self.assertEqual(fsm.get_state(), "[TaskA.[State1:AllOk]:TaskB.[State5:AllOk]]", 'Assert failed')
         fsm.stop()
 
