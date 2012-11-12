@@ -408,8 +408,8 @@ class PythonDevice(object):
             try:
                 self.onReconfigure(self._incomingValidatedReconfiguration)
             except Exception,e:
-                self.onException("Python Exception happened", str(e))
                 self._ss.reply(False, str(e))
+                self.triggerErrorFound("Python Exception happened", str(e))
                 return
             self._applyReconfiguration(self._incomingValidatedReconfiguration)
         self._ss.reply(result, error)
@@ -472,12 +472,6 @@ class PythonDevice(object):
     
     def onReconfigure(self, inputConfig): pass
 
-    def onException(self, m1, m2):
-        self.processEvent(event_instance('ErrorFoundEvent',(m1,m2,)))
-
-    def slotEndError(self):
-        self.processEvent(event_instance('EndErrorEvent',()))
-        
     def onKill(self): pass
     
     def _generateDefaultDeviceInstanceId(self):

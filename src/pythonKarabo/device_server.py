@@ -62,13 +62,13 @@ class DeviceServer(object):
         #*                        Events                              *
         #**************************************************************
         
-        KARABO_FSM_EVENT2('ErrorFoundEvent', self.errorFound, str, str)
-        KARABO_FSM_EVENT0('EndErrorEvent', self.endError)
-        KARABO_FSM_EVENT0('NewPluginAvailableEvent', self.newPluginAvailable)
-        KARABO_FSM_EVENT0('InbuildDevicesAvailableEvent', self.inbuildDevicesAvailable)
-        KARABO_FSM_EVENT1('StartDeviceEvent', self.slotStartDevice, Hash)
-        KARABO_FSM_EVENT1('RegistrationOkEvent', self.slotRegistrationOk, str)
-        KARABO_FSM_EVENT1('RegistrationFailedEvent', self.slotRegistrationFailed, str)
+        KARABO_FSM_EVENT2(self, 'ErrorFoundEvent', 'errorFound')
+        KARABO_FSM_EVENT0(self, 'EndErrorEvent', 'endError')
+        KARABO_FSM_EVENT0(self, 'NewPluginAvailableEvent', 'newPluginAvailable')
+        KARABO_FSM_EVENT0(self, 'InbuildDevicesAvailableEvent', 'inbuildDevicesAvailable')
+        KARABO_FSM_EVENT1(self, 'StartDeviceEvent', 'slotStartDevice')
+        KARABO_FSM_EVENT1(self, 'RegistrationOkEvent', 'slotRegistrationOk')
+        KARABO_FSM_EVENT1(self, 'RegistrationFailedEvent', 'slotRegistrationFailed')
 
         #**************************************************************
         #*                        States                              *
@@ -299,27 +299,9 @@ class DeviceServer(object):
             return
         self._getListOfClasses(tree[1], outList)
     
-    def errorFound(self, m1, m2):
-        self.fsm.process_event(event_instance('ErrorFoundEvent', (m1, m2,)))
-    
-    def endError(self):
-        self.fsm.process_event(event_instance('EndErrorEvent', ()))
-    
-    def newPluginAvailable(self):
-        self.fsm.process_event(event_instance('NewPluginAvailableEvent', ()))
-    
-    def inbuildDevicesAvailable(self):
-        self.fsm.process_event(event_instance('InbuildDevicesAvailableEvent', ()))
-    
-    def slotStartDevice(self, h):
-        self.fsm.process_event(event_instance('StartDeviceEvent', (h,)))
-    
-    def slotRegistrationOk(self, a1):
-        self.fsm.process_event(event_instance('RegistrationOkEvent', (a1,)))
-    
-    def slotRegistrationFailed(self, a1):
-        self.fsm.process_event(event_instance('RegistrationFailedEvent', (a1,)))
-    
+    def processEvent(self, event):
+        self.fsm.process_event(event)
+        
     def updateCurrentState(self, currentState):
         self.ss.reply(currentState)
     

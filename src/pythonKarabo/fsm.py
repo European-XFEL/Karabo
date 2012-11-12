@@ -14,19 +14,56 @@ class Event(object): pass
 def x_ini(self, a): self.x = a
 def x_get(self): return self.x
 def event_instance(x, a): return type(x, (Event,), {'__init__':x_ini, 'payload':x_get})(a)
+
 # global dicts
-_events_ = {'none':None}
+_events_ = ['none']
 _states_ = {'none':None}
 _interrupts_ = {}
 _actions_ = {'none':(NOOP, ())}
 _guards_ = {'none':(GNOOP, ())}
 _machines_ = {'none':None}
 # events
-def KARABO_FSM_EVENT0(name, f):                 _events_[name] = (f, ())
-def KARABO_FSM_EVENT1(name, f, a1):             _events_[name] = (f, (a1,))
-def KARABO_FSM_EVENT2(name, f, a1, a2):         _events_[name] = (f, (a1, a2))
-def KARABO_FSM_EVENT3(name, f, a1, a2, a3):     _events_[name] = (f, (a1, a2, a3))
-def KARABO_FSM_EVENT4(name, f, a1, a2, a3, a4): _events_[name] = (f, (a1, a2, a3, a4))
+def KARABO_FSM_EVENT0(self, event_name, method_name):
+    def inner(self):
+        self.processEvent(event_instance(event_name, ()))
+    inner.__doc__ = "Drive state machine by processing an event without payload"
+    inner.__name__ = method_name
+    setattr(self.__class__, inner.__name__, inner)
+    _events_.append(event_name)
+
+def KARABO_FSM_EVENT1(self, event_name, method_name):
+    def inner(self, a1):
+        self.processEvent(event_instance(event_name, (a1,)))
+    inner.__doc__ = "Drive state machine by processing an event with one parameter"
+    inner.__name__ = method_name
+    setattr(self.__class__, inner.__name__, inner)
+    _events_.append(event_name)
+
+def KARABO_FSM_EVENT2(self, event_name, method_name):
+    def inner(self, a1, a2):
+        self.processEvent(event_instance(event_name, (a1,a2,)))
+    inner.__doc__ = "Drive state machine by processing an event with two parameters"
+    inner.__name__ = method_name
+    setattr(self.__class__, inner.__name__, inner)
+    _events_.append(event_name)
+
+def KARABO_FSM_EVENT3(self, event_name, method_name):
+    def inner(self, a1, a2, a3):
+        self.processEvent(event_instance(event_name, (a1,a2,a3,)))
+    inner.__doc__ = "Drive state machine by processing an event with three parameters"
+    inner.__name__ = method_name
+    setattr(self.__class__, inner.__name__, inner)
+    _events_.append(event_name)
+
+def KARABO_FSM_EVENT4(self, event_name, method_name):
+    def inner(self, a1, a2, a3, a4):
+        self.processEvent(event_instance(event_name, (a1,a2,a3,a4,)))
+    inner.__doc__ = "Drive state machine by processing an event with four parameters"
+    inner.__name__ = method_name
+    setattr(self.__class__, inner.__name__, inner)
+    _events_.append(event_name)
+
+    
 # states
 def KARABO_FSM_STATE(name):                       _states_[name] = (NOOP, NOOP)
 def KARABO_FSM_STATE_E(name, on_entry):           _states_[name] = (on_entry, NOOP)
