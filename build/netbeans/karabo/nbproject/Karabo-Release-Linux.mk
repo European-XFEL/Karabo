@@ -101,9 +101,9 @@ OBJECTFILES= \
 	${OBJECTDIR}/_ext/2117156511/PyVectorContainer.o \
 	${OBJECTDIR}/_ext/163016059/Time.o \
 	${OBJECTDIR}/_ext/2117156511/pyexfel.o \
+	${OBJECTDIR}/_ext/1060241295/RecordFormat.o \
 	${OBJECTDIR}/_ext/1103122740/tinyxml.o \
 	${OBJECTDIR}/_ext/1060241295/Table.o \
-	${OBJECTDIR}/_ext/1060241295/RecordFormat.o \
 	${OBJECTDIR}/_ext/1060241295/DataBlock.o \
 	${OBJECTDIR}/_ext/1072794519/StringStreamWriter.o \
 	${OBJECTDIR}/_ext/1103112890/AJmsConnection.o \
@@ -160,6 +160,8 @@ TESTDIR=${CND_BUILDDIR}/${CND_CONF}/${CND_PLATFORM}/tests
 # Test Files
 TESTFILES= \
 	${TESTDIR}/TestFiles/f2 \
+	${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libkarabo.${CND_DLIB_EXT} \
+	${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libkarabo.${CND_DLIB_EXT} \
 	${TESTDIR}/TestFiles/f1
 
 # C Compiler Flags
@@ -516,6 +518,11 @@ ${OBJECTDIR}/_ext/2117156511/pyexfel.o: ../../../src/karabo/python/pyexfel.cc
 	${RM} $@.d
 	$(COMPILE.cc) -O2 -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/2117156511/pyexfel.o ../../../src/karabo/python/pyexfel.cc
 
+${OBJECTDIR}/_ext/1060241295/RecordFormat.o: ../../../src/karabo/io/hdf5/RecordFormat.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1060241295
+	${RM} $@.d
+	$(COMPILE.cc) -O2 -I${KARABO}/extern/include/hdf5 -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1060241295/RecordFormat.o ../../../src/karabo/io/hdf5/RecordFormat.cc
+
 ${OBJECTDIR}/_ext/1103122740/tinyxml.o: ../../../src/karabo/xml/tinyxml.cpp 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1103122740
 	${RM} $@.d
@@ -525,11 +532,6 @@ ${OBJECTDIR}/_ext/1060241295/Table.o: ../../../src/karabo/io/hdf5/Table.cc
 	${MKDIR} -p ${OBJECTDIR}/_ext/1060241295
 	${RM} $@.d
 	$(COMPILE.cc) -O2 -I${KARABO}/extern/include/hdf5 -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1060241295/Table.o ../../../src/karabo/io/hdf5/Table.cc
-
-${OBJECTDIR}/_ext/1060241295/RecordFormat.o: ../../../src/karabo/io/hdf5/RecordFormat.cc 
-	${MKDIR} -p ${OBJECTDIR}/_ext/1060241295
-	${RM} $@.d
-	$(COMPILE.cc) -O2 -I${KARABO}/extern/include/hdf5 -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1060241295/RecordFormat.o ../../../src/karabo/io/hdf5/RecordFormat.cc
 
 ${OBJECTDIR}/_ext/1060241295/DataBlock.o: ../../../src/karabo/io/hdf5/DataBlock.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1060241295
@@ -785,7 +787,15 @@ ${TESTDIR}/TestFiles/f2: ${TESTDIR}/_ext/861493463/ReaderWriter_Test.o ${TESTDIR
 	${MKDIR} -p ${TESTDIR}/TestFiles
 	${LINK.cc}   -o ${TESTDIR}/TestFiles/f2 $^ ${LDLIBSOPTIONS} -Wl,-rpath,${KARABO}/lib -Wl,-rpath,${KARABO}/extern/lib 
 
-${TESTDIR}/TestFiles/f1: ${TESTDIR}/_ext/357227895/BobbyCar.o ${TESTDIR}/_ext/357227895/Circle.o ${TESTDIR}/_ext/1033104525/ClassInfo_Test.o ${TESTDIR}/_ext/1033104525/Factory_Test.o ${TESTDIR}/_ext/1033104525/Hash_Test.o ${TESTDIR}/_ext/1033104525/Schema_Test.o ${TESTDIR}/_ext/1033104525/utilTestRunner.o ${OBJECTFILES:%.o=%_nomain.o}
+${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libkarabo.${CND_DLIB_EXT}: ${TESTDIR}/_ext/889921451/TcpNetworking_Test.o ${TESTDIR}/_ext/889921451/nettcpTestRunner.o ${OBJECTFILES:%.o=%_nomain.o}
+	${MKDIR} -p ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}
+	${LINK.cc}   -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libkarabo.${CND_DLIB_EXT} $^ ${LDLIBSOPTIONS} -Wl,-rpath,${KARABO}/lib -Wl,-rpath,${KARABO}/extern/lib 
+
+${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libkarabo.${CND_DLIB_EXT}: ${TESTDIR}/_ext/889920459/UdpNetworking_Test.o ${TESTDIR}/_ext/889920459/netudpTestRunner.o ${OBJECTFILES:%.o=%_nomain.o}
+	${MKDIR} -p ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}
+	${LINK.cc}   -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libkarabo.${CND_DLIB_EXT} $^ ${LDLIBSOPTIONS} -Wl,-rpath,${KARABO}/lib -Wl,-rpath,${KARABO}/extern/lib 
+
+${TESTDIR}/TestFiles/f1: ${TESTDIR}/_ext/357227895/BobbyCar.o ${TESTDIR}/_ext/357227895/Circle.o ${TESTDIR}/_ext/1033104525/ClassInfo_Test.o ${TESTDIR}/_ext/1033104525/Factory_Test.o ${TESTDIR}/_ext/1033104525/Hash_Test.o ${TESTDIR}/_ext/357227895/Rectangle.o ${TESTDIR}/_ext/1033104525/Schema_Test.o ${TESTDIR}/_ext/1033104525/utilTestRunner.o ${OBJECTFILES:%.o=%_nomain.o}
 	${MKDIR} -p ${TESTDIR}/TestFiles
 	${LINK.cc}   -o ${TESTDIR}/TestFiles/f1 $^ ${LDLIBSOPTIONS} -Wl,-rpath,${KARABO}/lib -Wl,-rpath,${KARABO}/extern/lib 
 
@@ -800,6 +810,30 @@ ${TESTDIR}/_ext/861493463/ioTestRunner.o: ../../../src/karabo/tests/io/ioTestRun
 	${MKDIR} -p ${TESTDIR}/_ext/861493463
 	${RM} $@.d
 	$(COMPILE.cc) -O2 -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -MMD -MP -MF $@.d -o ${TESTDIR}/_ext/861493463/ioTestRunner.o ../../../src/karabo/tests/io/ioTestRunner.cc
+
+
+${TESTDIR}/_ext/889921451/TcpNetworking_Test.o: ../../../src/karabo/tests/nettcp/TcpNetworking_Test.cc 
+	${MKDIR} -p ${TESTDIR}/_ext/889921451
+	${RM} $@.d
+	$(COMPILE.cc) -O2 -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -MMD -MP -MF $@.d -o ${TESTDIR}/_ext/889921451/TcpNetworking_Test.o ../../../src/karabo/tests/nettcp/TcpNetworking_Test.cc
+
+
+${TESTDIR}/_ext/889921451/nettcpTestRunner.o: ../../../src/karabo/tests/nettcp/nettcpTestRunner.cc 
+	${MKDIR} -p ${TESTDIR}/_ext/889921451
+	${RM} $@.d
+	$(COMPILE.cc) -O2 -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -MMD -MP -MF $@.d -o ${TESTDIR}/_ext/889921451/nettcpTestRunner.o ../../../src/karabo/tests/nettcp/nettcpTestRunner.cc
+
+
+${TESTDIR}/_ext/889920459/UdpNetworking_Test.o: ../../../src/karabo/tests/netudp/UdpNetworking_Test.cc 
+	${MKDIR} -p ${TESTDIR}/_ext/889920459
+	${RM} $@.d
+	$(COMPILE.cc) -O2 -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -MMD -MP -MF $@.d -o ${TESTDIR}/_ext/889920459/UdpNetworking_Test.o ../../../src/karabo/tests/netudp/UdpNetworking_Test.cc
+
+
+${TESTDIR}/_ext/889920459/netudpTestRunner.o: ../../../src/karabo/tests/netudp/netudpTestRunner.cc 
+	${MKDIR} -p ${TESTDIR}/_ext/889920459
+	${RM} $@.d
+	$(COMPILE.cc) -O2 -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -MMD -MP -MF $@.d -o ${TESTDIR}/_ext/889920459/netudpTestRunner.o ../../../src/karabo/tests/netudp/netudpTestRunner.cc
 
 
 ${TESTDIR}/_ext/357227895/BobbyCar.o: ../../../src/karabo/tests/util/resources/BobbyCar.cc 
@@ -830,6 +864,12 @@ ${TESTDIR}/_ext/1033104525/Hash_Test.o: ../../../src/karabo/tests/util/Hash_Test
 	${MKDIR} -p ${TESTDIR}/_ext/1033104525
 	${RM} $@.d
 	$(COMPILE.cc) -O2 -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -MMD -MP -MF $@.d -o ${TESTDIR}/_ext/1033104525/Hash_Test.o ../../../src/karabo/tests/util/Hash_Test.cc
+
+
+${TESTDIR}/_ext/357227895/Rectangle.o: ../../../src/karabo/tests/util/resources/Rectangle.cc 
+	${MKDIR} -p ${TESTDIR}/_ext/357227895
+	${RM} $@.d
+	$(COMPILE.cc) -O2 -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -MMD -MP -MF $@.d -o ${TESTDIR}/_ext/357227895/Rectangle.o ../../../src/karabo/tests/util/resources/Rectangle.cc
 
 
 ${TESTDIR}/_ext/1033104525/Schema_Test.o: ../../../src/karabo/tests/util/Schema_Test.cc 
@@ -1702,6 +1742,19 @@ ${OBJECTDIR}/_ext/2117156511/pyexfel_nomain.o: ${OBJECTDIR}/_ext/2117156511/pyex
 	    ${CP} ${OBJECTDIR}/_ext/2117156511/pyexfel.o ${OBJECTDIR}/_ext/2117156511/pyexfel_nomain.o;\
 	fi
 
+${OBJECTDIR}/_ext/1060241295/RecordFormat_nomain.o: ${OBJECTDIR}/_ext/1060241295/RecordFormat.o ../../../src/karabo/io/hdf5/RecordFormat.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1060241295
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/1060241295/RecordFormat.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} $@.d;\
+	    $(COMPILE.cc) -O2 -I${KARABO}/extern/include/hdf5 -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1060241295/RecordFormat_nomain.o ../../../src/karabo/io/hdf5/RecordFormat.cc;\
+	else  \
+	    ${CP} ${OBJECTDIR}/_ext/1060241295/RecordFormat.o ${OBJECTDIR}/_ext/1060241295/RecordFormat_nomain.o;\
+	fi
+
 ${OBJECTDIR}/_ext/1103122740/tinyxml_nomain.o: ${OBJECTDIR}/_ext/1103122740/tinyxml.o ../../../src/karabo/xml/tinyxml.cpp 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1103122740
 	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/1103122740/tinyxml.o`; \
@@ -1726,19 +1779,6 @@ ${OBJECTDIR}/_ext/1060241295/Table_nomain.o: ${OBJECTDIR}/_ext/1060241295/Table.
 	    $(COMPILE.cc) -O2 -I${KARABO}/extern/include/hdf5 -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1060241295/Table_nomain.o ../../../src/karabo/io/hdf5/Table.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/1060241295/Table.o ${OBJECTDIR}/_ext/1060241295/Table_nomain.o;\
-	fi
-
-${OBJECTDIR}/_ext/1060241295/RecordFormat_nomain.o: ${OBJECTDIR}/_ext/1060241295/RecordFormat.o ../../../src/karabo/io/hdf5/RecordFormat.cc 
-	${MKDIR} -p ${OBJECTDIR}/_ext/1060241295
-	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/1060241295/RecordFormat.o`; \
-	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
-	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
-	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
-	then  \
-	    ${RM} $@.d;\
-	    $(COMPILE.cc) -O2 -I${KARABO}/extern/include/hdf5 -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1060241295/RecordFormat_nomain.o ../../../src/karabo/io/hdf5/RecordFormat.cc;\
-	else  \
-	    ${CP} ${OBJECTDIR}/_ext/1060241295/RecordFormat.o ${OBJECTDIR}/_ext/1060241295/RecordFormat_nomain.o;\
 	fi
 
 ${OBJECTDIR}/_ext/1060241295/DataBlock_nomain.o: ${OBJECTDIR}/_ext/1060241295/DataBlock.o ../../../src/karabo/io/hdf5/DataBlock.cc 
@@ -2383,6 +2423,8 @@ ${OBJECTDIR}/_ext/2117156511/PyUtilSchemaSimple_nomain.o: ${OBJECTDIR}/_ext/2117
 	@if [ "${TEST}" = "" ]; \
 	then  \
 	    ${TESTDIR}/TestFiles/f2 || true; \
+	    ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libkarabo.${CND_DLIB_EXT} || true; \
+	    ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libkarabo.${CND_DLIB_EXT} || true; \
 	    ${TESTDIR}/TestFiles/f1 || true; \
 	else  \
 	    ./${TEST} || true; \

@@ -4,6 +4,7 @@ DISTDIR=$1
 CONF=$2
 PLATFORM=$3
 PACKAGE_TYPE=$4
+PACKAGE_OPTION=$5
 OS=$(uname -s)
 MACHINE=$(uname -m)
 tmp=$(svn info ../../../ | grep URL)
@@ -13,7 +14,9 @@ if [ "$VERSION" = "trunk" ]; then
     VERSION=r${tmp##*: }
 fi
 PACKAGENAME=karabo-$VERSION
-
+if [ $PACKAGE_OPTION = "NOGUI" ]; then
+   PACKAGENAME=karabo-nogui-$VERSION
+fi
 NUM_CORES=2
 if [ "$OS" = "Linux" ]; then
     DISTRO_ID=( $(lsb_release -is) )
@@ -26,7 +29,8 @@ elif [ "$OS" = "Darwin" ]; then
 fi
 EXTRACT_SCRIPT=$(pwd)/.extract.sh
 PACKAGEDIR=$(pwd)/../../../package/$CONF/$DISTRO_ID/$DISTRO_RELEASE/$MACHINE/$PACKAGENAME
-INSTALLSCRIPT=karabo-${VERSION}-${CONF}-${DISTRO_ID}-${DISTRO_RELEASE}-${MACHINE}.sh
+#INSTALLSCRIPT=karabo-${VERSION}-${CONF}-${DISTRO_ID}-${DISTRO_RELEASE}-${MACHINE}.sh
+INSTALLSCRIPT=${PACKAGENAME}-${CONF}-${DISTRO_ID}-${DISTRO_RELEASE}-${MACHINE}.sh
 
 if [ -d $(pwd)/../../../package/$CONF/$DISTRO_ID/$DISTRO_RELEASE/$MACHINE ]; then rm -rf $(pwd)/../../../package/$CONF/$DISTRO_ID/$DISTRO_RELEASE/$MACHINE; fi
 mkdir -p $PACKAGEDIR
@@ -58,11 +62,16 @@ cd ../pythonKarabo
 cp -rf $DISTDIR/$OS/bin $PACKAGEDIR/
 cp -rf $DISTDIR/$OS/lib $PACKAGEDIR/
 
+
 # pythonGui
-cd ../pythonGui
-./build.sh
-cp -rf $DISTDIR/$OS/bin $PACKAGEDIR/
-cp -rf $DISTDIR/$OS/lib $PACKAGEDIR/
+if [ $PACKAGE_OPTION = "NOGUI" ]; then
+   echo
+elif [ $PACKAGE_OPTION = "GUI" ]; then
+   cd ../pythonGui
+   ./build.sh
+   cp -rf $DISTDIR/$OS/bin $PACKAGEDIR/
+   cp -rf $DISTDIR/$OS/lib $PACKAGEDIR/
+fi
 
 # pythonCli
 cd ../pythonCli
