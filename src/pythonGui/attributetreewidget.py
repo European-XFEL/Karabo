@@ -13,7 +13,7 @@ __all__ = ["AttributeTreeWidget"]
 
 
 import attributetreewidgetitem
-import editableapplylatercomponent
+from editableapplylatercomponent import EditableApplyLaterComponent
 from enums import ConfigChangeTypes
 from enums import NavigationItemTypes
 from libkarabo import *
@@ -89,7 +89,7 @@ class AttributeTreeWidget(QTreeWidget):
 
     def addItemDataToHash(self, item, config):
         editableComponent = item.editableComponent
-        if type(editableComponent) != editableapplylatercomponent.EditableApplyLaterComponent:
+        if not isinstance(editableComponent, EditableApplyLaterComponent):
             return
         
         if (editableComponent is not None) and (editableComponent.applyEnabled is True):
@@ -101,7 +101,7 @@ class AttributeTreeWidget(QTreeWidget):
 
     def applyRemoteChanges(self, item):
         editableComponent = item.editableComponent
-        if type(editableComponent) != editableapplylatercomponent.EditableApplyLaterComponent:
+        if not isinstance(editableComponent, EditableApplyLaterComponent):
             return
         
         if (editableComponent is not None) and (editableComponent.applyEnabled is True):
@@ -113,7 +113,7 @@ class AttributeTreeWidget(QTreeWidget):
         counter = 0
         for item in self.selectedItems():
             editableComponent = item.editableComponent
-            if editableComponent is None:
+            if (editableComponent is None) or (not isinstance(editableComponent, EditableApplyLaterComponent)):
                 continue
             
             if editableComponent.applyEnabled is True:
@@ -267,7 +267,8 @@ class AttributeTreeWidget(QTreeWidget):
                 if result[0] is True: # Bug: returns but
                     return result
 
-        if (type(item) != attributetreewidgetitem.AttributeTreeWidgetItem) or (item.editableComponent is None) or (type(item.editableComponent) != editableapplylatercomponent.EditableApplyLaterComponent):
+        if (type(item) != attributetreewidgetitem.AttributeTreeWidgetItem) or (item.editableComponent is None) or \
+           (not isinstance(item.editableComponent, EditableApplyLaterComponent)):
             return (False,False)
         return (item.editableComponent.applyEnabled, item.editableComponent.hasConflict)
 

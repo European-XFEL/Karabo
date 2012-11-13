@@ -80,6 +80,16 @@ class Manager(Singleton):
     def init(self, *args, **kwargs):
         super(Manager, self).__init__()
         
+        # Time between state updates
+        self.__stateUpdateTime = QTime()
+        self.__stateUpdateTime.start()
+        
+        # Tuple stores last state
+        self.__lastState = None
+        # Timer for state update, if last incoming state is a while ago
+        self.__stateUpdateTimer = QTimer()
+        self.__stateUpdateTimer.timeout.connect(self.onLastStateUpdateTimeOut)
+        
         self.__hash = Hash()
         # Map stores all keys and DataNofiers for editable widgets
         self.__keyNotifierMapEditableValue = dict()
@@ -242,17 +252,18 @@ class Manager(Singleton):
                     # Broadcast new displayValue to all editable widgets
                     dataNotifier.updateDisplayValue(internalKey, value)
                 
-                # check state
+                # Check state
                 if key == "state":
-                    if value == "Changing...":
-                        self.__notifier.signalChangingState.emit(True)
+                    # Store latest state as tuple
+                    self.__lastState = (address, instanceId, value)
+                    if self.__stateUpdateTime.elapsed() > 250:
+                        # Update state when last state change happened before 250ms
+                        self._triggerStateChange(address, instanceId, value)
                     else:
-                        if ("Error" in value) or ("error" in value):
-                            self.__notifier.signalErrorState.emit(instanceId, True)
-                        else:
-                            self.__notifier.signalErrorState.emit(instanceId, False)
-                        self.__notifier.signalChangingState.emit(False)
-                        self.__notifier.signalDeviceInstanceStateChanged.emit(address, value)
+                        # Start timer for possible state update
+                        self.__stateUpdateTimer.start(300)
+                    # Start update state time again
+                    self.__stateUpdateTime.start()
                         
             # More recursion in case of Hash type
             if isinstance(value, Hash):
@@ -264,7 +275,30 @@ class Manager(Singleton):
                     hashValue = value[i]
 
 
-### slots ###
+    def _triggerStateChange(self, address, instanceId, value):
+        # Update GUI due to state changes
+        if value == "Changing...":
+            self.__notifier.signalChangingState.emit(True)
+        else:
+            if ("Error" in value) or ("error" in value):
+                self.__notifier.signalErrorState.emit(instanceId, True)
+            else:
+                self.__notifier.signalErrorState.emit(instanceId, False)
+            self.__notifier.signalChangingState.emit(False)
+            self.__notifier.signalDeviceInstanceStateChanged.emit(address, value)
+
+
+### Slots ###
+    def onLastStateUpdateTimeOut(self):
+        # Gets called when last state is not yet reflected in GUI
+        if self.__stateUpdateTime.elapsed() > 250:
+            if self.__lastState:
+                address = self.__lastState[0]
+                instanceId = self.__lastState[1]
+                value = self.__lastState[2]
+                self._triggerStateChange(address, instanceId, value)
+        self.__stateUpdateTimer.stop()
+        
 
     # TODO: This function must be thread-safe!!    
     def onConfigChanged(self, instanceId, config):

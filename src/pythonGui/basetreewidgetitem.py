@@ -69,6 +69,13 @@ class BaseTreeWidgetItem(QTreeWidgetItem):
 
 
 ### getter and setter functions ###
+    def _getEnabled(self):
+        raise NotImplementedError, "BaseTreeWidgetItem._getEnabled"
+    def _setEnabled(self, enabled):
+        raise NotImplementedError, "BaseTreeWidgetItem._setEnabled"
+    enabled = property(fget=_getEnabled, fset=_setEnabled)
+
+
     def _getClassAlias(self):
         return self.data(0, const.CLASS_ALIAS).toPyObject()
     def _setClassAlias(self, alias):
