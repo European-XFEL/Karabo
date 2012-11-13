@@ -104,9 +104,10 @@ build: .build-post
 	@$(CP) $(CND_BASEDIR)/../../../src/karabo/net/*.hh $(KARABO)/include/karabo/net
 	@$(CP) $(CND_BASEDIR)/../../../src/karabo/python/*.hh $(KARABO)/include/karabo/python
 	@$(CP) $(CND_BASEDIR)/../../../src/karabo/util/*.hh $(KARABO)/include/karabo/util
-	@$(CP) $(CND_BASEDIR)/../../../src/karabo/xip/*.h* $(KARABO)/include/karabo/xip
+	@$(CP) $(CND_BASEDIR)/../../../src/karabo/xip/*.hh $(KARABO)/include/karabo/xip
+	@$(CP) $(CND_BASEDIR)/../../../src/karabo/xip/*.h  $(KARABO)/include/karabo/xip
 	@$(CP) $(CND_BASEDIR)/../../../src/karabo/xml/*.hh $(KARABO)/include/karabo/xml
-	@$(CP) $(CND_BASEDIR)/../../../src/karabo/xml/*.h $(KARABO)/include/karabo/xml
+	@$(CP) $(CND_BASEDIR)/../../../src/karabo/xml/*.h  $(KARABO)/include/karabo/xml
 	@$(CP) $(CND_BASEDIR)/../../../src/karabo/xms/*.hh $(KARABO)/include/karabo/xms
 
 # Force extern re-build
