@@ -108,6 +108,7 @@ class DisplayCommand(DisplayWidget):
 
 ### slots ###
     def onDeviceInstanceStateChanged(self, internalKey, state):
+        print "DisplayCommand.onDeviceInstanceStateChanged"
         if len(self.__allowedStates) < 1:
             return
         
