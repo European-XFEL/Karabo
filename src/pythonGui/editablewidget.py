@@ -66,8 +66,6 @@ class EditableWidget(QObject):
                     # Register widget info in dictionary (<alias,category>) => 1 to 1 connection
                     if not EditableWidget.aliasToCategory.has_key(alias):
                         EditableWidget.aliasToCategory[alias] = category
-                    else:
-                        print "+++ EditableWidget.aliasToCategory.has_key", alias
                     
                     # Register widget info in dictionary (<alias, (moduleName,className)>)
                     if not EditableWidget.aliasConcreteClass.has_key(alias):

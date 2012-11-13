@@ -109,7 +109,7 @@ class MembranePumpWidget(VacuumWidget):
 
 
     def valueChanged(self, key, value, timestamp=None):
-        print "MembranePumpWidget.valueChanged", key, value
+        #print "MembranePumpWidget.valueChanged", key, value
         if value == "Changing..." or ("TurningOnOrOpening" in value) or ("TurningOffOrClosing" in value):
             self._setPixmap(QPixmap(":membranepump-orange"))
         elif ("On" in value) or ("on" in value):

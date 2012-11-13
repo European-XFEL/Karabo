@@ -60,6 +60,14 @@ class GraphicsProxyWidget(NodeBase, QGraphicsProxyWidget):
     component = property(fget=_getComponent)
 
 
+    # Returns the keys of the component
+    def _getKeys(self):
+        if self.__component:
+            return self.__component.keys
+        return None
+    keys = property(fget=_getKeys)
+
+
 ### private ###
     def _setupContextMenu(self, isStateToDisplay):
         # Populate context menu

@@ -345,7 +345,7 @@ class ConfigurationPanel(QWidget):
         if self.__xsdReader.parseContent(twAttributeEditorPage, self.__documentationPanel, itemInfo) == False:
             QMessageBox.critical(self, "XSD Schema", "The given XSD schema file is invalid")
             return
-        
+
         return index
 
 
@@ -548,7 +548,7 @@ class ConfigurationPanel(QWidget):
         self.__twNavigation.itemChanged(itemInfo)
         
         # Show correct attributes
-        index = self.__navItemInternalKeyIndexMap.get(key)
+        index = self.__navItemInternalKeyIndexMap.get(QString(key))
         if index is not None:
             self.__swAttributeEditor.blockSignals(True)
             

@@ -17,8 +17,9 @@ from editableapplylatercomponent import EditableApplyLaterComponent
 from editablenoapplycomponent import EditableNoApplyComponent
 
 from layoutcomponents.arrow import Arrow
+from layoutcomponents.graphicscustomitem import GraphicsCustomItem
 from layoutcomponents.graphicsproxywidget import GraphicsProxyWidget
-from layoutcomponents.graphicsproxywidgetcontainer import GraphicsProxyWidgetContainer
+#from layoutcomponents.graphicsproxywidgetcontainer import GraphicsProxyWidgetContainer
 from layoutcomponents.line import Line
 from layoutcomponents.link import Link
 from layoutcomponents.rectangle import Rectangle
@@ -36,6 +37,12 @@ class CustomXmlReader(QXmlStreamReader):
         super(CustomXmlReader, self).__init__()
         
         self.__view = view
+        # List containing tuples of (internalKey, text) of item
+        self.__internalKeyTextTuples = []
+
+
+    def getInternalKeyTextTuples(self):
+        return self.__internalKeyTextTuples
 
 
     def read(self, data):
@@ -100,6 +107,11 @@ class CustomXmlReader(QXmlStreamReader):
                         item = self._processGraphicsProxyWidget(posX, posY, posZ)
                         item.setFlags(QGraphicsItem.ItemIsMovable | QGraphicsItem.ItemIsSelectable)
                         self.__view.scene().addItem(item)
+                    elif type == "GraphicsCustomItem":
+                        item = self._processGraphicsCustomItem()
+                        self.__view.scene().addItem(item)
+                        item.setPos(QPointF(posX, posY))
+                        item.setZValue(posZ)
             elif tokenType == QXmlStreamReader.EndElement and tagName == "GraphicsItemList":
                 break
 
@@ -288,35 +300,65 @@ class CustomXmlReader(QXmlStreamReader):
             proxyItem = GraphicsProxyWidget(self.__view.isDesignMode, label)
             proxyItem.setTransformOriginPoint(proxyItem.boundingRect().center())
         elif componentType == "DisplayComponent":
-            # Display value
-            #displayValue = item.displayComponent.value
-
             displayComponent = DisplayComponent(classAlias, key=internalKey, widgetFactory=widgetFactory)
             displayComponent.widget.setAttribute(Qt.WA_NoSystemBackground, True)
             proxyItem = GraphicsProxyWidget(self.__view.isDesignMode, displayComponent.widget, displayComponent, isStateToDisplay)
             proxyItem.setTransformOriginPoint(proxyItem.boundingRect().center())
         elif componentType == "EditableNoApplyComponent":
-            # Editable value
-            #editableValue = item.editableComponent.value
-
             editableComponent = EditableNoApplyComponent(classAlias, key=internalKey, widgetFactory=widgetFactory)
             editableComponent.widget.setAttribute(Qt.WA_NoSystemBackground, True)
             proxyItem = GraphicsProxyWidget(self.__view.isDesignMode, editableComponent.widget, editableComponent, isStateToDisplay)
             proxyItem.setTransformOriginPoint(proxyItem.boundingRect().center())
         elif componentType == "EditableApplyLaterComponent":
-            # Editable value
-            #editableValue = item.editableComponent.value
-            
             editableComponent = EditableApplyLaterComponent(classAlias, key=internalKey, widgetFactory=widgetFactory)
             editableComponent.isEditableValueInit = False
             editableComponent.widget.setAttribute(Qt.WA_NoSystemBackground, True)
             proxyItem = GraphicsProxyWidget(self.__view.isDesignMode, editableComponent.widget, editableComponent, isStateToDisplay)
             proxyItem.setTransformOriginPoint(proxyItem.boundingRect().center())
         
-        Manager().onRefreshInstance(internalKey)
+        if internalKey:
+            # Simulated NavigationItem click event to load schema
+            Manager().selectNavigationItemByInternalKey(internalKey)
+            # Register as visible instance
+            Manager().newVisibleDeviceInstance(internalKey)
+            # Refresh over network needed
+            Manager().onRefreshInstance(internalKey)
         
         proxyItem.setPos(QPointF(posX, posY))
         proxyItem.setZValue(posZ)
         
         return proxyItem
+
+
+    def _processGraphicsCustomItem(self):
+        internalKey = None
+        text = None
+        
+        while self.atEnd() == False:
+            tokenType = self.readNext()
+            tagName = self.name()
+    
+            if tokenType == QXmlStreamReader.StartElement:
+                if tagName == "internalKey":
+                    self.readNext()
+                    internalKey = self.text().toString()
+                elif tagName == "text":
+                    self.readNext()
+                    text = self.text().toString()
+            
+            elif tokenType == QXmlStreamReader.EndElement and tagName == "GraphicsItem":
+                break
+
+        # Fill list with tuple
+        self.__internalKeyTextTuples.append((internalKey, text))
+        
+        # Register as visible instance
+        Manager().newVisibleDeviceInstance(internalKey)
+        # Simulated NavigationItem click event to load schema
+        Manager().selectNavigationItemByInternalKey(internalKey)
+        # Get schema
+        schema = Manager().getSchemaByInternalKey(internalKey)
+        
+        customItem = GraphicsCustomItem(internalKey, self.__view.isDesignMode, text, schema)
+        return customItem
 

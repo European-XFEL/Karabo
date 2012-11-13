@@ -11,7 +11,6 @@
 __all__ = ["SqlTreeModelPrivate"]
 
 
-from sqltreemodellevel import SqlTreeModelLevel
 from sqltreemodelnode import SqlTreeModelNode
 
 from PyQt4.QtCore import *
