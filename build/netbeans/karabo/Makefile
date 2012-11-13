@@ -70,9 +70,9 @@ build: .build-post
 # Add your pre 'build' code here...
 
 # Make sure the KARABO folder always exists
-	@$(MKDIR) -p $(KARABO)/bin
-	@$(MKDIR) -p $(KARABO)/include
-	@$(MKDIR) -p $(KARABO)/lib
+	@if test ! -d $(KARABO)/bin;     then @$(MKDIR) -p $(KARABO)/bin; fi
+	@if test ! -d $(KARABO)/include; then @$(MKDIR) -p $(KARABO)/include; fi
+	@if test ! -d $(KARABO)/lib;     then @$(MKDIR) -p $(KARABO)/lib; fi
 
 # Check whether external dependencies are installed, if not build them
 	@if test -d $(EXTERN_DISTDIR);\
@@ -88,15 +88,15 @@ build: .build-post
 	@$(CP) -f $(CND_BASEDIR)/nbproject/Makefile-$(CONF).mk $(CND_BASEDIR)/nbproject/Karabo-$(CONF)-$(CURRENT_PLATFORM).mk
 
 # Add your post 'build' code here...
-	@$(MKDIR) -p  $(KARABO)/include/karabo/core
-	@$(MKDIR) -p  $(KARABO)/include/karabo/io/hdf5
-	@$(MKDIR) -p  $(KARABO)/include/karabo/log
-	@$(MKDIR) -p  $(KARABO)/include/karabo/net
-	@$(MKDIR) -p  $(KARABO)/include/karabo/python
-	@$(MKDIR) -p  $(KARABO)/include/karabo/util
-	@$(MKDIR) -p  $(KARABO)/include/karabo/xip
-	@$(MKDIR) -p  $(KARABO)/include/karabo/xml
-	@$(MKDIR) -p  $(KARABO)/include/karabo/xms
+	@if test ! -d $(KARABO)/include/karabo/core;    then @$(MKDIR) -p  $(KARABO)/include/karabo/core; fi
+	@if test ! -d $(KARABO)/include/karabo/io/hdf5; then @$(MKDIR) -p  $(KARABO)/include/karabo/io/hdf5; fi
+	@if test ! -d $(KARABO)/include/karabo/log;     then @$(MKDIR) -p  $(KARABO)/include/karabo/log; fi
+	@if test ! -d $(KARABO)/include/karabo/net;     then @$(MKDIR) -p  $(KARABO)/include/karabo/net; fi
+	@if test ! -d $(KARABO)/include/karabo/python;  then @$(MKDIR) -p  $(KARABO)/include/karabo/python; fi
+	@if test ! -d $(KARABO)/include/karabo/util;    then @$(MKDIR) -p  $(KARABO)/include/karabo/util; fi
+	@if test ! -d $(KARABO)/include/karabo/xip;     then @$(MKDIR) -p  $(KARABO)/include/karabo/xip; fi
+	@if test ! -d $(KARABO)/include/karabo/xml;     then @$(MKDIR) -p  $(KARABO)/include/karabo/xml; fi
+	@if test ! -d $(KARABO)/include/karabo/xms;     then @$(MKDIR) -p  $(KARABO)/include/karabo/xms; fi
 	@$(CP) $(CND_BASEDIR)/../../../src/karabo/core/*.hh $(KARABO)/include/karabo/core
 	@$(CP) $(CND_BASEDIR)/../../../src/karabo/io/*.hh $(KARABO)/include/karabo/io
 	@$(CP) $(CND_BASEDIR)/../../../src/karabo/io/hdf5/*.hh $(KARABO)/include/karabo/io/hdf5
