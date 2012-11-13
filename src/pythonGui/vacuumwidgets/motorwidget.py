@@ -109,7 +109,7 @@ class MotorWidget(VacuumWidget):
 
 
     def valueChanged(self, key, value, timestamp=None):
-        print "MotorWidget.valueChanged", key, value
+        #print "MotorWidget.valueChanged", key, value
         if value == "Changing..." or ("Moving" in value):
             self._setPixmap(QPixmap(":motor-orange"))
         elif ("On" in value) or ("on" in value) or ("Idle" in value):

@@ -91,14 +91,33 @@ class CustomWidget(QWidget):
         return self.__view.selectedItemGroup()
 
 
-    # Open saved view from file
-    def openSceneFromFile(self):
-        self.__view.openSceneFromFile()
+    def openSceneLayout(self):
+        self.__view.openSceneLayoutFromFile()
 
 
-    # Save active view to file
-    def saveSceneToFile(self):
-        self.__view.saveSceneToFile()
+    def openSceneConfigurations(self):
+        self.__view.openSceneConfigurationsFromFile()
+
+
+    def openSceneLayoutConfigurations(self):
+        self.__view.openSceneLayoutConfigurationsFromFile()
+
+
+    def saveSceneAsLayout(self):
+        self.__view.saveSceneLayoutToFile()
+
+
+    def saveSceneAsConfigurations(self):
+        self.__view.saveSceneConfigurationsToFile()
+
+
+    def saveSceneAsLayoutConfigurations(self):
+        self.__view.saveSceneLayoutConfigurationsToFile()
+
+
+    # Save active view including the configurations to folder/files
+    def saveSceneAndConfigurationsToFile(self):
+        self.__view.saveSceneAndConfigurationsToFile()
 
 
     # A new instance of a text is created and passed to the _setupItem function

@@ -109,7 +109,7 @@ class TurboPumpWidget(VacuumWidget):
 
 
     def valueChanged(self, key, value, timestamp=None):
-        print "TurboPumpWidget.valueChanged", key, value
+        #print "TurboPumpWidget.valueChanged", key, value
         if value == "Changing...":
             self._setPixmap(QPixmap(":turbopump-orange"))
         elif ("On" in value) or ("on" in value):

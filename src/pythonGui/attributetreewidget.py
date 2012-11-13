@@ -312,6 +312,11 @@ class AttributeTreeWidget(QTreeWidget):
             keys = self.__instanceKey.split('+', 1)
             if len(keys) is 2:
                 self.__devClaId = str(keys[1])
+        
+        # TODO: Remove dirty hack for scientific computing again!!!
+        croppedDevClaId = self.__devClaId.split("-")
+        self.__devClaId = croppedDevClaId[0]
+        
         Manager().onFileOpen(configChangeType, str(self.instanceKey), str(self.__devClaId))
 
 

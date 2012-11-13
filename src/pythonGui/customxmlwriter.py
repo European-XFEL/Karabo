@@ -137,13 +137,13 @@ class CustomXmlWriter(QXmlStreamWriter):
                             self.writeEndElement() # End of GraphicsItem
                         self.writeEndElement() # End of GraphicsProxyItems
                 elif isinstance(item, GraphicsCustomItem):
-                    print "GraphicsCustomItem"
-                    #self.writeAttribute("type", "GraphicsCustomItem")
-                    #self.writeAttribute("posX", QString.number(item.x()))
-                    #self.writeAttribute("posY", QString.number(item.y()))
-                    #self.writeAttribute("posZ", QString.number(item.zValue()))
+                    self.writeAttribute("type", "GraphicsCustomItem")
+                    self.writeAttribute("posX", QString.number(item.x()))
+                    self.writeAttribute("posY", QString.number(item.y()))
+                    self.writeAttribute("posZ", QString.number(item.zValue()))
                     
-                    #self.writeTextElement("text", item.text())
+                    self.writeTextElement("internalKey", item.internalKey())
+                    self.writeTextElement("text", item.text())
                                 
                 self.writeEndElement() # End of GraphicsItem
 

@@ -140,7 +140,7 @@ class BaseTreeWidgetItem(QTreeWidgetItem):
 
 
     def updateState(self, state):
-        if len(self.allowedStates) < 1:
+        if self.allowedStates is None or len(self.allowedStates) < 1:
             return
         
         if state in self.allowedStates:
