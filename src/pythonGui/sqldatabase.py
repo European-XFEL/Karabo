@@ -26,7 +26,7 @@ class SqlDatabase(object):
 
         # Use temp path for database stuff
         xfelDir = QDir.tempPath()
-        dir = QDir(xfelDir)
+        #dir = QDir(xfelDir)
         self.__dbName = xfelDir + "/xfelgui-" + str(QCoreApplication.applicationPid()) +".db"
         #print "database:", self.__dbName
         
@@ -121,6 +121,61 @@ class SqlDatabase(object):
         while query.next():
             return query.value(0).toString()
         return None
+
+
+    def getLevelAndIdByInternalKey(self, internalKey):
+        
+        keys = internalKey.split('+', 1)
+        devSerName = None
+        devClaName = None
+        level = None
+        id = None
+        
+        if len(keys) == 2:
+            # Internal key for device class
+            devSerName = keys[0]
+            devClaName = keys[1]
+            level = 2
+            
+            query = QSqlQuery(self.__database)
+            queryText = "SELECT dc.id FROM tDeviceClass AS dc JOIN tDeviceServerInstance AS di " \
+                            "ON di.name=\'" + devSerName +"\' AND dc.name=\'" + devClaName + "\';"
+            query.exec_(queryText)
+            while query.next():
+                id = query.value(0).toInt()
+                if id[1]:
+                    id = id[0]
+            return (level, id)
+        else:
+            # Internal key for device instance
+            keys = internalKey.split('.', 1)
+            devInsName = keys[0]
+            level = 3
+            
+            query = QSqlQuery(self.__database)
+            queryText = "SELECT id FROM tDeviceInstance WHERE name=\'" + devInsName + "\';"
+            query.exec_(queryText)
+            while query.next():
+                id = query.value(0).toInt()
+                if id[1]:
+                    id = id[0]
+            
+            return (level, id)
+        
+        return None
+
+
+    def createNewDeviceClassId(self, devClaId):
+        query = QSqlQuery(self.__database)
+        queryText = "SELECT id FROM tDeviceClass WHERE name LIKE \'" + devClaId + "%\';"
+        query.exec_(queryText)
+        counter = 0
+        while query.next():
+            id = query.value(0).toInt()
+            counter += 1
+        
+        newDevClaId = devClaId + "-Config" + str(counter)
+        return newDevClaId
 
 
     def closeConnection(self):

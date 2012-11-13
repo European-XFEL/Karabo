@@ -109,7 +109,7 @@ class MaxiGaugeWidget(VacuumWidget):
 
 
     def valueChanged(self, key, value, timestamp=None):
-        print "MaxiGaugeWidget.valueChanged", key, value
+        #print "MaxiGaugeWidget.valueChanged", key, value
         if value == "Changing...":
             self._setPixmap(QPixmap(":maxigauge-orange"))
         elif ("On" in value) or ("on" in value):

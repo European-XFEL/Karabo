@@ -109,7 +109,7 @@ class RightAngleValveWidget(VacuumWidget):
 
 
     def valueChanged(self, key, value, timestamp=None):
-        print "RightAngleValveWidget.valueChanged", key, value
+        #print "RightAngleValveWidget.valueChanged", key, value
         if value == "Changing..." or ("TurningOnOrOpening" in value) or ("TurningOffOrClosing" in value):
             self._setPixmap(QPixmap(":rightanglevalve-orange"))
         elif ("On" in value) or ("on" in value):

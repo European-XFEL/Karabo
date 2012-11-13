@@ -109,7 +109,7 @@ class PressureSwitchWidget(VacuumWidget):
 
 
     def valueChanged(self, key, value, timestamp=None):
-        print "PressureSwitchWidget.valueChanged", key, value
+        #print "PressureSwitchWidget.valueChanged", key, value
         if value == "Changing...":
             self._setPixmap(QPixmap(":pressureswitch-orange"))
         elif ("On" in value) or ("on" in value):

@@ -56,18 +56,69 @@ class CustomMiddlePanel(QWidget):
         self.__acDesignMode.setCheckable(True)
         self.__acDesignMode.setChecked(True)
         self.__acDesignMode.toggled.connect(self.onDesignModeChanged)
-
+       
         text = "Open"
-        self.__acOpen = QAction(QIcon(":open"), text, self)
-        self.__acOpen.setStatusTip(text)
-        self.__acOpen.setToolTip(text)
-        self.__acOpen.triggered.connect(self.onOpen)
+        self.__tbOpen = QToolButton(self)
+        self.__tbOpen.setIcon(QIcon(":open"))
+        self.__tbOpen.setToolTip(text)
+        self.__tbOpen.setStatusTip(text)
+        self.__tbOpen.setPopupMode(QToolButton.InstantPopup)
+        
+        text = "Open layout"
+        self.__acOpenLayout = QAction(QIcon(":open"), text, self)
+        self.__acOpenLayout.setStatusTip(text)
+        self.__acOpenLayout.setToolTip(text)
+        self.__acOpenLayout.triggered.connect(self.onOpenLayout)
+        
+        text = "Open configurations"
+        self.__acOpenConfigurations = QAction(QIcon(":open"), text, self)
+        self.__acOpenConfigurations.setStatusTip(text)
+        self.__acOpenConfigurations.setToolTip(text)
+        self.__acOpenConfigurations.setEnabled(False)
+        self.__acOpenConfigurations.triggered.connect(self.onOpenConfigurations)
+        
+        text = "Open layout and configurations"
+        self.__acOpenLayoutConfigurations = QAction(QIcon(":open"), text, self)
+        self.__acOpenLayoutConfigurations.setStatusTip(text)
+        self.__acOpenLayoutConfigurations.setToolTip(text)
+        self.__acOpenLayoutConfigurations.triggered.connect(self.onOpenLayoutConfigurations)
+        
+        self.__mOpen = QMenu()
+        self.__mOpen.addAction(self.__acOpenLayout)
+        self.__mOpen.addAction(self.__acOpenConfigurations)
+        self.__mOpen.addAction(self.__acOpenLayoutConfigurations)
+        self.__tbOpen.setMenu(self.__mOpen)
 
         text = "Save as"
-        self.__acSaveAs = QAction(QIcon(":save-as"), text, self)
-        self.__acSaveAs.setStatusTip(text)
-        self.__acSaveAs.setToolTip(text)
-        self.__acSaveAs.triggered.connect(self.onSaveAs)
+        self.__tbSaveAs = QToolButton(self)
+        self.__tbSaveAs.setIcon(QIcon(":save-as"))
+        self.__tbSaveAs.setToolTip(text)
+        self.__tbSaveAs.setStatusTip(text)
+        self.__tbSaveAs.setPopupMode(QToolButton.InstantPopup)
+        
+        text = "Save layout as"
+        self.__acLayoutSaveAs = QAction(QIcon(":save-as"), text, self)
+        self.__acLayoutSaveAs.setStatusTip(text)
+        self.__acLayoutSaveAs.setToolTip(text)
+        self.__acLayoutSaveAs.triggered.connect(self.onSaveAsLayout)
+        
+        text = "Save configurations as"
+        self.__acConfigurationsSaveAs = QAction(QIcon(":save-as"), text, self)
+        self.__acConfigurationsSaveAs.setStatusTip(text)
+        self.__acConfigurationsSaveAs.setToolTip(text)
+        self.__acConfigurationsSaveAs.triggered.connect(self.onSaveAsConfigurations)
+        
+        text = "Save layout and configurations as"
+        self.__acLayoutConfigurationsSaveAs = QAction(QIcon(":save-as"), text, self)
+        self.__acLayoutConfigurationsSaveAs.setStatusTip(text)
+        self.__acLayoutConfigurationsSaveAs.setToolTip(text)
+        self.__acLayoutConfigurationsSaveAs.triggered.connect(self.onSaveAsLayoutConfigurations)
+        
+        self.__mSaveAs = QMenu()
+        self.__mSaveAs.addAction(self.__acLayoutSaveAs)
+        self.__mSaveAs.addAction(self.__acConfigurationsSaveAs)
+        self.__mSaveAs.addAction(self.__acLayoutConfigurationsSaveAs)
+        self.__tbSaveAs.setMenu(self.__mSaveAs)
 
         #text = "Add shape"
         #self.__tbAddShape = QToolButton(self)
@@ -106,17 +157,18 @@ class CustomMiddlePanel(QWidget):
         #self.__mAddShape.addAction(self.__acAddRect)
         #self.__tbAddShape.setMenu(self.__mAddShape)
         
-        text = "Add simple link"
-        self.__acAddSimpleLink = QAction(QIcon(":link"), text, self)
-        self.__acAddSimpleLink.setStatusTip(text)
-        self.__acAddSimpleLink.setToolTip(text)
-        self.__acAddSimpleLink.triggered.connect(self.onAddSimpleLink)
+        text = "Connect two nodes"
+        self.__acAddLink = QAction(QIcon(":link"), text, self)
+        self.__acAddLink.setStatusTip(text)
+        self.__acAddLink.setToolTip(text)
+        self.__acAddLink.triggered.connect(self.onAddLink)
         
-        text = "Add arrow link"
-        self.__acAddArrow = QAction(QIcon(":arrow"), text, self)
-        self.__acAddArrow.setStatusTip(text)
-        self.__acAddArrow.setToolTip(text)
-        self.__acAddArrow.triggered.connect(self.onAddArrowLink)
+        # TODO: temporary removed, because works not properly..
+        #text = "Add arrow link"
+        #self.__acAddArrow = QAction(QIcon(":arrow"), text, self)
+        #self.__acAddArrow.setStatusTip(text)
+        #self.__acAddArrow.setToolTip(text)
+        #self.__acAddArrow.triggered.connect(self.onAddArrowLink)
         
         text = "Cut"
         self.__acCut = QAction(QIcon(":edit-cut"), text, self)
@@ -218,8 +270,8 @@ class CustomMiddlePanel(QWidget):
         toolBar.addAction(self.__acDesignMode)
         
         toolBar.addSeparator()
-        toolBar.addAction(self.__acOpen)
-        toolBar.addAction(self.__acSaveAs)
+        toolBar.addWidget(self.__tbOpen)
+        toolBar.addWidget(self.__tbSaveAs)
         
         toolBar.addSeparator()
         #toolBar.addWidget(self.__tbAddShape)
@@ -228,8 +280,8 @@ class CustomMiddlePanel(QWidget):
         toolBar.addAction(self.__acAddRect)
         
         toolBar.addSeparator()
-        toolBar.addAction(self.__acAddSimpleLink)
-        toolBar.addAction(self.__acAddArrow)
+        toolBar.addAction(self.__acAddLink)
+        #toolBar.addAction(self.__acAddArrow)
         
         toolBar.addSeparator()
         toolBar.addAction(self.__acCut)
@@ -257,8 +309,8 @@ class CustomMiddlePanel(QWidget):
         isItemGroup = self.__customWidget.selectedItemGroup() is not None
         
         if hasSelection:
-            self.__acAddSimpleLink.setDisabled(not isItemPair)
-            self.__acAddArrow.setDisabled(not isItemPair)
+            self.__acAddLink.setDisabled(not isItemPair)
+            #self.__acAddArrow.setDisabled(not isItemPair)
             
             self.__acCut.setDisabled(isLink)
             self.__acCopy.setDisabled(isLink)
@@ -269,8 +321,8 @@ class CustomMiddlePanel(QWidget):
             self.__acBringToFront.setDisabled(isLink)
             self.__acSendToBack.setDisabled(isLink)
         else:
-            self.__acAddSimpleLink.setDisabled(True)
-            self.__acAddArrow.setDisabled(True)
+            self.__acAddLink.setDisabled(True)
+            #self.__acAddArrow.setDisabled(True)
             
             self.__acCut.setDisabled(True)
             self.__acCopy.setDisabled(True)
@@ -310,12 +362,28 @@ class CustomMiddlePanel(QWidget):
         self.__customWidget.setDesignMode(isChecked)
 
 
-    def onOpen(self):
-        self.__customWidget.openSceneFromFile()
+    def onOpenLayout(self):
+        self.__customWidget.openSceneLayout()
 
 
-    def onSaveAs(self):
-        self.__customWidget.saveSceneToFile()
+    def onOpenConfigurations(self):
+        self.__customWidget.openSceneConfigurations()
+
+
+    def onOpenLayoutConfigurations(self):
+        self.__customWidget.openSceneLayoutConfigurations()
+
+
+    def onSaveAsLayout(self):
+        self.__customWidget.saveSceneAsLayout()
+
+
+    def onSaveAsConfigurations(self):
+        self.__customWidget.saveSceneAsConfigurations()
+
+
+    def onSaveAsLayoutConfigurations(self):
+        self.__customWidget.saveSceneAsLayoutConfigurations()
 
 
     def onAddText(self):
@@ -330,7 +398,7 @@ class CustomMiddlePanel(QWidget):
         self.__customWidget.aboutToInsertRect(checked)
 
 
-    def onAddSimpleLink(self):
+    def onAddLink(self):
         self.__customWidget.addLink()
 
     

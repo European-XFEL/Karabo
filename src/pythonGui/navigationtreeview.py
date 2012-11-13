@@ -63,29 +63,49 @@ class NavigationTreeView(QTreeView):
         if len(itemInfo) == 0:
             return
         
-        type = itemInfo.get(QString('type'))
-        if type is None:
-            type = itemInfo.get('type')
+        devSerInsId  = itemInfo.get(QString('devSerInsId'))
+        if devSerInsId is None:
+            devSerInsId = itemInfo.get('devSerInsId')
+        
+        navigationItemType = itemInfo.get(QString('type'))
+        if navigationItemType is None:
+            navigationItemType = itemInfo.get('type')
         
         internalKey = itemInfo.get(QString('internalKey'))
         if internalKey is None:
             internalKey = itemInfo.get('internalKey')
         
         displayName = internalKey
-        if type is NavigationItemTypes.DEVICE_CLASS:
+        schema = None
+        if navigationItemType is NavigationItemTypes.DEVICE_CLASS:
             displayName = itemInfo.get(QString('devClaId'))
             if displayName is None:
                 displayName = itemInfo.get('devClaId')
+        
+        schema = itemInfo.get(QString('schema'))
+        if schema is None:
+            schema = itemInfo.get('schema')
 
         mimeData = QMimeData()
 
         # Put necessary data in MimeData:
         # Source type
         mimeData.setData("sourceType", "NavigationTreeView")
-        # Internal key
-        mimeData.setData("internalKey", QString(internalKey).toAscii())
-        # Display name
-        mimeData.setData("displayName", QString(displayName).toAscii())
+        if navigationItemType:
+            # Item type
+            mimeData.setData("navigationItemType", QByteArray.number(navigationItemType))
+        if devSerInsId:
+            # Device server instance id
+            mimeData.setData("devSerInsId", QString(devSerInsId).toAscii())
+        if internalKey:
+            # Internal key
+            mimeData.setData("internalKey", QString(internalKey).toAscii())
+        if displayName:
+            # Display name
+            mimeData.setData("displayName", QString(displayName).toAscii())
+        if schema:
+            # Display name
+            mimeData.setData("schema", QString(schema).toAscii())
 
         drag = QDrag(self)
         drag.setMimeData(mimeData)
@@ -195,13 +215,18 @@ class NavigationTreeView(QTreeView):
 
 
     def itemChanged(self, itemInfo):
-        key = itemInfo.get(QString('key'))
-        if key is None:
-            key = itemInfo.get('key')
+
+        #key = itemInfo.get(QString('key'))
+        #if key is None:
+        #    key = itemInfo.get('key')
             
-        name = itemInfo.get(QString('name'))
-        if name is None:
-            name = itemInfo.get('name')
+        #name = itemInfo.get(QString('name'))
+        #if name is None:
+        #    name = itemInfo.get('name')
+
+        #type = itemInfo.get(QString('type'))
+        #if type is None:
+        #    type = itemInfo.get('type')
 
         level = itemInfo.get('level')
         rowId = itemInfo.get('rowId')
@@ -271,7 +296,8 @@ class NavigationTreeView(QTreeView):
         level = self.__model.levelOf(index)
         if level == 0:
             # NODE
-            return dict(type=NavigationItemTypes.NODE)
+            internalKey = index.data().toString()
+            return dict(internalKey=internalKey, type=NavigationItemTypes.NODE)
         elif level == 1:
             # DEVICE_SERVER_INSTANCE
             devSerInsId = index.data().toString()
@@ -283,14 +309,22 @@ class NavigationTreeView(QTreeView):
             devSerInsId = parentIndex.data().toString()
             devClaId = index.data().toString()
             internalKey = devSerInsId+"+"+devClaId
-            return dict(devSerInsId=devSerInsId, devClaId=devClaId, internalKey=internalKey, type=NavigationItemTypes.DEVICE_CLASS)
+            # Get schema
+            level = self.__model.levelOf(index)
+            row = self.__model.mappedRow(index)
+            schema = self.__model.getSchema(level, row)
+            return dict(devSerInsId=devSerInsId, devClaId=devClaId, internalKey=internalKey, schema=schema, type=NavigationItemTypes.DEVICE_CLASS)
         elif level == 3:
             # DEVICE_INSTANCE
             parentIndex = index.parent()
             devClaId = parentIndex.data().toString()
             devSerInsId = parentIndex.parent().data().toString()
             internalKey = index.data().toString()
-            return dict(devSerInsId=devSerInsId, devClaId=devClaId, internalKey=internalKey, type=NavigationItemTypes.DEVICE_INSTANCE)
+            # Get schema
+            level = self.__model.levelOf(index)
+            row = self.__model.mappedRow(index)
+            schema = self.__model.getSchema(level, row)
+            return dict(devSerInsId=devSerInsId, devClaId=devClaId, internalKey=internalKey, schema=schema, type=NavigationItemTypes.DEVICE_INSTANCE)
 
 
     def currentInternalDeviceKey(self):
@@ -365,6 +399,11 @@ class NavigationTreeView(QTreeView):
             parentIndex = index.parent()
             devClaId = parentIndex.data().toString()
             instanceId = index.data().toString()
+        
+        # TODO: Remove dirty hack for scientific computing again!!!
+        croppedDevClaId = devClaId.split("-")
+        devClaId = croppedDevClaId[0]
+        
         Manager().onFileOpen(configChangeType, str(instanceId), str(devClaId))
 
 

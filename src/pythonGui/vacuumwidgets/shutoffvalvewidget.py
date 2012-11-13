@@ -109,7 +109,7 @@ class ShutOffValveWidget(VacuumWidget):
 
 
     def valueChanged(self, key, value, timestamp=None):
-        print "ShutOffValveWidget.valueChanged", key, value
+        #print "ShutOffValveWidget.valueChanged", key, value
         if value == "Changing..." or ("TurningOnOrOpening" in value) or ("TurningOffOrClosing" in value):
             self._setPixmap(QPixmap(":shutoffvalve-orange"))
         elif ("On" in value) or ("on" in value):

@@ -51,6 +51,8 @@ class Network(QObject):
         Manager().notifier.signalNewVisibleDeviceInstance.connect(self.onNewVisibleDeviceInstance)
         Manager().notifier.signalRemoveVisibleDeviceInstance.connect(self.onRemoveVisibleDeviceInstance)
         
+        Manager().notifier.signalCreateNewDeviceClassPlugin.connect(self.onCreateNewDeviceClassPlugin)
+        
         self.__totalSize = 0
         self.__headerSize = 0
         
@@ -126,6 +128,15 @@ class Network(QObject):
         header.set("type", "initDevice")
         header.set("instanceId", str(instanceId))
         self._tcpWriteHashHash(header, config)
+
+
+    def onCreateNewDeviceClassPlugin(self, devSrvInsId, devClaId, newDevClaId):
+        header = Hash("type", "createNewDeviceClassPlugin")
+        body = Hash()
+        body.set("devSrvInsId", str(devSrvInsId))
+        body.set("devClaId", str(devClaId))
+        body.set("newDevClaId", str(newDevClaId))
+        self._tcpWriteHashHash(header, body)
 
 
     def onSlotCommand(self, instanceId, info):

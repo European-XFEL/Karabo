@@ -66,6 +66,8 @@ class Notifier(QObject):
     signalErrorFound = pyqtSignal(str) # errorData
     signalAlarmFound = pyqtSignal(str) # alarmData
     signalWarningFound = pyqtSignal(str) # warningData
+    
+    signalCreateNewDeviceClassPlugin = pyqtSignal(str, str, str) # devSrvInsId, devClaId, newDevClaId
 
     def __init__(self):
         super(Notifier, self).__init__()
@@ -86,7 +88,7 @@ class Manager(Singleton):
         self.__notifier = Notifier()
         
         # Dictionary to store instanceId of visible DEVICE_INSTANCEs with counter
-        self.__visibleDevInsKeys = dict()#set([])
+        self.__visibleDevInsKeys = dict()
         
         # State, if initiate device is currently processed
         self.__isInitDeviceCurrentlyProcessed = False
@@ -322,29 +324,6 @@ class Manager(Singleton):
         self.__notifier.signalConflictStateChanged.emit(hasConflict)
 
 
-    def onFileOpen(self, configChangeType, internalKey, devClaId=str()):
-        filename = QFileDialog.getOpenFileName(None, "Open saved configuration", QDir.tempPath(), "XML (*.xml)")
-        if filename.isEmpty():
-            return
-        
-        file = QFile(filename)
-        if file.open(QIODevice.ReadOnly | QIODevice.Text) == False:
-            return
-        
-        xmlContent = str()
-        while file.atEnd() == False:
-            xmlContent += str(file.readLine())
-
-        # TODO: serializer needed?
-        serializer = FormatHash.create("Xml", Hash())
-        config = serializer.unserialize(xmlContent).getFromPath(devClaId)
-
-        # Remove old data from internal hash
-        self._setFromPath(internalKey, Hash())
-        # Update internal hash with new data for internalKey
-        self._changeHash(internalKey, config, configChangeType)
-
-
     def initDevice(self, devSerInsId, devClaId, internalKey):
         #print "initDevice", internalKey
         #print self.__hash
@@ -353,7 +332,12 @@ class Manager(Singleton):
         if self.__hash.hasFromPath(internalKey):
             h = self.__hash.getFromPath(internalKey)
         
+        # TODO: Remove dirty hack for scientific computing again!!!
+        croppedDevClaId = devClaId.split("-")
+        devClaId = croppedDevClaId[0]
+        
         config = Hash(devClaId, h)
+        
         self.__notifier.signalInitDevice.emit(devSerInsId, config)
         self.__isInitDeviceCurrentlyProcessed = True
 
@@ -380,6 +364,46 @@ class Manager(Singleton):
             return
         
         self.__notifier.signalKillDeviceServerInstance.emit(devSrvInsId)
+
+
+### TODO: Temporary functions for scientific computing START ###
+    def createNewDeviceClassId(self, devClaId):
+        return self.__sqlDatabase.createNewDeviceClassId(devClaId)
+
+
+    def createNewDeviceClassPlugin(self, devSrvInsId, devClaId, newDevClaId):
+        self.__notifier.signalCreateNewDeviceClassPlugin.emit(devSrvInsId, devClaId, newDevClaId)
+    
+    
+    def getSchemaByInternalKey(self, internalKey):
+        levelIdTuple = self.__sqlDatabase.getLevelAndIdByInternalKey(internalKey)
+        level = levelIdTuple[0]
+        id = levelIdTuple[1]
+        
+        index = self.__treemodel.findIndex(level, id, 0)
+        rowId = self.__treemodel.mappedRow(index)
+        
+        return self.__treemodel.getSchema(level, rowId)
+
+
+    def selectNavigationItemByInternalKey(self, internalKey):
+        levelIdTuple = self.__sqlDatabase.getLevelAndIdByInternalKey(internalKey)
+        level = levelIdTuple[0]
+        id = levelIdTuple[1]
+        
+        name = None
+        keys = internalKey.split('+', 1)
+        if len(keys) == 2:
+            # Internal key for device class
+            name = keys[1]
+        else:
+            # Internal key for device instance
+            keys = internalKey.split('.', 1)
+            internalKey = keys[0]
+            name = internalKey
+
+        self.onNavigationItemChanged(dict(key=internalKey, name=name, level=level, rowId=id, column=1))
+### TODO: Temporary functions for scientific computing END ###
 
 
     def slotCommand(self, itemInfo):
@@ -506,6 +530,45 @@ class Manager(Singleton):
     def onDeviceInstanceChanged(self, itemInfo, xml):
         self.__notifier.signalDeviceInstanceChanged.emit(itemInfo, xml)
 
+
+    def openAsXml(self, filename, internalKey, configChangeType, devClaId):
+        file = QFile(filename)
+        if file.open(QIODevice.ReadOnly | QIODevice.Text) == False:
+            return
+        
+        xmlContent = str()
+        while file.atEnd() == False:
+            xmlContent += str(file.readLine())
+
+        # TODO: serializer needed?
+        serializer = FormatHash.create("Xml", Hash())
+        config = serializer.unserialize(xmlContent).getFromPath(devClaId)
+
+        # Remove old data from internal hash
+        self._setFromPath(internalKey, Hash())
+        # Update internal hash with new data for internalKey
+        self._changeHash(internalKey, config, configChangeType)
+
+
+    def onFileOpen(self, configChangeType, internalKey, devClaId=str()):
+        filename = QFileDialog.getOpenFileName(None, "Open saved configuration", QDir.tempPath(), "XML (*.xml)")
+        if filename.isEmpty():
+            return
+        
+        file = QFile(filename)
+        if file.open(QIODevice.ReadOnly | QIODevice.Text) == False:
+            return
+        
+        self.openAsXml(filename, internalKey, configChangeType, devClaId)
+
+
+    def saveAsXml(self, filename, devClaId, internalKey):
+        writeHash = Hash("TextFile.filename", str(filename))
+        writeHash.setFromPath("TextFile.format.Xml.indentation", 1)
+        writeHash.setFromPath("TextFile.format.Xml.printDataType", True)
+        xmlWriter = WriterHash.create(writeHash)
+        xmlWriter.write(Hash(devClaId, self.getFromPathAsHash(internalKey)))
+
     
     def onSaveAsXml(self, devClaId, internalKey):
         filename = QFileDialog.getSaveFileName(None, "Save file as", QDir.tempPath(), "XML (*.xml)")
@@ -516,11 +579,7 @@ class Manager(Singleton):
         if fi.suffix().isEmpty():
             filename += ".xml"
 
-        writeHash = Hash("TextFile.filename", str(filename))
-        writeHash.setFromPath("TextFile.format.Xml.indentation", 1)
-        writeHash.setFromPath("TextFile.format.Xml.printDataType", True)
-        xmlWriter = WriterHash.create(writeHash)
-        xmlWriter.write(Hash(devClaId, self.getFromPathAsHash(internalKey)))
+        self.saveAsXml(filename, devClaId, internalKey)
 
 
     def onNavigationItemChanged(self, itemInfo):

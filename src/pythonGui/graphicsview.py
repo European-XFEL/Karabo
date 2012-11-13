@@ -15,6 +15,7 @@ from customxmlwriter import CustomXmlWriter
 from displaycomponent import DisplayComponent
 
 from enums import NavigationItemTypes
+from enums import ConfigChangeTypes
 from graphicsscene import GraphicsScene
 
 from layoutcomponents.arrow import Arrow
@@ -31,8 +32,7 @@ from layoutcomponents.rectangle import Rectangle
 from layoutcomponents.text import Text
 from layoutcomponents.textdialog import TextDialog
 
-#from userattributecustomframe import UserAttributeCustomFrame
-#from userdevicecustomframe import UserDeviceCustomFrame
+from manager import Manager
 
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
@@ -169,11 +169,55 @@ class GraphicsView(QGraphicsView):
 
 
     # Open saved view from file
-    def openSceneFromFile(self):
+    def openSceneLayoutFromFile(self):
         filename = QFileDialog.getOpenFileName(None, "Open saved view", QDir.tempPath(), "SCENE (*.scene)")
         if filename.isEmpty():
             return
         
+        self.openScene(filename)
+
+
+    def openSceneConfigurationsFromFile(self):
+        dirPath = QFileDialog.getExistingDirectory(self, "Select directory to open configuration files", QDir.tempPath(),
+                                                   QFileDialog.ShowDirsOnly | QFileDialog.DontResolveSymlinks)
+        
+        dir = QDir(dirPath)
+        fileInfos = dir.entryInfoList(QDir.NoDotAndDotDot | QDir.Files | QDir.Hidden | QDir.System)
+        for fileInfo in fileInfos:
+            print fileInfo
+
+
+    def openSceneLayoutConfigurationsFromFile(self):
+        dirPath = QFileDialog.getExistingDirectory(self, "Select directory to open configuration files", QDir.tempPath(),
+                                                   QFileDialog.ShowDirsOnly | QFileDialog.DontResolveSymlinks)
+        
+        dir = QDir(dirPath)
+        fileInfos = dir.entryInfoList(QDir.NoDotAndDotDot | QDir.Files | QDir.Hidden | QDir.System)
+        
+        internalKeyTextTuples = []
+        for fileInfo in fileInfos:
+            if fileInfo.suffix() == "scene":
+                # Layout file
+                internalKeyTextTuples = self.openScene(str(fileInfo.absoluteFilePath()))
+            #elif fileInfo.suffix() == "xml":
+                # Configuration file
+                #print "XML file:", fileInfo.absoluteFilePath()
+
+        for internalKeyText in internalKeyTextTuples:
+            internalKey = str(internalKeyText[0])
+            text = str(internalKeyText[1])
+            filename = str(dirPath + "/" + text + ".xml")
+            # openAsXml(self, filename, internalKey, configChange=ConfigChangeTypes.DEVICE_CLASS_CONFIG_CHANGED, devClaId=str())
+            
+            # TODO: Remove dirty hack for scientific computing again!!!
+            croppedDevClaId = text.split("-")
+            devClaId = croppedDevClaId[0]
+            Manager().openAsXml(filename, internalKey, ConfigChangeTypes.DEVICE_CLASS_CONFIG_CHANGED, devClaId)
+
+
+    # Helper function opens *.scene file
+    # Returns list of tuples containing (internalKey, text) of GraphicsItem of scene
+    def openScene(self, filename):
         file = QFile(filename)
         if file.open(QIODevice.ReadOnly | QIODevice.Text) == False:
             return
@@ -183,11 +227,19 @@ class GraphicsView(QGraphicsView):
             xmlContent += str(file.readLine())
         
         self.removeItems(self.items())
-        CustomXmlReader(self).read(xmlContent)
+        sceneReader = CustomXmlReader(self)
+        sceneReader.read(xmlContent)
+        
+        return sceneReader.getInternalKeyTextTuples()
+
+
+    # Helper function opens *.xml configuration file
+    def openConfiguration(self, filename):
+        print "openConfiguration", filename
 
 
     # Save active view to file
-    def saveSceneToFile(self):
+    def saveSceneLayoutToFile(self):
         filename = QFileDialog.getSaveFileName(None, "Save file as", QDir.tempPath(), "SCENE (*.scene)")
         if filename.isEmpty():
             return
@@ -197,6 +249,61 @@ class GraphicsView(QGraphicsView):
             filename += ".scene"
         
         CustomXmlWriter(self.__scene).write(filename)
+
+
+    def saveSceneConfigurationsToFile(self):
+        dirPath = QFileDialog.getExistingDirectory(self, "Select directory to save configuration files", QDir.tempPath(),
+                                                   QFileDialog.ShowDirsOnly | QFileDialog.DontResolveSymlinks)
+
+        # Check, if directory is empty
+        self.checkDirectoryBeforeSave(dirPath)
+        
+        # Save configurations of navigation related items
+        self.saveSceneConfigurations(dirPath)
+
+
+    # Save active view and configurations to folder/files
+    def saveSceneLayoutConfigurationsToFile(self):
+        dirPath = QFileDialog.getExistingDirectory(self, "Select directory to save layout and configuration files", QDir.tempPath(),
+                                                   QFileDialog.ShowDirsOnly | QFileDialog.DontResolveSymlinks)
+        
+        # Check, if directory is empty
+        self.checkDirectoryBeforeSave(dirPath)
+        
+        # Save layout to directory
+        CustomXmlWriter(self.__scene).write(dirPath + "/" + QDir(dirPath).dirName() + ".scene")
+        
+        # Save configurations of navigation related items
+        self.saveSceneConfigurations(dirPath)
+
+
+    # Helper function checks whether the directory to save to is empty
+    # If the directory is not empty the user has to select what happens with the existing files
+    def checkDirectoryBeforeSave(self, dirPath):
+        dir = QDir(dirPath)
+        files = dir.entryList(QDir.NoDotAndDotDot | QDir.Files | QDir.Hidden | QDir.System)
+        if len(files) > 0:
+            reply = QMessageBox.question(self, 'Selected directory is not empty',
+                "The selected directory already contains files.<br>These files will be overwritten or removed.<br><br>" \
+                + "Do you want to continue?", QMessageBox.Yes |
+                QMessageBox.No, QMessageBox.No)
+
+            if reply == QMessageBox.No:
+                return
+        
+        for file in files:
+            dir.remove(file)
+
+
+    # Helper function to save all configurations for scene items
+    def saveSceneConfigurations(self, dirPath):
+        items = self.items()
+        for item in items:
+            if isinstance(item, GraphicsCustomItem):
+                # TODO: Remove dirty hack for scientific computing again!!!
+                croppedDevClaId = item.text().split("-")
+                devClaId = croppedDevClaId[0]
+                Manager().saveAsXml(str(dirPath + "/" + item.text() + ".xml"), str(devClaId), str(item.internalKey()))
 
 
     # A new instance of a text is created and passed to the _setupItem function
@@ -400,6 +507,11 @@ class GraphicsView(QGraphicsView):
                 layout = item.layout()
                 for i in xrange(layout.count()):
                     proxyItem = layout.itemAt(i)
+                    keys = proxyItem.keys
+                    if keys:
+                        for key in keys:
+                            Manager().removeVisibleDeviceInstance(key)
+                    # Destroy and unregister
                     proxyItem.destroy()
                     if proxyItem in items:
                         # Remove item from list - prevent double deletion
@@ -407,7 +519,24 @@ class GraphicsView(QGraphicsView):
                     self.__scene.removeItem(proxyItem)
                 item.destroy()
             elif isinstance(item, GraphicsProxyWidget):
+                keys = item.keys
+                if keys:
+                    for key in keys:
+                        Manager().removeVisibleDeviceInstance(key)
+                # Destroy and unregister
                 item.destroy()
+            elif isinstance(item, GraphicsCustomItem):
+                for inputItem in item.inputChannelItems():
+                    if inputItem in items:
+                        # Remove item from list - prevent double deletion
+                        items.remove(inputItem)
+                    self.__scene.removeItem(inputItem)
+                for outputItem in item.outputChannelItems():
+                    if outputItem in items:
+                        # Remove item from list - prevent double deletion
+                        items.remove(outputItem)
+                    self.__scene.removeItem(outputItem)
+                Manager().removeVisibleDeviceInstance(item.internalKey())
             
             self.__scene.removeItem(item)
             del item
@@ -654,14 +783,42 @@ class GraphicsView(QGraphicsView):
             sourceType = mimeData.data("sourceType")
             # Drop from NavigationTreeView or AttributeTreeWidget?
             if sourceType == "NavigationTreeView":
+                # Navigation item type
+                navigationItemType = mimeData.data("navigationItemType").toInt()
+                if navigationItemType[1]:
+                    navigationItemType = navigationItemType[0]
+                else:
+                    navigationItemType = None
+                # Device server instance id
+                devSrvInsId = QString(mimeData.data("devSerInsId"))
                 # Internal key
                 internalKey = QString(mimeData.data("internalKey"))
                 # Display name
                 displayName = QString(mimeData.data("displayName"))
-                customItem = GraphicsCustomItem(self.__isDesignMode, displayName)
+                # Schema
+                schema = QString(mimeData.data("schema"))
+                
+                if navigationItemType and (navigationItemType == NavigationItemTypes.DEVICE_CLASS) \
+                   and (not ("-" in displayName)):
+                    # Get unique device class id for new plugin
+                    newDevClaId = Manager().createNewDeviceClassId(displayName)
+
+                    keys = internalKey.split('+', 1)
+                    if len(keys) is 2:
+                        internalKey = str(keys[0]) + "+" + newDevClaId
+                    
+                    # Create new device class plugin if Device Class is dropped
+                    Manager().createNewDeviceClassPlugin(devSrvInsId, displayName, newDevClaId)
+                    displayName = newDevClaId
+
+                # Create graphical item
+                customItem = GraphicsCustomItem(internalKey, self.__isDesignMode, displayName, schema)
                 offset = QPointF()
                 # Add created item to scene
                 self._addItem(customItem)
+                
+                # Register as visible instance
+                Manager().newVisibleDeviceInstance(internalKey)
             elif sourceType == "AttributeTreeWidget":
                 # Internal key
                 internalKey = QString(mimeData.data("internalKey"))
@@ -705,6 +862,9 @@ class GraphicsView(QGraphicsView):
                     displayProxyWidget.setTransformOriginPoint(displayProxyWidget.boundingRect().center())
                     # Add item to itemlist
                     items.append(displayProxyWidget)
+                    
+                    # Register as visible instance
+                    Manager().newVisibleDeviceInstance(internalKey)
                 
                 # Editable widget
                 if hasEditableComponent:
@@ -719,6 +879,9 @@ class GraphicsView(QGraphicsView):
                     editableProxyWidget.setTransformOriginPoint(editableProxyWidget.boundingRect().center())
                     # Add item to itemlist
                     items.append(editableProxyWidget)
+                    
+                    # Register as visible instance
+                    Manager().newVisibleDeviceInstance(internalKey)
 
                 customTuple = self.createGraphicsItemContainer(Qt.Horizontal, items)
                 customItem = customTuple[0]
@@ -755,4 +918,22 @@ class GraphicsView(QGraphicsView):
     # Called whenever an item of the scene is un-/selected
     def onSceneSelectionChanged(self):
         self.sceneSelectionChanged.emit()
+        
+        if (len(self.__scene.selectedItems()) == 1):
+            selectedItem = self.__scene.selectedItems()[0]
+            if isinstance(selectedItem, GraphicsCustomItem):
+                Manager().selectNavigationItemByInternalKey(selectedItem.internalKey())
+            elif isinstance(selectedItem, GraphicsProxyWidget):
+                keys = selectedItem.keys
+                if keys:
+                    for key in keys:
+                        Manager().selectNavigationItemByInternalKey(key)
+            elif isinstance(selectedItem, GraphicsProxyWidgetContainer):
+                layout = selectedItem.layout()
+                for i in xrange(layout.count()):
+                    proxyItem = layout.itemAt(i)
+                    keys = proxyItem.keys
+                    if keys:
+                        for key in keys:
+                            Manager().selectNavigationItemByInternalKey(key)
 

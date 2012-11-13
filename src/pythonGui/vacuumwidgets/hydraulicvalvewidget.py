@@ -109,7 +109,7 @@ class HydraulicValveWidget(VacuumWidget):
 
 
     def valueChanged(self, key, value, timestamp=None):
-        print "HydraulicValveWidget.valueChanged", key, value
+        #print "HydraulicValveWidget.valueChanged", key, value
         if value == "Changing...":
             self._setPixmap(QPixmap(":hydraulicvalve-orange"))
         elif ("On" in value) or ("on" in value):

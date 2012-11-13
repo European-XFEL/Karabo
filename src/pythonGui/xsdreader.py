@@ -52,7 +52,7 @@ class XsdReader(QXmlStreamReader):
         self.readNext() # StartDocument
         self.readNext()
 
-        if self.name() != "schema" :
+        if self.name() != "schema":
             print "Configurator was fed with illegal XSD"
             return False
 
@@ -62,55 +62,55 @@ class XsdReader(QXmlStreamReader):
 
     def processMainElementTag(self, twAttributeEditorPage, documentationPanel):
     
-        while self.atEnd() == False :
+        while self.atEnd() == False:
             tokenType = self.readNext()
             tagName = self.name()
 
-            if tokenType == QXmlStreamReader.StartElement :
-                if tagName == "element" :
+            if tokenType == QXmlStreamReader.StartElement:
+                if tagName == "element":
                     self.processSimpleElements(twAttributeEditorPage, documentationPanel)
-            elif tokenType == QXmlStreamReader.EndElement :
+            elif tokenType == QXmlStreamReader.EndElement:
                 break
 
 
     def processSimpleElements(self, twAttributeEditorPage, documentationPanel):
 
-        while self.atEnd() == False :
+        while self.atEnd() == False:
             tokenType = self.readNext()
             tagName = self.name()
 
-            if tokenType == QXmlStreamReader.StartElement :
+            if tokenType == QXmlStreamReader.StartElement:
                 if tagName == "element" :
                     name, type, defaultValue, minOccurs, maxOccurs = self.processSimpleElementAttributes()
                     # following tags
                     self.processFollowingElements(twAttributeEditorPage, documentationPanel,
                                                   name, type, defaultValue, minOccurs, maxOccurs)
-            elif tokenType == QXmlStreamReader.EndElement :
+            elif tokenType == QXmlStreamReader.EndElement:
                 break
 
 
     def processSimpleElementAttributes(self):
         name = self.attributes().value("name").toString()
 
-        if self.attributes().hasAttribute("type") :
+        if self.attributes().hasAttribute("type"):
             type = self.attributes().value("type").toString()
-        else :
-            type = ""
+        else:
+            type = None
 
-        if self.attributes().hasAttribute("default") :
+        if self.attributes().hasAttribute("default"):
             defaultValue = self.attributes().value("default").toString()
-        else :
-            defaultValue = ""
+        else:
+            defaultValue = None
 
-        if self.attributes().hasAttribute("minOccurs") :
+        if self.attributes().hasAttribute("minOccurs"):
             minOccurs = self.attributes().value("minOccurs").toString()
-        else :
-            minOccurs = ""
+        else:
+            minOccurs = None
 
-        if self.attributes().hasAttribute("maxOccurs") :
+        if self.attributes().hasAttribute("maxOccurs"):
             maxOccurs = self.attributes().value("maxOccurs").toString()
-        else :
-            maxOccurs = ""
+        else:
+            maxOccurs = None
 
         return [name, type, defaultValue, minOccurs, maxOccurs]
 
@@ -226,8 +226,8 @@ class XsdReader(QXmlStreamReader):
                             attributeItem.classAlias = "File Path"
                             if createEditableComponent is False:
                                 return complexItem
-                            if default:
-                                attributeItem.defaultValue = default
+                            
+                            attributeItem.defaultValue = default
                             
                             if self.__type is NavigationItemTypes.DEVICE_CLASS:
                                 editableComponent = EditableNoApplyComponent(attributeItem.classAlias, key=attributeItem.internalKey, value=attributeItem.defaultValue, valueType=attributeItem.valueType, unitSymbol=unitSymbol)
@@ -238,8 +238,8 @@ class XsdReader(QXmlStreamReader):
                             attributeItem.setIcon(0, QIcon(":path"))
                             attributeItem.setEditableComponent(editableComponent)
                         else:
-                            if default:
-                                attributeItem.defaultValue = default
+                            attributeItem.defaultValue = default
+                            
                             if len(enumeration) < 1 :
                                 attributeItem.classAlias = "Text Field"
                                 if createEditableComponent is False:
@@ -271,8 +271,8 @@ class XsdReader(QXmlStreamReader):
                                                                           or type == "xs:unsignedLong" or restrictionBase == "xs:unsignedLong"
                                                                           or type == "xs:unsignedByte" or restrictionBase == "xs:unsignedByte"):
                         attributeItem.valueType = "int"
-                        if default:
-                            attributeItem.defaultValue = int(default)
+                        attributeItem.defaultValue = int(default)
+                        
                         if len(enumeration) < 1 :
                             attributeItem.classAlias = "Integer Field"
                             if createEditableComponent is False:
@@ -284,9 +284,9 @@ class XsdReader(QXmlStreamReader):
                                 editableComponent = EditableApplyLaterComponent(attributeItem.classAlias, key=attributeItem.internalKey, value=None, valueType=attributeItem.valueType, unitSymbol=unitSymbol)
                                 editableComponent.signalApplyChanged.connect(twAttributeEditorPage.onApplyChanged)
                                 
-                            if len(minInclusive) > 0 :
+                            if minInclusive and len(minInclusive) > 0:
                                 editableComponent.addParameters(minimum=int(minInclusive))
-                            if len(maxInclusive) > 0 :
+                            if maxInclusive and len(maxInclusive) > 0:
                                 editableComponent.addParameters(maximum=int(maxInclusive))
                             attributeItem.setIcon(0, QIcon(":int"))
                             attributeItem.setEditableComponent(editableComponent)
@@ -305,8 +305,8 @@ class XsdReader(QXmlStreamReader):
                             attributeItem.setEditableComponent(editableComponent)
                     elif type == "xs:float" or restrictionBase == "xs:float" :
                         attributeItem.valueType = "float"
-                        if default:
-                            attributeItem.defaultValue = float(default)
+                        attributeItem.defaultValue = float(default)
+                        
                         if len(enumeration) < 1 :
                             attributeItem.classAlias = "Float Field"
                             if createEditableComponent is False:
@@ -339,8 +339,8 @@ class XsdReader(QXmlStreamReader):
                             attributeItem.setEditableComponent(editableComponent)
                     elif type == "xs:double" or restrictionBase == "xs:double" :
                         attributeItem.valueType = "double"
-                        if default:
-                            attributeItem.defaultValue = float(default)
+                        attributeItem.defaultValue = float(default)
+                        
                         if len(enumeration) < 1 :
                             attributeItem.classAlias = "Float Field"
                             if createEditableComponent is False:
@@ -376,8 +376,7 @@ class XsdReader(QXmlStreamReader):
                         attributeItem.classAlias = "Toggle Field"
                         if createEditableComponent is False:
                             return complexItem
-                        if default:
-                            attributeItem.defaultValue = default
+                        attributeItem.defaultValue = default
                         
                         if self.__type is NavigationItemTypes.DEVICE_CLASS:
                             editableComponent = EditableNoApplyComponent(attributeItem.classAlias, key=attributeItem.internalKey, value=attributeItem.defaultValue, valueType=attributeItem.valueType, unitSymbol=unitSymbol)
@@ -393,8 +392,7 @@ class XsdReader(QXmlStreamReader):
                         attributeItem.classAlias = "File Path"
                         if createEditableComponent is False:
                             return complexItem
-                        if default:
-                            attributeItem.defaultValue = default
+                        attributeItem.defaultValue = default
                         
                         if self.__type is NavigationItemTypes.DEVICE_CLASS:
                             editableComponent = EditableNoApplyComponent(attributeItem.classAlias, key=attributeItem.internalKey, value=attributeItem.defaultValue, valueType=attributeItem.valueType, unitSymbol=unitSymbol)
@@ -452,49 +450,49 @@ class XsdReader(QXmlStreamReader):
 
     def processAnnotationTag(self):
 
-        description = ""
-        displayedName = ""
-        expertLevel = ""
-        default = ""
-        unitName = ""
-        unitSymbol = ""
-        accessType = ""
-        displayType = ""
-        allowedStates = []
+        description = None
+        displayedName = None
+        expertLevel = None
+        default = None
+        unitName = None
+        unitSymbol = None
+        accessType = None
+        displayType = None
+        allowedStates = None
 
         while self.atEnd() == False :
             tokenType = self.readNext()
             tagName = self.name()
 
-            if tokenType == QXmlStreamReader.StartElement :
-                if tagName == "description" :
+            if tokenType == QXmlStreamReader.StartElement:
+                if tagName == "description":
                     self.readNext()
                     description = self.text().toString()
-                elif tagName == "displayedName" :
+                elif tagName == "displayedName":
                     self.readNext()
                     displayedName = self.text().toString()
-                elif tagName == "expertLevel" :
+                elif tagName == "expertLevel":
                     self.readNext()
                     expertLevel = self.text().toString()
-                elif tagName == "default" :
+                elif tagName == "default":
                     self.readNext()
                     default = self.text().toString()
-                elif tagName == "unitName" :
+                elif tagName == "unitName":
                     self.readNext()
                     unitName = self.text().toString()
-                elif tagName == "unitSymbol" :
+                elif tagName == "unitSymbol":
                     self.readNext()
                     unitSymbol = self.text().toString()
-                elif tagName == "accessType" :
+                elif tagName == "accessType":
                     self.readNext()
                     accessType = self.text().toString()
-                elif tagName == "displayType" :
+                elif tagName == "displayType":
                     self.readNext()
                     displayType = self.text().toString()
                 elif tagName == "allowedStates":
                     self.readNext()
                     allowedStates = list(self.text().toString().split(','))
-            elif tokenType == QXmlStreamReader.EndElement and tagName == "annotation" :
+            elif tokenType == QXmlStreamReader.EndElement and tagName == "annotation":
                 break
 
         return [description, displayedName, expertLevel, default, unitName, unitSymbol, accessType, displayType, allowedStates]
@@ -502,16 +500,16 @@ class XsdReader(QXmlStreamReader):
 
     def processSimpleTypeTag(self):
 
-        restrictionBase = ""
-        minInclusive = ""
-        maxInclusive = ""
+        restrictionBase = None
+        minInclusive = None
+        maxInclusive = None
         enumeration = []
 
-        while self.atEnd() == False :
+        while self.atEnd() == False:
             tokenType = self.readNext()
             tagName = self.name()
 
-            if tokenType == QXmlStreamReader.StartElement :
+            if tokenType == QXmlStreamReader.StartElement:
                 if tagName == "restriction" :
                     restrictionBase = self.attributes().value("base").toString()
                 elif tagName == "minInclusive" :
@@ -520,7 +518,7 @@ class XsdReader(QXmlStreamReader):
                     maxInclusive = self.attributes().value("value").toString()
                 elif tagName == "enumeration" :
                     enumeration.append(self.attributes().value("value").toString())
-            elif tokenType == QXmlStreamReader.EndElement and tagName == "simpleType" :
+            elif tokenType == QXmlStreamReader.EndElement and tagName == "simpleType":
                 break
 
         return [restrictionBase, minInclusive, maxInclusive, enumeration]
@@ -528,32 +526,32 @@ class XsdReader(QXmlStreamReader):
 
     def processComplexTypeTag(self, twAttributeEditorPage, documentationPanel, parentItem, isSequenceElement=False):
 
-        while self.atEnd() == False :
+        while self.atEnd() == False:
             tokenType = self.readNext()
             tagName = self.name()
 
-            if tokenType == QXmlStreamReader.StartElement :
-                if tagName == "choice" :
+            if tokenType == QXmlStreamReader.StartElement:
+                if tagName == "choice":
                     self.processChoiceTag(twAttributeEditorPage, documentationPanel, parentItem, isSequenceElement)
-                elif tagName == "element" :
+                elif tagName == "element":
                     name, type, defaultValue, minOccurs, maxOccurs = self.processSimpleElementAttributes()
                     # process children
                     self.processFollowingElements(twAttributeEditorPage, documentationPanel, name, type, defaultValue, minOccurs, maxOccurs, parentItem)
-                elif tagName == "sequence" :
+                elif tagName == "sequence":
                     self.processSequenceTag(twAttributeEditorPage, documentationPanel, parentItem)
-                elif tagName == "attribute" :
+                elif tagName == "attribute":
                     name = self.attributes().value("name").toString()
                     type = self.attributes().value("type").toString()
                     default = self.attributes().value("default").toString()
-            elif tokenType == QXmlStreamReader.EndElement and tagName == "complexType" :
+            elif tokenType == QXmlStreamReader.EndElement and tagName == "complexType":
                 break
 
 
     def processChoiceTag(self, twAttributeEditorPage, documentationPanel, parentItem, isSequenceElement=False):
         choiceComponent = None
         
-        defaultDataFromParent = ""
-        if isSequenceElement == False :
+        defaultDataFromParent = None
+        if isSequenceElement == False:
             parentItem.isChoiceElement = True
             parentItem.classAlias = "Choice Element"
             # Choiceelements can not have strings as arguments
@@ -593,8 +591,8 @@ class XsdReader(QXmlStreamReader):
             tokenType = self.readNext()
             tagName = self.name()
 
-            if tokenType == QXmlStreamReader.StartElement :
-                if tagName == "element" :
+            if tokenType == QXmlStreamReader.StartElement:
+                if tagName == "element":
                     name, type, defaultValue, minOccurs, maxOccurs = self.processSimpleElementAttributes()
 
                     childItem = self.processFollowingElements(twAttributeEditorPage, documentationPanel, name, type, defaultValue,
@@ -605,7 +603,7 @@ class XsdReader(QXmlStreamReader):
 
                     choiceComponent.addParameters(itemToBeAdded=childItem)
 
-            elif tokenType == QXmlStreamReader.EndElement and tagName == "choice" :
+            elif tokenType == QXmlStreamReader.EndElement and tagName == "choice":
                 break
 
         parentItem.onSetToDefault()
@@ -652,9 +650,9 @@ class XsdReader(QXmlStreamReader):
         if (parentItem is None) or (item is None):
             return
 
-        if parentItem.updateNeeded == True :
-            if parentItem.isChoiceElement == True :
-                if parentItem.defaultValue == item.text(0) :
+        if parentItem.updateNeeded == True:
+            if parentItem.isChoiceElement == True:
+                if parentItem.defaultValue == item.text(0):
                     item.updateNeeded = True
                 else :
                     item.updateNeeded = False
@@ -684,17 +682,17 @@ class XsdReader(QXmlStreamReader):
         systemKey = keys[0] + "/" + keys[1]
         content.append(QString("<b>Full key:</b> %2<br /><br />").arg(systemKey))
 
-        if len(minInclusive) > 0 :
+        if minInclusive and len(minInclusive) > 0:
             content.append(QString("<b>minInclusive:</b> %1<br />").arg(minInclusive))
-        if len(maxInclusive) > 0 :
+        if maxInclusive and len(maxInclusive) > 0:
             content.append(QString("<b>maxInclusive:</b> %1<br />").arg(maxInclusive))
 
-        if len(unitName) > 0 :
+        if unitName and len(unitName) > 0:
             content.append(QString("<b>Unit name:</b> %1<br />").arg(unitName))
-        if len(unitSymbol) > 0 :
+        if unitSymbol and len(unitSymbol) > 0:
             content.append(QString("<b>Unit symbol:</b> %1<br />").arg(unitSymbol))
 
-        if len(default) > 0 :
+        if default and len(default) > 0:
             content.append(QString("<b>Default:</b> %1<br />").arg(default))
 
         content.append(QString("<br />Further device documentation."))

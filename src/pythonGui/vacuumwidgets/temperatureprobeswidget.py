@@ -109,7 +109,7 @@ class TemperatureProbeWidget(VacuumWidget):
 
 
     def valueChanged(self, key, value, timestamp=None):
-        print "TemperatureProbeWidget.valueChanged", key, value
+        #print "TemperatureProbeWidget.valueChanged", key, value
         if value == "Changing...":
             self._setPixmap(QPixmap(":thermometer-orange"))
         elif ("On" in value) or ("on" in value):

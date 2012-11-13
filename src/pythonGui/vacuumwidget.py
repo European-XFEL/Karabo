@@ -63,8 +63,6 @@ class VacuumWidget(QObject):
                     # Register widget info in dictionary (<alias,category>) => 1 to 1 connection
                     if not VacuumWidget.aliasToCategory.has_key(alias):
                         VacuumWidget.aliasToCategory[alias] = category
-                    else:
-                        print "+++ VacuumWidget.aliasToCategory.has_key", alias
 
                     if not VacuumWidget.aliasConcreteClass.has_key(alias):
                         VacuumWidget.aliasConcreteClass[alias] = (modulename,className)
