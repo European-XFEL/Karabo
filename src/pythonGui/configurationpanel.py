@@ -507,6 +507,7 @@ class ConfigurationPanel(QWidget):
                     twAttributeEditorPage.clear()
                     if self.__xsdReader.parseContent(twAttributeEditorPage, self.__documentationPanel, itemInfo) == False:
                         QMessageBox.critical(self, "XSD Schema", "The given XSD schema file is invalid")
+                    self.__internalKeySchemaLoadedMap[key] = True
         else:
             self.__navItemInternalKeyIndexMap[key] = self._createNewAttributePage(itemInfo)
             self.__internalKeySchemaLoadedMap[key] = True
