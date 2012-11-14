@@ -22,14 +22,21 @@ from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 
 
-class GraphicsCustomItem(NodeBase, QGraphicsItem):
+class GraphicsCustomItem(NodeBase, QGraphicsObject):
+    # signals
+    signalValueChanged = pyqtSignal(str, object) # key, value
 
 
     def __init__(self, internalKey, isDesignMode, text, schema):
         super(GraphicsCustomItem, self).__init__(isDesignMode)
         
-        self.__font = QFont()
+        self.__textFont = QFont()
         self.__text = text
+        
+        self.__devInsId = ""
+        
+        self.__compositeText = None
+        self._updateCompositeText()
         
         self.__internalKey = internalKey
         
@@ -44,34 +51,8 @@ class GraphicsCustomItem(NodeBase, QGraphicsItem):
             # Get information to draw possible in/output channels
             self.__inputChannelData = xsdParser.inputChannelData
             self.__outputChannelData = xsdParser.outputChannelData
-            
-            rect = self._outlineRect()
-            width = rect.width()
-            height = rect.height()
-            
-            nbInputChannels = len(self.__inputChannelData)
-            x = -width/2
-            yDelta = height / (nbInputChannels+1)
-            for i in xrange(nbInputChannels):
-                hash = self.__inputChannelData[i]
-                y = yDelta * i
-                if nbInputChannels > 1:
-                    y -= (yDelta/2)
-                inputChannelItem = GraphicsInputChannelItem(self, hash.get("type"))
-                inputChannelItem.setPos(QPointF(x-inputChannelItem.boundingRect().width(), y))
-                self.__inputChannelItems.append(inputChannelItem)
-            
-            nbOutputChannels = len(self.__outputChannelData)
-            x = width/2
-            yDelta = height / (nbOutputChannels+1)
-            for i in xrange(nbOutputChannels):
-                hash = self.__outputChannelData[i]
-                y = yDelta * i
-                if nbOutputChannels > 1:
-                    y -= (yDelta/2)
-                outputChannelItem = GraphicsOutputChannelItem(self, hash.get("type"))
-                outputChannelItem.setPos(QPointF(x, y))
-                self.__outputChannelItems.append(outputChannelItem)
+            # Update channel graphics representation
+            self._updateChannelItems()
 
         self.setFlags(QGraphicsItem.ItemIsMovable | QGraphicsItem.ItemIsSelectable | QGraphicsItem.ItemIsFocusable)
 
@@ -80,8 +61,38 @@ class GraphicsCustomItem(NodeBase, QGraphicsItem):
         return self.__internalKey
 
 
+    def _getDevInstIdKey(self):
+        return self.__internalKey + ".devInstId"
+    devInstIdKey = property(fget=_getDevInstIdKey)
+
+
     def text(self):
         return self.__text
+
+
+    def additionalText(self):
+        return self.__devInsId
+
+
+    def setAdditionalText(self, additionalText):
+        if self.__devInsId == additionalText:
+            return
+        
+        # Prepare item for change
+        self.prepareGeometryChange()
+        # Prepare channel item for change
+        self._prepareGeometryChangeChannelItems()
+        
+        self.__devInsId = additionalText
+        self._updateCompositeText()
+        
+        # Update item geometry
+        self.update()
+        # Update channel item geometry
+        self._updateChannelItems()
+        
+        # Send changing signal to Manager (connected only for DEVICE_CLASS)
+        self.signalValueChanged.emit(self.devInstIdKey, self.__devInsId)
 
 
     def inputChannelItems(self):
@@ -93,7 +104,7 @@ class GraphicsCustomItem(NodeBase, QGraphicsItem):
 
 
     def boundingRect(self):
-        margin = 100 # 1, TODO: consider channels as well..
+        margin = 50 # 1, TODO: consider channels as well..
         return self._outlineRect().adjusted(-margin, -margin, +margin, +margin)
 
 
@@ -111,20 +122,82 @@ class GraphicsCustomItem(NodeBase, QGraphicsItem):
             pen.setStyle(Qt.DotLine)
             pen.setWidth(2)
         
-        painter.setFont(self.__font)
+        painter.setFont(self.__textFont)
         painter.setPen(pen)
         #painter.setBrush(self.__backgroundColor)
         rect = self._outlineRect()
         painter.drawRoundRect(rect, self._roundness(rect.width()), self._roundness(rect.height()))
         #painter.setPen(self.__textColor)
-        painter.drawText(rect, Qt.AlignCenter, self.__text)
+        painter.drawText(rect, Qt.AlignCenter, self.__compositeText)
 
 
 ### private ###
+    def _updateCompositeText(self):
+        self.__compositeText = str(self.__text + "\n<" + self.__devInsId + ">")
+
+
+    # Prepare channel items for geometry change
+    def _prepareGeometryChangeChannelItems(self):
+        for inputChannel in self.__inputChannelItems:
+            inputChannel.prepareGeometryChange()
+        
+        for outputChannel in self.__outputChannelItems:
+            outputChannel.prepareGeometryChange()
+
+
+    # Update channel items
+    def _updateChannelItems(self):
+        #for inputChannel in self.__inputChannelItems:
+        #    inputChannel.update()
+        
+        #for outputChannel in self.__outputChannelItems:
+        #    outputChannel.update()
+        
+        rect = self._outlineRect()
+        width = rect.width()
+        height = rect.height()
+
+        # Updating input channel items
+        nbInputChannels = len(self.__inputChannelData)
+        nbInputChannelItems = len(self.__inputChannelItems)
+        x = -width/2
+        yDelta = height / (nbInputChannels+1)
+        for i in xrange(nbInputChannels):
+            hash = self.__inputChannelData[i]
+            y = yDelta * i
+            if nbInputChannels > 1:
+                y -= (yDelta/2)
+            
+            if nbInputChannelItems == 0:
+                inputChannelItem = GraphicsInputChannelItem(self, hash.get("type"))
+                self.__inputChannelItems.append(inputChannelItem)
+            else:
+                inputChannelItem = self.__inputChannelItems[i]
+            inputChannelItem.setPos(QPointF(x-inputChannelItem.boundingRect().width(), y))
+
+        # Updating output channel items
+        nbOutputChannels = len(self.__outputChannelData)
+        nbOutputChannelItems = len(self.__outputChannelItems)
+        x = width/2
+        yDelta = height / (nbOutputChannels+1)
+        for i in xrange(nbOutputChannels):
+            hash = self.__outputChannelData[i]
+            y = yDelta * i
+            if nbOutputChannels > 1:
+                y -= (yDelta/2)
+            
+            if nbOutputChannelItems == 0:
+                outputChannelItem = GraphicsOutputChannelItem(self, hash.get("type"))
+                self.__outputChannelItems.append(outputChannelItem)
+            else:
+                outputChannelItem = self.__outputChannelItems[i]
+            outputChannelItem.setPos(QPointF(x, y))
+
+
     def _outlineRect(self):
-        padding = 8
-        metrics = QFontMetricsF(self.__font) #qApp.fontMetrics())
-        rect = metrics.boundingRect(self.__text)
+        padding = 4
+        metrics = QFontMetricsF(self.__textFont) #qApp.fontMetrics())
+        rect = metrics.boundingRect(self.__compositeText)
         rect.adjust(-padding, -padding, +padding, +padding)
         rect.translate(-rect.center())
         return rect
@@ -134,6 +207,24 @@ class GraphicsCustomItem(NodeBase, QGraphicsItem):
         diameter = 6
         return 100 * diameter / int(size)
 
+
+### protected ###
+    def mouseDoubleClickEvent(self, event):
+        additionalText = QInputDialog.getText(event.widget(), "Edit device instance", \
+                                              "Enter new device instance:", QLineEdit.Normal, \
+                                              self.__devInsId)
+        
+        if len(additionalText[0]) > 0:
+            self.setAdditionalText(additionalText[0])
+
+        QGraphicsObject.mouseDoubleClickEvent(self, event)
+
+
+### slots ###
+    # Triggered by DataNotifier signalUpdateComponent
+    def onValueChanged(self, key, value):
+        if self.devInstIdKey == key:
+            self.setAdditionalText(value)
 
 
 ####################################################################################
