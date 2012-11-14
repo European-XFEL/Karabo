@@ -819,6 +819,13 @@ class GraphicsView(QGraphicsView):
                 
                 # Register as visible instance
                 Manager().newVisibleDeviceInstance(internalKey)
+                
+                if navigationItemType and (navigationItemType == NavigationItemTypes.DEVICE_CLASS):
+                    # Connect customItem signal to Manager, DEVICE_CLASS
+                    customItem.signalValueChanged.connect(Manager().onDeviceClassValueChanged)
+                    # Register for value changes of devInstId
+                    Manager().registerEditableComponent(customItem.devInstIdKey, customItem)
+                
             elif sourceType == "AttributeTreeWidget":
                 # Internal key
                 internalKey = QString(mimeData.data("internalKey"))
