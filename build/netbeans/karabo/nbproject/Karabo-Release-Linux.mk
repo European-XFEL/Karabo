@@ -160,8 +160,8 @@ TESTDIR=${CND_BUILDDIR}/${CND_CONF}/${CND_PLATFORM}/tests
 # Test Files
 TESTFILES= \
 	${TESTDIR}/TestFiles/f2 \
-	${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libkarabo.${CND_DLIB_EXT} \
-	${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libkarabo.${CND_DLIB_EXT} \
+	${TESTDIR}/TestFiles/f4 \
+	${TESTDIR}/TestFiles/f3 \
 	${TESTDIR}/TestFiles/f1
 
 # C Compiler Flags
@@ -206,12 +206,12 @@ ${OBJECTDIR}/_ext/163556830/Device.o: ../../../src/karabo/core/Device.cc
 ${OBJECTDIR}/_ext/1103112890/TcpConnection.o: ../../../src/karabo/net/TcpConnection.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1103112890
 	${RM} $@.d
-	$(COMPILE.cc) -O2 -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1103112890/TcpConnection.o ../../../src/karabo/net/TcpConnection.cc
+	$(COMPILE.cc) -O2 -DLINUX -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1103112890/TcpConnection.o ../../../src/karabo/net/TcpConnection.cc
 
 ${OBJECTDIR}/_ext/1103112890/UdpConnection.o: ../../../src/karabo/net/UdpConnection.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1103112890
 	${RM} $@.d
-	$(COMPILE.cc) -O2 -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1103112890/UdpConnection.o ../../../src/karabo/net/UdpConnection.cc
+	$(COMPILE.cc) -O2 -DLINUX -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1103112890/UdpConnection.o ../../../src/karabo/net/UdpConnection.cc
 
 ${OBJECTDIR}/_ext/2117156511/PyUtilListElement.o: ../../../src/karabo/python/PyUtilListElement.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/2117156511
@@ -236,12 +236,12 @@ ${OBJECTDIR}/_ext/1072794519/LatexFormat.o: ../../../src/karabo/io/LatexFormat.c
 ${OBJECTDIR}/_ext/1103112890/TcpChannel.o: ../../../src/karabo/net/TcpChannel.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1103112890
 	${RM} $@.d
-	$(COMPILE.cc) -O2 -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1103112890/TcpChannel.o ../../../src/karabo/net/TcpChannel.cc
+	$(COMPILE.cc) -O2 -DLINUX -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1103112890/TcpChannel.o ../../../src/karabo/net/TcpChannel.cc
 
 ${OBJECTDIR}/_ext/1103112890/BrokerConnection.o: ../../../src/karabo/net/BrokerConnection.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1103112890
 	${RM} $@.d
-	$(COMPILE.cc) -O2 -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1103112890/BrokerConnection.o ../../../src/karabo/net/BrokerConnection.cc
+	$(COMPILE.cc) -O2 -DLINUX -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1103112890/BrokerConnection.o ../../../src/karabo/net/BrokerConnection.cc
 
 ${OBJECTDIR}/_ext/1060241295/ScalarFilterBuffer.o: ../../../src/karabo/io/hdf5/ScalarFilterBuffer.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1060241295
@@ -256,7 +256,7 @@ ${OBJECTDIR}/_ext/1103122747/SignalSlotable.o: ../../../src/karabo/xms/SignalSlo
 ${OBJECTDIR}/_ext/1103112890/Connection.o: ../../../src/karabo/net/Connection.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1103112890
 	${RM} $@.d
-	$(COMPILE.cc) -O2 -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1103112890/Connection.o ../../../src/karabo/net/Connection.cc
+	$(COMPILE.cc) -O2 -DLINUX -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1103112890/Connection.o ../../../src/karabo/net/Connection.cc
 
 ${OBJECTDIR}/_ext/2117156511/PyUtilTargetActualElement.o: ../../../src/karabo/python/PyUtilTargetActualElement.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/2117156511
@@ -346,7 +346,7 @@ ${OBJECTDIR}/_ext/1103111265/NetworkAppenderConfigurator.o: ../../../src/karabo/
 ${OBJECTDIR}/_ext/1103112890/JmsBrokerIOService.o: ../../../src/karabo/net/JmsBrokerIOService.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1103112890
 	${RM} $@.d
-	$(COMPILE.cc) -O2 -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1103112890/JmsBrokerIOService.o ../../../src/karabo/net/JmsBrokerIOService.cc
+	$(COMPILE.cc) -O2 -DLINUX -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1103112890/JmsBrokerIOService.o ../../../src/karabo/net/JmsBrokerIOService.cc
 
 ${OBJECTDIR}/_ext/1072794519/PlcFormat.o: ../../../src/karabo/io/PlcFormat.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1072794519
@@ -386,7 +386,7 @@ ${OBJECTDIR}/_ext/1060241295/RecordElement.o: ../../../src/karabo/io/hdf5/Record
 ${OBJECTDIR}/_ext/1103112890/AsioIOService.o: ../../../src/karabo/net/AsioIOService.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1103112890
 	${RM} $@.d
-	$(COMPILE.cc) -O2 -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1103112890/AsioIOService.o ../../../src/karabo/net/AsioIOService.cc
+	$(COMPILE.cc) -O2 -DLINUX -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1103112890/AsioIOService.o ../../../src/karabo/net/AsioIOService.cc
 
 ${OBJECTDIR}/_ext/2117156511/PyXmsSignalSlotable.o: ../../../src/karabo/python/PyXmsSignalSlotable.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/2117156511
@@ -436,7 +436,7 @@ ${OBJECTDIR}/_ext/1103122747/FileWrapNetworkInput.o: ../../../src/karabo/xms/Fil
 ${OBJECTDIR}/_ext/1103112890/SnmpChannel.o: ../../../src/karabo/net/SnmpChannel.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1103112890
 	${RM} $@.d
-	$(COMPILE.cc) -O2 -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1103112890/SnmpChannel.o ../../../src/karabo/net/SnmpChannel.cc
+	$(COMPILE.cc) -O2 -DLINUX -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1103112890/SnmpChannel.o ../../../src/karabo/net/SnmpChannel.cc
 
 ${OBJECTDIR}/_ext/1072794519/StringStreamReader.o: ../../../src/karabo/io/StringStreamReader.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1072794519
@@ -456,7 +456,7 @@ ${OBJECTDIR}/_ext/1072794519/HashBinarySerializer.o: ../../../src/karabo/io/Hash
 ${OBJECTDIR}/_ext/1103112890/SnmpIOService.o: ../../../src/karabo/net/SnmpIOService.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1103112890
 	${RM} $@.d
-	$(COMPILE.cc) -O2 -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1103112890/SnmpIOService.o ../../../src/karabo/net/SnmpIOService.cc
+	$(COMPILE.cc) -O2 -DLINUX -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1103112890/SnmpIOService.o ../../../src/karabo/net/SnmpIOService.cc
 
 ${OBJECTDIR}/_ext/163016059/Profiler.o: ../../../src/karabo/util/Profiler.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
@@ -496,7 +496,7 @@ ${OBJECTDIR}/_ext/1103111265/OstreamAppenderConfigurator.o: ../../../src/karabo/
 ${OBJECTDIR}/_ext/1103112890/JmsBrokerChannel.o: ../../../src/karabo/net/JmsBrokerChannel.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1103112890
 	${RM} $@.d
-	$(COMPILE.cc) -O2 -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1103112890/JmsBrokerChannel.o ../../../src/karabo/net/JmsBrokerChannel.cc
+	$(COMPILE.cc) -O2 -DLINUX -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1103112890/JmsBrokerChannel.o ../../../src/karabo/net/JmsBrokerChannel.cc
 
 ${OBJECTDIR}/_ext/2117156511/PyUtilChoiceElement.o: ../../../src/karabo/python/PyUtilChoiceElement.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/2117156511
@@ -546,7 +546,7 @@ ${OBJECTDIR}/_ext/1072794519/StringStreamWriter.o: ../../../src/karabo/io/String
 ${OBJECTDIR}/_ext/1103112890/AJmsConnection.o: ../../../src/karabo/net/AJmsConnection.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1103112890
 	${RM} $@.d
-	$(COMPILE.cc) -O2 -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1103112890/AJmsConnection.o ../../../src/karabo/net/AJmsConnection.cc
+	$(COMPILE.cc) -O2 -DLINUX -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1103112890/AJmsConnection.o ../../../src/karabo/net/AJmsConnection.cc
 
 ${OBJECTDIR}/_ext/1103111265/SimpleLayoutConfigurator.o: ../../../src/karabo/log/SimpleLayoutConfigurator.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1103111265
@@ -601,7 +601,7 @@ ${OBJECTDIR}/_ext/2117156511/PyUtilImageElement.o: ../../../src/karabo/python/Py
 ${OBJECTDIR}/_ext/1103112890/AbstractIOService.o: ../../../src/karabo/net/AbstractIOService.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1103112890
 	${RM} $@.d
-	$(COMPILE.cc) -O2 -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1103112890/AbstractIOService.o ../../../src/karabo/net/AbstractIOService.cc
+	$(COMPILE.cc) -O2 -DLINUX -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1103112890/AbstractIOService.o ../../../src/karabo/net/AbstractIOService.cc
 
 ${OBJECTDIR}/_ext/1072794519/SchemaXmlFormat.o: ../../../src/karabo/io/SchemaXmlFormat.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1072794519
@@ -631,7 +631,7 @@ ${OBJECTDIR}/_ext/1060241295/FLArrayFilterArrayView.o: ../../../src/karabo/io/hd
 ${OBJECTDIR}/_ext/1103112890/UdpChannel.o: ../../../src/karabo/net/UdpChannel.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1103112890
 	${RM} $@.d
-	$(COMPILE.cc) -O2 -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1103112890/UdpChannel.o ../../../src/karabo/net/UdpChannel.cc
+	$(COMPILE.cc) -O2 -DLINUX -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1103112890/UdpChannel.o ../../../src/karabo/net/UdpChannel.cc
 
 ${OBJECTDIR}/_ext/2117156511/HashWrap.o: ../../../src/karabo/python/HashWrap.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/2117156511
@@ -641,7 +641,7 @@ ${OBJECTDIR}/_ext/2117156511/HashWrap.o: ../../../src/karabo/python/HashWrap.cc
 ${OBJECTDIR}/_ext/1103112890/JmsChannel.o: ../../../src/karabo/net/JmsChannel.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1103112890
 	${RM} $@.d
-	$(COMPILE.cc) -O2 -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1103112890/JmsChannel.o ../../../src/karabo/net/JmsChannel.cc
+	$(COMPILE.cc) -O2 -DLINUX -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1103112890/JmsChannel.o ../../../src/karabo/net/JmsChannel.cc
 
 ${OBJECTDIR}/_ext/2117156511/PyUtilClassInfo.o: ../../../src/karabo/python/PyUtilClassInfo.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/2117156511
@@ -651,7 +651,7 @@ ${OBJECTDIR}/_ext/2117156511/PyUtilClassInfo.o: ../../../src/karabo/python/PyUti
 ${OBJECTDIR}/_ext/1103112890/JmsBrokerConnection.o: ../../../src/karabo/net/JmsBrokerConnection.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1103112890
 	${RM} $@.d
-	$(COMPILE.cc) -O2 -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1103112890/JmsBrokerConnection.o ../../../src/karabo/net/JmsBrokerConnection.cc
+	$(COMPILE.cc) -O2 -DLINUX -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1103112890/JmsBrokerConnection.o ../../../src/karabo/net/JmsBrokerConnection.cc
 
 ${OBJECTDIR}/_ext/1060241295/DataFormat.o: ../../../src/karabo/io/hdf5/DataFormat.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1060241295
@@ -691,7 +691,7 @@ ${OBJECTDIR}/_ext/1103122747/Signal.o: ../../../src/karabo/xms/Signal.cc
 ${OBJECTDIR}/_ext/1103112890/JmsIOService.o: ../../../src/karabo/net/JmsIOService.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1103112890
 	${RM} $@.d
-	$(COMPILE.cc) -O2 -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1103112890/JmsIOService.o ../../../src/karabo/net/JmsIOService.cc
+	$(COMPILE.cc) -O2 -DLINUX -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1103112890/JmsIOService.o ../../../src/karabo/net/JmsIOService.cc
 
 ${OBJECTDIR}/_ext/163556830/DeviceServer.o: ../../../src/karabo/core/DeviceServer.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/163556830
@@ -736,7 +736,7 @@ ${OBJECTDIR}/_ext/1060241295/FLArrayFilterArrayViewBuffer.o: ../../../src/karabo
 ${OBJECTDIR}/_ext/1103112890/SnmpConnection.o: ../../../src/karabo/net/SnmpConnection.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1103112890
 	${RM} $@.d
-	$(COMPILE.cc) -O2 -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1103112890/SnmpConnection.o ../../../src/karabo/net/SnmpConnection.cc
+	$(COMPILE.cc) -O2 -DLINUX -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1103112890/SnmpConnection.o ../../../src/karabo/net/SnmpConnection.cc
 
 ${OBJECTDIR}/_ext/2117156511/PyXmsSlotElement.o: ../../../src/karabo/python/PyXmsSlotElement.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/2117156511
@@ -787,13 +787,13 @@ ${TESTDIR}/TestFiles/f2: ${TESTDIR}/_ext/861493463/ReaderWriter_Test.o ${TESTDIR
 	${MKDIR} -p ${TESTDIR}/TestFiles
 	${LINK.cc}   -o ${TESTDIR}/TestFiles/f2 $^ ${LDLIBSOPTIONS} -Wl,-rpath,${KARABO}/lib -Wl,-rpath,${KARABO}/extern/lib 
 
-${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libkarabo.${CND_DLIB_EXT}: ${TESTDIR}/_ext/889921451/TcpNetworking_Test.o ${TESTDIR}/_ext/889921451/nettcpTestRunner.o ${OBJECTFILES:%.o=%_nomain.o}
-	${MKDIR} -p ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}
-	${LINK.cc}   -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libkarabo.${CND_DLIB_EXT} $^ ${LDLIBSOPTIONS} -Wl,-rpath,${KARABO}/lib -Wl,-rpath,${KARABO}/extern/lib 
+${TESTDIR}/TestFiles/f4: ${TESTDIR}/_ext/889921451/TcpNetworking_Test.o ${TESTDIR}/_ext/889921451/nettcpTestRunner.o ${OBJECTFILES:%.o=%_nomain.o}
+	${MKDIR} -p ${TESTDIR}/TestFiles
+	${LINK.cc}   -o ${TESTDIR}/TestFiles/f4 $^ ${LDLIBSOPTIONS} -Wl,-rpath,${KARABO}/lib -Wl,-rpath,${KARABO}/extern/lib 
 
-${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libkarabo.${CND_DLIB_EXT}: ${TESTDIR}/_ext/889920459/UdpNetworking_Test.o ${TESTDIR}/_ext/889920459/netudpTestRunner.o ${OBJECTFILES:%.o=%_nomain.o}
-	${MKDIR} -p ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}
-	${LINK.cc}   -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libkarabo.${CND_DLIB_EXT} $^ ${LDLIBSOPTIONS} -Wl,-rpath,${KARABO}/lib -Wl,-rpath,${KARABO}/extern/lib 
+${TESTDIR}/TestFiles/f3: ${TESTDIR}/_ext/889920459/UdpNetworking_Test.o ${TESTDIR}/_ext/889920459/netudpTestRunner.o ${OBJECTFILES:%.o=%_nomain.o}
+	${MKDIR} -p ${TESTDIR}/TestFiles
+	${LINK.cc}   -o ${TESTDIR}/TestFiles/f3 $^ ${LDLIBSOPTIONS} -Wl,-rpath,${KARABO}/lib -Wl,-rpath,${KARABO}/extern/lib 
 
 ${TESTDIR}/TestFiles/f1: ${TESTDIR}/_ext/357227895/BobbyCar.o ${TESTDIR}/_ext/357227895/Circle.o ${TESTDIR}/_ext/1033104525/ClassInfo_Test.o ${TESTDIR}/_ext/1033104525/Factory_Test.o ${TESTDIR}/_ext/1033104525/Hash_Test.o ${TESTDIR}/_ext/357227895/Rectangle.o ${TESTDIR}/_ext/1033104525/Schema_Test.o ${TESTDIR}/_ext/1033104525/utilTestRunner.o ${OBJECTFILES:%.o=%_nomain.o}
 	${MKDIR} -p ${TESTDIR}/TestFiles
@@ -803,85 +803,85 @@ ${TESTDIR}/TestFiles/f1: ${TESTDIR}/_ext/357227895/BobbyCar.o ${TESTDIR}/_ext/35
 ${TESTDIR}/_ext/861493463/ReaderWriter_Test.o: ../../../src/karabo/tests/io/ReaderWriter_Test.cc 
 	${MKDIR} -p ${TESTDIR}/_ext/861493463
 	${RM} $@.d
-	$(COMPILE.cc) -O2 -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -MMD -MP -MF $@.d -o ${TESTDIR}/_ext/861493463/ReaderWriter_Test.o ../../../src/karabo/tests/io/ReaderWriter_Test.cc
+	$(COMPILE.cc) -O2 -DTESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -MMD -MP -MF $@.d -o ${TESTDIR}/_ext/861493463/ReaderWriter_Test.o ../../../src/karabo/tests/io/ReaderWriter_Test.cc
 
 
 ${TESTDIR}/_ext/861493463/ioTestRunner.o: ../../../src/karabo/tests/io/ioTestRunner.cc 
 	${MKDIR} -p ${TESTDIR}/_ext/861493463
 	${RM} $@.d
-	$(COMPILE.cc) -O2 -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -MMD -MP -MF $@.d -o ${TESTDIR}/_ext/861493463/ioTestRunner.o ../../../src/karabo/tests/io/ioTestRunner.cc
+	$(COMPILE.cc) -O2 -DTESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -MMD -MP -MF $@.d -o ${TESTDIR}/_ext/861493463/ioTestRunner.o ../../../src/karabo/tests/io/ioTestRunner.cc
 
 
 ${TESTDIR}/_ext/889921451/TcpNetworking_Test.o: ../../../src/karabo/tests/nettcp/TcpNetworking_Test.cc 
 	${MKDIR} -p ${TESTDIR}/_ext/889921451
 	${RM} $@.d
-	$(COMPILE.cc) -O2 -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -MMD -MP -MF $@.d -o ${TESTDIR}/_ext/889921451/TcpNetworking_Test.o ../../../src/karabo/tests/nettcp/TcpNetworking_Test.cc
+	$(COMPILE.cc) -O2 -DTESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -MMD -MP -MF $@.d -o ${TESTDIR}/_ext/889921451/TcpNetworking_Test.o ../../../src/karabo/tests/nettcp/TcpNetworking_Test.cc
 
 
 ${TESTDIR}/_ext/889921451/nettcpTestRunner.o: ../../../src/karabo/tests/nettcp/nettcpTestRunner.cc 
 	${MKDIR} -p ${TESTDIR}/_ext/889921451
 	${RM} $@.d
-	$(COMPILE.cc) -O2 -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -MMD -MP -MF $@.d -o ${TESTDIR}/_ext/889921451/nettcpTestRunner.o ../../../src/karabo/tests/nettcp/nettcpTestRunner.cc
+	$(COMPILE.cc) -O2 -DTESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -MMD -MP -MF $@.d -o ${TESTDIR}/_ext/889921451/nettcpTestRunner.o ../../../src/karabo/tests/nettcp/nettcpTestRunner.cc
 
 
 ${TESTDIR}/_ext/889920459/UdpNetworking_Test.o: ../../../src/karabo/tests/netudp/UdpNetworking_Test.cc 
 	${MKDIR} -p ${TESTDIR}/_ext/889920459
 	${RM} $@.d
-	$(COMPILE.cc) -O2 -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -MMD -MP -MF $@.d -o ${TESTDIR}/_ext/889920459/UdpNetworking_Test.o ../../../src/karabo/tests/netudp/UdpNetworking_Test.cc
+	$(COMPILE.cc) -O2 -DTESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -MMD -MP -MF $@.d -o ${TESTDIR}/_ext/889920459/UdpNetworking_Test.o ../../../src/karabo/tests/netudp/UdpNetworking_Test.cc
 
 
 ${TESTDIR}/_ext/889920459/netudpTestRunner.o: ../../../src/karabo/tests/netudp/netudpTestRunner.cc 
 	${MKDIR} -p ${TESTDIR}/_ext/889920459
 	${RM} $@.d
-	$(COMPILE.cc) -O2 -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -MMD -MP -MF $@.d -o ${TESTDIR}/_ext/889920459/netudpTestRunner.o ../../../src/karabo/tests/netudp/netudpTestRunner.cc
+	$(COMPILE.cc) -O2 -DTESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -MMD -MP -MF $@.d -o ${TESTDIR}/_ext/889920459/netudpTestRunner.o ../../../src/karabo/tests/netudp/netudpTestRunner.cc
 
 
 ${TESTDIR}/_ext/357227895/BobbyCar.o: ../../../src/karabo/tests/util/resources/BobbyCar.cc 
 	${MKDIR} -p ${TESTDIR}/_ext/357227895
 	${RM} $@.d
-	$(COMPILE.cc) -O2 -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -MMD -MP -MF $@.d -o ${TESTDIR}/_ext/357227895/BobbyCar.o ../../../src/karabo/tests/util/resources/BobbyCar.cc
+	$(COMPILE.cc) -O2 -DTESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -MMD -MP -MF $@.d -o ${TESTDIR}/_ext/357227895/BobbyCar.o ../../../src/karabo/tests/util/resources/BobbyCar.cc
 
 
 ${TESTDIR}/_ext/357227895/Circle.o: ../../../src/karabo/tests/util/resources/Circle.cc 
 	${MKDIR} -p ${TESTDIR}/_ext/357227895
 	${RM} $@.d
-	$(COMPILE.cc) -O2 -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -MMD -MP -MF $@.d -o ${TESTDIR}/_ext/357227895/Circle.o ../../../src/karabo/tests/util/resources/Circle.cc
+	$(COMPILE.cc) -O2 -DTESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -MMD -MP -MF $@.d -o ${TESTDIR}/_ext/357227895/Circle.o ../../../src/karabo/tests/util/resources/Circle.cc
 
 
 ${TESTDIR}/_ext/1033104525/ClassInfo_Test.o: ../../../src/karabo/tests/util/ClassInfo_Test.cc 
 	${MKDIR} -p ${TESTDIR}/_ext/1033104525
 	${RM} $@.d
-	$(COMPILE.cc) -O2 -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -MMD -MP -MF $@.d -o ${TESTDIR}/_ext/1033104525/ClassInfo_Test.o ../../../src/karabo/tests/util/ClassInfo_Test.cc
+	$(COMPILE.cc) -O2 -DTESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -MMD -MP -MF $@.d -o ${TESTDIR}/_ext/1033104525/ClassInfo_Test.o ../../../src/karabo/tests/util/ClassInfo_Test.cc
 
 
 ${TESTDIR}/_ext/1033104525/Factory_Test.o: ../../../src/karabo/tests/util/Factory_Test.cc 
 	${MKDIR} -p ${TESTDIR}/_ext/1033104525
 	${RM} $@.d
-	$(COMPILE.cc) -O2 -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -MMD -MP -MF $@.d -o ${TESTDIR}/_ext/1033104525/Factory_Test.o ../../../src/karabo/tests/util/Factory_Test.cc
+	$(COMPILE.cc) -O2 -DTESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -MMD -MP -MF $@.d -o ${TESTDIR}/_ext/1033104525/Factory_Test.o ../../../src/karabo/tests/util/Factory_Test.cc
 
 
 ${TESTDIR}/_ext/1033104525/Hash_Test.o: ../../../src/karabo/tests/util/Hash_Test.cc 
 	${MKDIR} -p ${TESTDIR}/_ext/1033104525
 	${RM} $@.d
-	$(COMPILE.cc) -O2 -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -MMD -MP -MF $@.d -o ${TESTDIR}/_ext/1033104525/Hash_Test.o ../../../src/karabo/tests/util/Hash_Test.cc
+	$(COMPILE.cc) -O2 -DTESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -MMD -MP -MF $@.d -o ${TESTDIR}/_ext/1033104525/Hash_Test.o ../../../src/karabo/tests/util/Hash_Test.cc
 
 
 ${TESTDIR}/_ext/357227895/Rectangle.o: ../../../src/karabo/tests/util/resources/Rectangle.cc 
 	${MKDIR} -p ${TESTDIR}/_ext/357227895
 	${RM} $@.d
-	$(COMPILE.cc) -O2 -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -MMD -MP -MF $@.d -o ${TESTDIR}/_ext/357227895/Rectangle.o ../../../src/karabo/tests/util/resources/Rectangle.cc
+	$(COMPILE.cc) -O2 -DTESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -MMD -MP -MF $@.d -o ${TESTDIR}/_ext/357227895/Rectangle.o ../../../src/karabo/tests/util/resources/Rectangle.cc
 
 
 ${TESTDIR}/_ext/1033104525/Schema_Test.o: ../../../src/karabo/tests/util/Schema_Test.cc 
 	${MKDIR} -p ${TESTDIR}/_ext/1033104525
 	${RM} $@.d
-	$(COMPILE.cc) -O2 -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -MMD -MP -MF $@.d -o ${TESTDIR}/_ext/1033104525/Schema_Test.o ../../../src/karabo/tests/util/Schema_Test.cc
+	$(COMPILE.cc) -O2 -DTESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -MMD -MP -MF $@.d -o ${TESTDIR}/_ext/1033104525/Schema_Test.o ../../../src/karabo/tests/util/Schema_Test.cc
 
 
 ${TESTDIR}/_ext/1033104525/utilTestRunner.o: ../../../src/karabo/tests/util/utilTestRunner.cc 
 	${MKDIR} -p ${TESTDIR}/_ext/1033104525
 	${RM} $@.d
-	$(COMPILE.cc) -O2 -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -MMD -MP -MF $@.d -o ${TESTDIR}/_ext/1033104525/utilTestRunner.o ../../../src/karabo/tests/util/utilTestRunner.cc
+	$(COMPILE.cc) -O2 -DTESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -MMD -MP -MF $@.d -o ${TESTDIR}/_ext/1033104525/utilTestRunner.o ../../../src/karabo/tests/util/utilTestRunner.cc
 
 
 ${OBJECTDIR}/_ext/2117156511/PyIoWriter_nomain.o: ${OBJECTDIR}/_ext/2117156511/PyIoWriter.o ../../../src/karabo/python/PyIoWriter.cc 
@@ -931,7 +931,7 @@ ${OBJECTDIR}/_ext/1103112890/TcpConnection_nomain.o: ${OBJECTDIR}/_ext/110311289
 	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
 	then  \
 	    ${RM} $@.d;\
-	    $(COMPILE.cc) -O2 -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1103112890/TcpConnection_nomain.o ../../../src/karabo/net/TcpConnection.cc;\
+	    $(COMPILE.cc) -O2 -DLINUX -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1103112890/TcpConnection_nomain.o ../../../src/karabo/net/TcpConnection.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/1103112890/TcpConnection.o ${OBJECTDIR}/_ext/1103112890/TcpConnection_nomain.o;\
 	fi
@@ -944,7 +944,7 @@ ${OBJECTDIR}/_ext/1103112890/UdpConnection_nomain.o: ${OBJECTDIR}/_ext/110311289
 	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
 	then  \
 	    ${RM} $@.d;\
-	    $(COMPILE.cc) -O2 -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1103112890/UdpConnection_nomain.o ../../../src/karabo/net/UdpConnection.cc;\
+	    $(COMPILE.cc) -O2 -DLINUX -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1103112890/UdpConnection_nomain.o ../../../src/karabo/net/UdpConnection.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/1103112890/UdpConnection.o ${OBJECTDIR}/_ext/1103112890/UdpConnection_nomain.o;\
 	fi
@@ -1009,7 +1009,7 @@ ${OBJECTDIR}/_ext/1103112890/TcpChannel_nomain.o: ${OBJECTDIR}/_ext/1103112890/T
 	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
 	then  \
 	    ${RM} $@.d;\
-	    $(COMPILE.cc) -O2 -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1103112890/TcpChannel_nomain.o ../../../src/karabo/net/TcpChannel.cc;\
+	    $(COMPILE.cc) -O2 -DLINUX -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1103112890/TcpChannel_nomain.o ../../../src/karabo/net/TcpChannel.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/1103112890/TcpChannel.o ${OBJECTDIR}/_ext/1103112890/TcpChannel_nomain.o;\
 	fi
@@ -1022,7 +1022,7 @@ ${OBJECTDIR}/_ext/1103112890/BrokerConnection_nomain.o: ${OBJECTDIR}/_ext/110311
 	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
 	then  \
 	    ${RM} $@.d;\
-	    $(COMPILE.cc) -O2 -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1103112890/BrokerConnection_nomain.o ../../../src/karabo/net/BrokerConnection.cc;\
+	    $(COMPILE.cc) -O2 -DLINUX -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1103112890/BrokerConnection_nomain.o ../../../src/karabo/net/BrokerConnection.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/1103112890/BrokerConnection.o ${OBJECTDIR}/_ext/1103112890/BrokerConnection_nomain.o;\
 	fi
@@ -1061,7 +1061,7 @@ ${OBJECTDIR}/_ext/1103112890/Connection_nomain.o: ${OBJECTDIR}/_ext/1103112890/C
 	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
 	then  \
 	    ${RM} $@.d;\
-	    $(COMPILE.cc) -O2 -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1103112890/Connection_nomain.o ../../../src/karabo/net/Connection.cc;\
+	    $(COMPILE.cc) -O2 -DLINUX -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1103112890/Connection_nomain.o ../../../src/karabo/net/Connection.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/1103112890/Connection.o ${OBJECTDIR}/_ext/1103112890/Connection_nomain.o;\
 	fi
@@ -1295,7 +1295,7 @@ ${OBJECTDIR}/_ext/1103112890/JmsBrokerIOService_nomain.o: ${OBJECTDIR}/_ext/1103
 	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
 	then  \
 	    ${RM} $@.d;\
-	    $(COMPILE.cc) -O2 -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1103112890/JmsBrokerIOService_nomain.o ../../../src/karabo/net/JmsBrokerIOService.cc;\
+	    $(COMPILE.cc) -O2 -DLINUX -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1103112890/JmsBrokerIOService_nomain.o ../../../src/karabo/net/JmsBrokerIOService.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/1103112890/JmsBrokerIOService.o ${OBJECTDIR}/_ext/1103112890/JmsBrokerIOService_nomain.o;\
 	fi
@@ -1399,7 +1399,7 @@ ${OBJECTDIR}/_ext/1103112890/AsioIOService_nomain.o: ${OBJECTDIR}/_ext/110311289
 	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
 	then  \
 	    ${RM} $@.d;\
-	    $(COMPILE.cc) -O2 -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1103112890/AsioIOService_nomain.o ../../../src/karabo/net/AsioIOService.cc;\
+	    $(COMPILE.cc) -O2 -DLINUX -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1103112890/AsioIOService_nomain.o ../../../src/karabo/net/AsioIOService.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/1103112890/AsioIOService.o ${OBJECTDIR}/_ext/1103112890/AsioIOService_nomain.o;\
 	fi
@@ -1529,7 +1529,7 @@ ${OBJECTDIR}/_ext/1103112890/SnmpChannel_nomain.o: ${OBJECTDIR}/_ext/1103112890/
 	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
 	then  \
 	    ${RM} $@.d;\
-	    $(COMPILE.cc) -O2 -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1103112890/SnmpChannel_nomain.o ../../../src/karabo/net/SnmpChannel.cc;\
+	    $(COMPILE.cc) -O2 -DLINUX -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1103112890/SnmpChannel_nomain.o ../../../src/karabo/net/SnmpChannel.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/1103112890/SnmpChannel.o ${OBJECTDIR}/_ext/1103112890/SnmpChannel_nomain.o;\
 	fi
@@ -1581,7 +1581,7 @@ ${OBJECTDIR}/_ext/1103112890/SnmpIOService_nomain.o: ${OBJECTDIR}/_ext/110311289
 	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
 	then  \
 	    ${RM} $@.d;\
-	    $(COMPILE.cc) -O2 -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1103112890/SnmpIOService_nomain.o ../../../src/karabo/net/SnmpIOService.cc;\
+	    $(COMPILE.cc) -O2 -DLINUX -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1103112890/SnmpIOService_nomain.o ../../../src/karabo/net/SnmpIOService.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/1103112890/SnmpIOService.o ${OBJECTDIR}/_ext/1103112890/SnmpIOService_nomain.o;\
 	fi
@@ -1685,7 +1685,7 @@ ${OBJECTDIR}/_ext/1103112890/JmsBrokerChannel_nomain.o: ${OBJECTDIR}/_ext/110311
 	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
 	then  \
 	    ${RM} $@.d;\
-	    $(COMPILE.cc) -O2 -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1103112890/JmsBrokerChannel_nomain.o ../../../src/karabo/net/JmsBrokerChannel.cc;\
+	    $(COMPILE.cc) -O2 -DLINUX -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1103112890/JmsBrokerChannel_nomain.o ../../../src/karabo/net/JmsBrokerChannel.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/1103112890/JmsBrokerChannel.o ${OBJECTDIR}/_ext/1103112890/JmsBrokerChannel_nomain.o;\
 	fi
@@ -1815,7 +1815,7 @@ ${OBJECTDIR}/_ext/1103112890/AJmsConnection_nomain.o: ${OBJECTDIR}/_ext/11031128
 	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
 	then  \
 	    ${RM} $@.d;\
-	    $(COMPILE.cc) -O2 -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1103112890/AJmsConnection_nomain.o ../../../src/karabo/net/AJmsConnection.cc;\
+	    $(COMPILE.cc) -O2 -DLINUX -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1103112890/AJmsConnection_nomain.o ../../../src/karabo/net/AJmsConnection.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/1103112890/AJmsConnection.o ${OBJECTDIR}/_ext/1103112890/AJmsConnection_nomain.o;\
 	fi
@@ -1958,7 +1958,7 @@ ${OBJECTDIR}/_ext/1103112890/AbstractIOService_nomain.o: ${OBJECTDIR}/_ext/11031
 	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
 	then  \
 	    ${RM} $@.d;\
-	    $(COMPILE.cc) -O2 -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1103112890/AbstractIOService_nomain.o ../../../src/karabo/net/AbstractIOService.cc;\
+	    $(COMPILE.cc) -O2 -DLINUX -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1103112890/AbstractIOService_nomain.o ../../../src/karabo/net/AbstractIOService.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/1103112890/AbstractIOService.o ${OBJECTDIR}/_ext/1103112890/AbstractIOService_nomain.o;\
 	fi
@@ -2036,7 +2036,7 @@ ${OBJECTDIR}/_ext/1103112890/UdpChannel_nomain.o: ${OBJECTDIR}/_ext/1103112890/U
 	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
 	then  \
 	    ${RM} $@.d;\
-	    $(COMPILE.cc) -O2 -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1103112890/UdpChannel_nomain.o ../../../src/karabo/net/UdpChannel.cc;\
+	    $(COMPILE.cc) -O2 -DLINUX -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1103112890/UdpChannel_nomain.o ../../../src/karabo/net/UdpChannel.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/1103112890/UdpChannel.o ${OBJECTDIR}/_ext/1103112890/UdpChannel_nomain.o;\
 	fi
@@ -2062,7 +2062,7 @@ ${OBJECTDIR}/_ext/1103112890/JmsChannel_nomain.o: ${OBJECTDIR}/_ext/1103112890/J
 	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
 	then  \
 	    ${RM} $@.d;\
-	    $(COMPILE.cc) -O2 -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1103112890/JmsChannel_nomain.o ../../../src/karabo/net/JmsChannel.cc;\
+	    $(COMPILE.cc) -O2 -DLINUX -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1103112890/JmsChannel_nomain.o ../../../src/karabo/net/JmsChannel.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/1103112890/JmsChannel.o ${OBJECTDIR}/_ext/1103112890/JmsChannel_nomain.o;\
 	fi
@@ -2088,7 +2088,7 @@ ${OBJECTDIR}/_ext/1103112890/JmsBrokerConnection_nomain.o: ${OBJECTDIR}/_ext/110
 	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
 	then  \
 	    ${RM} $@.d;\
-	    $(COMPILE.cc) -O2 -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1103112890/JmsBrokerConnection_nomain.o ../../../src/karabo/net/JmsBrokerConnection.cc;\
+	    $(COMPILE.cc) -O2 -DLINUX -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1103112890/JmsBrokerConnection_nomain.o ../../../src/karabo/net/JmsBrokerConnection.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/1103112890/JmsBrokerConnection.o ${OBJECTDIR}/_ext/1103112890/JmsBrokerConnection_nomain.o;\
 	fi
@@ -2192,7 +2192,7 @@ ${OBJECTDIR}/_ext/1103112890/JmsIOService_nomain.o: ${OBJECTDIR}/_ext/1103112890
 	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
 	then  \
 	    ${RM} $@.d;\
-	    $(COMPILE.cc) -O2 -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1103112890/JmsIOService_nomain.o ../../../src/karabo/net/JmsIOService.cc;\
+	    $(COMPILE.cc) -O2 -DLINUX -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1103112890/JmsIOService_nomain.o ../../../src/karabo/net/JmsIOService.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/1103112890/JmsIOService.o ${OBJECTDIR}/_ext/1103112890/JmsIOService_nomain.o;\
 	fi
@@ -2309,7 +2309,7 @@ ${OBJECTDIR}/_ext/1103112890/SnmpConnection_nomain.o: ${OBJECTDIR}/_ext/11031128
 	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
 	then  \
 	    ${RM} $@.d;\
-	    $(COMPILE.cc) -O2 -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1103112890/SnmpConnection_nomain.o ../../../src/karabo/net/SnmpConnection.cc;\
+	    $(COMPILE.cc) -O2 -DLINUX -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1103112890/SnmpConnection_nomain.o ../../../src/karabo/net/SnmpConnection.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/1103112890/SnmpConnection.o ${OBJECTDIR}/_ext/1103112890/SnmpConnection_nomain.o;\
 	fi
@@ -2423,8 +2423,8 @@ ${OBJECTDIR}/_ext/2117156511/PyUtilSchemaSimple_nomain.o: ${OBJECTDIR}/_ext/2117
 	@if [ "${TEST}" = "" ]; \
 	then  \
 	    ${TESTDIR}/TestFiles/f2 || true; \
-	    ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libkarabo.${CND_DLIB_EXT} || true; \
-	    ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libkarabo.${CND_DLIB_EXT} || true; \
+	    ${TESTDIR}/TestFiles/f4 || true; \
+	    ${TESTDIR}/TestFiles/f3 || true; \
 	    ${TESTDIR}/TestFiles/f1 || true; \
 	else  \
 	    ./${TEST} || true; \

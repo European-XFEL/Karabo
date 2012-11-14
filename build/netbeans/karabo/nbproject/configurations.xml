@@ -493,30 +493,13 @@
         </linkerTool>
       </folder>
       <folder path="TestFiles/f3">
-        <cTool>
-          <incDir>
-            <pElem>.</pElem>
-          </incDir>
-        </cTool>
-        <ccTool>
-          <incDir>
-            <pElem>.</pElem>
-          </incDir>
-        </ccTool>
         <linkerTool>
           <output>${TESTDIR}/TestFiles/f3</output>
-          <linkerLibItems>
-            <linkerLibStdlibItem>CppUnit</linkerLibStdlibItem>
-            <linkerLibStdlibItem>CppUnit</linkerLibStdlibItem>
-          </linkerLibItems>
         </linkerTool>
       </folder>
       <folder path="TestFiles/f4">
         <linkerTool>
           <output>${TESTDIR}/TestFiles/f4</output>
-          <linkerLibItems>
-            <linkerLibStdlibItem>CppUnit</linkerLibStdlibItem>
-          </linkerLibItems>
         </linkerTool>
       </folder>
       <folder path="f2/f3">
@@ -527,13 +510,6 @@
         </ccTool>
       </folder>
       <folder path="f4">
-        <ccTool>
-          <preprocessorList>
-            <Elem>LINUX</Elem>
-          </preprocessorList>
-        </ccTool>
-      </folder>
-      <folder path="f4/f1">
         <ccTool>
           <preprocessorList>
             <Elem>LINUX</Elem>
@@ -609,6 +585,11 @@
         </packFileList>
       </packaging>
       <folder path="TestFiles">
+        <ccTool>
+          <preprocessorList>
+            <Elem>TESTPATH="${CND_BASEDIR}/../../../src/karabo/tests/"</Elem>
+          </preprocessorList>
+        </ccTool>
         <linkerTool>
           <linkerDynSerch>
             <pElem>${KARABO}/lib</pElem>
@@ -626,11 +607,28 @@
           <output>${TESTDIR}/TestFiles/f2</output>
         </linkerTool>
       </folder>
+      <folder path="TestFiles/f3">
+        <linkerTool>
+          <output>${TESTDIR}/TestFiles/f3</output>
+        </linkerTool>
+      </folder>
+      <folder path="TestFiles/f4">
+        <linkerTool>
+          <output>${TESTDIR}/TestFiles/f4</output>
+        </linkerTool>
+      </folder>
       <folder path="f2/f3">
         <ccTool>
           <incDir>
             <pElem>${KARABO}/extern/include/hdf5</pElem>
           </incDir>
+        </ccTool>
+      </folder>
+      <folder path="f4">
+        <ccTool>
+          <preprocessorList>
+            <Elem>LINUX</Elem>
+          </preprocessorList>
         </ccTool>
       </folder>
     </conf>

@@ -789,11 +789,11 @@ ${TESTDIR}/TestFiles/f2: ${TESTDIR}/_ext/861493463/ReaderWriter_Test.o ${TESTDIR
 
 ${TESTDIR}/TestFiles/f4: ${TESTDIR}/_ext/889921451/TcpNetworking_Test.o ${TESTDIR}/_ext/889921451/nettcpTestRunner.o ${OBJECTFILES:%.o=%_nomain.o}
 	${MKDIR} -p ${TESTDIR}/TestFiles
-	${LINK.cc}   -o ${TESTDIR}/TestFiles/f4 $^ ${LDLIBSOPTIONS} -Wl,-rpath,${KARABO}/lib -Wl,-rpath,${KARABO}/extern/lib -lcppunit 
+	${LINK.cc}   -o ${TESTDIR}/TestFiles/f4 $^ ${LDLIBSOPTIONS} -Wl,-rpath,${KARABO}/lib -Wl,-rpath,${KARABO}/extern/lib 
 
 ${TESTDIR}/TestFiles/f3: ${TESTDIR}/_ext/889920459/UdpNetworking_Test.o ${TESTDIR}/_ext/889920459/netudpTestRunner.o ${OBJECTFILES:%.o=%_nomain.o}
 	${MKDIR} -p ${TESTDIR}/TestFiles
-	${LINK.cc}   -o ${TESTDIR}/TestFiles/f3 $^ ${LDLIBSOPTIONS} -Wl,-rpath,${KARABO}/lib -Wl,-rpath,${KARABO}/extern/lib -lcppunit -lcppunit 
+	${LINK.cc}   -o ${TESTDIR}/TestFiles/f3 $^ ${LDLIBSOPTIONS} -Wl,-rpath,${KARABO}/lib -Wl,-rpath,${KARABO}/extern/lib 
 
 ${TESTDIR}/TestFiles/f1: ${TESTDIR}/_ext/357227895/BobbyCar.o ${TESTDIR}/_ext/357227895/Circle.o ${TESTDIR}/_ext/1033104525/ClassInfo_Test.o ${TESTDIR}/_ext/1033104525/Factory_Test.o ${TESTDIR}/_ext/1033104525/Hash_Test.o ${TESTDIR}/_ext/357227895/Rectangle.o ${TESTDIR}/_ext/1033104525/Schema_Test.o ${TESTDIR}/_ext/1033104525/utilTestRunner.o ${OBJECTFILES:%.o=%_nomain.o}
 	${MKDIR} -p ${TESTDIR}/TestFiles
@@ -827,13 +827,13 @@ ${TESTDIR}/_ext/889921451/nettcpTestRunner.o: ../../../src/karabo/tests/nettcp/n
 ${TESTDIR}/_ext/889920459/UdpNetworking_Test.o: ../../../src/karabo/tests/netudp/UdpNetworking_Test.cc 
 	${MKDIR} -p ${TESTDIR}/_ext/889920459
 	${RM} $@.d
-	$(COMPILE.cc) -g -DTESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I. -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -MMD -MP -MF $@.d -o ${TESTDIR}/_ext/889920459/UdpNetworking_Test.o ../../../src/karabo/tests/netudp/UdpNetworking_Test.cc
+	$(COMPILE.cc) -g -DTESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -MMD -MP -MF $@.d -o ${TESTDIR}/_ext/889920459/UdpNetworking_Test.o ../../../src/karabo/tests/netudp/UdpNetworking_Test.cc
 
 
 ${TESTDIR}/_ext/889920459/netudpTestRunner.o: ../../../src/karabo/tests/netudp/netudpTestRunner.cc 
 	${MKDIR} -p ${TESTDIR}/_ext/889920459
 	${RM} $@.d
-	$(COMPILE.cc) -g -DTESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I. -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -MMD -MP -MF $@.d -o ${TESTDIR}/_ext/889920459/netudpTestRunner.o ../../../src/karabo/tests/netudp/netudpTestRunner.cc
+	$(COMPILE.cc) -g -DTESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -MMD -MP -MF $@.d -o ${TESTDIR}/_ext/889920459/netudpTestRunner.o ../../../src/karabo/tests/netudp/netudpTestRunner.cc
 
 
 ${TESTDIR}/_ext/357227895/BobbyCar.o: ../../../src/karabo/tests/util/resources/BobbyCar.cc 
