@@ -73,6 +73,7 @@
     <pos datatype="HASH">
       <number dataType="STRING">123.450000</number>
       <y dataType="INT32">250</y>
+      <z dataType="BOOL">true</z>
     </pos>
     <size datatype="HASH">
       <h dataType="INT32">480</h>
