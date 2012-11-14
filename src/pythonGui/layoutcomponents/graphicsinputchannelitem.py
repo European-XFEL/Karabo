@@ -14,28 +14,43 @@ __all__ = ["GraphicsInputChannelItem"]
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 
+from manager import Manager
 
-class GraphicsInputChannelItem(QGraphicsItem):
+
+class GraphicsInputChannelItem(QGraphicsObject):
+    # signals
+    signalValueChanged = pyqtSignal(str, object) # key, value
 
 
-    def __init__(self, parent, connectionType, isEditable=False):
-        super(GraphicsInputChannelItem, self).__init__(parent)
+    def __init__(self, parentItem, connectionType, isEditable=False):
+        super(GraphicsInputChannelItem, self).__init__(parentItem)
 
+        self.__internalKey = parentItem.internalKey() + ".input"
         self.__connectionType = connectionType
+        
+        # Connect customItem signal to Manager, DEVICE_CLASS
+        self.signalValueChanged.connect(Manager().onDeviceClassValueChanged)
+        # Register for value changes of connectedOutputChannels
+        Manager().registerEditableComponent(self.connectedOutputChannelsKey, self)
 
 
-    def dragEnterEvent(self, event):
-        print "GraphicsInputChannelItem.dragEnterEvent"
+### public ###
+    def setConnectedOutputChannel(self, connectedOutputChannel):
+        self.signalValueChanged.emit(self.connectedOutputChannelsKey, [str(connectedOutputChannel)])
 
 
-    def dragLeaveEvent(self, event):
-        print "GraphicsInputChannelItem.dragLeaveEvent"
- 
- 
-    def dropEvent(self, event):
-        print "GraphicsInputChannelItem.dropEvent"
+### private ###
+    def _getConnectedOutputChannelsKey(self):
+        return self.__internalKey + "." + self.__connectionType + ".connectedOutputChannels"
+    connectedOutputChannelsKey = property(fget=_getConnectedOutputChannelsKey)
 
 
+    def _getDataDistributionKey(self):
+        return self.__internalKey + "." + self.__connectionType + ".dataDistribution"
+    dataDistributionKey = property(fget=_getDataDistributionKey)
+
+
+### protected ###
     def boundingRect(self):
         margin = 1
         return QRectF(0, 0, 40+margin, 5+margin)
@@ -46,3 +61,14 @@ class GraphicsInputChannelItem(QGraphicsItem):
         painter.drawLine(QPoint(0, 0), QPoint(40, 0))
         if self.__connectionType == "NetworkInput-Hash":
             painter.drawEllipse(QPoint(0, 0), 5, 5)
+
+
+### slots ###
+    # Triggered by DataNotifier signalUpdateComponent
+    def onValueChanged(self, key, value):
+        # TODO: Draw line between input and output channel
+        if self.connectedOutputChannelsKey == key:
+            print "change outputChannels", value
+        elif self.dataDistributionKey == key:
+            print "change dataDistribution", value
+

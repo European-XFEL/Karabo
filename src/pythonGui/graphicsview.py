@@ -537,6 +537,7 @@ class GraphicsView(QGraphicsView):
                         items.remove(outputItem)
                     self.__scene.removeItem(outputItem)
                 Manager().removeVisibleDeviceInstance(item.internalKey())
+                Manager().unregisterEditableComponent(item.devInstIdKey, item)
             
             self.__scene.removeItem(item)
             del item

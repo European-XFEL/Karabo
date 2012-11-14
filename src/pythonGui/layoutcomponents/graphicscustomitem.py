@@ -104,7 +104,7 @@ class GraphicsCustomItem(NodeBase, QGraphicsObject):
 
 
     def boundingRect(self):
-        margin = 50 # 1, TODO: consider channels as well..
+        margin = 80 # 1, TODO: consider channels as well..
         return self._outlineRect().adjusted(-margin, -margin, +margin, +margin)
 
 
@@ -147,12 +147,6 @@ class GraphicsCustomItem(NodeBase, QGraphicsObject):
 
     # Update channel items
     def _updateChannelItems(self):
-        #for inputChannel in self.__inputChannelItems:
-        #    inputChannel.update()
-        
-        #for outputChannel in self.__outputChannelItems:
-        #    outputChannel.update()
-        
         rect = self._outlineRect()
         width = rect.width()
         height = rect.height()
