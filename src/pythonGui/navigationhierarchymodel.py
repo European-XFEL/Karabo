@@ -278,14 +278,9 @@ class NavigationHierarchyModel(SqlTreeModel):
             status = 'online'
         
         sqlQuery = QSqlQuery()
-        queryText = "SELECT id from tDeviceInstance WHERE name='" + str(instanceId) + "' AND status='online';"
+        queryText = "UPDATE tDeviceInstance SET status='" + status + "' WHERE name='" + str(instanceId) + "';"
+
         sqlQuery.exec_(queryText)
-        
-        while sqlQuery.next():
-            id = sqlQuery.value(0).toString()
-            sqlQueryUpdate = QSqlQuery()
-            queryText = "UPDATE tDeviceInstance SET status='" + status + "' WHERE id=" + str(id) + ";"
-            sqlQueryUpdate.exec_(queryText)
 
         # Update view with model...
         self.updateQueries()

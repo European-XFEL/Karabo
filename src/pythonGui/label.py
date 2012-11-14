@@ -16,7 +16,7 @@ __all__ = ["Label"]
 
 
 from listedit import ListEdit
-import userattributecustomframe
+#import userattributecustomframe
 
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
@@ -101,54 +101,54 @@ class Label(QLabel):
             self.signalEditingFinished.emit(values)
 
 
-    def dragEnterEvent(self, event):
+    #def dragEnterEvent(self, event):
         
-        source = event.source()
-        if source is not None: #and (source is not self):
-            event.setDropAction(Qt.MoveAction)
-            event.accept()
+    #    source = event.source()
+    #    if source is not None: #and (source is not self):
+    #        event.setDropAction(Qt.MoveAction)
+    #        event.accept()
         
-        QWidget.dragEnterEvent(self, event)
+    #    QWidget.dragEnterEvent(self, event)
 
 
-    def dragMoveEvent(self, event):
+    #def dragMoveEvent(self, event):
 
-        event.setDropAction(Qt.MoveAction)
-        event.accept()
+    #    event.setDropAction(Qt.MoveAction)
+    #    event.accept()
         
-        QWidget.dragMoveEvent(self, event)
+    #    QWidget.dragMoveEvent(self, event)
 
 
-    def dropEvent(self, event):
-        source = event.source()
-        if source is not None:
-            if type(source) is userattributecustomframe.UserAttributeCustomFrame:
+    #def dropEvent(self, event):
+    #    source = event.source()
+    #    if source is not None:
+    #        if type(source) is userattributecustomframe.UserAttributeCustomFrame:
                 # TODO: source can have more than only 1 key... KeWe
-                return
+    #            return
 
-                keys = str(source.internalKey).split('.', 1)
-                instanceId = keys[0]
-                attributeKey = keys[1]
-                systemKey = instanceId + "/" + attributeKey
+    #            keys = str(source.internalKey).split('.', 1)
+    #            instanceId = keys[0]
+    #            attributeKey = keys[1]
+    #            systemKey = instanceId + "/" + attributeKey
                 
-                values = self.__value
-                if self.__valueType == 'string':
-                    values.append(systemKey)
+    #            values = self.__value
+    #            if self.__valueType == 'string':
+    #                values.append(systemKey)
                 
-                tmpList = str()
-                nbValues = len(values)
-                for i in xrange(nbValues):
-                    value = values[i]
+    #            tmpList = str()
+    #            nbValues = len(values)
+    #            for i in xrange(nbValues):
+    #                value = values[i]
                     # Prevent QString issue
-                    values[i] = str(value)
+    #                values[i] = str(value)
                     # as string
-                    tmpList += str(value)
-                    if i < (nbValues-1):
-                        tmpList += ", "
+    #                tmpList += str(value)
+    #                if i < (nbValues-1):
+    #                    tmpList += ", "
 
-                self.setText(tmpList)
-                self.signalEditingFinished.emit(values)
+    #            self.setText(tmpList)
+    #            self.signalEditingFinished.emit(values)
 
-        event.setDropAction(Qt.MoveAction)
-        event.accept()
+    #    event.setDropAction(Qt.MoveAction)
+    #    event.accept()
 
