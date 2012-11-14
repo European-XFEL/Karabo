@@ -10,25 +10,30 @@
 
 __all__ = ["GraphicsOutputChannelItem"]
 
+from layoutcomponents.graphicsinputchannelitem import GraphicsInputChannelItem
 from layoutcomponents.line import Line
 
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 
 
-class GraphicsOutputChannelItem(QGraphicsItem):
+class GraphicsOutputChannelItem(QGraphicsObject):
+    # signals
+    signalValueChanged = pyqtSignal(str, object) # key, value
 
 
     def __init__(self, parentItem, connectionType, isEditable=False):
         super(GraphicsOutputChannelItem, self).__init__(parentItem)
+        
+        self.__internalKey = parentItem.internalKey() + ".output"
         
         self.__connectionType = connectionType
         self.__connection = None
 
 
     def mousePressEvent(self, event):
-        print "GraphicsOutputChannelItem.mousePressEvent"
-        pos = self.mapToScene(event.pos()) #self.mapToScene(QPoint(40, 0))
+        #print "GraphicsOutputChannelItem.mousePressEvent"
+        pos = self.mapToScene(event.pos())
         self.__connection = Line(False) # TODO
         self.__connection.setWidthF(1.0)
         self.scene().addItem(self.__connection)
@@ -47,21 +52,22 @@ class GraphicsOutputChannelItem(QGraphicsItem):
             newLine = QLineF(QPointF(), QPointF(pos))
             self.__connection.setLine(newLine)
         
-        #drag = QDrag(event.widget())
-        #mime = QMimeData()
-        #drag.setMimeData(mime)
-        
-
-        #drag.exec_()
         #QGraphicsItem.mouseMoveEvent(self, event)
 
 
     def mouseReleaseEvent(self, event):
         #print "GraphicsOutputChannelItem.mouseReleaseEvent"
-        if self.__connection:
-            centerPos = self.__connection.boundingRect().center()
-            self.__connection.setTransformOriginPoint(centerPos)
-            self.__connection.setSelected(True)
+        
+        inputItem = self.scene().itemAt(self.mapToScene(event.pos()), QTransform())
+        if inputItem and isinstance(inputItem, GraphicsInputChannelItem):
+            inputItem.setConnectedOutputChannel(self.parentItem().additionalText() + "@output")
+
+            if self.__connection:
+                centerPos = self.__connection.boundingRect().center()
+                self.__connection.setTransformOriginPoint(centerPos)
+                self.__connection.setSelected(True)
+        else:
+            self.scene().removeItem(self.__connection)
         self.__connection = None
         
         #QGraphicsItem.mouseReleaseEvent(self, event)
