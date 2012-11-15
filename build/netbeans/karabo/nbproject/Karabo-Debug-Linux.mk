@@ -84,6 +84,7 @@ OBJECTFILES= \
 	${OBJECTDIR}/_ext/163016059/Base64.o \
 	${OBJECTDIR}/_ext/1072794519/TextFileWriter.o \
 	${OBJECTDIR}/_ext/1103122747/FileWrapNetworkInput.o \
+	${OBJECTDIR}/_ext/163556830/ComputeFsm.o \
 	${OBJECTDIR}/_ext/1103112890/SnmpChannel.o \
 	${OBJECTDIR}/_ext/1072794519/StringStreamReader.o \
 	${OBJECTDIR}/_ext/1103122747/FileWrapNetworkOutput.o \
@@ -432,6 +433,11 @@ ${OBJECTDIR}/_ext/1103122747/FileWrapNetworkInput.o: ../../../src/karabo/xms/Fil
 	${MKDIR} -p ${OBJECTDIR}/_ext/1103122747
 	${RM} $@.d
 	$(COMPILE.cc) -g -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1103122747/FileWrapNetworkInput.o ../../../src/karabo/xms/FileWrapNetworkInput.cc
+
+${OBJECTDIR}/_ext/163556830/ComputeFsm.o: ../../../src/karabo/core/ComputeFsm.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/163556830
+	${RM} $@.d
+	$(COMPILE.cc) -g -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163556830/ComputeFsm.o ../../../src/karabo/core/ComputeFsm.cc
 
 ${OBJECTDIR}/_ext/1103112890/SnmpChannel.o: ../../../src/karabo/net/SnmpChannel.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1103112890
@@ -1519,6 +1525,19 @@ ${OBJECTDIR}/_ext/1103122747/FileWrapNetworkInput_nomain.o: ${OBJECTDIR}/_ext/11
 	    $(COMPILE.cc) -g -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1103122747/FileWrapNetworkInput_nomain.o ../../../src/karabo/xms/FileWrapNetworkInput.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/1103122747/FileWrapNetworkInput.o ${OBJECTDIR}/_ext/1103122747/FileWrapNetworkInput_nomain.o;\
+	fi
+
+${OBJECTDIR}/_ext/163556830/ComputeFsm_nomain.o: ${OBJECTDIR}/_ext/163556830/ComputeFsm.o ../../../src/karabo/core/ComputeFsm.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/163556830
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/163556830/ComputeFsm.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} $@.d;\
+	    $(COMPILE.cc) -g -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163556830/ComputeFsm_nomain.o ../../../src/karabo/core/ComputeFsm.cc;\
+	else  \
+	    ${CP} ${OBJECTDIR}/_ext/163556830/ComputeFsm.o ${OBJECTDIR}/_ext/163556830/ComputeFsm_nomain.o;\
 	fi
 
 ${OBJECTDIR}/_ext/1103112890/SnmpChannel_nomain.o: ${OBJECTDIR}/_ext/1103112890/SnmpChannel.o ../../../src/karabo/net/SnmpChannel.cc 

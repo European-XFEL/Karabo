@@ -809,7 +809,8 @@ namespace karabo {
                         bool channelExists;
                         karabo::util::Hash reply;
                         int sleep = 1;
-                        while (true) {
+                        int trials = 8;
+                        while ((trials--) > 0) {
                             try {
                                 this->request(instanceId, "slotGetOutputChannelInformation", channelId, static_cast<int> (getpid())).timeout(1000).receive(channelExists, reply);
                             } catch (karabo::util::TimeoutException&) {

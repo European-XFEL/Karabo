@@ -33,28 +33,22 @@ namespace karabo {
             virtual ~AbstractInput() {
             }
 
-            /**
-             * Necessary method as part of the factory/configuration system
-             * @param expected [out] Description of expected parameters for this object (Schema)
-             */
-            static void expectedParameters(karabo::util::Schema& expected) {
-                using namespace karabo::util;
-
-                UINT32_ELEMENT(expected).key("minData")
-                        .displayedName("Minimum number of data")
-                        .description("The number of elements to be read before any computation is started (0 = all)")
-                        .assignmentOptional().defaultValue(1)
-                        .commit();
-
-            }
-
-            /**
-             * If this object is constructed using the factory/configuration system this method is called
-             * @param input Validated (@see expectedParameters) and default-filled configuration
-             */
-            void configure(const karabo::util::Hash& input) {
-                input.get("minData", m_nData);
-            }
+//            /**
+//             * Necessary method as part of the factory/configuration system
+//             * @param expected [out] Description of expected parameters for this object (Schema)
+//             */
+//            static void expectedParameters(karabo::util::Schema& expected) {
+//            }
+//
+//            /**
+//             * If this object is constructed using the factory/configuration system this method is called
+//             * @param input Validated (@see expectedParameters) and default-filled configuration
+//             */
+//            void configure(const karabo::util::Hash& input) {
+//               
+//            }
+            
+            virtual void reconfigure(const karabo::util::Hash& input) {}
             
             void setInstanceId(const std::string& instanceId) {
                 m_instanceId = instanceId;
@@ -96,10 +90,6 @@ namespace karabo {
 
         protected:
 
-            unsigned int getMinimumNumberOfData() const {
-                return m_nData;
-            }
-
             template <class InputType>
             void triggerIOEvent() {
                 if(!m_ioEventHandler.empty()) (boost::any_cast<boost::function<void (const boost::shared_ptr<InputType>&) > >(m_ioEventHandler))(boost::static_pointer_cast< InputType >(shared_from_this()));
@@ -107,14 +97,8 @@ namespace karabo {
             
         private:
 
-            unsigned int m_nData;
             std::string m_instanceId;
-
             boost::any m_ioEventHandler;
-
-
-
-
 
         };
     }
