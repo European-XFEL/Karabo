@@ -40,6 +40,8 @@ class GraphicsInputChannelItem(QGraphicsObject):
         self.signalValueChanged.connect(Manager().onDeviceClassValueChanged)
         # Register for value changes of connectedOutputChannels
         Manager().registerEditableComponent(self.connectedOutputChannelsKey, self)
+        # Register for value changes of dataDistribution
+        Manager().registerEditableComponent(self.dataDistributionKey, self)
 
 
     def _getValue(self):
@@ -115,7 +117,10 @@ class GraphicsInputChannelItem(QGraphicsObject):
                                 self.addChannelConnection(connection)
                             # Add connected output channel to list
                             self.addConnectedOutputChannel(v)
-            
         elif self.dataDistributionKey == key:
-            print "change dataDistribution", value
+            for channelConnection in self.__channelConnections:
+                if value == "copy":
+                    channelConnection.setStyle(Qt.SolidLine)
+                elif value == "shared":
+                    channelConnection.setStyle(Qt.DashLine)
 
