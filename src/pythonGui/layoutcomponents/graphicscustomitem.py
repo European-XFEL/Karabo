@@ -54,7 +54,7 @@ class GraphicsCustomItem(NodeBase, QGraphicsObject):
             # Update channel graphics representation
             self._updateChannelItems()
 
-        self.setFlags(QGraphicsItem.ItemIsMovable | QGraphicsItem.ItemIsSelectable | QGraphicsItem.ItemIsFocusable)
+        self.setFlags(QGraphicsItem.ItemIsMovable | QGraphicsItem.ItemIsSelectable | QGraphicsItem.ItemSendsGeometryChanges)
 
 
     def internalKey(self):
@@ -211,6 +211,16 @@ class GraphicsCustomItem(NodeBase, QGraphicsObject):
             self.value = additionalText[0]
 
         QGraphicsObject.mouseDoubleClickEvent(self, event)
+
+
+    def itemChange(self, change, value):
+        if change == QGraphicsItem.ItemPositionHasChanged: # ItemPositionChange
+            for inputChannel in self.__inputChannelItems:
+                inputChannel.trackChannelConnection()
+
+            for outputChannel in self.__outputChannelItems:
+                outputChannel.trackChannelConnection()
+        return QGraphicsItem.itemChange(self, change, value)
 
 
 ### slots ###

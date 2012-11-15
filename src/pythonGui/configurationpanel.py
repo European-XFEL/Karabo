@@ -418,7 +418,6 @@ class ConfigurationPanel(QWidget):
 
 
     def _updateButtonsVisibility(self, visible):
-        print "ConfigurationPanel._updateButtonsVisibility", visible
         self.__pbInitDevice.setVisible(visible)
         
         self.__pbKillInstance.setVisible(not visible)

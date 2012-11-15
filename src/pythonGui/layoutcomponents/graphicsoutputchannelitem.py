@@ -10,7 +10,8 @@
 
 __all__ = ["GraphicsOutputChannelItem"]
 
-from layoutcomponents.graphicsinputchannelitem import GraphicsInputChannelItem
+import layoutcomponents.graphicsinputchannelitem
+from channelconnection import ChannelConnection
 
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
@@ -28,8 +29,41 @@ class GraphicsOutputChannelItem(QGraphicsObject):
         
         self.__connectionType = connectionType
         self.__connection = None
+        
+        # List of connection line items
+        self.__channelConnections = set()
 
 
+### public ###
+    def _getOutputChannelConnection(self):
+        return self.parentItem().value + "@output"
+    outputChannelConnection = property(fget=_getOutputChannelConnection)
+
+
+    def _getPredefinedDevInstId(self):
+        return str(self.parentItem().value)
+    predefinedDevInstId = property(fget=_getPredefinedDevInstId)
+
+
+    def _outputPos(self):
+        return QPointF(40.0, 0.0)
+    outputPos = property(fget=_outputPos)
+
+
+    def addChannelConnection(self, channelConnection):
+        self.__channelConnections.add(channelConnection)
+
+
+    def removeChannelConnection(self, channelConnection):
+        self.__channelConnections.remove(channelConnection)
+
+
+    def trackChannelConnection(self):
+        for channelConnection in self.__channelConnections:
+            channelConnection.trackItems()
+
+
+### protected ###
     def mousePressEvent(self, event):
         #print "GraphicsOutputChannelItem.mousePressEvent"
         pos = self.mapToScene(event.pos())
@@ -57,15 +91,11 @@ class GraphicsOutputChannelItem(QGraphicsObject):
         #print "GraphicsOutputChannelItem.mouseReleaseEvent"
         
         inputItem = self.scene().itemAt(self.mapToScene(event.pos()), QTransform())
-        if inputItem and isinstance(inputItem, GraphicsInputChannelItem):
-            inputItem.setConnectedOutputChannel(self.parentItem().value + "@output")
+        if inputItem and (type(inputItem) == layoutcomponents.graphicsinputchannelitem.GraphicsInputChannelItem):
+            inputItem.addConnectedOutputChannel(self.outputChannelConnection)
 
-            if self.__connection:
-                centerPos = self.__connection.boundingRect().center()
-                self.__connection.setTransformOriginPoint(centerPos)
-                self.__connection.setSelected(True)
-        else:
-            self.scene().removeItem(self.__connection)
+        # Remove connection line again (gets drawn in GraphicsInputChannelItem...
+        self.scene().removeItem(self.__connection)
         self.__connection = None
         
         #QGraphicsItem.mouseReleaseEvent(self, event)
@@ -78,7 +108,7 @@ class GraphicsOutputChannelItem(QGraphicsObject):
 
     def paint(self, painter, option, widget=None):
         painter.setBrush(QBrush(Qt.white))
-        painter.drawLine(QPoint(0, 0), QPoint(40, 0))
+        painter.drawLine(QPointF(0, 0), self.outputPos)
         if self.__connectionType == "NetworkOutput-Hash":
-            painter.drawEllipse(QPoint(40, 0), 5, 5)
+            painter.drawEllipse(self.outputPos, 5, 5)
 
