@@ -61,21 +61,10 @@ class GraphicsCustomItem(NodeBase, QGraphicsObject):
         return self.__internalKey
 
 
-    def _getDevInstIdKey(self):
-        return self.__internalKey + ".devInstId"
-    devInstIdKey = property(fget=_getDevInstIdKey)
-
-
-    def text(self):
-        return self.__text
-
-
-    def additionalText(self):
+    def _getValue(self):
         return self.__devInsId
-
-
-    def setAdditionalText(self, additionalText):
-        if self.__devInsId == additionalText:
+    def _setValue(self, value):
+        if self.__devInsId == value:
             return
         
         # Prepare item for change
@@ -83,7 +72,7 @@ class GraphicsCustomItem(NodeBase, QGraphicsObject):
         # Prepare channel item for change
         self._prepareGeometryChangeChannelItems()
         
-        self.__devInsId = additionalText
+        self.__devInsId = value
         self._updateCompositeText()
         
         # Update item geometry
@@ -93,6 +82,16 @@ class GraphicsCustomItem(NodeBase, QGraphicsObject):
         
         # Send changing signal to Manager (connected only for DEVICE_CLASS)
         self.signalValueChanged.emit(self.devInstIdKey, self.__devInsId)
+    value = property(fget=_getValue, fset=_setValue)
+
+
+    def _getDevInstIdKey(self):
+        return self.__internalKey + ".devInstId"
+    devInstIdKey = property(fget=_getDevInstIdKey)
+
+
+    def text(self):
+        return self.__text
 
 
     def inputChannelItems(self):
@@ -209,7 +208,7 @@ class GraphicsCustomItem(NodeBase, QGraphicsObject):
                                               self.__devInsId)
         
         if len(additionalText[0]) > 0:
-            self.setAdditionalText(additionalText[0])
+            self.value = additionalText[0]
 
         QGraphicsObject.mouseDoubleClickEvent(self, event)
 
@@ -218,7 +217,7 @@ class GraphicsCustomItem(NodeBase, QGraphicsObject):
     # Triggered by DataNotifier signalUpdateComponent
     def onValueChanged(self, key, value):
         if self.devInstIdKey == key:
-            self.setAdditionalText(value)
+            self.value = value
 
 
 ####################################################################################

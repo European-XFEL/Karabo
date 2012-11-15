@@ -144,7 +144,7 @@ class CustomXmlWriter(QXmlStreamWriter):
                     
                     self.writeTextElement("internalKey", item.internalKey())
                     self.writeTextElement("text", item.text())
-                    self.writeTextElement("additionalText", item.additionalText())
+                    self.writeTextElement("devInstId", item.value)
                                 
                 self.writeEndElement() # End of GraphicsItem
 

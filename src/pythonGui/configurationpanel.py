@@ -418,6 +418,7 @@ class ConfigurationPanel(QWidget):
 
 
     def _updateButtonsVisibility(self, visible):
+        print "ConfigurationPanel._updateButtonsVisibility", visible
         self.__pbInitDevice.setVisible(visible)
         
         self.__pbKillInstance.setVisible(not visible)
@@ -427,7 +428,7 @@ class ConfigurationPanel(QWidget):
         self.__acKillInstance.setVisible(not visible)
         self.__acApplyAll.setVisible(not visible)
         self.__acResetAll.setVisible(not visible)
-    updateButtons = property(fset=_updateButtonsVisibility)
+    updateButtonsVisibility = property(fset=_updateButtonsVisibility)
 
 
     def _r_getAttributeTreeWidgetItemByKey(self, item, key):
@@ -521,9 +522,9 @@ class ConfigurationPanel(QWidget):
             return
         
         if type is NavigationItemTypes.DEVICE_CLASS:
-            self.updateButtons = True
+            self.updateButtonsVisibility = True
         else:
-            self.updateButtons = False
+            self.updateButtonsVisibility = False
 
 
     def onNavigationItemChanged(self, itemInfo):
@@ -536,11 +537,11 @@ class ConfigurationPanel(QWidget):
             key = itemInfo.get('key')
         
         if type is NavigationItemTypes.DEVICE_CLASS:
-            self.updateButtons = True
-        else:
-            self.updateButtons = False
+            self.updateButtonsVisibility = True
+        elif (type is NavigationItemTypes.DEVICE_SERVER_INSTANCE) or (type is NavigationItemTypes.DEVICE_INSTANCE):
+            self.updateButtonsVisibility = False
         
-        # hide apply button of current AttributeTreeWidget
+        # Hide apply button of current AttributeTreeWidget
         self._getCurrentAttributeEditor().setActionsVisible(False)
         if self.__prevDevInsKey != "":
             Manager().removeVisibleDeviceInstance(self.__prevDevInsKey)
@@ -552,10 +553,8 @@ class ConfigurationPanel(QWidget):
         index = self.__navItemInternalKeyIndexMap.get(QString(key))
         if index is not None:
             self.__swAttributeEditor.blockSignals(True)
-            
             self.__swAttributeEditor.setCurrentIndex(index)
-            
-            # show apply button of current AttributeTreeWidget
+            # Show apply button of current AttributeTreeWidget
             self._getCurrentAttributeEditor().setActionsVisible(True)
             self.__swAttributeEditor.blockSignals(False)
             
@@ -567,6 +566,15 @@ class ConfigurationPanel(QWidget):
             self.__swAttributeEditor.blockSignals(True)
             self.__swAttributeEditor.setCurrentIndex(0)
             self.__swAttributeEditor.blockSignals(False)
+            
+            # Hide buttons and actions
+            self.__pbInitDevice.setVisible(False)
+            self.__pbKillInstance.setVisible(False)
+            self.__pbApplyAll.setVisible(False)
+            self.__pbResetAll.setVisible(False)
+            self.__acKillInstance.setVisible(False)
+            self.__acApplyAll.setVisible(False)
+            self.__acResetAll.setVisible(False)
 
 
     def onUpdateDeviceServerInstance(self, itemInfo):

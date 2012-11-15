@@ -11,7 +11,6 @@
 __all__ = ["GraphicsOutputChannelItem"]
 
 from layoutcomponents.graphicsinputchannelitem import GraphicsInputChannelItem
-from layoutcomponents.line import Line
 
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
@@ -19,7 +18,7 @@ from PyQt4.QtGui import *
 
 class GraphicsOutputChannelItem(QGraphicsObject):
     # signals
-    signalValueChanged = pyqtSignal(str, object) # key, value
+    #signalValueChanged = pyqtSignal(str, object) # key, value
 
 
     def __init__(self, parentItem, connectionType, isEditable=False):
@@ -34,8 +33,7 @@ class GraphicsOutputChannelItem(QGraphicsObject):
     def mousePressEvent(self, event):
         #print "GraphicsOutputChannelItem.mousePressEvent"
         pos = self.mapToScene(event.pos())
-        self.__connection = Line(False) # TODO
-        self.__connection.setWidthF(1.0)
+        self.__connection = QGraphicsLineItem()
         self.scene().addItem(self.__connection)
         self.__connection.setPos(pos.x(), pos.y())
         
@@ -60,7 +58,7 @@ class GraphicsOutputChannelItem(QGraphicsObject):
         
         inputItem = self.scene().itemAt(self.mapToScene(event.pos()), QTransform())
         if inputItem and isinstance(inputItem, GraphicsInputChannelItem):
-            inputItem.setConnectedOutputChannel(self.parentItem().additionalText() + "@output")
+            inputItem.setConnectedOutputChannel(self.parentItem().value + "@output")
 
             if self.__connection:
                 centerPos = self.__connection.boundingRect().center()
