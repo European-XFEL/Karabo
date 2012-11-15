@@ -333,7 +333,7 @@ class CustomXmlReader(QXmlStreamReader):
     def _processGraphicsCustomItem(self):
         internalKey = None
         text = None
-        additionalText = None
+        devInstId = None
         
         while self.atEnd() == False:
             tokenType = self.readNext()
@@ -346,9 +346,9 @@ class CustomXmlReader(QXmlStreamReader):
                 elif tagName == "text":
                     self.readNext()
                     text = self.text().toString()
-                elif tagName == "additionalText":
+                elif tagName == "devInstId":
                     self.readNext()
-                    additionalText = self.text().toString()
+                    devInstId = self.text().toString()
             
             elif tokenType == QXmlStreamReader.EndElement and tagName == "GraphicsItem":
                 break
@@ -371,7 +371,7 @@ class CustomXmlReader(QXmlStreamReader):
         Manager().registerEditableComponent(customItem.devInstIdKey, customItem)
         
         # Important: set devInstId after connecting necessary signals/slots
-        customItem.setAdditionalText(additionalText)
+        customItem.value = devInstId
         
         return customItem
 
