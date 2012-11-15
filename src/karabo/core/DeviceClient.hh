@@ -129,6 +129,10 @@ namespace karabo {
             
             std::vector<std::string> getValueOptions(const std::string& instanceId, const std::string& key, const std::string& keySep = "");
             
+            karabo::util::Hash loadConfigurationFromDB(const std::string& configurationId);
+            
+            karabo::util::Hash loadConfigurationFromFile(const std::string& filename);
+            
             void instantiateNoWait(const std::string& serverInstanceId, const std::string& classId, const karabo::util::Hash& configuration);
 
             std::pair<bool, std::string> instantiateWait(const std::string& serverInstanceId, const std::string& classId, const karabo::util::Hash& configuration = karabo::util::Hash(), int timeout = -1);

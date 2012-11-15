@@ -80,6 +80,13 @@ namespace karabo {
                         .assignmentOptional().defaultValue("copy")
                         .init()
                         .commit();
+                
+                UINT32_ELEMENT(expected).key("minData")
+                        .displayedName("Minimum number input packets")
+                        .description("The number of elements to be read before any computation is started (0 = all)")
+                        .assignmentOptional().defaultValue(1)
+                        .reconfigurable()
+                        .commit();
             }
 
             /**
@@ -88,19 +95,39 @@ namespace karabo {
              */
             void configure(const karabo::util::Hash & input) {
 
-                std::vector<std::string> connectedOutputChannels;
-                input.get("connectedOutputChannels", connectedOutputChannels);
-                for (size_t i = 0; i < connectedOutputChannels.size(); ++i) {
-                    std::vector<std::string> tmp;
-                    boost::split(tmp, connectedOutputChannels[i], boost::is_any_of("@"));
-                    m_connectedOutputChannels.push_back(karabo::util::Hash("instanceId", tmp[0], "channelId", tmp[1]));
+                if (input.has("connectedOutputChannels")) {
+                    std::vector<std::string> connectedOutputChannels;
+                    input.get("connectedOutputChannels", connectedOutputChannels);
+                    for (size_t i = 0; i < connectedOutputChannels.size(); ++i) {
+                        std::vector<std::string> tmp;
+                        boost::split(tmp, connectedOutputChannels[i], boost::is_any_of("@"));
+                        m_connectedOutputChannels.push_back(karabo::util::Hash("instanceId", tmp[0], "channelId", tmp[1]));
+                    }
                 }
 
                 input.get("dataDistribution", m_dataDistribution);
+                input.get("minData", m_minData);
 
                 m_channelId = Memory<std::vector<char> >::registerChannel();
                 m_activeChunk = Memory<std::vector<char> >::registerChunk(m_channelId);
                 m_inactiveChunk = Memory<std::vector<char> >::registerChunk(m_channelId);
+            }
+
+            void reconfigure(const karabo::util::Hash& input) {
+
+                if (input.has("connectedOutputChannels")) {
+                    m_connectedOutputChannels.clear();
+                    std::vector<std::string> connectedOutputChannels;
+                    input.get("connectedOutputChannels", connectedOutputChannels);
+                    for (size_t i = 0; i < connectedOutputChannels.size(); ++i) {
+                        std::vector<std::string> tmp;
+                        boost::split(tmp, connectedOutputChannels[i], boost::is_any_of("@"));
+                        m_connectedOutputChannels.push_back(karabo::util::Hash("instanceId", tmp[0], "channelId", tmp[1]));
+                    }
+                }
+                
+                if (input.has("dataDistribution")) input.get("dataDistribution", m_dataDistribution);
+                if (input.has("minData")) input.get("minData", m_minData);
             }
 
             std::vector<karabo::util::Hash> getConnectedOutputChannels() {
@@ -120,6 +147,10 @@ namespace karabo {
                 return Memory<std::vector<char> >::size(m_channelId, m_activeChunk);
             }
 
+            unsigned int getMinimumNumberOfData() const {
+                return m_minData;
+            }
+            
             void connectNow(const karabo::util::Hash& outputChannelInfo) {
 
 
@@ -216,7 +247,7 @@ namespace karabo {
                 std::swap(m_activeChunk, m_inactiveChunk);
 
                 // Notify all connected output channels for another read
-                //notifyOutputChannelsForPossibleRead();
+                notifyOutputChannelsForPossibleRead();
             }
 
             void notifyOutputChannelsForPossibleRead() {
@@ -234,6 +265,7 @@ namespace karabo {
 
             std::vector<karabo::util::Hash> m_connectedOutputChannels;
             std::string m_dataDistribution;
+            unsigned int m_minData;
 
             unsigned int m_channelId;
 

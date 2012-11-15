@@ -187,7 +187,7 @@ static void _updateCurrentState(Fsm& fsm, bool isGoingToChange = false) { \
 // 'm' - state machine pointer, 'name' - event name, 'f' - slot function, t1,t2,... - argument types
 #define KARABO_FSM_EVENT0(m,name,f) \
     struct name {};\
-    void f() { boost::recursive_mutex::scoped_lock lock(m ## _mutex); _updateCurrentState(*m, true); m->process_event(name()); _updateCurrentState(*m); }
+    void f() { boost::recursive_mutex::scoped_lock lock(m ## _mutex); _updateCurrentState(*m, true); m->process_event(name());_log(*m) << "processEventDone"; _updateCurrentState(*m); }
 
 #define KARABO_FSM_EVENT1(m,name,f,t1) \
     struct name { \
@@ -237,6 +237,9 @@ struct NoTransitionAction { \
 #define KARABO_FSM_NO_TRANSITION_V_ACTION(action) \
 _KARABO_FSM_NO_TRANSITION_ACTION_IMPL(action);\
 virtual void action(const std::string& typeId, int state);
+#define KARABO_FSM_NO_TRANSITION_VE_ACTION(action) \
+_KARABO_FSM_NO_TRANSITION_ACTION_IMPL(action);\
+virtual void action(const std::string& typeId, int state) {}
 #define KARABO_FSM_NO_TRANSITION_PV_ACTION(action) \
 _KARABO_FSM_NO_TRANSITION_ACTION_IMPL(action) \
 virtual void action(const std::string& typeId, int state) = 0;
@@ -258,6 +261,9 @@ struct name { \
 #define KARABO_FSM_V_ACTION0(name, func) \
 _KARABO_FSM_ACTION_IMPL0(name, func) \
 virtual void func();
+#define KARABO_FSM_VE_ACTION0(name, func) \
+_KARABO_FSM_ACTION_IMPL0(name, func) \
+virtual void func() {}
 #define KARABO_FSM_PV_ACTION0(name, func) \
 _KARABO_FSM_ACTION_IMPL0(name, func) \
 virtual void func() = 0;
@@ -279,10 +285,13 @@ struct name { \
 #define KARABO_FSM_V_ACTION1(name, func, t1) \
 _KARABO_FSM_ACTION_IMPL1(name, func, t1) \
 virtual void func(const t1&);
+
 #define KARABO_FSM_PV_ACTION1(name, func, t1) \
 _KARABO_FSM_ACTION_IMPL1(name, func, t1) \
 virtual void func(const t1&)=0;
-
+#define KARABO_FSM_VE_ACTION1(name, func, t1) \
+_KARABO_FSM_ACTION_IMPL1(name, func, t1) \
+virtual void func(const t1&) {}
 #define _KARABO_FSM_ACTION_IMPL2(name, func, t1, t2) \
 struct name { \
     template<class Fsm, class Evt, class SourceState, class TargetState> \
@@ -300,6 +309,9 @@ struct name { \
 #define KARABO_FSM_V_ACTION2(name, func, t1, t2) \
 _KARABO_FSM_ACTION_IMPL2(name, func, t1, t2) \
 virtual void func(const t1&, const t2&);
+#define KARABO_FSM_VE_ACTION2(name, func, t1, t2) \
+_KARABO_FSM_ACTION_IMPL2(name, func, t1, t2) \
+virtual void func(const t1&, const t2&) {}
 #define KARABO_FSM_PV_ACTION2(name, func, t1, t2) \
 _KARABO_FSM_ACTION_IMPL2(name, func, t1, t2) \
 virtual void func(const t1&, const t2&) = 0;
@@ -321,6 +333,9 @@ struct name { \
 #define KARABO_FSM_V_ACTION3(name, func, t1, t2, t3) \
 _KARABO_FSM_ACTION_IMPL3(name, func, t1, t2, t3) \
 virtual void func(const t1&,const t2&,const t3&);
+#define KARABO_FSM_VE_ACTION3(name, func, t1, t2, t3) \
+_KARABO_FSM_ACTION_IMPL3(name, func, t1, t2, t3) \
+virtual void func(const t1&,const t2&,const t3&) {}
 #define KARABO_FSM_PV_ACTION3(name, func, t1, t2, t3) \
 _KARABO_FSM_ACTION_IMPL3(name, func, t1, t2, t3) \
 virtual void func(const t1&,const t2&,const t3&) = 0;
@@ -342,6 +357,9 @@ struct name { \
 #define KARABO_FSM_V_ACTION4(name, func, t1, t2, t3, t4) \
 _KARABO_FSM_ACTION_IMPL4(name, func, t1, t2, t3, t4) \
 virtual void func(const t1&,const t2&,const t3&,const t4&);
+#define KARABO_FSM_VE_ACTION4(name, func, t1, t2, t3, t4) \
+_KARABO_FSM_ACTION_IMPL4(name, func, t1, t2, t3, t4) \
+virtual void func(const t1&,const t2&,const t3&,const t4&) {}
 #define KARABO_FSM_PV_ACTION4(name, func, t1, t2, t3, t4) \
 _KARABO_FSM_ACTION_IMPL4(name, func, t1, t2, t3, t4) \
 virtual void func(const t1&,const t2&,const t3&,const t4&) = 0;
@@ -368,6 +386,9 @@ struct name { \
 #define KARABO_FSM_V_GUARD0(name, func) \
 _KARABO_FSM_GUARD_IMPL0(name, func) \
 virtual bool func();
+#define KARABO_FSM_VE_GUARD0(name, func) \
+_KARABO_FSM_GUARD_IMPL0(name, func) \
+virtual bool func() {}
 #define KARABO_FSM_PV_GUARD0(name, func) \
 _KARABO_FSM_GUARD_IMPL0(name, func) \
 virtual bool func() = 0;
@@ -390,6 +411,9 @@ struct name { \
 #define KARABO_FSM_V_GUARD1(name, func, t1) \
 _KARABO_FSM_GUARD_IMPL1(name, func, t1) \
 virtual bool func(const t1&);
+#define KARABO_FSM_VE_GUARD1(name, func, t1) \
+_KARABO_FSM_GUARD_IMPL1(name, func, t1) \
+virtual bool func(const t1&) {}
 #define KARABO_FSM_PV_GUARD1(name, func, t1) \
 _KARABO_FSM_GUARD_IMPL1(name, func, t1) \
 virtual bool func(const t1&) = 0;
@@ -412,6 +436,9 @@ struct name { \
 #define KARABO_FSM_V_GUARD2(name, func, t1, t2) \
 _KARABO_FSM_GUARD_IMPL2(name, func, t1, t2) \
 virtual bool func(const t1&, const t2&);
+#define KARABO_FSM_VE_GUARD2(name, func, t1, t2) \
+_KARABO_FSM_GUARD_IMPL2(name, func, t1, t2) \
+virtual bool func(const t1&, const t2&) {}
 #define KARABO_FSM_PV_GUARD2(name, func, t1, t2) \
 _KARABO_FSM_GUARD_IMPL2(name, func, t1, t2) \
 virtual bool func(const t1&, const t2&) = 0;
@@ -434,6 +461,9 @@ struct name { \
 #define KARABO_FSM_V_GUARD3(name, func, t1, t2, t3) \
 _KARABO_FSM_GUARD_IMPL3(name, func, t1, t2, t3) \
 virtual bool func(const t1&, const t2&, const t3&);
+#define KARABO_FSM_VE_GUARD3(name, func, t1, t2, t3) \
+_KARABO_FSM_GUARD_IMPL3(name, func, t1, t2, t3) \
+virtual bool func(const t1&, const t2&, const t3&) {}
 #define KARABO_FSM_PV_GUARD3(name, func, t1, t2, t3) \
 _KARABO_FSM_GUARD_IMPL3(name, func, t1, t2, t3) \
 virtual bool func(const t1&, const t2&, const t3&) = 0;
@@ -456,6 +486,9 @@ struct name { \
 #define KARABO_FSM_V_GUARD4(name, func, a1, a2, a3, a4) \
 _KARABO_FSM_GUARD_IMPL4(name, func, t1, t2, t3, t4) \
 virtual bool func(const t1&, const t2&, const t3&);
+#define KARABO_FSM_VE_GUARD4(name, func, a1, a2, a3, a4) \
+_KARABO_FSM_GUARD_IMPL4(name, func, t1, t2, t3, t4) \
+virtual bool func(const t1&, const t2&, const t3&) {}
 #define KARABO_FSM_PV_GUARD4(name, func, a1, a2, a3, a4) \
 _KARABO_FSM_GUARD_IMPL4(name, func, t1, t2, t3, t4) \
 virtual bool func(const t1&, const t2&, const t3&);
@@ -486,6 +519,7 @@ struct name : public boost::msm::front::state<karabo::core::FsmBaseState> { \
         try { \
              this->setFsmName(f.getFsmName()); \
              this->setContained(f.is_contained()); \
+             _updateCurrentState(f); \
             _log<Fsm>(f) << #name << ": entry"; \
             f.getContext()->entryFunc(); \
         } catch(karabo::util::Exception const& e) { \
@@ -498,6 +532,9 @@ struct name : public boost::msm::front::state<karabo::core::FsmBaseState> { \
 #define KARABO_FSM_STATE_V_E(name, entryFunc) \
 _KARABO_FSM_STATE_IMPL_E(name, entryFunc) \
 virtual void entryFunc();
+#define KARABO_FSM_STATE_VE_E(name, entryFunc) \
+_KARABO_FSM_STATE_IMPL_E(name, entryFunc) \
+virtual void entryFunc() {}
 #define KARABO_FSM_STATE_PV_E(name, entryFunc) \
 _KARABO_FSM_STATE_IMPL_E(name, entryFunc) \
 virtual void entryFunc() = 0;
@@ -522,6 +559,9 @@ struct name : public boost::msm::front::state<karabo::core::FsmBaseState> { \
 #define KARABO_FSM_STATE_V_E1(name, entryFunc, event, t1) \
 _KARABO_FSM_STATE_IMPL_E1(name, entryFunc, event, t1) \
 virtual void entryFunc(const t1&);
+#define KARABO_FSM_STATE_VE_E1(name, entryFunc, event, t1) \
+_KARABO_FSM_STATE_IMPL_E1(name, entryFunc, event, t1) \
+virtual void entryFunc(const t1&) {}
 #define KARABO_FSM_STATE_PV_E1(name, entryFunc, event, t1) \
 _KARABO_FSM_STATE_IMPL_E1(name, entryFunc, event, t1) \
 virtual void entryFunc(const t1&) = 0;
@@ -544,6 +584,9 @@ struct name : public boost::msm::front::state<karabo::core::FsmBaseState> { \
 #define KARABO_FSM_STATE_V_E2(name, entryFunc, t1, t2) \
 _KARABO_FSM_STATE_IMPL_E2(name, entryFunc, t1, t2) \
 virtual void entryFunc(const t1&, const t2&);
+#define KARABO_FSM_STATE_VE_E2(name, entryFunc, t1, t2) \
+_KARABO_FSM_STATE_IMPL_E2(name, entryFunc, t1, t2) \
+virtual void entryFunc(const t1&, const t2&) {}
 #define KARABO_FSM_STATE_PV_E2(name, entryFunc, t1, t2) \
 _KARABO_FSM_STATE_IMPL_E2(name, entryFunc, t1, t2) \
 virtual void entryFunc(const t1&, const t2&) = 0;
@@ -567,6 +610,9 @@ struct name : public boost::msm::front::state<karabo::core::FsmBaseState> { \
 #define KARABO_FSM_STATE_V_E3(name, entryFunc, t1, t2, t3) \
 _KARABO_FSM_STATE_IMPL_E3(name, entryFunc, t1, t2, t3) \
 virtual void entryFunc(const t1&, const t2&, const t3&);
+#define KARABO_FSM_STATE_VE_E3(name, entryFunc, t1, t2, t3) \
+_KARABO_FSM_STATE_IMPL_E3(name, entryFunc, t1, t2, t3) \
+virtual void entryFunc(const t1&, const t2&, const t3&) {}
 #define KARABO_FSM_STATE_PV_E3(name, entryFunc, t1, t2, t3) \
 _KARABO_FSM_STATE_IMPL_E3(name, entryFunc, t1, t2, t3) \
 virtual void entryFunc(const t1&, const t2&, const t3&) = 0;
@@ -590,6 +636,9 @@ struct name : public boost::msm::front::state<karabo::core::FsmBaseState> { \
 #define KARABO_FSM_STATE_V_E4(name, entryFunc, t1, t2, t3, t4) \
 _KARABO_FSM_STATE_IMPL_E4(name, entryFunc, t1, t2, t3, t4) \
 virtual void entryFunc(const t1&, const t2&, const t3&, const t4&);
+#define KARABO_FSM_STATE_VE_E4(name, entryFunc, t1, t2, t3, t4) \
+_KARABO_FSM_STATE_IMPL_E4(name, entryFunc, t1, t2, t3, t4) \
+virtual void entryFunc(const t1&, const t2&, const t3&, const t4&) {}
 #define KARABO_FSM_STATE_PV_E4(name, entryFunc, t1, t2, t3, t4) \
 _KARABO_FSM_STATE_IMPL_E4(name, entryFunc, t1, t2, t3, t4) \
 virtual void entryFunc(const t1&, const t2&, const t3& c3, const t4&) = 0;
@@ -602,6 +651,7 @@ struct name : public boost::msm::front::state<karabo::core::FsmBaseState> { \
     template <class Event, class Fsm> void on_entry(Event const&, Fsm & f) { \
         try { \
              this->setFsmName(f.getFsmName()); \
+             _updateCurrentState(f); \
             _log<Fsm>(f) << #name << ": entry"; \
             f.getContext()->entryFunc(); \
         } catch(karabo::util::Exception const& e) { \
@@ -626,6 +676,10 @@ struct name : public boost::msm::front::state<karabo::core::FsmBaseState> { \
 _KARABO_FSM_STATE_IMPL_EE(name, entryFunc, exitFunc) \
 virtual void entryFunc(); \
 virtual void exitFunc();
+#define KARABO_FSM_STATE_VE_EE(name, entryFunc, exitFunc) \
+_KARABO_FSM_STATE_IMPL_EE(name, entryFunc, exitFunc) \
+virtual void entryFunc() {} \
+virtual void exitFunc() {}
 #define KARABO_FSM_STATE_PV_EE(name, entryFunc, exitFunc) \
 _KARABO_FSM_STATE_IMPL_EE(name, entryFunc, exitFunc) \
 virtual void entryFunc() = 0; \
@@ -665,6 +719,9 @@ struct name : public boost::msm::front::terminate_state<karabo::core::FsmBaseSta
 #define KARABO_FSM_TERMINATE_STATE_V_E(name, entryFunc) \
 _KARABO_FSM_TERMINATE_STATE_IMPL_E(name, entryFunc) \
 virtual void entryFunc();
+#define KARABO_FSM_TERMINATE_STATE_VE_E(name, entryFunc) \
+_KARABO_FSM_TERMINATE_STATE_IMPL_E(name, entryFunc) \
+virtual void entryFunc() {}
 #define KARABO_FSM_TERMINATE_STATE_PV_E(name, entryFunc) \
 _KARABO_FSM_TERMINATE_STATE_IMPL_E(name, entryFunc) \
 virtual void entryFunc() = 0;
@@ -700,6 +757,10 @@ struct name : public boost::msm::front::terminate_state<karabo::core::FsmBaseSta
 _KARABO_FSM_TERMINATE_STATE_IMPL_EE(name, entryFunc, exitFunc) \
 virtual void entryFunc(); \
 virtual void exitFunc();
+#define KARABO_FSM_TERMINATE_STATE_VE_EE(name, entryFunc, exitFunc) \
+_KARABO_FSM_TERMINATE_STATE_IMPL_EE(name, entryFunc, exitFunc) \
+virtual void entryFunc() {} \
+virtual void exitFunc() {}
 #define KARABO_FSM_TERMINATE_STATE_PV_EE(name, entryFunc, exitFunc) \
 _KARABO_FSM_TERMINATE_STATE_IMPL_EE(name, entryFunc, exitFunc) \
 virtual void entryFunc() = 0; \
@@ -740,6 +801,9 @@ struct name : public boost::msm::front::interrupt_state<event, karabo::core::Fsm
 #define KARABO_FSM_INTERRUPT_STATE_V_E(name, event, entryFunc) \
 _KARABO_FSM_INTERRUPT_STATE_IMPL_E(name, event, entryFunc) \
 virtual void entryFunc();
+#define KARABO_FSM_INTERRUPT_STATE_VE_E(name, event, entryFunc) \
+_KARABO_FSM_INTERRUPT_STATE_IMPL_E(name, event, entryFunc) \
+virtual void entryFunc() {}
 #define KARABO_FSM_INTERRUPT_STATE_PV_E(name, event, entryFunc) \
 _KARABO_FSM_INTERRUPT_STATE_IMPL_E(name, event, entryFunc) \
 virtual void entryFunc() = 0;
@@ -775,6 +839,10 @@ struct name : public boost::msm::front::interrupt_state<event, karabo::core::Fsm
 _KARABO_FSM_INTERRUPT_STATE_IMPL_EE(name, event, entryFunc, exitFunc) \
 virtual void entryFunc(); \
 virtual void exitFunc();
+#define KARABO_FSM_INTERRUPT_STATE_VE_EE(name, event, entryFunc, exitFunc) \
+_KARABO_FSM_INTERRUPT_STATE_IMPL_EE(name, event, entryFunc, exitFunc) \
+virtual void entryFunc() {} \
+virtual void exitFunc() {}
 #define KARABO_FSM_INTERRUPT_STATE_PV_EE(name, event, entryFunc, exitFunc) \
 _KARABO_FSM_INTERRUPT_STATE_IMPL_EE(name, event, entryFunc, exitFunc) \
 virtual void entryFunc() = 0; \
@@ -813,6 +881,9 @@ struct name : public boost::msm::front::exit_pseudo_state<event, karabo::core::F
 #define KARABO_FSM_EXIT_PSEUDO_STATE_V_E(name, event, entryFunc) \
 _KARABO_FSM_EXIT_PSEUDO_STATE_IMPL_E(name, event, entryFunc) \
 virtual void entryFunc();
+#define KARABO_FSM_EXIT_PSEUDO_STATE_VE_E(name, event, entryFunc) \
+_KARABO_FSM_EXIT_PSEUDO_STATE_IMPL_E(name, event, entryFunc) \
+virtual void entryFunc() {}
 #define KARABO_FSM_EXIT_PSEUDO_STATE_PV_E(name, event, entryFunc) \
 _KARABO_FSM_EXIT_PSEUDO_STATE_IMPL_E(name, event, entryFunc) \
 virtual void entryFunc() = 0;
@@ -849,6 +920,10 @@ struct name : public boost::msm::front::exit_pseudo_state<event, karabo::core::F
 _KARABO_FSM_EXIT_PSEUDO_STATE_IMPL_EE(name, event, entryFunc, exitFunc) \
 virtual void entryFunc(); \
 virtual void exitFunc();
+#define KARABO_FSM_EXIT_PSEUDO_STATE_VE_EE(name, event, entryFunc, exitFunc) \
+_KARABO_FSM_EXIT_PSEUDO_STATE_IMPL_EE(name, event, entryFunc, exitFunc) \
+virtual void entryFunc() {} \
+virtual void exitFunc() {}
 #define KARABO_FSM_EXIT_PSEUDO_STATE_PV_EE(name, event, entryFunc, exitFunc) \
 _KARABO_FSM_EXIT_PSEUDO_STATE_IMPL_EE(name, event, entryFunc, exitFunc) \
 virtual void entryFunc() = 0; \
@@ -863,6 +938,7 @@ virtual void exitFunc()  = 0;
 #define KARABO_FSM_STATE_MACHINE(name, stt, istate, context) \
         template<class CTX = context> \
         struct name ## _ : boost::msm::front::state_machine_def<name ## _<CTX>, karabo::core::FsmBaseState > { \
+            typedef boost::msm::active_state_switch_after_transition_action active_state_switch_policy; \
             template <class Event, class Fsm> void on_entry(Event const& e, Fsm& f) { \
                 try { \
                 _log<Fsm>(f) << #name << ": entry"; \
@@ -886,6 +962,7 @@ virtual void exitFunc()  = 0;
 #define _KARABO_FSM_STATE_MACHINE_IMPL_E(name, stt, istate, context, entryFunc) \
         template<class CTX = context> \
         struct name ## _ : boost::msm::front::state_machine_def<name ## _<CTX>, karabo::core::FsmBaseState > { \
+            typedef boost::msm::active_state_switch_after_transition_action active_state_switch_policy; \
             template <class Event, class Fsm> void on_entry(Event const& e, Fsm& f) { \
                 try { \
                     _log<Fsm>(f) << #name << ": entry"; \
@@ -909,6 +986,9 @@ virtual void exitFunc()  = 0;
 #define KARABO_FSM_STATE_MACHINE_V_E(name, stt, istate, context, entryFunc) \
 _KARABO_FSM_STATE_MACHINE_IMPL_E(name, stt, istate, context, entryFunc) \
 virtual void entryFunc();
+#define KARABO_FSM_STATE_MACHINE_VE_E(name, stt, istate, context, entryFunc) \
+_KARABO_FSM_STATE_MACHINE_IMPL_E(name, stt, istate, context, entryFunc) \
+virtual void entryFunc() {}
 #define KARABO_FSM_STATE_MACHINE_PV_E(name, stt, istate, context, entryFunc) \
 _KARABO_FSM_STATE_MACHINE_IMPL_E(name, stt, istate, context, entryFunc) \
 virtual void entryFunc() = 0;
@@ -917,6 +997,7 @@ virtual void entryFunc() = 0;
 #define _KARABO_FSM_STATE_MACHINE_IMPL_EE(name, stt, istate, context, entryFunc, exitFunc) \
         template<class CTX = context> \
         struct name ## _ : boost::msm::front::state_machine_def<name ## _<CTX>, karabo::core::FsmBaseState > { \
+            typedef boost::msm::active_state_switch_after_transition_action active_state_switch_policy; \
             template <class Event, class Fsm> void on_entry(Event const& e, Fsm& f) { \
                 try { \
                     _log<Fsm>(f) << #name << ": entry"; \
@@ -951,6 +1032,10 @@ virtual void entryFunc() = 0;
 _KARABO_FSM_STATE_MACHINE_IMPL_EE(name, stt, istate, context, entryFunc, exitFunc) \
 virtual void entryFunc(); \
 virtual void exitFunc();
+#define KARABO_FSM_STATE_MACHINE_VE_EE(name, stt, istate, context, entryFunc, exitFunc) \
+_KARABO_FSM_STATE_MACHINE_IMPL_EE(name, stt, istate, context, entryFunc, exitFunc) \
+virtual void entryFunc() {} \
+virtual void exitFunc() {}
 #define KARABO_FSM_STATE_MACHINE_PV_EE(name, stt, istate, context, entryFunc, exitFunc) \
 _KARABO_FSM_STATE_MACHINE_IMPL_EE(name, stt, istate, context, entryFunc, exitFunc) \
 virtual void entryFunc() = 0; \

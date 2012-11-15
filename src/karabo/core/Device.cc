@@ -48,7 +48,6 @@ namespace karabo {
                     .description("Device Instance Id uniquely identifies a device instance in the distributed system")
                     .assignmentOptional().noDefaultValue()
                     .init()
-                    .advanced()
                     .commit();
 
             STRING_ELEMENT(expected).key("devClaId")
@@ -104,6 +103,8 @@ namespace karabo {
                 // Initialize the SignalSlotable instance
                 init(connection, devInstId);
 
+
+
                 SIGNAL4("signalErrorFound", string, string, string, string); // timeStamp, shortMsg, longMsg, instanceId
                 SIGNAL2("signalBadReconfiguration", string, string); // shortMsg, instanceId 
                 SIGNAL2("signalNoTransition", string, string);
@@ -111,7 +112,8 @@ namespace karabo {
                 SIGNAL4("signalWarning", string, string, string, string); // timeStamp, warnMsg, instanceId, priority
                 SIGNAL4("signalAlarm", string, string, string, string); // timeStamp, alarmMsg, instanceId, priority
                 SIGNAL3("signalSchemaUpdated", string, string, string); // schema, instanceId, classId
-                SIGNAL2("signalDeviceInstanceGone", string, string) /* DeviceServerInstanceId, deviceInstanceId */
+                SIGNAL2("signalDeviceInstanceGone", string, string); // DeviceServerInstanceId, deviceInstanceId
+                SIGNAL3("signalProgressUpdated", int, string, string); // Progress value [0,100], label, deviceInstanceIdre
 
                 SLOT1(slotReconfigure, karabo::util::Hash)
                 SLOT0(slotRefresh)
@@ -127,6 +129,7 @@ namespace karabo {
                 connectN("", "signalAlarm", "*", "slotAlarm");
                 connectN("", "signalSchemaUpdated", "*", "slotSchemaUpdated");
                 connectN("", "signalDeviceInstanceGone", "*", "slotDeviceInstanceGone");
+                connectN("", "progressUpdate", "*", "slotProgressUpdated");
 
                 KARABO_LOG_INFO << "Starting up " << m_classId << " on networkId " << getInstanceId();
 
@@ -143,6 +146,14 @@ namespace karabo {
             } catch (const Exception& e) {
                 RETHROW;
             }
+        }
+
+        DeviceClient& Device::remote() {
+            if (!m_deviceClient) {
+                // Initialize an embedded device client (for composition)
+                m_deviceClient = boost::shared_ptr<DeviceClient > (new DeviceClient(shared_from_this()));
+            }
+            return *(m_deviceClient);
         }
 
         void Device::slotGetSchema(const bool& onlyCurrentState) {
@@ -185,16 +196,14 @@ namespace karabo {
             return m_monitoredParameters.flatten();
         }
 
-        void Device::reconfigure(const std::string& instanceId, const Hash& configuration) {
-            call(instanceId, "slotReconfigure", configuration);
-        }
-
         void Device::errorFoundAction(const std::string& shortMessage, const std::string& detailedMessage) {
             triggerErrorFound(shortMessage, detailedMessage);
         }
 
         void Device::updateCurrentState(const std::string& state) {
-            set("state", state);
+            if (get<string>("state") != state) {
+                set("state", state);
+            }
             // Reply new state to interested event initiators
             reply(state);
         }
@@ -212,6 +221,7 @@ namespace karabo {
             all.update(m_reconfigurableParameters);
             all.update(m_monitoredParameters);
             emit("signalChanged", all, m_instanceId, m_classId);
+           //cout << "Refresh " << all << std::endl;
             reply(all);
         }
 

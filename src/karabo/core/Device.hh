@@ -19,6 +19,7 @@
 #include "coredll.hh"
 
 #include "FsmMacros.hh"
+#include "DeviceClient.hh"
 
 /**
  * The main European XFEL namespace
@@ -43,7 +44,7 @@ namespace karabo {
             KARABO_FACTORY_BASE_CLASS
 
             template <class Derived>
-            Device(Derived*) : m_log(0) {
+            Device(Derived*) : m_log(0), m_progressMin(0), m_progressMax(100) {
                 // Prepare expected parameters for runtime validation
                 m_expectedInitialParameters = Device::initialParameters(Derived::classInfo().getClassId());
                 m_expectedReconfigurableParameters = Device::reconfigurableParameters(Derived::classInfo().getClassId());
@@ -56,6 +57,16 @@ namespace karabo {
             static void expectedParameters(karabo::util::Schema& expected);
 
             void configure(const karabo::util::Hash& input);
+            
+            /**
+             * This function allows to communicate to other (remote) devices.
+             * Any device contains also a controller for other devices (DeviceClient) 
+             * which is returned by this function.
+             * 
+             * @return DeviceClient instance
+             */
+            DeviceClient& remote();
+            
 
             /**
              * Updates the state of the device. This function automatically notifies any observers.
@@ -206,7 +217,21 @@ namespace karabo {
                 emit("signalSchemaUpdated", stream.str(), getInstanceId(), m_classId);
                 log() << log4cpp::Priority::INFO << "Schema updated";
             }
-
+            
+            void setProgress(const int value, const std::string& associatedText = "") {
+                int v = m_progressMin + value / (m_progressMax - m_progressMin);
+                emit("signalProgressUpdated", v, associatedText, getInstanceId());
+            }
+            
+            void resetProgress() {
+                emit("signalProgressUpdated", m_progressMin, "");
+            }
+            
+            void setProgressRange(const int minimum, const int maximum) {
+                m_progressMin = minimum;
+                m_progressMax = maximum;
+            }
+            
             /**
              * Converts a device parameter key into its aliased key (must be defined in the expectedParameters function)
              * @param key A valid parameter of the device (must be defined in the expectedParameters function)
@@ -286,13 +311,6 @@ namespace karabo {
             const std::string& getDeviceServerInstanceId() const {
                 return m_devSrvInstId;
             }
-
-            template <class T>
-            void reconfigure(const std::string& instanceId, const std::string& key, const T& value) {
-                reconfigure(instanceId, karabo::util::Hash(key, value));
-            }
-
-            void reconfigure(const std::string& instanceId, const karabo::util::Hash& configuration);
 
             /**
              * This function will typically be called by the DeviceServer (or directly within the startDevice application).
@@ -422,10 +440,12 @@ namespace karabo {
             }
 
         private: // Members
+            
+            boost::shared_ptr<DeviceClient> m_deviceClient;
 
             std::string m_classId;
             std::string m_devSrvInstId;
-
+            
             std::map<std::string, karabo::util::Schema> m_stateDependendSchema;
             boost::mutex m_stateDependendSchemaMutex;
 
@@ -433,6 +453,10 @@ namespace karabo {
             boost::mutex m_objectStateChangeMutex;
 
             log4cpp::Category* m_log;
+            
+            // progressBar related
+            int m_progressMin;
+            int m_progressMax;
         };
     }
 }
