@@ -26,8 +26,6 @@ class LinkBase(QGraphicsLineItem):
     def __init__(self, fromItem, toItem):
         super(LinkBase, self).__init__()
         
-        print "LinkBase.__init__"
-        
         self.__fromItem = fromItem
         self.__toItem = toItem
         
