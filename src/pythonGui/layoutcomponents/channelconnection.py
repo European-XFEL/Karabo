@@ -42,3 +42,9 @@ class ChannelConnection(QGraphicsLineItem):
     def trackItems(self):
         self.setLine(QLineF(self.__outputChannel.mapToScene(self.__outputChannel.outputPos), self.__inputChannel.mapToScene(self.__inputChannel.inputPos)))
 
+
+    def setStyle(self, style):
+        pen = self.pen()
+        pen.setStyle(style)
+        self.setPen(pen)
+
