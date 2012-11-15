@@ -10,6 +10,8 @@
 
 __all__ = ["GraphicsInputChannelItem"]
 
+import layoutcomponents.graphicsoutputchannelitem
+from channelconnection import ChannelConnection
 
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
@@ -28,15 +30,48 @@ class GraphicsInputChannelItem(QGraphicsObject):
         self.__internalKey = parentItem.internalKey() + ".input"
         self.__connectionType = connectionType
         
+        # List of strings with connected output channel entries
+        self.__connectedOutputChannels = []
+        
+        # List of connection line items
+        self.__channelConnections = set()
+        
         # Connect customItem signal to Manager, DEVICE_CLASS
-        #self.signalValueChanged.connect(Manager().onDeviceClassValueChanged)
+        self.signalValueChanged.connect(Manager().onDeviceClassValueChanged)
         # Register for value changes of connectedOutputChannels
-        #Manager().registerEditableComponent(self.connectedOutputChannelsKey, self)
+        Manager().registerEditableComponent(self.connectedOutputChannelsKey, self)
+
+
+    def _getValue(self):
+        return self.__connectedOutputChannels
+    value = property(fget=_getValue)
+
+
+    def _inputPos(self):
+        return QPointF(0.0, 0.0)
+    inputPos = property(fget=_inputPos)
 
 
 ### public ###
-    def setConnectedOutputChannel(self, connectedOutputChannel):
-        self.signalValueChanged.emit(self.connectedOutputChannelsKey, [str(connectedOutputChannel)])
+    def addConnectedOutputChannel(self, connectedOutputChannel):
+        if connectedOutputChannel in self.__connectedOutputChannels:
+            return
+        
+        self.__connectedOutputChannels.append(str(connectedOutputChannel))
+        self.signalValueChanged.emit(self.connectedOutputChannelsKey, self.__connectedOutputChannels)
+
+
+    def addChannelConnection(self, channelConnection):
+        self.__channelConnections.add(channelConnection)
+
+
+    def removeChannelConnection(self, channelConnection):
+        self.__channelConnections.remove(channelConnection)
+
+
+    def trackChannelConnection(self):
+        for channelConnection in self.__channelConnections:
+            channelConnection.trackItems()
 
 
 ### private ###
@@ -58,17 +93,29 @@ class GraphicsInputChannelItem(QGraphicsObject):
 
     def paint(self, painter, option, widget=None):
         painter.setBrush(QBrush(Qt.white))
-        painter.drawLine(QPoint(0, 0), QPoint(40, 0))
+        painter.drawLine(self.inputPos, QPointF(40, 0))
         if self.__connectionType == "NetworkInput-Hash":
-            painter.drawEllipse(QPoint(0, 0), 5, 5)
+            painter.drawEllipse(self.inputPos, 5, 5)
 
 
 ### slots ###
     # Triggered by DataNotifier signalUpdateComponent
     def onValueChanged(self, key, value):
-        # TODO: Draw line between input and output channel
         if self.connectedOutputChannelsKey == key:
-            print "change outputChannels", value
+            if self.scene():
+                items = self.scene().items()
+                for item in items:
+                    if type(item) == layoutcomponents.graphicsoutputchannelitem.GraphicsOutputChannelItem:
+                        for v in value:
+                            vSplit = v.split('@', 1)
+                            if item.predefinedDevInstId == vSplit[0]:
+                                #connection = QGraphicsLineItem(QLineF(item.mapToScene(item.outputPos), self.mapToScene(self.inputPos)))
+                                connection = ChannelConnection(item, self)
+                                self.scene().addItem(connection)
+                                self.addChannelConnection(connection)
+                            # Add connected output channel to list
+                            self.addConnectedOutputChannel(v)
+            
         elif self.dataDistributionKey == key:
             print "change dataDistribution", value
 
