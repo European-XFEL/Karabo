@@ -29,9 +29,9 @@ class GraphicsInputChannelItem(QGraphicsObject):
         self.__connectionType = connectionType
         
         # Connect customItem signal to Manager, DEVICE_CLASS
-        self.signalValueChanged.connect(Manager().onDeviceClassValueChanged)
+        #self.signalValueChanged.connect(Manager().onDeviceClassValueChanged)
         # Register for value changes of connectedOutputChannels
-        Manager().registerEditableComponent(self.connectedOutputChannelsKey, self)
+        #Manager().registerEditableComponent(self.connectedOutputChannelsKey, self)
 
 
 ### public ###
