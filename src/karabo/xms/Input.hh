@@ -31,7 +31,7 @@ namespace karabo {
              */
             static void expectedParameters(karabo::util::Schema& expected) {
                 
-                AbstractInput::expectedParameters(expected);
+                //AbstractInput::expectedParameters(expected);
             }
 
             /**

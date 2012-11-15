@@ -93,7 +93,7 @@ namespace karabo {
                         .displayedName("No Input (Shared)")
                         .description("What to do if currently no share-input channel is available for writing to")
                         .options("drop,queue,throw,wait")
-                        .assignmentOptional().defaultValue("queue")
+                        .assignmentOptional().defaultValue("wait")
                         .init()
                         .commit();
 
@@ -101,7 +101,7 @@ namespace karabo {
                         .displayedName("No Input (Copy)")
                         .description("What to do if one (or more) copy-input channel(s) are missing")
                         .options("drop,throw,wait")
-                        .assignmentOptional().defaultValue("drop")
+                        .assignmentOptional().defaultValue("wait")
                         .init()
                         .commit();
             }

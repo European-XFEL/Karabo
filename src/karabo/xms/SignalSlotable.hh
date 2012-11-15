@@ -43,7 +43,7 @@ namespace karabo {
          * For a full documentation of the signal-slot component see the documentation in the software-guide.
          *
          */
-        class SignalSlotable {
+        class SignalSlotable : public boost::enable_shared_from_this<SignalSlotable> {
             friend class Slot;
 
             // Internally used typedefs
@@ -63,15 +63,11 @@ namespace karabo {
             typedef std::pair<std::string, int> AssocEntry;
             typedef std::set<AssocEntry> AssocType;
             typedef AssocType::const_iterator AssocTypeConstIterator;
+                        
+        public:
             
             typedef std::map<std::string, AbstractInput::Pointer> InputChannels;
             typedef std::map<std::string, AbstractOutput::Pointer> OutputChannels;
-            
-            typedef boost::function<void (const AbstractInput::Pointer&) > InputAvailableHandler;
-            typedef boost::function<void (const AbstractOutput::Pointer&)> OutputPossibleHandler;
-            
-
-        public:
 
             KARABO_CLASSINFO(SignalSlotable, "SignalSlotable", "1.0")
 
@@ -560,18 +556,21 @@ namespace karabo {
                 using namespace karabo::util;
                 AbstractInput::Pointer channel = AbstractInput::createChoice(name, input);
                 channel->setInstanceId(m_instanceId);
-                //channel->registerCanReadEventHandler(boost::bind(&karabo::xip::Algorithm::canReadEvent, this, _1));
-                channel->registerIOEventHandler(onInputAvailable);
+                if (!onInputAvailable.empty()) {
+                    channel->registerIOEventHandler(onInputAvailable);
+                }
                 m_inputChannels[name] = channel;
                 return boost::static_pointer_cast<InputType >(channel);
             }
             
             template <class OutputType>
-            boost::shared_ptr<OutputType > createOutputChannel(const std::string& name, const karabo::util::Hash& input, const OutputPossibleHandler& onOutputPossible = OutputPossibleHandler()) {
+            boost::shared_ptr<OutputType > createOutputChannel(const std::string& name, const karabo::util::Hash& input, const boost::function<void (const boost::shared_ptr<OutputType>&) >& onOutputPossible = boost::function<void (const boost::shared_ptr<OutputType>&) >()) {
                 using namespace karabo::util;
                 AbstractOutput::Pointer channel = AbstractOutput::createChoice(name, input);
                 channel->setInstanceId(m_instanceId);
-                channel->registerIOEventHandler(onOutputPossible);
+                 if (!onOutputPossible.empty()) { 
+                     channel->registerIOEventHandler(onOutputPossible);
+                 }
                 m_outputChannels[name] = channel;
                 return boost::static_pointer_cast<OutputType >(channel);
             }

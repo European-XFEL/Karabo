@@ -309,7 +309,7 @@ if (itData != entry.end()) {\
             if (schema.hasValueOptions()) return schema.getValueOptions();
             else return std::vector<std::string > ();
         }
-
+        
         const karabo::util::Schema& DeviceClient::getSchema(const std::string & instanceId, const std::string& key, const std::string& keySep) {
             if (key.empty())
                 return cacheAndGetFullSchema(instanceId);
