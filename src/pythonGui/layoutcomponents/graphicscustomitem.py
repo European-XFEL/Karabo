@@ -123,7 +123,7 @@ class GraphicsCustomItem(NodeBase, QGraphicsObject):
         
         painter.setFont(self.__textFont)
         painter.setPen(pen)
-        #painter.setBrush(self.__backgroundColor)
+        painter.setBrush(QColor(224,240,255)) # light blue
         rect = self._outlineRect()
         painter.drawRoundRect(rect, self._roundness(rect.width()), self._roundness(rect.height()))
         #painter.setPen(self.__textColor)

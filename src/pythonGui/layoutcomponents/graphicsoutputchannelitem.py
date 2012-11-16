@@ -102,7 +102,7 @@ class GraphicsOutputChannelItem(QGraphicsObject):
 
 
     def boundingRect(self):
-        margin = 5
+        margin = 1
         return QRectF(0, 0, 40+margin, 5+margin)
 
 
