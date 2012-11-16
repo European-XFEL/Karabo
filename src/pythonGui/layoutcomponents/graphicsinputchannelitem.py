@@ -29,6 +29,7 @@ class GraphicsInputChannelItem(QGraphicsObject):
 
         self.__internalKey = parentItem.internalKey() + ".input"
         self.__connectionType = connectionType
+        self.__connection = None
         
         # List of strings with connected output channel entries
         self.__connectedOutputChannels = []
@@ -88,6 +89,44 @@ class GraphicsInputChannelItem(QGraphicsObject):
 
 
 ### protected ###
+    def mousePressEvent(self, event):
+        #print "GraphicsOutputChannelItem.mousePressEvent"
+        
+        pos = self.mapToScene(event.pos())
+        self.__connection = QGraphicsLineItem()
+        self.scene().addItem(self.__connection)
+        self.__connection.setPos(pos.x(), pos.y())
+        
+        #QGraphicsItem.mousePressEvent(self, event)
+
+
+    def mouseMoveEvent(self, event):
+        #print "GraphicsOutputChannelItem.mouseMoveEvent"
+        
+        pos = self.mapToScene(event.pos())
+        if self.__connection:
+            linePos = self.__connection.pos()
+            pos = QPointF(pos.x()-linePos.x(), pos.y()-linePos.y())
+            newLine = QLineF(QPointF(), QPointF(pos))
+            self.__connection.setLine(newLine)
+        
+        #QGraphicsItem.mouseMoveEvent(self, event)
+
+
+    def mouseReleaseEvent(self, event):
+        #print "GraphicsOutputChannelItem.mouseReleaseEvent"
+        
+        outputItem = self.scene().itemAt(self.mapToScene(event.pos()), QTransform())
+        if outputItem and (type(outputItem) == layoutcomponents.graphicsoutputchannelitem.GraphicsOutputChannelItem):
+            self.addConnectedOutputChannel(outputItem.outputChannelConnection)
+
+        # Remove connection line again (gets drawn in GraphicsInputChannelItem...
+        self.scene().removeItem(self.__connection)
+        self.__connection = None
+        
+        #QGraphicsItem.mouseReleaseEvent(self, event)
+
+
     def boundingRect(self):
         margin = 1
         return QRectF(0, 0, 40+margin, 5+margin)
