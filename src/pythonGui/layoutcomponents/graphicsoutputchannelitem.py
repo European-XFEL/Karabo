@@ -66,6 +66,7 @@ class GraphicsOutputChannelItem(QGraphicsObject):
 ### protected ###
     def mousePressEvent(self, event):
         #print "GraphicsOutputChannelItem.mousePressEvent"
+        
         pos = self.mapToScene(event.pos())
         self.__connection = QGraphicsLineItem()
         self.scene().addItem(self.__connection)
