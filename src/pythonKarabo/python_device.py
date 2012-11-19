@@ -63,6 +63,7 @@ class PythonDevice(object):
         self._stateDependentSchema = dict()
         
         self.fsm = None
+        self._client = None
         
         self._expectedInitialParameters        = cls.getExpectedInitialParameters()
         self._expectedReconfigurableParameters = cls.getExpectedReconfigurableParameters()
@@ -192,6 +193,11 @@ class PythonDevice(object):
         e = STRING_ELEMENT(expected)
         e.key("state").displayedName("State").description("The current state the device is in")
         e.assignmentOptional().defaultValue("uninitialized").readOnly().commit()
+        
+    def remote(self):
+        if self._client is None:
+            self._client = DeviceClient()  # connectionType="Jms" config=Hash()
+        return self._client
     
     def postprocessing(self):
         ''' Finalizing the building of a device instance '''
