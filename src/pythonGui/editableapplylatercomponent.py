@@ -104,6 +104,7 @@ class EditableApplyLaterComponent(BaseComponent):
         self.__busyTimer = QTimer(self)
         self.__busyTimer.timeout.connect(self.onTimeOut)
 
+        # In case of attributes (Hash-V2) connect another function here
         self.signalValueChanged.connect(Manager().onDeviceInstanceValueChanged)
         self.signalConflictStateChanged.connect(Manager().onConflictStateChanged)
 

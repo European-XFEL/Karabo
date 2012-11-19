@@ -42,6 +42,7 @@ class EditableNoApplyComponent(BaseComponent):
         if unitSymbol is not None and len(unitSymbol) > 0:
             self.__layout.addWidget(QLabel(unitSymbol))
         
+        # In case of attributes (Hash-V2) connect another function here
         self.signalValueChanged.connect(Manager().onDeviceClassValueChanged)
         
         # Use key to register component to manager
