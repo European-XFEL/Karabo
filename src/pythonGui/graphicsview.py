@@ -181,6 +181,9 @@ class GraphicsView(QGraphicsView):
         dirPath = QFileDialog.getExistingDirectory(self, "Select directory to open configuration files", QDir.tempPath(),
                                                    QFileDialog.ShowDirsOnly | QFileDialog.DontResolveSymlinks)
         
+        if dirPath.isEmpty():
+            return
+        
         dir = QDir(dirPath)
         fileInfos = dir.entryInfoList(QDir.NoDotAndDotDot | QDir.Files | QDir.Hidden | QDir.System)
         for fileInfo in fileInfos:
@@ -190,6 +193,9 @@ class GraphicsView(QGraphicsView):
     def openSceneLayoutConfigurationsFromFile(self):
         dirPath = QFileDialog.getExistingDirectory(self, "Select directory to open configuration files", QDir.tempPath(),
                                                    QFileDialog.ShowDirsOnly | QFileDialog.DontResolveSymlinks)
+        
+        if dirPath.isEmpty():
+            return
         
         dir = QDir(dirPath)
         fileInfos = dir.entryInfoList(QDir.NoDotAndDotDot | QDir.Files | QDir.Hidden | QDir.System)
@@ -255,6 +261,9 @@ class GraphicsView(QGraphicsView):
         dirPath = QFileDialog.getExistingDirectory(self, "Select directory to save configuration files", QDir.tempPath(),
                                                    QFileDialog.ShowDirsOnly | QFileDialog.DontResolveSymlinks)
 
+        if dirPath.isEmpty():
+            return
+
         # Check, if directory is empty
         self.checkDirectoryBeforeSave(dirPath)
         
@@ -266,6 +275,9 @@ class GraphicsView(QGraphicsView):
     def saveSceneLayoutConfigurationsToFile(self):
         dirPath = QFileDialog.getExistingDirectory(self, "Select directory to save layout and configuration files", QDir.tempPath(),
                                                    QFileDialog.ShowDirsOnly | QFileDialog.DontResolveSymlinks)
+        
+        if dirPath.isEmpty():
+            return
         
         # Check, if directory is empty
         self.checkDirectoryBeforeSave(dirPath)

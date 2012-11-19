@@ -185,6 +185,7 @@ class GraphicsCustomItem(NodeBase, QGraphicsObject):
             else:
                 outputChannelItem = self.__outputChannelItems[i]
             outputChannelItem.setPos(QPointF(x, y))
+            outputChannelItem.predefinedDevInstId = self.__devInsId
 
 
     def _outlineRect(self):
@@ -216,10 +217,10 @@ class GraphicsCustomItem(NodeBase, QGraphicsObject):
     def itemChange(self, change, value):
         if change == QGraphicsItem.ItemPositionHasChanged: # ItemPositionChange
             for inputChannel in self.__inputChannelItems:
-                inputChannel.trackChannelConnection()
+                inputChannel.trackChannelConnectionItems()
 
             for outputChannel in self.__outputChannelItems:
-                outputChannel.trackChannelConnection()
+                outputChannel.trackChannelConnectionItems()
         return QGraphicsItem.itemChange(self, change, value)
 
 

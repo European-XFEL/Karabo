@@ -20,29 +20,35 @@ from PyQt4.QtGui import *
 class GraphicsOutputChannelItem(QGraphicsObject):
     # signals
     #signalValueChanged = pyqtSignal(str, object) # key, value
+    signalConnectedOutputChannelChanged = pyqtSignal(str, str) # old value, new value
 
 
     def __init__(self, parentItem, connectionType, isEditable=False):
         super(GraphicsOutputChannelItem, self).__init__(parentItem)
         
+        self.__predefinedDevInstId = str(self.parentItem().value)
         self.__internalKey = parentItem.internalKey() + ".output"
         
         self.__connectionType = connectionType
         self.__connection = None
         
         # List of connection line items
-        self.__channelConnections = set()
+        self.__channelConnectionItems = set()
 
 
 ### public ###
     def _getOutputChannelConnection(self):
-        return self.parentItem().value + "@output"
+        return self.__predefinedDevInstId + "@output"
     outputChannelConnection = property(fget=_getOutputChannelConnection)
 
 
     def _getPredefinedDevInstId(self):
-        return str(self.parentItem().value)
-    predefinedDevInstId = property(fget=_getPredefinedDevInstId)
+        return self.__predefinedDevInstId
+    def _setPredefinedDevInstId(self, devInstId):
+        oldOutputChannelConnection = self.outputChannelConnection
+        self.__predefinedDevInstId = devInstId
+        self.signalConnectedOutputChannelChanged.emit(oldOutputChannelConnection, self.outputChannelConnection)
+    predefinedDevInstId = property(fget=_getPredefinedDevInstId, fset=_setPredefinedDevInstId)
 
 
     def _outputPos(self):
@@ -50,17 +56,17 @@ class GraphicsOutputChannelItem(QGraphicsObject):
     outputPos = property(fget=_outputPos)
 
 
-    def addChannelConnection(self, channelConnection):
-        self.__channelConnections.add(channelConnection)
+    def addChannelConnectionItem(self, item):
+        self.__channelConnectionItems.add(item)
 
 
-    def removeChannelConnection(self, channelConnection):
-        self.__channelConnections.remove(channelConnection)
+    def removeChannelConnection(self, item):
+        self.__channelConnectionItems.remove(item)
 
 
-    def trackChannelConnection(self):
-        for channelConnection in self.__channelConnections:
-            channelConnection.trackItems()
+    def trackChannelConnectionItems(self):
+        for channelConnectionItem in self.__channelConnectionItems:
+            channelConnectionItem.trackItems()
 
 
 ### protected ###
@@ -94,6 +100,7 @@ class GraphicsOutputChannelItem(QGraphicsObject):
         inputItem = self.scene().itemAt(self.mapToScene(event.pos()), QTransform())
         if inputItem and (type(inputItem) == layoutcomponents.graphicsinputchannelitem.GraphicsInputChannelItem):
             inputItem.addConnectedOutputChannel(self.outputChannelConnection)
+            self.signalConnectedOutputChannelChanged.connect(inputItem.onConnectedOutputChannelChanged)
 
         # Remove connection line again (gets drawn in GraphicsInputChannelItem...
         self.scene().removeItem(self.__connection)

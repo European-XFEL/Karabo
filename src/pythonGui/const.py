@@ -24,7 +24,7 @@ sys.modules[__name__]=_const()
 import const
 from PyQt4.QtCore import *
 
-# Attribute item properties
+# Parameter item properties
 const.INTERNAL_KEY           = Qt.UserRole
 const.VALUE_TYPE             = Qt.UserRole + 1
 const.DEFAULT_VALUE          = Qt.UserRole + 2
