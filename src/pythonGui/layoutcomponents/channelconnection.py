@@ -23,8 +23,8 @@ class ChannelConnection(QGraphicsLineItem):
         self.__outputChannel = outputChannel
         self.__inputChannel= inputChannel
         
-        self.__outputChannel.addChannelConnection(self)
-        self.__inputChannel.addChannelConnection(self)
+        self.__outputChannel.addChannelConnectionItem(self)
+        self.__inputChannel.addChannelConnectionItem(self)
         
         self.setZValue(-1)
         self.trackItems()
@@ -35,8 +35,8 @@ class ChannelConnection(QGraphicsLineItem):
     def __del__(self):
         print "ChannelConnection.__del__"
 
-        self.__outputChannel.removeChannelConnection(self)
-        self.__inputChannel.removeChannelConnection(self)
+        self.__outputChannel.removeChannelConnectionItem(self)
+        self.__inputChannel.removeChannelConnectionItem(self)
 
 
     def trackItems(self):
