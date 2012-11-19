@@ -41,7 +41,7 @@ class MainWindow(QMainWindow):
         self._setupToolBar()
         self._setupStatusBar()
 
-        self.setWindowTitle('European XFEL - PyQt GUI Version')
+        self.setWindowTitle('European XFEL - Karabo GUI')
         self.resize(1200,800)
         self.show()
 
