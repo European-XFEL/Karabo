@@ -271,7 +271,8 @@ class XsdReader(QXmlStreamReader):
                                                                           or type == "xs:unsignedLong" or restrictionBase == "xs:unsignedLong"
                                                                           or type == "xs:unsignedByte" or restrictionBase == "xs:unsignedByte"):
                         attributeItem.valueType = "int"
-                        attributeItem.defaultValue = int(default)
+                        if default:
+                            attributeItem.defaultValue = int(default)
                         
                         if len(enumeration) < 1 :
                             attributeItem.classAlias = "Integer Field"
@@ -305,7 +306,8 @@ class XsdReader(QXmlStreamReader):
                             attributeItem.setEditableComponent(editableComponent)
                     elif type == "xs:float" or restrictionBase == "xs:float" :
                         attributeItem.valueType = "float"
-                        attributeItem.defaultValue = float(default)
+                        if default:
+                            attributeItem.defaultValue = float(default)
                         
                         if len(enumeration) < 1 :
                             attributeItem.classAlias = "Float Field"
@@ -339,7 +341,8 @@ class XsdReader(QXmlStreamReader):
                             attributeItem.setEditableComponent(editableComponent)
                     elif type == "xs:double" or restrictionBase == "xs:double" :
                         attributeItem.valueType = "double"
-                        attributeItem.defaultValue = float(default)
+                        if default:
+                            attributeItem.defaultValue = float(default)
                         
                         if len(enumeration) < 1 :
                             attributeItem.classAlias = "Float Field"
