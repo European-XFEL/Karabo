@@ -55,7 +55,7 @@ class DocumentationPanel(QWidget):
         #self.__reportView.loadFinished.connect(self.onLoadFinishedReport)
         
         self.__tabWidget = QTabWidget(self)
-        text = "Attribute information"
+        text = "Parameter information"
         index = self.__tabWidget.addTab(self.__swDocumentation, text)
         self.__tabWidget.setTabToolTip(index, text)
         text = "Wiki"

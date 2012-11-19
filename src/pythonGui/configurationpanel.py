@@ -100,7 +100,7 @@ class ConfigurationPanel(QWidget):
         self.__swAttributeEditor = QStackedWidget(splitTopPanes)
         # Initial page
         twInitalAttributeEditorPage = AttributeTreeWidget(self)
-        twInitalAttributeEditorPage.setHeaderLabels(QStringList() << "Attribute" << "Value")
+        twInitalAttributeEditorPage.setHeaderLabels(QStringList() << "Parameter" << "Value")
         self.__swAttributeEditor.addWidget(twInitalAttributeEditorPage)
         splitTopPanes.setStretchFactor(1, 3)
 
@@ -331,7 +331,7 @@ class ConfigurationPanel(QWidget):
         #    return
 
         twAttributeEditorPage = AttributeTreeWidget(self, internalKey, devClaId)
-        twAttributeEditorPage.setHeaderLabels(QStringList() << "Attribute" << "Current value on device" << "Value")
+        twAttributeEditorPage.setHeaderLabels(QStringList() << "Parameter" << "Current value on device" << "Value")
         twAttributeEditorPage.addConfigAction(self.__acKillInstance)
         twAttributeEditorPage.addConfigAction(self.__acApplyAll)
         #twAttributeEditorPage.addConfigMenu(self.__mApply)

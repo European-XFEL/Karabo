@@ -35,7 +35,7 @@ class GraphicsInputChannelItem(QGraphicsObject):
         self.__connectedOutputChannels = []
         
         # List of connection line items
-        self.__channelConnections = set()
+        self.__channelConnectionItems = []
         
         # Connect customItem signal to Manager, DEVICE_CLASS
         self.signalValueChanged.connect(Manager().onDeviceClassValueChanged)
@@ -64,17 +64,23 @@ class GraphicsInputChannelItem(QGraphicsObject):
         self.signalValueChanged.emit(self.connectedOutputChannelsKey, self.__connectedOutputChannels)
 
 
-    def addChannelConnection(self, channelConnection):
-        self.__channelConnections.add(channelConnection)
+    def removeConnecteOutputChannel(self, connectedOutputChannel):
+        if not connectedOutputChannel in self.__connectedOutputChannels:
+            return
+        self.__connectedOutputChannels.remove(connectedOutputChannel)
 
 
-    def removeChannelConnection(self, channelConnection):
-        self.__channelConnections.remove(channelConnection)
+    def addChannelConnectionItem(self, item):
+        self.__channelConnectionItems.append(item)
 
 
-    def trackChannelConnection(self):
-        for channelConnection in self.__channelConnections:
-            channelConnection.trackItems()
+    def removeChannelConnectionItem(self, item):
+        self.__channelConnectionItems.remove(item)
+
+
+    def trackChannelConnectionItems(self):
+        for channelConnectionItem in self.__channelConnectionItems:
+            channelConnectionItem.trackItems()
 
 
 ### private ###
@@ -150,16 +156,21 @@ class GraphicsInputChannelItem(QGraphicsObject):
                         for v in value:
                             vSplit = v.split('@', 1)
                             if item.predefinedDevInstId == vSplit[0]:
-                                #connection = QGraphicsLineItem(QLineF(item.mapToScene(item.outputPos), self.mapToScene(self.inputPos)))
-                                connection = ChannelConnection(item, self)
-                                self.scene().addItem(connection)
-                                self.addChannelConnection(connection)
+                                item = ChannelConnection(item, self)
+                                self.scene().addItem(item)
+                                self.addChannelConnectionItem(item)
                             # Add connected output channel to list
                             self.addConnectedOutputChannel(v)
         elif self.dataDistributionKey == key:
-            for channelConnection in self.__channelConnections:
+            for channelConnectionItem in self.__channelConnectionItems:
                 if value == "copy":
-                    channelConnection.setStyle(Qt.SolidLine)
+                    channelConnectionItem.setStyle(Qt.SolidLine)
                 elif value == "shared":
-                    channelConnection.setStyle(Qt.DashLine)
+                    channelConnectionItem.setStyle(Qt.DashLine)
+
+
+    def onConnectedOutputChannelChanged(self, oldConnectedOutputChannel, newConnectedOutputChannel):
+        self.removeConnecteOutputChannel(oldConnectedOutputChannel)
+        # Add new connected output channel to list
+        self.addConnectedOutputChannel(newConnectedOutputChannel)
 
