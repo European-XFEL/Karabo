@@ -116,31 +116,22 @@ class DisplayImage(DisplayWidget):
             self.__value = value
             
             # Value as Hash (dimX=<dimX>, dimY=<dimY>, dimZ=<dimZ>, dimC=<dimC>, pixelArray=<pixelArray>)
-            dimX = value.get('dimX')
-            dimY = value.get('dimY')
-            dimZ = value.get('dimZ')
-            #dimC = value.get('dimC')
+            dims = value.get('dims')
+            if len(dims) < 2:
+                return;
+            dimX = dims[0]
+            dimY = dims[1]
+            #dimZ = dims[2]
             pixelArray = value.get('pixelArray')
-
+            pixelFormat = value.get('format')
+            
             if not dimX and not dimY and not pixelArray:
                 return
             if (dimX < 1) or (dimY < 1) or (len(pixelArray) < (dimX*dimY)):
                 return
 
-            image = QImage(dimX, dimY, QImage.Format_RGB32)
+            image = QImage(pixelArray, dimX, dimY, QImage.Format_ARGB32_Premultiplied)
             
-            a = 0
-            b = 255
-            minValue = min(pixelArray)
-            maxValue = max(pixelArray)
-            diff = maxValue - minValue
-
-            for y in xrange(dimY):
-                for x in xrange(dimX):
-                    index = x + dimX * y
-                    value = int((pixelArray[index] - minValue) / diff * (b - a) + a)
-                    image.setPixel(x, y, QColor(value, value, value).rgb())
-
             if useGuiQwt:
                 data = image.bits().asstring(image.numBytes())
                 npy = np.frombuffer(data, np.uint8)
