@@ -84,6 +84,14 @@ namespace karabo {
                         .assignmentOptional().defaultValue(1)
                         .reconfigurable()
                         .commit();
+
+                BOOL_ELEMENT(expected).key("updateOnNewInput")
+                        .displayedName("Update on new input")
+                        .description("If true, keeps data until new data from an connected output is provided. "
+                        "If new data is available the previous chunk is automatically deleted and the new one is made available for reading")
+                        .assignmentOptional().defaultValue(false)
+                        .reconfigurable()
+                        .commit();
             }
 
             /**
@@ -104,6 +112,7 @@ namespace karabo {
 
                 input.get("dataDistribution", m_dataDistribution);
                 input.get("minData", m_minData);
+                input.get("updateOnNewInput", m_updateOnNewInput);
 
                 m_channelId = Memory<T>::registerChannel();
                 m_activeChunk = Memory<T>::registerChunk(m_channelId);
@@ -125,7 +134,7 @@ namespace karabo {
 
                 if (input.has("dataDistribution")) input.get("dataDistribution", m_dataDistribution);
                 if (input.has("minData")) input.get("minData", m_minData);
-
+                if (input.has("updateOnNewInput")) input.get("updateOnNewInput", m_updateOnNewInput);
             }
 
             std::vector<karabo::util::Hash> getConnectedOutputChannels() {
@@ -133,6 +142,7 @@ namespace karabo {
             }
 
             void read(T& data, size_t idx) {
+                boost::mutex::scoped_lock lock(m_swapBuffersMutex);
                 Memory<T>::read(data, idx, m_channelId, m_activeChunk);
             }
 
@@ -220,13 +230,23 @@ namespace karabo {
                     std::cout << "INPUT: can read more data" << std::endl;
                     notifyOutputChannelForPossibleRead(channel);
                 } else if (Memory<T>::size(m_channelId, m_activeChunk) == 0) {
-                    std::swap(m_activeChunk, m_inactiveChunk);
+                    this->swapBuffers();
                     std::cout << "INPUT: swapped buffers, can read more" << std::endl;
                     notifyOutputChannelForPossibleRead(channel);
                     this->template triggerIOEvent< Input<T> >();
+                } else {
+                    if (m_updateOnNewInput) {
+                        Memory<T>::clearChunk(m_channelId, m_activeChunk);
+                        this->swapBuffers();
+                    }
                 }
 
                 channel->readAsyncVectorHash(boost::bind(&karabo::xms::NetworkInput<T>::onTcpChannelRead, this, _1, _2, _3));
+            }
+            
+            void swapBuffers() {
+                boost::mutex::scoped_lock lock(m_swapBuffersMutex);
+                std::swap(m_activeChunk, m_inactiveChunk);
             }
 
             bool canCompute() const {
@@ -236,6 +256,9 @@ namespace karabo {
             }
 
             void update() {
+                
+                if (m_updateOnNewInput) return;
+                
                 m_mutex.lock();
                 // Clear active chunk
                 Memory<T>::clearChunk(m_channelId, m_activeChunk);
@@ -253,9 +276,8 @@ namespace karabo {
                     }
                     std::cout << "INPUT: Found input, continuing..." << std::endl;
                 }
-                
             }
-            
+
             void notifyOutputChannelsForPossibleRead() {
                 for (TcpChannels::const_iterator it = m_tcpChannels.begin(); it != m_tcpChannels.end(); ++it) {
                     notifyOutputChannelForPossibleRead(*it);
@@ -272,10 +294,12 @@ namespace karabo {
             std::vector<karabo::util::Hash> m_connectedOutputChannels;
             std::string m_dataDistribution;
             unsigned int m_minData;
+            bool m_updateOnNewInput;
 
             unsigned int m_channelId;
 
             boost::mutex m_mutex;
+            boost::mutex m_swapBuffersMutex;
 
             int m_activeChunk;
             int m_inactiveChunk;
