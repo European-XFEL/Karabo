@@ -19,13 +19,14 @@
 namespace karabo {
     namespace util {
 
-        template <class T>
+        template <class T = int >
         class ImageElement {
         private:
 
             ComplexElement m_outerElement;
-            SimpleElement<unsigned int> m_dimX, m_dimY, m_dimZ, m_dimC;
-            VectorElement<T> m_pixelArray;
+            VectorElement<unsigned int> m_dims;
+            VectorElement<unsigned char> m_pixelArray;
+            SimpleElement<std::string> m_format;
 
         public:
 
@@ -33,39 +34,32 @@ namespace karabo {
                 m_outerElement.readOnly();
                 m_outerElement.displayType("Image");
 
-                m_dimX.key("dimX");
-                m_dimX.displayedName("Dimension X");
-                m_dimX.description("Dimensionality along X");
-                m_dimX.assignmentOptional().noDefaultValue();
-                m_dimX.readOnly();
-
-                m_dimY.key("dimY");
-                m_dimY.displayedName("Dimension Y");
-                m_dimY.description("Dimensionality along Y");
-                m_dimY.assignmentOptional().noDefaultValue();
-                m_dimY.readOnly();
-
-                m_dimZ.key("dimZ");
-                m_dimZ.displayedName("Dimension Z");
-                m_dimZ.description("Dimensionality along Z");
-                m_dimZ.assignmentOptional().noDefaultValue();
-                m_dimZ.readOnly();
-
-                m_dimC.key("dimC");
-                m_dimC.displayedName("Dimension C");
-                m_dimC.description("Dimensionality along C");
-                m_dimC.assignmentOptional().noDefaultValue();
-                m_dimC.readOnly();
+                m_dims.key("dims");
+                m_dims.displayedName("Dimensions");
+                m_dims.description("Vector space containing image pixels");
+                m_dims.assignmentOptional().noDefaultValue();
+                m_dims.readOnly();
 
                 m_pixelArray.key("pixelArray");
                 m_pixelArray.displayedName("Pixel array");
                 m_pixelArray.description("Linear representation (row-wise) of the image pixels");
                 m_pixelArray.assignmentOptional().noDefaultValue();
                 m_pixelArray.readOnly();
+
+                m_format.key("format");
+                m_format.displayedName("Image format");
+                m_format.description("String description of image format: <tag>-<bytesPerPixel>-<bitsPerPixel>-<endianess>");
+                m_format.assignmentOptional().noDefaultValue();
+                m_format.readOnly();
             }
 
             ImageElement& key(const std::string& name) {
                 m_outerElement.key(name);
+                return *this;
+            }
+
+            ImageElement& alias(const T& name) {
+                m_outerElement.alias(name);
                 return *this;
             }
 
@@ -86,18 +80,13 @@ namespace karabo {
 
             void commit() {
                 Schema& innerElement = m_outerElement.commit();
-                m_dimX.commit(innerElement);
-                m_dimY.commit(innerElement);
-                m_dimZ.commit(innerElement);
-                m_dimC.commit(innerElement);
+                m_dims.commit(innerElement);
                 m_pixelArray.commit(innerElement);
+                m_format.commit(innerElement);
             }
         };
 
-        typedef ImageElement<short > INT16_IMAGE_ELEMENT;
-        typedef ImageElement<int > INT32_IMAGE_ELEMENT;
-        typedef ImageElement<float > FLOAT_IMAGE_ELEMENT;
-        typedef ImageElement<double > DOUBLE_IMAGE_ELEMENT;
+        typedef ImageElement<> IMAGE_ELEMENT;
     }
 }
 
