@@ -396,6 +396,7 @@ namespace karabo {
                 std::cout << "OUTPUT: With header: " << entry.second << std::endl;
                 tcpChannel->writeAsyncVectorHash(entry.first, entry.second, boost::bind(&karabo::xms::NetworkOutput<T>::onWriteCompleted, this, _1));
                 //m_activeTcpChannel->write(entry.first, entry.second);
+              
             }
 
             void registerAsyncWrite(const TcpChannelPointer& channel, const unsigned int& chunkId) {
@@ -431,6 +432,8 @@ namespace karabo {
                         Memory<T>::clearContiguousBlockCache(m_channelId, chunkId);
                         m_currentWritersCount.erase(chunkId);
                         std::cout << "OUTPUT: Cleared asynchronous write cache" << std::endl;
+                        // TODO Delete memory resident data
+                        //Memory<T>::clearChunk(m_channelId, chunkId);
                     }
                 } else {
                     throw LOGIC_EXCEPTION("Bad async write encountered");
