@@ -55,7 +55,7 @@ void Schema_Test::settingExpectedParameters(Schema& expected) {
             .readOnly()
             .commit();
 
-    FLOAT_IMAGE_ELEMENT(expected).key("image")
+    IMAGE_ELEMENT(expected).key("image")
             .displayedName("Image")
             .description("Image")
             .commit();
@@ -178,11 +178,9 @@ void Schema_Test::testGetAllParameters() {
     CPPUNIT_ASSERT(vecStr[0] == "exampleKey1");
     CPPUNIT_ASSERT(vecStr[4] == "exampleKey5");
     CPPUNIT_ASSERT(vecStr[5] == "image");
-    CPPUNIT_ASSERT(vecStr[6] == "image.dimC");
-    CPPUNIT_ASSERT(vecStr[7] == "image.dimX");
-    CPPUNIT_ASSERT(vecStr[8] == "image.dimY");
-    CPPUNIT_ASSERT(vecStr[9] == "image.dimZ");
-    CPPUNIT_ASSERT(vecStr[10] == "image.pixelArray");
+    CPPUNIT_ASSERT(vecStr[6] == "image.dims");
+    CPPUNIT_ASSERT(vecStr[7] == "image.format");
+    CPPUNIT_ASSERT(vecStr[8] == "image.pixelArray");
 
 }
 
