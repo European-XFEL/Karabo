@@ -22,9 +22,9 @@ namespace karabo {
         public:
 
             static bp::object pythonEmpty(const karabo::util::Hash & self) {
-                return bp::object(self.empty()? 1 : 0);
+                return bp::object(self.empty() ? 1 : 0);
             }
-            
+
             static bp::object pythonGetKeys(const karabo::util::Hash & self) {
                 return stdVector2pyList(self.getKeysAsVector());
             }
@@ -97,11 +97,11 @@ namespace karabo {
                 } else if (self.is < std::deque<bool> >(it)) {
                     return bp::object(stdDeque2pyList(self.get < std::deque<bool> >(it)));
                 } else if (self.is<std::vector<char> >(it)) {
-                    return bp::object(stdVector2pyList(self.get<std::vector<char> >(it)));
+                    return bp::object(stdVector2pyStr(self.get<std::vector<char> >(it)));
                 } else if (self.is < std::vector<signed char> >(it)) {
-                    return bp::object(stdVector2pyList(self.get < std::vector<signed char> >(it)));
+                    return bp::object(stdVector2pyStr(self.get < std::vector<signed char> >(it)));
                 } else if (self.is<std::vector<unsigned char> >(it)) {
-                    return bp::object(stdVector2pyList(self.get<std::vector<unsigned char> >(it)));
+                    return bp::object(stdVector2pyStr(self.get<std::vector<unsigned char> >(it)));
                 } else if (self.is<std::vector<short> >(it)) {
                     return bp::object(stdVector2pyList(self.get<std::vector<short> >(it)));
                 } else if (self.is<std::vector<unsigned short> >(it)) {
@@ -121,8 +121,8 @@ namespace karabo {
                     //} else if (self.is<std::vector<std::complex<float> > >(it)) {
 
                     //} else if (self.is<std::vector<std::complex<double> > >(it)) {
-                } else if (self.is<karabo::util::Schema>(it)) {
-                    return bp::object(self.get<karabo::util::Schema>(it));
+                } else if (self.is<karabo::util::Schema > (it)) {
+                    return bp::object(self.get<karabo::util::Schema > (it));
                 } else if (self.is<std::vector<std::string> >(it)) {
                     return bp::object(stdVector2pyList(self.get<std::vector<std::string> >(it)));
                     //} else if (self.is<std::vector<boost::filesystem::path> >(it)) {
@@ -181,8 +181,8 @@ namespace karabo {
                     self.set<karabo::util::Hash > (key, hash);
                 } else if (bp::extract<karabo::util::Hash > (obj).check()) {
                     self.set<karabo::util::Hash > (key, bp::extract<karabo::util::Hash > (obj));
-                } else if (bp::extract<karabo::util::Schema >(obj).check()) {
-                    self.set<karabo::util::Schema> (key, bp::extract<karabo::util::Schema >(obj));
+                } else if (bp::extract<karabo::util::Schema > (obj).check()) {
+                    self.set<karabo::util::Schema > (key, bp::extract<karabo::util::Schema > (obj));
                 } else {
                     throw PYTHON_EXCEPTION("Python type can not be mapped into Hash");
                 }
@@ -216,6 +216,15 @@ namespace karabo {
                 } else {
                     throw PYTHON_EXCEPTION("Python type can not be mapped into Hash");
                 }
+            }
+
+            static void pyStr2stdVector(karabo::util::Hash& self, const std::string& key, const bp::object& pystr) {
+                // elements of our vectors require to be of the same type
+                if (!PyString_Check(pystr.ptr())) {
+                    throw PYTHON_EXCEPTION("Failed to convert  python string to vector of unsigned char ");
+                }
+                const std::string& stdstr = bp::extract<std::string > (pystr);
+                self.set(key, std::vector<unsigned char>(stdstr.begin(), stdstr.end()));
             }
 
             static void pyList2stdVector(karabo::util::Hash& self, const std::string& key, const bp::object& list, bp::ssize_t size) {
@@ -330,6 +339,18 @@ namespace karabo {
                 }
             }
 
+            static bp::str stdVector2pyStr(const std::vector<char>& v) {
+                return bp::str(&v[0], v.size());
+            }
+
+            static bp::str stdVector2pyStr(const std::vector<signed char>& v) {
+                return bp::str(reinterpret_cast<const char*>(&v[0]), v.size());
+            }
+
+            static bp::str stdVector2pyStr(const std::vector<unsigned char>& v) {
+                return bp::str(reinterpret_cast<const char*> (&v[0]), v.size());
+            }
+
             template<class T >
             static bp::list stdVector2pyList(const std::vector<T>& v) {
                 bp::object it = bp::iterator<std::vector<T> >();
@@ -351,7 +372,7 @@ namespace karabo {
                 for (bp::ssize_t i = 0; i < bp::len(keys); i++) {
                     pythonSet(self, bp::extract<std::string > (keys[i]), dictionary[keys[i]]);
                 }
-		return self;
+                return self;
             }
 
             static const karabo::util::Hash& pyDict2HashFromPath(karabo::util::Hash& self, const bp::dict& dictionary, const std::string & sep) {
@@ -359,7 +380,7 @@ namespace karabo {
                 for (bp::ssize_t i = 0; i < bp::len(keys); i++) {
                     pythonSetFromPath(self, bp::extract<std::string > (keys[i]), dictionary[keys[i]], sep);
                 }
-		return self;
+                return self;
             }
 
             static void pythonErase(karabo::util::Hash& self, const bp::object & keyObj) {
@@ -403,8 +424,8 @@ namespace karabo {
         template<>
         karabo::util::Hash::Hash(const std::string& key1, const bp::object& value1, const std::string& key2, const bp::object& value2,
                 const std::string& key3, const bp::object& value3, const std::string& key4, const bp::object& value4);
-        }
     }
+}
 
 #endif
 
