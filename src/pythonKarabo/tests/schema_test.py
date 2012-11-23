@@ -156,7 +156,7 @@ class TestClass2(object):
 '''
 Class 'TestClass3' for testing schema elements:
 CHOICE_ELEMENT_CONNECTION, CHOICE_ELEMENT_BROKERCONNECTION, 
-INT32_IMAGE_ELEMENT, DOUBLE_IMAGE_ELEMENT, INTERNAL_ANY_ELEMENT
+IMAGE_ELEMENT, INTERNAL_ANY_ELEMENT
 as well as 
 customer's Element of Complex Type defined by a customer
 in the class 'SomeCustomerElement' 
@@ -229,16 +229,10 @@ class TestClass3(object):
         #e.reconfigurable()
         #e.commit()
         
-        e = INT32_IMAGE_ELEMENT(expected)
+        e = IMAGE_ELEMENT(expected)
         e.key("myImage")
         e.displayedName("myImage")
         e.description("myImage description")
-        e.commit()
-        
-        e = DOUBLE_IMAGE_ELEMENT(expected)
-        e.key("myImage2")
-        e.displayedName("myImage2")
-        e.description("myImage description next")
         e.commit()
         
         e = INTERNAL_ANY_ELEMENT(expected)
