@@ -194,7 +194,7 @@ class AttributeTreeWidget(QTreeWidget):
         if item is None:
             return
         
-        mimeData = QMimeData()
+        mimeData = QMimeData()        
 
         # Put necessary data in MimeData:
         # Source type
@@ -202,9 +202,17 @@ class AttributeTreeWidget(QTreeWidget):
         # Internal key
         mimeData.setData("internalKey", QString(item.internalKey).toAscii())
         # Display name
-        mimeData.setData("displayName", item.text(0).toAscii())
-        # Display component?
+        displayName = item.text(0)
+        # Use DeviceClass/DeviceInstance-Key if no displayName is set
+        if len(item.text(0)) == 0:
+            keys = item.internalKey.split('.', 1)
+            displayName = keys[0]
+        mimeData.setData("displayName", displayName.toAscii())
+        
+        # Get NavigationItemType
         navigationItemType = self.__configPanel.getNavigationItemType()
+        
+        # Display component?
         hasDisplayComponent = navigationItemType == NavigationItemTypes.DEVICE_INSTANCE
         mimeData.setData("hasDisplayComponent", QString("%1").arg(hasDisplayComponent).toAscii())
         # Editable component?
