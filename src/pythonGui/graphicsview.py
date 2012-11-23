@@ -862,13 +862,14 @@ class GraphicsView(QGraphicsView):
                 # List stored all items for layout
                 items = []
                 
-                # Label
-                label = QLabel(displayName)
-                label.setAttribute(Qt.WA_NoSystemBackground, True)
-                labelProxyWidget = GraphicsProxyWidget(self.__isDesignMode, label)
-                labelProxyWidget.setTransformOriginPoint(labelProxyWidget.boundingRect().center())
-                # Add item to itemlist
-                items.append(labelProxyWidget)
+                if len(displayName) > 0:
+                    # Label only, if there is something to show
+                    label = QLabel(displayName)
+                    label.setAttribute(Qt.WA_NoSystemBackground, True)
+                    labelProxyWidget = GraphicsProxyWidget(self.__isDesignMode, label)
+                    labelProxyWidget.setTransformOriginPoint(labelProxyWidget.boundingRect().center())
+                    # Add item to itemlist
+                    items.append(labelProxyWidget)
                 
                 # Does key concern state of device?
                 keys = str(internalKey).split('.', 1)
@@ -876,7 +877,25 @@ class GraphicsView(QGraphicsView):
                 
                 # Display widget
                 if hasDisplayComponent:
-                    displayComponent = DisplayComponent(classAlias, key=internalKey)
+                    # Special treatment for command
+                    if classAlias == "Command":
+                        allowedStates = []
+                        displayText = str()
+                        commandEnabled = False
+                        command = str()
+                        attributeTreeWidgetItem = source.getAttributeTreeWidgetItemByKey(internalKey)
+                        if attributeTreeWidgetItem:
+                            allowedStates = attributeTreeWidgetItem.allowedStates
+                            displayText = attributeTreeWidgetItem.displayText
+                            commandEnabled = attributeTreeWidgetItem.enabled
+                            command = attributeTreeWidgetItem.command
+                        displayComponent = DisplayComponent(classAlias, key=internalKey, \
+                                                            allowedStates=allowedStates, \
+                                                            commandText=displayText, \
+                                                            commandEnabled=commandEnabled, \
+                                                            command=command)
+                    else:
+                        displayComponent = DisplayComponent(classAlias, key=internalKey)
                     displayComponent.widget.setAttribute(Qt.WA_NoSystemBackground, True)
                     displayProxyWidget = GraphicsProxyWidget(self.__isDesignMode, displayComponent.widget, displayComponent, isStateToDisplay)
                     displayProxyWidget.setTransformOriginPoint(displayProxyWidget.boundingRect().center())
