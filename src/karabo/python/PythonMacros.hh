@@ -31,7 +31,7 @@ struct GenericElementWrap{
         }
     }
 };
-            
+
 #define KARABO_PYTHON_DEFAULT_VALUE \
 .def("defaultValue"\
 , (U & ( DefValue::* )( EType const & ) )( &DefValue::defaultValue )\
@@ -319,19 +319,18 @@ return boost::python::object(str);\
 /**
  * The following macro KARABO_PYTHON_IMAGE_ELEMENT is used for python binding of
  * @code
- * karabo::util::ImageElement< EType >
+ * karabo::util::ImageElement
  * @endcode
- * where EType: int, double. 
- * In Python: INT32_IMAGE_ELEMENT, DOUBLE_IMAGE_ELEMENT.
+ * 
+ * In Python: IMAGE_ELEMENT
  *
  */
-#define KARABO_PYTHON_IMAGE_ELEMENT(t, e)\
+
+#define KARABO_PYTHON_IMAGE_ELEMENT \
 {\
-typedef t EType;\
-typedef ImageElement<EType> U;\
+typedef ImageElement<int> U;\
 bp::implicitly_convertible< Schema &, U>();\
-bp::class_<U>(#e"_IMAGE_ELEMENT", bp::init<Schema &>(bp::arg("expected")))\
-.def("commit", (void (U::*)())(&U::commit))\
+bp::class_<U>("IMAGE_ELEMENT", bp::init<Schema &>(bp::arg("expected")))\
 .def("description"\
 , (U & (U::*)(string const &))(&U::description)\
 , bp::arg("desc")\
@@ -348,6 +347,10 @@ bp::class_<U>(#e"_IMAGE_ELEMENT", bp::init<Schema &>(bp::arg("expected")))\
 , (U & (U::*)(string const &))(&U::key)\
 , bp::arg("name")\
 , bp::return_internal_reference<> () )\
+.def("alias"\
+, (U & (U::*)(int const &))(&U::alias)\
+, bp::return_internal_reference<> ())\
+.def("commit", (void (U::*)())(&U::commit))\
 ;\
 }
 
