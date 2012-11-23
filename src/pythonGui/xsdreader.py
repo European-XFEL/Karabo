@@ -320,9 +320,9 @@ class XsdReader(QXmlStreamReader):
                                 editableComponent = EditableApplyLaterComponent(attributeItem.classAlias, key=attributeItem.internalKey, value=None, valueType=attributeItem.valueType, unitSymbol=unitSymbol)
                                 editableComponent.signalApplyChanged.connect(twAttributeEditorPage.onApplyChanged)
                             
-                            if len(minInclusive) > 0 :
+                            if (maxInclusive is not None) and (len(minInclusive)) > 0 :
                                 editableComponent.addParameters(minimum=float(minInclusive))
-                            if len(maxInclusive) > 0 :
+                            if (maxInclusive is not None) and (len(maxInclusive)) > 0 :
                                 editableComponent.addParameters(maximum=float(maxInclusive))
                             attributeItem.setIcon(0, QIcon(":float"))
                             attributeItem.setEditableComponent(editableComponent)
