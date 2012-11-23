@@ -23,15 +23,16 @@ from PyQt4.QtGui import *
 class SlotTreeWidgetItem(BaseTreeWidgetItem):
     
     def __init__(self, key, parent, parentItem=None):
-        
         super(SlotTreeWidgetItem, self).__init__(key, parent, parentItem)
         
         self.setIcon(0, QIcon(":slot"))
         
+        # Create empty label for 2nd column (current value on device)
         self.displayComponent = DisplayComponent("Value Field", key=self.internalKey)
         self.treeWidget().setItemWidget(self, 1, self.displayComponent.widget)
         self.treeWidget().resizeColumnToContents(1)
-        
+
+        # Name of command
         self.__command = key
         
         self.__isCommandEnabled = False
@@ -75,6 +76,11 @@ class SlotTreeWidgetItem(BaseTreeWidgetItem):
     def _setText(self, text):
         self.__pbCommand.setText(text)
     displayText = property(fget=_getText, fset=_setText)
+
+
+    def _getCommand(self):
+        return self.__command
+    command = property(fget=_getCommand)
 
 
 ### public functions ###

@@ -39,16 +39,26 @@ class DisplayCommand(DisplayWidget):
 
         # Minimum and maximum number of associated keys, 1 by default for each
         self.__minMaxAssociatedKeys = (1,1) # tuple<min,max>
+        
+        self.__allowedStates = params.get(QString('allowedStates'))
+        if self.__allowedStates is None:
+            self.__allowedStates = params.get('allowedStates')
+                
+        commandText = params.get(QString('commandText'))
+        if commandText is None:
+            commandText = params.get('commandText')
 
-        item = params.get(QString('item'))
-        if item is None:
-            item = params.get('item')
+        commandEnabled = params.get(QString('commandEnabled'))
+        if commandEnabled is None:
+            commandEnabled = params.get('commandEnabled')
 
-        self.__allowedStates = item.allowedStates
-
-        self.__pbCommand = QPushButton(item.displayText)
-        self.__pbCommand.setEnabled(item.enabled)
-        self.__pbCommand.clicked.connect(item.onCommandClicked)
+        self.__command = params.get(QString('command'))
+        if self.__command is None:
+            self.__command = params.get('command')
+            
+        self.__pbCommand = QPushButton(commandText)
+        self.__pbCommand.setEnabled(commandEnabled)
+        self.__pbCommand.clicked.connect(self.onCommandClicked)
         
         self.__key = params.get(QString('key'))
         if self.__key is None:
@@ -108,7 +118,6 @@ class DisplayCommand(DisplayWidget):
 
 ### slots ###
     def onDeviceInstanceStateChanged(self, internalKey, state):
-        print "DisplayCommand.onDeviceInstanceStateChanged"
         if len(self.__allowedStates) < 1:
             return
         
@@ -116,6 +125,13 @@ class DisplayCommand(DisplayWidget):
             self.__pbCommand.setEnabled(True)
         else:
             self.__pbCommand.setEnabled(False)
+
+
+    def onCommandClicked(self):
+        args = [] # TODO slot arguments
+        for key in self.keys:
+            print "key", key, self.__command
+            Manager().slotCommand(dict(internalKey=key, name=self.__command, args=args))
 
 
     class Maker:
