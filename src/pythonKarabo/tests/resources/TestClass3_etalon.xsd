@@ -521,49 +521,26 @@
           </xs:annotation>
           <xs:complexType>
             <xs:all>
-              <xs:element name="dimX" type="xs:unsignedInt" default="0" minOccurs="0" maxOccurs="1">
+              <xs:element name="dims" minOccurs="0" maxOccurs="1">
                 <xs:annotation>
                   <xs:documentation>
-                    <a:description>Dimensionality along X</a:description>
-                    <a:displayedName>Dimension X</a:displayedName>
+                    <a:description>Vector space containing image pixels</a:description>
+                    <a:displayedName>Dimensions</a:displayedName>
                     <a:expertLevel>0</a:expertLevel>
                     <a:default>0</a:default>
                     <a:accessType>2</a:accessType>
                   </xs:documentation>
                 </xs:annotation>
-              </xs:element>
-              <xs:element name="dimY" type="xs:unsignedInt" default="0" minOccurs="0" maxOccurs="1">
-                <xs:annotation>
-                  <xs:documentation>
-                    <a:description>Dimensionality along Y</a:description>
-                    <a:displayedName>Dimension Y</a:displayedName>
-                    <a:expertLevel>0</a:expertLevel>
-                    <a:default>0</a:default>
-                    <a:accessType>2</a:accessType>
-                  </xs:documentation>
-                </xs:annotation>
-              </xs:element>
-              <xs:element name="dimZ" type="xs:unsignedInt" default="0" minOccurs="0" maxOccurs="1">
-                <xs:annotation>
-                  <xs:documentation>
-                    <a:description>Dimensionality along Z</a:description>
-                    <a:displayedName>Dimension Z</a:displayedName>
-                    <a:expertLevel>0</a:expertLevel>
-                    <a:default>0</a:default>
-                    <a:accessType>2</a:accessType>
-                  </xs:documentation>
-                </xs:annotation>
-              </xs:element>
-              <xs:element name="dimC" type="xs:unsignedInt" default="0" minOccurs="0" maxOccurs="1">
-                <xs:annotation>
-                  <xs:documentation>
-                    <a:description>Dimensionality along C</a:description>
-                    <a:displayedName>Dimension C</a:displayedName>
-                    <a:expertLevel>0</a:expertLevel>
-                    <a:default>0</a:default>
-                    <a:accessType>2</a:accessType>
-                  </xs:documentation>
-                </xs:annotation>
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:element name="item" maxOccurs="unbounded">
+                      <xs:simpleType>
+                        <xs:restriction base="xs:unsignedInt" />
+                      </xs:simpleType>
+                    </xs:element>
+                  </xs:sequence>
+                  <xs:attribute name="dataType" type="xs:string" />
+                </xs:complexType>
               </xs:element>
               <xs:element name="pixelArray" minOccurs="0" maxOccurs="1">
                 <xs:annotation>
@@ -579,93 +556,23 @@
                   <xs:sequence>
                     <xs:element name="item" maxOccurs="unbounded">
                       <xs:simpleType>
-                        <xs:restriction base="xs:int" />
+                        <xs:restriction base="xs:unsignedByte" />
                       </xs:simpleType>
                     </xs:element>
                   </xs:sequence>
                   <xs:attribute name="dataType" type="xs:string" />
                 </xs:complexType>
               </xs:element>
-            </xs:all>
-          </xs:complexType>
-        </xs:element>
-        <xs:element name="myImage2" minOccurs="0" maxOccurs="1">
-          <xs:annotation>
-            <xs:documentation>
-              <a:description>myImage description next</a:description>
-              <a:displayedName>myImage2</a:displayedName>
-              <a:expertLevel>0</a:expertLevel>
-              <a:default>0</a:default>
-              <a:accessType>2</a:accessType>
-              <a:displayType>Image</a:displayType>
-            </xs:documentation>
-          </xs:annotation>
-          <xs:complexType>
-            <xs:all>
-              <xs:element name="dimX" type="xs:unsignedInt" default="0" minOccurs="0" maxOccurs="1">
+              <xs:element name="format" type="xs:string" default="0" minOccurs="0" maxOccurs="1">
                 <xs:annotation>
                   <xs:documentation>
-                    <a:description>Dimensionality along X</a:description>
-                    <a:displayedName>Dimension X</a:displayedName>
+                    <a:description>String description of image format: &lt;tag&gt;-&lt;bytesPerPixel&gt;-&lt;bitsPerPixel&gt;-&lt;endianess&gt;</a:description>
+                    <a:displayedName>Image format</a:displayedName>
                     <a:expertLevel>0</a:expertLevel>
                     <a:default>0</a:default>
                     <a:accessType>2</a:accessType>
                   </xs:documentation>
                 </xs:annotation>
-              </xs:element>
-              <xs:element name="dimY" type="xs:unsignedInt" default="0" minOccurs="0" maxOccurs="1">
-                <xs:annotation>
-                  <xs:documentation>
-                    <a:description>Dimensionality along Y</a:description>
-                    <a:displayedName>Dimension Y</a:displayedName>
-                    <a:expertLevel>0</a:expertLevel>
-                    <a:default>0</a:default>
-                    <a:accessType>2</a:accessType>
-                  </xs:documentation>
-                </xs:annotation>
-              </xs:element>
-              <xs:element name="dimZ" type="xs:unsignedInt" default="0" minOccurs="0" maxOccurs="1">
-                <xs:annotation>
-                  <xs:documentation>
-                    <a:description>Dimensionality along Z</a:description>
-                    <a:displayedName>Dimension Z</a:displayedName>
-                    <a:expertLevel>0</a:expertLevel>
-                    <a:default>0</a:default>
-                    <a:accessType>2</a:accessType>
-                  </xs:documentation>
-                </xs:annotation>
-              </xs:element>
-              <xs:element name="dimC" type="xs:unsignedInt" default="0" minOccurs="0" maxOccurs="1">
-                <xs:annotation>
-                  <xs:documentation>
-                    <a:description>Dimensionality along C</a:description>
-                    <a:displayedName>Dimension C</a:displayedName>
-                    <a:expertLevel>0</a:expertLevel>
-                    <a:default>0</a:default>
-                    <a:accessType>2</a:accessType>
-                  </xs:documentation>
-                </xs:annotation>
-              </xs:element>
-              <xs:element name="pixelArray" minOccurs="0" maxOccurs="1">
-                <xs:annotation>
-                  <xs:documentation>
-                    <a:description>Linear representation (row-wise) of the image pixels</a:description>
-                    <a:displayedName>Pixel array</a:displayedName>
-                    <a:expertLevel>0</a:expertLevel>
-                    <a:default>0</a:default>
-                    <a:accessType>2</a:accessType>
-                  </xs:documentation>
-                </xs:annotation>
-                <xs:complexType>
-                  <xs:sequence>
-                    <xs:element name="item" maxOccurs="unbounded">
-                      <xs:simpleType>
-                        <xs:restriction base="xs:double" />
-                      </xs:simpleType>
-                    </xs:element>
-                  </xs:sequence>
-                  <xs:attribute name="dataType" type="xs:string" />
-                </xs:complexType>
               </xs:element>
             </xs:all>
           </xs:complexType>
