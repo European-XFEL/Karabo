@@ -320,7 +320,7 @@ class XsdReader(QXmlStreamReader):
                                 editableComponent = EditableApplyLaterComponent(attributeItem.classAlias, key=attributeItem.internalKey, value=None, valueType=attributeItem.valueType, unitSymbol=unitSymbol)
                                 editableComponent.signalApplyChanged.connect(twAttributeEditorPage.onApplyChanged)
                             
-                            if (maxInclusive is not None) and (len(minInclusive)) > 0 :
+                            if (minInclusive is not None) and (len(minInclusive)) > 0 :
                                 editableComponent.addParameters(minimum=float(minInclusive))
                             if (maxInclusive is not None) and (len(maxInclusive)) > 0 :
                                 editableComponent.addParameters(maximum=float(maxInclusive))
@@ -355,9 +355,9 @@ class XsdReader(QXmlStreamReader):
                                 editableComponent = EditableApplyLaterComponent(attributeItem.classAlias, key=attributeItem.internalKey, value=None, valueType=attributeItem.valueType, unitSymbol=unitSymbol)
                                 editableComponent.signalApplyChanged.connect(twAttributeEditorPage.onApplyChanged)
                             
-                            if len(minInclusive) > 0 :
+                            if (minInclusive is not None) and len(minInclusive) > 0 :
                                 editableComponent.addParameters(minimum=float(minInclusive))
-                            if len(maxInclusive) > 0 :
+                            if (maxInclusive is not None) and len(maxInclusive) > 0 :
                                 editableComponent.addParameters(maximum=float(maxInclusive))
                             attributeItem.setIcon(0, QIcon(":float"))
                             attributeItem.setEditableComponent(editableComponent)
@@ -678,8 +678,8 @@ class XsdReader(QXmlStreamReader):
 
         content = QString("<h3><b>Information</b></h3>")
 
-        if len(description) > 0 :
-            content.append(QString("<b>Description:</b> %1<br />").arg(description))
+        if (description is not None) and len(description) > 0 :
+           content.append(QString("<b>Description:</b> %1<br />").arg(description))
 
         keys = str(attributeItem.internalKey).split('.', 1)
         systemKey = keys[0] + "/" + keys[1]
