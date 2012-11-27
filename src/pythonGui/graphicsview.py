@@ -48,28 +48,28 @@ class GraphicsView(QGraphicsView):
 
     def __init__(self):
         super(GraphicsView, self).__init__()
-        
+
         self.__scene = GraphicsScene(0, 0, 600, 500)
         self.__scene.selectionChanged.connect(self.onSceneSelectionChanged)
         self.setScene(self.__scene)
 
         # Current mode of the view (move, insert
         self.__mode = self.MoveItem
-        
+
         self.__line = None
         self.__rect = None
-        
+
         self.setDesignMode(True)
-        
+
         self.__minZ = 0
         self.__maxZ = 0
         self.__seqNumber = 0
-        
+
         self.__rotAngle = 30
-        
+
         # Describes most recent item to be cut or copied inside the application
         self.__copiedItem = QByteArray()
-        
+
         self.setAcceptDrops(True)
         self.setDragMode(QGraphicsView.RubberBandDrag)
         self.setRenderHints(QPainter.Antialiasing | QPainter.TextAntialiasing)
@@ -116,22 +116,22 @@ class GraphicsView(QGraphicsView):
         if len(items) == 2:
             firstItem = items[0]
             secondItem = items[1]
-            
+
             if isinstance(firstItem, Link):
                 firstItem = None
             if isinstance(secondItem, Link):
                 secondItem = None
-            
+
             if firstItem and secondItem:
                 return (firstItem, secondItem)
-        
+
         return None
 
 
     # All selected items of type Text are returned
     def selectedTextItems(self):
         items = self.selectedItems()
-        
+
         if len(items) > 0:
             textItems = []
             for item in items:
@@ -139,12 +139,12 @@ class GraphicsView(QGraphicsView):
                     textItems.append(item)
             return textItems
         return None
-        
+
 
     # All selected items of type Link are returned
     def selectedLinks(self):
         items = self.selectedItems()
-        
+
         if len(items) > 0:
             linkItems = []
             for item in items:
@@ -157,7 +157,7 @@ class GraphicsView(QGraphicsView):
 
     def selectedItemGroup(self):
         items = self.selectedItems()
-        
+
         if len(items) > 0:
             groupItems = []
             for item in items:
@@ -173,17 +173,17 @@ class GraphicsView(QGraphicsView):
         filename = QFileDialog.getOpenFileName(None, "Open saved view", QDir.tempPath(), "SCENE (*.scene)")
         if filename.isEmpty():
             return
-        
+
         self.openScene(filename)
 
 
     def openSceneConfigurationsFromFile(self):
         dirPath = QFileDialog.getExistingDirectory(self, "Select directory to open configuration files", QDir.tempPath(),
                                                    QFileDialog.ShowDirsOnly | QFileDialog.DontResolveSymlinks)
-        
+
         if dirPath.isEmpty():
             return
-        
+
         dir = QDir(dirPath)
         fileInfos = dir.entryInfoList(QDir.NoDotAndDotDot | QDir.Files | QDir.Hidden | QDir.System)
         for fileInfo in fileInfos:
@@ -193,13 +193,13 @@ class GraphicsView(QGraphicsView):
     def openSceneLayoutConfigurationsFromFile(self):
         dirPath = QFileDialog.getExistingDirectory(self, "Select directory to open configuration files", QDir.tempPath(),
                                                    QFileDialog.ShowDirsOnly | QFileDialog.DontResolveSymlinks)
-        
+
         if dirPath.isEmpty():
             return
-        
+
         dir = QDir(dirPath)
         fileInfos = dir.entryInfoList(QDir.NoDotAndDotDot | QDir.Files | QDir.Hidden | QDir.System)
-        
+
         internalKeyTextTuples = []
         for fileInfo in fileInfos:
             if fileInfo.suffix() == "scene":
@@ -214,7 +214,7 @@ class GraphicsView(QGraphicsView):
             text = str(internalKeyText[1])
             filename = str(dirPath + "/" + text + ".xml")
             # openAsXml(self, filename, internalKey, configChange=ConfigChangeTypes.DEVICE_CLASS_CONFIG_CHANGED, devClaId=str())
-            
+
             # TODO: Remove dirty hack for scientific computing again!!!
             croppedDevClaId = text.split("-")
             devClaId = croppedDevClaId[0]
@@ -227,15 +227,15 @@ class GraphicsView(QGraphicsView):
         file = QFile(filename)
         if file.open(QIODevice.ReadOnly | QIODevice.Text) == False:
             return
-        
+
         xmlContent = str()
         while file.atEnd() == False:
             xmlContent += str(file.readLine())
-        
+
         self.removeItems(self.items())
         sceneReader = CustomXmlReader(self)
         sceneReader.read(xmlContent)
-        
+
         return sceneReader.getInternalKeyTextTuples()
 
 
@@ -249,11 +249,11 @@ class GraphicsView(QGraphicsView):
         filename = QFileDialog.getSaveFileName(None, "Save file as", QDir.tempPath(), "SCENE (*.scene)")
         if filename.isEmpty():
             return
-        
+
         fi = QFileInfo(filename)
         if fi.suffix().isEmpty():
             filename += ".scene"
-        
+
         CustomXmlWriter(self.__scene).write(filename)
 
 
@@ -266,7 +266,7 @@ class GraphicsView(QGraphicsView):
 
         # Check, if directory is empty
         self.checkDirectoryBeforeSave(dirPath)
-        
+
         # Save configurations of navigation related items
         self.saveSceneConfigurations(dirPath)
 
@@ -275,16 +275,16 @@ class GraphicsView(QGraphicsView):
     def saveSceneLayoutConfigurationsToFile(self):
         dirPath = QFileDialog.getExistingDirectory(self, "Select directory to save layout and configuration files", QDir.tempPath(),
                                                    QFileDialog.ShowDirsOnly | QFileDialog.DontResolveSymlinks)
-        
+
         if dirPath.isEmpty():
             return
-        
+
         # Check, if directory is empty
         self.checkDirectoryBeforeSave(dirPath)
-        
+
         # Save layout to directory
         CustomXmlWriter(self.__scene).write(dirPath + "/" + QDir(dirPath).dirName() + ".scene")
-        
+
         # Save configurations of navigation related items
         self.saveSceneConfigurations(dirPath)
 
@@ -302,7 +302,7 @@ class GraphicsView(QGraphicsView):
 
             if reply == QMessageBox.No:
                 return
-        
+
         for file in files:
             dir.remove(file)
 
@@ -324,14 +324,14 @@ class GraphicsView(QGraphicsView):
         textDialog = TextDialog(self)
         if textDialog.exec_() == QDialog.Rejected:
             return
-        
+
         textItem = Text(self.__isDesignMode)
         textItem.setText(textDialog.text())
         textItem.setFont(textDialog.font())
         textItem.setTextColor(textDialog.textColor())
         textItem.setBackgroundColor(textDialog.backgroundColor())
         textItem.setOutlineColor(textDialog.outlineColor())
-        
+
         #node.setText(QString("Node %1").arg(self.__seqNumber + 1))
         self._setupItem(textItem)
 
@@ -341,17 +341,17 @@ class GraphicsView(QGraphicsView):
         items = self.selectedItemPair()
         if items is None:
             return
-        
+
         link = Link(items[0], items[1])
         self.__scene.addItem(link)
 
-    
+
     # Add an arrow, if exactely 2 items are selected
     def addArrowLink(self):
         items = self.selectedItemPair()
         if items is None:
             return
-        
+
         arrowLink = Arrow(items[0], items[1])
         self.__scene.addItem(arrowLink)
 
@@ -361,7 +361,7 @@ class GraphicsView(QGraphicsView):
         items = self.selectedItems()
         if len(items) < 1:
             return
-        
+
         # Copy items
         self.copy()
         # Remove items from scene
@@ -409,7 +409,7 @@ class GraphicsView(QGraphicsView):
             elif isinstance(item, GraphicsProxyWidget):
                 print "GraphicsProxyWidget"
                 embeddedWidget = item.widget()
-                
+
 
 
     # The copied item data is extracted and the items are instantiated with the
@@ -417,14 +417,14 @@ class GraphicsView(QGraphicsView):
     def paste(self):
         if self.__copiedItem.isEmpty():
             return
-        
+
         stream = QDataStream(self.__copiedItem, QIODevice.ReadOnly)
-        
+
         itemData = QStringList()
         while not stream.atEnd():
             input = QString()
             stream >> input
-            
+
             if input == "\n":
                 # Create item
                 type = itemData.first()
@@ -464,7 +464,7 @@ class GraphicsView(QGraphicsView):
                         lineItem.setStyle(style[0])
                     # Get line color
                     lineItem.setColor(QColor(itemData[5]))
-                    
+
                     self._setupItem(lineItem)
                     lineItem.setTransformOriginPoint(lineItem.boundingRect().center())
                 elif type == "Rectangle" and itemData.count() == 2:
@@ -480,10 +480,10 @@ class GraphicsView(QGraphicsView):
                     print "GraphicsProxyWidgetContainer"
                 elif type == "GraphicsProxyWidget":
                     print "GraphicsProxyWidget"
-                
+
                 itemData.clear()
                 continue
-            
+
             itemData.append(input)
 
 
@@ -498,7 +498,7 @@ class GraphicsView(QGraphicsView):
                                                 QMessageBox.Yes|QMessageBox.No) ==
                                                 QMessageBox.No):
             return
-        
+
         self.removeItems(items)
 
 
@@ -550,7 +550,7 @@ class GraphicsView(QGraphicsView):
                     self.__scene.removeItem(outputItem)
                 Manager().removeVisibleDeviceInstance(item.internalKey())
                 Manager().unregisterEditableComponent(item.devInstIdKey, item)
-            
+
             self.__scene.removeItem(item)
             del item
 
@@ -610,7 +610,7 @@ class GraphicsView(QGraphicsView):
         items = self.selectedItems()
         if len(items) < 1:
             return
-        
+
         childItems = []
         for item in items:
             if isinstance(item, QGraphicsItemGroup):
@@ -627,7 +627,7 @@ class GraphicsView(QGraphicsView):
         self.__maxZ += 1
         self._setZValue(self.__maxZ)
 
-    
+
     # Decrements self.__minZ value, and then sets the currently selected item's z
     # value to self.__minZ
     def sendToBack(self):
@@ -664,16 +664,16 @@ class GraphicsView(QGraphicsView):
         # Initialize layout
         layout = QGraphicsLinearLayout(orientation)
         layout.setContentsMargins(5,5,5,5)
-        
+
         width = 0
         height = 0
         for item in items:
             if isinstance(item, QGraphicsLayoutItem) is False:
                 continue
-            
+
             item.setFlag(QGraphicsItem.ItemIsMovable, False)
             item.setFlag(QGraphicsItem.ItemIsSelectable, False)
-            
+
             layout.addItem(item)
             layout.setAlignment(item, Qt.AlignCenter)
 
@@ -690,7 +690,7 @@ class GraphicsView(QGraphicsView):
         containerItem.setGeometry(QRectF(0, 0, width, height))
         # Add created item to scene
         self._addItem(containerItem)
-        
+
         # Calculations to position item center-oriented
         bRect = containerItem.boundingRect()
         leftPos = bRect.topLeft()
@@ -699,7 +699,7 @@ class GraphicsView(QGraphicsView):
         centerPos = containerItem.mapToScene(centerPos)
         offset = centerPos-leftPos
         containerItem.setTransformOriginPoint(centerPos)
-        
+
         return (containerItem, offset)
 
 
@@ -771,11 +771,11 @@ class GraphicsView(QGraphicsView):
 # Drag & Drop events
     def dragEnterEvent(self, event):
         #print "GraphicsView.dragEnterEvent"
-        
+
         source = event.source()
         if (source is not None) and (source is not self):
             event.accept()
-        
+
         QGraphicsView.dragEnterEvent(self, event)
 
 
@@ -787,7 +787,7 @@ class GraphicsView(QGraphicsView):
 
     def dropEvent(self, event):
         #print "GraphicsView.dropEvent"
-        
+
         source = event.source()
         if source is not None:
             customItem = None
@@ -810,7 +810,7 @@ class GraphicsView(QGraphicsView):
                 displayName = QString(mimeData.data("displayName"))
                 # Schema
                 schema = QString(mimeData.data("schema"))
-                
+
                 if navigationItemType and (navigationItemType == NavigationItemTypes.DEVICE_CLASS) \
                    and (not ("-" in displayName)):
                     # Get unique device class id for new plugin
@@ -819,26 +819,28 @@ class GraphicsView(QGraphicsView):
                     keys = internalKey.split('+', 1)
                     if len(keys) is 2:
                         internalKey = str(keys[0]) + "+" + newDevClaId
-                    
+
                     # Create new device class plugin if Device Class is dropped
                     Manager().createNewDeviceClassPlugin(devSrvInsId, displayName, newDevClaId)
                     displayName = newDevClaId
 
                 # Create graphical item
                 customItem = GraphicsCustomItem(internalKey, self.__isDesignMode, displayName, schema)
+                tooltipText = "<html><b>Associated key: </b>%s</html>" % internalKey
+                customItem.setToolTip(tooltipText)
                 offset = QPointF()
                 # Add created item to scene
                 self._addItem(customItem)
-                
+
                 # Register as visible instance
                 Manager().newVisibleDeviceInstance(internalKey)
-                
+
                 if navigationItemType and (navigationItemType == NavigationItemTypes.DEVICE_CLASS):
                     # Connect customItem signal to Manager, DEVICE_CLASS
                     customItem.signalValueChanged.connect(Manager().onDeviceClassValueChanged)
                     # Register for value changes of devInstId
                     Manager().registerEditableComponent(customItem.devInstIdKey, customItem)
-                
+
             elif sourceType == "AttributeTreeWidget":
                 # Internal key
                 internalKey = QString(mimeData.data("internalKey"))
@@ -861,7 +863,7 @@ class GraphicsView(QGraphicsView):
 
                 # List stored all items for layout
                 items = []
-                
+
                 if len(displayName) > 0:
                     # Label only, if there is something to show
                     label = QLabel(displayName)
@@ -870,11 +872,11 @@ class GraphicsView(QGraphicsView):
                     labelProxyWidget.setTransformOriginPoint(labelProxyWidget.boundingRect().center())
                     # Add item to itemlist
                     items.append(labelProxyWidget)
-                
+
                 # Does key concern state of device?
                 keys = str(internalKey).split('.', 1)
                 isStateToDisplay = keys[1] == "state"
-                
+
                 # Display widget
                 if hasDisplayComponent:
                     # Special treatment for command
@@ -899,12 +901,14 @@ class GraphicsView(QGraphicsView):
                     displayComponent.widget.setAttribute(Qt.WA_NoSystemBackground, True)
                     displayProxyWidget = GraphicsProxyWidget(self.__isDesignMode, displayComponent.widget, displayComponent, isStateToDisplay)
                     displayProxyWidget.setTransformOriginPoint(displayProxyWidget.boundingRect().center())
+                    tooltipText = "<html><b>Associated key: </b>%s</html>" % internalKey
+                    displayProxyWidget.setToolTip(tooltipText)
                     # Add item to itemlist
                     items.append(displayProxyWidget)
-                    
+
                     # Register as visible instance
                     Manager().newVisibleDeviceInstance(internalKey)
-                
+
                 # Editable widget
                 if hasEditableComponent:
                     if navigationItemType is NavigationItemTypes.DEVICE_CLASS:
@@ -912,30 +916,32 @@ class GraphicsView(QGraphicsView):
                     elif navigationItemType is NavigationItemTypes.DEVICE_INSTANCE:
                         editableComponent = EditableApplyLaterComponent(classAlias, key=internalKey)
                         editableComponent.isEditableValueInit = False
-                    
+
                     editableComponent.widget.setAttribute(Qt.WA_NoSystemBackground, True)
                     editableProxyWidget = GraphicsProxyWidget(self.__isDesignMode, editableComponent.widget, editableComponent, isStateToDisplay)
                     editableProxyWidget.setTransformOriginPoint(editableProxyWidget.boundingRect().center())
+                    tooltipText = "<html><b>Associated key: </b>%s</html>" % internalKey
+                    editableProxyWidget.setToolTip(tooltipText)
                     # Add item to itemlist
                     items.append(editableProxyWidget)
-                    
+
                     # Register as visible instance
                     Manager().newVisibleDeviceInstance(internalKey)
 
                 customTuple = self.createGraphicsItemContainer(Qt.Horizontal, items)
                 customItem = customTuple[0]
                 offset = customTuple[1]
-            
+
             if customItem is None: return
 
             pos = event.pos()
             scenePos = self.mapToScene(pos)
             scenePos = scenePos-offset
-            
+
             customItem.setPos(scenePos)
 
         event.accept()
-        
+
         QGraphicsView.dropEvent(self, event)
 
 
@@ -957,7 +963,7 @@ class GraphicsView(QGraphicsView):
     # Called whenever an item of the scene is un-/selected
     def onSceneSelectionChanged(self):
         self.sceneSelectionChanged.emit()
-        
+
         if (len(self.__scene.selectedItems()) == 1):
             selectedItem = self.__scene.selectedItems()[0]
             if isinstance(selectedItem, GraphicsCustomItem):
