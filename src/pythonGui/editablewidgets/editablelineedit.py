@@ -105,6 +105,11 @@ class EditableLineEdit(EditableWidget):
 
 ### slots ###
     def onEditingFinished(self, value):
+        if "." in value:
+            QMessageBox.critical(None, "Invalid input", "Your input contains '.' characters.<br>Please choose something else.")
+            self.__lineEdit.setText("")
+            return
+            
         self.valueEditingFinished(self.__key, value)
 
 
