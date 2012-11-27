@@ -129,8 +129,8 @@ class XsdReader(QXmlStreamReader):
         displayType = ""
         allowedStates = []
         restrictionBase = ""
-        minInclusive = ""
-        maxInclusive = ""
+        minInclusive = None
+        maxInclusive = None
         enumeration = []
 
         complexItem = None
@@ -320,9 +320,9 @@ class XsdReader(QXmlStreamReader):
                                 editableComponent = EditableApplyLaterComponent(attributeItem.classAlias, key=attributeItem.internalKey, value=None, valueType=attributeItem.valueType, unitSymbol=unitSymbol)
                                 editableComponent.signalApplyChanged.connect(twAttributeEditorPage.onApplyChanged)
                             
-                            if (minInclusive is not None) and (len(minInclusive)) > 0 :
+                            if minInclusive and len(minInclusive) > 0:
                                 editableComponent.addParameters(minimum=float(minInclusive))
-                            if (maxInclusive is not None) and (len(maxInclusive)) > 0 :
+                            if maxInclusive and len(maxInclusive) > 0:
                                 editableComponent.addParameters(maximum=float(maxInclusive))
                             attributeItem.setIcon(0, QIcon(":float"))
                             attributeItem.setEditableComponent(editableComponent)
@@ -355,9 +355,9 @@ class XsdReader(QXmlStreamReader):
                                 editableComponent = EditableApplyLaterComponent(attributeItem.classAlias, key=attributeItem.internalKey, value=None, valueType=attributeItem.valueType, unitSymbol=unitSymbol)
                                 editableComponent.signalApplyChanged.connect(twAttributeEditorPage.onApplyChanged)
                             
-                            if (minInclusive is not None) and len(minInclusive) > 0 :
+                            if minInclusive and len(minInclusive) > 0:
                                 editableComponent.addParameters(minimum=float(minInclusive))
-                            if (maxInclusive is not None) and len(maxInclusive) > 0 :
+                            if maxInclusive and len(maxInclusive) > 0:
                                 editableComponent.addParameters(maximum=float(maxInclusive))
                             attributeItem.setIcon(0, QIcon(":float"))
                             attributeItem.setEditableComponent(editableComponent)
@@ -513,13 +513,13 @@ class XsdReader(QXmlStreamReader):
             tagName = self.name()
 
             if tokenType == QXmlStreamReader.StartElement:
-                if tagName == "restriction" :
+                if tagName == "restriction":
                     restrictionBase = self.attributes().value("base").toString()
-                elif tagName == "minInclusive" :
+                elif tagName == "minInclusive":
                     minInclusive = self.attributes().value("value").toString()
-                elif tagName == "maxInclusive" :
+                elif tagName == "maxInclusive":
                     maxInclusive = self.attributes().value("value").toString()
-                elif tagName == "enumeration" :
+                elif tagName == "enumeration":
                     enumeration.append(self.attributes().value("value").toString())
             elif tokenType == QXmlStreamReader.EndElement and tagName == "simpleType":
                 break
