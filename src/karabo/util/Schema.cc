@@ -80,10 +80,6 @@ namespace karabo {
             // Set current state for children
             if (item.has("complexType")) item.setCurrentState(m_currentState);
 
-            // Check for existence of mandatory meta-information 
-            if (!item.has("assignment")) throw PARAMETER_EXCEPTION("Invalid parameter description, no assignment type is set");
-            if (!item.has("displayedName")) throw PARAMETER_EXCEPTION("Invalid parameter description, no displayedName is given");
-
             // Setup defaults for other elements
             if (!item.has("expertLevel")) {
                 item.set("expertLevel", (int) 0);
@@ -100,7 +96,11 @@ namespace karabo {
             } else {
                 keyValue = item.get<string > ("root");
             }
-
+            
+            // Check for existence of mandatory meta-information 
+            if (!item.has("assignment")) throw PARAMETER_EXCEPTION("Invalid parameter description, no assignment type is set for key : " + keyValue);
+            if (!item.has("displayedName")) throw PARAMETER_EXCEPTION("Invalid parameter description, no displayedName is given for key : " + keyValue);
+            
             // Increase the item count and finally add to this
             ostringstream ss;
             ss << "x" << setw(4) << setfill('0') << m_inputOrder++;
@@ -1460,17 +1460,28 @@ namespace karabo {
 
         ostream& operator<<(std::ostream& os, const Schema & schema) {
             ostringstream stream;
-            if (schema.has("elements") && schema.has("root")) {
+            if (schema.has("elements") && schema.has("root")) { cout <<" IN IF " <<endl;
                 stream << schema.get<string > ("root") << endl;
                 const Schema& elements = schema.get<Schema > ("elements");
                 for (Schema::const_iterator it = elements.begin(); it != elements.end(); it++) {
                     const Schema& description = elements.get<Schema > (it);
                     Schema::processingDescription(description, stream);
                 }
-            } else {
+            } else { cout <<" IN ELSE " <<endl;
                 std::vector<std::string> keys = schema.getKeysAsVector();
                 for (size_t i = 0; i < keys.size(); i++) {
-                    os << keys[i] << endl;
+                    stream << keys[i] << endl;
+                    string keyStr = keys[i];
+                    cout << "keyStr: " << keyStr <<endl;
+                    const Schema& sch = schema.get<Schema>(keyStr);
+                    if (sch.has("elements") && sch.has("root")) {
+                        stream << sch.get<string > ("root") << endl;
+                        const Schema& elements = sch.get<Schema > ("elements");
+                        for (Schema::const_iterator it = elements.begin(); it != elements.end(); it++) {
+                            const Schema& description = elements.get<Schema > (it);
+                            Schema::processingDescription(description, stream);
+                        }
+                    }
                 }
             }
             os << stream.str();
