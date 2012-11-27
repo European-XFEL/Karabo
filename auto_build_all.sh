@@ -5,9 +5,13 @@
 # Author: <burkhard.heisen@xfel.eu>
 #
 
-
-# Make sure we are in correct directory
-cd $(dirname $0)
+# Make sure the script runs in the correct directory
+scriptDir=$(dirname `[[ $0 = /* ]] && echo "$0" || echo "$PWD/${0#./}"`)
+cd ${scriptDir}
+if [ $? -ne 0 ]; then
+    echo " Could not change directory to ${scriptDir}"
+    exit 1;
+fi
 
 # Get some information about our system
 OS=$(uname -s)
@@ -36,7 +40,8 @@ echo -e "\n\n### Starting compilation (using $NUM_CORES threads) and packaging o
 sleep 2
 
 cd build/netbeans/karabo
-make -j$NUM_CORES package
+make -j$NUM_CORES 
+make package
 
 echo -e "\n\n### Successfully finished building and packaging of karaboFramework. ###\n\n"
 
