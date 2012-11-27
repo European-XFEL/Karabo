@@ -40,6 +40,10 @@ if (itData != entry.end()) {\
 
         DeviceClient::DeviceClient(const boost::shared_ptr<SignalSlotable>& signalSlotable) : m_signalSlotable(signalSlotable), m_isShared(true), m_defaultTimeout(8000) {
             m_signalSlotable->registerSlot<Hash, string > (boost::bind(&karabo::core::DeviceClient::slotChanged, this, _1, _2), "slotChanged");
+            m_signalSlotable->registerSlot<Hash > (boost::bind(&karabo::core::DeviceClient::slotNewDeviceServerInstance, this, _1), "slotNewDeviceServerInstance", SignalSlotable::GLOBAL);
+            m_signalSlotable->registerSlot<Hash > (boost::bind(&karabo::core::DeviceClient::slotUpdateDeviceServerInstance, this, _1), "slotUpdateDeviceServerInstance", SignalSlotable::GLOBAL);
+            m_signalSlotable->registerSlot<Hash > (boost::bind(&karabo::core::DeviceClient::slotNewDeviceInstance, this, _1), "slotNewDeviceInstance", SignalSlotable::GLOBAL);
+            m_signalSlotable->registerSlot<Hash > (boost::bind(&karabo::core::DeviceClient::slotUpdateDeviceInstance, this, _1), "slotUpdateDeviceInstance", SignalSlotable::GLOBAL);
         }
 
         DeviceClient::~DeviceClient() {
