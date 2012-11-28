@@ -8,12 +8,6 @@
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
 
-#include "ImageFileReader.hh"
-#include "ImageFileWriter.hh"
-
-#include "DeviceInput.hh"
-#include "DeviceOutput.hh"
-
 #include "CpuImage.hh"
 
 namespace exfel {
