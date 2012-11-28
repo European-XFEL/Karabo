@@ -86,7 +86,6 @@
         <itemPath>../../../src/karabo/io/ArrayDimensions.hh</itemPath>
         <itemPath>../../../src/karabo/io/ArrayView.hh</itemPath>
         <itemPath>../../../src/karabo/io/BinarySerializer.hh</itemPath>
-        <itemPath>../../../src/karabo/io/CImg.h</itemPath>
         <itemPath>../../../src/karabo/io/File.hh</itemPath>
         <itemPath>../../../src/karabo/io/Format.hh</itemPath>
         <itemPath>../../../src/karabo/io/HashBaseFormat.hh</itemPath>
@@ -293,9 +292,23 @@
     </logicalFolder>
     <logicalFolder name="f9" displayName="xip" projectFiles="true">
       <logicalFolder name="f1" displayName="Header Files" projectFiles="true">
+        <itemPath>../../../src/karabo/xip/AbstractImage.hh</itemPath>
         <itemPath>../../../src/karabo/xip/CImg.h</itemPath>
+        <itemPath>../../../src/karabo/xip/CpuEnvironment.hh</itemPath>
+        <itemPath>../../../src/karabo/xip/CpuImage.hh</itemPath>
+        <itemPath>../../../src/karabo/xip/CpuImageBinarySerializer.cc</itemPath>
+        <itemPath>../../../src/karabo/xip/CpuImageBinarySerializer.hh</itemPath>
+        <itemPath>../../../src/karabo/xip/Environment.hh</itemPath>
+        <itemPath>../../../src/karabo/xip/ImageFileReader.hh</itemPath>
+        <itemPath>../../../src/karabo/xip/ImageFileWriter.hh</itemPath>
+        <itemPath>../../../src/karabo/xip/SingleProcessor.hh</itemPath>
+        <itemPath>../../../src/karabo/xip/Statistics.hh</itemPath>
       </logicalFolder>
       <logicalFolder name="f2" displayName="Source Files" projectFiles="true">
+        <itemPath>../../../src/karabo/xip/CpuEnvironment.cc</itemPath>
+        <itemPath>../../../src/karabo/xip/CpuImage.cpp</itemPath>
+        <itemPath>../../../src/karabo/xip/ImageFileReader.cc</itemPath>
+        <itemPath>../../../src/karabo/xip/ImageFileWriter.cc</itemPath>
       </logicalFolder>
     </logicalFolder>
     <logicalFolder name="f3" displayName="xml" projectFiles="true">
@@ -345,30 +358,6 @@
                    displayName="Test Files"
                    projectFiles="false"
                    kind="TEST_LOGICAL_FOLDER">
-      <logicalFolder name="f2" displayName="io_test" projectFiles="true" kind="TEST">
-        <itemPath>../../../src/karabo/tests/io/ReaderWriter_Test.cc</itemPath>
-        <itemPath>../../../src/karabo/tests/io/ReaderWriter_Test.hh</itemPath>
-        <itemPath>../../../src/karabo/tests/io/resources/etalonXML_readonly.xml</itemPath>
-        <itemPath>../../../src/karabo/tests/io/resources/etalonXSD_readonly.xsd</itemPath>
-        <itemPath>../../../src/karabo/tests/io/ioTestRunner.cc</itemPath>
-        <itemPath>../../../src/karabo/tests/io/resources/xmlForReading_readonly.xml</itemPath>
-      </logicalFolder>
-      <logicalFolder name="f4"
-                     displayName="nettcp_test"
-                     projectFiles="true"
-                     kind="TEST">
-        <itemPath>../../../src/karabo/tests/nettcp/TcpNetworking_Test.cc</itemPath>
-        <itemPath>../../../src/karabo/tests/nettcp/TcpNetworking_Test.hh</itemPath>
-        <itemPath>../../../src/karabo/tests/nettcp/nettcpTestRunner.cc</itemPath>
-      </logicalFolder>
-      <logicalFolder name="f3"
-                     displayName="netudp_test"
-                     projectFiles="true"
-                     kind="TEST">
-        <itemPath>../../../src/karabo/tests/netudp/UdpNetworking_Test.cc</itemPath>
-        <itemPath>../../../src/karabo/tests/netudp/UdpNetworking_Test.hh</itemPath>
-        <itemPath>../../../src/karabo/tests/netudp/netudpTestRunner.cc</itemPath>
-      </logicalFolder>
       <logicalFolder name="f1"
                      displayName="util_test"
                      projectFiles="true"
@@ -391,6 +380,38 @@
         <itemPath>../../../src/karabo/tests/util/resources/Vehicle.hh</itemPath>
         <itemPath>../../../src/karabo/tests/util/utilTestRunner.cc</itemPath>
         <itemPath>../../../src/karabo/tests/util/resources/utiltestdll.hh</itemPath>
+      </logicalFolder>
+      <logicalFolder name="f2" displayName="io_test" projectFiles="true" kind="TEST">
+        <itemPath>../../../src/karabo/tests/io/ReaderWriter_Test.cc</itemPath>
+        <itemPath>../../../src/karabo/tests/io/ReaderWriter_Test.hh</itemPath>
+        <itemPath>../../../src/karabo/tests/io/resources/etalonXML_readonly.xml</itemPath>
+        <itemPath>../../../src/karabo/tests/io/resources/etalonXSD_readonly.xsd</itemPath>
+        <itemPath>../../../src/karabo/tests/io/ioTestRunner.cc</itemPath>
+        <itemPath>../../../src/karabo/tests/io/resources/xmlForReading_readonly.xml</itemPath>
+      </logicalFolder>
+      <logicalFolder name="f3"
+                     displayName="netudp_test"
+                     projectFiles="true"
+                     kind="TEST">
+        <itemPath>../../../src/karabo/tests/netudp/UdpNetworking_Test.cc</itemPath>
+        <itemPath>../../../src/karabo/tests/netudp/UdpNetworking_Test.hh</itemPath>
+        <itemPath>../../../src/karabo/tests/netudp/netudpTestRunner.cc</itemPath>
+      </logicalFolder>
+      <logicalFolder name="f4"
+                     displayName="nettcp_test"
+                     projectFiles="true"
+                     kind="TEST">
+        <itemPath>../../../src/karabo/tests/nettcp/TcpNetworking_Test.cc</itemPath>
+        <itemPath>../../../src/karabo/tests/nettcp/TcpNetworking_Test.hh</itemPath>
+        <itemPath>../../../src/karabo/tests/nettcp/nettcpTestRunner.cc</itemPath>
+      </logicalFolder>
+      <logicalFolder name="f5"
+                     displayName="xip_test"
+                     projectFiles="true"
+                     kind="TEST">
+        <itemPath>../../../src/karabo/tests/xip/Image_Test.cc</itemPath>
+        <itemPath>../../../src/karabo/tests/xip/Image_Test.hh</itemPath>
+        <itemPath>../../../src/karabo/tests/xip/xipTestRunner.cc</itemPath>
       </logicalFolder>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
@@ -506,6 +527,11 @@
           <output>${TESTDIR}/TestFiles/f4</output>
         </linkerTool>
       </folder>
+      <folder path="TestFiles/f5">
+        <linkerTool>
+          <output>${TESTDIR}/TestFiles/f5</output>
+        </linkerTool>
+      </folder>
       <folder path="f2/f3">
         <ccTool>
           <incDir>
@@ -617,6 +643,11 @@
         </linkerTool>
       </folder>
       <folder path="TestFiles/f4">
+        <linkerTool>
+          <output>${TESTDIR}/TestFiles/f4</output>
+        </linkerTool>
+      </folder>
+      <folder path="TestFiles/f5">
         <linkerTool>
           <output>${TESTDIR}/TestFiles/f4</output>
         </linkerTool>
