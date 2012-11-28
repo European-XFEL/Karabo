@@ -45,7 +45,7 @@ class DocumentationPanel(QWidget):
         
         self.__wikiTicket = ""
         self.__wikiView = QWebView()
-        self.__wikiView.load(QUrl("http://exfldms01:8080/alfresco/service/api/login?u=wiki&pw=wiki"))
+        self.__wikiView.load(QUrl("https://docs.xfel.eu/alfresco/service/api/login?u=wiki&pw=$w1k1!"))
         #self.__wikiView.loadProgress.connect(self.onLoadProgressWiki)
         self.__wikiView.loadFinished.connect(self.onLoadFinishedWiki)
         
@@ -143,7 +143,7 @@ class DocumentationPanel(QWidget):
         deviceId = itemInfo.get(QString('name'))
         if deviceId is None:
             deviceId = itemInfo.get('name')
-        url = "http://exfldms01:8080/share/page/site/xirus/device-page?title="+deviceId+"&action=view&parentNodeRef=workspace/SpacesStore/18cffe24-4ce3-4d26-b3c1-fdc953edff59&alf_ticket=" + self.__wikiTicket
+        url = "https://docs.xfel.eu/share/page/site/karabo/device-page?title="+deviceId+"&action=view&parentNodeRef=workspace/SpacesStore/18cffe24-4ce3-4d26-b3c1-fdc953edff59&alf_ticket=" + self.__wikiTicket
         self.__wikiView.load(QUrl(url))
 
 
