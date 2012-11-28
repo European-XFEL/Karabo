@@ -11,7 +11,7 @@
 #define	KARABO_XIP_ANYFORMATIMAGEWRITER_HH
 
 #include <karabo/util/Factory.hh>
-#include "Output.hh"
+#include <karabo/xms/Output.hh>
 
 #include "CpuImage.hh"
 
@@ -26,7 +26,7 @@ namespace karabo {
     namespace xip {
 
         template <class TPix>
-        class ImageFileWriter : public Output< CpuImage<TPix> > {
+        class ImageFileWriter : public karabo::xms::Output< CpuImage<TPix> > {
         public:
             
             KARABO_CLASSINFO(ImageFileWriter, "File", "1.0")
@@ -79,13 +79,13 @@ namespace karabo {
                     } catch (...) {
                         std::string extension = m_filename.extension().string().substr(1);
                         boost::to_lower(extension);
-                        std::vector<std::string> keys = karabo::util::Factory<Output<CpuImage<TPix> > >::getRegisteredKeys();
+                        std::vector<std::string> keys = karabo::util::Factory<karabo::xms::Output<CpuImage<TPix> > >::getRegisteredKeys();
 
                         BOOST_FOREACH(std::string key, keys) {
                             std::string lKey(key);
                             boost::to_lower(lKey);
                             if (lKey == extension) {
-                                boost::shared_ptr<Output<CpuImage<TPix> > > in = Output<CpuImage<TPix> >::create(m_input);
+                                boost::shared_ptr<karabo::xms::Output<CpuImage<TPix> > > in = karabo::xms::Output<CpuImage<TPix> >::create(m_input);
                                 in->write(image);
                                 return;
                             }
