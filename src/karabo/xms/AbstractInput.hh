@@ -74,10 +74,6 @@ namespace karabo {
             virtual void connectNow(const karabo::util::Hash& outputChannelInfo) {
             }
 
-            virtual karabo::util::Hash getIOStatus() const {
-                return karabo::util::Hash();
-            }
-
             virtual bool canCompute() const {
                 return true;
             }

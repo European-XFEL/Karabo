@@ -11,8 +11,8 @@
 #define	KARABO_XIP_IMAGEFILEREADER_HH
 
 #include <karabo/util/Factory.hh>
+#include <karabo/xms/Input.hh>
 
-#include "Input.hh"
 #include "CpuImage.hh"
 
 /**
@@ -26,7 +26,7 @@ namespace karabo {
     namespace xip {
 
         template <class TPix>
-        class ImageFileReader : public Input< CpuImage<TPix> > {
+        class ImageFileReader : public karabo::xms::Input< CpuImage<TPix> > {
         public:
 
             KARABO_CLASSINFO(ImageFileReader, "File", "1.0")
@@ -58,11 +58,11 @@ namespace karabo {
              * @param input Validated (@see expectedParameters) and default-filled configuration
              *              */
             void configure(const karabo::util::Hash& input) {
-                input.get("filename", m_filename);
+                m_filename = input.get<std::string>("filename");
                 m_input = input;
             }
 
-            void read(CpuImage<TPix>& image) {
+            void read(CpuImage<TPix>& image, size_t idx = 0) {
                 try {
                     CpuImage<TPix> tmp;
                     try {
@@ -72,13 +72,13 @@ namespace karabo {
                     } catch (...) {
                         std::string extension = m_filename.extension().string().substr(1);
                         boost::to_lower(extension);
-                        std::vector<std::string> keys = karabo::util::Factory<Input<CpuImage<TPix> > >::getRegisteredKeys();
+                        std::vector<std::string> keys = karabo::util::Factory<karabo::xms::Input<CpuImage<TPix> > >::getRegisteredKeys();
 
                         BOOST_FOREACH(std::string key, keys) {
                             std::string lKey(key);
                             boost::to_lower(lKey);
                             if (lKey == extension) {
-                                boost::shared_ptr<Input<CpuImage<TPix> > > in = Input<CpuImage<TPix> >::create(m_input);
+                                boost::shared_ptr<karabo::xms::Input<CpuImage<TPix> > > in = karabo::xms::Input<CpuImage<TPix> >::create(m_input);
                                 in->read(tmp);
                                 image.swap(tmp);
                                 return;
@@ -90,20 +90,16 @@ namespace karabo {
                     RETHROW_AS(IO_EXCEPTION("Problems reading image " + m_filename.string()));
                 }
             }
-            
-            karabo::util::Hash getIOStatus() const {
-                return karabo::util::Hash();
-            }
-            
-            bool canRead() const {
+
+            bool canCompute() const {
                 return boost::filesystem::exists(m_filename);
             }
             
-            void setEndOfStream() const {
-                
+            size_t size() const {
+                // TODO Work on this
+                return 1;
             }
-            
-            
+
         private:
 
             boost::filesystem::path m_filename;

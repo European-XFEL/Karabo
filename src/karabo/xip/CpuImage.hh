@@ -12,9 +12,10 @@
 #define KARABO_XIP_CPUIMAGE_HH
 
 #include <karabo/util/Factory.hh>
-#include "Input.hh"
-#include "Output.hh"
+#include <karabo/xms/Input.hh>
+#include <karabo/xms/Output.hh>
 
+#include "AbstractImage.hh"
 #include "CImg.h"
 #include "Statistics.hh"
 #include "SingleProcessor.hh"
@@ -39,7 +40,7 @@ namespace karabo {
          * Image class (computing done on CPU)
          */
         template<class TPix>
-        class CpuImage {
+        class CpuImage : public AbstractImage<TPix> {
             // Grant friendship in order to copy-construct from foreign pixelTypes
             template <class UPix> friend class CpuImage;
 
@@ -47,7 +48,7 @@ namespace karabo {
             template <class UPix> friend class ImageFileWriter;
 
 
-            typedef typename ci::cimg::superset<TPix, float>::type TPixFloat;
+            //typedef typename ci::cimg::superset<TPix, float>::type TPixFloat;
             typedef boost::shared_ptr<ci::CImgDisplay> CImgDisplayPointer;
             
         public:
@@ -63,8 +64,8 @@ namespace karabo {
             }
 
             explicit CpuImage(const std::string& filename) : m_cimg() {
-                karabo::util::Hash h("ImageFile.filename", filename);
-                boost::shared_ptr<Input<CpuImage<TPix> > > in = Input<CpuImage<TPix> >::create(h);
+                karabo::util::Hash h("File.filename", filename);
+                boost::shared_ptr<karabo::xms::Input<CpuImage<TPix> > > in = karabo::xms::Input<CpuImage<TPix> >::create(h);
                 in->read(*this);
             }
 
@@ -74,7 +75,7 @@ namespace karabo {
              * @param dy image height
              * @param dz image depth
              */
-            explicit CpuImage(const unsigned int dx, const unsigned int dy = 1, const unsigned int dz = 1) : m_cimg(ci::CImg<TPix>(dx, dy, dz)) {
+            explicit CpuImage(const size_t dx, const size_t dy = 1, const size_t dz = 1) : m_cimg(ci::CImg<TPix>(dx, dy, dz)) {
             }
 
             /** 
@@ -84,16 +85,16 @@ namespace karabo {
              * @param dz image depth
              * @param value default value to fill the image
              */
-            CpuImage(const unsigned int dx, const unsigned int dy, const unsigned int dz, const TPix& value) : m_cimg(ci::CImg<TPix>(dx, dy, dz, 1, value)) {
+            CpuImage(const size_t dx, const size_t dy, const size_t dz, const TPix& value) : m_cimg(ci::CImg<TPix>(dx, dy, dz, 1, value)) {
             }
 
-            CpuImage(const unsigned int dx, const unsigned int dy, const unsigned int dz, const std::string& values, const bool repeatValues) : m_cimg(ci::CImg<TPix>(dx, dy, dz, 1, values.c_str(), repeatValues)) {
+            CpuImage(const size_t dx, const size_t dy, const size_t dz, const std::string& values, const bool repeatValues) : m_cimg(ci::CImg<TPix>(dx, dy, dz, 1, values.c_str(), repeatValues)) {
             }
 
-            CpuImage(const TPix * const dataBuffer, const unsigned int dx, const unsigned int dy, const unsigned int dz) : m_cimg(ci::CImg<TPix>(dataBuffer, dx, dy, dz)) {
+            CpuImage(const TPix * const dataBuffer, const size_t dx, const size_t dy, const size_t dz) : m_cimg(ci::CImg<TPix>(dataBuffer, dx, dy, dz)) {
             }
 
-            CpuImage(const std::vector<TPix>& dataBuffer, const unsigned int dx, const unsigned int dy, const unsigned int dz) : m_cimg(ci::CImg<TPix>(&dataBuffer[0], dx, dy, dz)) {
+            CpuImage(const std::vector<TPix>& dataBuffer, const size_t dx, const size_t dy, const size_t dz) : m_cimg(ci::CImg<TPix>(&dataBuffer[0], dx, dy, dz)) {
             }
 
             CpuImage(const karabo::util::Hash& header) : m_cimg(ci::CImg<TPix>(header.get<int>("dimX"), header.get<int>("dimY"), header.get<int>("dimZ"))) {
@@ -139,7 +140,7 @@ namespace karabo {
                 return *this;
             }
 
-            inline CpuImage& assign(const unsigned int dx, const unsigned int dy = 1, const unsigned int dz = 1) {
+            inline CpuImage& assign(const size_t dx, const size_t dy = 1, const size_t dz = 1) {
                 m_header.clear();
                 m_cimg.assign(dx, dy, dz);
                 return *this;
@@ -172,7 +173,7 @@ namespace karabo {
              ***************************************/
 
             /**
-             * Copying from foreing pixelType
+             * Copying from foreign pixelType
              * @param image
              * @param isShared
              * @return 
@@ -243,12 +244,12 @@ namespace karabo {
 
             const CpuImage& write(const std::string& filename, const int number = -1) const {
                 karabo::util::Hash h("ImageFile.filename", filename, "ImageFile.number", number);
-                boost::shared_ptr<Output<CpuImage<TPix> > > out = Output<CpuImage<TPix> >::create(h);
+                boost::shared_ptr<karabo::xms::Output<CpuImage<TPix> > > out = karabo::xms::Output<CpuImage<TPix> >::create(h);
                 out->write(*this);
                 return *this;
             }
 
-            inline size_t offset(const unsigned int x, const unsigned int y = 0, const unsigned int z = 0) {
+            inline size_t offset(const size_t x, const size_t y = 0, const size_t z = 0) {
                 return m_cimg.offset(x, y, z);
             }
 
@@ -312,11 +313,11 @@ namespace karabo {
              *              Operators              *
              ***************************************/
 
-            inline const TPix& operator()(const unsigned int x, const unsigned int y = 0, const unsigned int z = 0) const {
+            inline const TPix& operator()(const size_t x, const size_t y = 0, const size_t z = 0) const {
                 return m_cimg(x, y, z);
             }
 
-            inline TPix& operator()(const unsigned int x, const unsigned int y = 0, const unsigned int z = 0) {
+            inline TPix& operator()(const size_t x, const size_t y = 0, const size_t z = 0) {
                 return m_cimg(x, y, z);
             }
 
@@ -413,22 +414,6 @@ namespace karabo {
                 return *this;
             }
 
-            CpuImage& operator++(int) {
-                const CpuImage copy(*this, false);
-                ++(*this);
-                return copy;
-            }
-
-            /**
-             * Operator+() (unary)
-             * \remark
-             * *this operator always returns a non-shared copy of an image.
-             * @return 
-             */
-            CpuImage& operator+() const {
-                return CpuImage(*this, false);
-            }
-
             template <typename U>
             CpuImage< typename ci::cimg::superset<TPix, U>::type > operator+(const U& val) const {
                 return CpuImage< typename ci::cimg::superset<TPix, U>::type > (*this, false) += val;
@@ -455,8 +440,8 @@ namespace karabo {
                 return CpuImage<typename ci::cimg::superset<TPix, UPix>::type >(*this)*=value;
             }
             
-            CpuImage<TPixFloat> operator*(const std::string& expression ) {
-                return CpuImage<TPixFloat>(*this)*=expression;
+            CpuImage<double> operator*(const std::string& expression ) {
+                return CpuImage<double>(*this)*=expression;
             }
             
             template <class UPix>
@@ -485,8 +470,8 @@ namespace karabo {
                 return CpuImage<typename ci::cimg::superset<TPix, UPix>::type >(*this)/=value;
             }
             
-            CpuImage<TPixFloat> operator/(const std::string& expression ) {
-                return CpuImage<TPixFloat>(*this)/=expression;
+            CpuImage<double> operator/(const std::string& expression ) {
+                return CpuImage<double>(*this)/=expression;
             }
             
             template <class UPix>
@@ -593,56 +578,56 @@ namespace karabo {
                 return m_cimg._atXYZ(x, y, z, 0);
             }
 
-            TPixFloat linearAtX(const float fx, const int y, const int z, const TPixFloat beyondBoundaryValue) const {
+            double linearAtX(const float fx, const int y, const int z, const double beyondBoundaryValue) const {
                 return m_cimg.linear_atX(fx, y, z, 0, beyondBoundaryValue);
             }
 
-            TPixFloat linearAtX(const float fx, const int y = 0, const int z = 0) const {
+            double linearAtX(const float fx, const int y = 0, const int z = 0) const {
                 if (this->isEmpty()) throw IMAGE_DIMENSION_EXCEPTION("Empty image");
                 return m_cimg._linear_atX(fx, y, z, 0);
             }
 
-            TPixFloat linearAtXY(const float fx, const float y, const int z, const TPixFloat beyondBoundaryValue) const {
+            double linearAtXY(const float fx, const float y, const int z, const double beyondBoundaryValue) const {
                 return m_cimg.linear_atXY(fx, y, z, 0, beyondBoundaryValue);
             }
 
-            TPixFloat linearAtXY(const float fx, const float y = 0, const int z = 0) const {
+            double linearAtXY(const float fx, const float y = 0, const int z = 0) const {
                 if (this->isEmpty()) throw IMAGE_DIMENSION_EXCEPTION("Empty image");
                 return m_cimg._linear_atXY(fx, y, z, 0);
             }
 
-            TPixFloat linearAtXYZ(const float fx, const float y, const float z, const TPixFloat beyondBoundaryValue) const {
+            double linearAtXYZ(const float fx, const float y, const float z, const double beyondBoundaryValue) const {
                 return m_cimg.linear_atXYZ(fx, y, z, 0, beyondBoundaryValue);
             }
 
-            TPixFloat linearAtXYZ(const float fx, const float y = 0, const float z = 0) const {
+            double linearAtXYZ(const float fx, const float y = 0, const float z = 0) const {
                 if (this->isEmpty()) throw IMAGE_DIMENSION_EXCEPTION("Empty image");
                 return m_cimg._linear_atXYZ(fx, y, z, 0);
             }
 
-            TPixFloat cubicAtX(const float fx, const int y, const int z, const TPixFloat beyondBoundaryValue) const {
+            double cubicAtX(const float fx, const int y, const int z, const double beyondBoundaryValue) const {
                 return m_cimg.cubic_atX(fx, y, z, 0, beyondBoundaryValue);
             }
 
-            TPixFloat cubicAtX(const float fx, const int y = 0, const int z = 0) const {
+            double cubicAtX(const float fx, const int y = 0, const int z = 0) const {
                 if (this->isEmpty()) throw IMAGE_DIMENSION_EXCEPTION("Empty image");
                 return m_cimg._cubic_atX(fx, y, z, 0);
             }
 
-            TPixFloat cubicAtXY(const float fx, const float y, const int z, const TPixFloat beyondBoundaryValue) const {
+            double cubicAtXY(const float fx, const float y, const int z, const double beyondBoundaryValue) const {
                 return m_cimg.cubic_atXY(fx, y, z, 0, beyondBoundaryValue);
             }
 
-            TPixFloat cubicAtXY(const float fx, const float y = 0, const int z = 0) const {
+            double cubicAtXY(const float fx, const float y = 0, const int z = 0) const {
                 if (this->isEmpty()) throw IMAGE_DIMENSION_EXCEPTION("Empty image");
                 return m_cimg._cubic_atXY(fx, y, z, 0);
             }
 
-            TPixFloat cubicAtXYZ(const float fx, const float y, const float z, const TPixFloat beyondBoundaryValue) const {
+            double cubicAtXYZ(const float fx, const float y, const float z, const double beyondBoundaryValue) const {
                 return m_cimg.cubic_atXYZ(fx, y, z, 0, beyondBoundaryValue);
             }
 
-            TPixFloat cubicAtXYZ(const float fx, const float y = 0, const float z = 0) const {
+            double cubicAtXYZ(const float fx, const float y = 0, const float z = 0) const {
                 if (this->isEmpty()) throw IMAGE_DIMENSION_EXCEPTION("Empty image");
                 return m_cimg._cubic_atXYZ(fx, y, z, 0);
             }
@@ -864,9 +849,9 @@ namespace karabo {
              */
             CpuImage& print(const std::string& title = "", const bool displayPixels = true, int maxDimX = 28, int maxDimY = 28, int maxDimZ = 8) {
                 using namespace std;
-                const unsigned int siz = m_cimg.size();
-                unsigned int msiz = siz * sizeof (TPix);
-                unsigned int mdisp = msiz < 8 * 1024 ? 0 : (msiz < 8 * 1024 * 1024 ? 1 : 2);
+                const size_t siz = m_cimg.size();
+                size_t msiz = siz * sizeof (TPix);
+                size_t mdisp = msiz < 8 * 1024 ? 0 : (msiz < 8 * 1024 * 1024 ? 1 : 2);
                 mdisp == 0 ? msiz = msiz : (mdisp == 1 ? (msiz = msiz >> 10) : (msiz = msiz >> 20));
                 std::string unit;
                 mdisp == 0 ? unit = "b " : (mdisp == 1 ? unit = "Kb" : unit = "Mb");
@@ -1028,15 +1013,16 @@ namespace karabo {
         template <class T>
         std::vector<boost::shared_ptr<cimg_library::CImgDisplay> > CpuImage<T>::m_displays;
 
+        typedef CpuImage<short> CpuImgS;
         typedef CpuImage<int> CpuImgI;
         typedef CpuImage<float> CpuImgF;
         typedef CpuImage<double> CpuImgD;
         
-        typedef Input<CpuImgD> InputCpuImgD;
-        typedef Output<CpuImgD> OutputCpuImgD;
+        typedef karabo::xms::Input<CpuImgD> InputCpuImgD;
+        typedef karabo::xms::Output<CpuImgD> OutputCpuImgD;
         
-        typedef Input<CpuImgI> InputCpuImgI;
-        typedef Output<CpuImgI> OutputCpuImgI;
+        typedef  karabo::xms::Input<CpuImgI> InputCpuImgI;
+        typedef  karabo::xms::Output<CpuImgI> OutputCpuImgI;
         
         typedef karabo::util::Hash Config;
 
