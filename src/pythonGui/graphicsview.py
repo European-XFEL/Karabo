@@ -811,6 +811,7 @@ class GraphicsView(QGraphicsView):
                 # Schema
                 schema = QString(mimeData.data("schema"))
 
+                showAdditionalInfo = False
                 if navigationItemType and (navigationItemType == NavigationItemTypes.DEVICE_CLASS) \
                    and (not ("-" in displayName)):
                     # Get unique device class id for new plugin
@@ -823,9 +824,10 @@ class GraphicsView(QGraphicsView):
                     # Create new device class plugin if Device Class is dropped
                     Manager().createNewDeviceClassPlugin(devSrvInsId, displayName, newDevClaId)
                     displayName = newDevClaId
+                    showAdditionalInfo = False
 
                 # Create graphical item
-                customItem = GraphicsCustomItem(internalKey, self.__isDesignMode, displayName, schema)
+                customItem = GraphicsCustomItem(internalKey, self.__isDesignMode, displayName, showAdditionalInfo, schema)
                 tooltipText = "<html><b>Associated key: </b>%s</html>" % internalKey
                 customItem.setToolTip(tooltipText)
                 offset = QPointF()
