@@ -27,7 +27,7 @@ class GraphicsCustomItem(NodeBase, QGraphicsObject):
     signalValueChanged = pyqtSignal(str, object) # key, value
 
 
-    def __init__(self, internalKey, isDesignMode, text, showAdditionalInfo, schema):
+    def __init__(self, internalKey, isDesignMode, text, schema, showAdditionalInfo=True):
         super(GraphicsCustomItem, self).__init__(isDesignMode)
         
         self.__textFont = QFont()
