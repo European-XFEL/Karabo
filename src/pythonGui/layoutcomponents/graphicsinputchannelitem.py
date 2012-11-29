@@ -27,7 +27,9 @@ class GraphicsInputChannelItem(QGraphicsObject):
     def __init__(self, parentItem, keyName, connectionType, isEditable=False):
         super(GraphicsInputChannelItem, self).__init__(parentItem)
 
-        self.__internalKey = parentItem.internalKey() + "." + keyName
+        self.__keyName = keyName
+
+        self.__internalKey = parentItem.internalKey() + "." + self.__keyName
         self.__connectionType = connectionType
         self.__connection = None
         
@@ -45,6 +47,12 @@ class GraphicsInputChannelItem(QGraphicsObject):
         Manager().registerEditableComponent(self.dataDistributionKey, self)
 
 
+### public ###
+    def _getKeyName(self):
+        return self.__keyName
+    keyName = property(fget=_getKeyName)
+
+
     def _getValue(self):
         return self.__connectedOutputChannels
     value = property(fget=_getValue)
@@ -55,7 +63,6 @@ class GraphicsInputChannelItem(QGraphicsObject):
     inputPos = property(fget=_inputPos)
 
 
-### public ###
     def addConnectedOutputChannel(self, connectedOutputChannel):
         if connectedOutputChannel in self.__connectedOutputChannels:
             return
@@ -151,14 +158,14 @@ class GraphicsInputChannelItem(QGraphicsObject):
         if self.connectedOutputChannelsKey == key:
             if self.scene():
                 items = self.scene().items()
-                for item in items:
-                    if type(item) == layoutcomponents.graphicsoutputchannelitem.GraphicsOutputChannelItem:
+                for channelItem in items:
+                    if type(channelItem) == layoutcomponents.graphicsoutputchannelitem.GraphicsOutputChannelItem:
                         for v in value:
                             vSplit = v.split('@', 1)
-                            if item.predefinedDevInstId == vSplit[0]:
-                                item = ChannelConnection(item, self)
-                                self.scene().addItem(item)
-                                self.addChannelConnectionItem(item)
+                            if (channelItem.predefinedDevInstId == vSplit[0]) and (channelItem.keyName == vSplit[1]):
+                                channelConnectionItem = ChannelConnection(channelItem, self)
+                                self.scene().addItem(channelConnectionItem)
+                                self.addChannelConnectionItem(channelConnectionItem)
                             # Add connected output channel to list
                             self.addConnectedOutputChannel(v)
         elif self.dataDistributionKey == key:
