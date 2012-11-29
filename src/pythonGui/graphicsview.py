@@ -812,19 +812,19 @@ class GraphicsView(QGraphicsView):
                 schema = QString(mimeData.data("schema"))
 
                 showAdditionalInfo = False
-                if navigationItemType and (navigationItemType == NavigationItemTypes.DEVICE_CLASS) \
-                   and (not ("-" in displayName)):
-                    # Get unique device class id for new plugin
-                    newDevClaId = Manager().createNewDeviceClassId(displayName)
+                if navigationItemType and (navigationItemType == NavigationItemTypes.DEVICE_CLASS):
+                    showAdditionalInfo = True
+                    if not ("-" in displayName):
+                        # Get unique device class id for new plugin
+                        newDevClaId = Manager().createNewDeviceClassId(displayName)
 
-                    keys = internalKey.split('+', 1)
-                    if len(keys) is 2:
-                        internalKey = str(keys[0]) + "+" + newDevClaId
+                        keys = internalKey.split('+', 1)
+                        if len(keys) is 2:
+                            internalKey = str(keys[0]) + "+" + newDevClaId
 
-                    # Create new device class plugin if Device Class is dropped
-                    Manager().createNewDeviceClassPlugin(devSrvInsId, displayName, newDevClaId)
-                    displayName = newDevClaId
-                    showAdditionalInfo = False
+                        # Create new device class plugin if Device Class is dropped
+                        Manager().createNewDeviceClassPlugin(devSrvInsId, displayName, newDevClaId)
+                        displayName = newDevClaId
 
                 # Create graphical item
                 customItem = GraphicsCustomItem(internalKey, self.__isDesignMode, displayName, showAdditionalInfo, schema)
