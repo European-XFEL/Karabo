@@ -24,10 +24,10 @@ class GraphicsInputChannelItem(QGraphicsObject):
     signalValueChanged = pyqtSignal(str, object) # key, value
 
 
-    def __init__(self, parentItem, connectionType, isEditable=False):
+    def __init__(self, parentItem, keyName, connectionType, isEditable=False):
         super(GraphicsInputChannelItem, self).__init__(parentItem)
 
-        self.__internalKey = parentItem.internalKey() + ".input"
+        self.__internalKey = parentItem.internalKey() + "." + keyName
         self.__connectionType = connectionType
         self.__connection = None
         
