@@ -11,7 +11,7 @@
 __all__ = ["GraphicsOutputChannelItem"]
 
 import layoutcomponents.graphicsinputchannelitem
-from channelconnection import ChannelConnection
+#from channelconnection import ChannelConnection
 
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
@@ -27,7 +27,8 @@ class GraphicsOutputChannelItem(QGraphicsObject):
         super(GraphicsOutputChannelItem, self).__init__(parentItem)
         
         self.__predefinedDevInstId = str(self.parentItem().value)
-        self.__internalKey = parentItem.internalKey() + "." + keyName
+        self.__keyName = keyName
+        self.__internalKey = parentItem.internalKey() + "." + self.__keyName
         
         self.__connectionType = connectionType
         self.__connection = None
@@ -38,7 +39,7 @@ class GraphicsOutputChannelItem(QGraphicsObject):
 
 ### public ###
     def _getOutputChannelConnection(self):
-        return self.__predefinedDevInstId + "@output"
+        return self.__predefinedDevInstId + "@" + self.__keyName
     outputChannelConnection = property(fget=_getOutputChannelConnection)
 
 
@@ -49,6 +50,11 @@ class GraphicsOutputChannelItem(QGraphicsObject):
         self.__predefinedDevInstId = devInstId
         self.signalConnectedOutputChannelChanged.emit(oldOutputChannelConnection, self.outputChannelConnection)
     predefinedDevInstId = property(fget=_getPredefinedDevInstId, fset=_setPredefinedDevInstId)
+
+
+    def _getKeyName(self):
+        return self.__keyName
+    keyName = property(fget=_getKeyName)
 
 
     def _outputPos(self):
