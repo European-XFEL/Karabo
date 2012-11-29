@@ -23,11 +23,11 @@ class GraphicsOutputChannelItem(QGraphicsObject):
     signalConnectedOutputChannelChanged = pyqtSignal(str, str) # old value, new value
 
 
-    def __init__(self, parentItem, connectionType, isEditable=False):
+    def __init__(self, parentItem, keyName, connectionType, isEditable=False):
         super(GraphicsOutputChannelItem, self).__init__(parentItem)
         
         self.__predefinedDevInstId = str(self.parentItem().value)
-        self.__internalKey = parentItem.internalKey() + ".output"
+        self.__internalKey = parentItem.internalKey() + "." + keyName
         
         self.__connectionType = connectionType
         self.__connection = None
