@@ -27,11 +27,13 @@ class GraphicsCustomItem(NodeBase, QGraphicsObject):
     signalValueChanged = pyqtSignal(str, object) # key, value
 
 
-    def __init__(self, internalKey, isDesignMode, text, schema):
+    def __init__(self, internalKey, isDesignMode, text, showAdditionalInfo, schema):
         super(GraphicsCustomItem, self).__init__(isDesignMode)
         
         self.__textFont = QFont()
         self.__text = text
+        
+        self.__showAdditionalInfo = showAdditionalInfo
         
         self.__devInsId = ""
         
@@ -132,7 +134,10 @@ class GraphicsCustomItem(NodeBase, QGraphicsObject):
 
 ### private ###
     def _updateCompositeText(self):
-        self.__compositeText = str(self.__text + "\n<" + self.__devInsId + ">")
+        if self.__showAdditionalInfo:
+            self.__compositeText = str(self.__text + "\n<" + self.__devInsId + ">")
+        else:
+            self.__compositeText = self.__text
 
 
     # Prepare channel items for geometry change
