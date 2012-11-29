@@ -827,7 +827,7 @@ class GraphicsView(QGraphicsView):
                         displayName = newDevClaId
 
                 # Create graphical item
-                customItem = GraphicsCustomItem(internalKey, self.__isDesignMode, displayName, showAdditionalInfo, schema)
+                customItem = GraphicsCustomItem(internalKey, self.__isDesignMode, displayName, schema, showAdditionalInfo)
                 tooltipText = "<html><b>Associated key: </b>%s</html>" % internalKey
                 customItem.setToolTip(tooltipText)
                 offset = QPointF()
