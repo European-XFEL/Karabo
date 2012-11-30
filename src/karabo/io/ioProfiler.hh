@@ -14,7 +14,7 @@
 #include <karabo/util/Profiler.hh>
 #include <iostream>
 
-#ifdef DEBUG_IO_HDF5_TABLE
+#ifdef KARABO_IO_TRACE
 #define tracer if(0); else std::cerr
 #else 
 #define tracer if(1); else std::cerr
