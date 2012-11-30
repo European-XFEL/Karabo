@@ -55,18 +55,18 @@ void ArrayView_Test::testCArray() {
     size_t dims[2] = {3, 4};
 
     ArrayView<long long> a(rawLongLong, ndims, dims);
-    cerr << a.getNumDims() << endl;
+    tracer << a.getNumDims() << endl;
     CPPUNIT_ASSERT(a.getNumDims() == 2);
     ArrayDimensions sizes = a.getDims();
     CPPUNIT_ASSERT(sizes[0] == 3);
     CPPUNIT_ASSERT(sizes[1] == 4);
-    cerr << "ArrayDimensions.size() = " << sizes.size() << endl;
+    tracer << "ArrayDimensions.size() = " << sizes.size() << endl;
 
     for (size_t i = 0; i < size; ++i) {
         CPPUNIT_ASSERT(a[i] == i * 5);
-        cerr << "[" << i << "]: " << a[i] << ", ";
+        tracer << "[" << i << "]: " << a[i] << ", ";
     }
-    cerr << endl;
+    tracer << endl;
 
 }
 
@@ -90,15 +90,15 @@ void ArrayView_Test::testIndexable() {
     // using self calculated index
     for (size_t i = 0; i < vecDims[0]; ++i) {
         for (size_t j = 0; j < vecDims[1]; ++j) {
-            cerr << vecData[vecDims[1] * i + j] << " ";
+            tracer << vecData[vecDims[1] * i + j] << " ";
             CPPUNIT_ASSERT(vecData[vecDims[1] * i + j] == (vecDims[1] * i + j)*10);
         }
-        cerr << endl;
+        tracer << endl;
     }
 
 
-    cerr << "number of elements: " << vecData.size() << endl << " dim[0]: " << vecDims[0] << " dim[1]: " << vecDims[1] << endl;
-    cerr << "rank " << vecDims.size() << endl;
+    tracer << "number of elements: " << vecData.size() << endl << " dim[0]: " << vecDims[0] << " dim[1]: " << vecDims[1] << endl;
+    tracer << "rank " << vecDims.size() << endl;
 
 
     // Define ArrayView using vector data and dimensions
@@ -107,7 +107,7 @@ void ArrayView_Test::testIndexable() {
 
     // get the array view dimensions as defined by constructor
     ArrayDimensions bSizes = b.getDims();
-    cerr << "dimensions [0]: " << bSizes[0] << " [1]: " << bSizes[1] << endl;
+    tracer << "dimensions [0]: " << bSizes[0] << " [1]: " << bSizes[1] << endl;
     CPPUNIT_ASSERT(bSizes[0] == 3);
     CPPUNIT_ASSERT(bSizes[1] == 4);
 
@@ -116,22 +116,22 @@ void ArrayView_Test::testIndexable() {
     // this allow us to access elements by double index, i.e.: b2[0][1], b2[0][2], ..., b2[2][3]
     ArrayView< ArrayView<unsigned int> > b2 = b.indexable();
 
-    cerr << "number of dimensions: " << b2.getNumDims() << endl;
+    tracer << "number of dimensions: " << b2.getNumDims() << endl;
     CPPUNIT_ASSERT(b2.getNumDims() == 1);
-    cerr << "number of columns: " << b2.getSize() << endl;
+    tracer << "number of columns: " << b2.getSize() << endl;
     CPPUNIT_ASSERT(b2.getSize() == 3);
         
-    cerr << "number of rows: " << b2[0].getSize() << endl;
+    tracer << "number of rows: " << b2[0].getSize() << endl;
     CPPUNIT_ASSERT(b2[0].getSize() == 4);
     CPPUNIT_ASSERT(b2[1].getSize() == 4);
     CPPUNIT_ASSERT(b2[2].getSize() == 4);
 
     for (size_t i = 0; i < b2.getSize(); ++i) {
         for (size_t j = 0; j < b2[i].getSize(); ++j) {
-            cerr << b2[i][j] << " ";
+            tracer << b2[i][j] << " ";
             CPPUNIT_ASSERT(b2[i][j] == (i * b2[i].getSize() + j)*10);
         }
-        cerr << endl;
+        tracer << endl;
     }
 }
 
