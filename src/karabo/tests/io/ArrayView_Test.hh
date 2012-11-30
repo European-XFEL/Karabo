@@ -10,6 +10,8 @@
 
 #include <cppunit/extensions/HelperMacros.h>
 #include <karabo/io/ArrayView.hh>
+#include <karabo/io/ioProfiler.hh>
+
 
 
 class ArrayView_Test : public CPPUNIT_NS::TestFixture {

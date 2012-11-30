@@ -88,7 +88,7 @@ void Hdf5File_Test::testWrite() {
             RETHROW;
         }
         dfc = dataFormat->getConfig();
-        cerr << "dataFormatConfig: " << endl << dfc << endl;
+        tracer << "dataFormatConfig: " << endl << dfc << endl;
         Writer<Hash>::Pointer wc = Writer<Hash>::create(Hash("TextFile.filename", runDir + "writer.xml"));
         wc->write(dfc);
     } else {
@@ -98,13 +98,13 @@ void Hdf5File_Test::testWrite() {
     dataFormat = DataFormat::create(dfc);
 
 
-    cerr << "-----" << endl << data[0] << endl << "-----";
+    tracer << "-----" << endl << data[0] << endl << "-----";
 
 
 
     Table::Pointer table = file.createTable("/test", dataFormat);
 
-    cerr << "table created " << endl;
+    tracer << "table created " << endl;
     for (size_t i = 0; i < vecSize; ++i) {
         table->append(data[i]);
     }
@@ -137,7 +137,7 @@ void Hdf5File_Test::testWrite() {
 
     for (size_t i = 0; i < vecSize; ++i) {
 
-        cerr << "------- readData[" << i << "] ----------" << endl;
+        tracer << "------- readData[" << i << "] ----------" << endl;
 
         CPPUNIT_ASSERT(readData[i].hasFromPath("scalars.a"));
         CPPUNIT_ASSERT(readData[i].getFromPath<signed char>("scalars.a") == (signed char) i);
@@ -243,7 +243,7 @@ void Hdf5File_Test::compute(Hash& rec, int idx) {
         vp[i] = i + idx;
         vx[i] = false;
         if (i % 2) vx[i] = true;
-        cerr << "original vx[" << i << "] = " << vx[i] << endl;
+        tracer << "original vx[" << i << "] = " << vx[i] << endl;
         axArr[i] = vx[i];        
         std::ostringstream str;
         str << "Hello " << idx << "[" << i << "]" << " from me";
