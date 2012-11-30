@@ -105,7 +105,7 @@ namespace karabo {
              * Post condition: isShared == true
              * The ArrayView object is always valid.             
              * @param dims description of dimensions
-             */            
+             */
             explicit ArrayView(ArrayDimensions dims) :
             m_dims(dims), m_isShared(true) {
                 m_sharedArray = boost::shared_array<T > (new T[ dims.getNumberOfElements() ]);
@@ -155,7 +155,7 @@ namespace karabo {
             }
 
             /**
-             * Get the number of elements in underlaying storage (as it was 1-dim array)
+             * Get the number of elements in underlying storage (as it was 1-dim array)
              * @return number of elements
              */
             unsigned long long getSize() const {
@@ -177,7 +177,7 @@ namespace karabo {
 
             /**
              * Get pointer to the first element in continues memory block.
-             * The same can be achieved using operator in like that: &av[0] assuming av is an object of ArrayView class.
+             * The same can be achieved using operator like that: &av[0] assuming av is an object of ArrayView class.
              * @return pointer of type T
              */
             T* data() const {
@@ -185,7 +185,7 @@ namespace karabo {
             }
 
             /**
-             * Get reference to a specified element in the array. 
+             * Get the reference to a specified element in the array. 
              * @param i index of an array as it was one dimensional array.
              * @return reference to the value 
              */
@@ -204,6 +204,7 @@ namespace karabo {
                 return m_ptr[i];
             }
 
+            
             void getVectorOfArrayViews(std::vector<ArrayView<T> >& vec) {
                 vec.resize(m_dims[0]);
                 size_t rank = getNumDims();
