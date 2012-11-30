@@ -134,7 +134,7 @@ if (itData != entry.end()) {\
 
         const DeviceClient::DbTableCache& DeviceClient::cacheAndGetDevices() {
             boost::mutex::scoped_lock lock(m_deviceCacheMutex);
-            
+
             if (m_deviceCache.empty()) {
                 m_signalSlotable->request("*", "slotSelect", "instanceId", "DeviceInstance").timeout(m_defaultTimeout).receive(m_deviceCache);
             }
@@ -313,7 +313,15 @@ if (itData != entry.end()) {\
             if (schema.hasValueOptions()) return schema.getValueOptions();
             else return std::vector<std::string > ();
         }
-        
+
+        Hash DeviceClient::loadConfigurationFromXMLFile(const std::string& filename) {
+            Hash configuration, conf;
+            conf.setFromPath("TextFile.filename", filename);
+            karabo::io::Reader<Hash>::Pointer in = karabo::io::Reader<Hash>::create(conf);
+            in->read(configuration);
+            return configuration;
+        }
+
         const karabo::util::Schema& DeviceClient::getSchema(const std::string & instanceId, const std::string& key, const std::string& keySep) {
             if (key.empty())
                 return cacheAndGetFullSchema(instanceId);
@@ -328,6 +336,10 @@ if (itData != entry.end()) {\
         void DeviceClient::instantiateNoWait(const std::string& serverInstanceId, const std::string& classId, const karabo::util::Hash & configuration) {
             Hash tmp(classId, configuration);
             m_signalSlotable->call(serverInstanceId, "slotStartDevice", tmp);
+        }
+        
+        void DeviceClient::instantiateNoWait(const std::string& serverInstanceId, const karabo::util::Hash & completeConfiguration) {
+            m_signalSlotable->call(serverInstanceId, "slotStartDevice", completeConfiguration);
         }
 
         std::pair<bool, std::string > DeviceClient::instantiateWait(const std::string& serverInstanceId, const std::string& classId, const karabo::util::Hash& configuration, int timeout) {
