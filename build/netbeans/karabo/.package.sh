@@ -13,10 +13,17 @@ if [ "$VERSION" = "trunk" ]; then
     tmp=$(svn info ../../../ | grep Revision)
     VERSION=r${tmp##*: }
 fi
-PACKAGENAME=karabo-$VERSION
-if [ $PACKAGE_OPTION = "NOGUI" ]; then
-   PACKAGENAME=karabo-nogui-$VERSION
+
+if [ "$PACKAGE_TYPE" = "tar" ]; then
+    if [ $PACKAGE_OPTION = "NOGUI" ]; then
+        PACKAGENAME=karabo-nogui-$VERSION
+    else 
+        PACKAGENAME=karabo-$VERSION
+    fi
+elif [ "$PACKAGE_TYPE" = "install" ]; then
+    PACKAGENAME=karabo
 fi
+
 NUM_CORES=2
 if [ "$OS" = "Linux" ]; then
     DISTRO_ID=( $(lsb_release -is) )
@@ -39,9 +46,9 @@ mkdir -p $PACKAGEDIR
 
 # karabo
 make -j$NUM_CORES CONF=$CONF
-cp -rf $DISTDIR/$CONF/$PLATFORM/lib $PACKAGEDIR/
-cp -rf $DISTDIR/$CONF/$PLATFORM/include $PACKAGEDIR/
-cp -rf ../../../extern/$PLATFORM $PACKAGEDIR/extern
+cp -urf $DISTDIR/$CONF/$PLATFORM/lib $PACKAGEDIR/
+cp -urf $DISTDIR/$CONF/$PLATFORM/include $PACKAGEDIR/
+cp -urf ../../../extern/$PLATFORM $PACKAGEDIR/extern
 if [ $OS = "Darwin" ]; then
     cd $PACKAGEDIR/lib
     ln -s libkarabo.dylib libkarabo.so
@@ -51,18 +58,18 @@ fi
 # deviceServer
 cd ../deviceServer
 make -j$NUM_CORES CONF=$CONF
-cp -rf $DISTDIR/$CONF/$PLATFORM/bin $PACKAGEDIR/
+cp -urf $DISTDIR/$CONF/$PLATFORM/bin $PACKAGEDIR/
 
 # brokerMessageLogger
 cd ../brokerMessageLogger
 make -j$NUM_CORES CONF=$CONF
-cp -rf $DISTDIR/$CONF/$PLATFORM/bin $PACKAGEDIR/
+cp -urf $DISTDIR/$CONF/$PLATFORM/bin $PACKAGEDIR/
 
 # pythonKarabo
 cd ../pythonKarabo
 ./build.sh
-cp -rf $DISTDIR/$OS/bin $PACKAGEDIR/
-cp -rf $DISTDIR/$OS/lib $PACKAGEDIR/
+cp -urf $DISTDIR/$OS/bin $PACKAGEDIR/
+cp -urf $DISTDIR/$OS/lib $PACKAGEDIR/
 
 
 # pythonGui
@@ -71,15 +78,15 @@ if [ $PACKAGE_OPTION = "NOGUI" ]; then
 elif [ $PACKAGE_OPTION = "GUI" ]; then
    cd ../pythonGui
    ./build.sh
-   cp -rf $DISTDIR/$OS/bin $PACKAGEDIR/
-   cp -rf $DISTDIR/$OS/lib $PACKAGEDIR/
+   cp -urf $DISTDIR/$OS/bin $PACKAGEDIR/
+   cp -urf $DISTDIR/$OS/lib $PACKAGEDIR/
 fi
 
 # pythonCli
 cd ../pythonCli
 ./build.sh
-cp -rf $DISTDIR/$OS/bin $PACKAGEDIR/
-cp -rf $DISTDIR/$OS/lib $PACKAGEDIR/
+cp -urf $DISTDIR/$OS/bin $PACKAGEDIR/
+cp -urf $DISTDIR/$OS/lib $PACKAGEDIR/
 
 if [ "$PACKAGE_TYPE" = "tar" ]; then
     # Tar it
