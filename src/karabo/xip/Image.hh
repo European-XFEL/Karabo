@@ -18,7 +18,7 @@
 
 namespace karabo {
     namespace xip {
-        
+
         enum ImageType {
             CPU,
             GPU
@@ -39,22 +39,134 @@ namespace karabo {
              *            Constructors             *
              ***************************************/
 
-            Image(const int imageType) {
-                if ( imageType == CPU) m_img = initCpu()->image();
+            explicit Image(const int imageType) {
+                if (imageType == CPU) m_img = initCpu()->image();
                 else m_img = initCuda()->image();
             }
-            
+
             Image(const int imageType, const std::string& filename) {
                 if (imageType == CPU) m_img = initCpu()->image(filename);
                 else m_img = initCuda()->image(filename);
             }
-            
+
             Image(const int imageType, const size_t dx, const size_t dy = 1, const size_t dz = 1) {
                 if (imageType == CPU) m_img = initCpu()->image(dx, dy, dz);
                 else m_img = initCuda()->image(dx, dy, dz);
             }
 
-         
+            Image(const int imageType, const size_t dx, const size_t dy, const size_t dz, const TPix& value) {
+                if (imageType == CPU) m_img = initCpu()->image(dx, dy, dz, value);
+                else m_img = initCuda()->image(dx, dy, dz, value);
+            }
+
+            Image(const int imageType, const size_t dx, const size_t dy, const size_t dz, const std::string& values, const bool repeatValues) {
+                if (imageType == CPU) m_img = initCpu()->image(dx, dy, dz, values, repeatValues);
+                else m_img = initCuda()->image(dx, dy, dz, values, repeatValues);
+            }
+
+            Image(const int imageType, const TPix * const dataBuffer, const size_t dx, const size_t dy, const size_t dz) {
+                if (imageType == CPU) m_img = initCpu()->image(dataBuffer, dx, dy, dz);
+                else m_img = initCuda()->image(dataBuffer, dx, dy, dz);
+            }
+
+            Image(const int imageType, const std::vector<TPix>& dataBuffer, const size_t dx, const size_t dy, const size_t dz) {
+                if (imageType == CPU) m_img = initCpu()->image(dataBuffer, dx, dy, dz);
+                else m_img = initCuda()->image(dataBuffer, dx, dy, dz);
+            }
+
+            Image(const int imageType, const karabo::util::Hash& header) {
+                if (imageType == CPU) m_img = initCpu()->image(header);
+                else m_img = initCuda()->image(header);
+            }
+
+            Image(const int imageType, const karabo::util::Hash& header, const TPix& value) {
+                if (imageType == CPU) m_img = initCpu()->image(header, value);
+                else m_img = initCuda()->image(header, value);
+            }
+
+            /***************************************
+             *          Copy-Constructors          *
+             ***************************************/
+
+
+
+
+            /***************************************
+             *        In-Place Construction        *
+             ***************************************/
+
+
+
+            /***************************************
+             *     In-Place Copy-Construction      *
+             ***************************************/
+
+
+            /***************************************
+             *             Destructor              *
+             ***************************************/
+
+
+            /***************************************
+             *         Special functions           *
+             ***************************************/
+
+            /***************************************
+             *      Instance Characteristics       *
+             ***************************************/
+
+            inline const int dimensionality() const {
+                return m_img->dimensionality();
+            }
+
+            inline bool isEmpty() const {
+                return m_img->isEmpty();
+            }
+
+            inline size_t dimX() const {
+                return m_img->dimX();
+            }
+
+            inline size_t dimY() const {
+                return m_img->dimY();
+            }
+
+            inline size_t dimZ() const {
+                return m_img->dimZ();
+            }
+
+            const karabo::util::Hash& getHeader() const {
+                return m_img->getHeader();
+            }
+
+            void setHeader(const karabo::util::Hash& header) {
+                m_img->setHeader(header);
+            }
+
+            inline size_t size() const {
+                return m_img->size();
+            }
+
+            inline size_t byteSize() const {
+                return m_img->byteSize();
+            }
+
+            inline std::string pixelType() const {
+                return m_img->pixelType();
+            }
+
+            Statistics getStatistics() const {
+                return m_img->getStatistics();
+            }
+
+            Image& print(const std::string& title = "", const bool displayPixels = true, int maxDimX = 28, int maxDimY = 28, int maxDimZ = 8) {
+                m_img->print();
+                return *this;
+            }
+
+            /***************************************
+             *              Operators              *
+             ***************************************/
 
         private:
 
@@ -79,14 +191,14 @@ namespace karabo {
                 return m_cudaEnvironment;
             }
 
-        }; 
-        
+        };
+
         template<class TPix>
         typename Image<TPix>::EnvironmentPointer Image<TPix>::m_cpuEnvironment = typename Image<TPix>::EnvironmentPointer();
-        
+
         template<class TPix>
         typename Image<TPix>::EnvironmentPointer Image<TPix>::m_cudaEnvironment = typename Image<TPix>::EnvironmentPointer();
-        
+
     }
 }
 

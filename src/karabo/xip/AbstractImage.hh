@@ -214,10 +214,12 @@ namespace karabo {
              */
             virtual AbstractImage& operator=(const AbstractImage& image) {
             }
+            
+            
+            /**************************
+             *        Operator +      *
+             **************************/
 
-            /**
-             * Operator+=();
-             */
             virtual AbstractImage& operator+=(const TPix& value) {
             }
 
@@ -227,8 +229,8 @@ namespace karabo {
             virtual AbstractImage& operator+=(const AbstractImage& image) {
             }
 
-            virtual AbstractImage& operator++() {
-            }
+            //virtual AbstractImage& operator++() {
+            //}
 
             virtual AbstractImage& operator+(const TPix& value) const {
             }
@@ -237,6 +239,28 @@ namespace karabo {
             }
 
             virtual AbstractImage& operator+(const AbstractImage& image) {
+            }
+            
+            /**************************
+             *        Operator -      *
+             **************************/
+            
+            virtual AbstractImage& operator-=(const TPix& value) {
+            }
+
+            virtual AbstractImage& operator-=(const std::string& expression) {
+            }
+
+            virtual AbstractImage& operator-=(const AbstractImage& image) {
+            }
+            
+            virtual AbstractImage& operator-(const TPix& value) const {
+            }
+
+            virtual AbstractImage& operator-(const std::string& expression) {
+            }
+
+            virtual AbstractImage& operator-(const AbstractImage& image) {
             }
 
             /***************************************
@@ -432,8 +456,8 @@ namespace karabo {
              * @param maxDimZ Maximum numbers printed in Z direction
              * @return Image
              */
-            virtual AbstractImage& print(const std::string& title = "", const bool displayPixels = true, int maxDimX = 28, int maxDimY = 28, int maxDimZ = 8) {
-            }
+            virtual const AbstractImage& print(const std::string& title = "", const bool displayPixels = true, int maxDimX = 28, int maxDimY = 28, int maxDimZ = 8) const = 0;
+            
 
             /***************************************
              *              Display                *
