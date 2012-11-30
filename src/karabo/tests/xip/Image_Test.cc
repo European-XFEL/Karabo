@@ -26,13 +26,18 @@ void ImageTest::tearDown() {
 }
 
 void ImageTest::testConstructors() {
-   
+    
     {
-        Image<float> img(GPU);
-        //CPPUNIT_ASSERT(img.isEmpty() == true);
+        Image<float> img(CPU);
+        CPPUNIT_ASSERT(img.isEmpty() == true);
+        CPPUNIT_ASSERT(img.byteSize() == 0);
     }
+    
     {
-        Image<float> img(CPU, "someFile");
+        boost::filesystem::path resourceDir(std::string(TESTPATH) + std::string("xip/resources/in-3-3-3.asc"));
+        std::cout << "FILE: " << resourceDir.normalize().string() << std::endl;
+        Image<float> img(CPU, resourceDir.normalize().string());
+        img.print();
     }
     
     

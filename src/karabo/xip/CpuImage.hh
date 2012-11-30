@@ -847,7 +847,7 @@ namespace karabo {
              * @param maxDimZ Maximum numbers printed in Z direction
              * @return Image
              */
-            CpuImage& print(const std::string& title = "", const bool displayPixels = true, int maxDimX = 28, int maxDimY = 28, int maxDimZ = 8) {
+            const CpuImage& print(const std::string& title = "", const bool displayPixels = true, int maxDimX = 28, int maxDimY = 28, int maxDimZ = 8) const {
                 using namespace std;
                 const size_t siz = m_cimg.size();
                 size_t msiz = siz * sizeof (TPix);
