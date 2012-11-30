@@ -13,7 +13,7 @@
 #define	KARABO_IO_FILE_HH
 
 #include <karabo/util/Factory.hh>
-#include "RecordFormat.hh"
+#include "hdf5/RecordFormat.hh"
 
 
 namespace karabo {

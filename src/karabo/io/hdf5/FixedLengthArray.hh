@@ -12,7 +12,6 @@
 
 #include "RecordElement.hh"
 #include "TypeTraits.hh"
-#include <karabo/util/CArray.hh>
 #include "../ArrayView.hh"
 #include "FLArrayFilter.hh"
 #include "FLArrayFilterBuffer.hh"
@@ -134,12 +133,16 @@ namespace karabo {
                         }
                         const boost::any& any = data.getAny(it);
                         if (!m_filter) {
-                            tracer << "creating a filter" << std::endl;
+                            tracer << "creating a filter for FixedLengthArray " << any.type().name() << std::endl;
                             // this uses factory mechanism combined with rtti.
                             m_filter = FLArrayFilter<T>::createDefault(any.type().name());
                         }
+                        //tracer << "about to write " << any.type().name() << std::endl;                        
                         m_filter->write(*this, any, m_dims);
+                        //tracer << m_filter << std::endl;
+                        //tracer << "after write " << any.type().name() << std::endl;                        
                     } catch (...) {
+                        //tracer << "exception caught" << std::endl;
                         RETHROW;
                     }
                 }

@@ -360,6 +360,10 @@
                    projectFiles="false"
                    kind="TEST_LOGICAL_FOLDER">
       <logicalFolder name="f2" displayName="io_test" projectFiles="true" kind="TEST">
+        <itemPath>../../../src/karabo/tests/io/ArrayView_Test.cc</itemPath>
+        <itemPath>../../../src/karabo/tests/io/ArrayView_Test.hh</itemPath>
+        <itemPath>../../../src/karabo/tests/io/Hdf5File_Test.cc</itemPath>
+        <itemPath>../../../src/karabo/tests/io/Hdf5File_Test.hh</itemPath>
         <itemPath>../../../src/karabo/tests/io/ReaderWriter_Test.cc</itemPath>
         <itemPath>../../../src/karabo/tests/io/ReaderWriter_Test.hh</itemPath>
         <itemPath>../../../src/karabo/tests/io/resources/etalonXML_readonly.xml</itemPath>
@@ -494,6 +498,9 @@
       </packaging>
       <folder path="TestFiles">
         <ccTool>
+          <incDir>
+            <pElem>${KARABO}/extern/include/hdf5</pElem>
+          </incDir>
           <preprocessorList>
             <Elem>TESTPATH="${CND_BASEDIR}/../../../src/karabo/tests/"</Elem>
           </preprocessorList>
@@ -614,6 +621,9 @@
       </packaging>
       <folder path="TestFiles">
         <ccTool>
+          <incDir>
+            <pElem>${KARABO}/extern/include/hdf5</pElem>
+          </incDir>
           <preprocessorList>
             <Elem>TESTPATH="${CND_BASEDIR}/../../../src/karabo/tests/"</Elem>
           </preprocessorList>

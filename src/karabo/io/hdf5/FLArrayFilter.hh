@@ -46,7 +46,7 @@ namespace karabo {
   }
 }
 
-KARABO_REGISTER_FACTORY_BASE_HH(karabo::io::hdf5::FLArrayFilter<karabo::util::Hash>, TEMPLATE_IO, DECLSPEC_IO)
+//KARABO_REGISTER_FACTORY_BASE_HH(karabo::io::hdf5::FLArrayFilter<karabo::util::Hash>, TEMPLATE_IO, DECLSPEC_IO)
 
 #endif	/* KARABO_IO_HDF5_FLARRAYFILTER_HH */
 

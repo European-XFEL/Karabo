@@ -121,7 +121,7 @@ namespace karabo {
 	    int rank_chunk;
 	    if (H5D_CHUNKED == cparms.getLayout()) {
 		rank_chunk = cparms.getChunk(1, chunk_dims);
-		tracer << "chunk rank " << rank_chunk << "dimensions "
+		tracer << "chunk rank " << rank_chunk << " dimensions "
 			<< (unsigned long) (chunk_dims[0]) << endl;
 	    }
 	    return chunk_dims[0];
