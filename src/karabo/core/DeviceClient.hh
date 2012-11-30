@@ -8,6 +8,7 @@
 
 
 #include <karabo/xms/SignalSlotable.hh>
+#include <karabo/io/Reader.hh>
 
 #ifndef KARABO_CORE_DEVCOM_HH
 #define	KARABO_CORE_DEVCOM_HH
@@ -76,7 +77,7 @@ namespace karabo {
             const karabo::util::Schema& getCurrentlyWritableSchema(const std::string& instanceId);
             
             std::vector<std::string> getDeviceServers();
-            
+
             std::vector<std::string> getDeviceClasses(const std::string& deviceServer);
             
             std::vector<std::string> getDevices();
@@ -131,9 +132,11 @@ namespace karabo {
             
             karabo::util::Hash loadConfigurationFromDB(const std::string& configurationId);
             
-            karabo::util::Hash loadConfigurationFromFile(const std::string& filename);
+            karabo::util::Hash loadConfigurationFromXMLFile(const std::string& filename);
             
             void instantiateNoWait(const std::string& serverInstanceId, const std::string& classId, const karabo::util::Hash& configuration);
+            
+            void instantiateNoWait(const std::string& serverInstanceId, const karabo::util::Hash& completeConfiguration);
 
             std::pair<bool, std::string> instantiateWait(const std::string& serverInstanceId, const std::string& classId, const karabo::util::Hash& configuration = karabo::util::Hash(), int timeout = -1);
 
