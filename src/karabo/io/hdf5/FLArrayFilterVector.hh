@@ -14,6 +14,7 @@
 #include "DataTypes.hh"
 #include "FixedLengthArray.hh"
 #include "TypeTraits.hh"
+#include "../ioProfiler.hh"
 
 /**
  * The main European XFEL namespace
@@ -110,10 +111,76 @@ namespace karabo {
                     // to the original place
                     for (size_t i = 0; i < totalNumberOfStrings; i++) {
                         str[i] = arrChar[i];
+                        tracer << "vector<string> vec[" << i << "]: " << vec[i] << std::endl;
                     }
                 }
             };
 
+            class BoolDequeFLArrayFilter :
+            public karabo::io::hdf5::FLArrayFilter<bool>, public karabo::io::hdf5::DataTypes {
+            public:
+
+                KARABO_CLASSINFO(BoolDequeFLArrayFilter, typeid (std::deque<bool>).name(), "1.0")
+
+                BoolDequeFLArrayFilter() {
+                }
+
+                virtual ~BoolDequeFLArrayFilter() {
+                }
+
+                ArrayDimensions getDims(const boost::any& any) {
+                    const std::deque<bool>& vec = boost::any_cast < std::deque<bool> > (any);
+                    return ArrayDimensions(vec.size());
+                }
+
+                std::string getElementClassId() {
+                    return ArrayTypeTraits::classId<bool > ();
+                }
+
+                void write(const FixedLengthArray<bool>& element, const boost::any& any, const ArrayDimensions& dims) {
+                    // Bool values are special in two aspects:
+                    // 1. since vector<bool> is broken we use deque<bool> which does not guarantee continues memory layout
+                    // 2. Hdf5 does not support bool type so we need to use unsigned char in HDF5 file                                    
+
+                    const std::deque<bool>& deq = boost::any_cast < std::deque<bool> > (any);
+
+                    unsigned long long totalNumberOfBoolValues = dims.getNumberOfElements();
+                    tracer << "deque[0] " << deq[0] << " [1]: " << deq[1] << std::endl;
+                    tracer << "totalNumberOfElements: " << totalNumberOfBoolValues << std::endl;
+
+                    boost::shared_array<unsigned char> convertedToArray(new unsigned char[totalNumberOfBoolValues]);
+                    for (size_t i = 0; i < totalNumberOfBoolValues; ++i) {
+                        convertedToArray[i] = boost::numeric_cast<unsigned char>(deq[i]);
+                    }
+
+                    element.write(convertedToArray.get());
+                }
+
+                void read(const FixedLengthArray<bool>& element, boost::any& any, ArrayDimensions& dims) {
+                    std::deque<bool>& deq = *(boost::any_cast < std::deque<bool> >(&any));
+
+
+                    // calculate number of strings to be read.
+                    // Note 1: remember that vector has 1 dim but array in hdf5 may have more
+                    // Note 2: ArrayView also contains this information but we use function argument to be consistent 
+                    //         with other data container as they may not provide this feature
+
+                    unsigned long long totalNumberOfBoolValues = dims.getNumberOfElements();
+
+                    // declare temporary array of unsigned chars
+                    boost::shared_array<unsigned char> arrUChars = boost::shared_array<unsigned char>(new unsigned char[totalNumberOfBoolValues]);
+
+                    element.read(arrUChars.get());
+
+                    // after reading from hdf5 file we need to copy the full array of unsigned chars to 
+                    // to the original place converting on the fly from uchar to bool
+                    deq.resize(totalNumberOfBoolValues);
+                    for (size_t i = 0; i < totalNumberOfBoolValues; i++) {
+                        deq[i] = arrUChars[i];
+                        tracer << "after read [" << i << "] = " << deq[i] << std::endl;
+                    }
+                }
+            };
 
             typedef FLArrayFilterVector<signed char> Int8VectorFLArrayFilter;
             typedef FLArrayFilterVector<short> Int16VectorFLArrayFilter;
@@ -126,6 +193,7 @@ namespace karabo {
             typedef FLArrayFilterVector<float> FloatVectorFLArrayFilter;
             typedef FLArrayFilterVector<double> DoubleVectorFLArrayFilter;
             typedef FLArrayFilterVector<std::string> StringVectorFLArrayFilter;
+            //typedef FLArrayFilterVector<bool, std::deque> BoolDequeFLArrayFilter;
 
 
         }
