@@ -130,13 +130,13 @@ class DisplayImage(DisplayWidget):
             if (dimX < 1) or (dimY < 1) or (len(pixelArray) < (dimX*dimY)):
                 return
 
-            image = QImage(pixelArray, dimX, dimY, QImage.Format_ARGB32_Premultiplied)
+            image = QImage(pixelArray, dimX, dimY, QImage.Format_ARGB32_Premultiplied).rgbSwapped()
             
             if useGuiQwt:
                 data = image.bits().asstring(image.numBytes())
                 npy = np.frombuffer(data, np.uint8)
                 npy.shape = image.height(), image.bytesPerLine()/4, 4
-                imgItem = make.image(npy[:, :, 0], colormap='gray')
+                imgItem = make.image(npy)
                 plot = self.__image.get_plot()
                 plot.add_item(imgItem)
             else:
