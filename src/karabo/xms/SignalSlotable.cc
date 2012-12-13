@@ -610,7 +610,7 @@ namespace karabo {
         }
 
         void SignalSlotable::connectionNotAvailable(const std::string& instanceId, const std::vector<karabo::util::Hash>& connections) {
-            std::cout << "Instance \"" << instanceId << "\" is not available, the following connection will thus not work: " << std::endl;
+            std::cout << m_instanceId << "says: Instance \"" << instanceId << "\" is not available, the following connection will thus not work: " << std::endl;
             for (size_t i = 0; i < connections.size(); ++i) {
                 const Hash& connection = connections[i];
                 const string& signalInstanceId = connection.get<string > ("signalInstanceId");

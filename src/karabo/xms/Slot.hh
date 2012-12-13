@@ -34,7 +34,6 @@ namespace karabo {
             Slot(SignalSlotable* signalSlotable, const karabo::net::BrokerChannel::Pointer& channel, const std::string& slotInstanceId, const std::string& slotFunction)
             : m_signalSlotable(signalSlotable), m_channel(channel), m_slotInstanceId(slotInstanceId + "|"), m_slotFunction(slotFunction + "|") {
                 std::string filterCondition;
-                //if (!slotInstanceId.empty()) filterCondition = "slotInstanceId LIKE '%" + m_slotInstanceId + "%' AND ";
                 filterCondition = "slotInstanceId LIKE '%" + m_slotInstanceId + "%' AND slotFunction LIKE '%" + m_slotFunction + "%'";
                 m_channel->setFilter(filterCondition);
             }

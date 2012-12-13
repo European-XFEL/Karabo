@@ -72,7 +72,7 @@ if (itData != entry.end()) {\
         bool DeviceClient::exists(const std::string& instanceId) {
             try {
                 string hostname;
-                m_signalSlotable->request("*", "slotPing", instanceId, true).timeout(m_defaultTimeout).receive(hostname);
+                m_signalSlotable->request("*", "slotPing", instanceId, true).timeout(80).receive(hostname);
                 cout << "Instance " << instanceId << "exists on host " << hostname << endl;
             } catch (karabo::util::TimeoutException) {
                 return false;

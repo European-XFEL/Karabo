@@ -13,7 +13,8 @@
 class ImageTest : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST_SUITE(ImageTest);
 
-    CPPUNIT_TEST(testConstructors);
+    CPPUNIT_TEST(testConstructors<float>);
+    CPPUNIT_TEST(testConstructors<double>);
 
     CPPUNIT_TEST_SUITE_END();
 
@@ -24,7 +25,60 @@ public:
     void tearDown();
 
 private:
-    void testConstructors();
+
+    template <class T>
+    void testConstructors() {
+        
+        using namespace karabo::xip;
+        
+        {
+            Image<T> img(CPU);
+            CPPUNIT_ASSERT(img.isEmpty() == true);
+            CPPUNIT_ASSERT(img.byteSize() == 0);
+        }
+
+        {
+            boost::filesystem::path resourceDir(std::string(TESTPATH) + std::string("xip/resources/in-3-3-3.asc"));
+            Image<T> img(CPU, resourceDir.normalize().string());
+            CPPUNIT_ASSERT(img.dimensionality() == 3);
+            CPPUNIT_ASSERT(img.dimX() == 3);
+            CPPUNIT_ASSERT(img.dimY() == 3);
+            CPPUNIT_ASSERT(img.dimZ() == 3);
+            CPPUNIT_ASSERT(img(2, 2, 2) == 222);
+            CPPUNIT_ASSERT(img(1, 0, 2) == 102);
+        }
+
+        {
+            Image<T> img(CPU, 1024, 1024);
+            CPPUNIT_ASSERT(img.dimensionality() == 2);
+            CPPUNIT_ASSERT(img.dimX() == 1024);
+            CPPUNIT_ASSERT(img.dimY() == 1024);
+            CPPUNIT_ASSERT(img.dimZ() == 1);
+
+        }
+
+        {
+            Image<T> img(CPU, 10, 1, 1, 5.5);
+            CPPUNIT_ASSERT(img.dimensionality() == 1);
+            CPPUNIT_ASSERT(img.dimX() == 10);
+            CPPUNIT_ASSERT(img.dimY() == 1);
+            CPPUNIT_ASSERT(img.dimZ() == 1);
+            for (size_t i = 0; i < img.dimX(); ++i) {
+                CPPUNIT_ASSERT(img[i] == 5.5);
+            }
+        }
+
+        {
+            Image<T> img(CPU, 4, 1, 1, "0,1,2,3", true);
+            CPPUNIT_ASSERT(img.dimensionality() == 1);
+            CPPUNIT_ASSERT(img.dimX() == 4);
+            CPPUNIT_ASSERT(img.dimY() == 1);
+            CPPUNIT_ASSERT(img.dimZ() == 1);
+            for (size_t i = 0; i < img.dimX(); ++i) {
+                CPPUNIT_ASSERT(img[i] == i);
+            }
+        }
+    }
 };
 
 #endif	/* IMAGETEST_HH */
