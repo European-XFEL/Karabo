@@ -578,6 +578,9 @@ class Manager(Singleton):
         serializer = FormatHash.create("Xml", Hash())
         config = serializer.unserialize(xmlContent).getFromPath(devClaId)
 
+        # TODO: Reload XSD in configuration panel
+        # ...
+        
         # Remove old data from internal hash
         self._setFromPath(internalKey, Hash())
         # Update internal hash with new data for internalKey
