@@ -293,63 +293,28 @@ class LogWidget(QWidget):
         self.__twLogTable.horizontalHeader().setStretchLastSection(True)
         self.__twLogTable.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.__twLogTable.verticalHeader().setVisible(False)
-        self.__twLogTable.resizeColumnsToContents()
-
+        
+        # Current viewState
+        self.__viewState = self.__twLogTable.horizontalHeader().saveState();
+        
         vLayout.addWidget(self.__twLogTable)
 
-
-    def getRowHeights(self):
-        rowHeights = [] # Get current row heights
-        
-        for index in xrange(self.__sqlQueryModel.rowCount()):
-            rowHeights.append(self.__twLogTable.rowHeight(index))
-        
-        return rowHeights
-    def setRowHeights(self, rowHeights):
-        for index in xrange(len(rowHeights)):
-            if self.__twLogTable.rowHeight(index) < rowHeights[index]:
-                self.__twLogTable.setRowHeight(index, rowHeights[index])
-
-
-    def getColumnWidths(self):
-        columWidths = [] # Get current row heights
-        
-        for index in xrange(self.__sqlQueryModel.columnCount()):
-            columWidths.append(self.__twLogTable.columnWidth(index))
-        
-        return columWidths
-    def setColumnWidths(self, columnWidths):
-        for index in xrange(len(columnWidths)):
-            if self.__twLogTable.columnWidth(index) < columnWidths[index]:
-                self.__twLogTable.setColumnWidth(index, columnWidths[index])
-
-
     def onViewNeedsUpdate(self, model):
-        rowHeights = self.getRowHeights()
-        columnWidths = self.getColumnWidths()
-        
+        self.__viewState = self.__twLogTable.horizontalHeader().saveState();
         with QMutexLocker(self.__modelMutex):
             self.__sqlQueryModel = model
             self.__sqlQueryModel.signalViewNeedsSortUpdate.connect(self.onViewNeedsSortUpdate)
         self.__twLogTable.setModel(self.__sqlQueryModel)
         self.onFilterChanged()
-        
-        self.setRowHeights(rowHeights)
-        self.setColumnWidths(columnWidths)
-
-
+        self.__twLogTable.horizontalHeader().restoreState(self.__viewState);
+      
     def onViewNeedsSortUpdate(self, queryText):
         print "onViewNeedsSortUpdate"
-        rowHeights = self.getRowHeights()
-        columWidths = self.getColumnWidths()
+        self.__viewState = self.__twLogTable.horizontalHeader().saveState();
         with QMutexLocker(self.__modelMutex):
             self.__sqlQueryModel.setLogQuery(queryText)
-        self.__twLogTable.resizeColumnsToContents()
-        self.__twLogTable.resizeRowsToContents()
-        self.setRowHeights(rowHeights)
-        self.setColumnWidths(columWidths)
-
-
+        self.__twLogTable.horizontalHeader().restoreState(self.__viewState);
+        
     def addLogMessage(self, logData):
         with QMutexLocker(self.__logDataMutex):
             self.__logDataQueue.put(logData)
