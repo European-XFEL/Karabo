@@ -68,6 +68,17 @@ if (itData != entry.end()) {\
         const std::string& DeviceClient::getDefaultKeySeparator() const {
             return m_defaultKeySep;
         }
+        
+        bool DeviceClient::exists(const std::string& instanceId) {
+            try {
+                string hostname;
+                m_signalSlotable->request(instanceId, "slotPing", instanceId, true).timeout(m_defaultTimeout).receive(hostname);
+                cout << "Instance " << instanceId << "exists on host " << hostname << endl;
+            } catch (karabo::util::TimeoutException) {
+                return false;
+            }
+            return true;
+        }
 
         std::vector<std::string> DeviceClient::getDeviceServers() {
             vector<string> deviceServers;
