@@ -76,6 +76,8 @@ namespace karabo {
             
             const karabo::util::Schema& getCurrentlyWritableSchema(const std::string& instanceId);
             
+            bool exists(const std::string& instanceId);
+            
             std::vector<std::string> getDeviceServers();
 
             std::vector<std::string> getDeviceClasses(const std::string& deviceServer);
