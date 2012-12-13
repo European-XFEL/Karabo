@@ -18,6 +18,8 @@
 
 namespace karabo {
     namespace xip {
+        
+       
 
         enum ImageType {
             CPU,
@@ -167,7 +169,41 @@ namespace karabo {
             /***************************************
              *              Operators              *
              ***************************************/
+            
+             inline const TPix& operator[](const size_t offset) const {
+                return (*m_img)[offset];
+            }
 
+            inline TPix& operator[](const size_t offset) {
+                return (*m_img)[offset];
+            }
+
+            inline const TPix& operator()(const size_t x, const size_t y = 0, const size_t z = 0) const {
+                return (*m_img)(x, y, z);
+            }
+
+            inline TPix& operator()(const size_t x, const size_t y = 0, const size_t z = 0) {
+                return (*m_img)(x, y, z);
+            }
+            
+              /***************************************
+             *        Convenience Functions        *
+             ***************************************/
+            
+            /**
+             * Computes the sum of all pixels
+             * @return total sum of all pixels
+             */
+            inline double getSum() const {
+                return m_img->getSum();
+            }
+            
+            inline double getMean() const {
+                return m_img->getMean();
+            }
+            
+            
+            
         private:
 
             const EnvironmentPointer& initCpu() {
@@ -198,7 +234,9 @@ namespace karabo {
 
         template<class TPix>
         typename Image<TPix>::EnvironmentPointer Image<TPix>::m_cudaEnvironment = typename Image<TPix>::EnvironmentPointer();
-
+        
+        typedef Image<float> ImageF;
+        typedef Image<double> ImageD;
     }
 }
 

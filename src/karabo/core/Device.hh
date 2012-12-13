@@ -27,8 +27,14 @@
 namespace karabo {
 
     namespace core {
-
+        
         // Convenient logging
+#ifdef KARABO_ENABLE_TRACE_LOG
+#define KARABO_LOG_TRACE if(0); else std::cerr
+#else 
+#define KARABO_LOG_TRACE if(1); else std::cerr
+#endif
+        
 #define KARABO_LOG_DEBUG log() << log4cpp::Priority::DEBUG 
 #define KARABO_LOG_INFO  log() << log4cpp::Priority::INFO 
 #define KARABO_LOG_WARN  log() << log4cpp::Priority::WARN 
@@ -79,7 +85,6 @@ namespace karabo {
                 boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
 
                 if (m_expectedMonitoredParameters.hasKey(key)) {
-                    checkWarningsAndAlarms(key, value);
                     m_monitoredParameters.setFromPath(key, value);
                 } else if (m_expectedReconfigurableParameters.hasKey(key)) {
                     m_reconfigurableParameters.setFromPath(key, value);
@@ -111,7 +116,6 @@ namespace karabo {
                 while (it != flat.end()) {
                     const std::string& key = it->first;
                     if (m_expectedMonitoredParameters.hasKey(key)) {
-                        // checkWarningsAndAlarms(key, it->second); // TODO Write a generic checker
                         m_monitoredParameters.setFromPath(key, it->second);
                     } else if (m_expectedReconfigurableParameters.hasKey(key)) {
                         m_reconfigurableParameters.setFromPath(key, it->second);

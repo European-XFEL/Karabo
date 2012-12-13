@@ -313,6 +313,15 @@ namespace karabo {
              *              Operators              *
              ***************************************/
 
+            inline const TPix& operator[](const size_t offset) const {
+                return m_cimg[offset];
+            }
+
+            inline TPix& operator[](const size_t offset) {
+                return m_cimg[offset];
+            }
+            
+            
             inline const TPix& operator()(const size_t x, const size_t y = 0, const size_t z = 0) const {
                 return m_cimg(x, y, z);
             }
