@@ -27,7 +27,7 @@ cd ${dir}
 ###
 
 BOOST_DIR=boost_1_51_0
-BOOST_LIBRARIES=date_time,filesystem,regex,thread,system,signals,python
+BOOST_LIBRARIES=date_time,filesystem,regex,thread,system,signals,python,numpy
 
 # Find number of cores on machine
 if [ "$(uname -s)" = "Linux" ]; then
