@@ -15,6 +15,8 @@ using namespace karabo::pyexfel;
 
 void exportPyUtilHash() {
 
+    bn::initialize();
+    
     bp::class_<Hash > h("Hash");
 
     h.def(bp::init< std::string const & >());
