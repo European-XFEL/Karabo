@@ -9,11 +9,12 @@
 #define	KARABO_PYKARABO_HASHWRAP_HH
 
 #include <boost/python.hpp>
-
+#include <boost/numpy.hpp>
 #include <karabo/util/Hash.hh>
 #include <karabo/util/Schema.hh>
 
 namespace bp = boost::python;
+namespace bn = boost::numpy;
 
 namespace karabo {
     namespace pyexfel {
@@ -103,21 +104,76 @@ namespace karabo {
                 } else if (self.is<std::vector<unsigned char> >(it)) {
                     return bp::object(stdVector2pyStr(self.get<std::vector<unsigned char> >(it)));
                 } else if (self.is<std::vector<short> >(it)) {
-                    return bp::object(stdVector2pyList(self.get<std::vector<short> >(it)));
+                    const std::vector<short>& v = boost::any_cast<std::vector<short> >(it->second);
+                    Py_intptr_t shape[1] = { v.size() };
+                    bn::ndarray result = bn::zeros(1, shape, bn::dtype::get_builtin<short>());
+                    std::copy(v.begin(), v.end(), reinterpret_cast<short*>(result.get_data()));
+                    return result;
+                    //return bn::from_data(&v[0], bn::dtype::get_builtin<short>(),
+                    //        bp::make_tuple(v.size()), bp::make_tuple(sizeof(v[0])), bp::object());
+                    //return bp::object(stdVector2pyList(self.get<std::vector<short> >(it)));
                 } else if (self.is<std::vector<unsigned short> >(it)) {
-                    return bp::object(stdVector2pyList(self.get<std::vector<unsigned short> >(it)));
+                    const std::vector<unsigned short>& v = boost::any_cast<std::vector<unsigned short> >(it->second);
+                    Py_intptr_t shape[1] = { v.size() };
+                    bn::ndarray result = bn::zeros(1, shape, bn::dtype::get_builtin<unsigned short>());
+                    std::copy(v.begin(), v.end(), reinterpret_cast<unsigned short*>(result.get_data()));
+                    return result;
+                    //return bn::from_data(&v[0], bn::dtype::get_builtin<unsigned short>(),
+                    //        bp::make_tuple(v.size()), bp::make_tuple(sizeof(v[0])), bp::object());
+                    //return bp::object(stdVector2pyList(self.get<std::vector<unsigned short> >(it)));
                 } else if (self.is<std::vector<int> >(it)) {
-                    return bp::object(stdVector2pyList(self.get<std::vector<int> >(it)));
+                    const std::vector<int>& v = boost::any_cast<std::vector<int> >(it->second);
+                    Py_intptr_t shape[1] = { v.size() };
+                    bn::ndarray result = bn::zeros(1, shape, bn::dtype::get_builtin<int>());
+                    std::copy(v.begin(), v.end(), reinterpret_cast<int*>(result.get_data()));
+                    return result;
+                    //return bn::from_data(&v[0], bn::dtype::get_builtin<int>(), bp::make_tuple(v.size()), bp::make_tuple(sizeof(v[0])), bp::object());
+                    //return bp::object(stdVector2pyList(self.get<std::vector<int> >(it)));
                 } else if (self.is<std::vector<unsigned int> >(it)) {
-                    return bp::object(stdVector2pyList(self.get<std::vector<unsigned int> >(it)));
+                    const std::vector<unsigned int>& v = boost::any_cast<std::vector<unsigned int> >(it->second);
+                    Py_intptr_t shape[1] = { v.size() };
+                    bn::ndarray result = bn::zeros(1, shape, bn::dtype::get_builtin<unsigned int>());
+                    std::copy(v.begin(), v.end(), reinterpret_cast<unsigned int*>(result.get_data()));
+                    return result;
+                    //return bn::from_data(&v[0], bn::dtype::get_builtin<unsigned int>(),
+                    //        bp::make_tuple(v.size()), bp::make_tuple(sizeof(v[0])), bp::object());
+                    //return bp::object(stdVector2pyList(self.get<std::vector<unsigned int> >(it)));
                 } else if (self.is<std::vector<long long> >(it)) {
-                    return bp::object(stdVector2pyList(self.get<std::vector<long long> >(it)));
+                    const std::vector<long long>& v = boost::any_cast<std::vector<long long> >(it->second);
+                    Py_intptr_t shape[1] = { v.size() };
+                    bn::ndarray result = bn::zeros(1, shape, bn::dtype::get_builtin<long long>());
+                    std::copy(v.begin(), v.end(), reinterpret_cast<long long*>(result.get_data()));
+                    return result;
+                    //return bn::from_data(&v[0], bn::dtype::get_builtin<long long>(),
+                    //        bp::make_tuple(v.size()), bp::make_tuple(sizeof(v[0])), bp::object());
+                    //return bp::object(stdVector2pyList(self.get<std::vector<long long> >(it)));
                 } else if (self.is<std::vector<unsigned long long> >(it)) {
-                    return bp::object(stdVector2pyList(self.get<std::vector<unsigned long long> >(it)));
+                    const std::vector<unsigned long long>& v = boost::any_cast<std::vector<unsigned long long> >(it->second);
+                    Py_intptr_t shape[1] = { v.size() };
+                    bn::ndarray result = bn::zeros(1, shape, bn::dtype::get_builtin<unsigned long long>());
+                    std::copy(v.begin(), v.end(), reinterpret_cast<unsigned long long*>(result.get_data()));
+                    return result;
+                    //return bn::from_data(&v[0], bn::dtype::get_builtin<unsigned long long>(),
+                    //        bp::make_tuple(v.size()), bp::make_tuple(sizeof(v[0])), bp::object());
+                    //return bp::object(stdVector2pyList(self.get<std::vector<unsigned long long> >(it)));
                 } else if (self.is<std::vector<float> >(it)) {
-                    return bp::object(stdVector2pyList(self.get<std::vector<float> >(it)));
+                    const std::vector<float>& v = boost::any_cast<std::vector<float> >(it->second);
+                    Py_intptr_t shape[1] = { v.size() };
+                    bn::ndarray result = bn::zeros(1, shape, bn::dtype::get_builtin<float>());
+                    std::copy(v.begin(), v.end(), reinterpret_cast<float*>(result.get_data()));
+                    return result;
+                    //return bn::from_data(&v[0], bn::dtype::get_builtin<float>(),
+                    //        bp::make_tuple(v.size()), bp::make_tuple(sizeof(v[0])), bp::object());
+                    //return bp::object(stdVector2pyList(self.get<std::vector<float> >(it)));
                 } else if (self.is<std::vector<double> >(it)) {
-                    return bp::object(stdVector2pyList(self.get<std::vector<double> >(it)));
+                    const std::vector<double>& v = boost::any_cast<std::vector<double> >(it->second);
+                    Py_intptr_t shape[1] = { v.size() };
+                    bn::ndarray result = bn::zeros(1, shape, bn::dtype::get_builtin<double>());
+                    std::copy(v.begin(), v.end(), reinterpret_cast<double*>(result.get_data()));
+                    return result;
+                    //return bn::from_data(&v[0], bn::dtype::get_builtin<double>(),
+                    //        bp::make_tuple(v.size()), bp::make_tuple(sizeof(v[0])), bp::object());
+                    //return bp::object(stdVector2pyList(self.get<std::vector<double> >(it)));
                     //} else if (self.is<std::vector<std::complex<float> > >(it)) {
 
                     //} else if (self.is<std::vector<std::complex<double> > >(it)) {
@@ -179,6 +235,46 @@ namespace karabo {
                     karabo::util::Hash hash;
                     pyDict2Hash(hash, bp::extract<bp::dict > (obj));
                     self.set<karabo::util::Hash > (key, hash);
+                } else if (bp::extract<bn::ndarray>(obj).check()) {
+                    const bn::ndarray& a = bp::extract<bn::ndarray>(obj);
+                    int nd = a.get_nd();
+                    Py_intptr_t const * shapes = a.get_shape();
+                    int nelems = 1;
+                    for(int i = 0; i<nd; i++) nelems *= shapes[i];
+                    //std::cout << "HashWrap::pythonSet: nelems = " << nelems << std::endl;
+                    if (a.get_dtype() == bn::dtype::get_builtin<double>()) {
+                        double* data = reinterpret_cast<double*>(a.get_data());
+                        std::vector<double> v(data, data + nelems);
+                        self.set<std::vector<double> >(key, v);
+                    } else if (a.get_dtype() == bn::dtype::get_builtin<float>()) {
+                        float* data = reinterpret_cast<float*>(a.get_data());
+                        std::vector<float> v(data, data + nelems);
+                        self.set<std::vector<float> >(key, v);
+                    } else if (a.get_dtype() == bn::dtype::get_builtin<short>()) {
+                        short* data = reinterpret_cast<short*>(a.get_data());
+                        std::vector<short> v(data, data + nelems);
+                        self.set<std::vector<short> >(key, v);
+                    } else if (a.get_dtype() == bn::dtype::get_builtin<unsigned short>()) {
+                        unsigned short* data = reinterpret_cast<unsigned short*>(a.get_data());
+                        std::vector<unsigned short> v(data, data + nelems);
+                        self.set<std::vector<unsigned short> >(key, v);
+                    } else if (a.get_dtype() == bn::dtype::get_builtin<int>()) {
+                        int* data = reinterpret_cast<int*>(a.get_data());
+                        std::vector<int> v(data, data + nelems);
+                        self.set<std::vector<int> >(key, v);
+                    } else if (a.get_dtype() == bn::dtype::get_builtin<unsigned int>()) {
+                        unsigned int* data = reinterpret_cast<unsigned int*>(a.get_data());
+                        std::vector<unsigned int> v(data, data + nelems);
+                        self.set<std::vector<unsigned int> >(key, v);
+                    } else if (a.get_dtype() == bn::dtype::get_builtin<long long>()) {
+                        long long* data = reinterpret_cast<long long*>(a.get_data());
+                        std::vector<long long> v(data, data + nelems);
+                        self.set<std::vector<long long> >(key, v);
+                    } else if (a.get_dtype() == bn::dtype::get_builtin<unsigned long long>()) {
+                        unsigned long long* data = reinterpret_cast<unsigned long long*>(a.get_data());
+                        std::vector<unsigned long long> v(data, data + nelems);
+                        self.set<std::vector<unsigned long long> >(key, v);
+                    }
                 } else if (bp::extract<karabo::util::Hash > (obj).check()) {
                     self.set<karabo::util::Hash > (key, bp::extract<karabo::util::Hash > (obj));
                 } else if (bp::extract<karabo::util::Schema > (obj).check()) {
