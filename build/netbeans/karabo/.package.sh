@@ -88,6 +88,10 @@ cd ../pythonCli
 cp -urf $DISTDIR/$OS/bin $PACKAGEDIR/
 cp -urf $DISTDIR/$OS/lib $PACKAGEDIR/
 
+if [ "$OS" = "Linux" ]; then
+	PACKAGEDIR=$(readlink -f $PACKAGEDIR)
+fi
+
 if [ "$PACKAGE_TYPE" = "tar" ]; then
     # Tar it
     cd $PACKAGEDIR/../
