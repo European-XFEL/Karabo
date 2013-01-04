@@ -142,7 +142,9 @@ namespace karabo {
              */
             template <class T>
             T get(const std::string& key) {
+                
                 boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
+                
                 T t;
                 if (m_monitoredParameters.tryToGetFromPath(key, t)) {
                     return t;
@@ -163,7 +165,9 @@ namespace karabo {
              */
             template <class T>
             bool is(const std::string& key) {
+                
                 boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
+                
                 if (m_monitoredParameters.has(key)) {
                     return m_monitoredParameters.is<T > (key);
                 } else if (m_reconfigurableParameters.has(key)) {

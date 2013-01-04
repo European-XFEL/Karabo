@@ -46,9 +46,7 @@ namespace karabo {
 
             template <class UPix> friend class ImageFileReader;
             template <class UPix> friend class ImageFileWriter;
-
-
-            //typedef typename ci::cimg::superset<TPix, float>::type TPixFloat;
+           
             typedef boost::shared_ptr<ci::CImgDisplay> CImgDisplayPointer;
             
         public:
@@ -243,7 +241,7 @@ namespace karabo {
             }
 
             const CpuImage& write(const std::string& filename, const int number = -1) const {
-                karabo::util::Hash h("ImageFile.filename", filename, "ImageFile.number", number);
+                karabo::util::Hash h("File.filename", filename, "File.number", number);
                 boost::shared_ptr<karabo::xms::Output<CpuImage<TPix> > > out = karabo::xms::Output<CpuImage<TPix> >::create(h);
                 out->write(*this);
                 return *this;
