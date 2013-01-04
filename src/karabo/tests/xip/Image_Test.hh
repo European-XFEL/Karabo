@@ -13,8 +13,8 @@
 class ImageTest : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST_SUITE(ImageTest);
 
-    CPPUNIT_TEST(testConstructors<float>);
-    CPPUNIT_TEST(testConstructors<double>);
+    CPPUNIT_TEST(testConstructorsFloat);
+    CPPUNIT_TEST(testConstructorsDouble);
 
     CPPUNIT_TEST_SUITE_END();
 
@@ -25,6 +25,14 @@ public:
     void tearDown();
 
 private:
+    
+    void testConstructorsDouble() {
+        this->testConstructors<double>();
+    }
+    
+    void testConstructorsFloat() {
+        this->testConstructors<float>();
+    }
 
     template <class T>
     void testConstructors() {
