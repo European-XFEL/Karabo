@@ -72,7 +72,9 @@ namespace karabo {
             virtual void update() {
             }
 
-            virtual bool canCompute() const = 0;
+            virtual bool canCompute() const {
+                return true;
+            }
 
         protected:
 

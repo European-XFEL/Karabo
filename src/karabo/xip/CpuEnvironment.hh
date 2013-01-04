@@ -32,7 +32,7 @@ namespace karabo {
             }
             
             void printInfo() const {
-                std::cout << "Initialized regular CPU environment\n" << std::endl;
+                std::cout << "\nInitialized regular CPU environment\n" << std::endl;
             }
 
             /***************************************
