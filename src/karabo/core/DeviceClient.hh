@@ -136,12 +136,14 @@ namespace karabo {
             
             karabo::util::Hash loadConfigurationFromXMLFile(const std::string& filename);
             
-            void instantiateNoWait(const std::string& serverInstanceId, const std::string& classId, const karabo::util::Hash& configuration);
+            void instantiateNoWait(const std::string& serverInstanceId, const std::string& classId, const karabo::util::Hash& configuration = karabo::util::Hash());
             
-            void instantiateNoWait(const std::string& serverInstanceId, const karabo::util::Hash& completeConfiguration);
+            void instantiateNoWait(const std::string& serverInstanceId, const karabo::util::Hash& configuration);
 
             std::pair<bool, std::string> instantiateWait(const std::string& serverInstanceId, const std::string& classId, const karabo::util::Hash& configuration = karabo::util::Hash(), int timeout = -1);
 
+            std::pair<bool, std::string> instantiateWait(const std::string& serverInstanceId, const karabo::util::Hash& configuration, int timeout = -1);
+            
             void kill(const std::string& instanceId);
 
             template<class T>

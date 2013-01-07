@@ -68,7 +68,7 @@ if (itData != entry.end()) {\
         const std::string& DeviceClient::getDefaultKeySeparator() const {
             return m_defaultKeySep;
         }
-        
+
         bool DeviceClient::exists(const std::string& instanceId) {
             try {
                 string hostname;
@@ -348,7 +348,7 @@ if (itData != entry.end()) {\
             Hash tmp(classId, configuration);
             m_signalSlotable->call(serverInstanceId, "slotStartDevice", tmp);
         }
-        
+
         void DeviceClient::instantiateNoWait(const std::string& serverInstanceId, const karabo::util::Hash & completeConfiguration) {
             m_signalSlotable->call(serverInstanceId, "slotStartDevice", completeConfiguration);
         }
@@ -361,6 +361,20 @@ if (itData != entry.end()) {\
 
             try {
                 m_signalSlotable->request(serverInstanceId, "slotStartDevice", tmp).timeout(timeout).receive(ok, errorText);
+            } catch (const karabo::util::Exception& e) {
+                errorText = e.userFriendlyMsg();
+                ok = false;
+            }
+            return std::make_pair(ok, errorText);
+        }
+
+        std::pair<bool, std::string > DeviceClient::instantiateWait(const std::string& serverInstanceId, const karabo::util::Hash& configuration, int timeout) {
+            if (timeout == -1) timeout = m_defaultTimeout;
+            bool ok = true;
+            std::string errorText = "";
+
+            try {
+                m_signalSlotable->request(serverInstanceId, "slotStartDevice", configuration).timeout(timeout).receive(ok, errorText);
             } catch (const karabo::util::Exception& e) {
                 errorText = e.userFriendlyMsg();
                 ok = false;
