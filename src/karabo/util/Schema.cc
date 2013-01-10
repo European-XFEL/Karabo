@@ -1460,14 +1460,14 @@ namespace karabo {
 
         ostream& operator<<(std::ostream& os, const Schema & schema) {
             ostringstream stream;
-            if (schema.has("elements") && schema.has("root")) { cout <<" IN IF " <<endl;
+            if (schema.has("elements") && schema.has("root")) {
                 stream << schema.get<string > ("root") << endl;
                 const Schema& elements = schema.get<Schema > ("elements");
                 for (Schema::const_iterator it = elements.begin(); it != elements.end(); it++) {
                     const Schema& description = elements.get<Schema > (it);
                     Schema::processingDescription(description, stream);
                 }
-            } else { cout <<" IN ELSE " <<endl;
+            } else {
                 std::vector<std::string> keys = schema.getKeysAsVector();
                 for (size_t i = 0; i < keys.size(); i++) {
                     stream << keys[i] << endl;
