@@ -1472,7 +1472,6 @@ namespace karabo {
                 for (size_t i = 0; i < keys.size(); i++) {
                     stream << keys[i] << endl;
                     string keyStr = keys[i];
-                    cout << "keyStr: " << keyStr <<endl;
                     const Schema& sch = schema.get<Schema>(keyStr);
                     if (sch.has("elements") && sch.has("root")) {
                         stream << sch.get<string > ("root") << endl;
