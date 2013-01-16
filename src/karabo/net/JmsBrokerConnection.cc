@@ -35,6 +35,11 @@ namespace karabo {
             char* env = getenv("XFEL_BROKER_HOST");
             if (env != 0) defaultHostname = string(env);
             
+            // TODO Implement, once fromString is there
+//            unsigned int defaultPort = 7676;
+//            char* env = getenv("XFEL_BROKER_PORT");
+//            if (env != 0) defaultHostname = string(env);
+            
             string defaultTopic = string(getenv("USER"));
             env = getenv("XFEL_BROKER_TOPIC");
             if (env != 0) defaultTopic = string(env);
