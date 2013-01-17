@@ -275,10 +275,10 @@ namespace karabo {
                         std::vector<unsigned long long> v(data, data + nelems);
                         self.set<std::vector<unsigned long long> >(key, v);
                     }
-                } else if (bp::extract<karabo::util::Hash > (obj).check()) {
-                    self.set<karabo::util::Hash > (key, bp::extract<karabo::util::Hash > (obj));
                 } else if (bp::extract<karabo::util::Schema > (obj).check()) {
                     self.set<karabo::util::Schema > (key, bp::extract<karabo::util::Schema > (obj));
+                } else if (bp::extract<karabo::util::Hash > (obj).check()) {
+                    self.set<karabo::util::Hash > (key, bp::extract<karabo::util::Hash > (obj));
                 } else {
                     throw PYTHON_EXCEPTION("Python type can not be mapped into Hash");
                 }
@@ -295,10 +295,10 @@ namespace karabo {
                     self.setFromPath<long long>(key, bp::extract<long>(obj), sep);
                 } else if (PyBool_Check(obj.ptr())) {
                     self.setFromPath<bool>(key, bp::extract<bool>(obj), sep);
-                } else if (bp::extract<karabo::util::Hash > (obj).check()) {
-                    self.setFromPath<karabo::util::Hash > (key, bp::extract<karabo::util::Hash > (obj), sep);
                 } else if (bp::extract<karabo::util::Schema > (obj).check()) {
                     self.setFromPath<karabo::util::Schema > (key, bp::extract<karabo::util::Schema > (obj), sep);
+                } else if (bp::extract<karabo::util::Hash > (obj).check()) {
+                    self.setFromPath<karabo::util::Hash > (key, bp::extract<karabo::util::Hash > (obj), sep);
                 } else if (PyList_Check(obj.ptr())) {
                     // TODO Check whether a const & will also do
                     const bp::list& l = bp::extract<bp::list > (obj);
