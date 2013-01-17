@@ -216,7 +216,9 @@ namespace karabo {
             }
 
             static void pythonSet(karabo::util::Hash& self, const std::string& key, const bp::object & obj) {
-                if (PyInt_Check(obj.ptr())) {
+                if (PyBool_Check(obj.ptr())) {
+                    self.set<bool>(key, bp::extract<bool>(obj));
+                } else if (PyInt_Check(obj.ptr())) {
                     self.set<int>(key, bp::extract<int>(obj));
                 } else if (PyFloat_Check(obj.ptr())) {
                     self.set<double>(key, bp::extract<double>(obj));
@@ -224,8 +226,6 @@ namespace karabo {
                     self.set<std::string > (key, bp::extract<std::string > (obj));
                 } else if (PyLong_Check(obj.ptr())) {
                     self.set<long long>(key, bp::extract<long>(obj));
-                } else if (PyBool_Check(obj.ptr())) {
-                    self.set<bool>(key, bp::extract<bool>(obj));
                 } else if (PyList_Check(obj.ptr())) {
                     const bp::list& l = bp::extract<bp::list > (obj);
                     bp::ssize_t size = bp::len(l);
