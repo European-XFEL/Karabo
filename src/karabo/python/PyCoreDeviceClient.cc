@@ -30,7 +30,9 @@ void exportPyCoreDeviceClient() {
 
             .def("getAvailableInstances", &DeviceClientWrap::getAvailableInstancesPy)
             .def("getSchema", (const Schema & (DeviceClient::*)(const string&, const string&, const string&))(&DeviceClient::getSchema), (bp::arg("instanceId"),bp::arg("key") = "", bp::arg("keySep") = "" ) , bp::return_value_policy<bp::copy_const_reference > ())
-            
+            .def("getCurrentlyWritableSchema", (const Schema & (DeviceClient::*)(const string&))(&DeviceClient::getCurrentlyWritableSchema), (bp::arg("instanceId")), bp::return_value_policy<bp::copy_const_reference > ())
+            .def("exists", (bool (DeviceClient::*)(const string&))(&DeviceClient::exists), (bp::arg("instanceId")))
+    
             .def("setDefaultTimeout", (void (DeviceClient::*)(const unsigned int))(&DeviceClient::setDefaultTimeout), bp::arg("defaultTimeout"))
             .def("getDefaultTimeout", (int (DeviceClient::*)( ) const)(&DeviceClient::getDefaultTimeout))
             
