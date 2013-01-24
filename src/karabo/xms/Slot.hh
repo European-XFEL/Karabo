@@ -129,7 +129,7 @@ namespace karabo {
                     stopSlotProcessing();
                 } catch (const karabo::util::CastException& e) {
                     karabo::util::Exception::addToTrace(e);
-                    std::cout << SIGNALSLOT_EXCEPTION("Received incompatible argument (see above) for slot \"" + m_slotFunction + "\". Check your connection!") << std::endl;
+                    std::cout << KARABO_SIGNALSLOT_EXCEPTION("Received incompatible argument (see above) for slot \"" + m_slotFunction + "\". Check your connection!") << std::endl;
                     stopSlotProcessing();
                 }
             }
@@ -171,7 +171,7 @@ namespace karabo {
                     stopSlotProcessing();
                 } catch (const karabo::util::CastException& e) {
                     karabo::util::Exception::addToTrace(e);
-                    std::cout << SIGNALSLOT_EXCEPTION("Received incompatible arguments (see above) for slot \"" + m_slotFunction + "\". Check your connection!") << std::endl;
+                    std::cout << KARABO_SIGNALSLOT_EXCEPTION("Received incompatible arguments (see above) for slot \"" + m_slotFunction + "\". Check your connection!") << std::endl;
                     stopSlotProcessing();
                 }
             }
@@ -214,7 +214,7 @@ namespace karabo {
                     stopSlotProcessing();
                 } catch (const karabo::util::CastException& e) {
                     karabo::util::Exception::addToTrace(e);
-                    std::cout << SIGNALSLOT_EXCEPTION("Received incompatible arguments (see above) for slot \"" + m_slotFunction + "\". Check your connection!") << std::endl;
+                    std::cout << KARABO_SIGNALSLOT_EXCEPTION("Received incompatible arguments (see above) for slot \"" + m_slotFunction + "\". Check your connection!") << std::endl;
                     stopSlotProcessing();
                 }
             }
@@ -258,7 +258,7 @@ namespace karabo {
                     stopSlotProcessing();
                 } catch (const karabo::util::CastException& e) {
                     karabo::util::Exception::addToTrace(e);
-                    std::cout << SIGNALSLOT_EXCEPTION("Received incompatible arguments (see above) for slot \"" + m_slotFunction + "\". Check your connection!") << std::endl;
+                    std::cout << KARABO_SIGNALSLOT_EXCEPTION("Received incompatible arguments (see above) for slot \"" + m_slotFunction + "\". Check your connection!") << std::endl;
                     stopSlotProcessing();
                 }
             }

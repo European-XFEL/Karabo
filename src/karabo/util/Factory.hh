@@ -17,19 +17,21 @@
 #include <boost/shared_ptr.hpp>
 
 #include "GenericFactory.hh"
-#include "Schema.hh"
-#include "SimpleElement.hh"
-#include "VectorElement.hh"
-#include "SingleElement.hh"
-#include "ChoiceElement.hh"
-#include "ListElement.hh"
-#include "TargetActualElement.hh"
-#include "MonitorableElement.hh"
-#include "OverwriteElement.hh"
-#include "ImageElement.hh"
+#include "Hash.hh"
+//#include "Schema.hh"
+//#include "SimpleElement.hh"
+//#include "VectorElement.hh"
+//#include "SingleElement.hh"
+//#include "ChoiceElement.hh"
+//#include "ListElement.hh"
+//#include "TargetActualElement.hh"
+//#include "MonitorableElement.hh"
+//#include "OverwriteElement.hh"
+//#include "ImageElement.hh"
+//#include "ConfigConstants.hh"
 #include "Traits.hh"
 #include "ClassInfo.hh"
-#include "ConfigConstants.hh"
+
 
 
 namespace karabo {
@@ -100,7 +102,7 @@ namespace karabo {
              *  @return boost shared pointer to BaseType
              */
             static boost::shared_ptr< BaseType > create(const karabo::util::Hash& config, bool assert = true) {
-                if (config.empty()) throw PARAMETER_EXCEPTION("Empty configuration object handed to factory");
+                if (config.empty()) throw KARABO_PARAMETER_EXCEPTION("Empty configuration object handed to factory");
                 const std::string & classId = config.begin()->first; // Root key encodes classId for factory
                 boost::shared_ptr<karabo::util::Factory<BaseType> > concreteMaker =
                         karabo::util::GenericFactory<karabo::util::Factory<BaseType> >::getInstance().create(classId);
@@ -127,7 +129,7 @@ namespace karabo {
                     return concreteMaker->makeObject(Hash(classId, input.get<Hash > (key)), classId, assert);
                 } else {
                     if (!input.has(key)) {
-                        throw PARAMETER_EXCEPTION("Configuration object to non-factory key \"" + key + "\" does not contain sufficient information to be manufactured");
+                        throw KARABO_PARAMETER_EXCEPTION("Configuration object to non-factory key \"" + key + "\" does not contain sufficient information to be manufactured");
                     } else {
                         const Hash& createInfo = input.get<Hash > (key);
                         classId = createInfo.begin()->first;
@@ -215,21 +217,21 @@ namespace karabo {
              * Defines expected parameters
              */
             virtual void expectedParameters(karabo::util::Schema& expected) {
-                throw NOT_SUPPORTED_EXCEPTION("The object to be created DOES NOT implement the expectedParameters functions, you may only default construct this object");
+                throw KARABO_NOT_SUPPORTED_EXCEPTION("The object to be created DOES NOT implement the expectedParameters functions, you may only default construct this object");
             }
 
             /**
              * Creates object without any attempt to configure it
              */
             virtual BaseTypePointer makeDefaultConstructedObject() {
-                throw NOT_SUPPORTED_EXCEPTION("The object to be created implements the configure and expectedParameters functions, default/zero construction is thus unsupported");
+                throw KARABO_NOT_SUPPORTED_EXCEPTION("The object to be created implements the configure and expectedParameters functions, default/zero construction is thus unsupported");
             }
 
             /**
              * Creates object and configure it according to delivered config
              */
             virtual BaseTypePointer makeConfiguredObject(const Hash& param) {
-                throw NOT_SUPPORTED_EXCEPTION("The object to be created DOES NOT implement the configure and expectedParameters functions, thus configuration-based creation is unsuported");
+                throw KARABO_NOT_SUPPORTED_EXCEPTION("The object to be created DOES NOT implement the configure and expectedParameters functions, thus configuration-based creation is unsuported");
             }
 
         };

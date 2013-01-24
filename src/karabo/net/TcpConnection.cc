@@ -84,7 +84,7 @@ namespace karabo {
                 m_acceptor->accept(ch->socket());
                 //cout << "New incoming connect: " << ch->socket().remote_endpoint().address() << " : " << ch->socket().remote_endpoint().port() << endl;
             } catch (...) {
-                RETHROW
+                KARABO_RETHROW
             }
             return new_channel;
         }
@@ -99,7 +99,7 @@ namespace karabo {
                 ch->socket().connect(*endpoint_iterator);
                 //cout << "Successfully connected to: " << ch->socket().remote_endpoint().address() << " : " << ch->socket().remote_endpoint().port() << endl;
             } catch (...) {
-                RETHROW
+                KARABO_RETHROW
             }
             return new_channel;
         }
@@ -119,7 +119,7 @@ namespace karabo {
                 m_acceptor->async_accept(ch->socket(), boost::bind(&TcpConnection::acceptHandler,
                         this, new_channel, handler, boost::asio::placeholders::error));
             } catch (...) {
-                RETHROW
+                KARABO_RETHROW
             }
         }
 
@@ -132,7 +132,7 @@ namespace karabo {
                 if (m_errorHandler)
                     m_errorHandler(channel, e.message());
                 else
-                    throw NETWORK_EXCEPTION(e.message());
+                    throw KARABO_NETWORK_EXCEPTION(e.message());
             }
         }
 
@@ -142,7 +142,7 @@ namespace karabo {
                 m_resolver->async_resolve(query, boost::bind(&TcpConnection::resolveHandler,
                         this, handler, boost::asio::placeholders::error, boost::asio::placeholders::iterator));
             } catch (...) {
-                RETHROW
+                KARABO_RETHROW
             }
         }
 
@@ -154,10 +154,10 @@ namespace karabo {
                     ch->socket().async_connect(*it, boost::bind(&TcpConnection::connectHandler,
                             this, new_channel, handler, boost::asio::placeholders::error));
                 } else {
-                    throw NETWORK_EXCEPTION(e.message());
+                    throw KARABO_NETWORK_EXCEPTION(e.message());
                 }
             } catch (...) {
-                RETHROW
+                KARABO_RETHROW
             }
         }
 
@@ -171,10 +171,10 @@ namespace karabo {
                     if (m_errorHandler)
                         m_errorHandler(channel, e.message());
                     else
-                        throw NETWORK_EXCEPTION(e.message());
+                        throw KARABO_NETWORK_EXCEPTION(e.message());
                 }
             } catch (...) {
-                RETHROW
+                KARABO_RETHROW
             }
         }
 

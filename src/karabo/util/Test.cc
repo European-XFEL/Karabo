@@ -37,7 +37,7 @@ namespace karabo {
       if (result && what.size() == 2) {
         m_name = what.str(1);
       } else {
-        throw INIT_EXCEPTION("Test could not be properly initialized");
+        throw KARABO_INIT_EXCEPTION("Test could not be properly initialized");
       }
 
       path runPath = system_complete(initial_path<path > ());

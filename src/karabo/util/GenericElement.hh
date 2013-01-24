@@ -257,7 +257,7 @@ namespace karabo {
                     m_element.setAccessMode(m_expected->getAccessMode());
                     m_expected->addElement(m_element);
                 } else {
-                    throw LOGIC_EXCEPTION("No expected parameter given to which this element should be applied to (hint: use different constructor)");
+                    throw KARABO_LOGIC_EXCEPTION("No expected parameter given to which this element should be applied to (hint: use different constructor)");
                 }
                 return *this;
             }

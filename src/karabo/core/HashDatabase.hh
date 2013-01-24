@@ -70,7 +70,7 @@ namespace karabo {
             Hash rowResult; \
             for (size_t i = 0; i < _fields.size(); ++i) { \
                 Hash::const_iterator fieldIt = row.find(_fields[i]); \
-                if (fieldIt == row.end()) throw PARAMETER_EXCEPTION("Selection key \"" + _fields[i] + "\" is not a valid field name in table \"" + tableName + "\""); \
+                if (fieldIt == row.end()) throw KARABO_PARAMETER_EXCEPTION("Selection key \"" + _fields[i] + "\" is not a valid field name in table \"" + tableName + "\""); \
                 const string& field = _fields[i]; \
                 rowResult[field] = row.find(field)->second; \
             } \

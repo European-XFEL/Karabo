@@ -31,7 +31,7 @@ struct SchemaWrap{
             double param = bp::extract<double>(obj);
             return self.hasAlias(param);
         } else {
-            throw PYTHON_EXCEPTION("Unknown type of the parameter in 'hasAlias' function");
+            throw KARABO_PYTHON_EXCEPTION("Unknown type of the parameter in 'hasAlias' function");
         }
     }
 };

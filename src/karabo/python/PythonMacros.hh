@@ -27,7 +27,7 @@ struct GenericElementWrap{
             double param = bp::extract<double>(obj);
             return self.alias(param);
         } else {
-            throw PYTHON_EXCEPTION("Unknown data type of the 'alias' element");
+            throw KARABO_PYTHON_EXCEPTION("Unknown data type of the 'alias' element");
         }
     }
 };

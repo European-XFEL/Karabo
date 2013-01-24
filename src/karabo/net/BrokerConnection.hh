@@ -72,7 +72,7 @@ namespace karabo {
              * Starts the connection asynchronously
              */
             virtual void startAsync(const ConnectionHandler& handler) {
-                throw NOT_SUPPORTED_EXCEPTION("Asynchronous connect is not available for " + this->classInfo().getClassId() + "connections");
+                throw KARABO_NOT_SUPPORTED_EXCEPTION("Asynchronous connect is not available for " + this->classInfo().getClassId() + "connections");
             }
 
             /**

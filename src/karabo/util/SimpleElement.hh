@@ -128,7 +128,7 @@ namespace karabo {
                         std::ostringstream msg;
                         msg << "minimum value " << el.get<T > ("minInc")
                                 << " is greater than maximum " << el.get<T > ("maxInc");
-                        throw PARAMETER_EXCEPTION(msg.str());
+                        throw KARABO_PARAMETER_EXCEPTION(msg.str());
                     }
                 }
             }
@@ -140,7 +140,7 @@ namespace karabo {
                     if ((el.get<U > ("minExc") + 1) >= el.get<U > ("maxExc")) {
                         std::ostringstream msg;
                         msg << "The open range: (" << el.get<U > ("minExc") << "," << el.get<U > ("maxExc") << ") is empty";
-                        throw PARAMETER_EXCEPTION(msg.str());
+                        throw KARABO_PARAMETER_EXCEPTION(msg.str());
                     }
                 }
             }
@@ -167,7 +167,7 @@ namespace karabo {
                         std::ostringstream msg;
                         msg << "minimum value " << el.get<float> ("minExc")
                                 << " is greater or equal to maximum " << el.get<float> ("maxExc");
-                        throw PARAMETER_EXCEPTION(msg.str());
+                        throw KARABO_PARAMETER_EXCEPTION(msg.str());
                     }
                 }
             }
@@ -178,7 +178,7 @@ namespace karabo {
                         std::ostringstream msg;
                         msg << "minimum value " << el.get<float> ("minExc")
                                 << " is greater or equal to maximum " << el.get<float> ("maxExc");
-                        throw PARAMETER_EXCEPTION(msg.str());
+                        throw KARABO_PARAMETER_EXCEPTION(msg.str());
                     }
                 }
             }

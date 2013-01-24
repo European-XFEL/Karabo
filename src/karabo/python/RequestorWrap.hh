@@ -99,7 +99,7 @@ namespace karabo {
                         case 4:
                             return prepareTuple4(body);
                         default:
-                            throw SIGNALSLOT_EXCEPTION("Too many arguments send as response (max 4 are currently supported");
+                            throw KARABO_SIGNALSLOT_EXCEPTION("Too many arguments send as response (max 4 are currently supported");
                     }
                 } catch (const karabo::util::Exception& e) {
                     std::cout << e << std::endl;

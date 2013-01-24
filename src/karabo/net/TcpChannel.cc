@@ -45,7 +45,7 @@ namespace karabo {
                 if (error)
                     throw boost::system::system_error(error);
             } catch (...) {
-                RETHROW
+                KARABO_RETHROW
             }
         }
 
@@ -93,7 +93,7 @@ namespace karabo {
                 if (error)
                     throw boost::system::system_error(error);
             } catch (...) {
-                RETHROW
+                KARABO_RETHROW
             }
         }
 
@@ -108,7 +108,7 @@ namespace karabo {
                         boost::asio::placeholders::bytes_transferred
                         ));
             } catch (...) {
-                RETHROW
+                KARABO_RETHROW
             }
         }
 
@@ -118,7 +118,7 @@ namespace karabo {
                     try {
                         m_inboundData.resize(m_inboundMessagePrefix);
                     } catch (const bad_alloc& e) {
-                        throw PARAMETER_EXCEPTION("Fail to resize vector with size = "
+                        throw KARABO_PARAMETER_EXCEPTION("Fail to resize vector with size = "
                                 + String::toString(m_inboundMessagePrefix) + " => " + e.what());
                     }
                     vector<mutable_buffer > buf;
@@ -128,9 +128,9 @@ namespace karabo {
                 } else if (m_errorHandler)
                     m_errorHandler(channel(), e.message() + " and transferred " + String::toString(bytes_transferred) + " bytes.");
                 else
-                    throw NETWORK_EXCEPTION(e.message());
+                    throw KARABO_NETWORK_EXCEPTION(e.message());
             } catch (...) {
-                RETHROW
+                KARABO_RETHROW
             }
         }
 
@@ -141,9 +141,9 @@ namespace karabo {
                 } else if (m_errorHandler)
                     m_errorHandler(channel(), e.message() + " and transferred " + String::toString(bytes_transferred) + " bytes");
                 else
-                    throw NETWORK_EXCEPTION(e.message());
+                    throw KARABO_NETWORK_EXCEPTION(e.message());
             } catch (...) {
-                RETHROW
+                KARABO_RETHROW
             }
         }
 
@@ -156,7 +156,7 @@ namespace karabo {
                         boost::asio::placeholders::bytes_transferred
                         ));
             } catch (...) {
-                RETHROW
+                KARABO_RETHROW
             }
         }
 
@@ -166,7 +166,7 @@ namespace karabo {
                     try {
                         m_inboundData.resize(m_inboundMessagePrefix);
                     } catch (const bad_alloc& e) {
-                        throw PARAMETER_EXCEPTION("Fail to resize vector with size = "
+                        throw KARABO_PARAMETER_EXCEPTION("Fail to resize vector with size = "
                                 + String::toString(m_inboundMessagePrefix) + " => " + e.what());
                     }
                     vector<mutable_buffer > buf;
@@ -176,9 +176,9 @@ namespace karabo {
                 } else if (m_errorHandler)
                     m_errorHandler(channel(), e.message() + " and transferred " + String::toString(bytes_transferred) + " bytes.");
                 else
-                    throw NETWORK_EXCEPTION(e.message());
+                    throw KARABO_NETWORK_EXCEPTION(e.message());
             } catch (...) {
-                RETHROW
+                KARABO_RETHROW
             }
         }
 
@@ -190,9 +190,9 @@ namespace karabo {
                 } else if (m_errorHandler)
                     m_errorHandler(channel(), e.message() + " and transferred " + String::toString(bytes_transferred) + " bytes");
                 else
-                    throw NETWORK_EXCEPTION(e.message());
+                    throw KARABO_NETWORK_EXCEPTION(e.message());
             } catch (...) {
-                RETHROW
+                KARABO_RETHROW
             }
         }
 
@@ -205,7 +205,7 @@ namespace karabo {
                         boost::asio::placeholders::bytes_transferred
                         ));
             } catch (...) {
-                RETHROW
+                KARABO_RETHROW
             }
 
         }
@@ -216,7 +216,7 @@ namespace karabo {
                     try {
                         m_inboundData.resize(m_inboundMessagePrefix);
                     } catch (const bad_alloc& e) {
-                        throw PARAMETER_EXCEPTION("Fail to resize vector with size = "
+                        throw KARABO_PARAMETER_EXCEPTION("Fail to resize vector with size = "
                                 + String::toString(m_inboundMessagePrefix) + " => " + e.what());
                     }
                     vector<mutable_buffer > buf;
@@ -226,9 +226,9 @@ namespace karabo {
                 } else if (m_errorHandler)
                     m_errorHandler(channel(), e.message() + " and transferred " + String::toString(bytes_transferred) + " bytes.");
                 else
-                    throw NETWORK_EXCEPTION(e.message());
+                    throw KARABO_NETWORK_EXCEPTION(e.message());
             } catch (...) {
-                RETHROW
+                KARABO_RETHROW
             }
         }
 
@@ -245,9 +245,9 @@ namespace karabo {
                 } else if (m_errorHandler)
                     m_errorHandler(channel(), e.message() + " and transferred " + String::toString(bytes_transferred) + " bytes");
                 else
-                    throw NETWORK_EXCEPTION(e.message());
+                    throw KARABO_NETWORK_EXCEPTION(e.message());
             } catch (...) {
-                RETHROW
+                KARABO_RETHROW
             }
         }
 
@@ -266,7 +266,7 @@ namespace karabo {
                 }
                 readRawPrefixHandler(data, size, handler, boost::system::error_code(), 0UL);
             } catch (...) {
-                RETHROW
+                KARABO_RETHROW
             }
         }
 
@@ -274,7 +274,7 @@ namespace karabo {
             try {
                 if (!e) {
                     if (size < m_inboundMessagePrefix) {
-                        throw PARAMETER_EXCEPTION("Size of read buffer is less than data size: "
+                        throw KARABO_PARAMETER_EXCEPTION("Size of read buffer is less than data size: "
                                 + String::toString(size) + " < " + String::toString(m_inboundMessagePrefix));
                     }
                     vector<mutable_buffer > buf;
@@ -285,7 +285,7 @@ namespace karabo {
                     }
                 }
             } catch (...) {
-                RETHROW
+                KARABO_RETHROW
             }
         }
 
@@ -296,10 +296,10 @@ namespace karabo {
                 } else if (m_errorHandler) {
                     m_errorHandler(channel(), e.message() + " and transferred " + String::toString(bytes_transferred) + " bytes");
                 } else {
-                    throw NETWORK_EXCEPTION(e.message());
+                    throw KARABO_NETWORK_EXCEPTION(e.message());
                 }
             } catch (...) {
-                RETHROW
+                KARABO_RETHROW
             }
         }
 
@@ -314,7 +314,7 @@ namespace karabo {
                 boost::asio::async_read(m_socket, buf, transfer_all(), boost::bind(&TcpChannel::readPrefixHandler,
                         this, handler, boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred));
             } catch (...) {
-                RETHROW
+                KARABO_RETHROW
             }
         }
 
@@ -326,7 +326,7 @@ namespace karabo {
                         m_inboundData.resize(dataPrefix);
                         m_inboundHeader.resize(m_inboundHeaderPrefix);
                     } catch (const std::bad_alloc& e) {
-                        throw PARAMETER_EXCEPTION("Failed to resize vectors with data size = "
+                        throw KARABO_PARAMETER_EXCEPTION("Failed to resize vectors with data size = "
                                 + String::toString(dataPrefix) + " and header size = "
                                 + String::toString(m_inboundHeaderPrefix) + " => " + e.what());
                     }
@@ -338,9 +338,9 @@ namespace karabo {
                 } else if (m_errorHandler)
                     m_errorHandler(channel(), e.message() + " and transferred " + String::toString(bytes_transferred) + " bytes.");
                 else
-                    throw NETWORK_EXCEPTION(e.message());
+                    throw KARABO_NETWORK_EXCEPTION(e.message());
             } catch (...) {
-                RETHROW
+                KARABO_RETHROW
             }
         }
 
@@ -357,9 +357,9 @@ namespace karabo {
                 } else if (m_errorHandler)
                     m_errorHandler(channel(), e.message() + " and transferred " + String::toString(bytes_transferred) + " bytes");
                 else
-                    throw NETWORK_EXCEPTION(e.message());
+                    throw KARABO_NETWORK_EXCEPTION(e.message());
             } catch (...) {
-                RETHROW
+                KARABO_RETHROW
             }
         }
 
@@ -374,7 +374,7 @@ namespace karabo {
                 boost::asio::async_read(m_socket, buf, transfer_all(), boost::bind(&TcpChannel::readStringHashPrefixHandler,
                         this, handler, boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred));
             } catch (...) {
-                RETHROW
+                KARABO_RETHROW
             }
         }
 
@@ -386,7 +386,7 @@ namespace karabo {
                         m_inboundData.resize(dataPrefix);
                         m_inboundHeader.resize(m_inboundHeaderPrefix);
                     } catch (const bad_alloc& e) {
-                        throw PARAMETER_EXCEPTION("Fail to resize vectors with data size = " + String::toString(dataPrefix)
+                        throw KARABO_PARAMETER_EXCEPTION("Fail to resize vectors with data size = " + String::toString(dataPrefix)
                                 + " and header size = " + String::toString(m_inboundHeaderPrefix) + " => " + e.what());
                     }
                     vector<mutable_buffer > buf;
@@ -397,9 +397,9 @@ namespace karabo {
                 } else if (m_errorHandler)
                     m_errorHandler(channel(), e.message() + " and transferred " + String::toString(bytes_transferred) + " bytes.");
                 else
-                    throw NETWORK_EXCEPTION(e.message());
+                    throw KARABO_NETWORK_EXCEPTION(e.message());
             } catch (...) {
-                RETHROW
+                KARABO_RETHROW
             }
         }
 
@@ -417,9 +417,9 @@ namespace karabo {
                 } else if (m_errorHandler)
                     m_errorHandler(channel(), e.message() + " and transferred " + String::toString(bytes_transferred) + " bytes");
                 else
-                    throw NETWORK_EXCEPTION(e.message());
+                    throw KARABO_NETWORK_EXCEPTION(e.message());
             } catch (...) {
-                RETHROW
+                KARABO_RETHROW
             }
         }
 
@@ -439,10 +439,10 @@ namespace karabo {
                 else if (m_errorHandler)
                     m_errorHandler(channel(), error.message());
                 else
-                    throw NETWORK_EXCEPTION(error.message());
+                    throw KARABO_NETWORK_EXCEPTION(error.message());
 
             } catch (...) {
-                RETHROW
+                KARABO_RETHROW
             }
         }
 
@@ -454,7 +454,7 @@ namespace karabo {
                 write(data, dsize, s.c_str(), s.size());
                 return;
             } catch (...) {
-                RETHROW
+                KARABO_RETHROW
             }
         }
 
@@ -476,10 +476,10 @@ namespace karabo {
                 else if (m_errorHandler)
                     m_errorHandler(channel(), error.message());
                 else
-                    throw NETWORK_EXCEPTION(error.message());
+                    throw KARABO_NETWORK_EXCEPTION(error.message());
 
             } catch (...) {
-                RETHROW
+                KARABO_RETHROW
             }
         }
 
@@ -494,7 +494,7 @@ namespace karabo {
                 buf.push_back(buffer(data, size));
                 boost::asio::async_write(m_socket, buf, boost::bind(&TcpChannel::asyncWriteHandler, this, handler, boost::asio::placeholders::error));
             } catch (...) {
-                RETHROW
+                KARABO_RETHROW
             }
         }
 
@@ -507,7 +507,7 @@ namespace karabo {
                 buf.push_back(buffer(data));
                 boost::asio::async_write(m_socket, buf, boost::bind(&TcpChannel::asyncWriteHandler, this, handler, boost::asio::placeholders::error));
             } catch (...) {
-                RETHROW
+                KARABO_RETHROW
             }
         }
 
@@ -516,12 +516,12 @@ namespace karabo {
                 try {
                     m_outboundData.resize(data.size());
                 } catch (const bad_alloc& e) {
-                    throw PARAMETER_EXCEPTION("Fail to resize vector with size = " + String::toString(data.size()) + " => " + e.what());
+                    throw KARABO_PARAMETER_EXCEPTION("Fail to resize vector with size = " + String::toString(data.size()) + " => " + e.what());
                 }
                 m_outboundData.assign(data.begin(), data.end());
                 writeAsyncVector(m_outboundData, handler);
             } catch (...) {
-                RETHROW
+                KARABO_RETHROW
             }
         }
 
@@ -532,7 +532,7 @@ namespace karabo {
                 hashToString(data, s);
                 writeAsyncString(s, handler);
             } catch (...) {
-                RETHROW
+                KARABO_RETHROW
             }
         }
 
@@ -553,7 +553,7 @@ namespace karabo {
                 buf.push_back(buffer(data, size));
                 boost::asio::async_write(m_socket, buf, boost::bind(&TcpChannel::asyncWriteHandler, this, handler, boost::asio::placeholders::error));
             } catch (...) {
-                RETHROW
+                KARABO_RETHROW
             }
         }
 
@@ -562,7 +562,7 @@ namespace karabo {
                 vector<char> v(data.begin(), data.end());
                 writeAsyncVectorHash(v, header, handler);
             } catch (...) {
-                RETHROW
+                KARABO_RETHROW
             }
         }
 
@@ -577,7 +577,7 @@ namespace karabo {
                 m_outboundData.assign(data.begin(), data.end()); // TODO: is it an extra copy operation??
                 writeAsyncVectorVector(m_outboundData, m_outboundHeader, handler);
             } catch (...) {
-                RETHROW
+                KARABO_RETHROW
             }
         }
 
@@ -593,7 +593,7 @@ namespace karabo {
                 buf.push_back(buffer(data));
                 boost::asio::async_write(m_socket, buf, boost::bind(&TcpChannel::asyncWriteHandler, this, handler, boost::asio::placeholders::error));
             } catch (...) {
-                RETHROW
+                KARABO_RETHROW
             }
         }
 
@@ -603,15 +603,15 @@ namespace karabo {
                     try {
                         handler(channel());
                     } catch (...) {
-                        RETHROW
+                        KARABO_RETHROW
                     }
                 } else if (m_errorHandler) {
                     m_errorHandler(channel(), e.message());
                 } else {
-                    throw NETWORK_EXCEPTION(e.message());
+                    throw KARABO_NETWORK_EXCEPTION(e.message());
                 }
             } catch (...) {
-                RETHROW
+                KARABO_RETHROW
             }
         }
 
@@ -620,7 +620,7 @@ namespace karabo {
                 m_timer.expires_from_now(boost::posix_time::milliseconds(millisecs));
                 m_timer.async_wait(boost::bind(&TcpChannel::asyncWaitHandler, this, handler, boost::asio::placeholders::error));
             } catch (...) {
-                RETHROW
+                KARABO_RETHROW
             }
         }
 
@@ -630,15 +630,15 @@ namespace karabo {
                     try {
                         handler(channel());
                     } catch (...) {
-                        RETHROW
+                        KARABO_RETHROW
                     }
                 } else if (m_errorHandler) {
                     m_errorHandler(channel(), e.message());
                 } else {
-                    throw NETWORK_EXCEPTION(e.message());
+                    throw KARABO_NETWORK_EXCEPTION(e.message());
                 }
             } catch (...) {
-                RETHROW
+                KARABO_RETHROW
             }
         }
 
@@ -647,7 +647,7 @@ namespace karabo {
                 m_socket.close();
                 unregisterChannel(shared_from_this());
             } catch (...) {
-                RETHROW
+                KARABO_RETHROW
             }
         }
 

@@ -27,7 +27,7 @@
     MQString tmp = MQGetStatusString(status);\
     std::string errorString(tmp);\
     MQFreeString(tmp);\
-    throw OPENMQ_EXCEPTION(errorString);\
+    throw KARABO_OPENMQ_EXCEPTION(errorString);\
   }\
 }
 

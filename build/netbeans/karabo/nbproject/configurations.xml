@@ -1,419 +1,61 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configurationDescriptor version="84">
   <logicalFolder name="root" displayName="root" projectFiles="true" kind="ROOT">
-    <logicalFolder name="f7" displayName="core" projectFiles="true">
-      <logicalFolder name="f1" displayName="Header Files" projectFiles="true">
-        <itemPath>../../../src/karabo/core/Device.hh</itemPath>
-        <itemPath>../../../src/karabo/core/DeviceClient.hh</itemPath>
-        <itemPath>../../../src/karabo/core/DeviceServer.hh</itemPath>
-        <itemPath>../../../src/karabo/core/DeviceServerLogic.hh</itemPath>
-        <itemPath>../../../src/karabo/core/DeviceServerMachine.hh</itemPath>
-        <itemPath>../../../src/karabo/core/FsmMacros.hh</itemPath>
-        <itemPath>../../../src/karabo/core/GuiServerDevice.hh</itemPath>
-        <itemPath>../../../src/karabo/core/HashDatabase.hh</itemPath>
-        <itemPath>../../../src/karabo/core/MasterDevice.hh</itemPath>
-        <itemPath>../../../src/karabo/core/Module.hh</itemPath>
-        <itemPath>../../../src/karabo/core/Runner.hh</itemPath>
-        <itemPath>../../../src/karabo/core/core.hh</itemPath>
-        <itemPath>../../../src/karabo/core/coredll.hh</itemPath>
-      </logicalFolder>
-      <logicalFolder name="f2" displayName="Source Files" projectFiles="true">
-        <itemPath>../../../src/karabo/core/Device.cc</itemPath>
-        <itemPath>../../../src/karabo/core/DeviceClient.cc</itemPath>
-        <itemPath>../../../src/karabo/core/DeviceServer.cc</itemPath>
-        <itemPath>../../../src/karabo/core/GuiServerDevice.cc</itemPath>
-        <itemPath>../../../src/karabo/core/HashDatabase.cc</itemPath>
-        <itemPath>../../../src/karabo/core/MasterDevice.cc</itemPath>
-      </logicalFolder>
-      <logicalFolder name="f3" displayName="State Machines" projectFiles="true">
-        <itemPath>../../../src/karabo/core/CameraFsm.cc</itemPath>
-        <itemPath>../../../src/karabo/core/CameraFsm.hh</itemPath>
-        <itemPath>../../../src/karabo/core/ComputeFsm.cc</itemPath>
-        <itemPath>../../../src/karabo/core/ComputeFsm.hh</itemPath>
-        <itemPath>../../../src/karabo/core/ReconfigurableFsm.cc</itemPath>
-        <itemPath>../../../src/karabo/core/ReconfigurableFsm.hh</itemPath>
-        <itemPath>../../../src/karabo/core/StartStopFsm.cc</itemPath>
-        <itemPath>../../../src/karabo/core/StartStopFsm.hh</itemPath>
-      </logicalFolder>
-    </logicalFolder>
-    <logicalFolder name="f2" displayName="io" projectFiles="true">
-      <logicalFolder name="f3" displayName="hdf5" projectFiles="true">
-        <logicalFolder name="f1" displayName="Header Files" projectFiles="true">
-          <itemPath>../../../src/karabo/io/hdf5/Column.hh</itemPath>
-          <itemPath>../../../src/karabo/io/hdf5/DataBlock.hh</itemPath>
-          <itemPath>../../../src/karabo/io/hdf5/DataFormat.hh</itemPath>
-          <itemPath>../../../src/karabo/io/hdf5/DataTypes.hh</itemPath>
-          <itemPath>../../../src/karabo/io/hdf5/DataTypesScalar.hh</itemPath>
-          <itemPath>../../../src/karabo/io/hdf5/FLArrayFilter.hh</itemPath>
-          <itemPath>../../../src/karabo/io/hdf5/FLArrayFilterArrayView.hh</itemPath>
-          <itemPath>../../../src/karabo/io/hdf5/FLArrayFilterArrayViewBuffer.hh</itemPath>
-          <itemPath>../../../src/karabo/io/hdf5/FLArrayFilterBuffer.hh</itemPath>
-          <itemPath>../../../src/karabo/io/hdf5/FLArrayFilterRawPointer.hh</itemPath>
-          <itemPath>../../../src/karabo/io/hdf5/FLArrayFilterVector.hh</itemPath>
-          <itemPath>../../../src/karabo/io/hdf5/File.hh</itemPath>
-          <itemPath>../../../src/karabo/io/hdf5/FixedLengthArray.hh</itemPath>
-          <itemPath>../../../src/karabo/io/hdf5/Group.hh</itemPath>
-          <itemPath>../../../src/karabo/io/hdf5/RecordElement.hh</itemPath>
-          <itemPath>../../../src/karabo/io/hdf5/RecordFormat.hh</itemPath>
-          <itemPath>../../../src/karabo/io/hdf5/Scalar.hh</itemPath>
-          <itemPath>../../../src/karabo/io/hdf5/ScalarFilter.hh</itemPath>
-          <itemPath>../../../src/karabo/io/hdf5/ScalarFilterBuffer.hh</itemPath>
-          <itemPath>../../../src/karabo/io/hdf5/Table.hh</itemPath>
-          <itemPath>../../../src/karabo/io/hdf5/TypeTraits.hh</itemPath>
-          <itemPath>../../../src/karabo/io/hdf5/WriteBuffer.hh</itemPath>
-        </logicalFolder>
-        <logicalFolder name="f2" displayName="Source Files" projectFiles="true">
-          <itemPath>../../../src/karabo/io/hdf5/Column.cc</itemPath>
-          <itemPath>../../../src/karabo/io/hdf5/DataBlock.cc</itemPath>
-          <itemPath>../../../src/karabo/io/hdf5/DataFormat.cc</itemPath>
-          <itemPath>../../../src/karabo/io/hdf5/DataTypesScalar.cc</itemPath>
-          <itemPath>../../../src/karabo/io/hdf5/FLArrayFilterArrayView.cc</itemPath>
-          <itemPath>../../../src/karabo/io/hdf5/FLArrayFilterArrayViewBuffer.cc</itemPath>
-          <itemPath>../../../src/karabo/io/hdf5/FLArrayFilterRawPointer.cc</itemPath>
-          <itemPath>../../../src/karabo/io/hdf5/FLArrayFilterVector.cc</itemPath>
-          <itemPath>../../../src/karabo/io/hdf5/File.cc</itemPath>
-          <itemPath>../../../src/karabo/io/hdf5/FixedLengthArray.cc</itemPath>
-          <itemPath>../../../src/karabo/io/hdf5/Group.cc</itemPath>
-          <itemPath>../../../src/karabo/io/hdf5/RecordElement.cc</itemPath>
-          <itemPath>../../../src/karabo/io/hdf5/RecordFormat.cc</itemPath>
-          <itemPath>../../../src/karabo/io/hdf5/Scalar.cc</itemPath>
-          <itemPath>../../../src/karabo/io/hdf5/ScalarFilterBuffer.cc</itemPath>
-          <itemPath>../../../src/karabo/io/hdf5/Table.cc</itemPath>
-          <itemPath>../../../src/karabo/io/hdf5/TypeTraits.cc</itemPath>
-        </logicalFolder>
-      </logicalFolder>
-      <logicalFolder name="f2" displayName="Header Files" projectFiles="true">
-        <itemPath>../../../src/karabo/io/ArrayDimensions.hh</itemPath>
-        <itemPath>../../../src/karabo/io/ArrayView.hh</itemPath>
-        <itemPath>../../../src/karabo/io/BinarySerializer.hh</itemPath>
-        <itemPath>../../../src/karabo/io/File.hh</itemPath>
-        <itemPath>../../../src/karabo/io/Format.hh</itemPath>
-        <itemPath>../../../src/karabo/io/HashBaseFormat.hh</itemPath>
-        <itemPath>../../../src/karabo/io/HashBinaryFormat.hh</itemPath>
-        <itemPath>../../../src/karabo/io/HashBinarySerializer.hh</itemPath>
-        <itemPath>../../../src/karabo/io/HashXmlFormat.hh</itemPath>
-        <itemPath>../../../src/karabo/io/HeaderFormat.hh</itemPath>
-        <itemPath>../../../src/karabo/io/LatexFormat.hh</itemPath>
-        <itemPath>../../../src/karabo/io/PlcFormat.hh</itemPath>
-        <itemPath>../../../src/karabo/io/Reader.hh</itemPath>
-        <itemPath>../../../src/karabo/io/SchemaXmlFormat.hh</itemPath>
-        <itemPath>../../../src/karabo/io/SchemaXsdFormat.hh</itemPath>
-        <itemPath>../../../src/karabo/io/StringStreamReader.hh</itemPath>
-        <itemPath>../../../src/karabo/io/StringStreamWriter.hh</itemPath>
-        <itemPath>../../../src/karabo/io/TextFileReader.hh</itemPath>
-        <itemPath>../../../src/karabo/io/TextFileWriter.hh</itemPath>
-        <itemPath>../../../src/karabo/io/Writer.hh</itemPath>
-        <itemPath>../../../src/karabo/io/io.hh</itemPath>
-        <itemPath>../../../src/karabo/io/ioProfiler.hh</itemPath>
-        <itemPath>../../../src/karabo/io/iodll.hh</itemPath>
-      </logicalFolder>
-      <logicalFolder name="f1" displayName="Source Files" projectFiles="true">
-        <itemPath>../../../src/karabo/io/ArrayDimensions.cc</itemPath>
-        <itemPath>../../../src/karabo/io/HashBinarySerializer.cc</itemPath>
-        <itemPath>../../../src/karabo/io/HashXmlFormat.cc</itemPath>
-        <itemPath>../../../src/karabo/io/HeaderFormat.cc</itemPath>
-        <itemPath>../../../src/karabo/io/LatexFormat.cc</itemPath>
-        <itemPath>../../../src/karabo/io/PlcFormat.cc</itemPath>
-        <itemPath>../../../src/karabo/io/SchemaXmlFormat.cc</itemPath>
-        <itemPath>../../../src/karabo/io/SchemaXsdFormat.cc</itemPath>
-        <itemPath>../../../src/karabo/io/StringStreamReader.cc</itemPath>
-        <itemPath>../../../src/karabo/io/StringStreamWriter.cc</itemPath>
-        <itemPath>../../../src/karabo/io/TextFileReader.cc</itemPath>
-        <itemPath>../../../src/karabo/io/TextFileWriter.cc</itemPath>
-        <itemPath>../../../src/karabo/io/Writer.cc</itemPath>
-      </logicalFolder>
-    </logicalFolder>
-    <logicalFolder name="f6" displayName="log" projectFiles="true">
-      <logicalFolder name="f1" displayName="Header Files" projectFiles="true">
-        <itemPath>../../../src/karabo/log/AppenderConfigurator.hh</itemPath>
-        <itemPath>../../../src/karabo/log/BasicLayoutConfigurator.hh</itemPath>
-        <itemPath>../../../src/karabo/log/CategoryConfigurator.hh</itemPath>
-        <itemPath>../../../src/karabo/log/FileAppenderConfigurator.hh</itemPath>
-        <itemPath>../../../src/karabo/log/LayoutConfigurator.hh</itemPath>
-        <itemPath>../../../src/karabo/log/Logger.hh</itemPath>
-        <itemPath>../../../src/karabo/log/NetworkAppender.hh</itemPath>
-        <itemPath>../../../src/karabo/log/NetworkAppenderConfigurator.hh</itemPath>
-        <itemPath>../../../src/karabo/log/OstreamAppenderConfigurator.hh</itemPath>
-        <itemPath>../../../src/karabo/log/PatternLayoutConfigurator.hh</itemPath>
-        <itemPath>../../../src/karabo/log/RollingFileAppenderConfigurator.hh</itemPath>
-        <itemPath>../../../src/karabo/log/Sample.hh</itemPath>
-        <itemPath>../../../src/karabo/log/SimpleLayoutConfigurator.hh</itemPath>
-        <itemPath>../../../src/karabo/log/logdll.hh</itemPath>
-      </logicalFolder>
-      <logicalFolder name="f2" displayName="Source Files" projectFiles="true">
-        <itemPath>../../../src/karabo/log/AppenderConfigurator.cc</itemPath>
-        <itemPath>../../../src/karabo/log/BasicLayoutConfigurator.cc</itemPath>
-        <itemPath>../../../src/karabo/log/CategoryConfigurator.cc</itemPath>
-        <itemPath>../../../src/karabo/log/FileAppenderConfigurator.cc</itemPath>
-        <itemPath>../../../src/karabo/log/Logger.cc</itemPath>
-        <itemPath>../../../src/karabo/log/NetworkAppender.cc</itemPath>
-        <itemPath>../../../src/karabo/log/NetworkAppenderConfigurator.cc</itemPath>
-        <itemPath>../../../src/karabo/log/OstreamAppenderConfigurator.cc</itemPath>
-        <itemPath>../../../src/karabo/log/PatternLayoutConfigurator.cc</itemPath>
-        <itemPath>../../../src/karabo/log/RollingFileAppenderConfigurator.cc</itemPath>
-        <itemPath>../../../src/karabo/log/SimpleLayoutConfigurator.cc</itemPath>
-      </logicalFolder>
-    </logicalFolder>
-    <logicalFolder name="f4" displayName="net" projectFiles="true">
-      <logicalFolder name="f1" displayName="Header Files" projectFiles="true">
-        <itemPath>../../../src/karabo/net/AJmsConnection.hh</itemPath>
-        <itemPath>../../../src/karabo/net/AbstractIOService.hh</itemPath>
-        <itemPath>../../../src/karabo/net/AsioIOService.hh</itemPath>
-        <itemPath>../../../src/karabo/net/BrokerChannel.hh</itemPath>
-        <itemPath>../../../src/karabo/net/BrokerConnection.hh</itemPath>
-        <itemPath>../../../src/karabo/net/BrokerIOService.hh</itemPath>
-        <itemPath>../../../src/karabo/net/Channel.hh</itemPath>
-        <itemPath>../../../src/karabo/net/Connection.hh</itemPath>
-        <itemPath>../../../src/karabo/net/IOService.hh</itemPath>
-        <itemPath>../../../src/karabo/net/JmsBrokerChannel.hh</itemPath>
-        <itemPath>../../../src/karabo/net/JmsBrokerConnection.hh</itemPath>
-        <itemPath>../../../src/karabo/net/JmsBrokerIOService.hh</itemPath>
-        <itemPath>../../../src/karabo/net/JmsChannel.hh</itemPath>
-        <itemPath>../../../src/karabo/net/JmsIOService.hh</itemPath>
-        <itemPath>../../../src/karabo/net/SnmpChannel.hh</itemPath>
-        <itemPath>../../../src/karabo/net/SnmpConnection.hh</itemPath>
-        <itemPath>../../../src/karabo/net/SnmpIOService.hh</itemPath>
-        <itemPath>../../../src/karabo/net/TcpChannel.hh</itemPath>
-        <itemPath>../../../src/karabo/net/TcpConnection.hh</itemPath>
-        <itemPath>../../../src/karabo/net/UdpChannel.hh</itemPath>
-        <itemPath>../../../src/karabo/net/UdpConnection.hh</itemPath>
-        <itemPath>../../../src/karabo/net/net.hh</itemPath>
-        <itemPath>../../../src/karabo/net/netdll.hh</itemPath>
-      </logicalFolder>
-      <logicalFolder name="f2" displayName="Source Files" projectFiles="true">
-        <itemPath>../../../src/karabo/net/AJmsConnection.cc</itemPath>
-        <itemPath>../../../src/karabo/net/AbstractIOService.cc</itemPath>
-        <itemPath>../../../src/karabo/net/AsioIOService.cc</itemPath>
-        <itemPath>../../../src/karabo/net/BrokerConnection.cc</itemPath>
-        <itemPath>../../../src/karabo/net/Connection.cc</itemPath>
-        <itemPath>../../../src/karabo/net/JmsBrokerChannel.cc</itemPath>
-        <itemPath>../../../src/karabo/net/JmsBrokerConnection.cc</itemPath>
-        <itemPath>../../../src/karabo/net/JmsBrokerIOService.cc</itemPath>
-        <itemPath>../../../src/karabo/net/JmsChannel.cc</itemPath>
-        <itemPath>../../../src/karabo/net/JmsIOService.cc</itemPath>
-        <itemPath>../../../src/karabo/net/SnmpChannel.cc</itemPath>
-        <itemPath>../../../src/karabo/net/SnmpConnection.cc</itemPath>
-        <itemPath>../../../src/karabo/net/SnmpIOService.cc</itemPath>
-        <itemPath>../../../src/karabo/net/TcpChannel.cc</itemPath>
-        <itemPath>../../../src/karabo/net/TcpConnection.cc</itemPath>
-        <itemPath>../../../src/karabo/net/UdpChannel.cc</itemPath>
-        <itemPath>../../../src/karabo/net/UdpConnection.cc</itemPath>
-      </logicalFolder>
-    </logicalFolder>
-    <logicalFolder name="f8" displayName="python" projectFiles="true">
-      <logicalFolder name="f1" displayName="Header Files" projectFiles="true">
-        <itemPath>../../../src/karabo/python/DefaultValueVectorWrap.hh</itemPath>
-        <itemPath>../../../src/karabo/python/DeviceClientWrap.hh</itemPath>
-        <itemPath>../../../src/karabo/python/HashWrap.hh</itemPath>
-        <itemPath>../../../src/karabo/python/MemberSlotWrap.hh</itemPath>
-        <itemPath>../../../src/karabo/python/PythonFactoryMacros.hh</itemPath>
-        <itemPath>../../../src/karabo/python/PythonMacros.hh</itemPath>
-        <itemPath>../../../src/karabo/python/RequestorWrap.hh</itemPath>
-        <itemPath>../../../src/karabo/python/SignalSlotableWrap.hh</itemPath>
-        <itemPath>../../../src/karabo/python/SignalWrap.hh</itemPath>
-        <itemPath>../../../src/karabo/python/SlotWrap.hh</itemPath>
-      </logicalFolder>
-      <logicalFolder name="f2" displayName="Source Files" projectFiles="true">
-        <itemPath>../../../src/karabo/python/HashWrap.cc</itemPath>
-        <itemPath>../../../src/karabo/python/PyCoreDeviceClient.cc</itemPath>
-        <itemPath>../../../src/karabo/python/PyIoFormat.cc</itemPath>
-        <itemPath>../../../src/karabo/python/PyIoReader.cc</itemPath>
-        <itemPath>../../../src/karabo/python/PyIoWriter.cc</itemPath>
-        <itemPath>../../../src/karabo/python/PyLogLogger.cc</itemPath>
-        <itemPath>../../../src/karabo/python/PyUtilChoiceElement.cc</itemPath>
-        <itemPath>../../../src/karabo/python/PyUtilClassInfo.cc</itemPath>
-        <itemPath>../../../src/karabo/python/PyUtilComplexElement.cc</itemPath>
-        <itemPath>../../../src/karabo/python/PyUtilHash.cc</itemPath>
-        <itemPath>../../../src/karabo/python/PyUtilImageElement.cc</itemPath>
-        <itemPath>../../../src/karabo/python/PyUtilListElement.cc</itemPath>
-        <itemPath>../../../src/karabo/python/PyUtilNonEmptyListElement.cc</itemPath>
-        <itemPath>../../../src/karabo/python/PyUtilOverwriteElement.cc</itemPath>
-        <itemPath>../../../src/karabo/python/PyUtilSchema.cc</itemPath>
-        <itemPath>../../../src/karabo/python/PyUtilSchemaSimple.cc</itemPath>
-        <itemPath>../../../src/karabo/python/PyUtilSimpleAnyElement.cc</itemPath>
-        <itemPath>../../../src/karabo/python/PyUtilSingleElement.cc</itemPath>
-        <itemPath>../../../src/karabo/python/PyUtilTargetActualElement.cc</itemPath>
-        <itemPath>../../../src/karabo/python/PyUtilTypes.cc</itemPath>
-        <itemPath>../../../src/karabo/python/PyVectorContainer.cc</itemPath>
-        <itemPath>../../../src/karabo/python/PyXmsRequestor.cc</itemPath>
-        <itemPath>../../../src/karabo/python/PyXmsSignalSlotable.cc</itemPath>
-        <itemPath>../../../src/karabo/python/PyXmsSlotElement.cc</itemPath>
-        <itemPath>../../../src/karabo/python/pyexfel.cc</itemPath>
-      </logicalFolder>
-    </logicalFolder>
     <logicalFolder name="f1" displayName="util" projectFiles="true">
-      <logicalFolder name="f1" displayName="Header Files" projectFiles="true">
+      <logicalFolder name="f4" displayName="Data Container" projectFiles="true">
+        <itemPath>../../../src/karabo/util/DoubleReferenceIterator.hh</itemPath>
+        <itemPath>../../../src/karabo/util/Element.hh</itemPath>
+        <itemPath>../../../src/karabo/util/Hash.cc</itemPath>
+        <itemPath>../../../src/karabo/util/Hash.hh</itemPath>
+        <itemPath>../../../src/karabo/util/OrderedMap.hh</itemPath>
+      </logicalFolder>
+      <logicalFolder name="f7"
+                     displayName="Factory / Introspection"
+                     projectFiles="true">
+        <itemPath>../../../src/karabo/util/ClassInfo.cc</itemPath>
+        <itemPath>../../../src/karabo/util/ClassInfo.hh</itemPath>
+        <itemPath>../../../src/karabo/util/Exception.cc</itemPath>
+        <itemPath>../../../src/karabo/util/Exception.hh</itemPath>
+        <itemPath>../../../src/karabo/util/karaboDll.hh</itemPath>
+        <itemPath>../../../src/karabo/util/util.hh</itemPath>
+      </logicalFolder>
+      <logicalFolder name="f6" displayName="Tools" projectFiles="true">
+        <itemPath>../../../src/karabo/util/Base64.cc</itemPath>
         <itemPath>../../../src/karabo/util/Base64.hh</itemPath>
         <itemPath>../../../src/karabo/util/CArray.hh</itemPath>
-        <itemPath>../../../src/karabo/util/ChoiceElement.hh</itemPath>
-        <itemPath>../../../src/karabo/util/ClassInfo.hh</itemPath>
-        <itemPath>../../../src/karabo/util/ComplexElement.hh</itemPath>
-        <itemPath>../../../src/karabo/util/ConfigConstants.hh</itemPath>
-        <itemPath>../../../src/karabo/util/Exception.hh</itemPath>
-        <itemPath>../../../src/karabo/util/Factory.hh</itemPath>
-        <itemPath>../../../src/karabo/util/GeneralDefines.hh</itemPath>
-        <itemPath>../../../src/karabo/util/GenericElement.hh</itemPath>
-        <itemPath>../../../src/karabo/util/GenericFactory.hh</itemPath>
-        <itemPath>../../../src/karabo/util/Hash.hh</itemPath>
-        <itemPath>../../../src/karabo/util/ImageElement.hh</itemPath>
-        <itemPath>../../../src/karabo/util/ListElement.hh</itemPath>
-        <itemPath>../../../src/karabo/util/MonitorableElement.hh</itemPath>
-        <itemPath>../../../src/karabo/util/OverwriteElement.hh</itemPath>
-        <itemPath>../../../src/karabo/util/PluginLoader.hh</itemPath>
-        <itemPath>../../../src/karabo/util/Profiler.hh</itemPath>
-        <itemPath>../../../src/karabo/util/Schema.hh</itemPath>
-        <itemPath>../../../src/karabo/util/SimpleElement.hh</itemPath>
-        <itemPath>../../../src/karabo/util/SingleElement.hh</itemPath>
-        <itemPath>../../../src/karabo/util/String.hh</itemPath>
-        <itemPath>../../../src/karabo/util/TargetActualElement.hh</itemPath>
-        <itemPath>../../../src/karabo/util/Test.hh</itemPath>
-        <itemPath>../../../src/karabo/util/Time.hh</itemPath>
-        <itemPath>../../../src/karabo/util/Timer.hh</itemPath>
-        <itemPath>../../../src/karabo/util/Traits.hh</itemPath>
-        <itemPath>../../../src/karabo/util/Types.hh</itemPath>
-        <itemPath>../../../src/karabo/util/VectorElement.hh</itemPath>
-        <itemPath>../../../src/karabo/util/util.hh</itemPath>
-        <itemPath>../../../src/karabo/util/utildll.hh</itemPath>
-      </logicalFolder>
-      <logicalFolder name="f2" displayName="Source Files" projectFiles="true">
-        <itemPath>../../../src/karabo/util/Base64.cc</itemPath>
-        <itemPath>../../../src/karabo/util/ClassInfo.cc</itemPath>
-        <itemPath>../../../src/karabo/util/Exception.cc</itemPath>
-        <itemPath>../../../src/karabo/util/Hash.cc</itemPath>
-        <itemPath>../../../src/karabo/util/PluginLoader.cc</itemPath>
         <itemPath>../../../src/karabo/util/Profiler.cc</itemPath>
-        <itemPath>../../../src/karabo/util/Schema.cc</itemPath>
-        <itemPath>../../../src/karabo/util/String.cc</itemPath>
-        <itemPath>../../../src/karabo/util/Test.cc</itemPath>
+        <itemPath>../../../src/karabo/util/Profiler.hh</itemPath>
+        <itemPath>../../../src/karabo/util/StringTools.cc</itemPath>
+        <itemPath>../../../src/karabo/util/StringTools.hh</itemPath>
         <itemPath>../../../src/karabo/util/Time.cc</itemPath>
+        <itemPath>../../../src/karabo/util/Time.hh</itemPath>
         <itemPath>../../../src/karabo/util/Timer.cc</itemPath>
-        <itemPath>../../../src/karabo/util/Types.cc</itemPath>
+        <itemPath>../../../src/karabo/util/Timer.hh</itemPath>
       </logicalFolder>
-    </logicalFolder>
-    <logicalFolder name="f9" displayName="xip" projectFiles="true">
-      <logicalFolder name="f1" displayName="Header Files" projectFiles="true">
-        <itemPath>../../../src/karabo/xip/AbstractImage.hh</itemPath>
-        <itemPath>../../../src/karabo/xip/CImg.h</itemPath>
-        <itemPath>../../../src/karabo/xip/CpuEnvironment.hh</itemPath>
-        <itemPath>../../../src/karabo/xip/CpuImage.hh</itemPath>
-        <itemPath>../../../src/karabo/xip/CpuImageBinarySerializer.cc</itemPath>
-        <itemPath>../../../src/karabo/xip/CpuImageBinarySerializer.hh</itemPath>
-        <itemPath>../../../src/karabo/xip/Environment.hh</itemPath>
-        <itemPath>../../../src/karabo/xip/Image.hh</itemPath>
-        <itemPath>../../../src/karabo/xip/ImageFileReader.hh</itemPath>
-        <itemPath>../../../src/karabo/xip/ImageFileWriter.hh</itemPath>
-        <itemPath>../../../src/karabo/xip/SingleProcessor.hh</itemPath>
-        <itemPath>../../../src/karabo/xip/Statistics.hh</itemPath>
-      </logicalFolder>
-      <logicalFolder name="f2" displayName="Source Files" projectFiles="true">
-        <itemPath>../../../src/karabo/xip/CpuEnvironment.cc</itemPath>
-        <itemPath>../../../src/karabo/xip/CpuImage.cpp</itemPath>
-        <itemPath>../../../src/karabo/xip/ImageFileReader.cc</itemPath>
-        <itemPath>../../../src/karabo/xip/ImageFileWriter.cc</itemPath>
-      </logicalFolder>
-    </logicalFolder>
-    <logicalFolder name="f3" displayName="xml" projectFiles="true">
-      <itemPath>../../../src/karabo/xml/tinystr.cpp</itemPath>
-      <itemPath>../../../src/karabo/xml/tinystr.h</itemPath>
-      <itemPath>../../../src/karabo/xml/tinyxml.cpp</itemPath>
-      <itemPath>../../../src/karabo/xml/tinyxml.h</itemPath>
-      <itemPath>../../../src/karabo/xml/tinyxmlerror.cpp</itemPath>
-      <itemPath>../../../src/karabo/xml/tinyxmlparser.cpp</itemPath>
-      <itemPath>../../../src/karabo/xml/xmldll.hh</itemPath>
-    </logicalFolder>
-    <logicalFolder name="f5" displayName="xms" projectFiles="true">
-      <logicalFolder name="f1" displayName="Header Files" projectFiles="true">
-        <itemPath>../../../src/karabo/xms/AbstractInput.hh</itemPath>
-        <itemPath>../../../src/karabo/xms/AbstractOutput.hh</itemPath>
-        <itemPath>../../../src/karabo/xms/FileWrapNetworkInput.hh</itemPath>
-        <itemPath>../../../src/karabo/xms/FileWrapNetworkOutput.hh</itemPath>
-        <itemPath>../../../src/karabo/xms/Input.hh</itemPath>
-        <itemPath>../../../src/karabo/xms/Memory.hh</itemPath>
-        <itemPath>../../../src/karabo/xms/NetworkInput.hh</itemPath>
-        <itemPath>../../../src/karabo/xms/NetworkOutput.hh</itemPath>
-        <itemPath>../../../src/karabo/xms/Output.hh</itemPath>
-        <itemPath>../../../src/karabo/xms/Requestor.hh</itemPath>
-        <itemPath>../../../src/karabo/xms/Signal.hh</itemPath>
-        <itemPath>../../../src/karabo/xms/SignalElement.hh</itemPath>
-        <itemPath>../../../src/karabo/xms/SignalSlotable.hh</itemPath>
-        <itemPath>../../../src/karabo/xms/Slot.hh</itemPath>
-        <itemPath>../../../src/karabo/xms/SlotElement.hh</itemPath>
-        <itemPath>../../../src/karabo/xms/Statics.hh</itemPath>
-        <itemPath>../../../src/karabo/xms/xms.hh</itemPath>
-        <itemPath>../../../src/karabo/xms/xmsdll.hh</itemPath>
-      </logicalFolder>
-      <logicalFolder name="f2" displayName="Source Files" projectFiles="true">
-        <itemPath>../../../src/karabo/xms/FileWrapNetworkInput.cc</itemPath>
-        <itemPath>../../../src/karabo/xms/FileWrapNetworkOutput.cc</itemPath>
-        <itemPath>../../../src/karabo/xms/Memory.cc</itemPath>
-        <itemPath>../../../src/karabo/xms/NetworkInput.cc</itemPath>
-        <itemPath>../../../src/karabo/xms/NetworkOutput.cc</itemPath>
-        <itemPath>../../../src/karabo/xms/Requestor.cc</itemPath>
-        <itemPath>../../../src/karabo/xms/Signal.cc</itemPath>
-        <itemPath>../../../src/karabo/xms/SignalSlotable.cc</itemPath>
-        <itemPath>../../../src/karabo/xms/Slot.cc</itemPath>
-        <itemPath>../../../src/karabo/xms/Statics.cc</itemPath>
+      <logicalFolder name="f3" displayName="Type System" projectFiles="true">
+        <itemPath>../../../src/karabo/util/FromLiteral.cc</itemPath>
+        <itemPath>../../../src/karabo/util/FromLiteral.hh</itemPath>
+        <itemPath>../../../src/karabo/util/FromType.hh</itemPath>
+        <itemPath>../../../src/karabo/util/FromTypeInfo.cc</itemPath>
+        <itemPath>../../../src/karabo/util/FromTypeInfo.hh</itemPath>
+        <itemPath>../../../src/karabo/util/ToCppString.hh</itemPath>
+        <itemPath>../../../src/karabo/util/ToLiteral.hh</itemPath>
+        <itemPath>../../../src/karabo/util/ToType.hh</itemPath>
+        <itemPath>../../../src/karabo/util/Types.hh</itemPath>
       </logicalFolder>
     </logicalFolder>
     <logicalFolder name="TestFiles"
                    displayName="Test Files"
                    projectFiles="false"
                    kind="TEST_LOGICAL_FOLDER">
-      <logicalFolder name="f2" displayName="io_test" projectFiles="true" kind="TEST">
-        <itemPath>../../../src/karabo/tests/io/ArrayView_Test.cc</itemPath>
-        <itemPath>../../../src/karabo/tests/io/ArrayView_Test.hh</itemPath>
-        <itemPath>../../../src/karabo/tests/io/Hdf5File_Test.cc</itemPath>
-        <itemPath>../../../src/karabo/tests/io/Hdf5File_Test.hh</itemPath>
-        <itemPath>../../../src/karabo/tests/io/ReaderWriter_Test.cc</itemPath>
-        <itemPath>../../../src/karabo/tests/io/ReaderWriter_Test.hh</itemPath>
-        <itemPath>../../../src/karabo/tests/io/resources/etalonXML_readonly.xml</itemPath>
-        <itemPath>../../../src/karabo/tests/io/resources/etalonXSD_readonly.xsd</itemPath>
-        <itemPath>../../../src/karabo/tests/io/ioTestRunner.cc</itemPath>
-        <itemPath>../../../src/karabo/tests/io/resources/xmlForReading_readonly.xml</itemPath>
-      </logicalFolder>
-      <logicalFolder name="f4"
-                     displayName="nettcp_test"
-                     projectFiles="true"
-                     kind="TEST">
-        <itemPath>../../../src/karabo/tests/nettcp/TcpNetworking_Test.cc</itemPath>
-        <itemPath>../../../src/karabo/tests/nettcp/TcpNetworking_Test.hh</itemPath>
-        <itemPath>../../../src/karabo/tests/nettcp/nettcpTestRunner.cc</itemPath>
-      </logicalFolder>
-      <logicalFolder name="f3"
-                     displayName="netudp_test"
-                     projectFiles="true"
-                     kind="TEST">
-        <itemPath>../../../src/karabo/tests/netudp/UdpNetworking_Test.cc</itemPath>
-        <itemPath>../../../src/karabo/tests/netudp/UdpNetworking_Test.hh</itemPath>
-        <itemPath>../../../src/karabo/tests/netudp/netudpTestRunner.cc</itemPath>
-      </logicalFolder>
       <logicalFolder name="f1"
                      displayName="util_test"
                      projectFiles="true"
                      kind="TEST">
-        <itemPath>../../../src/karabo/tests/util/resources/BobbyCar.cc</itemPath>
-        <itemPath>../../../src/karabo/tests/util/resources/BobbyCar.hh</itemPath>
-        <itemPath>../../../src/karabo/tests/util/resources/Circle.cc</itemPath>
-        <itemPath>../../../src/karabo/tests/util/resources/Circle.hh</itemPath>
-        <itemPath>../../../src/karabo/tests/util/ClassInfo_Test.cc</itemPath>
-        <itemPath>../../../src/karabo/tests/util/ClassInfo_Test.hh</itemPath>
-        <itemPath>../../../src/karabo/tests/util/Factory_Test.cc</itemPath>
-        <itemPath>../../../src/karabo/tests/util/Factory_Test.hh</itemPath>
         <itemPath>../../../src/karabo/tests/util/Hash_Test.cc</itemPath>
         <itemPath>../../../src/karabo/tests/util/Hash_Test.hh</itemPath>
-        <itemPath>../../../src/karabo/tests/util/resources/Rectangle.cc</itemPath>
-        <itemPath>../../../src/karabo/tests/util/resources/Rectangle.hh</itemPath>
-        <itemPath>../../../src/karabo/tests/util/Schema_Test.cc</itemPath>
-        <itemPath>../../../src/karabo/tests/util/Schema_Test.hh</itemPath>
-        <itemPath>../../../src/karabo/tests/util/resources/Shape.hh</itemPath>
-        <itemPath>../../../src/karabo/tests/util/resources/Vehicle.hh</itemPath>
         <itemPath>../../../src/karabo/tests/util/utilTestRunner.cc</itemPath>
         <itemPath>../../../src/karabo/tests/util/resources/utiltestdll.hh</itemPath>
-      </logicalFolder>
-      <logicalFolder name="f5" displayName="xip_test" projectFiles="true" kind="TEST">
-        <itemPath>../../../src/karabo/tests/xip/Image_Test.cc</itemPath>
-        <itemPath>../../../src/karabo/tests/xip/Image_Test.hh</itemPath>
-        <itemPath>../../../src/karabo/tests/xip/xipTestRunner.cc</itemPath>
       </logicalFolder>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
@@ -538,20 +180,6 @@
           <output>${TESTDIR}/TestFiles/f5</output>
         </linkerTool>
       </folder>
-      <folder path="f2/f3">
-        <ccTool>
-          <incDir>
-            <pElem>${KARABO}/extern/include/hdf5</pElem>
-          </incDir>
-        </ccTool>
-      </folder>
-      <folder path="f4">
-        <ccTool>
-          <preprocessorList>
-            <Elem>LINUX</Elem>
-          </preprocessorList>
-        </ccTool>
-      </folder>
     </conf>
     <conf name="Release" type="2">
       <toolsSet>
@@ -660,20 +288,6 @@
         <linkerTool>
           <output>${TESTDIR}/TestFiles/f4</output>
         </linkerTool>
-      </folder>
-      <folder path="f2/f3">
-        <ccTool>
-          <incDir>
-            <pElem>${KARABO}/extern/include/hdf5</pElem>
-          </incDir>
-        </ccTool>
-      </folder>
-      <folder path="f4">
-        <ccTool>
-          <preprocessorList>
-            <Elem>LINUX</Elem>
-          </preprocessorList>
-        </ccTool>
       </folder>
     </conf>
   </confs>

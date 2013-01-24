@@ -286,7 +286,7 @@ namespace karabo {
                     }
                 }
             } catch (...) {
-                RETHROW;
+                KARABO_RETHROW;
             }
         }
 
@@ -303,7 +303,7 @@ namespace karabo {
                     }
                 }
             } catch (...) {
-                RETHROW;
+                KARABO_RETHROW;
             }
         }
 
@@ -826,7 +826,7 @@ namespace karabo {
                         if (channelExists) {
                             channel->connectNow(reply); // Synchronous
                         } else {
-                            throw IO_EXCEPTION("Could not find outputChannel \"" + channelId + "\" on instanceId \"" + instanceId + "\"");
+                            throw KARABO_IO_EXCEPTION("Could not find outputChannel \"" + channelId + "\" on instanceId \"" + instanceId + "\"");
                         }
                     }
                 }

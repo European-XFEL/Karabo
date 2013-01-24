@@ -53,7 +53,7 @@ void exportPyUtilHash() {
             , (bp::arg("key")));
 
     h.def("getTypeAsId"
-            , (Types::Type(Hash::*)(string const &) const) (&Hash::getTypeAsId)
+            , (Types::ReferenceType(Hash::*)(string const &) const) (&Hash::getTypeAsId)
             , (bp::arg("key")));
 
     h.def("setFromPath",
@@ -90,7 +90,7 @@ void exportPyUtilHash() {
             , (bp::arg("path"), bp::arg("sep")=".") );
     
     h.def("isFromPath"
-            , (bool(Hash::*)(string const &, Types::Type, string const &) ) (&Hash::isFromPath)
+            , (bool(Hash::*)(string const &, Types::ReferenceType, string const &) ) (&Hash::isFromPath)
             , (bp::arg("path"), bp::arg("type"), bp::arg("sep")=".") );
     
     h.def("eraseFromPath"

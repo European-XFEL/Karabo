@@ -102,7 +102,7 @@ namespace karabo {
                     karabo::util::Hash::const_iterator it = m_record.find(m_keys[keyNumber]);
                     std::ostringstream os;
                     os << "Expected " << types.getTypeAsString(m_record.getAny(it).type()) << " type";
-                    throw CAST_EXCEPTION(os.str());
+                    throw KARABO_CAST_EXCEPTION(os.str());
                 }
                 karabo::io::ArrayView<T>& av = *(boost::any_cast<karabo::io::ArrayView<T> >(anyElement));
                 av[m_index] = value;                
@@ -117,7 +117,7 @@ namespace karabo {
                     karabo::util::Hash::const_iterator it = m_record.find(m_keys[keyNumber]);
                     std::ostringstream os;
                     os << "Expected " << types.getTypeAsString(m_record.getAny(it).type()) << " type";
-                    throw CAST_EXCEPTION(os.str());
+                    throw KARABO_CAST_EXCEPTION(os.str());
                 }
                 karabo::io::ArrayView<karabo::io::ArrayView<T> >& av = *(boost::any_cast<karabo::io::ArrayView<karabo::io::ArrayView<T> > >(anyElement));
                 av[m_index] = value;

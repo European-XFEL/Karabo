@@ -64,7 +64,7 @@ namespace karabo {
                         desc.get("description", description);
                     }
                     if (desc.has("simpleType")) {
-                        type = Types::convert(desc.get<Types::Type > ("simpleType"));
+                        type = Types::convert(desc.get<Types::ReferenceType > ("simpleType"));
                     } else if (desc.has("complexType")) {
                         Schema::OccuranceType occ = desc.get<Schema::OccuranceType > ("occurrence");
                         if (occ == Schema::EITHER_OR) {
@@ -139,7 +139,7 @@ namespace karabo {
                 stream << "\\label{tab:[...]Factory: " << expected.get<string > ("root") << "}" << endl;
                 stream << "\\end{table}" << endl;
             } catch (...) {
-                RETHROW;
+                KARABO_RETHROW;
             }
         }
     } // namespace io

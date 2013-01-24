@@ -66,9 +66,9 @@ namespace karabo {
                             if (callFunction1(body)) break;
                         case 0:
                             if (callFunction0(body)) break;
-                            throw LOGIC_EXCEPTION("TypeError exception happened \"somewhere\" in Python code");
+                            throw KARABO_LOGIC_EXCEPTION("TypeError exception happened \"somewhere\" in Python code");
                         default:
-                            throw SIGNALSLOT_EXCEPTION("Too many arguments send to python slot (max 4 are currently supported");
+                            throw KARABO_SIGNALSLOT_EXCEPTION("Too many arguments send to python slot (max 4 are currently supported");
                     }
 
                     handlePossibleReply(header);

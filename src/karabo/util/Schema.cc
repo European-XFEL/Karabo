@@ -87,8 +87,8 @@ namespace karabo {
             string keyValue;
             if (!item.has("root")) {
 
-                if (!item.has("key")) throw PARAMETER_EXCEPTION("Invalid parameter description, no key (variable name) is set");
-                if ((!item.has("simpleType")) && (!item.has("complexType"))) throw PARAMETER_EXCEPTION("Invalid parameter description. You have to use either of the functions: simpleType, complexType");
+                if (!item.has("key")) throw KARABO_PARAMETER_EXCEPTION("Invalid parameter description, no key (variable name) is set");
+                if ((!item.has("simpleType")) && (!item.has("complexType"))) throw KARABO_PARAMETER_EXCEPTION("Invalid parameter description. You have to use either of the functions: simpleType, complexType");
 
                 overwriteIfDuplicated(item.get<string > ("key"));
                 keyValue = item.get<string > ("key");
@@ -98,8 +98,8 @@ namespace karabo {
             }
             
             // Check for existence of mandatory meta-information 
-            if (!item.has("assignment")) throw PARAMETER_EXCEPTION("Invalid parameter description, no assignment type is set for key : " + keyValue);
-            if (!item.has("displayedName")) throw PARAMETER_EXCEPTION("Invalid parameter description, no displayedName is given for key : " + keyValue);
+            if (!item.has("assignment")) throw KARABO_PARAMETER_EXCEPTION("Invalid parameter description, no assignment type is set for key : " + keyValue);
+            if (!item.has("displayedName")) throw KARABO_PARAMETER_EXCEPTION("Invalid parameter description, no displayedName is given for key : " + keyValue);
             
             // Increase the item count and finally add to this
             ostringstream ss;
@@ -249,7 +249,7 @@ namespace karabo {
             set("access", at);
         }
 
-        void Schema::simpleType(const Types::Type type) {
+        void Schema::simpleType(const Types::ReferenceType type) {
             set("simpleType", type);
         }
 
@@ -313,7 +313,7 @@ namespace karabo {
 
             string fill(depth * 2, ' ');
             for (Schema::const_iterator it = config.begin(); it != config.end(); it++) {
-                Types::Type type = config.getTypeAsId(it);
+                Types::ReferenceType type = config.getTypeAsId(it);
                 string typeString = config.getTypeAsString(it);
                 bool isHandled = handleStandardTypes(os, config, it, fill);
                 if (!isHandled) {
@@ -378,7 +378,7 @@ namespace karabo {
         Hash Schema::validate(const Hash& user, bool injectDefaults, bool allowUnrootedConfiguration, bool allowAdditionalKeys, bool allowMissingKeys) {
 
             // Ensure that this schema class is rooted
-            if (!this->hasRoot()) throw LOGIC_EXCEPTION("This schema class is not rooted. Produce the schema using the static methods of the factory base class");
+            if (!this->hasRoot()) throw KARABO_LOGIC_EXCEPTION("This schema class is not rooted. Produce the schema using the static methods of the factory base class");
 
             // Set up flags for this validation
             m_injectDefaults = injectDefaults;
@@ -401,7 +401,7 @@ namespace karabo {
             string report(validationFailedReport.str());
 
             if (!report.empty()) { // Should be empty upon successful assertion
-                throw PARAMETER_EXCEPTION("Parameter validation failed.\n\n" + report);
+                throw KARABO_PARAMETER_EXCEPTION("Parameter validation failed.\n\n" + report);
             }
 
             // Return valid configuration
@@ -419,7 +419,7 @@ namespace karabo {
                     r_injectDefaults(*this, injected);
                 }
             } else {
-                throw LOGIC_EXCEPTION("Schema is un-rooted, use MyFactoryBase::expectedParameters(\"MyFactorizedClass\") for schema creation");
+                throw KARABO_LOGIC_EXCEPTION("Schema is un-rooted, use MyFactoryBase::expectedParameters(\"MyFactorizedClass\") for schema creation");
             }
             return injected;
         }
@@ -429,7 +429,7 @@ namespace karabo {
             if (this->hasRoot()) {
                 r_injectDefaults(*this, injected);
             } else {
-                throw LOGIC_EXCEPTION("Schema is un-rooted, use MyFactoryBase::expectedParameters(\"MyFactorizedClass\") for schema creation");
+                throw KARABO_LOGIC_EXCEPTION("Schema is un-rooted, use MyFactoryBase::expectedParameters(\"MyFactorizedClass\") for schema creation");
             }
             return injected;
         }
@@ -507,7 +507,7 @@ namespace karabo {
 
                 // The valueType for node has to be a Hash object, however no value may be given on the command line 
                 // and an empty string will be generated. In this case, an empty Hash object is inserted, instead.
-                Types::Type nodeValueType = user.getTypeAsId(node);
+                Types::ReferenceType nodeValueType = user.getTypeAsId(node);
                 if (nodeValueType == Types::STRING && user.get<string > (node).empty()) { // Exception from rule
                     user.set(node, Hash());
                     //working.set(node, Hash());
@@ -515,7 +515,7 @@ namespace karabo {
                     report << "Invalid assignment \"" << user.getAsString(node) << "\" to scope \"" << nextScope << "\"" << endl;
                     report << "Use \"" << nextScope << ".\" instead of \"" << nextScope << "=\"" << endl;
                     // showPossibleParameters(mParams, report); TODO
-                    throw PARAMETER_EXCEPTION(report.str());
+                    throw KARABO_PARAMETER_EXCEPTION(report.str());
                 }
 
             }
@@ -598,7 +598,7 @@ namespace karabo {
             }
             string out(notNeededMessage.str());
             if (!out.empty()) {
-                throw PARAMETER_EXCEPTION(out);
+                throw KARABO_PARAMETER_EXCEPTION(out);
             }
         }
 
@@ -693,7 +693,7 @@ namespace karabo {
                 }
                     break;
                 default:
-                    throw LOGIC_EXCEPTION("This should never happen, faced illegal occurance type");
+                    throw KARABO_LOGIC_EXCEPTION("This should never happen, faced illegal occurance type");
             }
         }
 
@@ -704,7 +704,7 @@ namespace karabo {
             message << "(1) \"" << scope << "[0]\"    (Sets/edits an element at a defined position (here 0))" << endl;
             message << "(2) \"" << scope << "[next]\" (Appends a new element to the list)" << endl;
             message << "(3) \"" << scope << "[last]\" (Addresses the last element in the list)" << endl;
-            throw PARAMETER_EXCEPTION(message.str());
+            throw KARABO_PARAMETER_EXCEPTION(message.str());
         }
 
         void Schema::assertOccuranceEitherOr(const Schema& mComplex, Hash& uComplex, Hash& wComplex, ostringstream& report, const string & scope) const {
@@ -776,7 +776,7 @@ namespace karabo {
             const string& key = desc.getAsString("key");
 
             string nextScope = scope + "." + key;
-            string type = Types::convert(desc.get<Types::Type > ("simpleType"));
+            string type = Types::convert(desc.get<Types::ReferenceType > ("simpleType"));
 
             if (!uParam.has(key)) {
                 report << "Missing simple-type (" << type << ") parameter: \"" << nextScope << "\"" << endl;
@@ -784,8 +784,8 @@ namespace karabo {
             }
 
             // Check datatype
-            Types::Type eDataType = desc.get<Types::Type > ("simpleType");
-            Types::Type iDataType = uParam.getTypeAsId(key);
+            Types::ReferenceType eDataType = desc.get<Types::ReferenceType > ("simpleType");
+            Types::ReferenceType iDataType = uParam.getTypeAsId(key);
             if (eDataType != Types::ANY && iDataType != eDataType) {
                 // TODO Discuss whether we should try to cast whatever is there
                 if (iDataType != Types::STRING) {
@@ -1077,7 +1077,7 @@ namespace karabo {
                 }
 
             } catch (...) {
-                RETHROW;
+                KARABO_RETHROW;
             }
 
             // ! show results !
@@ -1231,7 +1231,7 @@ namespace karabo {
                 }
 
             } catch (...) {
-                RETHROW;
+                KARABO_RETHROW;
             }
         }
 
@@ -1276,7 +1276,7 @@ namespace karabo {
 
                 }
             } catch (...) {
-                RETHROW;
+                KARABO_RETHROW;
             }
 
         }
@@ -1320,7 +1320,7 @@ namespace karabo {
             }
 
             if (desc.has("simpleType")) {
-                type = Types::convert(desc.get<Types::Type > ("simpleType"));
+                type = Types::convert(desc.get<Types::ReferenceType > ("simpleType"));
             } else if (desc.has("complexType")) {
                 Schema::OccuranceType occ = desc.get<Schema::OccuranceType > ("occurrence");
                 if (occ == Schema::EITHER_OR) {

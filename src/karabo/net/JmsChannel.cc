@@ -61,7 +61,7 @@ namespace karabo {
 
                 MQ_SAFE_CALL(MQCreateMessageConsumer(m_sessionHandle, m_destinationHandle, m_filterCondition.c_str(), m_jmsConnection.m_deliveryInhibition, &consumerHandle));
                 MQStatus status = MQReceiveMessageWithTimeout(consumerHandle, m_syncReadTimeout, &messageHandle);
-                if (MQStatusIsError(status)) throw TIMEOUT_EXCEPTION("Synchronous read timed out");
+                if (MQStatusIsError(status)) throw KARABO_TIMEOUT_EXCEPTION("Synchronous read timed out");
                 MQ_SAFE_CALL(MQGetMessageType(messageHandle, &messageType))
                 if (messageType == MQ_TEXT_MESSAGE) {
                     ConstMQString msgBody;
@@ -89,14 +89,14 @@ namespace karabo {
                     MQ_SAFE_CALL(MQFreeProperties(propertiesHandle))
                     MQ_SAFE_CALL(MQFreeProperties(headerHandle))
                 } else {
-                    throw MESSAGE_EXCEPTION("Recieved non-text message, but tried to read as text");
+                    throw KARABO_MESSAGE_EXCEPTION("Recieved non-text message, but tried to read as text");
                 }
                 MQ_SAFE_CALL(MQAcknowledgeMessages(m_sessionHandle, messageHandle))
                 // Clean up
                 MQ_SAFE_CALL(MQFreeMessage(messageHandle));
                 MQ_SAFE_CALL(MQCloseMessageConsumer(consumerHandle))
             } catch (...) {
-                RETHROW
+                KARABO_RETHROW
             }
         }
 
@@ -105,7 +105,7 @@ namespace karabo {
             try {
                 this->read(s, header);
             } catch (...) {
-                RETHROW
+                KARABO_RETHROW
             }
             stringstream ss(s);
             if (m_jmsConnection.m_autoDetectMessageFormat) {
@@ -116,7 +116,7 @@ namespace karabo {
                     try {
                         m_hashFormats[format] = HashFormat::create(Hash(format));
                     } catch (const Exception& e) {
-                        throw MESSAGE_EXCEPTION("Could not understand/automatically create a Hash from the given \"" + format + "\" format");
+                        throw KARABO_MESSAGE_EXCEPTION("Could not understand/automatically create a Hash from the given \"" + format + "\" format");
                     }
                 }
                 m_hashFormats[format]->convert(ss, body);
@@ -198,14 +198,14 @@ namespace karabo {
                     }
                 }
             } catch (...) {
-                RETHROW
+                KARABO_RETHROW
             }
         }
 
         void JmsChannel::readAsyncStringHash(const ReadStringHashHandler& readHandler) {
 
             if (m_hasAsyncHandler) {
-                throw NOT_SUPPORTED_EXCEPTION("You may only register exactly one handler per channel, "
+                throw KARABO_NOT_SUPPORTED_EXCEPTION("You may only register exactly one handler per channel, "
                         "if you need more handlers create a new channel on the connection and register there");
             }
             m_hasAsyncHandler = true;
@@ -271,7 +271,7 @@ namespace karabo {
                         // Just ignore binary messages
                     } else {
                         // Give an error if unexpected message types are going round the broker
-                        throw MESSAGE_EXCEPTION("Received message of unsupported type (i.e. neither <text> nor <bytes>)");
+                        throw KARABO_MESSAGE_EXCEPTION("Received message of unsupported type (i.e. neither <text> nor <bytes>)");
                     }
                     return true;
                 }
@@ -285,7 +285,7 @@ namespace karabo {
 
         void JmsChannel::readAsyncRawHash(const ReadRawHashHandler& readHandler) {
             if (m_hasAsyncHandler) {
-                throw NOT_SUPPORTED_EXCEPTION("You may only register exactly one handler per channel, "
+                throw KARABO_NOT_SUPPORTED_EXCEPTION("You may only register exactly one handler per channel, "
                         "if you need more handlers create a new channel on the connection and register there");
             }
             m_hasAsyncHandler = true;
@@ -378,7 +378,7 @@ namespace karabo {
                         MQ_SAFE_CALL(MQFreeMessage(messageHandle));
                     } else {
                         // Give an error if unexpected message types are going round the broker
-                        throw MESSAGE_EXCEPTION("Received message of unsupported type (i.e. neither <text> nor <bytes>)");
+                        throw KARABO_MESSAGE_EXCEPTION("Received message of unsupported type (i.e. neither <text> nor <bytes>)");
                     }
                     return true;
                 }
@@ -423,7 +423,7 @@ namespace karabo {
                 MQ_SAFE_CALL(MQCloseMessageProducer(producerHandle))
 
             } catch (...) {
-                RETHROW
+                KARABO_RETHROW
             }
         }
 
@@ -459,7 +459,7 @@ namespace karabo {
 
                 MQ_SAFE_CALL(MQCloseMessageProducer(producerHandle))
             } catch (...) {
-                RETHROW
+                KARABO_RETHROW
             }
         }
 
@@ -480,7 +480,7 @@ namespace karabo {
         void JmsChannel::setProperties(const Hash& properties, const MQPropertiesHandle& propertiesHandle) {
             try {
                 for (Hash::const_iterator it = properties.begin(); it != properties.end(); it++) {
-                    Types::Type type = properties.getTypeAsId(it);
+                    Types::ReferenceType type = properties.getTypeAsId(it);
                     switch (type) {
                         case Types::STRING:
                             MQ_SAFE_CALL(MQSetStringProperty(propertiesHandle, it->first.c_str(), properties.get<string > (it).c_str()))
@@ -510,12 +510,12 @@ namespace karabo {
                             MQ_SAFE_CALL(MQSetBoolProperty(propertiesHandle, it->first.c_str(), properties.get<bool>(it)))
                             break;
                         default:
-                            throw NOT_SUPPORTED_EXCEPTION("Given property value type (" + Types::convert(type) + ") is not supported by the OpenMQ");
+                            throw KARABO_NOT_SUPPORTED_EXCEPTION("Given property value type (" + Types::convert(type) + ") is not supported by the OpenMQ");
                             break;
                     }
                 }
             } catch (...) {
-                RETHROW
+                KARABO_RETHROW
             }
         }
 
@@ -552,7 +552,7 @@ namespace karabo {
                     try {
                         m_hashFormats[format] = HashFormat::create(Hash(format));
                     } catch (const Exception& e) {
-                        throw MESSAGE_EXCEPTION("Could not understand/automatically create a Hash from the given \"" + format + "\" format");
+                        throw KARABO_MESSAGE_EXCEPTION("Could not understand/automatically create a Hash from the given \"" + format + "\" format");
                     }
                 }
                 m_hashFormats[format]->convert(ss, h);

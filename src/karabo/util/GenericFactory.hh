@@ -20,7 +20,7 @@
 #include <boost/shared_ptr.hpp>
 
 #include "Exception.hh"
-#include "String.hh"
+#include "StringTools.hh"
 
 namespace karabo {
     namespace util {
@@ -67,8 +67,8 @@ namespace karabo {
                 if (baseCreateFunctionIterator != m_registry.end()) {
                     object = baseCreateFunctionIterator->second(); // () - means call base create function
                 } else {
-                    throw LOGIC_EXCEPTION("Could not find any factorized object associated "
-                            "to key: \"" + String::toString(classIdKey) + "\"");
+                    throw KARABO_LOGIC_EXCEPTION("Could not find any factorized object associated "
+                            "to key: \"" + karabo::util::toString(classIdKey) + "\"");
                 }
                 return object;
             }

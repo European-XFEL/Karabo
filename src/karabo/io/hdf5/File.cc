@@ -60,7 +60,7 @@ namespace karabo {
           ostringstream os;
           os << "Could not open file " << m_filename;
           string msg = os.str();
-          throw IO_EXCEPTION(msg);
+          throw KARABO_IO_EXCEPTION(msg);
         }
         m_accMode = mode;
       }
@@ -68,7 +68,7 @@ namespace karabo {
       Table::Pointer File::createTable(const string& name, const DataFormat::Pointer dataFormat, size_t chunkSize) {
 
         if (m_accMode == READONLY || m_accMode == APPEND) {
-          throw IO_EXCEPTION("Cannot create table when file is opened in READONLY or APPEND mode");
+          throw KARABO_IO_EXCEPTION("Cannot create table when file is opened in READONLY or APPEND mode");
         }
 
         Hash conf;

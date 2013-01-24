@@ -224,7 +224,7 @@ namespace karabo {
                 MQ_SAFE_CALL(MQCreateConnection(propertiesHandle, m_username.c_str(), m_password.c_str(), NULL, &onException, NULL, &m_connectionHandle))
                         
             } catch (...) {
-	      RETHROW_AS(OPENMQ_EXCEPTION("Propagating OpenMQ exception"));
+	      KARABO_RETHROW_AS(KARABO_OPENMQ_EXCEPTION("Propagating OpenMQ exception"));
             }
         }
 
@@ -232,7 +232,7 @@ namespace karabo {
             MQString tmp = MQGetStatusString(status);
             std::string errorString(tmp);
             MQFreeString(tmp);
-            throw MESSAGE_EXCEPTION(errorString);
+            throw KARABO_MESSAGE_EXCEPTION(errorString);
         }
 
         Channel::Pointer AJmsConnection::start() {
@@ -262,7 +262,7 @@ namespace karabo {
             } catch (...) {
                 // Cleanup C garbage
                 //MQFreeConnection(m_connectionHandle);
-                RETHROW
+                KARABO_RETHROW
             }
         }
 
@@ -272,7 +272,7 @@ namespace karabo {
                 //MQFreeConnection(m_connectionHandle);
             } catch (...) {
                 //MQFreeConnection(m_connectionHandle);
-                RETHROW
+                KARABO_RETHROW
             }
         }
 

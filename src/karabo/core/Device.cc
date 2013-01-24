@@ -144,7 +144,7 @@ namespace karabo {
 
 
             } catch (const Exception& e) {
-                RETHROW;
+                KARABO_RETHROW;
             }
         }
 

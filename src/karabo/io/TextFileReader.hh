@@ -96,7 +96,7 @@ namespace karabo {
             return;
           }
         }
-        throw NOT_SUPPORTED_EXCEPTION("Can not interprete extension: \"" + extension + "\"");
+        throw KARABO_NOT_SUPPORTED_EXCEPTION("Can not interprete extension: \"" + extension + "\"");
       }
 
       void readFile(std::stringstream& buffer) {
@@ -112,7 +112,7 @@ namespace karabo {
           }
           inputStream.close();
         } else {
-          throw IO_EXCEPTION("Cannot open file: " + m_filename.string());
+          throw KARABO_IO_EXCEPTION("Cannot open file: " + m_filename.string());
         }
       }
    

@@ -64,7 +64,7 @@ namespace karabo {
          * @param out Output parameter representing object of the class karabo::util::Hash
          */
         void SchemaXsdFormat::convert(stringstream& in, Schema& out) {
-            throw NOT_IMPLEMENTED_EXCEPTION("Reading (de-serialization) of .xsd file into Schema objects is currently not implemented");
+            throw KARABO_NOT_IMPLEMENTED_EXCEPTION("Reading (de-serialization) of .xsd file into Schema objects is currently not implemented");
         }
 
         /**
@@ -232,7 +232,7 @@ namespace karabo {
                                 simpleElem->LinkEndChild(annotationTag);
                             }
 
-                            Types::Type typeOfElem = desc.get<Types::Type > ("simpleType");
+                            Types::ReferenceType typeOfElem = desc.get<Types::ReferenceType > ("simpleType");
 
                             //type of element or type of all elements of the vector
                             string typeOfElemXsd = Types::convertToXsd(typeOfElem);
@@ -390,7 +390,7 @@ namespace karabo {
                 }//for-loop over root-elements
 
             } catch (...) {
-                RETHROW;
+                KARABO_RETHROW;
             }
         }
 

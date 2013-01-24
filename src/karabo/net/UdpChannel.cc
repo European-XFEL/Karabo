@@ -49,9 +49,9 @@ namespace karabo {
                 if (m_errorHandler)
                     m_errorHandler(channel(), errmsg);
                 else
-                    throw MESSAGE_EXCEPTION(errmsg);
+                    throw KARABO_MESSAGE_EXCEPTION(errmsg);
             } catch (...) {
-                RETHROW
+                KARABO_RETHROW
             }
         }
 
@@ -65,9 +65,9 @@ namespace karabo {
                 if (m_errorHandler)
                     m_errorHandler(channel(), errmsg);
                 else
-                    throw MESSAGE_EXCEPTION(errmsg);
+                    throw KARABO_MESSAGE_EXCEPTION(errmsg);
             } catch (...) {
-                RETHROW
+                KARABO_RETHROW
             }
         }
 
@@ -77,7 +77,7 @@ namespace karabo {
                 m_socket.async_receive_from(buffer(data, size), m_remote_endpoint, boost::bind(
                         &UdpChannel::asyncReadRawHandler, this, data, size, handler, boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred));
             } catch (...) {
-                RETHROW
+                KARABO_RETHROW
             }
         }
 
@@ -91,10 +91,10 @@ namespace karabo {
                 if (m_errorHandler) {
                     m_errorHandler(channel(), e.message() + " and transferred " + String::toString(size) + " bytes");
                 } else {
-                    throw MESSAGE_EXCEPTION(e.message());
+                    throw KARABO_MESSAGE_EXCEPTION(e.message());
                 }
             } catch (...) {
-                RETHROW
+                KARABO_RETHROW
             }
         }
 
@@ -104,7 +104,7 @@ namespace karabo {
                 m_socket.async_receive_from(buffer(m_inboundData), m_remote_endpoint,
                         boost::bind(&UdpChannel::asyncReadVectorHandler, this, handler, boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred));
             } catch (...) {
-                RETHROW
+                KARABO_RETHROW
             }
         }
 
@@ -116,10 +116,10 @@ namespace karabo {
                 } else if (m_errorHandler) {
                     m_errorHandler(channel(), e.message() + " and transferred " + String::toString(bytes_transferred) + " bytes");
                 } else {
-                    throw MESSAGE_EXCEPTION(e.message());
+                    throw KARABO_MESSAGE_EXCEPTION(e.message());
                 }
             } catch (...) {
-                RETHROW
+                KARABO_RETHROW
             }
         }
 
@@ -139,10 +139,10 @@ namespace karabo {
                 if (m_errorHandler) {
                     m_errorHandler(channel(), errmsg);
                 } else {
-                    throw MESSAGE_EXCEPTION(errmsg);
+                    throw KARABO_MESSAGE_EXCEPTION(errmsg);
                 }
             } catch (...) {
-                RETHROW
+                KARABO_RETHROW
             }
         }
 
@@ -150,7 +150,7 @@ namespace karabo {
             try {
                 write(&data[0], data.size());
             } catch (...) {
-                RETHROW
+                KARABO_RETHROW
             }
         }
 
@@ -159,7 +159,7 @@ namespace karabo {
                 const size_t size = data.size();
                 writeAsyncRaw(&data[0], size, handler);
             } catch (...) {
-                RETHROW
+                KARABO_RETHROW
             }
         }
 
@@ -173,11 +173,11 @@ namespace karabo {
                     if (m_errorHandler) {
                         m_errorHandler(channel(), errmsg);
                     } else {
-                        throw MESSAGE_EXCEPTION(errmsg);
+                        throw KARABO_MESSAGE_EXCEPTION(errmsg);
                     }
                 }
             } catch (...) {
-                RETHROW
+                KARABO_RETHROW
             }
         }
 
@@ -189,10 +189,10 @@ namespace karabo {
                     if (m_errorHandler)
                         m_errorHandler(channel(), e.message());
                     else
-                        throw MESSAGE_EXCEPTION(e.message());
+                        throw KARABO_MESSAGE_EXCEPTION(e.message());
                 }
             } catch (...) {
-                RETHROW
+                KARABO_RETHROW
             }
         }
 
@@ -210,7 +210,7 @@ namespace karabo {
                 else
                     throw boost::system::system_error(e);
             } catch (...) {
-                RETHROW
+                KARABO_RETHROW
             }
         }
 

@@ -5,6 +5,9 @@
  * Author: <burkhard.heisen@xfel.eu>
  *
  * Created on July 13, 2010, 6:55 PM
+ * 
+ * Major update on January 17, 2013 9:00 AM
+ * Contributions by: <djelloul.boukhelef@xfel.eu>
  *
  * Copyright (C) 2010 European XFEL GmbH Hamburg. All rights reserved.
  */
@@ -12,257 +15,162 @@
 #ifndef KARABO_UTIL_TYPES_HH
 #define	KARABO_UTIL_TYPES_HH
 
-#include <string>
-#include <map>
-#include <vector>
-#include <typeinfo>
-#include <complex>
-#include <deque>
-#include <boost/tuple/tuple.hpp>
-
-#include "utildll.hh"
-
-
-// Forward the boost::filesystem::path
-namespace boost {
-    namespace filesystem {
-        class path;
-    }
-}
-
 namespace karabo {
     namespace util {
 
-        class Schema;
+        // Forward ToType
+        template<class To>
+        class ToType;
 
-        /**
-         * Singleton Class for Type Description
-         * 
-         * TODO (for next library cleaning day)
-         * 
-         * 1 - Make all Types functions static (use getInstance privately)
-         * 2 - Make the API more orthogonal i.e. get rid of convert
-         * 3 - Use the FORMAT enum consistently either as template or function argument
-         * 
-         * BH will do this
-         *      
-         */
-        class DECLSPEC_UTIL Types {
+        // Forward FromType
+        template<class To>
+        class FromType;
+
+        class Types {
         public:
 
-            struct Any {
-            };
-
-            enum Type {
+            enum ReferenceType {
                 BOOL, // bool
-                CHAR, // char
-                INT8, // signed char
-                INT16, // signed short
-                INT32, // signed int
-                INT64, // signed long long
-                UINT8, // unsigned char
-                UINT16, // unsigned short
-                UINT32, // unsigned int
-                UINT64, // unsigned long long
-                FLOAT, // float
-                COMPLEX_FLOAT, // complex<float>
-                DOUBLE, // double
-                COMPLEX_DOUBLE, // complex<double>
-                STRING, // std::string
-                CONST_CHAR_PTR, // const char*
-                VECTOR_STRING, // std::vector<std::string>
-                VECTOR_PATH, // std::vector<boost::filesystem::path>
-                VECTOR_CHAR, // std::vector<char>
-                VECTOR_INT8, // std::vector<std::signed char>
-                VECTOR_INT16, // std::vector<std::signed short>
-                VECTOR_INT32, // std::vector<std::int>
-                VECTOR_INT64, // std::vector<std::signed long long>
-                VECTOR_UINT8, // std::vector<std::unsigned char>
-                VECTOR_UINT16, // std::vector<std::unsigned short>
-                VECTOR_UINT32, // std::vector<std::unsigned int>
-                VECTOR_UINT64, // std::vector<std::unsigned long long>
                 VECTOR_BOOL, // std::deque<std::bool>
-                VECTOR_DOUBLE, // std::vector<std::double>
+
+                CHAR, // char
+                VECTOR_CHAR, // std::vector<char>
+                INT8, // signed char
+                VECTOR_INT8, // std::vector<std::signed char>
+                UINT8, // unsigned char
+                VECTOR_UINT8, // std::vector<std::unsigned char>
+
+                INT16, // signed short
+                VECTOR_INT16, // std::vector<std::signed short>
+                UINT16, // unsigned short
+                VECTOR_UINT16, // std::vector<std::unsigned short>
+
+                INT32, // signed int
+                VECTOR_INT32, // std::vector<std::int>
+                UINT32, // unsigned int
+                VECTOR_UINT32, // std::vector<std::unsigned int>
+
+                INT64, // signed long long
+                VECTOR_INT64, // std::vector<std::signed long long>
+                UINT64, // unsigned long long
+                VECTOR_UINT64, // std::vector<std::unsigned long long>
+
+                FLOAT, // float
                 VECTOR_FLOAT, // std::vector<std::float>
-                OCCURANCE_TYPE, // Schema::OccuanceType
-                ASSIGNMENT_TYPE, // Schema::AssignmentType
-                DATA_TYPE, // Types::Type
-                EXPERT_LEVEL_TYPE, // Schema::ExpertLevelType
-                ACCESS_TYPE, // AccessType
-                PATH, // boost::filesystem::path
+
+                DOUBLE, // double
+                VECTOR_DOUBLE, // std::vector<std::double>
+
+                COMPLEX_FLOAT, // std::complex<float>
+                VECTOR_COMPLEX_FLOAT, // std::vector<std::complex<float>
+
+                COMPLEX_DOUBLE, // std::complex<double>
+                VECTOR_COMPLEX_DOUBLE, // std::vector<std::complex<double>
+
+                STRING, // std::string
+                VECTOR_STRING, // std::vector<std::string>
+
                 HASH, // Hash
-                SCHEMA, // Schema
                 VECTOR_HASH, // std::vector<Hash>
+
+                SCHEMA, // Schema
+
                 ANY, // unspecified type
-                UNKNOWN
+
+                UNKNOWN, // unknown type
+                SIMPLE,
+                SEQUENCE
             };
 
-            enum Format {
-                FORMAT_INTERN = 1,
-                FORMAT_XSD = 2,
-                FORMAT_CPP = 3
-            };
-
-            /**
-             * Singleton creation
-             */
-            static Types& getInstance();
-
-            /**
-             * Type retrieval given RTTI type_info object
-             * @param typeInfo
-             * @return Enumerated Types::TYPE
-             */
-            Type getTypeAsId(const std::type_info& typeInfo) const;
-
-            /**
-             * Type retrieval given RTTI type_info object
-             * @param typeInfo
-             * @return std::string identifying the data type
-             */
-            std::string getTypeAsString(const std::type_info& typeInfo) const;
-
-            /**
-             * Type retrieval given RTTI type_info object
-             * @param typeInfo
-             * @return std::string identifying the XSD data type
-             */
-            std::string getTypeAsStringXsd(const std::type_info& typeInfo) const;
-
-            /**
-             * TODO This can be heavily improved in performance, as all code could be generated at compile-time already
-             * @return
-             */
-            template <class T, int format>
-            static std::string getTypeAsString(const T& var = T()) {
-                getInstance();
-                std::string typeidName = std::string(typeid (var).name());
-                ConstTypeIt it = m_typeMap.find(typeidName);
-                if (it != m_typeMap.end()) {
-                    return it->second.get < format > ();
-                } else {
-                    return "UNKNOWN";
-                }
+            template <class From, class To>
+            static typename To::ReturnType convert(const typename From::ArgumentType& type) {
+                return ToType<To>::to(FromType<From>::from(type));
             }
 
-            template<class T>
-            static Type getTypeAsId(const T& var = T()) {
+            template <class From>
+            static ReferenceType from(const typename From::ArgumentType& type) {
+                return FromType<From>::from(type);
+            }
+
+            template <class To>
+            static typename To::ReturnType to(const ReferenceType type) {
+                return ToType<To>::to(type);
+            }
+
+            template<typename T>
+            static ReferenceType from(const T& var = T()) {
                 // This function does not compile by purpose. There are template specializations for each allowed data type
-                // (see template specialization declaration at the bottom of this file and corresponding definitions in Types.cc)
-                // Any attempt to use not supported type will result in the compilation error.
-                // This concept is used i.e. in SimpleElement
                 return this_type_is_not_supported_by_purpose(var);
             }
 
-
-            /**
-             * Given the enumerated type description this returns the string version
-             */
-            static std::string convert(const Type type);
-
-            /**
-             * Given the string type description this returns the enumerated version
-             */
-            static Types::Type convert(const std::string& type);
-
-            /**
-             * Given the enumerated type description this returns the XSD-string version
-             */
-            static std::string convertToXsd(const Type type);
-
-            /**
-             * Given the XSD-string type description this returns the enumerated version
-             */
-            static Types::Type convertFromXsd(const std::string& type);
-
-            /**
-             * This function retrieves all registered types as array
-             */
-            std::vector<std::string> getTypeListAsStrings() const;
-
-            /**
-             * This function retrieves all registered types as array
-             */
-            std::vector<Type> getTypeListAsIds() const;
-
-            /**
-             * Type retrieval given RTTI type_info object
-             * @param typeInfo
-             * @return A std::pair containing both, enumerated and stringified type information
-             */
-            std::pair<Type, std::string> getType(const std::type_info& typeInfo) const;
-
-            static void reRegisterTypes();
-
-        private:
-
-#define REGISTER_TYPE(t,e,x) m_typeMap[std::string(typeid(t).name())] = boost::tuple<Type, std::string, std::string, std::string>(e,std::string(#e),std::string(x),std::string(#t))
-            Types();
-
-            Types(const Types&);
-            Types & operator=(Types&);
-
-            static void registerTypes();
-
-            typedef std::map<const std::string, boost::tuple<Type, std::string, std::string, std::string > > TypeMap;
-            typedef TypeMap::const_iterator ConstTypeIt;
-
-            static TypeMap m_typeMap;
-
+            static ReferenceType category(ReferenceType type) {
+                switch (type) {
+                    case Types::CHAR:
+                    case Types::INT8:
+                    case Types::INT16:
+                    case Types::INT32:
+                    case Types::INT64:
+                    case Types::UINT8:
+                    case Types::UINT16:
+                    case Types::UINT32:
+                    case Types::UINT64:
+                    case Types::FLOAT:
+                    case Types::DOUBLE:
+                    case Types::BOOL:
+                    case Types::STRING:
+                    case Types::COMPLEX_FLOAT:
+                    case Types::COMPLEX_DOUBLE:
+                        return SIMPLE;
+                    case Types::VECTOR_STRING:
+                    case Types::VECTOR_CHAR:
+                    case Types::VECTOR_INT8:
+                    case Types::VECTOR_INT16:
+                    case Types::VECTOR_INT32:
+                    case Types::VECTOR_INT64:
+                    case Types::VECTOR_UINT8:
+                    case Types::VECTOR_UINT16:
+                    case Types::VECTOR_UINT32:
+                    case Types::VECTOR_UINT64:
+                    case Types::VECTOR_DOUBLE:
+                    case Types::VECTOR_FLOAT:
+                    case Types::VECTOR_BOOL:
+                    case Types::VECTOR_COMPLEX_FLOAT:
+                    case Types::VECTOR_COMPLEX_DOUBLE:
+                        return SEQUENCE;
+                    case Types::VECTOR_HASH:
+                    case Types::HASH:
+                    case Types::SCHEMA:
+                    case Types::ANY:
+                        return type;
+                    default:
+                        return UNKNOWN;
+                }
+            }
         };
+        
+#define _KARABO_HELPER_MACRO(RefType, CppType) \
+template <> inline Types::ReferenceType Types::from<CppType>(const CppType&) { return Types::RefType; } \
+template <> inline Types::ReferenceType Types::from<std::vector<CppType> > (const std::vector<CppType>&) { return Types::VECTOR_##RefType; }
 
-        // bool
-        template<> DECLSPEC_UTIL Types::Type Types::getTypeAsId(const bool&);
-        template<> DECLSPEC_UTIL Types::Type Types::getTypeAsId(const std::deque<bool>&);
+        _KARABO_HELPER_MACRO(BOOL, bool)
+        _KARABO_HELPER_MACRO(CHAR, char)
+        _KARABO_HELPER_MACRO(INT8, signed char)
+        _KARABO_HELPER_MACRO(UINT8, unsigned char)
+        _KARABO_HELPER_MACRO(INT16, short)
+        _KARABO_HELPER_MACRO(UINT16, unsigned short)
+        _KARABO_HELPER_MACRO(INT32, int)
+        _KARABO_HELPER_MACRO(UINT32, unsigned int)
+        _KARABO_HELPER_MACRO(INT64, long long)
+        _KARABO_HELPER_MACRO(UINT64, unsigned long)
+        _KARABO_HELPER_MACRO(FLOAT, float)
+        _KARABO_HELPER_MACRO(DOUBLE, double)
+        _KARABO_HELPER_MACRO(COMPLEX_FLOAT, std::complex<float>)
+        _KARABO_HELPER_MACRO(COMPLEX_DOUBLE, std::complex<double>)
+        _KARABO_HELPER_MACRO(STRING, std::string)
+                
+#undef _KARABO_HELPER_MACRO
 
-        // char
-        template<> DECLSPEC_UTIL Types::Type Types::getTypeAsId(const unsigned char&);
-        template<> DECLSPEC_UTIL Types::Type Types::getTypeAsId(const char&);
-        template<> DECLSPEC_UTIL Types::Type Types::getTypeAsId(const signed char&);
-        template<> DECLSPEC_UTIL Types::Type Types::getTypeAsId(const std::vector<unsigned char>&);
-        template<> DECLSPEC_UTIL Types::Type Types::getTypeAsId(const std::vector<char>&);
-        template<> DECLSPEC_UTIL Types::Type Types::getTypeAsId(const std::vector<signed char>&);
+    }
+}
 
-        // short
-        template<> DECLSPEC_UTIL Types::Type Types::getTypeAsId(const unsigned short&);
-        template<> DECLSPEC_UTIL Types::Type Types::getTypeAsId(const signed short&);
-        template<> DECLSPEC_UTIL Types::Type Types::getTypeAsId(const std::vector<unsigned short>&);
-        template<> DECLSPEC_UTIL Types::Type Types::getTypeAsId(const std::vector<signed short>&);
-
-        // int
-        template<> DECLSPEC_UTIL Types::Type Types::getTypeAsId(const unsigned int&);
-        template<> DECLSPEC_UTIL Types::Type Types::getTypeAsId(const signed int&);
-        template<> DECLSPEC_UTIL Types::Type Types::getTypeAsId(const std::vector<unsigned int>&);
-        template<> DECLSPEC_UTIL Types::Type Types::getTypeAsId(const std::vector<signed int>&);
-
-        // long long
-        template<> DECLSPEC_UTIL Types::Type Types::getTypeAsId(const unsigned long long&);
-        template<> DECLSPEC_UTIL Types::Type Types::getTypeAsId(const signed long long&);
-        template<> DECLSPEC_UTIL Types::Type Types::getTypeAsId(const std::vector<unsigned long long>&);
-        template<> DECLSPEC_UTIL Types::Type Types::getTypeAsId(const std::vector<signed long long>&);
-
-        // float
-        template<> DECLSPEC_UTIL Types::Type Types::getTypeAsId(const float&);
-        template<> DECLSPEC_UTIL Types::Type Types::getTypeAsId(const std::vector<float>&);
-
-        //double
-        template<> DECLSPEC_UTIL Types::Type Types::getTypeAsId(const double&);
-        template<> DECLSPEC_UTIL Types::Type Types::getTypeAsId(const std::vector<double>&);
-
-        // string
-        template<> DECLSPEC_UTIL Types::Type Types::getTypeAsId(const std::string&);
-        template<> DECLSPEC_UTIL Types::Type Types::getTypeAsId(const std::vector<std::string>&);
-
-        // path
-        template<> DECLSPEC_UTIL Types::Type Types::getTypeAsId(const boost::filesystem::path&);
-        template<> DECLSPEC_UTIL Types::Type Types::getTypeAsId(const std::vector<boost::filesystem::path>&);
-
-    } // namespace util
-
-    // Convenience
-    typedef karabo::util::Types::Format TypeFormat;
-
-} // namespace karabo
-
-#endif	/* KARABO_UTIL_TYPES_HH */
-
+#endif

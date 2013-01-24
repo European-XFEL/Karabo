@@ -94,8 +94,8 @@ namespace karabo {
 
             virtual int readKey(std::istream& is, std::string& path) = 0;
             virtual void writeKey(std::ostream& os, const std::string& path) = 0;
-            virtual int readType(std::istream& is, karabo::util::Types::Type& id) = 0;
-            virtual void writeType(std::ostream& os, karabo::util::Types::Type id) = 0;
+            virtual int readType(std::istream& is, karabo::util::Types::ReferenceType& id) = 0;
+            virtual void writeType(std::ostream& os, karabo::util::Types::ReferenceType id) = 0;
 
         protected:
 
@@ -157,7 +157,7 @@ namespace karabo {
                     streamSize -= rc;
                     if (streamSize <= 0) break;
 
-                    karabo::util::Types::Type id;
+                    karabo::util::Types::ReferenceType id;
                     rc = this->readType(is, id);
 
                     if (rc <= 0) break;
@@ -373,7 +373,7 @@ namespace karabo {
                         default:
                             std::ostringstream os;
                             os << id;
-                            throw NOT_SUPPORTED_EXCEPTION("No conversion exists for Protocol type \"" + os.str() + "\"");
+                            throw KARABO_NOT_SUPPORTED_EXCEPTION("No conversion exists for Protocol type \"" + os.str() + "\"");
                     }
                     if (rc <= 0) break;
                     streamSize -= rc;
@@ -382,7 +382,7 @@ namespace karabo {
 
             void l_writeStream(std::ostream& os, const karabo::util::Hash& hash, karabo::util::Hash::const_iterator& it, const std::string& key, const std::string& sep) {
                 writeKey(os, key);
-                karabo::util::Types::Type id = hash.getTypeAsId(it);
+                karabo::util::Types::ReferenceType id = hash.getTypeAsId(it);
                 this->writeType(os, id);
                 switch (id) {
                     case karabo::util::Types::STRING:
@@ -561,7 +561,7 @@ namespace karabo {
                         break;
                     }
                     default:
-                        throw NOT_SUPPORTED_EXCEPTION("No conversion exists for datatype \""
+                        throw KARABO_NOT_SUPPORTED_EXCEPTION("No conversion exists for datatype \""
                                 + hash.getTypeAsString(it) + "\"");
                 }
             }
@@ -569,7 +569,7 @@ namespace karabo {
             void r_writeStream(std::ostream& os, const karabo::util::Hash& hash, const std::string& prefix, const std::string& sep) {
                 for (karabo::util::Hash::const_iterator it = hash.begin(); it != hash.end(); ++it) {
                     std::string key = it->first;
-                    karabo::util::Types::Type id = hash.getTypeAsId(it);
+                    karabo::util::Types::ReferenceType id = hash.getTypeAsId(it);
                     if (id == karabo::util::Types::HASH) {
                         r_writeStream(os, hash.get<karabo::util::Hash > (it), prefix + key + sep, sep);
                     } else {

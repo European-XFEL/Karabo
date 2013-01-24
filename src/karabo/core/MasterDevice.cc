@@ -273,7 +273,7 @@ namespace karabo {
                 }
                 trackExistenceOfInstance(devSrvInstId);
             } else if (result.size() > 1) {
-                throw LOGIC_EXCEPTION("Internal error: Inconsistent database");
+                throw KARABO_LOGIC_EXCEPTION("Internal error: Inconsistent database");
             }
             KARABO_DB_SAVE
         }
@@ -303,7 +303,7 @@ namespace karabo {
             if (result.size() == 1) {
                 result[0].get("id", devSerInsId);
             } else {
-                throw LOGIC_EXCEPTION("Missing device-server instance");
+                throw KARABO_LOGIC_EXCEPTION("Missing device-server instance");
             }
             
             result.clear();
@@ -354,7 +354,7 @@ namespace karabo {
             if (result.size() == 1) {
                 result[0].get("id", devSerInsId);
             } else {
-                throw LOGIC_EXCEPTION("Missing device-server instance");
+                throw KARABO_LOGIC_EXCEPTION("Missing device-server instance");
             }
             
             result.clear();
@@ -366,7 +366,7 @@ namespace karabo {
                 result[0].get("id", devClaId);
                 result[0].get("schema", schema);
             } else {
-                throw LOGIC_EXCEPTION("Missing device-server instance");
+                throw KARABO_LOGIC_EXCEPTION("Missing device-server instance");
             }
 
             // Insert new deviceInstance

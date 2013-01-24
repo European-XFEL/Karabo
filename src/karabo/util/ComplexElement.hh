@@ -121,7 +121,7 @@ namespace karabo {
             return furtherExpected.get<Schema > ("elements");
           }
         } catch (...) {
-          RETHROW
+          KARABO_RETHROW
         }
         // Have to break recursion here, this is the standard trick when references are involved
         return dummy;

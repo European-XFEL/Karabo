@@ -35,7 +35,7 @@ namespace karabo {
                 } else if (nfds == 0) { // no file descriptors 'ready'
                     ::snmp_timeout();
                 } else { // exception in 'select'
-                    throw IO_EXCEPTION(string("Native 'select' failed: ") + ::strerror(errno));
+                    throw KARABO_IO_EXCEPTION(string("Native 'select' failed: ") + ::strerror(errno));
                 }
             }
         }

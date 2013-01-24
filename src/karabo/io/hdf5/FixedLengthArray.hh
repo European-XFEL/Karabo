@@ -82,7 +82,7 @@ namespace karabo {
                     // TODO
                     // size is deprecated - will be removed soon
                     if (!input.has("size") && !input.has("dims")) {
-                        throw PARAMETER_EXCEPTION("Size of the array not specified");
+                        throw KARABO_PARAMETER_EXCEPTION("Size of the array not specified");
                     }
 
                     if (input.has("size")) {
@@ -119,7 +119,7 @@ namespace karabo {
                         hid_t dataSetId = H5Dcreate2(gid, m_key.c_str(), ArrayTypes::getHdf5StandardType<T > (m_dims).getId(), m_fileDataSpace.getId(), linkCreatePropListId, m_dataSetProperties->getId(), m_dataAccessPropListId);
                         m_dataSet = H5::DataSet(dataSetId);
                     } catch (...) {
-                        RETHROW
+                        KARABO_RETHROW
                     }
                 }
 
@@ -129,7 +129,7 @@ namespace karabo {
                         selectFileRecord(recordId);
                         karabo::util::Hash::const_iterator it = data.find(m_key);
                         if (it == data.end()) { // TODO: do we need here to check if iterator is ok, is this performance issue
-                            throw PARAMETER_EXCEPTION("Invalid key in the Hash");
+                            throw KARABO_PARAMETER_EXCEPTION("Invalid key in the Hash");
                         }
                         const boost::any& any = data.getAny(it);
                         if (!m_filter) {
@@ -143,7 +143,7 @@ namespace karabo {
                         //tracer << "after write " << any.type().name() << std::endl;                        
                     } catch (...) {
                         //tracer << "exception caught" << std::endl;
-                        RETHROW;
+                        KARABO_RETHROW;
                     }
                 }
 
@@ -178,7 +178,7 @@ namespace karabo {
                         }
                         m_bufferFilter->write(*this, any, m_dims, len);
                     } catch (...) {
-                        RETHROW
+                        KARABO_RETHROW
                     }
 
                 }
@@ -239,7 +239,7 @@ namespace karabo {
                         m_bufferFilter->read(*this, any, m_dims, len);
 
                     } catch (...) {
-                        RETHROW
+                        KARABO_RETHROW
                     }
 
 
@@ -255,7 +255,7 @@ namespace karabo {
                     try {
                         m_dataSet.read(ptr, ArrayTypes::getHdf5NativeType<U > (m_dims), m_memoryDataSpace, m_fileDataSpace);
                     } catch (...) {
-                        RETHROW
+                        KARABO_RETHROW
                     }
                 }
 
@@ -269,7 +269,7 @@ namespace karabo {
                     try {
                         m_dataSet.read(ptr, ArrayTypes::getHdf5NativeType<V > (m_dims), m_memoryDataSpace, m_fileDataSpace);
                     } catch (...) {
-                        RETHROW
+                        KARABO_RETHROW
                     }
                 }
 
@@ -284,7 +284,7 @@ namespace karabo {
                         H5::DataSpace mds = this->getBufferDataSpace(len);
                         m_dataSet.read(ptr, ArrayTypes::getHdf5NativeType<U > (m_dims), mds, m_fileDataSpace);
                     } catch (...) {
-                        RETHROW
+                        KARABO_RETHROW
                     }
                 }
 
