@@ -24,7 +24,7 @@ void exportPyUtilTypes() { //exposing ::karabo::util::Types
           .value("FORMAT_CPP", Types::FORMAT_CPP)
           .export_values()
           ;
-  bp::enum_< Types::Type > ("Type")
+  bp::enum_< Types::ReferenceType > ("Type")
           .value("BOOL", Types::BOOL)
           .value("INT8", Types::INT8)
           .value("INT16", Types::INT16)
@@ -68,7 +68,7 @@ void exportPyUtilTypes() { //exposing ::karabo::util::Types
           ;
   { //::karabo::util::Types::convert
 
-    typedef ::std::string(*convert_function_type)(::karabo::util::Types::Type const);
+    typedef ::std::string(*convert_function_type)(::karabo::util::Types::ReferenceType const);
 
     Types_exposer.def(
             "convert"
@@ -78,7 +78,7 @@ void exportPyUtilTypes() { //exposing ::karabo::util::Types
   }
   { //::karabo::util::Types::convert
 
-    typedef ::karabo::util::Types::Type(*convert_function_type)(::std::string const &);
+    typedef ::karabo::util::Types::ReferenceType(*convert_function_type)(::std::string const &);
 
     Types_exposer.def(
             "convert"
@@ -88,7 +88,7 @@ void exportPyUtilTypes() { //exposing ::karabo::util::Types
   }
   { //::karabo::util::Types::convertFromXsd
 
-    typedef ::karabo::util::Types::Type(*convertFromXsd_function_type)(::std::string const &);
+    typedef ::karabo::util::Types::ReferenceType(*convertFromXsd_function_type)(::std::string const &);
 
     Types_exposer.def(
             "convertFromXsd"
@@ -98,7 +98,7 @@ void exportPyUtilTypes() { //exposing ::karabo::util::Types
   }
   { //::karabo::util::Types::convertToXsd
 
-    typedef ::std::string(*convertToXsd_function_type)(::karabo::util::Types::Type const);
+    typedef ::std::string(*convertToXsd_function_type)(::karabo::util::Types::ReferenceType const);
 
     Types_exposer.def(
             "convertToXsd"
@@ -108,7 +108,7 @@ void exportPyUtilTypes() { //exposing ::karabo::util::Types
   }
   { //::karabo::util::Types::getType
 
-    typedef ::std::pair< karabo::util::Types::Type, std::basic_string< char, std::char_traits< char >, std::allocator< char > > > (::karabo::util::Types::*getType_function_type)(::std::type_info const &) const;
+    typedef ::std::pair< karabo::util::Types::ReferenceType, std::basic_string< char, std::char_traits< char >, std::allocator< char > > > (::karabo::util::Types::*getType_function_type)(::std::type_info const &) const;
 
     Types_exposer.def(
             "getType"
@@ -118,7 +118,7 @@ void exportPyUtilTypes() { //exposing ::karabo::util::Types
   }
   { //::karabo::util::Types::getTypeAsId
 
-    typedef ::karabo::util::Types::Type(::karabo::util::Types::*getTypeAsId_function_type)(::std::type_info const &) const;
+    typedef ::karabo::util::Types::ReferenceType(::karabo::util::Types::*getTypeAsId_function_type)(::std::type_info const &) const;
 
     Types_exposer.def(
             "getTypeAsId"
@@ -128,7 +128,7 @@ void exportPyUtilTypes() { //exposing ::karabo::util::Types
   }
   { //::karabo::util::Types::getTypeAsId
 
-    typedef ::karabo::util::Types::Type(*getTypeAsId_function_type)(::std::vector< std::string > const &);
+    typedef ::karabo::util::Types::ReferenceType(*getTypeAsId_function_type)(::std::vector< std::string > const &);
 
     Types_exposer.def(
             "getTypeAsId"
@@ -138,7 +138,7 @@ void exportPyUtilTypes() { //exposing ::karabo::util::Types
   }
   { //::karabo::util::Types::getTypeAsId
 
-    typedef ::karabo::util::Types::Type(*getTypeAsId_function_type)(::std::vector< double > const &);
+    typedef ::karabo::util::Types::ReferenceType(*getTypeAsId_function_type)(::std::vector< double > const &);
 
     Types_exposer.def(
             "getTypeAsId"
@@ -148,7 +148,7 @@ void exportPyUtilTypes() { //exposing ::karabo::util::Types
   }
   { //::karabo::util::Types::getTypeAsId
 
-    typedef ::karabo::util::Types::Type(*getTypeAsId_function_type)(::std::vector< float > const &);
+    typedef ::karabo::util::Types::ReferenceType(*getTypeAsId_function_type)(::std::vector< float > const &);
 
     Types_exposer.def(
             "getTypeAsId"
@@ -158,7 +158,7 @@ void exportPyUtilTypes() { //exposing ::karabo::util::Types
   }
   { //::karabo::util::Types::getTypeAsId
 
-    typedef ::karabo::util::Types::Type(*getTypeAsId_function_type)(::std::vector< unsigned long long > const &);
+    typedef ::karabo::util::Types::ReferenceType(*getTypeAsId_function_type)(::std::vector< unsigned long long > const &);
 
     Types_exposer.def(
             "getTypeAsId"
@@ -168,7 +168,7 @@ void exportPyUtilTypes() { //exposing ::karabo::util::Types
   }
   { //::karabo::util::Types::getTypeAsId
 
-    typedef ::karabo::util::Types::Type(*getTypeAsId_function_type)(::std::vector< unsigned int > const &);
+    typedef ::karabo::util::Types::ReferenceType(*getTypeAsId_function_type)(::std::vector< unsigned int > const &);
 
     Types_exposer.def(
             "getTypeAsId"
@@ -178,7 +178,7 @@ void exportPyUtilTypes() { //exposing ::karabo::util::Types
   }
   { //::karabo::util::Types::getTypeAsId
 
-    typedef ::karabo::util::Types::Type(*getTypeAsId_function_type)(::std::vector< unsigned short > const &);
+    typedef ::karabo::util::Types::ReferenceType(*getTypeAsId_function_type)(::std::vector< unsigned short > const &);
 
     Types_exposer.def(
             "getTypeAsId"
@@ -188,7 +188,7 @@ void exportPyUtilTypes() { //exposing ::karabo::util::Types
   }
   { //::karabo::util::Types::getTypeAsId
 
-    typedef ::karabo::util::Types::Type(*getTypeAsId_function_type)(::std::vector< unsigned char > const &);
+    typedef ::karabo::util::Types::ReferenceType(*getTypeAsId_function_type)(::std::vector< unsigned char > const &);
 
     Types_exposer.def(
             "getTypeAsId"
@@ -198,7 +198,7 @@ void exportPyUtilTypes() { //exposing ::karabo::util::Types
   }
   { //::karabo::util::Types::getTypeAsId
 
-    typedef ::karabo::util::Types::Type(*getTypeAsId_function_type)(::std::vector< signed long long > const &);
+    typedef ::karabo::util::Types::ReferenceType(*getTypeAsId_function_type)(::std::vector< signed long long > const &);
 
     Types_exposer.def(
             "getTypeAsId"
@@ -208,7 +208,7 @@ void exportPyUtilTypes() { //exposing ::karabo::util::Types
   }
   { //::karabo::util::Types::getTypeAsId
 
-    typedef ::karabo::util::Types::Type(*getTypeAsId_function_type)(::std::vector< int > const &);
+    typedef ::karabo::util::Types::ReferenceType(*getTypeAsId_function_type)(::std::vector< int > const &);
 
     Types_exposer.def(
             "getTypeAsId"
@@ -218,7 +218,7 @@ void exportPyUtilTypes() { //exposing ::karabo::util::Types
   }
   { //::karabo::util::Types::getTypeAsId
 
-    typedef ::karabo::util::Types::Type(*getTypeAsId_function_type)(::std::vector< signed short > const &);
+    typedef ::karabo::util::Types::ReferenceType(*getTypeAsId_function_type)(::std::vector< signed short > const &);
 
     Types_exposer.def(
             "getTypeAsId"
@@ -228,7 +228,7 @@ void exportPyUtilTypes() { //exposing ::karabo::util::Types
   }
   { //::karabo::util::Types::getTypeAsId
 
-    typedef ::karabo::util::Types::Type(*getTypeAsId_function_type)(::std::vector< signed char > const &);
+    typedef ::karabo::util::Types::ReferenceType(*getTypeAsId_function_type)(::std::vector< signed char > const &);
 
     Types_exposer.def(
             "getTypeAsId"
@@ -238,7 +238,7 @@ void exportPyUtilTypes() { //exposing ::karabo::util::Types
   }
   { //::karabo::util::Types::getTypeAsId
 
-    typedef ::karabo::util::Types::Type(*getTypeAsId_function_type)(::std::vector< char > const &);
+    typedef ::karabo::util::Types::ReferenceType(*getTypeAsId_function_type)(::std::vector< char > const &);
 
     Types_exposer.def(
             "getTypeAsId"
@@ -248,7 +248,7 @@ void exportPyUtilTypes() { //exposing ::karabo::util::Types
   }
   { //::karabo::util::Types::getTypeAsId
 
-    typedef ::karabo::util::Types::Type(*getTypeAsId_function_type)(::std::deque< bool > const &);
+    typedef ::karabo::util::Types::ReferenceType(*getTypeAsId_function_type)(::std::deque< bool > const &);
 
     Types_exposer.def(
             "getTypeAsId"
@@ -258,7 +258,7 @@ void exportPyUtilTypes() { //exposing ::karabo::util::Types
   }
   { //::karabo::util::Types::getTypeAsId
 
-    typedef ::karabo::util::Types::Type(*getTypeAsId_function_type)(::boost::filesystem::path const &);
+    typedef ::karabo::util::Types::ReferenceType(*getTypeAsId_function_type)(::boost::filesystem::path const &);
 
     Types_exposer.def(
             "getTypeAsId"
@@ -268,7 +268,7 @@ void exportPyUtilTypes() { //exposing ::karabo::util::Types
   }
   { //::karabo::util::Types::getTypeAsId
 
-    typedef ::karabo::util::Types::Type(*getTypeAsId_function_type)(::std::string const &);
+    typedef ::karabo::util::Types::ReferenceType(*getTypeAsId_function_type)(::std::string const &);
 
     Types_exposer.def(
             "getTypeAsId"
@@ -278,7 +278,7 @@ void exportPyUtilTypes() { //exposing ::karabo::util::Types
   }
   { //::karabo::util::Types::getTypeAsId
 
-    typedef ::karabo::util::Types::Type(*getTypeAsId_function_type)(double const &);
+    typedef ::karabo::util::Types::ReferenceType(*getTypeAsId_function_type)(double const &);
 
     Types_exposer.def(
             "getTypeAsId"
@@ -288,7 +288,7 @@ void exportPyUtilTypes() { //exposing ::karabo::util::Types
   }
   { //::karabo::util::Types::getTypeAsId
 
-    typedef ::karabo::util::Types::Type(*getTypeAsId_function_type)(float const &);
+    typedef ::karabo::util::Types::ReferenceType(*getTypeAsId_function_type)(float const &);
 
     Types_exposer.def(
             "getTypeAsId"
@@ -298,7 +298,7 @@ void exportPyUtilTypes() { //exposing ::karabo::util::Types
   }
   { //::karabo::util::Types::getTypeAsId
 
-    typedef ::karabo::util::Types::Type(*getTypeAsId_function_type)(unsigned long long const &);
+    typedef ::karabo::util::Types::ReferenceType(*getTypeAsId_function_type)(unsigned long long const &);
 
     Types_exposer.def(
             "getTypeAsId"
@@ -308,7 +308,7 @@ void exportPyUtilTypes() { //exposing ::karabo::util::Types
   }
   { //::karabo::util::Types::getTypeAsId
 
-    typedef ::karabo::util::Types::Type(*getTypeAsId_function_type)(unsigned int const &);
+    typedef ::karabo::util::Types::ReferenceType(*getTypeAsId_function_type)(unsigned int const &);
 
     Types_exposer.def(
             "getTypeAsId"
@@ -318,7 +318,7 @@ void exportPyUtilTypes() { //exposing ::karabo::util::Types
   }
   { //::karabo::util::Types::getTypeAsId
 
-    typedef ::karabo::util::Types::Type(*getTypeAsId_function_type)(unsigned short const &);
+    typedef ::karabo::util::Types::ReferenceType(*getTypeAsId_function_type)(unsigned short const &);
 
     Types_exposer.def(
             "getTypeAsId"
@@ -328,7 +328,7 @@ void exportPyUtilTypes() { //exposing ::karabo::util::Types
   }
   { //::karabo::util::Types::getTypeAsId
 
-    typedef ::karabo::util::Types::Type(*getTypeAsId_function_type)(unsigned char const &);
+    typedef ::karabo::util::Types::ReferenceType(*getTypeAsId_function_type)(unsigned char const &);
 
     Types_exposer.def(
             "getTypeAsId"
@@ -338,7 +338,7 @@ void exportPyUtilTypes() { //exposing ::karabo::util::Types
   }
   { //::karabo::util::Types::getTypeAsId
 
-    typedef ::karabo::util::Types::Type(*getTypeAsId_function_type)(signed long long const &);
+    typedef ::karabo::util::Types::ReferenceType(*getTypeAsId_function_type)(signed long long const &);
 
     Types_exposer.def(
             "getTypeAsId"
@@ -348,7 +348,7 @@ void exportPyUtilTypes() { //exposing ::karabo::util::Types
   }
   { //::karabo::util::Types::getTypeAsId
 
-    typedef ::karabo::util::Types::Type(*getTypeAsId_function_type)(int const &);
+    typedef ::karabo::util::Types::ReferenceType(*getTypeAsId_function_type)(int const &);
 
     Types_exposer.def(
             "getTypeAsId"
@@ -358,7 +358,7 @@ void exportPyUtilTypes() { //exposing ::karabo::util::Types
   }
   { //::karabo::util::Types::getTypeAsId
 
-    typedef ::karabo::util::Types::Type(*getTypeAsId_function_type)(signed short const &);
+    typedef ::karabo::util::Types::ReferenceType(*getTypeAsId_function_type)(signed short const &);
 
     Types_exposer.def(
             "getTypeAsId"
@@ -368,7 +368,7 @@ void exportPyUtilTypes() { //exposing ::karabo::util::Types
   }
   { //::karabo::util::Types::getTypeAsId
 
-    typedef ::karabo::util::Types::Type(*getTypeAsId_function_type)(signed char const &);
+    typedef ::karabo::util::Types::ReferenceType(*getTypeAsId_function_type)(signed char const &);
 
     Types_exposer.def(
             "getTypeAsId"
@@ -378,7 +378,7 @@ void exportPyUtilTypes() { //exposing ::karabo::util::Types
   }
   { //::karabo::util::Types::getTypeAsId
 
-    typedef ::karabo::util::Types::Type(*getTypeAsId_function_type)(char const &);
+    typedef ::karabo::util::Types::ReferenceType(*getTypeAsId_function_type)(char const &);
 
     Types_exposer.def(
             "getTypeAsId"
@@ -388,7 +388,7 @@ void exportPyUtilTypes() { //exposing ::karabo::util::Types
   }
   { //::karabo::util::Types::getTypeAsId
 
-    typedef ::karabo::util::Types::Type(*getTypeAsId_function_type)(bool const &);
+    typedef ::karabo::util::Types::ReferenceType(*getTypeAsId_function_type)(bool const &);
 
     Types_exposer.def(
             "getTypeAsId"

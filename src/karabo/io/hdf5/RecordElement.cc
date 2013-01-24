@@ -62,7 +62,7 @@ namespace karabo {
 	    boost::split(v, fullName, is_any_of("."));
 
 	    if (v.size() == 0) {
-		throw PARAMETER_EXCEPTION("Dataset name cannot be an empty string");
+		throw KARABO_PARAMETER_EXCEPTION("Dataset name cannot be an empty string");
 	    }
 	    m_key = v[v.size() - 1];
 
@@ -101,7 +101,7 @@ namespace karabo {
 		m_dataSet = group->openDataSet(m_key.c_str());
 		m_fileDataSpace = m_dataSet.getSpace();
 	    } catch (...) {
-		RETHROW
+		KARABO_RETHROW
 	    }
 	}
 

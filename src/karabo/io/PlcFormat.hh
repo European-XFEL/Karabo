@@ -39,8 +39,8 @@ namespace karabo {
             
             virtual int readKey(std::istream& is, std::string& path);
             virtual void writeKey(std::ostream& os, const std::string& path);
-            virtual int readType(std::istream& is, karabo::util::Types::Type& id);
-            virtual void writeType(std::ostream& os, karabo::util::Types::Type id);
+            virtual int readType(std::istream& is, karabo::util::Types::ReferenceType& id);
+            virtual void writeType(std::ostream& os, karabo::util::Types::ReferenceType id);
 
         private:
             karabo::util::Schema m_config;

@@ -74,11 +74,11 @@ namespace karabo {
                     sendRequest();
                     receiveResponse(body, header);
                 } catch (const karabo::util::TimeoutException&) {
-                    RETHROW_AS(TIMEOUT_EXCEPTION("Response timed out"));
+                    KARABO_RETHROW_AS(KARABO_TIMEOUT_EXCEPTION("Response timed out"));
                 } catch (const karabo::util::CastException&) {
-                    RETHROW_AS(CAST_EXCEPTION("Received unexpected (incompatible) response type"));
+                    KARABO_RETHROW_AS(KARABO_CAST_EXCEPTION("Received unexpected (incompatible) response type"));
                 } catch (const karabo::util::NetworkException&) {
-                    RETHROW_AS(NETWORK_EXCEPTION("Could not send request"));
+                    KARABO_RETHROW_AS(KARABO_NETWORK_EXCEPTION("Could not send request"));
                 }
                 return *this;
             }
@@ -91,11 +91,11 @@ namespace karabo {
                     receiveResponse(body, header);
                     a1 = body.get<A1 > ("a1");
                 } catch (const karabo::util::TimeoutException&) {
-                    RETHROW_AS(TIMEOUT_EXCEPTION("Response timed out"));
+                    KARABO_RETHROW_AS(KARABO_TIMEOUT_EXCEPTION("Response timed out"));
                 } catch (const karabo::util::CastException&) {
-                    RETHROW_AS(CAST_EXCEPTION("Received unexpected (incompatible) response type"));
+                    KARABO_RETHROW_AS(KARABO_CAST_EXCEPTION("Received unexpected (incompatible) response type"));
                 } catch (const karabo::util::NetworkException&) {
-                    RETHROW_AS(NETWORK_EXCEPTION("Could not send request"));
+                    KARABO_RETHROW_AS(KARABO_NETWORK_EXCEPTION("Could not send request"));
                 }
                 return *this;
             }
@@ -109,11 +109,11 @@ namespace karabo {
                     a1 = body.get<A1 > ("a1");
                     a2 = body.get<A2 > ("a2");
                 } catch (const karabo::util::TimeoutException&) {
-                    RETHROW_AS(TIMEOUT_EXCEPTION("Response timed out"));
+                    KARABO_RETHROW_AS(KARABO_TIMEOUT_EXCEPTION("Response timed out"));
                 } catch (const karabo::util::CastException&) {
-                    RETHROW_AS(CAST_EXCEPTION("Received unexpected (incompatible) response type"));
+                    KARABO_RETHROW_AS(KARABO_CAST_EXCEPTION("Received unexpected (incompatible) response type"));
                 } catch (const karabo::util::NetworkException&) {
-                    RETHROW_AS(NETWORK_EXCEPTION("Could not send request"));
+                    KARABO_RETHROW_AS(KARABO_NETWORK_EXCEPTION("Could not send request"));
                 }
                 return *this;
             }
@@ -128,11 +128,11 @@ namespace karabo {
                     a2 = body.get<A2 > ("a2");
                     a3 = body.get<A3 > ("a3");
                 } catch (const karabo::util::TimeoutException&) {
-                    RETHROW_AS(TIMEOUT_EXCEPTION("Response timed out"));
+                    KARABO_RETHROW_AS(KARABO_TIMEOUT_EXCEPTION("Response timed out"));
                 } catch (const karabo::util::CastException&) {
-                    RETHROW_AS(CAST_EXCEPTION("Received unexpected (incompatible) response type"));
+                    KARABO_RETHROW_AS(KARABO_CAST_EXCEPTION("Received unexpected (incompatible) response type"));
                 } catch (const karabo::util::NetworkException&) {
-                    RETHROW_AS(NETWORK_EXCEPTION("Could not send request"));
+                    KARABO_RETHROW_AS(KARABO_NETWORK_EXCEPTION("Could not send request"));
                 }
                 return *this;
             }
@@ -148,11 +148,11 @@ namespace karabo {
                     a3 = body.get<A3 > ("a3");
                     a4 = body.get<A4 > ("a4");
                 } catch (const karabo::util::TimeoutException&) {
-                    RETHROW_AS(TIMEOUT_EXCEPTION("Response timed out"));
+                    KARABO_RETHROW_AS(KARABO_TIMEOUT_EXCEPTION("Response timed out"));
                 } catch (const karabo::util::CastException&) {
-                    RETHROW_AS(CAST_EXCEPTION("Received unexpected (incompatible) response type"));
+                    KARABO_RETHROW_AS(KARABO_CAST_EXCEPTION("Received unexpected (incompatible) response type"));
                 } catch (const karabo::util::NetworkException&) {
-                    RETHROW_AS(NETWORK_EXCEPTION("Could not send request"));
+                    KARABO_RETHROW_AS(KARABO_NETWORK_EXCEPTION("Could not send request"));
                 }
                 return *this;
             }
@@ -218,7 +218,7 @@ namespace karabo {
             }
 
             void registerRequest() {
-                if (m_isRequested) throw SIGNALSLOT_EXCEPTION("You have to receive an answer before you can send a new request");
+                if (m_isRequested) throw KARABO_SIGNALSLOT_EXCEPTION("You have to receive an answer before you can send a new request");
                 m_isRequested = true;
                 m_isReceived = false;
             }
@@ -232,18 +232,18 @@ namespace karabo {
                     m_channel->preRegisterSynchronousRead();
                     m_channel->write(m_body, m_header);
                 } catch (...) {
-                    RETHROW_AS(NETWORK_EXCEPTION("Problems sending request"));
+                    KARABO_RETHROW_AS(KARABO_NETWORK_EXCEPTION("Problems sending request"));
                 }
             }
 
             void receiveResponse(karabo::util::Hash& body, karabo::util::Hash& header) {
                 try {
-                    if (m_isReceived) throw SIGNALSLOT_EXCEPTION("You have to send a request before you can receive a response");
+                    if (m_isReceived) throw KARABO_SIGNALSLOT_EXCEPTION("You have to send a request before you can receive a response");
                     m_channel->read(body, header);
                     m_isReceived = true;
                     m_isRequested = false;
                 } catch (...) {
-                    RETHROW_AS(TIMEOUT_EXCEPTION("Problems reading response"));
+                    KARABO_RETHROW_AS(KARABO_TIMEOUT_EXCEPTION("Problems reading response"));
                 }
             }
 

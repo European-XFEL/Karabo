@@ -58,7 +58,7 @@ namespace karabo {
 
                 size_t vs = vec.size();
                 if (vs == 0) {
-                    throw PARAMETER_EXCEPTION("Dimensions is not defined");
+                    throw KARABO_PARAMETER_EXCEPTION("Dimensions is not defined");
                 }
 
                 size_t s = 1;
@@ -66,7 +66,7 @@ namespace karabo {
                     s *= dims[i];
                 }
                 if (s != vs) {
-                    throw PARAMETER_EXCEPTION("array dimensions does not agree with the size of the vector");
+                    throw KARABO_PARAMETER_EXCEPTION("array dimensions does not agree with the size of the vector");
                 }
 
                 m_ptr = &vec[0];
@@ -122,7 +122,7 @@ namespace karabo {
             explicit ArrayView(T* ptr, size_t nx) : m_ptr(ptr), m_isShared(false) {
 
                 if (nx <= 0) {
-                    throw PARAMETER_EXCEPTION("array dimensions must be greater than zero");
+                    throw KARABO_PARAMETER_EXCEPTION("array dimensions must be greater than zero");
                 }
 
                 this->m_dims.resize(1);
@@ -132,7 +132,7 @@ namespace karabo {
             explicit ArrayView(T* ptr, size_t nx, size_t ny) : m_ptr(ptr), m_isShared(false) {
 
                 if (nx <= 0 || ny <= 0) {
-                    throw PARAMETER_EXCEPTION("array dimensions must be greater than zero");
+                    throw KARABO_PARAMETER_EXCEPTION("array dimensions must be greater than zero");
                 }
 
                 this->m_dims.resize(2);
@@ -142,7 +142,7 @@ namespace karabo {
 
             explicit ArrayView(T* ptr, size_t nx, size_t ny, size_t nz) : m_ptr(ptr), m_isShared(false) {
                 if (nx <= 0 || ny <= 0 || nz <= 0) {
-                    throw PARAMETER_EXCEPTION("array dimensions must be greater than zero");
+                    throw KARABO_PARAMETER_EXCEPTION("array dimensions must be greater than zero");
                 }
                 this->m_dims.resize(3);
                 this->m_dims[0] = nx;
@@ -209,7 +209,7 @@ namespace karabo {
                 vec.resize(m_dims[0]);
                 size_t rank = getNumDims();
                 if (rank <= 1) {
-                    throw LOGIC_EXCEPTION("Cannot convert ArrayView to vector of ArrayViews. Number of dimensions is too low.");
+                    throw KARABO_LOGIC_EXCEPTION("Cannot convert ArrayView to vector of ArrayViews. Number of dimensions is too low.");
                 }
                 std::vector<unsigned long long> dimsVec(rank - 1, 0);
                 for (size_t i = 1; i < rank; ++i) {
@@ -242,7 +242,7 @@ namespace karabo {
                 ArrayView< ArrayView<T> >resultArrayView(resultStorage, m_dims[0]);
                 size_t rank = getNumDims();
                 if (rank <= 1) {
-                    throw LOGIC_EXCEPTION("Cannot convert ArrayView to ArrayView of ArrayViews. Number of dimensions is too low.");
+                    throw KARABO_LOGIC_EXCEPTION("Cannot convert ArrayView to ArrayView of ArrayViews. Number of dimensions is too low.");
                 }
 
                 std::vector<unsigned long long> dimsVec(rank - 1, 0);

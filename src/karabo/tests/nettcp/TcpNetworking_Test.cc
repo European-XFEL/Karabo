@@ -147,7 +147,7 @@ namespace karabo {
                 channel->readAsyncStringHash(boost::bind(&TcpClient::readStringHashHandler, this, _1, _2, _3));
 
             } catch (...) {
-                RETHROW
+                KARABO_RETHROW
             }
         }
 
@@ -237,7 +237,7 @@ namespace karabo {
                 channel->readAsyncStringHash(boost::bind(&TcpClient::readStringHashHandler, this, _1, _2, _3));
                 
             } catch (...) {
-                RETHROW
+                KARABO_RETHROW
             }
         }
     }
@@ -267,7 +267,7 @@ void TcpNetworking_Test::testMethod() {
         cout << e.detailedMsg();
 
     } catch (...) {
-        RETHROW
+        KARABO_RETHROW
     }
 }
 

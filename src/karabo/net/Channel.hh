@@ -71,7 +71,7 @@ namespace karabo {
              * @param size Size (in bytes) of the memory block
              */
             virtual void read(char*& data, size_t& size) {
-                throw NOT_SUPPORTED_EXCEPTION("Not implemented!");
+                throw KARABO_NOT_SUPPORTED_EXCEPTION("Not implemented!");
             }
 
             /**
@@ -130,7 +130,7 @@ namespace karabo {
              * @param header Hash that will be automatically updated
              */
             virtual void read(char*& data, size_t& size, karabo::util::Hash& header) {
-                throw NOT_SUPPORTED_EXCEPTION("Not implemented");
+                throw KARABO_NOT_SUPPORTED_EXCEPTION("Not implemented");
             }
 
             /**
@@ -178,11 +178,11 @@ namespace karabo {
             //**************************************************************/
 
             virtual void readAsyncRaw(const ReadRawHandler& handler) {
-                throw NOT_SUPPORTED_EXCEPTION("Not implemented!");
+                throw KARABO_NOT_SUPPORTED_EXCEPTION("Not implemented!");
             }
 
             virtual void readAsyncRaw(char*& data, size_t& size, const ReadRawHandler& handler) {
-                throw NOT_SUPPORTED_EXCEPTION("Not implemented!");
+                throw KARABO_NOT_SUPPORTED_EXCEPTION("Not implemented!");
             }
 
             virtual void readAsyncVector(const ReadVectorHandler& handler) {
@@ -205,7 +205,7 @@ namespace karabo {
             //**************************************************************/
 
             virtual void readAsyncRawHash(const ReadRawHashHandler& handler) {
-                throw NOT_SUPPORTED_EXCEPTION("Not implemented!");
+                throw KARABO_NOT_SUPPORTED_EXCEPTION("Not implemented!");
             }
 
             virtual void readAsyncVectorHash(const ReadVectorHashHandler& handler) {
@@ -228,7 +228,7 @@ namespace karabo {
             //**************************************************************/
 
             virtual void write(const char* data, const size_t& size) {
-                throw NOT_SUPPORTED_EXCEPTION("Not implemented!");
+                throw KARABO_NOT_SUPPORTED_EXCEPTION("Not implemented!");
             }
 
             virtual void write(const std::vector<char>& data) {
@@ -250,7 +250,7 @@ namespace karabo {
             //**************************************************************/
 
             virtual void write(const char* data, const size_t& size, const karabo::util::Hash& header) {
-                throw NOT_SUPPORTED_EXCEPTION("Not implemented!");
+                throw KARABO_NOT_SUPPORTED_EXCEPTION("Not implemented!");
             }
 
             virtual void write(const std::vector<char>& data, const karabo::util::Hash& header) {
@@ -272,19 +272,19 @@ namespace karabo {
             //**************************************************************/
 
             virtual void writeAsyncRaw(const char* data, const size_t& size, const WriteCompleteHandler& handler) {
-                throw NOT_SUPPORTED_EXCEPTION("Not implemented!");
+                throw KARABO_NOT_SUPPORTED_EXCEPTION("Not implemented!");
             }
 
             virtual void writeAsyncVector(const std::vector<char>& data, const WriteCompleteHandler& handler) {
-                throw NOT_SUPPORTED_EXCEPTION("Not implemented!");
+                throw KARABO_NOT_SUPPORTED_EXCEPTION("Not implemented!");
             }
 
             virtual void writeAsyncString(const std::string& data, const WriteCompleteHandler& handler) {
-                throw NOT_SUPPORTED_EXCEPTION("Not implemented!");
+                throw KARABO_NOT_SUPPORTED_EXCEPTION("Not implemented!");
             }
 
             virtual void writeAsyncHash(const karabo::util::Hash& data, const WriteCompleteHandler& handler) {
-                throw NOT_SUPPORTED_EXCEPTION("Not implemented!");
+                throw KARABO_NOT_SUPPORTED_EXCEPTION("Not implemented!");
             }
 
             //**************************************************************/
@@ -292,37 +292,37 @@ namespace karabo {
             //**************************************************************/
 
             virtual void writeAsyncRawHash(const char* data, const size_t& size, const karabo::util::Hash& header, const WriteCompleteHandler& handler) {
-                throw NOT_SUPPORTED_EXCEPTION("Not implemented!");
+                throw KARABO_NOT_SUPPORTED_EXCEPTION("Not implemented!");
             }
 
             virtual void writeAsyncVectorHash(const std::vector<char>& data, const karabo::util::Hash& header, const WriteCompleteHandler& handler) {
-                throw NOT_SUPPORTED_EXCEPTION("Not implemented!");
+                throw KARABO_NOT_SUPPORTED_EXCEPTION("Not implemented!");
             }
 
             virtual void writeAsyncStringHash(const std::string& data, const karabo::util::Hash& header, const WriteCompleteHandler& handler) {
-                throw NOT_SUPPORTED_EXCEPTION("Not implemented!");
+                throw KARABO_NOT_SUPPORTED_EXCEPTION("Not implemented!");
             }
 
             virtual void writeAsyncHashHash(const karabo::util::Hash& data, const karabo::util::Hash& header, const WriteCompleteHandler& handler) {
-                throw NOT_SUPPORTED_EXCEPTION("Not implemented!");
+                throw KARABO_NOT_SUPPORTED_EXCEPTION("Not implemented!");
             }
 
             virtual void setErrorHandler(const ErrorHandler& handler) = 0;
 
             virtual void waitAsync(int milliseconds, const WaitHandler& handler) {
-                throw NOT_SUPPORTED_EXCEPTION("Not implemented!");
+                throw KARABO_NOT_SUPPORTED_EXCEPTION("Not implemented!");
             }
             
             virtual void setTimeoutSyncRead(int milliseconds) {
-                throw NOT_SUPPORTED_EXCEPTION("Not implemented!");
+                throw KARABO_NOT_SUPPORTED_EXCEPTION("Not implemented!");
             }
 
             virtual void setFilter(const std::string& filterCondition) {
-                throw NOT_SUPPORTED_EXCEPTION("Filtering is not supported for this network protocol");
+                throw KARABO_NOT_SUPPORTED_EXCEPTION("Filtering is not supported for this network protocol");
             }
 
             std::string getFilter() const {
-                throw NOT_SUPPORTED_EXCEPTION("Filtering is not supported for this network protocol");
+                throw KARABO_NOT_SUPPORTED_EXCEPTION("Filtering is not supported for this network protocol");
             }
 
             virtual void close() = 0;

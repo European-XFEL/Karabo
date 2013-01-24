@@ -1,0 +1,64 @@
+/* 
+ * File:   ToLiteral.hh
+ * Author: <burkhard.heisen@xsmail.com>
+ *
+ * Created on January 22, 2013 9:12 PM
+ * 
+ */
+
+#include "ToType.hh"
+
+#ifndef KARABO_UTIL_TOLITERAL_HH
+#define	KARABO_UTIL_TOLITERAL_HH
+
+namespace karabo {
+
+    namespace util {
+
+        class ToLiteral {
+        public:
+
+            typedef std::string ReturnType;
+
+            template <int RefType>
+            static ReturnType to() {
+                throw KARABO_NOT_IMPLEMENTED_EXCEPTION("Conversion to required type not implemented");
+            }
+        };
+
+        KARABO_MAP_TO_REFERENCE_TYPE(ToLiteral, BOOL, "BOOL")
+        KARABO_MAP_TO_REFERENCE_TYPE(ToLiteral, VECTOR_BOOL, "VECTOR_BOOL")
+        KARABO_MAP_TO_REFERENCE_TYPE(ToLiteral, CHAR, "CHAR")
+        KARABO_MAP_TO_REFERENCE_TYPE(ToLiteral, VECTOR_CHAR, "VECTOR_CHAR")
+        KARABO_MAP_TO_REFERENCE_TYPE(ToLiteral, INT8, "INT8")
+        KARABO_MAP_TO_REFERENCE_TYPE(ToLiteral, VECTOR_INT8, "VECTOR_INT8")
+        KARABO_MAP_TO_REFERENCE_TYPE(ToLiteral, UINT8, "UINT8")
+        KARABO_MAP_TO_REFERENCE_TYPE(ToLiteral, VECTOR_UINT8, "VECTOR_UINT8")
+        KARABO_MAP_TO_REFERENCE_TYPE(ToLiteral, INT16, "INT16")
+        KARABO_MAP_TO_REFERENCE_TYPE(ToLiteral, VECTOR_INT16, "VECTOR_INT16")
+        KARABO_MAP_TO_REFERENCE_TYPE(ToLiteral, UINT16, "UINT16")
+        KARABO_MAP_TO_REFERENCE_TYPE(ToLiteral, VECTOR_UINT16, "VECTOR_UINT16")
+        KARABO_MAP_TO_REFERENCE_TYPE(ToLiteral, INT32, "INT32")
+        KARABO_MAP_TO_REFERENCE_TYPE(ToLiteral, VECTOR_INT32, "VECTOR_INT32")
+        KARABO_MAP_TO_REFERENCE_TYPE(ToLiteral, UINT32, "UNIT32")
+        KARABO_MAP_TO_REFERENCE_TYPE(ToLiteral, VECTOR_UINT32, "VECTOR_UINT32")
+        KARABO_MAP_TO_REFERENCE_TYPE(ToLiteral, INT64, "INT64")
+        KARABO_MAP_TO_REFERENCE_TYPE(ToLiteral, VECTOR_INT64, "VECTOR_INT64")
+        KARABO_MAP_TO_REFERENCE_TYPE(ToLiteral, UINT64, "UINT64")
+        KARABO_MAP_TO_REFERENCE_TYPE(ToLiteral, VECTOR_UINT64, "VECTOR_UINT64")
+        KARABO_MAP_TO_REFERENCE_TYPE(ToLiteral, FLOAT, "FLOAT")
+        KARABO_MAP_TO_REFERENCE_TYPE(ToLiteral, VECTOR_FLOAT, "VECTOR_FLOAT")
+        KARABO_MAP_TO_REFERENCE_TYPE(ToLiteral, DOUBLE, "DOUBLE")
+        KARABO_MAP_TO_REFERENCE_TYPE(ToLiteral, VECTOR_DOUBLE, "VECTOR_DOUBLE")
+        KARABO_MAP_TO_REFERENCE_TYPE(ToLiteral, STRING, "STRING")
+        KARABO_MAP_TO_REFERENCE_TYPE(ToLiteral, VECTOR_STRING, "VECTOR_STRING")
+        KARABO_MAP_TO_REFERENCE_TYPE(ToLiteral, HASH, "HASH")
+        KARABO_MAP_TO_REFERENCE_TYPE(ToLiteral, VECTOR_HASH, "VECTOR_HASH")
+        KARABO_MAP_TO_REFERENCE_TYPE(ToLiteral, SCHEMA, "SCHEMA")
+        KARABO_MAP_TO_REFERENCE_TYPE(ToLiteral, COMPLEX_FLOAT, "COMPLEX_FLOAT")
+        KARABO_MAP_TO_REFERENCE_TYPE(ToLiteral, COMPLEX_DOUBLE, "COMPLEX_DOUBLE")
+    }
+}
+
+#endif
+

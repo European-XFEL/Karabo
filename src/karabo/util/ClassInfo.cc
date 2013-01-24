@@ -66,7 +66,7 @@ namespace karabo {
       } else {
         m_className = "unresolved";
         m_namespace = "unresovled";
-        throw INIT_EXCEPTION("Test could not be properly initialized");
+        throw KARABO_INIT_EXCEPTION("Test could not be properly initialized");
       }
     }
 

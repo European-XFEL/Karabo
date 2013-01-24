@@ -69,12 +69,7 @@ namespace karabo {
             Exception::m_hasUnhandled = false;
             Exception::m_trace.clear();
         }
-
-//        void Exception::rethrow(const karabo::util::Exception& exception) {
-//            Exception::memorize();
-//            throw exception;
-//        }
-
+        
         void Exception::memorize() {
 
 #define KARABO_EXCEPTION(CLASS) Exception::ExceptionInfo myException; \
@@ -116,14 +111,6 @@ namespace karabo {
                 myException.function = "";
                 myException.lineNumber = "";
                 Exception::addToTrace(myException);
-                // TODO Discuss about source level external dependeny resolution
-                //      } catch (H5::Exception & e) {
-                //        Exception::exceptionInfo myException;
-                //        myException.type = "HDF5 Exception";
-                //        myException.message = e.getDetailMsg();
-                //        myException.filename = e.getFuncName();
-                //        myException.lineNumber = "";
-                //        Exception::_addToTrace(myException);
             } catch (...) { // ---- Forwarded exception is of unknown type ----
                 Exception::ExceptionInfo myException;
                 myException.type = "Unknown and unhandled exception";

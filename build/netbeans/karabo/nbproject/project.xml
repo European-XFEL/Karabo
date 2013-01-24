@@ -5,8 +5,8 @@
         <data xmlns="http://www.netbeans.org/ns/make-project/1">
             <name>karabo</name>
             <c-extensions/>
-            <cpp-extensions>cc,cpp</cpp-extensions>
-            <header-extensions>h,hh</header-extensions>
+            <cpp-extensions>cc</cpp-extensions>
+            <header-extensions>hh</header-extensions>
             <sourceEncoding>UTF-8</sourceEncoding>
             <make-dep-projects/>
             <sourceRootList>
@@ -31,5 +31,8 @@
                 <property name="builder" value="http://exflpcx18295:8080/job/karabo-framework%20on%20Ubuntu12.04/"/>
             </module>
         </preferences>
+        <spellchecker-wordlist xmlns="http://www.netbeans.org/ns/spellchecker-wordlist/1">
+            <word>std</word>
+        </spellchecker-wordlist>
     </configuration>
 </project>

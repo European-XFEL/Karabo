@@ -116,7 +116,7 @@ namespace karabo {
                     karabo::util::Hash header = prepareHeader();
                     m_channel->write(message, header);
                 } catch (const karabo::util::Exception& e) {
-                    RETHROW_AS(SIGNALSLOT_EXCEPTION("Problem sending a signal"))
+                    KARABO_RETHROW_AS(KARABO_SIGNALSLOT_EXCEPTION("Problem sending a signal"))
                 }
             }
 

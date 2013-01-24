@@ -320,7 +320,7 @@ namespace karabo {
                 try {
                     emitFunction(a1);
                 } catch (...) {
-                    RETHROW_AS(SIGNALSLOT_EXCEPTION("Problems whilst emitting from a valid signal, please ask BH"))
+                    KARABO_RETHROW_AS(KARABO_SIGNALSLOT_EXCEPTION("Problems whilst emitting from a valid signal, please ask BH"))
                 }
             }
 
@@ -351,7 +351,7 @@ namespace karabo {
                     m_emitFunctions.get(signalFunction, emitFunction);
                     emitFunction(a1, a2);
                 } catch (...) {
-                    RETHROW;
+                    KARABO_RETHROW;
                 }
             }
 
@@ -383,7 +383,7 @@ namespace karabo {
                     m_emitFunctions.get(signalFunction, emitFunction);
                     emitFunction(a1, a2, a3);
                 } catch (...) {
-                    RETHROW;
+                    KARABO_RETHROW;
                 }
             }
 
@@ -416,7 +416,7 @@ namespace karabo {
                     m_emitFunctions.get(signalFunction, emitFunction);
                     emitFunction(a1, a2, a3, a4);
                 } catch (...) {
-                    RETHROW;
+                    KARABO_RETHROW;
                 }
             }
 
@@ -621,10 +621,10 @@ namespace karabo {
                     if (m_emitFunctions.is<TFunc > (it)) {
                         emitFunction = m_emitFunctions.get<TFunc > (it);
                     } else {
-                        throw SIGNALSLOT_EXCEPTION("Argument mismatch: The requested signal \"" + signalFunction + "\" was registered with a different number of arguments before.");
+                        throw KARABO_SIGNALSLOT_EXCEPTION("Argument mismatch: The requested signal \"" + signalFunction + "\" was registered with a different number of arguments before.");
                     }
                 } else {
-                    throw SIGNALSLOT_EXCEPTION("The requested signal \"" + signalFunction + "\" could not be found. Ensure proper registration of the signal before you call emit.");
+                    throw KARABO_SIGNALSLOT_EXCEPTION("The requested signal \"" + signalFunction + "\" could not be found. Ensure proper registration of the signal before you call emit.");
                 }
             }
             

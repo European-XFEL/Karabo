@@ -621,7 +621,7 @@ if (itData != entry.end()) {\
                         KARABO_REGISTER_CALLBACK(std::vector<karabo::util::Hash>);
 
                     } else {
-                        throw LOGIC_EXCEPTION("Failed to call registered monitored (datatype problems)");
+                        throw KARABO_LOGIC_EXCEPTION("Failed to call registered monitored (datatype problems)");
                     }
                 }
                 if (current.is<karabo::util::Hash > (it)) castAndCall(instanceId, registered, current.get<Hash > (it), currentPath);

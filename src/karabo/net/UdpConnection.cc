@@ -88,7 +88,7 @@ namespace karabo {
                 m_sock = sock;
                 createChannel();
             } catch (...) {
-                RETHROW
+                KARABO_RETHROW
             }
             return m_channel;
         }
@@ -103,7 +103,7 @@ namespace karabo {
                 m_remoteEndpoint = *it;
                 createChannel();
             } catch (...) {
-                RETHROW
+                KARABO_RETHROW
             }
             return m_channel;
         }

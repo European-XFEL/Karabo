@@ -53,7 +53,7 @@ namespace karabo {
             }
 
             virtual size_t size() const {
-                throw NOT_SUPPORTED_EXCEPTION("This reader does not support size determination prior to reading");
+                throw KARABO_NOT_SUPPORTED_EXCEPTION("This reader does not support size determination prior to reading");
             }
         };    
 
