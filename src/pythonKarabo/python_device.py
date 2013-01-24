@@ -526,7 +526,10 @@ class PythonDevice(object):
             self._ss.reply(self._getStateDependentSchema(currentState))
         else:
             self._ss.reply(self._allExpectedParameters)
-   
+
+    def registerSlot(self, slotFunctionString):
+        self._ss.registerSlot(getattr(self, slotFunctionString), self);
+        
     def getCurrentDateTime(self):
         dt = datetime.datetime(1,1,1).today()
         return dt.isoformat(' ')
