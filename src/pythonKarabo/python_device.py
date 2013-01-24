@@ -527,8 +527,14 @@ class PythonDevice(object):
         else:
             self._ss.reply(self._allExpectedParameters)
 
-    def registerSlot(self, slotFunctionString):
-        self._ss.registerSlot(getattr(self, slotFunctionString), self);
+    def registerSlot(self, slotString):
+        self._ss.registerSlot(getattr(self, slotString), self);
+        
+    def registerSignal(self, signalString):
+        self._ss.registerSignal(signalString)
+        
+    def connect(self, localId, signalString, remoteId, slotString, type, flag):
+        self._ss.connect(localId, signalString, remoteId, slotString, type, flag)
         
     def getCurrentDateTime(self):
         dt = datetime.datetime(1,1,1).today()
