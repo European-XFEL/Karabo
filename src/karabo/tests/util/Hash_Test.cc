@@ -89,6 +89,17 @@ void Hash_Test::testConstructors() {
         CPPUNIT_ASSERT(h.get<std::vector<unsigned int> >("e")[0] == 5);
         CPPUNIT_ASSERT(h.get<Hash > ("f").get<int>("a") == 6);
         CPPUNIT_ASSERT(h.get<int > ("f.a") == 6);
+        
+        Hash h1("a.barsch.c", 1);
+        h1.setAttribute("a", "attr1", 1);
+        h1.setAttribute("a", "attr2", 2);
+        h1.setAttribute("a.barsch.c", "color", "red");
+        h.set("myArray[0]", h1);
+        h.set("myArray[1]", h1);
+        h.set("myArray[5]", h1);
+        cerr << endl << endl;
+        cerr << h;
+        cerr << endl << endl;
     }
 }
 
