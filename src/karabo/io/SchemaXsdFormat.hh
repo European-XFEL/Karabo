@@ -75,7 +75,7 @@ namespace karabo {
 
             void setAppearenceAllTag(const karabo::util::Schema& complex, karabo::tinyxml::TiXmlElement* complexTypeTag, int minOccurs);
 
-            std::string rewriteTypeToXsd(const karabo::util::Types::Type typeOfElement);
+            std::string rewriteTypeToXsd(const karabo::util::Types::ReferenceType typeOfElement);
         };
     } // namespace io
 } // namespace karabo

@@ -88,7 +88,7 @@ namespace karabo {
                         m_fileDataSpace = scalarFileDataSpace(0);
                         m_dataSet = group->createDataSet(m_key.c_str(), ScalarTypes::getHdf5StandardType<T > (), m_fileDataSpace, *m_dataSetProperties);
                     } catch (...) {
-                        RETHROW
+                        KARABO_RETHROW
                     }
 
                 }
@@ -98,13 +98,13 @@ namespace karabo {
                     //here we do not use filters, for performance reason (?)
                     karabo::util::Hash::const_iterator it = data.find(m_key);
                     if (it == data.end()) { // TODO: do we need here to check if iterator is ok, is this performance issue
-                        throw PARAMETER_EXCEPTION("Invalid key in the Hash");
+                        throw KARABO_PARAMETER_EXCEPTION("Invalid key in the Hash");
                     }
                     try {
                         selectFileRecord(recordId);
                         ScalarWriter<T>::write(data.get<const T > (it), m_dataSet, m_memoryDataSpace, m_fileDataSpace);
                     } catch (...) {
-                        RETHROW
+                        KARABO_RETHROW
                     }
                 }
 
@@ -135,7 +135,7 @@ namespace karabo {
                         KARABO_PROFILER_REPORT_SCALAR1("any")
                         KARABO_PROFILER_REPORT_SCALAR1("filter")
                     } catch (...) {
-                        RETHROW
+                        KARABO_RETHROW
                     }
 
                 }
@@ -161,7 +161,7 @@ namespace karabo {
                         H5::DataSpace mds = getBufferDataSpace(len);
                         m_dataSet.read(ptr, ScalarTypes::getHdf5NativeType<U > (), mds, m_fileDataSpace);
                     } catch (...) {
-                        RETHROW
+                        KARABO_RETHROW
                     }
                 }
 
@@ -176,7 +176,7 @@ namespace karabo {
                         H5::DataSpace mds = getBufferDataSpace(len);
                         m_dataSet.read(ptr, ScalarTypes::getHdf5NativeType<V > (), mds, m_fileDataSpace);
                     } catch (...) {
-                        RETHROW
+                        KARABO_RETHROW
                     }
                 }
 
@@ -201,7 +201,7 @@ namespace karabo {
                         selectFileRecord(recordId);
                         ScalarReader<T>::read(value, m_dataSet, m_memoryDataSpace, m_fileDataSpace);
                     } catch (...) {
-                        RETHROW
+                        KARABO_RETHROW
                     }
                 }
 
@@ -219,7 +219,7 @@ namespace karabo {
                         }
                         m_filter->read(*this, any, len);
                     } catch (...) {
-                        RETHROW
+                        KARABO_RETHROW
                     }
 
                 }

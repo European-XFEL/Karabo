@@ -161,7 +161,7 @@ namespace karabo {
                 // register read handler
                 channel->readAsyncVector(boost::bind(&UdpClient::readVectorHandler, this, _1, _2));
             } catch (...) {
-                RETHROW
+                KARABO_RETHROW
             }
         }
     }
@@ -190,7 +190,7 @@ void UdpNetworking_Test::testMethod() {
         cout << e.detailedMsg();
 
     } catch (...) {
-        RETHROW
+        KARABO_RETHROW
     }
 }
 

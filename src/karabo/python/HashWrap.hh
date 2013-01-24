@@ -47,16 +47,16 @@ namespace karabo {
                 if (bp::extract<std::string > (keyObj).check()) {
                     std::string key = bp::extract<std::string > (keyObj);
                     it = self.find(key);
-                    if (it == self.end()) throw PARAMETER_EXCEPTION("Key \"" + key + "\" does not exist");
+                    if (it == self.end()) throw KARABO_PARAMETER_EXCEPTION("Key \"" + key + "\" does not exist");
                 } else {
-                    throw PYTHON_EXCEPTION("Currently values can only be retrieved by string keys");
+                    throw KARABO_PYTHON_EXCEPTION("Currently values can only be retrieved by string keys");
                 }
                 return pythonGetArgIt(self, it);
             }
 
             static bp::object pythonGetArgString(const karabo::util::Hash& self, const std::string & key) {
                 karabo::util::Hash::const_iterator it = self.find(key);
-                if (it == self.end()) throw PARAMETER_EXCEPTION("Key \"" + key + "\" does not exist");
+                if (it == self.end()) throw KARABO_PARAMETER_EXCEPTION("Key \"" + key + "\" does not exist");
                 return pythonGetArgIt(self, it);
             }
 
@@ -186,7 +186,7 @@ namespace karabo {
                 } else if (self.is<std::vector<karabo::util::Hash> >(it)) {
                     return bp::object(stdVector2pyList(self.get<std::vector<karabo::util::Hash> >(it)));
                 } else {
-                    throw PYTHON_EXCEPTION("Failed to convert inner Hash type of python object");
+                    throw KARABO_PYTHON_EXCEPTION("Failed to convert inner Hash type of python object");
                 }
             }
 
@@ -197,12 +197,12 @@ namespace karabo {
                 boost::split(v, p, boost::is_any_of(sep));
                 size_t nElements = v.size();
                 if (nElements == 0) {
-                    throw LOGIC_EXCEPTION("No path (nested key value given)");
+                    throw KARABO_LOGIC_EXCEPTION("No path (nested key value given)");
                 } else if (nElements == 1) {
                     std::string key(v[0]);
                     boost::tuple<bool, std::string, int> arrayType = self.checkKeyForArrayType(key);
                     if (arrayType.get < 0 > () == true) {
-                        throw PYTHON_EXCEPTION("Recursive array retrieval is not implemented yet, ask BH");
+                        throw KARABO_PYTHON_EXCEPTION("Recursive array retrieval is not implemented yet, ask BH");
                     } else {
                         return pythonGetArgString(self, key);
                     }
@@ -280,7 +280,7 @@ namespace karabo {
                 } else if (bp::extract<karabo::util::Schema > (obj).check()) {
                     self.set<karabo::util::Schema > (key, bp::extract<karabo::util::Schema > (obj));
                 } else {
-                    throw PYTHON_EXCEPTION("Python type can not be mapped into Hash");
+                    throw KARABO_PYTHON_EXCEPTION("Python type can not be mapped into Hash");
                 }
             }
 
@@ -310,14 +310,14 @@ namespace karabo {
                     pyDict2Hash(hash, bp::extract<bp::dict > (obj));
                     self.setFromPath<karabo::util::Hash > (key, hash);
                 } else {
-                    throw PYTHON_EXCEPTION("Python type can not be mapped into Hash");
+                    throw KARABO_PYTHON_EXCEPTION("Python type can not be mapped into Hash");
                 }
             }
 
             static void pyStr2stdVector(karabo::util::Hash& self, const std::string& key, const bp::object& pystr) {
                 // elements of our vectors require to be of the same type
                 if (!PyString_Check(pystr.ptr())) {
-                    throw PYTHON_EXCEPTION("Failed to convert  python string to vector of unsigned char ");
+                    throw KARABO_PYTHON_EXCEPTION("Failed to convert  python string to vector of unsigned char ");
                 }
                 const std::string& stdstr = bp::extract<std::string > (pystr);
                 self.set(key, std::vector<unsigned char>(stdstr.begin(), stdstr.end()));
@@ -375,7 +375,7 @@ namespace karabo {
                     self.set(key, v);
 
                 } else {
-                    throw PYTHON_EXCEPTION("Failed to convert inner type of python list");
+                    throw KARABO_PYTHON_EXCEPTION("Failed to convert inner type of python list");
                 }
             }
 
@@ -431,7 +431,7 @@ namespace karabo {
                     self.setFromPath(key, v, sep);
 
                 } else {
-                    throw PYTHON_EXCEPTION("Failed to convert inner type of python list");
+                    throw KARABO_PYTHON_EXCEPTION("Failed to convert inner type of python list");
                 }
             }
 
@@ -485,9 +485,9 @@ namespace karabo {
                 if (bp::extract<std::string > (keyObj).check()) {
                     std::string key = bp::extract<std::string > (keyObj);
                     it = self.find(key);
-                    if (it == self.end()) throw PARAMETER_EXCEPTION("Key \"" + key + "\" does not exist");
+                    if (it == self.end()) throw KARABO_PARAMETER_EXCEPTION("Key \"" + key + "\" does not exist");
                 } else {
-                    throw PYTHON_EXCEPTION("Currently values can only be retrieved by string keys");
+                    throw KARABO_PYTHON_EXCEPTION("Currently values can only be retrieved by string keys");
                 }
                 self.erase(it);
             }

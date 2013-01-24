@@ -53,8 +53,8 @@ namespace karabo {
                 VECTOR_FLOAT // std::vector<std::float>
             };
 
-            static std::map<karabo::util::Types::Type, Type> toProType;
-            static std::map<Type, karabo::util::Types::Type> fromProType;
+            static std::map<karabo::util::Types::ReferenceType, Type> toProType;
+            static std::map<Type, karabo::util::Types::ReferenceType> fromProType;
         };
 
         void PlcFormat::expectedParameters(Schema& expected) {
@@ -93,7 +93,7 @@ namespace karabo {
             return length;
         }
 
-        int PlcFormat::readType(istream& is, Types::Type& id) {
+        int PlcFormat::readType(istream& is, Types::ReferenceType& id) {
             int length = 0;
             PlcTypeMap::Type type;
             int rc = this->readFrom(is, &type, sizeof (type));
@@ -109,23 +109,23 @@ namespace karabo {
                 int alias = m_config.key2alias<int>(key);
                 this->writeTo(os, &alias, sizeof (int));
             } catch (const ParameterException&) {
-                throw PARAMETER_EXCEPTION("PlcTypeMap::nameEncode -> Key \"" + key + "\" does not exist");
+                throw KARABO_PARAMETER_EXCEPTION("PlcTypeMap::nameEncode -> Key \"" + key + "\" does not exist");
             } catch (...) {
-                RETHROW
+                KARABO_RETHROW
             }
         }
 
-        void PlcFormat::writeType(ostream& os, Types::Type id) {
+        void PlcFormat::writeType(ostream& os, Types::ReferenceType id) {
             try {
                 PlcTypeMap::Type type = PlcTypeMap::toProType[id];
                 this->writeTo(os, &type, sizeof (PlcTypeMap::Type));
             } catch (...) {
-                RETHROW
+                KARABO_RETHROW
             }
         }
 
         // 'toProType' table
-        map<Types::Type, PlcTypeMap::Type> PlcTypeMap::toProType = map_list_of
+        map<Types::ReferenceType, PlcTypeMap::Type> PlcTypeMap::toProType = map_list_of
                 (Types::BOOL, PlcTypeMap::BOOL)
         (Types::INT8, PlcTypeMap::INT8)
         (Types::INT16, PlcTypeMap::INT16)
@@ -153,7 +153,7 @@ namespace karabo {
         (Types::VECTOR_FLOAT, PlcTypeMap::VECTOR_FLOAT)
         ;
         // 'fromProType' table
-        map<PlcTypeMap::Type, Types::Type> PlcTypeMap::fromProType = map_list_of
+        map<PlcTypeMap::Type, Types::ReferenceType> PlcTypeMap::fromProType = map_list_of
                 (PlcTypeMap::BOOL, Types::BOOL)
         (PlcTypeMap::INT8, Types::INT8)
         (PlcTypeMap::INT16, Types::INT16)

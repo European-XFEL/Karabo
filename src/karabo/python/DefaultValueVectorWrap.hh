@@ -38,7 +38,7 @@ namespace karabo {
                     self.defaultValue(v);
 
                 } else {
-                    throw PYTHON_EXCEPTION("Python type of the defaultValue of VectorElement must be a list");
+                    throw KARABO_PYTHON_EXCEPTION("Python type of the defaultValue of VectorElement must be a list");
                 }
             }
         };
@@ -64,7 +64,7 @@ namespace karabo {
                     self.defaultValue(v);
 
                 } else {
-                    throw PYTHON_EXCEPTION("Python type of the defaultValue of VectorElement must be a list");
+                    throw KARABO_PYTHON_EXCEPTION("Python type of the defaultValue of VectorElement must be a list");
                 }
             }
         };

@@ -244,7 +244,7 @@ void Schema_Test::testPerKeyFunctionality() {
 
         CPPUNIT_ASSERT(desc.isValueOfType<string > ());
 
-        Types::Type valueType = desc.getValueType();
+        Types::ReferenceType valueType = desc.getValueType();
         CPPUNIT_ASSERT(valueType == Types::STRING);
 
         CPPUNIT_ASSERT(desc.getValueTypeAsString() == "STRING");

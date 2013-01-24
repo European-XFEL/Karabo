@@ -153,7 +153,7 @@ namespace karabo {
                 } else if (m_initialParameters.tryToGetFromPath(key, t)) {
                     return t;
                 } else {
-                    throw PARAMETER_EXCEPTION("Illegal trial to get parameter (" + key + ") which was not described in the expectedParameters section");
+                    throw KARABO_PARAMETER_EXCEPTION("Illegal trial to get parameter (" + key + ") which was not described in the expectedParameters section");
                 }
             }
 
@@ -175,7 +175,7 @@ namespace karabo {
                 } else if (m_initialParameters.has(key)) {
                     return m_initialParameters.is<T > (key);
                 } else {
-                    throw PARAMETER_EXCEPTION("Illegal trial to get parameter (" + key + ") which was not described in the expectedParameters section");
+                    throw KARABO_PARAMETER_EXCEPTION("Illegal trial to get parameter (" + key + ") which was not described in the expectedParameters section");
                 }
             }
 
@@ -250,7 +250,7 @@ namespace karabo {
                 if (m_allExpectedParameters.hasKey(key)) {
                     return m_allExpectedParameters.key2alias<T > (key);
                 } else {
-                    throw PARAMETER_EXCEPTION("Illegal trial to get parameter (" + key + ") which was not described in the expectedParameters section");
+                    throw KARABO_PARAMETER_EXCEPTION("Illegal trial to get parameter (" + key + ") which was not described in the expectedParameters section");
                 }
             }
 
@@ -264,7 +264,7 @@ namespace karabo {
                 if (m_allExpectedParameters.hasAlias(alias)) {
                     return m_allExpectedParameters.alias2key(alias);
                 } else {
-                    throw PARAMETER_EXCEPTION("The provided alias (" + karabo::util::String::toString(alias) + ") was not described in the expectedParameters section");
+                    throw KARABO_PARAMETER_EXCEPTION("The provided alias (" + karabo::util::String::toString(alias) + ") was not described in the expectedParameters section");
                 }
             }
 

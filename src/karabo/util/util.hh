@@ -11,7 +11,7 @@
 #ifndef KARABO_UTIL_UTIL_HH
 #define	KARABO_UTIL_UTIL_HH
 
-#include "String.hh"
+#include "StringTools.hh"
 #include "Hash.hh"
 #include "Types.hh"
 #include "Schema.hh"
@@ -35,7 +35,7 @@
 #include "Test.hh"
 #include "ClassInfo.hh"    
 #include "ConfigConstants.hh"
-#include "GeneralDefines.hh"
+#include "karaboDll.hh"
 #include "CArray.hh"
 
 #endif	/* KARABO_UTIL_UTIL_HH */

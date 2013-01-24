@@ -81,7 +81,7 @@ namespace karabo {
                     openRecordStructure();
                     retrieveNumberOfRecordsFromFile();
                 } catch (...) {
-                    RETHROW
+                    KARABO_RETHROW
                 }
             }
 
@@ -110,7 +110,7 @@ namespace karabo {
                         tracer << m_dataFormat->getConfig() << endl;
                     }
                 } catch (...) {
-                    RETHROW
+                    KARABO_RETHROW
                 }
                 openRecordStructure();
                 retrieveNumberOfRecordsFromFile();
@@ -249,7 +249,7 @@ namespace karabo {
                             if (i == tokens.size() - 1) {
                                 ostringstream os;
                                 os << "Table " << fullPath.c_str() << " already exists";
-                                throw IO_EXCEPTION(os.str());
+                                throw KARABO_IO_EXCEPTION(os.str());
                             }
                             nextGroup = group.openGroup(tokens[i]);
                         } else {
@@ -261,7 +261,7 @@ namespace karabo {
                     group.close();
                     m_group = boost::shared_ptr<H5::Group > (new H5::Group(h5file->openGroup(fullPath.c_str())));
                 } catch (...) {
-                    RETHROW
+                    KARABO_RETHROW
                 }
 
             }
@@ -321,7 +321,7 @@ namespace karabo {
                     attributeTable.write(stringType, dataFormatConfigXml);
 
                 } catch (...) {
-                    RETHROW
+                    KARABO_RETHROW
                 }
             }
 
@@ -344,7 +344,7 @@ namespace karabo {
 
 
                 } catch (...) {
-                    RETHROW
+                    KARABO_RETHROW
                 }
             }
 
@@ -548,7 +548,7 @@ namespace karabo {
                     //tracer << "r_calculateNumberOfRecords  last: " << lastCalculatedNumberOfRecords << endl;
                     //tracer << "numberOfRecords : " << numberOfRecords << endl;
                     if (firstTime == false && numberOfRecords != lastCalculatedNumberOfRecords) {
-                        throw IO_EXCEPTION("Table contains fields with not consistent number of records.");
+                        throw KARABO_IO_EXCEPTION("Table contains fields with not consistent number of records.");
                     }
                     if (firstTime == true) {
                         lastCalculatedNumberOfRecords = numberOfRecords;
@@ -582,7 +582,7 @@ namespace karabo {
                     //tracer << "r_calculateNumberOfRecords  last: " << lastCalculatedNumberOfRecords << endl;
                     //tracer << "numberOfRecords : " << numberOfRecords << endl;
                     if (firstTime == false && chunkSize != lastCalculatedChunkSize) {
-                        throw IO_EXCEPTION("Table contains fields with not consistent chunk size - this is not supported at the moment.");
+                        throw KARABO_IO_EXCEPTION("Table contains fields with not consistent chunk size - this is not supported at the moment.");
                     }
                     if (firstTime == true) {
                         lastCalculatedChunkSize = chunkSize;
@@ -642,7 +642,7 @@ namespace karabo {
                     const string& key = it->first;
                     if (!discovered.has(key)) {
                         string msg = "Requested data structure \"" + key + "\" does not exist";
-                        throw IO_EXCEPTION(msg);
+                        throw KARABO_IO_EXCEPTION(msg);
                     }
                     if (discovered.getTypeAsId(key) == Types::HASH) {
                         //tracer << "discovered Hash " << key << endl;
@@ -872,7 +872,7 @@ namespace karabo {
                     H5::Group dataGroup(m_h5file->openGroup(groupName));
                     herr_t status = H5Ovisit(dataGroup.getId(), H5_INDEX_NAME, H5_ITER_NATIVE, &Table::fileInfo, d);
                     if (status < 0) {
-                        throw IO_EXCEPTION("Could not discover hdf5 structure in file: " + m_h5file->getFileName());
+                        throw KARABO_IO_EXCEPTION("Could not discover hdf5 structure in file: " + m_h5file->getFileName());
                     }
 
 
@@ -942,7 +942,7 @@ namespace karabo {
                     recordFormat->getHash(m_recordFormatHash);
                     tracer << "Hash structure: " << m_recordFormatHash << endl;
                 } catch (...) {
-                    RETHROW;
+                    KARABO_RETHROW;
                 }
                 return;
             }

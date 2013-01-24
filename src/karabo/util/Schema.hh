@@ -20,7 +20,7 @@
 
 #include "ConfigConstants.hh"
 #include "Hash.hh"
-#include "String.hh"
+#include "StringTools.hh"
 #include "Test.hh"
 
 #include "utildll.hh"
@@ -131,7 +131,7 @@ namespace karabo {
 
                 std::map<std::string, Schema*>::const_iterator it = m_keys.find(key);
                 if (it == m_keys.end()) {
-                    throw PARAMETER_EXCEPTION("Requested key \"" + key + "\" is not registered within this Schema object");
+                    throw KARABO_PARAMETER_EXCEPTION("Requested key \"" + key + "\" is not registered within this Schema object");
                 }
                 return *(it->second);
             }
@@ -194,7 +194,7 @@ namespace karabo {
                 ensureValidCache();
 
                 if (!m_key2alias.has(key)) {
-                    throw PARAMETER_EXCEPTION("No alias is registered for the key \"" + key + "\"");
+                    throw KARABO_PARAMETER_EXCEPTION("No alias is registered for the key \"" + key + "\"");
                 }
                 return m_key2alias.get<T > (key);
             }
@@ -214,7 +214,7 @@ namespace karabo {
                 std::string aliasKey = tmp.getAsString("a");
 
                 if (!m_alias2key.has(aliasKey)) {
-                    throw PARAMETER_EXCEPTION("No key is registered for this alias");
+                    throw KARABO_PARAMETER_EXCEPTION("No key is registered for this alias");
                 }
                 return m_alias2key.get<std::string > (tmp.getAsString("a"));
             }
@@ -295,7 +295,7 @@ namespace karabo {
             const Schema& getParameters() const {
                 if (has("elements")) return get<Schema > ("elements");
                 else if (has("complexType")) return get<Schema > ("complexType");
-                else throw LOGIC_EXCEPTION("No parameters available");
+                else throw KARABO_LOGIC_EXCEPTION("No parameters available");
             }
 
             bool hasKey() const {
@@ -369,15 +369,15 @@ namespace karabo {
             template <class T>
             bool isValueOfType() const {
                 if (has("simpleType")) {
-                    return Types::getTypeAsId<T > () == get<Types::Type > ("simpleType");
+                    return Types::getTypeAsId<T > () == get<Types::ReferenceType > ("simpleType");
                 } else {
                     return Types::getTypeAsId<T > () == Types::HASH;
                 }
             }
 
-            Types::Type getValueType() const {
+            Types::ReferenceType getValueType() const {
                 if (has("simpleType")) {
-                    return get<Types::Type > ("simpleType");
+                    return get<Types::ReferenceType > ("simpleType");
                 } else {
                     return Types::HASH;
                 }
@@ -385,7 +385,7 @@ namespace karabo {
 
             std::string getValueTypeAsString() const {
                 if (has("simpleType")) {
-                    return Types::convert(get<Types::Type > ("simpleType"));
+                    return Types::convert(get<Types::ReferenceType > ("simpleType"));
                 } else {
                     return Types::convert(Types::HASH);
                 }
@@ -496,7 +496,7 @@ namespace karabo {
                 boost::split(v, p, boost::is_any_of(sep));
                 size_t nElements = v.size();
                 if (nElements == 0) {
-                    throw LOGIC_EXCEPTION("No path (nested key value given)");
+                    throw KARABO_LOGIC_EXCEPTION("No path (nested key value given)");
                 } else if (nElements == 1) {
                     std::string key(v[0]);
                     boost::tuple<bool, std::string, int> arrayType = checkKeyForArrayType(key);
@@ -526,7 +526,7 @@ namespace karabo {
                 boost::split(v, p, boost::is_any_of(sep));
                 size_t nElements = v.size();
                 if (nElements == 0) {
-                    throw LOGIC_EXCEPTION("No path (nested key value given)");
+                    throw KARABO_LOGIC_EXCEPTION("No path (nested key value given)");
                 } else if (nElements == 1) {
                     std::string key(v[0]);
                     boost::tuple<bool, std::string, int> arrayType = checkKeyForArrayType(key);
@@ -566,7 +566,7 @@ namespace karabo {
                 boost::split(v, p, boost::is_any_of(sep));
                 size_t nElements = v.size();
                 if (nElements == 0) {
-                    throw LOGIC_EXCEPTION("No path (nested key value given)");
+                    throw KARABO_LOGIC_EXCEPTION("No path (nested key value given)");
                 } else if (nElements == 1) {
                     std::string key = v[0];
                     boost::tuple<bool, std::string, int> arrayType = checkKeyForArrayType(key);
@@ -652,7 +652,7 @@ namespace karabo {
 
             void access(AccessType at);
 
-            void simpleType(const Types::Type type);
+            void simpleType(const Types::ReferenceType type);
 
             void choiceType(const Schema & elements);
 

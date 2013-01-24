@@ -91,7 +91,7 @@ namespace karabo {
             type = dataType->getElementClassId();            
             arraySize = dataType->getDims(anyValue);
           } catch (...) {
-            throw HDF_IO_EXCEPTION("Not supported container/value type rtti["+string(anyValue.type().name())+"]");
+            throw KARABO_HDF_IO_EXCEPTION("Not supported container/value type rtti["+string(anyValue.type().name())+"]");
           }
 
           bool isArray = (arraySize[0] > 0 ? true : false);
@@ -173,7 +173,7 @@ namespace karabo {
           DataTypes::Pointer discriminator = DataTypes::createDefault(any.type().name());
           return discriminator->getElementClassId();
         } catch (...) {
-          throw HDF_IO_EXCEPTION("Not supported container/value type");
+          throw KARABO_HDF_IO_EXCEPTION("Not supported container/value type");
         }
 
       }
@@ -186,7 +186,7 @@ namespace karabo {
           dims = discriminator->getDims(anyValue);
           return dims;
         } catch (...) {
-          throw HDF_IO_EXCEPTION("Not supported container/value type");
+          throw KARABO_HDF_IO_EXCEPTION("Not supported container/value type");
         }
 
       }

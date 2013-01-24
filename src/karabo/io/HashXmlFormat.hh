@@ -123,7 +123,7 @@ namespace karabo {
 
                     pTheElement->LinkEndChild(newElement);
                 } catch (...) {
-                    RETHROW;
+                    KARABO_RETHROW;
                 }
 
             }//HashXmlFormat::fillXmlElementWithItems

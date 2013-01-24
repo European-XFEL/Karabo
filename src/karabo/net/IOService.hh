@@ -60,7 +60,7 @@ namespace karabo {
                     m_service = AbstractIOService::createDefault(classId);
                 else {
                     if (classId != m_service->getClassInfo().getClassId()) {
-                        throw LOGIC_EXCEPTION("Service was set to " + m_service->getClassInfo().getClassId() + " before. Cannot be used with " + classId + " now.");
+                        throw KARABO_LOGIC_EXCEPTION("Service was set to " + m_service->getClassInfo().getClassId() + " before. Cannot be used with " + classId + " now.");
                     } else {
                         //OK, another connection wants to use us
                     }

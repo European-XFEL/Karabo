@@ -112,7 +112,7 @@ namespace karabo {
             return;
           }
         }
-        throw NOT_SUPPORTED_EXCEPTION("FromFilenameSource::guessAndSetFormat -> Can not interprete extension: \"" + extension + "\"");
+        throw KARABO_NOT_SUPPORTED_EXCEPTION("FromFilenameSource::guessAndSetFormat -> Can not interprete extension: \"" + extension + "\"");
       }
 
       void writeFile(std::stringstream& sourceContent) {
@@ -122,7 +122,7 @@ namespace karabo {
         string filename = m_filename.string();
         if (m_writeMode == "abort") {
           if (exists(m_filename)) {
-            throw IO_EXCEPTION("TextFileWriter::write -> File " + filename + " does already exist");
+            throw KARABO_IO_EXCEPTION("TextFileWriter::write -> File " + filename + " does already exist");
           }
           ofstream outputStream(filename.c_str());
           outputStream << sourceContent.str();

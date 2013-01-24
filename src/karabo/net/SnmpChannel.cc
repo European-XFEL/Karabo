@@ -41,7 +41,7 @@ namespace karabo {
             //            session.callback_magic = this;
             m_session = ::snmp_open(&session);
             if (!m_session) {
-                throw IO_EXCEPTION("SNMP Session for " + m_hostname + " with " + m_community + " failed to open -- " + snmp_api_errstring(::snmp_errno));
+                throw KARABO_IO_EXCEPTION("SNMP Session for " + m_hostname + " with " + m_community + " failed to open -- " + snmp_api_errstring(::snmp_errno));
             }
             if (m_snmpConnection.m_aliasMode == "Schema")
                 m_flag = Schema;
@@ -61,7 +61,7 @@ namespace karabo {
             if (m_snmpConnection.m_schema.hasKey(key)) {
                 return m_snmpConnection.m_schema.key2alias<T > (key);
             } else {
-                throw PARAMETER_EXCEPTION("\"" + key + "\" is not a valid variable");
+                throw KARABO_PARAMETER_EXCEPTION("\"" + key + "\" is not a valid variable");
             }
         }
 
@@ -70,7 +70,7 @@ namespace karabo {
             if (m_snmpConnection.m_schema.hasAlias(alias)) {
                 return m_snmpConnection.m_schema.alias2key(alias);
             } else {
-                throw PARAMETER_EXCEPTION("The provided alias is not valid.");
+                throw KARABO_PARAMETER_EXCEPTION("The provided alias is not valid.");
             }
         }
 
@@ -707,7 +707,7 @@ namespace karabo {
                 m_snmpIOService->increaseReplyCount();
             } else {
                 snmp_free_pdu(m_pdu);
-                throw IO_EXCEPTION("snmp_send to " + m_hostname + " failed -- " + snmp_api_errstring(snmp_errno));
+                throw KARABO_IO_EXCEPTION("snmp_send to " + m_hostname + " failed -- " + snmp_api_errstring(snmp_errno));
             }
         }
 
@@ -749,10 +749,10 @@ namespace karabo {
                     }
                 }
             } catch (...) {
-                RETHROW // all keys should have an alias
+                KARABO_RETHROW // all keys should have an alias
             }
             if (hash.empty())
-                throw PARAMETER_EXCEPTION("Empty payload for command " + cmd);
+                throw KARABO_PARAMETER_EXCEPTION("Empty payload for command " + cmd);
 
             m_command = cmd; // store command
             m_output.clear();
@@ -772,7 +772,7 @@ namespace karabo {
                 for (Hash::const_iterator it = hash.begin(); it != hash.end(); ++it) {
                     m_namelen = MAX_OID_LEN;
                     if (!snmp_parse_oid(it->first.c_str(), m_name, &m_namelen)) {
-                        throw PARAMETER_EXCEPTION("Invalid OID " + it->first + " -- " + snmp_api_errstring(snmp_errno));
+                        throw KARABO_PARAMETER_EXCEPTION("Invalid OID " + it->first + " -- " + snmp_api_errstring(snmp_errno));
                     } else {
                         snmp_add_null_var(m_pdu, m_name, m_namelen);
                     }
@@ -786,10 +786,10 @@ namespace karabo {
                     const string& key = it->first;
                     m_namelen = MAX_OID_LEN;
                     if (!snmp_parse_oid(it->first.c_str(), m_name, &m_namelen)) {
-                        throw PARAMETER_EXCEPTION("Invalid OID " + key + " -- " + snmp_api_errstring(snmp_errno));
+                        throw KARABO_PARAMETER_EXCEPTION("Invalid OID " + key + " -- " + snmp_api_errstring(snmp_errno));
                     }
 
-                    Types::Type type = hash.getTypeAsId(it);
+                    Types::ReferenceType type = hash.getTypeAsId(it);
 
                     switch (type) {
 
@@ -891,7 +891,7 @@ namespace karabo {
                             break;
                         }
                         default:
-                            throw PARAMETER_EXCEPTION("Key '" + key + "' associated with SNMP invalid value!");
+                            throw KARABO_PARAMETER_EXCEPTION("Key '" + key + "' associated with SNMP invalid value!");
                     }
                 }
 
@@ -900,7 +900,7 @@ namespace karabo {
                 Hash::const_iterator it = hash.begin();
                 m_namelen = MAX_OID_LEN;
                 if (!snmp_parse_oid(it->first.c_str(), m_name, &m_namelen)) {
-                    throw PARAMETER_EXCEPTION("Invalid OID " + it->first + " -- " + snmp_api_errstring(snmp_errno));
+                    throw KARABO_PARAMETER_EXCEPTION("Invalid OID " + it->first + " -- " + snmp_api_errstring(snmp_errno));
                 }
                 memmove(m_endoid, m_name, m_namelen * sizeof (oid));
                 m_endlen = m_namelen;
@@ -914,7 +914,7 @@ namespace karabo {
                 Hash::const_iterator it = hash.begin();
                 m_namelen = MAX_OID_LEN;
                 if (!snmp_parse_oid(it->first.c_str(), m_name, &m_namelen)) {
-                    throw PARAMETER_EXCEPTION("Invalid OID " + it->first + " -- " + snmp_api_errstring(snmp_errno));
+                    throw KARABO_PARAMETER_EXCEPTION("Invalid OID " + it->first + " -- " + snmp_api_errstring(snmp_errno));
                 }
                 memmove(m_endoid, m_name, m_namelen * sizeof (oid));
                 m_endlen = m_namelen;
@@ -925,7 +925,7 @@ namespace karabo {
                 snmp_add_null_var(m_pdu, m_name, m_namelen);
 
             } else {
-                throw PARAMETER_EXCEPTION("Command '" + m_command + "' is not supported.");
+                throw KARABO_PARAMETER_EXCEPTION("Command '" + m_command + "' is not supported.");
             }
         }
 

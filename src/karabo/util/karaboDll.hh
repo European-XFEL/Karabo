@@ -8,30 +8,35 @@
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
 
-#ifndef KARABO_UTIL_GENERALDEFINES_HH
-#define	KARABO_UTIL_GENERALDEFINES_HH
+#ifndef KARABO_UTIL_KARABO_DLL_HH
+#define	KARABO_UTIL_KARABO_DLL_HH
 
 namespace karabo {
-  namespace util {
-    
+
+    /********************************************
+     *         Disable Specific Warnings         *
+     ********************************************/
+
+
+
     /********************************************
      *       Declare a parameter as unused      *
      ********************************************/
-    
+
 #if defined(_WIN32)
 #define ALWAYS_UNUSED(x) x;
 #else
 #define ALWAYS_UNUSED(x)
 #endif
 
-    
+
     /********************************************
      *            Windows DLL stuff             *  
      ********************************************/
-    
+
 #if defined(_WIN32) && defined(__DLL__)
-#define KARABO_API __declspec(dllexport)
-#define TEMPLATE_DLL
+#define KARABO_DECLSPEC __declspec(dllexport)
+#define KARABO_TEMPLATE_DLL
 #elif defined(unix)        || defined(__unix)      || defined(__unix__) \
  || defined(linux)       || defined(__linux)     || defined(__linux__) \
  || defined(sun)         || defined(__sun) \
@@ -40,10 +45,11 @@ namespace karabo {
  || defined(sgi)         || defined(__sgi) \
  || defined(__MACOSX__)  || defined(__APPLE__) \
  || defined(__CYGWIN__)
-#define KARABO_API
+#define KARABO_DECLSPEC
+#define KARABO_TEMPLATE_DLL
 #else
-#define KARABO_API __declspec(dllimport)
-#define TEMPLATE_DLL extern
+#define KARABO_DECLSPEC __declspec(dllimport)
+#define KARABO_TEMPLATE_DLL extern
 #endif
 
 #if defined(_WIN32)
@@ -51,11 +57,7 @@ namespace karabo {
 #else
     typedef unsigned long long uint64;
 #endif
-    
-  }
+
 }
-
-
-
-#endif	/* KARABO_PACKAGENAME_GENERALDEFINES_HH */
+#endif
 

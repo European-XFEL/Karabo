@@ -45,7 +45,7 @@ namespace karabo {
                     return b;
                 } else return hash.get<bool>(it);
             } else {
-                throw PARAMETER_EXCEPTION("Slot was called with to less arguments");
+                throw KARABO_PARAMETER_EXCEPTION("Slot was called with to less arguments");
             }
         }
     } // namespace xms
