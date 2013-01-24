@@ -6,6 +6,7 @@
  */
 
 #include "Hash.hh"
+#include "ToLiteral.hh"
 
 namespace karabo {
 
@@ -87,9 +88,9 @@ namespace karabo {
             }
         }
 
-//        std::string Hash::getString(const std::string & path, const char separator) const {
-//            return getNode(path, separator).getValueAsString();
-//        }
+        //        std::string Hash::getString(const std::string & path, const char separator) const {
+        //            return getNode(path, separator).getValueAsString();
+        //        }
 
         void Hash::erase(const std::string& path, const char separator) {
             std::string key;
@@ -123,7 +124,7 @@ namespace karabo {
         Hash & Hash::getLastHash(const std::string& path, std::string& last_key, const char separator) {
             return const_cast<Hash&> (thisAsConst().getLastHash(path, last_key, separator));
         }
-        
+
         const Hash::Node& Hash::getNode(const std::string& path, const char separator) const {
             std::string key;
             const Hash& hash = getLastHash(path, key, separator);
@@ -132,15 +133,15 @@ namespace karabo {
             }
             throw KARABO_LOGIC_EXCEPTION("Array syntax on a leaf is not possible (would be a Hash and not a Node)");
         }
-        
+
         Hash::Node& Hash::getNode(const std::string& path, const char separator) {
             return const_cast<Hash::Node&> (thisAsConst().getNode(path, separator));
         }
-         
+
         boost::optional<const Hash::Node&> Hash::find(const std::string& path, const char separator) const {
             try {
                 return getNode(path, separator);
-            } catch (...) { 
+            } catch (...) {
                 // Exception must be ignored here!
                 // TODO Construction and catching of an exception is expensive here.
                 Exception::clearTrace();
@@ -303,7 +304,7 @@ namespace karabo {
         void Hash::setAttributes(const std::string& path, const Hash::Attributes& attributes, const char separator) {
             return getNode(path, separator).setAttributes(attributes);
         }
-        
+
         Hash* Hash::setNodesAsNeeded(const std::vector<std::string>& tokens, char seperator) {
             // Loop all but last token
             Hash* tmp = this;
@@ -339,6 +340,42 @@ namespace karabo {
             return tmp;
         }
 
+        std::ostream& operator<<(std::ostream& os, const Hash& hash) {
+            hash.toStream(os, hash, 0);
+            return os;
+        }
+
+        void Hash::toStream(std::ostream& os, const Hash& hash, int depth) const {
+
+            std::string fill(depth * 2, ' ');
+
+            for (Hash::const_iterator hit = hash.begin(); hit != hash.end(); hit++) {
+                os << fill << hit->getKey();
+                
+                const Hash::Attributes& attrs = hit->getAttributes();
+                if (attrs.size() > 0) {
+                    for (Hash::Attributes::const_iterator ait = attrs.begin(); ait != attrs.end(); ++ait) {
+                        os << " " << ait->getKey() << "=\"" << ait->getValueAs<string>() << " " << Types::to<ToLiteral>(ait->getType()) << "\"";
+                    }
+                }
+
+                Types::ReferenceType type = hit->getType();
+                if (type == Types::HASH) {
+                    os << " +" << std::endl;
+                    toStream(os, hit->getValue<Hash>(), depth + 1);
+                } else if (type == Types::VECTOR_HASH) {
+                    const vector<Hash>& hashes = hit->getValue<vector<Hash> >();
+                    os << " @" << endl; 
+                    for (size_t i = 0; i < hashes.size(); ++i) {
+                        os << " [" << i << "]" << std::endl;
+                        toStream(os, hashes[i], depth + 1);
+                    }
+                } else {
+                    os << " => " << hit->getValueAs<string>() << " " << Types::to<ToLiteral>(type) << std::endl;
+                }
+            }
+        }
+
         bool similar(const Hash& left, const Hash& right) {
             if (left.size() != right.size())
                 return false;
@@ -371,8 +408,6 @@ namespace karabo {
             }
             return true;
         }
-        
-       
 
         size_t counter(const Hash& hash) {
             size_t partial_count = 0;
@@ -424,7 +459,7 @@ namespace karabo {
             return partial_count;
         }
 
-#define COUNTER(ReferenceType, CppType) ReferenceType: return element.getValue < vector <CppType> >().size();
+        #define COUNTER(ReferenceType, CppType) ReferenceType: return element.getValue < vector <CppType> >().size();
 
         size_t counter(const Hash::Node& element) {
             switch (element.getType()) {

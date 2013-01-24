@@ -382,19 +382,21 @@ namespace karabo {
              *******************************************************************/
 
             template <typename ValueType>
-            const ValueType& getAttribute(const std::string& path, const std::string& attribute, const char separator = '.') const; /**/
+            const ValueType& getAttribute(const std::string& path, const std::string& attribute, const char separator = '.') const;
 
             template <typename ValueType>
-            ValueType& getAttribute(const std::string& path, const std::string& attribute, const char separator = '.'); /**/
+            ValueType& getAttribute(const std::string& path, const std::string& attribute, const char separator = '.');
 
-            const Attributes& getAttributes(const std::string& path, const char separator = '.') const; /**/
-            Attributes& getAttributes(const std::string& path, const char separator = '.'); /**/
+            const Attributes& getAttributes(const std::string& path, const char separator = '.') const;
+            Attributes& getAttributes(const std::string& path, const char separator = '.');
 
             template <typename ValueType>
-            void setAttribute(const std::string& path, const std::string& attribute, const ValueType& value, const char separator = '.'); /**/
-            void setAttribute(const std::string& path, const std::string& attribute, const char* value, const char separator = '.'); /**/
+            void setAttribute(const std::string& path, const std::string& attribute, const ValueType& value, const char separator = '.');
+            void setAttribute(const std::string& path, const std::string& attribute, const char* value, const char separator = '.'); 
 
-            void setAttributes(const std::string& path, const Attributes& attributes, const char separator = '.'); /**/
+            void setAttributes(const std::string& path, const Attributes& attributes, const char separator = '.'); 
+            
+            friend std::ostream& operator<<(std::ostream& os, const Hash& hash);
 
         private:
 
@@ -406,6 +408,8 @@ namespace karabo {
             const Hash & thisAsConst() const {
                 return const_cast<const Hash &> (*this);
             }
+            
+            void toStream(std::ostream& os, const Hash& hash, int depth) const;
 
         };
     }
@@ -634,6 +638,8 @@ namespace karabo {
         void Hash::setAttribute(const std::string& path, const std::string& attribute, const ValueType& value, const char separator) {
             getNode(path, separator).setAttribute(attribute, value);
         }
+        
+        
 
         /*
          * Check the similarity between two objects.
