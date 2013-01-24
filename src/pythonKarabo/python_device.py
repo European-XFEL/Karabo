@@ -72,7 +72,10 @@ class PythonDevice(object):
         
         self._injectedExpectedParameters = Schema()
         self._incomingValidatedReconfiguration = Hash()
-        
+
+        # Define an event that has to be used on exception
+        KARABO_FSM_ON_EXCEPTION(self, 'onException')
+                
         try:
             # classId
             self._classId = cls.__name__
@@ -374,7 +377,7 @@ class PythonDevice(object):
         self._ss.call(instanceId, "slotReconfigure", configuration)
     
     def errorFoundAction(self, shortMessage, detailedMessage):
-        self.triggerErrorFound(shortMessage, detailedMessage)
+        print "*** ERROR Found ...\n\tDescription: {}\n\tDetails    : {}".format(shortMessage, detailedMessage)
     
     def updateCurrentState(self, state):
         self.set("state", state)
@@ -383,7 +386,13 @@ class PythonDevice(object):
     def processEvent(self, event):
         if self.fsm is not None:
             self.updateCurrentState("Changing...")
-            self.fsm.process_event(event)
+            try:
+                self.fsm.process_event(event)
+            except Exception,e:
+                m1 = "Exception while processing \"{}\" event".format(event.__class__.__name__)
+                m2 = str(e)
+                self.triggerErrorFound(m1, m2)
+                KARABO_FSM_ON_ERROR.onError(m1, m2)
             self.updateCurrentState(self.fsm.get_state())
     
     def startStateMachine(self):
@@ -391,7 +400,9 @@ class PythonDevice(object):
         if self.fsm is not None:
             self.fsm.start()
             self.updateCurrentState(self.fsm.get_state())
-        
+     
+    def onException(self, m1, m2): print "*** WARN **** 'onException(self, m1, m2) method is not implemented in subclass"
+    
     def slotKillDeviceInstance(self):
         self.log.INFO("Device is going down...")
         self.onKill()
