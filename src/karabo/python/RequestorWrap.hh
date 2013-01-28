@@ -83,9 +83,12 @@ namespace karabo {
                 try {
                     timeout(milliseconds);
                     karabo::util::Hash body, header;
+
+                    Py_BEGIN_ALLOW_THREADS
                     sendRequest();
                     receiveResponse(body, header);
-                    
+                    Py_END_ALLOW_THREADS
+                            
                     size_t arity = body.size();
                     switch (arity) {
                         case 0:

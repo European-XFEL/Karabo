@@ -75,9 +75,9 @@ void exportPyXmsSignalSlotable() {//exposing karabo::xms::SignalSlotable
 
             .def("registerSignal", &SignalSlotableWrap::registerSignalPy0, (bp::arg("signalFunction")))
             .def("registerSignal", &SignalSlotableWrap::registerSignalPy1, (bp::arg("signalFunction"), bp::arg("a1")))
-            .def("registerSignal", &SignalSlotableWrap::registerSignalPy2)
-            .def("registerSignal", &SignalSlotableWrap::registerSignalPy3)
-            .def("registerSignal", &SignalSlotableWrap::registerSignalPy4)
+            .def("registerSignal", &SignalSlotableWrap::registerSignalPy2, (bp::arg("signalFunction"), bp::arg("a1"), bp::arg("a2")))
+            .def("registerSignal", &SignalSlotableWrap::registerSignalPy3, (bp::arg("signalFunction"), bp::arg("a1"), bp::arg("a2"), bp::arg("a3")))
+            .def("registerSignal", &SignalSlotableWrap::registerSignalPy4, (bp::arg("signalFunction"), bp::arg("a1"), bp::arg("a2"), bp::arg("a3"), bp::arg("a4")))
 
             .def("call", (void (SignalSlotable::*)(string, string const &) const) (&SignalSlotable::call),
             (bp::arg("instanceId"), bp::arg("functionName")))
