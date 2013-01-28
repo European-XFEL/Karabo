@@ -373,6 +373,9 @@ class PythonDevice(object):
         ret = Hash(self._classId, config)
         return ret
     
+    def getAvailableInstances(self):
+        return self._ss.getAvailableInstances()
+    
     def reconfigure(self, instanceId, configuration):
         self._ss.call(instanceId, "slotReconfigure", configuration)
     
