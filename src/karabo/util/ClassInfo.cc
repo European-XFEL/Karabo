@@ -48,7 +48,7 @@ namespace karabo {
       return m_logCategory;
     }
     
-    const std::string& ClassInfo::getConfigVersion() const {
+    const std::string& ClassInfo::getVersion() const {
       return m_configVersion;
     }
 
@@ -65,8 +65,7 @@ namespace karabo {
         m_namespace = what.str(1);
       } else {
         m_className = "unresolved";
-        m_namespace = "unresovled";
-        throw KARABO_INIT_EXCEPTION("Test could not be properly initialized");
+        m_namespace = "unresolved";
       }
     }
 

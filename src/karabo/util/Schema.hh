@@ -22,8 +22,9 @@
 #include "Hash.hh"
 #include "StringTools.hh"
 #include "Test.hh"
+#include "ToLiteral.hh"
 
-#include "utildll.hh"
+#include "karaboDll.hh"
 
 /**
  * The main European XFEL namespace
@@ -36,7 +37,7 @@ namespace karabo {
     namespace util {
 
         /**
-         * The Schema class correlates to Hash class as XML Schema document correlates to XML document.
+         * The Schema class correlates to the Hash class like an XML Schema document correlates to an XML document.
          * The Schema object is a description of type of Hash objects, expressed in terms of constraints
          * on the structure and content of Hash objects of that type. Because generally the Hash object is
          * a collection of key/value pairs of quite a common nature (std::string, boost::any), the constraints
@@ -111,13 +112,8 @@ namespace karabo {
              */
             template <class T>
             bool hasAlias(const T & alias) {
-
                 ensureValidCache();
-
-                // TODO There could be a nicer way, which would not use a dummy Hash here!
-                Hash tmp("a", alias);
-                std::string aliasKey = tmp.getAsString("a");
-                return m_alias2key.has(aliasKey);
+                return m_alias2key.has(karabo::util::toString(alias));
             }
 
             /**
@@ -209,14 +205,12 @@ namespace karabo {
 
                 ensureValidCache();
 
-                // TODO There could be a nicer way, which would not use a dummy Hash here!
-                Hash tmp("a", alias);
-                std::string aliasKey = tmp.getAsString("a");
+                std::string aliasKey = karabo::util::toString(alias);
 
                 if (!m_alias2key.has(aliasKey)) {
                     throw KARABO_PARAMETER_EXCEPTION("No key is registered for this alias");
                 }
-                return m_alias2key.get<std::string > (tmp.getAsString("a"));
+                return m_alias2key.get<std::string > (aliasKey);
             }
 
             /**
@@ -275,13 +269,13 @@ namespace karabo {
                 if (schema->has("elements")) {
                     const Schema& params = schema->get<Schema > ("elements");
                     for (Schema::const_iterator it = params.begin(); it != params.end(); ++it) {
-                        const Schema& param = params.get<Schema > (it);
+                        const Schema& param = it->getValue<Schema>();
                         ret.push_back(param.get<std::string > ("key"));
                     }
                 } else if (schema->has("complexType")) {
                     const Schema& params = schema->get<Schema > ("complexType");
                     for (Schema::const_iterator it = params.begin(); it != params.end(); ++it) {
-                        const Schema& param = params.get<Schema > (it);
+                        const Schema& param = it->getValue<Schema>();
                         ret.push_back(param.get<std::string > ("root"));
                     }
                 }
@@ -369,9 +363,9 @@ namespace karabo {
             template <class T>
             bool isValueOfType() const {
                 if (has("simpleType")) {
-                    return Types::getTypeAsId<T > () == get<Types::ReferenceType > ("simpleType");
+                    return Types::from<T > () == get<Types::ReferenceType > ("simpleType");
                 } else {
-                    return Types::getTypeAsId<T > () == Types::HASH;
+                    return Types::from<T > () == Types::HASH;
                 }
             }
 
@@ -385,9 +379,9 @@ namespace karabo {
 
             std::string getValueTypeAsString() const {
                 if (has("simpleType")) {
-                    return Types::convert(get<Types::ReferenceType > ("simpleType"));
+                    return Types::to<ToLiteral>(get<Types::ReferenceType > ("simpleType"));
                 } else {
-                    return Types::convert(Types::HASH);
+                    return Types::to<ToLiteral>(Types::HASH);
                 }
             }
 
@@ -480,138 +474,8 @@ namespace karabo {
             const std::string& getUnitSymbol() const {
                 return get<std::string>("unitSymbol");
             }
-            
-            
-            /**
-             * Retrieves value given a complete path and, optionally, a separator. Works in non-<i>const</i> context.
-             * @param path  A path to the interested key in hierarchy
-             * @param sep   An optional separator (default: ".") used for parsing a path
-             * @return A non-<i>const</i> reference to the value of type <i>T</i>
-             */
-            template <class T>
-            T& getFromPath(const std::string& path, std::string sep = ".") {
-                std::string p(path);
-                std::vector<std::string> v;
-                boost::trim(p);
-                boost::split(v, p, boost::is_any_of(sep));
-                size_t nElements = v.size();
-                if (nElements == 0) {
-                    throw KARABO_LOGIC_EXCEPTION("No path (nested key value given)");
-                } else if (nElements == 1) {
-                    std::string key(v[0]);
-                    boost::tuple<bool, std::string, int> arrayType = checkKeyForArrayType(key);
-                    if (arrayType.get < 0 > () == true) {
-                        return getArrayElement(arrayType, T());
-                    } else {
-                        return get<T > (key);
-                    }
-                } else {
-                    std::string shorterPath = path.substr(0, path.find_last_of(sep));
-                    std::string last = *(v.rbegin());
-                    return r_get<Schema > (shorterPath, sep).getFromPath<T > (last);
-                }
-            }
-
-            /**
-             * Retrieves value given a complete path and, optionally, a separator. Works in <i>const</i> context.
-             * @param path  A path to the interested key in hierarchy
-             * @param sep   An optional separator (default: ".") used for parsing a path
-             * @return A <i>const</i> reference to the value of type <i>T</i>
-             */
-            template <class T>
-            const T& getFromPath(const std::string& path, std::string sep = ".") const {
-                std::string p(path);
-                std::vector<std::string> v;
-                boost::trim(p);
-                boost::split(v, p, boost::is_any_of(sep));
-                size_t nElements = v.size();
-                if (nElements == 0) {
-                    throw KARABO_LOGIC_EXCEPTION("No path (nested key value given)");
-                } else if (nElements == 1) {
-                    std::string key(v[0]);
-                    boost::tuple<bool, std::string, int> arrayType = checkKeyForArrayType(key);
-                    if (arrayType.get < 0 > () == true) {
-                        return getArrayElement(arrayType, T());
-                    } else {
-                        return get<T > (key);
-                    }
-                } else {
-                    std::string shorterPath = path.substr(0, path.find_last_of(sep));
-                    std::string last = *(v.rbegin());
-                    return r_get<Schema > (shorterPath, sep).getFromPath<T > (last);
-                }
-            }
-
-            template <class T>
-            bool tryToGetFromPath(const std::string& path, T& value) const {
-                try {
-                    value = getFromPath<T > (path);
-                    return true;
-                } catch (Exception e) {
-                    return false;
-                }
-            }
-
-            /**
-             * Set key/value pair into current <b>Schema</b> container using path, value and separator
-             * @param path  A path used for hierarchy recognition, and finding a key
-             * @param value A value that will be put into key/value pair
-             * @param sep An optional separator symbol (default: ".")
-             */
-            template <class T>
-            void setFromPath(const std::string& path, const T& value, std::string sep = ".") {
-                std::string p(path);
-                std::vector<std::string> v;
-                boost::trim(p);
-                boost::split(v, p, boost::is_any_of(sep));
-                size_t nElements = v.size();
-                if (nElements == 0) {
-                    throw KARABO_LOGIC_EXCEPTION("No path (nested key value given)");
-                } else if (nElements == 1) {
-                    std::string key = v[0];
-                    boost::tuple<bool, std::string, int> arrayType = checkKeyForArrayType(key);
-                    if (arrayType.get < 0 > () == true) {
-                        setArrayElement(arrayType, value);
-                    } else {
-                        set(key, value);
-                    }
-                } else {
-                    std::string shorterPath = path.substr(path.find_first_of(sep) + 1);
-                    std::string first = *(v.begin());
-                    // Check for array type
-                    boost::tuple<bool, std::string, int> arrayType = checkKeyForArrayType(first);
-                    if (arrayType.get < 0 > () == true) {
-                        Schema& tmp = setArrayElement<Schema > (arrayType);
-                        tmp.setFromPath(shorterPath, value, sep);
-                    } else {
-                        if (!this->has(first)) {
-                            set(first, Schema());
-                        }
-                        get<Schema > (first).setFromPath(shorterPath, value, sep);
-                    }
-                }
-            }
-
-            /**
-             * Overloaded <b>setFromPath</b> with path, <i>const char*</i> value and, optionally, a separator.
-             * @param path  A path used for hierarchy recognition, and finding a key
-             * @param value A value that will be put into key/value pair
-             * @param sep   An optional separator symbol (default: ".")
-             * @return void
-             */
-            void setFromPath(const std::string& path, const char* value, std::string sep = ".") {
-                setFromPath(path, std::string(value), sep);
-            }
-
-            /**
-             * Constructs an empty Schema object at given path
-             * @param path
-             * @return void
-             */
-            void setFromPath(const std::string& path) {
-                setFromPath(path, Schema());
-            }
-
+          
+          
 
         protected:
 
@@ -752,16 +616,7 @@ namespace karabo {
 
             void ensureValidCache();
 
-            void r_copy(const Hash& hash, const std::string & prefix) {
-                for (Hash::const_iterator it = hash.begin(); it != hash.end(); it++) {
-                    std::string path = prefix + it->first;
-                    if (Types::HASH == hash.getTypeAsId(it)) {
-                        r_copy(hash.get<Hash > (it), path + ".");
-                    } else {
-                        setFromPath(path, it->second);
-                    }
-                }
-            }
+        
 
             void r_generateAliasMaps(Schema& config, std::string path);
 
@@ -797,7 +652,7 @@ namespace karabo {
                     T option = boost::lexical_cast<T > (options[i]);
                     if (option == value) return;
                 }
-                report << "Value " << value << " for parameter \"" << key << "\" is not one of the valid options: " << String::sequenceToString(options) << std::endl;
+                report << "Value " << value << " for parameter \"" << key << "\" is not one of the valid options: " << karabo::util::toString(options) << std::endl;
             }
 
             template <class T>
@@ -833,14 +688,14 @@ namespace karabo {
             template <class T>
             void checkRangeOfVectorElements(const Schema& desc, const std::string& scope, const std::string& key, unsigned int iValue, const std::vector<T>& iValueVect, std::ostringstream & report) const {
                 if (desc.has("minInc")) {
-                    double eValue = desc.getNumeric<double>("minInc");
+                    double eValue = desc.getAs<double>("minInc");
                     for (size_t i = 0; i < iValue; i++) {
                         if (iValueVect[i] < eValue) {
                             report << "Parameter \"" << scope << "." << key << "[" << i << "]" << "\" = " << iValueVect[i] << " is out of min Inclusive boundary: " << eValue << std::endl;
                         }
                     }
                 } else if (desc.has("minExc")) {
-                    double eValue = desc.getNumeric<double>("minExc");
+                    double eValue = desc.getAs<double>("minExc");
                     for (size_t i = 0; i < iValue; i++) {
                         if (iValueVect[i] <= eValue) {
                             report << "Parameter \"" << scope << "." << key << "[" << i << "]" << "\" = " << iValueVect[i] << " is out of min Exclusive boundary: " << eValue << std::endl;
@@ -849,14 +704,14 @@ namespace karabo {
                 }
 
                 if (desc.has("maxInc")) {
-                    double eValue = desc.getNumeric<double>("maxInc");
+                    double eValue = desc.getAs<double>("maxInc");
                     for (size_t i = 0; i < iValue; i++) {
                         if (iValueVect[i] > eValue) {
                             report << "Parameter \"" << scope << "." << key << "[" << i << "]" << "\" = " << iValueVect[i] << " is out of max Inclusive boundary: " << eValue << std::endl;
                         }
                     }
                 } else if (desc.has("maxExc")) {
-                    double eValue = desc.getNumeric<double>("maxExc");
+                    double eValue = desc.getAs<double>("maxExc");
                     for (size_t i = 0; i < iValue; i++) {
                         if (iValueVect[i] >= eValue) {
                             report << "Parameter \"" << scope << "." << key << "[" << i << "]" << "\" = " << iValueVect[i] << " is out of max Exclusive boundary: " << eValue << std::endl;

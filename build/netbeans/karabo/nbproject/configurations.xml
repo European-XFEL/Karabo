@@ -14,10 +14,14 @@
                      projectFiles="true">
         <itemPath>../../../src/karabo/util/ClassInfo.cc</itemPath>
         <itemPath>../../../src/karabo/util/ClassInfo.hh</itemPath>
+        <itemPath>../../../src/karabo/util/Configurator.hh</itemPath>
         <itemPath>../../../src/karabo/util/Exception.cc</itemPath>
         <itemPath>../../../src/karabo/util/Exception.hh</itemPath>
+        <itemPath>../../../src/karabo/util/Factory.hh</itemPath>
         <itemPath>../../../src/karabo/util/karaboDll.hh</itemPath>
         <itemPath>../../../src/karabo/util/util.hh</itemPath>
+      </logicalFolder>
+      <logicalFolder name="f1" displayName="Schema" projectFiles="true">
       </logicalFolder>
       <logicalFolder name="f6" displayName="Tools" projectFiles="true">
         <itemPath>../../../src/karabo/util/Base64.cc</itemPath>
@@ -52,6 +56,10 @@
                      displayName="util_test"
                      projectFiles="true"
                      kind="TEST">
+        <itemPath>../../../src/karabo/tests/util/Configurator_Test.cc</itemPath>
+        <itemPath>../../../src/karabo/tests/util/Configurator_Test.hh</itemPath>
+        <itemPath>../../../src/karabo/tests/util/Factory_Test.cc</itemPath>
+        <itemPath>../../../src/karabo/tests/util/Factory_Test.hh</itemPath>
         <itemPath>../../../src/karabo/tests/util/Hash_Test.cc</itemPath>
         <itemPath>../../../src/karabo/tests/util/Hash_Test.hh</itemPath>
         <itemPath>../../../src/karabo/tests/util/utilTestRunner.cc</itemPath>
@@ -92,7 +100,7 @@
           </incDir>
         </ccTool>
         <linkerTool>
-          <output>${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/lib/libkarabo.${CND_DLIB_EXT}</output>
+          <output>${TESTDIR}/TestFiles/f5</output>
           <linkerAddLib>
             <pElem>/opt/local/lib/nss</pElem>
             <pElem>/opt/local/lib/nspr</pElem>
@@ -160,26 +168,6 @@
           <output>${TESTDIR}/TestFiles/f1</output>
         </linkerTool>
       </folder>
-      <folder path="TestFiles/f2">
-        <linkerTool>
-          <output>${TESTDIR}/TestFiles/f2</output>
-        </linkerTool>
-      </folder>
-      <folder path="TestFiles/f3">
-        <linkerTool>
-          <output>${TESTDIR}/TestFiles/f3</output>
-        </linkerTool>
-      </folder>
-      <folder path="TestFiles/f4">
-        <linkerTool>
-          <output>${TESTDIR}/TestFiles/f4</output>
-        </linkerTool>
-      </folder>
-      <folder path="TestFiles/f5">
-        <linkerTool>
-          <output>${TESTDIR}/TestFiles/f5</output>
-        </linkerTool>
-      </folder>
     </conf>
     <conf name="Release" type="2">
       <toolsSet>
@@ -205,7 +193,7 @@
           <developmentMode>5</developmentMode>
         </asmTool>
         <linkerTool>
-          <output>${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/lib/libkarabo.${CND_DLIB_EXT}</output>
+          <output>${TESTDIR}/TestFiles/f4</output>
           <linkerAddLib>
             <pElem>/opt/local/lib/nss</pElem>
             <pElem>/opt/local/lib/nspr</pElem>
@@ -267,26 +255,6 @@
       <folder path="TestFiles/f1">
         <linkerTool>
           <output>${TESTDIR}/TestFiles/f1</output>
-        </linkerTool>
-      </folder>
-      <folder path="TestFiles/f2">
-        <linkerTool>
-          <output>${TESTDIR}/TestFiles/f2</output>
-        </linkerTool>
-      </folder>
-      <folder path="TestFiles/f3">
-        <linkerTool>
-          <output>${TESTDIR}/TestFiles/f3</output>
-        </linkerTool>
-      </folder>
-      <folder path="TestFiles/f4">
-        <linkerTool>
-          <output>${TESTDIR}/TestFiles/f4</output>
-        </linkerTool>
-      </folder>
-      <folder path="TestFiles/f5">
-        <linkerTool>
-          <output>${TESTDIR}/TestFiles/f4</output>
         </linkerTool>
       </folder>
     </conf>
