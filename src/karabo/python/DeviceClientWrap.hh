@@ -29,10 +29,10 @@ namespace karabo {
             m_isVerbose(true) {
                 m_signalSlotableWrap = boost::static_pointer_cast<SignalSlotableWrap > (m_signalSlotable);
             }
-
+            
             ~DeviceClientWrap() {
             }
-
+            
             bp::list getAvailableInstancesPy() {
                 return m_signalSlotableWrap->getAvailableInstancesPy();
             }
@@ -81,7 +81,7 @@ namespace karabo {
                 boost::mutex::scoped_lock lock(m_deviceChangedHandlersMutex);
                 this->cacheAndGetConfiguration(instanceId);
                 if (hasattr(callbackFunction, "__self__")) {
-                      bp::object selfObject(callbackFunction.attr("__self__"));
+                      const bp::object& selfObject(callbackFunction.attr("__self__"));
                       std::string funcName(bp::extract<std::string>(callbackFunction.attr("__name__")));
                       m_deviceChangedHandlers.setFromPath(instanceId + "._function", funcName);
                       m_deviceChangedHandlers.setFromPath(instanceId + "._selfObject", selfObject.ptr());
@@ -97,7 +97,7 @@ namespace karabo {
                     boost::mutex::scoped_lock lock(m_propertyChangedHandlersMutex);
                     this->cacheAndGetConfiguration(instanceId);
                     if (hasattr(callbackFunction, "__self__")) {
-                        bp::object selfObject(callbackFunction.attr("__self__"));
+                        const bp::object& selfObject(callbackFunction.attr("__self__"));
                         std::string funcName(bp::extract<std::string>(callbackFunction.attr("__name__")));
                         m_propertyChangedHandlers.setFromPath(instanceId + "." + key + "._function", funcName);
                         m_propertyChangedHandlers.setFromPath(instanceId + "." + key + "._selfObject", selfObject.ptr());
@@ -113,19 +113,26 @@ namespace karabo {
         
             bp::tuple setWaitPy(const std::string& instanceId, const std::string& key, const bp::object& value, const std::string& keySep = ".", int timeout = -1) {
                 karabo::util::Hash tmp;
+                std::pair<bool, std::string> result;
                 HashWrap::pythonSetFromPath(tmp, key, value, keySep);
-                std::pair<bool, std::string> result = this->setWait(instanceId, tmp, timeout);
+                Py_BEGIN_ALLOW_THREADS
+                result = this->setWait(instanceId, tmp, timeout);
+                Py_END_ALLOW_THREADS
                 return bp::make_tuple(result.first, result.second);
             }
 
             void setNoWaitPy(const std::string& instanceId, const std::string& key, const bp::object& value, const std::string& keySep = ".") {
                 karabo::util::Hash tmp;
                 HashWrap::pythonSetFromPath(tmp, key, value, keySep);
+                Py_BEGIN_ALLOW_THREADS
                 this->setNoWait(instanceId, tmp);
+                Py_END_ALLOW_THREADS
             }
 
             void executeNoWaitPy0(std::string instanceId, const std::string& functionName) {
+                Py_BEGIN_ALLOW_THREADS
                 m_signalSlotableWrap->call(instanceId, functionName);
+                Py_END_ALLOW_THREADS
             }
 
             void executeNoWaitPy1(std::string instanceId, const std::string& functionName, const bp::object& a1) const {
@@ -145,15 +152,20 @@ namespace karabo {
             }
 
             bp::tuple executeWaitPy0(std::string instanceId, const std::string& functionName, int timeout = -1) {
-                std::pair<bool, std::string> result = this->executeWait(instanceId, functionName, timeout);
-                return bp::make_tuple(result.first, result.second);
+                std::pair<bool, std::string> result;
+                bp::tuple tuple;
+                Py_BEGIN_ALLOW_THREADS
+                result = this->executeWait(instanceId, functionName, timeout);
+                Py_END_ALLOW_THREADS
+                tuple = bp::make_tuple(result.first, result.second);
+                return tuple;
             }
 
             bp::tuple executeWaitPy1(std::string instanceId, const std::string& functionName, const bp::object& a1, int timeout = -1) const {
                 if (timeout == -1) timeout = m_defaultTimeout;
 
                 bp::tuple result;
-
+                
                 try {
                     result = m_signalSlotableWrap->requestPy1(instanceId, functionName, a1).waitForReply(timeout);
                 } catch (const karabo::util::Exception& e) {
@@ -234,12 +246,10 @@ namespace karabo {
                             }
                         }
                         
-                        PyGILState_Release(gstate);
-                        
                     } catch (const karabo::util::Exception& e) {
                         std::cout << e.userFriendlyMsg();
-                        PyGILState_Release(gstate);
                     }
+                    PyGILState_Release(gstate);
                 }
             }
 
@@ -278,12 +288,11 @@ namespace karabo {
                                 }
                             }
 
-                            PyGILState_Release(gstate);
-
                         } catch (const karabo::util::Exception& e) {
                             std::cout << e.userFriendlyMsg();
-                            PyGILState_Release(gstate);
                         }
+                        
+                        PyGILState_Release(gstate);
                         
                         if (current.is<karabo::util::Hash > (it)) callMonitor(instanceId, registered, current.get<karabo::util::Hash > (it), currentPath);
                     }
