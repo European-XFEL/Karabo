@@ -46,6 +46,7 @@ namespace karabo {
         public:
 
             OrderedMap();
+            
             OrderedMap(const OrderedMap<KeyType, MappedType>& other);
 
 
@@ -80,45 +81,67 @@ namespace karabo {
             OrderedMap<KeyType, MappedType>& operator=(const OrderedMap<KeyType, MappedType>& other);
 
             list_iterator begin();
+            
             const_list_iterator begin() const;
 
             list_iterator end();
+            
             const_list_iterator end() const;
 
             map_iterator mbegin();
+            
             const_map_iterator mbegin() const;
 
             map_iterator mend();
+            
             const_map_iterator mend() const;
 
             inline map_iterator find(const KeyType& key);
+            
             inline const_map_iterator find(const KeyType& key) const;
+            
             inline bool has(const KeyType& key) const;
+            
             inline void erase(const KeyType& key);
 
             inline size_t size() const;
+            
             inline bool empty() const;
+                        
             inline void clear();
 
             template<class T>
-            inline MappedType& set(const KeyType& key, const T& value);
+            inline Node& set(const KeyType& key, const T& value);
 
             template<class T>
             inline const T& get(const KeyType& key) const;
+            
             template<class T>
             inline T& get(const KeyType& key);
+            
             template<class T>
             inline void get(const KeyType& key, T & value) const;
+            
             template<class T>
             inline const T & get(const const_map_iterator & it) const;
+            
             template<class T>
             inline T & get(const map_iterator & it);
+            
+            template <typename ValueType>
+            inline ValueType getAs(const KeyType& key) const;
+                        
+            template<typename T, template <typename Elem, typename = std::allocator<Elem> > class Cont >
+            inline Cont<T> getAs(const KeyType& key) const;
 
-            inline const MappedType& getNode(const KeyType& key) const;
-            inline MappedType& getNode(const KeyType& key);
+            inline const Node& getNode(const KeyType& key) const;
+            
+            inline Node& getNode(const KeyType& key);
 
             template <typename T> bool is(const KeyType & key) const;
+            
             template <typename T> bool is(const const_map_iterator & it) const;
+            
             bool is(const KeyType& key, const Types::ReferenceType & type) const;
 
         };
@@ -361,7 +384,7 @@ namespace karabo {
             if ((it = find(key)) == m_mapNodes.end()) {
                 throw KARABO_PARAMETER_EXCEPTION("Key '" + key + "' does not exist");
             }
-            return get<T > (it); //return it->second.template value<T > (); // 
+            return get<T > (it);
         }
 
         template<class KeyType, class MappedType>
@@ -381,6 +404,26 @@ namespace karabo {
         inline T & OrderedMap<KeyType, MappedType>::get(const map_iterator & it) {
             return it->second.template getValue<T > ();
         }
+        
+        template <class KeyType, class MappedType>
+        template <class ValueType>
+        inline ValueType OrderedMap<KeyType, MappedType>::getAs(const KeyType& key) const {
+            map_iterator it;
+            if ((it = find(key)) == m_mapNodes.end()) {
+                throw KARABO_PARAMETER_EXCEPTION("Key '" + key + "' does not exist");
+            }
+            return it->second.template getValueAs<ValueType >();
+        }
+        
+        template <class KeyType, class MappedType>
+        template<typename T, template <typename Elem, typename = std::allocator<Elem> > class Cont >
+        inline Cont<T> OrderedMap<KeyType, MappedType>::getAs(const KeyType& key) const {
+            map_iterator it;
+            if ((it = find(key)) == m_mapNodes.end()) {
+                throw KARABO_PARAMETER_EXCEPTION("Key '" + key + "' does not exist");
+            }
+            return it->second.template getValueAs<T, Cont >();
+        }       
 
         template<class KeyType, class MappedType>
         template <typename T>

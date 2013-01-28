@@ -8,17 +8,17 @@ CND_BUILDDIR=build
 CND_DISTDIR=dist
 # Debug configuration
 CND_PLATFORM_Debug=GNU-Linux-x86
-CND_ARTIFACT_DIR_Debug=dist/Debug/GNU-Linux-x86/lib
-CND_ARTIFACT_NAME_Debug=libkarabo.so
-CND_ARTIFACT_PATH_Debug=dist/Debug/GNU-Linux-x86/lib/libkarabo.so
+CND_ARTIFACT_DIR_Debug=build/Debug/GNU-Linux-x86/tests/TestFiles
+CND_ARTIFACT_NAME_Debug=f5
+CND_ARTIFACT_PATH_Debug=build/Debug/GNU-Linux-x86/tests/TestFiles/f5
 CND_PACKAGE_DIR_Debug=dist/Debug/GNU-Linux-x86/package
 CND_PACKAGE_NAME_Debug=karabo.tar.gz
 CND_PACKAGE_PATH_Debug=dist/Debug/GNU-Linux-x86/package/karabo.tar.gz
 # Release configuration
 CND_PLATFORM_Release=GNU-Linux-x86
-CND_ARTIFACT_DIR_Release=dist/Release/GNU-Linux-x86/lib
-CND_ARTIFACT_NAME_Release=libkarabo.so
-CND_ARTIFACT_PATH_Release=dist/Release/GNU-Linux-x86/lib/libkarabo.so
+CND_ARTIFACT_DIR_Release=build/Release/GNU-Linux-x86/tests/TestFiles
+CND_ARTIFACT_NAME_Release=f4
+CND_ARTIFACT_PATH_Release=build/Release/GNU-Linux-x86/tests/TestFiles/f4
 CND_PACKAGE_DIR_Release=dist/Release/GNU-Linux-x86/package
 CND_PACKAGE_NAME_Release=libkarabo.so.tar
 CND_PACKAGE_PATH_Release=dist/Release/GNU-Linux-x86/package/libkarabo.so.tar

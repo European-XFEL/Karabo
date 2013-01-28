@@ -205,10 +205,10 @@ namespace karabo {
          */
         template<class E,
         class T = std::char_traits<E>,
-        class A = std::allocator<E> >
+        class Sub1 = std::allocator<E> >
 
         class Widen : public std::unary_function<
-        const std::string&, std::basic_string<E, T, A> > {
+        const std::string&, std::basic_string<E, T, Sub1> > {
             std::locale loc_;
             const std::ctype<E>* pCType_;
 
@@ -230,14 +230,14 @@ namespace karabo {
 
             // Conversion...
 
-            std::basic_string<E, T, A> operator() (const std::string& str) const {
-                typename std::basic_string<E, T, A>::size_type srcLen =
+            std::basic_string<E, T, Sub1> operator() (const std::string& str) const {
+                typename std::basic_string<E, T, Sub1>::size_type srcLen =
                         str.length();
                 const char* pSrcBeg = str.c_str();
                 std::vector<E> tmp(srcLen);
 
                 pCType_->widen(pSrcBeg, pSrcBeg + srcLen, &tmp[0]);
-                return std::basic_string<E, T, A > (&tmp[0], srcLen);
+                return std::basic_string<E, T, Sub1 > (&tmp[0], srcLen);
             }
         };
 

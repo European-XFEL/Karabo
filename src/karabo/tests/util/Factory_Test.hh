@@ -1,19 +1,52 @@
 /* 
- * File:   Factory_Test.hh
- * Author: heisenb
+ * File:   Factory_Test.h
+ * Author: <burkhard.heisen@xsmail.com>
  *
- * Created on September 19, 2012, 10:34 AM
+ * Created on August 26, 2012, 7:20 PM
+ * 
+ * © Copyright 2012 Burkhard C. Heisen
  */
 
-#ifndef FACTORY_TEST_HH
-#define	FACTORY_TEST_HH
+#ifndef KARABO_UTIL_FACTORY_TEST_HH
+#define	KARABO_UTIL_FACTORY_TEST_HH
 
+#include <karabo/util/ClassInfo.hh>
 #include <cppunit/extensions/HelperMacros.h>
+
+struct Interface {
+    
+    KARABO_CLASSINFO(Interface, "Interface", "1.0");
+    
+    virtual std::string foo() = 0;
+            
+};
+
+struct A : public Interface {
+    
+    KARABO_CLASSINFO(A, "A", "1.0");
+    
+    std::string _ctorType;
+    
+    A() : _ctorType("void") {
+    }
+    
+    A(const std::string& a1) : _ctorType("string") {
+    }
+    
+    A(int a1) : _ctorType("int") {
+    }
+    
+    std::string foo() {
+        return "A:" + _ctorType;
+    }
+    
+};
 
 class Factory_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST_SUITE(Factory_Test);
-    CPPUNIT_TEST(testMethod);
-    CPPUNIT_TEST(testFailedMethod);
+
+    CPPUNIT_TEST(testObjectCreation);
+
     CPPUNIT_TEST_SUITE_END();
 
 public:
@@ -23,10 +56,12 @@ public:
     void tearDown();
 
 private:
-    int *example;
-    void testMethod();
-    void testFailedMethod();
+    
+    void testObjectCreation();
+
+    
+
 };
 
-#endif	/* FACTORY_TEST_HH */
+#endif
 

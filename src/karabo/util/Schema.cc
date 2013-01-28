@@ -114,7 +114,7 @@ namespace karabo {
             Schema& currentElements = get<Schema > ("elements");
             const Schema& inputElements = schema.get<Schema > ("elements");
             for (const_iterator it = inputElements.begin(); it != inputElements.end(); it++) {
-                Schema item = inputElements.get<Schema > (it);
+                Schema item = it->getValue<Schema>();
                 currentElements.addElement(item);
             }
             return *this;
@@ -129,7 +129,7 @@ namespace karabo {
                 }
             }
             for (size_t i = 0; i < deleteMe.size(); ++i) {
-                this->erase(deleteMe[i]);
+                //this->erase(deleteMe[i]); // TODO
             }
         }
 
@@ -142,7 +142,7 @@ namespace karabo {
             for (size_t i = 0; i + 1 < tokens.size() - 1; i += 2) {
                 wasFound = false;
                 for (iterator it = level->begin(); it != level->end(); it++) {
-                    Schema& element = level->get<Schema > (it);
+                    Schema& element = it->getValue<Schema>(); //level->get<Schema > (it);
                     iterator jt = element.find("complexType");
                     if (jt != element.end() && element.get<string > ("key") == tokens[i]) {
                         Schema& complexTypes = element.get<Schema > (jt);
@@ -848,22 +848,22 @@ namespace karabo {
                 case Types::FLOAT:
                 case Types::DOUBLE:
                 {
-                    double iValue = uParam.getNumeric<double > (key);
+                    double iValue = uParam.getAs<double > (key);
                     if (desc.has("options")) {
                         checkOptions(scope, iValue, desc, report);
                     }
                     if (desc.has("minInc")) {
-                        double eValue = desc.getNumeric<double>("minInc");
+                        double eValue = desc.getAs<double>("minInc");
                         checkMinInc(scope, iValue, eValue, report);
                     } else if (desc.has("minExc")) {
-                        double eValue = desc.getNumeric<double>("minExc");
+                        double eValue = desc.getAs<double>("minExc");
                         checkMinExc(scope, iValue, eValue, report);
                     }
                     if (desc.has("maxInc")) {
-                        double eValue = desc.getNumeric<double>("maxInc");
+                        double eValue = desc.getAs<double>("maxInc");
                         checkMaxInc(scope, iValue, eValue, report);
                     } else if (desc.has("maxExc")) {
-                        double eValue = desc.getNumeric<double>("maxExc");
+                        double eValue = desc.getAs<double>("maxExc");
                         checkMaxExc(scope, iValue, eValue, report);
                     }
                 }
@@ -1018,13 +1018,13 @@ namespace karabo {
 
         void Schema::checkSizeOfVector(const Schema& desc, const string& scope, const string& key, unsigned int iValue, std::ostringstream & report) const {
             if (desc.has("minSize")) {
-                unsigned int eValue = desc.getNumeric<unsigned int > ("minSize");
+                unsigned int eValue = desc.getAs<unsigned int > ("minSize");
                 if (iValue < eValue) {
                     report << "Number of elements in array " << scope << "." << key << " must be greater or equal " << eValue << "." << endl;
                 }
             }
             if (desc.has("maxSize")) {
-                unsigned int eValue = desc.getNumeric<unsigned int > ("maxSize");
+                unsigned int eValue = desc.getAs<unsigned int > ("maxSize");
                 if (iValue > eValue) {
                     report << "Number of elements in array " << scope << "." << key << " must be less or equal " << eValue << "." << endl;
                 }
