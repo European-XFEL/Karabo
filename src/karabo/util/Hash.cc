@@ -1,7 +1,8 @@
 /* 
  * File:   Hash.cc
- * Author: boukhelef
- * 
+ * Author: <burkhard.heisen@xfel.eu>
+ * Author: <djelloul.boukhelef@xfel.eu>
+ *
  * Created on December 14, 2012, 11:19 AM
  */
 
@@ -36,6 +37,22 @@ namespace karabo {
 
         Hash::iterator Hash::end() {
             return m_container.end();
+        }
+        
+        Hash::const_map_iterator Hash::mbegin() const {
+            return m_container.mbegin();
+        }
+
+        Hash::map_iterator Hash::mbegin() {
+            return m_container.mbegin();
+        }
+
+        Hash::const_map_iterator Hash::mend() const {
+            return m_container.mend();
+        }
+
+        Hash::map_iterator Hash::mend() {
+            return m_container.mend();
         }
 
         size_t Hash::size() const {

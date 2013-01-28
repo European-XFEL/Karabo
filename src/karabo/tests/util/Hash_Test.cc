@@ -89,17 +89,7 @@ void Hash_Test::testConstructors() {
         CPPUNIT_ASSERT(h.get<std::vector<unsigned int> >("e")[0] == 5);
         CPPUNIT_ASSERT(h.get<Hash > ("f").get<int>("a") == 6);
         CPPUNIT_ASSERT(h.get<int > ("f.a") == 6);
-        
-        Hash h1("a.barsch.c", 1);
-        h1.setAttribute("a", "attr1", 1);
-        h1.setAttribute("a", "attr2", 2);
-        h1.setAttribute("a.barsch.c", "color", "red");
-        h.set("myArray[0]", h1);
-        h.set("myArray[1]", h1);
-        h.set("myArray[5]", h1);
-        cerr << endl << endl;
-        cerr << h;
-        cerr << endl << endl;
+
     }
 }
 
@@ -275,45 +265,179 @@ void Hash_Test::testGetAs() {
 
 void Hash_Test::testFind() {
 
-    Hash h("a.b.c1.d", 1);
-    boost::optional<Hash::Node&> node = h.find("a.b.c1.d");
-    if (node) CPPUNIT_ASSERT(node->getValue<int>() == 1);
-    else CPPUNIT_ASSERT(true == false);
-    node = h.find("a.b.c1.f");
-    if (node) CPPUNIT_ASSERT(true == false);
-    else CPPUNIT_ASSERT(true == true);
+    {
+        Hash h("a.b.c1.d", 1);
+        boost::optional<Hash::Node&> node = h.find("a.b.c1.d");
+        if (node) CPPUNIT_ASSERT(node->getValue<int>() == 1);
+        else CPPUNIT_ASSERT(true == false);
+        node = h.find("a.b.c1.f");
+        if (node) CPPUNIT_ASSERT(true == false);
+        else CPPUNIT_ASSERT(true == true);
+    }
+
+    {
+        Hash h("a.b.c", "1");
+        boost::optional<Hash::Node&> node = h.find("a.b.c");
+        if (node) node->setValue(2);
+        CPPUNIT_ASSERT(h.get<int>("a.b.c") == 2);
+        node = h.find("a.b.c", '/');
+        if (node) CPPUNIT_ASSERT(true == false);
+    }
 }
 
 void Hash_Test::testAttributes() {
-    Hash h("This.is.a.test", 42);
-    h.setAttribute("This", "attr1", "someValue");
-    CPPUNIT_ASSERT(h.getAttribute<std::string > ("This", "attr1") == "someValue");
-    h.setAttribute("This", "attr2", 42);
-    CPPUNIT_ASSERT(h.getAttribute<std::string > ("This", "attr1") == "someValue");
-    CPPUNIT_ASSERT(h.getAttribute<int>("This", "attr2") == 42);
-    h.setAttribute("This", "attr2", 43);
-    CPPUNIT_ASSERT(h.getAttribute<std::string > ("This", "attr1") == "someValue");
-    CPPUNIT_ASSERT(h.getAttribute<int>("This", "attr2") == 43);
-    h.setAttribute("This.is.a.test", "attr1", true);
-    CPPUNIT_ASSERT(h.getAttribute<bool>("This.is.a.test", "attr1") == true);
-    const Hash::Attributes& attrs = h.getAttributes("This");
+
+    Hash h("a.b.a.b", 42);
+    h.setAttribute("a", "attr1", "someValue");
+    CPPUNIT_ASSERT(h.getAttribute<std::string > ("a", "attr1") == "someValue");
+
+    h.setAttribute("a", "attr2", 42);
+    CPPUNIT_ASSERT(h.getAttribute<std::string > ("a", "attr1") == "someValue");
+    CPPUNIT_ASSERT(h.getAttribute<int>("a", "attr2") == 42);
+
+    h.setAttribute("a", "attr2", 43);
+    CPPUNIT_ASSERT(h.getAttribute<std::string > ("a", "attr1") == "someValue");
+    CPPUNIT_ASSERT(h.getAttribute<int>("a", "attr2") == 43);
+
+    h.setAttribute("a.b.a.b", "attr1", true);
+    CPPUNIT_ASSERT(h.getAttribute<bool>("a.b.a.b", "attr1") == true);
+
+    const Hash::Attributes& attrs = h.getAttributes("a");
     CPPUNIT_ASSERT(attrs.size() == 2);
     CPPUNIT_ASSERT(attrs.get<std::string > ("attr1") == "someValue");
     CPPUNIT_ASSERT(attrs.get<int>("attr2") == 43);
+
     Hash::Attributes::Node node = attrs.getNode("attr2");
     CPPUNIT_ASSERT(node.getType() == Types::INT32);
 }
 
 void Hash_Test::testIteration() {
-    Hash h("This", 1, "should", 2, "be", 3, "iterated", 4, "in", 5, "order", 6);
-    std::vector<std::string> inOrder;
-    for (Hash::const_iterator it = h.begin(); it != h.end(); ++it) {
-        inOrder.push_back(it->getKey());
+
+    Hash h("should", 1, "be", 2, "iterated", 3, "in", 4, "correct", 5, "order", 6);
+    Hash::Attributes a("should", 1, "be", 2, "iterated", 3, "in", 4, "correct", 5, "order", 6);
+
+    {
+        std::vector<std::string> insertionOrder;
+        for (Hash::const_iterator it = h.begin(); it != h.end(); ++it) {
+            insertionOrder.push_back(it->getKey());
+        }
+        CPPUNIT_ASSERT(insertionOrder[0] == "should");
+        CPPUNIT_ASSERT(insertionOrder[1] == "be");
+        CPPUNIT_ASSERT(insertionOrder[2] == "iterated");
+        CPPUNIT_ASSERT(insertionOrder[3] == "in");
+        CPPUNIT_ASSERT(insertionOrder[4] == "correct");
+        CPPUNIT_ASSERT(insertionOrder[5] == "order");
     }
-    CPPUNIT_ASSERT(inOrder[0] == "This");
-    CPPUNIT_ASSERT(inOrder[1] == "should");
-    CPPUNIT_ASSERT(inOrder[2] == "be");
-    CPPUNIT_ASSERT(inOrder[3] == "iterated");
-    CPPUNIT_ASSERT(inOrder[4] == "in");
-    CPPUNIT_ASSERT(inOrder[5] == "order");
+
+    {
+        std::vector<std::string> alphaNumericOrder;
+        for (Hash::const_map_iterator it = h.mbegin(); it != h.mend(); ++it) {
+            alphaNumericOrder.push_back(it->second.getKey());
+        }
+        CPPUNIT_ASSERT(alphaNumericOrder[0] == "be");
+        CPPUNIT_ASSERT(alphaNumericOrder[1] == "correct");
+        CPPUNIT_ASSERT(alphaNumericOrder[2] == "in");
+        CPPUNIT_ASSERT(alphaNumericOrder[3] == "iterated");
+        CPPUNIT_ASSERT(alphaNumericOrder[4] == "order");
+        CPPUNIT_ASSERT(alphaNumericOrder[5] == "should");
+    }
+
+    h.set("be", "2"); // Has no effect on order
+
+    {
+        std::vector<std::string> insertionOrder;
+        for (Hash::const_iterator it = h.begin(); it != h.end(); ++it) {
+            insertionOrder.push_back(it->getKey());
+        }
+        CPPUNIT_ASSERT(insertionOrder[0] == "should");
+        CPPUNIT_ASSERT(insertionOrder[1] == "be");
+        CPPUNIT_ASSERT(insertionOrder[2] == "iterated");
+        CPPUNIT_ASSERT(insertionOrder[3] == "in");
+        CPPUNIT_ASSERT(insertionOrder[4] == "correct");
+        CPPUNIT_ASSERT(insertionOrder[5] == "order");
+    }
+
+    {
+        std::vector<std::string> alphaNumericOrder;
+        for (Hash::const_map_iterator it = h.mbegin(); it != h.mend(); ++it) {
+            alphaNumericOrder.push_back(it->second.getKey());
+        }
+        CPPUNIT_ASSERT(alphaNumericOrder[0] == "be");
+        CPPUNIT_ASSERT(alphaNumericOrder[1] == "correct");
+        CPPUNIT_ASSERT(alphaNumericOrder[2] == "in");
+        CPPUNIT_ASSERT(alphaNumericOrder[3] == "iterated");
+        CPPUNIT_ASSERT(alphaNumericOrder[4] == "order");
+        CPPUNIT_ASSERT(alphaNumericOrder[5] == "should");
+    }
+
+    h.erase("be"); // Remove
+    h.set("be", "2"); // Must be last element in sequence now
+
+    {
+        std::vector<std::string> insertionOrder;
+        for (Hash::const_iterator it = h.begin(); it != h.end(); ++it) {
+            insertionOrder.push_back(it->getKey());
+        }
+        CPPUNIT_ASSERT(insertionOrder[0] == "should");
+        CPPUNIT_ASSERT(insertionOrder[1] == "iterated");
+        CPPUNIT_ASSERT(insertionOrder[2] == "in");
+        CPPUNIT_ASSERT(insertionOrder[3] == "correct");
+        CPPUNIT_ASSERT(insertionOrder[4] == "order");
+        CPPUNIT_ASSERT(insertionOrder[5] == "be");
+    }
+
+    {
+        std::vector<std::string> alphaNumericOrder;
+        for (Hash::const_map_iterator it = h.mbegin(); it != h.mend(); ++it) {
+            alphaNumericOrder.push_back(it->second.getKey());
+        }
+        CPPUNIT_ASSERT(alphaNumericOrder[0] == "be");
+        CPPUNIT_ASSERT(alphaNumericOrder[1] == "correct");
+        CPPUNIT_ASSERT(alphaNumericOrder[2] == "in");
+        CPPUNIT_ASSERT(alphaNumericOrder[3] == "iterated");
+        CPPUNIT_ASSERT(alphaNumericOrder[4] == "order");
+        CPPUNIT_ASSERT(alphaNumericOrder[5] == "should");
+    }
 }
+
+void Hash_Test::testMerge() {
+
+    Hash h1("a", 1,
+            "b", 2,
+            "c.b[0].g", 3,
+            "c.c[0].d", 4,
+            "c.c[1]", Hash("a.b.c", 6),
+            "d.e", 7
+            );
+
+    Hash h2("a", 21,
+            "b.c", 22,
+            "c.b[0]", Hash("key", "value"),
+            "c.b[1].d", 24,
+            "e", 27
+            );
+
+    h1 += h2;
+
+    CPPUNIT_ASSERT(h1.has("a"));
+    CPPUNIT_ASSERT(h1.get<int>("a") == 21);
+    CPPUNIT_ASSERT(h1.has("b"));
+    CPPUNIT_ASSERT(!h1.has("c.b.d"));
+    CPPUNIT_ASSERT(h1.has("c.b[0]"));
+    CPPUNIT_ASSERT(h1.has("c.b[1]"));
+    CPPUNIT_ASSERT(h1.has("c.b[2]"));
+    CPPUNIT_ASSERT(h1.get<int>("c.b[2].d") == 24);
+    CPPUNIT_ASSERT(h1.has("c.c[0].d"));
+    CPPUNIT_ASSERT(h1.has("c.c[1].a.b.c"));
+    CPPUNIT_ASSERT(h1.has("d.e"));
+    CPPUNIT_ASSERT(h1.has("e"));
+
+    Hash h3 = h1;
+
+    CPPUNIT_ASSERT(similar(h1, h3));
+}
+
+
+
+
+

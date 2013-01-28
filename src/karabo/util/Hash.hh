@@ -22,7 +22,6 @@
 #include <boost/optional.hpp>
 #include <boost/lexical_cast.hpp>
 
-#include "DoubleReferenceIterator.hh"
 #include "ClassInfo.hh"
 #include "StringTools.hh"
 #include "Types.hh"
@@ -30,19 +29,21 @@
 #include "OrderedMap.hh"
 #include "Exception.hh"
 
+#include "karaboDll.hh"
+
 namespace karabo {
 
     namespace util {
 
         /**
          * Heterogeneous generic key/value container.
-         * The Hash class can be regarded as a generic hash container
-         * which associates a string key to any value type.  Any type means the Hash type itself.
-         * It means that Hash container may keep values that are just other Hash containers forming
-         * a tree-like hierarchy.  The key representing a hierarchy we are calling a path.  Default key separator
-         * in a path is a "." (dot) symbol.
+         * The Hash class can be regarded as a generic hash container,
+         * which associates a string key to a value of any type. Optionally attributes of any value-type can be 
+         * associated to each hash-key. The Hash presevers insertion order.
+         * The Hash class is much like a XML-DOM container with the difference of 
+         * allowing only unique keys on a given tree-level.
          */
-        class Hash {
+        class KARABO_DECLSPEC Hash {
         public:
 
             KARABO_CLASSINFO(Hash, "Hash", "2.0")
@@ -56,18 +57,24 @@ namespace karabo {
             Container m_container;
 
         public:
-
+            
             typedef Container::iterator iterator;
             typedef Container::const_iterator const_iterator;
 
-            //typedef Container::map_iterator map_iterator;
-            //typedef Container::const_map_iterator const_map_iterator;
+            typedef Container::map_iterator map_iterator;
+            typedef Container::const_map_iterator const_map_iterator;
 
             const_iterator begin() const;
             iterator begin();
 
             const_iterator end() const;
             iterator end();
+            
+            const_map_iterator mbegin() const;
+            map_iterator mbegin();
+
+            const_map_iterator mend() const;
+            map_iterator mend();
 
             boost::optional<const Hash::Node&> find(const std::string& path, const char separator = '.') const;
             boost::optional<Hash::Node&> find(const std::string& path, const char separator = '.');
@@ -299,37 +306,13 @@ namespace karabo {
             template <typename ValueType>
             inline ValueType getAs(const std::string& path, const char separator = '.') const;
                         
-            template<typename T, template <typename Elem, typename = std::allocator<Elem> > class Container >
-            Container<T> getAs(const std::string& key, const char separator = '.') const;
+            template<typename T, template <typename Elem, typename = std::allocator<Elem> > class Cont >
+            inline Cont<T> getAs(const std::string& key, const char separator = '.') const;
             
             const Node& getNode(const std::string& path, const char separator = '.') const;
             
             Node& getNode(const std::string& path, const char separator = '.');
-                        
-
-//            /**
-//             * Tries to safely cast and return a numeric type
-//             * @param key A string key
-//             * @return The associated value and convert it if a converter defined
-//             */
-//            template<class T>
-//            inline T getNumeric(const std::string & path, const char separator = '.') const;
-//
-//            /**
-//             * Tries to safely cast into given numeric type
-//             * @param key A string key
-//             * @param value Numeric datatype that will be filled by reference
-//             */
-//            template<class ValueType>
-//            inline void getNumeric(const std::string& path, T & value, const char separator = '.') const;
-
-//            /**
-//             * Converts the value corresponding the <b>key</b> into string representation if possible
-//             * @param key A string key
-//             * @return String representation of value
-//             */
-//            std::string getString(const std::string & path, const char separator = '.') const;
-
+          
             /**
              * Predicate function calculating if the type of the value associated with the <b>key</b> is
              * of a specific type in template parameter
@@ -470,19 +453,6 @@ namespace karabo {
             this->set(path6, value6);
         }
 
-//        template<> inline const Hash::Node& Hash::get(const std::string& path, const char separator) const {
-//            std::string key;
-//            const Hash& hash = getLastHash(path, key, separator);
-//            if (karabo::util::getAndCropIndex(key) == -1) {
-//                return hash.m_container.getNode(key);
-//            }
-//            throw KARABO_LOGIC_EXCEPTION("What your are trying to access is a vector element which must be of type Hash");
-//        }
-//
-//        template<> inline Hash::Node& Hash::get(const std::string& path, const char separator) {
-//            return const_cast<Hash::Node&> (thisAsConst().getNode(path, separator));
-//        }
-
         template<> inline const boost::any& Hash::get(const std::string& path, const char separator) const {
             return getNode(path, separator).getAny();
         }
@@ -589,20 +559,7 @@ namespace karabo {
         template<typename T, template <typename Elem, typename = std::allocator<Elem> > class Cont >
         inline Cont<T> Hash::getAs(const std::string& path, const char separator) const {
             return getNode(path, separator).getValueAs<T, Cont>();
-        }
-            
-
-        
-        
-//        template<class ValueType>
-//        inline ValueType Hash::getNumeric(const std::string & path, const char separator) const {
-//            return getNode(path, separator).getNumeric<ValueType > ();
-//        }
-//
-//        template<class ValueType>
-//        inline void Hash::getNumeric(const std::string& path, ValueType & value, const char separator) const {
-//            value = getNode(path, separator).getNumeric<ValueType > ();
-//        }
+        }           
 
         template <typename ValueType> bool Hash::is(const std::string & path, const char separator) const {
             return getNode(path, separator).is<ValueType > ();
@@ -639,8 +596,6 @@ namespace karabo {
             getNode(path, separator).setAttribute(attribute, value);
         }
         
-        
-
         /*
          * Check the similarity between two objects.
          * Hash: Same number, and same order of similar elements
