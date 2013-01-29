@@ -27,14 +27,18 @@ namespace karabo {
             void emitPy1(const bp::object& a1) {
                karabo::util::Hash message;
                karabo::pyexfel::HashWrap::pythonSet(message, "a1", a1);
+               Py_BEGIN_ALLOW_THREADS
                send(message);
+               Py_END_ALLOW_THREADS
             }
 
             void emitPy2(const bp::object& a1, const bp::object& a2) {
               karabo::util::Hash message;      
               karabo::pyexfel::HashWrap::pythonSet(message, "a1", a1);
               karabo::pyexfel::HashWrap::pythonSet(message, "a2", a2);
+              Py_BEGIN_ALLOW_THREADS
               send(message);
+              Py_END_ALLOW_THREADS
             }
 
             void emitPy3(const bp::object& a1, const bp::object& a2, const bp::object& a3) {
@@ -42,7 +46,9 @@ namespace karabo {
                karabo::pyexfel::HashWrap::pythonSet(message, "a1", a1);
                karabo::pyexfel::HashWrap::pythonSet(message, "a2", a2);
                karabo::pyexfel::HashWrap::pythonSet(message, "a3", a3);
+               Py_BEGIN_ALLOW_THREADS
                send(message);
+               Py_END_ALLOW_THREADS
             }
 
             void emitPy4(const bp::object& a1, const bp::object& a2, const bp::object& a3, const bp::object& a4) {
@@ -51,7 +57,9 @@ namespace karabo {
                karabo::pyexfel::HashWrap::pythonSet(message, "a2", a2);
                karabo::pyexfel::HashWrap::pythonSet(message, "a3", a3);
                karabo::pyexfel::HashWrap::pythonSet(message, "a4", a4);
+               Py_BEGIN_ALLOW_THREADS
                send(message);
+               Py_END_ALLOW_THREADS
             }
         };
     }
