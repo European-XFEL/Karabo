@@ -105,8 +105,8 @@ class PythonDevice(object):
             self._initialParameters = self._expectedInitialParameters.validate(tmp, True, False, True).get(self._classId)
             self._reconfigurableParameters = self._expectedReconfigurableParameters.validate(tmp, True, False, True).get(self._classId)
             self._monitoredParameters = self._expectedMonitoredParameters.validate(tmp, True, False, True).get(self._classId)
-            print "\nInitialize Device SignalSlotable object...\n"
-            self._ss = SignalSlotable(self._devInstId)
+            print "\nInitialize Device SignalSlotable object via create factory function...\n"
+            self._ss = SignalSlotable.create(self._devInstId)
             print "\nInitialize Device Logging...\n"
             currentConfig = self.getCurrentConfiguration()
             connectionConfig = currentConfig.getFromPath(self._classId + ".connection")
@@ -199,7 +199,7 @@ class PythonDevice(object):
         
     def remote(self):
         if self._client is None:
-            self._client = DeviceClient()  # connectionType="Jms" config=Hash()
+            self._client = DeviceClient(self._ss)  # connectionType="Jms" config=Hash()
         return self._client
     
     def postprocessing(self):
