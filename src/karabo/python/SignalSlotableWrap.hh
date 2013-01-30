@@ -41,6 +41,10 @@ namespace karabo {
                 m_eventLoop.join();
             }
             
+            static boost::shared_ptr<SignalSlotableWrap> create(const std::string& instanceId = "py/console/0", const std::string& connectionType = "Jms", const karabo::util::Hash& connectionParameters = karabo::util::Hash()) {
+                return boost::shared_ptr<SignalSlotableWrap>(new SignalSlotableWrap(instanceId, connectionType, connectionParameters));
+            }
+            
             bp::list getAvailableInstancesPy() {
                 return HashWrap::stdVector2pyList(this->getAvailableInstances());
             }

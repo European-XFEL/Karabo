@@ -37,11 +37,17 @@ void exportPyXmsSignalSlotable() {//exposing karabo::xms::SignalSlotable
             .def(bp::init<const karabo::net::BrokerConnection::Pointer&, const std::string&>())
             ;
 
-    bp::class_<SignalSlotableWrap, bp::bases< SignalSlotable>, boost::noncopyable > ("SignalSlotable")
+    bp::class_<SignalSlotableWrap, boost::shared_ptr<SignalSlotableWrap>, bp::bases< SignalSlotable>, boost::noncopyable > ("SignalSlotable")
 
             .def(bp::init<const std::string&>())
             .def(bp::init<const std::string&, const std::string&>())
             .def(bp::init<const std::string&, const std::string&, const karabo::util::Hash&>())
+
+            .def("create", &SignalSlotableWrap::create,
+            (bp::arg("instanceId") = "py/console/0",
+            bp::arg("connectionType") = "Jms",
+            bp::arg("connectionParameters") = karabo::util::Hash()
+            )).staticmethod("create")
 
             .def("connect",
             (bool (SignalSlotable::*)(const string, const string&, const string, const string&, SignalSlotable::ConnectionType, const bool))(&SignalSlotable::connect),
@@ -66,11 +72,11 @@ void exportPyXmsSignalSlotable() {//exposing karabo::xms::SignalSlotable
             .def("slotPing", (void (SignalSlotable::*)()) (&SignalSlotable::slotPing))
             .def("disconnect", (void (SignalSlotable::*)(string const &, string const &)) (&SignalSlotable::disconnect), (bp::arg("signal"), bp::arg("slot")))
             .def("getInstanceId"
-                , (string const & (SignalSlotable::*)() const) (&SignalSlotable::getInstanceId)
-                , bp::return_value_policy< bp::copy_const_reference >())
-            
+            , (string const & (SignalSlotable::*)() const) (&SignalSlotable::getInstanceId)
+            , bp::return_value_policy< bp::copy_const_reference > ())
+
             .def("registerSlot", (&SignalSlotableWrap::registerSlotPy), (bp::arg("slotFunction"), bp::arg("slotType") = SignalSlotable::SPECIFIC))
-            
+
             .def("registerSlot", (&SignalSlotableWrap::registerMemberSlotPy), (bp::arg("slotFunction"), bp::arg("selfObject"), bp::arg("slotType") = SignalSlotable::SPECIFIC))
 
             .def("registerSignal", &SignalSlotableWrap::registerSignalPy0, (bp::arg("signalFunction")))
@@ -93,10 +99,10 @@ void exportPyXmsSignalSlotable() {//exposing karabo::xms::SignalSlotable
 
             .def("call", (void (SignalSlotableWrap::*)(string, string const &, const bp::object&, const bp::object&, const bp::object&, const bp::object&) const) (&SignalSlotableWrap::callPy4),
             (bp::arg("instanceId"), bp::arg("functionName"), bp::arg("a1"), bp::arg("a2"), bp::arg("a3"), bp::arg("a4")))
-            
-            .def("reconfigure", (void (SignalSlotableWrap::*)(const std::string&, const karabo::util::Hash&) const)(&SignalSlotableWrap::reconfigurePy),(bp::arg("instanceId"), bp::arg("configuration")))
-            
-            .def("reconfigure", (void (SignalSlotableWrap::*)(const std::string&, const std::string&, const bp::object&) const)(&SignalSlotableWrap::reconfigurePy),(bp::arg("instanceId"), bp::arg("key"), bp::arg("value")))
+
+            .def("reconfigure", (void (SignalSlotableWrap::*)(const std::string&, const karabo::util::Hash&) const) (&SignalSlotableWrap::reconfigurePy), (bp::arg("instanceId"), bp::arg("configuration")))
+
+            .def("reconfigure", (void (SignalSlotableWrap::*)(const std::string&, const std::string&, const bp::object&) const) (&SignalSlotableWrap::reconfigurePy), (bp::arg("instanceId"), bp::arg("key"), bp::arg("value")))
 
             .def("request", (RequestorWrap(SignalSlotableWrap::*)(string, const string&)) (&SignalSlotableWrap::requestPy0),
             (bp::arg("instanceId"), bp::arg("functionName")))
