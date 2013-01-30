@@ -27,6 +27,7 @@ void exportPyCoreDeviceClient() {
     bp::class_<DeviceClientWrap, bp::bases<DeviceClient>, boost::noncopyable > ("DeviceClient")
 
             .def(bp::init<const string&, const Hash&>())
+            .def(bp::init<boost::shared_ptr<SignalSlotableWrap>& >())
 
             .def("getAvailableInstances", &DeviceClientWrap::getAvailableInstancesPy)
             .def("getSchema", (const Schema & (DeviceClient::*)(const string&, const string&, const string&))(&DeviceClient::getSchema), (bp::arg("instanceId"),bp::arg("key") = "", bp::arg("keySep") = "" ) , bp::return_value_policy<bp::copy_const_reference > ())

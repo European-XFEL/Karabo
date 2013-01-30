@@ -30,6 +30,11 @@ namespace karabo {
                 m_signalSlotableWrap = boost::static_pointer_cast<SignalSlotableWrap > (m_signalSlotable);
             }
             
+            DeviceClientWrap(boost::shared_ptr<SignalSlotableWrap>& o) : DeviceClient(boost::static_pointer_cast<karabo::xms::SignalSlotable>(o)),
+            m_isVerbose(true) {
+                m_signalSlotableWrap = boost::static_pointer_cast<SignalSlotableWrap > (m_signalSlotable);
+            }
+            
             ~DeviceClientWrap() {
             }
             
