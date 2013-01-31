@@ -161,7 +161,7 @@ namespace karabo {
             void get(const std::string& instanceId, karabo::util::Hash& hash);
 
             template <class ValueType>
-            bool registerMonitor(const std::string& instanceId, const std::string& key, const boost::function<void (const ValueType&, const std::string&) >& callbackFunction) {
+            bool registerPropertyMonitor(const std::string& instanceId, const std::string& key, const boost::function<void (const ValueType&, const std::string&) >& callbackFunction) {
                 karabo::util::Schema schema = this->getSchema(instanceId);
                 if (schema.hasKey(key)) {
                     boost::mutex::scoped_lock lock(m_propertyChangedHandlersMutex);
@@ -174,7 +174,7 @@ namespace karabo {
             }
             
             template <class ValueType, class UserDataType>
-            bool registerMonitor(const std::string& instanceId, const std::string& key, const boost::function<void (const ValueType&, const std::string&, const boost::any&) >& callbackFunction, const UserDataType& userData) {
+            bool registerPropertyMonitor(const std::string& instanceId, const std::string& key, const boost::function<void (const ValueType&, const std::string&, const boost::any&) >& callbackFunction, const UserDataType& userData) {
                 karabo::util::Schema schema = this->getSchema(instanceId);
                 if (schema.hasKey(key)) {
                     boost::mutex::scoped_lock lock(m_propertyChangedHandlersMutex);
@@ -187,12 +187,12 @@ namespace karabo {
                 }
             }
 
-            void unregisterMonitor(const std::string& instanceId, const std::string& key);
+            void unregisterPropertyMonitor(const std::string& instanceId, const std::string& key);
 
-            void registerMonitor(const std::string& instanceId, const boost::function<void (const karabo::util::Hash&, const std::string&)>& callbackFunction);
+            void registerDeviceMonitor(const std::string& instanceId, const boost::function<void (const karabo::util::Hash&, const std::string&)>& callbackFunction);
             
             template <class UserDataType>
-            void registerMonitor(const std::string& instanceId, const boost::function<void (const karabo::util::Hash&, const std::string&, const boost::any&)>& callbackFunction, const UserDataType& userData) {
+            void registerDeviceMonitor(const std::string& instanceId, const boost::function<void (const karabo::util::Hash&, const std::string&, const boost::any&)>& callbackFunction, const UserDataType& userData) {
                 boost::mutex::scoped_lock lock(m_deviceChangedHandlersMutex);
                 // Make sure we are caching this instanceId
                 this->cacheAndGetConfiguration(instanceId);
@@ -200,7 +200,7 @@ namespace karabo {
                 m_deviceChangedHandlers.setFromPath(instanceId + "._userData", userData);
             }
 
-            void unregisterMonitor(const std::string& instanceId);
+            void unregisterDeviceMonitor(const std::string& instanceId);
 
             template <class T>
             std::pair<bool, std::string> setWait(const std::string& instanceId, const std::string& key, const T& value, const std::string& keySep = ".", int timeout = -1) const {

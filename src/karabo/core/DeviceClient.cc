@@ -394,7 +394,7 @@ if (itData != entry.end()) {\
             hash = cacheAndGetConfiguration(instanceId);
         }
 
-        void DeviceClient::unregisterMonitor(const std::string& instanceId, const std::string & key) {
+        void DeviceClient::unregisterPropertyMonitor(const std::string& instanceId, const std::string & key) {
             boost::mutex::scoped_lock lock(m_propertyChangedHandlersMutex);
             Hash::iterator it = m_propertyChangedHandlers.find(instanceId);
             if (it != m_propertyChangedHandlers.end()) {
@@ -409,14 +409,14 @@ if (itData != entry.end()) {\
             }
         }
 
-        void DeviceClient::registerMonitor(const std::string& instanceId, const boost::function<void (const karabo::util::Hash&, const std::string&)> & callbackFunction) {
+        void DeviceClient::registerDeviceMonitor(const std::string& instanceId, const boost::function<void (const karabo::util::Hash&, const std::string&)> & callbackFunction) {
             boost::mutex::scoped_lock lock(m_deviceChangedHandlersMutex);
             // Make sure we are caching this instanceId
             this->cacheAndGetConfiguration(instanceId);
             m_deviceChangedHandlers.setFromPath(instanceId + "._function", callbackFunction);
         }
 
-        void DeviceClient::unregisterMonitor(const std::string & instanceId) {
+        void DeviceClient::unregisterDeviceMonitor(const std::string & instanceId) {
             boost::mutex::scoped_lock lock(m_deviceChangedHandlersMutex);
             m_deviceChangedHandlers.erase(instanceId);
         }
