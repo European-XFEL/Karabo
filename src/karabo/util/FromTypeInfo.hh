@@ -26,7 +26,7 @@ namespace karabo {
 
             static Types::ReferenceType from(const ArgumentType& type) {
                 TypeInfoMap::const_iterator it = FromTypeInfo::init()._typeInfoMap.find(std::string(type.name()));
-                if (it == FromTypeInfo::init()._typeInfoMap.end()) throw KARABO_PARAMETER_EXCEPTION("Requested argument type " + std::string(typeid(type).name()) + " not registered");
+                if (it == FromTypeInfo::init()._typeInfoMap.end()) return Types::UNKNOWN; //throw KARABO_PARAMETER_EXCEPTION("Requested argument type " + std::string(typeid(type).name()) + " not registered");
                 return it->second;
             }
 

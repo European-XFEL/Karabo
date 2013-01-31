@@ -30,13 +30,13 @@ namespace karabo {
             }
 
             
-            void build() {
+            void beforeAddition() {
                 using namespace boost;
                 if (m_classId.empty()) {
                     throw KARABO_PARAMETER_EXCEPTION("classId is missing, use the .classId() function");
                 }
-                this->m_element.singleElementType(BASE::expectedParameters(m_classId, this->m_expected->getAccessMode(), this->m_expected->getCurrentState(), this->m_element.get<std::string > ("key")));
-                this->m_element.displayType(BASE::classInfo().getClassName());
+                this->m_node.singleElementType(BASE::expectedParameters(m_classId, this->m_schema->getAccessMode(), this->m_schema->getCurrentState(), this->m_node.get<std::string > ("key")));
+                this->m_node.displayType(BASE::classInfo().getClassName());
                 //alternatively we can take 'classId' instead of 'className' (to be shown as displayType element in expected parameters) :
                 //this->m_element.displayType(BASE::classInfo().getClassId()); 
             }

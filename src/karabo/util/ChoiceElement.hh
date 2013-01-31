@@ -26,9 +26,9 @@ namespace karabo {
         this->initializeElementPointer(this);
       }
 
-      void build() {
-        this->m_element.choiceType(T::expectedParameters(this->m_expected->getAccessMode()));
-        this->m_element.displayType(T::classInfo().getClassId());
+      void beforeAddition() {
+        this->m_node.choiceType(T::expectedParameters(this->m_schema->getAccessMode()));
+        this->m_node.displayType(T::classInfo().getClassId());
         //alternatively we can take 'className' instead of 'classId' (to be shown as 'displayType' element in expected parameters) :
         //this->m_element.displayType(T::classInfo().getClassName());
       }
@@ -42,9 +42,9 @@ namespace karabo {
         this->initializeElementPointer(this);
       }
 
-      void build() {
-        this->m_element.choiceType(m_pythonExpected);
-        this->m_element.displayType("Schema");
+      void beforeAddition() {
+        this->m_node.choiceType(m_pythonExpected);
+        this->m_node.displayType("Schema");
       }
     private:
       const Schema & m_pythonExpected;

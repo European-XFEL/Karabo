@@ -22,6 +22,10 @@
         <itemPath>../../../src/karabo/util/util.hh</itemPath>
       </logicalFolder>
       <logicalFolder name="f1" displayName="Schema" projectFiles="true">
+        <itemPath>../../../src/karabo/util/GenericElement.hh</itemPath>
+        <itemPath>../../../src/karabo/util/Schema.cc</itemPath>
+        <itemPath>../../../src/karabo/util/Schema.hh</itemPath>
+        <itemPath>../../../src/karabo/util/SimpleElement.hh</itemPath>
       </logicalFolder>
       <logicalFolder name="f6" displayName="Tools" projectFiles="true">
         <itemPath>../../../src/karabo/util/Base64.cc</itemPath>
@@ -35,6 +39,7 @@
         <itemPath>../../../src/karabo/util/Time.hh</itemPath>
         <itemPath>../../../src/karabo/util/Timer.cc</itemPath>
         <itemPath>../../../src/karabo/util/Timer.hh</itemPath>
+        <itemPath>../../../src/karabo/util/Units.hh</itemPath>
       </logicalFolder>
       <logicalFolder name="f3" displayName="Type System" projectFiles="true">
         <itemPath>../../../src/karabo/util/FromLiteral.cc</itemPath>
@@ -62,6 +67,8 @@
         <itemPath>../../../src/karabo/tests/util/Factory_Test.hh</itemPath>
         <itemPath>../../../src/karabo/tests/util/Hash_Test.cc</itemPath>
         <itemPath>../../../src/karabo/tests/util/Hash_Test.hh</itemPath>
+        <itemPath>../../../src/karabo/tests/util/Schema_Test.cc</itemPath>
+        <itemPath>../../../src/karabo/tests/util/Schema_Test.hh</itemPath>
         <itemPath>../../../src/karabo/tests/util/utilTestRunner.cc</itemPath>
         <itemPath>../../../src/karabo/tests/util/resources/utiltestdll.hh</itemPath>
       </logicalFolder>

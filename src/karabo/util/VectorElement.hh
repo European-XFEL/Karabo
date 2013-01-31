@@ -25,46 +25,46 @@ namespace karabo {
 
             VectorElement() : GenericElement<VectorElement<T>, CONT<T> >() {
                 this->initializeElementPointer(this);
-                this->m_element.simpleType(Types::getTypeAsId(CONT<T > ()));
+                this->m_node.simpleType(Types::getTypeAsId(CONT<T > ()));
             }
 
             VectorElement(Schema& expected) : GenericElement<VectorElement, CONT<T> >(expected) {
 
                 this->initializeElementPointer(this);
-                if (this->m_expected) {
-                    AccessType at = this->m_expected->getAccessMode();
-                    this->m_element.setAccessMode(at);
+                if (this->m_schema) {
+                    AccessType at = this->m_schema->getAccessMode();
+                    this->m_node.setAccessMode(at);
                 }
-                this->m_element.simpleType(Types::getTypeAsId(CONT<T > ()));
+                this->m_node.simpleType(Types::getTypeAsId(CONT<T > ()));
             }
 
             VectorElement& minInc(T const& val) {
-                this->m_element.minInc(val);
+                this->m_node.minInc(val);
                 return *this;
             }
 
             VectorElement& maxInc(T const& val) {
-                this->m_element.maxInc(val);
+                this->m_node.maxInc(val);
                 return *this;
             }
 
             VectorElement& minExc(T const& val) {
-                this->m_element.minExc(val);
+                this->m_node.minExc(val);
                 return *this;
             }
 
             VectorElement& maxExc(T const& val) {
-                this->m_element.maxExc(val);
+                this->m_node.maxExc(val);
                 return *this;
             }
 
             VectorElement& minSize(const int& value) {
-                this->m_element.minSize(value);
+                this->m_node.minSize(value);
                 return *this;
             }
 
             VectorElement& maxSize(const int& value) {
-                this->m_element.maxSize(value);
+                this->m_node.maxSize(value);
                 return *this;
             }
 

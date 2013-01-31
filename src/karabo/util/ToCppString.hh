@@ -23,7 +23,7 @@ namespace karabo {
 
             template <int RefType>
             static ReturnType to() {
-                throw KARABO_NOT_IMPLEMENTED_EXCEPTION("Conversion of to required type not implemented");
+                throw KARABO_NOT_IMPLEMENTED_EXCEPTION("Conversion to required type not implemented");
             }
         };
 
@@ -58,6 +58,7 @@ namespace karabo {
         KARABO_MAP_TO_REFERENCE_TYPE(ToCppString, SCHEMA, "Schema")
         KARABO_MAP_TO_REFERENCE_TYPE(ToCppString, COMPLEX_FLOAT, "complex<float>")
         KARABO_MAP_TO_REFERENCE_TYPE(ToCppString, COMPLEX_DOUBLE, "complex<double>")
+        KARABO_MAP_TO_REFERENCE_TYPE(ToCppString, UNKNOWN, "unknown")
     }
 }
 

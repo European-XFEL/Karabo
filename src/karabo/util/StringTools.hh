@@ -146,14 +146,14 @@ namespace karabo {
 
         template<typename T,
                 template <typename ELEM, typename = std::allocator<ELEM> > class CONT>
-                inline CONT<T> fromString(const std::string& value){
+                inline CONT<T> fromString(const std::string& value, const std::string& separator = ","){
             try {
                 CONT<std::string> elements;
                 std::string tmp(value);
                 boost::trim(tmp);
                 if (tmp[0] == '[') tmp = tmp.substr(1);
                 if (tmp[tmp.size()-1] == ']') tmp.erase(tmp.size()-1);
-                boost::split(elements, tmp, boost::is_any_of(","));
+                boost::split(elements, tmp, boost::is_any_of(separator));
                 size_t size = elements.size();
                 CONT<T> resultArray(size);
                 for (size_t i = 0; i < size; ++i) {
