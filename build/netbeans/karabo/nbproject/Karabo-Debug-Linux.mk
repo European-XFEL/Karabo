@@ -42,6 +42,7 @@ OBJECTFILES= \
 	${OBJECTDIR}/_ext/163016059/StringTools.o \
 	${OBJECTDIR}/_ext/163016059/Timer.o \
 	${OBJECTDIR}/_ext/163016059/Base64.o \
+	${OBJECTDIR}/_ext/163016059/Schema.o \
 	${OBJECTDIR}/_ext/163016059/Time.o \
 	${OBJECTDIR}/_ext/163016059/Profiler.o \
 	${OBJECTDIR}/_ext/163016059/Hash.o
@@ -112,6 +113,11 @@ ${OBJECTDIR}/_ext/163016059/Base64.o: ../../../src/karabo/util/Base64.cc
 	${RM} $@.d
 	$(COMPILE.cc) -g -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163016059/Base64.o ../../../src/karabo/util/Base64.cc
 
+${OBJECTDIR}/_ext/163016059/Schema.o: ../../../src/karabo/util/Schema.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
+	${RM} $@.d
+	$(COMPILE.cc) -g -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163016059/Schema.o ../../../src/karabo/util/Schema.cc
+
 ${OBJECTDIR}/_ext/163016059/Time.o: ../../../src/karabo/util/Time.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
 	${RM} $@.d
@@ -132,7 +138,7 @@ ${OBJECTDIR}/_ext/163016059/Hash.o: ../../../src/karabo/util/Hash.cc
 
 # Build Test Targets
 .build-tests-conf: .build-conf ${TESTFILES}
-${TESTDIR}/TestFiles/f1: ${TESTDIR}/_ext/1033104525/Configurator_Test.o ${TESTDIR}/_ext/1033104525/Factory_Test.o ${TESTDIR}/_ext/1033104525/Hash_Test.o ${TESTDIR}/_ext/1033104525/utilTestRunner.o ${OBJECTFILES:%.o=%_nomain.o}
+${TESTDIR}/TestFiles/f1: ${TESTDIR}/_ext/1033104525/Configurator_Test.o ${TESTDIR}/_ext/1033104525/Factory_Test.o ${TESTDIR}/_ext/1033104525/Hash_Test.o ${TESTDIR}/_ext/1033104525/Schema_Test.o ${TESTDIR}/_ext/1033104525/utilTestRunner.o ${OBJECTFILES:%.o=%_nomain.o}
 	${MKDIR} -p ${TESTDIR}/TestFiles
 	${LINK.cc}   -o ${TESTDIR}/TestFiles/f1 $^ ${LDLIBSOPTIONS} -Wl,-rpath,${KARABO}/lib -Wl,-rpath,${KARABO}/extern/lib 
 
@@ -153,6 +159,12 @@ ${TESTDIR}/_ext/1033104525/Hash_Test.o: ../../../src/karabo/tests/util/Hash_Test
 	${MKDIR} -p ${TESTDIR}/_ext/1033104525
 	${RM} $@.d
 	$(COMPILE.cc) -g -DTESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I${KARABO}/extern/include/hdf5 -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -MMD -MP -MF $@.d -o ${TESTDIR}/_ext/1033104525/Hash_Test.o ../../../src/karabo/tests/util/Hash_Test.cc
+
+
+${TESTDIR}/_ext/1033104525/Schema_Test.o: ../../../src/karabo/tests/util/Schema_Test.cc 
+	${MKDIR} -p ${TESTDIR}/_ext/1033104525
+	${RM} $@.d
+	$(COMPILE.cc) -g -DTESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I${KARABO}/extern/include/hdf5 -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -MMD -MP -MF $@.d -o ${TESTDIR}/_ext/1033104525/Schema_Test.o ../../../src/karabo/tests/util/Schema_Test.cc
 
 
 ${TESTDIR}/_ext/1033104525/utilTestRunner.o: ../../../src/karabo/tests/util/utilTestRunner.cc 
@@ -250,6 +262,19 @@ ${OBJECTDIR}/_ext/163016059/Base64_nomain.o: ${OBJECTDIR}/_ext/163016059/Base64.
 	    $(COMPILE.cc) -g -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163016059/Base64_nomain.o ../../../src/karabo/util/Base64.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/163016059/Base64.o ${OBJECTDIR}/_ext/163016059/Base64_nomain.o;\
+	fi
+
+${OBJECTDIR}/_ext/163016059/Schema_nomain.o: ${OBJECTDIR}/_ext/163016059/Schema.o ../../../src/karabo/util/Schema.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/163016059/Schema.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} $@.d;\
+	    $(COMPILE.cc) -g -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163016059/Schema_nomain.o ../../../src/karabo/util/Schema.cc;\
+	else  \
+	    ${CP} ${OBJECTDIR}/_ext/163016059/Schema.o ${OBJECTDIR}/_ext/163016059/Schema_nomain.o;\
 	fi
 
 ${OBJECTDIR}/_ext/163016059/Time_nomain.o: ${OBJECTDIR}/_ext/163016059/Time.o ../../../src/karabo/util/Time.cc 

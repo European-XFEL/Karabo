@@ -82,14 +82,14 @@ namespace karabo {
             return false;
         }
 
-        Hash::Node& Hash::set(const Hash::Node& srcElement) {
-            Node& destElement = set(srcElement.getKey(), srcElement.getAny());
+        Hash::Node& Hash::setNode(const Hash::Node& srcElement) {
+            Node& destElement = set(srcElement.getKey(), srcElement.getValueAsAny());
             destElement.setAttributes(srcElement.getAttributes());
             return destElement;
         }
 
-        Hash::Node& Hash::set(Hash::const_iterator srcIterator) {
-            Node& el = set(srcIterator->getKey(), srcIterator->getAny());
+        Hash::Node& Hash::setNode(Hash::const_iterator srcIterator) {
+            Node& el = set(srcIterator->getKey(), srcIterator->getValueAsAny());
             el.setAttributes(srcIterator->getAttributes());
             return el;
         }
@@ -248,7 +248,7 @@ namespace karabo {
                                 flatten(it->getValue<std::vector<Hash> > ().at(i), flat, os.str(), separator);
                             }
                         } else {
-                            flat.set(currentKey, it->getAny(), 0);
+                            flat.set(currentKey, it->getValueAsAny(), 0);
                             flat.setAttributes(currentKey, it->getAttributes(), separator);
                         }
                     }
@@ -262,7 +262,7 @@ namespace karabo {
 
         void Hash::unflatten(Hash& tree, const char separator) const {
             for (const_iterator it = begin(); it != end(); ++it) {
-                tree.set(it->getKey(), it->getAny(), separator);
+                tree.set(it->getKey(), it->getValueAsAny(), separator);
                 tree.setAttributes(it->getKey(), it->getAttributes(), separator);
             }
         }
@@ -292,7 +292,7 @@ namespace karabo {
                             continue;
                         }
                     }
-                    this->m_container.set(key, other_ele.getAny());
+                    this->m_container.set(key, other_ele.getValueAsAny());
                 }
             }
         }
@@ -306,6 +306,10 @@ namespace karabo {
          * Attributes manipulation
          *******************************************************************/
 
+        bool Hash::hasAttribute(const std::string& path, const std::string& attribute, const char separator) const {
+            return getNode(path, separator).hasAttribute(attribute);
+        }
+        
         const Hash::Attributes & Hash::getAttributes(const std::string& path, const char separator) const {
             return getNode(path, separator).getAttributes();
         }
@@ -358,8 +362,12 @@ namespace karabo {
         }
 
         std::ostream& operator<<(std::ostream& os, const Hash& hash) {
-            hash.toStream(os, hash, 0);
-            return os;
+            try {
+                hash.toStream(os, hash, 0);
+                return os;
+            } catch (...) {
+                KARABO_RETHROW;
+            }
         }
 
         void Hash::toStream(std::ostream& os, const Hash& hash, int depth) const {
@@ -372,7 +380,7 @@ namespace karabo {
                 const Hash::Attributes& attrs = hit->getAttributes();
                 if (attrs.size() > 0) {
                     for (Hash::Attributes::const_iterator ait = attrs.begin(); ait != attrs.end(); ++ait) {
-                        os << " " << ait->getKey() << "=\"" << ait->getValueAs<string>() << " " << Types::to<ToLiteral>(ait->getType()) << "\"";
+                        os << " " << ait->getKey() << "=\"" << ait->getValueAs<string>() /*<< " " << Types::to<ToLiteral>(ait->getType())*/ << "\"";
                     }
                 }
 

@@ -18,7 +18,7 @@ Configurator_Test::Configurator_Test() {
 
 Configurator_Test::~Configurator_Test() {
 }
-
+  
 void Configurator_Test::setUp() {
 }
 
