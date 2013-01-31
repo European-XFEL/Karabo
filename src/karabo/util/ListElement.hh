@@ -25,9 +25,9 @@ namespace karabo {
         this->initializeElementPointer(this);
       }
 
-      void build() {
-        this->m_element.listType(T::expectedParameters(this->m_expected->getAccessMode()));
-        this->m_element.displayType(T::classInfo().getClassName());
+      void beforeAddition() {
+        this->m_node.listType(T::expectedParameters(this->m_schema->getAccessMode()));
+        this->m_node.displayType(T::classInfo().getClassName());
         //alternatively we can take 'classId' instead of 'className' (to be shown as displayType element in expected parameters) :
         //this->m_element.displayType(T::classInfo().getClassId());
       }
@@ -41,9 +41,9 @@ namespace karabo {
         this->initializeElementPointer(this);
       }
 
-      void build() {
-        this->m_element.nonEmptyListType(T::expectedParameters(this->m_expected->getAccessMode()));
-        this->m_element.displayType(T::classInfo().getClassName());
+      void beforeAddition() {
+        this->m_node.nonEmptyListType(T::expectedParameters(this->m_schema->getAccessMode()));
+        this->m_node.displayType(T::classInfo().getClassName());
         //alternatively we can take 'classId' instead of 'className' (to be shown as displayType element in expected parameters) :
         //this->m_element.displayType(T::classInfo().getClassId()); 
       }

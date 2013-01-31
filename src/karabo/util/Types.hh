@@ -149,8 +149,8 @@ namespace karabo {
         };
         
 #define _KARABO_HELPER_MACRO(RefType, CppType) \
-template <> inline Types::ReferenceType Types::from<CppType>(const CppType&) { return Types::RefType; } \
-template <> inline Types::ReferenceType Types::from<std::vector<CppType> > (const std::vector<CppType>&) { return Types::VECTOR_##RefType; }
+         template <> inline Types::ReferenceType Types::from<CppType>(const CppType&) { return Types::RefType; } \
+         template <> inline Types::ReferenceType Types::from<std::vector<CppType> > (const std::vector<CppType>&) { return Types::VECTOR_##RefType; }
 
         _KARABO_HELPER_MACRO(BOOL, bool)
         _KARABO_HELPER_MACRO(CHAR, char)

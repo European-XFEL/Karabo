@@ -243,9 +243,9 @@ namespace karabo {
             template<typename ValueType>
             inline Node& set(const std::string& path, const ValueType& value, const char separator = '.'); /**/
 
-            Node& set(const Node& srcElement);
+            Node& setNode(const Node& srcElement);
 
-            Node& set(const_iterator srcIterator);
+            Node& setNode(const_iterator srcIterator);
 
             /**
              * Bind a (newly created) object in the map into and external variable
@@ -364,6 +364,8 @@ namespace karabo {
              * Attributes manipulation
              *******************************************************************/
 
+            bool hasAttribute(const std::string& path, const std::string& attribute, const char separator = '.') const;
+            
             template <typename ValueType>
             const ValueType& getAttribute(const std::string& path, const std::string& attribute, const char separator = '.') const;
 
@@ -454,7 +456,7 @@ namespace karabo {
         }
 
         template<> inline const boost::any& Hash::get(const std::string& path, const char separator) const {
-            return getNode(path, separator).getAny();
+            return getNode(path, separator).getValueAsAny();
         }
 
         template<> inline const Hash& Hash::get(const std::string& path, const char separator) const {
@@ -473,7 +475,7 @@ namespace karabo {
         }
 
         template<> inline boost::any& Hash::get(const std::string& path, const char separator) {
-            return getNode(path, separator).getAny();
+            return getNode(path, separator).getValueAsAny();
         }
 
         template<typename ValueType>
@@ -488,7 +490,7 @@ namespace karabo {
             std::string token = tokens.back();
             int index = karabo::util::getAndCropIndex(token);
             if (index == -1) // No vector
-                leaf->m_container.set(token, value);
+                return leaf->m_container.set(token, value);
             else {
                 throw KARABO_NOT_SUPPORTED_EXCEPTION("Only Hash objects may be assigned to a leaf node of array type");
             }
@@ -505,7 +507,7 @@ namespace karabo {
             std::string token = tokens.back();
             int index = karabo::util::getAndCropIndex(token);
             if (index == -1) // No vector of hashes
-                leaf->m_container.set(token, value);
+                return leaf->m_container.set(token, value);
             else { // vector of hashes
                 if (leaf->m_container.has(token)) { // node exists
                     Hash::Node* node = &(leaf->m_container.getNode(token));
@@ -518,10 +520,11 @@ namespace karabo {
                         if (index >= hashes.size()) hashes.resize(index + 1);
                         hashes[index] = value;
                     }
+                    return *node;
                 } else { // node does not exist
                     std::vector<Hash> hashes(index + 1);
                     hashes[index] = value;
-                    leaf->m_container.set(token, hashes);
+                    return leaf->m_container.set(token, hashes);
                 }
             }
         }
@@ -638,7 +641,7 @@ namespace karabo {
                         }
                     } else {
                         if (Types::category(ele.getType()) == Types::SEQUENCE) {
-                            if (typeid (std::vector<ValueType>) == ele.getAny().type()) {
+                            if (typeid (std::vector<ValueType>) == ele.getValueAsAny().type()) {
                                 partial_count += counter(ele);
                             }
                         }

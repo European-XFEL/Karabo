@@ -137,6 +137,10 @@ namespace karabo {
             inline const Node& getNode(const KeyType& key) const;
             
             inline Node& getNode(const KeyType& key);
+            
+            inline const boost::any& getAny(const KeyType& key) const;
+            
+            inline boost::any& getAny(const KeyType& key);
 
             template <typename T> bool is(const KeyType & key) const;
             
@@ -366,6 +370,25 @@ namespace karabo {
             }
             return it->second; // 
         }
+        
+        template<class KeyType, class MappedType>
+        inline const boost::any& OrderedMap<KeyType, MappedType>::getAny(const KeyType& key) const {
+            const_map_iterator it;
+            if ((it = find(key)) == m_mapNodes.end()) {
+                throw KARABO_PARAMETER_EXCEPTION("Key '" + key + "' does not exist");
+            }
+            return it->second.template getValueAsAny();
+        }
+        
+        template<class KeyType, class MappedType>
+        inline boost::any& OrderedMap<KeyType, MappedType>::getAny(const KeyType& key) {
+            map_iterator it;
+            if ((it = find(key)) == m_mapNodes.end()) {
+                throw KARABO_PARAMETER_EXCEPTION("Key '" + key + "' does not exist");
+            }
+            return it->second.template getValueAsAny();
+        }
+        
 
         template<class KeyType, class MappedType>
         template<class T>
