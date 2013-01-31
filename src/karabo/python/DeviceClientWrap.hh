@@ -82,7 +82,7 @@ namespace karabo {
                 return HashWrap::pythonGetFromPath(this->cacheAndGetConfiguration(instanceId), key, keySep);
             }
 
-            void registerMonitor(const std::string& instanceId, const bp::object& callbackFunction, const bp::object& userData = bp::object()) {
+            void registerDeviceMonitor(const std::string& instanceId, const bp::object& callbackFunction, const bp::object& userData = bp::object()) {
                 boost::mutex::scoped_lock lock(m_deviceChangedHandlersMutex);
                 this->cacheAndGetConfiguration(instanceId);
                 if (hasattr(callbackFunction, "__self__")) {
@@ -96,7 +96,7 @@ namespace karabo {
                 if (!userData.is_none()) m_deviceChangedHandlers.setFromPath(instanceId + "._userData", userData);
             }
             
-            bool registerMonitor(const std::string& instanceId, const std::string& key, const bp::object& callbackFunction, const bp::object& userData = bp::object()) {
+            bool registerPropertyMonitor(const std::string& instanceId, const std::string& key, const bp::object& callbackFunction, const bp::object& userData = bp::object()) {
                 karabo::util::Schema schema = this->getSchema(instanceId);
                 if (schema.hasKey(key)) {
                     boost::mutex::scoped_lock lock(m_propertyChangedHandlersMutex);
