@@ -8,6 +8,7 @@
 #ifndef KARABO_PYKARABO_DEVCOM_HH
 #define	KARABO_PYKARABO_DEVCOM_HH
 
+#include <iostream>
 #include <boost/python.hpp>
 #include <boost/function.hpp>
 #include <karabo/core/DeviceClient.hh>
@@ -83,6 +84,7 @@ namespace karabo {
             }
 
             void registerDeviceMonitor(const std::string& instanceId, const bp::object& callbackFunction, const bp::object& userData = bp::object()) {
+                std::cout << "DeviceClientWrap::registerDeviceMonitor on instanceId : \"" << instanceId << "\"" << std::endl;
                 boost::mutex::scoped_lock lock(m_deviceChangedHandlersMutex);
                 this->cacheAndGetConfiguration(instanceId);
                 if (hasattr(callbackFunction, "__self__")) {
@@ -239,15 +241,15 @@ namespace karabo {
                     try {
                         if (itSelfObject != entry.end()) {
                             if (itData != entry.end()) {
-                                bp::call_method<void>(entry.get<PyObject*>("_selfObject"), entry.get<std::string>("_function").c_str(), instanceId, hash, entry.get<bp::object > ("_userData"));
+                                bp::call_method<void>(entry.get<PyObject*>(itSelfObject), entry.get<std::string>(itFunc).c_str(), instanceId, hash, entry.get<bp::object > (itData));
                             } else {
-                                bp::call_method<void>(entry.get<PyObject*>("_selfObject"), entry.get<std::string>("_function").c_str(), instanceId, hash);
+                                bp::call_method<void>(entry.get<PyObject*>(itSelfObject), entry.get<std::string>(itFunc).c_str(), instanceId, hash);
                             }
                         } else {
                             if (itData != entry.end()) {
-                                bp::call<void>(entry.get<PyObject*>("_function"), instanceId, hash, entry.get<bp::object > ("_userData"));
+                                bp::call<void>(entry.get<PyObject*>(itFunc), instanceId, hash, entry.get<bp::object > (itData));
                             } else {
-                                bp::call<void>(entry.get<PyObject*>("_function"), instanceId, hash);
+                                bp::call<void>(entry.get<PyObject*>(itFunc), instanceId, hash);
                             }
                         }
                         
@@ -280,16 +282,16 @@ namespace karabo {
                         try {
                             if (itSelfObject != entry.end()) {
                                 if (itData != entry.end()) {
-                                    bp::call_method<void>(entry.get<PyObject*>("_selfObject"), entry.get<std::string>("_function").c_str(), instanceId, currentPath, HashWrap::pythonGetArgIt(current, it), entry.get<bp::object > ("_userData"));
+                                    bp::call_method<void>(entry.get<PyObject*>(itSelfObject), entry.get<std::string>(itFunc).c_str(), instanceId, currentPath, HashWrap::pythonGetArgIt(current, it), entry.get<bp::object > (itData));
                                 } else {
-                                    bp::call_method<void>(entry.get<PyObject*>("_selfObject"), entry.get<std::string>("_function").c_str(), instanceId, currentPath, HashWrap::pythonGetArgIt(current, it));
+                                    bp::call_method<void>(entry.get<PyObject*>(itSelfObject), entry.get<std::string>(itFunc).c_str(), instanceId, currentPath, HashWrap::pythonGetArgIt(current, it));
                                 }
                             } 
                             else {
                                 if (itData != entry.end()) {
-                                    bp::call<void>(entry.get<PyObject*>("_function"), instanceId, currentPath, HashWrap::pythonGetArgIt(current, it), entry.get<bp::object > ("_userData"));
+                                    bp::call<void>(entry.get<PyObject*>(itFunc), instanceId, currentPath, HashWrap::pythonGetArgIt(current, it), entry.get<bp::object > (itData));
                                 } else {
-                                    bp::call<void>(entry.get<PyObject*>("_function"), instanceId, currentPath, HashWrap::pythonGetArgIt(current, it));
+                                    bp::call<void>(entry.get<PyObject*>(itFunc), instanceId, currentPath, HashWrap::pythonGetArgIt(current, it));
                                 }
                             }
 
