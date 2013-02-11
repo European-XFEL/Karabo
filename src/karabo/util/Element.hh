@@ -255,12 +255,13 @@ namespace karabo {
 
             if (srcType == Types::UNKNOWN) throw KARABO_CAST_EXCEPTION("Unknown source type for key: \"" + m_key + "\". Cowardly refusing to cast.");
 
+            ValueType value;
             try {
-                std::string value = this->getValueAsString();
-                return karabo::util::fromString<ValueType > (value);
+                value = karabo::util::fromString<ValueType > (this->getValueAsString());
             } catch (...) {
                 KARABO_RETHROW_AS(KARABO_CAST_EXCEPTION(karabo::util::createCastFailureMessage(m_key, srcType, tgtType)));
             }
+            return value;
         }
 
         template<class KeyType, typename AttributeType>
@@ -278,6 +279,7 @@ namespace karabo {
                 return karabo::util::fromString<T, Cont > (value);
             } catch (...) {
                 KARABO_RETHROW_AS(KARABO_CAST_EXCEPTION(karabo::util::createCastFailureMessage(m_key, srcType, tgtType)));
+                return Cont<T>(); // Make the compiler happy
             }
         }
         
@@ -355,17 +357,17 @@ namespace karabo {
 
         template<typename KeyType, typename AttributeType>
         inline const boost::any& Element<KeyType, AttributeType>::getAttributeAsAny(const std::string& key) const {
-            return m_attributes.template getValueAsAny(key);
+            return m_attributes.getAny(key);
         }
         
         template<typename KeyType, typename AttributeType>
         inline boost::any& Element<KeyType, AttributeType>::getAttributeAsAny(const std::string& key) {
-            return m_attributes.template getValueAsAny(key);
+            return m_attributes.getAny(key);
         }
         
         template<typename KeyType, typename AttributeType>
         bool Element<KeyType, AttributeType>::hasAttribute(const std::string& key) const {
-            m_attributes.has(key);
+            return m_attributes.has(key);
         }
 
         template<typename KeyType, typename AttributeType>

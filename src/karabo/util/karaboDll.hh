@@ -11,17 +11,15 @@
 #ifndef KARABO_UTIL_KARABO_DLL_HH
 #define	KARABO_UTIL_KARABO_DLL_HH
 
-namespace karabo {
-
-    /********************************************
-     *         Disable Specific Warnings         *
-     ********************************************/
+/********************************************
+ *         Disable Specific Warnings         *
+ ********************************************/
 
 
 
-    /********************************************
-     *       Declare a parameter as unused      *
-     ********************************************/
+/********************************************
+ *       Declare a parameter as unused      *
+ ********************************************/
 
 #if defined(_WIN32)
 #define ALWAYS_UNUSED(x) x;
@@ -30,13 +28,18 @@ namespace karabo {
 #endif
 
 
-    /********************************************
-     *            Windows DLL stuff             *  
-     ********************************************/
+/********************************************
+ *            Windows DLL stuff             *  
+ ********************************************/
 
-#if defined(_WIN32) && defined(__DLL__)
-#define KARABO_DECLSPEC __declspec(dllexport)
-#define KARABO_TEMPLATE_DLL
+#if defined(_WIN32)
+  #if defined(__DLL__)
+    #define KARABO_DECLSPEC __declspec(dllexport)
+    #define KARABO_TEMPLATE_DLL
+  #else
+    #define KARABO_DECLSPEC __declspec(dllimport)
+    #define KARABO_TEMPLATE_DLL extern
+  #endif
 #elif defined(unix)        || defined(__unix)      || defined(__unix__) \
  || defined(linux)       || defined(__linux)     || defined(__linux__) \
  || defined(sun)         || defined(__sun) \
@@ -45,19 +48,15 @@ namespace karabo {
  || defined(sgi)         || defined(__sgi) \
  || defined(__MACOSX__)  || defined(__APPLE__) \
  || defined(__CYGWIN__)
-#define KARABO_DECLSPEC
-#define KARABO_TEMPLATE_DLL
-#else
-#define KARABO_DECLSPEC __declspec(dllimport)
-#define KARABO_TEMPLATE_DLL extern
+    #define KARABO_DECLSPEC
+    #define KARABO_TEMPLATE_DLL
 #endif
 
 #if defined(_WIN32)
-    typedef __unit64 uint64
+typedef __unit64 uint64
 #else
-    typedef unsigned long long uint64;
+typedef unsigned long long uint64;
 #endif
 
-}
 #endif
 
