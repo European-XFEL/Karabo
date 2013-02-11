@@ -73,12 +73,22 @@ namespace karabo {
          */
         class KARABO_DECLSPEC Schema {
             
+            template <class T> friend class GenericElement;
+            template< class T> friend class SimpleElement;
+            friend class OverwriteElement;
+            template< typename T, template <typename, typename> class CONT> friend class VectorElement;
+            friend class ChoiceElement;
+            friend class LIST_ELEMENT;
+            friend class NODE_ELEMENT;
+            
+//            template< class Node, class T> friend class DefaultValue;
+            
             // Container
             Hash m_hash;
             
             // Validation flags
             bool m_injectDefaults;
-            bool m_allowUnrootedConfiguration;
+            bool m_assumeRootedConfiguration;
             bool m_allowAdditionalKeys;
             bool m_allowMissingKeys;
             
@@ -86,6 +96,9 @@ namespace karabo {
             AccessType m_currentAccessMode;
             std::string m_currentState;
             std::string m_currentAccessRole;
+            
+            // Root name
+            std::string m_rootName;
 
             // Indices
             std::map<std::string, std::string> m_keyToAlias;
@@ -93,18 +106,33 @@ namespace karabo {
             
         public:
             
-            enum OccuranceType {
-                EXACTLY_ONCE,
-                ONE_OR_MORE,
-                ZERO_OR_ONE,
-                ZERO_OR_MORE,
-                EITHER_OR
+            struct AssemblyRules {
+                AccessType m_accessMode;
+                std::string m_state;
+                std::string m_accessRole;
+                AssemblyRules(const AccessType& accessMode = INIT|WRITE, const std::string& state = "", const std::string& accessRole = ""):
+                m_accessMode(accessMode), m_state(state), m_accessRole(accessRole){}
             };
+            
+            struct ValidationRules {
+                bool injectDefaults;
+                bool allowUnrootedConfiguration;
+                bool allowAdditionalKeys;
+                bool allowMissingKeys;
+            };        
 
             enum ExpertLevelType {
                 SIMPLE,
                 MEDIUM,
                 ADVANCED
+            };
+            
+            enum NodeType {
+                ROOT,
+                LEAF,
+                NODE,
+                CHOICE_OF_NODES,
+                LIST_OF_NODES
             };
 
             enum AssignmentType {
@@ -119,7 +147,19 @@ namespace karabo {
             Schema() {}
             
             // Constructs rooted Schema
-            Schema(const std::string& classId);
+            Schema(const std::string& classId, const Schema::AssemblyRules& rules = Schema::AssemblyRules());
+            
+            void setAssemblyRules(const Schema::AssemblyRules& rules);
+                
+            Schema::AssemblyRules getAssemblyRules() const;
+            
+            void setValidationRules(const Schema::ValidationRules& rules);
+                
+            Schema::ValidationRules getValidationRules() const;
+            
+            const std::string& getRootName() const;
+            
+            const karabo::util::Hash& getRoot() const;
             
             //**********************************************
             //          General functions on Schema        *
@@ -130,30 +170,9 @@ namespace karabo {
 
             template <class AliasType>
             boost::optional<AliasType> keyToAlias(const std::string& key) const;
-
-            void filteringSetAccessMode(const AccessType& currentAccess);
-
-            void filteringSetState(const std::string& currentState);
-
-            void filteringSetAccessRole(const std::string& currentAccessRole);
-
-            const AccessType& filteringGetAccessMode() const;
-
-            const std::string& filteringGetState() const;
-
-            const std::string& filteringGetAccessRole() const;
-
-            Hash validate(const Hash& user, bool injectDefaults = true, bool allowUnrootedConfiguration = false, bool allowAdditionalKeys = false, bool allowMissingKeys = false);
-
-            void validationInjectDefaults(const bool toggle);
-
-            void validationAllowUnrootedConfiguration(const bool toggle);
-
-            void validatationAllowAdditionalKeys(const bool toggle);
-
-            void validatationAllowMissingKeys(const bool toggle);
-
-
+            
+            std::pair<bool, std::string> validate(const Hash& input, Hash& validatedOutput) const;
+            
             //**********************************************
             //          Attribute Functionality            *
             //**********************************************
@@ -261,7 +280,7 @@ namespace karabo {
 
 
 
-            void setUnit(const std::string& path, const Units::SiUnit& value);
+            void setUnit(const std::string& path, const Unit& value);
 
             bool hasUnit(const std::string& path) const;
 
@@ -269,9 +288,9 @@ namespace karabo {
 
             const std::string& getUnitSymbol(const std::string& path) const;
 
-            void setUnitMetricPrefix(const std::string& path, const Units::MetricPrefix& value);
+            void setUnitMetricPrefix(const std::string& path, const MetricPrefix& value);
 
-            const Units::MetricPrefix getUnitMetricPrefix(const std::string& path) const;
+            const MetricPrefix getUnitMetricPrefix(const std::string& path) const;
 
 
 
@@ -368,6 +387,8 @@ namespace karabo {
             bool isAllowedInCurrentAccessRole(const Hash::Node& node) const;
             
             bool isAllowedInCurrentState(const Hash::Node& node) const;
+            
+            void r_validate(const Hash& master, const Hash& user, Hash& working, std::ostringstream& report, std::string scope = "") const;
             
             
         private: // functions
@@ -510,16 +531,7 @@ namespace karabo {
 //
 //            void assertOccuranceOneOrMore(const Schema& mComplex, std::vector<Hash>& uComplex, std::vector<Hash>& wComplex, std::ostringstream& report, const std::string & scope) const;
 //
-            template< class T> friend class SimpleElement;
-//            friend class ComplexElement;
-//            friend class OverwriteElement;
-//            template< typename T, template <typename, typename> class CONT> friend class VectorElement;
-//            template< class T> friend class CHOICE_ELEMENT;
-//            template< class T> friend class LIST_ELEMENT;
-//            template< class T> friend class NON_EMPTY_LIST_ELEMENT;
-//            template< class BASE, class DERIVED> friend class SINGLE_ELEMENT;
-            template< class Node, class T> friend class GenericElement;
-//            template< class Node, class T> friend class DefaultValue;
+  
         };
 
     } // namespace util

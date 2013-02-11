@@ -75,7 +75,7 @@ namespace karabo {
                 if (index == -1) {
                     return hash.m_container.has(key);
                 } else {
-                    return hash.m_container.get<vector<Hash> >(key).size() > index;
+                    return static_cast<int>(hash.m_container.get<vector<Hash> >(key).size()) > index;
                 }
             } catch (...) {
             }
@@ -350,7 +350,7 @@ namespace karabo {
                             node->setValue(std::vector<Hash > (index + 1)); // Force it to be one
                         }
                         std::vector<Hash>& hashes = node->getValue<std::vector<Hash> >();
-                        if (hashes.size() <= index) hashes.resize(index + 1);
+                        if (static_cast<int>(hashes.size()) <= index) hashes.resize(index + 1);
                         tmp = &hashes[index];
                     } else { // Node does not exist
                         Hash::Node* node = &(tmp->m_container.set(token, std::vector<Hash > (index + 1)));
@@ -364,10 +364,10 @@ namespace karabo {
         std::ostream& operator<<(std::ostream& os, const Hash& hash) {
             try {
                 hash.toStream(os, hash, 0);
-                return os;
             } catch (...) {
                 KARABO_RETHROW;
             }
+            return os;
         }
 
         void Hash::toStream(std::ostream& os, const Hash& hash, int depth) const {

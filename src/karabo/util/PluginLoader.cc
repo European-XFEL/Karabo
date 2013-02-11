@@ -13,14 +13,14 @@
 #include <dlfcn.h>
 #endif
 
-#include "Factory.hh"
+#include "PathElement.hh"
 #include "PluginLoader.hh"
 
 
 namespace karabo {
   namespace util {
 
-    KARABO_REGISTER_ONLY_ME_CC(PluginLoader)
+    //KARABO_REGISTER_ONLY_ME_CC(PluginLoader)
 
     using namespace std;
     using namespace boost;
@@ -36,13 +36,14 @@ namespace karabo {
               .displayedName("Plugin Directory")
               .description("Directory to search for plugins")
               .assignmentOptional().defaultValue("plugins")
+              .isDirectory()
               .advanced()
               .commit();
 
     }
 
     void PluginLoader::configure(const Hash& input) {
-      input.get("pluginDirectory", m_pluginDirectory);
+        m_pluginDirectory = boost::filesystem::path(input.get<string>("pluginDirectory"));
     }
 
     const path& PluginLoader::getPluginDirectory() const {

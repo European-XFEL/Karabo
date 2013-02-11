@@ -495,7 +495,7 @@ namespace karabo {
                 throw KARABO_NOT_SUPPORTED_EXCEPTION("Only Hash objects may be assigned to a leaf node of array type");
             }
         }
-        
+                
         template<>
         inline Hash::Node& Hash::set(const std::string& path, const Hash& value, const char separator) {
             
@@ -517,7 +517,7 @@ namespace karabo {
                         node->setValue(std::vector<Hash > (hashes)); // Force it to be one
                     } else {
                         std::vector<Hash>& hashes = node->getValue<std::vector<Hash> >();
-                        if (index >= hashes.size()) hashes.resize(index + 1);
+                        if (index >= static_cast<int>(hashes.size())) hashes.resize(index + 1);
                         hashes[index] = value;
                     }
                     return *node;
