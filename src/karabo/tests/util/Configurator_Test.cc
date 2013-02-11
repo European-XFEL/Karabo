@@ -53,7 +53,7 @@ KARABO_REGISTER_FOR_CONFIGURATION_1(Base_Y, Sub1_Y<Base_Y>);
 void Configurator_Test::testSub1() {
 
     {
-        Base_N::Pointer p = Configurator<Base_N>::create("Base_N-Sub1_N", Hash("a", 1));
+        Base_N::Pointer p = Configurator<Base_N>::create("Base_N-Sub1_N", Hash("a", 1), false);
         Hash h = p->getConfig();
         CPPUNIT_ASSERT(h.has("base.a") == false);
         CPPUNIT_ASSERT(h.has("sub1.a") == false);
@@ -61,21 +61,21 @@ void Configurator_Test::testSub1() {
     }
 
     {
-        Base_N::Pointer p = Configurator<Base_N>::create("Base_N-Sub1_Y", Hash("a", 1));
+        Base_N::Pointer p = Configurator<Base_N>::create("Base_N-Sub1_Y", Hash("a", 1), false);
         Hash h = p->getConfig();
         CPPUNIT_ASSERT(h.has("base.a") == false);
         CPPUNIT_ASSERT(h.has("sub1.a") == true);
     }
 
     {
-        Base_Y::Pointer p = Configurator<Base_Y>::create("Base_Y-Sub1_N", Hash("a", 1));
+        Base_Y::Pointer p = Configurator<Base_Y>::create("Base_Y-Sub1_N", Hash("a", 1), false);
         Hash h = p->getConfig();
         CPPUNIT_ASSERT(h.has("base.a") == true);
         CPPUNIT_ASSERT(h.has("sub1.a") == false);
     }
 
     {
-        Base_Y::Pointer p = Configurator<Base_Y>::create("Base_Y-Sub1_Y", Hash("a", 1));
+        Base_Y::Pointer p = Configurator<Base_Y>::create("Base_Y-Sub1_Y", Hash("a", 1), false);
         Hash h = p->getConfig();
         CPPUNIT_ASSERT(h.has("base.a") == true);
         CPPUNIT_ASSERT(h.has("sub1.a") == true);

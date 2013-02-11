@@ -141,7 +141,7 @@ namespace karabo {
                 Exception::showTrace();
             }
             string fill(Exception::m_trace.size()*3, ' ');
-            os << fill << Exception::m_trace.size() + 1 << ". Exception " << string(5, '=') << ">  {" << endl;
+            os << fill << "(" << Exception::m_trace.size() + 1 << ") Exception " << string(5, '=') << ">  {" << endl;
             Exception::format(os, exception.m_exceptionInfo, fill);
             os << fill << "}" << endl << endl;
 
@@ -150,12 +150,12 @@ namespace karabo {
         }
 
         void Exception::format(ostream& os, const ExceptionInfo& exceptionInfo, const string& spacing) {
-            if (!exceptionInfo.type.empty()) os << spacing << "  Exception Type....:  " << exceptionInfo.type << endl;
-            if (!exceptionInfo.message.empty()) os << spacing << "  Message...........:  " << exceptionInfo.message << endl;
-            if (!exceptionInfo.filename.empty()) os << spacing << "  File..............:  " << exceptionInfo.filename << endl;
-            if (!exceptionInfo.function.empty()) os << spacing << "  Function..........:  " << exceptionInfo.function << endl;
-            if (!exceptionInfo.lineNumber.empty()) os << spacing << "  Line Number.......:  " << exceptionInfo.lineNumber << endl;
-            if (!exceptionInfo.timestamp.empty()) os << spacing << "  Timestamp.........:  " << exceptionInfo.timestamp << endl;
+            if (!exceptionInfo.type.empty()) os << spacing << "    Exception Type....:  " << exceptionInfo.type << endl;
+            if (!exceptionInfo.message.empty()) os << spacing << "    Message...........:  " << exceptionInfo.message << endl;
+            if (!exceptionInfo.filename.empty()) os << spacing << "    File..............:  " << exceptionInfo.filename << endl;
+            if (!exceptionInfo.function.empty()) os << spacing << "    Function..........:  " << exceptionInfo.function << endl;
+            if (!exceptionInfo.lineNumber.empty()) os << spacing << "    Line Number.......:  " << exceptionInfo.lineNumber << endl;
+            if (!exceptionInfo.timestamp.empty()) os << spacing << "    Timestamp.........:  " << exceptionInfo.timestamp << endl;
         }
 
         void Exception::msg() const {

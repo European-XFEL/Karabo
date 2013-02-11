@@ -6,6 +6,8 @@
  *
  * Created on July 1, 2011, 11:48 AM
  *
+ * Major re-design on February 30, 2013, 17:22 PM
+ * 
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
 
@@ -15,41 +17,87 @@
 #include "GenericElement.hh"
 
 namespace karabo {
-  namespace util {
+    namespace util {
 
-    template<class T>
-    class LIST_ELEMENT : public GenericElement<LIST_ELEMENT<T>, std::string > {
-    public:
+        class LIST_ELEMENT : public GenericElement<LIST_ELEMENT> {
+            Schema::AssemblyRules m_parentSchemaAssemblyRules;
+        public:
 
-      LIST_ELEMENT(Schema& expected) : GenericElement<LIST_ELEMENT<T>, std::string >(expected) {
-        this->initializeElementPointer(this);
-      }
+            LIST_ELEMENT(Schema& expected) : GenericElement<LIST_ELEMENT>(expected) {
+                Schema::AssemblyRules m_parentSchemaAssemblyRules = expected.getAssemblyRules();
+            }
 
-      void beforeAddition() {
-        this->m_node.listType(T::expectedParameters(this->m_schema->getAccessMode()));
-        this->m_node.displayType(T::classInfo().getClassName());
-        //alternatively we can take 'classId' instead of 'className' (to be shown as displayType element in expected parameters) :
-        //this->m_element.displayType(T::classInfo().getClassId());
-      }
-    };
+            LIST_ELEMENT& min(const int minNumNodes) {
+                this->m_node->setAttribute("min", minNumNodes);
+                return *this;
+            }
 
-    template<class T>
-    class NON_EMPTY_LIST_ELEMENT : public GenericElement<NON_EMPTY_LIST_ELEMENT<T>, std::string > {
-    public:
+            LIST_ELEMENT& max(const int maxNumNodes) {
+                this->m_node->setAttribute("max", maxNumNodes);
+                return *this;
+            }
+            
+            LIST_ELEMENT& defaultValue(const std::vector<std::string>& defaultNodes) {
+                this->m_node->setAttribute("default", defaultNodes);
+                return *this;
+            }
 
-      NON_EMPTY_LIST_ELEMENT(Schema& expected) : GenericElement<NON_EMPTY_LIST_ELEMENT<T>, std::string >(expected) {
-        this->initializeElementPointer(this);
-      }
+            template <class ConfigurationBase>
+            LIST_ELEMENT& appendNodesOfConfigurationBase() {
+                // Create an empty Hash as value of this choice node if not there yet
+                if (this->m_node->getType() != Types::HASH) this->m_node->setValue(Hash());
+                // Retrieve reference for filling
+                Hash& choiceOfNodes = this->m_node->template getValue<Hash > ();
 
-      void beforeAddition() {
-        this->m_node.nonEmptyListType(T::expectedParameters(this->m_schema->getAccessMode()));
-        this->m_node.displayType(T::classInfo().getClassName());
-        //alternatively we can take 'classId' instead of 'className' (to be shown as displayType element in expected parameters) :
-        //this->m_element.displayType(T::classInfo().getClassId()); 
-      }
+                std::vector<std::string> nodeNames = Configurator<ConfigurationBase>::getRegisteredClasses();
+                for (size_t i = 0; i < nodeNames.size(); ++i) {
+                    const std::string& nodeName = nodeNames[i];
+                    Schema schema = Configurator<ConfigurationBase>::assembleSchema(nodeName, m_parentSchemaAssemblyRules);
+                    Hash::Node& node = choiceOfNodes.set<Hash > (nodeName, schema.getRoot());
+                    node.setAttribute("classId", nodeName);
+                    node.setAttribute("displayType", nodeName);
+                    node.setAttribute<int>("nodeType", Schema::NODE);
+                    node.setAttribute<int>("accessMode", READ | WRITE | INIT);
+                }
+                return *this;
+            }
 
-    };
-  }
+            template <class T>
+            LIST_ELEMENT& appendAsNode(const std::string& nodeName = "") {
+                // Create an empty Hash as value of this choice node if not there yet
+                if (this->m_node->getType() != Types::HASH) this->m_node->setValue(Hash());
+                // Retrieve reference for filling
+                Hash& choiceOfNodes = this->m_node->template getValue<Hash > ();
+
+                // Simply append the expected parameters of T to current node
+                if (nodeName.empty()) nodeName = T::classInfo().getClassId();
+                Schema schema = karabo::util::confTools::assembleSchema<T > (nodeName, m_parentSchemaAssemblyRules);
+                Hash::Node& node = choiceOfNodes.set<Hash > (nodeName, schema.getRoot());
+                node.setAttribute("classId", T::classInfo().getClassId());
+                node.setAttribute("displayType", T::classInfo().getClassId());
+                node.setAttribute<int>("nodeType", Schema::NODE);
+                node.setAttribute<int>("accessMode", READ | WRITE | INIT);
+                return *this;
+            }
+
+            LIST_ELEMENT& appendEmptyNode(const std::string& nodeName) {
+                // Create an empty Hash as value of this choice node if not there yet
+                if (this->m_node->getType() != Types::HASH) this->m_node->setValue(Hash());
+                // Retrieve reference for filling
+                Hash& choiceOfNodes = this->m_node->template getValue<Hash > ();
+                choiceOfNodes.set<Hash > (nodeName, Hash());
+                return *this;
+            }
+
+        protected:
+
+            void beforeAddition() {
+                this->m_node->setAttribute<int>("accessMode", READ | WRITE | INIT);
+                this->m_node->setAttribute<int>("nodeType", Schema::LIST_OF_NODES);
+            }
+
+        };
+    }
 }
 
 

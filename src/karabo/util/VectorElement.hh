@@ -20,55 +20,70 @@ namespace karabo {
 
         template<typename T,
                 template <typename ELEM, typename = std::allocator<ELEM> > class CONT = std::vector>
-                class VectorElement : public GenericElement<VectorElement<T, CONT>, CONT<T> > {
+                class VectorElement : public LeafElement<VectorElement<T, CONT>, CONT<T> > {
         public:
 
-            VectorElement() : GenericElement<VectorElement<T>, CONT<T> >() {
-                this->initializeElementPointer(this);
-                this->m_node.simpleType(Types::getTypeAsId(CONT<T > ()));
+            VectorElement(Schema& expected) : LeafElement<VectorElement>(expected) {
             }
-
-            VectorElement(Schema& expected) : GenericElement<VectorElement, CONT<T> >(expected) {
-
-                this->initializeElementPointer(this);
-                if (this->m_schema) {
-                    AccessType at = this->m_schema->getAccessMode();
-                    this->m_node.setAccessMode(at);
-                }
-                this->m_node.simpleType(Types::getTypeAsId(CONT<T > ()));
-            }
-
-            VectorElement& minInc(T const& val) {
-                this->m_node.minInc(val);
+            
+             /**
+             * The <b>minInc</b> method sets the lowest value accepted for this parameter. Defines the left-closed interval.
+             * @param val minimum value
+             * @return reference to the VectorElement
+             */
+            VectorElement& minInc(ValueType const& value) {
+                this->m_node.setAttribute("minInc", value);
                 return *this;
             }
 
-            VectorElement& maxInc(T const& val) {
-                this->m_node.maxInc(val);
+            /**
+             * The <b>maxInc</b> sets the highest value accepted for this parameter. Defines the right-closed interval.
+             * @param val maximum value
+             * @return reference to the VectorElement
+             */
+            VectorElement& maxInc(ValueType const& value) {
+                this->m_node.setAttribute("maxInc", value);
                 return *this;
             }
 
-            VectorElement& minExc(T const& val) {
-                this->m_node.minExc(val);
+            /**
+             * The <b>minExc</b> sets the upper limit for this parameter. Defines the left-open interval.
+             * @param val upper limit
+             * @return reference to the VectorElement
+             */
+            VectorElement& minExc(ValueType const& value) {
+                this->m_node.setAttribute("minExc", value);
                 return *this;
             }
 
-            VectorElement& maxExc(T const& val) {
-                this->m_node.maxExc(val);
+            /**
+             * The <b>maxExc</b> sets the lower limit for this parameter. Defines the right-open interval.
+             * @param val lower limit
+             * @return reference to the VectorElement
+             */
+            VectorElement& maxExc(ValueType const& value) {
+                this->m_node.setAttribute("maxExc", value);
                 return *this;
             }
-
+            
             VectorElement& minSize(const int& value) {
-                this->m_node.minSize(value);
+                this->m_node.setAttribute("minSize", value);
                 return *this;
             }
 
             VectorElement& maxSize(const int& value) {
-                this->m_node.maxSize(value);
+                 this->m_node.setAttribute("maxSize", value);
                 return *this;
             }
+            
+             protected:
 
-            void checkConsistency() {
+            void beforeAddition() {
+
+                this->m_node->setAttribute<int>("nodeType", Schema::LEAF);
+                this->m_node->setAttribute<int>("valueType", Types::from<CONT<T>>());
+                
+                if (this->m_node->hasAttribute("accessMode")) this->init(); // This is the default
             }
         };
 
@@ -85,8 +100,6 @@ namespace karabo {
         typedef VectorElement<float> VECTOR_FLOAT_ELEMENT;
         typedef VectorElement<double> VECTOR_DOUBLE_ELEMENT;
         typedef VectorElement<std::string> VECTOR_STRING_ELEMENT;
-        typedef VectorElement<boost::filesystem::path> VECTOR_PATH_ELEMENT;
-
     }
 }
 

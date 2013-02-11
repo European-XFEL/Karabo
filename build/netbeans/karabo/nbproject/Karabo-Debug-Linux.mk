@@ -42,9 +42,11 @@ OBJECTFILES= \
 	${OBJECTDIR}/_ext/163016059/StringTools.o \
 	${OBJECTDIR}/_ext/163016059/Timer.o \
 	${OBJECTDIR}/_ext/163016059/Base64.o \
+	${OBJECTDIR}/_ext/163016059/PluginLoader.o \
 	${OBJECTDIR}/_ext/163016059/Schema.o \
 	${OBJECTDIR}/_ext/163016059/Time.o \
 	${OBJECTDIR}/_ext/163016059/Profiler.o \
+	${OBJECTDIR}/_ext/163016059/Validator.o \
 	${OBJECTDIR}/_ext/163016059/Hash.o
 
 # Test Directory
@@ -81,64 +83,74 @@ ${TESTDIR}/TestFiles/f5: ${OBJECTFILES}
 ${OBJECTDIR}/_ext/163016059/FromLiteral.o: ../../../src/karabo/util/FromLiteral.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
 	${RM} $@.d
-	$(COMPILE.cc) -g -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163016059/FromLiteral.o ../../../src/karabo/util/FromLiteral.cc
+	$(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163016059/FromLiteral.o ../../../src/karabo/util/FromLiteral.cc
 
 ${OBJECTDIR}/_ext/163016059/ClassInfo.o: ../../../src/karabo/util/ClassInfo.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
 	${RM} $@.d
-	$(COMPILE.cc) -g -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163016059/ClassInfo.o ../../../src/karabo/util/ClassInfo.cc
+	$(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163016059/ClassInfo.o ../../../src/karabo/util/ClassInfo.cc
 
 ${OBJECTDIR}/_ext/163016059/Exception.o: ../../../src/karabo/util/Exception.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
 	${RM} $@.d
-	$(COMPILE.cc) -g -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163016059/Exception.o ../../../src/karabo/util/Exception.cc
+	$(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163016059/Exception.o ../../../src/karabo/util/Exception.cc
 
 ${OBJECTDIR}/_ext/163016059/FromTypeInfo.o: ../../../src/karabo/util/FromTypeInfo.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
 	${RM} $@.d
-	$(COMPILE.cc) -g -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163016059/FromTypeInfo.o ../../../src/karabo/util/FromTypeInfo.cc
+	$(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163016059/FromTypeInfo.o ../../../src/karabo/util/FromTypeInfo.cc
 
 ${OBJECTDIR}/_ext/163016059/StringTools.o: ../../../src/karabo/util/StringTools.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
 	${RM} $@.d
-	$(COMPILE.cc) -g -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163016059/StringTools.o ../../../src/karabo/util/StringTools.cc
+	$(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163016059/StringTools.o ../../../src/karabo/util/StringTools.cc
 
 ${OBJECTDIR}/_ext/163016059/Timer.o: ../../../src/karabo/util/Timer.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
 	${RM} $@.d
-	$(COMPILE.cc) -g -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163016059/Timer.o ../../../src/karabo/util/Timer.cc
+	$(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163016059/Timer.o ../../../src/karabo/util/Timer.cc
 
 ${OBJECTDIR}/_ext/163016059/Base64.o: ../../../src/karabo/util/Base64.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
 	${RM} $@.d
-	$(COMPILE.cc) -g -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163016059/Base64.o ../../../src/karabo/util/Base64.cc
+	$(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163016059/Base64.o ../../../src/karabo/util/Base64.cc
+
+${OBJECTDIR}/_ext/163016059/PluginLoader.o: ../../../src/karabo/util/PluginLoader.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
+	${RM} $@.d
+	$(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163016059/PluginLoader.o ../../../src/karabo/util/PluginLoader.cc
 
 ${OBJECTDIR}/_ext/163016059/Schema.o: ../../../src/karabo/util/Schema.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
 	${RM} $@.d
-	$(COMPILE.cc) -g -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163016059/Schema.o ../../../src/karabo/util/Schema.cc
+	$(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163016059/Schema.o ../../../src/karabo/util/Schema.cc
 
 ${OBJECTDIR}/_ext/163016059/Time.o: ../../../src/karabo/util/Time.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
 	${RM} $@.d
-	$(COMPILE.cc) -g -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163016059/Time.o ../../../src/karabo/util/Time.cc
+	$(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163016059/Time.o ../../../src/karabo/util/Time.cc
 
 ${OBJECTDIR}/_ext/163016059/Profiler.o: ../../../src/karabo/util/Profiler.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
 	${RM} $@.d
-	$(COMPILE.cc) -g -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163016059/Profiler.o ../../../src/karabo/util/Profiler.cc
+	$(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163016059/Profiler.o ../../../src/karabo/util/Profiler.cc
+
+${OBJECTDIR}/_ext/163016059/Validator.o: ../../../src/karabo/util/Validator.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
+	${RM} $@.d
+	$(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163016059/Validator.o ../../../src/karabo/util/Validator.cc
 
 ${OBJECTDIR}/_ext/163016059/Hash.o: ../../../src/karabo/util/Hash.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
 	${RM} $@.d
-	$(COMPILE.cc) -g -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163016059/Hash.o ../../../src/karabo/util/Hash.cc
+	$(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163016059/Hash.o ../../../src/karabo/util/Hash.cc
 
 # Subprojects
 .build-subprojects:
 
 # Build Test Targets
 .build-tests-conf: .build-conf ${TESTFILES}
-${TESTDIR}/TestFiles/f1: ${TESTDIR}/_ext/1033104525/Configurator_Test.o ${TESTDIR}/_ext/1033104525/Factory_Test.o ${TESTDIR}/_ext/1033104525/Hash_Test.o ${TESTDIR}/_ext/1033104525/Schema_Test.o ${TESTDIR}/_ext/1033104525/utilTestRunner.o ${OBJECTFILES:%.o=%_nomain.o}
+${TESTDIR}/TestFiles/f1: ${TESTDIR}/_ext/1033104525/Configurator_Test.o ${TESTDIR}/_ext/1033104525/Factory_Test.o ${TESTDIR}/_ext/1033104525/Hash_Test.o ${TESTDIR}/_ext/1033104525/SchemaTestClasses.o ${TESTDIR}/_ext/1033104525/Schema_Test.o ${TESTDIR}/_ext/1033104525/utilTestRunner.o ${OBJECTFILES:%.o=%_nomain.o}
 	${MKDIR} -p ${TESTDIR}/TestFiles
 	${LINK.cc}   -o ${TESTDIR}/TestFiles/f1 $^ ${LDLIBSOPTIONS} -Wl,-rpath,${KARABO}/lib -Wl,-rpath,${KARABO}/extern/lib 
 
@@ -146,31 +158,37 @@ ${TESTDIR}/TestFiles/f1: ${TESTDIR}/_ext/1033104525/Configurator_Test.o ${TESTDI
 ${TESTDIR}/_ext/1033104525/Configurator_Test.o: ../../../src/karabo/tests/util/Configurator_Test.cc 
 	${MKDIR} -p ${TESTDIR}/_ext/1033104525
 	${RM} $@.d
-	$(COMPILE.cc) -g -DTESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I${KARABO}/extern/include/hdf5 -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -MMD -MP -MF $@.d -o ${TESTDIR}/_ext/1033104525/Configurator_Test.o ../../../src/karabo/tests/util/Configurator_Test.cc
+	$(COMPILE.cc) -g -Wall -DTESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I${KARABO}/extern/include/hdf5 -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -MMD -MP -MF $@.d -o ${TESTDIR}/_ext/1033104525/Configurator_Test.o ../../../src/karabo/tests/util/Configurator_Test.cc
 
 
 ${TESTDIR}/_ext/1033104525/Factory_Test.o: ../../../src/karabo/tests/util/Factory_Test.cc 
 	${MKDIR} -p ${TESTDIR}/_ext/1033104525
 	${RM} $@.d
-	$(COMPILE.cc) -g -DTESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I${KARABO}/extern/include/hdf5 -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -MMD -MP -MF $@.d -o ${TESTDIR}/_ext/1033104525/Factory_Test.o ../../../src/karabo/tests/util/Factory_Test.cc
+	$(COMPILE.cc) -g -Wall -DTESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I${KARABO}/extern/include/hdf5 -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -MMD -MP -MF $@.d -o ${TESTDIR}/_ext/1033104525/Factory_Test.o ../../../src/karabo/tests/util/Factory_Test.cc
 
 
 ${TESTDIR}/_ext/1033104525/Hash_Test.o: ../../../src/karabo/tests/util/Hash_Test.cc 
 	${MKDIR} -p ${TESTDIR}/_ext/1033104525
 	${RM} $@.d
-	$(COMPILE.cc) -g -DTESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I${KARABO}/extern/include/hdf5 -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -MMD -MP -MF $@.d -o ${TESTDIR}/_ext/1033104525/Hash_Test.o ../../../src/karabo/tests/util/Hash_Test.cc
+	$(COMPILE.cc) -g -Wall -DTESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I${KARABO}/extern/include/hdf5 -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -MMD -MP -MF $@.d -o ${TESTDIR}/_ext/1033104525/Hash_Test.o ../../../src/karabo/tests/util/Hash_Test.cc
+
+
+${TESTDIR}/_ext/1033104525/SchemaTestClasses.o: ../../../src/karabo/tests/util/SchemaTestClasses.cc 
+	${MKDIR} -p ${TESTDIR}/_ext/1033104525
+	${RM} $@.d
+	$(COMPILE.cc) -g -Wall -DTESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I${KARABO}/extern/include/hdf5 -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -MMD -MP -MF $@.d -o ${TESTDIR}/_ext/1033104525/SchemaTestClasses.o ../../../src/karabo/tests/util/SchemaTestClasses.cc
 
 
 ${TESTDIR}/_ext/1033104525/Schema_Test.o: ../../../src/karabo/tests/util/Schema_Test.cc 
 	${MKDIR} -p ${TESTDIR}/_ext/1033104525
 	${RM} $@.d
-	$(COMPILE.cc) -g -DTESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I${KARABO}/extern/include/hdf5 -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -MMD -MP -MF $@.d -o ${TESTDIR}/_ext/1033104525/Schema_Test.o ../../../src/karabo/tests/util/Schema_Test.cc
+	$(COMPILE.cc) -g -Wall -DTESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I${KARABO}/extern/include/hdf5 -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -MMD -MP -MF $@.d -o ${TESTDIR}/_ext/1033104525/Schema_Test.o ../../../src/karabo/tests/util/Schema_Test.cc
 
 
 ${TESTDIR}/_ext/1033104525/utilTestRunner.o: ../../../src/karabo/tests/util/utilTestRunner.cc 
 	${MKDIR} -p ${TESTDIR}/_ext/1033104525
 	${RM} $@.d
-	$(COMPILE.cc) -g -DTESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I${KARABO}/extern/include/hdf5 -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -MMD -MP -MF $@.d -o ${TESTDIR}/_ext/1033104525/utilTestRunner.o ../../../src/karabo/tests/util/utilTestRunner.cc
+	$(COMPILE.cc) -g -Wall -DTESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I${KARABO}/extern/include/hdf5 -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -MMD -MP -MF $@.d -o ${TESTDIR}/_ext/1033104525/utilTestRunner.o ../../../src/karabo/tests/util/utilTestRunner.cc
 
 
 ${OBJECTDIR}/_ext/163016059/FromLiteral_nomain.o: ${OBJECTDIR}/_ext/163016059/FromLiteral.o ../../../src/karabo/util/FromLiteral.cc 
@@ -181,7 +199,7 @@ ${OBJECTDIR}/_ext/163016059/FromLiteral_nomain.o: ${OBJECTDIR}/_ext/163016059/Fr
 	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
 	then  \
 	    ${RM} $@.d;\
-	    $(COMPILE.cc) -g -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163016059/FromLiteral_nomain.o ../../../src/karabo/util/FromLiteral.cc;\
+	    $(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163016059/FromLiteral_nomain.o ../../../src/karabo/util/FromLiteral.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/163016059/FromLiteral.o ${OBJECTDIR}/_ext/163016059/FromLiteral_nomain.o;\
 	fi
@@ -194,7 +212,7 @@ ${OBJECTDIR}/_ext/163016059/ClassInfo_nomain.o: ${OBJECTDIR}/_ext/163016059/Clas
 	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
 	then  \
 	    ${RM} $@.d;\
-	    $(COMPILE.cc) -g -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163016059/ClassInfo_nomain.o ../../../src/karabo/util/ClassInfo.cc;\
+	    $(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163016059/ClassInfo_nomain.o ../../../src/karabo/util/ClassInfo.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/163016059/ClassInfo.o ${OBJECTDIR}/_ext/163016059/ClassInfo_nomain.o;\
 	fi
@@ -207,7 +225,7 @@ ${OBJECTDIR}/_ext/163016059/Exception_nomain.o: ${OBJECTDIR}/_ext/163016059/Exce
 	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
 	then  \
 	    ${RM} $@.d;\
-	    $(COMPILE.cc) -g -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163016059/Exception_nomain.o ../../../src/karabo/util/Exception.cc;\
+	    $(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163016059/Exception_nomain.o ../../../src/karabo/util/Exception.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/163016059/Exception.o ${OBJECTDIR}/_ext/163016059/Exception_nomain.o;\
 	fi
@@ -220,7 +238,7 @@ ${OBJECTDIR}/_ext/163016059/FromTypeInfo_nomain.o: ${OBJECTDIR}/_ext/163016059/F
 	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
 	then  \
 	    ${RM} $@.d;\
-	    $(COMPILE.cc) -g -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163016059/FromTypeInfo_nomain.o ../../../src/karabo/util/FromTypeInfo.cc;\
+	    $(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163016059/FromTypeInfo_nomain.o ../../../src/karabo/util/FromTypeInfo.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/163016059/FromTypeInfo.o ${OBJECTDIR}/_ext/163016059/FromTypeInfo_nomain.o;\
 	fi
@@ -233,7 +251,7 @@ ${OBJECTDIR}/_ext/163016059/StringTools_nomain.o: ${OBJECTDIR}/_ext/163016059/St
 	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
 	then  \
 	    ${RM} $@.d;\
-	    $(COMPILE.cc) -g -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163016059/StringTools_nomain.o ../../../src/karabo/util/StringTools.cc;\
+	    $(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163016059/StringTools_nomain.o ../../../src/karabo/util/StringTools.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/163016059/StringTools.o ${OBJECTDIR}/_ext/163016059/StringTools_nomain.o;\
 	fi
@@ -246,7 +264,7 @@ ${OBJECTDIR}/_ext/163016059/Timer_nomain.o: ${OBJECTDIR}/_ext/163016059/Timer.o 
 	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
 	then  \
 	    ${RM} $@.d;\
-	    $(COMPILE.cc) -g -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163016059/Timer_nomain.o ../../../src/karabo/util/Timer.cc;\
+	    $(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163016059/Timer_nomain.o ../../../src/karabo/util/Timer.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/163016059/Timer.o ${OBJECTDIR}/_ext/163016059/Timer_nomain.o;\
 	fi
@@ -259,9 +277,22 @@ ${OBJECTDIR}/_ext/163016059/Base64_nomain.o: ${OBJECTDIR}/_ext/163016059/Base64.
 	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
 	then  \
 	    ${RM} $@.d;\
-	    $(COMPILE.cc) -g -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163016059/Base64_nomain.o ../../../src/karabo/util/Base64.cc;\
+	    $(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163016059/Base64_nomain.o ../../../src/karabo/util/Base64.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/163016059/Base64.o ${OBJECTDIR}/_ext/163016059/Base64_nomain.o;\
+	fi
+
+${OBJECTDIR}/_ext/163016059/PluginLoader_nomain.o: ${OBJECTDIR}/_ext/163016059/PluginLoader.o ../../../src/karabo/util/PluginLoader.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/163016059/PluginLoader.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} $@.d;\
+	    $(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163016059/PluginLoader_nomain.o ../../../src/karabo/util/PluginLoader.cc;\
+	else  \
+	    ${CP} ${OBJECTDIR}/_ext/163016059/PluginLoader.o ${OBJECTDIR}/_ext/163016059/PluginLoader_nomain.o;\
 	fi
 
 ${OBJECTDIR}/_ext/163016059/Schema_nomain.o: ${OBJECTDIR}/_ext/163016059/Schema.o ../../../src/karabo/util/Schema.cc 
@@ -272,7 +303,7 @@ ${OBJECTDIR}/_ext/163016059/Schema_nomain.o: ${OBJECTDIR}/_ext/163016059/Schema.
 	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
 	then  \
 	    ${RM} $@.d;\
-	    $(COMPILE.cc) -g -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163016059/Schema_nomain.o ../../../src/karabo/util/Schema.cc;\
+	    $(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163016059/Schema_nomain.o ../../../src/karabo/util/Schema.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/163016059/Schema.o ${OBJECTDIR}/_ext/163016059/Schema_nomain.o;\
 	fi
@@ -285,7 +316,7 @@ ${OBJECTDIR}/_ext/163016059/Time_nomain.o: ${OBJECTDIR}/_ext/163016059/Time.o ..
 	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
 	then  \
 	    ${RM} $@.d;\
-	    $(COMPILE.cc) -g -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163016059/Time_nomain.o ../../../src/karabo/util/Time.cc;\
+	    $(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163016059/Time_nomain.o ../../../src/karabo/util/Time.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/163016059/Time.o ${OBJECTDIR}/_ext/163016059/Time_nomain.o;\
 	fi
@@ -298,9 +329,22 @@ ${OBJECTDIR}/_ext/163016059/Profiler_nomain.o: ${OBJECTDIR}/_ext/163016059/Profi
 	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
 	then  \
 	    ${RM} $@.d;\
-	    $(COMPILE.cc) -g -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163016059/Profiler_nomain.o ../../../src/karabo/util/Profiler.cc;\
+	    $(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163016059/Profiler_nomain.o ../../../src/karabo/util/Profiler.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/163016059/Profiler.o ${OBJECTDIR}/_ext/163016059/Profiler_nomain.o;\
+	fi
+
+${OBJECTDIR}/_ext/163016059/Validator_nomain.o: ${OBJECTDIR}/_ext/163016059/Validator.o ../../../src/karabo/util/Validator.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/163016059/Validator.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} $@.d;\
+	    $(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163016059/Validator_nomain.o ../../../src/karabo/util/Validator.cc;\
+	else  \
+	    ${CP} ${OBJECTDIR}/_ext/163016059/Validator.o ${OBJECTDIR}/_ext/163016059/Validator_nomain.o;\
 	fi
 
 ${OBJECTDIR}/_ext/163016059/Hash_nomain.o: ${OBJECTDIR}/_ext/163016059/Hash.o ../../../src/karabo/util/Hash.cc 
@@ -311,7 +355,7 @@ ${OBJECTDIR}/_ext/163016059/Hash_nomain.o: ${OBJECTDIR}/_ext/163016059/Hash.o ..
 	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
 	then  \
 	    ${RM} $@.d;\
-	    $(COMPILE.cc) -g -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163016059/Hash_nomain.o ../../../src/karabo/util/Hash.cc;\
+	    $(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163016059/Hash_nomain.o ../../../src/karabo/util/Hash.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/163016059/Hash.o ${OBJECTDIR}/_ext/163016059/Hash_nomain.o;\
 	fi

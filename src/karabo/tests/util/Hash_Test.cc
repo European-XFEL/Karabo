@@ -194,7 +194,7 @@ void Hash_Test::testGetAs() {
     }
     {
         Hash h("a", std::vector<bool>(4, false));
-        CPPUNIT_ASSERT(h.getAs<string > ("a") == "[0,0,0,0]");
+        CPPUNIT_ASSERT(h.getAs<string > ("a") == "0,0,0,0");
         int tmp = h.getAs<int, std::vector > ("a")[3];
         CPPUNIT_ASSERT(tmp == 0);
     }
@@ -204,7 +204,7 @@ void Hash_Test::testGetAs() {
     }
     {
         Hash h("a", std::vector<char>(3, '4'));
-        CPPUNIT_ASSERT(h.getAs<string > ("a") == "[4,4,4]");
+        CPPUNIT_ASSERT(h.getAs<string > ("a") == "4,4,4");
     }
     {
         Hash h("a", static_cast<unsigned char> ('R'));
@@ -212,7 +212,7 @@ void Hash_Test::testGetAs() {
     }
     {
         Hash h("a", std::vector<unsigned char>(4, '2'));
-        CPPUNIT_ASSERT(h.getAs<string > ("a") == "[50,50,50,50]");
+        CPPUNIT_ASSERT(h.getAs<string > ("a") == "50,50,50,50");
     }
     {
         Hash h("a", static_cast<signed char> ('R'));
@@ -220,7 +220,7 @@ void Hash_Test::testGetAs() {
     }
     {
         Hash h("a", std::vector<signed char>(4, '2'));
-        CPPUNIT_ASSERT(h.getAs<string > ("a") == "[50,50,50,50]");
+        CPPUNIT_ASSERT(h.getAs<string > ("a") == "50,50,50,50");
     }
     {
         Hash h("a", short(126));
@@ -228,7 +228,7 @@ void Hash_Test::testGetAs() {
     }
     {
         Hash h("a", std::vector<short>(4, 13));
-        CPPUNIT_ASSERT(h.getAs<string > ("a") == "[13,13,13,13]");
+        CPPUNIT_ASSERT(h.getAs<string > ("a") == "13,13,13,13");
     }
     {
         Hash h("a", int(-42));
@@ -236,7 +236,7 @@ void Hash_Test::testGetAs() {
     }
     {
         Hash h("a", std::vector<int>(1, -42));
-        CPPUNIT_ASSERT(h.getAs<string > ("a") == "[-42]");
+        CPPUNIT_ASSERT(h.getAs<string > ("a") == "-42");
     }
     {
         Hash h("a", static_cast<unsigned int> (42));
@@ -244,7 +244,7 @@ void Hash_Test::testGetAs() {
     }
     {
         Hash h("a", std::vector<unsigned int>());
-        CPPUNIT_ASSERT(h.getAs<string > ("a") == "[]");
+        CPPUNIT_ASSERT(h.getAs<string > ("a") == "");
     }
     {
         Hash h("a", static_cast<long long> (-2147483647));

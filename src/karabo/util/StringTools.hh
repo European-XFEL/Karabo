@@ -99,29 +99,40 @@ namespace karabo {
 
         template <typename T>
         inline std::string toString(const std::vector<T>& value) {
-            if (value.empty()) return "[]";
+            if (value.empty()) return "";
             std::ostringstream s;
             typename std::vector<T>::const_iterator it = value.begin();
-            s << "[" << toString(*it);
+            s << toString(*it);
             it++;
             for (; it != value.end(); ++it) {
                 s << "," << toString(*it);
             }
-            s << "]";
+            return s.str();
+        }
+        
+         template <typename T>
+        inline std::string toString(const std::set<T>& value) {
+            if (value.empty()) return "";
+            std::ostringstream s;
+            typename std::set<T>::const_iterator it = value.begin();
+            s << toString(*it);
+            it++;
+            for (; it != value.end(); ++it) {
+                s << "," << toString(*it);
+            }
             return s.str();
         }
 
         template <typename T>
         inline std::string toString(const std::deque<T>& value) {
-            if (value.empty()) return "[]";
+            if (value.empty()) return "";
             std::ostringstream s;
             typename std::deque<T>::const_iterator it = value.begin();
-            s << "[" << toString(*it);
+            s << toString(*it);
             it++;
             for (; it != value.end(); ++it) {
                 s << "," << toString(*it);
             }
-            s << "]";
             return s.str();
         }
 
@@ -164,6 +175,7 @@ namespace karabo {
                 return resultArray;
             } catch (...) {
                 KARABO_RETHROW;
+                return CONT<T>(); // Make the compiler happy
             }
         }
 

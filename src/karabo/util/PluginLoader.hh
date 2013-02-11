@@ -12,7 +12,10 @@
 #ifndef KARABO_UTIL_PLUGINLOADER_HH
 #define	KARABO_UTIL_PLUGINLOADER_HH
 
+#include <boost/filesystem.hpp>
+
 #include "Schema.hh"
+#include "Configurator.hh"
 
 
 /**
@@ -32,7 +35,7 @@ namespace karabo {
     public:
 
       KARABO_CLASSINFO(PluginLoader, "PluginLoader", "1.0")
-      KARABO_FACTORY_BASE_CLASS
+      KARABO_CONFIGURATION_BASE_CLASS
 
       PluginLoader() {
       };
@@ -62,7 +65,5 @@ namespace karabo {
     };
   } // namespace util
 } // namespace karabo
-
-KARABO_REGISTER_FACTORY_BASE_HH(karabo::util::PluginLoader, TEMPLATE_UTIL, DECLSPEC_UTIL)
 
 #endif	/* KARABO_PACKAGENAME_PLUGINLOADER_HH */

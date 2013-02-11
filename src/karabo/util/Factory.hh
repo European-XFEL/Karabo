@@ -44,13 +44,13 @@ namespace karabo {
 
             template <class ConcreteClass>
             static void registerClass(const std::string& factoryKey) {
-                std::cout << "Registering class: " << factoryKey << " with constructor argument: " << ctorKey() << std::endl;
+                std::cout << "Registering class: " << factoryKey << " with constructor: " << factoryKey << "(" << ctorKey() << ")" << std::endl;
                 Factory::init()._registry[factoryKey][ctorKey()] = static_cast<boost::function < boost::shared_ptr<AbstractClass > () > > (boost::factory<boost::shared_ptr<ConcreteClass> >());
             }
 
             template <class ConcreteClass, typename A1>
             static void registerClass(const std::string& factoryKey) {
-                std::cout << "Registering class: " << factoryKey << " with constructor argument: " << ctorKey<A1 > () << std::endl;
+                std::cout << "Registering class: " << factoryKey << " with constructor: " << factoryKey << "(const " << ctorKey<A1 > () << "&)" << std::endl;
                 Factory::init()._registry[factoryKey][ctorKey<A1 > ()] = static_cast<boost::function < boost::shared_ptr<AbstractClass > (const A1&) > > (boost::factory<boost::shared_ptr<ConcreteClass> >());
             }
 
@@ -71,6 +71,10 @@ namespace karabo {
                     registeredClasses.push_back(it->first);
                 }
                 return registeredClasses;
+            }
+            
+            static bool has(const std::string& factoryKey) {
+                return  Factory::init()._registry.find(factoryKey) != Factory::init()._registry.end();
             }
 
         private:

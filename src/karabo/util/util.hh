@@ -18,7 +18,7 @@
 #include "GenericElement.hh"
 #include "SimpleElement.hh"
 #include "ComplexElement.hh"
-#include "SingleElement.hh"
+#include "NodeElement.hh"
 #include "ListElement.hh"
 #include "ChoiceElement.hh"
 #include "VectorElement.hh"

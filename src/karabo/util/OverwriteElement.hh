@@ -5,6 +5,8 @@
  *
  * Created on September 23, 2011, 11:12 AM
  *
+ * Major re-design on February 1, 2013, 1:00 PM
+ * 
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
 
@@ -17,81 +19,89 @@ namespace karabo {
     namespace util {
 
         class OverwriteElement {
-        protected:
-
-            Schema m_element; // Schema element
-            Schema* m_expected; // our Schema element will be added to this parameters list
+            Schema* m_schema;
+            Hash::Node m_node;
 
         public:
 
-            OverwriteElement() : m_expected(0) {
-            }
-
-            OverwriteElement(Schema& expected) : m_expected(&expected) {
+            OverwriteElement(Schema& expected) : m_schema(&expected) {
             }
 
             /**
-             * Set the unique key for the parameter
+             * Specify the key to be overwritten
              * @param name unique key name
              * @return  reference to the Element
              */
             OverwriteElement& key(std::string const& name) {
-                m_element.key(name);
-                m_element.displayedName(name);
-                m_element.access(INIT|READ|WRITE);
-                m_element.assignment(Schema::OPTIONAL_PARAM);
-                m_element.simpleType(Types::BOOL);
+                m_node = Hash::Node(name, 0);
+                m_node.setAttribute("nodeType", "leaf");
                 return *this;
             }
 
+            template <class AliasType>
+            OverwriteElement& setNewAlias(const AliasType& alias) {
+                m_node.setAttribute<AliasType > ("alias", alias);
+                return *this;
+            }
+
+            template <class TagType>
+            OverwriteElement& setNewTag(const TagType& tag) {
+                m_node.setAttribute<TagType > ("tag", tag);
+                return *this;
+            }
+
+            OverwriteElement& setNewAssignmentMandatory() {
+                m_node.setAttribute<int>("assignment", Schema::MANDATORY_PARAM);
+                return *this;
+            }
+
+            OverwriteElement& setNewAssignmentOptional() {
+                m_node.setAttribute<int>("assignment", Schema::OPTIONAL_PARAM);
+                return *this;
+            }
+
+            OverwriteElement& setNewAssignmentInternal() {
+                m_node.setAttribute<int>("assignment", Schema::INTERNAL_PARAM);
+                return *this;
+            }
+            
+            OverwriteElement& setNowInit() {
+                m_node.setAttribute<int>("accessMode", INIT);
+                return *this;
+            }
+            
+            OverwriteElement& setNowReconfigurable() {
+                m_node.setAttribute<int>("accessMode", WRITE);
+                return *this;
+            }
+            
+            OverwriteElement& setNowReadOnly() {
+                m_node.setAttribute<int>("accessMode", READ);
+                return *this;
+            }
+
+            template <class ValueType>
+            OverwriteElement& setNewDefaultValue(const ValueType& value) {
+                m_node.setAttribute("default", value);
+                return *this;
+            }
+            
             /**
-             * The <b>alias</b> method serves for setting up just another name for the element.
-             * Note:  this <i>another</i> name may not be necessarily a string. Just any type!
-             * @param alias <i>Another</i> name for this element
-             * @return reference to the Element (to allow method's chaining)
+             * The <b>commit</b> method injects the element to the expected parameters list. If not called
+             * the element is not usable. This must be called after the element is fully defined.
+             * @return reference to the GenericElement
              */
-            template <class T>
-            OverwriteElement& setNewAlias(const T& previousAlias) {
-                m_element.overwriteAlias(previousAlias);
-                return *this;
-            }
-
-            template <class T>
-            OverwriteElement& setNewDefault(const T& defaultValue) {
-                m_element.overwriteDefault(defaultValue);
-                return *this;
-            }
-
-            /**
-             * This function injects the parameter to the expected parameters list. If not called
-             * the parameter is not usable. The function must be called after the parameter is fully defined.
-             * @return reference to the OverwriteElement
-             */
-            OverwriteElement& commit() {
-                if (m_expected) {
-                    m_expected->addElement(m_element);
+            void commit() {
+                if (m_schema) {
+                    m_schema->addElement(m_node);
                 } else {
-                    throw KARABO_LOGIC_EXCEPTION("No expected parameter given to which this element should be applied to (hint: use different constructor)");
+                    throw KARABO_INIT_EXCEPTION("Could not append element to non-initialized Schema object");
                 }
-                return *this;
             }
-
-            /**
-             * This function injects the parameter to the expected parameters list. If not called
-             * the parameter is not usable. The function must be called after the parameter is fully defined.
-             * @param expected Reference to an expected parameter object
-             * @return reference to the OverwriteElement
-             */
-            OverwriteElement& commit(Schema& expected) {
-                m_expected = &expected;
-                m_expected->addElement(m_element);
-                return *this;
-            }
-
         };
-
-        typedef OverwriteElement OVERWRITE_ELEMENT;
-
     }
+    
+    typedef util::OverwriteElement OVERWRITE_ELEMENT;
+    
 }
 #endif	
