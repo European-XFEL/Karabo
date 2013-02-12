@@ -103,7 +103,7 @@ namespace karabo {
                 return this_type_is_not_supported_by_purpose(var);
             }
 
-            static ReferenceType category(ReferenceType type) {
+            static ReferenceType category(int type) {
                 switch (type) {
                     case Types::CHAR:
                     case Types::INT8:
@@ -138,10 +138,13 @@ namespace karabo {
                     case Types::VECTOR_COMPLEX_DOUBLE:
                         return SEQUENCE;
                     case Types::VECTOR_HASH:
+                        return VECTOR_HASH;
                     case Types::HASH:
+                        return HASH;
                     case Types::SCHEMA:
+                        return SCHEMA;
                     case Types::ANY:
-                        return type;
+                        return ANY;
                     default:
                         return UNKNOWN;
                 }
@@ -161,7 +164,7 @@ namespace karabo {
         _KARABO_HELPER_MACRO(INT32, int)
         _KARABO_HELPER_MACRO(UINT32, unsigned int)
         _KARABO_HELPER_MACRO(INT64, long long)
-        _KARABO_HELPER_MACRO(UINT64, unsigned long)
+        _KARABO_HELPER_MACRO(UINT64, unsigned long long)
         _KARABO_HELPER_MACRO(FLOAT, float)
         _KARABO_HELPER_MACRO(DOUBLE, double)
         _KARABO_HELPER_MACRO(COMPLEX_FLOAT, std::complex<float>)

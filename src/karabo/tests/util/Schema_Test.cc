@@ -80,7 +80,7 @@ void Schema_Test::testBuildUp() {
 //        cout << schema << endl;
         
         
-        GraphicsRenderer::Pointer p = GraphicsRenderer::create("GraphicsRenderer", Hash("shapes.Circle.bullShit", 1.0, "arsch", "keks"));
+        GraphicsRenderer::Pointer p = GraphicsRenderer::create("GraphicsRenderer", Hash("shapes.Circle.radius", 1.0,"color", "lila", "antiAlias", true));
         
         
         

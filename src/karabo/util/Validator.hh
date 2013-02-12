@@ -52,13 +52,7 @@ namespace karabo {
             
             void r_validate(const Hash& master, const Hash& user, Hash& working, std::ostringstream& report, std::string scope = "") const;
             
-            void processLeaf(const Hash& master, const Hash& user, Hash& working, std::ostringstream& report, std::string scope = "") const;
-            
-            void processNode(const Hash& master, const Hash& user, Hash& working, std::ostringstream& report, std::string scope = "") const;
-            
-            void processChoice(const Hash& master, const Hash& user, Hash& working, std::ostringstream& report, std::string scope = "") const;
-            
-            void processList(const Hash& master, const Hash& user, Hash& working, std::ostringstream& report, std::string scope = "") const;
+            void validateLeaf(const Hash::Node& masterNode, Hash::Node& workNode, std::ostringstream& report, std::string scope) const;
             
         };
     }

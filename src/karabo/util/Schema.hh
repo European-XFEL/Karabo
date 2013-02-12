@@ -86,12 +86,6 @@ namespace karabo {
             // Container
             Hash m_hash;
             
-            // Validation flags
-            bool m_injectDefaults;
-            bool m_assumeRootedConfiguration;
-            bool m_allowAdditionalKeys;
-            bool m_allowMissingKeys;
-            
             // Filter
             AccessType m_currentAccessMode;
             std::string m_currentState;
@@ -113,14 +107,7 @@ namespace karabo {
                 AssemblyRules(const AccessType& accessMode = INIT|WRITE, const std::string& state = "", const std::string& accessRole = ""):
                 m_accessMode(accessMode), m_state(state), m_accessRole(accessRole){}
             };
-            
-            struct ValidationRules {
-                bool injectDefaults;
-                bool allowUnrootedConfiguration;
-                bool allowAdditionalKeys;
-                bool allowMissingKeys;
-            };        
-
+          
             enum ExpertLevelType {
                 SIMPLE,
                 MEDIUM,
@@ -152,11 +139,7 @@ namespace karabo {
             void setAssemblyRules(const Schema::AssemblyRules& rules);
                 
             Schema::AssemblyRules getAssemblyRules() const;
-            
-            void setValidationRules(const Schema::ValidationRules& rules);
-                
-            Schema::ValidationRules getValidationRules() const;
-            
+           
             const std::string& getRootName() const;
             
             const karabo::util::Hash& getRoot() const;
@@ -387,10 +370,7 @@ namespace karabo {
             bool isAllowedInCurrentAccessRole(const Hash::Node& node) const;
             
             bool isAllowedInCurrentState(const Hash::Node& node) const;
-            
-            void r_validate(const Hash& master, const Hash& user, Hash& working, std::ostringstream& report, std::string scope = "") const;
-            
-            
+                              
         private: // functions
 
 //            static void processingDescription(const Schema& desc, std::ostringstream& stream);
