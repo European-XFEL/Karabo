@@ -53,6 +53,8 @@
         <itemPath>../../../src/karabo/util/Units.hh</itemPath>
       </logicalFolder>
       <logicalFolder name="f3" displayName="Type System" projectFiles="true">
+        <itemPath>../../../src/karabo/util/FromInt.cc</itemPath>
+        <itemPath>../../../src/karabo/util/FromInt.hh</itemPath>
         <itemPath>../../../src/karabo/util/FromLiteral.cc</itemPath>
         <itemPath>../../../src/karabo/util/FromLiteral.hh</itemPath>
         <itemPath>../../../src/karabo/util/FromType.hh</itemPath>
