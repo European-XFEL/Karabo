@@ -99,7 +99,7 @@ namespace karabo {
             inline T& getAttribute(const std::string& key);
 
             template<class T>
-            inline void getAttribute(const std::string& key, T& value);
+            inline void getAttribute(const std::string& key, T& value) const;
 
             template<class T>
             inline const T& getAttribute(const std::string& key) const;
@@ -339,7 +339,7 @@ namespace karabo {
 
         template<typename KeyType, typename AttributeType>
         template<class T>
-        inline void Element<KeyType, AttributeType>::getAttribute(const std::string& key, T& value) {
+        inline void Element<KeyType, AttributeType>::getAttribute(const std::string& key, T& value) const {
             m_attributes.template get(key, value);
         }
 
@@ -400,7 +400,7 @@ namespace karabo {
                         throw KARABO_CAST_EXCEPTION("Casting of is not supported for target type");
                 }
             } catch (...) {
-                KARABO_RETHROW;
+                KARABO_RETHROW_AS(KARABO_CAST_EXCEPTION("Problems with casting"));
             }
             #undef _KARABO_HELPER_MACRO
         }

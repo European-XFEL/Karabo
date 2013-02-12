@@ -141,7 +141,7 @@ namespace karabo {
                 Exception::showTrace();
             }
             string fill(Exception::m_trace.size()*3, ' ');
-            os << fill << "(" << Exception::m_trace.size() + 1 << ") Exception " << string(5, '=') << ">  {" << endl;
+            os << fill << Exception::m_trace.size() + 1 << ". Exception " << string(5, '=') << ">  {" << endl;
             Exception::format(os, exception.m_exceptionInfo, fill);
             os << fill << "}" << endl << endl;
 

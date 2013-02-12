@@ -40,6 +40,7 @@ OBJECTFILES= \
 	${OBJECTDIR}/_ext/163016059/Exception.o \
 	${OBJECTDIR}/_ext/163016059/FromTypeInfo.o \
 	${OBJECTDIR}/_ext/163016059/StringTools.o \
+	${OBJECTDIR}/_ext/163016059/FromInt.o \
 	${OBJECTDIR}/_ext/163016059/Timer.o \
 	${OBJECTDIR}/_ext/163016059/Base64.o \
 	${OBJECTDIR}/_ext/163016059/PluginLoader.o \
@@ -104,6 +105,11 @@ ${OBJECTDIR}/_ext/163016059/StringTools.o: ../../../src/karabo/util/StringTools.
 	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
 	${RM} $@.d
 	$(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163016059/StringTools.o ../../../src/karabo/util/StringTools.cc
+
+${OBJECTDIR}/_ext/163016059/FromInt.o: ../../../src/karabo/util/FromInt.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
+	${RM} $@.d
+	$(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163016059/FromInt.o ../../../src/karabo/util/FromInt.cc
 
 ${OBJECTDIR}/_ext/163016059/Timer.o: ../../../src/karabo/util/Timer.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
@@ -254,6 +260,19 @@ ${OBJECTDIR}/_ext/163016059/StringTools_nomain.o: ${OBJECTDIR}/_ext/163016059/St
 	    $(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163016059/StringTools_nomain.o ../../../src/karabo/util/StringTools.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/163016059/StringTools.o ${OBJECTDIR}/_ext/163016059/StringTools_nomain.o;\
+	fi
+
+${OBJECTDIR}/_ext/163016059/FromInt_nomain.o: ${OBJECTDIR}/_ext/163016059/FromInt.o ../../../src/karabo/util/FromInt.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/163016059/FromInt.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} $@.d;\
+	    $(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163016059/FromInt_nomain.o ../../../src/karabo/util/FromInt.cc;\
+	else  \
+	    ${CP} ${OBJECTDIR}/_ext/163016059/FromInt.o ${OBJECTDIR}/_ext/163016059/FromInt_nomain.o;\
 	fi
 
 ${OBJECTDIR}/_ext/163016059/Timer_nomain.o: ${OBJECTDIR}/_ext/163016059/Timer.o ../../../src/karabo/util/Timer.cc 

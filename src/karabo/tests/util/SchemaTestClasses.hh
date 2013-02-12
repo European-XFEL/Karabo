@@ -133,6 +133,7 @@ namespace schemaTest {
             STRING_ELEMENT(expected).key("color")
                     .tag("prop")
                     .displayedName("Color")
+                    .options("red,green,blue,orange,black")
                     .description("The default color for any shape")
                     .assignmentOptional().defaultValue("red")
                     .reconfigurable()
@@ -157,7 +158,6 @@ namespace schemaTest {
         void configure(const karabo::util::Hash& input) {
             
             std::cout << "*********** " << std::endl << input << std::endl;
-            
             Shape::Pointer shape = Shape::createChoice("shapes", input);
             std::cout << "*********** " <<  shape->draw() << std::endl;
         }
@@ -182,7 +182,7 @@ namespace schemaTest {
                     .tag("prop")
                     .displayedName("Color")
                     .description("The default color for any shape")
-                    .assignmentOptional().defaultValue("red")
+                    .assignmentOptional().defaultValue("red")            
                     .reconfigurable()
                     .commit();
 

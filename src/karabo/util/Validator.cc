@@ -7,6 +7,7 @@
 
 #include "Validator.hh"
 #include "Schema.hh"
+#include "FromInt.hh"
 
 namespace karabo {
     namespace util {
@@ -96,12 +97,12 @@ namespace karabo {
                                 return;
                             }
                         } else if (assignment == Schema::OPTIONAL_PARAM && hasDefault && m_injectDefaults) {
-                            working.set(key, it->getAttributeAsAny("default"));
-                            // validateLeaf(*it, node, report);
+                            Hash::Node& node = working.set(key, it->getAttributeAsAny("default"));
+                            this->validateLeaf(*it, node, report, currentScope);
                         }
                     } else { // Node IS provided
                         Hash::Node& node = working.setNode(user.getNode(key));
-                        // validateLeaf(*it, node, report, currentScope);
+                        this->validateLeaf(*it, node, report, currentScope);
                     }
                 } else if (nodeType == Schema::NODE) {
                     if (!userHasNode) {
@@ -232,7 +233,7 @@ namespace karabo {
                                 cout << "Silently converting from STRING" << endl;
                                 if (validOptions.find(optionName) != validOptions.end()) { // Is a valid option
                                     Hash tmp;
-                                    //r_validate(it->getValue<Hash > ().get<Hash > (optionName), Hash(), tmp, report, currentScope + "." + optionName);
+                                    r_validate(it->getValue<Hash > ().get<Hash > (optionName), Hash(), tmp, report, currentScope + "." + optionName);
                                     workNodes.push_back(Hash(optionName, tmp));
                                 } else {
                                     report << "Provided parameter: \"" << optionName << "\" is not a valid option for list: \"" << key << "\". ";
@@ -265,7 +266,7 @@ namespace karabo {
                                 string optionName = rootNode.getKey();
                                 if (validOptions.find(optionName) != validOptions.end()) { // Is a valid option
                                     Hash tmp;
-                                    //r_validate(it->getValue<Hash > ().get<Hash > (optionName), rootNode.getValue<Hash>(), tmp, report, currentScope + "." + optionName);
+                                    r_validate(it->getValue<Hash > ().get<Hash > (optionName), rootNode.getValue<Hash>(), tmp, report, currentScope + "." + optionName);
                                     workNodes.push_back(Hash(optionName, tmp));
                                 } else {
                                     report << "Provided parameter: \"" << optionName << "\" is not a valid option for list: \"" << key << "\". ";
@@ -289,5 +290,45 @@ namespace karabo {
                 }
             }
         }
+        
+        void Validator::validateLeaf(const Hash::Node& masterNode, Hash::Node& workNode, std::ostringstream& report, std::string scope) const {
+            
+            
+            Types::ReferenceType referenceType = Types::from<FromInt>(masterNode.getAttribute<int>("valueType"));
+            Types::ReferenceType referenceCategory = Types::category(referenceType);
+            Types::ReferenceType givenType = workNode.getType();
+            
+            // Check data types
+            if (givenType != referenceType) {
+                // Try casting this guy
+                try {
+                    workNode.setType(referenceType);
+                } catch (const CastException& e) {
+                     report << "Failed to cast the value of parameter \"" << scope << "\" from " << Types::to<ToLiteral>(givenType);
+                     report << " to " << Types::to<ToLiteral>(referenceType) << endl;
+                     Exception::clearTrace(); // Do not show all the bloody details
+                     return;
+                }
+            }
+            
+            // Check ranges
+            if (referenceCategory == Types::SIMPLE) {
+                if (masterNode.hasAttribute("options")) {
+                    vector<string> options;
+                    masterNode.getAttribute("options", options);
+                    if (std::find(options.begin(), options.end(), workNode.getValueAs<string>()) == options.end()) {
+                        report << "Value " << workNode.getValueAs<string>() << " for parameter \"" << scope << "\" is not one of the valid options: " << karabo::util::toString(options) << endl;
+                    }
+                }
+                
+                if (masterNode.hasAttribute("minExc")) {
+                    //double minExc = masterNode.get
+                }
+                
+            }
+            
+        }
+        
+        
     }
 }
