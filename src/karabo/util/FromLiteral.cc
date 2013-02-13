@@ -50,7 +50,10 @@ namespace karabo {
                     _KARABO_HELPER_MACRO(VECTOR_HASH)
                     _KARABO_HELPER_MACRO(SCHEMA)
                     _KARABO_HELPER_MACRO(COMPLEX_FLOAT)
+                    _KARABO_HELPER_MACRO(VECTOR_COMPLEX_FLOAT)
                     _KARABO_HELPER_MACRO(COMPLEX_DOUBLE)
+                    _KARABO_HELPER_MACRO(VECTOR_COMPLEX_DOUBLE)
+                    
                     ;
         }
 #undef _KARABO_HELPER_MACRO

@@ -57,7 +57,9 @@ namespace karabo {
         KARABO_MAP_TO_REFERENCE_TYPE(ToCppString, VECTOR_HASH, "vector<Hash>")
         KARABO_MAP_TO_REFERENCE_TYPE(ToCppString, SCHEMA, "Schema")
         KARABO_MAP_TO_REFERENCE_TYPE(ToCppString, COMPLEX_FLOAT, "complex<float>")
+        KARABO_MAP_TO_REFERENCE_TYPE(ToCppString, VECTOR_COMPLEX_FLOAT, "vector<complex<float> >")
         KARABO_MAP_TO_REFERENCE_TYPE(ToCppString, COMPLEX_DOUBLE, "complex<double>")
+        KARABO_MAP_TO_REFERENCE_TYPE(ToCppString, VECTOR_COMPLEX_DOUBLE, "vector<complex<double> >")
         KARABO_MAP_TO_REFERENCE_TYPE(ToCppString, UNKNOWN, "unknown")
     }
 }
