@@ -89,7 +89,7 @@ build: .build-post
 
 # Add your post 'build' code here...
 	@if test ! -d $(KARABO)/include/karabo/core;    then $(MKDIR) -p  $(KARABO)/include/karabo/core; fi
-	@if test ! -d $(KARABO)/include/karabo/io/hdf5; then $(MKDIR) -p  $(KARABO)/include/karabo/io/hdf5; fi
+	@if test ! -d $(KARABO)/include/karabo/io/h5; then $(MKDIR) -p  $(KARABO)/include/karabo/io/h5; fi
 	@if test ! -d $(KARABO)/include/karabo/log;     then $(MKDIR) -p  $(KARABO)/include/karabo/log; fi
 	@if test ! -d $(KARABO)/include/karabo/net;     then $(MKDIR) -p  $(KARABO)/include/karabo/net; fi
 	@if test ! -d $(KARABO)/include/karabo/python;  then $(MKDIR) -p  $(KARABO)/include/karabo/python; fi
@@ -99,7 +99,7 @@ build: .build-post
 	@if test ! -d $(KARABO)/include/karabo/xms;     then $(MKDIR) -p  $(KARABO)/include/karabo/xms; fi
 	@$(CP) $(CND_BASEDIR)/../../../src/karabo/core/*.hh $(KARABO)/include/karabo/core
 	@$(CP) $(CND_BASEDIR)/../../../src/karabo/io/*.hh $(KARABO)/include/karabo/io
-	@$(CP) $(CND_BASEDIR)/../../../src/karabo/io/hdf5/*.hh $(KARABO)/include/karabo/io/hdf5
+	@$(CP) $(CND_BASEDIR)/../../../src/karabo/io/h5/*.hh $(KARABO)/include/karabo/io/h5
 	@$(CP) $(CND_BASEDIR)/../../../src/karabo/log/*.hh $(KARABO)/include/karabo/log
 	@$(CP) $(CND_BASEDIR)/../../../src/karabo/net/*.hh $(KARABO)/include/karabo/net
 	@$(CP) $(CND_BASEDIR)/../../../src/karabo/python/*.hh $(KARABO)/include/karabo/python
