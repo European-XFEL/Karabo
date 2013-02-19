@@ -12,12 +12,12 @@
 #include <string>
 #include <boost/current_function.hpp>
 
-#include "utildll.hh"
+#include "karaboDll.hh"
 
 namespace karabo {
     namespace util {
 
-        class DECLSPEC_UTIL ClassInfo {
+        class KARABO_DECLSPEC ClassInfo {
         public:
 
             ClassInfo(const std::string& classId, const std::string& signature, const std::string& classVersion);
