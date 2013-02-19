@@ -19,31 +19,31 @@
 namespace karabo {
     namespace util {
 
-        class LIST_ELEMENT : public GenericElement<LIST_ELEMENT> {
+        class ListElement : public GenericElement<ListElement> {
             Schema::AssemblyRules m_parentSchemaAssemblyRules;
         public:
 
-            LIST_ELEMENT(Schema& expected) : GenericElement<LIST_ELEMENT>(expected) {
+            ListElement(Schema& expected) : GenericElement<ListElement>(expected) {
                 Schema::AssemblyRules m_parentSchemaAssemblyRules = expected.getAssemblyRules();
             }
 
-            LIST_ELEMENT& min(const int minNumNodes) {
+            ListElement& min(const int minNumNodes) {
                 this->m_node->setAttribute("min", minNumNodes);
                 return *this;
             }
 
-            LIST_ELEMENT& max(const int maxNumNodes) {
+            ListElement& max(const int maxNumNodes) {
                 this->m_node->setAttribute("max", maxNumNodes);
                 return *this;
             }
             
-            LIST_ELEMENT& defaultValue(const std::vector<std::string>& defaultNodes) {
+            ListElement& defaultValue(const std::vector<std::string>& defaultNodes) {
                 this->m_node->setAttribute("default", defaultNodes);
                 return *this;
             }
 
             template <class ConfigurationBase>
-            LIST_ELEMENT& appendNodesOfConfigurationBase() {
+            ListElement& appendNodesOfConfigurationBase() {
                 // Create an empty Hash as value of this choice node if not there yet
                 if (this->m_node->getType() != Types::HASH) this->m_node->setValue(Hash());
                 // Retrieve reference for filling
@@ -63,7 +63,7 @@ namespace karabo {
             }
 
             template <class T>
-            LIST_ELEMENT& appendAsNode(const std::string& nodeName = "") {
+            ListElement& appendAsNode(const std::string& nodeName = "") {
                 // Create an empty Hash as value of this choice node if not there yet
                 if (this->m_node->getType() != Types::HASH) this->m_node->setValue(Hash());
                 // Retrieve reference for filling
@@ -80,15 +80,6 @@ namespace karabo {
                 return *this;
             }
 
-            LIST_ELEMENT& appendEmptyNode(const std::string& nodeName) {
-                // Create an empty Hash as value of this choice node if not there yet
-                if (this->m_node->getType() != Types::HASH) this->m_node->setValue(Hash());
-                // Retrieve reference for filling
-                Hash& choiceOfNodes = this->m_node->template getValue<Hash > ();
-                choiceOfNodes.set<Hash > (nodeName, Hash());
-                return *this;
-            }
-
         protected:
 
             void beforeAddition() {
@@ -97,6 +88,7 @@ namespace karabo {
             }
 
         };
+        typedef util::ListElement LIST_ELEMENT;
     }
 }
 

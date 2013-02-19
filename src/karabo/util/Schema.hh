@@ -18,7 +18,6 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/tuple/tuple.hpp>
 
-//#include "ConfigConstants.hh"
 #include "Hash.hh"
 #include "StringTools.hh"
 #include "Test.hh"
@@ -78,8 +77,8 @@ namespace karabo {
             friend class OverwriteElement;
             template< typename T, template <typename, typename> class CONT> friend class VectorElement;
             friend class ChoiceElement;
-            friend class LIST_ELEMENT;
-            friend class NODE_ELEMENT;
+            friend class ListElement;
+            friend class NodeElement;
             
 //            template< class Node, class T> friend class DefaultValue;
             
@@ -263,7 +262,7 @@ namespace karabo {
 
 
 
-            void setUnit(const std::string& path, const Unit& value);
+            void setUnit(const std::string& path, const Units::Unit& value);
 
             bool hasUnit(const std::string& path) const;
 
@@ -271,9 +270,9 @@ namespace karabo {
 
             const std::string& getUnitSymbol(const std::string& path) const;
 
-            void setUnitMetricPrefix(const std::string& path, const MetricPrefix& value);
+            void setUnitMetricPrefix(const std::string& path, const Units::MetricPrefix& value);
 
-            const MetricPrefix getUnitMetricPrefix(const std::string& path) const;
+            const Units::MetricPrefix getUnitMetricPrefix(const std::string& path) const;
 
 
 

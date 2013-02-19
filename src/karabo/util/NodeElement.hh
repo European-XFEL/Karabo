@@ -21,19 +21,19 @@
 namespace karabo {
     namespace util {
 
-        class NODE_ELEMENT : public GenericElement<NODE_ELEMENT> {
+        class NodeElement : public GenericElement<NodeElement> {
             Schema::AssemblyRules m_parentSchemaAssemblyRules;
 
         public:
 
-            NODE_ELEMENT(Schema& expected) : GenericElement<NODE_ELEMENT>(expected) {
+            NodeElement(Schema& expected) : GenericElement<NodeElement>(expected) {
                 m_parentSchemaAssemblyRules = expected.getAssemblyRules();
             }
 
             template <class FactoryBase>
-            NODE_ELEMENT& appendParametersOfFactoryMember(const std::string& classId) {
+            NodeElement& appendParametersOfFactoryMember(const std::string& classId) {
                 if (Factory<FactoryBase>::has(classId)) {
-                    this->m_node->setAttribute("foreignClassId", classId);
+                    this->m_node->setAttribute("classId", classId);
                     this->m_node->setAttribute("displayType", FactoryBase::classInfo().getClassId());
                     // Assemble schema (taking into account base classes, etc.) and append to node
                     Schema schema = Configurator<FactoryBase>::assembleSchema(classId, m_parentSchemaAssemblyRules);
@@ -48,7 +48,7 @@ namespace karabo {
             }
 
             template <class T>
-            NODE_ELEMENT& appendParametersOf() {
+            NodeElement& appendParametersOf() {
                 // Simply append the expected parameters of T to current node
                 Schema schema = karabo::util::confTools::assembleSchema<T > ("dummyRoot", m_parentSchemaAssemblyRules);
                 this->m_node->template setValue<Hash > (schema.getRoot());
@@ -62,6 +62,7 @@ namespace karabo {
                 this->m_node->setAttribute<int>("nodeType", Schema::NODE);
             }
         };
+        typedef NodeElement NODE_ELEMENT;
     }
 }
 

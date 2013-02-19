@@ -30,18 +30,18 @@ namespace karabo {
       return diff.total_milliseconds();
     }
     
-    // Get current date/time, format is YYYY-MM-DD.HH:mm:ss
-    std::string Time::getCurrentDateTime(const std::string& format) {
-        time_t     now = time(0);
-        struct tm  tstruct;
-        char       buf[80];
-        tstruct = *localtime(&now);
-        // Visit http://www.cplusplus.com/reference/clibrary/ctime/strftime/
-        // for more information about date/time format
-        strftime(buf, sizeof(buf), format.c_str(), &tstruct);
-        
-        return buf;
-    }
+//    // Get current date/time, format is YYYY-MM-DD.HH:mm:ss
+//    std::string Time::getCurrentDateTime(const std::string& format) {
+//        time_t     now = time(0);
+//        struct tm  tstruct;
+//        char       buf[80];
+//        tstruct = *localtime(&now);
+//        // Visit http://www.cplusplus.com/reference/clibrary/ctime/strftime/
+//        // for more information about date/time format
+//        strftime(buf, sizeof(buf), format.c_str(), &tstruct);
+//        
+//        return buf;
+//    }
     
   } // namespace packageName
 } // namespace karabo

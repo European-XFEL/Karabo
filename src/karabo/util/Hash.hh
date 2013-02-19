@@ -372,6 +372,12 @@ namespace karabo {
             template <typename ValueType>
             ValueType& getAttribute(const std::string& path, const std::string& attribute, const char separator = '.');
 
+            template <typename T>
+            T getAttributeAs(const std::string& path, const std::string& attribute, const char separator = '.') const;
+            
+            template<typename T, template <typename Elem, typename = std::allocator<Elem> > class Cont >
+            Cont<T> getAttributeAs(const std::string& path, const std::string& attribute, const char separator = '.') const;
+            
             const Attributes& getAttributes(const std::string& path, const char separator = '.') const;
             Attributes& getAttributes(const std::string& path, const char separator = '.');
 
@@ -592,6 +598,16 @@ namespace karabo {
         template <typename ValueType >
         ValueType & Hash::getAttribute(const std::string& path, const std::string& attribute, const char separator) {
             return getNode(path, separator).getAttribute<ValueType > (attribute);
+        }
+        
+        template <typename T>
+        T Hash::getAttributeAs(const std::string& path, const std::string& attribute, const char separator) const {
+            return getNode(path, separator).getAttributeAs<T >(attribute);
+        }
+        
+        template<typename T, template <typename Elem, typename = std::allocator<Elem> > class Cont >
+        Cont<T> Hash::getAttributeAs(const std::string& path, const std::string& attribute, const char separator) const {
+            return getNode(path, separator).getAttributeAs<Cont<T> >(attribute);
         }
 
         template <typename ValueType>

@@ -27,7 +27,7 @@ namespace karabo {
 
             SimpleElement(Schema& expected) : LeafElement<SimpleElement<ValueType>, ValueType >(expected) {
             }
-            
+
             /**
              * The <b>options</b> method specifies values allowed for the parameter.
              * @param opts A string with space separated values. The values are casted to the proper type.
@@ -89,16 +89,16 @@ namespace karabo {
                 this->m_node->setAttribute("maxExc", value);
                 return *this;
             }
-            
+
         protected:
 
             void beforeAddition() {
 
                 this->m_node->template setAttribute<int>("nodeType", Schema::LEAF);
-                this->m_node->template setAttribute<int>("valueType", Types::from<ValueType>());
-                
+                this->m_node->template setAttribute<int>("valueType", Types::from<ValueType > ());
+
                 if (this->m_node->hasAttribute("accessMode")) this->init(); // This is the default
-                
+
                 checkMinExcMaxExc();
                 checkMinIncMaxInc();
 
@@ -188,6 +188,13 @@ namespace karabo {
         //            }
         //        };
 
+
+
+
+        //typedef SimpleElement<boost::filesystem::path> PATH_ELEMENT;
+        //typedef SimpleElement<Schema> CONFIG_ELEMENT;
+        // typedef SimpleElement<Types::Any> INTERNAL_ANY_ELEMENT;
+
         typedef SimpleElement<bool > BOOL_ELEMENT;
         typedef SimpleElement<signed char> INT8_ELEMENT;
         typedef SimpleElement<char> CHAR_ELEMENT;
@@ -201,12 +208,6 @@ namespace karabo {
         typedef SimpleElement<float> FLOAT_ELEMENT;
         typedef SimpleElement<double> DOUBLE_ELEMENT;
         typedef SimpleElement<std::string> STRING_ELEMENT;
-
-
-        //typedef SimpleElement<boost::filesystem::path> PATH_ELEMENT;
-        //typedef SimpleElement<Schema> CONFIG_ELEMENT;
-        // typedef SimpleElement<Types::Any> INTERNAL_ANY_ELEMENT;
-
     }
 }
 

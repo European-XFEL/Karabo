@@ -322,13 +322,57 @@ namespace karabo {
                 }
                 
                 if (masterNode.hasAttribute("minExc")) {
-                    //double minExc = masterNode.get
+                    double minExc = masterNode.getAttributeAs<double>("minExc");
+                    double value = workNode.getValueAs<double>();
+                    if (value <= minExc) {
+                        report << "Value " << value << " for parameter \"" << scope << "\" is out of lower bound " << minExc << endl;
+                    }
                 }
                 
+                if (masterNode.hasAttribute("minInc")) {
+                    double minInc = masterNode.getAttributeAs<double>("minInc");
+                    double value = workNode.getValueAs<double>();
+                    if (value < minInc) {
+                        report << "Value " << value << " for parameter \"" << scope << "\" is out of lower bound " << minInc << endl;
+                    }
+                }
+                
+                if (masterNode.hasAttribute("maxExc")) {
+                    double maxExc = masterNode.getAttributeAs<double>("maxExc");
+                    double value = workNode.getValueAs<double>();
+                    if (value >= maxExc) {
+                        report << "Value " << value << " for parameter \"" << scope << "\" is out of upper bound " << maxExc << endl;
+                    }
+                }
+                
+                if (masterNode.hasAttribute("maxInc")) {
+                    double maxInc = masterNode.getAttributeAs<double>("maxInc");
+                    double value = workNode.getValueAs<double>();
+                    if (value > maxInc) {
+                        report << "Value " << value << " for parameter \"" << scope << "\" is out of upper bound " << maxInc << endl;
+                    }
+                }
+            } else if (referenceCategory == Types::SEQUENCE) {
+                int currentSize = workNode.getValueAs<string, vector>().size();
+                
+                // TODO Check whether we are really going to validate inner elements of a vector for max/min..., maybe not.
+                
+                if (masterNode.hasAttribute("minSize")) {
+                    int minSize = masterNode.getAttribute<int>("minSize");
+                    if (currentSize < minSize) {
+                        report << "Number of elements (" << currentSize << " for (vector-)parameter \"" << scope << "\" is smaller than lower bound (" << minSize << ")" << endl;
+                    }
+                }
+                
+                if (masterNode.hasAttribute("maxSize")) {
+                    int maxSize = masterNode.getAttribute<int>("maxSize");
+                    if (currentSize > maxSize) {
+                        report << "Number of elements (" << currentSize << " for (vector-)parameter \"" << scope << "\" is greater than upper bound (" << maxSize << ")" << endl;
+                    }
+                }
+               
+                
             }
-            
         }
-        
-        
     }
 }
