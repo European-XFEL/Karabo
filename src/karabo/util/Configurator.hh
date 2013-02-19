@@ -375,23 +375,23 @@ namespace karabo {
 
 
 
-        #define KARABO_REGISTER_FOR_CONFIGURATION(Base) \
+        #define KARABO_REGISTER_FOR_CONFIGURATION_1(Base) \
                 template<> const karabo::util::FactoryMember0<karabo::util::Configurator<Base>, karabo::util::Configurator0<Base> > \
                 karabo::util::Register0<karabo::util::Configurator<Base>, karabo::util::Configurator0<Base> >::registerAs(Base::classInfo().getClassId());
         
-        #define KARABO_REGISTER_FOR_CONFIGURATION_1(Base, Sub1) \
+        #define KARABO_REGISTER_FOR_CONFIGURATION_2(Base, Sub1) \
                 template<> const karabo::util::FactoryMember0<karabo::util::Configurator<Base>, karabo::util::Configurator1<Base, Sub1> > \
                 karabo::util::Register0<karabo::util::Configurator<Base>, karabo::util::Configurator1<Base, Sub1> >::registerAs(Sub1::classInfo().getClassId());
 
-        #define KARABO_REGISTER_FOR_CONFIGURATION_2(Base, Sub1, Sub2) \
+        #define KARABO_REGISTER_FOR_CONFIGURATION_3(Base, Sub1, Sub2) \
                 template<> const karabo::util::FactoryMember0<karabo::util::Configurator<Base>, karabo::util::Configurator2<Base, Sub1, Sub2> > \
                 karabo::util::Register0<karabo::util::Configurator<Base>, karabo::util::Configurator2<Base, Sub1, Sub2> >::registerAs(Sub2::classInfo().getClassId());
 
-        #define KARABO_REGISTER_FOR_CONFIGURATION_3(Base, Sub1, Sub2, Sub3) \
+        #define KARABO_REGISTER_FOR_CONFIGURATION_4(Base, Sub1, Sub2, Sub3) \
                 template<> const karabo::util::FactoryMember0<karabo::util::Configurator<Base>, karabo::util::Configurator3<Base, Sub1, Sub2, Sub3> > \
                 karabo::util::Register0<karabo::util::Configurator<Base>, karabo::util::Configurator3<Base, Sub1, Sub2, Sub3> >::registerAs(Sub3::classInfo().getClassId());
 
-        #define KARABO_REGISTER_FOR_CONFIGURATION_4(Base, Sub1, Sub2, Sub3, Sub4) \
+        #define KARABO_REGISTER_FOR_CONFIGURATION_5(Base, Sub1, Sub2, Sub3, Sub4) \
                 template<> const karabo::util::FactoryMember0<karabo::util::Configurator<Base>, karabo::util::Configurator4<Base, Sub1, Sub2, Sub3, Sub4> > \
                 karabo::util::Register0<karabo::util::Configurator<Base>, karabo::util::Configurator4<Base, Sub1, Sub2, Sub3, Sub4> >::registerAs(Sub3::classInfo().getClassId());
 

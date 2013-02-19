@@ -40,7 +40,7 @@ namespace karabo {
 
       static unsigned long long getMsSinceEpoch();
       
-      static std::string getCurrentDateTime(const std::string& format="%Y-%m-%d %H:%M:%S");
+      //static std::string getCurrentDateTime(const std::string& format="%Y-%m-%d %H:%M:%S");
 
     protected:
 
