@@ -16,12 +16,12 @@
 
 
 #include "Timer.hh"
-#include "utildll.hh"
+#include "karaboDll.hh"
 
 namespace karabo {
     namespace util {
 
-        class DECLSPEC_UTIL Profiler {
+        class KARABO_DECLSPEC Profiler {
             
             // Period of time 
 

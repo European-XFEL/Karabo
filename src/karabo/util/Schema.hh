@@ -20,7 +20,6 @@
 
 #include "Hash.hh"
 #include "StringTools.hh"
-#include "Test.hh"
 #include "ToLiteral.hh"
 #include "Units.hh"
 
