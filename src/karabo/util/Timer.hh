@@ -19,7 +19,7 @@ typedef int clockid_t;
 #endif
 
 #include <boost/date_time.hpp>
-#include "utildll.hh"
+#include "karaboDll.hh"
 
 namespace karabo {
     namespace util {
@@ -49,7 +49,7 @@ namespace karabo {
 
         // TODO: merge it with util::Time class
 
-        class DECLSPEC_UTIL HighResolutionTimer {
+        class KARABO_DECLSPEC HighResolutionTimer {
 #ifdef _WIN32
             timestamp m_CpuFrequency;
 #endif
@@ -89,10 +89,10 @@ namespace karabo {
             static std::string fractionsOfSecond(uint32_t nanosecs, int precision);
         };
 
-        DECLSPEC_UTIL bool operator!=(const timestamp& left, const timestamp& right);
-        DECLSPEC_UTIL bool operator==(const timestamp& left, const timestamp& right);
-        DECLSPEC_UTIL timestamp operator+(const timestamp& left, const timestamp& right);
-        DECLSPEC_UTIL timestamp operator-(const timestamp& left, const timestamp& right);
+        KARABO_DECLSPEC bool operator!=(const timestamp& left, const timestamp& right);
+        KARABO_DECLSPEC bool operator==(const timestamp& left, const timestamp& right);
+        KARABO_DECLSPEC timestamp operator+(const timestamp& left, const timestamp& right);
+        KARABO_DECLSPEC timestamp operator-(const timestamp& left, const timestamp& right);
     }
 }
 

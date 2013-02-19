@@ -23,7 +23,7 @@
 #include <vector>
 #include <sstream>
 
-#include "utildll.hh"
+#include "karaboDll.hh"
 
 namespace karabo {
 
@@ -32,7 +32,7 @@ namespace karabo {
         /**
          * Main Exception class.
          */
-        class DECLSPEC_UTIL Exception : public std::exception {
+        class KARABO_DECLSPEC Exception : public std::exception {
         public:
 
             typedef boost::function<void (const Exception&) > ExceptionHandler;
@@ -96,7 +96,7 @@ namespace karabo {
             /**
              *  Automatic output using the << operator
              */
-            DECLSPEC_UTIL friend std::ostream & operator<<(std::ostream& os, const Exception& Exception);
+            KARABO_DECLSPEC friend std::ostream & operator<<(std::ostream& os, const Exception& Exception);
 
             /**
              * Explicit output function.
