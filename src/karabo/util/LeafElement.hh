@@ -43,9 +43,11 @@ namespace karabo {
              * @param unitName The name describing units
              * @return reference to the Element (to allow method's chaining)
              */
-            LeafElement& unit(const Unit& unit) {
-                this->m_node->template setAttribute<int>("unit", unit);
-                // TODO unitName, unitSymbol here
+            LeafElement& unit(const Units::Unit& unit) {
+                this->m_node->template setAttribute<int>("unitEnum", unit);
+                std::pair<std::string, std::string> names = karabo::util::Units::getUnit(unit);
+                this->m_node->setAttribute("unitName", names.first);
+                this->m_node->setAttribute("unitSymbol", names.second);
                 return *this;
             }
 
@@ -54,8 +56,11 @@ namespace karabo {
              * @param metricPrefix The metric prefix
              * @return reference to the Element (to allow method's chaining)
              */
-            LeafElement& metricPrefix(const MetricPrefix& metricPrefix) {
+            LeafElement& metricPrefix(const Units::MetricPrefix& metricPrefix) {
                 this->m_node->template setAttribute<int>("metricPrefixEnum", metricPrefix);
+                std::pair<std::string, std::string> names = karabo::util::Units::getMetricPrefix(metricPrefix);
+                this->m_node->setAttribute("metricPrefixName", names.first);
+                this->m_node->setAttribute("metricPrefixSymbol", names.second);
                 return *this;
             }
 

@@ -5,16 +5,21 @@
  * Created on January 29, 2013, 12:13 PM
  */
 
-#ifndef KARABO_UTIL_UNITS_HH_hh
-#define	KARABO_UTIL_UNITS_HH_hh
+#ifndef KARABO_UTIL_UNITS_HH
+#define	KARABO_UTIL_UNITS_HH
 
+#include <boost/algorithm/string.hpp>
 
 #include <karabo/util/karaboDll.hh>
 
+#include "Exception.hh"
+
 namespace karabo {
     namespace util {
-        
-        namespace metricPrefix {
+
+        class Units {
+        public:
+
             enum MetricPrefix {
                 YOTTA,
                 ZETTA,
@@ -38,11 +43,7 @@ namespace karabo {
                 ZEPTO,
                 YOCTO
             };
-        }
-        typedef metricPrefix::MetricPrefix MetricPrefix;
-            
-        // TODO m^2 m^3 !!
-        namespace unit {
+
             enum Unit {
                 METER,
                 GRAM,
@@ -80,10 +81,43 @@ namespace karabo {
                 MONTH,
                 YEAR,
                 BAR,
-                PIXEL
+                PIXEL,
+                BYTE,
+                BIT
             };
-        }
-        typedef unit::Unit Unit;
+
+            template <int MetricEnum>
+            static std::pair<std::string, std::string> getMetricPrefix() {
+                throw KARABO_PARAMETER_EXCEPTION("");
+            }
+
+            template <int UnitEnum>
+            static std::pair<std::string, std::string> getUnit() {
+                throw KARABO_PARAMETER_EXCEPTION("");
+            }
+
+            static std::pair<std::string, std::string> getMetricPrefix(const MetricPrefix metricPrefix);
+
+            static std::pair<std::string, std::string> getUnit(const Unit unit);
+
+
+        };
+
+
+        #define _KARABO_HELPER_MACRO(metricEnum, symbol) \
+        template <> inline std::pair<std::string, std::string> Units::getMetricPrefix<karabo::util::Units::metricEnum>(){ std::string name(#metricEnum); boost::to_lower(name); return std::make_pair(name, symbol); }
+
+        _KARABO_HELPER_MACRO(MILLI, "m")
+
+        #undef _KARABO_HELPER_MACRO
+
+
+        #define _KARABO_HELPER_MACRO(unitEnum, symbol) \
+         template <> inline std::pair<std::string, std::string> Units::getUnit<karabo::util::Units::unitEnum>() { std::string name(#unitEnum); boost::to_lower(name); return std::make_pair(name, symbol); }
+
+        _KARABO_HELPER_MACRO(METER, "m")
+
+        #undef _KARABO_HELPER_MACRO
     }
 }
 #endif

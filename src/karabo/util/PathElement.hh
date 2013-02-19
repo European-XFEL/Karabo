@@ -72,7 +72,6 @@ namespace karabo {
                 if (this->m_node->hasAttribute("accessMode")) this->init(); // This is the default
             }
         };
-        
         typedef PathElement PATH_ELEMENT;
     }
 }

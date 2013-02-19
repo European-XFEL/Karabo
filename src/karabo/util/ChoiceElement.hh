@@ -70,16 +70,7 @@ namespace karabo {
                 node.setAttribute<int>("accessMode", READ | WRITE | INIT);
                 return *this;
             }
-            
-            ChoiceElement& appendEmptyNode(const std::string& nodeName) {
-                 // Create an empty Hash as value of this choice node if not there yet
-                if (this->m_node->getType() != Types::HASH) this->m_node->setValue(Hash());
-                // Retrieve reference for filling
-                Hash& choiceOfNodes = this->m_node->getValue<Hash > ();
-                choiceOfNodes.set<Hash>(nodeName, Hash());
-                return *this;
-            }
-            
+                        
             /**
              * The <b>assignmentMandatory</b> method serves for setting up a mode that requires the value
              * of the element always being specified. No default value is possible.
@@ -104,7 +95,6 @@ namespace karabo {
 
 
         };
-        
         typedef ChoiceElement CHOICE_ELEMENT;
     }
 }
