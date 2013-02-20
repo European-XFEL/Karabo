@@ -16,23 +16,28 @@ class Schema_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST_SUITE(Schema_Test);
 
     CPPUNIT_TEST(testBuildUp);
-
-
+    CPPUNIT_TEST(testGetRootName);
+    CPPUNIT_TEST(testGetRoot);
+    
     CPPUNIT_TEST_SUITE_END();
 
 public:
 
     Schema_Test();
     virtual ~Schema_Test();
+    void setUp();
+    
+    
+private: //members
+    karabo::util::Schema m_schema;
 
-private:
-
+private: //functions
     static void expectedParameters(karabo::util::Schema& schema);
 
     void testBuildUp();
 
-
-
+    void testGetRootName();    
+    void testGetRoot();
 };
 
 #endif	/* SCHEMA_TEST_HH */
