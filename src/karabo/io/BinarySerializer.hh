@@ -14,7 +14,7 @@
 
 #include <vector>
 
-#include <karabo/util/Factory.hh>
+#include <karabo/util/Configurator.hh>
 
 namespace karabo {
     namespace io {
@@ -25,8 +25,6 @@ namespace karabo {
             public:
                 
                 KARABO_CLASSINFO(BinarySerializer, "BinarySerializer", "1.0")
-                
-                KARABO_FACTORY_BASE_CLASS
                 
                 virtual void save(const T& object, std::vector<char>& archive) = 0;
                 

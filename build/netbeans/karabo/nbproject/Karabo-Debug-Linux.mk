@@ -39,6 +39,7 @@ OBJECTFILES= \
 	${OBJECTDIR}/_ext/163016059/ClassInfo.o \
 	${OBJECTDIR}/_ext/163016059/Exception.o \
 	${OBJECTDIR}/_ext/163016059/FromTypeInfo.o \
+	${OBJECTDIR}/_ext/163016059/Units.o \
 	${OBJECTDIR}/_ext/163016059/StringTools.o \
 	${OBJECTDIR}/_ext/163016059/FromInt.o \
 	${OBJECTDIR}/_ext/163016059/Timer.o \
@@ -79,11 +80,11 @@ LDLIBSOPTIONS=-L/opt/local/lib/nss -L/opt/local/lib/nspr -L${KARABO}/extern/lib 
 
 # Build Targets
 .build-conf: ${BUILD_SUBPROJECTS}
-	"${MAKE}"  -f nbproject/Makefile-${CND_CONF}.mk ${TESTDIR}/TestFiles/f5
+	"${MAKE}"  -f nbproject/Makefile-${CND_CONF}.mk ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libkarabo.${CND_DLIB_EXT}
 
-${TESTDIR}/TestFiles/f5: ${OBJECTFILES}
-	${MKDIR} -p ${TESTDIR}/TestFiles
-	${LINK.cc} -shared -o ${TESTDIR}/TestFiles/f5 -fPIC ${OBJECTFILES} ${LDLIBSOPTIONS} 
+${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libkarabo.${CND_DLIB_EXT}: ${OBJECTFILES}
+	${MKDIR} -p ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}
+	${LINK.cc} -shared -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libkarabo.${CND_DLIB_EXT} -fPIC ${OBJECTFILES} ${LDLIBSOPTIONS} 
 
 ${OBJECTDIR}/_ext/163016059/FromLiteral.o: ../../../src/karabo/util/FromLiteral.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
@@ -104,6 +105,11 @@ ${OBJECTDIR}/_ext/163016059/FromTypeInfo.o: ../../../src/karabo/util/FromTypeInf
 	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
 	${RM} $@.d
 	$(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163016059/FromTypeInfo.o ../../../src/karabo/util/FromTypeInfo.cc
+
+${OBJECTDIR}/_ext/163016059/Units.o: ../../../src/karabo/util/Units.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
+	${RM} $@.d
+	$(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163016059/Units.o ../../../src/karabo/util/Units.cc
 
 ${OBJECTDIR}/_ext/163016059/StringTools.o: ../../../src/karabo/util/StringTools.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
@@ -282,6 +288,19 @@ ${OBJECTDIR}/_ext/163016059/FromTypeInfo_nomain.o: ${OBJECTDIR}/_ext/163016059/F
 	    $(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163016059/FromTypeInfo_nomain.o ../../../src/karabo/util/FromTypeInfo.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/163016059/FromTypeInfo.o ${OBJECTDIR}/_ext/163016059/FromTypeInfo_nomain.o;\
+	fi
+
+${OBJECTDIR}/_ext/163016059/Units_nomain.o: ${OBJECTDIR}/_ext/163016059/Units.o ../../../src/karabo/util/Units.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/163016059/Units.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} $@.d;\
+	    $(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163016059/Units_nomain.o ../../../src/karabo/util/Units.cc;\
+	else  \
+	    ${CP} ${OBJECTDIR}/_ext/163016059/Units.o ${OBJECTDIR}/_ext/163016059/Units_nomain.o;\
 	fi
 
 ${OBJECTDIR}/_ext/163016059/StringTools_nomain.o: ${OBJECTDIR}/_ext/163016059/StringTools.o ../../../src/karabo/util/StringTools.cc 
@@ -466,7 +485,7 @@ ${OBJECTDIR}/_ext/163016059/Hash_nomain.o: ${OBJECTDIR}/_ext/163016059/Hash.o ..
 # Clean Targets
 .clean-conf: ${CLEAN_SUBPROJECTS}
 	${RM} -r ${CND_BUILDDIR}/${CND_CONF}
-	${RM} ${TESTDIR}/TestFiles/f5
+	${RM} ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libkarabo.${CND_DLIB_EXT}
 
 # Subprojects
 .clean-subprojects:
