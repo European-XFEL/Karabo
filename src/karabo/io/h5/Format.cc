@@ -32,7 +32,7 @@ namespace karabo {
     namespace io {
         namespace h5 {
 
-            KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::h5::Format)
+            KARABO_REGISTER_FOR_CONFIGURATION_1(karabo::io::h5::Format)
 
             void Format::expectedParameters(Schema& expected) {
 

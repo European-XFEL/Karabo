@@ -59,6 +59,7 @@
         <itemPath>../../../src/karabo/util/Time.hh</itemPath>
         <itemPath>../../../src/karabo/util/Timer.cc</itemPath>
         <itemPath>../../../src/karabo/util/Timer.hh</itemPath>
+        <itemPath>../../../src/karabo/util/Units.cc</itemPath>
         <itemPath>../../../src/karabo/util/Units.hh</itemPath>
       </logicalFolder>
       <logicalFolder name="f3" displayName="Type System" projectFiles="true">
@@ -138,7 +139,6 @@
           <warningLevel>2</warningLevel>
         </ccTool>
         <linkerTool>
-          <output>${TESTDIR}/TestFiles/f5</output>
           <linkerAddLib>
             <pElem>/opt/local/lib/nss</pElem>
             <pElem>/opt/local/lib/nspr</pElem>
