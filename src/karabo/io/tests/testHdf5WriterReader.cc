@@ -13,7 +13,6 @@
 #include <exfel/util/Test.hh>
 #include <exfel/util/Time.hh>
 #include <exfel/util/Hash.hh>
-#include <exfel/util/CArray.hh>
 #include "../hdf5/Table.hh"
 #include "../hdf5/File.hh"
 #include "../hdf5/FLArrayFilter.hh"

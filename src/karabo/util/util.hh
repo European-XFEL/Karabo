@@ -36,7 +36,6 @@
 #include "ClassInfo.hh"    
 #include "ConfigConstants.hh"
 #include "karaboDll.hh"
-#include "CArray.hh"
 
 #endif	/* KARABO_UTIL_UTIL_HH */
 

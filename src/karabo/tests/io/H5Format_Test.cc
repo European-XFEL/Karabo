@@ -12,14 +12,18 @@
 #include <karabo/util/FromLiteral.hh>
 #include <karabo/util/FromType.hh>
 
-#include "../../io/h5/Element.hh"
+#include <karabo/io/Dims.hh>
+#include <karabo/io/h5/Element.hh>
+
 
 #include <boost/shared_ptr.hpp>
+#include <boost/shared_array.hpp>
 
 #define _TRACER 2
 #include "../../io/h5/Tracer.hh"
 
 using namespace karabo::util;
+using namespace karabo::io;
 using namespace karabo::io::h5;
 using namespace boost;
 
@@ -169,36 +173,187 @@ data.set( "key-" + ToType<ToLiteral>::to(FromType<FromTypeInfo>::from(typeid(vec
 
             data.set("b", 2).setAttribute("m", "easy");
 
-            data.set("c", static_cast<long> (100));
+            vector<unsigned long long> ccc;
+            ccc.push_back(10);
+            ccc.push_back(20);
+            ccc.push_back(30);
+            ccc.push_back(40);
+            ccc.push_back(50);
+            ccc.push_back(60);
 
-            data.set("c", static_cast<long> (100));
+            vector<unsigned long long> dimsCcc;
+            dimsCcc.push_back(2);
+            dimsCcc.push_back(3);
 
-            unsigned short d[20];
-            for (size_t i = 0; i < 20; ++i) {
-                d[i] = 100 + i;
+            data.set("ccc", ccc).setAttribute("dims", dimsCcc);
+
+
+
+            
+            
+            Dims dimsD(10, 6);
+            boost::shared_array<unsigned short> d = shared_array<unsigned short>(new unsigned short[dimsD.getNumElements()]);
+            for (size_t i = 0; i < dimsD.getNumElements(); ++i) {
+                d[i] = 100 + i;                
             }
 
-            vector<unsigned long long> dimsD;
-            dimsD.push_back(10);
-            dimsD.push_back(2);
-            data.set("d", &d[0]).setAttribute("dims", dimsD);
+
+
+            
+            
+            unsigned short* dPtr = d.get();
+            data.set("d", dPtr).setAttribute("dims", dimsD.toVector());
+
+            
+            // even better but requires additions to Hash
+            data.set("k", dPtr, Dims(1, 60));
+
+
 
             clog << "About to discover the format" << endl;
 
             Format::discoverFromHash(data, config);
 
             clog << endl << "==================" << endl;
+
             //clog << data << endl;
+
             clog << endl << config << endl;
 
 //            clog << "fromType: int = " << ToType<ToLiteral>::to(Types::from<int>()) << endl;
 //            clog << "fromType: unsigned short*  = " << ToType<ToLiteral>::to(Types::from<unsigned short*>()) << endl;
 
 
+            
+            
+            
+            
+            unsigned short* dd = data.get<unsigned short*>("d");
+            const Dims& dimsDD = data.getAttribute<vector<unsigned long long> >("d", "dims");
+
+            if (dimsDD.getRank() == 2) {
+                for (size_t i = 0; i < dimsDD[0]; ++i) {
+                    for (size_t j = 0; j < dimsDD[1]; ++j) {
+                        clog << "dd[" << i * dimsDD[1] + j << "]: " << dd[i * dimsDD[1] + j] << " ";
+                        CPPUNIT_ASSERT( dd[i * dimsDD[1] + j] == (100 + i * dimsDD[1] + j) );
+                    }
+                    clog << endl;
+                }
+                clog << endl;
+            }
+
+
+            
+            
+            {
+                unsigned short* dd = data.get<unsigned short*>("k");
+                const Dims& dimsDD = data.getAttribute<vector<unsigned long long> >("k", "dims");
+
+                if (dimsDD.getRank() == 2) {
+                    for (size_t i = 0; i < dimsDD[0]; ++i) {
+                        for (size_t j = 0; j < dimsDD[1]; ++j) {
+                            clog << "dd[" << i * dimsDD[1] + j << "]: " << dd[i * dimsDD[1] + j] << " ";
+                            CPPUNIT_ASSERT( dd[i * dimsDD[1] + j] == (100 + i * dimsDD[1] + j) );
+                        }
+                        clog << endl;
+                    }
+                    clog << endl;
+                }
+
+            }
+
+            
+            
+            
+            
+            
+            
+//            {
+//                
+//                Hash data1;
+//                
+//                data1 = data;
+//                
+//                unsigned short* dd;
+//                Dims dims22;
+//                //dd = data1.getPtr<unsigned short>("k", dims22);
+//                data1.getPtr<unsigned short>("k", dd, dims22);
+//                
+//                
+//                if (dimsDD.getRank() == 2) {
+//                    for (size_t i = 0; i < dimsDD[0]; ++i) {
+//                        for (size_t j = 0; j < dimsDD[1]; ++j) {
+//                            clog << "dd[" << i * dimsDD[1] + j << "]: " << dd[i * dimsDD[1] + j] << " ";
+//                            CPPUNIT_ASSERT( dd[i * dimsDD[1] + j] == (100 + i * dimsDD[1] + j) );
+//                        }
+//                        clog << endl;
+//                    }
+//                    clog << endl;
+//                }
+//
+//            }
+// 
+//            Dims d(1)
+//
 
         } catch (Exception& e) {
             cerr << e << endl;
             KARABO_RETHROW
+        }
+
+    }
+
+    {
+
+        Dims a(2, 12);
+
+        clog << "rank : " << a.getRank() << endl;
+        CPPUNIT_ASSERT(a.getRank() == 2);
+        clog << "NumEl: " << a.getNumElements() << endl;
+        CPPUNIT_ASSERT(a.getNumElements() == 24);
+
+        Dims b = a;
+
+        clog << "rank : " << b.getRank() << endl;
+        CPPUNIT_ASSERT(b.getRank() == 2);
+        clog << "NumEl: " << b.getNumElements() << endl;
+        CPPUNIT_ASSERT(b.getNumElements() == 24);
+
+
+        Dims c(a);
+        clog << "rank : " << c.getRank() << endl;
+        CPPUNIT_ASSERT(c.getRank() == 2);
+        clog << "NumEl: " << c.getNumElements() << endl;
+        CPPUNIT_ASSERT(c.getNumElements() == 24);
+
+        vector<unsigned long long> vec(5, 2);
+        Dims d(vec);
+        clog << "rank : " << d.getRank() << endl;
+        CPPUNIT_ASSERT(d.getRank() == 5);
+        clog << "NumEl: " << d.getNumElements() << endl;
+        CPPUNIT_ASSERT(d.getNumElements() == 32);
+
+        Hash h;
+
+
+        h.set("dims", d.toVector());
+
+        vector<unsigned long long>& vec1 = h.get<vector<unsigned long long> >("dims");
+        for (size_t i = 0; i < vec1.size(); ++i) {
+            clog << "vec1[" << i << "] = " << vec1[i] << endl;
+            CPPUNIT_ASSERT(vec1[i] == 2);
+        }
+
+
+        const Dims& e = h.get<vector<unsigned long long> >("dims");
+        clog << "rank e : " << e.getRank() << endl;
+        CPPUNIT_ASSERT(e.getRank() == 5);
+        clog << "NumEl e : " << e.getNumElements() << endl;
+        CPPUNIT_ASSERT(e.getNumElements() == 32);
+
+        for (size_t i = 0; i < vec1.size(); ++i) {
+            clog << "e[" << i << "] = " << e[i] << endl;
+            CPPUNIT_ASSERT(e[i] == 2);
         }
 
     }

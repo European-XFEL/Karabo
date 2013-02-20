@@ -53,7 +53,22 @@ namespace karabo {
                     _KARABO_HELPER_MACRO(VECTOR_COMPLEX_FLOAT)
                     _KARABO_HELPER_MACRO(COMPLEX_DOUBLE)
                     _KARABO_HELPER_MACRO(VECTOR_COMPLEX_DOUBLE)
-                    
+                    _KARABO_HELPER_MACRO(PTR_BOOL)
+                    _KARABO_HELPER_MACRO(PTR_CHAR)
+                    _KARABO_HELPER_MACRO(PTR_INT8)
+                    _KARABO_HELPER_MACRO(PTR_UINT8)
+                    _KARABO_HELPER_MACRO(PTR_INT16)
+                    _KARABO_HELPER_MACRO(PTR_UINT16)
+                    _KARABO_HELPER_MACRO(PTR_INT32)
+                    _KARABO_HELPER_MACRO(PTR_UINT32)
+                    _KARABO_HELPER_MACRO(PTR_INT64)
+                    _KARABO_HELPER_MACRO(PTR_UINT64)
+                    _KARABO_HELPER_MACRO(PTR_FLOAT)
+                    _KARABO_HELPER_MACRO(PTR_DOUBLE)
+                    _KARABO_HELPER_MACRO(PTR_COMPLEX_FLOAT)
+                    _KARABO_HELPER_MACRO(PTR_COMPLEX_DOUBLE)
+                    _KARABO_HELPER_MACRO(PTR_STRING)
+
                     ;
         }
 #undef _KARABO_HELPER_MACRO
