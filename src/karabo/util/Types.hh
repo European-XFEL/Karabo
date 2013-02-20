@@ -73,6 +73,22 @@ namespace karabo {
                 HASH, // Hash
                 VECTOR_HASH, // std::vector<Hash>
 
+                PTR_BOOL,
+                PTR_CHAR,
+                PTR_INT8,
+                PTR_UINT8,
+                PTR_INT16,
+                PTR_UINT16,
+                PTR_INT32,
+                PTR_UINT32,
+                PTR_INT64,
+                PTR_UINT64,
+                PTR_FLOAT,
+                PTR_DOUBLE,
+                PTR_COMPLEX_FLOAT,
+                PTR_COMPLEX_DOUBLE,
+                PTR_STRING,
+
                 SCHEMA, // Schema
 
                 ANY, // unspecified type
@@ -136,6 +152,22 @@ namespace karabo {
                     case Types::VECTOR_BOOL:
                     case Types::VECTOR_COMPLEX_FLOAT:
                     case Types::VECTOR_COMPLEX_DOUBLE:
+                    case Types::PTR_STRING:
+                    case Types::PTR_CHAR:
+                    case Types::PTR_INT8:
+                    case Types::PTR_INT16:
+                    case Types::PTR_INT32:
+                    case Types::PTR_INT64:
+                    case Types::PTR_UINT8:
+                    case Types::PTR_UINT16:
+                    case Types::PTR_UINT32:
+                    case Types::PTR_UINT64:
+                    case Types::PTR_DOUBLE:
+                    case Types::PTR_FLOAT:
+                    case Types::PTR_BOOL:
+                    case Types::PTR_COMPLEX_FLOAT:
+                    case Types::PTR_COMPLEX_DOUBLE:
+
                         return SEQUENCE;
                     case Types::VECTOR_HASH:
                         return VECTOR_HASH;
@@ -150,7 +182,7 @@ namespace karabo {
                 }
             }
         };
-        
+
 #define _KARABO_HELPER_MACRO(RefType, CppType) \
          template <> inline Types::ReferenceType Types::from<CppType>(const CppType&) { return Types::RefType; } \
          template <> inline Types::ReferenceType Types::from<std::vector<CppType> > (const std::vector<CppType>&) { return Types::VECTOR_##RefType; }
@@ -170,8 +202,30 @@ namespace karabo {
         _KARABO_HELPER_MACRO(COMPLEX_FLOAT, std::complex<float>)
         _KARABO_HELPER_MACRO(COMPLEX_DOUBLE, std::complex<double>)
         _KARABO_HELPER_MACRO(STRING, std::string)
-                
+
 #undef _KARABO_HELPER_MACRO
+
+#define _KARABO_HELPER_MACRO(RefType, CppType) \
+         template <> inline Types::ReferenceType Types::from<CppType*>(CppType* const&) { return Types::RefType; }
+
+        _KARABO_HELPER_MACRO(PTR_BOOL, bool)
+        _KARABO_HELPER_MACRO(PTR_CHAR, char)
+        _KARABO_HELPER_MACRO(PTR_INT8, signed char)
+        _KARABO_HELPER_MACRO(PTR_UINT8, unsigned char)
+        _KARABO_HELPER_MACRO(PTR_INT16, short)
+        _KARABO_HELPER_MACRO(PTR_UINT16, unsigned short)
+        _KARABO_HELPER_MACRO(PTR_INT32, int)
+        _KARABO_HELPER_MACRO(PTR_UINT32, unsigned int)
+        _KARABO_HELPER_MACRO(PTR_INT64, long long)
+        _KARABO_HELPER_MACRO(PTR_UINT64, unsigned long long)
+        _KARABO_HELPER_MACRO(PTR_FLOAT, float)
+        _KARABO_HELPER_MACRO(PTR_DOUBLE, double)
+        _KARABO_HELPER_MACRO(PTR_COMPLEX_FLOAT, std::complex<float>)
+        _KARABO_HELPER_MACRO(PTR_COMPLEX_DOUBLE, std::complex<double>)
+        _KARABO_HELPER_MACRO(PTR_STRING, std::string)
+
+#undef _KARABO_HELPER_MACRO
+
 
     }
 }

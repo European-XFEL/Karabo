@@ -51,7 +51,6 @@ OBJECTFILES= \
 	${OBJECTDIR}/_ext/163016059/Profiler.o \
 	${OBJECTDIR}/_ext/163016059/Validator.o \
 	${OBJECTDIR}/_ext/769817549/Element.o \
-	${OBJECTDIR}/_ext/769817549/TypeTraits.o \
 	${OBJECTDIR}/_ext/163016059/Hash.o
 
 # Test Directory
@@ -166,11 +165,6 @@ ${OBJECTDIR}/_ext/769817549/Element.o: ../../../src/karabo/io/h5/Element.cc
 	${RM} $@.d
 	$(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/769817549/Element.o ../../../src/karabo/io/h5/Element.cc
 
-${OBJECTDIR}/_ext/769817549/TypeTraits.o: ../../../src/karabo/io/h5/TypeTraits.cc 
-	${MKDIR} -p ${OBJECTDIR}/_ext/769817549
-	${RM} $@.d
-	$(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/769817549/TypeTraits.o ../../../src/karabo/io/h5/TypeTraits.cc
-
 ${OBJECTDIR}/_ext/163016059/Hash.o: ../../../src/karabo/util/Hash.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
 	${RM} $@.d
@@ -185,7 +179,7 @@ ${TESTDIR}/TestFiles/f2: ${TESTDIR}/_ext/861493463/H5Format_Test.o ${TESTDIR}/_e
 	${MKDIR} -p ${TESTDIR}/TestFiles
 	${LINK.cc}   -o ${TESTDIR}/TestFiles/f2 $^ ${LDLIBSOPTIONS} -Wl,-rpath,${KARABO}/lib -Wl,-rpath,${KARABO}/extern/lib 
 
-${TESTDIR}/TestFiles/f1: ${TESTDIR}/_ext/1033104525/Configurator_Test.o ${TESTDIR}/_ext/1033104525/Factory_Test.o ${TESTDIR}/_ext/1033104525/Hash_Test.o ${TESTDIR}/_ext/1033104525/SchemaTestClasses.o ${TESTDIR}/_ext/1033104525/Schema_Test.o ${TESTDIR}/_ext/1033104525/utilTestRunner.o ${OBJECTFILES:%.o=%_nomain.o}
+${TESTDIR}/TestFiles/f1: ${TESTDIR}/_ext/1033104525/Configurator_Test.o ${TESTDIR}/_ext/1033104525/Dims_Test.o ${TESTDIR}/_ext/1033104525/Factory_Test.o ${TESTDIR}/_ext/1033104525/Hash_Test.o ${TESTDIR}/_ext/1033104525/SchemaTestClasses.o ${TESTDIR}/_ext/1033104525/Schema_Test.o ${TESTDIR}/_ext/1033104525/utilTestRunner.o ${OBJECTFILES:%.o=%_nomain.o}
 	${MKDIR} -p ${TESTDIR}/TestFiles
 	${LINK.cc}   -o ${TESTDIR}/TestFiles/f1 $^ ${LDLIBSOPTIONS} -Wl,-rpath,${KARABO}/lib -Wl,-rpath,${KARABO}/extern/lib 
 
@@ -206,6 +200,12 @@ ${TESTDIR}/_ext/1033104525/Configurator_Test.o: ../../../src/karabo/tests/util/C
 	${MKDIR} -p ${TESTDIR}/_ext/1033104525
 	${RM} $@.d
 	$(COMPILE.cc) -g -Wall -DTESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I${KARABO}/extern/include/hdf5 -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -MMD -MP -MF $@.d -o ${TESTDIR}/_ext/1033104525/Configurator_Test.o ../../../src/karabo/tests/util/Configurator_Test.cc
+
+
+${TESTDIR}/_ext/1033104525/Dims_Test.o: ../../../src/karabo/tests/util/Dims_Test.cc 
+	${MKDIR} -p ${TESTDIR}/_ext/1033104525
+	${RM} $@.d
+	$(COMPILE.cc) -g -Wall -DTESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I${KARABO}/extern/include/hdf5 -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -MMD -MP -MF $@.d -o ${TESTDIR}/_ext/1033104525/Dims_Test.o ../../../src/karabo/tests/util/Dims_Test.cc
 
 
 ${TESTDIR}/_ext/1033104525/Factory_Test.o: ../../../src/karabo/tests/util/Factory_Test.cc 
@@ -444,19 +444,6 @@ ${OBJECTDIR}/_ext/769817549/Element_nomain.o: ${OBJECTDIR}/_ext/769817549/Elemen
 	    $(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/769817549/Element_nomain.o ../../../src/karabo/io/h5/Element.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/769817549/Element.o ${OBJECTDIR}/_ext/769817549/Element_nomain.o;\
-	fi
-
-${OBJECTDIR}/_ext/769817549/TypeTraits_nomain.o: ${OBJECTDIR}/_ext/769817549/TypeTraits.o ../../../src/karabo/io/h5/TypeTraits.cc 
-	${MKDIR} -p ${OBJECTDIR}/_ext/769817549
-	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/769817549/TypeTraits.o`; \
-	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
-	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
-	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
-	then  \
-	    ${RM} $@.d;\
-	    $(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/769817549/TypeTraits_nomain.o ../../../src/karabo/io/h5/TypeTraits.cc;\
-	else  \
-	    ${CP} ${OBJECTDIR}/_ext/769817549/TypeTraits.o ${OBJECTDIR}/_ext/769817549/TypeTraits_nomain.o;\
 	fi
 
 ${OBJECTDIR}/_ext/163016059/Hash_nomain.o: ${OBJECTDIR}/_ext/163016059/Hash.o ../../../src/karabo/util/Hash.cc 

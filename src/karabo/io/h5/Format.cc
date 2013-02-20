@@ -13,7 +13,7 @@
 
 
 #define _TRACER
-#undef _TRACER
+//#undef _TRACER
 
 #ifdef _TRACER
 #define dftracer std::clog
@@ -115,10 +115,10 @@ namespace karabo {
                 discoverAttributes(el, hc);
 
                 for (size_t i = 0; i < vec.size(); ++i) {
-                    
+
                     config.push_back(Hash());
                     Hash& hc = config.back();
-                    
+
                     ostringstream oss1;
                     oss1 << "[" << i << "]";
 
@@ -129,10 +129,10 @@ namespace karabo {
                     hc.set("path", newPath);
                     hc.set("type", "HASH");
                     discoverAttributes(el, hc);
-                    
+
                     ostringstream oss2;
                     oss2 << path << m_h5Sep << key << m_h5Sep << "[" << i << "]";
- 
+
                     discoverFromHash(vec[i], config, oss2.str());
                 }
 
@@ -185,6 +185,7 @@ namespace karabo {
 #undef _KARABO_IO_H5_ATTRIBUTE_SEQUENCE_SIZE
 
 #define _KARABO_IO_H5_SEQUENCE_SIZE(T,cppType) case Types::VECTOR_##T:  Format::discoverVectorSize<cppType>(h,el); break;            
+#define _KARABO_IO_H5_SEQUENCE_PTR_SIZE(T,cppType) case Types::PTR_##T:  Format::discoverPtrSize<cppType>(h,el); break;      
 
             void Format::discoverFromDataElement(const Hash::Node& el, vector<Hash>& config, const string& path) {
 
@@ -194,10 +195,16 @@ namespace karabo {
                 Hash& h = config.back();
                 h.set("key", key);
                 h.set("path", path);
+                //                if (t != Types::UNKNOWN) {
                 h.set("type", ToType<ToLiteral>::to(t));
-                no_dftracer << "Format::discoverFromDataElement type: " << h.get<string > ("type") << endl;
+                //                } else {
+                //                    
+                //                }
+                dftracer << "Format::discoverFromDataElement type: " << h.get<string > ("type") << endl;
+
+                discoverAttributes(el, h);
                 if (Types::category(t) == Types::SEQUENCE) {
-                    no_dftracer << "SEQUENCE: " << key << endl;
+                    dftracer << "SEQUENCE: " << key << endl;
                     switch (t) {
                             _KARABO_IO_H5_SEQUENCE_SIZE(INT32, int)
                             _KARABO_IO_H5_SEQUENCE_SIZE(UINT32, unsigned int)
@@ -214,13 +221,30 @@ namespace karabo {
                             _KARABO_IO_H5_SEQUENCE_SIZE(STRING, std::string)
                             _KARABO_IO_H5_SEQUENCE_SIZE(COMPLEX_FLOAT, complex<float>)
                             _KARABO_IO_H5_SEQUENCE_SIZE(COMPLEX_DOUBLE, complex<double>)
+                            _KARABO_IO_H5_SEQUENCE_PTR_SIZE(INT32, int)
+                            _KARABO_IO_H5_SEQUENCE_PTR_SIZE(UINT32, unsigned int)
+                            _KARABO_IO_H5_SEQUENCE_PTR_SIZE(FLOAT, float)
+                            _KARABO_IO_H5_SEQUENCE_PTR_SIZE(DOUBLE, double)
+                            _KARABO_IO_H5_SEQUENCE_PTR_SIZE(INT16, short)
+                            _KARABO_IO_H5_SEQUENCE_PTR_SIZE(UINT16, unsigned short)
+                            _KARABO_IO_H5_SEQUENCE_PTR_SIZE(INT64, long long)
+                            _KARABO_IO_H5_SEQUENCE_PTR_SIZE(UINT64, unsigned long long)
+                            _KARABO_IO_H5_SEQUENCE_PTR_SIZE(INT8, signed char)
+                            _KARABO_IO_H5_SEQUENCE_PTR_SIZE(UINT8, unsigned char)
+                            _KARABO_IO_H5_SEQUENCE_PTR_SIZE(CHAR, char)
+                            _KARABO_IO_H5_SEQUENCE_PTR_SIZE(BOOL, bool)
+                            _KARABO_IO_H5_SEQUENCE_PTR_SIZE(STRING, std::string)
+                            _KARABO_IO_H5_SEQUENCE_PTR_SIZE(COMPLEX_FLOAT, complex<float>)
+                            _KARABO_IO_H5_SEQUENCE_PTR_SIZE(COMPLEX_DOUBLE, complex<double>)
+
+                           
                         default:
                             throw KARABO_NOT_SUPPORTED_EXCEPTION("Type not supported for key " + key);
                     }
 
 
                 }
-                discoverAttributes(el, h);
+
             }
 
 #undef _KARABO_IO_H5_SEQUENCE_SIZE
