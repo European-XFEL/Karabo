@@ -38,8 +38,8 @@ namespace schemaTest {
                     .displayedName("Radius")
                     .minExc(0)
                     .maxExc(100)
-                    .unit(unit::METER)
-                    .metricPrefix(metricPrefix::MILLI)
+                    .unit(Units::METER)
+                    .metricPrefix(Units::MILLI)
                     .assignmentOptional().defaultValue(10)
                     .init()
                     .commit();
@@ -48,10 +48,8 @@ namespace schemaTest {
         std::string draw() const {
             return "circle";
         }
-        
     };
    
-
     //**********************************************
     //            Editable Circle                  *
     //**********************************************
@@ -90,8 +88,8 @@ namespace schemaTest {
                     .displayedName("A")
                     .minExc(0)
                     .maxExc(100)
-                    .unit(unit::METER)
-                    .metricPrefix(metricPrefix::MILLI)
+                    .unit(Units::METER)
+                    .metricPrefix(Units::MILLI)
                     .assignmentOptional().defaultValue(10)
                     .init()
                     .commit();
@@ -101,8 +99,8 @@ namespace schemaTest {
                     .displayedName("B")
                     .minExc(0)
                     .maxExc(100)
-                    .unit(unit::METER)
-                    .metricPrefix(metricPrefix::MILLI)
+                    .unit(Units::METER)
+                    .metricPrefix(Units::MILLI)
                     .assignmentOptional().defaultValue(10)
                     .init()
                     .commit();
@@ -160,6 +158,7 @@ namespace schemaTest {
             std::cout << "*********** " << std::endl << input << std::endl;
             Shape::Pointer shape = Shape::createChoice("shapes", input);
             std::cout << "*********** " <<  shape->draw() << std::endl;
+            if (input.has("shapes.Circle")) std::cout << "$$$$$$$$ 0000" << std::endl;
         }
     };
     
@@ -194,20 +193,25 @@ namespace schemaTest {
                     .reconfigurable()
                     .commit();
 
-            NODE_ELEMENT(expected).key("circle")
+            CHOICE_ELEMENT(expected).key("shapes")
+                    .assignmentOptional().defaultValue("circle")
+                    .commit();
+                    
+                    
+            NODE_ELEMENT(expected).key("shapes.circle")
                     .tag("shape")
                     .displayedName("Circle")
                     .description("A circle")
                     //.appendParametersOf<Circle > ()
                     .commit();
-
-            FLOAT_ELEMENT(expected).key("circle.radius").alias(1)
+            
+            FLOAT_ELEMENT(expected).key("shapes.circle.radius").alias(1)
                     .description("The radius of the circle")
                     .displayedName("Radius")
                     .minExc(0)
                     .maxExc(100)
-                    .unit(unit::METER)
-                    .metricPrefix(metricPrefix::MILLI)
+                    .unit(Units::METER)
+                    .metricPrefix(Units::MILLI)
                     .assignmentOptional().defaultValue(10)
                     .init()
                     .commit();

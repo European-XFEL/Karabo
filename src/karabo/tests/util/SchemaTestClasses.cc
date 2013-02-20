@@ -6,9 +6,8 @@
 
 #include "SchemaTestClasses.hh"
 
+using namespace schemaTest;
 
-KARABO_REGISTER_FOR_CONFIGURATION_1(schemaTest::Shape, schemaTest::Circle);
-KARABO_REGISTER_FOR_CONFIGURATION_1(schemaTest::Shape, schemaTest::Rectangle);
-KARABO_REGISTER_FOR_CONFIGURATION(schemaTest::GraphicsRenderer);
-
-
+KARABO_REGISTER_FOR_CONFIGURATION_2(Shape, Circle);
+KARABO_REGISTER_FOR_CONFIGURATION_2(Shape, Rectangle);
+KARABO_REGISTER_FOR_CONFIGURATION_1(GraphicsRenderer);

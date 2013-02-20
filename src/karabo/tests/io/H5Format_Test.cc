@@ -191,8 +191,8 @@ data.set( "key-" + ToType<ToLiteral>::to(FromType<FromTypeInfo>::from(typeid(vec
             //clog << data << endl;
             clog << endl << config << endl;
 
-            clog << "fromType: int = " << ToType<ToLiteral>::to(Types::from<int>()) << endl;
-            clog << "fromType: unsigned short*  = " << ToType<ToLiteral>::to(Types::from<unsigned short*>()) << endl;
+//            clog << "fromType: int = " << ToType<ToLiteral>::to(Types::from<int>()) << endl;
+//            clog << "fromType: unsigned short*  = " << ToType<ToLiteral>::to(Types::from<unsigned short*>()) << endl;
 
 
 

@@ -192,6 +192,16 @@ void Hash_Test::testGetAs() {
         CPPUNIT_ASSERT_DOUBLES_EQUAL(1.0, h.getAs<double > ("a"), 0.00001);
         CPPUNIT_ASSERT(static_cast<unsigned int> (h.getAs<char > ("a")) == 1);
     }
+    
+    {
+        Hash h("a", true);
+        h.setAttribute("a", "a", true);
+        CPPUNIT_ASSERT(h.getAttributeAs<string > ("a", "a") == "1");
+        CPPUNIT_ASSERT(h.getAttributeAs<int > ("a", "a") == 1);
+        CPPUNIT_ASSERT_DOUBLES_EQUAL(1.0, h.getAttributeAs<double > ("a", "a"), 0.00001);
+        CPPUNIT_ASSERT(static_cast<unsigned int> (h.getAttributeAs<char > ("a", "a")) == 1);
+    }
+    
     {
         Hash h("a", std::vector<bool>(4, false));
         CPPUNIT_ASSERT(h.getAs<string > ("a") == "0,0,0,0");

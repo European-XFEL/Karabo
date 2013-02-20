@@ -75,12 +75,13 @@ void Schema_Test::expectedParameters(Schema& expected) {
 void Schema_Test::testBuildUp() {
     cout << endl << endl;
     try {
-//        Schema schema("MyClass");
-//        schemaTest::GraphicsRenderer::expectedParameters(schema);
-//        cout << schema << endl;
+        
+        Schema schema("MyClass");
+        GraphicsRenderer1::expectedParameters(schema);
+        cout << schema << endl;
         
         
-        GraphicsRenderer::Pointer p = GraphicsRenderer::create("GraphicsRenderer", Hash("shapes.Circle.radius", 1.0,"color", "lila", "antiAlias", true));
+        GraphicsRenderer::Pointer p = GraphicsRenderer::create("GraphicsRenderer", Hash("shapes.Circle.radius", 0.1,"color", "red", "antiAlias", true));
         
         
         

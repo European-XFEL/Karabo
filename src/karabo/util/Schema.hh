@@ -10,8 +10,8 @@
  */
 
 
-#ifndef KARABO_UTIL_MASTERCONFIG_HH
-#define	KARABO_UTIL_MASTERCONFIG_HH
+#ifndef KARABO_UTIL_SCHEMA_HH
+#define	KARABO_UTIL_SCHEMA_HH
 
 #include <boost/algorithm/string.hpp>
 #include <boost/foreach.hpp>
@@ -171,8 +171,6 @@ namespace karabo {
             bool isListOfNodes(const std::string& path) const;
 
             bool isNonEmptyListOfNodes(const std::string& path) const;
-
-
 
             void setDisplayedName(const std::string& path, const std::string& value);
 

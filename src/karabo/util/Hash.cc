@@ -392,7 +392,7 @@ namespace karabo {
                     const vector<Hash>& hashes = hit->getValue<vector<Hash> >();
                     os << " @" << endl; 
                     for (size_t i = 0; i < hashes.size(); ++i) {
-                        os << " [" << i << "]" << std::endl;
+                        os << fill << "[" << i << "]" << std::endl;
                         toStream(os, hashes[i], depth + 1);
                     }
                 } else {
