@@ -15,9 +15,15 @@
 namespace karabo {
     namespace util {
 
-#define _KARABO_HELPER_MACRO(ReferenceType, CppType) \
+#define _KARABO_HELPER_MACRO1(ReferenceType, CppType) \
 (std::string(typeid (CppType).name()), Types::ReferenceType) \
 (std::string(typeid (std::vector<CppType>).name()), Types::VECTOR_##ReferenceType)
+
+
+#define _KARABO_HELPER_MACRO(ReferenceType, CppType) \
+(std::string(typeid (CppType).name()), Types::ReferenceType) \
+(std::string(typeid (std::vector<CppType>).name()), Types::VECTOR_##ReferenceType)\
+(std::string(typeid (CppType*).name()), Types::PTR_##ReferenceType)
 
         FromTypeInfo::FromTypeInfo() {
             _typeInfoMap = boost::assign::map_list_of
@@ -36,8 +42,11 @@ namespace karabo {
                     _KARABO_HELPER_MACRO(COMPLEX_FLOAT, std::complex<float>)
                     _KARABO_HELPER_MACRO(COMPLEX_DOUBLE, std::complex<double>)
                     _KARABO_HELPER_MACRO(STRING, std::string)
-                    _KARABO_HELPER_MACRO(HASH, Hash)
+                    _KARABO_HELPER_MACRO1(HASH, Hash)
+
                     ;
         }
+#undef _KARABO_HELPER_MACRO
+#undef _KARABO_HELPER_MACRO1
     }
 }

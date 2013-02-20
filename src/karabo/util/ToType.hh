@@ -18,7 +18,6 @@ namespace karabo {
 
         template <class Impl>
         class ToType {
-            
 #define KARABO_MAP_TO_REFERENCE_TYPE(ClassName, ReferenceType, ToType) template<> inline ClassName::ReturnType ClassName::to<Types::ReferenceType>() {return ToType;}
 
 
@@ -26,16 +25,18 @@ namespace karabo {
 
             ToType();
             virtual ~ToType();
-            
-            public:
-            
-             // Concept the must be implemented
+
+        public:
+
+            // Concept the must be implemented
+
             template <Types::ReferenceType RefType>
             inline static ReturnType to() {
                 return Impl::template to<RefType > ();
             }
 
 #define _KARABO_HELPER_MACRO(ReferenceType) case Types::ReferenceType: return Impl::template to < Types::ReferenceType > ();
+
             static ReturnType to(const Types::ReferenceType& type) {
                 switch (type) {
                         _KARABO_HELPER_MACRO(BOOL)
@@ -72,12 +73,28 @@ namespace karabo {
                         _KARABO_HELPER_MACRO(COMPLEX_DOUBLE)
                         _KARABO_HELPER_MACRO(VECTOR_COMPLEX_DOUBLE)
                         _KARABO_HELPER_MACRO(UNKNOWN)
+                        _KARABO_HELPER_MACRO(PTR_BOOL)
+                        _KARABO_HELPER_MACRO(PTR_CHAR)
+                        _KARABO_HELPER_MACRO(PTR_INT8)
+                        _KARABO_HELPER_MACRO(PTR_UINT8)
+                        _KARABO_HELPER_MACRO(PTR_INT16)
+                        _KARABO_HELPER_MACRO(PTR_UINT16)
+                        _KARABO_HELPER_MACRO(PTR_INT32)
+                        _KARABO_HELPER_MACRO(PTR_UINT32)
+                        _KARABO_HELPER_MACRO(PTR_INT64)
+                        _KARABO_HELPER_MACRO(PTR_UINT64)
+                        _KARABO_HELPER_MACRO(PTR_FLOAT)
+                        _KARABO_HELPER_MACRO(PTR_DOUBLE)
+                        _KARABO_HELPER_MACRO(PTR_COMPLEX_FLOAT)
+                        _KARABO_HELPER_MACRO(PTR_COMPLEX_DOUBLE)
+                        _KARABO_HELPER_MACRO(PTR_STRING)
+
                     default:
                         throw KARABO_NOT_IMPLEMENTED_EXCEPTION("Requested datatype conversion not implemented");
                 }
             }
 #undef _KARABO_HELPER_MACRO
-            
+
         };
     }
 }

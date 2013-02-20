@@ -11,7 +11,6 @@
 #include <string>
 #include <exfel/util/Test.hh>
 #include "../hdf5/Table.hh"
-#include <exfel/util/CArray.hh>
 #include "../ArrayView.hh"
 #include "../CImg.h"
 #include "../hdf5/FLArrayFilter.hh"
