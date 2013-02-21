@@ -25,8 +25,6 @@ namespace karabo {
         using namespace karabo::util;
         using namespace karabo::tinyxml;
 
-        
-
         void SchemaXsdFormat::expectedParameters(karabo::util::Schema& expected) {
 
             INT32_ELEMENT(expected)
@@ -57,22 +55,22 @@ namespace karabo {
         }
 
         /**
-         * Reading a configuration file.
-         * Function reads configuration file (XML Document) and
-         * creates an object of the class karabo::util::Hash
-         * @param in Input parameter representing XML document
-         * @param out Output parameter representing object of the class karabo::util::Hash
+         * Reading an XSD file (we do not need such functionality, therefore function is not implemented).
+         * Function reads XSD Document and
+         * creates an object of the class karabo::util::Schema
+         * @param in Input parameter representing XSD document
+         * @param out Output parameter representing object of the class karabo::util::Schema
          */
         void SchemaXsdFormat::convert(stringstream& in, Schema& out) {
             throw NOT_IMPLEMENTED_EXCEPTION("Reading (de-serialization) of .xsd file into Schema objects is currently not implemented");
         }
 
         /**
-         * Writing a configuration file.
-         * Function gets as input an object of the class karabo::util::Hash
-         * and creates a configuration file in XML format.
-         * @param in Input parameter representing an object of the class karabo::util::Hash
-         * @param out Output parameter representing constructed XML Document
+         * Writing an XSD file.
+         * Function gets as input an object of the class karabo::util::Schema
+         * and creates an XSD file.
+         * @param in Input parameter representing an object of the class karabo::util::Schema
+         * @param out Output parameter representing constructed XSD Document
          */
         void SchemaXsdFormat::convert(const Schema& in, stringstream& out) {
 
