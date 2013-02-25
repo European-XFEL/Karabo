@@ -12,15 +12,39 @@
 #include <karabo/util/OverwriteElement.hh>
 #include <karabo/util/NodeElement.hh>
 
+#include <karabo/util/Configurator.hh>
+
 #include <karabo/util/karaboDll.hh>
 
-namespace schemaTest {
+namespace configurationTest {
+
+    using namespace karabo::util;
 
     struct Shape {
         KARABO_CLASSINFO(Shape, "Shape", "1.0");
+
         KARABO_CONFIGURATION_BASE_CLASS
 
-                virtual std::string draw() const = 0;
+                static void expectedParameters(karabo::util::Schema & expected) {
+
+            BOOL_ELEMENT(expected).key("shadowEnabled")
+                    .description("Shadow enabled")
+                    .displayedName("Shadow")
+                    .assignmentOptional().defaultValue(false)
+                    .init()
+                    .commit();
+        }
+
+        Shape(const Hash & configuration) : m_configuration(configuration) {
+        }
+
+        const Hash & getConfiguration() {
+            return m_configuration;
+        }
+
+        virtual std::string draw() const = 0;
+
+        Hash m_configuration;
     };
 
     //**********************************************
@@ -31,7 +55,6 @@ namespace schemaTest {
         KARABO_CLASSINFO(Circle, "Circle", "1.0");
 
         static void expectedParameters(karabo::util::Schema & expected) {
-            using namespace karabo::util;
 
             FLOAT_ELEMENT(expected).key("radius").alias(1)
                     .description("The radius of the circle")
@@ -45,8 +68,11 @@ namespace schemaTest {
                     .commit();
         }
 
+        Circle(const karabo::util::Hash & configuration) : Shape(configuration) {
+        }
+
         std::string draw() const {
-            return "circle";
+            return this->getClassInfo().getClassId();
         }
     };
 
@@ -58,15 +84,17 @@ namespace schemaTest {
         KARABO_CLASSINFO(EditableCircle, "EditableCircle", "1.0");
 
         static void expectedParameters(karabo::util::Schema & expected) {
-            using namespace karabo;
-
             OVERWRITE_ELEMENT(expected).key("radius")
                     .setNowReconfigurable()
                     .commit();
         }
 
+        EditableCircle(const karabo::util::Hash & configuration) : Circle(configuration) {
+
+        }
+
         std::string draw() const {
-            return "ecircle";
+            return this->getClassInfo().getClassId();
         }
 
     };
@@ -79,7 +107,6 @@ namespace schemaTest {
         KARABO_CLASSINFO(Rectangle, "Rectangle", "1.0");
 
         static void expectedParameters(karabo::util::Schema & expected) {
-            using namespace karabo::util;
 
             FLOAT_ELEMENT(expected).key("a").alias(1)
                     .description("Length of a")
@@ -104,8 +131,11 @@ namespace schemaTest {
                     .commit();
         }
 
+        Rectangle(const karabo::util::Hash & configuration) : Shape(configuration) {
+        }
+
         std::string draw() const {
-            return "rectangle";
+            return this->getClassInfo().getClassId();
         }
     };
 
@@ -115,10 +145,9 @@ namespace schemaTest {
         KARABO_CONFIGURATION_BASE_CLASS
 
                 static void expectedParameters(karabo::util::Schema & expected) {
-            using namespace karabo::util;
 
             BOOL_ELEMENT(expected).key("antiAlias")
-                    .tag("prop")
+                    .tags("prop")
                     .displayedName("Use Anti-Aliasing")
                     .description("You may switch of for speed")
                     .assignmentOptional().defaultValue(true)
@@ -127,7 +156,7 @@ namespace schemaTest {
                     .commit();
 
             STRING_ELEMENT(expected).key("color")
-                    .tag("prop")
+                    .tags("prop")
                     .displayedName("Color")
                     .options("red,green,blue,orange,black")
                     .description("The default color for any shape")
@@ -136,7 +165,7 @@ namespace schemaTest {
                     .commit();
 
             BOOL_ELEMENT(expected).key("bold")
-                    .tag("prop")
+                    .tags("prop")
                     .displayedName("Bold")
                     .description("Toggles bold painting")
                     .assignmentOptional().defaultValue(false)
@@ -151,7 +180,7 @@ namespace schemaTest {
                     .commit();
         }
 
-        void configure(const karabo::util::Hash & input) {
+        GraphicsRenderer(const karabo::util::Hash & input) {
 
             std::cout << "*********** " << std::endl << input << std::endl;
             Shape::Pointer shape = Shape::createChoice("shapes", input);
@@ -164,10 +193,9 @@ namespace schemaTest {
         KARABO_CLASSINFO(GraphicsRenderer1, "GraphicsRenderer1", "1.0");
 
         static void expectedParameters(karabo::util::Schema & expected) {
-            using namespace karabo::util;
 
             BOOL_ELEMENT(expected).key("antiAlias")
-                    .tag("prop")
+                    .tags("prop")
                     .displayedName("Use Anti-Aliasing")
                     .description("You may switch of for speed")
                     .assignmentOptional().defaultValue(true)
@@ -176,7 +204,7 @@ namespace schemaTest {
                     .commit();
 
             STRING_ELEMENT(expected).key("color")
-                    .tag("prop")
+                    .tags("prop")
                     .displayedName("Color")
                     .description("The default color for any shape")
                     .assignmentOptional().defaultValue("red")
@@ -184,7 +212,7 @@ namespace schemaTest {
                     .commit();
 
             BOOL_ELEMENT(expected).key("bold")
-                    .tag("prop")
+                    .tags("prop")
                     .displayedName("Bold")
                     .description("Toggles bold painting")
                     .assignmentOptional().defaultValue(false)
@@ -197,11 +225,12 @@ namespace schemaTest {
 
 
             NODE_ELEMENT(expected).key("shapes.circle")
-                    .tag("shape")
+                    .tags("shape")
                     .displayedName("Circle")
                     .description("A circle")
                     //.appendParametersOf<Circle > ()
                     .commit();
+
 
             FLOAT_ELEMENT(expected).key("shapes.circle.radius").alias(1)
                     .description("The radius of the circle")
@@ -221,17 +250,17 @@ namespace schemaTest {
 
         static void expectedParameters(karabo::util::Schema & expected) {
             using namespace karabo::util;
-            
             STRING_ELEMENT(expected).key("exampleKey1")
-                    .tag("h/w")
+                    .tags("h/w")
                     .displayedName("Example key 1")
                     .description("Example key 1 description")
                     .assignmentOptional().defaultValue("Some default string")
+                    .allowedStates("On")
                     .reconfigurable()
                     .commit();
 
             INT32_ELEMENT(expected).key("exampleKey2").alias(10)
-                    .tag("h/w")
+                    .tags("h/w")
                     .displayedName("Example key 2")
                     .description("Example key 2 description")
                     .assignmentOptional().defaultValue(-10)
@@ -239,7 +268,7 @@ namespace schemaTest {
                     .commit();
 
             UINT32_ELEMENT(expected).key("exampleKey3").alias(5.5)
-                    .tag("h/w")
+                    .tags("h/w")
                     .displayedName("Example key 3")
                     .description("Example key 3 description")
                     .assignmentOptional().defaultValue(20)
@@ -247,7 +276,7 @@ namespace schemaTest {
                     .commit();
 
             FLOAT_ELEMENT(expected).key("exampleKey4").alias("exampleAlias4")
-                    .tag("hardware")
+                    .tags("hardware")
                     .displayedName("Example key 4")
                     .description("Example key 4 description")
                     .readOnly()
@@ -255,13 +284,13 @@ namespace schemaTest {
 
 
             INT64_ELEMENT(expected).key("exampleKey5").alias("exampleAlias5")
-                    .tag("hardware")
+                    .tags("hardware")
                     .displayedName("Example key 5")
                     .description("Example key 5 description")
                     .readOnly()
                     .initialValue(1442244)
                     .commit();
-            }
+        }
     };
 
 }

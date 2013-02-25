@@ -31,7 +31,7 @@ namespace karabo {
             public:
 
                 KARABO_CLASSINFO(Format, "Format", "1.0")
-                KARABO_CONFIGURATION_BASE_CLASS
+                //KARABO_CONFIGURATION_BASE_CLASS
 
                 Format() {
                 }
@@ -41,7 +41,10 @@ namespace karabo {
 
                 static void expectedParameters(karabo::util::Schema& expected);
                 void configure(const karabo::util::Hash& input);
-
+                
+                Format(const karabo::util::Hash& input);
+                
+                
                 //static Format::Pointer discoverFromData(const karabo::util::Hash& data);
 
                 static void discoverFromHash(const karabo::util::Hash& data, karabo::util::Hash& config);

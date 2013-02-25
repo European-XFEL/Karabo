@@ -20,7 +20,7 @@ namespace karabo {
 
         class OverwriteElement {
             Schema* m_schema;
-            Hash::Node m_node;
+            Hash::Node* m_node;
 
         public:
 
@@ -33,56 +33,60 @@ namespace karabo {
              * @return  reference to the Element
              */
             OverwriteElement& key(std::string const& name) {
-                m_node = Hash::Node(name, 0);
-                m_node.setAttribute("nodeType", "leaf");
+                boost::optional<Hash::Node&> node = m_schema->getParameterHash().find(name);
+                if (node) { // exists
+                    m_node = node.get_ptr();
+                } else {
+                    throw KARABO_PARAMETER_EXCEPTION("Key \"" + name + "\" was not set before, thus can not be overwritten.");
+                }
                 return *this;
             }
 
             template <class AliasType>
             OverwriteElement& setNewAlias(const AliasType& alias) {
-                m_node.setAttribute<AliasType > ("alias", alias);
+                m_node->setAttribute<AliasType > ("alias", alias);
                 return *this;
             }
 
             template <class TagType>
             OverwriteElement& setNewTag(const TagType& tag) {
-                m_node.setAttribute<TagType > ("tag", tag);
+                m_node->setAttribute<TagType > ("tag", tag);
                 return *this;
             }
 
             OverwriteElement& setNewAssignmentMandatory() {
-                m_node.setAttribute<int>("assignment", Schema::MANDATORY_PARAM);
+                m_node->setAttribute<int>("assignment", Schema::MANDATORY_PARAM);
                 return *this;
             }
 
             OverwriteElement& setNewAssignmentOptional() {
-                m_node.setAttribute<int>("assignment", Schema::OPTIONAL_PARAM);
+                m_node->setAttribute<int>("assignment", Schema::OPTIONAL_PARAM);
                 return *this;
             }
 
             OverwriteElement& setNewAssignmentInternal() {
-                m_node.setAttribute<int>("assignment", Schema::INTERNAL_PARAM);
+                m_node->setAttribute<int>("assignment", Schema::INTERNAL_PARAM);
                 return *this;
             }
             
             OverwriteElement& setNowInit() {
-                m_node.setAttribute<int>("accessMode", INIT);
+                m_node->setAttribute<int>("accessMode", INIT);
                 return *this;
             }
             
             OverwriteElement& setNowReconfigurable() {
-                m_node.setAttribute<int>("accessMode", WRITE);
+                m_node->setAttribute<int>("accessMode", WRITE);
                 return *this;
             }
             
             OverwriteElement& setNowReadOnly() {
-                m_node.setAttribute<int>("accessMode", READ);
+                m_node->setAttribute<int>("accessMode", READ);
                 return *this;
             }
 
             template <class ValueType>
             OverwriteElement& setNewDefaultValue(const ValueType& value) {
-                m_node.setAttribute("default", value);
+                m_node->setAttribute("default", value);
                 return *this;
             }
             
@@ -92,16 +96,10 @@ namespace karabo {
              * @return reference to the GenericElement
              */
             void commit() {
-                if (m_schema) {
-                    m_schema->addElement(m_node);
-                } else {
-                    throw KARABO_INIT_EXCEPTION("Could not append element to non-initialized Schema object");
-                }
+                // Does nothing, changes happened on existing node
             }
         };
+        typedef OverwriteElement OVERWRITE_ELEMENT;
     }
-    
-    typedef util::OverwriteElement OVERWRITE_ELEMENT;
-    
 }
 #endif	

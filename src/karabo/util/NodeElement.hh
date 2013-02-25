@@ -39,7 +39,7 @@ namespace karabo {
                     Schema schema = Configurator<FactoryBase>::assembleSchema(classId, m_parentSchemaAssemblyRules);
                     // The produced schema will be rooted with classId, we however want to put its children
                     // under the defined key and ignore the classId root node
-                    this->m_node->template setValue<Hash > (schema.getRoot());
+                    this->m_node->template setValue<Hash > (schema.getParameterHash());
                     
                 } else {
                     throw KARABO_PARAMETER_EXCEPTION("Can not append class \"" + classId + "\", as it is not registered in factory.");
@@ -50,8 +50,9 @@ namespace karabo {
             template <class T>
             NodeElement& appendParametersOf() {
                 // Simply append the expected parameters of T to current node
-                Schema schema = karabo::util::confTools::assembleSchema<T > ("dummyRoot", m_parentSchemaAssemblyRules);
-                this->m_node->template setValue<Hash > (schema.getRoot());
+                Schema schema("dummyRoot", m_parentSchemaAssemblyRules);
+                T::_KARABO_SCHEMA_DESCRIPTION_FUNCTION(schema);
+                this->m_node->template setValue<Hash > (schema.getParameterHash());
                 return *this;
             }
             

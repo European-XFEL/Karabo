@@ -15,6 +15,10 @@
 #ifndef KARABO_UTIL_TYPES_HH
 #define	KARABO_UTIL_TYPES_HH
 
+#include <string>
+#include <complex>
+#include <vector>
+
 namespace karabo {
     namespace util {
 

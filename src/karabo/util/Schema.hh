@@ -79,8 +79,6 @@ namespace karabo {
             friend class ListElement;
             friend class NodeElement;
             
-//            template< class Node, class T> friend class DefaultValue;
-            
             // Container
             Hash m_hash;
             
@@ -119,6 +117,11 @@ namespace karabo {
                 CHOICE_OF_NODES,
                 LIST_OF_NODES
             };
+            
+            enum LeafType {
+                PROPERTY,
+                COMMAND
+            };
 
             enum AssignmentType {
                 OPTIONAL_PARAM,
@@ -128,10 +131,10 @@ namespace karabo {
         
         public:
             
-            // Constructs un-rooted Schema
-            Schema() {}
+            // Constructs empty anonymous schema
+            Schema();
             
-            // Constructs rooted Schema
+            // Constructs empty schema for given classId
             Schema(const std::string& classId, const Schema::AssemblyRules& rules = Schema::AssemblyRules());
             
             void setAssemblyRules(const Schema::AssemblyRules& rules);
@@ -140,7 +143,9 @@ namespace karabo {
            
             const std::string& getRootName() const;
             
-            const karabo::util::Hash& getRoot() const;
+            const karabo::util::Hash& getParameterHash() const;
+            
+            std::vector<std::string> getParameters(const std::string& path = "") const;
             
             //**********************************************
             //          General functions on Schema        *
@@ -152,10 +157,8 @@ namespace karabo {
             template <class AliasType>
             boost::optional<AliasType> keyToAlias(const std::string& key) const;
             
-            std::pair<bool, std::string> validate(const Hash& input, Hash& validatedOutput) const;
-            
             //**********************************************
-            //          Attribute Functionality            *
+            //              Node property                  *
             //**********************************************
 
             bool isCommand(const std::string& path) const;
@@ -169,15 +172,38 @@ namespace karabo {
             bool isChoiceOfNodes(const std::string& path) const;
 
             bool isListOfNodes(const std::string& path) const;
+            
+            int getNodeType(const std::string& path) const;
+            
+            //**********************************************
+            //                Access Mode                  *
+            //**********************************************
 
-            bool isNonEmptyListOfNodes(const std::string& path) const;
+            void setAccessMode(const std::string& path, const AccessType& value);
 
+            bool hasAccessMode(const std::string& path) const;
+
+            bool isAccessInitOnly(const std::string& path) const;
+
+            bool isAccessReadOnly(const std::string& path) const;
+
+            bool isAccessReconfigurable(const std::string& path) const;
+
+            int getAccessMode(const std::string& path) const;
+            
+            //**********************************************
+            //             DisplayedName                   *
+            //**********************************************
+            
             void setDisplayedName(const std::string& path, const std::string& value);
 
             bool hasDisplayedName(const std::string& path) const;
 
             const std::string& getDisplayedName(const std::string& path) const;
-
+            
+            //**********************************************
+            //               Description                   *
+            //**********************************************
 
             void setDescription(const std::string& path, const std::string& value);
 
@@ -185,7 +211,19 @@ namespace karabo {
 
             const std::string& getDescription(const std::string& path) const;
 
+            //**********************************************
+            //                   Tags                      *
+            //**********************************************
 
+            void setTags(const std::string& path, const std::string& value, const std::string& sep = " ,;");
+
+            bool hasTags(const std::string& path) const;
+
+            const std::vector<std::string>& getTags(const std::string& path) const;
+             
+            //**********************************************
+            //               DisplayType                   *
+            //**********************************************
             
             void setDisplayType(const std::string& path, const std::string& value);
 
@@ -193,7 +231,9 @@ namespace karabo {
 
             const std::string& getDisplayType(const std::string& path) const;
 
-
+            //**********************************************
+            //               Assignment                    *
+            //**********************************************
 
             void setAssignment(const std::string& path, const AssignmentType& value);
 
@@ -207,7 +247,9 @@ namespace karabo {
 
             const AssignmentType& getAssignment(const std::string& path) const;
 
-
+            //**********************************************
+            //                  Options                    *
+            //**********************************************
 
             void setOptions(const std::string& path, const std::vector<std::string>& options);
 
@@ -215,7 +257,9 @@ namespace karabo {
 
             const std::vector<std::string>& getOptions(const std::string& path) const;
 
-
+            //**********************************************
+            //                AllowedStates                *
+            //**********************************************
 
             void setAllowedStates(const std::string& path, const std::vector<std::string>& value);
 
@@ -223,31 +267,21 @@ namespace karabo {
 
             const std::vector<std::string>& getAllowedStates(const std::string& path) const;
 
+            //**********************************************
+            //                DefaultValue                 *
+            //**********************************************
+            
+            template <class ValueType>
+            void setDefault(const std::string& path, const ValueType& value);
 
-
-            void setAccessMode(const std::string& path, const AccessType& value);
-
-            bool hasAccessMode(const std::string& path) const;
-
-            bool isAccessInitOnly(const std::string& path) const;
-
-            bool isAccessReadOnly(const std::string& path) const;
-
-            bool isAccessReconfigurable(const std::string& path) const;
-
-            const AccessType& getAccessMode(const std::string& path) const;
-
-
+            bool hasDefault(const std::string& path) const;
 
             template <class ValueType>
-            void setDefaultValue(const std::string& path, const ValueType& value);
+            const ValueType& getDefault(const std::string& path) const;
 
-            bool hasDefaultValue(const std::string& path) const;
-
-            template <class ValueType>
-            const ValueType& getDefaultValue(const std::string& path) const;
-
-
+            //**********************************************
+            //                  Alias                      *
+            //**********************************************
 
             template <class AliasType>
             void setAlias(const std::string& path, const AliasType& value);
@@ -257,7 +291,9 @@ namespace karabo {
             template <class AliasType>
             const AliasType& getAlias(const std::string& path) const;
 
-
+            //**********************************************
+            //                  Alias                      *
+            //**********************************************
 
             void setUnit(const std::string& path, const Units::Unit& value);
 
@@ -351,9 +387,11 @@ namespace karabo {
             
         private: // functions
             
-            void setRoot(const std::string& rootName);
             
-            karabo::util::Hash& getRoot();
+            
+            void setRootName(const std::string& rootName);
+            
+            karabo::util::Hash& getParameterHash();
             
             void addElement(Hash::Node& node);
 

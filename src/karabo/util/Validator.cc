@@ -53,7 +53,7 @@ namespace karabo {
                     if (node.getType() == Types::HASH) {
 
                         Hash::Node& tmp = validatedOutput.set(classId, Hash());
-                        this->r_validate(schema.getRoot(), node.getValue<Hash > (), tmp.getValue<Hash > (), validationFailedReport, classId);
+                        this->r_validate(schema.getParameterHash(), node.getValue<Hash > (), tmp.getValue<Hash > (), validationFailedReport, classId);
 
                         if (validationFailedReport.str().empty()) return std::make_pair<bool, string > (true, "");
                         else return std::make_pair<bool, string > (false, validationFailedReport.str());
@@ -62,7 +62,7 @@ namespace karabo {
                     }
                 }
             } else {
-                this->r_validate(schema.getRoot(), unvalidatedInput, validatedOutput, validationFailedReport, "");
+                this->r_validate(schema.getParameterHash(), unvalidatedInput, validatedOutput, validationFailedReport, "");
                 if (validationFailedReport.str().empty()) return std::make_pair<bool, string > (true, "");
                 else return std::make_pair<bool, string > (false, validationFailedReport.str());
             }
