@@ -158,7 +158,7 @@ namespace karabo {
             inline static std::vector<typename BaseClass::Pointer> createList(const std::string& listName, const karabo::util::Hash& input, const bool validate = true) {
                 if (input.has(listName)) {
                     const vector<Hash>& tmp = input.get<vector<Hash> > (listName);
-                    std::vector<typename Base::Pointer > instances(tmp.size());
+                    std::vector<typename BaseClass::Pointer > instances(tmp.size());
                     for (size_t i = 0; i < tmp.size(); ++i) {
                         instances[i] = create(tmp[i], validate);
                     }

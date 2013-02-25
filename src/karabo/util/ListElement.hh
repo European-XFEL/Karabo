@@ -23,8 +23,8 @@ namespace karabo {
 
         class ListElement : public GenericElement<ListElement> {
             Schema::AssemblyRules m_parentSchemaAssemblyRules;
-            
-            DefaultValue<ListElement,std::vector<std::string> > m_defaultValue;
+
+            DefaultValue<ListElement, std::vector<std::string> > m_defaultValue;
         public:
 
             ListElement(Schema& expected) : GenericElement<ListElement>(expected) {
@@ -41,7 +41,7 @@ namespace karabo {
                 this->m_node->setAttribute("max", maxNumNodes);
                 return *this;
             }
-         
+
             template <class ConfigurationBase>
             ListElement& appendNodesOfConfigurationBase() {
                 // Create an empty Hash as value of this choice node if not there yet
@@ -80,7 +80,7 @@ namespace karabo {
                 node.setAttribute<int>("accessMode", READ | WRITE | INIT);
                 return *this;
             }
-            
+
             /**
              * The <b>assignmentMandatory</b> method serves for setting up a mode that requires the value
              * of the element always being specified. No default value is possible.
@@ -90,13 +90,13 @@ namespace karabo {
                 this->m_node->setAttribute<int>("assignment", Schema::MANDATORY_PARAM);
                 return *this;
             }
-            
+
             virtual DefaultValue<ListElement, std::vector<std::string> >& assignmentOptional() {
                 this->m_node->setAttribute<int>("assignment", Schema::OPTIONAL_PARAM);
                 return m_defaultValue;
             }
 
-            
+
         protected:
 
             void beforeAddition() {
