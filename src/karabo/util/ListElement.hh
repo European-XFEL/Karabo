@@ -15,6 +15,8 @@
 #define	KARABO_UTIL_LISTELEMENT_HH
 
 #include "GenericElement.hh"
+#include "LeafElement.hh"
+#include "Configurator.hh"
 
 namespace karabo {
     namespace util {
@@ -22,11 +24,12 @@ namespace karabo {
         class ListElement : public GenericElement<ListElement> {
             Schema::AssemblyRules m_parentSchemaAssemblyRules;
             
-            DefaultValue<ChoiceElement, std::string> m_defaultValue; 
+            DefaultValue<ListElement,std::vector<std::string> > m_defaultValue;
         public:
 
             ListElement(Schema& expected) : GenericElement<ListElement>(expected) {
                 Schema::AssemblyRules m_parentSchemaAssemblyRules = expected.getAssemblyRules();
+                m_defaultValue.setElement(this);
             }
 
             ListElement& min(const int minNumNodes) {
@@ -93,7 +96,7 @@ namespace karabo {
                 return m_defaultValue;
             }
 
-
+            
         protected:
 
             void beforeAddition() {

@@ -157,11 +157,12 @@ namespace karabo {
 
             inline static std::vector<typename BaseClass::Pointer> createList(const std::string& listName, const karabo::util::Hash& input, const bool validate = true) {
                 if (input.has(listName)) {
-                    const Hash& tmp = input.get<Hash > (listName);
-                    std::vector<typename BaseClass::Pointer> instances;
-                    for (Hash::const_iterator it = tmp.begin(); it != tmp.end(); ++it) {
-                        instances.push_back(create(it->getKey(), it->getValue<Hash > (), validate));
+                    const vector<Hash>& tmp = input.get<vector<Hash> > (listName);
+                    std::vector<typename Base::Pointer > instances(tmp.size());
+                    for (size_t i = 0; i < tmp.size(); ++i) {
+                        instances[i] = create(tmp[i], validate);
                     }
+                    return instances;
                 } else {
                     throw KARABO_INIT_EXCEPTION("Given listName \"" + listName + "\" is not part of input configuration");
                 }
@@ -232,7 +233,7 @@ namespace karabo {
             }
 
         };
-        
+
         template <class Base>
         struct ConfiguratorMember1 {
 
