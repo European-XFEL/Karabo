@@ -134,9 +134,9 @@ OBJECTFILES= \
 	${OBJECTDIR}/_ext/1103112890/JmsChannel.o \
 	${OBJECTDIR}/_ext/2117156511/PyUtilClassInfo.o \
 	${OBJECTDIR}/_ext/1103112890/JmsBrokerConnection.o \
+	${OBJECTDIR}/_ext/163556830/ReconfigurableFsm.o \
 	${OBJECTDIR}/_ext/1060241295/DataFormat.o \
 	${OBJECTDIR}/_ext/2117156511/PyUtilOverwriteElement.o \
-	${OBJECTDIR}/_ext/163556830/ReconfigurableFsm.o \
 	${OBJECTDIR}/_ext/1103111265/Logger.o \
 	${OBJECTDIR}/_ext/1060241295/TypeTraits.o \
 	${OBJECTDIR}/_ext/1103111265/FileAppenderConfigurator.o \
@@ -690,6 +690,11 @@ ${OBJECTDIR}/_ext/1103112890/JmsBrokerConnection.o: ../../../src/karabo/net/JmsB
 	${RM} $@.d
 	$(COMPILE.cc) -g -DLINUX -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1103112890/JmsBrokerConnection.o ../../../src/karabo/net/JmsBrokerConnection.cc
 
+${OBJECTDIR}/_ext/163556830/ReconfigurableFsm.o: ../../../src/karabo/core/ReconfigurableFsm.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/163556830
+	${RM} $@.d
+	$(COMPILE.cc) -g -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163556830/ReconfigurableFsm.o ../../../src/karabo/core/ReconfigurableFsm.cc
+
 ${OBJECTDIR}/_ext/1060241295/DataFormat.o: ../../../src/karabo/io/hdf5/DataFormat.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1060241295
 	${RM} $@.d
@@ -699,11 +704,6 @@ ${OBJECTDIR}/_ext/2117156511/PyUtilOverwriteElement.o: ../../../src/karabo/pytho
 	${MKDIR} -p ${OBJECTDIR}/_ext/2117156511
 	${RM} $@.d
 	$(COMPILE.cc) -g -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/2117156511/PyUtilOverwriteElement.o ../../../src/karabo/python/PyUtilOverwriteElement.cc
-
-${OBJECTDIR}/_ext/163556830/ReconfigurableFsm.o: ../../../src/karabo/core/ReconfigurableFsm.cc 
-	${MKDIR} -p ${OBJECTDIR}/_ext/163556830
-	${RM} $@.d
-	$(COMPILE.cc) -g -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163556830/ReconfigurableFsm.o ../../../src/karabo/core/ReconfigurableFsm.cc
 
 ${OBJECTDIR}/_ext/1103111265/Logger.o: ../../../src/karabo/log/Logger.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1103111265
@@ -2236,6 +2236,19 @@ ${OBJECTDIR}/_ext/1103112890/JmsBrokerConnection_nomain.o: ${OBJECTDIR}/_ext/110
 	    ${CP} ${OBJECTDIR}/_ext/1103112890/JmsBrokerConnection.o ${OBJECTDIR}/_ext/1103112890/JmsBrokerConnection_nomain.o;\
 	fi
 
+${OBJECTDIR}/_ext/163556830/ReconfigurableFsm_nomain.o: ${OBJECTDIR}/_ext/163556830/ReconfigurableFsm.o ../../../src/karabo/core/ReconfigurableFsm.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/163556830
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/163556830/ReconfigurableFsm.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} $@.d;\
+	    $(COMPILE.cc) -g -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163556830/ReconfigurableFsm_nomain.o ../../../src/karabo/core/ReconfigurableFsm.cc;\
+	else  \
+	    ${CP} ${OBJECTDIR}/_ext/163556830/ReconfigurableFsm.o ${OBJECTDIR}/_ext/163556830/ReconfigurableFsm_nomain.o;\
+	fi
+
 ${OBJECTDIR}/_ext/1060241295/DataFormat_nomain.o: ${OBJECTDIR}/_ext/1060241295/DataFormat.o ../../../src/karabo/io/hdf5/DataFormat.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1060241295
 	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/1060241295/DataFormat.o`; \
@@ -2260,19 +2273,6 @@ ${OBJECTDIR}/_ext/2117156511/PyUtilOverwriteElement_nomain.o: ${OBJECTDIR}/_ext/
 	    $(COMPILE.cc) -g -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/2117156511/PyUtilOverwriteElement_nomain.o ../../../src/karabo/python/PyUtilOverwriteElement.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/2117156511/PyUtilOverwriteElement.o ${OBJECTDIR}/_ext/2117156511/PyUtilOverwriteElement_nomain.o;\
-	fi
-
-${OBJECTDIR}/_ext/163556830/ReconfigurableFsm_nomain.o: ${OBJECTDIR}/_ext/163556830/ReconfigurableFsm.o ../../../src/karabo/core/ReconfigurableFsm.cc 
-	${MKDIR} -p ${OBJECTDIR}/_ext/163556830
-	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/163556830/ReconfigurableFsm.o`; \
-	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
-	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
-	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
-	then  \
-	    ${RM} $@.d;\
-	    $(COMPILE.cc) -g -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163556830/ReconfigurableFsm_nomain.o ../../../src/karabo/core/ReconfigurableFsm.cc;\
-	else  \
-	    ${CP} ${OBJECTDIR}/_ext/163556830/ReconfigurableFsm.o ${OBJECTDIR}/_ext/163556830/ReconfigurableFsm_nomain.o;\
 	fi
 
 ${OBJECTDIR}/_ext/1103111265/Logger_nomain.o: ${OBJECTDIR}/_ext/1103111265/Logger.o ../../../src/karabo/log/Logger.cc 

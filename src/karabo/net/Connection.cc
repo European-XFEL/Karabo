@@ -40,6 +40,14 @@ namespace karabo {
                     .assignmentOptional().defaultValue(4)
                     .init()
                     .commit();
+
+            BOOL_ELEMENT(expected)
+                    .key("messageTagIsText")
+                    .displayedName("Message Tag is Text")
+                    .description("The length field in communication protocol is considered as text string")
+                    .assignmentOptional().defaultValue(false)
+                    .init()
+                    .commit();
         }
 
         void Connection::configure(const karabo::util::Hash& input) {
@@ -55,6 +63,10 @@ namespace karabo {
             m_sizeofLength = 4;
             if (input.has("sizeofLength")) {
                 input.get("sizeofLength", m_sizeofLength);
+            }
+            m_lengthIsTextFlag = false;
+            if (input.has("messageTagIsText")) {
+                input.get("messageTagIsText", m_lengthIsTextFlag);
             }
         }
 

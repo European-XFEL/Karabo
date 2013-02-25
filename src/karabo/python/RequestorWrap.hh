@@ -15,6 +15,7 @@
 #include <karabo/xms/Requestor.hh>
 #include <karabo/net/BrokerChannel.hh>
 #include "HashWrap.hh"
+#include "ScopedGILRelease.hh"
 
 namespace bp = boost::python;
 
@@ -28,7 +29,7 @@ namespace karabo {
             RequestorWrap(const karabo::net::BrokerChannel::Pointer& channel, const std::string& requestInstanceId) :
             karabo::xms::Requestor(channel, requestInstanceId) {
             }
-            
+
             RequestorWrap& callPy(const std::string& slotInstanceId, const std::string& slotFunction) {
                 prepareHeaderAndFilter(slotInstanceId, slotFunction);
                 registerRequest();
@@ -84,11 +85,12 @@ namespace karabo {
                     timeout(milliseconds);
                     karabo::util::Hash body, header;
 
-                    Py_BEGIN_ALLOW_THREADS
-                    sendRequest();
-                    receiveResponse(body, header);
-                    Py_END_ALLOW_THREADS
-                            
+                    {
+                        ScopedGILRelease nogil;
+                        sendRequest();
+                        receiveResponse(body, header);
+                    }
+
                     size_t arity = body.size();
                     switch (arity) {
                         case 0:

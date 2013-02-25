@@ -90,12 +90,12 @@ namespace karabo {
 
             boost::asio::ip::tcp::socket m_socket;
             boost::asio::deadline_timer m_timer;
-            std::size_t m_inboundMessagePrefix;
-            std::size_t m_inboundHeaderPrefix;
+            std::vector<char> m_inboundMessagePrefix;
+            std::vector<char> m_inboundHeaderPrefix;
             std::vector<char> m_inboundData;
             std::vector<char> m_inboundHeader;
-            std::size_t m_outboundMessagePrefix;
-            std::size_t m_outboundHeaderPrefix;
+            std::vector<char> m_outboundMessagePrefix;
+            std::vector<char> m_outboundHeaderPrefix;
             std::vector<char> m_outboundData;
             std::vector<char> m_outboundHeader;
             ErrorHandler m_errorHandler;
