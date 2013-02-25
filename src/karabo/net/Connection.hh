@@ -118,6 +118,13 @@ namespace karabo {
                 return m_sizeofLength;
             }
 
+            /**
+             * @return true if content of message_length field should be considered as text string
+             */
+            bool lengthIsText() {
+                return m_lengthIsTextFlag;
+            }
+            
         protected: // functions
 
             void registerChannel(ChannelPointer channel) {
@@ -164,6 +171,7 @@ namespace karabo {
             boost::mutex m_channelMutex;
 
             unsigned int m_sizeofLength;
+            bool m_lengthIsTextFlag;
         };
 
 

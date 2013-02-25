@@ -1001,6 +1001,61 @@ namespace karabo {
              * @param sep   Separator used for representing a hierarchy in the Hash
              * @return true or false
              */
+            bool isFromPath(const std::string& path, Types::Type type, const std::string& sep = ".") const {
+                std::string p(path);
+                std::vector<std::string> v;
+                boost::trim(p);
+                boost::split(v, p, boost::is_any_of(sep));
+                size_t nElements = v.size();
+                if (nElements == 0) return false;
+                const Hash* ctx = this;
+
+                for (size_t i = 0; i < nElements; i++) {
+                    boost::tuple<bool, std::string, int> arrayType = checkKeyForArrayType(v[i]);
+                    if (arrayType.get < 0 > ()) {
+                        std::string key = arrayType.get < 1 > (); // key
+                        if (!ctx->has(key)) return false;
+                        if (arrayType.get < 2 > () >= 0) {
+                            size_t index = arrayType.get < 2 > (); // index
+                            if (ctx->is(key, Types::VECTOR_HASH)) {
+                                const std::vector<Hash>& tmp = ctx->get<std::vector<Hash> >(key);
+                                if (index >= tmp.size()) return false;
+                                if (i == nElements - 1 && type == Types::HASH) return true;
+                                ctx = &(ctx->get<std::vector<Hash> >(key)[index]);
+                                continue;
+                            } else
+                                // this is vector but not a vector<Hash>!
+                                throw NOT_SUPPORTED_EXCEPTION("The square bracket syntax may be used only for vector<Hash>!");
+                        } else if (arrayType.get < 2 > () == -1) { // Use last element
+                            if (ctx->is(key, Types::VECTOR_HASH)) {
+                                if (i == nElements - 1 && type == Types::HASH) return true;
+                                ctx = &(*(ctx->get<std::vector<Hash> > (key).rbegin()));
+                                continue;
+                            } else
+                                throw NOT_SUPPORTED_EXCEPTION("The square bracket syntax may be used only for vector<Hash>!");
+                        } else {
+                            return false;
+                        }
+                    } else {
+                        if (!ctx->has(v[i])) return false;
+                        if (ctx->is<Hash > (v[i])) {
+                            if (i == nElements - 1 && type == Types::HASH) return true;
+                            ctx = &(ctx->get<Hash > (v[i]));
+                            continue;
+                        }
+                    }
+                    if (i == nElements - 1) return ctx->is(v[i], type);
+                }
+                return false;
+            }
+
+            /**
+             * This function queries the Hash if the path is associated with the object of type <b>'type'</b>
+             * @param path  Path to the queried object
+             * @param type  Expected object type
+             * @param sep   Separator used for representing a hierarchy in the Hash
+             * @return true or false
+             */
             bool isFromPath(const std::string& path, Types::Type type, const std::string& sep = ".") {
                 std::string p(path);
                 std::vector<std::string> v;
@@ -1064,6 +1119,62 @@ namespace karabo {
                 size_t nElements = v.size();
                 if (nElements == 0) return false;
                 Hash* ctx = this;
+                for (size_t i = 0; i < nElements; i++) {
+                    boost::tuple<bool, std::string, int> arrayType = checkKeyForArrayType(v[i]);
+                    if (arrayType.get < 0 > ()) {
+                        std::string key = arrayType.get < 1 > (); // key
+                        if (!ctx->has(key)) return false;
+                        if (arrayType.get < 2 > () >= 0) {
+                            size_t index = arrayType.get < 2 > (); // index
+                            if (ctx->is<std::vector<Hash> >(key)) {
+                                const std::vector<Hash>& tmp = ctx->get<std::vector<Hash> >(key);
+                                if (index >= tmp.size()) return false;
+                                if (i == nElements - 1) return true; // last element
+                                ctx = &(ctx->get<std::vector<Hash> >(key)[index]);
+                                continue;
+                            } else if (i == nElements - 1 && ctx->is<std::vector<T> >(key)) {
+                                const std::vector<T>& tmp = ctx->get<std::vector<T> >(key);
+                                if (index >= tmp.size()) return false;
+                                return true;
+                            } else
+                                return false;
+                        } else if (arrayType.get < 2 > () == -1) { // Use last element
+                            if (ctx->is<std::vector<Hash> >(key)) {
+                                if (i == nElements - 1) return true;
+                                ctx = &(*(ctx->get<std::vector<Hash> > (key).rbegin()));
+                                continue;
+                            } else if (i == nElements - 1)
+                                return ctx->is<std::vector<T> >(key);
+                            else
+                                return false;
+                        } else {
+                            return false;
+                        }
+                    } else {
+                        if (!ctx->has(v[i])) return false;
+                        if (i == nElements - 1) return ctx->is<T > (v[i]);
+                        ctx = &(ctx->get<Hash > (v[i]));
+                        continue;
+                    }
+                }
+                return false;
+            }
+
+            /**
+             * This function queries the Hash if the path is associated with the object of type equal template parameter
+             * @param path  Path to the queried object
+             * @param sep   Separator used for representing a hierarchy in the Hash
+             * @return true or false
+             */
+            template<typename T>
+            bool isFromPath(const std::string& path, const std::string& sep = ".") const {
+                std::string p(path);
+                std::vector<std::string> v;
+                boost::trim(p);
+                boost::split(v, p, boost::is_any_of(sep));
+                size_t nElements = v.size();
+                if (nElements == 0) return false;
+                const Hash* ctx = this;
                 for (size_t i = 0; i < nElements; i++) {
                     boost::tuple<bool, std::string, int> arrayType = checkKeyForArrayType(v[i]);
                     if (arrayType.get < 0 > ()) {
