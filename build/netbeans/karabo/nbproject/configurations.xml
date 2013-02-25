@@ -209,6 +209,8 @@
         <itemPath>../../../src/karabo/python/PythonFactoryMacros.hh</itemPath>
         <itemPath>../../../src/karabo/python/PythonMacros.hh</itemPath>
         <itemPath>../../../src/karabo/python/RequestorWrap.hh</itemPath>
+        <itemPath>/home/esenov/karabo/karaboFramework/src/karabo/python/ScopedGILAcquire.hh</itemPath>
+        <itemPath>/home/esenov/karabo/karaboFramework/src/karabo/python/ScopedGILRelease.hh</itemPath>
         <itemPath>../../../src/karabo/python/SignalSlotableWrap.hh</itemPath>
         <itemPath>../../../src/karabo/python/SignalWrap.hh</itemPath>
         <itemPath>../../../src/karabo/python/SlotWrap.hh</itemPath>
