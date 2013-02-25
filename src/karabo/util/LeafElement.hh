@@ -160,7 +160,7 @@ namespace karabo {
                 this->m_node->template setAttribute<int>("accessMode", READ);
                 // Set the assignment and defaults here, as the API would look strange to assign something to a read-only
                 this->m_node->template setAttribute<int>("assignment", Schema::OPTIONAL_PARAM);
-                this->m_node->setAttribute("default", "0");
+                this->m_node->setAttribute("defaultValue", "0");
                 return m_readOnlySpecific;
             }
         };
@@ -184,7 +184,7 @@ namespace karabo {
              * @return reference to the Element for proper methods chaining
              */
             Element& defaultValue(const ValueType& defaultValue) {
-                m_genericElement->getNode().setAttribute("default", defaultValue);
+                m_genericElement->getNode().setAttribute("defaultValue", defaultValue);
                 return *m_genericElement;
             }
 
@@ -195,7 +195,7 @@ namespace karabo {
              * @return reference to the Element for proper methods chaining
              */
             Element& defaultValueFromString(const std::string& defaultValue) {
-                m_genericElement->getNode().setAttribute("default", defaultValue);
+                m_genericElement->getNode().setAttribute("defaultValue", defaultValue);
                 return *m_genericElement;
             }
 
@@ -237,7 +237,7 @@ namespace karabo {
              * @return reference to the Element for proper methods chaining
              */
             ReadOnlySpecific& initialValue(const ValueType& initialValue) {
-                m_genericElement->getNode().setAttribute("default", initialValue);
+                m_genericElement->getNode().setAttribute("defaultValue", initialValue);
                 return *this;
             }
 
@@ -248,7 +248,7 @@ namespace karabo {
              * @return reference to the Element for proper methods chaining
              */
             ReadOnlySpecific& initialValueFromString(const std::string& initialValue) {
-                m_genericElement->getNode().setAttribute("default", initialValue);
+                m_genericElement->getNode().setAttribute("defaultValue", initialValue);
                 return *this;
             }
             
