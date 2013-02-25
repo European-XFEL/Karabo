@@ -7,7 +7,7 @@
 
 #include "Validator.hh"
 #include "Schema.hh"
-#include "FromInt.hh"
+#include "FromLiteral.hh"
 
 namespace karabo {
     namespace util {
@@ -84,7 +84,7 @@ namespace karabo {
                 int nodeType = it->getAttribute<int>("nodeType");
                 bool userHasNode = user.has(key);
                 int assignment = it->getAttribute<int>("assignment");
-                bool hasDefault = it->hasAttribute("default");
+                bool hasDefault = it->hasAttribute("defaultValue");
 
                 // Remove current node from all provided
                 if (userHasNode) keys.erase(key);
@@ -97,7 +97,7 @@ namespace karabo {
                                 return;
                             }
                         } else if (assignment == Schema::OPTIONAL_PARAM && hasDefault && m_injectDefaults) {
-                            Hash::Node& node = working.set(key, it->getAttributeAsAny("default"));
+                            Hash::Node& node = working.set(key, it->getAttributeAsAny("defaultValue"));
                             this->validateLeaf(*it, node, report, currentScope);
                         }
                     } else { // Node IS provided
@@ -131,7 +131,7 @@ namespace karabo {
                                 return;
                             }
                         } else if (assignment == Schema::OPTIONAL_PARAM && hasDefault && m_injectDefaults) {
-                            std::string optionName = it->getAttribute<string > ("default");
+                            std::string optionName = it->getAttribute<string > ("defaultValue");
                             Hash::Node& workNode = working.set(key, Hash(optionName, Hash())); // Inject empty choice
                             r_validate(it->getValue<Hash > ().get<Hash > (optionName), Hash(), workNode.getValue<Hash > ().get<Hash > (optionName), report, currentScope + "." + optionName);
                         }
@@ -168,7 +168,7 @@ namespace karabo {
                                         return;
                                     }
                                 } else if (assignment == Schema::OPTIONAL_PARAM && hasDefault && m_injectDefaults) {
-                                    std::string optionName = it->getAttribute<string > ("default");
+                                    std::string optionName = it->getAttribute<string > ("defaultValue");
                                     Hash::Node& workNode = working.set(key, Hash(optionName, Hash())); // Inject empty choice
                                     r_validate(it->getValue<Hash > ().get<Hash > (optionName), Hash(), workNode.getValue<Hash > ().get<Hash > (optionName), report, currentScope + "." + optionName);
                                 }
@@ -199,7 +199,7 @@ namespace karabo {
                                 return;
                             }
                         } else if ((assignment == Schema::OPTIONAL_PARAM) && hasDefault && m_injectDefaults) {
-                            const vector<string>& optionNames = it->getAttribute<vector<string> > ("default");
+                            const vector<string>& optionNames = it->getAttribute<vector<string> > ("defaultValue");
                             Hash::Node& workNode = working.set(key, std::vector<Hash>()); // TODO use bindReference here
                             vector<Hash>& workNodes = workNode.getValue<vector<Hash> >();
                             BOOST_FOREACH(string optionName, optionNames) {
@@ -294,7 +294,7 @@ namespace karabo {
         void Validator::validateLeaf(const Hash::Node& masterNode, Hash::Node& workNode, std::ostringstream& report, std::string scope) const {
             
             
-            Types::ReferenceType referenceType = Types::from<FromInt>(masterNode.getAttribute<int>("valueType"));
+            Types::ReferenceType referenceType = Types::from<FromLiteral>(masterNode.getAttribute<string>("valueType"));
             Types::ReferenceType referenceCategory = Types::category(referenceType);
             Types::ReferenceType givenType = workNode.getType();
             

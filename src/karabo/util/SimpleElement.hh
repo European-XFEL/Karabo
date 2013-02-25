@@ -95,7 +95,7 @@ namespace karabo {
             void beforeAddition() {
 
                 this->m_node->template setAttribute<int>("nodeType", Schema::LEAF);
-                this->m_node->template setAttribute<int>("valueType", Types::from<ValueType > ());
+                this->m_node->template setAttribute("valueType", Types::to<ToLiteral>(Types::from<ValueType > ()));
 
                 if (!this->m_node->hasAttribute("accessMode")) this->init(); // This is the default
 
