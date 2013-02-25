@@ -176,6 +176,8 @@ namespace karabo {
 
             template< class U, class V> friend class LeafElement;
             friend class ChoiceElement;
+            friend class ListElement;
+            
 
             /**
              * The <b>defaultValue</b> method serves for setting up the default value to be used when User
