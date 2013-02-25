@@ -21,23 +21,33 @@ namespace karabo {
 
         using namespace std;
 
+        Schema::Schema() : m_rootName("") {
+        };
+
         Schema::Schema(const std::string& classId, const Schema::AssemblyRules& rules) :
         m_currentAccessMode(rules.m_accessMode), m_currentState(rules.m_state), m_currentAccessRole(rules.m_accessRole), m_rootName(classId) {
 
-            this->setRoot(classId);
+            //this->setRoot(classId);
 
         }
 
-        void Schema::setRoot(const std::string& rootName) {
-            m_hash.set(rootName, Hash()).setAttribute<int>("nodeType", Schema::ROOT);
+        void Schema::setRootName(const std::string& rootName) {
+            m_rootName = rootName;
         }
 
-        karabo::util::Hash& Schema::getRoot() {
-            return m_hash.begin()->getValue<Hash > ();
+        karabo::util::Hash& Schema::getParameterHash() {
+            return m_hash;
         }
 
-        const karabo::util::Hash& Schema::getRoot() const {
-            return m_hash.begin()->getValue<Hash > ();
+        const karabo::util::Hash& Schema::getParameterHash() const {
+            return m_hash;
+        }
+
+        std::vector<std::string> Schema::getParameters(const std::string& path) const {
+            std::vector<std::string> tmp;
+            if (path.empty()) m_hash.getKeys(tmp);
+            else m_hash.get<Hash > (path).getKeys(tmp);
+            return tmp;
         }
 
         void Schema::setAssemblyRules(const Schema::AssemblyRules& rules) {
@@ -53,10 +63,76 @@ namespace karabo {
             rules.m_state = m_currentState;
             return rules;
         }
-        
+
         const std::string& Schema::getRootName() const {
             return m_rootName;
         }
+
+        //**********************************************
+        //              Node property                  *
+        //**********************************************
+
+        bool Schema::isLeaf(const std::string& path) const {
+            return m_hash.getAttribute<int>(path, "nodeType") == LEAF;
+        }
+
+        bool Schema::isNode(const std::string& path) const {
+            return m_hash.getAttribute<int>(path, "nodeType") == NODE;
+        }
+
+        bool Schema::isChoiceOfNodes(const std::string& path) const {
+            return m_hash.getAttribute<int>(path, "nodeType") == CHOICE_OF_NODES;
+        }
+
+        bool Schema::isListOfNodes(const std::string& path) const {
+            return m_hash.getAttribute<int>(path, "nodeType") == LIST_OF_NODES;
+        }
+
+        int Schema::getNodeType(const std::string& path) const {
+            return m_hash.getAttribute<int>(path, "nodeType");
+        }
+
+        bool Schema::isCommand(const std::string& path) const {
+            if (this->isLeaf(path) && m_hash.getAttribute<int>(path, "leafType") == COMMAND) return true;
+            else return false;
+        }
+
+        bool Schema::isProperty(const std::string& path) const {
+            if (this->isLeaf(path) && m_hash.getAttribute<int>(path, "leafType") == PROPERTY) return true;
+            else return false;
+        }
+
+        //**********************************************
+        //                Access Mode                  *
+        //**********************************************
+
+        void Schema::setAccessMode(const std::string& path, const AccessType& value) {
+            m_hash.setAttribute<int>(path, "accessMode", value);
+        }
+
+        bool Schema::hasAccessMode(const std::string& path) const {
+            return m_hash.hasAttribute(path, "accessMode");
+        }
+
+        bool Schema::isAccessInitOnly(const std::string& path) const {
+            return m_hash.getAttribute<int>(path, "accessMode") == INIT;
+        }
+
+        bool Schema::isAccessReadOnly(const std::string& path) const {
+            return m_hash.getAttribute<int>(path, "accessMode") == READ;
+        }
+
+        bool Schema::isAccessReconfigurable(const std::string& path) const {
+            return m_hash.getAttribute<int>(path, "accessMode") == WRITE;
+        }
+
+        int Schema::getAccessMode(const std::string& path) const {
+            return m_hash.getAttribute<int>(path, "accessMode");
+        }
+
+        //**********************************************
+        //                DisplayedName                *
+        //**********************************************
 
         void Schema::setDisplayedName(const std::string& path, const std::string& value) {
             m_hash.setAttribute(path, "displayedName", value);
@@ -70,6 +146,10 @@ namespace karabo {
             return m_hash.getAttribute<std::string > (path, "displayedName");
         }
 
+        //**********************************************
+        //                Description                  *
+        //**********************************************
+
         void Schema::setDescription(const std::string& path, const std::string& value) {
             m_hash.setAttribute(path, "description", value);
         }
@@ -80,6 +160,41 @@ namespace karabo {
 
         const std::string& Schema::getDescription(const std::string& path) const {
             return m_hash.getAttribute<std::string > (path, "description");
+        }
+
+        //**********************************************
+        //                   Tags                      *
+        //**********************************************
+
+        void Schema::setTags(const std::string& path, const std::string& value, const std::string& sep) {
+            m_hash.setAttribute(path, "tags", karabo::util::fromString<std::string, std::vector>(value, sep));
+        }
+
+        bool Schema::hasTags(const std::string& path) const {
+            return m_hash.hasAttribute(path, "tags");
+        }
+
+        const std::vector<std::string>& Schema::getTags(const std::string& path) const {
+            return m_hash.getAttribute<std::vector<std::string> >(path, "tags");
+        }
+
+          
+        //**********************************************
+        //                  Alias                      *
+        //**********************************************
+
+        template <class AliasType>
+        void Schema::setAlias(const std::string& path, const AliasType& value) {
+            m_hash.setAttribute<AliasType > (path, "alias", value);
+        }
+
+        bool Schema::hasAlias(const std::string& path) const {
+            return m_hash.hasAttribute(path, "alias");
+        }
+
+        template <class AliasType>
+        const AliasType& Schema::getAlias(const std::string& path) const {
+            return m_hash.getAttribute < AliasType>(path, "alias");
         }
 
         void Schema::addElement(Hash::Node& node) {
@@ -98,7 +213,7 @@ namespace karabo {
             bool stateOk = isAllowedInCurrentState(node);
             if (!(accessModeOk && accessRoleOk && stateOk)) return;
 
-            this->getRoot().setNode(node);
+            this->getParameterHash().setNode(node);
         }
 
         void Schema::overwriteAttributes(const Hash::Node& node) {
@@ -153,6 +268,7 @@ namespace karabo {
         }
 
         ostream& operator<<(std::ostream& os, const Schema& schema) {
+            os << "Schema for: " << schema.getRootName() << endl;
             os << schema.m_hash;
             return os;
         }

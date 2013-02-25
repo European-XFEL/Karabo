@@ -164,7 +164,6 @@ void Hash_Test::testGetSet() {
 
     {
         std::string s;
-        int i;
         Hash h("a", "1");
         h.get("a", s);
         CPPUNIT_ASSERT(s == "1");
@@ -337,8 +336,8 @@ void Hash_Test::testAttributes() {
         CPPUNIT_ASSERT(h.getNode("a").getType() == Types::INT32);
     }
     
-}
-
+    }
+    
 void Hash_Test::testIteration() {
 
     Hash h("should", 1, "be", 2, "iterated", 3, "in", 4, "correct", 5, "order", 6);
