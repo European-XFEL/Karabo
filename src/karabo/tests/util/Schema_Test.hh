@@ -17,6 +17,7 @@ class Schema_Test : public CPPUNIT_NS::TestFixture {
 
     CPPUNIT_TEST(testBuildUp);
     CPPUNIT_TEST(testGetRootName);
+    CPPUNIT_TEST(testPerKeyFunctionality);
     
     CPPUNIT_TEST_SUITE_END();
 
@@ -35,6 +36,8 @@ private: //functions
     void testBuildUp();
 
     void testGetRootName();    
+    void testPerKeyFunctionality();
+    
 };
 
 #endif	/* SCHEMA_TEST_HH */
