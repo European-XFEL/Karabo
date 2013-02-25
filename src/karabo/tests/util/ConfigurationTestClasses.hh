@@ -245,7 +245,7 @@ namespace configurationTest {
         }
     };
 
-    struct TestStruct1 {
+        struct TestStruct1 {
         KARABO_CLASSINFO(TestStruct1, "TestStruct1", "1.0");
 
         static void expectedParameters(karabo::util::Schema & expected) {
@@ -271,7 +271,7 @@ namespace configurationTest {
                     .tags("h/w")
                     .displayedName("Example key 3")
                     .description("Example key 3 description")
-                    .assignmentOptional().defaultValue(20)
+                    .assignmentMandatory()
                     .reconfigurable()
                     .commit();
 
@@ -279,9 +279,8 @@ namespace configurationTest {
                     .tags("hardware")
                     .displayedName("Example key 4")
                     .description("Example key 4 description")
-                    .readOnly()
+                    .assignmentInternal().noDefaultValue()
                     .commit();
-
 
             INT64_ELEMENT(expected).key("exampleKey5").alias("exampleAlias5")
                     .tags("hardware")
