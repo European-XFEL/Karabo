@@ -25,20 +25,18 @@ namespace karabo {
          */
         template <class Derived>
         class GenericElement {
-            bool m_deleteNode;
-
+            
         protected:
 
             Schema* m_schema;
-            Hash::Node* m_node;
+            boost::shared_ptr<Hash::Node> m_node;
 
         public:
 
-            GenericElement(Schema& expected) : m_deleteNode(false), m_schema(&expected), m_node(0) {
+            GenericElement(Schema& expected) : m_schema(&expected) {
             }
 
             virtual ~GenericElement() {
-                if (m_deleteNode) delete m_node;
             }
 
             /**
@@ -56,19 +54,10 @@ namespace karabo {
              */
             virtual Derived& key(const std::string& name) {
 
-                if (m_node != 0) throw KARABO_LOGIC_EXCEPTION("The key() function must only be called once!");
+                if (m_node) throw KARABO_LOGIC_EXCEPTION("The key() function must only be called once!");
 
-                boost::optional<Hash::Node&> node = m_schema->getRoot().find(name);
-                if (node) { // exists
-                    m_node = node.get_ptr();
-                } else {
-                    m_node = new Hash::Node(name, 0);
-                    m_deleteNode = true;
-                }
-
-                // Set some defaults here
-                //this->init();
-
+                m_node = boost::shared_ptr<Hash::Node>(new Hash::Node(name, 0));
+                    
                 return *(static_cast<Derived*>(this));
             }
 
@@ -89,9 +78,8 @@ namespace karabo {
              * @param tag of any type
              * @return reference to the Element (to allow method's chaining)
              */
-            template <class TagType>
-            Derived& tag(const TagType& tag) {
-                m_node->setAttribute<TagType > ("tag", tag);
+            Derived& tags(const std::string& tags, const std::string& sep = " .,;") {
+                m_node->setAttribute("tags", karabo::util::fromString<std::string, std::vector>(tags, sep));
                 return *(static_cast<Derived*>(this));
             }
 

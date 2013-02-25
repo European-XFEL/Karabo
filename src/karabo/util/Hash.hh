@@ -301,7 +301,7 @@ namespace karabo {
              * @return void
              */
             template <typename ValueType>
-            inline void get(const std::string& path, ValueType & value, const char separator = '.');
+            inline void get(const std::string& path, ValueType & value, const char separator = '.') const;
             
             template <typename ValueType>
             inline ValueType getAs(const std::string& path, const char separator = '.') const;
@@ -556,7 +556,7 @@ namespace karabo {
         }
 
         template <typename ValueType>
-        inline void Hash::get(const std::string& path, ValueType & value, const char separator) {
+        inline void Hash::get(const std::string& path, ValueType & value, const char separator) const {
             value = getNode(path, separator).getValue<ValueType > ();
         }
         

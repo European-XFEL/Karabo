@@ -21,6 +21,8 @@ namespace karabo {
 
         class ListElement : public GenericElement<ListElement> {
             Schema::AssemblyRules m_parentSchemaAssemblyRules;
+            
+            DefaultValue<ChoiceElement, std::string> m_defaultValue; 
         public:
 
             ListElement(Schema& expected) : GenericElement<ListElement>(expected) {
@@ -36,12 +38,7 @@ namespace karabo {
                 this->m_node->setAttribute("max", maxNumNodes);
                 return *this;
             }
-            
-            ListElement& defaultValue(const std::vector<std::string>& defaultNodes) {
-                this->m_node->setAttribute("default", defaultNodes);
-                return *this;
-            }
-
+         
             template <class ConfigurationBase>
             ListElement& appendNodesOfConfigurationBase() {
                 // Create an empty Hash as value of this choice node if not there yet
@@ -52,8 +49,8 @@ namespace karabo {
                 std::vector<std::string> nodeNames = Configurator<ConfigurationBase>::getRegisteredClasses();
                 for (size_t i = 0; i < nodeNames.size(); ++i) {
                     const std::string& nodeName = nodeNames[i];
-                    Schema schema = Configurator<ConfigurationBase>::assembleSchema(nodeName, m_parentSchemaAssemblyRules);
-                    Hash::Node& node = choiceOfNodes.set<Hash > (nodeName, schema.getRoot());
+                    Schema schema = Configurator<ConfigurationBase>::getSchema(nodeName, m_parentSchemaAssemblyRules);
+                    Hash::Node& node = choiceOfNodes.set<Hash > (nodeName, schema.getParameterHash());
                     node.setAttribute("classId", nodeName);
                     node.setAttribute("displayType", nodeName);
                     node.setAttribute<int>("nodeType", Schema::NODE);
@@ -71,14 +68,31 @@ namespace karabo {
 
                 // Simply append the expected parameters of T to current node
                 if (nodeName.empty()) nodeName = T::classInfo().getClassId();
-                Schema schema = karabo::util::confTools::assembleSchema<T > (nodeName, m_parentSchemaAssemblyRules);
-                Hash::Node& node = choiceOfNodes.set<Hash > (nodeName, schema.getRoot());
+                Schema schema(nodeName, m_parentSchemaAssemblyRules);
+                T::_KARABO_SCHEMA_DESCRIPTION_FUNCTION(schema);
+                Hash::Node& node = choiceOfNodes.set<Hash > (nodeName, schema.getParameterHash());
                 node.setAttribute("classId", T::classInfo().getClassId());
                 node.setAttribute("displayType", T::classInfo().getClassId());
                 node.setAttribute<int>("nodeType", Schema::NODE);
                 node.setAttribute<int>("accessMode", READ | WRITE | INIT);
                 return *this;
             }
+            
+            /**
+             * The <b>assignmentMandatory</b> method serves for setting up a mode that requires the value
+             * of the element always being specified. No default value is possible.
+             * @return reference to the Element (to allow method's chaining)
+             */
+            virtual ListElement& assignmentMandatory() {
+                this->m_node->setAttribute<int>("assignment", Schema::MANDATORY_PARAM);
+                return *this;
+            }
+            
+            virtual DefaultValue<ListElement, std::vector<std::string> >& assignmentOptional() {
+                this->m_node->setAttribute<int>("assignment", Schema::OPTIONAL_PARAM);
+                return m_defaultValue;
+            }
+
 
         protected:
 

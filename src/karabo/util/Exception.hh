@@ -237,6 +237,18 @@ namespace karabo {
             }
         };
 #define KARABO_NOT_SUPPORTED_EXCEPTION(msg) karabo::util::NotSupportedException(msg, __FILE__, BOOST_CURRENT_FUNCTION, __LINE__)
+        
+         /**
+         * The SchemaException handles exceptions that are raised whilst constructing a Schema 
+         */
+        class SchemaException : public Exception {
+        public:
+
+            SchemaException(const std::string& message, const std::string& filename, const std::string& function, int lineNumber) :
+            Exception(message, "Bad schema construction", filename, function, lineNumber) {
+            }
+        };
+#define KARABO_SCHEMA_EXCEPTION(msg) karabo::util::SchemaException(msg, __FILE__, BOOST_CURRENT_FUNCTION, __LINE__)
 
         /**
          * The CastException handles exceptions that are raised due to illegal type castings

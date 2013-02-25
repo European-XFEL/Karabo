@@ -97,7 +97,7 @@ namespace karabo {
                 this->m_node->template setAttribute<int>("nodeType", Schema::LEAF);
                 this->m_node->template setAttribute<int>("valueType", Types::from<ValueType > ());
 
-                if (this->m_node->hasAttribute("accessMode")) this->init(); // This is the default
+                if (!this->m_node->hasAttribute("accessMode")) this->init(); // This is the default
 
                 checkMinExcMaxExc();
                 checkMinIncMaxInc();

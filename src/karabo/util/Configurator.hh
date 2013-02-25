@@ -5,8 +5,8 @@
  * Created on January 28, 2013, 2:09 PM
  */
 
-#ifndef KARABO_UTIL_CONFIGURATOR_HH_hh
-#define	KARABO_UTIL_CONFIGURATOR_HH_hh
+#ifndef KARABO_UTIL_CONFIGURATOR_HH
+#define	KARABO_UTIL_CONFIGURATOR_HH
 
 #include <string>
 
@@ -19,8 +19,10 @@
 
 namespace karabo {
     namespace util {
-
         namespace confTools {
+
+            #define _KARABO_SCHEMA_DESCRIPTION_FUNCTION expectedParameters
+            typedef void(*PointerToSchemaDescriptionFunction)(Schema&);
 
             //**********************************************
             //               Schema Assembly               *
@@ -30,139 +32,17 @@ namespace karabo {
             struct VoidArg1FunctionExists {
             };
 
-            template<class Class, class Argument>
-            inline bool appendToSchemaIfPossible(Argument& arg, VoidArg1FunctionExists<Class, Argument, &Class::expectedParameters>*) {
-                Class::expectedParameters(arg);
-                return true;
+            template<class Class>
+            inline PointerToSchemaDescriptionFunction getSchemaDescriptionFunction(VoidArg1FunctionExists<Class, Schema, &Class::_KARABO_SCHEMA_DESCRIPTION_FUNCTION>*) {
+                return &Class::_KARABO_SCHEMA_DESCRIPTION_FUNCTION;
             }
 
-            template<class Class, class Argument>
-            inline bool appendToSchemaIfPossible(Argument& arg, ...) {
-                // Do nothing
-                return false;
+            template<class Class>
+            inline PointerToSchemaDescriptionFunction getSchemaDescriptionFunction(...) {
+                return 0;
             }
 
-            template <class T>
-            inline Schema assembleSchema(const std::string& classId, const Schema::AssemblyRules& rules) {
-                Schema schema(classId, rules);
-                karabo::util::confTools::appendToSchemaIfPossible<T, Schema > (schema, 0);
-                return schema;
-            }
-
-            template <class T, class U>
-            inline Schema assembleSchema(const std::string& classId, const Schema::AssemblyRules& rules) {
-                Schema schema(classId, rules);
-                karabo::util::confTools::appendToSchemaIfPossible<T, Schema > (schema, 0);
-                karabo::util::confTools::appendToSchemaIfPossible<U, Schema > (schema, 0);
-                return schema;
-            }
-
-            template <class T, class U, class V>
-            inline Schema assembleSchema(const std::string& classId, const Schema::AssemblyRules& rules) {
-                Schema schema(classId, rules);
-                karabo::util::confTools::appendToSchemaIfPossible<T, Schema > (schema, 0);
-                karabo::util::confTools::appendToSchemaIfPossible<U, Schema > (schema, 0);
-                karabo::util::confTools::appendToSchemaIfPossible<V, Schema > (schema, 0);
-                return schema;
-            }
-
-            template <class T, class U, class V, class W>
-            inline Schema assembleSchema(const std::string& classId, const Schema::AssemblyRules& rules) {
-                Schema schema(classId, rules);
-                karabo::util::confTools::appendToSchemaIfPossible<T, Schema > (schema, 0);
-                karabo::util::confTools::appendToSchemaIfPossible<U, Schema > (schema, 0);
-                karabo::util::confTools::appendToSchemaIfPossible<V, Schema > (schema, 0);
-                karabo::util::confTools::appendToSchemaIfPossible<W, Schema > (schema, 0);
-                return schema;
-            }
-
-            template <class T, class U, class V, class W, class X>
-            inline Schema assembleSchema(const std::string& classId, const Schema::AssemblyRules& rules) {
-                Schema schema(classId, rules);
-                karabo::util::confTools::appendToSchemaIfPossible<T, Schema > (schema, 0);
-                karabo::util::confTools::appendToSchemaIfPossible<U, Schema > (schema, 0);
-                karabo::util::confTools::appendToSchemaIfPossible<V, Schema > (schema, 0);
-                karabo::util::confTools::appendToSchemaIfPossible<W, Schema > (schema, 0);
-                karabo::util::confTools::appendToSchemaIfPossible<X, Schema > (schema, 0);
-                return schema;
-            }
-
-            //**********************************************
-            //            Configure and Create             *
-            //**********************************************
-
-            template<class Class, class Argument, void (Class::*)(const Argument&) >
-            struct VoidConstArg1FunctionExists {
-            };
-
-            template <class Class, class Argument>
-            inline bool configureIfPossible(const typename Class::Pointer& instance, const Argument& arg, VoidConstArg1FunctionExists<Class, Argument, &Class::configure >*) {
-                instance->configure(arg);
-                return true;
-            }
-
-            template <class Class, class Argument>
-            inline bool configureIfPossible(const typename Class::Pointer& instance, const Argument& arg, ...) {
-                // Do nothing
-                return false;
-            }
-
-            template <class Base>
-            inline typename Base::Pointer createAndConfigure(const karabo::util::Hash& configuration) {
-                typename Base::Pointer basePointer = typename Base::Pointer(new Base());
-                karabo::util::confTools::configureIfPossible<Base, karabo::util::Hash > (basePointer, configuration, 0);
-                return basePointer;
-            }
-
-            template <class Base, class Sub1>
-            inline typename Base::Pointer createAndConfigure(const karabo::util::Hash& configuration) {
-                typename Base::Pointer basePointer = typename Base::Pointer(new Sub1());
-                typename Sub1::Pointer sub1Pointer = boost::static_pointer_cast<Sub1 > (basePointer);
-                karabo::util::confTools::configureIfPossible<Base, karabo::util::Hash > (basePointer, configuration, 0);
-                karabo::util::confTools::configureIfPossible<Sub1, karabo::util::Hash > (sub1Pointer, configuration, 0);
-                return basePointer;
-            }
-
-            template <class Base, class Sub1, class Sub2>
-            typename Base::Pointer createAndConfigure(const karabo::util::Hash& configuration) {
-                typename Base::Pointer basePointer = typename Base::Pointer(new Sub2());
-                typename Sub1::Pointer sub1Pointer = boost::static_pointer_cast<Sub1 > (basePointer);
-                typename Sub2::Pointer sub2Pointer = boost::static_pointer_cast<Sub2 > (basePointer);
-                karabo::util::confTools::configureIfPossible<Base, karabo::util::Hash > (basePointer, configuration, 0);
-                karabo::util::confTools::configureIfPossible<Sub1, karabo::util::Hash > (sub1Pointer, configuration, 0);
-                karabo::util::confTools::configureIfPossible<Sub2, karabo::util::Hash > (sub2Pointer, configuration, 0);
-                return basePointer;
-            }
-
-            template <class Base, class Sub1, class Sub2, class Sub3>
-            inline typename Base::Pointer createAndConfigure(const karabo::util::Hash& configuration) {
-                typename Base::Pointer basePointer = typename Base::Pointer(new Sub3());
-                typename Sub1::Pointer sub1Pointer = boost::static_pointer_cast<Sub1 > (basePointer);
-                typename Sub2::Pointer sub2Pointer = boost::static_pointer_cast<Sub2 > (basePointer);
-                typename Sub3::Pointer sub3Pointer = boost::static_pointer_cast<Sub3 > (basePointer);
-                karabo::util::confTools::configureIfPossible<Base, karabo::util::Hash > (basePointer, configuration, 0);
-                karabo::util::confTools::configureIfPossible<Sub1, karabo::util::Hash > (sub1Pointer, configuration, 0);
-                karabo::util::confTools::configureIfPossible<Sub2, karabo::util::Hash > (sub2Pointer, configuration, 0);
-                karabo::util::confTools::configureIfPossible<Sub3, karabo::util::Hash > (sub3Pointer, configuration, 0);
-                return basePointer;
-            }
-
-            template <class Base, class Sub1, class Sub2, class Sub3, class Sub4>
-            inline typename Base::Pointer createAndConfigure(const karabo::util::Hash& configuration) {
-                typename Base::Pointer basePointer = typename Base::Pointer(new Sub4());
-                typename Sub1::Pointer sub1Pointer = boost::static_pointer_cast<Sub1 > (basePointer);
-                typename Sub2::Pointer sub2Pointer = boost::static_pointer_cast<Sub2 > (basePointer);
-                typename Sub3::Pointer sub3Pointer = boost::static_pointer_cast<Sub3 > (basePointer);
-                typename Sub4::Pointer sub4Pointer = boost::static_pointer_cast<Sub4 > (basePointer);
-                karabo::util::confTools::configureIfPossible<Base, karabo::util::Hash > (basePointer, configuration, 0);
-                karabo::util::confTools::configureIfPossible<Sub1, karabo::util::Hash > (sub1Pointer, configuration, 0);
-                karabo::util::confTools::configureIfPossible<Sub2, karabo::util::Hash > (sub2Pointer, configuration, 0);
-                karabo::util::confTools::configureIfPossible<Sub3, karabo::util::Hash > (sub3Pointer, configuration, 0);
-                karabo::util::confTools::configureIfPossible<Sub4, karabo::util::Hash > (sub4Pointer, configuration, 0);
-                return basePointer;
-            }
-
-            inline std::pair<std::string, karabo::util::Hash> spitIntoClassIdAndConfiguration(const karabo::util::Hash& rootedConfiguration) {
+            inline std::pair<std::string, karabo::util::Hash> splitIntoClassIdAndConfiguration(const karabo::util::Hash& rootedConfiguration) {
                 if (rootedConfiguration.size() != 1) throw KARABO_LOGIC_EXCEPTION("Expecting exactly one (root-)node identifying the classId in configuration");
                 std::string classId = rootedConfiguration.begin()->getKey();
                 karabo::util::Hash config = rootedConfiguration.begin()->getValue<Hash > ();
@@ -170,47 +50,96 @@ namespace karabo {
             }
         }
 
-
         //**********************************************
         //               Configurator                  *
         //**********************************************
 
-        template <class Base>
+        template <class BaseClass>
         class Configurator {
+            typedef std::map<std::string, boost::any > CtorMap;
+            typedef std::map<std::string, CtorMap> Registry;
+            typedef std::vector<boost::function<void (Schema&)> > SchemaFuncs;
+            typedef std::map<std::string, SchemaFuncs > SchemaFuncRegistry;
+
+            Registry m_registry;
+            SchemaFuncRegistry m_schemaFuncRegistry;
+
         public:
 
-            KARABO_CLASSINFO(Configurator<Base>, "Configurator", "1.0");
+            KARABO_CLASSINFO(Configurator<BaseClass>, "Configurator", "1.0");
 
-            inline static std::vector<std::string> getRegisteredClasses() {
-                std::vector<std::string> registeredClasses;
-                return Factory< Configurator<Base> >::getRegisteredClasses();
+            template <class DerivedClass>
+            static void registerClass(const std::string& classId) {
+                std::cout << "Registering class \"" << classId << "\" with constructor: " << classId << "(" << ctorKey() << ") for configuration" << std::endl;
+                Configurator::init().m_registry[classId][ctorKey()] = static_cast<boost::function < boost::shared_ptr<BaseClass > (const Hash&) > > (boost::factory<boost::shared_ptr<DerivedClass> >());
             }
 
-            inline static typename Base::Pointer create(const karabo::util::Hash& configuration, const bool validate = true) {
+            template <class DerivedClass, typename A1>
+            static void registerClass(const std::string& classId) {
+                std::cout << "Registering class \"" << classId << "\" with constructor: " << classId << "(" << ctorKey<A1 > () << ") for configuration" << std::endl;
+                Configurator::init().m_registry[classId][ctorKey<A1 > ()] = static_cast<boost::function < boost::shared_ptr<BaseClass > (const Hash&, const A1&) > > (boost::factory<boost::shared_ptr<DerivedClass> >());
+            }
+
+            template <class T>
+            static void registerSchemaFunction(const std::string& classId) {
+                confTools::PointerToSchemaDescriptionFunction p = confTools::getSchemaDescriptionFunction<T > (0);
+                if (p) Configurator::init().m_schemaFuncRegistry[classId].push_back(p);
+            }
+
+            static Schema getSchema(const std::string& classId, const Schema::AssemblyRules& rules = Schema::AssemblyRules()) {
+                Schema schema(classId, rules);
+                const SchemaFuncs& schemaFunctions = Configurator::init().m_schemaFuncRegistry[classId];
+                for (size_t i = 0; i < schemaFunctions.size(); ++i) {
+                    schemaFunctions[i](schema);
+                }
+                return schema;
+            }
+
+            inline static typename BaseClass::Pointer create(const karabo::util::Hash& configuration, const bool validate = true) {
                 try {
-                    std::pair<std::string, karabo::util::Hash> p = karabo::util::confTools::spitIntoClassIdAndConfiguration(configuration);
+                    std::pair<std::string, karabo::util::Hash> p = karabo::util::confTools::splitIntoClassIdAndConfiguration(configuration);
                     return create(p.first, p.second, validate);
                 } catch (const LogicException& e) {
                     KARABO_RETHROW_AS(KARABO_INIT_EXCEPTION("This create method expects a rooted Hash with the root node name specifying the classId"));
-                    return typename Base::Pointer(); // Make the compiler happy
+                    return typename BaseClass::Pointer(); // Make the compiler happy
                 }
             }
 
-            inline static typename Base::Pointer create(const std::string& classId, const karabo::util::Hash& configuration, const bool validate = true) {
-                Pointer p = Factory<Configurator<Base> >::create(classId); // This creates a configurator for desired class
+            inline static typename BaseClass::Pointer create(const std::string& classId, const karabo::util::Hash& configuration, const bool validate = true) {
+                CtorMap::const_iterator it = findCtor(classId, ctorKey());
                 if (validate) {
-                    Schema schema = p->assemble(classId, Schema::AssemblyRules());
-                    Validator validator; // Default validation
                     Hash validated;
-                    std::pair<bool, std::string> ret = validator.validate(schema, configuration, validated);
-                    if (ret.first == false) throw KARABO_PARAMETER_EXCEPTION("Validation failed. \n" + ret.second);
-                    return p->createAndConfigure(validated); // This creates the desired class (by zero/default construction)
+                    validateConfiguration(classId, configuration, validated);
+                    return (boost::any_cast < boost::function < boost::shared_ptr<BaseClass > (const Hash&) > >(it->second))(validated);
                 } else {
-                    return p->createAndConfigure(configuration);
+                    return (boost::any_cast < boost::function < boost::shared_ptr<BaseClass > (const Hash&) > >(it->second))(configuration);
                 }
             }
 
-            inline static typename Base::Pointer createNode(const std::string& nodeName, const std::string& classId, const karabo::util::Hash& input, const bool validate = true) {
+            template <typename A1>
+            inline static typename BaseClass::Pointer create(const karabo::util::Hash& configuration, const A1& a1, const bool validate = true) {
+                try {
+                    std::pair<std::string, karabo::util::Hash> p = karabo::util::confTools::splitIntoClassIdAndConfiguration(configuration);
+                    return create(p.first, p.second, a1, validate);
+                } catch (const LogicException& e) {
+                    KARABO_RETHROW_AS(KARABO_INIT_EXCEPTION("This create method expects a rooted Hash with the root node name specifying the classId"));
+                    return typename BaseClass::Pointer(); // Make the compiler happy
+                }
+            }
+
+            template <typename A1>
+            inline static typename BaseClass::Pointer create(const std::string& classId, const karabo::util::Hash& configuration, const A1& a1, const bool validate = true) {
+                CtorMap::const_iterator it = findCtor(classId, ctorKey());
+                if (validate) {
+                    Hash validated;
+                    validateConfiguration(classId, configuration, validated);
+                    return (boost::any_cast < boost::function < boost::shared_ptr<BaseClass > (const Hash&, const A1&) > >(it->second))(validated, a1);
+                } else {
+                    return (boost::any_cast < boost::function < boost::shared_ptr<BaseClass > (const Hash&, const A1&) > >(it->second))(configuration, a1);
+                }
+            }
+
+            inline static typename BaseClass::Pointer createNode(const std::string& nodeName, const std::string& classId, const karabo::util::Hash& input, const bool validate = true) {
                 if (input.has(nodeName)) {
                     return create(classId, input.get<Hash > (nodeName), validate);
                 } else {
@@ -218,19 +147,18 @@ namespace karabo {
                 }
             }
 
-            inline static typename Base::Pointer createChoice(const std::string& choiceName, const karabo::util::Hash& input, const bool validate = true) {
+            inline static typename BaseClass::Pointer createChoice(const std::string& choiceName, const karabo::util::Hash& input, const bool validate = true) {
                 if (input.has(choiceName)) {
-                    // choiceName should have a Hash which has exactly one key that associates a hash
                     return create(input.get<Hash > (choiceName), validate);
                 } else {
                     throw KARABO_INIT_EXCEPTION("Given choiceName \"" + choiceName + "\" is not part of input configuration");
                 }
             }
 
-            inline static std::vector<typename Base::Pointer> createList(const std::string& listName, const karabo::util::Hash& input, const bool validate = true) {
+            inline static std::vector<typename BaseClass::Pointer> createList(const std::string& listName, const karabo::util::Hash& input, const bool validate = true) {
                 if (input.has(listName)) {
                     const Hash& tmp = input.get<Hash > (listName);
-                    std::vector<typename Base::Pointer> instances;
+                    std::vector<typename BaseClass::Pointer> instances;
                     for (Hash::const_iterator it = tmp.begin(); it != tmp.end(); ++it) {
                         instances.push_back(create(it->getKey(), it->getValue<Hash > (), validate));
                     }
@@ -239,78 +167,151 @@ namespace karabo {
                 }
             }
 
-            inline static Schema assembleSchema(const std::string& classId, const Schema::AssemblyRules& rules = Schema::AssemblyRules()) {
-                Pointer p = Factory<Configurator<Base> >::create(classId);
-                return p->assemble(classId, rules);
+            static std::vector<std::string> getRegisteredClasses() {
+                std::vector<std::string> registeredClasses;
+                for (Registry::const_iterator it = Configurator::init().m_registry.begin(); it != Configurator::init().m_registry.end(); ++it) {
+                    registeredClasses.push_back(it->first);
+                }
+                return registeredClasses;
             }
 
-        protected:
+        private:
 
-            virtual Schema assemble(const std::string& classId, const Schema::AssemblyRules& rules) = 0;
-            virtual typename Base::Pointer createAndConfigure(const karabo::util::Hash& configuration) = 0;
+            Configurator() {
+            }
+
+            virtual ~Configurator() {
+            }
+
+            static Configurator& init() {
+                static Configurator f;
+                return f;
+            }
+
+            static std::string ctorKey() {
+                return std::string(typeid (Hash).name());
+            }
+
+            template <typename A1>
+            static std::string ctorKey() {
+                string h(typeid (Hash).name());
+                string a1(typeid (A1).name());
+                return h + a1;
+            }
+
+            template <typename A1, typename A2>
+            static std::string ctorKey() {
+                string h(typeid (Hash).name());
+                string a1(typeid (A1).name());
+                string a2(typeid (A2).name());
+                return h + a1 + a2;
+            }
+
+            template <typename A1, typename A2, typename A3>
+            static std::string ctorKey() {
+                string h(typeid (Hash).name());
+                string a1(typeid (A1).name());
+                string a2(typeid (A2).name());
+                string a3(typeid (A3).name());
+                return h + a1 + a2 + a3;
+            }
+
+            static CtorMap::const_iterator findCtor(const std::string& factoryKey, const std::string& constructorKey) {
+                Registry::const_iterator it = Configurator::init().m_registry.find(factoryKey);
+                if (it == Configurator::init().m_registry.end()) throw KARABO_PARAMETER_EXCEPTION("No factorize-able class registered for key \"" + factoryKey + "\"");
+                CtorMap::const_iterator jt = it->second.find(constructorKey);
+                if (jt == it->second.end()) throw KARABO_PARAMETER_EXCEPTION("No constructor expecting argument(s) \"" + constructorKey + "\" registered for key \"" + factoryKey + "\"");
+                return jt;
+            }
+
+            static void validateConfiguration(const std::string& classId, const Hash& configuration, Hash& validated) {
+                Schema schema = getSchema(classId);
+                Validator validator; // Default validation
+                std::pair<bool, std::string> ret = validator.validate(schema, configuration, validated);
+                if (ret.first == false) throw KARABO_PARAMETER_EXCEPTION("Validation failed. \n" + ret.second);
+            }
+
         };
-        
         
         template <class Base>
-        struct Configurator0 : public Configurator<Base> {
+        struct ConfiguratorMember1 {
 
-            Schema assemble(const std::string& classId, const Schema::AssemblyRules & rules) {
-                return karabo::util::confTools::assembleSchema<Base> (classId, rules);
-            }
-
-            typename Base::Pointer createAndConfigure(const karabo::util::Hash & configuration) {
-                return karabo::util::confTools::createAndConfigure<Base> (configuration);
+            ConfiguratorMember1(int) {
+                std::string classId(Base::classInfo().getClassId());
+                Configurator<Base>::template registerClass<Base > (classId);
+                Configurator<Base>::template registerSchemaFunction<Base > (classId);
             }
         };
 
-        template <class Base, typename Sub1>
-        struct Configurator1 : public Configurator<Base> {
+        template <class Base>
+        struct RegisterConfigurator1 {
+            static const ConfiguratorMember1<Base> registerMe;
+        };
 
-            Schema assemble(const std::string& classId, const Schema::AssemblyRules & rules) {
-                return karabo::util::confTools::assembleSchema<Base, Sub1 > (classId, rules);
+        template <class Base, class Sub1>
+        struct ConfiguratorMember2 {
+
+            ConfiguratorMember2(int) {
+                std::string classId(Sub1::classInfo().getClassId());
+                Configurator<Base>::template registerClass<Sub1 > (classId);
+                Configurator<Base>::template registerSchemaFunction<Base > (classId);
+                Configurator<Base>::template registerSchemaFunction<Sub1 > (classId);
             }
+        };
 
-            typename Base::Pointer createAndConfigure(const karabo::util::Hash & configuration) {
-                return karabo::util::confTools::createAndConfigure<Base, Sub1 > (configuration);
+        template <class Base, class Sub1>
+        struct RegisterConfigurator2 {
+            static const ConfiguratorMember2<Base, Sub1> registerMe;
+        };
+
+        template <class Base, class Sub1, class Sub2>
+        struct ConfiguratorMember3 {
+
+            ConfiguratorMember3(int) {
+                std::string classId(Sub2::classInfo().getClassId());
+                Configurator<Base>::template registerClass<Sub2 > (classId);
+                Configurator<Base>::template registerSchemaFunction<Base > (classId);
+                Configurator<Base>::template registerSchemaFunction<Sub1 > (classId);
+                Configurator<Base>::template registerSchemaFunction<Sub2 > (classId);
             }
         };
 
         template <class Base, class Sub1, class Sub2>
-        struct Configurator2 {
-
-            Schema assemble(const std::string& classId, const Schema::AssemblyRules & rules) {
-                return karabo::util::confTools::assembleSchema<Base, Sub1, Sub2 > (classId, rules);
-            }
-
-            typename Base::Pointer createAndConfigure(const karabo::util::Hash & configuration) {
-                return karabo::util::confTools::createAndConfigure<Base, Sub1, Sub2 > (configuration);
-            }
+        struct RegisterConfigurator3 {
+            static const ConfiguratorMember3<Base, Sub1, Sub2> registerMe;
         };
 
-        template <class Base, class Sub1, class Sub2, class Sub3>
-        struct Configurator3 {
+        #define _KARABO_REGISTER_FOR_CONFIGURATION_1(base) \
+                template<> const karabo::util::ConfiguratorMember1<base> \
+                karabo::util::RegisterConfigurator1<base>::registerMe(1);
 
-            Schema assemble(const std::string& classId, const Schema::AssemblyRules & rules) {
-                return karabo::util::confTools::assembleSchema<Base, Sub1, Sub2, Sub3 > (classId, rules);
-            }
+        #define _KARABO_REGISTER_FOR_CONFIGURATION_2(base, sub1) \
+                template<> const karabo::util::ConfiguratorMember2<base, sub1> \
+                karabo::util::RegisterConfigurator2<base, sub1>::registerMe(1);
 
-            typename Base::Pointer createAndConfigure(const karabo::util::Hash & configuration) {
-                return karabo::util::confTools::createAndConfigure<Base, Sub1, Sub2, Sub3 > (configuration);
-            }
-        };
+        #define _KARABO_REGISTER_FOR_CONFIGURATION_3(base, sub1, sub2) \
+                template<> const karabo::util::ConfiguratorMember3<base, sub1, sub2> \
+                karabo::util::RegisterConfigurator3<base, sub1, sub2>::registerMe(1);
 
-        template <class Base, class Sub1, class Sub2, class Sub3, class Sub4>
-        struct Configurator4 {
+        #define _KARABO_REGISTER_FOR_CONFIGURATION_4(base, sub1, sub2, sub3) \
+                template<> const karabo::util::ConfiguratorMember4<base, sub1, sub2, sub3> \
+                karabo::util::RegisterConfigurator4<base, sub1, sub2, sub3>::registerMe(1);
 
-            Schema assemble(const std::string& classId, const Schema::AssemblyRules & rules) {
-                return karabo::util::confTools::assembleSchema<Base, Sub1, Sub2, Sub3, Sub4 > (classId, rules);
-            }
+        #define _KARABO_REGISTER_FOR_CONFIGURATION_5(base, sub1, sub2, sub3, sub4) \
+                template<> const karabo::util::ConfiguratorMember5<base, sub1, sub2, sub3, sub4> \
+                karabo::util::RegisterConfigurator5<base, sub1, sub2, sub3, sub4>::registerMe(1);
 
-            typename Base::Pointer createAndConfigure(const karabo::util::Hash & configuration) {
-                return karabo::util::confTools::createAndConfigure<Base, Sub1, Sub2, Sub3, Sub4 > (configuration);
-            }
-        };
+        #define _KARABO_REGISTER_FOR_CONFIGURATION_N(x0,x1,x2,x3,x4,x5,FUNC, ...) FUNC
 
+        #define KARABO_REGISTER_FOR_CONFIGURATION(...) \
+                    _KARABO_REGISTER_FOR_CONFIGURATION_N(,##__VA_ARGS__, \
+                    _KARABO_REGISTER_FOR_CONFIGURATION_5(__VA_ARGS__), \
+                    _KARABO_REGISTER_FOR_CONFIGURATION_4(__VA_ARGS__), \
+                    _KARABO_REGISTER_FOR_CONFIGURATION_3(__VA_ARGS__), \
+                    _KARABO_REGISTER_FOR_CONFIGURATION_2(__VA_ARGS__), \
+                    _KARABO_REGISTER_FOR_CONFIGURATION_1(__VA_ARGS__), \
+                    _KARABO_REGISTER_FOR_CONFIGURATION_0(__VA_ARGS__) \
+                    )
         /**
          * If we are importing symbols from a dll in windows, we have to tell the compiler that he should use a single
          * "version" of our templated factory only. This happens through KARABO_TEMPLATE_DLL which resolves to "extern"
@@ -373,28 +374,7 @@ namespace karabo {
                 return karabo::util::Configurator<Self>::createList(listName, input); }
         #endif
 
-
-
-        #define KARABO_REGISTER_FOR_CONFIGURATION_1(Base) \
-                template<> const karabo::util::FactoryMember0<karabo::util::Configurator<Base>, karabo::util::Configurator0<Base> > \
-                karabo::util::Register0<karabo::util::Configurator<Base>, karabo::util::Configurator0<Base> >::registerAs(Base::classInfo().getClassId());
-        
-        #define KARABO_REGISTER_FOR_CONFIGURATION_2(Base, Sub1) \
-                template<> const karabo::util::FactoryMember0<karabo::util::Configurator<Base>, karabo::util::Configurator1<Base, Sub1> > \
-                karabo::util::Register0<karabo::util::Configurator<Base>, karabo::util::Configurator1<Base, Sub1> >::registerAs(Sub1::classInfo().getClassId());
-
-        #define KARABO_REGISTER_FOR_CONFIGURATION_3(Base, Sub1, Sub2) \
-                template<> const karabo::util::FactoryMember0<karabo::util::Configurator<Base>, karabo::util::Configurator2<Base, Sub1, Sub2> > \
-                karabo::util::Register0<karabo::util::Configurator<Base>, karabo::util::Configurator2<Base, Sub1, Sub2> >::registerAs(Sub2::classInfo().getClassId());
-
-        #define KARABO_REGISTER_FOR_CONFIGURATION_4(Base, Sub1, Sub2, Sub3) \
-                template<> const karabo::util::FactoryMember0<karabo::util::Configurator<Base>, karabo::util::Configurator3<Base, Sub1, Sub2, Sub3> > \
-                karabo::util::Register0<karabo::util::Configurator<Base>, karabo::util::Configurator3<Base, Sub1, Sub2, Sub3> >::registerAs(Sub3::classInfo().getClassId());
-
-        #define KARABO_REGISTER_FOR_CONFIGURATION_5(Base, Sub1, Sub2, Sub3, Sub4) \
-                template<> const karabo::util::FactoryMember0<karabo::util::Configurator<Base>, karabo::util::Configurator4<Base, Sub1, Sub2, Sub3, Sub4> > \
-                karabo::util::Register0<karabo::util::Configurator<Base>, karabo::util::Configurator4<Base, Sub1, Sub2, Sub3, Sub4> >::registerAs(Sub3::classInfo().getClassId());
-
     }
 }
+
 #endif

@@ -62,8 +62,7 @@ struct Sub1_Y : public Base {
 };
 
 class Configurator_Test : public CPPUNIT_NS::TestFixture {
-    CPPUNIT_TEST_SUITE(Configurator_Test);
-    //CPPUNIT_TEST(testBase);
+    CPPUNIT_TEST_SUITE(Configurator_Test);  
     CPPUNIT_TEST(testSub1);
     CPPUNIT_TEST_SUITE_END();
 
@@ -74,8 +73,6 @@ public:
     void tearDown();
 
 private:
-
-    //void testBase();
     
     void testSub1();
 

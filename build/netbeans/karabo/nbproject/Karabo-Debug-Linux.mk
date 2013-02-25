@@ -36,6 +36,7 @@ OBJECTDIR=${CND_BUILDDIR}/${CND_CONF}/${CND_PLATFORM}
 # Object Files
 OBJECTFILES= \
 	${OBJECTDIR}/_ext/163016059/FromLiteral.o \
+	${OBJECTDIR}/_ext/1080827789/pugixml.o \
 	${OBJECTDIR}/_ext/163016059/ClassInfo.o \
 	${OBJECTDIR}/_ext/163016059/Exception.o \
 	${OBJECTDIR}/_ext/163016059/FromTypeInfo.o \
@@ -89,6 +90,11 @@ ${OBJECTDIR}/_ext/163016059/FromLiteral.o: ../../../src/karabo/util/FromLiteral.
 	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
 	${RM} $@.d
 	$(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163016059/FromLiteral.o ../../../src/karabo/util/FromLiteral.cc
+
+${OBJECTDIR}/_ext/1080827789/pugixml.o: ../../../src/karabo/pugiXml/pugixml.cpp 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1080827789
+	${RM} $@.d
+	$(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1080827789/pugixml.o ../../../src/karabo/pugiXml/pugixml.cpp
 
 ${OBJECTDIR}/_ext/163016059/ClassInfo.o: ../../../src/karabo/util/ClassInfo.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
@@ -179,7 +185,7 @@ ${TESTDIR}/TestFiles/f2: ${TESTDIR}/_ext/861493463/H5Format_Test.o ${TESTDIR}/_e
 	${MKDIR} -p ${TESTDIR}/TestFiles
 	${LINK.cc}   -o ${TESTDIR}/TestFiles/f2 $^ ${LDLIBSOPTIONS} -Wl,-rpath,${KARABO}/lib -Wl,-rpath,${KARABO}/extern/lib 
 
-${TESTDIR}/TestFiles/f1: ${TESTDIR}/_ext/1033104525/Configurator_Test.o ${TESTDIR}/_ext/1033104525/Dims_Test.o ${TESTDIR}/_ext/1033104525/Factory_Test.o ${TESTDIR}/_ext/1033104525/Hash_Test.o ${TESTDIR}/_ext/1033104525/SchemaTestClasses.o ${TESTDIR}/_ext/1033104525/Schema_Test.o ${TESTDIR}/_ext/1033104525/utilTestRunner.o ${OBJECTFILES:%.o=%_nomain.o}
+${TESTDIR}/TestFiles/f1: ${TESTDIR}/_ext/1033104525/ConfigurationTestClasses.o ${TESTDIR}/_ext/1033104525/Dims_Test.o ${TESTDIR}/_ext/1033104525/Factory_Test.o ${TESTDIR}/_ext/1033104525/Hash_Test.o ${TESTDIR}/_ext/1033104525/Schema_Test.o ${TESTDIR}/_ext/1033104525/utilTestRunner.o ${OBJECTFILES:%.o=%_nomain.o}
 	${MKDIR} -p ${TESTDIR}/TestFiles
 	${LINK.cc}   -o ${TESTDIR}/TestFiles/f1 $^ ${LDLIBSOPTIONS} -Wl,-rpath,${KARABO}/lib -Wl,-rpath,${KARABO}/extern/lib 
 
@@ -196,10 +202,10 @@ ${TESTDIR}/_ext/861493463/ioTestRunner.o: ../../../src/karabo/tests/io/ioTestRun
 	$(COMPILE.cc) -g -Wall -DTESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I${KARABO}/extern/include/hdf5 -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -MMD -MP -MF $@.d -o ${TESTDIR}/_ext/861493463/ioTestRunner.o ../../../src/karabo/tests/io/ioTestRunner.cc
 
 
-${TESTDIR}/_ext/1033104525/Configurator_Test.o: ../../../src/karabo/tests/util/Configurator_Test.cc 
+${TESTDIR}/_ext/1033104525/ConfigurationTestClasses.o: ../../../src/karabo/tests/util/ConfigurationTestClasses.cc 
 	${MKDIR} -p ${TESTDIR}/_ext/1033104525
 	${RM} $@.d
-	$(COMPILE.cc) -g -Wall -DTESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I${KARABO}/extern/include/hdf5 -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -MMD -MP -MF $@.d -o ${TESTDIR}/_ext/1033104525/Configurator_Test.o ../../../src/karabo/tests/util/Configurator_Test.cc
+	$(COMPILE.cc) -g -Wall -DTESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I${KARABO}/extern/include/hdf5 -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -MMD -MP -MF $@.d -o ${TESTDIR}/_ext/1033104525/ConfigurationTestClasses.o ../../../src/karabo/tests/util/ConfigurationTestClasses.cc
 
 
 ${TESTDIR}/_ext/1033104525/Dims_Test.o: ../../../src/karabo/tests/util/Dims_Test.cc 
@@ -218,12 +224,6 @@ ${TESTDIR}/_ext/1033104525/Hash_Test.o: ../../../src/karabo/tests/util/Hash_Test
 	${MKDIR} -p ${TESTDIR}/_ext/1033104525
 	${RM} $@.d
 	$(COMPILE.cc) -g -Wall -DTESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I${KARABO}/extern/include/hdf5 -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -MMD -MP -MF $@.d -o ${TESTDIR}/_ext/1033104525/Hash_Test.o ../../../src/karabo/tests/util/Hash_Test.cc
-
-
-${TESTDIR}/_ext/1033104525/SchemaTestClasses.o: ../../../src/karabo/tests/util/SchemaTestClasses.cc 
-	${MKDIR} -p ${TESTDIR}/_ext/1033104525
-	${RM} $@.d
-	$(COMPILE.cc) -g -Wall -DTESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I${KARABO}/extern/include/hdf5 -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -MMD -MP -MF $@.d -o ${TESTDIR}/_ext/1033104525/SchemaTestClasses.o ../../../src/karabo/tests/util/SchemaTestClasses.cc
 
 
 ${TESTDIR}/_ext/1033104525/Schema_Test.o: ../../../src/karabo/tests/util/Schema_Test.cc 
@@ -249,6 +249,19 @@ ${OBJECTDIR}/_ext/163016059/FromLiteral_nomain.o: ${OBJECTDIR}/_ext/163016059/Fr
 	    $(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163016059/FromLiteral_nomain.o ../../../src/karabo/util/FromLiteral.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/163016059/FromLiteral.o ${OBJECTDIR}/_ext/163016059/FromLiteral_nomain.o;\
+	fi
+
+${OBJECTDIR}/_ext/1080827789/pugixml_nomain.o: ${OBJECTDIR}/_ext/1080827789/pugixml.o ../../../src/karabo/pugiXml/pugixml.cpp 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1080827789
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/1080827789/pugixml.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} $@.d;\
+	    $(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1080827789/pugixml_nomain.o ../../../src/karabo/pugiXml/pugixml.cpp;\
+	else  \
+	    ${CP} ${OBJECTDIR}/_ext/1080827789/pugixml.o ${OBJECTDIR}/_ext/1080827789/pugixml_nomain.o;\
 	fi
 
 ${OBJECTDIR}/_ext/163016059/ClassInfo_nomain.o: ${OBJECTDIR}/_ext/163016059/ClassInfo.o ../../../src/karabo/util/ClassInfo.cc 
