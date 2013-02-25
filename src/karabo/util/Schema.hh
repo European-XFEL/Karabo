@@ -245,7 +245,7 @@ namespace karabo {
 
             bool isAssignmentInternal(const std::string& path) const;
 
-            const AssignmentType& getAssignment(const std::string& path) const;
+            int getAssignment(const std::string& path) const;
 
             //**********************************************
             //                  Options                    *
