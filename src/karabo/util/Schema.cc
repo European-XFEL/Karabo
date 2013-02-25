@@ -163,6 +163,34 @@ namespace karabo {
         }
 
         //**********************************************
+        //                Assignment                 *
+        //**********************************************
+
+        void Schema::setAssignment(const std::string& path, const Schema::AssignmentType& value) {
+            m_hash.setAttribute(path, "assignment", value);
+        }
+
+        bool Schema::hasAssignment(const std::string& path) const {
+            return m_hash.hasAttribute(path, "assignment");
+        }
+
+        bool Schema::isAssignmentMandatory(const std::string& path) const {
+            return m_hash.getAttribute<int>(path, "assignment") == Schema::MANDATORY_PARAM;
+        }
+
+        bool Schema::isAssignmentOptional(const std::string& path) const {
+            return m_hash.getAttribute<int>(path, "assignment") == Schema::OPTIONAL_PARAM;
+        }
+
+        bool Schema::isAssignmentInternal(const std::string& path) const {
+            return m_hash.getAttribute<int>(path, "assignment") == Schema::INTERNAL_PARAM;
+        }
+
+        int Schema::getAssignment(const std::string& path) const {
+            return m_hash.getAttribute<int > (path, "assignment");
+        }
+
+        //**********************************************
         //                   Tags                      *
         //**********************************************
 
@@ -178,7 +206,7 @@ namespace karabo {
             return m_hash.getAttribute<std::vector<std::string> >(path, "tags");
         }
 
-          
+
         //**********************************************
         //                  Alias                      *
         //**********************************************
