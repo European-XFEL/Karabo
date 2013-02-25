@@ -255,7 +255,7 @@ namespace configurationTest {
                     .displayedName("Example key 1")
                     .description("Example key 1 description")
                     .assignmentOptional().defaultValue("Some default string")
-                    .allowedStates("On")
+                    .allowedStates("On,AllOk.On")
                     .reconfigurable()
                     .commit();
 

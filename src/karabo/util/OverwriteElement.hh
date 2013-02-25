@@ -86,7 +86,7 @@ namespace karabo {
 
             template <class ValueType>
             OverwriteElement& setNewDefaultValue(const ValueType& value) {
-                m_node->setAttribute("default", value);
+                m_node->setAttribute("defaultValue", value);
                 return *this;
             }
             
@@ -97,7 +97,7 @@ namespace karabo {
              */
             void commit() {
                 // Does nothing, changes happened on existing node
-            }
+                }
         };
         typedef OverwriteElement OVERWRITE_ELEMENT;
     }
