@@ -13,9 +13,10 @@
 #include "Hash.hh"
 #include "Factory.hh"
 
-#include "karaboDll.hh"
 #include "Schema.hh"
 #include "Validator.hh"
+
+#include "karaboDll.hh"
 
 namespace karabo {
     namespace util {
@@ -105,7 +106,7 @@ namespace karabo {
                 }
             }
 
-            inline static typename BaseClass::Pointer create(const std::string& classId, const karabo::util::Hash& configuration, const bool validate = true) {
+            inline static typename BaseClass::Pointer create(const std::string& classId, const karabo::util::Hash& configuration = Hash(), const bool validate = true) {
                 CtorMap::const_iterator it = findCtor(classId, ctorKey());
                 if (validate) {
                     Hash validated;
@@ -362,7 +363,7 @@ namespace karabo {
                 static boost::shared_ptr<Self> create(const karabo::util::Hash& configuration) { \
                 return karabo::util::Configurator<Self>::create(configuration); } \
                 \
-                static boost::shared_ptr<Self> create(const std::string& classId, const karabo::util::Hash& configuration) { \
+                static boost::shared_ptr<Self> create(const std::string& classId, const karabo::util::Hash& configuration = karabo::util::Hash()) { \
                 return karabo::util::Configurator<Self>::create(classId, configuration); } \
                 \
                 static boost::shared_ptr<Self> createNode(const std::string& nodeName, const std::string& classId, const karabo::util::Hash& input) { \
@@ -372,7 +373,11 @@ namespace karabo {
                 return karabo::util::Configurator<Self>::createChoice(choiceName, input); } \
                 \
                 static std::vector<boost::shared_ptr<Self> > createList(const std::string& listName, const karabo::util::Hash& input) { \
-                return karabo::util::Configurator<Self>::createList(listName, input); }
+                return karabo::util::Configurator<Self>::createList(listName, input); } \
+                \
+                static karabo::util::Schema getSchema(const std::string& classId, const karabo::util::Schema::AssemblyRules& rules = karabo::util::Schema::AssemblyRules()) { \
+                return karabo::util::Configurator<Self>::getSchema(classId, rules); \
+                }
         #endif
 
     }
