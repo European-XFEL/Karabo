@@ -81,7 +81,6 @@ void Schema_Test::testPerKeyFunctionality() {
             CPPUNIT_ASSERT(m_schema.hasAccessMode(keys[i]) == true);
             CPPUNIT_ASSERT(m_schema.isAccessReconfigurable(keys[i]) == true);
             CPPUNIT_ASSERT(m_schema.getAccessMode(keys[i]) == 4);
-            CPPUNIT_ASSERT(m_schema.getAccessMode(keys[i]) == (INIT|READ|WRITE));
         }
         
         if (keys[i] == "exampleKey2"){
@@ -92,7 +91,6 @@ void Schema_Test::testPerKeyFunctionality() {
             CPPUNIT_ASSERT(m_schema.hasAccessMode(keys[i]) == true);
             CPPUNIT_ASSERT(m_schema.isAccessInitOnly(keys[i]) == true);
             CPPUNIT_ASSERT(m_schema.getAccessMode(keys[i]) == 1);
-            CPPUNIT_ASSERT(m_schema.getAccessMode(keys[i]) == (INIT|READ));
         }
         
         if (keys[i] == "exampleKey3"){
@@ -115,7 +113,6 @@ void Schema_Test::testPerKeyFunctionality() {
             CPPUNIT_ASSERT(m_schema.hasAccessMode(keys[i]) == true);
             CPPUNIT_ASSERT(m_schema.isAccessInitOnly(keys[i]) == true);
             CPPUNIT_ASSERT(m_schema.getAccessMode(keys[i]) == 1);
-            CPPUNIT_ASSERT(m_schema.getAccessMode(keys[i]) == (INIT|READ));
         }
         
         if (keys[i] == "exampleKey5"){
