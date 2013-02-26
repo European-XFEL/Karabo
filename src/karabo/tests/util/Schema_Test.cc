@@ -54,13 +54,34 @@ void Schema_Test::setUp() {
 
 void Schema_Test::testGetRootName() {
     CPPUNIT_ASSERT(m_schema.getRootName() == "MyTest");
+}
+
+
+void Schema_Test::testGetTags() {
     CPPUNIT_ASSERT(m_schema.getTags("exampleKey1")[0] == "h/w");
     CPPUNIT_ASSERT(m_schema.getTags("exampleKey2")[0] == "h/w");
-    CPPUNIT_ASSERT(m_schema.getAlias<int>("exampleKey2") == 10);
     CPPUNIT_ASSERT(m_schema.getTags("exampleKey3")[0] == "h/w");
     CPPUNIT_ASSERT(m_schema.getTags("exampleKey4")[0] == "hardware");
-    CPPUNIT_ASSERT(m_schema.getTags("exampleKey1")[0] == "h/w");
+    CPPUNIT_ASSERT(m_schema.getTags("exampleKey5")[0] == "hardware");
+}
 
+
+void Schema_Test::testGetAlias() {
+    CPPUNIT_ASSERT(m_schema.hasAlias("exampleKey1") == false);
+    CPPUNIT_ASSERT(m_schema.hasAlias("exampleKey2") == true);
+    CPPUNIT_ASSERT(m_schema.getAlias<int>("exampleKey2") == 10);
+    CPPUNIT_ASSERT(m_schema.getAlias<double>("exampleKey3") == 5.5);
+    CPPUNIT_ASSERT(m_schema.getAlias<string>("exampleKey4") == "exampleAlias4");
+    CPPUNIT_ASSERT(m_schema.getAlias<string>("exampleKey5") == "exampleAlias5");
+}
+
+
+void Schema_Test::testGetAccessMode() {
+    CPPUNIT_ASSERT(m_schema.getAccessMode("exampleKey1") == WRITE);
+    CPPUNIT_ASSERT(m_schema.getAccessMode("exampleKey2") == INIT);
+    CPPUNIT_ASSERT(m_schema.getAccessMode("exampleKey3") == WRITE);
+    CPPUNIT_ASSERT(m_schema.getAccessMode("exampleKey4") == INIT);
+    CPPUNIT_ASSERT(m_schema.getAccessMode("exampleKey5") == READ);
 }
 
 
