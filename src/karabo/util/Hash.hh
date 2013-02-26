@@ -571,7 +571,13 @@ namespace karabo {
         }           
 
         template <typename ValueType> bool Hash::is(const std::string & path, const char separator) const {
-            return getNode(path, separator).is<ValueType > ();
+            std::string tmp(path);
+            int index = karabo::util::getAndCropIndex(tmp);
+            if (index == -1) {
+                return getNode(tmp, separator).is<ValueType > ();
+            } else {
+                return typeid (getNode(tmp, separator).getValue<vector<Hash> >()[index]) == typeid (ValueType);
+            }
         }
 
         template<template<class ValueType, class All = std::allocator<ValueType> > class container >
