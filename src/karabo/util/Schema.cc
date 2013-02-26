@@ -163,6 +163,14 @@ namespace karabo {
         }
 
         //**********************************************
+        //                DefaultValue                  *
+        //**********************************************
+
+        bool Schema::hasDefaultValue(const std::string& path) const {
+            return m_hash.hasAttribute(path, "defaultValue");
+        }
+        
+        //**********************************************
         //                Assignment                 *
         //**********************************************
 

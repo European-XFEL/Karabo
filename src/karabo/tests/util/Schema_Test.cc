@@ -72,7 +72,17 @@ void Schema_Test::testPerKeyFunctionality() {
             
             bool hasAssignment = m_schema.hasAssignment(keys[i]);
             CPPUNIT_ASSERT(hasAssignment == true);
-            CPPUNIT_ASSERT(m_schema.isAssignmentOptional(keys[i]) == true);     
+            CPPUNIT_ASSERT(m_schema.isAssignmentOptional(keys[i]) == true);
+            
+            CPPUNIT_ASSERT(m_schema.hasDefaultValue(keys[i]) == true);
+            string defaultValue = m_schema.getDefaultValue<string>(keys[i]);
+            CPPUNIT_ASSERT(defaultValue == "Some default string");
+        }
+        
+        if (keys[i] == "exampleKey2"){
+            CPPUNIT_ASSERT(m_schema.hasDefaultValue(keys[i]) == true);     
+            int defaultValue = m_schema.getDefaultValue<int>(keys[i]);
+            CPPUNIT_ASSERT(defaultValue == -10);
         }
         
         if (keys[i] == "exampleKey3"){
@@ -80,6 +90,8 @@ void Schema_Test::testPerKeyFunctionality() {
             CPPUNIT_ASSERT(m_schema.getAssignment(keys[i]) == 1);
             CPPUNIT_ASSERT(m_schema.getAssignment(keys[i]) == Schema::MANDATORY_PARAM);
             CPPUNIT_ASSERT(m_schema.isAssignmentMandatory(keys[i]) == true);
+            
+            CPPUNIT_ASSERT(m_schema.hasDefaultValue(keys[i]) == false);
         }
 
         if (keys[i] == "exampleKey4"){
@@ -89,5 +101,11 @@ void Schema_Test::testPerKeyFunctionality() {
             CPPUNIT_ASSERT(m_schema.isAssignmentInternal(keys[i]) == true);
         }
         
+        if (keys[i] == "exampleKey5"){
+            CPPUNIT_ASSERT(m_schema.getNodeType(keys[i]) == 1);
+            CPPUNIT_ASSERT(m_schema.hasDefaultValue(keys[i]) == true);
+            long long int defaultValue = m_schema.getDefaultValue<long long int>(keys[i]);
+            CPPUNIT_ASSERT(defaultValue == 1442244);
+        }
     }
 }
