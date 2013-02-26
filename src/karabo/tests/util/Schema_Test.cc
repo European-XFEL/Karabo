@@ -77,12 +77,18 @@ void Schema_Test::testPerKeyFunctionality() {
             CPPUNIT_ASSERT(m_schema.hasDefaultValue(keys[i]) == true);
             string defaultValue = m_schema.getDefaultValue<string>(keys[i]);
             CPPUNIT_ASSERT(defaultValue == "Some default string");
+            
+            CPPUNIT_ASSERT(m_schema.hasAccessMode(keys[i]) == true);
+            CPPUNIT_ASSERT(m_schema.isAccessReconfigurable(keys[i]) == true);
         }
         
         if (keys[i] == "exampleKey2"){
             CPPUNIT_ASSERT(m_schema.hasDefaultValue(keys[i]) == true);     
             int defaultValue = m_schema.getDefaultValue<int>(keys[i]);
             CPPUNIT_ASSERT(defaultValue == -10);
+            
+            CPPUNIT_ASSERT(m_schema.hasAccessMode(keys[i]) == true);
+            CPPUNIT_ASSERT(m_schema.isAccessInitOnly(keys[i]) == true);
         }
         
         if (keys[i] == "exampleKey3"){
@@ -99,6 +105,9 @@ void Schema_Test::testPerKeyFunctionality() {
             CPPUNIT_ASSERT(m_schema.getAssignment(keys[i]) == 2);
             CPPUNIT_ASSERT(m_schema.getAssignment(keys[i]) == Schema::INTERNAL_PARAM);
             CPPUNIT_ASSERT(m_schema.isAssignmentInternal(keys[i]) == true);
+            
+            CPPUNIT_ASSERT(m_schema.hasAccessMode(keys[i]) == true);
+            CPPUNIT_ASSERT(m_schema.isAccessInitOnly(keys[i]) == true);
         }
         
         if (keys[i] == "exampleKey5"){
@@ -106,6 +115,11 @@ void Schema_Test::testPerKeyFunctionality() {
             CPPUNIT_ASSERT(m_schema.hasDefaultValue(keys[i]) == true);
             long long int defaultValue = m_schema.getDefaultValue<long long int>(keys[i]);
             CPPUNIT_ASSERT(defaultValue == 1442244);
+            
+            CPPUNIT_ASSERT(m_schema.hasAccessMode(keys[i]) == true);
+            CPPUNIT_ASSERT(m_schema.isAccessReadOnly(keys[i]) == true);
+            CPPUNIT_ASSERT(m_schema.isAccessInitOnly(keys[i]) == false);
+            CPPUNIT_ASSERT(m_schema.isAccessReconfigurable(keys[i]) == false);
         }
     }
 }
