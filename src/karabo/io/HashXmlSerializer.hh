@@ -19,14 +19,25 @@ namespace karabo {
     namespace io {
 
         class HashXmlSerializer : public TextSerializer<karabo::util::Hash> {
-            bool _writeDataTypes;
-            std::string _indentation;
-            bool _writeCompact;
+                        
+            std::string m_indentation;
+            std::string m_xmlns;
+            std::string m_prefix;
+            bool m_writeDataTypes;
+            bool m_readDataTypes;
+            
+            // Helper variables
+            std::string m_typeFlag;
+            std::string m_artificialRootFlag;
+            std::string m_itemFlag;
+            bool m_writeCompact;
 
         public:
 
             KARABO_CLASSINFO(HashXmlSerializer, "Xml", "1.0")
 
+            static void expectedParameters(karabo::util::Schema& expected);
+                    
             HashXmlSerializer(const karabo::util::Hash& hash);
 
             void save(const karabo::util::Hash& object, std::string& archive);
@@ -41,8 +52,12 @@ namespace karabo {
             void createXml(const karabo::util::Hash& object, pugi::xml_node& node) const;
 
             void createHash(karabo::util::Hash& object, pugi::xml_node node) const;
+            
+            void writeAttributes(const  karabo::util::Hash::Attributes& attrs, pugi::xml_node& node ) const;
+            
+            void readAttributes(karabo::util::Hash::Attributes& attrs, const pugi::xml_node& node) const;
 
-            std::pair<std::string, karabo::util::Types::ReferenceType> decodeXmlAttribute(const std::string& xmlAttribute) const;
+            std::pair<std::string, karabo::util::Types::ReferenceType> readXmlAttribute(const std::string& xmlAttribute) const;
 
             struct CustomWriter : public pugi::xml_writer {
                 std::string& _result;

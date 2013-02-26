@@ -23,56 +23,16 @@ namespace karabo {
                 class VectorElement : public LeafElement<VectorElement<T, CONT>, CONT<T> > {
         public:
 
-            VectorElement(Schema& expected) : LeafElement<VectorElement>(expected) {
+            VectorElement(Schema& expected) : LeafElement<VectorElement, CONT<T> >(expected) {
             }
-            
-             /**
-             * The <b>minInc</b> method sets the lowest value accepted for this parameter. Defines the left-closed interval.
-             * @param val minimum value
-             * @return reference to the VectorElement
-             */
-            VectorElement& minInc(ValueType const& value) {
-                this->m_node.setAttribute("minInc", value);
+                        
+            VectorElement& minSize(const unsigned int& value) {
+                this->m_node->setAttribute("minSize", value);
                 return *this;
             }
 
-            /**
-             * The <b>maxInc</b> sets the highest value accepted for this parameter. Defines the right-closed interval.
-             * @param val maximum value
-             * @return reference to the VectorElement
-             */
-            VectorElement& maxInc(ValueType const& value) {
-                this->m_node.setAttribute("maxInc", value);
-                return *this;
-            }
-
-            /**
-             * The <b>minExc</b> sets the upper limit for this parameter. Defines the left-open interval.
-             * @param val upper limit
-             * @return reference to the VectorElement
-             */
-            VectorElement& minExc(ValueType const& value) {
-                this->m_node.setAttribute("minExc", value);
-                return *this;
-            }
-
-            /**
-             * The <b>maxExc</b> sets the lower limit for this parameter. Defines the right-open interval.
-             * @param val lower limit
-             * @return reference to the VectorElement
-             */
-            VectorElement& maxExc(ValueType const& value) {
-                this->m_node.setAttribute("maxExc", value);
-                return *this;
-            }
-            
-            VectorElement& minSize(const int& value) {
-                this->m_node.setAttribute("minSize", value);
-                return *this;
-            }
-
-            VectorElement& maxSize(const int& value) {
-                 this->m_node.setAttribute("maxSize", value);
+            VectorElement& maxSize(const unsigned int& value) {
+                 this->m_node->setAttribute("maxSize", value);
                 return *this;
             }
             
@@ -80,8 +40,8 @@ namespace karabo {
 
             void beforeAddition() {
 
-                this->m_node->setAttribute<int>("nodeType", Schema::LEAF);
-                this->m_node->setAttribute<int>("valueType", Types::to<ToLiteral>(Types::from<CONT<T>>()));
+                this->m_node->template setAttribute<int>("nodeType", Schema::LEAF);
+                this->m_node->setAttribute("valueType", Types::to<ToLiteral>(Types::from<CONT<T> >()));
                 
                 if (this->m_node->hasAttribute("accessMode")) this->init(); // This is the default
             }

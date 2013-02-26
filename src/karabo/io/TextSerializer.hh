@@ -26,6 +26,8 @@ namespace karabo {
                 
                 KARABO_CLASSINFO(TextSerializer, "TextSerializer", "1.0")
                 
+                KARABO_CONFIGURATION_BASE_CLASS
+                
                 virtual void save(const T& object, std::string& archive) = 0;
                 
                 virtual void load(T& object, const std::string& archive) = 0;
