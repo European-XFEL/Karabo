@@ -13,7 +13,7 @@
 #ifndef KARABO_UTIL_VECTORELEMENT_HH
 #define	KARABO_UTIL_VECTORELEMENT_HH
 
-#include "GenericElement.hh"
+#include "LeafElement.hh"
 
 namespace karabo {
     namespace util {
