@@ -146,8 +146,8 @@ namespace karabo {
             std::string key;
             const Hash& hash = getLastHash(path, key, separator);
             if (karabo::util::getAndCropIndex(key) == -1) {
-                return hash.m_container.getNode(key);
-            }
+            return hash.m_container.getNode(key);
+        }
             throw KARABO_LOGIC_EXCEPTION("Array syntax on a leaf is not possible (would be a Hash and not a Node)");
         }
 
@@ -178,7 +178,13 @@ namespace karabo {
         }
 
         Types::ReferenceType Hash::getType(const std::string& path, const char separator) const {
-            return getNode(path, separator).getType();
+            std::string tmp(path);
+            int index = karabo::util::getAndCropIndex(tmp);
+            if (index == -1) {
+                return getNode(tmp, separator).getType();
+            } else {
+                return Types::HASH;
+            }
         }
 
         /*-------------------------------------------------------------------------
