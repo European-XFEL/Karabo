@@ -20,12 +20,12 @@ namespace configurationTest {
 
     using namespace karabo::util;
 
+
     struct Shape {
         KARABO_CLASSINFO(Shape, "Shape", "1.0");
+        KARABO_CONFIGURATION_BASE_CLASS;
 
-        KARABO_CONFIGURATION_BASE_CLASS
-
-                static void expectedParameters(karabo::util::Schema & expected) {
+        static void expectedParameters(karabo::util::Schema & expected) {
 
             BOOL_ELEMENT(expected).key("shadowEnabled")
                     .description("Shadow enabled")
@@ -44,12 +44,14 @@ namespace configurationTest {
 
         virtual std::string draw() const = 0;
 
+    private:
         Hash m_configuration;
     };
 
     //**********************************************
     //                Circle                       *
     //**********************************************
+
 
     struct Circle : public Shape {
         KARABO_CLASSINFO(Circle, "Circle", "1.0");
@@ -71,6 +73,7 @@ namespace configurationTest {
         Circle(const karabo::util::Hash & configuration) : Shape(configuration) {
         }
 
+        virtual ~Circle() {}
         std::string draw() const {
             return this->getClassInfo().getClassId();
         }
@@ -79,6 +82,7 @@ namespace configurationTest {
     //**********************************************
     //            Editable Circle                  *
     //**********************************************
+
 
     struct EditableCircle : public Circle {
         KARABO_CLASSINFO(EditableCircle, "EditableCircle", "1.0");
@@ -90,7 +94,9 @@ namespace configurationTest {
         }
 
         EditableCircle(const karabo::util::Hash & configuration) : Circle(configuration) {
+        }
 
+        virtual ~EditableCircle() {
         }
 
         std::string draw() const {
@@ -102,6 +108,7 @@ namespace configurationTest {
     //**********************************************
     //                 Rectangle                   *
     //**********************************************
+
 
     struct Rectangle : public Shape {
         KARABO_CLASSINFO(Rectangle, "Rectangle", "1.0");
@@ -134,17 +141,20 @@ namespace configurationTest {
         Rectangle(const karabo::util::Hash & configuration) : Shape(configuration) {
         }
 
+        virtual ~Rectangle() {
+        }
+
         std::string draw() const {
             return this->getClassInfo().getClassId();
         }
     };
 
+
     struct GraphicsRenderer {
-        KARABO_CLASSINFO(GraphicsRenderer, "GraphicsRenderer", "1.0");
+        KARABO_CLASSINFO(GraphicsRenderer, "GraphicsRenderer", "1.0")
+        KARABO_CONFIGURATION_BASE_CLASS;
 
-        KARABO_CONFIGURATION_BASE_CLASS
-
-                static void expectedParameters(karabo::util::Schema & expected) {
+        static void expectedParameters(karabo::util::Schema & expected) {
 
             BOOL_ELEMENT(expected).key("antiAlias")
                     .tags("prop")
@@ -181,13 +191,16 @@ namespace configurationTest {
         }
 
         GraphicsRenderer(const karabo::util::Hash & input) {
-
             std::cout << "*********** " << std::endl << input << std::endl;
             Shape::Pointer shape = Shape::createChoice("shapes", input);
             std::cout << "*********** " << shape->draw() << std::endl;
             if (input.has("shapes.Circle")) std::cout << "$$$$$$$$ 0000" << std::endl;
         }
+
+        virtual ~GraphicsRenderer() {
+        }
     };
+
 
     struct GraphicsRenderer1 {
         KARABO_CLASSINFO(GraphicsRenderer1, "GraphicsRenderer1", "1.0");
@@ -245,11 +258,12 @@ namespace configurationTest {
         }
     };
 
-        struct TestStruct1 {
+
+    struct TestStruct1 {
         KARABO_CLASSINFO(TestStruct1, "TestStruct1", "1.0");
 
         static void expectedParameters(karabo::util::Schema & expected) {
-            using namespace karabo::util;
+
             STRING_ELEMENT(expected).key("exampleKey1")
                     .tags("h/w")
                     .displayedName("Example key 1")
