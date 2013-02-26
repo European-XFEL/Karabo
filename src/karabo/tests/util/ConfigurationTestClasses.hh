@@ -268,7 +268,8 @@ namespace configurationTest {
                     .tags("h/w")
                     .displayedName("Example key 1")
                     .description("Example key 1 description")
-                    .assignmentOptional().defaultValue("Some default string")
+                    .options("Radio,Air-Condition-Point,Navigation")
+                    .assignmentOptional().defaultValue("Navigation")
                     .reconfigurable()
                     .commit();
 
@@ -276,6 +277,7 @@ namespace configurationTest {
                     .tags("h/w")
                     .displayedName("Example key 2")
                     .description("Example key 2 description")
+                    .options("5,25,-10")
                     .assignmentOptional().defaultValue(-10)
                     .init()
                     .commit();
@@ -292,6 +294,7 @@ namespace configurationTest {
                     .tags("hardware")
                     .displayedName("Example key 4")
                     .description("Example key 4 description")
+                    .options("1.11 -2.22 5.55")      //double values space separated
                     .assignmentInternal().noDefaultValue()
                     .commit();
 

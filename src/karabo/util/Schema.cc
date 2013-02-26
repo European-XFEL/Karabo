@@ -233,6 +233,22 @@ namespace karabo {
             return m_hash.getAttribute < AliasType>(path, "alias");
         }
 
+        //**********************************************
+        //                  Options             *
+        //**********************************************
+        void Schema::setOptions(const std::string& path, const std::string& value, const std::string& sep){
+            m_hash.setAttribute(path, "options", karabo::util::fromString<std::string, std::vector>(value, sep));
+        }
+
+        bool Schema::hasOptions(const std::string& path) const{
+            return m_hash.hasAttribute(path, "options");   
+        }
+
+        const std::vector<std::string>& Schema::getOptions(const std::string& path) const {
+            return m_hash.getAttribute<std::vector<std::string> >(path, "options");
+        }
+        
+        
         void Schema::addElement(Hash::Node& node) {
 
             if (node.hasAttribute("overwrite")) {

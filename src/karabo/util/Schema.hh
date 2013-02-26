@@ -252,7 +252,7 @@ namespace karabo {
             //                  Options                    *
             //**********************************************
 
-            void setOptions(const std::string& path, const std::vector<std::string>& options);
+            void setOptions(const std::string& path, const std::string& value, const std::string& sep);
 
             bool hasOptions(const std::string& path) const;
 
@@ -282,6 +282,11 @@ namespace karabo {
             template <class ValueType>
             const ValueType& getDefaultValue(const std::string& path) const {
                 return m_hash.getAttribute<ValueType > (path, "defaultValue");
+            }
+            
+            template <class T>
+            T getDefaultValueAs(const std::string& path) const {
+                return m_hash.getAttributeAs<T > (path, "defaultValue");
             }
             
             //**********************************************
