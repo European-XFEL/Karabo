@@ -80,6 +80,8 @@ void Schema_Test::testPerKeyFunctionality() {
             
             CPPUNIT_ASSERT(m_schema.hasAccessMode(keys[i]) == true);
             CPPUNIT_ASSERT(m_schema.isAccessReconfigurable(keys[i]) == true);
+            CPPUNIT_ASSERT(m_schema.getAccessMode(keys[i]) == 4);
+            CPPUNIT_ASSERT(m_schema.getAccessMode(keys[i]) == (INIT|READ|WRITE));
         }
         
         if (keys[i] == "exampleKey2"){
@@ -89,6 +91,8 @@ void Schema_Test::testPerKeyFunctionality() {
             
             CPPUNIT_ASSERT(m_schema.hasAccessMode(keys[i]) == true);
             CPPUNIT_ASSERT(m_schema.isAccessInitOnly(keys[i]) == true);
+            CPPUNIT_ASSERT(m_schema.getAccessMode(keys[i]) == 1);
+            CPPUNIT_ASSERT(m_schema.getAccessMode(keys[i]) == (INIT|READ));
         }
         
         if (keys[i] == "exampleKey3"){
@@ -102,12 +106,16 @@ void Schema_Test::testPerKeyFunctionality() {
 
         if (keys[i] == "exampleKey4"){
             CPPUNIT_ASSERT(m_schema.getNodeType(keys[i]) == 1);
+            CPPUNIT_ASSERT(m_schema.hasDefaultValue(keys[i]) == false);
+            
             CPPUNIT_ASSERT(m_schema.getAssignment(keys[i]) == 2);
             CPPUNIT_ASSERT(m_schema.getAssignment(keys[i]) == Schema::INTERNAL_PARAM);
             CPPUNIT_ASSERT(m_schema.isAssignmentInternal(keys[i]) == true);
             
             CPPUNIT_ASSERT(m_schema.hasAccessMode(keys[i]) == true);
             CPPUNIT_ASSERT(m_schema.isAccessInitOnly(keys[i]) == true);
+            CPPUNIT_ASSERT(m_schema.getAccessMode(keys[i]) == 1);
+            CPPUNIT_ASSERT(m_schema.getAccessMode(keys[i]) == (INIT|READ));
         }
         
         if (keys[i] == "exampleKey5"){
@@ -116,10 +124,13 @@ void Schema_Test::testPerKeyFunctionality() {
             long long int defaultValue = m_schema.getDefaultValue<long long int>(keys[i]);
             CPPUNIT_ASSERT(defaultValue == 1442244);
             
+            CPPUNIT_ASSERT(m_schema.hasAssignment(keys[i]) == true);
+            CPPUNIT_ASSERT(m_schema.isAssignmentOptional(keys[i]) == true);
+            
             CPPUNIT_ASSERT(m_schema.hasAccessMode(keys[i]) == true);
             CPPUNIT_ASSERT(m_schema.isAccessReadOnly(keys[i]) == true);
-            CPPUNIT_ASSERT(m_schema.isAccessInitOnly(keys[i]) == false);
-            CPPUNIT_ASSERT(m_schema.isAccessReconfigurable(keys[i]) == false);
+            CPPUNIT_ASSERT(m_schema.getAccessMode(keys[i]) == 2);
+            CPPUNIT_ASSERT(m_schema.getAccessMode(keys[i]) == READ);
         }
     }
 }
