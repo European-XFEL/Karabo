@@ -13,34 +13,38 @@
 #include <karabo/util/ClassInfo.hh>
 #include <cppunit/extensions/HelperMacros.h>
 
+
 struct Interface {
-    
     KARABO_CLASSINFO(Interface, "Interface", "1.0");
-    
+
     virtual std::string foo() = 0;
-            
+
 };
 
+
 struct A : public Interface {
-    
     KARABO_CLASSINFO(A, "A", "1.0");
-    
+
     std::string _ctorType;
-    
+
     A() : _ctorType("void") {
     }
-    
+
     A(const std::string& a1) : _ctorType("string") {
     }
-    
+
     A(int a1) : _ctorType("int") {
     }
-    
+
+    virtual ~A() {
+    }
+
     std::string foo() {
         return "A:" + _ctorType;
     }
-    
+
 };
+
 
 class Factory_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST_SUITE(Factory_Test);
@@ -56,11 +60,8 @@ public:
     void tearDown();
 
 private:
-    
+
     void testObjectCreation();
-
-    
-
 };
 
 #endif
