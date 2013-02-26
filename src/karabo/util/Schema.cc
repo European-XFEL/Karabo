@@ -219,18 +219,8 @@ namespace karabo {
         //                  Alias                      *
         //**********************************************
 
-        template <class AliasType>
-        void Schema::setAlias(const std::string& path, const AliasType& value) {
-            m_hash.setAttribute<AliasType > (path, "alias", value);
-        }
-
         bool Schema::hasAlias(const std::string& path) const {
             return m_hash.hasAttribute(path, "alias");
-        }
-
-        template <class AliasType>
-        const AliasType& Schema::getAlias(const std::string& path) const {
-            return m_hash.getAttribute < AliasType>(path, "alias");
         }
 
         //**********************************************

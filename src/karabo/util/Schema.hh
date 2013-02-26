@@ -276,14 +276,14 @@ namespace karabo {
             void setDefaultValue(const std::string& path, const ValueType& value) {
                 m_hash.setAttribute(path, "defaultValue", value);
             }
-            
+
             bool hasDefaultValue(const std::string&) const;
 
             template <class ValueType>
             const ValueType& getDefaultValue(const std::string& path) const {
                 return m_hash.getAttribute<ValueType > (path, "defaultValue");
             }
-            
+
             template <class T>
             T getDefaultValueAs(const std::string& path) const {
                 return m_hash.getAttributeAs<T > (path, "defaultValue");
@@ -294,12 +294,16 @@ namespace karabo {
             //**********************************************
 
             template <class AliasType>
-            void setAlias(const std::string& path, const AliasType& value);
+            void setAlias(const std::string& path, const AliasType& value) {
+                m_hash.setAttribute<AliasType > (path, "alias", value);
+            }
 
             bool hasAlias(const std::string& path) const;
 
             template <class AliasType>
-            const AliasType& getAlias(const std::string& path) const;
+            const AliasType& getAlias(const std::string& path) const {
+                return m_hash.getAttribute < AliasType>(path, "alias");
+            }
 
             //**********************************************
             //                  Alias                      *
