@@ -7,23 +7,29 @@
 
 #include <karabo/util/Hash.hh>
 #include "Hash_Test.hh"
+#include "karabo/util/ToLiteral.hh"
 
 CPPUNIT_TEST_SUITE_REGISTRATION(Hash_Test);
 
 using namespace karabo::util;
 using namespace std;
 
+
 Hash_Test::Hash_Test() {
 }
+
 
 Hash_Test::~Hash_Test() {
 }
 
+
 void Hash_Test::setUp() {
 }
 
+
 void Hash_Test::tearDown() {
 }
+
 
 void Hash_Test::testConstructors() {
 
@@ -91,7 +97,23 @@ void Hash_Test::testConstructors() {
         CPPUNIT_ASSERT(h.get<int > ("f.a") == 6);
 
     }
+
+    {
+        Hash h("a.b.c", 1, "b.c", 2.0, "c", 3.f, "d.e", "4", "e.f.g.h", std::vector<uint64_t > (5, 5), "F.f.f.f.f", Hash("x.y.z", 99));
+        CPPUNIT_ASSERT(h.empty() == false);
+        CPPUNIT_ASSERT(h.size() == 6);
+        CPPUNIT_ASSERT(h.get<int>("a.b.c") == 1);
+        CPPUNIT_ASSERT(h.get<double>("b.c") == 2.0);
+        CPPUNIT_ASSERT(h.get<float>("c") == 3.0);
+        CPPUNIT_ASSERT(h.get<string > ("d.e") == "4");
+        CPPUNIT_ASSERT(h.get<std::vector<uint64_t> >("e.f.g.h")[0] == 5);
+        CPPUNIT_ASSERT(h.get<Hash > ("F.f.f.f.f").get<int>("x.y.z") == 99);
+        CPPUNIT_ASSERT(h.get<int>("F.f.f.f.f.x.y.z") == 99);
+
+    }
+
 }
+
 
 void Hash_Test::testGetSet() {
 
@@ -102,11 +124,15 @@ void Hash_Test::testGetSet() {
         CPPUNIT_ASSERT(h.get<Hash > ("a.b").has("c1") == true);
         CPPUNIT_ASSERT(h.get<Hash > ("a.b.c1").has("d") == true);
         CPPUNIT_ASSERT(h.get<int>("a.b.c1.d") == 1);
+        CPPUNIT_ASSERT(h.has("a.b.c1.d") == true);
+        CPPUNIT_ASSERT(h.get<Hash > ("a").has("b.c1") == true);
 
         h.set("a.b.c2.d", "1");
         CPPUNIT_ASSERT(h.get<Hash > ("a").has("b") == true);
         CPPUNIT_ASSERT(h.get<Hash > ("a.b").has("c1") == true);
         CPPUNIT_ASSERT(h.get<Hash > ("a.b").has("c2") == true);
+        CPPUNIT_ASSERT(h.get<Hash > ("a.b").has("c2.d") == true);
+        CPPUNIT_ASSERT(h.get<Hash > ("a.b").is<string > ("c2.d") == true);
         CPPUNIT_ASSERT(h.get<Hash > ("a.b.c2").has("d") == true);
         CPPUNIT_ASSERT(h.get<string > ("a.b.c2.d") == "1");
 
@@ -120,13 +146,24 @@ void Hash_Test::testGetSet() {
         CPPUNIT_ASSERT(h.get<int>("a.b[0].a") == 1);
 
         h.set("a.b[2]", Hash("a", "1"));
-        CPPUNIT_ASSERT(h.get<Hash > ("a").has("b") == true);
-        CPPUNIT_ASSERT(h.get<Hash > ("a").size() == 1);
+        CPPUNIT_ASSERT(h.get<Hash>("a").has("b") == true);
+        CPPUNIT_ASSERT(h.get<Hash>("a").size() == 1);
         CPPUNIT_ASSERT(h.is<std::vector<Hash> >("a.b") == true);
+        CPPUNIT_ASSERT(h.has("a.b") == true);
         CPPUNIT_ASSERT(h.get<std::vector<Hash> >("a.b").size() == 3);
         CPPUNIT_ASSERT(h.get<int>("a.b[0].a") == 1);
-        CPPUNIT_ASSERT(h.get<Hash > ("a.b[1]").empty() == true);
-        CPPUNIT_ASSERT(h.get<string > ("a.b[2].a") == "1");
+        CPPUNIT_ASSERT(h.get<Hash>("a.b[1]").empty() == true);
+        CPPUNIT_ASSERT(h.get<string>("a.b[2].a") == "1");
+        CPPUNIT_ASSERT(h.get<std::vector<Hash> >("a.b")[0].is<int>("a") == true);
+        CPPUNIT_ASSERT(h.get<std::vector<Hash> >("a.b")[1].empty() == true);
+        CPPUNIT_ASSERT(h.get<std::vector<Hash> >("a.b")[2].is<string>("a") == true);
+        
+        CPPUNIT_ASSERT(h.get<Hash>("a").is<Hash>("b[0]") == true);
+        CPPUNIT_ASSERT(h.get<Hash>("a").is<Hash>("b[1]") == true);
+        CPPUNIT_ASSERT(h.get<Hash>("a").is<Hash>("b[2]") == true);
+        CPPUNIT_ASSERT(h.get<Hash>("a.b[0]").empty() == false);
+        CPPUNIT_ASSERT(h.get<Hash>("a.b[1]").empty() == true);
+        CPPUNIT_ASSERT(h.get<Hash>("a.b[2]").empty() == false);
     }
 
     {
@@ -134,6 +171,10 @@ void Hash_Test::testGetSet() {
         h.set("a.b.c", 1);
         h.set("a.b.c", 2);
         CPPUNIT_ASSERT(h.get<int>("a.b.c") == 2);
+        CPPUNIT_ASSERT(h.get<Hash > ("a").is<Hash > ("b") == true);
+        CPPUNIT_ASSERT(h.is<int>("a.b.c") == true);
+        CPPUNIT_ASSERT(h.has("a.b") == true);
+        CPPUNIT_ASSERT(h.has("a.b.c.d") == false);
     }
 
     {
@@ -177,10 +218,12 @@ void Hash_Test::testGetSet() {
         bool a = true;
         h.set<int>("a", a);
         CPPUNIT_ASSERT(h.getType("a") == Types::INT32);
+        CPPUNIT_ASSERT(h.is<int>("a") == true);
     }
 
 
 }
+
 
 void Hash_Test::testGetAs() {
 
@@ -191,7 +234,7 @@ void Hash_Test::testGetAs() {
         CPPUNIT_ASSERT_DOUBLES_EQUAL(1.0, h.getAs<double > ("a"), 0.00001);
         CPPUNIT_ASSERT(static_cast<unsigned int> (h.getAs<char > ("a")) == 1);
     }
-    
+
     {
         Hash h("a", true);
         h.setAttribute("a", "a", true);
@@ -200,7 +243,7 @@ void Hash_Test::testGetAs() {
         CPPUNIT_ASSERT_DOUBLES_EQUAL(1.0, h.getAttributeAs<double > ("a", "a"), 0.00001);
         CPPUNIT_ASSERT(static_cast<unsigned int> (h.getAttributeAs<char > ("a", "a")) == 1);
     }
-    
+
     {
         Hash h("a", std::vector<bool>(4, false));
         CPPUNIT_ASSERT(h.getAs<string > ("a") == "0,0,0,0");
@@ -281,6 +324,7 @@ void Hash_Test::testGetAs() {
     }
 }
 
+
 void Hash_Test::testFind() {
 
     {
@@ -302,6 +346,7 @@ void Hash_Test::testFind() {
         if (node) CPPUNIT_ASSERT(true == false);
     }
 }
+
 
 void Hash_Test::testAttributes() {
 
@@ -335,9 +380,10 @@ void Hash_Test::testAttributes() {
         h.getNode("a").setAttribute<int>("a", b);
         CPPUNIT_ASSERT(h.getNode("a").getType() == Types::INT32);
     }
-    
-    }
-    
+
+}
+
+
 void Hash_Test::testIteration() {
 
     Hash h("should", 1, "be", 2, "iterated", 3, "in", 4, "correct", 5, "order", 6);
@@ -426,6 +472,7 @@ void Hash_Test::testIteration() {
         CPPUNIT_ASSERT(alphaNumericOrder[5] == "should");
     }
 }
+
 
 void Hash_Test::testMerge() {
 
