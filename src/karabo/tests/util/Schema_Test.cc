@@ -44,39 +44,47 @@ void Schema_Test::testBuildUp() {
 
 void Schema_Test::setUp() {
     try {
-        m_schema = Schema("MyTest", Schema::AssemblyRules(READ|WRITE|INIT));
+        m_schema = Schema("MyTest", Schema::AssemblyRules(READ | WRITE | INIT));
         TestStruct1::expectedParameters(m_schema);
-        cout << m_schema;
     } catch (karabo::util::Exception e) {
         cout << e << endl;
     }
 }
 
+
 void Schema_Test::testGetRootName() {
     CPPUNIT_ASSERT(m_schema.getRootName() == "MyTest");
+    CPPUNIT_ASSERT(m_schema.getTags("exampleKey1")[0] == "h/w");
+    CPPUNIT_ASSERT(m_schema.getTags("exampleKey2")[0] == "h/w");
+    CPPUNIT_ASSERT(m_schema.getAlias<int>("exampleKey2") == 10);
+    CPPUNIT_ASSERT(m_schema.getTags("exampleKey3")[0] == "h/w");
+    CPPUNIT_ASSERT(m_schema.getTags("exampleKey4")[0] == "hardware");
+    CPPUNIT_ASSERT(m_schema.getTags("exampleKey1")[0] == "h/w");
+
 }
+
 
 void Schema_Test::testPerKeyFunctionality() {
 
     std::vector<std::string> keys = m_schema.getParameters();
-    
+
     for (size_t i = 0; i < keys.size(); ++i) {
 
-        if (keys[i] == "exampleKey1"){
+        if (keys[i] == "exampleKey1") {
             int nodeType = m_schema.getNodeType(keys[i]);
             CPPUNIT_ASSERT(nodeType == Schema::LEAF);
-            
+
             int assignment = m_schema.getAssignment(keys[i]);
             CPPUNIT_ASSERT(assignment == Schema::OPTIONAL_PARAM);
-            
+
             bool hasAssignment = m_schema.hasAssignment(keys[i]);
             CPPUNIT_ASSERT(hasAssignment == true);
             CPPUNIT_ASSERT(m_schema.isAssignmentOptional(keys[i]) == true);
-            
+
             CPPUNIT_ASSERT(m_schema.hasDefaultValue(keys[i]) == true);
             string defaultValue = m_schema.getDefaultValue<string>(keys[i]);
             CPPUNIT_ASSERT(defaultValue == "Navigation");
-            
+
             CPPUNIT_ASSERT(m_schema.hasAccessMode(keys[i]) == true);
             CPPUNIT_ASSERT(m_schema.isAccessReconfigurable(keys[i]) == true);
             CPPUNIT_ASSERT(m_schema.getAccessMode(keys[i]) == WRITE);
@@ -87,12 +95,12 @@ void Schema_Test::testPerKeyFunctionality() {
             CPPUNIT_ASSERT(options[1] == "Air-Condition-Point");
             CPPUNIT_ASSERT(options[2] == "Navigation");
         }
-        
-        if (keys[i] == "exampleKey2"){
-            CPPUNIT_ASSERT(m_schema.hasDefaultValue(keys[i]) == true);     
+
+        if (keys[i] == "exampleKey2") {
+            CPPUNIT_ASSERT(m_schema.hasDefaultValue(keys[i]) == true);
             int defaultValue = m_schema.getDefaultValue<int>(keys[i]);
             CPPUNIT_ASSERT(defaultValue == -10);
-            
+
             string defaultValueAsString = m_schema.getDefaultValueAs<string>(keys[i]);
             CPPUNIT_ASSERT(defaultValueAsString == "-10");
             
@@ -106,26 +114,26 @@ void Schema_Test::testPerKeyFunctionality() {
             CPPUNIT_ASSERT(options[1] == "25");
             CPPUNIT_ASSERT(options[2] == "-10");
         }
-        
-        if (keys[i] == "exampleKey3"){
+
+        if (keys[i] == "exampleKey3") {
             CPPUNIT_ASSERT(m_schema.getNodeType(keys[i]) == 1);
             CPPUNIT_ASSERT(m_schema.getAssignment(keys[i]) == 1);
             CPPUNIT_ASSERT(m_schema.getAssignment(keys[i]) == Schema::MANDATORY_PARAM);
             CPPUNIT_ASSERT(m_schema.isAssignmentMandatory(keys[i]) == true);
-            
+
             CPPUNIT_ASSERT(m_schema.hasDefaultValue(keys[i]) == false);
             
             CPPUNIT_ASSERT(m_schema.hasOptions(keys[i]) == false);
         }
 
-        if (keys[i] == "exampleKey4"){
+        if (keys[i] == "exampleKey4") {
             CPPUNIT_ASSERT(m_schema.getNodeType(keys[i]) == 1);
             CPPUNIT_ASSERT(m_schema.hasDefaultValue(keys[i]) == false);
-            
+
             CPPUNIT_ASSERT(m_schema.getAssignment(keys[i]) == 2);
             CPPUNIT_ASSERT(m_schema.getAssignment(keys[i]) == Schema::INTERNAL_PARAM);
             CPPUNIT_ASSERT(m_schema.isAssignmentInternal(keys[i]) == true);
-            
+
             CPPUNIT_ASSERT(m_schema.hasAccessMode(keys[i]) == true);
             CPPUNIT_ASSERT(m_schema.isAccessInitOnly(keys[i]) == true);
             CPPUNIT_ASSERT(m_schema.getAccessMode(keys[i]) == INIT);
@@ -135,16 +143,16 @@ void Schema_Test::testPerKeyFunctionality() {
             CPPUNIT_ASSERT(options[1] == "-2.22");
             CPPUNIT_ASSERT(options[2] == "5.55");
         }
-        
-        if (keys[i] == "exampleKey5"){
+
+        if (keys[i] == "exampleKey5") {
             CPPUNIT_ASSERT(m_schema.getNodeType(keys[i]) == 1);
             CPPUNIT_ASSERT(m_schema.hasDefaultValue(keys[i]) == true);
             long long int defaultValue = m_schema.getDefaultValue<long long int>(keys[i]);
             CPPUNIT_ASSERT(defaultValue == 1442244);
-            
+
             CPPUNIT_ASSERT(m_schema.hasAssignment(keys[i]) == true);
             CPPUNIT_ASSERT(m_schema.isAssignmentOptional(keys[i]) == true);
-            
+
             CPPUNIT_ASSERT(m_schema.hasAccessMode(keys[i]) == true);
             CPPUNIT_ASSERT(m_schema.isAccessReadOnly(keys[i]) == true);
             CPPUNIT_ASSERT(m_schema.getAccessMode(keys[i]) == READ);
