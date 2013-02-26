@@ -36,7 +36,7 @@ namespace karabo {
                     this->m_node->setAttribute("classId", classId);
                     this->m_node->setAttribute("displayType", FactoryBase::classInfo().getClassId());
                     // Assemble schema (taking into account base classes, etc.) and append to node
-                    Schema schema = Configurator<FactoryBase>::assembleSchema(classId, m_parentSchemaAssemblyRules);
+                    Schema schema = Configurator<FactoryBase>::getSchema(classId, m_parentSchemaAssemblyRules);
                     // The produced schema will be rooted with classId, we however want to put its children
                     // under the defined key and ignore the classId root node
                     this->m_node->template setValue<Hash > (schema.getParameterHash());
