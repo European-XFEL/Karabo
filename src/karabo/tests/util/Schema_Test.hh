@@ -12,13 +12,17 @@
 
 #include "ConfigurationTestClasses.hh"
 
+
 class Schema_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST_SUITE(Schema_Test);
 
     CPPUNIT_TEST(testBuildUp);
     CPPUNIT_TEST(testGetRootName);
+    CPPUNIT_TEST(testGetTags);
+    CPPUNIT_TEST(testGetAlias);
+    CPPUNIT_TEST(testGetAccessMode);
     CPPUNIT_TEST(testPerKeyFunctionality);
-    
+
     CPPUNIT_TEST_SUITE_END();
 
 public:
@@ -27,7 +31,7 @@ public:
     virtual ~Schema_Test();
     void setUp();
 
-    
+
 private: //members
     karabo::util::Schema m_schema;
 
@@ -35,9 +39,12 @@ private: //functions
 
     void testBuildUp();
 
-    void testGetRootName();    
+    void testGetRootName();
+    void testGetTags();
+    void testGetAlias();
+    void testGetAccessMode();
     void testPerKeyFunctionality();
-    
+
 };
 
 #endif	/* SCHEMA_TEST_HH */
