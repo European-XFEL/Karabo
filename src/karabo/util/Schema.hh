@@ -112,7 +112,6 @@ namespace karabo {
             };
 
             enum NodeType {
-                ROOT,
                 LEAF,
                 NODE,
                 CHOICE_OF_NODES,
