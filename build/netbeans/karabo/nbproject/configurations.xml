@@ -84,6 +84,7 @@
         <itemPath>../../../src/karabo/util/ToCppString.hh</itemPath>
         <itemPath>../../../src/karabo/util/ToLiteral.hh</itemPath>
         <itemPath>../../../src/karabo/util/ToType.hh</itemPath>
+        <itemPath>../../../src/karabo/util/ToXsd.hh</itemPath>
         <itemPath>../../../src/karabo/util/Types.hh</itemPath>
       </logicalFolder>
     </logicalFolder>
