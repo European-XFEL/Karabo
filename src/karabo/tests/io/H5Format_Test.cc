@@ -45,8 +45,8 @@ void H5Format_Test::testDiscoverFromHash() {
 
     //{
 //
-//#define _IO_TEST_HELPER_MACRO( data, type, value, size )\
-//data.set( "key-" + ToType<ToLiteral>::to(FromType<FromTypeInfo>::from(typeid(type) )), static_cast<type > (value));\
+//#define _IO_TEST_HELPER_MACRO( data, type, value, size )
+//data.set( "key-" + ToType<ToLiteral>::to(FromType<FromTypeInfo>::from(typeid(type) )), static_cast<type > (value));
 //data.set( "key-" + ToType<ToLiteral>::to(FromType<FromTypeInfo>::from(typeid(vector<type>) )), vector<type>(size, value));
 //
 //
