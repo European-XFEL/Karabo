@@ -322,43 +322,14 @@ namespace karabo {
          */
         #ifdef _WIN32
         #ifdef __DLL__
-        #define KARABO_CONFIGURATION_BASE_CLASS \
-                static boost::shared_ptr<Self> create(const karabo::util::Hash& configuration) { \
-                return karabo::util::Configurator<Self>::create(configuration); } \
-                \
-                static boost::shared_ptr<Self> create(const std::string& classId, const karabo:::util::Hash& configuration) { \
-                return karabo::util::Configurator<Self>::create(classId, configuration); } \
-                \
-                static boost::shared_ptr<Self> createNode(const std::string& nodeName, const std::string& classId, const karabo::util::Hash& input) { \
-                return karabo::util::Configurator<Self>::createNode(nodeName, classId, input); } \
-                \
-                static boost::shared_ptr<Self> createChoice(const std::string& choiceName, const karabo::util::Hash& input) { \
-                return karabo::util::Configurator<Self>::createChoice(choiceName, input); } \
-                \
-                static std::vector<boost::shared_ptr<Self> > createList(const std::string& listName, const karabo::util::Hash& input) { \
-                return karabo::util::Configurator<Self>::createList(listName, input); } \
-                \
-                template class __declspec(dllexport) karabo::util::Factory< karabo::util::Configurator<Self> >;
+        #define KARABO_REGISTER_CONFIGURATION_BASE_CLASS template class __declspec(dllexport) karabo::util::Configurator< Self >;
         #else
-        #define KARABO_CONFIGURATION_BASE_CLASS \
-                static boost::shared_ptr<Self> create(const karabo::util::Hash& configuration) { \
-                return karabo::util::Configurator<Self>::create(configuration); } \
-                \
-                static boost::shared_ptr<Self> create(const std::string& classId, const karabo:::util::Hash& configuration) { \
-                return karabo::util::Configurator<Self>::create(classId, configuration); } \
-                \
-                static boost::shared_ptr<Self> createNode(const std::string& nodeName, const std::string& classId, const karabo::util::Hash& input) { \
-                return karabo::util::Configurator<Self>::createNode(nodeName, classId, input); } \
-                \
-                static boost::shared_ptr<Self> createChoice(const std::string& choiceName, const karabo::util::Hash& input) { \
-                return karabo::util::Configurator<Self>::createChoice(choiceName, input); } \
-                \
-                static std::vector<boost::shared_ptr<Self> > createList(const std::string& listName, const karabo::util::Hash& input) { \
-                return karabo::util::Configurator<Self>::createList(listName, input); } \
-                \
-                extern template class __declspec(dllimport) karabo::util::Factory< karabo::util::Configurator<Self> >;
+        #define KARABO_REGISTER_CONFIGURATION_BASE_CLASS extern template class __declspec(dllimport) karabo::util::Configurator< Self >;
         #endif
         #else
+        #define KARABO_REGISTER_CONFIGURATION_BASE_CLASS
+        #endif
+
         #define KARABO_CONFIGURATION_BASE_CLASS \
                 static boost::shared_ptr<Self> create(const karabo::util::Hash& configuration) { \
                 return karabo::util::Configurator<Self>::create(configuration); } \
@@ -378,8 +349,6 @@ namespace karabo {
                 static karabo::util::Schema getSchema(const std::string& classId, const karabo::util::Schema::AssemblyRules& rules = karabo::util::Schema::AssemblyRules()) { \
                 return karabo::util::Configurator<Self>::getSchema(classId, rules); \
                 }
-        #endif
-
     }
 }
 

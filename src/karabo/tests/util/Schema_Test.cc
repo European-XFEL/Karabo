@@ -92,6 +92,7 @@ void Schema_Test::testPerKeyFunctionality() {
     for (size_t i = 0; i < keys.size(); ++i) {
 
         if (keys[i] == "exampleKey1") {
+            CPPUNIT_ASSERT(m_schema.getNodeType(keys[i]) == Schema::LEAF);
             int nodeType = m_schema.getNodeType(keys[i]);
             CPPUNIT_ASSERT(nodeType == Schema::LEAF);
 
@@ -118,6 +119,7 @@ void Schema_Test::testPerKeyFunctionality() {
         }
 
         if (keys[i] == "exampleKey2") {
+            CPPUNIT_ASSERT(m_schema.getNodeType(keys[i]) == Schema::LEAF);
             CPPUNIT_ASSERT(m_schema.hasDefaultValue(keys[i]) == true);
             int defaultValue = m_schema.getDefaultValue<int>(keys[i]);
             CPPUNIT_ASSERT(defaultValue == -10);
@@ -137,8 +139,6 @@ void Schema_Test::testPerKeyFunctionality() {
         }
 
         if (keys[i] == "exampleKey3") {
-            CPPUNIT_ASSERT(m_schema.getNodeType(keys[i]) == 1);
-            CPPUNIT_ASSERT(m_schema.getAssignment(keys[i]) == 1);
             CPPUNIT_ASSERT(m_schema.getAssignment(keys[i]) == Schema::MANDATORY_PARAM);
             CPPUNIT_ASSERT(m_schema.isAssignmentMandatory(keys[i]) == true);
 
@@ -148,7 +148,7 @@ void Schema_Test::testPerKeyFunctionality() {
         }
 
         if (keys[i] == "exampleKey4") {
-            CPPUNIT_ASSERT(m_schema.getNodeType(keys[i]) == 1);
+            CPPUNIT_ASSERT(m_schema.getNodeType(keys[i]) == Schema::LEAF);
             CPPUNIT_ASSERT(m_schema.hasDefaultValue(keys[i]) == false);
 
             CPPUNIT_ASSERT(m_schema.getAssignment(keys[i]) == 2);
@@ -166,7 +166,7 @@ void Schema_Test::testPerKeyFunctionality() {
         }
 
         if (keys[i] == "exampleKey5") {
-            CPPUNIT_ASSERT(m_schema.getNodeType(keys[i]) == 1);
+            CPPUNIT_ASSERT(m_schema.getNodeType(keys[i]) == Schema::LEAF);
             CPPUNIT_ASSERT(m_schema.hasDefaultValue(keys[i]) == true);
             long long int defaultValue = m_schema.getDefaultValue<long long int>(keys[i]);
             CPPUNIT_ASSERT(defaultValue == 1442244);

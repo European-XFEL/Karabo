@@ -32,6 +32,7 @@
 #include "Types.hh"
 #include "ToCppString.hh"
 #include "ToLiteral.hh"
+#include "ToXsd.hh"
 #include "FromInt.hh"
 #include "FromLiteral.hh"
 #include "FromTypeInfo.hh"

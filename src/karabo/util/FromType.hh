@@ -26,7 +26,7 @@ namespace karabo {
 
         public:
 
-            // Concept the must be implemented
+            // Concept that must be implemented
             static Types::ReferenceType from(const ArgumentType& type) {
                 return Impl::from(type);
             }

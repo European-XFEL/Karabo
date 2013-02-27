@@ -4,7 +4,6 @@
  *
  * Created on January 22, 2013
  * 
- * © Copyright 2012 Burkhard C. Heisen
  */
 
 #include "ToType.hh"

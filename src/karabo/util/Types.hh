@@ -35,7 +35,7 @@ namespace karabo {
 
             enum ReferenceType {
                 BOOL, // bool
-                VECTOR_BOOL, // std::deque<std::bool>
+                VECTOR_BOOL, // std::vector<std::bool>
 
                 CHAR, // char
                 VECTOR_CHAR, // std::vector<char>
