@@ -32,7 +32,7 @@ void HashXmlSerializer_Test::testSave() {
     h.setAttribute("a.b", "b1", "3");
     h.setAttribute("a.b.c", "c1", 2);
     
-    TextSerializer<Hash>::Pointer p = TextSerializer<Hash>::create("Xml", Hash("writeDataTypes", true, "readDataTypes", true));
+    TextSerializer<Hash>::Pointer p = TextSerializer<Hash>::create("Xml");
     std::string archive;
     p->save(h, archive);
     

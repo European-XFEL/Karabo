@@ -110,6 +110,19 @@ namespace karabo {
             return s.str();
         }
         
+        inline std::string toString(const std::vector<std::string> value) {
+            if (value.empty()) return "";
+            std::ostringstream s;
+            std::vector<std::string>::const_iterator it = value.begin();
+            if (it->find_first_of(',') != std::string::npos) throw KARABO_NOT_SUPPORTED_EXCEPTION("Comma separator within in string array element is not supported during casting");
+             s << *it;
+            it++;
+            for (; it != value.end(); ++it) {
+                s << "," << *it;
+            }
+            return s.str();
+        }
+        
          template <typename T>
         inline std::string toString(const std::set<T>& value) {
             if (value.empty()) return "";
