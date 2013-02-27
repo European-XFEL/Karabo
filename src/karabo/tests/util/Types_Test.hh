@@ -12,8 +12,10 @@
 
 class Types_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST_SUITE(Types_Test);
-    CPPUNIT_TEST(testMethod);
-    CPPUNIT_TEST(testFailedMethod);
+    CPPUNIT_TEST(testCategory);
+    CPPUNIT_TEST(testFrom);
+    CPPUNIT_TEST(testTo);
+    CPPUNIT_TEST(testConvert);
     CPPUNIT_TEST_SUITE_END();
 
 public:
@@ -23,9 +25,10 @@ public:
     void tearDown();
 
 private:
-    int *example;
-    void testMethod();
-    void testFailedMethod();
+    void testCategory();
+    void testFrom();
+    void testTo();
+    void testConvert();
 };
 
 #endif	/* TYPES_TEST_HH */
