@@ -25,6 +25,10 @@ public:
 private:
     void testSave();
     void testLoad();
+
+private:
+    
+    karabo::util::Hash m_hash;
 };
 
 #endif	/* HASHXMLSERIALIZER_TEST_HH */
