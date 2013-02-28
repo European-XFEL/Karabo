@@ -23,31 +23,35 @@
 #include <string>
 #include <vector>
 
+#include "Element.hh"
+
+
 namespace karabo {
     namespace io {
         namespace h5 {
 
+            class Table;
+
             class Format {
+                friend class Table;
             public:
 
-                KARABO_CLASSINFO(Format, "Format", "1.0")
-                //KARABO_CONFIGURATION_BASE_CLASS
+                KARABO_CLASSINFO(Format, "Format", "2.0")
+                KARABO_CONFIGURATION_BASE_CLASS
 
-                Format() {
-                }
+                Format(const karabo::util::Hash& input);
 
                 virtual ~Format() {
                 }
 
                 static void expectedParameters(karabo::util::Schema& expected);
-                void configure(const karabo::util::Hash& input);
-                
-                Format(const karabo::util::Hash& input);
-                
-                
-                //static Format::Pointer discoverFromData(const karabo::util::Hash& data);
 
-                static void discoverFromHash(const karabo::util::Hash& data, karabo::util::Hash& config);
+
+                static Format::Pointer discoverFromHash(const karabo::util::Hash& data);
+
+                const karabo::util::Hash& getConfig() const {
+                    return m_config;
+                }
 
             private:
 
@@ -67,23 +71,28 @@ namespace karabo {
 
                 template< class T> static void discoverVectorSize(karabo::util::Hash& h, const karabo::util::Hash::Node& el) {
                     const std::vector<T>& vec = el.getValue< std::vector<T> >();
-                    unsigned long long size = vec.size();
-                    h.set("size", size);
+                    std::vector<unsigned long long> dims;
+                    if (el.hasAttribute("dims")) {
+                        dims = el.getAttribute<std::vector<unsigned long long> >("dims");
+                    } else {
+                        dims.push_back(vec.size());
+                    }
+                    h.set("dims", dims);
                 }
 
                 template< class T> static void discoverVectorSize(karabo::util::Hash& h, const karabo::util::Hash::Attributes::Node el) {
                     const std::vector<T>& vec = el.getValue< std::vector<T> >();
                     unsigned long long size = vec.size();
-                    h.set("size", size);
+                    h.set("dims", std::vector<unsigned long long>(1, size));
                 }
 
                 template< class T> static void discoverPtrSize(karabo::util::Hash& h, const karabo::util::Hash::Node& el) {
                     const std::vector<unsigned long long>& dims = el.getAttribute<std::vector<unsigned long long> >("dims");
                     unsigned long long size = dims[0];
-                    for( size_t i=1; i< dims.size(); ++i){
+                    for (size_t i = 1; i < dims.size(); ++i) {
                         size *= dims[i];
                     }
-                    h.set("size", size);
+                    h.set("size_bad", size);
                 }
 
 
@@ -95,10 +104,14 @@ namespace karabo {
                 //        const karabo::util::Hash& getConfig() const;
                 //        
 
+                std::vector<Element::Pointer> getElements() {
+                    return m_elements;
+                }
 
             private:
                 static const char m_h5Sep = '/';
                 karabo::util::Hash m_config;
+                std::vector<karabo::io::h5::Element::Pointer> m_elements;
                 //
                 //
                 //        static std::string getClassIdAsString(const boost::any& any);        
