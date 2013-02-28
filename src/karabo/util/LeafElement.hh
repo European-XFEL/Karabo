@@ -70,7 +70,7 @@ namespace karabo {
              * @param sep A separator symbol used for parsing previous argument for list of states
              * @return reference to the Element (to allow method's chaining)
              */
-            Derived& allowedStates(const std::string& states, const std::string& sep = ",") {
+            Derived& allowedStates(const std::string& states, const std::string& sep = " ,;") {
                 this->m_node->setAttribute("allowedStates", karabo::util::fromString<std::string, std::vector>(states, sep));
                 return *(static_cast<Derived*> (this));
             }
@@ -81,7 +81,7 @@ namespace karabo {
              * @param sep A separator symbol used for parsing previous argument for list of states
              * @return reference to the Element (to allow method's chaining)
              */
-            Derived& allowedRoles(const std::string& roles, const std::string& sep = ",") {
+            Derived& allowedRoles(const std::string& roles, const std::string& sep = " ,;") {
                 this->m_node->setAttribute("allowedRoles", karabo::util::fromString<std::string, std::vector>(roles, sep) );
                 return *(static_cast<Derived*> (this));
             }

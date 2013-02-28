@@ -270,7 +270,7 @@ namespace configurationTest {
                     .tags("hardware, poll")
                     .displayedName("Example key 1")
                     .description("Example key 1 description")
-                    .options("Radio, Air Condition, Navigation")
+                    .options("Radio,Air Condition,Navigation", ",")
                     .assignmentOptional().defaultValue("Navigation")
                     .reconfigurable()
                     .commit();
@@ -279,7 +279,7 @@ namespace configurationTest {
                     .tags("hardware, poll")
                     .displayedName("Example key 2")
                     .description("Example key 2 description")
-                    .options("5; 25; -10", ";")
+                    .options("5, 25, -10")
                     .assignmentOptional().defaultValue(-10)
                     .init()
                     .commit();
@@ -297,7 +297,7 @@ namespace configurationTest {
                     .tags("software")
                     .displayedName("Example key 4")
                     .description("Example key 4 description")
-                    .options("1.11, -2.22, 5.55")
+                    .options("1.11     -2.22 5.55")
                     .assignmentInternal().noDefaultValue()
                     .commit();
 

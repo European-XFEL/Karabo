@@ -13,14 +13,11 @@ using namespace configurationTest;
 
 CPPUNIT_TEST_SUITE_REGISTRATION(Schema_Test);
 
-
 Schema_Test::Schema_Test() {
 }
 
-
 Schema_Test::~Schema_Test() {
 }
-
 
 void Schema_Test::testBuildUp() {
     cout << endl << endl;
@@ -45,7 +42,6 @@ void Schema_Test::testBuildUp() {
     }
 }
 
-
 void Schema_Test::setUp() {
     try {
         m_schema = Schema("MyTest", Schema::AssemblyRules(READ | WRITE | INIT));
@@ -55,11 +51,9 @@ void Schema_Test::setUp() {
     }
 }
 
-
 void Schema_Test::testGetRootName() {
     CPPUNIT_ASSERT(m_schema.getRootName() == "MyTest");
 }
-
 
 void Schema_Test::testGetTags() {
     CPPUNIT_ASSERT(m_schema.getTags("exampleKey1")[0] == "hardware");
@@ -73,7 +67,6 @@ void Schema_Test::testGetTags() {
     CPPUNIT_ASSERT(m_schema.getTags("exampleKey5")[1] == "d.m.y");
 }
 
-
 void Schema_Test::testGetNodeType() {
 
     int nodeType = m_schema.getNodeType("exampleKey1");
@@ -81,7 +74,6 @@ void Schema_Test::testGetNodeType() {
 
     CPPUNIT_ASSERT(m_schema.getNodeType("exampleKey5") == Schema::LEAF);
 }
-
 
 void Schema_Test::testGetAlias() {
     CPPUNIT_ASSERT(m_schema.hasAlias("exampleKey1") == false);
@@ -91,7 +83,6 @@ void Schema_Test::testGetAlias() {
     CPPUNIT_ASSERT(m_schema.getAlias<string > ("exampleKey4") == "exampleAlias4");
     CPPUNIT_ASSERT(m_schema.getAlias<string > ("exampleKey5") == "exampleAlias5");
 }
-
 
 void Schema_Test::testGetAccessMode() {
     int accessModeKey1 = m_schema.getAccessMode("exampleKey1");
@@ -103,7 +94,6 @@ void Schema_Test::testGetAccessMode() {
     CPPUNIT_ASSERT(m_schema.getAccessMode("exampleKey5") == READ);
 }
 
-
 void Schema_Test::testGetAssignment() {
     int assignment = m_schema.getAssignment("exampleKey1");
     CPPUNIT_ASSERT(assignment == Schema::OPTIONAL_PARAM);
@@ -113,7 +103,6 @@ void Schema_Test::testGetAssignment() {
     CPPUNIT_ASSERT(m_schema.getAssignment("exampleKey4") == Schema::INTERNAL_PARAM);
     CPPUNIT_ASSERT(m_schema.getAssignment("exampleKey5") == Schema::OPTIONAL_PARAM);
 }
-
 
 void Schema_Test::testGetOptions() {
     vector<std::string> options = m_schema.getOptions("exampleKey1");
@@ -130,7 +119,6 @@ void Schema_Test::testGetOptions() {
     CPPUNIT_ASSERT(m_schema.getOptions("exampleKey4")[2] == "5.55");
 }
 
-
 void Schema_Test::testGetDefaultValue() {
     string defaultValueKey1 = m_schema.getDefaultValue<string > ("exampleKey1");
     CPPUNIT_ASSERT(defaultValueKey1 == "Navigation");
@@ -145,7 +133,6 @@ void Schema_Test::testGetDefaultValue() {
     string defaultValueAsString5 = m_schema.getDefaultValueAs<string > ("exampleKey5");
     CPPUNIT_ASSERT(defaultValueAsString5 == "1442244");
 }
-
 
 void Schema_Test::testPerKeyFunctionality() {
     cout << "\n======================" << endl;

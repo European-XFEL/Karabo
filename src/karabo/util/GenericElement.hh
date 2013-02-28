@@ -78,7 +78,7 @@ namespace karabo {
              * @param tag of any type
              * @return reference to the Element (to allow method's chaining)
              */
-            Derived& tags(const std::string& tags, const std::string& sep = ",") {
+            Derived& tags(const std::string& tags, const std::string& sep = " ,;") {
                 m_node->setAttribute("tags", karabo::util::fromString<std::string, std::vector>(tags, sep));
                 return *(static_cast<Derived*>(this));
             }
