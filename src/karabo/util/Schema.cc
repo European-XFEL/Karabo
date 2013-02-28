@@ -388,7 +388,7 @@ namespace karabo {
 
 
         bool Schema::isAllowedInCurrentState(const Hash::Node& node) const {
-            if (node.hasAttribute("allowedStates")) {
+            if (node.hasAttribute("allowedStates") && !m_currentState.empty()) {
                 const vector<string>& allowedStates = node.getAttribute<vector<string> >("allowedStates");
                 return (std::find(allowedStates.begin(), allowedStates.end(), m_currentState) != allowedStates.end());
             } else { // If no states are assigned, access/visibility is always possible
