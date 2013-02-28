@@ -6,7 +6,7 @@
  */
 
 #include "Schema_Test.hh"
-
+//
 using namespace std;
 using namespace karabo::util;
 using namespace configurationTest;
@@ -123,7 +123,7 @@ void Schema_Test::testGetOptions() {
 
     CPPUNIT_ASSERT(m_schema.getOptions("exampleKey2")[0] == "5");
     CPPUNIT_ASSERT(m_schema.getOptions("exampleKey2")[1] == "25");
-    CPPUNIT_ASSERT(m_schema.getOptions("exampleKey2")[2] == "-10");
+    CPPUNIT_ASSERT(m_schema.getOptions("exampleKey2")[2] == "10");
 
     CPPUNIT_ASSERT(m_schema.getOptions("exampleKey4")[0] == "1.11");
     CPPUNIT_ASSERT(m_schema.getOptions("exampleKey4")[1] == "-2.22");
@@ -136,9 +136,9 @@ void Schema_Test::testGetDefaultValue() {
     CPPUNIT_ASSERT(defaultValueKey1 == "Navigation");
 
     int defaultValueKey2 = m_schema.getDefaultValue<int>("exampleKey2");
-    CPPUNIT_ASSERT(defaultValueKey2 == -10);
+    CPPUNIT_ASSERT(defaultValueKey2 == 10);
     string defaultValueAsString2 = m_schema.getDefaultValueAs<string > ("exampleKey2");
-    CPPUNIT_ASSERT(defaultValueAsString2 == "-10");
+    CPPUNIT_ASSERT(defaultValueAsString2 == "10");
 
     long long defaultValue = m_schema.getDefaultValue<long long>("exampleKey5");
     CPPUNIT_ASSERT(defaultValue == 1442244);
@@ -155,6 +155,23 @@ void Schema_Test::testGetAllowedStates() {
     CPPUNIT_ASSERT(m_schema.getAllowedStates("exampleKey3")[3] == "NewState");
 }
 
+
+void Schema_Test::testGetUnit() {
+    int units = m_schema.getUnit("exampleKey2");
+    CPPUNIT_ASSERT(units == Units::METER);
+
+    string unitName = m_schema.getUnitName("exampleKey2");
+    CPPUNIT_ASSERT(unitName == "meter");
+
+    string unitSymbol = m_schema.getUnitSymbol("exampleKey2");
+    CPPUNIT_ASSERT(unitSymbol == "m");    
+}
+
+void Schema_Test::testGetMetricPrefix() {
+    CPPUNIT_ASSERT(m_schema.getMetricPrefix("exampleKey2") == Units::MILLI);
+    CPPUNIT_ASSERT(m_schema.getMetricPrefixName("exampleKey2") == "milli");
+    CPPUNIT_ASSERT(m_schema.getMetricPrefixSymbol("exampleKey2") == "m");    
+}
 
 void Schema_Test::testPerKeyFunctionality() {
     cout << "\n======================" << endl;
@@ -176,6 +193,9 @@ void Schema_Test::testPerKeyFunctionality() {
 
             CPPUNIT_ASSERT(m_schema.hasOptions(keys[i]) == true);
             CPPUNIT_ASSERT(m_schema.hasTags(keys[i]) == true);
+            
+            CPPUNIT_ASSERT(m_schema.hasUnit(keys[i]) == false);
+            CPPUNIT_ASSERT(m_schema.hasMetricPrefix(keys[i]) == false);
         }
 
         if (keys[i] == "exampleKey2") {
@@ -188,6 +208,9 @@ void Schema_Test::testPerKeyFunctionality() {
             CPPUNIT_ASSERT(m_schema.hasTags(keys[i]) == true);
 
             CPPUNIT_ASSERT(m_schema.hasAllowedStates(keys[i]) == false);
+            
+            CPPUNIT_ASSERT(m_schema.hasUnit(keys[i]) == true);
+            CPPUNIT_ASSERT(m_schema.hasMetricPrefix(keys[i]) == true); 
         }
 
         if (keys[i] == "exampleKey3") {
