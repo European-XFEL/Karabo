@@ -21,8 +21,10 @@ namespace karabo {
 
         using namespace std;
 
+
         Schema::Schema() : m_rootName("") {
         };
+
 
         Schema::Schema(const std::string& classId, const Schema::AssemblyRules& rules) :
         m_currentAccessMode(rules.m_accessMode), m_currentState(rules.m_state), m_currentAccessRole(rules.m_accessRole), m_rootName(classId) {
@@ -31,17 +33,21 @@ namespace karabo {
 
         }
 
+
         void Schema::setRootName(const std::string& rootName) {
             m_rootName = rootName;
         }
+
 
         karabo::util::Hash& Schema::getParameterHash() {
             return m_hash;
         }
 
+
         const karabo::util::Hash& Schema::getParameterHash() const {
             return m_hash;
         }
+
 
         std::vector<std::string> Schema::getParameters(const std::string& path) const {
             std::vector<std::string> tmp;
@@ -50,11 +56,13 @@ namespace karabo {
             return tmp;
         }
 
+
         void Schema::setAssemblyRules(const Schema::AssemblyRules& rules) {
             m_currentAccessMode = rules.m_accessMode;
             m_currentState = rules.m_state;
             m_currentAccessRole = rules.m_accessRole;
         }
+
 
         Schema::AssemblyRules Schema::getAssemblyRules() const {
             Schema::AssemblyRules rules;
@@ -64,6 +72,7 @@ namespace karabo {
             return rules;
         }
 
+
         const std::string& Schema::getRootName() const {
             return m_rootName;
         }
@@ -72,30 +81,37 @@ namespace karabo {
         //              Node property                  *
         //**********************************************
 
+
         bool Schema::isLeaf(const std::string& path) const {
             return m_hash.getAttribute<int>(path, "nodeType") == LEAF;
         }
+
 
         bool Schema::isNode(const std::string& path) const {
             return m_hash.getAttribute<int>(path, "nodeType") == NODE;
         }
 
+
         bool Schema::isChoiceOfNodes(const std::string& path) const {
             return m_hash.getAttribute<int>(path, "nodeType") == CHOICE_OF_NODES;
         }
+
 
         bool Schema::isListOfNodes(const std::string& path) const {
             return m_hash.getAttribute<int>(path, "nodeType") == LIST_OF_NODES;
         }
 
+
         int Schema::getNodeType(const std::string& path) const {
             return m_hash.getAttribute<int>(path, "nodeType");
         }
+
 
         bool Schema::isCommand(const std::string& path) const {
             if (this->isLeaf(path) && m_hash.getAttribute<int>(path, "leafType") == COMMAND) return true;
             else return false;
         }
+
 
         bool Schema::isProperty(const std::string& path) const {
             if (this->isLeaf(path) && m_hash.getAttribute<int>(path, "leafType") == PROPERTY) return true;
@@ -106,25 +122,31 @@ namespace karabo {
         //                Access Mode                  *
         //**********************************************
 
+
         void Schema::setAccessMode(const std::string& path, const AccessType& value) {
             m_hash.setAttribute<int>(path, "accessMode", value);
         }
+
 
         bool Schema::hasAccessMode(const std::string& path) const {
             return m_hash.hasAttribute(path, "accessMode");
         }
 
+
         bool Schema::isAccessInitOnly(const std::string& path) const {
             return m_hash.getAttribute<int>(path, "accessMode") == INIT;
         }
+
 
         bool Schema::isAccessReadOnly(const std::string& path) const {
             return m_hash.getAttribute<int>(path, "accessMode") == READ;
         }
 
+
         bool Schema::isAccessReconfigurable(const std::string& path) const {
             return m_hash.getAttribute<int>(path, "accessMode") == WRITE;
         }
+
 
         int Schema::getAccessMode(const std::string& path) const {
             return m_hash.getAttribute<int>(path, "accessMode");
@@ -134,13 +156,16 @@ namespace karabo {
         //                DisplayedName                *
         //**********************************************
 
+
         void Schema::setDisplayedName(const std::string& path, const std::string& value) {
             m_hash.setAttribute(path, "displayedName", value);
         }
 
+
         bool Schema::hasDisplayedName(const std::string& path) const {
             return m_hash.hasAttribute(path, "displayedName");
         }
+
 
         const std::string& Schema::getDisplayedName(const std::string& path) const {
             return m_hash.getAttribute<std::string > (path, "displayedName");
@@ -150,13 +175,16 @@ namespace karabo {
         //                Description                  *
         //**********************************************
 
+
         void Schema::setDescription(const std::string& path, const std::string& value) {
             m_hash.setAttribute(path, "description", value);
         }
 
+
         bool Schema::hasDescription(const std::string& path) const {
             return m_hash.hasAttribute(path, "description");
         }
+
 
         const std::string& Schema::getDescription(const std::string& path) const {
             return m_hash.getAttribute<std::string > (path, "description");
@@ -166,33 +194,40 @@ namespace karabo {
         //                DefaultValue                  *
         //**********************************************
 
+
         bool Schema::hasDefaultValue(const std::string& path) const {
             return m_hash.hasAttribute(path, "defaultValue");
         }
-        
+
         //**********************************************
         //                Assignment                 *
         //**********************************************
+
 
         void Schema::setAssignment(const std::string& path, const Schema::AssignmentType& value) {
             m_hash.setAttribute(path, "assignment", value);
         }
 
+
         bool Schema::hasAssignment(const std::string& path) const {
             return m_hash.hasAttribute(path, "assignment");
         }
+
 
         bool Schema::isAssignmentMandatory(const std::string& path) const {
             return m_hash.getAttribute<int>(path, "assignment") == Schema::MANDATORY_PARAM;
         }
 
+
         bool Schema::isAssignmentOptional(const std::string& path) const {
             return m_hash.getAttribute<int>(path, "assignment") == Schema::OPTIONAL_PARAM;
         }
 
+
         bool Schema::isAssignmentInternal(const std::string& path) const {
             return m_hash.getAttribute<int>(path, "assignment") == Schema::INTERNAL_PARAM;
         }
+
 
         int Schema::getAssignment(const std::string& path) const {
             return m_hash.getAttribute<int > (path, "assignment");
@@ -202,13 +237,16 @@ namespace karabo {
         //                   Tags                      *
         //**********************************************
 
+
         void Schema::setTags(const std::string& path, const std::string& value, const std::string& sep) {
-            m_hash.setAttribute(path, "tags", karabo::util::fromString<std::string, std::vector>(value, sep));
+            m_hash.setAttribute(path, "tags", karabo::util::fromString<std::string, std::vector > (value, sep));
         }
+
 
         bool Schema::hasTags(const std::string& path) const {
             return m_hash.hasAttribute(path, "tags");
         }
+
 
         const std::vector<std::string>& Schema::getTags(const std::string& path) const {
             return m_hash.getAttribute<std::vector<std::string> >(path, "tags");
@@ -219,6 +257,7 @@ namespace karabo {
         //                  Alias                      *
         //**********************************************
 
+
         bool Schema::hasAlias(const std::string& path) const {
             return m_hash.hasAttribute(path, "alias");
         }
@@ -226,19 +265,62 @@ namespace karabo {
         //**********************************************
         //                  Options             *
         //**********************************************
-        void Schema::setOptions(const std::string& path, const std::string& value, const std::string& sep){
-            m_hash.setAttribute(path, "options", karabo::util::fromString<std::string, std::vector>(value, sep));
+
+
+        void Schema::setOptions(const std::string& path, const std::string& value, const std::string& sep) {
+            m_hash.setAttribute(path, "options", karabo::util::fromString<std::string, std::vector > (value, sep));
         }
 
-        bool Schema::hasOptions(const std::string& path) const{
-            return m_hash.hasAttribute(path, "options");   
+
+        bool Schema::hasOptions(const std::string& path) const {
+            return m_hash.hasAttribute(path, "options");
         }
+
 
         const std::vector<std::string>& Schema::getOptions(const std::string& path) const {
             return m_hash.getAttribute<std::vector<std::string> >(path, "options");
         }
-        
-        
+
+
+        //**********************************************
+        //                AllowedStates                *
+        //**********************************************
+
+
+        void Schema::setAllowedStates(const std::string& path, const std::string& value, const std::string& sep) {
+            m_hash.setAttribute(path, "allowedStates", karabo::util::fromString<std::string, std::vector > (value, sep));
+        }
+
+
+        bool Schema::hasAllowedStates(const std::string& path) const {
+            return m_hash.hasAttribute(path, "allowedStates");
+        }
+
+
+        const std::vector<std::string>& Schema::getAllowedStates(const std::string& path) const {
+            return m_hash.getAttribute<std::vector<std::string> >(path, "allowedStates");
+        }
+
+        //**********************************************
+        //                  Unit                      *
+        //**********************************************
+
+
+        void Schema::setUnit(const std::string& path, const Units::Unit& value) {
+            m_hash.setAttribute(path, "unit", value);
+        }
+
+
+        bool Schema::hasUnit(const std::string& path) const {
+            return m_hash.hasAttribute(path, "unit");
+        }
+
+
+        const std::string& Schema::getUnit(const std::string& path) const {
+            return m_hash.getAttributeAs<std::string > (path, "unit");
+        }
+
+
         void Schema::addElement(Hash::Node& node) {
 
             if (node.hasAttribute("overwrite")) {
@@ -258,6 +340,7 @@ namespace karabo {
             this->getParameterHash().setNode(node);
         }
 
+
         void Schema::overwriteAttributes(const Hash::Node& node) {
 
             boost::optional<Hash::Node&> thisNodeOpt = m_hash.find(node.getKey());
@@ -271,6 +354,7 @@ namespace karabo {
                 }
             }
         }
+
 
         void Schema::ensureParameterDescriptionIsComplete(Hash::Node& node) const {
             std::string error;
@@ -287,9 +371,11 @@ namespace karabo {
             if (!error.empty()) throw KARABO_PARAMETER_EXCEPTION("Bad description for parameter \"" + node.getKey() + "\": " + error);
         }
 
+
         bool Schema::isAllowedInCurrentAccessMode(const Hash::Node& node) const {
             return (m_currentAccessMode & node.getAttribute<int>("accessMode"));
         }
+
 
         bool Schema::isAllowedInCurrentAccessRole(const Hash::Node& node) const {
             if (node.hasAttribute("allowedRoles")) {
@@ -300,6 +386,7 @@ namespace karabo {
             }
         }
 
+
         bool Schema::isAllowedInCurrentState(const Hash::Node& node) const {
             if (node.hasAttribute("allowedStates")) {
                 const vector<string>& allowedStates = node.getAttribute<vector<string> >("allowedStates");
@@ -308,6 +395,7 @@ namespace karabo {
                 return true;
             }
         }
+
 
         ostream& operator<<(std::ostream& os, const Schema& schema) {
             os << "Schema for: " << schema.getRootName() << endl;

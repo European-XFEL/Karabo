@@ -36,6 +36,7 @@ namespace karabo {
      */
     namespace util {
 
+
         enum AccessType {
             INIT = 1 << 0,
             READ = 1 << 1,
@@ -57,6 +58,7 @@ namespace karabo {
         inline AccessType & operator&=(AccessType& __a, AccessType __b) {
             return __a = __a & __b;
         }
+
 
         /**
          * The Schema class correlates to the Hash class like an XML Schema document correlates to an XML document.
@@ -95,6 +97,7 @@ namespace karabo {
 
         public:
 
+
             struct AssemblyRules {
                 AccessType m_accessMode;
                 std::string m_state;
@@ -105,11 +108,13 @@ namespace karabo {
                 }
             };
 
+
             enum ExpertLevelType {
                 SIMPLE,
                 MEDIUM,
                 ADVANCED
             };
+
 
             enum NodeType {
                 LEAF,
@@ -118,10 +123,12 @@ namespace karabo {
                 LIST_OF_NODES
             };
 
+
             enum LeafType {
                 PROPERTY,
                 COMMAND
             };
+
 
             enum AssignmentType {
                 OPTIONAL_PARAM,
@@ -261,7 +268,8 @@ namespace karabo {
             //                AllowedStates                *
             //**********************************************
 
-            void setAllowedStates(const std::string& path, const std::vector<std::string>& value);
+            //void setAllowedStates(const std::string& path, const std::vector<std::string>& value);
+            void setAllowedStates(const std::string& path, const std::string& value, const std::string& sep);
 
             bool hasAllowedStates(const std::string& path) const;
 
@@ -287,7 +295,7 @@ namespace karabo {
             T getDefaultValueAs(const std::string& path) const {
                 return m_hash.getAttributeAs<T > (path, "defaultValue");
             }
-            
+
             //**********************************************
             //                  Alias                      *
             //**********************************************
@@ -301,21 +309,24 @@ namespace karabo {
 
             template <class AliasType>
             const AliasType& getAlias(const std::string& path) const {
-                return m_hash.getAttribute < AliasType>(path, "alias");
+                return m_hash.getAttribute < AliasType > (path, "alias");
             }
 
             //**********************************************
-            //                  Alias                      *
+            //                  Unit                      *
             //**********************************************
 
             void setUnit(const std::string& path, const Units::Unit& value);
 
             bool hasUnit(const std::string& path) const;
 
-            const std::string& getUnitName(const std::string& path) const;
+            const std::string& getUnit(const std::string& path) const;
 
             const std::string& getUnitSymbol(const std::string& path) const;
 
+            //**********************************************
+            //                  UnitMetricPrefix                     *
+            //**********************************************
             void setUnitMetricPrefix(const std::string& path, const Units::MetricPrefix& value);
 
             const Units::MetricPrefix getUnitMetricPrefix(const std::string& path) const;
