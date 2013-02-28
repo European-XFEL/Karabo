@@ -16,9 +16,7 @@
 #include "TypeTraits.hh"
 #include "Attribute.hh"
 #include <karabo/util/util.hh>
-#include <karabo/util/Hash.hh>
-#include <karabo/util/ToLiteral.hh>
-#include <karabo/util/FromTypeInfo.hh>
+
 
 //#include "ScalarFilter.hh"
 
@@ -50,15 +48,6 @@ namespace karabo {
                 }
 
                 void create(hsize_t chunkSize) {
-//                    try {
-//                        m_chunkSize = chunkSize;
-//                        createDataSetProperties(chunkSize);
-//                        m_fileDataSpace = Dataset::dataSpace(0);
-//                        m_dataSet = m_group->createDataSet(m_key.c_str(), ScalarTypes::getHdf5StandardType<T > (), m_fileDataSpace, *m_dataSetProperties);
-//                    } catch (...) {
-//                        KARABO_RETHROW
-//                    }
-
                 }
 
 
