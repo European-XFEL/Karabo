@@ -1,23 +1,23 @@
 /* 
- * File:   HashXmlSerializer_Test.hh
+ * File:   HashBinarySerializer_Test.hh
  * Author: heisenb
  *
  * Created on February 25, 2013, 6:03 PM
  */
 
-#ifndef HASHXMLSERIALIZER_TEST_HH
-#define	HASHXMLSERIALIZER_TEST_HH
+#ifndef HASHBINARYSERIALIZER_TEST_HH
+#define	HASHBINARYSERIALIZER_TEST_HH
 
 #include <cppunit/extensions/HelperMacros.h>
 
-class HashXmlSerializer_Test : public CPPUNIT_NS::TestFixture {
-    CPPUNIT_TEST_SUITE(HashXmlSerializer_Test);
+class HashBinarySerializer_Test : public CPPUNIT_NS::TestFixture {
+    CPPUNIT_TEST_SUITE(HashBinarySerializer_Test);
     CPPUNIT_TEST(testSerialization);
     CPPUNIT_TEST_SUITE_END();
 
 public:
-    HashXmlSerializer_Test();
-    virtual ~HashXmlSerializer_Test();
+    HashBinarySerializer_Test();
+    virtual ~HashBinarySerializer_Test();
     void setUp();
     void tearDown();
 

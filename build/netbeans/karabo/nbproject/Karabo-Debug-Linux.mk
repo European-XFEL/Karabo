@@ -46,6 +46,7 @@ OBJECTFILES= \
 	${OBJECTDIR}/_ext/163016059/Timer.o \
 	${OBJECTDIR}/_ext/163016059/Base64.o \
 	${OBJECTDIR}/_ext/769817549/Format.o \
+	${OBJECTDIR}/_ext/1072794519/HashBinarySerializer.o \
 	${OBJECTDIR}/_ext/163016059/PluginLoader.o \
 	${OBJECTDIR}/_ext/163016059/Schema.o \
 	${OBJECTDIR}/_ext/1072794519/HashXmlSerializer.o \
@@ -142,6 +143,11 @@ ${OBJECTDIR}/_ext/769817549/Format.o: ../../../src/karabo/io/h5/Format.cc
 	${RM} $@.d
 	$(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/769817549/Format.o ../../../src/karabo/io/h5/Format.cc
 
+${OBJECTDIR}/_ext/1072794519/HashBinarySerializer.o: ../../../src/karabo/io/HashBinarySerializer.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1072794519
+	${RM} $@.d
+	$(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1072794519/HashBinarySerializer.o ../../../src/karabo/io/HashBinarySerializer.cc
+
 ${OBJECTDIR}/_ext/163016059/PluginLoader.o: ../../../src/karabo/util/PluginLoader.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
 	${RM} $@.d
@@ -187,11 +193,11 @@ ${OBJECTDIR}/_ext/163016059/Hash.o: ../../../src/karabo/util/Hash.cc
 
 # Build Test Targets
 .build-tests-conf: .build-conf ${TESTFILES}
-${TESTDIR}/TestFiles/f2: ${TESTDIR}/_ext/861493463/H5Format_Test.o ${TESTDIR}/_ext/861493463/HashXmlSerializer_Test.o ${TESTDIR}/_ext/861493463/ioTestRunner.o ${OBJECTFILES:%.o=%_nomain.o}
+${TESTDIR}/TestFiles/f2: ${TESTDIR}/_ext/861493463/H5Format_Test.o ${TESTDIR}/_ext/861493463/HashBinarySerializer_Test.o ${TESTDIR}/_ext/861493463/HashXmlSerializer_Test.o ${TESTDIR}/_ext/861493463/ioTestRunner.o ${OBJECTFILES:%.o=%_nomain.o}
 	${MKDIR} -p ${TESTDIR}/TestFiles
 	${LINK.cc}   -o ${TESTDIR}/TestFiles/f2 $^ ${LDLIBSOPTIONS} -Wl,-rpath,${KARABO}/lib -Wl,-rpath,${KARABO}/extern/lib 
 
-${TESTDIR}/TestFiles/f1: ${TESTDIR}/_ext/1033104525/ConfigurationTestClasses.o ${TESTDIR}/_ext/1033104525/Dims_Test.o ${TESTDIR}/_ext/1033104525/Factory_Test.o ${TESTDIR}/_ext/1033104525/Hash_Test.o ${TESTDIR}/_ext/1033104525/Schema_Test.o ${TESTDIR}/_ext/1033104525/utilTestRunner.o ${OBJECTFILES:%.o=%_nomain.o}
+${TESTDIR}/TestFiles/f1: ${TESTDIR}/_ext/1033104525/ConfigurationTestClasses.o ${TESTDIR}/_ext/1033104525/Dims_Test.o ${TESTDIR}/_ext/1033104525/Factory_Test.o ${TESTDIR}/_ext/1033104525/Hash_Test.o ${TESTDIR}/_ext/1033104525/Schema_Test.o ${TESTDIR}/_ext/1033104525/Types_Test.o ${TESTDIR}/_ext/1033104525/utilTestRunner.o ${OBJECTFILES:%.o=%_nomain.o}
 	${MKDIR} -p ${TESTDIR}/TestFiles
 	${LINK.cc}   -o ${TESTDIR}/TestFiles/f1 $^ ${LDLIBSOPTIONS} -Wl,-rpath,${KARABO}/lib -Wl,-rpath,${KARABO}/extern/lib 
 
@@ -200,6 +206,12 @@ ${TESTDIR}/_ext/861493463/H5Format_Test.o: ../../../src/karabo/tests/io/H5Format
 	${MKDIR} -p ${TESTDIR}/_ext/861493463
 	${RM} $@.d
 	$(COMPILE.cc) -g -Wall -DTESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I${KARABO}/extern/include/hdf5 -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -MMD -MP -MF $@.d -o ${TESTDIR}/_ext/861493463/H5Format_Test.o ../../../src/karabo/tests/io/H5Format_Test.cc
+
+
+${TESTDIR}/_ext/861493463/HashBinarySerializer_Test.o: ../../../src/karabo/tests/io/HashBinarySerializer_Test.cc 
+	${MKDIR} -p ${TESTDIR}/_ext/861493463
+	${RM} $@.d
+	$(COMPILE.cc) -g -Wall -DTESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I${KARABO}/extern/include/hdf5 -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -MMD -MP -MF $@.d -o ${TESTDIR}/_ext/861493463/HashBinarySerializer_Test.o ../../../src/karabo/tests/io/HashBinarySerializer_Test.cc
 
 
 ${TESTDIR}/_ext/861493463/HashXmlSerializer_Test.o: ../../../src/karabo/tests/io/HashXmlSerializer_Test.cc 
@@ -242,6 +254,12 @@ ${TESTDIR}/_ext/1033104525/Schema_Test.o: ../../../src/karabo/tests/util/Schema_
 	${MKDIR} -p ${TESTDIR}/_ext/1033104525
 	${RM} $@.d
 	$(COMPILE.cc) -g -Wall -DTESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I${KARABO}/extern/include/hdf5 -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -MMD -MP -MF $@.d -o ${TESTDIR}/_ext/1033104525/Schema_Test.o ../../../src/karabo/tests/util/Schema_Test.cc
+
+
+${TESTDIR}/_ext/1033104525/Types_Test.o: ../../../src/karabo/tests/util/Types_Test.cc 
+	${MKDIR} -p ${TESTDIR}/_ext/1033104525
+	${RM} $@.d
+	$(COMPILE.cc) -g -Wall -DTESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I${KARABO}/extern/include/hdf5 -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -MMD -MP -MF $@.d -o ${TESTDIR}/_ext/1033104525/Types_Test.o ../../../src/karabo/tests/util/Types_Test.cc
 
 
 ${TESTDIR}/_ext/1033104525/utilTestRunner.o: ../../../src/karabo/tests/util/utilTestRunner.cc 
@@ -391,6 +409,19 @@ ${OBJECTDIR}/_ext/769817549/Format_nomain.o: ${OBJECTDIR}/_ext/769817549/Format.
 	    $(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/769817549/Format_nomain.o ../../../src/karabo/io/h5/Format.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/769817549/Format.o ${OBJECTDIR}/_ext/769817549/Format_nomain.o;\
+	fi
+
+${OBJECTDIR}/_ext/1072794519/HashBinarySerializer_nomain.o: ${OBJECTDIR}/_ext/1072794519/HashBinarySerializer.o ../../../src/karabo/io/HashBinarySerializer.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1072794519
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/1072794519/HashBinarySerializer.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} $@.d;\
+	    $(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1072794519/HashBinarySerializer_nomain.o ../../../src/karabo/io/HashBinarySerializer.cc;\
+	else  \
+	    ${CP} ${OBJECTDIR}/_ext/1072794519/HashBinarySerializer.o ${OBJECTDIR}/_ext/1072794519/HashBinarySerializer_nomain.o;\
 	fi
 
 ${OBJECTDIR}/_ext/163016059/PluginLoader_nomain.o: ${OBJECTDIR}/_ext/163016059/PluginLoader.o ../../../src/karabo/util/PluginLoader.cc 

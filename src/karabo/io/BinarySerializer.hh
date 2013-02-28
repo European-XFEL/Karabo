@@ -25,6 +25,7 @@ namespace karabo {
             public:
                 
                 KARABO_CLASSINFO(BinarySerializer, "BinarySerializer", "1.0")
+                KARABO_CONFIGURATION_BASE_CLASS;
                 
                 virtual void save(const T& object, std::vector<char>& archive) = 0;
                 

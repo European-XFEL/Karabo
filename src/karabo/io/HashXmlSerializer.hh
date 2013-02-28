@@ -25,6 +25,7 @@ namespace karabo {
             std::string m_prefix;
             bool m_writeDataTypes;
             bool m_readDataTypes;
+            bool m_insertXmlNamespace;
             
             // Helper variables
             std::string m_typeFlag;
