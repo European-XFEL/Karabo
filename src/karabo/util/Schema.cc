@@ -302,22 +302,68 @@ namespace karabo {
         }
 
         //**********************************************
-        //                  Unit                      *
+        //                  Unit                       *
         //**********************************************
 
 
         void Schema::setUnit(const std::string& path, const Units::Unit& value) {
-            m_hash.setAttribute(path, "unit", value);
+            m_hash.setAttribute(path, "unitEnum", value);
+            pair<string, string> names = Units::getUnit(value);
+            m_hash.setAttribute(path, "unitName", names.first);
+            m_hash.setAttribute(path, "unitSymbol", names.second);
         }
 
 
         bool Schema::hasUnit(const std::string& path) const {
-            return m_hash.hasAttribute(path, "unit");
+            return m_hash.hasAttribute(path, "unitEnum");
         }
 
 
-        const std::string& Schema::getUnit(const std::string& path) const {
-            return m_hash.getAttributeAs<std::string > (path, "unit");
+        const int Schema::getUnit(const std::string& path) const {
+            return m_hash.getAttribute<int>(path, "unitEnum");
+        }
+
+
+        const std::string& Schema::getUnitName(const std::string& path) const {
+            return m_hash.getAttribute<string > (path, "unitName");
+        }
+
+
+        const std::string& Schema::getUnitSymbol(const std::string& path) const {
+            return m_hash.getAttribute<string > (path, "unitSymbol");
+        }
+
+
+        //**********************************************
+        //                  MetricPrefix               *
+        //**********************************************
+
+
+        void Schema::setMetricPrefix(const std::string& path, const Units::MetricPrefix& value) {
+            m_hash.setAttribute(path, "metricPrefixEnum", value);
+            pair<string, string> names = Units::getMetricPrefix(value);
+            m_hash.setAttribute(path, "metricPrefixName", names.first);
+            m_hash.setAttribute(path, "metricPrefixSymbol", names.second);
+        }
+
+
+        bool Schema::hasMetricPrefix(const std::string& path) const {
+            return m_hash.hasAttribute(path, "metricPrefixEnum");
+        }
+
+
+        const int Schema::getMetricPrefix(const std::string& path) const {
+            return m_hash.getAttribute<int>(path, "metricPrefixEnum");
+        }
+
+
+        const std::string& Schema::getMetricPrefixName(const std::string& path) const {
+            return m_hash.getAttribute<string > (path, "metricPrefixName");
+        }
+
+
+        const std::string& Schema::getMetricPrefixSymbol(const std::string& path) const {
+            return m_hash.getAttribute<string > (path, "metricPrefixSymbol");
         }
 
 

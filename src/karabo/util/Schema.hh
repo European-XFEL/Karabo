@@ -320,18 +320,24 @@ namespace karabo {
 
             bool hasUnit(const std::string& path) const;
 
-            const std::string& getUnit(const std::string& path) const;
-
+            const int getUnit(const std::string& path) const;
+            
+            const std::string& getUnitName(const std::string& path) const;
+            
             const std::string& getUnitSymbol(const std::string& path) const;
 
             //**********************************************
             //                  UnitMetricPrefix                     *
             //**********************************************
-            void setUnitMetricPrefix(const std::string& path, const Units::MetricPrefix& value);
+            void setMetricPrefix(const std::string& path, const Units::MetricPrefix& value);
+            
+            bool hasMetricPrefix(const std::string& path) const;
 
-            const Units::MetricPrefix getUnitMetricPrefix(const std::string& path) const;
-
-
+            const int getMetricPrefix(const std::string& path) const;
+            
+            const std::string& getMetricPrefixName(const std::string& path) const;
+            
+            const std::string& getMetricPrefixSymbol(const std::string& path) const;
 
             template <class ValueType>
             void setMinInc(const std::string& path, const ValueType & value);
