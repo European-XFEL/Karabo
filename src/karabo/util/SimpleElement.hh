@@ -34,7 +34,7 @@ namespace karabo {
              * @param sep  A separator symbols. Default values are " ,;"
              * @return reference to the SimpleElement
              */
-            SimpleElement& options(const std::string& opts, const std::string& sep = ",") {
+            SimpleElement& options(const std::string& opts, const std::string& sep = " ,;") {
                 this->m_node->setAttribute("options", karabo::util::fromString<std::string, std::vector > (opts, sep));
                 return *this;
             }
