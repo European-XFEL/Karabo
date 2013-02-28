@@ -13,5 +13,4 @@ namespace configurationTest {
     KARABO_REGISTER_FOR_CONFIGURATION(Shape, Rectangle);
     KARABO_REGISTER_FOR_CONFIGURATION(GraphicsRenderer);
 
-
 }
