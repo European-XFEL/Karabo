@@ -1,26 +1,26 @@
 /* 
- * File:   HashXmlSerializer_Test.cc
+ * File:   HashBinarySerializer_Test.cc
  * Author: heisenb
  * 
  * Created on February 25, 2013, 6:03 PM
  */
 
-#include <karabo/io/HashXmlSerializer.hh>
-#include "HashXmlSerializer_Test.hh"
+#include <karabo/io/HashBinarySerializer.hh>
+#include "HashBinarySerializer_Test.hh"
 #include "karabo/io/BinarySerializer.hh"
 
-CPPUNIT_TEST_SUITE_REGISTRATION(HashXmlSerializer_Test);
+CPPUNIT_TEST_SUITE_REGISTRATION(HashBinarySerializer_Test);
 
 using namespace karabo::io;
 using namespace karabo::util;
 
-HashXmlSerializer_Test::HashXmlSerializer_Test() {
+HashBinarySerializer_Test::HashBinarySerializer_Test() {
 }
 
-HashXmlSerializer_Test::~HashXmlSerializer_Test() {
+HashBinarySerializer_Test::~HashBinarySerializer_Test() {
 }
 
-void HashXmlSerializer_Test::setUp() {
+void HashBinarySerializer_Test::setUp() {
 
     Hash rooted("a.b.c", 1, "a.b.d", vector<int>(5, 1), "a.b.e", vector<Hash > (2, Hash("a", 1)), "a.d", std::complex<double>(1.2, 4.2));
     rooted.setAttribute("a", "a1", true);
@@ -31,7 +31,7 @@ void HashXmlSerializer_Test::setUp() {
     m_rootedHash = rooted;
 
 
-    Hash big("a.b", std::vector<double>(10000, 1.0));
+    Hash big("a.b", std::vector<double>(10000000, 1.0));
     vector<Hash>& tmp = big.bindReference<vector<Hash> >("a.c");
     tmp.resize(1000);
     for (size_t i = 0; i < tmp.size(); ++i) {
@@ -45,16 +45,16 @@ void HashXmlSerializer_Test::setUp() {
     m_unrootedHash = unrooted;
 }
 
-void HashXmlSerializer_Test::tearDown() {
+void HashBinarySerializer_Test::tearDown() {
 }
 
-void HashXmlSerializer_Test::testSerialization() {
+void HashBinarySerializer_Test::testSerialization() {
 
-    TextSerializer<Hash>::Pointer p = TextSerializer<Hash>::create("Xml");
+    BinarySerializer<Hash>::Pointer p = BinarySerializer<Hash>::create("Binary");
 
     {
-        std::string archive1;
-        std::string archive2;
+        vector<char> archive1;
+        vector<char> archive2;
 
         p->save(m_rootedHash, archive1);
 
@@ -70,32 +70,31 @@ void HashXmlSerializer_Test::testSerialization() {
 
         //cout << "\n\n" << archive2 << endl;
 
-        CPPUNIT_ASSERT(archive1 == archive2);
-
-
+       CPPUNIT_ASSERT(string(archive1[0], archive1.size()) == string(archive2[0], archive2.size()));
     }
 
     {
-        std::string archive1;
-        std::string archive2;
+        vector<char> archive1;
+        vector<char> archive2;
 
         p->save(m_bigHash, archive1);
 
-        //cout << "\n\nXML string size: " << archive.size() / 1024 / 1024 << " MB" << endl;
+        //cout << "\n\n Archive size: " << archive1.size() << " bytes" << endl;
 
         Hash h;
         p->load(h, archive1);
 
-        CPPUNIT_ASSERT(karabo::util::similar(m_bigHash, h) == true);
+       CPPUNIT_ASSERT(karabo::util::similar(m_bigHash, h) == true);
 
         p->save(h, archive2);
-        CPPUNIT_ASSERT(archive1 == archive2);
+        
+        CPPUNIT_ASSERT(string(archive1[0], archive1.size()) == string(archive2[0], archive2.size()));
 
     }
 
     {
-        std::string archive1;
-        std::string archive2;
+        vector<char> archive1;
+        vector<char> archive2;
 
         p->save(m_unrootedHash, archive1);
 
@@ -107,7 +106,7 @@ void HashXmlSerializer_Test::testSerialization() {
         CPPUNIT_ASSERT(karabo::util::similar(m_unrootedHash, h) == true);
 
         p->save(h, archive2);
-        CPPUNIT_ASSERT(archive1 == archive2);
+        CPPUNIT_ASSERT(string(archive1[0], archive1.size()) == string(archive2[0], archive2.size()));
 
     }
 }

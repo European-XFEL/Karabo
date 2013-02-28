@@ -10,6 +10,8 @@
       </logicalFolder>
       <logicalFolder name="f2" displayName="Serialization" projectFiles="true">
         <itemPath>../../../src/karabo/io/BinarySerializer.hh</itemPath>
+        <itemPath>../../../src/karabo/io/HashBinarySerializer.cc</itemPath>
+        <itemPath>../../../src/karabo/io/HashBinarySerializer.hh</itemPath>
         <itemPath>../../../src/karabo/io/HashXmlSerializer.cc</itemPath>
         <itemPath>../../../src/karabo/io/HashXmlSerializer.hh</itemPath>
         <itemPath>../../../src/karabo/io/TextSerializer.hh</itemPath>
@@ -95,6 +97,10 @@
       <logicalFolder name="f2" displayName="io_test" projectFiles="true" kind="TEST">
         <itemPath>../../../src/karabo/tests/io/H5Format_Test.cc</itemPath>
         <itemPath>../../../src/karabo/tests/io/H5Format_Test.hh</itemPath>
+        <itemPath>../../../src/karabo/tests/io/HashBinarySerializer_Test.cc</itemPath>
+        <itemPath>../../../src/karabo/tests/io/HashBinarySerializer_Test.hh</itemPath>
+        <itemPath>../../../src/karabo/tests/io/HashXmlSerializer_Test.cc</itemPath>
+        <itemPath>../../../src/karabo/tests/io/HashXmlSerializer_Test.hh</itemPath>
         <itemPath>../../../src/karabo/tests/io/ioTestRunner.cc</itemPath>
       </logicalFolder>
       <logicalFolder name="f1"

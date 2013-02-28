@@ -171,7 +171,6 @@ namespace karabo {
                     case Types::PTR_BOOL:
                     case Types::PTR_COMPLEX_FLOAT:
                     case Types::PTR_COMPLEX_DOUBLE:
-
                         return SEQUENCE;
                     case Types::VECTOR_HASH:
                         return VECTOR_HASH;
