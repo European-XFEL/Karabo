@@ -113,6 +113,8 @@
         <itemPath>../../../src/karabo/tests/util/Hash_Test.hh</itemPath>
         <itemPath>../../../src/karabo/tests/util/Schema_Test.cc</itemPath>
         <itemPath>../../../src/karabo/tests/util/Schema_Test.hh</itemPath>
+        <itemPath>/home/esenov/branch/karaboFramework/src/karabo/tests/util/Types_Test.cc</itemPath>
+        <itemPath>/home/esenov/branch/karaboFramework/src/karabo/tests/util/Types_Test.hh</itemPath>
         <itemPath>../../../src/karabo/tests/util/utilTestRunner.cc</itemPath>
         <itemPath>../../../src/karabo/tests/util/resources/utiltestdll.hh</itemPath>
       </logicalFolder>
