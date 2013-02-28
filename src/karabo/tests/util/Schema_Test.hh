@@ -19,8 +19,12 @@ class Schema_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST(testBuildUp);
     CPPUNIT_TEST(testGetRootName);
     CPPUNIT_TEST(testGetTags);
+    CPPUNIT_TEST(testGetNodeType);
     CPPUNIT_TEST(testGetAlias);
     CPPUNIT_TEST(testGetAccessMode);
+    CPPUNIT_TEST(testGetAssignment);
+    CPPUNIT_TEST(testGetOptions);
+    CPPUNIT_TEST(testGetDefaultValue);
     CPPUNIT_TEST(testPerKeyFunctionality);
 
     CPPUNIT_TEST_SUITE_END();
@@ -41,8 +45,12 @@ private: //functions
 
     void testGetRootName();
     void testGetTags();
+    void testGetNodeType();
     void testGetAlias();
     void testGetAccessMode();
+    void testGetAssignment();
+    void testGetOptions();
+    void testGetDefaultValue();
     void testPerKeyFunctionality();
 
 };
