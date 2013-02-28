@@ -45,7 +45,15 @@ namespace karabo {
                     .assignmentOptional().defaultValue(true)
                     .advanced()
                     .commit();
-
+            
+            BOOL_ELEMENT(expected)
+                    .key("insertXmlNamespace")
+                    .displayedName("Insert XML Namespace")
+                    .description("Flag toggling whether to insert or not an xmlns attribute")
+                    .assignmentOptional().defaultValue(false)
+                    .advanced()
+                    .commit();
+            
             STRING_ELEMENT(expected)
                     .key("xmlns")
                     .description("Sets the default XML namespace")
@@ -66,6 +74,7 @@ namespace karabo {
         HashXmlSerializer::HashXmlSerializer(const Hash& input) {
             input.get("writeDataTypes", m_writeDataTypes);
             input.get("readDataTypes", m_readDataTypes);
+            input.get("insertXmlNamespace", m_insertXmlNamespace);
             input.get("xmlns", m_xmlns);
             input.get("prefix", m_prefix);
             
@@ -90,7 +99,7 @@ namespace karabo {
                 const Hash& value = object.begin()->getValue<Hash > ();
                 pugi::xml_node node = doc.append_child(key.c_str());
                 // Set xml namespace
-                node.append_attribute("xmlns") = m_xmlns.c_str();
+                if (m_insertXmlNamespace) node.append_attribute("xmlns") = m_xmlns.c_str();
                 if (m_writeDataTypes) node.append_attribute(m_typeFlag.c_str()) = Types::to<ToLiteral > (Types::HASH).c_str();
 
                 // Set root attributes
@@ -150,6 +159,7 @@ namespace karabo {
             if (std::string(node.first_attribute().name()) == m_artificialRootFlag) { // ignore
                 this->createHash(object, node.first_child());
             } else {
+                node.remove_attribute("xmlns");
                 this->createHash(object, node);
             }
         }
@@ -159,7 +169,7 @@ namespace karabo {
                 string attributeName(it->name());
                 if (attributeName.substr(0, m_prefix.size()) != m_prefix) {
                     std::pair<std::string, Types::ReferenceType> attr = this->readXmlAttribute(std::string(it->value()));
-                    Hash::Attributes::Node attrNode = attrs.set<std::string > (it->name(), attr.first); // Sets as string
+                    Hash::Attributes::Node& attrNode = attrs.set<std::string > (it->name(), attr.first); // Sets as string
                     if (attr.second != Types::UNKNOWN && m_readDataTypes) {
                         attrNode.setType(attr.second); // Shapes it into correct type
                     }
@@ -197,17 +207,15 @@ namespace karabo {
 
                 string nodeName(node.name());
                 if (node.first_child().type() == pugi::node_element) {
-                    if (nodeName == m_itemFlag) { // Vector of Hashes
-                        vector<Hash>& tmp = hash.bindReference<vector<Hash> >(node.last_child().name());
-                        pugi::xml_node itemNode = node;
+                    if (node.first_child().name() == m_itemFlag) { // This node describes a vector of Hashes
+                        vector<Hash>& tmp = hash.bindReference<vector<Hash> >(nodeName);
+                        pugi::xml_node itemNode = node.first_child();
                         while (string(itemNode.name()) == m_itemFlag) {
                             Hash h;
-                            createHash(h, itemNode.first_child());
+                            this->createHash(h, itemNode.first_child());
                             tmp.push_back(h);
                             itemNode = itemNode.next_sibling();
                         }
-                        node = itemNode;
-                        continue;
                     } else { // Regular Hash
                         hash.set(nodeName, Hash());
                         hash.setAttributes(nodeName, attrs);
