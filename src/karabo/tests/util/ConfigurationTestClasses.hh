@@ -265,7 +265,7 @@ namespace configurationTest {
         static void expectedParameters(karabo::util::Schema & expected) {
 
             STRING_ELEMENT(expected).key("exampleKey1")
-                    .tags("h/w")
+                    .tags("hardware, poll")
                     .displayedName("Example key 1")
                     .description("Example key 1 description")
                     .options("Radio,Air-Condition-Point,Navigation")
@@ -274,7 +274,7 @@ namespace configurationTest {
                     .commit();
 
             INT32_ELEMENT(expected).key("exampleKey2").alias(10)
-                    .tags("h/w")
+                    .tags("hardware, poll")
                     .displayedName("Example key 2")
                     .description("Example key 2 description")
                     .options("5,25,-10")
@@ -283,7 +283,7 @@ namespace configurationTest {
                     .commit();
 
             UINT32_ELEMENT(expected).key("exampleKey3").alias(5.5)
-                    .tags("h/w")
+                    .tags("hardware, set")
                     .displayedName("Example key 3")
                     .description("Example key 3 description")
                     .assignmentMandatory()
@@ -291,7 +291,7 @@ namespace configurationTest {
                     .commit();
 
             FLOAT_ELEMENT(expected).key("exampleKey4").alias("exampleAlias4")
-                    .tags("hardware")
+                    .tags("software")
                     .displayedName("Example key 4")
                     .description("Example key 4 description")
                     .options("1.11 -2.22 5.55")      //double values space separated
@@ -299,7 +299,7 @@ namespace configurationTest {
                     .commit();
 
             INT64_ELEMENT(expected).key("exampleKey5").alias("exampleAlias5")
-                    .tags("hardware")
+                    .tags("software")
                     .displayedName("Example key 5")
                     .description("Example key 5 description")
                     .readOnly()

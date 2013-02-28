@@ -7,6 +7,7 @@
 
 #include <karabo/io/HashXmlSerializer.hh>
 #include "HashXmlSerializer_Test.hh"
+#include "karabo/io/BinarySerializer.hh"
 
 CPPUNIT_TEST_SUITE_REGISTRATION(HashXmlSerializer_Test);
 
@@ -20,31 +21,45 @@ HashXmlSerializer_Test::~HashXmlSerializer_Test() {
 }
 
 void HashXmlSerializer_Test::setUp() {
+    Hash h("a.b.c", 1, "a.b.d", vector<int>(5, 1)/*, "a.b.e", vector<Hash > (2, Hash("a", 1))*/);
+    h.setAttribute("a", "a1", true);
+    h.setAttribute("a", "a2", 3.4);
+    h.setAttribute("a.b", "b1", "3");
+    h.setAttribute("a.b.c", "c1", 2);
+    m_hash = h;
 }
 
 void HashXmlSerializer_Test::tearDown() {
 }
 
 void HashXmlSerializer_Test::testSave() {
-    Hash h("a.b.c", 1, "a.b.d", vector<int>(5,1), "a.b.e", vector<Hash>(2, Hash("a", 1)));
-    h.setAttribute("a", "a1", true);
-    h.setAttribute("a", "a2", 3.4);
-    h.setAttribute("a.b", "b1", "3");
-    h.setAttribute("a.b.c", "c1", 2);
+
+    {
+        TextSerializer<Hash>::Pointer p = TextSerializer<Hash>::create("Xml", Hash("writeDataTypes", false, "readDataTypes", false));
+        std::string archive;
+        p->save(m_hash, archive);
+
+        cout << "XML" << endl << archive << endl;
+        
+        Hash h;
+        p->load(h, archive);
+        cout << endl << h << endl;
+    }
     
-    TextSerializer<Hash>::Pointer p = TextSerializer<Hash>::create("Xml");
-    std::string archive;
-    p->save(h, archive);
-    
-    cout << endl << archive << endl;
-    
-    Hash h2;
-    p->load(h2, archive);
-    cout << endl << h2 << endl;
-    
-    
+    {
+        BinarySerializer<Hash>::Pointer p = BinarySerializer<Hash>::create("Default");
+        std::vector<char> archive;
+        p->save(m_hash, archive);
+        
+        
+        //cout << "BINARY (size " << archive.size() << " bytes)" << endl << karabo::util::toString(archive) << endl;
+        
+        Hash h;
+        p->load(h, archive);
+        cout << endl << h << endl;
+    }
 }
 
 void HashXmlSerializer_Test::testLoad() {
-    
+
 }

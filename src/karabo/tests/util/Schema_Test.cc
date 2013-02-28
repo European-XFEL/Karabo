@@ -46,6 +46,7 @@ void Schema_Test::setUp() {
     try {
         m_schema = Schema("MyTest", Schema::AssemblyRules(READ | WRITE | INIT));
         TestStruct1::expectedParameters(m_schema);
+        cout << m_schema << endl;
     } catch (karabo::util::Exception e) {
         cout << e << endl;
     }
@@ -58,11 +59,14 @@ void Schema_Test::testGetRootName() {
 
 
 void Schema_Test::testGetTags() {
-    CPPUNIT_ASSERT(m_schema.getTags("exampleKey1")[0] == "h/w");
-    CPPUNIT_ASSERT(m_schema.getTags("exampleKey2")[0] == "h/w");
-    CPPUNIT_ASSERT(m_schema.getTags("exampleKey3")[0] == "h/w");
-    CPPUNIT_ASSERT(m_schema.getTags("exampleKey4")[0] == "hardware");
-    CPPUNIT_ASSERT(m_schema.getTags("exampleKey5")[0] == "hardware");
+    CPPUNIT_ASSERT(m_schema.getTags("exampleKey1")[0] == "hardware");
+    CPPUNIT_ASSERT(m_schema.getTags("exampleKey1")[1] == "poll");
+    CPPUNIT_ASSERT(m_schema.getTags("exampleKey2")[0] == "hardware");
+    CPPUNIT_ASSERT(m_schema.getTags("exampleKey2")[1] == "poll");
+    CPPUNIT_ASSERT(m_schema.getTags("exampleKey3")[0] == "hardware");
+    CPPUNIT_ASSERT(m_schema.getTags("exampleKey3")[1] == "set");
+    CPPUNIT_ASSERT(m_schema.getTags("exampleKey4")[0] == "software");
+    CPPUNIT_ASSERT(m_schema.getTags("exampleKey5")[0] == "software");
 }
 
 
