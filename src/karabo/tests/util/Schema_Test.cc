@@ -142,7 +142,7 @@ void Schema_Test::testGetDefaultValue() {
 
     long long defaultValue = m_schema.getDefaultValue<long long>("exampleKey5");
     CPPUNIT_ASSERT(defaultValue == 1442244);
-    string defaultValueAsString5 = m_schema.getDefaultValueAs<string > ("exampleKey2");
+    string defaultValueAsString5 = m_schema.getDefaultValueAs<string > ("exampleKey5");
     CPPUNIT_ASSERT(defaultValueAsString5 == "1442244");
 }
 
