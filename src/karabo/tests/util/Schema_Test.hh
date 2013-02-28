@@ -25,6 +25,7 @@ class Schema_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST(testGetAssignment);
     CPPUNIT_TEST(testGetOptions);
     CPPUNIT_TEST(testGetDefaultValue);
+    CPPUNIT_TEST(testGetAllowedStates);
     CPPUNIT_TEST(testPerKeyFunctionality);
 
     CPPUNIT_TEST_SUITE_END();
@@ -51,6 +52,7 @@ private: //functions
     void testGetAssignment();
     void testGetOptions();
     void testGetDefaultValue();
+    void testGetAllowedStates();
     void testPerKeyFunctionality();
 
 };

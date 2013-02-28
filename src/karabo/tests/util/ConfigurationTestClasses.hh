@@ -288,7 +288,7 @@ namespace configurationTest {
                     .tags("hardware, set")
                     .displayedName("Example key 3")
                     .description("Example key 3 description")
-                    //.allowedStates("AllOk.Started, AllOk.Stopped, AllOk.Run.On, NewState") //TODO check
+                    .allowedStates("AllOk.Started, AllOk.Stopped, AllOk.Run.On, NewState") //TODO check
                     .assignmentMandatory()
                     .reconfigurable()
                     .commit();
