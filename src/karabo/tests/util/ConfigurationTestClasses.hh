@@ -279,8 +279,10 @@ namespace configurationTest {
                     .tags("hardware, poll")
                     .displayedName("Example key 2")
                     .description("Example key 2 description")
-                    .options("5, 25, -10")
-                    .assignmentOptional().defaultValue(-10)
+                    .options("5, 25, 10")
+                    .unit(Units::METER)
+                    .metricPrefix(Units::MILLI)
+                    .assignmentOptional().defaultValue(10)
                     .init()
                     .commit();
 
