@@ -52,6 +52,13 @@ namespace karabo {
                     dataSet.write(ptr, ScalarTypes::getHdf5NativeType<T > (), memoryDataSpace, fileDataSpace);
                 }
 
+                static void write(const std::vector<T>& vec, H5::DataSet& dataSet, H5::DataSpace memoryDataSpace, H5::DataSpace fileDataSpace) {
+                    const T* ptr = &vec[0];
+                    dataSet.write(ptr, ScalarTypes::getHdf5NativeType<T > (), memoryDataSpace, fileDataSpace);
+                }
+
+
+
             };
 
             template<>
@@ -71,6 +78,18 @@ namespace karabo {
                     }
                     dataSet.write(ptr, ScalarTypes::getHdf5NativeType<unsigned char > (), memoryDataSpace, fileDataSpace);
                 }
+
+                static void write(const std::vector<bool>& vec, H5::DataSet& dataSet, H5::DataSpace memoryDataSpace, H5::DataSpace fileDataSpace) {
+
+                    hsize_t len = vec.size();
+                    std::vector<unsigned char> converted(len, 0);
+                    for (size_t i = 0; i < len; ++i) {
+                        converted[i] = boost::numeric_cast<unsigned char>(vec[i]);
+                    }
+                    const unsigned char* ptr = &converted[0];
+                    dataSet.write(ptr, ScalarTypes::getHdf5NativeType<unsigned char> (), memoryDataSpace, fileDataSpace);
+                }
+
             };
 
             template< typename T>
@@ -118,13 +137,12 @@ namespace karabo {
 
                 }
 
-
                 void write(const karabo::util::Hash& data, hsize_t recordId) {
 
                     try {
                         if (recordId % m_chunkSize == 0) extend(m_chunkSize);
                         //selectFileRecord(recordId);
-                        Dataset::selectScalarRecord(m_fileDataSpace,recordId);
+                        Dataset::selectScalarRecord(m_fileDataSpace, recordId);
                         ScalarWriter<T>::write(data.get<const T > (m_path_key, '/'), m_dataSet, H5::DataSpace(H5S_SCALAR), m_fileDataSpace);
                     } catch (...) {
                         KARABO_RETHROW
@@ -138,10 +156,10 @@ namespace karabo {
                         //extend(len);
                         Dataset::extend(m_dataSet, m_fileDataSpace, len);
                         //selectFileRecord(recordId, len);
-                        Dataset::selectRecord(m_fileDataSpace,recordId, len);
-                        
+                        Dataset::selectRecord(m_fileDataSpace, recordId, len);
+
                         const T* ptr = data.get<T*>(m_path_key, '/');
-                        H5::DataSpace mds = Dataset::dataSpace(len);//  this->getBufferDataSpace(len);
+                        H5::DataSpace mds = Dataset::dataSpace(len); //  this->getBufferDataSpace(len);
                         ScalarWriter<T>::write(ptr, len, m_dataSet, mds, m_fileDataSpace);
                     } catch (karabo::util::Exception& e) {
                         std::clog << "exception" << e << std::endl;
@@ -150,7 +168,7 @@ namespace karabo {
 
                 }
 
-              
+
                 //
                 //                void write(const karabo::util::Hash& data, hsize_t recordId, hsize_t len) {
                 //
@@ -283,7 +301,7 @@ namespace karabo {
 
 
 
-                
+
 
 
 

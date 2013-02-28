@@ -59,10 +59,10 @@ namespace karabo {
                 clog << "configure: " << endl << input << endl;
                 m_elements = Element::createList("elements", input);
                 m_config = Hash("Format", input);
-                for (size_t i = 0; i < m_elements.size(); ++i) {
-                    clog << "Element name: " << m_elements[i]->getName() << endl;
-                }
-                clog << "after configure: " << endl << input << endl;
+//                for (size_t i = 0; i < m_elements.size(); ++i) {
+//                    clog << "Element name: " << m_elements[i]->getName() << endl;
+//                }
+                //clog << "after configure: " << endl << input << endl;
             }
 
             Format::Pointer Format::discoverFromHash(const Hash& data) {
