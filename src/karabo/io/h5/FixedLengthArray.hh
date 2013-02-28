@@ -15,6 +15,7 @@
 #include <string>
 
 #include "Dataset.hh"
+#include "Scalar.hh"
 #include "TypeTraits.hh"
 #include <karabo/util/Hash.hh>
 #include <karabo/util/ToLiteral.hh>
@@ -36,7 +37,7 @@ namespace karabo {
             class FixedLengthArray : public Dataset {
             public:
 
-                KARABO_CLASSINFO(FixedLengthArray, "VECTOR_" + karabo::util::ToType<karabo::util::ToLiteral>::to(karabo::util::FromType<karabo::util::FromTypeInfo>::from(typeid (T))), "2.0")          
+                KARABO_CLASSINFO(FixedLengthArray, "VECTOR_" + karabo::util::ToType<karabo::util::ToLiteral>::to(karabo::util::FromType<karabo::util::FromTypeInfo>::from(typeid (T))), "2.0")
 
                 FixedLengthArray(const karabo::util::Hash& input) : Dataset(input) {
                     m_dims = karabo::util::Dims(input.get<std::vector<unsigned long long> >("dims"));
@@ -55,114 +56,71 @@ namespace karabo {
                             .init()
                             .commit();
 
-                    //
-                    //                    karabo::util::INT32_ELEMENT(expected)
-                    //                            .key("chunkCacheSize")
-                    //                            .displayedName("chunk cache size")
-                    //                            .description("Size of the chunk cache in MB. 0 effectively means disabling the cache")
-                    //                            .minInc(0)
-                    //                            .assignmentOptional().noDefaultValue()
-                    //                            .init()
-                    //                            .advanced()
-                    //                            .commit();
-
                 }
-                //
-                //                void configure(const karabo::util::Hash& input) {
-                //
-                //                    // TODO
-                //                    // size is deprecated - will be removed soon
-                //                    if (!input.has("size") && !input.has("dims")) {
-                //                        throw KARABO_PARAMETER_EXCEPTION("Size of the array not specified");
-                //                    }
-                //
-                //                    if (input.has("size")) {
-                //                        m_size = input.get<int> ("size");
-                //                        m_dims.push_back(m_size);
-                //
-                //                    } else if (input.has("dims")) {
-                //
-                //                        m_dims = ArrayDimensions(input.get<std::vector<unsigned long long> >("dims"));
-                //                        m_size = m_dims.getNumberOfElements();
-                //                    }
-                //
-                //
-                //                    // chunkCacheSize configuration
-                //                    m_dataAccessPropListId = H5Pcreate(H5P_DATASET_ACCESS);
-                //                    if (input.has("chunkCacheSize")) {
-                //                        size_t cacheSize = 1024 * 1024; // in MB
-                //                        cacheSize *= input.get<int>("chunkCacheSize");
-                //                        tracer << "chunk cache Size: " << cacheSize << std::endl;
-                //                        H5Pset_chunk_cache(m_dataAccessPropListId, (size_t) 521, cacheSize, 0.75);
-                //                    }
-                //                }
-                //
 
                 void create(hsize_t chunkSize) {
 
                     try {
-                        //createDataSetProperties(chunkSize);
-                        std::clog << "100" << std::endl;
+
+                        m_chunkSize = chunkSize;
+                        
                         std::vector<unsigned long long> chunkVector(m_dims.rank() + 1, 0);
                         chunkVector[0] = chunkSize;
-                        for(size_t i=0; i< m_dims.rank(); ++i){
-                            chunkVector[i+1] = m_dims.extentIn(i);
+                        for (size_t i = 0; i < m_dims.rank(); ++i) {
+                            chunkVector[i + 1] = m_dims.extentIn(i);
                         }
-                        
-                        std::clog << "101" << std::endl;
                         karabo::util::Dims chunk(chunkVector);
-                        std::clog << "102" << std::endl;
-                        createDataSetProperties( chunk );
 
-                        std::clog << "103" << m_key << std::endl;
-                        // ArrayType needs scalar DataSpace
-                        m_fileDataSpace = dataSpace(chunk);
+                        
+                        createDataSetProperties(chunk);
+                        
+                        chunkVector[0] = 0;
+                        karabo::util::Dims zeroDataSpace(chunkVector);
+                        
+                        m_fileDataSpace = dataSpace(zeroDataSpace);
                         m_dataSet = m_group->createDataSet(m_key.c_str(), ScalarTypes::getHdf5StandardType<T > (), m_fileDataSpace, *m_dataSetProperties);
                         // need to use C interface because C++ does not allow specifying dataset access property list
-//                        hid_t gid = m_group->getId();
-//                        hid_t linkCreatePropListId = H5Pcreate(H5P_LINK_CREATE);
-//                        hid_t dataSetId = H5Dcreate2(gid, m_key.c_str(), ScalarTypes::getHdf5StandardType<T > ().getId(), m_fileDataSpace.getId(), linkCreatePropListId, m_dataSetProperties->getId(), m_dataAccessPropListId);
-//                        std::clog << "104" << std::endl;
-//                        m_dataSet = H5::DataSet(dataSetId);
-                        std::clog << "105" << std::endl;
+                        //                        hid_t gid = m_group->getId();
+                        //                        hid_t linkCreatePropListId = H5Pcreate(H5P_LINK_CREATE);
+                        //                        hid_t dataSetId = H5Dcreate2(gid, m_key.c_str(), ScalarTypes::getHdf5StandardType<T > ().getId(), m_fileDataSpace.getId(), linkCreatePropListId, m_dataSetProperties->getId(), m_dataAccessPropListId);
+                        //                        std::clog << "104" << std::endl;
+                        //                        m_dataSet = H5::DataSet(dataSetId);
                     } catch (...) {
                         KARABO_RETHROW
                     }
                 }
 
-                H5::DataSpace fileDataSpace(hsize_t size) {
-
-                    hsize_t* dims = new hsize_t[m_dims.rank()];
-                    hsize_t* maxdims = new hsize_t[m_dims.rank()];
-                    for (size_t i = 0; i < m_dims.rank(); ++i) {
-                        dims[i] = m_dims.extentIn(i);
-                        maxdims[i] = H5S_UNLIMITED;
-                    }
-                    return H5::DataSpace(m_dims.rank(), dims, maxdims);
-                }
-
                 void write(const karabo::util::Hash& data, hsize_t recordId) {
-                    //
-                    //                    try {
-                    //                        selectFileRecord(recordId);
-                    //                        karabo::util::Hash::const_iterator it = data.find(m_key);
-                    //                        if (it == data.end()) { // TODO: do we need here to check if iterator is ok, is this performance issue
-                    //                            throw KARABO_PARAMETER_EXCEPTION("Invalid key in the Hash");
-                    //                        }
-                    //                        const boost::any& any = data.getAny(it);
-                    //                        if (!m_filter) {
-                    //                            tracer << "creating a filter for FixedLengthArray " << any.type().name() << std::endl;
-                    //                            // this uses factory mechanism combined with rtti.
-                    //                            m_filter = FLArrayFilter<T>::createDefault(any.type().name());
-                    //                        }
-                    //                        //tracer << "about to write " << any.type().name() << std::endl;                        
-                    //                        m_filter->write(*this, any, m_dims);
-                    //                        //tracer << m_filter << std::endl;
-                    //                        //tracer << "after write " << any.type().name() << std::endl;                        
-                    //                    } catch (...) {
-                    //                        //tracer << "exception caught" << std::endl;
-                    //                        KARABO_RETHROW;
-                    //                    }
+
+                    try {
+
+                        std::clog << "200: m_chunkSize = " << m_chunkSize << std::endl;
+                        std::clog << "200: recordId = " << recordId << std::endl;
+                        if (recordId % m_chunkSize == 0) extend(m_dataSet, m_fileDataSpace, m_chunkSize);
+                        selectRecord(m_fileDataSpace, recordId, 1);
+                        const std::vector<T>& vec = data.get<std::vector<T> >(m_path_key, '/');                        
+                        H5::DataSpace mds = Dataset::dataSpace(vec.size()); 
+                        ScalarWriter<T>::write(vec, m_dataSet, mds, m_fileDataSpace);
+
+                        //                        selectFileRecord(recordId);
+                        //                        karabo::util::Hash::const_iterator it = data.find(m_key);
+                        //                        if (it == data.end()) { // TODO: do we need here to check if iterator is ok, is this performance issue
+                        //                            throw KARABO_PARAMETER_EXCEPTION("Invalid key in the Hash");
+                        //                        }
+                        //                        const boost::any& any = data.getAny(it);
+                        //                        if (!m_filter) {
+                        //                            tracer << "creating a filter for FixedLengthArray " << any.type().name() << std::endl;
+                        //                            // this uses factory mechanism combined with rtti.
+                        //                            m_filter = FLArrayFilter<T>::createDefault(any.type().name());
+                        //                        }
+                        //                        //tracer << "about to write " << any.type().name() << std::endl;                        
+                        //                        m_filter->write(*this, any, m_dims);
+                        //                        //tracer << m_filter << std::endl;
+                        //tracer << "after write " << any.type().name() << std::endl;                        
+                    } catch (...) {
+                        //tracer << "exception caught" << std::endl;
+                        KARABO_RETHROW;
+                    }
                 }
                 //
                 //                /*
@@ -317,16 +275,7 @@ namespace karabo {
 
             protected:
 
-//                H5::DataSet m_dataSet;
-//                H5::DataSpace m_memoryDataSpace;
-//                H5::DataSpace m_fileDataSpace;
-//                boost::shared_ptr<H5::DSetCreatPropList> m_dataSetProperties;
-//                hsize_t m_chunkSize;
 
-
-
-
-                hsize_t m_size; // size of the array is fixed
                 karabo::util::Dims m_dims;
 
                 hid_t m_dataAccessPropListId;
