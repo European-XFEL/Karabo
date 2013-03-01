@@ -30,7 +30,7 @@ class Schema_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST(testGetUnit);
     CPPUNIT_TEST(testGetMetricPrefix);
     CPPUNIT_TEST(testPerKeyFunctionality);
-    //CPPUNIT_TEST(testHelpFunction);
+    CPPUNIT_TEST(testHelpFunction);
     
     CPPUNIT_TEST_SUITE_END();
 
@@ -61,7 +61,7 @@ private: //functions
     void testGetUnit();
     void testGetMetricPrefix();
     void testPerKeyFunctionality();
-    //void testHelpFunction();
+    void testHelpFunction();
 
 };
 
