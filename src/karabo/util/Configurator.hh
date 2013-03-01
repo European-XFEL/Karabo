@@ -71,13 +71,13 @@ namespace karabo {
 
             template <class DerivedClass>
             static void registerClass(const std::string& classId) {
-                std::cout << "Registering class \"" << classId << "\" with constructor: " << classId << "(" << ctorKey() << ") for configuration" << std::endl;
+               // std::cout << "Registering class \"" << classId << "\" with constructor: " << classId << "(" << ctorKey() << ") for configuration" << std::endl;
                 Configurator::init().m_registry[classId][ctorKey()] = static_cast<boost::function < boost::shared_ptr<BaseClass > (const Hash&) > > (boost::factory<boost::shared_ptr<DerivedClass> >());
             }
 
             template <class DerivedClass, typename A1>
             static void registerClass(const std::string& classId) {
-                std::cout << "Registering class \"" << classId << "\" with constructor: " << classId << "(" << ctorKey<A1 > () << ") for configuration" << std::endl;
+                //std::cout << "Registering class \"" << classId << "\" with constructor: " << classId << "(" << ctorKey<A1 > () << ") for configuration" << std::endl;
                 Configurator::init().m_registry[classId][ctorKey<A1 > ()] = static_cast<boost::function < boost::shared_ptr<BaseClass > (const Hash&, const A1&) > > (boost::factory<boost::shared_ptr<DerivedClass> >());
             }
 
