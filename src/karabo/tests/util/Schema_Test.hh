@@ -20,6 +20,7 @@ class Schema_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST(testGetRootName);
     CPPUNIT_TEST(testGetTags);
     CPPUNIT_TEST(testGetNodeType);
+    CPPUNIT_TEST(testGetValueType);
     CPPUNIT_TEST(testGetAlias);
     CPPUNIT_TEST(testGetAccessMode);
     CPPUNIT_TEST(testGetAssignment);
@@ -29,7 +30,8 @@ class Schema_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST(testGetUnit);
     CPPUNIT_TEST(testGetMetricPrefix);
     CPPUNIT_TEST(testPerKeyFunctionality);
-
+    //CPPUNIT_TEST(testHelpFunction);
+    
     CPPUNIT_TEST_SUITE_END();
 
 public:
@@ -49,6 +51,7 @@ private: //functions
     void testGetRootName();
     void testGetTags();
     void testGetNodeType();
+    void testGetValueType();
     void testGetAlias();
     void testGetAccessMode();
     void testGetAssignment();
@@ -58,6 +61,7 @@ private: //functions
     void testGetUnit();
     void testGetMetricPrefix();
     void testPerKeyFunctionality();
+    //void testHelpFunction();
 
 };
 

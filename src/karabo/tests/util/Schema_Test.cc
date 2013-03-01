@@ -6,7 +6,7 @@
  */
 
 #include "Schema_Test.hh"
-//
+
 using namespace std;
 using namespace karabo::util;
 using namespace configurationTest;
@@ -82,6 +82,16 @@ void Schema_Test::testGetNodeType() {
     CPPUNIT_ASSERT(m_schema.getNodeType("exampleKey5") == Schema::LEAF);
 }
 
+
+void Schema_Test::testGetValueType() {
+    string valueType = m_schema.getValueType("exampleKey1");
+    CPPUNIT_ASSERT(valueType == "STRING");
+
+    CPPUNIT_ASSERT(m_schema.getValueType("exampleKey2") == "INT32");
+    CPPUNIT_ASSERT(m_schema.getValueType("exampleKey3") == "UINT32");
+    CPPUNIT_ASSERT(m_schema.getValueType("exampleKey4") == "FLOAT");
+    CPPUNIT_ASSERT(m_schema.getValueType("exampleKey5") == "INT64");
+}
 
 void Schema_Test::testGetAlias() {
     CPPUNIT_ASSERT(m_schema.hasAlias("exampleKey1") == false);
@@ -164,14 +174,16 @@ void Schema_Test::testGetUnit() {
     CPPUNIT_ASSERT(unitName == "meter");
 
     string unitSymbol = m_schema.getUnitSymbol("exampleKey2");
-    CPPUNIT_ASSERT(unitSymbol == "m");    
+    CPPUNIT_ASSERT(unitSymbol == "m");
 }
+
 
 void Schema_Test::testGetMetricPrefix() {
     CPPUNIT_ASSERT(m_schema.getMetricPrefix("exampleKey2") == Units::MILLI);
     CPPUNIT_ASSERT(m_schema.getMetricPrefixName("exampleKey2") == "milli");
-    CPPUNIT_ASSERT(m_schema.getMetricPrefixSymbol("exampleKey2") == "m");    
+    CPPUNIT_ASSERT(m_schema.getMetricPrefixSymbol("exampleKey2") == "m");
 }
+
 
 void Schema_Test::testPerKeyFunctionality() {
     cout << "\n======================" << endl;
@@ -193,7 +205,7 @@ void Schema_Test::testPerKeyFunctionality() {
 
             CPPUNIT_ASSERT(m_schema.hasOptions(keys[i]) == true);
             CPPUNIT_ASSERT(m_schema.hasTags(keys[i]) == true);
-            
+
             CPPUNIT_ASSERT(m_schema.hasUnit(keys[i]) == false);
             CPPUNIT_ASSERT(m_schema.hasMetricPrefix(keys[i]) == false);
         }
@@ -208,9 +220,9 @@ void Schema_Test::testPerKeyFunctionality() {
             CPPUNIT_ASSERT(m_schema.hasTags(keys[i]) == true);
 
             CPPUNIT_ASSERT(m_schema.hasAllowedStates(keys[i]) == false);
-            
+
             CPPUNIT_ASSERT(m_schema.hasUnit(keys[i]) == true);
-            CPPUNIT_ASSERT(m_schema.hasMetricPrefix(keys[i]) == true); 
+            CPPUNIT_ASSERT(m_schema.hasMetricPrefix(keys[i]) == true);
         }
 
         if (keys[i] == "exampleKey3") {
