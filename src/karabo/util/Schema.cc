@@ -117,7 +117,14 @@ namespace karabo {
             if (this->isLeaf(path) && m_hash.getAttribute<int>(path, "leafType") == PROPERTY) return true;
             else return false;
         }
-
+        
+        //**********************************************
+        //                Value Type             *
+        //**********************************************
+        string Schema::getValueType(const std::string& path) const{
+            return m_hash.getAttribute<string>(path, "valueType");
+        }
+        
         //**********************************************
         //                Access Mode                  *
         //**********************************************

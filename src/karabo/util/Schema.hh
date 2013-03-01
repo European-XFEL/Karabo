@@ -183,6 +183,12 @@ namespace karabo {
             int getNodeType(const std::string& path) const;
 
             //**********************************************
+            //                Value Type                  *
+            //**********************************************
+            string getValueType(const std::string& path) const;
+            
+            
+            //**********************************************
             //                Access Mode                  *
             //**********************************************
 
@@ -374,11 +380,10 @@ namespace karabo {
             void overwrite(const T& defaultValue);
 
 
-            //            /**
-            //             * 
-            //             *  Help function to show all parameters on console
-            //             */
-            //            void help(const std::string& classId = "");
+            /**
+             *  Help function to show all parameters on console
+             */
+            void help(const std::string& classId = "");
 
             //std::vector<std::string> getAllParameters();
 
@@ -434,7 +439,7 @@ namespace karabo {
             bool isAllowedInCurrentAccessRole(const Hash::Node& node) const;
 
             bool isAllowedInCurrentState(const Hash::Node& node) const;
-
+        
         private: // functions
 
             //            static void processingDescription(const Schema& desc, std::ostringstream& stream);
