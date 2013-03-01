@@ -117,14 +117,16 @@ namespace karabo {
             if (this->isLeaf(path) && m_hash.getAttribute<int>(path, "leafType") == PROPERTY) return true;
             else return false;
         }
-        
+
         //**********************************************
         //                Value Type             *
         //**********************************************
-        string Schema::getValueType(const std::string& path) const{
-            return m_hash.getAttribute<string>(path, "valueType");
+
+
+        string Schema::getValueType(const std::string& path) const {
+            return m_hash.getAttribute<string > (path, "valueType");
         }
-        
+
         //**********************************************
         //                Access Mode                  *
         //**********************************************
@@ -456,6 +458,87 @@ namespace karabo {
             return os;
         }
 
+
+        void Schema::help(const string& classId) {
+
+            ostringstream stream;
+            stream << "----- HELP -----" << endl;
+            if (!classId.empty()) {
+                stream << "Schema: " << getRootName() << " , key: " << classId << endl;
+            } else {
+                stream << "Schema: \n" << getRootName() << endl;
+                vector<string> keys = getParameters(classId);
+
+                BOOST_FOREACH(string key, keys) {
+                    if (getNodeType(key) == Schema::LEAF) {
+                        processingLeaf(key, stream);
+                    } else if (getNodeType(key) == Schema::NODE) {
+                        processingNode(key, stream);
+                    } else if (getNodeType(key) == Schema::CHOICE_OF_NODES) {
+                        processingChoiceOfNodes(key, stream);
+                    } else if (getNodeType(key) == Schema::LIST_OF_NODES) {
+                        processingListOfNodes(key, stream);
+                    }
+                }
+            }
+
+            //show results:
+            cout << "\n" << stream.str();
+        }
+
+
+        void Schema::processingLeaf(const std::string& key, ostringstream & stream) {
+            string valueType = getValueType(key);
+
+            stream << "  ." << key << "(" << valueType << ")" << endl;
+
+            if (getAssignment(key) == OPTIONAL_PARAM)
+                stream << "     " << "Assignment : OPTIONAL" << endl;
+            else if (getAssignment(key) == MANDATORY_PARAM)
+                stream << "     " << "Assignment : MANDATORY" << endl;
+            else if (getAssignment(key) == INTERNAL_PARAM)
+                stream << "     " << "Assignment : INTERNAL" << endl;
+
+            if (hasDescription(key))
+                stream << "     " << "Description : " << getDescription(key) << endl;
+
+            if (getAccessMode(key) == INIT)
+                stream << "     " << "Access mode: initialization" << endl;
+            else if (getAccessMode(key) == READ)
+                stream << "     " << "Access mode: read only" << endl;
+            else if (getAccessMode(key) == WRITE)
+                stream << "     " << "Access mode: reconfigurable" << endl;
+        }
+
+
+        void Schema::processingNode(const std::string& key, ostringstream & stream) {
+            stream << "  ." << key << "(NODE)" << endl;
+            if (hasDescription(key))
+                stream << "     " << "Description : " << getDescription(key) << endl;
+        }
+
+
+        void Schema::processingChoiceOfNodes(const std::string& key, ostringstream & stream) {
+            stream << "  ." << key << "(CHOICE_OF_NODES)" << endl;
+
+            if (getAssignment(key) == OPTIONAL_PARAM)
+                stream << "     " << "Assignment : OPTIONAL" << endl;
+            else if (getAssignment(key) == MANDATORY_PARAM)
+                stream << "     " << "Assignment : MANDATORY" << endl;
+            else if (getAssignment(key) == INTERNAL_PARAM)
+                stream << "     " << "Assignment : INTERNAL" << endl;
+
+            if (hasDescription(key))
+                stream << "     " << "Description : " << getDescription(key) << endl;
+
+            if (hasDefaultValue(key))
+                stream << "     " << "Default value : " << getDefaultValue<string > (key) << endl;
+        }
+
+
+        void Schema::processingListOfNodes(const std::string& key, ostringstream & stream) {
+            stream << "  ." << key << "(LIST_OF_NODES)" << endl;
+        }
 
         //        Schema& Schema::addExternalSchema(const Schema& schema) {
         //            Schema& currentElements = get<Schema > ("elements");

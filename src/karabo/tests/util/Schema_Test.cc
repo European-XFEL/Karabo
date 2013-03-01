@@ -93,6 +93,7 @@ void Schema_Test::testGetValueType() {
     CPPUNIT_ASSERT(m_schema.getValueType("exampleKey5") == "INT64");
 }
 
+
 void Schema_Test::testGetAlias() {
     CPPUNIT_ASSERT(m_schema.hasAlias("exampleKey1") == false);
     CPPUNIT_ASSERT(m_schema.hasAlias("exampleKey2") == true);
@@ -257,3 +258,13 @@ void Schema_Test::testPerKeyFunctionality() {
         }
     }
 }
+
+
+void Schema_Test::testHelpFunction() {
+
+    Schema schema("schemaGraphRender1", Schema::AssemblyRules(READ | WRITE | INIT));
+    GraphicsRenderer1::expectedParameters(schema);
+    cout << "\n===================================" << endl;
+    schema.help();
+    cout << "===================================" << endl;
+} 

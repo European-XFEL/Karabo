@@ -439,7 +439,15 @@ namespace karabo {
             bool isAllowedInCurrentAccessRole(const Hash::Node& node) const;
 
             bool isAllowedInCurrentState(const Hash::Node& node) const;
-        
+            
+            void processingLeaf(const std::string& key, ostringstream& stream);
+            
+            void processingNode(const std::string& key, ostringstream& stream);
+            
+            void processingChoiceOfNodes(const std::string& key, ostringstream& stream);
+            
+            void processingListOfNodes(const std::string& key, ostringstream& stream);
+            
         private: // functions
 
             //            static void processingDescription(const Schema& desc, std::ostringstream& stream);
