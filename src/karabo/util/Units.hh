@@ -98,7 +98,6 @@ namespace karabo {
 
             static std::pair<std::string, std::string> getUnit(const Unit unit);
 
-
         };
 
 
