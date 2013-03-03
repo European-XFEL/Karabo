@@ -41,38 +41,68 @@ namespace karabo {
 
             void Format::expectedParameters(Schema& expected) {
 
-                vector<string> def(2, "");
-                def[0] = "INT32";
-                def[1] = "FLOAT";
-
                 LIST_ELEMENT(expected)
                         .key("elements")
                         .displayedName("Elements")
                         .description("Definition of hdf5 objects.")
                         .appendNodesOfConfigurationBase<Element > ()
-                        .assignmentOptional().defaultValue(def) //TODO
+                        .assignmentOptional().noDefaultValue()
                         .commit();
             }
+
+            Format::Pointer Format::createFormat(const karabo::util::Hash& config) {
+                return Format::createNode("Format", "Format", config);
+            }
+
+            Format::Pointer Format::createEmptyFormat(){
+                Hash config("Format", Hash());
+                return Format::createNode("Format", "Format", config );
+            }
+                        
 
             Format::Format(const karabo::util::Hash& input) {
 
                 clog << "configure: " << endl << input << endl;
                 m_elements = Element::createList("elements", input);
                 m_config = Hash("Format", input);
-//                for (size_t i = 0; i < m_elements.size(); ++i) {
-//                    clog << "Element name: " << m_elements[i]->getName() << endl;
-//                }
-                //clog << "after configure: " << endl << input << endl;
+                mapElementsToKeys();
             }
 
-            Format::Pointer Format::discoverFromHash(const Hash& data) {
-                Hash config;
+            void Format::discoverFromHash(const Hash& data, Hash& config) {
                 Hash& hh = config.bindReference<Hash > ("Format");
                 vector<Hash>& vec = hh.bindReference< vector<Hash> >("elements");
                 string path = "";
                 discoverFromHash(data, vec, path);
-                clog << "after discovery: " << endl << config << endl;
-                return Format::createNode("Format", "Format", config);
+                //clog << "after discovery: " << endl << config << endl;
+
+
+            }
+
+            void Format::addElement(karabo::io::h5::Element::Pointer element) {
+                m_elements.push_back(element);
+
+                // update config
+                vector<Hash>& vec = m_config.get<vector<Hash> >("Format.elements");
+                vec.push_back(Hash());
+                Hash& last = vec.back();
+                Hash& elementConfig = last.bindReference<Hash > (element->getClassInfo().getClassId());
+                element->getConfig(elementConfig);
+                // update map between h5PathName and index in element;
+                m_mapElements[element->getFullName()] = m_elements.size() - 1;
+            }
+
+            void Format::mapElementsToKeys() {
+                for (size_t i = 0; i < m_elements.size(); ++i) {
+                    m_mapElements[m_elements[i]->getFullName()] = i;
+                }
+            }
+
+            void Format::removeElement(const std::string& fullPath) {
+                string fullPathSlash = boost::replace_all_copy(fullPath, ".", "/");
+                size_t idx = m_mapElements[fullPathSlash];
+                m_elements.erase(m_elements.begin() + idx);
+                m_mapElements.clear();
+                mapElementsToKeys();
             }
 
             void Format::discoverFromHash(const Hash& data, vector<Hash>& config, const string& path) {
@@ -99,8 +129,8 @@ namespace karabo {
                     config.push_back(Hash());
                     Hash& hcGroup = config.back();
                     Hash& hc = hcGroup.bindReference<Hash > ("Group");
-                    hc.set("name", key);
-                    hc.set("path", path);
+                    hc.set("h5name", key);
+                    hc.set("h5path", path);
                     hc.set("type", "HASH");
                     discoverAttributes(el, hc);
                 }
@@ -134,8 +164,8 @@ namespace karabo {
                 Hash& hcGroup = config.back();
                 Hash& hc = hcGroup.bindReference<Hash > ("Group");
 
-                hc.set("name", key);
-                hc.set("path", path);
+                hc.set("h5name", key);
+                hc.set("h5path", path);
                 hc.set("type", "VECTOR_HASH");
                 hc.set("size", static_cast<unsigned long long> (vec.size()));
                 discoverAttributes(el, hc);
@@ -149,11 +179,11 @@ namespace karabo {
                     ostringstream oss1;
                     oss1 << "[" << i << "]";
 
-                    hc.set("name", oss1.str());
+                    hc.set("h5name", oss1.str());
 
 
                     std::string newPath = path + m_h5Sep + key;
-                    hc.set("path", newPath);
+                    hc.set("h5path", newPath);
                     hc.set("type", "HASH");
                     discoverAttributes(el, hc);
 
@@ -176,8 +206,8 @@ namespace karabo {
                 config.push_back(Hash());
                 Hash& hc = config.back();
                 Hash& h = hc.bindReference<Hash > (ToType<ToLiteral>::to(t));
-                h.set("name", key);
-                h.set("path", path);
+                h.set("h5name", key);
+                h.set("h5path", path);
                 //                if (t != Types::UNKNOWN) {
                 h.set("type", ToType<ToLiteral>::to(t));
                 //                } else {
@@ -223,7 +253,7 @@ namespace karabo {
                         default:
                             throw KARABO_NOT_SUPPORTED_EXCEPTION("Type not supported for key " + key);
                     }
-                    
+
                 }
                 discoverAttributes(el, h);
 
@@ -252,7 +282,7 @@ namespace karabo {
                     Hash& h = hc.bindReference<Hash > (ToType<ToLiteral>::to(it->getType()));
 
                     h.set("type", ToType<ToLiteral>::to(it->getType()));
-                    h.set("name", it->getKey());
+                    h.set("h5name", it->getKey());
                     Types::ReferenceType t = it->getType();
                     if (Types::category(t) == Types::SEQUENCE) {
                         dftracer << "SEQUENCE: " << key << endl;

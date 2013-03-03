@@ -14,7 +14,7 @@ namespace karabo {
   namespace io {
     namespace h5 {
        
-        
+          
     KARABO_REGISTER_FOR_CONFIGURATION(Attribute, Int8ArrayAttribute)
     KARABO_REGISTER_FOR_CONFIGURATION(Attribute, Int16ArrayAttribute)
     KARABO_REGISTER_FOR_CONFIGURATION(Attribute, Int32ArrayAttribute)

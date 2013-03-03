@@ -16,11 +16,11 @@
 //#include "../Writer.hh"
 //#include "../Reader.hh"
 
-//#include "../ioProfiler.hh"
+#include "ioProfiler.hh"
 
 using namespace std;
 using namespace karabo::util;
-using namespace H5;
+//using namespace H5;
 using namespace boost;
 
 namespace karabo {
@@ -30,6 +30,10 @@ namespace karabo {
             // KARABO_REGISTER_FOR_CONFIGURATION_1(karabo::io::h5::Table)
 
             Table::~Table() {
+                KARABO_PROFILER_REPORT_TABLE1("write1");
+                //                KARABO_PROFILER_REPORT_TABLE1("test");
+                //                std::clog << "test" << ": " << table1 << std::endl;
+                //                std::clog << "test" << ": " << table1.getTime("write1").sec << " " << table1.getTime("write1").nsec << std::endl;
             }
 
             void Table::openNew(const Format::Pointer dataFormat) {
@@ -97,6 +101,9 @@ namespace karabo {
 
             void Table::write(const karabo::util::Hash& data, size_t recordId) {
 
+
+
+                KARABO_PROFILER_START_TABLE1("write1")
                 vector<boost::shared_ptr<Element> > elements = m_dataFormat->getElements();
                 for (size_t i = 0; i < elements.size(); ++i) {
                     elements[i]->write(data, recordId);
@@ -104,10 +111,11 @@ namespace karabo {
                 if (m_numberOfRecords <= recordId) {
                     m_numberOfRecords++;
                 }
-                m_h5file->flush(H5F_SCOPE_GLOBAL); //??
+                H5Fflush(m_h5file, H5F_SCOPE_GLOBAL); //??
                 updateNumberOfRecordsAttribute();
 
-                //                if (recordNumber >= m_numberOfRecords && recordNumber % m_chunkSize == 0) {
+                KARABO_PROFILER_STOP_TABLE1
+                        //                if (recordNumber >= m_numberOfRecords && recordNumber % m_chunkSize == 0) {
             }
 
             void Table::write(const karabo::util::Hash& data, size_t recordId, size_t len) {
@@ -117,13 +125,13 @@ namespace karabo {
                     elements[i]->write(data, recordId, len);
                 }
                 if (m_numberOfRecords <= recordId) {
-                    m_numberOfRecords+=len;
+                    m_numberOfRecords += len;
                 }
-                m_h5file->flush(H5F_SCOPE_GLOBAL); //??
+                H5Fflush(m_h5file, H5F_SCOPE_GLOBAL); //??
                 updateNumberOfRecordsAttribute();
             }
-            
-            
+
+
             //
             //            void Table::writeBuffer(const karabo::util::Hash& data, size_t recordNumber, size_t len) {
             //
@@ -224,33 +232,36 @@ namespace karabo {
             //            //////////////////////////////////////////////////////////////////////////////
             //
 
-            void Table::createEmptyTable(boost::shared_ptr<H5::H5File> h5file, const boost::filesystem::path& fullPath) {
+            void Table::createEmptyTable(hid_t h5file, const boost::filesystem::path& fullPath) {
 
                 //                clog << "Table fullpath: " << fullPath.string() << endl;
                 try {
                     vector<string> tokens;
                     boost::split(tokens, fullPath.string(), boost::is_any_of("/"));
-                    H5::Group group(h5file->openGroup("/"));
+
+                    hid_t group = H5Gopen(h5file, "/", H5P_DEFAULT);
+                    //H5::Group group(h5file->openGroup("/"));
                     for (size_t i = 0; i < tokens.size(); ++i) {
                         // skip empty tokens (like in: "/a/b//c" -> "a","b","","c") 
                         if (tokens[i].size() == 0) continue;
 
-                        H5::Group nextGroup;
-                        if (H5Lexists(group.getLocId(), tokens[i].c_str(), H5P_DEFAULT) != 0) {
+                        hid_t nextGroup;
+                        if (H5Lexists(group, tokens[i].c_str(), H5P_DEFAULT) != 0) {
                             if (i == tokens.size() - 1) {
                                 ostringstream os;
                                 os << "Table " << fullPath.c_str() << " already exists";
                                 throw KARABO_IO_EXCEPTION(os.str());
                             }
-                            nextGroup = group.openGroup(tokens[i]);
+                            nextGroup = H5Gopen(group, tokens[i].c_str(), H5P_DEFAULT); //    openGroup(tokens[i]);
                         } else {
-                            nextGroup = group.createGroup(tokens[i]);
+                            nextGroup = H5Gcreate(group, tokens[i].c_str(), H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT); //createGroup(tokens[i]);
                         }
-                        group.close();
+                        H5Gclose(group);
                         group = nextGroup;
                     }
-                    group.close();
-                    m_group = boost::shared_ptr<H5::Group > (new H5::Group(h5file->openGroup(fullPath.c_str())));
+                    H5Gclose(group);
+                    m_group = H5Gopen(h5file, fullPath.c_str(), H5P_DEFAULT);
+                    //m_group = boost::shared_ptr<H5::Group > (new H5::Group(h5file->openGroup(fullPath.c_str())));
                     m_h5Groups[""] = m_group;
                 } catch (...) {
                     KARABO_RETHROW
@@ -259,18 +270,38 @@ namespace karabo {
             }
 
             void Table::createSchemaVersionAttribute() {
-                H5::StrType strType(H5::PredType::C_S1, H5T_VARIABLE);
-                H5::Attribute schemaVersion = m_group->createAttribute("schemaVersion", strType, DataSpace(H5S_SCALAR));
-                schemaVersion.write(strType, Format::classInfo().getVersion());
+
+                hid_t stringType = H5Tcopy(H5T_C_S1);
+                herr_t status = H5Tset_size(stringType, H5T_VARIABLE);
+                if (status < 0) {
+                    throw KARABO_HDF_IO_EXCEPTION("Could not create variable string data type for schemaVersion attribute");
+                }
+
+                hsize_t dims[1] = {1};
+                hid_t dataSpace = H5Screate_simple(1, dims, NULL);
+                
+                hid_t schemaVersion = H5Acreate(m_group, "schemaVersion", stringType, dataSpace, H5P_DEFAULT, H5P_DEFAULT);
+                const char* version = Format::classInfo().getVersion().c_str();
+                status = H5Awrite(schemaVersion, stringType, &version);
+                if (status < 0) {
+                    throw KARABO_HDF_IO_EXCEPTION("Could not write schemaVersion attribute");
+                }
             }
 
             void Table::createInitialNumberOfRecordsAttribute() {
-                m_numberOfRecordsAttribute = m_group->createAttribute("numberOfRecords", PredType::STD_U32LE, DataSpace(H5S_SCALAR));
+
+                hid_t u32leType = H5Tcopy(H5T_STD_U32LE);
+                hid_t dataSpace = H5Screate(H5S_SCALAR);
+                m_numberOfRecordsAttribute = H5Acreate(m_group, "numberOfRecords", u32leType, dataSpace, H5P_DEFAULT, H5P_DEFAULT);
                 updateNumberOfRecordsAttribute();
             }
 
             void Table::updateNumberOfRecordsAttribute() {
-                m_numberOfRecordsAttribute.write(PredType::NATIVE_HSIZE, &m_numberOfRecords);
+                hid_t type = H5Tcopy(H5T_NATIVE_HSIZE);
+                herr_t status = H5Awrite(m_numberOfRecordsAttribute, type, &m_numberOfRecords);
+                if (status < 0) {
+                    throw KARABO_HDF_IO_EXCEPTION("Could not write numberOfRecords attribute");
+                }
             }
             //
             //            void Table::retrieveNumberOfRecordsFromFile() {

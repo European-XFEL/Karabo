@@ -24,7 +24,7 @@ namespace karabo {
             void Attribute::expectedParameters(Schema& expected) {
 
                 STRING_ELEMENT(expected)
-                        .key("name")
+                        .key("h5name")
                         .displayedName("Name")
                         .description("Group or dataset name. i.e.: d1, g4.d2")
                         .assignmentOptional().defaultValue("aa")
@@ -33,35 +33,41 @@ namespace karabo {
                         .commit();
 
 
-//                STRING_ELEMENT(expected)
-//                        .key("path")
-//                        .displayedName("Path")
-//                        .description("Path to that element. i.e. instrument.XXX.LPD")
-//                        .assignmentOptional().defaultValue("instrument")
-//                        //.assignmentMandatory()
-//                        .reconfigurable() //???
-//                        .commit();
+                //                STRING_ELEMENT(expected)
+                //                        .key("path")
+                //                        .displayedName("Path")
+                //                        .description("Path to that element. i.e. instrument.XXX.LPD")
+                //                        .assignmentOptional().defaultValue("instrument")
+                //                        //.assignmentMandatory()
+                //                        .reconfigurable() //???
+                //                        .commit();
 
                 STRING_ELEMENT(expected)
                         .key("type")
                         .displayedName("Type")
                         .description("Type")
                         .assignmentOptional().defaultValue("INT32")
-                        //.assignmentMandatory()
                         .reconfigurable() //???
                         .commit();
 
             }
 
             Attribute::Attribute(const Hash& input) {
-                m_key = input.get<string > ("name");
-                m_path = input.get<string > ("path");
-                if (m_path != "") m_path_key = m_path + "/" + m_key;
-                else m_path_key = m_key;
-                
-                if (m_key.size() == 0) {
+                m_h5name = input.get<string > ("h5name");
+                m_h5path = input.get<string > ("h5path");
+                if (m_h5path != "") m_h5PathName = m_h5path + "/" + m_h5name;
+                else m_h5PathName = m_h5name;
+
+                if (input.has("key")) {
+                    m_key = input.get<string > ("key");
+                } else {
+                    m_key = m_h5PathName;
+                }
+
+                if (m_key.size() == 0 || m_h5name.size() == 0) {
                     throw KARABO_PARAMETER_EXCEPTION("Name cannot be an empty string");
                 }
+                m_config = input;        
             }
 
             const string& Attribute::getName() {

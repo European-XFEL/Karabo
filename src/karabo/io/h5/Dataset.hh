@@ -45,127 +45,99 @@ namespace karabo {
 
             protected:
 
-                H5::DataSpace getBufferDataSpace(hsize_t len) {
-                    hsize_t dims[] = {len};
-                    hsize_t maxdims[] = {len};
-                    return H5::DataSpace(1, dims, maxdims);
-                }
-
-                void createDataSetProperties(hsize_t chunkSize) {
-                    m_dataSetProperties = boost::shared_ptr<H5::DSetCreatPropList > (new H5::DSetCreatPropList());
+                void createDataSetProperties(karabo::util::Dims& chunkDims) {                    
+                    m_dataSetProperties = H5Pcreate(H5P_DATASET_CREATE);
+                    H5Pset_layout(m_dataSetProperties, H5D_CHUNKED);
                     if (m_compressionLevel > 0) {
                         //         m_dataSetProperties->setShuffle();
-                        m_dataSetProperties->setDeflate(m_compressionLevel);
+                        H5Pset_deflate(m_dataSetProperties, m_compressionLevel);
                     }
-                    hsize_t chunkDims[1] = {chunkSize};
-                    m_dataSetProperties->setChunk(1, chunkDims);
+
+                    H5Pset_chunk(m_dataSetProperties, chunkDims.rank(), &(chunkDims.toVector())[0]);
                 }
 
-                H5::DataSpace scalarFileDataSpace(hsize_t size) {
-                    hsize_t dims[] = {size};
-                    hsize_t maxdims[] = {H5S_UNLIMITED};
-                    return H5::DataSpace(1, dims, maxdims);
-                }
-
-                void selectFileRecord(hsize_t recordId, hsize_t len = 1) {
-                    hsize_t start[] = {recordId};
-                    hsize_t count[] = {len};
-                    m_fileDataSpace.selectHyperslab(H5S_SELECT_SET, count, start, NULL, NULL);
-                }
-
-                void extend(hsize_t size) {
-                    hsize_t currentSizeDims[1];
-                    m_fileDataSpace.getSimpleExtentDims(currentSizeDims);
-                    hsize_t newSizeDims[1];
-                    newSizeDims[0] = currentSizeDims[0] + size;
-                    m_dataSet.extend(newSizeDims);
-                    m_fileDataSpace = m_dataSet.getSpace();
-                }
-
-
-                ///////
-                
-                void createDataSetProperties(karabo::util::Dims& chunkDims) {
-                    std::clog << "200" << std::endl;
-                    m_dataSetProperties = boost::shared_ptr<H5::DSetCreatPropList > (new H5::DSetCreatPropList());
-                    std::clog << "201" << std::endl;
-                    if (m_compressionLevel > 0) {
-                        //         m_dataSetProperties->setShuffle();
-                        m_dataSetProperties->setDeflate(m_compressionLevel);
-                    }
-                    std::clog << "202" << std::endl;
-                   
-                   // hsize_t chunkDims[1] = {chunkSize};
-                    m_dataSetProperties->setChunk(chunkDims.rank(), &(chunkDims.toVector())[0] );
-                    std::clog << "203" << std::endl;
-                }
-                
-
-                static H5::DataSpace dataSpace(karabo::util::Dims& dims) {
-                    std::vector<hsize_t> curdims(dims.rank(),0);
-                    std::vector<hsize_t> maxdims(dims.rank(),0);
+                static hid_t dataSpace(karabo::util::Dims& dims) {
+                    std::vector<hsize_t> curdims(dims.rank(), 0);
+                    std::vector<hsize_t> maxdims(dims.rank(), 0);
                     for (size_t i = 0; i < dims.rank(); ++i) {
                         curdims[i] = dims.extentIn(i);
                         maxdims[i] = curdims[i];
                     }
                     maxdims[0] = H5S_UNLIMITED;
-                    return H5::DataSpace(dims.rank(), &curdims[0], &maxdims[0]);                    
+                    return H5Screate_simple(dims.rank(), &curdims[0], &maxdims[0]);
+
+
                 }
 
-                static H5::DataSpace dataSpace() {
+                static hid_t dataSpace() {
                     hsize_t dims[] = {1};
                     hsize_t maxdims[] = {H5S_UNLIMITED};
-                    return H5::DataSpace(1, dims, maxdims);
+                    return H5Screate_simple(1, dims, maxdims);
                 }
 
-                static H5::DataSpace dataSpace(hsize_t len) {
+                static hid_t dataSpace(hsize_t len) {
                     hsize_t dims[] = {len};
                     hsize_t maxdims[] = {H5S_UNLIMITED};
-                    return H5::DataSpace(1, dims, maxdims);
+                    return H5Screate_simple(1, dims, maxdims);
                 }
 
-                static H5::DataSpace& extend(H5::DataSet& dataSet, H5::DataSpace& dataSpace, hsize_t len) {
-                    int ndims = dataSpace.getSimpleExtentNdims();
+                static hid_t extend(hid_t dataSet, hid_t dataSpace, hsize_t len) {
+                    int ndims = H5Sget_simple_extent_ndims(dataSpace);
                     std::vector<hsize_t> extent(ndims, 0);
-                    dataSpace.getSimpleExtentDims(&extent[0]);
+                    std::vector<hsize_t> maxExtent(ndims, 0);
+                    H5Sget_simple_extent_dims(dataSpace, &extent[0], &maxExtent[0]);
+                    //                    for (int i = 0; i < ndims; ++i) {
+                    //                        std::clog << "extent[" << i << "] = " << extent[i] << std::endl;
+                    //                        std::clog << "maxExtent[" << i << "] = " << maxExtent[i] << std::endl;
+                    //                    }
                     extent[0] += len;
-                    dataSet.extend(&extent[0]);
-                    dataSpace = dataSet.getSpace();
+                    H5Dset_extent(dataSet, &extent[0]);
+                    dataSpace = H5Dget_space(dataSet);
+
+                    //                    H5Sget_simple_extent_dims(dataSpace, &extent[0], &maxExtent[0]);
+                    //                    for (int i = 0; i < ndims; ++i) {
+                    //                        std::clog << "after extent[" << i << "] = " << extent[i] << std::endl;
+                    //                        std::clog << "maxExtent[" << i << "] = " << maxExtent[i] << std::endl;
+                    //                    }
+                    return dataSpace;
+                }
+
+                static hid_t selectScalarRecord(hid_t dataSpace, hsize_t recordId, hsize_t len = 1) {
+                    hsize_t start[] = {recordId};
+                    hsize_t count[] = {len};
+                    H5Sselect_hyperslab(dataSpace, H5S_SELECT_SET, start, NULL, count, NULL);
+                    return dataSpace;
+
+                }
+
+                static hid_t selectRecord(hid_t dataSpace, hsize_t recordId, hsize_t len = 1) {
+                    int ndims = H5Sget_simple_extent_ndims(dataSpace);
+                    std::vector<hsize_t> start(ndims, 0);
+                    start[0] = recordId;
+
+                    std::vector<hsize_t> count(ndims, 0);
+                    std::vector<hsize_t> maxExtent(ndims, 0);
+                    H5Sget_simple_extent_dims(dataSpace, &count[0], &maxExtent[0]);
+                    //                    for (int i = 0; i < ndims; ++i) {
+                    //                        std::clog << "selectRecord count[" << i << "] = " << count[i] << std::endl;
+                    //                    }
+                    count[0] = len;
+                    //                    for (int i = 0; i < ndims; ++i) {
+                    //                        std::clog << "selectRecord after count[" << i << "] = " << count[i] << std::endl;
+                    //                    }
+                    H5Sselect_hyperslab(dataSpace, H5S_SELECT_SET, &start[0], NULL, &count[0], NULL);
                     return dataSpace;
                 }
                 
 
-                static void selectScalarRecord(H5::DataSpace& dataSpace, hsize_t recordId, hsize_t len = 1) {
-                    hsize_t start[] = {recordId};
-                    hsize_t count[] = {len};
-                    dataSpace.selectHyperslab(H5S_SELECT_SET, count, start, NULL, NULL);
-                }
-
-                static H5::DataSpace& selectRecord(H5::DataSpace& dataSpace, hsize_t recordId, hsize_t len = 1) {
-                    int ndims = dataSpace.getSimpleExtentNdims();
-                    std::vector<hsize_t> start(ndims, 0);
-                    start[0] = recordId;
-                    
-                    std::vector<hsize_t> count(ndims, 0);
-                    dataSpace.getSimpleExtentDims(&count[0]);
-                    count[0] = len;                                        
-                    dataSpace.selectHyperslab(H5S_SELECT_SET, &count[0], &start[0], NULL, NULL);
-                    return dataSpace;
-                }
-
-
-
-
-
-                //            private:
-
                 int m_compressionLevel;
 
-                H5::DataSet m_dataSet;
-                //H5::DataSpace m_memoryDataSpace;
-                H5::DataSpace m_fileDataSpace;
+                hid_t m_dataSet;
+
+                
+                hid_t m_fileDataSpace;
                 hsize_t m_chunkSize;
-                boost::shared_ptr<H5::DSetCreatPropList> m_dataSetProperties;
+                hid_t m_dataSetProperties;
 
 
             };

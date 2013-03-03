@@ -13,6 +13,7 @@
 #include <karabo/util/Configurator.hh>
 #include <karabo/util/SimpleElement.hh>
 #include <karabo/io/h5/Attribute.hh>
+#include <boost/algorithm/string/replace.hpp>
 
 
 using namespace karabo::util;
@@ -25,48 +26,45 @@ namespace karabo {
             void Element::expectedParameters(Schema& expected) {
 
                 STRING_ELEMENT(expected)
-                        .key("name")
-                        .displayedName("Name")
+                        .key("h5name")
+                        .displayedName("H5 Name")
                         .description("Group or dataset name. i.e.: d1, g4.d2")
-                        .assignmentOptional().defaultValue("aa")
-                        //.assignmentMandatory()
-                        .reconfigurable() // ???
+                        .assignmentMandatory()
+                        .reconfigurable()
                         .commit();
 
 
                 STRING_ELEMENT(expected)
-                        .key("path")
-                        .displayedName("Path")
+                        .key("h5path")
+                        .displayedName("H5 Path")
                         .description("Path to that element. i.e. instrument.XXX.LPD")
-                        .assignmentOptional().defaultValue("instrument")
-                        //.assignmentMandatory()
-                        .reconfigurable() //???
+                        .assignmentMandatory()
+                        .reconfigurable()
+                        .commit();
+
+                STRING_ELEMENT(expected)
+                        .key("key")
+                        .displayedName("Hash key")
+                        .description("Path to the data element in Hash")
+                        .assignmentOptional().noDefaultValue()
+                        .reconfigurable()
                         .commit();
 
                 STRING_ELEMENT(expected)
                         .key("type")
                         .displayedName("Type")
-                        .description("Type")
-                        .assignmentOptional().defaultValue("INT32")
-                        //.assignmentMandatory()
-                        .reconfigurable() //???
+                        .description("Data Type in Hash")
+                        .assignmentMandatory()
+                        .reconfigurable()
                         .commit();
 
-//                INT32_ELEMENT(expected)
-//                        .key("compressionLevel")
-//                        .displayedName("Use Compression Level")
-//                        .description("Defines compression level: [0-9]. 0 - no compression (default), 9 - attempt the best compression.")
-//                        .minInc(0).maxInc(9)
-//                        .assignmentOptional().defaultValue(0)
-//                        .reconfigurable() // ???
-//                        .commit();
 
                 LIST_ELEMENT(expected)
                         .key("attributes")
                         .displayedName("Attributes")
-                        .description("Definition of hdf5 objects.")
+                        .description("Definition of hdf5 attributes.")
                         .appendNodesOfConfigurationBase<Attribute > ()
-                        .assignmentOptional().noDefaultValue() //TODO
+                        .assignmentOptional().noDefaultValue()
                         .commit();
 
 
@@ -81,56 +79,62 @@ namespace karabo {
             }
 
             Element::Element(const Hash& input) {
-                m_key = input.get<string > ("name");
-                m_path = input.get<string > ("path");
-                if (m_path != "") m_path_key = m_path + "/" + m_key;
-                else m_path_key = m_key;
-                
-                if (m_key.size() == 0) {
+                m_h5name = input.get<string > ("h5name");
+                m_h5path = input.get<string > ("h5path");
+                if (m_h5path != "") m_h5PathName = m_h5path + "/" + m_h5name;
+                else m_h5PathName = m_h5name;
+
+                if (input.has("key")) {
+                    m_key = boost::replace_all_copy(input.get<string > ("key"), ".", "/");                    
+                } else {
+                    m_key = m_h5PathName;
+                }
+
+                if (m_key.size() == 0 || m_h5name.size() == 0) {
                     throw KARABO_PARAMETER_EXCEPTION("Name cannot be an empty string");
                 }
+                m_config = input;
             }
 
-            const string& Element::getName() {
-                return m_key;
+            const string& Element::getFullName() {
+                return m_h5PathName;
             }
 
             void Element::getElement(Hash& element) {
-                element.set(m_key, shared_from_this());
+                element.set(m_h5name, shared_from_this());
             }
 
-            void Element::openParentGroup(std::map<std::string, boost::shared_ptr<H5::Group> >& groups) {
+            void Element::openParentGroup(std::map<std::string, hid_t >& groups) {
 
-                typedef std::map<std::string, boost::shared_ptr<H5::Group> > H5GroupsMap;
+                typedef std::map<std::string, hid_t> H5GroupsMap;
 
                 try {
 
-                    H5GroupsMap::iterator it = groups.find(m_path);
+                    H5GroupsMap::iterator it = groups.find(m_h5path);
                     if (it != groups.end()) {
                         m_group = it->second;
                     } else {
                         //
 
                         std::vector<std::string> tokens;
-                        boost::split(tokens, m_path, boost::is_any_of("/"));
-                        boost::shared_ptr<H5::Group> groupPtr = groups[""];
+                        boost::split(tokens, m_h5path, boost::is_any_of("/"));
+                        hid_t groupId = groups[""];
                         std::string relativePath;
 
                         for (size_t i = 0; i < tokens.size(); ++i) {
                             // skip empty tokens (like in: "/a/b//c" -> "a","b","","c") 
                             if (tokens[i].size() == 0) continue;
                             relativePath += "/" + tokens[i];
-                            if (H5Lexists(groupPtr->getLocId(), relativePath.c_str(), H5P_DEFAULT) != 0) {
+                            if (H5Lexists(groupId, relativePath.c_str(), H5P_DEFAULT) != 0) {
                                 continue;
                             } else {
-                                m_group = boost::shared_ptr<H5::Group > (new H5::Group(groupPtr->createGroup(m_path.c_str())));
-                                groups[m_path] = m_group;
+                                m_group = H5Gcreate(groupId, m_h5path.c_str(), H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+                                groups[m_h5path] = m_group;
                                 return;
                             }
                         }
-                        m_group = boost::shared_ptr<H5::Group > (new H5::Group(groupPtr->openGroup(m_path.c_str())));
-                        groups[m_path] = m_group;
-
+                        m_group = H5Gopen(groupId, m_h5path.c_str(), H5P_DEFAULT);
+                        groups[m_h5path] = m_group;
                     }
 
                 } catch (...) {

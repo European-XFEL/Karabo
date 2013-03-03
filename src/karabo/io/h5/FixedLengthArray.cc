@@ -9,7 +9,7 @@
 
 #include "FixedLengthArray.hh"
 using namespace karabo::io;
- 
+    
 namespace karabo {  
   namespace io {
     namespace h5 {
@@ -27,7 +27,7 @@ namespace karabo {
     KARABO_REGISTER_FOR_CONFIGURATION(Element, Dataset, StringArrayElement)
     KARABO_REGISTER_FOR_CONFIGURATION(Element, Dataset, FloatArrayElement)
     KARABO_REGISTER_FOR_CONFIGURATION(Element, Dataset, DoubleArrayElement)
-             
+                   
     }
   }
 }
