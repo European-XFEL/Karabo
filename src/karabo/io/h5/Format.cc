@@ -55,7 +55,7 @@ namespace karabo {
             }
 
             Format::Pointer Format::createEmptyFormat(){
-                Hash config("Format", Hash());
+                Hash config("Format.elements", vector<Hash>());
                 return Format::createNode("Format", "Format", config );
             }
                         
