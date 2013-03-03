@@ -18,7 +18,7 @@
 
 using namespace std;
 using namespace karabo::util;
-using namespace H5;
+
 
 namespace karabo {
     namespace io {
@@ -54,13 +54,13 @@ namespace karabo {
             void File::open(File::AccessMode mode) {
                 try {
                     if (mode == TRUNCATE) {
-                        m_h5file = boost::shared_ptr<H5File > (new H5File(m_filename.c_str(), H5F_ACC_TRUNC));
+                        m_h5file = H5Fcreate(m_filename.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
                     } else if (mode == EXCLUSIVE) {
-                        m_h5file = boost::shared_ptr<H5File > (new H5File(m_filename.c_str(), H5F_ACC_EXCL));
+                        m_h5file = H5Fcreate(m_filename.c_str(), H5F_ACC_EXCL, H5P_DEFAULT, H5P_DEFAULT);
                     } else if (mode == READONLY) {
-                        m_h5file = boost::shared_ptr<H5File > (new H5File(m_filename.c_str(), H5F_ACC_RDONLY));
+                        m_h5file = H5Fopen(m_filename.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
                     } else if (mode == APPEND) {
-                        m_h5file = boost::shared_ptr<H5File > (new H5File(m_filename.c_str(), H5F_ACC_RDWR));
+                        m_h5file = H5Fopen(m_filename.c_str(), H5F_ACC_RDWR, H5P_DEFAULT);
                     }
                 } catch (...) {
                     ostringstream os;
@@ -77,7 +77,7 @@ namespace karabo {
                     throw KARABO_IO_EXCEPTION("Cannot create table when file is opened in READONLY or APPEND mode");
                 }
 
-                Table::Pointer table = Table::Pointer( new Table(m_h5file, name, chunkSize));
+                Table::Pointer table = Table::Pointer(new Table(m_h5file, name, chunkSize));
                 table->openNew(dataFormat);
                 return table;
 
@@ -96,18 +96,14 @@ namespace karabo {
             }
 
             void File::close() {
-                if (m_accMode == TRUNCATE || m_accMode == EXCLUSIVE || m_accMode == APPEND) {
-                    m_h5file->flush(H5F_SCOPE_GLOBAL);
+                if (m_accMode == TRUNCATE || m_accMode == EXCLUSIVE || m_accMode == APPEND) {                    
+                    H5Fflush(m_h5file,H5F_SCOPE_GLOBAL);
                 }
-                m_h5file->close();
+                H5Fclose(m_h5file);
             }
 
             Table::Pointer File::createReadOnlyTablePointer(const std::string& name) {
-//                Hash conf;
-//                conf.set("t.table", name);
-//                conf.set("t.h5file", m_h5file);
-                return Table::Pointer( new Table(m_h5file, name));
-                //return Configurator<Table>::createNode("t", "Hdf5", conf);
+                return Table::Pointer(new Table(m_h5file, name));
             }
         }
     }

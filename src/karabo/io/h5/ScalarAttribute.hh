@@ -39,7 +39,6 @@ namespace karabo {
                 KARABO_CLASSINFO(ScalarAttribute, karabo::util::ToType<karabo::util::ToLiteral>::to(karabo::util::FromType<karabo::util::FromTypeInfo>::from(typeid (T))), "1.0")
 
 
-
                 ScalarAttribute(const karabo::util::Hash& input) : Attribute(input) {
 
                 }
@@ -52,6 +51,7 @@ namespace karabo {
 
 
                 void write(const karabo::util::Hash& data, hsize_t recordId) {
+                    
 
                 }
 

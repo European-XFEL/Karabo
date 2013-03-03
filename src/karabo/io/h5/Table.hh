@@ -16,10 +16,9 @@
 #include <boost/filesystem.hpp>
 #include <boost/shared_ptr.hpp>
 #include <hdf5/hdf5.h>
-#include <hdf5/H5Cpp.h>
-#include <hdf5/hdf5_hl.h>
 #include <karabo/util/Time.hh>
 #include "../iodll.hh"
+#include "ioProfiler.hh"
 
 
 namespace karabo {
@@ -41,18 +40,11 @@ namespace karabo {
                 KARABO_CLASSINFO(Table, "Hdf5", "1.0")
                 //KARABO_CONFIGURATION_BASE_CLASS
 
-                typedef std::map<std::string, boost::shared_ptr<H5::Group> > H5GroupsMap;
+                typedef std::map<std::string, hid_t > H5GroupsMap;
 
-
-                /**
-                 * Default, empty constructor. 
-                 */
-                //                Table() //: m_recordFormatVector(), m_useCache(true), m_cacheStart(0), m_cacheEnd(0), m_cacheSize(0) 
-                //                {
-                //                }
-
-                Table(boost::shared_ptr<H5::H5File> h5file, boost::filesystem::path name, hsize_t chunkSize = 1)
-                : m_h5file(h5file), m_name(name), m_chunkSize(chunkSize), m_numberOfRecords(0) {
+                
+                Table(hid_t h5file, boost::filesystem::path name, hsize_t chunkSize = 1)
+                : m_h5file(h5file), m_name(name), table1("table1"), m_chunkSize(chunkSize), m_numberOfRecords(0) {
                 }
 
                 virtual ~Table();
@@ -69,6 +61,8 @@ namespace karabo {
                 void write(const karabo::util::Hash& data, size_t recordNumber);
 
                 void write(const karabo::util::Hash& data, size_t recordNumber, size_t len);
+
+
                 //                /**
                 //                 * Write len number of records starting at record recordNumber.
                 //                 * All existing records are replaced.
@@ -147,7 +141,7 @@ namespace karabo {
                 //                void retrieveNumberOfRecordsFromFile();
                 //                void calculateNumberOfRecords();
                 //                void retrieveChunkSizeFromFile();
-                void createEmptyTable(boost::shared_ptr<H5::H5File> h5file, const boost::filesystem::path& fullPath);
+                void createEmptyTable(hid_t h5file, const boost::filesystem::path& fullPath);
                 void createInitialNumberOfRecordsAttribute();
                 void createSchemaVersionAttribute();
                 //
@@ -181,15 +175,16 @@ namespace karabo {
                 //
                 //
 
-                // pointer to H5::H5File object where this table belongs to.
-                boost::shared_ptr<H5::H5File> m_h5file;
+                // file where this table belongs to.
+                hid_t m_h5file;
 
                 // table name, i.e.: /Data/Bla
                 boost::filesystem::path m_name;
 
 
 
-                boost::shared_ptr<H5::Group> m_group; // hdf5 group to this table
+                //boost::shared_ptr<H5::Group> 
+                hid_t m_group; // hdf5 group to this table
 
                 //std::map<std::string,boost::shared_ptr<H5::Group> > 
                 H5GroupsMap m_h5Groups;
@@ -201,29 +196,14 @@ namespace karabo {
                 //                // selected record format in Hash representation
                 //                karabo::util::Hash m_recordFormatHash;
                 //
-                //                // we can try to optimize it  using std::vector<boost::any*> m_recordFormatVector; 
-                //                // which would contain pointers to Hash elements 
-                //                // it must be recalculated whenever m_recordFormatHash is updated
-                //                std::vector<const boost::any*> m_recordFormatVector;
-                //
-                //                // activated elements in Hash representation
-                //                karabo::util::Hash m_activatedElements; // not used at the moment
-                //
                 //                karabo::util::Hash m_readData;
                 //
+                
+                karabo::util::Profiler table1;
+                
                 hsize_t m_chunkSize;
                 hsize_t m_numberOfRecords;
-                H5::Attribute m_numberOfRecordsAttribute;
-
-
-
-                //                // caching (read ahead)
-                //                bool m_useCache;
-                //                karabo::util::Hash m_cache;
-                //                unsigned long long m_cacheStart;
-                //                unsigned long long m_cacheEnd;
-                //                unsigned long long m_cacheSize;
-                //
+                hid_t m_numberOfRecordsAttribute;
 
             };
 
