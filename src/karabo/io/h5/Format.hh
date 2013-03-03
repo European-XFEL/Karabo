@@ -40,19 +40,29 @@ namespace karabo {
                 KARABO_CONFIGURATION_BASE_CLASS
 
                 Format(const karabo::util::Hash& input);
-
+                
+                        
                 virtual ~Format() {
                 }
 
                 static void expectedParameters(karabo::util::Schema& expected);
 
 
-                static Format::Pointer discoverFromHash(const karabo::util::Hash& data);
+                static Format::Pointer createFormat(const karabo::util::Hash& config);
+                
+                static Format::Pointer createEmptyFormat();
+                
+                static void discoverFromHash(const karabo::util::Hash& data, karabo::util::Hash& config);
 
                 const karabo::util::Hash& getConfig() const {
                     return m_config;
                 }
 
+                void addElement(karabo::io::h5::Element::Pointer element);
+                
+                void removeElement(const std::string& fullPath );
+                
+                
             private:
 
                 static void discoverFromHash(const karabo::util::Hash& data,
@@ -92,33 +102,22 @@ namespace karabo {
                     for (size_t i = 1; i < dims.size(); ++i) {
                         size *= dims[i];
                     }
-                    h.set("size_bad", size);
+                    h.set("dims", size);
                 }
 
-
-                // const RecordFormat::Pointer getRecordFormat();
-
-                //static void r_discoverFromData(const karabo::util::Hash& data);                
-                //static void r_discoverFromData(const karabo::util::Hash& data, karabo::util::Hash& config);
-                //        const RecordFormat::Pointer getRecordFormat();
-                //        const karabo::util::Hash& getConfig() const;
-                //        
 
                 std::vector<Element::Pointer> getElements() {
                     return m_elements;
                 }
 
+                void mapElementsToKeys();
+                
             private:
                 static const char m_h5Sep = '/';
                 karabo::util::Hash m_config;
                 std::vector<karabo::io::h5::Element::Pointer> m_elements;
-                //
-                //
-                //        static std::string getClassIdAsString(const boost::any& any);        
-                //        static karabo::io::ArrayDimensions arraySize(const boost::any& any);
 
-
-
+                std::map<std::string, size_t> m_mapElements;
             };
 
 

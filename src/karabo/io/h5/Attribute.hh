@@ -28,7 +28,6 @@
 #include <karabo/util/FromTypeInfo.hh>
 
 #include <hdf5/hdf5.h>
-#include <hdf5/H5Cpp.h>
 
 #include <boost/enable_shared_from_this.hpp>
 
@@ -78,7 +77,7 @@ namespace karabo {
                  * @param chunkSize Chunk size as defined by hdf5
                  */
                 virtual void create(hsize_t chunkSize) = 0;
-                
+
 
                 virtual void write(const karabo::util::Hash& data, hsize_t recordId) = 0;
                 //
@@ -101,10 +100,13 @@ namespace karabo {
 
             protected:
 
-                std::string m_key; // name of this element
-                std::string m_path; // path to the parent of this element from the root of the table (/ as separator)
-                std::string m_path_key;               
-                boost::shared_ptr<H5::Group> m_group; // parent group of this element
+                std::string m_h5name; // name of this element
+                std::string m_h5path; // path to the parent of this element from the root of the table (/ as separator)
+                std::string m_h5PathName;
+                std::string m_key; // attribute key
+                hid_t m_group; // parent group of this element
+                
+                karabo::util::Hash m_config;
 
             };
 

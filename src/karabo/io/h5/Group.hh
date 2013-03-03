@@ -47,7 +47,8 @@ namespace karabo {
                 void create(hsize_t chunkSize) {
 
                     try {
-                        boost::shared_ptr<H5::Group > (new H5::Group(m_group->createGroup(m_key.c_str())));
+                        hid_t group = H5Gcreate(m_group, m_h5name.c_str(), H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+                        H5Gclose(group);                        
                     } catch (...) {
                         KARABO_RETHROW
                     }

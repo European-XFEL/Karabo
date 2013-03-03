@@ -28,7 +28,6 @@
 #include <karabo/util/FromTypeInfo.hh>
 
 #include <hdf5/hdf5.h>
-#include <hdf5/H5Cpp.h>
 
 #include <boost/enable_shared_from_this.hpp>
 
@@ -50,6 +49,8 @@ namespace karabo {
 
                 Element(const karabo::util::Hash& input);
 
+
+
                 virtual ~Element() {
                 }
 
@@ -57,7 +58,7 @@ namespace karabo {
                  * Get element name. Element can represent hdf5 group or dataset
                  * @return name element name
                  */
-                const std::string& getName();
+                const std::string& getFullName();
 
                 /** 
                  * Get Hash representation of this Element.
@@ -72,6 +73,10 @@ namespace karabo {
                  */
                 virtual void getElement(karabo::util::Hash& element);
 
+                void getConfig(karabo::util::Hash& config){
+                    
+                    config = m_config;
+                }
                 /**
                  * Create UNLIMITED CHUNKED HDF5 dataset.
                  * @param group Hdf5 group where the dataset belongs to.
@@ -79,7 +84,7 @@ namespace karabo {
                  */
                 virtual void create(hsize_t chunkSize) = 0;
 
-                void openParentGroup(std::map<std::string, boost::shared_ptr<H5::Group> >& groups);
+                void openParentGroup(std::map<std::string, hid_t >& groups);
 
 
 
@@ -175,11 +180,12 @@ namespace karabo {
 
             protected:
 
-                std::string m_key; // name of this element
-                std::string m_path; // path to the parent of this element from the root of the table (/ as separator)
-                std::string m_path_key;               
-                boost::shared_ptr<H5::Group> m_group; // parent group of this element
-
+                std::string m_h5name; // name of this element in hdf5 file               
+                std::string m_h5path; // path to the parent of this element from the root of the table (/ as separator)
+                std::string m_h5PathName;
+                std::string m_key; // key  (including path) to the data element in hash                
+                hid_t m_group; // parent group of this element
+                karabo::util::Hash m_config;
             };
 
 

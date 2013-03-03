@@ -17,13 +17,11 @@
 #include "Dataset.hh"
 #include "Scalar.hh"
 #include "TypeTraits.hh"
-#include <karabo/util/Hash.hh>
-#include <karabo/util/ToLiteral.hh>
-#include <karabo/util/FromTypeInfo.hh>
-#include <karabo/util/VectorElement.hh>
+#include "DatasetReader.hh"
+#include "DatasetWriter.hh"
 
 #include <karabo/util/util.hh>
-//#include "../ioProfiler.hh"
+#include "ioProfiler.hh"
 
 
 
@@ -39,11 +37,17 @@ namespace karabo {
 
                 KARABO_CLASSINFO(FixedLengthArray, "VECTOR_" + karabo::util::ToType<karabo::util::ToLiteral>::to(karabo::util::FromType<karabo::util::FromTypeInfo>::from(typeid (T))), "2.0")
 
-                FixedLengthArray(const karabo::util::Hash& input) : Dataset(input) {
+                FixedLengthArray(const karabo::util::Hash& input) : Dataset(input), scalar1("scalar1") {
+
                     m_dims = karabo::util::Dims(input.get<std::vector<unsigned long long> >("dims"));
                 }
 
                 virtual ~FixedLengthArray() {
+                    KARABO_PROFILER_REPORT_SCALAR1("write");
+                    KARABO_PROFILER_REPORT_SCALAR1("dataspace");
+                    KARABO_PROFILER_REPORT_SCALAR1("writeBuffer");
+                    KARABO_PROFILER_REPORT_SCALAR1("dataspaceBuffer");
+
                 }
 
                 static void expectedParameters(karabo::util::Schema& expected) {
@@ -63,22 +67,24 @@ namespace karabo {
                     try {
 
                         m_chunkSize = chunkSize;
-                        
+
                         std::vector<unsigned long long> chunkVector(m_dims.rank() + 1, 0);
                         chunkVector[0] = chunkSize;
                         for (size_t i = 0; i < m_dims.rank(); ++i) {
                             chunkVector[i + 1] = m_dims.extentIn(i);
                         }
                         karabo::util::Dims chunk(chunkVector);
+                        m_dimsPlus1 = chunk;
 
-                        
+
                         createDataSetProperties(chunk);
-                        
+
                         chunkVector[0] = 0;
                         karabo::util::Dims zeroDataSpace(chunkVector);
-                        
-                        m_fileDataSpace = dataSpace(zeroDataSpace);
-                        m_dataSet = m_group->createDataSet(m_key.c_str(), ScalarTypes::getHdf5StandardType<T > (), m_fileDataSpace, *m_dataSetProperties);
+
+                        m_fileDataSpace = dataSpace(zeroDataSpace);                        
+                        m_dataSet = H5Dcreate2(m_group, m_h5name.c_str(), ScalarTypes::getHdf5StandardType<T > (), m_fileDataSpace, H5P_DEFAULT, m_dataSetProperties, H5P_DEFAULT);
+                        //m_dataSet = m_group->createDataSet(m_key.c_str(), ScalarTypes::getHdf5StandardType<T > (), m_fileDataSpace, *m_dataSetProperties);
                         // need to use C interface because C++ does not allow specifying dataset access property list
                         //                        hid_t gid = m_group->getId();
                         //                        hid_t linkCreatePropListId = H5Pcreate(H5P_LINK_CREATE);
@@ -93,30 +99,22 @@ namespace karabo {
                 void write(const karabo::util::Hash& data, hsize_t recordId) {
 
                     try {
+                        KARABO_PROFILER_START_SCALAR1("dataspace")
 
-                        std::clog << "200: m_chunkSize = " << m_chunkSize << std::endl;
-                        std::clog << "200: recordId = " << recordId << std::endl;
-                        if (recordId % m_chunkSize == 0) extend(m_dataSet, m_fileDataSpace, m_chunkSize);
-                        selectRecord(m_fileDataSpace, recordId, 1);
-                        const std::vector<T>& vec = data.get<std::vector<T> >(m_path_key, '/');                        
-                        H5::DataSpace mds = Dataset::dataSpace(vec.size()); 
-                        ScalarWriter<T>::write(vec, m_dataSet, mds, m_fileDataSpace);
+                        if (recordId % m_chunkSize == 0) {
+                            m_fileDataSpace = Dataset::extend(m_dataSet, m_fileDataSpace, m_chunkSize);
+                        }
 
-                        //                        selectFileRecord(recordId);
-                        //                        karabo::util::Hash::const_iterator it = data.find(m_key);
-                        //                        if (it == data.end()) { // TODO: do we need here to check if iterator is ok, is this performance issue
-                        //                            throw KARABO_PARAMETER_EXCEPTION("Invalid key in the Hash");
-                        //                        }
-                        //                        const boost::any& any = data.getAny(it);
-                        //                        if (!m_filter) {
-                        //                            tracer << "creating a filter for FixedLengthArray " << any.type().name() << std::endl;
-                        //                            // this uses factory mechanism combined with rtti.
-                        //                            m_filter = FLArrayFilter<T>::createDefault(any.type().name());
-                        //                        }
-                        //                        //tracer << "about to write " << any.type().name() << std::endl;                        
-                        //                        m_filter->write(*this, any, m_dims);
-                        //                        //tracer << m_filter << std::endl;
-                        //tracer << "after write " << any.type().name() << std::endl;                        
+                        m_fileDataSpace = selectRecord(m_fileDataSpace, recordId, 1);
+                        const std::vector<T>& vec = data.get<std::vector<T> >(m_key, '/');
+
+
+                        hid_t mds = Dataset::dataSpace(m_dims);
+                        KARABO_PROFILER_STOP_SCALAR1
+                        KARABO_PROFILER_START_SCALAR1("write")
+
+                        DatasetWriter<T>::write(vec, m_dataSet, mds, m_fileDataSpace);
+                        KARABO_PROFILER_STOP_SCALAR1
                     } catch (...) {
                         //tracer << "exception caught" << std::endl;
                         KARABO_RETHROW;
@@ -145,6 +143,34 @@ namespace karabo {
                 //
 
                 void write(const karabo::util::Hash& data, hsize_t recordId, hsize_t len) {
+
+                    try {
+
+                        //                        std::clog << "300: m_chunkSize = " << m_chunkSize << std::endl;
+                        //                        std::clog << "301: recordId = " << recordId << std::endl;
+                        //                        std::clog << "302: len = " << len << std::endl;
+                        KARABO_PROFILER_START_SCALAR1("dataspaceBuffer")
+                        if (recordId % m_chunkSize == 0) {
+                            m_fileDataSpace = Dataset::extend(m_dataSet, m_fileDataSpace, len);
+                        }
+                        m_fileDataSpace = selectRecord(m_fileDataSpace, recordId, len);
+                        const std::vector<T>& vec = data.get<std::vector<T> >(m_key, '/');
+                        std::clog << "303: vec.size = " << vec.size() << std::endl;
+                        std::vector<hsize_t> vdims = m_dimsPlus1.toVector();
+                        vdims[0] = len;
+                        karabo::util::Dims memoryDims(vdims);
+                        hid_t mds = Dataset::dataSpace(memoryDims);
+
+                        KARABO_PROFILER_STOP_SCALAR1
+                        KARABO_PROFILER_START_SCALAR1("writeBuffer")
+
+                        DatasetWriter<T>::write(vec, m_dataSet, mds, m_fileDataSpace);
+                        KARABO_PROFILER_STOP_SCALAR1
+                    } catch (...) {
+                        KARABO_RETHROW;
+                    }
+
+
                     //                    try {
                     //                        selectFileRecord(recordId, len);
                     //                        karabo::util::Hash::const_iterator it = data.find(m_key);
@@ -276,7 +302,9 @@ namespace karabo {
             protected:
 
 
+                karabo::util::Profiler scalar1;
                 karabo::util::Dims m_dims;
+                karabo::util::Dims m_dimsPlus1;
 
                 hid_t m_dataAccessPropListId;
 

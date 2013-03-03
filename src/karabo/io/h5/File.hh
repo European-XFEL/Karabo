@@ -7,17 +7,14 @@
  */
 
 
-#ifndef KARABO_IO_H5_File_HH
-#define	KARABO_IO_H5_File_HH
+#ifndef KARABO_IO_H5_FILE_HH
+#define	KARABO_IO_H5_FILE_HH
 
 #include "Table.hh"
 #include "Format.hh"
-//#include "RecordFormat.hh"
 #include <boost/filesystem.hpp>
 #include <boost/shared_ptr.hpp>
 #include <hdf5/hdf5.h>
-#include <hdf5/H5Cpp.h>
-#include <hdf5/hdf5_hl.h>
 
 
 namespace karabo {
@@ -112,7 +109,8 @@ namespace karabo {
             private:
 
                 boost::filesystem::path m_filename;
-                boost::shared_ptr<H5::H5File> m_h5file;
+                
+                hid_t m_h5file;
                 AccessMode m_accMode;
 
                 boost::shared_ptr<Table> createReadOnlyTablePointer(const std::string& name);
@@ -125,4 +123,4 @@ namespace karabo {
 
 //KARABO_REGISTER_FACTORY_BASE_HH(karabo::io::hdf5::File, TEMPLATE_IO, DECLSPEC_IO)
 
-#endif	/* KARABO_IO_File_HH */
+#endif	
