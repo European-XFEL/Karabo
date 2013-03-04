@@ -63,6 +63,7 @@ OBJECTFILES= \
 	${OBJECTDIR}/_ext/769817549/Dataset.o \
 	${OBJECTDIR}/_ext/769817549/Table.o \
 	${OBJECTDIR}/_ext/769817549/File.o \
+	${OBJECTDIR}/_ext/1072794519/TextFileInput.o \
 	${OBJECTDIR}/_ext/163016059/Hash.o \
 	${OBJECTDIR}/_ext/769817549/FixedLengthArrayAttribute.o
 
@@ -238,6 +239,11 @@ ${OBJECTDIR}/_ext/769817549/File.o: ../../../src/karabo/io/h5/File.cc
 	${RM} $@.d
 	$(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/769817549/File.o ../../../src/karabo/io/h5/File.cc
 
+${OBJECTDIR}/_ext/1072794519/TextFileInput.o: ../../../src/karabo/io/TextFileInput.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1072794519
+	${RM} $@.d
+	$(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1072794519/TextFileInput.o ../../../src/karabo/io/TextFileInput.cc
+
 ${OBJECTDIR}/_ext/163016059/Hash.o: ../../../src/karabo/util/Hash.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
 	${RM} $@.d
@@ -253,7 +259,7 @@ ${OBJECTDIR}/_ext/769817549/FixedLengthArrayAttribute.o: ../../../src/karabo/io/
 
 # Build Test Targets
 .build-tests-conf: .build-conf ${TESTFILES}
-${TESTDIR}/TestFiles/f2: ${TESTDIR}/_ext/861493463/H5File_Test.o ${TESTDIR}/_ext/861493463/H5Format_Test.o ${TESTDIR}/_ext/861493463/HashBinarySerializer_Test.o ${TESTDIR}/_ext/861493463/HashXmlSerializer_Test.o ${TESTDIR}/_ext/861493463/Hdf5_Test.o ${TESTDIR}/_ext/861493463/ioTestRunner.o ${OBJECTFILES:%.o=%_nomain.o}
+${TESTDIR}/TestFiles/f2: ${TESTDIR}/_ext/861493463/H5File_Test.o ${TESTDIR}/_ext/861493463/H5Format_Test.o ${TESTDIR}/_ext/861493463/HashBinarySerializer_Test.o ${TESTDIR}/_ext/861493463/HashXmlSerializer_Test.o ${TESTDIR}/_ext/861493463/Hdf5_Test.o ${TESTDIR}/_ext/861493463/TextFileInput_Test.o ${TESTDIR}/_ext/861493463/ioTestRunner.o ${OBJECTFILES:%.o=%_nomain.o}
 	${MKDIR} -p ${TESTDIR}/TestFiles
 	${LINK.cc}   -o ${TESTDIR}/TestFiles/f2 $^ ${LDLIBSOPTIONS} -Wl,-rpath,${KARABO}/lib -Wl,-rpath,${KARABO}/extern/lib 
 
@@ -290,6 +296,12 @@ ${TESTDIR}/_ext/861493463/Hdf5_Test.o: ../../../src/karabo/tests/io/Hdf5_Test.cc
 	${MKDIR} -p ${TESTDIR}/_ext/861493463
 	${RM} $@.d
 	$(COMPILE.cc) -g -Wall -DTESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I${KARABO}/extern/include/hdf5 -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -MMD -MP -MF $@.d -o ${TESTDIR}/_ext/861493463/Hdf5_Test.o ../../../src/karabo/tests/io/Hdf5_Test.cc
+
+
+${TESTDIR}/_ext/861493463/TextFileInput_Test.o: ../../../src/karabo/tests/io/TextFileInput_Test.cc 
+	${MKDIR} -p ${TESTDIR}/_ext/861493463
+	${RM} $@.d
+	$(COMPILE.cc) -g -Wall -DTESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I${KARABO}/extern/include/hdf5 -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -MMD -MP -MF $@.d -o ${TESTDIR}/_ext/861493463/TextFileInput_Test.o ../../../src/karabo/tests/io/TextFileInput_Test.cc
 
 
 ${TESTDIR}/_ext/861493463/ioTestRunner.o: ../../../src/karabo/tests/io/ioTestRunner.cc 
@@ -702,6 +714,19 @@ ${OBJECTDIR}/_ext/769817549/File_nomain.o: ${OBJECTDIR}/_ext/769817549/File.o ..
 	    $(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/769817549/File_nomain.o ../../../src/karabo/io/h5/File.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/769817549/File.o ${OBJECTDIR}/_ext/769817549/File_nomain.o;\
+	fi
+
+${OBJECTDIR}/_ext/1072794519/TextFileInput_nomain.o: ${OBJECTDIR}/_ext/1072794519/TextFileInput.o ../../../src/karabo/io/TextFileInput.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1072794519
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/1072794519/TextFileInput.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} $@.d;\
+	    $(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1072794519/TextFileInput_nomain.o ../../../src/karabo/io/TextFileInput.cc;\
+	else  \
+	    ${CP} ${OBJECTDIR}/_ext/1072794519/TextFileInput.o ${OBJECTDIR}/_ext/1072794519/TextFileInput_nomain.o;\
 	fi
 
 ${OBJECTDIR}/_ext/163016059/Hash_nomain.o: ${OBJECTDIR}/_ext/163016059/Hash.o ../../../src/karabo/util/Hash.cc 

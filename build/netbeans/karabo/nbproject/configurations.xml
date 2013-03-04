@@ -33,6 +33,15 @@
         <itemPath>../../../src/karabo/io/h5/TypeTraits.hh</itemPath>
         <itemPath>../../../src/karabo/io/h5/ioProfiler.hh</itemPath>
       </logicalFolder>
+      <logicalFolder name="f3" displayName="Input" projectFiles="true">
+        <itemPath>../../../src/karabo/io/AbstractInput.hh</itemPath>
+        <itemPath>../../../src/karabo/io/FileTools.hh</itemPath>
+        <itemPath>../../../src/karabo/io/Input.hh</itemPath>
+        <itemPath>../../../src/karabo/io/TextFileInput.cc</itemPath>
+        <itemPath>../../../src/karabo/io/TextFileInput.hh</itemPath>
+      </logicalFolder>
+      <logicalFolder name="f4" displayName="Output" projectFiles="true">
+      </logicalFolder>
       <logicalFolder name="f2" displayName="Serialization" projectFiles="true">
         <itemPath>../../../src/karabo/io/BinarySerializer.hh</itemPath>
         <itemPath>../../../src/karabo/io/HashBinarySerializer.cc</itemPath>
@@ -130,6 +139,8 @@
         <itemPath>../../../src/karabo/tests/io/HashXmlSerializer_Test.hh</itemPath>
         <itemPath>../../../src/karabo/tests/io/Hdf5_Test.cc</itemPath>
         <itemPath>../../../src/karabo/tests/io/Hdf5_Test.hh</itemPath>
+        <itemPath>../../../src/karabo/tests/io/TextFileInput_Test.cc</itemPath>
+        <itemPath>../../../src/karabo/tests/io/TextFileInput_Test.hh</itemPath>
         <itemPath>../../../src/karabo/tests/io/ioTestRunner.cc</itemPath>
       </logicalFolder>
       <logicalFolder name="f1"

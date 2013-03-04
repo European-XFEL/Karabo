@@ -13,7 +13,7 @@
 #define	KARABO_IO_TEXTSERIALIZER_HH
 
 #include <vector>
-
+#include <sstream>
 #include <karabo/util/Configurator.hh>
 
 namespace karabo {
@@ -24,7 +24,7 @@ namespace karabo {
             
             public:
                 
-                KARABO_CLASSINFO(TextSerializer, "TextSerializer", "1.0")
+                KARABO_CLASSINFO(TextSerializer<T>, "TextSerializer-" + std::string(T::classInfo().getClassName()), "1.0")
                 
                 KARABO_CONFIGURATION_BASE_CLASS
                 
@@ -32,8 +32,10 @@ namespace karabo {
                 
                 virtual void load(T& object, const std::string& archive) = 0;
                 
+                virtual void load(T& object, const std::stringstream& archive) {
+                    this->load(object, archive.str()); // Creates a copy, but may be overridden for more performance
+                }
         };
-        
     }
 }
 
