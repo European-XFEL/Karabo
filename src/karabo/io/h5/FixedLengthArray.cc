@@ -1,5 +1,5 @@
 /*
- * $Id: FixedLengthArray.cc 5260 2012-02-26 22:13:16Z wrona $
+ * $Id$
  *
  * Author: <krzysztof.wrona@xfel.eu>
  *
@@ -13,7 +13,7 @@ using namespace karabo::io;
 namespace karabo {  
   namespace io {
     namespace h5 {
-       
+        
          
     KARABO_REGISTER_FOR_CONFIGURATION(Element, Dataset, Int8ArrayElement)
     KARABO_REGISTER_FOR_CONFIGURATION(Element, Dataset, Int16ArrayElement)
