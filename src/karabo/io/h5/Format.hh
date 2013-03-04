@@ -62,6 +62,8 @@ namespace karabo {
                 
                 void removeElement(const std::string& fullPath );
                 
+                void replaceElement(const std::string& fullPath, karabo::io::h5::Element::Pointer element);
+                
                 
             private:
 
