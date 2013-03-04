@@ -62,7 +62,7 @@ namespace karabo {
 
             Format::Format(const karabo::util::Hash& input) {
 
-                clog << "configure: " << endl << input << endl;
+                //clog << "configure: " << endl << input << endl;
                 m_elements = Element::createList("elements", input);
                 m_config = Hash("Format", input);
                 mapElementsToKeys();
@@ -79,6 +79,7 @@ namespace karabo {
             }
 
             void Format::addElement(karabo::io::h5::Element::Pointer element) {
+                
                 m_elements.push_back(element);
 
                 // update config
@@ -101,10 +102,29 @@ namespace karabo {
                 string fullPathSlash = boost::replace_all_copy(fullPath, ".", "/");
                 size_t idx = m_mapElements[fullPathSlash];
                 m_elements.erase(m_elements.begin() + idx);
+                
+                vector<Hash>& config = m_config.get<vector<Hash> >("Format.elements");
+                config.erase( config.begin() + idx );                                
+                
                 m_mapElements.clear();
                 mapElementsToKeys();
             }
 
+            void Format::replaceElement(const std::string& fullPath, karabo::io::h5::Element::Pointer element) {
+                string fullPathSlash = boost::replace_all_copy(fullPath, ".", "/");
+                size_t idx = m_mapElements[fullPathSlash];
+                m_elements[idx] = element;                
+                                
+                vector<Hash>& vecConfig = m_config.get<vector<Hash> >("Format.elements");
+                Hash newConfig;
+                Hash& elementConfig = newConfig.bindReference<Hash > (element->getClassInfo().getClassId());
+                element->getConfig(elementConfig);
+                vecConfig[idx] = newConfig;
+                                                                
+                m_mapElements.clear();
+                mapElementsToKeys();
+            }
+            
             void Format::discoverFromHash(const Hash& data, vector<Hash>& config, const string& path) {
 
                 // This hash does not have attributes
