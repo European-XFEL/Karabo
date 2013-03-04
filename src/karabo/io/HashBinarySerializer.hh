@@ -29,10 +29,10 @@ namespace karabo {
 
             KARABO_CLASSINFO(HashBinarySerializer, "Binary", "1.0")
 
-            HashBinarySerializer(const karabo::util::Hash& input) {}
-
             static void expectedParameters(karabo::util::Schema& expected) {
             };
+            
+            HashBinarySerializer(const karabo::util::Hash& input) {}
 
             virtual void save(const karabo::util::Hash& object, std::vector<char>& archive) {
                 // TODO We will introduce a copy here, which could be avoided with some effort

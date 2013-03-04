@@ -71,7 +71,7 @@ namespace karabo {
 
             template <class DerivedClass>
             static void registerClass(const std::string& classId) {
-               // std::cout << "Registering class \"" << classId << "\" with constructor: " << classId << "(" << ctorKey() << ") for configuration" << std::endl;
+                // std::cout << "Registering class \"" << classId << "\" with constructor: " << classId << "(" << ctorKey() << ") for configuration" << std::endl;
                 Configurator::init().m_registry[classId][ctorKey()] = static_cast<boost::function < boost::shared_ptr<BaseClass > (const Hash&) > > (boost::factory<boost::shared_ptr<DerivedClass> >());
             }
 
@@ -347,8 +347,10 @@ namespace karabo {
                 return karabo::util::Configurator<Self>::createList(listName, input); } \
                 \
                 static karabo::util::Schema getSchema(const std::string& classId, const karabo::util::Schema::AssemblyRules& rules = karabo::util::Schema::AssemblyRules()) { \
-                return karabo::util::Configurator<Self>::getSchema(classId, rules); \
-                }
+                return karabo::util::Configurator<Self>::getSchema(classId, rules); } \
+                \
+                static std::vector<std::string> getRegisteredClasses() { \
+                return karabo::util::Configurator<Self>::getRegisteredClasses(); }
     }
 }
 
