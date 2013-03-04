@@ -1,5 +1,5 @@
 /*
- * $Id: Scalar.cc 5260 2012-02-26 22:13:16Z wrona $
+ * $Id$
  *
  * Author: <krzysztof.wrona@xfel.eu>
  *
@@ -9,7 +9,7 @@
 
 #include "Scalar.hh"
 using namespace karabo::io::h5;
-    
+     
 namespace karabo {
     namespace io {
         namespace h5 {

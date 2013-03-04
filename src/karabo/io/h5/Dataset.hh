@@ -1,5 +1,5 @@
 /*
- * $Id: Scalar.hh 5491 2012-03-09 17:27:25Z wrona $
+ * $Id$
  *
  * Author: <krzysztof.wrona@xfel.eu>
  *
@@ -112,20 +112,29 @@ namespace karabo {
 
                 static hid_t selectRecord(hid_t dataSpace, hsize_t recordId, hsize_t len = 1) {
                     int ndims = H5Sget_simple_extent_ndims(dataSpace);
+                    if( ndims < 0 ) {
+                        throw KARABO_HDF_IO_EXCEPTION("Could not obtain rank of data space");
+                    }
                     std::vector<hsize_t> start(ndims, 0);
                     start[0] = recordId;
 
                     std::vector<hsize_t> count(ndims, 0);
                     std::vector<hsize_t> maxExtent(ndims, 0);
-                    H5Sget_simple_extent_dims(dataSpace, &count[0], &maxExtent[0]);
+                    int status = H5Sget_simple_extent_dims(dataSpace, &count[0], &maxExtent[0]);
+                    if (status < 0 ){
+                           throw KARABO_HDF_IO_EXCEPTION("Could not obtain extents of data space");
+                    }
                     //                    for (int i = 0; i < ndims; ++i) {
                     //                        std::clog << "selectRecord count[" << i << "] = " << count[i] << std::endl;
                     //                    }
-                    count[0] = len;
+                    count[0] = len + 10000;
                     //                    for (int i = 0; i < ndims; ++i) {
                     //                        std::clog << "selectRecord after count[" << i << "] = " << count[i] << std::endl;
                     //                    }
-                    H5Sselect_hyperslab(dataSpace, H5S_SELECT_SET, &start[0], NULL, &count[0], NULL);
+                    herr_t st = H5Sselect_hyperslab(dataSpace, H5S_SELECT_SET, &start[0], NULL, &count[0], NULL);
+                    if (st < 0 ){
+                           throw KARABO_HDF_IO_EXCEPTION("Could not select hyperslab");
+                    }
                     return dataSpace;
                 }
                 

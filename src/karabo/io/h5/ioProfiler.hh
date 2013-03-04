@@ -1,5 +1,5 @@
 /*
- * $Id: ioProfiler.hh 5260 2012-02-26 22:13:16Z wrona $
+ * $Id$
  *
  * Author: <krzysztof.wrona@xfel.eu>
  * 

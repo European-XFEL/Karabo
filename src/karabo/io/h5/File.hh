@@ -1,5 +1,5 @@
 /*
- * $Id: File.hh 5395 2012-03-07 16:10:07Z wegerk $
+ * $Id$
  *
  * Author: <krzysztof.wrona@xfel.eu>
  *
