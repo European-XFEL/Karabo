@@ -39,8 +39,8 @@ namespace karabo {
             uint64_t epoch;
 
             struct {
-                uint32_t nsec;
-                uint32_t sec;
+                uint64_t nsec;
+                uint64_t sec;
             };
         } timestamp;
 
