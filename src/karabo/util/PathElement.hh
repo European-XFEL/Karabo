@@ -67,9 +67,9 @@ namespace karabo {
         protected:
 
             void beforeAddition() {
-
                 this->m_node->setAttribute<int>("nodeType", Schema::LEAF);
-                if (this->m_node->hasAttribute("accessMode")) this->init(); // This is the default
+                this->m_node->setAttribute("valueType", ToLiteral::to<Types::STRING>());
+                if (!this->m_node->hasAttribute("accessMode")) this->init(); // This is the default
             }
         };
         typedef PathElement PATH_ELEMENT;

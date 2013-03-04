@@ -12,7 +12,7 @@
 
 class H5File_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST_SUITE(H5File_Test);
-    CPPUNIT_TEST(testMethod);
+    //CPPUNIT_TEST(testMethod);
     CPPUNIT_TEST(testBufferWrite);
     CPPUNIT_TEST(testVectorBufferWrite);
     CPPUNIT_TEST_SUITE_END();
@@ -25,7 +25,7 @@ public:
 
 private:
 
-    void testMethod();
+    //void testMethod();
     void testBufferWrite();
     void testVectorBufferWrite();
 };
