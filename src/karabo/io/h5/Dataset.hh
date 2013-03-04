@@ -127,7 +127,7 @@ namespace karabo {
                     //                    for (int i = 0; i < ndims; ++i) {
                     //                        std::clog << "selectRecord count[" << i << "] = " << count[i] << std::endl;
                     //                    }
-                    count[0] = len + 10000;
+                    count[0] = len;
                     //                    for (int i = 0; i < ndims; ++i) {
                     //                        std::clog << "selectRecord after count[" << i << "] = " << count[i] << std::endl;
                     //                    }
