@@ -1,5 +1,5 @@
 /*
- * $Id: Format.cc 6095 2012-05-08 10:05:56Z boukhele $
+ * $Id$
  *
  * Author: <krzysztof.wrona@xfel.eu>
  *

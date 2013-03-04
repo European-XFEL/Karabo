@@ -1,5 +1,5 @@
 /*
- * $Id: Table.cc 5491 2012-03-09 17:27:25Z wrona $
+ * $Id$
  *
  * Author: <krzysztof.wrona@xfel.eu>
  *

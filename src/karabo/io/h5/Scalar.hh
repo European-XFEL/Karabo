@@ -1,5 +1,5 @@
 /*
- * $Id: Scalar.hh 5491 2012-03-09 17:27:25Z wrona $
+ * $Id$
  *
  * Author: <krzysztof.wrona@xfel.eu>
  *
@@ -42,22 +42,6 @@ namespace karabo {
 
                 }
 
-                Scalar(const std::string& path, const std::string& name, const std::string& key, int compressionLevel)
-                : Dataset(computeArgs(path, name, key, compressionLevel)) {
-                }
-
-            private:
-
-                karabo::util::Hash computeArgs(const std::string& path, const std::string& name, const std::string& key, int compressionLevel) {
-
-                    karabo::util::Hash input;                    
-                    input.set("h5name", name);
-                    input.set("h5path", path);
-                    input.set("key", key);                    
-                    input.set("compressionLevel", compressionLevel);
-                    return input;
-
-                }
             public:
 
                 virtual ~Scalar() {
@@ -98,7 +82,7 @@ namespace karabo {
                         Dataset::selectRecord(m_fileDataSpace, recordId, len);
 
                         const T* ptr = data.get<T*>(m_key, '/');
-                        hid_t mds = Dataset::dataSpace(len); //  this->getBufferDataSpace(len);
+                        hid_t mds = Dataset::dataSpace(len); 
                         DatasetWriter<T>::write(ptr, len, m_dataSet, mds, m_fileDataSpace);
                     } catch (karabo::util::Exception& e) {
                         std::clog << "exception" << e << std::endl;
