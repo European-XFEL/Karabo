@@ -8,6 +8,7 @@
 #include <sstream>
 
 #include "Profiler.hh"
+using namespace std;
 
 namespace karabo {
     namespace util {

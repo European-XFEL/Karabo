@@ -3,10 +3,35 @@
   <logicalFolder name="root" displayName="root" projectFiles="true" kind="ROOT">
     <logicalFolder name="f2" displayName="io" projectFiles="true">
       <logicalFolder name="f1" displayName="h5" projectFiles="true">
+        <itemPath>../../../src/karabo/io/h5/Attribute.cc</itemPath>
+        <itemPath>../../../src/karabo/io/h5/Attribute.hh</itemPath>
+        <itemPath>../../../src/karabo/io/h5/Dataset.cc</itemPath>
+        <itemPath>../../../src/karabo/io/h5/Dataset.hh</itemPath>
+        <itemPath>../../../src/karabo/io/h5/DatasetReader.hh</itemPath>
+        <itemPath>../../../src/karabo/io/h5/DatasetWriter.hh</itemPath>
         <itemPath>../../../src/karabo/io/h5/Element.cc</itemPath>
         <itemPath>../../../src/karabo/io/h5/Element.hh</itemPath>
+        <itemPath>../../../src/karabo/io/h5/File.cc</itemPath>
+        <itemPath>../../../src/karabo/io/h5/File.hh</itemPath>
+        <itemPath>../../../src/karabo/io/h5/FixedLengthArray.cc</itemPath>
+        <itemPath>../../../src/karabo/io/h5/FixedLengthArray.hh</itemPath>
+        <itemPath>../../../src/karabo/io/h5/FixedLengthArrayAttribute.cc</itemPath>
+        <itemPath>../../../src/karabo/io/h5/FixedLengthArrayAttribute.hh</itemPath>
         <itemPath>../../../src/karabo/io/h5/Format.cc</itemPath>
         <itemPath>../../../src/karabo/io/h5/Format.hh</itemPath>
+        <itemPath>../../../src/karabo/io/h5/Group.cc</itemPath>
+        <itemPath>../../../src/karabo/io/h5/Group.hh</itemPath>
+        <itemPath>../../../src/karabo/io/h5/Scalar.cc</itemPath>
+        <itemPath>../../../src/karabo/io/h5/Scalar.hh</itemPath>
+        <itemPath>../../../src/karabo/io/h5/ScalarAttribute.cc</itemPath>
+        <itemPath>../../../src/karabo/io/h5/ScalarAttribute.hh</itemPath>
+        <itemPath>../../../src/karabo/io/h5/ScalarFilter.hh</itemPath>
+        <itemPath>../../../src/karabo/io/h5/Table.cc</itemPath>
+        <itemPath>../../../src/karabo/io/h5/Table.hh</itemPath>
+        <itemPath>../../../src/karabo/io/h5/Tracer.hh</itemPath>
+        <itemPath>../../../src/karabo/io/h5/TypeTraits.cc</itemPath>
+        <itemPath>../../../src/karabo/io/h5/TypeTraits.hh</itemPath>
+        <itemPath>../../../src/karabo/io/h5/ioProfiler.hh</itemPath>
       </logicalFolder>
       <logicalFolder name="f2" displayName="Serialization" projectFiles="true">
         <itemPath>../../../src/karabo/io/BinarySerializer.hh</itemPath>
@@ -95,12 +120,16 @@
                    projectFiles="false"
                    kind="TEST_LOGICAL_FOLDER">
       <logicalFolder name="f2" displayName="io_test" projectFiles="true" kind="TEST">
+        <itemPath>../../../src/karabo/tests/io/H5File_Test.cc</itemPath>
+        <itemPath>../../../src/karabo/tests/io/H5File_Test.hh</itemPath>
         <itemPath>../../../src/karabo/tests/io/H5Format_Test.cc</itemPath>
         <itemPath>../../../src/karabo/tests/io/H5Format_Test.hh</itemPath>
         <itemPath>../../../src/karabo/tests/io/HashBinarySerializer_Test.cc</itemPath>
         <itemPath>../../../src/karabo/tests/io/HashBinarySerializer_Test.hh</itemPath>
         <itemPath>../../../src/karabo/tests/io/HashXmlSerializer_Test.cc</itemPath>
         <itemPath>../../../src/karabo/tests/io/HashXmlSerializer_Test.hh</itemPath>
+        <itemPath>../../../src/karabo/tests/io/Hdf5_Test.cc</itemPath>
+        <itemPath>../../../src/karabo/tests/io/Hdf5_Test.hh</itemPath>
         <itemPath>../../../src/karabo/tests/io/ioTestRunner.cc</itemPath>
       </logicalFolder>
       <logicalFolder name="f1"
@@ -179,9 +208,6 @@
             <linkerLibLibItem>boost_thread</linkerLibLibItem>
             <linkerLibLibItem>cppunit</linkerLibLibItem>
             <linkerLibLibItem>hdf5</linkerLibLibItem>
-            <linkerLibLibItem>hdf5_cpp</linkerLibLibItem>
-            <linkerLibLibItem>hdf5_hl</linkerLibLibItem>
-            <linkerLibLibItem>hdf5_hl_cpp</linkerLibLibItem>
             <linkerLibLibItem>log4cpp</linkerLibLibItem>
             <linkerLibLibItem>netsnmp</linkerLibLibItem>
             <linkerLibLibItem>netsnmpagent</linkerLibLibItem>
