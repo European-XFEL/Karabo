@@ -118,7 +118,7 @@ namespace karabo {
             return std::make_pair("", "");
         }
         _KARABO_HELPER_MACRO(DECI, "d")
-        _KARABO_HELPER_MACRO(CENT, "c")
+        _KARABO_HELPER_MACRO(CENTI, "c")
         _KARABO_HELPER_MACRO(MILLI, "m")
         _KARABO_HELPER_MACRO(MICRO, "u")
         _KARABO_HELPER_MACRO(NANO, "n")
