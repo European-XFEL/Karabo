@@ -30,7 +30,7 @@ namespace karabo {
             // KARABO_REGISTER_FOR_CONFIGURATION_1(karabo::io::h5::Table)
 
             Table::~Table() {
-                KARABO_PROFILER_REPORT_TABLE1("write1");
+//                KARABO_PROFILER_REPORT_TABLE1("write1");
                 //                KARABO_PROFILER_REPORT_TABLE1("test");
                 //                std::clog << "test" << ": " << table1 << std::endl;
                 //                std::clog << "test" << ": " << table1.getTime("write1").sec << " " << table1.getTime("write1").nsec << std::endl;

@@ -6,14 +6,14 @@
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
 
-
+ 
 #include "FixedLengthArray.hh"
 using namespace karabo::io;
     
 namespace karabo {  
   namespace io {
     namespace h5 {
-        
+         
          
     KARABO_REGISTER_FOR_CONFIGURATION(Element, Dataset, Int8ArrayElement)
     KARABO_REGISTER_FOR_CONFIGURATION(Element, Dataset, Int16ArrayElement)

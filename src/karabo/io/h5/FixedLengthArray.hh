@@ -19,6 +19,7 @@
 #include "TypeTraits.hh"
 #include "DatasetReader.hh"
 #include "DatasetWriter.hh"
+#include "ErrorHandler.hh"
 
 #include <karabo/util/util.hh>
 #include "ioProfiler.hh"
@@ -37,16 +38,19 @@ namespace karabo {
 
                 KARABO_CLASSINFO(FixedLengthArray, "VECTOR_" + karabo::util::ToType<karabo::util::ToLiteral>::to(karabo::util::FromType<karabo::util::FromTypeInfo>::from(typeid (T))), "2.0")
 
-                FixedLengthArray(const karabo::util::Hash& input) : Dataset(input), scalar1("scalar1") {
-
+                FixedLengthArray(const karabo::util::Hash& input) : Dataset(input)
+                 #ifdef KARABO_USE_PROFILER_SCALAR1
+                , scalar1("scalar1")
+                #endif
+                {
                     m_dims = karabo::util::Dims(input.get<std::vector<unsigned long long> >("dims"));
                 }
 
                 virtual ~FixedLengthArray() {
-                    KARABO_PROFILER_REPORT_SCALAR1("write");
-                    KARABO_PROFILER_REPORT_SCALAR1("dataspace");
-                    KARABO_PROFILER_REPORT_SCALAR1("writeBuffer");
-                    KARABO_PROFILER_REPORT_SCALAR1("dataspaceBuffer");
+//                    KARABO_PROFILER_REPORT_SCALAR1("write");
+//                    KARABO_PROFILER_REPORT_SCALAR1("dataspace");
+//                    KARABO_PROFILER_REPORT_SCALAR1("writeBuffer");
+//                    KARABO_PROFILER_REPORT_SCALAR1("dataspaceBuffer");
 
                 }
 
@@ -83,7 +87,8 @@ namespace karabo {
                         karabo::util::Dims zeroDataSpace(chunkVector);
 
                         m_fileDataSpace = dataSpace(zeroDataSpace);                        
-                        m_dataSet = H5Dcreate2(m_group, m_h5name.c_str(), ScalarTypes::getHdf5StandardType<T > (), m_fileDataSpace, H5P_DEFAULT, m_dataSetProperties, H5P_DEFAULT);
+                        m_dataSet = H5Dcreate(m_group, m_h5name.c_str(), ScalarTypes::getHdf5StandardType<T > (), m_fileDataSpace, H5P_DEFAULT, m_dataSetProperties, H5P_DEFAULT);
+                        KARABO_CHECK_HDF5_STATUS(m_dataSet);
                         //m_dataSet = m_group->createDataSet(m_key.c_str(), ScalarTypes::getHdf5StandardType<T > (), m_fileDataSpace, *m_dataSetProperties);
                         // need to use C interface because C++ does not allow specifying dataset access property list
                         //                        hid_t gid = m_group->getId();
@@ -92,7 +97,7 @@ namespace karabo {
                         //                        std::clog << "104" << std::endl;
                         //                        m_dataSet = H5::DataSet(dataSetId);
                     } catch (...) {
-                        KARABO_RETHROW
+                        KARABO_RETHROW_AS(KARABO_PROPAGATED_EXCEPTION("Cannot create dataset /" + m_h5PathName));
                     }
                 }
 
@@ -116,8 +121,8 @@ namespace karabo {
                         DatasetWriter<T>::write(vec, m_dataSet, mds, m_fileDataSpace);
                         KARABO_PROFILER_STOP_SCALAR1
                     } catch (...) {
-                        //tracer << "exception caught" << std::endl;
-                        KARABO_RETHROW;
+                        KARABO_RETHROW_AS(KARABO_PROPAGATED_EXCEPTION("Cannot write Hash node " + m_key + " to dataset /" + m_h5PathName));                        
+                        
                     }
                 }
                 //
@@ -167,7 +172,7 @@ namespace karabo {
                         DatasetWriter<T>::write(vec, m_dataSet, mds, m_fileDataSpace);
                         KARABO_PROFILER_STOP_SCALAR1
                     } catch (...) {
-                        KARABO_RETHROW;
+                        KARABO_RETHROW_AS(KARABO_PROPAGATED_EXCEPTION("Cannot write Hash node " + m_key + " to dataset /" + m_h5PathName));
                     }
 
 
@@ -302,7 +307,9 @@ namespace karabo {
             protected:
 
 
+                 #ifdef KARABO_USE_PROFILER_SCALAR1
                 karabo::util::Profiler scalar1;
+                #endif                
                 karabo::util::Dims m_dims;
                 karabo::util::Dims m_dimsPlus1;
 

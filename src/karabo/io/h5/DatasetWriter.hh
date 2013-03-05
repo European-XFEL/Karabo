@@ -14,6 +14,7 @@
 
 #include "Dataset.hh"
 #include "TypeTraits.hh"
+#include "ErrorHandler.hh"
 #include <karabo/util/util.hh>
 
 namespace karabo {
@@ -21,6 +22,7 @@ namespace karabo {
     namespace io {
 
         namespace h5 {
+
 
 
             #define _KARABO_IO_H5_TYPE(type)\
@@ -36,25 +38,22 @@ namespace karabo {
 
                 static void write(const T& value, hid_t dataSet, hid_t memoryDataSpace, hid_t fileDataSpace) {
                     herr_t status = H5Dwrite(dataSet, ScalarTypes::getHdf5NativeType<T > (), memoryDataSpace, fileDataSpace, H5P_DEFAULT, &value);
-                    if (status < 0) {
-                        throw KARABO_HDF_IO_EXCEPTION("Could not write " + _KARABO_IO_H5_TYPE(T) + " dataset");
-                    }
+                    KARABO_CHECK_HDF5_STATUS(status)
+
                 }
 
                 static void write(const T* ptr, hsize_t len, hid_t dataSet, hid_t memoryDataSpace, hid_t fileDataSpace) {
                     hid_t tid = ScalarTypes::getHdf5NativeType<T > ();
                     herr_t status = H5Dwrite(dataSet, tid, memoryDataSpace, fileDataSpace, H5P_DEFAULT, ptr);
-                    if (status < 0) {
-                        throw KARABO_HDF_IO_EXCEPTION("Could not write " + _KARABO_IO_H5_TYPE(T) + " dataset");
-                    }
+                    KARABO_CHECK_HDF5_STATUS(status)
+                    
+
                 }
 
                 static void write(const std::vector<T>& vec, hid_t dataSet, hid_t memoryDataSpace, hid_t fileDataSpace) {
                     const T* ptr = &vec[0];
                     herr_t status = H5Dwrite(dataSet, ScalarTypes::getHdf5NativeType<T > (), memoryDataSpace, fileDataSpace, H5P_DEFAULT, ptr);
-                    if (status < 0) {
-                        throw KARABO_HDF_IO_EXCEPTION("Could not write " + _KARABO_IO_H5_TYPE(T) + " dataset");
-                    }
+                    KARABO_CHECK_HDF5_STATUS(status)
                 }
 
             };
@@ -107,7 +106,7 @@ namespace karabo {
 
             };
 
-        #undef _KARABO_IO_H5_TYPE
+            #undef _KARABO_IO_H5_TYPE
         }
     }
 }
