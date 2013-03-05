@@ -11,6 +11,7 @@
 #include <boost/shared_array.hpp>
 
 #include <karabo/util/util.hh>
+#include <karabo/io/TextSerializer.hh>
 
 #include <karabo/io/h5/Format.hh>
 #include <karabo/io/h5/Element.hh>
@@ -53,6 +54,13 @@ void H5Format_Test::testEmptyFormat() {
 void H5Format_Test::testManualFormat() {
 
 
+    TextSerializer<Hash>::Pointer p = TextSerializer<Hash>::create("Xml");
+    std::string archive1;
+    std::string archive2;
+    std::string archive3;
+
+
+
     Format::Pointer format = Format::createEmptyFormat();
     Hash c1(
             "h5path", "experimental",
@@ -61,12 +69,18 @@ void H5Format_Test::testManualFormat() {
             "type", "UINT32",
             "compressionLevel", 9
             );
+
     h5::Element::Pointer e1 = h5::Element::create("UINT32", c1);
     format->addElement(e1);
 
-    const Hash& config = format->getConfig();
+    const Hash config1 = format->getConfig();
+    clog << endl << "config1:" << endl << config1 << endl;
+    p->save(config1, archive1);
+    //clog << "archive1:" << endl << archive1 << endl;
 
-    const vector<Hash>& vec = config.get<vector<Hash> >("Format.elements");
+
+
+    const vector<Hash>& vec = config1.get<vector<Hash> >("Format.elements");
     CPPUNIT_ASSERT(vec.size() == 1);
     CPPUNIT_ASSERT(vec[0].has("UINT32") == true);
 
@@ -83,26 +97,32 @@ void H5Format_Test::testManualFormat() {
     h5::Element::Pointer e2 = h5::Element::create("FLOAT", c2);
     format->replaceElement("experimental.test23", e2);
 
-    const Hash& config2 = format->getConfig();
+    const Hash config2 = format->getConfig();
     CPPUNIT_ASSERT(config2.has("Format") == true);
     CPPUNIT_ASSERT(config2.is<Hash > ("Format") == true);
     CPPUNIT_ASSERT(config2.has("Format.elements") == true);
     CPPUNIT_ASSERT(config2.get<vector<Hash> >("Format.elements").size() == 1);
-    CPPUNIT_ASSERT(config2.get<Hash >("Format.elements[0]").has("UINT32") == false);
-    CPPUNIT_ASSERT(config2.get<Hash >("Format.elements[0]").has("FLOAT") == true);    
-    CPPUNIT_ASSERT(config2.get<Hash >("Format.elements[0]").get<string>("FLOAT.h5path") == "experimental2");
+    CPPUNIT_ASSERT(config2.get<Hash > ("Format.elements[0]").has("UINT32") == false);
+    CPPUNIT_ASSERT(config2.get<Hash > ("Format.elements[0]").has("FLOAT") == true);
+    CPPUNIT_ASSERT(config2.get<Hash > ("Format.elements[0]").get<string > ("FLOAT.h5path") == "experimental2");
+
+    clog << endl << "config2:" << endl << config2 << endl;
+    p->save(config2, archive2);
+    //clog << "archive2:" << endl << archive2 << endl;
 
 
 
     format->removeElement("experimental2.test1000");
 
-    const Hash& config3 = format->getConfig();
+    const Hash config3 = format->getConfig();
     CPPUNIT_ASSERT(config3.has("Format") == true);
     CPPUNIT_ASSERT(config3.is<Hash > ("Format") == true);
     CPPUNIT_ASSERT(config3.has("Format.elements") == true);
     CPPUNIT_ASSERT(config3.get<vector<Hash> >("Format.elements").size() == 0);
 
-
+    clog << endl << "config3:" << endl << config3 << endl;
+    p->save(config3, archive3);
+    //clog << "archive3:" << endl << archive3 << endl;
 
 }
 
