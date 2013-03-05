@@ -80,9 +80,9 @@ namespace karabo {
                  * @param data Hash object representing data record structure in file
                  */
                 void append(const karabo::util::Hash& data);
-                //
-                //
-                //                void allocate(karabo::util::Hash& data);
+
+
+                void allocate(karabo::util::Hash& data);
                 //
                 //                void allocate(karabo::util::Hash& data, size_t len);
                 //
@@ -112,7 +112,7 @@ namespace karabo {
                 //
                 void openNew(const karabo::io::h5::Format::Pointer dataFormat);
                 //                //void openReadOnly(const karabo::util::Hash& dataFormatConfig = karabo::util::Hash());
-                //                void openReadOnly(const karabo::io::hdf5::DataFormat::Pointer dataFormat);
+                void openReadOnly(const karabo::io::h5::Format::Pointer dataFormat);
                 //                void openReadOnly();
                 //
                 //                void refreshRecordFormatVector();
@@ -150,7 +150,7 @@ namespace karabo {
                 //
                 //                void saveTableFormatAsAttribute(const karabo::io::hdf5::DataFormat::Pointer dataFormat);
                 //                void readTableFormatFromAttribute(karabo::util::Hash& dataFormatConfig);             
-                //                void openRecordStructure();
+                                
                 //
                 //
                 //                bool hasAttribute(const boost::shared_ptr<H5::Group> group, const std::string& name) const;
