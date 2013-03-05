@@ -11,6 +11,8 @@
         <itemPath>../../../src/karabo/io/h5/DatasetWriter.hh</itemPath>
         <itemPath>../../../src/karabo/io/h5/Element.cc</itemPath>
         <itemPath>../../../src/karabo/io/h5/Element.hh</itemPath>
+        <itemPath>../../../src/karabo/io/h5/ErrorHandler.cc</itemPath>
+        <itemPath>../../../src/karabo/io/h5/ErrorHandler.hh</itemPath>
         <itemPath>../../../src/karabo/io/h5/File.cc</itemPath>
         <itemPath>../../../src/karabo/io/h5/File.hh</itemPath>
         <itemPath>../../../src/karabo/io/h5/FixedLengthArray.cc</itemPath>
