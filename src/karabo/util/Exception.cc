@@ -122,23 +122,23 @@ namespace karabo {
             }
         }
 
-        void Exception::showTrace() {
+        void Exception::showTrace( ostream& os) {
             boost::mutex::scoped_lock lock(Exception::m_mutex);
             if (m_trace.empty()) return;
-            ostringstream os;
-            os << endl << " Exception with trace (listed from inner to outer):" << endl;
+            ostringstream oss;
+            oss << endl << " Exception with trace (listed from inner to outer):" << endl;
             for (unsigned int i = 0; i < Exception::m_trace.size(); ++i) {
                 string fill(i * 3, ' ');
-                os << fill << i + 1 << ". Exception " << string(5, '=') << ">  {" << endl;
-                format(os, Exception::m_trace[i], fill);
-                os << fill << "}" << endl << endl;
+                oss << fill << i + 1 << ". Exception " << string(5, '=') << ">  {" << endl;
+                format(oss, Exception::m_trace[i], fill);
+                oss << fill << "}" << endl << endl;
             }
-            cout << os.str();
+            os << oss.str();
         }
 
         ostream & operator<<(ostream& os, const Exception& exception) {
             if (Exception::m_trace.size() >= 1) {
-                Exception::showTrace();
+                Exception::showTrace(os);
             }
             string fill(Exception::m_trace.size()*3, ' ');
             os << fill << Exception::m_trace.size() + 1 << ". Exception " << string(5, '=') << ">  {" << endl;
@@ -158,8 +158,9 @@ namespace karabo {
             if (!exceptionInfo.timestamp.empty()) os << spacing << "    Timestamp.........:  " << exceptionInfo.timestamp << endl;
         }
 
-        void Exception::msg() const {
-            cout << *this;
+        
+        void Exception::msg(std::ostream& os) const {
+            os << *this;
         }
 
         const char* Exception::what() const throw () {
