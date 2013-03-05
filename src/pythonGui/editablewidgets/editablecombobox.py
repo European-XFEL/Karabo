@@ -135,6 +135,9 @@ class EditableComboBox(EditableWidget):
         self.__comboBox.setCurrentIndex(index)
         self.__comboBox.blockSignals(False)
 
+        # Needs to be called to update possible apply buttons
+        self.onEditingFinished(value)
+
 
 ### slots ###
     def onEditingFinished(self, value):

@@ -101,6 +101,9 @@ class EditableLineEdit(EditableWidget):
         self.__lineEdit.blockSignals(True)
         self.__lineEdit.setText(value)
         self.__lineEdit.blockSignals(False)
+        
+        # Needs to be called to update possible apply buttons
+        self.onEditingFinished(value)
 
 
 ### slots ###
