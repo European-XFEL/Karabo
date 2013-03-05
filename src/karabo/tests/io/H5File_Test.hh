@@ -15,6 +15,7 @@ class H5File_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST(testBufferWrite);
     CPPUNIT_TEST(testVectorBufferWrite);
     CPPUNIT_TEST(testWrite);
+    CPPUNIT_TEST(testRead);    
     CPPUNIT_TEST_SUITE_END();
 
 public:
@@ -28,6 +29,7 @@ private:
     void testWrite();
     void testBufferWrite();
     void testVectorBufferWrite();
+    void testRead();
 };
 
 #endif	/* H5FILE_TEST_HH */
