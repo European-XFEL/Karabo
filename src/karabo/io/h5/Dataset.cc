@@ -6,10 +6,10 @@
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
 
-
+#include <sstream> 
 #include "Dataset.hh"
 #include <karabo/util/SimpleElement.hh>
-
+ 
 using namespace karabo::io::h5;
 using namespace karabo::util;
 
@@ -17,7 +17,7 @@ namespace karabo {
     namespace io {
         namespace h5 {
 
-            void Dataset::expectedParameters(Schema& expected) {
+            void Dataset::expectedParameters(Schema & expected) {
 
                 INT32_ELEMENT(expected)
                         .key("compressionLevel")
@@ -27,7 +27,6 @@ namespace karabo {
                         .assignmentOptional().defaultValue(0)
                         .reconfigurable()
                         .commit();
-
             }
 
 

@@ -42,9 +42,12 @@ namespace karabo {
 
                 typedef std::map<std::string, hid_t > H5GroupsMap;
 
-                
                 Table(hid_t h5file, boost::filesystem::path name, hsize_t chunkSize = 1)
-                : m_h5file(h5file), m_name(name), table1("table1"), m_chunkSize(chunkSize), m_numberOfRecords(0) {
+                : m_h5file(h5file), m_name(name), m_chunkSize(chunkSize), m_numberOfRecords(0)
+                #ifdef KARABO_USE_PROFILER_TABLE1
+                , table1("table1")
+                #endif
+                {
                 }
 
                 virtual ~Table();
@@ -198,12 +201,13 @@ namespace karabo {
                 //
                 //                karabo::util::Hash m_readData;
                 //
-                
-                karabo::util::Profiler table1;
-                
+
                 hsize_t m_chunkSize;
                 hsize_t m_numberOfRecords;
                 hid_t m_numberOfRecordsAttribute;
+                #ifdef KARABO_USE_PROFILER_TABLE1
+                karabo::util::Profiler table1;
+                #endif
 
             };
 
