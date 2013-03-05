@@ -139,6 +139,9 @@ class EditableSpinBox(EditableWidget):
         self.__spinBox.blockSignals(True)
         self.__spinBox.setValue(value)
         self.__spinBox.blockSignals(False)
+        
+        # Needs to be called to update possible apply buttons
+        self.onEditingFinished(value)
 
 
 ### slots ###

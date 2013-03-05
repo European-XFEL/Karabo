@@ -140,7 +140,10 @@ class EditableDoubleSpinBox(EditableWidget):
         
         self.__doubleSpinBox.blockSignals(True)
         self.__doubleSpinBox.setValue(value)
-        self.__doubleSpinBox.blockSignals(False)
+        self.__doubleSpinBox.blockSignals(False)      
+        
+        # Needs to be called to update possible apply buttons
+        self.onEditingFinished(value)
 
 
 ### slots ###
