@@ -197,7 +197,7 @@ namespace karabo {
                         
                         std::vector<T>& vec = data.bindReference<std::vector<T> >(m_key);
                         vec.resize(m_dims.size());
-                        data.setAttribute(m_key, "dims", m_dims );
+                        data.setAttribute(m_key, "dims", m_dims.toVector() );
                     }
                 }
                 //
