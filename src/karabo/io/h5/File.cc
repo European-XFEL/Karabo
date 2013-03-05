@@ -91,7 +91,7 @@ namespace karabo {
 
             Table::Pointer File::getTable(const std::string& name, const karabo::io::h5::Format::Pointer dataFormat) {
                 Table::Pointer table = createReadOnlyTablePointer(name);
-                //         table->openReadOnly(dataFormat);
+                table->openReadOnly(dataFormat);
                 return table;
             }
 
