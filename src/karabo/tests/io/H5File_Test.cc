@@ -130,7 +130,7 @@ void H5File_Test::testWrite() {
         dataFormat->removeElement("vectors.str");
 
 
-        //        clog << "config 2: " << dataFormat->getConfig() << endl;
+              clog << "config 2: " << dataFormat->getConfig() << endl;
 
         File file("file.h5");
         file.open(File::TRUNCATE);
@@ -171,6 +171,19 @@ void H5File_Test::testRead() {
     h5::Element::Pointer e1 = h5::Element::create("UINT32", c1);
     format->addElement(e1);
 
+    Hash c2;
+    c2.set("h5path", "vectors");
+    c2.set("h5name", "double");
+    c2.set("key", "vectors.double");
+    c2.set("type", "VECTOR_DOUBLE");
+    c2.set("dims", Dims(3,4).toVector() );
+    c2.set("compressionLevel", 9);
+
+   // clog << "aaaa:\n" << c2 << endl;
+
+    h5::Element::Pointer e2 = h5::Element::create("VECTOR_DOUBLE", c2);
+    format->addElement(e2);
+
 
     File file("file.h5");
     file.open(File::READONLY);
@@ -178,9 +191,9 @@ void H5File_Test::testRead() {
     Hash data;
 
     Table::Pointer table = file.getTable("/abc", format);
-    
+
     table->allocate(data);
-    
+
     clog << data << endl;
 
 
