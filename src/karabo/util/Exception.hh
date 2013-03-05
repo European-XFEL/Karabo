@@ -89,7 +89,7 @@ namespace karabo {
             /**
              * Shows all memorized messages.
              */
-            static void showTrace();
+            static void showTrace( std::ostream& os = std::cerr );
 
             static void addToTrace(const Exception& e);
 
@@ -103,7 +103,7 @@ namespace karabo {
              * In contrast to the inherited what() function this function also lists
              * memorized/traced exceptions.
              */
-            void msg() const;
+            void msg( std::ostream& os = std::cerr ) const;
 
             /**
              * Overrides std::exception.
@@ -367,6 +367,13 @@ namespace karabo {
 
             HdfIOException(const std::string& message, const std::string& filename, const std::string& function, int lineNumber) :
             IOException(message, "HdfIOException", filename, function, lineNumber) {
+            }
+            
+            void set(const std::string& message, const std::string& filename, const std::string& function, int lineNumber){                
+                m_exceptionInfo.message =  message;                
+                m_exceptionInfo.filename = filename;
+                m_exceptionInfo.function = function;
+                m_exceptionInfo.lineNumber = toString(lineNumber);
             }
         };
 #define KARABO_HDF_IO_EXCEPTION(msg) karabo::util::HdfIOException(msg, __FILE__, BOOST_CURRENT_FUNCTION, __LINE__)
