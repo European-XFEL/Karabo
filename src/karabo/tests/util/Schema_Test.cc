@@ -257,6 +257,14 @@ void Schema_Test::testPerKeyFunctionality() {
             CPPUNIT_ASSERT(m_schema.isAccessReadOnly(keys[i]) == true);
         }
     }
+    
+    //testing HELP function
+    cout << "\n TestStruct1::help() \n";
+    m_schema.help();
+
+    cout << "\n TestStruct1::help(\"exampleKey1\") \n";
+    m_schema.help("exampleKey1");
+
 }
 
 
@@ -264,7 +272,25 @@ void Schema_Test::testHelpFunction() {
 
     Schema schema("schemaGraphRender1", Schema::AssemblyRules(READ | WRITE | INIT));
     GraphicsRenderer1::expectedParameters(schema);
-    cout << "\n===================================" << endl;
+    
+    cout << "\n========== schema.help() =========================" << endl;
     schema.help();
-    cout << "===================================" << endl;
+    
+    cout << "============ schema.help(\"shapes\") ===============" << endl;
+    schema.help("shapes");
+    
+    cout << "============ schema.help(\"shapes.circle\")=========" << endl;
+    schema.help("shapes.circle");
+    
+    cout << "==========schema.help(\"shapes.circle.radius\")======" << endl;
+    schema.help("shapes.circle.radius");
+    
+    cout << "==========schema.help(\"shapes.rectangle\")======" << endl;
+    schema.help("shapes.rectangle");
+    
+    cout << "==========schema.help(\"shapes.rectangle.b\")======" << endl;
+    schema.help("shapes.rectangle.b");
+    
+    cout << "==========schema.help(\"shapes.Triangle\")======" << endl;
+    schema.help("Triangle");
 } 
