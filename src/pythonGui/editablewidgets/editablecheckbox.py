@@ -110,7 +110,10 @@ class EditableCheckBox(EditableWidget):
             self.__checkBox.blockSignals(True)
             self.__checkBox.setCheckState(checkState)
             self.__checkBox.blockSignals(False)
-
+        
+        # Needs to be called to update possible apply buttons
+        self.onEditingFinished(checkState)
+        
 
 ### slots ###
     def onEditingFinished(self, value):

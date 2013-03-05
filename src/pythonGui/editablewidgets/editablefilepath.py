@@ -105,7 +105,7 @@ class EditableFilePath(EditableWidget):
         
         self.__leFilePath.blockSignals(True)
         self.__leFilePath.setText(value)
-        self.__leFilePath.blockSignals(False)
+        self.__leFilePath.blockSignals(False)        
 
 
 ### slots ###
