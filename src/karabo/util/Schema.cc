@@ -15,6 +15,7 @@
 
 #include "Exception.hh"
 #include "Schema.hh"
+#include "Hash.hh"
 
 namespace karabo {
     namespace util {
@@ -460,15 +461,13 @@ namespace karabo {
 
 
         void Schema::help(const string& classId) {
-
+            
             ostringstream stream;
             stream << "----- HELP -----" << endl;
-            if (!classId.empty()) {
-                stream << "Schema: " << getRootName() << " , key: " << classId << endl;
-            } else {
-                stream << "Schema: \n" << getRootName() << endl;
-                vector<string> keys = getParameters(classId);
-
+            if (classId.empty()) {
+                stream << "Schema: " << getRootName() << endl;
+                vector<string> keys = getParameters();
+                
                 BOOST_FOREACH(string key, keys) {
                     if (getNodeType(key) == Schema::LEAF) {
                         processingLeaf(key, stream);
@@ -480,6 +479,41 @@ namespace karabo {
                         processingListOfNodes(key, stream);
                     }
                 }
+            } else {
+                stream << "Schema: " << getRootName() << " , key: " << classId << endl;
+
+                if (getNodeType(classId) == Schema::LEAF) {
+                    stream << "LEAF element" << endl;
+                    processingLeaf(classId, stream);
+                }
+
+                if (getNodeType(classId) == Schema::NODE) {
+                    stream << "NODE element" << endl;
+                    vector<string> keys = getParameters(classId);
+
+                    BOOST_FOREACH(string key, keys) {
+                        string path = classId + "." + key;
+                        if (getNodeType(path) == Schema::LEAF) {
+                            processingLeaf(path, stream);
+                        } else if (getNodeType(path) == Schema::NODE) {
+                            processingNode(path, stream);
+                        } else if (getNodeType(path) == Schema::CHOICE_OF_NODES) {
+                            processingChoiceOfNodes(path, stream);
+                        } else if (getNodeType(path) == Schema::LIST_OF_NODES) {
+                            processingListOfNodes(path, stream);
+                        }
+                    }
+                }
+
+                if (getNodeType(classId) == Schema::CHOICE_OF_NODES) {
+                    stream << "CHOICE_OF_NODES element" << endl;
+                    processingChoiceOfNodes(classId, stream);
+                }
+
+                if (getNodeType(classId) == Schema::LIST_OF_NODES) {
+                    stream << "LIST_OF_NODES element" << endl;
+                    processingListOfNodes(classId, stream);
+                }
             }
 
             //show results:
@@ -488,9 +522,19 @@ namespace karabo {
 
 
         void Schema::processingLeaf(const std::string& key, ostringstream & stream) {
+            string showKey;
+            if (key.rfind(".") != string::npos) {
+                vector<string> tokens;
+                boost::split(tokens, key, boost::is_any_of("."));
+                int i = tokens.size()-1;
+                showKey = tokens[i];
+            } else {
+                showKey = key;
+            }
+
             string valueType = getValueType(key);
 
-            stream << "  ." << key << "(" << valueType << ")" << endl;
+            stream << "\n  ." << showKey << "(" << valueType << ")" << endl;
 
             if (getAssignment(key) == OPTIONAL_PARAM)
                 stream << "     " << "Assignment : OPTIONAL" << endl;
@@ -512,14 +556,25 @@ namespace karabo {
 
 
         void Schema::processingNode(const std::string& key, ostringstream & stream) {
-            stream << "  ." << key << "(NODE)" << endl;
+//            string showKey;
+//            if (key.rfind(".") != string::npos) {
+//                vector<string> tokens;
+//                boost::split(tokens, key, boost::is_any_of("."));
+//                int i = tokens.size()-1;
+//                showKey = tokens[i];
+//            } else {
+//                showKey = key;
+//            }
+            
+            stream << "\n  ." << key << "(NODE)" << endl;
             if (hasDescription(key))
                 stream << "     " << "Description : " << getDescription(key) << endl;
+
         }
 
 
         void Schema::processingChoiceOfNodes(const std::string& key, ostringstream & stream) {
-            stream << "  ." << key << "(CHOICE_OF_NODES)" << endl;
+            stream << "\n  ." << key << "(CHOICE_OF_NODES)" << endl;
 
             if (getAssignment(key) == OPTIONAL_PARAM)
                 stream << "     " << "Assignment : OPTIONAL" << endl;
@@ -537,7 +592,7 @@ namespace karabo {
 
 
         void Schema::processingListOfNodes(const std::string& key, ostringstream & stream) {
-            stream << "  ." << key << "(LIST_OF_NODES)" << endl;
+            stream << "\n  ." << key << "(LIST_OF_NODES)" << endl;
         }
 
         //        Schema& Schema::addExternalSchema(const Schema& schema) {
