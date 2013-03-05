@@ -8,8 +8,8 @@
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
 
-#ifndef KARABO_IO_IOPROFILER_HH
-#define	KARABO_IO_IOPROFILER_HH
+#ifndef KARABO_IO_H5_IOPROFILER_HH
+#define	KARABO_IO_H5_IOPROFILER_HH
 
 #include <karabo/util/Profiler.hh>
 #include <iostream>
