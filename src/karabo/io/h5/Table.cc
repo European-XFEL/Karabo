@@ -291,9 +291,10 @@ namespace karabo {
 
                 hid_t schemaVersion = H5Acreate(m_group, "schemaVersion", stringType, dataSpace, H5P_DEFAULT, H5P_DEFAULT);
                 KARABO_CHECK_HDF5_STATUS(schemaVersion)
-                const char* version = Format::classInfo().getVersion().c_str();
-                clog << "schema version: " << version << endl;
-                status = H5Awrite(schemaVersion, stringType, &version);
+                string version = Format::classInfo().getVersion();
+                const char* versionPtr = version.c_str();
+//                clog << "schema version: " << version << endl;
+                status = H5Awrite(schemaVersion, stringType, &versionPtr);
                 KARABO_CHECK_HDF5_STATUS(status)
 
             }

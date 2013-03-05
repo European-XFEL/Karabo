@@ -157,6 +157,35 @@ void H5File_Test::testWrite() {
 
 }
 
+void H5File_Test::testRead() {
+
+    Format::Pointer format = Format::createEmptyFormat();
+    Hash c1(
+            "h5path", "experimental",
+            "h5name", "test23",
+            "key", "instrument.test",
+            "type", "UINT32",
+            "compressionLevel", 9
+            );
+
+    h5::Element::Pointer e1 = h5::Element::create("UINT32", c1);
+    format->addElement(e1);
+
+
+    File file("file.h5");
+    file.open(File::READONLY);
+
+    Hash data;
+
+    Table::Pointer table = file.getTable("/abc", format);
+    
+    table->allocate(data);
+    
+    clog << data << endl;
+
+
+}
+
 void H5File_Test::testVectorBufferWrite() {
 
 

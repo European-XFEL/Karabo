@@ -167,7 +167,7 @@ data.set( "key-" + ToType<ToLiteral>::to(FromType<FromTypeInfo>::from(typeid(vec
 
 
         } catch (Exception e) {
-            clog << e << endl;
+            clog << e.detailedMsg() << endl;
             KARABO_RETHROW
         }
 
