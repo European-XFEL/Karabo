@@ -26,10 +26,10 @@ namespace karabo {
 
             #define KARABO_CHECK_HDF5_STATUS(status)\
                 if(status < 0){\
-                std::ostringstream oss;\
+                karabo::util::HdfIOException ex("","","",0);\
                 hid_t errId = H5Eget_current_stack();\
-                H5Ewalk2(errId, H5E_WALK_DOWNWARD, karaboH5Errorhandler, &oss);\
-                throw KARABO_HDF_IO_EXCEPTION(oss.str());\
+                H5Ewalk2(errId, H5E_WALK_DOWNWARD, karaboH5Errorhandler, &ex);\
+                throw ex;\
             }
             
 

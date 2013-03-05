@@ -95,15 +95,15 @@ namespace karabo {
                 //                 * @param size The size of extended space corresponding to the number of newly added records
                 //                 */
                 //                virtual void extend(hsize_t size);
-                //
-                //
-                //                /**
-                //                 * Open existing HDF5 dataset.
-                //                 * @param group Hdf5 group where the dataset belongs to.
-                //                 */
-                //                virtual void open(boost::shared_ptr<H5::Group> group);
-                //
-                //
+                
+                
+                /**
+                 * Open existing HDF5 dataset.
+                 * @param group Hdf5 group where the dataset belongs to.
+                 */
+                virtual void open( hid_t group) = 0;
+
+                
                 //                /**
                 //                 * Write data to dataset. Hash structure must contain key and value pair.
                 //                 * The key is the name of the dataset, value must correspond to the type as defined at the dataset creation time
@@ -128,13 +128,13 @@ namespace karabo {
                  */
                 virtual void write(const karabo::util::Hash& data, hsize_t recordId, hsize_t len) = 0;
                 //
-                //                /**
-                //                 * Allocate memory for single record
-                //                 * If the entry in the Hash does not exist, this function must allocate memory to hold the complete dataset
-                //                 * If the entry exist assume the memory is allocated. This can be used when client delivers own buffers.
-                //                 * @param data Hash where the data will be stored when using read function
-                //                 */
-                //                virtual void allocate(karabo::util::Hash& data) = 0;
+                /**
+                 * Allocate memory for single record
+                 * If the entry in the Hash does not exist, this function must allocate memory to hold the complete dataset
+                 * If the entry exist assume the memory is allocated. This can be used when client delivers own buffers.
+                 * @param data Hash where the data will be stored when using read function
+                 */
+                virtual void allocate(karabo::util::Hash& data) = 0;
                 //
                 //                /**
                 //                 * allocate memory for len number of records
@@ -184,7 +184,7 @@ namespace karabo {
                 std::string m_h5path; // path to the parent of this element from the root of the table (/ as separator)
                 std::string m_h5PathName;
                 std::string m_key; // key  (including path) to the data element in hash                
-                hid_t m_group; // parent group of this element
+                hid_t m_parentGroup; // parent group of this element
                 karabo::util::Hash m_config;
             };
 

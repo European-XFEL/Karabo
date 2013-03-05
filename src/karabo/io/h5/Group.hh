@@ -14,9 +14,8 @@
 
 #include "Element.hh"
 #include "TypeTraits.hh"
-#include <karabo/util/Hash.hh>
-#include <karabo/util/ToLiteral.hh>
-#include <karabo/util/FromTypeInfo.hh>
+#include <karabo/util/util.hh>
+#include "ErrorHandler.hh"
 
 //#include "ScalarFilter.hh"
 
@@ -36,27 +35,22 @@ namespace karabo {
                 KARABO_CLASSINFO(Group, "Group", "1.0")
 
                 static void expectedParameters(karabo::util::Schema& expected);
-                
-                Group( const karabo::util::Hash& input) : Element(input) {                    
-                               
+
+                Group(const karabo::util::Hash& input) : Element(input) {
+
                 }
 
                 virtual ~Group() {
                 }
 
-                void create(hsize_t chunkSize) {
+                void create(hsize_t chunkSize);
 
-                    try {
-                        hid_t group = H5Gcreate(m_group, m_h5name.c_str(), H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-                        H5Gclose(group);                        
-                    } catch (...) {
-                        KARABO_RETHROW
-                    }
-
+                void write(const karabo::util::Hash& data, hsize_t recordId) {
                 }
-                
-                void write(const karabo::util::Hash& data, hsize_t recordId){}
-                void write(const karabo::util::Hash& data, hsize_t recordId, hsize_t len){}
+
+                void write(const karabo::util::Hash& data, hsize_t recordId, hsize_t len) {
+                }
+                void open(hid_t group);
                 //
                 //                void write(const karabo::util::Hash& data, hsize_t recordId) {
                 //
@@ -145,17 +139,13 @@ namespace karabo {
                 //                    }
                 //                }
                 //
-                //                inline void allocate(karabo::util::Hash & data) {
-                //                    data.set(m_key, T());
-                //                }
-                //
-                //                inline void allocate(karabo::util::Hash& buffer, size_t len) {
-                //                    // check if one can use bindReference here
-                //                    boost::shared_array<T> arr(new T[len]);
-                //                    ArrayView<T> av(arr, len);
-                //                    buffer.set(m_key, av);                                        
-                //                }
-                //
+
+                inline void allocate(karabo::util::Hash & data) {
+                }
+
+                inline void allocate(karabo::util::Hash& buffer, size_t len) {
+                }
+
                 //                inline void read(karabo::util::Hash& data, hsize_t recordId) {
                 //                    T& value = data.get<T > (m_key);
                 //                    readValue(value, recordId);
@@ -201,6 +191,7 @@ namespace karabo {
                 //            private:
                 //                boost::shared_ptr<ScalarFilter<T> > m_filter;
 
+                hid_t m_group; // this group
 
 
             };

@@ -9,6 +9,7 @@
 
 #include "Element.hh"
 #include "karabo/util/ListElement.hh"
+#include "ErrorHandler.hh"
 #include <karabo/util/Factory.hh>
 #include <karabo/util/Configurator.hh>
 #include <karabo/util/SimpleElement.hh>
@@ -112,7 +113,7 @@ namespace karabo {
 
                     H5GroupsMap::iterator it = groups.find(m_h5path);
                     if (it != groups.end()) {
-                        m_group = it->second;
+                        m_parentGroup = it->second;
                     } else {
                         //
 
@@ -128,17 +129,19 @@ namespace karabo {
                             if (H5Lexists(groupId, relativePath.c_str(), H5P_DEFAULT) != 0) {
                                 continue;
                             } else {
-                                m_group = H5Gcreate(groupId, m_h5path.c_str(), H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-                                groups[m_h5path] = m_group;
+                                m_parentGroup = H5Gcreate(groupId, m_h5path.c_str(), H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+                                KARABO_CHECK_HDF5_STATUS(m_parentGroup);
+                                groups[m_h5path] = m_parentGroup;
                                 return;
                             }
                         }
-                        m_group = H5Gopen(groupId, m_h5path.c_str(), H5P_DEFAULT);
-                        groups[m_h5path] = m_group;
+                        m_parentGroup = H5Gopen(groupId, m_h5path.c_str(), H5P_DEFAULT);
+                        KARABO_CHECK_HDF5_STATUS(m_parentGroup);
+                        groups[m_h5path] = m_parentGroup;
                     }
 
                 } catch (...) {
-                    KARABO_RETHROW
+                    KARABO_RETHROW_AS( KARABO_PROPAGATED_EXCEPTION("Could not create one of the parent group"));
                 }
             }
 

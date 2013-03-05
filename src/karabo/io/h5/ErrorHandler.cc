@@ -12,41 +12,87 @@
 
 using namespace karabo::io::h5;
 using namespace karabo::util;
+using namespace std;
 
 namespace karabo {
     namespace io {
         namespace h5 {
 
-
-            #define MSG_SIZE 64 
-
             herr_t karaboH5Errorhandler(unsigned n, const H5E_error2_t *err_desc, void* client_data) {
-                //FILE *stream = (FILE *) client_data;
-                std::ostringstream* oss = static_cast<std::ostringstream*> (client_data);
-                char maj[MSG_SIZE];
-                char min[MSG_SIZE];
-                char cls[MSG_SIZE];
+                karabo::util::HdfIOException* ex = static_cast<karabo::util::HdfIOException*> (client_data);
 
+                ssize_t lenClassId = 0, lenMajor = 0, lenMinor = 0;
+                if ((lenClassId = H5Eget_class_name(err_desc->cls_id, NULL, 0)) < 0)
+                    return -1;
+
+                if ((lenMajor = H5Eget_msg(err_desc->maj_num, NULL, NULL, 0)) < 0)
+                    return -1;
+
+                if ((lenMinor = H5Eget_msg(err_desc->min_num, NULL, NULL, 0)) < 0)
+                    return -1;
 
                 /* Get descriptions for the major and minor error numbers */
-                if (H5Eget_class_name(err_desc->cls_id, cls, MSG_SIZE) < 0)
+                vector<char> cls(lenClassId + 1, '\0');
+                if (H5Eget_class_name(err_desc->cls_id, &cls[0], lenClassId + 1) < 0)
                     return -1;
 
-                if (H5Eget_msg(err_desc->maj_num, NULL, maj, MSG_SIZE) < 0)
+                vector<char> maj(lenMajor + 1, '\0');
+                if (H5Eget_msg(err_desc->maj_num, NULL, &maj[0], lenMajor + 1) < 0)
                     return -1;
 
-                if (H5Eget_msg(err_desc->min_num, NULL, min, MSG_SIZE) < 0)
+                vector<char> min(lenMinor + 1, '\0');
+                if (H5Eget_msg(err_desc->min_num, NULL, &min[0], lenMinor + 1) < 0)
                     return -1;
 
-                *oss << "#";
-                oss->width(3);
-                oss->fill('0');
-                *oss << n << " " << err_desc->file_name << " line: " << err_desc->line;
-                *oss << " in " << err_desc->func_name << "(), " << err_desc->desc;
-                *oss << ". Major: " << maj << " Minor: " << min << std::endl;
+                ostringstream oss;
+                oss << "#";
+                oss.width(3);
+                oss.fill('0');
+                oss << n << " " << err_desc->desc;
+                oss << ". Major: " << &maj[0] << " Minor: " << &min[0];
+
+                ex->set(oss.str(), err_desc->file_name, err_desc->func_name, err_desc->line);
                 return 0;
 
             }
+
+            //            herr_t karaboH5Errorhandler(unsigned n, const H5E_error2_t *err_desc, void* client_data) {
+            //                std::ostringstream* oss = static_cast<std::ostringstream*> (client_data);
+            //
+            //                ssize_t lenClassId = 0, lenMajor=0, lenMinor=0;
+            //                if ((lenClassId = H5Eget_class_name(err_desc->cls_id, NULL, 0)) < 0)
+            //                    return -1;
+            //                clog << "classId len: " << lenClassId << endl;
+            //                
+            //                if ((lenMajor = H5Eget_msg(err_desc->maj_num, NULL, NULL, 0)) < 0)
+            //                    return -1;
+            //                clog << "major len: " << lenMajor << endl;
+            //                
+            //                if ((lenMinor = H5Eget_msg(err_desc->min_num, NULL, NULL, 0)) < 0)
+            //                    return -1;
+            //                clog << "minor len: " << lenMinor << endl;
+            //                
+            //                /* Get descriptions for the major and minor error numbers */
+            ////                if (H5Eget_class_name(err_desc->cls_id, cls, lenClassId) < 0)
+            ////                    return -1;
+            //
+            //                vector<char> maj(lenMajor+1,'\0');
+            //                if (H5Eget_msg(err_desc->maj_num, NULL, &maj[0], lenMajor+1) < 0)
+            //                    return -1;
+            //
+            //                vector<char> min(lenMinor+1,'\0');
+            //                if (H5Eget_msg(err_desc->min_num, NULL, &min[0], lenMinor+1) < 0)
+            //                    return -1;
+            //
+            //                *oss << "#";
+            //                oss->width(3);
+            //                oss->fill('0');
+            //                *oss << n << " " << err_desc->file_name << " line: " << err_desc->line;
+            //                *oss << " in " << err_desc->func_name << "(), " << err_desc->desc;
+            //                *oss << ". Major: " << &maj[0] << " Minor: " << &min[0] << std::endl;
+            //                return 0;
+            //
+            //            }
 
 
         }

@@ -39,18 +39,18 @@ namespace karabo {
                 KARABO_CLASSINFO(FixedLengthArray, "VECTOR_" + karabo::util::ToType<karabo::util::ToLiteral>::to(karabo::util::FromType<karabo::util::FromTypeInfo>::from(typeid (T))), "2.0")
 
                 FixedLengthArray(const karabo::util::Hash& input) : Dataset(input)
-                 #ifdef KARABO_USE_PROFILER_SCALAR1
+#ifdef KARABO_USE_PROFILER_SCALAR1
                 , scalar1("scalar1")
-                #endif
+#endif
                 {
                     m_dims = karabo::util::Dims(input.get<std::vector<unsigned long long> >("dims"));
                 }
 
                 virtual ~FixedLengthArray() {
-//                    KARABO_PROFILER_REPORT_SCALAR1("write");
-//                    KARABO_PROFILER_REPORT_SCALAR1("dataspace");
-//                    KARABO_PROFILER_REPORT_SCALAR1("writeBuffer");
-//                    KARABO_PROFILER_REPORT_SCALAR1("dataspaceBuffer");
+                    //                    KARABO_PROFILER_REPORT_SCALAR1("write");
+                    //                    KARABO_PROFILER_REPORT_SCALAR1("dataspace");
+                    //                    KARABO_PROFILER_REPORT_SCALAR1("writeBuffer");
+                    //                    KARABO_PROFILER_REPORT_SCALAR1("dataspaceBuffer");
 
                 }
 
@@ -86,8 +86,8 @@ namespace karabo {
                         chunkVector[0] = 0;
                         karabo::util::Dims zeroDataSpace(chunkVector);
 
-                        m_fileDataSpace = dataSpace(zeroDataSpace);                        
-                        m_dataSet = H5Dcreate(m_group, m_h5name.c_str(), ScalarTypes::getHdf5StandardType<T > (), m_fileDataSpace, H5P_DEFAULT, m_dataSetProperties, H5P_DEFAULT);
+                        m_fileDataSpace = dataSpace(zeroDataSpace);
+                        m_dataSet = H5Dcreate(m_parentGroup, m_h5name.c_str(), ScalarTypes::getHdf5StandardType<T > (), m_fileDataSpace, H5P_DEFAULT, m_dataSetProperties, H5P_DEFAULT);
                         KARABO_CHECK_HDF5_STATUS(m_dataSet);
                         //m_dataSet = m_group->createDataSet(m_key.c_str(), ScalarTypes::getHdf5StandardType<T > (), m_fileDataSpace, *m_dataSetProperties);
                         // need to use C interface because C++ does not allow specifying dataset access property list
@@ -121,8 +121,8 @@ namespace karabo {
                         DatasetWriter<T>::write(vec, m_dataSet, mds, m_fileDataSpace);
                         KARABO_PROFILER_STOP_SCALAR1
                     } catch (...) {
-                        KARABO_RETHROW_AS(KARABO_PROPAGATED_EXCEPTION("Cannot write Hash node " + m_key + " to dataset /" + m_h5PathName));                        
-                        
+                        KARABO_RETHROW_AS(KARABO_PROPAGATED_EXCEPTION("Cannot write Hash node " + m_key + " to dataset /" + m_h5PathName));
+
                     }
                 }
                 //
@@ -190,19 +190,16 @@ namespace karabo {
                     //                    }
                     //
                 }
-                //
-                //                void allocate(karabo::util::Hash & data) {
-                //
-                //                    if (!data.has(m_key)) {
-                //                        // if element is not set allocate memory
-                //                        boost::shared_array<T> arr(new T[m_size]);
-                //                        ArrayView<T> av(arr, m_dims);
-                //                        data.set(m_key, av);
-                //                    }
-                //                    karabo::util::Hash::iterator it = data.find(m_key);
-                //                    boost::any& any = data.getAny(it);
-                //                    m_filter = FLArrayFilter<T>::createDefault(any.type().name());
-                //                }
+
+                void allocate(karabo::util::Hash & data) {
+
+                    if (!data.has(m_key)) {
+                        
+                        std::vector<T>& vec = data.bindReference<std::vector<T> >(m_key);
+                        vec.resize(m_dims.size());
+                        data.setAttribute(m_key, "dims", m_dims );
+                    }
+                }
                 //
                 //                void allocate(karabo::util::Hash& buffer, size_t len) {
                 //
@@ -307,9 +304,9 @@ namespace karabo {
             protected:
 
 
-                 #ifdef KARABO_USE_PROFILER_SCALAR1
+#ifdef KARABO_USE_PROFILER_SCALAR1
                 karabo::util::Profiler scalar1;
-                #endif                
+#endif                
                 karabo::util::Dims m_dims;
                 karabo::util::Dims m_dimsPlus1;
 

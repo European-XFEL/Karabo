@@ -66,10 +66,7 @@ namespace karabo {
                     unsigned char converted = boost::numeric_cast<unsigned char>(value);
                     hid_t tid = ScalarTypes::getHdf5NativeType<unsigned char > ();
                     herr_t status = H5Dwrite(dataSet, tid, memoryDataSpace, fileDataSpace, H5P_DEFAULT, &converted);
-                    if (status < 0) {
-                        throw KARABO_HDF_IO_EXCEPTION("Could not write " + _KARABO_IO_H5_TYPE(bool) + " dataset");
-                    }
-
+                    KARABO_CHECK_HDF5_STATUS(status);
                 }
 
                 static void write(const bool* ptr, hsize_t len, hid_t dataSet, hid_t memoryDataSpace, hid_t fileDataSpace) {
@@ -80,9 +77,7 @@ namespace karabo {
                     }
                     hid_t tid = ScalarTypes::getHdf5NativeType<unsigned char > ();
                     herr_t status = H5Dwrite(dataSet, tid, memoryDataSpace, fileDataSpace, H5P_DEFAULT, &converted);
-                    if (status < 0) {
-                        throw KARABO_HDF_IO_EXCEPTION("Could not write " + _KARABO_IO_H5_TYPE(bool) + " dataset");
-                    }
+                    KARABO_CHECK_HDF5_STATUS(status);                    
 
                 }
 
@@ -98,10 +93,7 @@ namespace karabo {
                     const unsigned char* ptr = &converted[0];
                     hid_t tid = ScalarTypes::getHdf5NativeType<unsigned char > ();
                     herr_t status = H5Dwrite(dataSet, tid, memoryDataSpace, fileDataSpace, H5P_DEFAULT, ptr);
-                    if (status < 0) {
-                        throw KARABO_HDF_IO_EXCEPTION("Could not write " + _KARABO_IO_H5_TYPE(bool) + " dataset");
-                    }
-
+                    KARABO_CHECK_HDF5_STATUS(status);
                 }
 
             };
