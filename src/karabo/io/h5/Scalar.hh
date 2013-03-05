@@ -55,7 +55,7 @@ namespace karabo {
                         karabo::util::Dims dims(chunkSize);
                         createDataSetProperties(dims);
                         m_fileDataSpace = Dataset::dataSpace(0);
-                        m_dataSet = H5Dcreate(m_group, m_h5name.c_str(), ScalarTypes::getHdf5StandardType<T > (),
+                        m_dataSet = H5Dcreate(m_parentGroup, m_h5name.c_str(), ScalarTypes::getHdf5StandardType<T > (),
                                 m_fileDataSpace, H5P_DEFAULT, m_dataSetProperties, H5P_DEFAULT);
                         KARABO_CHECK_HDF5_STATUS(m_dataSet);
                     } catch (...) {
@@ -167,9 +167,10 @@ namespace karabo {
                 //                    }
                 //                }
                 //
-                //                inline void allocate(karabo::util::Hash & data) {
-                //                    data.set(m_key, T());
-                //                }
+
+                inline void allocate(karabo::util::Hash & data) {
+                    data.set(m_key, T());
+                }
                 //
                 //                inline void allocate(karabo::util::Hash& buffer, size_t len) {
                 //                    // check if one can use bindReference here

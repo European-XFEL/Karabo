@@ -49,12 +49,15 @@ namespace karabo {
 
                 void createDataSetProperties(karabo::util::Dims& chunkDims) {
                     m_dataSetProperties = H5Pcreate(H5P_DATASET_CREATE);
-                    H5Pset_layout(m_dataSetProperties, H5D_CHUNKED);
+                    herr_t status = H5Pset_layout(m_dataSetProperties, H5D_CHUNKED);
+                    KARABO_CHECK_HDF5_STATUS(status);
                     if (m_compressionLevel > 0) {
                         //         m_dataSetProperties->setShuffle();
-                        H5Pset_deflate(m_dataSetProperties, m_compressionLevel);
+                        status = H5Pset_deflate(m_dataSetProperties, m_compressionLevel);
+                        KARABO_CHECK_HDF5_STATUS(status);
                     }
-                    H5Pset_chunk(m_dataSetProperties, chunkDims.rank(), &(chunkDims.toVector())[0]);
+                    status = H5Pset_chunk(m_dataSetProperties, chunkDims.rank(), &(chunkDims.toVector())[0]);
+                    KARABO_CHECK_HDF5_STATUS(status);
                 }
 
                 static hid_t dataSpace(karabo::util::Dims& dims) {
@@ -128,6 +131,8 @@ namespace karabo {
                 }
 
 
+                virtual void open( hid_t group);
+                
                 int m_compressionLevel;
 
                 hid_t m_dataSet;

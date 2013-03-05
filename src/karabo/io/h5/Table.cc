@@ -30,7 +30,7 @@ namespace karabo {
             // KARABO_REGISTER_FOR_CONFIGURATION_1(karabo::io::h5::Table)
 
             Table::~Table() {
-//                KARABO_PROFILER_REPORT_TABLE1("write1");
+                //                KARABO_PROFILER_REPORT_TABLE1("write1");
                 //                KARABO_PROFILER_REPORT_TABLE1("test");
                 //                std::clog << "test" << ": " << table1 << std::endl;
                 //                std::clog << "test" << ": " << table1.getTime("write1").sec << " " << table1.getTime("write1").nsec << std::endl;
@@ -47,18 +47,24 @@ namespace karabo {
                 //refreshRecordFormatVector();
 
             }
-            //
-            //            void Table::openReadOnly(const karabo::io::hdf5::DataFormat::Pointer dataFormat) {
-            //
-            //                m_dataFormat = dataFormat;
-            //                try {
-            //                    m_group = boost::shared_ptr<H5::Group > (new H5::Group(m_h5file->openGroup(m_name.c_str())));
-            //                    openRecordStructure();
-            //                    retrieveNumberOfRecordsFromFile();
-            //                } catch (...) {
-            //                    KARABO_RETHROW
-            //                }
-            //            }
+
+            void Table::openReadOnly(const karabo::io::h5::Format::Pointer dataFormat) {
+
+                m_dataFormat = dataFormat;
+                try {
+
+                    m_group = H5Gopen(m_h5file, m_name.c_str(), H5P_DEFAULT);
+                    KARABO_CHECK_HDF5_STATUS(m_group);
+
+                    vector<boost::shared_ptr<Element> > elements = m_dataFormat->getElements();
+                    for (size_t i = 0; i < elements.size(); ++i) {
+                        elements[i]->open(m_group);
+                    }
+                    // retrieveNumberOfRecordsFromFile();
+                } catch (...) {
+                    KARABO_RETHROW
+                }
+            }
             //
             //            void Table::openReadOnly() {
             //                // there are 3 ways of opening file for reading
@@ -188,9 +194,13 @@ namespace karabo {
             //                updateNumberOfRecordsAttribute();
             //            }
             //
-            //            void Table::allocate(karabo::util::Hash& data) {
-            //                r_allocate(data, m_recordFormatHash);
-            //            }
+
+            void Table::allocate(karabo::util::Hash& data) {
+                vector<boost::shared_ptr<Element> > elements = m_dataFormat->getElements();
+                for (size_t i = 0; i < elements.size(); ++i) {
+                    elements[i]->allocate(data);
+                }
+            }
             //
             //            void Table::allocate(karabo::util::Hash& data, size_t len) {
             //                r_allocate(data, len, m_recordFormatHash);
@@ -273,19 +283,19 @@ namespace karabo {
 
                 hid_t stringType = H5Tcopy(H5T_C_S1);
                 herr_t status = H5Tset_size(stringType, H5T_VARIABLE);
-                if (status < 0) {
-                    throw KARABO_HDF_IO_EXCEPTION("Could not create variable string data type for schemaVersion attribute");
-                }
+                KARABO_CHECK_HDF5_STATUS(status)
 
                 hsize_t dims[1] = {1};
                 hid_t dataSpace = H5Screate_simple(1, dims, NULL);
-                
+                KARABO_CHECK_HDF5_STATUS(dataSpace);
+
                 hid_t schemaVersion = H5Acreate(m_group, "schemaVersion", stringType, dataSpace, H5P_DEFAULT, H5P_DEFAULT);
+                KARABO_CHECK_HDF5_STATUS(schemaVersion)
                 const char* version = Format::classInfo().getVersion().c_str();
+                clog << "schema version: " << version << endl;
                 status = H5Awrite(schemaVersion, stringType, &version);
-                if (status < 0) {
-                    throw KARABO_HDF_IO_EXCEPTION("Could not write schemaVersion attribute");
-                }
+                KARABO_CHECK_HDF5_STATUS(status)
+
             }
 
             void Table::createInitialNumberOfRecordsAttribute() {
@@ -374,22 +384,6 @@ namespace karabo {
 
 
             //
-            //            void Table::openRecordStructure() {
-            //
-            //                RecordFormat::Pointer recordFormat = m_dataFormat->getRecordFormat();
-            //                Hash discoveredRecordFormatHash;
-            //                recordFormat->getHash(discoveredRecordFormatHash);
-            //
-            //                //TODO: here place holder for selection
-            //                //m_recordFormatHash.clear();
-            //                //r_filter(discoveredRecordFormatHash, m_activatedElements, m_recordFormatHash );
-            //
-            //                m_recordFormatHash = discoveredRecordFormatHash;
-            //                refreshRecordFormatVector();
-            //
-            //                r_openStructure(m_recordFormatHash, m_group);
-            //
-            //            }
             //
             //            void Table::refreshRecordFormatVector() {
             //                m_recordFormatVector.clear();
