@@ -50,6 +50,8 @@
         <itemPath>../../../src/karabo/io/HashBinarySerializer.hh</itemPath>
         <itemPath>../../../src/karabo/io/HashXmlSerializer.cc</itemPath>
         <itemPath>../../../src/karabo/io/HashXmlSerializer.hh</itemPath>
+        <itemPath>../../../src/karabo/io/SchemaXsdSerializer.cc</itemPath>
+        <itemPath>../../../src/karabo/io/SchemaXsdSerializer.hh</itemPath>
         <itemPath>../../../src/karabo/io/TextSerializer.hh</itemPath>
       </logicalFolder>
     </logicalFolder>
