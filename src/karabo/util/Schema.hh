@@ -72,6 +72,7 @@ namespace karabo {
          * 
          */
         class KARABO_DECLSPEC Schema {
+                        
             template <class T> friend class GenericElement;
             template< class T> friend class SimpleElement;
             friend class OverwriteElement;
@@ -96,7 +97,8 @@ namespace karabo {
             std::map<std::string, std::string> m_aliasToKey;
 
         public:
-
+            
+            KARABO_CLASSINFO(Schema, "Schema", "1.0")
 
             struct AssemblyRules {
                 AccessType m_accessMode;

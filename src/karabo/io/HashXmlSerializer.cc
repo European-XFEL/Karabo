@@ -145,6 +145,9 @@ namespace karabo {
                         pugi::xml_node itemNode = nextNode.append_child(m_itemFlag.c_str());
                         this->createXml(hashes[i], itemNode);
                     }
+                } else if (type == Types::SCHEMA) {
+                    
+                    
                 } else {
                     if (m_writeDataTypes) nextNode.append_attribute(m_typeFlag.c_str()) = Types::to<ToLiteral > (type).c_str();
                     nextNode.append_child(pugi::node_pcdata).set_value(it->getValueAs<string > ().c_str());
