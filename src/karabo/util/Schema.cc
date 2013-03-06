@@ -52,11 +52,11 @@ namespace karabo {
 
         std::vector<std::string> Schema::getParameters(const std::string& path) const {
             std::vector<std::string> tmp;
-            if (path.empty()) 
+            if (path.empty())
                 m_hash.getKeys(tmp);
-            else if (m_hash.is<Hash>(path)) 
-                m_hash.get<Hash>(path).getKeys(tmp);
-            
+            else if (m_hash.is<Hash > (path))
+                m_hash.get<Hash > (path).getKeys(tmp);
+
             return tmp;
         }
 
@@ -271,6 +271,25 @@ namespace karabo {
         //**********************************************
 
 
+        void Schema::setDisplayType(const std::string& path, const std::string& value) {
+            m_hash.setAttribute(path, "displayType", value);
+        }
+
+
+        bool Schema::hasDisplayType(const std::string& path) const {
+            return m_hash.hasAttribute(path, "displayType");
+        }
+
+
+        const string& Schema::getDisplayType(const std::string& path) const {
+            return m_hash.getAttribute<string > (path, "displayType");
+        }
+
+        //**********************************************
+        //                  Alias                      *
+        //**********************************************
+
+
         bool Schema::hasAlias(const std::string& path) const {
             return m_hash.hasAttribute(path, "alias");
         }
@@ -310,8 +329,8 @@ namespace karabo {
         }
 
 
-        const std::vector<std::string>& Schema::getAllowedStates(const std::string& path) const {
-            return m_hash.getAttribute<std::vector<std::string> >(path, "allowedStates");
+        const vector<string>& Schema::getAllowedStates(const std::string& path) const {
+            return m_hash.getAttribute<vector<string> >(path, "allowedStates");
         }
 
         //**********************************************
@@ -377,6 +396,81 @@ namespace karabo {
 
         const std::string& Schema::getMetricPrefixSymbol(const std::string& path) const {
             return m_hash.getAttribute<string > (path, "metricPrefixSymbol");
+        }
+
+        //**********************************************
+        //    Minimum Inclusive value                  *                   *
+        //**********************************************
+        
+        bool Schema::hasMinInc(const std::string& path) const{
+            return m_hash.hasAttribute(path, "minInc");
+        }
+        
+        //**********************************************
+        //    Maximum Inclusive value                  *                   *
+        //**********************************************
+        
+        bool Schema::hasMaxInc(const std::string& path) const{
+            return m_hash.hasAttribute(path, "maxInc");
+        }
+        
+        
+        //**********************************************
+        //    Minimum Exclusive value                  *                   *
+        //**********************************************
+        
+        bool Schema::hasMinExc(const std::string& path) const{
+            return m_hash.hasAttribute(path, "minExc");
+        }
+        
+        
+        //**********************************************
+        //    Maximum Exclusive value                  *                   *
+        //**********************************************
+        
+        bool Schema::hasMaxExc(const std::string& path) const{
+            return m_hash.hasAttribute(path, "maxExc");
+        }
+        
+        //**********************************************************
+        //       Specific functions for LEAF node which is vector  *
+        //       Minimum Size of the vector                        *
+        //**********************************************************
+
+
+        void Schema::setMinSize(const std::string& path, const unsigned int& value) {
+            m_hash.setAttribute(path, "minSize", value);
+        }
+
+
+        bool Schema::hasMinSize(const std::string& path) const {
+            return m_hash.hasAttribute(path, "minSize");
+        }
+
+
+        const unsigned int& Schema::getMinSize(const std::string& path) const {
+            return m_hash.getAttribute<unsigned int>(path, "minSize");
+        }
+
+        
+        //******************************************************
+        //  Specific functions for LEAF node (which is vector):*
+        //  Maximum Size of the vector                         *  
+        //******************************************************
+        
+        
+        void Schema::setMaxSize(const std::string& path, const unsigned int& value){
+            m_hash.setAttribute(path, "maxSize", value);
+        }
+
+        
+        bool Schema::hasMaxSize(const std::string& path) const {
+           return m_hash.hasAttribute(path, "maxSize");
+        }
+
+        
+        const unsigned int& Schema::getMaxSize(const std::string& path) const {
+          return m_hash.getAttribute<unsigned int>(path, "maxSize");
         }
 
 
@@ -470,6 +564,7 @@ namespace karabo {
                 stream << "Schema: " << getRootName() << endl;
                 vector<string> keys = getParameters();
 
+
                 BOOST_FOREACH(string key, keys) {
                     if (getNodeType(key) == Schema::LEAF) {
                         processingLeaf(key, stream);
@@ -490,7 +585,7 @@ namespace karabo {
                 }
 
                 if (getNodeType(classId) == Schema::NODE) {
-                    
+
                     vector<string> keys = getParameters(classId);
                     if (!keys.empty()) {
                         stream << "NODE element" << endl;
@@ -538,7 +633,7 @@ namespace karabo {
 
         void Schema::processingLeaf(const std::string& key, ostringstream & stream) {
             string showKey = extractKey(key);
-            
+
             string valueType = getValueType(key);
 
             stream << "\n  ." << showKey << "(" << valueType << ")" << endl;
@@ -559,7 +654,7 @@ namespace karabo {
             stream << "\n  ." << showKey << "(NODE)" << endl;
             if (hasDescription(key))
                 stream << "     " << "Description : " << getDescription(key) << endl;
-        
+
         }
 
 
@@ -606,8 +701,8 @@ namespace karabo {
             }
             return newKey;
         }
-        
-        
+
+
         //        Schema& Schema::addExternalSchema(const Schema& schema) {
         //            Schema& currentElements = get<Schema > ("elements");
         //            const Schema& inputElements = schema.get<Schema > ("elements");
