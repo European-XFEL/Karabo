@@ -111,7 +111,7 @@ void H5File_Test::testWrite() {
         data.set("abecadlo.wer", 1006u);
 
         Hash uel(
-                "h5path", "experimental",
+                "h5path", "experimental.gdh.hhh",
                 "h5name", "test23",
                 "key", "abecadlo.wer",
                 "type", "UINT32",

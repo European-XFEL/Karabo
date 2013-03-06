@@ -19,15 +19,16 @@ namespace karabo {
     namespace io {
         
         template <class T>
-        inline void loadFromFile(T& object, const std::string& filename) {
+        inline void loadFromFile(T& object, const std::string& filename, const karabo::util::Hash& config = karabo::util::Hash()) {
             boost::filesystem::path filepath(filename);
             std::string extension = filepath.extension().string().substr(1);
             boost::to_lower(extension);
+            config.set("filename", filepath.normalize().string());
             if (extension != "bin") {
-                typename Input<T>::Pointer p = Input<T>::create("TextFile", karabo::util::Hash("filename", filepath.normalize().string()));
+                typename Input<T>::Pointer p = Input<T>::create("TextFile", config);
                 p->read(object);
             } else {
-                //typename TextFileInput<T>::Pointer p = TextFileInput<T>::create("BinaryFile", karabo::util::Hash("filename", filepath.normalize().string()));
+                //typename TextFileInput<T>::Pointer p = TextFileInput<T>::create("BinaryFile", config);
                // p->read(object);
             }
         }
