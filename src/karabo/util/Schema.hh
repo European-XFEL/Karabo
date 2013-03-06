@@ -72,7 +72,6 @@ namespace karabo {
          * 
          */
         class KARABO_DECLSPEC Schema {
-                        
             template <class T> friend class GenericElement;
             template< class T> friend class SimpleElement;
             friend class OverwriteElement;
@@ -97,7 +96,8 @@ namespace karabo {
             std::map<std::string, std::string> m_aliasToKey;
 
         public:
-            
+
+
             KARABO_CLASSINFO(Schema, "Schema", "1.0")
 
             struct AssemblyRules {
@@ -276,7 +276,6 @@ namespace karabo {
             //                AllowedStates                *
             //**********************************************
 
-            //void setAllowedStates(const std::string& path, const std::vector<std::string>& value);
             void setAllowedStates(const std::string& path, const std::string& value, const std::string& sep);
 
             bool hasAllowedStates(const std::string& path) const;
@@ -321,7 +320,7 @@ namespace karabo {
             }
 
             //**********************************************
-            //                  Unit                      *
+            //                  Unit                       *
             //**********************************************
 
             void setUnit(const std::string& path, const Units::Unit& value);
@@ -335,8 +334,9 @@ namespace karabo {
             const std::string& getUnitSymbol(const std::string& path) const;
 
             //**********************************************
-            //                  UnitMetricPrefix                     *
+            //                  UnitMetricPrefix           *
             //**********************************************
+
             void setMetricPrefix(const std::string& path, const Units::MetricPrefix& value);
 
             bool hasMetricPrefix(const std::string& path) const;
@@ -347,21 +347,112 @@ namespace karabo {
 
             const std::string& getMetricPrefixSymbol(const std::string& path) const;
 
-            template <class ValueType>
-            void setMinInc(const std::string& path, const ValueType & value);
+            //******************************************************************
+            //    Specific functions for LEAF node (which is not a vector) :   *
+            //    Minimum Inclusive value                                      *
+            //******************************************************************
 
             template <class ValueType>
-            void setMaxInc(const std::string& path, const ValueType & value);
+            void setMinInc(const std::string& path, const ValueType& value) {
+                m_hash.setAttribute(path, "minInc", value);
+            }
 
             template <class ValueType>
-            void setMinExc(const std::string& path, const ValueType & value);
+            const ValueType& getMinInc(const std::string& path) const {
+                return m_hash.getAttribute<ValueType > (path, "minInc");
+            }
+
+            template <class T>
+            T getMinIncAs(const std::string& path) const {
+                return m_hash.getAttributeAs<T > (path, "minInc");
+            }
+
+            bool hasMinInc(const std::string& path) const;
+
+            //******************************************************************
+            //    Maximum Inclusive value                                      *
+            //******************************************************************
 
             template <class ValueType>
-            void setMaxExc(const std::string& path, const ValueType & value);
+            void setMaxInc(const std::string& path, const ValueType & value) {
+                m_hash.setAttribute(path, "maxInc", value);
+            }
 
-            void minSize(const int& value);
+            template <class ValueType>
+            const ValueType& getMaxInc(const std::string& path) const {
+                return m_hash.getAttribute<ValueType > (path, "maxInc");
+            }
 
-            void maxSize(const int& value);
+            template <class T>
+            T getMaxIncAs(const std::string& path) const {
+                return m_hash.getAttributeAs<T > (path, "maxInc");
+            }
+
+            bool hasMaxInc(const std::string& path) const;
+
+            //******************************************************************
+            //    Minimum Exclusive value                                      *
+            //******************************************************************
+
+            template <class ValueType>
+            void setMinExc(const std::string& path, const ValueType & value) {
+                m_hash.setAttribute(path, "minExc", value);
+            }
+
+            template <class ValueType>
+            const ValueType& getMinExc(const std::string& path) const {
+                return m_hash.getAttribute<ValueType > (path, "minExc");
+            }
+
+            template <class T>
+            T getMinExcAs(const std::string& path) const {
+                return m_hash.getAttributeAs<T > (path, "minExc");
+            }
+
+            bool hasMinExc(const std::string& path) const;
+
+            //******************************************************************
+            //    Maximum Exclusive value                                      *
+            //******************************************************************
+
+            template <class ValueType>
+            void setMaxExc(const std::string& path, const ValueType & value) {
+                m_hash.setAttribute(path, "maxExc", value);
+            }
+
+            template <class ValueType>
+            const ValueType& getMaxExc(const std::string& path) const {
+                return m_hash.getAttribute<ValueType > (path, "maxExc");
+            }
+
+            template <class T>
+            T getMaxExcAs(const std::string& path) const {
+                return m_hash.getAttributeAs<T > (path, "maxExc");
+            }
+
+            bool hasMaxExc(const std::string& path) const;
+
+            //******************************************************
+            //  Specific functions for LEAF node (which is vector):*
+            //  Minimum Size of the vector                         *
+            //******************************************************
+
+            void setMinSize(const std::string& path, const unsigned int& value);
+
+            bool hasMinSize(const std::string& path) const;
+
+            const unsigned int& getMinSize(const std::string& path) const;
+
+            //******************************************************
+            //  Specific functions for LEAF node (which is vector):*
+            //  Maximum Size of the vector                         *  
+            //******************************************************
+
+            void setMaxSize(const std::string& path, const unsigned int& value);
+
+            bool hasMaxSize(const std::string& path) const;
+
+            const unsigned int& getMaxSize(const std::string& path) const;
 
             template <class ValueType>
             void setWarnLow(const std::string& path, const ValueType & value);
@@ -454,150 +545,150 @@ namespace karabo {
 
             std::string extractKey(const std::string& key);
 
-           //private: // functions
+            //private: // functions
 
-                //            static void processingDescription(const Schema& desc, std::ostringstream& stream);
-                //
-                //            static void processingExpectParams(const Schema& expected, const std::string& classId, std::ostringstream& stream);
-                //
-                //            static void processingComplexType(const Schema& elementsComplexType, std::ostringstream& stream);
-                //
-                //            static void r_processingPathToElem(const Schema& expected, std::vector<std::string>& tokens, std::ostringstream& stream);
-                //
-                //            static void showSingleElement(const Schema& desc, std::ostringstream& stream);
-                //
-                //            Schema::Node& addElement(Schema::Node& element);
-                //
-                //
-                //            void setNodeTypeLeaf(const std::string& path);
-                //            
-                //            void setNodeTypeRoot(const std::string& path);
-                //            
-                //            void setNodeTypeChoice(const std::string& path);
-                //            
-                //            void setNodeTypeList(const std::string& path);
-                //            
-                //            void setNodeTypeNonEmptyList(const std::string& path);
-                //            
-                //            void setNodeTypeSequence(const std::string& path);
-                //            
-                //
-                //            void ensureValidCache();
-                //
-                //
-                //
-                //            void r_generateAliasMaps(Schema& config, std::string path);
-                //
-                //            void complexType(const Schema & type);
-                //
-                //            void occurance(OccuranceType occ);
-                //
-                //            void overwriteIfDuplicated(const std::string& key);
-                //
-                //            // TODO Implement support for SingleElement type Schemas
-                //            void overwriteNestedDefaults(Schema& item);
-                //
-                //            void reportWrongComplexTypeFormat(const std::string & scope) const;
-                //
-                //            void applyDefault(const std::string& key, const Schema& desc, Hash& uParam, Hash & wParam) const;
-                //
-                //            void reportNotNeededInformation(const std::string& scope, const std::set<std::string>& sufficientParameters) const;
-                //
-                //
-                //
-                //            void r_injectDefaults(const Schema& schema, Hash& user) const;
-                //
-                //            void r_validate(const Schema& master, Hash& user, Hash& working, std::ostringstream& report, std::string scope = "") const;
-                //
-                //            void assertSimpleType(const Schema& desc, Hash& uParam, Hash& wParam, std::ostringstream& report, std::string & scope) const;
-                //
-                //            void assertComplexType(const Schema& desc, Hash& uParam, Hash& wParam, std::ostringstream& report, std::string & scope) const;
-                //
-                //            template <class T>
-                //            void checkOptions(const std::string& key, const T& value, const Schema& desc, std::ostringstream & report) const {
-                //                const std::vector<std::string>& options = desc.get<std::vector<std::string> >("options");
-                //                for (size_t i = 0; i < options.size(); ++i) {
-                //                    T option = boost::lexical_cast<T > (options[i]);
-                //                    if (option == value) return;
-                //                }
-                //                report << "Value " << value << " for parameter \"" << key << "\" is not one of the valid options: " << karabo::util::toString(options) << std::endl;
-                //            }
-                //
-                //            template <class T>
-                //            void checkMinInc(const std::string& key, const T& iValue, const T& eValue, std::ostringstream & report) const {
-                //                if (iValue < eValue) {
-                //                    report << "Value " << iValue << " for parameter \"" << key << "\" is out of lower bound: " << eValue << std::endl;
-                //                }
-                //            }
-                //
-                //            template <class T>
-                //            void checkMinExc(const std::string& key, const T& iValue, const T& eValue, std::ostringstream & report) const {
-                //                if (iValue <= eValue) {
-                //                    report << "Value " << iValue << " for parameter \"" << key << "\" is out of lower bound: " << eValue << std::endl;
-                //                }
-                //            }
-                //
-                //            template <class T>
-                //            void checkMaxInc(const std::string& key, const T& iValue, const T& eValue, std::ostringstream & report) const {
-                //                if (iValue > eValue) {
-                //                    report << "Value " << iValue << " for parameter \"" << key << "\" is out of upper bound: " << eValue << std::endl;
-                //                }
-                //            }
-                //
-                //            template <class T>
-                //            void checkMaxExc(const std::string& key, const T& iValue, const T& eValue, std::ostringstream & report) const {
-                //                if (iValue >= eValue) {
-                //                    report << "Value " << iValue << " for parameter \"" << key << "\" is out of upper bound: " << eValue << std::endl;
-                //                }
-                //            }
-                //
-                //            void checkSizeOfVector(const Schema& desc, const std::string& scope, const std::string& key, unsigned int iValue, std::ostringstream & report) const;
-                //
-                //            template <class T>
-                //            void checkRangeOfVectorElements(const Schema& desc, const std::string& scope, const std::string& key, unsigned int iValue, const std::vector<T>& iValueVect, std::ostringstream & report) const {
-                //                if (desc.has("minInc")) {
-                //                    double eValue = desc.getAs<double>("minInc");
-                //                    for (size_t i = 0; i < iValue; i++) {
-                //                        if (iValueVect[i] < eValue) {
-                //                            report << "Parameter \"" << scope << "." << key << "[" << i << "]" << "\" = " << iValueVect[i] << " is out of min Inclusive boundary: " << eValue << std::endl;
-                //                        }
-                //                    }
-                //                } else if (desc.has("minExc")) {
-                //                    double eValue = desc.getAs<double>("minExc");
-                //                    for (size_t i = 0; i < iValue; i++) {
-                //                        if (iValueVect[i] <= eValue) {
-                //                            report << "Parameter \"" << scope << "." << key << "[" << i << "]" << "\" = " << iValueVect[i] << " is out of min Exclusive boundary: " << eValue << std::endl;
-                //                        }
-                //                    }
-                //                }
-                //
-                //                if (desc.has("maxInc")) {
-                //                    double eValue = desc.getAs<double>("maxInc");
-                //                    for (size_t i = 0; i < iValue; i++) {
-                //                        if (iValueVect[i] > eValue) {
-                //                            report << "Parameter \"" << scope << "." << key << "[" << i << "]" << "\" = " << iValueVect[i] << " is out of max Inclusive boundary: " << eValue << std::endl;
-                //                        }
-                //                    }
-                //                } else if (desc.has("maxExc")) {
-                //                    double eValue = desc.getAs<double>("maxExc");
-                //                    for (size_t i = 0; i < iValue; i++) {
-                //                        if (iValueVect[i] >= eValue) {
-                //                            report << "Parameter \"" << scope << "." << key << "[" << i << "]" << "\" = " << iValueVect[i] << " is out of max Exclusive boundary: " << eValue << std::endl;
-                //                        }
-                //                    }
-                //                }
-                //            }
-                //
-                //            void assertOccuranceEitherOr(const Schema& mComplex, Hash& uComplex, Hash& wParam, std::ostringstream& report, const std::string & scope) const;
-                //
-                //            void assertOccuranceZeroOrMore(const Schema& mComplex, std::vector<Hash>& uComplex, std::vector<Hash>& wComplex, std::ostringstream& report, const std::string & scope) const;
-                //
-                //            void assertOccuranceOneOrMore(const Schema& mComplex, std::vector<Hash>& uComplex, std::vector<Hash>& wComplex, std::ostringstream& report, const std::string & scope) const;
-                //
+            //            static void processingDescription(const Schema& desc, std::ostringstream& stream);
+            //
+            //            static void processingExpectParams(const Schema& expected, const std::string& classId, std::ostringstream& stream);
+            //
+            //            static void processingComplexType(const Schema& elementsComplexType, std::ostringstream& stream);
+            //
+            //            static void r_processingPathToElem(const Schema& expected, std::vector<std::string>& tokens, std::ostringstream& stream);
+            //
+            //            static void showSingleElement(const Schema& desc, std::ostringstream& stream);
+            //
+            //            Schema::Node& addElement(Schema::Node& element);
+            //
+            //
+            //            void setNodeTypeLeaf(const std::string& path);
+            //            
+            //            void setNodeTypeRoot(const std::string& path);
+            //            
+            //            void setNodeTypeChoice(const std::string& path);
+            //            
+            //            void setNodeTypeList(const std::string& path);
+            //            
+            //            void setNodeTypeNonEmptyList(const std::string& path);
+            //            
+            //            void setNodeTypeSequence(const std::string& path);
+            //            
+            //
+            //            void ensureValidCache();
+            //
+            //
+            //
+            //            void r_generateAliasMaps(Schema& config, std::string path);
+            //
+            //            void complexType(const Schema & type);
+            //
+            //            void occurance(OccuranceType occ);
+            //
+            //            void overwriteIfDuplicated(const std::string& key);
+            //
+            //            // TODO Implement support for SingleElement type Schemas
+            //            void overwriteNestedDefaults(Schema& item);
+            //
+            //            void reportWrongComplexTypeFormat(const std::string & scope) const;
+            //
+            //            void applyDefault(const std::string& key, const Schema& desc, Hash& uParam, Hash & wParam) const;
+            //
+            //            void reportNotNeededInformation(const std::string& scope, const std::set<std::string>& sufficientParameters) const;
+            //
+            //
+            //
+            //            void r_injectDefaults(const Schema& schema, Hash& user) const;
+            //
+            //            void r_validate(const Schema& master, Hash& user, Hash& working, std::ostringstream& report, std::string scope = "") const;
+            //
+            //            void assertSimpleType(const Schema& desc, Hash& uParam, Hash& wParam, std::ostringstream& report, std::string & scope) const;
+            //
+            //            void assertComplexType(const Schema& desc, Hash& uParam, Hash& wParam, std::ostringstream& report, std::string & scope) const;
+            //
+            //            template <class T>
+            //            void checkOptions(const std::string& key, const T& value, const Schema& desc, std::ostringstream & report) const {
+            //                const std::vector<std::string>& options = desc.get<std::vector<std::string> >("options");
+            //                for (size_t i = 0; i < options.size(); ++i) {
+            //                    T option = boost::lexical_cast<T > (options[i]);
+            //                    if (option == value) return;
+            //                }
+            //                report << "Value " << value << " for parameter \"" << key << "\" is not one of the valid options: " << karabo::util::toString(options) << std::endl;
+            //            }
+            //
+            //            template <class T>
+            //            void checkMinInc(const std::string& key, const T& iValue, const T& eValue, std::ostringstream & report) const {
+            //                if (iValue < eValue) {
+            //                    report << "Value " << iValue << " for parameter \"" << key << "\" is out of lower bound: " << eValue << std::endl;
+            //                }
+            //            }
+            //
+            //            template <class T>
+            //            void checkMinExc(const std::string& key, const T& iValue, const T& eValue, std::ostringstream & report) const {
+            //                if (iValue <= eValue) {
+            //                    report << "Value " << iValue << " for parameter \"" << key << "\" is out of lower bound: " << eValue << std::endl;
+            //                }
+            //            }
+            //
+            //            template <class T>
+            //            void checkMaxInc(const std::string& key, const T& iValue, const T& eValue, std::ostringstream & report) const {
+            //                if (iValue > eValue) {
+            //                    report << "Value " << iValue << " for parameter \"" << key << "\" is out of upper bound: " << eValue << std::endl;
+            //                }
+            //            }
+            //
+            //            template <class T>
+            //            void checkMaxExc(const std::string& key, const T& iValue, const T& eValue, std::ostringstream & report) const {
+            //                if (iValue >= eValue) {
+            //                    report << "Value " << iValue << " for parameter \"" << key << "\" is out of upper bound: " << eValue << std::endl;
+            //                }
+            //            }
+            //
+            //            void checkSizeOfVector(const Schema& desc, const std::string& scope, const std::string& key, unsigned int iValue, std::ostringstream & report) const;
+            //
+            //            template <class T>
+            //            void checkRangeOfVectorElements(const Schema& desc, const std::string& scope, const std::string& key, unsigned int iValue, const std::vector<T>& iValueVect, std::ostringstream & report) const {
+            //                if (desc.has("minInc")) {
+            //                    double eValue = desc.getAs<double>("minInc");
+            //                    for (size_t i = 0; i < iValue; i++) {
+            //                        if (iValueVect[i] < eValue) {
+            //                            report << "Parameter \"" << scope << "." << key << "[" << i << "]" << "\" = " << iValueVect[i] << " is out of min Inclusive boundary: " << eValue << std::endl;
+            //                        }
+            //                    }
+            //                } else if (desc.has("minExc")) {
+            //                    double eValue = desc.getAs<double>("minExc");
+            //                    for (size_t i = 0; i < iValue; i++) {
+            //                        if (iValueVect[i] <= eValue) {
+            //                            report << "Parameter \"" << scope << "." << key << "[" << i << "]" << "\" = " << iValueVect[i] << " is out of min Exclusive boundary: " << eValue << std::endl;
+            //                        }
+            //                    }
+            //                }
+            //
+            //                if (desc.has("maxInc")) {
+            //                    double eValue = desc.getAs<double>("maxInc");
+            //                    for (size_t i = 0; i < iValue; i++) {
+            //                        if (iValueVect[i] > eValue) {
+            //                            report << "Parameter \"" << scope << "." << key << "[" << i << "]" << "\" = " << iValueVect[i] << " is out of max Inclusive boundary: " << eValue << std::endl;
+            //                        }
+            //                    }
+            //                } else if (desc.has("maxExc")) {
+            //                    double eValue = desc.getAs<double>("maxExc");
+            //                    for (size_t i = 0; i < iValue; i++) {
+            //                        if (iValueVect[i] >= eValue) {
+            //                            report << "Parameter \"" << scope << "." << key << "[" << i << "]" << "\" = " << iValueVect[i] << " is out of max Exclusive boundary: " << eValue << std::endl;
+            //                        }
+            //                    }
+            //                }
+            //            }
+            //
+            //            void assertOccuranceEitherOr(const Schema& mComplex, Hash& uComplex, Hash& wParam, std::ostringstream& report, const std::string & scope) const;
+            //
+            //            void assertOccuranceZeroOrMore(const Schema& mComplex, std::vector<Hash>& uComplex, std::vector<Hash>& wComplex, std::ostringstream& report, const std::string & scope) const;
+            //
+            //            void assertOccuranceOneOrMore(const Schema& mComplex, std::vector<Hash>& uComplex, std::vector<Hash>& wComplex, std::ostringstream& report, const std::string & scope) const;
+            //
 
-            };
+        };
 
-        } // namespace util
-    } // namespace karabo
+    } // namespace util
+} // namespace karabo
 
-#    endif	/* KARABO_UTIL_MASTERCONFIG_HH */
+#endif	/* KARABO_UTIL_MASTERCONFIG_HH */
