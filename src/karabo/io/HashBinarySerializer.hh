@@ -27,7 +27,7 @@ namespace karabo {
         class HashBinarySerializer : public BinarySerializer<karabo::util::Hash> {
         public:
 
-            KARABO_CLASSINFO(HashBinarySerializer, "Binary", "1.0")
+            KARABO_CLASSINFO(HashBinarySerializer, "Bin", "1.0")
 
             static void expectedParameters(karabo::util::Schema& expected) {
             };

@@ -66,7 +66,7 @@ namespace karabo {
                     .key("prefix")
                     .displayedName("Prefix")
                     .description("Prefix flagging auxiliary constructs needed for serialization")
-                    .assignmentOptional().defaultValue("KRB")
+                    .assignmentOptional().defaultValue("KRB_")
                     .advanced()
                     .commit();
         }
