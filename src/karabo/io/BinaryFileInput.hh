@@ -1,5 +1,5 @@
 /*
- * $Id: TextFileReader.hh 4644 2011-11-04 16:04:36Z heisenb@DESY.DE $
+ * $Id: BinaryFileReader.hh 4644 2011-11-04 16:04:36Z heisenb@DESY.DE $
  *
  * Author: <burkhard.heisen@xfel.eu>
  *
@@ -8,8 +8,8 @@
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
 
-#ifndef KARABO_IO_TEXTFILEINPUT_HH
-#define	KARABO_IO_TEXTFILEINPUT_HH
+#ifndef KARABO_IO_BINARYFILEINPUT_HH
+#define	KARABO_IO_BINARYFILEINPUT_HH
 
 #include <iosfwd>
 #include <fstream>
@@ -19,7 +19,7 @@
 #include <karabo/util/util.hh>
 
 #include "Input.hh"
-#include "TextSerializer.hh"
+#include "BinarySerializer.hh"
 
 /**
  * The main European XFEL namespace
@@ -32,13 +32,13 @@ namespace karabo {
     namespace io {
 
         template <class T>
-        class TextFileInput : public Input<T> {
+        class BinaryFileInput : public Input<T> {
             boost::filesystem::path m_filename;
-            typename TextSerializer<T>::Pointer m_serializer;
+            typename BinarySerializer<T>::Pointer m_serializer;
 
         public:
 
-            KARABO_CLASSINFO(TextFileInput<T>, "TextFile", "1.0");
+            KARABO_CLASSINFO(BinaryFileInput<T>, "BinaryFile", "1.0");
 
             static void expectedParameters(karabo::util::Schema& expected) {
 
@@ -53,22 +53,22 @@ namespace karabo {
                 CHOICE_ELEMENT(expected).key("format")
                         .displayedName("Format")
                         .description("Select the format which should be used to interprete the data")
-                        .appendNodesOfConfigurationBase<TextSerializer<T> >()
+                        .appendNodesOfConfigurationBase<BinarySerializer<T> >()
                         .assignmentOptional().noDefaultValue()
                         .commit();
             }
 
-            TextFileInput(const karabo::util::Hash& input) {
+            BinaryFileInput(const karabo::util::Hash& input) {
                 m_filename = input.get<std::string > ("filename");
                 if (input.has("format")) {
-                    m_serializer = TextSerializer<T>::createChoice("format", input);
+                    m_serializer = BinarySerializer<T>::createChoice("format", input);
                 } else {
                     guessAndSetFormat();
                 }
             }
 
             void read(T& data, size_t idx = 0) {
-                std::stringstream buffer;
+                std::vector<char> buffer;
                 readFile(buffer);
                 m_serializer->load(data, buffer);
             }
@@ -84,7 +84,7 @@ namespace karabo {
                 using namespace std;
                 using namespace karabo::util;
 
-                vector<string> keys = TextSerializer<T>::getRegisteredClasses();
+                vector<string> keys = BinarySerializer<Hash>::getRegisteredClasses();
                 string extension = boost::filesystem::path(m_filename).extension().string().substr(1);
                 boost::to_lower(extension);
 
@@ -92,31 +92,33 @@ namespace karabo {
                     string lKey(key);
                     boost::to_lower(lKey);
                     if (lKey == extension) {
-                        m_serializer = TextSerializer<T>::create(key);
+                        m_serializer = BinarySerializer<T>::create(key);
                         return;
                     }
                 }
                 throw KARABO_NOT_SUPPORTED_EXCEPTION("Can not interprete extension: \"" + extension + "\"");
             }
 
-            void readFile(std::stringstream& buffer) {
+            void readFile(std::vector<char>& buffer) {
 
                 using namespace std;
 
-                string line;
-                ifstream inputStream(m_filename.string().c_str());
-                if (inputStream.is_open()) {
-                    while (!inputStream.eof()) {
-                        getline(inputStream, line);
-                        buffer << line << endl;
+                ifstream file(m_filename.string().c_str(), ios::in | ios::binary);
+                if (file.is_open()) {
+                    file.seekg (0, ios::end);
+                    ifstream::pos_type fileSize = file.tellg();
+                    file.seekg(0, ios::beg);
+                    buffer.resize(fileSize);
+                    if (!file.read(&buffer[0], fileSize)) {
+                        KARABO_IO_EXCEPTION("Failed to read file: " + m_filename.string());
                     }
-                    inputStream.close();
+                    file.close();
                 } else {
                     throw KARABO_IO_EXCEPTION("Cannot open file: " + m_filename.string());
                 }
             }
         };
     }
-} 
+}
 
-#endif	
+#endif

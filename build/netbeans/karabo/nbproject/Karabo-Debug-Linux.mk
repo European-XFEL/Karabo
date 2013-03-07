@@ -36,14 +36,16 @@ OBJECTDIR=${CND_BUILDDIR}/${CND_CONF}/${CND_PLATFORM}
 # Object Files
 OBJECTFILES= \
 	${OBJECTDIR}/_ext/163016059/FromLiteral.o \
+	${OBJECTDIR}/_ext/1072794519/BinaryFileOutput.o \
 	${OBJECTDIR}/_ext/1080827789/pugixml.o \
 	${OBJECTDIR}/_ext/163016059/ClassInfo.o \
 	${OBJECTDIR}/_ext/163016059/Exception.o \
 	${OBJECTDIR}/_ext/163016059/FromTypeInfo.o \
-	${OBJECTDIR}/_ext/769817549/Group.o \
+	${OBJECTDIR}/_ext/1072794519/TextFileOutput.o \
 	${OBJECTDIR}/_ext/769817549/ScalarAttribute.o \
-	${OBJECTDIR}/_ext/163016059/Units.o \
 	${OBJECTDIR}/_ext/163016059/StringTools.o \
+	${OBJECTDIR}/_ext/769817549/Group.o \
+	${OBJECTDIR}/_ext/163016059/Units.o \
 	${OBJECTDIR}/_ext/163016059/FromInt.o \
 	${OBJECTDIR}/_ext/163016059/Timer.o \
 	${OBJECTDIR}/_ext/163016059/Base64.o \
@@ -67,7 +69,8 @@ OBJECTFILES= \
 	${OBJECTDIR}/_ext/769817549/File.o \
 	${OBJECTDIR}/_ext/1072794519/TextFileInput.o \
 	${OBJECTDIR}/_ext/163016059/Hash.o \
-	${OBJECTDIR}/_ext/769817549/FixedLengthArrayAttribute.o
+	${OBJECTDIR}/_ext/769817549/FixedLengthArrayAttribute.o \
+	${OBJECTDIR}/_ext/1072794519/BinaryFileInput.o
 
 # Test Directory
 TESTDIR=${CND_BUILDDIR}/${CND_CONF}/${CND_PLATFORM}/tests
@@ -106,6 +109,11 @@ ${OBJECTDIR}/_ext/163016059/FromLiteral.o: ../../../src/karabo/util/FromLiteral.
 	${RM} $@.d
 	$(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163016059/FromLiteral.o ../../../src/karabo/util/FromLiteral.cc
 
+${OBJECTDIR}/_ext/1072794519/BinaryFileOutput.o: ../../../src/karabo/io/BinaryFileOutput.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1072794519
+	${RM} $@.d
+	$(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1072794519/BinaryFileOutput.o ../../../src/karabo/io/BinaryFileOutput.cc
+
 ${OBJECTDIR}/_ext/1080827789/pugixml.o: ../../../src/karabo/pugiXml/pugixml.cpp 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1080827789
 	${RM} $@.d
@@ -126,25 +134,30 @@ ${OBJECTDIR}/_ext/163016059/FromTypeInfo.o: ../../../src/karabo/util/FromTypeInf
 	${RM} $@.d
 	$(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163016059/FromTypeInfo.o ../../../src/karabo/util/FromTypeInfo.cc
 
-${OBJECTDIR}/_ext/769817549/Group.o: ../../../src/karabo/io/h5/Group.cc 
-	${MKDIR} -p ${OBJECTDIR}/_ext/769817549
+${OBJECTDIR}/_ext/1072794519/TextFileOutput.o: ../../../src/karabo/io/TextFileOutput.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1072794519
 	${RM} $@.d
-	$(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/769817549/Group.o ../../../src/karabo/io/h5/Group.cc
+	$(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1072794519/TextFileOutput.o ../../../src/karabo/io/TextFileOutput.cc
 
 ${OBJECTDIR}/_ext/769817549/ScalarAttribute.o: ../../../src/karabo/io/h5/ScalarAttribute.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/769817549
 	${RM} $@.d
 	$(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/769817549/ScalarAttribute.o ../../../src/karabo/io/h5/ScalarAttribute.cc
 
-${OBJECTDIR}/_ext/163016059/Units.o: ../../../src/karabo/util/Units.cc 
-	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
-	${RM} $@.d
-	$(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163016059/Units.o ../../../src/karabo/util/Units.cc
-
 ${OBJECTDIR}/_ext/163016059/StringTools.o: ../../../src/karabo/util/StringTools.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
 	${RM} $@.d
 	$(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163016059/StringTools.o ../../../src/karabo/util/StringTools.cc
+
+${OBJECTDIR}/_ext/769817549/Group.o: ../../../src/karabo/io/h5/Group.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/769817549
+	${RM} $@.d
+	$(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/769817549/Group.o ../../../src/karabo/io/h5/Group.cc
+
+${OBJECTDIR}/_ext/163016059/Units.o: ../../../src/karabo/util/Units.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
+	${RM} $@.d
+	$(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163016059/Units.o ../../../src/karabo/util/Units.cc
 
 ${OBJECTDIR}/_ext/163016059/FromInt.o: ../../../src/karabo/util/FromInt.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
@@ -266,12 +279,17 @@ ${OBJECTDIR}/_ext/769817549/FixedLengthArrayAttribute.o: ../../../src/karabo/io/
 	${RM} $@.d
 	$(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/769817549/FixedLengthArrayAttribute.o ../../../src/karabo/io/h5/FixedLengthArrayAttribute.cc
 
+${OBJECTDIR}/_ext/1072794519/BinaryFileInput.o: ../../../src/karabo/io/BinaryFileInput.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1072794519
+	${RM} $@.d
+	$(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1072794519/BinaryFileInput.o ../../../src/karabo/io/BinaryFileInput.cc
+
 # Subprojects
 .build-subprojects:
 
 # Build Test Targets
 .build-tests-conf: .build-conf ${TESTFILES}
-${TESTDIR}/TestFiles/f2: ${TESTDIR}/_ext/861493463/H5File_Test.o ${TESTDIR}/_ext/861493463/H5Format_Test.o ${TESTDIR}/_ext/861493463/HashBinarySerializer_Test.o ${TESTDIR}/_ext/861493463/HashXmlSerializer_Test.o ${TESTDIR}/_ext/861493463/Hdf5_Test.o ${TESTDIR}/_ext/861493463/TextFileInput_Test.o ${TESTDIR}/_ext/861493463/ioTestRunner.o ${OBJECTFILES:%.o=%_nomain.o}
+${TESTDIR}/TestFiles/f2: ${TESTDIR}/_ext/861493463/FileInputOutput_Test.o ${TESTDIR}/_ext/861493463/H5File_Test.o ${TESTDIR}/_ext/861493463/H5Format_Test.o ${TESTDIR}/_ext/861493463/HashBinarySerializer_Test.o ${TESTDIR}/_ext/861493463/HashXmlSerializer_Test.o ${TESTDIR}/_ext/861493463/Hdf5_Test.o ${TESTDIR}/_ext/861493463/ioTestRunner.o ${OBJECTFILES:%.o=%_nomain.o}
 	${MKDIR} -p ${TESTDIR}/TestFiles
 	${LINK.cc}   -o ${TESTDIR}/TestFiles/f2 $^ ${LDLIBSOPTIONS} -Wl,-rpath,${KARABO}/lib -Wl,-rpath,${KARABO}/extern/lib 
 
@@ -280,88 +298,88 @@ ${TESTDIR}/TestFiles/f1: ${TESTDIR}/_ext/1033104525/ConfigurationTestClasses.o $
 	${LINK.cc}   -o ${TESTDIR}/TestFiles/f1 $^ ${LDLIBSOPTIONS} -Wl,-rpath,${KARABO}/lib -Wl,-rpath,${KARABO}/extern/lib 
 
 
+${TESTDIR}/_ext/861493463/FileInputOutput_Test.o: ../../../src/karabo/tests/io/FileInputOutput_Test.cc 
+	${MKDIR} -p ${TESTDIR}/_ext/861493463
+	${RM} $@.d
+	$(COMPILE.cc) -g -Wall -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I${KARABO}/extern/include/hdf5 -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -MMD -MP -MF $@.d -o ${TESTDIR}/_ext/861493463/FileInputOutput_Test.o ../../../src/karabo/tests/io/FileInputOutput_Test.cc
+
+
 ${TESTDIR}/_ext/861493463/H5File_Test.o: ../../../src/karabo/tests/io/H5File_Test.cc 
 	${MKDIR} -p ${TESTDIR}/_ext/861493463
 	${RM} $@.d
-	$(COMPILE.cc) -g -Wall -DTESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I${KARABO}/extern/include/hdf5 -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -MMD -MP -MF $@.d -o ${TESTDIR}/_ext/861493463/H5File_Test.o ../../../src/karabo/tests/io/H5File_Test.cc
+	$(COMPILE.cc) -g -Wall -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I${KARABO}/extern/include/hdf5 -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -MMD -MP -MF $@.d -o ${TESTDIR}/_ext/861493463/H5File_Test.o ../../../src/karabo/tests/io/H5File_Test.cc
 
 
 ${TESTDIR}/_ext/861493463/H5Format_Test.o: ../../../src/karabo/tests/io/H5Format_Test.cc 
 	${MKDIR} -p ${TESTDIR}/_ext/861493463
 	${RM} $@.d
-	$(COMPILE.cc) -g -Wall -DTESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I${KARABO}/extern/include/hdf5 -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -MMD -MP -MF $@.d -o ${TESTDIR}/_ext/861493463/H5Format_Test.o ../../../src/karabo/tests/io/H5Format_Test.cc
+	$(COMPILE.cc) -g -Wall -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I${KARABO}/extern/include/hdf5 -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -MMD -MP -MF $@.d -o ${TESTDIR}/_ext/861493463/H5Format_Test.o ../../../src/karabo/tests/io/H5Format_Test.cc
 
 
 ${TESTDIR}/_ext/861493463/HashBinarySerializer_Test.o: ../../../src/karabo/tests/io/HashBinarySerializer_Test.cc 
 	${MKDIR} -p ${TESTDIR}/_ext/861493463
 	${RM} $@.d
-	$(COMPILE.cc) -g -Wall -DTESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I${KARABO}/extern/include/hdf5 -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -MMD -MP -MF $@.d -o ${TESTDIR}/_ext/861493463/HashBinarySerializer_Test.o ../../../src/karabo/tests/io/HashBinarySerializer_Test.cc
+	$(COMPILE.cc) -g -Wall -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I${KARABO}/extern/include/hdf5 -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -MMD -MP -MF $@.d -o ${TESTDIR}/_ext/861493463/HashBinarySerializer_Test.o ../../../src/karabo/tests/io/HashBinarySerializer_Test.cc
 
 
 ${TESTDIR}/_ext/861493463/HashXmlSerializer_Test.o: ../../../src/karabo/tests/io/HashXmlSerializer_Test.cc 
 	${MKDIR} -p ${TESTDIR}/_ext/861493463
 	${RM} $@.d
-	$(COMPILE.cc) -g -Wall -DTESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I${KARABO}/extern/include/hdf5 -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -MMD -MP -MF $@.d -o ${TESTDIR}/_ext/861493463/HashXmlSerializer_Test.o ../../../src/karabo/tests/io/HashXmlSerializer_Test.cc
+	$(COMPILE.cc) -g -Wall -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I${KARABO}/extern/include/hdf5 -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -MMD -MP -MF $@.d -o ${TESTDIR}/_ext/861493463/HashXmlSerializer_Test.o ../../../src/karabo/tests/io/HashXmlSerializer_Test.cc
 
 
 ${TESTDIR}/_ext/861493463/Hdf5_Test.o: ../../../src/karabo/tests/io/Hdf5_Test.cc 
 	${MKDIR} -p ${TESTDIR}/_ext/861493463
 	${RM} $@.d
-	$(COMPILE.cc) -g -Wall -DTESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I${KARABO}/extern/include/hdf5 -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -MMD -MP -MF $@.d -o ${TESTDIR}/_ext/861493463/Hdf5_Test.o ../../../src/karabo/tests/io/Hdf5_Test.cc
-
-
-${TESTDIR}/_ext/861493463/TextFileInput_Test.o: ../../../src/karabo/tests/io/TextFileInput_Test.cc 
-	${MKDIR} -p ${TESTDIR}/_ext/861493463
-	${RM} $@.d
-	$(COMPILE.cc) -g -Wall -DTESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I${KARABO}/extern/include/hdf5 -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -MMD -MP -MF $@.d -o ${TESTDIR}/_ext/861493463/TextFileInput_Test.o ../../../src/karabo/tests/io/TextFileInput_Test.cc
+	$(COMPILE.cc) -g -Wall -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I${KARABO}/extern/include/hdf5 -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -MMD -MP -MF $@.d -o ${TESTDIR}/_ext/861493463/Hdf5_Test.o ../../../src/karabo/tests/io/Hdf5_Test.cc
 
 
 ${TESTDIR}/_ext/861493463/ioTestRunner.o: ../../../src/karabo/tests/io/ioTestRunner.cc 
 	${MKDIR} -p ${TESTDIR}/_ext/861493463
 	${RM} $@.d
-	$(COMPILE.cc) -g -Wall -DTESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I${KARABO}/extern/include/hdf5 -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -MMD -MP -MF $@.d -o ${TESTDIR}/_ext/861493463/ioTestRunner.o ../../../src/karabo/tests/io/ioTestRunner.cc
+	$(COMPILE.cc) -g -Wall -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I${KARABO}/extern/include/hdf5 -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -MMD -MP -MF $@.d -o ${TESTDIR}/_ext/861493463/ioTestRunner.o ../../../src/karabo/tests/io/ioTestRunner.cc
 
 
 ${TESTDIR}/_ext/1033104525/ConfigurationTestClasses.o: ../../../src/karabo/tests/util/ConfigurationTestClasses.cc 
 	${MKDIR} -p ${TESTDIR}/_ext/1033104525
 	${RM} $@.d
-	$(COMPILE.cc) -g -Wall -DTESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I${KARABO}/extern/include/hdf5 -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -MMD -MP -MF $@.d -o ${TESTDIR}/_ext/1033104525/ConfigurationTestClasses.o ../../../src/karabo/tests/util/ConfigurationTestClasses.cc
+	$(COMPILE.cc) -g -Wall -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I${KARABO}/extern/include/hdf5 -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -MMD -MP -MF $@.d -o ${TESTDIR}/_ext/1033104525/ConfigurationTestClasses.o ../../../src/karabo/tests/util/ConfigurationTestClasses.cc
 
 
 ${TESTDIR}/_ext/1033104525/Dims_Test.o: ../../../src/karabo/tests/util/Dims_Test.cc 
 	${MKDIR} -p ${TESTDIR}/_ext/1033104525
 	${RM} $@.d
-	$(COMPILE.cc) -g -Wall -DTESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I${KARABO}/extern/include/hdf5 -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -MMD -MP -MF $@.d -o ${TESTDIR}/_ext/1033104525/Dims_Test.o ../../../src/karabo/tests/util/Dims_Test.cc
+	$(COMPILE.cc) -g -Wall -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I${KARABO}/extern/include/hdf5 -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -MMD -MP -MF $@.d -o ${TESTDIR}/_ext/1033104525/Dims_Test.o ../../../src/karabo/tests/util/Dims_Test.cc
 
 
 ${TESTDIR}/_ext/1033104525/Factory_Test.o: ../../../src/karabo/tests/util/Factory_Test.cc 
 	${MKDIR} -p ${TESTDIR}/_ext/1033104525
 	${RM} $@.d
-	$(COMPILE.cc) -g -Wall -DTESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I${KARABO}/extern/include/hdf5 -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -MMD -MP -MF $@.d -o ${TESTDIR}/_ext/1033104525/Factory_Test.o ../../../src/karabo/tests/util/Factory_Test.cc
+	$(COMPILE.cc) -g -Wall -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I${KARABO}/extern/include/hdf5 -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -MMD -MP -MF $@.d -o ${TESTDIR}/_ext/1033104525/Factory_Test.o ../../../src/karabo/tests/util/Factory_Test.cc
 
 
 ${TESTDIR}/_ext/1033104525/Hash_Test.o: ../../../src/karabo/tests/util/Hash_Test.cc 
 	${MKDIR} -p ${TESTDIR}/_ext/1033104525
 	${RM} $@.d
-	$(COMPILE.cc) -g -Wall -DTESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I${KARABO}/extern/include/hdf5 -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -MMD -MP -MF $@.d -o ${TESTDIR}/_ext/1033104525/Hash_Test.o ../../../src/karabo/tests/util/Hash_Test.cc
+	$(COMPILE.cc) -g -Wall -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I${KARABO}/extern/include/hdf5 -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -MMD -MP -MF $@.d -o ${TESTDIR}/_ext/1033104525/Hash_Test.o ../../../src/karabo/tests/util/Hash_Test.cc
 
 
 ${TESTDIR}/_ext/1033104525/Schema_Test.o: ../../../src/karabo/tests/util/Schema_Test.cc 
 	${MKDIR} -p ${TESTDIR}/_ext/1033104525
 	${RM} $@.d
-	$(COMPILE.cc) -g -Wall -DTESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I${KARABO}/extern/include/hdf5 -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -MMD -MP -MF $@.d -o ${TESTDIR}/_ext/1033104525/Schema_Test.o ../../../src/karabo/tests/util/Schema_Test.cc
+	$(COMPILE.cc) -g -Wall -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I${KARABO}/extern/include/hdf5 -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -MMD -MP -MF $@.d -o ${TESTDIR}/_ext/1033104525/Schema_Test.o ../../../src/karabo/tests/util/Schema_Test.cc
 
 
 ${TESTDIR}/_ext/1033104525/Types_Test.o: ../../../src/karabo/tests/util/Types_Test.cc 
 	${MKDIR} -p ${TESTDIR}/_ext/1033104525
 	${RM} $@.d
-	$(COMPILE.cc) -g -Wall -DTESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I${KARABO}/extern/include/hdf5 -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -MMD -MP -MF $@.d -o ${TESTDIR}/_ext/1033104525/Types_Test.o ../../../src/karabo/tests/util/Types_Test.cc
+	$(COMPILE.cc) -g -Wall -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I${KARABO}/extern/include/hdf5 -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -MMD -MP -MF $@.d -o ${TESTDIR}/_ext/1033104525/Types_Test.o ../../../src/karabo/tests/util/Types_Test.cc
 
 
 ${TESTDIR}/_ext/1033104525/utilTestRunner.o: ../../../src/karabo/tests/util/utilTestRunner.cc 
 	${MKDIR} -p ${TESTDIR}/_ext/1033104525
 	${RM} $@.d
-	$(COMPILE.cc) -g -Wall -DTESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I${KARABO}/extern/include/hdf5 -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -MMD -MP -MF $@.d -o ${TESTDIR}/_ext/1033104525/utilTestRunner.o ../../../src/karabo/tests/util/utilTestRunner.cc
+	$(COMPILE.cc) -g -Wall -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I${KARABO}/extern/include/hdf5 -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -MMD -MP -MF $@.d -o ${TESTDIR}/_ext/1033104525/utilTestRunner.o ../../../src/karabo/tests/util/utilTestRunner.cc
 
 
 ${OBJECTDIR}/_ext/163016059/FromLiteral_nomain.o: ${OBJECTDIR}/_ext/163016059/FromLiteral.o ../../../src/karabo/util/FromLiteral.cc 
@@ -375,6 +393,19 @@ ${OBJECTDIR}/_ext/163016059/FromLiteral_nomain.o: ${OBJECTDIR}/_ext/163016059/Fr
 	    $(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163016059/FromLiteral_nomain.o ../../../src/karabo/util/FromLiteral.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/163016059/FromLiteral.o ${OBJECTDIR}/_ext/163016059/FromLiteral_nomain.o;\
+	fi
+
+${OBJECTDIR}/_ext/1072794519/BinaryFileOutput_nomain.o: ${OBJECTDIR}/_ext/1072794519/BinaryFileOutput.o ../../../src/karabo/io/BinaryFileOutput.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1072794519
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/1072794519/BinaryFileOutput.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} $@.d;\
+	    $(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1072794519/BinaryFileOutput_nomain.o ../../../src/karabo/io/BinaryFileOutput.cc;\
+	else  \
+	    ${CP} ${OBJECTDIR}/_ext/1072794519/BinaryFileOutput.o ${OBJECTDIR}/_ext/1072794519/BinaryFileOutput_nomain.o;\
 	fi
 
 ${OBJECTDIR}/_ext/1080827789/pugixml_nomain.o: ${OBJECTDIR}/_ext/1080827789/pugixml.o ../../../src/karabo/pugiXml/pugixml.cpp 
@@ -429,17 +460,17 @@ ${OBJECTDIR}/_ext/163016059/FromTypeInfo_nomain.o: ${OBJECTDIR}/_ext/163016059/F
 	    ${CP} ${OBJECTDIR}/_ext/163016059/FromTypeInfo.o ${OBJECTDIR}/_ext/163016059/FromTypeInfo_nomain.o;\
 	fi
 
-${OBJECTDIR}/_ext/769817549/Group_nomain.o: ${OBJECTDIR}/_ext/769817549/Group.o ../../../src/karabo/io/h5/Group.cc 
-	${MKDIR} -p ${OBJECTDIR}/_ext/769817549
-	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/769817549/Group.o`; \
+${OBJECTDIR}/_ext/1072794519/TextFileOutput_nomain.o: ${OBJECTDIR}/_ext/1072794519/TextFileOutput.o ../../../src/karabo/io/TextFileOutput.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1072794519
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/1072794519/TextFileOutput.o`; \
 	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
 	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
 	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
 	then  \
 	    ${RM} $@.d;\
-	    $(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/769817549/Group_nomain.o ../../../src/karabo/io/h5/Group.cc;\
+	    $(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1072794519/TextFileOutput_nomain.o ../../../src/karabo/io/TextFileOutput.cc;\
 	else  \
-	    ${CP} ${OBJECTDIR}/_ext/769817549/Group.o ${OBJECTDIR}/_ext/769817549/Group_nomain.o;\
+	    ${CP} ${OBJECTDIR}/_ext/1072794519/TextFileOutput.o ${OBJECTDIR}/_ext/1072794519/TextFileOutput_nomain.o;\
 	fi
 
 ${OBJECTDIR}/_ext/769817549/ScalarAttribute_nomain.o: ${OBJECTDIR}/_ext/769817549/ScalarAttribute.o ../../../src/karabo/io/h5/ScalarAttribute.cc 
@@ -455,19 +486,6 @@ ${OBJECTDIR}/_ext/769817549/ScalarAttribute_nomain.o: ${OBJECTDIR}/_ext/76981754
 	    ${CP} ${OBJECTDIR}/_ext/769817549/ScalarAttribute.o ${OBJECTDIR}/_ext/769817549/ScalarAttribute_nomain.o;\
 	fi
 
-${OBJECTDIR}/_ext/163016059/Units_nomain.o: ${OBJECTDIR}/_ext/163016059/Units.o ../../../src/karabo/util/Units.cc 
-	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
-	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/163016059/Units.o`; \
-	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
-	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
-	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
-	then  \
-	    ${RM} $@.d;\
-	    $(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163016059/Units_nomain.o ../../../src/karabo/util/Units.cc;\
-	else  \
-	    ${CP} ${OBJECTDIR}/_ext/163016059/Units.o ${OBJECTDIR}/_ext/163016059/Units_nomain.o;\
-	fi
-
 ${OBJECTDIR}/_ext/163016059/StringTools_nomain.o: ${OBJECTDIR}/_ext/163016059/StringTools.o ../../../src/karabo/util/StringTools.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
 	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/163016059/StringTools.o`; \
@@ -479,6 +497,32 @@ ${OBJECTDIR}/_ext/163016059/StringTools_nomain.o: ${OBJECTDIR}/_ext/163016059/St
 	    $(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163016059/StringTools_nomain.o ../../../src/karabo/util/StringTools.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/163016059/StringTools.o ${OBJECTDIR}/_ext/163016059/StringTools_nomain.o;\
+	fi
+
+${OBJECTDIR}/_ext/769817549/Group_nomain.o: ${OBJECTDIR}/_ext/769817549/Group.o ../../../src/karabo/io/h5/Group.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/769817549
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/769817549/Group.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} $@.d;\
+	    $(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/769817549/Group_nomain.o ../../../src/karabo/io/h5/Group.cc;\
+	else  \
+	    ${CP} ${OBJECTDIR}/_ext/769817549/Group.o ${OBJECTDIR}/_ext/769817549/Group_nomain.o;\
+	fi
+
+${OBJECTDIR}/_ext/163016059/Units_nomain.o: ${OBJECTDIR}/_ext/163016059/Units.o ../../../src/karabo/util/Units.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/163016059/Units.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} $@.d;\
+	    $(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163016059/Units_nomain.o ../../../src/karabo/util/Units.cc;\
+	else  \
+	    ${CP} ${OBJECTDIR}/_ext/163016059/Units.o ${OBJECTDIR}/_ext/163016059/Units_nomain.o;\
 	fi
 
 ${OBJECTDIR}/_ext/163016059/FromInt_nomain.o: ${OBJECTDIR}/_ext/163016059/FromInt.o ../../../src/karabo/util/FromInt.cc 
@@ -791,6 +835,19 @@ ${OBJECTDIR}/_ext/769817549/FixedLengthArrayAttribute_nomain.o: ${OBJECTDIR}/_ex
 	    $(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/769817549/FixedLengthArrayAttribute_nomain.o ../../../src/karabo/io/h5/FixedLengthArrayAttribute.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/769817549/FixedLengthArrayAttribute.o ${OBJECTDIR}/_ext/769817549/FixedLengthArrayAttribute_nomain.o;\
+	fi
+
+${OBJECTDIR}/_ext/1072794519/BinaryFileInput_nomain.o: ${OBJECTDIR}/_ext/1072794519/BinaryFileInput.o ../../../src/karabo/io/BinaryFileInput.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1072794519
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/1072794519/BinaryFileInput.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} $@.d;\
+	    $(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1072794519/BinaryFileInput_nomain.o ../../../src/karabo/io/BinaryFileInput.cc;\
+	else  \
+	    ${CP} ${OBJECTDIR}/_ext/1072794519/BinaryFileInput.o ${OBJECTDIR}/_ext/1072794519/BinaryFileInput_nomain.o;\
 	fi
 
 # Run Test Targets

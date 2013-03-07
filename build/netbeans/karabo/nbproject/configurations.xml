@@ -37,12 +37,19 @@
       </logicalFolder>
       <logicalFolder name="f3" displayName="Input" projectFiles="true">
         <itemPath>../../../src/karabo/io/AbstractInput.hh</itemPath>
-        <itemPath>../../../src/karabo/io/FileTools.hh</itemPath>
+        <itemPath>../../../src/karabo/io/BinaryFileInput.cc</itemPath>
+        <itemPath>../../../src/karabo/io/BinaryFileInput.hh</itemPath>
         <itemPath>../../../src/karabo/io/Input.hh</itemPath>
         <itemPath>../../../src/karabo/io/TextFileInput.cc</itemPath>
         <itemPath>../../../src/karabo/io/TextFileInput.hh</itemPath>
       </logicalFolder>
       <logicalFolder name="f4" displayName="Output" projectFiles="true">
+        <itemPath>../../../src/karabo/io/AbstractOutput.hh</itemPath>
+        <itemPath>../../../src/karabo/io/BinaryFileOutput.cc</itemPath>
+        <itemPath>../../../src/karabo/io/BinaryFileOutput.hh</itemPath>
+        <itemPath>../../../src/karabo/io/Output.hh</itemPath>
+        <itemPath>../../../src/karabo/io/TextFileOutput.cc</itemPath>
+        <itemPath>../../../src/karabo/io/TextFileOutput.hh</itemPath>
       </logicalFolder>
       <logicalFolder name="f2" displayName="Serialization" projectFiles="true">
         <itemPath>../../../src/karabo/io/BinarySerializer.hh</itemPath>
@@ -54,6 +61,7 @@
         <itemPath>../../../src/karabo/io/SchemaXsdSerializer.hh</itemPath>
         <itemPath>../../../src/karabo/io/TextSerializer.hh</itemPath>
       </logicalFolder>
+      <itemPath>../../../src/karabo/io/FileTools.hh</itemPath>
     </logicalFolder>
     <logicalFolder name="f3" displayName="pugiXml" projectFiles="true">
       <itemPath>../../../src/karabo/pugiXml/pugiconfig.hpp</itemPath>
@@ -133,6 +141,8 @@
                    projectFiles="false"
                    kind="TEST_LOGICAL_FOLDER">
       <logicalFolder name="f2" displayName="io_test" projectFiles="true" kind="TEST">
+        <itemPath>../../../src/karabo/tests/io/FileInputOutput_Test.cc</itemPath>
+        <itemPath>../../../src/karabo/tests/io/FileInputOutput_Test.hh</itemPath>
         <itemPath>../../../src/karabo/tests/io/H5File_Test.cc</itemPath>
         <itemPath>../../../src/karabo/tests/io/H5File_Test.hh</itemPath>
         <itemPath>../../../src/karabo/tests/io/H5Format_Test.cc</itemPath>
@@ -143,8 +153,7 @@
         <itemPath>../../../src/karabo/tests/io/HashXmlSerializer_Test.hh</itemPath>
         <itemPath>../../../src/karabo/tests/io/Hdf5_Test.cc</itemPath>
         <itemPath>../../../src/karabo/tests/io/Hdf5_Test.hh</itemPath>
-        <itemPath>../../../src/karabo/tests/io/TextFileInput_Test.cc</itemPath>
-        <itemPath>../../../src/karabo/tests/io/TextFileInput_Test.hh</itemPath>
+        <itemPath>../../../src/karabo/tests/io/TestPathSetup.hh</itemPath>
         <itemPath>../../../src/karabo/tests/io/ioTestRunner.cc</itemPath>
       </logicalFolder>
       <logicalFolder name="f1"
@@ -252,7 +261,7 @@
             <pElem>${KARABO}/extern/include/hdf5</pElem>
           </incDir>
           <preprocessorList>
-            <Elem>TESTPATH="${CND_BASEDIR}/../../../src/karabo/tests/"</Elem>
+            <Elem>KARABO_TESTPATH="${CND_BASEDIR}/../../../src/karabo/tests/"</Elem>
           </preprocessorList>
         </ccTool>
         <linkerTool>

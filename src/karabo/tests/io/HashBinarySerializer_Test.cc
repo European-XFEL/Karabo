@@ -50,7 +50,7 @@ void HashBinarySerializer_Test::tearDown() {
 
 void HashBinarySerializer_Test::testSerialization() {
 
-    BinarySerializer<Hash>::Pointer p = BinarySerializer<Hash>::create("Binary");
+    BinarySerializer<Hash>::Pointer p = BinarySerializer<Hash>::create("Bin");
 
     {
         vector<char> archive1;
