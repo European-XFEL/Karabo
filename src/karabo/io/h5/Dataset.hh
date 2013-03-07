@@ -69,7 +69,7 @@ namespace karabo {
                     }
                     maxdims[0] = H5S_UNLIMITED;
                     hid_t ds = H5Screate_simple(dims.rank(), &curdims[0], &maxdims[0]);
-                    std::clog << "dataSpace " << ds << std::endl;
+                    //std::clog << "dataSpace " << ds << std::endl;
                     KARABO_CHECK_HDF5_STATUS(ds);
                     return ds;
                 }

@@ -98,7 +98,6 @@ void H5File_Test::testWrite() {
                 "h5path", "experimental",
                 "h5name", "test",
                 "key", "experimental.test",
-                "type", "INT32",
                 "compressionLevel", 9
                 );
 
@@ -111,26 +110,25 @@ void H5File_Test::testWrite() {
         data.set("abecadlo.wer", 1006u);
 
         Hash uel(
-                "h5path", "experimental.gdh.hhh",
+                "h5path", "experimental",
                 "h5name", "test23",
                 "key", "abecadlo.wer",
-                "type", "UINT32",
                 "compressionLevel", 9
                 );
         h5::Element::Pointer e2 = h5::Element::create("UINT32", uel);
         dataFormat->addElement(e2);
 
-        dataFormat->removeElement("instrument/e");
-        dataFormat->removeElement("instrument/d");
-        dataFormat->removeElement("instrument/c");
-        dataFormat->removeElement("instrument/b");
-        dataFormat->removeElement("instrument/a");
-        dataFormat->removeElement("vectors.image");
-        dataFormat->removeElement("vectors.bool");
-        dataFormat->removeElement("vectors.str");
+        //        dataFormat->removeElement("instrument/e");
+        //        dataFormat->removeElement("instrument/d");
+        //        dataFormat->removeElement("instrument/c");
+        //        dataFormat->removeElement("instrument/b");
+        //        dataFormat->removeElement("instrument/a");
+        //        dataFormat->removeElement("vectors.image");
+        //        dataFormat->removeElement("vectors.bool");
+        //        dataFormat->removeElement("vectors.str");
 
 
-              clog << "config 2: " << dataFormat->getConfig() << endl;
+//        clog << "config 2: " << dataFormat->getConfig() << endl;
 
         File file("file.h5");
         file.open(File::TRUNCATE);
@@ -138,7 +136,7 @@ void H5File_Test::testWrite() {
 
         Table::Pointer t = file.createTable("/abc", dataFormat, 1);
 
-        //       clog << "==================================" << endl;
+ 
         for (int i = 0; i < 3; ++i)
             t->write(data, i);
 
@@ -159,43 +157,126 @@ void H5File_Test::testWrite() {
 
 void H5File_Test::testRead() {
 
-    Format::Pointer format = Format::createEmptyFormat();
-    Hash c1(
-            "h5path", "experimental",
-            "h5name", "test23",
-            "key", "instrument.test",
-            "type", "UINT32",
-            "compressionLevel", 9
-            );
+    try {
 
-    h5::Element::Pointer e1 = h5::Element::create("UINT32", c1);
-    format->addElement(e1);
+        //Define what you want to read from file.h5 which has been written by testWrite
+        // we read:
+        //    /abc/experimental/test23 into Hash element data("bla")  - UINT32
+        //    /abc/vectors/double  into Hash element data("db")       - VECTOR_DOUBLE
+        //    /abc/instrument/d    into Hash element data("d")        - BOOL
+        //    /abc/vectors/bool    into Hash element data(("a.bools") - PTR_BOOL
 
-    Hash c2;
-    c2.set("h5path", "vectors");
-    c2.set("h5name", "double");
-    c2.set("key", "vectors.double");
-    c2.set("type", "VECTOR_DOUBLE");
-    c2.set("dims", Dims(3,4).toVector() );
-    c2.set("compressionLevel", 9);
+        Format::Pointer format = Format::createEmptyFormat();
+        Hash c1(
+                "h5path", "experimental",
+                "h5name", "test23",
+                "key", "bla"
+                );
 
-   // clog << "aaaa:\n" << c2 << endl;
+        h5::Element::Pointer e1 = h5::Element::create("UINT32", c1);
+        format->addElement(e1);
 
-    h5::Element::Pointer e2 = h5::Element::create("VECTOR_DOUBLE", c2);
-    format->addElement(e2);
+        Dims dims(3, 4);
+        Hash c2;
+        c2.set("h5path", "vectors");
+        c2.set("h5name", "double");
+        c2.set("key", "db");
+        c2.set("dims", dims.toVector());
 
 
-    File file("file.h5");
-    file.open(File::READONLY);
+        h5::Element::Pointer e2 = h5::Element::create("VECTOR_DOUBLE", c2);
+        format->addElement(e2);
 
-    Hash data;
 
-    Table::Pointer table = file.getTable("/abc", format);
+        Hash c3(
+                "h5path", "instrument",
+                "h5name", "d",
+                "key", "d"
+                );
 
-    table->allocate(data);
+        h5::Element::Pointer e3 = h5::Element::create("BOOL", c3);
+        format->addElement(e3);
 
-    clog << data << endl;
+        Dims boolDims(2, 5);
+        Hash c4(
+                "h5path", "vectors",
+                "h5name", "bool",
+                "key", "a.bools",
+                "dims", boolDims.toVector()
+                );
 
+        h5::Element::Pointer e4 = h5::Element::create("VECTOR_BOOL", c4);
+        format->addElement(e4);
+
+        // End of definition of what is read
+
+
+
+        // Open the file in READONLY mode
+        File file("file.h5");
+        file.open(File::READONLY);
+
+
+        // Define the table to be read using defined format
+        Table::Pointer table = file.getTable("/abc", format);
+
+        // Declare container for data
+        Hash data;
+
+        // Bind some variable to hash data
+        // Note that hash element "d" is not bound
+        
+        // bla will contain data from /abc/experimental/test23
+        unsigned int& bla = data.bindReference<unsigned int>("bla");
+        
+        // vecd will contain data from /abc/vectors/double
+        // here we are responsible for memory management
+        vector<double>& vecd = data.bindReference<vector<double> >("db");
+        vecd.resize(dims.size());
+
+        // bArray will contain data from /abc/vectors/bool
+        // here we are responsible for memory management
+        bool bArray[boolDims.size()];
+        data.set("a.bools", &bArray[0]);
+        
+        // /abc/instrument/d will be accessible as Hash element with key "d"
+        // because we do not use binding
+        // Memory is managed by our API
+        
+        
+        // Now bind the data Hash to table
+        table->bind(data);
+        
+        // read first record
+        table->read(0);
+
+        // assert values
+        CPPUNIT_ASSERT(bla == 1006);
+        CPPUNIT_ASSERT(data.get<unsigned int>("bla") == 1006);
+        vector<double>& vec = data.get< vector<double> >("db");
+        for (size_t i = 0; i < dims.size(); ++i) {
+            CPPUNIT_ASSERT(vec[i] == i * 1.0 + 0.1234);
+            CPPUNIT_ASSERT(vecd[i] == i * 1.0 + 0.1234);
+        }
+        
+        CPPUNIT_ASSERT( data.get<bool>("d") == true);
+
+        for (size_t i = 0; i < boolDims.size(); ++i) {
+            //clog << "bool[" << i << "]: " << bArray[i] << endl;
+            if (i % 2) CPPUNIT_ASSERT(bArray[i] == true);
+            else CPPUNIT_ASSERT(bArray[i] == false);
+            
+        }
+        //        clog << endl;
+
+        //read second record
+        table->read(1);
+
+
+    } catch (Exception& ex) {
+        clog << ex << endl;
+        CPPUNIT_ASSERT(true == false);
+    }
 
 }
 
@@ -203,7 +284,7 @@ void H5File_Test::testVectorBufferWrite() {
 
 
     return;
-    clog << endl << "testVectorBufferWrite" << endl;
+//    clog << endl << "testVectorBufferWrite" << endl;
     Hash data;
 
     size_t nRec = 10;
@@ -229,7 +310,7 @@ void H5File_Test::testVectorBufferWrite() {
     t->write(data, i*nRec, nRec);
 
 
-    clog << "abcd" << endl;
+//    clog << "abcd" << endl;
 
     file.close();
 
@@ -254,7 +335,7 @@ void H5File_Test::testBufferWrite() {
         Format::Pointer dataFormat = Format::createNode("Format", "Format", config);
 
 
-        clog << "after format discovery" << endl;
+//        clog << "after format discovery" << endl;
         const int bufSize = 100;
         vector<int> a(bufSize, 4);
         vector<float> b(bufSize, 5.2);

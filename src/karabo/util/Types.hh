@@ -99,7 +99,8 @@ namespace karabo {
 
                 UNKNOWN, // unknown type
                 SIMPLE,
-                SEQUENCE
+                SEQUENCE,
+                POINTER
             };
 
             template <class From, class To>
@@ -184,6 +185,83 @@ namespace karabo {
                         return UNKNOWN;
                 }
             }
+
+            static bool isPointer(int type) {
+//                if(type >= Types::PTR_BOOL && type <= Types::PTR_STRING) return true;
+//                return false;
+
+                
+                switch (type) {
+                    case Types::PTR_STRING:
+                    case Types::PTR_CHAR:
+                    case Types::PTR_INT8:
+                    case Types::PTR_INT16:
+                    case Types::PTR_INT32:
+                    case Types::PTR_INT64:
+                    case Types::PTR_UINT8:
+                    case Types::PTR_UINT16:
+                    case Types::PTR_UINT32:
+                    case Types::PTR_UINT64:
+                    case Types::PTR_DOUBLE:
+                    case Types::PTR_FLOAT:
+                    case Types::PTR_BOOL:
+                    case Types::PTR_COMPLEX_FLOAT:
+                    case Types::PTR_COMPLEX_DOUBLE:
+                        return true;
+                    default:
+                        return false;
+                }
+            }
+
+            static bool isVector(int type) {
+                switch (type) {
+                    case Types::VECTOR_STRING:
+                    case Types::VECTOR_CHAR:
+                    case Types::VECTOR_INT8:
+                    case Types::VECTOR_INT16:
+                    case Types::VECTOR_INT32:
+                    case Types::VECTOR_INT64:
+                    case Types::VECTOR_UINT8:
+                    case Types::VECTOR_UINT16:
+                    case Types::VECTOR_UINT32:
+                    case Types::VECTOR_UINT64:
+                    case Types::VECTOR_DOUBLE:
+                    case Types::VECTOR_FLOAT:
+                    case Types::VECTOR_BOOL:
+                    case Types::VECTOR_COMPLEX_FLOAT:
+                    case Types::VECTOR_COMPLEX_DOUBLE:
+                    case Types::VECTOR_HASH:
+                        return true;
+                    default:
+                        return false;
+                }
+            }
+
+            static bool isSimple(int type) {
+                switch (type) {
+                    case Types::CHAR:
+                    case Types::INT8:
+                    case Types::INT16:
+                    case Types::INT32:
+                    case Types::INT64:
+                    case Types::UINT8:
+                    case Types::UINT16:
+                    case Types::UINT32:
+                    case Types::UINT64:
+                    case Types::FLOAT:
+                    case Types::DOUBLE:
+                    case Types::BOOL:
+                    case Types::STRING:
+                    case Types::COMPLEX_FLOAT:
+                    case Types::COMPLEX_DOUBLE:
+                        return true;
+                    default:
+                        return false;
+                }
+            }
+
+
+
         };
 
 #define _KARABO_HELPER_MACRO(RefType, CppType) \

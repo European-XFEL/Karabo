@@ -20,6 +20,7 @@
 
 #define _TRACER 2
 #include "../../io/h5/Tracer.hh"
+#include "karabo/util/Profiler.hh"
 
 using namespace karabo::util;
 using namespace karabo::io;
@@ -43,7 +44,7 @@ void H5Format_Test::tearDown() {
 void H5Format_Test::testEmptyFormat() {
     Format::Pointer format = Format::createEmptyFormat();
     const Hash& config = format->getConfig();
-    clog << endl << "Empty format config\n" << format->getConfig() << endl;
+//    clog << endl << "Empty format config\n" << format->getConfig() << endl;
     CPPUNIT_ASSERT(config.has("Format") == true);
     CPPUNIT_ASSERT(config.is<Hash > ("Format") == true);
 
@@ -52,7 +53,6 @@ void H5Format_Test::testEmptyFormat() {
 }
 
 void H5Format_Test::testManualFormat() {
-
 
     TextSerializer<Hash>::Pointer p = TextSerializer<Hash>::create("Xml");
     std::string archive1;
@@ -66,7 +66,6 @@ void H5Format_Test::testManualFormat() {
             "h5path", "experimental",
             "h5name", "test23",
             "key", "instrument.test",
-            "type", "UINT32",
             "compressionLevel", 9
             );
 
@@ -74,7 +73,7 @@ void H5Format_Test::testManualFormat() {
     format->addElement(e1);
 
     const Hash config1 = format->getConfig();
-    clog << endl << "config1:" << endl << config1 << endl;
+//    clog << endl << "config1:" << endl << config1 << endl;
     p->save(config1, archive1);
     //clog << "archive1:" << endl << archive1 << endl;
 
@@ -91,7 +90,6 @@ void H5Format_Test::testManualFormat() {
             "h5path", "experimental2",
             "h5name", "test1000",
             "key", "instrument.test2",
-            "type", "FLOAT",
             "compressionLevel", 0
             );
     h5::Element::Pointer e2 = h5::Element::create("FLOAT", c2);
@@ -106,7 +104,7 @@ void H5Format_Test::testManualFormat() {
     CPPUNIT_ASSERT(config2.get<Hash > ("Format.elements[0]").has("FLOAT") == true);
     CPPUNIT_ASSERT(config2.get<Hash > ("Format.elements[0]").get<string > ("FLOAT.h5path") == "experimental2");
 
-    clog << endl << "config2:" << endl << config2 << endl;
+//    clog << endl << "config2:" << endl << config2 << endl;
     p->save(config2, archive2);
     //clog << "archive2:" << endl << archive2 << endl;
 
@@ -120,7 +118,7 @@ void H5Format_Test::testManualFormat() {
     CPPUNIT_ASSERT(config3.has("Format.elements") == true);
     CPPUNIT_ASSERT(config3.get<vector<Hash> >("Format.elements").size() == 0);
 
-    clog << endl << "config3:" << endl << config3 << endl;
+//    clog << endl << "config3:" << endl << config3 << endl;
     p->save(config3, archive3);
     //clog << "archive3:" << endl << archive3 << endl;
 
@@ -131,12 +129,12 @@ void H5Format_Test::testDiscoverFromHash() {
     return;
     {
 
-        #define _IO_TEST_HELPER_MACRO( data, type, value, size )\
+#define _IO_TEST_HELPER_MACRO( data, type, value, size )\
 data.set( "key-" + ToType<ToLiteral>::to(FromType<FromTypeInfo>::from(typeid(type) )), static_cast<type > (value));\
 data.set( "key-" + ToType<ToLiteral>::to(FromType<FromTypeInfo>::from(typeid(vector<type>) )), vector<type>(size, value));
 
         try {
-            clog << endl << "testDiscoverFromHash" << endl;
+//            clog << endl << "testDiscoverFromHash" << endl;
             Hash data, data1;
 
             vector<Hash> vecHash;
@@ -162,8 +160,8 @@ data.set( "key-" + ToType<ToLiteral>::to(FromType<FromTypeInfo>::from(typeid(vec
             Format::Pointer format = Format::createNode("Format", "Format", config);
 
 
-            clog << "data: \n" << data << endl;
-            clog << "conf: \n" << format->getConfig() << endl;
+//            clog << "data: \n" << data << endl;
+//            clog << "conf: \n" << format->getConfig() << endl;
 
 
         } catch (Exception e) {
@@ -250,7 +248,7 @@ data.set( "key-" + ToType<ToLiteral>::to(FromType<FromTypeInfo>::from(typeid(vec
         //            KARABO_RETHROW
         //        }
         //
-        #undef _IO_TEST_HELPER_MACRO
+#undef _IO_TEST_HELPER_MACRO
     }
 
 

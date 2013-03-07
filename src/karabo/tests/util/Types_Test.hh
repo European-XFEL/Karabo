@@ -12,6 +12,9 @@
 
 class Types_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST_SUITE(Types_Test);
+    CPPUNIT_TEST(testIsPointer);
+    CPPUNIT_TEST(testIsVector);
+    CPPUNIT_TEST(testIsSimple);
     CPPUNIT_TEST(testCategory);
     CPPUNIT_TEST(testFrom);
     CPPUNIT_TEST(testTo);
@@ -29,6 +32,9 @@ private:
     void testFrom();
     void testTo();
     void testConvert();
+    void testIsPointer();
+    void testIsVector();
+    void testIsSimple();
 };
 
 #endif	/* TYPES_TEST_HH */

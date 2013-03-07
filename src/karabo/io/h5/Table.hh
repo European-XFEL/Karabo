@@ -44,9 +44,9 @@ namespace karabo {
 
                 Table(hid_t h5file, boost::filesystem::path name, hsize_t chunkSize = 1)
                 : m_h5file(h5file), m_name(name), m_chunkSize(chunkSize), m_numberOfRecords(0)
-                #ifdef KARABO_USE_PROFILER_TABLE1
+#ifdef KARABO_USE_PROFILER_TABLE1
                 , table1("table1")
-                #endif
+#endif
                 {
                 }
 
@@ -82,17 +82,17 @@ namespace karabo {
                 void append(const karabo::util::Hash& data);
 
 
-                void allocate(karabo::util::Hash& data);
-                //
+                void bind(karabo::util::Hash& data);
+
                 //                void allocate(karabo::util::Hash& data, size_t len);
-                //
-                //                /**
-                //                 * Read data record from the table.
-                //                 * @param data Hash object filled with values read from the table.
-                //                 * @param recordNumber Number identifying record to be read. Record numbers start from 0.
-                //                 */
-                //                void read(karabo::util::Hash& data, size_t recordNumber);
-                //
+
+                /**
+                 * Read data record from the table.
+                 * @param data Hash object filled with values read from the table.
+                 * @param recordNumber Number identifying record to be read. Record numbers start from 0.
+                 */
+                void read( size_t recordNumber);
+
                 //                /**
                 //                 * Buffered reading
                 //                 * @param data
@@ -150,7 +150,7 @@ namespace karabo {
                 //
                 //                void saveTableFormatAsAttribute(const karabo::io::hdf5::DataFormat::Pointer dataFormat);
                 //                void readTableFormatFromAttribute(karabo::util::Hash& dataFormatConfig);             
-                                
+
                 //
                 //
                 //                bool hasAttribute(const boost::shared_ptr<H5::Group> group, const std::string& name) const;
@@ -205,9 +205,9 @@ namespace karabo {
                 hsize_t m_chunkSize;
                 hsize_t m_numberOfRecords;
                 hid_t m_numberOfRecordsAttribute;
-                #ifdef KARABO_USE_PROFILER_TABLE1
+#ifdef KARABO_USE_PROFILER_TABLE1
                 karabo::util::Profiler table1;
-                #endif
+#endif
 
             };
 
