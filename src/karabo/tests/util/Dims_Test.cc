@@ -87,7 +87,7 @@ void Dims_Test::testArrayTools() {
         getPointerFromHash(data, "d", dd, dimsDD);
     }
 
-    clog << "rank: " << dimsDD.rank() << endl;
+    //clog << "rank: " << dimsDD.rank() << endl;
     CPPUNIT_ASSERT(dimsDD.rank() == 2);
     CPPUNIT_ASSERT(dimsDD.size() == 60);
     CPPUNIT_ASSERT(dimsDD.extentIn(0) == 10);

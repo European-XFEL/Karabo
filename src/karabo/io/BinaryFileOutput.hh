@@ -1,16 +1,16 @@
 /*
- * $Id: TextFileOutput.hh 4951 2012-01-06 12:54:57Z heisenb@DESY.DE $
+ * $Id$
  *
  * Author: <burkhard.heisen@xfel.eu>
  *
- * Created on January 16, 2010, 10:18 PM
+ * Created on March 07, 2013, 10:18 AM
  *
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
 
 
-#ifndef KARABO_IO_TEXTFILEOUTPUT_HH
-#define	KARABO_IO_TEXTFILEOUTPUT_HH
+#ifndef KARABO_IO_BINARYFILEOUTPUT_HH
+#define	KARABO_IO_BINARYFILEOUTPUT_HH
 
 #include <iosfwd>
 #include <fstream>
@@ -20,7 +20,7 @@
 #include <karabo/util/util.hh>
 
 #include "Output.hh"
-#include "TextSerializer.hh"
+#include "BinarySerializer.hh"
 
 /**
  * The main European XFEL namespace
@@ -33,17 +33,17 @@ namespace karabo {
     namespace io {
 
         /**
-         * The TextFileOutput class.
+         * The BinaryFileOutput class.
          */
         template <class T>
-        class TextFileOutput : public Output<T> {
+        class BinaryFileOutput : public Output<T> {
             boost::filesystem::path m_filename;
             std::string m_writeMode;
-            typename TextSerializer<T>::Pointer m_serializer;
+            typename BinarySerializer<T>::Pointer m_serializer;
 
         public:
 
-            KARABO_CLASSINFO(TextFileOutput<T>, "TextFile", "1.0")
+            KARABO_CLASSINFO(BinaryFileOutput<T>, "BinaryFile", "1.0")
 
             static void expectedParameters(karabo::util::Schema& expected) {
 
@@ -65,23 +65,23 @@ namespace karabo {
                 CHOICE_ELEMENT(expected).key("format")
                         .displayedName("Format")
                         .description("Select the format which should be used to interprete the data")
-                        .appendNodesOfConfigurationBase<TextSerializer<T> >()
+                        .appendNodesOfConfigurationBase<BinarySerializer<T> >()
                         .assignmentOptional().noDefaultValue()
                         .commit();
             }
 
-            TextFileOutput(const karabo::util::Hash& config) : Output<T>(config){
-                m_filename = config.get<std::string>("filename");
+            BinaryFileOutput(const karabo::util::Hash& config) : Output<T>(config) {
+                m_filename = config.get<std::string > ("filename");
                 config.get("writeMode", m_writeMode);
                 if (config.has("format")) {
-                    m_serializer = TextSerializer<T>::createChoice("format", config);
+                    m_serializer = BinarySerializer<T>::createChoice("format", config);
                 } else {
                     guessAndSetFormat();
                 }
             }
 
             void write(const T& data) {
-                std::string buffer;
+                std::vector<char> buffer;
                 m_serializer->save(data, buffer);
                 writeFile(buffer);
             }
@@ -93,7 +93,7 @@ namespace karabo {
                 using namespace std;
                 using namespace karabo::util;
 
-                vector<string> keys = TextSerializer<T>::getRegisteredClasses();
+                vector<string> keys = BinarySerializer<T>::getRegisteredClasses();
                 string extension = m_filename.extension().string().substr(1);
                 boost::to_lower(extension);
 
@@ -101,30 +101,33 @@ namespace karabo {
                     string lKey(key);
                     boost::to_lower(lKey);
                     if (lKey == extension) {
-                        m_serializer = TextSerializer<T>::create(key);
+                        m_serializer = BinarySerializer<T>::create(key);
                         return;
                     }
                 }
                 throw KARABO_NOT_SUPPORTED_EXCEPTION("Can not interprete extension: \"" + extension + "\"");
             }
 
-            void writeFile(std::string& sourceContent) {
+            void writeFile(std::vector<char>& buffer) {
 
                 using namespace std;
 
                 string filename = m_filename.string();
                 if (m_writeMode == "abort") {
                     if (boost::filesystem::exists(m_filename)) {
-                        throw KARABO_IO_EXCEPTION("TextFileOutput::write -> File " + filename + " does already exist");
+                        throw KARABO_IO_EXCEPTION("File " + filename + " does already exist");
                     }
-                    ofstream outputStream(filename.c_str());
-                    outputStream << sourceContent;
+                    ofstream file(filename.c_str(), ios::out | ios::binary);
+                    file.write(&buffer[0], buffer.size());
+                    file.close();
                 } else if (m_writeMode == "truncate") {
-                    ofstream outputStream(filename.c_str(), ios::trunc);
-                    outputStream << sourceContent;
+                    ofstream file(filename.c_str(), ios::out | ios::trunc | ios::binary);
+                    file.write(&buffer[0], buffer.size());
+                    file.close();
                 } else if (m_writeMode == "append") {
-                    ofstream outputStream(filename.c_str(), ios::app);
-                    outputStream << sourceContent;
+                    ofstream file(filename.c_str(), ios::out | ios::app | ios::binary);
+                    file.write(&buffer[0], buffer.size());
+                    file.close();
                 }
             }
 

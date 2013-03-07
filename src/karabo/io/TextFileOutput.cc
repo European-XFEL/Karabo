@@ -10,11 +10,11 @@
 
 #include "TextFileOutput.hh"
 
-//namespace karabo {
-  //namespace io {
+using namespace karabo::util;
 
-    KARABO_REGISTER_FACTORY_CC(karabo::io::Output<karabo::util::Hash>, karabo::io::TextFileOutput<karabo::util::Hash>)
-    KARABO_REGISTER_FACTORY_CC(karabo::io::Output<karabo::util::Schema>, karabo::io::TextFileOutput<karabo::util::Schema>)
-            
-	//} // namespace io
-//} // namespace karabo
+namespace karabo {
+    namespace io {
+
+        KARABO_REGISTER_FOR_CONFIGURATION(Output<Hash>, TextFileOutput<Hash> )
+    } 
+} 

@@ -23,11 +23,11 @@ Schema_Test::~Schema_Test() {
 
 
 void Schema_Test::testBuildUp() {
-    cout << endl << endl;
+    //cout << endl << endl;
     try {
         {
             Schema schema = Configurator<Shape>::getSchema("Circle");
-            cout << schema << endl;
+            //cout << schema << endl;
             CPPUNIT_ASSERT(schema.isAccessInitOnly("shadowEnabled") == true);
             CPPUNIT_ASSERT(schema.isAccessInitOnly("radius") == true);
             CPPUNIT_ASSERT(schema.isLeaf("radius") == true);
@@ -35,7 +35,7 @@ void Schema_Test::testBuildUp() {
         {
             Schema schema("test");
             GraphicsRenderer1::expectedParameters(schema);
-            cout << schema << endl;
+            //cout << schema << endl;
         }
         GraphicsRenderer::Pointer p = GraphicsRenderer::create("GraphicsRenderer", Hash("shapes.Circle.radius", 0.5, "color", "red", "antiAlias", "true"));
         //cout << Configurator<GraphicsRenderer>::getSchema("GraphicsRenderer"); 
@@ -187,9 +187,9 @@ void Schema_Test::testGetMetricPrefix() {
 
 
 void Schema_Test::testPerKeyFunctionality() {
-    cout << "\n======================" << endl;
-    cout << m_schema << endl;
-    cout << "======================" << endl;
+//    cout << "\n======================" << endl;
+//    cout << m_schema << endl;
+//    cout << "======================" << endl;
     std::vector<std::string> keys = m_schema.getParameters();
 
     for (size_t i = 0; i < keys.size(); ++i) {
@@ -259,11 +259,11 @@ void Schema_Test::testPerKeyFunctionality() {
     }
     
     //testing HELP function
-    cout << "\n TestStruct1::help() \n";
-    m_schema.help();
+    //cout << "\n TestStruct1::help() \n";
+    //m_schema.help();
 
-    cout << "\n TestStruct1::help(\"exampleKey1\") \n";
-    m_schema.help("exampleKey1");
+    //cout << "\n TestStruct1::help(\"exampleKey1\") \n";
+   // m_schema.help("exampleKey1");
 
 }
 
@@ -273,24 +273,24 @@ void Schema_Test::testHelpFunction() {
     Schema schema("schemaGraphRender1", Schema::AssemblyRules(READ | WRITE | INIT));
     GraphicsRenderer1::expectedParameters(schema);
     
-    cout << "\n========== schema.help() =========================" << endl;
-    schema.help();
+    //cout << "\n========== schema.help() =========================" << endl;
+    //schema.help();
     
-    cout << "============ schema.help(\"shapes\") ===============" << endl;
-    schema.help("shapes");
+    //cout << "============ schema.help(\"shapes\") ===============" << endl;
+    //schema.help("shapes");
     
-    cout << "============ schema.help(\"shapes.circle\")=========" << endl;
-    schema.help("shapes.circle");
+    //cout << "============ schema.help(\"shapes.circle\")=========" << endl;
+    //schema.help("shapes.circle");
     
-    cout << "==========schema.help(\"shapes.circle.radius\")======" << endl;
-    schema.help("shapes.circle.radius");
+    //cout << "==========schema.help(\"shapes.circle.radius\")======" << endl;
+    //schema.help("shapes.circle.radius");
     
-    cout << "==========schema.help(\"shapes.rectangle\")======" << endl;
-    schema.help("shapes.rectangle");
+   // cout << "==========schema.help(\"shapes.rectangle\")======" << endl;
+    //schema.help("shapes.rectangle");
     
-    cout << "==========schema.help(\"shapes.rectangle.b\")======" << endl;
-    schema.help("shapes.rectangle.b");
+    //cout << "==========schema.help(\"shapes.rectangle.b\")======" << endl;
+    //schema.help("shapes.rectangle.b");
     
-    cout << "==========schema.help(\"shapes.Triangle\")======" << endl;
-    schema.help("Triangle");
+   // cout << "==========schema.help(\"shapes.Triangle\")======" << endl;
+    //schema.help("Triangle");
 } 
