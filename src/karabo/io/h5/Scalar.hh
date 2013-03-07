@@ -39,9 +39,9 @@ namespace karabo {
                 KARABO_CLASSINFO(Scalar, karabo::util::ToType<karabo::util::ToLiteral>::to(karabo::util::FromType<karabo::util::FromTypeInfo>::from(typeid (T))), "1.0")
 
 
-                Scalar(const karabo::util::Hash& input) : Dataset(input)               
-                {
-
+                Scalar(const karabo::util::Hash& input) : Dataset(input) {
+                    m_fileDataSpace = Dataset::dataSpace(0);
+                    m_memoryDataSpace1 = Dataset::dataSpace(1);
                 }
 
             public:
@@ -53,8 +53,7 @@ namespace karabo {
                     try {
                         m_chunkSize = chunkSize;
                         karabo::util::Dims dims(chunkSize);
-                        createDataSetProperties(dims);
-                        m_fileDataSpace = Dataset::dataSpace(0);
+                        createDataSetProperties(dims);                        
                         m_dataSet = H5Dcreate(m_parentGroup, m_h5name.c_str(), ScalarTypes::getHdf5StandardType<T > (),
                                 m_fileDataSpace, H5P_DEFAULT, m_dataSetProperties, H5P_DEFAULT);
                         KARABO_CHECK_HDF5_STATUS(m_dataSet);
@@ -168,8 +167,15 @@ namespace karabo {
                 //                }
                 //
 
-                inline void allocate(karabo::util::Hash & data) {
-                    data.set(m_key, T());
+                inline void bind(karabo::util::Hash & data) {
+                    if (!data.has(m_key, '/')) {
+                        T & value = data.bindReference<T>(m_key, '/');
+                        m_readData = &value;
+                    } else {
+                        T & value = data.get<T>(m_key,'/');
+                        m_readData = &value;;
+                    }
+
                 }
                 //
                 //                inline void allocate(karabo::util::Hash& buffer, size_t len) {
@@ -179,11 +185,18 @@ namespace karabo {
                 //                    buffer.set(m_key, av);                                        
                 //                }
                 //
-                //                inline void read(karabo::util::Hash& data, hsize_t recordId) {
-                //                    T& value = data.get<T > (m_key);
-                //                    readValue(value, recordId);
-                //                }
-                //
+
+                inline void read(hsize_t recordId) {
+                    try {
+                        m_fileDataSpace = Dataset::selectScalarRecord(m_fileDataSpace, recordId);
+                        //std::clog << "m_key: " << m_key << std::endl;                                                
+                        ScalarReader<T>::read(m_readData, m_dataSet, m_memoryDataSpace1, m_fileDataSpace);
+                    } catch (...) {
+                        KARABO_RETHROW;
+                    }
+
+                }
+
                 //                inline void readValue(T& value, hsize_t recordId) {
                 //                    try {
                 //                        selectFileRecord(recordId);
@@ -226,9 +239,8 @@ namespace karabo {
 
 
 
-
-
-
+                T* m_readData;
+                hid_t m_memoryDataSpace1;
 
 
 

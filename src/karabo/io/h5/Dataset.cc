@@ -33,6 +33,8 @@ namespace karabo {
             void Dataset::open( hid_t group){                              
                 m_dataSet = H5Dopen2(group, m_h5PathName.c_str(), H5P_DEFAULT);
                 KARABO_CHECK_HDF5_STATUS(m_dataSet);
+                m_fileDataSpace = H5Dget_space(m_dataSet);
+                KARABO_CHECK_HDF5_STATUS(m_fileDataSpace);
             }
 
         }

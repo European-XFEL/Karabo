@@ -32,8 +32,8 @@ namespace karabo {
 
         namespace h5 {
 
-            template<typename T>
-            class FixedLengthArray : public Dataset {
+            template<typename T, typename U = T*>
+                    class FixedLengthArray : public Dataset {
             public:
 
                 KARABO_CLASSINFO(FixedLengthArray, "VECTOR_" + karabo::util::ToType<karabo::util::ToLiteral>::to(karabo::util::FromType<karabo::util::FromTypeInfo>::from(typeid (T))), "2.0")
@@ -44,6 +44,7 @@ namespace karabo {
 #endif
                 {
                     m_dims = karabo::util::Dims(input.get<std::vector<unsigned long long> >("dims"));
+                    m_memoryDataSpace1 = Dataset::dataSpace(m_dims);
                 }
 
                 virtual ~FixedLengthArray() {
@@ -62,6 +63,14 @@ namespace karabo {
                             .description("Array dimensions.")
                             .assignmentOptional().noDefaultValue()
                             .init()
+                            .commit();
+
+                    karabo::util::STRING_ELEMENT(expected)
+                            .key("type")
+                            .displayedName("Type")
+                            .description("Data Type in Hash")
+                            .assignmentOptional().noDefaultValue()
+                            .reconfigurable()
                             .commit();
 
                 }
@@ -87,15 +96,9 @@ namespace karabo {
                         karabo::util::Dims zeroDataSpace(chunkVector);
 
                         m_fileDataSpace = dataSpace(zeroDataSpace);
-                        m_dataSet = H5Dcreate(m_parentGroup, m_h5name.c_str(), ScalarTypes::getHdf5StandardType<T > (), m_fileDataSpace, H5P_DEFAULT, m_dataSetProperties, H5P_DEFAULT);
+                        m_dataSet = H5Dcreate(m_parentGroup, m_h5name.c_str(), ScalarTypes::getHdf5StandardType<T > (),
+                                m_fileDataSpace, H5P_DEFAULT, m_dataSetProperties, H5P_DEFAULT);
                         KARABO_CHECK_HDF5_STATUS(m_dataSet);
-                        //m_dataSet = m_group->createDataSet(m_key.c_str(), ScalarTypes::getHdf5StandardType<T > (), m_fileDataSpace, *m_dataSetProperties);
-                        // need to use C interface because C++ does not allow specifying dataset access property list
-                        //                        hid_t gid = m_group->getId();
-                        //                        hid_t linkCreatePropListId = H5Pcreate(H5P_LINK_CREATE);
-                        //                        hid_t dataSetId = H5Dcreate2(gid, m_key.c_str(), ScalarTypes::getHdf5StandardType<T > ().getId(), m_fileDataSpace.getId(), linkCreatePropListId, m_dataSetProperties->getId(), m_dataAccessPropListId);
-                        //                        std::clog << "104" << std::endl;
-                        //                        m_dataSet = H5::DataSet(dataSetId);
                     } catch (...) {
                         KARABO_RETHROW_AS(KARABO_PROPAGATED_EXCEPTION("Cannot create dataset /" + m_h5PathName));
                     }
@@ -113,12 +116,9 @@ namespace karabo {
                         m_fileDataSpace = selectRecord(m_fileDataSpace, recordId, 1);
                         const std::vector<T>& vec = data.get<std::vector<T> >(m_key, '/');
 
-
-                        hid_t mds = Dataset::dataSpace(m_dims);
                         KARABO_PROFILER_STOP_SCALAR1
                         KARABO_PROFILER_START_SCALAR1("write")
-
-                        DatasetWriter<T>::write(vec, m_dataSet, mds, m_fileDataSpace);
+                        DatasetWriter<T>::write(vec, m_dataSet, m_memoryDataSpace1, m_fileDataSpace);
                         KARABO_PROFILER_STOP_SCALAR1
                     } catch (...) {
                         KARABO_RETHROW_AS(KARABO_PROPAGATED_EXCEPTION("Cannot write Hash node " + m_key + " to dataset /" + m_h5PathName));
@@ -160,7 +160,7 @@ namespace karabo {
                         }
                         m_fileDataSpace = selectRecord(m_fileDataSpace, recordId, len);
                         const std::vector<T>& vec = data.get<std::vector<T> >(m_key, '/');
-                        std::clog << "303: vec.size = " << vec.size() << std::endl;
+//                        std::clog << "303: vec.size = " << vec.size() << std::endl;
                         std::vector<hsize_t> vdims = m_dimsPlus1.toVector();
                         vdims[0] = len;
                         karabo::util::Dims memoryDims(vdims);
@@ -191,16 +191,26 @@ namespace karabo {
                     //
                 }
 
-                void allocate(karabo::util::Hash & data) {
-
-                    if (!data.has(m_key)) {
-                        
-                        std::vector<T>& vec = data.bindReference<std::vector<T> >(m_key);
+                void bind(karabo::util::Hash & data) {
+                    boost::optional<karabo::util::Hash::Node&> node = data.find(m_key, '/');
+                    if (!node) {
+                        std::vector<T>& vec = data.bindReference<std::vector<T> >(m_key, '/');
                         vec.resize(m_dims.size());
-                        data.setAttribute(m_key, "dims", m_dims.toVector() );
+                        data.setAttribute(m_key, "dims", m_dims.toVector(), '/');
+                        m_readData = ScalarReader<T>::getPointerFromVector(vec);
+                    } else {
+                        if (karabo::util::Types::isVector(node->getType())) {
+                            std::vector<T>& vec = node->getValue< std::vector<T> >();
+                            m_readData = ScalarReader<T>::getPointerFromVector(vec);
+                        } else if (karabo::util::Types::isPointer(node->getType())) {
+                            T* ptr = node->getValue<T* >();                            
+                            m_readData = ScalarReader<T>::getPointerFromRaw(ptr, m_dims.size());
+                            data.setAttribute(m_key, "dims", m_dims.toVector(), '/');
+                        }
                     }
+                    
                 }
-                //
+
                 //                void allocate(karabo::util::Hash& buffer, size_t len) {
                 //
                 //
@@ -218,14 +228,18 @@ namespace karabo {
                 //                    //av.getVectorOfArrayViews(vec);
                 //                }
                 //
-                //                void read(karabo::util::Hash& data, hsize_t recordId) {
-                //                    selectFileRecord(recordId);
-                //                    karabo::util::Hash::iterator it = data.find(m_key);
-                //                    boost::any& any = data.getAny(it);
-                //                    //tracer << "READING type=" << any.type().name() << std::endl;
-                //                    m_filter->read(*this, any, m_dims);
-                //
-                //                }
+
+                void read(hsize_t recordId) {
+                    try {
+                        m_fileDataSpace = Dataset::selectRecord(m_fileDataSpace, recordId);
+                        ScalarReader<T>::read(m_readData, m_dataSet, m_memoryDataSpace1, m_fileDataSpace);
+                    } catch (karabo::util::Exception &e) {
+                        KARABO_RETHROW_AS(KARABO_PROPAGATED_EXCEPTION("Could not read " + m_h5PathName + " dataset"));
+                    }
+                }
+
+
+
                 //
                 //                // buffered reading
                 //
@@ -312,9 +326,9 @@ namespace karabo {
 
                 hid_t m_dataAccessPropListId;
 
-                //                boost::shared_ptr<FLArrayFilter<T> > m_filter;
-                //                boost::shared_ptr<FLArrayFilterBuffer<T> > m_bufferFilter;
 
+                U m_readData;             // this is a pointer to the data Hash (apart from case of bool type )
+                hid_t m_memoryDataSpace1; // memory data space for one record element, defined here for performance optimization
 
             };
 
@@ -330,7 +344,7 @@ namespace karabo {
             typedef FixedLengthArray<double> DoubleArrayElement;
             typedef FixedLengthArray<float> FloatArrayElement;
             typedef FixedLengthArray<std::string> StringArrayElement;
-            typedef FixedLengthArray<bool> BoolArrayElement;
+            typedef FixedLengthArray<bool, boost::shared_ptr<ScalarReader<bool>::Mapping > > BoolArrayElement;
 
         }
     }

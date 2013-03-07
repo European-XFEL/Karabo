@@ -140,16 +140,18 @@ namespace karabo {
                 //                }
                 //
 
-                inline void allocate(karabo::util::Hash & data) {
+                inline void bind(karabo::util::Hash & data) {
                 }
 
                 inline void allocate(karabo::util::Hash& buffer, size_t len) {
                 }
 
-                //                inline void read(karabo::util::Hash& data, hsize_t recordId) {
-                //                    T& value = data.get<T > (m_key);
-                //                    readValue(value, recordId);
-                //                }
+                inline void read(karabo::util::Hash& data, hsize_t recordId) {
+                }
+                
+                inline void read( hsize_t recordId) {
+                }
+                
                 //
                 //                inline void readValue(T& value, hsize_t recordId) {
                 //                    try {

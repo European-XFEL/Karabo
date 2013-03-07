@@ -49,8 +49,6 @@ namespace karabo {
 
                 Element(const karabo::util::Hash& input);
 
-
-
                 virtual ~Element() {
                 }
 
@@ -73,8 +71,8 @@ namespace karabo {
                  */
                 virtual void getElement(karabo::util::Hash& element);
 
-                void getConfig(karabo::util::Hash& config){
-                    
+                void getConfig(karabo::util::Hash& config) {
+
                     config = m_config;
                 }
                 /**
@@ -95,15 +93,15 @@ namespace karabo {
                 //                 * @param size The size of extended space corresponding to the number of newly added records
                 //                 */
                 //                virtual void extend(hsize_t size);
-                
-                
+
+
                 /**
                  * Open existing HDF5 dataset.
                  * @param group Hdf5 group where the dataset belongs to.
                  */
-                virtual void open( hid_t group) = 0;
+                virtual void open(hid_t group) = 0;
 
-                
+
                 //                /**
                 //                 * Write data to dataset. Hash structure must contain key and value pair.
                 //                 * The key is the name of the dataset, value must correspond to the type as defined at the dataset creation time
@@ -134,7 +132,7 @@ namespace karabo {
                  * If the entry exist assume the memory is allocated. This can be used when client delivers own buffers.
                  * @param data Hash where the data will be stored when using read function
                  */
-                virtual void allocate(karabo::util::Hash& data) = 0;
+                virtual void bind(karabo::util::Hash& data) = 0;
                 //
                 //                /**
                 //                 * allocate memory for len number of records
@@ -153,7 +151,10 @@ namespace karabo {
                 //                 * @param data Hash to be filled
                 //                 * @param recordId Record number (numbering starts from 0)
                 //                 */
-                //                virtual void read(karabo::util::Hash& data, hsize_t recordId) = 0;
+                //virtual void read(karabo::util::Hash& data, hsize_t recordId) = 0;
+                
+                virtual void read( hsize_t recordId) = 0;
+                
                 //
                 //
                 //                virtual void read(karabo::util::Hash& data, hsize_t recordId, hsize_t len) = 0;

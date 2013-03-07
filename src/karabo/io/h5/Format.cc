@@ -151,7 +151,7 @@ namespace karabo {
                     Hash& hc = hcGroup.bindReference<Hash > ("Group");
                     hc.set("h5name", key);
                     hc.set("h5path", path);
-                    hc.set("type", "HASH");
+                    //hc.set("type", "HASH");
                     discoverAttributes(el, hc);
                 }
                 dftracer << "HashElement: " << endl << config.back() << endl;
@@ -186,7 +186,7 @@ namespace karabo {
 
                 hc.set("h5name", key);
                 hc.set("h5path", path);
-                hc.set("type", "VECTOR_HASH");
+                //hc.set("type", "VECTOR_HASH");
                 hc.set("size", static_cast<unsigned long long> (vec.size()));
                 discoverAttributes(el, hc);
 
@@ -204,7 +204,7 @@ namespace karabo {
 
                     std::string newPath = path + m_h5Sep + key;
                     hc.set("h5path", newPath);
-                    hc.set("type", "HASH");
+                    //hc.set("type", "HASH");
                     discoverAttributes(el, hc);
 
                     ostringstream oss2;
@@ -229,11 +229,11 @@ namespace karabo {
                 h.set("h5name", key);
                 h.set("h5path", path);
                 //                if (t != Types::UNKNOWN) {
-                h.set("type", ToType<ToLiteral>::to(t));
+               // h.set("type", ToType<ToLiteral>::to(t));
                 //                } else {
                 //                    
                 //                }
-                dftracer << "Format::discoverFromDataElement type: " << h.get<string > ("type") << endl;
+            //    dftracer << "Format::discoverFromDataElement type: " << h.get<string > ("type") << endl;
 
                 if (Types::category(t) == Types::SEQUENCE) {
                     dftracer << "SEQUENCE: " << key << endl;
@@ -301,7 +301,7 @@ namespace karabo {
                     Hash& hc = config_attr.back();
                     Hash& h = hc.bindReference<Hash > (ToType<ToLiteral>::to(it->getType()));
 
-                    h.set("type", ToType<ToLiteral>::to(it->getType()));
+                   // h.set("type", ToType<ToLiteral>::to(it->getType()));
                     h.set("h5name", it->getKey());
                     Types::ReferenceType t = it->getType();
                     if (Types::category(t) == Types::SEQUENCE) {
