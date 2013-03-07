@@ -30,7 +30,7 @@ namespace karabo {
             // KARABO_REGISTER_FOR_CONFIGURATION_1(karabo::io::h5::Table)
 
             Table::~Table() {
-                //                KARABO_PROFILER_REPORT_TABLE1("write1");
+//                                KARABO_PROFILER_REPORT_TABLE1("write1");
                 //                KARABO_PROFILER_REPORT_TABLE1("test");
                 //                std::clog << "test" << ": " << table1 << std::endl;
                 //                std::clog << "test" << ": " << table1.getTime("write1").sec << " " << table1.getTime("write1").nsec << std::endl;
@@ -195,10 +195,10 @@ namespace karabo {
             //            }
             //
 
-            void Table::allocate(karabo::util::Hash& data) {
+            void Table::bind(karabo::util::Hash& data) {
                 vector<boost::shared_ptr<Element> > elements = m_dataFormat->getElements();
                 for (size_t i = 0; i < elements.size(); ++i) {
-                    elements[i]->allocate(data);
+                    elements[i]->bind(data);
                 }
             }
             //
@@ -206,10 +206,14 @@ namespace karabo {
             //                r_allocate(data, len, m_recordFormatHash);
             //            }
             //
-            //            void Table::read(Hash & data, size_t recordNumber) {
-            //
-            //                r_read(data, recordNumber, m_recordFormatHash);
-            //            }
+
+            void Table::read( size_t recordNumber) {
+                vector<boost::shared_ptr<Element> > elements = m_dataFormat->getElements();
+                for (size_t i = 0; i < elements.size(); ++i) {
+                    elements[i]->read(recordNumber);
+                }
+             //   r_read(data, recordNumber, m_recordFormatHash);
+            }
             //
             //            void Table::readBuffer(karabo::util::Hash& data, size_t recordNumber, size_t len) {
             //                r_read(data, recordNumber, len, m_recordFormatHash);

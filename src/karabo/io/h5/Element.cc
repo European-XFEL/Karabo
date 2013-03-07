@@ -51,13 +51,13 @@ namespace karabo {
                         .reconfigurable()
                         .commit();
 
-                STRING_ELEMENT(expected)
-                        .key("type")
-                        .displayedName("Type")
-                        .description("Data Type in Hash")
-                        .assignmentMandatory()
-                        .reconfigurable()
-                        .commit();
+//                STRING_ELEMENT(expected)
+//                        .key("type")
+//                        .displayedName("Type")
+//                        .description("Data Type in Hash")
+//                        .assignmentMandatory()
+//                        .reconfigurable()
+//                        .commit();
 
 
                 LIST_ELEMENT(expected)
