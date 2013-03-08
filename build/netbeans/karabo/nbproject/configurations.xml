@@ -197,9 +197,6 @@
         <cTool>
           <incDir>
             <pElem>.</pElem>
-            <pElem>.</pElem>
-            <pElem>.</pElem>
-            <pElem>.</pElem>
           </incDir>
         </cTool>
         <ccTool>
@@ -280,7 +277,6 @@
         <cTool>
           <incDir>
             <pElem>.</pElem>
-            <pElem>.</pElem>
           </incDir>
         </cTool>
         <linkerTool>
@@ -302,8 +298,10 @@
           <incDir>
             <pElem>../../../src</pElem>
             <pElem>${KARABO}/extern/include</pElem>
+            <pElem>${KARABO}/extern/include/hdf5</pElem>
             <pElem>${KARABO}/extern/include/python2.7</pElem>
           </incDir>
+          <warningLevel>2</warningLevel>
         </ccTool>
         <fortranCompilerTool>
           <developmentMode>5</developmentMode>
@@ -312,7 +310,6 @@
           <developmentMode>5</developmentMode>
         </asmTool>
         <linkerTool>
-          <output>${TESTDIR}/TestFiles/f4</output>
           <linkerAddLib>
             <pElem>/opt/local/lib/nss</pElem>
             <pElem>/opt/local/lib/nspr</pElem>
@@ -325,6 +322,7 @@
             <linkerLibLibItem>boost_chrono</linkerLibLibItem>
             <linkerLibLibItem>boost_date_time</linkerLibLibItem>
             <linkerLibLibItem>boost_filesystem</linkerLibLibItem>
+            <linkerLibLibItem>boost_numpy</linkerLibLibItem>
             <linkerLibLibItem>boost_python</linkerLibLibItem>
             <linkerLibLibItem>boost_regex</linkerLibLibItem>
             <linkerLibLibItem>boost_signals</linkerLibLibItem>
@@ -355,13 +353,13 @@
         <packFileList>
         </packFileList>
       </packaging>
-      <folder path="TestFiles">
+       <folder path="TestFiles">
         <ccTool>
           <incDir>
             <pElem>${KARABO}/extern/include/hdf5</pElem>
           </incDir>
           <preprocessorList>
-            <Elem>TESTPATH="${CND_BASEDIR}/../../../src/karabo/tests/"</Elem>
+            <Elem>KARABO_TESTPATH="${CND_BASEDIR}/../../../src/karabo/tests/"</Elem>
           </preprocessorList>
         </ccTool>
         <linkerTool>
@@ -371,11 +369,21 @@
           </linkerDynSerch>
         </linkerTool>
       </folder>
-      <folder path="TestFiles/f1">
-        <linkerTool>
-          <output>${TESTDIR}/TestFiles/f1</output>
-        </linkerTool>
-      </folder>
+       <folder path="TestFiles/f1">
+         <linkerTool>
+           <output>${TESTDIR}/TestFiles/f1</output>
+         </linkerTool>
+       </folder>
+       <folder path="TestFiles/f2">
+         <cTool>
+           <incDir>
+             <pElem>.</pElem>
+           </incDir>
+         </cTool>
+         <linkerTool>
+           <output>${TESTDIR}/TestFiles/f2</output>
+         </linkerTool>
+       </folder>
     </conf>
   </confs>
 </configurationDescriptor>
