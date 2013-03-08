@@ -37,6 +37,7 @@ namespace karabo {
          */
         template <class T>
         class TextFileOutput : public Output<T> {
+
             boost::filesystem::path m_filename;
             std::string m_writeMode;
             typename TextSerializer<T>::Pointer m_serializer;
@@ -70,7 +71,7 @@ namespace karabo {
                         .commit();
             }
 
-            TextFileOutput(const karabo::util::Hash& config) : Output<T>(config){
+            TextFileOutput(const karabo::util::Hash& config) : Output<T>(config) {
                 m_filename = config.get<std::string>("filename");
                 config.get("writeMode", m_writeMode);
                 if (config.has("format")) {

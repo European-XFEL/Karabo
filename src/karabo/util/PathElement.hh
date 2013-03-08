@@ -22,11 +22,12 @@ namespace karabo {
          * The PathElement represents a leaf and can be of any (supported) type
          */
         class PathElement : public LeafElement<PathElement, std::string > {
+
         public:
-            
+
             PathElement(Schema& expected) : LeafElement<PathElement, std::string >(expected) {
             }
-            
+
             /**
              * The <b>options</b> method specifies values allowed for the parameter.
              * @param opts A string with space separated values. The values are casted to the proper type.
@@ -48,22 +49,22 @@ namespace karabo {
                 this->m_node->setAttribute("options", opts);
                 return *this;
             }
-            
+
             PathElement& isInputFile() {
                 this->m_node->setAttribute("displayType", "fileIn");
                 return *this;
             }
-            
-             PathElement& isOutputFile() {
+
+            PathElement& isOutputFile() {
                 this->m_node->setAttribute("displayType", "fileOut");
                 return *this;
             }
-             
-             PathElement& isDirectory() {
-                 this->m_node->setAttribute("displayType", "directory");
-                 return *this;
-             }
-             
+
+            PathElement& isDirectory() {
+                this->m_node->setAttribute("displayType", "directory");
+                return *this;
+            }
+
         protected:
 
             void beforeAddition() {

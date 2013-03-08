@@ -15,7 +15,7 @@ using namespace karabo::util;
 namespace karabo {
     namespace io {
 
-        KARABO_REGISTER_FOR_CONFIGURATION(Input<Hash>, BinaryFileInput<Hash> )
-        
-    } 
-} 
+        KARABO_REGISTER_FOR_CONFIGURATION(Input<Hash>, BinaryFileInput<Hash>)
+
+    }
+}

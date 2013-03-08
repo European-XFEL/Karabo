@@ -18,7 +18,8 @@ namespace karabo {
 
         template <class Impl>
         class ToType {
-#define KARABO_MAP_TO_REFERENCE_TYPE(ClassName, ReferenceType, ToType) template<> inline ClassName::ReturnType ClassName::to<Types::ReferenceType>() {return ToType;}
+
+            #define KARABO_MAP_TO_REFERENCE_TYPE(ClassName, ReferenceType, ToType) template<> inline ClassName::ReturnType ClassName::to<Types::ReferenceType>() {return ToType;}
 
 
             typedef typename Impl::ReturnType ReturnType;
@@ -35,7 +36,7 @@ namespace karabo {
                 return Impl::template to<RefType > ();
             }
 
-#define _KARABO_HELPER_MACRO(ReferenceType) case Types::ReferenceType: return Impl::template to < Types::ReferenceType > ();
+            #define _KARABO_HELPER_MACRO(ReferenceType) case Types::ReferenceType: return Impl::template to < Types::ReferenceType > ();
 
             static ReturnType to(const Types::ReferenceType& type) {
                 switch (type) {
@@ -93,7 +94,7 @@ namespace karabo {
                         throw KARABO_NOT_IMPLEMENTED_EXCEPTION("Requested datatype conversion not implemented");
                 }
             }
-#undef _KARABO_HELPER_MACRO
+            #undef _KARABO_HELPER_MACRO
 
         };
     }

@@ -19,53 +19,54 @@
  */
 namespace karabo {
 
-  /**
-   * Namespace for package packageName
-   */
-  namespace util {
-
     /**
-     * The Time class.
-     * More detailed comments
+     * Namespace for package packageName
      */
-    class Time {
-    public:
+    namespace util {
 
-      /**
-       * Default constructor.
-       */
-      Time();
+        /**
+         * The Time class.
+         * More detailed comments
+         */
+        class Time {
 
-      virtual ~Time();
+        public:
 
-      static unsigned long long getMsSinceEpoch();
-      
-      //static std::string getCurrentDateTime(const std::string& format="%Y-%m-%d %H:%M:%S");
+            /**
+             * Default constructor.
+             */
+            Time();
 
-    protected:
+            virtual ~Time();
 
-    private:
+            static unsigned long long getMsSinceEpoch();
 
-      static boost::posix_time::ptime m_epoch;
-   
-    };
+            //static std::string getCurrentDateTime(const std::string& format="%Y-%m-%d %H:%M:%S");
 
-    /**
-     * Placeholder for later timestamp
-     */
-    class Timestamp {
-        
-        unsigned long long getAsTrainId() const {
-            return 0;
-        }
-        
-        unsigned long long getAsMsSinceEpoch() const {
-            return 0;
-        }
-        
-    };
+        protected:
 
-  } // namespace util
+        private:
+
+            static boost::posix_time::ptime m_epoch;
+
+        };
+
+        /**
+         * Placeholder for later timestamp
+         */
+        class Timestamp {
+
+            unsigned long long getAsTrainId() const {
+                return 0;
+            }
+
+            unsigned long long getAsMsSinceEpoch() const {
+                return 0;
+            }
+
+        };
+
+    } // namespace util
 } // namespace karabo
 
 #endif	/* KARABO_UTIL_TIME_HH */

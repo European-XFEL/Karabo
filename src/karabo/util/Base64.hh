@@ -12,14 +12,14 @@
 #include <string>
 
 namespace karabo {
-  namespace util {
+    namespace util {
 
-    // Base64 encoder/decoder
+        // Base64 encoder/decoder
 
-    std::string base64_encode(char const* bytes_to_encode, size_t len);
-    std::string base64_decode(char const* bytes_to_decode, size_t len);
+        std::string base64_encode(char const* bytes_to_encode, size_t len);
+        std::string base64_decode(char const* bytes_to_decode, size_t len);
 
-  }
+    }
 }
 
 #endif // KARABO_UTIL_BASE64_HH

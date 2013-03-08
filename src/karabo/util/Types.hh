@@ -31,9 +31,11 @@ namespace karabo {
         class FromType;
 
         class Types {
+
         public:
 
             enum ReferenceType {
+
                 BOOL, // bool
                 VECTOR_BOOL, // std::vector<std::bool>
 
@@ -187,10 +189,10 @@ namespace karabo {
             }
 
             static bool isPointer(int type) {
-//                if(type >= Types::PTR_BOOL && type <= Types::PTR_STRING) return true;
-//                return false;
+                //                if(type >= Types::PTR_BOOL && type <= Types::PTR_STRING) return true;
+                //                return false;
 
-                
+
                 switch (type) {
                     case Types::PTR_STRING:
                     case Types::PTR_CHAR:
@@ -264,7 +266,7 @@ namespace karabo {
 
         };
 
-#define _KARABO_HELPER_MACRO(RefType, CppType) \
+        #define _KARABO_HELPER_MACRO(RefType, CppType) \
          template <> inline Types::ReferenceType Types::from<CppType>(const CppType&) { return Types::RefType; } \
          template <> inline Types::ReferenceType Types::from<std::vector<CppType> > (const std::vector<CppType>&) { return Types::VECTOR_##RefType; }
 
@@ -284,9 +286,9 @@ namespace karabo {
         _KARABO_HELPER_MACRO(COMPLEX_DOUBLE, std::complex<double>)
         _KARABO_HELPER_MACRO(STRING, std::string)
 
-#undef _KARABO_HELPER_MACRO
+        #undef _KARABO_HELPER_MACRO
 
-#define _KARABO_HELPER_MACRO(RefType, CppType) \
+        #define _KARABO_HELPER_MACRO(RefType, CppType) \
          template <> inline Types::ReferenceType Types::from<CppType*>(CppType* const&) { return Types::RefType; }
 
         _KARABO_HELPER_MACRO(PTR_BOOL, bool)
@@ -305,7 +307,7 @@ namespace karabo {
         _KARABO_HELPER_MACRO(PTR_COMPLEX_DOUBLE, std::complex<double>)
         _KARABO_HELPER_MACRO(PTR_STRING, std::string)
 
-#undef _KARABO_HELPER_MACRO
+        #undef _KARABO_HELPER_MACRO
 
 
     }

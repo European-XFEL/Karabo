@@ -16,9 +16,11 @@ namespace karabo {
 
     namespace util {
 
-#define _KARABO_HELPER_MACRO(type) (#type, Types::type)    
 
         FromLiteral::FromLiteral() {
+
+            #define _KARABO_HELPER_MACRO(type) (#type, Types::type)    
+
             _typeInfoMap = boost::assign::map_list_of
                     _KARABO_HELPER_MACRO(BOOL)
                     _KARABO_HELPER_MACRO(VECTOR_BOOL)
@@ -70,7 +72,9 @@ namespace karabo {
                     _KARABO_HELPER_MACRO(PTR_STRING)
 
                     ;
+            #undef _KARABO_HELPER_MACRO
+
         }
-#undef _KARABO_HELPER_MACRO
+
     }
 }

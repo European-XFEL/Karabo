@@ -13,24 +13,29 @@ using namespace std;
 namespace karabo {
     namespace util {
 
+
         Profiler::Period::Period() : m_name(std::string("")), m_open(false), m_level(0) {
             m_startTime.epoch = 0L;
             m_endTime.epoch = 0L;
         }
+
 
         Profiler::Period::Period(const std::string name, int level) : m_name(name), m_open(false), m_level(level) {
             m_startTime.epoch = 0L;
             m_endTime.epoch = 0L;
         }
 
+
         Profiler::Period::Period(const std::string name, timestamp start, int level) : m_name(name), m_startTime(start), m_open(true), m_level(level) {
             m_endTime.epoch = 0L;
         }
+
 
         Profiler::Period::Period(const std::string name, timestamp start, timestamp end, int level) : m_name(name), m_startTime(start), m_endTime(end), m_open(false), m_level(level) {
         }
 
         // Initialize a profile with called "name"
+
 
         Profiler::Profiler(const std::string profilename) : m_name(profilename), m_openPeriodsCount(0) {
             // timestamp now = HighResolutionTimer::now();
@@ -40,6 +45,7 @@ namespace karabo {
         // Start an new period with a given name
         // Empty name means that the period is appended to the previous one
 
+
         void Profiler::start(const std::string periodname) {
             profile.push_back(Period(periodname, HighResolutionTimer::now(), m_openPeriodsCount));
             mapperiods.insert(std::pair<std::string, size_t > (profile[profile.size() - 1].m_name, profile.size() - 1));
@@ -48,6 +54,7 @@ namespace karabo {
 
         // Stops the last period
         // TODO: implement interleaving periods (ie. reentrance)
+
 
         void Profiler::stop(const std::string periodname) {
             timestamp now = HighResolutionTimer::now();
@@ -68,12 +75,14 @@ namespace karabo {
 
         // Reset the content of the profiler
 
+
         void Profiler::reset() {
             m_openPeriodsCount = 0;
             profile.resize(0);
         }
 
         // Return the global time for this profiler include idle time (ie. between periods)
+
 
         timestamp Profiler::getGlobalTime() {
             timestamp result;
@@ -96,12 +105,13 @@ namespace karabo {
         // Return the total time of a period at "position"
         // This will sum up the all the sub-periods (ie, unnamed period) the come right after it.
 
+
         timestamp Profiler::getTime(size_t position) {
             if (position < profile.size()) {
                 timestamp result = profile[position].m_endTime - profile[position].m_startTime;
 
                 for (size_t i = position + 1; i < profile.size(); ++i) {
-                    if (!profile[i].m_name.empty() || (profile[i].m_level>profile[position].m_level))
+                    if (!profile[i].m_name.empty() || (profile[i].m_level > profile[position].m_level))
                         break;
 
                     timestamp df = profile[i].m_endTime - profile[i].m_startTime;
@@ -123,6 +133,7 @@ namespace karabo {
         // Return the total time of the period called "periodname"
         // This will sum up the all the sub-periods (ie, unnamed period) the come right after it.
 
+
         timestamp Profiler::getTime(std::string periodname) {
             std::vector<timestamp> details = getTimeDetails(periodname);
 
@@ -142,6 +153,7 @@ namespace karabo {
 
         // Return the detailed time profile for the period called "periodname"
 
+
         std::vector<timestamp> Profiler::getTimeDetails(std::string periodname) {
             std::pair<std::multimap<std::string, size_t>::iterator, std::multimap<std::string, size_t>::iterator> ret;
 
@@ -154,8 +166,8 @@ namespace karabo {
             std::vector<timestamp> result;
 
 
-            if(ret.first == mapperiods.end())
-            {   std::cout << "No such period: " << periodname << std::endl;
+            if (ret.first == mapperiods.end()) {
+                std::cout << "No such period: " << periodname << std::endl;
                 return result;
             }
 
@@ -168,6 +180,7 @@ namespace karabo {
 
         // Returns the effective time for this profiler.
         // This function excludes idle time (ie. between periods)
+
 
         timestamp Profiler::getEffectiveTime() {
             timestamp result;
@@ -182,8 +195,8 @@ namespace karabo {
 
                 if (lastpos >= 0) {
                     for (size_t i = 0; i < profile.size(); ++i) {
-                        if( profile[i].m_level > 0 )
-                            continue;   // TODO: Include lower level periods to allow fine-grained timing 
+                        if (profile[i].m_level > 0)
+                            continue; // TODO: Include lower level periods to allow fine-grained timing 
 
                         timestamp period = profile[i].m_endTime - profile[i].m_startTime;
                         result.sec += period.sec;
@@ -199,7 +212,8 @@ namespace karabo {
         }
 
         // output the content of profiler as string
-        
+
+
         std::string Profiler::report(int level) const {
             std::ostringstream oss;
 
@@ -211,10 +225,14 @@ namespace karabo {
                 if (profile[i].m_level > level)
                     continue;
 
-                    oss.width((profile[i].m_level+1) * 4); oss << ""; oss.width(0);
+                oss.width((profile[i].m_level + 1) * 4);
+                oss << "";
+                oss.width(0);
 
                 if (profile[i].m_name.empty()) {
-                    oss.width(4); oss << "- "; oss.width(0);
+                    oss.width(4);
+                    oss << "- ";
+                    oss.width(0);
                 } else {
                     oss << profile[i].m_name << ": ";
                 }
@@ -245,6 +263,7 @@ namespace karabo {
         }
 
         // Serialize the profile into standard ostream
+
 
         std::ostream& operator <<(std::ostream& os, const Profiler & pr) {
             return os << pr.report();

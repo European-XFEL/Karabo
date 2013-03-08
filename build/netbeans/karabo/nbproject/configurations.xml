@@ -63,6 +63,8 @@
       </logicalFolder>
       <itemPath>../../../src/karabo/io/FileTools.hh</itemPath>
     </logicalFolder>
+    <logicalFolder name="f4" displayName="log" projectFiles="true" kind="ROOT">
+    </logicalFolder>
     <logicalFolder name="f3" displayName="pugiXml" projectFiles="true">
       <itemPath>../../../src/karabo/pugiXml/pugiconfig.hpp</itemPath>
       <itemPath>../../../src/karabo/pugiXml/pugixml.cpp</itemPath>
@@ -353,7 +355,7 @@
         <packFileList>
         </packFileList>
       </packaging>
-       <folder path="TestFiles">
+      <folder path="TestFiles">
         <ccTool>
           <incDir>
             <pElem>${KARABO}/extern/include/hdf5</pElem>
@@ -369,21 +371,21 @@
           </linkerDynSerch>
         </linkerTool>
       </folder>
-       <folder path="TestFiles/f1">
-         <linkerTool>
-           <output>${TESTDIR}/TestFiles/f1</output>
-         </linkerTool>
-       </folder>
-       <folder path="TestFiles/f2">
-         <cTool>
-           <incDir>
-             <pElem>.</pElem>
-           </incDir>
-         </cTool>
-         <linkerTool>
-           <output>${TESTDIR}/TestFiles/f2</output>
-         </linkerTool>
-       </folder>
+      <folder path="TestFiles/f1">
+        <linkerTool>
+          <output>${TESTDIR}/TestFiles/f1</output>
+        </linkerTool>
+      </folder>
+      <folder path="TestFiles/f2">
+        <cTool>
+          <incDir>
+            <pElem>.</pElem>
+          </incDir>
+        </cTool>
+        <linkerTool>
+          <output>${TESTDIR}/TestFiles/f2</output>
+        </linkerTool>
+      </folder>
     </conf>
   </confs>
 </configurationDescriptor>

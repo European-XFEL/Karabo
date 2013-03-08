@@ -25,14 +25,16 @@ namespace karabo {
          * The HashBinarySerializer class.
          */
         class HashBinarySerializer : public BinarySerializer<karabo::util::Hash> {
+
         public:
 
             KARABO_CLASSINFO(HashBinarySerializer, "Bin", "1.0")
 
             static void expectedParameters(karabo::util::Schema& expected) {
             };
-            
-            HashBinarySerializer(const karabo::util::Hash& input) {}
+
+            HashBinarySerializer(const karabo::util::Hash& input) {
+            }
 
             virtual void save(const karabo::util::Hash& object, std::vector<char>& archive) {
                 // TODO We will introduce a copy here, which could be avoided with some effort
@@ -45,7 +47,7 @@ namespace karabo {
 
             virtual void load(karabo::util::Hash& object, const char* archive, const size_t nBytes) {
                 std::stringstream is;
-                is.rdbuf()->pubsetbuf(const_cast<char*>(archive), nBytes);
+                is.rdbuf()->pubsetbuf(const_cast<char*> (archive), nBytes);
                 this->serialize(object, is);
             }
 
@@ -62,7 +64,7 @@ namespace karabo {
         private: // functions
 
             void serialize(const karabo::util::Hash& hash, std::ostream& os);
-           
+
             void serialize(karabo::util::Hash& hash, std::istream& is);
 
             void serialize(const karabo::util::Hash::Node& element, std::ostream& os);

@@ -16,6 +16,7 @@ namespace karabo {
     namespace util {
 
         class ToCppString {
+
         public:
 
             typedef std::string ReturnType;

@@ -18,6 +18,7 @@ namespace karabo {
     namespace util {
 
         class KARABO_DECLSPEC ClassInfo {
+
         public:
 
             ClassInfo(const std::string& classId, const std::string& signature, const std::string& classVersion);

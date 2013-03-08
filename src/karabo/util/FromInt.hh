@@ -15,8 +15,9 @@ namespace karabo {
 
     namespace util {
 
-      class FromInt {
-        typedef std::map<int, Types::ReferenceType> TypeInfoMap;
+        class FromInt {
+
+            typedef std::map<int, Types::ReferenceType> TypeInfoMap;
 
             TypeInfoMap _typeInfoMap;
 

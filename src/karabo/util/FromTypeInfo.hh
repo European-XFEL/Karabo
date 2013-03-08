@@ -16,6 +16,7 @@ namespace karabo {
     namespace util {
 
         class FromTypeInfo {
+
             typedef std::map<std::string, Types::ReferenceType> TypeInfoMap;
 
             TypeInfoMap _typeInfoMap;

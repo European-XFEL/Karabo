@@ -21,6 +21,7 @@ namespace karabo {
     namespace io {
         namespace h5 {
 
+
             void Attribute::expectedParameters(Schema& expected) {
 
                 STRING_ELEMENT(expected)
@@ -52,6 +53,7 @@ namespace karabo {
 
             }
 
+
             Attribute::Attribute(const Hash& input) {
                 m_h5name = input.get<string > ("h5name");
                 m_h5path = input.get<string > ("h5path");
@@ -67,12 +69,14 @@ namespace karabo {
                 if (m_key.size() == 0 || m_h5name.size() == 0) {
                     throw KARABO_PARAMETER_EXCEPTION("Name cannot be an empty string");
                 }
-                m_config = input;        
+                m_config = input;
             }
+
 
             const string& Attribute::getName() {
                 return m_key;
             }
+
 
             void Attribute::getAttribute(Hash& element) {
                 element.set(m_key, shared_from_this());
