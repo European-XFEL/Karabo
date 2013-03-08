@@ -7,6 +7,7 @@
 
 #include "H5File_Test.hh"
 #include "karabo/util/ArrayTools.hh"
+#include "TestPathSetup.hh"
 #include <karabo/util/Hash.hh>
 
 #include <karabo/io/h5/File.hh>
@@ -130,7 +131,7 @@ void H5File_Test::testWrite() {
 
 //        clog << "config 2: " << dataFormat->getConfig() << endl;
 
-        File file("file.h5");
+        File file(resourcePath("file.h5"));
         file.open(File::TRUNCATE);
 
 
@@ -213,7 +214,7 @@ void H5File_Test::testRead() {
 
 
         // Open the file in READONLY mode
-        File file("file.h5");
+        File file(resourcePath("file.h5"));
         file.open(File::READONLY);
 
 
@@ -296,7 +297,7 @@ void H5File_Test::testVectorBufferWrite() {
 
     data.set("vectors.image", v0).setAttribute("dims", Dims(1024, 1024).toVector());
 
-    File file("file2.h5");
+    File file(resourcePath("file2.h5"));
     file.open(File::TRUNCATE);
 
     Hash config;
@@ -361,7 +362,7 @@ void H5File_Test::testBufferWrite() {
 
 
 
-        File file("file1.h5");
+        File file(resourcePath("file1.h5"));
         file.open(File::TRUNCATE);
 
 
