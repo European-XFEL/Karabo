@@ -5,9 +5,12 @@
         <data xmlns="http://www.netbeans.org/ns/make-project/1">
             <name>karathon</name>
             <c-extensions/>
-            <cpp-extensions/>
-            <header-extensions/>
-            <make-dep-projects/>
+            <cpp-extensions>cc</cpp-extensions>
+            <header-extensions>hh</header-extensions>
+            <sourceEncoding>UTF-8</sourceEncoding>
+            <make-dep-projects>
+                <make-dep-project>/home/esenov/branch/karaboFramework/build/netbeans/karabo</make-dep-project>
+            </make-dep-projects>
             <sourceRootList/>
             <confList>
                 <confElem>
@@ -19,7 +22,6 @@
                     <type>2</type>
                 </confElem>
             </confList>
-            <sourceEncoding>UTF-8</sourceEncoding>
         </data>
     </configuration>
 </project>

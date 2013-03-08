@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<configurationDescriptor version="84">
+<configurationDescriptor version="88">
   <logicalFolder name="root" displayName="root" projectFiles="true" kind="ROOT">
     <logicalFolder name="HeaderFiles"
                    displayName="Header Files"
                    projectFiles="true">
+      <itemPath>/home/esenov/branch/karaboFramework/src/karathon/HashWrap.hh</itemPath>
     </logicalFolder>
     <logicalFolder name="ResourceFiles"
                    displayName="Resource Files"
@@ -12,11 +13,22 @@
     <logicalFolder name="SourceFiles"
                    displayName="Source Files"
                    projectFiles="true">
+      <itemPath>/home/esenov/branch/karaboFramework/src/karathon/HashWrap.cc</itemPath>
+      <itemPath>/home/esenov/branch/karaboFramework/src/karathon/PyUtilHash.cc</itemPath>
+      <itemPath>/home/esenov/branch/karaboFramework/src/karathon/karathon.cc</itemPath>
     </logicalFolder>
     <logicalFolder name="TestFiles"
                    displayName="Test Files"
                    projectFiles="false"
                    kind="TEST_LOGICAL_FOLDER">
+      <logicalFolder name="f1"
+                     displayName="karathon_test"
+                     projectFiles="true"
+                     kind="TEST">
+        <itemPath>tests/HashWrap_Test.cc</itemPath>
+        <itemPath>tests/HashWrap_Test.hh</itemPath>
+        <itemPath>tests/karathonTestRunner.cc</itemPath>
+      </logicalFolder>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
@@ -33,7 +45,106 @@
         <compilerSet>default</compilerSet>
       </toolsSet>
       <compileType>
+        <ccTool>
+          <incDir>
+            <pElem>../../../src</pElem>
+            <pElem>${KARABO}/extern/include</pElem>
+            <pElem>${KARABO}/extern/include/hdf5</pElem>
+            <pElem>${KARABO}/extern/include/python2.7</pElem>
+          </incDir>
+          <preprocessorList>
+            <Elem>KARATHON_BOOST_NUMPY</Elem>
+          </preprocessorList>
+        </ccTool>
+        <linkerTool>
+          <linkerAddLib>
+            <pElem>/opt/local/nss</pElem>
+            <pElem>/opt/local/nspr</pElem>
+            <pElem>${KARABO}/extern/lib</pElem>
+          </linkerAddLib>
+          <linkerDynSerch>
+            <pElem>\$$ORIGIN/../lib</pElem>
+            <pElem>\$$ORIGIN/../extern/lib</pElem>
+            <pElem>${KARABO}/extern/lib</pElem>
+          </linkerDynSerch>
+          <linkerLibItems>
+            <linkerLibProjectItem>
+              <makeArtifact PL="/home/esenov/branch/karaboFramework/build/netbeans/karabo"
+                            CT="2"
+                            CN="Debug"
+                            AC="true"
+                            BL="true"
+                            WD="/home/esenov/branch/karaboFramework/build/netbeans/karabo"
+                            BC="${MAKE}  -f Makefile CONF=Debug"
+                            CC="${MAKE}  -f Makefile CONF=Debug clean"
+                            OP="${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libkarabo.${CND_DLIB_EXT}">
+              </makeArtifact>
+            </linkerLibProjectItem>
+            <linkerLibLibItem>boost_chrono</linkerLibLibItem>
+            <linkerLibLibItem>boost_date_time</linkerLibLibItem>
+            <linkerLibLibItem>boost_filesystem</linkerLibLibItem>
+            <linkerLibLibItem>boost_numpy</linkerLibLibItem>
+            <linkerLibLibItem>boost_python</linkerLibLibItem>
+            <linkerLibLibItem>boost_regex</linkerLibLibItem>
+            <linkerLibLibItem>boost_signals</linkerLibLibItem>
+            <linkerLibLibItem>boost_system</linkerLibLibItem>
+            <linkerLibLibItem>boost_thread</linkerLibLibItem>
+            <linkerLibLibItem>cppunit</linkerLibLibItem>
+            <linkerLibLibItem>hdf5</linkerLibLibItem>
+            <linkerLibLibItem>hdf5_cpp</linkerLibLibItem>
+            <linkerLibLibItem>hdf5_hl</linkerLibLibItem>
+            <linkerLibLibItem>hdf5_hl_cpp</linkerLibLibItem>
+            <linkerLibLibItem>log4cpp</linkerLibLibItem>
+            <linkerLibLibItem>netsnmp</linkerLibLibItem>
+            <linkerLibLibItem>netsnmpagent</linkerLibLibItem>
+            <linkerLibLibItem>netsnmphelpers</linkerLibLibItem>
+            <linkerLibLibItem>netsnmpmibs</linkerLibLibItem>
+            <linkerLibLibItem>netsnmptrapd</linkerLibLibItem>
+            <linkerLibLibItem>openmqc</linkerLibLibItem>
+            <linkerLibLibItem>python2.7</linkerLibLibItem>
+          </linkerLibItems>
+        </linkerTool>
       </compileType>
+      <item path="/home/esenov/branch/karaboFramework/src/karathon/HashWrap.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="/home/esenov/branch/karaboFramework/src/karathon/HashWrap.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="/home/esenov/branch/karaboFramework/src/karathon/PyUtilHash.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="/home/esenov/branch/karaboFramework/src/karathon/karathon.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <folder path="TestFiles/f1">
+        <cTool>
+          <commandLine>`cppunit-config --cflags`</commandLine>
+        </cTool>
+        <ccTool>
+          <commandLine>`cppunit-config --cflags`</commandLine>
+        </ccTool>
+        <linkerTool>
+          <output>${TESTDIR}/TestFiles/f1</output>
+          <linkerLibItems>
+            <linkerOptionItem>`cppunit-config --libs`</linkerOptionItem>
+          </linkerLibItems>
+        </linkerTool>
+      </folder>
+      <item path="tests/HashWrap_Test.cc" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="tests/HashWrap_Test.hh" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="tests/karathonTestRunner.cc" ex="false" tool="1" flavor2="0">
+      </item>
     </conf>
     <conf name="Release" type="2">
       <toolsSet>
@@ -54,6 +165,46 @@
           <developmentMode>5</developmentMode>
         </asmTool>
       </compileType>
+      <item path="/home/esenov/branch/karaboFramework/src/karathon/HashWrap.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="/home/esenov/branch/karaboFramework/src/karathon/HashWrap.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="/home/esenov/branch/karaboFramework/src/karathon/PyUtilHash.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="/home/esenov/branch/karaboFramework/src/karathon/karathon.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <folder path="TestFiles/f1">
+        <cTool>
+          <commandLine>`cppunit-config --cflags`</commandLine>
+        </cTool>
+        <ccTool>
+          <commandLine>`cppunit-config --cflags`</commandLine>
+        </ccTool>
+        <linkerTool>
+          <output>${TESTDIR}/TestFiles/f1</output>
+          <linkerLibItems>
+            <linkerOptionItem>`cppunit-config --libs`</linkerOptionItem>
+          </linkerLibItems>
+        </linkerTool>
+      </folder>
+      <item path="tests/HashWrap_Test.cc" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="tests/HashWrap_Test.hh" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="tests/karathonTestRunner.cc" ex="false" tool="1" flavor2="0">
+      </item>
     </conf>
   </confs>
 </configurationDescriptor>
