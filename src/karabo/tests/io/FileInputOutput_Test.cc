@@ -160,6 +160,6 @@ void FileInputOutput_Test::readBinaryFile() {
     CPPUNIT_ASSERT(karabo::util::similar(h2, m_bigHash));
     CPPUNIT_ASSERT(karabo::util::similar(h2, h2a));
     
-    CPPUNIT_ASSERT(h3.get<string>("a.b.c") == "1");
-    CPPUNIT_ASSERT(h3a.get<string>("a.b.c") == "1");
+    CPPUNIT_ASSERT(h3.get<int>("a.b.c") == 1);
+    CPPUNIT_ASSERT(h3a.get<int>("a.b.c") == 1);
 }

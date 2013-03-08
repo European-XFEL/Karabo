@@ -144,7 +144,7 @@ namespace karabo {
                         // We will allow for this and silently inject an empty Hash instead
                         if (user.getType(key) == Types::STRING) {
 
-                            cout << "Silently converting from STRING" << endl;
+                            //cout << "Silently converting from STRING" << endl;
                             string optionName = user.get<string > (key);
                             if (validOptions.find(optionName) != validOptions.end()) { // Is a valid option
                                 Hash::Node& workNode = working.set(key, Hash(optionName, Hash())); // Inject empty choice
