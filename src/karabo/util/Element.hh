@@ -150,11 +150,12 @@ namespace karabo {
          * 
          **********************************************************************/
 
+        // TODO This should be implemented in a cleaner way
         template<class KeyType, typename AttributeType>
         Element<KeyType, AttributeType>::Element() {
-            if (typeid (m_attributes) == typeid (bool)) {
-                *reinterpret_cast<bool*> (&m_attributes) = false;
-            }
+//            if (typeid (m_attributes) == typeid (bool)) {
+//                *reinterpret_cast<bool*> (&m_attributes) = false;
+//            }
         }
 
         template<class KeyType, typename AttributeType>
@@ -260,14 +261,13 @@ namespace karabo {
             Types::ReferenceType tgtType = Types::from<ValueType > ();
 
             if (srcType == Types::UNKNOWN) throw KARABO_CAST_EXCEPTION("Unknown source type for key: \"" + m_key + "\". Cowardly refusing to cast.");
-
-            ValueType value;
+           
             try {
-                value = karabo::util::fromString<ValueType > (this->getValueAsString());
+                return ValueType(karabo::util::fromString<ValueType > (this->getValueAsString()));
             } catch (...) {
                 KARABO_RETHROW_AS(KARABO_CAST_EXCEPTION(karabo::util::createCastFailureMessage(m_key, srcType, tgtType)));
             }
-            return value;
+            return ValueType();
         }
 
         template<class KeyType, typename AttributeType>

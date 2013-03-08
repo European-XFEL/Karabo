@@ -193,10 +193,10 @@ namespace configurationTest {
         }
 
         GraphicsRenderer(const karabo::util::Hash & input) {
-            std::cout << "*********** " << std::endl << input << std::endl;
+            //std::cout << "*********** " << std::endl << input << std::endl;
             Shape::Pointer shape = Shape::createChoice("shapes", input);
-            std::cout << "*********** " << shape->draw() << std::endl;
-            if (input.has("shapes.Circle")) std::cout << "$$$$$$$$ 0000" << std::endl;
+            //std::cout << "*********** " << shape->draw() << std::endl;
+            //if (input.has("shapes.Circle")) std::cout << "$$$$$$$$ 0000" << std::endl;
         }
 
         virtual ~GraphicsRenderer() {

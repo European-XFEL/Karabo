@@ -82,7 +82,7 @@ namespace karabo {
                 char buffer[32];
                 memset(buffer, 0, 32);
                 is.read(buffer, sizeof (T));
-                return *reinterpret_cast<T*> (buffer);
+                return *reinterpret_cast<T*> (buffer); // BH: Why reinterpret if we know the type?
             }
 
             template<typename T>
