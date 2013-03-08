@@ -54,7 +54,7 @@ void H5File_Test::testWrite() {
             v0[i] = static_cast<unsigned short> (i % 16);
         }
 
-        data.set("vectors.image", v0).setAttribute("dims", Dims(1024, 1024).toVector());
+      //  data.set("vectors.image", v0).setAttribute("dims", Dims(1024, 1024).toVector());
 
 
 
@@ -138,9 +138,9 @@ void H5File_Test::testWrite() {
         Table::Pointer t = file.createTable("/abc", dataFormat, 1);
 
  
-        for (int i = 0; i < 3; ++i)
+        for (int i = 0; i < 512 ; ++i)
             t->write(data, i);
-
+        
 
         file.close();
 

@@ -9,7 +9,7 @@
 #include <sstream> 
 #include "Dataset.hh"
 #include <karabo/util/SimpleElement.hh>
- 
+
 using namespace karabo::io::h5;
 using namespace karabo::util;
 
@@ -29,12 +29,16 @@ namespace karabo {
                         .commit();
             }
 
-            
-            void Dataset::open( hid_t group){                              
+            void Dataset::open(hid_t group) {
                 m_dataSet = H5Dopen2(group, m_h5PathName.c_str(), H5P_DEFAULT);
                 KARABO_CHECK_HDF5_STATUS(m_dataSet);
                 m_fileDataSpace = H5Dget_space(m_dataSet);
                 KARABO_CHECK_HDF5_STATUS(m_fileDataSpace);
+            }
+
+            void Dataset::close() {
+                KARABO_CHECK_HDF5_STATUS(H5Pclose(m_dataSetProperties));
+                KARABO_CHECK_HDF5_STATUS(H5Dclose(m_dataSet));
             }
 
         }

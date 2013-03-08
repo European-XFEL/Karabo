@@ -22,10 +22,10 @@ namespace karabo {
     namespace io {
 
         namespace h5 {
-            
+
 
             class Format;
-            
+
             /**
              * Class representing physical Hdf5 file.
              * Each File may contain any number of Tables.
@@ -105,12 +105,13 @@ namespace karabo {
                 void close();
 
 
-
+                
             private:
 
                 boost::filesystem::path m_filename;
-                
+
                 hid_t m_h5file;
+
                 AccessMode m_accMode;
 
                 boost::shared_ptr<Table> createReadOnlyTablePointer(const std::string& name);

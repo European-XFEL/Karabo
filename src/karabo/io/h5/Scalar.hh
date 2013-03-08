@@ -49,11 +49,17 @@ namespace karabo {
                 virtual ~Scalar() {
                 }
 
+                void close() {
+                    KARABO_CHECK_HDF5_STATUS(H5Sclose(m_memoryDataSpace1));
+                    KARABO_CHECK_HDF5_STATUS(H5Sclose(m_fileDataSpace));
+                    Dataset::close();
+                }
+
                 void create(hsize_t chunkSize) {
                     try {
                         m_chunkSize = chunkSize;
                         karabo::util::Dims dims(chunkSize);
-                        createDataSetProperties(dims);                        
+                        createDataSetProperties(dims);
                         m_dataSet = H5Dcreate(m_parentGroup, m_h5name.c_str(), ScalarTypes::getHdf5StandardType<T > (),
                                 m_fileDataSpace, H5P_DEFAULT, m_dataSetProperties, H5P_DEFAULT);
                         KARABO_CHECK_HDF5_STATUS(m_dataSet);
@@ -169,11 +175,12 @@ namespace karabo {
 
                 inline void bind(karabo::util::Hash & data) {
                     if (!data.has(m_key, '/')) {
-                        T & value = data.bindReference<T>(m_key, '/');
+                        T & value = data.bindReference<T > (m_key, '/');
                         m_readData = &value;
                     } else {
-                        T & value = data.get<T>(m_key,'/');
-                        m_readData = &value;;
+                        T & value = data.get<T > (m_key, '/');
+                        m_readData = &value;
+                        ;
                     }
 
                 }
