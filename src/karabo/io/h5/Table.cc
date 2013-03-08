@@ -13,24 +13,19 @@
 #include <karabo/util/PathElement.hh>
 #include <karabo/util/SimpleElement.hh>
 
-//#include "../Writer.hh"
-//#include "../Reader.hh"
-
 #include "ioProfiler.hh"
 
 using namespace std;
 using namespace karabo::util;
-//using namespace H5;
 using namespace boost;
 
 namespace karabo {
     namespace io {
         namespace h5 {
-
-            // KARABO_REGISTER_FOR_CONFIGURATION_1(karabo::io::h5::Table)
+            
 
             Table::~Table() {
-//                                KARABO_PROFILER_REPORT_TABLE1("write1");
+                //                                KARABO_PROFILER_REPORT_TABLE1("write1");
                 //                KARABO_PROFILER_REPORT_TABLE1("test");
                 //                std::clog << "test" << ": " << table1 << std::endl;
                 //                std::clog << "test" << ": " << table1.getTime("write1").sec << " " << table1.getTime("write1").nsec << std::endl;
@@ -117,7 +112,7 @@ namespace karabo {
                 if (m_numberOfRecords <= recordId) {
                     m_numberOfRecords++;
                 }
-                H5Fflush(m_h5file, H5F_SCOPE_GLOBAL); //??
+                KARABO_CHECK_HDF5_STATUS(H5Fflush(m_h5file, H5F_SCOPE_LOCAL));
                 updateNumberOfRecordsAttribute();
 
                 KARABO_PROFILER_STOP_TABLE1
@@ -133,7 +128,7 @@ namespace karabo {
                 if (m_numberOfRecords <= recordId) {
                     m_numberOfRecords += len;
                 }
-                H5Fflush(m_h5file, H5F_SCOPE_GLOBAL); //??
+                KARABO_CHECK_HDF5_STATUS(H5Fflush(m_h5file, H5F_SCOPE_GLOBAL)); 
                 updateNumberOfRecordsAttribute();
             }
 
@@ -207,12 +202,12 @@ namespace karabo {
             //            }
             //
 
-            void Table::read( size_t recordNumber) {
+            void Table::read(size_t recordNumber) {
                 vector<boost::shared_ptr<Element> > elements = m_dataFormat->getElements();
                 for (size_t i = 0; i < elements.size(); ++i) {
                     elements[i]->read(recordNumber);
                 }
-             //   r_read(data, recordNumber, m_recordFormatHash);
+                //   r_read(data, recordNumber, m_recordFormatHash);
             }
             //
             //            void Table::readBuffer(karabo::util::Hash& data, size_t recordNumber, size_t len) {
@@ -231,8 +226,16 @@ namespace karabo {
             //                return m_numberOfRecords;
             //            }
             //
-            //            void Table::close() {
-            //            }
+
+            void Table::close() {
+
+                vector<boost::shared_ptr<Element> > elements = m_dataFormat->getElements();
+                for (size_t i = 0; i < elements.size(); ++i) {
+                    elements[i]->close();
+                }
+                KARABO_CHECK_HDF5_STATUS(H5Gclose(m_group));
+                KARABO_CHECK_HDF5_STATUS(H5Aclose(m_numberOfRecordsAttribute));
+            }
             //
             //
             //            // end of public functions
@@ -254,6 +257,7 @@ namespace karabo {
                     boost::split(tokens, fullPath.string(), boost::is_any_of("/"));
 
                     hid_t group = H5Gopen(h5file, "/", H5P_DEFAULT);
+                    KARABO_CHECK_HDF5_STATUS(group);
                     //H5::Group group(h5file->openGroup("/"));
                     for (size_t i = 0; i < tokens.size(); ++i) {
                         // skip empty tokens (like in: "/a/b//c" -> "a","b","","c") 
@@ -266,16 +270,18 @@ namespace karabo {
                                 os << "Table " << fullPath.c_str() << " already exists";
                                 throw KARABO_IO_EXCEPTION(os.str());
                             }
-                            nextGroup = H5Gopen(group, tokens[i].c_str(), H5P_DEFAULT); //    openGroup(tokens[i]);
+                            nextGroup = H5Gopen(group, tokens[i].c_str(), H5P_DEFAULT);
+                            KARABO_CHECK_HDF5_STATUS(nextGroup);
                         } else {
-                            nextGroup = H5Gcreate(group, tokens[i].c_str(), H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT); //createGroup(tokens[i]);
+                            nextGroup = H5Gcreate(group, tokens[i].c_str(), H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+                            KARABO_CHECK_HDF5_STATUS(nextGroup);
                         }
-                        H5Gclose(group);
+                        KARABO_CHECK_HDF5_STATUS(H5Gclose(group));
                         group = nextGroup;
                     }
-                    H5Gclose(group);
+                    KARABO_CHECK_HDF5_STATUS(H5Gclose(group));
                     m_group = H5Gopen(h5file, fullPath.c_str(), H5P_DEFAULT);
-                    //m_group = boost::shared_ptr<H5::Group > (new H5::Group(h5file->openGroup(fullPath.c_str())));
+                    KARABO_CHECK_HDF5_STATUS(m_group);                    
                     m_h5Groups[""] = m_group;
                 } catch (...) {
                     KARABO_RETHROW
@@ -297,9 +303,10 @@ namespace karabo {
                 KARABO_CHECK_HDF5_STATUS(schemaVersion)
                 string version = Format::classInfo().getVersion();
                 const char* versionPtr = version.c_str();
-//                clog << "schema version: " << version << endl;
+                //                clog << "schema version: " << version << endl;
                 status = H5Awrite(schemaVersion, stringType, &versionPtr);
-                KARABO_CHECK_HDF5_STATUS(status)
+                KARABO_CHECK_HDF5_STATUS(status);
+                KARABO_CHECK_HDF5_STATUS( H5Aclose(schemaVersion) );
 
             }
 

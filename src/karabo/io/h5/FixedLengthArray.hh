@@ -75,6 +75,12 @@ namespace karabo {
 
                 }
 
+                void close() {
+                    KARABO_CHECK_HDF5_STATUS(H5Sclose(m_memoryDataSpace1));
+                    KARABO_CHECK_HDF5_STATUS(H5Sclose(m_fileDataSpace)); 
+                    Dataset::close();
+                }
+
                 void create(hsize_t chunkSize) {
 
                     try {
@@ -160,7 +166,7 @@ namespace karabo {
                         }
                         m_fileDataSpace = selectRecord(m_fileDataSpace, recordId, len);
                         const std::vector<T>& vec = data.get<std::vector<T> >(m_key, '/');
-//                        std::clog << "303: vec.size = " << vec.size() << std::endl;
+                        //                        std::clog << "303: vec.size = " << vec.size() << std::endl;
                         std::vector<hsize_t> vdims = m_dimsPlus1.toVector();
                         vdims[0] = len;
                         karabo::util::Dims memoryDims(vdims);
@@ -203,12 +209,12 @@ namespace karabo {
                             std::vector<T>& vec = node->getValue< std::vector<T> >();
                             m_readData = ScalarReader<T>::getPointerFromVector(vec);
                         } else if (karabo::util::Types::isPointer(node->getType())) {
-                            T* ptr = node->getValue<T* >();                            
+                            T* ptr = node->getValue<T* >();
                             m_readData = ScalarReader<T>::getPointerFromRaw(ptr, m_dims.size());
                             data.setAttribute(m_key, "dims", m_dims.toVector(), '/');
                         }
                     }
-                    
+
                 }
 
                 //                void allocate(karabo::util::Hash& buffer, size_t len) {
@@ -327,7 +333,7 @@ namespace karabo {
                 hid_t m_dataAccessPropListId;
 
 
-                U m_readData;             // this is a pointer to the data Hash (apart from case of bool type )
+                U m_readData; // this is a pointer to the data Hash (apart from case of bool type )
                 hid_t m_memoryDataSpace1; // memory data space for one record element, defined here for performance optimization
 
             };

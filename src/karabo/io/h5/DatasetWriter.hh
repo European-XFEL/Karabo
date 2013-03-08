@@ -25,7 +25,7 @@ namespace karabo {
 
 
 
-            #define _KARABO_IO_H5_TYPE(type)\
+#define _KARABO_IO_H5_TYPE(type)\
             karabo::util::ToType<karabo::util::ToLiteral>::to(karabo::util::FromType<karabo::util::FromTypeInfo>::from(typeid (type)))
 
             /**
@@ -37,23 +37,28 @@ namespace karabo {
             public:
 
                 static void write(const T& value, hid_t dataSet, hid_t memoryDataSpace, hid_t fileDataSpace) {
-                    herr_t status = H5Dwrite(dataSet, ScalarTypes::getHdf5NativeType<T > (), memoryDataSpace, fileDataSpace, H5P_DEFAULT, &value);
+                    hid_t tid = ScalarTypes::getHdf5NativeType<T > ();
+                    herr_t status = H5Dwrite(dataSet, tid, memoryDataSpace, fileDataSpace, H5P_DEFAULT, &value);
                     KARABO_CHECK_HDF5_STATUS(status)
+                    KARABO_CHECK_HDF5_STATUS(H5Tclose(tid) );
 
                 }
 
                 static void write(const T* ptr, hsize_t len, hid_t dataSet, hid_t memoryDataSpace, hid_t fileDataSpace) {
                     hid_t tid = ScalarTypes::getHdf5NativeType<T > ();
                     herr_t status = H5Dwrite(dataSet, tid, memoryDataSpace, fileDataSpace, H5P_DEFAULT, ptr);
-                    KARABO_CHECK_HDF5_STATUS(status)
-                    
+                    KARABO_CHECK_HDF5_STATUS(status);
+                    KARABO_CHECK_HDF5_STATUS(H5Tclose(tid) );
+
 
                 }
 
                 static void write(const std::vector<T>& vec, hid_t dataSet, hid_t memoryDataSpace, hid_t fileDataSpace) {
                     const T* ptr = &vec[0];
-                    herr_t status = H5Dwrite(dataSet, ScalarTypes::getHdf5NativeType<T > (), memoryDataSpace, fileDataSpace, H5P_DEFAULT, ptr);
+                    hid_t tid = ScalarTypes::getHdf5NativeType<T > ();
+                    herr_t status = H5Dwrite(dataSet, tid, memoryDataSpace, fileDataSpace, H5P_DEFAULT, ptr);
                     KARABO_CHECK_HDF5_STATUS(status)
+                    KARABO_CHECK_HDF5_STATUS(H5Tclose(tid));
                 }
 
             };
@@ -67,6 +72,7 @@ namespace karabo {
                     hid_t tid = ScalarTypes::getHdf5NativeType<unsigned char > ();
                     herr_t status = H5Dwrite(dataSet, tid, memoryDataSpace, fileDataSpace, H5P_DEFAULT, &converted);
                     KARABO_CHECK_HDF5_STATUS(status);
+                    KARABO_CHECK_HDF5_STATUS(H5Tclose(tid));
                 }
 
                 static void write(const bool* ptr, hsize_t len, hid_t dataSet, hid_t memoryDataSpace, hid_t fileDataSpace) {
@@ -77,7 +83,8 @@ namespace karabo {
                     }
                     hid_t tid = ScalarTypes::getHdf5NativeType<unsigned char > ();
                     herr_t status = H5Dwrite(dataSet, tid, memoryDataSpace, fileDataSpace, H5P_DEFAULT, &converted);
-                    KARABO_CHECK_HDF5_STATUS(status);                    
+                    KARABO_CHECK_HDF5_STATUS(status);
+                    KARABO_CHECK_HDF5_STATUS(H5Tclose(tid));
 
                 }
 
@@ -94,11 +101,12 @@ namespace karabo {
                     hid_t tid = ScalarTypes::getHdf5NativeType<unsigned char > ();
                     herr_t status = H5Dwrite(dataSet, tid, memoryDataSpace, fileDataSpace, H5P_DEFAULT, ptr);
                     KARABO_CHECK_HDF5_STATUS(status);
+                    KARABO_CHECK_HDF5_STATUS(H5Tclose(tid));
                 }
 
             };
 
-            #undef _KARABO_IO_H5_TYPE
+#undef _KARABO_IO_H5_TYPE
         }
     }
 }

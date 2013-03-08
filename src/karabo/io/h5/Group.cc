@@ -30,6 +30,10 @@ namespace karabo {
                 m_group = H5Gopen(group, m_h5PathName.c_str(), H5P_DEFAULT);
                 KARABO_CHECK_HDF5_STATUS(m_parentGroup);
             }
+            
+            void Group::close() {
+                KARABO_CHECK_HDF5_STATUS(H5Gclose(m_group));
+            }
 
 
 

@@ -50,7 +50,10 @@ namespace karabo {
 
                 void write(const karabo::util::Hash& data, hsize_t recordId, hsize_t len) {
                 }
+                
                 void open(hid_t group);
+                
+                void close();
                 //
                 //                void write(const karabo::util::Hash& data, hsize_t recordId) {
                 //

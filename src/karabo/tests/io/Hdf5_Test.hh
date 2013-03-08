@@ -11,9 +11,9 @@
 #include <cppunit/extensions/HelperMacros.h>
 
 class Hdf5_Test : public CPPUNIT_NS::TestFixture {
-    CPPUNIT_TEST_SUITE(Hdf5_Test);
+    CPPUNIT_TEST_SUITE(Hdf5_Test);    
     CPPUNIT_TEST(testPureHdf5);
-    
+    CPPUNIT_TEST(testKaraboHdf5);
     CPPUNIT_TEST_SUITE_END();
 
 public:
@@ -23,9 +23,13 @@ public:
     void tearDown();
 
 private:
- 
+
+    unsigned int m_numImages; // number of images to be written
+    int m_extentMultiplier; //image size multiplier: 1 means 1Mpx, 2 - 4Mpx, 3 - 9 Mpx, etc
+    bool m_report;
+
     void testPureHdf5();
- 
+    void testKaraboHdf5();
 };
 
 #endif	/* HDF5_TEST_HH */
