@@ -35,6 +35,7 @@ namespace karabo {
          */
         template <class AbstractClass>
         class Factory {
+
         protected:
 
             typedef std::map<std::string, boost::any > CtorMap;
@@ -79,7 +80,7 @@ namespace karabo {
                 return Factory::init().m_registry.find(factoryKey) != Factory::init().m_registry.end();
             }
 
-            protected:
+        protected:
 
             Factory() {
             };
@@ -89,7 +90,7 @@ namespace karabo {
 
             virtual ~Factory() {
             }
-            
+
             static Factory& init() {
                 static Factory f;
                 return f;
@@ -160,11 +161,13 @@ namespace karabo {
 
         template <class AbstractClass, class ConcreteClass>
         struct Register0 {
+
             static const FactoryMember0<AbstractClass, ConcreteClass> registerAs;
         };
 
         template <class AbstractClass, class ConcreteClass, typename A1>
         struct Register1 {
+
             static const FactoryMember1<AbstractClass, ConcreteClass, A1> registerAs;
         };
 

@@ -16,6 +16,7 @@ namespace karabo {
     namespace util {
 
         class ToLiteral {
+
         public:
 
             typedef std::string ReturnType;

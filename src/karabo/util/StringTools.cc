@@ -18,17 +18,20 @@ using namespace std;
 namespace karabo {
     namespace util {
 
+
         std::string createCastFailureMessage(const std::string& key, const std::type_info& src, const std::type_info& tgt) {
             std::string srcType = Types::convert<FromTypeInfo, ToCppString > (src);
             std::string tgtType = Types::convert<FromTypeInfo, ToCppString > (tgt);
             return "Failed conversion from \"" + srcType + "\" into \"" + tgtType + "\" on key \"" + key + "\"";
         }
 
+
         std::string createCastFailureMessage(const std::string& key, const Types::ReferenceType& src, const Types::ReferenceType& tgt) {
             std::string srcType = ToType<ToCppString>::to(src);
             std::string tgtType = ToType<ToCppString>::to(tgt);
             return "Failed conversion from \"" + srcType + "\" into \"" + tgtType + "\" on key \"" + key + "\"";
         }
+
 
         int getAndCropIndex(std::string& str) {
             int len = str.length() - 1;

@@ -23,9 +23,10 @@ namespace karabo {
     namespace util {
 
         class ChoiceElement : public GenericElement<ChoiceElement> {
+
             Schema::AssemblyRules m_parentSchemaAssemblyRules;
-            
-            DefaultValue<ChoiceElement, std::string> m_defaultValue; 
+
+            DefaultValue<ChoiceElement, std::string> m_defaultValue;
         public:
 
             ChoiceElement(Schema& expected) : GenericElement<ChoiceElement>(expected) {
@@ -52,15 +53,15 @@ namespace karabo {
                 }
                 return *this;
             }
-            
+
             template <class T>
             ChoiceElement& appendAsNode(const std::string& nodeName = "") {
-                 // Create an empty Hash as value of this choice node if not there yet
+                // Create an empty Hash as value of this choice node if not there yet
                 if (this->m_node->getType() != Types::HASH) this->m_node->setValue(Hash());
                 // Retrieve reference for filling
                 Hash& choiceOfNodes = this->m_node->template getValue<Hash > ();
 
-                 // Simply append the expected parameters of T to current node
+                // Simply append the expected parameters of T to current node
                 if (nodeName.empty()) nodeName = T::classInfo().getClassId();
                 Schema schema(nodeName, m_parentSchemaAssemblyRules);
                 T::_KARABO_SCHEMA_DESCRIPTION_FUNCTION(schema);
@@ -72,7 +73,7 @@ namespace karabo {
                 node.setAttribute<int>("accessMode", READ | WRITE | INIT);
                 return *this;
             }
-                        
+
             /**
              * The <b>assignmentMandatory</b> method serves for setting up a mode that requires the value
              * of the element always being specified. No default value is possible.
@@ -82,7 +83,7 @@ namespace karabo {
                 this->m_node->setAttribute<int>("assignment", Schema::MANDATORY_PARAM);
                 return *this;
             }
-            
+
             virtual DefaultValue<ChoiceElement, std::string>& assignmentOptional() {
                 this->m_node->setAttribute<int>("assignment", Schema::OPTIONAL_PARAM);
                 return m_defaultValue;

@@ -25,7 +25,7 @@ namespace karabo {
          */
         template <class Derived>
         class GenericElement {
-            
+
         protected:
 
             Schema* m_schema;
@@ -57,8 +57,8 @@ namespace karabo {
                 if (m_node) throw KARABO_LOGIC_EXCEPTION("The key() function must only be called once!");
 
                 m_node = boost::shared_ptr<Hash::Node>(new Hash::Node(name, 0));
-                    
-                return *(static_cast<Derived*>(this));
+
+                return *(static_cast<Derived*> (this));
             }
 
             /**
@@ -70,7 +70,7 @@ namespace karabo {
             template <class AliasType>
             Derived& alias(const AliasType& alias) {
                 m_node->setAttribute<AliasType > ("alias", alias);
-                return *(static_cast<Derived*>(this));
+                return *(static_cast<Derived*> (this));
             }
 
             /**
@@ -80,7 +80,7 @@ namespace karabo {
              */
             Derived& tags(const std::string& tags, const std::string& sep = " ,;") {
                 m_node->setAttribute("tags", karabo::util::fromString<std::string, std::vector>(tags, sep));
-                return *(static_cast<Derived*>(this));
+                return *(static_cast<Derived*> (this));
             }
 
             /**
@@ -100,7 +100,7 @@ namespace karabo {
              */
             Derived& displayedName(const std::string& name) {
                 m_node->setAttribute("displayedName", name);
-                return *(static_cast<Derived*>(this));
+                return *(static_cast<Derived*> (this));
             }
 
             /**
@@ -119,7 +119,7 @@ namespace karabo {
              */
             Derived& description(const std::string& description) {
                 m_node->setAttribute("description", description);
-                return *(static_cast<Derived*>(this));
+                return *(static_cast<Derived*> (this));
             }
 
             /**
@@ -128,7 +128,7 @@ namespace karabo {
              */
             Derived& advanced() {
                 m_node->setAttribute<int>("expertLevel", Schema::ADVANCED);
-                return *(static_cast<Derived*>(this));
+                return *(static_cast<Derived*> (this));
             }
 
             /**

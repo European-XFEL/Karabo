@@ -22,10 +22,11 @@ namespace karabo {
     namespace util {
 
         class KARABO_DECLSPEC Profiler {
-            
+
             // Period of time 
 
             struct Period {
+
                 std::string m_name;
                 timestamp m_startTime;
                 timestamp m_endTime;
@@ -49,7 +50,7 @@ namespace karabo {
 
             // Initialize a profile with called "name"
             Profiler(const std::string profilename);
-            
+
             const std::string getName() const {
                 return m_name;
             }
@@ -57,8 +58,8 @@ namespace karabo {
             std::string& getName() {
                 return m_name;
             }
-            
-            void setName(const std::string name){
+
+            void setName(const std::string name) {
                 m_name = name;
                 profile[0].m_name = name;
             }
@@ -66,27 +67,27 @@ namespace karabo {
 
             // Start an new period with a given name
             // Empty name means that the period is appended to the previous one
-            
-            void start(const std::string periodname = std::string("")) ;
-            
+
+            void start(const std::string periodname = std::string(""));
+
             // Stops the last period
             // TODO: implement interleaving periods (ie. reentrance)
-            
-            void stop(const std::string periodname = std::string("")) ;
+
+            void stop(const std::string periodname = std::string(""));
 
             // Reset the content of the profiler
-            void reset() ;
+            void reset();
 
             // Return the global time for this profiler include idle time (ie. between periods)
-            timestamp getGlobalTime() ;
+            timestamp getGlobalTime();
 
             // Return the total time of a period at "position"
             // This will sum up the all the sub-periods (ie, unnamed period) the come right after it.
-            timestamp getTime(size_t position) ;
-            
+            timestamp getTime(size_t position);
+
             // Return the total time of the period called "periodname"
             // This will sum up the all the sub-periods (ie, unnamed period) the come right after it.
-            timestamp getTime(std::string periodname) ;
+            timestamp getTime(std::string periodname);
 
             // Return the detailed time profile for the period called "periodname"
             std::vector<timestamp> getTimeDetails(std::string periodname);
@@ -96,10 +97,10 @@ namespace karabo {
             timestamp getEffectiveTime();
 
             // Serialize the profile into standard ostream
-            std::string report(int level=0xFFFF) const;
-            
+            std::string report(int level = 0xFFFF) const;
+
             // Serialize the profile into standard ostream
-            
+
             friend std::ostream& operator <<(std::ostream& os, const Profiler & pr);
 
         private:

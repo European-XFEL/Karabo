@@ -36,8 +36,8 @@ namespace karabo {
      */
     namespace util {
 
-
         enum AccessType {
+
             INIT = 1 << 0,
             READ = 1 << 1,
             WRITE = 1 << 2,
@@ -59,7 +59,6 @@ namespace karabo {
             return __a = __a & __b;
         }
 
-
         /**
          * The Schema class correlates to the Hash class like an XML Schema document correlates to an XML document.
          * The Schema object is a description of type of Hash objects, expressed in terms of constraints
@@ -72,6 +71,7 @@ namespace karabo {
          * 
          */
         class KARABO_DECLSPEC Schema {
+
             template <class T> friend class GenericElement;
             template< class T> friend class SimpleElement;
             friend class OverwriteElement;
@@ -97,10 +97,10 @@ namespace karabo {
 
         public:
 
-
             KARABO_CLASSINFO(Schema, "Schema", "1.0")
 
             struct AssemblyRules {
+
                 AccessType m_accessMode;
                 std::string m_state;
                 std::string m_accessRole;
@@ -110,29 +110,29 @@ namespace karabo {
                 }
             };
 
-
             enum ExpertLevelType {
+
                 SIMPLE,
                 MEDIUM,
                 ADVANCED
             };
 
-
             enum NodeType {
+
                 LEAF,
                 NODE,
                 CHOICE_OF_NODES,
                 LIST_OF_NODES
             };
 
-
             enum LeafType {
+
                 PROPERTY,
                 COMMAND
             };
 
-
             enum AssignmentType {
+
                 OPTIONAL_PARAM,
                 MANDATORY_PARAM,
                 INTERNAL_PARAM

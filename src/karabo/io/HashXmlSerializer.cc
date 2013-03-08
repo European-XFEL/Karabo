@@ -13,17 +13,18 @@ using namespace karabo::util;
 using namespace std;
 
 namespace karabo {
-
     namespace io {
 
+
         KARABO_REGISTER_FOR_CONFIGURATION(TextSerializer<Hash>, HashXmlSerializer)
+
 
         void HashXmlSerializer::expectedParameters(karabo::util::Schema& expected) {
 
             INT32_ELEMENT(expected)
                     .key("indentation")
                     .description("Set the indent characters for printing. Value -1: the most dense formatting without linebreaks. "
-                    "Value 0: no indentation, value 1/2/3: one/two/three space indentation. If not set, default is 2 spaces.")
+                                 "Value 0: no indentation, value 1/2/3: one/two/three space indentation. If not set, default is 2 spaces.")
                     .displayedName("Indentation")
                     .options("-1 0 1 2 3 4")
                     .assignmentOptional().defaultValue(2)
@@ -37,7 +38,7 @@ namespace karabo {
                     .assignmentOptional().defaultValue(true)
                     .advanced()
                     .commit();
-            
+
             BOOL_ELEMENT(expected)
                     .key("readDataTypes")
                     .description("This flag controls whether to use any potentially existing data type information to do automatic casting into the described types")
@@ -45,7 +46,7 @@ namespace karabo {
                     .assignmentOptional().defaultValue(true)
                     .advanced()
                     .commit();
-            
+
             BOOL_ELEMENT(expected)
                     .key("insertXmlNamespace")
                     .displayedName("Insert XML Namespace")
@@ -53,7 +54,7 @@ namespace karabo {
                     .assignmentOptional().defaultValue(false)
                     .advanced()
                     .commit();
-            
+
             STRING_ELEMENT(expected)
                     .key("xmlns")
                     .description("Sets the default XML namespace")
@@ -71,17 +72,18 @@ namespace karabo {
                     .commit();
         }
 
+
         HashXmlSerializer::HashXmlSerializer(const Hash& input) {
             input.get("writeDataTypes", m_writeDataTypes);
             input.get("readDataTypes", m_readDataTypes);
             input.get("insertXmlNamespace", m_insertXmlNamespace);
             input.get("xmlns", m_xmlns);
             input.get("prefix", m_prefix);
-            
+
             m_typeFlag = m_prefix + "Type";
             m_artificialRootFlag = m_prefix + "Artificial";
             m_itemFlag = m_prefix + "Item";
-            
+
             int indentation = input.get<int>("indentation");
             if (indentation == -1) {
                 m_indentation = "";
@@ -91,6 +93,7 @@ namespace karabo {
                 m_writeCompact = false;
             }
         }
+
 
         void HashXmlSerializer::save(const Hash& object, std::string& archive) {
             pugi::xml_document doc;
@@ -117,6 +120,7 @@ namespace karabo {
             else doc.save(writer, m_indentation.c_str(), pugi::format_indent);
         }
 
+
         void HashXmlSerializer::writeAttributes(const Hash::Attributes& attrs, pugi::xml_node& node) const {
             for (Hash::Attributes::const_iterator it = attrs.begin(); it != attrs.end(); ++it) {
                 if (m_writeDataTypes) {
@@ -127,6 +131,7 @@ namespace karabo {
                 }
             }
         }
+
 
         void HashXmlSerializer::createXml(const Hash& hash, pugi::xml_node& node) const {
             for (Hash::const_iterator it = hash.begin(); it != hash.end(); ++it) {
@@ -146,14 +151,15 @@ namespace karabo {
                         this->createXml(hashes[i], itemNode);
                     }
                 } else if (type == Types::SCHEMA) {
-                    
-                    
+
+
                 } else {
                     if (m_writeDataTypes) nextNode.append_attribute(m_typeFlag.c_str()) = Types::to<ToLiteral > (type).c_str();
                     nextNode.append_child(pugi::node_pcdata).set_value(it->getValueAs<string > ().c_str());
                 }
             }
         }
+
 
         void HashXmlSerializer::load(Hash& object, const std::string& archive) {
             pugi::xml_document doc;
@@ -167,6 +173,7 @@ namespace karabo {
             }
         }
 
+
         void HashXmlSerializer::readAttributes(Hash::Attributes& attrs, const pugi::xml_node& node) const {
             for (pugi::xml_attribute_iterator it = node.attributes_begin(); it != node.attributes_end(); ++it) {
                 string attributeName(it->name());
@@ -179,6 +186,7 @@ namespace karabo {
                 }
             }
         }
+
 
         std::pair<std::string, Types::ReferenceType> HashXmlSerializer::readXmlAttribute(const std::string& attributeValue) const {
             if ((attributeValue.substr(0, m_prefix.size())) == m_prefix) { // Attribute value with type
@@ -201,6 +209,7 @@ namespace karabo {
                 return std::make_pair(attributeValue, Types::UNKNOWN);
             }
         }
+
 
         void HashXmlSerializer::createHash(Hash& hash, pugi::xml_node node) const {
             while (node.type() != pugi::node_null) {
@@ -240,7 +249,7 @@ namespace karabo {
                     }
                     hashNode.setAttributes(attrs);
                 }
-                
+
                 // Go to next sibling
                 node = node.next_sibling();
             }

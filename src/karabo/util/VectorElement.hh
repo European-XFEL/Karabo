@@ -19,30 +19,31 @@ namespace karabo {
     namespace util {
 
         template<typename T,
-                template <typename ELEM, typename = std::allocator<ELEM> > class CONT = std::vector>
-                class VectorElement : public LeafElement<VectorElement<T, CONT>, CONT<T> > {
+        template <typename ELEM, typename = std::allocator<ELEM> > class CONT = std::vector>
+        class VectorElement : public LeafElement<VectorElement<T, CONT>, CONT<T> > {
+
         public:
 
             VectorElement(Schema& expected) : LeafElement<VectorElement, CONT<T> >(expected) {
             }
-                        
+
             VectorElement& minSize(const unsigned int& value) {
                 this->m_node->setAttribute("minSize", value);
                 return *this;
             }
 
             VectorElement& maxSize(const unsigned int& value) {
-                 this->m_node->setAttribute("maxSize", value);
+                this->m_node->setAttribute("maxSize", value);
                 return *this;
             }
-            
-             protected:
+
+        protected:
 
             void beforeAddition() {
 
                 this->m_node->template setAttribute<int>("nodeType", Schema::LEAF);
                 this->m_node->setAttribute("valueType", Types::to<ToLiteral>(Types::from<CONT<T> >()));
-                
+
                 if (this->m_node->hasAttribute("accessMode")) this->init(); // This is the default
             }
         };

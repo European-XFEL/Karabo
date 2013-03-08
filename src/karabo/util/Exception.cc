@@ -27,6 +27,7 @@ namespace karabo {
         std::map<void*, Exception::ExceptionHandler> Exception::m_exceptionHandlers;
         bool Exception::m_hasUnhandled = false;
 
+
         Exception::Exception(const string& message, const string& type, const string& filename, const string& function, int lineNumber) {
             m_exceptionInfo.message = message;
             m_exceptionInfo.type = type;
@@ -54,25 +55,29 @@ namespace karabo {
             m_exceptionInfo.timestamp = to_simple_string(ptime(microsec_clock::local_time()));
         }
 
+
         void Exception::addToTrace(const ExceptionInfo& value) {
             boost::mutex::scoped_lock lock(Exception::m_mutex);
             m_hasUnhandled = true;
             m_trace.push_back(value);
         }
 
+
         void Exception::addToTrace(const Exception& e) {
             addToTrace(e.m_exceptionInfo);
         }
+
 
         void Exception::clearTrace() {
             boost::mutex::scoped_lock lock(Exception::m_mutex);
             Exception::m_hasUnhandled = false;
             Exception::m_trace.clear();
         }
-        
+
+
         void Exception::memorize() {
 
-#define KARABO_EXCEPTION(CLASS) Exception::ExceptionInfo myException; \
+            #define KARABO_EXCEPTION(CLASS) Exception::ExceptionInfo myException; \
   myException.type = CLASS; \
   myException.message = string(e.what()); \
   myException.filename = ""; \
@@ -122,7 +127,8 @@ namespace karabo {
             }
         }
 
-        void Exception::showTrace( ostream& os) {
+
+        void Exception::showTrace(ostream& os) {
             boost::mutex::scoped_lock lock(Exception::m_mutex);
             if (m_trace.empty()) return;
             ostringstream oss;
@@ -135,6 +141,7 @@ namespace karabo {
             }
             os << oss.str();
         }
+
 
         ostream & operator<<(ostream& os, const Exception& exception) {
             if (Exception::m_trace.size() >= 1) {
@@ -149,6 +156,7 @@ namespace karabo {
             return os;
         }
 
+
         void Exception::format(ostream& os, const ExceptionInfo& exceptionInfo, const string& spacing) {
             if (!exceptionInfo.type.empty()) os << spacing << "    Exception Type....:  " << exceptionInfo.type << endl;
             if (!exceptionInfo.message.empty()) os << spacing << "    Message...........:  " << exceptionInfo.message << endl;
@@ -158,10 +166,11 @@ namespace karabo {
             if (!exceptionInfo.timestamp.empty()) os << spacing << "    Timestamp.........:  " << exceptionInfo.timestamp << endl;
         }
 
-        
+
         void Exception::msg(std::ostream& os) const {
             os << *this;
         }
+
 
         const char* Exception::what() const throw () {
             string& err = const_cast<string&> (m_exceptionText);
@@ -183,11 +192,13 @@ namespace karabo {
             return err.c_str();
         }
 
+
         string Exception::userFriendlyMsg() const {
             string err = "An error has occured: ";
             err += what();
             return err;
         }
+
 
         string Exception::detailedMsg() const {
             std::ostringstream os;

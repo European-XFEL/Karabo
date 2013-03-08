@@ -21,6 +21,7 @@ namespace karabo {
     namespace io {
 
         class AbstractInput : public boost::enable_shared_from_this<AbstractInput> {
+
         public:
 
             KARABO_CLASSINFO(AbstractInput, "AbstractInput", "1.0")
@@ -31,13 +32,14 @@ namespace karabo {
 
             virtual ~AbstractInput() {
             }
-            
-            virtual void reconfigure(const karabo::util::Hash& input) {}
-            
+
+            virtual void reconfigure(const karabo::util::Hash& input) {
+            }
+
             void setInstanceId(const std::string& instanceId) {
                 m_instanceId = instanceId;
             }
-            
+
             const std::string& getInstanceId() const {
                 return m_instanceId;
             }
@@ -46,7 +48,7 @@ namespace karabo {
             void registerIOEventHandler(const boost::function<void (const boost::shared_ptr<InputType>&) >& ioEventHandler) {
                 m_ioEventHandler = ioEventHandler;
             }
-            
+
             virtual bool needsDeviceConnection() const { // TODO Check if we can get rid of this
                 return false;
             }
@@ -72,9 +74,9 @@ namespace karabo {
 
             template <class InputType>
             void triggerIOEvent() {
-                if(!m_ioEventHandler.empty()) (boost::any_cast<boost::function<void (const boost::shared_ptr<InputType>&) > >(m_ioEventHandler))(boost::static_pointer_cast< InputType >(shared_from_this()));
+                if (!m_ioEventHandler.empty()) (boost::any_cast < boost::function<void (const boost::shared_ptr<InputType>&) > >(m_ioEventHandler))(boost::static_pointer_cast< InputType >(shared_from_this()));
             }
-            
+
         private:
 
             std::string m_instanceId;

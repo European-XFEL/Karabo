@@ -20,16 +20,17 @@ namespace karabo {
 
         template <class T>
         class Input : public AbstractInput {
+
         public:
 
             KARABO_CLASSINFO(Input, "Input", "1.0")
             KARABO_CONFIGURATION_BASE_CLASS
 
-           
+
             virtual void read(T& data, size_t idx = 0) = 0;
-            
+
             virtual size_t size() const = 0;
-            
+
         };
     }
 }

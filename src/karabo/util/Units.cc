@@ -10,6 +10,7 @@
 namespace karabo {
     namespace util {
 
+
         std::pair<std::string, std::string> Units::getMetricPrefix(const MetricPrefix metricPrefix) {
             #define _KARABO_HELPER_MACRO(MetricEnum) case MetricEnum: return getMetricPrefix<MetricEnum>();
             switch (metricPrefix) {
@@ -19,6 +20,7 @@ namespace karabo {
             }
             #undef _KARABO_HELPER_MACRO
         }
+
 
         std::pair<std::string, std::string> Units::getUnit(const Unit unit) {
             #define _KARABO_HELPER_MACRO(UnitEnum) case UnitEnum: return getUnit<UnitEnum>();

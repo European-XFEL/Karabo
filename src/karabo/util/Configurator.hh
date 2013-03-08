@@ -31,6 +31,7 @@ namespace karabo {
 
             template<class Class, class Argument, void (*)(Argument&) >
             struct VoidArg1FunctionExists {
+
             };
 
             template<class Class>
@@ -57,6 +58,7 @@ namespace karabo {
 
         template <class BaseClass>
         class Configurator {
+
             typedef std::map<std::string, boost::any > CtorMap;
             typedef std::map<std::string, CtorMap> Registry;
             typedef std::vector<boost::function<void (Schema&)> > SchemaFuncs;
@@ -247,6 +249,7 @@ namespace karabo {
 
         template <class Base>
         struct RegisterConfigurator1 {
+
             static const ConfiguratorMember1<Base> registerMe;
         };
 
@@ -263,6 +266,7 @@ namespace karabo {
 
         template <class Base, class Sub1>
         struct RegisterConfigurator2 {
+
             static const ConfiguratorMember2<Base, Sub1> registerMe;
         };
 
@@ -280,6 +284,7 @@ namespace karabo {
 
         template <class Base, class Sub1, class Sub2>
         struct RegisterConfigurator3 {
+
             static const ConfiguratorMember3<Base, Sub1, Sub2> registerMe;
         };
 

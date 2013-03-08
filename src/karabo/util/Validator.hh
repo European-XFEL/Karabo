@@ -23,6 +23,7 @@ namespace karabo {
     namespace util {
 
         class Validator {
+
             // Validation flags
             bool m_injectDefaults;
             bool m_assumeRootedConfiguration;
@@ -32,6 +33,7 @@ namespace karabo {
         public:
 
             struct ValidationRules {
+
                 bool injectDefaults;
                 bool allowUnrootedConfiguration;
                 bool allowAdditionalKeys;
@@ -39,21 +41,21 @@ namespace karabo {
             };
 
             Validator();
-            
+
             Validator(const ValidationRules rules);
-            
+
             void setValidationRules(const Validator::ValidationRules& rules);
-                
+
             Validator::ValidationRules getValidationRules() const;
-            
+
             std::pair<bool, std::string> validate(const Schema& schema, const Hash& unvalidatedInput, Hash& validatedOutput) const;
-                    
+
         private:
-            
+
             void r_validate(const Hash& master, const Hash& user, Hash& working, std::ostringstream& report, std::string scope = "") const;
-            
+
             void validateLeaf(const Hash::Node& masterNode, Hash::Node& workNode, std::ostringstream& report, std::string scope) const;
-            
+
         };
     }
 }

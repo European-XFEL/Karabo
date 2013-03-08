@@ -25,6 +25,7 @@ namespace karabo {
          * The SchemaXsdSerializer class
          */
         class SchemaXsdSerializer : public TextSerializer<karabo::util::Schema> {
+
             int m_indentation;
             std::string m_defaultNamespace;
 
@@ -46,6 +47,7 @@ namespace karabo {
         private: // functions
 
             struct CustomWriter : public pugi::xml_writer {
+
                 std::string& _result;
 
                 CustomWriter(std::string & archive) : _result(archive) {

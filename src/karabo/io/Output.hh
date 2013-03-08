@@ -21,10 +21,11 @@ namespace karabo {
 
         template <class T>
         class Output : public AbstractOutput {
+
         public:
 
             KARABO_CLASSINFO(Output, "Output", "1.0")
-            
+
             KARABO_CONFIGURATION_BASE_CLASS
 
             Output(const karabo::util::Hash& config) : AbstractOutput(config) {
@@ -32,7 +33,7 @@ namespace karabo {
 
             virtual ~Output() {
             }
-            
+
             virtual void write(const T& object) = 0;
         };
     }
