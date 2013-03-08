@@ -242,7 +242,7 @@ namespace karabo {
         }
 
 
-        int Schema::getAssignment(const std::string& path) const {
+        const int Schema::getAssignment(const std::string& path) const {
             return m_hash.getAttribute<int > (path, "assignment");
         }
 
@@ -333,6 +333,34 @@ namespace karabo {
             return m_hash.getAttribute<vector<string> >(path, "allowedStates");
         }
 
+        //**********************************************
+        //                  ExpertLevel                *
+        //**********************************************
+        
+        void Schema::setExpertLevel(const std::string& path, const Schema::ExpertLevelType& value) {
+            m_hash.setAttribute(path, "expertLevel", value);
+        }
+
+        bool Schema::hasExpertLevel(const std::string& path) const {
+            return m_hash.hasAttribute(path, "expertLevel");
+        }
+
+        bool Schema::isExpertLevelAdvanced(const std::string& path) const {
+            return m_hash.getAttribute<int>(path, "expertLevel") == Schema::ADVANCED;
+        }
+
+        bool Schema::isExpertLevelMedium(const std::string& path) const {
+            return m_hash.getAttribute<int>(path, "expertLevel") == Schema::MEDIUM;
+        }
+        
+        bool Schema::isExpertLevelSimple(const std::string& path) const {
+            return m_hash.getAttribute<int>(path, "expertLevel") == Schema::SIMPLE;
+        }
+        
+        const int Schema::getExpertLevel(const std::string& path) const {
+            return m_hash.getAttribute<int> (path, "expertLevel");
+        }
+        
         //**********************************************
         //                  Unit                       *
         //**********************************************

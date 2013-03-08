@@ -260,7 +260,7 @@ namespace karabo {
 
             bool isAssignmentInternal(const std::string& path) const;
 
-            int getAssignment(const std::string& path) const;
+            const int getAssignment(const std::string& path) const;
 
             //**********************************************
             //                  Options                    *
@@ -281,6 +281,22 @@ namespace karabo {
             bool hasAllowedStates(const std::string& path) const;
 
             const std::vector<std::string>& getAllowedStates(const std::string& path) const;
+            
+            //**********************************************
+            //                  ExpertLevel                *
+            //**********************************************
+            
+            void setExpertLevel(const std::string& path, const ExpertLevelType& value);
+            
+            bool hasExpertLevel(const std::string& path) const;
+
+            bool isExpertLevelAdvanced(const std::string& path) const;
+
+            bool isExpertLevelMedium(const std::string& path) const;
+        
+            bool isExpertLevelSimple(const std::string& path) const;
+            
+            const int getExpertLevel(const std::string& path) const;
 
             //**********************************************
             //                DefaultValue                 *
