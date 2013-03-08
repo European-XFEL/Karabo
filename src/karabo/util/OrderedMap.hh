@@ -23,17 +23,17 @@ namespace karabo {
 
         template<class KeyType, class MappedType>
         class OrderedMap {
-            
+
             typedef std::list<MappedType*> ListType;
             typedef std::map<KeyType, MappedType> MapType;
 
             ListType m_listNodes;
             MapType m_mapNodes;
-            
+
         public:
-            
+
             typedef MappedType Node;
-            
+
             typedef typename MapType::iterator map_iterator;
             typedef typename MapType::const_iterator const_map_iterator;
 
@@ -46,7 +46,7 @@ namespace karabo {
         public:
 
             OrderedMap();
-            
+
             OrderedMap(const OrderedMap<KeyType, MappedType>& other);
 
 
@@ -58,21 +58,21 @@ namespace karabo {
 
             template <typename T, typename U, typename V>
             OrderedMap(const KeyType& key1, const T& value1, const KeyType& key2, const U& value2,
-                    const KeyType& key3, const V& value3);
+                       const KeyType& key3, const V& value3);
 
             template <typename T, typename U, typename V, typename X>
             OrderedMap(const KeyType& key1, const T& value1, const KeyType& key2, const U& value2,
-                    const KeyType& key3, const V& value3, const KeyType& key4, const X& value4);
+                       const KeyType& key3, const V& value3, const KeyType& key4, const X& value4);
 
             template <typename T, typename U, typename V, typename X, typename Y>
             OrderedMap(const KeyType& key1, const T& value1, const KeyType& key2, const U& value2,
-                    const KeyType& key3, const V& value3, const KeyType& key4, const X& value4,
-                    const KeyType& key5, const Y& value5);
+                       const KeyType& key3, const V& value3, const KeyType& key4, const X& value4,
+                       const KeyType& key5, const Y& value5);
 
             template <typename T, typename U, typename V, typename X, typename Y, typename Z>
             OrderedMap(const KeyType& key1, const T& value1, const KeyType& key2, const U& value2,
-                    const KeyType& key3, const V& value3, const KeyType& key4, const X& value4,
-                    const KeyType& key5, const Y& value5, const KeyType& key6, const Z& value6);
+                       const KeyType& key3, const V& value3, const KeyType& key4, const X& value4,
+                       const KeyType& key5, const Y& value5, const KeyType& key6, const Z& value6);
 
             // Destructor
             virtual ~OrderedMap();
@@ -81,33 +81,33 @@ namespace karabo {
             OrderedMap<KeyType, MappedType>& operator=(const OrderedMap<KeyType, MappedType>& other);
 
             list_iterator begin();
-            
+
             const_list_iterator begin() const;
 
             list_iterator end();
-            
+
             const_list_iterator end() const;
 
             map_iterator mbegin();
-            
+
             const_map_iterator mbegin() const;
 
             map_iterator mend();
-            
+
             const_map_iterator mend() const;
 
             inline map_iterator find(const KeyType& key);
-            
+
             inline const_map_iterator find(const KeyType& key) const;
-            
+
             inline bool has(const KeyType& key) const;
-            
+
             inline void erase(const KeyType& key);
 
             inline size_t size() const;
-            
+
             inline bool empty() const;
-                        
+
             inline void clear();
 
             template<class T>
@@ -115,37 +115,37 @@ namespace karabo {
 
             template<class T>
             inline const T& get(const KeyType& key) const;
-            
+
             template<class T>
             inline T& get(const KeyType& key);
-            
+
             template<class T>
             inline void get(const KeyType& key, T & value) const;
-            
+
             template<class T>
             inline const T & get(const const_map_iterator & it) const;
-            
+
             template<class T>
             inline T & get(const map_iterator & it);
-            
+
             template <typename ValueType>
             inline ValueType getAs(const KeyType& key) const;
-                        
+
             template<typename T, template <typename Elem, typename = std::allocator<Elem> > class Cont >
             inline Cont<T> getAs(const KeyType& key) const;
 
             inline const Node& getNode(const KeyType& key) const;
-            
+
             inline Node& getNode(const KeyType& key);
-            
+
             inline const boost::any& getAny(const KeyType& key) const;
-            
+
             inline boost::any& getAny(const KeyType& key);
 
             template <typename T> bool is(const KeyType & key) const;
-            
+
             template <typename T> bool is(const const_map_iterator & it) const;
-            
+
             bool is(const KeyType& key, const Types::ReferenceType & type) const;
 
         };
@@ -184,7 +184,7 @@ namespace karabo {
         template<class KeyType, class MappedType>
         template <typename T, typename U, typename V>
         OrderedMap<KeyType, MappedType>::OrderedMap(const KeyType& key1, const T& value1, const KeyType& key2, const U& value2,
-        const KeyType& key3, const V& value3) {
+                                                    const KeyType& key3, const V& value3) {
             this->set(key1, value1);
             this->set(key2, value2);
             this->set(key3, value3);
@@ -193,7 +193,7 @@ namespace karabo {
         template<class KeyType, class MappedType>
         template <typename T, typename U, typename V, typename X>
         OrderedMap<KeyType, MappedType>::OrderedMap(const KeyType& key1, const T& value1, const KeyType& key2, const U& value2,
-        const KeyType& key3, const V& value3, const KeyType& key4, const X& value4) {
+                                                    const KeyType& key3, const V& value3, const KeyType& key4, const X& value4) {
             this->set(key1, value1);
             this->set(key2, value2);
             this->set(key3, value3);
@@ -203,8 +203,8 @@ namespace karabo {
         template<class KeyType, class MappedType>
         template <typename T, typename U, typename V, typename X, typename Y>
         OrderedMap<KeyType, MappedType>::OrderedMap(const KeyType& key1, const T& value1, const KeyType& key2, const U& value2,
-        const KeyType& key3, const V& value3, const KeyType& key4, const X& value4,
-        const KeyType& key5, const Y& value5) {
+                                                    const KeyType& key3, const V& value3, const KeyType& key4, const X& value4,
+                                                    const KeyType& key5, const Y& value5) {
             this->set(key1, value1);
             this->set(key2, value2);
             this->set(key3, value3);
@@ -215,8 +215,8 @@ namespace karabo {
         template<class KeyType, class MappedType>
         template <typename T, typename U, typename V, typename X, typename Y, typename Z>
         OrderedMap<KeyType, MappedType>::OrderedMap(const KeyType& key1, const T& value1, const KeyType& key2, const U& value2,
-        const KeyType& key3, const V& value3, const KeyType& key4, const X& value4,
-        const KeyType& key5, const Y& value5, const KeyType& key6, const Z& value6) {
+                                                    const KeyType& key3, const V& value3, const KeyType& key4, const X& value4,
+                                                    const KeyType& key5, const Y& value5, const KeyType& key6, const Z& value6) {
             this->set(key1, value1);
             this->set(key2, value2);
             this->set(key3, value3);
@@ -370,7 +370,7 @@ namespace karabo {
             }
             return it->second; // 
         }
-        
+
         template<class KeyType, class MappedType>
         inline const boost::any& OrderedMap<KeyType, MappedType>::getAny(const KeyType& key) const {
             const_map_iterator it;
@@ -379,7 +379,7 @@ namespace karabo {
             }
             return it->second.template getValueAsAny();
         }
-        
+
         template<class KeyType, class MappedType>
         inline boost::any& OrderedMap<KeyType, MappedType>::getAny(const KeyType& key) {
             map_iterator it;
@@ -388,7 +388,6 @@ namespace karabo {
             }
             return it->second.template getValueAsAny();
         }
-        
 
         template<class KeyType, class MappedType>
         template<class T>
@@ -427,7 +426,7 @@ namespace karabo {
         inline T & OrderedMap<KeyType, MappedType>::get(const map_iterator & it) {
             return it->second.template getValue<T > ();
         }
-        
+
         template <class KeyType, class MappedType>
         template <class ValueType>
         inline ValueType OrderedMap<KeyType, MappedType>::getAs(const KeyType& key) const {
@@ -437,7 +436,7 @@ namespace karabo {
             }
             return it->second.template getValueAs<ValueType >();
         }
-        
+
         template <class KeyType, class MappedType>
         template<typename T, template <typename Elem, typename = std::allocator<Elem> > class Cont >
         inline Cont<T> OrderedMap<KeyType, MappedType>::getAs(const KeyType& key) const {
@@ -446,7 +445,7 @@ namespace karabo {
                 throw KARABO_PARAMETER_EXCEPTION("Key '" + key + "' does not exist");
             }
             return it->second.template getValueAs<T, Cont >();
-        }       
+        }
 
         template<class KeyType, class MappedType>
         template <typename T>

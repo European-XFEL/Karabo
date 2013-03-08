@@ -32,7 +32,7 @@
 
 namespace karabo {
     namespace util {
-        
+
         std::string createCastFailureMessage(const std::string& key, const std::type_info& src, const std::type_info& tgt);
         std::string createCastFailureMessage(const std::string& key, const Types::ReferenceType& src, const Types::ReferenceType& tgt);
 
@@ -109,21 +109,21 @@ namespace karabo {
             }
             return s.str();
         }
-        
+
         inline std::string toString(const std::vector<std::string> value) {
             if (value.empty()) return "";
             std::ostringstream s;
             std::vector<std::string>::const_iterator it = value.begin();
             if (it->find_first_of(',') != std::string::npos) throw KARABO_NOT_SUPPORTED_EXCEPTION("Comma separator within in string array element is not supported during casting");
-             s << *it;
+            s << *it;
             it++;
             for (; it != value.end(); ++it) {
                 s << "," << *it;
             }
             return s.str();
         }
-        
-         template <typename T>
+
+        template <typename T>
         inline std::string toString(const std::set<T>& value) {
             if (value.empty()) return "";
             std::ostringstream s;
@@ -169,15 +169,15 @@ namespace karabo {
         }
 
         template<typename T,
-                template <typename ELEM, typename = std::allocator<ELEM> > class CONT>
-                inline CONT<T> fromString(const std::string& value, const std::string& separator = ","){
+        template <typename ELEM, typename = std::allocator<ELEM> > class CONT>
+        inline CONT<T> fromString(const std::string& value, const std::string& separator = ",") {
             try {
                 CONT<std::string> elements;
                 std::string tmp(value);
                 boost::trim(tmp);
-                if (tmp[0] == '[' && tmp[tmp.size()-1] == ']') {
+                if (tmp[0] == '[' && tmp[tmp.size() - 1] == ']') {
                     tmp = tmp.substr(1);
-                    tmp.erase(tmp.size()-1);
+                    tmp.erase(tmp.size() - 1);
                 }
                 boost::split(elements, tmp, boost::is_any_of(separator), boost::token_compress_on);
                 size_t size = elements.size();
@@ -236,6 +236,7 @@ namespace karabo {
 
         class Widen : public std::unary_function<
         const std::string&, std::basic_string<E, T, Sub1> > {
+
             std::locale loc_;
             const std::ctype<E>* pCType_;
 
@@ -247,12 +248,12 @@ namespace karabo {
             // Constructor...
 
             Widen(const std::locale& loc = std::locale()) : loc_(loc) {
-#if defined(_MSC_VER) && (_MSC_VER < 1300) // VC++ 6.0...
+                #if defined(_MSC_VER) && (_MSC_VER < 1300) // VC++ 6.0...
                 using namespace std;
                 pCType_ = &_USE(loc, ctype<E>);
-#else
+                #else
                 pCType_ = &std::use_facet<std::ctype<E> >(loc);
-#endif
+                #endif
             }
 
             // Conversion...

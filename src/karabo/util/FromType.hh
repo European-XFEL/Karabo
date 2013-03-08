@@ -18,7 +18,7 @@ namespace karabo {
 
         template <class Impl>
         class FromType {
-            
+
             typedef typename Impl::ArgumentType ArgumentType;
 
             FromType();
@@ -27,6 +27,7 @@ namespace karabo {
         public:
 
             // Concept that must be implemented
+
             static Types::ReferenceType from(const ArgumentType& type) {
                 return Impl::from(type);
             }

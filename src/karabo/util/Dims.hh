@@ -19,6 +19,7 @@ namespace karabo {
          * Describes array dimensions. 
          */
         class Dims {
+
             typedef unsigned long long ull64;
 
             std::vector<ull64> m_vec;

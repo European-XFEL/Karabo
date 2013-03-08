@@ -27,7 +27,7 @@ namespace karabo {
         inline void getPointerFromHash(const Hash& hash, const std::string& path, T*& value, Dims& dims, const char separator = '.') {
             const Hash::Node& node = hash.getNode(path, separator);
             value = node.getValue<T*>();
-            const vector<unsigned long long>& vec = node.getAttribute< std::vector<unsigned long long> >("dims");         
+            const vector<unsigned long long>& vec = node.getAttribute< std::vector<unsigned long long> >("dims");
             dims.fromVector(vec);
         }
 

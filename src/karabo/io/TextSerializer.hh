@@ -18,23 +18,23 @@
 
 namespace karabo {
     namespace io {
-        
+
         template <class T>
         class TextSerializer {
-            
-            public:
-                
-                KARABO_CLASSINFO(TextSerializer<T>, "TextSerializer-" + std::string(T::classInfo().getClassName()), "1.0")
-                
-                KARABO_CONFIGURATION_BASE_CLASS
-                
-                virtual void save(const T& object, std::string& archive) = 0;
-                
-                virtual void load(T& object, const std::string& archive) = 0;
-                
-                virtual void load(T& object, const std::stringstream& archive) {
-                    this->load(object, archive.str()); // Creates a copy, but may be overridden for more performance
-                }
+
+        public:
+
+            KARABO_CLASSINFO(TextSerializer<T>, "TextSerializer-" + std::string(T::classInfo().getClassName()), "1.0")
+
+            KARABO_CONFIGURATION_BASE_CLASS
+
+            virtual void save(const T& object, std::string& archive) = 0;
+
+            virtual void load(T& object, const std::string& archive) = 0;
+
+            virtual void load(T& object, const std::stringstream& archive) {
+                this->load(object, archive.str()); // Creates a copy, but may be overridden for more performance
+            }
         };
     }
 }

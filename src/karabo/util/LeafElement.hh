@@ -20,24 +20,24 @@ namespace karabo {
 
         // Forwards
         template<class T, class U> class DefaultValue;
-        template<class T, class U> class ReadOnlySpecific; 
-        
+        template<class T, class U> class ReadOnlySpecific;
+
         /**
          * The LeafElement represents a leaf and can be of any (supported) type
          */
         template<class Derived, typename ValueType>
         class LeafElement : public GenericElement<Derived> {
-            
+
             DefaultValue<Derived, ValueType> m_defaultValue; // the default value type depends on the type of element
             ReadOnlySpecific<Derived, ValueType> m_readOnlySpecific;
-            
+
         public:
-            
+
             LeafElement(Schema& expected) : GenericElement<Derived>(expected) {
                 m_defaultValue.setElement(static_cast<Derived*> (this));
                 m_readOnlySpecific.setElement(static_cast<Derived*> (this));
             }
-            
+
             /**
              * The <b>unit</b> method serves for setting up a name for units
              * @param unitName The name describing units
@@ -82,10 +82,10 @@ namespace karabo {
              * @return reference to the Element (to allow method's chaining)
              */
             Derived& allowedRoles(const std::string& roles, const std::string& sep = " ,;") {
-                this->m_node->setAttribute("allowedRoles", karabo::util::fromString<std::string, std::vector>(roles, sep) );
+                this->m_node->setAttribute("allowedRoles", karabo::util::fromString<std::string, std::vector>(roles, sep));
                 return *(static_cast<Derived*> (this));
             }
-          
+
             /**
              * The <b>assignmentMandatory</b> method serves for setting up a mode that requires the value
              * of the element always being specified. No default value is possible.
@@ -130,8 +130,8 @@ namespace karabo {
                 this->m_node->template setAttribute<int>("assignment", Schema::INTERNAL_PARAM);
                 return m_defaultValue;
             }
-            
-             /**
+
+            /**
              * The <b>init</b> method serves for setting up an access type property that allows the element
              * to be included in initial schema.
              * @return reference to the Element (to allow method's chaining)
@@ -164,12 +164,13 @@ namespace karabo {
                 return m_readOnlySpecific;
             }
         };
-        
-           /**
+
+        /**
          * The DefaultValue class defines a default value for element.
          */
         template<class Element, class ValueType>
         class DefaultValue {
+
             Element* m_genericElement;
 
         public:
@@ -177,7 +178,6 @@ namespace karabo {
             template< class U, class V> friend class LeafElement;
             friend class ChoiceElement;
             friend class ListElement;
-            
 
             /**
              * The <b>defaultValue</b> method serves for setting up the default value to be used when User
@@ -221,18 +221,19 @@ namespace karabo {
             }
 
         };
-        
+
         /**
          * The DefaultValue class defines a default value for element.
          */
         template<class Element, class ValueType>
         class ReadOnlySpecific {
+
             Element* m_genericElement;
 
         public:
 
             template< class U, class V> friend class LeafElement;
-            
+
             /**
              * The <b>initialValue</b> method serves for setting up the initial value reported for this parameter.
              * @param val  Initial value
@@ -253,32 +254,32 @@ namespace karabo {
                 m_genericElement->getNode().setAttribute("defaultValue", initialValue);
                 return *this;
             }
-            
+
             ReadOnlySpecific& warnLow(const ValueType& value) {
                 m_genericElement->getNode().setAttribute("warnLow", value);
                 return *this;
             }
-            
+
             ReadOnlySpecific& warnHigh(const ValueType& value) {
                 m_genericElement->getNode().setAttribute("warnHigh", value);
                 return *this;
             }
-            
+
             ReadOnlySpecific& alarmLow(const ValueType& value) {
                 m_genericElement->getNode().setAttribute("alarmLow", value);
                 return *this;
             }
-            
+
             ReadOnlySpecific& alarmHigh(const ValueType& value) {
                 m_genericElement->getNode().setAttribute("alarmHigh", value);
                 return *this;
             }
-            
+
             void commit() {
                 m_genericElement->commit();
             }
-            
-            private:
+
+        private:
 
             // DefaultValue object can be only constructed by its friends
 

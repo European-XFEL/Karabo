@@ -14,8 +14,9 @@
 
 namespace karabo {
     namespace util {
-        
+
         class ToXsd {
+
         public:
 
             typedef std::string ReturnType;
@@ -25,7 +26,7 @@ namespace karabo {
                 throw KARABO_NOT_IMPLEMENTED_EXCEPTION("Conversion to required type not implemented");
             }
         };
-        
+
         KARABO_MAP_TO_REFERENCE_TYPE(ToXsd, BOOL, "xs:boolean")
         KARABO_MAP_TO_REFERENCE_TYPE(ToXsd, VECTOR_BOOL, "xs:boolean")
         KARABO_MAP_TO_REFERENCE_TYPE(ToXsd, CHAR, "xs:byte")

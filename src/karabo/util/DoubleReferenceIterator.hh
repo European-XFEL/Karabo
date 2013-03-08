@@ -13,6 +13,7 @@ namespace karabo {
 
         template<class T, class R = typename T::MappedType>
         class DoubleReferenceIterator : public T::iterator {
+
         public:
 
             DoubleReferenceIterator(const typename T::iterator& it) : T::iterator(it) {
@@ -37,6 +38,7 @@ namespace karabo {
 
         template<class T, class R = typename T::MappedType>
         class ConstDoubleReferenceIterator : public T::const_iterator {
+
         public:
 
             ConstDoubleReferenceIterator(const typename T::const_iterator& it) : T::const_iterator(it) {

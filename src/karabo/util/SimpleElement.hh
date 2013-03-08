@@ -23,6 +23,7 @@ namespace karabo {
          */
         template<typename ValueType>
         class SimpleElement : public LeafElement<SimpleElement<ValueType>, ValueType > {
+
         public:
 
             SimpleElement(Schema& expected) : LeafElement<SimpleElement<ValueType>, ValueType >(expected) {

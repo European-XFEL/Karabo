@@ -18,9 +18,11 @@ namespace karabo {
     namespace util {
 
         class Units {
+
         public:
 
             enum MetricPrefix {
+
                 YOTTA,
                 ZETTA,
                 EXA,
@@ -45,6 +47,7 @@ namespace karabo {
             };
 
             enum Unit {
+
                 METER,
                 GRAM,
                 SECOND,

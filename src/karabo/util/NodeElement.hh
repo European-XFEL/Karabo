@@ -22,6 +22,7 @@ namespace karabo {
     namespace util {
 
         class NodeElement : public GenericElement<NodeElement> {
+
             Schema::AssemblyRules m_parentSchemaAssemblyRules;
 
         public:
@@ -40,7 +41,7 @@ namespace karabo {
                     // The produced schema will be rooted with classId, we however want to put its children
                     // under the defined key and ignore the classId root node
                     this->m_node->template setValue<Hash > (schema.getParameterHash());
-                    
+
                 } else {
                     throw KARABO_PARAMETER_EXCEPTION("Can not append class \"" + classId + "\", as it is not registered in factory.");
                 }
@@ -55,11 +56,11 @@ namespace karabo {
                 this->m_node->template setValue<Hash > (schema.getParameterHash());
                 return *this;
             }
-            
+
         protected:
-            
+
             void beforeAddition() {
-                this->m_node->setAttribute<int>("accessMode", READ|WRITE|INIT);
+                this->m_node->setAttribute<int>("accessMode", READ | WRITE | INIT);
                 this->m_node->setAttribute<int>("nodeType", Schema::NODE);
             }
         };

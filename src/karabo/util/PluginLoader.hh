@@ -23,47 +23,48 @@
  */
 namespace karabo {
 
-  /**
-   * Namespace for package packageName
-   */
-  namespace util {
-
     /**
-     * The PluginLoader class.
+     * Namespace for package packageName
      */
-    class PluginLoader {
-    public:
+    namespace util {
 
-      KARABO_CLASSINFO(PluginLoader, "PluginLoader", "1.0")
-      KARABO_CONFIGURATION_BASE_CLASS
+        /**
+         * The PluginLoader class.
+         */
+        class PluginLoader {
 
-      PluginLoader() {
-      };
+        public:
 
-      PluginLoader(const boost::filesystem::path& pluginDirectory) : m_pluginDirectory(pluginDirectory) {
-      }
+            KARABO_CLASSINFO(PluginLoader, "PluginLoader", "1.0")
+            KARABO_CONFIGURATION_BASE_CLASS
 
-      static void expectedParameters(karabo::util::Schema& expected);
+            PluginLoader() {
+            };
 
-      void configure(const karabo::util::Hash& input);
+            PluginLoader(const boost::filesystem::path& pluginDirectory) : m_pluginDirectory(pluginDirectory) {
+            }
 
-      virtual ~PluginLoader() {
-      };
+            static void expectedParameters(karabo::util::Schema& expected);
 
-      bool update();
+            void configure(const karabo::util::Hash& input);
 
-      const boost::filesystem::path& getPluginDirectory() const;
+            virtual ~PluginLoader() {
+            };
 
-    protected:
+            bool update();
 
-    private:
+            const boost::filesystem::path& getPluginDirectory() const;
 
-      boost::filesystem::path m_pluginDirectory;
+        protected:
 
-      static std::map<boost::filesystem::path, void*> m_loadedPlugins;
+        private:
 
-    };
-  } // namespace util
+            boost::filesystem::path m_pluginDirectory;
+
+            static std::map<boost::filesystem::path, void*> m_loadedPlugins;
+
+        };
+    } // namespace util
 } // namespace karabo
 
 #endif	/* KARABO_PACKAGENAME_PLUGINLOADER_HH */

@@ -20,12 +20,14 @@ namespace karabo {
 
         KARABO_REGISTER_FOR_CONFIGURATION(BinarySerializer<Hash>, HashBinarySerializer);
 
+
         void HashBinarySerializer::serialize(const Hash& hash, std::ostream& os) {
             writeSize(os, hash.size());
             for (Hash::const_iterator iter = hash.begin(); iter != hash.end(); ++iter) {
                 serialize(*iter, os);
             }
         }
+
 
         void HashBinarySerializer::serialize(Hash& hash, std::istream& is) {
             size_t size = readSize(is);
@@ -38,6 +40,7 @@ namespace karabo {
             }
         }
 
+
         void HashBinarySerializer::serialize(const Hash::Node& element, std::ostream& os) {
             writeKey(os, element.getKey());
             writeType(os, element.getType());
@@ -49,6 +52,7 @@ namespace karabo {
             }
         }
 
+
         void HashBinarySerializer::serialize(Hash::Node& element, std::istream& is) {
             Types::ReferenceType type = readType(is);
             serialize(element.getAttributes(), is);
@@ -59,6 +63,7 @@ namespace karabo {
             serialize(element.getValueAsAny(), type, is);
         }
 
+
         void HashBinarySerializer::serialize(const Hash::Attributes& attributes, std::ostream& os) {
             writeSize(os, attributes.size());
             for (Hash::Attributes::const_iterator iter = attributes.begin(); iter != attributes.end(); ++iter) {
@@ -68,6 +73,7 @@ namespace karabo {
                 serialize(attr.getValueAsAny(), attr.getType(), os);
             }
         }
+
 
         void HashBinarySerializer::serialize(Hash::Attributes& attributes, std::istream& is) {
             size_t size = readSize(is);
@@ -80,6 +86,7 @@ namespace karabo {
             }
         }
 
+
         void HashBinarySerializer::serialize(const boost::any& value, const Types::ReferenceType type, std::ostream& os) {
             switch (Types::category(type)) {
                 case Types::HASH:
@@ -90,6 +97,7 @@ namespace karabo {
                     throw KARABO_IO_EXCEPTION("Could not properly categorize value type \"" + Types::to<ToLiteral>(type) + "\" for writing to archive");
             }
         }
+
 
         void HashBinarySerializer::serialize(boost::any& value, const Types::ReferenceType type, std::istream& is) {
             switch (Types::category(type)) {
@@ -116,6 +124,7 @@ namespace karabo {
             }
         }
 
+
         template<>
         std::string HashBinarySerializer::readSingleValue(std::istream& is) {
             size_t size = readSize(is);
@@ -125,15 +134,18 @@ namespace karabo {
             return std::string(buffer.get());
         }
 
+
         template<>
         std::complex<double> HashBinarySerializer::readSingleValue(std::istream& is) {
             return readComplexValue<double > (is);
         }
 
+
         template<>
         std::complex<float> HashBinarySerializer::readSingleValue(std::istream& is) {
             return readComplexValue<float> (is);
         }
+
 
         template<>
         Hash HashBinarySerializer::readSingleValue(std::istream& is) {
@@ -141,6 +153,7 @@ namespace karabo {
             serialize(hash, is);
             return hash;
         }
+
 
         boost::any HashBinarySerializer::readSingleValue(std::istream& is, const Types::ReferenceType type) {
             switch (type) {
@@ -164,6 +177,7 @@ namespace karabo {
                     throw KARABO_IO_EXCEPTION("Encountered unknown data type whilst reading from binary archive");
             }
         }
+
 
         void HashBinarySerializer::readSequence(std::istream& is, boost::any& result, const Types::ReferenceType type) {
             size_t size = readSize(is);
@@ -189,6 +203,7 @@ namespace karabo {
             }
         }
 
+
         template<>
         void HashBinarySerializer::writeSingleValue(std::ostream& os, const std::string& str) {
             size_t size = str.length();
@@ -196,20 +211,24 @@ namespace karabo {
             os.write(str.c_str(), size);
         }
 
+
         template<>
         void HashBinarySerializer::writeSingleValue(std::ostream& os, const std::complex<float>& value) {
             return writeComplexValue(os, value);
         }
+
 
         template<>
         void HashBinarySerializer::writeSingleValue(std::ostream& os, const std::complex<double>& value) {
             return writeComplexValue(os, value);
         }
 
+
         template<>
         void HashBinarySerializer::writeSingleValue(std::ostream& os, const Hash& hash) {
             serialize(hash, os);
         }
+
 
         void HashBinarySerializer::writeSingleValue(std::ostream& os, const boost::any& value, const Types::ReferenceType type) {
             switch (type) {
@@ -229,10 +248,11 @@ namespace karabo {
                 case Types::COMPLEX_DOUBLE: return writeSingleValue(os, boost::any_cast<std::complex<double> >(value));
                 case Types::STRING: return writeSingleValue(os, boost::any_cast<std::string > (value)); //
                 case Types::HASH: return writeSingleValue(os, boost::any_cast<Hash > (value)); //
-                default: 
+                default:
                     throw KARABO_IO_EXCEPTION("Encountered unknown data type whilst writing to binary archive");
             }
         }
+
 
         void HashBinarySerializer::writeSequence(std::ostream& os, const boost::any& value, const Types::ReferenceType type) {
             switch (type) {
@@ -257,9 +277,11 @@ namespace karabo {
             }
         }
 
+
         void HashBinarySerializer::writeSize(std::ostream& os, size_t size) {
             os.write((char*) &size, sizeof (size));
         }
+
 
         size_t HashBinarySerializer::readSize(std::istream& is) {
             size_t size;
@@ -267,10 +289,12 @@ namespace karabo {
             return size;
         }
 
+
         void HashBinarySerializer::writeKey(std::ostream& os, const std::string& str) {
             writeSize(os, str.size());
             os.write(str.c_str(), str.size());
         }
+
 
         std::string HashBinarySerializer::readKey(std::istream& is) {
             char buffer[256];
@@ -279,9 +303,11 @@ namespace karabo {
             return std::string(buffer);
         }
 
+
         void HashBinarySerializer::writeType(std::ostream& os, const Types::ReferenceType type) {
             return writeSize(os, type);
         }
+
 
         Types::ReferenceType HashBinarySerializer::readType(std::istream& is) {
             return Types::ReferenceType(readSize(is));

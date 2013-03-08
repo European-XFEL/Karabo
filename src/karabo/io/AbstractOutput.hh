@@ -21,10 +21,10 @@ namespace karabo {
     namespace io {
 
         class AbstractOutput : public boost::enable_shared_from_this<AbstractOutput> {
-            
+
             boost::any m_ioEventHandler;
             std::string m_instanceId;
-            
+
         public:
 
             KARABO_CLASSINFO(AbstractOutput, "AbstractOutput", "1.0")
@@ -80,7 +80,7 @@ namespace karabo {
             template <class OutputType>
             void triggerIOEvent() {
                 if (!m_ioEventHandler.empty()) (boost::any_cast < boost::function<void (const boost::shared_ptr<OutputType>&) > >(m_ioEventHandler))(boost::static_pointer_cast< OutputType > (shared_from_this()));
-            }          
+            }
         };
     }
 }

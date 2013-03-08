@@ -37,6 +37,7 @@ namespace karabo {
          */
         template <class T>
         class BinaryFileOutput : public Output<T> {
+
             boost::filesystem::path m_filename;
             std::string m_writeMode;
             typename BinarySerializer<T>::Pointer m_serializer;

@@ -33,6 +33,7 @@ namespace karabo {
 
         template <class T>
         class BinaryFileInput : public Input<T> {
+
             boost::filesystem::path m_filename;
             typename BinarySerializer<T>::Pointer m_serializer;
 
@@ -105,7 +106,7 @@ namespace karabo {
 
                 ifstream file(m_filename.string().c_str(), ios::in | ios::binary);
                 if (file.is_open()) {
-                    file.seekg (0, ios::end);
+                    file.seekg(0, ios::end);
                     ifstream::pos_type fileSize = file.tellg();
                     file.seekg(0, ios::beg);
                     buffer.resize(fileSize);

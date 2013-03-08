@@ -33,6 +33,7 @@ namespace karabo {
          * Main Exception class.
          */
         class KARABO_DECLSPEC Exception : public std::exception {
+
         public:
 
             typedef boost::function<void (const Exception&) > ExceptionHandler;
@@ -89,7 +90,7 @@ namespace karabo {
             /**
              * Shows all memorized messages.
              */
-            static void showTrace( std::ostream& os = std::cerr );
+            static void showTrace(std::ostream& os = std::cerr);
 
             static void addToTrace(const Exception& e);
 
@@ -103,7 +104,7 @@ namespace karabo {
              * In contrast to the inherited what() function this function also lists
              * memorized/traced exceptions.
              */
-            void msg( std::ostream& os = std::cerr ) const;
+            void msg(std::ostream& os = std::cerr) const;
 
             /**
              * Overrides std::exception.
@@ -127,6 +128,7 @@ namespace karabo {
             // Generic Exception information structure
 
             typedef struct {
+
                 std::string type;
                 std::string message;
                 std::string filename;
@@ -176,17 +178,18 @@ namespace karabo {
          * The PropagatedException handles exceptions that reflect anonymous nodes within a exception trace
          */
         class PropagatedException : public Exception {
+
         public:
 
             PropagatedException(const std::string& message, const std::string& filename, const std::string& function, int lineNumber) :
             Exception(message, "Propagated Exception", filename, function, lineNumber) {
             }
         };
-#define KARABO_PROPAGATED_EXCEPTION(msg) karabo::util::PropagatedException(msg, __FILE__, BOOST_CURRENT_FUNCTION, __LINE__)
+        #define KARABO_PROPAGATED_EXCEPTION(msg) karabo::util::PropagatedException(msg, __FILE__, BOOST_CURRENT_FUNCTION, __LINE__)
 
         // Convenience defines
-#define KARABO_RETHROW karabo::util::Exception::rethrow(KARABO_PROPAGATED_EXCEPTION(""));
-#define KARABO_RETHROW_AS(exception) karabo::util::Exception::rethrow(exception);
+        #define KARABO_RETHROW karabo::util::Exception::rethrow(KARABO_PROPAGATED_EXCEPTION(""));
+        #define KARABO_RETHROW_AS(exception) karabo::util::Exception::rethrow(exception);
 
         // ---- Fundamental Exceptions
 
@@ -194,73 +197,79 @@ namespace karabo {
          * The ParameterException handles exceptions that result from missing or out-of-bounds parameter
          */
         class ParameterException : public Exception {
+
         public:
 
             ParameterException(const std::string& message, const std::string& filename, const std::string& function, int lineNumber) :
             Exception(message, "Parameter Exception", filename, function, lineNumber) {
             }
         };
-#define KARABO_PARAMETER_EXCEPTION(msg) karabo::util::ParameterException(msg, __FILE__, BOOST_CURRENT_FUNCTION, __LINE__)
+        #define KARABO_PARAMETER_EXCEPTION(msg) karabo::util::ParameterException(msg, __FILE__, BOOST_CURRENT_FUNCTION, __LINE__)
 
         /**
          *  The LogicException handles exceptions that are raised by any unexpected logical behaviour
          */
         class LogicException : public Exception {
+
         public:
 
             LogicException(const std::string& message, const std::string& filename, const std::string& function, int lineNumber) :
             Exception(message, "Logic Exception", filename, function, lineNumber) {
             }
         };
-#define KARABO_LOGIC_EXCEPTION(msg) karabo::util::LogicException(msg, __FILE__, BOOST_CURRENT_FUNCTION, __LINE__)
+        #define KARABO_LOGIC_EXCEPTION(msg) karabo::util::LogicException(msg, __FILE__, BOOST_CURRENT_FUNCTION, __LINE__)
 
         /**
          * The NotImplementedException handles exceptions that are raised due to unimplemented functions/class calls
          */
         class NotImplementedException : public Exception {
+
         public:
 
             NotImplementedException(const std::string& message, const std::string& filename, const std::string& function, int lineNumber) :
             Exception(message, "Not implemented", filename, function, lineNumber) {
             }
         };
-#define KARABO_NOT_IMPLEMENTED_EXCEPTION(msg) karabo::util::NotImplementedException(msg, __FILE__, BOOST_CURRENT_FUNCTION, __LINE__)
+        #define KARABO_NOT_IMPLEMENTED_EXCEPTION(msg) karabo::util::NotImplementedException(msg, __FILE__, BOOST_CURRENT_FUNCTION, __LINE__)
 
         /**
          * The NotImplementedException handles exceptions that are raised by requesting unsupported features
          */
         class NotSupportedException : public Exception {
+
         public:
 
             NotSupportedException(const std::string& message, const std::string& filename, const std::string& function, int lineNumber) :
             Exception(message, "Call not supported", filename, function, lineNumber) {
             }
         };
-#define KARABO_NOT_SUPPORTED_EXCEPTION(msg) karabo::util::NotSupportedException(msg, __FILE__, BOOST_CURRENT_FUNCTION, __LINE__)
-        
-         /**
+        #define KARABO_NOT_SUPPORTED_EXCEPTION(msg) karabo::util::NotSupportedException(msg, __FILE__, BOOST_CURRENT_FUNCTION, __LINE__)
+
+        /**
          * The SchemaException handles exceptions that are raised whilst constructing a Schema 
          */
         class SchemaException : public Exception {
+
         public:
 
             SchemaException(const std::string& message, const std::string& filename, const std::string& function, int lineNumber) :
             Exception(message, "Bad schema construction", filename, function, lineNumber) {
             }
         };
-#define KARABO_SCHEMA_EXCEPTION(msg) karabo::util::SchemaException(msg, __FILE__, BOOST_CURRENT_FUNCTION, __LINE__)
+        #define KARABO_SCHEMA_EXCEPTION(msg) karabo::util::SchemaException(msg, __FILE__, BOOST_CURRENT_FUNCTION, __LINE__)
 
         /**
          * The CastException handles exceptions that are raised due to illegal type castings
          */
         class CastException : public Exception {
+
         public:
 
             CastException(const std::string& message, const std::string& filename, const std::string& function, int lineNumber) :
             Exception(message, "Cast Exception", filename, function, lineNumber) {
             }
         };
-#define KARABO_CAST_EXCEPTION(msg) karabo::util::CastException(msg, __FILE__, BOOST_CURRENT_FUNCTION, __LINE__)
+        #define KARABO_CAST_EXCEPTION(msg) karabo::util::CastException(msg, __FILE__, BOOST_CURRENT_FUNCTION, __LINE__)
 
         // ---- Image Exceptions
 
@@ -268,6 +277,7 @@ namespace karabo {
          * The ImageException handles an generic image exception
          */
         class ImageException : public Exception {
+
         public:
 
             ImageException(const std::string& message, const std::string& filename, const std::string& function, int lineNumber) :
@@ -275,51 +285,55 @@ namespace karabo {
             }
 
             ImageException(const std::string& message, const std::string& type, const std::string& filename, const std::string& function,
-                    int lineNumber) : Exception(message, type, filename, function, lineNumber) {
+                           int lineNumber) : Exception(message, type, filename, function, lineNumber) {
             }
-#define KARABO_IMAGE_EXCEPTION(msg) karabo::util::ImageException(msg, __FILE__, BOOST_CURRENT_FUNCTION, __LINE__)
+            #define KARABO_IMAGE_EXCEPTION(msg) karabo::util::ImageException(msg, __FILE__, BOOST_CURRENT_FUNCTION, __LINE__)
         };
 
         /**
          * The ImageDimensionException handles exceptions raised due to illegal image dimensions
          */
         class ImageDimensionException : public ImageException {
+
         public:
 
             ImageDimensionException(const std::string& message, const std::string& filename, const std::string& function, int lineNumber) :
             ImageException(message, "Image Dimension Exception", filename, function, lineNumber) {
             }
         };
-#define KARABO_IMAGE_DIMENSION_EXCEPTION(msg) karabo::util::ImageDimensionException(msg, __FILE__, BOOST_CURRENT_FUNCTION, __LINE__)
+        #define KARABO_IMAGE_DIMENSION_EXCEPTION(msg) karabo::util::ImageDimensionException(msg, __FILE__, BOOST_CURRENT_FUNCTION, __LINE__)
 
         /**
          * The ImageFormatException handles exceptions raised due to unsupported image formats
          */
         class ImageFormatException : public ImageException {
+
         public:
 
             ImageFormatException(const std::string& message, const std::string& filename, const std::string& function, int lineNumber) :
             ImageException(message, "Image Format Exception", filename, function, lineNumber) {
             }
         };
-#define KARABO_IMAGE_FORMAT_EXCEPTION(msg) karabo::util::ImageFormatException(msg, __FILE__, BOOST_CURRENT_FUNCTION, __LINE__)
+        #define KARABO_IMAGE_FORMAT_EXCEPTION(msg) karabo::util::ImageFormatException(msg, __FILE__, BOOST_CURRENT_FUNCTION, __LINE__)
 
         /**
          * The ImageTypeException handles exceptions raised due to imcompatible image types
          */
         class ImageTypeException : public ImageException {
+
         public:
 
             ImageTypeException(const std::string& message, const std::string& filename, const std::string& function, int lineNumber) :
             ImageException(message, "Image Type Exception", filename, function, lineNumber) {
             }
         };
-#define KARABO_IMAGE_TYPE_EXCEPTION(msg) karabo::util::ImageTypeException(msg, __FILE__, BOOST_CURRENT_FUNCTION, __LINE__)
+        #define KARABO_IMAGE_TYPE_EXCEPTION(msg) karabo::util::ImageTypeException(msg, __FILE__, BOOST_CURRENT_FUNCTION, __LINE__)
 
         /**
          * The InitException handles exceptions raised during any initialization procedures
          */
         class InitException : public Exception {
+
         public:
 
             InitException(const std::string& message, const std::string& filename, const std::string& function, int lineNumber) :
@@ -327,22 +341,23 @@ namespace karabo {
             }
 
             InitException(const std::string& message, const std::string type, const std::string& filename, const std::string& function,
-                    int lineNumber) : Exception(message, type, filename, function, lineNumber) {
+                          int lineNumber) : Exception(message, type, filename, function, lineNumber) {
             }
         };
-#define KARABO_INIT_EXCEPTION(msg) karabo::util::InitException(msg, __FILE__, BOOST_CURRENT_FUNCTION, __LINE__)
+        #define KARABO_INIT_EXCEPTION(msg) karabo::util::InitException(msg, __FILE__, BOOST_CURRENT_FUNCTION, __LINE__)
 
         /**
          * The MemoryInitException handles exceptions raised during any memory initializations
          */
         class MemoryInitException : public InitException {
+
         public:
 
             MemoryInitException(const std::string& message, const std::string& filename, const std::string& function, int lineNumber) :
             InitException(message, "Memory init Exception", filename, function, lineNumber) {
             }
         };
-#define KARABO_MEMORY_INIT_EXCEPTION(msg) karabo::util::MemoryInitException(msg, __FILE__, BOOST_CURRENT_FUNCTION, __LINE__)
+        #define KARABO_MEMORY_INIT_EXCEPTION(msg) karabo::util::MemoryInitException(msg, __FILE__, BOOST_CURRENT_FUNCTION, __LINE__)
 
         // ---- IO Exceptions
 
@@ -350,6 +365,7 @@ namespace karabo {
          * The IOException handles exceptions raised related to Input/Output routines
          */
         class IOException : public Exception {
+
         public:
 
             IOException(const std::string& message, const std::string& filename, const std::string& function, int lineNumber) :
@@ -360,155 +376,167 @@ namespace karabo {
             Exception(message, type, filename, function, lineNumber) {
             }
         };
-#define KARABO_IO_EXCEPTION(msg) karabo::util::IOException(msg, __FILE__, BOOST_CURRENT_FUNCTION, __LINE__)
+        #define KARABO_IO_EXCEPTION(msg) karabo::util::IOException(msg, __FILE__, BOOST_CURRENT_FUNCTION, __LINE__)
 
         class HdfIOException : public IOException {
+
         public:
 
             HdfIOException(const std::string& message, const std::string& filename, const std::string& function, int lineNumber) :
             IOException(message, "HdfIOException", filename, function, lineNumber) {
             }
-            
-            void set(const std::string& message, const std::string& filename, const std::string& function, int lineNumber){                
-                m_exceptionInfo.message =  message;                
+
+            void set(const std::string& message, const std::string& filename, const std::string& function, int lineNumber) {
+                m_exceptionInfo.message = message;
                 m_exceptionInfo.filename = filename;
                 m_exceptionInfo.function = function;
                 m_exceptionInfo.lineNumber = toString(lineNumber);
             }
         };
-#define KARABO_HDF_IO_EXCEPTION(msg) karabo::util::HdfIOException(msg, __FILE__, BOOST_CURRENT_FUNCTION, __LINE__)
+        #define KARABO_HDF_IO_EXCEPTION(msg) karabo::util::HdfIOException(msg, __FILE__, BOOST_CURRENT_FUNCTION, __LINE__)
 
         /**
          * FileNotFoundIOException
          */
         class FileNotFoundIOException : public IOException {
+
         public:
 
             FileNotFoundIOException(const std::string& message, const std::string& filename, const std::string& function, int lineNumber) :
             IOException(message, "FileNotFound IOException", filename, function, lineNumber) {
             }
         };
-#define KARABO_FILENOTFOUND_IO_EXCEPTION(msg) karabo::util::FileNotFoundIOException(msg, __FILE__, BOOST_CURRENT_FUNCTION, __LINE__)
+        #define KARABO_FILENOTFOUND_IO_EXCEPTION(msg) karabo::util::FileNotFoundIOException(msg, __FILE__, BOOST_CURRENT_FUNCTION, __LINE__)
 
         /**
          * The MQException handles exceptions that are caused by the JMS openMQ c-client implementation
          */
         class OpenMqException : public Exception {
+
         public:
 
             OpenMqException(const std::string& message, const std::string& filename, const std::string& function, int lineNumber) :
             Exception(message, "OpenMq Exception", filename, function, lineNumber) {
             }
         };
-#define KARABO_OPENMQ_EXCEPTION(msg) karabo::util::OpenMqException(msg, __FILE__, BOOST_CURRENT_FUNCTION, __LINE__)
+        #define KARABO_OPENMQ_EXCEPTION(msg) karabo::util::OpenMqException(msg, __FILE__, BOOST_CURRENT_FUNCTION, __LINE__)
 
         /**
          * The MessageException handles exceptions that are caused during messaging
          */
         class MessageException : public Exception {
+
         public:
 
             MessageException(const std::string& message, const std::string& filename, const std::string& function, int lineNumber) :
             Exception(message, "Message Exception", filename, function, lineNumber) {
             }
         };
-#define KARABO_MESSAGE_EXCEPTION(msg) karabo::util::MessageException(msg, __FILE__, BOOST_CURRENT_FUNCTION, __LINE__)
+        #define KARABO_MESSAGE_EXCEPTION(msg) karabo::util::MessageException(msg, __FILE__, BOOST_CURRENT_FUNCTION, __LINE__)
 
         /**
          * PythonException
          */
         class PythonException : public Exception {
+
         public:
 
             PythonException(const std::string& message, const std::string& filename, const std::string& function, int lineNumber) :
             Exception(message, "Python Exception", filename, function, lineNumber) {
             }
         };
-#define KARABO_PYTHON_EXCEPTION(msg) karabo::util::PythonException(msg, __FILE__, BOOST_CURRENT_FUNCTION, __LINE__)
+        #define KARABO_PYTHON_EXCEPTION(msg) karabo::util::PythonException(msg, __FILE__, BOOST_CURRENT_FUNCTION, __LINE__)
 
         /**
          * The CudaException handles exceptions that are caused by the NVIDIA CUDA runtime
          */
         class CudaException : public Exception {
+
         public:
 
             CudaException(const std::string& message, const std::string& filename, const std::string& function, int lineNumber) :
             Exception(message, "GPU (NVIDIA CUDA) Exception", filename, function, lineNumber) {
             }
         };
-#define KARABO_CUDA_EXCEPTION(msg) karabo::util::CudaException(msg, __FILE__, BOOST_CURRENT_FUNCTION, __LINE__)
+        #define KARABO_CUDA_EXCEPTION(msg) karabo::util::CudaException(msg, __FILE__, BOOST_CURRENT_FUNCTION, __LINE__)
 
         /**
          * The HardwareException handles exceptions that are caused by any connected hardware
          */
         class HardwareException : public Exception {
+
         public:
 
             HardwareException(const std::string& message, const std::string& filename, const std::string& function, int lineNumber) :
             Exception(message, "Hardware Exception", filename, function, lineNumber) {
             }
         };
-#define KARABO_HARDWARE_EXCEPTION(msg) karabo::util::HardwareException(msg, __FILE__, BOOST_CURRENT_FUNCTION, __LINE__)
+        #define KARABO_HARDWARE_EXCEPTION(msg) karabo::util::HardwareException(msg, __FILE__, BOOST_CURRENT_FUNCTION, __LINE__)
 
         /**
          * The HardwareException handles exceptions that are caused by any connected hardware
          */
         class ReconfigureException : public Exception {
+
         public:
 
             ReconfigureException(const std::string& message, const std::string& filename, const std::string& function, int lineNumber) :
             Exception(message, "Reconfigure Exception", filename, function, lineNumber) {
             }
         };
-#define KARABO_RECONFIGURE_EXCEPTION(msg) karabo::util::ReconfigureException(msg, __FILE__, BOOST_CURRENT_FUNCTION, __LINE__)
+        #define KARABO_RECONFIGURE_EXCEPTION(msg) karabo::util::ReconfigureException(msg, __FILE__, BOOST_CURRENT_FUNCTION, __LINE__)
 
         /**
          * The HardwareException handles exceptions that are caused by any connected hardware
          */
         class SignalSlotException : public Exception {
+
         public:
 
             SignalSlotException(const std::string& message, const std::string& filename, const std::string& function, int lineNumber) :
             Exception(message, "SignalSlot Exception", filename, function, lineNumber) {
             }
         };
-#define KARABO_SIGNALSLOT_EXCEPTION(msg) karabo::util::SignalSlotException(msg, __FILE__, BOOST_CURRENT_FUNCTION, __LINE__)
+        #define KARABO_SIGNALSLOT_EXCEPTION(msg) karabo::util::SignalSlotException(msg, __FILE__, BOOST_CURRENT_FUNCTION, __LINE__)
 
         /**
          * The NetworkException handles exceptions that are caused by network protocol related libraries (BoostAsio, SNMP, OpenMQ,...)
          */
         class NetworkException : public Exception {
+
         public:
 
             NetworkException(const std::string& message, const std::string& filename, const std::string& function, int lineNumber) :
             Exception(message, "Network Exception", filename, function, lineNumber) {
             }
         };
-#define KARABO_NETWORK_EXCEPTION(msg) karabo::util::NetworkException(msg, __FILE__, BOOST_CURRENT_FUNCTION, __LINE__)
+        #define KARABO_NETWORK_EXCEPTION(msg) karabo::util::NetworkException(msg, __FILE__, BOOST_CURRENT_FUNCTION, __LINE__)
 
         /**
          * The TimeoutException handles exceptions that are caused by time out events
          */
         class TimeoutException : public Exception {
+
         public:
 
             TimeoutException(const std::string& message, const std::string& filename, const std::string& function, int lineNumber) :
             Exception(message, "Timeout Exception", filename, function, lineNumber) {
             }
         };
-#define KARABO_TIMEOUT_EXCEPTION(msg) karabo::util::TimeoutException(msg, __FILE__, BOOST_CURRENT_FUNCTION, __LINE__)
+        #define KARABO_TIMEOUT_EXCEPTION(msg) karabo::util::TimeoutException(msg, __FILE__, BOOST_CURRENT_FUNCTION, __LINE__)
 
         /**
          * DoocsException
          */
         class DoocsException : public Exception {
+
         public:
 
             DoocsException(const std::string& message, const std::string& filename, const std::string& function, int lineNumber) :
             Exception(message, "DOOCS Exception", filename, function, lineNumber) {
             }
         };
-#define KARABO_DOOCS_EXCEPTION(msg) karabo::util::DoocsException(msg, __FILE__, BOOST_CURRENT_FUNCTION, __LINE__)
+        #define KARABO_DOOCS_EXCEPTION(msg) karabo::util::DoocsException(msg, __FILE__, BOOST_CURRENT_FUNCTION, __LINE__)
 
     } // namespace exception
 
