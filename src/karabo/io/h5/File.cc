@@ -14,7 +14,6 @@
 #include "File.hh"
 #include "Scalar.hh"
 
-//#include "../Writer.hh"
 
 using namespace std;
 using namespace karabo::util;
@@ -97,9 +96,9 @@ namespace karabo {
 
             void File::close() {
                 if (m_accMode == TRUNCATE || m_accMode == EXCLUSIVE || m_accMode == APPEND) {                    
-                    H5Fflush(m_h5file,H5F_SCOPE_GLOBAL);
+                    KARABO_CHECK_HDF5_STATUS(H5Fflush(m_h5file,H5F_SCOPE_GLOBAL));
                 }
-                H5Fclose(m_h5file);
+                KARABO_CHECK_HDF5_STATUS(H5Fclose(m_h5file));
             }
 
             Table::Pointer File::createReadOnlyTablePointer(const std::string& name) {

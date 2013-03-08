@@ -101,6 +101,7 @@ namespace karabo {
                  */
                 virtual void open(hid_t group) = 0;
 
+                virtual void close() = 0;
 
                 //                /**
                 //                 * Write data to dataset. Hash structure must contain key and value pair.

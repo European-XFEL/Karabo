@@ -105,7 +105,7 @@ namespace karabo {
                 //
                 //                size_t getNumberOfRecords();
                 //
-                //                void close();
+                void close();
                 //
                 //            private:
                 //

@@ -133,6 +133,8 @@ namespace karabo {
 
                 virtual void open( hid_t group);
                 
+                virtual void close();
+                
                 int m_compressionLevel;
 
                 hid_t m_dataSet;
