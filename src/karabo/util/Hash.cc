@@ -285,7 +285,7 @@ namespace karabo {
                             }
                         } else {
                             flat.set(currentKey, it->getValueAsAny(), 0);
-                            flat.setAttributes(currentKey, it->getAttributes(), separator);
+                            flat.setAttributes(currentKey, it->getAttributes(), 0);
                         }
                     }
                 }
@@ -372,7 +372,7 @@ namespace karabo {
         }
 
 
-        Hash* Hash::setNodesAsNeeded(const std::vector<std::string>& tokens, char seperator) {
+        Hash* Hash::setNodesAsNeeded(const std::vector<std::string>& tokens, char separator) {
             // Loop all but last token
             Hash* tmp = this;
             for (size_t i = 0; i < tokens.size() - 1; ++i) {
