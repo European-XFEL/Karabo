@@ -15,8 +15,13 @@
 class HashWrap_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST_SUITE(HashWrap_Test);
 
-    CPPUNIT_TEST(testMethod);
-    CPPUNIT_TEST(testFailedMethod);
+    CPPUNIT_TEST(testConstructors);
+    CPPUNIT_TEST(testGetSet);
+    CPPUNIT_TEST(testGetAs);
+    CPPUNIT_TEST(testFind);
+    CPPUNIT_TEST(testAttributes);
+    CPPUNIT_TEST(testIteration);
+    CPPUNIT_TEST(testMerge);
 
     CPPUNIT_TEST_SUITE_END();
 
@@ -27,8 +32,13 @@ public:
     void tearDown();
 
 private:
-    void testMethod();
-    void testFailedMethod();
+    void testConstructors();
+    void testGetSet();
+    void testGetAs();
+    void testFind();
+    void testAttributes();
+    void testIteration();
+    void testMerge();
     
 private:
     boost::python::object o_main;
