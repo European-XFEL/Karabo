@@ -14,22 +14,17 @@ CPPUNIT_TEST_SUITE_REGISTRATION(Hash_Test);
 using namespace karabo::util;
 using namespace std;
 
-
 Hash_Test::Hash_Test() {
 }
-
 
 Hash_Test::~Hash_Test() {
 }
 
-
 void Hash_Test::setUp() {
 }
 
-
 void Hash_Test::tearDown() {
 }
-
 
 void Hash_Test::testConstructors() {
 
@@ -99,17 +94,43 @@ void Hash_Test::testConstructors() {
     }
 
     {
-        Hash h("a.b.c", 1, "b.c", 2.0, "c", 3.f, "d.e", "4", "e.f.g.h", std::vector<uint64_t > (5, 5), "F.f.f.f.f", Hash("x.y.z", 99));
+        Hash h("a.b.c", 1, "b.c", 2.0, "c", 3.f, "d.e", "4", "e.f.g.h", std::vector<unsigned long long> (5, 5), "F.f.f.f.f", Hash("x.y.z", 99));
         CPPUNIT_ASSERT(h.empty() == false);
         CPPUNIT_ASSERT(h.size() == 6);
         CPPUNIT_ASSERT(h.get<int>("a.b.c") == 1);
         CPPUNIT_ASSERT(h.get<double>("b.c") == 2.0);
         CPPUNIT_ASSERT(h.get<float>("c") == 3.0);
         CPPUNIT_ASSERT(h.get<string > ("d.e") == "4");
-        CPPUNIT_ASSERT(h.get<std::vector<uint64_t> >("e.f.g.h")[0] == 5);
+        CPPUNIT_ASSERT(h.get<std::vector<unsigned long long> >("e.f.g.h")[0] == 5);
         CPPUNIT_ASSERT(h.get<Hash > ("F.f.f.f.f").get<int>("x.y.z") == 99);
         CPPUNIT_ASSERT(h.get<int>("F.f.f.f.f.x.y.z") == 99);
 
+        // Check 'flatten'
+        Hash flat;
+        Hash::flatten(h, flat);
+        
+        CPPUNIT_ASSERT(flat.empty() == false);
+        CPPUNIT_ASSERT(flat.size() == 6);
+        CPPUNIT_ASSERT(flat.get<int>("a.b.c",0) == 1);
+        CPPUNIT_ASSERT(flat.get<double>("b.c",0) == 2.0);
+        CPPUNIT_ASSERT(flat.get<float>("c",0) == 3.0);
+        CPPUNIT_ASSERT(flat.get<string > ("d.e",0) == "4");
+        CPPUNIT_ASSERT(flat.get<std::vector<unsigned long long> >("e.f.g.h",0)[0] == 5);
+        CPPUNIT_ASSERT(flat.get<int>("F.f.f.f.f.x.y.z",0) == 99);
+        
+        Hash tree;
+        flat.unflatten(tree);
+        
+        CPPUNIT_ASSERT(tree.empty() == false);
+        CPPUNIT_ASSERT(tree.size() == 6);
+        CPPUNIT_ASSERT(tree.get<int>("a.b.c") == 1);
+        CPPUNIT_ASSERT(tree.get<double>("b.c") == 2.0);
+        CPPUNIT_ASSERT(tree.get<float>("c") == 3.0);
+        CPPUNIT_ASSERT(tree.get<string > ("d.e") == "4");
+        CPPUNIT_ASSERT(tree.get<std::vector<unsigned long long> >("e.f.g.h")[0] == 5);
+        CPPUNIT_ASSERT(tree.get<Hash > ("F.f.f.f.f").get<int>("x.y.z") == 99);
+        CPPUNIT_ASSERT(tree.get<int>("F.f.f.f.f.x.y.z") == 99);
+        
     }
 
 }
@@ -157,7 +178,7 @@ void Hash_Test::testGetSet() {
         CPPUNIT_ASSERT(h.get<std::vector<Hash> >("a.b")[0].is<int>("a") == true);
         CPPUNIT_ASSERT(h.get<std::vector<Hash> >("a.b")[1].empty() == true);
         CPPUNIT_ASSERT(h.get<std::vector<Hash> >("a.b")[2].is<string>("a") == true);
-        
+
         CPPUNIT_ASSERT(h.get<Hash>("a").is<Hash>("b[0]") == true);
         CPPUNIT_ASSERT(h.get<Hash>("a").is<Hash>("b[1]") == true);
         CPPUNIT_ASSERT(h.get<Hash>("a").is<Hash>("b[2]") == true);
@@ -224,7 +245,6 @@ void Hash_Test::testGetSet() {
 
 }
 
-
 void Hash_Test::testGetAs() {
 
     {
@@ -242,6 +262,14 @@ void Hash_Test::testGetAs() {
         CPPUNIT_ASSERT(h.getAttributeAs<int > ("a", "a") == 1);
         CPPUNIT_ASSERT_DOUBLES_EQUAL(1.0, h.getAttributeAs<double > ("a", "a"), 0.00001);
         CPPUNIT_ASSERT(static_cast<unsigned int> (h.getAttributeAs<char > ("a", "a")) == 1);
+        h.setAttribute("a", "b", 12);
+        h.setAttribute("a", "c", 1.23);
+        Hash::Attributes attrs = h.getAttributes("a");
+        Hash g("Z.a.b.c", "Value");
+        g.setAttributes("Z.a.b.c", attrs);
+        CPPUNIT_ASSERT(g.getAttributeAs<string > ("Z.a.b.c", "a") == "1");
+        CPPUNIT_ASSERT(g.getAttributeAs<int > ("Z.a.b.c", "a") == 1);
+        CPPUNIT_ASSERT_DOUBLES_EQUAL(1.0, g.getAttributeAs<double > ("Z.a.b.c", "a"), 0.00001);
     }
 
     {
@@ -324,17 +352,16 @@ void Hash_Test::testGetAs() {
     }
 }
 
-
 void Hash_Test::testFind() {
 
     {
         Hash h("a.b.c1.d", 1);
         boost::optional<Hash::Node&> node = h.find("a.b.c1.d");
         if (node) CPPUNIT_ASSERT(node->getValue<int>() == 1);
-        else CPPUNIT_ASSERT(true == false);
+        else CPPUNIT_ASSERT(false);
         node = h.find("a.b.c1.f");
-        if (node) CPPUNIT_ASSERT(true == false);
-        else CPPUNIT_ASSERT(true == true);
+        if (node) CPPUNIT_ASSERT(false);
+        else CPPUNIT_ASSERT(true);
     }
 
     {
@@ -343,10 +370,9 @@ void Hash_Test::testFind() {
         if (node) node->setValue(2);
         CPPUNIT_ASSERT(h.get<int>("a.b.c") == 2);
         node = h.find("a.b.c", '/');
-        if (node) CPPUNIT_ASSERT(true == false);
+        if (node) CPPUNIT_ASSERT(false);
     }
 }
-
 
 void Hash_Test::testAttributes() {
 
@@ -382,7 +408,6 @@ void Hash_Test::testAttributes() {
     }
 
 }
-
 
 void Hash_Test::testIteration() {
 
@@ -471,8 +496,60 @@ void Hash_Test::testIteration() {
         CPPUNIT_ASSERT(alphaNumericOrder[4] == "order");
         CPPUNIT_ASSERT(alphaNumericOrder[5] == "should");
     }
-}
 
+    //  getKeys(...) to ...
+    //         "set"
+    {
+        std::set<std::string> tmp; // create empty set
+        h.getKeys(tmp); // fill set by keys
+        std::set<std::string>::const_iterator it = tmp.begin();
+        CPPUNIT_ASSERT(*it++ == "be");
+        CPPUNIT_ASSERT(*it++ == "correct");
+        CPPUNIT_ASSERT(*it++ == "in");
+        CPPUNIT_ASSERT(*it++ == "iterated");
+        CPPUNIT_ASSERT(*it++ == "order");
+        CPPUNIT_ASSERT(*it++ == "should");
+    }
+
+    //         "vector"
+    {
+        std::vector<std::string> tmp; // create empty vector
+        h.getKeys(tmp); // fill vector by keys
+        std::vector<std::string>::const_iterator it = tmp.begin();
+        CPPUNIT_ASSERT(*it++ == "should");
+        CPPUNIT_ASSERT(*it++ == "iterated");
+        CPPUNIT_ASSERT(*it++ == "in");
+        CPPUNIT_ASSERT(*it++ == "correct");
+        CPPUNIT_ASSERT(*it++ == "order");
+        CPPUNIT_ASSERT(*it++ == "be");
+    }
+
+    //         "list"
+    {
+        std::list<std::string> tmp; // create empty list
+        h.getKeys(tmp); // fill list by keys
+        std::list<std::string>::const_iterator it = tmp.begin();
+        CPPUNIT_ASSERT(*it++ == "should");
+        CPPUNIT_ASSERT(*it++ == "iterated");
+        CPPUNIT_ASSERT(*it++ == "in");
+        CPPUNIT_ASSERT(*it++ == "correct");
+        CPPUNIT_ASSERT(*it++ == "order");
+        CPPUNIT_ASSERT(*it++ == "be");
+    }
+
+    //         "deque"
+    {
+        std::deque<std::string> tmp; // create empty queue
+        h.getKeys(tmp); // fill deque by keys
+        std::deque<std::string>::const_iterator it = tmp.begin();
+        CPPUNIT_ASSERT(*it++ == "should");
+        CPPUNIT_ASSERT(*it++ == "iterated");
+        CPPUNIT_ASSERT(*it++ == "in");
+        CPPUNIT_ASSERT(*it++ == "correct");
+        CPPUNIT_ASSERT(*it++ == "order");
+        CPPUNIT_ASSERT(*it++ == "be");
+    }
+}
 
 void Hash_Test::testMerge() {
 
