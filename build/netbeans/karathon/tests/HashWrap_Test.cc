@@ -224,7 +224,7 @@ void HashWrap_Test::testGetSet() {
         bool a = true;
         h.attr("__setitem__")("a", a);
         CPPUNIT_ASSERT(h.attr("getType")("a") == "BOOL");
-//        CPPUNIT_ASSERT(h.is<int>("a") == true);
+//        CPPUNIT_ASSERT(h.attr("is_type")("a", "BOOL"));
     } catch(const bp::error_already_set&) {
         PyErr_Print();
         CPPUNIT_ASSERT(false);
