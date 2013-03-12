@@ -125,6 +125,21 @@
             tool="1"
             flavor2="0">
       </item>
+      <folder path="TestFiles">
+        <linkerTool>
+          <linkerAddLib>
+            <pElem>/opt/local/nss</pElem>
+            <pElem>/opt/local/nspr</pElem>
+            <pElem>${KARABO}/lib</pElem>
+          </linkerAddLib>
+          <linkerDynSerch>
+            <pElem>\$$ORIGIN/../lib</pElem>
+            <pElem>\$$ORIGIN/../extern/lib</pElem>
+            <pElem>${KARABO}/lib</pElem>
+            <pElem>${KARABO}/extern/lib</pElem>
+          </linkerDynSerch>
+        </linkerTool>
+      </folder>
       <folder path="TestFiles/f1">
         <cTool>
           <commandLine>`cppunit-config --cflags`</commandLine>
