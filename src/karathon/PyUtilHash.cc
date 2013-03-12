@@ -68,7 +68,7 @@ void exportPyUtilHash() {
 
     h.def("set", &HashWrap().pythonSet, (bp::arg("path"), bp::arg("value"), bp::arg("sep") = "."));
 
-    h.def("__setitem__", &HashWrap().pythonSet);
+    h.def("__setitem__", &HashWrap().pythonSet, (bp::arg("path"), bp::arg("value"), bp::arg("sep") = "."));
 
     h.def("get", &HashWrap().pythonGet, (bp::arg("path"), bp::arg("sep") = "."));
 
@@ -76,11 +76,11 @@ void exportPyUtilHash() {
 
     h.def("has", &HashWrap().pythonHas, (bp::arg("path"), bp::arg("sep") = "."));
 
-    h.def("__contains__", &Hash::has);
+    h.def("__contains__", &HashWrap().pythonHas, (bp::arg("path"), bp::arg("sep") = "."));
 
     h.def("erase", &HashWrap().pythonErase, (bp::arg("path"), bp::arg("sep") = "."));
 
-    h.def("__delitem__", &HashWrap().pythonErase);
+    h.def("__delitem__", &HashWrap().pythonErase, (bp::arg("path"), bp::arg("sep") = "."));
 
     h.def("__len__", &Hash::size);
 
