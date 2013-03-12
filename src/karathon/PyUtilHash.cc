@@ -100,7 +100,7 @@ void exportPyUtilHash() {
 //          , (bp::arg("key")));
 //
 
-    h.def("isa", &HashWrap().pythonIs, (bp::arg("path"), bp::arg("type"), bp::arg("sep") = "."));
+    h.def("is_type", &HashWrap().pythonIs, (bp::arg("path"), bp::arg("type"), bp::arg("sep") = "."));
 
     h.def(bp::self_ns::str(bp::self));
 
