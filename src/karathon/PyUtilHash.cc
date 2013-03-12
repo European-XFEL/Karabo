@@ -72,7 +72,7 @@ void exportPyUtilHash() {
 
     h.def("get", &HashWrap().pythonGet, (bp::arg("path"), bp::arg("sep") = "."));
 
-    h.def("__getitem__", &HashWrap().pythonGet);
+    h.def("__getitem__", &HashWrap().pythonGet, (bp::arg("path"), bp::arg("sep") = "."));
 
     h.def("has", &HashWrap().pythonHas, (bp::arg("path"), bp::arg("sep") = "."));
 
