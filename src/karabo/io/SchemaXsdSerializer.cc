@@ -4,7 +4,7 @@
  * File:   SchemaXsdSerializer.cc
  * Author: <irina.kozlova@xfel.eu>
  *
- * Created on September 10, 2010, 10:31 AM
+ * Created on March 12, 2013, 10:31 AM
  *
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
@@ -259,7 +259,13 @@ namespace karabo {
                 string xsdType = Types::convert<FromLiteral, ToXsd > (schema.getValueType(key));
                 node.append_attribute("type") = xsdType.c_str();
             }
-
+            
+            //default
+            if (schema.getNodeType(key) == Schema::LEAF && schema.hasDefaultValue(key)){
+                string defaultValue = schema.getDefaultValueAs<string>(key);
+                node.append_attribute("default") = defaultValue.c_str();
+            }
+            
             //assignment -> minOccurs, maxOccurs
             if (schema.getAssignment(key) == Schema::OPTIONAL_PARAM) {
                 node.append_attribute("minOccurs") = "0";
