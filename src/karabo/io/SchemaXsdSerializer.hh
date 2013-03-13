@@ -59,7 +59,7 @@ namespace karabo {
             
             void listOfNodesToXsd(const karabo::util::Schema& schema, const std::string& key, pugi::xml_node& node) const;
             
-            void createDocumentationNode(const karabo::util::Schema& schema, const std::string& key, pugi::xml_node& node) const;
+            void createDocumentationNode(const karabo::util::Schema& schema, const std::string& key, pugi::xml_node& node, const bool isVector = false) const;
             
             bool annotationExists(const karabo::util::Schema& schema, const std::string& key) const;
             
