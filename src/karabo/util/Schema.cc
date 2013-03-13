@@ -123,7 +123,7 @@ namespace karabo {
         }
 
         //**********************************************
-        //                Value Type             *
+        //                Value Type                   *
         //**********************************************
 
 
@@ -204,7 +204,7 @@ namespace karabo {
         }
 
         //**********************************************
-        //                DefaultValue                  *
+        //                DefaultValue                 *
         //**********************************************
 
 
@@ -213,7 +213,7 @@ namespace karabo {
         }
 
         //**********************************************
-        //                Assignment                 *
+        //                Assignment                   *
         //**********************************************
 
 
@@ -501,7 +501,27 @@ namespace karabo {
           return m_hash.getAttribute<unsigned int>(path, "maxSize");
         }
 
-
+        //******************************************************
+        //    has/ WarnLow, WarnHigh, AlarmLow, AlarmHigh      *                   *  
+        //******************************************************
+        
+        bool Schema::hasWarnLow(const std::string& path) const {
+            return m_hash.hasAttribute(path, "warnLow");
+        }
+        
+        bool Schema::hasWarnHigh(const std::string& path) const {
+            return m_hash.hasAttribute(path, "warnHigh");
+        }
+        
+        bool Schema::hasAlarmLow(const std::string& path) const {
+            return m_hash.hasAttribute(path, "alarmLow");
+        }
+        
+        bool Schema::hasAlarmHigh(const std::string& path) const {
+            return m_hash.hasAttribute(path, "alarmHigh");
+        }
+        
+        
         void Schema::addElement(Hash::Node& node) {
 
             if (node.hasAttribute("overwrite")) {
