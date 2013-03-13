@@ -469,20 +469,90 @@ namespace karabo {
             bool hasMaxSize(const std::string& path) const;
 
             const unsigned int& getMaxSize(const std::string& path) const;
+            
+            //******************************************************
+            //                   WarnLow                          *  
+            //******************************************************
+            
+            template <class ValueType>
+            void setWarnLow(const std::string& path, const ValueType & value) {
+               m_hash.setAttribute(path, "warnLow", value);
+            }
+            
+            template <class ValueType>
+            const ValueType& getWarnLow(const std::string& path) const {
+                return m_hash.getAttribute<ValueType > (path, "warnLow");
+            }
+
+            template <class T>
+            T getWarnLowAs(const std::string& path) const {
+                return m_hash.getAttributeAs<T > (path, "warnLow");
+            }
+
+            bool hasWarnLow(const std::string& path) const;
+            
+            
+            //******************************************************
+            //                   WarnHigh                         *  
+            //******************************************************
+            template <class ValueType>
+            void setWarnHigh(const std::string& path, const ValueType & value) {
+                m_hash.setAttribute(path, "warnHigh", value);
+            }
+            
+            template <class ValueType>
+            const ValueType& getWarnHigh(const std::string& path) const {
+                return m_hash.getAttribute<ValueType > (path, "warnHigh");
+            }
+
+            template <class T>
+            T getWarnHighAs(const std::string& path) const {
+                return m_hash.getAttributeAs<T > (path, "warnHigh");
+            }
+
+            bool hasWarnHigh(const std::string& path) const;
+            
+            //******************************************************
+            //                   AlarmLow                          *  
+            //******************************************************
+            
+            template <class ValueType>
+            void setAlarmLow(const std::string& path, const ValueType & value) {
+                m_hash.setAttribute(path, "alarmLow", value);
+            }
+            
+            template <class ValueType>
+            const ValueType& getAlarmLow(const std::string& path) const {
+                return m_hash.getAttribute<ValueType > (path, "alarmLow");
+            }
+
+            template <class T>
+            T getAlarmLowAs(const std::string& path) const {
+                return m_hash.getAttributeAs<T > (path, "alarmLow");
+            }
+
+            bool hasAlarmLow(const std::string& path) const;
+            
+            //******************************************************
+            //                   AlarmHigh                          *  
+            //******************************************************
+            
+            template <class ValueType>
+            void setAlarmHigh(const std::string& path, const ValueType & value) {
+                m_hash.setAttribute(path, "alarmHigh", value);
+            }
 
             template <class ValueType>
-            void setWarnLow(const std::string& path, const ValueType & value);
+            const ValueType& getAlarmHigh(const std::string& path) const {
+                return m_hash.getAttribute<ValueType > (path, "alarmHigh");
+            }
 
-            template <class ValueType>
-            void setWarnHigh(const std::string& path, const ValueType & value);
+            template <class T>
+            T getAlarmHighAs(const std::string& path) const {
+                return m_hash.getAttributeAs<T > (path, "alarmHigh");
+            }
 
-            template <class ValueType>
-            void setAlarmLow(const std::string& path, const ValueType & value);
-
-            template <class ValueType>
-            void setAlarmHigh(const std::string& path, const ValueType & value);
-
-
+            bool hasAlarmHigh(const std::string& path) const;
 
 
             template <class T>
@@ -493,8 +563,6 @@ namespace karabo {
              *  Help function to show all parameters on console
              */
             void help(const std::string& classId = "");
-
-            //std::vector<std::string> getAllParameters();
 
             /**
              * Default output using help function
