@@ -4,7 +4,7 @@
  * File:   SchemaXsdSerializer.hh
  * Author: <irina.kozlova@xfel.eu>
  *
- * Created on September 10, 2010, 10:31 AM
+ * Created on March 12, 2013, 10:31 AM
  *
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
