@@ -89,7 +89,6 @@ namespace karabo {
         void SchemaXsdSerializer::r_createXsd(const Schema& schema, pugi::xml_node& node, const string& key) const {
 
             vector<string> keys;
-            bool composedKey = false;
             string elementName;
 
             if (key.empty()) {//top schema element
@@ -98,7 +97,6 @@ namespace karabo {
             } else {//other Node schema element
                 if (key.rfind(".") != string::npos) {
                     keys = schema.getParameters(key);
-                    composedKey = true;
                     elementName = extractKey(key);
                 } else {
                     elementName = key;
@@ -152,11 +150,52 @@ namespace karabo {
 
             pugi::xml_node simpleElementNode = node.append_child("xs:element");
             appendAttributes(schema, key, simpleElementNode);
+            string typeOfLeafElem = schema.getValueType(key);
 
             bool annotation = annotationExists(schema, key);
             if (annotation) {
                 pugi::xml_node annotationNode = simpleElementNode.append_child("xs:annotation");
-                createDocumentationNode(schema, key, annotationNode);
+                if (typeOfLeafElem.substr(0, 6) == "VECTOR") {
+                    createDocumentationNode(schema, key, annotationNode, true);
+                } else {
+                    createDocumentationNode(schema, key, annotationNode);
+                }
+            }
+
+            if (schema.hasOptions(key)) {
+                vector<string> options = schema.getOptions(key);
+                pugi::xml_node simpleElem = simpleElementNode.append_child("xs:simpleType");
+                pugi::xml_node restrictionElem = simpleElem.append_child("xs:restriction");
+                string baseXsdType = Types::convert<FromLiteral, ToXsd > (schema.getValueType(key));
+                restrictionElem.append_attribute("base") = baseXsdType.c_str();
+
+
+                BOOST_FOREACH(string opt, options) {
+                    pugi::xml_node enumerationElem = restrictionElem.append_child("xs:enumeration");
+                    enumerationElem.append_attribute("value") = opt.c_str();
+                }
+
+            } else if (schema.hasMinInc(key) || schema.hasMinExc(key) || schema.hasMaxInc(key) || schema.hasMaxExc(key)) {
+                pugi::xml_node simpleElem = simpleElementNode.append_child("xs:simpleType");
+                pugi::xml_node restrictionElem = simpleElem.append_child("xs:restriction");
+                string baseXsdType = Types::convert<FromLiteral, ToXsd > (schema.getValueType(key));
+                restrictionElem.append_attribute("base") = baseXsdType.c_str();
+
+                if (schema.hasMinInc(key)) {
+                    pugi::xml_node enumerationElem = restrictionElem.append_child("xs:minInclusive");
+                    enumerationElem.append_attribute("value") = schema.getMinIncAs<string > (key).c_str();
+                } else if (schema.hasMinExc(key)) {
+                    pugi::xml_node enumerationElem = restrictionElem.append_child("xs:minExclusive");
+                    enumerationElem.append_attribute("value") = schema.getMinExcAs<string > (key).c_str();
+                }
+
+                if (schema.hasMaxInc(key)) {
+                    pugi::xml_node enumerationElem = restrictionElem.append_child("xs:maxInclusive");
+                    enumerationElem.append_attribute("value") = schema.getMaxIncAs<string > (key).c_str();
+                } else if (schema.hasMaxExc(key)) {
+                    pugi::xml_node enumerationElem = restrictionElem.append_child("xs:maxExclusive");
+                    enumerationElem.append_attribute("value") = schema.getMaxExcAs<string > (key).c_str();
+                }
             }
         }
 
@@ -215,7 +254,7 @@ namespace karabo {
             node.append_attribute("name") = lastKey.c_str();
 
             //type
-            if (schema.getNodeType(key) == Schema::LEAF) {
+            if (schema.getNodeType(key) == Schema::LEAF && !schema.hasOptions(key)) {
                 string xsdType = Types::convert<FromLiteral, ToXsd > (schema.getValueType(key));
                 node.append_attribute("type") = xsdType.c_str();
             }
@@ -232,7 +271,7 @@ namespace karabo {
         }
 
 
-        void SchemaXsdSerializer::createDocumentationNode(const Schema& schema, const string& key, pugi::xml_node& annotationNode) const {
+        void SchemaXsdSerializer::createDocumentationNode(const Schema& schema, const string& key, pugi::xml_node& annotationNode, const bool isVector) const {
             pugi::xml_node documentationNode = annotationNode.append_child("xs:documentation");
 
             if (schema.hasDescription(key)) {
@@ -269,13 +308,31 @@ namespace karabo {
                 string displayType = schema.getDisplayType(key);
                 pugi::xml_node displayTypeElem = documentationNode.append_child("a:displayType");
                 displayTypeElem.append_child(pugi::node_pcdata).set_value(displayType.c_str());
-            } 
-            
+            }
+
             if (schema.hasAllowedStates(key)) {
                 vector<string> allowedStates = schema.getAllowedStates(key);
                 pugi::xml_node allowedStatesElem = documentationNode.append_child("a:allowedStates");
                 allowedStatesElem.append_child(pugi::node_pcdata).set_value(toString(allowedStates).c_str());
             }
+            
+            if (isVector) {
+                string valueTypeStr = schema.getValueType(key);
+                pugi::xml_node displayTypeVect = documentationNode.append_child("a:displayType");
+                displayTypeVect.append_child(pugi::node_pcdata).set_value(valueTypeStr.c_str());
+
+                if (schema.hasMinSize(key)) {
+                    unsigned int minSize = schema.getMinSize(key);
+                    pugi::xml_node minSizeElem = documentationNode.append_child("a:minSize");
+                    minSizeElem.append_child(pugi::node_pcdata).set_value(toString(minSize).c_str());
+                }
+                if (schema.hasMaxSize(key)) {
+                    unsigned int maxSize = schema.getMaxSize(key);
+                    pugi::xml_node maxSizeElem = documentationNode.append_child("a:maxSize");
+                    maxSizeElem.append_child(pugi::node_pcdata).set_value(toString(maxSize).c_str());
+                }
+            }
+
         }
 
 
