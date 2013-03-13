@@ -241,13 +241,13 @@ void Types_Test::testTo() {
     CPPUNIT_ASSERT(Types::to<ToCppString > (Types::VECTOR_HASH) == "vector<Hash>");
 
     CPPUNIT_ASSERT(Types::to<ToXsd > (Types::CHAR) == "xs:byte");
-    CPPUNIT_ASSERT(Types::to<ToXsd > (Types::VECTOR_CHAR) == "xs:byte");
+    CPPUNIT_ASSERT(Types::to<ToXsd > (Types::VECTOR_CHAR) == "xs:string");
     CPPUNIT_ASSERT(Types::to<ToXsd > (Types::FLOAT) == "xs:float");
     CPPUNIT_ASSERT(Types::to<ToXsd > (Types::DOUBLE) == "xs:double");
     CPPUNIT_ASSERT(Types::to<ToXsd > (Types::VECTOR_STRING) == "xs:string");
-    CPPUNIT_ASSERT(Types::to<ToXsd > (Types::VECTOR_UINT8) == "xs:unsignedByte");
-    CPPUNIT_ASSERT(Types::to<ToXsd > (Types::VECTOR_INT8) == "xs:byte");
-    CPPUNIT_ASSERT(Types::to<ToXsd > (Types::VECTOR_INT32) == "xs:int");
+    CPPUNIT_ASSERT(Types::to<ToXsd > (Types::VECTOR_UINT8) == "xs:string");
+    CPPUNIT_ASSERT(Types::to<ToXsd > (Types::VECTOR_INT8) == "xs:string");
+    CPPUNIT_ASSERT(Types::to<ToXsd > (Types::VECTOR_INT32) == "xs:string");
 }
 
 void Types_Test::testConvert() {
