@@ -329,6 +329,59 @@ namespace karabo {
                 tagsElem.append_child(pugi::node_pcdata).set_value(toString(tags).c_str());
             }
             
+            if (schema.hasUnit(key)){
+               string unitName = schema.getUnitName(key);
+               string unitSymbol = schema.getUnitSymbol(key);
+               
+               pugi::xml_node unitNameElem = documentationNode.append_child("a:unitName");
+               unitNameElem.append_child(pugi::node_pcdata).set_value(unitName.c_str());
+               
+               pugi::xml_node unitSymbolElem = documentationNode.append_child("a:unitSymbol");
+               unitSymbolElem.append_child(pugi::node_pcdata).set_value(unitSymbol.c_str());
+            }
+            
+            if (schema.hasMetricPrefix(key)){
+               string prefixName = schema.getMetricPrefixName(key);
+               string prefixSymbol = schema.getMetricPrefixSymbol(key);
+               
+               pugi::xml_node prefixNameElem = documentationNode.append_child("a:metricPrefixName");
+               prefixNameElem.append_child(pugi::node_pcdata).set_value(prefixName.c_str());
+               
+               pugi::xml_node prefixSymbolElem = documentationNode.append_child("a:metricPrefixSymbol");
+               prefixSymbolElem.append_child(pugi::node_pcdata).set_value(prefixSymbol.c_str());
+            }
+            
+            if( schema.isAccessReadOnly(key) ){//if element 'readOnly', check for Warn and Alarm
+              
+                if (schema.hasWarnLow(key)){
+                  string warnLow = schema.getWarnLowAs<string>(key);
+                  
+                  pugi::xml_node warnLowElem = documentationNode.append_child("a:warnLow");
+                  warnLowElem.append_child(pugi::node_pcdata).set_value(warnLow.c_str());
+              }
+              
+              if (schema.hasWarnHigh(key)){
+                  string warnHigh = schema.getWarnHighAs<string>(key);
+                  
+                  pugi::xml_node warnHighElem = documentationNode.append_child("a:warnHigh");
+                  warnHighElem.append_child(pugi::node_pcdata).set_value(warnHigh.c_str());
+              }
+              
+              if (schema.hasAlarmLow(key)){
+                  string alarmLow = schema.getAlarmLowAs<string>(key);
+                  
+                  pugi::xml_node alarmLowElem = documentationNode.append_child("a:alarmLow");
+                  alarmLowElem.append_child(pugi::node_pcdata).set_value(alarmLow.c_str());   
+              }
+              
+              if (schema.hasAlarmHigh(key)){
+                  string alarmHigh = schema.getAlarmHighAs<string>(key);
+                  
+                  pugi::xml_node alarmHighElem = documentationNode.append_child("a:alarmHigh");
+                  alarmHighElem.append_child(pugi::node_pcdata).set_value(alarmHigh.c_str());   
+              }
+            }
+            
             if (isVector) {
                 string valueTypeStr = schema.getValueType(key);
                 pugi::xml_node displayTypeVect = documentationNode.append_child("a:displayType");
