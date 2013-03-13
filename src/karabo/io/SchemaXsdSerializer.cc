@@ -255,13 +255,13 @@ namespace karabo {
 
             if (schema.hasDefaultValue(key)) {
                 string defaultValue = schema.getDefaultValueAs<string > (key);
-                pugi::xml_node defaultValueElem = documentationNode.append_child("a:defaultValue");
+                pugi::xml_node defaultValueElem = documentationNode.append_child("a:default");
                 defaultValueElem.append_child(pugi::node_pcdata).set_value(defaultValue.c_str());
             }
 
             if (schema.hasAccessMode(key)) {
                 int accessMode = schema.getAccessMode(key);
-                pugi::xml_node accessModeElem = documentationNode.append_child("a:accessMode");
+                pugi::xml_node accessModeElem = documentationNode.append_child("a:accessType");
                 accessModeElem.append_child(pugi::node_pcdata).set_value(toString(accessMode).c_str());
             }
 
