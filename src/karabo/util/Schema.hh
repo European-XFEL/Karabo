@@ -187,7 +187,7 @@ namespace karabo {
             //**********************************************
             //                Value Type                  *
             //**********************************************
-            string getValueType(const std::string& path) const;
+            const string& getValueType(const std::string& path) const;
 
 
             //**********************************************
