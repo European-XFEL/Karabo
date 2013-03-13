@@ -127,7 +127,7 @@ namespace karabo {
         //**********************************************
 
 
-        string Schema::getValueType(const std::string& path) const {
+        const string& Schema::getValueType(const std::string& path) const {
             return m_hash.getAttribute<string > (path, "valueType");
         }
 
@@ -293,7 +293,7 @@ namespace karabo {
         bool Schema::hasAlias(const std::string& path) const {
             return m_hash.hasAttribute(path, "alias");
         }
-
+        
         //**********************************************
         //                  Options             *
         //**********************************************

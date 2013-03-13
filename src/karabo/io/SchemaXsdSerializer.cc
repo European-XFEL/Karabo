@@ -254,7 +254,8 @@ namespace karabo {
             node.append_attribute("name") = lastKey.c_str();
 
             //type
-            if (schema.getNodeType(key) == Schema::LEAF && !schema.hasOptions(key)) {
+            if (schema.getNodeType(key) == Schema::LEAF && !schema.hasOptions(key) &&
+                    !schema.hasMinInc(key) && !schema.hasMinExc(key) && !schema.hasMaxInc(key) && !schema.hasMaxExc(key)) {
                 string xsdType = Types::convert<FromLiteral, ToXsd > (schema.getValueType(key));
                 node.append_attribute("type") = xsdType.c_str();
             }
@@ -314,6 +315,12 @@ namespace karabo {
                 vector<string> allowedStates = schema.getAllowedStates(key);
                 pugi::xml_node allowedStatesElem = documentationNode.append_child("a:allowedStates");
                 allowedStatesElem.append_child(pugi::node_pcdata).set_value(toString(allowedStates).c_str());
+            }
+            
+            if (schema.hasTags(key)) {
+                vector<string> tags = schema.getTags(key);
+                pugi::xml_node tagsElem = documentationNode.append_child("a:tags");
+                tagsElem.append_child(pugi::node_pcdata).set_value(toString(tags).c_str());
             }
             
             if (isVector) {
