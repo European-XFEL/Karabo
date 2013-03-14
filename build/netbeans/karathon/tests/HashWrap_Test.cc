@@ -7,30 +7,54 @@
 
 #include <boost/python.hpp>
 #include <iostream>
+#include <stdlib.h>
+#include <karabo/util/Exception.hh>
 #include "HashWrap_Test.hh"
 
 namespace bp = boost::python;
 using namespace std;
 
+static char interpreter_path[256];
+static int argc = 1;
+static char* argv[2];
+
 CPPUNIT_TEST_SUITE_REGISTRATION(HashWrap_Test);
 
 HashWrap_Test::HashWrap_Test() {
+    char* karaboPath = getenv("KARABO");
+    if (!karaboPath) throw KARABO_PYTHON_EXCEPTION("Environment variable \"KARABO\" is not set");
+    string krbo(karaboPath);
+    krbo += "/extern/bin/python";
+    copy(krbo.begin(), krbo.end(), interpreter_path);
+    Py_SetProgramName(interpreter_path);
     Py_Initialize();
+    argv[0] = interpreter_path;
+    PySys_SetArgv(argc, argv);
     o_main = bp::import("__main__");
     o_global = o_main.attr("__dict__");
+    //bp::exec("import os\nimport sys\nsys.path.append(os.getcwd()+'/dist/Debug/GNU-Linux-x86')\n", o_global, o_global);
 }
 
 HashWrap_Test::~HashWrap_Test() {
 }
 
 void HashWrap_Test::setUp() {
-    bp::exec(
-             "import os\nimport sys\nsys.path.append(os.getcwd()+'/dist/Debug/GNU-Linux-x86')\nfrom libkarathon import *\n"
-             , o_global, o_global);
+    bp::exec("from libkarathon import *\n", o_global, o_global);
 }
 
 void HashWrap_Test::tearDown() {
 }
+
+void HashWrap_Test::testInPythonUnittest() {
+    try {
+        bp::exec_file("tests/hash_Test.py", o_global, o_global);
+        CPPUNIT_ASSERT(true);
+    } catch(const bp::error_already_set&) {
+        PyErr_Print();
+        CPPUNIT_ASSERT(false);
+    }
+}
+
 
 void HashWrap_Test::testConstructors() {
     bp::object o_Hash = o_main.attr("Hash");
@@ -64,7 +88,6 @@ void HashWrap_Test::testConstructors() {
                                   "F.f.f.f.f", o_Hash("x.y.z", 99));
             CPPUNIT_ASSERT(!h.attr("empty")());
             CPPUNIT_ASSERT(h.attr("__len__")() == 6);
-            CPPUNIT_ASSERT(h.attr("get")("a.b.c") == 1);
             CPPUNIT_ASSERT(h.attr("get")("a.b.c") == 1);
             CPPUNIT_ASSERT(h.attr("get")("b.c") == 2.0);
             CPPUNIT_ASSERT(h.attr("get")("c") == 3.7);

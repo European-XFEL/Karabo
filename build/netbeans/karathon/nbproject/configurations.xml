@@ -27,6 +27,7 @@
                      kind="TEST">
         <itemPath>tests/HashWrap_Test.cc</itemPath>
         <itemPath>tests/HashWrap_Test.hh</itemPath>
+        <itemPath>tests/hash_Test.py</itemPath>
         <itemPath>tests/karathonTestRunner.cc</itemPath>
       </logicalFolder>
     </logicalFolder>
@@ -158,6 +159,8 @@
       </item>
       <item path="tests/HashWrap_Test.hh" ex="false" tool="3" flavor2="0">
       </item>
+      <item path="tests/hash_Test.py" ex="false" tool="3" flavor2="0">
+      </item>
       <item path="tests/karathonTestRunner.cc" ex="false" tool="1" flavor2="0">
       </item>
     </conf>
@@ -217,6 +220,8 @@
       <item path="tests/HashWrap_Test.cc" ex="false" tool="1" flavor2="0">
       </item>
       <item path="tests/HashWrap_Test.hh" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="tests/hash_Test.py" ex="false" tool="3" flavor2="0">
       </item>
       <item path="tests/karathonTestRunner.cc" ex="false" tool="1" flavor2="0">
       </item>

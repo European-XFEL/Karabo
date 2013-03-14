@@ -15,6 +15,7 @@
 class HashWrap_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST_SUITE(HashWrap_Test);
 
+//    CPPUNIT_TEST(testInPythonUnittest);
     CPPUNIT_TEST(testConstructors);
     CPPUNIT_TEST(testGetSet);
     CPPUNIT_TEST(testGetAs);
@@ -32,6 +33,7 @@ public:
     void tearDown();
 
 private:
+    void testInPythonUnittest();
     void testConstructors();
     void testGetSet();
     void testGetAs();
