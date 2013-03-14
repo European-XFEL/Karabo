@@ -14,7 +14,7 @@
 #define	KARABO_LOGCONFIG_OSTREAMAPPENDERCONFIGURATOR_HH
 
 #include "AppenderConfigurator.hh"
-#include <karabo/util/Factory.hh>
+#include <karabo/util/util.hh>
 #include <log4cpp/Appender.hh>
 #include <string>
 /**
@@ -22,31 +22,32 @@
  */
 namespace karabo {
 
-  /**
-   * Namespace for package log
-   */
-  namespace log {
+    /**
+     * Namespace for package log
+     */
+    namespace log {
 
-    class OstreamAppenderConfigurator : public AppenderConfigurator {
-    public:
-      KARABO_CLASSINFO(OstreamAppenderConfigurator, "Ostream", "1.0")
+        class OstreamAppenderConfigurator : public AppenderConfigurator {
 
-      OstreamAppenderConfigurator();
+        public:
+            KARABO_CLASSINFO(OstreamAppenderConfigurator, "Ostream", "1.0")
 
-      virtual ~OstreamAppenderConfigurator();
+            static void expectedParameters(karabo::util::Schema& expected);
 
-      log4cpp::Appender* create();
+            OstreamAppenderConfigurator(const karabo::util::Hash& input);
 
-      static void expectedParameters(karabo::util::Schema& expected);
-      void configure(const karabo::util::Hash& input);
+            virtual ~OstreamAppenderConfigurator() {
+            };
 
-    private:
-      std::string m_out;
+            log4cpp::Appender* create();
+
+        private:
+            std::string m_out;
 
 
-    };
+        };
 
-  }
+    }
 }
 
 #endif	/* KARABO_LOGCONFIG_OSTREAMAPPENDERCONFIGURATOR_HH */
