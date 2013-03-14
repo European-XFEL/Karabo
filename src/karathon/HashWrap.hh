@@ -63,72 +63,76 @@ namespace karabo {
             }
 
             static bp::object toObject(const karabo::util::Hash& self, const boost::any& operand) {
-                if (operand.type() == typeid (int)) {
-                    return bp::object(boost::any_cast<bool>(operand));
-                } else if (operand.type() == typeid (char)) {
-                    return bp::object(boost::any_cast<char>(operand));
-                } else if (operand.type() == typeid (signed char)) {
-                    return bp::object(boost::any_cast<signed char>(operand));
-                } else if (operand.type() == typeid (unsigned char)) {
-                    return bp::object(boost::any_cast<unsigned char>(operand));
-                } else if (operand.type() == typeid (short)) {
-                    return bp::object(boost::any_cast<short>(operand));
-                } else if (operand.type() == typeid (unsigned short)) {
-                    return bp::object(boost::any_cast<unsigned short>(operand));
-                } else if (operand.type() == typeid (int)) {
-                    return bp::object(boost::any_cast<int>(operand));
-                } else if (operand.type() == typeid (unsigned int)) {
-                    return bp::object(boost::any_cast<unsigned int>(operand));
-                } else if (operand.type() == typeid (long long)) {
-                    return bp::object(boost::any_cast<long long>(operand));
-                } else if (operand.type() == typeid (unsigned long long)) {
-                    return bp::object(boost::any_cast<unsigned long long>(operand));
-                } else if (operand.type() == typeid (float)) {
-                    return bp::object(boost::any_cast<float>(operand));
-                } else if (operand.type() == typeid (double)) {
-                    return bp::object(boost::any_cast<double>(operand));
-                } else if (operand.type() == typeid (std::complex<float>)) {
-                    return bp::object(boost::any_cast<std::complex<float> >(operand));
-                } else if (operand.type() == typeid (std::complex<double>)) {
-                    return bp::object(boost::any_cast<std::complex<double> >(operand));
-                } else if (operand.type() == typeid (std::string)) {
-                    return bp::object(boost::any_cast<std::string>(operand));
-                } else if (operand.type() == typeid (boost::filesystem::path)) {
-                    return bp::object(boost::any_cast<boost::filesystem::path>(operand).string());
-                } else if (operand.type() == typeid (karabo::util::Hash)) {
-                    return bp::object(boost::any_cast<karabo::util::Hash>(operand));
-                } else if (operand.type() == typeid (std::vector<bool>)) {
-                    return stdVector2pyList(boost::any_cast < std::vector<bool> >(operand));
-                } else if (operand.type() == typeid (std::vector<char>)) {
-                    return stdVector2pyList(boost::any_cast<std::vector<char> >(operand));
-                } else if (operand.type() == typeid (std::vector<signed char>)) {
-                    return stdVector2pyList(boost::any_cast < std::vector<signed char> >(operand));
-                } else if (operand.type() == typeid (std::vector<unsigned char>)) {
-                    return stdVector2pyList(boost::any_cast<std::vector<unsigned char> >(operand));
-                } else if (operand.type() == typeid (std::vector<short>)) {
-                    return stdVector2pyArray(boost::any_cast<std::vector<short> >(operand));
-                } else if (operand.type() == typeid (std::vector<unsigned short>)) {
-                    return stdVector2pyArray(boost::any_cast<std::vector<unsigned short> >(operand));
-                } else if (operand.type() == typeid (std::vector<int>)) {
-                    return stdVector2pyArray(boost::any_cast<std::vector<int> >(operand));
-                } else if (operand.type() == typeid (std::vector<unsigned int>)) {
-                    return stdVector2pyArray(boost::any_cast<std::vector<unsigned int> >(operand));
-                } else if (operand.type() == typeid (std::vector<long long>)) {
-                    return stdVector2pyArray(boost::any_cast<std::vector<long long> >(operand));
-                } else if (operand.type() == typeid (std::vector<unsigned long long>)) {
-                    return stdVector2pyArray(boost::any_cast<std::vector<unsigned long long> >(operand));
-                } else if (operand.type() == typeid (std::vector<float>)) {
-                    return stdVector2pyArray(boost::any_cast<std::vector<float> >(operand));
-                } else if (operand.type() == typeid (std::vector<double>)) {
-                    return stdVector2pyArray(boost::any_cast<std::vector<double> >(operand));
-                } else if (operand.type() == typeid (karabo::util::Schema)) {
-                    return bp::object(boost::any_cast<karabo::util::Schema>(operand));
-                } else if (operand.type() == typeid (std::vector<std::string>)) {
-                    return stdVector2pyList(boost::any_cast < std::vector<std::string> >(operand));
-                } else if (operand.type() == typeid (std::vector<karabo::util::Hash>)) {
-                    return stdVector2pyList(boost::any_cast<std::vector<karabo::util::Hash> >(operand));
-                } else {
-                    throw KARABO_PYTHON_EXCEPTION("Failed to convert inner Hash type of python object");
+                try {
+                    if (operand.type() == typeid (bool)) {
+                        return bp::object(boost::any_cast<bool>(operand));
+                    } else if (operand.type() == typeid (char)) {
+                        return bp::object(boost::any_cast<char>(operand));
+                    } else if (operand.type() == typeid (signed char)) {
+                        return bp::object(boost::any_cast<signed char>(operand));
+                    } else if (operand.type() == typeid (unsigned char)) {
+                        return bp::object(boost::any_cast<unsigned char>(operand));
+                    } else if (operand.type() == typeid (short)) {
+                        return bp::object(boost::any_cast<short>(operand));
+                    } else if (operand.type() == typeid (unsigned short)) {
+                        return bp::object(boost::any_cast<unsigned short>(operand));
+                    } else if (operand.type() == typeid (int)) {
+                        return bp::object(boost::any_cast<int>(operand));
+                    } else if (operand.type() == typeid (unsigned int)) {
+                        return bp::object(boost::any_cast<unsigned int>(operand));
+                    } else if (operand.type() == typeid (long long)) {
+                        return bp::object(boost::any_cast<long long>(operand));
+                    } else if (operand.type() == typeid (unsigned long long)) {
+                        return bp::object(boost::any_cast<unsigned long long>(operand));
+                    } else if (operand.type() == typeid (float)) {
+                        return bp::object(boost::any_cast<float>(operand));
+                    } else if (operand.type() == typeid (double)) {
+                        return bp::object(boost::any_cast<double>(operand));
+                    } else if (operand.type() == typeid (std::complex<float>)) {
+                        return bp::object(boost::any_cast<std::complex<float> >(operand));
+                    } else if (operand.type() == typeid (std::complex<double>)) {
+                        return bp::object(boost::any_cast<std::complex<double> >(operand));
+                    } else if (operand.type() == typeid (std::string)) {
+                        return bp::object(boost::any_cast<std::string>(operand));
+                    } else if (operand.type() == typeid (boost::filesystem::path)) {
+                        return bp::object(boost::any_cast<boost::filesystem::path>(operand).string());
+                    } else if (operand.type() == typeid (karabo::util::Hash)) {
+                        return bp::object(boost::any_cast<karabo::util::Hash>(operand));
+                    } else if (operand.type() == typeid (std::vector<bool>)) {
+                        return stdVector2pyList(boost::any_cast < std::vector<bool> >(operand));
+                    } else if (operand.type() == typeid (std::vector<char>)) {
+                        return stdVector2pyList(boost::any_cast<std::vector<char> >(operand));
+                    } else if (operand.type() == typeid (std::vector<signed char>)) {
+                        return stdVector2pyList(boost::any_cast < std::vector<signed char> >(operand));
+                    } else if (operand.type() == typeid (std::vector<unsigned char>)) {
+                        return stdVector2pyList(boost::any_cast<std::vector<unsigned char> >(operand));
+                    } else if (operand.type() == typeid (std::vector<short>)) {
+                        return stdVector2pyArray(boost::any_cast<std::vector<short> >(operand));
+                    } else if (operand.type() == typeid (std::vector<unsigned short>)) {
+                        return stdVector2pyArray(boost::any_cast<std::vector<unsigned short> >(operand));
+                    } else if (operand.type() == typeid (std::vector<int>)) {
+                        return stdVector2pyArray(boost::any_cast<std::vector<int> >(operand));
+                    } else if (operand.type() == typeid (std::vector<unsigned int>)) {
+                        return stdVector2pyArray(boost::any_cast<std::vector<unsigned int> >(operand));
+                    } else if (operand.type() == typeid (std::vector<long long>)) {
+                        return stdVector2pyArray(boost::any_cast<std::vector<long long> >(operand));
+                    } else if (operand.type() == typeid (std::vector<unsigned long long>)) {
+                        return stdVector2pyArray(boost::any_cast<std::vector<unsigned long long> >(operand));
+                    } else if (operand.type() == typeid (std::vector<float>)) {
+                        return stdVector2pyArray(boost::any_cast<std::vector<float> >(operand));
+                    } else if (operand.type() == typeid (std::vector<double>)) {
+                        return stdVector2pyArray(boost::any_cast<std::vector<double> >(operand));
+                    } else if (operand.type() == typeid (karabo::util::Schema)) {
+                        return bp::object(boost::any_cast<karabo::util::Schema>(operand));
+                    } else if (operand.type() == typeid (std::vector<std::string>)) {
+                        return stdVector2pyList(boost::any_cast < std::vector<std::string> >(operand));
+                    } else if (operand.type() == typeid (std::vector<karabo::util::Hash>)) {
+                        return stdVector2pyList(boost::any_cast<std::vector<karabo::util::Hash> >(operand));
+                    } else {
+                        throw KARABO_PYTHON_EXCEPTION("Failed to convert inner Hash type of python object");
+                    }
+                } catch (const boost::bad_any_cast& e) {
+                    KARABO_RETHROW_AS(KARABO_CAST_EXCEPTION(e.what()));
                 }
             }
 
@@ -229,18 +233,56 @@ namespace karabo {
                 return t;
             }
 
-            static bp::object pythonGet(const karabo::util::Hash& self, const bp::object & keyObj, const std::string& separator = ".") {
-                std::string key;
-                if (bp::extract<std::string > (keyObj).check()) {
-                    key = bp::extract<std::string > (keyObj);
-                } else {
-                    throw KARABO_PYTHON_EXCEPTION("Currently values can only be retrieved by string keys");
-                }
-                return toObject(self, self.getNode(key, separator.at(0)).getValueAsAny());
+            static bp::object pythonGet(const karabo::util::Hash& self, const std::string& path, const std::string& separator = ".") {
+                return toObject(self, self.getNode(path, separator.at(0)).getValueAsAny());
             }
 
-            static bp::object pythonGetKeyString(const karabo::util::Hash& self, const std::string & key, const std::string& separator = ".") {
-                return toObject(self, self.getNode(key, separator.at(0)).getValueAsAny());
+            static bp::object pythonGetAsStr(const karabo::util::Hash& self, const std::string& path, const std::string& separator = ".") {
+                return toObject(self, self.getAs<std::string>(path, separator.at(0)));
+            }
+
+            static bp::object pythonGetAsStrArr(const karabo::util::Hash& self, const std::string& path, const std::string& separator = ".") {
+                return toObject(self, self.getAs<std::string, std::vector>(path, separator.at(0)));
+            }
+
+            static bp::object pythonGetAsInt(const karabo::util::Hash& self, const std::string& path, const std::string& separator = ".") {
+                return toObject(self, self.getAs<int>(path, separator.at(0)));
+            }
+
+            static bp::object pythonGetAsIntArr(const karabo::util::Hash& self, const std::string& path, const std::string& separator = ".") {
+                return toObject(self, self.getAs<int, std::vector>(path, separator.at(0)));
+            }
+
+            static bp::object pythonGetAsBool(const karabo::util::Hash& self, const std::string& path, const std::string& separator = ".") {
+                return toObject(self, self.getAs<bool>(path, separator.at(0)));
+            }
+
+            static bp::object pythonGetAsBoolArr(const karabo::util::Hash& self, const std::string& path, const std::string& separator = ".") {
+                return toObject(self, self.getAs<bool, std::vector > (path, separator.at(0)));
+            }
+
+            static bp::object pythonGetAsLong(const karabo::util::Hash& self, const std::string& path, const std::string& separator = ".") {
+                return toObject(self, self.getAs<long long>(path, separator.at(0)));
+            }
+
+            static bp::object pythonGetAsLongArr(const karabo::util::Hash& self, const std::string& path, const std::string& separator = ".") {
+                return toObject(self, self.getAs<long long, std::vector>(path, separator.at(0)));
+            }
+
+            static bp::object pythonGetAsFloat(const karabo::util::Hash& self, const std::string& path, const std::string& separator = ".") {
+                return toObject(self, self.getAs<float>(path, separator.at(0)));
+            }
+
+            static bp::object pythonGetAsFloatArr(const karabo::util::Hash& self, const std::string& path, const std::string& separator = ".") {
+                return toObject(self, self.getAs<float, std::vector>(path, separator.at(0)));
+            }
+
+            static bp::object pythonGetAsDouble(const karabo::util::Hash& self, const std::string& path, const std::string& separator = ".") {
+                return toObject(self, self.getAs<double>(path, separator.at(0)));
+            }
+
+            static bp::object pythonGetAsDoubleArr(const karabo::util::Hash& self, const std::string& path, const std::string& separator = ".") {
+                return toObject(self, self.getAs<double, std::vector>(path, separator.at(0)));
             }
 
             static void pythonSet(karabo::util::Hash& self, const std::string& key, const bp::object & obj, const std::string& separator = ".") {
@@ -330,21 +372,9 @@ namespace karabo {
                 return self.has(key, separator.at(0));
             }
 
-            static bool pythonIs(karabo::util::Hash& self, const std::string& path, const bp::object& typeObj, const std::string& separator = ".") {
+            static bool pythonIs(karabo::util::Hash& self, const std::string& path, const std::string& type, const std::string& separator = ".") {
                 //std::string path;
-                karabo::util::Types::ReferenceType refType;
-                if (bp::extract<std::string>(typeObj).check()) {
-                    std::string type = bp::extract<std::string>(typeObj);
-                    refType = karabo::util::Types::from(type);
-                } else if (bp::extract<int>(typeObj).check()) {
-                    int type = bp::extract<int>(typeObj);
-                    refType = karabo::util::Types::from(type);
-                } else if (bp::extract<long>(typeObj).check()) {
-                    int type = bp::extract<long>(typeObj);
-                    refType = karabo::util::Types::from(type);
-                } else {
-                    throw KARABO_PYTHON_EXCEPTION("Reference type is not recognized");
-                }
+                karabo::util::Types::ReferenceType refType = karabo::util::Types::from(type);
                 return self.is(path, refType, separator.at(0));
             }
 
