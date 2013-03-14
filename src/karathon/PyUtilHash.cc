@@ -7,8 +7,11 @@
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
 
+#include <boost/python.hpp>
+#include <string>
 #include "HashWrap.hh"
 
+namespace bp = boost::python;
 using namespace karabo::util;
 using namespace std;
 using namespace karabo::pyexfel;
@@ -86,19 +89,36 @@ void exportPyUtilHash() {
 
     h.def("__iter__", bp::iterator<Hash > ());
 
+    h.def("getAsStr", &HashWrap().pythonGetAsStr, (bp::arg("path"), bp::arg("sep") = "."));
+    
+    h.def("getAsStrArr", &HashWrap().pythonGetAsStrArr, (bp::arg("path"), bp::arg("sep") = "."));
+    
+//    h.def("getAsBool", (bool (Hash::*)(const std::string&, const char))&Hash::get<bool>, (bp::arg("path"), bp::arg("sep") = "."));
+    
+    h.def("getAsInt", &HashWrap().pythonGetAsInt, (bp::arg("path"), bp::arg("sep") = "."));
+    
+    h.def("getAsIntArr", &HashWrap().pythonGetAsIntArr, (bp::arg("path"), bp::arg("sep") = "."));
+    
+    h.def("getAsLong", &HashWrap().pythonGetAsLong, (bp::arg("path"), bp::arg("sep") = "."));
+    
+    h.def("getAsLongArr", &HashWrap().pythonGetAsLongArr, (bp::arg("path"), bp::arg("sep") = "."));
+    
+    h.def("getAsFloat", &HashWrap().pythonGetAsFloat, (bp::arg("path"), bp::arg("sep") = "."));
+    
+    h.def("getAsFloatArr", &HashWrap().pythonGetAsFloatArr, (bp::arg("path"), bp::arg("sep") = "."));
+    
+    h.def("getAsDouble", &HashWrap().pythonGetAsDouble, (bp::arg("path"), bp::arg("sep") = "."));
+    
+    h.def("getAsDoubleArr", &HashWrap().pythonGetAsDoubleArr, (bp::arg("path"), bp::arg("sep") = "."));
+    
     h.def("getType", &HashWrap().pythonGetType, (bp::arg("key"), bp::arg("sep") = "."));
 
     h.def("getTypeAsId", &HashWrap().pythonGetTypeAsId, (bp::arg("key"), bp::arg("sep") = "."));
 
-//    h.def("merge"
-//          , (Hash const & (Hash::*)(Hash const &))(&Hash::append)
-//          , (bp::arg("hash"))
-//          , bp::return_value_policy< bp::copy_const_reference > ());
-//
-//    h.def("getAsString"
-//          , (string(Hash::*)(string const &) const) (&Hash::getAsString)
-//          , (bp::arg("key")));
-//
+    h.def("merge", &Hash::merge, (bp::arg("hash")));
+    
+//    h.def("__add__", &Hash::operator+, (bp::arg("hash1"), bp::arg("hash2")), bp::return_value_policy<copy_non_const_reference>());
+    h.def("__iadd__", &Hash::operator+=, (bp::arg("hash")), bp::return_internal_reference<>());
 
     h.def("is_type", &HashWrap().pythonIs, (bp::arg("path"), bp::arg("type"), bp::arg("sep") = "."));
 
