@@ -24,18 +24,20 @@ using namespace log4cpp;
 namespace karabo {
     namespace log {
 
+        KARABO_REGISTER_FOR_CONFIGURATION(Logger)
+        
         // Static initialization of logMutex
         boost::mutex Logger::m_logMutex;
 
+
         void Logger::expectedParameters(Schema& expected) {
 
-
-
-            LIST_ELEMENT<AppenderConfigurator > (expected)
+            LIST_ELEMENT(expected)
                     .key("appenders")
                     .displayedName("Define Appenders")
                     .description("Configures root appenders")
-                    .assignmentOptional().defaultValue("Ostream")
+                    .appendNodesOfConfigurationBase<AppenderConfigurator>()
+                    .assignmentOptional().defaultValueFromString("Ostream")
                     .commit();
 
             STRING_ELEMENT(expected)
@@ -46,29 +48,26 @@ namespace karabo {
                     .assignmentOptional().defaultValue("INFO")
                     .commit();
 
-
             // Setup for additional categories, optional
-
-            LIST_ELEMENT<CategoryConfigurator > (expected)
+            LIST_ELEMENT(expected)
                     .key("categories")
                     .displayedName("Categories")
                     .description("Configures categories")
+                    .appendNodesOfConfigurationBase<CategoryConfigurator>()
                     .assignmentOptional().noDefaultValue()
                     .commit();
-
-
-
         }
 
-        void Logger::configure(const Hash& input) {
+
+        Logger::Logger(const Hash& input) {
 
             configureAppenders(input);
             configurePriority(input);
             configureCategories(input);
         }
 
-        void Logger::initialize() {
 
+        void Logger::initialize() {
 
             Category& rootLog = Category::getRoot();
 
@@ -85,21 +84,22 @@ namespace karabo {
 
         }
 
+
         void Logger::configureAppenders(const Hash& input) {
             m_rootAppenderConfigs = AppenderConfigurator::createList("appenders", input);
         }
+
 
         void Logger::configurePriority(const Hash& input) {
             string prio = input.get<string > ("priority");
             m_rootPriority = Priority::getPriorityValue(prio);
         }
 
+
         void Logger::configureCategories(const Hash& input) {
             if (input.has("categories")) {
                 m_categories = CategoryConfigurator::createList("categories", input);
             }
         }
-
-        KARABO_REGISTER_ONLY_ME_CC(Logger)
     }
 }

@@ -11,45 +11,39 @@
 #include "FileAppenderConfigurator.hh"
 #include <log4cpp/PatternLayout.hh>
 
-
 using namespace std;
 using namespace karabo::util;
 using log4cpp::Layout;
 using log4cpp::PatternLayout;
 
 namespace karabo {
-  namespace log {
+    namespace log {
 
-    PatternLayoutConfigurator::PatternLayoutConfigurator() {
-      m_pattern = PatternLayout::DEFAULT_CONVERSION_PATTERN;
+
+        KARABO_REGISTER_FOR_CONFIGURATION(LayoutConfigurator, PatternLayoutConfigurator)
+
+        
+        void PatternLayoutConfigurator::expectedParameters(Schema& expected) {
+
+
+            STRING_ELEMENT(expected)
+                    .description("Set conversion pattern for the layout. See log4cpp documentation.")
+                    .key("pattern")
+                    .displayedName("FormatPattern")
+                    .assignmentOptional() .defaultValue("%d %c %p %m %n")
+                    .commit();
+        }
+
+
+        PatternLayoutConfigurator::PatternLayoutConfigurator(const Hash& input) {
+            m_pattern = input.get<string > ("pattern");
+        }
+
+
+        log4cpp::Layout * PatternLayoutConfigurator::create() {
+            PatternLayout* layout = new log4cpp::PatternLayout();
+            layout->setConversionPattern(m_pattern);
+            return layout;
+        }
     }
-
-    PatternLayoutConfigurator::~PatternLayoutConfigurator() {
-    }
-
-    void PatternLayoutConfigurator::expectedParameters(Schema& expected) {
-
-
-      STRING_ELEMENT(expected)
-              .description("Set conversion pattern for the layout. See log4cpp documentation.")
-              .key("pattern")
-              .displayedName("FormatPattern")
-              .assignmentOptional() .defaultValue("%d %c %p %m %n")
-              .commit();
-
-    }
-
-    void PatternLayoutConfigurator::configure(const Hash & input) {
-      m_pattern = input.get<string > ("pattern");
-    }
-
-    log4cpp::Layout * PatternLayoutConfigurator::create() {
-      PatternLayout* layout = new log4cpp::PatternLayout();
-      layout->setConversionPattern(m_pattern);
-      return layout;
-    }
-
-    KARABO_REGISTER_FACTORY_CC(LayoutConfigurator, PatternLayoutConfigurator)
-
-  }
 }

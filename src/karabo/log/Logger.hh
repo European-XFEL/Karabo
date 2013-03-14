@@ -8,23 +8,15 @@
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
 
-
-
-
 #ifndef KARABO_LOGCONFIG_LOGGER_HH
 #define	KARABO_LOGCONFIG_LOGGER_HH
 
 #include <vector>
 #include <string>
-#include <karabo/util/Factory.hh>
+#include <karabo/util/util.hh>
 #include <log4cpp/Priority.hh>
 #include <log4cpp/Category.hh>
 #include <boost/shared_ptr.hpp>
-#include "logdll.hh"
-// I belive the following is not needed - see forward declarations
-//#include <karabo/util/Hash.hh>
-//#include "AppenderConfigurator.hh"
-//#include "CategoryConfigurator.hh"
 
 /**
  * The main European XFEL namespace
@@ -53,7 +45,7 @@ namespace karabo {
         public:
 
             KARABO_CLASSINFO(Logger, "Logger", "1.0")
-            KARABO_FACTORY_BASE_CLASS
+            KARABO_CONFIGURATION_BASE_CLASS
 
             virtual ~Logger() {
             }
@@ -65,9 +57,9 @@ namespace karabo {
             static void expectedParameters(karabo::util::Schema& expected);
 
             /*
-             *  This method is called by karabo::util::Factory
+             *  This constructor is called by karabo::util::Configurator
              */
-            void configure(const karabo::util::Hash& input);
+            Logger(const karabo::util::Hash& input);
 
             /*
              * This initializes the logger.
@@ -109,6 +101,7 @@ namespace karabo {
     }
 }
 
-KARABO_REGISTER_FACTORY_BASE_HH(karabo::log::Logger, TEMPLATE_LOG, DECLSPEC_LOG)
+// TODO WINDOWS
+//KARABO_REGISTER_FACTORY_BASE_HH(karabo::log::Logger, TEMPLATE_LOG, DECLSPEC_LOG)
 
 #endif	/* KARABO_LOGCONFIG_LOGGER_HH */

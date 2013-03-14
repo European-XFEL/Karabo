@@ -12,35 +12,36 @@
 #ifndef KARABO_LOGCONFIG_LAYOUTCONFIGURATOR_HH
 #define	KARABO_LOGCONFIG_LAYOUTCONFIGURATOR_HH
 
-#include <karabo/util/Factory.hh>
-#include "logdll.hh"
+#include <karabo/util/util.hh>
 
 namespace log4cpp {
-  class Layout;
+    class Layout;
 }
 
 namespace karabo {
 
-  namespace util {
-    class Hash;
-  }
+    namespace util {
+        class Hash;
+    }
 
-  namespace log {
+    namespace log {
 
-    class LayoutConfigurator {
-    public:
+        class LayoutConfigurator {
 
-      KARABO_CLASSINFO(LayoutConfigurator, "Layout", "1.0")
-      KARABO_FACTORY_BASE_CLASS
-      virtual ~LayoutConfigurator() {
-      }
-      virtual log4cpp::Layout* create() = 0;
+        public:
 
-    };
-  }
+            KARABO_CLASSINFO(LayoutConfigurator, "Layout", "1.0")
+            KARABO_CONFIGURATION_BASE_CLASS
+
+            virtual ~LayoutConfigurator() {
+            }
+            virtual log4cpp::Layout* create() = 0;
+
+        };
+    }
 }
-
-KARABO_REGISTER_FACTORY_BASE_HH(karabo::log::LayoutConfigurator, TEMPLATE_LOG, DECLSPEC_LOG)
+// TODO WINDOWS
+//KARABO_REGISTER_FACTORY_BASE_HH(karabo::log::LayoutConfigurator, TEMPLATE_LOG, DECLSPEC_LOG)
 
 #endif	/* KARABO_LOGCONFIG_LAYOUTCONFIGURATOR_HH */
 

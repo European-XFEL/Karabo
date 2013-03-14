@@ -15,23 +15,26 @@
 using namespace std;
 
 namespace karabo {
-  namespace log {
+    namespace log {
 
-    SimpleLayoutConfigurator::SimpleLayoutConfigurator() { }
 
-    SimpleLayoutConfigurator::~SimpleLayoutConfigurator() { }
+        KARABO_REGISTER_FOR_CONFIGURATION(LayoutConfigurator, SimpleLayoutConfigurator)
 
-    void SimpleLayoutConfigurator::expectedParameters(karabo::util::Schema& expected) {
+
+        SimpleLayoutConfigurator::~SimpleLayoutConfigurator() {
+        }
+
+
+        void SimpleLayoutConfigurator::expectedParameters(karabo::util::Schema& expected) {
+        }
+
+
+        SimpleLayoutConfigurator::SimpleLayoutConfigurator(const karabo::util::Hash& input) {
+        }
+
+
+        log4cpp::Layout* SimpleLayoutConfigurator::create() {
+            return new log4cpp::SimpleLayout();
+        }
     }
-
-    void SimpleLayoutConfigurator::configure(const karabo::util::Hash& input) {
-    }
-
-    log4cpp::Layout* SimpleLayoutConfigurator::create(){
-      return new log4cpp::SimpleLayout();
-    }
-
-    KARABO_REGISTER_FACTORY_CC(LayoutConfigurator, SimpleLayoutConfigurator)
-
-  } 
-} 
+}
