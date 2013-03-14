@@ -36,6 +36,7 @@
 #include "FromInt.hh"
 #include "FromLiteral.hh"
 #include "FromTypeInfo.hh"
+#include "karaboDll.hh"
 
 #endif	/* KARABO_UTIL_UTIL_HH */
 
