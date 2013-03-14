@@ -59,10 +59,11 @@ endif
 
 # Custom Karabo variables
 KARABO = $(CND_BASEDIR)/$(CND_DISTDIR)/$(CONF)/$(CND_PLATFORM_$(CONF))
+export KARABO
+PYTHONPATH = /home/esenov/branch/karaboFramework/build/netbeans/karathon/dist/Debug/GNU-Linux-x86
+export PYTHONPATH
 EXTERN_DIR ?= $(CND_BASEDIR)/../../../extern
 EXTERN_DISTDIR = $(EXTERN_DIR)/$(CND_PLATFORM_$(CONF))
-
-#$(shell echo $(KARABO))
 	
 # build
 build: .build-post
@@ -191,3 +192,10 @@ include nbproject/Makefile-impl.mk
 
 # include project make variables
 include nbproject/Makefile-variables.mk
+
+print_variables:
+	echo $(KARABO)
+	echo $(PYTHONPATH)
+
+.PHONY: print_variables
+	
