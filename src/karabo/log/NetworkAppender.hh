@@ -16,7 +16,9 @@ namespace karabo {
     namespace log {
 
         class NetworkAppender : public log4cpp::LayoutAppender {
+
         public:
+
             NetworkAppender(const std::string& name, const karabo::net::BrokerChannel::Pointer& channel);
             virtual ~NetworkAppender();
 
@@ -27,20 +29,20 @@ namespace karabo {
             virtual void _append(const log4cpp::LoggingEvent& event);
 
         protected: // members
+            
             karabo::net::BrokerChannel::Pointer m_channel;
-            
-            
+
         private: // functions
-            
+
             void checkLogCache(); // runs in thread
-            
+
             void writeNow(); // called within thread
-            
+
         private: // members            
-            
+
             boost::thread m_thread;
             boost::mutex m_mutex;
-            
+
             std::string m_logCache;
             bool m_ok;
         };

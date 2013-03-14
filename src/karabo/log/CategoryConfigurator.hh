@@ -17,9 +17,8 @@
 #include <vector>
 #include "log4cpp/Priority.hh"
 #include "FileAppenderConfigurator.hh"
-#include <karabo/util/Factory.hh>
+#include <karabo/util/util.hh>
 #include "AppenderConfigurator.hh"
-#include "logdll.hh"
 
 /**
  * The main European XFEL namespace
@@ -39,7 +38,7 @@ namespace karabo {
 
     public:
       KARABO_CLASSINFO(CategoryConfigurator, "Category", "1.0")
-      KARABO_FACTORY_BASE_CLASS
+      KARABO_CONFIGURATION_BASE_CLASS
 
       CategoryConfigurator();
       virtual ~CategoryConfigurator();
@@ -47,7 +46,7 @@ namespace karabo {
       void setup();
 
       static void expectedParameters(karabo::util::Schema& expected);
-      void configure(const karabo::util::Hash& input);
+      CategoryConfigurator(const karabo::util::Hash& input);
 
     private:
 
@@ -60,6 +59,7 @@ namespace karabo {
   }
 }
 
-KARABO_REGISTER_FACTORY_BASE_HH(karabo::log::CategoryConfigurator, TEMPLATE_LOG, DECLSPEC_LOG)
+// TODO WINDOWS
+//KARABO_REGISTER_FACTORY_BASE_HH(karabo::log::CategoryConfigurator, TEMPLATE_LOG, DECLSPEC_LOG)
 
 #endif	/* KARABO_LOGCONFIG_CATEGORYCONFIGURATOR_HH */

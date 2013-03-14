@@ -19,26 +19,28 @@
 namespace karabo {
 
 
-  /**
-   * Namespace for package log
-   */
-  namespace log {
+    /**
+     * Namespace for package log
+     */
+    namespace log {
 
-    class SimpleLayoutConfigurator : public LayoutConfigurator {
-    public:
-      KARABO_CLASSINFO(SimpleLayoutConfigurator, "Simple", "1.0")
+        class SimpleLayoutConfigurator : public LayoutConfigurator {
 
-      SimpleLayoutConfigurator();
-      virtual ~SimpleLayoutConfigurator();
+        public:
+            
+            KARABO_CLASSINFO(SimpleLayoutConfigurator, "Simple", "1.0")
 
-      log4cpp::Layout* create();
+            virtual ~SimpleLayoutConfigurator();
 
-      static void expectedParameters(karabo::util::Schema& expected);
-      void configure(const karabo::util::Hash& input);
+            static void expectedParameters(karabo::util::Schema& expected);
+            
+            SimpleLayoutConfigurator(const karabo::util::Hash& input);
 
-    };
+            log4cpp::Layout* create();
 
-  }
+        };
+
+    }
 }
 
 #endif	/* KARABO_LOGCONFIG_SIMPLELAYOUTCONFIGURATOR_HH */
