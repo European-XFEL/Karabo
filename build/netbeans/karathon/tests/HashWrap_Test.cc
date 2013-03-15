@@ -21,18 +21,10 @@ static char* argv[2];
 CPPUNIT_TEST_SUITE_REGISTRATION(HashWrap_Test);
 
 HashWrap_Test::HashWrap_Test() {
-    char* karaboPath = getenv("KARABO");
-    if (!karaboPath) throw KARABO_PYTHON_EXCEPTION("Environment variable \"KARABO\" is not set");
-    string krbo(karaboPath);
-    krbo += "/extern/bin/python";
-    copy(krbo.begin(), krbo.end(), interpreter_path);
-    Py_SetProgramName(interpreter_path);
     Py_Initialize();
-    argv[0] = interpreter_path;
-    PySys_SetArgv(argc, argv);
     o_main = bp::import("__main__");
     o_global = o_main.attr("__dict__");
-    //bp::exec("import os\nimport sys\nsys.path.append(os.getcwd()+'/dist/Debug/GNU-Linux-x86')\n", o_global, o_global);
+    bp::exec("import os\nimport sys\nsys.path.append(os.getcwd()+'/dist/Debug/GNU-Linux-x86')\n", o_global, o_global);
 }
 
 HashWrap_Test::~HashWrap_Test() {
@@ -43,16 +35,6 @@ void HashWrap_Test::setUp() {
 }
 
 void HashWrap_Test::tearDown() {
-}
-
-void HashWrap_Test::testInPythonUnittest() {
-    try {
-        bp::exec_file("tests/hash_Test.py", o_global, o_global);
-        CPPUNIT_ASSERT(true);
-    } catch(const bp::error_already_set&) {
-        PyErr_Print();
-        CPPUNIT_ASSERT(false);
-    }
 }
 
 
