@@ -49,9 +49,10 @@
         <ccTool>
           <incDir>
             <pElem>../../../src</pElem>
-            <pElem>${KARABO}/extern/include</pElem>
-            <pElem>${KARABO}/extern/include/hdf5</pElem>
-            <pElem>${KARABO}/extern/include/python2.7</pElem>
+            <pElem>${KARATHON}/karabo/include</pElem>
+            <pElem>${KARATHON}/karabo/extern/include/hdf5</pElem>
+            <pElem>${KARATHON}/karabo/extern/include/python2.7</pElem>
+            <pElem>${KARATHON}/karabo/extern/include</pElem>
           </incDir>
           <preprocessorList>
             <Elem>KARATHON_BOOST_NUMPY</Elem>
@@ -61,12 +62,12 @@
           <linkerAddLib>
             <pElem>/opt/local/nss</pElem>
             <pElem>/opt/local/nspr</pElem>
-            <pElem>${KARABO}/extern/lib</pElem>
+            <pElem>${KARATHON}/karabo</pElem>
+            <pElem>${KARATHON}/karabo/extern/lib</pElem>
           </linkerAddLib>
           <linkerDynSerch>
-            <pElem>\$$ORIGIN/../lib</pElem>
-            <pElem>\$$ORIGIN/../extern/lib</pElem>
-            <pElem>${KARABO}/extern/lib</pElem>
+            <pElem>\$$ORIGIN/karabo</pElem>
+            <pElem>\$$ORIGIN/karabo/extern/lib</pElem>
           </linkerDynSerch>
           <linkerLibItems>
             <linkerLibProjectItem>
@@ -128,16 +129,10 @@
       </item>
       <folder path="TestFiles">
         <linkerTool>
-          <linkerAddLib>
-            <pElem>/opt/local/nss</pElem>
-            <pElem>/opt/local/nspr</pElem>
-            <pElem>${KARABO}/lib</pElem>
-          </linkerAddLib>
           <linkerDynSerch>
-            <pElem>\$$ORIGIN/../lib</pElem>
-            <pElem>\$$ORIGIN/../extern/lib</pElem>
-            <pElem>${KARABO}/lib</pElem>
-            <pElem>${KARABO}/extern/lib</pElem>
+            <pElem>${KARATHON}/karabo/extern/lib</pElem>
+            <pElem>${KARATHON}/karabo</pElem>
+            <pElem>${KARATHON}</pElem>
           </linkerDynSerch>
         </linkerTool>
       </folder>
