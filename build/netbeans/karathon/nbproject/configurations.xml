@@ -4,7 +4,7 @@
     <logicalFolder name="HeaderFiles"
                    displayName="Header Files"
                    projectFiles="true">
-      <itemPath>/home/esenov/branch/karaboFramework/src/karathon/HashWrap.hh</itemPath>
+      <itemPath>../../../src/karathon/HashWrap.hh</itemPath>
     </logicalFolder>
     <logicalFolder name="ResourceFiles"
                    displayName="Resource Files"
@@ -13,9 +13,9 @@
     <logicalFolder name="SourceFiles"
                    displayName="Source Files"
                    projectFiles="true">
-      <itemPath>/home/esenov/branch/karaboFramework/src/karathon/HashWrap.cc</itemPath>
-      <itemPath>/home/esenov/branch/karaboFramework/src/karathon/PyUtilHash.cc</itemPath>
-      <itemPath>/home/esenov/branch/karaboFramework/src/karathon/karathon.cc</itemPath>
+      <itemPath>../../../src/karathon/HashWrap.cc</itemPath>
+      <itemPath>../../../src/karathon/PyUtilHash.cc</itemPath>
+      <itemPath>../../../src/karathon/karathon.cc</itemPath>
     </logicalFolder>
     <logicalFolder name="TestFiles"
                    displayName="Test Files"
@@ -27,7 +27,6 @@
                      kind="TEST">
         <itemPath>tests/HashWrap_Test.cc</itemPath>
         <itemPath>tests/HashWrap_Test.hh</itemPath>
-        <itemPath>tests/hash_Test.py</itemPath>
         <itemPath>tests/karathonTestRunner.cc</itemPath>
       </logicalFolder>
     </logicalFolder>
@@ -70,18 +69,7 @@
             <pElem>\$$ORIGIN/karabo/extern/lib</pElem>
           </linkerDynSerch>
           <linkerLibItems>
-            <linkerLibProjectItem>
-              <makeArtifact PL="/home/esenov/branch/karaboFramework/build/netbeans/karabo"
-                            CT="2"
-                            CN="Debug"
-                            AC="true"
-                            BL="true"
-                            WD="/home/esenov/branch/karaboFramework/build/netbeans/karabo"
-                            BC="${MAKE}  -f Makefile CONF=Debug"
-                            CC="${MAKE}  -f Makefile CONF=Debug clean"
-                            OP="${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libkarabo.${CND_DLIB_EXT}">
-              </makeArtifact>
-            </linkerLibProjectItem>
+            <linkerLibLibItem>karabo</linkerLibLibItem>
             <linkerLibLibItem>boost_chrono</linkerLibLibItem>
             <linkerLibLibItem>boost_date_time</linkerLibLibItem>
             <linkerLibLibItem>boost_filesystem</linkerLibLibItem>
@@ -107,25 +95,16 @@
           </linkerLibItems>
         </linkerTool>
       </compileType>
-      <item path="/home/esenov/branch/karaboFramework/src/karathon/HashWrap.cc"
+      <item path="../../../src/karathon/HashWrap.cc" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="../../../src/karathon/HashWrap.hh" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../../../src/karathon/PyUtilHash.cc"
             ex="false"
             tool="1"
             flavor2="0">
       </item>
-      <item path="/home/esenov/branch/karaboFramework/src/karathon/HashWrap.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="/home/esenov/branch/karaboFramework/src/karathon/PyUtilHash.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="/home/esenov/branch/karaboFramework/src/karathon/karathon.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
+      <item path="../../../src/karathon/karathon.cc" ex="false" tool="1" flavor2="0">
       </item>
       <folder path="TestFiles">
         <linkerTool>
@@ -154,8 +133,6 @@
       </item>
       <item path="tests/HashWrap_Test.hh" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="tests/hash_Test.py" ex="false" tool="3" flavor2="0">
-      </item>
       <item path="tests/karathonTestRunner.cc" ex="false" tool="1" flavor2="0">
       </item>
     </conf>
@@ -178,25 +155,16 @@
           <developmentMode>5</developmentMode>
         </asmTool>
       </compileType>
-      <item path="/home/esenov/branch/karaboFramework/src/karathon/HashWrap.cc"
+      <item path="../../../src/karathon/HashWrap.cc" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="../../../src/karathon/HashWrap.hh" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../../../src/karathon/PyUtilHash.cc"
             ex="false"
             tool="1"
             flavor2="0">
       </item>
-      <item path="/home/esenov/branch/karaboFramework/src/karathon/HashWrap.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="/home/esenov/branch/karaboFramework/src/karathon/PyUtilHash.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="/home/esenov/branch/karaboFramework/src/karathon/karathon.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
+      <item path="../../../src/karathon/karathon.cc" ex="false" tool="1" flavor2="0">
       </item>
       <folder path="TestFiles/f1">
         <cTool>
@@ -215,8 +183,6 @@
       <item path="tests/HashWrap_Test.cc" ex="false" tool="1" flavor2="0">
       </item>
       <item path="tests/HashWrap_Test.hh" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="tests/hash_Test.py" ex="false" tool="3" flavor2="0">
       </item>
       <item path="tests/karathonTestRunner.cc" ex="false" tool="1" flavor2="0">
       </item>
