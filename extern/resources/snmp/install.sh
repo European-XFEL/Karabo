@@ -35,7 +35,7 @@ fi
   cd $SNMP_DIR
   ./configure --prefix=${DIR}/${SNMP_DIR}/snmp --with-default-snmp-version=2 --with-sys-contact="European XFEL GmbH" --with-sys-location="Unknown" --with-logfile="/var/log/snmpd.log" --with-persistent-directory="/var/net-snmp" --without-perl-modules --disable-embedded-perl  2>&1 | tee configure.log
   
-  make -j 2>&1 | tee make.log
+  make 2>&1 | tee make.log
   make install
   cp -rf snmp/include ${INSTALL_PREFIX}
   cp -rf snmp/lib ${INSTALL_PREFIX}
