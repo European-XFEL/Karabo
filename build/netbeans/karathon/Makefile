@@ -142,8 +142,6 @@ test: .test-post
 
 .test-pre:
 # Add your pre 'test' code here...
-	echo "*** KARABO = $(KARABO)"
-	echo "*** KARATHON = $(KARATHON)"
 	
 .test-post: .test-impl
 # Add your post 'test' code here...
