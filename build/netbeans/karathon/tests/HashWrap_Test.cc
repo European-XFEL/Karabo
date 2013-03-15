@@ -7,6 +7,7 @@
 
 #include <boost/python.hpp>
 #include <iostream>
+#include <string>
 #include <stdlib.h>
 #include <karabo/util/Exception.hh>
 #include "HashWrap_Test.hh"
@@ -21,7 +22,16 @@ static char* argv[2];
 CPPUNIT_TEST_SUITE_REGISTRATION(HashWrap_Test);
 
 HashWrap_Test::HashWrap_Test() {
+    string karathon(getenv("KARATHON") == NULL? "" : getenv("KARATHON"));
+    if (karathon.empty()) throw KARABO_PYTHON_EXCEPTION("KARATHON environment variable is not set");
+    string python = karathon + "/karabo/extern/bin/python";
+    copy(python.begin(),python.end(),interpreter_path);
+    Py_SetProgramName(interpreter_path);
     Py_Initialize();
+//    char* pyname = Py_GetProgramName();
+//    char* prefix = Py_GetPrefix();
+//    cout << "*** Python progname is " << pyname << endl;
+//    cout << "*** Python prefix   is " << prefix << endl;
     o_main = bp::import("__main__");
     o_global = o_main.attr("__dict__");
     bp::exec("import os\nimport sys\nsys.path.append(os.getcwd()+'/dist/Debug/GNU-Linux-x86')\n", o_global, o_global);

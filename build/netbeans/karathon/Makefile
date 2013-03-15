@@ -59,10 +59,7 @@ endif
 
 # Custom Karabo variables
 KARATHON = $(CND_BASEDIR)/$(CND_DISTDIR)/$(CONF)/$(CND_PLATFORM_$(CONF))
-#PYTHONPATH=$(KARATHON)
-#KARABO=$(KARATHON)/karabo
-#export PYTHONPATH
-#export KARABO
+export KARATHON
 EXTERN_DIR ?= $(CND_BASEDIR)/../../../extern
 EXTERN_DISTDIR = $(EXTERN_DIR)/$(CND_PLATFORM_$(CONF))
 	
