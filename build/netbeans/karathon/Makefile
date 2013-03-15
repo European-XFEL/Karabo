@@ -58,9 +58,10 @@ $(CP) -f nbproject/Karabo-variables-$(CURRENT_PLATFORM).mk nbproject/Makefile-va
 endif
 
 # Custom Karabo variables
-KARABO = $(CND_BASEDIR)/$(CND_DISTDIR)/$(CONF)/$(CND_PLATFORM_$(CONF))
+KARATHON = $(CND_BASEDIR)/$(CND_DISTDIR)/$(CONF)/$(CND_PLATFORM_$(CONF))
+KARABO = $(KARATHON)/../../../../karabo/dist/Debug/GNU-Linux-x86
 export KARABO
-PYTHONPATH = /home/esenov/branch/karaboFramework/build/netbeans/karathon/dist/Debug/GNU-Linux-x86
+PYTHONPATH=$(KARATHON)
 export PYTHONPATH
 EXTERN_DIR ?= $(CND_BASEDIR)/../../../extern
 EXTERN_DISTDIR = $(EXTERN_DIR)/$(CND_PLATFORM_$(CONF))
@@ -72,9 +73,12 @@ build: .build-post
 # Add your pre 'build' code here...
 
 # Make sure the KARABO folder always exists
-	@if test ! -d $(KARABO)/bin;     then $(MKDIR) -p $(KARABO)/bin; fi
-	@if test ! -d $(KARABO)/include; then $(MKDIR) -p $(KARABO)/include; fi
-	@if test ! -d $(KARABO)/lib;     then $(MKDIR) -p $(KARABO)/lib; fi
+	echo "current KARABO is $(KARABO)"
+	echo "current KARATHON is $(KARATHON)"
+	echo "current PYTHONPATH is $(PYTHONPATH)"
+	@if test ! -d $(KARATHON)/bin;     then $(MKDIR) -p $(KARATHON)/bin; fi
+	@if test ! -d $(KARATHON)/include; then $(MKDIR) -p $(KARATHON)/include; fi
+	@if test ! -d $(KARATHON)/lib;     then $(MKDIR) -p $(KARATHON)/lib; fi
 
 # Check whether external dependencies are installed, if not build them
 	@if test -d $(EXTERN_DISTDIR);\
@@ -90,27 +94,27 @@ build: .build-post
 	@$(CP) -f $(CND_BASEDIR)/nbproject/Makefile-$(CONF).mk $(CND_BASEDIR)/nbproject/Karabo-$(CONF)-$(CURRENT_PLATFORM).mk
 
 # Add your post 'build' code here...
-	@if test ! -d $(KARABO)/include/karabo/core;    then $(MKDIR) -p  $(KARABO)/include/karabo/core; fi
-	@if test ! -d $(KARABO)/include/karabo/io/h5; then $(MKDIR) -p  $(KARABO)/include/karabo/io/h5; fi
-	@if test ! -d $(KARABO)/include/karabo/log;     then $(MKDIR) -p  $(KARABO)/include/karabo/log; fi
-	@if test ! -d $(KARABO)/include/karabo/net;     then $(MKDIR) -p  $(KARABO)/include/karabo/net; fi
-	@if test ! -d $(KARABO)/include/karabo/python;  then $(MKDIR) -p  $(KARABO)/include/karabo/python; fi
-	@if test ! -d $(KARABO)/include/karabo/util;    then $(MKDIR) -p  $(KARABO)/include/karabo/util; fi
-	@if test ! -d $(KARABO)/include/karabo/xip;     then $(MKDIR) -p  $(KARABO)/include/karabo/xip; fi
-	@if test ! -d $(KARABO)/include/karabo/xml;     then $(MKDIR) -p  $(KARABO)/include/karabo/xml; fi
-	@if test ! -d $(KARABO)/include/karabo/xms;     then $(MKDIR) -p  $(KARABO)/include/karabo/xms; fi
-	@$(CP) $(CND_BASEDIR)/../../../src/karabo/core/*.hh $(KARABO)/include/karabo/core
-	@$(CP) $(CND_BASEDIR)/../../../src/karabo/io/*.hh $(KARABO)/include/karabo/io
-	@$(CP) $(CND_BASEDIR)/../../../src/karabo/io/h5/*.hh $(KARABO)/include/karabo/io/h5
-	@$(CP) $(CND_BASEDIR)/../../../src/karabo/log/*.hh $(KARABO)/include/karabo/log
-	@$(CP) $(CND_BASEDIR)/../../../src/karabo/net/*.hh $(KARABO)/include/karabo/net
-	@$(CP) $(CND_BASEDIR)/../../../src/karabo/python/*.hh $(KARABO)/include/karabo/python
-	@$(CP) $(CND_BASEDIR)/../../../src/karabo/util/*.hh $(KARABO)/include/karabo/util
-	@$(CP) $(CND_BASEDIR)/../../../src/karabo/xip/*.hh $(KARABO)/include/karabo/xip
-	@$(CP) $(CND_BASEDIR)/../../../src/karabo/xip/*.h  $(KARABO)/include/karabo/xip
-	@$(CP) $(CND_BASEDIR)/../../../src/karabo/xml/*.hh $(KARABO)/include/karabo/xml
-	@$(CP) $(CND_BASEDIR)/../../../src/karabo/xml/*.h  $(KARABO)/include/karabo/xml
-	@$(CP) $(CND_BASEDIR)/../../../src/karabo/xms/*.hh $(KARABO)/include/karabo/xms
+	@if test ! -d $(KARATHON)/include/karabo/core;    then $(MKDIR) -p  $(KARATHON)/include/karabo/core; fi
+	@if test ! -d $(KARATHON)/include/karabo/io/h5; then $(MKDIR) -p  $(KARATHON)/include/karabo/io/h5; fi
+	@if test ! -d $(KARATHON)/include/karabo/log;     then $(MKDIR) -p  $(KARATHON)/include/karabo/log; fi
+	@if test ! -d $(KARATHON)/include/karabo/net;     then $(MKDIR) -p  $(KARATHON)/include/karabo/net; fi
+	@if test ! -d $(KARATHON)/include/karabo/python;  then $(MKDIR) -p  $(KARATHON)/include/karabo/python; fi
+	@if test ! -d $(KARATHON)/include/karabo/util;    then $(MKDIR) -p  $(KARATHON)/include/karabo/util; fi
+	@if test ! -d $(KARATHON)/include/karabo/xip;     then $(MKDIR) -p  $(KARATHON)/include/karabo/xip; fi
+	@if test ! -d $(KARATHON)/include/karabo/xml;     then $(MKDIR) -p  $(KARATHON)/include/karabo/xml; fi
+	@if test ! -d $(KARATHON)/include/karabo/xms;     then $(MKDIR) -p  $(KARATHON)/include/karabo/xms; fi
+	@$(CP) $(CND_BASEDIR)/../../../src/karabo/core/*.hh $(KARATHON)/include/karabo/core
+	@$(CP) $(CND_BASEDIR)/../../../src/karabo/io/*.hh $(KARATHON)/include/karabo/io
+	@$(CP) $(CND_BASEDIR)/../../../src/karabo/io/h5/*.hh $(KARATHON)/include/karabo/io/h5
+	@$(CP) $(CND_BASEDIR)/../../../src/karabo/log/*.hh $(KARATHON)/include/karabo/log
+	@$(CP) $(CND_BASEDIR)/../../../src/karabo/net/*.hh $(KARATHON)/include/karabo/net
+	@$(CP) $(CND_BASEDIR)/../../../src/karabo/python/*.hh $(KARATHON)/include/karabo/python
+	@$(CP) $(CND_BASEDIR)/../../../src/karabo/util/*.hh $(KARATHON)/include/karabo/util
+	@$(CP) $(CND_BASEDIR)/../../../src/karabo/xip/*.hh $(KARATHON)/include/karabo/xip
+	@$(CP) $(CND_BASEDIR)/../../../src/karabo/xip/*.h  $(KARATHON)/include/karabo/xip
+	@$(CP) $(CND_BASEDIR)/../../../src/karabo/xml/*.hh $(KARATHON)/include/karabo/xml
+	@$(CP) $(CND_BASEDIR)/../../../src/karabo/xml/*.h  $(KARATHON)/include/karabo/xml
+	@$(CP) $(CND_BASEDIR)/../../../src/karabo/xms/*.hh $(KARATHON)/include/karabo/xms
 
 # Force extern re-build
 .PHONY: extern package cmd
@@ -171,7 +175,9 @@ test: .test-post
 .test-pre:
 # Add your pre 'test' code here...
 	@if test ! -d testresults;    then $(MKDIR) -p  testresults; fi
-
+	echo "*** KARABO = $(KARABO)"
+	echo "*** KARATHON = $(KARATHON)"
+	
 .test-post: .test-impl
 # Add your post 'test' code here...
 
@@ -193,9 +199,4 @@ include nbproject/Makefile-impl.mk
 # include project make variables
 include nbproject/Makefile-variables.mk
 
-print_variables:
-	echo $(KARABO)
-	echo $(PYTHONPATH)
-
-.PHONY: print_variables
 	
