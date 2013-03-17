@@ -29,7 +29,10 @@ namespace karabo {
 
         class OstreamAppenderConfigurator : public AppenderConfigurator {
 
+            std::string m_out;
+
         public:
+
             KARABO_CLASSINFO(OstreamAppenderConfigurator, "Ostream", "1.0")
 
             static void expectedParameters(karabo::util::Schema& expected);
@@ -40,10 +43,6 @@ namespace karabo {
             };
 
             log4cpp::Appender* create();
-
-        private:
-            std::string m_out;
-
 
         };
 

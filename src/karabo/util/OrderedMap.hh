@@ -440,7 +440,7 @@ namespace karabo {
         template <class KeyType, class MappedType>
         template<typename T, template <typename Elem, typename = std::allocator<Elem> > class Cont >
         inline Cont<T> OrderedMap<KeyType, MappedType>::getAs(const KeyType& key) const {
-            map_iterator it;
+            const_map_iterator it;
             if ((it = find(key)) == m_mapNodes.end()) {
                 throw KARABO_PARAMETER_EXCEPTION("Key '" + key + "' does not exist");
             }

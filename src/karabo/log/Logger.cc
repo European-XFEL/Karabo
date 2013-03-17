@@ -28,6 +28,9 @@ namespace karabo {
         
         // Static initialization of logMutex
         boost::mutex Logger::m_logMutex;
+        
+        // Static initialization of LogStreamRegistry
+        Logger::LogStreamRegistry Logger::m_logStreams;
 
 
         void Logger::expectedParameters(Schema& expected) {
@@ -41,13 +44,13 @@ namespace karabo {
                     .commit();
 
             STRING_ELEMENT(expected)
-                    .description("Default Priority")
                     .key("priority")
+                    .description("Default Priority")
                     .displayedName("Priority")
                     .options("DEBUG INFO WARN ERROR")
                     .assignmentOptional().defaultValue("INFO")
                     .commit();
-
+            
             // Setup for additional categories, optional
             LIST_ELEMENT(expected)
                     .key("categories")
@@ -60,7 +63,6 @@ namespace karabo {
 
 
         Logger::Logger(const Hash& input) {
-
             configureAppenders(input);
             configurePriority(input);
             configureCategories(input);
