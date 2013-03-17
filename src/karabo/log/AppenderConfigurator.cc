@@ -9,10 +9,11 @@
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
 
+#include <log4cpp/BasicLayout.hh>
+#include <log4cpp/SimpleLayout.hh>
+#include <log4cpp/PatternLayout.hh>
 
 #include "AppenderConfigurator.hh"
-#include "log4cpp/Layout.hh"
-#include "LayoutConfigurator.hh"
 
 using namespace std;
 using namespace karabo::util;
@@ -45,8 +46,28 @@ namespace karabo {
                     .key("layout")
                     .displayedName("Layout")
                     .description("Configures layout")
-                    .appendNodesOfConfigurationBase<LayoutConfigurator>()
                     .assignmentOptional().defaultValue("Simple")
+                    .commit();
+
+            NODE_ELEMENT(expected).key("layout.Simple")
+                    .description("Simple Layout")
+                    .displayedName("Simple")
+                    .commit();
+
+            NODE_ELEMENT(expected).key("layout.Basic")
+                    .description("Basic Layout")
+                    .displayedName("Basic")
+                    .commit();
+            
+            NODE_ELEMENT(expected).key("layout.Pattern")
+                    .description("Allows to define a pattern for the log string")
+                    .displayedName("Pattern")
+                    .commit();
+            
+            STRING_ELEMENT(expected).key("layout.Pattern.format")
+                    .description("Set conversion pattern for the layout. See log4cpp documentation.")
+                    .displayedName("Format")
+                    .assignmentOptional() .defaultValue("%d %c %p %m %n")
                     .commit();
         }
 
@@ -71,9 +92,15 @@ namespace karabo {
 
 
         void AppenderConfigurator::configureLayout(const Hash& input) {
-            LayoutConfigurator::Pointer layoutConfig = LayoutConfigurator::createChoice("layout", input);
-            m_layout = layoutConfig->create();
-
+            if (input.has("layout.Basic")) {
+                m_layout = new log4cpp::BasicLayout();
+            } else if (input.has("layout.Simple")) {
+                m_layout = new log4cpp::SimpleLayout();
+            } else if (input.has("layout.Pattern")) {
+                PatternLayout* layout = new log4cpp::PatternLayout();
+                layout->setConversionPattern(input.get<string>("layout.Pattern.format"));
+                m_layout = layout;
+            }
         }
 
 

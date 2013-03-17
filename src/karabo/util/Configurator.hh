@@ -73,7 +73,7 @@ namespace karabo {
 
             template <class DerivedClass>
             static void registerClass(const std::string& classId) {
-                // std::cout << "Registering class \"" << classId << "\" with constructor: " << classId << "(" << ctorKey() << ") for configuration" << std::endl;
+                //std::cout << "Registering class \"" << classId << "\" with constructor: " << classId << "(" << ctorKey() << ") for configuration" << std::endl;
                 Configurator::init().m_registry[classId][ctorKey()] = static_cast<boost::function < boost::shared_ptr<BaseClass > (const Hash&) > > (boost::factory<boost::shared_ptr<DerivedClass> >());
             }
 
@@ -91,9 +91,14 @@ namespace karabo {
 
             static Schema getSchema(const std::string& classId, const Schema::AssemblyRules& rules = Schema::AssemblyRules()) {
                 Schema schema(classId, rules);
-                const SchemaFuncs& schemaFunctions = Configurator::init().m_schemaFuncRegistry[classId];
-                for (size_t i = 0; i < schemaFunctions.size(); ++i) {
-                    schemaFunctions[i](schema);
+                SchemaFuncRegistry::const_iterator it = Configurator::init().m_schemaFuncRegistry.find(classId);
+                if (it != Configurator::init().m_schemaFuncRegistry.end()) {
+                    const SchemaFuncs& schemaFunctions = it->second;
+                    for (size_t i = 0; i < schemaFunctions.size(); ++i) {
+                        if (!schemaFunctions[i].empty()) {
+                            schemaFunctions[i](schema);
+                        }
+                    }
                 }
                 return schema;
             }

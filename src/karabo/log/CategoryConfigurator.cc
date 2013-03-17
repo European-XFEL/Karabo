@@ -20,10 +20,6 @@ namespace karabo {
 
         KARABO_REGISTER_FOR_CONFIGURATION(CategoryConfigurator)
 
-        
-        CategoryConfigurator::CategoryConfigurator() {
-        }
-
 
         CategoryConfigurator::~CategoryConfigurator() {
         }

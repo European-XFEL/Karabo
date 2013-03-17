@@ -16,7 +16,6 @@
 #include <string>
 #include <vector>
 #include "log4cpp/Priority.hh"
-#include "FileAppenderConfigurator.hh"
 #include <karabo/util/util.hh>
 #include "AppenderConfigurator.hh"
 
@@ -25,38 +24,42 @@
  */
 namespace karabo {
 
-  /**
-   * Namespace for package log
-   */
-  namespace log {
+    /**
+     * Namespace for package log
+     */
+    namespace log {
 
-    class CategoryConfigurator {
-      std::string m_name;
-      log4cpp::Priority::Value m_level;
-      bool m_additivity;
-      std::vector<AppenderConfigurator::Pointer> m_appenderConfigurators;
+        class CategoryConfigurator {
 
-    public:
-      KARABO_CLASSINFO(CategoryConfigurator, "Category", "1.0")
-      KARABO_CONFIGURATION_BASE_CLASS
+            std::string m_name;
+            log4cpp::Priority::Value m_level;
+            bool m_additivity;
+            std::vector<AppenderConfigurator::Pointer> m_appenderConfigurators;
 
-      CategoryConfigurator();
-      virtual ~CategoryConfigurator();
+        public:
+            KARABO_CLASSINFO(CategoryConfigurator, "Category", "1.0")
+            KARABO_CONFIGURATION_BASE_CLASS
+           
+            virtual ~CategoryConfigurator();
 
-      void setup();
+            void setup();
 
-      static void expectedParameters(karabo::util::Schema& expected);
-      CategoryConfigurator(const karabo::util::Hash& input);
+            static void expectedParameters(karabo::util::Schema& expected);
+            
+            CategoryConfigurator(const karabo::util::Hash& input);
 
-    private:
+        private:
 
-      void configureName(const karabo::util::Hash& input);
-      void configurePriority(const karabo::util::Hash& input);
-      void configureAdditivity(const karabo::util::Hash& input);
-      void configureAppenders(const karabo::util::Hash& input);
-    };
+            void configureName(const karabo::util::Hash& input);
+            
+            void configurePriority(const karabo::util::Hash& input);
+            
+            void configureAdditivity(const karabo::util::Hash& input);
+            
+            void configureAppenders(const karabo::util::Hash& input);
+        };
 
-  }
+    }
 }
 
 // TODO WINDOWS
