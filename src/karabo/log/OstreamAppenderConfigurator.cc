@@ -22,8 +22,9 @@ using namespace log4cpp;
 namespace karabo {
     namespace log {
 
+
         KARABO_REGISTER_FOR_CONFIGURATION(AppenderConfigurator, OstreamAppenderConfigurator)
-        
+
         void OstreamAppenderConfigurator::expectedParameters(Schema& expected) {
 
             STRING_ELEMENT(expected)
@@ -35,9 +36,11 @@ namespace karabo {
                     .commit();
         }
 
+
         OstreamAppenderConfigurator::OstreamAppenderConfigurator(const Hash& input) : AppenderConfigurator(input) {
             m_out = input.get<string > ("output");
         }
+
 
         log4cpp::Appender* OstreamAppenderConfigurator::create() {
             if (m_out == "STDERR") {

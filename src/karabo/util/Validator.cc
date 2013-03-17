@@ -199,7 +199,7 @@ namespace karabo {
                                 return;
                             }
                         } else if ((assignment == Schema::OPTIONAL_PARAM) && hasDefault && m_injectDefaults) {
-                            const vector<string>& optionNames = it->getAttribute<vector<string> > ("defaultValue");
+                            vector<string> optionNames = it->getAttributeAs<string, vector> ("defaultValue");
                             Hash::Node& workNode = working.set(key, std::vector<Hash>()); // TODO use bindReference here
                             vector<Hash>& workNodes = workNode.getValue<vector<Hash> >();
                             BOOST_FOREACH(string optionName, optionNames) {

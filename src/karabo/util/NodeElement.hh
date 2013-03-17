@@ -29,6 +29,7 @@ namespace karabo {
 
             NodeElement(Schema& expected) : GenericElement<NodeElement>(expected) {
                 m_parentSchemaAssemblyRules = expected.getAssemblyRules();
+                this->m_node->setValue(Hash()); // A node value always is a Hash
             }
 
             template <class FactoryBase>

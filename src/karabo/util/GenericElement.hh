@@ -33,7 +33,9 @@ namespace karabo {
 
         public:
 
-            GenericElement(Schema& expected) : m_schema(&expected) {
+            GenericElement(Schema& expected) :
+            m_schema(&expected),
+            m_node(boost::shared_ptr<Hash::Node>(new Hash::Node(std::string(), 0))) {
             }
 
             virtual ~GenericElement() {
@@ -53,11 +55,7 @@ namespace karabo {
              * @endcode
              */
             virtual Derived& key(const std::string& name) {
-
-                if (m_node) throw KARABO_LOGIC_EXCEPTION("The key() function must only be called once!");
-
-                m_node = boost::shared_ptr<Hash::Node>(new Hash::Node(name, 0));
-
+                m_node->m_key = name;
                 return *(static_cast<Derived*> (this));
             }
 

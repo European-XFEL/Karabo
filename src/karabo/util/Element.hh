@@ -14,7 +14,6 @@
 #include <complex>
 #include <vector>
 
-//#include <boost/spirit/home/support/detail/hold_any.hpp>
 #include <boost/any.hpp>
 #include <boost/cast.hpp>
 
@@ -27,6 +26,7 @@ namespace karabo {
 
         // Class forward (needed to prevent assignment of Hash to Attribute)
         class Hash;
+        template <class T> class GenericElement;
 
         template<typename KeyType, typename AttributesType = bool>
         class Element {
@@ -34,6 +34,10 @@ namespace karabo {
             // Grant friendship to container
             template<typename T, typename U>
             friend class OrderedMap;
+            
+            // Grant friendship to GenericElement (needs to setKey)
+            template<class T>
+            friend class GenericElement;
 
             // Members
             KeyType m_key;
@@ -382,7 +386,7 @@ namespace karabo {
         template<typename KeyType, typename AttributeType>
         template<typename T, template <typename Elem, typename = std::allocator<Elem> > class Cont >
         inline Cont<T> Element<KeyType, AttributeType>::getAttributeAs(const std::string& key) const {
-            return m_attributes.template getAs<Cont<T> >(key);
+            return m_attributes.template getAs<T, Cont >(key);
         }
 
         template<typename KeyType, typename AttributeType>
