@@ -56,14 +56,11 @@ OBJECTFILES= \
 	${OBJECTDIR}/_ext/769817549/Table.o \
 	${OBJECTDIR}/_ext/769817549/TypeTraits.o \
 	${OBJECTDIR}/_ext/1103111265/AppenderConfigurator.o \
-	${OBJECTDIR}/_ext/1103111265/BasicLayoutConfigurator.o \
 	${OBJECTDIR}/_ext/1103111265/CategoryConfigurator.o \
 	${OBJECTDIR}/_ext/1103111265/FileAppenderConfigurator.o \
 	${OBJECTDIR}/_ext/1103111265/Logger.o \
 	${OBJECTDIR}/_ext/1103111265/OstreamAppenderConfigurator.o \
-	${OBJECTDIR}/_ext/1103111265/PatternLayoutConfigurator.o \
 	${OBJECTDIR}/_ext/1103111265/RollingFileAppenderConfigurator.o \
-	${OBJECTDIR}/_ext/1103111265/SimpleLayoutConfigurator.o \
 	${OBJECTDIR}/_ext/1080827789/pugixml.o \
 	${OBJECTDIR}/_ext/163016059/Base64.o \
 	${OBJECTDIR}/_ext/163016059/ClassInfo.o \
@@ -87,6 +84,7 @@ TESTDIR=${CND_BUILDDIR}/${CND_CONF}/${CND_PLATFORM}/tests
 # Test Files
 TESTFILES= \
 	${TESTDIR}/TestFiles/f2 \
+	${TESTDIR}/TestFiles/f3 \
 	${TESTDIR}/TestFiles/f1
 
 # C Compiler Flags
@@ -218,11 +216,6 @@ ${OBJECTDIR}/_ext/1103111265/AppenderConfigurator.o: ../../../src/karabo/log/App
 	${RM} $@.d
 	$(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1103111265/AppenderConfigurator.o ../../../src/karabo/log/AppenderConfigurator.cc
 
-${OBJECTDIR}/_ext/1103111265/BasicLayoutConfigurator.o: ../../../src/karabo/log/BasicLayoutConfigurator.cc 
-	${MKDIR} -p ${OBJECTDIR}/_ext/1103111265
-	${RM} $@.d
-	$(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1103111265/BasicLayoutConfigurator.o ../../../src/karabo/log/BasicLayoutConfigurator.cc
-
 ${OBJECTDIR}/_ext/1103111265/CategoryConfigurator.o: ../../../src/karabo/log/CategoryConfigurator.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1103111265
 	${RM} $@.d
@@ -243,20 +236,10 @@ ${OBJECTDIR}/_ext/1103111265/OstreamAppenderConfigurator.o: ../../../src/karabo/
 	${RM} $@.d
 	$(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1103111265/OstreamAppenderConfigurator.o ../../../src/karabo/log/OstreamAppenderConfigurator.cc
 
-${OBJECTDIR}/_ext/1103111265/PatternLayoutConfigurator.o: ../../../src/karabo/log/PatternLayoutConfigurator.cc 
-	${MKDIR} -p ${OBJECTDIR}/_ext/1103111265
-	${RM} $@.d
-	$(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1103111265/PatternLayoutConfigurator.o ../../../src/karabo/log/PatternLayoutConfigurator.cc
-
 ${OBJECTDIR}/_ext/1103111265/RollingFileAppenderConfigurator.o: ../../../src/karabo/log/RollingFileAppenderConfigurator.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1103111265
 	${RM} $@.d
 	$(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1103111265/RollingFileAppenderConfigurator.o ../../../src/karabo/log/RollingFileAppenderConfigurator.cc
-
-${OBJECTDIR}/_ext/1103111265/SimpleLayoutConfigurator.o: ../../../src/karabo/log/SimpleLayoutConfigurator.cc 
-	${MKDIR} -p ${OBJECTDIR}/_ext/1103111265
-	${RM} $@.d
-	$(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1103111265/SimpleLayoutConfigurator.o ../../../src/karabo/log/SimpleLayoutConfigurator.cc
 
 ${OBJECTDIR}/_ext/1080827789/pugixml.o: ../../../src/karabo/pugiXml/pugixml.cpp 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1080827789
@@ -347,6 +330,10 @@ ${TESTDIR}/TestFiles/f2: ${TESTDIR}/_ext/861493463/FileInputOutput_Test.o ${TEST
 	${MKDIR} -p ${TESTDIR}/TestFiles
 	${LINK.cc}   -o ${TESTDIR}/TestFiles/f2 $^ ${LDLIBSOPTIONS} 
 
+${TESTDIR}/TestFiles/f3: ${TESTDIR}/_ext/936496563/Logger_Test.o ${TESTDIR}/_ext/936496563/logTestRunner.o ${OBJECTFILES:%.o=%_nomain.o}
+	${MKDIR} -p ${TESTDIR}/TestFiles
+	${LINK.cc}   -o ${TESTDIR}/TestFiles/f3 $^ ${LDLIBSOPTIONS} 
+
 ${TESTDIR}/TestFiles/f1: ${TESTDIR}/_ext/1033104525/ConfigurationTestClasses.o ${TESTDIR}/_ext/1033104525/Dims_Test.o ${TESTDIR}/_ext/1033104525/Factory_Test.o ${TESTDIR}/_ext/1033104525/Hash_Test.o ${TESTDIR}/_ext/1033104525/Schema_Test.o ${TESTDIR}/_ext/1033104525/Types_Test.o ${TESTDIR}/_ext/1033104525/utilTestRunner.o ${OBJECTFILES:%.o=%_nomain.o}
 	${MKDIR} -p ${TESTDIR}/TestFiles
 	${LINK.cc}   -o ${TESTDIR}/TestFiles/f1 $^ ${LDLIBSOPTIONS} 
@@ -392,6 +379,18 @@ ${TESTDIR}/_ext/861493463/ioTestRunner.o: ../../../src/karabo/tests/io/ioTestRun
 	${MKDIR} -p ${TESTDIR}/_ext/861493463
 	${RM} $@.d
 	$(COMPILE.cc) -g -Wall -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/include/hdf5 -MMD -MP -MF $@.d -o ${TESTDIR}/_ext/861493463/ioTestRunner.o ../../../src/karabo/tests/io/ioTestRunner.cc
+
+
+${TESTDIR}/_ext/936496563/Logger_Test.o: ../../../src/karabo/tests/log/Logger_Test.cc 
+	${MKDIR} -p ${TESTDIR}/_ext/936496563
+	${RM} $@.d
+	$(COMPILE.cc) -g -Wall -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/include/hdf5 -MMD -MP -MF $@.d -o ${TESTDIR}/_ext/936496563/Logger_Test.o ../../../src/karabo/tests/log/Logger_Test.cc
+
+
+${TESTDIR}/_ext/936496563/logTestRunner.o: ../../../src/karabo/tests/log/logTestRunner.cc 
+	${MKDIR} -p ${TESTDIR}/_ext/936496563
+	${RM} $@.d
+	$(COMPILE.cc) -g -Wall -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/include/hdf5 -MMD -MP -MF $@.d -o ${TESTDIR}/_ext/936496563/logTestRunner.o ../../../src/karabo/tests/log/logTestRunner.cc
 
 
 ${TESTDIR}/_ext/1033104525/ConfigurationTestClasses.o: ../../../src/karabo/tests/util/ConfigurationTestClasses.cc 
@@ -709,19 +708,6 @@ ${OBJECTDIR}/_ext/1103111265/AppenderConfigurator_nomain.o: ${OBJECTDIR}/_ext/11
 	    ${CP} ${OBJECTDIR}/_ext/1103111265/AppenderConfigurator.o ${OBJECTDIR}/_ext/1103111265/AppenderConfigurator_nomain.o;\
 	fi
 
-${OBJECTDIR}/_ext/1103111265/BasicLayoutConfigurator_nomain.o: ${OBJECTDIR}/_ext/1103111265/BasicLayoutConfigurator.o ../../../src/karabo/log/BasicLayoutConfigurator.cc 
-	${MKDIR} -p ${OBJECTDIR}/_ext/1103111265
-	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/1103111265/BasicLayoutConfigurator.o`; \
-	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
-	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
-	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
-	then  \
-	    ${RM} $@.d;\
-	    $(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1103111265/BasicLayoutConfigurator_nomain.o ../../../src/karabo/log/BasicLayoutConfigurator.cc;\
-	else  \
-	    ${CP} ${OBJECTDIR}/_ext/1103111265/BasicLayoutConfigurator.o ${OBJECTDIR}/_ext/1103111265/BasicLayoutConfigurator_nomain.o;\
-	fi
-
 ${OBJECTDIR}/_ext/1103111265/CategoryConfigurator_nomain.o: ${OBJECTDIR}/_ext/1103111265/CategoryConfigurator.o ../../../src/karabo/log/CategoryConfigurator.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1103111265
 	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/1103111265/CategoryConfigurator.o`; \
@@ -774,19 +760,6 @@ ${OBJECTDIR}/_ext/1103111265/OstreamAppenderConfigurator_nomain.o: ${OBJECTDIR}/
 	    ${CP} ${OBJECTDIR}/_ext/1103111265/OstreamAppenderConfigurator.o ${OBJECTDIR}/_ext/1103111265/OstreamAppenderConfigurator_nomain.o;\
 	fi
 
-${OBJECTDIR}/_ext/1103111265/PatternLayoutConfigurator_nomain.o: ${OBJECTDIR}/_ext/1103111265/PatternLayoutConfigurator.o ../../../src/karabo/log/PatternLayoutConfigurator.cc 
-	${MKDIR} -p ${OBJECTDIR}/_ext/1103111265
-	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/1103111265/PatternLayoutConfigurator.o`; \
-	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
-	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
-	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
-	then  \
-	    ${RM} $@.d;\
-	    $(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1103111265/PatternLayoutConfigurator_nomain.o ../../../src/karabo/log/PatternLayoutConfigurator.cc;\
-	else  \
-	    ${CP} ${OBJECTDIR}/_ext/1103111265/PatternLayoutConfigurator.o ${OBJECTDIR}/_ext/1103111265/PatternLayoutConfigurator_nomain.o;\
-	fi
-
 ${OBJECTDIR}/_ext/1103111265/RollingFileAppenderConfigurator_nomain.o: ${OBJECTDIR}/_ext/1103111265/RollingFileAppenderConfigurator.o ../../../src/karabo/log/RollingFileAppenderConfigurator.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1103111265
 	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/1103111265/RollingFileAppenderConfigurator.o`; \
@@ -798,19 +771,6 @@ ${OBJECTDIR}/_ext/1103111265/RollingFileAppenderConfigurator_nomain.o: ${OBJECTD
 	    $(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1103111265/RollingFileAppenderConfigurator_nomain.o ../../../src/karabo/log/RollingFileAppenderConfigurator.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/1103111265/RollingFileAppenderConfigurator.o ${OBJECTDIR}/_ext/1103111265/RollingFileAppenderConfigurator_nomain.o;\
-	fi
-
-${OBJECTDIR}/_ext/1103111265/SimpleLayoutConfigurator_nomain.o: ${OBJECTDIR}/_ext/1103111265/SimpleLayoutConfigurator.o ../../../src/karabo/log/SimpleLayoutConfigurator.cc 
-	${MKDIR} -p ${OBJECTDIR}/_ext/1103111265
-	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/1103111265/SimpleLayoutConfigurator.o`; \
-	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
-	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
-	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
-	then  \
-	    ${RM} $@.d;\
-	    $(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1103111265/SimpleLayoutConfigurator_nomain.o ../../../src/karabo/log/SimpleLayoutConfigurator.cc;\
-	else  \
-	    ${CP} ${OBJECTDIR}/_ext/1103111265/SimpleLayoutConfigurator.o ${OBJECTDIR}/_ext/1103111265/SimpleLayoutConfigurator_nomain.o;\
 	fi
 
 ${OBJECTDIR}/_ext/1080827789/pugixml_nomain.o: ${OBJECTDIR}/_ext/1080827789/pugixml.o ../../../src/karabo/pugiXml/pugixml.cpp 
@@ -1026,6 +986,7 @@ ${OBJECTDIR}/_ext/163016059/Validator_nomain.o: ${OBJECTDIR}/_ext/163016059/Vali
 	@if [ "${TEST}" = "" ]; \
 	then  \
 	    ${TESTDIR}/TestFiles/f2 || true; \
+	    ${TESTDIR}/TestFiles/f3 || true; \
 	    ${TESTDIR}/TestFiles/f1 || true; \
 	else  \
 	    ./${TEST} || true; \
