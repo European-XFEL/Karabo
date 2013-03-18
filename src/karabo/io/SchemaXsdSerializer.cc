@@ -78,7 +78,7 @@ namespace karabo {
             schemaNode.append_attribute("xmlns:xs") = m_defaultNamespace.c_str();
             schemaNode.append_attribute("xmlns:a") = m_xmlnsa.c_str();
 
-            r_createXsd(object, schemaNode);
+            r_createXsd(object, schemaNode, false);
 
             CustomWriter writer(archive);
             if (m_writeCompact) doc.save(writer, "", pugi::format_raw);
@@ -86,7 +86,7 @@ namespace karabo {
         }
 
 
-        void SchemaXsdSerializer::r_createXsd(const Schema& schema, pugi::xml_node& node, const string& key) const {
+        void SchemaXsdSerializer::r_createXsd(const Schema& schema, pugi::xml_node& node, const bool isChildNodeOfListElement, const string& key) const {
 
             vector<string> keys;
             string elementName;
@@ -106,7 +106,12 @@ namespace karabo {
 
             pugi::xml_node rootElementNode = node.append_child("xs:element");
             rootElementNode.append_attribute("name") = elementName.c_str();
-
+            
+            if(isChildNodeOfListElement){
+               rootElementNode.append_attribute("minOccurs") = "0";
+               rootElementNode.append_attribute("maxOccurs") = "unbounded";
+            }
+            
             if (!key.empty()) {
                 if (schema.hasDisplayedName(key)) {//sufficient condition for 'annotation' to be added to Node element 
                     pugi::xml_node annotationNode = rootElementNode.append_child("xs:annotation");
@@ -131,7 +136,7 @@ namespace karabo {
 
                 } else if (schema.getNodeType(name) == Schema::NODE) {
 
-                    r_createXsd(schema, allNode, name);
+                    r_createXsd(schema, allNode, false, name);
 
                 } else if (schema.getNodeType(name) == Schema::CHOICE_OF_NODES && schema.getAssignment(name) != Schema::INTERNAL_PARAM) {
 
@@ -219,7 +224,7 @@ namespace karabo {
 
             BOOST_FOREACH(string name, keys) {
                 string currentKey = key + "." + name;
-                r_createXsd(schema, choiceTag, currentKey);
+                r_createXsd(schema, choiceTag, false, currentKey);
             }
         }
 
@@ -243,7 +248,7 @@ namespace karabo {
 
             BOOST_FOREACH(string name, keys) {
                 string currentKey = key + "." + name;
-                r_createXsd(schema, sequenceTag, currentKey);
+                r_createXsd(schema, sequenceTag, true, currentKey);
             }
         }
 
@@ -349,6 +354,18 @@ namespace karabo {
                
                pugi::xml_node prefixSymbolElem = documentationNode.append_child("a:metricPrefixSymbol");
                prefixSymbolElem.append_child(pugi::node_pcdata).set_value(prefixSymbol.c_str());
+            }
+            
+            if (schema.hasMin(key)){ //relevant for LIST element
+                int minNumNodes = schema.getMin(key);
+                pugi::xml_node minNumNodesElem = documentationNode.append_child("a:min");
+                minNumNodesElem.append_child(pugi::node_pcdata).set_value(toString(minNumNodes).c_str());
+            }
+            
+            if (schema.hasMax(key)){ //relevant for LIST element
+                int maxNumNodes = schema.getMax(key);
+                pugi::xml_node maxNumNodesElem = documentationNode.append_child("a:max");
+                maxNumNodesElem.append_child(pugi::node_pcdata).set_value(toString(maxNumNodes).c_str());
             }
             
             if( schema.isAccessReadOnly(key) ){//if element 'readOnly', check for Warn and Alarm
