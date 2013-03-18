@@ -553,8 +553,24 @@ namespace karabo {
             }
 
             bool hasAlarmHigh(const std::string& path) const;
+            
+            //******************************************************
+            //      min/max for number of nodes in ListElement     *                     *  
+            //******************************************************
+            
+            void setMin(const std::string& path, const int& value);
 
+            bool hasMin(const std::string& path) const;
 
+            const int& getMin(const std::string& path) const;
+            
+            void setMax(const std::string& path, const int& value);
+
+            bool hasMax(const std::string& path) const;
+
+            const int& getMax(const std::string& path) const;
+            
+            
             template <class T>
             void overwrite(const T& defaultValue);
 

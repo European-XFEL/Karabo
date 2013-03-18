@@ -293,7 +293,7 @@ namespace karabo {
         bool Schema::hasAlias(const std::string& path) const {
             return m_hash.hasAttribute(path, "alias");
         }
-        
+
         //**********************************************
         //                  Options             *
         //**********************************************
@@ -336,31 +336,37 @@ namespace karabo {
         //**********************************************
         //                  ExpertLevel                *
         //**********************************************
-        
+
+
         void Schema::setExpertLevel(const std::string& path, const Schema::ExpertLevelType& value) {
             m_hash.setAttribute(path, "expertLevel", value);
         }
+
 
         bool Schema::hasExpertLevel(const std::string& path) const {
             return m_hash.hasAttribute(path, "expertLevel");
         }
 
+
         bool Schema::isExpertLevelAdvanced(const std::string& path) const {
             return m_hash.getAttribute<int>(path, "expertLevel") == Schema::ADVANCED;
         }
 
+
         bool Schema::isExpertLevelMedium(const std::string& path) const {
             return m_hash.getAttribute<int>(path, "expertLevel") == Schema::MEDIUM;
         }
-        
+
+
         bool Schema::isExpertLevelSimple(const std::string& path) const {
             return m_hash.getAttribute<int>(path, "expertLevel") == Schema::SIMPLE;
         }
-        
+
+
         const int Schema::getExpertLevel(const std::string& path) const {
             return m_hash.getAttribute<int> (path, "expertLevel");
         }
-        
+
         //**********************************************
         //                  Unit                       *
         //**********************************************
@@ -429,37 +435,41 @@ namespace karabo {
         //**********************************************
         //    Minimum Inclusive value                  *                   *
         //**********************************************
-        
-        bool Schema::hasMinInc(const std::string& path) const{
+
+
+        bool Schema::hasMinInc(const std::string& path) const {
             return m_hash.hasAttribute(path, "minInc");
         }
-        
+
         //**********************************************
         //    Maximum Inclusive value                  *                   *
         //**********************************************
-        
-        bool Schema::hasMaxInc(const std::string& path) const{
+
+
+        bool Schema::hasMaxInc(const std::string& path) const {
             return m_hash.hasAttribute(path, "maxInc");
         }
-        
-        
+
+
         //**********************************************
         //    Minimum Exclusive value                  *                   *
         //**********************************************
-        
-        bool Schema::hasMinExc(const std::string& path) const{
+
+
+        bool Schema::hasMinExc(const std::string& path) const {
             return m_hash.hasAttribute(path, "minExc");
         }
-        
-        
+
+
         //**********************************************
         //    Maximum Exclusive value                  *                   *
         //**********************************************
-        
-        bool Schema::hasMaxExc(const std::string& path) const{
+
+
+        bool Schema::hasMaxExc(const std::string& path) const {
             return m_hash.hasAttribute(path, "maxExc");
         }
-        
+
         //**********************************************************
         //       Specific functions for LEAF node which is vector  *
         //       Minimum Size of the vector                        *
@@ -480,48 +490,86 @@ namespace karabo {
             return m_hash.getAttribute<unsigned int>(path, "minSize");
         }
 
-        
+
         //******************************************************
         //  Specific functions for LEAF node (which is vector):*
         //  Maximum Size of the vector                         *  
         //******************************************************
-        
-        
-        void Schema::setMaxSize(const std::string& path, const unsigned int& value){
+
+
+        void Schema::setMaxSize(const std::string& path, const unsigned int& value) {
             m_hash.setAttribute(path, "maxSize", value);
         }
 
-        
+
         bool Schema::hasMaxSize(const std::string& path) const {
-           return m_hash.hasAttribute(path, "maxSize");
+            return m_hash.hasAttribute(path, "maxSize");
         }
 
-        
+
         const unsigned int& Schema::getMaxSize(const std::string& path) const {
-          return m_hash.getAttribute<unsigned int>(path, "maxSize");
+            return m_hash.getAttribute<unsigned int>(path, "maxSize");
         }
 
         //******************************************************
         //    has/ WarnLow, WarnHigh, AlarmLow, AlarmHigh      *                   *  
         //******************************************************
-        
+
+
         bool Schema::hasWarnLow(const std::string& path) const {
             return m_hash.hasAttribute(path, "warnLow");
         }
-        
+
+
         bool Schema::hasWarnHigh(const std::string& path) const {
             return m_hash.hasAttribute(path, "warnHigh");
         }
-        
+
+
         bool Schema::hasAlarmLow(const std::string& path) const {
             return m_hash.hasAttribute(path, "alarmLow");
         }
-        
+
+
         bool Schema::hasAlarmHigh(const std::string& path) const {
             return m_hash.hasAttribute(path, "alarmHigh");
         }
-        
-        
+
+        //******************************************************
+        //      min/max for number of nodes in ListElement     *                     *  
+        //******************************************************
+
+
+        void Schema::setMin(const std::string& path, const int& value) {
+            m_hash.setAttribute(path, "min", value);
+        }
+
+
+        bool Schema::hasMin(const std::string& path) const {
+            return m_hash.hasAttribute(path, "min");
+        }
+
+
+        const int& Schema::getMin(const std::string& path) const {
+            return m_hash.getAttribute<int>(path, "min");
+        }
+
+
+        void Schema::setMax(const std::string& path, const int& value) {
+            m_hash.setAttribute(path, "max", value);
+        }
+
+
+        bool Schema::hasMax(const std::string& path) const {
+            return m_hash.hasAttribute(path, "max");
+        }
+
+
+        const int& Schema::getMax(const std::string& path) const {
+            return m_hash.getAttribute<int>(path, "max");
+        }
+
+
         void Schema::addElement(Hash::Node& node) {
 
             if (node.hasAttribute("overwrite")) {
@@ -637,6 +685,8 @@ namespace karabo {
                     vector<string> keys = getParameters(classId);
                     if (!keys.empty()) {
                         stream << "NODE element" << endl;
+
+
                         BOOST_FOREACH(string key, keys) {
                             string path = classId + "." + key;
                             if (getNodeType(path) == Schema::LEAF) {
@@ -658,6 +708,8 @@ namespace karabo {
                 if (getNodeType(classId) == Schema::CHOICE_OF_NODES) {
                     stream << "CHOICE element" << endl;
                     vector<string> keys = getParameters(classId);
+
+
                     BOOST_FOREACH(string key, keys) {
                         string path = classId + "." + key;
                         processingNode(path, stream);
@@ -667,6 +719,8 @@ namespace karabo {
                 if (getNodeType(classId) == Schema::LIST_OF_NODES) {
                     stream << "LIST element" << endl;
                     vector<string> keys = getParameters(classId);
+
+
                     BOOST_FOREACH(string key, keys) {
                         string path = classId + "." + key;
                         processingNode(path, stream);

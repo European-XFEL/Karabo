@@ -49,7 +49,7 @@ namespace karabo {
 
         private: // functions
 
-            void r_createXsd(const karabo::util::Schema& schema, pugi::xml_node& node, const std::string& key = "") const;
+            void r_createXsd(const karabo::util::Schema& schema, pugi::xml_node& node, const bool isChildOfListElement, const std::string& key = "") const;
 
             void appendAttributes(const karabo::util::Schema& schema, const std::string& key, pugi::xml_node& node) const;
             
