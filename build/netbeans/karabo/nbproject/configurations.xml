@@ -171,6 +171,8 @@
         <itemPath>../../../src/karabo/tests/io/HashXmlSerializer_Test.hh</itemPath>
         <itemPath>../../../src/karabo/tests/io/Hdf5_Test.cc</itemPath>
         <itemPath>../../../src/karabo/tests/io/Hdf5_Test.hh</itemPath>
+        <itemPath>../../../src/karabo/tests/io/SchemaXsdSerializer_Test.cc</itemPath>
+        <itemPath>../../../src/karabo/tests/io/SchemaXsdSerializer_Test.hh</itemPath>
         <itemPath>../../../src/karabo/tests/io/TestPathSetup.hh</itemPath>
         <itemPath>../../../src/karabo/tests/io/ioTestRunner.cc</itemPath>
       </logicalFolder>
@@ -634,6 +636,16 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/tests/io/Hdf5_Test.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/io/SchemaXsdSerializer_Test.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/io/SchemaXsdSerializer_Test.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -1419,6 +1431,16 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/tests/io/Hdf5_Test.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/io/SchemaXsdSerializer_Test.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/io/SchemaXsdSerializer_Test.hh"
             ex="false"
             tool="3"
             flavor2="0">
