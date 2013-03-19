@@ -37,6 +37,7 @@ OBJECTDIR=${CND_BUILDDIR}/${CND_CONF}/${CND_PLATFORM}
 OBJECTFILES= \
 	${OBJECTDIR}/_ext/381567218/HashWrap.o \
 	${OBJECTDIR}/_ext/381567218/PyUtilHash.o \
+	${OBJECTDIR}/_ext/381567218/Wrapper.o \
 	${OBJECTDIR}/_ext/381567218/karathon.o
 
 # Test Directory
@@ -79,6 +80,11 @@ ${OBJECTDIR}/_ext/381567218/PyUtilHash.o: ../../../src/karathon/PyUtilHash.cc
 	${MKDIR} -p ${OBJECTDIR}/_ext/381567218
 	${RM} $@.d
 	$(COMPILE.cc) -g -DKARATHON_BOOST_NUMPY -I../../../src -I${KARATHON}/karabo/include -I${KARATHON}/karabo/extern/include/hdf5 -I${KARATHON}/karabo/extern/include/python2.7 -I${KARATHON}/karabo/extern/include -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/381567218/PyUtilHash.o ../../../src/karathon/PyUtilHash.cc
+
+${OBJECTDIR}/_ext/381567218/Wrapper.o: ../../../src/karathon/Wrapper.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/381567218
+	${RM} $@.d
+	$(COMPILE.cc) -g -DKARATHON_BOOST_NUMPY -I../../../src -I${KARATHON}/karabo/include -I${KARATHON}/karabo/extern/include/hdf5 -I${KARATHON}/karabo/extern/include/python2.7 -I${KARATHON}/karabo/extern/include -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/381567218/Wrapper.o ../../../src/karathon/Wrapper.cc
 
 ${OBJECTDIR}/_ext/381567218/karathon.o: ../../../src/karathon/karathon.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/381567218
@@ -131,6 +137,19 @@ ${OBJECTDIR}/_ext/381567218/PyUtilHash_nomain.o: ${OBJECTDIR}/_ext/381567218/PyU
 	    $(COMPILE.cc) -g -DKARATHON_BOOST_NUMPY -I../../../src -I${KARATHON}/karabo/include -I${KARATHON}/karabo/extern/include/hdf5 -I${KARATHON}/karabo/extern/include/python2.7 -I${KARATHON}/karabo/extern/include -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/381567218/PyUtilHash_nomain.o ../../../src/karathon/PyUtilHash.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/381567218/PyUtilHash.o ${OBJECTDIR}/_ext/381567218/PyUtilHash_nomain.o;\
+	fi
+
+${OBJECTDIR}/_ext/381567218/Wrapper_nomain.o: ${OBJECTDIR}/_ext/381567218/Wrapper.o ../../../src/karathon/Wrapper.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/381567218
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/381567218/Wrapper.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} $@.d;\
+	    $(COMPILE.cc) -g -DKARATHON_BOOST_NUMPY -I../../../src -I${KARATHON}/karabo/include -I${KARATHON}/karabo/extern/include/hdf5 -I${KARATHON}/karabo/extern/include/python2.7 -I${KARATHON}/karabo/extern/include -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/381567218/Wrapper_nomain.o ../../../src/karathon/Wrapper.cc;\
+	else  \
+	    ${CP} ${OBJECTDIR}/_ext/381567218/Wrapper.o ${OBJECTDIR}/_ext/381567218/Wrapper_nomain.o;\
 	fi
 
 ${OBJECTDIR}/_ext/381567218/karathon_nomain.o: ${OBJECTDIR}/_ext/381567218/karathon.o ../../../src/karathon/karathon.cc 

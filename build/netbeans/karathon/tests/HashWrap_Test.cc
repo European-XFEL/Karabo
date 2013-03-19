@@ -143,27 +143,27 @@ void HashWrap_Test::testGetSet() {
         CPPUNIT_ASSERT(h.attr("get")("a.b.c2").attr("has")("d"));
         CPPUNIT_ASSERT(h.attr("get")("a.b.c2.d") == "1");
 
-        h.attr("set")("a.b[0]", o_Hash("a", 1));
-        CPPUNIT_ASSERT(h.attr("get")("a").attr("has")("b"));
-        CPPUNIT_ASSERT(h.attr("get")("a").attr("__len__")() == 1);
-        //CPPUNIT_ASSERT(h.is<std::vector<Hash> >("a.b") == true);
-        CPPUNIT_ASSERT(h.attr("get")("a.b").attr("__len__")() == 1);
-        CPPUNIT_ASSERT(h.attr("get")("a.b")[0].attr("__len__")() == 1);
-        CPPUNIT_ASSERT(h.attr("get")("a.b")[0].attr("get")("a") == 1);
-        CPPUNIT_ASSERT(h.attr("get")("a.b[0].a") == 1);
-
-        h.attr("set")("a.b[2]", o_Hash("a", "1"));
-        CPPUNIT_ASSERT(h.attr("get")("a").attr("has")("b"));
-        CPPUNIT_ASSERT(h.attr("get")("a").attr("__len__")() == 1);
-//        CPPUNIT_ASSERT(h.is<std::vector<Hash> >("a.b") == true);
-        CPPUNIT_ASSERT(h.attr("has")("a.b"));
-        CPPUNIT_ASSERT(h.attr("get")("a.b").attr("__len__")() == 3);
-        CPPUNIT_ASSERT(h.attr("get")("a.b[0].a") == 1);
-//        CPPUNIT_ASSERT(h.attr("get")("a.b[1]").attr("empty")());
-        CPPUNIT_ASSERT(h.attr("get")("a.b[2].a") == "1");
-        CPPUNIT_ASSERT(h.attr("get")("a.b")[0].attr("get")("a") == 1);
-        CPPUNIT_ASSERT(h.attr("get")("a.b")[1].attr("empty")());
-        CPPUNIT_ASSERT(h.attr("get")("a.b")[2].attr("get")("a") == "1");
+//        h.attr("set")("a.b[0]", o_Hash("a", 1));
+//        CPPUNIT_ASSERT(h.attr("get")("a").attr("has")("b"));
+//        CPPUNIT_ASSERT(h.attr("get")("a").attr("__len__")() == 1);
+//        //CPPUNIT_ASSERT(h.is<std::vector<Hash> >("a.b") == true);
+//        CPPUNIT_ASSERT(h.attr("get")("a.b").attr("__len__")() == 1);
+//        CPPUNIT_ASSERT(h.attr("get")("a.b")[0].attr("__len__")() == 1);
+//        CPPUNIT_ASSERT(h.attr("get")("a.b")[0].attr("get")("a") == 1);
+//        CPPUNIT_ASSERT(h.attr("get")("a.b[0].a") == 1);
+//
+//        h.attr("set")("a.b[2]", o_Hash("a", "1"));
+//        CPPUNIT_ASSERT(h.attr("get")("a").attr("has")("b"));
+//        CPPUNIT_ASSERT(h.attr("get")("a").attr("__len__")() == 1);
+////        CPPUNIT_ASSERT(h.is<std::vector<Hash> >("a.b") == true);
+//        CPPUNIT_ASSERT(h.attr("has")("a.b"));
+//        CPPUNIT_ASSERT(h.attr("get")("a.b").attr("__len__")() == 3);
+//        CPPUNIT_ASSERT(h.attr("get")("a.b[0].a") == 1);
+////        CPPUNIT_ASSERT(h.attr("get")("a.b[1]").attr("empty")());
+//        CPPUNIT_ASSERT(h.attr("get")("a.b[2].a") == "1");
+//        CPPUNIT_ASSERT(h.attr("get")("a.b")[0].attr("get")("a") == 1);
+//        CPPUNIT_ASSERT(h.attr("get")("a.b")[1].attr("empty")());
+//        CPPUNIT_ASSERT(h.attr("get")("a.b")[2].attr("get")("a") == "1");
 
 //        CPPUNIT_ASSERT(!h.attr("get")("a.b[0]").attr("empty")());
 //        CPPUNIT_ASSERT( h.attr("get")("a.b[1]").attr("empty")());
@@ -188,40 +188,40 @@ void HashWrap_Test::testGetSet() {
         CPPUNIT_ASSERT(false);
     }
 
-    try {
-        bp::object h = o_Hash("a[0]", o_Hash("a", 1), "a[1]", o_Hash("a", 1));
-        CPPUNIT_ASSERT(h.attr("get")("a[0].a") == 1);
-        CPPUNIT_ASSERT(h.attr("get")("a[1].a") == 1);
-    } catch(const bp::error_already_set&) {
-        PyErr_Print();
-        CPPUNIT_ASSERT(false);
-    }
+//    try {
+//        bp::object h = o_Hash("a[0]", o_Hash("a", 1), "a[1]", o_Hash("a", 1));
+//        CPPUNIT_ASSERT(h.attr("get")("a[0].a") == 1);
+//        CPPUNIT_ASSERT(h.attr("get")("a[1].a") == 1);
+//    } catch(const bp::error_already_set&) {
+//        PyErr_Print();
+//        CPPUNIT_ASSERT(false);
+//    }
 
-    try {
-        bp::object h = o_Hash();
-        h.attr("set")("x[0].y[0]", o_Hash("a", 4.2, "b", "red", "c", true));
-        h.attr("set")("x[1].y[0]", o_Hash("a", 4.0, "b", "green", "c", false));
-        CPPUNIT_ASSERT( h.attr("get")("x[0].y[0].c"));
-        CPPUNIT_ASSERT(!h.attr("get")("x[1].y[0].c"));
-        CPPUNIT_ASSERT( h.attr("get")("x[0].y[0].b") == "red");
-        CPPUNIT_ASSERT( h.attr("get")("x[1].y[0].b") == "green");
-    } catch(const bp::error_already_set&) {
-        PyErr_Print();
-        CPPUNIT_ASSERT(false);
-    }
+//    try {
+//        bp::object h = o_Hash();
+//        h.attr("set")("x[0].y[0]", o_Hash("a", 4.2, "b", "red", "c", true));
+//        h.attr("set")("x[1].y[0]", o_Hash("a", 4.0, "b", "green", "c", false));
+//        CPPUNIT_ASSERT( h.attr("get")("x[0].y[0].c"));
+//        CPPUNIT_ASSERT(!h.attr("get")("x[1].y[0].c"));
+//        CPPUNIT_ASSERT( h.attr("get")("x[0].y[0].b") == "red");
+//        CPPUNIT_ASSERT( h.attr("get")("x[1].y[0].b") == "green");
+//    } catch(const bp::error_already_set&) {
+//        PyErr_Print();
+//        CPPUNIT_ASSERT(false);
+//    }
 
-    try {
-        bp::object h1 = o_Hash("a[0].b[0]", o_Hash("a", 1));
-        bp::object h2 = o_Hash("a[0].b[0]", o_Hash("a", 2));
-
-        h1.attr("set")("a[0]", h2);
-        CPPUNIT_ASSERT(h1.attr("get")("a[0].a[0].b[0].a") == 2);
-        h1.attr("set")("a", h2);
-        CPPUNIT_ASSERT(h1.attr("get")("a.a[0].b[0].a") == 2);
-    } catch(const bp::error_already_set&) {
-        PyErr_Print();
-        CPPUNIT_ASSERT(false);
-    }
+//    try {
+//        bp::object h1 = o_Hash("a[0].b[0]", o_Hash("a", 1));
+//        bp::object h2 = o_Hash("a[0].b[0]", o_Hash("a", 2));
+//
+//        h1.attr("set")("a[0]", h2);
+//        CPPUNIT_ASSERT(h1.attr("get")("a[0].a[0].b[0].a") == 2);
+//        h1.attr("set")("a", h2);
+//        CPPUNIT_ASSERT(h1.attr("get")("a.a[0].b[0].a") == 2);
+//    } catch(const bp::error_already_set&) {
+//        PyErr_Print();
+//        CPPUNIT_ASSERT(false);
+//    }
 
     try {
         bp::str s;
