@@ -347,6 +347,10 @@ namespace karabo {
          * Attributes manipulation
          *******************************************************************/
 
+        boost::any& Hash::getAttributeAsAny(const std::string& path,  const std::string& attribute, const char separator) {
+            return getNode(path, separator).getAttributeAsAny(attribute);
+        }
+        
         bool Hash::hasAttribute(const std::string& path, const std::string& attribute, const char separator) const {
             return getNode(path, separator).hasAttribute(attribute);
         }
