@@ -113,7 +113,7 @@ namespace karabo {
             }
             
             if (!key.empty()) {
-                if (schema.hasDisplayedName(key)) {//sufficient condition for 'annotation' to be added to Node element 
+                if (schema.hasDisplayedName(key)) {//sufficient condition for 'annotation' to be added to element 
                     pugi::xml_node annotationNode = rootElementNode.append_child("xs:annotation");
                     createDocumentationNode(schema, key, annotationNode);
                 }
@@ -135,10 +135,10 @@ namespace karabo {
                     leafToXsd(schema, name, allNode);
 
                 } else if (schema.getNodeType(name) == Schema::NODE) {
-
+                    
                     r_createXsd(schema, allNode, false, name);
 
-                } else if (schema.getNodeType(name) == Schema::CHOICE_OF_NODES && schema.getAssignment(name) != Schema::INTERNAL_PARAM) {
+                } else if (schema.getNodeType(name) == Schema::CHOICE_OF_NODES) {
 
                     choiceOfNodesToXsd(schema, name, allNode);
 
@@ -221,10 +221,15 @@ namespace karabo {
 
             vector<string> keys = schema.getParameters(key);
 
-
             BOOST_FOREACH(string name, keys) {
-                string currentKey = key + "." + name;
-                r_createXsd(schema, choiceTag, false, currentKey);
+                string currentKey = key + "." + name;           
+                if (schema.getNodeType(currentKey) == Schema::NODE) {                   
+                   r_createXsd(schema, choiceTag, false, currentKey);            
+                } else if (schema.getNodeType(currentKey) == Schema::CHOICE_OF_NODES) {
+                    choiceOfNodesToXsd(schema, currentKey, choiceTag);
+                } else if (schema.getNodeType(currentKey) == Schema::LIST_OF_NODES) {
+                    listOfNodesToXsd(schema, currentKey, choiceTag);
+                }
             }
         }
 
@@ -248,7 +253,13 @@ namespace karabo {
 
             BOOST_FOREACH(string name, keys) {
                 string currentKey = key + "." + name;
-                r_createXsd(schema, sequenceTag, true, currentKey);
+                if (schema.getNodeType(currentKey) == Schema::NODE) {      
+                   r_createXsd(schema, sequenceTag, true, currentKey);  
+                } else if (schema.getNodeType(currentKey) == Schema::CHOICE_OF_NODES) {
+                    choiceOfNodesToXsd(schema, currentKey, sequenceTag);
+                } else if (schema.getNodeType(currentKey) == Schema::LIST_OF_NODES) {
+                    listOfNodesToXsd(schema, currentKey, sequenceTag);
+                }
             }
         }
 
@@ -423,7 +434,8 @@ namespace karabo {
 
             if (schema.hasDescription(key) || schema.hasDisplayedName(key) || schema.hasExpertLevel(key) ||
                     schema.hasDefaultValue(key) || schema.hasUnit(key) || schema.hasAccessMode(key) ||
-                    schema.hasDisplayType(key) || schema.hasAllowedStates(key)) {
+                    schema.hasDisplayType(key) || schema.hasAllowedStates(key) || schema.hasTags(key) ||
+                    schema.hasMin(key) || schema.hasMax(key) ) {
                 return true;
             } else {
                 return false;
