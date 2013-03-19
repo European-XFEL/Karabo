@@ -262,6 +262,8 @@ void Hash_Test::testGetAs() {
         CPPUNIT_ASSERT(h.getAttributeAs<int > ("a", "a") == 1);
         CPPUNIT_ASSERT_DOUBLES_EQUAL(1.0, h.getAttributeAs<double > ("a", "a"), 0.00001);
         CPPUNIT_ASSERT(static_cast<unsigned int> (h.getAttributeAs<char > ("a", "a")) == 1);
+        boost::any& any = h.getAttributeAsAny("a", "a");
+        CPPUNIT_ASSERT(boost::any_cast<bool>(any) == true);
         h.setAttribute("a", "b", 12);
         h.setAttribute("a", "c", 1.23);
         Hash::Attributes attrs = h.getAttributes("a");
