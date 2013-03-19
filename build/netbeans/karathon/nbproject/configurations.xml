@@ -1,9 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configurationDescriptor version="88">
   <logicalFolder name="root" displayName="root" projectFiles="true" kind="ROOT">
-    <logicalFolder name="f1"
-                   displayName="Data Container Binding"
-                   projectFiles="true">
+    <logicalFolder name="f1" displayName="Hash Binding" projectFiles="true">
       <itemPath>../../../src/karathon/HashWrap.cc</itemPath>
       <itemPath>../../../src/karathon/HashWrap.hh</itemPath>
       <itemPath>../../../src/karathon/NodeWrap.hh</itemPath>
