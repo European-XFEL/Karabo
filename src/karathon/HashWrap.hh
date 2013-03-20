@@ -191,7 +191,7 @@ namespace karabo {
             }
 
             static bp::object pythonGetNode(const karabo::util::Hash& self, const std::string& path, const std::string& separator = ".") {
-                return bp::object(self.getNode(path, separator.at(0)));
+                return bp::object(static_cast<karabo::util::Hash::Node>(self.getNode(path, separator.at(0))));
             }
 
             static bp::object pythonSetNode(karabo::util::Hash& self, const bp::object& node) {
@@ -332,7 +332,8 @@ namespace karabo {
                 boost::optional<karabo::util::Hash::Node&> node = self.find(path, separator.at(0));
                 if (!node)
                     return bp::object();
-                return bp::object(node);
+                //boost::shared_ptr<karabo::util::Hash::Node> ptr(node.get_ptr());
+                return bp::object(node.get());
             }
         };
     }
