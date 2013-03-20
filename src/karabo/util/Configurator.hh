@@ -66,6 +66,7 @@ namespace karabo {
 
             Registry m_registry;
             SchemaFuncRegistry m_schemaFuncRegistry;
+            std::string m_default;
 
         public:
 
@@ -88,6 +89,10 @@ namespace karabo {
                 confTools::PointerToSchemaDescriptionFunction p = confTools::getSchemaDescriptionFunction<T > (0);
                 if (p) Configurator::init().m_schemaFuncRegistry[classId].push_back(p);
             }
+            
+            static void setDefault(const std::string& classId) {
+                Configurator::init().m_default = classId;
+            }
 
             static Schema getSchema(const std::string& classId, const Schema::AssemblyRules& rules = Schema::AssemblyRules()) {
                 Schema schema(classId, rules);
@@ -101,6 +106,12 @@ namespace karabo {
                     }
                 }
                 return schema;
+            }
+            
+            inline static typename BaseClass::Pointer createDefault(const bool validate = true) {
+                string defaultClassId = Configurator::init().m_default;
+                if (defaultClassId.empty) throw KARABO_INIT_EXCEPTION("No default was defined");
+                return create(defaultClassId, Hash(), validate);
             }
 
             inline static typename BaseClass::Pointer create(const karabo::util::Hash& configuration, const bool validate = true) {
