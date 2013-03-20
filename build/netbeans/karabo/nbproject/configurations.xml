@@ -81,6 +81,25 @@
       <itemPath>../../../src/karabo/log/Logger.cc</itemPath>
       <itemPath>../../../src/karabo/log/Logger.hh</itemPath>
     </logicalFolder>
+    <logicalFolder name="f5" displayName="net" projectFiles="true">
+      <logicalFolder name="f2" displayName="Channel" projectFiles="true">
+        <itemPath>../../../src/karabo/net/BrokerChannel.hh</itemPath>
+        <itemPath>../../../src/karabo/net/JmsBrokerChannel.cc</itemPath>
+        <itemPath>../../../src/karabo/net/JmsBrokerChannel.hh</itemPath>
+      </logicalFolder>
+      <logicalFolder name="f3" displayName="Connection" projectFiles="true">
+        <itemPath>../../../src/karabo/net/BrokerConnection.cc</itemPath>
+        <itemPath>../../../src/karabo/net/BrokerConnection.hh</itemPath>
+        <itemPath>../../../src/karabo/net/JmsBrokerConnection.cc</itemPath>
+        <itemPath>../../../src/karabo/net/JmsBrokerConnection.hh</itemPath>
+      </logicalFolder>
+      <logicalFolder name="f1" displayName="IOService" projectFiles="true">
+        <itemPath>../../../src/karabo/net/AbstractIOService.hh</itemPath>
+        <itemPath>../../../src/karabo/net/BrokerIOService.hh</itemPath>
+        <itemPath>../../../src/karabo/net/JmsBrokerIOService.cc</itemPath>
+        <itemPath>../../../src/karabo/net/JmsBrokerIOService.hh</itemPath>
+      </logicalFolder>
+    </logicalFolder>
     <logicalFolder name="f3" displayName="pugiXml" projectFiles="true">
       <itemPath>../../../src/karabo/pugiXml/pugiconfig.hpp</itemPath>
       <itemPath>../../../src/karabo/pugiXml/pugixml.cpp</itemPath>
@@ -180,6 +199,11 @@
         <itemPath>../../../src/karabo/tests/log/Logger_Test.cc</itemPath>
         <itemPath>../../../src/karabo/tests/log/Logger_Test.hh</itemPath>
         <itemPath>../../../src/karabo/tests/log/logTestRunner.cc</itemPath>
+      </logicalFolder>
+      <logicalFolder name="f4" displayName="net_test" projectFiles="true" kind="TEST">
+        <itemPath>../../../src/karabo/tests/net/JmsBroker_Test.cc</itemPath>
+        <itemPath>../../../src/karabo/tests/net/JmsBroker_Test.hh</itemPath>
+        <itemPath>../../../src/karabo/tests/net/netTestRunner.cc</itemPath>
       </logicalFolder>
       <logicalFolder name="f1"
                      displayName="util_test"
@@ -565,6 +589,61 @@
             tool="3"
             flavor2="0">
       </item>
+      <item path="../../../src/karabo/net/AbstractIOService.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/net/BrokerChannel.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/net/BrokerConnection.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/net/BrokerConnection.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/net/BrokerIOService.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/net/JmsBrokerChannel.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/net/JmsBrokerChannel.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/net/JmsBrokerConnection.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/net/JmsBrokerConnection.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/net/JmsBrokerIOService.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/net/JmsBrokerIOService.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="../../../src/karabo/pugiXml/pugiconfig.hpp"
             ex="false"
             tool="3"
@@ -671,6 +750,21 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/tests/log/logTestRunner.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/net/JmsBroker_Test.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/net/JmsBroker_Test.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/net/netTestRunner.cc"
             ex="false"
             tool="1"
             flavor2="0">
@@ -998,6 +1092,20 @@
       <folder path="TestFiles/f3">
         <linkerTool>
           <output>${TESTDIR}/TestFiles/f3</output>
+        </linkerTool>
+      </folder>
+      <folder path="TestFiles/f4">
+        <cTool>
+          <commandLine>`cppunit-config --cflags`</commandLine>
+        </cTool>
+        <ccTool>
+          <commandLine>`cppunit-config --cflags`</commandLine>
+        </ccTool>
+        <linkerTool>
+          <output>${TESTDIR}/TestFiles/f4</output>
+          <linkerLibItems>
+            <linkerOptionItem>`cppunit-config --libs`</linkerOptionItem>
+          </linkerLibItems>
         </linkerTool>
       </folder>
     </conf>
@@ -1360,6 +1468,61 @@
             tool="3"
             flavor2="0">
       </item>
+      <item path="../../../src/karabo/net/AbstractIOService.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/net/BrokerChannel.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/net/BrokerConnection.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/net/BrokerConnection.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/net/BrokerIOService.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/net/JmsBrokerChannel.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/net/JmsBrokerChannel.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/net/JmsBrokerConnection.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/net/JmsBrokerConnection.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/net/JmsBrokerIOService.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/net/JmsBrokerIOService.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="../../../src/karabo/pugiXml/pugiconfig.hpp"
             ex="false"
             tool="3"
@@ -1466,6 +1629,21 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/tests/log/logTestRunner.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/net/JmsBroker_Test.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/net/JmsBroker_Test.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/net/netTestRunner.cc"
             ex="false"
             tool="1"
             flavor2="0">
@@ -1799,6 +1977,20 @@
         </ccTool>
         <linkerTool>
           <output>${TESTDIR}/TestFiles/f3</output>
+          <linkerLibItems>
+            <linkerOptionItem>`cppunit-config --libs`</linkerOptionItem>
+          </linkerLibItems>
+        </linkerTool>
+      </folder>
+      <folder path="TestFiles/f4">
+        <cTool>
+          <commandLine>`cppunit-config --cflags`</commandLine>
+        </cTool>
+        <ccTool>
+          <commandLine>`cppunit-config --cflags`</commandLine>
+        </ccTool>
+        <linkerTool>
+          <output>${TESTDIR}/TestFiles/f4</output>
           <linkerLibItems>
             <linkerOptionItem>`cppunit-config --libs`</linkerOptionItem>
           </linkerLibItems>
