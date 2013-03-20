@@ -2,6 +2,7 @@
 <configurationDescriptor version="88">
   <logicalFolder name="root" displayName="root" projectFiles="true" kind="ROOT">
     <logicalFolder name="f1" displayName="Hash Binding" projectFiles="true">
+      <itemPath>/home/esenov/branch/karaboFramework/src/karathon/AttributesWrap.hh</itemPath>
       <itemPath>../../../src/karathon/HashWrap.cc</itemPath>
       <itemPath>../../../src/karathon/HashWrap.hh</itemPath>
       <itemPath>../../../src/karathon/NodeWrap.hh</itemPath>
@@ -109,6 +110,11 @@
       </item>
       <item path="../../../src/karathon/karathon.cc" ex="false" tool="1" flavor2="0">
       </item>
+      <item path="/home/esenov/branch/karaboFramework/src/karathon/AttributesWrap.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <folder path="TestFiles">
         <linkerTool>
           <linkerDynSerch>
@@ -174,6 +180,11 @@
       <item path="../../../src/karathon/Wrapper.hh" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../../../src/karathon/karathon.cc" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="/home/esenov/branch/karaboFramework/src/karathon/AttributesWrap.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
       </item>
       <folder path="TestFiles/f1">
         <cTool>
