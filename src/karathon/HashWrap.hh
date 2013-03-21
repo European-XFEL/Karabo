@@ -328,12 +328,19 @@ namespace karabo {
                 throw KARABO_PYTHON_EXCEPTION("Python object contains not a C++ 'Hash::Attributes' type");
             }
 
-            static bp::object pythonFind(karabo::util::Hash& self, const std::string& path, const std::string& separator = ".") {
+
+            struct null_deleter {
+
+                void operator()(void const *) const {
+                }
+            };
+
+            static boost::shared_ptr<karabo::util::Hash::Node> pythonFind(karabo::util::Hash& self, const std::string& path, const std::string& separator = ".") {
                 boost::optional<karabo::util::Hash::Node&> node = self.find(path, separator.at(0));
                 if (!node)
-                    return bp::object();
-                //boost::shared_ptr<karabo::util::Hash::Node> ptr(node.get_ptr());
-                return bp::object(node.get());
+                    return boost::shared_ptr<karabo::util::Hash::Node>();
+                return boost::shared_ptr<karabo::util::Hash::Node>(&node.get(), null_deleter());
+                //return bp::object(node.get());
             }
         };
     }
