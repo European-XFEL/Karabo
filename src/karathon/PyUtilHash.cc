@@ -31,7 +31,7 @@ void exportPyUtilHash() {
 
     bp::class_<Hash::Attributes::const_map_iterator>("Hash.Attributes.ConstMapIterator", bp::no_init);
 
-    bp::class_<Hash::Attributes::Node> an("Hash.Attributes.Node", bp::no_init);
+    bp::class_<Hash::Attributes::Node, boost::shared_ptr<Hash::Attributes::Node> > an("Hash.Attributes.Node", bp::no_init);
     an.def("getKey", &AttributesNodeWrap().pythonGetKey);
     an.def("setValue", &AttributesNodeWrap().pythonSetValue, (bp::arg("value")));
     an.def("getValue", &AttributesNodeWrap().pythonGetValue);
@@ -57,7 +57,7 @@ void exportPyUtilHash() {
     a.def("find", &AttributesWrap().pythonFind, (bp::arg("key")));
     a.def("getIt", &AttributesWrap().pythonGetIt, (bp::arg("it")));
 
-    bp::class_<Hash::Node> n("Hash.Node", bp::no_init);
+    bp::class_<Hash::Node, boost::shared_ptr<Hash::Node> > n("Hash.Node", bp::no_init);
     n.def("getKey", &NodeWrap().pythonGetKey);
     n.def("setValue", &NodeWrap().pythonSetValue, (bp::arg("value")));
     n.def("getValue", &NodeWrap().pythonGetValue);
