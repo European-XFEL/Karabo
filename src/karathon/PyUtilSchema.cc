@@ -169,24 +169,13 @@ void exportPyUtilSchema() {
     //DefaultValue<VectorElement< EType, std::vector >, std::vector< EType > > where EType:
     //BOOL, INT32, UINT32, INT64, UINT64, DOUBLE, STRING 
 
-    bp::class_< DefaultValue< VectorElement< bool, std::deque >, std::deque< bool > >, boost::noncopyable > ("DefaultValueVectorElementBOOL", bp::no_init)
-            .def("defaultValue"
-            , &karabo::karathon::DefaultValueVectorWrap<bool>::pyList2VectorDefaultValue
-            , (bp::arg("defValueVec"), bp::arg("defaultValuePyList")))
-            .def("defaultValueFromString"
-            , (VectorElement< bool, std::deque > & (DefaultValue<VectorElement<bool, std::deque>, std::deque<bool, std::allocator<bool> > >::*)(string const &))(&DefaultValue< karabo::util::VectorElement< bool, std::deque >, std::deque< bool > >::defaultValueFromString)
-            , (bp::arg("defaultValue"))
-            , bp::return_internal_reference<> ())
-            .def("noDefaultValue"
-            , (VectorElement< bool, std::deque > & (DefaultValue<VectorElement<bool, std::deque>, std::deque<bool, std::allocator<bool> > >::*)())(&DefaultValue< karabo::util::VectorElement< bool, std::deque >, std::deque< bool > >::noDefaultValue)
-            , bp::return_internal_reference<> ());
-
     KARABO_PYTHON_VECTOR_DEFAULT_VALUE(int, INT32)
     KARABO_PYTHON_VECTOR_DEFAULT_VALUE(unsigned int, UINT32)
     KARABO_PYTHON_VECTOR_DEFAULT_VALUE(long long, INT64)
     KARABO_PYTHON_VECTOR_DEFAULT_VALUE(unsigned long long, UINT64)
     KARABO_PYTHON_VECTOR_DEFAULT_VALUE(double, DOUBLE)
     KARABO_PYTHON_VECTOR_DEFAULT_VALUE(std::string, STRING)
+    KARABO_PYTHON_VECTOR_DEFAULT_VALUE(bool, BOOL)
             
     ///////////////////////////////////////////////////////////////
     //ReadOnlySpecific<VectorElement< EType >, EType >, where EType:
@@ -227,6 +216,7 @@ void exportPyUtilSchema() {
     KARABO_PYTHON_VECTOR(unsigned long long, UINT64)
     KARABO_PYTHON_VECTOR(double, DOUBLE)
     KARABO_PYTHON_VECTOR(string, STRING)   
-
+    KARABO_PYTHON_VECTOR(bool, BOOL)
+ 
 }//end  exportPyUtilSchema
 
