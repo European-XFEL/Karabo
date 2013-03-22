@@ -48,7 +48,7 @@ namespace karabo {
             }
         };
 
-        typedef VectorElement<bool, std::deque> VECTOR_BOOL_ELEMENT;
+        typedef VectorElement<bool> VECTOR_BOOL_ELEMENT;
         typedef VectorElement<signed char> VECTOR_INT8_ELEMENT;
         typedef VectorElement<char> VECTOR_CHAR_ELEMENT;
         typedef VectorElement<signed short> VECTOR_INT16_ELEMENT;
