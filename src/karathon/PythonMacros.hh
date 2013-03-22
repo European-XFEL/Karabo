@@ -131,8 +131,8 @@ bp::class_< ReadOnlySpecVec, boost::noncopyable > ("ReadOnlySpecificVector"#e, b
  * karabo::util::SimpleElement< EType >
  * @endcode
  * where EType: int, long long, double.
- * In Python: INT32_ELEMENT, INT64_ELEMENT, DOUBLE_ELEMENT
- * (Bindings STRING_ELEMENT, BOOL_ELEMENT defined in PyUtilSchema.cc)
+ * In Python: INT32_ELEMENT, ..UINT32.., INT64_ELEMENT, ..UINT64..,
+ * DOUBLE_ELEMENT, STRING_ELEMENT, BOOL_ELEMENT
  *
  */
 #define KARABO_PYTHON_SIMPLE(t, e)\
@@ -214,7 +214,8 @@ KARABO_PYTHON_NUMERIC_ATTRIBUTES \
  * karabo::util::VectorElement< EType, std::vector >
  * @endcode
  * where EType: int, long long, double. 
- * In Python: VECTOR_INT32_ELEMENT, VECTOR_INT64_ELEMENT, VECTOR_DOUBLE_ELEMENT, VECTOR_STRING_ELEMENT.
+ * In Python: VECTOR_INT32_ELEMENT, ..UINT32.., VECTOR_INT64_ELEMENT, ..UINT64..,
+ *  VECTOR_DOUBLE_ELEMENT, VECTOR_STRING_ELEMENT, VECTOR_BOOL_ELEMENT.
  *
  */
 #define KARABO_PYTHON_VECTOR(t, e)\
