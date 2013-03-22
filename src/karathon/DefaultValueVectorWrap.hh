@@ -15,14 +15,14 @@
 namespace bp = boost::python;
 
 namespace karabo {
-    namespace pyexfel {
+    namespace karathon {
 
         template<class T>
         class DefaultValueVectorWrap {
         public:
 
             typedef std::vector< T > VType;
-            typedef karabo::util::VectorElement< T, std::vector > U;
+            typedef karabo::util::VectorElement< T > U;
             typedef karabo::util::DefaultValue< U, VType > DefValueVec;
 
             static void pyList2VectorDefaultValue(DefValueVec& self, const bp::object & obj) {
@@ -38,7 +38,7 @@ namespace karabo {
                     self.defaultValue(v);
 
                 } else {
-                    throw PYTHON_EXCEPTION("Python type of the defaultValue of VectorElement must be a list");
+                    throw KARABO_PYTHON_EXCEPTION("Python type of the defaultValue of VectorElement must be a list");
                 }
             }
         };
@@ -64,36 +64,12 @@ namespace karabo {
                     self.defaultValue(v);
 
                 } else {
-                    throw PYTHON_EXCEPTION("Python type of the defaultValue of VectorElement must be a list");
+                    throw KARABO_PYTHON_EXCEPTION("Python type of the defaultValue of VectorElement must be a list");
                 }
             }
         };
 
     }
-}
-
-#define KARABO_PYTHON_VECTOR_DEFAULT_VALUE(t, e) \
-{\
-typedef t EType;\
-typedef std::vector< EType > VType;\
-typedef VectorElement< EType, std::vector > U;\
-typedef DefaultValue< U, VType > DefValueVec;\
-bp::class_< DefValueVec, boost::noncopyable > ("DefaultValueVectorElement"#e, bp::no_init)\
-.def("defaultValue"\
-, &karabo::pyexfel::DefaultValueVectorWrap<EType>::pyList2VectorDefaultValue\
-, (bp::arg("param"), bp::arg("defaultValuePyList")))\
-.def("defaultValue"\
-, (U & (DefaultValue<U, std::vector<EType, std::allocator<EType> > >::*)(VType const &))(&DefValueVec::defaultValue)\
-, (bp::arg("defaultValue"))\
-, bp::return_internal_reference<> ())\
-.def("defaultValueFromString"\
-, (U & (DefaultValue<U, std::vector<EType, std::allocator<EType> > >::*)(::std::string const &))(&DefValueVec::defaultValueFromString)\
-, (bp::arg("defaultValue"))\
-, bp::return_internal_reference<> ())\
-.def("noDefaultValue"\
-, (U & (DefaultValue<U, std::vector<EType, std::allocator<EType> > >::*)())(&DefValueVec::noDefaultValue)\
-, bp::return_internal_reference<> ())\
-;\
 }
 
 #endif	/* KARABO_PYKARABO_DEFAULTVALUEVECTORWRAP_HH */
