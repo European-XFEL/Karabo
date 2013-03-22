@@ -26,9 +26,17 @@ namespace bp = boost::python;
 namespace karabo {
     namespace pyexfel {
 
-
+        
         class HashWrap {
 
+
+            struct null_deleter {
+
+                void operator()(void const *) const {
+                }
+            };
+
+          
             static void setPyListAsStdVector(karabo::util::Hash& self, const std::string& key, const bp::object& list, bp::ssize_t size, const char sep) {
                 // elements of our vectors require to be of the same type
                 bp::object list0 = list[0];
@@ -311,7 +319,7 @@ namespace karabo {
             }
 
             static bp::object pythonGetAttributes(karabo::util::Hash& self, const std::string& path, const std::string& separator = ".") {
-                return bp::object(self.getAttributes(path, separator.at(0)));
+                return bp::object(self.getAttributes(path, separator.at(0))); 
             }
 
             static void pythonSetAttribute(karabo::util::Hash& self, const std::string& path, const std::string& attribute, const bp::object& value, const std::string& separator = ".") {
@@ -319,7 +327,7 @@ namespace karabo {
                 Wrapper::toAny(value, any);
                 self.setAttribute(path, attribute, any, separator.at(0));
             }
-
+            
             static void pythonSetAttributes(karabo::util::Hash& self, const std::string& path, const bp::object& attributes, const std::string& separator = ".") {
                 if (bp::extract<karabo::util::Hash::Attributes>(attributes).check()) {
                     self.setAttributes(path, bp::extract<karabo::util::Hash::Attributes>(attributes), separator.at(0));
@@ -327,13 +335,6 @@ namespace karabo {
                 }
                 throw KARABO_PYTHON_EXCEPTION("Python object contains not a C++ 'Hash::Attributes' type");
             }
-
-
-            struct null_deleter {
-
-                void operator()(void const *) const {
-                }
-            };
 
             static boost::shared_ptr<karabo::util::Hash::Node> pythonFind(karabo::util::Hash& self, const std::string& path, const std::string& separator = ".") {
                 boost::optional<karabo::util::Hash::Node&> node = self.find(path, separator.at(0));

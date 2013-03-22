@@ -20,28 +20,58 @@ using namespace karabo::util;
 using namespace std;
 using namespace karabo::pyexfel;
 
+typedef  karabo::util::Element<std::string, karabo::util::OrderedMap<std::string, karabo::util::Element<std::string, bool> > > HashNode;
+
 void exportPyUtilHash() {
 
 #    ifdef KARATHON_BOOST_NUMPY
     bn::initialize();
 #    endif
 
+    bp::docstring_options docs(true, true, false);
 
-    bp::class_<Hash::Attributes::map_iterator>("Hash.Attributes.MapIterator", bp::no_init);
+//    using boost::python::iterator;
+//    bp::def("range", &karabo::pyexfel::range);
+    
+    bp::class_<Hash::Attributes::map_iterator>("HashAttributesMapIterator", bp::no_init);
 
-    bp::class_<Hash::Attributes::const_map_iterator>("Hash.Attributes.ConstMapIterator", bp::no_init);
+    bp::class_<Hash::Attributes::const_map_iterator>("HashAttributesConstMapIterator", bp::no_init);
 
-    bp::class_<Hash::Attributes::Node, boost::shared_ptr<Hash::Attributes::Node> > an("Hash.Attributes.Node", bp::no_init);
-    an.def("getKey", &AttributesNodeWrap().pythonGetKey);
-    an.def("setValue", &AttributesNodeWrap().pythonSetValue, (bp::arg("value")));
-    an.def("getValue", &AttributesNodeWrap().pythonGetValue);
-    an.def("getValueAs", &AttributesNodeWrap().pythonGetValueAs, (bp::arg("type")));
-    an.def("getType", &AttributesNodeWrap().pythonGetType);
-    an.def("setType", &AttributesNodeWrap().pythonSetType, (bp::arg("type")));
-    
-    
-    
-    bp::class_<Hash::Attributes> a("Hash.Attributes", bp::no_init);
+    bp::class_<Hash::Attributes::Node, boost::shared_ptr<Hash::Attributes::Node> > an("HashAttributesNode", bp::no_init);
+    an.def("getKey", &AttributesNodeWrap().pythonGetKey, "Get key of current node in attribute's container");
+    an.def("setValue", &AttributesNodeWrap().pythonSetValue, (bp::arg("value")), "Set value for current node in attribute's container");
+    an.def("getValue", &AttributesNodeWrap().pythonGetValue, "Get value for current node in attribute's container");
+    an.def("getValueAs", &AttributesNodeWrap().pythonGetValueAs, (bp::arg("type")), "Get value as a type given as an argument for current node");
+    an.def("getType", &AttributesNodeWrap().pythonGetType, "Get type of the value kept in current node");
+    an.def("setType", &AttributesNodeWrap().pythonSetType, (bp::arg("type")), "Set type for value kept in current node");
+
+
+
+    bp::class_<Hash::Attributes> a("HashAttributes",
+                                   "The HashAttributes class is a heterogeneous container with string key and \"any object\" value\n"
+                                   "that preserves insertion order, i.e. it behaves like ordered map");
+    a.def(bp::init<>());
+    a.def(bp::init< std::string const &, bp::object const & >());
+    a.def(bp::init< std::string const &, bp::object const &,
+          std::string const &, bp::object const & >());
+    a.def(bp::init< std::string const &, bp::object const &,
+          std::string const &, bp::object const &,
+          std::string const &, bp::object const & >());
+    a.def(bp::init< std::string const &, bp::object const &,
+          std::string const &, bp::object const &,
+          std::string const &, bp::object const &,
+          std::string const &, bp::object const & >());
+    a.def(bp::init< std::string const &, bp::object const &,
+          std::string const &, bp::object const &,
+          std::string const &, bp::object const &,
+          std::string const &, bp::object const &,
+          std::string const &, bp::object const & >());
+    a.def(bp::init< std::string const &, bp::object const &,
+          std::string const &, bp::object const &,
+          std::string const &, bp::object const &,
+          std::string const &, bp::object const &,
+          std::string const &, bp::object const &,
+          std::string const &, bp::object const & >());
     a.def("has", &AttributesWrap().pythonHas, (bp::arg("key")));
     a.def("isType", &AttributesWrap().pythonHas, (bp::arg("key"), bp::arg("type")));
     a.def("erase", &AttributesWrap().pythonErase, (bp::arg("key")));
@@ -56,8 +86,9 @@ void exportPyUtilHash() {
     a.def("__setitem__", &AttributesWrap().pythonSet, (bp::arg("key"), bp::arg("value")));
     a.def("find", &AttributesWrap().pythonFind, (bp::arg("key")));
     a.def("getIt", &AttributesWrap().pythonGetIt, (bp::arg("it")));
+    a.def("__iter__", bp::iterator<Hash::Attributes>());
 
-    bp::class_<Hash::Node, boost::shared_ptr<Hash::Node> > n("Hash.Node", bp::no_init);
+    bp::class_<HashNode, boost::shared_ptr<HashNode>, boost::noncopyable > n("HashNode", bp::no_init);
     n.def("getKey", &NodeWrap().pythonGetKey);
     n.def("setValue", &NodeWrap().pythonSetValue, (bp::arg("value")));
     n.def("getValue", &NodeWrap().pythonGetValue);
@@ -72,7 +103,9 @@ void exportPyUtilHash() {
     n.def("setType", &NodeWrap().pythonSetType, (bp::arg("type")));
 
 
-    bp::class_<Hash > h("Hash");
+    bp::class_<Hash > h("Hash", "The Hash class can be regarded as a generic hash container, which associates a string key to a value of any type.\n"
+                        "Optionally attributes of any value-type can be associated to each hash-key.  The Hash preserves insertion order.  The Hash\n"
+                        "class is much like a XML-DOM container with the difference of allowing only unique keys on a given tree-level.");
     h.def(bp::init< std::string const & >());
     h.def(bp::init< Hash const & >());
     h.def(bp::init< std::string const &, bp::object const & >());
@@ -125,9 +158,16 @@ void exportPyUtilHash() {
     //    h.def("update", &Hash::update, (bp::arg("hash")));
     h.def("flatten", &HashWrap().pythonFlatten, (bp::arg("flat"), bp::arg("sep") = "."));
     h.def("unflatten", &HashWrap().pythonUnFlatten, (bp::arg("tree"), bp::arg("sep") = "."));
-    h.def("find", &HashWrap().pythonFind, (bp::arg("path"), bp::arg("sep") = "."));
-    h.def("setNode", &HashWrap().pythonSetNode, (bp::arg("node")));
-    h.def("getNode", &HashWrap().pythonGetNode, (bp::arg("path"), bp::arg("sep") = "."));
+    h.def("find", &HashWrap().pythonFind, (bp::arg("path"), bp::arg("sep") = "."),
+          "Find node in current Hash using \"path\".  Optionally the separator \"sep\" may be defined.\n"
+          "Returns not a copy but reference to the existing Hash.Node object or \"None\".\n"
+          "If you do any changes via returned object, these changes will be reflected in the current Hash object.\n"
+          "Example:\n\th = Hash('a.b.c', 1)\n\tnode = h.find('a.b.c')\n\tif node is not None: node.setValue(2)");
+    h.def("setNode", &HashWrap().pythonSetNode, (bp::arg("node")),
+          "Set \"node\" into current Hash object.");
+    h.def("getNode", &HashWrap().pythonGetNode, (bp::arg("path"), bp::arg("sep") = "."),
+          "Returns a copy of found node (not a reference!), so if you do any changes via returned object,\n"
+          "these changes will not be reflected in the current Hash object.");
     h.def("getAttribute", &HashWrap().pythonGetAttribute, (bp::arg("path"), bp::arg("attribute"), bp::arg("sep") = "."));
     h.def("getAttributeAs", &HashWrap().pythonGetAttributeAs, (bp::arg("path"), bp::arg("attribute"), bp::arg("type"), bp::arg("sep") = "."));
     h.def("getAttributes", &HashWrap().pythonGetAttributes, (bp::arg("path"), bp::arg("sep") = "."));
