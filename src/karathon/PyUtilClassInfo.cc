@@ -25,8 +25,8 @@ void exportPyUtilClassInfo() { //exposing karabo::util::ClassInfo
             , (string const & ( ClassInfo::* )(  ) const)( &ClassInfo::getClassName )
             , bp::return_value_policy< bp::copy_const_reference >() )
         .def(
-            "getConfigVersion"
-            , (string const & ( ClassInfo::* )(  ) const)( &ClassInfo::getConfigVersion )
+            "getVersion"
+            , (string const & ( ClassInfo::* )(  ) const)( &ClassInfo::getVersion )
             , bp::return_value_policy< bp::copy_const_reference >() )
         .def(
             "getLogCategory"

@@ -18,9 +18,9 @@ namespace bp = boost::python;
 
 //void exportPyVectorContainer();
 void exportPyUtilHash();
-//void exportPyUtilSchema();
+void exportPyUtilSchema();
 //void exportPyUtilTypes();
-//void exportPyUtilClassInfo();
+void exportPyUtilClassInfo();
 //void exportPyIoWriter();
 //void exportPyIoReader();
 //void exportPyIoFormat();
@@ -100,9 +100,9 @@ BOOST_PYTHON_MODULE(libkarathon) {
 //
 //    exportPyVectorContainer();
     exportPyUtilHash();
-//    exportPyUtilSchema();
+    exportPyUtilSchema();
 //    exportPyUtilTypes();
-//    exportPyUtilClassInfo();
+    exportPyUtilClassInfo();
 //
 //    exportPyXmsRequestor();
 //    exportPyXmsSignalSlotable();
