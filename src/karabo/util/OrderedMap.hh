@@ -10,10 +10,8 @@
 
 #include <map>
 #include <list>
-
 #include <boost/any.hpp>
-
-#include "DoubleReferenceIterator.hh"
+#include <boost/iterator/indirect_iterator.hpp>
 #include "Types.hh"
 #include "Exception.hh"
 
@@ -21,9 +19,9 @@ namespace karabo {
 
     namespace util {
 
+
         template<class KeyType, class MappedType>
         class OrderedMap {
-
             typedef std::list<MappedType*> ListType;
             typedef std::map<KeyType, MappedType> MapType;
 
@@ -40,8 +38,25 @@ namespace karabo {
             typedef typename ListType::iterator list_iterator;
             typedef typename ListType::const_iterator const_list_iterator;
 
-            typedef DoubleReferenceIterator<ListType, MappedType> iterator;
-            typedef ConstDoubleReferenceIterator<ListType, MappedType> const_iterator;
+            typedef boost::indirect_iterator<list_iterator> iterator;
+            typedef boost::indirect_iterator<const_list_iterator> const_iterator;
+
+            iterator begin() {
+                return m_listNodes.begin();
+            }
+
+            const_iterator begin() const {
+                return m_listNodes.begin();
+            }
+
+            iterator end() {
+                return m_listNodes.end();
+            }
+
+            const_iterator end() const {
+                return m_listNodes.end();
+            }
+
 
         public:
 
@@ -80,13 +95,13 @@ namespace karabo {
 
             OrderedMap<KeyType, MappedType>& operator=(const OrderedMap<KeyType, MappedType>& other);
 
-            list_iterator begin();
+            list_iterator lbegin();
 
-            const_list_iterator begin() const;
+            const_list_iterator lbegin() const;
 
-            list_iterator end();
+            list_iterator lend();
 
-            const_list_iterator end() const;
+            const_list_iterator lend() const;
 
             map_iterator mbegin();
 
@@ -252,22 +267,22 @@ namespace karabo {
         }
 
         template<class KeyType, class MappedType>
-        inline typename OrderedMap<KeyType, MappedType>::list_iterator OrderedMap<KeyType, MappedType>::begin() {
+        inline typename OrderedMap<KeyType, MappedType>::list_iterator OrderedMap<KeyType, MappedType>::lbegin() {
             return m_listNodes.begin();
         }
 
         template<class KeyType, class MappedType>
-        inline typename OrderedMap<KeyType, MappedType>::const_list_iterator OrderedMap<KeyType, MappedType>::begin() const {
+        inline typename OrderedMap<KeyType, MappedType>::const_list_iterator OrderedMap<KeyType, MappedType>::lbegin() const {
             return m_listNodes.begin();
         }
 
         template<class KeyType, class MappedType>
-        inline typename OrderedMap<KeyType, MappedType>::list_iterator OrderedMap<KeyType, MappedType>::end() {
+        inline typename OrderedMap<KeyType, MappedType>::list_iterator OrderedMap<KeyType, MappedType>::lend() {
             return m_listNodes.end();
         }
 
         template<class KeyType, class MappedType>
-        inline typename OrderedMap<KeyType, MappedType>::const_list_iterator OrderedMap<KeyType, MappedType>::end() const {
+        inline typename OrderedMap<KeyType, MappedType>::const_list_iterator OrderedMap<KeyType, MappedType>::lend() const {
             return m_listNodes.end();
         }
 
