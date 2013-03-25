@@ -26,7 +26,7 @@ namespace bp = boost::python;
 namespace karabo {
     namespace pyexfel {
 
-        
+
         class HashWrap {
 
 
@@ -36,7 +36,6 @@ namespace karabo {
                 }
             };
 
-          
             static void setPyListAsStdVector(karabo::util::Hash& self, const std::string& key, const bp::object& list, bp::ssize_t size, const char sep) {
                 // elements of our vectors require to be of the same type
                 bp::object list0 = list[0];
@@ -319,7 +318,7 @@ namespace karabo {
             }
 
             static bp::object pythonGetAttributes(karabo::util::Hash& self, const std::string& path, const std::string& separator = ".") {
-                return bp::object(self.getAttributes(path, separator.at(0))); 
+                return bp::object(self.getAttributes(path, separator.at(0)));
             }
 
             static void pythonSetAttribute(karabo::util::Hash& self, const std::string& path, const std::string& attribute, const bp::object& value, const std::string& separator = ".") {
@@ -327,7 +326,7 @@ namespace karabo {
                 Wrapper::toAny(value, any);
                 self.setAttribute(path, attribute, any, separator.at(0));
             }
-            
+
             static void pythonSetAttributes(karabo::util::Hash& self, const std::string& path, const bp::object& attributes, const std::string& separator = ".") {
                 if (bp::extract<karabo::util::Hash::Attributes>(attributes).check()) {
                     self.setAttributes(path, bp::extract<karabo::util::Hash::Attributes>(attributes), separator.at(0));
@@ -342,6 +341,14 @@ namespace karabo {
                     return boost::shared_ptr<karabo::util::Hash::Node>();
                 // Wrapping the pointer to the existing memory location with null deleter
                 return boost::shared_ptr<karabo::util::Hash::Node>(&node.get(), null_deleter());
+            }
+
+            static bp::object __getitem__(karabo::util::Hash& self, const bp::object& obj) {
+                if (bp::extract<karabo::util::Hash::Node>(obj).check()) {
+                    const karabo::util::Hash::Node& node = bp::extract<karabo::util::Hash::Node>(obj);
+                    return Wrapper::toObject(node.getValueAsAny());
+                }
+                return pythonGet(self, bp::extract<std::string>(obj));
             }
         };
     }

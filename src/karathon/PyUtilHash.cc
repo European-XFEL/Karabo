@@ -88,7 +88,9 @@ void exportPyUtilHash() {
     a.def("getIt", &AttributesWrap().pythonGetIt, (bp::arg("it")));
     a.def("__iter__", bp::iterator<Hash::Attributes>());
 
-    bp::class_<HashNode, boost::shared_ptr<HashNode>, boost::noncopyable > n("HashNode", bp::no_init);
+    bp::class_<HashNode, boost::shared_ptr<HashNode> > n("HashNode", bp::init<>());
+    n.def("__repr__", &NodeWrap().pythonGetKey);
+    n.def("__str__", &NodeWrap().pythonGetKey);
     n.def("getKey", &NodeWrap().pythonGetKey);
     n.def("setValue", &NodeWrap().pythonSetValue, (bp::arg("value")));
     n.def("getValue", &NodeWrap().pythonGetValue);
@@ -139,7 +141,7 @@ void exportPyUtilHash() {
     h.def("set", &HashWrap().pythonSet, (bp::arg("path"), bp::arg("value"), bp::arg("sep") = "."));
     h.def("__setitem__", &HashWrap().pythonSet, (bp::arg("path"), bp::arg("value"), bp::arg("sep") = "."));
     h.def("get", &HashWrap().pythonGet, (bp::arg("path"), bp::arg("sep") = "."));
-    h.def("__getitem__", &HashWrap().pythonGet, (bp::arg("path"), bp::arg("sep") = "."));
+    h.def("__getitem__", &HashWrap().__getitem__, (bp::arg("iterator")));
     h.def("has", &HashWrap().pythonHas, (bp::arg("path"), bp::arg("sep") = "."));
     h.def("__contains__", &HashWrap().pythonHas, (bp::arg("path"), bp::arg("sep") = "."));
     h.def("erase", &HashWrap().pythonErase, (bp::arg("path"), bp::arg("sep") = "."));
