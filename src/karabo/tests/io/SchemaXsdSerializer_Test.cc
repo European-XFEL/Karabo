@@ -7,7 +7,8 @@
 
 #include <karabo/io/SchemaXsdSerializer.hh>
 #include "SchemaXsdSerializer_Test.hh"
-
+#include "TestPathSetup.hh"
+#include <karabo/io/TextFileOutput.hh>
 #include <karabo/util/SimpleElement.hh>
 #include <karabo/util/ChoiceElement.hh>
 #include <karabo/util/NodeElement.hh>
@@ -29,8 +30,6 @@ SchemaXsdSerializer_Test::~SchemaXsdSerializer_Test() {
 
 
 void SchemaXsdSerializer_Test::setUp() {
-
-
 }
 
 
@@ -197,8 +196,51 @@ void SchemaXsdSerializer_Test::testXsdSerialization() {
     //cout << "Schema : \n" << testSchema << endl;
 
     TextSerializer<Schema>::Pointer p = TextSerializer<Schema>::create("Xsd");
-
+     
     std::string archive;
     p->save(testSchema, archive);
     //cout << "\n XSD representation: \n" << archive << endl;
+}    
+
+void SchemaXsdSerializer_Test::testTextFileOutputSchema() {
+    
+    Schema testSchema("TestSchema", Schema::AssemblyRules(READ | WRITE | INIT));
+    TestSchemaXsdSerializer::expectedParameters(testSchema);
+    
+    string fileName = resourcePath("testSchemaFile.xsd");
+       
+    Output<Schema>::Pointer out = Output<Schema>::create("TextFile", Hash("filename", fileName, "format.Xsd.indentation", 2));
+    out->write(testSchema);
+
+    ifstream newFile(fileName.c_str());
+
+    string fnameEtalon = resourcePath("TestSchemaFile_readonly.xsd");
+    ifstream etalonFile(fnameEtalon.c_str());
+
+    if (etalonFile.is_open()) {
+        if (newFile.is_open()) {
+
+            while (etalonFile.good()) {
+                while (newFile.good()) {
+                    string etalonLine, newLine;
+
+                    getline(etalonFile, etalonLine);
+
+                    getline(newFile, newLine);
+
+                    if (!etalonLine.compare(newLine) == 0) {
+                        CPPUNIT_ASSERT(false);
+                    }
+                }
+            }
+            etalonFile.close();
+            newFile.close();
+        } else {
+            cout << "Error opening file " << fileName << endl;
+        }
+    } else {
+        cout << "Error opening etalon file " << fnameEtalon << endl;
+    }
+
+      
 }

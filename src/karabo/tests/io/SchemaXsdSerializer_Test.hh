@@ -14,6 +14,7 @@
 class SchemaXsdSerializer_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST_SUITE(SchemaXsdSerializer_Test);
     CPPUNIT_TEST(testXsdSerialization);
+    CPPUNIT_TEST(testTextFileOutputSchema); 
     CPPUNIT_TEST_SUITE_END();
 
 public:
@@ -24,7 +25,8 @@ public:
 
 private:
     void testXsdSerialization();
-
+    void testTextFileOutputSchema();
+    
 };
 
 #endif	/* SCHEMAXSDSERIALIZER_TEST_HH */
