@@ -32,12 +32,9 @@ namespace karabo {
      */
     namespace net {
 
-        typedef boost::system::error_code ErrorCode;
-
-
         class BrokerChannel;
-        typedef boost::shared_ptr<BrokerChannel> BrokerChannelPointer;
-        typedef boost::function<void (BrokerChannelPointer, const std::string&) > BrokerErrorHandler;
+        
+        typedef boost::function<void (boost::shared_ptr<BrokerChannel>, const std::string&) > BrokerErrorHandler;
 
         /**
          * The BrokerConnection class.
@@ -46,15 +43,15 @@ namespace karabo {
          */
         class BrokerConnection : public boost::enable_shared_from_this<BrokerConnection> {
 
+            typedef boost::shared_ptr<BrokerChannel> BrokerChannelPointer;
+            
+
             friend class BrokerChannel;
-            
-//            karabo::io::TextSerializer<karabo::util::Hash>::Pointer m_textSerializer;
-//            karabo::io::BinarySerializer<karabo::util::Hash>::Pointer m_binarySerializer;
-            
+
             std::set<BrokerChannelPointer> m_channels;
 
             boost::mutex m_channelMutex;
-            
+
         public:
 
             KARABO_CLASSINFO(BrokerConnection, "Connection", "1.0")
@@ -126,9 +123,9 @@ namespace karabo {
 
         private: // functions
 
-//            void hashToString(const karabo::util::Hash& hash, std::string& serializedHash);
-//
-//            void stringToHash(const std::string& serializedHash, karabo::util::Hash& hash);
+            //            void hashToString(const karabo::util::Hash& hash, std::string& serializedHash);
+            //
+            //            void stringToHash(const std::string& serializedHash, karabo::util::Hash& hash);
 
             void unregisterChannel(BrokerChannelPointer channel) {
                 boost::mutex::scoped_lock lock(m_channelMutex);
@@ -142,13 +139,13 @@ namespace karabo {
                 return shared_from_this();
             }
 
-//            std::string getHashFormat() {
-//                return m_hashFormat->getClassInfo().getClassId();
-//            }
+            //            std::string getHashFormat() {
+            //                return m_hashFormat->getClassInfo().getClassId();
+            //            }
 
         private: // members
 
-          
+
         };
 
 
@@ -158,4 +155,4 @@ namespace karabo {
 // TODO Windows
 //KARABO_REGISTER_FACTORY_BASE_HH(karabo::net::BrokerConnection, TEMPLATE_NET, DECLSPEC_NET)
 
-#endif	/* KARABO_NET_ACONNECTION_HH */
+#endif

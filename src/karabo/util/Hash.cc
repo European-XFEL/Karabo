@@ -179,6 +179,8 @@ namespace karabo {
         }
 
 
+        // TODO: Idea of SE: Expose as shared_pointer<Node>, and let it be empty if not found
+        // Use std::map iterator inside
         boost::optional<const Hash::Node&> Hash::find(const std::string& path, const char separator) const {
             try {
                 return getNode(path, separator);
