@@ -82,23 +82,43 @@
       <itemPath>../../../src/karabo/log/Logger.hh</itemPath>
     </logicalFolder>
     <logicalFolder name="f5" displayName="net" projectFiles="true">
-      <logicalFolder name="f2" displayName="Channel" projectFiles="true">
-        <itemPath>../../../src/karabo/net/BrokerChannel.hh</itemPath>
-        <itemPath>../../../src/karabo/net/JmsBrokerChannel.cc</itemPath>
-        <itemPath>../../../src/karabo/net/JmsBrokerChannel.hh</itemPath>
+      <logicalFolder name="f4" displayName="Broker" projectFiles="true">
+        <logicalFolder name="f2" displayName="Channel" projectFiles="true">
+          <itemPath>../../../src/karabo/net/BrokerChannel.hh</itemPath>
+          <itemPath>../../../src/karabo/net/JmsBrokerChannel.cc</itemPath>
+          <itemPath>../../../src/karabo/net/JmsBrokerChannel.hh</itemPath>
+        </logicalFolder>
+        <logicalFolder name="f3" displayName="Connection" projectFiles="true">
+          <itemPath>../../../src/karabo/net/BrokerConnection.cc</itemPath>
+          <itemPath>../../../src/karabo/net/BrokerConnection.hh</itemPath>
+          <itemPath>../../../src/karabo/net/JmsBrokerConnection.cc</itemPath>
+          <itemPath>../../../src/karabo/net/JmsBrokerConnection.hh</itemPath>
+        </logicalFolder>
+        <logicalFolder name="f1" displayName="IOService" projectFiles="true">
+          <itemPath>../../../src/karabo/net/BrokerIOService.hh</itemPath>
+          <itemPath>../../../src/karabo/net/JmsBrokerIOService.cc</itemPath>
+          <itemPath>../../../src/karabo/net/JmsBrokerIOService.hh</itemPath>
+        </logicalFolder>
       </logicalFolder>
-      <logicalFolder name="f3" displayName="Connection" projectFiles="true">
-        <itemPath>../../../src/karabo/net/BrokerConnection.cc</itemPath>
-        <itemPath>../../../src/karabo/net/BrokerConnection.hh</itemPath>
-        <itemPath>../../../src/karabo/net/JmsBrokerConnection.cc</itemPath>
-        <itemPath>../../../src/karabo/net/JmsBrokerConnection.hh</itemPath>
+      <logicalFolder name="f1" displayName="Point-2-Point" projectFiles="true">
+        <logicalFolder name="f3" displayName="Channel" projectFiles="true">
+          <itemPath>../../../src/karabo/net/Channel.hh</itemPath>
+          <itemPath>../../../src/karabo/net/TcpChannel.cc</itemPath>
+          <itemPath>../../../src/karabo/net/TcpChannel.hh</itemPath>
+        </logicalFolder>
+        <logicalFolder name="f1" displayName="Connection" projectFiles="true">
+          <itemPath>../../../src/karabo/net/Connection.cc</itemPath>
+          <itemPath>../../../src/karabo/net/Connection.hh</itemPath>
+          <itemPath>../../../src/karabo/net/TcpConnection.cc</itemPath>
+          <itemPath>../../../src/karabo/net/TcpConnection.hh</itemPath>
+        </logicalFolder>
+        <logicalFolder name="f2" displayName="IOService" projectFiles="true">
+          <itemPath>../../../src/karabo/net/AsioIOService.cc</itemPath>
+          <itemPath>../../../src/karabo/net/AsioIOService.hh</itemPath>
+        </logicalFolder>
       </logicalFolder>
-      <logicalFolder name="f1" displayName="IOService" projectFiles="true">
-        <itemPath>../../../src/karabo/net/AbstractIOService.hh</itemPath>
-        <itemPath>../../../src/karabo/net/BrokerIOService.hh</itemPath>
-        <itemPath>../../../src/karabo/net/JmsBrokerIOService.cc</itemPath>
-        <itemPath>../../../src/karabo/net/JmsBrokerIOService.hh</itemPath>
-      </logicalFolder>
+      <itemPath>../../../src/karabo/net/AbstractIOService.hh</itemPath>
+      <itemPath>../../../src/karabo/net/IOService.hh</itemPath>
     </logicalFolder>
     <logicalFolder name="f3" displayName="pugiXml" projectFiles="true">
       <itemPath>../../../src/karabo/pugiXml/pugiconfig.hpp</itemPath>
@@ -259,6 +279,7 @@
           <warningLevel>2</warningLevel>
         </ccTool>
         <linkerTool>
+          <output>${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/lib/libkarabo.${CND_DLIB_EXT}</output>
           <linkerAddLib>
             <pElem>/opt/local/lib/nss</pElem>
             <pElem>/opt/local/lib/nspr</pElem>
@@ -594,6 +615,16 @@
             tool="3"
             flavor2="0">
       </item>
+      <item path="../../../src/karabo/net/AsioIOService.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/net/AsioIOService.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="../../../src/karabo/net/BrokerChannel.hh"
             ex="false"
             tool="3"
@@ -610,6 +641,23 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/net/BrokerIOService.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/net/Channel.hh" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../../../src/karabo/net/Connection.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/net/Connection.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/net/IOService.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -640,6 +688,26 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/net/JmsBrokerIOService.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/net/TcpChannel.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/net/TcpChannel.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/net/TcpConnection.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/net/TcpConnection.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -1473,6 +1541,16 @@
             tool="3"
             flavor2="0">
       </item>
+      <item path="../../../src/karabo/net/AsioIOService.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/net/AsioIOService.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="../../../src/karabo/net/BrokerChannel.hh"
             ex="false"
             tool="3"
@@ -1489,6 +1567,23 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/net/BrokerIOService.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/net/Channel.hh" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../../../src/karabo/net/Connection.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/net/Connection.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/net/IOService.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -1519,6 +1614,26 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/net/JmsBrokerIOService.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/net/TcpChannel.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/net/TcpChannel.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/net/TcpConnection.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/net/TcpConnection.hh"
             ex="false"
             tool="3"
             flavor2="0">

@@ -61,10 +61,14 @@ OBJECTFILES= \
 	${OBJECTDIR}/_ext/1103111265/Logger.o \
 	${OBJECTDIR}/_ext/1103111265/OstreamAppenderConfigurator.o \
 	${OBJECTDIR}/_ext/1103111265/RollingFileAppenderConfigurator.o \
+	${OBJECTDIR}/_ext/1103112890/AsioIOService.o \
 	${OBJECTDIR}/_ext/1103112890/BrokerConnection.o \
+	${OBJECTDIR}/_ext/1103112890/Connection.o \
 	${OBJECTDIR}/_ext/1103112890/JmsBrokerChannel.o \
 	${OBJECTDIR}/_ext/1103112890/JmsBrokerConnection.o \
 	${OBJECTDIR}/_ext/1103112890/JmsBrokerIOService.o \
+	${OBJECTDIR}/_ext/1103112890/TcpChannel.o \
+	${OBJECTDIR}/_ext/1103112890/TcpConnection.o \
 	${OBJECTDIR}/_ext/1080827789/pugixml.o \
 	${OBJECTDIR}/_ext/163016059/Base64.o \
 	${OBJECTDIR}/_ext/163016059/ClassInfo.o \
@@ -110,11 +114,11 @@ LDLIBSOPTIONS=-L/opt/local/lib/nss -L/opt/local/lib/nspr -L${KARABO}/extern/lib 
 
 # Build Targets
 .build-conf: ${BUILD_SUBPROJECTS}
-	"${MAKE}"  -f nbproject/Makefile-${CND_CONF}.mk ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libkarabo.${CND_DLIB_EXT}
+	"${MAKE}"  -f nbproject/Makefile-${CND_CONF}.mk ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/lib/libkarabo.${CND_DLIB_EXT}
 
-${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libkarabo.${CND_DLIB_EXT}: ${OBJECTFILES}
-	${MKDIR} -p ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}
-	${LINK.cc} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libkarabo.${CND_DLIB_EXT} ${OBJECTFILES} ${LDLIBSOPTIONS} -shared -fPIC
+${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/lib/libkarabo.${CND_DLIB_EXT}: ${OBJECTFILES}
+	${MKDIR} -p ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/lib
+	${LINK.cc} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/lib/libkarabo.${CND_DLIB_EXT} ${OBJECTFILES} ${LDLIBSOPTIONS} -shared -fPIC
 
 ${OBJECTDIR}/_ext/1072794519/BinaryFileInput.o: ../../../src/karabo/io/BinaryFileInput.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1072794519
@@ -246,10 +250,20 @@ ${OBJECTDIR}/_ext/1103111265/RollingFileAppenderConfigurator.o: ../../../src/kar
 	${RM} $@.d
 	$(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1103111265/RollingFileAppenderConfigurator.o ../../../src/karabo/log/RollingFileAppenderConfigurator.cc
 
+${OBJECTDIR}/_ext/1103112890/AsioIOService.o: ../../../src/karabo/net/AsioIOService.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1103112890
+	${RM} $@.d
+	$(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1103112890/AsioIOService.o ../../../src/karabo/net/AsioIOService.cc
+
 ${OBJECTDIR}/_ext/1103112890/BrokerConnection.o: ../../../src/karabo/net/BrokerConnection.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1103112890
 	${RM} $@.d
 	$(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1103112890/BrokerConnection.o ../../../src/karabo/net/BrokerConnection.cc
+
+${OBJECTDIR}/_ext/1103112890/Connection.o: ../../../src/karabo/net/Connection.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1103112890
+	${RM} $@.d
+	$(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1103112890/Connection.o ../../../src/karabo/net/Connection.cc
 
 ${OBJECTDIR}/_ext/1103112890/JmsBrokerChannel.o: ../../../src/karabo/net/JmsBrokerChannel.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1103112890
@@ -265,6 +279,16 @@ ${OBJECTDIR}/_ext/1103112890/JmsBrokerIOService.o: ../../../src/karabo/net/JmsBr
 	${MKDIR} -p ${OBJECTDIR}/_ext/1103112890
 	${RM} $@.d
 	$(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1103112890/JmsBrokerIOService.o ../../../src/karabo/net/JmsBrokerIOService.cc
+
+${OBJECTDIR}/_ext/1103112890/TcpChannel.o: ../../../src/karabo/net/TcpChannel.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1103112890
+	${RM} $@.d
+	$(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1103112890/TcpChannel.o ../../../src/karabo/net/TcpChannel.cc
+
+${OBJECTDIR}/_ext/1103112890/TcpConnection.o: ../../../src/karabo/net/TcpConnection.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1103112890
+	${RM} $@.d
+	$(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1103112890/TcpConnection.o ../../../src/karabo/net/TcpConnection.cc
 
 ${OBJECTDIR}/_ext/1080827789/pugixml.o: ../../../src/karabo/pugiXml/pugixml.cpp 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1080827789
@@ -820,6 +844,19 @@ ${OBJECTDIR}/_ext/1103111265/RollingFileAppenderConfigurator_nomain.o: ${OBJECTD
 	    ${CP} ${OBJECTDIR}/_ext/1103111265/RollingFileAppenderConfigurator.o ${OBJECTDIR}/_ext/1103111265/RollingFileAppenderConfigurator_nomain.o;\
 	fi
 
+${OBJECTDIR}/_ext/1103112890/AsioIOService_nomain.o: ${OBJECTDIR}/_ext/1103112890/AsioIOService.o ../../../src/karabo/net/AsioIOService.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1103112890
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/1103112890/AsioIOService.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} $@.d;\
+	    $(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1103112890/AsioIOService_nomain.o ../../../src/karabo/net/AsioIOService.cc;\
+	else  \
+	    ${CP} ${OBJECTDIR}/_ext/1103112890/AsioIOService.o ${OBJECTDIR}/_ext/1103112890/AsioIOService_nomain.o;\
+	fi
+
 ${OBJECTDIR}/_ext/1103112890/BrokerConnection_nomain.o: ${OBJECTDIR}/_ext/1103112890/BrokerConnection.o ../../../src/karabo/net/BrokerConnection.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1103112890
 	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/1103112890/BrokerConnection.o`; \
@@ -831,6 +868,19 @@ ${OBJECTDIR}/_ext/1103112890/BrokerConnection_nomain.o: ${OBJECTDIR}/_ext/110311
 	    $(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1103112890/BrokerConnection_nomain.o ../../../src/karabo/net/BrokerConnection.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/1103112890/BrokerConnection.o ${OBJECTDIR}/_ext/1103112890/BrokerConnection_nomain.o;\
+	fi
+
+${OBJECTDIR}/_ext/1103112890/Connection_nomain.o: ${OBJECTDIR}/_ext/1103112890/Connection.o ../../../src/karabo/net/Connection.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1103112890
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/1103112890/Connection.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} $@.d;\
+	    $(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1103112890/Connection_nomain.o ../../../src/karabo/net/Connection.cc;\
+	else  \
+	    ${CP} ${OBJECTDIR}/_ext/1103112890/Connection.o ${OBJECTDIR}/_ext/1103112890/Connection_nomain.o;\
 	fi
 
 ${OBJECTDIR}/_ext/1103112890/JmsBrokerChannel_nomain.o: ${OBJECTDIR}/_ext/1103112890/JmsBrokerChannel.o ../../../src/karabo/net/JmsBrokerChannel.cc 
@@ -870,6 +920,32 @@ ${OBJECTDIR}/_ext/1103112890/JmsBrokerIOService_nomain.o: ${OBJECTDIR}/_ext/1103
 	    $(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1103112890/JmsBrokerIOService_nomain.o ../../../src/karabo/net/JmsBrokerIOService.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/1103112890/JmsBrokerIOService.o ${OBJECTDIR}/_ext/1103112890/JmsBrokerIOService_nomain.o;\
+	fi
+
+${OBJECTDIR}/_ext/1103112890/TcpChannel_nomain.o: ${OBJECTDIR}/_ext/1103112890/TcpChannel.o ../../../src/karabo/net/TcpChannel.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1103112890
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/1103112890/TcpChannel.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} $@.d;\
+	    $(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1103112890/TcpChannel_nomain.o ../../../src/karabo/net/TcpChannel.cc;\
+	else  \
+	    ${CP} ${OBJECTDIR}/_ext/1103112890/TcpChannel.o ${OBJECTDIR}/_ext/1103112890/TcpChannel_nomain.o;\
+	fi
+
+${OBJECTDIR}/_ext/1103112890/TcpConnection_nomain.o: ${OBJECTDIR}/_ext/1103112890/TcpConnection.o ../../../src/karabo/net/TcpConnection.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1103112890
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/1103112890/TcpConnection.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} $@.d;\
+	    $(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1103112890/TcpConnection_nomain.o ../../../src/karabo/net/TcpConnection.cc;\
+	else  \
+	    ${CP} ${OBJECTDIR}/_ext/1103112890/TcpConnection.o ${OBJECTDIR}/_ext/1103112890/TcpConnection_nomain.o;\
 	fi
 
 ${OBJECTDIR}/_ext/1080827789/pugixml_nomain.o: ${OBJECTDIR}/_ext/1080827789/pugixml.o ../../../src/karabo/pugiXml/pugixml.cpp 
@@ -1095,7 +1171,7 @@ ${OBJECTDIR}/_ext/163016059/Validator_nomain.o: ${OBJECTDIR}/_ext/163016059/Vali
 # Clean Targets
 .clean-conf: ${CLEAN_SUBPROJECTS}
 	${RM} -r ${CND_BUILDDIR}/${CND_CONF}
-	${RM} ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libkarabo.${CND_DLIB_EXT}
+	${RM} ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/lib/libkarabo.${CND_DLIB_EXT}
 
 # Subprojects
 .clean-subprojects:
