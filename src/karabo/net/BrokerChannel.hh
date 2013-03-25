@@ -42,9 +42,6 @@ namespace karabo {
             typedef boost::function<void (BrokerChannel::Pointer, const karabo::util::Hash&, const karabo::util::Hash&) > ReadHashHashHandler;
 
             typedef boost::function<void (BrokerChannel::Pointer) > WriteCompleteHandler;
-
-            //            typedef boost::function<void (BrokerChannel::Pointer, const std::string&) > ErrorHandler;
-
             typedef boost::function<void (BrokerChannel::Pointer) > WaitHandler;
 
             BrokerChannel(BrokerConnection& connection) : m_connection(connection) {

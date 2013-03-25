@@ -29,6 +29,7 @@
 #include "Dims.hh"
 #include "Units.hh"
 #include "Time.hh"
+#include "Timer.hh"
 #include "Types.hh"
 #include "ToCppString.hh"
 #include "ToLiteral.hh"
@@ -36,6 +37,7 @@
 #include "FromInt.hh"
 #include "FromLiteral.hh"
 #include "FromTypeInfo.hh"
+#include "Profiler.hh"
 #include "karaboDll.hh"
 
 #endif	/* KARABO_UTIL_UTIL_HH */
