@@ -94,7 +94,7 @@ struct TestSchemaXsdSerializer {
                 .assignmentOptional().defaultValue("circle")
                 .commit();
 
-        //or: test for LIST element (min/max appears only in 'annotation') 
+        //or: test for LIST element (min/max appears only in 'annotation')
         //  LIST_ELEMENT(expected).key("shapes")
         //       .displayedName("shapesAsList")
         //       .description("Description of List-element shapes")
@@ -194,11 +194,11 @@ void SchemaXsdSerializer_Test::testXsdSerialization() {
 
     Schema testSchema("TestSchema", Schema::AssemblyRules(READ | WRITE | INIT));
     TestSchemaXsdSerializer::expectedParameters(testSchema);
-    cout << "Schema : \n" << testSchema << endl;
+    //cout << "Schema : \n" << testSchema << endl;
 
     TextSerializer<Schema>::Pointer p = TextSerializer<Schema>::create("Xsd");
 
     std::string archive;
     p->save(testSchema, archive);
-    cout << "\n XSD representation: \n" << archive << endl;
+    //cout << "\n XSD representation: \n" << archive << endl;
 }
