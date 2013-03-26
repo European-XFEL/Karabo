@@ -16,7 +16,7 @@ namespace bp = boost::python;
 
 
 template <class T>
-struct SimpleElementWrap {
+struct AliasAttributeWrap {
 
     static T & aliasPy(T& self, const bp::object& obj) {
         if (PyInt_Check(obj.ptr())) {
@@ -160,7 +160,7 @@ KARABO_PYTHON_NUMERIC_ATTRIBUTES \
 .def("assignmentOptional", &T::assignmentOptional\
 , bp::return_internal_reference<> () )\
 .def("alias"\
-, &SimpleElementWrap<T>::aliasPy\
+, &AliasAttributeWrap<T>::aliasPy\
 , bp::return_internal_reference<> ())\
 .def("commit", &T::commit\
 , bp::return_internal_reference<> () )\
@@ -259,6 +259,9 @@ KARABO_PYTHON_COMMON_ATTRIBUTES \
 .def("description", &NameElem::description\
 , bp::return_internal_reference<> ())\
 .def("displayedName", &NameElem::displayedName\
+, bp::return_internal_reference<> ())\
+.def("alias"\
+, &AliasAttributeWrap<NameElem>::aliasPy\
 , bp::return_internal_reference<> ())\
 .def("tags"\
 , (NameElem & (NameElem::*)(std::string const &, std::string const &))(&NameElem::tags)\
