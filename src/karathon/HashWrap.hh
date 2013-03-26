@@ -75,7 +75,7 @@ namespace karabo {
             static bp::object
             pythonGetAs(const karabo::util::Hash& self,
                         const std::string& path,
-                        const std::string& type,
+                        const karabo::util::Types::ReferenceType& type,
                         const std::string& separator = ".");
 
             static bp::object
@@ -106,7 +106,7 @@ namespace karabo {
             static bool
             pythonIs(karabo::util::Hash& self,
                      const std::string& path,
-                     const std::string& type,
+                     const karabo::util::Types::ReferenceType& type,
                      const std::string& separator = ".");
 
             static void
@@ -145,7 +145,7 @@ namespace karabo {
             pythonGetAttributeAs(karabo::util::Hash& self,
                                  const std::string& path,
                                  const std::string& attribute,
-                                 const std::string& type,
+                                 const karabo::util::Types::ReferenceType& type,
                                  const std::string& separator = ".");
 
             static bp::object
