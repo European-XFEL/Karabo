@@ -29,6 +29,46 @@ void exportPyUtilHash() {
 #    endif
 
     bp::docstring_options docs(true, true, false);
+    
+    // Types
+    bp::enum_<Types::ReferenceType>("Types")
+        .value("BOOL", Types::BOOL)
+        .value("VECTOR_BOOL", Types::VECTOR_BOOL)
+        .value("CHAR", Types::CHAR)
+        .value("VECTOR_CHAR", Types::VECTOR_CHAR)
+        .value("INT8", Types::INT8)
+        .value("VECTOR_INT8", Types::VECTOR_INT8)
+        .value("UINT8", Types::UINT8)
+        .value("VECTOR_UINT8", Types::VECTOR_UINT8)
+        .value("INT16", Types::INT16)
+        .value("VECTOR_INT16", Types::VECTOR_INT16)
+        .value("UINT16", Types::UINT16)
+        .value("VECTOR_UINT16", Types::VECTOR_UINT16)
+        .value("INT32", Types::INT32)
+        .value("VECTOR_INT32", Types::VECTOR_INT32)
+        .value("UINT32", Types::UINT32)
+        .value("VECTOR_UINT32", Types::VECTOR_UINT32)
+        .value("INT64", Types::INT64)
+        .value("VECTOR_INT64", Types::VECTOR_INT64)
+        .value("UINT64", Types::UINT64)
+        .value("VECTOR_UINT64", Types::VECTOR_UINT64)
+        .value("FLOAT", Types::FLOAT)
+        .value("VECTOR_FLOAT", Types::VECTOR_FLOAT)
+        .value("DOUBLE", Types::DOUBLE)
+        .value("VECTOR_DOUBLE", Types::VECTOR_DOUBLE)
+        .value("COMPLEX_FLOAT", Types::COMPLEX_FLOAT)
+        .value("VECTOR_COMPLEX_FLOAT", Types::VECTOR_COMPLEX_FLOAT)
+        .value("COMPLEX_DOUBLE", Types::COMPLEX_DOUBLE)
+        .value("VECTOR_COMPLEX_DOUBLE", Types::VECTOR_COMPLEX_DOUBLE)
+        .value("STRING", Types::STRING)
+        .value("VECTOR_STRING", Types::VECTOR_STRING)
+        .value("HASH", Types::HASH)
+        .value("VECTOR_HASH", Types::VECTOR_HASH)
+        .value("SCHEMA", Types::SCHEMA)
+        .value("ANY", Types::ANY)
+        .value("UNKNOWN", Types::UNKNOWN)
+        ;
+    
 
 //    using boost::python::iterator;
 //    bp::def("range", &karabo::pyexfel::range);
