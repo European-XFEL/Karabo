@@ -308,7 +308,13 @@ namespace karabo {
                 pugi::xml_node displayedNameElem = documentationNode.append_child("a:displayedName");
                 displayedNameElem.append_child(pugi::node_pcdata).set_value(displayedName.c_str());
             }
-
+            
+            if (schema.hasAlias(key)) {
+                string alias = schema.getAliasAsString(key);
+                pugi::xml_node aliasElem = documentationNode.append_child("a:alias");
+                aliasElem.append_child(pugi::node_pcdata).set_value(alias.c_str());
+            }
+            
             if (schema.hasExpertLevel(key)) {
                 int expertLevel = schema.getExpertLevel(key);
                 pugi::xml_node expertLevelElem = documentationNode.append_child("a:expertLevel");

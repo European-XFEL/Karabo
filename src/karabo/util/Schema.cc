@@ -293,7 +293,11 @@ namespace karabo {
         bool Schema::hasAlias(const std::string& path) const {
             return m_hash.hasAttribute(path, "alias");
         }
-
+        
+        string Schema::getAliasAsString(const std::string& path) const {
+            return m_hash.getAttributeAs<string>(path, "alias");
+        }
+ 
         //**********************************************
         //                  Options             *
         //**********************************************
