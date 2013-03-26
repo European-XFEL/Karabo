@@ -8,12 +8,17 @@
 #include <boost/python.hpp>
 
 #include <karabo/util/Factory.hh>
+#include <karabo/util/NodeElement.hh>
+#include <karabo/util/ListElement.hh>
+#include <karabo/util/ChoiceElement.hh>
+
 #include "PythonMacros.hh"
 #include "DefaultValueVectorWrap.hh"
 
 namespace bp = boost::python;
 using namespace karabo::util;
 using namespace std;
+
 
 struct SchemaWrapper : Schema, bp::wrapper< Schema > {
 
@@ -24,7 +29,7 @@ struct SchemaWrapper : Schema, bp::wrapper< Schema > {
     }
 
     SchemaWrapper(std::string const & classId, Schema::AssemblyRules const & rules)
-    : Schema( classId, boost::ref(rules) ), bp::wrapper< karabo::util::Schema >(){
+    : Schema(classId, boost::ref(rules)), bp::wrapper< karabo::util::Schema >() {
     }
 
     virtual ClassInfo getClassInfo() const  {
@@ -33,27 +38,27 @@ struct SchemaWrapper : Schema, bp::wrapper< Schema > {
         else
             return this->Schema::getClassInfo(  );
     }
-       
+
     ClassInfo default_getClassInfo(  ) const  {
         return Schema::getClassInfo( );
     }
 };
 
 void exportPyUtilSchema() {
-     
-      bp::enum_< karabo::util::AccessType>("AccessType")
-        .value("INIT", karabo::util::INIT)
-        .value("READ", karabo::util::READ)
-        .value("WRITE", karabo::util::WRITE)
-        .export_values()
-        ; 
-    
+
+    bp::enum_< karabo::util::AccessType>("AccessType")
+            .value("INIT", karabo::util::INIT)
+            .value("READ", karabo::util::READ)
+            .value("WRITE", karabo::util::WRITE)
+            .export_values()
+            ;
+
     {//exposing ::karabo::util::Schema
 
         bp::class_< Schema > s("Schema");
         s.def(bp::init< >());
-        s.def(bp::init<std::string const & , bp::optional<Schema::AssemblyRules const&> > ());
-        
+        s.def(bp::init<std::string const &, bp::optional<Schema::AssemblyRules const&> > ());
+
         bp::enum_< Schema::AssignmentType > ("AssignmentType")
                 .value("OPTIONAL", Schema::OPTIONAL_PARAM)
                 .value("MANDATORY", Schema::MANDATORY_PARAM)
@@ -66,78 +71,78 @@ void exportPyUtilSchema() {
                 .value("ADVANCED", Schema::ADVANCED)
                 .export_values()
                 ;
-        
+
         bp::enum_< Schema::LeafType>("LeafType")
-            .value("PROPERTY", karabo::util::Schema::PROPERTY)
-            .value("COMMAND", karabo::util::Schema::COMMAND)
-            .export_values()
-            ;
+                .value("PROPERTY", karabo::util::Schema::PROPERTY)
+                .value("COMMAND", karabo::util::Schema::COMMAND)
+                .export_values()
+                ;
         bp::enum_< Schema::NodeType>("NodeType")
-            .value("LEAF", Schema::LEAF)
-            .value("NODE", Schema::NODE)
-            .value("CHOICE_OF_NODES", Schema::CHOICE_OF_NODES)
-            .value("LIST_OF_NODES", Schema::LIST_OF_NODES)
-            .export_values()
-            ;
-        bp::class_< Schema::AssemblyRules >( "AssemblyRules", bp::init< bp::optional< AccessType const &, std::string const &, std::string const & > >(( bp::arg("accessMode")=operator|(INIT, WRITE), bp::arg("state")="", bp::arg("accessRole")="" )) )    
-            .def_readwrite( "m_accessMode", &Schema::AssemblyRules::m_accessMode )    
-            .def_readwrite( "m_accessRole", &Schema::AssemblyRules::m_accessRole )    
-            .def_readwrite( "m_state", &Schema::AssemblyRules::m_state );
-        
-        s.def(bp::self_ns::str(bp::self));    
-         
+                .value("LEAF", Schema::LEAF)
+                .value("NODE", Schema::NODE)
+                .value("CHOICE_OF_NODES", Schema::CHOICE_OF_NODES)
+                .value("LIST_OF_NODES", Schema::LIST_OF_NODES)
+                .export_values()
+                ;
+        bp::class_< Schema::AssemblyRules >("AssemblyRules", bp::init< bp::optional< AccessType const &, std::string const &, std::string const & > >((bp::arg("accessMode") = operator|(INIT, WRITE), bp::arg("state") = "", bp::arg("accessRole") = "")))
+                .def_readwrite("m_accessMode", &Schema::AssemblyRules::m_accessMode)
+                .def_readwrite("m_accessRole", &Schema::AssemblyRules::m_accessRole)
+                .def_readwrite("m_state", &Schema::AssemblyRules::m_state);
+
+        s.def(bp::self_ns::str(bp::self));
+
         s.def("getAccessMode", &Schema::getAccessMode);
-        
+
         s.def("getAssemblyRules", &Schema::getAssemblyRules);
-        
+
         s.def("getAllowedStates"
-            , &Schema::getAllowedStates
-            , bp::return_value_policy< bp::copy_const_reference >() );
-        
+              , &Schema::getAllowedStates
+              , bp::return_value_policy< bp::copy_const_reference >());
+
         s.def("getAssignment", &Schema::getAssignment);
-        
+
         s.def("getDescription"
-            , &Schema::getDescription
-            , bp::return_value_policy< bp::copy_const_reference >() );
-        
+              , &Schema::getDescription
+              , bp::return_value_policy< bp::copy_const_reference >());
+
         s.def("getDisplayType"
-            , &Schema::getDisplayType
-            , bp::return_value_policy< bp::copy_const_reference >() );
-        
+              , &Schema::getDisplayType
+              , bp::return_value_policy< bp::copy_const_reference >());
+
         s.def("getDisplayedName"
-            , &Schema::getDisplayedName
-            , bp::return_value_policy< bp::copy_const_reference >() );
+              , &Schema::getDisplayedName
+              , bp::return_value_policy< bp::copy_const_reference >());
         //all other get-s....
-        
+
         //********* has methods ****************
 
         s.def("hasAlias", &Schema::hasAlias);
         s.def("hasAccessMode", &Schema::hasAccessMode);
         //all other has .....
-        
+
         //********* is methods ****************
-        
+
         s.def("isAccessInitOnly", &Schema::isAccessInitOnly);
         s.def("isAccessReadOnly", &Schema::isAccessReadOnly);
         s.def("isAccessReconfigurable", &Schema::isAccessReconfigurable);
-        
+
         s.def("isAssignmentInternal", &Schema::isAssignmentInternal);
         s.def("isAssignmentMandatory", &Schema::isAssignmentMandatory);
         s.def("isAssignmentOptional", &Schema::isAssignmentOptional);
-        
+
         s.def("isChoiceOfNodes", &Schema::isChoiceOfNodes);
         s.def("isListOfNodes", &Schema::isListOfNodes);
         s.def("isLeaf", &Schema::isLeaf);
         s.def("isNode", &Schema::isNode);
-        
+
         s.def("help", &Schema::help, (bp::arg("classId") = ""));
-            
+
         s.def("getClassInfo"
-           , (ClassInfo (Schema::*)() const)(&Schema::getClassInfo)
-           , (ClassInfo (SchemaWrapper::*)() const)(&SchemaWrapper::default_getClassInfo));
-            
+              , (ClassInfo(Schema::*)() const) (&Schema::getClassInfo)
+              , (ClassInfo(SchemaWrapper::*)() const) (&SchemaWrapper::default_getClassInfo));
+
         s.def("classInfo"
-           , (ClassInfo (*)() )(&Schema::classInfo) ).staticmethod("classInfo");
+              , (ClassInfo(*)())(&Schema::classInfo)).staticmethod("classInfo");
     }// end Schema
 
     /////////////////////////////////////////////////////////////
@@ -151,7 +156,7 @@ void exportPyUtilSchema() {
     KARABO_PYTHON_ELEMENT_DEFAULT_VALUE(double, DOUBLE)
     KARABO_PYTHON_ELEMENT_DEFAULT_VALUE(std::string, STRING)
     KARABO_PYTHON_ELEMENT_DEFAULT_VALUE(bool, BOOL)
-    
+
     ///////////////////////////////////////////////////////////////
     //ReadOnlySpecific<SimpleElement< EType >, EType >, where EType:
     //INT32, UINT32, INT64, UINT64, DOUBLE, STRING, BOOL
@@ -163,7 +168,7 @@ void exportPyUtilSchema() {
     KARABO_PYTHON_ELEMENT_READONLYSPECIFIC(double, DOUBLE)
     KARABO_PYTHON_ELEMENT_READONLYSPECIFIC(std::string, STRING)
     KARABO_PYTHON_ELEMENT_READONLYSPECIFIC(bool, BOOL)
-    
+
 
     ///////////////////////////////////////////////////////////
     //DefaultValue<VectorElement< EType, std::vector >, std::vector< EType > > where EType:
@@ -176,22 +181,22 @@ void exportPyUtilSchema() {
     KARABO_PYTHON_VECTOR_DEFAULT_VALUE(double, DOUBLE)
     KARABO_PYTHON_VECTOR_DEFAULT_VALUE(std::string, STRING)
     KARABO_PYTHON_VECTOR_DEFAULT_VALUE(bool, BOOL)
-            
+
     ///////////////////////////////////////////////////////////////
     //ReadOnlySpecific<VectorElement< EType >, EType >, where EType:
     //INT32, UINT32, INT64, UINT64, DOUBLE, STRING, BOOL
-     
-     KARABO_PYTHON_VECTOR_READONLYSPECIFIC(int, INT32)
-     KARABO_PYTHON_VECTOR_READONLYSPECIFIC(unsigned int, UINT32)
-     KARABO_PYTHON_VECTOR_READONLYSPECIFIC(long long, INT64)
-     KARABO_PYTHON_VECTOR_READONLYSPECIFIC(unsigned long long, UINT64)
-     KARABO_PYTHON_VECTOR_READONLYSPECIFIC(double, DOUBLE)  
-     KARABO_PYTHON_VECTOR_READONLYSPECIFIC(std::string, STRING)
-     KARABO_PYTHON_VECTOR_READONLYSPECIFIC(bool, BOOL)
-            
 
-    //&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
-    //SimpleElement< EType >, where EType:
+    KARABO_PYTHON_VECTOR_READONLYSPECIFIC(int, INT32)
+    KARABO_PYTHON_VECTOR_READONLYSPECIFIC(unsigned int, UINT32)
+    KARABO_PYTHON_VECTOR_READONLYSPECIFIC(long long, INT64)
+    KARABO_PYTHON_VECTOR_READONLYSPECIFIC(unsigned long long, UINT64)
+    KARABO_PYTHON_VECTOR_READONLYSPECIFIC(double, DOUBLE)
+    KARABO_PYTHON_VECTOR_READONLYSPECIFIC(std::string, STRING)
+    KARABO_PYTHON_VECTOR_READONLYSPECIFIC(bool, BOOL)
+
+
+    //////////////////////////////////////////////////////////////////////
+    //Binding karabo::util::SimpleElement< EType >, where EType:
     //int, long long, double, string, bool
     //In Python: INT32_ELEMENT, UINT32_ELEMENT, INT64_ELEMENT, UINT64_ELEMENT, DOUBLE_ELEMENT,
     //STRING_ELEMENT, BOOL_ELEMENT
@@ -203,20 +208,98 @@ void exportPyUtilSchema() {
     KARABO_PYTHON_SIMPLE(double, DOUBLE)
     KARABO_PYTHON_SIMPLE(string, STRING)
     KARABO_PYTHON_SIMPLE(bool, BOOL)
-  
-    //&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
-    // Binding ::karabo::util::VectorElement< EType, std::vector >
+
+    //////////////////////////////////////////////////////////////////////
+    // Binding karabo::util::VectorElement< EType, std::vector >
     // In Python : VECTOR_INT32_ELEMENT, VECTOR_UINT32_ELEMENT, 
     // VECTOR_INT64_ELEMENT, VECTOR_UINT64_ELEMENT, VECTOR_DOUBLE_ELEMENT,
-    // VECTOR_STRING_ELEMENT
+    // VECTOR_STRING_ELEMENT, VECTOR_BOOL_ELEMENT
 
     KARABO_PYTHON_VECTOR(int, INT32)
     KARABO_PYTHON_VECTOR(unsigned int, UINT32)
     KARABO_PYTHON_VECTOR(long long, INT64)
     KARABO_PYTHON_VECTOR(unsigned long long, UINT64)
     KARABO_PYTHON_VECTOR(double, DOUBLE)
-    KARABO_PYTHON_VECTOR(string, STRING)   
+    KARABO_PYTHON_VECTOR(string, STRING)
     KARABO_PYTHON_VECTOR(bool, BOOL)
- 
+
+    //////////////////////////////////////////////////////////////////////
+    // Binding karabo::util::NodeElement       
+    // In Python : NODE_ELEMENT
+    {
+    bp::implicitly_convertible< Schema &, NodeElement >();
+    bp::class_<NodeElement> ("NODE_ELEMENT", bp::init<Schema & >((bp::arg("expected"))))
+    KARABO_PYTHON_NODE_CHOICE_LIST(NodeElement)
+    ;
+    }
+    
+    //////////////////////////////////////////////////////////////////////
+    // Binding karabo::util::ListElement
+    // In Python : LIST_ELEMENT
+    {
+    bp::implicitly_convertible< Schema &, ListElement >();
+    bp::class_<ListElement> ("LIST_ELEMENT", bp::init<Schema & >((bp::arg("expected"))))
+        KARABO_PYTHON_NODE_CHOICE_LIST(ListElement)
+       .def("assignmentMandatory"
+           , &ListElement::assignmentMandatory
+           , bp::return_internal_reference<> () )
+       .def("assignmentOptional"
+           , &ListElement::assignmentOptional
+           , bp::return_internal_reference<> () )
+       .def("min"
+           , &ListElement::min
+           , bp::return_internal_reference<> ())
+       .def("max"
+           , &ListElement::max
+           , bp::return_internal_reference<> ())
+        ;
+    }
+
+    //////////////////////////////////////////////////////////////////////
+    // Binding karabo::util::ChoiceElement       
+    // In Python : CHOICE_ELEMENT
+    {
+    bp::implicitly_convertible< Schema &, ChoiceElement >();
+    bp::class_<ChoiceElement> ("CHOICE_ELEMENT", bp::init<Schema & >((bp::arg("expected"))))
+    KARABO_PYTHON_NODE_CHOICE_LIST(ChoiceElement)
+    .def("assignmentMandatory"
+          , &ChoiceElement::assignmentMandatory
+          , bp::return_internal_reference<> () )
+    .def("assignmentOptional"
+          , &ChoiceElement::assignmentOptional
+          , bp::return_internal_reference<> () )
+     ;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    //  karabo::util::DefaultValue<ChoiceElement> 
+    {
+    typedef DefaultValue<ChoiceElement, string> DefChoiceElement;
+    bp::class_< DefChoiceElement, boost::noncopyable > ("DefaultValueChoiceElement", bp::no_init)
+    .def("defaultValue"
+      , (ChoiceElement & ( DefChoiceElement::* )( string const & ) )( &DefChoiceElement::defaultValue )
+      , (bp::arg("defValue"))
+      , bp::return_internal_reference<> ())
+    .def("noDefaultValue"
+      , (ChoiceElement & (DefChoiceElement::*)())(&DefChoiceElement::noDefaultValue)
+      , bp::return_internal_reference<> ())
+    ;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    //  karabo::util::DefaultValue<ListElement> 
+    {
+    typedef DefaultValue<ListElement, vector<string> > DefListElement;
+    bp::class_< DefListElement, boost::noncopyable > ("DefaultValueListElement", bp::no_init)
+    .def("defaultValue"
+      , (ListElement & ( DefListElement::* )( string const & ) )( &DefListElement::defaultValueFromString )
+      , (bp::arg("defValue"))
+      , bp::return_internal_reference<> ())
+    .def("noDefaultValue"
+      , (ListElement & (DefListElement::*)())(&DefListElement::noDefaultValue)
+      , bp::return_internal_reference<> ())
+    ;
+    }
+
 }//end  exportPyUtilSchema
 
