@@ -11,6 +11,7 @@
 #include <karabo/util/Hash.hh>
 
 using namespace std;
+using namespace karabo::util;
 
 namespace karabo {
     namespace pyexfel {
@@ -121,6 +122,9 @@ namespace karabo {
             } else if (bp::extract<wchar_t* const>(obj).check()) {
                 wchar_t* const b = bp::extract<wchar_t* const>(obj);
                 any = b;
+            } else if (bp::extract<karabo::util::Hash>(obj).check()) {
+                Hash h = bp::extract<Hash>(obj);
+                any = h;
             }
 #                ifdef KARATHON_BOOST_NUMPY
             else if (bp::extract<bn::ndarray>(obj).check()) {
@@ -229,10 +233,15 @@ namespace karabo {
                     any = v;
                     return;
                 }
+                if (bp::extract<Hash>(list0).check()) {
+                    std::vector<Hash> v(size);
+                    for (bp::ssize_t i = 0; i < size; ++i) {
+                        v[i] = bp::extract<Hash>(obj[i]);
+                    }
+                    any = v;
+                    return;
+                }
                 throw KARABO_PYTHON_EXCEPTION("Failed to convert inner type of python list");
-            } else if (bp::extract<karabo::util::Hash>(obj).check()) {
-                const karabo::util::Hash& h = bp::extract<karabo::util::Hash>(obj);
-                any = h;
             } else {
                 throw KARABO_PYTHON_EXCEPTION("Python type can not be mapped into Hash");
             }

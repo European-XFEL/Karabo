@@ -15,6 +15,7 @@ namespace bn = boost::numpy;
 #endif
 #include <karabo/util/Hash.hh>
 #include <karabo/util/FromLiteral.hh>
+#include <karabo/util/ToLiteral.hh>
 #include "Wrapper.hh"
 
 namespace bp = boost::python;
