@@ -133,11 +133,12 @@ void exportPyUtilHash() {
           std::string const &, bp::object const & >());
     h.def("clear", &Hash::clear);
     h.def("empty", &HashWrap().pythonEmpty);
-    h.def("getKeys", &HashWrap().pythonGetKeys);
-    h.def("keys", &HashWrap().pythonGetKeys);
+    h.def("getKeys", &HashWrap().pythonGetKeys, (bp::arg("target_container")));
+    h.def("keys", &HashWrap().pythonKeys);
     h.def("getValues", &HashWrap().pythonGetValues);
     h.def("values", &HashWrap().pythonGetValues);
-    h.def("getPaths", &HashWrap().pythonGetPaths);
+    h.def("getPaths", &HashWrap().pythonGetPaths, (bp::arg("target_container")));
+    h.def("paths", &HashWrap().pythonPaths);
     h.def("set", &HashWrap().pythonSet, (bp::arg("path"), bp::arg("value"), bp::arg("sep") = "."));
     h.def("__setitem__", &HashWrap().pythonSet, (bp::arg("path"), bp::arg("value"), bp::arg("sep") = "."));
     h.def("get", &HashWrap().pythonGet, (bp::arg("path"), bp::arg("sep") = "."));
@@ -152,6 +153,10 @@ void exportPyUtilHash() {
     h.def("getType", &HashWrap().pythonGetType, (bp::arg("key"), bp::arg("sep") = "."));
     h.def("getTypeAsId", &HashWrap().pythonGetTypeAsId, (bp::arg("key"), bp::arg("sep") = "."));
     h.def("merge", &Hash::merge, (bp::arg("hash")));
+    
+    // Global free function to compare Hash, vector<Hash>, Hash::Node
+    def("similar", &pythonSimilar, (bp::arg("left"), bp::arg("right")));
+    
     //    h.def("__add__", &Hash::operator+, (bp::arg("hash1"), bp::arg("hash2")), bp::return_value_policy<copy_non_const_reference>());
     h.def("__iadd__", &Hash::operator+=, (bp::arg("hash")), bp::return_internal_reference<>());
     h.def("isType", &HashWrap().pythonIs, (bp::arg("path"), bp::arg("type"), bp::arg("sep") = "."));
