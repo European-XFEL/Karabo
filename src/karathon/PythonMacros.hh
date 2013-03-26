@@ -184,6 +184,14 @@ KARABO_PYTHON_NUMERIC_ATTRIBUTES \
 , bp::return_internal_reference<> () )\
 .def("reconfigurable", &T::reconfigurable\
 , bp::return_internal_reference<> () )\
+.def("tags"\
+, (T & (T::*)(std::string const &, std::string const &))(&T::tags)\
+, (bp::arg("tags"), bp::arg("sep")=" ,;")\
+, bp::return_internal_reference<> ())\
+.def("tags"\
+, (T & (T::*)(std::vector<std::string> const &))(&T::tags)\
+, (bp::arg("tags"))\
+, bp::return_internal_reference<> ())\
 
 
 #define KARABO_PYTHON_OPTIONS_NONVECTOR \
@@ -234,6 +242,38 @@ KARABO_PYTHON_COMMON_ATTRIBUTES \
 ;\
 }
 
+/**
+ * The following macro KARABO_PYTHON_NODE_CHOICE_LIST is used for python binding of
+ * @code
+ * karabo::util::NodeElement, karabo::util::ListElement, karabo::util::ChoiceElement
+ * @endcode
+ *
+ * In Python: NODE_ELEMENT, CHOICE_ELEMENT, LIST_ELEMENT
+ *
+ */
+#define KARABO_PYTHON_NODE_CHOICE_LIST(NameElem)\
+.def("advanced", &NameElem::advanced\
+, bp::return_internal_reference<> ())\
+.def("key", &NameElem::key\
+, bp::return_internal_reference<> ())\
+.def("description", &NameElem::description\
+, bp::return_internal_reference<> ())\
+.def("displayedName", &NameElem::displayedName\
+, bp::return_internal_reference<> ())\
+.def("tags"\
+, (NameElem & (NameElem::*)(std::string const &, std::string const &))(&NameElem::tags)\
+, (bp::arg("tags"), bp::arg("sep") = " ,;")\
+, bp::return_internal_reference<> ())\
+.def("tags"\
+, (NameElem & (NameElem::*)(std::vector<std::string> const &))(&NameElem::tags)\
+, (bp::arg("tags"))\
+, bp::return_internal_reference<> ())\
+.def("commit", &NameElem::commit\
+, bp::return_internal_reference<> ())\
+.def("commit"\
+, (NameElem & (NameElem::*)(karabo::util::Schema &))(&NameElem::commit)\
+, bp::arg("expected")\
+, bp::return_internal_reference<> ())
 
 //Macro KARABO_PYTHON_ANY_EXTRACT is used in pyexfel.cc and pyexfelportable.cc for binding.
 //Extracting boost.python object with correct data type from boost::any
