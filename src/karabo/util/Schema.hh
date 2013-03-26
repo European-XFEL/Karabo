@@ -334,7 +334,9 @@ namespace karabo {
             const AliasType& getAlias(const std::string& path) const {
                 return m_hash.getAttribute < AliasType > (path, "alias");
             }
-
+            
+            std::string getAliasAsString(const std::string& path) const;
+            
             //**********************************************
             //                  Unit                       *
             //**********************************************
