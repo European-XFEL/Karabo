@@ -235,11 +235,10 @@ namespace karabo {
         bp::object
         HashWrap::pythonGetAs(const karabo::util::Hash& self,
                               const std::string& path,
-                              const std::string& type,
+                              const karabo::util::Types::ReferenceType& type,
                               const std::string& separator) {
             using namespace karabo::util;
-            Types::ReferenceType reftype = Types::from<FromLiteral>(type);
-            switch (reftype) {
+            switch (type) {
                 case Types::BOOL:
                     return bp::object(self.getAs<bool>(path, separator.at(0)));
                 case Types::CHAR:
@@ -352,11 +351,9 @@ namespace karabo {
         bool
         HashWrap::pythonIs(karabo::util::Hash& self,
                            const std::string& path,
-                           const std::string& type,
+                           const karabo::util::Types::ReferenceType& type,
                            const std::string& separator) {
-            //std::string path;
-            karabo::util::Types::ReferenceType refType = karabo::util::Types::from(type);
-            return self.is(path, refType, separator.at(0));
+            return self.getType(path, separator.at(0)) == type;
         }
 
         void
@@ -387,7 +384,7 @@ namespace karabo {
                                     const std::string& path,
                                     const std::string& separator) {
             const char sep = separator.at(0);
-            const int type = self.getType(path, sep);
+            karabo::util::Types::ReferenceType type = self.getType(path, sep);
             return bp::object(type);
         }
 
@@ -411,11 +408,10 @@ namespace karabo {
         HashWrap::pythonGetAttributeAs(karabo::util::Hash& self,
                                        const std::string& path,
                                        const std::string& attribute,
-                                       const std::string& type,
+                                       const karabo::util::Types::ReferenceType& type,
                                        const std::string& separator) {
             using namespace karabo::util;
-            Types::ReferenceType reftype = Types::from<FromLiteral>(type);
-            switch (reftype) {
+            switch (type) {
 
                 case Types::BOOL:
                     return bp::object(self.getAttributeAs<bool>(path, attribute, separator.at(0)));
