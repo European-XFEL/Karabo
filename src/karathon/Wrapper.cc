@@ -53,7 +53,6 @@ namespace karabo {
                 } else if (operand.type() == typeid (karabo::util::Hash)) {
                     return bp::object(boost::any_cast<karabo::util::Hash>(operand));
                 } else if (operand.type() == typeid (std::vector<bool>)) {
-                    cout << "operand type is std::vector<bool>" << endl;
                     return fromStdVectorToPyArray(boost::any_cast < std::vector<bool> >(operand));
                 } else if (operand.type() == typeid (std::vector<char>)) {
                     return fromStdVectorToPyByteArray(boost::any_cast<std::vector<char> >(operand));
@@ -193,6 +192,14 @@ namespace karabo {
             else if (PyList_Check(obj.ptr())) {
                 bp::object list0 = obj[0];
                 bp::ssize_t size = bp::len(obj);
+                if (PyBool_Check(list0.ptr())) {
+                    std::vector<bool> v(size); // Special case here
+                    for (bp::ssize_t i = 0; i < size; ++i) {
+                        v[i] = bp::extract<bool>(obj[i]);
+                    }
+                    any = v;
+                    return;
+                }
                 if (PyInt_Check(list0.ptr())) {
                     std::vector<int> v(size);
                     for (bp::ssize_t i = 0; i < size; ++i) {
@@ -209,14 +216,6 @@ namespace karabo {
                     any = v;
                     return;
                 }
-                if (PyString_Check(list0.ptr())) {
-                    std::vector<std::string> v(size);
-                    for (bp::ssize_t i = 0; i < size; ++i) {
-                        v[i] = bp::extract<std::string > (obj[i]);
-                    }
-                    any = v;
-                    return;
-                }
                 if (PyLong_Check(list0.ptr())) {
                     std::vector<long long> v(size);
                     for (bp::ssize_t i = 0; i < size; ++i) {
@@ -225,10 +224,10 @@ namespace karabo {
                     any = v;
                     return;
                 }
-                if (PyBool_Check(list0.ptr())) {
-                    std::vector<bool> v(size); // Special case here
+                if (PyString_Check(list0.ptr())) {
+                    std::vector<std::string> v(size);
                     for (bp::ssize_t i = 0; i < size; ++i) {
-                        v[i] = bp::extract<bool>(obj[i]);
+                        v[i] = bp::extract<std::string > (obj[i]);
                     }
                     any = v;
                     return;
