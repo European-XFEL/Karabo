@@ -61,6 +61,7 @@
             <xs:documentation>
               <a:description>Example key 5 description</a:description>
               <a:displayedName>Example key 5</a:displayedName>
+              <a:alias>exampleAlias5</a:alias>
               <a:default>1442244</a:default>
               <a:accessType>2</a:accessType>
               <a:tags>h/w,d.m.y</a:tags>

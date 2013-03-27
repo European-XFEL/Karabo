@@ -9,6 +9,7 @@
 #include "SchemaXsdSerializer_Test.hh"
 #include "TestPathSetup.hh"
 #include <karabo/io/TextFileOutput.hh>
+#include <karabo/io/BinaryFileOutput.hh>
 #include <karabo/util/SimpleElement.hh>
 #include <karabo/util/ChoiceElement.hh>
 #include <karabo/util/NodeElement.hh>
@@ -73,7 +74,8 @@ struct TestSchemaXsdSerializer {
                 .assignmentMandatory()
                 .commit();
 
-        INT64_ELEMENT(expected).key("exampleKey5").alias("exampleAlias5")
+        INT64_ELEMENT(expected).key("exampleKey5")
+                .alias("exampleAlias5")
                 .tags("h/w; d.m.y", ";")
                 .displayedName("Example key 5")
                 .description("Example key 5 description")
@@ -214,7 +216,7 @@ void SchemaXsdSerializer_Test::testTextFileOutputSchema() {
 
     ifstream newFile(fileName.c_str());
 
-    string fnameEtalon = resourcePath("TestSchemaFile_readonly.xsd");
+    string fnameEtalon = resourcePath("testSchemaFile_readonly.xsd");
     ifstream etalonFile(fnameEtalon.c_str());
 
     if (etalonFile.is_open()) {
@@ -240,7 +242,5 @@ void SchemaXsdSerializer_Test::testTextFileOutputSchema() {
         }
     } else {
         cout << "Error opening etalon file " << fnameEtalon << endl;
-    }
-
-      
-}
+    }    
+}  
