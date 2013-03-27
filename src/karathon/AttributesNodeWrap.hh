@@ -9,15 +9,13 @@
 #define	ATTRIBUTESNODEWRAP_HH
 
 #include <boost/python.hpp>
-#ifdef KARATHON_BOOST_NUMPY
 #include <boost/numpy.hpp>
-namespace bn = boost::numpy;
-#endif
 #include <karabo/util/Hash.hh>
 #include <karabo/util/FromLiteral.hh>
 #include "Wrapper.hh"
 
 namespace bp = boost::python;
+namespace bn = boost::numpy;
 
 namespace karabo {
     namespace pyexfel {

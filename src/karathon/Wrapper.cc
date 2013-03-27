@@ -7,6 +7,7 @@
 
 #include "Wrapper.hh"
 #include <iostream>
+#include <algorithm>
 #include <boost/filesystem.hpp>
 #include <karabo/util/Hash.hh>
 
@@ -78,12 +79,12 @@ namespace karabo {
                     return fromStdVectorToPyArray(boost::any_cast<std::vector<double> >(operand));
                 } else if (operand.type() == typeid (karabo::util::Hash)) {
                     return bp::object(boost::any_cast<karabo::util::Hash>(operand));
-                    //                } else if (operand.type() == typeid (karabo::util::Schema)) {
-                    //                    return bp::object(boost::any_cast<karabo::util::Schema>(operand));
+//                } else if (operand.type() == typeid (karabo::util::Schema)) {
+//                    return bp::object(boost::any_cast<karabo::util::Schema>(operand));
                 } else if (operand.type() == typeid (std::vector<std::string>)) {
                     return fromStdVectorToPyList(boost::any_cast < std::vector<std::string> >(operand));
                 } else if (operand.type() == typeid (std::vector<karabo::util::Hash>)) {
-                    return fromStdVectorToPyList(boost::any_cast<std::vector<karabo::util::Hash> >(operand));
+                    return fromStdVectorToPyHashList(boost::any_cast<std::vector<karabo::util::Hash> >(operand));
                 } else {
                     throw KARABO_PYTHON_EXCEPTION("Failed to convert inner Hash type of python object");
                 }
@@ -96,37 +97,52 @@ namespace karabo {
             if (PyBool_Check(obj.ptr())) {
                 bool b = bp::extract<bool>(obj);
                 any = b;
-                //any.swap(bp::extract<bool>(obj));
-            } else if (PyInt_Check(obj.ptr())) {
+                return;
+            }
+            if (PyInt_Check(obj.ptr())) {
                 int b = bp::extract<int>(obj);
                 any = b;
-            } else if (PyFloat_Check(obj.ptr())) {
+                return;
+            }
+            if (PyFloat_Check(obj.ptr())) {
                 double b = bp::extract<double>(obj);
                 any = b;
-            } else if (PyString_Check(obj.ptr())) {
+                return;
+            }
+            if (PyString_Check(obj.ptr())) {
                 std::string b = bp::extract<std::string >(obj);
                 any = b;
-            } else if (PyLong_Check(obj.ptr())) {
+                return;
+            }
+            if (PyLong_Check(obj.ptr())) {
                 //return PyLong_AsLongLong(obj.ptr());
                 long long b = bp::extract<long>(obj);
                 any = b;
-            } else if (PyByteArray_Check(obj.ptr())) {
+                return;
+            }
+            if (PyByteArray_Check(obj.ptr())) {
                 size_t size = PyByteArray_Size(obj.ptr());
                 char* data = PyByteArray_AsString(obj.ptr());
                 std::vector<char> b(data, data + size);
                 any = b;
-            } else if (bp::extract<char* const>(obj).check()) {
+                return;
+            }
+            if (bp::extract<char* const>(obj).check()) {
                 char* const b = bp::extract<char* const>(obj);
                 any = b;
-            } else if (bp::extract<wchar_t* const>(obj).check()) {
+                return;
+            }
+            if (bp::extract<wchar_t* const>(obj).check()) {
                 wchar_t* const b = bp::extract<wchar_t* const>(obj);
                 any = b;
-            } else if (bp::extract<karabo::util::Hash>(obj).check()) {
+                return;
+            }
+            if (bp::extract<karabo::util::Hash>(obj).check()) {
                 Hash h = bp::extract<Hash>(obj);
                 any = h;
+                return;
             }
-#                ifdef KARATHON_BOOST_NUMPY
-            else if (bp::extract<bn::ndarray>(obj).check()) {
+            if (bp::extract<bn::ndarray>(obj).check()) {
                 const bn::ndarray& a = bp::extract<bn::ndarray>(obj);
                 int nd = a.get_nd();
                 Py_intptr_t const * shapes = a.get_shape();
@@ -187,9 +203,8 @@ namespace karabo {
                     return;
                 }
             }
-#                endif
 
-            else if (PyList_Check(obj.ptr())) {
+            if (PyList_Check(obj.ptr())) {
                 bp::object list0 = obj[0];
                 bp::ssize_t size = bp::len(obj);
                 if (PyBool_Check(list0.ptr())) {
@@ -240,11 +255,10 @@ namespace karabo {
                     any = v;
                     return;
                 }
-                throw KARABO_PYTHON_EXCEPTION("Failed to convert inner type of python list");
-            } else {
-                throw KARABO_PYTHON_EXCEPTION("Python type can not be mapped into Hash");
             }
-
+            throw KARABO_PYTHON_EXCEPTION("Python type can not be mapped into Hash");
         }
     }
 }
+
+bool karabo::pyexfel::Wrapper::try_to_use_numpy = false;
