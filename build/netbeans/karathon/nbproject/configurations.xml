@@ -52,9 +52,6 @@
             <pElem>${KARATHON}/karabo/extern/include/python2.7</pElem>
             <pElem>${KARATHON}/karabo/extern/include</pElem>
           </incDir>
-          <preprocessorList>
-            <Elem>KARATHON_BOOST_NUMPY</Elem>
-          </preprocessorList>
         </ccTool>
         <linkerTool>
           <linkerAddLib>
@@ -94,6 +91,16 @@
           </linkerLibItems>
         </linkerTool>
       </compileType>
+      <item path="../../../src/karathon/AttributesNodeWrap.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karathon/AttributesWrap.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="../../../src/karathon/HashWrap.cc" ex="false" tool="1" flavor2="0">
       </item>
       <item path="../../../src/karathon/HashWrap.hh" ex="false" tool="3" flavor2="0">
@@ -110,16 +117,6 @@
       <item path="../../../src/karathon/Wrapper.hh" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../../../src/karathon/karathon.cc" ex="false" tool="1" flavor2="0">
-      </item>
-      <item path="../../../src/karathon/AttributesNodeWrap.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karathon/AttributesWrap.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
       </item>
       <folder path="TestFiles">
         <linkerTool>
@@ -170,6 +167,16 @@
           <developmentMode>5</developmentMode>
         </asmTool>
       </compileType>
+      <item path="../../../src/karathon/AttributesNodeWrap.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karathon/AttributesWrap.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="../../../src/karathon/HashWrap.cc" ex="false" tool="1" flavor2="0">
       </item>
       <item path="../../../src/karathon/HashWrap.hh" ex="false" tool="3" flavor2="0">
@@ -186,16 +193,6 @@
       <item path="../../../src/karathon/Wrapper.hh" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../../../src/karathon/karathon.cc" ex="false" tool="1" flavor2="0">
-      </item>
-      <item path="../../../src/karathon/AttributesNodeWrap.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karathon/AttributesWrap.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
       </item>
       <folder path="TestFiles/f1">
         <cTool>
