@@ -415,7 +415,7 @@ namespace karabo {
                                     const std::string& path,
                                     const std::string& separator) {
             const char sep = separator.at(0);
-            PyTypes::ReferenceType type = static_cast<PyTypes::ReferenceType>(self.getType(path, sep));
+            PyTypes::ReferenceType type = static_cast<PyTypes::ReferenceType> (self.getType(path, sep));
             return bp::object(type);
         }
 
@@ -470,24 +470,24 @@ namespace karabo {
                     return bp::object(self.getAttributeAs<double>(path, attribute, separator.at(0)));
                 case Types::STRING:
                     return bp::object(self.getAttributeAs<std::string>(path, attribute, separator.at(0)));
-//                    case Types::VECTOR_CHAR:
-//                        return Wrapper::fromStdVectorToPyByteArray(self.getAttributeAs<char, std::vector>(path, attribute, separator.at(0)));
-//                    case Types::VECTOR_INT8:
-//                        return Wrapper::fromStdVectorToPyByteArray(self.getAttributeAs<signed char, std::vector > (path, attribute, separator.at(0)));
-//                    case Types::VECTOR_UINT8:
-//                        return Wrapper::fromStdVectorToPyByteArray(self.getAttributeAs<unsigned char, std::vector>(path, attribute, separator.at(0)));
-//                    case Types::VECTOR_INT16:
-//                        return Wrapper::fromStdVectorToPyArray(self.getAttributeAs<short, std::vector>(path, attribute, separator.at(0)));
-//                    case Types::VECTOR_UINT16:
-//                        return Wrapper::fromStdVectorToPyArray(self.getAttributeAs<unsigned short, std::vector>(path, attribute, separator.at(0)));
-//                    case Types::VECTOR_INT32:
-//                        return Wrapper::fromStdVectorToPyArray(self.getAttributeAs<int, std::vector>(path, attribute, separator.at(0)));
-//                    case Types::VECTOR_UINT32:
-//                        return Wrapper::fromStdVectorToPyArray(self.getAttributeAs<unsigned int, std::vector>(path, attribute, separator.at(0)));
-//                    case Types::VECTOR_INT64:
-//                        return Wrapper::fromStdVectorToPyArray(self.getAttributeAs<long long, std::vector>(path, attribute, separator.at(0)));
-//                    case Types::VECTOR_UINT64:
-//                        return Wrapper::fromStdVectorToPyArray(self.getAttributeAs<unsigned long long, std::vector>(path, attribute, separator.at(0)));
+                    //                    case Types::VECTOR_CHAR:
+                    //                        return Wrapper::fromStdVectorToPyByteArray(self.getAttributeAs<char, std::vector>(path, attribute, separator.at(0)));
+                    //                    case Types::VECTOR_INT8:
+                    //                        return Wrapper::fromStdVectorToPyByteArray(self.getAttributeAs<signed char, std::vector > (path, attribute, separator.at(0)));
+                    //                    case Types::VECTOR_UINT8:
+                    //                        return Wrapper::fromStdVectorToPyByteArray(self.getAttributeAs<unsigned char, std::vector>(path, attribute, separator.at(0)));
+                    //                    case Types::VECTOR_INT16:
+                    //                        return Wrapper::fromStdVectorToPyArray(self.getAttributeAs<short, std::vector>(path, attribute, separator.at(0)));
+                    //                    case Types::VECTOR_UINT16:
+                    //                        return Wrapper::fromStdVectorToPyArray(self.getAttributeAs<unsigned short, std::vector>(path, attribute, separator.at(0)));
+                    //                    case Types::VECTOR_INT32:
+                    //                        return Wrapper::fromStdVectorToPyArray(self.getAttributeAs<int, std::vector>(path, attribute, separator.at(0)));
+                    //                    case Types::VECTOR_UINT32:
+                    //                        return Wrapper::fromStdVectorToPyArray(self.getAttributeAs<unsigned int, std::vector>(path, attribute, separator.at(0)));
+                    //                    case Types::VECTOR_INT64:
+                    //                        return Wrapper::fromStdVectorToPyArray(self.getAttributeAs<long long, std::vector>(path, attribute, separator.at(0)));
+                    //                    case Types::VECTOR_UINT64:
+                    //                        return Wrapper::fromStdVectorToPyArray(self.getAttributeAs<unsigned long long, std::vector>(path, attribute, separator.at(0)));
                 default:
                     break;
             }
@@ -584,6 +584,26 @@ namespace karabo {
 
             return false;
         }
+
+        void
+        HashWrap::setDefault(const PyTypes::ReferenceType& type) {
+            if (type == PyTypes::PYTHON_DEFAULT)
+                try_to_use_numpy = false;
+            else if (type == PyTypes::NUMPY_DEFAULT)
+                try_to_use_numpy = true;
+            else
+                throw KARABO_PYTHON_EXCEPTION("Unsupported default type: use either Types.NUMPY or Types.PYTHON");
+        }
+
+        bool
+        HashWrap::isDefault(const PyTypes::ReferenceType& type) {
+            if (type == PyTypes::PYTHON_DEFAULT && !try_to_use_numpy)
+                return true;
+            else if (type == PyTypes::NUMPY_DEFAULT && try_to_use_numpy)
+                return true;
+            return false;
+        }
+
     }
 }
 

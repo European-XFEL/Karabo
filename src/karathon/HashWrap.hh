@@ -175,7 +175,13 @@ namespace karabo {
 
             static bp::object
             __getitem__(karabo::util::Hash& self, const bp::object& obj);
+            
+            static void
+            setDefault(const PyTypes::ReferenceType& type);
 
+            static bool
+            isDefault(const PyTypes::ReferenceType& type);
+            
         };
 
         bool
