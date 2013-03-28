@@ -17,7 +17,7 @@ using namespace karabo::util;
 namespace karabo {
     namespace pyexfel {
 
-        bp::object Wrapper::toObject(const boost::any& operand) {
+        bp::object Wrapper::toObject(const boost::any& operand, bool numpyFlag) {
             try {
                 if (operand.type() == typeid (bool)) {
                     return bp::object(boost::any_cast<bool>(operand));
@@ -54,7 +54,7 @@ namespace karabo {
                 } else if (operand.type() == typeid (karabo::util::Hash)) {
                     return bp::object(boost::any_cast<karabo::util::Hash>(operand));
                 } else if (operand.type() == typeid (std::vector<bool>)) {
-                    return fromStdVectorToPyArray(boost::any_cast < std::vector<bool> >(operand));
+                    return fromStdVectorToPyArray(boost::any_cast < std::vector<bool> >(operand), numpyFlag);
                 } else if (operand.type() == typeid (std::vector<char>)) {
                     return fromStdVectorToPyByteArray(boost::any_cast<std::vector<char> >(operand));
                 } else if (operand.type() == typeid (std::vector<signed char>)) {
@@ -62,21 +62,21 @@ namespace karabo {
                 } else if (operand.type() == typeid (std::vector<unsigned char>)) {
                     return fromStdVectorToPyByteArray(boost::any_cast<std::vector<unsigned char> >(operand));
                 } else if (operand.type() == typeid (std::vector<short>)) {
-                    return fromStdVectorToPyArray(boost::any_cast<std::vector<short> >(operand));
+                    return fromStdVectorToPyArray(boost::any_cast<std::vector<short> >(operand), numpyFlag);
                 } else if (operand.type() == typeid (std::vector<unsigned short>)) {
-                    return fromStdVectorToPyArray(boost::any_cast<std::vector<unsigned short> >(operand));
+                    return fromStdVectorToPyArray(boost::any_cast<std::vector<unsigned short> >(operand), numpyFlag);
                 } else if (operand.type() == typeid (std::vector<int>)) {
-                    return fromStdVectorToPyArray(boost::any_cast<std::vector<int> >(operand));
+                    return fromStdVectorToPyArray(boost::any_cast<std::vector<int> >(operand), numpyFlag);
                 } else if (operand.type() == typeid (std::vector<unsigned int>)) {
-                    return fromStdVectorToPyArray(boost::any_cast<std::vector<unsigned int> >(operand));
+                    return fromStdVectorToPyArray(boost::any_cast<std::vector<unsigned int> >(operand), numpyFlag);
                 } else if (operand.type() == typeid (std::vector<long long>)) {
-                    return fromStdVectorToPyArray(boost::any_cast<std::vector<long long> >(operand));
+                    return fromStdVectorToPyArray(boost::any_cast<std::vector<long long> >(operand), numpyFlag);
                 } else if (operand.type() == typeid (std::vector<unsigned long long>)) {
-                    return fromStdVectorToPyArray(boost::any_cast<std::vector<unsigned long long> >(operand));
+                    return fromStdVectorToPyArray(boost::any_cast<std::vector<unsigned long long> >(operand), numpyFlag);
                 } else if (operand.type() == typeid (std::vector<float>)) {
-                    return fromStdVectorToPyArray(boost::any_cast<std::vector<float> >(operand));
+                    return fromStdVectorToPyArray(boost::any_cast<std::vector<float> >(operand), numpyFlag);
                 } else if (operand.type() == typeid (std::vector<double>)) {
-                    return fromStdVectorToPyArray(boost::any_cast<std::vector<double> >(operand));
+                    return fromStdVectorToPyArray(boost::any_cast<std::vector<double> >(operand), numpyFlag);
                 } else if (operand.type() == typeid (karabo::util::Hash)) {
                     return bp::object(boost::any_cast<karabo::util::Hash>(operand));
 //                } else if (operand.type() == typeid (karabo::util::Schema)) {
@@ -261,4 +261,3 @@ namespace karabo {
     }
 }
 
-bool karabo::pyexfel::Wrapper::try_to_use_numpy = false;
