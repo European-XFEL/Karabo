@@ -9,6 +9,7 @@
 #include <boost/python.hpp>
 #include <boost/filesystem.hpp>
 #include <set>
+#include <complex>
 #include <sstream>
 #include <iostream>             // std::cout, std::endl
 #include <algorithm>            // std::copy
@@ -285,6 +286,14 @@ namespace karabo {
                     return Wrapper::fromStdVectorToPyArray(self.getAs<long long, std::vector>(path, separator.at(0)));
                 case PyTypes::VECTOR_UINT64:
                     return Wrapper::fromStdVectorToPyArray(self.getAs<unsigned long long, std::vector>(path, separator.at(0)));
+                case PyTypes::VECTOR_FLOAT:
+                    return Wrapper::fromStdVectorToPyArray(self.getAs<float, std::vector>(path, separator.at(0)));
+                case PyTypes::VECTOR_DOUBLE:
+                    return Wrapper::fromStdVectorToPyArray(self.getAs<double, std::vector>(path, separator.at(0)));
+                case PyTypes::VECTOR_COMPLEX_FLOAT:
+                    return Wrapper::fromStdVectorToPyArray(self.getAs<std::complex<float>, std::vector>(path, separator.at(0)));
+                case PyTypes::VECTOR_COMPLEX_DOUBLE:
+                    return Wrapper::fromStdVectorToPyArray(self.getAs<std::complex<double>, std::vector>(path, separator.at(0)));
                     //                    case PyTypes::HASH:
                     //                        return bp::object(self.getAs<karabo::util::Hash>(path, separator.at(0)));
                     //                    case PyTypes::VECTOR_HASH:
@@ -301,6 +310,14 @@ namespace karabo {
                     return Wrapper::fromStdVectorToPyArray(self.getAs<long long, std::vector>(path, separator.at(0)), true);
                 case PyTypes::NDARRAY_UINT64:
                     return Wrapper::fromStdVectorToPyArray(self.getAs<unsigned long long, std::vector>(path, separator.at(0)), true);
+                case PyTypes::NDARRAY_FLOAT:
+                    return Wrapper::fromStdVectorToPyArray(self.getAs<float, std::vector>(path, separator.at(0)), true);
+                case PyTypes::NDARRAY_DOUBLE:
+                    return Wrapper::fromStdVectorToPyArray(self.getAs<double, std::vector>(path, separator.at(0)), true);
+                case PyTypes::NDARRAY_COMPLEX_FLOAT:
+                    return Wrapper::fromStdVectorToPyArray(self.getAs<std::complex<float>, std::vector>(path, separator.at(0)), true);
+                case PyTypes::NDARRAY_COMPLEX_DOUBLE:
+                    return Wrapper::fromStdVectorToPyArray(self.getAs<std::complex<double>, std::vector>(path, separator.at(0)), true);
                 default:
                     break;
             }
