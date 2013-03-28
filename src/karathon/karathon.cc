@@ -12,7 +12,6 @@
 //#include <karabo/xms/SignalSlotable.hh>
 #include <boost/any.hpp>
 #include <vector>
-//#include "PythonMacros.hh"
 
 namespace bp = boost::python;
 
@@ -21,7 +20,7 @@ void exportPyUtilHash();
 void exportPyUtilSchema();
 //void exportPyUtilTypes();
 void exportPyUtilClassInfo();
-//void exportPyIoWriter();
+void exportPyIoFileTools();
 //void exportPyIoReader();
 //void exportPyIoFormat();
 //void exportPyXmsRequestor();
@@ -103,12 +102,13 @@ BOOST_PYTHON_MODULE(libkarathon) {
     exportPyUtilSchema();
 //    exportPyUtilTypes();
     exportPyUtilClassInfo();
+    exportPyIoFileTools();
 //
 //    exportPyXmsRequestor();
 //    exportPyXmsSignalSlotable();
 //    exportPyCoreDeviceClient();
 //    
-//    exportPyIoWriter();
+
 //    exportPyIoReader();
 //    exportPyIoFormat();
 //
