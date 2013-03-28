@@ -168,7 +168,6 @@ namespace karabo {
             }
         };
 
-
         struct Wrapper {
 
             template<class ValueType>
