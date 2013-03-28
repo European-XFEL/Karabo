@@ -65,8 +65,8 @@ void exportPyUtilHash() {
         .value("SCHEMA", PyTypes::SCHEMA)
         .value("ANY", PyTypes::ANY)
         .value("UNKNOWN", PyTypes::UNKNOWN)
-        .value("PYTHON_DEFAULT",  PyTypes::PYTHON_DEFAULT)
-        .value("NUMPY_DEFAULT", PyTypes::NUMPY_DEFAULT)
+        .value("PYTHON",  PyTypes::PYTHON_DEFAULT)
+        .value("NUMPY", PyTypes::NUMPY_DEFAULT)
         .value("NDARRAY_BOOL", PyTypes::NDARRAY_BOOL)
         .value("NDARRAY_INT16", PyTypes::NDARRAY_INT16)
         .value("NDARRAY_UINT16", PyTypes::NDARRAY_UINT16)
@@ -80,7 +80,11 @@ void exportPyUtilHash() {
         .value("NDARRAY_COMPLEX_DOUBLE", PyTypes::NDARRAY_COMPLEX_DOUBLE)
         ;
     
-
+  
+    bp::def("setStdVectorDefaultConversion", &HashWrap().setDefault, (bp::arg("PYTHON_or_NUMPY_types")));
+    bp::def("isStdVectorDefaultConversion", &HashWrap().isDefault, (bp::arg("PYTHON_or_NUMPY_types")));
+            
+    
 //    using boost::python::iterator;
 //    bp::def("range", &karabo::pyexfel::range);
     
