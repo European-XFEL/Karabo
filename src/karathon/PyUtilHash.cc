@@ -100,7 +100,7 @@ void exportPyUtilHash() {
 
     bp::class_<Hash::Attributes> a("HashAttributes",
                                    "The HashAttributes class is a heterogeneous container with string key and \"any object\" value\n"
-                                   "that preserves insertion order, i.e. it behaves like ordered map");
+                                   "that preserves insertion order, i.e. it is behaving like an ordered map");
     a.def(bp::init<>());
     a.def(bp::init< std::string const &, bp::object const & >());
     a.def(bp::init< std::string const &, bp::object const &,
