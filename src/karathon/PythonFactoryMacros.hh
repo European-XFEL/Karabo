@@ -13,42 +13,43 @@
 
 namespace bp = boost::python;
 
-#define KARABO_PYTHON_FACTORY_TYPEDEFS(baseClass) \
-typedef boost::shared_ptr< baseClass > (*create_function_type1)(karabo::util::Hash const &);\
-typedef boost::shared_ptr< baseClass > (*create_function_type2)(std::string const &, karabo::util::Hash const &);\
-typedef boost::shared_ptr< baseClass > (*createDefault_function_type)(std::string const &);\
-typedef boost::shared_ptr< baseClass > (*createChoice_function_type)(std::string const &, karabo::util::Hash const &);\
-typedef vector<boost::shared_ptr< baseClass > > (*createList_function_type)(std::string const &, karabo::util::Hash const &);\
-typedef boost::shared_ptr< baseClass > (*createSingle_function_type)(std::string const &, std::string const &, karabo::util::Hash const &);\
-typedef karabo::util::ClassInfo(*classInfo_function_type)();\
-typedef karabo::util::ClassInfo(baseClass::*getClassInfo_function_type)() const;\
-typedef karabo::util::Schema(*expectedParameters_function_type1)(karabo::util::AccessType, std::string const &);\
-typedef karabo::util::Schema(*expectedParameters_function_type2)(std::string const &, karabo::util::AccessType, std::string const &, std::string const &);\
-typedef karabo::util::Schema(*initialParameters_function_type1)(std::string const &, std::string const &, std::string const &);\
-typedef karabo::util::Schema(*initialParameters_function_type2)();\
-typedef karabo::util::Schema(*monitorableParameters_function_type1)(std::string const &, std::string const &, std::string const &);\
-typedef karabo::util::Schema(*monitorableParameters_function_type2)();\
-typedef karabo::util::Schema(*reconfigurableParameters_function_type1)(std::string const &, std::string const &, std::string const &);\
-typedef karabo::util::Schema(*reconfigurableParameters_function_type2)();\
-typedef void (*help_function_type)(std::string const &)
+#define KARABO_PYTHON_FACTORY_CONFIGURATOR_WRAPPER(baseClass) \
+struct ConfiguratorWrapper : karabo::util::Configurator<baseClass>, bp::wrapper< karabo::util::Configurator<baseClass> > {\
+virtual karabo::util::ClassInfo getClassInfo( ) const  {\
+if( bp::override func_getClassInfo = this->get_override("getClassInfo"))\
+{return func_getClassInfo( );}\
+else\
+{return this->karabo::util::Configurator<baseClass>::getClassInfo();}\
+}\
+karabo::util::ClassInfo default_getClassInfo(  ) const  {\
+return karabo::util::Configurator<baseClass>::getClassInfo( );\
+}\
+};
 
-#define KARABO_PYTHON_FACTORY_BINDING_BASE(baseClass) \
-.def("create", create_function_type1(&baseClass::create), (bp::arg("config")))\
-.def("create", create_function_type2(&baseClass::create), (bp::arg("classId"), bp::arg("parameters")=karabo::util::Hash() )).staticmethod("create")\
-.def("createDefault", createDefault_function_type(&baseClass::createDefault), (bp::arg("classId"))).staticmethod("createDefault")\
-.def("createChoice", createChoice_function_type(&baseClass::createChoice), (bp::arg("key"), bp::arg("input"))).staticmethod("createChoice")\
-.def("createList", createList_function_type(&baseClass::createList), (bp::arg("key"), bp::arg("input"))).staticmethod("createList")\
-.def("createSingle", createSingle_function_type(&baseClass::createSingle), (bp::arg("key"), bp::arg("classId"), bp::arg("input"))).staticmethod("createSingle")\
-.def("classInfo", classInfo_function_type(&baseClass::classInfo)).staticmethod("classInfo")\
-.def("getClassInfo", getClassInfo_function_type(&baseClass::getClassInfo))\
-.def("expectedParameters", expectedParameters_function_type1(&baseClass::expectedParameters), (bp::arg("at")=karabo::util::INIT|karabo::util::WRITE, bp::arg("currentState")=""))\
-.def("expectedParameters", expectedParameters_function_type2(&baseClass::expectedParameters), (bp::arg("classId"), bp::arg("at")=karabo::util::INIT|karabo::util::WRITE, bp::arg("currentState")="", bp::arg("displayedClassId")="")).staticmethod("expectedParameters")\
-.def("initialParameters", initialParameters_function_type1(&baseClass::initialParameters), (bp::arg("classId"), bp::arg("currentState")="", bp::arg("displayedClassId")=""))\
-.def("initialParameters", initialParameters_function_type2(&baseClass::initialParameters)).staticmethod("initialParameters")\
-.def("monitorableParameters", monitorableParameters_function_type1(&baseClass::monitorableParameters), (bp::arg("classId"), bp::arg("currentState")="", bp::arg("displayedClassId")=""))\
-.def("monitorableParameters", monitorableParameters_function_type2(&baseClass::monitorableParameters)).staticmethod("monitorableParameters")\
-.def("reconfigurableParameters", reconfigurableParameters_function_type1(&baseClass::reconfigurableParameters), (bp::arg("classId"), bp::arg("currentState")="", bp::arg("displayedClassId")=""))\
-.def("reconfigurableParameters", reconfigurableParameters_function_type2(&baseClass::reconfigurableParameters)).staticmethod("reconfigurableParameters")\
-.def("help", help_function_type(&baseClass::help), ( bp::arg("classId")="" )).staticmethod("help")
-
+#define KARABO_PYTHON_FACTORY_CONFIGURATOR(baseClass) \
+.def("classInfo"\
+, (karabo::util::ClassInfo(*)())(&karabo::util::Configurator<baseClass>::classInfo)).staticmethod("classInfo")\
+.def("create"\
+, (boost::shared_ptr<baseClass>(*)(karabo::util::Hash const &, bool const))(&karabo::util::Configurator<baseClass>::create)\
+, (bp::arg("configuration"), bp::arg("validate")=(bool const)(true)))\
+.def("create"\
+, (boost::shared_ptr< baseClass >(*)(std::string const &, karabo::util::Hash const &, bool const))( &karabo::util::Configurator< baseClass >::create)\
+, (bp::arg("classId"), bp::arg("configuration")=karabo::util::Hash(), bp::arg("validate")=(bool const)(true) )).staticmethod("create")\
+.def("createChoice"\
+, (boost::shared_ptr<baseClass> (*)(std::string const &, karabo::util::Hash const &,bool const ))( &karabo::util::Configurator<baseClass>::createChoice)\
+, (bp::arg("choiceName"), bp::arg("input"), bp::arg("validate")=(bool const)(true))).staticmethod("createChoice")\
+.def("createList"\
+, (std::vector< boost::shared_ptr<baseClass> > (*)(std::string const &,karabo::util::Hash const &,bool const ))( &karabo::util::Configurator<baseClass>::createList)\
+, (bp::arg("listName"), bp::arg("input"), bp::arg("validate")=(bool const)(true))).staticmethod("createList")\
+.def("createNode"\
+, (boost::shared_ptr<baseClass> (*)(std::string const &,std::string const &,karabo::util::Hash const &,bool const ))(&karabo::util::Configurator<baseClass>::createNode)\
+, (bp::arg("nodeName"), bp::arg("classId"), bp::arg("input"), bp::arg("validate")=(bool const)(true))).staticmethod("createNode")\
+.def("getClassInfo"\
+, (karabo::util::ClassInfo(karabo::util::Configurator<baseClass>::* )() const)(&karabo::util::Configurator<baseClass>::getClassInfo))\
+.def("getRegisteredClasses"\
+, (std::vector< std::string > (*)( ))( &karabo::util::Configurator<baseClass>::getRegisteredClasses)).staticmethod("getRegisteredClasses")\
+.def("getSchema"\
+, (karabo::util::Schema (*)( std::string const &,karabo::util::Schema::AssemblyRules const & ))( &karabo::util::Configurator<baseClass>::getSchema)\
+, (bp::arg("classId"), bp::arg("rules")=karabo::util::Schema::AssemblyRules() ) ).staticmethod( "getSchema" )
+        
 #endif	/* PYTHONFACTORYMACROS_HH */
