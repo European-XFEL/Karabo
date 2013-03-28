@@ -65,6 +65,26 @@ class  AttributesTestCase(unittest.TestCase):
         except Exception,e:
             self.fail("test_attributes exception group 5: " + str(e))
 
+        try:
+            h = Hash("a.b.a.b", 42)
+            h.setAttribute("a.b.a.b","attr1", [1,2,3,4,5,6,7])
+            
+            setStdVectorDefaultConversion(Types.PYTHON)
+            if isStdVectorDefaultConversion(Types.PYTHON):
+                self.assertEqual(h.getAttribute("a.b.a.b","attr1"), [1,2,3,4,5,6,7])
+            if isStdVectorDefaultConversion(Types.NUMPY):
+                self.assertEqual(h.getAttribute("a.b.a.b","attr1").all(), np.array([1,2,3,4,5,6,7], dtype=np.int32).all())
+            
+            setStdVectorDefaultConversion(Types.NUMPY)
+            if isStdVectorDefaultConversion(Types.PYTHON):
+                self.assertEqual(h.getAttribute("a.b.a.b","attr1"), [1,2,3,4,5,6,7])
+            if isStdVectorDefaultConversion(Types.NUMPY):
+                self.assertEqual(h.getAttribute("a.b.a.b","attr1").all(), np.array([1,2,3,4,5,6,7], dtype=np.int32).all())
+                
+            setStdVectorDefaultConversion(Types.PYTHON)
+        except Exception,e:
+            self.fail("test_attributes exception group 6: " + str(e))
+
 
 if __name__ == '__main__':
     unittest.main()
