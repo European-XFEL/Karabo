@@ -97,6 +97,7 @@ namespace karabo {
                         //                        return bp::object(node->getValueAs<karabo::util::Hash>());
                         //                    case Types::VECTOR_HASH:
                         //                        return Wrapper::fromStdVectorToPyList(node->getValueAs<karabo::util::Hash, std::vector>());
+                        
                     default:
                         break;
                 }
