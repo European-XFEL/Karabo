@@ -15,6 +15,7 @@
 #include <karabo/util/NodeElement.hh>
 #include <karabo/util/ListElement.hh>
 #include <karabo/util/VectorElement.hh>
+#include <karabo/io/FileTools.hh>
 
 CPPUNIT_TEST_SUITE_REGISTRATION(SchemaXsdSerializer_Test);
 
@@ -210,10 +211,13 @@ void SchemaXsdSerializer_Test::testTextFileOutputSchema() {
     TestSchemaXsdSerializer::expectedParameters(testSchema);
     
     string fileName = resourcePath("testSchemaFile.xsd");
-       
-    Output<Schema>::Pointer out = Output<Schema>::create("TextFile", Hash("filename", fileName, "format.Xsd.indentation", 2));
-    out->write(testSchema);
-
+    
+    saveToFile(testSchema, fileName, Hash("format.Xsd.indentation", 2));
+    
+    //or:
+    //Output<Schema>::Pointer out = Output<Schema>::create("TextFile", Hash("filename", fileName, "format.Xsd.indentation", 2));
+    //out->write(testSchema);
+    
     ifstream newFile(fileName.c_str());
 
     string fnameEtalon = resourcePath("testSchemaFile_readonly.xsd");
