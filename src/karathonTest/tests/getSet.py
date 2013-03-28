@@ -99,6 +99,26 @@ class  GetSetTestCase(unittest.TestCase):
         except Exception,e:
             self.fail("test_getSet exception group 6: " + str(e))
             
+        try:
+            h = Hash('a.b.c', [1, 2, 3, 4, 5, 6, 7], 'b.c.d', [False, False, True, True, True, False, True])
+            self.assertEqual(isStdVectorDefaultConversion(Types.PYTHON), True)
+            self.assertEqual(h.isType('a.b.c', Types.VECTOR_INT32), True)
+            self.assertEqual(str(type(h['a.b.c'])), "<type 'list'>")
+            try:
+                setStdVectorDefaultConversion(Types.VECTOR_INT32)
+            except RuntimeError,e:
+                pass
+            self.assertEqual(isStdVectorDefaultConversion(Types.PYTHON), True)
+            setStdVectorDefaultConversion(Types.NUMPY)
+            self.assertEqual(isStdVectorDefaultConversion(Types.PYTHON), False)
+            self.assertEqual(isStdVectorDefaultConversion(Types.NUMPY), True)
+            self.assertEqual(str(type(h['a.b.c'])), "<type 'numpy.ndarray'>")
+            self.assertEqual(str(type(h['b.c.d'])), "<type 'numpy.ndarray'>")
+            setStdVectorDefaultConversion(Types.PYTHON)
+            self.assertEqual(isStdVectorDefaultConversion(Types.PYTHON), True)
+        except Exception,e:
+            self.fail("test_getSet exception group 7: " + str(e))
+            
             
 if __name__ == '__main__':
     unittest.main()
