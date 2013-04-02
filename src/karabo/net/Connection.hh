@@ -32,7 +32,7 @@ namespace karabo {
 
         class Channel;
         
-        typedef boost::function<void (boost::shared_ptr<Channel>, const std::string&) > ErrorHandler;
+        typedef boost::function<void (boost::shared_ptr<Channel>, const ErrorCode&) > ErrorHandler;
 
         /**
          * The Connection class.
@@ -97,7 +97,7 @@ namespace karabo {
 
             /**
              * This function sets the error handler that will be called if connection process failed
-             * @param Handler as a function object of ErrorHandler type
+             * @param Call-back function of signature: void (boost::shared_ptr<Channel>, const ErrorCode&)
              * @return void
              */
             void setErrorHandler(const ErrorHandler& handler) {
