@@ -22,9 +22,9 @@ static char* argv[2];
 CPPUNIT_TEST_SUITE_REGISTRATION(HashWrap_Test);
 
 HashWrap_Test::HashWrap_Test() {
-    string karathon(getenv("KARATHON") == NULL? "" : getenv("KARATHON"));
-    if (karathon.empty()) throw KARABO_PYTHON_EXCEPTION("KARATHON environment variable is not set");
-    string python = karathon + "/karabo/extern/bin/python";
+    string karaboEnv(getenv("KARABO") == NULL? "" : getenv("KARABO"));
+    if (karaboEnv.empty()) throw KARABO_PYTHON_EXCEPTION("KARABO environment variable is not set");
+    string python = karaboEnv + "/extern/bin/python";
     copy(python.begin(),python.end(),interpreter_path);
     Py_SetProgramName(interpreter_path);
     Py_Initialize();
