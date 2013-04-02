@@ -18,7 +18,7 @@ namespace bp = boost::python;
 namespace karabo {
     namespace pyexfel {
 
-        
+
         class HashWrap {
 
 
@@ -127,11 +127,6 @@ namespace karabo {
                           const std::string& path,
                           const std::string& separator = ".");
 
-            static bp::object
-            pythonGetTypeAsId(const karabo::util::Hash& self,
-                              const std::string& path,
-                              const std::string& separator = ".");
-
             static bool
             pythonHasAttribute(karabo::util::Hash& self,
                                const std::string& path,
@@ -175,18 +170,18 @@ namespace karabo {
 
             static bp::object
             __getitem__(karabo::util::Hash& self, const bp::object& obj);
-            
+
             static void
             setDefault(const PyTypes::ReferenceType& type);
 
             static bool
             isDefault(const PyTypes::ReferenceType& type);
-            
+
         };
 
         bool
         pythonSimilar(const bp::object& left, const bp::object& right);
-        
+
     }
 }
 

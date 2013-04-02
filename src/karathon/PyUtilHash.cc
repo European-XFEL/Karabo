@@ -20,74 +20,74 @@ using namespace karabo::util;
 using namespace std;
 using namespace karabo::pyexfel;
 
-typedef  karabo::util::Element<std::string, karabo::util::OrderedMap<std::string, karabo::util::Element<std::string, bool> > > HashNode;
+typedef karabo::util::Element<std::string, karabo::util::OrderedMap<std::string, karabo::util::Element<std::string, bool> > > HashNode;
 
 void exportPyUtilHash() {
 
     bn::initialize();
 
     bp::docstring_options docs(true, true, false);
-    
+
     // Types
     bp::enum_<PyTypes::ReferenceType>("Types")
-        .value("BOOL", PyTypes::BOOL)
-        .value("VECTOR_BOOL", PyTypes::VECTOR_BOOL)
-        .value("CHAR", PyTypes::CHAR)
-        .value("VECTOR_CHAR", PyTypes::VECTOR_CHAR)
-        .value("INT8", PyTypes::INT8)
-        .value("VECTOR_INT8", PyTypes::VECTOR_INT8)
-        .value("UINT8", PyTypes::UINT8)
-        .value("VECTOR_UINT8", PyTypes::VECTOR_UINT8)
-        .value("INT16", PyTypes::INT16)
-        .value("VECTOR_INT16", PyTypes::VECTOR_INT16)
-        .value("UINT16", PyTypes::UINT16)
-        .value("VECTOR_UINT16", PyTypes::VECTOR_UINT16)
-        .value("INT32", PyTypes::INT32)
-        .value("VECTOR_INT32", PyTypes::VECTOR_INT32)
-        .value("UINT32", PyTypes::UINT32)
-        .value("VECTOR_UINT32", PyTypes::VECTOR_UINT32)
-        .value("INT64", PyTypes::INT64)
-        .value("VECTOR_INT64", PyTypes::VECTOR_INT64)
-        .value("UINT64", PyTypes::UINT64)
-        .value("VECTOR_UINT64", PyTypes::VECTOR_UINT64)
-        .value("FLOAT", PyTypes::FLOAT)
-        .value("VECTOR_FLOAT", PyTypes::VECTOR_FLOAT)
-        .value("DOUBLE", PyTypes::DOUBLE)
-        .value("VECTOR_DOUBLE", PyTypes::VECTOR_DOUBLE)
-        .value("COMPLEX_FLOAT", PyTypes::COMPLEX_FLOAT)
-        .value("VECTOR_COMPLEX_FLOAT", PyTypes::VECTOR_COMPLEX_FLOAT)
-        .value("COMPLEX_DOUBLE", PyTypes::COMPLEX_DOUBLE)
-        .value("VECTOR_COMPLEX_DOUBLE", PyTypes::VECTOR_COMPLEX_DOUBLE)
-        .value("STRING", PyTypes::STRING)
-        .value("VECTOR_STRING", PyTypes::VECTOR_STRING)
-        .value("HASH", PyTypes::HASH)
-        .value("VECTOR_HASH", PyTypes::VECTOR_HASH)
-        .value("SCHEMA", PyTypes::SCHEMA)
-        .value("ANY", PyTypes::ANY)
-        .value("UNKNOWN", PyTypes::UNKNOWN)
-        .value("PYTHON",  PyTypes::PYTHON_DEFAULT)
-        .value("NUMPY", PyTypes::NUMPY_DEFAULT)
-        .value("NDARRAY_BOOL", PyTypes::NDARRAY_BOOL)
-        .value("NDARRAY_INT16", PyTypes::NDARRAY_INT16)
-        .value("NDARRAY_UINT16", PyTypes::NDARRAY_UINT16)
-        .value("NDARRAY_INT32", PyTypes::NDARRAY_INT32)
-        .value("NDARRAY_UINT32", PyTypes::NDARRAY_UINT32)
-        .value("NDARRAY_INT64", PyTypes::NDARRAY_INT64)
-        .value("NDARRAY_UINT64", PyTypes::NDARRAY_UINT64)
-        .value("NDARRAY_FLOAT", PyTypes::NDARRAY_FLOAT)
-        .value("NDARRAY_DOUBLE", PyTypes::NDARRAY_DOUBLE)
-        .value("NDARRAY_COMPLEX_FLOAT", PyTypes::NDARRAY_COMPLEX_FLOAT)
-        .value("NDARRAY_COMPLEX_DOUBLE", PyTypes::NDARRAY_COMPLEX_DOUBLE)
-        ;
-    
-  
+            .value("BOOL", PyTypes::BOOL)
+            .value("VECTOR_BOOL", PyTypes::VECTOR_BOOL)
+            .value("CHAR", PyTypes::CHAR)
+            .value("VECTOR_CHAR", PyTypes::VECTOR_CHAR)
+            .value("INT8", PyTypes::INT8)
+            .value("VECTOR_INT8", PyTypes::VECTOR_INT8)
+            .value("UINT8", PyTypes::UINT8)
+            .value("VECTOR_UINT8", PyTypes::VECTOR_UINT8)
+            .value("INT16", PyTypes::INT16)
+            .value("VECTOR_INT16", PyTypes::VECTOR_INT16)
+            .value("UINT16", PyTypes::UINT16)
+            .value("VECTOR_UINT16", PyTypes::VECTOR_UINT16)
+            .value("INT32", PyTypes::INT32)
+            .value("VECTOR_INT32", PyTypes::VECTOR_INT32)
+            .value("UINT32", PyTypes::UINT32)
+            .value("VECTOR_UINT32", PyTypes::VECTOR_UINT32)
+            .value("INT64", PyTypes::INT64)
+            .value("VECTOR_INT64", PyTypes::VECTOR_INT64)
+            .value("UINT64", PyTypes::UINT64)
+            .value("VECTOR_UINT64", PyTypes::VECTOR_UINT64)
+            .value("FLOAT", PyTypes::FLOAT)
+            .value("VECTOR_FLOAT", PyTypes::VECTOR_FLOAT)
+            .value("DOUBLE", PyTypes::DOUBLE)
+            .value("VECTOR_DOUBLE", PyTypes::VECTOR_DOUBLE)
+            .value("COMPLEX_FLOAT", PyTypes::COMPLEX_FLOAT)
+            .value("VECTOR_COMPLEX_FLOAT", PyTypes::VECTOR_COMPLEX_FLOAT)
+            .value("COMPLEX_DOUBLE", PyTypes::COMPLEX_DOUBLE)
+            .value("VECTOR_COMPLEX_DOUBLE", PyTypes::VECTOR_COMPLEX_DOUBLE)
+            .value("STRING", PyTypes::STRING)
+            .value("VECTOR_STRING", PyTypes::VECTOR_STRING)
+            .value("HASH", PyTypes::HASH)
+            .value("VECTOR_HASH", PyTypes::VECTOR_HASH)
+            .value("SCHEMA", PyTypes::SCHEMA)
+            .value("ANY", PyTypes::ANY)
+            .value("UNKNOWN", PyTypes::UNKNOWN)
+            .value("PYTHON", PyTypes::PYTHON_DEFAULT)
+            .value("NUMPY", PyTypes::NUMPY_DEFAULT)
+            .value("NDARRAY_BOOL", PyTypes::NDARRAY_BOOL)
+            .value("NDARRAY_INT16", PyTypes::NDARRAY_INT16)
+            .value("NDARRAY_UINT16", PyTypes::NDARRAY_UINT16)
+            .value("NDARRAY_INT32", PyTypes::NDARRAY_INT32)
+            .value("NDARRAY_UINT32", PyTypes::NDARRAY_UINT32)
+            .value("NDARRAY_INT64", PyTypes::NDARRAY_INT64)
+            .value("NDARRAY_UINT64", PyTypes::NDARRAY_UINT64)
+            .value("NDARRAY_FLOAT", PyTypes::NDARRAY_FLOAT)
+            .value("NDARRAY_DOUBLE", PyTypes::NDARRAY_DOUBLE)
+            .value("NDARRAY_COMPLEX_FLOAT", PyTypes::NDARRAY_COMPLEX_FLOAT)
+            .value("NDARRAY_COMPLEX_DOUBLE", PyTypes::NDARRAY_COMPLEX_DOUBLE)
+            ;
+
+
     bp::def("setStdVectorDefaultConversion", &HashWrap().setDefault, (bp::arg("PYTHON_or_NUMPY_types")));
     bp::def("isStdVectorDefaultConversion", &HashWrap().isDefault, (bp::arg("PYTHON_or_NUMPY_types")));
-            
-    
-//    using boost::python::iterator;
-//    bp::def("range", &karabo::pyexfel::range);
-    
+
+
+    //    using boost::python::iterator;
+    //    bp::def("range", &karabo::pyexfel::range);
+
     bp::class_<Hash::Attributes::map_iterator>("HashAttributesMapIterator", bp::no_init);
 
     bp::class_<Hash::Attributes::const_map_iterator>("HashAttributesConstMapIterator", bp::no_init);
@@ -186,40 +186,81 @@ void exportPyUtilHash() {
           std::string const &, bp::object const &,
           std::string const &, bp::object const &,
           std::string const &, bp::object const & >());
-    h.def("clear", &Hash::clear);
-    h.def("empty", &HashWrap().pythonEmpty);
-    h.def("getKeys", &HashWrap().pythonGetKeys, (bp::arg("target_container")));
-    h.def("keys", &HashWrap().pythonKeys);
-    h.def("getValues", &HashWrap().pythonGetValues);
-    h.def("values", &HashWrap().pythonGetValues);
-    h.def("getPaths", &HashWrap().pythonGetPaths, (bp::arg("target_container")));
-    h.def("paths", &HashWrap().pythonPaths);
-    h.def("set", &HashWrap().pythonSet, (bp::arg("path"), bp::arg("value"), bp::arg("sep") = "."));
-    h.def("__setitem__", &HashWrap().pythonSet, (bp::arg("path"), bp::arg("value"), bp::arg("sep") = "."));
-    h.def("get", &HashWrap().pythonGet, (bp::arg("path"), bp::arg("sep") = "."));
-    h.def("__getitem__", &HashWrap().__getitem__, (bp::arg("iterator")));
-    h.def("has", &HashWrap().pythonHas, (bp::arg("path"), bp::arg("sep") = "."));
-    h.def("__contains__", &HashWrap().pythonHas, (bp::arg("path"), bp::arg("sep") = "."));
+    h.def("clear", &Hash::clear,
+          "Make empty the content of current Hash object (in place).\n");
+    h.def("empty", &HashWrap().pythonEmpty,
+          "Returns True if current Hash object is empty.\n");
+    h.def("getKeys", &HashWrap().pythonGetKeys, (bp::arg("target_container")),
+          "Put into the target container all the keys visible on the top level of the tree hierarchy.\n"
+          "\nExample:\n\th = Hash('a.b.c', 1, 'b.x', 2.22, 'b.y', 7.432, 'c', [1,2,3])\n"
+          "\tmykeys = []\n\th.getKeys(mykeys)\nprint mykeys\n\n... returns:\n\t['a', 'b', 'c']\n");
+    h.def("keys", &HashWrap().pythonKeys,
+          "Returns list of all keys visible on the top level of the tree hierarchy.\n"
+          "\nExample:\n\th = Hash('a.b.c', 1, 'b.x', 2.22, 'b.y', 7.432, 'c', [1,2,3])\n"
+          "\tprint h.keys()\n\n... returns:\n\t['a', 'b', 'c']\n");
+    h.def("getValues", &HashWrap().pythonGetValues,
+          "Returns list of values associated with keys visible on the top level of the tree hierarchy.\n"
+          "\nExample:\n\th = Hash('a.b.c', 1, 'b.x', 2.22, 'b.y', 7.432, 'c', [1,2,3])\n"
+          "\tprint h.getValues()\n\n... returns:\n\t[<libkarathon.Hash at 0x3188b18>,\n\t <libkarathon.Hash at 0x3188f68>,\n"
+          "\t [True, False, True, True]]\n");
+
+    h.def("values", &HashWrap().pythonGetValues,
+          "Returns list of values associated with keys visible on the top level of the tree hierarchy.\n"
+          "\nExample:\n\th = Hash('a.b.c', 1, 'b.x', 2.22, 'b.y', 7.432, 'c', [1,2,3])\n"
+          "\tprint h.values()\n\n... returns:\n\t[<libkarathon.Hash at 0x3188b18>,\n\t <libkarathon.Hash at 0x3188f68>,\n"
+          "\t [True, False, True, True]]\n");
+    h.def("getPaths", &HashWrap().pythonGetPaths, (bp::arg("target_container")),
+          "Put into the target container the full paths of current Hash object.\n"
+          "\nExample:\n\th = Hash('a.b.c', 1, 'b.x', 2.22, 'b.y', 7.432, 'c', [1,2,3])\n"
+          "\tmypaths = []\n\th.getPaths(mypaths)\nprint mypaths\n\n... returns:\n\t['a.b.c', 'b.x', 'b.y', 'c']");
+    h.def("paths", &HashWrap().pythonPaths,
+          "Returns list of all the paths being in current Hash object.\n"
+          "\nExample:\n\th = Hash('a.b.c', 1, 'b.x', 2.22, 'b.y', 7.432, 'c', [1,2,3])\n"
+          "\tprint h.paths()\n\n... returns:\n\t['a.b.c', 'b.x', 'b.y', 'c']");
+    h.def("set", &HashWrap().pythonSet, (bp::arg("path"), bp::arg("value"), bp::arg("sep") = "."),
+          "Set the new 'path'/'value' pair into the current Hash object. The third optional parameter is a separator,\n"
+          "used to form a tree hierarchy out of 'path'.\nExample:\n\th = Hash()\n\th.set('a.b.c', 1)\n\th.set('x/y/z', 2, \"/\")\n"
+          "\tprint h");
+    h.def("__setitem__", &HashWrap().pythonSet, (bp::arg("path"), bp::arg("value"), bp::arg("sep") = "."),
+          "Use this form of setting the new 'path'/'value' pair if you need the default separator.\nE"
+          "xample:\n\th = Hash()\n\th['a.b.c'] = 1\n\tprint h");
+    h.def("get", &HashWrap().pythonGet, (bp::arg("path"), bp::arg("sep") = "."),
+          "Get the 'value' by 'path'. Optionally, the separator can be defined as second argument.\n"
+          "Example:\n\th = Hash('a.b.c', 1)\n\tprint h.get('a/b/c','/')");
+    h.def("__getitem__", &HashWrap().__getitem__, (bp::arg("iterator")),
+          "Use this form of getting the 'value' using the 'path' if you need the default separator.\n"
+          "Example:\n\th = Hash('a.b.c', 1)\n\tprint h['a.b.c']");
+    h.def("has", &HashWrap().pythonHas, (bp::arg("path"), bp::arg("sep") = "."),
+          "Returns true if given 'path' is found in current Hash object. Use separator as needed.");
+    h.def("__contains__", &HashWrap().pythonHas, (bp::arg("path"), bp::arg("sep") = "."),
+          "Check if 'path' is known in current Hash object. Use this form if you use the default separator.\n"
+          "Example:\n\th = Hash('a.b.c', 1)\n\t...\n\tif 'a.b.c' in h:\n\t\th['a.b.c'] = 2");
     h.def("erase", &HashWrap().pythonErase, (bp::arg("path"), bp::arg("sep") = "."));
     h.def("__delitem__", &HashWrap().pythonErase, (bp::arg("path"), bp::arg("sep") = "."));
     h.def("__len__", &Hash::size);
     h.def("__iter__", bp::iterator<Hash > ());
-    h.def("getAs", &HashWrap().pythonGetAs, (bp::arg("path"), bp::arg("type"), bp::arg("sep") = "."));
-    h.def("getType", &HashWrap().pythonGetType, (bp::arg("key"), bp::arg("sep") = "."));
-    h.def("getTypeAsId", &HashWrap().pythonGetTypeAsId, (bp::arg("key"), bp::arg("sep") = "."));
+    h.def("getAs", &HashWrap().pythonGetAs, (bp::arg("path"), bp::arg("type"), bp::arg("sep") = "."),
+          "Get value by 'path' and convert it to 'type' type.  Optionally use separator.\n"
+          "Example:\n\th = Hash('a.b.c', True)\n\tprint h.getAs('a.b.c', Types.INT32)\n\t"
+          "print h.getAs('a.b.c', Types.STRING)\n\tprint h.getAs('a.b.c', Types.DOUBLE)");
+    h.def("getType", &HashWrap().pythonGetType, (bp::arg("path"), bp::arg("sep") = "."),
+          "Get type by 'path'.  Returns 'Types.<value>' object.\n"
+          "Example:\n\th = Hash('a.b.c', True)\n\tprint h.getType('a.b.c')");
     h.def("merge", &Hash::merge, (bp::arg("hash")));
-    
+
     // Global free function to compare Hash, vector<Hash>, Hash::Node
     def("similar", &pythonSimilar, (bp::arg("left"), bp::arg("right")));
-    
+
     //    h.def("__add__", &Hash::operator+, (bp::arg("hash1"), bp::arg("hash2")), bp::return_value_policy<copy_non_const_reference>());
     h.def("__iadd__", &Hash::operator+=, (bp::arg("hash")), bp::return_internal_reference<>());
     h.def("isType", &HashWrap().pythonIs, (bp::arg("path"), bp::arg("type"), bp::arg("sep") = "."));
     h.def(bp::self_ns::str(bp::self));
     //    h.def("copy", &HashWrap().pyDict2Hash, (bp::arg("dict"), bp::arg("sep") = "."), bp::return_value_policy<bp::copy_const_reference > ());
     //    h.def("update", &Hash::update, (bp::arg("hash")));
-    h.def("flatten", &HashWrap().pythonFlatten, (bp::arg("flat"), bp::arg("sep") = "."));
-    h.def("unflatten", &HashWrap().pythonUnFlatten, (bp::arg("tree"), bp::arg("sep") = "."));
+    h.def("flatten", &HashWrap().pythonFlatten, (bp::arg("flat"), bp::arg("sep") = "."),
+          "Make all key/value pairs flat and put them into 'target' container.  Optionally use separator (2nd arg)");
+    h.def("unflatten", &HashWrap().pythonUnFlatten, (bp::arg("tree"), bp::arg("sep") = "."),
+          "Make all key/value pairs tree-like and put them into 'target' container.  Optionally use separator (2nd arg)");
     h.def("find", &HashWrap().pythonFind, (bp::arg("path"), bp::arg("sep") = "."),
           "Find node in current Hash using \"path\".  Optionally the separator \"sep\" may be defined.\n"
           "Returns not a copy but reference to the existing Hash.Node object or \"None\".\n"
@@ -230,7 +271,8 @@ void exportPyUtilHash() {
     h.def("getNode", &HashWrap().pythonGetNode, (bp::arg("path"), bp::arg("sep") = "."),
           "Returns a copy of found node (not a reference!), so if you do any changes via returned object,\n"
           "these changes will not be reflected in the current Hash object.");
-    h.def("getAttribute", &HashWrap().pythonGetAttribute, (bp::arg("path"), bp::arg("attribute"), bp::arg("sep") = "."));
+    h.def("getAttribute", &HashWrap().pythonGetAttribute, (bp::arg("path"), bp::arg("attribute"), bp::arg("sep") = "."),
+          "Get attribute value following given 'path' and 'attribute' name. Optionally use separator (3rd arg).");
     h.def("getAttributeAs", &HashWrap().pythonGetAttributeAs, (bp::arg("path"), bp::arg("attribute"), bp::arg("type"), bp::arg("sep") = "."));
     h.def("getAttributes", &HashWrap().pythonGetAttributes, (bp::arg("path"), bp::arg("sep") = "."));
     h.def("setAttribute", &HashWrap().pythonSetAttribute, (bp::arg("path"), bp::arg("attribute"), bp::arg("value"), bp::arg("sep") = "."));
