@@ -406,15 +406,6 @@ namespace karabo {
                                 const std::string& path,
                                 const std::string& separator) {
             const char sep = separator.at(0);
-            const std::string stdstr = karabo::util::Types::to<karabo::util::ToLiteral>(self.getType(path, sep));
-            return bp::str(stdstr.c_str(), stdstr.size());
-        }
-
-        bp::object
-        HashWrap::pythonGetTypeAsId(const karabo::util::Hash& self,
-                                    const std::string& path,
-                                    const std::string& separator) {
-            const char sep = separator.at(0);
             PyTypes::ReferenceType type = static_cast<PyTypes::ReferenceType> (self.getType(path, sep));
             return bp::object(type);
         }
