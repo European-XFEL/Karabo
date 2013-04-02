@@ -164,7 +164,7 @@ namespace karabo {
                 handler(channel);
             } else {
                 if (m_errorHandler)
-                    m_errorHandler(channel, e.message());
+                    m_errorHandler(channel, e);
                 else
                     throw KARABO_NETWORK_EXCEPTION(e.message());
             }
@@ -206,7 +206,7 @@ namespace karabo {
                     handler(channel);
                 } else {
                     if (m_errorHandler)
-                        m_errorHandler(channel, e.message());
+                        m_errorHandler(channel, e);
                     else
                         throw KARABO_NETWORK_EXCEPTION(e.message());
                 }

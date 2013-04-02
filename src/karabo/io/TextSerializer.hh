@@ -35,6 +35,10 @@ namespace karabo {
             virtual void load(T& object, const std::stringstream& archive) {
                 this->load(object, archive.str()); // Creates a copy, but may be overridden for more performance
             }
+            
+            virtual void load(T& object, const char* archive) {
+                this->load(object, std::string(archive)); // Creates a copy, but may be overridden for more performance
+            }
         };
     }
 }

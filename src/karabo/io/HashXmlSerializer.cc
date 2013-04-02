@@ -162,8 +162,12 @@ namespace karabo {
 
 
         void HashXmlSerializer::load(Hash& object, const std::string& archive) {
+            this->load(object, archive.c_str());
+        }
+        
+        void HashXmlSerializer::load(karabo::util::Hash& object, const char* archive) {
             pugi::xml_document doc;
-            doc.load(archive.c_str());
+            doc.load(archive);
             pugi::xml_node node = doc.first_child();
             if (std::string(node.first_attribute().name()) == m_artificialRootFlag) { // ignore
                 this->createHash(object, node.first_child());

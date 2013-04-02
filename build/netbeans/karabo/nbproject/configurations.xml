@@ -309,7 +309,6 @@
             <linkerLibLibItem>python2.7</linkerLibLibItem>
             <linkerLibLibItem>dl</linkerLibLibItem>
             <linkerLibLibItem>pthread</linkerLibLibItem>
-            <linkerLibLibItem>rt</linkerLibLibItem>
           </linkerLibItems>
         </linkerTool>
       </compileType>
@@ -938,6 +937,11 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/util/Dims.hh" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/DoubleReferenceIterator.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
       </item>
       <item path="../../../src/karabo/util/Element.hh"
             ex="false"
@@ -1859,6 +1863,11 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/util/Dims.hh" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/DoubleReferenceIterator.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
       </item>
       <item path="../../../src/karabo/util/Element.hh"
             ex="false"
