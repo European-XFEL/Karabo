@@ -50,6 +50,8 @@
       <toolsSet>
         <remote-sources-mode>LOCAL_SOURCES</remote-sources-mode>
         <compilerSet>default</compilerSet>
+        <dependencyChecking>true</dependencyChecking>
+        <rebuildPropChanged>false</rebuildPropChanged>
       </toolsSet>
       <compileType>
         <ccTool>
@@ -192,6 +194,8 @@
       <toolsSet>
         <remote-sources-mode>LOCAL_SOURCES</remote-sources-mode>
         <compilerSet>default</compilerSet>
+        <dependencyChecking>true</dependencyChecking>
+        <rebuildPropChanged>false</rebuildPropChanged>
       </toolsSet>
       <compileType>
         <cTool>
@@ -226,6 +230,31 @@
             <pElem>${KARABO}/extern/lib</pElem>
             <pElem>${KARABO}/lib</pElem>
           </linkerDynSerch>
+          <linkerLibItems>
+            <linkerLibLibItem>karabo</linkerLibLibItem>
+            <linkerLibLibItem>boost_chrono</linkerLibLibItem>
+            <linkerLibLibItem>boost_date_time</linkerLibLibItem>
+            <linkerLibLibItem>boost_filesystem</linkerLibLibItem>
+            <linkerLibLibItem>boost_numpy</linkerLibLibItem>
+            <linkerLibLibItem>boost_python</linkerLibLibItem>
+            <linkerLibLibItem>boost_regex</linkerLibLibItem>
+            <linkerLibLibItem>boost_signals</linkerLibLibItem>
+            <linkerLibLibItem>boost_system</linkerLibLibItem>
+            <linkerLibLibItem>boost_thread</linkerLibLibItem>
+            <linkerLibLibItem>cppunit</linkerLibLibItem>
+            <linkerLibLibItem>hdf5</linkerLibLibItem>
+            <linkerLibLibItem>hdf5_cpp</linkerLibLibItem>
+            <linkerLibLibItem>hdf5_hl</linkerLibLibItem>
+            <linkerLibLibItem>hdf5_hl_cpp</linkerLibLibItem>
+            <linkerLibLibItem>log4cpp</linkerLibLibItem>
+            <linkerLibLibItem>netsnmp</linkerLibLibItem>
+            <linkerLibLibItem>netsnmpagent</linkerLibLibItem>
+            <linkerLibLibItem>netsnmphelpers</linkerLibLibItem>
+            <linkerLibLibItem>netsnmpmibs</linkerLibLibItem>
+            <linkerLibLibItem>netsnmptrapd</linkerLibLibItem>
+            <linkerLibLibItem>openmqc</linkerLibLibItem>
+            <linkerLibLibItem>python2.7</linkerLibLibItem>
+          </linkerLibItems>
         </linkerTool>
       </compileType>
       <item path="../../../src/karathon/AttributesNodeWrap.hh"

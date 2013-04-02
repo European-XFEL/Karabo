@@ -64,7 +64,7 @@ FFLAGS=
 ASFLAGS=
 
 # Link Libraries and Options
-LDLIBSOPTIONS=-L/opt/local/nss -L/opt/local/nspr -L${KARABO}/lib -L${KARABO}/extern/lib -Wl,-rpath,\$$ORIGIN -Wl,-rpath,\$$ORIGIN/../extern/lib -Wl,-rpath,${KARABO}/extern/lib -Wl,-rpath,${KARABO}/lib
+LDLIBSOPTIONS=-L/opt/local/nss -L/opt/local/nspr -L${KARABO}/lib -L${KARABO}/extern/lib -Wl,-rpath,\$$ORIGIN -Wl,-rpath,\$$ORIGIN/../extern/lib -Wl,-rpath,${KARABO}/extern/lib -Wl,-rpath,${KARABO}/lib -lkarabo -lboost_chrono -lboost_date_time -lboost_filesystem -lboost_numpy -lboost_python -lboost_regex -lboost_signals -lboost_system -lboost_thread -lcppunit -lhdf5 -lhdf5_cpp -lhdf5_hl -lhdf5_hl_cpp -llog4cpp -lnetsnmp -lnetsnmpagent -lnetsnmphelpers -lnetsnmpmibs -lnetsnmptrapd -lopenmqc -lpython2.7
 
 # Build Targets
 .build-conf: ${BUILD_SUBPROJECTS}
