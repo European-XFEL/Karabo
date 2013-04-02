@@ -11,6 +11,14 @@
       <itemPath>../../../src/karathon/Wrapper.cc</itemPath>
       <itemPath>../../../src/karathon/Wrapper.hh</itemPath>
     </logicalFolder>
+    <logicalFolder name="f2" displayName="Schema Binding" projectFiles="true">
+      <itemPath>../../../src/karathon/DefaultValueVectorWrap.hh</itemPath>
+      <itemPath>../../../src/karathon/PyIoFileTools.cc</itemPath>
+      <itemPath>../../../src/karathon/PyUtilClassInfo.cc</itemPath>
+      <itemPath>../../../src/karathon/PyUtilSchema.cc</itemPath>
+      <itemPath>../../../src/karathon/PythonFactoryMacros.hh</itemPath>
+      <itemPath>../../../src/karathon/PythonMacros.hh</itemPath>
+    </logicalFolder>
     <logicalFolder name="SourceFiles"
                    displayName="Source Files"
                    projectFiles="true">
@@ -42,8 +50,6 @@
       <toolsSet>
         <remote-sources-mode>LOCAL_SOURCES</remote-sources-mode>
         <compilerSet>default</compilerSet>
-        <dependencyChecking>true</dependencyChecking>
-        <rebuildPropChanged>false</rebuildPropChanged>
       </toolsSet>
       <compileType>
         <ccTool>
@@ -56,7 +62,6 @@
           </incDir>
         </ccTool>
         <linkerTool>
-          <output>${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libkarathon.${CND_DLIB_EXT}</output>
           <linkerAddLib>
             <pElem>/opt/local/nss</pElem>
             <pElem>/opt/local/nspr</pElem>
@@ -66,8 +71,8 @@
           <linkerDynSerch>
             <pElem>\$$ORIGIN</pElem>
             <pElem>\$$ORIGIN/../extern/lib</pElem>
-            <pElem>${KARABO}/lib</pElem>
             <pElem>${KARABO}/extern/lib</pElem>
+            <pElem>${KARABO}/lib</pElem>
           </linkerDynSerch>
           <linkerLibItems>
             <linkerLibLibItem>karabo</linkerLibLibItem>
@@ -106,15 +111,45 @@
             tool="3"
             flavor2="0">
       </item>
+      <item path="../../../src/karathon/DefaultValueVectorWrap.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="../../../src/karathon/HashWrap.cc" ex="false" tool="1" flavor2="0">
       </item>
       <item path="../../../src/karathon/HashWrap.hh" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../../../src/karathon/NodeWrap.hh" ex="false" tool="3" flavor2="0">
       </item>
+      <item path="../../../src/karathon/PyIoFileTools.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karathon/PyUtilClassInfo.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
       <item path="../../../src/karathon/PyUtilHash.cc"
             ex="false"
             tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karathon/PyUtilSchema.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karathon/PythonFactoryMacros.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karathon/PythonMacros.hh"
+            ex="false"
+            tool="3"
             flavor2="0">
       </item>
       <item path="../../../src/karathon/Wrapper.cc" ex="false" tool="1" flavor2="0">
@@ -157,8 +192,6 @@
       <toolsSet>
         <remote-sources-mode>LOCAL_SOURCES</remote-sources-mode>
         <compilerSet>default</compilerSet>
-        <dependencyChecking>true</dependencyChecking>
-        <rebuildPropChanged>false</rebuildPropChanged>
       </toolsSet>
       <compileType>
         <cTool>
@@ -166,6 +199,13 @@
         </cTool>
         <ccTool>
           <developmentMode>5</developmentMode>
+          <incDir>
+            <pElem>../../../src</pElem>
+            <pElem>${KARABO}/include</pElem>
+            <pElem>${KARABO}/extern/include/hdf5</pElem>
+            <pElem>${KARABO}/extern/include/python2.7</pElem>
+            <pElem>${KARABO}/extern/include</pElem>
+          </incDir>
         </ccTool>
         <fortranCompilerTool>
           <developmentMode>5</developmentMode>
@@ -173,6 +213,20 @@
         <asmTool>
           <developmentMode>5</developmentMode>
         </asmTool>
+        <linkerTool>
+          <linkerAddLib>
+            <pElem>/opt/local/nss</pElem>
+            <pElem>/opt/local/nspr</pElem>
+            <pElem>${KARABO}/lib</pElem>
+            <pElem>${KARABO}/extern/lib</pElem>
+          </linkerAddLib>
+          <linkerDynSerch>
+            <pElem>\$$ORIGIN</pElem>
+            <pElem>\$$ORIGIN/../extern/lib</pElem>
+            <pElem>${KARABO}/extern/lib</pElem>
+            <pElem>${KARABO}/lib</pElem>
+          </linkerDynSerch>
+        </linkerTool>
       </compileType>
       <item path="../../../src/karathon/AttributesNodeWrap.hh"
             ex="false"
@@ -184,15 +238,45 @@
             tool="3"
             flavor2="0">
       </item>
+      <item path="../../../src/karathon/DefaultValueVectorWrap.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="../../../src/karathon/HashWrap.cc" ex="false" tool="1" flavor2="0">
       </item>
       <item path="../../../src/karathon/HashWrap.hh" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../../../src/karathon/NodeWrap.hh" ex="false" tool="3" flavor2="0">
       </item>
+      <item path="../../../src/karathon/PyIoFileTools.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karathon/PyUtilClassInfo.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
       <item path="../../../src/karathon/PyUtilHash.cc"
             ex="false"
             tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karathon/PyUtilSchema.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karathon/PythonFactoryMacros.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karathon/PythonMacros.hh"
+            ex="false"
+            tool="3"
             flavor2="0">
       </item>
       <item path="../../../src/karathon/Wrapper.cc" ex="false" tool="1" flavor2="0">
