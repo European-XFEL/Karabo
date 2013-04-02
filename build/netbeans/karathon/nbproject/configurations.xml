@@ -42,27 +42,32 @@
       <toolsSet>
         <remote-sources-mode>LOCAL_SOURCES</remote-sources-mode>
         <compilerSet>default</compilerSet>
+        <dependencyChecking>true</dependencyChecking>
+        <rebuildPropChanged>false</rebuildPropChanged>
       </toolsSet>
       <compileType>
         <ccTool>
           <incDir>
             <pElem>../../../src</pElem>
-            <pElem>${KARATHON}/karabo/include</pElem>
-            <pElem>${KARATHON}/karabo/extern/include/hdf5</pElem>
-            <pElem>${KARATHON}/karabo/extern/include/python2.7</pElem>
-            <pElem>${KARATHON}/karabo/extern/include</pElem>
+            <pElem>${KARABO}/include</pElem>
+            <pElem>${KARABO}/extern/include/hdf5</pElem>
+            <pElem>${KARABO}/extern/include/python2.7</pElem>
+            <pElem>${KARABO}/extern/include</pElem>
           </incDir>
         </ccTool>
         <linkerTool>
+          <output>${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libkarathon.${CND_DLIB_EXT}</output>
           <linkerAddLib>
             <pElem>/opt/local/nss</pElem>
             <pElem>/opt/local/nspr</pElem>
-            <pElem>${KARATHON}/karabo</pElem>
-            <pElem>${KARATHON}/karabo/extern/lib</pElem>
+            <pElem>${KARABO}/lib</pElem>
+            <pElem>${KARABO}/extern/lib</pElem>
           </linkerAddLib>
           <linkerDynSerch>
-            <pElem>\$$ORIGIN/karabo</pElem>
-            <pElem>\$$ORIGIN/karabo/extern/lib</pElem>
+            <pElem>\$$ORIGIN</pElem>
+            <pElem>\$$ORIGIN/../extern/lib</pElem>
+            <pElem>${KARABO}/lib</pElem>
+            <pElem>${KARABO}/extern/lib</pElem>
           </linkerDynSerch>
           <linkerLibItems>
             <linkerLibLibItem>karabo</linkerLibLibItem>
@@ -152,6 +157,8 @@
       <toolsSet>
         <remote-sources-mode>LOCAL_SOURCES</remote-sources-mode>
         <compilerSet>default</compilerSet>
+        <dependencyChecking>true</dependencyChecking>
+        <rebuildPropChanged>false</rebuildPropChanged>
       </toolsSet>
       <compileType>
         <cTool>
