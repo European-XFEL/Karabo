@@ -21,11 +21,11 @@ namespace karabo {
 
     namespace io {
 
+
         /**
          * The HashBinarySerializer class.
          */
         class HashBinarySerializer : public BinarySerializer<karabo::util::Hash> {
-
         public:
 
             KARABO_CLASSINFO(HashBinarySerializer, "Bin", "1.0")
@@ -81,10 +81,13 @@ namespace karabo {
 
             template<typename T>
             T readSingleValue(std::istream& is) {
-                char buffer[32];
-                memset(buffer, 0, 32);
-                is.read(buffer, sizeof (T));
-                return *reinterpret_cast<T*> (buffer); // BH: Why reinterpret if we know the type?
+                union {
+                    char buffer[32];
+                    T tbuffer[32/sizeof(T)];
+                } all;
+                memset(all.buffer, 0, 32);
+                is.read(all.buffer, sizeof (T));
+                return all.tbuffer[0];
             }
 
             template<typename T>
