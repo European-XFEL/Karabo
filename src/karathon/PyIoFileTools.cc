@@ -36,8 +36,8 @@ void exportPyIoFileTools() {
             , (bp::arg("object"), bp::arg("filename"), bp::arg("config") = karabo::util::Hash())
             );
     
-    {//exposing karabo::io::TextFileOutput<karabo::util::Hash>
-        typedef karabo::io::TextFileOutput<karabo::util::Hash> WriterHash;
+    {//exposing karabo::io::Output<karabo::util::Hash>
+        typedef karabo::io::Output<karabo::util::Hash> WriterHash;
         bp::class_<WriterHash, boost::noncopyable >("WriterHash", bp::no_init)
                 .def("write"
                      , (void (WriterHash::*)(Hash const &))(&WriterHash::write)
@@ -47,8 +47,8 @@ void exportPyIoFileTools() {
         bp::register_ptr_to_python< boost::shared_ptr<WriterHash> >();
     }
     
-    {//exposing karabo::io::TextFileInput<karabo::util::Hash>
-        typedef karabo::io::TextFileInput<karabo::util::Hash> ReaderHash;
+    {//exposing karabo::io::Input<karabo::util::Hash>
+        typedef karabo::io::Input<karabo::util::Hash> ReaderHash;
         bp::class_<ReaderHash, boost::noncopyable >("ReaderHash", bp::no_init)
                 .def("read"
                     , (void (ReaderHash::*)(Hash &, size_t))(&ReaderHash::read)
@@ -60,8 +60,8 @@ void exportPyIoFileTools() {
         bp::register_ptr_to_python< boost::shared_ptr<ReaderHash> >();
     }
     
-    {//exposing karabo::io::TextFileOutput<karabo::util::Schema>
-        typedef karabo::io::TextFileOutput<karabo::util::Schema> WriterSchema;
+    {//exposing karabo::io::Output<karabo::util::Schema>
+        typedef karabo::io::Output<karabo::util::Schema> WriterSchema;
         bp::class_<WriterSchema, boost::noncopyable > ("WriterSchema", bp::no_init)
                 .def("write"
                      , (void (WriterSchema::*)(Schema const &))(&WriterSchema::write)
