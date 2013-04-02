@@ -14,7 +14,11 @@ class  GetSetTestCase(unittest.TestCase):
             self.assertEqual(h.get("a.b.c1").has("d"), True, '"d" not found')
             self.assertEqual(h.get("a.b.c1.d"), 1, '"get" should return 1')
             self.assertEqual(h.has("a.b.c1.d"), True, '"a.b.c1.d" key not found')
+            if "a.b.c1.d" not in h:
+                self.fail("test_getSet group 1: h __contains__ \"a.b.c1.d\" failed")
             self.assertEqual(h.get("a").has("b.c1"), True, '"b.c1" key not found')
+            if "b.c1" not in h["a"]:
+                self.fail("test_getSet group 1: h['a'] __contains__ \"b.c1\" failed")
         
             h.set("a.b.c2.d", 2.0)
             self.assertEqual(h.get("a.b").has("c2.d"), True, '"c2.d" not found')
@@ -25,6 +29,8 @@ class  GetSetTestCase(unittest.TestCase):
             h.set("a.b[0]", Hash("a", 1))
             self.assertEqual(h.get("a").has("b"), True, "'b' not found")
             self.assertEqual(h["a"].has("b"), True, "'b' not found")
+            if "b" not in h["a"]:
+                self.fail("test_getSet group 1: h['a'] __contains__ \"b\" failed")
             self.assertEqual(len(h.get("a")), 1, "'len' should give 1")
             self.assertEqual(len(h["a"]), 1, "'len' should give 1")
             self.assertEqual(len(h.get("a.b")), 1, "'len' should give 1")
@@ -94,8 +100,8 @@ class  GetSetTestCase(unittest.TestCase):
             h = Hash()
             b = True
             h["a"] = b
-            self.assertEqual(h.getType("a"), "BOOL", 'The type should be "BOOL"')
-            self.assertEqual(h.getTypeAsId("a"), 0, 'The type ID for "BOOL" should be 0')
+            self.assertEqual(str(h.getType("a")), "BOOL", 'The type should be "BOOL"')
+            self.assertEqual(h.getType("a"), Types.BOOL, 'The type ID for "BOOL" should be Types.BOOL')
         except Exception,e:
             self.fail("test_getSet exception group 6: " + str(e))
             
