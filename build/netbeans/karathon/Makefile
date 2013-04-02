@@ -58,23 +58,14 @@ $(CP) -f nbproject/Karabo-variables-$(CURRENT_PLATFORM).mk nbproject/Makefile-va
 endif
 
 # Custom Karabo variables
-KARATHON = $(CND_BASEDIR)/$(CND_DISTDIR)/$(CONF)/$(CND_PLATFORM_$(CONF))
-export KARATHON
-EXTERN_DIR ?= $(CND_BASEDIR)/../../../extern
-EXTERN_DISTDIR = $(EXTERN_DIR)/$(CND_PLATFORM_$(CONF))
+KARABO = $(CND_BASEDIR)/../karabo/$(CND_DISTDIR)/$(CONF)/$(CND_PLATFORM_$(CONF))
+export KARABO
 	
 # build
 build: .build-post
 
 .build-pre:
 # Add your pre 'build' code here...
-# Make sure the KARATHON folder always exists
-	@if test ! -d $(KARATHON)/bin;     then $(MKDIR) -p $(KARATHON)/bin; fi
-	@if test ! -d $(KARATHON)/include; then $(MKDIR) -p $(KARATHON)/include; fi
-	@if test ! -d $(KARATHON)/lib;     then $(MKDIR) -p $(KARATHON)/lib; fi
-
-# Set symbolic link to 'karabo' project as an external dependency...
-	if [ ! -h ${KARATHON}/karabo ]; then cd $(KARATHON); ln -sf ../../../../karabo/$(CND_DISTDIR)/$(CONF)/$(CND_PLATFORM_$(CONF)) karabo; cd -; fi
 
 
 .build-post: .build-impl
@@ -82,17 +73,6 @@ build: .build-post
 	@$(CP) -f $(CND_BASEDIR)/nbproject/Makefile-variables.mk $(CND_BASEDIR)/nbproject/Karabo-variables-$(CURRENT_PLATFORM).mk
 	@$(CP) -f $(CND_BASEDIR)/nbproject/Makefile-impl.mk $(CND_BASEDIR)/nbproject/Karabo-impl-$(CURRENT_PLATFORM).mk
 	@$(CP) -f $(CND_BASEDIR)/nbproject/Makefile-$(CONF).mk $(CND_BASEDIR)/nbproject/Karabo-$(CONF)-$(CURRENT_PLATFORM).mk
-
-# Add your post 'build' code here...
-
-# Force extern re-build
-.PHONY: package cmd
-# Package
-package:
-	@./.package.sh $(CND_DISTDIR) $(CONF) $(CND_PLATFORM_$(CONF)) tar $(GUIOPT)
-
-install:
-	@./.package.sh $(CND_DISTDIR) $(CONF) $(CND_PLATFORM_$(CONF)) install $(GUIOPT)
 
 # clean
 clean: .clean-post
