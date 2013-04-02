@@ -101,14 +101,15 @@ class  GetAsTestCase(unittest.TestCase):
         try:
             h = Hash("a", 1234567890123456789L)
             self.assertEqual(h.getAs("a", Types.STRING), "1234567890123456789", 'Should return "1234567890123456789" str')
-            self.assertEqual(h.getType("a"), "INT64")
+            self.assertEqual(h.getType("a"), Types.INT64)
+            self.assertEqual(str(h.getType("a")), "INT64")
         except Exception,e:
             self.fail("test_getAs exception group 12: " + str(e))
             
         try:
             h = Hash("a", 0.123456789123456)
             self.assertEqual(h.getAs("a", Types.STRING), "0.123456789123456", 'Should return "0.123456789123456" str')
-            self.assertEqual(h.getTypeAsId("a"), Types.DOUBLE)
+            self.assertEqual(h.getType("a"), Types.DOUBLE)
         except Exception,e:
             self.fail("test_getAs exception group 13: " + str(e))
             
