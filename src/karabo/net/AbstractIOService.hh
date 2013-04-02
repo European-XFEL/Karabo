@@ -10,7 +10,7 @@
 
 #include <boost/shared_ptr.hpp>
 #include <karabo/util/util.hh>
-//#include "netdll.hh"
+#include "karabo/util/karaboDll.hh"
 
 namespace karabo {
     namespace net {

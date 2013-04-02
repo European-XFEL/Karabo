@@ -43,7 +43,7 @@ namespace karabo {
             typename TextSerializer<T>::Pointer m_serializer;
 
         public:
-
+            
             KARABO_CLASSINFO(TextFileOutput<T>, "TextFile", "1.0")
 
             static void expectedParameters(karabo::util::Schema& expected) {

@@ -111,15 +111,15 @@ namespace karabo {
         #define KARABO_LOG_TRACE if(1); else std::cerr
         #endif
         
-        #define _KARABO_LOG_DEBUG_0 Logger::getLogger<Self>() << log4cpp::Priority::DEBUG 
-        #define _KARABO_LOG_INFO_0  Logger::getLogger<Self>() << log4cpp::Priority::INFO 
-        #define _KARABO_LOG_WARN_0  Logger::getLogger<Self>() << log4cpp::Priority::WARN 
-        #define _KARABO_LOG_ERROR_0 Logger::getLogger<Self>() << log4cpp::Priority::ERROR
+        #define _KARABO_LOG_DEBUG_0 karabo::log::Logger::getLogger<Self>() << log4cpp::Priority::DEBUG 
+        #define _KARABO_LOG_INFO_0  karabo::log::Logger::getLogger<Self>() << log4cpp::Priority::INFO 
+        #define _KARABO_LOG_WARN_0  karabo::log::Logger::getLogger<Self>() << log4cpp::Priority::WARN 
+        #define _KARABO_LOG_ERROR_0 karabo::log::Logger::getLogger<Self>() << log4cpp::Priority::ERROR
         
-        #define _KARABO_LOG_DEBUG_1(category) Logger::getLogger(category) << log4cpp::Priority::DEBUG 
-        #define _KARABO_LOG_INFO_1(category)  Logger::getLogger(category) << log4cpp::Priority::INFO 
-        #define _KARABO_LOG_WARN_1(category)  Logger::getLogger(category) << log4cpp::Priority::WARN 
-        #define _KARABO_LOG_ERROR_1(category) Logger::getLogger(category) << log4cpp::Priority::ERROR 
+        #define _KARABO_LOG_DEBUG_1(category) karabo::log::Logger::getLogger(category) << log4cpp::Priority::DEBUG 
+        #define _KARABO_LOG_INFO_1(category)  karabo::log::Logger::getLogger(category) << log4cpp::Priority::INFO 
+        #define _KARABO_LOG_WARN_1(category)  karabo::log::Logger::getLogger(category) << log4cpp::Priority::WARN 
+        #define _KARABO_LOG_ERROR_1(category) karabo::log::Logger::getLogger(category) << log4cpp::Priority::ERROR 
 
         #define _KARABO_LOG_DEBUG_N(x0,x1,FUNC, ...) FUNC
         
