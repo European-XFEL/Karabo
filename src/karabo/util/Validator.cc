@@ -83,13 +83,15 @@ namespace karabo {
 
                 int nodeType = it->getAttribute<int>("nodeType");
                 bool userHasNode = user.has(key);
-                int assignment = it->getAttribute<int>("assignment");
                 bool hasDefault = it->hasAttribute("defaultValue");
 
                 // Remove current node from all provided
                 if (userHasNode) keys.erase(key);
 
                 if (nodeType == Schema::LEAF) {
+                    
+                    int assignment = it->getAttribute<int>("assignment");
+                    
                     if (!userHasNode) { // Node IS NOT provided
                         if (assignment == Schema::MANDATORY_PARAM) {
                             if (!m_allowMissingKeys) {
@@ -124,6 +126,9 @@ namespace karabo {
                         }
                     }
                 } else if (nodeType == Schema::CHOICE_OF_NODES) {
+                    
+                    int assignment = it->getAttribute<int>("assignment");
+                    
                     if (!userHasNode) {
                         if (assignment == Schema::MANDATORY_PARAM) {
                             if (!m_allowMissingKeys) {
@@ -192,6 +197,9 @@ namespace karabo {
                         }
                     }
                 } else if (nodeType == Schema::LIST_OF_NODES) {
+                    
+                    int assignment = it->getAttribute<int>("assignment");
+                    
                     if (!userHasNode) { // Node IS NOT provided
                         if (assignment == Schema::MANDATORY_PARAM) {
                             if (!m_allowMissingKeys) {

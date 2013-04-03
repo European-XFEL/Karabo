@@ -100,6 +100,12 @@
           <itemPath>../../../src/karabo/net/JmsBrokerIOService.hh</itemPath>
         </logicalFolder>
       </logicalFolder>
+      <logicalFolder name="f2" displayName="NetworkAppender" projectFiles="true">
+        <itemPath>../../../src/karabo/net/NetworkAppender.cc</itemPath>
+        <itemPath>../../../src/karabo/net/NetworkAppender.hh</itemPath>
+        <itemPath>../../../src/karabo/net/NetworkAppenderConfigurator.cc</itemPath>
+        <itemPath>../../../src/karabo/net/NetworkAppenderConfigurator.hh</itemPath>
+      </logicalFolder>
       <logicalFolder name="f1" displayName="Point-2-Point" projectFiles="true">
         <logicalFolder name="f3" displayName="Channel" projectFiles="true">
           <itemPath>../../../src/karabo/net/Channel.hh</itemPath>
@@ -690,6 +696,26 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/net/JmsBrokerIOService.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/net/NetworkAppender.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/net/NetworkAppender.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/net/NetworkAppenderConfigurator.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/net/NetworkAppenderConfigurator.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -1625,6 +1651,26 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/net/JmsBrokerIOService.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/net/NetworkAppender.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/net/NetworkAppender.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/net/NetworkAppenderConfigurator.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/net/NetworkAppenderConfigurator.hh"
             ex="false"
             tool="3"
             flavor2="0">
