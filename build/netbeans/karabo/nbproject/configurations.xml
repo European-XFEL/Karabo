@@ -261,6 +261,8 @@
       <toolsSet>
         <remote-sources-mode>LOCAL_SOURCES</remote-sources-mode>
         <compilerSet>GNU|GNU</compilerSet>
+        <dependencyChecking>true</dependencyChecking>
+        <rebuildPropChanged>false</rebuildPropChanged>
       </toolsSet>
       <compileType>
         <cTool>
@@ -1176,11 +1178,20 @@
           </linkerLibItems>
         </linkerTool>
       </folder>
+      <folder path="f5">
+        <ccTool>
+          <preprocessorList>
+            <Elem>LINUX</Elem>
+          </preprocessorList>
+        </ccTool>
+      </folder>
     </conf>
     <conf name="Release" type="2">
       <toolsSet>
         <remote-sources-mode>LOCAL_SOURCES</remote-sources-mode>
         <compilerSet>default</compilerSet>
+        <dependencyChecking>true</dependencyChecking>
+        <rebuildPropChanged>false</rebuildPropChanged>
       </toolsSet>
       <compileType>
         <cTool>
@@ -2110,6 +2121,13 @@
             <linkerOptionItem>`cppunit-config --libs`</linkerOptionItem>
           </linkerLibItems>
         </linkerTool>
+      </folder>
+      <folder path="f5">
+        <ccTool>
+          <preprocessorList>
+            <Elem>LINUX</Elem>
+          </preprocessorList>
+        </ccTool>
       </folder>
     </conf>
   </confs>
