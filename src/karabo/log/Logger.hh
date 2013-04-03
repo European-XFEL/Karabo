@@ -110,8 +110,10 @@ namespace karabo {
         // Convenient logging
         #ifdef KARABO_ENABLE_TRACE_LOG
         #define KARABO_LOG_TRACE if(0); else KARABO_LOG_DEBUG
+        #define KARABO_LOG_TRACE_C(category) if(0); else KARABO_LOG_DEBUG_C(category)
         #else 
         #define KARABO_LOG_TRACE if(1); else std::cerr
+        #define KARABO_LOG_TRACE_C(category) if(1); else std::cerr
         #endif
 
         #define KARABO_LOG_DEBUG karabo::log::Logger::getLogger<Self>() << log4cpp::Priority::DEBUG 
