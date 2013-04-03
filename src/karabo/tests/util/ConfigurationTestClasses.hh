@@ -11,6 +11,8 @@
 #include <karabo/util/ChoiceElement.hh>
 #include <karabo/util/OverwriteElement.hh>
 #include <karabo/util/NodeElement.hh>
+#include <karabo/util/ListElement.hh>
+#include <karabo/util/VectorElement.hh>
 
 #include <karabo/util/Configurator.hh>
 
@@ -238,52 +240,18 @@ namespace configurationTest {
                     .assignmentOptional().defaultValue("circle")
                     .commit();
 
-
             NODE_ELEMENT(expected).key("shapes.circle")
                     .tags("shape")
                     .displayedName("Circle")
                     .description("A circle")
-                    //.appendParametersOf<Circle > ()
+                    .appendParametersOf<Circle> ()
                     .commit();
 
-
-            FLOAT_ELEMENT(expected).key("shapes.circle.radius").alias(1)
-                    .description("The radius of the circle")
-                    .displayedName("Radius")
-                    .minExc(0)
-                    .maxExc(100)
-                    .unit(Units::METER)
-                    .metricPrefix(Units::MILLI)
-                    .assignmentOptional().defaultValue(10)
-                    .init()
-                    .commit();
-            
-            NODE_ELEMENT(expected).key("Triangle")
-                    .tags("triangle")
-                    .displayedName("Triangle")
-                    .description("A triangle")
-                    .commit();
-            
-            DOUBLE_ELEMENT(expected).key("Triangle.sideA")
-                    .tags("triangle")
-                    .displayedName("sideA")
-                    .description("Description of sideA")
-                    .assignmentOptional().noDefaultValue()
-                    .commit();
-            
-            DOUBLE_ELEMENT(expected).key("Triangle.sideB")
-                    .tags("triangle")
-                    .displayedName("sideB")
-                    .description("Description of sideB")
-                    .assignmentOptional().noDefaultValue()
-                    .commit();
-            
             NODE_ELEMENT(expected).key("shapes.rectangle")
                     .tags("shape")
                     .displayedName("Rectangle")
                     .description("A rectangle")
                     .commit();
-
 
             FLOAT_ELEMENT(expected).key("shapes.rectangle.b")
                     .description("Rectangle side - b")
@@ -291,7 +259,7 @@ namespace configurationTest {
                     .assignmentOptional().defaultValue(10)
                     .init()
                     .commit();
-            
+
             FLOAT_ELEMENT(expected).key("shapes.rectangle.c")
                     .description("Rectangle side - c")
                     .displayedName("Side C")
@@ -353,6 +321,6 @@ namespace configurationTest {
                     .commit();
         }
     };
-
-}
+            
+        }
 #endif
