@@ -17,6 +17,7 @@ using namespace karabo::io;
 
 CPPUNIT_TEST_SUITE_REGISTRATION(Logger_Test);
 
+KARABO_REGISTER_FOR_CONFIGURATION(LogSomething)
 
 Logger_Test::Logger_Test() {  
 }
@@ -37,9 +38,15 @@ void Logger_Test::tearDown() {
 void Logger_Test::testLogging() {
     Hash s1("Category.name", "s1", "Category.priority", "DEBUG");
     Hash conf("categories[0]", s1, "appenders[0].Ostream.layout", "Pattern");
-    Logger::Pointer p = Logger::create("Logger", conf); 
+    Logger::Pointer p = Logger::create("Logger", conf);
     p->initialize();
-    KARABO_LOG_DEBUG("s1") << "Some test message"; 
+    KARABO_LOG_DEBUG_C("s1") << "Some test message"; 
     
 }
+
+//void Logger_Test::testInClassLogging() {
+//    Hash config("priority", "DEBUG");
+//    LogSomething::Pointer p = LogSomething::create("LogSomething", config);
+//    p->doSomeLogging();
+//}
 
