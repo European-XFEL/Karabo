@@ -16,10 +16,12 @@
 #include <karabo/net/IOService.hh>
 #include <karabo/net/Connection.hh>
 #include <karabo/net/Channel.hh>
+#include <karabo/io/Output.hh>
+#include <karabo/util/Configurator.hh>
 
 #include "Statics.hh"
 #include "Memory.hh"
-#include "Output.hh"
+
 
 /**
  * The main European XFEL namespace
@@ -32,7 +34,7 @@ namespace karabo {
          * The DeviceOutput class.
          */
         template <class T>
-        class NetworkOutput : public Output<T> {
+        class NetworkOutput : public karabo::io::Output<T> {
             typedef boost::shared_ptr<karabo::net::Channel> TcpChannelPointer;
 
             /*
@@ -76,7 +78,7 @@ namespace karabo {
              */
             virtual ~NetworkOutput() {
                 if (m_dataThread.joinable()) {
-                    m_dataConnection->close();
+                    m_dataConnection->stop();
                     m_dataIOService->stop();
                     m_dataThread.join();
                 }
@@ -110,7 +112,7 @@ namespace karabo {
              * If this object is constructed using the factory/configuration system this method is called
              * @param input Validated (@see expectedParameters) and default-filled configuration
              */
-            void configure(const karabo::util::Hash& input) {
+            NetworkOutput(const karabo::util::Hash& input) {
 
                 input.get("noInputShared", m_onNoSharedInputChannelAvailable);
                 input.get("noInputCopy", m_onNoCopiedInputChannelAvailable);
@@ -170,13 +172,12 @@ namespace karabo {
                 m_dataConnection->startAsync(boost::bind(&karabo::xms::NetworkOutput<T>::onTcpConnect, this, _1));
             }
 
-            void onTcpConnectionError(TcpChannelPointer, const std::string& errorMessage) {
-                std::cout << errorMessage << std::endl;
+            void onTcpConnectionError(TcpChannelPointer, const karabo::net::ErrorCode& error) {
+                std::cout << error.message() << std::endl;
             }
 
             void onTcpChannelError(TcpChannelPointer, const std::string& errorMessage) {
-                std::cout << errorMessage << std::endl;
-
+                std::cout << error.message() << std::endl;
             }
 
             void onTcpChannelRead(TcpChannelPointer channel, const karabo::util::Hash& message) {
@@ -237,7 +238,7 @@ namespace karabo {
                 } else {
                     std::cout << "OUTPUT: LOW-LEVEL-DEBUG An input channel wants to connect, that was not registered before." << std::endl;
                 }
-                this->template triggerIOEvent<Output<T> >();
+                this->template triggerIOEvent<karabo::io::Output<T> >();
             }
 
             void pushShareNext(const InputChannelInfo& info) {
@@ -394,7 +395,7 @@ namespace karabo {
                 const std::pair< std::vector<char>, karabo::util::Hash>& entry = getAsyncWriteData(chunkId);
                 std::cout << "OUTPUT: Going to distribute " << entry.first.size() << " bytes of data" << std::endl;
                 std::cout << "OUTPUT: With header: " << entry.second << std::endl;
-                tcpChannel->writeAsyncVectorHash(entry.first, entry.second, boost::bind(&karabo::xms::NetworkOutput<T>::onWriteCompleted, this, _1));
+                tcpChannel->writeAsyncHashVector(entry.first, entry.second, boost::bind(&karabo::xms::NetworkOutput<T>::onWriteCompleted, this, _1));
                 //m_activeTcpChannel->write(entry.first, entry.second);
               
             }
@@ -526,7 +527,7 @@ namespace karabo {
                 const std::pair< std::vector<char>, karabo::util::Hash>& entry = getAsyncWriteData(chunkId);
                 std::cout << "OUTPUT: Going to copy " << entry.first.size() << " bytes of data" << std::endl;
                 std::cout << "OUTPUT: With header: " << entry.second << std::endl;
-                tcpChannel->writeAsyncVectorHash(entry.first, entry.second, boost::bind(&karabo::xms::NetworkOutput<T>::onWriteCompleted, this, _1));
+                tcpChannel->writeAsyncHashVector(entry.first, entry.second, boost::bind(&karabo::xms::NetworkOutput<T>::onWriteCompleted, this, _1));
             }
 
 

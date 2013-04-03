@@ -213,7 +213,8 @@ namespace karabo {
             m_readHandler = handler;
             this->readAsyncSizeInBytes(boost::bind(&karabo::net::TcpChannel::byteSizeAvailableHandler, this, _1, _2));
         }
-        
+
+
         void TcpChannel::readAsyncHashHash(const ReadHashHashHandler& handler) {
             if (m_activeHandler != TcpChannel::NONE) throw KARABO_NETWORK_EXCEPTION("Multiple async read: You are allowed to register only exactly one asynchronous read or write per channel.");
             m_activeHandler = TcpChannel::HASH_HASH;
@@ -539,7 +540,7 @@ namespace karabo {
         }
 
 
-        void TcpChannel::writeAsyncRawHash(const char* data, const size_t& size, const karabo::util::Hash& header, const WriteCompleteHandler& handler) {
+        void TcpChannel::writeAsyncHashRaw(const karabo::util::Hash& header, const char* data, const size_t& size, const WriteCompleteHandler& handler) {
             try {
                 this->prepareHeaderFromHash(header);
                 if (m_connectionPointer->m_manageAsyncData) {
@@ -555,16 +556,16 @@ namespace karabo {
         }
 
 
-        void TcpChannel::writeAsyncVectorHash(const std::vector<char>& data, const Hash& header, const Channel::WriteCompleteHandler& handler) {
+        void TcpChannel::writeAsyncHashVector(const Hash& header, const std::vector<char>& data, const Channel::WriteCompleteHandler& handler) {
             try {
-                this->writeAsyncRawHash(&data[0], data.size(), header, handler);
+                this->writeAsyncHashRaw(header, &data[0], data.size(), handler);
             } catch (...) {
                 KARABO_RETHROW
             }
         }
 
 
-        void TcpChannel::writeAsyncHashHash(const karabo::util::Hash& data, const karabo::util::Hash& header, const WriteCompleteHandler& handler) {
+        void TcpChannel::writeAsyncHashHash(const karabo::util::Hash& header, const karabo::util::Hash& data, const WriteCompleteHandler& handler) {
             try {
                 this->prepareHeaderFromHash(header);
                 this->prepareDataFromHash(data);

@@ -41,7 +41,6 @@ namespace karabo {
                     .assignmentOptional() .defaultValue("NOTSET")
                     .commit();
 
-
             CHOICE_ELEMENT(expected)
                     .key("layout")
                     .displayedName("Layout")

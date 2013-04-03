@@ -306,15 +306,15 @@ namespace karabo {
             //*              Asynchronous Write - With Header              */
             //**************************************************************/
 
-            virtual void writeAsyncRawHash(const char* data, const size_t& size, const karabo::util::Hash& header, const WriteCompleteHandler& handler) {
+            virtual void writeAsyncHashRaw(const karabo::util::Hash& header, const char* data, const size_t& size, const WriteCompleteHandler& handler) {
                 throw KARABO_NOT_SUPPORTED_EXCEPTION("Not supported for this transport layer");
             }
 
-            virtual void writeAsyncVectorHash(const std::vector<char>& data, const karabo::util::Hash& header, const WriteCompleteHandler& handler) {
+            virtual void writeAsyncHashVector(const karabo::util::Hash& header, const std::vector<char>& data, const WriteCompleteHandler& handler) {
                 throw KARABO_NOT_SUPPORTED_EXCEPTION("Not supported for this transport layer");
             }
 
-            virtual void writeAsyncHashHash(const karabo::util::Hash& data, const karabo::util::Hash& header, const WriteCompleteHandler& handler) {
+            virtual void writeAsyncHashHash(const karabo::util::Hash& header, const karabo::util::Hash& data, const WriteCompleteHandler& handler) {
                 throw KARABO_NOT_SUPPORTED_EXCEPTION("Not supported for this transport layer");
             }
 
@@ -333,36 +333,10 @@ namespace karabo {
             }
 
             virtual void close() = 0;
-
-
-        private: // functions
-
-            //            void raw2Vector(Channel::Pointer channel, const char* data, const size_t& size) {
-            //                std::vector<char> v;
-            //                v.resize(size);
-            //                memcpy(&v[0], data, size);
-            //                m_readVectorHandler(channel, v);
-            //            }
-            //
-            //            void raw2String(Channel::Pointer channel, const char* data, const size_t& size) {
-            //                std::string s(data, size);
-            //                m_readStringHandler(channel, s);
-            //            }          
-            //
-            //            void rawHash2VectorHash(Channel::Pointer channel, const char* data, const size_t& size, const karabo::util::Hash& header) {
-            //                std::vector<char> v;
-            //                v.resize(size);
-            //                memcpy(&v[0], data, size);
-            //                m_readVectorHashHandler(channel, v, header);
-            //            }
-            //
-            //            void rawHash2StringHash(Channel::Pointer channel, const char* data, const size_t& size, const karabo::util::Hash& header) {
-            //                std::string s(data, size);
-            //                m_readStringHashHandler(channel, s, header);
-            //            }
+        
         };
     }
 }
 
-#endif	/* KARABO_NET_CHANNEL_HH */
+#endif
 

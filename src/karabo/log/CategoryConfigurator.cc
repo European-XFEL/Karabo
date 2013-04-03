@@ -39,7 +39,7 @@ namespace karabo {
                     .description("Priority")
                     .displayedName("Priority")
                     .options("DEBUG INFO WARN ERROR")
-                    .assignmentOptional().defaultValue("INFO")
+                    .assignmentOptional().noDefaultValue()
                     .commit();
 
             BOOL_ELEMENT(expected)
@@ -73,6 +73,7 @@ namespace karabo {
             Category& log = Category::getInstance(m_name);
             log.setPriority(m_level);
             log.setAdditivity(m_additivity);
+            log.removeAllAppenders();
             for (size_t i = 0; i < m_appenderConfigurators.size(); ++i) {
                 log.addAppender(m_appenderConfigurators[i]->getConfigured());
             }
@@ -85,8 +86,12 @@ namespace karabo {
 
 
         void CategoryConfigurator::configurePriority(const Hash& input) {
-            string level = input.get<string > ("priority");
-            m_level = log4cpp::Priority::getPriorityValue(level);
+            if (input.has("priority")) {
+                string level = input.get<string > ("priority");
+                m_level = log4cpp::Priority::getPriorityValue(level);
+            } else {
+                m_level = log4cpp::Priority::NOTSET;
+            }
         }
 
 

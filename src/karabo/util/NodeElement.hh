@@ -32,20 +32,15 @@ namespace karabo {
                 this->m_node->setValue(Hash()); // A node value always is a Hash
             }
 
-            template <class FactoryBase>
-            NodeElement& appendParametersOfFactoryMember(const std::string& classId) {
-                if (Factory<FactoryBase>::has(classId)) {
-                    this->m_node->setAttribute("classId", classId);
-                    this->m_node->setAttribute("displayType", FactoryBase::classInfo().getClassId());
-                    // Assemble schema (taking into account base classes, etc.) and append to node
-                    Schema schema = Configurator<FactoryBase>::getSchema(classId, m_parentSchemaAssemblyRules);
-                    // The produced schema will be rooted with classId, we however want to put its children
-                    // under the defined key and ignore the classId root node
-                    this->m_node->template setValue<Hash > (schema.getParameterHash());
-
-                } else {
-                    throw KARABO_PARAMETER_EXCEPTION("Can not append class \"" + classId + "\", as it is not registered in factory.");
-                }
+            template <class ConfigurableClass>
+            NodeElement& appendParametersOfConfigurableClass(const std::string& classId) {
+                this->m_node->setAttribute("classId", classId);
+                this->m_node->setAttribute("displayType", ConfigurableClass::classInfo().getClassId());
+                // Assemble schema (taking into account base classes, etc.) and append to node
+                Schema schema = Configurator<ConfigurableClass>::getSchema(classId, m_parentSchemaAssemblyRules);
+                // The produced schema will be rooted with classId, we however want to put its children
+                // under the defined key and ignore the classId root node
+                this->m_node->template setValue<Hash > (schema.getParameterHash());
                 return *this;
             }
 
