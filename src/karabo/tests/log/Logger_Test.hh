@@ -29,10 +29,9 @@ public:
         .commit();
     }
     
-    LogSomething(const karabo::util::Hash& config) {
+    LogSomething(const karabo::util::Hash& input) {
         using namespace karabo::log;
-        Logger::Pointer p = Logger::createNode("logger", "Logger", config); 
-        p->initialize();
+        Logger::configure(input.get<karabo::util::Hash>("logger")); 
     }
     
     void doSomeLogging() {
@@ -50,7 +49,7 @@ class Logger_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST_SUITE(Logger_Test);
 
     CPPUNIT_TEST(testLogging);
-    //CPPUNIT_TEST(testInClassLogging);
+    CPPUNIT_TEST(testInClassLogging);
     
     CPPUNIT_TEST_SUITE_END();
 
@@ -62,7 +61,7 @@ public:
 
 private:
     void testLogging();
-    //void testInClassLogging();
+    void testInClassLogging();
 };
 
 #endif	/* LOGGER_TEST_HH */

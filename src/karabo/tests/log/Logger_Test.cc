@@ -23,7 +23,7 @@ Logger_Test::Logger_Test() {
 }
 
 
-Logger_Test::~Logger_Test() {
+Logger_Test::~Logger_Test() { 
 }
 
 
@@ -38,15 +38,15 @@ void Logger_Test::tearDown() {
 void Logger_Test::testLogging() {
     Hash s1("Category.name", "s1", "Category.priority", "DEBUG");
     Hash conf("categories[0]", s1, "appenders[0].Ostream.layout", "Pattern");
-    Logger::Pointer p = Logger::create("Logger", conf);
-    p->initialize();
+    Logger::configure(conf);
+    //p->initialize();
     KARABO_LOG_DEBUG_C("s1") << "Some test message"; 
     
 }
 
-//void Logger_Test::testInClassLogging() {
-//    Hash config("priority", "DEBUG");
-//    LogSomething::Pointer p = LogSomething::create("LogSomething", config);
-//    p->doSomeLogging();
-//}
+void Logger_Test::testInClassLogging() {
+    Hash config("logger.priority", "INFO", "logger.appenders[0].File.layout.Pattern.format", "%c %m %n");
+    LogSomething::Pointer p = LogSomething::create("LogSomething", config);
+    p->doSomeLogging();
+}
 

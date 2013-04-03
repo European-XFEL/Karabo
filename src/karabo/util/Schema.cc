@@ -613,7 +613,7 @@ namespace karabo {
             std::string error;
             if (node.hasAttribute("nodeType")) {
                 int type = node.getAttribute<int>("nodeType");
-                if (type == Schema::LEAF || type == Schema::CHOICE_OF_NODES) {
+                if (type == Schema::LEAF || type == Schema::CHOICE_OF_NODES || type == Schema::LIST_OF_NODES) {
                     if (!node.hasAttribute("assignment")) error = "Missing assignment, i.e. assignmentMandatory() / assignmentOptional(). ";
                 }
             } else {
