@@ -223,8 +223,8 @@ void exportPyUtilHash() {
           "used to form a tree hierarchy out of 'path'.\nExample:\n\th = Hash()\n\th.set('a.b.c', 1)\n\th.set('x/y/z', 2, \"/\")\n"
           "\th.set('u/v/w', 3)\n\tprint h");
     h.def("__setitem__", &HashWrap().pythonSet, (bp::arg("path"), bp::arg("value"), bp::arg("sep") = "."),
-          "Use this form of setting the new 'path'/'value' pair if you need the default separator.\nE"
-          "xample:\n\th = Hash()\n\th['a.b.c'] = 1\n\tprint h");
+          "h[path] = value <==> h.set(path, value)\nUse this setting of the new path/value item if the default separator fits."
+          "\nExample:\n\th = Hash()\n\th['a.b.c'] = 1\n\th.set('x/y/z', 2, \"/\")\n\th['u/v/w'] = 3\n\tprint h");
     h.def("get", &HashWrap().pythonGet, (bp::arg("path"), bp::arg("sep") = "."),
           "Get the 'value' by 'path'. Optionally, the separator can be defined as second argument.\n"
           "Example:\n\th = Hash('a.b.c', 1)\n\tprint h.get('a/b/c','/')");
