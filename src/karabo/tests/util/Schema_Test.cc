@@ -36,6 +36,8 @@ void Schema_Test::testBuildUp() {
             Schema schema("test");
             GraphicsRenderer1::expectedParameters(schema);
             //cout << schema << endl;
+            CPPUNIT_ASSERT(schema.isAccessInitOnly("shapes.circle.radius") == true);
+            CPPUNIT_ASSERT(schema.isLeaf("shapes.circle.radius") == true);
         }
         GraphicsRenderer::Pointer p = GraphicsRenderer::create("GraphicsRenderer", Hash("shapes.Circle.radius", 0.5, "color", "red", "antiAlias", "true"));
         //cout << Configurator<GraphicsRenderer>::getSchema("GraphicsRenderer"); 
@@ -185,7 +187,7 @@ void Schema_Test::testGetMetricPrefix() {
     CPPUNIT_ASSERT(m_schema.getMetricPrefixSymbol("exampleKey2") == "m");
 }
 
-
+    
 void Schema_Test::testPerKeyFunctionality() {
 //    cout << "\n======================" << endl;
 //    cout << m_schema << endl;
@@ -273,8 +275,6 @@ void Schema_Test::testHelpFunction() {
     Schema schema("schemaGraphRender1", Schema::AssemblyRules(READ | WRITE | INIT));
     GraphicsRenderer1::expectedParameters(schema);
     
-    //cout << "\n========== schema.help() =========================" << endl;
-    //schema.help();
     
     //cout << "============ schema.help(\"shapes\") ===============" << endl;
     //schema.help("shapes");
