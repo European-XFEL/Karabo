@@ -616,7 +616,7 @@ namespace karabo {
 
         template<typename T, template <typename Elem, typename = std::allocator<Elem> > class Cont >
         Cont<T> Hash::getAttributeAs(const std::string& path, const std::string& attribute, const char separator) const {
-            return getNode(path, separator).getAttributeAs<Cont<T> >(attribute);
+            return getNode(path, separator).getAttributeAs<T, Cont>(attribute);
         }
         
         template <typename ValueType>
