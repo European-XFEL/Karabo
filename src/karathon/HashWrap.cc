@@ -435,50 +435,82 @@ namespace karabo {
             using namespace karabo::util;
             switch (type) {
 
-                case Types::BOOL:
+                case PyTypes::BOOL:
                     return bp::object(self.getAttributeAs<bool>(path, attribute, separator.at(0)));
-                case Types::CHAR:
+                case PyTypes::CHAR:
                     return bp::object(self.getAttributeAs<char>(path, attribute, separator.at(0)));
-                case Types::INT8:
+                case PyTypes::INT8:
                     return bp::object(self.getAttributeAs<signed char>(path, attribute, separator.at(0)));
-                case Types::UINT8:
+                case PyTypes::UINT8:
                     return bp::object(self.getAttributeAs<unsigned char>(path, attribute, separator.at(0)));
-                case Types::INT16:
+                case PyTypes::INT16:
                     return bp::object(self.getAttributeAs<short>(path, attribute, separator.at(0)));
-                case Types::UINT16:
+                case PyTypes::UINT16:
                     return bp::object(self.getAttributeAs<unsigned short>(path, attribute, separator.at(0)));
-                case Types::INT32:
+                case PyTypes::INT32:
                     return bp::object(self.getAttributeAs<int>(path, attribute, separator.at(0)));
-                case Types::UINT32:
+                case PyTypes::UINT32:
                     return bp::object(self.getAttributeAs<unsigned int>(path, attribute, separator.at(0)));
-                case Types::INT64:
+                case PyTypes::INT64:
                     return bp::object(self.getAttributeAs<long long>(path, attribute, separator.at(0)));
-                case Types::UINT64:
+                case PyTypes::UINT64:
                     return bp::object(self.getAttributeAs<unsigned long long>(path, attribute, separator.at(0)));
-                case Types::FLOAT:
+                case PyTypes::FLOAT:
                     return bp::object(self.getAttributeAs<float>(path, attribute, separator.at(0)));
-                case Types::DOUBLE:
+                case PyTypes::DOUBLE:
                     return bp::object(self.getAttributeAs<double>(path, attribute, separator.at(0)));
-                case Types::STRING:
+                case PyTypes::STRING:
                     return bp::object(self.getAttributeAs<std::string>(path, attribute, separator.at(0)));
-                    //                    case Types::VECTOR_CHAR:
-                    //                        return Wrapper::fromStdVectorToPyByteArray(self.getAttributeAs<char, std::vector>(path, attribute, separator.at(0)));
-                    //                    case Types::VECTOR_INT8:
-                    //                        return Wrapper::fromStdVectorToPyByteArray(self.getAttributeAs<signed char, std::vector > (path, attribute, separator.at(0)));
-                    //                    case Types::VECTOR_UINT8:
-                    //                        return Wrapper::fromStdVectorToPyByteArray(self.getAttributeAs<unsigned char, std::vector>(path, attribute, separator.at(0)));
-                    //                    case Types::VECTOR_INT16:
-                    //                        return Wrapper::fromStdVectorToPyArray(self.getAttributeAs<short, std::vector>(path, attribute, separator.at(0)));
-                    //                    case Types::VECTOR_UINT16:
-                    //                        return Wrapper::fromStdVectorToPyArray(self.getAttributeAs<unsigned short, std::vector>(path, attribute, separator.at(0)));
-                    //                    case Types::VECTOR_INT32:
-                    //                        return Wrapper::fromStdVectorToPyArray(self.getAttributeAs<int, std::vector>(path, attribute, separator.at(0)));
-                    //                    case Types::VECTOR_UINT32:
-                    //                        return Wrapper::fromStdVectorToPyArray(self.getAttributeAs<unsigned int, std::vector>(path, attribute, separator.at(0)));
-                    //                    case Types::VECTOR_INT64:
-                    //                        return Wrapper::fromStdVectorToPyArray(self.getAttributeAs<long long, std::vector>(path, attribute, separator.at(0)));
-                    //                    case Types::VECTOR_UINT64:
-                    //                        return Wrapper::fromStdVectorToPyArray(self.getAttributeAs<unsigned long long, std::vector>(path, attribute, separator.at(0)));
+                case PyTypes::VECTOR_BOOL:
+                    return Wrapper::fromStdVectorToPyArray(self.getAttributeAs<bool, std::vector>(path, attribute, separator.at(0)), false);
+                case PyTypes::VECTOR_CHAR:
+                    return Wrapper::fromStdVectorToPyByteArray(self.getAttributeAs<char, std::vector>(path, attribute, separator.at(0)));
+                case PyTypes::VECTOR_INT8:
+                    return Wrapper::fromStdVectorToPyByteArray(self.getAttributeAs<signed char, std::vector > (path, attribute, separator.at(0)));
+                case PyTypes::VECTOR_UINT8:
+                    return Wrapper::fromStdVectorToPyByteArray(self.getAttributeAs<unsigned char, std::vector>(path, attribute, separator.at(0)));
+                case PyTypes::VECTOR_INT16:
+                    return Wrapper::fromStdVectorToPyArray(self.getAttributeAs<short, std::vector>(path, attribute, separator.at(0)), false);
+                case PyTypes::VECTOR_UINT16:
+                    return Wrapper::fromStdVectorToPyArray(self.getAttributeAs<unsigned short, std::vector>(path, attribute, separator.at(0)), false);
+                case PyTypes::VECTOR_INT32:
+                    return Wrapper::fromStdVectorToPyArray(self.getAttributeAs<int, std::vector>(path, attribute, separator.at(0)), false);
+                case PyTypes::VECTOR_UINT32:
+                    return Wrapper::fromStdVectorToPyArray(self.getAttributeAs<unsigned int, std::vector>(path, attribute, separator.at(0)), false);
+                case PyTypes::VECTOR_INT64:
+                    return Wrapper::fromStdVectorToPyArray(self.getAttributeAs<long long, std::vector>(path, attribute, separator.at(0)), false);
+                case PyTypes::VECTOR_UINT64:
+                    return Wrapper::fromStdVectorToPyArray(self.getAttributeAs<unsigned long long, std::vector>(path, attribute, separator.at(0)), false);
+                case PyTypes::VECTOR_FLOAT:
+                    return Wrapper::fromStdVectorToPyArray(self.getAttributeAs<float, std::vector>(path, attribute, separator.at(0)), false);
+                case PyTypes::VECTOR_DOUBLE:
+                    return Wrapper::fromStdVectorToPyArray(self.getAttributeAs<double, std::vector>(path, attribute, separator.at(0)), false);
+                case PyTypes::VECTOR_COMPLEX_FLOAT:
+                    return Wrapper::fromStdVectorToPyArray(self.getAttributeAs<std::complex<float>, std::vector>(path, attribute, separator.at(0)), false);
+                case PyTypes::VECTOR_COMPLEX_DOUBLE:
+                    return Wrapper::fromStdVectorToPyArray(self.getAttributeAs<std::complex<double>, std::vector>(path, attribute, separator.at(0)), false);
+                case PyTypes::NDARRAY_BOOL:
+                    return Wrapper::fromStdVectorToPyArray(self.getAttributeAs<bool, std::vector>(path, attribute, separator.at(0)), true);
+                case PyTypes::NDARRAY_INT16:
+                    return Wrapper::fromStdVectorToPyArray(self.getAttributeAs<short, std::vector>(path, attribute, separator.at(0)), true);
+                case PyTypes::NDARRAY_UINT16:
+                    return Wrapper::fromStdVectorToPyArray(self.getAttributeAs<unsigned short, std::vector>(path, attribute, separator.at(0)), true);
+                case PyTypes::NDARRAY_INT32:
+                    return Wrapper::fromStdVectorToPyArray(self.getAttributeAs<int, std::vector>(path, attribute, separator.at(0)), true);
+                case PyTypes::NDARRAY_UINT32:
+                    return Wrapper::fromStdVectorToPyArray(self.getAttributeAs<unsigned int, std::vector>(path, attribute, separator.at(0)), true);
+                case PyTypes::NDARRAY_INT64:
+                    return Wrapper::fromStdVectorToPyArray(self.getAttributeAs<long long, std::vector>(path, attribute, separator.at(0)), true);
+                case PyTypes::NDARRAY_UINT64:
+                    return Wrapper::fromStdVectorToPyArray(self.getAttributeAs<unsigned long long, std::vector>(path, attribute, separator.at(0)), true);
+                case PyTypes::NDARRAY_FLOAT:
+                    return Wrapper::fromStdVectorToPyArray(self.getAttributeAs<float, std::vector>(path, attribute, separator.at(0)), true);
+                case PyTypes::NDARRAY_DOUBLE:
+                    return Wrapper::fromStdVectorToPyArray(self.getAttributeAs<double, std::vector>(path, attribute, separator.at(0)), true);
+                case PyTypes::NDARRAY_COMPLEX_FLOAT:
+                    return Wrapper::fromStdVectorToPyArray(self.getAttributeAs<std::complex<float>, std::vector>(path, attribute, separator.at(0)), true);
+                case PyTypes::NDARRAY_COMPLEX_DOUBLE:
+                    return Wrapper::fromStdVectorToPyArray(self.getAttributeAs<std::complex<double>, std::vector>(path, attribute, separator.at(0)), true);
                 default:
                     break;
             }
