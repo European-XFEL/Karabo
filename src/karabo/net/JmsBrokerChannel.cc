@@ -165,7 +165,7 @@ namespace karabo {
                 } else if (messageType == MQ_TEXT_MESSAGE) {
                     ConstMQString msgBody;
                     MQ_SAFE_CALL(MQGetTextMessageText(messageHandle, &msgBody))
-                    m_textSerializer->load(body, string(msgBody));
+                    m_textSerializer->load(body, msgBody);
                     MQPropertiesHandle propertiesHandle, headerHandle;
                     MQ_SAFE_CALL(MQGetMessageProperties(messageHandle, &propertiesHandle))
                     MQ_SAFE_CALL(MQGetMessageHeaders(messageHandle, &headerHandle))
@@ -438,7 +438,7 @@ namespace karabo {
                             m_hasAsyncHandler = false;
                         }
                         // TODO Check, whether to free the propertiesHandle
-                        m_readRawHashHandler(shared_from_this(), reinterpret_cast<const char*> (msgBody), string(msgBody).size(), header);
+                        m_readRawHashHandler(shared_from_this(), msgBody, 0 /*interface needs it*/ , header);
                         MQ_SAFE_CALL(MQFreeMessage(messageHandle));
                     } else {
                         // Give an error if unexpected message types are going round the broker
@@ -627,7 +627,7 @@ namespace karabo {
                 std::string format = header.get<string>("__format");
                 if (format == "Xml") {
                     try {
-                        m_textSerializer->load(h, std::string(data, size));
+                        m_textSerializer->load(h, data);
                     } catch (const Exception& e) {
                         throw KARABO_MESSAGE_EXCEPTION("Could not de-serialize text message into Hash");
                     }

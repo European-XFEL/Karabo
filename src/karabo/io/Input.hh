@@ -25,7 +25,12 @@ namespace karabo {
 
             KARABO_CLASSINFO(Input, "Input", "1.0")
             KARABO_CONFIGURATION_BASE_CLASS
+            
+            Input(const karabo::util::Hash& config) : AbstractInput(config) {
+            }
 
+            virtual ~Input() {
+            }
 
             virtual void read(T& data, size_t idx = 0) = 0;
 
