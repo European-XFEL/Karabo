@@ -22,19 +22,28 @@ static char* argv[2];
 CPPUNIT_TEST_SUITE_REGISTRATION(HashWrap_Test);
 
 HashWrap_Test::HashWrap_Test() {
-    string karaboEnv(getenv("KARABO") == NULL? "" : getenv("KARABO"));
-    if (karaboEnv.empty()) throw KARABO_PYTHON_EXCEPTION("KARABO environment variable is not set");
-    string python = karaboEnv + "/extern/bin/python";
-    copy(python.begin(),python.end(),interpreter_path);
+    {
+        string karaboEnv(getenv("KARABO") == NULL ? "" : getenv("KARABO"));
+        if (karaboEnv.empty()) throw KARABO_PYTHON_EXCEPTION("KARABO environment variable is not set");
+        string python = karaboEnv + "/extern/bin/python";
+        copy(python.begin(), python.end(), interpreter_path);
+    }
     Py_SetProgramName(interpreter_path);
     Py_Initialize();
-//    char* pyname = Py_GetProgramName();
-//    char* prefix = Py_GetPrefix();
-//    cout << "*** Python progname is " << pyname << endl;
-//    cout << "*** Python prefix   is " << prefix << endl;
+    //    char* pyname = Py_GetProgramName();
+    //    char* prefix = Py_GetPrefix();
+    //    cout << "*** Python progname is " << pyname << endl;
+    //    cout << "*** Python prefix   is " << prefix << endl;
     o_main = bp::import("__main__");
     o_global = o_main.attr("__dict__");
-    bp::exec("import os\nimport sys\nsys.path.append(os.getcwd()+'/dist/Debug/GNU-Linux-x86')\n", o_global, o_global);
+    string cmd;
+    {
+        string pypathEnv(getenv("PYTHONPATH") == NULL ? "" : getenv("PYTHONPATH"));
+        if (pypathEnv.empty()) throw KARABO_PYTHON_EXCEPTION("PYTHONPATH environment variable is not set");
+        cmd = "import os\nimport sys\nsys.path.append('" + pypathEnv + "')\n";
+    }
+    //cout << "Command is " << cmd << endl;
+    bp::exec(bp::str(cmd), o_global, o_global);
 }
 
 HashWrap_Test::~HashWrap_Test() {
@@ -46,7 +55,6 @@ void HashWrap_Test::setUp() {
 
 void HashWrap_Test::tearDown() {
 }
-
 
 void HashWrap_Test::testConstructors() {
     bp::object o_Hash = o_main.attr("Hash");
@@ -66,12 +74,12 @@ void HashWrap_Test::testConstructors() {
 
         {
             bp::object h = o_Hash("a", 1, "b", 2.0);
-            CPPUNIT_ASSERT(!h.attr("empty")());                 // h.empty() -> False
-            CPPUNIT_ASSERT(h.attr("__len__")() == 2);           // len(h) -> 2
-            CPPUNIT_ASSERT(h.attr("get")("a") == 1);            // h.get("a") -> 1
-            CPPUNIT_ASSERT(h.attr("__getitem__")("b") == 2.0);  // h["b"] -> 2.0
+            CPPUNIT_ASSERT(!h.attr("empty")()); // h.empty() -> False
+            CPPUNIT_ASSERT(h.attr("__len__")() == 2); // len(h) -> 2
+            CPPUNIT_ASSERT(h.attr("get")("a") == 1); // h.get("a") -> 1
+            CPPUNIT_ASSERT(h.attr("__getitem__")("b") == 2.0); // h["b"] -> 2.0
         }
-        
+
         {
             bp::list lst;
             for (size_t i = 0; i < 5; i++) lst.append(5);
@@ -165,12 +173,12 @@ void HashWrap_Test::testGetSet() {
         CPPUNIT_ASSERT(h.attr("get")("a.b")[0].attr("get")("a") == 1);
         CPPUNIT_ASSERT(h.attr("get")("a.b")[1].attr("empty")());
         CPPUNIT_ASSERT(h.attr("get")("a.b")[2].attr("get")("a") == "1");
-        
-    } catch(const bp::error_already_set&) {
+
+    } catch (const bp::error_already_set&) {
         PyErr_Print();
         CPPUNIT_ASSERT(false);
     }
-    
+
     try {
         bp::object h = o_Hash();
         bp::object o_HASH = o_Types.attr("HASH");
@@ -182,7 +190,7 @@ void HashWrap_Test::testGetSet() {
         CPPUNIT_ASSERT(h.attr("isType")("a.b.c", o_INT32) == true);
         CPPUNIT_ASSERT(h.attr("has")("a.b"));
         CPPUNIT_ASSERT(!h.attr("has")("a.b.c.d"));
-    } catch(const bp::error_already_set&) {
+    } catch (const bp::error_already_set&) {
         PyErr_Print();
         CPPUNIT_ASSERT(false);
     }
@@ -191,7 +199,7 @@ void HashWrap_Test::testGetSet() {
         bp::object h = o_Hash("a[0]", o_Hash("a", 1), "a[1]", o_Hash("a", 1));
         CPPUNIT_ASSERT(h.attr("get")("a[0].a") == 1);
         CPPUNIT_ASSERT(h.attr("get")("a[1].a") == 1);
-    } catch(const bp::error_already_set&) {
+    } catch (const bp::error_already_set&) {
         PyErr_Print();
         CPPUNIT_ASSERT(false);
     }
@@ -200,11 +208,11 @@ void HashWrap_Test::testGetSet() {
         bp::object h = o_Hash();
         h.attr("set")("x[0].y[0]", o_Hash("a", 4.2, "b", "red", "c", true));
         h.attr("set")("x[1].y[0]", o_Hash("a", 4.0, "b", "green", "c", false));
-        CPPUNIT_ASSERT( h.attr("get")("x[0].y[0].c"));
+        CPPUNIT_ASSERT(h.attr("get")("x[0].y[0].c"));
         CPPUNIT_ASSERT(!h.attr("get")("x[1].y[0].c"));
-        CPPUNIT_ASSERT( h.attr("get")("x[0].y[0].b") == "red");
-        CPPUNIT_ASSERT( h.attr("get")("x[1].y[0].b") == "green");
-    } catch(const bp::error_already_set&) {
+        CPPUNIT_ASSERT(h.attr("get")("x[0].y[0].b") == "red");
+        CPPUNIT_ASSERT(h.attr("get")("x[1].y[0].b") == "green");
+    } catch (const bp::error_already_set&) {
         PyErr_Print();
         CPPUNIT_ASSERT(false);
     }
@@ -217,7 +225,7 @@ void HashWrap_Test::testGetSet() {
         CPPUNIT_ASSERT(h1.attr("get")("a[0].a[0].b[0].a") == 2);
         h1.attr("set")("a", h2);
         CPPUNIT_ASSERT(h1.attr("get")("a.a[0].b[0].a") == 2);
-    } catch(const bp::error_already_set&) {
+    } catch (const bp::error_already_set&) {
         PyErr_Print();
         CPPUNIT_ASSERT(false);
     }
@@ -228,7 +236,7 @@ void HashWrap_Test::testGetSet() {
         CPPUNIT_ASSERT(h.attr("__getitem__")("a") == "1");
         h.attr("__setitem__")("a", "2");
         CPPUNIT_ASSERT(h.attr("__getitem__")("a") == "2");
-    } catch(const bp::error_already_set&) {
+    } catch (const bp::error_already_set&) {
         PyErr_Print();
         CPPUNIT_ASSERT(false);
     }
@@ -238,8 +246,8 @@ void HashWrap_Test::testGetSet() {
         bool a = true;
         h.attr("__setitem__")("a", a);
         CPPUNIT_ASSERT(h.attr("getType")("a") == o_Types.attr("BOOL"));
-//        CPPUNIT_ASSERT(h.attr("is_type")("a", "BOOL"));
-    } catch(const bp::error_already_set&) {
+        //        CPPUNIT_ASSERT(h.attr("is_type")("a", "BOOL"));
+    } catch (const bp::error_already_set&) {
         PyErr_Print();
         CPPUNIT_ASSERT(false);
     }
