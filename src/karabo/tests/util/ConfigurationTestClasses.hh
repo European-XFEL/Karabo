@@ -266,6 +266,11 @@ namespace configurationTest {
                     .assignmentOptional().defaultValue(10)
                     .init()
                     .commit();
+
+            NODE_ELEMENT(expected).key("triangle")
+                    .displayedName("triangle")
+                    .description("A triangle (Node element containing no other elements)")
+                    .commit();
         }
     };
 
@@ -289,6 +294,8 @@ namespace configurationTest {
                     .displayedName("Example key 2")
                     .description("Example key 2 description")
                     .options("5, 25, 10")
+                    .minInc(5)
+                    .maxInc(25)
                     .unit(Units::METER)
                     .metricPrefix(Units::MILLI)
                     .assignmentOptional().defaultValue(10)
@@ -300,6 +307,8 @@ namespace configurationTest {
                     .displayedName("Example key 3")
                     .description("Example key 3 description")
                     .allowedStates("AllOk.Started, AllOk.Stopped, AllOk.Run.On, NewState") //TODO check
+                    .minExc(10)
+                    .maxExc(20)
                     .assignmentMandatory()
                     .reconfigurable()
                     .commit();
@@ -322,5 +331,5 @@ namespace configurationTest {
         }
     };
             
-        }
+}
 #endif

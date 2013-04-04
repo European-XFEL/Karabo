@@ -27,7 +27,6 @@ void Schema_Test::testBuildUp() {
     try {
         {
             Schema schema = Configurator<Shape>::getSchema("Circle");
-            //cout << schema << endl;
             CPPUNIT_ASSERT(schema.isAccessInitOnly("shadowEnabled") == true);
             CPPUNIT_ASSERT(schema.isAccessInitOnly("radius") == true);
             CPPUNIT_ASSERT(schema.isLeaf("radius") == true);
@@ -35,7 +34,6 @@ void Schema_Test::testBuildUp() {
         {
             Schema schema("test");
             GraphicsRenderer1::expectedParameters(schema);
-            //cout << schema << endl;
             CPPUNIT_ASSERT(schema.isAccessInitOnly("shapes.circle.radius") == true);
             CPPUNIT_ASSERT(schema.isLeaf("shapes.circle.radius") == true);
         }
@@ -187,11 +185,39 @@ void Schema_Test::testGetMetricPrefix() {
     CPPUNIT_ASSERT(m_schema.getMetricPrefixSymbol("exampleKey2") == "m");
 }
 
-    
+
+void Schema_Test::testGetMinIncMaxInc() {
+
+    int minInc = m_schema.getMinInc<int>("exampleKey2");
+    string minIncStr = m_schema.getMinIncAs<string>("exampleKey2");
+    CPPUNIT_ASSERT(minInc == 5);
+    CPPUNIT_ASSERT(minIncStr == "5");
+
+
+    int maxInc = m_schema.getMaxInc<int>("exampleKey2");
+    string maxIncStr = m_schema.getMaxIncAs<string>("exampleKey2");
+    CPPUNIT_ASSERT(maxInc == 25);
+    CPPUNIT_ASSERT(maxIncStr == "25");
+}
+
+
+void Schema_Test::testGetMinExcMaxExc() {
+
+    unsigned int minExc = m_schema.getMinExc<unsigned int>("exampleKey3");
+    string minExcStr = m_schema.getMinExcAs<string>("exampleKey3");
+    CPPUNIT_ASSERT(minExc == 10);
+    CPPUNIT_ASSERT(minExcStr == "10");
+
+    unsigned int maxExc = m_schema.getMaxExc<unsigned int>("exampleKey3");
+    string maxExcStr = m_schema.getMaxExcAs<string>("exampleKey3");
+    CPPUNIT_ASSERT(maxExc == 20);
+    CPPUNIT_ASSERT(maxExcStr == "20");
+
+}
+
+
 void Schema_Test::testPerKeyFunctionality() {
-//    cout << "\n======================" << endl;
-//    cout << m_schema << endl;
-//    cout << "======================" << endl;
+
     std::vector<std::string> keys = m_schema.getParameters();
 
     for (size_t i = 0; i < keys.size(); ++i) {
@@ -226,6 +252,9 @@ void Schema_Test::testPerKeyFunctionality() {
 
             CPPUNIT_ASSERT(m_schema.hasUnit(keys[i]) == true);
             CPPUNIT_ASSERT(m_schema.hasMetricPrefix(keys[i]) == true);
+
+            CPPUNIT_ASSERT(m_schema.hasMinInc(keys[i]) == true);
+            CPPUNIT_ASSERT(m_schema.hasMaxInc(keys[i]) == true);
         }
 
         if (keys[i] == "exampleKey3") {
@@ -238,6 +267,9 @@ void Schema_Test::testPerKeyFunctionality() {
             CPPUNIT_ASSERT(m_schema.hasOptions(keys[i]) == false);
 
             CPPUNIT_ASSERT(m_schema.hasAllowedStates(keys[i]) == true);
+
+            CPPUNIT_ASSERT(m_schema.hasMinExc(keys[i]) == true);
+            CPPUNIT_ASSERT(m_schema.hasMaxExc(keys[i]) == true);
         }
 
         if (keys[i] == "exampleKey4") {
@@ -259,38 +291,22 @@ void Schema_Test::testPerKeyFunctionality() {
             CPPUNIT_ASSERT(m_schema.isAccessReadOnly(keys[i]) == true);
         }
     }
-    
-    //testing HELP function
-    //cout << "\n TestStruct1::help() \n";
-    //m_schema.help();
-
-    //cout << "\n TestStruct1::help(\"exampleKey1\") \n";
-   // m_schema.help("exampleKey1");
 
 }
 
 
 void Schema_Test::testHelpFunction() {
-
-    Schema schema("schemaGraphRender1", Schema::AssemblyRules(READ | WRITE | INIT));
+    //===== uncomment to see 'help()' functionality =====:
+    /*
+    Schema schema("GraphicsRenderer1", Schema::AssemblyRules(READ | WRITE | INIT));
     GraphicsRenderer1::expectedParameters(schema);
-    
-    
-    //cout << "============ schema.help(\"shapes\") ===============" << endl;
-    //schema.help("shapes");
-    
-    //cout << "============ schema.help(\"shapes.circle\")=========" << endl;
-    //schema.help("shapes.circle");
-    
-    //cout << "==========schema.help(\"shapes.circle.radius\")======" << endl;
-    //schema.help("shapes.circle.radius");
-    
-   // cout << "==========schema.help(\"shapes.rectangle\")======" << endl;
-    //schema.help("shapes.rectangle");
-    
-    //cout << "==========schema.help(\"shapes.rectangle.b\")======" << endl;
-    //schema.help("shapes.rectangle.b");
-    
-   // cout << "==========schema.help(\"shapes.Triangle\")======" << endl;
-    //schema.help("Triangle");
-} 
+  
+    schema.help();
+    schema.help("shapes");
+    schema.help("shapes.circle");
+    schema.help("shapes.circle.radius");
+    schema.help("shapes.rectangle");
+    schema.help("shapes.rectangle.b");
+    schema.help("triangle");
+     */
+}
