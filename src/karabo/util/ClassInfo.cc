@@ -59,20 +59,26 @@ namespace karabo {
         }
 
 
-        void ClassInfo::initClassNameAndSpace(const std::string& signature) {
+        void ClassInfo::initClassNameAndSpace(const std::string& signature) {            
             #if defined(_WIN32)
-            boost::regex re("class karabo::util::ClassInfo __cdecl\\s(.+)::(.+)::classInfo");
-            #else
-            boost::regex re("static karabo::util::ClassInfo\\s*(.+)::(.+)::classInfo");
+            boost::regex re("class karabo::util::ClassInfo __cdecl\\s(.+::)*(.+)::classInfo");
+            #else            
+            boost::regex re("static karabo::util::ClassInfo\\s*(.+::)*(.+)::classInfo");
             #endif
             boost::smatch what;
             bool result = boost::regex_search(signature, what, re);
             if (result && what.size() == 3) {
                 m_className = what.str(2);
                 m_namespace = what.str(1);
+                if (m_namespace.length() > 1) {
+                    std::string::iterator it = m_namespace.end() - 1;
+                    if (*it == ':') {
+                        m_namespace.erase(it--);                        
+                        m_namespace.erase(it);                        
+                    }
+                }
             } else {
-                m_className = "unresolved";
-                m_namespace = "unresolved";
+                throw KARABO_LOGIC_EXCEPTION("Introspection error");
             }
         }
 
