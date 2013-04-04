@@ -29,9 +29,11 @@ class Schema_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST(testGetAllowedStates);
     CPPUNIT_TEST(testGetUnit);
     CPPUNIT_TEST(testGetMetricPrefix);
+    CPPUNIT_TEST(testGetMinIncMaxInc);
+    CPPUNIT_TEST(testGetMinExcMaxExc);
     CPPUNIT_TEST(testPerKeyFunctionality);
     CPPUNIT_TEST(testHelpFunction);
-    
+        
     CPPUNIT_TEST_SUITE_END();
 
 public:
@@ -60,10 +62,11 @@ private: //functions
     void testGetAllowedStates();
     void testGetUnit();
     void testGetMetricPrefix();
+    void testGetMinIncMaxInc();
+    void testGetMinExcMaxExc();
     void testPerKeyFunctionality();
     void testHelpFunction();
 
 };
 
 #endif	/* SCHEMA_TEST_HH */
-
