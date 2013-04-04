@@ -58,9 +58,12 @@ $(CP) -f nbproject/Karabo-impl-$(CURRENT_PLATFORM).mk nbproject/Makefile-impl.mk
 $(CP) -f nbproject/Karabo-variables-$(CURRENT_PLATFORM).mk nbproject/Makefile-variables.mk)
 endif
 
-# Custom Karabo variables
+# Custom environment variables
 KARABO = $(CND_BASEDIR)/../karabo/$(CND_DISTDIR)/$(CONF)/$(CND_PLATFORM_$(CONF))
+# ... needed for C++ tests
+PYTHONPATH = $(PWD)/$(CND_DISTDIR)/$(CONF)/$(CND_PLATFORM_$(CONF))
 export KARABO
+export PYTHONPATH
 	
 # build
 build: .build-post
