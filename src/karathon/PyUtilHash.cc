@@ -244,7 +244,8 @@ void exportPyUtilHash() {
           "del h[path] <==> h.erase(path)\nExample:\n"
           "\th = Hash('a.b.c', 1, 'b.x', 2.22, 'b.y', 7.432, 'c', [1,2,3])\n\tprint h\n\t"
           "del b['b.x']\n\tprint h\n\th.erase('b.y')\n\tprint h\n\tdel h['b']");
-    h.def("__len__", &Hash::size, "h.__len__() -> number of (top level) items of Hash mapping <==> len(h) <==> len(h.keys())");
+    h.def("__len__", &Hash::size,
+          "h.__len__() -> number of (top level) items of Hash mapping <==> len(h) <==> len(h.keys())");
     h.def("__iter__", bp::iterator<Hash > (),
           "h.__iter__() <==> iter(h) : iterator of (top level) items of 'h' mapping.\nExample:\n\t"
           "h = Hash('a.b.c', 1, 'b.x', 2.22, 'b.y', 7.432, 'c', [1,2,3])\n\ti = iter(h)       # create iterator\n\t"
@@ -273,7 +274,12 @@ void exportPyUtilHash() {
         "tree = Hash()\n\tflat.unflatten(tree)\n\tresult = similar(h, tree)\n"
         "... result will be 'True'");
 
-    h.def("isType", &HashWrap().pythonIs, (bp::arg("path"), bp::arg("type"), bp::arg("sep") = "."));
+    h.def("isType", &HashWrap().pythonIs, (bp::arg("path"), bp::arg("type"), bp::arg("sep") = "."),
+          "h.isType(path, type) -> True if reference type of value in Hash container for given 'path' is equal 'type'.\nExample:\n\t"
+          "h = Hash('a.b.c', 1, 'b.x', 2.22, 'b.y', 7.432, 'c', [1,2,3])\n\t"
+          "assert h.isType('a.b.c', Types.INT32) == True\n\t"
+          "assert h.isType('b.y', Types.DOUBLE) == True\n\t"
+          "assert h.isType('c', Types.VECTOR_INT32) == True");
     h.def(bp::self_ns::str(bp::self));
     //    h.def("copy", &HashWrap().pyDict2Hash, (bp::arg("dict"), bp::arg("sep") = "."), bp::return_value_policy<bp::copy_const_reference > ());
     //    h.def("update", &Hash::update, (bp::arg("hash")));
@@ -304,11 +310,29 @@ void exportPyUtilHash() {
           "\th = Hash('a.b.c', 1, 'b.x', 2.22, 'b.y', 7.432, 'c', [1,2,3])\n\t"
           "n = h.getNode('b')\n\tg = Hash()\n\tg.setNode(n)\n\tprint g");
     h.def("getAttribute", &HashWrap().pythonGetAttribute, (bp::arg("path"), bp::arg("attribute"), bp::arg("sep") = "."),
-          "Get attribute value following given 'path' and 'attribute' name. Optionally use separator (3rd arg).");
-    h.def("getAttributeAs", &HashWrap().pythonGetAttributeAs, (bp::arg("path"), bp::arg("attribute"), bp::arg("type"), bp::arg("sep") = "."));
-    h.def("getAttributes", &HashWrap().pythonGetAttributes, (bp::arg("path"), bp::arg("sep") = "."));
-    h.def("setAttribute", &HashWrap().pythonSetAttribute, (bp::arg("path"), bp::arg("attribute"), bp::arg("value"), bp::arg("sep") = "."));
-    h.def("setAttributes", &HashWrap().pythonSetAttributes, (bp::arg("path"), bp::arg("attributes"), bp::arg("sep") = "."));
+          "Get attribute value following given 'path' and 'attribute' name. Optionally use separator.\nExample:\n\t"
+          "h = Hash('a.b.c', 1, 'b.x', 2.22, 'b.y', 7.432, 'c', [1,2,3])\n\th.setAttribute('a.b.c', 'attr1', [1.234,2.987,5.555]\n\t"
+          "assert h.getAttribute('a.b.c', 'attr1') == [1.234,2.987,5.555]");
+    h.def("getAttributeAs", &HashWrap().pythonGetAttributeAs, (bp::arg("path"), bp::arg("attribute"), bp::arg("type"), bp::arg("sep") = "."),
+          "h.getAttributeAs(path, attribute, type, sep = '.') -> value of 'type' type.\nExample:\n\t"
+          "h = Hash('a.b.c', 1, 'b.x', 2.22, 'b.y', 7.432, 'c', [1,2,3])\n\th.setAttribute('a.b.c', 'attr1', [1.234,2.987,5.555])\n"
+          "\nHere you have to be sure that you have imported numpy as np:\n\n\timport numpy as np\n\t"
+          "assert h.getAttributeAs('a.b.c', 'attr1', Types.NDARRAY_DOUBLE).all() == np.array([1.234,2.987,5.555], dtype=np.double).all()");
+    h.def("getAttributes", &HashWrap().pythonGetAttributes, (bp::arg("path"), bp::arg("sep") = "."),
+          "h.getAttributes(path, sep='.') -> iterable container of attributes.\nExample:\n\t"
+          "h = Hash('a.b.c', 1, 'b.x', 2.22, 'b.y', 7.432, 'c', [1,2,3])\n\t"
+          "h.setAttribute('a.b.c', 'attr1', [1.234,2.987,5.555])\n\th.setAttribute('a.b.c', 'attr2', 1)\n\t"
+          "h.setAttribute('a.b.c', 'attr3', )\n\t"
+          "for a in h.getAttributes('a.b.c'):\n\t\tprint a.getKey(), a.getValue()");
+    h.def("setAttribute", &HashWrap().pythonSetAttribute, (bp::arg("path"), bp::arg("attribute"), bp::arg("value"), bp::arg("sep") = "."),
+          "Set attribute associated with path.\nExample:\n\th = Hash('a.b.c', 1, 'b.x', 2.22, 'b.y', 7.432, 'c', [1,2,3])\n\t"
+          "h.setAttribute('a.b.c', 'attr1', [1.234,2.987,5.555])\n\tassert h.getAttribute('a.b.c', 'attr1') == [1.234,2.987,5.555]");
+    h.def("setAttributes", &HashWrap().pythonSetAttributes, (bp::arg("path"), bp::arg("attributes"), bp::arg("sep") = "."),
+          "h.setAttributes(path, attributes, sep='.') allows to associate 'attributes' with 'path' in this Hash.\nExample:\n\t"
+          "h = Hash('a.b.c', 1, 'b.x', 2.22, 'b.y', 7.432, 'c', [1,2,3])\n\t"
+          "h.setAttribute('a.b.c', 'attr1', [1.234,2.987,5.555])\n\th.setAttribute('a.b.c', 'attr2', 1)\n\t"
+          "h.setAttribute('a.b.c', 'attr3', )\n\ta = h.getAttributes('a.b.c')\n\t"
+          "h.setAttributes('c', a)    # copy attributes under the different path");
 
     bp::class_<std::vector<Hash> > v("VectorHash");
     v.def("__iter__", bp::iterator < std::vector<Hash> > ());
