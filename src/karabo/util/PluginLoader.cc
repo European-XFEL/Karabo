@@ -20,7 +20,7 @@
 namespace karabo {
     namespace util {
 
-        //KARABO_REGISTER_ONLY_ME_CC(PluginLoader)
+        KARABO_REGISTER_FOR_CONFIGURATION(PluginLoader)
 
         using namespace std;
         using namespace boost;
@@ -44,7 +44,7 @@ namespace karabo {
         }
 
 
-        void PluginLoader::configure(const Hash& input) {
+        PluginLoader::PluginLoader(const Hash& input) {
             m_pluginDirectory = boost::filesystem::path(input.get<string>("pluginDirectory"));
         }
 

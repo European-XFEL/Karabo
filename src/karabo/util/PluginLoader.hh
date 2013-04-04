@@ -38,15 +38,12 @@ namespace karabo {
             KARABO_CLASSINFO(PluginLoader, "PluginLoader", "1.0")
             KARABO_CONFIGURATION_BASE_CLASS
 
-            PluginLoader() {
-            };
-
-            PluginLoader(const boost::filesystem::path& pluginDirectory) : m_pluginDirectory(pluginDirectory) {
+            PluginLoader(const std::string& pluginDirectory) : m_pluginDirectory(pluginDirectory) {
             }
 
             static void expectedParameters(karabo::util::Schema& expected);
 
-            void configure(const karabo::util::Hash& input);
+            PluginLoader(const karabo::util::Hash& input);
 
             virtual ~PluginLoader() {
             };
