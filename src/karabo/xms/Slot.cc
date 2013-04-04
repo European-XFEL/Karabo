@@ -36,17 +36,20 @@ namespace karabo {
         template <>
         const bool& Slot::getAndCast(const std::string& key, const karabo::util::Hash& hash) const {
             //std::cout << "int -> boolean caster in action..." << std::endl;
-            karabo::util::Hash::const_iterator it = hash.find(key);
-            if (it != hash.end()) {
-                if (hash.is<int>(it)) {
-                    // TODO Check portability
-                    const bool& b = *(reinterpret_cast<const bool*> (&(hash.get<int>(it))));
-                    //std::cout << "casting integer to boolean, value: " << b << std::endl;
-                    return b;
-                } else return hash.get<bool>(it);
+            karabo::util::Hash::Node node;
+            try {
+                node = hash.getNode(key);
+            } catch (...) {
+                KARABO_RETHROW_AS(KARABO_PARAMETER_EXCEPTION("Slot was called with to less arguments"));
+            }
+            if (node.is<int>()) {
+                // TODO Check portability
+                const bool& b = *(reinterpret_cast<const bool*> (&(node.getValue<int>())));
+                //std::cout << "casting integer to boolean, value: " << b << std::endl;
+                return b;
             } else {
-                throw KARABO_PARAMETER_EXCEPTION("Slot was called with to less arguments");
+                return node.getValue<bool>();
             }
         }
-    } // namespace xms
-} // namespace karabo
+    }
+} 

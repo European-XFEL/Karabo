@@ -9,8 +9,6 @@
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
 
-
-
 #ifndef KARABO_XMS_MEMORY_HH
 #define	KARABO_XMS_MEMORY_HH
 
@@ -276,7 +274,7 @@ namespace karabo {
                         return i;
                     }
                 }
-                throw KARABO_MEMORY_INIT_EXCEPTION("Total number channels is exhausted");
+                throw KARABO_MEMORY_INIT_EXCEPTION("Total number of channels is exhausted");
             }
 
             static size_t registerChunk(const size_t channelIdx) {
@@ -288,7 +286,7 @@ namespace karabo {
                         return i;
                     }
                 }
-                throw KARABO_MEMORY_INIT_EXCEPTION("Total number chunks is exhausted");
+                throw KARABO_MEMORY_INIT_EXCEPTION("Total number of chunks is exhausted");
             }
             
             static int getChannelStatus(const size_t channelIdx) {

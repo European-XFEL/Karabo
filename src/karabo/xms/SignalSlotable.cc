@@ -24,6 +24,7 @@ namespace karabo {
 
         using namespace std;
         using namespace karabo::util;
+        using namespace karabo::io;
         using namespace karabo::net;
 
         // Static initializations
@@ -278,10 +279,10 @@ namespace karabo {
             try {
                 for (Hash::const_iterator it = config.begin(); it != config.end(); ++it) {
                     const boost::regex e(signalRegularExpression);
-                    if (boost::regex_match(it->first, e)) {
-                        const vector<string>& connects = config.get<vector<string> >(it);
+                    if (boost::regex_match(it->getKey(), e)) {
+                        const vector<string>& connects = it->getValue<vector<string> >();
                         for (size_t i = 0; i < connects.size(); ++i) {
-                            connect(it->first, connects[i], RECONNECT);
+                            connect(it->getKey(), connects[i], RECONNECT);
                         }
                     }
                 }
@@ -294,11 +295,11 @@ namespace karabo {
             try {
                 for (Hash::const_iterator it = config.begin(); it != config.end(); ++it) {
                     const boost::regex e(slotRegularExpression);
-                    if (boost::regex_match(it->first, e)) {
-                        const vector<string>& connects = config.get<vector<string> >(it);
+                    if (boost::regex_match(it->getKey(), e)) {
+                        const vector<string>& connects = it->getValue<vector<string> >();
                         for (size_t i = 0; i < connects.size(); ++i) {
                             cout << "AutoConnect:" << connects[i] << endl;
-                            connect(connects[i], it->first, RECONNECT);
+                            connect(connects[i], it->getKey(), RECONNECT);
                         }
                     }
                 }
@@ -312,7 +313,7 @@ namespace karabo {
             if (!m_trackedComponents.has(instanceId)) {
                 addTrackedComponent(instanceId);
             }
-            m_trackedComponents.setFromPath(instanceId + ".isExplicitlyTracked", true);
+            m_trackedComponents.set(instanceId + ".isExplicitlyTracked", true);
             connect(instanceId, "signalHeartbeat", "", "slotHeartbeat", NO_TRACK, false);
         }
 
@@ -491,7 +492,7 @@ namespace karabo {
                     if (signalInstanceId != m_instanceId) {
                         boost::mutex::scoped_lock lock(m_heartbeatMutex);
                         if (!m_trackedComponents.has(signalInstanceId)) addTrackedComponent(signalInstanceId);
-                        m_trackedComponents.getFromPath<vector<Hash> >(signalInstanceId + ".connections").push_back(connection);
+                        m_trackedComponents.get<vector<Hash> >(signalInstanceId + ".connections").push_back(connection);
                         // Connect remote signalHeartbeat to local slotHeartbeat
                         //connect(signalInstanceId, "signalHeartbeat", "", "slotHeartbeat", NO_TRACK, false);
                     }
@@ -500,7 +501,7 @@ namespace karabo {
                     if (slotInstanceId != m_instanceId) {
                         boost::mutex::scoped_lock lock(m_heartbeatMutex);
                         if (!m_trackedComponents.has(slotInstanceId)) addTrackedComponent(slotInstanceId);
-                        m_trackedComponents.getFromPath<vector<Hash> >(slotInstanceId + ".connections").push_back(connection);
+                        m_trackedComponents.get<vector<Hash> >(slotInstanceId + ".connections").push_back(connection);
                         // Connect remote signalHeartbeat to local slotHeartbeat
                         //connect(slotInstanceId, "signalHeartbeat", "", "slotHeartbeat", NO_TRACK, false);
                     }
@@ -512,7 +513,7 @@ namespace karabo {
 
             boost::mutex::scoped_lock lock(m_heartbeatMutex);
             for (Hash::iterator it = m_trackedComponents.begin(); it != m_trackedComponents.end(); ++it) {
-                const vector<Hash>& connections = m_trackedComponents.get<Hash > (it).get<vector<Hash> >("connections");
+                const vector<Hash>& connections = it->getValue<Hash>().get<vector<Hash> >("connections");
                 for (size_t j = 0; j < connections.size(); ++j) {
                     const Hash& connection = connections[j];
                     if (connection.get<string > ("connectionId") == connectionId) return true;
@@ -598,7 +599,7 @@ namespace karabo {
 
             boost::mutex::scoped_lock lock(m_heartbeatMutex);
             for (Hash::iterator it = m_trackedComponents.begin(); it != m_trackedComponents.end(); ++it) {
-                vector<Hash>& connections = m_trackedComponents.get<Hash > (it).get<vector<Hash> >("connections");
+                vector<Hash>& connections = it->getValue<Hash>().get<vector<Hash> >("connections");
                 for (vector<Hash>::iterator jt = connections.begin(); jt != connections.end(); ++jt) {
                     const Hash& connection = *jt;
                     if (connection.get<string > ("connectionId") == connectionId) {
@@ -689,13 +690,13 @@ namespace karabo {
                 m_heartbeatMutex.lock();
 
                 for (Hash::iterator it = m_trackedComponents.begin(); it != m_trackedComponents.end(); ++it) {
-                    Hash& entry = m_trackedComponents.get<Hash > (it);
+                    Hash& entry = it->getValue<Hash>();
                     int& countDown = entry.get<int>("countDown");
                     if (countDown > 0) countDown--;
                     else if (countDown == 0) {
                         countDown--;
-                        if (entry.get<bool>("isExplicitlyTracked") == true) instanceNotAvailable(it->first);
-                        connectionLost(it->first, entry.get<vector<Hash> >("connections"));
+                        if (entry.get<bool>("isExplicitlyTracked") == true) instanceNotAvailable(it->getKey());
+                        connectionLost(it->getKey(), entry.get<vector<Hash> >("connections"));
                     } else {
                         countDown--;
                         // Here we can try to reconnect
@@ -705,7 +706,7 @@ namespace karabo {
                                 const Hash& connection = connections[i];
                                 if (connection.get<int>("connectionType") == RECONNECT) {
                                     m_heartbeatMutex.unlock();
-                                    connect(it->first, "signalHeartbeat", "", "slotHeartbeat", NO_TRACK, false);
+                                    connect(it->getKey(), "signalHeartbeat", "", "slotHeartbeat", NO_TRACK, false);
                                     m_heartbeatMutex.lock();
                                     break;
                                 }
@@ -740,13 +741,13 @@ namespace karabo {
         Hash SignalSlotable::prepareConnectionNotAvailableInformation(const karabo::util::Hash& hash) const {
             Hash result;
             for (Hash::const_iterator jt = hash.begin(); jt != hash.end(); ++jt) {
-                const AssocType& associates = hash.get< AssocType > (jt);
+                const AssocType& associates = jt->getValue<AssocType>();
                 vector<string > tmp;
                 tmp.reserve(associates.size());
                 for (AssocTypeConstIterator kt = associates.begin(); kt != associates.end(); ++kt) {
                     tmp.push_back(kt->first);
                 }
-                result.set(jt->first, tmp);
+                result.set(jt->getKey(), tmp);
             }
             return result;
         }
@@ -754,27 +755,27 @@ namespace karabo {
         void SignalSlotable::slotTryReconnectNow() {
             boost::mutex::scoped_lock lock(m_heartbeatMutex);
             for (Hash::iterator it = m_trackedComponents.begin(); it != m_trackedComponents.end(); ++it) {
-                Hash& entry = m_trackedComponents.get<Hash > (it->first);
+                Hash& entry = m_trackedComponents.get<Hash > (it->getKey());
                 const int& timeToLive = entry.get<int>("timeToLive");
                 if (timeToLive < 0) {
                     const Hash& signals = entry.get<Hash > ("signals");
                     for (Hash::const_iterator jt = signals.begin(); jt != signals.end(); ++jt) {
-                        const AssocType& slots = signals.get< AssocType > (jt);
+                        const AssocType& slots = jt->getValue<AssocType>();
                         for (AssocTypeConstIterator kt = slots.begin(); kt != slots.end(); ++kt) {
                             if (kt->second == RECONNECT) {
                                 m_heartbeatMutex.unlock();
-                                connect(jt->first, kt->first, RECONNECT);
+                                connect(jt->getKey(), kt->first, RECONNECT);
                                 m_heartbeatMutex.lock();
                             }
                         }
                     }
                     const Hash& slots = entry.get<Hash > ("slots");
                     for (Hash::const_iterator jt = slots.begin(); jt != slots.end(); ++jt) {
-                        const AssocType& signals = slots.get< AssocType > (jt);
+                        const AssocType& signals = jt->getValue<AssocType>();
                         for (AssocTypeConstIterator kt = signals.begin(); kt != signals.end(); ++kt) {
                             if (kt->second == RECONNECT) {
                                 m_heartbeatMutex.unlock();
-                                connect(kt->first, jt->first, RECONNECT);
+                                connect(kt->first, jt->getKey(), RECONNECT);
                                 m_heartbeatMutex.lock();
                             }
                         }

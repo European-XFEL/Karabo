@@ -27,7 +27,7 @@ namespace karabo {
             KARABO_CLASSINFO(AbstractInput, "AbstractInput", "1.0")
             KARABO_CONFIGURATION_BASE_CLASS
 
-            AbstractInput() {
+            AbstractInput(const karabo::util::Hash&) {
             }
 
             virtual ~AbstractInput() {
