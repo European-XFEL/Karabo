@@ -133,7 +133,6 @@
     </logicalFolder>
     <logicalFolder name="f1" displayName="util" projectFiles="true">
       <logicalFolder name="f4" displayName="Data Container" projectFiles="true">
-        <itemPath>../../../src/karabo/util/DoubleReferenceIterator.hh</itemPath>
         <itemPath>../../../src/karabo/util/Element.hh</itemPath>
         <itemPath>../../../src/karabo/util/Hash.cc</itemPath>
         <itemPath>../../../src/karabo/util/Hash.hh</itemPath>
@@ -1240,6 +1239,7 @@
           <developmentMode>5</developmentMode>
         </asmTool>
         <linkerTool>
+          <output>${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/lib/libkarabo.${CND_DLIB_EXT}</output>
           <linkerAddLib>
             <pElem>/opt/local/lib/nss</pElem>
             <pElem>/opt/local/lib/nspr</pElem>
