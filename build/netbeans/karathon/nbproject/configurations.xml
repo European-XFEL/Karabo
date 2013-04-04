@@ -11,9 +11,14 @@
       <itemPath>../../../src/karathon/Wrapper.cc</itemPath>
       <itemPath>../../../src/karathon/Wrapper.hh</itemPath>
     </logicalFolder>
+    <logicalFolder name="f3"
+                   displayName="IO Binding"
+                   projectFiles="true"
+                   kind="ROOT">
+      <itemPath>../../../src/karathon/PyIoFileTools.cc</itemPath>
+    </logicalFolder>
     <logicalFolder name="f2" displayName="Schema Binding" projectFiles="true">
       <itemPath>../../../src/karathon/DefaultValueVectorWrap.hh</itemPath>
-      <itemPath>../../../src/karathon/PyIoFileTools.cc</itemPath>
       <itemPath>../../../src/karathon/PyUtilClassInfo.cc</itemPath>
       <itemPath>../../../src/karathon/PyUtilSchema.cc</itemPath>
       <itemPath>../../../src/karathon/PythonFactoryMacros.hh</itemPath>
