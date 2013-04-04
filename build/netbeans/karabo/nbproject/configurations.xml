@@ -198,6 +198,25 @@
         <itemPath>../../../src/karabo/util/Types.hh</itemPath>
       </logicalFolder>
     </logicalFolder>
+    <logicalFolder name="f6" displayName="xms" projectFiles="true" kind="ROOT">
+      <itemPath>../../../src/karabo/xms/Memory.cc</itemPath>
+      <itemPath>../../../src/karabo/xms/Memory.hh</itemPath>
+      <itemPath>../../../src/karabo/xms/NetworkInput.cc</itemPath>
+      <itemPath>../../../src/karabo/xms/NetworkInput.hh</itemPath>
+      <itemPath>../../../src/karabo/xms/NetworkOutput.cc</itemPath>
+      <itemPath>../../../src/karabo/xms/NetworkOutput.hh</itemPath>
+      <itemPath>../../../src/karabo/xms/Output.hh</itemPath>
+      <itemPath>../../../src/karabo/xms/Requestor.cc</itemPath>
+      <itemPath>../../../src/karabo/xms/Requestor.hh</itemPath>
+      <itemPath>../../../src/karabo/xms/Signal.hh</itemPath>
+      <itemPath>../../../src/karabo/xms/SignalSlotable.cc</itemPath>
+      <itemPath>../../../src/karabo/xms/SignalSlotable.hh</itemPath>
+      <itemPath>../../../src/karabo/xms/Slot.cc</itemPath>
+      <itemPath>../../../src/karabo/xms/Slot.hh</itemPath>
+      <itemPath>../../../src/karabo/xms/SlotElement.hh</itemPath>
+      <itemPath>../../../src/karabo/xms/Statics.cc</itemPath>
+      <itemPath>../../../src/karabo/xms/Statics.hh</itemPath>
+    </logicalFolder>
     <logicalFolder name="TestFiles"
                    displayName="Test Files"
                    projectFiles="false"
@@ -248,6 +267,11 @@
         <itemPath>../../../src/karabo/tests/util/Types_Test.hh</itemPath>
         <itemPath>../../../src/karabo/tests/util/utilTestRunner.cc</itemPath>
         <itemPath>../../../src/karabo/tests/util/resources/utiltestdll.hh</itemPath>
+      </logicalFolder>
+      <logicalFolder name="f5" displayName="xms_test" projectFiles="true" kind="TEST">
+        <itemPath>../../../src/karabo/tests/xms/SignalSlotable_Test.cc</itemPath>
+        <itemPath>../../../src/karabo/tests/xms/SignalSlotable_Test.hh</itemPath>
+        <itemPath>../../../src/karabo/tests/xms/xmsTestRunner.cc</itemPath>
       </logicalFolder>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
@@ -934,6 +958,21 @@
             tool="1"
             flavor2="0">
       </item>
+      <item path="../../../src/karabo/tests/xms/SignalSlotable_Test.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/xms/SignalSlotable_Test.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/xms/xmsTestRunner.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
       <item path="../../../src/karabo/util/ArrayTools.hh"
             ex="false"
             tool="3"
@@ -1153,6 +1192,67 @@
       </item>
       <item path="../../../src/karabo/util/util.hh" ex="false" tool="3" flavor2="0">
       </item>
+      <item path="../../../src/karabo/xms/Memory.cc" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="../../../src/karabo/xms/Memory.hh" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../../../src/karabo/xms/NetworkInput.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/xms/NetworkInput.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/xms/NetworkOutput.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/xms/NetworkOutput.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/xms/Output.hh" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../../../src/karabo/xms/Requestor.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/xms/Requestor.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/xms/Signal.hh" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../../../src/karabo/xms/SignalSlotable.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/xms/SignalSlotable.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/xms/Slot.cc" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="../../../src/karabo/xms/Slot.hh" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../../../src/karabo/xms/SlotElement.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/xms/Statics.cc" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="../../../src/karabo/xms/Statics.hh" ex="false" tool="3" flavor2="0">
+      </item>
       <folder path="TestFiles">
         <ccTool>
           <incDir>
@@ -1198,6 +1298,20 @@
         </ccTool>
         <linkerTool>
           <output>${TESTDIR}/TestFiles/f4</output>
+          <linkerLibItems>
+            <linkerOptionItem>`cppunit-config --libs`</linkerOptionItem>
+          </linkerLibItems>
+        </linkerTool>
+      </folder>
+      <folder path="TestFiles/f5">
+        <cTool>
+          <commandLine>`cppunit-config --cflags`</commandLine>
+        </cTool>
+        <ccTool>
+          <commandLine>`cppunit-config --cflags`</commandLine>
+        </ccTool>
+        <linkerTool>
+          <output>${TESTDIR}/TestFiles/f5</output>
           <linkerLibItems>
             <linkerOptionItem>`cppunit-config --libs`</linkerOptionItem>
           </linkerLibItems>
@@ -1890,6 +2004,21 @@
             tool="1"
             flavor2="0">
       </item>
+      <item path="../../../src/karabo/tests/xms/SignalSlotable_Test.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/xms/SignalSlotable_Test.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/xms/xmsTestRunner.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
       <item path="../../../src/karabo/util/ArrayTools.hh"
             ex="false"
             tool="3"
@@ -2109,6 +2238,67 @@
       </item>
       <item path="../../../src/karabo/util/util.hh" ex="false" tool="3" flavor2="0">
       </item>
+      <item path="../../../src/karabo/xms/Memory.cc" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="../../../src/karabo/xms/Memory.hh" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../../../src/karabo/xms/NetworkInput.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/xms/NetworkInput.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/xms/NetworkOutput.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/xms/NetworkOutput.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/xms/Output.hh" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../../../src/karabo/xms/Requestor.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/xms/Requestor.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/xms/Signal.hh" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../../../src/karabo/xms/SignalSlotable.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/xms/SignalSlotable.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/xms/Slot.cc" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="../../../src/karabo/xms/Slot.hh" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../../../src/karabo/xms/SlotElement.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/xms/Statics.cc" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="../../../src/karabo/xms/Statics.hh" ex="false" tool="3" flavor2="0">
+      </item>
       <folder path="TestFiles">
         <ccTool>
           <incDir>
@@ -2163,6 +2353,20 @@
         </ccTool>
         <linkerTool>
           <output>${TESTDIR}/TestFiles/f4</output>
+          <linkerLibItems>
+            <linkerOptionItem>`cppunit-config --libs`</linkerOptionItem>
+          </linkerLibItems>
+        </linkerTool>
+      </folder>
+      <folder path="TestFiles/f5">
+        <cTool>
+          <commandLine>`cppunit-config --cflags`</commandLine>
+        </cTool>
+        <ccTool>
+          <commandLine>`cppunit-config --cflags`</commandLine>
+        </ccTool>
+        <linkerTool>
+          <output>${TESTDIR}/TestFiles/f5</output>
           <linkerLibItems>
             <linkerOptionItem>`cppunit-config --libs`</linkerOptionItem>
           </linkerLibItems>

@@ -27,6 +27,7 @@ namespace karabo {
     namespace xms {
 
         class Signal {
+
         public:
 
             KARABO_CLASSINFO(Signal, "Signal", "1.0")
@@ -130,9 +131,9 @@ namespace karabo {
                 header.set("classId", "Signal");
                 return header;
             }
-            
+
         protected:
-            
+
             karabo::net::BrokerChannel::Pointer m_channel;
             std::string m_signalInstanceId;
             std::string m_signalFunction;

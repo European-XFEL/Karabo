@@ -9,21 +9,22 @@
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
 
-#ifndef KARABO_XMS_REQUEST_HH
-#define	KARABO_XMS_REQUEST_HH
+#ifndef KARABO_XMS_REQUESTOR_HH
+#define	KARABO_XMS_REQUESTOR_HH
 
 #include <boost/uuid/uuid.hpp>            // uuid class
 #include <boost/uuid/uuid_generators.hpp> // generators
 #include <boost/uuid/uuid_io.hpp>         // streaming operators etc.
 #include <boost/asio.hpp>
 
-#include <karabo/util/Factory.hh>
+#include <karabo/util/Configurator.hh>
 #include <karabo/net/BrokerChannel.hh>
 
 namespace karabo {
     namespace xms {
 
         class Requestor {
+
         public:
 
             KARABO_CLASSINFO(Requestor, "Requestor", "1.0")
@@ -31,7 +32,7 @@ namespace karabo {
             Requestor(const karabo::net::BrokerChannel::Pointer& channel, const std::string& requestInstanceId) :
             m_channel(channel), m_requestInstanceId(requestInstanceId), m_replyId(generateUUID()), m_isRequested(false), m_isReceived(false) {
             }
-            
+
             virtual ~Requestor() {
             }
 
@@ -46,7 +47,7 @@ namespace karabo {
             Requestor& call(const std::string& slotInstanceId, const std::string& slotFunction, const A1& a1) {
                 prepareHeaderAndFilter(slotInstanceId, slotFunction);
                 return request(a1);
-                
+
             }
 
             template <class A1, class A2>
@@ -67,7 +68,6 @@ namespace karabo {
                 return request(a1, a2, a3, a4);
             }
 
-           
             Requestor& receive() {
                 try {
                     karabo::util::Hash body, header;
@@ -163,7 +163,7 @@ namespace karabo {
             }
 
         protected: // functions
-            
+
             Requestor& request() {
                 registerRequest();
                 m_body.clear();

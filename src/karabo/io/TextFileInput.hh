@@ -58,10 +58,10 @@ namespace karabo {
                         .commit();
             }
 
-            TextFileInput(const karabo::util::Hash& input) {
-                m_filename = input.get<std::string > ("filename");
-                if (input.has("format")) {
-                    m_serializer = TextSerializer<T>::createChoice("format", input);
+            TextFileInput(const karabo::util::Hash& config) : Input<T>(config) {
+                m_filename = config.get<std::string > ("filename");
+                if (config.has("format")) {
+                    m_serializer = TextSerializer<T>::createChoice("format", config);
                 } else {
                     guessAndSetFormat();
                 }
