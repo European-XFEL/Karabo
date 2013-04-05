@@ -35,13 +35,15 @@ OBJECTDIR=${CND_BUILDDIR}/${CND_CONF}/${CND_PLATFORM}
 
 # Object Files
 OBJECTFILES= \
+	${OBJECTDIR}/_ext/381567218/ConnectionWrap.o \
 	${OBJECTDIR}/_ext/381567218/HashWrap.o \
 	${OBJECTDIR}/_ext/381567218/PyIoFileTools.o \
 	${OBJECTDIR}/_ext/381567218/PyUtilClassInfo.o \
 	${OBJECTDIR}/_ext/381567218/PyUtilHash.o \
 	${OBJECTDIR}/_ext/381567218/PyUtilSchema.o \
 	${OBJECTDIR}/_ext/381567218/Wrapper.o \
-	${OBJECTDIR}/_ext/381567218/karathon.o
+	${OBJECTDIR}/_ext/381567218/karathon.o \
+	${OBJECTDIR}/_ext/381567218/p2pbinding.o
 
 # Test Directory
 TESTDIR=${CND_BUILDDIR}/${CND_CONF}/${CND_PLATFORM}/tests
@@ -73,6 +75,11 @@ LDLIBSOPTIONS=-L/opt/local/nss -L/opt/local/nspr -L${KARABO}/lib -L${KARABO}/ext
 ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libkarathon.${CND_DLIB_EXT}: ${OBJECTFILES}
 	${MKDIR} -p ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}
 	${LINK.cc} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libkarathon.${CND_DLIB_EXT} ${OBJECTFILES} ${LDLIBSOPTIONS} -shared -fPIC
+
+${OBJECTDIR}/_ext/381567218/ConnectionWrap.o: ../../../src/karathon/ConnectionWrap.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/381567218
+	${RM} $@.d
+	$(COMPILE.cc) -g -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/include -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/381567218/ConnectionWrap.o ../../../src/karathon/ConnectionWrap.cc
 
 ${OBJECTDIR}/_ext/381567218/HashWrap.o: ../../../src/karathon/HashWrap.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/381567218
@@ -109,6 +116,11 @@ ${OBJECTDIR}/_ext/381567218/karathon.o: ../../../src/karathon/karathon.cc
 	${RM} $@.d
 	$(COMPILE.cc) -g -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/include -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/381567218/karathon.o ../../../src/karathon/karathon.cc
 
+${OBJECTDIR}/_ext/381567218/p2pbinding.o: ../../../src/karathon/p2pbinding.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/381567218
+	${RM} $@.d
+	$(COMPILE.cc) -g -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/include -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/381567218/p2pbinding.o ../../../src/karathon/p2pbinding.cc
+
 # Subprojects
 .build-subprojects:
 
@@ -130,6 +142,19 @@ ${TESTDIR}/tests/karathonTestRunner.o: tests/karathonTestRunner.cc
 	${RM} $@.d
 	$(COMPILE.cc) -g -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/include `cppunit-config --cflags` -MMD -MP -MF $@.d -o ${TESTDIR}/tests/karathonTestRunner.o tests/karathonTestRunner.cc
 
+
+${OBJECTDIR}/_ext/381567218/ConnectionWrap_nomain.o: ${OBJECTDIR}/_ext/381567218/ConnectionWrap.o ../../../src/karathon/ConnectionWrap.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/381567218
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/381567218/ConnectionWrap.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} $@.d;\
+	    $(COMPILE.cc) -g -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/include -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/381567218/ConnectionWrap_nomain.o ../../../src/karathon/ConnectionWrap.cc;\
+	else  \
+	    ${CP} ${OBJECTDIR}/_ext/381567218/ConnectionWrap.o ${OBJECTDIR}/_ext/381567218/ConnectionWrap_nomain.o;\
+	fi
 
 ${OBJECTDIR}/_ext/381567218/HashWrap_nomain.o: ${OBJECTDIR}/_ext/381567218/HashWrap.o ../../../src/karathon/HashWrap.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/381567218
@@ -220,6 +245,19 @@ ${OBJECTDIR}/_ext/381567218/karathon_nomain.o: ${OBJECTDIR}/_ext/381567218/karat
 	    $(COMPILE.cc) -g -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/include -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/381567218/karathon_nomain.o ../../../src/karathon/karathon.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/381567218/karathon.o ${OBJECTDIR}/_ext/381567218/karathon_nomain.o;\
+	fi
+
+${OBJECTDIR}/_ext/381567218/p2pbinding_nomain.o: ${OBJECTDIR}/_ext/381567218/p2pbinding.o ../../../src/karathon/p2pbinding.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/381567218
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/381567218/p2pbinding.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} $@.d;\
+	    $(COMPILE.cc) -g -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/include -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/381567218/p2pbinding_nomain.o ../../../src/karathon/p2pbinding.cc;\
+	else  \
+	    ${CP} ${OBJECTDIR}/_ext/381567218/p2pbinding.o ${OBJECTDIR}/_ext/381567218/p2pbinding_nomain.o;\
 	fi
 
 # Run Test Targets
