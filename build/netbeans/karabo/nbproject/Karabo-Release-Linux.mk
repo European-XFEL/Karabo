@@ -74,7 +74,6 @@ OBJECTFILES= \
 	${OBJECTDIR}/_ext/1080827789/pugixml.o \
 	${OBJECTDIR}/_ext/163016059/Base64.o \
 	${OBJECTDIR}/_ext/163016059/ClassInfo.o \
-	${OBJECTDIR}/_ext/163016059/Exception.o \
 	${OBJECTDIR}/_ext/163016059/FromInt.o \
 	${OBJECTDIR}/_ext/163016059/FromLiteral.o \
 	${OBJECTDIR}/_ext/163016059/FromTypeInfo.o \
