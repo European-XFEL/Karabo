@@ -34,6 +34,7 @@
         <itemPath>../../../src/karabo/io/h5/TypeTraits.cc</itemPath>
         <itemPath>../../../src/karabo/io/h5/TypeTraits.hh</itemPath>
         <itemPath>../../../src/karabo/io/h5/ioProfiler.hh</itemPath>
+        <itemPath>../../../src/karabo/io/h5/ioTracer.hh</itemPath>
       </logicalFolder>
       <logicalFolder name="f3" displayName="Input" projectFiles="true">
         <itemPath>../../../src/karabo/io/AbstractInput.hh</itemPath>
@@ -198,7 +199,7 @@
         <itemPath>../../../src/karabo/util/Types.hh</itemPath>
       </logicalFolder>
     </logicalFolder>
-    <logicalFolder name="f6" displayName="xms" projectFiles="true" kind="ROOT">
+    <logicalFolder name="f6" displayName="xms" projectFiles="true">
       <itemPath>../../../src/karabo/xms/Memory.cc</itemPath>
       <itemPath>../../../src/karabo/xms/Memory.hh</itemPath>
       <itemPath>../../../src/karabo/xms/NetworkInput.cc</itemPath>
@@ -587,6 +588,11 @@
             tool="3"
             flavor2="0">
       </item>
+      <item path="../../../src/karabo/io/h5/ioTracer.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="../../../src/karabo/log/AppenderConfigurator.cc"
             ex="false"
             tool="1"
@@ -1004,11 +1010,6 @@
       </item>
       <item path="../../../src/karabo/util/Dims.hh" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="../../../src/karabo/util/DoubleReferenceIterator.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
       <item path="../../../src/karabo/util/Element.hh"
             ex="false"
             tool="3"
@@ -1316,6 +1317,13 @@
             <linkerOptionItem>`cppunit-config --libs`</linkerOptionItem>
           </linkerLibItems>
         </linkerTool>
+      </folder>
+      <folder path="f2/f1">
+        <ccTool>
+          <preprocessorList>
+            <Elem>KARABO_NO_ENABLE_TRACE_LOG</Elem>
+          </preprocessorList>
+        </ccTool>
       </folder>
       <folder path="f5">
         <ccTool>
@@ -1633,6 +1641,11 @@
             tool="3"
             flavor2="0">
       </item>
+      <item path="../../../src/karabo/io/h5/ioTracer.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="../../../src/karabo/log/AppenderConfigurator.cc"
             ex="false"
             tool="1"
@@ -2049,11 +2062,6 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/util/Dims.hh" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="../../../src/karabo/util/DoubleReferenceIterator.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
       </item>
       <item path="../../../src/karabo/util/Element.hh"
             ex="false"
