@@ -11,6 +11,12 @@
       <itemPath>../../../src/karathon/Wrapper.cc</itemPath>
       <itemPath>../../../src/karathon/Wrapper.hh</itemPath>
     </logicalFolder>
+    <logicalFolder name="f4"
+                   displayName="IO Binding"
+                   projectFiles="true"
+                   kind="ROOT">
+      <itemPath>../../../src/karathon/PyIoFileTools.cc</itemPath>
+    </logicalFolder>
     <logicalFolder name="f3"
                    displayName="Point-2-Point Binding"
                    projectFiles="true">
