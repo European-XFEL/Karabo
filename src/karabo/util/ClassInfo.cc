@@ -1,5 +1,5 @@
 /*
- * $Id: ClassInfo.cc 4956 2012-01-11 08:28:15Z wegerk@DESY.DE $
+ * $Id$
  *
  * Author: <krzysztof.wrona@xfel.eu>
  *
@@ -7,6 +7,20 @@
  *   Added getLogCategory()
  *   Extended KARABO_CLASSINFO macro to contain fully qualified class name and class version
  *
+ * Modified by <krzysztof.wrona@xfel.eu>
+ *   improved parsing to work with template specializations (proper namespace)
+ *   Note: Still template parameters are not part of the class name
+ *         Also for template specializations
+ *   Consider further improvements for template parameters - to be discussed what is needed
+ *   i.e.  
+ *    template< class T> class A
+ *    template<> class A<int>
+ *    template<> class A<std::string>
+ *    template<class U, Class V> class B
+ *    template<class U > class B<U, int>
+ *    template<> class B<float, std::string>
+ *    etc.
+ * 
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
 
@@ -59,27 +73,60 @@ namespace karabo {
         }
 
 
-        void ClassInfo::initClassNameAndSpace(const std::string& signature) {            
-            #if defined(_WIN32)
-            boost::regex re("class karabo::util::ClassInfo __cdecl\\s(.+::)*(.+)::classInfo");
-            #else            
-            boost::regex re("static karabo::util::ClassInfo\\s*(.+::)*(.+)::classInfo");
-            #endif
-            boost::smatch what;
-            bool result = boost::regex_search(signature, what, re);
-            if (result && what.size() == 3) {
-                m_className = what.str(2);
-                m_namespace = what.str(1);
-                if (m_namespace.length() > 1) {
-                    std::string::iterator it = m_namespace.end() - 1;
-                    if (*it == ':') {
-                        m_namespace.erase(it--);                        
-                        m_namespace.erase(it);                        
+        void ClassInfo::initClassNameAndSpace(const std::string& signature) {
+//            clog << "signature=|" << signature << "|" << endl;
+
+            size_t found = signature.find("<");
+            if (found == std::string::npos) {
+                // no templates in the signature
+                #if defined(_WIN32)
+                boost::regex re("class karabo::util::ClassInfo __cdecl\\s(.+::)*(.+)::classInfo");
+                #else            
+                boost::regex re("static karabo::util::ClassInfo\\s*(.+::)*(.+)::classInfo");
+                #endif
+                boost::smatch what;
+                bool result = boost::regex_search(signature, what, re);
+                if (result && what.size() == 3) {
+                    m_className = what.str(2);
+                    m_namespace = what.str(1);
+                    if (m_namespace.length() > 1) {
+                        std::string::iterator it = m_namespace.end() - 1;
+                        if (*it == ':') {
+                            m_namespace.erase(it--);
+                            m_namespace.erase(it);
+                        }
                     }
+                } else {
+                    throw KARABO_LOGIC_EXCEPTION("Introspection error");
                 }
             } else {
-                throw KARABO_LOGIC_EXCEPTION("Introspection error");
+
+                string tmp = signature.substr(0, found);
+                                                
+                #if defined(_WIN32)
+                boost::regex re("class karabo::util::ClassInfo __cdecl\\s(.+::)*(.+)");
+                #else            
+                boost::regex re("static karabo::util::ClassInfo\\s*(.+::)*(.+)");
+                #endif
+
+                boost::smatch what;
+
+                bool result = boost::regex_search(tmp, what, re);
+                if (result && what.size() == 3) {
+                    m_className = what.str(2);                                                            
+                    m_namespace = what.str(1);
+                    if (m_namespace.length() > 1) {
+                        std::string::iterator it = m_namespace.end() - 1;
+                        if (*it == ':') {
+                            m_namespace.erase(it--);
+                            m_namespace.erase(it);
+                        }
+                    }
+                } else {
+                    throw KARABO_LOGIC_EXCEPTION("Introspection error");
+                }
             }
+
         }
 
 

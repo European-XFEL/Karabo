@@ -52,6 +52,29 @@ public:
     KARABO_CLASSINFO(B, "BBB", "2.1");
 };
 
+template<>
+class B<std::string> {
+
+public:
+    KARABO_CLASSINFO(B, "BBB", "2.1");
+};
+
+namespace internal{
+    template<class T>
+class B {
+
+public:
+    KARABO_CLASSINFO(B, "BBB", "2.1");
+};
+
+template<>
+class B<std::string> {
+
+public:
+    KARABO_CLASSINFO(B, "BBB", "2.1");
+};
+}
+
 class Factory_Test : public CPPUNIT_NS::TestFixture {
 
     CPPUNIT_TEST_SUITE(Factory_Test);
