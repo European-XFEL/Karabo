@@ -30,22 +30,23 @@ namespace karabo {
              Table is an entity defined to store set of records...
              */
             class Table {
+
                 friend class File;
                 //                template<class T> friend class Column;
 
 
             public:
 
-                KARABO_CLASSINFO(Table, "Hdf5", "1.0")
+                KARABO_CLASSINFO(Table, "Table", "1.0")
                 //KARABO_CONFIGURATION_BASE_CLASS
 
                 typedef std::map<std::string, hid_t > H5GroupsMap;
 
                 Table(hid_t h5file, boost::filesystem::path name, hsize_t chunkSize = 1)
                 : m_h5file(h5file), m_name(name), m_chunkSize(chunkSize), m_numberOfRecords(0)
-#ifdef KARABO_USE_PROFILER_TABLE1
+                #ifdef KARABO_USE_PROFILER_TABLE1
                 , table1("table1")
-#endif
+                #endif
                 {
                 }
 
@@ -90,7 +91,7 @@ namespace karabo {
                  * @param data Hash object filled with values read from the table.
                  * @param recordNumber Number identifying record to be read. Record numbers start from 0.
                  */
-                void read( size_t recordNumber);
+                void read(size_t recordNumber);
 
                 //                /**
                 //                 * Buffered reading
@@ -102,9 +103,9 @@ namespace karabo {
                 //
                 //                void read(size_t recordNumber);
                 //                void readAttributes(karabo::util::Hash & attr);
-                //
-                //                size_t getNumberOfRecords();
-                //
+
+                size_t getNumberOfRecords();
+
                 void close();
                 //
                 //            private:
@@ -140,19 +141,19 @@ namespace karabo {
                 //
                 //
                 void updateNumberOfRecordsAttribute();
-                //                void retrieveNumberOfRecordsFromFile();
+                void retrieveNumberOfRecordsFromFile();
                 //                void calculateNumberOfRecords();
                 //                void retrieveChunkSizeFromFile();
                 void createEmptyTable(hid_t h5file, const boost::filesystem::path& fullPath);
                 void createInitialNumberOfRecordsAttribute();
                 void createSchemaVersionAttribute();
-                //
-                //                void saveTableFormatAsAttribute(const karabo::io::hdf5::DataFormat::Pointer dataFormat);
-                //                void readTableFormatFromAttribute(karabo::util::Hash& dataFormatConfig);             
+
+                void saveTableFormatAsAttribute(const karabo::io::h5::Format::Pointer dataFormat);
+                void readTableFormatFromAttribute(karabo::util::Hash& dataFormatConfig);
 
                 //
                 //
-                //                bool hasAttribute(const boost::shared_ptr<H5::Group> group, const std::string& name) const;
+                bool hasAttribute(hid_t group, const std::string& name) const;
                 //
                 //                template <class T>
                 //                std::vector<T>& getCacheVector(const std::string& key) {
@@ -204,9 +205,12 @@ namespace karabo {
                 hsize_t m_chunkSize;
                 hsize_t m_numberOfRecords;
                 hid_t m_numberOfRecordsAttribute;
-#ifdef KARABO_USE_PROFILER_TABLE1
+                #ifdef KARABO_USE_PROFILER_TABLE1
                 karabo::util::Profiler table1;
-#endif
+                #endif
+
+            private:
+                static const char* NUMBER_OF_RECORDS;
 
             };
 

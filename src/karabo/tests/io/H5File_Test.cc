@@ -15,23 +15,40 @@
 #include <karabo/io/h5/Scalar.hh>
 #include <karabo/io/h5/ioProfiler.hh>
 
+#include <karabo/io/h5/ioTracer.hh>
+
 using namespace karabo::util;
 using namespace karabo::io::h5;
 using namespace karabo::io;
+using namespace log4cpp;
 
 CPPUNIT_TEST_SUITE_REGISTRATION(H5File_Test);
 
+
 H5File_Test::H5File_Test() {
+    
+    karabo::io::h5::Tracer tr;
+    tr.disableAll();
+    tr.enable("karabo.io.h5.Table.open");
+    tr.enable("karabo.io.h5.Table");
+    tr.reconfigure();
+    
+    
+    m_numberOfRecords = 512;
 }
+
 
 H5File_Test::~H5File_Test() {
 }
 
+
 void H5File_Test::setUp() {
 }
 
+
 void H5File_Test::tearDown() {
 }
+
 
 void H5File_Test::testWrite() {
 
@@ -54,7 +71,7 @@ void H5File_Test::testWrite() {
             v0[i] = static_cast<unsigned short> (i % 16);
         }
 
-      //  data.set("vectors.image", v0).setAttribute("dims", Dims(1024, 1024).toVector());
+        //  data.set("vectors.image", v0).setAttribute("dims", Dims(1024, 1024).toVector());
 
 
 
@@ -92,15 +109,13 @@ void H5File_Test::testWrite() {
 
 
 
-        //        clog << "config 1: " << dataFormat->getConfig() << endl;
-
 
         Hash i32el(
-                "h5path", "experimental",
-                "h5name", "test",
-                "key", "experimental.test",
-                "compressionLevel", 9
-                );
+                   "h5path", "experimental",
+                   "h5name", "test",
+                   "key", "experimental.test",
+                   "compressionLevel", 9
+                   );
 
         h5::Element::Pointer e1 = h5::Element::create("INT32", i32el);
 
@@ -111,11 +126,11 @@ void H5File_Test::testWrite() {
         data.set("abecadlo.wer", 1006u);
 
         Hash uel(
-                "h5path", "experimental",
-                "h5name", "test23",
-                "key", "abecadlo.wer",
-                "compressionLevel", 9
-                );
+                 "h5path", "experimental",
+                 "h5name", "test23",
+                 "key", "abecadlo.wer",
+                 "compressionLevel", 9
+                 );
         h5::Element::Pointer e2 = h5::Element::create("UINT32", uel);
         dataFormat->addElement(e2);
 
@@ -129,7 +144,7 @@ void H5File_Test::testWrite() {
         //        dataFormat->removeElement("vectors.str");
 
 
-//        clog << "config 2: " << dataFormat->getConfig() << endl;
+        //        clog << "config 2: " << dataFormat->getConfig() << endl;
 
         File file(resourcePath("file.h5"));
         file.open(File::TRUNCATE);
@@ -137,12 +152,13 @@ void H5File_Test::testWrite() {
 
         Table::Pointer t = file.createTable("/abc", dataFormat, 1);
 
- 
-        for (int i = 0; i < 512 ; ++i)
+
+        for (size_t i = 0; i < m_numberOfRecords; ++i)
             t->write(data, i);
-        
+
 
         file.close();
+
 
 
     } catch (karabo::util::Exception& e) {
@@ -156,6 +172,7 @@ void H5File_Test::testWrite() {
 
 }
 
+
 void H5File_Test::testRead() {
 
     try {
@@ -166,6 +183,7 @@ void H5File_Test::testRead() {
         //    /abc/vectors/double  into Hash element data("db")       - VECTOR_DOUBLE
         //    /abc/instrument/d    into Hash element data("d")        - BOOL
         //    /abc/vectors/bool    into Hash element data(("a.bools") - PTR_BOOL
+        //    /abc/instrument/c    into Hash element data("c")        - STRING
 
         Format::Pointer format = Format::createEmptyFormat();
         Hash c1(
@@ -209,6 +227,29 @@ void H5File_Test::testRead() {
         h5::Element::Pointer e4 = h5::Element::create("VECTOR_BOOL", c4);
         format->addElement(e4);
 
+
+        Hash c5(
+                "h5path", "instrument",
+                "h5name", "c",
+                "key", "c"
+                );
+
+        h5::Element::Pointer e5 = h5::Element::create("STRING", c5);
+        format->addElement(e5);
+
+
+        Dims stringsDims(5);
+        Hash c6(
+                "h5path", "vectors",
+                "h5name", "str",
+                "key", "strings",
+                "dims", stringsDims.toVector()
+                );
+
+        h5::Element::Pointer e6 = h5::Element::create("VECTOR_STRING", c6);
+        format->addElement(e6);
+
+
         // End of definition of what is read
 
 
@@ -226,10 +267,10 @@ void H5File_Test::testRead() {
 
         // Bind some variable to hash data
         // Note that hash element "d" is not bound
-        
+
         // bla will contain data from /abc/experimental/test23
         unsigned int& bla = data.bindReference<unsigned int>("bla");
-        
+
         // vecd will contain data from /abc/vectors/double
         // here we are responsible for memory management
         vector<double>& vecd = data.bindReference<vector<double> >("db");
@@ -239,18 +280,31 @@ void H5File_Test::testRead() {
         // here we are responsible for memory management
         bool bArray[boolDims.size()];
         data.set("a.bools", &bArray[0]);
-        
+
+        vector<string>& strings = data.bindReference<vector<string> >("strings");
+        strings.resize(stringsDims.size());
+         
         // /abc/instrument/d will be accessible as Hash element with key "d"
         // because we do not use binding
         // Memory is managed by our API
-        
-        
+
+
         // Now bind the data Hash to table
         table->bind(data);
-        
+
+        // get number of records in the file
+        size_t nRecords = table->getNumberOfRecords();
+ 
+        clog << "number of records: " << nRecords << endl;
+        CPPUNIT_ASSERT(nRecords == m_numberOfRecords);
+
+
+
         // read first record
         table->read(0);
 
+        clog << "after reading: " << endl;
+        
         // assert values
         CPPUNIT_ASSERT(bla == 1006);
         CPPUNIT_ASSERT(data.get<unsigned int>("bla") == 1006);
@@ -259,16 +313,28 @@ void H5File_Test::testRead() {
             CPPUNIT_ASSERT(vec[i] == i * 1.0 + 0.1234);
             CPPUNIT_ASSERT(vecd[i] == i * 1.0 + 0.1234);
         }
-        
-        CPPUNIT_ASSERT( data.get<bool>("d") == true);
+
+        CPPUNIT_ASSERT(data.get<bool>("d") == true);
 
         for (size_t i = 0; i < boolDims.size(); ++i) {
             //clog << "bool[" << i << "]: " << bArray[i] << endl;
             if (i % 2) CPPUNIT_ASSERT(bArray[i] == true);
             else CPPUNIT_ASSERT(bArray[i] == false);
-            
+
         }
         //        clog << endl;
+
+        KARABO_LOG_TRACE << "string reference value: abc, actual value: " << data.get<string>("c");
+        CPPUNIT_ASSERT(data.get<string>("c") == "abc");
+
+        //vector<string>& strings = data.get<vector<string> >("strings");
+
+        for (size_t i = 0; i < stringsDims.size(); ++i) {
+            KARABO_LOG_TRACE << "strings[" << i << "] = " << strings[i];
+        }
+
+
+
 
         //read second record
         table->read(1);
@@ -281,11 +347,12 @@ void H5File_Test::testRead() {
 
 }
 
+
 void H5File_Test::testVectorBufferWrite() {
 
 
     return;
-//    clog << endl << "testVectorBufferWrite" << endl;
+    //    clog << endl << "testVectorBufferWrite" << endl;
     Hash data;
 
     size_t nRec = 10;
@@ -311,12 +378,13 @@ void H5File_Test::testVectorBufferWrite() {
     t->write(data, i*nRec, nRec);
 
 
-//    clog << "abcd" << endl;
+    //    clog << "abcd" << endl;
 
     file.close();
 
 
 }
+
 
 void H5File_Test::testBufferWrite() {
 
@@ -336,7 +404,7 @@ void H5File_Test::testBufferWrite() {
         Format::Pointer dataFormat = Format::createNode("Format", "Format", config);
 
 
-//        clog << "after format discovery" << endl;
+        //        clog << "after format discovery" << endl;
         const int bufSize = 100;
         vector<int> a(bufSize, 4);
         vector<float> b(bufSize, 5.2);
