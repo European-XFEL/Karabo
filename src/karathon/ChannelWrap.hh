@@ -43,14 +43,19 @@ namespace karabo {
             static void writeAsyncHash(karabo::net::Channel& channel, const bp::object& data, const bp::object& handler);
             static void writeAsyncHashStr(karabo::net::Channel& channel, const bp::object& hdr, const bp::object& data, const bp::object& handler);
             static void writeAsyncHashHash(karabo::net::Channel& channel, const bp::object& hdr, const bp::object& data, const bp::object& handler);
+            static void waitAsync(karabo::net::Channel& channel, const bp::object& milliseconds, const bp::object& handler);
+            static void setErrorHandler(karabo::net::Channel& channel, const bp::object& handler);
             
         private:
             static void registerHandler(karabo::net::Channel& channel, const bp::object& handler);
-            
+
             static void proxyReadSizeInBytesHandler(karabo::net::Channel::Pointer channel, const size_t& size);
             static void proxyReadRawHandler(karabo::net::Channel::Pointer channel);
             static void proxyReadHashHandler(karabo::net::Channel::Pointer channel, const karabo::util::Hash& hash);
             static void proxyReadHashVectorHandler(karabo::net::Channel::Pointer channel, const karabo::util::Hash& hash, const std::vector<char>& v);
+            static void proxyReadHashHashHandler(karabo::net::Channel::Pointer channel, const karabo::util::Hash& h, const karabo::util::Hash& b);
+            static void proxyWriteCompleteHandler(karabo::net::Channel::Pointer channel);
+            static void proxyWaitCompleteHandler(karabo::net::Channel::Pointer channel);
             static void proxyErrorHandler(karabo::net::Channel::Pointer channel, const karabo::net::ErrorCode& code);
 
             // I've taken this helper function from Burkhard
@@ -62,10 +67,8 @@ namespace karabo {
         private:
             static boost::mutex m_changedChannelHandlersMutex;
             static std::map<karabo::net::Channel*, karabo::util::Hash> m_channelHandlers;
-            static boost::mutex m_changedErrorHandlersMutex;
-            static std::map<karabo::net::Connection*, karabo::util::Hash> m_errorHandlers;
         };
-        
+
     }
 }
 #endif	/* KARABO_PYEXFEL_CHANNELWRAP_HH */
