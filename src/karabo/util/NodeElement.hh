@@ -34,8 +34,8 @@ namespace karabo {
 
             template <class ConfigurableClass>
             NodeElement& appendParametersOfConfigurableClass(const std::string& classId) {
-                this->m_node->setAttribute("classId", classId);
-                this->m_node->setAttribute("displayType", ConfigurableClass::classInfo().getClassId());
+                this->m_node->setAttribute(KARABO_SCHEMA_CLASS_ID, classId);
+                this->m_node->setAttribute(KARABO_SCHEMA_DISPLAY_TYPE, ConfigurableClass::classInfo().getClassId());
                 // Assemble schema (taking into account base classes, etc.) and append to node
                 Schema schema = Configurator<ConfigurableClass>::getSchema(classId, m_parentSchemaAssemblyRules);
                 // The produced schema will be rooted with classId, we however want to put its children
@@ -56,8 +56,8 @@ namespace karabo {
         protected:
 
             void beforeAddition() {
-                this->m_node->setAttribute<int>("accessMode", READ | WRITE | INIT);
-                this->m_node->setAttribute<int>("nodeType", Schema::NODE);
+                this->m_node->setAttribute<int>(KARABO_SCHEMA_ACCESS_MODE, READ | WRITE | INIT);
+                this->m_node->setAttribute<int>(KARABO_SCHEMA_NODE_TYPE, Schema::NODE);
             }
         };
         typedef NodeElement NODE_ELEMENT;

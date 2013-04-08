@@ -44,7 +44,7 @@ namespace karabo {
 
             template <class AliasType>
             OverwriteElement& setNewAlias(const AliasType& alias) {
-                m_node->setAttribute<AliasType > ("alias", alias);
+                m_node->setAttribute<AliasType > (KARABO_SCHEMA_ALIAS, alias);
                 return *this;
             }
 
@@ -55,38 +55,38 @@ namespace karabo {
             }
 
             OverwriteElement& setNewAssignmentMandatory() {
-                m_node->setAttribute<int>("assignment", Schema::MANDATORY_PARAM);
+                m_node->setAttribute<int>(KARABO_SCHEMA_ASSIGNMENT, Schema::MANDATORY_PARAM);
                 return *this;
             }
 
             OverwriteElement& setNewAssignmentOptional() {
-                m_node->setAttribute<int>("assignment", Schema::OPTIONAL_PARAM);
+                m_node->setAttribute<int>(KARABO_SCHEMA_ASSIGNMENT, Schema::OPTIONAL_PARAM);
                 return *this;
             }
 
             OverwriteElement& setNewAssignmentInternal() {
-                m_node->setAttribute<int>("assignment", Schema::INTERNAL_PARAM);
+                m_node->setAttribute<int>(KARABO_SCHEMA_ASSIGNMENT, Schema::INTERNAL_PARAM);
                 return *this;
             }
             
             OverwriteElement& setNowInit() {
-                m_node->setAttribute<int>("accessMode", INIT);
+                m_node->setAttribute<int>(KARABO_SCHEMA_ACCESS_MODE, INIT);
                 return *this;
             }
             
             OverwriteElement& setNowReconfigurable() {
-                m_node->setAttribute<int>("accessMode", WRITE);
+                m_node->setAttribute<int>(KARABO_SCHEMA_ACCESS_MODE, WRITE);
                 return *this;
             }
             
             OverwriteElement& setNowReadOnly() {
-                m_node->setAttribute<int>("accessMode", READ);
+                m_node->setAttribute<int>(KARABO_SCHEMA_ACCESS_MODE, READ);
                 return *this;
             }
 
             template <class ValueType>
             OverwriteElement& setNewDefaultValue(const ValueType& value) {
-                m_node->setAttribute("defaultValue", value);
+                m_node->setAttribute(KARABO_SCHEMA_DEFAULT_VALUE, value);
                 return *this;
             }
             
