@@ -49,6 +49,17 @@ void exportp2p() {
         bp::class_<Channel, Channel::Pointer, boost::noncopyable >("Channel", bp::no_init)
                 .def("getConnection", &Channel::getConnection)
                 .def("readSizeInBytes", &ChannelWrap().readSizeInBytes)
+                .def("readAsyncSizeInBytes", &ChannelWrap().readAsyncSizeInBytes, (bp::arg("handler")))
+                .def("read", &ChannelWrap().read, (bp::arg("body")))
+                .def("read", &ChannelWrap().read2, (bp::arg("hdr"), bp::arg("body")))
+                .def("readAsyncStr", &ChannelWrap().readAsyncStr, (bp::arg("bytearray"), bp::arg("handler")))
+                .def("readAsyncHash", &ChannelWrap().readAsyncHash, (bp::arg("handler")))
+                .def("write", &ChannelWrap().write, (bp::arg("obj")))
+                .def("write", &ChannelWrap().write2, (bp::arg("obj"), bp::arg("body")))
+                .def("writeAsyncStr", &ChannelWrap().writeAsyncStr, (bp::arg("data"), bp::arg("handler")))
+                .def("writeAsyncHash", &ChannelWrap().writeAsyncHash, (bp::arg("data"), bp::arg("handler")))
+                .def("writeAsyncHashStr", &ChannelWrap().writeAsyncHashStr, (bp::arg("hdr"), bp::arg("data"), bp::arg("handler")))
+                .def("writeAsyncHashHash", &ChannelWrap().writeAsyncHashHash, (bp::arg("hdr"), bp::arg("data"), bp::arg("handler")))
                 KARABO_PYTHON_FACTORY_CONFIGURATOR(Channel)
                 ;
     }

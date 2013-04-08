@@ -11,15 +11,13 @@
       <itemPath>../../../src/karathon/Wrapper.cc</itemPath>
       <itemPath>../../../src/karathon/Wrapper.hh</itemPath>
     </logicalFolder>
-    <logicalFolder name="f4"
-                   displayName="IO Binding"
-                   projectFiles="true"
-                   kind="ROOT">
+    <logicalFolder name="f4" displayName="IO Binding" projectFiles="true">
       <itemPath>../../../src/karathon/PyIoFileTools.cc</itemPath>
     </logicalFolder>
     <logicalFolder name="f3"
                    displayName="Point-2-Point Binding"
                    projectFiles="true">
+      <itemPath>../../../src/karathon/ChannelWrap.cc</itemPath>
       <itemPath>../../../src/karathon/ChannelWrap.hh</itemPath>
       <itemPath>../../../src/karathon/ConnectionWrap.cc</itemPath>
       <itemPath>../../../src/karathon/ConnectionWrap.hh</itemPath>
@@ -130,6 +128,11 @@
       <item path="../../../src/karathon/AttributesWrap.hh"
             ex="false"
             tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karathon/ChannelWrap.cc"
+            ex="false"
+            tool="1"
             flavor2="0">
       </item>
       <item path="../../../src/karathon/ChannelWrap.hh"
@@ -319,6 +322,11 @@
       <item path="../../../src/karathon/AttributesWrap.hh"
             ex="false"
             tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karathon/ChannelWrap.cc"
+            ex="false"
+            tool="1"
             flavor2="0">
       </item>
       <item path="../../../src/karathon/ChannelWrap.hh"
