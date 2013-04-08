@@ -22,6 +22,7 @@
 #include "StringTools.hh"
 #include "ToLiteral.hh"
 #include "Units.hh"
+#include "SchemaAttributeDefinition.hh"
 
 #include "karaboDll.hh"
 
@@ -281,21 +282,21 @@ namespace karabo {
             bool hasAllowedStates(const std::string& path) const;
 
             const std::vector<std::string>& getAllowedStates(const std::string& path) const;
-            
+
             //**********************************************
             //                  ExpertLevel                *
             //**********************************************
-            
+
             void setExpertLevel(const std::string& path, const ExpertLevelType& value);
-            
+
             bool hasExpertLevel(const std::string& path) const;
 
             bool isExpertLevelAdvanced(const std::string& path) const;
 
             bool isExpertLevelMedium(const std::string& path) const;
-        
+
             bool isExpertLevelSimple(const std::string& path) const;
-            
+
             const int getExpertLevel(const std::string& path) const;
 
             //**********************************************
@@ -304,19 +305,19 @@ namespace karabo {
 
             template <class ValueType>
             void setDefaultValue(const std::string& path, const ValueType& value) {
-                m_hash.setAttribute(path, "defaultValue", value);
+                m_hash.setAttribute(path, KARABO_SCHEMA_DEFAULT_VALUE, value);
             }
 
             bool hasDefaultValue(const std::string&) const;
 
             template <class ValueType>
             const ValueType& getDefaultValue(const std::string& path) const {
-                return m_hash.getAttribute<ValueType > (path, "defaultValue");
+                return m_hash.getAttribute<ValueType > (path, KARABO_SCHEMA_DEFAULT_VALUE);
             }
 
             template <class T>
             T getDefaultValueAs(const std::string& path) const {
-                return m_hash.getAttributeAs<T > (path, "defaultValue");
+                return m_hash.getAttributeAs<T > (path, KARABO_SCHEMA_DEFAULT_VALUE);
             }
 
             //**********************************************
@@ -325,18 +326,18 @@ namespace karabo {
 
             template <class AliasType>
             void setAlias(const std::string& path, const AliasType& value) {
-                m_hash.setAttribute<AliasType > (path, "alias", value);
+                m_hash.setAttribute<AliasType > (path, KARABO_SCHEMA_ALIAS, value);
             }
 
             bool hasAlias(const std::string& path) const;
 
             template <class AliasType>
             const AliasType& getAlias(const std::string& path) const {
-                return m_hash.getAttribute < AliasType > (path, "alias");
+                return m_hash.getAttribute < AliasType > (path, KARABO_SCHEMA_ALIAS);
             }
-            
+
             std::string getAliasAsString(const std::string& path) const;
-            
+
             //**********************************************
             //                  Unit                       *
             //**********************************************
@@ -372,17 +373,17 @@ namespace karabo {
 
             template <class ValueType>
             void setMinInc(const std::string& path, const ValueType& value) {
-                m_hash.setAttribute(path, "minInc", value);
+                m_hash.setAttribute(path, KARABO_SCHEMA_MIN_INC, value);
             }
 
             template <class ValueType>
             const ValueType& getMinInc(const std::string& path) const {
-                return m_hash.getAttribute<ValueType > (path, "minInc");
+                return m_hash.getAttribute<ValueType > (path, KARABO_SCHEMA_MIN_INC);
             }
 
             template <class T>
             T getMinIncAs(const std::string& path) const {
-                return m_hash.getAttributeAs<T > (path, "minInc");
+                return m_hash.getAttributeAs<T > (path, KARABO_SCHEMA_MIN_INC);
             }
 
             bool hasMinInc(const std::string& path) const;
@@ -393,17 +394,17 @@ namespace karabo {
 
             template <class ValueType>
             void setMaxInc(const std::string& path, const ValueType & value) {
-                m_hash.setAttribute(path, "maxInc", value);
+                m_hash.setAttribute(path, KARABO_SCHEMA_MAX_INC, value);
             }
 
             template <class ValueType>
             const ValueType& getMaxInc(const std::string& path) const {
-                return m_hash.getAttribute<ValueType > (path, "maxInc");
+                return m_hash.getAttribute<ValueType > (path, KARABO_SCHEMA_MAX_INC);
             }
 
             template <class T>
             T getMaxIncAs(const std::string& path) const {
-                return m_hash.getAttributeAs<T > (path, "maxInc");
+                return m_hash.getAttributeAs<T > (path, KARABO_SCHEMA_MAX_INC);
             }
 
             bool hasMaxInc(const std::string& path) const;
@@ -414,17 +415,17 @@ namespace karabo {
 
             template <class ValueType>
             void setMinExc(const std::string& path, const ValueType & value) {
-                m_hash.setAttribute(path, "minExc", value);
+                m_hash.setAttribute(path, KARABO_SCHEMA_MIN_EXC, value);
             }
 
             template <class ValueType>
             const ValueType& getMinExc(const std::string& path) const {
-                return m_hash.getAttribute<ValueType > (path, "minExc");
+                return m_hash.getAttribute<ValueType > (path, KARABO_SCHEMA_MIN_EXC);
             }
 
             template <class T>
             T getMinExcAs(const std::string& path) const {
-                return m_hash.getAttributeAs<T > (path, "minExc");
+                return m_hash.getAttributeAs<T > (path, KARABO_SCHEMA_MIN_EXC);
             }
 
             bool hasMinExc(const std::string& path) const;
@@ -435,17 +436,17 @@ namespace karabo {
 
             template <class ValueType>
             void setMaxExc(const std::string& path, const ValueType & value) {
-                m_hash.setAttribute(path, "maxExc", value);
+                m_hash.setAttribute(path, KARABO_SCHEMA_MAX_EXC, value);
             }
 
             template <class ValueType>
             const ValueType& getMaxExc(const std::string& path) const {
-                return m_hash.getAttribute<ValueType > (path, "maxExc");
+                return m_hash.getAttribute<ValueType > (path, KARABO_SCHEMA_MAX_EXC);
             }
 
             template <class T>
             T getMaxExcAs(const std::string& path) const {
-                return m_hash.getAttributeAs<T > (path, "maxExc");
+                return m_hash.getAttributeAs<T > (path, KARABO_SCHEMA_MAX_EXC);
             }
 
             bool hasMaxExc(const std::string& path) const;
@@ -471,108 +472,108 @@ namespace karabo {
             bool hasMaxSize(const std::string& path) const;
 
             const unsigned int& getMaxSize(const std::string& path) const;
-            
+
             //******************************************************
             //                   WarnLow                          *  
             //******************************************************
-            
+
             template <class ValueType>
             void setWarnLow(const std::string& path, const ValueType & value) {
-               m_hash.setAttribute(path, "warnLow", value);
+                m_hash.setAttribute(path, KARABO_SCHEMA_WARN_LOW, value);
             }
-            
+
             template <class ValueType>
             const ValueType& getWarnLow(const std::string& path) const {
-                return m_hash.getAttribute<ValueType > (path, "warnLow");
+                return m_hash.getAttribute<ValueType > (path, KARABO_SCHEMA_WARN_LOW);
             }
 
             template <class T>
             T getWarnLowAs(const std::string& path) const {
-                return m_hash.getAttributeAs<T > (path, "warnLow");
+                return m_hash.getAttributeAs<T > (path, KARABO_SCHEMA_WARN_LOW);
             }
 
             bool hasWarnLow(const std::string& path) const;
-            
-            
+
+
             //******************************************************
             //                   WarnHigh                         *  
             //******************************************************
             template <class ValueType>
             void setWarnHigh(const std::string& path, const ValueType & value) {
-                m_hash.setAttribute(path, "warnHigh", value);
+                m_hash.setAttribute(path, KARABO_SCHEMA_WARN_HIGH, value);
             }
-            
+
             template <class ValueType>
             const ValueType& getWarnHigh(const std::string& path) const {
-                return m_hash.getAttribute<ValueType > (path, "warnHigh");
+                return m_hash.getAttribute<ValueType > (path, KARABO_SCHEMA_WARN_HIGH);
             }
 
             template <class T>
             T getWarnHighAs(const std::string& path) const {
-                return m_hash.getAttributeAs<T > (path, "warnHigh");
+                return m_hash.getAttributeAs<T > (path, KARABO_SCHEMA_WARN_HIGH);
             }
 
             bool hasWarnHigh(const std::string& path) const;
-            
+
             //******************************************************
             //                   AlarmLow                          *  
             //******************************************************
-            
+
             template <class ValueType>
             void setAlarmLow(const std::string& path, const ValueType & value) {
-                m_hash.setAttribute(path, "alarmLow", value);
+                m_hash.setAttribute(path, KARABO_SCHEMA_ALARM_LOW, value);
             }
-            
+
             template <class ValueType>
             const ValueType& getAlarmLow(const std::string& path) const {
-                return m_hash.getAttribute<ValueType > (path, "alarmLow");
+                return m_hash.getAttribute<ValueType > (path, KARABO_SCHEMA_ALARM_LOW);
             }
 
             template <class T>
             T getAlarmLowAs(const std::string& path) const {
-                return m_hash.getAttributeAs<T > (path, "alarmLow");
+                return m_hash.getAttributeAs<T > (path, KARABO_SCHEMA_ALARM_LOW);
             }
 
             bool hasAlarmLow(const std::string& path) const;
-            
+
             //******************************************************
             //                   AlarmHigh                          *  
             //******************************************************
-            
+
             template <class ValueType>
             void setAlarmHigh(const std::string& path, const ValueType & value) {
-                m_hash.setAttribute(path, "alarmHigh", value);
+                m_hash.setAttribute(path, KARABO_SCHEMA_ALARM_HIGH, value);
             }
 
             template <class ValueType>
             const ValueType& getAlarmHigh(const std::string& path) const {
-                return m_hash.getAttribute<ValueType > (path, "alarmHigh");
+                return m_hash.getAttribute<ValueType > (path, KARABO_SCHEMA_ALARM_HIGH);
             }
 
             template <class T>
             T getAlarmHighAs(const std::string& path) const {
-                return m_hash.getAttributeAs<T > (path, "alarmHigh");
+                return m_hash.getAttributeAs<T > (path, KARABO_SCHEMA_ALARM_HIGH);
             }
 
             bool hasAlarmHigh(const std::string& path) const;
-            
+
             //******************************************************
             //      min/max for number of nodes in ListElement     *                     *  
             //******************************************************
-            
+
             void setMin(const std::string& path, const int& value);
 
             bool hasMin(const std::string& path) const;
 
             const int& getMin(const std::string& path) const;
-            
+
             void setMax(const std::string& path, const int& value);
 
             bool hasMax(const std::string& path) const;
 
             const int& getMax(const std::string& path) const;
-            
-            
+
+
             template <class T>
             void overwrite(const T& defaultValue);
 
