@@ -37,6 +37,7 @@ void exportPyIoFileTools();
 //void exportPyCoreDeviceClient();
 //void exportTargetActualElement();
 //void exportPyLogLogger();
+void exportp2p();
 
 //bp::object anyExtract(boost::any const& self) {
 //    if (self.empty()) return bp::object();
@@ -124,4 +125,5 @@ BOOST_PYTHON_MODULE(libkarathon) {
 //    exportTargetActualElement();
 //    
 //    exportPyLogLogger();
+    exportp2p();
 }

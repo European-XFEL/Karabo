@@ -2,7 +2,7 @@
 
 namespace karabo {
     namespace pyexfel {
-
+        
         void ConnectionWrap::startAsync(karabo::net::Connection& connection, const bp::object& connectionHandler) {
             karabo::util::Hash hash;
             // Check that 'connectionHandler' object is a class method
