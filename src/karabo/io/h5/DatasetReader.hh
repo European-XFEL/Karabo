@@ -10,14 +10,16 @@
 #ifndef KARABO_IO_H5_DATASETREADER_HH
 #define	KARABO_IO_H5_DATASETREADER_HH
 
-#include "ioTracer.hh"
 
 #include <string>
 #include <boost/shared_array.hpp>
 
+#include <karabo/util/util.hh>
+#include <karabo/log/Logger.hh>
+
 #include "Dataset.hh"
 #include "TypeTraits.hh"
-#include <karabo/util/util.hh>
+
 
 
 namespace karabo {

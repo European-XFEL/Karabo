@@ -8,7 +8,7 @@
 
 #include <boost/smart_ptr/shared_array.hpp>
 
-#include "ioTracer.hh"
+#include <karabo/log/Logger.hh>
 
 #include "Table.hh"
 #include "Scalar.hh"
@@ -45,7 +45,7 @@ namespace karabo {
             void Table::openNew(const Format::Pointer dataFormat) {
 
                 KARABO_LOG_TRACE << "Open new file: " << m_name;
-                KARABO_LOG_TRACE_C(Self::getClassInfo().getLogCategory() + ".open") << "Open new file 1111: " << m_name;
+                KARABO_LOG_TRACE_CF << "Open new file 1111: " << m_name;
                 createEmptyTable(m_h5file, m_name);
                 createSchemaVersionAttribute();
                 createInitialNumberOfRecordsAttribute();
