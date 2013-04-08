@@ -28,12 +28,12 @@ namespace karabo {
             }
 
             VectorElement& minSize(const unsigned int& value) {
-                this->m_node->setAttribute("minSize", value);
+                this->m_node->setAttribute(KARABO_SCHEMA_MIN_SIZE, value);
                 return *this;
             }
 
             VectorElement& maxSize(const unsigned int& value) {
-                this->m_node->setAttribute("maxSize", value);
+                this->m_node->setAttribute(KARABO_SCHEMA_MAX_SIZE, value);
                 return *this;
             }
 
@@ -41,10 +41,10 @@ namespace karabo {
 
             void beforeAddition() {
 
-                this->m_node->template setAttribute<int>("nodeType", Schema::LEAF);
-                this->m_node->setAttribute("valueType", Types::to<ToLiteral>(Types::from<CONT<T> >()));
+                this->m_node->template setAttribute<int>(KARABO_SCHEMA_NODE_TYPE, Schema::LEAF);
+                this->m_node->setAttribute(KARABO_SCHEMA_VALUE_TYPE, Types::to<ToLiteral>(Types::from<CONT<T> >()));
 
-                if (this->m_node->hasAttribute("accessMode")) this->init(); // This is the default
+                if (this->m_node->hasAttribute(KARABO_SCHEMA_ACCESS_MODE)) this->init(); // This is the default
             }
         };
 

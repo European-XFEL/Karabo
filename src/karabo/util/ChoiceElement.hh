@@ -46,10 +46,10 @@ namespace karabo {
                     const std::string& nodeName = nodeNames[i];
                     Schema schema = Configurator<ConfigurationBase>::getSchema(nodeName, m_parentSchemaAssemblyRules);
                     Hash::Node& node = choiceOfNodes.set<Hash > (nodeName, schema.getParameterHash());
-                    node.setAttribute("classId", nodeName);
-                    node.setAttribute("displayType", nodeName);
-                    node.setAttribute<int>("nodeType", Schema::NODE);
-                    node.setAttribute<int>("accessMode", READ | WRITE | INIT);
+                    node.setAttribute(KARABO_SCHEMA_CLASS_ID, nodeName);
+                    node.setAttribute(KARABO_SCHEMA_DISPLAY_TYPE, nodeName);
+                    node.setAttribute<int>(KARABO_SCHEMA_NODE_TYPE, Schema::NODE);
+                    node.setAttribute<int>(KARABO_SCHEMA_ACCESS_MODE, READ | WRITE | INIT);
                 }
                 return *this;
             }
@@ -67,10 +67,10 @@ namespace karabo {
                 T::_KARABO_SCHEMA_DESCRIPTION_FUNCTION(schema);
                 //Schema schema = karabo::util::confTools::assembleSchema<T > (nodeName, m_parentSchemaAssemblyRules);
                 Hash::Node& node = choiceOfNodes.set<Hash > (nodeName, schema.getParameterHash());
-                node.setAttribute("classId", T::classInfo().getClassId());
-                node.setAttribute("displayType", T::classInfo().getClassId());
-                node.setAttribute<int>("nodeType", Schema::NODE);
-                node.setAttribute<int>("accessMode", READ | WRITE | INIT);
+                node.setAttribute(KARABO_SCHEMA_CLASS_ID, T::classInfo().getClassId());
+                node.setAttribute(KARABO_SCHEMA_DISPLAY_TYPE, T::classInfo().getClassId());
+                node.setAttribute<int>(KARABO_SCHEMA_NODE_TYPE, Schema::NODE);
+                node.setAttribute<int>(KARABO_SCHEMA_ACCESS_MODE, READ | WRITE | INIT);
                 return *this;
             }
 
@@ -80,20 +80,20 @@ namespace karabo {
              * @return reference to the Element (to allow method's chaining)
              */
             virtual ChoiceElement& assignmentMandatory() {
-                this->m_node->setAttribute<int>("assignment", Schema::MANDATORY_PARAM);
+                this->m_node->setAttribute<int>(KARABO_SCHEMA_ASSIGNMENT, Schema::MANDATORY_PARAM);
                 return *this;
             }
 
             virtual DefaultValue<ChoiceElement, std::string>& assignmentOptional() {
-                this->m_node->setAttribute<int>("assignment", Schema::OPTIONAL_PARAM);
+                this->m_node->setAttribute<int>(KARABO_SCHEMA_ASSIGNMENT, Schema::OPTIONAL_PARAM);
                 return m_defaultValue;
             }
 
         protected:
 
             void beforeAddition() {
-                this->m_node->setAttribute<int>("accessMode", READ | WRITE | INIT);
-                this->m_node->setAttribute<int>("nodeType", Schema::CHOICE_OF_NODES);
+                this->m_node->setAttribute<int>(KARABO_SCHEMA_ACCESS_MODE, READ | WRITE | INIT);
+                this->m_node->setAttribute<int>(KARABO_SCHEMA_NODE_TYPE, Schema::CHOICE_OF_NODES);
             }
 
 

@@ -67,7 +67,7 @@ namespace karabo {
              */
             template <class AliasType>
             Derived& alias(const AliasType& alias) {
-                m_node->setAttribute<AliasType > ("alias", alias);
+                m_node->setAttribute<AliasType > (KARABO_SCHEMA_ALIAS, alias);
                 return *(static_cast<Derived*> (this));
             }
 
@@ -77,7 +77,7 @@ namespace karabo {
              * @return reference to the Element (to allow method's chaining)
              */
             Derived& tags(const std::string& tags, const std::string& sep = " ,;") {
-                m_node->setAttribute("tags", karabo::util::fromString<std::string, std::vector>(tags, sep));
+                m_node->setAttribute(KARABO_SCHEMA_TAGS, karabo::util::fromString<std::string, std::vector>(tags, sep));
                 return *(static_cast<Derived*> (this));
             }
 
@@ -97,7 +97,7 @@ namespace karabo {
              * @endcode
              */
             Derived& displayedName(const std::string& name) {
-                m_node->setAttribute("displayedName", name);
+                m_node->setAttribute(KARABO_SCHEMA_DISPLAYED_NAME, name);
                 return *(static_cast<Derived*> (this));
             }
 
@@ -116,7 +116,7 @@ namespace karabo {
              * @endcode
              */
             Derived& description(const std::string& description) {
-                m_node->setAttribute("description", description);
+                m_node->setAttribute(KARABO_SCHEMA_DESCRIPTION, description);
                 return *(static_cast<Derived*> (this));
             }
 
@@ -125,7 +125,7 @@ namespace karabo {
              * @return reference to the Element (to allow method's chaining)
              */
             Derived& advanced() {
-                m_node->setAttribute<int>("expertLevel", Schema::ADVANCED);
+                m_node->setAttribute<int>(KARABO_SCHEMA_EXPERT_LEVEL, Schema::ADVANCED);
                 return *(static_cast<Derived*> (this));
             }
 

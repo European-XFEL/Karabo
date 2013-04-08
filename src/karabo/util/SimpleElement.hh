@@ -36,7 +36,7 @@ namespace karabo {
              * @return reference to the SimpleElement
              */
             SimpleElement& options(const std::string& opts, const std::string& sep = " ,;") {
-                this->m_node->setAttribute("options", karabo::util::fromString<std::string, std::vector > (opts, sep));
+                this->m_node->setAttribute(KARABO_SCHEMA_OPTIONS, karabo::util::fromString<std::string, std::vector > (opts, sep));
                 return *this;
             }
 
@@ -47,7 +47,7 @@ namespace karabo {
              * @return reference to the SimpleElement
              */
             SimpleElement& options(const std::vector<std::string>& opts) {
-                this->m_node->setAttribute("options", opts);
+                this->m_node->setAttribute(KARABO_SCHEMA_OPTIONS, opts);
                 return *this;
             }
 
@@ -57,7 +57,7 @@ namespace karabo {
              * @return reference to the SimpleElement
              */
             SimpleElement& minInc(ValueType const& value) {
-                this->m_node->setAttribute("minInc", value);
+                this->m_node->setAttribute(KARABO_SCHEMA_MIN_INC, value);
                 return *this;
             }
 
@@ -67,7 +67,7 @@ namespace karabo {
              * @return reference to the SimpleElement
              */
             SimpleElement& maxInc(ValueType const& value) {
-                this->m_node->setAttribute("maxInc", value);
+                this->m_node->setAttribute(KARABO_SCHEMA_MAX_INC, value);
                 return *this;
             }
 
@@ -77,7 +77,7 @@ namespace karabo {
              * @return reference to the SimpleElement
              */
             SimpleElement& minExc(ValueType const& value) {
-                this->m_node->setAttribute("minExc", value);
+                this->m_node->setAttribute(KARABO_SCHEMA_MIN_EXC, value);
                 return *this;
             }
 
@@ -87,7 +87,7 @@ namespace karabo {
              * @return reference to the SimpleElement
              */
             SimpleElement& maxExc(ValueType const& value) {
-                this->m_node->setAttribute("maxExc", value);
+                this->m_node->setAttribute(KARABO_SCHEMA_MAX_EXC, value);
                 return *this;
             }
 
@@ -95,10 +95,10 @@ namespace karabo {
 
             void beforeAddition() {
 
-                this->m_node->template setAttribute<int>("nodeType", Schema::LEAF);
-                this->m_node->template setAttribute("valueType", Types::to<ToLiteral>(Types::from<ValueType > ()));
+                this->m_node->template setAttribute<int>(KARABO_SCHEMA_NODE_TYPE, Schema::LEAF);
+                this->m_node->template setAttribute(KARABO_SCHEMA_VALUE_TYPE, Types::to<ToLiteral>(Types::from<ValueType > ()));
 
-                if (!this->m_node->hasAttribute("accessMode")) this->init(); // This is the default
+                if (!this->m_node->hasAttribute(KARABO_SCHEMA_ACCESS_MODE)) this->init(); // This is the default
 
                 checkMinExcMaxExc();
                 checkMinIncMaxInc();
@@ -108,9 +108,9 @@ namespace karabo {
         private:
 
             void checkMinIncMaxInc() {
-                if (this->m_node->hasAttribute("minInc") && this->m_node->hasAttribute("maxInc")) {
-                    const ValueType& min = this->m_node->template getAttribute<ValueType > ("minInc");
-                    const ValueType& max = this->m_node->template getAttribute<ValueType > ("maxInc");
+                if (this->m_node->hasAttribute(KARABO_SCHEMA_MIN_INC) && this->m_node->hasAttribute(KARABO_SCHEMA_MAX_INC)) {
+                    const ValueType& min = this->m_node->template getAttribute<ValueType > (KARABO_SCHEMA_MIN_INC);
+                    const ValueType& max = this->m_node->template getAttribute<ValueType > (KARABO_SCHEMA_MAX_INC);
                     if (min > max) {
                         std::ostringstream msg;
                         msg << "Minimum value (" << min << ") is greater than maximum (" << max
@@ -122,9 +122,9 @@ namespace karabo {
 
             void checkMinExcMaxExc() {
                 // this is a default implementation valid for all integral types
-                if (this->m_node->hasAttribute("minExc") && this->m_node->hasAttribute("maxExc")) {
-                    const ValueType& min = this->m_node->template getAttribute<ValueType > ("minExc");
-                    const ValueType& max = this->m_node->template getAttribute<ValueType > ("maxExc");
+                if (this->m_node->hasAttribute(KARABO_SCHEMA_MIN_EXC) && this->m_node->hasAttribute(KARABO_SCHEMA_MAX_EXC)) {
+                    const ValueType& min = this->m_node->template getAttribute<ValueType > (KARABO_SCHEMA_MIN_EXC);
+                    const ValueType& max = this->m_node->template getAttribute<ValueType > (KARABO_SCHEMA_MAX_EXC);
                     if (min >= max) {
                         std::ostringstream msg;
                         msg << "The open range: (" << min << "," << max << ") is empty on parameter \""

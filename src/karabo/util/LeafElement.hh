@@ -44,10 +44,10 @@ namespace karabo {
              * @return reference to the Element (to allow method's chaining)
              */
             LeafElement& unit(const Units::Unit& unit) {
-                this->m_node->template setAttribute<int>("unitEnum", unit);
+                this->m_node->template setAttribute<int>(KARABO_SCHEMA_UNIT_ENUM, unit);
                 std::pair<std::string, std::string> names = karabo::util::Units::getUnit(unit);
-                this->m_node->setAttribute("unitName", names.first);
-                this->m_node->setAttribute("unitSymbol", names.second);
+                this->m_node->setAttribute(KARABO_SCHEMA_UNIT_NAME, names.first);
+                this->m_node->setAttribute(KARABO_SCHEMA_UNIT_SYMBOL, names.second);
                 return *this;
             }
 
@@ -57,10 +57,10 @@ namespace karabo {
              * @return reference to the Element (to allow method's chaining)
              */
             LeafElement& metricPrefix(const Units::MetricPrefix& metricPrefix) {
-                this->m_node->template setAttribute<int>("metricPrefixEnum", metricPrefix);
+                this->m_node->template setAttribute<int>(KARABO_SCHEMA_METRIC_PREFIX_ENUM, metricPrefix);
                 std::pair<std::string, std::string> names = karabo::util::Units::getMetricPrefix(metricPrefix);
-                this->m_node->setAttribute("metricPrefixName", names.first);
-                this->m_node->setAttribute("metricPrefixSymbol", names.second);
+                this->m_node->setAttribute(KARABO_SCHEMA_METRIC_PREFIX_NAME, names.first);
+                this->m_node->setAttribute(KARABO_SCHEMA_METRIC_PREFIX_SYMBOL, names.second);
                 return *this;
             }
 
@@ -71,7 +71,7 @@ namespace karabo {
              * @return reference to the Element (to allow method's chaining)
              */
             Derived& allowedStates(const std::string& states, const std::string& sep = " ,;") {
-                this->m_node->setAttribute("allowedStates", karabo::util::fromString<std::string, std::vector>(states, sep));
+                this->m_node->setAttribute(KARABO_SCHEMA_ALLOWED_STATES, karabo::util::fromString<std::string, std::vector>(states, sep));
                 return *(static_cast<Derived*> (this));
             }
 
@@ -82,7 +82,7 @@ namespace karabo {
              * @return reference to the Element (to allow method's chaining)
              */
             Derived& allowedRoles(const std::string& roles, const std::string& sep = " ,;") {
-                this->m_node->setAttribute("allowedRoles", karabo::util::fromString<std::string, std::vector>(roles, sep));
+                this->m_node->setAttribute(KARABO_SCHEMA_ALLOWED_ROLES, karabo::util::fromString<std::string, std::vector>(roles, sep));
                 return *(static_cast<Derived*> (this));
             }
 
@@ -92,7 +92,7 @@ namespace karabo {
              * @return reference to the Element (to allow method's chaining)
              */
             virtual Derived& assignmentMandatory() {
-                this->m_node->template setAttribute<int>("assignment", Schema::MANDATORY_PARAM);
+                this->m_node->template setAttribute<int>(KARABO_SCHEMA_ASSIGNMENT, Schema::MANDATORY_PARAM);
                 return *(static_cast<Derived*> (this));
             }
 
@@ -115,7 +115,7 @@ namespace karabo {
              * @endcode
              */
             virtual DefaultValue<Derived, ValueType>& assignmentOptional() {
-                this->m_node->template setAttribute<int>("assignment", Schema::OPTIONAL_PARAM);
+                this->m_node->template setAttribute<int>(KARABO_SCHEMA_ASSIGNMENT, Schema::OPTIONAL_PARAM);
                 return m_defaultValue;
             }
 
@@ -127,7 +127,7 @@ namespace karabo {
              * @return reference to DefaultValue (to allow method's chaining)
              */
             virtual DefaultValue<Derived, ValueType>& assignmentInternal() {
-                this->m_node->template setAttribute<int>("assignment", Schema::INTERNAL_PARAM);
+                this->m_node->template setAttribute<int>(KARABO_SCHEMA_ASSIGNMENT, Schema::INTERNAL_PARAM);
                 return m_defaultValue;
             }
 
@@ -137,7 +137,7 @@ namespace karabo {
              * @return reference to the Element (to allow method's chaining)
              */
             virtual Derived& init() {
-                this->m_node->template setAttribute<int>("accessMode", INIT);
+                this->m_node->template setAttribute<int>(KARABO_SCHEMA_ACCESS_MODE, INIT);
                 return *(static_cast<Derived*> (this));
             }
 
@@ -147,7 +147,7 @@ namespace karabo {
              * @return reference to the Element (to allow method's chaining)
              */
             virtual Derived& reconfigurable() {
-                this->m_node->template setAttribute<int>("accessMode", WRITE);
+                this->m_node->template setAttribute<int>(KARABO_SCHEMA_ACCESS_MODE, WRITE);
                 return *(static_cast<Derived*> (this));
             }
 
@@ -157,10 +157,10 @@ namespace karabo {
              * @return reference to the Element (to allow method's chaining)
              */
             virtual ReadOnlySpecific<Derived, ValueType>& readOnly() {
-                this->m_node->template setAttribute<int>("accessMode", READ);
+                this->m_node->template setAttribute<int>(KARABO_SCHEMA_ACCESS_MODE, READ);
                 // Set the assignment and defaults here, as the API would look strange to assign something to a read-only
-                this->m_node->template setAttribute<int>("assignment", Schema::OPTIONAL_PARAM);
-                this->m_node->setAttribute("defaultValue", "0");
+                this->m_node->template setAttribute<int>(KARABO_SCHEMA_ASSIGNMENT, Schema::OPTIONAL_PARAM);
+                this->m_node->setAttribute(KARABO_SCHEMA_DEFAULT_VALUE, "0");
                 return m_readOnlySpecific;
             }
         };
@@ -186,7 +186,7 @@ namespace karabo {
              * @return reference to the Element for proper methods chaining
              */
             Element& defaultValue(const ValueType& defaultValue) {
-                m_genericElement->getNode().setAttribute("defaultValue", defaultValue);
+                m_genericElement->getNode().setAttribute(KARABO_SCHEMA_DEFAULT_VALUE, defaultValue);
                 return *m_genericElement;
             }
 
@@ -197,7 +197,7 @@ namespace karabo {
              * @return reference to the Element for proper methods chaining
              */
             Element& defaultValueFromString(const std::string& defaultValue) {
-                m_genericElement->getNode().setAttribute("defaultValue", defaultValue);
+                m_genericElement->getNode().setAttribute(KARABO_SCHEMA_DEFAULT_VALUE, defaultValue);
                 return *m_genericElement;
             }
 
@@ -240,7 +240,7 @@ namespace karabo {
              * @return reference to the Element for proper methods chaining
              */
             ReadOnlySpecific& initialValue(const ValueType& initialValue) {
-                m_genericElement->getNode().setAttribute("defaultValue", initialValue);
+                m_genericElement->getNode().setAttribute(KARABO_SCHEMA_DEFAULT_VALUE, initialValue);
                 return *this;
             }
 
@@ -251,27 +251,27 @@ namespace karabo {
              * @return reference to the Element for proper methods chaining
              */
             ReadOnlySpecific& initialValueFromString(const std::string& initialValue) {
-                m_genericElement->getNode().setAttribute("defaultValue", initialValue);
+                m_genericElement->getNode().setAttribute(KARABO_SCHEMA_DEFAULT_VALUE, initialValue);
                 return *this;
             }
 
             ReadOnlySpecific& warnLow(const ValueType& value) {
-                m_genericElement->getNode().setAttribute("warnLow", value);
+                m_genericElement->getNode().setAttribute(KARABO_SCHEMA_WARN_LOW, value);
                 return *this;
             }
 
             ReadOnlySpecific& warnHigh(const ValueType& value) {
-                m_genericElement->getNode().setAttribute("warnHigh", value);
+                m_genericElement->getNode().setAttribute(KARABO_SCHEMA_WARN_HIGH, value);
                 return *this;
             }
 
             ReadOnlySpecific& alarmLow(const ValueType& value) {
-                m_genericElement->getNode().setAttribute("alarmLow", value);
+                m_genericElement->getNode().setAttribute(KARABO_SCHEMA_ALARM_LOW, value);
                 return *this;
             }
 
             ReadOnlySpecific& alarmHigh(const ValueType& value) {
-                m_genericElement->getNode().setAttribute("alarmHigh", value);
+                m_genericElement->getNode().setAttribute(KARABO_SCHEMA_ALARM_HIGH, value);
                 return *this;
             }
 

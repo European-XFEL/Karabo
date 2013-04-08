@@ -5,7 +5,7 @@
  * Created on February 8, 2013, 6:03 PM
  */
 
-#include "Validator.hh"
+#include "Validator.hh"  
 #include "Schema.hh"
 #include "FromLiteral.hh"
 
@@ -81,16 +81,16 @@ namespace karabo {
                 if (scope.empty()) currentScope = key;
                 else currentScope = scope + "." + key;
 
-                int nodeType = it->getAttribute<int>("nodeType");
+                int nodeType = it->getAttribute<int>(KARABO_SCHEMA_NODE_TYPE);
                 bool userHasNode = user.has(key);
-                bool hasDefault = it->hasAttribute("defaultValue");
+                bool hasDefault = it->hasAttribute(KARABO_SCHEMA_DEFAULT_VALUE);
 
                 // Remove current node from all provided
                 if (userHasNode) keys.erase(key);
 
                 if (nodeType == Schema::LEAF) {
                     
-                    int assignment = it->getAttribute<int>("assignment");
+                    int assignment = it->getAttribute<int>(KARABO_SCHEMA_ASSIGNMENT);
                     
                     if (!userHasNode) { // Node IS NOT provided
                         if (assignment == Schema::MANDATORY_PARAM) {
@@ -99,7 +99,7 @@ namespace karabo {
                                 return;
                             }
                         } else if (assignment == Schema::OPTIONAL_PARAM && hasDefault && m_injectDefaults) {
-                            Hash::Node& node = working.set(key, it->getAttributeAsAny("defaultValue"));
+                            Hash::Node& node = working.set(key, it->getAttributeAsAny(KARABO_SCHEMA_DEFAULT_VALUE));
                             this->validateLeaf(*it, node, report, currentScope);
                         }
                     } else { // Node IS provided
@@ -127,7 +127,7 @@ namespace karabo {
                     }
                 } else if (nodeType == Schema::CHOICE_OF_NODES) {
                     
-                    int assignment = it->getAttribute<int>("assignment");
+                    int assignment = it->getAttribute<int>(KARABO_SCHEMA_ASSIGNMENT);
                     
                     if (!userHasNode) {
                         if (assignment == Schema::MANDATORY_PARAM) {
@@ -136,7 +136,7 @@ namespace karabo {
                                 return;
                             }
                         } else if (assignment == Schema::OPTIONAL_PARAM && hasDefault && m_injectDefaults) {
-                            std::string optionName = it->getAttribute<string > ("defaultValue");
+                            std::string optionName = it->getAttribute<string > (KARABO_SCHEMA_DEFAULT_VALUE);
                             Hash::Node& workNode = working.set(key, Hash(optionName, Hash())); // Inject empty choice
                             r_validate(it->getValue<Hash > ().get<Hash > (optionName), Hash(), workNode.getValue<Hash > ().get<Hash > (optionName), report, currentScope + "." + optionName);
                         }
@@ -173,7 +173,7 @@ namespace karabo {
                                         return;
                                     }
                                 } else if (assignment == Schema::OPTIONAL_PARAM && hasDefault && m_injectDefaults) {
-                                    std::string optionName = it->getAttribute<string > ("defaultValue");
+                                    std::string optionName = it->getAttribute<string > (KARABO_SCHEMA_DEFAULT_VALUE);
                                     Hash::Node& workNode = working.set(key, Hash(optionName, Hash())); // Inject empty choice
                                     r_validate(it->getValue<Hash > ().get<Hash > (optionName), Hash(), workNode.getValue<Hash > ().get<Hash > (optionName), report, currentScope + "." + optionName);
                                 }
@@ -198,7 +198,7 @@ namespace karabo {
                     }
                 } else if (nodeType == Schema::LIST_OF_NODES) {
                     
-                    int assignment = it->getAttribute<int>("assignment");
+                    int assignment = it->getAttribute<int>(KARABO_SCHEMA_ASSIGNMENT);
                     
                     if (!userHasNode) { // Node IS NOT provided
                         if (assignment == Schema::MANDATORY_PARAM) {
@@ -207,7 +207,7 @@ namespace karabo {
                                 return;
                             }
                         } else if ((assignment == Schema::OPTIONAL_PARAM) && hasDefault && m_injectDefaults) {
-                            vector<string> optionNames = it->getAttributeAs<string, vector> ("defaultValue");
+                            vector<string> optionNames = it->getAttributeAs<string, vector> (KARABO_SCHEMA_DEFAULT_VALUE);
                             Hash::Node& workNode = working.set(key, std::vector<Hash>()); // TODO use bindReference here
                             vector<Hash>& workNodes = workNode.getValue<vector<Hash> >();
                             BOOST_FOREACH(string optionName, optionNames) {
@@ -228,12 +228,12 @@ namespace karabo {
                         if (user.getType(key) == Types::VECTOR_STRING) {
                             const vector<string> optionNames(user.get<vector<string> >(key));
                             int optionNamesSize = static_cast<int>(optionNames.size());
-                            if (it->hasAttribute("min") && (optionNamesSize < it->getAttribute<int>("min"))) {
-                                report << "Too less options given for (list-)parameter: \"" << key << "\". Expecting at least " << it->getAttribute<int>("min");
+                            if (it->hasAttribute(KARABO_SCHEMA_MIN) && (optionNamesSize < it->getAttribute<int>(KARABO_SCHEMA_MIN))) {
+                                report << "Too less options given for (list-)parameter: \"" << key << "\". Expecting at least " << it->getAttribute<int>(KARABO_SCHEMA_MIN);
                                 return;
                             }
-                            if (it->hasAttribute("max") && (optionNamesSize > it->getAttribute<int>("max"))) {
-                                report << "Too many options given for (list-)parameter: \"" << key << "\". Expecting at most " << it->getAttribute<int>("max");
+                            if (it->hasAttribute(KARABO_SCHEMA_MAX) && (optionNamesSize > it->getAttribute<int>(KARABO_SCHEMA_MAX))) {
+                                report << "Too many options given for (list-)parameter: \"" << key << "\". Expecting at most " << it->getAttribute<int>(KARABO_SCHEMA_MAX);
                                 return;
                             }
                             
@@ -256,13 +256,13 @@ namespace karabo {
 
                             const vector<Hash>& userOptions = user.get<vector<Hash> > (key);
                              int optionNamesSize = static_cast<int>(userOptions.size());
-                            if (it->hasAttribute("min") && (optionNamesSize < it->getAttribute<int>("min"))) {
-                                report << "Too less options given for (list-)parameter: \"" << key << "\". Expecting at least " << it->getAttribute<int>("min");
+                            if (it->hasAttribute(KARABO_SCHEMA_MIN) && (optionNamesSize < it->getAttribute<int>(KARABO_SCHEMA_MIN))) {
+                                report << "Too less options given for (list-)parameter: \"" << key << "\". Expecting at least " << it->getAttribute<int>(KARABO_SCHEMA_MIN);
                                 report << "Valid options are: " << karabo::util::toString(validOptions) << endl;
                                 return;
                             }
-                            if (it->hasAttribute("max") && (optionNamesSize > it->getAttribute<int>("max"))) {
-                                report << "Too many options given for (list-)parameter: \"" << key << "\". Expecting at most " << it->getAttribute<int>("max");
+                            if (it->hasAttribute(KARABO_SCHEMA_MAX) && (optionNamesSize > it->getAttribute<int>(KARABO_SCHEMA_MAX))) {
+                                report << "Too many options given for (list-)parameter: \"" << key << "\". Expecting at most " << it->getAttribute<int>(KARABO_SCHEMA_MAX);
                                 report << "Valid options are: " << karabo::util::toString(validOptions) << endl;
                                 return;
                             }
@@ -302,7 +302,7 @@ namespace karabo {
         void Validator::validateLeaf(const Hash::Node& masterNode, Hash::Node& workNode, std::ostringstream& report, std::string scope) const {
             
             
-            Types::ReferenceType referenceType = Types::from<FromLiteral>(masterNode.getAttribute<string>("valueType"));
+            Types::ReferenceType referenceType = Types::from<FromLiteral>(masterNode.getAttribute<string>(KARABO_SCHEMA_VALUE_TYPE));
             Types::ReferenceType referenceCategory = Types::category(referenceType);
             Types::ReferenceType givenType = workNode.getType();
             
@@ -321,40 +321,40 @@ namespace karabo {
             
             // Check ranges
             if (referenceCategory == Types::SIMPLE) {
-                if (masterNode.hasAttribute("options")) {
+                if (masterNode.hasAttribute(KARABO_SCHEMA_OPTIONS)) {
                     vector<string> options;
-                    masterNode.getAttribute("options", options);
+                    masterNode.getAttribute(KARABO_SCHEMA_OPTIONS, options);
                     if (std::find(options.begin(), options.end(), workNode.getValueAs<string>()) == options.end()) {
                         report << "Value " << workNode.getValueAs<string>() << " for parameter \"" << scope << "\" is not one of the valid options: " << karabo::util::toString(options) << endl;
                     }
                 }
                 
-                if (masterNode.hasAttribute("minExc")) {
-                    double minExc = masterNode.getAttributeAs<double>("minExc");
+                if (masterNode.hasAttribute(KARABO_SCHEMA_MIN_EXC)) {
+                    double minExc = masterNode.getAttributeAs<double>(KARABO_SCHEMA_MIN_EXC);
                     double value = workNode.getValueAs<double>();
                     if (value <= minExc) {
                         report << "Value " << value << " for parameter \"" << scope << "\" is out of lower bound " << minExc << endl;
                     }
                 }
                 
-                if (masterNode.hasAttribute("minInc")) {
-                    double minInc = masterNode.getAttributeAs<double>("minInc");
+                if (masterNode.hasAttribute(KARABO_SCHEMA_MIN_INC)) {
+                    double minInc = masterNode.getAttributeAs<double>(KARABO_SCHEMA_MIN_INC);
                     double value = workNode.getValueAs<double>();
                     if (value < minInc) {
                         report << "Value " << value << " for parameter \"" << scope << "\" is out of lower bound " << minInc << endl;
                     }
                 }
                 
-                if (masterNode.hasAttribute("maxExc")) {
-                    double maxExc = masterNode.getAttributeAs<double>("maxExc");
+                if (masterNode.hasAttribute(KARABO_SCHEMA_MAX_EXC)) {
+                    double maxExc = masterNode.getAttributeAs<double>(KARABO_SCHEMA_MAX_EXC);
                     double value = workNode.getValueAs<double>();
                     if (value >= maxExc) {
                         report << "Value " << value << " for parameter \"" << scope << "\" is out of upper bound " << maxExc << endl;
                     }
                 }
                 
-                if (masterNode.hasAttribute("maxInc")) {
-                    double maxInc = masterNode.getAttributeAs<double>("maxInc");
+                if (masterNode.hasAttribute(KARABO_SCHEMA_MAX_INC)) {
+                    double maxInc = masterNode.getAttributeAs<double>(KARABO_SCHEMA_MAX_INC);
                     double value = workNode.getValueAs<double>();
                     if (value > maxInc) {
                         report << "Value " << value << " for parameter \"" << scope << "\" is out of upper bound " << maxInc << endl;
@@ -365,15 +365,15 @@ namespace karabo {
                 
                 // TODO Check whether we are really going to validate inner elements of a vector for max/min..., maybe not.
                 
-                if (masterNode.hasAttribute("minSize")) {
-                    int minSize = masterNode.getAttribute<int>("minSize");
+                if (masterNode.hasAttribute(KARABO_SCHEMA_MIN_SIZE)) {
+                    int minSize = masterNode.getAttribute<int>(KARABO_SCHEMA_MIN_SIZE);
                     if (currentSize < minSize) {
                         report << "Number of elements (" << currentSize << " for (vector-)parameter \"" << scope << "\" is smaller than lower bound (" << minSize << ")" << endl;
                     }
                 }
                 
-                if (masterNode.hasAttribute("maxSize")) {
-                    int maxSize = masterNode.getAttribute<int>("maxSize");
+                if (masterNode.hasAttribute(KARABO_SCHEMA_MAX_SIZE)) {
+                    int maxSize = masterNode.getAttribute<int>(KARABO_SCHEMA_MAX_SIZE);
                     if (currentSize > maxSize) {
                         report << "Number of elements (" << currentSize << " for (vector-)parameter \"" << scope << "\" is greater than upper bound (" << maxSize << ")" << endl;
                     }

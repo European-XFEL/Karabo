@@ -35,7 +35,7 @@ namespace karabo {
              * @return reference to the PathElement
              */
             PathElement& options(const std::string& opts, const std::string& sep = " ,;") {
-                this->m_node->setAttribute("options", karabo::util::fromString<std::string, std::vector > (opts, sep));
+                this->m_node->setAttribute(KARABO_SCHEMA_OPTIONS, karabo::util::fromString<std::string, std::vector > (opts, sep));
                 return *this;
             }
 
@@ -46,31 +46,31 @@ namespace karabo {
              * @return reference to the PathElement
              */
             PathElement& options(const std::vector<std::string>& opts) {
-                this->m_node->setAttribute("options", opts);
+                this->m_node->setAttribute(KARABO_SCHEMA_OPTIONS, opts);
                 return *this;
             }
 
             PathElement& isInputFile() {
-                this->m_node->setAttribute("displayType", "fileIn");
+                this->m_node->setAttribute(KARABO_SCHEMA_DISPLAY_TYPE, "fileIn");
                 return *this;
             }
 
             PathElement& isOutputFile() {
-                this->m_node->setAttribute("displayType", "fileOut");
+                this->m_node->setAttribute(KARABO_SCHEMA_DISPLAY_TYPE, "fileOut");
                 return *this;
             }
 
             PathElement& isDirectory() {
-                this->m_node->setAttribute("displayType", "directory");
+                this->m_node->setAttribute(KARABO_SCHEMA_DISPLAY_TYPE, "directory");
                 return *this;
             }
 
         protected:
 
             void beforeAddition() {
-                this->m_node->setAttribute<int>("nodeType", Schema::LEAF);
-                this->m_node->setAttribute("valueType", ToLiteral::to<Types::STRING>());
-                if (!this->m_node->hasAttribute("accessMode")) this->init(); // This is the default
+                this->m_node->setAttribute<int>(KARABO_SCHEMA_NODE_TYPE, Schema::LEAF);
+                this->m_node->setAttribute(KARABO_SCHEMA_VALUE_TYPE, ToLiteral::to<Types::STRING>());
+                if (!this->m_node->hasAttribute(KARABO_SCHEMA_ACCESS_MODE)) this->init(); // This is the default
             }
         };
         typedef PathElement PATH_ELEMENT;
