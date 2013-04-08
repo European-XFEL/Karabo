@@ -19,9 +19,10 @@ using namespace std;
 using namespace karabo::net;
 using namespace karabo::pyexfel;
 
+
 void exportp2p() {
     bp::docstring_options docs(true, true, false);
-    
+
     {
         bp::class_<ErrorCode> ec("ErrorCode", bp::init<>());
     }
@@ -42,6 +43,7 @@ void exportp2p() {
                 .def("createChannel", &Connection::createChannel)
                 .def("getIOService", &Connection::getIOService)
                 .def("setIOService", &ConnectionWrap().setIOService, (bp::arg("ioserv")))
+                .def("setErrorHandler", &ConnectionWrap().setErrorHandler, (bp::arg("handler")))
                 KARABO_PYTHON_FACTORY_CONFIGURATOR(Connection)
                 ;
     }
@@ -60,6 +62,8 @@ void exportp2p() {
                 .def("writeAsyncHash", &ChannelWrap().writeAsyncHash, (bp::arg("data"), bp::arg("handler")))
                 .def("writeAsyncHashStr", &ChannelWrap().writeAsyncHashStr, (bp::arg("hdr"), bp::arg("data"), bp::arg("handler")))
                 .def("writeAsyncHashHash", &ChannelWrap().writeAsyncHashHash, (bp::arg("hdr"), bp::arg("data"), bp::arg("handler")))
+                .def("waitAsync", &ChannelWrap().waitAsync, (bp::arg("milliseconds"), bp::arg("handler")))
+                .def("setErrorHandler", &ChannelWrap().setErrorHandler, (bp::arg("handler")))
                 KARABO_PYTHON_FACTORY_CONFIGURATOR(Channel)
                 ;
     }
