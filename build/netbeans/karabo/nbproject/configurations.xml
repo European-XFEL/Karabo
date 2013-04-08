@@ -34,7 +34,6 @@
         <itemPath>../../../src/karabo/io/h5/TypeTraits.cc</itemPath>
         <itemPath>../../../src/karabo/io/h5/TypeTraits.hh</itemPath>
         <itemPath>../../../src/karabo/io/h5/ioProfiler.hh</itemPath>
-        <itemPath>../../../src/karabo/io/h5/ioTracer.hh</itemPath>
       </logicalFolder>
       <logicalFolder name="f3" displayName="Input" projectFiles="true">
         <itemPath>../../../src/karabo/io/AbstractInput.hh</itemPath>
@@ -81,6 +80,7 @@
       </logicalFolder>
       <itemPath>../../../src/karabo/log/Logger.cc</itemPath>
       <itemPath>../../../src/karabo/log/Logger.hh</itemPath>
+      <itemPath>../../../src/karabo/log/Tracer.hh</itemPath>
     </logicalFolder>
     <logicalFolder name="f5" displayName="net" projectFiles="true">
       <logicalFolder name="f4" displayName="Broker" projectFiles="true">
@@ -588,11 +588,6 @@
             tool="3"
             flavor2="0">
       </item>
-      <item path="../../../src/karabo/io/h5/ioTracer.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
       <item path="../../../src/karabo/log/AppenderConfigurator.cc"
             ex="false"
             tool="1"
@@ -646,6 +641,8 @@
             ex="false"
             tool="3"
             flavor2="0">
+      </item>
+      <item path="../../../src/karabo/log/Tracer.hh" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../../../src/karabo/net/AbstractIOService.hh"
             ex="false"
@@ -1641,11 +1638,6 @@
             tool="3"
             flavor2="0">
       </item>
-      <item path="../../../src/karabo/io/h5/ioTracer.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
       <item path="../../../src/karabo/log/AppenderConfigurator.cc"
             ex="false"
             tool="1"
@@ -1699,6 +1691,8 @@
             ex="false"
             tool="3"
             flavor2="0">
+      </item>
+      <item path="../../../src/karabo/log/Tracer.hh" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../../../src/karabo/net/AbstractIOService.hh"
             ex="false"
