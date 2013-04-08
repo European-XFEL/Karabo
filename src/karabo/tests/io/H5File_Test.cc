@@ -15,7 +15,7 @@
 #include <karabo/io/h5/Scalar.hh>
 #include <karabo/io/h5/ioProfiler.hh>
 
-#include <karabo/io/h5/ioTracer.hh>
+#include <karabo/log/Tracer.hh>
 
 using namespace karabo::util;
 using namespace karabo::io::h5;
@@ -27,7 +27,7 @@ CPPUNIT_TEST_SUITE_REGISTRATION(H5File_Test);
 
 H5File_Test::H5File_Test() {
     
-    karabo::io::h5::Tracer tr;
+    karabo::log::Tracer tr;
     tr.disableAll();
     tr.enable("karabo.io.h5.Table.open");
     tr.enable("karabo.io.h5.Table");
@@ -295,15 +295,15 @@ void H5File_Test::testRead() {
         // get number of records in the file
         size_t nRecords = table->getNumberOfRecords();
  
-        clog << "number of records: " << nRecords << endl;
+        KARABO_LOG_TRACE << "number of records: " << nRecords;
         CPPUNIT_ASSERT(nRecords == m_numberOfRecords);
-
+  
 
 
         // read first record
         table->read(0);
 
-        clog << "after reading: " << endl;
+         KARABO_LOG_TRACE << "after reading: " << endl;
         
         // assert values
         CPPUNIT_ASSERT(bla == 1006);

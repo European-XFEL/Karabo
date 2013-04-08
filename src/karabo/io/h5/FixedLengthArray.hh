@@ -14,7 +14,6 @@
 #include <vector>
 #include <string>
 
-#include "ioTracer.hh"
 
 #include "Dataset.hh"
 //#include "Scalar.hh"
