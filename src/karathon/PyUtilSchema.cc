@@ -116,7 +116,7 @@ void exportPyUtilSchema() {
 
         //********* has methods ****************
 
-        s.def("hasAlias", &Schema::hasAlias);
+        s.def("keyHasAlias", &Schema::keyHasAlias);
         s.def("hasAccessMode", &Schema::hasAccessMode);
         //all other has .....
 
