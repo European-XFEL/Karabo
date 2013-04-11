@@ -18,6 +18,7 @@
 #include "Units.hh"
 
 #include "karaboDll.hh"
+#include "Time.hh"
 
 namespace karabo {
     namespace util {
@@ -29,8 +30,19 @@ namespace karabo {
             bool m_assumeRootedConfiguration;
             bool m_allowAdditionalKeys;
             bool m_allowMissingKeys;
-
+            bool m_injectTimestamps;
+            
+            karabo::util::Hash m_parametersInWarnOrAlarm;
+            karabo::util::Timestamp m_timestamp;
+            
         public:
+            
+            enum ProblemType {
+                WARN_LOW,
+                WARN_HIGH,
+                ALARM_LOW,
+                ALARM_HIGH
+            };
 
             struct ValidationRules {
 
@@ -38,6 +50,7 @@ namespace karabo {
                 bool allowUnrootedConfiguration;
                 bool allowAdditionalKeys;
                 bool allowMissingKeys;
+                bool injectTimestamps;
             };
 
             Validator();
@@ -48,13 +61,17 @@ namespace karabo {
 
             Validator::ValidationRules getValidationRules() const;
 
-            std::pair<bool, std::string> validate(const Schema& schema, const Hash& unvalidatedInput, Hash& validatedOutput) const;
+            std::pair<bool, std::string> validate(const Schema& schema, const Hash& unvalidatedInput, Hash& validatedOutput, const Timestamp& timestamp = Timestamp());
+            
+            bool hasParametersInWarnOrAlarm() const;
+            
+            const karabo::util::Hash& getParametersInWarnOrAlarm() const;
 
         private:
 
-            void r_validate(const Hash& master, const Hash& user, Hash& working, std::ostringstream& report, std::string scope = "") const;
+            void r_validate(const Hash& master, const Hash& user, Hash& working, std::ostringstream& report, std::string scope = "");
 
-            void validateLeaf(const Hash::Node& masterNode, Hash::Node& workNode, std::ostringstream& report, std::string scope) const;
+            void validateLeaf(const Hash::Node& masterNode, Hash::Node& workNode, std::ostringstream& report, std::string scope);
 
         };
     }

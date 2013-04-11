@@ -84,23 +84,23 @@ void Schema_Test::testGetNodeType() {
 
 
 void Schema_Test::testGetValueType() {
-    string valueType = m_schema.getValueType("exampleKey1");
-    CPPUNIT_ASSERT(valueType == "STRING");
+    Types::ReferenceType valueType = m_schema.getValueType("exampleKey1");
+    CPPUNIT_ASSERT(valueType == Types::STRING);
 
-    CPPUNIT_ASSERT(m_schema.getValueType("exampleKey2") == "INT32");
-    CPPUNIT_ASSERT(m_schema.getValueType("exampleKey3") == "UINT32");
-    CPPUNIT_ASSERT(m_schema.getValueType("exampleKey4") == "FLOAT");
-    CPPUNIT_ASSERT(m_schema.getValueType("exampleKey5") == "INT64");
+    CPPUNIT_ASSERT(m_schema.getValueType("exampleKey2") == Types::INT32);
+    CPPUNIT_ASSERT(m_schema.getValueType("exampleKey3") == Types::UINT32);
+    CPPUNIT_ASSERT(m_schema.getValueType("exampleKey4") == Types::FLOAT);
+    CPPUNIT_ASSERT(m_schema.getValueType("exampleKey5") == Types::INT64);
 }
 
 
 void Schema_Test::testGetAlias() {
-    CPPUNIT_ASSERT(m_schema.hasAlias("exampleKey1") == false);
-    CPPUNIT_ASSERT(m_schema.hasAlias("exampleKey2") == true);
-    CPPUNIT_ASSERT(m_schema.getAlias<int>("exampleKey2") == 10);
-    CPPUNIT_ASSERT(m_schema.getAlias<double>("exampleKey3") == 5.5);
-    CPPUNIT_ASSERT(m_schema.getAlias<string > ("exampleKey4") == "exampleAlias4");
-    CPPUNIT_ASSERT(m_schema.getAlias<string > ("exampleKey5") == "exampleAlias5");
+    CPPUNIT_ASSERT(m_schema.keyHasAlias("exampleKey1") == false);
+    CPPUNIT_ASSERT(m_schema.keyHasAlias("exampleKey2") == true);
+    CPPUNIT_ASSERT(m_schema.getAliasFromKey<int>("exampleKey2") == 10);
+    CPPUNIT_ASSERT(m_schema.getAliasFromKey<double>("exampleKey3") == 5.5);
+    CPPUNIT_ASSERT(m_schema.getAliasFromKey<string > ("exampleKey4") == "exampleAlias4");
+    CPPUNIT_ASSERT(m_schema.getAliasFromKey<string > ("exampleKey5") == "exampleAlias5");
 }
 
 

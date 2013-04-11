@@ -92,9 +92,9 @@ namespace karabo {
                 m_threadGroup.create_thread(boost::bind(&karabo::net::JmsBrokerChannel::listenForTextMessages, channel));
             }
         }
-
-        void JmsBrokerIOService::registerBinaryMessageChannel(JmsBrokerChannel* channel) {
-             //std::cout << "Registering thread No.: " << m_threadCount++ << std::endl;
+        
+        void JmsBrokerIOService::registerBinaryMessageChannel(JmsBrokerChannel* channel) {            
+            //std::cout << "Registering thread No.: " << m_threadCount++ << std::endl;
             if (m_status == IDLE || m_status == STOPPED || m_status == RUNNING) {
                 m_binaryMessageChannels.push_back(channel);
             } else if (m_status == WORKING) {

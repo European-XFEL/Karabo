@@ -25,13 +25,13 @@ namespace karabo {
             }
         }
         
-        void Slot::startSlotProcessing() {
-            m_signalSlotable->setSlotProcessingFlag(true);
-        }
+//        void Slot::startSlotProcessing() {
+//            m_signalSlotable->setSlotProcessingFlag(true);
+//        }
         
-        void Slot::stopSlotProcessing() {
-            m_signalSlotable->setSlotProcessingFlag(false);
-        }
+//        void Slot::stopSlotProcessing() {
+//            m_signalSlotable->setSlotProcessingFlag(false);
+//        }
         
         template <>
         const bool& Slot::getAndCast(const std::string& key, const karabo::util::Hash& hash) const {

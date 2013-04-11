@@ -68,6 +68,8 @@ namespace karabo {
             template <class AliasType>
             Derived& alias(const AliasType& alias) {
                 m_node->setAttribute<AliasType > (KARABO_SCHEMA_ALIAS, alias);
+                if (m_node->getKey().empty()) throw KARABO_PARAMETER_EXCEPTION("You have to first assign a key to the expected parameter before you can set any alias");
+                m_schema->m_aliasToKey[karabo::util::toString(alias)] = m_node->getKey();
                 return *(static_cast<Derived*> (this));
             }
 
