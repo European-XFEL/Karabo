@@ -206,7 +206,7 @@ namespace karabo {
             }
 
             void onTcpConnectionError(karabo::net::Channel::Pointer, const karabo::net::ErrorCode& error) {
-                KARABO_LOG_ERROR << error.value() << ": " << error.message();
+                KARABO_LOG_FRAMEWORK_ERROR << error.value() << ": " << error.message();
             }
 
             void onTcpChannelError(karabo::net::Channel::Pointer, const karabo::net::ErrorCode& error) {

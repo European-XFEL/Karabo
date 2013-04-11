@@ -24,7 +24,7 @@ namespace karabo {
 
         public:
 
-            KARABO_CLASSINFO(TextSerializer<T>, "TextSerializer-" + std::string(T::classInfo().getClassName()), "1.0")
+            KARABO_CLASSINFO(TextSerializer<T>, "TextSerializer", "1.0")
 
             KARABO_CONFIGURATION_BASE_CLASS
 

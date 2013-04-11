@@ -16,6 +16,7 @@
 #include "Exception.hh"
 #include "Schema.hh"
 #include "Hash.hh"
+#include "FromLiteral.hh"
 
 namespace karabo {
     namespace util {
@@ -81,6 +82,21 @@ namespace karabo {
             return m_rootName;
         }
 
+
+        bool Schema::has(const std::string& path) const {
+            return m_hash.has(path);
+        }
+
+
+        // TODO Implement it such that the current assembly rules are respected
+        void Schema::merge(const Schema& schema) {
+            m_hash.merge(schema.m_hash);
+        }
+        
+        bool Schema::empty() const {
+            return m_hash.empty();
+        }
+
         //**********************************************
         //              Node property                  *
         //**********************************************
@@ -127,8 +143,13 @@ namespace karabo {
         //**********************************************
 
 
-        const string& Schema::getValueType(const std::string& path) const {
-            return m_hash.getAttribute<string > (path, KARABO_SCHEMA_VALUE_TYPE);
+        //const string& Schema::getValueType(const std::string& path) const {
+        //   return m_hash.getAttribute<string > (path, KARABO_SCHEMA_VALUE_TYPE);
+        // }
+
+
+        Types::ReferenceType Schema::getValueType(const std::string& path) const {
+            return Types::from<FromLiteral>(m_hash.getAttribute<string > (path, KARABO_SCHEMA_VALUE_TYPE));
         }
 
         //**********************************************
@@ -267,7 +288,7 @@ namespace karabo {
 
 
         //**********************************************
-        //                  Alias                      *
+        //                  DisplayType                      *
         //**********************************************
 
 
@@ -290,14 +311,15 @@ namespace karabo {
         //**********************************************
 
 
-        bool Schema::hasAlias(const std::string& path) const {
+        bool Schema::keyHasAlias(const std::string& path) const {
             return m_hash.hasAttribute(path, KARABO_SCHEMA_ALIAS);
         }
-        
+
+
         string Schema::getAliasAsString(const std::string& path) const {
             return m_hash.getAttributeAs<string>(path, KARABO_SCHEMA_ALIAS);
         }
- 
+
         //**********************************************
         //                  Options             *
         //**********************************************
@@ -740,7 +762,7 @@ namespace karabo {
         void Schema::processingLeaf(const std::string& key, ostringstream & stream) {
             string showKey = extractKey(key);
 
-            string valueType = getValueType(key);
+            string valueType = Types::to<ToLiteral>(getValueType(key));
 
             stream << "\n  ." << showKey << "(" << valueType << ")" << endl;
 

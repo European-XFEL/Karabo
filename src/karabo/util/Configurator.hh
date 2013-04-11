@@ -245,7 +245,7 @@ namespace karabo {
             }
 
             static void validateConfiguration(const std::string& classId, const Hash& configuration, Hash& validated) {
-                Schema schema = getSchema(classId);
+                Schema schema = getSchema(classId, Schema::AssemblyRules(INIT|WRITE|READ));
                 Validator validator; // Default validation
                 std::pair<bool, std::string> ret = validator.validate(schema, configuration, validated);
                 if (ret.first == false) throw KARABO_PARAMETER_EXCEPTION("Validation failed. \n" + ret.second);

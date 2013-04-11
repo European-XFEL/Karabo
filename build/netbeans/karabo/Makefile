@@ -97,18 +97,16 @@ build: .build-post
 	@if test ! -d $(KARABO)/include/karabo/xip;     then $(MKDIR) -p  $(KARABO)/include/karabo/xip; fi
 	@if test ! -d $(KARABO)/include/karabo/xml;     then $(MKDIR) -p  $(KARABO)/include/karabo/xml; fi
 	@if test ! -d $(KARABO)/include/karabo/xms;     then $(MKDIR) -p  $(KARABO)/include/karabo/xms; fi
-	@$(CP) $(CND_BASEDIR)/../../../src/karabo/core/*.hh $(KARABO)/include/karabo/core
-	@$(CP) $(CND_BASEDIR)/../../../src/karabo/io/*.hh $(KARABO)/include/karabo/io
-	@$(CP) $(CND_BASEDIR)/../../../src/karabo/io/h5/*.hh $(KARABO)/include/karabo/io/h5
-	@$(CP) $(CND_BASEDIR)/../../../src/karabo/log/*.hh $(KARABO)/include/karabo/log
-	@$(CP) $(CND_BASEDIR)/../../../src/karabo/net/*.hh $(KARABO)/include/karabo/net
-	@$(CP) $(CND_BASEDIR)/../../../src/karabo/python/*.hh $(KARABO)/include/karabo/python
-	@$(CP) $(CND_BASEDIR)/../../../src/karabo/util/*.hh $(KARABO)/include/karabo/util
-	@$(CP) $(CND_BASEDIR)/../../../src/karabo/xip/*.hh $(KARABO)/include/karabo/xip
-	@$(CP) $(CND_BASEDIR)/../../../src/karabo/xip/*.h  $(KARABO)/include/karabo/xip
-	@$(CP) $(CND_BASEDIR)/../../../src/karabo/xml/*.hh $(KARABO)/include/karabo/xml
-	@$(CP) $(CND_BASEDIR)/../../../src/karabo/xml/*.h  $(KARABO)/include/karabo/xml
-	@$(CP) $(CND_BASEDIR)/../../../src/karabo/xms/*.hh $(KARABO)/include/karabo/xms
+	@$(CP) $(CND_BASEDIR)/../../../src/karabo/core/*.h* $(KARABO)/include/karabo/core
+	@$(CP) $(CND_BASEDIR)/../../../src/karabo/io/*.h* $(KARABO)/include/karabo/io
+	@$(CP) $(CND_BASEDIR)/../../../src/karabo/io/h5/*.h* $(KARABO)/include/karabo/io/h5
+	@$(CP) $(CND_BASEDIR)/../../../src/karabo/log/*.h* $(KARABO)/include/karabo/log
+	@$(CP) $(CND_BASEDIR)/../../../src/karabo/net/*.h* $(KARABO)/include/karabo/net
+	@$(CP) $(CND_BASEDIR)/../../../src/karabo/python/*.h* $(KARABO)/include/karabo/python
+	@$(CP) $(CND_BASEDIR)/../../../src/karabo/util/*.h* $(KARABO)/include/karabo/util
+	@$(CP) $(CND_BASEDIR)/../../../src/karabo/xip/*.h* $(KARABO)/include/karabo/xip
+	@$(CP) $(CND_BASEDIR)/../../../src/karabo/xml/*.h* $(KARABO)/include/karabo/xml
+	@$(CP) $(CND_BASEDIR)/../../../src/karabo/xms/*.h* $(KARABO)/include/karabo/xms
 
 # Force extern re-build
 .PHONY: extern package cmd

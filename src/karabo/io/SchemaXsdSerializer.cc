@@ -155,12 +155,12 @@ namespace karabo {
 
             pugi::xml_node simpleElementNode = node.append_child("xs:element");
             appendAttributes(schema, key, simpleElementNode);
-            string typeOfLeafElem = schema.getValueType(key);
+            Types::ReferenceType typeOfLeafElem = schema.getValueType(key);
 
             bool annotation = annotationExists(schema, key);
             if (annotation) {
                 pugi::xml_node annotationNode = simpleElementNode.append_child("xs:annotation");
-                if (typeOfLeafElem.substr(0, 6) == "VECTOR") {
+                if (Types::category(typeOfLeafElem) == Types::SEQUENCE) {
                     createDocumentationNode(schema, key, annotationNode, true);
                 } else {
                     createDocumentationNode(schema, key, annotationNode);
@@ -171,7 +171,7 @@ namespace karabo {
                 vector<string> options = schema.getOptions(key);
                 pugi::xml_node simpleElem = simpleElementNode.append_child("xs:simpleType");
                 pugi::xml_node restrictionElem = simpleElem.append_child("xs:restriction");
-                string baseXsdType = Types::convert<FromLiteral, ToXsd > (schema.getValueType(key));
+                string baseXsdType = Types::to<ToXsd > (schema.getValueType(key));
                 restrictionElem.append_attribute("base") = baseXsdType.c_str();
 
 
@@ -183,7 +183,7 @@ namespace karabo {
             } else if (schema.hasMinInc(key) || schema.hasMinExc(key) || schema.hasMaxInc(key) || schema.hasMaxExc(key)) {
                 pugi::xml_node simpleElem = simpleElementNode.append_child("xs:simpleType");
                 pugi::xml_node restrictionElem = simpleElem.append_child("xs:restriction");
-                string baseXsdType = Types::convert<FromLiteral, ToXsd > (schema.getValueType(key));
+                string baseXsdType = Types::to<ToXsd > (schema.getValueType(key));
                 restrictionElem.append_attribute("base") = baseXsdType.c_str();
 
                 if (schema.hasMinInc(key)) {
@@ -272,7 +272,7 @@ namespace karabo {
             //type
             if (schema.getNodeType(key) == Schema::LEAF && !schema.hasOptions(key) &&
                     !schema.hasMinInc(key) && !schema.hasMinExc(key) && !schema.hasMaxInc(key) && !schema.hasMaxExc(key)) {
-                string xsdType = Types::convert<FromLiteral, ToXsd > (schema.getValueType(key));
+                string xsdType = Types::to<ToXsd > (schema.getValueType(key));
                 node.append_attribute("type") = xsdType.c_str();
             }
             
@@ -309,7 +309,7 @@ namespace karabo {
                 displayedNameElem.append_child(pugi::node_pcdata).set_value(displayedName.c_str());
             }
             
-            if (schema.hasAlias(key)) {
+            if (schema.keyHasAlias(key)) {
                 string alias = schema.getAliasAsString(key);
                 pugi::xml_node aliasElem = documentationNode.append_child("a:alias");
                 aliasElem.append_child(pugi::node_pcdata).set_value(alias.c_str());
@@ -417,7 +417,7 @@ namespace karabo {
             }
             
             if (isVector) {
-                string valueTypeStr = schema.getValueType(key);
+                string valueTypeStr = Types::to<ToLiteral>(schema.getValueType(key));
                 pugi::xml_node displayTypeVect = documentationNode.append_child("a:displayType");
                 displayTypeVect.append_child(pugi::node_pcdata).set_value(valueTypeStr.c_str());
 

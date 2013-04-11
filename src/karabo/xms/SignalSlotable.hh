@@ -65,11 +65,56 @@ namespace karabo {
             typedef std::pair<std::string, int> AssocEntry;
             typedef std::set<AssocEntry> AssocType;
             typedef AssocType::const_iterator AssocTypeConstIterator;
+            
+            typedef std::map<std::string, karabo::io::AbstractInput::Pointer> InputChannels;
+            typedef std::map<std::string, karabo::io::AbstractOutput::Pointer> OutputChannels;
+            
+        protected: // Members
+            
+            std::string m_instanceId;
+            std::string m_instanceType;
+
+            SignalInstances m_signalInstances;
+            SlotInstances m_slotInstances;
+
+            karabo::net::BrokerIOService::Pointer m_ioService;
+            karabo::net::BrokerConnection::Pointer m_connection;
+            karabo::net::BrokerChannel::Pointer m_signalChannel;
+
+            // Reply/Request related
+            karabo::net::BrokerChannel::Pointer m_requestChannel;
+            Replies m_replies;
+            boost::mutex m_replyMutex;
+
+            boost::mutex m_isProcessingSlotMutex;
+            //bool m_isProcessingSlot;
+
+            karabo::util::Hash m_emitFunctions;
+            std::vector<boost::any> m_slots;
+
+            SlotChannels m_slotChannels;
+
+            karabo::util::Hash m_trackedComponents;
+            int m_timeToLive;
+            static std::set<int> m_reconnectIntervals;
+
+            bool m_sendHeartbeats;
+
+            boost::mutex m_connectMutex;
+            boost::mutex m_heartbeatMutex;
+
+            boost::thread m_trackingThread;
+            bool m_doTracking;
+
+            std::map<std::string, std::vector<std::string> > m_availableInstances;
+
+            // IO channel related
+            InputChannels m_inputChannels;
+            OutputChannels m_outputChannels;
 
         public:
 
-            typedef std::map<std::string, karabo::io::AbstractInput::Pointer> InputChannels;
-            typedef std::map<std::string, karabo::io::AbstractOutput::Pointer> OutputChannels;
+           
 
             KARABO_CLASSINFO(SignalSlotable, "SignalSlotable", "1.0")
 
@@ -133,6 +178,10 @@ namespace karabo {
              * @return instanceId
              */
             virtual const std::string& getInstanceId() const;
+            
+            void setInstanceType(const std::string& instanceType);
+            
+            const std::string& getInstanceType() const;
 
             /**
              * TO BE DEPRECATED - DO NOT USE!
@@ -160,7 +209,7 @@ namespace karabo {
 
             virtual void connectionAvailableAgain(const std::string& instanceId, const std::vector<karabo::util::Hash>& connections);
 
-            const std::vector<std::string>& getAvailableInstances();
+            const std::map<std::string, std::vector<std::string> >& getAvailableInstances();
 
             std::vector<std::string> getAvailableSignals(const std::string& instanceId);
 
@@ -171,7 +220,7 @@ namespace karabo {
              */
             void slotPing(const std::string& instanceId, const bool& replyIfInstanceIdIsDuplicated);
 
-            void slotPingAnswer(const std::string& instanceId);
+            void slotPingAnswer(const std::string& instanceId, const std::string& instanceType);
 
             /**
              * Connects a signal and slot by explicitely seperating instanceId from the slotId/signalId.
@@ -456,31 +505,31 @@ namespace karabo {
             }
 
             void reply() {
-                if (!m_isProcessingSlot) return;
+                //if (!m_isProcessingSlot) return;
                 registerReply(karabo::util::Hash());
             }
 
             template <class A1>
             void reply(const A1& a1) {
-                if (!m_isProcessingSlot) return;
+                //if (!m_isProcessingSlot) return;
                 registerReply(karabo::util::Hash("a1", a1));
             }
 
             template <class A1, class A2>
             void reply(const A1& a1, const A2& a2) {
-                if (!m_isProcessingSlot) return;
+                //if (!m_isProcessingSlot) return;
                 registerReply(karabo::util::Hash("a1", a1, "a2", a2));
             }
 
             template <class A1, class A2, class A3>
             void reply(const A1& a1, const A2& a2, const A3& a3) {
-                if (!m_isProcessingSlot) return;
+                //if (!m_isProcessingSlot) return;
                 registerReply(karabo::util::Hash("a1", a1, "a2", a2, "a3", a3));
             }
 
             template <class A1, class A2, class A3, class A4>
             void reply(const A1& a1, const A2& a2, const A3& a3, A4& a4) {
-                if (!m_isProcessingSlot) return;
+                //if (!m_isProcessingSlot) return;
                 registerReply(karabo::util::Hash("a1", a1, "a2", a2, "a3", a3, "a4", a4));
             }
 
@@ -651,16 +700,16 @@ namespace karabo {
 
         protected: // Member variables
 
-            std::string m_instanceId;
+          
 
         private: // Functions
 
             std::pair<bool, karabo::util::Hash> digestPotentialReply();
 
-            void setSlotProcessingFlag(const bool flag) {
-                boost::mutex::scoped_lock lock(m_isProcessingSlotMutex);
-                m_isProcessingSlot = flag;
-            }
+//            void setSlotProcessingFlag(const bool flag) {
+//                boost::mutex::scoped_lock lock(m_isProcessingSlotMutex);
+//                m_isProcessingSlot = flag;
+//            }
 
             void emitHeartbeat();
 
@@ -718,45 +767,7 @@ namespace karabo {
             void slotGetOutputChannelInformation(const std::string& ioChannelId, const int& processId);
 
 
-        protected: // Member variables
-
-            SignalInstances m_signalInstances;
-            SlotInstances m_slotInstances;
-
-            karabo::net::BrokerIOService::Pointer m_ioService;
-            karabo::net::BrokerConnection::Pointer m_connection;
-            karabo::net::BrokerChannel::Pointer m_signalChannel;
-
-            // Reply/Request related
-            karabo::net::BrokerChannel::Pointer m_requestChannel;
-            Replies m_replies;
-            boost::mutex m_replyMutex;
-
-            boost::mutex m_isProcessingSlotMutex;
-            bool m_isProcessingSlot;
-
-            karabo::util::Hash m_emitFunctions;
-            std::vector<boost::any> m_slots;
-
-            SlotChannels m_slotChannels;
-
-            karabo::util::Hash m_trackedComponents;
-            int m_timeToLive;
-            static std::set<int> m_reconnectIntervals;
-
-            bool m_sendHeartbeats;
-
-            boost::mutex m_connectMutex;
-            boost::mutex m_heartbeatMutex;
-
-            boost::thread m_trackingThread;
-            bool m_doTracking;
-
-            std::vector<std::string> m_availableInstances;
-
-            // IO channel related
-            InputChannels m_inputChannels;
-            OutputChannels m_outputChannels;
+       
 
 
         };

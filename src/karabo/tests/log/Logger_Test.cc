@@ -40,7 +40,7 @@ void Logger_Test::testLogging() {
     Hash conf("categories[0]", s1, "appenders[0].Ostream.layout", "Pattern");
     Logger::configure(conf);
     //p->initialize();
-    KARABO_LOG_DEBUG_C("s1") << "Some test message"; 
+    KARABO_LOG_FRAMEWORK_DEBUG_C("s1") << "Some test message"; 
     
 }
 

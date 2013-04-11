@@ -10,6 +10,7 @@
 
 #include "DeviceClient.hh"
 #include "Device.hh"
+#include "karabo/io/FileTools.hh"
 
 using namespace std;
 using namespace karabo::util;
@@ -69,15 +70,14 @@ if (itData != entry.end()) {\
             return m_defaultKeySep;
         }
 
-        bool DeviceClient::exists(const std::string& instanceId) {
+        std::pair<bool, std::string> DeviceClient::exists(const std::string& instanceId) {
+            string hostname;
             try {
-                string hostname;
                 m_signalSlotable->request("*", "slotPing", instanceId, true).timeout(80).receive(hostname);
-                cout << "Instance " << instanceId << "exists on host " << hostname << endl;
             } catch (karabo::util::TimeoutException) {
-                return false;
+                return std::make_pair(false, hostname);
             }
-            return true;
+            return std::make_pair(true, hostname);
         }
 
         std::vector<std::string> DeviceClient::getDeviceServers() {
@@ -153,48 +153,10 @@ if (itData != entry.end()) {\
         }
 
         std::vector<std::string> DeviceClient::getDeviceParameters(const std::string& instanceId, const std::string& key, const std::string& keySep) {
-            if (key.empty()) return getTopDeviceParameters(instanceId);
-            else return getSubDeviceParameters(instanceId, key, keySep);
-        }
-
-        std::vector<std::string> DeviceClient::getTopDeviceParameters(const std::string& instanceId) {
-            std::vector<std::string> ret;
             Schema& schema = cacheAndGetFullSchema(instanceId);
-            const Schema& params = schema.get<Schema > ("elements");
-            for (Schema::const_iterator it = params.begin(); it != params.end(); ++it) {
-                const Schema& param = params.get<Schema > (it);
-                ret.push_back(param.get<string > ("key"));
-            }
-            return ret;
+            return schema.getParameters(key);
         }
-
-        std::vector<std::string> DeviceClient::getSubDeviceParameters(const std::string& instanceId, const std::string& key, const std::string & keySep) {
-            std::vector<std::string> ret;
-            const Schema& schema = getSchemaForParameter(instanceId, key, keySep);
-            if (schema.has("elements")) {
-                const Schema& params = schema.get<Schema > ("elements");
-                for (Schema::const_iterator it = params.begin(); it != params.end(); ++it) {
-                    const Schema& param = params.get<Schema > (it);
-                    ret.push_back(param.get<string > ("key"));
-                }
-            } else if (schema.has("complexType")) {
-                const Schema& params = schema.get<Schema > ("complexType");
-                for (Schema::const_iterator it = params.begin(); it != params.end(); ++it) {
-                    const Schema& param = params.get<Schema > (it);
-                    ret.push_back(param.get<string > ("root"));
-                }
-            }
-            return ret;
-        }
-
-        std::vector<std::string> DeviceClient::getDeviceParametersFlat(const std::string& instanceId, const std::string& keySep) {
-            return cacheAndGetFullSchema(instanceId).getAllParameters();
-        }
-
-        const Schema & DeviceClient::getSchemaForParameter(const std::string& instanceId, const std::string& key, const std::string & keySep) {
-            return cacheAndGetFullSchema(instanceId).getDescriptionByKey(key);
-        }
-
+        
         std::vector<std::string> DeviceClient::getCurrentlyExecutableCommands(const std::string& instanceId, const std::string& keySep) {
             std::vector<std::string> params = cacheAndGetCurrentlyWritableSchema(instanceId).getAllParameters();
             std::vector<std::string> commands;
@@ -325,19 +287,14 @@ if (itData != entry.end()) {\
             else return std::vector<std::string > ();
         }
 
-        Hash DeviceClient::loadConfigurationFromXMLFile(const std::string& filename) {
-            Hash configuration, conf;
-            conf.setFromPath("TextFile.filename", filename);
-            karabo::io::Reader<Hash>::Pointer in = karabo::io::Reader<Hash>::create(conf);
-            in->read(configuration);
-            return configuration;
+        Hash DeviceClient::loadConfigurationFromFile(const std::string& filename) {
+            Hash config;
+            karabo::io::loadFromFile(config, filename);
+            return config;
         }
 
-        const karabo::util::Schema& DeviceClient::getSchema(const std::string & instanceId, const std::string& key, const std::string& keySep) {
-            if (key.empty())
-                return cacheAndGetFullSchema(instanceId);
-            else
-                return getSchemaForParameter(instanceId, key, keySep);
+        const karabo::util::Schema& DeviceClient::getSchema(const std::string& instanceId) {
+            return cacheAndGetFullSchema(instanceId);
         }
 
         const karabo::util::Schema& DeviceClient::getCurrentlyWritableSchema(const std::string& instanceId) {
@@ -413,7 +370,7 @@ if (itData != entry.end()) {\
             boost::mutex::scoped_lock lock(m_deviceChangedHandlersMutex);
             // Make sure we are caching this instanceId
             this->cacheAndGetConfiguration(instanceId);
-            m_deviceChangedHandlers.setFromPath(instanceId + "._function", callbackFunction);
+            m_deviceChangedHandlers.set(instanceId + "._function", callbackFunction);
         }
 
         void DeviceClient::unregisterMonitor(const std::string & instanceId) {
@@ -442,7 +399,7 @@ if (itData != entry.end()) {\
         }
 
         std::string DeviceClient::generateOwnInstanceId() {
-            return std::string(boost::asio::ip::host_name() + "/DeviceClient/" + String::toString(getpid()));
+            return std::string(boost::asio::ip::host_name() + "/DeviceClient/" + karabo::util::toString(getpid()));
         }
 
         karabo::util::Schema & DeviceClient::cacheAndGetFullSchema(const std::string & instanceId) {
@@ -556,8 +513,8 @@ if (itData != entry.end()) {\
             for (karabo::util::Hash::const_iterator it = current.begin(); it != current.end(); ++it) {
                 std::string currentPath = it->first;
                 if (!path.empty()) currentPath = path + "." + it->first;
-                if (registered.hasFromPath(currentPath)) {
-                    const Hash& entry = registered.getFromPath<Hash > (currentPath);
+                if (registered.has(currentPath)) {
+                    const Hash& entry = registered.get<Hash > (currentPath);
                     Hash::const_iterator itFunc = entry.find("_function");
                     Hash::const_iterator itData = entry.find("_userData");
 
@@ -589,8 +546,8 @@ if (itData != entry.end()) {\
                         KARABO_REGISTER_CALLBACK(boost::filesystem::path);
                     } else if (current.is<karabo::util::Hash > (it)) {
                         KARABO_REGISTER_CALLBACK(karabo::util::Hash);
-                    } else if (current.is < std::deque<bool> >(it)) {
-                        KARABO_REGISTER_CALLBACK(std::deque<bool>);
+                    } else if (current.is < std::vector<bool> >(it)) {
+                        KARABO_REGISTER_CALLBACK(std::vector<bool>);
                     } else if (current.is<std::vector<char> >(it)) {
                         KARABO_REGISTER_CALLBACK(std::vector<char>);
                     } else if (current.is < std::vector<signed char> >(it)) {

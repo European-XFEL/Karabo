@@ -35,11 +35,11 @@ public:
     }
     
     void doSomeLogging() {
-        KARABO_LOG_TRACE << "This is a trace message" << std::endl;
-        KARABO_LOG_DEBUG << "This is a debug message";
-        KARABO_LOG_INFO << "This is an info message";
-        KARABO_LOG_WARN << "This is a warn message";
-        KARABO_LOG_ERROR << "This is an error message";
+        KARABO_LOG_FRAMEWORK_TRACE << "This is a trace message" << std::endl;
+        KARABO_LOG_FRAMEWORK_DEBUG << "This is a debug message";
+        KARABO_LOG_FRAMEWORK_INFO << "This is an info message";
+        KARABO_LOG_FRAMEWORK_WARN << "This is a warn message";
+        KARABO_LOG_FRAMEWORK_ERROR << "This is an error message";
     }
 };
 

@@ -8,18 +8,16 @@
 
 
 #include <karabo/xms/SignalSlotable.hh>
-#include <karabo/io/Reader.hh>
 
-#ifndef KARABO_CORE_DEVCOM_HH
-#define	KARABO_CORE_DEVCOM_HH
-
+#ifndef KARABO_CORE_DEVICE_CLIENT_HH
+#define	KARABO_CORE_DEVICE_CLIENT_HH
 
 namespace karabo {
 
     namespace core {
 
         /**
-         * The XFEL Device Client
+         * The Karabo Device Client
          * This class can be used to (remotely) control devices of the distributed system
          * Synchronous calls (i.e. get()) are in fact asynchronous under the hood
          */
@@ -72,11 +70,11 @@ namespace karabo {
              * @param instanceId Device instance id
              * @return full Schema
              */
-            const karabo::util::Schema& getSchema(const std::string& instanceId, const std::string& key = "", const std::string& keySep = "");
+            const karabo::util::Schema& getSchema(const std::string& instanceId);
             
             const karabo::util::Schema& getCurrentlyWritableSchema(const std::string& instanceId);
             
-            bool exists(const std::string& instanceId);
+            std::pair<bool, std::string> exists(const std::string& instanceId);
             
             std::vector<std::string> getDeviceServers();
 
@@ -134,7 +132,7 @@ namespace karabo {
             
             karabo::util::Hash loadConfigurationFromDB(const std::string& configurationId);
             
-            karabo::util::Hash loadConfigurationFromXMLFile(const std::string& filename);
+            karabo::util::Hash loadConfigurationFromFile(const std::string& filename);
             
             void instantiateNoWait(const std::string& serverInstanceId, const std::string& classId, const karabo::util::Hash& configuration = karabo::util::Hash());
             
@@ -148,12 +146,12 @@ namespace karabo {
 
             template<class T>
             T get(const std::string& instanceId, const std::string& key, const std::string& keySep = ".") {
-                return cacheAndGetConfiguration(instanceId).getFromPath<T > (key, keySep);
+                return cacheAndGetConfiguration(instanceId).get<T > (key, keySep);
             }
 
             template<class T>
             void get(const std::string& instanceId, const std::string& key, T& value, const std::string& keySep = ".") {
-                return cacheAndGetConfiguration(instanceId).getFromPath(key, value);
+                return cacheAndGetConfiguration(instanceId).get(key, value);
             }
 
             const karabo::util::Hash& get(const std::string& instanceId);
@@ -163,10 +161,10 @@ namespace karabo {
             template <class ValueType>
             bool registerMonitor(const std::string& instanceId, const std::string& key, const boost::function<void (const ValueType&, const std::string&) >& callbackFunction) {
                 karabo::util::Schema schema = this->getSchema(instanceId);
-                if (schema.hasKey(key)) {
+                if (schema.has(key)) {
                     boost::mutex::scoped_lock lock(m_propertyChangedHandlersMutex);
                     this->cacheAndGetConfiguration(instanceId);
-                    m_propertyChangedHandlers.setFromPath(instanceId + "." + key + "._function", callbackFunction);
+                    m_propertyChangedHandlers.set(instanceId + "." + key + "._function", callbackFunction);
                     return true;
                 } else {
                     return false;
@@ -176,11 +174,11 @@ namespace karabo {
             template <class ValueType, class UserDataType>
             bool registerMonitor(const std::string& instanceId, const std::string& key, const boost::function<void (const ValueType&, const std::string&, const boost::any&) >& callbackFunction, const UserDataType& userData) {
                 karabo::util::Schema schema = this->getSchema(instanceId);
-                if (schema.hasKey(key)) {
+                if (schema.has(key)) {
                     boost::mutex::scoped_lock lock(m_propertyChangedHandlersMutex);
                     this->cacheAndGetConfiguration(instanceId);
-                    m_propertyChangedHandlers.setFromPath(instanceId + "." + key + "._function", callbackFunction);
-                    m_propertyChangedHandlers.setFromPath(instanceId + "." + key + "._userData", userData);
+                    m_propertyChangedHandlers.set(instanceId + "." + key + "._function", callbackFunction);
+                    m_propertyChangedHandlers.set(instanceId + "." + key + "._userData", userData);
                     return true;
                 } else {
                     return false;
@@ -196,8 +194,8 @@ namespace karabo {
                 boost::mutex::scoped_lock lock(m_deviceChangedHandlersMutex);
                 // Make sure we are caching this instanceId
                 this->cacheAndGetConfiguration(instanceId);
-                m_deviceChangedHandlers.setFromPath(instanceId + "._function", callbackFunction);
-                m_deviceChangedHandlers.setFromPath(instanceId + "._userData", userData);
+                m_deviceChangedHandlers.set(instanceId + "._function", callbackFunction);
+                m_deviceChangedHandlers.set(instanceId + "._userData", userData);
             }
 
             void unregisterMonitor(const std::string& instanceId);
@@ -205,14 +203,14 @@ namespace karabo {
             template <class T>
             std::pair<bool, std::string> setWait(const std::string& instanceId, const std::string& key, const T& value, const std::string& keySep = ".", int timeout = -1) const {
                 karabo::util::Hash tmp;
-                tmp.setFromPath(key, value, keySep);
+                tmp.set(key, value, keySep);
                 return setWait(instanceId, tmp, timeout);
             }
 
             template <class T>
             void setNoWait(const std::string& instanceId, const std::string& key, const T& value, const std::string& keySep = ".") const {
                 karabo::util::Hash tmp;
-                tmp.setFromPath(key, value, keySep);
+                tmp.set(key, value, keySep);
                 setNoWait(instanceId, tmp);
             }
 
@@ -256,7 +254,7 @@ namespace karabo {
                     text = e.userFriendlyMsg();
                     ok = false;
                 }
-                return make_pair(ok, text);
+                return std::make_pair(ok, text);
             }
 
             template <class A1>
@@ -272,7 +270,7 @@ namespace karabo {
                     text = e.userFriendlyMsg();
                     ok = false;
                 }
-                return make_pair(ok, text);
+                return std::make_pair(ok, text);
             }
 
             template <class A1, class A2>
@@ -288,7 +286,7 @@ namespace karabo {
                     text = e.userFriendlyMsg();
                     ok = false;
                 }
-                return make_pair(ok, text);
+                return std::make_pair(ok, text);
             }
 
             template <class A1, class A2, class A3>
@@ -304,7 +302,7 @@ namespace karabo {
                     text = e.userFriendlyMsg();
                     ok = false;
                 }
-                return make_pair(ok, text);
+                return std::make_pair(ok, text);
             }
 
             template <class A1, class A2, class A3, class A4>
@@ -320,18 +318,12 @@ namespace karabo {
                     text = e.userFriendlyMsg();
                     ok = false;
                 }
-                return make_pair(ok, text);
+                return std::make_pair(ok, text);
             }
 
         protected: // functions
 
             static std::string generateOwnInstanceId();
-            
-            std::vector<std::string> getTopDeviceParameters(const std::string& instanceId);
-            
-            std::vector<std::string> getSubDeviceParameters(const std::string& instanceId, const std::string& key, const std::string& keySep);
-            
-            const karabo::util::Schema& getSchemaForParameter(const std::string& instanceId, const std::string& key, const std::string& keySep);
             
             const karabo::util::Schema& getCurrentlyWritableSchemaForParameter(const std::string& instanceId, const std::string& key, const std::string& keySep);
             

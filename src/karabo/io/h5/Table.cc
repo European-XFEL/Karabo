@@ -44,8 +44,8 @@ namespace karabo {
 
             void Table::openNew(const Format::Pointer dataFormat) {
 
-                KARABO_LOG_TRACE << "Open new file: " << m_name;
-                KARABO_LOG_TRACE_CF << "Open new file 1111: " << m_name;
+                KARABO_LOG_FRAMEWORK_TRACE << "Open new file: " << m_name;
+                KARABO_LOG_FRAMEWORK_TRACE_CF << "Open new file 1111: " << m_name;
                 createEmptyTable(m_h5file, m_name);
                 createSchemaVersionAttribute();
                 createInitialNumberOfRecordsAttribute();
@@ -64,7 +64,7 @@ namespace karabo {
 
             void Table::openReadOnly(const karabo::io::h5::Format::Pointer dataFormat) {
 
-                KARABO_LOG_TRACE << "Open file for reading: " << m_name;
+                KARABO_LOG_FRAMEWORK_TRACE << "Open file for reading: " << m_name;
                 m_dataFormat = dataFormat;
                 try {
 
@@ -231,7 +231,7 @@ namespace karabo {
                 
                 vector<boost::shared_ptr<Element> > elements = m_dataFormat->getElements();
                 for (size_t i = 0; i < elements.size(); ++i) {
-                    KARABO_LOG_TRACE << "Table::read  element " << i;
+                    KARABO_LOG_FRAMEWORK_TRACE << "Table::read  element " << i;
                     elements[i]->read(recordNumber);
                 }
                 
@@ -360,11 +360,11 @@ namespace karabo {
                     KARABO_CHECK_HDF5_STATUS(m_numberOfRecordsAttribute);
 
                     KARABO_CHECK_HDF5_STATUS(H5Aread(m_numberOfRecordsAttribute, H5T_NATIVE_HSIZE, &m_numberOfRecords));
-                    KARABO_LOG_TRACE << "numberOfRecords attribute for " << m_name.c_str() << " is " << m_numberOfRecords;
+                    KARABO_LOG_FRAMEWORK_TRACE << "numberOfRecords attribute for " << m_name.c_str() << " is " << m_numberOfRecords;
                 } else {
-                    KARABO_LOG_TRACE << "numberOfRecords attribute not defined for " << m_name;
+                    KARABO_LOG_FRAMEWORK_TRACE << "numberOfRecords attribute not defined for " << m_name;
                     //calculateNumberOfRecords();
-                    KARABO_LOG_TRACE << "Calculated number of records: " << m_numberOfRecords;
+                    KARABO_LOG_FRAMEWORK_TRACE << "Calculated number of records: " << m_numberOfRecords;
                 }
             }
             //
@@ -391,7 +391,7 @@ namespace karabo {
 
                     serializer->save(dataFormatConfig, dataFormatConfigXml);
 
-                    KARABO_LOG_TRACE << "Description of format to be written to hdf5 file as group attribute:\n " << dataFormatConfigXml;
+                    KARABO_LOG_FRAMEWORK_TRACE << "Description of format to be written to hdf5 file as group attribute:\n " << dataFormatConfigXml;
                     hid_t dataSpace = H5Screate(H5S_SCALAR);
                     hid_t tableAttribute = H5Acreate(m_group, "table", ScalarTypes::getHdf5StandardType<string>(), dataSpace, H5P_DEFAULT, H5P_DEFAULT);
                     KARABO_CHECK_HDF5_STATUS(tableAttribute);
@@ -416,7 +416,7 @@ namespace karabo {
                     KARABO_CHECK_HDF5_STATUS(H5Aread(tableAttribute, ScalarTypes::getHdf5NativeType<string>(), &ptr));
                     string dataFormatConfigXml = ptr[0];
 
-                    KARABO_LOG_TRACE << "Read format:\n " << dataFormatConfigXml;
+                    KARABO_LOG_FRAMEWORK_TRACE << "Read format:\n " << dataFormatConfigXml;
 
                     TextSerializer<Hash>::Pointer serializer = TextSerializer<Hash>::create("Xml");
                     serializer->load(dataFormatConfig, dataFormatConfigXml);

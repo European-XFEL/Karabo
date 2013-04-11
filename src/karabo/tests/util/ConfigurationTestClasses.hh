@@ -22,8 +22,8 @@ namespace configurationTest {
 
     using namespace karabo::util;
 
-
     struct Shape {
+
         KARABO_CLASSINFO(Shape, "Shape", "1.0");
         KARABO_CONFIGURATION_BASE_CLASS;
 
@@ -54,8 +54,8 @@ namespace configurationTest {
     //                Circle                       *
     //**********************************************
 
-
     struct Circle : public Shape {
+
         KARABO_CLASSINFO(Circle, "Circle", "1.0");
 
         static void expectedParameters(karabo::util::Schema & expected) {
@@ -87,8 +87,8 @@ namespace configurationTest {
     //            Editable Circle                  *
     //**********************************************
 
-
     struct EditableCircle : public Circle {
+
         KARABO_CLASSINFO(EditableCircle, "EditableCircle", "1.0");
 
         static void expectedParameters(karabo::util::Schema & expected) {
@@ -113,8 +113,8 @@ namespace configurationTest {
     //                 Rectangle                   *
     //**********************************************
 
-
     struct Rectangle : public Shape {
+
         KARABO_CLASSINFO(Rectangle, "Rectangle", "1.0");
 
         static void expectedParameters(karabo::util::Schema & expected) {
@@ -153,8 +153,8 @@ namespace configurationTest {
         }
     };
 
-
     struct GraphicsRenderer {
+
         KARABO_CLASSINFO(GraphicsRenderer, "GraphicsRenderer", "1.0")
         KARABO_CONFIGURATION_BASE_CLASS;
 
@@ -192,21 +192,28 @@ namespace configurationTest {
                     .appendNodesOfConfigurationBase<Shape > ()
                     .assignmentOptional().defaultValue("Rectangle")
                     .commit();
+
+            STRING_ELEMENT(expected).key("version")
+                    .displayedName("Version")
+                    .description("Version information")
+                    .readOnly()
+                    .initialValue("1.4.7")
+                    .commit();
         }
 
         GraphicsRenderer(const karabo::util::Hash & input) {
-            //std::cout << "*********** " << std::endl << input << std::endl;
+            //cout << input << endl;
             Shape::Pointer shape = Shape::createChoice("shapes", input);
-            //std::cout << "*********** " << shape->draw() << std::endl;
-            //if (input.has("shapes.Circle")) std::cout << "$$$$$$$$ 0000" << std::endl;
+            assert(input.get<string>("version") == "1.4.7");
+            if (input.has("shapes.Circle")) assert(shape->draw() == "Circle");
         }
 
         virtual ~GraphicsRenderer() {
         }
     };
 
-
     struct GraphicsRenderer1 {
+
         KARABO_CLASSINFO(GraphicsRenderer1, "GraphicsRenderer1", "1.0");
 
         static void expectedParameters(karabo::util::Schema & expected) {
@@ -274,8 +281,8 @@ namespace configurationTest {
         }
     };
 
-
     struct TestStruct1 {
+
         KARABO_CLASSINFO(TestStruct1, "TestStruct1", "1.0");
 
         static void expectedParameters(karabo::util::Schema & expected) {
@@ -330,6 +337,6 @@ namespace configurationTest {
                     .commit();
         }
     };
-            
+
 }
 #endif

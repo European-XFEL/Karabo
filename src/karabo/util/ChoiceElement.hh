@@ -30,7 +30,7 @@ namespace karabo {
         public:
 
             ChoiceElement(Schema& expected) : GenericElement<ChoiceElement>(expected) {
-                Schema::AssemblyRules m_parentSchemaAssemblyRules = expected.getAssemblyRules();
+                m_parentSchemaAssemblyRules = expected.getAssemblyRules();
                 m_defaultValue.setElement(this);
             }
 
@@ -89,10 +89,31 @@ namespace karabo {
                 return m_defaultValue;
             }
 
+            /**
+             * The <b>init</b> method serves for setting up an access type property that allows the element
+             * to be included in initial schema.
+             * @return reference to the Element (to allow method's chaining)
+             */
+            virtual ChoiceElement& init() {
+                this->m_node->setAttribute<int>(KARABO_SCHEMA_ACCESS_MODE, INIT);
+                return *this;
+            }
+
+            /**
+             * The <b>reconfigurable</b> method serves for setting up an access type property that allows the element
+             * to be included in initial, reconfiguration and monitoring schemas.
+             * @return reference to the Element (to allow method's chaining)
+             */
+            virtual ChoiceElement& reconfigurable() {
+                this->m_node->setAttribute<int>(KARABO_SCHEMA_ACCESS_MODE, WRITE);
+                return *this;
+            }
+
+
         protected:
 
             void beforeAddition() {
-                this->m_node->setAttribute<int>(KARABO_SCHEMA_ACCESS_MODE, READ | WRITE | INIT);
+                if (!this->m_node->hasAttribute(KARABO_SCHEMA_ACCESS_MODE)) this->m_node->setAttribute<int>(KARABO_SCHEMA_ACCESS_MODE, READ | WRITE | INIT);
                 this->m_node->setAttribute<int>(KARABO_SCHEMA_NODE_TYPE, Schema::CHOICE_OF_NODES);
             }
 

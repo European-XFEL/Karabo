@@ -11,21 +11,26 @@
 
 namespace karabo {
     namespace util {
-        
-        Validator::Validator() : m_injectDefaults(true), m_assumeRootedConfiguration(false), 
-                m_allowAdditionalKeys(false), m_allowMissingKeys(false) {
+
+
+        Validator::Validator() : m_injectDefaults(true), m_assumeRootedConfiguration(false),
+        m_allowAdditionalKeys(false), m_allowMissingKeys(false), m_injectTimestamps(false) {
         }
-        
+
+
         Validator::Validator(const ValidationRules rules) {
             this->setValidationRules(rules);
         }
-        
+
+
         void Validator::setValidationRules(const Validator::ValidationRules& rules) {
             m_injectDefaults = rules.injectDefaults;
             m_allowAdditionalKeys = rules.allowAdditionalKeys;
             m_allowMissingKeys = rules.allowMissingKeys;
             m_assumeRootedConfiguration = rules.allowUnrootedConfiguration;
+            m_injectTimestamps = rules.injectTimestamps;
         }
+
 
         Validator::ValidationRules Validator::getValidationRules() const {
             Validator::ValidationRules rules;
@@ -33,10 +38,20 @@ namespace karabo {
             rules.allowAdditionalKeys = m_allowAdditionalKeys;
             rules.allowMissingKeys = m_allowMissingKeys;
             rules.allowUnrootedConfiguration = m_assumeRootedConfiguration;
+            rules.injectTimestamps = m_injectTimestamps;
             return rules;
         }
 
-        std::pair<bool, std::string> Validator::validate(const Schema& schema, const Hash& unvalidatedInput, Hash& validatedOutput) const {
+
+        std::pair<bool, std::string> Validator::validate(const Schema& schema, const Hash& unvalidatedInput, Hash& validatedOutput, const Timestamp& timestamp) {
+
+            // Clear all previous warnings and alarms
+            m_parametersInWarnOrAlarm.clear();
+            
+            // Prepare timestamp if needed
+            if (m_injectTimestamps) {
+                m_timestamp = timestamp;
+            }
 
             // In case of failed validation, report why it failed
             ostringstream validationFailedReport;
@@ -68,7 +83,8 @@ namespace karabo {
             }
         }
 
-        void Validator::r_validate(const Hash& master, const Hash& user, Hash& working, std::ostringstream& report, std::string scope) const {
+
+        void Validator::r_validate(const Hash& master, const Hash& user, Hash& working, std::ostringstream& report, std::string scope) {
             std::set<std::string> keys;
             user.getKeys(keys);
 
@@ -89,9 +105,9 @@ namespace karabo {
                 if (userHasNode) keys.erase(key);
 
                 if (nodeType == Schema::LEAF) {
-                    
+
                     int assignment = it->getAttribute<int>(KARABO_SCHEMA_ASSIGNMENT);
-                    
+
                     if (!userHasNode) { // Node IS NOT provided
                         if (assignment == Schema::MANDATORY_PARAM) {
                             if (!m_allowMissingKeys) {
@@ -126,9 +142,9 @@ namespace karabo {
                         }
                     }
                 } else if (nodeType == Schema::CHOICE_OF_NODES) {
-                    
+
                     int assignment = it->getAttribute<int>(KARABO_SCHEMA_ASSIGNMENT);
-                    
+
                     if (!userHasNode) {
                         if (assignment == Schema::MANDATORY_PARAM) {
                             if (!m_allowMissingKeys) {
@@ -197,9 +213,9 @@ namespace karabo {
                         }
                     }
                 } else if (nodeType == Schema::LIST_OF_NODES) {
-                    
+
                     int assignment = it->getAttribute<int>(KARABO_SCHEMA_ASSIGNMENT);
-                    
+
                     if (!userHasNode) { // Node IS NOT provided
                         if (assignment == Schema::MANDATORY_PARAM) {
                             if (!m_allowMissingKeys) {
@@ -210,24 +226,26 @@ namespace karabo {
                             vector<string> optionNames = it->getAttributeAs<string, vector> (KARABO_SCHEMA_DEFAULT_VALUE);
                             Hash::Node& workNode = working.set(key, std::vector<Hash>()); // TODO use bindReference here
                             vector<Hash>& workNodes = workNode.getValue<vector<Hash> >();
+
+
                             BOOST_FOREACH(string optionName, optionNames) {
                                 Hash tmp;
                                 r_validate(it->getValue<Hash > ().get<Hash > (optionName), Hash(), tmp, report, currentScope + "." + optionName);
                                 workNodes.push_back(Hash(optionName, tmp));
                             }
                         }
-                    
+
                     } else { // Node IS provided
                         std::set<std::string> validOptions;
                         master.get<Hash > (key).getKeys(validOptions);
                         Hash::Node& workNode = working.set(key, std::vector<Hash>()); // TODO use bindReference here
                         vector<Hash>& workNodes = workNode.getValue<vector<Hash> >();
-                        
+
                         // If the options have all-default parameters the user lazily may have set the option as string instead of HASH
                         // We will allow for this and silently inject an empty Hashes instead
                         if (user.getType(key) == Types::VECTOR_STRING) {
                             const vector<string> optionNames(user.get<vector<string> >(key));
-                            int optionNamesSize = static_cast<int>(optionNames.size());
+                            int optionNamesSize = static_cast<int> (optionNames.size());
                             if (it->hasAttribute(KARABO_SCHEMA_MIN) && (optionNamesSize < it->getAttribute<int>(KARABO_SCHEMA_MIN))) {
                                 report << "Too less options given for (list-)parameter: \"" << key << "\". Expecting at least " << it->getAttribute<int>(KARABO_SCHEMA_MIN);
                                 return;
@@ -236,7 +254,8 @@ namespace karabo {
                                 report << "Too many options given for (list-)parameter: \"" << key << "\". Expecting at most " << it->getAttribute<int>(KARABO_SCHEMA_MAX);
                                 return;
                             }
-                            
+
+
                             BOOST_FOREACH(string optionName, optionNames) {
                                 cout << "Silently converting from STRING" << endl;
                                 if (validOptions.find(optionName) != validOptions.end()) { // Is a valid option
@@ -255,7 +274,7 @@ namespace karabo {
                         } else {
 
                             const vector<Hash>& userOptions = user.get<vector<Hash> > (key);
-                             int optionNamesSize = static_cast<int>(userOptions.size());
+                            int optionNamesSize = static_cast<int> (userOptions.size());
                             if (it->hasAttribute(KARABO_SCHEMA_MIN) && (optionNamesSize < it->getAttribute<int>(KARABO_SCHEMA_MIN))) {
                                 report << "Too less options given for (list-)parameter: \"" << key << "\". Expecting at least " << it->getAttribute<int>(KARABO_SCHEMA_MIN);
                                 report << "Valid options are: " << karabo::util::toString(validOptions) << endl;
@@ -266,7 +285,7 @@ namespace karabo {
                                 report << "Valid options are: " << karabo::util::toString(validOptions) << endl;
                                 return;
                             }
-                            
+
                             // That is what we expect it should be
                             for (size_t i = 0; i < userOptions.size(); ++i) {
                                 const Hash& option = userOptions[i];
@@ -280,15 +299,16 @@ namespace karabo {
                                     report << "Provided parameter: \"" << optionName << "\" is not a valid option for list: \"" << key << "\". ";
                                     report << "Valid options are: " << karabo::util::toString(validOptions) << endl;
                                     return;
-                                    
+
                                 }
                             }
                         }
                     }
                 }
             }
-            
+
             if (!m_allowAdditionalKeys && !keys.empty()) {
+
 
                 BOOST_FOREACH(string key, keys) {
                     string currentScope;
@@ -298,27 +318,32 @@ namespace karabo {
                 }
             }
         }
-        
-        void Validator::validateLeaf(const Hash::Node& masterNode, Hash::Node& workNode, std::ostringstream& report, std::string scope) const {
-            
+
+
+        void Validator::validateLeaf(const Hash::Node& masterNode, Hash::Node& workNode, std::ostringstream& report, std::string scope) {
+
+
+            if (m_injectTimestamps) {
+                if (!workNode.hasAttribute("msSinceEpoch")) workNode.setAttribute("msSinceEpoch", m_timestamp.getAsMsSinceEpoch());
+            }
             
             Types::ReferenceType referenceType = Types::from<FromLiteral>(masterNode.getAttribute<string>(KARABO_SCHEMA_VALUE_TYPE));
             Types::ReferenceType referenceCategory = Types::category(referenceType);
             Types::ReferenceType givenType = workNode.getType();
-            
+
             // Check data types
             if (givenType != referenceType) {
                 // Try casting this guy
                 try {
                     workNode.setType(referenceType);
                 } catch (const CastException& e) {
-                     report << "Failed to cast the value of parameter \"" << scope << "\" from " << Types::to<ToLiteral>(givenType);
-                     report << " to " << Types::to<ToLiteral>(referenceType) << endl;
-                     Exception::clearTrace(); // Do not show all the bloody details
-                     return;
+                    report << "Failed to cast the value of parameter \"" << scope << "\" from " << Types::to<ToLiteral>(givenType);
+                    report << " to " << Types::to<ToLiteral>(referenceType) << endl;
+                    Exception::clearTrace(); // Do not show all the bloody details
+                    return;
                 }
             }
-            
+
             // Check ranges
             if (referenceCategory == Types::SIMPLE) {
                 if (masterNode.hasAttribute(KARABO_SCHEMA_OPTIONS)) {
@@ -328,7 +353,7 @@ namespace karabo {
                         report << "Value " << workNode.getValueAs<string>() << " for parameter \"" << scope << "\" is not one of the valid options: " << karabo::util::toString(options) << endl;
                     }
                 }
-                
+
                 if (masterNode.hasAttribute(KARABO_SCHEMA_MIN_EXC)) {
                     double minExc = masterNode.getAttributeAs<double>(KARABO_SCHEMA_MIN_EXC);
                     double value = workNode.getValueAs<double>();
@@ -336,7 +361,7 @@ namespace karabo {
                         report << "Value " << value << " for parameter \"" << scope << "\" is out of lower bound " << minExc << endl;
                     }
                 }
-                
+
                 if (masterNode.hasAttribute(KARABO_SCHEMA_MIN_INC)) {
                     double minInc = masterNode.getAttributeAs<double>(KARABO_SCHEMA_MIN_INC);
                     double value = workNode.getValueAs<double>();
@@ -344,7 +369,7 @@ namespace karabo {
                         report << "Value " << value << " for parameter \"" << scope << "\" is out of lower bound " << minInc << endl;
                     }
                 }
-                
+
                 if (masterNode.hasAttribute(KARABO_SCHEMA_MAX_EXC)) {
                     double maxExc = masterNode.getAttributeAs<double>(KARABO_SCHEMA_MAX_EXC);
                     double value = workNode.getValueAs<double>();
@@ -352,7 +377,7 @@ namespace karabo {
                         report << "Value " << value << " for parameter \"" << scope << "\" is out of upper bound " << maxExc << endl;
                     }
                 }
-                
+
                 if (masterNode.hasAttribute(KARABO_SCHEMA_MAX_INC)) {
                     double maxInc = masterNode.getAttributeAs<double>(KARABO_SCHEMA_MAX_INC);
                     double value = workNode.getValueAs<double>();
@@ -360,27 +385,73 @@ namespace karabo {
                         report << "Value " << value << " for parameter \"" << scope << "\" is out of upper bound " << maxInc << endl;
                     }
                 }
+
+                if (masterNode.hasAttribute(KARABO_SCHEMA_WARN_LOW)) {
+                    double threshold = masterNode.getAttributeAs<double>(KARABO_SCHEMA_WARN_LOW);
+                    double value = workNode.getValueAs<double>();
+                    if (value < threshold) {
+                        string msg("Value " + workNode.getValueAs<string>() + " of parameter \"" + scope + "\" went below warn level of " + karabo::util::toString(threshold));
+                        m_parametersInWarnOrAlarm.set(scope, Hash("type", "WARN_LOW", "message", msg), '\0');
+                    }
+                }
+
+                if (masterNode.hasAttribute(KARABO_SCHEMA_WARN_HIGH)) {
+                    double threshold = masterNode.getAttributeAs<double>(KARABO_SCHEMA_WARN_HIGH);
+                    double value = workNode.getValueAs<double>();
+                    if (value > threshold) {
+                        string msg("Value " + workNode.getValueAs<string>() + " of parameter \"" + scope + "\" went above warn level of " + karabo::util::toString(threshold));
+                        m_parametersInWarnOrAlarm.set(scope, Hash("type", "WARN_HIGH", "message", msg), '\0');
+                    }
+                }
+
+                if (masterNode.hasAttribute(KARABO_SCHEMA_ALARM_LOW)) {
+                    double threshold = masterNode.getAttributeAs<double>(KARABO_SCHEMA_ALARM_LOW);
+                    double value = workNode.getValueAs<double>();
+                    if (value < threshold) {
+                        string msg("Value " + workNode.getValueAs<string>() + " of parameter \"" + scope + "\" went below alarm level of " + karabo::util::toString(threshold));
+                        m_parametersInWarnOrAlarm.set(scope, Hash("type", "ALARM_LOW", "message", msg), '\0');
+                    }
+                }
+
+                if (masterNode.hasAttribute(KARABO_SCHEMA_ALARM_HIGH)) {
+                    double threshold = masterNode.getAttributeAs<double>(KARABO_SCHEMA_ALARM_HIGH);
+                    double value = workNode.getValueAs<double>();
+                    if (value > threshold) {
+                        string msg("Value " + workNode.getValueAs<string>() + " of parameter \"" + scope + "\" went above alarm level of " + karabo::util::toString(threshold));
+                        m_parametersInWarnOrAlarm.set(scope, Hash("type", "ALARM_HIGH", "message", msg), '\0');
+                    }
+                }
+
+                //if (masterNode.hasAttribute(""))
             } else if (referenceCategory == Types::SEQUENCE) {
                 int currentSize = workNode.getValueAs<string, vector>().size();
-                
+
                 // TODO Check whether we are really going to validate inner elements of a vector for max/min..., maybe not.
-                
+
                 if (masterNode.hasAttribute(KARABO_SCHEMA_MIN_SIZE)) {
                     int minSize = masterNode.getAttribute<int>(KARABO_SCHEMA_MIN_SIZE);
                     if (currentSize < minSize) {
                         report << "Number of elements (" << currentSize << " for (vector-)parameter \"" << scope << "\" is smaller than lower bound (" << minSize << ")" << endl;
                     }
                 }
-                
+
                 if (masterNode.hasAttribute(KARABO_SCHEMA_MAX_SIZE)) {
                     int maxSize = masterNode.getAttribute<int>(KARABO_SCHEMA_MAX_SIZE);
                     if (currentSize > maxSize) {
                         report << "Number of elements (" << currentSize << " for (vector-)parameter \"" << scope << "\" is greater than upper bound (" << maxSize << ")" << endl;
                     }
                 }
-               
-                
             }
+        }
+
+
+        bool Validator::hasParametersInWarnOrAlarm() const {
+            return !m_parametersInWarnOrAlarm.empty();
+        }
+
+
+        const Hash& Validator::getParametersInWarnOrAlarm() const {
+            return m_parametersInWarnOrAlarm;
         }
     }
 }

@@ -156,18 +156,18 @@ namespace karabo {
             }
 
             void onTcpConnect(TcpChannelPointer channel) {
-                KARABO_LOG_DEBUG << "Connection established";
+                KARABO_LOG_FRAMEWORK_DEBUG << "Connection established";
                 channel->setErrorHandler(boost::bind(&karabo::xms::NetworkOutput<T>::onTcpChannelError, this, _1, _2));
                 channel->readAsyncHash(boost::bind(&karabo::xms::NetworkOutput<T>::onTcpChannelRead, this, _1, _2));
                 m_dataConnection->startAsync(boost::bind(&karabo::xms::NetworkOutput<T>::onTcpConnect, this, _1));
             }
 
             void onTcpConnectionError(TcpChannelPointer, const karabo::net::ErrorCode& error) {
-                KARABO_LOG_ERROR << error.message();
+                KARABO_LOG_FRAMEWORK_ERROR << error.message();
             }
 
             void onTcpChannelError(TcpChannelPointer, const karabo::net::ErrorCode& error) {
-                KARABO_LOG_ERROR << error.message();
+                KARABO_LOG_FRAMEWORK_ERROR << error.message();
             }
 
             void onTcpChannelRead(TcpChannelPointer channel, const karabo::util::Hash& message) {
@@ -189,13 +189,13 @@ namespace karabo {
                         info.set("tcpChannel", channel);
 
                         if (dataDistribution == "shared") {
-                            KARABO_LOG_DEBUG << "Registering shared-input channel of instance: " << instanceId;
+                            KARABO_LOG_FRAMEWORK_DEBUG << "Registering shared-input channel of instance: " << instanceId;
                             m_sharedInputs.set(instanceId, info);
                         } else {
-                            KARABO_LOG_DEBUG << "Registering copy-input channel of instance: " << instanceId;
+                            KARABO_LOG_FRAMEWORK_DEBUG << "Registering copy-input channel of instance: " << instanceId;
                             m_copiedInputs.set(instanceId, info);
                         }
-                        KARABO_LOG_DEBUG << "With meta-data: " << info;
+                        KARABO_LOG_FRAMEWORK_DEBUG << "With meta-data: " << info;
 
                         onInputAvailable(instanceId); // Immediately register for reading
                     }
@@ -203,7 +203,7 @@ namespace karabo {
 
                     if (message.has("instanceId")) {
                         std::string instanceId = message.get<std::string > ("instanceId");
-                        KARABO_LOG_DEBUG << "InstanceId " << instanceId << " has updated...";
+                        KARABO_LOG_FRAMEWORK_DEBUG << "InstanceId " << instanceId << " has updated...";
                         onInputAvailable(instanceId);
                     }
 
@@ -216,7 +216,7 @@ namespace karabo {
                 if (m_sharedInputs.has(instanceId)) {
                     InputChannelInfo channelInfo = m_sharedInputs.get<karabo::util::Hash > (instanceId);
                     pushShareNext(channelInfo);
-                    KARABO_LOG_DEBUG << "OUTPUT: New (shared) input on instance " << instanceId << " available for writing ";
+                    KARABO_LOG_FRAMEWORK_DEBUG << "OUTPUT: New (shared) input on instance " << instanceId << " available for writing ";
                     if (m_finishedSharedChunkIds.size() > 0) {
                         //this->autoDistributeQueue();
                         return;
@@ -224,9 +224,9 @@ namespace karabo {
                 } else if (m_copiedInputs.has(instanceId)) {
                     InputChannelInfo channelInfo = m_copiedInputs.get<karabo::util::Hash > (instanceId);
                     pushCopyNext(channelInfo);
-                    KARABO_LOG_DEBUG << "OUTPUT: New (copied) input on instance " << instanceId << " available for writing ";
+                    KARABO_LOG_FRAMEWORK_DEBUG << "OUTPUT: New (copied) input on instance " << instanceId << " available for writing ";
                 } else {
-                    KARABO_LOG_DEBUG << "OUTPUT: LOW-LEVEL-DEBUG An input channel wants to connect, that was not registered before.";
+                    KARABO_LOG_FRAMEWORK_DEBUG << "OUTPUT: LOW-LEVEL-DEBUG An input channel wants to connect, that was not registered before.";
                 }
                 this->template triggerIOEvent<karabo::io::Output<T> >();
             }
@@ -269,7 +269,7 @@ namespace karabo {
 
             void autoDistributeQueue() {
                 boost::mutex::scoped_lock lock(m_nextInputMutex);
-                KARABO_LOG_DEBUG << "OUTPUT: Auto-distributing queued data";
+                KARABO_LOG_FRAMEWORK_DEBUG << "OUTPUT: Auto-distributing queued data";
                 unsigned int chunkId = popSharedChunkId();
                 InputChannelInfo channelInfo = popShareNext();
                 if (channelInfo.get<std::string > ("memoryLocation") == "local") {
@@ -281,7 +281,7 @@ namespace karabo {
 
             void update() {
 
-                KARABO_LOG_DEBUG << "OUTPUT: update";
+                KARABO_LOG_FRAMEWORK_DEBUG << "OUTPUT: update";
 
                 // Distribute chunk(s)
                 distribute();
@@ -299,7 +299,7 @@ namespace karabo {
                 if (goOn) {
                     boost::mutex::scoped_lock lock(m_nextInputMutex);
 
-                    KARABO_LOG_DEBUG << "OUTPUT: finishedChunks " << m_finishedSharedChunkIds.size() << " shareNext " << m_shareNext.size();
+                    KARABO_LOG_FRAMEWORK_DEBUG << "OUTPUT: finishedChunks " << m_finishedSharedChunkIds.size() << " shareNext " << m_shareNext.size();
                     while (!m_finishedSharedChunkIds.empty() && !m_shareNext.empty()) {
 
                         unsigned int chunkId = popSharedChunkId();
@@ -383,8 +383,8 @@ namespace karabo {
 
                 registerAsyncWrite(tcpChannel, chunkId);
                 const std::pair< std::vector<char>, karabo::util::Hash>& entry = getAsyncWriteData(chunkId);
-                KARABO_LOG_DEBUG << "OUTPUT: Going to distribute " << entry.first.size() << " bytes of data";
-                KARABO_LOG_DEBUG << "OUTPUT: With header: " << entry.second;
+                KARABO_LOG_FRAMEWORK_DEBUG << "OUTPUT: Going to distribute " << entry.first.size() << " bytes of data";
+                KARABO_LOG_FRAMEWORK_DEBUG << "OUTPUT: With header: " << entry.second;
                 tcpChannel->writeAsyncHashVector(entry.second, entry.first, boost::bind(&karabo::xms::NetworkOutput<T>::onWriteCompleted, this, _1));
                 //m_activeTcpChannel->write(entry.first, entry.second);
 

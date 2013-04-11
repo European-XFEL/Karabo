@@ -15,7 +15,7 @@
 #include <karabo/io/h5/Scalar.hh>
 #include <karabo/io/h5/ioProfiler.hh>
 
-#include <karabo/log/Tracer.hh>
+//#include <karabo/log/Tracer.hh>
 
 using namespace karabo::util;
 using namespace karabo::io::h5;
@@ -27,11 +27,11 @@ CPPUNIT_TEST_SUITE_REGISTRATION(H5File_Test);
 
 H5File_Test::H5File_Test() {
     
-    karabo::log::Tracer tr;
-    tr.disableAll();
-    tr.enable("karabo.io.h5.Table.open");
-    tr.enable("karabo.io.h5.Table");
-    tr.reconfigure();
+//    karabo::log::Tracer tr;
+//    tr.disableAll();
+//    tr.enable("karabo.io.h5.Table.open");
+//    tr.enable("karabo.io.h5.Table");
+//    tr.reconfigure();
     
     
     m_numberOfRecords = 512;
@@ -295,7 +295,7 @@ void H5File_Test::testRead() {
         // get number of records in the file
         size_t nRecords = table->getNumberOfRecords();
  
-        KARABO_LOG_TRACE << "number of records: " << nRecords;
+        KARABO_LOG_FRAMEWORK_TRACE << "number of records: " << nRecords;
         CPPUNIT_ASSERT(nRecords == m_numberOfRecords);
   
 
@@ -303,7 +303,7 @@ void H5File_Test::testRead() {
         // read first record
         table->read(0);
 
-         KARABO_LOG_TRACE << "after reading: " << endl;
+         KARABO_LOG_FRAMEWORK_TRACE << "after reading: " << endl;
         
         // assert values
         CPPUNIT_ASSERT(bla == 1006);
@@ -324,13 +324,13 @@ void H5File_Test::testRead() {
         }
         //        clog << endl;
 
-        KARABO_LOG_TRACE << "string reference value: abc, actual value: " << data.get<string>("c");
+        KARABO_LOG_FRAMEWORK_TRACE << "string reference value: abc, actual value: " << data.get<string>("c");
         CPPUNIT_ASSERT(data.get<string>("c") == "abc");
 
         //vector<string>& strings = data.get<vector<string> >("strings");
 
         for (size_t i = 0; i < stringsDims.size(); ++i) {
-            KARABO_LOG_TRACE << "strings[" << i << "] = " << strings[i];
+            KARABO_LOG_FRAMEWORK_TRACE << "strings[" << i << "] = " << strings[i];
         }
 
 

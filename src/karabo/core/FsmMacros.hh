@@ -138,10 +138,10 @@ namespace karabo {
  * @param Logstream The logstream that is returned AFTER the prefix is applied
  * @param prefix Any prefix that should be prepended to a log event
  */
-#define KARABO_FSM_LOGGER(logFunction, LogStream, prefix) \
+#define KARABO_FSM_LOGGER(logger) \
 template <class Fsm> \
-static LogStream _log(const Fsm& fsm) { \
-    return fsm.getContext()->logFunction() << prefix; \
+static log4cpp::CategoryStream _log(const Fsm& fsm) { \
+    return KARABO_LOG_FRAMEWORK_DEBUG; \
 }
 
 #define KARABO_FSM_TABLE_BEGIN(tableName) struct tableName : boost::mpl::vector< 
@@ -167,7 +167,6 @@ static void _onError(const Fsm& fsm, const std::string& userFriendlyMsg = "Unkno
 
 // Produces a static function that calls stateChangeFunction of the state machine's context
 #define KARABO_FSM_ON_CURRENT_STATE_CHANGE(stateChangeFunction) \
-virtual void stateChangeFunction(const std::string& currentState); \
 template <class Fsm> \
 static void _updateCurrentState(Fsm& fsm, bool isGoingToChange = false) { \
     if (isGoingToChange) fsm.getContext()->stateChangeFunction("Changing..."); \
