@@ -46,7 +46,7 @@ namespace karabo {
                 {
                     m_dims = karabo::util::Dims(input.get<std::vector<unsigned long long> >("dims"));
                     m_memoryDataSpace1 = Dataset::dataSpace(m_dims);
-                    KARABO_LOG_TRACE << "constructor FixedLengthArray";
+                    KARABO_LOG_FRAMEWORK_TRACE << "constructor FixedLengthArray";
                 }
 
                 virtual ~FixedLengthArray() {
@@ -239,10 +239,10 @@ namespace karabo {
 
                 void read(hsize_t recordId) {
                     try {
-                        KARABO_LOG_TRACE << "entering read array";
+                        KARABO_LOG_FRAMEWORK_TRACE << "entering read array";
                         m_fileDataSpace = Dataset::selectRecord(m_fileDataSpace, recordId);
                         ScalarReader<T>::read(m_readData, m_dataSet, m_memoryDataSpace1, m_fileDataSpace);
-                        KARABO_LOG_TRACE << "read array m_readData=" << m_readData;
+                        KARABO_LOG_FRAMEWORK_TRACE << "read array m_readData=" << m_readData;
                     } catch (karabo::util::Exception &e) {
                         KARABO_RETHROW_AS(KARABO_PROPAGATED_EXCEPTION("Could not read " + m_h5PathName + " dataset"));
                     }

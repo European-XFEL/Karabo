@@ -37,7 +37,7 @@ namespace karabo {
 
                 static void read(T* value, hid_t dataSet, hid_t memoryDataSpace, hid_t fileDataSpace) {
 
-                    KARABO_LOG_TRACE << "enter read T*";
+                    KARABO_LOG_FRAMEWORK_TRACE << "enter read T*";
                     KARABO_CHECK_HDF5_STATUS(
                                              H5Dread(dataSet, ScalarTypes::getHdf5NativeType<T > (), memoryDataSpace, fileDataSpace, H5P_DEFAULT, value)
                                              );
@@ -45,7 +45,7 @@ namespace karabo {
 
                 static void read(std::vector<T>& value, hid_t dataSet, hid_t memoryDataSpace, hid_t fileDataSpace) {
 
-                    KARABO_LOG_TRACE << "enter read vector<T>";
+                    KARABO_LOG_FRAMEWORK_TRACE << "enter read vector<T>";
                     KARABO_CHECK_HDF5_STATUS(
                                              H5Dread(dataSet, ScalarTypes::getHdf5NativeType<T > (), memoryDataSpace, fileDataSpace, H5P_DEFAULT, &value[0])
                                              );
@@ -90,7 +90,7 @@ namespace karabo {
 
                 static void read(std::string* value, hid_t dataSet, hid_t memoryDataSpace, hid_t fileDataSpace) {
 
-                    KARABO_LOG_TRACE << "enter read string*";
+                    KARABO_LOG_FRAMEWORK_TRACE << "enter read string*";
                     char* ptr[1];
                     KARABO_CHECK_HDF5_STATUS(
                                              H5Dread(dataSet, ScalarTypes::getHdf5NativeType<std::string> (), memoryDataSpace, fileDataSpace, H5P_DEFAULT, ptr)
@@ -100,7 +100,7 @@ namespace karabo {
 
                 static void read(boost::shared_ptr< ScalarReader<std::string>::Mapping > ptrMap, hid_t dataSet, hid_t memoryDataSpace, hid_t fileDataSpace) {
 
-                    KARABO_LOG_TRACE << "vector size: ";
+                    KARABO_LOG_FRAMEWORK_TRACE << "vector size: ";
 
                     ptrMap->m_ch.resize(ptrMap->m_len);
                     char** chPtr = &(ptrMap->m_ch[0]);
@@ -161,7 +161,7 @@ namespace karabo {
 
                 static void read(bool* value, hid_t dataSet, hid_t memoryDataSpace, hid_t fileDataSpace) {
 
-                    KARABO_LOG_TRACE << "enter read bool*";
+                    KARABO_LOG_FRAMEWORK_TRACE << "enter read bool*";
                     unsigned char tmp;
                     KARABO_CHECK_HDF5_STATUS(
                                              H5Dread(dataSet, ScalarTypes::getHdf5NativeType<bool > (), memoryDataSpace, fileDataSpace, H5P_DEFAULT, &tmp)
@@ -171,7 +171,7 @@ namespace karabo {
 
                 static void read(boost::shared_ptr< ScalarReader<bool>::Mapping > ptrMap, hid_t dataSet, hid_t memoryDataSpace, hid_t fileDataSpace) {
 
-                    KARABO_LOG_TRACE << "enter read boost::shared_ptr< ScalarReader<bool>::Mapping >";
+                    KARABO_LOG_FRAMEWORK_TRACE << "enter read boost::shared_ptr< ScalarReader<bool>::Mapping >";
                     ptrMap->m_uch.resize(ptrMap->m_len);
                     unsigned char* uchPtr = &(ptrMap->m_uch[0]);
 

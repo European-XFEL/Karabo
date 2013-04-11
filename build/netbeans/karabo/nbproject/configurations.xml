@@ -1,6 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configurationDescriptor version="88">
   <logicalFolder name="root" displayName="root" projectFiles="true" kind="ROOT">
+    <logicalFolder name="f7" displayName="core" projectFiles="true" kind="ROOT">
+      <itemPath>../../../src/karabo/core/Device.cc</itemPath>
+      <itemPath>../../../src/karabo/core/Device.hh</itemPath>
+      <itemPath>../../../src/karabo/core/DeviceClient.cc</itemPath>
+      <itemPath>../../../src/karabo/core/DeviceClient.hh</itemPath>
+      <itemPath>../../../src/karabo/core/FsmBase.hh</itemPath>
+      <itemPath>../../../src/karabo/core/OkErrorFsm.hh</itemPath>
+    </logicalFolder>
     <logicalFolder name="f2" displayName="io" projectFiles="true">
       <logicalFolder name="f1" displayName="h5" projectFiles="true">
         <itemPath>../../../src/karabo/io/h5/Attribute.cc</itemPath>
@@ -34,6 +42,7 @@
         <itemPath>../../../src/karabo/io/h5/TypeTraits.cc</itemPath>
         <itemPath>../../../src/karabo/io/h5/TypeTraits.hh</itemPath>
         <itemPath>../../../src/karabo/io/h5/ioProfiler.hh</itemPath>
+        <itemPath>../../../src/karabo/io/h5/ioTracer.hh</itemPath>
       </logicalFolder>
       <logicalFolder name="f3" displayName="Input" projectFiles="true">
         <itemPath>../../../src/karabo/io/AbstractInput.hh</itemPath>
@@ -80,7 +89,6 @@
       </logicalFolder>
       <itemPath>../../../src/karabo/log/Logger.cc</itemPath>
       <itemPath>../../../src/karabo/log/Logger.hh</itemPath>
-      <itemPath>../../../src/karabo/log/Tracer.hh</itemPath>
     </logicalFolder>
     <logicalFolder name="f5" displayName="net" projectFiles="true">
       <logicalFolder name="f4" displayName="Broker" projectFiles="true">
@@ -352,6 +360,20 @@
         <packFileList>
         </packFileList>
       </packaging>
+      <item path="../../../src/karabo/core/Device.cc" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="../../../src/karabo/core/Device.hh" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../../../src/karabo/core/FsmBase.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/core/OkErrorFsm.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="../../../src/karabo/io/AbstractInput.hh"
             ex="false"
             tool="3"
@@ -588,6 +610,11 @@
             tool="3"
             flavor2="0">
       </item>
+      <item path="../../../src/karabo/io/h5/ioTracer.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="../../../src/karabo/log/AppenderConfigurator.cc"
             ex="false"
             tool="1"
@@ -641,8 +668,6 @@
             ex="false"
             tool="3"
             flavor2="0">
-      </item>
-      <item path="../../../src/karabo/log/Tracer.hh" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../../../src/karabo/net/AbstractIOService.hh"
             ex="false"
@@ -1402,6 +1427,20 @@
         <packFileList>
         </packFileList>
       </packaging>
+      <item path="../../../src/karabo/core/Device.cc" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="../../../src/karabo/core/Device.hh" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../../../src/karabo/core/FsmBase.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/core/OkErrorFsm.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="../../../src/karabo/io/AbstractInput.hh"
             ex="false"
             tool="3"
@@ -1638,6 +1677,11 @@
             tool="3"
             flavor2="0">
       </item>
+      <item path="../../../src/karabo/io/h5/ioTracer.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="../../../src/karabo/log/AppenderConfigurator.cc"
             ex="false"
             tool="1"
@@ -1691,8 +1735,6 @@
             ex="false"
             tool="3"
             flavor2="0">
-      </item>
-      <item path="../../../src/karabo/log/Tracer.hh" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../../../src/karabo/net/AbstractIOService.hh"
             ex="false"

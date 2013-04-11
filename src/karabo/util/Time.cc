@@ -23,6 +23,7 @@ namespace karabo {
         using namespace boost::gregorian;
 
         ptime Time::m_epoch = ptime(date(1970, 1, 1));
+        ptime Timestamp::m_epoch = ptime(date(1970, 1, 1));
 
 
         unsigned long long Time::getMsSinceEpoch() {

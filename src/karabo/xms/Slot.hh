@@ -43,9 +43,9 @@ namespace karabo {
 
             void handlePossibleReply(const karabo::util::Hash& header);
             
-            void startSlotProcessing();
+            //void startSlotProcessing();
             
-            void stopSlotProcessing();
+            //void stopSlotProcessing();
 
             template <class T>
             const T& getAndCast(const std::string& key, const karabo::util::Hash& hash) const {
@@ -85,12 +85,12 @@ namespace karabo {
         private:
 
             void callRegisteredSlotFunctions(karabo::net::BrokerChannel::Pointer /*channel*/, const karabo::util::Hash& body, const karabo::util::Hash& header) {
-                startSlotProcessing();
+                //startSlotProcessing();
                 for (size_t i = 0; i < m_slotHandlers.size(); ++i) {
                     m_slotHandlers[i]();
                     handlePossibleReply(header);
                 }
-                stopSlotProcessing();
+                //stopSlotProcessing();
             }
 
             std::vector<SlotHandler> m_slotHandlers;
@@ -120,17 +120,17 @@ namespace karabo {
 
             void callRegisteredSlotFunctions(karabo::net::BrokerChannel::Pointer /*channel*/, const karabo::util::Hash& body, const karabo::util::Hash& header) {
                 try {
-                    startSlotProcessing();
+                    //startSlotProcessing();
                     const A1& a1 = getAndCast<A1>("a1", body);
                     for (size_t i = 0; i < m_slotHandlers.size(); ++i) {
                         m_slotHandlers[i](a1);
                         handlePossibleReply(header);
                     }
-                    stopSlotProcessing();
+                    //stopSlotProcessing();
                 } catch (const karabo::util::CastException& e) {
                     karabo::util::Exception::addToTrace(e);
                     std::cout << KARABO_SIGNALSLOT_EXCEPTION("Received incompatible argument (see above) for slot \"" + m_slotFunction + "\". Check your connection!") << std::endl;
-                    stopSlotProcessing();
+                    //stopSlotProcessing();
                 }
             }
 
@@ -161,18 +161,18 @@ namespace karabo {
 
             void callRegisteredSlotFunctions(karabo::net::BrokerChannel::Pointer /*channel*/, const karabo::util::Hash& body, const karabo::util::Hash& header) {
                 try {
-                    startSlotProcessing();
+                   // startSlotProcessing();
                     const A1& a1 = getAndCast<A1>("a1", body);
                     const A2& a2 = getAndCast<A2>("a2", body);
                     for (size_t i = 0; i < m_slotHandlers.size(); ++i) {
                         m_slotHandlers[i](a1, a2);
                         handlePossibleReply(header);
                     }
-                    stopSlotProcessing();
+                   // stopSlotProcessing();
                 } catch (const karabo::util::CastException& e) {
                     karabo::util::Exception::addToTrace(e);
                     std::cout << KARABO_SIGNALSLOT_EXCEPTION("Received incompatible arguments (see above) for slot \"" + m_slotFunction + "\". Check your connection!") << std::endl;
-                    stopSlotProcessing();
+                   // stopSlotProcessing();
                 }
             }
 
@@ -203,7 +203,7 @@ namespace karabo {
 
             void callRegisteredSlotFunctions(karabo::net::BrokerChannel::Pointer /*channel*/, const karabo::util::Hash& body, const karabo::util::Hash& header) {
                 try {
-                    startSlotProcessing();
+                   // startSlotProcessing();
                     const A1& a1 = getAndCast<A1 > ("a1", body);
                     const A2& a2 = getAndCast<A2 > ("a2", body);
                     const A3& a3 = getAndCast<A3 > ("a3", body);
@@ -211,11 +211,11 @@ namespace karabo {
                         m_slotHandlers[i](a1, a2, a3);
                         handlePossibleReply(header);
                     }
-                    stopSlotProcessing();
+                   // stopSlotProcessing();
                 } catch (const karabo::util::CastException& e) {
                     karabo::util::Exception::addToTrace(e);
                     std::cout << KARABO_SIGNALSLOT_EXCEPTION("Received incompatible arguments (see above) for slot \"" + m_slotFunction + "\". Check your connection!") << std::endl;
-                    stopSlotProcessing();
+                   // stopSlotProcessing();
                 }
             }
 
@@ -246,7 +246,7 @@ namespace karabo {
 
             void callRegisteredSlotFunctions(karabo::net::BrokerChannel::Pointer /*channel*/, const karabo::util::Hash& body, const karabo::util::Hash& header) {
                 try {
-                    startSlotProcessing();
+                   // startSlotProcessing();
                     const A1& a1 = getAndCast<A1 > ("a1", body);
                     const A2& a2 = getAndCast<A2 > ("a2", body);
                     const A3& a3 = getAndCast<A3 > ("a3", body);
@@ -255,11 +255,11 @@ namespace karabo {
                         m_slotHandlers[i](a1, a2, a3, a4);
                         handlePossibleReply(header);
                     }
-                    stopSlotProcessing();
+                    //stopSlotProcessing();
                 } catch (const karabo::util::CastException& e) {
                     karabo::util::Exception::addToTrace(e);
                     std::cout << KARABO_SIGNALSLOT_EXCEPTION("Received incompatible arguments (see above) for slot \"" + m_slotFunction + "\". Check your connection!") << std::endl;
-                    stopSlotProcessing();
+                    //stopSlotProcessing();
                 }
             }
             std::vector<SlotHandler> m_slotHandlers;

@@ -22,7 +22,6 @@
 #include "StringTools.hh"
 #include "ToLiteral.hh"
 #include "Units.hh"
-#include "SchemaAttributeDefinition.hh"
 
 #include "karaboDll.hh"
 
@@ -73,6 +72,55 @@ namespace karabo {
          */
         class KARABO_DECLSPEC Schema {
 
+            #define KARABO_SCHEMA_NODE_TYPE "nodeType"
+            #define KARABO_SCHEMA_LEAF_TYPE "leafType"
+            #define KARABO_SCHEMA_VALUE_TYPE "valueType"
+            #define KARABO_SCHEMA_CLASS_ID "classId"
+
+            #define KARABO_SCHEMA_DISPLAYED_NAME "displayedName"
+            #define KARABO_SCHEMA_DESCRIPTION "description"
+            #define KARABO_SCHEMA_DEFAULT_VALUE "defaultValue"
+            #define KARABO_SCHEMA_DISPLAY_TYPE "displayType"
+
+            #define KARABO_SCHEMA_ACCESS_MODE "accessMode"
+            #define KARABO_SCHEMA_ALIAS "alias"
+            #define KARABO_SCHEMA_ADVANCED "advanced"
+            #define KARABO_SCHEMA_ALLOWED_STATES "allowedStates"
+            #define KARABO_SCHEMA_ALLOWED_ROLES "allowedRoles"
+            #define KARABO_SCHEMA_ASSIGNMENT "assignment"
+            #define KARABO_SCHEMA_TAGS "tags"
+
+            #define KARABO_SCHEMA_OPTIONS "options"
+            #define KARABO_SCHEMA_EXPERT_LEVEL "expertLevel"
+
+            #define KARABO_SCHEMA_UNIT_ENUM "unitEnum"
+            #define KARABO_SCHEMA_UNIT_NAME "unitName"
+            #define KARABO_SCHEMA_UNIT_SYMBOL "unitSymbol"
+
+            #define KARABO_SCHEMA_METRIC_PREFIX_ENUM "metricPrefixEnum"
+            #define KARABO_SCHEMA_METRIC_PREFIX_NAME "metricPrefixName"
+            #define KARABO_SCHEMA_METRIC_PREFIX_SYMBOL "metricPrefixSymbol"
+
+            #define KARABO_SCHEMA_MIN_INC "minInc"
+            #define KARABO_SCHEMA_MAX_INC "maxInc"
+            #define KARABO_SCHEMA_MIN_EXC "minExc"
+            #define KARABO_SCHEMA_MAX_EXC "maxExc"
+
+            #define KARABO_SCHEMA_MIN_SIZE "minSize"
+            #define KARABO_SCHEMA_MAX_SIZE "maxSize"
+
+            #define KARABO_SCHEMA_WARN_LOW "warnLow"
+            #define KARABO_SCHEMA_WARN_HIGH "warnHigh"
+
+            #define KARABO_SCHEMA_ALARM_LOW "alarmLow"
+            #define KARABO_SCHEMA_ALARM_HIGH "alarmHigh"
+
+            #define KARABO_SCHEMA_MIN "min"
+            #define KARABO_SCHEMA_MAX "max"
+
+            #define KARABO_SCHEMA_OVERWRITE "overwrite"
+
+
             template <class T> friend class GenericElement;
             template< class T> friend class SimpleElement;
             friend class OverwriteElement;
@@ -93,7 +141,6 @@ namespace karabo {
             std::string m_rootName;
 
             // Indices
-            std::map<std::string, std::string> m_keyToAlias;
             std::map<std::string, std::string> m_aliasToKey;
 
         public:
@@ -161,12 +208,16 @@ namespace karabo {
             //          General functions on Schema        *
             //**********************************************
 
-            template <class AliasType>
-            boost::optional<const std::string&> aliasToKey(const AliasType& alias) const;
-
-            template <class AliasType>
-            boost::optional<AliasType> keyToAlias(const std::string& key) const;
-
+            bool has(const std::string& path) const;
+            
+            /**
+             * Merges another schema into the current one
+             * @param schema Another schema to be merged
+             */
+            void merge(const Schema& schema);
+            
+            bool empty() const;
+            
             //**********************************************
             //              Node property                  *
             //**********************************************
@@ -188,8 +239,10 @@ namespace karabo {
             //**********************************************
             //                Value Type                  *
             //**********************************************
-            const string& getValueType(const std::string& path) const;
-
+            
+            //const string& getValueType(const std::string& path) const;
+            
+            Types::ReferenceType getValueType(const std::string& path) const;
 
             //**********************************************
             //                Access Mode                  *
@@ -324,19 +377,30 @@ namespace karabo {
             //                  Alias                      *
             //**********************************************
 
+            bool keyHasAlias(const std::string& path) const;
+
             template <class AliasType>
-            void setAlias(const std::string& path, const AliasType& value) {
-                m_hash.setAttribute<AliasType > (path, KARABO_SCHEMA_ALIAS, value);
+            bool aliasHasKey(const AliasType& alias) const {
+                return (m_aliasToKey.find(karabo::util::toString(alias)) != m_aliasToKey.end());
             }
 
-            bool hasAlias(const std::string& path) const;
-
             template <class AliasType>
-            const AliasType& getAlias(const std::string& path) const {
+            const AliasType& getAliasFromKey(const std::string& path) const {
                 return m_hash.getAttribute < AliasType > (path, KARABO_SCHEMA_ALIAS);
             }
 
+            template <class AliasType>
+            const std::string& getKeyFromAlias(const AliasType& alias) const {
+                return (m_aliasToKey.find(karabo::util::toString(alias)))->second;
+            }
+
             std::string getAliasAsString(const std::string& path) const;
+
+            template <class AliasType>
+            void setAlias(const std::string& path, const AliasType& value) {
+                m_aliasToKey[karabo::util::toString(value)] = path;
+                m_hash.setAttribute<AliasType > (path, KARABO_SCHEMA_ALIAS, value);
+            }
 
             //**********************************************
             //                  Unit                       *
@@ -498,6 +562,7 @@ namespace karabo {
             //******************************************************
             //                   WarnHigh                         *  
             //******************************************************
+
             template <class ValueType>
             void setWarnHigh(const std::string& path, const ValueType & value) {
                 m_hash.setAttribute(path, KARABO_SCHEMA_WARN_HIGH, value);
@@ -558,7 +623,7 @@ namespace karabo {
             bool hasAlarmHigh(const std::string& path) const;
 
             //******************************************************
-            //      min/max for number of nodes in ListElement     *                     *  
+            //      min/max for number of nodes in ListElement     *                       
             //******************************************************
 
             void setMin(const std::string& path, const int& value);

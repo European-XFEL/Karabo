@@ -55,13 +55,25 @@ namespace karabo {
          * Placeholder for later timestamp
          */
         class Timestamp {
+            
+            static boost::posix_time::ptime m_epoch;
+            boost::posix_time::ptime m_now;
+            unsigned long long m_msSinceEpoch;
+            
+            
+        public:
+            
+            Timestamp() : m_now(boost::posix_time::microsec_clock::universal_time()) {
+                 boost::posix_time::time_duration diff = m_now - m_epoch;
+                m_msSinceEpoch = diff.total_milliseconds();
+            }
 
             unsigned long long getAsTrainId() const {
                 return 0;
             }
 
             unsigned long long getAsMsSinceEpoch() const {
-                return 0;
+                return m_msSinceEpoch;
             }
 
         };
