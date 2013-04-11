@@ -44,6 +44,28 @@ struct SchemaWrapper : Schema, bp::wrapper< Schema > {
     }
 };
 
+
+struct NodeElementWrap {
+
+    static karabo::util::NodeElement & appendParametersOfPy(karabo::util::NodeElement& self, const bp::object& obj) {
+
+        if (!PyType_Check(obj.ptr())) {
+            throw KARABO_PYTHON_EXCEPTION("Argument 'arg' given in 'appendParametersOf(arg)' of NODE_ELEMENT must be a class in Python");
+        }
+        if (!obj.attr("expectedParameters")) {
+            throw KARABO_PYTHON_EXCEPTION("Class given in 'appendParametersOf' of NODE_ELELEMT must have 'expectedParameters' function");
+        }
+
+        const karabo::util::Schema schemaPy = bp::extract<karabo::util::Schema> (obj.attr("getSchema")());
+
+        const karabo::util::Hash h = schemaPy.getParameterHash();
+        self.getNode().setValue<karabo::util::Hash>(h);
+
+        return self;
+    }
+
+};
+
 void exportPyUtilSchema() {
 
     bp::enum_< karabo::util::AccessType>("AccessType")
@@ -230,6 +252,9 @@ void exportPyUtilSchema() {
     bp::implicitly_convertible< Schema &, NodeElement >();
     bp::class_<NodeElement> ("NODE_ELEMENT", bp::init<Schema & >((bp::arg("expected"))))
     KARABO_PYTHON_NODE_CHOICE_LIST(NodeElement)
+    .def("appendParametersOf"
+         , &NodeElementWrap::appendParametersOfPy
+         , bp::return_internal_reference<> ())
     ;
     }
     
@@ -301,5 +326,5 @@ void exportPyUtilSchema() {
     ;
     }
 
-}//end  exportPyUtilSchema
+} //end  exportPyUtilSchema
 
