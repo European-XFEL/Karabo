@@ -54,7 +54,7 @@ class Configurator(object):
             try:
                 theClass.expectedParameters(schema) # fill schema in order from base to derived
             except AttributeError,e:
-                pass
+                print "Exception while adding expected parameters for class %r: %r" % (theClass.__name__, e)
         return schema
             
     def create(self, classid, configuration, validation = True):
