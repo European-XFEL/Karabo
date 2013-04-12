@@ -37,7 +37,6 @@ class Configurator(object):
         if classid not in self.baseRegistry:
             raise AttributeError,"Class Id '" + classid + "' not found in the base registry"
         Derived = self.baseRegistry[classid]
-            
         # generate list of classes in inheritance order from most derived to base
         def inheritanceGenerator(c):
             while c.__classid__ != c.__base_classid__:
@@ -45,7 +44,6 @@ class Configurator(object):
                 c = c.__base__
             else:
                 yield c
-        
         clist = []
         for c in inheritanceGenerator(Derived):
             clist.insert(0,c) # base class will be the first!
@@ -61,8 +59,7 @@ class Configurator(object):
         if classId not in self.baseRegistry:
             raise AttributeError,"Unknown classid '" + classid + "' in base registry"
         Derived = self.baseRegistry[classId]
-        Base = self.baseRegistry[Derived.__base_classid__]
-        schema = Base.getSchema(classid)
+        schema = Configurator(Derived.__base_classid__).getSchema(classid)
         if not validation:
             return Derived(configuration)
         validated = Hash()
