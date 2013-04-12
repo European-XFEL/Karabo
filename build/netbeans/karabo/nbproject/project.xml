@@ -6,7 +6,7 @@
             <name>karabo</name>
             <c-extensions/>
             <cpp-extensions>cc,cpp</cpp-extensions>
-            <header-extensions>hh,hpp</header-extensions>
+            <header-extensions>h,hh,hpp</header-extensions>
             <sourceEncoding>UTF-8</sourceEncoding>
             <make-dep-projects/>
             <sourceRootList>

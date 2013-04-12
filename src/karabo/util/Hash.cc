@@ -183,6 +183,9 @@ namespace karabo {
         // Use std::map iterator inside
         boost::optional<const Hash::Node&> Hash::find(const std::string& path, const char separator) const {
             try {
+                
+                
+                
                 return getNode(path, separator);
             } catch (...) {
                 // Exception must be ignored here!

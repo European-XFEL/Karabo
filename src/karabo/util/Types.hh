@@ -96,6 +96,7 @@ namespace karabo {
                 PTR_STRING,
 
                 SCHEMA, // Schema
+                VECTOR_SCHEMA, // std::vector<Schema>
 
                 ANY, // unspecified type
 
