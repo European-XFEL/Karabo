@@ -40,6 +40,7 @@ OBJECTFILES= \
 	${OBJECTDIR}/_ext/1072794519/BinaryFileOutput.o \
 	${OBJECTDIR}/_ext/1072794519/HashBinarySerializer.o \
 	${OBJECTDIR}/_ext/1072794519/HashXmlSerializer.o \
+	${OBJECTDIR}/_ext/1072794519/SchemaXmlSerializer.o \
 	${OBJECTDIR}/_ext/1072794519/SchemaXsdSerializer.o \
 	${OBJECTDIR}/_ext/1072794519/TextFileInput.o \
 	${OBJECTDIR}/_ext/1072794519/TextFileOutput.o \
@@ -88,6 +89,9 @@ OBJECTFILES= \
 	${OBJECTDIR}/_ext/163016059/Timer.o \
 	${OBJECTDIR}/_ext/163016059/Units.o \
 	${OBJECTDIR}/_ext/163016059/Validator.o \
+	${OBJECTDIR}/_ext/1760428615/soapAuthenticationPortBindingProxy.o \
+	${OBJECTDIR}/_ext/1760428615/soapC.o \
+	${OBJECTDIR}/_ext/1760428615/stdsoap2.o \
 	${OBJECTDIR}/_ext/1103122747/Memory.o \
 	${OBJECTDIR}/_ext/1103122747/NetworkInput.o \
 	${OBJECTDIR}/_ext/1103122747/NetworkOutput.o \
@@ -155,6 +159,11 @@ ${OBJECTDIR}/_ext/1072794519/HashXmlSerializer.o: ../../../src/karabo/io/HashXml
 	${MKDIR} -p ${OBJECTDIR}/_ext/1072794519
 	${RM} $@.d
 	$(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1072794519/HashXmlSerializer.o ../../../src/karabo/io/HashXmlSerializer.cc
+
+${OBJECTDIR}/_ext/1072794519/SchemaXmlSerializer.o: ../../../src/karabo/io/SchemaXmlSerializer.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1072794519
+	${RM} $@.d
+	$(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1072794519/SchemaXmlSerializer.o ../../../src/karabo/io/SchemaXmlSerializer.cc
 
 ${OBJECTDIR}/_ext/1072794519/SchemaXsdSerializer.o: ../../../src/karabo/io/SchemaXsdSerializer.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1072794519
@@ -395,6 +404,21 @@ ${OBJECTDIR}/_ext/163016059/Validator.o: ../../../src/karabo/util/Validator.cc
 	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
 	${RM} $@.d
 	$(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163016059/Validator.o ../../../src/karabo/util/Validator.cc
+
+${OBJECTDIR}/_ext/1760428615/soapAuthenticationPortBindingProxy.o: ../../../src/karabo/webAuth/soapAuthenticationPortBindingProxy.cpp 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1760428615
+	${RM} $@.d
+	$(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1760428615/soapAuthenticationPortBindingProxy.o ../../../src/karabo/webAuth/soapAuthenticationPortBindingProxy.cpp
+
+${OBJECTDIR}/_ext/1760428615/soapC.o: ../../../src/karabo/webAuth/soapC.cpp 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1760428615
+	${RM} $@.d
+	$(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1760428615/soapC.o ../../../src/karabo/webAuth/soapC.cpp
+
+${OBJECTDIR}/_ext/1760428615/stdsoap2.o: ../../../src/karabo/webAuth/stdsoap2.cpp 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1760428615
+	${RM} $@.d
+	$(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1760428615/stdsoap2.o ../../../src/karabo/webAuth/stdsoap2.cpp
 
 ${OBJECTDIR}/_ext/1103122747/Memory.o: ../../../src/karabo/xms/Memory.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1103122747
@@ -646,6 +670,19 @@ ${OBJECTDIR}/_ext/1072794519/HashXmlSerializer_nomain.o: ${OBJECTDIR}/_ext/10727
 	    $(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1072794519/HashXmlSerializer_nomain.o ../../../src/karabo/io/HashXmlSerializer.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/1072794519/HashXmlSerializer.o ${OBJECTDIR}/_ext/1072794519/HashXmlSerializer_nomain.o;\
+	fi
+
+${OBJECTDIR}/_ext/1072794519/SchemaXmlSerializer_nomain.o: ${OBJECTDIR}/_ext/1072794519/SchemaXmlSerializer.o ../../../src/karabo/io/SchemaXmlSerializer.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1072794519
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/1072794519/SchemaXmlSerializer.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} $@.d;\
+	    $(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1072794519/SchemaXmlSerializer_nomain.o ../../../src/karabo/io/SchemaXmlSerializer.cc;\
+	else  \
+	    ${CP} ${OBJECTDIR}/_ext/1072794519/SchemaXmlSerializer.o ${OBJECTDIR}/_ext/1072794519/SchemaXmlSerializer_nomain.o;\
 	fi
 
 ${OBJECTDIR}/_ext/1072794519/SchemaXsdSerializer_nomain.o: ${OBJECTDIR}/_ext/1072794519/SchemaXsdSerializer.o ../../../src/karabo/io/SchemaXsdSerializer.cc 
@@ -1270,6 +1307,45 @@ ${OBJECTDIR}/_ext/163016059/Validator_nomain.o: ${OBJECTDIR}/_ext/163016059/Vali
 	    $(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163016059/Validator_nomain.o ../../../src/karabo/util/Validator.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/163016059/Validator.o ${OBJECTDIR}/_ext/163016059/Validator_nomain.o;\
+	fi
+
+${OBJECTDIR}/_ext/1760428615/soapAuthenticationPortBindingProxy_nomain.o: ${OBJECTDIR}/_ext/1760428615/soapAuthenticationPortBindingProxy.o ../../../src/karabo/webAuth/soapAuthenticationPortBindingProxy.cpp 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1760428615
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/1760428615/soapAuthenticationPortBindingProxy.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} $@.d;\
+	    $(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1760428615/soapAuthenticationPortBindingProxy_nomain.o ../../../src/karabo/webAuth/soapAuthenticationPortBindingProxy.cpp;\
+	else  \
+	    ${CP} ${OBJECTDIR}/_ext/1760428615/soapAuthenticationPortBindingProxy.o ${OBJECTDIR}/_ext/1760428615/soapAuthenticationPortBindingProxy_nomain.o;\
+	fi
+
+${OBJECTDIR}/_ext/1760428615/soapC_nomain.o: ${OBJECTDIR}/_ext/1760428615/soapC.o ../../../src/karabo/webAuth/soapC.cpp 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1760428615
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/1760428615/soapC.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} $@.d;\
+	    $(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1760428615/soapC_nomain.o ../../../src/karabo/webAuth/soapC.cpp;\
+	else  \
+	    ${CP} ${OBJECTDIR}/_ext/1760428615/soapC.o ${OBJECTDIR}/_ext/1760428615/soapC_nomain.o;\
+	fi
+
+${OBJECTDIR}/_ext/1760428615/stdsoap2_nomain.o: ${OBJECTDIR}/_ext/1760428615/stdsoap2.o ../../../src/karabo/webAuth/stdsoap2.cpp 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1760428615
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/1760428615/stdsoap2.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} $@.d;\
+	    $(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1760428615/stdsoap2_nomain.o ../../../src/karabo/webAuth/stdsoap2.cpp;\
+	else  \
+	    ${CP} ${OBJECTDIR}/_ext/1760428615/stdsoap2.o ${OBJECTDIR}/_ext/1760428615/stdsoap2_nomain.o;\
 	fi
 
 ${OBJECTDIR}/_ext/1103122747/Memory_nomain.o: ${OBJECTDIR}/_ext/1103122747/Memory.o ../../../src/karabo/xms/Memory.cc 

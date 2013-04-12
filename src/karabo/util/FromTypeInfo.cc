@@ -9,6 +9,7 @@
 #include <boost/assign.hpp>
 
 #include "Hash.hh"
+#include "Schema.hh"
 
 #include "FromTypeInfo.hh"
 
@@ -44,6 +45,7 @@ namespace karabo {
                     _KARABO_HELPER_MACRO(COMPLEX_DOUBLE, std::complex<double>)
                     _KARABO_HELPER_MACRO(STRING, std::string)
                     _KARABO_HELPER_MACRO1(HASH, Hash)
+                    _KARABO_HELPER_MACRO1(SCHEMA, Schema)
 
                     ;
         }
