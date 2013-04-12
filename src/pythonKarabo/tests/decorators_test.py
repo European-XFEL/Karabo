@@ -1,14 +1,17 @@
 # To change this template, choose Tools | Templates
 # and open the template in the editor.
 
+from karabo_decorators import *
+from libkarathon import *
 import unittest
 
-from karabo_decorators import schemamethod
-from libkarabo import *
 
+
+@KARABO_CLASSINFO("Example", "1.0")
+@KARABO_CONFIGURATION_BASE_CLASS
 class ExampleClass(object):
 
-    @schemamethod
+    @classmethod
     def expectedParameters(expected):
 
         e = STRING_ELEMENT(expected)
@@ -42,14 +45,16 @@ class  Decorators_TestCase(unittest.TestCase):
     #    self.foo = None
 
     def test_decorators_(self):
-        schema = ExampleClass.expectedParameters()
+        print "Hello decorators"
+        schema = ExampleClass.getSchema('Example')
+        print schema
         #assert x != y;
-        self.assertEqual(schema.hasKey("firstWord"),    True, "expectedParameters failed -- no 'firstWord' key found")
-        self.assertEqual(schema.hasKey("secondWord"),   True, "expectedParameters failed -- no 'secondWord' key found")
-        self.assertEqual(schema.hasKey("multiply"),     True, "expectedParameters failed -- no 'multiply' key found")
-        self.assertEqual(schema.hasKey("composedWord"), True, "expectedParameters failed -- no 'composedWord' key found")
-        self.assertEqual(schema.hasKey("thirdWord"),    False,"expectedParameters failed -- 'thirdWord' key was found")
-        #self.fail("TODO: Write test")
+        #self.assertEqual(schema.hasKey("firstWord"),    True, "expectedParameters failed -- no 'firstWord' key found")
+        #self.assertEqual(schema.hasKey("secondWord"),   True, "expectedParameters failed -- no 'secondWord' key found")
+        #self.assertEqual(schema.hasKey("multiply"),     True, "expectedParameters failed -- no 'multiply' key found")
+        #self.assertEqual(schema.hasKey("composedWord"), True, "expectedParameters failed -- no 'composedWord' key found")
+        #self.assertEqual(schema.hasKey("thirdWord"),    False,"expectedParameters failed -- 'thirdWord' key was found")
+        self.fail("TODO: Write test")
 
 if __name__ == '__main__':
     unittest.main()
