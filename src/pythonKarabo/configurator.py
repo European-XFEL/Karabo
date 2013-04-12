@@ -20,7 +20,7 @@ class Configurator(object):
     def __init__(self, baseclassid):
         if baseclassid not in Configurator.registry:
             raise AttributeError,"Argument is a classid of registered base class"
-        self.baseRegistry = registry[baseclassid]
+        self.baseRegistry = Configurator.registry[baseclassid]
         assert baseclassid in self.baseRegistry
 
         
@@ -34,11 +34,9 @@ class Configurator(object):
         return self
         
     def getSchema(self, classid):
-        try:
-            Derived = self.baseRegistry[classId]
-            Base = self.baseRegistry[Derived.__base_classid__]
-        except AttributeError,e:
+        if classid not in self.baseRegistry:
             raise AttributeError,"Class Id '" + classid + "' not found in the base registry"
+        Derived = self.baseRegistry[classid]
             
         # generate list of classes in inheritance order from most derived to base
         def inheritanceGenerator(c):
@@ -49,9 +47,9 @@ class Configurator(object):
                 yield c
         
         clist = []
-        for c in inheritanceGenerator(c):
+        for c in inheritanceGenerator(Derived):
             clist.insert(0,c) # base class will be the first!
-        schema = Schema(classid, AccessRules(READ | WRITE | INIT))
+        schema = Schema(classid, AssemblyRules(AccessType(READ | WRITE | INIT)))
         for theClass in clist:
             try:
                 theClass.expectedParameters(schema) # fill schema in order from base to derived
