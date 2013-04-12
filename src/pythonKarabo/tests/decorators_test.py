@@ -6,31 +6,65 @@ from libkarathon import *
 import unittest
 
 @KARABO_CONFIGURATION_BASE_CLASS
-@KARABO_CLASSINFO("Example", "1.0")
-class ExampleClass(object):
+@KARABO_CLASSINFO("ExampleBase", "1.0")
+class ExampleBaseClass(object):
 
-    @staticmethod
-    def expectedParameters(expected):
+    @classmethod
+    def expectedParameters(cls, expected):
 
         e = STRING_ELEMENT(expected)
         e.key('firstWord').displayedName("First Word").description("Input for first word")
-        e.assignmentOptional().defaultValue("").unitName("dimensionless").unitSymbol("")
+        e.assignmentOptional().defaultValue("")
         e.reconfigurable().commit()
 
         e = STRING_ELEMENT(expected)
         e.key("secondWord").displayedName("Second Word").description("Input for first word")
-        e.assignmentOptional().defaultValue("").unitName("dimensionless").unitSymbol("")
+        e.assignmentOptional().defaultValue("")
         e.reconfigurable().commit()
 
         e = INT32_ELEMENT(expected)
         e.key("multiply").displayedName("Multiply").description("multiplies word")
-        e.assignmentOptional().defaultValue(1).unitName("#").unitSymbol("#")
+        e.assignmentOptional().defaultValue(1)
         e.allowedStates("ErrorState").reconfigurable().commit()
 
         e = STRING_ELEMENT(expected)
         e.key("composedWord").displayedName("Composed word").description("The composed word")
-        e.assignmentOptional().noDefaultValue().unitName("dimensionless").unitSymbol("")
+        e.assignmentOptional().noDefaultValue()
         e.readOnly().commit()
+
+
+@KARABO_CLASSINFO("ExampleDerived", "1.0")
+class ExampleDerivedClass(ExampleBaseClass):
+    
+    @classmethod
+    def expectedParameters(cls, expected):
+
+        e = STRING_ELEMENT(expected)
+        e.key('hostname').displayedName("Hostname").description("Input for host name")
+        e.assignmentOptional().defaultValue("")
+        e.reconfigurable().commit()
+
+        e = INT32_ELEMENT(expected)
+        e.key("port").displayedName("Port").description("Input for port")
+        e.assignmentOptional().defaultValue(2999)
+        e.reconfigurable().commit()
+
+
+@KARABO_CLASSINFO("Example", "1.0")
+class ExampleClass(ExampleDerivedClass):
+    
+    @classmethod
+    def expectedParameters(cls, expected):
+
+        e = STRING_ELEMENT(expected)
+        e.key('street').displayedName("Street").description("Street")
+        e.assignmentOptional().defaultValue("Albert-Einstein-Ring")
+        e.reconfigurable().commit()
+
+        e = INT32_ELEMENT(expected)
+        e.key("bld").displayedName("Bld").description("Building number")
+        e.assignmentOptional().defaultValue(19)
+        e.reconfigurable().commit()
 
 
 class  Decorators_TestCase(unittest.TestCase):
@@ -44,7 +78,7 @@ class  Decorators_TestCase(unittest.TestCase):
 
     def test_decorators_(self):
         print "Hello decorators"
-        schema = Configurator('Example').getSchema('Example')
+        schema = Configurator('ExampleBase').getSchema('Example')
         print schema
         #assert x != y;
         #self.assertEqual(schema.hasKey("firstWord"),    True, "expectedParameters failed -- no 'firstWord' key found")
