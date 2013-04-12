@@ -20,32 +20,52 @@ using namespace karabo::xms;
 namespace karabo {
     namespace core {
 
-#define KARABO_REGISTER_CALLBACK(valueType) \
+        #define KARABO_REGISTER_CALLBACK(valueType) \
 if (itData != entry.end()) {\
     boost::any_cast < boost::function<void (const valueType&, const std::string&, const boost::any&) > >(itFunc->second)(current.get<valueType > (it), instanceId, itData->second);\
 } else {\
     boost::any_cast < boost::function<void (const valueType&, const std::string&) > >(itFunc->second)(current.get<valueType > (it), instanceId);\
 }
 
+
         DeviceClient::DeviceClient(const std::string& connectionType, const karabo::util::Hash& connectionParameters) : m_isShared(false), m_defaultTimeout(8000) {
             karabo::net::BrokerConnection::Pointer connection = karabo::net::BrokerConnection::create(connectionType, connectionParameters);
             std::string ownInstanceId = generateOwnInstanceId();
             m_signalSlotable = boost::shared_ptr<SignalSlotable > (new SignalSlotable(connection, ownInstanceId));
             m_eventThread = boost::thread(boost::bind(&karabo::xms::SignalSlotable::runEventLoop, m_signalSlotable, true));
-            m_signalSlotable->registerSlot<Hash, string > (boost::bind(&karabo::core::DeviceClient::slotChanged, this, _1, _2), "slotChanged");
-            m_signalSlotable->registerSlot<Hash > (boost::bind(&karabo::core::DeviceClient::slotNewDeviceServerInstance, this, _1), "slotNewDeviceServerInstance", SignalSlotable::GLOBAL);
-            m_signalSlotable->registerSlot<Hash > (boost::bind(&karabo::core::DeviceClient::slotUpdateDeviceServerInstance, this, _1), "slotUpdateDeviceServerInstance", SignalSlotable::GLOBAL);
-            m_signalSlotable->registerSlot<Hash > (boost::bind(&karabo::core::DeviceClient::slotNewDeviceInstance, this, _1), "slotNewDeviceInstance", SignalSlotable::GLOBAL);
-            m_signalSlotable->registerSlot<Hash > (boost::bind(&karabo::core::DeviceClient::slotUpdateDeviceInstance, this, _1), "slotUpdateDeviceInstance", SignalSlotable::GLOBAL);
+            this->setupSlots();
+
         }
 
+
         DeviceClient::DeviceClient(const boost::shared_ptr<SignalSlotable>& signalSlotable) : m_signalSlotable(signalSlotable), m_isShared(true), m_defaultTimeout(8000) {
+            this->setupSlots();
+        }
+
+
+        void DeviceClient::setupSlots() {
             m_signalSlotable->registerSlot<Hash, string > (boost::bind(&karabo::core::DeviceClient::slotChanged, this, _1, _2), "slotChanged");
             m_signalSlotable->registerSlot<Hash > (boost::bind(&karabo::core::DeviceClient::slotNewDeviceServerInstance, this, _1), "slotNewDeviceServerInstance", SignalSlotable::GLOBAL);
             m_signalSlotable->registerSlot<Hash > (boost::bind(&karabo::core::DeviceClient::slotUpdateDeviceServerInstance, this, _1), "slotUpdateDeviceServerInstance", SignalSlotable::GLOBAL);
             m_signalSlotable->registerSlot<Hash > (boost::bind(&karabo::core::DeviceClient::slotNewDeviceInstance, this, _1), "slotNewDeviceInstance", SignalSlotable::GLOBAL);
             m_signalSlotable->registerSlot<Hash > (boost::bind(&karabo::core::DeviceClient::slotUpdateDeviceInstance, this, _1), "slotUpdateDeviceInstance", SignalSlotable::GLOBAL);
         }
+        
+        void DeviceClient::cacheAvailableInstances() {
+            boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
+            std::vector<SignalSlotable::InstanceInfo> instances = m_signalSlotable->getAvailableInstances();
+            for (size_t i = 0; i < instances.size(); ++i) {
+                const SignalSlotable::InstanceInfo& info = instances[i];
+                Hash h(info.instanceType, Hash(info.instanceId));
+                h.set()
+                       
+                
+                if (info.instanceType == "server") {
+                    m_runtimeSystemDescription
+                }
+            }
+        }
+
 
         DeviceClient::~DeviceClient() {
             if (!m_isShared) {
@@ -54,21 +74,26 @@ if (itData != entry.end()) {\
             }
         }
 
+
         void DeviceClient::setDefaultTimeout(const unsigned int defaultTimeout) {
             m_defaultTimeout = defaultTimeout;
         }
+
 
         int DeviceClient::getDefaultTimeout() const {
             return m_defaultTimeout;
         }
 
+
         void DeviceClient::setDefaultKeySeparator(const std::string& defaultKeySep) {
             m_defaultKeySep = defaultKeySep;
         }
 
+
         const std::string& DeviceClient::getDefaultKeySeparator() const {
             return m_defaultKeySep;
         }
+
 
         std::pair<bool, std::string> DeviceClient::exists(const std::string& instanceId) {
             string hostname;
@@ -79,6 +104,7 @@ if (itData != entry.end()) {\
             }
             return std::make_pair(true, hostname);
         }
+
 
         std::vector<std::string> DeviceClient::getDeviceServers() {
             vector<string> deviceServers;
@@ -92,6 +118,7 @@ if (itData != entry.end()) {\
             return deviceServers;
         }
 
+
         const DeviceClient::DbTableCache& DeviceClient::cacheAndGetDeviceServers() {
             boost::mutex::scoped_lock lock(m_deviceServerCacheMutex);
 
@@ -100,6 +127,7 @@ if (itData != entry.end()) {\
             }
             return m_deviceServerCache;
         }
+
 
         std::vector<std::string> DeviceClient::getDeviceClasses(const std::string& deviceServerInstanceId) {
             unsigned int devSerInsId;
@@ -124,6 +152,7 @@ if (itData != entry.end()) {\
             return deviceClasses;
         }
 
+
         const DeviceClient::DbTableCache& DeviceClient::cacheAndGetDeviceClasses() {
             boost::mutex::scoped_lock lock(m_deviceClassCacheMutex);
 
@@ -132,6 +161,7 @@ if (itData != entry.end()) {\
             }
             return m_deviceClassCache;
         }
+
 
         std::vector<std::string> DeviceClient::getDevices() {
             vector<string> devices;
@@ -143,6 +173,7 @@ if (itData != entry.end()) {\
             return devices;
         }
 
+
         const DeviceClient::DbTableCache& DeviceClient::cacheAndGetDevices() {
             boost::mutex::scoped_lock lock(m_deviceCacheMutex);
 
@@ -152,14 +183,17 @@ if (itData != entry.end()) {\
             return m_deviceCache;
         }
 
+
         std::vector<std::string> DeviceClient::getDeviceParameters(const std::string& instanceId, const std::string& key, const std::string& keySep) {
             Schema& schema = cacheAndGetFullSchema(instanceId);
             return schema.getParameters(key);
         }
-        
+
+
         std::vector<std::string> DeviceClient::getCurrentlyExecutableCommands(const std::string& instanceId, const std::string& keySep) {
-            std::vector<std::string> params = cacheAndGetCurrentlyWritableSchema(instanceId).getAllParameters();
+            std::vector<std::string> params = cacheAndGetActiveSchema(instanceId).getAllParameters();
             std::vector<std::string> commands;
+
 
             BOOST_FOREACH(std::string param, params) {
                 if (this->isCommand(instanceId, param)) {
@@ -169,9 +203,11 @@ if (itData != entry.end()) {\
             return commands;
         }
 
+
         std::vector<std::string> DeviceClient::getCurrentlySettableProperties(const std::string& instanceId, const std::string& keySep) {
-            std::vector<std::string> params = cacheAndGetCurrentlyWritableSchema(instanceId).getAllParameters();
+            std::vector<std::string> params = cacheAndGetActiveSchema(instanceId).getAllParameters();
             std::vector<std::string> properties;
+
 
             BOOST_FOREACH(std::string param, params) {
                 if (this->isProperty(instanceId, param)) {
@@ -181,111 +217,11 @@ if (itData != entry.end()) {\
             return properties;
         }
 
+
         const Schema & DeviceClient::getCurrentlyWritableSchemaForParameter(const std::string& instanceId, const std::string& key, const std::string& keySep) {
-            return cacheAndGetCurrentlyWritableSchema(instanceId).getDescriptionByKey(key);
+            return cacheAndGetActiveSchema(instanceId).getDescriptionByKey(key);
         }
 
-        bool DeviceClient::isCommand(const std::string& instanceId, const std::string& key, const std::string & keySep) {
-            const Schema& schema = getSchemaForParameter(instanceId, key, keySep);
-            return schema.isCommand();
-        }
-
-        bool DeviceClient::isProperty(const std::string& instanceId, const std::string& key, const std::string & keySep) {
-            const Schema& schema = getSchemaForParameter(instanceId, key, keySep);
-            return schema.isAttribute();
-        }
-
-        bool DeviceClient::isChoiceOfNodes(const std::string& instanceId, const std::string& key, const std::string & keySep) {
-            const Schema& schema = getSchemaForParameter(instanceId, key, keySep);
-            return schema.isChoiceOfNodes();
-        }
-
-        bool DeviceClient::isListOfNodes(const std::string& instanceId, const std::string& key, const std::string & keySep) {
-            const Schema& schema = getSchemaForParameter(instanceId, key, keySep);
-            return schema.isListOfNodes();
-        }
-
-        bool DeviceClient::isNode(const std::string& instanceId, const std::string& key, const std::string & keySep) {
-            const Schema& schema = getSchemaForParameter(instanceId, key, keySep);
-            return schema.isNode();
-        }
-
-        bool DeviceClient::isLeaf(const std::string& instanceId, const std::string& key, const std::string & keySep) {
-            const Schema& schema = getSchemaForParameter(instanceId, key, keySep);
-            return schema.isLeaf();
-        }
-
-        bool DeviceClient::isAccessInitOnly(const std::string& instanceId, const std::string& key, const std::string & keySep) {
-            const Schema& schema = getSchemaForParameter(instanceId, key, keySep);
-            return schema.isAccessInitOnly();
-        }
-
-        bool DeviceClient::isAccessReadOnly(const std::string& instanceId, const std::string& key, const std::string & keySep) {
-            const Schema& schema = getSchemaForParameter(instanceId, key, keySep);
-            return schema.isAccessReadOnly();
-        }
-
-        bool DeviceClient::isAccessReconfigurable(const std::string& instanceId, const std::string& key, const std::string & keySep) {
-            const Schema& schema = getSchemaForParameter(instanceId, key, keySep);
-            return schema.isAccessReconfigurable();
-        }
-
-        bool DeviceClient::isAssignmentMandatory(const std::string& instanceId, const std::string& key, const std::string& keySep) {
-            const Schema& schema = getSchemaForParameter(instanceId, key, keySep);
-            return schema.getAssignment() == Schema::MANDATORY_PARAM;
-        }
-
-        bool DeviceClient::isAssignmentOptional(const std::string& instanceId, const std::string& key, const std::string& keySep) {
-            const Schema& schema = getSchemaForParameter(instanceId, key, keySep);
-            return schema.getAssignment() == Schema::OPTIONAL_PARAM;
-        }
-
-        std::string DeviceClient::getValueTypeAsString(const std::string& instanceId, const std::string& key, const std::string& keySep) {
-            const Schema& schema = getSchemaForParameter(instanceId, key, keySep);
-            return schema.getValueTypeAsString();
-        }
-
-        std::string DeviceClient::getDescription(const std::string& instanceId, const std::string& key, const std::string& keySep) {
-            const Schema& schema = getSchemaForParameter(instanceId, key, keySep);
-            if (schema.hasDescription()) return schema.getDescription();
-            else return "";
-        }
-
-        std::string DeviceClient::getDisplayedName(const std::string& instanceId, const std::string& key, const std::string& keySep) {
-            const Schema& schema = getSchemaForParameter(instanceId, key, keySep);
-            if (schema.hasDisplayedName()) return schema.getDisplayedName();
-            else return "";
-        }
-
-        std::string DeviceClient::getDisplayType(const std::string& instanceId, const std::string& key, const std::string& keySep) {
-            const Schema& schema = getSchemaForParameter(instanceId, key, keySep);
-            if (schema.hasDisplayType()) return schema.getDisplayType();
-            else return "";
-        }
-
-        std::vector<std::string> DeviceClient::getAllowedStates(const std::string& instanceId, const std::string& key, const std::string& keySep) {
-            const Schema& schema = getSchemaForParameter(instanceId, key, keySep);
-            if (schema.hasAllowedStates()) return schema.getAllowedStates();
-            else return std::vector<std::string > ();
-        }
-
-        std::string DeviceClient::getUnitName(const std::string& instanceId, const std::string& key, const std::string& keySep) {
-            const Schema& schema = getSchemaForParameter(instanceId, key, keySep);
-            if (schema.hasUnitName()) return schema.getUnitName();
-            else return "";
-        }
-
-        std::string DeviceClient::getUnitSymbol(const std::string& instanceId, const std::string& key, const std::string& keySep) {
-            const Schema& schema = getSchemaForParameter(instanceId, key, keySep);
-            if (schema.hasUnitSymbol()) return schema.getUnitSymbol();
-            else return "";
-        }
-
-        std::vector<std::string> DeviceClient::getValueOptions(const std::string& instanceId, const std::string& key, const std::string& keySep) {
-            const Schema& schema = getSchemaForParameter(instanceId, key, keySep);
-            if (schema.hasValueOptions()) return schema.getValueOptions();
-            else return std::vector<std::string > ();
-        }
 
         Hash DeviceClient::loadConfigurationFromFile(const std::string& filename) {
             Hash config;
@@ -293,22 +229,55 @@ if (itData != entry.end()) {\
             return config;
         }
 
+
         const karabo::util::Schema& DeviceClient::getFullSchema(const std::string& instanceId) {
             return cacheAndGetFullSchema(instanceId);
         }
 
-        const karabo::util::Schema& DeviceClient::getActiveSchema(const std::string& instanceId) {
-            return cacheAndGetCurrentlyWritableSchema(instanceId);
+
+        karabo::util::Schema& DeviceClient::cacheAndGetFullSchema(const std::string & instanceId) {
+            std::string path("devices." + instanceId + ".fullSchema");
+            boost::optional<Hash::Node&> node = m_runtimeSystemDescription.find(path);
+            if (!node) { // Not found, request and cache it
+                // Request schema
+                Schema schema;
+                m_signalSlotable->request(instanceId, "slotGetSchema", false).timeout(m_defaultTimeout).receive(schema); // Retrieves full schema
+                return m_runtimeSystemDescription.set(path, schema).getValue<Schema>();
+            }
+            return node->getValue<Schema>();
         }
+
+
+        const karabo::util::Schema& DeviceClient::getActiveSchema(const std::string& instanceId) {
+            return cacheAndGetActiveSchema(instanceId);
+        }
+
+
+        karabo::util::Schema& DeviceClient::cacheAndGetActiveSchema(const std::string& instanceId) {
+            std::string state = this->get<std::string > (instanceId, "state");
+            std::string path("devices." + instanceId + ".activeSchema." + state + "." + m_role);
+            boost::optional<Hash::Node&> node = m_runtimeSystemDescription.find(path);
+            if (!node) { // Not found, request and cache it
+                // Request schema
+                Schema schema;
+                m_signalSlotable->request(instanceId, "slotGetSchema", true).timeout(m_defaultTimeout).receive(schema); // Retrieves active schema
+                return m_runtimeSystemDescription.set(path, schema).getValue<Schema>();
+            } else {
+                return node->getValue<Schema>();
+            }
+        }
+
 
         void DeviceClient::instantiateNoWait(const std::string& serverInstanceId, const std::string& classId, const karabo::util::Hash & configuration) {
             Hash tmp(classId, configuration);
             m_signalSlotable->call(serverInstanceId, "slotStartDevice", tmp);
         }
 
+
         void DeviceClient::instantiateNoWait(const std::string& serverInstanceId, const karabo::util::Hash & completeConfiguration) {
             m_signalSlotable->call(serverInstanceId, "slotStartDevice", completeConfiguration);
         }
+
 
         std::pair<bool, std::string > DeviceClient::instantiateWait(const std::string& serverInstanceId, const std::string& classId, const karabo::util::Hash& configuration, int timeout) {
             if (timeout == -1) timeout = m_defaultTimeout;
@@ -325,6 +294,7 @@ if (itData != entry.end()) {\
             return std::make_pair(ok, errorText);
         }
 
+
         std::pair<bool, std::string > DeviceClient::instantiateWait(const std::string& serverInstanceId, const karabo::util::Hash& configuration, int timeout) {
             if (timeout == -1) timeout = m_defaultTimeout;
             bool ok = true;
@@ -339,17 +309,21 @@ if (itData != entry.end()) {\
             return std::make_pair(ok, errorText);
         }
 
+
         void DeviceClient::kill(const std::string & instanceId) {
             m_signalSlotable->call(instanceId, "slotKillDeviceInstance");
         }
+
 
         const karabo::util::Hash & DeviceClient::get(const std::string & instanceId) {
             return cacheAndGetConfiguration(instanceId);
         }
 
+
         void DeviceClient::get(const std::string& instanceId, karabo::util::Hash & hash) {
             hash = cacheAndGetConfiguration(instanceId);
         }
+
 
         void DeviceClient::unregisterMonitor(const std::string& instanceId, const std::string & key) {
             boost::mutex::scoped_lock lock(m_propertyChangedHandlersMutex);
@@ -366,6 +340,7 @@ if (itData != entry.end()) {\
             }
         }
 
+
         void DeviceClient::registerMonitor(const std::string& instanceId, const boost::function<void (const karabo::util::Hash&, const std::string&)> & callbackFunction) {
             boost::mutex::scoped_lock lock(m_deviceChangedHandlersMutex);
             // Make sure we are caching this instanceId
@@ -373,10 +348,12 @@ if (itData != entry.end()) {\
             m_deviceChangedHandlers.set(instanceId + "._function", callbackFunction);
         }
 
+
         void DeviceClient::unregisterMonitor(const std::string & instanceId) {
             boost::mutex::scoped_lock lock(m_deviceChangedHandlersMutex);
             m_deviceChangedHandlers.erase(instanceId);
         }
+
 
         std::pair<bool, std::string > DeviceClient::setWait(const std::string& instanceId, const karabo::util::Hash& values, int timeout) const {
             if (timeout == -1) timeout = m_defaultTimeout;
@@ -394,45 +371,16 @@ if (itData != entry.end()) {\
             return std::make_pair(ok, errorText);
         }
 
+
         void DeviceClient::setNoWait(const std::string& instanceId, const karabo::util::Hash & values) const {
             m_signalSlotable->call(instanceId, "slotReconfigure", values);
         }
+
 
         std::string DeviceClient::generateOwnInstanceId() {
             return std::string(boost::asio::ip::host_name() + "/DeviceClient/" + karabo::util::toString(getpid()));
         }
 
-        karabo::util::Schema & DeviceClient::cacheAndGetFullSchema(const std::string & instanceId) {
-            const Hash::Node& node = m_runtimeSystemDescription.find("devices." + instanceId);
-            if (it == m_fullSchemaCache.end()) {
-                // Request schema
-                Schema schema;
-                m_signalSlotable->request(instanceId, "slotGetSchema", false).timeout(m_defaultTimeout).receive(schema); // Retrieves full schema
-                it = m_fullSchemaCache.insert(make_pair(instanceId, schema)).first;
-            }
-            return it->second;
-        }
-
-        karabo::util::Schema& DeviceClient::cacheAndGetCurrentlyWritableSchema(const std::string& instanceId) {
-            std::string state = this->get<std::string > (instanceId, "state");
-            CurrentStateSchemaCache::iterator it = m_currentStateSchemaCache.find(instanceId);
-            if (it != m_currentStateSchemaCache.end()) {
-                CurrentStateSchemaCache::mapped_type& stateCache = it->second;
-                CurrentStateSchemaCache::mapped_type::iterator jt = stateCache.find(state);
-                if (jt != stateCache.end()) {
-                    return jt->second;
-                } else {
-                    Schema schema;
-                    m_signalSlotable->request(instanceId, "slotGetSchema", true).timeout(m_defaultTimeout).receive(schema); // Retrieves current schema
-                    jt = stateCache.insert(make_pair(state, schema)).first;
-                    return jt->second;
-                }
-            } else {
-                Schema schema;
-                m_signalSlotable->request(instanceId, "slotGetSchema", true).timeout(m_defaultTimeout).receive(schema); // Retrieves current schema
-                return (m_currentStateSchemaCache[instanceId][state] = schema);
-            }
-        }
 
         const karabo::util::Hash & DeviceClient::cacheAndGetConfiguration(const std::string & instanceId) {
             boost::mutex::scoped_lock lock(m_configurationCacheMutex);
@@ -449,11 +397,13 @@ if (itData != entry.end()) {\
             return it->second;
         }
 
+
         void DeviceClient::slotNewDeviceServerInstance(const karabo::util::Hash&) {
             boost::mutex::scoped_lock lock(m_deviceServerCacheMutex);
             // TODO This is a simple way here, add however load to the broker and the master
             m_deviceServerCache.clear();
         }
+
 
         void DeviceClient::slotUpdateDeviceServerInstance(const karabo::util::Hash&) {
             boost::mutex::scoped_lock lock(m_deviceServerCacheMutex);
@@ -461,10 +411,12 @@ if (itData != entry.end()) {\
             m_deviceServerCache.clear();
         }
 
+
         void DeviceClient::slotNewDeviceInstance(const karabo::util::Hash&) {
             boost::mutex::scoped_lock lock(m_deviceCacheMutex);
             m_deviceCache.clear();
         }
+
 
         void DeviceClient::slotUpdateDeviceInstance(const karabo::util::Hash&) {
             boost::mutex::scoped_lock lock(m_deviceCacheMutex);
@@ -472,10 +424,12 @@ if (itData != entry.end()) {\
             m_deviceCache.clear();
         }
 
+
         void DeviceClient::refreshInstanceUsage(const std::string & instanceId) {
             boost::mutex::scoped_lock lock(m_instanceUsageMutex);
             m_instanceUsage[instanceId] = 0;
         }
+
 
         void DeviceClient::slotChanged(const karabo::util::Hash& hash, const std::string & instanceId) {
             boost::mutex::scoped_lock lock(m_configurationCacheMutex);
@@ -485,6 +439,7 @@ if (itData != entry.end()) {\
             notifyDeviceChangedMonitors(hash, instanceId);
             notifyPropertyChangedMonitors(hash, instanceId);
         }
+
 
         void DeviceClient::notifyDeviceChangedMonitors(const karabo::util::Hash& hash, const std::string & instanceId) {
             boost::mutex::scoped_lock lock(m_deviceChangedHandlersMutex);
@@ -501,12 +456,14 @@ if (itData != entry.end()) {\
             }
         }
 
+
         void DeviceClient::notifyPropertyChangedMonitors(const karabo::util::Hash& hash, const std::string & instanceId) {
             boost::mutex::scoped_lock lock(m_propertyChangedHandlersMutex);
             if (m_propertyChangedHandlers.has(instanceId)) {
                 castAndCall(instanceId, m_propertyChangedHandlers.get<karabo::util::Hash > (instanceId), hash);
             }
         }
+
 
         void DeviceClient::castAndCall(const std::string& instanceId, const Hash& registered, const Hash& current, std::string path) const {
 
@@ -584,6 +541,7 @@ if (itData != entry.end()) {\
                 if (current.is<karabo::util::Hash > (it)) castAndCall(instanceId, registered, current.get<Hash > (it), currentPath);
             }
         }
+
 
         void DeviceClient::clearCacheAndDisconnect(const std::string & instanceId) {
             boost::mutex::scoped_lock lock(m_configurationCacheMutex);

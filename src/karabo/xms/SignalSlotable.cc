@@ -125,7 +125,7 @@ namespace karabo {
             // Register networkId invariant ping slot
             GLOBAL_SLOT2(slotPing, string, bool) // instanceId of caller, only reply if same instance id
 
-            SLOT2(slotPingAnswer, string, string) // instanceId, instanceType
+            SLOT4(slotPingAnswer, string, string, string, string) // hostname, instanceId, instanceType, parent
 
             /**
              * Connects signal to slot
@@ -194,23 +194,22 @@ namespace karabo {
             m_ioService->stop();
         }
 
-        const std::map<std::string, std::vector<string> >& SignalSlotable::getAvailableInstances() {
+        const std::vector<SignalSlotable::InstanceInfo>& SignalSlotable::getAvailableInstances() {
             m_availableInstances.clear();
             call("*", "slotPing", m_instanceId, false);
-            // The function slotPingAnswer will be called now, by all instances available
-            // Lets wait a fair amount of time
+            // The function slotPingAnswer will be called by all instances available now
+            // Lets wait a fair amount of time - huaaah this is bad isn't it :-(
             boost::this_thread::sleep(boost::posix_time::milliseconds(500));
             return m_availableInstances;
         }
 
         void SignalSlotable::slotPing(const std::string& instanceId, const bool& replyIfInstanceIdIsDuplicated) {
             if (replyIfInstanceIdIsDuplicated) {
-                if (instanceId == getInstanceId()) {
-                    //cout << "New instance (" << instanceId << ") is coming up, checking against uniqueness..." << endl;
+                if (instanceId == m_instanceId) {
                     reply(boost::asio::ip::host_name());
                 }
             } else {
-                call(instanceId, "slotPingAnswer", getInstanceId(), getInstanceType());
+                call(instanceId, "slotPingAnswer", boost::asio::ip::host_name(), m_instanceId, m_instanceType, m_instanceParent);
             }
         }
 
@@ -259,8 +258,13 @@ namespace karabo {
             reply(functions);
         }
 
-        void SignalSlotable::slotPingAnswer(const std::string& instanceId, const std::string& instanceType) {
-            m_availableInstances[instanceType].push_back(instanceId);
+        void SignalSlotable::slotPingAnswer(const std::string& hostname, const std::string& instanceId, const std::string& instanceType, const std::string& instanceParent) {
+            InstanceInfo info;
+            info.hostname = hostname;
+            info.instanceId = instanceId;
+            info.instanceType = instanceType;
+            info.instanceParent = instanceParent;
+            m_availableInstances.push_back(info);
         }
 
         void SignalSlotable::slotHeartbeat(const std::string& networkId, const int& timeToLive) {
@@ -281,6 +285,14 @@ namespace karabo {
         
         const std::string& SignalSlotable::getInstanceType() const {
             return m_instanceType;
+        }
+        
+        void SignalSlotable::setInstanceParent(const std::string& instanceParent) {
+            m_instanceParent = instanceParent;
+        }
+        
+        const std::string& SignalSlotable::getInstanceParent() const {
+            return m_instanceParent;
         }
 
         void SignalSlotable::autoConnectAllSignals(const karabo::util::Hash& config, const std::string signalRegularExpression) {
