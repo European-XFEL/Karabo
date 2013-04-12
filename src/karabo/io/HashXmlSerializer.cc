@@ -151,8 +151,11 @@ namespace karabo {
                         this->createXml(hashes[i], itemNode);
                     }
                 } else if (type == Types::SCHEMA) {
-
-
+                    TextSerializer<Schema>::Pointer p = TextSerializer<Schema>::create("Xml", Hash("indentation", -1));
+                    std::string schema;
+                    p->save(it->getValue<Schema>(), schema);
+                    if (m_writeDataTypes) nextNode.append_attribute(m_typeFlag.c_str()) = Types::to<ToLiteral > (type).c_str();
+                    nextNode.append_child(pugi::node_pcdata).set_value(schema.c_str());
                 } else {
                     if (m_writeDataTypes) nextNode.append_attribute(m_typeFlag.c_str()) = Types::to<ToLiteral > (type).c_str();
                     nextNode.append_child(pugi::node_pcdata).set_value(it->getValueAs<string > ().c_str());
@@ -243,11 +246,19 @@ namespace karabo {
                         pugi::xml_attribute attr = node.attribute(m_typeFlag.c_str());
                         if (!attr.empty()) {
                             string attributeValue(attr.value());
-                            try {
-                                hashNode.setType(Types::from<FromLiteral > (attributeValue));
-                            } catch (const karabo::util::Exception& e) {
-                                cout << "WARN: Could not understand xml attribute type: \"" << attributeValue << "\". Will interprete type as string." << endl;
-                                e.clearTrace();
+                            // Special case: Schema
+                            if (attributeValue == "SCHEMA") {
+                                TextSerializer<Schema>::Pointer p = TextSerializer<Schema>::create("Xml", Hash("indentation", -1));
+                                Schema s;
+                                p->load(s, hashNode.getValue<string>());
+                                hashNode.setValue(s);
+                            } else {
+                                try {
+                                    hashNode.setType(Types::from<FromLiteral > (attributeValue));
+                                } catch (const karabo::util::Exception& e) {
+                                    cout << "WARN: Could not understand xml attribute type: \"" << attributeValue << "\". Will interprete type as string." << endl;
+                                    e.clearTrace();
+                                }
                             }
                         }
                     }

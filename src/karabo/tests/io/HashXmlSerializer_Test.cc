@@ -14,11 +14,14 @@ CPPUNIT_TEST_SUITE_REGISTRATION(HashXmlSerializer_Test);
 using namespace karabo::io;
 using namespace karabo::util;
 
+
 HashXmlSerializer_Test::HashXmlSerializer_Test() {
 }
 
+
 HashXmlSerializer_Test::~HashXmlSerializer_Test() {
 }
+
 
 void HashXmlSerializer_Test::setUp() {
 
@@ -45,12 +48,27 @@ void HashXmlSerializer_Test::setUp() {
     m_unrootedHash = unrooted;
 }
 
+
 void HashXmlSerializer_Test::tearDown() {
 }
+
 
 void HashXmlSerializer_Test::testSerialization() {
 
     TextSerializer<Hash>::Pointer p = TextSerializer<Hash>::create("Xml");
+
+    {
+
+        Schema s = TextSerializer<Hash>::getSchema("Xml");
+        Hash fuckedUp("a1", 3.2, "a2", s);
+        string garbage;
+        p->save(fuckedUp, garbage);
+        //cout << "GARBAGE: " << garbage << endl;
+        Hash fresh;
+        p->load(fresh, garbage);
+        //cout << "HASH: " << fresh.get<Schema>("a2") << endl;
+
+    }
 
     {
         std::string archive1;

@@ -33,6 +33,25 @@ namespace karabo {
 
             typedef std::map<std::string, unsigned int> InstanceUsage;
 
+           
+            
+            /**
+             * #servers +
+             *   serverName \host(STRING) +
+             *     className +
+             *       #description SCHEMA
+             *       #configuration HASH
+             *       #instances VECTOR_STRING        
+             * #devices +
+             *   deviceName \serverName(STRING) \className(STRING)
+             *     #description +
+             *       #full SCHEMA
+             *       #active +
+             *         stateName +
+             *           roleName SCHEMA
+             *     #configuration HASH
+             */
+            karabo::util::Hash m_runtimeSystemDescription;
             
         public:
 
@@ -67,14 +86,36 @@ namespace karabo {
             
              /**
              * Retrieves the full Schema (parameter description) of the given instance;
-             * @param instanceId Device instance id
+             * @param instanceId Device's instance ID
              * @return full Schema
              */
-            const karabo::util::Schema& getSchema(const std::string& instanceId);
+            const karabo::util::Schema& getFullSchema(const std::string& instanceId);
             
-            const karabo::util::Schema& getCurrentlyWritableSchema(const std::string& instanceId);
+            /**
+             * Retrieves the currently active Schema (filtered by allowed states and allowed roles)
+             * of the given instance
+             * @param instanceId Device's instance ID
+             * @return active Schema
+             */
+            const karabo::util::Schema& getActiveSchema(const std::string& instanceId);
             
+            /**
+             * Retrieves a schema from static context of a loaded Device class plug-in.
+             * This schema represents a description of parameters possible to configure for instantiation.
+             * I.e. returns in fact a description of the constructor arguments to that device class.
+             * @param deviceServer instanceId of a deviceServer
+             * @param className name of loaded class on the deviceServer (classId)
+             * @return Schema describing parameters available at instantiation time
+             */
+            const karabo::util::Schema& getClassSchema(const std::string& deviceServer, const std::string& className);
+            
+            /**
+             * Allows asking whether an instance is online in the current distributed system
+             * @param boolean indicating whether existing and hostname if exists
+             * @return 
+             */
             std::pair<bool, std::string> exists(const std::string& instanceId);
+            
             
             std::vector<std::string> getDeviceServers();
 
@@ -160,7 +201,7 @@ namespace karabo {
 
             template <class ValueType>
             bool registerMonitor(const std::string& instanceId, const std::string& key, const boost::function<void (const ValueType&, const std::string&) >& callbackFunction) {
-                karabo::util::Schema schema = this->getSchema(instanceId);
+                karabo::util::Schema schema = this->getFullSchema(instanceId);
                 if (schema.has(key)) {
                     boost::mutex::scoped_lock lock(m_propertyChangedHandlersMutex);
                     this->cacheAndGetConfiguration(instanceId);
@@ -173,7 +214,7 @@ namespace karabo {
             
             template <class ValueType, class UserDataType>
             bool registerMonitor(const std::string& instanceId, const std::string& key, const boost::function<void (const ValueType&, const std::string&, const boost::any&) >& callbackFunction, const UserDataType& userData) {
-                karabo::util::Schema schema = this->getSchema(instanceId);
+                karabo::util::Schema schema = this->getFullSchema(instanceId);
                 if (schema.has(key)) {
                     boost::mutex::scoped_lock lock(m_propertyChangedHandlersMutex);
                     this->cacheAndGetConfiguration(instanceId);

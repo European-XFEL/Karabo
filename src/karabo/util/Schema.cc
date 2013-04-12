@@ -44,6 +44,10 @@ namespace karabo {
         karabo::util::Hash& Schema::getParameterHash() {
             return m_hash;
         }
+        
+        void Schema::setParameterHash(const karabo::util::Hash& parameterDescription) {
+            m_hash = parameterDescription;
+        }
 
 
         const karabo::util::Hash& Schema::getParameterHash() const {

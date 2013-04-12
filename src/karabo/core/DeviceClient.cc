@@ -293,11 +293,11 @@ if (itData != entry.end()) {\
             return config;
         }
 
-        const karabo::util::Schema& DeviceClient::getSchema(const std::string& instanceId) {
+        const karabo::util::Schema& DeviceClient::getFullSchema(const std::string& instanceId) {
             return cacheAndGetFullSchema(instanceId);
         }
 
-        const karabo::util::Schema& DeviceClient::getCurrentlyWritableSchema(const std::string& instanceId) {
+        const karabo::util::Schema& DeviceClient::getActiveSchema(const std::string& instanceId) {
             return cacheAndGetCurrentlyWritableSchema(instanceId);
         }
 
@@ -403,7 +403,7 @@ if (itData != entry.end()) {\
         }
 
         karabo::util::Schema & DeviceClient::cacheAndGetFullSchema(const std::string & instanceId) {
-            FullSchemaCache::iterator it = m_fullSchemaCache.find(instanceId);
+            const Hash::Node& node = m_runtimeSystemDescription.find("devices." + instanceId);
             if (it == m_fullSchemaCache.end()) {
                 // Request schema
                 Schema schema;

@@ -32,7 +32,7 @@ namespace karabo {
             std::string m_artificialRootFlag;
             std::string m_itemFlag;
             bool m_writeCompact;
-
+           
         public:
 
             KARABO_CLASSINFO(HashXmlSerializer, "Xml", "1.0")

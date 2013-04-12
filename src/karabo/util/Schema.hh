@@ -30,6 +30,10 @@
  * The main European XFEL namespace
  */
 namespace karabo {
+    
+    namespace io {
+        class SchemaXmlSerializer;
+    }
 
     /**
      * Namespace for package util
@@ -128,7 +132,8 @@ namespace karabo {
             friend class ChoiceElement;
             friend class ListElement;
             friend class NodeElement;
-
+            friend class karabo::io::SchemaXmlSerializer;
+            
             // Container
             Hash m_hash;
 
@@ -199,11 +204,11 @@ namespace karabo {
             Schema::AssemblyRules getAssemblyRules() const;
 
             const std::string& getRootName() const;
-
+            
             const karabo::util::Hash& getParameterHash() const;
-
+            
             std::vector<std::string> getParameters(const std::string& path = "") const;
-
+            
             //**********************************************
             //          General functions on Schema        *
             //**********************************************
@@ -682,9 +687,9 @@ namespace karabo {
 
 
         private: // functions
-
-
-
+            
+            void setParameterHash(const karabo::util::Hash& parameterDescription);
+            
             void setRootName(const std::string& rootName);
 
             karabo::util::Hash& getParameterHash();

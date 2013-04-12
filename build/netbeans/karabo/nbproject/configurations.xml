@@ -66,6 +66,8 @@
         <itemPath>../../../src/karabo/io/HashBinarySerializer.hh</itemPath>
         <itemPath>../../../src/karabo/io/HashXmlSerializer.cc</itemPath>
         <itemPath>../../../src/karabo/io/HashXmlSerializer.hh</itemPath>
+        <itemPath>../../../src/karabo/io/SchemaXmlSerializer.cc</itemPath>
+        <itemPath>../../../src/karabo/io/SchemaXmlSerializer.hh</itemPath>
         <itemPath>../../../src/karabo/io/SchemaXsdSerializer.cc</itemPath>
         <itemPath>../../../src/karabo/io/SchemaXsdSerializer.hh</itemPath>
         <itemPath>../../../src/karabo/io/TextSerializer.hh</itemPath>
@@ -206,6 +208,16 @@
         <itemPath>../../../src/karabo/util/ToXsd.hh</itemPath>
         <itemPath>../../../src/karabo/util/Types.hh</itemPath>
       </logicalFolder>
+    </logicalFolder>
+    <logicalFolder name="f8" displayName="webAuth" projectFiles="true" kind="ROOT">
+      <itemPath>../../../src/karabo/webAuth/ClientAuthentication.h</itemPath>
+      <itemPath>../../../src/karabo/webAuth/soapAuthenticationPortBindingProxy.cpp</itemPath>
+      <itemPath>../../../src/karabo/webAuth/soapAuthenticationPortBindingProxy.h</itemPath>
+      <itemPath>../../../src/karabo/webAuth/soapC.cpp</itemPath>
+      <itemPath>../../../src/karabo/webAuth/soapH.h</itemPath>
+      <itemPath>../../../src/karabo/webAuth/soapStub.h</itemPath>
+      <itemPath>../../../src/karabo/webAuth/stdsoap2.cpp</itemPath>
+      <itemPath>../../../src/karabo/webAuth/stdsoap2.h</itemPath>
     </logicalFolder>
     <logicalFolder name="f6" displayName="xms" projectFiles="true">
       <itemPath>../../../src/karabo/xms/Memory.cc</itemPath>
@@ -437,6 +449,16 @@
       <item path="../../../src/karabo/io/Input.hh" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../../../src/karabo/io/Output.hh" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/SchemaXmlSerializer.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/SchemaXmlSerializer.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
       </item>
       <item path="../../../src/karabo/io/SchemaXsdSerializer.cc"
             ex="false"
@@ -1214,6 +1236,46 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/util/util.hh" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../../../src/karabo/webAuth/ClientAuthentication.h"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/webAuth/soapAuthenticationPortBindingProxy.cpp"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/webAuth/soapAuthenticationPortBindingProxy.h"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/webAuth/soapC.cpp"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/webAuth/soapH.h"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/webAuth/soapStub.h"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/webAuth/stdsoap2.cpp"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/webAuth/stdsoap2.h"
+            ex="false"
+            tool="3"
+            flavor2="0">
       </item>
       <item path="../../../src/karabo/xms/Memory.cc" ex="false" tool="1" flavor2="0">
       </item>
@@ -1505,6 +1567,16 @@
       </item>
       <item path="../../../src/karabo/io/Output.hh" ex="false" tool="3" flavor2="0">
       </item>
+      <item path="../../../src/karabo/io/SchemaXmlSerializer.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/SchemaXmlSerializer.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="../../../src/karabo/io/SchemaXsdSerializer.cc"
             ex="false"
             tool="1"
@@ -2281,6 +2353,46 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/util/util.hh" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../../../src/karabo/webAuth/ClientAuthentication.h"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/webAuth/soapAuthenticationPortBindingProxy.cpp"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/webAuth/soapAuthenticationPortBindingProxy.h"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/webAuth/soapC.cpp"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/webAuth/soapH.h"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/webAuth/soapStub.h"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/webAuth/stdsoap2.cpp"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/webAuth/stdsoap2.h"
+            ex="false"
+            tool="3"
+            flavor2="0">
       </item>
       <item path="../../../src/karabo/xms/Memory.cc" ex="false" tool="1" flavor2="0">
       </item>
