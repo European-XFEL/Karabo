@@ -179,20 +179,16 @@ namespace karabo {
         }
 
 
-        // TODO: Idea of SE: Expose as shared_pointer<Node>, and let it be empty if not found
-        // Use std::map iterator inside
         boost::optional<const Hash::Node&> Hash::find(const std::string& path, const char separator) const {
-            try {
-                
-                
-                
-                return getNode(path, separator);
-            } catch (...) {
-                // Exception must be ignored here!
-                // TODO Construction and catching of an exception is expensive here.
-                Exception::clearTrace();
+            std::string key;
+            const Hash& hash = getLastHash(path, key, separator);
+            if (karabo::util::getAndCropIndex(key) == -1) {
+                const_map_iterator it = hash.m_container.find(key);
+                if (it != this->mend()) return it->second;
+                else return boost::optional<const Hash::Node&>();
+            } else {
+                throw KARABO_LOGIC_EXCEPTION("Array syntax on a leaf is not possible (would be a Hash and not a Node)");
             }
-            return boost::optional<const Hash::Node&>();
         }
 
 
@@ -352,10 +348,11 @@ namespace karabo {
          * Attributes manipulation
          *******************************************************************/
 
-        boost::any& Hash::getAttributeAsAny(const std::string& path,  const std::string& attribute, const char separator) {
+        boost::any& Hash::getAttributeAsAny(const std::string& path, const std::string& attribute, const char separator) {
             return getNode(path, separator).getAttributeAsAny(attribute);
         }
-        
+
+
         bool Hash::hasAttribute(const std::string& path, const std::string& attribute, const char separator) const {
             return getNode(path, separator).hasAttribute(attribute);
         }
