@@ -9,8 +9,8 @@ import unittest
 @KARABO_CLASSINFO("ExampleBase", "1.0")
 class ExampleBaseClass(object):
 
-    @classmethod
-    def expectedParameters(cls, expected):
+    @staticmethod
+    def expectedParameters(expected):
 
         e = STRING_ELEMENT(expected)
         e.key('firstWord').displayedName("First Word").description("Input for first word")
@@ -36,8 +36,8 @@ class ExampleBaseClass(object):
 @KARABO_CLASSINFO("ExampleDerived", "1.0")
 class ExampleDerivedClass(ExampleBaseClass):
     
-    @classmethod
-    def expectedParameters(cls, expected):
+    @staticmethod
+    def expectedParameters(expected):
 
         e = STRING_ELEMENT(expected)
         e.key('hostname').displayedName("Hostname").description("Input for host name")
@@ -53,8 +53,8 @@ class ExampleDerivedClass(ExampleBaseClass):
 @KARABO_CLASSINFO("Example", "1.0")
 class ExampleClass(ExampleDerivedClass):
     
-    @classmethod
-    def expectedParameters(cls, expected):
+    @staticmethod
+    def expectedParameters(expected):
 
         e = STRING_ELEMENT(expected)
         e.key('street').displayedName("Street").description("Street")
