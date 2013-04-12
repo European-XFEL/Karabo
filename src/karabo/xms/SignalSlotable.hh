@@ -65,14 +65,25 @@ namespace karabo {
             typedef std::pair<std::string, int> AssocEntry;
             typedef std::set<AssocEntry> AssocType;
             typedef AssocType::const_iterator AssocTypeConstIterator;
-            
+
             typedef std::map<std::string, karabo::io::AbstractInput::Pointer> InputChannels;
             typedef std::map<std::string, karabo::io::AbstractOutput::Pointer> OutputChannels;
-            
+
+        public:
+
+            struct InstanceInfo {
+
+                std::string hostname;
+                std::string instanceId;
+                std::string instanceType;
+                std::string instanceParent;
+            };
+
         protected: // Members
-            
+
             std::string m_instanceId;
             std::string m_instanceType;
+            std::string m_instanceParent;
 
             SignalInstances m_signalInstances;
             SlotInstances m_slotInstances;
@@ -106,15 +117,13 @@ namespace karabo {
             boost::thread m_trackingThread;
             bool m_doTracking;
 
-            std::map<std::string, std::vector<std::string> > m_availableInstances;
+            std::vector<InstanceInfo> m_availableInstances;
 
             // IO channel related
             InputChannels m_inputChannels;
             OutputChannels m_outputChannels;
 
         public:
-
-           
 
             KARABO_CLASSINFO(SignalSlotable, "SignalSlotable", "1.0")
 
@@ -178,10 +187,14 @@ namespace karabo {
              * @return instanceId
              */
             virtual const std::string& getInstanceId() const;
-            
+
             void setInstanceType(const std::string& instanceType);
-            
+
             const std::string& getInstanceType() const;
+
+            void setInstanceParent(const std::string& instanceParent);
+
+            const std::string& getInstanceParent() const;
 
             /**
              * TO BE DEPRECATED - DO NOT USE!
@@ -209,7 +222,7 @@ namespace karabo {
 
             virtual void connectionAvailableAgain(const std::string& instanceId, const std::vector<karabo::util::Hash>& connections);
 
-            const std::map<std::string, std::vector<std::string> >& getAvailableInstances();
+            const std::vector<InstanceInfo>& getAvailableInstances();
 
             std::vector<std::string> getAvailableSignals(const std::string& instanceId);
 
@@ -220,7 +233,7 @@ namespace karabo {
              */
             void slotPing(const std::string& instanceId, const bool& replyIfInstanceIdIsDuplicated);
 
-            void slotPingAnswer(const std::string& instanceId, const std::string& instanceType);
+            void slotPingAnswer(const std::string& hostname, const std::string& instanceId, const std::string& instanceType, const std::string& instanceParent);
 
             /**
              * Connects a signal and slot by explicitely seperating instanceId from the slotId/signalId.
@@ -700,16 +713,16 @@ namespace karabo {
 
         protected: // Member variables
 
-          
+
 
         private: // Functions
 
             std::pair<bool, karabo::util::Hash> digestPotentialReply();
 
-//            void setSlotProcessingFlag(const bool flag) {
-//                boost::mutex::scoped_lock lock(m_isProcessingSlotMutex);
-//                m_isProcessingSlot = flag;
-//            }
+            //            void setSlotProcessingFlag(const bool flag) {
+            //                boost::mutex::scoped_lock lock(m_isProcessingSlotMutex);
+            //                m_isProcessingSlot = flag;
+            //            }
 
             void emitHeartbeat();
 
@@ -767,7 +780,7 @@ namespace karabo {
             void slotGetOutputChannelInformation(const std::string& ioChannelId, const int& processId);
 
 
-       
+
 
 
         };
