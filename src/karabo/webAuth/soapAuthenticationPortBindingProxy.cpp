@@ -122,7 +122,7 @@ int AuthenticationPortBindingProxy::logout(const char *endpoint, const char *soa
 	if (endpoint)
 		soap_endpoint = endpoint;
 	if (!soap_endpoint)
-		soap_endpoint = "http://localhost:8080/XFELAuthWebService/Authentication";
+		soap_endpoint = "http://exflpcx18262:8080/XFELAuthWebService/Authentication";
 	if (!soap_action)
 		soap_action = "";
 	soap->encodingStyle = NULL;
@@ -176,7 +176,7 @@ int AuthenticationPortBindingProxy::singleSignOn(const char *endpoint, const cha
 	if (endpoint)
 		soap_endpoint = endpoint;
 	if (!soap_endpoint)
-		soap_endpoint = "http://localhost:8080/XFELAuthWebService/Authentication";
+		soap_endpoint = "http://exflpcx18262:8080/XFELAuthWebService/Authentication";
 	if (!soap_action)
 		soap_action = "";
 	soap->encodingStyle = NULL;
@@ -230,7 +230,7 @@ int AuthenticationPortBindingProxy::sessionsByIp(const char *endpoint, const cha
 	if (endpoint)
 		soap_endpoint = endpoint;
 	if (!soap_endpoint)
-		soap_endpoint = "http://localhost:8080/XFELAuthWebService/Authentication";
+		soap_endpoint = "http://exflpcx18262:8080/XFELAuthWebService/Authentication";
 	if (!soap_action)
 		soap_action = "";
 	soap->encodingStyle = NULL;
@@ -284,7 +284,7 @@ int AuthenticationPortBindingProxy::getUserNonce(const char *endpoint, const cha
 	if (endpoint)
 		soap_endpoint = endpoint;
 	if (!soap_endpoint)
-		soap_endpoint = "http://localhost:8080/XFELAuthWebService/Authentication";
+		soap_endpoint = "http://exflpcx18262:8080/XFELAuthWebService/Authentication";
 	if (!soap_action)
 		soap_action = "";
 	soap->encodingStyle = NULL;
@@ -338,7 +338,7 @@ int AuthenticationPortBindingProxy::login(const char *endpoint, const char *soap
 	if (endpoint)
 		soap_endpoint = endpoint;
 	if (!soap_endpoint)
-		soap_endpoint = "http://localhost:8080/XFELAuthWebService/Authentication";
+		soap_endpoint = "http://exflpcx18262:8080/XFELAuthWebService/Authentication";
 	if (!soap_action)
 		soap_action = "";
 	soap->encodingStyle = NULL;
