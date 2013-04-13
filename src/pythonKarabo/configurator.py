@@ -65,7 +65,7 @@ class Configurator(object):
         validated = Hash()
         validator = Validator()
         try:
-            validator.validate(schema, configuration, validated)
+            validated = validator.validate(schema, configuration)
         except RuntimeError,e:
             raise RuntimeError,"Validation Exception: " + e
         return Derived(validated)
