@@ -49,8 +49,9 @@ struct SchemaWrapper : Schema, bp::wrapper< Schema > {
     }
 };
 
-class ValidatorWrap : Validator, bp::wrapper< Validator > {
-    ValidatorWrap() : Validator(), bp::wrapper<Validator>() {} 
+class ValidatorWrap : Validator {
+public:
+    ValidatorWrap() : Validator() {} 
     bp::object validate(const bp::object& schemaObj, const bp::object& confObj) {
         Hash validated;
         if (bp::extract<Schema>(schemaObj).check() && bp::extract<Hash>(confObj).check()) {
@@ -350,8 +351,8 @@ void exportPyUtilSchema() {
     }
 
     {
-        bp::class_<Validator>("ValidatorWrap", bp::init<>())
-                .def("validate", &Validator::validate, (bp::arg("schema"), bp::arg("configuration"), bp::arg("validated")))
+        bp::class_<ValidatorWrap>("Validator", bp::init<>())
+                .def("validate", &ValidatorWrap::validate, (bp::arg("schema"), bp::arg("configuration")))
                 ;
     }
 } //end  exportPyUtilSchema
