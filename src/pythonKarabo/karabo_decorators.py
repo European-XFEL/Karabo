@@ -20,4 +20,7 @@ def KARABO_CLASSINFO(classid, version):
 def KARABO_CONFIGURATION_BASE_CLASS(theClass):
     if isinstance(theClass, type):
         Configurator.registerAsBaseClass(theClass)
+        def create(cls, classid, configuration, validation = True): return Configurator(theClass.__base_classid__).create(classid, configuration, validation)
+        create = classmethod(create)
+        theClass.create = create
     return theClass

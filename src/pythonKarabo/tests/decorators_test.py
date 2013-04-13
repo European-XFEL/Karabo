@@ -89,6 +89,7 @@ class  Decorators_TestCase(unittest.TestCase):
 
     def test_decorators_(self):
         example = Configurator('ExampleBase').create('Example', Hash())
+        example2 = ExampleBaseClass.create('Example', Hash())
         schema = Configurator('ExampleBase').getSchema('Example')
         print schema
         #assert x != y;
