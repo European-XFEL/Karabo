@@ -98,7 +98,7 @@ class EditableList(EditableWidget):
         self.__key = None
 
 
-    def valueChanged(self, key, value, timestamp=None):
+    def valueChanged(self, key, value, timestamp=None, forceRefresh=False):
         if value is None:
             return
         
