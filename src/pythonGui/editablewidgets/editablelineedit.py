@@ -94,7 +94,7 @@ class EditableLineEdit(EditableWidget):
         self.__key = None
 
 
-    def valueChanged(self, key, value, timestamp=None):
+    def valueChanged(self, key, value, timestamp=None, forceRefresh=False):
         if value is None:
             return
         
@@ -102,8 +102,9 @@ class EditableLineEdit(EditableWidget):
         self.__lineEdit.setText(value)
         self.__lineEdit.blockSignals(False)
         
-        # Needs to be called to update possible apply buttons
-        self.onEditingFinished(value)
+        if forceRefresh:
+            # Needs to be called to update possible apply buttons
+            self.onEditingFinished(value)
 
 
 ### slots ###

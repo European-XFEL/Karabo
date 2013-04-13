@@ -144,7 +144,7 @@ class EditableWidget(QObject):
         raise NotImplementedError, "EditableWidget.removeKeyValue"
 
 
-    def valueChanged(self, key, value, timestamp):
+    def valueChanged(self, key, value, timestamp, forceRefresh=False):
         raise NotImplementedError, "EditableWidget.valueChanged"
 
 

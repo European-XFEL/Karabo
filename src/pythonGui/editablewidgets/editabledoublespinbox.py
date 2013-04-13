@@ -20,8 +20,10 @@
 
 __all__ = ["EditableDoubleSpinBox"]
 
+#import sys
 
 from editablewidget import EditableWidget
+from scientificdoublespinbox import ScientificDoubleSpinBox
 
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
@@ -36,10 +38,14 @@ class EditableDoubleSpinBox(EditableWidget):
     def __init__(self, **params):
         super(EditableDoubleSpinBox, self).__init__(**params)
 
-        self.__doubleSpinBox = QDoubleSpinBox()
-        self.__doubleSpinBox.setRange(-999999999.0, 999999999.0)
-        self.__doubleSpinBox.setDecimals(6)
-        self.__doubleSpinBox.setSingleStep(0.000001)
+        # Using new scientific doublespinbox
+        self.__doubleSpinBox = ScientificDoubleSpinBox()
+        #self.__doubleSpinBox = QDoubleSpinBox()
+	# Set Range to maximum possible values
+	#doubleMax = sys.float_info.max
+	#self.__doubleSpinBox.setRange(-doubleMax, doubleMax)
+        #self.__doubleSpinBox.setDecimals(6)
+        #self.__doubleSpinBox.setSingleStep(0.000001)
         
         self.__doubleSpinBox.installEventFilter(self)
         self.__doubleSpinBox.valueChanged.connect(self.onEditingFinished)
@@ -134,7 +140,7 @@ class EditableDoubleSpinBox(EditableWidget):
     maximum = property(fset=_setMaximum)
 
 
-    def valueChanged(self, key, value, timestamp=None):
+    def valueChanged(self, key, value, timestamp=None, forceRefresh=False):
         if value is None:
             return
         
@@ -142,8 +148,9 @@ class EditableDoubleSpinBox(EditableWidget):
         self.__doubleSpinBox.setValue(value)
         self.__doubleSpinBox.blockSignals(False)      
         
-        # Needs to be called to update possible apply buttons
-        self.onEditingFinished(value)
+        if forceRefresh:
+            # Needs to be called to update possible apply buttons
+            self.onEditingFinished(value)
 
 
 ### slots ###

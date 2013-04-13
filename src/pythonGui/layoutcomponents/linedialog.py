@@ -10,6 +10,7 @@
 
 __all__ = ["LineDialog", "PenStyleComboBox"]
 
+import sys
 
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
@@ -20,13 +21,16 @@ class LineDialog(QDialog):
     def __init__(self, parent, lineItem=None):
         super(LineDialog, self).__init__(parent)
         
+	doubleMax = sys.float_info.max
+        
         self.__sbLineLength = QDoubleSpinBox()
+	self.__sbLineLength.setRange(0.25, doubleMax)
         self.__sbLineLength.setRange(0.25, 999999999.0)
         self.__sbLineLength.setDecimals(2)
         self.__sbLineLength.setSingleStep(0.25)
         
         self.__sbLineWidth = QDoubleSpinBox()
-        self.__sbLineWidth.setRange(0.25, 999999999.0)
+        self.__sbLineWidth.setRange(0.25, doubleMax)
         self.__sbLineWidth.setDecimals(2)
         self.__sbLineWidth.setSingleStep(0.25)
         
