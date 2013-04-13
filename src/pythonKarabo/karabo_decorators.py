@@ -20,7 +20,25 @@ def KARABO_CLASSINFO(classid, version):
 def KARABO_CONFIGURATION_BASE_CLASS(theClass):
     if isinstance(theClass, type):
         Configurator.registerAsBaseClass(theClass)
-        def create(cls, classid, configuration, validation = True): return Configurator(theClass.__base_classid__).create(classid, configuration, validation)
+        def create(cls, classid, configuration): return Configurator(theClass.__base_classid__).create(classid, configuration)
         create = classmethod(create)
         theClass.create = create
+        def createByConf(cls, configuration): return Configurator(theClass.__base_classid__).createByConf(configuration)
+        createByConf = classmethod(createByConf)
+        theClass.createByConf = createByConf
+        def createNode(cls, nodename, classid, configuration): return Configurator(theClass.__base_classid__).createNode(nodename, classid, configuration)
+        createNode = classmethod(createNode)
+        theClass.createNode = createNode
+        def createChoice(cls, choice, configuration): return Configurator(theClass.__base_classid__).createChoice(choice, configuration)
+        createChoice = classmethod(createChoice)
+        theClass.createChoice = createChoice
+        def createList(cls, listname, configuration): return Configurator(theClass.__base_classid__).createList(listname, configuration)
+        createList = classmethod(createList)
+        theClass.createList = createList
+        def getSchema(cls, classid, rules = AssemblyRules(AccessType(READ|WRITE|INIT))): return Configurator(theClass.__base_classid__).getSchema(classid, rules)
+        getSchema = classmethod(getSchema)
+        theClass.getSchema = getSchema
+        def getRegisteredClasses(cls): return Configurator(theClass.__base_classid__).getRegisteredClasses()
+        getRegisteredClasses = classmethod(getRegisteredClasses)
+        theClass.getRegisteredClasses = getRegisteredClasses
     return theClass
