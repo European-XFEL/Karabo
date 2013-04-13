@@ -11,6 +11,7 @@
 #include <karabo/util/NodeElement.hh>
 #include <karabo/util/ListElement.hh>
 #include <karabo/util/ChoiceElement.hh>
+#include <karabo/util/Validator.hh>
 
 #include "PythonMacros.hh"
 #include "DefaultValueVectorWrap.hh"
@@ -19,33 +20,53 @@ namespace bp = boost::python;
 using namespace karabo::util;
 using namespace std;
 
-
 struct SchemaWrapper : Schema, bp::wrapper< Schema > {
 
-    SchemaWrapper(Schema const & arg ) : Schema( arg ), bp::wrapper< Schema >(){
+
+    SchemaWrapper(Schema const & arg) : Schema(arg), bp::wrapper< Schema >() {
     }
 
-    SchemaWrapper( ) : Schema( ), bp::wrapper< Schema >(){
+
+    SchemaWrapper() : Schema(), bp::wrapper< Schema >() {
     }
+
 
     SchemaWrapper(std::string const & classId, Schema::AssemblyRules const & rules)
     : Schema(classId, boost::ref(rules)), bp::wrapper< karabo::util::Schema >() {
     }
 
-    virtual ClassInfo getClassInfo() const  {
-        if( bp::override func_getClassInfo = this->get_override( "getClassInfo" ) )
-            return func_getClassInfo(  );
+
+    virtual ClassInfo getClassInfo() const {
+        if (bp::override func_getClassInfo = this->get_override("getClassInfo"))
+            return func_getClassInfo();
         else
-            return this->Schema::getClassInfo(  );
+            return this->Schema::getClassInfo();
     }
 
-    ClassInfo default_getClassInfo(  ) const  {
-        return Schema::getClassInfo( );
+
+    ClassInfo default_getClassInfo() const {
+        return Schema::getClassInfo();
     }
 };
 
+class ValidatorWrap : Validator, bp::wrapper< Validator > {
+    ValidatorWrap() : Validator(), bp::wrapper<Validator>() {} 
+    bp::object validate(const bp::object& schemaObj, const bp::object& confObj) {
+        Hash validated;
+        if (bp::extract<Schema>(schemaObj).check() && bp::extract<Hash>(confObj).check()) {
+            const Schema& schema = bp::extract<Schema>(schemaObj);
+            const Hash& configuration = bp::extract<Hash>(confObj);
+            pair<bool, string> result = Validator::validate(schema, configuration, validated);
+            if (result.first) 
+                return bp::object(validated);
+            throw KARABO_PYTHON_EXCEPTION(result.second);
+        }
+        throw KARABO_PYTHON_EXCEPTION("Python arguments are not supported types");
+    }
+};
 
 struct NodeElementWrap {
+
 
     static karabo::util::NodeElement & appendParametersOfPy(karabo::util::NodeElement& self, const bp::object& obj) {
 
@@ -65,6 +86,7 @@ struct NodeElementWrap {
     }
 
 };
+
 
 void exportPyUtilSchema() {
 
@@ -171,6 +193,7 @@ void exportPyUtilSchema() {
     //DefaultValue<SimpleElement< EType >, EType >, where EType:
     //INT32, UINT32, INT64, UINT64, DOUBLE, STRING, BOOL
 
+
     KARABO_PYTHON_ELEMENT_DEFAULT_VALUE(int, INT32)
     KARABO_PYTHON_ELEMENT_DEFAULT_VALUE(unsigned int, UINT32)
     KARABO_PYTHON_ELEMENT_DEFAULT_VALUE(long long, INT64)
@@ -245,86 +268,91 @@ void exportPyUtilSchema() {
     KARABO_PYTHON_VECTOR(string, STRING)
     KARABO_PYTHON_VECTOR(bool, BOOL)
 
-    //////////////////////////////////////////////////////////////////////
-    // Binding karabo::util::NodeElement       
-    // In Python : NODE_ELEMENT
+            //////////////////////////////////////////////////////////////////////
+            // Binding karabo::util::NodeElement       
+            // In Python : NODE_ELEMENT
     {
-    bp::implicitly_convertible< Schema &, NodeElement >();
-    bp::class_<NodeElement> ("NODE_ELEMENT", bp::init<Schema & >((bp::arg("expected"))))
-    KARABO_PYTHON_NODE_CHOICE_LIST(NodeElement)
-    .def("appendParametersOf"
-         , &NodeElementWrap::appendParametersOfPy
-         , bp::return_internal_reference<> ())
-    ;
+        bp::implicitly_convertible< Schema &, NodeElement >();
+        bp::class_<NodeElement> ("NODE_ELEMENT", bp::init<Schema & >((bp::arg("expected"))))
+                KARABO_PYTHON_NODE_CHOICE_LIST(NodeElement)
+                .def("appendParametersOf"
+                     , &NodeElementWrap::appendParametersOfPy
+                     , bp::return_internal_reference<> ())
+                ;
     }
-    
+
     //////////////////////////////////////////////////////////////////////
     // Binding karabo::util::ListElement
     // In Python : LIST_ELEMENT
     {
-    bp::implicitly_convertible< Schema &, ListElement >();
-    bp::class_<ListElement> ("LIST_ELEMENT", bp::init<Schema & >((bp::arg("expected"))))
-        KARABO_PYTHON_NODE_CHOICE_LIST(ListElement)
-       .def("assignmentMandatory"
-           , &ListElement::assignmentMandatory
-           , bp::return_internal_reference<> () )
-       .def("assignmentOptional"
-           , &ListElement::assignmentOptional
-           , bp::return_internal_reference<> () )
-       .def("min"
-           , &ListElement::min
-           , bp::return_internal_reference<> ())
-       .def("max"
-           , &ListElement::max
-           , bp::return_internal_reference<> ())
-        ;
+        bp::implicitly_convertible< Schema &, ListElement >();
+        bp::class_<ListElement> ("LIST_ELEMENT", bp::init<Schema & >((bp::arg("expected"))))
+                KARABO_PYTHON_NODE_CHOICE_LIST(ListElement)
+                .def("assignmentMandatory"
+                     , &ListElement::assignmentMandatory
+                     , bp::return_internal_reference<> ())
+                .def("assignmentOptional"
+                     , &ListElement::assignmentOptional
+                     , bp::return_internal_reference<> ())
+                .def("min"
+                     , &ListElement::min
+                     , bp::return_internal_reference<> ())
+                .def("max"
+                     , &ListElement::max
+                     , bp::return_internal_reference<> ())
+                ;
     }
 
     //////////////////////////////////////////////////////////////////////
     // Binding karabo::util::ChoiceElement       
     // In Python : CHOICE_ELEMENT
     {
-    bp::implicitly_convertible< Schema &, ChoiceElement >();
-    bp::class_<ChoiceElement> ("CHOICE_ELEMENT", bp::init<Schema & >((bp::arg("expected"))))
-    KARABO_PYTHON_NODE_CHOICE_LIST(ChoiceElement)
-    .def("assignmentMandatory"
-          , &ChoiceElement::assignmentMandatory
-          , bp::return_internal_reference<> () )
-    .def("assignmentOptional"
-          , &ChoiceElement::assignmentOptional
-          , bp::return_internal_reference<> () )
-     ;
+        bp::implicitly_convertible< Schema &, ChoiceElement >();
+        bp::class_<ChoiceElement> ("CHOICE_ELEMENT", bp::init<Schema & >((bp::arg("expected"))))
+                KARABO_PYTHON_NODE_CHOICE_LIST(ChoiceElement)
+                .def("assignmentMandatory"
+                     , &ChoiceElement::assignmentMandatory
+                     , bp::return_internal_reference<> ())
+                .def("assignmentOptional"
+                     , &ChoiceElement::assignmentOptional
+                     , bp::return_internal_reference<> ())
+                ;
     }
 
     ///////////////////////////////////////////////////////////////////////////
     //  karabo::util::DefaultValue<ChoiceElement> 
     {
-    typedef DefaultValue<ChoiceElement, string> DefChoiceElement;
-    bp::class_< DefChoiceElement, boost::noncopyable > ("DefaultValueChoiceElement", bp::no_init)
-    .def("defaultValue"
-      , (ChoiceElement & ( DefChoiceElement::* )( string const & ) )( &DefChoiceElement::defaultValue )
-      , (bp::arg("defValue"))
-      , bp::return_internal_reference<> ())
-    .def("noDefaultValue"
-      , (ChoiceElement & (DefChoiceElement::*)())(&DefChoiceElement::noDefaultValue)
-      , bp::return_internal_reference<> ())
-    ;
+        typedef DefaultValue<ChoiceElement, string> DefChoiceElement;
+        bp::class_< DefChoiceElement, boost::noncopyable > ("DefaultValueChoiceElement", bp::no_init)
+                .def("defaultValue"
+                     , (ChoiceElement & (DefChoiceElement::*)(string const &))(&DefChoiceElement::defaultValue)
+                     , (bp::arg("defValue"))
+                     , bp::return_internal_reference<> ())
+                .def("noDefaultValue"
+                     , (ChoiceElement & (DefChoiceElement::*)())(&DefChoiceElement::noDefaultValue)
+                     , bp::return_internal_reference<> ())
+                ;
     }
 
     ///////////////////////////////////////////////////////////////////////////
     //  karabo::util::DefaultValue<ListElement> 
     {
-    typedef DefaultValue<ListElement, vector<string> > DefListElement;
-    bp::class_< DefListElement, boost::noncopyable > ("DefaultValueListElement", bp::no_init)
-    .def("defaultValue"
-      , (ListElement & ( DefListElement::* )( string const & ) )( &DefListElement::defaultValueFromString )
-      , (bp::arg("defValue"))
-      , bp::return_internal_reference<> ())
-    .def("noDefaultValue"
-      , (ListElement & (DefListElement::*)())(&DefListElement::noDefaultValue)
-      , bp::return_internal_reference<> ())
-    ;
+        typedef DefaultValue<ListElement, vector<string> > DefListElement;
+        bp::class_< DefListElement, boost::noncopyable > ("DefaultValueListElement", bp::no_init)
+                .def("defaultValue"
+                     , (ListElement & (DefListElement::*)(string const &))(&DefListElement::defaultValueFromString)
+                     , (bp::arg("defValue"))
+                     , bp::return_internal_reference<> ())
+                .def("noDefaultValue"
+                     , (ListElement & (DefListElement::*)())(&DefListElement::noDefaultValue)
+                     , bp::return_internal_reference<> ())
+                ;
     }
 
+    {
+        bp::class_<Validator>("ValidatorWrap", bp::init<>())
+                .def("validate", &Validator::validate, (bp::arg("schema"), bp::arg("configuration"), bp::arg("validated")))
+                ;
+    }
 } //end  exportPyUtilSchema
 
