@@ -97,7 +97,7 @@ class EditableCheckBox(EditableWidget):
         self.__key = None
 
 
-    def valueChanged(self, key, value, timestamp=None):
+    def valueChanged(self, key, value, timestamp=None, forceRefresh=False):
         if value is None:
             return
         
@@ -111,8 +111,9 @@ class EditableCheckBox(EditableWidget):
             self.__checkBox.setCheckState(checkState)
             self.__checkBox.blockSignals(False)
         
-        # Needs to be called to update possible apply buttons
-        self.onEditingFinished(checkState)
+        if forceRefresh:
+            # Needs to be called to update possible apply buttons
+            self.onEditingFinished(checkState)
         
 
 ### slots ###

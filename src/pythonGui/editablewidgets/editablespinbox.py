@@ -20,6 +20,7 @@
 
 __all__ = ["EditableSpinBox"]
 
+import sys
 
 from editablewidget import EditableWidget
 
@@ -37,7 +38,8 @@ class EditableSpinBox(EditableWidget):
         super(EditableSpinBox, self).__init__(**params)
 
         self.__spinBox = QSpinBox()
-        self.__spinBox.setRange(-999999999, 999999999)
+        intMax = sys.maxint
+        self.__spinBox.setRange(-intMax, intMax)
         
         self.__spinBox.installEventFilter(self)
         self.__spinBox.valueChanged.connect(self.onEditingFinished)
@@ -132,7 +134,7 @@ class EditableSpinBox(EditableWidget):
     maximum = property(fset=_setMaximum)
 
 
-    def valueChanged(self, key, value, timestamp=None):
+    def valueChanged(self, key, value, timestamp=None, forceRefresh=False):
         if value is None:
             return
         
@@ -140,8 +142,9 @@ class EditableSpinBox(EditableWidget):
         self.__spinBox.setValue(value)
         self.__spinBox.blockSignals(False)
         
-        # Needs to be called to update possible apply buttons
-        self.onEditingFinished(value)
+        if forceRefresh:
+            # Needs to be called to update possible apply buttons
+            self.onEditingFinished(value)
 
 
 ### slots ###

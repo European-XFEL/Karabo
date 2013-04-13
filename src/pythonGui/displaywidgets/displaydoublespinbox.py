@@ -20,8 +20,10 @@
 
 __all__ = ["DisplayDoubleSpinBox"]
 
+#import sys
 
 from displaywidget import DisplayWidget
+from scientificdoublespinbox import ScientificDoubleSpinBox
 
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
@@ -39,11 +41,15 @@ class DisplayDoubleSpinBox(DisplayWidget):
         # Minimum and maximum number of associated keys, 1 by default for each
         self.__minMaxAssociatedKeys = (1,1) # tuple<min,max>
         
-        self.__doubleSpinBox = QDoubleSpinBox()
-        self.__doubleSpinBox.setRange(-999999999.0, 999999999.0)
-        self.__doubleSpinBox.setDecimals(6)
-        self.__doubleSpinBox.setSingleStep(0.000001)
-        self.__doubleSpinBox.setEnabled(False)
+        # Using new scientific doublespinbox
+        self.__doubleSpinBox = ScientificDoubleSpinBox()
+        #self.__doubleSpinBox = QDoubleSpinBox()
+	# Set Range to maximum possible values
+	#doubleMax = sys.float_info.max
+	#self.__doubleSpinBox.setRange(-doubleMax, doubleMax)
+        #self.__doubleSpinBox.setDecimals(6)
+        #self.__doubleSpinBox.setSingleStep(0.000001)
+        #self.__doubleSpinBox.setEnabled(False)
         
         self.__key = params.get(QString('key'))
         if self.__key is None:
