@@ -56,9 +56,9 @@ class Configurator(object):
         return schema
             
     def create(self, classid, configuration, validation = True):
-        if classId not in self.baseRegistry:
+        if classid not in self.baseRegistry:
             raise AttributeError,"Unknown classid '" + classid + "' in base registry"
-        Derived = self.baseRegistry[classId]
+        Derived = self.baseRegistry[classid]
         schema = Configurator(Derived.__base_classid__).getSchema(classid)
         if not validation:
             return Derived(configuration)

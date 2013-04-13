@@ -9,9 +9,12 @@ import unittest
 @KARABO_CLASSINFO("ExampleBase", "1.0")
 class ExampleBaseClass(object):
 
+    def __init__(self, configuration):
+        self.configuration = configuration
+
     @staticmethod
     def expectedParameters(expected):
-
+    
         e = STRING_ELEMENT(expected)
         e.key('firstWord').displayedName("First Word").description("Input for first word")
         e.assignmentOptional().defaultValue("")
@@ -36,6 +39,10 @@ class ExampleBaseClass(object):
 @KARABO_CLASSINFO("ExampleDerived", "1.0")
 class ExampleDerivedClass(ExampleBaseClass):
     
+    def __init__(self, configuration):
+        super(ExampleDerivedClass, self).__init__(configuration)
+        self.configuration = configuration
+    
     @staticmethod
     def expectedParameters(expected):
 
@@ -52,6 +59,10 @@ class ExampleDerivedClass(ExampleBaseClass):
 
 @KARABO_CLASSINFO("Example", "1.0")
 class ExampleClass(ExampleDerivedClass):
+    
+    def __init__(self, configuration):
+        super(ExampleClass, self).__init__(configuration)
+        self.configuration = configuration
     
     @staticmethod
     def expectedParameters(expected):
@@ -77,7 +88,7 @@ class  Decorators_TestCase(unittest.TestCase):
     #    self.foo = None
 
     def test_decorators_(self):
-        print "Hello decorators"
+        example = Configurator('ExampleBase').create('Example', Hash())
         schema = Configurator('ExampleBase').getSchema('Example')
         print schema
         #assert x != y;
