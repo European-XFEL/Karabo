@@ -324,11 +324,11 @@ namespace karabo {
             throw KARABO_NOT_SUPPORTED_EXCEPTION("Type is not yet supported");
         }
 
-        bp::object
+        const karabo::util::Hash::Node&
         HashWrap::pythonGetNode(const karabo::util::Hash& self,
                                 const std::string& path,
                                 const std::string& separator) {
-            return bp::object(static_cast<karabo::util::Hash::Node> (self.getNode(path, separator.at(0))));
+            return static_cast<const karabo::util::Hash::Node&> (self.getNode(path, separator.at(0)));
         }
 
         bp::object

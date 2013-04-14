@@ -304,9 +304,9 @@ void exportPyUtilHash() {
           "Set \"node\" into current Hash object.  You cannot create node directly, you can extract the node from created Hash object.\nExample:\n"
           "\th = Hash('a.b.c', 1, 'b.x', 2.22, 'b.y', 7.432, 'c', [1,2,3])\n\t"
           "n = h.getNode('b')\n\tg = Hash()\n\tg.setNode(n)\n\tprint g");
-    h.def("getNode", &HashWrap().pythonGetNode, (bp::arg("path"), bp::arg("sep") = "."),
-          "Returns a copy of found node (not a reference!), so if you do any changes via returned object,\n"
-          "these changes will not be reflected in the current Hash object.\nExample:\n"
+    h.def("getNode", &HashWrap().pythonGetNode, (bp::arg("path"), bp::arg("sep") = "."), bp::return_internal_reference<1> (),
+          "Returns a reference of found node (not a copy!), so if you do any changes via returned object,\n"
+          "these changes will be reflected in the current Hash object.\nExample:\n"
           "\th = Hash('a.b.c', 1, 'b.x', 2.22, 'b.y', 7.432, 'c', [1,2,3])\n\t"
           "n = h.getNode('b')\n\tg = Hash()\n\tg.setNode(n)\n\tprint g");
     h.def("getAttribute", &HashWrap().pythonGetAttribute, (bp::arg("path"), bp::arg("attribute"), bp::arg("sep") = "."),
