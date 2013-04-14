@@ -81,7 +81,7 @@ namespace karabo {
                         const PyTypes::ReferenceType& type,
                         const std::string& separator = ".");
 
-            static bp::object
+            static const karabo::util::Hash::Node&
             pythonGetNode(const karabo::util::Hash& self,
                           const std::string& path,
                           const std::string& separator = ".");
