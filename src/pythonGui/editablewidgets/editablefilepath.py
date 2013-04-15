@@ -100,7 +100,7 @@ class EditableFilePath(EditableWidget):
 
 
     def valueChanged(self, key, value, timestamp=None, forceRefresh=False):
-        if value is None:
+        if (value is None) or (self.__leFilePath.isEnabled() == False):
             return
         
         self.__leFilePath.blockSignals(True)

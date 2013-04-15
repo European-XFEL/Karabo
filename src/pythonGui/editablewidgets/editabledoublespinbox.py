@@ -141,7 +141,7 @@ class EditableDoubleSpinBox(EditableWidget):
 
 
     def valueChanged(self, key, value, timestamp=None, forceRefresh=False):
-        if value is None:
+        if (value is None) or (self.__doubleSpinBox.isEnabled() == False):
             return
         
         self.__doubleSpinBox.blockSignals(True)
