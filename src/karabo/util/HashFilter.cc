@@ -5,7 +5,6 @@
  * Created on April 12, 2013, 11:50 AM
  */
 
-//#include "Validator.hh"  
 #include "Schema.hh"
 #include "FromLiteral.hh"
 #include "HashFilter.hh"
@@ -16,72 +15,87 @@ namespace karabo {
     namespace util {
 
 
-        void HashFilter::byTag(Hash& result, const Schema& schema, const Hash& input, const std::string& tags, const std::string& sep) {
+        void HashFilter::byTag(const Schema& schema, const Hash& input, Hash& result, const std::string& tags, const std::string& sep) {
 
             const Hash& master = schema.getParameterHash1();
-            string path;
-            clog << "A" << endl;
-            std::set<std::string> tagSet;
-            tagSet = fromString<string, set>(tags, sep);
-            clog << "B" << endl;
-            for (set<string>::const_iterator it = tagSet.begin(); it != tagSet.end(); ++it)
-                clog << "set element: " << *it << endl;
-
-
+            std::set<std::string> tagSet = fromString<string, set>(tags, sep);
             for (Hash::const_iterator it = input.begin(); it != input.end(); ++it) {
-                r_byTag(master, *it, it->getKey(), tagSet, result);
+                r_byTag(master, *it, result, it->getKey(), tagSet);
             }
-            //return result;
         }
 
 
-        void HashFilter::r_byTag(const Hash& master, const Hash::Node& inputNode, const std::string& path, const std::set<std::string>& tags, Hash& result) {
+        void HashFilter::r_byTag(const Hash& master, const Hash::Node& inputNode, Hash& result, const std::string& path, const std::set<std::string>& tags) {
 
             if (!master.has(path)) {
-                clog << "Path: " << path << " does not exist in schema" << endl;
+                //clog << "Path: " << path << " does not exist in schema" << endl;
                 return;
             }
 
             if (inputNode.is<Hash>()) {
-                
+
+                // if the tag was found in the HASH copy complete Hash and return
+                // otherwise process the Hash further
+                if (processNode(master, inputNode, result, path, tags) == true) return;
+
                 const Hash& input = inputNode.getValue<Hash>();
                 for (Hash::const_iterator it = input.begin(); it != input.end(); ++it) {
                     string newPath = path + "." + it->getKey();
-                    r_byTag(master, *it, newPath, tags, result);
+                    r_byTag(master, *it, result, newPath, tags);
                 }
             } else if (inputNode.is<vector<Hash> >()) {
-                const vector<Hash>& inputVector = inputNode.getValue<vector<Hash> >();                
+
+                // if the tag was found in the vector<HASH> (defined for LIST_ELEMENT) copy complete vector<Hash> and return
+                // otherwise process the Hash further
+                if (processNode(master, inputNode, result, path, tags) == true) {
+                    //clog << "Copy entire vector<Hash> " << path << endl;
+                    return;
+                }
+                //clog << "Further processing vector<Hash>  " << path << endl;
+
+                // For vector<Hash> the following policy is implemented
+                // The size of the vector is always preserved
+                // even if all parameters are filter out - in this case we keep the empty Hash 
+                const vector<Hash>& inputVector = inputNode.getValue<vector<Hash> >();
                 vector<Hash>& outputVector = result.bindReference<vector<Hash> > (path);
                 outputVector.resize(inputVector.size());
                 for (size_t i = 0; i < inputVector.size(); ++i) {
-                    //clog << "index i=" << i << endl;
+                    clog << "index i=" << i << endl;
                     const Hash& input = inputVector[i];
                     Hash& output = outputVector[i];
                     for (Hash::const_iterator it = input.begin(); it != input.end(); ++it) {
-                       // clog << "Hash in vector path=" << path << endl; 
-                        r_byTag(master.get<Hash>(path), *it, it->getKey(), tags, output);
+                        //clog << "Hash in vector path=" << path << endl;
+                        r_byTag(master.get<Hash>(path), *it, output, it->getKey(), tags);
                     }
                 }
-
 
             } else {
-                if (master.hasAttribute(path, KARABO_SCHEMA_TAGS)) {                                        
-                    const vector<string>& t = master.getAttribute< vector<string> >(path, KARABO_SCHEMA_TAGS);
-                    for (size_t i = 0; i < t.size(); ++i) {
-                        std::set<string>::const_iterator its = tags.find(t[i]);
-                        if (its != tags.end()) {
-                            clog << "take element " << inputNode.getKey() << ", tag found: " << t[i] << endl;
-                            result.set(path, inputNode);
-                            break;
-
-                        } else {
-                            clog << "tag " << t[i] << " not requested for: " << inputNode.getKey() << endl;
-                        }
-                    }
-                }
-
+                processNode(master, inputNode, result, path, tags);
             }
         }
+
+
+        bool HashFilter::processNode(const Hash& master, const Hash::Node& inputNode, Hash& result,
+                                     const std::string& path, const std::set<std::string>& tags) {
+
+            if (master.hasAttribute(path, KARABO_SCHEMA_TAGS)) {
+                const vector<string>& t = master.getAttribute< vector<string> >(path, KARABO_SCHEMA_TAGS);
+                for (size_t i = 0; i < t.size(); ++i) {
+                    std::set<string>::const_iterator its = tags.find(t[i]);
+                    if (its != tags.end()) {
+                        //clog << "take element " << inputNode.getKey() << ", tag found: " << t[i] << endl;
+                        result.set(path, inputNode);
+                        return true;
+                    } else {
+                        //clog << "tag " << t[i] << " not requested for: " << inputNode.getKey() << endl;
+                    }
+                }
+            }
+            return false;
+
+
+        }
+
 
     }
 }
