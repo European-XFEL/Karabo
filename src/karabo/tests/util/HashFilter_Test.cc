@@ -19,10 +19,19 @@ namespace hashfilter {
 
     using namespace karabo::util;
 
-    struct A {
+    struct Base {
 
-        KARABO_CLASSINFO(A, "A", "1.0");
+        KARABO_CLASSINFO(Base, "Base", "1.0");
         KARABO_CONFIGURATION_BASE_CLASS;
+
+
+        Base(const Hash & configuration) {
+        }
+    };
+
+    struct P1 : public Base {
+
+        KARABO_CLASSINFO(P1, "P1", "1.0");
 
 
         static void expectedParameters(karabo::util::Schema & expected) {
@@ -34,7 +43,7 @@ namespace hashfilter {
                     .tags("CY,CY,NC,JS,KW,NC")
                     .commit();
 
-            STRING_ELEMENT(expected).key("exampleKey1")
+            STRING_ELEMENT(expected).key("b")
                     .tags("BH,CY")
                     .displayedName("Example key 1")
                     .description("Example key 1 description")
@@ -43,7 +52,7 @@ namespace hashfilter {
                     .reconfigurable()
                     .commit();
 
-            INT32_ELEMENT(expected).key("exampleKey2").alias(10)
+            INT32_ELEMENT(expected).key("c").alias(10)
                     .tags("BH")
                     .displayedName("Example key 2")
                     .description("Example key 2 description")
@@ -56,7 +65,7 @@ namespace hashfilter {
                     .init()
                     .commit();
 
-            UINT32_ELEMENT(expected).key("exampleKey3").alias(5.5)
+            UINT32_ELEMENT(expected).key("d").alias(5.5)
                     .tags("CY,JS")
                     .displayedName("Example key 3")
                     .description("Example key 3 description")
@@ -67,26 +76,109 @@ namespace hashfilter {
                     .reconfigurable()
                     .commit();
 
-            FLOAT_ELEMENT(expected).key("exampleKey4").alias("exampleAlias4")
-                    .tags("KW")
+            FLOAT_ELEMENT(expected).key("e").alias("exampleAlias4")
+                    .tags("DB,NC,CY")
                     .displayedName("Example key 4")
                     .description("Example key 4 description")
                     .options("1.11     -2.22 5.55")
                     .assignmentOptional().defaultValue(4.0)
                     .commit();
 
-            INT64_ELEMENT(expected).key("exampleKey5").alias("exampleAlias5")
-                    .tags("KW")
+            INT64_ELEMENT(expected).key("f").alias("exampleAlias5")
+                    .tags("LM,DB")
                     .displayedName("Example key 5")
                     .description("Example key 5 description")
                     .assignmentOptional().defaultValue(5)
                     .commit();
 
-
         }
 
 
-        A(const Hash & configuration) {
+        P1(const Hash & configuration) : Base(configuration) {
+        }
+    };
+
+    struct P2 : public Base {
+
+        KARABO_CLASSINFO(P2, "P2", "1.0");
+
+
+        static void expectedParameters(karabo::util::Schema & expected) {
+
+            STRING_ELEMENT(expected).key("x")
+                    .description("x")
+                    .displayedName("x")
+                    .assignmentOptional().defaultValue("a value")
+                    .tags("LM,BH")
+                    .commit();
+
+            STRING_ELEMENT(expected).key("y")
+                    .tags("CY")
+                    .displayedName("Example key 1")
+                    .description("Example key 1 description")
+                    .options("Radio,Air Condition,Navigation", ",")
+                    .assignmentOptional().defaultValue("exampleValue1")
+                    .reconfigurable()
+                    .commit();
+
+            INT32_ELEMENT(expected).key("z").alias(10)
+                    .tags("CY,LM,KW")
+                    .displayedName("Example key 2")
+                    .description("Example key 2 description")
+                    .options("5, 25, 10")
+                    .minInc(5)
+                    .maxInc(25)
+                    .unit(Units::METER)
+                    .metricPrefix(Units::MILLI)
+                    .assignmentOptional().defaultValue(2)
+                    .init()
+                    .commit();
+        }
+
+
+        P2(const Hash & configuration) : Base(configuration) {
+        }
+    };
+
+    struct P3 : public Base {
+
+        KARABO_CLASSINFO(P3, "P3", "1.0");
+
+
+        static void expectedParameters(karabo::util::Schema & expected) {
+
+            STRING_ELEMENT(expected).key("k")
+                    .description("k")
+                    .displayedName("k")
+                    .assignmentOptional().defaultValue("k value")
+                    .tags("LM")
+                    .commit();
+
+            STRING_ELEMENT(expected).key("l")
+                    .tags("CY")
+                    .displayedName("l")
+                    .description("l")
+                    .options("Radio,Air Condition,Navigation", ",")
+                    .assignmentOptional().defaultValue("exampleValue1")
+                    .reconfigurable()
+                    .commit();
+
+            INT32_ELEMENT(expected).key("m").alias(10)
+                    .tags("CY,DB,JE,BP,MK,PG,BF")
+                    .displayedName("Example key 2")
+                    .description("Example key 2 description")
+                    .options("5, 25, 10")
+                    .minInc(5)
+                    .maxInc(25)
+                    .unit(Units::METER)
+                    .metricPrefix(Units::MILLI)
+                    .assignmentOptional().defaultValue(2)
+                    .init()
+                    .commit();
+        }
+
+
+        P3(const Hash & configuration) : Base(configuration) {
         }
     };
 
@@ -99,7 +191,7 @@ namespace hashfilter {
         static void expectedParameters(karabo::util::Schema & expected) {
 
             BOOL_ELEMENT(expected).key("antiAlias")
-                    .tags("prop")
+                    .tags("NC")
                     .displayedName("Use Anti-Aliasing")
                     .description("You may switch of for speed")
                     .assignmentOptional().defaultValue(true)
@@ -116,7 +208,7 @@ namespace hashfilter {
                     .commit();
 
             BOOL_ELEMENT(expected).key("bold")
-                    .tags("prop")
+                    .tags("LM")
                     .displayedName("Bold")
                     .description("Toggles bold painting")
                     .assignmentOptional().defaultValue(false)
@@ -124,11 +216,12 @@ namespace hashfilter {
                     .commit();
 
             CHOICE_ELEMENT(expected).key("shapes")
-                    .assignmentOptional().defaultValue("circle")
+                    .tags("DB")
+                    .assignmentOptional().defaultValue("rectangle")
                     .commit();
 
             NODE_ELEMENT(expected).key("shapes.circle")
-                    .tags("shape")
+                    .tags("JS")
                     .displayedName("Circle")
                     .description("A circle")
                     .commit();
@@ -136,6 +229,7 @@ namespace hashfilter {
             FLOAT_ELEMENT(expected).key("shapes.circle.radius")
                     .description("The radius of the circle")
                     .displayedName("Radius")
+                    .tags("NC,KW")
                     .minExc(0)
                     .maxExc(100)
                     .unit(Units::METER)
@@ -159,7 +253,7 @@ namespace hashfilter {
                     .commit();
 
             FLOAT_ELEMENT(expected).key("shapes.rectangle.c")
-                    .tags("KW")
+                    .tags("LM,JS")
                     .description("Rectangle side - c")
                     .displayedName("Side C")
                     .assignmentOptional().defaultValue(10)
@@ -174,16 +268,16 @@ namespace hashfilter {
             NODE_ELEMENT(expected).key("letter")
                     .displayedName("Letter")
                     .description("Letter")
-                    //.appendParametersOf<karabo::io::h5::Format>()
-                    .appendParametersOf<A>()
-                    //defaultValue(vector<string>(1,"A"))
+                    .appendParametersOf<P1>()
                     .commit();
 
-            //            NODE_ELEMENT(expected).key("format")
-            //                    .displayedName("format")
-            //                    .description("hdf5 format")
-            //                    .appendParametersOf<karabo::io::h5::Format>()
-            //                    .commit();
+            LIST_ELEMENT(expected).key("chars")
+                    .displayedName("characters")
+                    .description("Characters")
+                    .tags("LM")
+                    .appendNodesOfConfigurationBase<Base>()
+                    .assignmentOptional().defaultValueFromString("P2,P3")
+                    .commit();
 
 
         }
@@ -203,7 +297,9 @@ using namespace std;
 using namespace karabo::io;
 
 
-KARABO_REGISTER_FOR_CONFIGURATION(A);
+KARABO_REGISTER_FOR_CONFIGURATION(Base, P1);
+KARABO_REGISTER_FOR_CONFIGURATION(Base, P2);
+KARABO_REGISTER_FOR_CONFIGURATION(Base, P3);
 KARABO_REGISTER_FOR_CONFIGURATION(GraphicsRenderer2);
 
 
@@ -227,22 +323,181 @@ void HashFilter_Test::tearDown() {
 void HashFilter_Test::testFilterByTag() {
 
     try {
-        //Schema schema = A::getSchema("A");    
-        //GraphicsRenderer2::expectedParameters(schema);
+
         Schema schema = Configurator<GraphicsRenderer2>::getSchema("GraphicsRenderer2");
-        
+
         Validator validator;
         Hash config;
         validator.validate(schema, Hash(), config);
 
-        const Hash& param = schema.getParameterHash1();
-
-
+        //const Hash& param = schema.getParameterHash1();
         //clog << "\nparam : \n" << param << endl;        
-        //clog << "\nconfig:\n" << config << endl;
-        
+//        clog << "\nconfig:\n" << config << endl;
+
         Hash result;
         HashFilter::byTag(schema, config, result, "KW;KW,BH", ",;");
+
+//        clog << "KW,BH\n" << result << endl;
+        
+        CPPUNIT_ASSERT(result.has("antiAlias") == false);
+        CPPUNIT_ASSERT(result.has("color") == true);
+        CPPUNIT_ASSERT(result.has("bold") == false);
+        CPPUNIT_ASSERT(result.has("shapes") == true);
+        CPPUNIT_ASSERT(result.has("shapes.rectangle") == true);
+        CPPUNIT_ASSERT(result.has("shapes.rectangle.b") == true);
+        CPPUNIT_ASSERT(result.has("shapes.rectangle.c") == true);
+        CPPUNIT_ASSERT(result.has("letter") == true);
+        CPPUNIT_ASSERT(result.has("letter.a") == true);
+        CPPUNIT_ASSERT(result.has("letter.b") == true);
+        CPPUNIT_ASSERT(result.has("letter.c") == true);
+        CPPUNIT_ASSERT(result.has("letter.d") == false);
+        CPPUNIT_ASSERT(result.has("letter.e") == false);
+        CPPUNIT_ASSERT(result.has("letter.f") == false);
+        CPPUNIT_ASSERT(result.has("chars") == true);
+        CPPUNIT_ASSERT(result.has("chars[0]") == true);        
+        CPPUNIT_ASSERT(result.has("chars[0].P2") == true);
+        CPPUNIT_ASSERT(result.has("chars[0].P2.x") == true);
+        CPPUNIT_ASSERT(result.has("chars[0].P2.y") == false);
+        CPPUNIT_ASSERT(result.has("chars[0].P2.z") == true);
+        CPPUNIT_ASSERT(result.has("chars[1]") == true);
+        CPPUNIT_ASSERT(result.has("chars[1].P3") == false);
+        CPPUNIT_ASSERT(result.has("chars[1].P3.k") == false);
+        CPPUNIT_ASSERT(result.has("chars[1].P3.l") == false);
+        CPPUNIT_ASSERT(result.has("chars[1].P3.m") == false);
+
+     
+        result.clear();
+        HashFilter::byTag(schema, config, result, "JS", ",;");
+        
+//        clog << "JS\n" << result << endl;
+
+
+        CPPUNIT_ASSERT(result.has("antiAlias") == false);
+        CPPUNIT_ASSERT(result.has("color") == false);
+        CPPUNIT_ASSERT(result.has("bold") == false);
+        CPPUNIT_ASSERT(result.has("shapes") == true);
+        CPPUNIT_ASSERT(result.has("shapes.rectangle") == true);
+        CPPUNIT_ASSERT(result.has("shapes.rectangle.b") == true);
+        CPPUNIT_ASSERT(result.has("shapes.rectangle.c") == true);
+        CPPUNIT_ASSERT(result.has("letter") == true);
+        CPPUNIT_ASSERT(result.has("letter.a") == true);
+        CPPUNIT_ASSERT(result.has("letter.b") == false);
+        CPPUNIT_ASSERT(result.has("letter.c") == false);
+        CPPUNIT_ASSERT(result.has("letter.d") == true);
+        CPPUNIT_ASSERT(result.has("letter.e") == false);
+        CPPUNIT_ASSERT(result.has("letter.f") == false);
+        CPPUNIT_ASSERT(result.has("chars") == true);
+        CPPUNIT_ASSERT(result.has("chars[0]") == true);
+        CPPUNIT_ASSERT(result.has("chars[0].P2") == false);
+        CPPUNIT_ASSERT(result.has("chars[0].P2.x") == false);
+        CPPUNIT_ASSERT(result.has("chars[0].P2.y") == false);
+        CPPUNIT_ASSERT(result.has("chars[0].P2.z") == false);
+        CPPUNIT_ASSERT(result.has("chars[1]") == true);
+        CPPUNIT_ASSERT(result.has("chars[1].P3") == false);
+        CPPUNIT_ASSERT(result.has("chars[1].P3.k") == false);
+        CPPUNIT_ASSERT(result.has("chars[1].P3.l") == false);
+        CPPUNIT_ASSERT(result.has("chars[1].P3.m") == false);
+
+
+        result.clear();
+        HashFilter::byTag(schema, config, result, "NC,LM", ",;");
+        
+//        clog << "NC,LM\n" << result << endl;
+
+
+        CPPUNIT_ASSERT(result.has("antiAlias") == true);
+        CPPUNIT_ASSERT(result.has("color") == false);
+        CPPUNIT_ASSERT(result.has("bold") == true);
+        CPPUNIT_ASSERT(result.has("shapes") == true);
+        CPPUNIT_ASSERT(result.has("shapes.rectangle") == true);
+        CPPUNIT_ASSERT(result.has("shapes.rectangle.b") == false);
+        CPPUNIT_ASSERT(result.has("shapes.rectangle.c") == true);
+        CPPUNIT_ASSERT(result.has("letter") == true);
+        CPPUNIT_ASSERT(result.has("letter.a") == true);
+        CPPUNIT_ASSERT(result.has("letter.b") == false);
+        CPPUNIT_ASSERT(result.has("letter.c") == false);
+        CPPUNIT_ASSERT(result.has("letter.d") == false);
+        CPPUNIT_ASSERT(result.has("letter.e") == true);
+        CPPUNIT_ASSERT(result.has("letter.f") == true);
+        CPPUNIT_ASSERT(result.has("chars") == true);
+        CPPUNIT_ASSERT(result.has("chars[0]") == true);
+        CPPUNIT_ASSERT(result.has("chars[0].P2") == true);
+        CPPUNIT_ASSERT(result.has("chars[0].P2.x") == true);
+        CPPUNIT_ASSERT(result.has("chars[0].P2.y") == true);
+        CPPUNIT_ASSERT(result.has("chars[0].P2.z") == true);
+        CPPUNIT_ASSERT(result.has("chars[1]") == true);
+        CPPUNIT_ASSERT(result.has("chars[1].P3") == true);
+        CPPUNIT_ASSERT(result.has("chars[1].P3.k") == true);
+        CPPUNIT_ASSERT(result.has("chars[1].P3.l") == true);
+        CPPUNIT_ASSERT(result.has("chars[1].P3.m") == true);
+
+
+        result.clear();
+        HashFilter::byTag(schema, config, result, "CY", ",;");
+        
+//        clog << "CY\n" << result << endl;
+
+
+        CPPUNIT_ASSERT(result.has("antiAlias") == false);
+        CPPUNIT_ASSERT(result.has("color") == false);
+        CPPUNIT_ASSERT(result.has("bold") == false);
+        CPPUNIT_ASSERT(result.has("shapes") == true);
+        CPPUNIT_ASSERT(result.has("shapes.rectangle") == true);
+        CPPUNIT_ASSERT(result.has("shapes.rectangle.b") == true);
+        CPPUNIT_ASSERT(result.has("shapes.rectangle.c") == true);
+        CPPUNIT_ASSERT(result.has("letter") == true);
+        CPPUNIT_ASSERT(result.has("letter.a") == true);
+        CPPUNIT_ASSERT(result.has("letter.b") == true);
+        CPPUNIT_ASSERT(result.has("letter.c") == false);
+        CPPUNIT_ASSERT(result.has("letter.d") == true);
+        CPPUNIT_ASSERT(result.has("letter.e") == true);
+        CPPUNIT_ASSERT(result.has("letter.f") == false);
+        CPPUNIT_ASSERT(result.has("chars") == true);
+        CPPUNIT_ASSERT(result.has("chars[0]") == true);
+        CPPUNIT_ASSERT(result.has("chars[0].P2") == true);
+        CPPUNIT_ASSERT(result.has("chars[0].P2.x") == false);
+        CPPUNIT_ASSERT(result.has("chars[0].P2.y") == true);
+        CPPUNIT_ASSERT(result.has("chars[0].P2.z") == true);
+        CPPUNIT_ASSERT(result.has("chars[1]") == true);
+        CPPUNIT_ASSERT(result.has("chars[1].P3") == true);
+        CPPUNIT_ASSERT(result.has("chars[1].P3.k") == false);
+        CPPUNIT_ASSERT(result.has("chars[1].P3.l") == true);
+        CPPUNIT_ASSERT(result.has("chars[1].P3.m") == true);
+
+
+
+        result.clear();
+        HashFilter::byTag(schema, config, result, "BF", ",;");
+        
+//        clog << "BF\n" << result << endl;
+
+
+        CPPUNIT_ASSERT(result.has("antiAlias") == false);
+        CPPUNIT_ASSERT(result.has("color") == false);
+        CPPUNIT_ASSERT(result.has("bold") == false);
+        CPPUNIT_ASSERT(result.has("shapes") == false);
+        CPPUNIT_ASSERT(result.has("shapes.rectangle") == false);
+        CPPUNIT_ASSERT(result.has("shapes.rectangle.b") == false);
+        CPPUNIT_ASSERT(result.has("shapes.rectangle.c") == false);
+        CPPUNIT_ASSERT(result.has("letter") == false);
+        CPPUNIT_ASSERT(result.has("letter.a") == false);
+        CPPUNIT_ASSERT(result.has("letter.b") == false);
+        CPPUNIT_ASSERT(result.has("letter.c") == false);
+        CPPUNIT_ASSERT(result.has("letter.d") == false);
+        CPPUNIT_ASSERT(result.has("letter.e") == false);
+        CPPUNIT_ASSERT(result.has("letter.f") == false);
+        CPPUNIT_ASSERT(result.has("chars") == true);
+        CPPUNIT_ASSERT(result.has("chars[0]") == true);
+        CPPUNIT_ASSERT(result.has("chars[0].P2") == false);
+        CPPUNIT_ASSERT(result.has("chars[0].P2.x") == false);
+        CPPUNIT_ASSERT(result.has("chars[0].P2.y") == false);
+        CPPUNIT_ASSERT(result.has("chars[0].P2.z") == false);
+        CPPUNIT_ASSERT(result.has("chars[1]") == true);
+        CPPUNIT_ASSERT(result.has("chars[1].P3") == true);
+        CPPUNIT_ASSERT(result.has("chars[1].P3.k") == false);
+        CPPUNIT_ASSERT(result.has("chars[1].P3.l") == false);
+        CPPUNIT_ASSERT(result.has("chars[1].P3.m") == true);
+
 
         //clog << "\nresult: \n" << result << endl;
 
@@ -253,6 +508,7 @@ void HashFilter_Test::testFilterByTag() {
 }
 
 #ifdef HASHFILTER_HDF5TEST
+
 
 void HashFilter_Test::testHdf5Filter() {
 
