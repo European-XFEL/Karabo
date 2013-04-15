@@ -26,14 +26,18 @@ CPPUNIT_TEST_SUITE_REGISTRATION(H5File_Test);
 
 
 H5File_Test::H5File_Test() {
-    
-//    karabo::log::Tracer tr;
-//    tr.disableAll();
-//    tr.enable("karabo.io.h5.Table.open");
-//    tr.enable("karabo.io.h5.Table");
-//    tr.reconfigure();
-    
-    
+
+    karabo::log::Tracer tr;
+    tr.disableAll();
+
+    //    tr.enable("karabo.io.h5.Table");
+    tr.enable("karabo.io.h5.Table.saveTableFormatAsAttribute");
+    //    tr.enable("karabo.io.h5.Table.openNew");
+    tr.enable("karabo.io.h5.Table.openReadOnly");
+    tr.enable("H5File_Test.testReadTable");
+    tr.reconfigure();
+
+
     m_numberOfRecords = 512;
 }
 
@@ -43,6 +47,16 @@ H5File_Test::~H5File_Test() {
 
 
 void H5File_Test::setUp() {
+
+    m_v3Size = 5;
+    ostringstream oss;
+    oss << "vecString";
+    m_v3 = vector<string>(m_v3Size, "");
+    for (size_t i = 0; i < m_v3.size(); ++i) {
+        oss << " " << i;
+        m_v3[i] = oss.str();
+    }
+
 }
 
 
@@ -62,7 +76,7 @@ void H5File_Test::testWrite() {
         data.set("instrument.b", static_cast<float> (10));
         data.set("instrument.c", "abc");
         data.set("instrument.d", true).setAttribute("att1", 123);
-        data.set("instrument.e", static_cast<char> (10));
+        data.set("instrument.e", static_cast<char> (58));
         size_t s = 4 * 32 * 256;
 
         s = 1024 * 1024;
@@ -164,8 +178,6 @@ void H5File_Test::testWrite() {
     } catch (karabo::util::Exception& e) {
         cerr << e.detailedMsg() << endl;
         KARABO_RETHROW;
-        //       e.clearTrace();
-        //CPPUNIT_ASSERT(true == false);
     }
 
 
@@ -283,7 +295,7 @@ void H5File_Test::testRead() {
 
         vector<string>& strings = data.bindReference<vector<string> >("strings");
         strings.resize(stringsDims.size());
-         
+
         // /abc/instrument/d will be accessible as Hash element with key "d"
         // because we do not use binding
         // Memory is managed by our API
@@ -294,17 +306,17 @@ void H5File_Test::testRead() {
 
         // get number of records in the file
         size_t nRecords = table->getNumberOfRecords();
- 
+
         KARABO_LOG_FRAMEWORK_TRACE << "number of records: " << nRecords;
         CPPUNIT_ASSERT(nRecords == m_numberOfRecords);
-  
+
 
 
         // read first record
         table->read(0);
 
-         KARABO_LOG_FRAMEWORK_TRACE << "after reading: " << endl;
-        
+        KARABO_LOG_FRAMEWORK_TRACE << "after reading: ";
+
         // assert values
         CPPUNIT_ASSERT(bla == 1006);
         CPPUNIT_ASSERT(data.get<unsigned int>("bla") == 1006);
@@ -317,7 +329,6 @@ void H5File_Test::testRead() {
         CPPUNIT_ASSERT(data.get<bool>("d") == true);
 
         for (size_t i = 0; i < boolDims.size(); ++i) {
-            //clog << "bool[" << i << "]: " << bArray[i] << endl;
             if (i % 2) CPPUNIT_ASSERT(bArray[i] == true);
             else CPPUNIT_ASSERT(bArray[i] == false);
 
@@ -331,8 +342,8 @@ void H5File_Test::testRead() {
 
         for (size_t i = 0; i < stringsDims.size(); ++i) {
             KARABO_LOG_FRAMEWORK_TRACE << "strings[" << i << "] = " << strings[i];
+            CPPUNIT_ASSERT(strings[i] == m_v3[i]);
         }
-
 
 
 
@@ -344,6 +355,47 @@ void H5File_Test::testRead() {
         clog << ex << endl;
         CPPUNIT_ASSERT(true == false);
     }
+
+}
+
+
+void H5File_Test::testReadTable() {
+
+    try {
+        // Open the file in READONLY mode
+        File file(resourcePath("file.h5"));
+        file.open(File::READONLY);
+
+
+        // Define the table to be read using defined format
+        Table::Pointer table = file.getTable("/abc");
+
+        // Declare container for data
+        Hash data;
+
+        // Bind some variable to hash data
+        // Note that hash element "d" is not bound
+
+        // bla will contain data from /abc/experimental/test23
+        //unsigned int& test23 = data.bindReference<unsigned int>("abecadlo.wer");
+
+        table->bind(data);
+
+        table->read(0);
+
+        KARABO_LOG_FRAMEWORK_TRACE_CF << "DATA:\n" << data;
+        
+        //KARABO_LOG_FRAMEWORK_TRACE_CF << "test23: " << test23;
+        KARABO_LOG_FRAMEWORK_TRACE_CF << "data(\"instrument.b\"): " << data.get<float>("instrument.b");
+
+
+//        table->close();
+        file.close();
+    } catch (Exception& ex) {
+        clog << ex << endl;
+        CPPUNIT_ASSERT(true == false);
+    }
+ 
 
 }
 

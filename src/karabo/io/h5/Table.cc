@@ -17,6 +17,7 @@
 #include <karabo/util/SimpleElement.hh>
 
 #include <karabo/io/HashXmlSerializer.hh>
+#include <karabo/util/HashFilter.hh>
 
 
 #include "ioProfiler.hh"
@@ -44,16 +45,15 @@ namespace karabo {
 
             void Table::openNew(const Format::Pointer dataFormat) {
 
-                KARABO_LOG_FRAMEWORK_TRACE << "Open new file: " << m_name;
-                KARABO_LOG_FRAMEWORK_TRACE_CF << "Open new file 1111: " << m_name;
+                KARABO_LOG_FRAMEWORK_TRACE_CF << "Open new file: " << m_name;
                 createEmptyTable(m_h5file, m_name);
                 createSchemaVersionAttribute();
                 createInitialNumberOfRecordsAttribute();
                 saveTableFormatAsAttribute(dataFormat);
                 //////////////////////////////////////
                 // to be removed: test only
-                Hash config;
-                readTableFormatFromAttribute(config);
+                //                Hash config;
+                //                readTableFormatFromAttribute(config);
                 //////////////////////////////////////
                 m_dataFormat = dataFormat;
                 defineStructure();
@@ -64,7 +64,7 @@ namespace karabo {
 
             void Table::openReadOnly(const karabo::io::h5::Format::Pointer dataFormat) {
 
-                KARABO_LOG_FRAMEWORK_TRACE << "Open file for reading: " << m_name;
+                KARABO_LOG_FRAMEWORK_TRACE_CF << "Open file for reading with specific user defined format: " << m_name;
                 m_dataFormat = dataFormat;
                 try {
 
@@ -80,40 +80,47 @@ namespace karabo {
                     KARABO_RETHROW
                 }
             }
-            //
-            //            void Table::openReadOnly() {
-            //                // there are 3 ways of opening file for reading
-            //                // 1 - table structure is read from the file. Hdf5 group contains the attribute table
-            //                // 2 - table structure is discovered from the file/group structure
-            //                // 3 - user defines the table structure - this is implemented by openReadOnly(DataFormat::Pointer) function
-            //                //
-            //                // 1) standard way, only files written by this software can use it as it requires the attribute ("table") is set
-            //                // 2) this is more general, but still requires that within the table (h5 group) datasets have the same number of
-            //                // entries (implemented as 1Dim dataset) and there is one-to-one relation. 
-            //                // 3) this should allow essentially any file to be read. Here the table could be even just one dataset
-            //                //
-            //
-            //
-            //                try {
-            //                    m_group = boost::shared_ptr<H5::Group > (new H5::Group(m_h5file->openGroup(m_name.c_str())));
-            //                    if (hasAttribute(m_group, "table")) {
-            //                        Hash readDataFormatConfig;
-            //                        readTableFormatFromAttribute(readDataFormatConfig);
-            //                        m_dataFormat = DataFormat::create(readDataFormatConfig);
-            //                    } else {
-            //                        // if format not defined as attribute discover it from data structure
-            //                        discover(m_dataFormat, m_name.c_str());
-            //                        KARABO_LOG_TRACE << m_dataFormat->getConfig() << endl;
-            //                    }
-            //                } catch (...) {
-            //                    KARABO_RETHROW
-            //                }
-            //                openRecordStructure();
-            //                retrieveNumberOfRecordsFromFile();
-            //                retrieveChunkSizeFromFile();
-            //                if (m_useCache) initializeCache();
-            //            }
-            //
+
+
+            void Table::openReadOnly() {
+                // there are 3 ways of opening file for reading
+                // 1 - table structure is read from the file. Hdf5 group contains the attribute table
+                // 2 - table structure is discovered from the file/group structure
+                // 3 - user defines the table structure - this is implemented by openReadOnly(DataFormat::Pointer) function
+                //
+                // 1) standard way, only files written by this software can use it as it requires the attribute ("table") is set
+                // 2) this is more general, but still requires that within the table (h5 group) datasets have the same number of
+                // entries (implemented as NDim dataset) and there is one-to-one relation. 
+                // 3) this should allow essentially any file to be read. Here the table could be even just one dataset
+                //
+
+                KARABO_LOG_FRAMEWORK_TRACE_CF << "Open file for reading using stored table definition: " << m_name;
+
+                try {
+
+                    m_group = H5Gopen(m_h5file, m_name.c_str(), H5P_DEFAULT);
+                    KARABO_CHECK_HDF5_STATUS(m_group);
+
+                    if (hasAttribute(m_group, "table")) {
+                        Hash readDataFormatConfig;
+                        readTableFormatFromAttribute(readDataFormatConfig);
+                        m_dataFormat = Format::createNode("Format", "Format", readDataFormatConfig);
+                    } else {
+                        throw KARABO_HDF_IO_EXCEPTION("auto discovery not enabled yet");
+                        // if format not defined as attribute discover it from data structure
+                        //discover(m_dataFormat, m_name.c_str());
+                        //KARABO_LOG_FRAMEWORK_TRACE_CF << m_dataFormat->getConfig() << endl;
+                    }
+                } catch (...) {
+                    KARABO_RETHROW
+                }
+
+                vector<boost::shared_ptr<Element> > elements = m_dataFormat->getElements();
+                for (size_t i = 0; i < elements.size(); ++i) {
+                    elements[i]->open(m_group);
+                }
+                retrieveNumberOfRecordsFromFile();
+            }
 
 
             void Table::append(const karabo::util::Hash& data) {
@@ -160,7 +167,7 @@ namespace karabo {
             //            void Table::writeBuffer(const karabo::util::Hash& data, size_t recordNumber, size_t len) {
             //
             //                size_t missingRecords = recordNumber + len - m_numberOfRecords;
-            //                KARABO_LOG_TRACE << "recordNumber: " << recordNumber << " len: " << len << endl
+            //                KARABO_LOG_FRAMEWORK_TRACE_CF<< "recordNumber: " << recordNumber << " len: " << len << endl
             //                        << "m_numberOfRecords: " << m_numberOfRecords << " missing: " << missingRecords << endl;
             //
             //                if (missingRecords > 0) {
@@ -228,13 +235,13 @@ namespace karabo {
 
 
             void Table::read(size_t recordNumber) {
-                
+
                 vector<boost::shared_ptr<Element> > elements = m_dataFormat->getElements();
                 for (size_t i = 0; i < elements.size(); ++i) {
-                    KARABO_LOG_FRAMEWORK_TRACE << "Table::read  element " << i;
+                    KARABO_LOG_FRAMEWORK_TRACE_CF << "Table::read  element " << i;
                     elements[i]->read(recordNumber);
                 }
-                
+
             }
             //
             //            void Table::readBuffer(karabo::util::Hash& data, size_t recordNumber, size_t len) {
@@ -360,11 +367,11 @@ namespace karabo {
                     KARABO_CHECK_HDF5_STATUS(m_numberOfRecordsAttribute);
 
                     KARABO_CHECK_HDF5_STATUS(H5Aread(m_numberOfRecordsAttribute, H5T_NATIVE_HSIZE, &m_numberOfRecords));
-                    KARABO_LOG_FRAMEWORK_TRACE << "numberOfRecords attribute for " << m_name.c_str() << " is " << m_numberOfRecords;
+                    KARABO_LOG_FRAMEWORK_TRACE_CF << "numberOfRecords attribute for " << m_name.c_str() << " is " << m_numberOfRecords;
                 } else {
-                    KARABO_LOG_FRAMEWORK_TRACE << "numberOfRecords attribute not defined for " << m_name;
+                    KARABO_LOG_FRAMEWORK_TRACE_CF << "numberOfRecords attribute not defined for " << m_name;
                     //calculateNumberOfRecords();
-                    KARABO_LOG_FRAMEWORK_TRACE << "Calculated number of records: " << m_numberOfRecords;
+                    KARABO_LOG_FRAMEWORK_TRACE_CF << "Calculated number of records: " << m_numberOfRecords;
                 }
             }
             //
@@ -383,15 +390,22 @@ namespace karabo {
                 try {
 
                     const Hash& dataFormatConfig = dataFormat->getConfig();
+                    
+                    Schema schema = Format::getSchema("Format");
+                    Hash persistentDataFormatConfig;
+                    Hash& elements = persistentDataFormatConfig.bindReference<Hash>("Format");
+                    HashFilter::byTag(elements, schema, dataFormatConfig.get<Hash>("Format"), "persistent");
 
+                    KARABO_LOG_FRAMEWORK_TRACE_CF << persistentDataFormatConfig;
+                    
                     Hash c("Xml.indentation", 1);
                     TextSerializer<Hash>::Pointer serializer = TextSerializer<Hash>::create(c);
 
                     string dataFormatConfigXml;
 
-                    serializer->save(dataFormatConfig, dataFormatConfigXml);
+                    serializer->save(persistentDataFormatConfig, dataFormatConfigXml);
 
-                    KARABO_LOG_FRAMEWORK_TRACE << "Description of format to be written to hdf5 file as group attribute:\n " << dataFormatConfigXml;
+                    KARABO_LOG_FRAMEWORK_TRACE_CF << "Description of format to be written to hdf5 file as group attribute:\n " << dataFormatConfigXml;
                     hid_t dataSpace = H5Screate(H5S_SCALAR);
                     hid_t tableAttribute = H5Acreate(m_group, "table", ScalarTypes::getHdf5StandardType<string>(), dataSpace, H5P_DEFAULT, H5P_DEFAULT);
                     KARABO_CHECK_HDF5_STATUS(tableAttribute);
@@ -412,17 +426,17 @@ namespace karabo {
                     KARABO_CHECK_HDF5_STATUS(tableAttribute);
 
                     char* ptr[1];
-                    
+
                     KARABO_CHECK_HDF5_STATUS(H5Aread(tableAttribute, ScalarTypes::getHdf5NativeType<string>(), &ptr));
                     string dataFormatConfigXml = ptr[0];
 
-                    KARABO_LOG_FRAMEWORK_TRACE << "Read format:\n " << dataFormatConfigXml;
+                    KARABO_LOG_FRAMEWORK_TRACE_CF << "Read format:\n " << dataFormatConfigXml;
 
                     TextSerializer<Hash>::Pointer serializer = TextSerializer<Hash>::create("Xml");
                     serializer->load(dataFormatConfig, dataFormatConfigXml);
-                    
-                    
-                    
+
+
+
 
                 } catch (...) {
                     KARABO_RETHROW
@@ -582,7 +596,7 @@ namespace karabo {
             //                if (firstTime == true) {
             //                    lastCalculatedNumberOfRecords = 0;
             //                }
-            //                KARABO_LOG_TRACE << "r_calculateNumberOfRecords enter function: last: " << lastCalculatedNumberOfRecords << endl;
+            //                KARABO_LOG_FRAMEWORK_TRACE_CF<< "r_calculateNumberOfRecords enter function: last: " << lastCalculatedNumberOfRecords << endl;
             //
             //                for (Hash::const_iterator it = recordFormat.begin(); it != recordFormat.end(); ++it) {
             //                    const string& key = it->first;
@@ -592,8 +606,8 @@ namespace karabo {
             //                    }
             //                    boost::shared_ptr<RecordElement> element = recordFormat.get<boost::shared_ptr<RecordElement> >(key);
             //                    hsize_t numberOfRecords = element->getNumberOfRecords();
-            //                    //KARABO_LOG_TRACE << "r_calculateNumberOfRecords  last: " << lastCalculatedNumberOfRecords << endl;
-            //                    //KARABO_LOG_TRACE << "numberOfRecords : " << numberOfRecords << endl;
+            //                    //KARABO_LOG_FRAMEWORK_TRACE_CF<< "r_calculateNumberOfRecords  last: " << lastCalculatedNumberOfRecords << endl;
+            //                    //KARABO_LOG_FRAMEWORK_TRACE_CF<< "numberOfRecords : " << numberOfRecords << endl;
             //                    if (firstTime == false && numberOfRecords != lastCalculatedNumberOfRecords) {
             //                        throw KARABO_IO_EXCEPTION("Table contains fields with not consistent number of records.");
             //                    }
@@ -616,7 +630,7 @@ namespace karabo {
             //                if (firstTime == true) {
             //                    lastCalculatedChunkSize = 0;
             //                }
-            //                KARABO_LOG_TRACE << "r_getChunkSize enter function: last: " << lastCalculatedChunkSize << endl;
+            //                KARABO_LOG_FRAMEWORK_TRACE_CF<< "r_getChunkSize enter function: last: " << lastCalculatedChunkSize << endl;
             //
             //                for (Hash::const_iterator it = recordFormat.begin(); it != recordFormat.end(); ++it) {
             //                    const string& key = it->first;
@@ -626,8 +640,8 @@ namespace karabo {
             //                    }
             //                    boost::shared_ptr<RecordElement> element = recordFormat.get<boost::shared_ptr<RecordElement> >(key);
             //                    hsize_t chunkSize = element->getChunkSize();
-            //                    //KARABO_LOG_TRACE << "r_calculateNumberOfRecords  last: " << lastCalculatedNumberOfRecords << endl;
-            //                    //KARABO_LOG_TRACE << "numberOfRecords : " << numberOfRecords << endl;
+            //                    //KARABO_LOG_FRAMEWORK_TRACE_CF<< "r_calculateNumberOfRecords  last: " << lastCalculatedNumberOfRecords << endl;
+            //                    //KARABO_LOG_FRAMEWORK_TRACE_CF<< "numberOfRecords : " << numberOfRecords << endl;
             //                    if (firstTime == false && chunkSize != lastCalculatedChunkSize) {
             //                        throw KARABO_IO_EXCEPTION("Table contains fields with not consistent chunk size - this is not supported at the moment.");
             //                    }
@@ -655,19 +669,19 @@ namespace karabo {
             //            void Table::refreshCache(size_t recordNumber) {
             //
             //                size_t chunkNumber = static_cast<size_t> (recordNumber / m_chunkSize);
-            //                KARABO_LOG_TRACE << "chunkNumber: " << chunkNumber << endl;
+            //                KARABO_LOG_FRAMEWORK_TRACE_CF<< "chunkNumber: " << chunkNumber << endl;
             //                size_t firstChunkRecord = chunkNumber * m_chunkSize;
             //                unsigned long long lastChunkRecord = firstChunkRecord + m_cacheSize;
             //                long long t = lastChunkRecord - m_numberOfRecords;
-            //                KARABO_LOG_TRACE << "t: " << t << endl;
+            //                KARABO_LOG_FRAMEWORK_TRACE_CF<< "t: " << t << endl;
             //                size_t nRecordsToRead = m_chunkSize;
-            //                KARABO_LOG_TRACE << "firstChunkRecord: " << firstChunkRecord << endl;
-            //                KARABO_LOG_TRACE << "lastChunkRecord: " << lastChunkRecord << endl;
-            //                KARABO_LOG_TRACE << "nRecordsToRead: " << nRecordsToRead << endl;
+            //                KARABO_LOG_FRAMEWORK_TRACE_CF<< "firstChunkRecord: " << firstChunkRecord << endl;
+            //                KARABO_LOG_FRAMEWORK_TRACE_CF<< "lastChunkRecord: " << lastChunkRecord << endl;
+            //                KARABO_LOG_FRAMEWORK_TRACE_CF<< "nRecordsToRead: " << nRecordsToRead << endl;
             //
             //                if (t > 0) {
             //                    nRecordsToRead = m_chunkSize - t;
-            //                    KARABO_LOG_TRACE << "nRecordsToRead updated: " << nRecordsToRead << endl;
+            //                    KARABO_LOG_FRAMEWORK_TRACE_CF<< "nRecordsToRead updated: " << nRecordsToRead << endl;
             //                }
             //                readBuffer(m_cache, firstChunkRecord, nRecordsToRead);
             //                m_cacheStart = firstChunkRecord;
@@ -686,7 +700,7 @@ namespace karabo {
             //
             //            void Table::r_filter(const Hash& discovered, const Hash& selection, Hash & output) {
             //
-            //                //KARABO_LOG_TRACE << "r_filter " << endl;
+            //                //KARABO_LOG_FRAMEWORK_TRACE_CF<< "r_filter " << endl;
             //                for (Hash::const_iterator it = selection.begin(); it != selection.end(); ++it) {
             //                    const string& key = it->first;
             //                    if (!discovered.has(key)) {
@@ -694,34 +708,34 @@ namespace karabo {
             //                        throw KARABO_IO_EXCEPTION(msg);
             //                    }
             //                    if (discovered.getTypeAsId(key) == Types::HASH) {
-            //                        //KARABO_LOG_TRACE << "discovered Hash " << key << endl;
+            //                        //KARABO_LOG_FRAMEWORK_TRACE_CF<< "discovered Hash " << key << endl;
             //                        if (discovered.has(key)) {
-            //                            //KARABO_LOG_TRACE << "discovered exists  " << key << endl;
+            //                            //KARABO_LOG_FRAMEWORK_TRACE_CF<< "discovered exists  " << key << endl;
             //                            if (selection.getTypeAsId(key) == Types::HASH) {
-            //                                //KARABO_LOG_TRACE << "selection is Hash  " << key << endl;
+            //                                //KARABO_LOG_FRAMEWORK_TRACE_CF<< "selection is Hash  " << key << endl;
             //                                output.set(key, Hash());
             //                                r_filter(discovered.get<Hash > (key), selection.get<Hash > (key), output.get<Hash > (key));
             //                            } else {
             //                                // check if true/false
-            //                                //KARABO_LOG_TRACE << "discovered is NOT a Hash  " << key << endl;
+            //                                //KARABO_LOG_FRAMEWORK_TRACE_CF<< "discovered is NOT a Hash  " << key << endl;
             //                                output.set(key, discovered.get<Hash > (key));
             //                            }
             //                        }
             //                        continue;
             //                    }
             //
-            //                    //KARABO_LOG_TRACE << "discovered is not a Hash  " << key << endl;
+            //                    //KARABO_LOG_FRAMEWORK_TRACE_CF<< "discovered is not a Hash  " << key << endl;
             //                    if (selection.has(key)) {
-            //                        //KARABO_LOG_TRACE << "selection is element  " << key << endl;
+            //                        //KARABO_LOG_FRAMEWORK_TRACE_CF<< "selection is element  " << key << endl;
             //                        boost::shared_ptr<RecordElement> element = discovered.get<boost::shared_ptr<RecordElement> >(key);
             //                        output.set(key, element);
             //                        /*
             //                                  if (selection.is<int>(key)) {
-            //                                    KARABO_LOG_TRACE << "Hash element " << key << " is int" << endl;
+            //                                    KARABO_LOG_FRAMEWORK_TRACE_CF<< "Hash element " << key << " is int" << endl;
             //                                  } else if (selection.is<short>(key)) {
-            //                                    KARABO_LOG_TRACE << "Hash element " << key << " is short" << endl;
+            //                                    KARABO_LOG_FRAMEWORK_TRACE_CF<< "Hash element " << key << " is short" << endl;
             //                                  } else {
-            //                                    KARABO_LOG_TRACE << "Hash element " << key << " is not known" << endl;
+            //                                    KARABO_LOG_FRAMEWORK_TRACE_CF<< "Hash element " << key << " is not known" << endl;
             //                                  }
             //                         */
             //
@@ -743,23 +757,23 @@ namespace karabo {
             //                    return 0;
             //                }
             //                if (info->type == H5O_TYPE_GROUP) {
-            //                    KARABO_LOG_TRACE << "Group:   " << name << endl;
+            //                    KARABO_LOG_FRAMEWORK_TRACE_CF<< "Group:   " << name << endl;
             //
             //                } else if (info->type == H5O_TYPE_DATASET) {
-            //                    KARABO_LOG_TRACE << "Dataset: " << name << endl;
+            //                    KARABO_LOG_FRAMEWORK_TRACE_CF<< "Dataset: " << name << endl;
             //                    hid_t ds_id = H5Dopen(loc_id, name, H5P_DEFAULT);
             //                    DataSet dataset(ds_id);
             //                    string p(name);
             //                    boost::trim(p);
             //                    vector<string> v;
             //                    boost::split(v, p, is_any_of("/"));
-            //                    KARABO_LOG_TRACE << "v.size(): " << v.size() << endl;
+            //                    KARABO_LOG_FRAMEWORK_TRACE_CF<< "v.size(): " << v.size() << endl;
             //                    string dataSetName = v[v.size() - 1];
             //                    string dataBlockName = "";
             //                    if (v.size() > 1) {
             //                        dataBlockName = v[v.size() - 2];
             //                    }
-            //                    KARABO_LOG_TRACE << "After dataBlockName discovered: " << dataBlockName << endl;
+            //                    KARABO_LOG_FRAMEWORK_TRACE_CF<< "After dataBlockName discovered: " << dataBlockName << endl;
             //                    ostringstream os;
             //
             //                    if (v.size() > 2) {
@@ -768,22 +782,22 @@ namespace karabo {
             //                        }
             //                    }
             //
-            //                    KARABO_LOG_TRACE << "Before prefix" << endl;
+            //                    KARABO_LOG_FRAMEWORK_TRACE_CF<< "Before prefix" << endl;
             //                    string prefix = os.str();
-            //                    KARABO_LOG_TRACE << "dsN: " << dataSetName << endl;
-            //                    KARABO_LOG_TRACE << "groupN: " << dataBlockName << endl;
-            //                    KARABO_LOG_TRACE << "prefix: " << prefix << endl;
+            //                    KARABO_LOG_FRAMEWORK_TRACE_CF<< "dsN: " << dataSetName << endl;
+            //                    KARABO_LOG_FRAMEWORK_TRACE_CF<< "groupN: " << dataBlockName << endl;
+            //                    KARABO_LOG_FRAMEWORK_TRACE_CF<< "prefix: " << prefix << endl;
             //                    trim_right_if(prefix, is_any_of("/"));
-            //                    KARABO_LOG_TRACE << "prefix: " << prefix << endl;
+            //                    KARABO_LOG_FRAMEWORK_TRACE_CF<< "prefix: " << prefix << endl;
             //                    if (!prefix.empty()) prefix = prefix + "/";
             //
             //
             //                    Hash& dbs = discovered->get<Hash > ("dataBlocks");
-            //                    KARABO_LOG_TRACE << "dbs1: " << dbs << endl;
+            //                    KARABO_LOG_FRAMEWORK_TRACE_CF<< "dbs1: " << dbs << endl;
             //                    if (!dbs.has(dataBlockName)) {
             //                        dbs.set(dataBlockName, Hash());
             //                    }
-            //                    KARABO_LOG_TRACE << "dbs2: " << dbs << endl;
+            //                    KARABO_LOG_FRAMEWORK_TRACE_CF<< "dbs2: " << dbs << endl;
             //
             //                    Hash& dataBlock = dbs.get<Hash > (dataBlockName);
             //                    dataBlock.setFromPath(dataSetName, Hash(), "/");
@@ -835,7 +849,7 @@ namespace karabo {
             //
             //                        DataType dataType = atype.getSuper();
             //                        if (dataType == PredType::NATIVE_UINT16) {
-            //                            KARABO_LOG_TRACE << "array of uint16" << endl;
+            //                            KARABO_LOG_FRAMEWORK_TRACE_CF<< "array of uint16" << endl;
             //                            dataSet.set("type", "UInt16Array");
             //                        } else if (dataType == PredType::NATIVE_FLOAT) {
             //                            dataSet.set("type", "FloatArray");
@@ -858,13 +872,13 @@ namespace karabo {
             //
             //
             //                        } else {
-            //                            KARABO_LOG_TRACE << "unknown array" << endl;
+            //                            KARABO_LOG_FRAMEWORK_TRACE_CF<< "unknown array" << endl;
             //                            dataBlock.erase(dataSetName);
             //                            isSupportedType = false;
             //                        }
             //                        if (isSupportedType) {
             //                            dataSet.set("dims", dims);
-            //                            KARABO_LOG_TRACE << "type: " << dataSet.get<string > ("type") << endl;
+            //                            KARABO_LOG_FRAMEWORK_TRACE_CF<< "type: " << dataSet.get<string > ("type") << endl;
             //                        }
             //
             //                    } else if (typeClass == H5T_COMPOUND) {
@@ -896,7 +910,7 @@ namespace karabo {
             //
             //
             //
-            //                    KARABO_LOG_TRACE << "DUPA: \n" << dbs << "\nDUPA-END" << endl;
+            //                    KARABO_LOG_FRAMEWORK_TRACE_CF<< "DUPA: \n" << dbs << "\nDUPA-END" << endl;
             //                    // TODO - check if compression is used
             //                    // DSetCreatPropList plist = dataset.getCreatePlist();
             //
@@ -916,7 +930,7 @@ namespace karabo {
             //                    discovered.setFromPath("RecordFormat", Hash());
             //                    void* d = (void*) &discovered;
             //
-            //                    KARABO_LOG_TRACE << "Iterating over all elements starting from group " << groupName << endl;
+            //                    KARABO_LOG_FRAMEWORK_TRACE_CF<< "Iterating over all elements starting from group " << groupName << endl;
             //
             //                    H5::Group dataGroup(m_h5file->openGroup(groupName));
             //                    herr_t status = H5Ovisit(dataGroup.getId(), H5_INDEX_NAME, H5_ITER_NATIVE, &Table::fileInfo, d);
@@ -925,7 +939,7 @@ namespace karabo {
             //                    }
             //
             //
-            //                    KARABO_LOG_TRACE << "discovered: \n" << discovered << endl;
+            //                    KARABO_LOG_FRAMEWORK_TRACE_CF<< "discovered: \n" << discovered << endl;
             //
             //                    Hash& discoveredDataBlocks = discovered.get<Hash > ("dataBlocks");
             //                    Hash& discoveredRecordFormat = discovered.get<Hash > ("RecordFormat");
@@ -936,21 +950,21 @@ namespace karabo {
             //
             //                    for (Hash::const_iterator it = discoveredDataBlocks.begin(); it != discoveredDataBlocks.end(); ++it) {
             //                        const string& key = it->first;
-            //                        KARABO_LOG_TRACE << "key: " << key << endl;
+            //                        KARABO_LOG_FRAMEWORK_TRACE_CF<< "key: " << key << endl;
             //                        Hash & dataBlockHash = discoveredDataBlocks.get<Hash > (key);
             //                        Hash dataBlock;
             //                        dataBlock.setFromPath("DataBlock.name", key);
             //                        for (Hash::const_iterator it2 = dataBlockHash.begin(); it2 != dataBlockHash.end(); ++it2) {
             //                            const string& key2 = it2->first;
-            //                            KARABO_LOG_TRACE << "  key2:" << key2 << endl;
+            //                            KARABO_LOG_FRAMEWORK_TRACE_CF<< "  key2:" << key2 << endl;
             //                            const string& type = dataBlockHash.getFromPath<string > (key2 + ".type");
             //                            dataBlock.setFromPath("DataBlock.elements[next]." + type + ".dataset", key2);
             //
             //
             //                            Hash& blockHash = dataBlockHash.getFromPath<Hash > (key2);
-            //                            KARABO_LOG_TRACE << "blockHash: " << blockHash << endl;
+            //                            KARABO_LOG_FRAMEWORK_TRACE_CF<< "blockHash: " << blockHash << endl;
             //                            if (blockHash.has("dims")) {
-            //                                KARABO_LOG_TRACE << "blockHash has key 'dims' " << endl;
+            //                                KARABO_LOG_FRAMEWORK_TRACE_CF<< "blockHash has key 'dims' " << endl;
             //                                vector<unsigned long long> dims = dataBlockHash.getFromPath<vector<unsigned long long> >(key2 + ".dims");
             //                                dataBlock.setFromPath("DataBlock.elements[last]." + type + ".dims", dims);
             //                            }
@@ -959,17 +973,17 @@ namespace karabo {
             //                        vectorOfDataBlocks.push_back(dataBlock);
             //                    }
             //
-            //                    KARABO_LOG_TRACE << "before adding Group.name and Group.path" << endl;
-            //                    KARABO_LOG_TRACE << "discoveredRecordFormat: \n" << discoveredRecordFormat << endl;
+            //                    KARABO_LOG_FRAMEWORK_TRACE_CF<< "before adding Group.name and Group.path" << endl;
+            //                    KARABO_LOG_FRAMEWORK_TRACE_CF<< "discoveredRecordFormat: \n" << discoveredRecordFormat << endl;
             //                    for (Hash::const_iterator it = discoveredRecordFormat.begin(); it != discoveredRecordFormat.end(); ++it) {
             //                        const string& key = it->first;
-            //                        KARABO_LOG_TRACE << "key: " << key << endl;
+            //                        KARABO_LOG_FRAMEWORK_TRACE_CF<< "key: " << key << endl;
             //                        const Hash& tmp = discoveredRecordFormat.get<Hash > (key);
-            //                        KARABO_LOG_TRACE << "tmp (what is that?) " << tmp << endl;
+            //                        KARABO_LOG_FRAMEWORK_TRACE_CF<< "tmp (what is that?) " << tmp << endl;
             //                        conf.setFromPath("DataFormat.RecordFormat.groups[next].Group.name", tmp.get<string > ("group"));
             //                        conf.setFromPath("DataFormat.RecordFormat.groups[last].Group.path", tmp.get<string > ("path"));
             //                    }
-            //                    KARABO_LOG_TRACE << "before writing CrossCheckFormat" << endl;
+            //                    KARABO_LOG_FRAMEWORK_TRACE_CF<< "before writing CrossCheckFormat" << endl;
             //                    conf.setFromPath("DataFormat.RecordFormat.root", "");
             //
             //                    Hash writerConfig;
@@ -977,19 +991,19 @@ namespace karabo {
             //                    Writer<Hash>::Pointer formatWriter = Writer<Hash>::create(writerConfig);
             //                    formatWriter->write(conf);
             //
-            //                    KARABO_LOG_TRACE << "after writing CrossCheckFormat" << endl;
-            //                    KARABO_LOG_TRACE << "Full: \n" << conf << endl;
+            //                    KARABO_LOG_FRAMEWORK_TRACE_CF<< "after writing CrossCheckFormat" << endl;
+            //                    KARABO_LOG_FRAMEWORK_TRACE_CF<< "Full: \n" << conf << endl;
             //                    for (size_t i = 0; i < vectorOfDataBlocks.size(); ++i) {
-            //                        KARABO_LOG_TRACE << "vec:\n" << vectorOfDataBlocks[i] << endl;
+            //                        KARABO_LOG_FRAMEWORK_TRACE_CF<< "vec:\n" << vectorOfDataBlocks[i] << endl;
             //                    }
             //
             //
             //                    dataFormat = DataFormat::create(conf);
-            //                    KARABO_LOG_TRACE << "dataFormat " << dataFormat << endl;
+            //                    KARABO_LOG_FRAMEWORK_TRACE_CF<< "dataFormat " << dataFormat << endl;
             //                    RecordFormat::Pointer recordFormat = dataFormat->getRecordFormat();
-            //                    KARABO_LOG_TRACE << "After getRecordFormat" << endl;
+            //                    KARABO_LOG_FRAMEWORK_TRACE_CF<< "After getRecordFormat" << endl;
             //                    recordFormat->getHash(m_recordFormatHash);
-            //                    KARABO_LOG_TRACE << "Hash structure: " << m_recordFormatHash << endl;
+            //                    KARABO_LOG_FRAMEWORK_TRACE_CF<< "Hash structure: " << m_recordFormatHash << endl;
             //                } catch (...) {
             //                    KARABO_RETHROW;
             //                }

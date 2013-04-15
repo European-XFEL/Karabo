@@ -34,9 +34,10 @@ namespace karabo {
 
             template<typename T>
             class FixedLengthArrayAttribute : public Attribute {
+
             public:
 
-                KARABO_CLASSINFO(FixedLengthArrayAttribute, "VECTOR_" + karabo::util::ToType<karabo::util::ToLiteral>::to(karabo::util::FromType<karabo::util::FromTypeInfo>::from(typeid (T))), "2.0")          
+                KARABO_CLASSINFO(FixedLengthArrayAttribute, "VECTOR_" + karabo::util::ToType<karabo::util::ToLiteral>::to(karabo::util::FromType<karabo::util::FromTypeInfo>::from(typeid (T))), "2.0")
 
                 FixedLengthArrayAttribute(const karabo::util::Hash& input) : Attribute(input) {
                     m_dims = karabo::util::Dims(input.get<std::vector<unsigned long long> >("dims"));
@@ -51,22 +52,23 @@ namespace karabo {
                             .key("dims")
                             .displayedName("Dimensions")
                             .description("Array dimensions.")
+                            .tags("persistent")
                             .assignmentOptional().noDefaultValue()
                             .init()
                             .commit();
                 }
 
                 void create(hsize_t chunkSize) {
-                    
+
                 }
 
- 
                 void write(const karabo::util::Hash& data, hsize_t recordId) {
- 
+
                 }
+
                 void write(const karabo::util::Hash& data, hsize_t recordId, hsize_t len) {
-                 }
- 
+                }
+
 
             protected:
 

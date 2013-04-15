@@ -82,11 +82,12 @@ namespace karabo {
                 static void discoverAttributes(const karabo::util::Hash::Node& el, karabo::util::Hash& config);
 
                 template< class T> static void discoverVectorSize(karabo::util::Hash& h, const karabo::util::Hash::Node& el) {
-                    const std::vector<T>& vec = el.getValue< std::vector<T> >();
+                    
                     std::vector<unsigned long long> dims;
                     if (el.hasAttribute("dims")) {
                         dims = el.getAttribute<std::vector<unsigned long long> >("dims");
                     } else {
+                        const std::vector<T>& vec = el.getValue< std::vector<T> >();
                         dims.push_back(vec.size());
                     }
                     h.set("dims", dims);

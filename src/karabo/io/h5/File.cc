@@ -84,7 +84,7 @@ namespace karabo {
 
             Table::Pointer File::getTable(const std::string& name) {
                 Table::Pointer table = createReadOnlyTablePointer(name);
-                //          table->openReadOnly();
+                table->openReadOnly();
                 return table;
             }
 

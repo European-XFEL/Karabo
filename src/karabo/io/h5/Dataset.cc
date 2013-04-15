@@ -23,6 +23,7 @@ namespace karabo {
                         .key("compressionLevel")
                         .displayedName("Use Compression Level")
                         .description("Defines compression level: [0-9]. 0 - no compression (default), 9 - attempt the best compression.")
+                        .tags("persistent")
                         .minInc(0).maxInc(9)
                         .assignmentOptional().defaultValue(0)
                         .reconfigurable()

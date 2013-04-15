@@ -34,15 +34,16 @@ namespace karabo {
         namespace h5 {
 
             template<typename T, typename U = T*>
-                    class FixedLengthArray : public Dataset {
+            class FixedLengthArray : public Dataset {
+
             public:
 
                 KARABO_CLASSINFO(FixedLengthArray, "VECTOR_" + karabo::util::ToType<karabo::util::ToLiteral>::to(karabo::util::FromType<karabo::util::FromTypeInfo>::from(typeid (T))), "2.0")
 
                 FixedLengthArray(const karabo::util::Hash& input) : Dataset(input)
-#ifdef KARABO_USE_PROFILER_SCALAR1
+                #ifdef KARABO_USE_PROFILER_SCALAR1
                 , scalar1("scalar1")
-#endif
+                #endif
                 {
                     m_dims = karabo::util::Dims(input.get<std::vector<unsigned long long> >("dims"));
                     m_memoryDataSpace1 = Dataset::dataSpace(m_dims);
@@ -63,6 +64,7 @@ namespace karabo {
                             .key("dims")
                             .displayedName("Dimensions")
                             .description("Array dimensions.")
+                            .tags("persistent")
                             .assignmentOptional().noDefaultValue()
                             .init()
                             .commit();
@@ -79,7 +81,7 @@ namespace karabo {
 
                 void close() {
                     KARABO_CHECK_HDF5_STATUS(H5Sclose(m_memoryDataSpace1));
-                    KARABO_CHECK_HDF5_STATUS(H5Sclose(m_fileDataSpace)); 
+                    KARABO_CHECK_HDF5_STATUS(H5Sclose(m_fileDataSpace));
                     Dataset::close();
                 }
 
@@ -105,7 +107,7 @@ namespace karabo {
 
                         m_fileDataSpace = dataSpace(zeroDataSpace);
                         m_dataSet = H5Dcreate(m_parentGroup, m_h5name.c_str(), ScalarTypes::getHdf5StandardType<T > (),
-                                m_fileDataSpace, H5P_DEFAULT, m_dataSetProperties, H5P_DEFAULT);
+                                              m_fileDataSpace, H5P_DEFAULT, m_dataSetProperties, H5P_DEFAULT);
                         KARABO_CHECK_HDF5_STATUS(m_dataSet);
                     } catch (...) {
                         KARABO_RETHROW_AS(KARABO_PROPAGATED_EXCEPTION("Cannot create dataset /" + m_h5PathName));
@@ -328,9 +330,9 @@ namespace karabo {
             protected:
 
 
-#ifdef KARABO_USE_PROFILER_SCALAR1
+                #ifdef KARABO_USE_PROFILER_SCALAR1
                 karabo::util::Profiler scalar1;
-#endif                
+                #endif                
                 karabo::util::Dims m_dims;
                 karabo::util::Dims m_dimsPlus1;
 

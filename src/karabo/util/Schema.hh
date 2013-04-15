@@ -206,6 +206,11 @@ namespace karabo {
             const std::string& getRootName() const;
             
             const karabo::util::Hash& getParameterHash() const;
+
+            // temporary fix getParameterHash with const context does not work as public functions
+            // There is a private function which the compiler always want to use
+            // This function getParameterHash1 needs to be removed when the issue is fixed
+            const karabo::util::Hash& getParameterHash1() const;
             
             std::vector<std::string> getParameters(const std::string& path = "") const;
             

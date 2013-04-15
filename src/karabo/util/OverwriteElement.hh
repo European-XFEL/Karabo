@@ -32,7 +32,7 @@ namespace karabo {
              * @param name unique key name
              * @return  reference to the Element
              */
-            OverwriteElement& key(std::string const& name) {
+            OverwriteElement& key(std::string const& name) {                
                 boost::optional<Hash::Node&> node = m_schema->getParameterHash().find(name);
                 if (node) { // exists
                     m_node = node.get_ptr();
