@@ -58,6 +58,7 @@ namespace karabo {
             return m_hash;
         }
 
+        
         std::vector<std::string> Schema::getParameters(const std::string& path) const {
             std::vector<std::string> tmp;
             if (path.empty())

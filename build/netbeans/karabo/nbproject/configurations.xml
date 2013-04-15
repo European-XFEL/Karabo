@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configurationDescriptor version="88">
   <logicalFolder name="root" displayName="root" projectFiles="true" kind="ROOT">
-    <logicalFolder name="f7" displayName="core" projectFiles="true" kind="ROOT">
+    <logicalFolder name="f7" displayName="core" projectFiles="true">
       <itemPath>../../../src/karabo/core/Device.cc</itemPath>
       <itemPath>../../../src/karabo/core/Device.hh</itemPath>
       <itemPath>../../../src/karabo/core/DeviceClient.cc</itemPath>
@@ -164,6 +164,8 @@
       <logicalFolder name="f1" displayName="Schema" projectFiles="true">
         <itemPath>../../../src/karabo/util/ChoiceElement.hh</itemPath>
         <itemPath>../../../src/karabo/util/GenericElement.hh</itemPath>
+        <itemPath>../../../src/karabo/util/HashFilter.cc</itemPath>
+        <itemPath>../../../src/karabo/util/HashFilter.hh</itemPath>
         <itemPath>../../../src/karabo/util/LeafElement.hh</itemPath>
         <itemPath>../../../src/karabo/util/ListElement.hh</itemPath>
         <itemPath>../../../src/karabo/util/NodeElement.hh</itemPath>
@@ -209,7 +211,7 @@
         <itemPath>../../../src/karabo/util/Types.hh</itemPath>
       </logicalFolder>
     </logicalFolder>
-    <logicalFolder name="f8" displayName="webAuth" projectFiles="true" kind="ROOT">
+    <logicalFolder name="f8" displayName="webAuth" projectFiles="true">
       <itemPath>../../../src/karabo/webAuth/Authenticator.cc</itemPath>
       <itemPath>../../../src/karabo/webAuth/Authenticator.hh</itemPath>
       <itemPath>../../../src/karabo/webAuth/ClientAuthentication.h</itemPath>
@@ -282,6 +284,8 @@
         <itemPath>../../../src/karabo/tests/util/Dims_Test.hh</itemPath>
         <itemPath>../../../src/karabo/tests/util/Factory_Test.cc</itemPath>
         <itemPath>../../../src/karabo/tests/util/Factory_Test.hh</itemPath>
+        <itemPath>../../../src/karabo/tests/util/HashFilter_Test.cc</itemPath>
+        <itemPath>../../../src/karabo/tests/util/HashFilter_Test.hh</itemPath>
         <itemPath>../../../src/karabo/tests/util/Hash_Test.cc</itemPath>
         <itemPath>../../../src/karabo/tests/util/Hash_Test.hh</itemPath>
         <itemPath>../../../src/karabo/tests/util/Schema_Test.cc</itemPath>
@@ -980,6 +984,16 @@
             tool="3"
             flavor2="0">
       </item>
+      <item path="../../../src/karabo/tests/util/HashFilter_Test.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/util/HashFilter_Test.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="../../../src/karabo/tests/util/Hash_Test.cc"
             ex="false"
             tool="1"
@@ -1144,6 +1158,16 @@
       <item path="../../../src/karabo/util/Hash.cc" ex="false" tool="1" flavor2="0">
       </item>
       <item path="../../../src/karabo/util/Hash.hh" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/HashFilter.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/HashFilter.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
       </item>
       <item path="../../../src/karabo/util/LeafElement.hh"
             ex="false"
@@ -1402,6 +1426,11 @@
             <pElem>.</pElem>
           </incDir>
         </cTool>
+        <ccTool>
+          <preprocessorList>
+            <Elem>KARABO_NO_ENABLE_TRACE_LOG</Elem>
+          </preprocessorList>
+        </ccTool>
         <linkerTool>
           <output>${TESTDIR}/TestFiles/f2</output>
         </linkerTool>
@@ -1459,7 +1488,7 @@
       <folder path="f2/f1">
         <ccTool>
           <preprocessorList>
-            <Elem>KARABO_NO_ENABLE_TRACE_LOG</Elem>
+            <Elem>KARABO_ENABLE_TRACE_LOG</Elem>
           </preprocessorList>
         </ccTool>
       </folder>
@@ -2142,6 +2171,16 @@
             tool="3"
             flavor2="0">
       </item>
+      <item path="../../../src/karabo/tests/util/HashFilter_Test.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/util/HashFilter_Test.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="../../../src/karabo/tests/util/Hash_Test.cc"
             ex="false"
             tool="1"
@@ -2306,6 +2345,16 @@
       <item path="../../../src/karabo/util/Hash.cc" ex="false" tool="1" flavor2="0">
       </item>
       <item path="../../../src/karabo/util/Hash.hh" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/HashFilter.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/HashFilter.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
       </item>
       <item path="../../../src/karabo/util/LeafElement.hh"
             ex="false"
