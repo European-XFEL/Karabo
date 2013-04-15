@@ -154,9 +154,9 @@ class EditableChoiceElement(EditableWidget):
                 value = keys[0]
         
         index = self.__comboBox.findText(value)
-        if index < 0:
+        if (index < 0) or (self.__comboBox.isEnabled() == False):
             return
-
+        
         self.__comboBox.blockSignals(True)
         self.__comboBox.setCurrentIndex(index)
         self.__comboBox.blockSignals(False)
