@@ -60,7 +60,7 @@ namespace karabo {
                 vector<Hash>& outputVector = result.bindReference<vector<Hash> > (path);
                 outputVector.resize(inputVector.size());
                 for (size_t i = 0; i < inputVector.size(); ++i) {
-                    clog << "index i=" << i << endl;
+                    //clog << "index i=" << i << endl;
                     const Hash& input = inputVector[i];
                     Hash& output = outputVector[i];
                     for (Hash::const_iterator it = input.begin(); it != input.end(); ++it) {
