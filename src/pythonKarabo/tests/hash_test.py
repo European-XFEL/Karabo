@@ -1,7 +1,7 @@
 '''
 Created on Oct 17, 2012
 
-@author: irinak
+@author: Sergey Esenov <serguei.essenov@xfel.eu>, Irina Kozlova <irina.kozlova@xfel.eu>
 '''
 
 import unittest
