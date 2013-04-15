@@ -28,6 +28,7 @@ namespace karabo {
                         .key("h5name")
                         .displayedName("Name")
                         .description("Group or dataset name. i.e.: d1, g4.d2")
+                        .tags("persistent")
                         .assignmentOptional().defaultValue("aa")
                         //.assignmentMandatory()
                         .reconfigurable() // ???

@@ -194,6 +194,31 @@ namespace karabo {
             }
         }
 
+        template<typename T,
+        template <typename ELEM, typename = std::less<ELEM>, typename = std::allocator<ELEM> > class CONT>
+        inline CONT<T> fromString(const std::string& value, const std::string& separator = ",") {
+            try {
+                CONT<std::string> elements;
+                std::string tmp(value);
+                boost::trim(tmp);
+                if (tmp[0] == '[' && tmp[tmp.size() - 1] == ']') {
+                    tmp = tmp.substr(1);
+                    tmp.erase(tmp.size() - 1);
+                }
+                boost::split(elements, tmp, boost::is_any_of(separator), boost::token_compress_on);
+                CONT<T> resultArray;
+                for (typename CONT<T>::iterator it=elements.begin(); it!=elements.end(); ++it){
+                    std::string element(*it);
+                    boost::trim(element);
+                    resultArray.insert(util::fromString<T > (element));
+                }                
+                return resultArray;
+            } catch (...) {
+                KARABO_RETHROW;
+                return CONT<T>(); // Make the compiler happy
+            }
+        }
+
         template<> inline char fromString<char>(const std::string& value) {
             return boost::numeric_cast<char>(boost::lexical_cast<int>(value));
         }
