@@ -8,6 +8,7 @@
 
 
 #include "Format.hh"
+#include <karabo/log/Tracer.hh>
 #include <vector>
 #include <karabo/util/ListElement.hh>
 #include <karabo/util/ChoiceElement.hh>
@@ -15,18 +16,7 @@
 
 #include "Element.hh"
 
-#define _TRACER
-#undef _TRACER
 
-#ifdef _TRACER
-#define dftracer std::clog
-#else 
-#define dftracer if(1); else std::clog
-#endif
-
-// the following macro allows quickly to disable some printouts
-#define no_dftracer if(1); else std::clog
-#define yes_dftracer std::clog
 
 using namespace std;
 using namespace karabo::util;
@@ -35,6 +25,7 @@ using namespace karabo::io::h5;
 namespace karabo {
     namespace io {
         namespace h5 {
+
 
             KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::h5::Format)
 
@@ -45,41 +36,45 @@ namespace karabo {
                         .key("elements")
                         .displayedName("Elements")
                         .description("Definition of hdf5 objects.")
+                        .tags("persistent")
                         .appendNodesOfConfigurationBase<Element > ()
                         .assignmentOptional().noDefaultValue()
                         .commit();
             }
 
+
             Format::Pointer Format::createFormat(const karabo::util::Hash& config) {
                 return Format::createNode("Format", "Format", config);
             }
 
-            Format::Pointer Format::createEmptyFormat(){
+
+            Format::Pointer Format::createEmptyFormat() {
                 Hash config("Format.elements", vector<Hash>());
-                return Format::createNode("Format", "Format", config );
+                return Format::createNode("Format", "Format", config);
             }
-                        
+
 
             Format::Format(const karabo::util::Hash& input) {
 
-                //clog << "configure: " << endl << input << endl;
                 m_elements = Element::createList("elements", input);
                 m_config = Hash("Format", input);
                 mapElementsToKeys();
             }
+
 
             void Format::discoverFromHash(const Hash& data, Hash& config) {
                 Hash& hh = config.bindReference<Hash > ("Format");
                 vector<Hash>& vec = hh.bindReference< vector<Hash> >("elements");
                 string path = "";
                 discoverFromHash(data, vec, path);
-                //clog << "after discovery: " << endl << config << endl;
+                KARABO_LOG_FRAMEWORK_TRACE_CF << "after discovery:\n" << config;
 
 
             }
 
+
             void Format::addElement(karabo::io::h5::Element::Pointer element) {
-                
+
                 m_elements.push_back(element);
 
                 // update config
@@ -92,39 +87,43 @@ namespace karabo {
                 m_mapElements[element->getFullName()] = m_elements.size() - 1;
             }
 
+
             void Format::mapElementsToKeys() {
                 for (size_t i = 0; i < m_elements.size(); ++i) {
                     m_mapElements[m_elements[i]->getFullName()] = i;
                 }
             }
 
+
             void Format::removeElement(const std::string& fullPath) {
                 string fullPathSlash = boost::replace_all_copy(fullPath, ".", "/");
                 size_t idx = m_mapElements[fullPathSlash];
                 m_elements.erase(m_elements.begin() + idx);
-                
+
                 vector<Hash>& config = m_config.get<vector<Hash> >("Format.elements");
-                config.erase( config.begin() + idx );                                
-                
+                config.erase(config.begin() + idx);
+
                 m_mapElements.clear();
                 mapElementsToKeys();
             }
 
+
             void Format::replaceElement(const std::string& fullPath, karabo::io::h5::Element::Pointer element) {
                 string fullPathSlash = boost::replace_all_copy(fullPath, ".", "/");
                 size_t idx = m_mapElements[fullPathSlash];
-                m_elements[idx] = element;                
-                                
+                m_elements[idx] = element;
+
                 vector<Hash>& vecConfig = m_config.get<vector<Hash> >("Format.elements");
                 Hash newConfig;
                 Hash& elementConfig = newConfig.bindReference<Hash > (element->getClassInfo().getClassId());
                 element->getConfig(elementConfig);
                 vecConfig[idx] = newConfig;
-                                                                
+
                 m_mapElements.clear();
                 mapElementsToKeys();
             }
-            
+
+
             void Format::discoverFromHash(const Hash& data, vector<Hash>& config, const string& path) {
 
                 // This hash does not have attributes
@@ -141,6 +140,7 @@ namespace karabo {
                 }
             }
 
+
             void Format::discoverFromHashElement(const Hash::Node& el, vector<Hash>& config, const string& path) {
 
                 const Hash& h = el.getValue<Hash > ();
@@ -154,7 +154,7 @@ namespace karabo {
                     //hc.set("type", "HASH");
                     discoverAttributes(el, hc);
                 }
-                dftracer << "HashElement: " << endl << config.back() << endl;
+                KARABO_LOG_FRAMEWORK_TRACE_CF << "HashElement:\n"  << config.back();
 
                 std::string newPath;
                 if (path != "") {
@@ -173,13 +173,14 @@ namespace karabo {
                 }
             }
 
+
             void Format::discoverFromVectorOfHashesElement(const Hash::Node& el, vector<Hash>& config, const string& path) {
 
                 const vector<Hash>& vec = el.getValue<vector<Hash> >();
 
                 const std::string& key = el.getKey();
 
-                no_dftracer << "vector of hashes" << endl;
+                KARABO_LOG_FRAMEWORK_TRACE_CF << "vector of hashes";
                 config.push_back(Hash());
                 Hash& hcGroup = config.back();
                 Hash& hc = hcGroup.bindReference<Hash > ("Group");
@@ -219,6 +220,7 @@ namespace karabo {
             #define _KARABO_IO_H5_SEQUENCE_SIZE(T,cppType) case Types::VECTOR_##T:  Format::discoverVectorSize<cppType>(h,el); break;            
             #define _KARABO_IO_H5_SEQUENCE_PTR_SIZE(T,cppType) case Types::PTR_##T:  Format::discoverPtrSize<cppType>(h,el); break;      
 
+
             void Format::discoverFromDataElement(const Hash::Node& el, vector<Hash>& config, const string& path) {
 
                 Types::ReferenceType t = el.getType();
@@ -228,15 +230,11 @@ namespace karabo {
                 Hash& h = hc.bindReference<Hash > (ToType<ToLiteral>::to(t));
                 h.set("h5name", key);
                 h.set("h5path", path);
-                //                if (t != Types::UNKNOWN) {
-               // h.set("type", ToType<ToLiteral>::to(t));
-                //                } else {
-                //                    
-                //                }
-            //    dftracer << "Format::discoverFromDataElement type: " << h.get<string > ("type") << endl;
+                
+                KARABO_LOG_FRAMEWORK_TRACE_CF << "Format::discoverFromDataElement type: " << ToType<ToLiteral>::to(t);
 
                 if (Types::category(t) == Types::SEQUENCE) {
-                    dftracer << "SEQUENCE: " << key << endl;
+                    KARABO_LOG_FRAMEWORK_TRACE_CF << "SEQUENCE: " << key;
                     switch (t) {
                             _KARABO_IO_H5_SEQUENCE_SIZE(INT32, int)
                             _KARABO_IO_H5_SEQUENCE_SIZE(UINT32, unsigned int)
@@ -284,28 +282,29 @@ namespace karabo {
 
             #define _KARABO_IO_H5_ATTRIBUTE_SEQUENCE_SIZE(T,cppType) case Types::VECTOR_##T:  Format::discoverVectorSize<cppType>(h,(*it)); break;                        
 
+
             void Format::discoverAttributes(const Hash::Node& el, Hash& config) {
                 const Hash::Attributes& attr = el.getAttributes();
                 if (attr.empty()) return;
 
-                dftracer << el.getKey() << " has some attributes" << endl;
+                KARABO_LOG_FRAMEWORK_TRACE_CF << el.getKey() << " has some attributes";
 
                 const std::string& key = el.getKey();
                 vector<Hash>& config_attr = config.bindReference<vector<Hash> > ("attributes");
 
 
                 for (Hash::Attributes::const_iterator it = attr.begin(); it != attr.end(); ++it) {
-                    no_dftracer << "attr key: " << it->getKey() << endl;
+                    KARABO_LOG_FRAMEWORK_TRACE_CF << "attr key: " << it->getKey();
 
                     config_attr.push_back(Hash());
                     Hash& hc = config_attr.back();
                     Hash& h = hc.bindReference<Hash > (ToType<ToLiteral>::to(it->getType()));
 
-                   // h.set("type", ToType<ToLiteral>::to(it->getType()));
+                    // h.set("type", ToType<ToLiteral>::to(it->getType()));
                     h.set("h5name", it->getKey());
                     Types::ReferenceType t = it->getType();
                     if (Types::category(t) == Types::SEQUENCE) {
-                        dftracer << "SEQUENCE: " << key << endl;
+                        KARABO_LOG_FRAMEWORK_TRACE_CF << "SEQUENCE: " << key;
                         switch (t) {
                                 _KARABO_IO_H5_ATTRIBUTE_SEQUENCE_SIZE(INT32, int)
                                 _KARABO_IO_H5_ATTRIBUTE_SEQUENCE_SIZE(UINT32, unsigned int)
@@ -333,10 +332,7 @@ namespace karabo {
             #undef _KARABO_IO_H5_ATTRIBUTE_SEQUENCE_SIZE
 
 
-            #undef _TRACER
-            #undef dftracer
-            #undef no_dftracer
-            #undef yes_dftracer            
+
 
 
         }

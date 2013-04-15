@@ -16,9 +16,7 @@
 #include "ErrorHandler.hh"
 #include "TypeTraits.hh"
 #include <karabo/util/util.hh>
-#include <karabo/util/Hash.hh>
-#include <karabo/util/ToLiteral.hh>
-#include <karabo/util/FromTypeInfo.hh>
+#include <karabo/log/Tracer.hh>
 
 #include "DatasetReader.hh"
 #include "DatasetWriter.hh"
@@ -56,7 +54,8 @@ namespace karabo {
                 }
 
                 void create(hsize_t chunkSize) {
-                    try {
+                    KARABO_LOG_FRAMEWORK_TRACE_CF << "Create dataset " << m_h5PathName << " with chunk size = " << chunkSize;
+                    try { 
                         m_chunkSize = chunkSize;
                         karabo::util::Dims dims(chunkSize);
                         createDataSetProperties(dims);
@@ -71,6 +70,7 @@ namespace karabo {
 
                 void write(const karabo::util::Hash& data, hsize_t recordId) {
 
+                    KARABO_LOG_FRAMEWORK_TRACE_CF << "Write dataset " << m_h5PathName << " from Hash element " << m_key;
                     try {
                         if (recordId % m_chunkSize == 0) {
                             m_fileDataSpace = extend(m_dataSet, m_fileDataSpace, m_chunkSize);
@@ -85,6 +85,7 @@ namespace karabo {
 
                 void write(const karabo::util::Hash& data, hsize_t recordId, hsize_t len) {
 
+                    KARABO_LOG_FRAMEWORK_TRACE_CF << "Write " << len << " records to dataset " << m_h5PathName << " from Hash element " << m_key;
                     try {
                         Dataset::extend(m_dataSet, m_fileDataSpace, len);
                         Dataset::selectRecord(m_fileDataSpace, recordId, len);
@@ -99,63 +100,6 @@ namespace karabo {
                 }
 
 
-                //
-                //                void write(const karabo::util::Hash& data, hsize_t recordId, hsize_t len) {
-                //1
-                //                    KARABO_PROFILER_SCALAR1
-                //
-                //                    try {
-                //                        KARABO_PROFILER_START_SCALAR1("select")
-                //                        selectFileRecord(recordId, len);
-                //                        KARABO_PROFILER_STOP_SCALAR1
-                //                        KARABO_PROFILER_START_SCALAR1("find")
-                //                        karabo::util::Hash::const_iterator it = data.find(m_key);
-                //                        KARABO_PROFILER_STOP_SCALAR1
-                //                        KARABO_PROFILER_START_SCALAR1("any")
-                //                        const boost::any& any = data.getAny(it);
-                //                        KARABO_PROFILER_STOP_SCALAR1
-                //
-                //                        if (!m_filter) {
-                //                            tracer << "creating a filter" << std::endl;
-                //                            m_filter = ScalarFilter<T>::createDefault(any.type().name());
-                //                        }
-                //                        KARABO_PROFILER_START_SCALAR1("filter")
-                //                        m_filter->write(*this, any, len);
-                //                        KARABO_PROFILER_STOP_SCALAR1
-                //                        KARABO_PROFILER_REPORT_SCALAR1("select")
-                //                        KARABO_PROFILER_REPORT_SCALAR1("find")
-                //                        KARABO_PROFILER_REPORT_SCALAR1("any")
-                //                        KARABO_PROFILER_REPORT_SCALAR1("filter")
-                //                    } catch (...) {
-                //                        KARABO_RETHROW
-                //                    }
-                //
-                //                }
-                //
-                //                /*
-                //                 * This function is not available via Element interface
-                //                 * To be used by filters only
-                //                 */
-                //                template<class U>
-                //                void writeBuffer(const U* ptr, size_t len) const {
-                //                    H5::DataSpace mds = this->getBufferDataSpace(len);
-                //                    m_dataSet.write(ptr, ScalarTypes::getHdf5NativeType<U > (), mds, m_fileDataSpace);
-                //                }
-                //
-                //                /*
-                //                 * This function is not available via Element interface
-                //                 * To be used by filters only
-                //                 */
-                //
-                //                template<class U>
-                //                inline void readBuffer(U* ptr, size_t len) const {
-                //                    try {
-                //                        H5::DataSpace mds = getBufferDataSpace(len);
-                //                        m_dataSet.read(ptr, ScalarTypes::getHdf5NativeType<U > (), mds, m_fileDataSpace);
-                //                    } catch (...) {
-                //                        KARABO_RETHROW
-                //                    }
-                //                }
                 //
                 //                /*
                 //                 * This function is not available via Element interface

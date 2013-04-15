@@ -54,6 +54,9 @@ namespace karabo {
             return m_hash;
         }
 
+        const karabo::util::Hash& Schema::getParameterHash1() const {
+            return m_hash;
+        }
 
         std::vector<std::string> Schema::getParameters(const std::string& path) const {
             std::vector<std::string> tmp;

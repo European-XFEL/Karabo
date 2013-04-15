@@ -28,6 +28,7 @@ namespace karabo {
 
                 STRING_ELEMENT(expected)
                         .key("h5name")
+                        .tags("persistent")
                         .displayedName("H5 Name")
                         .description("Group or dataset name. i.e.: d1, g4.d2")
                         .assignmentMandatory()
@@ -37,6 +38,7 @@ namespace karabo {
 
                 STRING_ELEMENT(expected)
                         .key("h5path")
+                        .tags("persistent")
                         .displayedName("H5 Path")
                         .description("Path to that element. i.e. instrument.XXX.LPD")
                         .assignmentMandatory()
@@ -62,6 +64,7 @@ namespace karabo {
 
                 LIST_ELEMENT(expected)
                         .key("attributes")
+                        .tags("persistent")
                         .displayedName("Attributes")
                         .description("Definition of hdf5 attributes.")
                         .appendNodesOfConfigurationBase<Attribute > ()

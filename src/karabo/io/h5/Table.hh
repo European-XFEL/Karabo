@@ -113,7 +113,7 @@ namespace karabo {
                 void openNew(const karabo::io::h5::Format::Pointer dataFormat);
                 //                //void openReadOnly(const karabo::util::Hash& dataFormatConfig = karabo::util::Hash());
                 void openReadOnly(const karabo::io::h5::Format::Pointer dataFormat);
-                //                void openReadOnly();
+                void openReadOnly();
                 //
                 //                void refreshRecordFormatVector();
                 //                void r_refreshRecordFormatVector(const karabo::util::Hash& recordFormat, std::vector< const boost::any*>& recordVector);
