@@ -394,7 +394,7 @@ namespace karabo {
                     Schema schema = Format::getSchema("Format");
                     Hash persistentDataFormatConfig;
                     Hash& elements = persistentDataFormatConfig.bindReference<Hash>("Format");
-                    HashFilter::byTag(elements, schema, dataFormatConfig.get<Hash>("Format"), "persistent");
+                    HashFilter::byTag(schema, dataFormatConfig.get<Hash>("Format"), elements, "persistent");
 
                     KARABO_LOG_FRAMEWORK_TRACE_CF << persistentDataFormatConfig;
                     

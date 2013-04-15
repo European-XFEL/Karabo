@@ -64,8 +64,7 @@ namespace karabo {
 
                 LIST_ELEMENT(expected)
                         .key("attributes")
-                        .tags("persistent")
-                        .displayedName("Attributes")
+                        .displayedName("Attributes")                        
                         .description("Definition of hdf5 attributes.")
                         .appendNodesOfConfigurationBase<Attribute > ()
                         .assignmentOptional().noDefaultValue()

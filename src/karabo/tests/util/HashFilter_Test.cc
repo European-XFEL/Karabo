@@ -179,11 +179,11 @@ namespace hashfilter {
                     //defaultValue(vector<string>(1,"A"))
                     .commit();
 
-//            NODE_ELEMENT(expected).key("format")
-//                    .displayedName("format")
-//                    .description("hdf5 format")
-//                    .appendParametersOf<karabo::io::h5::Format>()
-//                    .commit();
+            //            NODE_ELEMENT(expected).key("format")
+            //                    .displayedName("format")
+            //                    .description("hdf5 format")
+            //                    .appendParametersOf<karabo::io::h5::Format>()
+            //                    .commit();
 
 
         }
@@ -230,8 +230,7 @@ void HashFilter_Test::testFilterByTag() {
         //Schema schema = A::getSchema("A");    
         //GraphicsRenderer2::expectedParameters(schema);
         Schema schema = Configurator<GraphicsRenderer2>::getSchema("GraphicsRenderer2");
-
-        clog << "before validator" << endl;
+        
         Validator validator;
         Hash config;
         validator.validate(schema, Hash(), config);
@@ -239,19 +238,13 @@ void HashFilter_Test::testFilterByTag() {
         const Hash& param = schema.getParameterHash1();
 
 
-        clog << "\nparam : \n" << param << endl;
-
-
-
-        //
-        //    clog << archive << endl;
-        //    
-        clog << "\nconfig:\n" << config << endl;
-        // 
+        //clog << "\nparam : \n" << param << endl;        
+        //clog << "\nconfig:\n" << config << endl;
+        
         Hash result;
-        HashFilter::byTag(result, schema, config, "KW;KW,BH",",;");
+        HashFilter::byTag(schema, config, result, "KW;KW,BH", ",;");
 
-        clog << "\nresult: \n" << result << endl;
+        //clog << "\nresult: \n" << result << endl;
 
         CPPUNIT_ASSERT(1 == 1);
     } catch (karabo::util::Exception e) {
@@ -259,17 +252,20 @@ void HashFilter_Test::testFilterByTag() {
     }
 }
 
+#ifdef HASHFILTER_HDF5TEST
 
 void HashFilter_Test::testHdf5Filter() {
+
+
 
     using namespace karabo::io;
 
     Hash data("instrument.a", 10, "instrument.b", 2.4, "c", "Hello World");
-    vector<unsigned short> vec(100,0);
-    for(size_t i = 0; i< 100; ++i){
-        vec[i] = i%20;
+    vector<unsigned short> vec(100, 0);
+    for (size_t i = 0; i < 100; ++i) {
+        vec[i] = i % 20;
     }
-    data.set("d", vec).setAttribute("dims", Dims(20,5).toVector());
+    data.set("d", vec).setAttribute("dims", Dims(20, 5).toVector());
     Hash config;
     h5::Format::discoverFromHash(data, config);
     h5::Format::Pointer dataFormat = h5::Format::createFormat(config);
@@ -294,10 +290,10 @@ void HashFilter_Test::testHdf5Filter() {
         Hash h5Config = dataFormat->getConfig();
         clog << "original\n" << h5Config << endl;
         Schema schema = h5::Format::getSchema("Format");
-//        clog << "schema: \n" << schema.getParameterHash1() << endl;
-        
+        //        clog << "schema: \n" << schema.getParameterHash1() << endl;
+
         Hash result;
-        HashFilter::byTag(result, schema, h5Config.get<Hash>("Format"), "persistent");
+        HashFilter::byTag(schema, h5Config.get<Hash>("Format"), result, "persistent");
 
         clog << "permanent: \n" << result << endl;
 
@@ -306,4 +302,4 @@ void HashFilter_Test::testHdf5Filter() {
     }
 
 }
-
+#endif

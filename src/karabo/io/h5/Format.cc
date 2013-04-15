@@ -36,7 +36,6 @@ namespace karabo {
                         .key("elements")
                         .displayedName("Elements")
                         .description("Definition of hdf5 objects.")
-                        .tags("persistent")
                         .appendNodesOfConfigurationBase<Element > ()
                         .assignmentOptional().noDefaultValue()
                         .commit();
