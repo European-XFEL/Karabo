@@ -29,13 +29,13 @@ namespace karabo {
 
             HashFilter();
 
-            static void byTag(Hash& result, const Schema& schema, const Hash& config, const std::string& tags, const std::string& sep = ",");
+            static void byTag(const Schema& schema, const Hash& config, Hash& result, const std::string& tags, const std::string& sep = ",");
 
 
         private:
 
-            static void r_byTag(const Hash& master, const Hash::Node& input, const std::string& path, const std::set<std::string>& tags, Hash& result);
-            
+            static void r_byTag(const Hash& master, const Hash::Node& input, Hash& result, const std::string& path, const std::set<std::string>& tags);
+            static bool processNode(const Hash& master, const Hash::Node& input, Hash& result, const std::string& path, const std::set<std::string>& tags);
 //            static void r_byTag(const Schema& master, const Hash& input, std::string& path, const std::set<std::string>& tags, Hash& result);
             
                         
