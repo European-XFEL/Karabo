@@ -90,21 +90,21 @@ class  Schema_TestCase(unittest.TestCase):
      
     def test_getAccessMode(self):
         try:
-            self.assertEqual(self.schema.getAccessMode("exampleKey1"), AccessMode(WRITE))
-            self.assertEqual(self.schema.getAccessMode("exampleKey2"), AccessMode(INIT))
-            self.assertEqual(self.schema.getAccessMode("exampleKey3"), AccessMode(WRITE))
-            self.assertEqual(self.schema.getAccessMode("exampleKey4"), AccessMode(INIT))
-            self.assertEqual(self.schema.getAccessMode("exampleKey5"), AccessMode(READ))
+            self.assertEqual(self.schema.getAccessMode("exampleKey1"), AccessType.WRITE)
+            self.assertEqual(self.schema.getAccessMode("exampleKey2"), AccessType.INIT)
+            self.assertEqual(self.schema.getAccessMode("exampleKey3"), AccessType.WRITE)
+            self.assertEqual(self.schema.getAccessMode("exampleKey4"), AccessType.INIT)
+            self.assertEqual(self.schema.getAccessMode("exampleKey5"), AccessType.READ)
         except Exception,e:
             self.fail("test_getAccessMode exception group 1: " + str(e))
     
     def test_getAssignment(self):
         try:
-            self.assertEqual(self.schema.getAssignment("exampleKey1"), Schema.OPTIONAL_PARAM)
-            self.assertEqual(self.schema.getAssignment("exampleKey2"), Schema.OPTIONAL_PARAM)
-            self.assertEqual(self.schema.getAssignment("exampleKey3"), Schema.MANDATORY_PARAM)
-            self.assertEqual(self.schema.getAssignment("exampleKey4"), Schema.INTERNAL_PARAM)
-            self.assertEqual(self.schema.getAssignment("exampleKey5"), Schema.OPTIONAL_PARAM)
+            self.assertEqual(self.schema.getAssignment("exampleKey1"), AssignmentType.OPTIONAL)
+            self.assertEqual(self.schema.getAssignment("exampleKey2"), AssignmentType.OPTIONAL)
+            self.assertEqual(self.schema.getAssignment("exampleKey3"), AssignmentType.MANDATORY)
+            self.assertEqual(self.schema.getAssignment("exampleKey4"), AssignmentType.INTERNAL)
+            self.assertEqual(self.schema.getAssignment("exampleKey5"), AssignmentType.OPTIONAL)
         except Exception,e:
             self.fail("test_getAssignment exception group 1: " + str(e))
     
@@ -147,7 +147,7 @@ class  Schema_TestCase(unittest.TestCase):
     
     def test_getUnit(self):
         try:
-            self.assertEqual(self.schema.getUnit("exampleKey2"), Units.METER)
+            self.assertEqual(self.schema.getUnit("exampleKey2"), Unit.METER)
             self.assertEqual(self.schema.getUnitName("exampleKey2"), "meter")
             self.assertEqual(self.schema.getUnitSymbol("exampleKey2"), "m")
         except Exception,e:
@@ -155,7 +155,7 @@ class  Schema_TestCase(unittest.TestCase):
     
     def test_getMetricPrefix(self):
         try:
-            self.assertEqual(self.schema.getMetricPrefix("exampleKey2"), Units.MILLI)
+            self.assertEqual(self.schema.getMetricPrefix("exampleKey2"), MetricPrefix.MILLI)
             self.assertEqual(self.schema.getMetricPrefixName("exampleKey2"), "milli")
             self.assertEqual(self.schema.getMetricPrefixSymbol("exampleKey2"), "m")
         except Exception,e:
