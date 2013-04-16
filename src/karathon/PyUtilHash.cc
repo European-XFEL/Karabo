@@ -160,7 +160,7 @@ void exportPyUtilHash() {
     n.def("setType", &NodeWrap().pythonSetType, (bp::arg("type")));
 
 
-    bp::class_<Hash > h("Hash", "The Hash class can be regarded as a generic hash container, which associates a string key to a value of any type.\n"
+    bp::class_<Hash, boost::shared_ptr<Hash> > h("Hash", "The Hash class can be regarded as a generic hash container, which associates a string key to a value of any type.\n"
                         "Optionally attributes of any value-type can be associated to each hash-key.  The Hash preserves insertion order.  The Hash\n"
                         "class is much like a XML-DOM container with the difference of allowing only unique keys on a given tree-level.");
     h.def(bp::init< std::string const & >());

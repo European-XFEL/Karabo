@@ -8,6 +8,7 @@
 
 #include <boost/python.hpp>
 #include <boost/filesystem.hpp>
+#include <iostream>
 #include <set>
 #include <complex>
 #include <sstream>
@@ -565,11 +566,22 @@ namespace karabo {
         bp::object
         HashWrap::__getitem__(karabo::util::Hash& self,
                               const bp::object& obj) {
-            if (bp::extract<karabo::util::Hash::Node>(obj).check()) {
-                const karabo::util::Hash::Node& node = bp::extract<karabo::util::Hash::Node>(obj);
+            if (bp::extract<karabo::util::Hash::Node&>(obj).check()) {
+                karabo::util::Hash::Node& node = bp::extract<karabo::util::Hash::Node&>(obj);
+                if (node.getType() == karabo::util::Types::HASH) {
+                    boost::shared_ptr<karabo::util::Hash> hash = boost::shared_ptr<karabo::util::Hash>(&node.getValue<karabo::util::Hash>(), null_deleter());
+                    return bp::object(hash);
+                }
+                return Wrapper::toObject(node.getValueAsAny(), HashWrap::try_to_use_numpy);
+            } else if (bp::extract<std::string>(obj).check()) {
+                karabo::util::Hash::Node& node = self.getNode(bp::extract<std::string>(obj));
+                if (node.getType() == karabo::util::Types::HASH) {
+                    boost::shared_ptr<karabo::util::Hash> hash = boost::shared_ptr<karabo::util::Hash>(&node.getValue<karabo::util::Hash>(), null_deleter());
+                    return bp::object(hash);
+                }
                 return Wrapper::toObject(node.getValueAsAny(), HashWrap::try_to_use_numpy);
             }
-            return pythonGet(self, bp::extract<std::string>(obj));
+            throw KARABO_PYTHON_EXCEPTION("Invalid type for Hash index. The type should be 'Node' or 'str'!");
         }
 
         bool
