@@ -15,6 +15,7 @@
 
 #include "PythonMacros.hh"
 #include "DefaultValueVectorWrap.hh"
+#include "Wrapper.hh"
 
 namespace bp = boost::python;
 using namespace karabo::util;
@@ -67,8 +68,7 @@ public:
 };
 
 struct NodeElementWrap {
-
-
+    
     static karabo::util::NodeElement & appendParametersOfPy(karabo::util::NodeElement& self, const bp::object& obj) {
 
         if (!PyType_Check(obj.ptr())) {
@@ -87,6 +87,227 @@ struct NodeElementWrap {
     }
 
 };
+
+  
+karabo::pyexfel::PyTypes::ReferenceType Wrap_Schema_getValueType(const Schema& schema, const bp::object& obj) {
+   if (PyString_Check(obj.ptr())){
+      string path = bp::extract<string>(obj);  
+      Types::ReferenceType t = schema.getValueType(path);   
+      return karabo::pyexfel::PyTypes::from(t);
+   } 
+   throw KARABO_PYTHON_EXCEPTION("Python argument in 'getValueType' must be a string"); 
+}
+
+//*********************************************************************
+// Wrapper functions for : getMinInc, getMaxInc, getMinExc, getMaxExc *
+//*********************************************************************
+bp::object Wrap_Schema_getMinInc(const Schema& schema, const bp::object& obj){
+    if (PyString_Check(obj.ptr())){
+        string path = bp::extract<string>(obj);
+        Types::ReferenceType reftype = schema.getValueType(path);
+
+        switch (reftype) {
+                case Types::INT32:
+                     return bp::object(schema.getMinInc<int>(path));
+                case Types::UINT32:
+                     return bp::object(schema.getMinInc<unsigned int>(path));
+                case Types::INT64:
+                     return bp::object(schema.getMinInc<long long>(path));
+                case Types::UINT64:
+                     return bp::object(schema.getMinInc<unsigned long long>(path));
+                case Types::STRING:
+                     return bp::object(schema.getMinInc<string>(path));
+                case Types::DOUBLE:
+                     return bp::object(schema.getMinInc<double>(path));    
+                default:
+                     break;
+        }
+        throw KARABO_NOT_SUPPORTED_EXCEPTION("Type is not supported");
+    }
+    throw KARABO_PYTHON_EXCEPTION("Python argument in 'getMinInc' must be a string");
+}
+
+
+bp::object Wrap_Schema_getMaxInc(const Schema& schema, const bp::object& obj){
+    if (PyString_Check(obj.ptr())){
+        string path = bp::extract<string>(obj);
+        Types::ReferenceType reftype = schema.getValueType(path);
+
+        switch (reftype) {
+                case Types::INT32:
+                     return bp::object(schema.getMaxInc<int>(path));
+                case Types::UINT32:
+                     return bp::object(schema.getMaxInc<unsigned int>(path));
+                case Types::INT64:
+                     return bp::object(schema.getMaxInc<long long>(path));
+                case Types::UINT64:
+                     return bp::object(schema.getMaxInc<unsigned long long>(path));
+                case Types::STRING:
+                     return bp::object(schema.getMaxInc<string>(path));
+                case Types::DOUBLE:
+                     return bp::object(schema.getMaxInc<double>(path));    
+                default:
+                     break;
+        }
+        throw KARABO_NOT_SUPPORTED_EXCEPTION("Type is not supported");
+    }
+    throw KARABO_PYTHON_EXCEPTION("Python argument in 'getMaxInc' must be a string");
+}
+
+
+bp::object Wrap_Schema_getMinExc(const Schema& schema, const bp::object& obj){
+    if (PyString_Check(obj.ptr())){
+        string path = bp::extract<string>(obj);
+        Types::ReferenceType reftype = schema.getValueType(path);
+
+        switch (reftype) {
+                case Types::INT32:
+                     return bp::object(schema.getMinExc<int>(path));
+                case Types::UINT32:
+                     return bp::object(schema.getMinExc<unsigned int>(path));
+                case Types::INT64:
+                     return bp::object(schema.getMinExc<long long>(path));
+                case Types::UINT64:
+                     return bp::object(schema.getMinExc<unsigned long long>(path));
+                case Types::STRING:
+                     return bp::object(schema.getMinExc<string>(path));
+                case Types::DOUBLE:
+                     return bp::object(schema.getMinExc<double>(path));    
+                default:
+                     break;
+        }
+        throw KARABO_NOT_SUPPORTED_EXCEPTION("Type is not supported");
+    }
+    throw KARABO_PYTHON_EXCEPTION("Python argument in 'getMinExc' must be a string");
+}
+
+
+bp::object Wrap_Schema_getMaxExc(const Schema& schema, const bp::object& obj){
+    if (PyString_Check(obj.ptr())){
+        string path = bp::extract<string>(obj);
+        Types::ReferenceType reftype = schema.getValueType(path);
+
+        switch (reftype) {
+                case Types::INT32:
+                     return bp::object(schema.getMaxExc<int>(path));
+                case Types::UINT32:
+                     return bp::object(schema.getMaxExc<unsigned int>(path));
+                case Types::INT64:
+                     return bp::object(schema.getMaxExc<long long>(path));
+                case Types::UINT64:
+                     return bp::object(schema.getMaxExc<unsigned long long>(path));
+                case Types::STRING:
+                     return bp::object(schema.getMaxExc<string>(path));
+                case Types::DOUBLE:
+                     return bp::object(schema.getMaxExc<double>(path));    
+                default:
+                     break;
+        }
+        throw KARABO_NOT_SUPPORTED_EXCEPTION("Type is not supported");
+    }
+    throw KARABO_PYTHON_EXCEPTION("Python argument in 'getMinInc' must be a string");
+}
+
+//*****************************************************************************
+// Wrapper functions for : getMinIncAs, getMaxIncAs, getMinExcAs, getMaxExcAs *
+//*****************************************************************************
+
+bp::object Wrap_Schema_getMinIncAs(const Schema& schema, const bp::object& obj, const karabo::pyexfel::PyTypes::ReferenceType& pytype){
+    if (PyString_Check(obj.ptr())){
+        string path = bp::extract<string>(obj);
+        switch (pytype) {
+                case karabo::pyexfel::PyTypes::INT32:
+                     return bp::object(schema.getMinIncAs<int>(path));
+                case karabo::pyexfel::PyTypes::UINT32:
+                     return bp::object(schema.getMinIncAs<unsigned int>(path));
+                case karabo::pyexfel::PyTypes::INT64:
+                     return bp::object(schema.getMinIncAs<long long>(path));
+                case karabo::pyexfel::PyTypes::UINT64:
+                     return bp::object(schema.getMinIncAs<unsigned long long>(path));
+                case karabo::pyexfel::PyTypes::STRING:
+                     return bp::object(schema.getMinIncAs<string>(path));
+                case karabo::pyexfel::PyTypes::DOUBLE:
+                     return bp::object(schema.getMinIncAs<double>(path));    
+                default:
+                     break;
+        }
+        throw KARABO_PYTHON_EXCEPTION("Python Type is not supported");
+    }
+    throw KARABO_PYTHON_EXCEPTION("Python first argument in 'getMinIncAs' must be a string");
+}
+
+
+bp::object Wrap_Schema_getMaxIncAs(const Schema& schema, const bp::object& obj, const karabo::pyexfel::PyTypes::ReferenceType& pytype){
+    if (PyString_Check(obj.ptr())){
+        string path = bp::extract<string>(obj);
+        switch (pytype) {
+                case karabo::pyexfel::PyTypes::INT32:
+                     return bp::object(schema.getMaxIncAs<int>(path));
+                case karabo::pyexfel::PyTypes::UINT32:
+                     return bp::object(schema.getMaxIncAs<unsigned int>(path));
+                case karabo::pyexfel::PyTypes::INT64:
+                     return bp::object(schema.getMaxIncAs<long long>(path));
+                case karabo::pyexfel::PyTypes::UINT64:
+                     return bp::object(schema.getMaxIncAs<unsigned long long>(path));
+                case karabo::pyexfel::PyTypes::STRING:
+                     return bp::object(schema.getMaxIncAs<string>(path));
+                case karabo::pyexfel::PyTypes::DOUBLE:
+                     return bp::object(schema.getMaxIncAs<double>(path));    
+                default:
+                     break;
+        }
+        throw KARABO_PYTHON_EXCEPTION("Python Type is not supported");
+    }
+    throw KARABO_PYTHON_EXCEPTION("Python first argument in 'getMaxIncAs' must be a string");
+}
+
+bp::object Wrap_Schema_getMinExcAs(const Schema& schema, const bp::object& obj, const karabo::pyexfel::PyTypes::ReferenceType& pytype){
+    if (PyString_Check(obj.ptr())){
+        string path = bp::extract<string>(obj);
+        switch (pytype) {
+                case karabo::pyexfel::PyTypes::INT32:
+                     return bp::object(schema.getMinExcAs<int>(path));
+                case karabo::pyexfel::PyTypes::UINT32:
+                     return bp::object(schema.getMinExcAs<unsigned int>(path));
+                case karabo::pyexfel::PyTypes::INT64:
+                     return bp::object(schema.getMinExcAs<long long>(path));
+                case karabo::pyexfel::PyTypes::UINT64:
+                     return bp::object(schema.getMinExcAs<unsigned long long>(path));
+                case karabo::pyexfel::PyTypes::STRING:
+                     return bp::object(schema.getMinExcAs<string>(path));
+                case karabo::pyexfel::PyTypes::DOUBLE:
+                     return bp::object(schema.getMinExcAs<double>(path));    
+                default:
+                     break;
+        }
+        throw KARABO_PYTHON_EXCEPTION("Python Type is not supported");
+    }
+    throw KARABO_PYTHON_EXCEPTION("Python first argument in 'getMinExcAs' must be a string");
+}
+
+bp::object Wrap_Schema_getMaxExcAs(const Schema& schema, const bp::object& obj, const karabo::pyexfel::PyTypes::ReferenceType& pytype){
+    if (PyString_Check(obj.ptr())){
+        string path = bp::extract<string>(obj);
+        switch (pytype) {
+                case karabo::pyexfel::PyTypes::INT32:
+                     return bp::object(schema.getMaxExcAs<int>(path));
+                case karabo::pyexfel::PyTypes::UINT32:
+                     return bp::object(schema.getMaxExcAs<unsigned int>(path));
+                case karabo::pyexfel::PyTypes::INT64:
+                     return bp::object(schema.getMaxExcAs<long long>(path));
+                case karabo::pyexfel::PyTypes::UINT64:
+                     return bp::object(schema.getMaxExcAs<unsigned long long>(path));
+                case karabo::pyexfel::PyTypes::STRING:
+                     return bp::object(schema.getMaxExcAs<string>(path));
+                case karabo::pyexfel::PyTypes::DOUBLE:
+                     return bp::object(schema.getMaxExcAs<double>(path));    
+                default:
+                     break;
+        }
+        throw KARABO_PYTHON_EXCEPTION("Python Type is not supported");
+    }
+    throw KARABO_PYTHON_EXCEPTION("Python first argument in 'getMaxExcAs' must be a string");
+}
 
 
 void exportPyUtilSchema() {
@@ -159,20 +380,46 @@ void exportPyUtilSchema() {
               , bp::return_value_policy< bp::copy_const_reference >());
         
         s.def("getUnit", &Schema::getUnit);
+        
         s.def("getUnitName"
               , &Schema::getUnitName
               , bp::return_value_policy< bp::copy_const_reference >());
+        
         s.def("getUnitSymbol"
               , &Schema::getUnitSymbol
               , bp::return_value_policy< bp::copy_const_reference >());
         
         s.def("getMetricPrefix", &Schema::getMetricPrefix);
+        
         s.def("getMetricPrefixName"
                , &Schema::getMetricPrefixName
                , bp::return_value_policy< bp::copy_const_reference >());
+        
         s.def("getMetricPrefixSymbol"
                , &Schema::getMetricPrefixSymbol
                , bp::return_value_policy< bp::copy_const_reference >());
+        
+        s.def("getRootName"
+               , &Schema::getRootName
+               , bp::return_value_policy< bp::copy_const_reference >());
+        
+        s.def("getValueType", &Wrap_Schema_getValueType, (bp::arg("path")));
+        
+        s.def("getMinInc", &Wrap_Schema_getMinInc, (bp::arg("path")));
+
+        s.def("getMaxInc", &Wrap_Schema_getMaxInc);
+        
+        s.def("getMinExc", &Wrap_Schema_getMinExc);
+        
+        s.def("getMaxExc", &Wrap_Schema_getMaxExc);
+
+        s.def("getMinIncAs", &Wrap_Schema_getMinIncAs, (bp::arg("path"),bp::arg("pytype")));
+        
+        s.def("getMaxIncAs", &Wrap_Schema_getMaxIncAs, (bp::arg("path"),bp::arg("pytype")));
+        
+        s.def("getMinExcAs", &Wrap_Schema_getMinExcAs, (bp::arg("path"),bp::arg("pytype")));
+        
+        s.def("getMaxExcAs", &Wrap_Schema_getMaxExcAs, (bp::arg("path"),bp::arg("pytype")));
         
         //all other get-s....
 
