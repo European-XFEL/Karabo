@@ -386,13 +386,13 @@ void HashFilter_Test::testFilterByTag() {
         CPPUNIT_ASSERT(result.has("letter.d") == true);
         CPPUNIT_ASSERT(result.has("letter.e") == false);
         CPPUNIT_ASSERT(result.has("letter.f") == false);
-        CPPUNIT_ASSERT(result.has("chars") == true);
-        CPPUNIT_ASSERT(result.has("chars[0]") == true);
+        CPPUNIT_ASSERT(result.has("chars") == false);
+        CPPUNIT_ASSERT(result.has("chars[0]") == false);
         CPPUNIT_ASSERT(result.has("chars[0].P2") == false);
         CPPUNIT_ASSERT(result.has("chars[0].P2.x") == false);
         CPPUNIT_ASSERT(result.has("chars[0].P2.y") == false);
         CPPUNIT_ASSERT(result.has("chars[0].P2.z") == false);
-        CPPUNIT_ASSERT(result.has("chars[1]") == true);
+        CPPUNIT_ASSERT(result.has("chars[1]") == false);
         CPPUNIT_ASSERT(result.has("chars[1].P3") == false);
         CPPUNIT_ASSERT(result.has("chars[1].P3.k") == false);
         CPPUNIT_ASSERT(result.has("chars[1].P3.l") == false);
@@ -499,42 +499,41 @@ void HashFilter_Test::testFilterByTag() {
         CPPUNIT_ASSERT(result.has("chars[1].P3.m") == true);
 
 
-//        result.clear();
-//        HashFilter::byTag(schema, config, result, "WP76", ",;");
-//
-//        clog << "WP76\n" << result << endl;
-//
-//
-//        CPPUNIT_ASSERT(result.has("antiAlias") == false);
-//        CPPUNIT_ASSERT(result.has("color") == false);
-//        CPPUNIT_ASSERT(result.has("bold") == false);
-//        CPPUNIT_ASSERT(result.has("shapes") == false);
-//        CPPUNIT_ASSERT(result.has("shapes.rectangle") == false);
-//        CPPUNIT_ASSERT(result.has("shapes.rectangle.b") == false);
-//        CPPUNIT_ASSERT(result.has("shapes.rectangle.c") == false);
-//        CPPUNIT_ASSERT(result.has("letter") == false);
-//        CPPUNIT_ASSERT(result.has("letter.a") == false);
-//        CPPUNIT_ASSERT(result.has("letter.b") == false);
-//        CPPUNIT_ASSERT(result.has("letter.c") == false);
-//        CPPUNIT_ASSERT(result.has("letter.d") == false);
-//        CPPUNIT_ASSERT(result.has("letter.e") == false);
-//        CPPUNIT_ASSERT(result.has("letter.f") == false);
-//        CPPUNIT_ASSERT(result.has("chars") == false);
-//        CPPUNIT_ASSERT(result.has("chars[0]") == false);
-//        CPPUNIT_ASSERT(result.has("chars[0].P2") == false);
-//        CPPUNIT_ASSERT(result.has("chars[0].P2.x") == false);
-//        CPPUNIT_ASSERT(result.has("chars[0].P2.y") == false);
-//        CPPUNIT_ASSERT(result.has("chars[0].P2.z") == false);
-//        CPPUNIT_ASSERT(result.has("chars[1]") == false);
-//        CPPUNIT_ASSERT(result.has("chars[1].P3") == false);
-//        CPPUNIT_ASSERT(result.has("chars[1].P3.k") == false);
-//        CPPUNIT_ASSERT(result.has("chars[1].P3.l") == false);
-//        CPPUNIT_ASSERT(result.has("chars[1].P3.m") == false);
-        //clog << "\nresult: \n" << result << endl;
+        result.clear();
+        HashFilter::byTag(schema, config, result, "WP76", ",;");
 
-        CPPUNIT_ASSERT(1 == 1);
+//        clog << "WP76\n" << result << endl;
+
+
+        CPPUNIT_ASSERT(result.has("antiAlias") == false);
+        CPPUNIT_ASSERT(result.has("color") == false);
+        CPPUNIT_ASSERT(result.has("bold") == false);
+        CPPUNIT_ASSERT(result.has("shapes") == false);
+        CPPUNIT_ASSERT(result.has("shapes.rectangle") == false);
+        CPPUNIT_ASSERT(result.has("shapes.rectangle.b") == false);
+        CPPUNIT_ASSERT(result.has("shapes.rectangle.c") == false);
+        CPPUNIT_ASSERT(result.has("letter") == false);
+        CPPUNIT_ASSERT(result.has("letter.a") == false);
+        CPPUNIT_ASSERT(result.has("letter.b") == false);
+        CPPUNIT_ASSERT(result.has("letter.c") == false);
+        CPPUNIT_ASSERT(result.has("letter.d") == false);
+        CPPUNIT_ASSERT(result.has("letter.e") == false);
+        CPPUNIT_ASSERT(result.has("letter.f") == false);
+        CPPUNIT_ASSERT(result.has("chars") == false);
+        CPPUNIT_ASSERT(result.has("chars[0]") == false);
+        CPPUNIT_ASSERT(result.has("chars[0].P2") == false);
+        CPPUNIT_ASSERT(result.has("chars[0].P2.x") == false);
+        CPPUNIT_ASSERT(result.has("chars[0].P2.y") == false);
+        CPPUNIT_ASSERT(result.has("chars[0].P2.z") == false);
+        CPPUNIT_ASSERT(result.has("chars[1]") == false);
+        CPPUNIT_ASSERT(result.has("chars[1].P3") == false);
+        CPPUNIT_ASSERT(result.has("chars[1].P3.k") == false);
+        CPPUNIT_ASSERT(result.has("chars[1].P3.l") == false);
+        CPPUNIT_ASSERT(result.has("chars[1].P3.m") == false);
+
+        
     } catch (karabo::util::Exception e) {
-        cout << e << endl;
+        clog << e << endl;
     }
 }
 

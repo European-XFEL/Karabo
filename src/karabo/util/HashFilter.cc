@@ -54,11 +54,18 @@ namespace karabo {
                 //clog << "Further processing vector<Hash>  " << path << endl;
 
                 // For vector<Hash> the following policy is implemented
-                // The size of the vector is always preserved
-                // even if all parameters are filter out - in this case we keep the empty Hash 
+                // The size of the vector is preserved unless all Hashes in the vector are empty
                 const vector<Hash>& inputVector = inputNode.getValue<vector<Hash> >();
-                vector<Hash>& outputVector = result.bindReference<vector<Hash> > (path);
-                outputVector.resize(inputVector.size());
+                
+                // At the moment we copy the vector<Hash> to the result in all cases except 
+                // if every Hash is empty after running a filter.
+                // One can optimize it
+                
+                //vector<Hash>& outputVector = result.bindReference<vector<Hash> > (path);
+                //outputVector.resize(inputVector.size());                
+                //vector<Hash>& outputVector(inputVector.size());
+                vector<Hash> outputVector(inputVector.size());
+                
                 for (size_t i = 0; i < inputVector.size(); ++i) {
                     //clog << "index i=" << i << endl;
                     const Hash& input = inputVector[i];
@@ -68,6 +75,14 @@ namespace karabo {
                         r_byTag(master.get<Hash>(path), *it, output, it->getKey(), tags);
                     }
                 }
+                for (size_t i = 0; i < outputVector.size(); ++i) {
+                    const Hash& output = outputVector[i];
+                    if(output.size() > 0 ){
+                        result.set(path,outputVector);
+                        return;
+                    }
+                }
+                
 
             } else {
                 processNode(master, inputNode, result, path, tags);

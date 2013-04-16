@@ -10,6 +10,8 @@
 
 #include <cppunit/extensions/HelperMacros.h>
 
+//#define HASHFILTER_HDF5TEST
+
 class HashFilter_Test : public CPPUNIT_NS::TestFixture {
 
     CPPUNIT_TEST_SUITE(HashFilter_Test);
