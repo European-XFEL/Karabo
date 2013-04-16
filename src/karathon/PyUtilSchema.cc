@@ -497,6 +497,8 @@ void exportPyUtilSchema() {
         
         s.def("getValueType", &Wrap_Schema_getValueType, (bp::arg("path")));
         
+        s.def("getNodeType", &Schema::getNodeType);
+        
         s.def("getMinInc", &Wrap_Schema_getMinInc, (bp::arg("path")));
 
         s.def("getMaxInc", &Wrap_Schema_getMaxInc);
