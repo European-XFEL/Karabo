@@ -15,6 +15,7 @@
 #include <karabo/util/SimpleElement.hh>
 
 #include "Element.hh"
+#include <karabo/util/HashFilter.hh>
 
 
 
@@ -58,6 +59,13 @@ namespace karabo {
                 m_elements = Element::createList("elements", input);
                 m_config = Hash("Format", input);
                 mapElementsToKeys();
+            }
+
+
+            void Format::getPersistentConfig(karabo::util::Hash& config) const {
+                Schema schema = Format::getSchema("Format");                
+                Hash& elements = config.bindReference<Hash>("Format");
+                HashFilter::byTag(schema, m_config.get<Hash>("Format"), elements, "persistent");
             }
 
 
@@ -152,8 +160,10 @@ namespace karabo {
                     hc.set("h5path", path);
                     //hc.set("type", "HASH");
                     discoverAttributes(el, hc);
+                    
+                    KARABO_LOG_FRAMEWORK_TRACE_CF << "HashElement:\n" << config.back();
                 }
-                KARABO_LOG_FRAMEWORK_TRACE_CF << "HashElement:\n"  << config.back();
+                
 
                 std::string newPath;
                 if (path != "") {
@@ -226,53 +236,75 @@ namespace karabo {
                 const std::string& key = el.getKey();
                 config.push_back(Hash());
                 Hash& hc = config.back();
-                Hash& h = hc.bindReference<Hash > (ToType<ToLiteral>::to(t));
-                h.set("h5name", key);
-                h.set("h5path", path);
-                
-                KARABO_LOG_FRAMEWORK_TRACE_CF << "Format::discoverFromDataElement type: " << ToType<ToLiteral>::to(t);
+                if (Types::isPointer(t)) {
+                    string ptrType = ToType<ToLiteral>::to(t);
+                    KARABO_LOG_FRAMEWORK_TRACE_CF << "SEQUENCE: " << ptrType;
+                    string vecType = "VECTOR_" + ptrType.substr(4);
+                    Hash& h = hc.bindReference<Hash > (vecType);
+                    h.set("h5name", key);
+                    h.set("h5path", path);
+                    h.set("type", ptrType);
+                    if (Types::category(t) == Types::SEQUENCE) {
+                        KARABO_LOG_FRAMEWORK_TRACE_CF << "SEQUENCE: " << key;
+                        switch (t) {
+                                _KARABO_IO_H5_SEQUENCE_PTR_SIZE(INT32, int)
+                                _KARABO_IO_H5_SEQUENCE_PTR_SIZE(UINT32, unsigned int)
+                                _KARABO_IO_H5_SEQUENCE_PTR_SIZE(FLOAT, float)
+                                _KARABO_IO_H5_SEQUENCE_PTR_SIZE(DOUBLE, double)
+                                _KARABO_IO_H5_SEQUENCE_PTR_SIZE(INT16, short)
+                                _KARABO_IO_H5_SEQUENCE_PTR_SIZE(UINT16, unsigned short)
+                                _KARABO_IO_H5_SEQUENCE_PTR_SIZE(INT64, long long)
+                                _KARABO_IO_H5_SEQUENCE_PTR_SIZE(UINT64, unsigned long long)
+                                _KARABO_IO_H5_SEQUENCE_PTR_SIZE(INT8, signed char)
+                                _KARABO_IO_H5_SEQUENCE_PTR_SIZE(UINT8, unsigned char)
+                                _KARABO_IO_H5_SEQUENCE_PTR_SIZE(CHAR, char)
+                                _KARABO_IO_H5_SEQUENCE_PTR_SIZE(BOOL, bool)
+                                _KARABO_IO_H5_SEQUENCE_PTR_SIZE(STRING, std::string)
+                                _KARABO_IO_H5_SEQUENCE_PTR_SIZE(COMPLEX_FLOAT, complex<float>)
+                                _KARABO_IO_H5_SEQUENCE_PTR_SIZE(COMPLEX_DOUBLE, complex<double>)
 
-                if (Types::category(t) == Types::SEQUENCE) {
-                    KARABO_LOG_FRAMEWORK_TRACE_CF << "SEQUENCE: " << key;
-                    switch (t) {
-                            _KARABO_IO_H5_SEQUENCE_SIZE(INT32, int)
-                            _KARABO_IO_H5_SEQUENCE_SIZE(UINT32, unsigned int)
-                            _KARABO_IO_H5_SEQUENCE_SIZE(FLOAT, float)
-                            _KARABO_IO_H5_SEQUENCE_SIZE(DOUBLE, double)
-                            _KARABO_IO_H5_SEQUENCE_SIZE(INT16, short)
-                            _KARABO_IO_H5_SEQUENCE_SIZE(UINT16, unsigned short)
-                            _KARABO_IO_H5_SEQUENCE_SIZE(INT64, long long)
-                            _KARABO_IO_H5_SEQUENCE_SIZE(UINT64, unsigned long long)
-                            _KARABO_IO_H5_SEQUENCE_SIZE(INT8, signed char)
-                            _KARABO_IO_H5_SEQUENCE_SIZE(UINT8, unsigned char)
-                            _KARABO_IO_H5_SEQUENCE_SIZE(CHAR, char)
-                            _KARABO_IO_H5_SEQUENCE_SIZE(BOOL, bool)
-                            _KARABO_IO_H5_SEQUENCE_SIZE(STRING, std::string)
-                            _KARABO_IO_H5_SEQUENCE_SIZE(COMPLEX_FLOAT, complex<float>)
-                            _KARABO_IO_H5_SEQUENCE_SIZE(COMPLEX_DOUBLE, complex<double>)
-                            _KARABO_IO_H5_SEQUENCE_PTR_SIZE(INT32, int)
-                            _KARABO_IO_H5_SEQUENCE_PTR_SIZE(UINT32, unsigned int)
-                            _KARABO_IO_H5_SEQUENCE_PTR_SIZE(FLOAT, float)
-                            _KARABO_IO_H5_SEQUENCE_PTR_SIZE(DOUBLE, double)
-                            _KARABO_IO_H5_SEQUENCE_PTR_SIZE(INT16, short)
-                            _KARABO_IO_H5_SEQUENCE_PTR_SIZE(UINT16, unsigned short)
-                            _KARABO_IO_H5_SEQUENCE_PTR_SIZE(INT64, long long)
-                            _KARABO_IO_H5_SEQUENCE_PTR_SIZE(UINT64, unsigned long long)
-                            _KARABO_IO_H5_SEQUENCE_PTR_SIZE(INT8, signed char)
-                            _KARABO_IO_H5_SEQUENCE_PTR_SIZE(UINT8, unsigned char)
-                            _KARABO_IO_H5_SEQUENCE_PTR_SIZE(CHAR, char)
-                            _KARABO_IO_H5_SEQUENCE_PTR_SIZE(BOOL, bool)
-                            _KARABO_IO_H5_SEQUENCE_PTR_SIZE(STRING, std::string)
-                            _KARABO_IO_H5_SEQUENCE_PTR_SIZE(COMPLEX_FLOAT, complex<float>)
-                            _KARABO_IO_H5_SEQUENCE_PTR_SIZE(COMPLEX_DOUBLE, complex<double>)
+                            default:
+                                throw KARABO_NOT_SUPPORTED_EXCEPTION("Type not supported for key " + key);
+                        }
 
-
-                        default:
-                            throw KARABO_NOT_SUPPORTED_EXCEPTION("Type not supported for key " + key);
                     }
+                    discoverAttributes(el, h);
+
+                } else {
+                    Hash& h = hc.bindReference<Hash > (ToType<ToLiteral>::to(t));
+                    h.set("h5name", key);
+                    h.set("h5path", path);
+                    if (Types::category(t) == Types::SEQUENCE) {
+                        KARABO_LOG_FRAMEWORK_TRACE_CF << "SEQUENCE: " << key;
+                        switch (t) {
+                                _KARABO_IO_H5_SEQUENCE_SIZE(INT32, int)
+                                _KARABO_IO_H5_SEQUENCE_SIZE(UINT32, unsigned int)
+                                _KARABO_IO_H5_SEQUENCE_SIZE(FLOAT, float)
+                                _KARABO_IO_H5_SEQUENCE_SIZE(DOUBLE, double)
+                                _KARABO_IO_H5_SEQUENCE_SIZE(INT16, short)
+                                _KARABO_IO_H5_SEQUENCE_SIZE(UINT16, unsigned short)
+                                _KARABO_IO_H5_SEQUENCE_SIZE(INT64, long long)
+                                _KARABO_IO_H5_SEQUENCE_SIZE(UINT64, unsigned long long)
+                                _KARABO_IO_H5_SEQUENCE_SIZE(INT8, signed char)
+                                _KARABO_IO_H5_SEQUENCE_SIZE(UINT8, unsigned char)
+                                _KARABO_IO_H5_SEQUENCE_SIZE(CHAR, char)
+                                _KARABO_IO_H5_SEQUENCE_SIZE(BOOL, bool)
+                                _KARABO_IO_H5_SEQUENCE_SIZE(STRING, std::string)
+                                _KARABO_IO_H5_SEQUENCE_SIZE(COMPLEX_FLOAT, complex<float>)
+                                _KARABO_IO_H5_SEQUENCE_SIZE(COMPLEX_DOUBLE, complex<double>)
+
+                            default:
+                                throw KARABO_NOT_SUPPORTED_EXCEPTION("Type not supported for key " + key);
+                        }
+
+                    }
+                    discoverAttributes(el, h);
 
                 }
-                discoverAttributes(el, h);
+
+                KARABO_LOG_FRAMEWORK_TRACE_CF << "Format::discoverFromDataElement type: " << ToType<ToLiteral>::to(t);
+
+
 
             }
 

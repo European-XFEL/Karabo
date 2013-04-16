@@ -47,6 +47,11 @@ namespace karabo {
                 {
                     m_dims = karabo::util::Dims(input.get<std::vector<unsigned long long> >("dims"));
                     m_memoryDataSpace1 = Dataset::dataSpace(m_dims);
+                    if (input.has("type")) {
+                        m_hashType = karabo::util::FromType<karabo::util::FromLiteral>::from(input.get<std::string>("type"));
+                    } else {
+                        m_hashType =  karabo::util::FromType<karabo::util::FromLiteral>::from(FixedLengthArray<T, U>::classInfo().getClassId());
+                    }
                     KARABO_LOG_FRAMEWORK_TRACE << "constructor FixedLengthArray";
                 }
 
@@ -73,7 +78,7 @@ namespace karabo {
                             .key("type")
                             .displayedName("Type")
                             .description("Data Type in Hash")
-                            .assignmentOptional().noDefaultValue()
+                            .assignmentOptional().defaultValue(FixedLengthArray<T, U>::classInfo().getClassId())
                             .reconfigurable()
                             .commit();
 
@@ -337,6 +342,8 @@ namespace karabo {
                 karabo::util::Dims m_dimsPlus1;
 
                 hid_t m_dataAccessPropListId;
+
+                karabo::util::Types::ReferenceType m_hashType;
 
 
                 U m_readData; // this is a pointer to the data Hash (apart from case of bool type )
