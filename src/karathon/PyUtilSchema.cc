@@ -309,18 +309,103 @@ bp::object Wrap_Schema_getMaxExcAs(const Schema& schema, const bp::object& obj, 
     throw KARABO_PYTHON_EXCEPTION("Python first argument in 'getMaxExcAs' must be a string");
 }
 
-     bp::list Wrap_Schema_getParameters(const Schema& self, const bp::object& obj) {
-            if (PyString_Check(obj.ptr())) {
-                bp::list listParams;
-                string path = bp::extract<string>(obj);
-                std::vector<std::string> v = self.getParameters(path);
-                for (size_t i = 0; i < v.size(); i++) listParams.attr("append")(bp::object(v[i]));
-                return listParams;
-            }
-            throw KARABO_PYTHON_EXCEPTION("Python type should be 'list'");
-        }
+
+bp::list Wrap_Schema_getParameters(const Schema& schema, const bp::object& obj) {
+    if (PyString_Check(obj.ptr())) {
+        bp::list listParams;
+        string path = bp::extract<string>(obj);
+        std::vector<std::string> v = schema.getParameters(path);
+        for (size_t i = 0; i < v.size(); i++) listParams.attr("append")(bp::object(v[i]));
+        return listParams;
+    }
+    throw KARABO_PYTHON_EXCEPTION("Python argument in 'getParameters' should be a string");
+}
      
+bp::object Wrap_Schema_getTags(const Schema& schema, const bp::object& obj) {
+    if (PyString_Check(obj.ptr())) {
+        string path = bp::extract<string>(obj);
+        std::vector<std::string> v = schema.getTags(path);
+        return karabo::pyexfel::Wrapper::fromStdVectorToPyArray<string>(v);
+    }
+    throw KARABO_PYTHON_EXCEPTION("Python argument in 'getTags' should be a string");
+}
+
+
+bp::object Wrap_Schema_getOptions(const Schema& schema, const bp::object& obj) {
+    if (PyString_Check(obj.ptr())) {
+        string path = bp::extract<string>(obj);
+        vector<string> v = schema.getOptions(path);
+        return karabo::pyexfel::Wrapper::fromStdVectorToPyArray<string>(v);
+    }
+    throw KARABO_PYTHON_EXCEPTION("Python argument in 'getOptions' should be a string");
+}
+
+bp::object Wrap_Schema_getAllowedStates(const Schema& schema, const bp::object& obj) {
+    if (PyString_Check(obj.ptr())) {
+        string path = bp::extract<string>(obj);
+        vector<string> v = schema.getAllowedStates(path);
+        return karabo::pyexfel::Wrapper::fromStdVectorToPyArray<string>(v);
+    }
+    throw KARABO_PYTHON_EXCEPTION("Python argument in 'getAllowedStates' should be a string");
+}
+
+bp::object Wrap_Schema_getDefaultValue(const Schema& schema, const bp::object& obj){
+    if (PyString_Check(obj.ptr())){
+        string path = bp::extract<string>(obj);
+        Types::ReferenceType reftype = schema.getValueType(path);
+
+        switch (reftype) {
+                case Types::BOOL:
+                     return bp::object(schema.getDefaultValue<bool>(path));    
+                case Types::INT32:
+                     return bp::object(schema.getDefaultValue<int>(path));
+                case Types::UINT32:
+                     return bp::object(schema.getDefaultValue<unsigned int>(path));
+                case Types::INT64:
+                     return bp::object(schema.getDefaultValue<long long>(path));
+                case Types::UINT64:
+                     return bp::object(schema.getDefaultValue<unsigned long long>(path));
+                case Types::STRING:
+                     return bp::object(schema.getDefaultValue<string>(path));
+                case Types::DOUBLE:
+                     return bp::object(schema.getDefaultValue<double>(path));    
+                default:
+                     break;
+        }
+        throw KARABO_NOT_SUPPORTED_EXCEPTION("Type is not supported");
+    }
+    throw KARABO_PYTHON_EXCEPTION("Python argument in 'getDefaultValue' should be a string");
+}
+
+
+bp::object Wrap_Schema_getDefaultValueAs(const Schema& schema, const bp::object& obj, const karabo::pyexfel::PyTypes::ReferenceType& pytype){
+    if (PyString_Check(obj.ptr())){
+        string path = bp::extract<string>(obj);
         
+        switch (pytype) {
+                case karabo::pyexfel::PyTypes::BOOL:
+                     return bp::object(schema.getDefaultValueAs<bool>(path));    
+                case karabo::pyexfel::PyTypes::INT32:
+                     return bp::object(schema.getDefaultValueAs<int>(path));
+                case karabo::pyexfel::PyTypes::UINT32:
+                     return bp::object(schema.getDefaultValueAs<unsigned int>(path));
+                case karabo::pyexfel::PyTypes::INT64:
+                     return bp::object(schema.getDefaultValueAs<long long>(path));
+                case karabo::pyexfel::PyTypes::UINT64:
+                     return bp::object(schema.getDefaultValueAs<unsigned long long>(path));
+                case karabo::pyexfel::PyTypes::STRING:
+                     return bp::object(schema.getDefaultValueAs<string>(path));
+                case karabo::pyexfel::PyTypes::DOUBLE:
+                     return bp::object(schema.getDefaultValueAs<double>(path));    
+                default:
+                     break;
+        }
+        throw KARABO_NOT_SUPPORTED_EXCEPTION("Type is not supported");
+    }
+    throw KARABO_PYTHON_EXCEPTION("Python first argument in 'getDefaultValueAs' should be a string");
+}
+
+
 void exportPyUtilSchema() {
 
     bp::enum_< karabo::util::AccessType>("AccessType")
@@ -371,10 +456,6 @@ void exportPyUtilSchema() {
         s.def("getAccessMode", &Schema::getAccessMode);
 
         s.def("getAssemblyRules", &Schema::getAssemblyRules);
-
-        s.def("getAllowedStates"
-              , &Schema::getAllowedStates
-              , bp::return_value_policy< bp::copy_const_reference >());
 
         s.def("getAssignment", &Schema::getAssignment);
 
@@ -434,9 +515,17 @@ void exportPyUtilSchema() {
         
         s.def("getAliasAsString", &Schema::getAliasAsString); 
         
-        s.def("getParameters", 
-              &Wrap_Schema_getParameters
-              , (bp::arg("path") = "") );
+        s.def("getParameters", &Wrap_Schema_getParameters, (bp::arg("path") = "") );
+        
+        s.def("getOptions", &Wrap_Schema_getOptions);
+        
+        s.def("getTags", &Wrap_Schema_getTags);
+        
+        s.def("getAllowedStates", &Wrap_Schema_getAllowedStates);
+        
+        s.def("getDefaultValue", &Wrap_Schema_getDefaultValue);
+        
+        s.def("getDefaultValueAs", &Wrap_Schema_getDefaultValueAs);
         //all other get-s....
 
         //********* has methods ****************
