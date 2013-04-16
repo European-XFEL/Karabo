@@ -62,8 +62,8 @@ class  Schema_TestCase(unittest.TestCase):
     def test_getNodeType(self):
         try:
             nodeType = self.schema.getNodeType("exampleKey1")
-            self.assertEqual(nodeType, Schema.LEAF)
-            self.assertEqual(self.schema.getNodeType("exampleKey5"), Schema.LEAF)
+            self.assertEqual(nodeType, NodeType.LEAF)
+            self.assertEqual(self.schema.getNodeType("exampleKey5"), NodeType.LEAF)
         except Exception,e:
             self.fail("test_getNodeType exception group 1: " + str(e))
         
