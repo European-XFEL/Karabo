@@ -72,7 +72,7 @@ class  Schema_TestCase(unittest.TestCase):
             self.assertEqual(self.schema.getValueType("exampleKey1"), Types.STRING)
             self.assertEqual(self.schema.getValueType("exampleKey2"), Types.INT32)
             self.assertEqual(self.schema.getValueType("exampleKey3"), Types.UINT32)
-            self.assertEqual(self.schema.getValueType("exampleKey4"), Types.FLOAT)
+            self.assertEqual(self.schema.getValueType("exampleKey4"), Types.DOUBLE)
             self.assertEqual(self.schema.getValueType("exampleKey5"), Types.INT64)
         except Exception,e:
             self.fail("test_getValueType exception group 1: " + str(e))
@@ -81,10 +81,12 @@ class  Schema_TestCase(unittest.TestCase):
         try:
             self.assertEqual(self.schema.keyHasAlias("exampleKey1"), False)
             self.assertEqual(self.schema.keyHasAlias("exampleKey2"), True)
-            self.assertEqual(self.schema.getAliasFromKey("exampleKey2"), 10)
-            self.assertEqual(self.schema.getAliasFromKey("exampleKey3"), 5.5)
-            self.assertEqual(self.schema.getAliasFromKey("exampleKey4"), "exampleAlias4")
-            self.assertEqual(self.schema.getAliasFromKey("exampleKey5"), "exampleAlias5")
+            self.assertEqual(self.schema.getAliasAsString("exampleKey2"), "10")
+            self.assertEqual(self.schema.getAliasAsString("exampleKey4"), "exampleAlias4")
+            #self.assertEqual(self.schema.getAliasFromKey("exampleKey2"), 10)
+            #self.assertEqual(self.schema.getAliasFromKey("exampleKey3"), 5.5)
+            #self.assertEqual(self.schema.getAliasFromKey("exampleKey4"), "exampleAlias4")
+            #self.assertEqual(self.schema.getAliasFromKey("exampleKey5"), "exampleAlias5")
         except Exception,e:
             self.fail("test_getAlias exception group 1: " + str(e))
      

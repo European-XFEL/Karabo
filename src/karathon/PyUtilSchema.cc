@@ -309,7 +309,18 @@ bp::object Wrap_Schema_getMaxExcAs(const Schema& schema, const bp::object& obj, 
     throw KARABO_PYTHON_EXCEPTION("Python first argument in 'getMaxExcAs' must be a string");
 }
 
-
+     bp::list Wrap_Schema_getParameters(const Schema& self, const bp::object& obj) {
+            if (PyString_Check(obj.ptr())) {
+                bp::list listParams;
+                string path = bp::extract<string>(obj);
+                std::vector<std::string> v = self.getParameters(path);
+                for (size_t i = 0; i < v.size(); i++) listParams.attr("append")(bp::object(v[i]));
+                return listParams;
+            }
+            throw KARABO_PYTHON_EXCEPTION("Python type should be 'list'");
+        }
+     
+        
 void exportPyUtilSchema() {
 
     bp::enum_< karabo::util::AccessType>("AccessType")
@@ -421,12 +432,41 @@ void exportPyUtilSchema() {
         
         s.def("getMaxExcAs", &Wrap_Schema_getMaxExcAs, (bp::arg("path"),bp::arg("pytype")));
         
+        s.def("getAliasAsString", &Schema::getAliasAsString); 
+        
+        s.def("getParameters", 
+              &Wrap_Schema_getParameters
+              , (bp::arg("path") = "") );
         //all other get-s....
 
         //********* has methods ****************
 
         s.def("keyHasAlias", &Schema::keyHasAlias);
+        
         s.def("hasAccessMode", &Schema::hasAccessMode);
+        
+        s.def("hasAssignment", &Schema::hasAssignment);
+        
+        s.def("hasAllowedStates", &Schema::hasAllowedStates);
+        
+        s.def("hasDefaultValue", &Schema::hasDefaultValue);
+        
+        s.def("hasOptions", &Schema::hasOptions);
+        
+        s.def("hasTags", &Schema::hasTags);
+        
+        s.def("hasUnit", &Schema::hasUnit);
+        
+        s.def("hasMetricPrefix", &Schema::hasMetricPrefix);
+        
+        s.def("hasMinInc", &Schema::hasMinInc);
+        
+        s.def("hasMaxInc", &Schema::hasMaxInc);
+        
+        s.def("hasMinExc", &Schema::hasMinExc);
+        
+        s.def("hasMaxExc", &Schema::hasMaxExc);
+        
         //all other has .....
 
         //********* is methods ****************
