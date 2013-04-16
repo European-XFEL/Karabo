@@ -389,13 +389,15 @@ namespace karabo {
 
                 try {
 
-                    const Hash& dataFormatConfig = dataFormat->getConfig();
+//                    const Hash& dataFormatConfig = dataFormat->getConfig();
                     
-                    Schema schema = Format::getSchema("Format");
+//                    Schema schema = Format::getSchema("Format");
                     Hash persistentDataFormatConfig;
-                    Hash& elements = persistentDataFormatConfig.bindReference<Hash>("Format");
-                    HashFilter::byTag(schema, dataFormatConfig.get<Hash>("Format"), elements, "persistent");
+//                    Hash& elements = persistentDataFormatConfig.bindReference<Hash>("Format");
+//                    HashFilter::byTag(schema, dataFormatConfig.get<Hash>("Format"), elements, "persistent");
 
+                    dataFormat->getPersistentConfig(persistentDataFormatConfig);
+                    
                     KARABO_LOG_FRAMEWORK_TRACE_CF << persistentDataFormatConfig;
                     
                     Hash c("Xml.indentation", 1);

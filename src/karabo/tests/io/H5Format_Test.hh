@@ -10,6 +10,7 @@
 #define	H5FORMAT_TEST_HH
 
 #include <cppunit/extensions/HelperMacros.h>
+#include <karabo/util/util.hh>
 
 class H5Format_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST_SUITE(H5Format_Test);
@@ -22,6 +23,9 @@ class H5Format_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST_SUITE_END();
 
 public:
+    
+    KARABO_CLASSINFO(H5Format_Test, "H5Format_Test", "1.0")
+            
     H5Format_Test();
     virtual ~H5Format_Test();
     void setUp();

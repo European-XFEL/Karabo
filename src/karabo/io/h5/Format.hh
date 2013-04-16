@@ -57,6 +57,8 @@ namespace karabo {
                 const karabo::util::Hash& getConfig() const {
                     return m_config;
                 }
+                
+                void getPersistentConfig(karabo::util::Hash& config) const;
 
                 void addElement(karabo::io::h5::Element::Pointer element);
                 

@@ -15,7 +15,7 @@
 #include <karabo/io/h5/Scalar.hh>
 #include <karabo/io/h5/ioProfiler.hh>
 
-//#include <karabo/log/Tracer.hh>
+#include <karabo/log/Tracer.hh>
 
 using namespace karabo::util;
 using namespace karabo::io::h5;
@@ -31,10 +31,10 @@ H5File_Test::H5File_Test() {
     tr.disableAll();
 
     //    tr.enable("karabo.io.h5.Table");
-    tr.enable("karabo.io.h5.Table.saveTableFormatAsAttribute");
-    //    tr.enable("karabo.io.h5.Table.openNew");
-    tr.enable("karabo.io.h5.Table.openReadOnly");
-    tr.enable("H5File_Test.testReadTable");
+//    tr.enable("karabo.io.h5.Table.saveTableFormatAsAttribute");
+//    //    tr.enable("karabo.io.h5.Table.openNew");
+//    tr.enable("karabo.io.h5.Table.openReadOnly");
+//    tr.enable("H5File_Test.testReadTable");
     tr.reconfigure();
 
 
@@ -270,7 +270,7 @@ void H5File_Test::testRead() {
         File file(resourcePath("file.h5"));
         file.open(File::READONLY);
 
-
+        
         // Define the table to be read using defined format
         Table::Pointer table = file.getTable("/abc", format);
 
@@ -373,11 +373,8 @@ void H5File_Test::testReadTable() {
         // Declare container for data
         Hash data;
 
-        // Bind some variable to hash data
-        // Note that hash element "d" is not bound
-
-        // bla will contain data from /abc/experimental/test23
-        //unsigned int& test23 = data.bindReference<unsigned int>("abecadlo.wer");
+        // test23 will contain data from /abc/experimental/test23
+        unsigned int& test23 = data.bindReference<unsigned int>("experimental.test23");
 
         table->bind(data);
 
@@ -385,11 +382,20 @@ void H5File_Test::testReadTable() {
 
         KARABO_LOG_FRAMEWORK_TRACE_CF << "DATA:\n" << data;
         
-        //KARABO_LOG_FRAMEWORK_TRACE_CF << "test23: " << test23;
-        KARABO_LOG_FRAMEWORK_TRACE_CF << "data(\"instrument.b\"): " << data.get<float>("instrument.b");
+        KARABO_LOG_FRAMEWORK_TRACE_CF << "test23: " << test23;
+        CPPUNIT_ASSERT( test23 == 1006);
+        
+        float b = data.get<float>("instrument.b");        
+        KARABO_LOG_FRAMEWORK_TRACE_CF << "data(\"instrument.b\"): " << b;
+        CPPUNIT_ASSERT( b > 9.99999);
+        CPPUNIT_ASSERT( b < 10.00001);
+        CPPUNIT_ASSERT( data.get<int>("instrument.a") == 100);
+        CPPUNIT_ASSERT( data.get<string>("instrument.c") == "abc" );
+        CPPUNIT_ASSERT( data.get<bool>("instrument.d") == true );
+        
+        //TODO  CPPUNIT_ASSERT( data.getAttribute<int>("instrument.d","att1") == 123 );
+        CPPUNIT_ASSERT( data.get<char>("instrument.e") == 58 );
 
-
-//        table->close();
         file.close();
     } catch (Exception& ex) {
         clog << ex << endl;
