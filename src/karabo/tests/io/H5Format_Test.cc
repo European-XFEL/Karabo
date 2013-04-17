@@ -33,12 +33,13 @@ CPPUNIT_TEST_SUITE_REGISTRATION(H5Format_Test);
 
 
 H5Format_Test::H5Format_Test() {
-    
+
     karabo::log::Tracer tr;
     tr.disableAll();
-
+   // tr.enable("karabo.io.h5.VECTOR_INT32");
+//    tr.enable("karabo.io.h5");
     //tr.enable("karabo.io.h5.Format");    
-    //tr.enable("H5File_Test");
+    //tr.enable("H5Format_Test.testDiscoverFromHash");
     tr.reconfigure();
 }
 
@@ -122,7 +123,7 @@ void H5Format_Test::testManualFormat() {
         format->replaceElement("experimental.test23", e2);
 
         const Hash config2 = format->getConfig();
- 
+
         const vector<Hash>& vec2 = config2.get<vector<Hash> >("Format.elements");
         CPPUNIT_ASSERT(vec2.size() == 1);
         CPPUNIT_ASSERT(vec2[0].has("VECTOR_INT32") == true);
@@ -224,12 +225,12 @@ void H5Format_Test::testDiscoverFromHash() {
             Format::Pointer dataFormat = Format::createFormat(config);
 
 
-            //clog << "config\n" << dataFormat->getConfig() << endl;
+            KARABO_LOG_FRAMEWORK_TRACE_CF << "config\n" << dataFormat->getConfig();
 
             Hash pers;
             dataFormat->getPersistentConfig(pers);
 
-            //clog << "persistent config\n" << pers << endl;
+            KARABO_LOG_FRAMEWORK_TRACE_CF << "persistent config\n" << pers;
 
         } catch (Exception e) {
             clog << e.detailedMsg() << endl;
