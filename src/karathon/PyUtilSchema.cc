@@ -6,7 +6,7 @@
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
 #include <boost/python.hpp>
-
+#include <iostream>
 #include <karabo/util/Factory.hh>
 #include <karabo/util/NodeElement.hh>
 #include <karabo/util/ListElement.hh>
@@ -77,8 +77,9 @@ struct NodeElementWrap {
         if (!obj.attr("expectedParameters")) {
             throw KARABO_PYTHON_EXCEPTION("Class given in 'appendParametersOf' of NODE_ELELEMT must have 'expectedParameters' function");
         }
-
-        const karabo::util::Schema schemaPy = bp::extract<karabo::util::Schema> (obj.attr("getSchema")());
+        std::string classid = bp::extract<std::string>(obj.attr("__classid__"));
+        bp::object schemaObj = obj.attr("getSchema")(classid);
+        const karabo::util::Schema schemaPy = bp::extract<karabo::util::Schema> (schemaObj);
 
         const karabo::util::Hash h = schemaPy.getParameterHash();
         self.getNode().setValue<karabo::util::Hash>(h);
@@ -672,7 +673,7 @@ void exportPyUtilSchema() {
         bp::class_<NodeElement> ("NODE_ELEMENT", bp::init<Schema & >((bp::arg("expected"))))
                 KARABO_PYTHON_NODE_CHOICE_LIST(NodeElement)
                 .def("appendParametersOf"
-                     , &NodeElementWrap::appendParametersOfPy
+                     , &NodeElementWrap::appendParametersOfPy, (bp::arg("python_class"))
                      , bp::return_internal_reference<> ())
                 ;
     }
