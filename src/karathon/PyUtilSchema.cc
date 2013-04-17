@@ -11,6 +11,7 @@
 #include <karabo/util/NodeElement.hh>
 #include <karabo/util/ListElement.hh>
 #include <karabo/util/ChoiceElement.hh>
+#include <karabo/util/OverwriteElement.hh>
 #include <karabo/util/Validator.hh>
 
 #include "PythonMacros.hh"
@@ -110,12 +111,12 @@ struct ChoiceElementWrap {
         if (self.getNode().getType() != Types::HASH) self.getNode().setValue(Hash());
         Hash& choiceOfNodes = self.getNode().getValue<Hash>();
         std::string classid = bp::extract<std::string>(classobj.attr("__classid__"));
-        
+
         bp::object nodeNameList = classobj.attr("getRegisteredClasses")();
         boost::any any;
         karabo::pyexfel::Wrapper::toAny(nodeNameList, any);
-        
-        if (any.type() != typeid(std::vector<std::string>))
+
+        if (any.type() != typeid (std::vector<std::string>))
             throw KARABO_PYTHON_EXCEPTION("getRegisteredClass() doesn't return vector<string>!");
         const std::vector<std::string>& nodeNames = boost::any_cast<std::vector<std::string> >(any);
         for (size_t i = 0; i < nodeNames.size(); i++) {
@@ -132,7 +133,6 @@ struct ChoiceElementWrap {
     }
 };
 
-
 struct ListElementWrap {
 
 
@@ -147,12 +147,12 @@ struct ListElementWrap {
         if (self.getNode().getType() != Types::HASH) self.getNode().setValue(Hash());
         Hash& choiceOfNodes = self.getNode().getValue<Hash>();
         std::string classid = bp::extract<std::string>(classobj.attr("__classid__"));
-        
+
         bp::object nodeNameList = classobj.attr("getRegisteredClasses")();
         boost::any any;
         karabo::pyexfel::Wrapper::toAny(nodeNameList, any);
-        
-        if (any.type() != typeid(std::vector<std::string>))
+
+        if (any.type() != typeid (std::vector<std::string>))
             throw KARABO_PYTHON_EXCEPTION("getRegisteredClass() doesn't return vector<string>!");
         const std::vector<std::string>& nodeNames = boost::any_cast<std::vector<std::string> >(any);
         for (size_t i = 0; i < nodeNames.size(); i++) {
@@ -166,6 +166,30 @@ struct ListElementWrap {
             node.setAttribute<int>(KARABO_SCHEMA_ACCESS_MODE, READ | WRITE | INIT);
         }
         return self;
+    }
+};
+
+struct OverwriteElementWrap {
+
+
+    static karabo::util::OverwriteElement & setNewAlias(karabo::util::OverwriteElement& self, const bp::object& alias) {
+        boost::any any;
+        karabo::pyexfel::Wrapper::toAny(alias, any);
+        return self.setNewAlias(any);
+    }
+
+
+    static karabo::util::OverwriteElement & setNewTag(karabo::util::OverwriteElement& self, const bp::object& tag) {
+        boost::any any;
+        karabo::pyexfel::Wrapper::toAny(tag, any);
+        return self.setNewTag(any);
+    }
+
+
+    static karabo::util::OverwriteElement & setNewDefaultValue(karabo::util::OverwriteElement& self, const bp::object& value) {
+        boost::any any;
+        karabo::pyexfel::Wrapper::toAny(value, any);
+        return self.setNewDefaultValue(any);
     }
 };
 
@@ -911,6 +935,48 @@ void exportPyUtilSchema() {
                 .value("BYTE", Units::BYTE)
                 .value("BIT", Units::BIT)
                 .export_values()
+                ;
+    }
+
+    {
+        bp::implicitly_convertible< Schema &, OverwriteElement >();
+        bp::class_<OverwriteElement> ("OVERWRITE_ELEMENT", bp::init<Schema & >((bp::arg("expected"))))
+                .def("key"
+                     , (OverwriteElement & (OverwriteElement::*)(string const &))(&OverwriteElement::key)
+                     , (bp::arg("key"))
+                     , bp::return_internal_reference<> ())
+                .def("setNewAlias"
+                     , &OverwriteElementWrap().setNewAlias
+                     , (bp::arg("alias"))
+                     , bp::return_internal_reference<> ())
+                .def("setNewTag"
+                     , &OverwriteElementWrap().setNewTag
+                     , (bp::arg("tag"))
+                     , bp::return_internal_reference<> ())
+                .def("setNewAssignmentMandatory"
+                     , (OverwriteElement & (OverwriteElement::*)())(&OverwriteElement::setNewAssignmentMandatory)
+                     , bp::return_internal_reference<> ())
+                .def("setNewAssignmentOptional"
+                     , (OverwriteElement & (OverwriteElement::*)())(&OverwriteElement::setNewAssignmentOptional)
+                     , bp::return_internal_reference<> ())
+                .def("setNewAssignmentInternal"
+                     , (OverwriteElement & (OverwriteElement::*)())(&OverwriteElement::setNewAssignmentInternal)
+                     , bp::return_internal_reference<> ())
+                .def("setNowInit"
+                     , (OverwriteElement & (OverwriteElement::*)())(&OverwriteElement::setNowInit)
+                     , bp::return_internal_reference<> ())
+                .def("setNowReconfigurable"
+                     , (OverwriteElement & (OverwriteElement::*)())(&OverwriteElement::setNowReconfigurable)
+                     , bp::return_internal_reference<> ())
+                .def("setNowReadOnly"
+                     , (OverwriteElement & (OverwriteElement::*)())(&OverwriteElement::setNowReadOnly)
+                     , bp::return_internal_reference<> ())
+                .def("setNewDefaultValue"
+                     , &OverwriteElementWrap().setNewDefaultValue
+                     , (bp::arg("value"))
+                     , bp::return_internal_reference<> ())
+                .def("commit"
+                     , (void (OverwriteElement::*)())(&OverwriteElement::commit))
                 ;
     }
 } //end  exportPyUtilSchema
