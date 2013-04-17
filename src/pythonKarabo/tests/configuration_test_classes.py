@@ -195,7 +195,7 @@ class GraphicsRenderer1(object):
         e.tags("shape")
         e.displayedName("Circle")
         e.description("A circle")
-        e.appendParametersOf(Circle)()
+        e.appendParametersOf(Circle)
         e.commit()
 
         e = NODE_ELEMENT(expected).key("shapes.rectangle")

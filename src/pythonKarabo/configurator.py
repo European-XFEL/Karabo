@@ -33,7 +33,7 @@ class Configurator(object):
         self.baseRegistry[derived.__classid__] = derived
         return self
         
-    def getSchema(self, classid):
+    def getSchema(self, classid, rules = AssemblyRules(AccessType(READ | WRITE | INIT))):
         if classid not in self.baseRegistry:
             raise AttributeError,"Class Id '" + classid + "' not found in the base registry"
         Derived = self.baseRegistry[classid]
@@ -47,7 +47,7 @@ class Configurator(object):
         clist = []
         for c in inheritanceGenerator(Derived):
             clist.insert(0,c) # base class will be the first!
-        schema = Schema(classid, AssemblyRules(AccessType(READ | WRITE | INIT)))
+        schema = Schema(classid, rules)
         for theClass in clist:
             try:
                 theClass.expectedParameters(schema) # fill schema in order from base to derived
