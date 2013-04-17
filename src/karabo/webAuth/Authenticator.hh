@@ -28,6 +28,7 @@ namespace karabo {
             std::string m_portNumber;
             std::string m_software;
             std::string m_nonce;
+            std::string m_sessionToken;
             
             boost::shared_ptr<AuthenticationPortBindingProxy> m_service;
 
@@ -50,6 +51,8 @@ namespace karabo {
             ns1__loginResponse authenticate(const karabo::util::Timestamp& timestamp);
 
             ns1__getUserNonceResponse getUserNonce();
+            
+            bool setSessionToken(const std::string& newSessionToken);
 
         };
     }
