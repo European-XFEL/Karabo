@@ -107,7 +107,8 @@ struct ChoiceElementWrap {
         if (!classobj.attr("expectedParameters")) {
             throw KARABO_PYTHON_EXCEPTION("Class given in 'appendNodesOfConfigurationBase' of CHOICE_ELELEMT must have 'expectedParameters' function");
         }
-        
+        if (self.getNode().getType() != Types::HASH) self.getNode().setValue(Hash());
+        Hash& choiceOfNodes = self.getNode().getValue<Hash>();
         std::string classid = bp::extract<std::string>(classobj.attr("__classid__"));
         
         bp::object nodeNameList = classobj.attr("getRegisteredClasses")();
@@ -117,13 +118,6 @@ struct ChoiceElementWrap {
         if (any.type() != typeid(std::vector<std::string>))
             throw KARABO_PYTHON_EXCEPTION("getRegisteredClass() doesn't return vector<string>!");
         const std::vector<std::string>& nodeNames = boost::any_cast<std::vector<std::string> >(any);
-        for(size_t i = 0; i < nodeNames.size(); ++i) 
-            cout << "nodeName -> " << nodeNames[i] << std::endl;
-
-        // This is apparently wrong!!!  What can be written instead?
-        Hash& choiceOfNodes = self.getNode().getValue<Hash>();
-        ///////////////////////////////////////////////////////////
-        
         for (size_t i = 0; i < nodeNames.size(); i++) {
             std::string nodeName = nodeNames[i];
             std::cout << "ChoiceElementWrap::appendNodesOfConfigurationBasePy nodeName = " << nodeName << std::endl;
