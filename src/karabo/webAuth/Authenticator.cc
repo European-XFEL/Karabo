@@ -51,12 +51,41 @@ namespace karabo {
 //                printf("sessionToken: %s\n", nsLoginResp.return_->sessionToken->c_str());
 //                printf("welcomeMessage: %s\n", nsLoginResp.return_->welcomeMessage->c_str());
 //                printf("operationSuccess: %d\n", *(nsLoginResp.return_->operationSuccess));
+                
+                setSessionToken(*(nsLoginResp.return_->sessionToken));
+                //m_sessionToken = *(nsLoginResp.return_->sessionToken);
 
                 return true;
             } else {
                 //cout << "Login failed" << endl;
                 return false;
             }
+        }
+        
+        bool Authenticator::logout() {
+            
+            ns1__logout nsLogout;
+            ns1__logoutResponse nsLogoutResp;
+            
+            nsLogout.username = &m_username;
+            nsLogout.provider = &m_provider;
+            nsLogout.sessionToken = &m_sessionToken;
+            
+            // If obtain successfully answer from Web Service it print message returned!
+            if (m_service->logout(&nsLogout, &nsLogoutResp) == SOAP_OK) {
+                //std::cout << &(nsUserNonceResp.return_) << std::endl;
+                if (*(nsLogoutResp.return_) == 1) {
+                    //printf("The nonce was: %s\n", nsUserNonceResp.return_->sessionToken->c_str());
+                } else {
+                    //printf("Error message: %s\n", nsUserNonceResp.return_->errorMsg->c_str());
+                    return false;
+                }
+            } else {
+                soap_print_fault(m_service->soap, stderr);
+                return false;
+            }
+            
+            return true;
         }
 
 
@@ -114,6 +143,12 @@ namespace karabo {
             }
 
             return nsLoginResp;
+        }
+        
+        
+        bool Authenticator::setSessionToken(const std::string& newSessionToken) {
+            m_sessionToken = newSessionToken;
+            return true;
         }
 
     }
