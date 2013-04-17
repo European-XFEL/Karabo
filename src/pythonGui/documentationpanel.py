@@ -140,10 +140,15 @@ class DocumentationPanel(QWidget):
 
 
     def onNavigationItemChanged(self, itemInfo):
-        deviceId = itemInfo.get(QString('name'))
-        if deviceId is None:
-            deviceId = itemInfo.get('name')
-        url = "https://docs.xfel.eu/share/page/site/karabo/device-page?title="+deviceId+"&action=view&parentNodeRef=workspace/SpacesStore/18cffe24-4ce3-4d26-b3c1-fdc953edff59&alf_ticket=" + self.__wikiTicket
+        devClaId = itemInfo.get(QString('devClaId'))
+        if devClaId is None:
+            devClaId = itemInfo.get('devClaId')
+        
+        if devClaId is None:
+            self.__wikiView.load(QUrl("https://docs.xfel.eu/share/page/site-index"))
+            return
+        
+        url = "https://docs.xfel.eu/share/page/site/karabo/device-page?title="+devClaId+"&action=view&parentNodeRef=workspace/SpacesStore/18cffe24-4ce3-4d26-b3c1-fdc953edff59&alf_ticket=" + self.__wikiTicket
         self.__wikiView.load(QUrl(url))
 
 

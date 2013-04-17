@@ -189,7 +189,9 @@ class NavigationTreeView(QTreeView):
         row = self.__model.mappedRow(index)
         rowId = self.__model.rowId(index)
         key = index.data().toString()
-
+        
+        devClaId = None
+        
         if level == 0:
             type = NavigationItemTypes.NODE
         elif level == 1:
@@ -198,17 +200,19 @@ class NavigationTreeView(QTreeView):
             type = NavigationItemTypes.DEVICE_CLASS
             parentIndex = index.parent()
             key = parentIndex.data().toString() + "+" + index.data().toString()
+            devClaId = index.data().toString()
             # Get schema from model
             schema = self.__model.getSchema(level, row)
             Manager().onSchemaAvailable(dict(key=key, type=type, schema=schema))
         elif level == 3:
             type = NavigationItemTypes.DEVICE_INSTANCE
             parentIndex = index.parent()
+            devClaId = parentIndex.data().toString()
             # Get schema from model
             schema = self.__model.getSchema(level, row)
             Manager().onSchemaAvailable(dict(devClaId=parentIndex.data().toString(), key=key, type=type, schema=schema))
         
-        itemInfo = dict(key=key, type=type, name=index.data().toString(), level=level, rowId=rowId, column=1)
+        itemInfo = dict(key=key, type=type, devClaId=devClaId, level=level, rowId=rowId, column=1)
         Manager().onNavigationItemChanged(itemInfo)
         
         return type # Needed in ConfigurationPanel
