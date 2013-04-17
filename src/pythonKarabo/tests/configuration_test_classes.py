@@ -151,7 +151,7 @@ class GraphicsRenderer(object):
         e = CHOICE_ELEMENT(expected).key("shapes")
         e.description("Some shapes")
         e.displayedName("Shapes")
-        e.appendNodesOfConfigurationBase("Shape")
+        e.appendNodesOfConfigurationBase(Shape)
         e.assignmentOptional().defaultValue("Rectangle")
         e.commit()
         
