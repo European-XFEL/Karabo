@@ -67,7 +67,7 @@ class Configurator(object):
         try:
             validated = validator.validate(schema, configuration)
         except RuntimeError,e:
-            raise RuntimeError,"Validation Exception: " + e
+            raise RuntimeError,"Validation Exception: " + str(e)
         return Derived(validated)
     
     def createByConf(self, configuration, validation = True):
