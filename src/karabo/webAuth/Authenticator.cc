@@ -143,7 +143,11 @@ namespace karabo {
             KARABO_LOG_FRAMEWORK_DEBUG << "softwareDesc: " << string(nsLoginResp.return_->softwareDesc->c_str()) << "\n";
             KARABO_LOG_FRAMEWORK_DEBUG << "sessionToken: " << string(nsLoginResp.return_->sessionToken->c_str()) << "\n";
             KARABO_LOG_FRAMEWORK_DEBUG << "welcomeMessage: " << string(nsLoginResp.return_->welcomeMessage->c_str()) << "\n";
-            KARABO_LOG_FRAMEWORK_DEBUG << "operationSuccess: " << string(*(nsLoginResp.return_->operationSuccess)) << "\n";
+            if (*(nsLoginResp.return_->operationSuccess) == 0) {
+                KARABO_LOG_FRAMEWORK_DEBUG << "operationSuccess: No\n";
+            } else {
+                KARABO_LOG_FRAMEWORK_DEBUG << "operationSuccess: Yes\n";
+            }
         }
 
         std::string Authenticator::soapMessageNotOk(struct soap *soap) {
@@ -162,15 +166,15 @@ namespace karabo {
                 d = soap_check_faultdetail(soap);
 
                 errorMsg = soap->version ? "SOAP 1." : "Error ";
-                errorMsg = errorMsg + std::string(soap->version ? (int) soap->version : soap->error);
+                //errorMsg = errorMsg + std::string(soap->version ? (int) soap->version : soap->error);
                 errorMsg = errorMsg + " fault: ";
                 errorMsg = errorMsg + *c;
                 errorMsg = errorMsg + " [";
-                errorMsg = errorMsg + v ? v : "no subcode";
+                //errorMsg = errorMsg + v ? v : "no subcode";
                 errorMsg = errorMsg + " ]\n\"";
-                errorMsg = errorMsg + s ? s : "[no reason]";
+                //errorMsg = errorMsg + s ? s : "[no reason]";
                 errorMsg = errorMsg + "\"\nDetail: ";
-                errorMsg = errorMsg + d ? d : "[no detail]";
+                //errorMsg = errorMsg + d ? d : "[no detail]";
                 errorMsg = errorMsg + "\n";
             }
             return errorMsg;
