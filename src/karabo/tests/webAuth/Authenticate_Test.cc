@@ -41,11 +41,17 @@ void Authenticate_Test::testLogin() {
     string portNumber = "4444";
     string software = "Karabo";
     string time = "20130410145159257";
+    
+    bool success;
 
     Authenticator a = Authenticator(username, password, provider, ipAddress, hostname, portNumber, software);
-    bool success = a.login();
     
+    success = a.login();
     CPPUNIT_ASSERT(success == true);
+    
+    success = a.logout();
+    CPPUNIT_ASSERT(success == true);
+    
 }
 
 
