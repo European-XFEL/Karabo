@@ -99,7 +99,7 @@ class EditableList(EditableWidget):
 
 
     def valueChanged(self, key, value, timestamp=None, forceRefresh=False):
-        if (value is None) or (self.__label.isEnabled() == False):
+        if value is None:
             return
         
         #self.__list = value

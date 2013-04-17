@@ -95,7 +95,7 @@ class EditableLineEdit(EditableWidget):
 
 
     def valueChanged(self, key, value, timestamp=None, forceRefresh=False):
-        if (value is None) or (self.__lineEdit.isEnabled() == False):
+        if value is None:
             return
         
         self.__lineEdit.blockSignals(True)

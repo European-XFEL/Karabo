@@ -128,7 +128,7 @@ class EditableComboBox(EditableWidget):
             return
 
         index = self.__comboBox.findText(str(value))
-        if (index < 0) or (self.__comboBox.isEnabled() == False):
+        if index < 0:
             return
 
         self.__comboBox.blockSignals(True)
