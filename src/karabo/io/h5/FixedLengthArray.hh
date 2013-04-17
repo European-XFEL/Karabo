@@ -47,12 +47,7 @@ namespace karabo {
                 {
                     m_dims = karabo::util::Dims(input.get<std::vector<unsigned long long> >("dims"));
                     m_memoryDataSpace1 = Dataset::dataSpace(m_dims);
-                    if (input.has("type")) {
-                        m_hashType = karabo::util::FromType<karabo::util::FromLiteral>::from(input.get<std::string>("type"));
-                    } else {
-                        m_hashType =  karabo::util::FromType<karabo::util::FromLiteral>::from(FixedLengthArray<T, U>::classInfo().getClassId());
-                    }
-                    KARABO_LOG_FRAMEWORK_TRACE << "constructor FixedLengthArray";
+                    m_hashType = karabo::util::FromType<karabo::util::FromLiteral>::from(input.get<std::string>("type"));
                 }
 
                 virtual ~FixedLengthArray() {
@@ -129,12 +124,17 @@ namespace karabo {
                         }
 
                         m_fileDataSpace = selectRecord(m_fileDataSpace, recordId, 1);
-                        const std::vector<T>& vec = data.get<std::vector<T> >(m_key, '/');
+                        if (karabo::util::Types::isVector(m_hashType)) {
+                            const std::vector<T>& vec = data.get<std::vector<T> >(m_key, '/');
+                            KARABO_PROFILER_STOP_SCALAR1
+                            KARABO_PROFILER_START_SCALAR1("write")
+                            DatasetWriter<T>::write(vec, m_dataSet, m_memoryDataSpace1, m_fileDataSpace);
+                            KARABO_PROFILER_STOP_SCALAR1
 
-                        KARABO_PROFILER_STOP_SCALAR1
-                        KARABO_PROFILER_START_SCALAR1("write")
-                        DatasetWriter<T>::write(vec, m_dataSet, m_memoryDataSpace1, m_fileDataSpace);
-                        KARABO_PROFILER_STOP_SCALAR1
+                        } else {
+                            const T* ptr = data.get<T*>(m_key, '/');
+                            DatasetWriter<T>::write(ptr, m_dims.size(), m_dataSet, m_memoryDataSpace1, m_fileDataSpace);
+                        }
                     } catch (...) {
                         KARABO_RETHROW_AS(KARABO_PROPAGATED_EXCEPTION("Cannot write Hash node " + m_key + " to dataset /" + m_h5PathName));
 
@@ -166,16 +166,12 @@ namespace karabo {
 
                     try {
 
-                        //                        std::clog << "300: m_chunkSize = " << m_chunkSize << std::endl;
-                        //                        std::clog << "301: recordId = " << recordId << std::endl;
-                        //                        std::clog << "302: len = " << len << std::endl;
                         KARABO_PROFILER_START_SCALAR1("dataspaceBuffer")
                         if (recordId % m_chunkSize == 0) {
                             m_fileDataSpace = Dataset::extend(m_dataSet, m_fileDataSpace, len);
                         }
                         m_fileDataSpace = selectRecord(m_fileDataSpace, recordId, len);
                         const std::vector<T>& vec = data.get<std::vector<T> >(m_key, '/');
-                        //                        std::clog << "303: vec.size = " << vec.size() << std::endl;
                         std::vector<hsize_t> vdims = m_dimsPlus1.toVector();
                         vdims[0] = len;
                         karabo::util::Dims memoryDims(vdims);
@@ -189,21 +185,6 @@ namespace karabo {
                     } catch (...) {
                         KARABO_RETHROW_AS(KARABO_PROPAGATED_EXCEPTION("Cannot write Hash node " + m_key + " to dataset /" + m_h5PathName));
                     }
-
-
-                    //                    try {
-                    //                        selectFileRecord(recordId, len);
-                    //                        karabo::util::Hash::const_iterator it = data.find(m_key);
-                    //                        const boost::any& any = data.getAny(it);
-                    //                        if (!m_bufferFilter) {
-                    //                            //std::cout << "creating a filter" << std::endl;
-                    //                            m_bufferFilter = FLArrayFilterBuffer<T>::createDefault(any.type().name());
-                    //                        }
-                    //                        m_bufferFilter->write(*this, any, m_dims, len);
-                    //                    } catch (...) {
-                    //                        KARABO_RETHROW
-                    //                    }
-                    //
                 }
 
                 void bind(karabo::util::Hash & data) {

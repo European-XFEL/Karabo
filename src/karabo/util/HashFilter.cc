@@ -1,4 +1,6 @@
 /* 
+ * $ID$
+ * 
  * File:   hashFilter.cc
  * Author: <krzysztof.wrona@xfel.eu>
  * 
