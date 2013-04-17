@@ -103,11 +103,12 @@ namespace karabo {
 
                 template< class T> static void discoverPtrSize(karabo::util::Hash& h, const karabo::util::Hash::Node& el) {
                     const std::vector<unsigned long long>& dims = el.getAttribute<std::vector<unsigned long long> >("dims");
-                    unsigned long long size = dims[0];
-                    for (size_t i = 1; i < dims.size(); ++i) {
-                        size *= dims[i];
-                    }
-                    h.set("dims", size);
+                    h.set("dims", dims);
+//                    unsigned long long size = dims[0];
+//                    for (size_t i = 1; i < dims.size(); ++i) {
+//                        size *= dims[i];
+//                    }
+//                    h.set("dims", size);
                 }
 
 
