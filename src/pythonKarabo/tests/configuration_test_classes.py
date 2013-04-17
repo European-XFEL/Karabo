@@ -54,7 +54,7 @@ class Circle(Shape):
 
 '''
 Editable Circle
-'''
+
 @KARABO_CLASSINFO("EditableCircle", "1.0")    
 class EditableCircle(Circle):
     
@@ -71,7 +71,7 @@ class EditableCircle(Circle):
         
     def draw(self):
         return self.__class__.__name__
-
+'''
 
 '''
 Rectangle
@@ -115,7 +115,7 @@ class GraphicsRenderer(object):
     
     def __init__(self, input):
         shape = Shape.createChoice("shapes", input)
-        assert input["version"] == "1.4.7"
+        #assert input["version"] == "1.4.7"
         if "shapes.Circle" in input:
             assert shape.draw() == "Circle"
         

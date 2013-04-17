@@ -72,15 +72,15 @@ class Configurator(object):
     
     def createByConf(self, configuration, validation = True):
         classid = configuration.keys()[0]
-        return create(classid, configuration[classid], validation)
+        return self.create(classid, configuration[classid], validation)
         
     def createNode(self, nodename, classid, configuration, validation = True):
         if nodename in configuration:
-            return create(classid, configuration[nodename], validation)
+            return self.create(classid, configuration[nodename], validation)
         raise AttributeError,"Given nodeName \"" + nodename + "\" is not part of input configuration"
     
     def createChoice(self, choice, configuration, validation = True):
-        return createByConf(configuration[choice], validation)
+        return self.createByConf(configuration[choice], validation)
        
     def getRegisteredClasses(self):
         return self.baseRegistry.keys()
