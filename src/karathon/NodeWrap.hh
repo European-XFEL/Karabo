@@ -27,21 +27,21 @@ namespace karabo {
             
             typedef boost::shared_ptr<karabo::util::Hash::Node> Pointer;
             
-            static bp::object pythonGetKey(const Pointer& node) {
+            static bp::object getKey(const Pointer& node) {
                 return bp::object(node->getKey());
             }
 
-            static void pythonSetValue(const Pointer& node, const bp::object& obj) {
+            static void setValue(const Pointer& node, const bp::object& obj) {
                 boost::any any;
                 Wrapper::toAny(obj, any);
                 node->setValue(any);
             }
 
-            static bp::object pythonGetValue(const Pointer& node) {
+            static bp::object getValue(const Pointer& node) {
                 return Wrapper::toObject(node->getValueAsAny());
             }
 
-            static bp::object pythonGetValueAs(const Pointer& node, const std::string& type) {
+            static bp::object getValueAs(const Pointer& node, const std::string& type) {
                 using namespace karabo::util;
                 Types::ReferenceType reftype = Types::from<FromLiteral>(type);
                 switch (reftype) {
@@ -104,17 +104,17 @@ namespace karabo {
                 throw KARABO_NOT_SUPPORTED_EXCEPTION("Type is not yet supported");
             }
 
-            static void pythonSetAttribute(const Pointer& node, const std::string& key, const bp::object& obj) {
+            static void setAttribute(const Pointer& node, const std::string& key, const bp::object& obj) {
                 boost::any value;
                 Wrapper::toAny(obj, value);
                 node->setAttribute(key, value);
             }
 
-            static bp::object pythonGetAttribute(const Pointer& node, const std::string& key) {
+            static bp::object getAttribute(const Pointer& node, const std::string& key) {
                 return Wrapper::toObject(node->getAttributeAsAny(key));
             }
 
-            static bp::object pythonGetAttributeAs(const Pointer& node, const std::string& key, const std::string& type) {
+            static bp::object getAttributeAs(const Pointer& node, const std::string& key, const std::string& type) {
                 using namespace karabo::util;
                 Types::ReferenceType reftype = Types::from<FromLiteral>(type);
                 switch (reftype) {
@@ -176,27 +176,27 @@ namespace karabo {
                 throw KARABO_NOT_SUPPORTED_EXCEPTION("Type is not yet supported");
             }
 
-            static bool pythonHasAttribute(const Pointer& node, const std::string& key) {
+            static bool hasAttribute(const Pointer& node, const std::string& key) {
                 return node->hasAttribute(key);
             }
 
-            static void pythonSetAttributes(const Pointer& node, const bp::object& obj) {
+            static void setAttributes(const Pointer& node, const bp::object& obj) {
                 if (bp::extract<karabo::util::Hash::Attributes>(obj).check())
                     node->setAttributes(bp::extract<karabo::util::Hash::Attributes>(obj));
                 else
                     throw KARABO_PYTHON_EXCEPTION("Python object is not of a Hash.Attributes type");
             }
 
-            static bp::object pythonGetAttributes(const Pointer& node) {
+            static bp::object getAttributes(const Pointer& node) {
                 return bp::object(node->getAttributes());
             }
 
-            static bp::object pythonGetType(const Pointer& node) {
+            static bp::object getType(const Pointer& node) {
                 using namespace karabo::util;
                 return bp::str(Types::to<ToLiteral>(node->getType()));
             }
             
-            static void pythonSetType(const Pointer& node, const std::string& type) {
+            static void setType(const Pointer& node, const std::string& type) {
                 using namespace karabo::util;
                 node->setType(Types::from<FromLiteral>(type));
             }

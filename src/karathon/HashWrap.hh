@@ -51,58 +51,58 @@ namespace karabo {
                             const char sep);
 
             static bp::object
-            pythonEmpty(const karabo::util::Hash & self);
+            empty(const karabo::util::Hash & self);
 
             static void
-            pythonGetKeys(const karabo::util::Hash & self,
+            getKeys(const karabo::util::Hash & self,
                           const bp::object& obj);
 
             static bp::list
             pythonKeys(const karabo::util::Hash & self);
 
             static void
-            pythonGetPaths(const karabo::util::Hash & self,
+            getPaths(const karabo::util::Hash & self,
                            const bp::object& obj);
 
             static bp::list
             pythonPaths(const karabo::util::Hash & self);
 
             static bp::object
-            pythonGetValues(const karabo::util::Hash& self);
+            getValues(const karabo::util::Hash& self);
 
             static bp::object
-            pythonGet(const karabo::util::Hash& self,
+            get(const karabo::util::Hash& self,
                       const std::string& path,
                       const std::string& separator = ".");
 
             static bp::object
-            pythonGetAs(const karabo::util::Hash& self,
+            getAs(const karabo::util::Hash& self,
                         const std::string& path,
                         const PyTypes::ReferenceType& type,
                         const std::string& separator = ".");
 
             static const karabo::util::Hash::Node&
-            pythonGetNode(const karabo::util::Hash& self,
+            getNode(const karabo::util::Hash& self,
                           const std::string& path,
                           const std::string& separator = ".");
 
             static bp::object
-            pythonSetNode(karabo::util::Hash& self,
+            setNode(karabo::util::Hash& self,
                           const bp::object& node);
 
             static void
-            pythonSet(karabo::util::Hash& self,
+            set(karabo::util::Hash& self,
                       const std::string& key,
                       const bp::object & obj,
                       const std::string& separator = ".");
 
             static void
-            pythonErase(karabo::util::Hash& self,
+            erase(karabo::util::Hash& self,
                         const bp::object & keyObj,
                         const std::string& separator = ".");
 
             static bool
-            pythonHas(karabo::util::Hash& self,
+            has(karabo::util::Hash& self,
                       const std::string& key,
                       const std::string& separator = ".");
 
@@ -113,59 +113,59 @@ namespace karabo {
                      const std::string& separator = ".");
 
             static void
-            pythonFlatten(const karabo::util::Hash& self,
+            flatten(const karabo::util::Hash& self,
                           karabo::util::Hash& flat,
                           const std::string& separator = ".");
 
             static void
-            pythonUnFlatten(const karabo::util::Hash& self,
+            unflatten(const karabo::util::Hash& self,
                             karabo::util::Hash& tree,
                             const std::string& separator = ".");
 
             static bp::object
-            pythonGetType(const karabo::util::Hash& self,
+            getType(const karabo::util::Hash& self,
                           const std::string& path,
                           const std::string& separator = ".");
 
             static bool
-            pythonHasAttribute(karabo::util::Hash& self,
+            hasAttribute(karabo::util::Hash& self,
                                const std::string& path,
                                const std::string& attribute,
                                const std::string& separator = ".");
 
             static bp::object
-            pythonGetAttribute(karabo::util::Hash& self,
+            getAttribute(karabo::util::Hash& self,
                                const std::string& path,
                                const std::string& attribute,
                                const std::string& separator = ".");
 
             static bp::object
-            pythonGetAttributeAs(karabo::util::Hash& self,
+            getAttributeAs(karabo::util::Hash& self,
                                  const std::string& path,
                                  const std::string& attribute,
                                  const PyTypes::ReferenceType& type,
                                  const std::string& separator = ".");
 
             static bp::object
-            pythonGetAttributes(karabo::util::Hash& self,
+            getAttributes(karabo::util::Hash& self,
                                 const std::string& path,
                                 const std::string& separator = ".");
 
             static void
-            pythonSetAttribute(karabo::util::Hash& self,
+            setAttribute(karabo::util::Hash& self,
                                const std::string& path,
                                const std::string& attribute,
                                const bp::object& value,
                                const std::string& separator = ".");
 
             static void
-            pythonSetAttributes(karabo::util::Hash& self,
+            setAttributes(karabo::util::Hash& self,
                                 const std::string& path,
                                 const bp::object& attributes,
                                 const std::string& separator = ".");
 
             static boost::shared_ptr<karabo::util::Hash::Node>
-            pythonFind(karabo::util::Hash& self, const std::string& path,
+            find(karabo::util::Hash& self, const std::string& path,
                        const std::string& separator = ".");
 
             static bp::object
@@ -180,7 +180,7 @@ namespace karabo {
         };
 
         bool
-        pythonSimilar(const bp::object& left, const bp::object& right);
+        similarWrap(const bp::object& left, const bp::object& right);
 
     }
 }
