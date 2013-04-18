@@ -13,19 +13,6 @@
 
 namespace bp = boost::python;
 
-#define KARABO_PYTHON_FACTORY_CONFIGURATOR_WRAPPER(baseClass) \
-struct ConfiguratorWrapper : karabo::util::Configurator<baseClass>, bp::wrapper< karabo::util::Configurator<baseClass> > {\
-virtual karabo::util::ClassInfo getClassInfo( ) const  {\
-if( bp::override func_getClassInfo = this->get_override("getClassInfo"))\
-{return func_getClassInfo( );}\
-else\
-{return this->karabo::util::Configurator<baseClass>::getClassInfo();}\
-}\
-karabo::util::ClassInfo default_getClassInfo(  ) const  {\
-return karabo::util::Configurator<baseClass>::getClassInfo( );\
-}\
-};
-
 #define KARABO_PYTHON_FACTORY_CONFIGURATOR(baseClass) \
 .def("classInfo"\
 , (karabo::util::ClassInfo(*)())(&karabo::util::Configurator<baseClass>::classInfo)).staticmethod("classInfo")\
