@@ -93,12 +93,12 @@ void exportPyUtilHash() {
     bp::class_<Hash::Attributes::const_map_iterator>("HashAttributesConstMapIterator", bp::no_init);
 
     bp::class_<Hash::Attributes::Node, boost::shared_ptr<Hash::Attributes::Node> > an("HashAttributesNode", bp::no_init);
-    an.def("getKey", &AttributesNodeWrap().pythonGetKey, "Get key of current node in attribute's container");
-    an.def("setValue", &AttributesNodeWrap().pythonSetValue, (bp::arg("value")), "Set value for current node in attribute's container");
-    an.def("getValue", &AttributesNodeWrap().pythonGetValue, "Get value for current node in attribute's container");
-    an.def("getValueAs", &AttributesNodeWrap().pythonGetValueAs, (bp::arg("type")), "Get value as a type given as an argument for current node");
-    an.def("getType", &AttributesNodeWrap().pythonGetType, "Get type of the value kept in current node");
-    an.def("setType", &AttributesNodeWrap().pythonSetType, (bp::arg("type")), "Set type for value kept in current node");
+    an.def("getKey", &AttributesNodeWrap().getKey, "Get key of current node in attribute's container");
+    an.def("setValue", &AttributesNodeWrap().setValue, (bp::arg("value")), "Set value for current node in attribute's container");
+    an.def("getValue", &AttributesNodeWrap().getValue, "Get value for current node in attribute's container");
+    an.def("getValueAs", &AttributesNodeWrap().getValueAs, (bp::arg("type")), "Get value as a type given as an argument for current node");
+    an.def("getType", &AttributesNodeWrap().getType, "Get type of the value kept in current node");
+    an.def("setType", &AttributesNodeWrap().setType, (bp::arg("type")), "Set type for value kept in current node");
 
 
 
@@ -127,37 +127,37 @@ void exportPyUtilHash() {
           std::string const &, bp::object const &,
           std::string const &, bp::object const &,
           std::string const &, bp::object const & >());
-    a.def("has", &AttributesWrap().pythonHas, (bp::arg("key")));
-    a.def("isType", &AttributesWrap().pythonHas, (bp::arg("key"), bp::arg("type")));
-    a.def("erase", &AttributesWrap().pythonErase, (bp::arg("key")));
-    a.def("size", &AttributesWrap().pythonSize);
-    a.def("empty", &AttributesWrap().pythonEmpty);
+    a.def("has", &AttributesWrap().has, (bp::arg("key")));
+    a.def("isType", &AttributesWrap().has, (bp::arg("key"), bp::arg("type")));
+    a.def("erase", &AttributesWrap().erase, (bp::arg("key")));
+    a.def("size", &AttributesWrap().size);
+    a.def("empty", &AttributesWrap().empty);
     a.def("clear", &AttributesWrap().pythonClear);
-    a.def("getNode", &AttributesWrap().pythonGetNode, (bp::arg("key")));
-    a.def("get", &AttributesWrap().pythonGet, (bp::arg("key")));
-    a.def("__getitem__", &AttributesWrap().pythonGet, (bp::arg("key")));
-    a.def("getAs", &AttributesWrap().pythonGetAs, (bp::arg("key"), bp::arg("type")));
-    a.def("set", &AttributesWrap().pythonSet, (bp::arg("key"), bp::arg("value")));
-    a.def("__setitem__", &AttributesWrap().pythonSet, (bp::arg("key"), bp::arg("value")));
-    a.def("find", &AttributesWrap().pythonFind, (bp::arg("key")));
-    a.def("getIt", &AttributesWrap().pythonGetIt, (bp::arg("it")));
+    a.def("getNode", &AttributesWrap().getNode, (bp::arg("key")));
+    a.def("get", &AttributesWrap().get, (bp::arg("key")));
+    a.def("__getitem__", &AttributesWrap().get, (bp::arg("key")));
+    a.def("getAs", &AttributesWrap().getAs, (bp::arg("key"), bp::arg("type")));
+    a.def("set", &AttributesWrap().set, (bp::arg("key"), bp::arg("value")));
+    a.def("__setitem__", &AttributesWrap().set, (bp::arg("key"), bp::arg("value")));
+    a.def("find", &AttributesWrap().find, (bp::arg("key")));
+    a.def("getIt", &AttributesWrap().getIt, (bp::arg("it")));
     a.def("__iter__", bp::iterator<Hash::Attributes>());
 
     bp::class_<HashNode, boost::shared_ptr<HashNode> > n("HashNode", bp::init<>());
-    n.def("__repr__", &NodeWrap().pythonGetKey);
-    n.def("__str__", &NodeWrap().pythonGetKey);
-    n.def("getKey", &NodeWrap().pythonGetKey);
-    n.def("setValue", &NodeWrap().pythonSetValue, (bp::arg("value")));
-    n.def("getValue", &NodeWrap().pythonGetValue);
-    n.def("getValueAs", &NodeWrap().pythonGetValueAs, (bp::arg("type")));
-    n.def("setAttribute", &NodeWrap().pythonSetAttribute, (bp::arg("key"), bp::arg("value")));
-    n.def("getAttribute", &NodeWrap().pythonGetAttribute, (bp::arg("key")));
-    n.def("getAttributeAs", &NodeWrap().pythonGetAttributeAs, (bp::arg("key"), bp::arg("type")));
-    n.def("hasAttribute", &NodeWrap().pythonHasAttribute, (bp::arg("key")));
-    n.def("setAttributes", &NodeWrap().pythonSetAttributes, (bp::arg("attributes")));
-    n.def("getAttributes", &NodeWrap().pythonGetAttributes);
-    n.def("getType", &NodeWrap().pythonGetType);
-    n.def("setType", &NodeWrap().pythonSetType, (bp::arg("type")));
+    n.def("__repr__", &NodeWrap().getKey);
+    n.def("__str__", &NodeWrap().getKey);
+    n.def("getKey", &NodeWrap().getKey);
+    n.def("setValue", &NodeWrap().setValue, (bp::arg("value")));
+    n.def("getValue", &NodeWrap().getValue);
+    n.def("getValueAs", &NodeWrap().getValueAs, (bp::arg("type")));
+    n.def("setAttribute", &NodeWrap().setAttribute, (bp::arg("key"), bp::arg("value")));
+    n.def("getAttribute", &NodeWrap().getAttribute, (bp::arg("key")));
+    n.def("getAttributeAs", &NodeWrap().getAttributeAs, (bp::arg("key"), bp::arg("type")));
+    n.def("hasAttribute", &NodeWrap().hasAttribute, (bp::arg("key")));
+    n.def("setAttributes", &NodeWrap().setAttributes, (bp::arg("attributes")));
+    n.def("getAttributes", &NodeWrap().getAttributes);
+    n.def("getType", &NodeWrap().getType);
+    n.def("setType", &NodeWrap().setType, (bp::arg("type")));
 
 
     bp::class_<Hash, boost::shared_ptr<Hash> > h("Hash", "The Hash class can be regarded as a generic hash container, which associates a string key to a value of any type.\n"
@@ -188,9 +188,9 @@ void exportPyUtilHash() {
           std::string const &, bp::object const & >());
     h.def("clear", &Hash::clear,
           "h.clear() makes empty the content of current Hash object 'h' (in place).\n");
-    h.def("empty", &HashWrap().pythonEmpty,
+    h.def("empty", &HashWrap().empty,
           "h.empty() -> True if 'h' is empty otherwise False.\n");
-    h.def("getKeys", &HashWrap().pythonGetKeys, (bp::arg("target_container")),
+    h.def("getKeys", &HashWrap().getKeys, (bp::arg("target_container")),
           "This function follows the API of C++ counterpart. Put into the target container all the keys visible\n"
           "on the top level of the tree hierarchy.\n"
           "\nExample:\n\th = Hash('a.b.c', 1, 'b.x', 2.22, 'b.y', 7.432, 'c', [1,2,3])\n"
@@ -199,18 +199,18 @@ void exportPyUtilHash() {
           "Returns list of all keys visible on the top level of the tree hierarchy.\n"
           "\nExample:\n\th = Hash('a.b.c', 1, 'b.x', 2.22, 'b.y', 7.432, 'c', [1,2,3])\n"
           "\tprint h.keys()\n\n... returns:\n\t['a', 'b', 'c']\n");
-    h.def("getValues", &HashWrap().pythonGetValues,
+    h.def("getValues", &HashWrap().getValues,
           "Returns list of values associated with keys visible on the top level of the tree hierarchy.\n"
           "\nExample:\n\th = Hash('a.b.c', 1, 'b.x', 2.22, 'b.y', 7.432, 'c', [1,2,3])\n"
           "\tprint h.getValues()\n\n... returns:\n\t[<libkarathon.Hash at 0x3188b18>,\n\t <libkarathon.Hash at 0x3188f68>,\n"
           "\t [True, False, True, True]]\n");
 
-    h.def("values", &HashWrap().pythonGetValues,
+    h.def("values", &HashWrap().getValues,
           "Returns list of values associated with keys visible on the top level of the tree hierarchy.\n"
           "\nExample:\n\th = Hash('a.b.c', 1, 'b.x', 2.22, 'b.y', 7.432, 'c', [1,2,3])\n"
           "\tprint h.values()\n\n... returns:\n\t[<libkarathon.Hash at 0x3188b18>,\n\t <libkarathon.Hash at 0x3188f68>,\n"
           "\t [True, False, True, True]]\n");
-    h.def("getPaths", &HashWrap().pythonGetPaths, (bp::arg("target_container")),
+    h.def("getPaths", &HashWrap().getPaths, (bp::arg("target_container")),
           "Put into the target container the full paths of current Hash object.\n"
           "\nExample:\n\th = Hash('a.b.c', 1, 'b.x', 2.22, 'b.y', 7.432, 'c', [1,2,3])\n"
           "\tmypaths = []\n\th.getPaths(mypaths)\nprint mypaths\n\n... returns:\n\t['a.b.c', 'b.x', 'b.y', 'c']");
@@ -218,29 +218,29 @@ void exportPyUtilHash() {
           "Returns list of all the paths being in current Hash object.\n"
           "\nExample:\n\th = Hash('a.b.c', 1, 'b.x', 2.22, 'b.y', 7.432, 'c', [1,2,3])\n"
           "\tprint h.paths()\n\n... returns:\n\t['a.b.c', 'b.x', 'b.y', 'c']");
-    h.def("set", &HashWrap().pythonSet, (bp::arg("path"), bp::arg("value"), bp::arg("sep") = "."),
+    h.def("set", &HashWrap().set, (bp::arg("path"), bp::arg("value"), bp::arg("sep") = "."),
           "Set the new 'path'/'value' pair into the current Hash object. The third optional parameter is a separator,\n"
           "used to form a tree hierarchy out of 'path'.\nExample:\n\th = Hash()\n\th.set('a.b.c', 1)\n\th.set('x/y/z', 2, \"/\")\n"
           "\th.set('u/v/w', 3)\n\tprint h");
-    h.def("__setitem__", &HashWrap().pythonSet, (bp::arg("path"), bp::arg("value"), bp::arg("sep") = "."),
+    h.def("__setitem__", &HashWrap().set, (bp::arg("path"), bp::arg("value"), bp::arg("sep") = "."),
           "h[path] = value <==> h.set(path, value)\nUse this setting of the new path/value item if the default separator fits."
           "\nExample:\n\th = Hash()\n\th['a.b.c'] = 1\n\th.set('x/y/z', 2, \"/\")\n\th['u/v/w'] = 3\n\tprint h");
-    h.def("get", &HashWrap().pythonGet, (bp::arg("path"), bp::arg("sep") = "."),
+    h.def("get", &HashWrap().get, (bp::arg("path"), bp::arg("sep") = "."),
           "Get the 'value' by 'path'. Optionally, the separator can be defined as second argument.\n"
           "Example:\n\th = Hash('a.b.c', 1)\n\tprint h.get('a/b/c','/')");
     h.def("__getitem__", &HashWrap().__getitem__, (bp::arg("iterator")),
           "Use this form of getting the 'value' using the 'path' if you need the default separator.\n"
           "Example:\n\th = Hash('a.b.c', 1)\n\tprint h['a.b.c']");
-    h.def("has", &HashWrap().pythonHas, (bp::arg("path"), bp::arg("sep") = "."),
+    h.def("has", &HashWrap().has, (bp::arg("path"), bp::arg("sep") = "."),
           "Returns true if given 'path' is found in current Hash object. Use separator as needed.");
-    h.def("__contains__", &HashWrap().pythonHas, (bp::arg("path"), bp::arg("sep") = "."),
+    h.def("__contains__", &HashWrap().has, (bp::arg("path"), bp::arg("sep") = "."),
           "Check if 'path' is known in current Hash object. Use this form if you use the default separator.\n"
           "Example:\n\th = Hash('a.b.c', 1)\n\t...\n\tif 'a.b.c' in h:\n\t\th['a.b.c'] = 2");
-    h.def("erase", &HashWrap().pythonErase, (bp::arg("path"), bp::arg("sep") = "."),
+    h.def("erase", &HashWrap().erase, (bp::arg("path"), bp::arg("sep") = "."),
           "h.erase(path) -> remove item identified by 'path' from 'h' (in place)\nExample:\n"
           "\th = Hash('a.b.c', 1, 'b.x', 2.22, 'b.y', 7.432, 'c', [1,2,3])\n\tprint h\n\t"
           "del b['b.x']\n\tprint h\n\th.erase('b.y')\n\tprint h\n\tdel h['b']");
-    h.def("__delitem__", &HashWrap().pythonErase, (bp::arg("path"), bp::arg("sep") = "."),
+    h.def("__delitem__", &HashWrap().erase, (bp::arg("path"), bp::arg("sep") = "."),
           "del h[path] <==> h.erase(path)\nExample:\n"
           "\th = Hash('a.b.c', 1, 'b.x', 2.22, 'b.y', 7.432, 'c', [1,2,3])\n\tprint h\n\t"
           "del b['b.x']\n\tprint h\n\th.erase('b.y')\n\tprint h\n\tdel h['b']");
@@ -252,11 +252,11 @@ void exportPyUtilHash() {
           "n = i.next()      # position to the 1st node\n\tprint n.getKey()\n\tprint n.getValue()\n\t"
           "n = i.next()      # position to the 2nd node\n\t...\n\nExample2:\n\t"
           "for n in h:\n\t\tprint n.getKey()\n\t\tprint.getValue()");
-    h.def("getAs", &HashWrap().pythonGetAs, (bp::arg("path"), bp::arg("type"), bp::arg("sep") = "."),
+    h.def("getAs", &HashWrap().getAs, (bp::arg("path"), bp::arg("type"), bp::arg("sep") = "."),
           "Get value by 'path' and convert it to 'type' type.  Optionally use separator.\n"
           "Example:\n\th = Hash('a.b.c', True)\n\tprint h.getAs('a.b.c', Types.INT32)\n\t"
           "print h.getAs('a.b.c', Types.STRING)\n\tprint h.getAs('a.b.c', Types.DOUBLE)");
-    h.def("getType", &HashWrap().pythonGetType, (bp::arg("path"), bp::arg("sep") = "."),
+    h.def("getType", &HashWrap().getType, (bp::arg("path"), bp::arg("sep") = "."),
           "Get type by 'path'.  Returns 'Types.<value>' object.\n"
           "Example:\n\th = Hash('a.b.c', True)\n\tprint h.getType('a.b.c')");
     h.def("merge", &Hash::merge, (bp::arg("hash")),
@@ -267,7 +267,7 @@ void exportPyUtilHash() {
           "\th = Hash('a.b1.c', 22)\n\th2 = Hash('a.b2.c', 33)\n\th += h2");
 
     // Global free function to compare Hash, vector<Hash>, Hash::Node
-    def("similar", &pythonSimilar, (bp::arg("left"), bp::arg("right")),
+    def("similar", &similarWrap, (bp::arg("left"), bp::arg("right")),
         "Compares two hashes for equality.\nExample:\n"
         "\th = Hash('a.b.c', 1, 'b.x', 2.22, 'b.y', 7.432, 'c', [1,2,3])\n\t"
         "flat = Hash()\n\th.flatten(flat) # 'flat' will contain 'flatten' hash\n\t"
@@ -283,51 +283,51 @@ void exportPyUtilHash() {
     h.def(bp::self_ns::str(bp::self));
     //    h.def("copy", &HashWrap().pyDict2Hash, (bp::arg("dict"), bp::arg("sep") = "."), bp::return_value_policy<bp::copy_const_reference > ());
     //    h.def("update", &Hash::update, (bp::arg("hash")));
-    h.def("flatten", &HashWrap().pythonFlatten, (bp::arg("flat"), bp::arg("sep") = "."),
+    h.def("flatten", &HashWrap().flatten, (bp::arg("flat"), bp::arg("sep") = "."),
           "Make all key/value pairs flat and put them into 'target' container.  Optionally a separator can be used.\nExample:\n"
           "\th = Hash('a.b.c', 1, 'b.x', 2.22, 'b.y', 7.432, 'c', [1,2,3])\n\t"
           "flat = Hash()\n\th.flatten(flat) # 'flat' will contain 'flatten' hash\n\t"
           "tree = Hash()\n\tflat.unflatten(tree)\n\tresult = similar(h, tree)\n"
           "... result will be 'True'");
-    h.def("unflatten", &HashWrap().pythonUnFlatten, (bp::arg("tree"), bp::arg("sep") = "."),
+    h.def("unflatten", &HashWrap().unflatten, (bp::arg("tree"), bp::arg("sep") = "."),
           "Make all key/value pairs tree-like structured and put them into 'target' container.  Optionally use separator.\nExample:\n"
           "\th = Hash('a.b.c', 1, 'b.x', 2.22, 'b.y', 7.432, 'c', [1,2,3])\n\t"
           "flat = Hash()\n\th.flatten(flat) # 'flat' will contain 'flatten' hash\n\t"
           "tree = Hash()\n\tflat.unflatten(tree)\n\tresult = similar(h, tree)\n"
           "... result will be 'True'");
-    h.def("find", &HashWrap().pythonFind, (bp::arg("path"), bp::arg("sep") = "."),
+    h.def("find", &HashWrap().find, (bp::arg("path"), bp::arg("sep") = "."),
           "Find node in current Hash using \"path\".  Optionally the separator \"sep\" may be defined.\n"
           "Returns not a copy but reference to the existing Hash.Node object or \"None\".\n"
           "If you do any changes via returned object, these changes will be reflected in the current Hash object.\n"
           "Example:\n\th = Hash('a.b.c', 1)\n\tnode = h.find('a.b.c')\n\tif node is not None: node.setValue(2)");
-    h.def("setNode", &HashWrap().pythonSetNode, (bp::arg("node")),
+    h.def("setNode", &HashWrap().setNode, (bp::arg("node")),
           "Set \"node\" into current Hash object.  You cannot create node directly, you can extract the node from created Hash object.\nExample:\n"
           "\th = Hash('a.b.c', 1, 'b.x', 2.22, 'b.y', 7.432, 'c', [1,2,3])\n\t"
           "n = h.getNode('b')\n\tg = Hash()\n\tg.setNode(n)\n\tprint g");
-    h.def("getNode", &HashWrap().pythonGetNode, (bp::arg("path"), bp::arg("sep") = "."), bp::return_internal_reference<1> (),
+    h.def("getNode", &HashWrap().getNode, (bp::arg("path"), bp::arg("sep") = "."), bp::return_internal_reference<1> (),
           "Returns a reference of found node (not a copy!), so if you do any changes via returned object,\n"
           "these changes will be reflected in the current Hash object.\nExample:\n"
           "\th = Hash('a.b.c', 1, 'b.x', 2.22, 'b.y', 7.432, 'c', [1,2,3])\n\t"
           "n = h.getNode('b')\n\tg = Hash()\n\tg.setNode(n)\n\tprint g");
-    h.def("getAttribute", &HashWrap().pythonGetAttribute, (bp::arg("path"), bp::arg("attribute"), bp::arg("sep") = "."),
+    h.def("getAttribute", &HashWrap().getAttribute, (bp::arg("path"), bp::arg("attribute"), bp::arg("sep") = "."),
           "Get attribute value following given 'path' and 'attribute' name. Optionally use separator.\nExample:\n\t"
           "h = Hash('a.b.c', 1, 'b.x', 2.22, 'b.y', 7.432, 'c', [1,2,3])\n\th.setAttribute('a.b.c', 'attr1', [1.234,2.987,5.555]\n\t"
           "assert h.getAttribute('a.b.c', 'attr1') == [1.234,2.987,5.555]");
-    h.def("getAttributeAs", &HashWrap().pythonGetAttributeAs, (bp::arg("path"), bp::arg("attribute"), bp::arg("type"), bp::arg("sep") = "."),
+    h.def("getAttributeAs", &HashWrap().getAttributeAs, (bp::arg("path"), bp::arg("attribute"), bp::arg("type"), bp::arg("sep") = "."),
           "h.getAttributeAs(path, attribute, type, sep = '.') -> value of 'type' type.\nExample:\n\t"
           "h = Hash('a.b.c', 1, 'b.x', 2.22, 'b.y', 7.432, 'c', [1,2,3])\n\th.setAttribute('a.b.c', 'attr1', [1.234,2.987,5.555])\n"
           "\nHere you have to be sure that you have imported numpy as np:\n\n\timport numpy as np\n\t"
           "assert h.getAttributeAs('a.b.c', 'attr1', Types.NDARRAY_DOUBLE).all() == np.array([1.234,2.987,5.555], dtype=np.double).all()");
-    h.def("getAttributes", &HashWrap().pythonGetAttributes, (bp::arg("path"), bp::arg("sep") = "."),
+    h.def("getAttributes", &HashWrap().getAttributes, (bp::arg("path"), bp::arg("sep") = "."),
           "h.getAttributes(path, sep='.') -> iterable container of attributes.\nExample:\n\t"
           "h = Hash('a.b.c', 1, 'b.x', 2.22, 'b.y', 7.432, 'c', [1,2,3])\n\t"
           "h.setAttribute('a.b.c', 'attr1', [1.234,2.987,5.555])\n\th.setAttribute('a.b.c', 'attr2', 1)\n\t"
           "h.setAttribute('a.b.c', 'attr3', )\n\t"
           "for a in h.getAttributes('a.b.c'):\n\t\tprint a.getKey(), a.getValue()");
-    h.def("setAttribute", &HashWrap().pythonSetAttribute, (bp::arg("path"), bp::arg("attribute"), bp::arg("value"), bp::arg("sep") = "."),
+    h.def("setAttribute", &HashWrap().setAttribute, (bp::arg("path"), bp::arg("attribute"), bp::arg("value"), bp::arg("sep") = "."),
           "Set attribute associated with path.\nExample:\n\th = Hash('a.b.c', 1, 'b.x', 2.22, 'b.y', 7.432, 'c', [1,2,3])\n\t"
           "h.setAttribute('a.b.c', 'attr1', [1.234,2.987,5.555])\n\tassert h.getAttribute('a.b.c', 'attr1') == [1.234,2.987,5.555]");
-    h.def("setAttributes", &HashWrap().pythonSetAttributes, (bp::arg("path"), bp::arg("attributes"), bp::arg("sep") = "."),
+    h.def("setAttributes", &HashWrap().setAttributes, (bp::arg("path"), bp::arg("attributes"), bp::arg("sep") = "."),
           "h.setAttributes(path, attributes, sep='.') allows to associate 'attributes' with 'path' in this Hash.\nExample:\n\t"
           "h = Hash('a.b.c', 1, 'b.x', 2.22, 'b.y', 7.432, 'c', [1,2,3])\n\t"
           "h.setAttribute('a.b.c', 'attr1', [1.234,2.987,5.555])\n\th.setAttribute('a.b.c', 'attr2', 1)\n\t"

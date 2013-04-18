@@ -26,21 +26,21 @@ namespace karabo {
             
             typedef boost::shared_ptr<karabo::util::Hash::Attributes::Node> Pointer;
             
-            static bp::object pythonGetKey(const Pointer& node) {
+            static bp::object getKey(const Pointer& node) {
                 return bp::object(node->getKey());
             }
 
-            static void pythonSetValue(const Pointer& node, const bp::object& obj) {
+            static void setValue(const Pointer& node, const bp::object& obj) {
                 boost::any any;
                 Wrapper::toAny(obj, any);
                 node->setValue(any);
             }
 
-            static bp::object pythonGetValue(const Pointer& node) {
+            static bp::object getValue(const Pointer& node) {
                 return Wrapper::toObject(node->getValueAsAny());
             }
 
-            static bp::object pythonGetValueAs(const Pointer& node, const std::string& type) {
+            static bp::object getValueAs(const Pointer& node, const std::string& type) {
                 using namespace karabo::util;
                 Types::ReferenceType reftype = Types::from<FromLiteral>(type);
                 switch (reftype) {
@@ -103,12 +103,12 @@ namespace karabo {
             }
 
 
-            static bp::object pythonGetType(const Pointer& node) {
+            static bp::object getType(const Pointer& node) {
                 using namespace karabo::util;
                 return bp::str(Types::to<ToLiteral>(node->getType()));
             }
             
-            static void pythonSetType(const Pointer& node, const std::string& type) {
+            static void setType(const Pointer& node, const std::string& type) {
                 using namespace karabo::util;
                 node->setType(Types::from<FromLiteral>(type));
             }
