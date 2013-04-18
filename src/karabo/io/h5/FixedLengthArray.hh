@@ -49,9 +49,22 @@ namespace karabo {
                 , scalar1("scalar1")
                 #endif
                 {
-                    m_dims = karabo::util::Dims(input.get<std::vector<unsigned long long> >("dims"));
+                    const std::vector<unsigned long long>& vectorDims = input.get<std::vector<unsigned long long> >("dims");
+                    m_dims = karabo::util::Dims(vectorDims);
                     m_memoryDataSpace1 = Dataset::dataSpace(m_dims);
                     m_hashType = karabo::util::FromType<karabo::util::FromLiteral>::from(input.get<std::string>("type"));
+
+                    std::string datasetWriterClassId = "DatasetWriter_" + input.get<std::string>("type");
+                    KARABO_LOG_FRAMEWORK_TRACE_CF << "dWClassId " << datasetWriterClassId;
+                    KARABO_LOG_FRAMEWORK_TRACE_CF << "classId " << Self::classInfo().getClassId();
+                    karabo::util::Hash config("dims", vectorDims);
+                    KARABO_LOG_FRAMEWORK_TRACE_CF << "config " << config;
+
+                    //if (Self::classInfo().getClassId() == "VECTOR_BOOL") {
+                        m_datasetWriter = DatasetWriter<T>::create(datasetWriterClassId, config);
+                    //} else {
+                    //    m_datasetWriter = DatasetWriter<T>::create(datasetWriterClassId);
+                    //}
                 }
 
                 virtual ~FixedLengthArray() {
@@ -120,6 +133,7 @@ namespace karabo {
 
                 void write(const karabo::util::Hash& data, hsize_t recordId) {
 
+                    KARABO_LOG_FRAMEWORK_TRACE_CF << "writing array " << m_key;
                     try {
                         KARABO_PROFILER_START_SCALAR1("dataspace")
 
@@ -128,46 +142,22 @@ namespace karabo {
                         }
 
                         m_fileDataSpace = selectRecord(m_fileDataSpace, recordId, 1);
-                        if (karabo::util::Types::isVector(m_hashType)) {
-                            const std::vector<T>& vec = data.get<std::vector<T> >(m_key, '/');
-                            KARABO_PROFILER_STOP_SCALAR1
-                            KARABO_PROFILER_START_SCALAR1("write")
-                            DatasetWriter<T>::write(vec, m_dataSet, m_memoryDataSpace1, m_fileDataSpace);
-                            KARABO_PROFILER_STOP_SCALAR1
+                        const karabo::util::Hash::Node& node = data.getNode(m_key, '/');
+                        //KARABO_PROFILER_STOP_SCALAR1
+                        //KARABO_PROFILER_START_SCALAR1("write")
 
-                        } else {
-                            const T* ptr = data.get<T*>(m_key, '/');
-                            DatasetWriter<T>::write(ptr, m_dims.size(), m_dataSet, m_memoryDataSpace1, m_fileDataSpace);
-                        }
+                        m_datasetWriter->write(node, m_dataSet, m_memoryDataSpace1, m_fileDataSpace);
+                        //KARABO_PROFILER_STOP_SCALAR1
+
                     } catch (...) {
                         KARABO_RETHROW_AS(KARABO_PROPAGATED_EXCEPTION("Cannot write Hash node " + m_key + " to dataset /" + m_h5PathName));
 
                     }
                 }
-                //
-                //                /*
-                //                 * This function is not available via RecordElement interface
-                //                 * To be used by filters only
-                //                 */
-                //                template<class U>
-                //                inline void write(const U* ptr) const {
-                //                    m_dataSet.write(ptr, ArrayTypes::getHdf5NativeType<U > (m_dims), m_memoryDataSpace, m_fileDataSpace);
-                //                }
-                //
-                //                /*
-                //                 * This function is not available via RecordElement interface
-                //                 * To be used by filters only
-                //                 */
-                //
-                //                template<class U>
-                //                void writeBuffer(const U* ptr, size_t len) const {
-                //                    H5::DataSpace mds = this->getBufferDataSpace(len);
-                //                    m_dataSet.write(ptr, ArrayTypes::getHdf5NativeType<U > (m_dims), mds, m_fileDataSpace);
-                //                }
-                //
 
                 void write(const karabo::util::Hash& data, hsize_t recordId, hsize_t len) {
 
+                    KARABO_LOG_FRAMEWORK_TRACE_CF << "writing " << len << " records of " << m_key;
                     try {
 
                         KARABO_PROFILER_START_SCALAR1("dataspaceBuffer")
@@ -175,16 +165,19 @@ namespace karabo {
                             m_fileDataSpace = Dataset::extend(m_dataSet, m_fileDataSpace, len);
                         }
                         m_fileDataSpace = selectRecord(m_fileDataSpace, recordId, len);
-                        const std::vector<T>& vec = data.get<std::vector<T> >(m_key, '/');
-                        std::vector<hsize_t> vdims = m_dimsPlus1.toVector();
-                        vdims[0] = len;
-                        karabo::util::Dims memoryDims(vdims);
-                        hid_t mds = Dataset::dataSpace(memoryDims);
+                        karabo::util::Hash::Node node = data.getNode(m_key, '/');
+                        
+//                        const std::vector<T>& vec = data.get<std::vector<T> >(m_key, '/');
+//                        std::vector<hsize_t> vdims = m_dimsPlus1.toVector();
+//                        vdims[0] = len;
+//                        karabo::util::Dims memoryDims(vdims);
+//                        hid_t mds = Dataset::dataSpace(memoryDims);
 
                         KARABO_PROFILER_STOP_SCALAR1
                         KARABO_PROFILER_START_SCALAR1("writeBuffer")
 
-                        DatasetWriter<T>::write(vec, m_dataSet, mds, m_fileDataSpace);
+                        m_datasetWriter->write(node, len, m_dataSet, m_fileDataSpace);
+                        //                        DatasetWriter<T>::write(vec, m_dataSet, mds, m_fileDataSpace);
                         KARABO_PROFILER_STOP_SCALAR1
                     } catch (...) {
                         KARABO_RETHROW_AS(KARABO_PROPAGATED_EXCEPTION("Cannot write Hash node " + m_key + " to dataset /" + m_h5PathName));
@@ -329,7 +322,7 @@ namespace karabo {
                 hid_t m_dataAccessPropListId;
 
                 karabo::util::Types::ReferenceType m_hashType;
-
+                typename karabo::io::h5::DatasetWriter<T>::Pointer m_datasetWriter;
 
                 U m_readData; // this is a pointer to the data Hash (apart from case of bool type )
                 hid_t m_memoryDataSpace1; // memory data space for one record element, defined here for performance optimization

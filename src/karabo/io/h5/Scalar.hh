@@ -32,14 +32,22 @@ namespace karabo {
 
             template<class T>
             class Scalar : public karabo::io::h5::Dataset {
+
             public:
 
-                KARABO_CLASSINFO(Scalar, karabo::util::ToType<karabo::util::ToLiteral>::to(karabo::util::FromType<karabo::util::FromTypeInfo>::from(typeid (T))), "1.0")
+                KARABO_CLASSINFO(Scalar,
+                                 karabo::util::ToType<karabo::util::ToLiteral>::
+                                 to(
+                                    karabo::util::FromType<karabo::util::FromTypeInfo>::from(typeid (T))), "1.0"
+                                 )
 
 
                 Scalar(const karabo::util::Hash& input) : Dataset(input) {
                     m_fileDataSpace = Dataset::dataSpace(0);
                     m_memoryDataSpace1 = Dataset::dataSpace(1);
+                    m_datasetWriter = DatasetWriter<T>::create("DatasetWriter_" + Scalar<T>::classInfo().getClassId(),
+                                                               karabo::util::Hash("dims", karabo::util::Dims().toVector())
+                                                               );
                 }
 
             public:
@@ -55,12 +63,12 @@ namespace karabo {
 
                 void create(hsize_t chunkSize) {
                     KARABO_LOG_FRAMEWORK_TRACE_CF << "Create dataset " << m_h5PathName << " with chunk size = " << chunkSize;
-                    try { 
+                    try {
                         m_chunkSize = chunkSize;
                         karabo::util::Dims dims(chunkSize);
                         createDataSetProperties(dims);
                         m_dataSet = H5Dcreate(m_parentGroup, m_h5name.c_str(), ScalarTypes::getHdf5StandardType<T > (),
-                                m_fileDataSpace, H5P_DEFAULT, m_dataSetProperties, H5P_DEFAULT);
+                                              m_fileDataSpace, H5P_DEFAULT, m_dataSetProperties, H5P_DEFAULT);
                         KARABO_CHECK_HDF5_STATUS(m_dataSet);
                     } catch (...) {
                         KARABO_RETHROW_AS(KARABO_PROPAGATED_EXCEPTION("Cannot create dataset /" + m_h5PathName));
@@ -77,7 +85,7 @@ namespace karabo {
                         }
                         m_fileDataSpace = Dataset::selectScalarRecord(m_fileDataSpace, recordId);
                         hid_t mds = Dataset::dataSpace();
-                        DatasetWriter<T>::write(data.get<const T > (m_key, '/'), m_dataSet, mds, m_fileDataSpace);
+                        m_datasetWriter->write(data.getNode(m_key, '/'), m_dataSet, mds, m_fileDataSpace);
                     } catch (...) {
                         KARABO_RETHROW_AS(KARABO_PROPAGATED_EXCEPTION("Cannot write Hash node " + m_key + " to dataset /" + m_h5PathName));
                     }
@@ -90,9 +98,10 @@ namespace karabo {
                         Dataset::extend(m_dataSet, m_fileDataSpace, len);
                         Dataset::selectRecord(m_fileDataSpace, recordId, len);
 
-                        const T* ptr = data.get<T*>(m_key, '/');
-                        hid_t mds = Dataset::dataSpace(len);
-                        DatasetWriter<T>::write(ptr, len, m_dataSet, mds, m_fileDataSpace);
+                        //const T* ptr = data.get<T*>(m_key, '/');
+                        //hid_t mds = Dataset::dataSpace(len);
+                        ////                        DatasetWriter<T>::write(ptr, len, m_dataSet, mds, m_fileDataSpace);
+                        m_datasetWriter->write(data.getNode(m_key, '/'), len, m_dataSet, m_fileDataSpace);
                     } catch (karabo::util::Exception& e) {
                         KARABO_RETHROW_AS(KARABO_PROPAGATED_EXCEPTION("Cannot write Hash node " + m_key + " to dataset /" + m_h5PathName));
                     }
@@ -192,6 +201,7 @@ namespace karabo {
 
                 T* m_readData;
                 hid_t m_memoryDataSpace1;
+                typename karabo::io::h5::DatasetWriter<T>::Pointer m_datasetWriter;
 
 
 
