@@ -45,16 +45,16 @@ namespace karabo {
                 return boost::shared_ptr<SignalSlotableWrap>(new SignalSlotableWrap(instanceId, connectionType, connectionParameters));
             }
             
-            bp::list getAvailableInstancesPy() {
-                return HashWrap::stdVector2pyList(this->getAvailableInstances());
+            bp::object getAvailableInstancesPy() {
+                return Wrapper::fromStdVectorToPyList(this->getAvailableInstances());
             }
             
-            bp::list getAvailableSignalsPy(const std::string& instanceId) {
-                return HashWrap::stdVector2pyList(this->getAvailableSignals(instanceId));
+            bp::object getAvailableSignalsPy(const std::string& instanceId) {
+                return Wrapper::fromStdVectorToPyList(this->getAvailableSignals(instanceId));
             }
             
-            bp::list getAvailableSlotsPy(const std::string& instanceId) {
-                return HashWrap::stdVector2pyList(this->getAvailableSlots(instanceId));
+            bp::object getAvailableSlotsPy(const std::string& instanceId) {
+                return Wrapper::fromStdVectorToPyList(this->getAvailableSlots(instanceId));
             }
 
             void registerSlotPy(const bp::object& slotFunction, const SlotType& slotType = SPECIFIC) {
@@ -62,20 +62,28 @@ namespace karabo {
                 if (m_slotInstances.find(functionName) != m_slotInstances.end()) return; // Already registered
                 karabo::net::BrokerChannel::Pointer channel = m_connection->createChannel(); // New Channel
                 std::string instanceId = prepareInstanceId(slotType);
-                boost::shared_ptr<SlotWrap> s(new SlotWrap(this, channel, instanceId, functionName)); // New specific slot
-                s->registerSlotFunction(slotFunction.ptr()); // Bind user's slot-function to Slot
-                storeSlot(functionName, s, channel); // Keep slot and his channel alive
+                if (Wrapper::hasattr(slotFunction, "__self__")) { // Member function
+                    const bp::object& selfObject(slotFunction.attr("__self__"));
+                    std::string funcName(bp::extract<std::string > (slotFunction.attr("__name__")));
+                    boost::shared_ptr<MemberSlotWrap> s(new MemberSlotWrap(this, channel, instanceId, functionName)); // New specific slot
+                    s->registerSlotFunction(funcName, selfObject.ptr()); // Bind user's slot-function to Slot
+                    storeSlot(functionName, s, channel); // Keep slot and his channel alive
+                } else { // Free function
+                    boost::shared_ptr<SlotWrap> s(new SlotWrap(this, channel, instanceId, functionName)); // New specific slot
+                    s->registerSlotFunction(slotFunction.ptr()); // Bind user's slot-function to Slot
+                    storeSlot(functionName, s, channel); // Keep slot and his channel alive
+                }
             }
             
-            void registerMemberSlotPy(const bp::object& slotFunction, const bp::object& selfObject, const SlotType& slotType = SPECIFIC) {
-                std::string functionName = bp::extract<std::string>((slotFunction.attr("func_name")));
-                if (m_slotInstances.find(functionName) != m_slotInstances.end()) return; // Already registered
-                karabo::net::BrokerChannel::Pointer channel = m_connection->createChannel(); // New Channel
-                std::string instanceId = prepareInstanceId(slotType);
-                boost::shared_ptr<MemberSlotWrap> s(new MemberSlotWrap(this, channel, instanceId, functionName)); // New specific slot
-                s->registerSlotFunction(functionName, selfObject.ptr()); // Bind user's slot-function to Slot
-                storeSlot(functionName, s, channel); // Keep slot and his channel alive
-            }
+//            void registerMemberSlotPy(const bp::object& slotFunction, const bp::object& selfObject, const SlotType& slotType = SPECIFIC) {
+//                std::string functionName = bp::extract<std::string>((slotFunction.attr("func_name")));
+//                if (m_slotInstances.find(functionName) != m_slotInstances.end()) return; // Already registered
+//                karabo::net::BrokerChannel::Pointer channel = m_connection->createChannel(); // New Channel
+//                std::string instanceId = prepareInstanceId(slotType);
+//                boost::shared_ptr<MemberSlotWrap> s(new MemberSlotWrap(this, channel, instanceId, functionName)); // New specific slot
+//                s->registerSlotFunction(functionName, selfObject.ptr()); // Bind user's slot-function to Slot
+//                storeSlot(functionName, s, channel); // Keep slot and his channel alive
+//            }
             
             void registerSignalPy0(const std::string& funcName) {
                 this->registerSignal(funcName);
@@ -133,16 +141,6 @@ namespace karabo {
                 s.emitPy4(a1, a2, a3, a4);
             }
             
-            void reconfigurePy(const std::string& instanceId, const std::string& key, const bp::object& value) const {
-                karabo::util::Hash configuration;      
-                karabo::pyexfel::HashWrap::pythonSet(configuration, key, value);
-                reconfigurePy(instanceId, configuration);
-            }
-            
-            void reconfigurePy(const std::string& instanceId, const karabo::util::Hash& configuration) const {
-                call(instanceId, "slotReconfigure", configuration);
-            }
-            
             void emitPy1(const std::string& signalFunction, const bp::object& a1) {
                 this->emit(signalFunction, a1);
             }
@@ -185,20 +183,17 @@ namespace karabo {
             }
             
             void replyPy0() {
-                if (!m_isProcessingSlot) return;
                 registerReply(karabo::util::Hash());
                 
             }
             
             void replyPy1(const bp::object& a1) {
-                if (!m_isProcessingSlot) return;
                 karabo::util::Hash reply;
                 HashWrap::pythonSet(reply, "a1", a1);
                 registerReply(reply);
             }
             
             void replyPy2(const bp::object& a1, const bp::object& a2) {
-                if (!m_isProcessingSlot) return;
                 karabo::util::Hash reply;
                 HashWrap::pythonSet(reply, "a1", a1);
                 HashWrap::pythonSet(reply, "a2", a2);
@@ -207,7 +202,6 @@ namespace karabo {
             }
             
             void replyPy3(const bp::object& a1, const bp::object& a2, const bp::object& a3) {
-                if(!m_isProcessingSlot) return;
                 karabo::util::Hash reply;
                 HashWrap::pythonSet(reply, "a1", a1);
                 HashWrap::pythonSet(reply, "a2", a2);
@@ -216,7 +210,6 @@ namespace karabo {
             }
             
             void replyPy4(const bp::object& a1, const bp::object& a2, const bp::object& a3, const bp::object& a4) {
-                if(!m_isProcessingSlot) return;
                 karabo::util::Hash reply;
                 HashWrap::pythonSet(reply, "a1", a1);
                 HashWrap::pythonSet(reply, "a2", a2);
@@ -233,5 +226,5 @@ namespace karabo {
     }
 }
 
-#endif	/* KARABO_PYKARABO_SIGNALSLOTABLE_HH */
+#endif
 

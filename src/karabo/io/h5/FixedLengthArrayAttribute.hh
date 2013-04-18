@@ -20,8 +20,8 @@
 #include <karabo/util/ToLiteral.hh>
 #include <karabo/util/FromTypeInfo.hh>
 #include <karabo/util/VectorElement.hh>
-
-#include <karabo/util/util.hh>
+#include <karabo/util/Dims.hh>
+#include <karabo/util/Configurator.hh>
 //#include "../ioProfiler.hh"
 
 

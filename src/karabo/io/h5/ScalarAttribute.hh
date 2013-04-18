@@ -15,7 +15,7 @@
 #include "Dataset.hh"
 #include "TypeTraits.hh"
 #include "Attribute.hh"
-#include <karabo/util/util.hh>
+#include <karabo/util/Configurator.hh>
 
 
 //#include "ScalarFilter.hh"

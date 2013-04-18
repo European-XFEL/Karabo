@@ -8,8 +8,7 @@
 #ifndef SIGNALSLOTABLE_TEST_HH
 #define	SIGNALSLOTABLE_TEST_HH
 
-#include <karabo/net/net.hpp>
-#include <karabo/xms/SignalSlotable.hh>
+#include <karabo/xms.hpp>
 #include <cppunit/extensions/HelperMacros.h>
 
 class SignalSlotDemo : public karabo::xms::SignalSlotable {

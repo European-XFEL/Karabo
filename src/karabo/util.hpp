@@ -37,7 +37,7 @@
 #include "util/FromInt.hh"
 #include "util/FromLiteral.hh"
 #include "util/FromTypeInfo.hh"
-//#include "util/HashFilter.hh"
+#include "util/HashFilter.hh"
 #include "util/Profiler.hh"
 #include "util/karaboDll.hh"
 

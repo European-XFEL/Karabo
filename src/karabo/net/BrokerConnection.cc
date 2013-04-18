@@ -12,6 +12,7 @@
 
 #include <karabo/io/TextSerializer.hh>
 #include <karabo/io/BinarySerializer.hh>
+#include <karabo/util/SimpleElement.hh>
 
 namespace karabo {
     namespace net {

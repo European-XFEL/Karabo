@@ -11,10 +11,10 @@
 #ifndef KARABO_XMS_DEVICEINPUT_HH
 #define	KARABO_XMS_DEVICEINPUT_HH
 
-#include <karabo/net/net.hpp>
-#include <karabo/io/io.hpp>
-#include <karabo/log/log.hpp>
-
+#include <karabo/net.hpp>
+#include <karabo/io.hpp>
+#include <karabo/log.hpp>
+#include <karabo/util.hpp>
 #include "Memory.hh"
 
 /**

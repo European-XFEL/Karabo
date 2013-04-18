@@ -12,10 +12,8 @@
 
 #include "Hash.hh"
 #include "Factory.hh"
-
 #include "Schema.hh"
 #include "Validator.hh"
-
 #include "karaboDll.hh"
 
 namespace karabo {
