@@ -11,12 +11,10 @@
 #ifndef KARABO_CORE_CORE_HH
 #define	KARABO_CORE_CORE_HH
 
-#include "Runner.hh"
-#include "Application.hh"
-#include "Module.hh"
-#include "FsmMacros.hh"
-#include "DeviceServer.hh"
-#include "Device.hh"
+#include "core/Device.hh"
+#include "core/DeviceClient.hh"
+#include "core/OkErrorFsm.hh"
+#include "core/StartStopFsm.hh"
 
-#endif	/* KARABO_CORE_CORE_HH */
+#endif
 

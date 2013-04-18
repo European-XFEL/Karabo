@@ -27,7 +27,7 @@ namespace karabo {
 
             // Validation flags
             bool m_injectDefaults;
-            bool m_assumeRootedConfiguration;
+            bool m_allowUnrootedConfiguration;
             bool m_allowAdditionalKeys;
             bool m_allowMissingKeys;
             bool m_injectTimestamps;

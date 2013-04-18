@@ -8,6 +8,6 @@
 #ifndef KARABO_LOG_HPP
 #define	KARABO_LOG_HPP
 
-#include "Logger.hh"
+#include "log/Logger.hh"
 
 #endif

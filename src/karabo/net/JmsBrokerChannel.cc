@@ -438,7 +438,7 @@ namespace karabo {
                             m_hasAsyncHandler = false;
                         }
                         // TODO Check, whether to free the propertiesHandle
-                        m_readRawHashHandler(shared_from_this(), msgBody, 0 /*interface needs it*/ , header);
+                        m_readRawHashHandler(shared_from_this(), msgBody, strlen(msgBody), header);
                         MQ_SAFE_CALL(MQFreeMessage(messageHandle));
                     } else {
                         // Give an error if unexpected message types are going round the broker

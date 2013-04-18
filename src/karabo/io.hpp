@@ -8,11 +8,11 @@
 #ifndef KARABO_IO_HPP
 #define	KARABO_IO_HPP
 
-#include "BinarySerializer.hh"
-#include "TextSerializer.hh"
-#include "Input.hh"
-#include "Output.hh"
-#include "FileTools.hh"
+#include "io/BinarySerializer.hh"
+#include "io/TextSerializer.hh"
+#include "io/Input.hh"
+#include "io/Output.hh"
+#include "io/FileTools.hh"
 
 // TODO important h5 headers
 
