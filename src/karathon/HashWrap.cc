@@ -379,7 +379,7 @@ namespace karabo {
         }
 
         bool
-        HashWrap::pythonIs(karabo::util::Hash& self,
+        HashWrap::is(karabo::util::Hash& self,
                            const std::string& path,
                            const PyTypes::ReferenceType& type,
                            const std::string& separator) {

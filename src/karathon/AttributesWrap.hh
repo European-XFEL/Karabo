@@ -25,7 +25,7 @@ namespace karabo {
                 return self.has(key);
             }
 
-            static bool pythonIs(karabo::util::Hash::Attributes& self, const std::string& key, const std::string& type) {
+            static bool is(karabo::util::Hash::Attributes& self, const std::string& key, const std::string& type) {
                 using namespace karabo::util;
                 Types::ReferenceType reftype = Types::from<FromLiteral>(type);
                 return self.is(key, reftype);
@@ -43,7 +43,7 @@ namespace karabo {
                 return self.empty();
             }
 
-            static void pythonClear(karabo::util::Hash::Attributes& self) {
+            static void clear(karabo::util::Hash::Attributes& self) {
                 self.clear();
             }
 
