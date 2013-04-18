@@ -28,27 +28,27 @@ namespace karabo {
         protected: // members
 
             /**
-             * #server +
-             *   serverId type host deviceClasses +
-             *     #classes
-             *       classId +
-             *         #description SCHEMA
-             *         #configuration HASH
-             *     #configuration HASH
-             * #device +
-             *   deviceId type host classId serverId +
-             *     #fullSchema SCHEMA
-             *     #activeSchema +
-             *         stateName +
-             *           roleName SCHEMA
-             *     #configuration HASH
+             * server +
+             *   <serverId> type host deviceClasses version +
+             *     classes +
+             *       <classId> +
+             *         description SCHEMA
+             *         configuration HASH
+             *     configuration HASH
+             * device +
+             *   <deviceId> type host classId serverId version +
+             *      fullSchema SCHEMA
+             *      activeSchema +
+             *         <stateName> +
+             *           <roleName> SCHEMA
+             *      configuration HASH
              */
             karabo::util::Hash m_runtimeSystemDescription;
 
             boost::mutex m_runtimeSystemDescriptionMutex;
 
             std::string m_role;
-
+            
             boost::shared_ptr<karabo::xms::SignalSlotable> m_signalSlotable;
 
             bool m_isShared;
