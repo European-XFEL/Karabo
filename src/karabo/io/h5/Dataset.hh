@@ -34,6 +34,7 @@ namespace karabo {
         namespace h5 {
 
             class Dataset : public karabo::io::h5::Element {
+
             public:
 
                 KARABO_CLASSINFO(Dataset, "Dataset", "1.0")
@@ -47,6 +48,30 @@ namespace karabo {
                 virtual ~Dataset() {
                 }
 
+                static hid_t dataSpace(karabo::util::Dims& dims) {
+                    if( dims.rank() == 0 ){
+                        return dataSpace();
+                    }                    
+                    std::vector<hsize_t> curdims(dims.rank(), 0);
+                    std::vector<hsize_t> maxdims(dims.rank(), 0);
+                    for (size_t i = 0; i < dims.rank(); ++i) {
+                        curdims[i] = dims.extentIn(i);
+                        maxdims[i] = curdims[i];
+                    }
+                    maxdims[0] = H5S_UNLIMITED;
+                    hid_t ds = H5Screate_simple(dims.rank(), &curdims[0], &maxdims[0]);
+                    //std::clog << "dataSpace " << ds << std::endl;
+                    KARABO_CHECK_HDF5_STATUS(ds);
+                    return ds;
+                }
+
+                static hid_t dataSpace(hsize_t len) {
+                    hsize_t dims[] = {len};
+                    hsize_t maxdims[] = {H5S_UNLIMITED};
+                    hid_t ds = H5Screate_simple(1, dims, maxdims);
+                    KARABO_CHECK_HDF5_STATUS(ds);
+                    return ds;
+                }
 
             protected:
 
@@ -63,30 +88,8 @@ namespace karabo {
                     KARABO_CHECK_HDF5_STATUS(status);
                 }
 
-                static hid_t dataSpace(karabo::util::Dims& dims) {
-                    std::vector<hsize_t> curdims(dims.rank(), 0);
-                    std::vector<hsize_t> maxdims(dims.rank(), 0);
-                    for (size_t i = 0; i < dims.rank(); ++i) {
-                        curdims[i] = dims.extentIn(i);
-                        maxdims[i] = curdims[i];
-                    }
-                    maxdims[0] = H5S_UNLIMITED;
-                    hid_t ds = H5Screate_simple(dims.rank(), &curdims[0], &maxdims[0]);
-                    //std::clog << "dataSpace " << ds << std::endl;
-                    KARABO_CHECK_HDF5_STATUS(ds);
-                    return ds;
-                }
-
                 static hid_t dataSpace() {
                     hsize_t dims[] = {1};
-                    hsize_t maxdims[] = {H5S_UNLIMITED};
-                    hid_t ds =  H5Screate_simple(1, dims, maxdims);
-                    KARABO_CHECK_HDF5_STATUS(ds);
-                    return ds;
-                }
-
-                static hid_t dataSpace(hsize_t len) {
-                    hsize_t dims[] = {len};
                     hsize_t maxdims[] = {H5S_UNLIMITED};
                     hid_t ds = H5Screate_simple(1, dims, maxdims);
                     KARABO_CHECK_HDF5_STATUS(ds);
@@ -134,10 +137,10 @@ namespace karabo {
                 }
 
 
-                virtual void open( hid_t group);
-                
+                virtual void open(hid_t group);
+
                 virtual void close();
-                
+
                 int m_compressionLevel;
 
                 hid_t m_dataSet;
