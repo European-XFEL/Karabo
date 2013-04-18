@@ -14,8 +14,7 @@
 #include <boost/regex.hpp>
 #include <boost/algorithm/string.hpp>
 #include <string>
-#include <karabo/util/Time.hh>
-#include <karabo/util/Factory.hh>
+#include <karabo/util.hpp>
 #include <karabo/xms/SignalSlotable.hh>
 #include <karabo/log/Logger.hh>
 #include "coredll.hh"

@@ -7,6 +7,7 @@
  */
 
 #include <sstream> 
+#include <karabo/util/Exception.hh>
 #include "ErrorHandler.hh"
 
 

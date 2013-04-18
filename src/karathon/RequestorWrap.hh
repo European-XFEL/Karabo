@@ -104,7 +104,7 @@ namespace karabo {
                         case 4:
                             return prepareTuple4(body);
                         default:
-                            throw SIGNALSLOT_EXCEPTION("Too many arguments send as response (max 4 are currently supported");
+                            throw KARABO_SIGNALSLOT_EXCEPTION("Too many arguments send as response (max 4 are currently supported");
                     }
                 } catch (const karabo::util::Exception& e) {
                     std::cout << e << std::endl;
@@ -117,32 +117,28 @@ namespace karabo {
             }
 
             bp::tuple prepareTuple1(const karabo::util::Hash& body) {
-                karabo::util::Hash::const_iterator it = body.begin();
-                bp::object a1 = HashWrap::pythonGetArgIt(body, it);
+                bp::object a1 = HashWrap::pythonGet(body, "a1");
                 return bp::make_tuple(a1);
             }
 
             bp::tuple prepareTuple2(const karabo::util::Hash& body) {
-                karabo::util::Hash::const_iterator it = body.begin();
-                bp::object a1 = HashWrap::pythonGetArgIt(body, it++);
-                bp::object a2 = HashWrap::pythonGetArgIt(body, it);
+                bp::object a1 = HashWrap::pythonGet(body, "a1");
+                bp::object a2 = HashWrap::pythonGet(body, "a2");
                 return bp::make_tuple(a1, a2);
             }
 
             bp::tuple prepareTuple3(const karabo::util::Hash& body) {
-                karabo::util::Hash::const_iterator it = body.begin();
-                bp::object a1 = HashWrap::pythonGetArgIt(body, it++);
-                bp::object a2 = HashWrap::pythonGetArgIt(body, it++);
-                bp::object a3 = HashWrap::pythonGetArgIt(body, it);
+                bp::object a1 = HashWrap::pythonGet(body, "a1");
+                bp::object a2 = HashWrap::pythonGet(body, "a2");
+                bp::object a3 = HashWrap::pythonGet(body, "a3");
                 return bp::make_tuple(a1, a2, a3);
             }
 
             bp::tuple prepareTuple4(const karabo::util::Hash& body) {
-                karabo::util::Hash::const_iterator it = body.begin();
-                bp::object a1 = HashWrap::pythonGetArgIt(body, it++);
-                bp::object a2 = HashWrap::pythonGetArgIt(body, it++);
-                bp::object a3 = HashWrap::pythonGetArgIt(body, it++);
-                bp::object a4 = HashWrap::pythonGetArgIt(body, it);
+                bp::object a1 = HashWrap::pythonGet(body, "a1");
+                bp::object a2 = HashWrap::pythonGet(body, "a2");
+                bp::object a3 = HashWrap::pythonGet(body, "a3");
+                bp::object a4 = HashWrap::pythonGet(body, "a4");
                 return bp::make_tuple(a1, a2, a3, a4);
             }
         };

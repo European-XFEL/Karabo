@@ -7,6 +7,7 @@
 
 #include "NetworkAppenderConfigurator.hh"
 #include "NetworkAppender.hh"
+#include <karabo/util/ChoiceElement.hh>
 
 using namespace karabo::util;
 using namespace karabo::log;

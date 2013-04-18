@@ -25,6 +25,7 @@ namespace karabo {
     namespace pyexfel {
 
         class DeviceClientWrap : public karabo::core::DeviceClient {
+
         public:
 
             DeviceClientWrap(const std::string& connectionType = "Jms", const karabo::util::Hash& connectionParameters = karabo::util::Hash()) :
@@ -41,89 +42,77 @@ namespace karabo {
             ~DeviceClientWrap() {
             }
 
-            bp::list getAvailableInstancesPy() {
-                return m_signalSlotableWrap->getAvailableInstancesPy();
+            bp::tuple existsPy(const std::string& instanceId) {
+                return Wrapper::fromStdPairToPyTuple(this->exists(instanceId));
             }
 
-            bp::list getDeviceServersPy() {
-                return HashWrap::stdVector2pyList(this->getDeviceServers());
+            bp::object getDeviceServersPy() {
+                return Wrapper::fromStdVectorToPyList(this->getDeviceServers());
             }
 
-            bp::list getDeviceClassesPy(const std::string& deviceServerInstanceId) {
-                return HashWrap::stdVector2pyList(this->getDeviceClasses(deviceServerInstanceId));
+            bp::object getDeviceClassesPy(const std::string& deviceServer) {
+                return Wrapper::fromStdVectorToPyList(this->getDeviceClasses(deviceServer));
             }
 
-            bp::list getDevicesPy() {
-                return HashWrap::stdVector2pyList(this->getDevices());
+//            bp::object getDevicesPy(const std::string& deviceServer) {
+//                return Wrapper::fromStdVectorToPyList(this->getDevices(deviceServer));
+//            }
+
+            bp::object getDevicesPy() {
+                return Wrapper::fromStdVectorToPyList(this->getDevices());
             }
 
-            bp::list getDeviceParametersPy(const std::string& instanceId, const std::string& key = "", const std::string& keySep = "") {
-                return HashWrap::stdVector2pyList(this->getDeviceParameters(instanceId, key, keySep));
+            bp::object getCurrentlySettablePropertiesPy(const std::string& instanceId) {
+                return Wrapper::fromStdVectorToPyList(this->getCurrentlySettableProperties(instanceId));
             }
 
-            bp::list getDeviceParametersFlatPy(const std::string& instanceId, const std::string& keySep = "") {
-                return HashWrap::stdVector2pyList(this->getDeviceParametersFlat(instanceId, keySep));
-            }
-
-            bp::list getCurrentlySettablePropertiesPy(const std::string& instanceId, const std::string& keySep = "") {
-                return HashWrap::stdVector2pyList(this->getCurrentlySettableProperties(instanceId, keySep));
-            }
-
-            bp::list getCurrentlyExecutableCommandsPy(const std::string& instanceId, const std::string& keySep = "") {
-                return HashWrap::stdVector2pyList(this->getCurrentlyExecutableCommands(instanceId, keySep));
-            }
-
-            bp::list getAllowedStatesPy(const std::string& instanceId, const std::string& key, const std::string& keySep = "") {
-                return HashWrap::stdVector2pyList(this->getAllowedStates(instanceId, key, keySep));
-            }
-
-            bp::list getValueOptionsPy(const std::string& instanceId, const std::string& key, const std::string& keySep = "") {
-                return HashWrap::stdVector2pyList(this->getValueOptions(instanceId, key, keySep));
+            bp::object getCurrentlyExecutableCommandsPy(const std::string& instanceId) {
+                return Wrapper::fromStdVectorToPyList(this->getCurrentlyExecutableCommands(instanceId));
             }
 
             bp::object getPy(const std::string& instanceId, const std::string& key, const std::string& keySep = ".") {
-                return HashWrap::pythonGetFromPath(this->cacheAndGetConfiguration(instanceId), key, keySep);
+                return HashWrap::pythonGet(this->cacheAndGetConfiguration(instanceId), key, keySep);
             }
 
-            void registerDeviceMonitor(const std::string& instanceId, const bp::object& callbackFunction, const bp::object& userData = bp::object()) {
-                std::cout << "DeviceClientWrap::registerDeviceMonitor on instanceId : \"" << instanceId << "\"" << std::endl;
-                boost::mutex::scoped_lock lock(m_deviceChangedHandlersMutex);
-                this->cacheAndGetConfiguration(instanceId);
-                if (hasattr(callbackFunction, "__self__")) {
-                    const bp::object & selfObject(callbackFunction.attr("__self__"));
-                    std::string funcName(bp::extract<std::string > (callbackFunction.attr("__name__")));
-                    m_deviceChangedHandlers.setFromPath(instanceId + "._function", funcName);
-                    m_deviceChangedHandlers.setFromPath(instanceId + "._selfObject", selfObject.ptr());
-                } else {
-                    m_deviceChangedHandlers.setFromPath(instanceId + "._function", callbackFunction.ptr());
-                }
-                if (!userData.is_none()) m_deviceChangedHandlers.setFromPath(instanceId + "._userData", userData);
-            }
-
-            bool registerPropertyMonitor(const std::string& instanceId, const std::string& key, const bp::object& callbackFunction, const bp::object& userData = bp::object()) {
-                karabo::util::Schema schema = this->getSchema(instanceId);
-                if (schema.hasKey(key)) {
-                    boost::mutex::scoped_lock lock(m_propertyChangedHandlersMutex);
-                    this->cacheAndGetConfiguration(instanceId);
-                    if (hasattr(callbackFunction, "__self__")) {
-                        const bp::object & selfObject(callbackFunction.attr("__self__"));
-                        std::string funcName(bp::extract<std::string > (callbackFunction.attr("__name__")));
-                        m_propertyChangedHandlers.setFromPath(instanceId + "." + key + "._function", funcName);
-                        m_propertyChangedHandlers.setFromPath(instanceId + "." + key + "._selfObject", selfObject.ptr());
-                    } else {
-                        m_propertyChangedHandlers.setFromPath(instanceId + "." + key + "._function", callbackFunction.ptr());
-                    }
-                    if (!userData.is_none()) m_propertyChangedHandlers.setFromPath(instanceId + "." + key + "._userData", userData);
-                    return true;
-                } else {
-                    return false;
-                }
-            }
+            //            void registerDeviceMonitor(const std::string& instanceId, const bp::object& callbackFunction, const bp::object& userData = bp::object()) {
+            //                std::cout << "DeviceClientWrap::registerDeviceMonitor on instanceId : \"" << instanceId << "\"" << std::endl;
+            //                boost::mutex::scoped_lock lock(m_deviceChangedHandlersMutex);
+            //                this->cacheAndGetConfiguration(instanceId);
+            //                if (Wrapper::hasattr(callbackFunction, "__self__")) {
+            //                    const bp::object & selfObject(callbackFunction.attr("__self__"));
+            //                    std::string funcName(bp::extract<std::string > (callbackFunction.attr("__name__")));
+            //                    m_deviceChangedHandlers.set(instanceId + "._function", funcName);
+            //                    m_deviceChangedHandlers.set(instanceId + "._selfObject", selfObject.ptr());
+            //                } else {
+            //                    m_deviceChangedHandlers.set(instanceId + "._function", callbackFunction.ptr());
+            //                }
+            //                if (!userData.is_none()) m_deviceChangedHandlers.set(instanceId + "._userData", userData);
+            //            }
+            //
+            //            bool registerPropertyMonitor(const std::string& instanceId, const std::string& key, const bp::object& callbackFunction, const bp::object& userData = bp::object()) {
+            //                karabo::util::Schema schema = this->getSchema(instanceId);
+            //                if (schema.hasKey(key)) {
+            //                    boost::mutex::scoped_lock lock(m_propertyChangedHandlersMutex);
+            //                    this->cacheAndGetConfiguration(instanceId);
+            //                    if (hasattr(callbackFunction, "__self__")) {
+            //                        const bp::object & selfObject(callbackFunction.attr("__self__"));
+            //                        std::string funcName(bp::extract<std::string > (callbackFunction.attr("__name__")));
+            //                        m_propertyChangedHandlers.setFromPath(instanceId + "." + key + "._function", funcName);
+            //                        m_propertyChangedHandlers.setFromPath(instanceId + "." + key + "._selfObject", selfObject.ptr());
+            //                    } else {
+            //                        m_propertyChangedHandlers.setFromPath(instanceId + "." + key + "._function", callbackFunction.ptr());
+            //                    }
+            //                    if (!userData.is_none()) m_propertyChangedHandlers.setFromPath(instanceId + "." + key + "._userData", userData);
+            //                    return true;
+            //                } else {
+            //                    return false;
+            //                }
+            //            }
 
             bp::tuple setWaitPy(const std::string& instanceId, const std::string& key, const bp::object& value, const std::string& keySep = ".", int timeout = -1) {
                 karabo::util::Hash tmp;
                 std::pair<bool, std::string> result;
-                HashWrap::pythonSetFromPath(tmp, key, value, keySep);
+                HashWrap::pythonSet(tmp, key, value, keySep);
                 {
                     ScopedGILRelease nogil;
                     result = this->setWait(instanceId, tmp, timeout);
@@ -133,7 +122,7 @@ namespace karabo {
 
             void setNoWaitPy(const std::string& instanceId, const std::string& key, const bp::object& value, const std::string& keySep = ".") {
                 karabo::util::Hash tmp;
-                HashWrap::pythonSetFromPath(tmp, key, value, keySep);
+                HashWrap::pythonSet(tmp, key, value, keySep);
                 ScopedGILRelease nogil;
                 this->setNoWait(instanceId, tmp);
             }
@@ -159,151 +148,150 @@ namespace karabo {
                 m_signalSlotableWrap->callPy4(instanceId, functionName, a1, a2, a3, a4);
             }
 
-            bp::tuple executeWaitPy0(std::string instanceId, const std::string& functionName, int timeout = -1) {
-                std::pair<bool, std::string> result;
-                bp::tuple tuple;
-                {
-                    ScopedGILRelease nogil;
-                    result = this->executeWait(instanceId, functionName, timeout);
-                }
-                tuple = bp::make_tuple(result.first, result.second);
-                return tuple;
-            }
-
-            bp::tuple executeWaitPy1(std::string instanceId, const std::string& functionName, const bp::object& a1, int timeout = -1) const {
-                if (timeout == -1) timeout = m_defaultTimeout;
-
-                bp::tuple result;
-
-                try {
-                    result = m_signalSlotableWrap->requestPy1(instanceId, functionName, a1).waitForReply(timeout);
-                } catch (const karabo::util::Exception& e) {
-                    return bp::make_tuple(false, e.userFriendlyMsg());
-                }
-                return bp::make_tuple(true, result[0]);
-            }
-
-            bp::tuple executeWaitPy2(std::string instanceId, const std::string& functionName, const bp::object& a1, const bp::object& a2, int timeout = -1) const {
-                if (timeout == -1) timeout = m_defaultTimeout;
-
-                bp::tuple result;
-
-                try {
-                    result = m_signalSlotableWrap->requestPy2(instanceId, functionName, a1, a2).waitForReply(timeout);
-                } catch (const karabo::util::Exception& e) {
-                    return bp::make_tuple(false, e.userFriendlyMsg());
-                }
-                return bp::make_tuple(true, result[0]);
-            }
-
-            bp::tuple executeWaitPy3(std::string instanceId, const std::string& functionName, const bp::object& a1, const bp::object& a2, const bp::object& a3, int timeout = -1) const {
-                if (timeout == -1) timeout = m_defaultTimeout;
-
-                bp::tuple result;
-
-                try {
-                    result = m_signalSlotableWrap->requestPy3(instanceId, functionName, a1, a2, a3).waitForReply(timeout);
-                } catch (const karabo::util::Exception& e) {
-                    return bp::make_tuple(false, e.userFriendlyMsg());
-                }
-                return bp::make_tuple(true, result[0]);
-            }
-
-            bp::tuple executeWaitPy4(std::string instanceId, const std::string& functionName, const bp::object& a1, const bp::object& a2, const bp::object& a3, const bp::object& a4, int timeout = -1) const {
-                if (timeout == -1) timeout = m_defaultTimeout;
-
-                bp::tuple result;
-
-                try {
-                    result = m_signalSlotableWrap->requestPy4(instanceId, functionName, a1, a2, a3, a4).waitForReply(timeout);
-                } catch (const karabo::util::Exception& e) {
-                    return bp::make_tuple(false, e.userFriendlyMsg());
-                }
-                return bp::make_tuple(true, result[0]);
-            }
+            //            bp::tuple executeWaitPy0(std::string instanceId, const std::string& functionName, int timeout = -1) {
+            //                std::pair<bool, std::string> result;
+            //                bp::tuple tuple;
+            //                {
+            //                    ScopedGILRelease nogil;
+            //                    result = this->executeWait(instanceId, functionName, timeout);
+            //                }
+            //                tuple = bp::make_tuple(result.first, result.second);
+            //                return tuple;
+            //            }
+            //
+            //            bp::tuple executeWaitPy1(std::string instanceId, const std::string& functionName, const bp::object& a1, int timeout = -1) const {
+            //                if (timeout == -1) timeout = m_defaultTimeout;
+            //
+            //                bp::tuple result;
+            //
+            //                try {
+            //                    result = m_signalSlotableWrap->requestPy1(instanceId, functionName, a1).waitForReply(timeout);
+            //                } catch (const karabo::util::Exception& e) {
+            //                    return bp::make_tuple(false, e.userFriendlyMsg());
+            //                }
+            //                return bp::make_tuple(true, result[0]);
+            //            }
+            //
+            //            bp::tuple executeWaitPy2(std::string instanceId, const std::string& functionName, const bp::object& a1, const bp::object& a2, int timeout = -1) const {
+            //                if (timeout == -1) timeout = m_defaultTimeout;
+            //
+            //                bp::tuple result;
+            //
+            //                try {
+            //                    result = m_signalSlotableWrap->requestPy2(instanceId, functionName, a1, a2).waitForReply(timeout);
+            //                } catch (const karabo::util::Exception& e) {
+            //                    return bp::make_tuple(false, e.userFriendlyMsg());
+            //                }
+            //                return bp::make_tuple(true, result[0]);
+            //            }
+            //
+            //            bp::tuple executeWaitPy3(std::string instanceId, const std::string& functionName, const bp::object& a1, const bp::object& a2, const bp::object& a3, int timeout = -1) const {
+            //                if (timeout == -1) timeout = m_defaultTimeout;
+            //
+            //                bp::tuple result;
+            //
+            //                try {
+            //                    result = m_signalSlotableWrap->requestPy3(instanceId, functionName, a1, a2, a3).waitForReply(timeout);
+            //                } catch (const karabo::util::Exception& e) {
+            //                    return bp::make_tuple(false, e.userFriendlyMsg());
+            //                }
+            //                return bp::make_tuple(true, result[0]);
+            //            }
+            //
+            //            bp::tuple executeWaitPy4(std::string instanceId, const std::string& functionName, const bp::object& a1, const bp::object& a2, const bp::object& a3, const bp::object& a4, int timeout = -1) const {
+            //                if (timeout == -1) timeout = m_defaultTimeout;
+            //
+            //                bp::tuple result;
+            //
+            //                try {
+            //                    result = m_signalSlotableWrap->requestPy4(instanceId, functionName, a1, a2, a3, a4).waitForReply(timeout);
+            //                } catch (const karabo::util::Exception& e) {
+            //                    return bp::make_tuple(false, e.userFriendlyMsg());
+            //                }
+            //                return bp::make_tuple(true, result[0]);
+            //            }
 
         private:
 
-            static bool hasattr(bp::object obj, const std::string& attrName) {
-                // NOTE: There seems to be different implementations of the Python C-API around
-                // Some use a char* some other a const char* -> char* is the always compiling alternative
-                return PyObject_HasAttrString(obj.ptr(), const_cast<char*> (attrName.c_str()));
-            }
+            //            static bool hasattr(bp::object obj, const std::string& attrName) {
+            //                // NOTE: There seems to be different implementations of the Python C-API around
+            //                // Some use a char* some other a const char* -> char* is the always compiling alternative
+            //                return PyObject_HasAttrString(obj.ptr(), const_cast<char*> (attrName.c_str()));
+            //            }
 
-            void notifyDeviceChangedMonitors(const karabo::util::Hash& hash, const std::string& instanceId) {
-                boost::mutex::scoped_lock lock(m_deviceChangedHandlersMutex);
-                karabo::util::Hash::const_iterator it = m_deviceChangedHandlers.find(instanceId);
-                if (it != m_deviceChangedHandlers.end()) {
-                    const karabo::util::Hash& entry = m_deviceChangedHandlers.get<karabo::util::Hash > (it);
-                    karabo::util::Hash::const_iterator itFunc = entry.find("_function");
-                    karabo::util::Hash::const_iterator itSelfObject = entry.find("_selfObject");
-                    karabo::util::Hash::const_iterator itData = entry.find("_userData");
+            //            void notifyDeviceChangedMonitors(const karabo::util::Hash& hash, const std::string& instanceId) {
+            //                boost::mutex::scoped_lock lock(m_deviceChangedHandlersMutex);
+            //                karabo::util::Hash::const_iterator it = m_deviceChangedHandlers.find(instanceId);
+            //                if (it != m_deviceChangedHandlers.end()) {
+            //                    const karabo::util::Hash& entry = m_deviceChangedHandlers.get<karabo::util::Hash > (it);
+            //                    karabo::util::Hash::const_iterator itFunc = entry.find("_function");
+            //                    karabo::util::Hash::const_iterator itSelfObject = entry.find("_selfObject");
+            //                    karabo::util::Hash::const_iterator itData = entry.find("_userData");
+            //
+            //                    ScopedGILAcquire gil;
+            //                    try {
+            //                        if (itSelfObject != entry.end()) {
+            //                            if (itData != entry.end()) {
+            //                                bp::call_method<void>(entry.get<PyObject*>(itSelfObject), entry.get<std::string > (itFunc).c_str(), instanceId, hash, entry.get<bp::object > (itData));
+            //                            } else {
+            //                                bp::call_method<void>(entry.get<PyObject*>(itSelfObject), entry.get<std::string > (itFunc).c_str(), instanceId, hash);
+            //                            }
+            //                        } else {
+            //                            if (itData != entry.end()) {
+            //                                bp::call<void>(entry.get<PyObject*>(itFunc), instanceId, hash, entry.get<bp::object > (itData));
+            //                            } else {
+            //                                bp::call<void>(entry.get<PyObject*>(itFunc), instanceId, hash);
+            //                            }
+            //                        }
+            //
+            //                    } catch (const karabo::util::Exception& e) {
+            //                        std::cout << e.userFriendlyMsg();
+            //                    }
+            //                }
+            //            }
 
-                    ScopedGILAcquire gil;
-                    try {
-                        if (itSelfObject != entry.end()) {
-                            if (itData != entry.end()) {
-                                bp::call_method<void>(entry.get<PyObject*>(itSelfObject), entry.get<std::string > (itFunc).c_str(), instanceId, hash, entry.get<bp::object > (itData));
-                            } else {
-                                bp::call_method<void>(entry.get<PyObject*>(itSelfObject), entry.get<std::string > (itFunc).c_str(), instanceId, hash);
-                            }
-                        } else {
-                            if (itData != entry.end()) {
-                                bp::call<void>(entry.get<PyObject*>(itFunc), instanceId, hash, entry.get<bp::object > (itData));
-                            } else {
-                                bp::call<void>(entry.get<PyObject*>(itFunc), instanceId, hash);
-                            }
-                        }
-
-                    } catch (const karabo::util::Exception& e) {
-                        std::cout << e.userFriendlyMsg();
-                    }
-                }
-            }
-
-            void notifyPropertyChangedMonitors(const karabo::util::Hash& hash, const std::string& instanceId) {
-                boost::mutex::scoped_lock lock(m_propertyChangedHandlersMutex);
-                if (m_propertyChangedHandlers.has(instanceId)) {
-                    this->callMonitor(instanceId, m_propertyChangedHandlers.get<karabo::util::Hash > (instanceId), hash);
-                }
-            }
-
-            void callMonitor(const std::string& instanceId, const karabo::util::Hash& registered, const karabo::util::Hash& current, std::string path = "") {
-                for (karabo::util::Hash::const_iterator it = current.begin(); it != current.end(); ++it) {
-                    std::string currentPath = it->first;
-                    if (!path.empty()) currentPath = path + "." + it->first;
-                    if (registered.hasFromPath(currentPath)) {
-                        const karabo::util::Hash& entry = registered.getFromPath<karabo::util::Hash > (currentPath);
-                        karabo::util::Hash::const_iterator itFunc = entry.find("_function");
-                        karabo::util::Hash::const_iterator itSelfObject = entry.find("_selfObject");
-                        karabo::util::Hash::const_iterator itData = entry.find("_userData");
-
-                        {
-                            ScopedGILAcquire gil;
-                            try {
-                                if (itSelfObject != entry.end()) {
-                                    if (itData != entry.end()) {
-                                        bp::call_method<void>(entry.get<PyObject*>(itSelfObject), entry.get<std::string > (itFunc).c_str(), instanceId, currentPath, HashWrap::pythonGetArgIt(current, it), entry.get<bp::object > (itData));
-                                    } else {
-                                        bp::call_method<void>(entry.get<PyObject*>(itSelfObject), entry.get<std::string > (itFunc).c_str(), instanceId, currentPath, HashWrap::pythonGetArgIt(current, it));
-                                    }
-                                }
-                                else {
-                                    if (itData != entry.end()) {
-                                        bp::call<void>(entry.get<PyObject*>(itFunc), instanceId, currentPath, HashWrap::pythonGetArgIt(current, it), entry.get<bp::object > (itData));
-                                    } else {
-                                        bp::call<void>(entry.get<PyObject*>(itFunc), instanceId, currentPath, HashWrap::pythonGetArgIt(current, it));
-                                    }
-                                }
-
-                            } catch (const karabo::util::Exception& e) {
-                                std::cout << e.userFriendlyMsg();
-                            }
-                        }
-                        if (current.is<karabo::util::Hash > (it)) callMonitor(instanceId, registered, current.get<karabo::util::Hash > (it), currentPath);
-                    }
-                }
-            }
+            //            void notifyPropertyChangedMonitors(const karabo::util::Hash& hash, const std::string& instanceId) {
+            //                boost::mutex::scoped_lock lock(m_propertyChangedHandlersMutex);
+            //                if (m_propertyChangedHandlers.has(instanceId)) {
+            //                    this->callMonitor(instanceId, m_propertyChangedHandlers.get<karabo::util::Hash > (instanceId), hash);
+            //                }
+            //            }
+            //
+            //            void callMonitor(const std::string& instanceId, const karabo::util::Hash& registered, const karabo::util::Hash& current, std::string path = "") {
+            //                for (karabo::util::Hash::const_iterator it = current.begin(); it != current.end(); ++it) {
+            //                    std::string currentPath = it->first;
+            //                    if (!path.empty()) currentPath = path + "." + it->first;
+            //                    if (registered.hasFromPath(currentPath)) {
+            //                        const karabo::util::Hash& entry = registered.getFromPath<karabo::util::Hash > (currentPath);
+            //                        karabo::util::Hash::const_iterator itFunc = entry.find("_function");
+            //                        karabo::util::Hash::const_iterator itSelfObject = entry.find("_selfObject");
+            //                        karabo::util::Hash::const_iterator itData = entry.find("_userData");
+            //
+            //                        {
+            //                            ScopedGILAcquire gil;
+            //                            try {
+            //                                if (itSelfObject != entry.end()) {
+            //                                    if (itData != entry.end()) {
+            //                                        bp::call_method<void>(entry.get<PyObject*>(itSelfObject), entry.get<std::string > (itFunc).c_str(), instanceId, currentPath, HashWrap::pythonGetArgIt(current, it), entry.get<bp::object > (itData));
+            //                                    } else {
+            //                                        bp::call_method<void>(entry.get<PyObject*>(itSelfObject), entry.get<std::string > (itFunc).c_str(), instanceId, currentPath, HashWrap::pythonGetArgIt(current, it));
+            //                                    }
+            //                                } else {
+            //                                    if (itData != entry.end()) {
+            //                                        bp::call<void>(entry.get<PyObject*>(itFunc), instanceId, currentPath, HashWrap::pythonGetArgIt(current, it), entry.get<bp::object > (itData));
+            //                                    } else {
+            //                                        bp::call<void>(entry.get<PyObject*>(itFunc), instanceId, currentPath, HashWrap::pythonGetArgIt(current, it));
+            //                                    }
+            //                                }
+            //
+            //                            } catch (const karabo::util::Exception& e) {
+            //                                std::cout << e.userFriendlyMsg();
+            //                            }
+            //                        }
+            //                        if (current.is<karabo::util::Hash > (it)) callMonitor(instanceId, registered, current.get<karabo::util::Hash > (it), currentPath);
+            //                    }
+            //                }
+            //            }
 
         private: // members
 

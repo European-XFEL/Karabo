@@ -1,9 +1,21 @@
+/*
+ * $Id: Connection.hh 3602 2011-05-31 21:09:02Z esenov@DESY.DE $
+ *
+ * File:   Connection.hh
+ * Author: WP76 <wp76@xfel.eu>
+ *
+ * Created on June 3, 2011, 9:47 AM
+ *
+ * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
+ */
+
 #include <boost/any.hpp>
 #include <boost/pointer_cast.hpp>
 #include "IOService.hh"
 #include "TcpConnection.hh"
 #include "TcpChannel.hh"
 #include "AsioIOService.hh"
+#include <karabo/util/SimpleElement.hh>
 
 using namespace std;
 using namespace boost::asio;

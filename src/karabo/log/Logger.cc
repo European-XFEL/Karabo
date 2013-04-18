@@ -10,6 +10,8 @@
  */
 
 #include <vector>
+#include <karabo/util/SimpleElement.hh>
+#include <karabo/util/ListElement.hh>
 #include "Logger.hh"
 #include "AppenderConfigurator.hh"
 #include "CategoryConfigurator.hh"

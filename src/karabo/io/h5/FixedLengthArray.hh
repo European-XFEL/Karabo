@@ -14,6 +14,10 @@
 #include <vector>
 #include <string>
 
+#include <karabo/util/Configurator.hh>
+#include <karabo/util/VectorElement.hh>
+#include <karabo/util/SimpleElement.hh>
+#include <karabo/util/FromLiteral.hh>
 
 #include "Dataset.hh"
 //#include "Scalar.hh"
@@ -22,7 +26,7 @@
 #include "DatasetWriter.hh"
 #include "ErrorHandler.hh"
 
-#include <karabo/util/util.hh>
+
 #include "ioProfiler.hh"
 
 

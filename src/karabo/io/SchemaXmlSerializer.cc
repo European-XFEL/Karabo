@@ -6,7 +6,7 @@
  *
  */
 
-#include <karabo/util/util.hh>
+#include <karabo/util/Configurator.hh>
 #include "HashXmlSerializer.hh"
 
 #include "SchemaXmlSerializer.hh"

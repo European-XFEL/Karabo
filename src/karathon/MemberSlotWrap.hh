@@ -13,6 +13,7 @@
 
 #include <iostream>
 #include <boost/python.hpp>
+#include <boost/python/call_method.hpp>
 #include <karabo/xms/Slot.hh>
 #include <karabo/net/BrokerChannel.hh>
 #include "HashWrap.hh"
@@ -51,8 +52,6 @@ namespace karabo {
 
             void callRegisteredSlotFunctions(karabo::net::BrokerChannel::Pointer /*channel*/, const karabo::util::Hash& body, const karabo::util::Hash& header) {
 
-                startSlotProcessing();
-
                 PyGILState_STATE gstate = PyGILState_Ensure();
 
                 try {
@@ -69,20 +68,17 @@ namespace karabo {
                             if (callFunction1(body)) break;
                         case 0:
                             if (callFunction0(body)) break;
-                            throw LOGIC_EXCEPTION("TypeError exception happened \"somewhere\" in Python code");
+                            throw KARABO_LOGIC_EXCEPTION("TypeError exception happened \"somewhere\" in Python code");
                         default:
-                            throw SIGNALSLOT_EXCEPTION("Too many arguments send to python slot (max 4 are currently supported");
+                            throw KARABO_SIGNALSLOT_EXCEPTION("Too many arguments send to python slot (max 4 are currently supported");
                     }
 
                     handlePossibleReply(header);
                     PyGILState_Release(gstate);
-
-                    stopSlotProcessing();
-
+                    
                 } catch (const karabo::util::Exception& e) {
                     std::cout << e.userFriendlyMsg();
                     PyGILState_Release(gstate);
-                    stopSlotProcessing();
                 }
 
             }
@@ -98,8 +94,7 @@ namespace karabo {
             }
 
             bool callFunction1(const karabo::util::Hash& body) {
-                karabo::util::Hash::const_iterator it = body.begin();
-                bp::object a1 = HashWrap::pythonGetArgIt(body, it);
+                bp::object a1 = HashWrap::pythonGet(body, "a1");
                 try {
                     bp::call_method<void>(m_selfObject, m_slotFunction.c_str(), a1);
                 } catch (const bp::error_already_set&) {
@@ -110,9 +105,8 @@ namespace karabo {
             }
 
             bool callFunction2(const karabo::util::Hash& body) {
-                karabo::util::Hash::const_iterator it = body.begin();
-                bp::object a1 = HashWrap::pythonGetArgIt(body, it++);
-                bp::object a2 = HashWrap::pythonGetArgIt(body, it);
+                bp::object a1 = HashWrap::pythonGet(body, "a1");
+                bp::object a2 = HashWrap::pythonGet(body, "a2");
                 try {
                     bp::call_method<void>(m_selfObject, m_slotFunction.c_str(), a1, a2);
                 } catch (const bp::error_already_set&) {
@@ -123,10 +117,10 @@ namespace karabo {
             }
 
             bool callFunction3(const karabo::util::Hash& body) {
-                karabo::util::Hash::const_iterator it = body.begin();
-                bp::object a1 = HashWrap::pythonGetArgIt(body, it++);
-                bp::object a2 = HashWrap::pythonGetArgIt(body, it++);
-                bp::object a3 = HashWrap::pythonGetArgIt(body, it);
+                bp::object a1 = HashWrap::pythonGet(body, "a1");
+                bp::object a2 = HashWrap::pythonGet(body, "a2");
+                bp::object a3 = HashWrap::pythonGet(body, "a3");
+              
                 try {
                     bp::call_method<void>(m_selfObject, m_slotFunction.c_str(), a1, a2, a3);
                 } catch (const bp::error_already_set&) {
@@ -137,11 +131,10 @@ namespace karabo {
             }
 
             bool callFunction4(const karabo::util::Hash& body) {
-                karabo::util::Hash::const_iterator it = body.begin();
-                bp::object a1 = HashWrap::pythonGetArgIt(body, it++);
-                bp::object a2 = HashWrap::pythonGetArgIt(body, it++);
-                bp::object a3 = HashWrap::pythonGetArgIt(body, it++);
-                bp::object a4 = HashWrap::pythonGetArgIt(body, it);
+                bp::object a1 = HashWrap::pythonGet(body, "a1");
+                bp::object a2 = HashWrap::pythonGet(body, "a2");
+                bp::object a3 = HashWrap::pythonGet(body, "a3");
+                bp::object a4 = HashWrap::pythonGet(body, "a4");
                 try {
                     bp::call_method<void>(m_selfObject, m_slotFunction.c_str(), a1, a2, a3, a4);
                 } catch (const bp::error_already_set&) {

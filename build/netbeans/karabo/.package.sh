@@ -55,6 +55,10 @@ if [ $OS = "Darwin" ]; then
     cd -
 fi
 
+# karathon
+cd ../karathon
+cp -rf $DISTDIR/$CONF/$PLATFORM/*.so $PACKAGEDIR/lib
+
 # deviceServer
 cd ../deviceServer
 make -j$NUM_CORES CONF=$CONF

@@ -18,6 +18,7 @@ using namespace karabo::pyexfel;
 using namespace std;
 namespace bp = boost::python;
 
+
 void exportPyXmsSignalSlotable() {//exposing karabo::xms::SignalSlotable 
     bp::enum_< SignalSlotable::SlotType > ("SlotType")
             .value("SPECIFIC", SignalSlotable::SPECIFIC)
@@ -33,7 +34,8 @@ void exportPyXmsSignalSlotable() {//exposing karabo::xms::SignalSlotable
             ;
 
     bp::class_<SignalSlotable, boost::noncopyable > ("SignalSlotableIntern")
-            .def(bp::init<const karabo::net::BrokerConnection::Pointer&, const std::string&, int>())
+            .def(bp::init<const karabo::net::BrokerConnection::Pointer&, const std::string&, const karabo::util::Hash&, int>())
+            .def(bp::init<const karabo::net::BrokerConnection::Pointer&, const std::string&, const karabo::util::Hash&>())
             .def(bp::init<const karabo::net::BrokerConnection::Pointer&, const std::string&>())
             ;
 
@@ -44,26 +46,26 @@ void exportPyXmsSignalSlotable() {//exposing karabo::xms::SignalSlotable
             .def(bp::init<const std::string&, const std::string&, const karabo::util::Hash&>())
 
             .def("create", &SignalSlotableWrap::create,
-            (bp::arg("instanceId") = "py/console/0",
-            bp::arg("connectionType") = "Jms",
-            bp::arg("connectionParameters") = karabo::util::Hash()
-            )).staticmethod("create")
+                 (bp::arg("instanceId") = "py/console/0",
+                 bp::arg("connectionType") = "Jms",
+                 bp::arg("connectionParameters") = karabo::util::Hash()
+                 )).staticmethod("create")
 
             .def("connect",
-            (bool (SignalSlotable::*)(const string, const string&, const string, const string&, SignalSlotable::ConnectionType, const bool))(&SignalSlotable::connect),
-            (bp::arg("signalInstanceId"),
-            bp::arg("signalFunction"),
-            bp::arg("slotInstanceId"),
-            bp::arg("slotFunction"),
-            bp::arg("connectionType") = SignalSlotable::TRACK,
-            bp::arg("isVerbose") = true))
+                 (bool (SignalSlotable::*)(const string, const string&, const string, const string&, SignalSlotable::ConnectionType, const bool))(&SignalSlotable::connect),
+                 (bp::arg("signalInstanceId"),
+                 bp::arg("signalFunction"),
+                 bp::arg("slotInstanceId"),
+                 bp::arg("slotFunction"),
+                 bp::arg("connectionType") = SignalSlotable::TRACK,
+                 bp::arg("isVerbose") = true))
 
             .def("connect",
-            (bool (SignalSlotable::*)(const string&, const string&, SignalSlotable::ConnectionType, const bool))(&SignalSlotable::connect),
-            (bp::arg("signalFunction"),
-            bp::arg("slotFunction"),
-            bp::arg("connectionType") = SignalSlotable::TRACK,
-            bp::arg("isVerbose") = true))
+                 (bool (SignalSlotable::*)(const string&, const string&, SignalSlotable::ConnectionType, const bool))(&SignalSlotable::connect),
+                 (bp::arg("signalFunction"),
+                 bp::arg("slotFunction"),
+                 bp::arg("connectionType") = SignalSlotable::TRACK,
+                 bp::arg("isVerbose") = true))
 
             .def("getAvailableInstances", &SignalSlotableWrap::getAvailableInstancesPy)
             .def("getAvailableSignals", &SignalSlotableWrap::getAvailableSignalsPy, bp::arg("instanceId"))
@@ -72,12 +74,12 @@ void exportPyXmsSignalSlotable() {//exposing karabo::xms::SignalSlotable
             .def("slotPing", (void (SignalSlotable::*)()) (&SignalSlotable::slotPing))
             .def("disconnect", (void (SignalSlotable::*)(string const &, string const &)) (&SignalSlotable::disconnect), (bp::arg("signal"), bp::arg("slot")))
             .def("getInstanceId"
-            , (string const & (SignalSlotable::*)() const) (&SignalSlotable::getInstanceId)
-            , bp::return_value_policy< bp::copy_const_reference > ())
+                 , (string const & (SignalSlotable::*)() const) (&SignalSlotable::getInstanceId)
+                 , bp::return_value_policy< bp::copy_const_reference > ())
 
             .def("registerSlot", (&SignalSlotableWrap::registerSlotPy), (bp::arg("slotFunction"), bp::arg("slotType") = SignalSlotable::SPECIFIC))
 
-            .def("registerSlot", (&SignalSlotableWrap::registerMemberSlotPy), (bp::arg("slotFunction"), bp::arg("selfObject"), bp::arg("slotType") = SignalSlotable::SPECIFIC))
+            //.def("registerSlot", (&SignalSlotableWrap::registerMemberSlotPy), (bp::arg("slotFunction"), bp::arg("selfObject"), bp::arg("slotType") = SignalSlotable::SPECIFIC))
 
             .def("registerSignal", &SignalSlotableWrap::registerSignalPy0, (bp::arg("signalFunction")))
             .def("registerSignal", &SignalSlotableWrap::registerSignalPy1, (bp::arg("signalFunction"), bp::arg("a1")))
@@ -86,52 +88,48 @@ void exportPyXmsSignalSlotable() {//exposing karabo::xms::SignalSlotable
             .def("registerSignal", &SignalSlotableWrap::registerSignalPy4, (bp::arg("signalFunction"), bp::arg("a1"), bp::arg("a2"), bp::arg("a3"), bp::arg("a4")))
 
             .def("call", (void (SignalSlotable::*)(string, string const &) const) (&SignalSlotable::call),
-            (bp::arg("instanceId"), bp::arg("functionName")))
+                 (bp::arg("instanceId"), bp::arg("functionName")))
 
             .def("call", (void (SignalSlotableWrap::*)(string, string const &, const bp::object&) const) (&SignalSlotableWrap::callPy1),
-            (bp::arg("instanceId"), bp::arg("functionName"), bp::arg("a1")))
+                 (bp::arg("instanceId"), bp::arg("functionName"), bp::arg("a1")))
 
             .def("call", (void (SignalSlotableWrap::*)(string, string const &, const bp::object&, const bp::object&) const) (&SignalSlotableWrap::callPy2),
-            (bp::arg("instanceId"), bp::arg("functionName"), bp::arg("a1"), bp::arg("a2")))
+                 (bp::arg("instanceId"), bp::arg("functionName"), bp::arg("a1"), bp::arg("a2")))
 
             .def("call", (void (SignalSlotableWrap::*)(string, string const &, const bp::object&, const bp::object&, const bp::object&) const) (&SignalSlotableWrap::callPy3),
-            (bp::arg("instanceId"), bp::arg("functionName"), bp::arg("a1"), bp::arg("a2"), bp::arg("a3")))
+                 (bp::arg("instanceId"), bp::arg("functionName"), bp::arg("a1"), bp::arg("a2"), bp::arg("a3")))
 
             .def("call", (void (SignalSlotableWrap::*)(string, string const &, const bp::object&, const bp::object&, const bp::object&, const bp::object&) const) (&SignalSlotableWrap::callPy4),
-            (bp::arg("instanceId"), bp::arg("functionName"), bp::arg("a1"), bp::arg("a2"), bp::arg("a3"), bp::arg("a4")))
-
-            .def("reconfigure", (void (SignalSlotableWrap::*)(const std::string&, const karabo::util::Hash&) const) (&SignalSlotableWrap::reconfigurePy), (bp::arg("instanceId"), bp::arg("configuration")))
-
-            .def("reconfigure", (void (SignalSlotableWrap::*)(const std::string&, const std::string&, const bp::object&) const) (&SignalSlotableWrap::reconfigurePy), (bp::arg("instanceId"), bp::arg("key"), bp::arg("value")))
+                 (bp::arg("instanceId"), bp::arg("functionName"), bp::arg("a1"), bp::arg("a2"), bp::arg("a3"), bp::arg("a4")))
 
             .def("request", (RequestorWrap(SignalSlotableWrap::*)(string, const string&)) (&SignalSlotableWrap::requestPy0),
-            (bp::arg("instanceId"), bp::arg("functionName")))
+                 (bp::arg("instanceId"), bp::arg("functionName")))
 
             .def("request", (RequestorWrap(SignalSlotableWrap::*)(string, const string&, const bp::object&)) (&SignalSlotableWrap::requestPy1),
-            (bp::arg("instanceId"), bp::arg("functionName"), bp::arg("a1")))
+                 (bp::arg("instanceId"), bp::arg("functionName"), bp::arg("a1")))
 
             .def("request", (RequestorWrap(SignalSlotableWrap::*)(string, const string&, const bp::object&, const bp::object&)) (&SignalSlotableWrap::requestPy2),
-            (bp::arg("instanceId"), bp::arg("functionName"), bp::arg("a1"), bp::arg("a2")))
+                 (bp::arg("instanceId"), bp::arg("functionName"), bp::arg("a1"), bp::arg("a2")))
 
             .def("request", (RequestorWrap(SignalSlotableWrap::*)(string, const string&, const bp::object&, const bp::object&, const bp::object&)) (&SignalSlotableWrap::requestPy3),
-            (bp::arg("instanceId"), bp::arg("functionName"), bp::arg("a1"), bp::arg("a2"), bp::arg("a3")))
+                 (bp::arg("instanceId"), bp::arg("functionName"), bp::arg("a1"), bp::arg("a2"), bp::arg("a3")))
 
             .def("request", (RequestorWrap(SignalSlotableWrap::*)(string, const string&, const bp::object&, const bp::object&, const bp::object&, const bp::object&)) (&SignalSlotableWrap::requestPy4),
-            (bp::arg("instanceId"), bp::arg("functionName"), bp::arg("a1"), bp::arg("a2"), bp::arg("a3"), bp::arg("a4")))
+                 (bp::arg("instanceId"), bp::arg("functionName"), bp::arg("a1"), bp::arg("a2"), bp::arg("a3"), bp::arg("a4")))
 
             .def("reply", (void (SignalSlotableWrap::*)()) (&SignalSlotableWrap::replyPy0))
 
             .def("reply", (void (SignalSlotableWrap::*)(const bp::object&)) (&SignalSlotableWrap::replyPy1),
-            (bp::arg("a1")))
+                 (bp::arg("a1")))
 
             .def("reply", (void (SignalSlotableWrap::*)(const bp::object&, const bp::object&)) (&SignalSlotableWrap::replyPy2),
-            (bp::arg("a1"), bp::arg("a2")))
+                 (bp::arg("a1"), bp::arg("a2")))
 
             .def("reply", (void (SignalSlotableWrap::*)(const bp::object&, const bp::object&, const bp::object&)) (&SignalSlotableWrap::replyPy3),
-            (bp::arg("a1"), bp::arg("a2"), bp::arg("a3")))
+                 (bp::arg("a1"), bp::arg("a2"), bp::arg("a3")))
 
             .def("reply", (void (SignalSlotableWrap::*)(const bp::object&, const bp::object&, const bp::object&, const bp::object&)) (&SignalSlotableWrap::replyPy4),
-            (bp::arg("a1"), bp::arg("a2"), bp::arg("a3"), bp::arg("a4")))
+                 (bp::arg("a1"), bp::arg("a2"), bp::arg("a3"), bp::arg("a4")))
 
 
 

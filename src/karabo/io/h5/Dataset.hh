@@ -12,11 +12,14 @@
 
 #include <string>
 
+#include <karabo/util/Configurator.hh>
+#include <karabo/util/Dims.hh>
+
 #include "Element.hh"
 #include "ErrorHandler.hh"
 
 #include "TypeTraits.hh"
-#include <karabo/util/util.hh>
+
 
 //#include "ScalarFilter.hh"
 

@@ -14,7 +14,7 @@
 
 #include <vector>
 #include <string>
-#include <karabo/util/util.hh>
+#include <karabo/util/Configurator.hh>
 #include <log4cpp/Priority.hh>
 #include <log4cpp/Category.hh>
 #include <boost/shared_ptr.hpp>

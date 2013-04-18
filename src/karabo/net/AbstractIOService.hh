@@ -9,7 +9,7 @@
 #define	KARABO_NET_ABSTRACTIOSERVICE_HH
 
 #include <boost/shared_ptr.hpp>
-#include <karabo/util/util.hh>
+#include <karabo/util/Configurator.hh>
 #include "karabo/util/karaboDll.hh"
 
 namespace karabo {

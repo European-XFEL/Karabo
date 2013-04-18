@@ -12,7 +12,7 @@
 #define	KARABO_LOGCONFIG_ROLLINGFILEAPPENDERCONFIGURATOR_HH
 
 #include "FileAppenderConfigurator.hh"
-#include <karabo/util/util.hh>
+#include <karabo/util/Configurator.hh>
 #include <boost/filesystem.hpp>
 
 namespace log4cpp {

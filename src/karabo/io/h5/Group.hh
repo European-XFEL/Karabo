@@ -14,7 +14,7 @@
 
 #include "Element.hh"
 #include "TypeTraits.hh"
-#include <karabo/util/util.hh>
+#include <karabo/util/Configurator.hh>
 #include "ErrorHandler.hh"
 
 namespace karabo {

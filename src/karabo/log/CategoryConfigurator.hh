@@ -16,7 +16,7 @@
 #include <string>
 #include <vector>
 #include "log4cpp/Priority.hh"
-#include <karabo/util/util.hh>
+#include <karabo/util/Configurator.hh>
 #include "AppenderConfigurator.hh"
 
 /**

@@ -10,7 +10,7 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/shared_array.hpp>
 
-#include <karabo/util/util.hh>
+#include <karabo/util/Configurator.hh>
 #include <karabo/io/TextSerializer.hh>
 
 #include <karabo/io/h5/Format.hh>

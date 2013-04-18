@@ -9,7 +9,7 @@
 #define	KARABO_CORE_OK_ERROR_FSM_HH
 
 
-#include <karabo/util/util.hpp>
+#include <karabo/util/Configurator.hh>
 #include <karabo/xms/SlotElement.hh>
 #include <karabo/util/karaboDll.hh>
 

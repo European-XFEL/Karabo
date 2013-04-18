@@ -9,7 +9,7 @@
 #define	H5FILE_TEST_HH
 
 #include <cppunit/extensions/HelperMacros.h>
-#include <karabo/util/util.hh>
+#include <karabo/util/Configurator.hh>
 
 class H5File_Test : public CPPUNIT_NS::TestFixture {
 

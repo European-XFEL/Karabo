@@ -9,7 +9,9 @@
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
 
-#include <karabo/util/util.hh>
+#include <karabo/util/Configurator.hh>
+#include <karabo/util/SimpleElement.hh>
+#include <karabo/util/ToXsd.hh>
 #include "SchemaXsdSerializer.hh"
 
 using namespace std;

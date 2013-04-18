@@ -13,6 +13,7 @@
 #include <string>
 #include "OstreamAppenderConfigurator.hh"
 #include "log4cpp/OstreamAppender.hh"
+#include <karabo/util/SimpleElement.hh>
 
 using namespace std;
 using namespace karabo::util;

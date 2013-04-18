@@ -9,7 +9,8 @@
 #define	LOGGER_TEST_HH
 
 #include <cppunit/extensions/HelperMacros.h>
-#include <karabo/util/util.hh>
+#include <karabo/util/Configurator.hh>
+#include <karabo/util/NodeElement.hh>
 #include <karabo/log/Logger.hh>
 
 class LogSomething {

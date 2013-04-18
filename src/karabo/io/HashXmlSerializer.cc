@@ -6,7 +6,9 @@
  *
  */
 
-#include <karabo/util/util.hh>
+#include <karabo/util/Schema.hh>
+#include <karabo/util/SimpleElement.hh>
+#include <karabo/util/FromLiteral.hh>
 #include "HashXmlSerializer.hh"
 
 using namespace karabo::util;

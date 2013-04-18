@@ -12,10 +12,10 @@
 #define	KARABO_XMS_NETWORKOUTPUT_HH
 
 #include <boost/asio.hpp>
-#include <karabo/util/util.hpp>
-#include <karabo/log/log.hpp>
-#include <karabo/io/io.hpp>
-#include <karabo/net/net.hpp>
+#include <karabo/util.hpp>
+#include <karabo/log.hpp>
+#include <karabo/io.hpp>
+#include <karabo/net.hpp>
 
 #include "Statics.hh"
 #include "Memory.hh"

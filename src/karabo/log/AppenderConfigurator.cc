@@ -12,6 +12,9 @@
 #include <log4cpp/BasicLayout.hh>
 #include <log4cpp/SimpleLayout.hh>
 #include <log4cpp/PatternLayout.hh>
+#include <karabo/util/SimpleElement.hh>
+#include <karabo/util/ChoiceElement.hh>
+#include <karabo/util/NodeElement.hh>
 
 #include "AppenderConfigurator.hh"
 
