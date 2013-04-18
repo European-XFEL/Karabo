@@ -76,6 +76,28 @@ public:
 
 struct NodeElementWrap {
 
+    static karabo::util::NodeElement & appendParametersOfConfigurableClass(karabo::util::NodeElement& self, const bp::object& baseobj, const std::string& classid) {
+        
+        if (!PyType_Check(baseobj.ptr())) {
+            throw KARABO_PYTHON_EXCEPTION("Argument 'arg1' given in 'appendParametersOfConfigurableClass(arg1, arg2)' of NODE_ELEMENT must be a class in Python registered as base class in Configurator");
+        }
+        if (!baseobj.attr("expectedParameters")) {
+            throw KARABO_PYTHON_EXCEPTION("Class given in 'appendParametersOf' of NODE_ELELEMT must have 'expectedParameters' function");
+        }
+        
+        if (self.getNode().getType() != Types::HASH) self.getNode().setValue(Hash());
+        std::string baseClassId = bp::extract<std::string>(baseobj.attr("__classid__"));
+        self.getNode().setAttribute(KARABO_SCHEMA_CLASS_ID, classid);
+        self.getNode().setAttribute(KARABO_SCHEMA_DISPLAY_TYPE, baseClassId);
+        
+        bp::object schemaObj = baseobj.attr("getSchema")(classid);
+        
+        const karabo::util::Schema schema = bp::extract<karabo::util::Schema> (schemaObj);
+        const karabo::util::Hash h = schema.getParameterHash();
+        self.getNode().setValue<karabo::util::Hash>(h);
+        
+        return self;
+    }
 
     static karabo::util::NodeElement & appendParametersOf(karabo::util::NodeElement& self, const bp::object& obj) {
 
@@ -790,6 +812,9 @@ void exportPyUtilSchema() {
                 KARABO_PYTHON_NODE_CHOICE_LIST(NodeElement)
                 .def("appendParametersOf"
                      , &NodeElementWrap::appendParametersOf, (bp::arg("python_class"))
+                     , bp::return_internal_reference<> ())
+                .def("appendParametersOfConfigurableClass"
+                     , &NodeElementWrap::appendParametersOfConfigurableClass, (bp::arg("python_base_class"), bp::arg("classid"))
                      , bp::return_internal_reference<> ())
                 ;
     }
