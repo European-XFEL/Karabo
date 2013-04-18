@@ -11,11 +11,11 @@
 #include <cppunit/extensions/HelperMacros.h>
 
 class Authenticate_Test : public CPPUNIT_NS::TestFixture {
-
     CPPUNIT_TEST_SUITE(Authenticate_Test);
-
-    CPPUNIT_TEST(testLogin);
-
+    CPPUNIT_TEST(testCorrectLogin);
+    CPPUNIT_TEST(testIncorrectLogin);
+    CPPUNIT_TEST(testIncorrectUsername);
+    CPPUNIT_TEST(testSingleSignOn);
     CPPUNIT_TEST_SUITE_END();
 
 public:
@@ -25,7 +25,10 @@ public:
     void tearDown();
 
 private:
-    void testLogin();
+    void testCorrectLogin();
+    void testIncorrectLogin();
+    void testIncorrectUsername();
+    void testSingleSignOn();
 };
 
 #endif	/* AUTHENTICATE_TEST_HH */
