@@ -142,6 +142,11 @@ class  Hash_TestCase(unittest.TestCase):
             self.assertEqual(h["a.b.c"], 2, "Value should be overwritten by 2")
             self.assertEqual(h.has("a.b"), True, "Key 'a.b' not found")
             self.assertEqual(h.has("a.b.c.d"), False, "Key 'a.b.c.d' should not be found")
+            # similarity with python dictionary...
+            self.assertEqual(h["a"]["b"]["c"], 2)
+            h["a"]["b"]["c"] = 77
+            self.assertEqual(h["a"]["b"]["c"], 77)
+            self.assertEqual(h["a.b.c"], 77)
         except Exception,e:
             self.fail("test_getSet exception group 2: " + str(e))
             
