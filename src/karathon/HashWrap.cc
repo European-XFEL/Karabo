@@ -194,7 +194,7 @@ namespace karabo {
         }
 
         bp::list
-        HashWrap::pythonKeys(const karabo::util::Hash & self) {
+        HashWrap::keys(const karabo::util::Hash & self) {
             bp::list l;
             getKeys(self, l);
             return l;
@@ -213,7 +213,7 @@ namespace karabo {
         }
 
         bp::list
-        HashWrap::pythonPaths(const karabo::util::Hash & self) {
+        HashWrap::paths(const karabo::util::Hash & self) {
             bp::list l;
             getPaths(self, l);
             return l;
