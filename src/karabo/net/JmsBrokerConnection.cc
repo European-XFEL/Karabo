@@ -53,7 +53,7 @@ namespace karabo {
                     .key("port")
                     .displayedName("Broker Hostport")
                     .description("Broker Hostport")
-                    .assignmentOptional().defaultValue(7676)
+                    .assignmentOptional().defaultValue(defaultPort)
                     .commit();
 
             // TODO Check for WIN32 compatibility
