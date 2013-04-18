@@ -48,9 +48,10 @@ namespace karabo {
             //boost::shared_ptr<DeviceClient> m_deviceClient;
 
             karabo::util::Hash m_instanceInfo;
-            
+
             std::string m_classId;
-            std::string m_devSrvInstId;
+            std::string m_serverId;
+            std::string m_deviceId;
 
             std::map<std::string, karabo::util::Schema> m_stateDependendSchema;
             boost::mutex m_stateDependendSchemaMutex;
@@ -75,7 +76,7 @@ namespace karabo {
 
             static void expectedParameters(karabo::util::Schema& expected) {
                 using namespace karabo::util;
-                
+
                 STRING_ELEMENT(expected).key("version")
                         .displayedName("Version")
                         .description("The version of this device class")
@@ -92,13 +93,13 @@ namespace karabo {
                         .advanced()
                         .init()
                         .commit();
-                
+
                 STRING_ELEMENT(expected).key("classId")
                         .displayedName("ClassID")
                         .description("The (factory)-name of the class of this device")
                         .advanced()
                         .readOnly()
-                        .commit();         
+                        .commit();
 
                 STRING_ELEMENT(expected).key("serverId")
                         .displayedName("ServerID")
@@ -108,8 +109,8 @@ namespace karabo {
                         .init()
                         .commit();
 
-                STRING_ELEMENT(expected).key("instanceId")
-                        .displayedName("InstanceID")
+                STRING_ELEMENT(expected).key("deviceId")
+                        .displayedName("DeviceID")
                         .description("The device instance ID uniquely identifies a device instance in the distributed system")
                         .assignmentOptional().noDefaultValue()
                         .init()
@@ -126,87 +127,30 @@ namespace karabo {
             }
 
             Device(const karabo::util::Hash& configuration) {
-                using namespace karabo::util;
-
-                try {
-                    // Speed access to own classId
-                    m_classId = getClassInfo().getClassId();
-
-                    // Make the configuration the initial state of the device
-                    m_parameters = configuration;
-
-                    // The static schema is the regular schema as assembled by parsing the expectedParameters functions
-                    m_staticSchema = getSchema(m_classId, karabo::util::Schema::AssemblyRules(INIT | WRITE | READ));
-
-                    // If no runtime schema got injected, the full schema equals the static schema
-                    m_fullSchema = m_staticSchema;
-
-                    // Set up the validator
-                    Validator::ValidationRules rules;
-                    rules.allowAdditionalKeys = false;
-                    rules.allowMissingKeys = true;
-                    rules.allowUnrootedConfiguration = true;
-                    rules.injectDefaults = false;
-                    rules.injectTimestamps = true;
-                    m_validatorIntern.setValidationRules(rules);
-
-                    rules.injectTimestamps = false;
-                    m_validatorExtern.setValidationRules(rules);
-
-                    // Speed access to device-server instance
-                    if (configuration.has("serverId")) {
-                        configuration.get("serverId", m_devSrvInstId);
-                    } else {
-                        m_devSrvInstId = "__none__";
-                    }
-
-                    // Set device instance 
-                    string devInstId;
-                    if (configuration.has("instanceId")) {
-                        configuration.get("instanceId", devInstId);
-                    } else { // No instanceId given
-                        devInstId = "__none__"; // TODO generate uuid
-                    }
-
-                    // Setup device logger
-                    m_log = &(karabo::log::Logger::getLogger(devInstId)); // TODO use later: "device." + devInstId
-
-                    // Instantiate connection
-                    karabo::net::BrokerConnection::Pointer connection = karabo::net::BrokerConnection::createChoice("connection", configuration);
-
-                    // Prepare some info further describing this particular instance
-                    Hash info("type", "device", "classId", m_classId, "serverId", m_devSrvInstId, "version", Device::classInfo().getVersion(), "host", boost::asio::ip::host_name());
-                    
-                    // Initialize the SignalSlotable instance
-                    init(connection, devInstId, info);
-
-                    // Initialize FSM slots (the interface of this function must be inherited from the templated FSM)
-                    this->initFsmSlots(); // requires template CONCEPT
-
-                    // Initialize Device slots
-                    this->initDeviceSlots();
-
-                    KARABO_LOG_INFO << "Starting up " << m_classId << " on networkId " << getInstanceId();
-
-                    set("classId", m_classId);
-                    
-                    
-
-
-                } catch (const Exception& e) {
-                    KARABO_RETHROW;
-                }
+                
+                // Make the configuration the initial state of the device
+                m_parameters = configuration;
+                
+                // Set serverId
+                if (configuration.has("serverId")) configuration.get("serverId", m_serverId);
+                else m_serverId = "__none__";
+                
+                // Set deviceId
+                if (configuration.has("deviceId")) configuration.get("deviceId", m_deviceId);
+                else m_deviceId = "__none__"; // TODO generate uuid
+                
             }
-            
+
             virtual ~Device() {
             };
-            
+
             /**
              * This function will typically be called by the DeviceServer (or directly within the startDevice application).
              * It must be overridden in any derived device class and typically should block the main thread - bringing
              * the device into an event driven mode of operation.
              */
             virtual void run() {
+                initDevice();
                 boost::thread t(boost::bind(&karabo::core::Device<FSM>::runEventLoop, this, true));
                 this->startFsm();
                 t.join();
@@ -452,10 +396,10 @@ namespace karabo {
             }
 
             const std::string& getDeviceServerInstanceId() const {
-                return m_devSrvInstId;
+                return m_serverId;
             }
 
-            
+
 
         protected: // Functions and Classes
 
@@ -490,6 +434,52 @@ namespace karabo {
             //            void triggerAlarm(const std::string& alarmMessage, const std::string& priority) const;
 
         private: // Functions
+
+            void initDevice() {
+                using namespace karabo::util;
+
+                // Speed access to own classId
+                m_classId = getClassInfo().getClassId();
+
+                // The static schema is the regular schema as assembled by parsing the expectedParameters functions
+                m_staticSchema = getSchema(m_classId, karabo::util::Schema::AssemblyRules(INIT | WRITE | READ));
+
+                // If no runtime schema got injected, the full schema equals the static schema
+                m_fullSchema = m_staticSchema;
+
+                // Set up the validator
+                Validator::ValidationRules rules;
+                rules.allowAdditionalKeys = false;
+                rules.allowMissingKeys = true;
+                rules.allowUnrootedConfiguration = true;
+                rules.injectDefaults = false;
+                rules.injectTimestamps = true;
+                m_validatorIntern.setValidationRules(rules);
+                rules.injectTimestamps = false;
+                m_validatorExtern.setValidationRules(rules);
+
+                // Setup device logger
+                m_log = &(karabo::log::Logger::getLogger(m_deviceId)); // TODO use later: "device." + devInstId
+
+                // Instantiate connection
+                karabo::net::BrokerConnection::Pointer connection = karabo::net::BrokerConnection::createChoice("connection", m_parameters);
+
+                // Prepare some info further describing this particular instance
+                Hash info("type", "device", "classId", m_classId, "serverId", m_serverId, "version", Device::classInfo().getVersion(), "host", boost::asio::ip::host_name());
+
+                // Initialize the SignalSlotable instance
+                init(connection, m_deviceId, info);
+
+                // Initialize FSM slots (the interface of this function must be inherited from the templated FSM)
+                this->initFsmSlots(); // requires template CONCEPT
+
+                // Initialize Device slots
+                this->initDeviceSlots();
+
+                KARABO_LOG_INFO << "Starting up " << m_classId << " on networkId " << getInstanceId();
+
+                set("classId", m_classId);
+            }
 
             void noStateTransition(const std::string& typeId, int state) {
                 std::string eventName(typeId);
@@ -576,8 +566,11 @@ namespace karabo {
             }
 
             void applyReconfiguration(const karabo::util::Hash& reconfiguration) {
-                boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
+                
+                m_objectStateChangeMutex.lock();
                 m_parameters.merge(reconfiguration);
+                m_objectStateChangeMutex.unlock();
+                
                 KARABO_LOG_DEBUG << "After user interaction:\n" << reconfiguration;
                 emit("signalChanged", reconfiguration, getInstanceId(), m_classId);
                 KARABO_LOG_DEBUG << "Current state:\n" << m_parameters;
@@ -596,7 +589,7 @@ namespace karabo {
             void slotKillDeviceInstance() {
                 KARABO_LOG_INFO << "Device is going down...";
                 preDestruction(); // Give devices a chance to react
-                emit("signalDeviceInstanceGone", m_devSrvInstId, m_instanceId);
+                emit("signalDeviceInstanceGone", m_serverId, m_instanceId);
                 stopEventLoop();
                 KARABO_LOG_INFO << "dead.";
             }
