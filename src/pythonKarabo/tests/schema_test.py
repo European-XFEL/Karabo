@@ -183,7 +183,7 @@ class  Schema_TestCase(unittest.TestCase):
     
     def test_perKeyFunctionality(self):
         try:
-            keys = self.schema.getParameters()
+            keys = self.schema.getKeys()
             for key in keys:
                 if key == "exampleKey1":
                     self.assertEqual(self.schema.hasAssignment(key), True)
