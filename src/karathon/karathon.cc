@@ -21,6 +21,7 @@ void exportPyUtilSchema();
 //void exportPyUtilTypes();
 void exportPyUtilClassInfo();
 void exportPyIoFileTools();
+void exportPyWebAuthenticator();
 //void exportPyIoReader();
 //void exportPyIoFormat();
 void exportPyXmsRequestor();
@@ -104,7 +105,7 @@ BOOST_PYTHON_MODULE(libkarathon) {
 //    exportPyUtilTypes();
     exportPyUtilClassInfo();
     exportPyIoFileTools();
-//
+    exportPyWebAuthenticator();
     exportPyXmsRequestor();
     exportPyXmsSignalSlotable();
     exportPyCoreDeviceClient();
