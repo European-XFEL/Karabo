@@ -29,7 +29,7 @@ H5File_Test::H5File_Test() {
 
     karabo::log::Tracer tr;
     tr.disableAll();
-
+    tr.enable("karabo.io.h5");
     //    tr.enable("karabo.io.h5.Table");
     //    tr.enable("karabo.io.h5.Table.saveTableFormatAsAttribute");
     //    tr.enable("karabo.io.h5.Table.openNew");
@@ -77,7 +77,7 @@ void H5File_Test::testWrite() {
         data.set("instrument.c", "abc");
         data.set("instrument.d", true).setAttribute("att1", 123);
         data.set("instrument.e", static_cast<char> (58));
-        
+
         size_t s = 4 * 32 * 256;
         //s = 1024 * 1024;
         vector<unsigned short> v0(s);
@@ -85,7 +85,7 @@ void H5File_Test::testWrite() {
             v0[i] = static_cast<unsigned short> (i % 16);
         }
 
-        data.set("instrument.LPD.image", &v0[0]).setAttribute("dims", Dims(4,32,256).toVector());
+        data.set("instrument.LPD.image", &v0[0]).setAttribute("dims", Dims(4, 32, 256).toVector());
 
 
 
@@ -420,20 +420,56 @@ void H5File_Test::testVectorBufferWrite() {
         v0[i] = static_cast<unsigned short> (i % 10);
     }
 
-    data.set("vectors.image", v0).setAttribute("dims", Dims(1024, 1024).toVector());
+    Format::Pointer format = Format::createEmptyFormat();
 
-    File file(resourcePath("file2.h5"));
+    Hash i32el(
+               "h5path", "",
+               "h5name", "mercury",
+               "compressionLevel", 9
+               );
+
+    h5::Element::Pointer e1 = h5::Element::create("INT32", i32el);
+
+    Hash u16(
+             "h5path", "",
+             "h5name", "venus",
+             "compressionLevel", 9
+             );
+
+    h5::Element::Pointer e2 = h5::Element::create("UINT16", u16);
+
+    Hash fel(
+             "h5path", "",
+             "h5name", "earth",
+             "compressionLevel", 9
+             );
+
+    h5::Element::Pointer e3 = h5::Element::create("FLOAT", fel);
+
+    format->addElement(e1);
+    format->addElement(e2);
+    format->addElement(e3);
+
+
+
+    //data.set("vectors.image", v0).setAttribute("dims", Dims(1024, 1024).toVector());
+
+    data.set("mercury", vector<int>(100, 1));
+    data.set("venus", vector<unsigned short>(100, 2));
+    data.set("earth", vector<float>(100, 3.0));
+
+    File file(resourcePath("file3.h5"));
     file.open(File::TRUNCATE);
 
     Hash config;
-    Format::discoverFromHash(data, config);
-    Format::Pointer dataFormat = Format::createNode("Format", "Format", config);
+    //Format::discoverFromHash(data, config);
+    //Format::Pointer dataFormat = Format::createNode("Format", "Format", config);
 
-    Table::Pointer t = file.createTable("/abc", dataFormat, 1);
+    Table::Pointer t = file.createTable("/planets", format, 10);
 
-    int i = 0;
-    //for (int i = 0; i < 5; ++i)
-    t->write(data, i*nRec, nRec);
+    //int i = 0;
+    for (int i = 0; i < 10; ++i)
+        t->write(data, i * nRec, nRec);
 
 
     //    clog << "abcd" << endl;

@@ -19,6 +19,7 @@
         <itemPath>../../../src/karabo/io/h5/Dataset.cc</itemPath>
         <itemPath>../../../src/karabo/io/h5/Dataset.hh</itemPath>
         <itemPath>../../../src/karabo/io/h5/DatasetReader.hh</itemPath>
+        <itemPath>../../../src/karabo/io/h5/DatasetWriter.cc</itemPath>
         <itemPath>../../../src/karabo/io/h5/DatasetWriter.hh</itemPath>
         <itemPath>../../../src/karabo/io/h5/Element.cc</itemPath>
         <itemPath>../../../src/karabo/io/h5/Element.hh</itemPath>
@@ -553,6 +554,11 @@
       <item path="../../../src/karabo/io/h5/DatasetReader.hh"
             ex="false"
             tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/h5/DatasetWriter.cc"
+            ex="false"
+            tool="1"
             flavor2="0">
       </item>
       <item path="../../../src/karabo/io/h5/DatasetWriter.hh"
@@ -1507,7 +1513,7 @@
       <folder path="f2/f1">
         <ccTool>
           <preprocessorList>
-            <Elem>KARABO_ENABLE_TRACE_LOG</Elem>
+            <Elem>KARABO_NO_ENABLE_TRACE_LOG</Elem>
           </preprocessorList>
         </ccTool>
       </folder>
@@ -1756,6 +1762,11 @@
       <item path="../../../src/karabo/io/h5/DatasetReader.hh"
             ex="false"
             tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/h5/DatasetWriter.cc"
+            ex="false"
+            tool="1"
             flavor2="0">
       </item>
       <item path="../../../src/karabo/io/h5/DatasetWriter.hh"
