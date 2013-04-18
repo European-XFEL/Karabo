@@ -75,7 +75,7 @@ namespace karabo {
               if (m_loadedPlugins.find(plugin) == m_loadedPlugins.end()) {
                 void* libHandle = dlopen(plugin.c_str(), RTLD_NOW);
                 if (libHandle == 0) {
-                  throw INIT_EXCEPTION("Failed to load plugin" + string(it->path().filename().string()) + ": " + string(dlerror()));
+                  throw INIT_EXCEPTION("Failed to load plugin " + string(it->path().filename().string()) + ": " + string(dlerror()));
                 } else {
                   m_loadedPlugins[it->path()] = libHandle;
                   cout << "Successfully loaded plugin: " << it->path().filename() << endl;
