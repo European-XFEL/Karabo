@@ -475,7 +475,7 @@ namespace karabo {
         template<class KeyType, class MappedType>
         template <typename T>
         bool OrderedMap<KeyType, MappedType>::is(const const_map_iterator & it) const {
-            return it->second.is<T > ();
+            return it->second.template is<T > ();
         }
 
         template<class KeyType, class MappedType>

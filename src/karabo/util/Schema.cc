@@ -59,13 +59,19 @@ namespace karabo {
         }
 
         
-        std::vector<std::string> Schema::getParameters(const std::string& path) const {
+        std::vector<std::string> Schema::getKeys(const std::string& path) const {
             std::vector<std::string> tmp;
             if (path.empty())
                 m_hash.getKeys(tmp);
             else if (m_hash.is<Hash > (path))
                 m_hash.get<Hash > (path).getKeys(tmp);
 
+            return tmp;
+        }
+        
+        std::vector<std::string> Schema::getPaths() const {
+            std::vector<std::string> tmp;
+            m_hash.getPaths(tmp);
             return tmp;
         }
 
@@ -692,7 +698,7 @@ namespace karabo {
             stream << "----- HELP -----" << endl;
             if (classId.empty()) {
                 stream << "Schema: " << getRootName() << endl;
-                vector<string> keys = getParameters();
+                vector<string> keys = getKeys();
 
 
                 BOOST_FOREACH(string key, keys) {
@@ -716,7 +722,7 @@ namespace karabo {
 
                 if (getNodeType(classId) == Schema::NODE) {
 
-                    vector<string> keys = getParameters(classId);
+                    vector<string> keys = getKeys(classId);
                     if (!keys.empty()) {
                         stream << "NODE element" << endl;
 
@@ -741,7 +747,7 @@ namespace karabo {
 
                 if (getNodeType(classId) == Schema::CHOICE_OF_NODES) {
                     stream << "CHOICE element" << endl;
-                    vector<string> keys = getParameters(classId);
+                    vector<string> keys = getKeys(classId);
 
 
                     BOOST_FOREACH(string key, keys) {
@@ -752,7 +758,7 @@ namespace karabo {
 
                 if (getNodeType(classId) == Schema::LIST_OF_NODES) {
                     stream << "LIST element" << endl;
-                    vector<string> keys = getParameters(classId);
+                    vector<string> keys = getKeys(classId);
 
 
                     BOOST_FOREACH(string key, keys) {

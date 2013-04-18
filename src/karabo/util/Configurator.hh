@@ -110,7 +110,7 @@ namespace karabo {
             
             inline static typename BaseClass::Pointer createDefault(const bool validate = true) {
                 string defaultClassId = Configurator::init().m_default;
-                if (defaultClassId.empty) throw KARABO_INIT_EXCEPTION("No default was defined");
+                if (defaultClassId.empty()) throw KARABO_INIT_EXCEPTION("No default was defined");
                 return create(defaultClassId, Hash(), validate);
             }
 

@@ -48,6 +48,8 @@ namespace karabo {
 
             //boost::shared_ptr<DeviceClient> m_deviceClient;
 
+            karabo::util::Hash m_instanceInfo;
+            
             std::string m_classId;
             std::string m_devSrvInstId;
 
@@ -74,6 +76,14 @@ namespace karabo {
 
             static void expectedParameters(karabo::util::Schema& expected) {
                 using namespace karabo::util;
+                
+                STRING_ELEMENT(expected).key("version")
+                        .displayedName("Version")
+                        .description("The version of this device class")
+                        .advanced()
+                        .readOnly()
+                        .initialValue(Device::classInfo().getVersion())
+                        .commit();
 
                 CHOICE_ELEMENT(expected).key("connection")
                         .displayedName("Connection")
@@ -83,33 +93,25 @@ namespace karabo {
                         .advanced()
                         .init()
                         .commit();
-
-                STRING_ELEMENT(expected).key("devClaId")
-                        .displayedName("Device Class Id")
+                
+                STRING_ELEMENT(expected).key("classId")
+                        .displayedName("ClassID")
                         .description("The (factory)-name of the class of this device")
                         .advanced()
                         .readOnly()
-                        .commit();
+                        .commit();         
 
-                STRING_ELEMENT(expected).key("version")
-                        .displayedName("Version")
-                        .description("The version of this device class")
-                        .advanced()
-                        .readOnly()
-                        .initialValue(Device::classInfo().getVersion())
-                        .commit();
-
-                STRING_ELEMENT(expected).key("devSrvInstId")
-                        .displayedName("Device-Server Instance Id")
-                        .description("The device-server instance id, on which this device-instance is running on")
+                STRING_ELEMENT(expected).key("serverId")
+                        .displayedName("ServerID")
+                        .description("The device-server on which this device is running on")
                         .advanced()
                         .assignmentOptional().noDefaultValue()
                         .init()
                         .commit();
 
-                STRING_ELEMENT(expected).key("devInstId")
-                        .displayedName("Device Instance Id")
-                        .description("Device Instance Id uniquely identifies a device instance in the distributed system")
+                STRING_ELEMENT(expected).key("instanceId")
+                        .displayedName("InstanceID")
+                        .description("The device instance ID uniquely identifies a device instance in the distributed system")
                         .assignmentOptional().noDefaultValue()
                         .init()
                         .commit();
@@ -117,8 +119,8 @@ namespace karabo {
                 STRING_ELEMENT(expected).key("state")
                         .displayedName("State")
                         .description("The current state the device is in")
-                        .assignmentOptional().defaultValue("uninitialized")
                         .readOnly()
+                        .initialValue("uninitialized")
                         .commit();
 
                 FSM::expectedParameters(expected);
@@ -153,17 +155,17 @@ namespace karabo {
                     m_validatorExtern.setValidationRules(rules);
 
                     // Speed access to device-server instance
-                    if (configuration.has("devSrvInstId")) {
-                        configuration.get("devSrvInstId", m_devSrvInstId);
+                    if (configuration.has("serverId")) {
+                        configuration.get("serverId", m_devSrvInstId);
                     } else {
                         m_devSrvInstId = "__none__";
                     }
 
                     // Set device instance 
                     string devInstId;
-                    if (configuration.has("devInstId")) {
-                        configuration.get("devInstId", devInstId);
-                    } else { // No devInstId given
+                    if (configuration.has("instanceId")) {
+                        configuration.get("instanceId", devInstId);
+                    } else { // No instanceId given
                         devInstId = "__none__"; // TODO generate uuid
                     }
 
@@ -173,8 +175,11 @@ namespace karabo {
                     // Instantiate connection
                     karabo::net::BrokerConnection::Pointer connection = karabo::net::BrokerConnection::createChoice("connection", configuration);
 
+                    // Prepare some info further describing this particular instance
+                    Hash info("type", "device", "classId", m_classId, "serverId", m_devSrvInstId, "version", Device::classInfo().getVersion(), "host", boost::asio::ip::host_name());
+                    
                     // Initialize the SignalSlotable instance
-                    init(connection, devInstId);
+                    init(connection, devInstId, info);
 
                     // Initialize FSM slots (the interface of this function must be inherited from the templated FSM)
                     this->initFsmSlots(); // requires template CONCEPT
@@ -184,7 +189,9 @@ namespace karabo {
 
                     KARABO_LOG_INFO << "Starting up " << m_classId << " on networkId " << getInstanceId();
 
-                    set("devClaId", m_classId);
+                    set("classId", m_classId);
+                    
+                    
 
 
                 } catch (const Exception& e) {
@@ -454,6 +461,7 @@ namespace karabo {
         protected: // Functions and Classes
 
             void onStateUpdate(const std::string& currentState) { // private
+                KARABO_LOG_FRAMEWORK_DEBUG << "onStateUpdate: " << currentState;
                 if (get<std::string>("state") != currentState) {
                     set("state", currentState);
                 }

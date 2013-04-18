@@ -13,7 +13,7 @@ namespace karabo {
     namespace util {
 
 
-        Validator::Validator() : m_injectDefaults(true), m_assumeRootedConfiguration(false),
+        Validator::Validator() : m_injectDefaults(true), m_allowUnrootedConfiguration(true),
         m_allowAdditionalKeys(false), m_allowMissingKeys(false), m_injectTimestamps(false) {
         }
 
@@ -27,7 +27,7 @@ namespace karabo {
             m_injectDefaults = rules.injectDefaults;
             m_allowAdditionalKeys = rules.allowAdditionalKeys;
             m_allowMissingKeys = rules.allowMissingKeys;
-            m_assumeRootedConfiguration = rules.allowUnrootedConfiguration;
+            m_allowUnrootedConfiguration = rules.allowUnrootedConfiguration;
             m_injectTimestamps = rules.injectTimestamps;
         }
 
@@ -37,7 +37,7 @@ namespace karabo {
             rules.injectDefaults = m_injectDefaults;
             rules.allowAdditionalKeys = m_allowAdditionalKeys;
             rules.allowMissingKeys = m_allowMissingKeys;
-            rules.allowUnrootedConfiguration = m_assumeRootedConfiguration;
+            rules.allowUnrootedConfiguration = m_allowUnrootedConfiguration;
             rules.injectTimestamps = m_injectTimestamps;
             return rules;
         }
@@ -56,7 +56,7 @@ namespace karabo {
             // In case of failed validation, report why it failed
             ostringstream validationFailedReport;
 
-            if (m_assumeRootedConfiguration) {
+            if (!m_allowUnrootedConfiguration) {
                 if (unvalidatedInput.size() != 1) {
                     return std::make_pair<bool, string > (false, "Expecting a rooted input, i.e. a Hash with exactly one key (describing the classId) at the top level");
                 } else {

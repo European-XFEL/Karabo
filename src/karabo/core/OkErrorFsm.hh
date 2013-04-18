@@ -53,9 +53,9 @@ namespace karabo {
             /*                        States                              */
             /**************************************************************/
 
-            KARABO_FSM_STATE_VE_EE(OkState, okStateOnEntry, okStateOnExit)
+            KARABO_FSM_STATE_VE_EE(Ok, okStateOnEntry, okStateOnExit)
 
-            KARABO_FSM_STATE_VE_EE(ErrorState, errorStateOnEntry, errorStateOnExit)
+            KARABO_FSM_STATE_VE_EE(Error, errorStateOnEntry, errorStateOnExit)
 
             /**************************************************************/
             /*                    Transition Actions                      */
@@ -72,13 +72,13 @@ namespace karabo {
             //  Source-State    Event        Target-State    Action         Guard
 
             KARABO_FSM_TABLE_BEGIN(StateMachineTransitionTable)
-            Row< OkState, ErrorFoundEvent, ErrorState, ErrorFoundAction, none >,
-            Row< ErrorState, ResetEvent, OkState, ResetAction, none >
+            Row< Ok, ErrorFoundEvent, Error, ErrorFoundAction, none >,
+            Row< Error, ResetEvent, Ok, ResetAction, none >
             KARABO_FSM_TABLE_END
 
 
             //                       Name          Transition-Table             Initial-State Context
-            KARABO_FSM_STATE_MACHINE(StateMachine, StateMachineTransitionTable, OkState, Self)
+            KARABO_FSM_STATE_MACHINE(StateMachine, StateMachineTransitionTable, Ok, Self)
 
 
             void startFsm() {

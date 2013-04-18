@@ -93,14 +93,14 @@ namespace karabo {
 
             if (key.empty()) {//top schema element
                 elementName = schema.getRootName();
-                keys = schema.getParameters();
+                keys = schema.getKeys();
             } else {//other Node schema element
                 if (key.rfind(".") != string::npos) {
-                    keys = schema.getParameters(key);
+                    keys = schema.getKeys(key);
                     elementName = extractKey(key);
                 } else {
                     elementName = key;
-                    keys = schema.getParameters(key);
+                    keys = schema.getKeys(key);
                 }
             }
 
@@ -219,7 +219,7 @@ namespace karabo {
             pugi::xml_node complexTypeElement = choiceElement.append_child("xs:complexType");
             pugi::xml_node choiceTag = complexTypeElement.append_child("xs:choice");
 
-            vector<string> keys = schema.getParameters(key);
+            vector<string> keys = schema.getKeys(key);
 
             BOOST_FOREACH(string name, keys) {
                 string currentKey = key + "." + name;           
@@ -248,7 +248,7 @@ namespace karabo {
             pugi::xml_node complexTypeElement = sequenceElement.append_child("xs:complexType");
             pugi::xml_node sequenceTag = complexTypeElement.append_child("xs:sequence");
 
-            vector<string> keys = schema.getParameters(key);
+            vector<string> keys = schema.getKeys(key);
 
 
             BOOST_FOREACH(string name, keys) {
