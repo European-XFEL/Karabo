@@ -1,6 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configurationDescriptor version="88">
   <logicalFolder name="root" displayName="root" projectFiles="true" kind="ROOT">
+    <logicalFolder name="f7"
+                   displayName="Binding Tools"
+                   projectFiles="true"
+                   kind="ROOT">
+      <itemPath>../../../src/karathon/ScopedGILAcquire.hh</itemPath>
+      <itemPath>../../../src/karathon/ScopedGILRelease.hh</itemPath>
+      <itemPath>../../../src/karathon/Wrapper.cc</itemPath>
+      <itemPath>../../../src/karathon/Wrapper.hh</itemPath>
+    </logicalFolder>
     <logicalFolder name="f5" displayName="DeviceClient Binding" projectFiles="true">
       <itemPath>../../../src/karathon/DeviceClientWrap.hh</itemPath>
       <itemPath>../../../src/karathon/PyCoreDeviceClient.cc</itemPath>
@@ -12,8 +21,6 @@
       <itemPath>../../../src/karathon/HashWrap.hh</itemPath>
       <itemPath>../../../src/karathon/NodeWrap.hh</itemPath>
       <itemPath>../../../src/karathon/PyUtilHash.cc</itemPath>
-      <itemPath>../../../src/karathon/Wrapper.cc</itemPath>
-      <itemPath>../../../src/karathon/Wrapper.hh</itemPath>
     </logicalFolder>
     <logicalFolder name="f4" displayName="IO Binding" projectFiles="true">
       <itemPath>../../../src/karathon/PyIoFileTools.cc</itemPath>
@@ -49,8 +56,6 @@
     <logicalFolder name="SourceFiles"
                    displayName="Source Files"
                    projectFiles="true">
-      <itemPath>../../../src/karathon/ScopedGILAcquire.hh</itemPath>
-      <itemPath>../../../src/karathon/ScopedGILRelease.hh</itemPath>
       <itemPath>../../../src/karathon/karathon.cc</itemPath>
     </logicalFolder>
     <logicalFolder name="TestFiles"

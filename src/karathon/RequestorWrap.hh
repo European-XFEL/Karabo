@@ -42,7 +42,7 @@ namespace karabo {
                 prepareHeaderAndFilter(slotInstanceId, slotFunction);
                 registerRequest();
                 m_body.clear();
-                karabo::pyexfel::HashWrap::pythonSet(m_body, "a1", a1);
+                karabo::pyexfel::HashWrap::set(m_body, "a1", a1);
                 return *this;
 
             }
@@ -52,8 +52,8 @@ namespace karabo {
                 prepareHeaderAndFilter(slotInstanceId, slotFunction);
                 registerRequest();
                 m_body.clear();
-                karabo::pyexfel::HashWrap::pythonSet(m_body, "a1", a1);
-                karabo::pyexfel::HashWrap::pythonSet(m_body, "a2", a2);
+                karabo::pyexfel::HashWrap::set(m_body, "a1", a1);
+                karabo::pyexfel::HashWrap::set(m_body, "a2", a2);
                 return *this;
             }
 
@@ -62,9 +62,9 @@ namespace karabo {
                 prepareHeaderAndFilter(slotInstanceId, slotFunction);
                 registerRequest();
                 m_body.clear();
-                karabo::pyexfel::HashWrap::pythonSet(m_body, "a1", a1);
-                karabo::pyexfel::HashWrap::pythonSet(m_body, "a2", a2);
-                karabo::pyexfel::HashWrap::pythonSet(m_body, "a3", a3);
+                karabo::pyexfel::HashWrap::set(m_body, "a1", a1);
+                karabo::pyexfel::HashWrap::set(m_body, "a2", a2);
+                karabo::pyexfel::HashWrap::set(m_body, "a3", a3);
                 return *this;
             }
 
@@ -73,10 +73,10 @@ namespace karabo {
                 prepareHeaderAndFilter(slotInstanceId, slotFunction);
                 registerRequest();
                 m_body.clear();
-                karabo::pyexfel::HashWrap::pythonSet(m_body, "a1", a1);
-                karabo::pyexfel::HashWrap::pythonSet(m_body, "a2", a2);
-                karabo::pyexfel::HashWrap::pythonSet(m_body, "a3", a3);
-                karabo::pyexfel::HashWrap::pythonSet(m_body, "a4", a4);
+                karabo::pyexfel::HashWrap::set(m_body, "a1", a1);
+                karabo::pyexfel::HashWrap::set(m_body, "a2", a2);
+                karabo::pyexfel::HashWrap::set(m_body, "a3", a3);
+                karabo::pyexfel::HashWrap::set(m_body, "a4", a4);
                 return *this;
             }
 
@@ -117,28 +117,28 @@ namespace karabo {
             }
 
             bp::tuple prepareTuple1(const karabo::util::Hash& body) {
-                bp::object a1 = HashWrap::pythonGet(body, "a1");
+                bp::object a1 = HashWrap::get(body, "a1");
                 return bp::make_tuple(a1);
             }
 
             bp::tuple prepareTuple2(const karabo::util::Hash& body) {
-                bp::object a1 = HashWrap::pythonGet(body, "a1");
-                bp::object a2 = HashWrap::pythonGet(body, "a2");
+                bp::object a1 = HashWrap::get(body, "a1");
+                bp::object a2 = HashWrap::get(body, "a2");
                 return bp::make_tuple(a1, a2);
             }
 
             bp::tuple prepareTuple3(const karabo::util::Hash& body) {
-                bp::object a1 = HashWrap::pythonGet(body, "a1");
-                bp::object a2 = HashWrap::pythonGet(body, "a2");
-                bp::object a3 = HashWrap::pythonGet(body, "a3");
+                bp::object a1 = HashWrap::get(body, "a1");
+                bp::object a2 = HashWrap::get(body, "a2");
+                bp::object a3 = HashWrap::get(body, "a3");
                 return bp::make_tuple(a1, a2, a3);
             }
 
             bp::tuple prepareTuple4(const karabo::util::Hash& body) {
-                bp::object a1 = HashWrap::pythonGet(body, "a1");
-                bp::object a2 = HashWrap::pythonGet(body, "a2");
-                bp::object a3 = HashWrap::pythonGet(body, "a3");
-                bp::object a4 = HashWrap::pythonGet(body, "a4");
+                bp::object a1 = HashWrap::get(body, "a1");
+                bp::object a2 = HashWrap::get(body, "a2");
+                bp::object a3 = HashWrap::get(body, "a3");
+                bp::object a4 = HashWrap::get(body, "a4");
                 return bp::make_tuple(a1, a2, a3, a4);
             }
         };

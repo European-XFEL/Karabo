@@ -91,7 +91,7 @@ namespace karabo {
             }
 
             bool callFunction1(const karabo::util::Hash& body) {
-                bp::object a1 = HashWrap::pythonGet(body, "a1");
+                bp::object a1 = HashWrap::get(body, "a1");
                 try {
                     bp::call<void>(m_slotFunction, a1);
                 } catch (const bp::error_already_set&) {
@@ -102,8 +102,8 @@ namespace karabo {
             }
 
             bool callFunction2(const karabo::util::Hash& body) {
-                bp::object a1 = HashWrap::pythonGet(body, "a1");
-                bp::object a2 = HashWrap::pythonGet(body, "a2");
+                bp::object a1 = HashWrap::get(body, "a1");
+                bp::object a2 = HashWrap::get(body, "a2");
                 try {
                     bp::call<void>(m_slotFunction, a1, a2);
                 } catch (const bp::error_already_set&) {
@@ -114,9 +114,9 @@ namespace karabo {
             }
 
             bool callFunction3(const karabo::util::Hash& body) {
-                bp::object a1 = HashWrap::pythonGet(body, "a1");
-                bp::object a2 = HashWrap::pythonGet(body, "a2");
-                bp::object a3 = HashWrap::pythonGet(body, "a3");
+                bp::object a1 = HashWrap::get(body, "a1");
+                bp::object a2 = HashWrap::get(body, "a2");
+                bp::object a3 = HashWrap::get(body, "a3");
                 try {
                     bp::call<void>(m_slotFunction, a1, a2, a3);
                 } catch (const bp::error_already_set&) {
@@ -127,10 +127,10 @@ namespace karabo {
             }
 
             bool callFunction4(const karabo::util::Hash& body) {
-                bp::object a1 = HashWrap::pythonGet(body, "a1");
-                bp::object a2 = HashWrap::pythonGet(body, "a2");
-                bp::object a3 = HashWrap::pythonGet(body, "a3");
-                bp::object a4 = HashWrap::pythonGet(body, "a4");
+                bp::object a1 = HashWrap::get(body, "a1");
+                bp::object a2 = HashWrap::get(body, "a2");
+                bp::object a3 = HashWrap::get(body, "a3");
+                bp::object a4 = HashWrap::get(body, "a4");
                 try {
                     bp::call<void>(m_slotFunction, a1, a2, a3, a4);
                 } catch (const bp::error_already_set&) {

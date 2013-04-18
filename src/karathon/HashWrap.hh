@@ -58,14 +58,14 @@ namespace karabo {
                           const bp::object& obj);
 
             static bp::list
-            pythonKeys(const karabo::util::Hash & self);
+            keys(const karabo::util::Hash & self);
 
             static void
             getPaths(const karabo::util::Hash & self,
                            const bp::object& obj);
 
             static bp::list
-            pythonPaths(const karabo::util::Hash & self);
+            paths(const karabo::util::Hash & self);
 
             static bp::object
             getValues(const karabo::util::Hash& self);

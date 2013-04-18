@@ -27,34 +27,34 @@ namespace karabo {
                        
             void emitPy1(const bp::object& a1) {
                karabo::util::Hash message;
-               karabo::pyexfel::HashWrap::pythonSet(message, "a1", a1);
+               karabo::pyexfel::HashWrap::set(message, "a1", a1);
                ScopedGILRelease nogil;
                send(message);
             }
 
             void emitPy2(const bp::object& a1, const bp::object& a2) {
               karabo::util::Hash message;      
-              karabo::pyexfel::HashWrap::pythonSet(message, "a1", a1);
-              karabo::pyexfel::HashWrap::pythonSet(message, "a2", a2);
+              karabo::pyexfel::HashWrap::set(message, "a1", a1);
+              karabo::pyexfel::HashWrap::set(message, "a2", a2);
               ScopedGILRelease nogil;
               send(message);
             }
 
             void emitPy3(const bp::object& a1, const bp::object& a2, const bp::object& a3) {
                karabo::util::Hash message;      
-               karabo::pyexfel::HashWrap::pythonSet(message, "a1", a1);
-               karabo::pyexfel::HashWrap::pythonSet(message, "a2", a2);
-               karabo::pyexfel::HashWrap::pythonSet(message, "a3", a3);
+               karabo::pyexfel::HashWrap::set(message, "a1", a1);
+               karabo::pyexfel::HashWrap::set(message, "a2", a2);
+               karabo::pyexfel::HashWrap::set(message, "a3", a3);
                ScopedGILRelease nogil;
                send(message);
             }
 
             void emitPy4(const bp::object& a1, const bp::object& a2, const bp::object& a3, const bp::object& a4) {
                karabo::util::Hash message;      
-               karabo::pyexfel::HashWrap::pythonSet(message, "a1", a1);
-               karabo::pyexfel::HashWrap::pythonSet(message, "a2", a2);
-               karabo::pyexfel::HashWrap::pythonSet(message, "a3", a3);
-               karabo::pyexfel::HashWrap::pythonSet(message, "a4", a4);
+               karabo::pyexfel::HashWrap::set(message, "a1", a1);
+               karabo::pyexfel::HashWrap::set(message, "a2", a2);
+               karabo::pyexfel::HashWrap::set(message, "a3", a3);
+               karabo::pyexfel::HashWrap::set(message, "a4", a4);
                ScopedGILRelease nogil;
                send(message);
             }

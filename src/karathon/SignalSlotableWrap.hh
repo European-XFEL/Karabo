@@ -189,32 +189,32 @@ namespace karabo {
             
             void replyPy1(const bp::object& a1) {
                 karabo::util::Hash reply;
-                HashWrap::pythonSet(reply, "a1", a1);
+                HashWrap::set(reply, "a1", a1);
                 registerReply(reply);
             }
             
             void replyPy2(const bp::object& a1, const bp::object& a2) {
                 karabo::util::Hash reply;
-                HashWrap::pythonSet(reply, "a1", a1);
-                HashWrap::pythonSet(reply, "a2", a2);
+                HashWrap::set(reply, "a1", a1);
+                HashWrap::set(reply, "a2", a2);
                 registerReply(reply);
                 
             }
             
             void replyPy3(const bp::object& a1, const bp::object& a2, const bp::object& a3) {
                 karabo::util::Hash reply;
-                HashWrap::pythonSet(reply, "a1", a1);
-                HashWrap::pythonSet(reply, "a2", a2);
-                HashWrap::pythonSet(reply, "a3", a3);
+                HashWrap::set(reply, "a1", a1);
+                HashWrap::set(reply, "a2", a2);
+                HashWrap::set(reply, "a3", a3);
                 registerReply(reply);
             }
             
             void replyPy4(const bp::object& a1, const bp::object& a2, const bp::object& a3, const bp::object& a4) {
                 karabo::util::Hash reply;
-                HashWrap::pythonSet(reply, "a1", a1);
-                HashWrap::pythonSet(reply, "a2", a2);
-                HashWrap::pythonSet(reply, "a3", a3);
-                HashWrap::pythonSet(reply, "a4", a4);
+                HashWrap::set(reply, "a1", a1);
+                HashWrap::set(reply, "a2", a2);
+                HashWrap::set(reply, "a3", a3);
+                HashWrap::set(reply, "a4", a4);
                 registerReply(reply);
             }
             
