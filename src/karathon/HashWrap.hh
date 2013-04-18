@@ -107,7 +107,7 @@ namespace karabo {
                       const std::string& separator = ".");
 
             static bool
-            pythonIs(karabo::util::Hash& self,
+            is(karabo::util::Hash& self,
                      const std::string& path,
                      const PyTypes::ReferenceType& type,
                      const std::string& separator = ".");

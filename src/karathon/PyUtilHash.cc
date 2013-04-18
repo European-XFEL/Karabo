@@ -132,7 +132,7 @@ void exportPyUtilHash() {
     a.def("erase", &AttributesWrap().erase, (bp::arg("key")));
     a.def("size", &AttributesWrap().size);
     a.def("empty", &AttributesWrap().empty);
-    a.def("clear", &AttributesWrap().pythonClear);
+    a.def("clear", &AttributesWrap().clear);
     a.def("getNode", &AttributesWrap().getNode, (bp::arg("key")));
     a.def("get", &AttributesWrap().get, (bp::arg("key")));
     a.def("__getitem__", &AttributesWrap().get, (bp::arg("key")));
@@ -274,7 +274,7 @@ void exportPyUtilHash() {
         "tree = Hash()\n\tflat.unflatten(tree)\n\tresult = similar(h, tree)\n"
         "... result will be 'True'");
 
-    h.def("isType", &HashWrap().pythonIs, (bp::arg("path"), bp::arg("type"), bp::arg("sep") = "."),
+    h.def("isType", &HashWrap().is, (bp::arg("path"), bp::arg("type"), bp::arg("sep") = "."),
           "h.isType(path, type) -> True if reference type of value in Hash container for given 'path' is equal 'type'.\nExample:\n\t"
           "h = Hash('a.b.c', 1, 'b.x', 2.22, 'b.y', 7.432, 'c', [1,2,3])\n\t"
           "assert h.isType('a.b.c', Types.INT32) == True\n\t"
