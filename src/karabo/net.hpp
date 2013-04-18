@@ -8,10 +8,10 @@
 #ifndef KARABO_NET_HPP
 #define	KARABO_NET_HPP
 
-#include "IOService.hh"
-#include "Connection.hh"
-#include "Channel.hh"
-#include "BrokerConnection.hh"
-#include "BrokerChannel.hh"
+#include "net/IOService.hh"
+#include "net/Connection.hh"
+#include "net/Channel.hh"
+#include "net/BrokerConnection.hh"
+#include "net/BrokerChannel.hh"
 
 #endif

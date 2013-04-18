@@ -30,7 +30,7 @@
  * The main European XFEL namespace
  */
 namespace karabo {
-    
+
     namespace io {
         class SchemaXmlSerializer;
     }
@@ -133,7 +133,7 @@ namespace karabo {
             friend class ListElement;
             friend class NodeElement;
             friend class karabo::io::SchemaXmlSerializer;
-            
+
             // Container
             Hash m_hash;
 
@@ -204,30 +204,42 @@ namespace karabo {
             Schema::AssemblyRules getAssemblyRules() const;
 
             const std::string& getRootName() const;
-            
+
             const karabo::util::Hash& getParameterHash() const;
 
             // temporary fix getParameterHash with const context does not work as public functions
             // There is a private function which the compiler always want to use
             // This function getParameterHash1 needs to be removed when the issue is fixed
             const karabo::util::Hash& getParameterHash1() const;
-            
-            std::vector<std::string> getParameters(const std::string& path = "") const;
-            
+
+            /**
+             * Returns all keys in the schema (no recursion)
+             * Keys in inner-structures are not provided
+             * @param level from which to start the traversal
+             * @return array of strings
+             */
+            std::vector<std::string> getKeys(const std::string& path = "") const;
+
+            /**
+             * Returns all root-to-leaves paths of the schema
+             * @return array of strings
+             */
+            std::vector<std::string> getPaths() const;
+
             //**********************************************
             //          General functions on Schema        *
             //**********************************************
 
             bool has(const std::string& path) const;
-            
+
             /**
              * Merges another schema into the current one
              * @param schema Another schema to be merged
              */
             void merge(const Schema& schema);
-            
+
             bool empty() const;
-            
+
             //**********************************************
             //              Node property                  *
             //**********************************************
@@ -249,9 +261,9 @@ namespace karabo {
             //**********************************************
             //                Value Type                  *
             //**********************************************
-            
+
             //const string& getValueType(const std::string& path) const;
-            
+
             Types::ReferenceType getValueType(const std::string& path) const;
 
             //**********************************************
@@ -692,9 +704,9 @@ namespace karabo {
 
 
         private: // functions
-            
+
             void setParameterHash(const karabo::util::Hash& parameterDescription);
-            
+
             void setRootName(const std::string& rootName);
 
             karabo::util::Hash& getParameterHash();
@@ -722,7 +734,7 @@ namespace karabo {
             void processingStandardAttributes(const std::string& key, ostringstream & stream);
 
             std::string extractKey(const std::string& key);
-         
+
         };
 
     } // namespace util

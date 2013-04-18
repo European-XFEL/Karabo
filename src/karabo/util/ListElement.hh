@@ -54,7 +54,7 @@ namespace karabo {
                 for (size_t i = 0; i < nodeNames.size(); ++i) {
                     const std::string& nodeName = nodeNames[i];
                     Schema schema = Configurator<ConfigurationBase>::getSchema(nodeName, m_parentSchemaAssemblyRules);
-                    Hash::Node& node = choiceOfNodes.set<Hash > (nodeName, schema.getParameterHash());
+                    Hash::Node& node = choiceOfNodes.template set<Hash > (nodeName, schema.getParameterHash());
                     node.setAttribute(KARABO_SCHEMA_CLASS_ID, nodeName);
                     node.setAttribute(KARABO_SCHEMA_DISPLAY_TYPE, nodeName);
                     node.setAttribute<int>(KARABO_SCHEMA_NODE_TYPE, Schema::NODE);
@@ -74,7 +74,7 @@ namespace karabo {
                 if (nodeName.empty()) nodeName = T::classInfo().getClassId();
                 Schema schema(nodeName, m_parentSchemaAssemblyRules);
                 T::_KARABO_SCHEMA_DESCRIPTION_FUNCTION(schema);
-                Hash::Node& node = choiceOfNodes.set<Hash > (nodeName, schema.getParameterHash());
+                Hash::Node& node = choiceOfNodes.template set<Hash > (nodeName, schema.getParameterHash());
                 node.setAttribute(KARABO_SCHEMA_CLASS_ID, T::classInfo().getClassId());
                 node.setAttribute(KARABO_SCHEMA_DISPLAY_TYPE, T::classInfo().getClassId());
                 node.setAttribute<int>(KARABO_SCHEMA_NODE_TYPE, Schema::NODE);

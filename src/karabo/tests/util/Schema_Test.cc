@@ -218,7 +218,7 @@ void Schema_Test::testGetMinExcMaxExc() {
 
 void Schema_Test::testPerKeyFunctionality() {
 
-    std::vector<std::string> keys = m_schema.getParameters();
+    std::vector<std::string> keys = m_schema.getKeys();
 
     for (size_t i = 0; i < keys.size(); ++i) {
 

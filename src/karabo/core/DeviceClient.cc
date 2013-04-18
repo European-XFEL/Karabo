@@ -6,11 +6,10 @@
  * Copyright (c) 2010-2012 European XFEL GmbH Hamburg. All rights reserved.
  */
 
-#include <map>
+#include <karabo/log/Logger.hh>
+#include <karabo/io/FileTools.hh>
 
 #include "DeviceClient.hh"
-#include "Device.hh"
-#include "karabo/io/FileTools.hh"
 
 using namespace std;
 using namespace karabo::util;
@@ -20,50 +19,80 @@ using namespace karabo::xms;
 namespace karabo {
     namespace core {
 
-        #define KARABO_REGISTER_CALLBACK(valueType) \
-if (itData != entry.end()) {\
-    boost::any_cast < boost::function<void (const valueType&, const std::string&, const boost::any&) > >(itFunc->second)(current.get<valueType > (it), instanceId, itData->second);\
-} else {\
-    boost::any_cast < boost::function<void (const valueType&, const std::string&) > >(itFunc->second)(current.get<valueType > (it), instanceId);\
-}
 
-
-        DeviceClient::DeviceClient(const std::string& connectionType, const karabo::util::Hash& connectionParameters) : m_isShared(false), m_defaultTimeout(8000) {
+        DeviceClient::DeviceClient(const std::string& connectionType, const karabo::util::Hash& connectionParameters) : m_isShared(false), m_defaultTimeout(500) {
             karabo::net::BrokerConnection::Pointer connection = karabo::net::BrokerConnection::create(connectionType, connectionParameters);
             std::string ownInstanceId = generateOwnInstanceId();
             m_signalSlotable = boost::shared_ptr<SignalSlotable > (new SignalSlotable(connection, ownInstanceId));
             m_eventThread = boost::thread(boost::bind(&karabo::xms::SignalSlotable::runEventLoop, m_signalSlotable, true));
             this->setupSlots();
+            this->cacheAvailableInstances();
 
         }
 
 
-        DeviceClient::DeviceClient(const boost::shared_ptr<SignalSlotable>& signalSlotable) : m_signalSlotable(signalSlotable), m_isShared(true), m_defaultTimeout(8000) {
+        DeviceClient::DeviceClient(const boost::shared_ptr<SignalSlotable>& signalSlotable) : m_signalSlotable(signalSlotable), m_isShared(true), m_defaultTimeout(500) {
             this->setupSlots();
+            this->cacheAvailableInstances();
         }
 
 
         void DeviceClient::setupSlots() {
             m_signalSlotable->registerSlot<Hash, string > (boost::bind(&karabo::core::DeviceClient::slotChanged, this, _1, _2), "slotChanged");
-            m_signalSlotable->registerSlot<Hash > (boost::bind(&karabo::core::DeviceClient::slotNewDeviceServerInstance, this, _1), "slotNewDeviceServerInstance", SignalSlotable::GLOBAL);
-            m_signalSlotable->registerSlot<Hash > (boost::bind(&karabo::core::DeviceClient::slotUpdateDeviceServerInstance, this, _1), "slotUpdateDeviceServerInstance", SignalSlotable::GLOBAL);
-            m_signalSlotable->registerSlot<Hash > (boost::bind(&karabo::core::DeviceClient::slotNewDeviceInstance, this, _1), "slotNewDeviceInstance", SignalSlotable::GLOBAL);
-            m_signalSlotable->registerSlot<Hash > (boost::bind(&karabo::core::DeviceClient::slotUpdateDeviceInstance, this, _1), "slotUpdateDeviceInstance", SignalSlotable::GLOBAL);
+            m_signalSlotable->registerSlot<string, Hash > (boost::bind(&karabo::core::DeviceClient::slotInstanceUpdated, this, _1, _2), "slotInstanceUpdated", SignalSlotable::GLOBAL);
+            m_signalSlotable->registerSlot<string > (boost::bind(&karabo::core::DeviceClient::slotInstanceGone, this, _1), "slotInstanceGone", SignalSlotable::GLOBAL);
         }
-        
+
+
         void DeviceClient::cacheAvailableInstances() {
             boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
-            std::vector<SignalSlotable::InstanceInfo> instances = m_signalSlotable->getAvailableInstances();
+            vector<pair<string, Hash> > instances = m_signalSlotable->getAvailableInstances();
             for (size_t i = 0; i < instances.size(); ++i) {
-                const SignalSlotable::InstanceInfo& info = instances[i];
-                Hash h(info.instanceType, Hash(info.instanceId));
-                h.set()
-                       
-                
-                if (info.instanceType == "server") {
-                    m_runtimeSystemDescription
+                const string& instanceId = instances[i].first;
+                const Hash& instanceInfo = instances[i].second;
+                boost::optional<const Hash::Node&> node = instanceInfo.find("type");
+                string type = "unknownType";
+                if (node) type = node->getValue<string>();
+                Hash entry;
+                Hash::Node & entryNode = entry.set(type + "." + instanceId, Hash());
+                for (Hash::const_iterator it = instanceInfo.begin(); it != instanceInfo.end(); ++it) {
+
+
+                    entryNode.setAttribute(it->getKey(), it->getValueAsAny());
                 }
+                m_runtimeSystemDescription.merge(entry);
             }
+        }
+
+
+        void DeviceClient::slotChanged(const karabo::util::Hash& hash, const std::string & instanceId) {
+            boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
+            Hash& tmp = m_runtimeSystemDescription.get<Hash>("device." + instanceId + "configuration");
+            tmp.merge(hash);
+            // NOTE: This will block us here, i.e. we are deaf for other changes...
+            // NOTE: Monitors could be implemented as additional slots, too.
+            notifyDeviceChangedMonitors(hash, instanceId);
+            notifyPropertyChangedMonitors(hash, instanceId);
+        }
+
+
+        void DeviceClient::slotInstanceUpdated(const std::string& instanceId, const karabo::util::Hash& instanceInfo) {
+            boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
+            boost::optional<const Hash::Node&> node = instanceInfo.find("type");
+            string type = "unknownType";
+            if (node) type = node->getValue<string>();
+            Hash entry;
+            Hash::Node& entryNode = entry.set(type + "." + instanceId, Hash());
+            for (Hash::const_iterator it = instanceInfo.begin(); it != instanceInfo.end(); ++it) {
+                entryNode.setAttribute(it->getKey(), it->getValueAsAny());
+            }
+            m_runtimeSystemDescription.merge(entry);
+        }
+
+
+        void DeviceClient::slotInstanceGone(const std::string& instanceId) {
+            boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
+            m_runtimeSystemDescription.erase("device." + instanceId);
         }
 
 
@@ -85,20 +114,10 @@ if (itData != entry.end()) {\
         }
 
 
-        void DeviceClient::setDefaultKeySeparator(const std::string& defaultKeySep) {
-            m_defaultKeySep = defaultKeySep;
-        }
-
-
-        const std::string& DeviceClient::getDefaultKeySeparator() const {
-            return m_defaultKeySep;
-        }
-
-
         std::pair<bool, std::string> DeviceClient::exists(const std::string& instanceId) {
             string hostname;
             try {
-                m_signalSlotable->request("*", "slotPing", instanceId, true).timeout(80).receive(hostname);
+                m_signalSlotable->request("*", "slotPing", instanceId, true).timeout(m_defaultTimeout).receive(hostname);
             } catch (karabo::util::TimeoutException) {
                 return std::make_pair(false, hostname);
             }
@@ -107,241 +126,255 @@ if (itData != entry.end()) {\
 
 
         std::vector<std::string> DeviceClient::getDeviceServers() {
-            vector<string> deviceServers;
-            DbTableCache deviceServerCache = cacheAndGetDeviceServers();
-            for (size_t i = 0; i < deviceServerCache.size(); ++i) {
-                const Hash& deviceServer = deviceServerCache[i];
-                if (deviceServer.get<string > ("status") == "online") {
-                    deviceServers.push_back(deviceServer.get<string > ("instanceId"));
+            boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
+            if (m_runtimeSystemDescription.has("server")) {
+                const Hash& tmp = m_runtimeSystemDescription.get<Hash>("server");
+                vector<string> deviceServers;
+                deviceServers.reserve(tmp.size());
+                for (Hash::const_iterator it = tmp.begin(); it != tmp.end(); ++it) {
+                    deviceServers.push_back(it->getKey());
                 }
+                return deviceServers;
+            } else {
+                KARABO_LOG_FRAMEWORK_INFO << "No device servers found in the system";
+                return vector<string>();
             }
-            return deviceServers;
         }
 
 
-        const DeviceClient::DbTableCache& DeviceClient::cacheAndGetDeviceServers() {
-            boost::mutex::scoped_lock lock(m_deviceServerCacheMutex);
-
-            if (m_deviceServerCache.empty()) {
-                m_signalSlotable->request("*", "slotSelect", "id,instanceId,status", "DeviceServerInstance").timeout(m_defaultTimeout).receive(m_deviceServerCache);
+        std::vector<std::string> DeviceClient::getDeviceClasses(const std::string& deviceServer) {
+            boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
+            if (!m_runtimeSystemDescription.has("server." + deviceServer)) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Requested device server \"" << deviceServer << "\" does not exist.";
+                return vector<string>();
+            } else {
+                return m_runtimeSystemDescription.getAttribute<vector<string> >("server." + deviceServer, "deviceClasses");
             }
-            return m_deviceServerCache;
-        }
-
-
-        std::vector<std::string> DeviceClient::getDeviceClasses(const std::string& deviceServerInstanceId) {
-            unsigned int devSerInsId;
-            bool found = false;
-            DbTableCache deviceServerCache = cacheAndGetDeviceServers();
-            for (size_t i = 0; i < deviceServerCache.size(); ++i) {
-                if (deviceServerCache[i].get<string > ("instanceId") == deviceServerInstanceId) {
-                    devSerInsId = deviceServerCache[i].get<unsigned int>("id");
-                    found = true;
-                    break;
-                }
-            }
-            std::vector<string> deviceClasses;
-            if (found) {
-                DbTableCache deviceClassCache = cacheAndGetDeviceClasses();
-                for (size_t i = 0; i < deviceClassCache.size(); ++i) {
-                    if (deviceClassCache[i].get<unsigned int>("devSerInsId") == devSerInsId) {
-                        deviceClasses.push_back(deviceClassCache[i].get<string > ("name"));
-                    }
-                }
-            }
-            return deviceClasses;
-        }
-
-
-        const DeviceClient::DbTableCache& DeviceClient::cacheAndGetDeviceClasses() {
-            boost::mutex::scoped_lock lock(m_deviceClassCacheMutex);
-
-            if (m_deviceClassCache.empty()) {
-                m_signalSlotable->request("*", "slotSelect", "devSerInsId,name", "DeviceClass").timeout(m_defaultTimeout).receive(m_deviceClassCache);
-            }
-            return m_deviceClassCache;
         }
 
 
         std::vector<std::string> DeviceClient::getDevices() {
-            vector<string> devices;
-            DbTableCache deviceCache = cacheAndGetDevices();
-            for (size_t i = 0; i < deviceCache.size(); ++i) {
-                const Hash& device = m_deviceCache[i];
-                devices.push_back(device.get<string > ("instanceId"));
-            }
-            return devices;
-        }
-
-
-        const DeviceClient::DbTableCache& DeviceClient::cacheAndGetDevices() {
-            boost::mutex::scoped_lock lock(m_deviceCacheMutex);
-
-            if (m_deviceCache.empty()) {
-                m_signalSlotable->request("*", "slotSelect", "instanceId", "DeviceInstance").timeout(m_defaultTimeout).receive(m_deviceCache);
-            }
-            return m_deviceCache;
-        }
-
-
-        std::vector<std::string> DeviceClient::getDeviceParameters(const std::string& instanceId, const std::string& key, const std::string& keySep) {
-            Schema& schema = cacheAndGetFullSchema(instanceId);
-            return schema.getParameters(key);
-        }
-
-
-        std::vector<std::string> DeviceClient::getCurrentlyExecutableCommands(const std::string& instanceId, const std::string& keySep) {
-            std::vector<std::string> params = cacheAndGetActiveSchema(instanceId).getAllParameters();
-            std::vector<std::string> commands;
-
-
-            BOOST_FOREACH(std::string param, params) {
-                if (this->isCommand(instanceId, param)) {
-                    commands.push_back(param);
+            boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
+            if (!m_runtimeSystemDescription.has("device")) {
+                return vector<string>();
+            } else {
+                const Hash& tmp = m_runtimeSystemDescription.get<Hash>("device");
+                vector<string> devices;
+                devices.reserve(tmp.size());
+                for (Hash::const_iterator it = tmp.begin(); it != tmp.end(); ++it) {
+                    devices.push_back(it->getKey());
                 }
+                return devices;
             }
-            return commands;
         }
 
 
-        std::vector<std::string> DeviceClient::getCurrentlySettableProperties(const std::string& instanceId, const std::string& keySep) {
-            std::vector<std::string> params = cacheAndGetActiveSchema(instanceId).getAllParameters();
-            std::vector<std::string> properties;
-
-
-            BOOST_FOREACH(std::string param, params) {
-                if (this->isProperty(instanceId, param)) {
-                    properties.push_back(param);
+        std::vector<std::string> DeviceClient::getDevices(const std::string& deviceServer) {
+            boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
+            if (!m_runtimeSystemDescription.has("device")) {
+                return vector<string>();
+            } else {
+                const Hash& tmp = m_runtimeSystemDescription.get<Hash>("device");
+                vector<string> devices;
+                devices.reserve(tmp.size());
+                for (Hash::const_iterator it = tmp.begin(); it != tmp.end(); ++it) {
+                    if (it->getAttribute<string>("serverId") == deviceServer) {
+                        devices.push_back(it->getKey());
+                    }
                 }
+                return devices;
             }
-            return properties;
         }
 
 
-        const Schema & DeviceClient::getCurrentlyWritableSchemaForParameter(const std::string& instanceId, const std::string& key, const std::string& keySep) {
-            return cacheAndGetActiveSchema(instanceId).getDescriptionByKey(key);
-        }
-
-
-        Hash DeviceClient::loadConfigurationFromFile(const std::string& filename) {
-            Hash config;
-            karabo::io::loadFromFile(config, filename);
-            return config;
-        }
-
-
-        const karabo::util::Schema& DeviceClient::getFullSchema(const std::string& instanceId) {
+        karabo::util::Schema DeviceClient::getFullSchema(const std::string& instanceId) {
             return cacheAndGetFullSchema(instanceId);
         }
 
 
-        karabo::util::Schema& DeviceClient::cacheAndGetFullSchema(const std::string & instanceId) {
-            std::string path("devices." + instanceId + ".fullSchema");
+        karabo::util::Schema DeviceClient::cacheAndGetFullSchema(const std::string & instanceId) {
+            std::string path("device." + instanceId + ".fullSchema");
             boost::optional<Hash::Node&> node = m_runtimeSystemDescription.find(path);
             if (!node) { // Not found, request and cache it
                 // Request schema
                 Schema schema;
-                m_signalSlotable->request(instanceId, "slotGetSchema", false).timeout(m_defaultTimeout).receive(schema); // Retrieves full schema
+                try {
+                    m_signalSlotable->request(instanceId, "slotGetSchema", false).timeout(m_defaultTimeout).receive(schema); // Retrieves full schema
+                } catch (const TimeoutException&) {
+                    KARABO_LOG_FRAMEWORK_ERROR << "Schema request for instance \"" << instanceId << "\" timed out";
+                    Exception::clearTrace();
+                    return Schema();
+                }
                 return m_runtimeSystemDescription.set(path, schema).getValue<Schema>();
             }
             return node->getValue<Schema>();
         }
 
 
-        const karabo::util::Schema& DeviceClient::getActiveSchema(const std::string& instanceId) {
+        karabo::util::Schema DeviceClient::getActiveSchema(const std::string& instanceId) {
             return cacheAndGetActiveSchema(instanceId);
         }
 
 
-        karabo::util::Schema& DeviceClient::cacheAndGetActiveSchema(const std::string& instanceId) {
+        karabo::util::Schema DeviceClient::cacheAndGetActiveSchema(const std::string& instanceId) {
             std::string state = this->get<std::string > (instanceId, "state");
-            std::string path("devices." + instanceId + ".activeSchema." + state + "." + m_role);
+            std::string path("device." + instanceId + ".activeSchema." + state + "." + m_role);
             boost::optional<Hash::Node&> node = m_runtimeSystemDescription.find(path);
             if (!node) { // Not found, request and cache it
                 // Request schema
                 Schema schema;
-                m_signalSlotable->request(instanceId, "slotGetSchema", true).timeout(m_defaultTimeout).receive(schema); // Retrieves active schema
+                try {
+                    m_signalSlotable->request(instanceId, "slotGetSchema", true).timeout(m_defaultTimeout).receive(schema); // Retrieves active schema
+                } catch (const TimeoutException&) {
+                    KARABO_LOG_FRAMEWORK_ERROR << "Schema request for instance \"" << instanceId << "\" timed out";
+                    Exception::clearTrace();
+                    return Schema();
+                }
                 return m_runtimeSystemDescription.set(path, schema).getValue<Schema>();
             } else {
+
+
                 return node->getValue<Schema>();
             }
         }
 
 
-        void DeviceClient::instantiateNoWait(const std::string& serverInstanceId, const std::string& classId, const karabo::util::Hash & configuration) {
+        karabo::util::Schema DeviceClient::getClassSchema(const std::string& deviceServer, const std::string& className) {
+            // TODO Implement
+            throw KARABO_NOT_IMPLEMENTED_EXCEPTION("Will be available soon");
+        }
+
+
+        std::vector<std::string> DeviceClient::getCurrentlyExecutableCommands(const std::string& instanceId) {
+            Schema schema = cacheAndGetActiveSchema(instanceId);
+            vector<string> paths = schema.getPaths();
+            vector<string> commands;
+
+
+            BOOST_FOREACH(std::string path, paths) {
+                if (schema.isCommand(path)) {
+                    commands.push_back(path);
+                }
+            }
+            return commands;
+        }
+
+
+        std::vector<std::string> DeviceClient::getCurrentlySettableProperties(const std::string& instanceId) {
+            Schema schema = cacheAndGetActiveSchema(instanceId);
+            vector<string> paths = schema.getPaths();
+            std::vector<std::string> properties;
+
+
+            BOOST_FOREACH(std::string path, paths) {
+                if (schema.isProperty(path)) {
+                    properties.push_back(path);
+                }
+            }
+            return properties;
+        }
+
+
+        Hash DeviceClient::loadConfigurationFromFile(const std::string& filename) {
+            Hash configuration;
+            karabo::io::loadFromFile(configuration, filename);
+            return configuration;
+        }
+
+
+        void DeviceClient::instantiateNoWait(const std::string& serverInstanceId, const std::string& classId, const karabo::util::Hash& configuration) {
             Hash tmp(classId, configuration);
             m_signalSlotable->call(serverInstanceId, "slotStartDevice", tmp);
         }
 
 
-        void DeviceClient::instantiateNoWait(const std::string& serverInstanceId, const karabo::util::Hash & completeConfiguration) {
+        void DeviceClient::instantiateNoWait(const std::string& serverInstanceId, const karabo::util::Hash& completeConfiguration) {
             m_signalSlotable->call(serverInstanceId, "slotStartDevice", completeConfiguration);
         }
 
 
-        std::pair<bool, std::string > DeviceClient::instantiateWait(const std::string& serverInstanceId, const std::string& classId, const karabo::util::Hash& configuration, int timeout) {
-            if (timeout == -1) timeout = m_defaultTimeout;
-            Hash tmp(classId, configuration);
-            bool ok = true;
-            std::string errorText = "";
+        //        std::pair<bool, std::string > DeviceClient::instantiateWait(const std::string& serverInstanceId, const std::string& classId, const karabo::util::Hash& configuration, int timeout) {
+        //            if (timeout == -1) timeout = m_defaultTimeout;
+        //            Hash tmp(classId, configuration);
+        //            bool ok = true;
+        //            std::string errorText = "";
+        //
+        //            try {
+        //                m_signalSlotable->request(serverInstanceId, "slotStartDevice", tmp).timeout(timeout).receive(ok, errorText);
+        //            } catch (const karabo::util::Exception& e) {
+        //
+        //
+        //                errorText = e.userFriendlyMsg();
+        //                ok = false;
+        //            }
+        //            return std::make_pair(ok, errorText);
+        //        }
+        //
+        //
+        //        std::pair<bool, std::string > DeviceClient::instantiateWait(const std::string& serverInstanceId, const karabo::util::Hash& configuration, int timeout) {
+        //            if (timeout == -1) timeout = m_defaultTimeout;
+        //            bool ok = true;
+        //            std::string errorText = "";
+        //
+        //            try {
+        //                m_signalSlotable->request(serverInstanceId, "slotStartDevice", configuration).timeout(timeout).receive(ok, errorText);
+        //            } catch (const karabo::util::Exception& e) {
+        //
+        //
+        //                errorText = e.userFriendlyMsg();
+        //                ok = false;
+        //            }
+        //            return std::make_pair(ok, errorText);
+        //        }
 
-            try {
-                m_signalSlotable->request(serverInstanceId, "slotStartDevice", tmp).timeout(timeout).receive(ok, errorText);
-            } catch (const karabo::util::Exception& e) {
-                errorText = e.userFriendlyMsg();
-                ok = false;
-            }
-            return std::make_pair(ok, errorText);
-        }
 
-
-        std::pair<bool, std::string > DeviceClient::instantiateWait(const std::string& serverInstanceId, const karabo::util::Hash& configuration, int timeout) {
-            if (timeout == -1) timeout = m_defaultTimeout;
-            bool ok = true;
-            std::string errorText = "";
-
-            try {
-                m_signalSlotable->request(serverInstanceId, "slotStartDevice", configuration).timeout(timeout).receive(ok, errorText);
-            } catch (const karabo::util::Exception& e) {
-                errorText = e.userFriendlyMsg();
-                ok = false;
-            }
-            return std::make_pair(ok, errorText);
-        }
-
-
-        void DeviceClient::kill(const std::string & instanceId) {
+        void DeviceClient::killNoWait(const std::string & instanceId) {
             m_signalSlotable->call(instanceId, "slotKillDeviceInstance");
         }
 
 
-        const karabo::util::Hash & DeviceClient::get(const std::string & instanceId) {
+        std::pair<bool, std::string> DeviceClient::killWait(const std::string& instanceId) {
+            // TODO implement
+            throw KARABO_NOT_IMPLEMENTED_EXCEPTION("availble soon");
+
+        }
+
+
+        karabo::util::Hash DeviceClient::get(const std::string & instanceId) {
             return cacheAndGetConfiguration(instanceId);
         }
 
 
-        void DeviceClient::get(const std::string& instanceId, karabo::util::Hash & hash) {
-            hash = cacheAndGetConfiguration(instanceId);
-        }
-
-
-        void DeviceClient::unregisterMonitor(const std::string& instanceId, const std::string & key) {
-            boost::mutex::scoped_lock lock(m_propertyChangedHandlersMutex);
-            Hash::iterator it = m_propertyChangedHandlers.find(instanceId);
-            if (it != m_propertyChangedHandlers.end()) {
-                Hash& tmp = m_propertyChangedHandlers.get<Hash > (it);
-                Hash::iterator jt = tmp.find(key);
-                if (jt != tmp.end()) {
-                    tmp.erase(jt);
+        karabo::util::Hash DeviceClient::cacheAndGetConfiguration(const std::string& instanceId) {
+            boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
+            std::string path("device." + instanceId + ".configuration");
+            boost::optional<Hash::Node&> node = m_runtimeSystemDescription.find(path);
+            if (!node) { // Not found, request and cache
+                // Request configuration
+                Hash hash;
+                try {
+                    m_signalSlotable->request(instanceId, "slotRefresh").timeout(m_defaultTimeout).receive(hash);
+                } catch (const TimeoutException&) {
+                    KARABO_LOG_FRAMEWORK_ERROR << "Configuration request for instance \"" << instanceId << "\" timed out";
+                    Exception::clearTrace();
+                    return Hash();
                 }
-                if (tmp.empty()) {
-                    m_propertyChangedHandlers.erase(it);
-                }
+                // Keep up to date from now on
+                m_signalSlotable->connectR(instanceId, "signalChanged", "", "slotChanged");
+                return m_runtimeSystemDescription.set(path, hash).getValue<Hash>();
+            } else {
+                refreshInstanceUsage(instanceId); // Keep cache for longer
+                return node->getValue<Hash>();
             }
         }
 
 
-        void DeviceClient::registerMonitor(const std::string& instanceId, const boost::function<void (const karabo::util::Hash&, const std::string&)> & callbackFunction) {
+        void DeviceClient::get(const std::string& instanceId, karabo::util::Hash& hash) {
+            hash = cacheAndGetConfiguration(instanceId);
+        }
+
+
+        void DeviceClient::registerDeviceMonitor(const std::string& instanceId, const boost::function<void (const karabo::util::Hash&, const std::string&)> & callbackFunction) {
             boost::mutex::scoped_lock lock(m_deviceChangedHandlersMutex);
             // Make sure we are caching this instanceId
             this->cacheAndGetConfiguration(instanceId);
@@ -349,7 +382,23 @@ if (itData != entry.end()) {\
         }
 
 
-        void DeviceClient::unregisterMonitor(const std::string & instanceId) {
+        void DeviceClient::unregisterPropertyMonitor(const std::string& instanceId, const std::string& key) {
+            boost::mutex::scoped_lock lock(m_propertyChangedHandlersMutex);
+            boost::optional<Hash::Node&> node = m_propertyChangedHandlers.find(instanceId);
+            if (node) {
+                Hash& tmp = node->getValue<Hash >();
+                boost::optional<Hash::Node&> tmpNode = tmp.find(key);
+                if (tmpNode) {
+                    tmp.erase(tmpNode->getKey());
+                }
+                if (tmp.empty()) {
+                    m_propertyChangedHandlers.erase(node->getKey());
+                }
+            }
+        }
+
+
+        void DeviceClient::unregisterDeviceMonitor(const std::string& instanceId) {
             boost::mutex::scoped_lock lock(m_deviceChangedHandlersMutex);
             m_deviceChangedHandlers.erase(instanceId);
         }
@@ -372,86 +421,35 @@ if (itData != entry.end()) {\
         }
 
 
-        void DeviceClient::setNoWait(const std::string& instanceId, const karabo::util::Hash & values) const {
+        void DeviceClient::setNoWait(const std::string& instanceId, const karabo::util::Hash& values) const {
             m_signalSlotable->call(instanceId, "slotReconfigure", values);
         }
 
 
         std::string DeviceClient::generateOwnInstanceId() {
-            return std::string(boost::asio::ip::host_name() + "/DeviceClient/" + karabo::util::toString(getpid()));
-        }
-
-
-        const karabo::util::Hash & DeviceClient::cacheAndGetConfiguration(const std::string & instanceId) {
-            boost::mutex::scoped_lock lock(m_configurationCacheMutex);
-            ConfigurationCache::iterator it = m_configurationCache.find(instanceId);
-            if (it == m_configurationCache.end()) {
-                // Request configuration
-                Hash hash;
-                m_signalSlotable->request(instanceId, "slotRefresh").timeout(m_defaultTimeout).receive(hash);
-                it = m_configurationCache.insert(make_pair(instanceId, hash)).first;
-                // Keep up to date from now on
-                m_signalSlotable->connectR(instanceId, "signalChanged", "", "slotChanged");
-            }
-            refreshInstanceUsage(instanceId);
-            return it->second;
-        }
-
-
-        void DeviceClient::slotNewDeviceServerInstance(const karabo::util::Hash&) {
-            boost::mutex::scoped_lock lock(m_deviceServerCacheMutex);
-            // TODO This is a simple way here, add however load to the broker and the master
-            m_deviceServerCache.clear();
-        }
-
-
-        void DeviceClient::slotUpdateDeviceServerInstance(const karabo::util::Hash&) {
-            boost::mutex::scoped_lock lock(m_deviceServerCacheMutex);
-            // TODO This is a simple way here, add however load to the broker and the master
-            m_deviceServerCache.clear();
-        }
-
-
-        void DeviceClient::slotNewDeviceInstance(const karabo::util::Hash&) {
-            boost::mutex::scoped_lock lock(m_deviceCacheMutex);
-            m_deviceCache.clear();
-        }
-
-
-        void DeviceClient::slotUpdateDeviceInstance(const karabo::util::Hash&) {
-            boost::mutex::scoped_lock lock(m_deviceCacheMutex);
-            std::cout << "## Cleared device instance cache ##" << std::endl;
-            m_deviceCache.clear();
+            return std::string(boost::asio::ip::host_name() + "_DeviceClient_" + karabo::util::toString(getpid()));
         }
 
 
         void DeviceClient::refreshInstanceUsage(const std::string & instanceId) {
+
+
             boost::mutex::scoped_lock lock(m_instanceUsageMutex);
             m_instanceUsage[instanceId] = 0;
         }
 
 
-        void DeviceClient::slotChanged(const karabo::util::Hash& hash, const std::string & instanceId) {
-            boost::mutex::scoped_lock lock(m_configurationCacheMutex);
-            m_configurationCache[instanceId].update(hash);
-            // NOTE: This will block us here, i.e. we are deaf for other changes...
-            // NOTE: Monitors could be implemented as additional slots, too.
-            notifyDeviceChangedMonitors(hash, instanceId);
-            notifyPropertyChangedMonitors(hash, instanceId);
-        }
-
-
         void DeviceClient::notifyDeviceChangedMonitors(const karabo::util::Hash& hash, const std::string & instanceId) {
             boost::mutex::scoped_lock lock(m_deviceChangedHandlersMutex);
-            Hash::const_iterator it = m_deviceChangedHandlers.find(instanceId);
-            if (it != m_deviceChangedHandlers.end()) {
-                const Hash& entry = m_deviceChangedHandlers.get<Hash > (it);
-                Hash::const_iterator itFunc = entry.find("_function");
-                Hash::const_iterator itData = entry.find("_userData");
-                if (itData != entry.end()) {
-                    boost::any_cast < boost::function<void (const karabo::util::Hash&, const std::string&, const boost::any&)> >(itFunc->second)(hash, instanceId, itData->second);
+            boost::optional<Hash::Node&> node = m_deviceChangedHandlers.find(instanceId);
+            if (node) {
+                const Hash& entry = node->getValue<Hash >();
+                boost::optional<const Hash::Node&> nodeFunc = entry.find("_function");
+                boost::optional<const Hash::Node&> nodeData = entry.find("_userData");
+                if (nodeData) {
+                    boost::any_cast < boost::function<void (const karabo::util::Hash&, const std::string&, const boost::any&)> >(nodeFunc->getValueAsAny())(hash, instanceId, nodeData->getValueAsAny());
                 } else {
-                    boost::any_cast < boost::function<void (const karabo::util::Hash&, const std::string&)> >(itFunc->second)(hash, instanceId);
+                    boost::any_cast < boost::function<void (const karabo::util::Hash&, const std::string&)> >(nodeFunc->getValueAsAny())(hash, instanceId);
                 }
             }
         }
@@ -460,6 +458,8 @@ if (itData != entry.end()) {\
         void DeviceClient::notifyPropertyChangedMonitors(const karabo::util::Hash& hash, const std::string & instanceId) {
             boost::mutex::scoped_lock lock(m_propertyChangedHandlersMutex);
             if (m_propertyChangedHandlers.has(instanceId)) {
+
+
                 castAndCall(instanceId, m_propertyChangedHandlers.get<karabo::util::Hash > (instanceId), hash);
             }
         }
@@ -467,86 +467,95 @@ if (itData != entry.end()) {\
 
         void DeviceClient::castAndCall(const std::string& instanceId, const Hash& registered, const Hash& current, std::string path) const {
 
+            #define KARABO_REGISTER_CALLBACK(valueType) \
+if (nodeData) {\
+    boost::any_cast < boost::function<void (const valueType&, const std::string&, const boost::any&) > >(nodeFunc->getValueAsAny())(it->getValue<valueType >(), instanceId, nodeData->getValueAsAny());\
+} else {\
+    boost::any_cast < boost::function<void (const valueType&, const std::string&) > >(nodeFunc->getValueAsAny())(it->getValue<valueType >(), instanceId);\
+}
+
             for (karabo::util::Hash::const_iterator it = current.begin(); it != current.end(); ++it) {
-                std::string currentPath = it->first;
-                if (!path.empty()) currentPath = path + "." + it->first;
+                std::string currentPath = it->getKey();
+                if (!path.empty()) currentPath = path + "." + it->getKey();
                 if (registered.has(currentPath)) {
                     const Hash& entry = registered.get<Hash > (currentPath);
-                    Hash::const_iterator itFunc = entry.find("_function");
-                    Hash::const_iterator itData = entry.find("_userData");
+                    boost::optional<const Hash::Node&> nodeFunc = entry.find("_function");
+                    boost::optional<const Hash::Node&> nodeData = entry.find("_userData");
 
-                    if (current.is<bool>(it)) {
+                    if (it->is<bool>()) {
                         KARABO_REGISTER_CALLBACK(bool);
-                    } else if (current.is<char>(it)) {
+                    } else if (it->is<char>()) {
                         KARABO_REGISTER_CALLBACK(char);
-                    } else if (current.is<signed char>(it)) {
+                    } else if (it->is<signed char>()) {
                         KARABO_REGISTER_CALLBACK(signed char);
-                    } else if (current.is<unsigned char>(it)) {
+                    } else if (it->is<unsigned char>()) {
                         KARABO_REGISTER_CALLBACK(unsigned char);
-                    } else if (current.is<short>(it)) {
+                    } else if (it->is<short>()) {
                         KARABO_REGISTER_CALLBACK(short);
-                    } else if (current.is<unsigned short>(it)) {
+                    } else if (it->is<unsigned short>()) {
                         KARABO_REGISTER_CALLBACK(unsigned short);
-                    } else if (current.is<int>(it)) {
+                    } else if (it->is<int>()) {
                         KARABO_REGISTER_CALLBACK(int);
-                    } else if (current.is<unsigned int>(it)) {
+                    } else if (it->is<unsigned int>()) {
                         KARABO_REGISTER_CALLBACK(unsigned int);
-                    } else if (current.is<unsigned long long>(it)) {
+                    } else if (it->is<unsigned long long>()) {
                         KARABO_REGISTER_CALLBACK(unsigned long long);
-                    } else if (current.is<float>(it)) {
+                    } else if (it->is<float>()) {
                         KARABO_REGISTER_CALLBACK(float);
-                    } else if (current.is<double>(it)) {
+                    } else if (it->is<double>()) {
                         KARABO_REGISTER_CALLBACK(double);
-                    } else if (current.is<std::string > (it)) {
+                    } else if (it->is<std::string > ()) {
                         KARABO_REGISTER_CALLBACK(std::string);
-                    } else if (current.is<boost::filesystem::path > (it)) {
+                    } else if (it->is<boost::filesystem::path > ()) {
                         KARABO_REGISTER_CALLBACK(boost::filesystem::path);
-                    } else if (current.is<karabo::util::Hash > (it)) {
+                    } else if (it->is<karabo::util::Hash > ()) {
                         KARABO_REGISTER_CALLBACK(karabo::util::Hash);
-                    } else if (current.is < std::vector<bool> >(it)) {
+                    } else if (it->is < std::vector<bool> >()) {
                         KARABO_REGISTER_CALLBACK(std::vector<bool>);
-                    } else if (current.is<std::vector<char> >(it)) {
+                    } else if (it->is<std::vector<char> >()) {
                         KARABO_REGISTER_CALLBACK(std::vector<char>);
-                    } else if (current.is < std::vector<signed char> >(it)) {
+                    } else if (it->is < std::vector<signed char> >()) {
                         KARABO_REGISTER_CALLBACK(std::vector<signed char>);
-                    } else if (current.is<std::vector<unsigned char> >(it)) {
+                    } else if (it->is<std::vector<unsigned char> >()) {
                         KARABO_REGISTER_CALLBACK(std::vector<unsigned char>);
-                    } else if (current.is<std::vector<short> >(it)) {
+                    } else if (it->is<std::vector<short> >()) {
                         KARABO_REGISTER_CALLBACK(std::vector<short>);
-                    } else if (current.is<std::vector<unsigned short> >(it)) {
+                    } else if (it->is<std::vector<unsigned short> >()) {
                         KARABO_REGISTER_CALLBACK(std::vector<unsigned short>);
-                    } else if (current.is<std::vector<int> >(it)) {
+                    } else if (it->is<std::vector<int> >()) {
                         KARABO_REGISTER_CALLBACK(std::vector<int>);
-                    } else if (current.is<std::vector<unsigned int> >(it)) {
+                    } else if (it->is<std::vector<unsigned int> >()) {
                         KARABO_REGISTER_CALLBACK(std::vector<unsigned int>);
-                    } else if (current.is<std::vector<long long> >(it)) {
+                    } else if (it->is<std::vector<long long> >()) {
                         KARABO_REGISTER_CALLBACK(std::vector<long long>);
-                    } else if (current.is<std::vector<unsigned long long> >(it)) {
+                    } else if (it->is<std::vector<unsigned long long> >()) {
                         KARABO_REGISTER_CALLBACK(std::vector<unsigned long long>);
-                    } else if (current.is<std::vector<float> >(it)) {
+                    } else if (it->is<std::vector<float> >()) {
                         KARABO_REGISTER_CALLBACK(std::vector<float>);
-                    } else if (current.is<std::vector<double> >(it)) {
+                    } else if (it->is<std::vector<double> >()) {
                         KARABO_REGISTER_CALLBACK(std::vector<double>);
-                    } else if (current.is<karabo::util::Schema > (it)) {
+                    } else if (it->is<karabo::util::Schema > ()) {
                         KARABO_REGISTER_CALLBACK(karabo::util::Schema);
-                    } else if (current.is<std::vector<std::string> >(it)) {
+                    } else if (it->is<std::vector<std::string> >()) {
                         KARABO_REGISTER_CALLBACK(std::vector<std::string>);
-                    } else if (current.is<std::vector<karabo::util::Hash> >(it)) {
+                    } else if (it->is<std::vector<karabo::util::Hash> >()) {
                         KARABO_REGISTER_CALLBACK(std::vector<karabo::util::Hash>);
 
                     } else {
                         throw KARABO_LOGIC_EXCEPTION("Failed to call registered monitored (datatype problems)");
                     }
                 }
-                if (current.is<karabo::util::Hash > (it)) castAndCall(instanceId, registered, current.get<Hash > (it), currentPath);
+
+
+                if (it->is<karabo::util::Hash > ()) castAndCall(instanceId, registered, it->getValue<Hash >(), currentPath);
             }
         }
 
 
         void DeviceClient::clearCacheAndDisconnect(const std::string & instanceId) {
-            boost::mutex::scoped_lock lock(m_configurationCacheMutex);
-            m_signalSlotable->disconnect(instanceId, "signalChanged", "", "slotChanged", false);
-            m_configurationCache.erase(instanceId);
+            //            boost::mutex::scoped_lock lock(m_configurationCacheMutex);
+            //            m_signalSlotable->disconnect(instanceId, "signalChanged", "", "slotChanged", false);
+            //            m_configurationCache.erase(instanceId);
         }
 
 
