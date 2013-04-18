@@ -42,6 +42,8 @@ namespace karabo {
             bool login(const karabo::util::Timestamp& timestamp = karabo::util::Timestamp());
 
             bool logout();
+            
+            std::string getSingleSignOn(const std::string ipAddress);
 
             virtual ~Authenticator() {
             };

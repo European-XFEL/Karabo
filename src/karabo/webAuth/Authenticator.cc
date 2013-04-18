@@ -129,6 +129,36 @@ namespace karabo {
             return nsLoginResp; // If no problems happened it returns new loginResponse information
         }
 
+        std::string Authenticator::getSingleSignOn(const std::string ipAddress) {
+            ns1__singleSignOn nsSingleSignOn;
+            ns1__singleSignOnResponse nsSingleSignOnResp;
+
+            nsSingleSignOn.username = &m_username;
+            nsSingleSignOn.provider = &m_provider;
+            
+            std::string xpto = string(ipAddress);
+            nsSingleSignOn.ipAddress = &xpto;
+            //nsSingleSignOn.ipAddress = &m_ipAddress;
+
+            // If obtain successfully answer from Web Service it print message returned!
+            if (m_service->singleSignOn(&nsSingleSignOn, &nsSingleSignOnResp) == SOAP_OK) {
+                KARABO_LOG_FRAMEWORK_DEBUG << "Debug: SOAP message is OK";
+                if (*(nsSingleSignOnResp.return_->operationSuccess) == 0) {
+                    KARABO_LOG_FRAMEWORK_DEBUG << "Error: " << string(nsSingleSignOnResp.return_->errorMsg->c_str());
+                    return "";
+                } else {
+                    KARABO_LOG_FRAMEWORK_DEBUG << "Debug: The sessionToken is " << string(nsSingleSignOnResp.return_->sessionToken->c_str());
+                }
+            } else {
+                throw KARABO_NETWORK_EXCEPTION("Error: Problem with SOAP message: " + soapMessageNotOk(m_service->soap));
+            }
+
+            return string(nsSingleSignOnResp.return_->sessionToken->c_str()); // If no problems happened it returns SessionToken
+        }
+
+        /*
+         * Auxiliar functions
+         */
         void Authenticator::setSessionToken(const std::string& newSessionToken) {
             m_sessionToken = newSessionToken;
         }
