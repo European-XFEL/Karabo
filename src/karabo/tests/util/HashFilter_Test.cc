@@ -6,10 +6,8 @@
  */
 
 #include "HashFilter_Test.hh"
-#include <karabo/util/util.hpp>
-#include <karabo/util/HashFilter.hh>
-#include <karabo/io/TextSerializer.hh>
-#include <karabo/io/h5/Format.hh>
+#include <karabo/util.hpp>
+#include <karabo/io.hpp>
 
 CPPUNIT_TEST_SUITE_REGISTRATION(HashFilter_Test);
 

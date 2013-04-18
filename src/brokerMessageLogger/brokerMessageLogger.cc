@@ -28,14 +28,6 @@ void readHandler(BrokerChannel::Pointer channel, const char* body, const size_t&
     cout << "-----------------------------------------------------------------------" << endl << endl;
 }
 
-void onError(BrokerChannel::Pointer channel, const std::string& errorMessage) {
-    cout << errorMessage << endl;
-}
-
-void onException(const Exception& e) {
-    cout << e << endl;
-}
-
 int main(int argc, char** argv) {
 
     try {

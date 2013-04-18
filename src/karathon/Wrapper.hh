@@ -169,6 +169,17 @@ namespace karabo {
         };
 
         struct Wrapper {
+            
+            static bool hasattr(bp::object obj, const std::string& attrName) {
+                // NOTE: There seems to be different implementations of the Python C-API around
+                // Some use a char* some other a const char* -> char* is the always compiling alternative
+                return PyObject_HasAttrString(obj.ptr(), const_cast<char*> (attrName.c_str()));
+            }
+            
+            template <class T, class U>
+            static bp::tuple fromStdPairToPyTuple(const std::pair<T, U>& p) {
+                return bp::make_tuple(p.first, p.second);
+            }
 
             template<class ValueType>
             static bp::object fromStdVectorToPyArray(const std::vector<ValueType>& v, bool numpyFlag = false) {
@@ -185,6 +196,13 @@ namespace karabo {
             static bp::object fromStdVectorToPyList(const std::vector<ValueType>& v) {
                 bp::list pylist;
                 for (size_t i = 0; i < v.size(); i++) pylist.append(bp::object(v[i]));
+                return pylist;
+            }
+            
+            template <class T, class U>
+            static bp::object fromStdVectorToPyList(const std::vector< std::pair<T, U> >& v) {
+                bp::list pylist;
+                for (size_t i = 0; i < v.size(); i++) pylist.append(bp::make_tuple(v[i].first, v[i].second));
                 return pylist;
             }
 

@@ -15,7 +15,7 @@
 #define	KARABO_LOGCONFIG_APPENDERCONFIGURATOR_HH
 
 #include <string>
-#include <karabo/util/util.hh>
+#include <karabo/util/Configurator.hh>
 #include <log4cpp/Appender.hh>
 #include <log4cpp/Priority.hh>
 #include <log4cpp/Layout.hh>

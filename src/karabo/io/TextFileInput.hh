@@ -16,7 +16,9 @@
 #include <sstream>
 #include <boost/filesystem.hpp>
 
-#include <karabo/util/util.hh>
+#include <karabo/util/Configurator.hh>
+#include <karabo/util/PathElement.hh>
+#include <karabo/util/ChoiceElement.hh>
 
 #include "Input.hh"
 #include "TextSerializer.hh"

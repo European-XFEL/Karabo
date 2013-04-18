@@ -7,8 +7,12 @@
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
 
-#include "CategoryConfigurator.hh"
+
 #include <log4cpp/Category.hh>
+#include <karabo/util/SimpleElement.hh>
+#include <karabo/util/ListElement.hh>
+#include "CategoryConfigurator.hh"
+
 
 using namespace std;
 using namespace log4cpp;

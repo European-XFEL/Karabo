@@ -23,8 +23,8 @@ void exportPyUtilClassInfo();
 void exportPyIoFileTools();
 //void exportPyIoReader();
 //void exportPyIoFormat();
-//void exportPyXmsRequestor();
-//void exportPyXmsSignalSlotable();
+void exportPyXmsRequestor();
+void exportPyXmsSignalSlotable();
 //void exportChoiceElement();
 //void exportSingleElement();
 //void exportListElement();
@@ -34,7 +34,7 @@ void exportPyIoFileTools();
 //void exportComplexElement();
 //void exportOverwriteElement();
 //void exportNonEmptyListElement();
-//void exportPyCoreDeviceClient();
+void exportPyCoreDeviceClient();
 //void exportTargetActualElement();
 //void exportPyLogLogger();
 void exportp2p();
@@ -105,9 +105,9 @@ BOOST_PYTHON_MODULE(libkarathon) {
     exportPyUtilClassInfo();
     exportPyIoFileTools();
 //
-//    exportPyXmsRequestor();
-//    exportPyXmsSignalSlotable();
-//    exportPyCoreDeviceClient();
+    exportPyXmsRequestor();
+    exportPyXmsSignalSlotable();
+    exportPyCoreDeviceClient();
 //    
 
 //    exportPyIoReader();

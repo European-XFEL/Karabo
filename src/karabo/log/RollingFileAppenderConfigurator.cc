@@ -9,7 +9,7 @@
 
 #include "RollingFileAppenderConfigurator.hh"
 #include <log4cpp/RollingFileAppender.hh>
-
+#include <karabo/util/SimpleElement.hh>
 
 using namespace std;
 using namespace karabo::util;

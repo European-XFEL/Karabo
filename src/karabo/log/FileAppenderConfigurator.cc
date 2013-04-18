@@ -13,6 +13,8 @@
 #include "log4cpp/FileAppender.hh"
 #include "log4cpp/Priority.hh"
 #include <karabo/util/Hash.hh>
+#include <karabo/util/PathElement.hh>
+#include <karabo/util/SimpleElement.hh>
 #include <string>
 #include <iostream>
 

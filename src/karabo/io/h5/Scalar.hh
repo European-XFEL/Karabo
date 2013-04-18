@@ -15,7 +15,7 @@
 #include "Dataset.hh"
 #include "ErrorHandler.hh"
 #include "TypeTraits.hh"
-#include <karabo/util/util.hh>
+#include <karabo/util/Configurator.hh>
 #include <karabo/log/Tracer.hh>
 
 #include "DatasetReader.hh"
