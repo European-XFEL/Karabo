@@ -104,6 +104,7 @@ build: .build-post
 	@$(CP) $(CND_BASEDIR)/../../../src/karabo/xip/*.h* $(KARABO)/include/karabo/xip
 	@$(CP) $(CND_BASEDIR)/../../../src/karabo/xms/*.h* $(KARABO)/include/karabo/xms
 	@$(CP) $(CND_BASEDIR)/../../../src/karabo/*.hpp $(KARABO)/include/karabo
+	@$(CP) $(CND_BASEDIR)/../../../src/karabo/karabo.hpp $(KARABO)/include/karabo
 	
 # Force extern re-build
 .PHONY: extern package cmd
