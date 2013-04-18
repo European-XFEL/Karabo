@@ -11,7 +11,7 @@
 #ifndef KARABO_XMS_HPP
 #define	KARABO_XMS_HPP
 
-#include "SignalSlotable.hh"
+#include "xms/SignalSlotable.hh"
 
 #endif
 
