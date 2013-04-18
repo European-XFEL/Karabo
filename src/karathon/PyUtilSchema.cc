@@ -445,15 +445,15 @@ namespace schemawrap {
     }
 
 
-    bp::list getParameters(const Schema& schema, const bp::object& obj) {
+    bp::list getKeys(const Schema& schema, const bp::object& obj) {
         if (PyString_Check(obj.ptr())) {
             bp::list listParams;
             string path = bp::extract<string>(obj);
-            std::vector<std::string> v = schema.getParameters(path);
+            std::vector<std::string> v = schema.getKeys(path);
             for (size_t i = 0; i < v.size(); i++) listParams.attr("append")(bp::object(v[i]));
             return listParams;
         }
-        throw KARABO_PYTHON_EXCEPTION("Python argument in 'getParameters' should be a string");
+        throw KARABO_PYTHON_EXCEPTION("Python argument in 'getKeyss' should be a string");
     }
 
 
@@ -656,7 +656,7 @@ void exportPyUtilSchema() {
 
         s.def("getAliasAsString", &Schema::getAliasAsString);
 
-        s.def("getParameters", &schemawrap::getParameters, (bp::arg("path") = ""));
+        s.def("getKeys", &schemawrap::getKeys, (bp::arg("path") = ""));
 
         s.def("getOptions", &schemawrap::getOptions);
 

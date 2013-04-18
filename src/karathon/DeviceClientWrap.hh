@@ -71,7 +71,7 @@ namespace karabo {
             }
 
             bp::object getPy(const std::string& instanceId, const std::string& key, const std::string& keySep = ".") {
-                return HashWrap::pythonGet(this->cacheAndGetConfiguration(instanceId), key, keySep);
+                return HashWrap::get(this->cacheAndGetConfiguration(instanceId), key, keySep);
             }
 
             //            void registerDeviceMonitor(const std::string& instanceId, const bp::object& callbackFunction, const bp::object& userData = bp::object()) {
@@ -112,7 +112,7 @@ namespace karabo {
             bp::tuple setWaitPy(const std::string& instanceId, const std::string& key, const bp::object& value, const std::string& keySep = ".", int timeout = -1) {
                 karabo::util::Hash tmp;
                 std::pair<bool, std::string> result;
-                HashWrap::pythonSet(tmp, key, value, keySep);
+                HashWrap::set(tmp, key, value, keySep);
                 {
                     ScopedGILRelease nogil;
                     result = this->setWait(instanceId, tmp, timeout);
@@ -122,7 +122,7 @@ namespace karabo {
 
             void setNoWaitPy(const std::string& instanceId, const std::string& key, const bp::object& value, const std::string& keySep = ".") {
                 karabo::util::Hash tmp;
-                HashWrap::pythonSet(tmp, key, value, keySep);
+                HashWrap::set(tmp, key, value, keySep);
                 ScopedGILRelease nogil;
                 this->setNoWait(instanceId, tmp);
             }
@@ -272,15 +272,15 @@ namespace karabo {
             //                            try {
             //                                if (itSelfObject != entry.end()) {
             //                                    if (itData != entry.end()) {
-            //                                        bp::call_method<void>(entry.get<PyObject*>(itSelfObject), entry.get<std::string > (itFunc).c_str(), instanceId, currentPath, HashWrap::pythonGetArgIt(current, it), entry.get<bp::object > (itData));
+            //                                        bp::call_method<void>(entry.get<PyObject*>(itSelfObject), entry.get<std::string > (itFunc).c_str(), instanceId, currentPath, HashWrap::getArgIt(current, it), entry.get<bp::object > (itData));
             //                                    } else {
-            //                                        bp::call_method<void>(entry.get<PyObject*>(itSelfObject), entry.get<std::string > (itFunc).c_str(), instanceId, currentPath, HashWrap::pythonGetArgIt(current, it));
+            //                                        bp::call_method<void>(entry.get<PyObject*>(itSelfObject), entry.get<std::string > (itFunc).c_str(), instanceId, currentPath, HashWrap::getArgIt(current, it));
             //                                    }
             //                                } else {
             //                                    if (itData != entry.end()) {
-            //                                        bp::call<void>(entry.get<PyObject*>(itFunc), instanceId, currentPath, HashWrap::pythonGetArgIt(current, it), entry.get<bp::object > (itData));
+            //                                        bp::call<void>(entry.get<PyObject*>(itFunc), instanceId, currentPath, HashWrap::getArgIt(current, it), entry.get<bp::object > (itData));
             //                                    } else {
-            //                                        bp::call<void>(entry.get<PyObject*>(itFunc), instanceId, currentPath, HashWrap::pythonGetArgIt(current, it));
+            //                                        bp::call<void>(entry.get<PyObject*>(itFunc), instanceId, currentPath, HashWrap::getArgIt(current, it));
             //                                    }
             //                                }
             //

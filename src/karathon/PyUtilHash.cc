@@ -195,7 +195,7 @@ void exportPyUtilHash() {
           "on the top level of the tree hierarchy.\n"
           "\nExample:\n\th = Hash('a.b.c', 1, 'b.x', 2.22, 'b.y', 7.432, 'c', [1,2,3])\n"
           "\tmykeys = []\n\th.getKeys(mykeys)\nprint mykeys\n\n... returns:\n\t['a', 'b', 'c']\n");
-    h.def("keys", &HashWrap().pythonKeys,
+    h.def("keys", &HashWrap().keys,
           "Returns list of all keys visible on the top level of the tree hierarchy.\n"
           "\nExample:\n\th = Hash('a.b.c', 1, 'b.x', 2.22, 'b.y', 7.432, 'c', [1,2,3])\n"
           "\tprint h.keys()\n\n... returns:\n\t['a', 'b', 'c']\n");
@@ -214,7 +214,7 @@ void exportPyUtilHash() {
           "Put into the target container the full paths of current Hash object.\n"
           "\nExample:\n\th = Hash('a.b.c', 1, 'b.x', 2.22, 'b.y', 7.432, 'c', [1,2,3])\n"
           "\tmypaths = []\n\th.getPaths(mypaths)\nprint mypaths\n\n... returns:\n\t['a.b.c', 'b.x', 'b.y', 'c']");
-    h.def("paths", &HashWrap().pythonPaths,
+    h.def("paths", &HashWrap().paths,
           "Returns list of all the paths being in current Hash object.\n"
           "\nExample:\n\th = Hash('a.b.c', 1, 'b.x', 2.22, 'b.y', 7.432, 'c', [1,2,3])\n"
           "\tprint h.paths()\n\n... returns:\n\t['a.b.c', 'b.x', 'b.y', 'c']");
