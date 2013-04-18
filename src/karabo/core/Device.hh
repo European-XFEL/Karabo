@@ -219,13 +219,14 @@ namespace karabo {
              * @return value of the requested parameter
              */
             template <class T>
-            const T& get(const std::string& key) {
+            const T& get(const std::string& key, const T& var = T()) {
                 boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
                 try {
                     return m_parameters.get<T>(key);
                 } catch (const karabo::util::Exception& e) {
                     KARABO_RETHROW_AS(KARABO_PARAMETER_EXCEPTION("Error whilst retrieving parameter (" + key + ") from device"));
                 }
+                return var;  // never reached. Keep it to make a compiler happy.
             }
 
             /**
