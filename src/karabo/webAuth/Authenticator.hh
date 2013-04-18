@@ -26,8 +26,12 @@ namespace karabo {
             std::string m_hostname;
             std::string m_portNumber;
             std::string m_software;
+            //
+            // Information returned when login is made
             std::string m_nonce;
             std::string m_sessionToken;
+            std::string m_welcomeMessage;
+            std::string m_roleDesc;
 
             boost::shared_ptr<AuthenticationPortBindingProxy> m_service;
 
@@ -42,12 +46,23 @@ namespace karabo {
             bool login(const karabo::util::Timestamp& timestamp = karabo::util::Timestamp());
 
             bool logout();
-            
+
             std::string getSingleSignOn(const std::string ipAddress);
 
             virtual ~Authenticator() {
-            };
+            }
 
+            std::string getSessionToken() const;
+            std::string getSoftware() const;
+            std::string getPortNumber() const;
+            std::string getHostname() const;
+            std::string getIpAddress() const;
+            std::string getProvider() const;
+            std::string getPassword() const;
+            std::string getUsername() const;
+            std::string getRoleDesc() const;
+            std::string getWelcomeMessage() const;
+            
         private:
 
             ns1__loginResponse authenticate(const karabo::util::Timestamp& timestamp);
@@ -55,6 +70,8 @@ namespace karabo {
             ns1__getUserNonceResponse getUserNonce();
 
             void setSessionToken(const std::string& newSessionToken);
+            void setRoleDesc(const std::string& roleDesc);
+            void setWelcomeMessage(const std::string& welcomeMessage);
 
             void printObject(ns1__loginResponse nsLoginResp);
 

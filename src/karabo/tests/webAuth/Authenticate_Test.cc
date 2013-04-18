@@ -40,11 +40,26 @@ void Authenticate_Test::testCorrectLogin() {
 
     Authenticator a = Authenticator(username, password, provider, ipAddress, hostname, portNumber, software);
 
+    // Validate the following parameters were empty before login
+    CPPUNIT_ASSERT(a.getRoleDesc().empty() == true);
+    CPPUNIT_ASSERT(a.getWelcomeMessage().empty() == true);
+    CPPUNIT_ASSERT(a.getSessionToken().empty() == true);
+    
     success = a.login();
     CPPUNIT_ASSERT(success == true);
+    
+    // Validate the following parameters were populated after login
+    CPPUNIT_ASSERT(a.getRoleDesc().empty() == false);
+    CPPUNIT_ASSERT(a.getWelcomeMessage().empty() == false);
+    CPPUNIT_ASSERT(a.getSessionToken().empty() == false);
 
     success = a.logout();
     CPPUNIT_ASSERT(success == true);
+    
+    // Validate the following parameters were cleaned after logout
+    CPPUNIT_ASSERT(a.getRoleDesc().empty() == true);
+    CPPUNIT_ASSERT(a.getWelcomeMessage().empty() == true);
+    CPPUNIT_ASSERT(a.getSessionToken().empty() == true);
 }
 
 void Authenticate_Test::testIncorrectLogin() {
