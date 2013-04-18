@@ -7,7 +7,6 @@
 
 #include <karabo/log/Logger.hh>
 #include "Authenticator.hh"
-#include "Authenticator.hh"
 #include "soapAuthenticationPortBindingProxy.h"
 #include "AuthenticationPortBinding.nsmap"
 
