@@ -20,7 +20,7 @@ namespace karabo {
     namespace core {
 
 
-        DeviceClient::DeviceClient(const std::string& connectionType, const karabo::util::Hash& connectionParameters) : m_isShared(false), m_defaultTimeout(500) {
+        DeviceClient::DeviceClient(const std::string& connectionType, const karabo::util::Hash& connectionParameters) : m_isShared(false), m_defaultTimeout(8000) {
             karabo::net::BrokerConnection::Pointer connection = karabo::net::BrokerConnection::create(connectionType, connectionParameters);
             std::string ownInstanceId = generateOwnInstanceId();
             m_signalSlotable = boost::shared_ptr<SignalSlotable > (new SignalSlotable(connection, ownInstanceId));
@@ -31,7 +31,7 @@ namespace karabo {
         }
 
 
-        DeviceClient::DeviceClient(const boost::shared_ptr<SignalSlotable>& signalSlotable) : m_signalSlotable(signalSlotable), m_isShared(true), m_defaultTimeout(500) {
+        DeviceClient::DeviceClient(const boost::shared_ptr<SignalSlotable>& signalSlotable) : m_signalSlotable(signalSlotable), m_isShared(true), m_defaultTimeout(8000) {
             this->setupSlots();
             this->cacheAvailableInstances();
         }
