@@ -30,23 +30,23 @@ namespace karabo {
 
         template<>
         karabo::util::Hash::Hash(const std::string& key, const bp::object& value) {
-            karabo::pyexfel::HashWrap::pythonSet(*this, key, value);
+            karabo::pyexfel::HashWrap::set(*this, key, value);
         }
 
         template<>
         karabo::util::Hash::Hash(const std::string& key1, const bp::object& value1,
                                  const std::string& key2, const bp::object& value2) {
-            karabo::pyexfel::HashWrap::pythonSet(*this, key1, value1);
-            karabo::pyexfel::HashWrap::pythonSet(*this, key2, value2);
+            karabo::pyexfel::HashWrap::set(*this, key1, value1);
+            karabo::pyexfel::HashWrap::set(*this, key2, value2);
         }
 
         template<>
         karabo::util::Hash::Hash(const std::string& key1, const bp::object& value1,
                                  const std::string& key2, const bp::object& value2,
                                  const std::string& key3, const bp::object& value3) {
-            karabo::pyexfel::HashWrap::pythonSet(*this, key1, value1);
-            karabo::pyexfel::HashWrap::pythonSet(*this, key2, value2);
-            karabo::pyexfel::HashWrap::pythonSet(*this, key3, value3);
+            karabo::pyexfel::HashWrap::set(*this, key1, value1);
+            karabo::pyexfel::HashWrap::set(*this, key2, value2);
+            karabo::pyexfel::HashWrap::set(*this, key3, value3);
         }
 
         template<>
@@ -54,10 +54,10 @@ namespace karabo {
                                  const std::string& key2, const bp::object& value2,
                                  const std::string& key3, const bp::object& value3,
                                  const std::string& key4, const bp::object& value4) {
-            karabo::pyexfel::HashWrap::pythonSet(*this, key1, value1);
-            karabo::pyexfel::HashWrap::pythonSet(*this, key2, value2);
-            karabo::pyexfel::HashWrap::pythonSet(*this, key3, value3);
-            karabo::pyexfel::HashWrap::pythonSet(*this, key4, value4);
+            karabo::pyexfel::HashWrap::set(*this, key1, value1);
+            karabo::pyexfel::HashWrap::set(*this, key2, value2);
+            karabo::pyexfel::HashWrap::set(*this, key3, value3);
+            karabo::pyexfel::HashWrap::set(*this, key4, value4);
         }
 
         template<>
@@ -66,11 +66,11 @@ namespace karabo {
                                  const std::string& key3, const bp::object& value3,
                                  const std::string& key4, const bp::object& value4,
                                  const std::string& key5, const bp::object& value5) {
-            karabo::pyexfel::HashWrap::pythonSet(*this, key1, value1);
-            karabo::pyexfel::HashWrap::pythonSet(*this, key2, value2);
-            karabo::pyexfel::HashWrap::pythonSet(*this, key3, value3);
-            karabo::pyexfel::HashWrap::pythonSet(*this, key4, value4);
-            karabo::pyexfel::HashWrap::pythonSet(*this, key5, value5);
+            karabo::pyexfel::HashWrap::set(*this, key1, value1);
+            karabo::pyexfel::HashWrap::set(*this, key2, value2);
+            karabo::pyexfel::HashWrap::set(*this, key3, value3);
+            karabo::pyexfel::HashWrap::set(*this, key4, value4);
+            karabo::pyexfel::HashWrap::set(*this, key5, value5);
         }
 
         template<>
@@ -80,12 +80,12 @@ namespace karabo {
                                  const std::string& key4, const bp::object& value4,
                                  const std::string& key5, const bp::object& value5,
                                  const std::string& key6, const bp::object& value6) {
-            karabo::pyexfel::HashWrap::pythonSet(*this, key1, value1);
-            karabo::pyexfel::HashWrap::pythonSet(*this, key2, value2);
-            karabo::pyexfel::HashWrap::pythonSet(*this, key3, value3);
-            karabo::pyexfel::HashWrap::pythonSet(*this, key4, value4);
-            karabo::pyexfel::HashWrap::pythonSet(*this, key5, value5);
-            karabo::pyexfel::HashWrap::pythonSet(*this, key6, value6);
+            karabo::pyexfel::HashWrap::set(*this, key1, value1);
+            karabo::pyexfel::HashWrap::set(*this, key2, value2);
+            karabo::pyexfel::HashWrap::set(*this, key3, value3);
+            karabo::pyexfel::HashWrap::set(*this, key4, value4);
+            karabo::pyexfel::HashWrap::set(*this, key5, value5);
+            karabo::pyexfel::HashWrap::set(*this, key6, value6);
         }
     }
 
@@ -171,18 +171,18 @@ namespace karabo {
             std::string separator(1, sep);
             bp::list keys(dictionary.iterkeys());
             for (bp::ssize_t i = 0; i < bp::len(keys); i++) {
-                pythonSet(self, bp::extract<std::string > (keys[i]), dictionary[keys[i]], separator);
+                set(self, bp::extract<std::string > (keys[i]), dictionary[keys[i]], separator);
             }
             return self;
         }
 
         bp::object
-        HashWrap::pythonEmpty(const karabo::util::Hash & self) {
+        HashWrap::empty(const karabo::util::Hash & self) {
             return bp::object(self.empty() ? 1 : 0);
         }
 
         void
-        HashWrap::pythonGetKeys(const karabo::util::Hash & self,
+        HashWrap::getKeys(const karabo::util::Hash & self,
                                 const bp::object& obj) {
             if (PyList_Check(obj.ptr())) {
                 std::vector<std::string> v;
@@ -196,12 +196,12 @@ namespace karabo {
         bp::list
         HashWrap::pythonKeys(const karabo::util::Hash & self) {
             bp::list l;
-            pythonGetKeys(self, l);
+            getKeys(self, l);
             return l;
         }
 
         void
-        HashWrap::pythonGetPaths(const karabo::util::Hash & self,
+        HashWrap::getPaths(const karabo::util::Hash & self,
                                  const bp::object& obj) {
             if (PyList_Check(obj.ptr())) {
                 std::vector<std::string> v;
@@ -215,12 +215,12 @@ namespace karabo {
         bp::list
         HashWrap::pythonPaths(const karabo::util::Hash & self) {
             bp::list l;
-            pythonGetPaths(self, l);
+            getPaths(self, l);
             return l;
         }
 
         bp::object
-        HashWrap::pythonGetValues(const karabo::util::Hash& self) {
+        HashWrap::getValues(const karabo::util::Hash& self) {
             bp::list t;
             for (karabo::util::Hash::const_iterator it = self.begin(); it != self.end(); it++)
                 t.append(Wrapper::toObject(it->getValueAsAny(), HashWrap::try_to_use_numpy));
@@ -228,14 +228,14 @@ namespace karabo {
         }
 
         bp::object
-        HashWrap::pythonGet(const karabo::util::Hash& self,
+        HashWrap::get(const karabo::util::Hash& self,
                             const std::string& path,
                             const std::string& separator) {
             return Wrapper::toObject(self.getNode(path, separator.at(0)).getValueAsAny(), HashWrap::try_to_use_numpy);
         }
 
         bp::object
-        HashWrap::pythonGetAs(const karabo::util::Hash& self,
+        HashWrap::getAs(const karabo::util::Hash& self,
                               const std::string& path,
                               const PyTypes::ReferenceType& type,
                               const std::string& separator) {
@@ -326,14 +326,14 @@ namespace karabo {
         }
 
         const karabo::util::Hash::Node&
-        HashWrap::pythonGetNode(const karabo::util::Hash& self,
+        HashWrap::getNode(const karabo::util::Hash& self,
                                 const std::string& path,
                                 const std::string& separator) {
             return static_cast<const karabo::util::Hash::Node&> (self.getNode(path, separator.at(0)));
         }
 
         bp::object
-        HashWrap::pythonSetNode(karabo::util::Hash& self,
+        HashWrap::setNode(karabo::util::Hash& self,
                                 const bp::object& node) {
             if (bp::extract<const karabo::util::Hash::Node&>(node).check()) {
                 return bp::object(self.setNode(bp::extract<const karabo::util::Hash::Node&>(node)));
@@ -342,7 +342,7 @@ namespace karabo {
         }
 
         void
-        HashWrap::pythonSet(karabo::util::Hash& self,
+        HashWrap::set(karabo::util::Hash& self,
                             const std::string& key,
                             const bp::object & obj,
                             const std::string& separator) {
@@ -358,7 +358,7 @@ namespace karabo {
         }
 
         void
-        HashWrap::pythonErase(karabo::util::Hash& self,
+        HashWrap::erase(karabo::util::Hash& self,
                               const bp::object & keyObj,
                               const std::string& separator) {
             const char sep = separator.at(0);
@@ -372,7 +372,7 @@ namespace karabo {
         }
 
         bool
-        HashWrap::pythonHas(karabo::util::Hash& self,
+        HashWrap::has(karabo::util::Hash& self,
                             const std::string& key,
                             const std::string& separator) {
             return self.has(key, separator.at(0));
@@ -389,21 +389,21 @@ namespace karabo {
         }
 
         void
-        HashWrap::pythonFlatten(const karabo::util::Hash& self,
+        HashWrap::flatten(const karabo::util::Hash& self,
                                 karabo::util::Hash& flat,
                                 const std::string& separator) {
             self.flatten(flat, separator.at(0));
         }
 
         void
-        HashWrap::pythonUnFlatten(const karabo::util::Hash& self,
+        HashWrap::unflatten(const karabo::util::Hash& self,
                                   karabo::util::Hash& tree,
                                   const std::string& separator) {
             self.unflatten(tree, separator.at(0));
         }
 
         bp::object
-        HashWrap::pythonGetType(const karabo::util::Hash& self,
+        HashWrap::getType(const karabo::util::Hash& self,
                                 const std::string& path,
                                 const std::string& separator) {
             const char sep = separator.at(0);
@@ -412,7 +412,7 @@ namespace karabo {
         }
 
         bool
-        HashWrap::pythonHasAttribute(karabo::util::Hash& self,
+        HashWrap::hasAttribute(karabo::util::Hash& self,
                                      const std::string& path,
                                      const std::string& attribute,
                                      const std::string& separator) {
@@ -420,7 +420,7 @@ namespace karabo {
         }
 
         bp::object
-        HashWrap::pythonGetAttribute(karabo::util::Hash& self,
+        HashWrap::getAttribute(karabo::util::Hash& self,
                                      const std::string& path,
                                      const std::string& attribute,
                                      const std::string& separator) {
@@ -428,7 +428,7 @@ namespace karabo {
         }
 
         bp::object
-        HashWrap::pythonGetAttributeAs(karabo::util::Hash& self,
+        HashWrap::getAttributeAs(karabo::util::Hash& self,
                                        const std::string& path,
                                        const std::string& attribute,
                                        const PyTypes::ReferenceType& type,
@@ -519,7 +519,7 @@ namespace karabo {
         }
 
         bp::object
-        HashWrap::pythonGetAttributes(karabo::util::Hash& self,
+        HashWrap::getAttributes(karabo::util::Hash& self,
                                       const std::string& path,
                                       const std::string& separator) {
 
@@ -527,7 +527,7 @@ namespace karabo {
         }
 
         void
-        HashWrap::pythonSetAttribute(karabo::util::Hash& self,
+        HashWrap::setAttribute(karabo::util::Hash& self,
                                      const std::string& path,
                                      const std::string& attribute,
                                      const bp::object& value,
@@ -539,7 +539,7 @@ namespace karabo {
         }
 
         void
-        HashWrap::pythonSetAttributes(karabo::util::Hash& self,
+        HashWrap::setAttributes(karabo::util::Hash& self,
                                       const std::string& path,
                                       const bp::object& attributes,
                                       const std::string& separator) {
@@ -552,7 +552,7 @@ namespace karabo {
         }
 
         boost::shared_ptr<karabo::util::Hash::Node>
-        HashWrap::pythonFind(karabo::util::Hash& self,
+        HashWrap::find(karabo::util::Hash& self,
                              const std::string& path,
                              const std::string& separator) {
             boost::optional<karabo::util::Hash::Node&> node = self.find(path, separator.at(0));
@@ -585,7 +585,7 @@ namespace karabo {
         }
 
         bool
-        pythonSimilar(const bp::object& left, const bp::object& right) {
+        similarWrap(const bp::object& left, const bp::object& right) {
             if (bp::extract<karabo::util::Hash>(left).check() && bp::extract<karabo::util::Hash>(right).check()) {
                 const karabo::util::Hash& lhash = bp::extract<karabo::util::Hash>(left);
                 const karabo::util::Hash& rhash = bp::extract<karabo::util::Hash>(right);

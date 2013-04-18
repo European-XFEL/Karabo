@@ -21,7 +21,7 @@ namespace karabo {
         class AttributesWrap {
         public:
 
-            static bool pythonHas(karabo::util::Hash::Attributes& self, const std::string& key) {
+            static bool has(karabo::util::Hash::Attributes& self, const std::string& key) {
                 return self.has(key);
             }
 
@@ -31,15 +31,15 @@ namespace karabo {
                 return self.is(key, reftype);
             }
 
-            static void pythonErase(karabo::util::Hash::Attributes& self, const std::string& key) {
+            static void erase(karabo::util::Hash::Attributes& self, const std::string& key) {
                 self.erase(key);
             }
 
-            static bp::object pythonSize(karabo::util::Hash::Attributes& self) {
+            static bp::object size(karabo::util::Hash::Attributes& self) {
                 return bp::object(self.size());
             }
 
-            static bool pythonEmpty(karabo::util::Hash::Attributes& self) {
+            static bool empty(karabo::util::Hash::Attributes& self) {
                 return self.empty();
             }
 
@@ -47,15 +47,15 @@ namespace karabo {
                 self.clear();
             }
 
-            static bp::object pythonGetNode(karabo::util::Hash::Attributes& self, const std::string& key) {
+            static bp::object getNode(karabo::util::Hash::Attributes& self, const std::string& key) {
                 return bp::object(self.getNode(key));
             }
             
-            static bp::object pythonGet(karabo::util::Hash::Attributes& self, const std::string& key) {
+            static bp::object get(karabo::util::Hash::Attributes& self, const std::string& key) {
                 return Wrapper::toObject(self.getAny(key));
             }
             
-            static bp::object pythonGetAs(karabo::util::Hash::Attributes& self, const std::string& key, const std::string& type) {
+            static bp::object getAs(karabo::util::Hash::Attributes& self, const std::string& key, const std::string& type) {
                 using namespace karabo::util;
                 Types::ReferenceType reftype = Types::from<FromLiteral>(type);
                 switch (reftype) {
@@ -115,20 +115,20 @@ namespace karabo {
                 throw KARABO_NOT_SUPPORTED_EXCEPTION("Type is not yet supported");
             }
             
-            static bp::object pythonSet(karabo::util::Hash::Attributes& self, const std::string& key, const bp::object& value) {
+            static bp::object set(karabo::util::Hash::Attributes& self, const std::string& key, const bp::object& value) {
                 boost::any any;
                 Wrapper::toAny(value, any);
                 return bp::object(self.set(key, any));
             }
             
-            static bp::object pythonFind(karabo::util::Hash::Attributes& self, const std::string& key) {
+            static bp::object find(karabo::util::Hash::Attributes& self, const std::string& key) {
                 karabo::util::Hash::Attributes::const_map_iterator it = self.find(key);
                 if (it == self.mend())
                     return bp::object();
                 return bp::object(it);
             }
             
-            static bp::object pythonGetIt(karabo::util::Hash::Attributes& self, const bp::object& obj) {
+            static bp::object getIt(karabo::util::Hash::Attributes& self, const bp::object& obj) {
                 if (bp::extract<karabo::util::Hash::Attributes::const_map_iterator>(obj).check()) {
                     karabo::util::Hash::Attributes::const_map_iterator it = bp::extract<karabo::util::Hash::Attributes::const_map_iterator>(obj);
                     return Wrapper::toObject(self.get<boost::any>(it));
