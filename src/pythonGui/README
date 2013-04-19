@@ -1,0 +1,11 @@
+XFEL SUITE ON LINUX
+=====================
+
+The following dependencies have to be added to run the GUI:
+
+1. Python 2.7
+2. SIP
+3. PyQt
+4. NumPy
+5. PyQwt5
+
