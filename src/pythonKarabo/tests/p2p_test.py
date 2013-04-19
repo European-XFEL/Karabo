@@ -19,6 +19,7 @@ class Server(threading.Thread):
         self.connection.startAsync(self.onConnect)
         #extract io service object
         self.ioserv = self.connection.getIOService()
+        print "TCP Async server listening port", port
         
     def onError(self, channel, ec):
         print "Error #%r => %r  -- close channel" % (ec.value(), ec.message())
@@ -26,31 +27,32 @@ class Server(threading.Thread):
         
     def onConnect(self, channel):
         try:
-            print "Server.onConnect: Incoming connection #%r" % id(channel)
+            print "TCP Async server onConnect: Incoming connection #%r" % id(channel)
             #register connect handler for incoming connections
             self.connection.startAsync(self.onConnect)
             #register read Hash handler for this channel (client)
             channel.readAsyncHash(self.onReadHash)
         except RuntimeError,e:
-            print "Server.onConnect:",str(e)
+            print "TCP Async server onConnect:",str(e)
     
     def onReadHash(self, channel, hash):
         try:
-            print "Read hash on #%r" % id(channel)
+            print "TCP Async server onReadHash id #%r" % id(channel)
             hash["server"] = "APPROVED!"
             channel.write(hash)
             channel.readAsyncHash(self.onReadHash)
         except RuntimeError,e:
-            print "Server.onReadHash:",str(e)
+            print "TCP Async server onReadHash:",str(e)
         
     def run(self):
         try:
             self.ioserv.run()
         except Exception, e:
-            print "Server.run: " + str(e)
+            print "TCP Async server run: " + str(e)
         
     # this method stops server
     def stop(self):
+        print "Stop TCP Async server"
         self.ioserv.stop()
         
         
@@ -65,9 +67,7 @@ class  P2p_TestCase(unittest.TestCase):
     def tearDown(self):
         print "Stop server io service and exit server thread"
         self.server.stop()
-        print "join server thread"
         self.server.join()
-        print "joined"
 
     def test_synchronous_client(self):
         # Synchronous TCP client
@@ -76,12 +76,15 @@ class  P2p_TestCase(unittest.TestCase):
             connection = Connection.create("Tcp", Hash("type", "client", "hostname", "localhost", "port", 32323))    
             #connect to the server
             channel = connection.start()
-            print "Synchronous TCP client channel id =", id(channel), ". Channel type = ", type(channel)
+            print "TCP Sync client open connection: id #", id(channel)
             #build hash to send to server
             h = Hash("a.b.c", 1, "x.y.z", [1,2,3,4,5], "d", Hash("abc", 'rabbish'))
+            print "TCP Sync client send Hash"
             channel.write(h)
             h = Hash()
+            print "TCP Sync client read Hash back"
             channel.read(h)
+            print "TCP Sync client close connection."
             channel.close()
             
             self.assertEqual(len(h), 4)
@@ -90,7 +93,6 @@ class  P2p_TestCase(unittest.TestCase):
             self.assertEqual(h['x.y.z'], [1,2,3,4,5])
             self.assertEqual(h['d.abc'], 'rabbish')
             
-            print "Channel closed"
         except Exception, e:
             self.fail("test_server exception group 1: " + str(e))
 
