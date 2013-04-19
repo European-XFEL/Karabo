@@ -6,6 +6,10 @@
  */
 
 #include <karabo/log/Logger.hh>
+#include <wchar.h>
+#include <iostream>
+#include <fstream>
+#include <stdlib.h>
 #include "Authenticator.hh"
 #include "soapAuthenticationPortBindingProxy.h"
 #include "AuthenticationPortBinding.nsmap"
@@ -61,6 +65,21 @@ namespace karabo {
             return m_welcomeMessage;
         }
 
+        unsigned long long int Authenticator::getRoleId() const {
+            return roleId;
+        }
+
+        unsigned long long int Authenticator::getSoftwareId() const {
+            return softwareId;
+        }
+
+        unsigned long long int Authenticator::getUserId() const {
+            return userId;
+        }
+
+        /*
+         * Setters
+         */
         void Authenticator::setSessionToken(const std::string& newSessionToken) {
             this->m_sessionToken = newSessionToken;
         }
@@ -73,6 +92,21 @@ namespace karabo {
             this->m_welcomeMessage = welcomeMessage;
         }
 
+        void Authenticator::setRoleId(unsigned long long int roleId) {
+            this->roleId = roleId;
+        }
+
+        void Authenticator::setSoftwareId(unsigned long long int softwareId) {
+            this->softwareId = softwareId;
+        }
+
+        void Authenticator::setUserId(unsigned long long int userId) {
+            this->userId = userId;
+        }
+
+        /*
+         * Specific logical functions
+         */
         bool Authenticator::login(const karabo::util::Timestamp& timestamp) {
 
             ns1__getUserNonceResponse nsUserNonceResp;
@@ -81,7 +115,7 @@ namespace karabo {
             // Get the nonce that must be used in Authentication method
             nsUserNonceResp = getUserNonce();
             if (*(nsUserNonceResp.return_->operationSuccess) == 0) {
-                KARABO_LOG_FRAMEWORK_DEBUG << "Error: " << string(nsLoginResp.return_->errorMsg->c_str());
+                KARABO_LOG_FRAMEWORK_DEBUG << "Error: " << string(nsLoginResp.return_->operationResultMsg->c_str());
                 return false;
             }
 
@@ -91,7 +125,7 @@ namespace karabo {
             // Try authenticate the user
             nsLoginResp = authenticate(timestamp);
             if (*(nsLoginResp.return_->operationSuccess) == 0) {
-                KARABO_LOG_FRAMEWORK_DEBUG << "Error: " << string(nsLoginResp.return_->errorMsg->c_str());
+                KARABO_LOG_FRAMEWORK_DEBUG << "Error: " << string(nsLoginResp.return_->operationResultMsg->c_str());
                 return false;
             } else {
                 KARABO_LOG_FRAMEWORK_DEBUG << "Debug: The sessionToken is " << string(nsLoginResp.return_->sessionToken->c_str());
@@ -99,6 +133,17 @@ namespace karabo {
                 setSessionToken(*(nsLoginResp.return_->sessionToken));
                 setWelcomeMessage(*(nsLoginResp.return_->welcomeMessage));
                 setRoleDesc(*(nsLoginResp.return_->roleDesc));
+
+//                string containerStr = "shit"; //*(nsLoginResp.return_->roleId);
+//                char * pEnd;
+//                unsigned long long int containerInt = strtoull(containerStr, &pEnd, 10);
+//                int value = *(nsLoginResp.return_->roleId);
+//                unsigned long long int v= static_cast<std::make_unsigned<decltype(value)>::type>(value);
+                //nsSingleSignOn.ipAddress = &idAddressStr;
+
+                //                setRoleId( strtoull(containerStr));
+                //                setUserId(*(nsLoginResp.return_->userId));
+                //                setSoftwareId(*(nsLoginResp.return_->softwareId));
                 // Clear m_nonce value
                 m_nonce = "";
                 return true;
@@ -146,7 +191,7 @@ namespace karabo {
             if (m_service->getUserNonce(&nsUserNonce, &nsUserNonceResp) == SOAP_OK) {
                 KARABO_LOG_FRAMEWORK_DEBUG << "Debug: SOAP message is OK";
                 if (*(nsUserNonceResp.return_->operationSuccess) == 0) {
-                    KARABO_LOG_FRAMEWORK_DEBUG << "Error: " << string(nsUserNonceResp.return_->errorMsg->c_str());
+                    KARABO_LOG_FRAMEWORK_DEBUG << "Error: " << string(nsUserNonceResp.return_->operationResultMsg->c_str());
                 } else {
                     KARABO_LOG_FRAMEWORK_DEBUG << "Debug: The userNonce is " << string(nsUserNonceResp.return_->sessionToken->c_str());
                 }
@@ -179,7 +224,7 @@ namespace karabo {
             if (m_service->login(&nsLogin, &nsLoginResp) == SOAP_OK) {
                 KARABO_LOG_FRAMEWORK_DEBUG << "Debug: SOAP message is OK";
                 if (*(nsLoginResp.return_->operationSuccess) == 0) {
-                    KARABO_LOG_FRAMEWORK_DEBUG << "Error: " << string(nsLoginResp.return_->errorMsg->c_str());
+                    KARABO_LOG_FRAMEWORK_DEBUG << "Error: " << string(nsLoginResp.return_->operationResultMsg->c_str());
                 } else {
                     KARABO_LOG_FRAMEWORK_DEBUG << "Debug: The sessionToken is " << string(nsLoginResp.return_->sessionToken->c_str());
                 }
@@ -204,7 +249,7 @@ namespace karabo {
             if (m_service->singleSignOn(&nsSingleSignOn, &nsSingleSignOnResp) == SOAP_OK) {
                 KARABO_LOG_FRAMEWORK_DEBUG << "Debug: SOAP message is OK";
                 if (*(nsSingleSignOnResp.return_->operationSuccess) == 0) {
-                    KARABO_LOG_FRAMEWORK_DEBUG << "Error: " << string(nsSingleSignOnResp.return_->errorMsg->c_str());
+                    KARABO_LOG_FRAMEWORK_DEBUG << "Error: " << string(nsSingleSignOnResp.return_->operationResultMsg->c_str());
                     return "";
                 } else {
                     KARABO_LOG_FRAMEWORK_DEBUG << "Debug: The sessionToken is " << string(nsSingleSignOnResp.return_->sessionToken->c_str());

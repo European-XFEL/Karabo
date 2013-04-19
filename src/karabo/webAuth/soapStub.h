@@ -45,7 +45,7 @@ compiling, linking, and/or using OpenSSL is allowed.
 #endif
 
 #ifndef SOAP_TYPE_ns1__getUserNonce
-#define SOAP_TYPE_ns1__getUserNonce (8)
+#define SOAP_TYPE_ns1__getUserNonce (10)
 /* ns1:getUserNonce */
 class SOAP_CMAC ns1__getUserNonce
 {
@@ -55,7 +55,7 @@ public:
 	std::string *ipAddress;	/* optional element of type xsd:string */
 	struct soap *soap;	/* transient */
 public:
-	virtual int soap_type() const { return 8; } /* = unique id SOAP_TYPE_ns1__getUserNonce */
+	virtual int soap_type() const { return 10; } /* = unique id SOAP_TYPE_ns1__getUserNonce */
 	virtual void soap_default(struct soap*);
 	virtual void soap_serialize(struct soap*) const;
 	virtual int soap_put(struct soap*, const char*, const char*) const;
@@ -68,7 +68,7 @@ public:
 #endif
 
 #ifndef SOAP_TYPE_ns1__getUserNonceResponse
-#define SOAP_TYPE_ns1__getUserNonceResponse (9)
+#define SOAP_TYPE_ns1__getUserNonceResponse (11)
 /* ns1:getUserNonceResponse */
 class SOAP_CMAC ns1__getUserNonceResponse
 {
@@ -76,7 +76,7 @@ public:
 	class ns1__xfelSession *return_;	/* SOAP 1.2 RPC return element (when namespace qualified) */	/* optional element of type ns1:xfelSession */
 	struct soap *soap;	/* transient */
 public:
-	virtual int soap_type() const { return 9; } /* = unique id SOAP_TYPE_ns1__getUserNonceResponse */
+	virtual int soap_type() const { return 11; } /* = unique id SOAP_TYPE_ns1__getUserNonceResponse */
 	virtual void soap_default(struct soap*);
 	virtual void soap_serialize(struct soap*) const;
 	virtual int soap_put(struct soap*, const char*, const char*) const;
@@ -89,24 +89,27 @@ public:
 #endif
 
 #ifndef SOAP_TYPE_ns1__xfelSession
-#define SOAP_TYPE_ns1__xfelSession (10)
+#define SOAP_TYPE_ns1__xfelSession (12)
 /* ns1:xfelSession */
 class SOAP_CMAC ns1__xfelSession
 {
 public:
-	std::string *errorMsg;	/* optional element of type xsd:string */
 	std::string *familyName;	/* optional element of type xsd:string */
 	std::string *firstName;	/* optional element of type xsd:string */
+	std::string *operationResultMsg;	/* optional element of type xsd:string */
 	int *operationSuccess;	/* optional element of type xsd:int */
 	std::string *provider;	/* optional element of type xsd:string */
 	std::string *roleDesc;	/* optional element of type xsd:string */
+	std::string *roleId;	/* optional element of type xsd:integer */
 	std::string *sessionToken;	/* optional element of type xsd:string */
 	std::string *softwareDesc;	/* optional element of type xsd:string */
+	std::string *softwareId;	/* optional element of type xsd:integer */
+	std::string *userId;	/* optional element of type xsd:integer */
 	std::string *username;	/* optional element of type xsd:string */
 	std::string *welcomeMessage;	/* optional element of type xsd:string */
 	struct soap *soap;	/* transient */
 public:
-	virtual int soap_type() const { return 10; } /* = unique id SOAP_TYPE_ns1__xfelSession */
+	virtual int soap_type() const { return 12; } /* = unique id SOAP_TYPE_ns1__xfelSession */
 	virtual void soap_default(struct soap*);
 	virtual void soap_serialize(struct soap*) const;
 	virtual int soap_put(struct soap*, const char*, const char*) const;
@@ -119,7 +122,7 @@ public:
 #endif
 
 #ifndef SOAP_TYPE_ns1__sessionsByIp
-#define SOAP_TYPE_ns1__sessionsByIp (11)
+#define SOAP_TYPE_ns1__sessionsByIp (13)
 /* ns1:sessionsByIp */
 class SOAP_CMAC ns1__sessionsByIp
 {
@@ -127,7 +130,7 @@ public:
 	std::string *ipAddress;	/* optional element of type xsd:string */
 	struct soap *soap;	/* transient */
 public:
-	virtual int soap_type() const { return 11; } /* = unique id SOAP_TYPE_ns1__sessionsByIp */
+	virtual int soap_type() const { return 13; } /* = unique id SOAP_TYPE_ns1__sessionsByIp */
 	virtual void soap_default(struct soap*);
 	virtual void soap_serialize(struct soap*) const;
 	virtual int soap_put(struct soap*, const char*, const char*) const;
@@ -140,7 +143,7 @@ public:
 #endif
 
 #ifndef SOAP_TYPE_ns1__sessionsByIpResponse
-#define SOAP_TYPE_ns1__sessionsByIpResponse (12)
+#define SOAP_TYPE_ns1__sessionsByIpResponse (14)
 /* ns1:sessionsByIpResponse */
 class SOAP_CMAC ns1__sessionsByIpResponse
 {
@@ -148,7 +151,7 @@ public:
 	std::string *return_;	/* SOAP 1.2 RPC return element (when namespace qualified) */	/* optional element of type xsd:string */
 	struct soap *soap;	/* transient */
 public:
-	virtual int soap_type() const { return 12; } /* = unique id SOAP_TYPE_ns1__sessionsByIpResponse */
+	virtual int soap_type() const { return 14; } /* = unique id SOAP_TYPE_ns1__sessionsByIpResponse */
 	virtual void soap_default(struct soap*);
 	virtual void soap_serialize(struct soap*) const;
 	virtual int soap_put(struct soap*, const char*, const char*) const;
@@ -161,7 +164,7 @@ public:
 #endif
 
 #ifndef SOAP_TYPE_ns1__logout
-#define SOAP_TYPE_ns1__logout (13)
+#define SOAP_TYPE_ns1__logout (15)
 /* ns1:logout */
 class SOAP_CMAC ns1__logout
 {
@@ -171,7 +174,7 @@ public:
 	std::string *sessionToken;	/* optional element of type xsd:string */
 	struct soap *soap;	/* transient */
 public:
-	virtual int soap_type() const { return 13; } /* = unique id SOAP_TYPE_ns1__logout */
+	virtual int soap_type() const { return 15; } /* = unique id SOAP_TYPE_ns1__logout */
 	virtual void soap_default(struct soap*);
 	virtual void soap_serialize(struct soap*) const;
 	virtual int soap_put(struct soap*, const char*, const char*) const;
@@ -184,7 +187,7 @@ public:
 #endif
 
 #ifndef SOAP_TYPE_ns1__logoutResponse
-#define SOAP_TYPE_ns1__logoutResponse (14)
+#define SOAP_TYPE_ns1__logoutResponse (16)
 /* ns1:logoutResponse */
 class SOAP_CMAC ns1__logoutResponse
 {
@@ -192,7 +195,7 @@ public:
 	bool *return_;	/* SOAP 1.2 RPC return element (when namespace qualified) */	/* optional element of type xsd:boolean */
 	struct soap *soap;	/* transient */
 public:
-	virtual int soap_type() const { return 14; } /* = unique id SOAP_TYPE_ns1__logoutResponse */
+	virtual int soap_type() const { return 16; } /* = unique id SOAP_TYPE_ns1__logoutResponse */
 	virtual void soap_default(struct soap*);
 	virtual void soap_serialize(struct soap*) const;
 	virtual int soap_put(struct soap*, const char*, const char*) const;
@@ -205,7 +208,7 @@ public:
 #endif
 
 #ifndef SOAP_TYPE_ns1__singleSignOn
-#define SOAP_TYPE_ns1__singleSignOn (15)
+#define SOAP_TYPE_ns1__singleSignOn (17)
 /* ns1:singleSignOn */
 class SOAP_CMAC ns1__singleSignOn
 {
@@ -215,7 +218,7 @@ public:
 	std::string *ipAddress;	/* optional element of type xsd:string */
 	struct soap *soap;	/* transient */
 public:
-	virtual int soap_type() const { return 15; } /* = unique id SOAP_TYPE_ns1__singleSignOn */
+	virtual int soap_type() const { return 17; } /* = unique id SOAP_TYPE_ns1__singleSignOn */
 	virtual void soap_default(struct soap*);
 	virtual void soap_serialize(struct soap*) const;
 	virtual int soap_put(struct soap*, const char*, const char*) const;
@@ -228,7 +231,7 @@ public:
 #endif
 
 #ifndef SOAP_TYPE_ns1__singleSignOnResponse
-#define SOAP_TYPE_ns1__singleSignOnResponse (16)
+#define SOAP_TYPE_ns1__singleSignOnResponse (18)
 /* ns1:singleSignOnResponse */
 class SOAP_CMAC ns1__singleSignOnResponse
 {
@@ -236,7 +239,7 @@ public:
 	ns1__xfelSession *return_;	/* SOAP 1.2 RPC return element (when namespace qualified) */	/* optional element of type ns1:xfelSession */
 	struct soap *soap;	/* transient */
 public:
-	virtual int soap_type() const { return 16; } /* = unique id SOAP_TYPE_ns1__singleSignOnResponse */
+	virtual int soap_type() const { return 18; } /* = unique id SOAP_TYPE_ns1__singleSignOnResponse */
 	virtual void soap_default(struct soap*);
 	virtual void soap_serialize(struct soap*) const;
 	virtual int soap_put(struct soap*, const char*, const char*) const;
@@ -249,7 +252,7 @@ public:
 #endif
 
 #ifndef SOAP_TYPE_ns1__login
-#define SOAP_TYPE_ns1__login (17)
+#define SOAP_TYPE_ns1__login (19)
 /* ns1:login */
 class SOAP_CMAC ns1__login
 {
@@ -265,7 +268,7 @@ public:
 	std::string *time;	/* optional element of type xsd:string */
 	struct soap *soap;	/* transient */
 public:
-	virtual int soap_type() const { return 17; } /* = unique id SOAP_TYPE_ns1__login */
+	virtual int soap_type() const { return 19; } /* = unique id SOAP_TYPE_ns1__login */
 	virtual void soap_default(struct soap*);
 	virtual void soap_serialize(struct soap*) const;
 	virtual int soap_put(struct soap*, const char*, const char*) const;
@@ -278,7 +281,7 @@ public:
 #endif
 
 #ifndef SOAP_TYPE_ns1__loginResponse
-#define SOAP_TYPE_ns1__loginResponse (18)
+#define SOAP_TYPE_ns1__loginResponse (20)
 /* ns1:loginResponse */
 class SOAP_CMAC ns1__loginResponse
 {
@@ -286,7 +289,7 @@ public:
 	ns1__xfelSession *return_;	/* SOAP 1.2 RPC return element (when namespace qualified) */	/* optional element of type ns1:xfelSession */
 	struct soap *soap;	/* transient */
 public:
-	virtual int soap_type() const { return 18; } /* = unique id SOAP_TYPE_ns1__loginResponse */
+	virtual int soap_type() const { return 20; } /* = unique id SOAP_TYPE_ns1__loginResponse */
 	virtual void soap_default(struct soap*);
 	virtual void soap_serialize(struct soap*) const;
 	virtual int soap_put(struct soap*, const char*, const char*) const;
@@ -299,7 +302,7 @@ public:
 #endif
 
 #ifndef SOAP_TYPE_ns1__DecoderException
-#define SOAP_TYPE_ns1__DecoderException (19)
+#define SOAP_TYPE_ns1__DecoderException (21)
 /* ns1:DecoderException */
 class SOAP_CMAC ns1__DecoderException
 {
@@ -307,7 +310,7 @@ public:
 	std::string *message;	/* optional element of type xsd:string */
 	struct soap *soap;	/* transient */
 public:
-	virtual int soap_type() const { return 19; } /* = unique id SOAP_TYPE_ns1__DecoderException */
+	virtual int soap_type() const { return 21; } /* = unique id SOAP_TYPE_ns1__DecoderException */
 	virtual void soap_default(struct soap*);
 	virtual void soap_serialize(struct soap*) const;
 	virtual int soap_put(struct soap*, const char*, const char*) const;
@@ -320,7 +323,7 @@ public:
 #endif
 
 #ifndef SOAP_TYPE_ns1__UnsupportedEncodingException
-#define SOAP_TYPE_ns1__UnsupportedEncodingException (20)
+#define SOAP_TYPE_ns1__UnsupportedEncodingException (22)
 /* ns1:UnsupportedEncodingException */
 class SOAP_CMAC ns1__UnsupportedEncodingException
 {
@@ -328,7 +331,7 @@ public:
 	std::string *message;	/* optional element of type xsd:string */
 	struct soap *soap;	/* transient */
 public:
-	virtual int soap_type() const { return 20; } /* = unique id SOAP_TYPE_ns1__UnsupportedEncodingException */
+	virtual int soap_type() const { return 22; } /* = unique id SOAP_TYPE_ns1__UnsupportedEncodingException */
 	virtual void soap_default(struct soap*);
 	virtual void soap_serialize(struct soap*) const;
 	virtual int soap_put(struct soap*, const char*, const char*) const;
@@ -343,7 +346,7 @@ public:
 #ifndef WITH_NOGLOBAL
 
 #ifndef SOAP_TYPE_SOAP_ENV__Detail
-#define SOAP_TYPE_SOAP_ENV__Detail (28)
+#define SOAP_TYPE_SOAP_ENV__Detail (30)
 /* SOAP-ENV:Detail */
 struct SOAP_ENV__Detail
 {
@@ -358,8 +361,18 @@ public:
 
 #endif
 
+#ifndef SOAP_TYPE___ns1__login
+#define SOAP_TYPE___ns1__login (38)
+/* Operation wrapper: */
+struct __ns1__login
+{
+public:
+	ns1__login *ns1__login_;	/* optional element of type ns1:login */
+};
+#endif
+
 #ifndef SOAP_TYPE___ns1__logout
-#define SOAP_TYPE___ns1__logout (36)
+#define SOAP_TYPE___ns1__logout (42)
 /* Operation wrapper: */
 struct __ns1__logout
 {
@@ -369,7 +382,7 @@ public:
 #endif
 
 #ifndef SOAP_TYPE___ns1__singleSignOn
-#define SOAP_TYPE___ns1__singleSignOn (40)
+#define SOAP_TYPE___ns1__singleSignOn (46)
 /* Operation wrapper: */
 struct __ns1__singleSignOn
 {
@@ -379,7 +392,7 @@ public:
 #endif
 
 #ifndef SOAP_TYPE___ns1__sessionsByIp
-#define SOAP_TYPE___ns1__sessionsByIp (44)
+#define SOAP_TYPE___ns1__sessionsByIp (50)
 /* Operation wrapper: */
 struct __ns1__sessionsByIp
 {
@@ -389,7 +402,7 @@ public:
 #endif
 
 #ifndef SOAP_TYPE___ns1__getUserNonce
-#define SOAP_TYPE___ns1__getUserNonce (48)
+#define SOAP_TYPE___ns1__getUserNonce (54)
 /* Operation wrapper: */
 struct __ns1__getUserNonce
 {
@@ -398,20 +411,10 @@ public:
 };
 #endif
 
-#ifndef SOAP_TYPE___ns1__login
-#define SOAP_TYPE___ns1__login (52)
-/* Operation wrapper: */
-struct __ns1__login
-{
-public:
-	ns1__login *ns1__login_;	/* optional element of type ns1:login */
-};
-#endif
-
 #ifndef WITH_NOGLOBAL
 
 #ifndef SOAP_TYPE_SOAP_ENV__Header
-#define SOAP_TYPE_SOAP_ENV__Header (53)
+#define SOAP_TYPE_SOAP_ENV__Header (55)
 /* SOAP Header: */
 struct SOAP_ENV__Header
 {
@@ -427,7 +430,7 @@ private:
 #ifndef WITH_NOGLOBAL
 
 #ifndef SOAP_TYPE_SOAP_ENV__Code
-#define SOAP_TYPE_SOAP_ENV__Code (54)
+#define SOAP_TYPE_SOAP_ENV__Code (56)
 /* SOAP Fault Code: */
 struct SOAP_ENV__Code
 {
@@ -442,7 +445,7 @@ public:
 #ifndef WITH_NOGLOBAL
 
 #ifndef SOAP_TYPE_SOAP_ENV__Reason
-#define SOAP_TYPE_SOAP_ENV__Reason (56)
+#define SOAP_TYPE_SOAP_ENV__Reason (58)
 /* SOAP-ENV:Reason */
 struct SOAP_ENV__Reason
 {
@@ -456,7 +459,7 @@ public:
 #ifndef WITH_NOGLOBAL
 
 #ifndef SOAP_TYPE_SOAP_ENV__Fault
-#define SOAP_TYPE_SOAP_ENV__Fault (57)
+#define SOAP_TYPE_SOAP_ENV__Fault (59)
 /* SOAP Fault: */
 struct SOAP_ENV__Fault
 {
@@ -489,6 +492,11 @@ typedef char *_QName;
 #ifndef SOAP_TYPE__XML
 #define SOAP_TYPE__XML (6)
 typedef char *_XML;
+#endif
+
+#ifndef SOAP_TYPE_xsd__integer
+#define SOAP_TYPE_xsd__integer (9)
+typedef std::string xsd__integer;
 #endif
 
 
