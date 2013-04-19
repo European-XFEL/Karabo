@@ -189,72 +189,72 @@ ${OBJECTDIR}/_ext/1072794519/TextFileOutput.o: ../../../src/karabo/io/TextFileOu
 ${OBJECTDIR}/_ext/769817549/Attribute.o: ../../../src/karabo/io/h5/Attribute.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/769817549
 	${RM} $@.d
-	$(COMPILE.cc) -g -Wall -DKARABO_ENABLE_TRACE_LOG -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/769817549/Attribute.o ../../../src/karabo/io/h5/Attribute.cc
+	$(COMPILE.cc) -g -Wall -DKARABO_NO_ENABLE_TRACE_LOG -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/769817549/Attribute.o ../../../src/karabo/io/h5/Attribute.cc
 
 ${OBJECTDIR}/_ext/769817549/Dataset.o: ../../../src/karabo/io/h5/Dataset.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/769817549
 	${RM} $@.d
-	$(COMPILE.cc) -g -Wall -DKARABO_ENABLE_TRACE_LOG -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/769817549/Dataset.o ../../../src/karabo/io/h5/Dataset.cc
+	$(COMPILE.cc) -g -Wall -DKARABO_NO_ENABLE_TRACE_LOG -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/769817549/Dataset.o ../../../src/karabo/io/h5/Dataset.cc
 
 ${OBJECTDIR}/_ext/769817549/DatasetWriter.o: ../../../src/karabo/io/h5/DatasetWriter.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/769817549
 	${RM} $@.d
-	$(COMPILE.cc) -g -Wall -DKARABO_ENABLE_TRACE_LOG -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/769817549/DatasetWriter.o ../../../src/karabo/io/h5/DatasetWriter.cc
+	$(COMPILE.cc) -g -Wall -DKARABO_NO_ENABLE_TRACE_LOG -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/769817549/DatasetWriter.o ../../../src/karabo/io/h5/DatasetWriter.cc
 
 ${OBJECTDIR}/_ext/769817549/Element.o: ../../../src/karabo/io/h5/Element.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/769817549
 	${RM} $@.d
-	$(COMPILE.cc) -g -Wall -DKARABO_ENABLE_TRACE_LOG -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/769817549/Element.o ../../../src/karabo/io/h5/Element.cc
+	$(COMPILE.cc) -g -Wall -DKARABO_NO_ENABLE_TRACE_LOG -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/769817549/Element.o ../../../src/karabo/io/h5/Element.cc
 
 ${OBJECTDIR}/_ext/769817549/ErrorHandler.o: ../../../src/karabo/io/h5/ErrorHandler.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/769817549
 	${RM} $@.d
-	$(COMPILE.cc) -g -Wall -DKARABO_ENABLE_TRACE_LOG -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/769817549/ErrorHandler.o ../../../src/karabo/io/h5/ErrorHandler.cc
+	$(COMPILE.cc) -g -Wall -DKARABO_NO_ENABLE_TRACE_LOG -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/769817549/ErrorHandler.o ../../../src/karabo/io/h5/ErrorHandler.cc
 
 ${OBJECTDIR}/_ext/769817549/File.o: ../../../src/karabo/io/h5/File.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/769817549
 	${RM} $@.d
-	$(COMPILE.cc) -g -Wall -DKARABO_ENABLE_TRACE_LOG -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/769817549/File.o ../../../src/karabo/io/h5/File.cc
+	$(COMPILE.cc) -g -Wall -DKARABO_NO_ENABLE_TRACE_LOG -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/769817549/File.o ../../../src/karabo/io/h5/File.cc
 
 ${OBJECTDIR}/_ext/769817549/FixedLengthArray.o: ../../../src/karabo/io/h5/FixedLengthArray.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/769817549
 	${RM} $@.d
-	$(COMPILE.cc) -g -Wall -DKARABO_ENABLE_TRACE_LOG -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/769817549/FixedLengthArray.o ../../../src/karabo/io/h5/FixedLengthArray.cc
+	$(COMPILE.cc) -g -Wall -DKARABO_NO_ENABLE_TRACE_LOG -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/769817549/FixedLengthArray.o ../../../src/karabo/io/h5/FixedLengthArray.cc
 
 ${OBJECTDIR}/_ext/769817549/FixedLengthArrayAttribute.o: ../../../src/karabo/io/h5/FixedLengthArrayAttribute.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/769817549
 	${RM} $@.d
-	$(COMPILE.cc) -g -Wall -DKARABO_ENABLE_TRACE_LOG -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/769817549/FixedLengthArrayAttribute.o ../../../src/karabo/io/h5/FixedLengthArrayAttribute.cc
+	$(COMPILE.cc) -g -Wall -DKARABO_NO_ENABLE_TRACE_LOG -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/769817549/FixedLengthArrayAttribute.o ../../../src/karabo/io/h5/FixedLengthArrayAttribute.cc
 
 ${OBJECTDIR}/_ext/769817549/Format.o: ../../../src/karabo/io/h5/Format.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/769817549
 	${RM} $@.d
-	$(COMPILE.cc) -g -Wall -DKARABO_ENABLE_TRACE_LOG -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/769817549/Format.o ../../../src/karabo/io/h5/Format.cc
+	$(COMPILE.cc) -g -Wall -DKARABO_NO_ENABLE_TRACE_LOG -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/769817549/Format.o ../../../src/karabo/io/h5/Format.cc
 
 ${OBJECTDIR}/_ext/769817549/Group.o: ../../../src/karabo/io/h5/Group.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/769817549
 	${RM} $@.d
-	$(COMPILE.cc) -g -Wall -DKARABO_ENABLE_TRACE_LOG -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/769817549/Group.o ../../../src/karabo/io/h5/Group.cc
+	$(COMPILE.cc) -g -Wall -DKARABO_NO_ENABLE_TRACE_LOG -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/769817549/Group.o ../../../src/karabo/io/h5/Group.cc
 
 ${OBJECTDIR}/_ext/769817549/Scalar.o: ../../../src/karabo/io/h5/Scalar.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/769817549
 	${RM} $@.d
-	$(COMPILE.cc) -g -Wall -DKARABO_ENABLE_TRACE_LOG -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/769817549/Scalar.o ../../../src/karabo/io/h5/Scalar.cc
+	$(COMPILE.cc) -g -Wall -DKARABO_NO_ENABLE_TRACE_LOG -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/769817549/Scalar.o ../../../src/karabo/io/h5/Scalar.cc
 
 ${OBJECTDIR}/_ext/769817549/ScalarAttribute.o: ../../../src/karabo/io/h5/ScalarAttribute.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/769817549
 	${RM} $@.d
-	$(COMPILE.cc) -g -Wall -DKARABO_ENABLE_TRACE_LOG -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/769817549/ScalarAttribute.o ../../../src/karabo/io/h5/ScalarAttribute.cc
+	$(COMPILE.cc) -g -Wall -DKARABO_NO_ENABLE_TRACE_LOG -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/769817549/ScalarAttribute.o ../../../src/karabo/io/h5/ScalarAttribute.cc
 
 ${OBJECTDIR}/_ext/769817549/Table.o: ../../../src/karabo/io/h5/Table.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/769817549
 	${RM} $@.d
-	$(COMPILE.cc) -g -Wall -DKARABO_ENABLE_TRACE_LOG -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/769817549/Table.o ../../../src/karabo/io/h5/Table.cc
+	$(COMPILE.cc) -g -Wall -DKARABO_NO_ENABLE_TRACE_LOG -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/769817549/Table.o ../../../src/karabo/io/h5/Table.cc
 
 ${OBJECTDIR}/_ext/769817549/TypeTraits.o: ../../../src/karabo/io/h5/TypeTraits.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/769817549
 	${RM} $@.d
-	$(COMPILE.cc) -g -Wall -DKARABO_ENABLE_TRACE_LOG -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/769817549/TypeTraits.o ../../../src/karabo/io/h5/TypeTraits.cc
+	$(COMPILE.cc) -g -Wall -DKARABO_NO_ENABLE_TRACE_LOG -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/769817549/TypeTraits.o ../../../src/karabo/io/h5/TypeTraits.cc
 
 ${OBJECTDIR}/_ext/1103111265/AppenderConfigurator.o: ../../../src/karabo/log/AppenderConfigurator.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1103111265
@@ -489,49 +489,49 @@ ${TESTDIR}/TestFiles/f5: ${TESTDIR}/_ext/936508045/SignalSlotable_Test.o ${TESTD
 ${TESTDIR}/_ext/861493463/FileInputOutput_Test.o: ../../../src/karabo/tests/io/FileInputOutput_Test.cc 
 	${MKDIR} -p ${TESTDIR}/_ext/861493463
 	${RM} $@.d
-	$(COMPILE.cc) -g -Wall -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -DKARABO_ENABLE_TRACE_LOG -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/include/hdf5 -MMD -MP -MF $@.d -o ${TESTDIR}/_ext/861493463/FileInputOutput_Test.o ../../../src/karabo/tests/io/FileInputOutput_Test.cc
+	$(COMPILE.cc) -g -Wall -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -DKARABO_NO_ENABLE_TRACE_LOG -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/include/hdf5 -MMD -MP -MF $@.d -o ${TESTDIR}/_ext/861493463/FileInputOutput_Test.o ../../../src/karabo/tests/io/FileInputOutput_Test.cc
 
 
 ${TESTDIR}/_ext/861493463/H5File_Test.o: ../../../src/karabo/tests/io/H5File_Test.cc 
 	${MKDIR} -p ${TESTDIR}/_ext/861493463
 	${RM} $@.d
-	$(COMPILE.cc) -g -Wall -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -DKARABO_ENABLE_TRACE_LOG -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/include/hdf5 -MMD -MP -MF $@.d -o ${TESTDIR}/_ext/861493463/H5File_Test.o ../../../src/karabo/tests/io/H5File_Test.cc
+	$(COMPILE.cc) -g -Wall -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -DKARABO_NO_ENABLE_TRACE_LOG -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/include/hdf5 -MMD -MP -MF $@.d -o ${TESTDIR}/_ext/861493463/H5File_Test.o ../../../src/karabo/tests/io/H5File_Test.cc
 
 
 ${TESTDIR}/_ext/861493463/H5Format_Test.o: ../../../src/karabo/tests/io/H5Format_Test.cc 
 	${MKDIR} -p ${TESTDIR}/_ext/861493463
 	${RM} $@.d
-	$(COMPILE.cc) -g -Wall -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -DKARABO_ENABLE_TRACE_LOG -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/include/hdf5 -MMD -MP -MF $@.d -o ${TESTDIR}/_ext/861493463/H5Format_Test.o ../../../src/karabo/tests/io/H5Format_Test.cc
+	$(COMPILE.cc) -g -Wall -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -DKARABO_NO_ENABLE_TRACE_LOG -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/include/hdf5 -MMD -MP -MF $@.d -o ${TESTDIR}/_ext/861493463/H5Format_Test.o ../../../src/karabo/tests/io/H5Format_Test.cc
 
 
 ${TESTDIR}/_ext/861493463/HashBinarySerializer_Test.o: ../../../src/karabo/tests/io/HashBinarySerializer_Test.cc 
 	${MKDIR} -p ${TESTDIR}/_ext/861493463
 	${RM} $@.d
-	$(COMPILE.cc) -g -Wall -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -DKARABO_ENABLE_TRACE_LOG -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/include/hdf5 -MMD -MP -MF $@.d -o ${TESTDIR}/_ext/861493463/HashBinarySerializer_Test.o ../../../src/karabo/tests/io/HashBinarySerializer_Test.cc
+	$(COMPILE.cc) -g -Wall -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -DKARABO_NO_ENABLE_TRACE_LOG -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/include/hdf5 -MMD -MP -MF $@.d -o ${TESTDIR}/_ext/861493463/HashBinarySerializer_Test.o ../../../src/karabo/tests/io/HashBinarySerializer_Test.cc
 
 
 ${TESTDIR}/_ext/861493463/HashXmlSerializer_Test.o: ../../../src/karabo/tests/io/HashXmlSerializer_Test.cc 
 	${MKDIR} -p ${TESTDIR}/_ext/861493463
 	${RM} $@.d
-	$(COMPILE.cc) -g -Wall -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -DKARABO_ENABLE_TRACE_LOG -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/include/hdf5 -MMD -MP -MF $@.d -o ${TESTDIR}/_ext/861493463/HashXmlSerializer_Test.o ../../../src/karabo/tests/io/HashXmlSerializer_Test.cc
+	$(COMPILE.cc) -g -Wall -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -DKARABO_NO_ENABLE_TRACE_LOG -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/include/hdf5 -MMD -MP -MF $@.d -o ${TESTDIR}/_ext/861493463/HashXmlSerializer_Test.o ../../../src/karabo/tests/io/HashXmlSerializer_Test.cc
 
 
 ${TESTDIR}/_ext/861493463/Hdf5_Test.o: ../../../src/karabo/tests/io/Hdf5_Test.cc 
 	${MKDIR} -p ${TESTDIR}/_ext/861493463
 	${RM} $@.d
-	$(COMPILE.cc) -g -Wall -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -DKARABO_ENABLE_TRACE_LOG -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/include/hdf5 -MMD -MP -MF $@.d -o ${TESTDIR}/_ext/861493463/Hdf5_Test.o ../../../src/karabo/tests/io/Hdf5_Test.cc
+	$(COMPILE.cc) -g -Wall -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -DKARABO_NO_ENABLE_TRACE_LOG -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/include/hdf5 -MMD -MP -MF $@.d -o ${TESTDIR}/_ext/861493463/Hdf5_Test.o ../../../src/karabo/tests/io/Hdf5_Test.cc
 
 
 ${TESTDIR}/_ext/861493463/SchemaXsdSerializer_Test.o: ../../../src/karabo/tests/io/SchemaXsdSerializer_Test.cc 
 	${MKDIR} -p ${TESTDIR}/_ext/861493463
 	${RM} $@.d
-	$(COMPILE.cc) -g -Wall -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -DKARABO_ENABLE_TRACE_LOG -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/include/hdf5 -MMD -MP -MF $@.d -o ${TESTDIR}/_ext/861493463/SchemaXsdSerializer_Test.o ../../../src/karabo/tests/io/SchemaXsdSerializer_Test.cc
+	$(COMPILE.cc) -g -Wall -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -DKARABO_NO_ENABLE_TRACE_LOG -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/include/hdf5 -MMD -MP -MF $@.d -o ${TESTDIR}/_ext/861493463/SchemaXsdSerializer_Test.o ../../../src/karabo/tests/io/SchemaXsdSerializer_Test.cc
 
 
 ${TESTDIR}/_ext/861493463/ioTestRunner.o: ../../../src/karabo/tests/io/ioTestRunner.cc 
 	${MKDIR} -p ${TESTDIR}/_ext/861493463
 	${RM} $@.d
-	$(COMPILE.cc) -g -Wall -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -DKARABO_ENABLE_TRACE_LOG -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/include/hdf5 -MMD -MP -MF $@.d -o ${TESTDIR}/_ext/861493463/ioTestRunner.o ../../../src/karabo/tests/io/ioTestRunner.cc
+	$(COMPILE.cc) -g -Wall -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -DKARABO_NO_ENABLE_TRACE_LOG -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/include/hdf5 -MMD -MP -MF $@.d -o ${TESTDIR}/_ext/861493463/ioTestRunner.o ../../../src/karabo/tests/io/ioTestRunner.cc
 
 
 ${TESTDIR}/_ext/936496563/Logger_Test.o: ../../../src/karabo/tests/log/Logger_Test.cc 
@@ -762,7 +762,7 @@ ${OBJECTDIR}/_ext/769817549/Attribute_nomain.o: ${OBJECTDIR}/_ext/769817549/Attr
 	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
 	then  \
 	    ${RM} $@.d;\
-	    $(COMPILE.cc) -g -Wall -DKARABO_ENABLE_TRACE_LOG -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/769817549/Attribute_nomain.o ../../../src/karabo/io/h5/Attribute.cc;\
+	    $(COMPILE.cc) -g -Wall -DKARABO_NO_ENABLE_TRACE_LOG -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/769817549/Attribute_nomain.o ../../../src/karabo/io/h5/Attribute.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/769817549/Attribute.o ${OBJECTDIR}/_ext/769817549/Attribute_nomain.o;\
 	fi
@@ -775,7 +775,7 @@ ${OBJECTDIR}/_ext/769817549/Dataset_nomain.o: ${OBJECTDIR}/_ext/769817549/Datase
 	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
 	then  \
 	    ${RM} $@.d;\
-	    $(COMPILE.cc) -g -Wall -DKARABO_ENABLE_TRACE_LOG -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/769817549/Dataset_nomain.o ../../../src/karabo/io/h5/Dataset.cc;\
+	    $(COMPILE.cc) -g -Wall -DKARABO_NO_ENABLE_TRACE_LOG -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/769817549/Dataset_nomain.o ../../../src/karabo/io/h5/Dataset.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/769817549/Dataset.o ${OBJECTDIR}/_ext/769817549/Dataset_nomain.o;\
 	fi
@@ -788,7 +788,7 @@ ${OBJECTDIR}/_ext/769817549/DatasetWriter_nomain.o: ${OBJECTDIR}/_ext/769817549/
 	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
 	then  \
 	    ${RM} $@.d;\
-	    $(COMPILE.cc) -g -Wall -DKARABO_ENABLE_TRACE_LOG -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/769817549/DatasetWriter_nomain.o ../../../src/karabo/io/h5/DatasetWriter.cc;\
+	    $(COMPILE.cc) -g -Wall -DKARABO_NO_ENABLE_TRACE_LOG -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/769817549/DatasetWriter_nomain.o ../../../src/karabo/io/h5/DatasetWriter.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/769817549/DatasetWriter.o ${OBJECTDIR}/_ext/769817549/DatasetWriter_nomain.o;\
 	fi
@@ -801,7 +801,7 @@ ${OBJECTDIR}/_ext/769817549/Element_nomain.o: ${OBJECTDIR}/_ext/769817549/Elemen
 	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
 	then  \
 	    ${RM} $@.d;\
-	    $(COMPILE.cc) -g -Wall -DKARABO_ENABLE_TRACE_LOG -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/769817549/Element_nomain.o ../../../src/karabo/io/h5/Element.cc;\
+	    $(COMPILE.cc) -g -Wall -DKARABO_NO_ENABLE_TRACE_LOG -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/769817549/Element_nomain.o ../../../src/karabo/io/h5/Element.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/769817549/Element.o ${OBJECTDIR}/_ext/769817549/Element_nomain.o;\
 	fi
@@ -814,7 +814,7 @@ ${OBJECTDIR}/_ext/769817549/ErrorHandler_nomain.o: ${OBJECTDIR}/_ext/769817549/E
 	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
 	then  \
 	    ${RM} $@.d;\
-	    $(COMPILE.cc) -g -Wall -DKARABO_ENABLE_TRACE_LOG -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/769817549/ErrorHandler_nomain.o ../../../src/karabo/io/h5/ErrorHandler.cc;\
+	    $(COMPILE.cc) -g -Wall -DKARABO_NO_ENABLE_TRACE_LOG -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/769817549/ErrorHandler_nomain.o ../../../src/karabo/io/h5/ErrorHandler.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/769817549/ErrorHandler.o ${OBJECTDIR}/_ext/769817549/ErrorHandler_nomain.o;\
 	fi
@@ -827,7 +827,7 @@ ${OBJECTDIR}/_ext/769817549/File_nomain.o: ${OBJECTDIR}/_ext/769817549/File.o ..
 	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
 	then  \
 	    ${RM} $@.d;\
-	    $(COMPILE.cc) -g -Wall -DKARABO_ENABLE_TRACE_LOG -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/769817549/File_nomain.o ../../../src/karabo/io/h5/File.cc;\
+	    $(COMPILE.cc) -g -Wall -DKARABO_NO_ENABLE_TRACE_LOG -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/769817549/File_nomain.o ../../../src/karabo/io/h5/File.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/769817549/File.o ${OBJECTDIR}/_ext/769817549/File_nomain.o;\
 	fi
@@ -840,7 +840,7 @@ ${OBJECTDIR}/_ext/769817549/FixedLengthArray_nomain.o: ${OBJECTDIR}/_ext/7698175
 	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
 	then  \
 	    ${RM} $@.d;\
-	    $(COMPILE.cc) -g -Wall -DKARABO_ENABLE_TRACE_LOG -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/769817549/FixedLengthArray_nomain.o ../../../src/karabo/io/h5/FixedLengthArray.cc;\
+	    $(COMPILE.cc) -g -Wall -DKARABO_NO_ENABLE_TRACE_LOG -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/769817549/FixedLengthArray_nomain.o ../../../src/karabo/io/h5/FixedLengthArray.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/769817549/FixedLengthArray.o ${OBJECTDIR}/_ext/769817549/FixedLengthArray_nomain.o;\
 	fi
@@ -853,7 +853,7 @@ ${OBJECTDIR}/_ext/769817549/FixedLengthArrayAttribute_nomain.o: ${OBJECTDIR}/_ex
 	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
 	then  \
 	    ${RM} $@.d;\
-	    $(COMPILE.cc) -g -Wall -DKARABO_ENABLE_TRACE_LOG -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/769817549/FixedLengthArrayAttribute_nomain.o ../../../src/karabo/io/h5/FixedLengthArrayAttribute.cc;\
+	    $(COMPILE.cc) -g -Wall -DKARABO_NO_ENABLE_TRACE_LOG -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/769817549/FixedLengthArrayAttribute_nomain.o ../../../src/karabo/io/h5/FixedLengthArrayAttribute.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/769817549/FixedLengthArrayAttribute.o ${OBJECTDIR}/_ext/769817549/FixedLengthArrayAttribute_nomain.o;\
 	fi
@@ -866,7 +866,7 @@ ${OBJECTDIR}/_ext/769817549/Format_nomain.o: ${OBJECTDIR}/_ext/769817549/Format.
 	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
 	then  \
 	    ${RM} $@.d;\
-	    $(COMPILE.cc) -g -Wall -DKARABO_ENABLE_TRACE_LOG -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/769817549/Format_nomain.o ../../../src/karabo/io/h5/Format.cc;\
+	    $(COMPILE.cc) -g -Wall -DKARABO_NO_ENABLE_TRACE_LOG -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/769817549/Format_nomain.o ../../../src/karabo/io/h5/Format.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/769817549/Format.o ${OBJECTDIR}/_ext/769817549/Format_nomain.o;\
 	fi
@@ -879,7 +879,7 @@ ${OBJECTDIR}/_ext/769817549/Group_nomain.o: ${OBJECTDIR}/_ext/769817549/Group.o 
 	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
 	then  \
 	    ${RM} $@.d;\
-	    $(COMPILE.cc) -g -Wall -DKARABO_ENABLE_TRACE_LOG -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/769817549/Group_nomain.o ../../../src/karabo/io/h5/Group.cc;\
+	    $(COMPILE.cc) -g -Wall -DKARABO_NO_ENABLE_TRACE_LOG -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/769817549/Group_nomain.o ../../../src/karabo/io/h5/Group.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/769817549/Group.o ${OBJECTDIR}/_ext/769817549/Group_nomain.o;\
 	fi
@@ -892,7 +892,7 @@ ${OBJECTDIR}/_ext/769817549/Scalar_nomain.o: ${OBJECTDIR}/_ext/769817549/Scalar.
 	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
 	then  \
 	    ${RM} $@.d;\
-	    $(COMPILE.cc) -g -Wall -DKARABO_ENABLE_TRACE_LOG -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/769817549/Scalar_nomain.o ../../../src/karabo/io/h5/Scalar.cc;\
+	    $(COMPILE.cc) -g -Wall -DKARABO_NO_ENABLE_TRACE_LOG -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/769817549/Scalar_nomain.o ../../../src/karabo/io/h5/Scalar.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/769817549/Scalar.o ${OBJECTDIR}/_ext/769817549/Scalar_nomain.o;\
 	fi
@@ -905,7 +905,7 @@ ${OBJECTDIR}/_ext/769817549/ScalarAttribute_nomain.o: ${OBJECTDIR}/_ext/76981754
 	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
 	then  \
 	    ${RM} $@.d;\
-	    $(COMPILE.cc) -g -Wall -DKARABO_ENABLE_TRACE_LOG -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/769817549/ScalarAttribute_nomain.o ../../../src/karabo/io/h5/ScalarAttribute.cc;\
+	    $(COMPILE.cc) -g -Wall -DKARABO_NO_ENABLE_TRACE_LOG -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/769817549/ScalarAttribute_nomain.o ../../../src/karabo/io/h5/ScalarAttribute.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/769817549/ScalarAttribute.o ${OBJECTDIR}/_ext/769817549/ScalarAttribute_nomain.o;\
 	fi
@@ -918,7 +918,7 @@ ${OBJECTDIR}/_ext/769817549/Table_nomain.o: ${OBJECTDIR}/_ext/769817549/Table.o 
 	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
 	then  \
 	    ${RM} $@.d;\
-	    $(COMPILE.cc) -g -Wall -DKARABO_ENABLE_TRACE_LOG -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/769817549/Table_nomain.o ../../../src/karabo/io/h5/Table.cc;\
+	    $(COMPILE.cc) -g -Wall -DKARABO_NO_ENABLE_TRACE_LOG -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/769817549/Table_nomain.o ../../../src/karabo/io/h5/Table.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/769817549/Table.o ${OBJECTDIR}/_ext/769817549/Table_nomain.o;\
 	fi
@@ -931,7 +931,7 @@ ${OBJECTDIR}/_ext/769817549/TypeTraits_nomain.o: ${OBJECTDIR}/_ext/769817549/Typ
 	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
 	then  \
 	    ${RM} $@.d;\
-	    $(COMPILE.cc) -g -Wall -DKARABO_ENABLE_TRACE_LOG -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/769817549/TypeTraits_nomain.o ../../../src/karabo/io/h5/TypeTraits.cc;\
+	    $(COMPILE.cc) -g -Wall -DKARABO_NO_ENABLE_TRACE_LOG -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/769817549/TypeTraits_nomain.o ../../../src/karabo/io/h5/TypeTraits.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/769817549/TypeTraits.o ${OBJECTDIR}/_ext/769817549/TypeTraits_nomain.o;\
 	fi

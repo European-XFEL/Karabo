@@ -100,7 +100,7 @@ namespace karabo {
                 }
 
                 void write(const karabo::util::Hash::Node& node, hsize_t len, hid_t dataSet, hid_t fileDataSpace) {
-                    
+
                     const std::vector<T>& vec = node.getValue< std::vector<T> >();
                     const T* ptr = &vec[0];
                     hid_t tid = ScalarTypes::getHdf5NativeType<T > ();
@@ -109,9 +109,9 @@ namespace karabo {
                     vdims[0] = len;
                     karabo::util::Dims memoryDims(vdims);
                     hid_t mds = Dataset::dataSpace(memoryDims);
-                    
+
                     herr_t status = H5Dwrite(dataSet, tid, mds, fileDataSpace, H5P_DEFAULT, ptr);
-                    
+
                     KARABO_CHECK_HDF5_STATUS(status)
                     KARABO_CHECK_HDF5_STATUS(H5Tclose(tid));
 
@@ -151,19 +151,7 @@ namespace karabo {
                 KARABO_CLASSINFO(DatasetVectorWriter, "DatasetWriter_" + karabo::util::ToType<karabo::util::ToLiteral>::to(karabo::util::FromType<karabo::util::FromTypeInfo>::from(typeid (std::vector<bool>))), "1.0")
 
 
-                //                static void expectedParameters(karabo::util::Schema& expected) {
-                //
-                //                    karabo::util::VECTOR_UINT64_ELEMENT(expected)
-                //                            .key("dims")
-                //                            .displayedName("Dimensions")
-                //                            .description("Array dimensions.")
-                //                            .assignmentMandatory()
-                //                            .init()
-                //                            .commit();
-                //                }
-
                 DatasetVectorWriter(const karabo::util::Hash& input) : DatasetWriter<bool>(input) {
-                    //                    m_len = input.get<std::vector<unsigned long long> >("dims").size();
                 }
 
                 void write(const karabo::util::Hash::Node& node, hid_t dataSet, hid_t memoryDataSpace, hid_t fileDataSpace) {
@@ -193,19 +181,7 @@ namespace karabo {
                 KARABO_CLASSINFO(DatasetPointerWriter, "DatasetWriter_" + karabo::util::ToType<karabo::util::ToLiteral>::to(karabo::util::FromType<karabo::util::FromTypeInfo>::from(typeid (bool*))), "1.0")
 
 
-                //                static void expectedParameters(karabo::util::Schema& expected) {
-                //
-                //                    karabo::util::VECTOR_UINT64_ELEMENT(expected)
-                //                            .key("dims")
-                //                            .displayedName("Dimensions")
-                //                            .description("Array dimensions.")
-                //                            .assignmentMandatory()
-                //                            .init()
-                //                            .commit();
-                //                }
-
                 DatasetPointerWriter(const karabo::util::Hash& input) : DatasetWriter<bool>(input) {
-                    //                    m_len = input.get<std::vector<unsigned long long> >("dims").size();
                 }
 
                 void write(const karabo::util::Hash::Node& node, hid_t dataSet, hid_t memoryDataSpace, hid_t fileDataSpace) {
@@ -249,10 +225,22 @@ namespace karabo {
 
                 void write(const karabo::util::Hash::Node& node, hsize_t len, hid_t dataSet, hid_t fileDataSpace) {
                     KARABO_LOG_FRAMEWORK_TRACE_CF << "entered (scalar, buffer)";
-                    const T* ptr = node.getValue<T*>();
+                    const T* ptr = 0;
+
+                    if (node.is<T*>()) {
+                        KARABO_LOG_FRAMEWORK_TRACE_CF << "buffer is raw pointer";
+                        ptr = node.getValue<T*>();
+                    } else if (node.is< std::vector<T> >()) {
+                        KARABO_LOG_FRAMEWORK_TRACE_CF << "buffer is a vector";
+                        const std::vector<T>& vec = node.getValue<std::vector<T> >();
+                        ptr = &vec[0];
+                    } else {
+                        throw KARABO_HDF_IO_EXCEPTION("buffer type not supported. Use vector or raw pointer");
+                    }
+
                     hid_t tid = ScalarTypes::getHdf5NativeType<T > ();
                     hid_t memoryDataSpace = Dataset::dataSpace1dim(len);
-                    herr_t status = H5Dwrite(dataSet, tid, memoryDataSpace, fileDataSpace, H5P_DEFAULT, &ptr);
+                    herr_t status = H5Dwrite(dataSet, tid, memoryDataSpace, fileDataSpace, H5P_DEFAULT, ptr);
                     KARABO_CHECK_HDF5_STATUS(status);
                     KARABO_CHECK_HDF5_STATUS(H5Tclose(tid));
                 }

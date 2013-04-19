@@ -95,6 +95,7 @@
       </logicalFolder>
       <itemPath>../../../src/karabo/log/Logger.cc</itemPath>
       <itemPath>../../../src/karabo/log/Logger.hh</itemPath>
+      <itemPath>../../../src/karabo/log/Tracer.hh</itemPath>
     </logicalFolder>
     <logicalFolder name="f5" displayName="net" projectFiles="true">
       <logicalFolder name="f4" displayName="Broker" projectFiles="true">
@@ -729,6 +730,8 @@
             ex="false"
             tool="3"
             flavor2="0">
+      </item>
+      <item path="../../../src/karabo/log/Tracer.hh" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../../../src/karabo/net/AbstractIOService.hh"
             ex="false"
@@ -1870,6 +1873,8 @@
             ex="false"
             tool="3"
             flavor2="0">
+      </item>
+      <item path="../../../src/karabo/log/Tracer.hh" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../../../src/karabo/net/AbstractIOService.hh"
             ex="false"

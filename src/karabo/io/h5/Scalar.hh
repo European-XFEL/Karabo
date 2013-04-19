@@ -93,11 +93,10 @@ namespace karabo {
 
                 void write(const karabo::util::Hash& data, hsize_t recordId, hsize_t len) {
 
-                    KARABO_LOG_FRAMEWORK_TRACE_C("karabo.io.h5.Scalar") << "Write " << len << " records to dataset " << m_h5PathName << " from Hash element " << m_key;
-                    std::clog << "Write " << len << " records to dataset " << m_h5PathName << " from Hash element " << m_key << std::endl;
+                    KARABO_LOG_FRAMEWORK_TRACE_C("karabo.io.h5.Scalar") << "Write " << len << " records to dataset " << m_h5PathName << " from Hash element " << m_key;                    
                     try {
-                        Dataset::extend(m_dataSet, m_fileDataSpace, len);
-                        Dataset::selectRecord(m_fileDataSpace, recordId, len);                  
+                        m_fileDataSpace = extend(m_dataSet, m_fileDataSpace, len);                        
+                        m_fileDataSpace = selectRecord(m_fileDataSpace, recordId, len);                  
                         m_datasetWriter->write(data.getNode(m_key, '/'), len, m_dataSet, m_fileDataSpace);
                     } catch (karabo::util::Exception& e) {
                         KARABO_RETHROW_AS(KARABO_PROPAGATED_EXCEPTION("Cannot write Hash node " + m_key + " to dataset /" + m_h5PathName));
