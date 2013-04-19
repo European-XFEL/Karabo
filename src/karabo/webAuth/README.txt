@@ -6,7 +6,7 @@
 
 $> wsdl2h -o ClientAuthentication.h http://exflpcx18262:8080/XFELAuthWebService/Authentication?WSDL
 
-$> soapcpp2 -j -I/usr/share/gsoap/import auth.h
+$> soapcpp2 -j -I/usr/share/gsoap/import ClientAuthentication.h
 
 --> Add these functions to soap.C.cpp file:
 SOAP_FMAC3 const char * SOAP_FMAC4 soap_check_faultsubcode(struct soap *soap)
