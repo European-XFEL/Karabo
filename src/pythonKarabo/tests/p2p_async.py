@@ -12,12 +12,13 @@ class Server(threading.Thread):
         threading.Thread.__init__(self)
         #create connection object
         self.connection = Connection.create("Tcp", Hash("type", "server", "port", port))
-        #set up error handler
+        #set error handler
         self.connection.setErrorHandler(self.onError)
         #register connect handler for incoming connections
         self.connection.startAsync(self.onConnect)
         #extract io service object
         self.ioserv = self.connection.getIOService()
+        print "TCP Async server listening port",port
         
     def onError(self, channel, ec):
         print "Error #%r => %r  -- close channel" % (ec.value(), ec.message())
@@ -25,31 +26,32 @@ class Server(threading.Thread):
         
     def onConnect(self, channel):
         try:
-            print "Server.onConnect: Incoming connection #%r" % id(channel)
+            print "TCP Async server onConnect: Incoming connection #%r" % id(channel)
             #register connect handler for incoming connections
             self.connection.startAsync(self.onConnect)
             #register read Hash handler for this channel (client)
             channel.readAsyncHash(self.onReadHash)
         except RuntimeError,e:
-            print "Server.onConnect:",str(e)
+            print "TCP Async server onConnect:",str(e)
     
     def onReadHash(self, channel, hash):
         try:
-            print "Read hash on #%r" % id(channel)
+            print "TCP Async server onReadHash id #%r" % id(channel)
             hash["server"] = "APPROVED!"
             channel.write(hash)
             channel.readAsyncHash(self.onReadHash)
         except RuntimeError,e:
-            print "Server.onReadHash:",str(e)
+            print "TCP Async server onReadHash:",str(e)
         
     def run(self):
         try:
             self.ioserv.run()
         except Exception, e:
-            print "Server.run: " + str(e)
+            print "TCP Async server run: " + str(e)
         
     # this method stops server
     def stop(self):
+        print "Stop TCP Async server"
         self.ioserv.stop()
         
 
@@ -70,7 +72,7 @@ class  P2p_asyncTestCase(unittest.TestCase):
 
         def onConnect(channel):
             try:
-                print "ASync:  Connection established"
+                print "ASync client onConnect:  Connection established. id is", id(channel)
                 h = Hash("a.b.c", 1, "x.y.z", [1,2,3,4,5], "d", Hash("abc", 'rabbish'))
                 channel.write(h)
                 channel.readAsyncHash(onReadHash)
@@ -78,19 +80,19 @@ class  P2p_asyncTestCase(unittest.TestCase):
                 print "onConnect:",str(e)
 
         def onReadHash(channel, h):
+            print "ASync client onReadHash: id is", id(channel)
             try:
                 self.assertEqual(len(h), 4)
                 self.assertEqual(h['server'], "APPROVED!")
                 self.assertEqual(h['a.b.c'], 1)
                 self.assertEqual(h['x.y.z'], [1,2,3,4,5])
                 self.assertEqual(h['d.abc'], 'rabbish')
-                print "Register onTimeout handler"
                 channel.waitAsync(1000, onTimeout)
             except Exception, e:
                 self.fail("test_asynchronous_client exception group 1: " + str(e))
 
         def onTimeout(channel):
-            print "Timeout reached. Stop further communication"
+            print "ASync client onTimeout: stop further communication: id is", id(channel)
             channel.close()
 
         # Asynchronous TCP client
