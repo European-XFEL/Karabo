@@ -466,6 +466,7 @@ namespace karabo {
                 karabo::net::BrokerConnection::Pointer connection = karabo::net::BrokerConnection::createChoice("connection", m_parameters);
 
                 // Prepare some info further describing this particular instance
+                // status, visibility, owner
                 Hash info("type", "device", "classId", m_classId, "serverId", m_serverId, "version", Device::classInfo().getVersion(), "host", boost::asio::ip::host_name());
 
                 // Initialize the SignalSlotable instance
