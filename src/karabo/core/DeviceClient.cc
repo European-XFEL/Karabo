@@ -67,7 +67,7 @@ namespace karabo {
 
         void DeviceClient::slotChanged(const karabo::util::Hash& hash, const std::string & instanceId) {
             boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
-            Hash& tmp = m_runtimeSystemDescription.get<Hash>("device." + instanceId + "configuration");
+            Hash& tmp = m_runtimeSystemDescription.get<Hash>("device." + instanceId + ".configuration");
             tmp.merge(hash);
             // NOTE: This will block us here, i.e. we are deaf for other changes...
             // NOTE: Monitors could be implemented as additional slots, too.
