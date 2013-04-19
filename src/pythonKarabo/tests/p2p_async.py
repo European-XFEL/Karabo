@@ -6,7 +6,6 @@ import threading
 import time
 from libkarathon import *
 
-
 class Server(threading.Thread):
     
     def __init__(self, port):
@@ -53,46 +52,58 @@ class Server(threading.Thread):
     def stop(self):
         self.ioserv.stop()
         
-        
-class  P2p_TestCase(unittest.TestCase):
-    
+
+class  P2p_asyncTestCase(unittest.TestCase):
     def setUp(self):
-        #start server listening on port 32323
-        self.server = Server(32323)
+        #start server listening on port 32123
+        self.server = Server(32123)
         self.server.start()
         time.sleep(1)
 
     def tearDown(self):
-        print "Stop server io service and exit server thread"
-        self.server.stop()
-        print "join server thread"
-        self.server.join()
-        print "joined"
+        self.server.stop() # stop server io service
+        self.server.join() # join server thread
 
-    def test_synchronous_client(self):
-        # Synchronous TCP client
+    def test_p2p_async(self):
+        def onError(channel, error_code):
+            print "Error #%r => %r" % (error_code.value(), error_code.message())
+
+        def onConnect(channel):
+            try:
+                print "ASync:  Connection established"
+                h = Hash("a.b.c", 1, "x.y.z", [1,2,3,4,5], "d", Hash("abc", 'rabbish'))
+                channel.write(h)
+                channel.readAsyncHash(onReadHash)
+            except RuntimeError,e:
+                print "onConnect:",str(e)
+
+        def onReadHash(channel, h):
+            try:
+                self.assertEqual(len(h), 4)
+                self.assertEqual(h['server'], "APPROVED!")
+                self.assertEqual(h['a.b.c'], 1)
+                self.assertEqual(h['x.y.z'], [1,2,3,4,5])
+                self.assertEqual(h['d.abc'], 'rabbish')
+                print "Register onTimeout handler"
+                channel.waitAsync(1000, onTimeout)
+            except Exception, e:
+                self.fail("test_asynchronous_client exception group 1: " + str(e))
+
+        def onTimeout(channel):
+            print "Timeout reached. Stop further communication"
+            channel.close()
+
+        # Asynchronous TCP client
         try:
             #create client connection object
-            connection = Connection.create("Tcp", Hash("type", "client", "hostname", "localhost", "port", 32323))    
-            #connect to the server
-            channel = connection.start()
-            print "Synchronous TCP client channel id =", id(channel), ". Channel type = ", type(channel)
-            #build hash to send to server
-            h = Hash("a.b.c", 1, "x.y.z", [1,2,3,4,5], "d", Hash("abc", 'rabbish'))
-            channel.write(h)
-            h = Hash()
-            channel.read(h)
-            channel.close()
-            
-            self.assertEqual(len(h), 4)
-            self.assertEqual(h['server'], "APPROVED!")
-            self.assertEqual(h['a.b.c'], 1)
-            self.assertEqual(h['x.y.z'], [1,2,3,4,5])
-            self.assertEqual(h['d.abc'], 'rabbish')
-            
-            print "Channel closed"
+            connection = Connection.create("Tcp", Hash("type", "client", "hostname", "localhost", "port", 32123))
+            connection.setErrorHandler(onError)
+            #register connect handler
+            connection.startAsync(onConnect)
+            ioservice = connection.getIOService()
+            ioservice.run()
         except Exception, e:
-            self.fail("test_server exception group 1: " + str(e))
+            self.fail("test_asynchronous_client exception group 2: " + str(e))
 
 
 if __name__ == '__main__':
