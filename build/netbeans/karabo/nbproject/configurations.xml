@@ -303,8 +303,6 @@
                      displayName="webAuth_test"
                      projectFiles="true"
                      kind="TEST">
-        <itemPath>../../../src/karabo/tests/webAuth/Authenticate_Test.cc</itemPath>
-        <itemPath>../../../src/karabo/tests/webAuth/Authenticate_Test.hh</itemPath>
         <itemPath>../../../src/karabo/tests/webAuth/webAuthTestRunner.cc</itemPath>
       </logicalFolder>
       <logicalFolder name="f5" displayName="xms_test" projectFiles="true" kind="TEST">
@@ -1059,16 +1057,6 @@
             tool="1"
             flavor2="0">
       </item>
-      <item path="../../../src/karabo/tests/webAuth/Authenticate_Test.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/tests/webAuth/Authenticate_Test.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
       <item path="../../../src/karabo/tests/webAuth/webAuthTestRunner.cc"
             ex="false"
             tool="1"
@@ -1313,56 +1301,6 @@
       </item>
       <item path="../../../src/karabo/util/util.hh" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="../../../src/karabo/webAuth/Authenticator.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/webAuth/Authenticator.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/webAuth/ClientAuthentication.h"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/webAuth/soapAuthenticationPortBindingProxy.cpp"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/webAuth/soapAuthenticationPortBindingProxy.h"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/webAuth/soapC.cpp"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/webAuth/soapH.h"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/webAuth/soapStub.h"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/webAuth/stdsoap2.cpp"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/webAuth/stdsoap2.h"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
       <item path="../../../src/karabo/xms/Memory.cc" ex="false" tool="1" flavor2="0">
       </item>
       <item path="../../../src/karabo/xms/Memory.hh" ex="false" tool="3" flavor2="0">
@@ -1453,7 +1391,7 @@
         </cTool>
         <ccTool>
           <preprocessorList>
-            <Elem>KARABO_NO_ENABLE_TRACE_LOG</Elem>
+            <Elem>KARABO_ENABLE_TRACE_LOG</Elem>
           </preprocessorList>
         </ccTool>
         <linkerTool>
@@ -1513,7 +1451,7 @@
       <folder path="f2/f1">
         <ccTool>
           <preprocessorList>
-            <Elem>KARABO_NO_ENABLE_TRACE_LOG</Elem>
+            <Elem>KARABO_ENABLE_TRACE_LOG</Elem>
           </preprocessorList>
         </ccTool>
       </folder>
@@ -1521,13 +1459,6 @@
         <ccTool>
           <preprocessorList>
             <Elem>LINUX</Elem>
-          </preprocessorList>
-        </ccTool>
-      </folder>
-      <folder path="f8">
-        <ccTool>
-          <preprocessorList>
-            <Elem>WITH_NONAMESPACES</Elem>
           </preprocessorList>
         </ccTool>
       </folder>
@@ -2267,16 +2198,6 @@
             tool="1"
             flavor2="0">
       </item>
-      <item path="../../../src/karabo/tests/webAuth/Authenticate_Test.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/tests/webAuth/Authenticate_Test.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
       <item path="../../../src/karabo/tests/webAuth/webAuthTestRunner.cc"
             ex="false"
             tool="1"
@@ -2520,56 +2441,6 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/util/util.hh" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="../../../src/karabo/webAuth/Authenticator.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/webAuth/Authenticator.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/webAuth/ClientAuthentication.h"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/webAuth/soapAuthenticationPortBindingProxy.cpp"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/webAuth/soapAuthenticationPortBindingProxy.h"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/webAuth/soapC.cpp"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/webAuth/soapH.h"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/webAuth/soapStub.h"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/webAuth/stdsoap2.cpp"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/webAuth/stdsoap2.h"
-            ex="false"
-            tool="3"
-            flavor2="0">
       </item>
       <item path="../../../src/karabo/xms/Memory.cc" ex="false" tool="1" flavor2="0">
       </item>

@@ -182,9 +182,6 @@ namespace karabo {
                     KARABO_CHECK_HDF5_STATUS(status);
                     KARABO_CHECK_HDF5_STATUS(H5Tclose(tid));
                 }
-                //            private:
-                //                hsize_t m_len;
-
 
             };
 
@@ -227,9 +224,6 @@ namespace karabo {
 
                 }
 
-                //
-                //            private:
-                //                hsize_t m_len;
 
 
             };
@@ -254,11 +248,11 @@ namespace karabo {
                 }
 
                 void write(const karabo::util::Hash::Node& node, hsize_t len, hid_t dataSet, hid_t fileDataSpace) {
-                    KARABO_LOG_FRAMEWORK_TRACE_CF << "entered (scalar)";
-                    const T& value = node.getValue<T>();
+                    KARABO_LOG_FRAMEWORK_TRACE_CF << "entered (scalar, buffer)";
+                    const T* ptr = node.getValue<T*>();
                     hid_t tid = ScalarTypes::getHdf5NativeType<T > ();
-                    hid_t memoryDataSpace = Dataset::dataSpace(len);
-                    herr_t status = H5Dwrite(dataSet, tid, memoryDataSpace, fileDataSpace, H5P_DEFAULT, &value);
+                    hid_t memoryDataSpace = Dataset::dataSpace1dim(len);
+                    herr_t status = H5Dwrite(dataSet, tid, memoryDataSpace, fileDataSpace, H5P_DEFAULT, &ptr);
                     KARABO_CHECK_HDF5_STATUS(status);
                     KARABO_CHECK_HDF5_STATUS(H5Tclose(tid));
                 }

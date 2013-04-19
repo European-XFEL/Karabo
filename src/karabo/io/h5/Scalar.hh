@@ -43,8 +43,8 @@ namespace karabo {
 
 
                 Scalar(const karabo::util::Hash& input) : Dataset(input) {
-                    m_fileDataSpace = Dataset::dataSpace(0);
-                    m_memoryDataSpace1 = Dataset::dataSpace(1);
+                    m_fileDataSpace = Dataset::dataSpace1dim(0);
+                    m_memoryDataSpace1 = Dataset::dataSpace1dim(1);
                     m_datasetWriter = DatasetWriter<T>::create("DatasetWriter_" + Scalar<T>::classInfo().getClassId(),
                                                                karabo::util::Hash("dims", karabo::util::Dims().toVector())
                                                                );
@@ -62,7 +62,7 @@ namespace karabo {
                 }
 
                 void create(hsize_t chunkSize) {
-                    KARABO_LOG_FRAMEWORK_TRACE_CF << "Create dataset " << m_h5PathName << " with chunk size = " << chunkSize;
+                    KARABO_LOG_FRAMEWORK_TRACE_C("karabo.io.h5.Scalar") << "Create dataset " << m_h5PathName << " with chunk size = " << chunkSize;
                     try {
                         m_chunkSize = chunkSize;
                         karabo::util::Dims dims(chunkSize);
@@ -78,7 +78,7 @@ namespace karabo {
 
                 void write(const karabo::util::Hash& data, hsize_t recordId) {
 
-                    KARABO_LOG_FRAMEWORK_TRACE_CF << "Write dataset " << m_h5PathName << " from Hash element " << m_key;
+                    KARABO_LOG_FRAMEWORK_TRACE_C("karabo.io.h5.Scalar") << "Write dataset " << m_h5PathName << " from Hash element " << m_key;
                     try {
                         if (recordId % m_chunkSize == 0) {
                             m_fileDataSpace = extend(m_dataSet, m_fileDataSpace, m_chunkSize);
@@ -93,14 +93,11 @@ namespace karabo {
 
                 void write(const karabo::util::Hash& data, hsize_t recordId, hsize_t len) {
 
-                    KARABO_LOG_FRAMEWORK_TRACE_CF << "Write " << len << " records to dataset " << m_h5PathName << " from Hash element " << m_key;
+                    KARABO_LOG_FRAMEWORK_TRACE_C("karabo.io.h5.Scalar") << "Write " << len << " records to dataset " << m_h5PathName << " from Hash element " << m_key;
+                    std::clog << "Write " << len << " records to dataset " << m_h5PathName << " from Hash element " << m_key << std::endl;
                     try {
                         Dataset::extend(m_dataSet, m_fileDataSpace, len);
-                        Dataset::selectRecord(m_fileDataSpace, recordId, len);
-
-                        //const T* ptr = data.get<T*>(m_key, '/');
-                        //hid_t mds = Dataset::dataSpace(len);
-                        ////                        DatasetWriter<T>::write(ptr, len, m_dataSet, mds, m_fileDataSpace);
+                        Dataset::selectRecord(m_fileDataSpace, recordId, len);                  
                         m_datasetWriter->write(data.getNode(m_key, '/'), len, m_dataSet, m_fileDataSpace);
                     } catch (karabo::util::Exception& e) {
                         KARABO_RETHROW_AS(KARABO_PROPAGATED_EXCEPTION("Cannot write Hash node " + m_key + " to dataset /" + m_h5PathName));

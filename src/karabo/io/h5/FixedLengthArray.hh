@@ -133,7 +133,7 @@ namespace karabo {
 
                 void write(const karabo::util::Hash& data, hsize_t recordId) {
 
-                    KARABO_LOG_FRAMEWORK_TRACE_CF << "writing array " << m_key;
+                    KARABO_LOG_FRAMEWORK_TRACE_C("FixedLengthArray") << "writing array " << m_key;
                     try {
                         KARABO_PROFILER_START_SCALAR1("dataspace")
 
@@ -157,7 +157,7 @@ namespace karabo {
 
                 void write(const karabo::util::Hash& data, hsize_t recordId, hsize_t len) {
 
-                    KARABO_LOG_FRAMEWORK_TRACE_CF << "writing " << len << " records of " << m_key;
+                    KARABO_LOG_FRAMEWORK_TRACE_C("FixedLengthArray") << "writing " << len << " records of " << m_key;
                     try {
 
                         KARABO_PROFILER_START_SCALAR1("dataspaceBuffer")
@@ -167,17 +167,9 @@ namespace karabo {
                         m_fileDataSpace = selectRecord(m_fileDataSpace, recordId, len);
                         karabo::util::Hash::Node node = data.getNode(m_key, '/');
                         
-//                        const std::vector<T>& vec = data.get<std::vector<T> >(m_key, '/');
-//                        std::vector<hsize_t> vdims = m_dimsPlus1.toVector();
-//                        vdims[0] = len;
-//                        karabo::util::Dims memoryDims(vdims);
-//                        hid_t mds = Dataset::dataSpace(memoryDims);
-
                         KARABO_PROFILER_STOP_SCALAR1
                         KARABO_PROFILER_START_SCALAR1("writeBuffer")
-
-                        m_datasetWriter->write(node, len, m_dataSet, m_fileDataSpace);
-                        //                        DatasetWriter<T>::write(vec, m_dataSet, mds, m_fileDataSpace);
+                        m_datasetWriter->write(node, len, m_dataSet, m_fileDataSpace);                        
                         KARABO_PROFILER_STOP_SCALAR1
                     } catch (...) {
                         KARABO_RETHROW_AS(KARABO_PROPAGATED_EXCEPTION("Cannot write Hash node " + m_key + " to dataset /" + m_h5PathName));
