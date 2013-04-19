@@ -59,10 +59,6 @@ class SOAP_CMAC AuthenticationPortBindingProxy
 	virtual	char *soap_sprint_fault(char *buf, size_t len);
 #endif
 
-	/// Web service operation 'login' (returns error code or SOAP_OK)
-	virtual	int login(ns1__login *ns1__login_, ns1__loginResponse *ns1__loginResponse_) { return login(NULL, NULL, ns1__login_, ns1__loginResponse_); }
-	virtual	int login(const char *endpoint, const char *soap_action, ns1__login *ns1__login_, ns1__loginResponse *ns1__loginResponse_);
-
 	/// Web service operation 'logout' (returns error code or SOAP_OK)
 	virtual	int logout(ns1__logout *ns1__logout_, ns1__logoutResponse *ns1__logoutResponse_) { return logout(NULL, NULL, ns1__logout_, ns1__logoutResponse_); }
 	virtual	int logout(const char *endpoint, const char *soap_action, ns1__logout *ns1__logout_, ns1__logoutResponse *ns1__logoutResponse_);
@@ -78,5 +74,9 @@ class SOAP_CMAC AuthenticationPortBindingProxy
 	/// Web service operation 'getUserNonce' (returns error code or SOAP_OK)
 	virtual	int getUserNonce(ns1__getUserNonce *ns1__getUserNonce_, ns1__getUserNonceResponse *ns1__getUserNonceResponse_) { return getUserNonce(NULL, NULL, ns1__getUserNonce_, ns1__getUserNonceResponse_); }
 	virtual	int getUserNonce(const char *endpoint, const char *soap_action, ns1__getUserNonce *ns1__getUserNonce_, ns1__getUserNonceResponse *ns1__getUserNonceResponse_);
+
+	/// Web service operation 'login' (returns error code or SOAP_OK)
+	virtual	int login(ns1__login *ns1__login_, ns1__loginResponse *ns1__loginResponse_) { return login(NULL, NULL, ns1__login_, ns1__loginResponse_); }
+	virtual	int login(const char *endpoint, const char *soap_action, ns1__login *ns1__login_, ns1__loginResponse *ns1__loginResponse_);
 };
 #endif
