@@ -6,10 +6,6 @@
  */
 
 #include <karabo/log/Logger.hh>
-#include <wchar.h>
-#include <iostream>
-#include <fstream>
-#include <stdlib.h>
 #include "Authenticator.hh"
 #include "soapAuthenticationPortBindingProxy.h"
 #include "AuthenticationPortBinding.nsmap"
