@@ -424,24 +424,21 @@ void H5File_Test::testVectorBufferWrite() {
 
     Hash i32el(
                "h5path", "",
-               "h5name", "mercury",
-               "compressionLevel", 9
+               "h5name", "mercury"
                );
 
     h5::Element::Pointer e1 = h5::Element::create("INT32", i32el);
 
     Hash u16(
              "h5path", "",
-             "h5name", "venus",
-             "compressionLevel", 9
+             "h5name", "venus"
              );
 
     h5::Element::Pointer e2 = h5::Element::create("UINT16", u16);
 
     Hash fel(
              "h5path", "",
-             "h5name", "earth",
-             "compressionLevel", 9
+             "h5name", "earth"
              );
 
     h5::Element::Pointer e3 = h5::Element::create("FLOAT", fel);
@@ -453,11 +450,15 @@ void H5File_Test::testVectorBufferWrite() {
 
 
     //data.set("vectors.image", v0).setAttribute("dims", Dims(1024, 1024).toVector());
-
-    data.set("mercury", vector<int>(100, 1));
-    data.set("venus", vector<unsigned short>(100, 2));
-    data.set("earth", vector<float>(100, 3.0));
-
+ 
+    vector<int> mercury(100, 1);
+    vector<unsigned short> venus(100, 2);
+    vector<float> earth(100, 3.0);
+    
+    data.set("mercury", &mercury[0] );
+    data.set("venus", &venus[0]);
+    data.set("earth", &earth[0]);
+ 
     File file(resourcePath("file3.h5"));
     file.open(File::TRUNCATE);
 
@@ -481,7 +482,7 @@ void H5File_Test::testVectorBufferWrite() {
 
 
 void H5File_Test::testBufferWrite() {
-
+ 
     {
         // clog << "TestBufferWrite" << endl;
 

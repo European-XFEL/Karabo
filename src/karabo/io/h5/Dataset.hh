@@ -7,8 +7,8 @@
  */
 
 
-#ifndef KARABO_IO_H5_GROUP_HH
-#define	KARABO_IO_H5_GROUP_HH
+#ifndef KARABO_IO_H5_DATASET_HH
+#define	KARABO_IO_H5_DATASET_HH
 
 #include <string>
 
@@ -65,7 +65,7 @@ namespace karabo {
                     return ds;
                 }
 
-                static hid_t dataSpace(hsize_t len) {
+                static hid_t dataSpace1dim(hsize_t len) {
                     hsize_t dims[] = {len};
                     hsize_t maxdims[] = {H5S_UNLIMITED};
                     hid_t ds = H5Screate_simple(1, dims, maxdims);
