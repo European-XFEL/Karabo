@@ -4,7 +4,7 @@
 #
 ######################################################################################
 
-$> wsdl2h -o ClientAuthentication.h http://localhost:8080/XFELAuthWebService/Authentication?WSDL
+$> wsdl2h -o ClientAuthentication.h http://exflpcx18262:8080/XFELAuthWebService/Authentication?WSDL
 
 $> soapcpp2 -j -I/usr/share/gsoap/import auth.h
 
