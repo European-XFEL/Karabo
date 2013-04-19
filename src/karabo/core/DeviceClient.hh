@@ -5,8 +5,6 @@
  *
  * Copyright (c) 2010-2012 European XFEL GmbH Hamburg. All rights reserved.
  */
-
-
 #include <karabo/xms/SignalSlotable.hh>
 
 #ifndef KARABO_CORE_DEVICE_CLIENT_HH
@@ -34,7 +32,9 @@ namespace karabo {
              *       <classId> +
              *         description SCHEMA
              *         configuration HASH
+             *     description SCHEMA
              *     configuration HASH
+             *     
              * device +
              *   <deviceId> type host classId serverId version +
              *      fullSchema SCHEMA
@@ -48,7 +48,7 @@ namespace karabo {
             boost::mutex m_runtimeSystemDescriptionMutex;
 
             std::string m_role;
-            
+
             boost::shared_ptr<karabo::xms::SignalSlotable> m_signalSlotable;
 
             bool m_isShared;
@@ -78,7 +78,8 @@ namespace karabo {
              * @param connectionType The communication system transport layer implementation
              * @param connectionParameters Additional connection configuration
              */
-            DeviceClient(const std::string& connectionType = "Jms", const karabo::util::Hash& connectionParameters = karabo::util::Hash());
+            DeviceClient(const std::string& connectionType = "Jms",
+                         const karabo::util::Hash& connectionParameters = karabo::util::Hash());
 
             /**
              * Constructor using instantiated signalSlotable class (shared communication)
@@ -100,7 +101,7 @@ namespace karabo {
              */
             int getDefaultTimeout() const;
 
-           
+
             /**
              * Allows asking whether an instance is online in the current distributed system
              * @param boolean indicating whether existing and hostname if exists
@@ -162,9 +163,10 @@ namespace karabo {
 
             void instantiateNoWait(const std::string& serverInstanceId, const karabo::util::Hash& configuration);
 
-            //            std::pair<bool, std::string> instantiateWait(const std::string& serverInstanceId, const std::string& classId, const karabo::util::Hash& configuration = karabo::util::Hash(), int timeout = -1);
-            //
-            //            std::pair<bool, std::string> instantiateWait(const std::string& serverInstanceId, const karabo::util::Hash& configuration, int timeout = -1);
+            std::pair<bool, std::string> instantiateWait(const std::string& serverInstanceId, const std::string& classId,
+                                                         const karabo::util::Hash& configuration = karabo::util::Hash(), int timeout = -1);
+
+            std::pair<bool, std::string> instantiateWait(const std::string& serverInstanceId, const karabo::util::Hash& configuration, int timeout = -1);
 
             void killNoWait(const std::string& instanceId);
 
@@ -198,7 +200,8 @@ namespace karabo {
             }
 
             template <class ValueType, class UserDataType>
-            bool registerPropertyMonitor(const std::string& instanceId, const std::string& key, const boost::function<void (const ValueType&, const std::string&, const boost::any&) >& callbackFunction, const UserDataType& userData) {
+            bool registerPropertyMonitor(const std::string& instanceId, const std::string& key, const boost::function<void (const ValueType&,
+                                         const std::string&, const boost::any&) >& callbackFunction, const UserDataType& userData) {
                 karabo::util::Schema schema = this->getFullSchema(instanceId);
                 if (schema.has(key)) {
                     boost::mutex::scoped_lock lock(m_propertyChangedHandlersMutex);
@@ -216,7 +219,8 @@ namespace karabo {
             void registerDeviceMonitor(const std::string& instanceId, const boost::function<void (const karabo::util::Hash&, const std::string&)>& callbackFunction);
 
             template <class UserDataType>
-            void registerDeviceMonitor(const std::string& instanceId, const boost::function<void (const karabo::util::Hash&, const std::string&, const boost::any&)>& callbackFunction, const UserDataType& userData) {
+            void registerDeviceMonitor(const std::string& instanceId, const boost::function<void (const karabo::util::Hash&, const std::string&, const boost::any&)>& callbackFunction,
+                                       const UserDataType& userData) {
                 boost::mutex::scoped_lock lock(m_deviceChangedHandlersMutex);
                 // Make sure we are caching this instanceId
                 this->cacheAndGetConfiguration(instanceId);
@@ -267,96 +271,98 @@ namespace karabo {
             void executeNoWait(const std::string& instanceId, const std::string& command, const A1& a1, const A2& a2, const A3& a3, const A4& a4) {
                 m_signalSlotable->call(instanceId, command, a1, a2, a3, a4);
             }
-            //
-            //            std::pair<bool, std::string> executeWait(const std::string& instanceId, const std::string& command, int timeout = -1) {
-            //                if (timeout == -1) timeout = m_defaultTimeout;
-            //
-            //                bool ok = true;
-            //                std::string text = "";
-            //
-            //                try {
-            //                    m_signalSlotable->request(instanceId, command).timeout(timeout).receive(text);
-            //                } catch (const karabo::util::Exception& e) {
-            //                    text = e.userFriendlyMsg();
-            //                    ok = false;
-            //                }
-            //                return std::make_pair(ok, text);
-            //            }
-            //
-            //            template <class A1>
-            //            std::pair<bool, std::string> executeWait(const std::string& instanceId, const std::string& command, const A1& a1, int timeout = -1) {
-            //                if (timeout == -1) timeout = m_defaultTimeout;
-            //
-            //                bool ok = true;
-            //                std::string text = "";
-            //
-            //                try {
-            //                    m_signalSlotable->request(instanceId, command, a1).timeout(timeout).receive(text);
-            //                } catch (const karabo::util::Exception& e) {
-            //                    text = e.userFriendlyMsg();
-            //                    ok = false;
-            //                }
-            //                return std::make_pair(ok, text);
-            //            }
-            //
-            //            template <class A1, class A2>
-            //            std::pair<bool, std::string> executeWait(const std::string& instanceId, const std::string& command, const A1& a1, const A2& a2, int timeout = -1) {
-            //                if (timeout == -1) timeout = m_defaultTimeout;
-            //
-            //                bool ok = true;
-            //                std::string text = "";
-            //
-            //                try {
-            //                    m_signalSlotable->request(instanceId, command, a1, a2).timeout(timeout).receive(text);
-            //                } catch (const karabo::util::Exception& e) {
-            //                    text = e.userFriendlyMsg();
-            //                    ok = false;
-            //                }
-            //                return std::make_pair(ok, text);
-            //            }
-            //
-            //            template <class A1, class A2, class A3>
-            //            std::pair<bool, std::string> executeWait(const std::string& instanceId, const std::string& command, const A1& a1, const A2& a2, const A3& a3, int timeout = -1) {
-            //                if (timeout == -1) timeout = m_defaultTimeout;
-            //
-            //                bool ok = true;
-            //                std::string text = "";
-            //
-            //                try {
-            //                    m_signalSlotable->request(instanceId, command, a1, a2, a3).timeout(timeout).receive(text);
-            //                } catch (const karabo::util::Exception& e) {
-            //                    text = e.userFriendlyMsg();
-            //                    ok = false;
-            //                }
-            //                return std::make_pair(ok, text);
-            //            }
-            //
-            //            template <class A1, class A2, class A3, class A4>
-            //            std::pair<bool, std::string> executeWait(const std::string& instanceId, const std::string& command, const A1& a1, const A2& a2, const A3& a3, const A4& a4, int timeout = -1) {
-            //                if (timeout == -1) timeout = m_defaultTimeout;
-            //
-            //                bool ok = true;
-            //                std::string text = "";
-            //
-            //                try {
-            //                    m_signalSlotable->request(instanceId, command, a1, a2, a3, a4).timeout(timeout).receive(text);
-            //                } catch (const karabo::util::Exception& e) {
-            //                    text = e.userFriendlyMsg();
-            //                    ok = false;
-            //                }
-            //                return std::make_pair(ok, text);
-            //            }
+
+            std::pair<bool, std::string> executeWait(const std::string& instanceId, const std::string& command, int timeout = -1) {
+                if (timeout == -1) timeout = m_defaultTimeout;
+
+                bool ok = true;
+                std::string text = "";
+
+                try {
+                    m_signalSlotable->request(instanceId, command).timeout(timeout).receive(text);
+                } catch (const karabo::util::Exception& e) {
+                    text = e.userFriendlyMsg();
+                    ok = false;
+                }
+                return std::make_pair(ok, text);
+            }
+
+            template <class A1>
+            std::pair<bool, std::string> executeWait(const std::string& instanceId, const std::string& command, const A1& a1, int timeout = -1) {
+                if (timeout == -1) timeout = m_defaultTimeout;
+
+                bool ok = true;
+                std::string text = "";
+
+                try {
+                    m_signalSlotable->request(instanceId, command, a1).timeout(timeout).receive(text);
+                } catch (const karabo::util::Exception& e) {
+                    text = e.userFriendlyMsg();
+                    ok = false;
+                }
+                return std::make_pair(ok, text);
+            }
+
+            template <class A1, class A2>
+            std::pair<bool, std::string> executeWait(const std::string& instanceId, const std::string& command, const A1& a1, const A2& a2, int timeout = -1) {
+                if (timeout == -1) timeout = m_defaultTimeout;
+
+                bool ok = true;
+                std::string text = "";
+
+                try {
+                    m_signalSlotable->request(instanceId, command, a1, a2).timeout(timeout).receive(text);
+                } catch (const karabo::util::Exception& e) {
+                    text = e.userFriendlyMsg();
+                    ok = false;
+                }
+                return std::make_pair(ok, text);
+            }
+
+            template <class A1, class A2, class A3>
+            std::pair<bool, std::string> executeWait(const std::string& instanceId, const std::string& command,
+                                                     const A1& a1, const A2& a2, const A3& a3, int timeout = -1) {
+                if (timeout == -1) timeout = m_defaultTimeout;
+
+                bool ok = true;
+                std::string text = "";
+
+                try {
+                    m_signalSlotable->request(instanceId, command, a1, a2, a3).timeout(timeout).receive(text);
+                } catch (const karabo::util::Exception& e) {
+                    text = e.userFriendlyMsg();
+                    ok = false;
+                }
+                return std::make_pair(ok, text);
+            }
+
+            template <class A1, class A2, class A3, class A4>
+            std::pair<bool, std::string> executeWait(const std::string& instanceId, const std::string& command,
+                                                     const A1& a1, const A2& a2, const A3& a3, const A4& a4, int timeout = -1) {
+                if (timeout == -1) timeout = m_defaultTimeout;
+
+                bool ok = true;
+                std::string text = "";
+
+                try {
+                    m_signalSlotable->request(instanceId, command, a1, a2, a3, a4).timeout(timeout).receive(text);
+                } catch (const karabo::util::Exception& e) {
+                    text = e.userFriendlyMsg();
+                    ok = false;
+                }
+                return std::make_pair(ok, text);
+            }
 
         protected: // functions
 
             void cacheAvailableInstances();
-            
+
             virtual void setupSlots();
-            
+
             virtual void slotChanged(const karabo::util::Hash& hash, const std::string& instanceId);
-            
+
             virtual void slotInstanceUpdated(const std::string& instanceId, const karabo::util::Hash& instanceInfo);
-             
+
             virtual void slotInstanceGone(const std::string& instanceId);
 
             static std::string generateOwnInstanceId();
@@ -366,7 +372,7 @@ namespace karabo {
             karabo::util::Schema cacheAndGetActiveSchema(const std::string& instanceId);
 
             karabo::util::Hash cacheAndGetConfiguration(const std::string& instanceId);
-            
+
             void refreshInstanceUsage(const std::string& instanceId);
 
             virtual void notifyDeviceChangedMonitors(const karabo::util::Hash& hash, const std::string& instanceId);
