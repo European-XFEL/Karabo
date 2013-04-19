@@ -453,7 +453,7 @@ namespace schemawrap {
             for (size_t i = 0; i < v.size(); i++) listParams.attr("append")(bp::object(v[i]));
             return listParams;
         }
-        throw KARABO_PYTHON_EXCEPTION("Python argument in 'getKeyss' should be a string");
+        throw KARABO_PYTHON_EXCEPTION("Python argument in 'getKeys' should be a string");
     }
 
 
@@ -667,6 +667,24 @@ void exportPyUtilSchema() {
         s.def("getDefaultValue", &schemawrap::getDefaultValue);
 
         s.def("getDefaultValueAs", &schemawrap::getDefaultValueAs);
+                
+        s.def("getMin", &Schema::getMin
+              , bp::return_value_policy< bp::copy_const_reference >());
+        
+        s.def("getMax", &Schema::getMax
+              , bp::return_value_policy< bp::copy_const_reference >());
+        
+        s.def("getMinSize"
+              , (const unsigned int& (Schema::*)(const string &) const)(&Schema::getMinSize)
+              , bp::return_value_policy< bp::copy_const_reference >());
+        
+        s.def("getMaxSize"
+              , (const unsigned int& (Schema::*)(const string &) const)(&Schema::getMaxSize)
+              , bp::return_value_policy< bp::copy_const_reference >());
+        
+        s.def("getExpertLevel", &Schema::getExpertLevel);
+
+        
         //all other get-s....
 
         //********* has methods ****************
@@ -696,7 +714,7 @@ void exportPyUtilSchema() {
         s.def("hasMinExc", &Schema::hasMinExc);
 
         s.def("hasMaxExc", &Schema::hasMaxExc);
-
+        
         //all other has .....
 
         //********* is methods ****************
