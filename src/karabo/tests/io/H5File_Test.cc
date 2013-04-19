@@ -30,6 +30,8 @@ H5File_Test::H5File_Test() {
     karabo::log::Tracer tr;
     tr.disableAll();
     tr.enable("karabo.io.h5");
+    tr.disable("karabo.io.h5.DatasetWriter_VECTOR_UINT16");
+
     //    tr.enable("karabo.io.h5.Table");
     //    tr.enable("karabo.io.h5.Table.saveTableFormatAsAttribute");
     //    tr.enable("karabo.io.h5.Table.openNew");
@@ -409,39 +411,37 @@ void H5File_Test::testReadTable() {
 void H5File_Test::testVectorBufferWrite() {
 
 
-    return;
-    //    clog << endl << "testVectorBufferWrite" << endl;
     Hash data;
 
     size_t nRec = 10;
-    size_t s = 1024 * 1024 * nRec;
-    vector<unsigned short> v0(s);
-    for (size_t i = 0; i < v0.size(); ++i) {
-        v0[i] = static_cast<unsigned short> (i % 10);
-    }
+//    size_t s = 1024 * 1024 * nRec;
+//    vector<unsigned short> v0(s);
+//    for (size_t i = 0; i < v0.size(); ++i) {
+//        v0[i] = static_cast<unsigned short> (i % 10);
+//    }
 
     Format::Pointer format = Format::createEmptyFormat();
 
-    Hash i32el(
+    Hash h1(
                "h5path", "",
                "h5name", "mercury"
                );
 
-    h5::Element::Pointer e1 = h5::Element::create("INT32", i32el);
+    h5::Element::Pointer e1 = h5::Element::create("INT32", h1);
 
-    Hash u16(
+    Hash h2(
              "h5path", "",
              "h5name", "venus"
              );
 
-    h5::Element::Pointer e2 = h5::Element::create("UINT16", u16);
+    h5::Element::Pointer e2 = h5::Element::create("UINT16", h2);
 
-    Hash fel(
+    Hash h3(
              "h5path", "",
              "h5name", "earth"
              );
 
-    h5::Element::Pointer e3 = h5::Element::create("FLOAT", fel);
+    h5::Element::Pointer e3 = h5::Element::create("FLOAT", h3);
 
     format->addElement(e1);
     format->addElement(e2);
@@ -450,15 +450,18 @@ void H5File_Test::testVectorBufferWrite() {
 
 
     //data.set("vectors.image", v0).setAttribute("dims", Dims(1024, 1024).toVector());
- 
-    vector<int> mercury(100, 1);
-    vector<unsigned short> venus(100, 2);
-    vector<float> earth(100, 3.0);
-    
-    data.set("mercury", &mercury[0] );
-    data.set("venus", &venus[0]);
-    data.set("earth", &earth[0]);
- 
+
+    size_t maxRec = 100;
+    vector<int> mercury(maxRec, 1);
+    vector<unsigned short> venus(maxRec, 2);
+    vector<float> earth(maxRec, 3);
+    for (size_t i = 0; i < maxRec; ++i) {
+        mercury[i] = i + 1000;
+        venus[i] = i;
+        earth[i] = i * 2.5;
+    }
+
+
     File file(resourcePath("file3.h5"));
     file.open(File::TRUNCATE);
 
@@ -468,12 +471,15 @@ void H5File_Test::testVectorBufferWrite() {
 
     Table::Pointer t = file.createTable("/planets", format, 10);
 
-    //int i = 0;
-    for (int i = 0; i < 10; ++i)
+
+    for (int i = 0; i < 10; ++i) {        
+        data.set("mercury", &mercury[i*nRec]);
+        data.set("venus", &venus[i*nRec]);
+        data.set("earth", &earth[i*nRec]);
+        
         t->write(data, i * nRec, nRec);
-
-
-    //    clog << "abcd" << endl;
+        
+    }    
 
     file.close();
 
@@ -482,7 +488,7 @@ void H5File_Test::testVectorBufferWrite() {
 
 
 void H5File_Test::testBufferWrite() {
- 
+
     {
         // clog << "TestBufferWrite" << endl;
 

@@ -111,7 +111,7 @@ namespace karabo {
         #ifdef KARABO_ENABLE_TRACE_LOG
         #define KARABO_LOG_FRAMEWORK_TRACE KARABO_LOG_FRAMEWORK_DEBUG
         #define KARABO_LOG_FRAMEWORK_TRACE_C(category) KARABO_LOG_FRAMEWORK_DEBUG_C(category)
-        #define KARABO_LOG_FRAMEWORK_TRACE_CF KARABO_LOG_FRAMEWORK_DEBUG_C(Self::classInfo().getLogCategory() + "." + __func__)
+        #define KARABO_LOG_FRAMEWORK_TRACE_CF KARABO_LOG_FRAMEWORK_DEBUG_C(Self::classInfo().getLogCategory() + "." + __func__)        
         #else 
         #define KARABO_LOG_FRAMEWORK_TRACE if(1); else std::cerr
         #define KARABO_LOG_FRAMEWORK_TRACE_C(category) if(1); else std::cerr
