@@ -28,9 +28,9 @@ namespace karabo {
             std::string m_software;
             //
             // Information returned when login is made
-            unsigned long long int userId;
-            unsigned long long int softwareId;
-            unsigned long long int roleId;
+            unsigned long long int m_userId;
+            unsigned long long int m_softwareId;
+            unsigned long long int m_roleId;
             std::string m_nonce;
             std::string m_sessionToken;
             std::string m_welcomeMessage;
@@ -79,9 +79,9 @@ namespace karabo {
             void setSessionToken(const std::string& newSessionToken);
             void setRoleDesc(const std::string& roleDesc);
             void setWelcomeMessage(const std::string& welcomeMessage);
-            void setRoleId(unsigned long long int roleId);
-            void setSoftwareId(unsigned long long int softwareId);
-            void setUserId(unsigned long long int userId);
+            void setRoleId(const unsigned long long int roleId);
+            void setSoftwareId(const unsigned long long int softwareId);
+            void setUserId(const unsigned long long int userId);
 
             void printObject(ns1__loginResponse nsLoginResp);
 
