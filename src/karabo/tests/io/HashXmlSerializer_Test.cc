@@ -45,6 +45,7 @@ void HashXmlSerializer_Test::setUp() {
 
     Hash unrooted("a.b.c", 1, "b.c", 2.0, "c", 3.f, "d.e", "4", "e.f.g.h", std::vector<unsigned long long > (5, 5), "F.f.f.f.f", Hash("x.y.z", 99));
     unrooted.setAttribute("F.f.f", "attr1", true);
+    unrooted.set("a1", string());
     m_unrootedHash = unrooted;
 }
 
@@ -114,9 +115,7 @@ void HashXmlSerializer_Test::testSerialization() {
     {
         std::string archive1;
         std::string archive2;
-
         p->save(m_unrootedHash, archive1);
-
         //cout << "\n\nXML string size: " << archive.size() / 1024 / 1024 << " MB" << endl;
 
         Hash h;
