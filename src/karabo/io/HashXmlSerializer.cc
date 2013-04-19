@@ -169,7 +169,8 @@ namespace karabo {
         void HashXmlSerializer::load(Hash& object, const std::string& archive) {
             this->load(object, archive.c_str());
         }
-        
+
+
         void HashXmlSerializer::load(karabo::util::Hash& object, const char* archive) {
             pugi::xml_document doc;
             doc.load(archive);
@@ -265,10 +266,34 @@ namespace karabo {
                         }
                     }
                     hashNode.setAttributes(attrs);
-                }
 
+                } else if (node.first_child().type() == pugi::node_null) {
+                    if (m_readDataTypes) {
+                        pugi::xml_attribute attr = node.attribute(m_typeFlag.c_str());
+                        if (!attr.empty()) {
+                            string attributeValue(attr.value());
+                            // Special case: Schema
+                            if (attributeValue == "HASH") hash.set(nodeName, Hash());
+                            else if (attributeValue == "SCHEMA") hash.set(nodeName, Schema());
+                            else {
+                                Hash::Node& hashNode = hash.set(nodeName, string());
+                                try {
+                                    hashNode.setType(Types::from<FromLiteral > (attributeValue));
+                                } catch (const karabo::util::Exception& e) {
+                                    cout << "WARN: Could not understand xml attribute type: \"" << attributeValue << "\". Will interprete type as string." << endl;
+                                    e.clearTrace();
+                                }
+                            }
+                        }
+                    } else {
+                        hash.set(nodeName, string());
+                    }
+                    hash.setAttributes(nodeName, attrs);
+                }
+                
                 // Go to next sibling
                 node = node.next_sibling();
+                
             }
         }
     }
