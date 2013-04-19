@@ -26,9 +26,13 @@ namespace karabo {
         class ConnectionWrap {
         public:
 
-            static void start(karabo::net::Connection& connection) {
-                ScopedGILRelease nogil;
-                connection.start();
+            static bp::object start(karabo::net::Connection& connection) {
+                karabo::net::Channel::Pointer channel;
+                {
+                    ScopedGILRelease nogil;
+                    channel = connection.start();
+                }
+                return bp::object(channel);
             }
 
             static void stop(karabo::net::Connection& connection) {

@@ -24,7 +24,10 @@ void exportp2p() {
     bp::docstring_options docs(true, true, false);
 
     {
-        bp::class_<ErrorCode> ec("ErrorCode", bp::init<>());
+        bp::class_<ErrorCode>("ErrorCode", bp::init<>())
+                .def("value", &ErrorCode::value)
+                .def("message", &ErrorCode::message)
+                ;
     }
 
     {
@@ -34,6 +37,7 @@ void exportp2p() {
                 .def("stop", &IOServiceWrap().stop)
                 ;
     }
+
     {
         bp::class_<Connection, Connection::Pointer, boost::noncopyable>("Connection", bp::no_init)
                 .def("expectedParameters", &Connection::expectedParameters, (bp::arg("expected")))
@@ -47,6 +51,7 @@ void exportp2p() {
                 KARABO_PYTHON_FACTORY_CONFIGURATOR(Connection)
                 ;
     }
+
     {
         bp::class_<Channel, Channel::Pointer, boost::noncopyable >("Channel", bp::no_init)
                 .def("getConnection", &Channel::getConnection)
@@ -64,6 +69,7 @@ void exportp2p() {
                 .def("writeAsyncHashHash", &ChannelWrap().writeAsyncHashHash, (bp::arg("hdr"), bp::arg("data"), bp::arg("handler")))
                 .def("waitAsync", &ChannelWrap().waitAsync, (bp::arg("milliseconds"), bp::arg("handler")))
                 .def("setErrorHandler", &ChannelWrap().setErrorHandler, (bp::arg("handler")))
+                .def("close", &Channel::close)
                 KARABO_PYTHON_FACTORY_CONFIGURATOR(Channel)
                 ;
     }

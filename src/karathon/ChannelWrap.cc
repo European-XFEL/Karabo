@@ -141,10 +141,11 @@ namespace karabo {
                 ScopedGILRelease nogil;
                 channel.read(data, size);
                 return;
-            } else if (bp::extract<Hash&>(obj).check()) {
-                Hash& hash = bp::extract<Hash&>(obj);
+            } else if (bp::extract<karabo::util::Hash&>(obj).check()) {
+                karabo::util::Hash& hash = bp::extract<karabo::util::Hash&>(obj);
                 ScopedGILRelease nogil;
                 channel.read(hash);
+                return;
             }
             throw KARABO_PYTHON_EXCEPTION("Python type in parameter is not supported");
         }
@@ -164,6 +165,7 @@ namespace karabo {
                     karabo::util::Hash& hash = bp::extract<karabo::util::Hash&>(obj);
                     ScopedGILRelease nogil;
                     channel.read(hdr, hash);
+                    return;
                 }
 
             }
@@ -183,6 +185,7 @@ namespace karabo {
                 const Hash& hash = bp::extract<const Hash&>(obj);
                 ScopedGILRelease nogil;
                 channel.write(hash);
+                return;
             }
             throw KARABO_PYTHON_EXCEPTION("Python type in parameter is not supported");
         }
@@ -202,6 +205,7 @@ namespace karabo {
                     const karabo::util::Hash& hash = bp::extract<const karabo::util::Hash&>(obj);
                     ScopedGILRelease nogil;
                     channel.write(hdr, hash);
+                    return;
                 }
 
             }
