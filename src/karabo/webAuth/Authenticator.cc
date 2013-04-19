@@ -66,15 +66,15 @@ namespace karabo {
         }
 
         unsigned long long int Authenticator::getRoleId() const {
-            return roleId;
+            return m_roleId;
         }
 
         unsigned long long int Authenticator::getSoftwareId() const {
-            return softwareId;
+            return m_softwareId;
         }
 
         unsigned long long int Authenticator::getUserId() const {
-            return userId;
+            return m_userId;
         }
 
         /*
@@ -92,16 +92,16 @@ namespace karabo {
             this->m_welcomeMessage = welcomeMessage;
         }
 
-        void Authenticator::setRoleId(unsigned long long int roleId) {
-            this->roleId = roleId;
+        void Authenticator::setRoleId(const unsigned long long int roleId) {
+            this->m_roleId = roleId;
         }
 
-        void Authenticator::setSoftwareId(unsigned long long int softwareId) {
-            this->softwareId = softwareId;
+        void Authenticator::setSoftwareId(const unsigned long long int softwareId) {
+            this->m_softwareId = softwareId;
         }
 
-        void Authenticator::setUserId(unsigned long long int userId) {
-            this->userId = userId;
+        void Authenticator::setUserId(const unsigned long long int userId) {
+            this->m_userId = userId;
         }
 
         /*
@@ -133,17 +133,10 @@ namespace karabo {
                 setSessionToken(*(nsLoginResp.return_->sessionToken));
                 setWelcomeMessage(*(nsLoginResp.return_->welcomeMessage));
                 setRoleDesc(*(nsLoginResp.return_->roleDesc));
-
-//                string containerStr = "shit"; //*(nsLoginResp.return_->roleId);
-//                char * pEnd;
-//                unsigned long long int containerInt = strtoull(containerStr, &pEnd, 10);
-//                int value = *(nsLoginResp.return_->roleId);
-//                unsigned long long int v= static_cast<std::make_unsigned<decltype(value)>::type>(value);
-                //nsSingleSignOn.ipAddress = &idAddressStr;
-
-                //                setRoleId( strtoull(containerStr));
-                //                setUserId(*(nsLoginResp.return_->userId));
-                //                setSoftwareId(*(nsLoginResp.return_->softwareId));
+                // Saved ID's
+                setRoleId(*(nsLoginResp.return_->roleId));
+                setUserId(*(nsLoginResp.return_->userId));
+                setSoftwareId(*(nsLoginResp.return_->softwareId));
                 // Clear m_nonce value
                 m_nonce = "";
                 return true;
@@ -171,6 +164,7 @@ namespace karabo {
                     setSessionToken("");
                     setWelcomeMessage("");
                     setRoleDesc("");
+                    m_roleId = NULL;
                 }
             } else {
                 throw KARABO_NETWORK_EXCEPTION("Error: Problem with SOAP message: " + soapMessageNotOk(m_service->soap));
