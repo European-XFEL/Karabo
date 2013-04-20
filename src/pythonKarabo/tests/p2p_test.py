@@ -19,6 +19,7 @@ class Server(threading.Thread):
         self.connection.startAsync(self.onConnect)
         #extract io service object
         self.ioserv = self.connection.getIOService()
+        self.store = {}
         print "TCP Async server listening port", port
         
     def onError(self, channel, ec):
@@ -27,7 +28,7 @@ class Server(threading.Thread):
         
     def onConnect(self, channel):
         try:
-            print "TCP Async server onConnect: Incoming connection #%r" % id(channel)
+            print "TCP Async server onConnect: Incoming connection #%r" % channel.id()
             #register connect handler for incoming connections
             self.connection.startAsync(self.onConnect)
             #register read Hash handler for this channel (client)
@@ -37,13 +38,21 @@ class Server(threading.Thread):
     
     def onReadHash(self, channel, hash):
         try:
-            print "TCP Async server onReadHash id #%r" % id(channel)
+            print "TCP Async server onReadHash id #%r" % channel.id()
             hash["server"] = "APPROVED!"
-            channel.write(hash)
+            self.store[channel.id()] = hash
+            channel.writeAsyncHash(self.store[channel.id()], self.onWriteComplete)
+        except RuntimeError,e:
+            print "TCP Async server onReadHash:",str(e)
+    
+    def onWriteComplete(self, channel):
+        try:
+            print "TCP Async server onWriteComplete id #%r" % channel.id()
+            del self.store[channel.id()]
             channel.readAsyncHash(self.onReadHash)
         except RuntimeError,e:
             print "TCP Async server onReadHash:",str(e)
-        
+            
     def run(self):
         try:
             self.ioserv.run()
@@ -76,7 +85,7 @@ class  P2p_TestCase(unittest.TestCase):
             connection = Connection.create("Tcp", Hash("type", "client", "hostname", "localhost", "port", 32323))    
             #connect to the server
             channel = connection.start()
-            print "TCP Sync client open connection: id #", id(channel)
+            print "TCP Sync client open connection: id #", channel.id()
             #build hash to send to server
             h = Hash("a.b.c", 1, "x.y.z", [1,2,3,4,5], "d", Hash("abc", 'rabbish'))
             print "TCP Sync client send Hash"
