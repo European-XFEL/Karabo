@@ -70,7 +70,7 @@ void exportp2p() {
                 .def("waitAsync", &ChannelWrap().waitAsync, (bp::arg("milliseconds"), bp::arg("handler")))
                 .def("setErrorHandler", &ChannelWrap().setErrorHandler, (bp::arg("handler")))
                 .def("close", &Channel::close)
-                .def("id", &ChannelWrap().id)
+                .add_property("__id__", &ChannelWrap().id)
                 KARABO_PYTHON_FACTORY_CONFIGURATOR(Channel)
                 ;
     }
