@@ -45,7 +45,9 @@ namespace karabo {
             static void writeAsyncHashHash(karabo::net::Channel& channel, const bp::object& hdr, const bp::object& data, const bp::object& handler);
             static void waitAsync(karabo::net::Channel& channel, const bp::object& milliseconds, const bp::object& handler);
             static void setErrorHandler(karabo::net::Channel& channel, const bp::object& handler);
-            
+            static size_t id(karabo::net::Channel::Pointer channel) {
+                return size_t(&(*channel));
+            }
         private:
             static void registerHandler(karabo::net::Channel& channel, const bp::object& handler);
 
