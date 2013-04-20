@@ -76,6 +76,9 @@ class  P2p_asyncTestCase(unittest.TestCase):
         self.server.join() # join server thread
 
     def test_p2p_async(self):
+        #define store for Hash written asynchronously
+        store = {}
+        
         def onError(channel, error_code):
             print "Error #%r => %r" % (error_code.value(), error_code.message())
 
@@ -83,11 +86,19 @@ class  P2p_asyncTestCase(unittest.TestCase):
             try:
                 print "ASync client onConnect:  Connection established. id is", channel.id()
                 h = Hash("a.b.c", 1, "x.y.z", [1,2,3,4,5], "d", Hash("abc", 'rabbish'))
-                channel.write(h)
+                store[channel.id()] = h  # keep object alive until write complete
+                channel.writeAsyncHash(store[channel.id()], onWriteComplete)
+            except RuntimeError,e:
+                print "ASync client onConnect:",str(e)
+
+        def onWriteComplete(channel):
+            try:
+                print "ASync client onWriteComplete: id is", channel.id()
+                del store[channel.id()]
                 channel.readAsyncHash(onReadHash)
             except RuntimeError,e:
-                print "onConnect:",str(e)
-
+                print "ASync client onWriteComplete:",str(e)
+            
         def onReadHash(channel, h):
             print "ASync client onReadHash: id is", channel.id()
             try:
