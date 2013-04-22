@@ -38,6 +38,11 @@ namespace karabo {
 
                 virtual ~Dataset() {
                 }
+                
+                void write(const karabo::util::Hash& data, hsize_t recordId, hsize_t len = 1);
+                
+                virtual void writeNode(const karabo::util::Hash::Node& data, hsize_t len) = 0;
+                                
 
                 static hid_t dataSpace(karabo::util::Dims& dims) {
                     if (dims.rank() == 0) {
@@ -141,6 +146,8 @@ namespace karabo {
                 hsize_t m_chunkSize;
                 hid_t m_dataSetProperties;
 
+                
+                
             private:
                 void configureFileDataSpace( const karabo::util::Hash& input);
 

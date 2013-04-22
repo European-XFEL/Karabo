@@ -78,109 +78,17 @@ namespace karabo {
 
                 }
 
-                void write(const karabo::util::Hash& data, hsize_t recordId) {
-
-                    KARABO_LOG_FRAMEWORK_TRACE_C("karabo.io.h5.Scalar") << "Write dataset "
-                            << m_h5PathName << " from Hash element " << m_key;
+                void writeNode(const karabo::util::Hash::Node& node, hsize_t len) {
+                    KARABO_LOG_FRAMEWORK_TRACE_C("FixedLengthArray") << "writing " << len << " records of " << m_key;
                     try {
-                        if (recordId % m_chunkSize == 0) {
-                            m_fileDataSpace = extend(m_dataSet, m_fileDataSpace, m_chunkSize);
-                        }
-                        m_fileDataSpace = Dataset::selectScalarRecord(m_fileDataSpace, recordId);
-                        hid_t mds = Dataset::dataSpace();
-                        m_datasetWriter->write(data.getNode(m_key, '/'), m_dataSet, mds, m_fileDataSpace);
-                        m_numRecords++;
+                        m_datasetWriter->write(node, len, m_dataSet, m_fileDataSpace);
                     } catch (...) {
-                        KARABO_RETHROW_AS(KARABO_PROPAGATED_EXCEPTION("Cannot write Hash node " + m_key
-                                                                      + " to dataset /" + m_h5PathName));
-                    }
-                }
-
-                void write(const karabo::util::Hash& data, hsize_t recordId, hsize_t len) {
-
-                    KARABO_LOG_FRAMEWORK_TRACE_C("karabo.io.h5.Scalar") << "Write " << len << " records to dataset "
-                            << m_h5PathName << " from Hash element " << m_key;
-
-//                    hsize_t extLen = 0;
-//                    hsize_t m = std::min(recordId, m_numRecords);
-//                    hsize_t a0 = (m + m_chunkSize - 1) / m_chunkSize;
-//                    hsize_t a1 = (m + m_chunkSize + len - 1) / m_chunkSize;
-//                    if (a1 > a0)
-//                        extLen = (a1 - a0) * m_chunkSize;
-
-                    // ch=5 
-                    // la, r, l, n
-                    //  0, 1, 6, 7    a=(0+5-1)/5=0 a0=(1+5-1)/5=1, a1=(1+5+6-1)/5=2     2 10 10
-                    //  7, 8, 3, 11   a=(7+5-1)/5=2 a0=(8+5-1)/5=2  a1=(8+5+3-1)/5=3     1 5  15
-                    // 11, 27, 9, 36  a=(11+5-1)/5=3 a0=(27+5-1)/5=6 a1=(27+5+9-1)/5=8   5 25 40
-                    // 36, 0, 2, 36    a=(36+5-1)/5=8 a0=(0+5-1)/5=0 a1=(0+5+2-1)/5=1    
-                    // 36, 34, 4, 38   a=(36+5-1)/5=8 a0=(34+5-1)/5=7 a1=(34+5+4-1)/5=8
-                    //
-                    //                    
-                    //  '   [ ]  '  |  
-                    //  '      [ ' ]|                    
-                    //  '        '[]|
-                    //  '        ' [|  ]                    
-                    //  '        '  | [   ]
-                    //  '      [ '  |   ]
-                    //  "     "     "     "
-                    //
-                    // c = 5
-                    //1  r + l <= na; al = 0
-                    //2  r + l <= na; al = 0
-                    //3  r + l <= na; al = 0
-                    //4  r + l > na;  al = r + l - na
-                    //5  r + l > na;  
-                    //6  r + l > na;                    
-                    //
-                    //(4) na=10, c=5
-                    // 8 + 4 - 10 + (5 - 1) = 6; 6/5 = 1
-                    // 8 + 27 - 10 + 4 = 29; 29/5 = 5   5*5+10 = 35
-                    // 10+ 30 - 10 + 4 = 34; 34/5 = 6   6*5+10 = 40
-                    // 
-                    //(5) na=10, c=5
-                    // 12 + 3 - 10 + 4 = 9; 9/5 = 1     5*1+10 = 15
-                    // 12 + 4 - 10 + 4 = 10; 10/5 = 2   5*2 + 10 = 20
-                    //
-                    //(6) na=10, c=5
-                    // 
-                    //
-                    //
-                    // last, rec+len
-                    // (rec + len - last + chunk - 1)/chunk
-                    // ch=5
-                    // r  le la n
-                    // 0, 4,  0   4  (0+4-0 + (5-1) )/5 = 1  5  5
-                    // 4, 10, 4   14 (4+10-4 + 4)/5 = 2     10 15
-                    // 23, 6, 14  29 (23+6-14 + 4)/5 = 3    15 30
-                    // 23, 8, 29  31 (23+8-29+ 4)/5 =  1     5 35
-                    // 12, 4, 31  31 (12+4-31+ 4)/5 = -2     0 35
-                    // 50, 10, 31  60 (50+10-31+4)/5 = 6      30 65
-
-                    //  0, 8, 0   8  (0+8+0 + 4)/5= 12/5= 2
-
-//                    KARABO_LOG_FRAMEWORK_TRACE_C("karabo.io.h5.Scalar")
-//                            << "rec=" << recordId << " len=" << len
-//                            << " a0=" << a0 << " a1=" << a1 << " extLen=" << extLen;
-                    try {
-//                        if (extLen > 0) {
-//                            KARABO_LOG_FRAMEWORK_TRACE_C("karabo.io.h5.Scalar") << "extending: rec=" << recordId
-//                                    << " len=" << len;
-//                            m_fileDataSpace = extend(m_dataSet, m_fileDataSpace, extLen);
-//                        }
-                        extend(recordId, len);
-                        selectFileRecords(recordId, len);
-                        
-                        //m_fileDataSpace = selectRecord(m_fileDataSpace, recordId, len);
-                        m_datasetWriter->write(data.getNode(m_key, '/'), len, m_dataSet, m_fileDataSpace);
-                        
-
-                    } catch (karabo::util::Exception& e) {
                         KARABO_RETHROW_AS(KARABO_PROPAGATED_EXCEPTION("Cannot write Hash node " + m_key + " to dataset /" + m_h5PathName));
                     }
-
                 }
-
+                
+                
+                
                 inline void bind(karabo::util::Hash & data) {
                     if (!data.has(m_key, '/')) {
                         T & value = data.bindReference<T > (m_key, '/');
@@ -237,13 +145,6 @@ namespace karabo {
                 //                    attributes.setFromPath(m_key + ".typeCategory", "Scalar");
                 //                }
                 //
-                //
-                //            protected:
-                //
-                //
-                //            private:
-                //                boost::shared_ptr<ScalarFilter<T> > m_filter;
-
 
 
                 T* m_readData;
