@@ -14,27 +14,30 @@
 #include <karabo/log/Logger.hh>
 
 class LogSomething {
-    
+
 public:
-    
+
     KARABO_CLASSINFO(LogSomething, "LogSomething", "1.0")
     KARABO_CONFIGURATION_BASE_CLASS
-    
+
     static void expectedParameters(karabo::util::Schema& expected) {
         using namespace karabo::util;
-        
+
         NODE_ELEMENT(expected).key("logger")
-        .displayedName("Logger")
-        .description("Logger configuration")
-        .appendParametersOfConfigurableClass<karabo::log::Logger>("Logger")
-        .commit();
+                .displayedName("Logger")
+                .description("Logger configuration")
+                .appendParametersOfConfigurableClass<karabo::log::Logger>("Logger")
+                .commit();
     }
-    
+
     LogSomething(const karabo::util::Hash& input) {
         using namespace karabo::log;
-        Logger::configure(input.get<karabo::util::Hash>("logger")); 
+        Logger::configure(input.get<karabo::util::Hash>("logger"));
     }
-    
+
+    virtual ~LogSomething() {
+    }
+
     void doSomeLogging() {
         KARABO_LOG_FRAMEWORK_TRACE << "This is a trace message" << std::endl;
         KARABO_LOG_FRAMEWORK_DEBUG << "This is a debug message";
@@ -44,14 +47,13 @@ public:
     }
 };
 
-
 class Logger_Test : public CPPUNIT_NS::TestFixture {
 
     CPPUNIT_TEST_SUITE(Logger_Test);
 
     CPPUNIT_TEST(testLogging);
     CPPUNIT_TEST(testInClassLogging);
-    
+
     CPPUNIT_TEST_SUITE_END();
 
 public:
