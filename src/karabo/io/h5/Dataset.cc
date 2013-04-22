@@ -102,6 +102,21 @@ namespace karabo {
             }
 
 
+            void Dataset::write(const karabo::util::Hash& data, hsize_t recordId, hsize_t len) {
+
+                try {
+                    extend(recordId, len);
+                    selectFileRecords(recordId, len);
+                    const Hash::Node& node = data.getNode(m_key, '/');                    
+                    writeNode(node, len);                    
+
+                } catch (karabo::util::Exception& e) {
+                    KARABO_RETHROW_AS(KARABO_PROPAGATED_EXCEPTION("Cannot write Hash node " + m_key + " to dataset /" + m_h5PathName));
+                }
+
+            }
+
+
             void Dataset::extend(hsize_t recordId, hsize_t len) {
 
                 hsize_t lastRecord = recordId + len;

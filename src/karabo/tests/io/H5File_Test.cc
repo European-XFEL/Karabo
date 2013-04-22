@@ -38,7 +38,7 @@ H5File_Test::H5File_Test() {
     //    tr.enable("karabo.io.h5.Table.openReadOnly");
     //    tr.enable("H5File_Test.testReadTable");
     tr.reconfigure();
-
+  
 
     m_numberOfRecords = 512;
 }

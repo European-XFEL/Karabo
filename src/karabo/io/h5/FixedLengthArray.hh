@@ -61,7 +61,7 @@ namespace karabo {
                     KARABO_LOG_FRAMEWORK_TRACE_CF << "config " << config;
 
                     //if (Self::classInfo().getClassId() == "VECTOR_BOOL") {
-                        m_datasetWriter = DatasetWriter<T>::create(datasetWriterClassId, config);
+                    m_datasetWriter = DatasetWriter<T>::create(datasetWriterClassId, config);
                     //} else {
                     //    m_datasetWriter = DatasetWriter<T>::create(datasetWriterClassId);
                     //}
@@ -76,7 +76,7 @@ namespace karabo {
                 }
 
                 static void expectedParameters(karabo::util::Schema& expected) {
-                    
+
 
                     karabo::util::STRING_ELEMENT(expected)
                             .key("type")
@@ -93,7 +93,6 @@ namespace karabo {
                     KARABO_CHECK_HDF5_STATUS(H5Sclose(m_fileDataSpace));
                     Dataset::close();
                 }
-
 
                 void create(hsize_t chunkSize) {
 
@@ -124,51 +123,15 @@ namespace karabo {
                     }
                 }
 
-                void write(const karabo::util::Hash& data, hsize_t recordId) {
-
-                    KARABO_LOG_FRAMEWORK_TRACE_C("FixedLengthArray") << "writing array " << m_key;
-                    try {
-                        KARABO_PROFILER_START_SCALAR1("dataspace")
-
-                        if (recordId % m_chunkSize == 0) {
-                            m_fileDataSpace = Dataset::extend(m_dataSet, m_fileDataSpace, m_chunkSize);
-                        }
-
-                        m_fileDataSpace = selectRecord(m_fileDataSpace, recordId, 1);
-                        const karabo::util::Hash::Node& node = data.getNode(m_key, '/');
-                        //KARABO_PROFILER_STOP_SCALAR1
-                        //KARABO_PROFILER_START_SCALAR1("write")
-
-                        m_datasetWriter->write(node, m_dataSet, m_memoryDataSpace1, m_fileDataSpace);
-                        //KARABO_PROFILER_STOP_SCALAR1
-
-                    } catch (...) {
-                        KARABO_RETHROW_AS(KARABO_PROPAGATED_EXCEPTION("Cannot write Hash node " + m_key + " to dataset /" + m_h5PathName));
-
-                    }
-                }
-
-                void write(const karabo::util::Hash& data, hsize_t recordId, hsize_t len) {
-
+                void writeNode(const karabo::util::Hash::Node& node, hsize_t len) {
                     KARABO_LOG_FRAMEWORK_TRACE_C("FixedLengthArray") << "writing " << len << " records of " << m_key;
                     try {
-
-                        KARABO_PROFILER_START_SCALAR1("dataspaceBuffer")
-                        if (recordId % m_chunkSize == 0) {
-                            m_fileDataSpace = Dataset::extend(m_dataSet, m_fileDataSpace, len);
-                        }
-                        m_fileDataSpace = selectRecord(m_fileDataSpace, recordId, len);
-                        karabo::util::Hash::Node node = data.getNode(m_key, '/');
-                        
-                        KARABO_PROFILER_STOP_SCALAR1
-                        KARABO_PROFILER_START_SCALAR1("writeBuffer")
-                        m_datasetWriter->write(node, len, m_dataSet, m_fileDataSpace);                        
-                        KARABO_PROFILER_STOP_SCALAR1
+                        m_datasetWriter->write(node, len, m_dataSet, m_fileDataSpace);
                     } catch (...) {
                         KARABO_RETHROW_AS(KARABO_PROPAGATED_EXCEPTION("Cannot write Hash node " + m_key + " to dataset /" + m_h5PathName));
                     }
                 }
-
+                
                 void bind(karabo::util::Hash & data) {
                     boost::optional<karabo::util::Hash::Node&> node = data.find(m_key, '/');
                     if (!node) {
@@ -308,6 +271,7 @@ namespace karabo {
 
                 karabo::util::Types::ReferenceType m_hashType;
                 typename karabo::io::h5::DatasetWriter<T>::Pointer m_datasetWriter;
+
 
                 U m_readData; // this is a pointer to the data Hash (apart from case of bool type )
                 hid_t m_memoryDataSpace1; // memory data space for one record element, defined here for performance optimization

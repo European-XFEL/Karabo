@@ -227,6 +227,7 @@ namespace karabo {
                     KARABO_LOG_FRAMEWORK_TRACE_CF << "entered (scalar, buffer)";
                     const T* ptr = 0;
 
+                    
                     if (node.is<T*>()) {
                         KARABO_LOG_FRAMEWORK_TRACE_CF << "buffer is raw pointer";
                         ptr = node.getValue<T*>();
