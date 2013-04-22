@@ -27,7 +27,6 @@ class Server(threading.Thread):
         
     def onConnect(self, channel):
         try:
-            print "TCP Async server onConnect: Incoming connection #%r" % channel.__id__
             #register connect handler for incoming connections
             self.connection.startAsync(self.onConnect)
             #register read Hash handler for this channel (client)
@@ -37,7 +36,6 @@ class Server(threading.Thread):
     
     def onReadHash(self, channel, hash):
         try:
-            print "TCP Async server onReadHash id #%r" % channel.__id__
             hash["server"] = "APPROVED!"
             self.store[channel.__id__] = hash
             channel.writeAsyncHash(self.store[channel.__id__], self.onWriteComplete)
@@ -46,7 +44,6 @@ class Server(threading.Thread):
     
     def onWriteComplete(self, channel):
         try:
-            print "TCP Async server onWriteComplete id #%r" % channel.__id__
             del self.store[channel.__id__]
             channel.readAsyncHash(self.onReadHash)
         except RuntimeError,e:
@@ -60,7 +57,6 @@ class Server(threading.Thread):
         
     # this method stops server
     def stop(self):
-        print "Stop TCP Async server"
         self.ioserv.stop()
         
 
@@ -69,7 +65,7 @@ class  P2p_asyncTestCase(unittest.TestCase):
         #start server listening on port 32123
         self.server = Server(32123)
         self.server.start()
-        time.sleep(1)
+        time.sleep(0.5)
 
     def tearDown(self):
         self.server.stop() # stop server io service
@@ -107,7 +103,7 @@ class  P2p_asyncTestCase(unittest.TestCase):
                 self.assertEqual(h['a.b.c'], 1)
                 self.assertEqual(h['x.y.z'], [1,2,3,4,5])
                 self.assertEqual(h['d.abc'], 'rabbish')
-                channel.waitAsync(1000, onTimeout)
+                channel.waitAsync(100, onTimeout)
             except Exception, e:
                 self.fail("test_asynchronous_client exception group 1: " + str(e))
 
