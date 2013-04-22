@@ -414,39 +414,38 @@ void H5File_Test::testVectorBufferWrite() {
     Hash data;
 
     size_t nRec = 10;
-//    size_t s = 1024 * 1024 * nRec;
-//    vector<unsigned short> v0(s);
-//    for (size_t i = 0; i < v0.size(); ++i) {
-//        v0[i] = static_cast<unsigned short> (i % 10);
-//    }
+    //    size_t s = 1024 * 1024 * nRec;
+    //    vector<unsigned short> v0(s);
+    //    for (size_t i = 0; i < v0.size(); ++i) {
+    //        v0[i] = static_cast<unsigned short> (i % 10);
+    //    }
 
     Format::Pointer format = Format::createEmptyFormat();
 
     Hash h1(
-               "h5path", "",
-               "h5name", "mercury"
-               );
+            "h5path", "",
+            "h5name", "mercury"
+            );
 
     h5::Element::Pointer e1 = h5::Element::create("INT32", h1);
 
     Hash h2(
-             "h5path", "",
-             "h5name", "venus"
-             );
+            "h5path", "",
+            "h5name", "venus"
+            );
 
     h5::Element::Pointer e2 = h5::Element::create("UINT16", h2);
 
     Hash h3(
-             "h5path", "",
-             "h5name", "earth"
-             );
+            "h5path", "",
+            "h5name", "earth"
+            );
 
     h5::Element::Pointer e3 = h5::Element::create("FLOAT", h3);
 
     format->addElement(e1);
     format->addElement(e2);
     format->addElement(e3);
-
 
 
     //data.set("vectors.image", v0).setAttribute("dims", Dims(1024, 1024).toVector());
@@ -460,6 +459,7 @@ void H5File_Test::testVectorBufferWrite() {
         venus[i] = i;
         earth[i] = i * 2.5;
     }
+    
 
 
     File file(resourcePath("file3.h5"));
@@ -469,17 +469,81 @@ void H5File_Test::testVectorBufferWrite() {
     //Format::discoverFromHash(data, config);
     //Format::Pointer dataFormat = Format::createNode("Format", "Format", config);
 
-    Table::Pointer t = file.createTable("/planets", format, 10);
+    Table::Pointer t = file.createTable("/planets", format, 25);
 
 
-    for (int i = 0; i < 10; ++i) {        
-        data.set("mercury", &mercury[i*nRec]);
-        data.set("venus", &venus[i*nRec]);
-        data.set("earth", &earth[i*nRec]);
-        
-        t->write(data, i * nRec, nRec);
-        
-    }    
+    int i = 0, l = 23;
+    data.set("mercury", &mercury[i]);
+    data.set("venus", &venus[i]);
+    data.set("earth", &earth[i]);
+    t->write(data, i, l);
+
+    i = i + l;
+    l = 5;
+    data.set("mercury", &mercury[i]);
+    data.set("venus", &venus[i]);
+    data.set("earth", &earth[i]);
+    t->write(data, i, l);
+
+    i = i + l + 1;
+    l = 10;
+    data.set("mercury", &mercury[i]);
+    data.set("venus", &venus[i]);
+    data.set("earth", &earth[i]);
+    t->write(data, i, l);
+
+
+    i = i + l;
+    l = 3;
+    data.set("mercury", &mercury[i]);
+    data.set("venus", &venus[i]);
+    data.set("earth", &earth[i]);
+    t->write(data, i, l);
+
+    i = i + l;
+    l = 8;
+    data.set("mercury", &mercury[i]);
+    data.set("venus", &venus[i]);
+    data.set("earth", &earth[i]);
+    t->write(data, i, l);
+
+    i = i + l;
+    l = 25;
+    data.set("mercury", &mercury[i]);
+    data.set("venus", &venus[i]);
+    data.set("earth", &earth[i]);
+    t->write(data, i, l);
+
+    i = i + l;
+    l = 5;
+    data.set("mercury", &mercury[i]);
+    data.set("venus", &venus[i]);
+    data.set("earth", &earth[i]);
+    t->write(data, i, l);
+
+    i = i + l;
+    l = 19;
+    data.set("mercury", &mercury[i]);
+    data.set("venus", &venus[i]);
+    data.set("earth", &earth[i]);
+    t->write(data, i, l);
+
+    i = i + l;
+    l = 1;
+    data.set("mercury", &mercury[i]);
+    data.set("venus", &venus[i]);
+    data.set("earth", &earth[i]);
+    t->write(data, i, l);
+
+
+
+//    for (int i = 0; i < 10; ++i) {
+//        data.set("mercury", &mercury[i * nRec]);
+//        data.set("venus", &venus[i * nRec]);
+//        data.set("earth", &earth[i * nRec]);
+//
+//        t->write(data, i * nRec, nRec);
+//    }
 
     file.close();
 
