@@ -39,7 +39,9 @@ namespace configurationTest {
 
         Shape(const Hash & configuration) : m_configuration(configuration) {
         }
-
+        
+        virtual ~Shape(){}
+        
         const Hash & getConfiguration() {
             return m_configuration;
         }
@@ -215,7 +217,9 @@ namespace configurationTest {
     struct GraphicsRenderer1 {
 
         KARABO_CLASSINFO(GraphicsRenderer1, "GraphicsRenderer1", "1.0");
-
+        
+        virtual ~GraphicsRenderer1(){}
+        
         static void expectedParameters(karabo::util::Schema & expected) {
 
             BOOL_ELEMENT(expected).key("antiAlias")
@@ -285,6 +289,8 @@ namespace configurationTest {
 
         KARABO_CLASSINFO(TestStruct1, "TestStruct1", "1.0");
 
+        virtual ~TestStruct1(){}
+        
         static void expectedParameters(karabo::util::Schema & expected) {
 
             STRING_ELEMENT(expected).key("exampleKey1")
