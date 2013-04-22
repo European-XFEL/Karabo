@@ -25,6 +25,10 @@ namespace hashfilter {
 
         Base(const Hash & configuration) {
         }
+
+
+        virtual ~Base() {
+        }
     };
 
     struct P1 : public Base {
@@ -94,6 +98,10 @@ namespace hashfilter {
 
         P1(const Hash & configuration) : Base(configuration) {
         }
+
+
+        virtual ~P1() {
+        }
     };
 
     struct P2 : public Base {
@@ -136,6 +144,10 @@ namespace hashfilter {
 
         P2(const Hash & configuration) : Base(configuration) {
         }
+
+
+        virtual ~P2() {
+        }
     };
 
     struct P3 : public Base {
@@ -177,6 +189,10 @@ namespace hashfilter {
 
 
         P3(const Hash & configuration) : Base(configuration) {
+        }
+
+
+        virtual ~P3() {
         }
     };
 
@@ -282,7 +298,10 @@ namespace hashfilter {
 
 
         GraphicsRenderer2(const karabo::util::Hash & input) {
+        }
 
+
+        virtual ~GraphicsRenderer2() {
         }
     };
 
@@ -500,7 +519,7 @@ void HashFilter_Test::testFilterByTag() {
         result.clear();
         HashFilter::byTag(schema, config, result, "WP76", ",;");
 
-//        clog << "WP76\n" << result << endl;
+        //        clog << "WP76\n" << result << endl;
 
 
         CPPUNIT_ASSERT(result.has("antiAlias") == false);
@@ -529,7 +548,7 @@ void HashFilter_Test::testFilterByTag() {
         CPPUNIT_ASSERT(result.has("chars[1].P3.l") == false);
         CPPUNIT_ASSERT(result.has("chars[1].P3.m") == false);
 
-        
+
     } catch (karabo::util::Exception e) {
         clog << e << endl;
     }
