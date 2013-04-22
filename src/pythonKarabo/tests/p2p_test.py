@@ -19,6 +19,7 @@ class Server(threading.Thread):
         self.connection.startAsync(self.onConnect)
         #extract io service object
         self.ioserv = self.connection.getIOService()
+        #initialize the store (channel.__id__, Hash) used by async write
         self.store = {}
         print "TCP Async server listening port", port
         
@@ -28,7 +29,6 @@ class Server(threading.Thread):
         
     def onConnect(self, channel):
         try:
-            print "TCP Async server onConnect: Incoming connection #%r" % channel.__id__
             #register connect handler for incoming connections
             self.connection.startAsync(self.onConnect)
             #register read Hash handler for this channel (client)
@@ -38,7 +38,6 @@ class Server(threading.Thread):
     
     def onReadHash(self, channel, hash):
         try:
-            print "TCP Async server onReadHash id #%r" % channel.__id__
             hash["server"] = "APPROVED!"
             self.store[channel.__id__] = hash
             channel.writeAsyncHash(self.store[channel.__id__], self.onWriteComplete)
@@ -47,7 +46,6 @@ class Server(threading.Thread):
     
     def onWriteComplete(self, channel):
         try:
-            print "TCP Async server onWriteComplete id #%r" % channel.__id__
             del self.store[channel.__id__]
             channel.readAsyncHash(self.onReadHash)
         except RuntimeError,e:
@@ -56,12 +54,11 @@ class Server(threading.Thread):
     def run(self):
         try:
             self.ioserv.run()
-        except Exception, e:
+        except RuntimeError,e:
             print "TCP Async server run: " + str(e)
         
     # this method stops server
     def stop(self):
-        print "Stop TCP Async server"
         self.ioserv.stop()
         
         
@@ -74,7 +71,6 @@ class  P2p_TestCase(unittest.TestCase):
         time.sleep(1)
 
     def tearDown(self):
-        print "Stop server io service and exit server thread"
         self.server.stop()
         self.server.join()
 
