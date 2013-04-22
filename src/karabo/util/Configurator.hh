@@ -87,7 +87,7 @@ namespace karabo {
                 confTools::PointerToSchemaDescriptionFunction p = confTools::getSchemaDescriptionFunction<T > (0);
                 if (p) Configurator::init().m_schemaFuncRegistry[classId].push_back(p);
             }
-            
+
             static void setDefault(const std::string& classId) {
                 Configurator::init().m_default = classId;
             }
@@ -105,7 +105,7 @@ namespace karabo {
                 }
                 return schema;
             }
-            
+
             inline static typename BaseClass::Pointer createDefault(const bool validate = true) {
                 string defaultClassId = Configurator::init().m_default;
                 if (defaultClassId.empty()) throw KARABO_INIT_EXCEPTION("No default was defined");
@@ -243,7 +243,7 @@ namespace karabo {
             }
 
             static void validateConfiguration(const std::string& classId, const Hash& configuration, Hash& validated) {
-                Schema schema = getSchema(classId, Schema::AssemblyRules(INIT|WRITE|READ));
+                Schema schema = getSchema(classId, Schema::AssemblyRules(INIT | WRITE | READ));
                 Validator validator; // Default validation
                 std::pair<bool, std::string> ret = validator.validate(schema, configuration, validated);
                 if (ret.first == false) throw KARABO_PARAMETER_EXCEPTION("Validation failed. \n" + ret.second);
@@ -258,6 +258,9 @@ namespace karabo {
                 std::string classId(Base::classInfo().getClassId());
                 Configurator<Base>::template registerClass<Base > (classId);
                 Configurator<Base>::template registerSchemaFunction<Base > (classId);
+            }
+
+            virtual ~ConfiguratorMember1() {
             }
         };
 
@@ -276,6 +279,9 @@ namespace karabo {
                 Configurator<Base>::template registerSchemaFunction<Base > (classId);
                 Configurator<Base>::template registerSchemaFunction<Sub1 > (classId);
             }
+
+            virtual ~ConfiguratorMember2() {
+            }
         };
 
         template <class Base, class Sub1>
@@ -293,6 +299,9 @@ namespace karabo {
                 Configurator<Base>::template registerSchemaFunction<Base > (classId);
                 Configurator<Base>::template registerSchemaFunction<Sub1 > (classId);
                 Configurator<Base>::template registerSchemaFunction<Sub2 > (classId);
+            }
+
+            virtual ~ConfiguratorMember3() {
             }
         };
 
