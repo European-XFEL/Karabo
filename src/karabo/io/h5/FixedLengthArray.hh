@@ -76,15 +76,7 @@ namespace karabo {
                 }
 
                 static void expectedParameters(karabo::util::Schema& expected) {
-
-                    karabo::util::VECTOR_UINT64_ELEMENT(expected)
-                            .key("dims")
-                            .displayedName("Dimensions")
-                            .description("Array dimensions.")
-                            .tags("persistent")
-                            .assignmentOptional().noDefaultValue()
-                            .init()
-                            .commit();
+                    
 
                     karabo::util::STRING_ELEMENT(expected)
                             .key("type")
@@ -101,6 +93,7 @@ namespace karabo {
                     KARABO_CHECK_HDF5_STATUS(H5Sclose(m_fileDataSpace));
                     Dataset::close();
                 }
+
 
                 void create(hsize_t chunkSize) {
 
