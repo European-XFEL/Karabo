@@ -110,7 +110,7 @@ namespace karabo {
                 //                 * @param data Hash with data to be written.
                 //                 * @param recordId Record number (numbering starts from 0)
                 //                 */
-                virtual void write(const karabo::util::Hash& data, hsize_t recordId) = 0;
+//                virtual void write(const karabo::util::Hash& data, hsize_t recordId) = 0;
                 //
                 //
 
@@ -125,7 +125,7 @@ namespace karabo {
                  * @param recordId Record number (numbering starts from 0)
                  * @param len Number of values to be written
                  */
-                virtual void write(const karabo::util::Hash& data, hsize_t recordId, hsize_t len) = 0;
+                virtual void write(const karabo::util::Hash& data, hsize_t recordId, hsize_t len = 1) = 0;
                 //
                 /**
                  * Allocate memory for single record
