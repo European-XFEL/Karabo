@@ -194,7 +194,7 @@ namespace configurationTest {
                     .appendNodesOfConfigurationBase<Shape > ()
                     .assignmentOptional().defaultValue("Rectangle")
                     .commit();
-
+            
             STRING_ELEMENT(expected).key("version")
                     .displayedName("Version")
                     .description("Version information")
@@ -333,8 +333,12 @@ namespace configurationTest {
                     .options("1.11     -2.22 5.55")
                     .assignmentInternal().noDefaultValue()
                     .commit();
-
-            INT64_ELEMENT(expected).key("exampleKey5").alias("exampleAlias5")
+            
+            vector<int> vecIntAlias;
+            vecIntAlias.push_back(10);
+            vecIntAlias.push_back(20);
+            vecIntAlias.push_back(30);
+            INT64_ELEMENT(expected).key("exampleKey5").alias(vecIntAlias)
                     .tags("h/w; d.m.y", ";")
                     .displayedName("Example key 5")
                     .description("Example key 5 description")
