@@ -59,20 +59,11 @@ namespace karabo {
                     KARABO_LOG_FRAMEWORK_TRACE_CF << "classId " << Self::classInfo().getClassId();
                     karabo::util::Hash config("dims", vectorDims);
                     KARABO_LOG_FRAMEWORK_TRACE_CF << "config " << config;
-
-                    //if (Self::classInfo().getClassId() == "VECTOR_BOOL") {
                     m_datasetWriter = DatasetWriter<T>::create(datasetWriterClassId, config);
-                    //} else {
-                    //    m_datasetWriter = DatasetWriter<T>::create(datasetWriterClassId);
-                    //}
+
                 }
 
                 virtual ~FixedLengthArray() {
-                    //                    KARABO_PROFILER_REPORT_SCALAR1("write");
-                    //                    KARABO_PROFILER_REPORT_SCALAR1("dataspace");
-                    //                    KARABO_PROFILER_REPORT_SCALAR1("writeBuffer");
-                    //                    KARABO_PROFILER_REPORT_SCALAR1("dataspaceBuffer");
-
                 }
 
                 static void expectedParameters(karabo::util::Schema& expected) {
@@ -123,15 +114,24 @@ namespace karabo {
                     }
                 }
 
-                void writeNode(const karabo::util::Hash::Node& node, hsize_t len) {
-                    KARABO_LOG_FRAMEWORK_TRACE_C("FixedLengthArray") << "writing " << len << " records of " << m_key;
+                void writeNode(const karabo::util::Hash::Node& node, hid_t dataSet, hid_t fileDataSpace) {
+                    KARABO_LOG_FRAMEWORK_TRACE_C("FixedLengthArray") << "writing one record of " << m_key;
                     try {
-                        m_datasetWriter->write(node, len, m_dataSet, m_fileDataSpace);
+                        m_datasetWriter->write(node, dataSet, fileDataSpace);
                     } catch (...) {
                         KARABO_RETHROW_AS(KARABO_PROPAGATED_EXCEPTION("Cannot write Hash node " + m_key + " to dataset /" + m_h5PathName));
                     }
                 }
-                
+
+                void writeNode(const karabo::util::Hash::Node& node, hsize_t len, hid_t dataSet, hid_t fileDataSpace) {
+                    KARABO_LOG_FRAMEWORK_TRACE_C("FixedLengthArray") << "writing " << len << " records of " << m_key;
+                    try {
+                        m_datasetWriter->write(node, len, dataSet, fileDataSpace);
+                    } catch (...) {
+                        KARABO_RETHROW_AS(KARABO_PROPAGATED_EXCEPTION("Cannot write Hash node " + m_key + " to dataset /" + m_h5PathName));
+                    }
+                }
+
                 void bind(karabo::util::Hash & data) {
                     boost::optional<karabo::util::Hash::Node&> node = data.find(m_key, '/');
                     if (!node) {

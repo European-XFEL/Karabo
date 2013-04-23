@@ -10,7 +10,7 @@
 #include <karabo/util/Factory.hh>
 #include <karabo/util/Configurator.hh>
 #include <karabo/util/PathElement.hh>
-
+ 
 #include "File.hh"
 #include "Scalar.hh"
 

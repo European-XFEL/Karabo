@@ -374,6 +374,7 @@ namespace karabo {
                     KARABO_LOG_FRAMEWORK_TRACE_CF << "Calculated number of records: " << m_numberOfRecords;
                 }
             }
+            
             //
             //            void Table::calculateNumberOfRecords() {
             //                m_numberOfRecords = r_calculateNumberOfRecords(m_recordFormatHash);
