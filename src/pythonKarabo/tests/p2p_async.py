@@ -22,7 +22,7 @@ class Server(threading.Thread):
         print "TCP Async server listening port",port
         
     def onError(self, channel, ec):
-        print "Error #%r => %r  -- close channel" % (ec.value(), ec.message())
+        print "Error #%r => %r  -- close channel: id %r" % (ec.value(), ec.message(), id(channel))
         channel.close()
         
     def onConnect(self, channel):
@@ -37,14 +37,15 @@ class Server(threading.Thread):
     def onReadHash(self, channel, hash):
         try:
             hash["server"] = "APPROVED!"
-            self.store[channel.__id__] = hash
-            channel.writeAsyncHash(self.store[channel.__id__], self.onWriteComplete)
+            # Use id(channel) or channel.__id__.  Don't use channel directly -- this is local variable! It can be reused or garbage collected
+            self.store[id(channel)] = hash
+            channel.writeAsyncHash(self.store[id(channel)], self.onWriteComplete)
         except RuntimeError,e:
             print "TCP Async server onReadHash:",str(e)
     
     def onWriteComplete(self, channel):
         try:
-            del self.store[channel.__id__]
+            del self.store[id(channel)]
             channel.readAsyncHash(self.onReadHash)
         except RuntimeError,e:
             print "TCP Async server onReadHash:",str(e)
