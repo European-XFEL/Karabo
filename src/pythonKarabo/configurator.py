@@ -16,8 +16,16 @@ class Configurator(object):
             theClass.__base_classid__ = theClass.__classid__
             Configurator.registry[theClass.__classid__] = {}
         Configurator.registry[theClass.__classid__][theClass.__classid__] = theClass  # self-registering
-        
-    def __init__(self, baseclassid):
+    '''
+    The argument to constructor may be the classid of a configurable class or configurable class itself:
+    Configurator(ConfigClass)  or Configurator("ConfigClass")
+    '''
+    def __init__(self, baseclass):
+        if not isinstance(baseclass, type) and not isinstance(baseclass, str):
+            raise TypeError, "The argument type '" + type(baseclass) + " is not allowed"
+        baseclassid = baseclass
+        if isinstance(baseclass, type):
+            baseclassid = baseclass.__classid__
         if baseclassid not in Configurator.registry:
             raise AttributeError,"Argument is a classid of registered base class"
         self.baseRegistry = Configurator.registry[baseclassid]
