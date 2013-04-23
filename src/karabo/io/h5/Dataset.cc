@@ -13,7 +13,7 @@
 
 using namespace karabo::io::h5;
 using namespace karabo::util;
-
+ 
 namespace karabo {
     namespace io {
         namespace h5 {
@@ -96,9 +96,17 @@ namespace karabo {
             }
 
 
-            void Dataset::close() {
-                KARABO_CHECK_HDF5_STATUS(H5Pclose(m_dataSetProperties));
-                KARABO_CHECK_HDF5_STATUS(H5Dclose(m_dataSet));
+            void Dataset::write(const karabo::util::Hash& data, hsize_t recordId) {
+
+                try {
+                    extend(recordId, 1);
+                    selectFileRecords(recordId, 1);
+                    const Hash::Node& node = data.getNode(m_key, '/');
+                    writeNode(node, m_dataSet, m_fileDataSpace);
+                } catch (karabo::util::Exception& e) {
+                    KARABO_RETHROW_AS(KARABO_PROPAGATED_EXCEPTION("Cannot write Hash node " + m_key + " to dataset /" + m_h5PathName));
+                }
+
             }
 
 
@@ -107,13 +115,19 @@ namespace karabo {
                 try {
                     extend(recordId, len);
                     selectFileRecords(recordId, len);
-                    const Hash::Node& node = data.getNode(m_key, '/');                    
-                    writeNode(node, len);                    
+                    const Hash::Node& node = data.getNode(m_key, '/');
+                    writeNode(node, len, m_dataSet, m_fileDataSpace);
 
                 } catch (karabo::util::Exception& e) {
                     KARABO_RETHROW_AS(KARABO_PROPAGATED_EXCEPTION("Cannot write Hash node " + m_key + " to dataset /" + m_h5PathName));
                 }
 
+            }
+
+
+            void Dataset::close() {
+                KARABO_CHECK_HDF5_STATUS(H5Pclose(m_dataSetProperties));
+                KARABO_CHECK_HDF5_STATUS(H5Dclose(m_dataSet));
             }
 
 

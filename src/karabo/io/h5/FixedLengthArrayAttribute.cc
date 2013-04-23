@@ -9,7 +9,7 @@
 
 #include "FixedLengthArrayAttribute.hh"
 using namespace karabo::io;
- 
+  
 namespace karabo {  
   namespace io {
     namespace h5 {
