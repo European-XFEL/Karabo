@@ -36,14 +36,17 @@ class  Xms_TestCase(unittest.TestCase):
         self.remote.join()
 
     def test_xms_signal_slotable(self):
-        ss = SignalSlotable("b")
-        h = Hash('a.b.c', 1, 'x.y.z', [1,2,3,4,5,6,7])
-        (h,) = ss.request("a", "onHashRequest", h).waitForReply(100)
-        
-        self.assertEqual(h['a.b.c'], 1)
-        self.assertEqual(h['x.y.z'], [1,2,3,4,5,6,7])
-        self.assertEqual(h['remote_client'], 'APPROVED!')
+        try:
+            ss = SignalSlotable("b")
+            h = Hash('a.b.c', 1, 'x.y.z', [1,2,3,4,5,6,7])
+            (h,) = ss.request("a", "onHashRequest", h).waitForReply(100)
 
+            self.assertEqual(h['a.b.c'], 1)
+            self.assertEqual(h['x.y.z'], [1,2,3,4,5,6,7])
+            self.assertEqual(h['remote_client'], 'APPROVED!')
+        except Exception,e:
+            self.fail("test_xms_signal_slotable exception group 1: " + str(e))
+            
 
 if __name__ == '__main__':
     unittest.main()
