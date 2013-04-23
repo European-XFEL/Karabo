@@ -23,7 +23,7 @@ Schema_Test::~Schema_Test() {
 
 
 void Schema_Test::testBuildUp() {
-    //cout << endl << endl;
+
     try {
         {
             Schema schema = Configurator<Shape>::getSchema("Circle");
@@ -94,13 +94,68 @@ void Schema_Test::testGetValueType() {
 }
 
 
-void Schema_Test::testGetAlias() {
+void Schema_Test::testKeyHasAlias() {
     CPPUNIT_ASSERT(m_schema.keyHasAlias("exampleKey1") == false);
     CPPUNIT_ASSERT(m_schema.keyHasAlias("exampleKey2") == true);
+    CPPUNIT_ASSERT(m_schema.keyHasAlias("exampleKey3") == true);
+    CPPUNIT_ASSERT(m_schema.keyHasAlias("exampleKey4") == true);
+    CPPUNIT_ASSERT(m_schema.keyHasAlias("exampleKey5") == true);
+}
+
+
+void Schema_Test::testAliasHasKey() {
+    CPPUNIT_ASSERT(m_schema.aliasHasKey(10) == true);
+    CPPUNIT_ASSERT(m_schema.aliasHasKey(5.5) == true);
+    CPPUNIT_ASSERT(m_schema.aliasHasKey("exampleAlias4") == true);
+    
+    vector<int> vecIntAlias;
+    vecIntAlias.push_back(10);
+    vecIntAlias.push_back(20);
+    vecIntAlias.push_back(30);
+    CPPUNIT_ASSERT(m_schema.aliasHasKey(vecIntAlias) == true);
+    
+    CPPUNIT_ASSERT(m_schema.aliasHasKey(7) == false);
+}
+
+
+void Schema_Test::testGetAliasFromKey() {
     CPPUNIT_ASSERT(m_schema.getAliasFromKey<int>("exampleKey2") == 10);
     CPPUNIT_ASSERT(m_schema.getAliasFromKey<double>("exampleKey3") == 5.5);
     CPPUNIT_ASSERT(m_schema.getAliasFromKey<string > ("exampleKey4") == "exampleAlias4");
-    CPPUNIT_ASSERT(m_schema.getAliasFromKey<string > ("exampleKey5") == "exampleAlias5");
+    
+    vector<int> aliasVec = m_schema.getAliasFromKey<vector<int> > ("exampleKey5");
+    CPPUNIT_ASSERT(aliasVec[0] == 10);
+    CPPUNIT_ASSERT(aliasVec[1] == 20);
+    CPPUNIT_ASSERT(aliasVec[2] == 30);
+
+}
+
+
+void Schema_Test::testGetKeyFromAlias() {
+    CPPUNIT_ASSERT(m_schema.getKeyFromAlias(10) == "exampleKey2");
+    CPPUNIT_ASSERT(m_schema.getKeyFromAlias(5.5) == "exampleKey3");
+    CPPUNIT_ASSERT(m_schema.getKeyFromAlias("exampleAlias4") == "exampleKey4");
+    
+    vector<int> vecIntAlias;
+    vecIntAlias.push_back(10);
+    vecIntAlias.push_back(20);
+    vecIntAlias.push_back(30);
+    CPPUNIT_ASSERT(m_schema.getKeyFromAlias(vecIntAlias) == "exampleKey5");
+}
+
+
+void Schema_Test::testGetAliasAsString() {
+    CPPUNIT_ASSERT(m_schema.getAliasAsString("exampleKey2") == "10");
+    
+    //CPPUNIT_ASSERT(m_schema.getAliasAsString("exampleKey3") == "5.5");
+    string str = m_schema.getAliasAsString("exampleKey3");
+    cout << "\n TODO check getAliasAsString from double:  str=" << str <<endl;
+    CPPUNIT_ASSERT(m_schema.getAliasAsString("exampleKey3") == "5.500000000000000");
+    
+    CPPUNIT_ASSERT(m_schema.getAliasAsString("exampleKey4") == "exampleAlias4");
+    
+    string aliasStr = m_schema.getAliasAsString("exampleKey5");
+    CPPUNIT_ASSERT(aliasStr == "10,20,30");
 }
 
 
@@ -296,6 +351,7 @@ void Schema_Test::testPerKeyFunctionality() {
 
 
 void Schema_Test::testHelpFunction() {
+
     //===== uncomment to see 'help()' functionality =====:
     /*
     Schema schema("GraphicsRenderer1", Schema::AssemblyRules(READ | WRITE | INIT));
