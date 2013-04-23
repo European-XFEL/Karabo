@@ -58,6 +58,8 @@ namespace karabo {
 
                 }
 
+                virtual ~DatasetWriter() {
+                }
                 virtual void write(const karabo::util::Hash::Node& node, hid_t dataSet, hid_t fileDataSpace) = 0;
 
                 virtual void write(const karabo::util::Hash::Node& node, hsize_t len, hid_t dataSet, hid_t fileDataSpace) = 0;
@@ -188,16 +190,16 @@ namespace karabo {
 
                 void write(const karabo::util::Hash::Node& node, hsize_t len, hid_t dataSet, hid_t fileDataSpace) {
 
-                    const std::vector<bool>& vec = node.getValue< std::vector<bool> >();
+                    const std::vector<bool>& vec = node.getValue < std::vector<bool> >();
                     hsize_t lenTotal = vec.size();
                     std::vector<unsigned char> converted(lenTotal, 0);
                     for (size_t i = 0; i < lenTotal; ++i) {
                         converted[i] = boost::numeric_cast<unsigned char>(vec[i]);
                         // std::clog << converted[i];
-                    }                                        
+                    }
                     const unsigned char* ptr = &converted[0];
-                    
-                    
+
+
                     hid_t tid = ScalarTypes::getHdf5NativeType<bool> ();
 
                     std::vector<hsize_t> vdims = this->m_dimsBuffer.toVector();
