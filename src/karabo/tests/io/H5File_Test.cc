@@ -38,7 +38,7 @@ H5File_Test::H5File_Test() {
     //    tr.enable("karabo.io.h5.Table.openReadOnly");
     //    tr.enable("H5File_Test.testReadTable");
     tr.reconfigure();
-  
+
 
     m_numberOfRecords = 512;
 }
@@ -459,7 +459,7 @@ void H5File_Test::testVectorBufferWrite() {
         venus[i] = i;
         earth[i] = i * 2.5;
     }
-    
+
 
 
     File file(resourcePath("file3.h5"));
@@ -485,6 +485,8 @@ void H5File_Test::testVectorBufferWrite() {
     data.set("earth", &earth[i]);
     t->write(data, i, l);
 
+    // one record is intentionally skipped
+    // should appear in file with zeros ( recordId=28)
     i = i + l + 1;
     l = 10;
     data.set("mercury", &mercury[i]);
@@ -514,12 +516,16 @@ void H5File_Test::testVectorBufferWrite() {
     data.set("earth", &earth[i]);
     t->write(data, i, l);
 
+
     i = i + l;
-    l = 5;
-    data.set("mercury", &mercury[i]);
-    data.set("venus", &venus[i]);
-    data.set("earth", &earth[i]);
-    t->write(data, i, l);
+    l = 4;
+
+    for (int j = 0; j < 4; ++j) {
+        data.set("mercury", mercury[i+j]);
+        data.set("venus", venus[i+j]);
+        data.set("earth", earth[i+j]);
+        t->write(data, i+j);
+    }
 
     i = i + l;
     l = 19;
@@ -537,13 +543,13 @@ void H5File_Test::testVectorBufferWrite() {
 
 
 
-//    for (int i = 0; i < 10; ++i) {
-//        data.set("mercury", &mercury[i * nRec]);
-//        data.set("venus", &venus[i * nRec]);
-//        data.set("earth", &earth[i * nRec]);
-//
-//        t->write(data, i * nRec, nRec);
-//    }
+    //    for (int i = 0; i < 10; ++i) {
+    //        data.set("mercury", &mercury[i * nRec]);
+    //        data.set("venus", &venus[i * nRec]);
+    //        data.set("earth", &earth[i * nRec]);
+    //
+    //        t->write(data, i * nRec, nRec);
+    //    }
 
     file.close();
 

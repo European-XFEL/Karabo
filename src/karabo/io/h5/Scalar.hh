@@ -42,7 +42,7 @@ namespace karabo {
                                  )
 
 
-                Scalar(const karabo::util::Hash& input) : Dataset(input), m_numRecords(0) {
+                Scalar(const karabo::util::Hash& input) : Dataset(input) {
                     m_fileDataSpace = Dataset::dataSpace1dim(0);
                     m_memoryDataSpace1 = Dataset::dataSpace1dim(1);
                     m_datasetWriter = DatasetWriter<T>::create
@@ -78,10 +78,20 @@ namespace karabo {
 
                 }
 
-                void writeNode(const karabo::util::Hash::Node& node, hsize_t len) {
-                    KARABO_LOG_FRAMEWORK_TRACE_C("FixedLengthArray") << "writing " << len << " records of " << m_key;
+                
+                void writeNode(const karabo::util::Hash::Node& node, hid_t dataSet, hid_t fileDataSpace) {
+                    KARABO_LOG_FRAMEWORK_TRACE_C("Scalar") << "writing one record of " << m_key;
                     try {
-                        m_datasetWriter->write(node, len, m_dataSet, m_fileDataSpace);
+                        m_datasetWriter->write(node, dataSet, fileDataSpace);
+                    } catch (...) {
+                        KARABO_RETHROW_AS(KARABO_PROPAGATED_EXCEPTION("Cannot write Hash node " + m_key + " to dataset /" + m_h5PathName));
+                    }
+                }
+
+                void writeNode(const karabo::util::Hash::Node& node, hsize_t len, hid_t dataSet, hid_t fileDataSpace) {
+                    KARABO_LOG_FRAMEWORK_TRACE_C("Scalar") << "writing " << len << " records of " << m_key;
+                    try {
+                        m_datasetWriter->write(node, len, dataSet, fileDataSpace);
                     } catch (...) {
                         KARABO_RETHROW_AS(KARABO_PROPAGATED_EXCEPTION("Cannot write Hash node " + m_key + " to dataset /" + m_h5PathName));
                     }
@@ -150,7 +160,7 @@ namespace karabo {
                 T* m_readData;
                 hid_t m_memoryDataSpace1;
                 typename karabo::io::h5::DatasetWriter<T>::Pointer m_datasetWriter;
-                hsize_t m_numRecords;
+                
 
 
 

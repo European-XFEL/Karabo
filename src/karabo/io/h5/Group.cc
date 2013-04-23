@@ -9,7 +9,7 @@
 
 #include "Group.hh"
 using namespace karabo::io::h5;
-
+ 
 namespace karabo {
     namespace io {
         namespace h5 {

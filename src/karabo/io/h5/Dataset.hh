@@ -38,11 +38,16 @@ namespace karabo {
 
                 virtual ~Dataset() {
                 }
-                
-                void write(const karabo::util::Hash& data, hsize_t recordId, hsize_t len = 1);
-                
-                virtual void writeNode(const karabo::util::Hash::Node& data, hsize_t len) = 0;
-                                
+
+                void write(const karabo::util::Hash& data, hsize_t recordId);
+
+                void write(const karabo::util::Hash& data, hsize_t recordId, hsize_t len);
+
+                virtual void writeNode(const karabo::util::Hash::Node& data,
+                                       hid_t dataSet, hid_t fileDataSpace) = 0;
+
+                virtual void writeNode(const karabo::util::Hash::Node& data, hsize_t len,
+                                       hid_t dataSet, hid_t fileDataSpace) = 0;
 
                 static hid_t dataSpace(karabo::util::Dims& dims) {
                     if (dims.rank() == 0) {
@@ -75,7 +80,7 @@ namespace karabo {
                     m_dataSetProperties = H5Pcreate(H5P_DATASET_CREATE);
                     herr_t status = H5Pset_layout(m_dataSetProperties, H5D_CHUNKED);
                     KARABO_CHECK_HDF5_STATUS(status);
-                    std::clog << "Dataset property list created, chunkDims.rank="<< chunkDims.rank() << std::endl;
+                    std::clog << "Dataset property list created, chunkDims.rank=" << chunkDims.rank() << std::endl;
                     if (m_compressionLevel > 0) {
                         //         m_dataSetProperties->setShuffle();
                         status = H5Pset_deflate(m_dataSetProperties, m_compressionLevel);
@@ -95,11 +100,9 @@ namespace karabo {
 
                 void extend(hsize_t recordId, hsize_t len);
                 void selectFileRecords(hsize_t recordId, hsize_t len = 1);
-                
+
 
                 static hid_t extend(hid_t dataSet, hid_t dataSpace, hsize_t len);
-                
-                
 
                 static hid_t selectScalarRecord(hid_t dataSpace, hsize_t recordId, hsize_t len = 1) {
 
@@ -142,14 +145,14 @@ namespace karabo {
                 hsize_t m_numberAllocatedRecords;
                 std::vector<hsize_t> m_dataSetExtent;
                 std::vector<hsize_t> m_dataSetMaxExtent;
-                
+
                 hsize_t m_chunkSize;
                 hid_t m_dataSetProperties;
 
-                
-                
+
+
             private:
-                void configureFileDataSpace( const karabo::util::Hash& input);
+                void configureFileDataSpace(const karabo::util::Hash& input);
 
             };
 

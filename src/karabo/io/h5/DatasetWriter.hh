@@ -58,12 +58,9 @@ namespace karabo {
 
                 }
 
+                virtual void write(const karabo::util::Hash::Node& node, hid_t dataSet, hid_t fileDataSpace) = 0;
 
-                //                virtual void write(const T& value, hid_t dataSet, hid_t memoryDataSpace, hid_t fileDataSpace) = 0;
-                virtual void write(const karabo::util::Hash::Node& node, hid_t dataSet, hid_t memoryDataSpace, hid_t fileDataSpace) = 0;
-
-                virtual void write(const karabo::util::Hash::Node& node, hsize_t len, hid_t dataSet, hid_t fileDataSpace) {
-                }
+                virtual void write(const karabo::util::Hash::Node& node, hsize_t len, hid_t dataSet, hid_t fileDataSpace) = 0;
 
             protected:
                 karabo::util::Dims m_dims;
@@ -89,12 +86,12 @@ namespace karabo {
 
 
 
-                void write(const karabo::util::Hash::Node& node, hid_t dataSet, hid_t memoryDataSpace, hid_t fileDataSpace) {
+                void write(const karabo::util::Hash::Node& node, hid_t dataSet, hid_t fileDataSpace) {
                     KARABO_LOG_FRAMEWORK_TRACE_CF << "entered (vector)";
                     const std::vector<T>& vec = node.getValue < std::vector<T> >();
                     const T* ptr = &vec[0];
                     hid_t tid = ScalarTypes::getHdf5NativeType<T > ();
-                    herr_t status = H5Dwrite(dataSet, tid, memoryDataSpace, fileDataSpace, H5P_DEFAULT, ptr);
+                    herr_t status = H5Dwrite(dataSet, tid, this->m_memoryDataSpace, fileDataSpace, H5P_DEFAULT, ptr);
                     KARABO_CHECK_HDF5_STATUS(status)
                     KARABO_CHECK_HDF5_STATUS(H5Tclose(tid));
                 }
@@ -132,14 +129,32 @@ namespace karabo {
                 DatasetPointerWriter(const karabo::util::Hash& input) : DatasetWriter<T>(input) {
                 }
 
-                void write(const karabo::util::Hash::Node& node, hid_t dataSet, hid_t memoryDataSpace, hid_t fileDataSpace) {
+                void write(const karabo::util::Hash::Node& node, hid_t dataSet, hid_t fileDataSpace) {
                     KARABO_LOG_FRAMEWORK_TRACE_CF << "entered (pointer)";
                     const T* ptr = node.getValue<T*>();
                     hid_t tid = ScalarTypes::getHdf5NativeType<T > ();
-                    herr_t status = H5Dwrite(dataSet, tid, memoryDataSpace, fileDataSpace, H5P_DEFAULT, ptr);
+                    herr_t status = H5Dwrite(dataSet, tid, this->m_memoryDataSpace, fileDataSpace, H5P_DEFAULT, ptr);
                     KARABO_CHECK_HDF5_STATUS(status);
                     KARABO_CHECK_HDF5_STATUS(H5Tclose(tid));
                 }
+
+                void write(const karabo::util::Hash::Node& node, hsize_t len, hid_t dataSet, hid_t fileDataSpace) {
+
+                    const T* ptr = node.getValue<T* >();
+
+                    hid_t tid = ScalarTypes::getHdf5NativeType<T > ();
+
+                    std::vector<hsize_t> vdims = this->m_dimsBuffer.toVector();
+                    vdims[0] = len;
+                    karabo::util::Dims memoryDims(vdims);
+                    hid_t mds = Dataset::dataSpace(memoryDims);
+
+                    herr_t status = H5Dwrite(dataSet, tid, mds, fileDataSpace, H5P_DEFAULT, ptr);
+                    KARABO_CHECK_HDF5_STATUS(status)
+                    KARABO_CHECK_HDF5_STATUS(H5Tclose(tid));
+                }
+
+
 
             };
 
@@ -154,7 +169,7 @@ namespace karabo {
                 DatasetVectorWriter(const karabo::util::Hash& input) : DatasetWriter<bool>(input) {
                 }
 
-                void write(const karabo::util::Hash::Node& node, hid_t dataSet, hid_t memoryDataSpace, hid_t fileDataSpace) {
+                void write(const karabo::util::Hash::Node& node, hid_t dataSet, hid_t fileDataSpace) {
                     KARABO_LOG_FRAMEWORK_TRACE_CF << "entered (vector)";
                     const std::vector<bool>& vec = node.getValue < std::vector<bool> > ();
                     hsize_t len = vec.size();
@@ -166,10 +181,37 @@ namespace karabo {
                     //std::clog << std::endl;
                     const unsigned char* ptr = &converted[0];
                     hid_t tid = ScalarTypes::getHdf5NativeType<unsigned char > ();
-                    herr_t status = H5Dwrite(dataSet, tid, memoryDataSpace, fileDataSpace, H5P_DEFAULT, ptr);
+                    herr_t status = H5Dwrite(dataSet, tid, m_memoryDataSpace, fileDataSpace, H5P_DEFAULT, ptr);
                     KARABO_CHECK_HDF5_STATUS(status);
                     KARABO_CHECK_HDF5_STATUS(H5Tclose(tid));
                 }
+
+                void write(const karabo::util::Hash::Node& node, hsize_t len, hid_t dataSet, hid_t fileDataSpace) {
+
+                    const std::vector<bool>& vec = node.getValue< std::vector<bool> >();
+                    hsize_t lenTotal = vec.size();
+                    std::vector<unsigned char> converted(lenTotal, 0);
+                    for (size_t i = 0; i < lenTotal; ++i) {
+                        converted[i] = boost::numeric_cast<unsigned char>(vec[i]);
+                        // std::clog << converted[i];
+                    }                                        
+                    const unsigned char* ptr = &converted[0];
+                    
+                    
+                    hid_t tid = ScalarTypes::getHdf5NativeType<bool> ();
+
+                    std::vector<hsize_t> vdims = this->m_dimsBuffer.toVector();
+                    vdims[0] = len;
+                    karabo::util::Dims memoryDims(vdims);
+                    hid_t mds = Dataset::dataSpace(memoryDims);
+
+                    herr_t status = H5Dwrite(dataSet, tid, mds, fileDataSpace, H5P_DEFAULT, ptr);
+
+                    KARABO_CHECK_HDF5_STATUS(status)
+                    KARABO_CHECK_HDF5_STATUS(H5Tclose(tid));
+
+                }
+
 
             };
 
@@ -184,7 +226,7 @@ namespace karabo {
                 DatasetPointerWriter(const karabo::util::Hash& input) : DatasetWriter<bool>(input) {
                 }
 
-                void write(const karabo::util::Hash::Node& node, hid_t dataSet, hid_t memoryDataSpace, hid_t fileDataSpace) {
+                void write(const karabo::util::Hash::Node& node, hid_t dataSet, hid_t fileDataSpace) {
                     KARABO_LOG_FRAMEWORK_TRACE_CF << "entered (ptr)";
 
                     hsize_t len = m_dims.size();
@@ -194,12 +236,33 @@ namespace karabo {
                         converted[i] = boost::numeric_cast<unsigned char>(ptr[i]);
                     }
                     hid_t tid = ScalarTypes::getHdf5NativeType<unsigned char > ();
-                    herr_t status = H5Dwrite(dataSet, tid, memoryDataSpace, fileDataSpace, H5P_DEFAULT, &converted);
+                    herr_t status = H5Dwrite(dataSet, tid, m_memoryDataSpace, fileDataSpace, H5P_DEFAULT, &converted);
                     KARABO_CHECK_HDF5_STATUS(status);
                     KARABO_CHECK_HDF5_STATUS(H5Tclose(tid));
 
                 }
 
+                void write(const karabo::util::Hash::Node& node, hsize_t len, hid_t dataSet, hid_t fileDataSpace) {
+                    KARABO_LOG_FRAMEWORK_TRACE_CF << "entered (ptr, buffer)";
+
+                    hsize_t lenTotal = len * m_dims.size();
+                    const bool* ptr = node.getValue<bool*>();
+                    std::vector<unsigned char> converted(lenTotal, 0);
+                    for (size_t i = 0; i < lenTotal; ++i) {
+                        converted[i] = boost::numeric_cast<unsigned char>(ptr[i]);
+                    }
+                    hid_t tid = ScalarTypes::getHdf5NativeType<unsigned char > ();
+
+                    std::vector<hsize_t> vdims = this->m_dimsBuffer.toVector();
+                    vdims[0] = len;
+                    karabo::util::Dims memoryDims(vdims);
+                    hid_t mds = Dataset::dataSpace(memoryDims);
+
+                    herr_t status = H5Dwrite(dataSet, tid, mds, fileDataSpace, H5P_DEFAULT, &converted);
+                    KARABO_CHECK_HDF5_STATUS(status);
+                    KARABO_CHECK_HDF5_STATUS(H5Tclose(tid));
+
+                }
 
 
             };
@@ -214,11 +277,11 @@ namespace karabo {
                 DatasetScalarWriter(const karabo::util::Hash& input) : DatasetWriter<T>(input) {
                 }
 
-                void write(const karabo::util::Hash::Node& node, hid_t dataSet, hid_t memoryDataSpace, hid_t fileDataSpace) {
+                void write(const karabo::util::Hash::Node& node, hid_t dataSet, hid_t fileDataSpace) {
                     KARABO_LOG_FRAMEWORK_TRACE_CF << "entered (scalar)";
                     const T& value = node.getValue<T>();
                     hid_t tid = ScalarTypes::getHdf5NativeType<T > ();
-                    herr_t status = H5Dwrite(dataSet, tid, memoryDataSpace, fileDataSpace, H5P_DEFAULT, &value);
+                    herr_t status = H5Dwrite(dataSet, tid, this->m_memoryDataSpace, fileDataSpace, H5P_DEFAULT, &value);
                     KARABO_CHECK_HDF5_STATUS(status);
                     KARABO_CHECK_HDF5_STATUS(H5Tclose(tid));
                 }
@@ -227,7 +290,7 @@ namespace karabo {
                     KARABO_LOG_FRAMEWORK_TRACE_CF << "entered (scalar, buffer)";
                     const T* ptr = 0;
 
-                    
+
                     if (node.is<T*>()) {
                         KARABO_LOG_FRAMEWORK_TRACE_CF << "buffer is raw pointer";
                         ptr = node.getValue<T*>();
@@ -259,17 +322,17 @@ namespace karabo {
                 DatasetScalarWriter(const karabo::util::Hash& input) : DatasetWriter<bool>(input) {
                 }
 
-                void write(const karabo::util::Hash::Node& node, hid_t dataSet, hid_t memoryDataSpace, hid_t fileDataSpace) {
+                void write(const karabo::util::Hash::Node& node, hid_t dataSet, hid_t fileDataSpace) {
                     KARABO_LOG_FRAMEWORK_TRACE_CF << "entered (bool)";
                     const bool& value = node.getValue<bool>();
                     unsigned char converted = boost::numeric_cast<unsigned char>(value);
                     hid_t tid = ScalarTypes::getHdf5NativeType<bool> ();
-                    herr_t status = H5Dwrite(dataSet, tid, memoryDataSpace, fileDataSpace, H5P_DEFAULT, &converted);
+                    herr_t status = H5Dwrite(dataSet, tid, m_memoryDataSpace, fileDataSpace, H5P_DEFAULT, &converted);
                     KARABO_CHECK_HDF5_STATUS(status);
                     KARABO_CHECK_HDF5_STATUS(H5Tclose(tid));
                 }
 
-                void write(const karabo::util::Hash::Node& node, hsize_t len, hid_t dataSet, hid_t memoryDataSpace, hid_t fileDataSpace) {
+                void write(const karabo::util::Hash::Node& node, hsize_t len, hid_t dataSet, hid_t fileDataSpace) {
                     KARABO_LOG_FRAMEWORK_TRACE_CF << "entered (bool)";
 
                     const bool* ptr = node.getValue<bool*>();
@@ -278,7 +341,7 @@ namespace karabo {
                         converted[i] = boost::numeric_cast<unsigned char>(ptr[i]);
                     }
                     hid_t tid = ScalarTypes::getHdf5NativeType<bool> ();
-                    herr_t status = H5Dwrite(dataSet, tid, memoryDataSpace, fileDataSpace, H5P_DEFAULT, &converted);
+                    herr_t status = H5Dwrite(dataSet, tid, m_memoryDataSpace, fileDataSpace, H5P_DEFAULT, &converted);
                     KARABO_CHECK_HDF5_STATUS(status);
                     KARABO_CHECK_HDF5_STATUS(H5Tclose(tid));
                 }
