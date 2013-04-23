@@ -32,20 +32,20 @@ namespace karabo {
 
             KARABO_CLASSINFO(Channel, "Channel", "1.0")
 
-            typedef boost::function<void (Channel::Pointer, const size_t&) > ReadSizeInBytesHandler;
-            typedef boost::function<void (Channel::Pointer) > ReadRawHandler;
-            typedef boost::function<void (Channel::Pointer, const karabo::util::Hash&) > ReadHashRawHandler;
+            typedef boost::function<void (const Channel::Pointer&, const size_t&) > ReadSizeInBytesHandler;
+            typedef boost::function<void (const Channel::Pointer&) > ReadRawHandler;
+            typedef boost::function<void (const Channel::Pointer&, const karabo::util::Hash&) > ReadHashRawHandler;
 
-            typedef boost::function<void (Channel::Pointer, const std::vector<char>&) > ReadVectorHandler;
-            typedef boost::function<void (Channel::Pointer, const std::string&) > ReadStringHandler;
-            typedef boost::function<void (Channel::Pointer, const karabo::util::Hash&) > ReadHashHandler;
+            typedef boost::function<void (const Channel::Pointer&, const std::vector<char>&) > ReadVectorHandler;
+            typedef boost::function<void (const Channel::Pointer&, const std::string&) > ReadStringHandler;
+            typedef boost::function<void (const Channel::Pointer&, const karabo::util::Hash&) > ReadHashHandler;
 
-            typedef boost::function<void (Channel::Pointer, const karabo::util::Hash&, const std::vector<char>&) > ReadHashVectorHandler;
-            typedef boost::function<void (Channel::Pointer, const karabo::util::Hash&, const std::string&) > ReadHashStringHandler;
-            typedef boost::function<void (Channel::Pointer, const karabo::util::Hash&, const karabo::util::Hash&) > ReadHashHashHandler;
+            typedef boost::function<void (const Channel::Pointer&, const karabo::util::Hash&, const std::vector<char>&) > ReadHashVectorHandler;
+            typedef boost::function<void (const Channel::Pointer&, const karabo::util::Hash&, const std::string&) > ReadHashStringHandler;
+            typedef boost::function<void (const Channel::Pointer&, const karabo::util::Hash&, const karabo::util::Hash&) > ReadHashHashHandler;
 
-            typedef boost::function<void (Channel::Pointer) > WriteCompleteHandler;
-            typedef boost::function<void (Channel::Pointer) > WaitHandler;
+            typedef boost::function<void (const Channel::Pointer&) > WriteCompleteHandler;
+            typedef boost::function<void (const Channel::Pointer&) > WaitHandler;
 
             virtual ~Channel() {
             }
