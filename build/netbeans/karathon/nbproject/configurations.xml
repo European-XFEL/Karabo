@@ -1,10 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configurationDescriptor version="88">
   <logicalFolder name="root" displayName="root" projectFiles="true" kind="ROOT">
-    <logicalFolder name="f7"
-                   displayName="Binding Tools"
+    <logicalFolder name="f8"
+                   displayName="Authenticator Binding"
                    projectFiles="true"
                    kind="ROOT">
+    </logicalFolder>
+    <logicalFolder name="f7" displayName="Binding Tools" projectFiles="true">
       <itemPath>../../../src/karathon/ScopedGILAcquire.hh</itemPath>
       <itemPath>../../../src/karathon/ScopedGILRelease.hh</itemPath>
       <itemPath>../../../src/karathon/Wrapper.cc</itemPath>

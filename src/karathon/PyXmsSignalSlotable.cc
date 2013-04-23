@@ -49,7 +49,10 @@ void exportPyXmsSignalSlotable() {//exposing karabo::xms::SignalSlotable
                  (bp::arg("instanceId") = "py/console/0",
                  bp::arg("connectionType") = "Jms",
                  bp::arg("connectionParameters") = karabo::util::Hash()
-                 )).staticmethod("create")
+                 ),
+                 "\nUse this factory method to create SignalSlotable object with given 'instanceId', 'connectionType' and 'connectionParameters'.\n"
+                 "Example:\n\tss = SignalSlotable.create('a')\n"
+                 ).staticmethod("create")
 
             .def("connect",
                  (bool (SignalSlotable::*)(const string, const string&, const string, const string&, SignalSlotable::ConnectionType, const bool))(&SignalSlotable::connect),
@@ -58,7 +61,11 @@ void exportPyXmsSignalSlotable() {//exposing karabo::xms::SignalSlotable
                  bp::arg("slotInstanceId"),
                  bp::arg("slotFunction"),
                  bp::arg("connectionType") = SignalSlotable::TRACK,
-                 bp::arg("isVerbose") = true))
+                 bp::arg("isVerbose") = true),
+                 "\nUse this method to connect \"signalFunction\" issued by \"signalInstanceId\" with \"slotFunction\" belong to \"slotInstanceId\" using \"connectionType\"\n"
+                 "and \"isVerbose\" flag controlling verbosity level.\n\nExample:\n\nIf we have to communicate with remote client registered as instance \"b\" and slot \"onMoin\" ...\n\n\t"
+                 "ss = SignalSlotable(\"a\")\n\tss.connect(\"\", \"moin\", \"b\", \"onMoin\")\n\tss.emit(\"moin\", 12)\n"
+                 )
 
             .def("connect",
                  (bool (SignalSlotable::*)(const string&, const string&, SignalSlotable::ConnectionType, const bool))(&SignalSlotable::connect),
