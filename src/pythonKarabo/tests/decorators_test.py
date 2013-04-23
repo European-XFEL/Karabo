@@ -88,17 +88,21 @@ class  Decorators_TestCase(unittest.TestCase):
     #    self.foo = None
 
     def test_decorators_(self):
-        example = Configurator('ExampleBase').create('Example', Hash())
-        example2 = ExampleBaseClass.create('Example', Hash())
-        schema = Configurator('ExampleBase').getSchema('Example')
-        print schema
-        #assert x != y;
-        #self.assertEqual(schema.hasKey("firstWord"),    True, "expectedParameters failed -- no 'firstWord' key found")
-        #self.assertEqual(schema.hasKey("secondWord"),   True, "expectedParameters failed -- no 'secondWord' key found")
-        #self.assertEqual(schema.hasKey("multiply"),     True, "expectedParameters failed -- no 'multiply' key found")
-        #self.assertEqual(schema.hasKey("composedWord"), True, "expectedParameters failed -- no 'composedWord' key found")
-        #self.assertEqual(schema.hasKey("thirdWord"),    False,"expectedParameters failed -- 'thirdWord' key was found")
-        #self.fail("TODO: Write test")
+        try:
+            example = Configurator('ExampleBase').create('Example', Hash())
+            example2 = ExampleBaseClass.create('Example', Hash())
+            schema = Configurator("ExampleBase").getSchema('Example')     # call Configurator by classid
+            schema = Configurator(ExampleBaseClass).getSchema('Example')  # call Configurator by class
+            self.assertEqual(schema.getValueType("firstWord"),  Types.STRING, "expectedParameters failed -- no 'firstWord' key found")
+            self.assertEqual(schema.getValueType("secondWord"), Types.STRING, "expectedParameters failed -- no 'secondWord' key found")
+            self.assertEqual(schema.getValueType("multiply"),   Types.INT32, "expectedParameters failed -- no 'multiply' key found")
+            self.assertEqual(schema.getValueType("composedWord"), Types.STRING, "expectedParameters failed -- no 'composedWord' key found")
+            self.assertEqual(schema.getValueType("hostname"),   Types.STRING)
+            self.assertEqual(schema.getValueType("port"),       Types.INT32)
+            self.assertEqual(schema.getValueType("street"),     Types.STRING)
+
+        except Exception,e:
+            self.fail("test_decorators group 1: " + str(e))
 
 if __name__ == '__main__':
     unittest.main()
