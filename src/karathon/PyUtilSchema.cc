@@ -22,6 +22,7 @@ namespace bp = boost::python;
 using namespace karabo::util;
 using namespace std;
 
+
 struct SchemaWrapper : Schema, bp::wrapper< Schema > {
 
 
@@ -51,8 +52,8 @@ struct SchemaWrapper : Schema, bp::wrapper< Schema > {
     }
 };
 
-class ValidatorWrap : Validator {
 
+class ValidatorWrap : Validator {
 public:
 
 
@@ -74,30 +75,33 @@ public:
     }
 };
 
+
 struct NodeElementWrap {
 
+
     static karabo::util::NodeElement & appendParametersOfConfigurableClass(karabo::util::NodeElement& self, const bp::object& baseobj, const std::string& classid) {
-        
+
         if (!PyType_Check(baseobj.ptr())) {
             throw KARABO_PYTHON_EXCEPTION("Argument 'arg1' given in 'appendParametersOfConfigurableClass(arg1, arg2)' of NODE_ELEMENT must be a class in Python registered as base class in Configurator");
         }
         if (!baseobj.attr("expectedParameters")) {
             throw KARABO_PYTHON_EXCEPTION("Class given in 'appendParametersOf' of NODE_ELELEMT must have 'expectedParameters' function");
         }
-        
+
         if (self.getNode().getType() != Types::HASH) self.getNode().setValue(Hash());
         std::string baseClassId = bp::extract<std::string>(baseobj.attr("__classid__"));
         self.getNode().setAttribute(KARABO_SCHEMA_CLASS_ID, classid);
         self.getNode().setAttribute(KARABO_SCHEMA_DISPLAY_TYPE, baseClassId);
-        
+
         bp::object schemaObj = baseobj.attr("getSchema")(classid);
-        
+
         const karabo::util::Schema schema = bp::extract<karabo::util::Schema> (schemaObj);
         const karabo::util::Hash h = schema.getParameterHash();
         self.getNode().setValue<karabo::util::Hash>(h);
-        
+
         return self;
     }
+
 
     static karabo::util::NodeElement & appendParametersOf(karabo::util::NodeElement& self, const bp::object& obj) {
 
@@ -118,6 +122,7 @@ struct NodeElementWrap {
     }
 
 };
+
 
 struct ChoiceElementWrap {
 
@@ -155,6 +160,7 @@ struct ChoiceElementWrap {
     }
 };
 
+
 struct ListElementWrap {
 
 
@@ -190,6 +196,7 @@ struct ListElementWrap {
         return self;
     }
 };
+
 
 struct OverwriteElementWrap {
 
@@ -337,7 +344,7 @@ namespace schemawrap {
             }
             throw KARABO_NOT_SUPPORTED_EXCEPTION("Type is not supported");
         }
-        throw KARABO_PYTHON_EXCEPTION("Python argument in 'getMinInc' must be a string");
+        throw KARABO_PYTHON_EXCEPTION("Python argument in 'getMaxExc' must be a string");
     }
 
     //*****************************************************************************
@@ -445,15 +452,23 @@ namespace schemawrap {
     }
 
 
-    bp::list getKeys(const Schema& schema, const bp::object& obj) {
+    bp::object getKeys(const Schema& schema, const bp::object& obj) {
         if (PyString_Check(obj.ptr())) {
             bp::list listParams;
             string path = bp::extract<string>(obj);
-            std::vector<std::string> v = schema.getKeys(path);
+            vector<string> v = schema.getKeys(path);
             for (size_t i = 0; i < v.size(); i++) listParams.attr("append")(bp::object(v[i]));
             return listParams;
         }
         throw KARABO_PYTHON_EXCEPTION("Python argument in 'getKeys' should be a string");
+    }
+
+
+    bp::object getPaths(const Schema& schema) {
+        bp::list listParams;
+        vector<string> v = schema.getPaths();
+        for (size_t i = 0; i < v.size(); i++) listParams.attr("append")(bp::object(v[i]));
+        return listParams;
     }
 
 
@@ -542,6 +557,69 @@ namespace schemawrap {
         }
         throw KARABO_PYTHON_EXCEPTION("Python first argument in 'getDefaultValueAs' should be a string");
     }
+
+
+    bool aliasHasKey(const Schema& schema, const bp::object& obj) {
+        if (PyInt_Check(obj.ptr())) {
+            int param = bp::extract<int>(obj);
+            return schema.aliasHasKey(param);
+        } else if (PyString_Check(obj.ptr())) {
+            std::string param = bp::extract<std::string>(obj);
+            return schema.aliasHasKey(param);
+        } else if (PyFloat_Check(obj.ptr())) {
+            double param = bp::extract<double>(obj);
+            return schema.aliasHasKey(param);
+        } else {
+            throw KARABO_PYTHON_EXCEPTION("Python argument in 'aliasHasKey': type is not supported");
+        }
+    }
+
+
+    bp::object getAliasFromKey(const Schema& schema, const bp::object& obj, const karabo::pyexfel::PyTypes::ReferenceType& pytype)  {
+        if (PyString_Check(obj.ptr())) {
+            string path = bp::extract<string>(obj);
+
+            switch (pytype) {
+                case karabo::pyexfel::PyTypes::BOOL:
+                    return bp::object(schema.getAliasFromKey<bool>(path));
+                case karabo::pyexfel::PyTypes::INT32:
+                    return bp::object(schema.getAliasFromKey<int>(path));
+                case karabo::pyexfel::PyTypes::UINT32:
+                    return bp::object(schema.getAliasFromKey<unsigned int>(path));
+                case karabo::pyexfel::PyTypes::INT64:
+                    return bp::object(schema.getAliasFromKey<long long>(path));
+                case karabo::pyexfel::PyTypes::UINT64:
+                    return bp::object(schema.getAliasFromKey<unsigned long long>(path));
+                case karabo::pyexfel::PyTypes::STRING:
+                    return bp::object(schema.getAliasFromKey<string>(path));
+                case karabo::pyexfel::PyTypes::DOUBLE:
+                    return bp::object(schema.getAliasFromKey<double>(path));
+                default:
+                    break;
+            }
+            throw KARABO_NOT_SUPPORTED_EXCEPTION("Type is not supported");
+
+        } else {
+            throw KARABO_PYTHON_EXCEPTION("Python first argument in 'getAliasFromKey' should be a string");
+        }
+    }
+
+
+    string getKeyFromAlias(const Schema& schema, const bp::object& obj) {
+        if (PyInt_Check(obj.ptr())) {
+            int param = bp::extract<int>(obj);
+            return schema.getKeyFromAlias(param);
+        } else if (PyString_Check(obj.ptr())) {
+            std::string param = bp::extract<std::string>(obj);
+            return schema.getKeyFromAlias(param);
+        } else if (PyFloat_Check(obj.ptr())) {
+            double param = bp::extract<double>(obj);
+            return schema.getKeyFromAlias(param);
+        } else {
+            throw KARABO_PYTHON_EXCEPTION("Python argument in 'getKeyFromAlias': type is not supported");
+        }
+    }
+
 }
 
 
@@ -658,6 +736,8 @@ void exportPyUtilSchema() {
 
         s.def("getKeys", &schemawrap::getKeys, (bp::arg("path") = ""));
 
+        s.def("getPaths", &schemawrap::getPaths);
+
         s.def("getOptions", &schemawrap::getOptions);
 
         s.def("getTags", &schemawrap::getTags);
@@ -667,29 +747,35 @@ void exportPyUtilSchema() {
         s.def("getDefaultValue", &schemawrap::getDefaultValue);
 
         s.def("getDefaultValueAs", &schemawrap::getDefaultValueAs);
-                
+
         s.def("getMin", &Schema::getMin
               , bp::return_value_policy< bp::copy_const_reference >());
-        
+
         s.def("getMax", &Schema::getMax
               , bp::return_value_policy< bp::copy_const_reference >());
-        
+
         s.def("getMinSize"
-              , (const unsigned int& (Schema::*)(const string &) const)(&Schema::getMinSize)
+              , (const unsigned int& (Schema::*)(const string &) const) (&Schema::getMinSize)
               , bp::return_value_policy< bp::copy_const_reference >());
-        
+
         s.def("getMaxSize"
-              , (const unsigned int& (Schema::*)(const string &) const)(&Schema::getMaxSize)
+              , (const unsigned int& (Schema::*)(const string &) const) (&Schema::getMaxSize)
               , bp::return_value_policy< bp::copy_const_reference >());
-        
+
         s.def("getExpertLevel", &Schema::getExpertLevel);
 
-        
+
         //all other get-s....
 
         //********* has methods ****************
 
         s.def("keyHasAlias", &Schema::keyHasAlias);
+
+        s.def("aliasHasKey", &schemawrap::aliasHasKey);
+
+        s.def("getAliasFromKey", &schemawrap::getAliasFromKey);
+
+        s.def("getKeyFromAlias", &schemawrap::getKeyFromAlias);
 
         s.def("hasAccessMode", &Schema::hasAccessMode);
 
@@ -714,7 +800,7 @@ void exportPyUtilSchema() {
         s.def("hasMinExc", &Schema::hasMinExc);
 
         s.def("hasMaxExc", &Schema::hasMaxExc);
-        
+
         //all other has .....
 
         //********* is methods ****************
