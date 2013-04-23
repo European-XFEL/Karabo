@@ -12,7 +12,7 @@
 __all__ = ["Network"]
 
 
-from libkarabo import *
+from libkarathon import *
 from logindialog import LoginDialog
 from manager import Manager
 from struct import *
@@ -240,10 +240,18 @@ class Network(QObject):
             
             type = headerHash.get("type")
             #print "Request: ", type
-            if type == "change":
+            
+            # "instanceUpdated" (instanceId, instanceInfo)
+            # "instanceGone" (instanceId)
+            # "configurationChange" (config, instanceId)
+            # "log" (logMessage)
+            # "notify" (instanceId, type, text)
+            # "invalidateCache" (instanceId)
+            
+            if type == "change": 
                 bodyHash = self.__binarySerializer.unserialize(str(bodyString))
                 self._handleChange(headerHash, bodyHash)
-            elif type == "log":
+            elif type == "log": 
                 self._handleLog(bodyString)
             elif type == "error":
                 self._handleError(bodyString)
