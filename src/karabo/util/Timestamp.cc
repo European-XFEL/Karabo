@@ -181,42 +181,47 @@ namespace karabo {
 
 
         boost::posix_time::ptime Timestamp::getStringFormated2PTime(const std::string& timestampStr) {
-            for (size_t i = 0; i < formats; ++i) {
-                std::istringstream ss(timestampStr);
-                ss.imbue(inputs[i]);
-                boost::posix_time::ptime this_time;
 
-                // Warning here!
-                ss >> this_time;
+            throw KARABO_NOT_SUPPORTED_EXCEPTION("To solve Warning problem!");
 
-                if (this_time != boost::posix_time::not_a_date_time)
-                    return this_time;
-            }
-
-            // If a match format is not find
-            throw KARABO_NOT_SUPPORTED_EXCEPTION("Not a valid format");
+            //            for (size_t i = 0; i < formats; ++i) {
+            //                std::istringstream ss(timestampStr);
+            //                ss.imbue(inputs[i]);
+            //                boost::posix_time::ptime this_time;
+            //
+            //                // Warning here!
+            //                ss >> this_time;
+            //
+            //                if (this_time != boost::posix_time::not_a_date_time)
+            //                    return this_time;
+            //            }
+            //
+            //            // If a match format is not find
+            //            throw KARABO_NOT_SUPPORTED_EXCEPTION("Not a valid format");
         }
 
 
         boost::posix_time::ptime Timestamp::getStringFormated2PTime(const std::string& timestampStr, const boost::posix_time::time_input_facet* facet) {
 
-            const boost::posix_time::time_input_facet* finalTimestampFormat;
-            if (facet == NULL) {
-                return Timestamp::getStringFormated2PTime(timestampStr);
-            } else {
-                finalTimestampFormat = facet;
-            }
+            throw KARABO_NOT_SUPPORTED_EXCEPTION("To solve Warning problem!");
 
-            boost::posix_time::ptime pt;
-
-            std::istringstream iss(timestampStr);
-            std::locale official_format = std::locale(iss.getloc(), finalTimestampFormat);
-            iss.imbue(official_format);
-
-            // Warning here!
-            iss >> pt;
-
-            return pt;
+            //            const boost::posix_time::time_input_facet* finalTimestampFormat;
+            //            if (facet == NULL) {
+            //                return Timestamp::getStringFormated2PTime(timestampStr);
+            //            } else {
+            //                finalTimestampFormat = facet;
+            //            }
+            //
+            //            boost::posix_time::ptime pt;
+            //
+            //            std::istringstream iss(timestampStr);
+            //            std::locale official_format = std::locale(iss.getloc(), finalTimestampFormat);
+            //            iss.imbue(official_format);
+            //
+            //            // Warning here!
+            //            iss >> pt;
+            //
+            //            return pt;
         }
 
 
