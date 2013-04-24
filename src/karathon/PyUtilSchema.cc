@@ -452,6 +452,229 @@ namespace schemawrap {
     }
 
 
+    //*****************************************************************************
+    // Wrapper functions for : getWarnLow, getWarnHigh, getAlarmLow, getAlarmHigh *
+    //*****************************************************************************
+
+
+    bp::object getWarnLow(const Schema& schema, const bp::object& obj) {
+        if (PyString_Check(obj.ptr())) {
+            string path = bp::extract<string>(obj);
+            Types::ReferenceType reftype = schema.getValueType(path);
+
+            switch (reftype) {
+                case Types::INT32:
+                    return bp::object(schema.getWarnLow<int>(path));
+                case Types::UINT32:
+                    return bp::object(schema.getWarnLow<unsigned int>(path));
+                case Types::INT64:
+                    return bp::object(schema.getWarnLow<long long>(path));
+                case Types::UINT64:
+                    return bp::object(schema.getWarnLow<unsigned long long>(path));
+                case Types::STRING:
+                    return bp::object(schema.getWarnLow<string>(path));
+                case Types::DOUBLE:
+                    return bp::object(schema.getWarnLow<double>(path));
+                default:
+                    break;
+            }
+            throw KARABO_NOT_SUPPORTED_EXCEPTION("Type is not supported");
+        }
+        throw KARABO_PYTHON_EXCEPTION("Python argument in 'getWarnLow' must be a string");
+    }
+
+
+    bp::object getWarnHigh(const Schema& schema, const bp::object& obj) {
+        if (PyString_Check(obj.ptr())) {
+            string path = bp::extract<string>(obj);
+            Types::ReferenceType reftype = schema.getValueType(path);
+
+            switch (reftype) {
+                case Types::INT32:
+                    return bp::object(schema.getWarnHigh<int>(path));
+                case Types::UINT32:
+                    return bp::object(schema.getWarnHigh<unsigned int>(path));
+                case Types::INT64:
+                    return bp::object(schema.getWarnHigh<long long>(path));
+                case Types::UINT64:
+                    return bp::object(schema.getWarnHigh<unsigned long long>(path));
+                case Types::STRING:
+                    return bp::object(schema.getWarnHigh<string>(path));
+                case Types::DOUBLE:
+                    return bp::object(schema.getWarnHigh<double>(path));
+                default:
+                    break;
+            }
+            throw KARABO_NOT_SUPPORTED_EXCEPTION("Type is not supported");
+        }
+        throw KARABO_PYTHON_EXCEPTION("Python argument in 'getWarnHigh' must be a string");
+    }
+
+
+    bp::object getAlarmLow(const Schema& schema, const bp::object& obj) {
+        if (PyString_Check(obj.ptr())) {
+            string path = bp::extract<string>(obj);
+            Types::ReferenceType reftype = schema.getValueType(path);
+
+            switch (reftype) {
+                case Types::INT32:
+                    return bp::object(schema.getAlarmLow<int>(path));
+                case Types::UINT32:
+                    return bp::object(schema.getAlarmLow<unsigned int>(path));
+                case Types::INT64:
+                    return bp::object(schema.getAlarmLow<long long>(path));
+                case Types::UINT64:
+                    return bp::object(schema.getAlarmLow<unsigned long long>(path));
+                case Types::STRING:
+                    return bp::object(schema.getAlarmLow<string>(path));
+                case Types::DOUBLE:
+                    return bp::object(schema.getAlarmLow<double>(path));
+                default:
+                    break;
+            }
+            throw KARABO_NOT_SUPPORTED_EXCEPTION("Type is not supported");
+        }
+        throw KARABO_PYTHON_EXCEPTION("Python argument in 'getAlarmLow' must be a string");
+    }
+
+
+    bp::object getAlarmHigh(const Schema& schema, const bp::object& obj) {
+        if (PyString_Check(obj.ptr())) {
+            string path = bp::extract<string>(obj);
+            Types::ReferenceType reftype = schema.getValueType(path);
+
+            switch (reftype) {
+                case Types::INT32:
+                    return bp::object(schema.getAlarmHigh<int>(path));
+                case Types::UINT32:
+                    return bp::object(schema.getAlarmHigh<unsigned int>(path));
+                case Types::INT64:
+                    return bp::object(schema.getAlarmHigh<long long>(path));
+                case Types::UINT64:
+                    return bp::object(schema.getAlarmHigh<unsigned long long>(path));
+                case Types::STRING:
+                    return bp::object(schema.getAlarmHigh<string>(path));
+                case Types::DOUBLE:
+                    return bp::object(schema.getAlarmHigh<double>(path));
+                default:
+                    break;
+            }
+            throw KARABO_NOT_SUPPORTED_EXCEPTION("Type is not supported");
+        }
+        throw KARABO_PYTHON_EXCEPTION("Python argument in 'getAlarmHigh' must be a string");
+    }
+
+
+    //*************************************************************************************
+    // Wrapper functions for : getWarnLowAs, getWarnHighAs, getAlarmLowAs, getAlarmHighAs *
+    //*************************************************************************************
+
+
+    bp::object getWarnLowAs(const Schema& schema, const bp::object& obj, const karabo::pyexfel::PyTypes::ReferenceType& pytype) {
+        if (PyString_Check(obj.ptr())) {
+            string path = bp::extract<string>(obj);
+            switch (pytype) {
+                case karabo::pyexfel::PyTypes::INT32:
+                    return bp::object(schema.getWarnLowAs<int>(path));
+                case karabo::pyexfel::PyTypes::UINT32:
+                    return bp::object(schema.getWarnLowAs<unsigned int>(path));
+                case karabo::pyexfel::PyTypes::INT64:
+                    return bp::object(schema.getWarnLowAs<long long>(path));
+                case karabo::pyexfel::PyTypes::UINT64:
+                    return bp::object(schema.getWarnLowAs<unsigned long long>(path));
+                case karabo::pyexfel::PyTypes::STRING:
+                    return bp::object(schema.getWarnLowAs<string>(path));
+                case karabo::pyexfel::PyTypes::DOUBLE:
+                    return bp::object(schema.getWarnLowAs<double>(path));
+                default:
+                    break;
+            }
+            throw KARABO_PYTHON_EXCEPTION("Python Type is not supported");
+        }
+        throw KARABO_PYTHON_EXCEPTION("Python first argument in 'getWarnLowAs' must be a string");
+    }
+
+
+    bp::object getWarnHighAs(const Schema& schema, const bp::object& obj, const karabo::pyexfel::PyTypes::ReferenceType& pytype) {
+        if (PyString_Check(obj.ptr())) {
+            string path = bp::extract<string>(obj);
+            switch (pytype) {
+                case karabo::pyexfel::PyTypes::INT32:
+                    return bp::object(schema.getWarnHighAs<int>(path));
+                case karabo::pyexfel::PyTypes::UINT32:
+                    return bp::object(schema.getWarnHighAs<unsigned int>(path));
+                case karabo::pyexfel::PyTypes::INT64:
+                    return bp::object(schema.getWarnHighAs<long long>(path));
+                case karabo::pyexfel::PyTypes::UINT64:
+                    return bp::object(schema.getWarnHighAs<unsigned long long>(path));
+                case karabo::pyexfel::PyTypes::STRING:
+                    return bp::object(schema.getWarnHighAs<string>(path));
+                case karabo::pyexfel::PyTypes::DOUBLE:
+                    return bp::object(schema.getWarnHighAs<double>(path));
+                default:
+                    break;
+            }
+            throw KARABO_PYTHON_EXCEPTION("Python Type is not supported");
+        }
+        throw KARABO_PYTHON_EXCEPTION("Python first argument in 'getWarnHighAs' must be a string");
+    }
+
+
+    bp::object getAlarmLowAs(const Schema& schema, const bp::object& obj, const karabo::pyexfel::PyTypes::ReferenceType& pytype) {
+        if (PyString_Check(obj.ptr())) {
+            string path = bp::extract<string>(obj);
+            switch (pytype) {
+                case karabo::pyexfel::PyTypes::INT32:
+                    return bp::object(schema.getAlarmLowAs<int>(path));
+                case karabo::pyexfel::PyTypes::UINT32:
+                    return bp::object(schema.getAlarmLowAs<unsigned int>(path));
+                case karabo::pyexfel::PyTypes::INT64:
+                    return bp::object(schema.getAlarmLowAs<long long>(path));
+                case karabo::pyexfel::PyTypes::UINT64:
+                    return bp::object(schema.getAlarmLowAs<unsigned long long>(path));
+                case karabo::pyexfel::PyTypes::STRING:
+                    return bp::object(schema.getAlarmLowAs<string>(path));
+                case karabo::pyexfel::PyTypes::DOUBLE:
+                    return bp::object(schema.getAlarmLowAs<double>(path));
+                default:
+                    break;
+            }
+            throw KARABO_PYTHON_EXCEPTION("Python Type is not supported");
+        }
+        throw KARABO_PYTHON_EXCEPTION("Python first argument in 'getAlarmLowAs' must be a string");
+    }
+
+
+    bp::object getAlarmHighAs(const Schema& schema, const bp::object& obj, const karabo::pyexfel::PyTypes::ReferenceType& pytype) {
+        if (PyString_Check(obj.ptr())) {
+            string path = bp::extract<string>(obj);
+            switch (pytype) {
+                case karabo::pyexfel::PyTypes::INT32:
+                    return bp::object(schema.getAlarmHighAs<int>(path));
+                case karabo::pyexfel::PyTypes::UINT32:
+                    return bp::object(schema.getAlarmHighAs<unsigned int>(path));
+                case karabo::pyexfel::PyTypes::INT64:
+                    return bp::object(schema.getAlarmHighAs<long long>(path));
+                case karabo::pyexfel::PyTypes::UINT64:
+                    return bp::object(schema.getAlarmHighAs<unsigned long long>(path));
+                case karabo::pyexfel::PyTypes::STRING:
+                    return bp::object(schema.getAlarmHighAs<string>(path));
+                case karabo::pyexfel::PyTypes::DOUBLE:
+                    return bp::object(schema.getAlarmHighAs<double>(path));
+                default:
+                    break;
+            }
+            throw KARABO_PYTHON_EXCEPTION("Python Type is not supported");
+        }
+        throw KARABO_PYTHON_EXCEPTION("Python first argument in 'getAlarmHighAs' must be a string");
+    }
+
+
+    //***********************************************************************************
+    // Wrapper functions for : getKeys, getPaths, getTags, getOptions, getAllowedStates *
+    //***********************************************************************************
+
+
     bp::object getKeys(const Schema& schema, const bp::object& obj) {
         if (PyString_Check(obj.ptr())) {
             bp::list listParams;
@@ -500,6 +723,10 @@ namespace schemawrap {
         }
         throw KARABO_PYTHON_EXCEPTION("Python argument in 'getAllowedStates' should be a string");
     }
+
+    //*************************************************************
+    // Wrapper functions for : getDefaultValue, getDefaultValueAs *
+    //*************************************************************
 
 
     bp::object getDefaultValue(const Schema& schema, const bp::object& obj) {
@@ -558,6 +785,10 @@ namespace schemawrap {
         throw KARABO_PYTHON_EXCEPTION("Python first argument in 'getDefaultValueAs' should be a string");
     }
 
+    //************************************************************************
+    // Wrapper functions for : aliasHasKey, getAliasFromKey, getKeyFromAlias *
+    //************************************************************************
+
 
     bool aliasHasKey(const Schema& schema, const bp::object& obj) {
         if (PyInt_Check(obj.ptr())) {
@@ -575,7 +806,7 @@ namespace schemawrap {
     }
 
 
-    bp::object getAliasFromKey(const Schema& schema, const bp::object& obj, const karabo::pyexfel::PyTypes::ReferenceType& pytype)  {
+    bp::object getAliasFromKey(const Schema& schema, const bp::object& obj, const karabo::pyexfel::PyTypes::ReferenceType& pytype) {
         if (PyString_Check(obj.ptr())) {
             string path = bp::extract<string>(obj);
 
@@ -764,7 +995,22 @@ void exportPyUtilSchema() {
 
         s.def("getExpertLevel", &Schema::getExpertLevel);
 
-
+        s.def("getWarnLow", &schemawrap::getWarnLow);
+        
+        s.def("getWarnHigh", &schemawrap::getWarnHigh);
+        
+        s.def("getAlarmLow", &schemawrap::getAlarmLow);
+        
+        s.def("getAlarmHigh", &schemawrap::getAlarmHigh);
+        
+        s.def("getWarnLowAs", &schemawrap::getWarnLowAs, (bp::arg("path"), bp::arg("pytype")));
+        
+        s.def("getWarnHighAs", &schemawrap::getWarnHighAs, (bp::arg("path"), bp::arg("pytype")));
+        
+        s.def("getAlarmLowAs", &schemawrap::getAlarmLowAs, (bp::arg("path"), bp::arg("pytype")));
+        
+        s.def("getAlarmHighAs", &schemawrap::getAlarmHighAs, (bp::arg("path"), bp::arg("pytype")));
+        
         //all other get-s....
 
         //********* has methods ****************
@@ -800,6 +1046,14 @@ void exportPyUtilSchema() {
         s.def("hasMinExc", &Schema::hasMinExc);
 
         s.def("hasMaxExc", &Schema::hasMaxExc);
+
+        s.def("hasWarnLow", &Schema::hasWarnLow);
+
+        s.def("hasWarnHigh", &Schema::hasWarnHigh);
+
+        s.def("hasAlarmLow", &Schema::hasAlarmLow);
+
+        s.def("hasAlarmHigh", &Schema::hasAlarmHigh);
 
         //all other has .....
 
