@@ -336,7 +336,5 @@ namespace karabo {
             return errorMsg;
         }
 
-    }
-}
-
-
+    } // namespace packageName
+} // namespace karabo
