@@ -55,7 +55,7 @@ void Authenticate_Test::testCorrectLogin() {
     CPPUNIT_ASSERT(a.getWelcomeMessage().empty() == true);
     CPPUNIT_ASSERT(a.getSessionToken().empty() == true);
 
-    success = a.login(time);
+    success = a.login();
     CPPUNIT_ASSERT(success == true);
 
     // Validate the following parameters were populated after login
@@ -90,7 +90,7 @@ void Authenticate_Test::testIncorrectLogin() {
     Authenticator a = Authenticator(username, password, provider, ipAddress, hostname, portNumber, software);
 
     // Test wrong password
-    success = a.login(time);
+    success = a.login();
     CPPUNIT_ASSERT(success == false);
 
     // Test wrong username
@@ -98,7 +98,7 @@ void Authenticate_Test::testIncorrectLogin() {
     password = "guest";
     a = Authenticator(username, password, provider, ipAddress, hostname, portNumber, software);
 
-    success = a.login(time);
+    success = a.login();
     CPPUNIT_ASSERT(success == false);
 }
 
@@ -120,7 +120,7 @@ void Authenticate_Test::testIncorrectUsername() {
     Authenticator a = Authenticator(username, password, provider, ipAddress, hostname, portNumber, software);
 
     // Test wrong password
-    success = a.login(time);
+    success = a.login();
     CPPUNIT_ASSERT(success == false);
 }
 
@@ -142,7 +142,7 @@ void Authenticate_Test::testSingleSignOn() {
 
     Authenticator a = Authenticator(username, password, provider, ipAddress, hostname, portNumber, software);
 
-    success = a.login(time);
+    success = a.login();
     CPPUNIT_ASSERT(success == true);
 
     // Validate session with current machine name => Should be OK
