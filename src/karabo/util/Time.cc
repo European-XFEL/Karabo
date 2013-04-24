@@ -11,9 +11,7 @@
 
 #include <stdio.h>
 #include <time.h>
-
 #include "Time.hh"
-#include <time.h>
 
 
 namespace karabo {
@@ -23,7 +21,6 @@ namespace karabo {
         using namespace boost::gregorian;
 
         ptime Time::m_epoch = ptime(date(1970, 1, 1));
-        ptime Timestamp::m_epoch = ptime(date(1970, 1, 1));
 
 
         unsigned long long Time::getMsSinceEpoch() {
@@ -41,7 +38,7 @@ namespace karabo {
         //        // Visit http://www.cplusplus.com/reference/clibrary/ctime/strftime/
         //        // for more information about date/time format
         //        strftime(buf, sizeof(buf), format.c_str(), &tstruct);
-        //        
+        //                
         //        return buf;
         //    }
 
