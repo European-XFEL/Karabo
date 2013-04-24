@@ -50,7 +50,6 @@ void Schema_Test::testPaths() {
     Schema schema("test");
     GraphicsRenderer::expectedParameters(schema);
 
-    schema.help();
     vector<string> paths = schema.getPaths();
     CPPUNIT_ASSERT(paths[0] == "antiAlias");
     CPPUNIT_ASSERT(paths[1] == "color");
