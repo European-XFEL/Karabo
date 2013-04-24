@@ -1,12 +1,15 @@
 /*
- * File:   Authenticate_Test.cc
- * Author: heisenb
  *
- * Created on Apr 12, 2013, 4:24:42 PM
+ * File:   Authenticate_Test.cc
+ * Author: <luis.maia@xfel.eu>
+ *
+ * Created on April 12, 2013, 4:24:42 PM
+ *
+ * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
 
 #include <karabo/webAuth/Authenticator.hh>
-
+#include <karabo/util/Timestamp.hh>
 #include "Authenticate_Test.hh"
 
 using namespace std;
@@ -14,17 +17,22 @@ using namespace karabo::webAuth;
 
 CPPUNIT_TEST_SUITE_REGISTRATION(Authenticate_Test);
 
+
 Authenticate_Test::Authenticate_Test() {
 }
+
 
 Authenticate_Test::~Authenticate_Test() {
 }
 
+
 void Authenticate_Test::setUp() {
 }
 
+
 void Authenticate_Test::tearDown() {
 }
+
 
 void Authenticate_Test::testCorrectLogin() {
     string username = "guest";
@@ -34,7 +42,9 @@ void Authenticate_Test::testCorrectLogin() {
     string hostname = "127.0.0.1";
     string portNumber = "4444";
     string software = "Karabo";
-    string time = "20130410145159257";
+    //
+    string timeStr = "20130410T145159.789333";
+    karabo::util::Timestamp time = karabo::util::Timestamp(timeStr);
 
     bool success;
 
@@ -44,10 +54,10 @@ void Authenticate_Test::testCorrectLogin() {
     CPPUNIT_ASSERT(a.getRoleDesc().empty() == true);
     CPPUNIT_ASSERT(a.getWelcomeMessage().empty() == true);
     CPPUNIT_ASSERT(a.getSessionToken().empty() == true);
-    
-    success = a.login();
+
+    success = a.login(time);
     CPPUNIT_ASSERT(success == true);
-    
+
     // Validate the following parameters were populated after login
     CPPUNIT_ASSERT(a.getRoleDesc().empty() == false);
     CPPUNIT_ASSERT(a.getWelcomeMessage().empty() == false);
@@ -55,12 +65,13 @@ void Authenticate_Test::testCorrectLogin() {
 
     success = a.logout();
     CPPUNIT_ASSERT(success == true);
-    
+
     // Validate the following parameters were cleaned after logout
     CPPUNIT_ASSERT(a.getRoleDesc().empty() == true);
     CPPUNIT_ASSERT(a.getWelcomeMessage().empty() == true);
     CPPUNIT_ASSERT(a.getSessionToken().empty() == true);
 }
+
 
 void Authenticate_Test::testIncorrectLogin() {
     string username = "guest";
@@ -70,14 +81,16 @@ void Authenticate_Test::testIncorrectLogin() {
     string hostname = "127.0.0.1";
     string portNumber = "4444";
     string software = "Karabo";
-    string time = "20130410145159257";
+    //
+    string timeStr = "20130410T145159.789333";
+    karabo::util::Timestamp time = karabo::util::Timestamp(timeStr);
 
     bool success;
 
     Authenticator a = Authenticator(username, password, provider, ipAddress, hostname, portNumber, software);
 
     // Test wrong password
-    success = a.login();
+    success = a.login(time);
     CPPUNIT_ASSERT(success == false);
 
     // Test wrong username
@@ -85,9 +98,10 @@ void Authenticate_Test::testIncorrectLogin() {
     password = "guest";
     a = Authenticator(username, password, provider, ipAddress, hostname, portNumber, software);
 
-    success = a.login();
+    success = a.login(time);
     CPPUNIT_ASSERT(success == false);
 }
+
 
 void Authenticate_Test::testIncorrectUsername() {
     string username = "guest2";
@@ -97,16 +111,19 @@ void Authenticate_Test::testIncorrectUsername() {
     string hostname = "127.0.0.1";
     string portNumber = "4444";
     string software = "Karabo";
-    string time = "20130410145159257";
+    //
+    string timeStr = "20130410T145159.789333";
+    karabo::util::Timestamp time = karabo::util::Timestamp(timeStr);
 
     bool success;
 
     Authenticator a = Authenticator(username, password, provider, ipAddress, hostname, portNumber, software);
 
     // Test wrong password
-    success = a.login();
+    success = a.login(time);
     CPPUNIT_ASSERT(success == false);
 }
+
 
 void Authenticate_Test::testSingleSignOn() {
     string username = "guest";
@@ -116,14 +133,16 @@ void Authenticate_Test::testSingleSignOn() {
     string hostname = "127.0.0.1";
     string portNumber = "4444";
     string software = "Karabo";
-    string time = "20130410145159257";
+    //
+    string timeStr = "20130410T145159.789333";
+    karabo::util::Timestamp time = karabo::util::Timestamp(timeStr);
 
     bool success;
     std::string sessionToken;
 
     Authenticator a = Authenticator(username, password, provider, ipAddress, hostname, portNumber, software);
 
-    success = a.login();
+    success = a.login(time);
     CPPUNIT_ASSERT(success == true);
 
     // Validate session with current machine name => Should be OK
