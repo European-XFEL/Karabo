@@ -30,19 +30,38 @@ void Schema_Test::testBuildUp() {
             CPPUNIT_ASSERT(schema.isAccessInitOnly("shadowEnabled") == true);
             CPPUNIT_ASSERT(schema.isAccessInitOnly("radius") == true);
             CPPUNIT_ASSERT(schema.isLeaf("radius") == true);
-        }
+            }
         {
             Schema schema("test");
             GraphicsRenderer1::expectedParameters(schema);
             CPPUNIT_ASSERT(schema.isAccessInitOnly("shapes.circle.radius") == true);
             CPPUNIT_ASSERT(schema.isLeaf("shapes.circle.radius") == true);
-        }
+            }
         GraphicsRenderer::Pointer p = GraphicsRenderer::create("GraphicsRenderer", Hash("shapes.Circle.radius", 0.5, "color", "red", "antiAlias", "true"));
         //cout << Configurator<GraphicsRenderer>::getSchema("GraphicsRenderer"); 
 
     } catch (karabo::util::Exception e) {
         cout << e << endl;
     }
+}
+
+
+void Schema_Test::testPaths() {
+    Schema schema("test");
+    GraphicsRenderer::expectedParameters(schema);
+
+    schema.help();
+    vector<string> paths = schema.getPaths();
+    CPPUNIT_ASSERT(paths[0] == "antiAlias");
+    CPPUNIT_ASSERT(paths[1] == "color");
+    CPPUNIT_ASSERT(paths[2] == "bold");
+    CPPUNIT_ASSERT(paths[3] == "shapes.Circle.shadowEnabled");
+    CPPUNIT_ASSERT(paths[4] == "shapes.Circle.radius");
+    CPPUNIT_ASSERT(paths[5] == "shapes.EditableCircle.shadowEnabled");
+    CPPUNIT_ASSERT(paths[6] == "shapes.EditableCircle.radius");
+    CPPUNIT_ASSERT(paths[7] == "shapes.Rectangle.shadowEnabled");
+    CPPUNIT_ASSERT(paths[8] == "shapes.Rectangle.a");
+    CPPUNIT_ASSERT(paths[9] == "shapes.Rectangle.b");
 }
 
 
@@ -107,13 +126,13 @@ void Schema_Test::testAliasHasKey() {
     CPPUNIT_ASSERT(m_schema.aliasHasKey(10) == true);
     CPPUNIT_ASSERT(m_schema.aliasHasKey(5.5) == true);
     CPPUNIT_ASSERT(m_schema.aliasHasKey("exampleAlias4") == true);
-    
+
     vector<int> vecIntAlias;
     vecIntAlias.push_back(10);
     vecIntAlias.push_back(20);
     vecIntAlias.push_back(30);
     CPPUNIT_ASSERT(m_schema.aliasHasKey(vecIntAlias) == true);
-    
+
     CPPUNIT_ASSERT(m_schema.aliasHasKey(7) == false);
 }
 
@@ -122,7 +141,7 @@ void Schema_Test::testGetAliasFromKey() {
     CPPUNIT_ASSERT(m_schema.getAliasFromKey<int>("exampleKey2") == 10);
     CPPUNIT_ASSERT(m_schema.getAliasFromKey<double>("exampleKey3") == 5.5);
     CPPUNIT_ASSERT(m_schema.getAliasFromKey<string > ("exampleKey4") == "exampleAlias4");
-    
+
     vector<int> aliasVec = m_schema.getAliasFromKey<vector<int> > ("exampleKey5");
     CPPUNIT_ASSERT(aliasVec[0] == 10);
     CPPUNIT_ASSERT(aliasVec[1] == 20);
@@ -135,7 +154,7 @@ void Schema_Test::testGetKeyFromAlias() {
     CPPUNIT_ASSERT(m_schema.getKeyFromAlias(10) == "exampleKey2");
     CPPUNIT_ASSERT(m_schema.getKeyFromAlias(5.5) == "exampleKey3");
     CPPUNIT_ASSERT(m_schema.getKeyFromAlias("exampleAlias4") == "exampleKey4");
-    
+
     vector<int> vecIntAlias;
     vecIntAlias.push_back(10);
     vecIntAlias.push_back(20);
@@ -146,14 +165,9 @@ void Schema_Test::testGetKeyFromAlias() {
 
 void Schema_Test::testGetAliasAsString() {
     CPPUNIT_ASSERT(m_schema.getAliasAsString("exampleKey2") == "10");
-    
-    //CPPUNIT_ASSERT(m_schema.getAliasAsString("exampleKey3") == "5.5");
-    string str = m_schema.getAliasAsString("exampleKey3");
-    cout << "\n TODO check getAliasAsString from double:  str=" << str <<endl;
     CPPUNIT_ASSERT(m_schema.getAliasAsString("exampleKey3") == "5.500000000000000");
-    
     CPPUNIT_ASSERT(m_schema.getAliasAsString("exampleKey4") == "exampleAlias4");
-    
+
     string aliasStr = m_schema.getAliasAsString("exampleKey5");
     CPPUNIT_ASSERT(aliasStr == "10,20,30");
 }

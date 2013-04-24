@@ -37,6 +37,7 @@ class Schema_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST(testGetMinExcMaxExc);
     CPPUNIT_TEST(testPerKeyFunctionality);
     CPPUNIT_TEST(testHelpFunction);
+    CPPUNIT_TEST(testPaths);
         
     CPPUNIT_TEST_SUITE_END();
 
@@ -74,6 +75,7 @@ private: //functions
     void testGetMinExcMaxExc();
     void testPerKeyFunctionality();
     void testHelpFunction();
+    void testPaths();
 
 };
 
