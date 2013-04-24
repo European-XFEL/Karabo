@@ -285,6 +285,26 @@ void Schema_Test::testGetMinExcMaxExc() {
 }
 
 
+void Schema_Test::testGetAlarmLowAlarmHigh() {
+    CPPUNIT_ASSERT(m_schema.getAlarmLow<long long>("exampleKey5") == -20);
+    CPPUNIT_ASSERT(m_schema.getAlarmHigh<long long>("exampleKey5") == 20);
+}
+
+
+void Schema_Test::testGetWarnLowWarnHigh() {
+    CPPUNIT_ASSERT(m_schema.getWarnLow<long long>("exampleKey5") == -10);
+    CPPUNIT_ASSERT(m_schema.getWarnHigh<long long>("exampleKey5") == 10);
+}
+
+
+void Schema_Test::testHasAlarmWarn() {
+    CPPUNIT_ASSERT(m_schema.hasWarnLow("exampleKey5") == true);
+    CPPUNIT_ASSERT(m_schema.hasWarnHigh("exampleKey5") == true);
+    CPPUNIT_ASSERT(m_schema.hasAlarmLow("exampleKey5") == true);
+    CPPUNIT_ASSERT(m_schema.hasAlarmHigh("exampleKey5") == true);
+}
+
+
 void Schema_Test::testPerKeyFunctionality() {
 
     std::vector<std::string> keys = m_schema.getKeys();

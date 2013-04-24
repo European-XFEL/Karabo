@@ -282,6 +282,19 @@ class  Schema_TestCase(unittest.TestCase):
         except Exception,e:
             self.fail("test_getWarnAlarmLowHighAs exception in getAlarmHighAs: " + str(e))
             
+   def test_hasWarnAlarm(self):
+        try:
+            self.assertEqual(self.schema.hasWarnLow("exampleKey5"), True)
+            self.assertEqual(self.schema.hasWarnHigh("exampleKey5"), True)
+            
+            self.assertEqual(self.schema.hasWarnLow("exampleKey6"), True)
+            self.assertEqual(self.schema.hasWarnHigh("exampleKey6"), True)
+            self.assertEqual(self.schema.hasAlarmLow("exampleKey6"), True)
+            self.assertEqual(self.schema.hasAlarmHigh("exampleKey6"), True)
+            
+            self.assertEqual(self.schema.hasAlarmHigh("exampleKey1"), False)
+        except Exception,e:
+            self.fail("test_hasWarnAlarm exception: " + str(e))         
             
     def test_perKeyFunctionality(self):
         try:
