@@ -54,6 +54,7 @@ class  Hash_TestCase(unittest.TestCase):
             self.assertEqual(len(h['e.f.g.h']), 5)
             self.assertEqual(h['F.f.f.f.f']['x.y.z'], 99)
             self.assertEqual(h['F.f.f.f.f.x.y.z'], 99)
+            self.assertEqual(h['F']['f']['f']['f']['f']['x']['y']['z'], 99)
             # Make Hash flat
             flat = Hash()
             Hash.flatten(h, flat)
