@@ -344,6 +344,8 @@ namespace configurationTest {
                     .description("Example key 5 description")
                     .readOnly()
                     .initialValue(1442244)
+                    .warnLow(-10).warnHigh(10)
+                    .alarmLow(-20).alarmHigh(20)
                     .commit();
         }
     };
