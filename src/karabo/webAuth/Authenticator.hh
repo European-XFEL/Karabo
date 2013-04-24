@@ -1,15 +1,18 @@
-/* 
+/*
+ *
  * File:   Authenticator.hh
  * Author: <luis.maia@xfel.eu>
  *
  * Created on April 12, 2013, 4:31 PM
+ *
+ * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
 
 #ifndef _KARABO_WEBAUTH_AUTHENTICATOR_HH
 #define	_KARABO_WEBAUTH_AUTHENTICATOR_HH
 
 #include <karabo/util/Configurator.hh>
-#include <karabo/util/Time.hh>
+#include <karabo/util/Timestamp.hh>
 #include "soapStub.h"
 
 // Forward
@@ -19,6 +22,7 @@ namespace karabo {
     namespace webAuth {
 
         class Authenticator {
+
             std::string m_username;
             std::string m_password;
             std::string m_provider;
@@ -43,8 +47,8 @@ namespace karabo {
             KARABO_CLASSINFO(Authenticator, "Authenticator", "1.0");
 
             Authenticator(const std::string& username, const std::string& password, const std::string& provider,
-                    const std::string& ipAddress, const std::string& hostname, const std::string& portNumber,
-                    const std::string& software);
+                          const std::string& ipAddress, const std::string& hostname, const std::string& portNumber,
+                          const std::string& software);
 
             bool login(const karabo::util::Timestamp& timestamp = karabo::util::Timestamp());
 
@@ -65,11 +69,11 @@ namespace karabo {
             std::string getUsername() const;
             std::string getRoleDesc() const;
             std::string getWelcomeMessage() const;
-            
+
             unsigned long long int getRoleId() const;
             unsigned long long int getSoftwareId() const;
             unsigned long long int getUserId() const;
-            
+
         private:
 
             ns1__loginResponse authenticate(const karabo::util::Timestamp& timestamp);
