@@ -1,9 +1,13 @@
 /*
- * File:   webAuthTestRunner.cc
- * Author: heisenb
  *
- * Created on Apr 12, 2013, 4:24:42 PM
+ * File:   webAuthTestRunner.cc
+ * Author: <luis.maia@xfel.eu>
+ *
+ * Created on April 12, 2013, 4:24:42 PM
+ *
+ * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
+
 
 #include <cppunit/BriefTestProgressListener.h>
 #include <cppunit/CompilerOutputter.h>
