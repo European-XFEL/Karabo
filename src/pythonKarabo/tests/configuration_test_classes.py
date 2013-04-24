@@ -265,6 +265,7 @@ class TestStruct1(object):
         e.displayedName("Example key 4")
         e.description("Example key 4 description")
         e.options("1.11     -2.22 5.55")
+        e.minExc(-2.22).maxExc(5.55)
         e.assignmentInternal().noDefaultValue()
         e.commit()
 
@@ -272,6 +273,11 @@ class TestStruct1(object):
         e.tags("h/w; d.m.y", ";")
         e.displayedName("Example key 5")
         e.description("Example key 5 description")
-        e.readOnly().initialValue(1442244)
+        e.readOnly().initialValue(1442244).warnLow(-10).warnHigh(10).alarmLow(-20).alarmHigh(20)
         e.commit()
                     
+        e = DOUBLE_ELEMENT(expected).key("exampleKey6")
+        e.displayedName("Example key 6")
+        e.description("Example key 6 description")
+        e.readOnly().initialValue(1.11).alarmLow(-22.1).alarmHigh(22.777).warnLow(-5.5).warnHigh(5.5)
+        e.commit()

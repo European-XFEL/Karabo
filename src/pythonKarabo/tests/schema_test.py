@@ -57,7 +57,7 @@ class  Schema_TestCase(unittest.TestCase):
             self.assertEqual(self.schema.getTags("exampleKey5")[0], "h/w")
             self.assertEqual(self.schema.getTags("exampleKey5")[1], "d.m.y")
         except Exception,e:
-            self.fail("test_getTags exception group 1: " + str(e))
+            self.fail("test_getTags exception: " + str(e))
         
     def test_getNodeType(self):
         try:
@@ -65,7 +65,7 @@ class  Schema_TestCase(unittest.TestCase):
             self.assertEqual(nodeType, NodeType.LEAF)
             self.assertEqual(self.schema.getNodeType("exampleKey5"), NodeType.LEAF)
         except Exception,e:
-            self.fail("test_getNodeType exception group 1: " + str(e))
+            self.fail("test_getNodeType exception: " + str(e))
         
     def test_getValueType(self):
         try:
@@ -75,21 +75,17 @@ class  Schema_TestCase(unittest.TestCase):
             self.assertEqual(self.schema.getValueType("exampleKey4"), Types.DOUBLE)
             self.assertEqual(self.schema.getValueType("exampleKey5"), Types.INT64)
         except Exception,e:
-            self.fail("test_getValueType exception group 1: " + str(e))
+            self.fail("test_getValueType exception: " + str(e))
 
     def test_getAliasAsString(self):
         try:          
             self.assertEqual(self.schema.getAliasAsString("exampleKey2"), "10")
-            
-            #self.assertEqual(self.schema.getAliasAsString("exampleKey3"), "5.5")
-            aliasAsString = self.schema.getAliasAsString("exampleKey3")
-            print "TODO check aliasAsString: ", aliasAsString
             self.assertEqual(self.schema.getAliasAsString("exampleKey3"), "5.500000000000000")
            
             self.assertEqual(self.schema.getAliasAsString("exampleKey4"), "exampleAlias4")
             self.assertEqual(self.schema.getAliasAsString("exampleKey5"), "exampleAlias5")              
         except Exception,e:
-            self.fail("test_getAlias exception group 1: " + str(e))
+            self.fail("test_getAliasAsString exception: " + str(e))
 
     def test_keyHasAlias(self):
         try:
@@ -137,7 +133,7 @@ class  Schema_TestCase(unittest.TestCase):
             self.assertEqual(self.schema.getAccessMode("exampleKey4"), AccessType.INIT)
             self.assertEqual(self.schema.getAccessMode("exampleKey5"), AccessType.READ)
         except Exception,e:
-            self.fail("test_getAccessMode exception group 1: " + str(e))
+            self.fail("test_getAccessMode exception: " + str(e))
     
     def test_getAssignment(self):
         try:
@@ -147,7 +143,7 @@ class  Schema_TestCase(unittest.TestCase):
             self.assertEqual(self.schema.getAssignment("exampleKey4"), AssignmentType.INTERNAL)
             self.assertEqual(self.schema.getAssignment("exampleKey5"), AssignmentType.OPTIONAL)
         except Exception,e:
-            self.fail("test_getAssignment exception group 1: " + str(e))
+            self.fail("test_getAssignment exception: " + str(e))
     
     def test_getOptions(self):
         try:
@@ -164,7 +160,7 @@ class  Schema_TestCase(unittest.TestCase):
             self.assertEqual(self.schema.getOptions("exampleKey4")[1], "-2.22")
             self.assertEqual(self.schema.getOptions("exampleKey4")[2], "5.55")
         except Exception,e:
-            self.fail("test_getOptions exception group 1: " + str(e))
+            self.fail("test_getOptions exception: " + str(e))
     
     def test_getDefaultValue(self):
         try:
@@ -174,7 +170,7 @@ class  Schema_TestCase(unittest.TestCase):
             self.assertEqual(self.schema.getDefaultValue("exampleKey5"), 1442244)
             self.assertEqual(self.schema.getDefaultValueAs("exampleKey5", Types.STRING), "1442244")
         except Exception,e:
-            self.fail("test_getDefaultValue exception group 1: " + str(e))
+            self.fail("test_getDefaultValue exception: " + str(e))
     
     def test_getAllowedStates(self):
         try:
@@ -184,7 +180,7 @@ class  Schema_TestCase(unittest.TestCase):
             self.assertEqual(self.schema.getAllowedStates("exampleKey3")[2], "AllOk.Run.On")
             self.assertEqual(self.schema.getAllowedStates("exampleKey3")[3], "NewState")
         except Exception,e:
-            self.fail("test_getAllowedStates exception group 1: " + str(e))
+            self.fail("test_getAllowedStates exception: " + str(e))
     
     def test_getUnit(self):
         try:
@@ -192,7 +188,7 @@ class  Schema_TestCase(unittest.TestCase):
             self.assertEqual(self.schema.getUnitName("exampleKey2"), "meter")
             self.assertEqual(self.schema.getUnitSymbol("exampleKey2"), "m")
         except Exception,e:
-            self.fail("test_getUnit exception group 1: " + str(e))
+            self.fail("test_getUnit exception: " + str(e))
     
     def test_getMetricPrefix(self):
         try:
@@ -200,7 +196,7 @@ class  Schema_TestCase(unittest.TestCase):
             self.assertEqual(self.schema.getMetricPrefixName("exampleKey2"), "milli")
             self.assertEqual(self.schema.getMetricPrefixSymbol("exampleKey2"), "m")
         except Exception,e:
-            self.fail("test_getMetricPrefix exception group 1: " + str(e))
+            self.fail("test_getMetricPrefix exception: " + str(e))
     
     def test_getMinIncMaxInc(self):
         try:
@@ -209,17 +205,84 @@ class  Schema_TestCase(unittest.TestCase):
             self.assertEqual(self.schema.getMaxInc("exampleKey2"), 25)
             self.assertEqual(self.schema.getMaxIncAs("exampleKey2", Types.STRING), "25")
         except Exception,e:
-            self.fail("test_getMinIncMaxInc exception group 1: " + str(e))
+            self.fail("test_getMinIncMaxInc exception: " + str(e))
     
     def test_getMinExcMaxExc(self):
         try:
             self.assertEqual(self.schema.getMinExc("exampleKey3"), 10)
-            self.assertEqual(self.schema.getMinExcAs("exampleKey3", Types.STRING), "10")
-            self.assertEqual(self.schema.getMaxExc("exampleKey3"), 20)
-            self.assertEqual(self.schema.getMaxExcAs("exampleKey3", Types.STRING), "20")
+            self.assertEqual(self.schema.getMinExc("exampleKey4"), -2.22)
         except Exception,e:
-            self.fail("test_getMinExcMaxExc exception group 1: " + str(e))
+            self.fail("test_getMinExcMaxExc exception in getMinExc: " + str(e))
+            
+        try:    
+            self.assertEqual(self.schema.getMaxExc("exampleKey3"), 20)
+            self.assertEqual(self.schema.getMaxExc("exampleKey4"), 5.55)
+        except Exception,e:
+            self.fail("test_getMinExcMaxExc exception in getMaxExc: " + str(e))
+        
+        try:
+            self.assertEqual(self.schema.getMinExcAs("exampleKey3", Types.STRING), "10")
+            self.assertEqual(self.schema.getMinExcAs("exampleKey4", Types.STRING), "-2.220000000000000")
+        except Exception,e:
+            self.fail("test_getMinExcMaxExc exception in getMinExcAs: " + str(e))
+        
+        try:    
+            self.assertEqual(self.schema.getMaxExcAs("exampleKey3", Types.STRING), "20")
+            self.assertEqual(self.schema.getMaxExcAs("exampleKey4", Types.STRING), "5.550000000000000")
+        except Exception,e:
+            self.fail("test_getMinExcMaxExc exception in getMaxExcAs: " + str(e))
     
+    def test_getWarnAlarmLowHigh(self):
+        try:
+            self.assertEqual(self.schema.getWarnLow("exampleKey5"), -10)
+            self.assertEqual(self.schema.getWarnLow("exampleKey6"), -5.5)
+        except Exception,e:
+            self.fail("test_getWarnAlarmLowHigh exception in getWarnLow: " + str(e))
+        
+        try:
+            self.assertEqual(self.schema.getWarnHigh("exampleKey5"), 10)
+            self.assertEqual(self.schema.getWarnHigh("exampleKey6"), 5.5)
+        except Exception,e:
+            self.fail("test_getWarnAlarmLowHigh exception in getWarnHigh: " + str(e))
+           
+        try:
+            self.assertEqual(self.schema.getAlarmLow("exampleKey5"), -20)
+            self.assertEqual(self.schema.getAlarmLow("exampleKey6"), -22.1)
+        except Exception,e:
+            self.fail("test_getWarnAlarmLowHigh exception in getAlarmLow: " + str(e))
+        
+        try:
+            self.assertEqual(self.schema.getAlarmHigh("exampleKey5"), 20)
+            self.assertEqual(self.schema.getAlarmHigh("exampleKey6"), 22.777)
+        except Exception,e:
+            self.fail("test_getWarnAlarmLowHigh exception in getAlarmHigh: " + str(e))
+    
+    def test_getWarnAlarmLowHighAs(self):
+        try:
+            self.assertEqual(self.schema.getWarnLowAs("exampleKey5", Types.STRING), "-10")
+            self.assertEqual(self.schema.getWarnLowAs("exampleKey6", Types.STRING), "-5.500000000000000")
+        except Exception,e:
+            self.fail("test_getWarnAlarmLowHighAs exception in getWarnLowAs: " + str(e))
+        
+        try:
+            self.assertEqual(self.schema.getWarnHighAs("exampleKey5", Types.STRING), "10")
+            self.assertEqual(self.schema.getWarnHighAs("exampleKey6", Types.STRING), "5.500000000000000")
+        except Exception,e:
+            self.fail("test_getWarnAlarmLowHighAs exception in getWarnHighAs: " + str(e))
+           
+        try:
+            self.assertEqual(self.schema.getAlarmLowAs("exampleKey5", Types.STRING), "-20")
+            self.assertEqual(self.schema.getAlarmLowAs("exampleKey6", Types.STRING), "-22.100000000000001")
+        except Exception,e:
+            self.fail("test_getWarnAlarmLowHighAs exception in getAlarmLowAs: " + str(e))
+        
+        try:
+            self.assertEqual(self.schema.getAlarmHighAs("exampleKey5", Types.STRING), "20")
+            self.assertEqual(self.schema.getAlarmHighAs("exampleKey6", Types.STRING), "22.777000000000001")
+        except Exception,e:
+            self.fail("test_getWarnAlarmLowHighAs exception in getAlarmHighAs: " + str(e))
+            
+            
     def test_perKeyFunctionality(self):
         try:
             keys = self.schema.getKeys()
