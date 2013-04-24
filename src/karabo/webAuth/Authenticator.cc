@@ -1,8 +1,11 @@
-/* 
+/*
+ *
  * File:   Authenticator.cc
  * Author: <luis.maia@xfel.eu>
- * 
+ *
  * Created on April 12, 2013, 4:31 PM
+ *
+ * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
 
 #include <karabo/log/Logger.hh>
@@ -15,63 +18,78 @@ using namespace std;
 namespace karabo {
     namespace webAuth {
 
+
         Authenticator::Authenticator(const std::string& username, const std::string& password, const std::string& provider,
-                const std::string& ipAddress, const std::string& hostname, const std::string& portNumber,
-                const std::string& software)
+                                     const std::string& ipAddress, const std::string& hostname, const std::string& portNumber,
+                                     const std::string& software)
         : m_username(username), m_password(password), m_provider(provider), m_ipAddress(ipAddress), m_hostname(hostname), m_portNumber(portNumber), m_software(software), m_service(new AuthenticationPortBindingProxy) {
         }
+
 
         std::string Authenticator::getSessionToken() const {
             return m_sessionToken;
         }
 
+
         std::string Authenticator::getSoftware() const {
             return m_software;
         }
+
 
         std::string Authenticator::getPortNumber() const {
             return m_portNumber;
         }
 
+
         std::string Authenticator::getHostname() const {
             return m_hostname;
         }
+
 
         std::string Authenticator::getIpAddress() const {
             return m_ipAddress;
         }
 
+
         std::string Authenticator::getProvider() const {
             return m_provider;
         }
+
 
         std::string Authenticator::getPassword() const {
             return m_password;
         }
 
+
         std::string Authenticator::getUsername() const {
             return m_username;
         }
+
 
         std::string Authenticator::getRoleDesc() const {
             return m_roleDesc;
         }
 
+
         std::string Authenticator::getWelcomeMessage() const {
             return m_welcomeMessage;
         }
+
 
         unsigned long long int Authenticator::getRoleId() const {
             return m_roleId;
         }
 
+
         unsigned long long int Authenticator::getSoftwareId() const {
             return m_softwareId;
         }
 
+
         unsigned long long int Authenticator::getUserId() const {
             return m_userId;
         }
+
 
         /*
          * Setters
@@ -80,25 +98,31 @@ namespace karabo {
             this->m_sessionToken = newSessionToken;
         }
 
+
         void Authenticator::setRoleDesc(const std::string& roleDesc) {
             this->m_roleDesc = roleDesc;
         }
+
 
         void Authenticator::setWelcomeMessage(const std::string& welcomeMessage) {
             this->m_welcomeMessage = welcomeMessage;
         }
 
+
         void Authenticator::setRoleId(const unsigned long long int roleId) {
             this->m_roleId = roleId;
         }
+
 
         void Authenticator::setSoftwareId(const unsigned long long int softwareId) {
             this->m_softwareId = softwareId;
         }
 
+
         void Authenticator::setUserId(const unsigned long long int userId) {
             this->m_userId = userId;
         }
+
 
         /*
          * Specific logical functions
@@ -139,6 +163,7 @@ namespace karabo {
             }
         }
 
+
         bool Authenticator::logout() {
 
             ns1__logout nsLogout;
@@ -160,7 +185,8 @@ namespace karabo {
                     setSessionToken("");
                     setWelcomeMessage("");
                     setRoleDesc("");
-                    m_roleId = NULL;
+                    //setRoleId(NULL);
+                    //m_roleId = NULL;
                 }
             } else {
                 throw KARABO_NETWORK_EXCEPTION("Error: Problem with SOAP message: " + soapMessageNotOk(m_service->soap));
@@ -168,6 +194,7 @@ namespace karabo {
 
             return true; // If no problems happened it returns true
         }
+
 
         ns1__getUserNonceResponse Authenticator::getUserNonce() {
             ns1__getUserNonce nsUserNonce;
@@ -192,6 +219,7 @@ namespace karabo {
             return nsUserNonceResp; // If no problems happened it returns new userNonceResponse information
         }
 
+
         ns1__loginResponse Authenticator::authenticate(const karabo::util::Timestamp& timestamp) {
             ns1__login nsLogin;
             ns1__loginResponse nsLoginResp;
@@ -207,8 +235,12 @@ namespace karabo {
 
             // TODO implement timestamp.getDBString())
             //std::string ts = boost::lexical_cast<std::string>(seconds);
-            string time = "20130410145159257";
-            nsLogin.time = &time;
+            karabo::util::Timestamp currentTime = karabo::util::Timestamp();
+            string currentTimeStr = currentTime.toString();
+
+            nsLogin.time = &currentTimeStr;
+            //string time = "20130410145159257";
+            //nsLogin.time = &time;
 
             // If obtain successfully answer from Web Service it print message returned!
             if (m_service->login(&nsLogin, &nsLoginResp) == SOAP_OK) {
@@ -224,6 +256,7 @@ namespace karabo {
 
             return nsLoginResp; // If no problems happened it returns new loginResponse information
         }
+
 
         std::string Authenticator::getSingleSignOn(const std::string ipAddress) {
             ns1__singleSignOn nsSingleSignOn;
@@ -251,6 +284,7 @@ namespace karabo {
             return string(nsSingleSignOnResp.return_->sessionToken->c_str()); // If no problems happened it returns SessionToken
         }
 
+
         /*
          * Auxiliar functions
          */
@@ -271,6 +305,7 @@ namespace karabo {
             }
         }
 
+
         std::string Authenticator::soapMessageNotOk(struct soap *soap) {
             string errorMsg;
 
@@ -287,15 +322,15 @@ namespace karabo {
                 d = soap_check_faultdetail(soap);
 
                 errorMsg = soap->version ? "SOAP 1." : "Error ";
-                //errorMsg = errorMsg + string(soap->version ? (int) soap->version : soap->error);
+                errorMsg = errorMsg + boost::lexical_cast<std::string>(soap->version ? (int) soap->version : soap->error);
                 errorMsg = errorMsg + " fault: ";
                 errorMsg = errorMsg + *c;
                 errorMsg = errorMsg + " [";
-                //errorMsg = errorMsg + v ? v : "no subcode";
+                errorMsg = errorMsg + boost::lexical_cast<std::string>(v ? v : "no subcode");
                 errorMsg = errorMsg + " ]\n\"";
-                //errorMsg = errorMsg + s ? s : "[no reason]";
+                errorMsg = errorMsg + boost::lexical_cast<std::string>(s ? s : "[no reason]");
                 errorMsg = errorMsg + "\"\nDetail: ";
-                //errorMsg = errorMsg + d ? d : "[no detail]";
+                errorMsg = errorMsg + boost::lexical_cast<std::string>(d ? d : "[no detail]");
                 errorMsg = errorMsg + "\n";
             }
             return errorMsg;
