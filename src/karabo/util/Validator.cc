@@ -324,7 +324,7 @@ namespace karabo {
 
 
             if (m_injectTimestamps) {
-                if (!workNode.hasAttribute("msSinceEpoch")) workNode.setAttribute("msSinceEpoch", m_timestamp.getAsMsSinceEpoch());
+                if (!workNode.hasAttribute("msSinceEpoch")) workNode.setAttribute("msSinceEpoch", m_timestamp.getMsSinceEpoch());
             }
             
             Types::ReferenceType referenceType = Types::from<FromLiteral>(masterNode.getAttribute<string>(KARABO_SCHEMA_VALUE_TYPE));
