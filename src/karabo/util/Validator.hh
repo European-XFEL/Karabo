@@ -18,7 +18,7 @@
 #include "Units.hh"
 
 #include "karaboDll.hh"
-#include "Time.hh"
+#include "Timestamp.hh"
 
 namespace karabo {
     namespace util {
