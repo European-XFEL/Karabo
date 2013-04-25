@@ -19,17 +19,39 @@ using namespace std;
 namespace bp = boost::python;
 
 
+namespace karabo {
+    namespace io {
+        
+        class HashXmlSerializerWrap {
+        public:
+            
+            static bp::object save(HashXmlSerializer& s, const karabo::util::Hash& hash) {
+                std::string archive;
+                s.save(hash, archive);
+                return bp::object(archive);
+            }
+            
+            static bp::object load(HashXmlSerializer& s, const std::string& archive) {
+                Hash hash;
+                s.load(hash, archive);
+                return bp::object(hash);
+            }
+        };
+    }
+}
+
+
 void exportPyIoSerialization() {
 
     {//exposing karabo::io::HashXmlSerializer
 
         bp::class_< HashXmlSerializer > h("HashXmlSerializer", bp::init<Hash const &>((bp::arg("hash"))));
             h.def("save"
-              , (void (HashXmlSerializer::*)(Hash const &, string &))(&HashXmlSerializer::save)
-              , (bp::arg("object"), bp::arg("archive")));
+              , &HashXmlSerializerWrap().save
+              , (bp::arg("hash")));
             h.def("load"
-              , (void (HashXmlSerializer::*)(Hash &, string const &))(&HashXmlSerializer::load)
-              , (bp::arg("object"), bp::arg("archive")));
+              , &HashXmlSerializerWrap().load
+              , (bp::arg("archive")));
     }
 
     {//exposing karabo::io::SchemaXsdSerializer
