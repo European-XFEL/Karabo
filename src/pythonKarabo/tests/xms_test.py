@@ -23,7 +23,7 @@ class RemoteClient(threading.Thread):
         
     def run(self):
         while self.running:
-            time.sleep(2)
+            time.sleep(1)
     
 
 class  Xms_TestCase(unittest.TestCase):
