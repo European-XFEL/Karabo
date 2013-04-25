@@ -233,14 +233,10 @@ namespace karabo {
             nsLogin.nonce = &m_nonce;
             nsLogin.software = &m_software;
 
-            // TODO implement timestamp.getDBString())
-            //std::string ts = boost::lexical_cast<std::string>(seconds);
-            karabo::util::Timestamp currentTime = karabo::util::Timestamp();
-            string currentTimeStr = currentTime.toString();
-
-            nsLogin.time = &currentTimeStr;
-            //string time = "20130410145159257";
-            //nsLogin.time = &time;
+            // Convert received date to String to send to the WebServer
+            karabo::util::Timestamp contextTime = karabo::util::Timestamp(timestamp);
+            string contextTimeStr = contextTime.toFormattedString("%Y-%m-%d %H:%M:%S.%f");
+            nsLogin.time = &contextTimeStr;
 
             // If obtain successfully answer from Web Service it print message returned!
             if (m_service->login(&nsLogin, &nsLoginResp) == SOAP_OK) {

@@ -43,7 +43,7 @@ void Authenticate_Test::testCorrectLogin() {
     string portNumber = "4444";
     string software = "Karabo";
     //
-    string timeStr = "20130410T145159.789333";
+    string timeStr = "20130120T122059.259188123";
     karabo::util::Timestamp time = karabo::util::Timestamp(timeStr);
 
     bool success;
@@ -82,7 +82,7 @@ void Authenticate_Test::testIncorrectLogin() {
     string portNumber = "4444";
     string software = "Karabo";
     //
-    string timeStr = "20130410T145159.789333";
+    string timeStr = "20130120T122059.259188";
     karabo::util::Timestamp time = karabo::util::Timestamp(timeStr);
 
     bool success;
@@ -112,7 +112,7 @@ void Authenticate_Test::testIncorrectUsername() {
     string portNumber = "4444";
     string software = "Karabo";
     //
-    string timeStr = "20130410T145159.789333";
+    string timeStr = "20130120T122059.259188";
     karabo::util::Timestamp time = karabo::util::Timestamp(timeStr);
 
     bool success;
@@ -134,7 +134,7 @@ void Authenticate_Test::testSingleSignOn() {
     string portNumber = "4444";
     string software = "Karabo";
     //
-    string timeStr = "20130410T145159.789333";
+    string timeStr = "20130120T122059.259188";
     karabo::util::Timestamp time = karabo::util::Timestamp(timeStr);
 
     bool success;
