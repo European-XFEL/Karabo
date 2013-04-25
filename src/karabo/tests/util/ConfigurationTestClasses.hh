@@ -213,7 +213,7 @@ namespace configurationTest {
         virtual ~GraphicsRenderer() {
         }
     };
-
+    
     struct GraphicsRenderer1 {
 
         KARABO_CLASSINFO(GraphicsRenderer1, "GraphicsRenderer1", "1.0");
@@ -319,7 +319,7 @@ namespace configurationTest {
                     .tags("hardware, set")
                     .displayedName("Example key 3")
                     .description("Example key 3 description")
-                    .allowedStates("AllOk.Started, AllOk.Stopped, AllOk.Run.On, NewState") //TODO check
+                    .allowedStates("AllOk.Started, AllOk.Stopped, AllOk.Run.On, NewState")
                     .minExc(10)
                     .maxExc(20)
                     .assignmentMandatory()
@@ -330,6 +330,7 @@ namespace configurationTest {
                     .tags("software")
                     .displayedName("Example key 4")
                     .description("Example key 4 description")
+                    .allowedRoles("Admin, User, OtherRole")
                     .options("1.11     -2.22 5.55")
                     .assignmentInternal().noDefaultValue()
                     .commit();
