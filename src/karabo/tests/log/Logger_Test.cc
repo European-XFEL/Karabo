@@ -45,6 +45,7 @@ void Logger_Test::testLogging() {
 }
 
 void Logger_Test::testInClassLogging() {
+    Logger::reset();
     Hash config("logger.priority", "INFO", "logger.appenders[0].File.layout.Pattern.format", "%c %m %n");
     LogSomething::Pointer p = LogSomething::create("LogSomething", config);
     p->doSomeLogging();
