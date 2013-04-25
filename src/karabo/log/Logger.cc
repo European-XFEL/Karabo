@@ -78,7 +78,7 @@ namespace karabo {
 
             rootLog.setRootPriority(m_rootPriority);
 
-            rootLog.removeAllAppenders(); // Re-initialize all appenders
+            
             
             for (size_t i = 0; i < m_rootAppenderConfigs.size(); ++i) {
                 Appender* app = m_rootAppenderConfigs[i]->getConfigured();
@@ -89,6 +89,11 @@ namespace karabo {
                 m_categories[i]->setup();
             }
 
+        }
+        
+        void Logger::reset() {
+            Category& rootLog = Category::getRoot();
+            rootLog.removeAllAppenders();
         }
 
 

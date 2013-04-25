@@ -70,7 +70,9 @@ namespace karabo {
             static void configure(const karabo::util::Hash& configuration = karabo::util::Hash()) {
                 karabo::util::Configurator<Logger>::create(classInfo().getClassId(), configuration);
             }
-
+            
+            static void reset();
+            
             /*
              * This returns a log category reference, automatically configured using the type introspection system
              * CAVEAT: This function only works for classes that declare the KARABO_CLASSINFO macro!
