@@ -16,11 +16,14 @@ import threading
 import time
 import inspect
 
-from fsm import event_instance, ParameterException
+from fsm import event_instance
 from python_device import *
-from karabo_decorators import schemamethod
-from libkarabo import *
+from karabo_decorators import *
+from libkarathon import *
 
+
+@KARABO_CONFIGURATION_BASE_CLASS
+@KARABO_CLASSINFO("DeviceServer", "1.0")
 class DeviceServer(object):
     '''
     Device server
@@ -32,7 +35,7 @@ class DeviceServer(object):
     instanceCountLock = threading.Lock()
     instanceCountPerDeviceServer = dict()
     
-    @schemamethod
+    @staticmethod
     def expectedParameters(expected):
         
         e = CHOICE_ELEMENT_BROKERCONNECTION(expected)
@@ -177,8 +180,6 @@ class DeviceServer(object):
         super(DeviceServer, self).__init__()
         # describe FSM
         self.fsm = self.setupFsm()
-        cls = self.__class__
-        self._classId = cls.__name__
         self.ss = None
         self.availableModules = dict()
         self.availableDevices = dict()
@@ -281,15 +282,14 @@ class DeviceServer(object):
             self._getListOfClasses(tree, classList)
             deviceClass = classList.pop()  # most derived class in hierarchy
             deviceClass.inheritanceChain = inheritanceChain
-            classId = deviceClass.__name__
             try:
-                schema = deviceClass.getExpectedParameters(AccessType(READ|INIT|WRITE))
+                schema = PythonDevice.getSchema(deviceClass)
                 xsd = deviceClass.convertToXsd(schema)
-                self.availableModules[name] = classId
-                self.availableDevices[classId] = {"mustNotify": True, "module": name, "xsd": xsd}
+                self.availableModules[name] = deviceClass.__classid__
+                self.availableDevices[deviceClass.__classid__] = {"mustNotify": True, "module": name, "xsd": xsd}
                 self.newPluginAvailable()
             except RuntimeError, e:
-                self.log.ERROR("Failure while building schema for class {}: {}".format(classId, e.message))
+                self.log.ERROR("Failure while building schema for class {} and base class {}: {}".format(deviceClass.__classid__, deviceClass.__base_classid__, e.message))
     
     def _getListOfClasses(self, tree, outList):
         (cl, bases) = tree[0]
@@ -389,19 +389,23 @@ class DeviceServer(object):
     
     def noStateTransition(self):
         self.log.DEBUG("No transition")
-        
+   
 
-if __name__ == '__main__':
-    myFullHost = socket.gethostname()
-    myHost, dotsep, domainName = myFullHost.partition('.')
-    devSrvId = myHost + "/" + "DeviceServer" + "/0" 
-    conf = Hash('DeviceServer.devSrvInstId', devSrvId)
-    schema = DeviceServer.expectedParameters()
-    #print schema
+def getConfigurationFromCommandLine(argv):
+    if argv is None:
+        hostname = socket.gethostname()
+        host, dot, domain = hostname.partition('.')
+        deviceServerId = host + "/" + DeviceServer.__classid__ + "/0"
+        return Hash("devSrvInstId", deviceServerId)
+    
+        
+def main(argv):
     try:
-        conf = schema.validate(conf)
-    except RuntimeError, e:
-        print e
-        sys.exit(1)
-    server = DeviceServer(conf.get("DeviceServer"))
-    server.run()
+        server = DeviceServer.create("DeviceServer", getConfigurationFromCommandLine(argv))
+        server.run()
+    except Exception,e:
+        print "Exception caught: " + str(e)
+    
+    
+if __name__ == '__main__':
+    main(sys.argv[1:])
