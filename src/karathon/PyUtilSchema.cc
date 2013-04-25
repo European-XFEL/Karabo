@@ -225,6 +225,9 @@ struct OverwriteElementWrap {
 
 namespace schemawrap {
 
+    bp::object getParameterHash(const Schema& schema) {
+        return bp::object(schema.getParameterHash());
+    }
 
     karabo::pyexfel::PyTypes::ReferenceType getValueType(const Schema& schema, const bp::object& obj) {
         if (PyString_Check(obj.ptr())) {
@@ -900,6 +903,8 @@ void exportPyUtilSchema() {
                 .def_readwrite("m_state", &Schema::AssemblyRules::m_state);
 
         s.def(bp::self_ns::str(bp::self));
+        
+        s.def("getParameterHash", &schemawrap::getParameterHash);
 
         s.def("getAccessMode", &Schema::getAccessMode);
 
