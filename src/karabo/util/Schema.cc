@@ -372,7 +372,28 @@ namespace karabo {
         const vector<string>& Schema::getAllowedStates(const std::string& path) const {
             return m_hash.getAttribute<vector<string> >(path, KARABO_SCHEMA_ALLOWED_STATES);
         }
+        
+        
+        //**********************************************
+        //                AllowedRoles                *
+        //**********************************************
 
+
+        void Schema::setAllowedRoles(const std::string& path, const std::string& value, const std::string& sep) {
+            m_hash.setAttribute(path, KARABO_SCHEMA_ALLOWED_ROLES, karabo::util::fromString<std::string, std::vector > (value, sep));
+        }
+
+
+        bool Schema::hasAllowedRoles(const std::string& path) const {
+            return m_hash.hasAttribute(path, KARABO_SCHEMA_ALLOWED_ROLES);
+        }
+
+
+        const vector<string>& Schema::getAllowedRoles(const std::string& path) const {
+            return m_hash.getAttribute<vector<string> >(path, KARABO_SCHEMA_ALLOWED_ROLES);
+        }
+        
+        
         //**********************************************
         //                  ExpertLevel                *
         //**********************************************
@@ -667,7 +688,7 @@ namespace karabo {
 
 
         bool Schema::isAllowedInCurrentAccessRole(const Hash::Node& node) const {
-            if (node.hasAttribute(KARABO_SCHEMA_ALLOWED_ROLES)) {
+            if (node.hasAttribute(KARABO_SCHEMA_ALLOWED_ROLES) && !m_currentAccessRole.empty()) {
                 const vector<string>& allowedRoles = node.getAttribute<vector<string> >(KARABO_SCHEMA_ALLOWED_ROLES);
                 return (std::find(allowedRoles.begin(), allowedRoles.end(), m_currentAccessRole) != allowedRoles.end());
             } else { // If no roles are assigned, access/visibility is always possible
@@ -686,14 +707,14 @@ namespace karabo {
         }
 
 
-        ostream& operator<<(std::ostream& os, const Schema& schema) {
+        ostream& operator<<(ostream& os, const Schema& schema) {
             os << "Schema for: " << schema.getRootName() << endl;
             os << schema.m_hash;
             return os;
         }
 
 
-        void Schema::help(const string& classId) {
+        void Schema::help(const string& classId, ostream& os) {
             ostringstream stream;
             stream << "----- HELP -----" << endl;
             if (classId.empty()) {
@@ -769,7 +790,7 @@ namespace karabo {
             }
 
             //show results:
-            cout << "\n" << stream.str();
+            os << "\n" << stream.str();
         }
 
 
@@ -788,6 +809,16 @@ namespace karabo {
                 stream << "     " << "Access mode: read only" << endl;
             else if (getAccessMode(key) == WRITE)
                 stream << "     " << "Access mode: reconfigurable" << endl;
+            
+            if(hasAllowedStates(key)) {
+                vector<string> states = getAllowedStates(key);
+                stream << "     " << "Allowed states: " << karabo::util::toString(states) << endl;
+            }
+            
+            if(hasAllowedRoles(key)){
+                vector<string> roles = getAllowedRoles(key);
+                stream << "     " << "Allowed roles: " << karabo::util::toString(roles) << endl;
+            }
         }
 
 

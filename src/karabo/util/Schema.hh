@@ -357,7 +357,17 @@ namespace karabo {
             bool hasAllowedStates(const std::string& path) const;
 
             const std::vector<std::string>& getAllowedStates(const std::string& path) const;
+     
+            //*********************************************
+            //                AllowedRoles                *
+            //*********************************************
 
+            void setAllowedRoles(const std::string& path, const std::string& value, const std::string& sep);
+
+            bool hasAllowedRoles(const std::string& path) const;
+
+            const std::vector<std::string>& getAllowedRoles(const std::string& path) const;
+            
             //**********************************************
             //                  ExpertLevel                *
             //**********************************************
@@ -666,9 +676,9 @@ namespace karabo {
 
 
             /**
-             *  Help function to show all parameters on console
+             *  Help function to show all parameters
              */
-            void help(const std::string& classId = "");
+            void help(const std::string& classId = "", std::ostream& os = std::cout);
 
             /**
              * Default output using help function

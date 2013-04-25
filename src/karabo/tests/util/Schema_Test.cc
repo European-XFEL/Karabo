@@ -234,6 +234,12 @@ void Schema_Test::testGetAllowedStates() {
     CPPUNIT_ASSERT(m_schema.getAllowedStates("exampleKey3")[3] == "NewState");
 }
 
+void Schema_Test::testGetAllowedRoles() {
+    vector<string> allowedRoles = m_schema.getAllowedRoles("exampleKey4");
+    CPPUNIT_ASSERT(allowedRoles[0] == "Admin");
+    CPPUNIT_ASSERT(allowedRoles[1] == "User");
+    CPPUNIT_ASSERT(m_schema.getAllowedRoles("exampleKey4")[2] == "OtherRole");
+}
 
 void Schema_Test::testGetUnit() {
     int units = m_schema.getUnit("exampleKey2");
@@ -367,6 +373,8 @@ void Schema_Test::testPerKeyFunctionality() {
 
             CPPUNIT_ASSERT(m_schema.hasAccessMode(keys[i]) == true);
             CPPUNIT_ASSERT(m_schema.isAccessInitOnly(keys[i]) == true);
+            
+            CPPUNIT_ASSERT(m_schema.hasAllowedRoles(keys[i]) == true);
         }
 
         if (keys[i] == "exampleKey5") {
