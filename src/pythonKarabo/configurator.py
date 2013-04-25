@@ -20,16 +20,15 @@ class Configurator(object):
     The argument to constructor may be the classid of a configurable class or configurable class itself:
     Configurator(ConfigClass)  or Configurator("ConfigClass")
     '''
-    def __init__(self, baseclass):
-        if not isinstance(baseclass, type) and not isinstance(baseclass, str):
-            raise TypeError, "The argument type '" + type(baseclass) + " is not allowed"
-        baseclassid = baseclass
-        if isinstance(baseclass, type):
-            baseclassid = baseclass.__classid__
-        if baseclassid not in Configurator.registry:
+    def __init__(self, classid):
+        if isinstance(classid, type):
+            classid = classid.__classid__
+        if not isinstance(classid, str):
+            raise TypeError, "The argument type '" + type(classid) + "' is not allowed. Must be a class or a str."
+        if classid not in Configurator.registry:
             raise AttributeError,"Argument is a classid of registered base class"
-        self.baseRegistry = Configurator.registry[baseclassid]
-        assert baseclassid in self.baseRegistry
+        self.baseRegistry = Configurator.registry[classid]
+        assert classid in self.baseRegistry
 
         
     def __new__(cls, *args, **kwargs):
@@ -42,9 +41,13 @@ class Configurator(object):
         return self
         
     def getSchema(self, classid, rules = AssemblyRules(AccessType(READ | WRITE | INIT))):
+        if isinstance(classid, type):
+            classid = classid.__classid__
+        if not isinstance(classid, str):
+            raise TypeError, "The first argument type '" + type(classid) + "' is not allowed. Must be a type or str."
         if classid not in self.baseRegistry:
             raise AttributeError,"Class Id '" + classid + "' not found in the base registry"
-        Derived = self.baseRegistry[classid]
+        Derived = self.baseRegistry[classid]   # userclass -> Derived        
         # generate list of classes in inheritance order from most derived to base
         def inheritanceGenerator(c):
             while c.__classid__ != c.__base_classid__:
@@ -64,6 +67,10 @@ class Configurator(object):
         return schema
             
     def create(self, classid, configuration, validation = True):
+        if isinstance(classid, type):
+            classid = classid.__classid__
+        if not isinstance(classid, str):
+            raise TypeError,"First argument 'classid' must be a python string type"
         if classid not in self.baseRegistry:
             raise AttributeError,"Unknown classid '" + classid + "' in base registry"
         Derived = self.baseRegistry[classid]
@@ -83,13 +90,25 @@ class Configurator(object):
         return self.create(classid, configuration[classid], validation)
         
     def createNode(self, nodename, classid, configuration, validation = True):
+        if isinstance(classid, type):
+            classid = classid.__classid__
+        if not isinstance(classid, str):
+            raise TypeError,"Second argument 'classid' must be a python string type"
         if nodename in configuration:
             return self.create(classid, configuration[nodename], validation)
         raise AttributeError,"Given nodeName \"" + nodename + "\" is not part of input configuration"
     
-    def createChoice(self, choice, configuration, validation = True):
-        return self.createByConf(configuration[choice], validation)
+    def createChoice(self, choicename, configuration, validation = True):
+        return self.createByConf(configuration[choicename], validation)
        
+    def createList(self, listname, input, validation = True):
+        if listname not in input:
+            raise AttributeError,"Given list name \"" + listname + "\" is not a part of input configuration"
+        instances = []
+        for hash in input[listname]:
+            instances.append(createByConf(hash, validation))
+        return instances
+            
     def getRegisteredClasses(self):
         return self.baseRegistry.keys()
     
