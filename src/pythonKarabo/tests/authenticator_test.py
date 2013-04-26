@@ -36,7 +36,7 @@ class  Authenticator_TestCase(unittest.TestCase):
         try:
             a = Authenticator(username, password, provider, ipAddress, hostname, portNumber, software)
             
-            # Variables that should be correcly assigned
+            # Variables that should be correctly assigned
             self.assertEqual(a.getUsername(), username, "getUsername() don't match")
             self.assertEqual(a.getProvider(), provider, "getProvider() don't match")
             self.assertEqual(a.getIpAddress(), ipAddress, "getIpAddress() don't match")
@@ -46,12 +46,12 @@ class  Authenticator_TestCase(unittest.TestCase):
             
             # Variables that should be empty
             self.assertEqual(a.getRoleDesc(), emptyString, "getRoleDesc() is not Empty")
-            
-            ## TODO : correct memory problem
-            ###self.assertEqual(a.getRoleId(), 0, "getRoleId() is not zero (equivalent to Empty)")
-            
             self.assertEqual(a.getWelcomeMessage(), emptyString, "getWelcomeMessage() is not Empty")
             self.assertEqual(a.getSessionToken(), emptyString, "getSessionToken() is not Empty")
+            #
+            self.assertEqual(a.getRoleId(), -100, "getRoleId() is not undifined")
+            self.assertEqual(a.getSoftwareId(), -100, "getSoftwareId() is not undifined")
+            self.assertEqual(a.getUserId(), -100, "getUserId() is not undifined")
         except Exception, e:
             self.fail(functionName + " creation exception before LOGIN: " + str(e))
         
@@ -59,7 +59,7 @@ class  Authenticator_TestCase(unittest.TestCase):
         try:
             self.assertTrue(a.login())
             
-            # Variables that should be correcly assigned
+            # Variables that should be correctly assigned
             self.assertEqual(a.getUsername(), username, "getUsername() don't match")
             self.assertEqual(a.getProvider(), provider, "getProvider() don't match")
             self.assertEqual(a.getIpAddress(), ipAddress, "getIpAddress() don't match")
@@ -67,14 +67,14 @@ class  Authenticator_TestCase(unittest.TestCase):
             self.assertEqual(a.getPortNumber(), portNumber, "getPortNumber() don't match")
             self.assertEqual(a.getSoftware(), software, "getSoftware() don't match")
             
-            # Variables that should be populated after login
+            # Variables that should be empty
             self.assertEqual(a.getRoleDesc(), "GUEST_USER")
-            
-            ## TODO : correct memory problem
-            ###self.assertEqual(a.getRoleId(), 3)
-            
             self.assertNotEqual(a.getWelcomeMessage(), emptyString, "getWelcomeMessage() is Empty")
             self.assertNotEqual(a.getSessionToken(), emptyString, "getSessionToken() is Empty")
+            #
+            self.assertEqual(a.getRoleId(), 3, "getRoleId() is not undifined")
+            self.assertEqual(a.getSoftwareId(), 1, "getSoftwareId() is not undifined")
+            self.assertEqual(a.getUserId(), -1, "getUserId() is not undifined")
         except Exception, e:
             self.fail(functionName + " exception after LOGIN: " + str(e))
         
@@ -82,7 +82,7 @@ class  Authenticator_TestCase(unittest.TestCase):
         try:
             self.assertTrue(a.logout())
             
-            # Variables that should be correcly assigned
+            # Variables that should be correctly assigned
             self.assertEqual(a.getUsername(), username, "getUsername() don't match")
             self.assertEqual(a.getProvider(), provider, "getProvider() don't match")
             self.assertEqual(a.getIpAddress(), ipAddress, "getIpAddress() don't match")
@@ -90,18 +90,16 @@ class  Authenticator_TestCase(unittest.TestCase):
             self.assertEqual(a.getPortNumber(), portNumber, "getPortNumber() don't match")
             self.assertEqual(a.getSoftware(), software, "getSoftware() don't match")
             
-            # Variables that should be clean after logout
+            # Variables that should be empty
             self.assertEqual(a.getRoleDesc(), emptyString, "getRoleDesc() is not Empty")
-            
-            ## TODO : correct memory problem
-            ####self.assertEqual(a.getRoleId(), 0, "getRoleId() is not zero (equivalent to Empty)")
-            
             self.assertEqual(a.getWelcomeMessage(), emptyString, "getWelcomeMessage() is not Empty")
             self.assertEqual(a.getSessionToken(), emptyString, "getSessionToken() is not Empty")
+            #
+            self.assertEqual(a.getRoleId(), -100, "getRoleId() is not undifined")
+            self.assertEqual(a.getSoftwareId(), -100, "getSoftwareId() is not undifined")
+            self.assertEqual(a.getUserId(), -100, "getUserId() is not undifined")
         except Exception, e:
             self.fail(functionName + " exception after LOGOUT: " + str(e))
-        
-        del a
 
 
     def test_authenticator_incorrect_login(self):
@@ -126,7 +124,7 @@ class  Authenticator_TestCase(unittest.TestCase):
         try:
             a = Authenticator(username, password, provider, ipAddress, hostname, portNumber, software)
             
-            # Variables that should be correcly assigned
+            # Variables that should be correctly assigned
             self.assertEqual(a.getUsername(), username, "getUsername() don't match")
             self.assertEqual(a.getProvider(), provider, "getProvider() don't match")
             self.assertEqual(a.getIpAddress(), ipAddress, "getIpAddress() don't match")
@@ -136,13 +134,12 @@ class  Authenticator_TestCase(unittest.TestCase):
             
             # Variables that should be empty
             self.assertEqual(a.getRoleDesc(), emptyString, "getRoleDesc() is not Empty")
-            
-            ## TODO : correct memory problem
-            print "roleID = " + str(a.getRoleId())
-            ###self.assertEqual(a.getRoleId(), 0, "getRoleId() is not zero (equivalent to Empty)")
-            
             self.assertEqual(a.getWelcomeMessage(), emptyString, "getWelcomeMessage() is not Empty")
             self.assertEqual(a.getSessionToken(), emptyString, "getSessionToken() is not Empty")
+            #
+            self.assertEqual(a.getRoleId(), -100, "getRoleId() is not undifined")
+            self.assertEqual(a.getSoftwareId(), -100, "getSoftwareId() is not undifined")
+            self.assertEqual(a.getUserId(), -100, "getUserId() is not undifined")
         except Exception, e:
             self.fail(functionName + " creation exception before LOGIN: " + str(e))
         
@@ -150,7 +147,7 @@ class  Authenticator_TestCase(unittest.TestCase):
         try:
             self.assertFalse(a.login())
             
-            # Variables that should be correcly assigned
+            # Variables that should be correctly assigned
             self.assertEqual(a.getUsername(), username, "getUsername() don't match")
             self.assertEqual(a.getProvider(), provider, "getProvider() don't match")
             self.assertEqual(a.getIpAddress(), ipAddress, "getIpAddress() don't match")
@@ -158,15 +155,14 @@ class  Authenticator_TestCase(unittest.TestCase):
             self.assertEqual(a.getPortNumber(), portNumber, "getPortNumber() don't match")
             self.assertEqual(a.getSoftware(), software, "getSoftware() don't match")
             
-            # Variables that should be empty bacause login was not successful
+            # Variables that should be empty
             self.assertEqual(a.getRoleDesc(), emptyString, "getRoleDesc() is not Empty")
-            
-            ## TODO : correct memory problem
-            print "roleID = " + str(a.getRoleId())
-            ###self.assertEqual(a.getRoleId(), 0, "getRoleId() is not zero (equivalent to Empty)")
-            
             self.assertEqual(a.getWelcomeMessage(), emptyString, "getWelcomeMessage() is not Empty")
             self.assertEqual(a.getSessionToken(), emptyString, "getSessionToken() is not Empty")
+            #
+            self.assertEqual(a.getRoleId(), -100, "getRoleId() is not undifined")
+            self.assertEqual(a.getSoftwareId(), -100, "getSoftwareId() is not undifined")
+            self.assertEqual(a.getUserId(), -100, "getUserId() is not undifined")
         except Exception, e:
             self.fail(functionName + " exception after LOGIN: " + str(e))
 
