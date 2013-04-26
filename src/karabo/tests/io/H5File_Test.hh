@@ -38,6 +38,8 @@ private:
     std::vector<std::string> m_v3;
     
 
+    bool m_reportTime;
+    
     void testWrite();
     void testBufferWrite();
     void testVectorBufferWrite();

@@ -9,7 +9,7 @@
 #include <hdf5/hdf5.h>
 #include <karabo/util/Profiler.hh>
 #include "TestPathSetup.hh"
-#include "karabo/util/Dims.hh"
+#include <karabo/util/Dims.hh>
 
 #include <karabo/io/h5/Table.hh>
 

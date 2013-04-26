@@ -28,7 +28,7 @@ namespace karabo {
 
         public:
 
-            Dims() : m_vec((std::vector<ull64>())) {
+            Dims() : m_vec(std::vector<ull64>()) {
                 calculate();
             }
 
@@ -68,10 +68,16 @@ namespace karabo {
                 return m_rank;
             }
 
+            /*
+             * returns total number of elements
+             */
             ull64 size() const {
                 return m_numberOfElements;
             }
 
+            /*
+             * Pre:  idx >= 0 && idx < rank()
+             */
             ull64 extentIn(size_t idx) const {
                 return m_vec[idx];
             }
@@ -95,7 +101,7 @@ namespace karabo {
             void calculate() {
                 m_rank = m_vec.size();
                 if (m_rank == 0) {
-                    m_numberOfElements = 1;
+                    m_numberOfElements = 0;
                     return;
                 }
                 m_numberOfElements = m_vec[0];

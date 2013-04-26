@@ -13,7 +13,7 @@
 #include <karabo/io/h5/File.hh>
 #include <karabo/io/h5/Element.hh>
 #include <karabo/io/h5/Scalar.hh>
-#include <karabo/io/h5/ioProfiler.hh>
+#include <karabo/util/Profiler.hh>
 
 #include <karabo/log/Tracer.hh>
 
@@ -30,16 +30,17 @@ H5File_Test::H5File_Test() {
     karabo::log::Tracer tr;
     tr.disableAll();
     tr.enable("karabo.io.h5");
-    tr.disable("karabo.io.h5.DatasetWriter_VECTOR_UINT16");
-
+    //tr.disable("karabo.io.h5.DatasetWriter_VECTOR_UINT16");
     //    tr.enable("karabo.io.h5.Table");
     //    tr.enable("karabo.io.h5.Table.saveTableFormatAsAttribute");
     //    tr.enable("karabo.io.h5.Table.openNew");
     //    tr.enable("karabo.io.h5.Table.openReadOnly");
-    //    tr.enable("H5File_Test.testReadTable");
+    //        tr.enable("H5File_Test.testReadTable");
+    tr.enable("H5File_Test.testVectorBufferWrite");
     tr.reconfigure();
 
 
+    m_reportTime = false; //true;
     m_numberOfRecords = 512;
 }
 
@@ -307,7 +308,7 @@ void H5File_Test::testRead() {
         table->bind(data);
 
         // get number of records in the file
-        size_t nRecords = table->getNumberOfRecords();
+        size_t nRecords = table->size();
 
         KARABO_LOG_FRAMEWORK_TRACE << "number of records: " << nRecords;
         CPPUNIT_ASSERT(nRecords == m_numberOfRecords);
@@ -382,7 +383,7 @@ void H5File_Test::testReadTable() {
 
         table->read(0);
 
-        KARABO_LOG_FRAMEWORK_TRACE_CF << "DATA:\n" << data;
+        //KARABO_LOG_FRAMEWORK_TRACE_CF << "DATA:\n" << data;
 
         KARABO_LOG_FRAMEWORK_TRACE_CF << "test23: " << test23;
         CPPUNIT_ASSERT(test23 == 1006);
@@ -413,13 +414,9 @@ void H5File_Test::testVectorBufferWrite() {
 
     Hash data;
 
-    size_t nRec = 10;
-    //    size_t s = 1024 * 1024 * nRec;
-    //    vector<unsigned short> v0(s);
-    //    for (size_t i = 0; i < v0.size(); ++i) {
-    //        v0[i] = static_cast<unsigned short> (i % 10);
-    //    }
+    Profiler p("VectorBufferWrite");
 
+    p.start("format");
     Format::Pointer format = Format::createEmptyFormat();
 
     Hash h1(
@@ -443,39 +440,81 @@ void H5File_Test::testVectorBufferWrite() {
 
     h5::Element::Pointer e3 = h5::Element::create("FLOAT", h3);
 
+    Hash h4(
+            "h5path", "",
+            "h5name", "mars"
+            );
+
+    h5::Element::Pointer e4 = h5::Element::create("BOOL", h4);
+
+    Hash h5(
+            "h5path", "",
+            "h5name", "jupiter"
+            );
+
+    h5::Element::Pointer e5 = h5::Element::create("STRING", h5);
+
     format->addElement(e1);
     format->addElement(e2);
     format->addElement(e3);
+    format->addElement(e4);
+    format->addElement(e5);
+
+    p.stop("format");
 
 
     //data.set("vectors.image", v0).setAttribute("dims", Dims(1024, 1024).toVector());
 
-    size_t maxRec = 100;
+    p.start("initialize");
+    const size_t maxRec = 1000000;
+    //size_t maxIterations = 100;
+    size_t maxIterations = 2;
+
+    unsigned long long totalSize = maxIterations * maxRec * (4 + 2 + 4 + 1 + 12) / 1000000; 
+
     vector<int> mercury(maxRec, 1);
     vector<unsigned short> venus(maxRec, 2);
     vector<float> earth(maxRec, 3);
+    bool mars[maxRec];
+    vector<std::string> jupiter(maxRec, "Hello 000000");
+    
+
+
     for (size_t i = 0; i < maxRec; ++i) {
         mercury[i] = i + 1000;
         venus[i] = i;
         earth[i] = i * 2.5;
+
+        mars[i] = true;
+        if (i % 2) mars[i] = false;
+
+        ostringstream oss;
+        oss << "Hello " <<  std::setw(6) << std::setfill('0') << i;
+        jupiter[i] = oss.str();
+        
     }
 
+    p.stop("initialize");
+    p.start("create");
 
 
-    File file(resourcePath("file3.h5"));
+    string filename = "/dev/shm/file3.h5";
+    filename = resourcePath("file3.h5");
+    File file(filename);
     file.open(File::TRUNCATE);
 
-    Hash config;
-    //Format::discoverFromHash(data, config);
-    //Format::Pointer dataFormat = Format::createNode("Format", "Format", config);
+    Table::Pointer t = file.createTable("/planets", format, 1000000);
 
-    Table::Pointer t = file.createTable("/planets", format, 25);
-
+    p.stop("create");
+    p.start("write0");
 
     int i = 0, l = 23;
     data.set("mercury", &mercury[i]);
     data.set("venus", &venus[i]);
     data.set("earth", &earth[i]);
+    //we cannot use vector of bool this way
+    data.set("mars", &mars[i]);
+    data.set("jupiter", &jupiter[i]);
     t->write(data, i, l);
 
     i = i + l;
@@ -483,15 +522,17 @@ void H5File_Test::testVectorBufferWrite() {
     data.set("mercury", &mercury[i]);
     data.set("venus", &venus[i]);
     data.set("earth", &earth[i]);
+    data.set("mars", &mars[i]);
     t->write(data, i, l);
 
-    // one record is intentionally skipped
-    // should appear in file with zeros ( recordId=28)
-    i = i + l + 1;
-    l = 10;
+    // 5 records are intentionally skipped
+    // should appear in file with zeros ( recordId=28, len=5)
+    i = i + l + 5;
+    l = 6;
     data.set("mercury", &mercury[i]);
     data.set("venus", &venus[i]);
     data.set("earth", &earth[i]);
+    data.set("mars", &mars[i]);
     t->write(data, i, l);
 
 
@@ -500,6 +541,7 @@ void H5File_Test::testVectorBufferWrite() {
     data.set("mercury", &mercury[i]);
     data.set("venus", &venus[i]);
     data.set("earth", &earth[i]);
+    data.set("mars", &mars[i]);
     t->write(data, i, l);
 
     i = i + l;
@@ -507,6 +549,7 @@ void H5File_Test::testVectorBufferWrite() {
     data.set("mercury", &mercury[i]);
     data.set("venus", &venus[i]);
     data.set("earth", &earth[i]);
+    data.set("mars", &mars[i]);
     t->write(data, i, l);
 
     i = i + l;
@@ -514,45 +557,83 @@ void H5File_Test::testVectorBufferWrite() {
     data.set("mercury", &mercury[i]);
     data.set("venus", &venus[i]);
     data.set("earth", &earth[i]);
+    data.set("mars", &mars[i]);
     t->write(data, i, l);
 
 
     i = i + l;
-    l = 4;
+    l = 5;
+    data.set("mercury", &mercury[i]);
+    data.set("venus", &venus[i]);
+    data.set("earth", &earth[i]);
+    data.set("mars", &mars[i]);
+    t->write(data, i, l);
 
-    for (int j = 0; j < 4; ++j) {
-        data.set("mercury", mercury[i+j]);
-        data.set("venus", venus[i+j]);
-        data.set("earth", earth[i+j]);
-        t->write(data, i+j);
-    }
+    //    for (int j = 0; j < 4; ++j) {
+    //        data.set("mercury", mercury[i+j]);
+    //        data.set("venus", venus[i+j]);
+    //        data.set("earth", earth[i+j]);
+    //        t->write(data, i+j);
+    //    }
 
     i = i + l;
     l = 19;
     data.set("mercury", &mercury[i]);
     data.set("venus", &venus[i]);
     data.set("earth", &earth[i]);
+    data.set("mars", &mars[i]);
     t->write(data, i, l);
 
     i = i + l;
     l = 1;
+    KARABO_LOG_FRAMEWORK_TRACE_CF << " i=" << i << " l=" << l;
     data.set("mercury", &mercury[i]);
     data.set("venus", &venus[i]);
     data.set("earth", &earth[i]);
+    data.set("mars", &mars[i]);
     t->write(data, i, l);
 
 
+    p.stop("write0");
+    p.start("write");
 
-    //    for (int i = 0; i < 10; ++i) {
-    //        data.set("mercury", &mercury[i * nRec]);
-    //        data.set("venus", &venus[i * nRec]);
-    //        data.set("earth", &earth[i * nRec]);
-    //
-    //        t->write(data, i * nRec, nRec);
-    //    }
 
+    data.set("mercury", &mercury[0]);
+    data.set("venus", &venus[0]);
+    data.set("earth", &earth[0]);
+    data.set("mars", &mars[0]);
+    data.set("jupiter", &jupiter[0]);
+    
+    
+
+    for (size_t j = 0; j < maxIterations; ++j) {
+        t->write(data, maxRec*j, maxRec);
+    }
+    p.stop("write");
+
+    p.start("close");
     file.close();
+    p.stop("close");
 
+    double formatTime = HighResolutionTimer::time2double(p.getTime("format"));
+    double initializeTime = HighResolutionTimer::time2double(p.getTime("initialize"));
+    double createTime = HighResolutionTimer::time2double(p.getTime("create"));
+    double writeTime = HighResolutionTimer::time2double(p.getTime("write"));
+    double closeTime = HighResolutionTimer::time2double(p.getTime("close"));
+
+    if (m_reportTime) {
+        clog << endl;
+        clog << "file: " << filename << endl;
+        clog << "initialize data                  : " << initializeTime << " [s]" << endl;
+        clog << "format                           : " << formatTime << " [s]" << endl;
+        clog << "open/prepare file                : " << createTime << " [s]" << endl;
+        clog << "write data (may use memory cache): " << writeTime << " [s]" << endl;
+        clog << "written data size                : " << totalSize << " [MB]" << endl;
+        clog << "writing speed                    : " << totalSize / writeTime << " [MB/s]" << endl;
+        clog << "close                            : " << closeTime << " [s]" << endl;
+        clog << "write+close(flush to disk)       : " << writeTime + closeTime << " [s]" << endl;
+        clog << "write+close(flush to disk) speed : " << totalSize / (writeTime + closeTime) << " [MB/s]" << endl;
+    }
 
 }
 

@@ -37,13 +37,12 @@ namespace karabo {
 
             public:
 
-                KARABO_CLASSINFO(Table, "Table", "1.0")
-                //KARABO_CONFIGURATION_BASE_CLASS
+                KARABO_CLASSINFO(Table, "Table", "1.0")                
 
                 typedef std::map<std::string, hid_t > H5GroupsMap;
 
                 Table(hid_t h5file, boost::filesystem::path name, hsize_t chunkSize = 1)
-                : m_h5file(h5file), m_name(name), m_chunkSize(chunkSize), m_numberOfRecords(0)
+                : m_h5file(h5file), m_name(name), m_chunkSize(chunkSize), m_tableSize(0)
                 #ifdef KARABO_USE_PROFILER_TABLE1
                 , table1("table1")
                 #endif
@@ -54,7 +53,6 @@ namespace karabo {
 
 
 
-                //void select(karabo::util::Hash& activeElementsHash);
 
                 /*
                  * Write a single record to the table at position recordNumber
@@ -66,15 +64,6 @@ namespace karabo {
                 void write(const karabo::util::Hash& data, size_t recordNumber, size_t len);
 
 
-                //                /**
-                //                 * Write len number of records starting at record recordNumber.
-                //                 * All existing records are replaced.
-                //                 * Each element of the hash must be a std::vector (?filters) of appropriate 
-                //                 * type with len number of elements
-                //                 */
-                //                void writeBuffer(const karabo::util::Hash& data, size_t recordNumber, size_t len);
-                //
-
                 /**
                  * Append data record to the end of the table.
                  * @param data Hash object representing data record structure in file
@@ -84,7 +73,6 @@ namespace karabo {
 
                 void bind(karabo::util::Hash& data);
 
-                //                void allocate(karabo::util::Hash& data, size_t len);
 
                 /**
                  * Read data record from the table.
@@ -104,7 +92,16 @@ namespace karabo {
                 //                void read(size_t recordNumber);
                 //                void readAttributes(karabo::util::Hash & attr);
 
-                size_t getNumberOfRecords();
+                /*
+                 * Get table size.                 
+                 * This function returns the index to the first record greater than the last written to the table.
+                 * i.e.
+                 * 
+                 *  table->write(data, 0, 10);
+                 *  table->write(data, 12, 5);
+                 *  table.size() ==> returns 17
+                 */
+                size_t size();
 
                 void close();
                 //
@@ -140,7 +137,7 @@ namespace karabo {
                 //                void discover(karabo::io::hdf5::DataFormat::Pointer& discovered, std::string groupName);
                 //
                 //
-                void updateNumberOfRecordsAttribute();
+                void updateTableSizeAttribute();
                 void retrieveNumberOfRecordsFromFile();
                 //                void calculateNumberOfRecords();
                 //                void retrieveChunkSizeFromFile();
@@ -203,14 +200,14 @@ namespace karabo {
                 //
 
                 hsize_t m_chunkSize;
-                hsize_t m_numberOfRecords;
+                hsize_t m_tableSize;
                 hid_t m_numberOfRecordsAttribute;
                 #ifdef KARABO_USE_PROFILER_TABLE1
                 karabo::util::Profiler table1;
                 #endif
 
             private:
-                static const char* NUMBER_OF_RECORDS;
+                static const char* TABLE_SIZE;
 
             };
 
