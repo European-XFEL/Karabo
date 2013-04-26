@@ -717,7 +717,7 @@ namespace karabo {
         void Schema::help(const string& classId, ostream& os) {
             ostringstream stream;
             stream << "----- HELP -----" << endl;
-            if (classId.empty()) {
+            if (classId.empty() || classId == getRootName()) {
                 stream << "Schema: " << getRootName() << endl;
                 vector<string> keys = getKeys();
 
@@ -734,7 +734,7 @@ namespace karabo {
                     }
                 }
             } else {
-                stream << "Schema: " << getRootName() << " , key: " << classId << endl;
+                stream << "Schema: " << getRootName() << ", key: " << classId << endl;
 
                 if (getNodeType(classId) == Schema::LEAF) {
                     stream << "LEAF element" << endl;
@@ -799,7 +799,7 @@ namespace karabo {
 
             string valueType = Types::to<ToLiteral>(getValueType(key));
 
-            stream << "\n  ." << showKey << "(" << valueType << ")" << endl;
+            stream << "\n  ." << showKey << " (" << valueType << ")" << endl;
 
             processingStandardAttributes(key, stream);
 
@@ -824,7 +824,7 @@ namespace karabo {
 
         void Schema::processingNode(const std::string& key, ostringstream & stream) {
             string showKey = extractKey(key);
-            stream << "\n  ." << showKey << "(NODE)" << endl;
+            stream << "\n  ." << showKey << " (NODE)" << endl;
             if (hasDescription(key))
                 stream << "     " << "Description : " << getDescription(key) << endl;
 
@@ -833,14 +833,14 @@ namespace karabo {
 
         void Schema::processingChoiceOfNodes(const std::string& key, ostringstream & stream) {
             string showKey = extractKey(key);
-            stream << "\n  ." << showKey << "(CHOICE_OF_NODES)" << endl;
+            stream << "\n  ." << showKey << " (CHOICE_OF_NODES)" << endl;
             processingStandardAttributes(key, stream);
         }
 
 
         void Schema::processingListOfNodes(const std::string& key, ostringstream & stream) {
             string showKey = extractKey(key);
-            stream << "\n  ." << showKey << "(LIST_OF_NODES)" << endl;
+            stream << "\n  ." << showKey << " (LIST_OF_NODES)" << endl;
             processingStandardAttributes(key, stream);
         }
 
