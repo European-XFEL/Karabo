@@ -63,12 +63,12 @@ void exportPyWebAuthenticator() {
            , (string (Authenticator::*)() const)(&Authenticator::getWelcomeMessage));
        
        a.def("getRoleId"
-           , (unsigned long long (Authenticator::*)() const)(&Authenticator::getRoleId));
+           , (long long (Authenticator::*)() const)(&Authenticator::getRoleId));
        
        a.def("getSoftwareId"
-           , (unsigned long long (Authenticator::*)() const)(&Authenticator::getSoftwareId));
+           , (long long (Authenticator::*)() const)(&Authenticator::getSoftwareId));
 
        a.def("getUserId"
-           , (unsigned long long (Authenticator::*)() const)(&Authenticator::getUserId));
+           , (long long (Authenticator::*)() const)(&Authenticator::getUserId));
 
 }
