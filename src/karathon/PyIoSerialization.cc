@@ -11,6 +11,7 @@
 #include <karabo/io/SchemaXsdSerializer.hh>
 #include <karabo/io/SchemaXmlSerializer.hh>
 #include <karabo/io/HashXmlSerializer.hh>
+#include <karabo/io/HashBinarySerializer.hh>
 #include "PythonFactoryMacros.hh"
 
 using namespace karabo::util;
@@ -71,6 +72,31 @@ namespace karabo {
                 return bp::object(schema);
             }
         };
+
+        class HashBinarySerializerWrap {
+
+        public:
+
+
+            static bp::object save(HashBinarySerializer& s, const karabo::util::Hash& hash) {
+                std::vector<char> v;
+                s.save(hash, v);
+                return bp::object(bp::handle<>(PyByteArray_FromStringAndSize(&v[0], v.size())));
+            }
+
+
+            static bp::object load(HashBinarySerializer& s, const bp::object& obj) {
+                if (PyByteArray_Check(obj.ptr())) {
+                    PyObject* bytearray = PyByteArray_FromObject(obj.ptr());
+                    size_t size = PyByteArray_Size(bytearray);
+                    char* data = PyByteArray_AsString(bytearray);
+                    Hash hash;
+                    s.load(hash, data, size);
+                    return bp::object(hash);
+                }
+                throw KARABO_PYTHON_EXCEPTION("Python object type is not a bytearray!");
+            }
+        };
     }
 }
 
@@ -117,5 +143,14 @@ void exportPyIoSerialization() {
               , (bp::arg("archive")));
     }
 
+    {//exposing karabo::io::SchemaXmlSerializer
+        bp::class_< HashBinarySerializer > s("HashBinarySerializer", bp::init<Hash const &>((bp::arg("configuration") = Hash())));
+        s.def("save"
+              , &HashBinarySerializerWrap().save
+              , (bp::arg("hash")));
+        s.def("load"
+              , &HashBinarySerializerWrap().load
+              , (bp::arg("archive_as_bytearray")));
+    }
 
 }
