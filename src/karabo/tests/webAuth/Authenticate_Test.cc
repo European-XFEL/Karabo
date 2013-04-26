@@ -8,8 +8,7 @@
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
 
-#include <karabo/webAuth/Authenticator.hh>
-#include <karabo/util/Timestamp.hh>
+
 #include "Authenticate_Test.hh"
 
 using namespace std;
@@ -34,6 +33,54 @@ void Authenticate_Test::tearDown() {
 }
 
 
+void Authenticate_Test::testNotLoggedContext(karabo::webAuth::Authenticator a, const std::string& username, const std::string& password, const std::string& provider,
+                                             const std::string& ipAddress, const std::string& hostname, const std::string& portNumber,
+                                             const std::string& software) {
+
+    // Variables that should be correctly assigned
+    CPPUNIT_ASSERT(a.getUsername() == username);
+    CPPUNIT_ASSERT(a.getPassword() == password);
+    CPPUNIT_ASSERT(a.getProvider() == provider);
+    CPPUNIT_ASSERT(a.getIpAddress() == ipAddress);
+    CPPUNIT_ASSERT(a.getHostname() == hostname);
+    CPPUNIT_ASSERT(a.getPortNumber() == portNumber);
+    CPPUNIT_ASSERT(a.getSoftware() == software);
+
+    // Validate the following parameters are empty before login
+    CPPUNIT_ASSERT(a.getRoleDesc().empty() == true);
+    CPPUNIT_ASSERT(a.getWelcomeMessage().empty() == true);
+    CPPUNIT_ASSERT(a.getSessionToken().empty() == true);
+    //
+    CPPUNIT_ASSERT(a.getSoftwareId() == -100);
+    CPPUNIT_ASSERT(a.getUserId() == -100);
+    CPPUNIT_ASSERT(a.getRoleId() == -100);
+}
+
+
+void Authenticate_Test::testSuccessfulLoggedContext(karabo::webAuth::Authenticator a, const std::string& username, const std::string& password, const std::string& provider,
+                                                    const std::string& ipAddress, const std::string& hostname, const std::string& portNumber, const std::string& software,
+                                                    const long long int expectedSoftwareId, const long long int expectedUserId, const long long int expectedRoleId) {
+
+    // Variables that should be correctly assigned
+    CPPUNIT_ASSERT(a.getUsername() == username);
+    CPPUNIT_ASSERT(a.getPassword() == password);
+    CPPUNIT_ASSERT(a.getProvider() == provider);
+    CPPUNIT_ASSERT(a.getIpAddress() == ipAddress);
+    CPPUNIT_ASSERT(a.getHostname() == hostname);
+    CPPUNIT_ASSERT(a.getPortNumber() == portNumber);
+    CPPUNIT_ASSERT(a.getSoftware() == software);
+
+    // Validate the following parameters were populated after login
+    CPPUNIT_ASSERT(a.getRoleDesc().empty() == false);
+    CPPUNIT_ASSERT(a.getWelcomeMessage().empty() == false);
+    CPPUNIT_ASSERT(a.getSessionToken().empty() == false);
+    //
+    CPPUNIT_ASSERT(a.getSoftwareId() == expectedSoftwareId);
+    CPPUNIT_ASSERT(a.getUserId() == expectedUserId);
+    CPPUNIT_ASSERT(a.getRoleId() == expectedRoleId);
+}
+
+
 void Authenticate_Test::testCorrectLogin() {
     string username = "guest";
     string password = "guest";
@@ -46,30 +93,34 @@ void Authenticate_Test::testCorrectLogin() {
     string timeStr = "20130120T122059.259188123";
     karabo::util::Timestamp time = karabo::util::Timestamp(timeStr);
 
-    bool success;
+    // Expected result values
+    const long long int expectedSoftwareId = 1;
+    const long long int expectedUserId = -1;
+    const long long int expectedRoleId = 3;
+
 
     Authenticator a = Authenticator(username, password, provider, ipAddress, hostname, portNumber, software);
 
-    // Validate the following parameters were empty before login
-    CPPUNIT_ASSERT(a.getRoleDesc().empty() == true);
-    CPPUNIT_ASSERT(a.getWelcomeMessage().empty() == true);
-    CPPUNIT_ASSERT(a.getSessionToken().empty() == true);
+    // Class instance should be in the initial state
+    testNotLoggedContext(a, username, password, provider, ipAddress, hostname, portNumber, software);
 
-    success = a.login(time);
-    CPPUNIT_ASSERT(success == true);
+    /************************
+     * LOGIN
+     ************************/
+    // Successful login
+    CPPUNIT_ASSERT(a.login(time) == true);
 
-    // Validate the following parameters were populated after login
-    CPPUNIT_ASSERT(a.getRoleDesc().empty() == false);
-    CPPUNIT_ASSERT(a.getWelcomeMessage().empty() == false);
-    CPPUNIT_ASSERT(a.getSessionToken().empty() == false);
+    // Class instance should be with in new information
+    testSuccessfulLoggedContext(a, username, password, provider, ipAddress, hostname, portNumber, software, expectedSoftwareId, expectedUserId, expectedRoleId);
 
-    success = a.logout();
-    CPPUNIT_ASSERT(success == true);
+    /************************
+     * LOGOUT
+     ************************/
+    // Successful logout
+    CPPUNIT_ASSERT(a.logout() == true);
 
-    // Validate the following parameters were cleaned after logout
-    CPPUNIT_ASSERT(a.getRoleDesc().empty() == true);
-    CPPUNIT_ASSERT(a.getWelcomeMessage().empty() == true);
-    CPPUNIT_ASSERT(a.getSessionToken().empty() == true);
+    // Class instance should be in the initial state
+    testNotLoggedContext(a, username, password, provider, ipAddress, hostname, portNumber, software);
 }
 
 
@@ -85,21 +136,29 @@ void Authenticate_Test::testIncorrectLogin() {
     string timeStr = "20130120T122059.259188";
     karabo::util::Timestamp time = karabo::util::Timestamp(timeStr);
 
-    bool success;
-
     Authenticator a = Authenticator(username, password, provider, ipAddress, hostname, portNumber, software);
 
+    // Class instance should be in the initial state
+    testNotLoggedContext(a, username, password, provider, ipAddress, hostname, portNumber, software);
+
     // Test wrong password
-    success = a.login(time);
-    CPPUNIT_ASSERT(success == false);
+    CPPUNIT_ASSERT(a.login(time) == false);
+
+    // Class instance should be in the initial state
+    testNotLoggedContext(a, username, password, provider, ipAddress, hostname, portNumber, software);
 
     // Test wrong username
     username = "guest2";
     password = "guest";
     a = Authenticator(username, password, provider, ipAddress, hostname, portNumber, software);
 
-    success = a.login(time);
-    CPPUNIT_ASSERT(success == false);
+    // Class instance should be in the initial state
+    testNotLoggedContext(a, username, password, provider, ipAddress, hostname, portNumber, software);
+
+    CPPUNIT_ASSERT(a.login(time) == false);
+
+    // Class instance should be in the initial state
+    testNotLoggedContext(a, username, password, provider, ipAddress, hostname, portNumber, software);
 }
 
 
@@ -115,13 +174,16 @@ void Authenticate_Test::testIncorrectUsername() {
     string timeStr = "20130120T122059.259188";
     karabo::util::Timestamp time = karabo::util::Timestamp(timeStr);
 
-    bool success;
-
     Authenticator a = Authenticator(username, password, provider, ipAddress, hostname, portNumber, software);
 
+    // Class instance should be in the initial state
+    testNotLoggedContext(a, username, password, provider, ipAddress, hostname, portNumber, software);
+
     // Test wrong password
-    success = a.login(time);
-    CPPUNIT_ASSERT(success == false);
+    CPPUNIT_ASSERT(a.login(time) == false);
+
+    // Class instance should be in the initial state
+    testNotLoggedContext(a, username, password, provider, ipAddress, hostname, portNumber, software);
 }
 
 
@@ -137,41 +199,25 @@ void Authenticate_Test::testSingleSignOn() {
     string timeStr = "20130120T122059.259188";
     karabo::util::Timestamp time = karabo::util::Timestamp(timeStr);
 
-    bool success;
     std::string sessionToken;
 
     Authenticator a = Authenticator(username, password, provider, ipAddress, hostname, portNumber, software);
 
-    success = a.login(time);
-    CPPUNIT_ASSERT(success == true);
+    // Successful login
+    CPPUNIT_ASSERT(a.login(time) == true);
 
     // Validate session with current machine name => Should be OK
     sessionToken = a.getSingleSignOn("c++UnitTestsIpAddress");
-    if (sessionToken.empty()) {
-        success = false;
-    } else {
-        success = true;
-    }
-    CPPUNIT_ASSERT(success == true);
+    CPPUNIT_ASSERT(sessionToken.empty() == false);
 
     // Validate session with different machine name => Should be NOT OK
     sessionToken = a.getSingleSignOn("c++UnitTestsIpAddressXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
-    if (sessionToken.empty()) {
-        success = false;
-    } else {
-        success = true;
-    }
-    CPPUNIT_ASSERT(success == false);
+    CPPUNIT_ASSERT(sessionToken.empty() == true);
 
-    success = a.logout();
-    CPPUNIT_ASSERT(success == true);
+    // Successful logout
+    CPPUNIT_ASSERT(a.logout() == true);
 
     // Validate session with current machine name => Should be NOT OK because user made Logout
     sessionToken = a.getSingleSignOn("c++UnitTestsIpAddress");
-    if (sessionToken.empty()) {
-        success = false;
-    } else {
-        success = true;
-    }
-    CPPUNIT_ASSERT(success == false);
+    CPPUNIT_ASSERT(sessionToken.empty() == true);
 }
