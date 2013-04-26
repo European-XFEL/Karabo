@@ -38,7 +38,7 @@ void exportPyXmsSignalSlotable();
 //void exportNonEmptyListElement();
 void exportPyCoreDeviceClient();
 //void exportTargetActualElement();
-//void exportPyLogLogger();
+void exportPyLogLogger();
 void exportp2p();
 
 //bp::object anyExtract(boost::any const& self) {
@@ -127,6 +127,6 @@ BOOST_PYTHON_MODULE(libkarathon) {
 //    exportOverwriteElement();
 //    exportTargetActualElement();
 //    
-//    exportPyLogLogger();
+    exportPyLogLogger();
     exportp2p();
 }
