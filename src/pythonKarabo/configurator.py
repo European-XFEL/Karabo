@@ -7,6 +7,10 @@ __date__ ="$Apr 11, 2013 4:20:13 PM$"
 from libkarathon import *
 
 class Configurator(object):
+    '''
+    Configurator is the singleton class that keeps methods for registration and creation other classes that
+    support "configuration" protocol, i.e. are configurable classes
+    '''
     _instance = None
     registry = {}   # { classid_of_base_class : registry_for_classes_derived_of_the_base_class }
     
@@ -16,11 +20,16 @@ class Configurator(object):
             theClass.__base_classid__ = theClass.__classid__
             Configurator.registry[theClass.__classid__] = {}
         Configurator.registry[theClass.__classid__][theClass.__classid__] = theClass  # self-registering
-    '''
-    The argument to constructor may be the classid of a configurable class or configurable class itself:
-    Configurator(ConfigClass)  or Configurator("ConfigClass")
-    '''
+
+    
     def __init__(self, classid):
+        '''
+        The argument to constructor may be the classid of a configurable class or configurable class itself:
+        Example:
+                c = Configurator(ConfigurableClass)
+        or
+                c = Configurator("ConfigurableClassId")
+        '''
         if isinstance(classid, type):
             classid = classid.__classid__
         if not isinstance(classid, str):
@@ -41,6 +50,11 @@ class Configurator(object):
         return self
         
     def getSchema(self, classid, rules = AssemblyRules(AccessType(READ | WRITE | INIT))):
+        '''
+        Get schema for class with "classid" derived from base class given to constructor using assembly "rules"
+        Example:
+                schema = Configurator(Shape).getSchema("Rectangle")
+        '''
         if isinstance(classid, type):
             classid = classid.__classid__
         if not isinstance(classid, str):
@@ -65,8 +79,15 @@ class Configurator(object):
             except AttributeError,e:
                 print "Exception while adding expected parameters for class %r: %r" % (theClass.__name__, e)
         return schema
-            
+    
+    
     def create(self, classid, configuration, validation = True):
+        '''
+        The factory method to create the instance of class with "classId" that inherits from base class given to constructor using "input" configuration.
+        The last argument is a flag to determine if the input configuration should be validated.
+        Example:
+                instance = Configurator(Shape).create("EditableCircle", Hash("radius", 12.345))
+        '''        
         if isinstance(classid, type):
             classid = classid.__classid__
         if not isinstance(classid, str):
@@ -85,11 +106,26 @@ class Configurator(object):
             raise RuntimeError,"Validation Exception: " + str(e)
         return Derived(validated)
     
+    
     def createByConf(self, configuration, validation = True):
+        '''
+        The factory method to create instance of class that inherits from base class given to constructor using input "configuration".
+        The configuration should have "classId" of class to be created as a root element.  The last argument is a flag to determine
+        if the input "configuration" should be validated.
+        Example:
+                configuration = Hash("EditableCircle.radius", 12.345)
+                instance = Configurator(Shape).createByConf(configuration)
+        '''
         classid = configuration.keys()[0]
         return self.create(classid, configuration[classid], validation)
         
+    
     def createNode(self, nodename, classid, configuration, validation = True):
+        '''
+        The helper method to create instance of class specified by "classId" and derived from class given to constructor using
+        sub-configuration specified by "nodeName" which has to be a part of input "configuration".
+        The last argument is a flag to determine if the input "configuration" should be validated.
+        '''
         if isinstance(classid, type):
             classid = classid.__classid__
         if not isinstance(classid, str):
@@ -99,9 +135,18 @@ class Configurator(object):
         raise AttributeError,"Given nodeName \"" + nodename + "\" is not part of input configuration"
     
     def createChoice(self, choicename, configuration, validation = True):
+        '''
+        The helper method to create the instance of class derived from base class given to constructor using "choiceName" and
+        input "configuration".  The last argument is a flag to determine if the input configuration should be validated.
+        '''
         return self.createByConf(configuration[choicename], validation)
        
     def createList(self, listname, input, validation = True):
+        '''
+        The helper method to create the list of instances of classes derived from base class given to constructor using "listName"
+        used as a key to the list and "input" configuration.  The last argument is a flag to determine if the input configuration
+        should be validated.
+        '''
         if listname not in input:
             raise AttributeError,"Given list name \"" + listname + "\" is not a part of input configuration"
         instances = []
@@ -110,8 +155,14 @@ class Configurator(object):
         return instances
             
     def getRegisteredClasses(self):
+        '''
+        Returns list of "classid"'s for all registered classes derived from base class given to constructor.
+        '''
         return self.baseRegistry.keys()
     
     @staticmethod
     def getRegisteredBaseClasses():
+        '''
+        Returns all classid's of base classes registerd in Configurator.
+        '''
         return Configurator.registry.keys()
