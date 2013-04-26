@@ -12,6 +12,8 @@
 #define	AUTHENTICATE_TEST_HH
 
 #include <cppunit/extensions/HelperMacros.h>
+#include <karabo/webAuth/Authenticator.hh>
+#include <karabo/util/Timestamp.hh>
 
 class Authenticate_Test : public CPPUNIT_NS::TestFixture {
 
@@ -29,6 +31,13 @@ public:
     void tearDown();
 
 private:
+    void testNotLoggedContext(karabo::webAuth::Authenticator a, const std::string& username, const std::string& password, const std::string& provider,
+                              const std::string& ipAddress, const std::string& hostname, const std::string& portNumber,
+                              const std::string& software);
+    void testSuccessfulLoggedContext(karabo::webAuth::Authenticator a, const std::string& username, const std::string& password, const std::string& provider,
+                                     const std::string& ipAddress, const std::string& hostname, const std::string& portNumber, const std::string& software,
+                                     const long long int expectedSoftwareId, const long long int expectedUserId, const long long int expectedRoleId);
+    //
     void testCorrectLogin();
     void testIncorrectLogin();
     void testIncorrectUsername();
