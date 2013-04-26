@@ -122,6 +122,26 @@ namespace karabo {
                 }
 
                 void bind(karabo::util::Hash & data, hsize_t len) {
+
+                    boost::optional<karabo::util::Hash::Node&> node = data.find(m_key, '/');
+                    if (!node) {
+                        std::vector<T>& vec = data.bindReference<std::vector<T> >(m_key, '/');
+                        vec.resize(dims().size()*len);
+                        data.setAttribute(m_key, "dims", dims().toVector(), '/');
+                        m_datasetReader->bind(vec);
+
+                    } else {
+                        if (karabo::util::Types::isVector(node->getType())) {
+                            std::vector<T>& vec = node->getValue< std::vector<T> >();
+                            m_datasetReader->bind(vec);
+                        } else if (karabo::util::Types::isPointer(node->getType())) {
+                            T* ptr = node->getValue<T* >();
+                            m_datasetReader->bind(ptr);
+                            data.setAttribute(m_key, "dims", dims().toVector(), '/');
+                        }
+                    }
+
+
                 }
 
                 void readRecord(const hid_t& dataSet, const hid_t& fileDataSpace) {

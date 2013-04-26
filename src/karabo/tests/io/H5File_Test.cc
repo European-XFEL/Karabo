@@ -36,7 +36,8 @@ H5File_Test::H5File_Test() {
     //    tr.enable("karabo.io.h5.Table.openNew");
     //    tr.enable("karabo.io.h5.Table.openReadOnly");
     //        tr.enable("H5File_Test.testReadTable");
-    tr.enable("H5File_Test.testVectorBufferWrite");
+    //tr.enable("H5File_Test.testBufferWrite");
+    tr.enable("H5File_Test.testBufferRead");
     tr.reconfigure();
 
 
@@ -466,11 +467,11 @@ void H5File_Test::testBufferWrite() {
     }
 
     {
-        Dims dims(2,5);
+        Dims dims(2, 5);
         Hash h1(
                 "h5path", "vector",
                 "h5name", "a1",
-                "dims", dims.toVector()        
+                "dims", dims.toVector()
                 );
         h5::Element::Pointer e1 = h5::Element::create("VECTOR_INT32", h1);
         format->addElement(e1);
@@ -514,7 +515,7 @@ void H5File_Test::testBufferWrite() {
     }
 
     for (size_t j = 0; j < maxRec * 10; ++j) {
-        a1[j] = j%20;
+        a1[j] = j % 20;
     }
 
     p.stop("initialize");
@@ -539,7 +540,7 @@ void H5File_Test::testBufferWrite() {
     data.set("mars", &mars[i]);
     data.set("jupiter", &jupiter[i]);
     data.set("vector.a1", a1);
-    
+
     t->write(data, i, l);
 
     i = i + l;
@@ -667,51 +668,77 @@ void H5File_Test::testBufferWrite() {
 void H5File_Test::testBufferRead() {
 
 
-
-    Profiler p("VectorBufferWrite");
-
-    p.start("format");
-    Format::Pointer format = Format::createEmptyFormat();
-
-    Hash h1(
-            "h5path", "",
-            "h5name", "mercury"
-            );
-
-    h5::Element::Pointer e1 = h5::Element::create("INT32", h1);
-
-    format->addElement(e1);
-
-    string filename = "/dev/shm/file3.h5";
-    filename = resourcePath("file3.h5");
-    File file(filename);
-    file.open(File::READONLY);
-
-    Table::Pointer t = file.getTable("/planets", format);
-
-    Hash data;
+    try {
 
 
-    vector<int>& mercuryBuffer = data.bindReference<vector<int> >("mercury");
-    mercuryBuffer.resize(100);
+        Profiler p("VectorBufferWrite");
 
-    t->bind(data, 100);
+        p.start("format");
+        Format::Pointer format = Format::createEmptyFormat();
+        {
+            Hash h1(
+                    "h5path", "",
+                    "h5name", "mercury"
+                    );
+            h5::Element::Pointer e1 = h5::Element::create("INT32", h1);
+            format->addElement(e1);
+        }
 
-    t->read(0, 100);
-
-//    for (size_t i = 0; i < mercuryBuffer.size(); ++i) {
-//        clog << "buffer[" << i << "] = " << mercuryBuffer[i] << endl;
-//    }
-
-    file.close();
-
-
-
-
-
+        Dims a1Dims(2, 5);
+        {
+            Hash h1(
+                    "h5path", "vector",
+                    "h5name", "a1",
+                    "dims", a1Dims.toVector()
+                    );
+            h5::Element::Pointer e1 = h5::Element::create("VECTOR_INT32", h1);
+            format->addElement(e1);
+        }
 
 
+        string filename = "/dev/shm/file3.h5";
+        filename = resourcePath("file3.h5");
+        File file(filename);
+        file.open(File::READONLY);
 
+        Table::Pointer t = file.getTable("/planets");
+
+        Hash data;
+
+        const size_t bufLen = 100;
+
+        vector<int>& mercuryBuffer = data.bindReference<vector<int> >("mercury");
+        mercuryBuffer.resize(bufLen);
+
+
+
+        t->bind(data, bufLen);
+
+        vector<int>& a1 = data.get< vector<int> >("vector.a1");
+
+        size_t numReadRecords = t->read(0, bufLen);
+
+        for (size_t i = 0; i < mercuryBuffer.size(); ++i) {
+            KARABO_LOG_FRAMEWORK_TRACE_CF << "mercuryBuffer[" << i << "] = " << mercuryBuffer[i];
+        }
+
+        size_t m = 0;
+        for (size_t j = 0; j < numReadRecords; ++j) {
+            KARABO_LOG_FRAMEWORK_TRACE_CF << "{" << j << "}: ";
+            for (size_t k = 0; k < a1Dims.extentIn(0); ++k) {
+                for (size_t l = 0; l < a1Dims.extentIn(1); ++l) {
+                    KARABO_LOG_FRAMEWORK_TRACE_CF << "[" << k << "," << l << "]=" << a1[m];
+                    m++;
+                }
+            }
+        }
+
+
+        file.close();
+    } catch (Exception& ex) {
+        clog << ex << endl;
+        CPPUNIT_ASSERT(true == false);
+    }
 
 }
 

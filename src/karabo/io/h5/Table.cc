@@ -112,7 +112,8 @@ namespace karabo {
                 }
 
                 vector<boost::shared_ptr<Element> > elements = m_dataFormat->getElements();
-                for (size_t i = 0; i < elements.size(); ++i) {
+                KARABO_LOG_FRAMEWORK_TRACE_CF << "elements.size() : " << elements.size();
+                for (size_t i = 0; i < elements.size(); ++i) {                    
                     elements[i]->open(m_group);
                 }
                 retrieveNumberOfRecordsFromFile();
