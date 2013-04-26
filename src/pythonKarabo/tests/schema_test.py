@@ -282,7 +282,7 @@ class  Schema_TestCase(unittest.TestCase):
         except Exception,e:
             self.fail("test_getWarnAlarmLowHighAs exception in getAlarmHighAs: " + str(e))
             
-   def test_hasWarnAlarm(self):
+    def test_hasWarnAlarm(self):
         try:
             self.assertEqual(self.schema.hasWarnLow("exampleKey5"), True)
             self.assertEqual(self.schema.hasWarnHigh("exampleKey5"), True)
