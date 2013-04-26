@@ -78,6 +78,20 @@ namespace karabo {
                                              );
                 }
 
+                void read(hsize_t len, hid_t dataSet, hid_t fileDataSpace) {
+
+                    KARABO_LOG_FRAMEWORK_TRACE << "enter read T*";
+                    
+                    std::vector<hsize_t> vdims = this->m_dimsBuffer.toVector();
+                    vdims[0] = len;
+                    karabo::util::Dims memoryDims(vdims);
+                    hid_t mds = Dataset::dataSpace(memoryDims);
+                    
+                    KARABO_CHECK_HDF5_STATUS(
+                                             H5Dread(dataSet, ScalarTypes::getHdf5NativeType<T > (), mds, fileDataSpace, H5P_DEFAULT, m_readData)
+                                             );
+                }
+
                 void bind(std::vector<T>& vec) {
                     m_readData = &vec[0];
                 }
@@ -85,40 +99,7 @@ namespace karabo {
                 void bind(T* ptr) {
                     m_readData = ptr;
                 }
-
-
-
-
-
-                // begin old
-//
-//                static void read(T* value, hid_t dataSet, hid_t memoryDataSpace, hid_t fileDataSpace) {
-//
-//                    KARABO_LOG_FRAMEWORK_TRACE << "enter read T*";
-//                    KARABO_CHECK_HDF5_STATUS(
-//                                             H5Dread(dataSet, ScalarTypes::getHdf5NativeType<T > (), memoryDataSpace, fileDataSpace, H5P_DEFAULT, value)
-//                                             );
-//                }
-//
-//                static void read(std::vector<T>& value, hid_t dataSet, hid_t memoryDataSpace, hid_t fileDataSpace) {
-//
-//                    KARABO_LOG_FRAMEWORK_TRACE << "enter read vector<T>";
-//                    KARABO_CHECK_HDF5_STATUS(
-//                                             H5Dread(dataSet, ScalarTypes::getHdf5NativeType<T > (), memoryDataSpace, fileDataSpace, H5P_DEFAULT, &value[0])
-//                                             );
-//                }
-//
-//                static T* getPointerFromVector(std::vector<T>& vec) {
-//                    //This function is needed. See specializations below.
-//                    return &vec[0];
-//                }
-//
-//                static T* getPointerFromRaw(T* ptr, hsize_t len) {
-//                    //This function is needed. See specializations below.
-//                    return ptr;
-//                }
-
-                //end old
+               
 
 
             protected:
@@ -206,6 +187,10 @@ namespace karabo {
 
 
                 }
+                
+                void read(hsize_t len, hid_t dataSet, hid_t fileDataSpace) {
+                    
+                }
 
             private:
 
@@ -227,52 +212,10 @@ namespace karabo {
 
                 };
 
-                //                static void read(std::string* value, hid_t dataSet, hid_t memoryDataSpace, hid_t fileDataSpace) {
-                //
-                //                    KARABO_LOG_FRAMEWORK_TRACE << "enter read string*";
-                //                    char* ptr[1];
-                //                    KARABO_CHECK_HDF5_STATUS(
-                //                                             H5Dread(dataSet, ScalarTypes::getHdf5NativeType<std::string> (), memoryDataSpace, fileDataSpace, H5P_DEFAULT, ptr)
-                //                                             );
-                //                    *value = ptr[0];
-                //                }
-                //
-                //                static void read(boost::shared_ptr< DatasetReader<std::string>::Mapping > ptrMap, hid_t dataSet, hid_t memoryDataSpace, hid_t fileDataSpace) {
-                //
-                //                    KARABO_LOG_FRAMEWORK_TRACE << "vector size: ";
-                //
-                //                    ptrMap->m_ch.resize(ptrMap->m_len);
-                //                    char** chPtr = &(ptrMap->m_ch[0]);
-                //
-                //                    KARABO_CHECK_HDF5_STATUS(
-                //                                             H5Dread(dataSet, ScalarTypes::getHdf5NativeType<std::string> (), memoryDataSpace, fileDataSpace, H5P_DEFAULT, chPtr)
-                //                                             );
-                //
-                //                    if (ptrMap->m_useVector) {
-                //                        for (size_t i = 0; i < ptrMap->m_len; ++i) {
-                //                            ptrMap->m_vec[i] = ptrMap->m_ch[i];
-                //                        }
-                //                    } else {
-                //                        for (size_t i = 0; i < ptrMap->m_len; ++i) {
-                //                            ptrMap->m_ptr[i] = ptrMap->m_ch[i];
-                //                        }
-                //                    }
-                //                }
-                //
-                //                static boost::shared_ptr<Mapping> getPointerFromVector(std::vector<std::string>& vec) {
-                //                    return boost::shared_ptr<Mapping > (new Mapping(vec, vec.size()));
-                //                }
-                //
-                //                inline static boost::shared_ptr<Mapping> getPointerFromRaw(std::string* ptr, hsize_t len) {
-                //                    std::vector<std::string> dummy(0);
-                //                    return boost::shared_ptr<Mapping > (new Mapping(ptr, len, dummy));
-                //                }
-
 
                 karabo::util::Dims m_dims;
                 karabo::util::Dims m_dimsBuffer;
                 hid_t m_memoryDataSpace;
-                //T* m_readData;
                 boost::shared_ptr<Mapping > m_readData;
 
             };
@@ -375,47 +318,11 @@ namespace karabo {
 
 
                 }
+                
+                void read(hsize_t len, hid_t dataSet, hid_t fileDataSpace) {
+                    
+                }
 
-                //                static void read(bool* value, hid_t dataSet, hid_t memoryDataSpace, hid_t fileDataSpace) {
-                //
-                //                    KARABO_LOG_FRAMEWORK_TRACE << "enter read bool*";
-                //                    unsigned char tmp;
-                //                    KARABO_CHECK_HDF5_STATUS(
-                //                                             H5Dread(dataSet, ScalarTypes::getHdf5NativeType<bool > (), memoryDataSpace, fileDataSpace, H5P_DEFAULT, &tmp)
-                //                                             );
-                //                    *value = boost::numeric_cast<bool>(tmp);
-                //                }
-                //
-                //                static void read(boost::shared_ptr< DatasetReader<bool>::Mapping > ptrMap, hid_t dataSet, hid_t memoryDataSpace, hid_t fileDataSpace) {
-                //
-                //                    KARABO_LOG_FRAMEWORK_TRACE << "enter read boost::shared_ptr< ScalarReader<bool>::Mapping >";
-                //                    ptrMap->m_uch.resize(ptrMap->m_len);
-                //                    unsigned char* uchPtr = &(ptrMap->m_uch[0]);
-                //
-                //                    KARABO_CHECK_HDF5_STATUS(
-                //                                             H5Dread(dataSet, ScalarTypes::getHdf5NativeType<bool > (), memoryDataSpace, fileDataSpace, H5P_DEFAULT, uchPtr));
-                //
-                //                    if (ptrMap->m_useVector) {
-                //                        for (size_t i = 0; i < ptrMap->m_len; ++i) {
-                //                            ptrMap->m_vec[i] = boost::numeric_cast<bool>(ptrMap->m_uch[i]);
-                //                        }
-                //                    } else {
-                //                        for (size_t i = 0; i < ptrMap->m_len; ++i) {
-                //                            ptrMap->m_ptr[i] = boost::numeric_cast<bool>(ptrMap->m_uch[i]);
-                //                        }
-                //                    }
-                //
-                //                }
-                //
-                //                static boost::shared_ptr<Mapping> getPointerFromVector(std::vector<bool>& vec) {
-                //                    return boost::shared_ptr<Mapping > (new Mapping(vec, vec.size()));
-                //                }
-                //
-                //                static boost::shared_ptr<Mapping> getPointerFromRaw(bool* ptr, hsize_t len) {
-                //                    std::vector<bool> dummy(0);
-                //                    return boost::shared_ptr<Mapping > (new Mapping(ptr, len, dummy));
-                //                }
-                //
 
             private:
                 karabo::util::Dims m_dims;

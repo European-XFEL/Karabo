@@ -24,6 +24,7 @@ namespace karabo {
         namespace h5 {
 
             class Group : public karabo::io::h5::Element {
+
             public:
 
                 KARABO_CLASSINFO(Group, "Group", "1.0")
@@ -44,23 +45,25 @@ namespace karabo {
 
                 void write(const karabo::util::Hash& data, hsize_t recordId, hsize_t len) {
                 }
-                
+
                 void open(hid_t group);
-                
+
                 void close();
 
-                inline void bind(karabo::util::Hash & data) {
+                void bind(karabo::util::Hash & data) {
                 }
 
-                inline void allocate(karabo::util::Hash& buffer, size_t len) {
+                void bind(karabo::util::Hash & data, hsize_t len) {
                 }
 
-                inline void read(karabo::util::Hash& data, hsize_t recordId) {
+                void read(karabo::util::Hash& data, hsize_t recordId) {
                 }
-                
+
                 inline void read( hsize_t recordId) {
                 }
-                
+
+                void read(hsize_t recordId, hsize_t len) {    
+                }
 
                 hid_t m_group; // this group
 

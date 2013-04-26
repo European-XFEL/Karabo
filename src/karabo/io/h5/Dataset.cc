@@ -157,7 +157,7 @@ namespace karabo {
             void Dataset::write(const karabo::util::Hash& data, hsize_t recordId) {
 
                 try {
-                    extend(recordId, 1);
+                    extendFileDataspace(recordId, 1);
                     selectFileRecords(recordId, 1);
                     const Hash::Node& node = data.getNode(m_key, '/');
                     writeNode(node, m_dataSet, m_fileDataSpace);
@@ -171,7 +171,7 @@ namespace karabo {
             void Dataset::write(const karabo::util::Hash& data, hsize_t recordId, hsize_t len) {
 
                 try {
-                    extend(recordId, len);
+                    extendFileDataspace(recordId, len);
                     selectFileRecords(recordId, len);
                     const Hash::Node& node = data.getNode(m_key, '/');
                     writeNode(node, len, m_dataSet, m_fileDataSpace);
@@ -210,7 +210,7 @@ namespace karabo {
             }
 
 
-            void Dataset::extend(hsize_t recordId, hsize_t len) {
+            void Dataset::extendFileDataspace(hsize_t recordId, hsize_t len) {
 
                 hsize_t lastRecord = recordId + len;
                 if (lastRecord > m_dataSetExtent[0]) {

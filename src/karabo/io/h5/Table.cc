@@ -153,72 +153,11 @@ namespace karabo {
                     m_tableSize = possibleNewSize;
                     updateTableSizeAttribute();
                 }
-
-                if (m_tableSize <= recordId) {
-                    m_tableSize += len;
-                }
+            
                 KARABO_CHECK_HDF5_STATUS(H5Fflush(m_h5file, H5F_SCOPE_GLOBAL));
                 updateTableSizeAttribute();
             }
-
-
-            //
-            //            void Table::writeBuffer(const karabo::util::Hash& data, size_t recordNumber, size_t len) {
-            //
-            //                size_t missingRecords = recordNumber + len - m_numberOfRecords;
-            //                KARABO_LOG_FRAMEWORK_TRACE_CF<< "recordNumber: " << recordNumber << " len: " << len << endl
-            //                        << "m_numberOfRecords: " << m_numberOfRecords << " missing: " << missingRecords << endl;
-            //
-            //                if (missingRecords > 0) {
-            //                    m_h5file->flush(H5F_SCOPE_GLOBAL);
-            //                    //r_extendRecordSpace(missingRecords, m_recordFormatHash);
-            //                }
-            //
-            //                KARABO_PROFILER_TABLE1
-            //
-            //                if (missingRecords > 0) {
-            //
-            //                    KARABO_PROFILER_START_TABLE1("flush")
-            //                    m_h5file->flush(H5F_SCOPE_GLOBAL);
-            //                    KARABO_PROFILER_STOP_TABLE1
-            //
-            //                    for (size_t j = 0; j < m_recordFormatVector.size(); ++j) {
-            //                        KARABO_PROFILER_START_TABLE1("getElement")
-            //                                const boost::any& anyElement = *(m_recordFormatVector[j]);
-            //                        boost::shared_ptr<RecordElement> element = boost::any_cast<boost::shared_ptr<RecordElement> >(anyElement);
-            //                        KARABO_PROFILER_STOP_TABLE1
-            //                        KARABO_PROFILER_START_TABLE1("extend")
-            //                        element->extend(missingRecords);
-            //                        KARABO_PROFILER_STOP_TABLE1
-            //                        KARABO_PROFILER_START_TABLE1("write");
-            //                        element->write(data, recordNumber, len);
-            //                        KARABO_PROFILER_STOP_TABLE1
-            //                    }
-            //
-            //                    KARABO_PROFILER_REPORT_TABLE1("getElement")
-            //                    KARABO_PROFILER_REPORT_TABLE1("extend")
-            //                    KARABO_PROFILER_REPORT_TABLE1("write")
-            //
-            //
-            //
-            //                } else {
-            //                    for (size_t j = 0; j < m_recordFormatVector.size(); ++j) {
-            //                        const boost::any& anyElement = *(m_recordFormatVector[j]);
-            //                        boost::shared_ptr<RecordElement> element = boost::any_cast<boost::shared_ptr<RecordElement> >(anyElement);
-            //                        element->write(data, recordNumber, len);
-            //                    }
-            //                }
-            //                //		p.start("r_write");
-            //                //		r_write(data, recordNumber, len, m_recordFormatHash);
-            //                //		p.stop();
-            //                //		cout << "r_write     : " << fixed << HighResolutionTimer::time2double(p.getTime("r_write")) << endl;
-            //                if (m_numberOfRecords <= recordNumber) {
-            //                    m_numberOfRecords += len;
-            //                }
-            //                updateNumberOfRecordsAttribute();
-            //            }
-            //
-
+           
 
             void Table::bind(karabo::util::Hash& data) {
                 vector<boost::shared_ptr<Element> > elements = m_dataFormat->getElements();
@@ -226,36 +165,38 @@ namespace karabo {
                     elements[i]->bind(data);
                 }
             }
-            //
-            //            void Table::allocate(karabo::util::Hash& data, size_t len) {
-            //                r_allocate(data, len, m_recordFormatHash);
-            //            }
-            //
+            
+            
+            void Table::bind(karabo::util::Hash& data, size_t bufferLen) {
+                vector<boost::shared_ptr<Element> > elements = m_dataFormat->getElements();
+                for (size_t i = 0; i < elements.size(); ++i) {
+                    elements[i]->bind(data, bufferLen);
+                }
+            }
+            
+            size_t Table::read(size_t recordNumber) {
 
-
-            void Table::read(size_t recordNumber) {
-
+                if ( recordNumber >= m_tableSize ) return 0;
                 vector<boost::shared_ptr<Element> > elements = m_dataFormat->getElements();
                 for (size_t i = 0; i < elements.size(); ++i) {
                     KARABO_LOG_FRAMEWORK_TRACE_CF << "Table::read  element " << i;
                     elements[i]->read(recordNumber);
                 }
+                return 1ul;
 
             }
-            //
-            //            void Table::readBuffer(karabo::util::Hash& data, size_t recordNumber, size_t len) {
-            //                r_read(data, recordNumber, len, m_recordFormatHash);
-            //            }
-            //
-            //            void Table::read(size_t recordNumber) {
-            //                r_read(m_readData, recordNumber, m_recordFormatHash);
-            //            }
-            //
-            //            void Table::readAttributes(Hash & attr) {
-            //                r_readAttributes(attr, m_recordFormatHash);
-            //            }
-            //
+            
+            size_t Table::read(size_t recordNumber, size_t len) {
 
+                size_t numberReadRecords = (recordNumber + len ) < m_tableSize ? len : (m_tableSize - recordNumber);
+                vector<boost::shared_ptr<Element> > elements = m_dataFormat->getElements();
+                for (size_t i = 0; i < elements.size(); ++i) {
+                    KARABO_LOG_FRAMEWORK_TRACE_CF << "Table::read  element " << i;
+                    elements[i]->read(recordNumber, numberReadRecords);
+                }
+                return numberReadRecords;
+            }
+            
 
             size_t Table::size() {
                 return m_tableSize;

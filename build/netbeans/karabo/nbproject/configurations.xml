@@ -47,7 +47,6 @@
         <itemPath>../../../src/karabo/io/h5/TypeTraits.cc</itemPath>
         <itemPath>../../../src/karabo/io/h5/TypeTraits.hh</itemPath>
         <itemPath>../../../src/karabo/io/h5/ioProfiler.hh</itemPath>
-        <itemPath>../../../src/karabo/io/h5/ioTracer.hh</itemPath>
       </logicalFolder>
       <logicalFolder name="f3" displayName="Input" projectFiles="true">
         <itemPath>../../../src/karabo/io/AbstractInput.hh</itemPath>
@@ -681,11 +680,6 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/io/h5/ioProfiler.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/io/h5/ioTracer.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -1910,11 +1904,6 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/io/h5/ioProfiler.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/io/h5/ioTracer.hh"
             ex="false"
             tool="3"
             flavor2="0">
