@@ -25,6 +25,8 @@ namespace karabo {
 
         namespace h5 {
 
+            #define _LOGGER_CATEGORY "karabo.io.h5.DatasetWriter"
+            
             template <typename T>
             class DatasetWriter {
 
@@ -93,7 +95,7 @@ namespace karabo {
 
 
                 void write(const karabo::util::Hash::Node& node, hid_t dataSet, hid_t fileDataSpace) {
-                    KARABO_LOG_FRAMEWORK_TRACE_CF << "entered (vector)";
+                    KARABO_LOG_FRAMEWORK_TRACE_C(_LOGGER_CATEGORY) << "entered write(vector)";
                     const std::vector<T>& vec = node.getValue < std::vector<T> >();
                     const T* ptr = &vec[0];
                     hid_t tid = ScalarTypes::getHdf5NativeType<T > ();
@@ -104,6 +106,7 @@ namespace karabo {
 
                 void write(const karabo::util::Hash::Node& node, hsize_t len, hid_t dataSet, hid_t fileDataSpace) {
 
+                    KARABO_LOG_FRAMEWORK_TRACE_C(_LOGGER_CATEGORY) << "entered write(vector, buffer)";
                     const std::vector<T>& vec = node.getValue< std::vector<T> >();
                     const T* ptr = &vec[0];
                     hid_t tid = ScalarTypes::getHdf5NativeType<T > ();
@@ -136,7 +139,7 @@ namespace karabo {
                 }
 
                 void write(const karabo::util::Hash::Node& node, hid_t dataSet, hid_t fileDataSpace) {
-                    KARABO_LOG_FRAMEWORK_TRACE_CF << "entered (pointer)";
+                    KARABO_LOG_FRAMEWORK_TRACE_C(_LOGGER_CATEGORY) << "entered write(pointer)";
                     const T* ptr = node.getValue<T*>();
                     hid_t tid = ScalarTypes::getHdf5NativeType<T > ();
                     Dataset::getDataSpaceInfo(this->m_memoryDataSpace, "DatasetWriter::write pointer m_memoryDataSpace");
@@ -147,7 +150,7 @@ namespace karabo {
                 }
 
                 void write(const karabo::util::Hash::Node& node, hsize_t len, hid_t dataSet, hid_t fileDataSpace) {
-                    KARABO_LOG_FRAMEWORK_TRACE_CF << "entered (pointer, buffer)";
+                    KARABO_LOG_FRAMEWORK_TRACE_C(_LOGGER_CATEGORY) << "entered write(pointer, buffer)";
                     const T* ptr = node.getValue<T* >();
 
                     hid_t tid = ScalarTypes::getHdf5NativeType<T > ();
@@ -180,7 +183,7 @@ namespace karabo {
                 }
 
                 void write(const karabo::util::Hash::Node& node, hid_t dataSet, hid_t fileDataSpace) {
-                    KARABO_LOG_FRAMEWORK_TRACE_CF << "entered (vector)";
+                    KARABO_LOG_FRAMEWORK_TRACE_C(_LOGGER_CATEGORY) << "entered write(bool, vector)";
                     const std::vector<bool>& vec = node.getValue < std::vector<bool> > ();
                     hsize_t len = vec.size();
                     std::vector<unsigned char> converted(len, 0);
@@ -196,6 +199,7 @@ namespace karabo {
 
                 void write(const karabo::util::Hash::Node& node, hsize_t len, hid_t dataSet, hid_t fileDataSpace) {
 
+                    KARABO_LOG_FRAMEWORK_TRACE_C(_LOGGER_CATEGORY) << "entered write(bool, vector, buffer)";
                     const std::vector<bool>& vec = node.getValue < std::vector<bool> >();
                     hsize_t lenTotal = vec.size();
                     std::vector<unsigned char> converted(lenTotal, 0);
@@ -234,7 +238,7 @@ namespace karabo {
                 }
 
                 void write(const karabo::util::Hash::Node& node, hid_t dataSet, hid_t fileDataSpace) {
-                    KARABO_LOG_FRAMEWORK_TRACE_CF << "entered (ptr)";
+                    KARABO_LOG_FRAMEWORK_TRACE_C(_LOGGER_CATEGORY) << "entered write(bool, ptr)";
 
                     hsize_t len = m_dims.size();
                     const bool* ptr = node.getValue<bool*>();
@@ -250,7 +254,7 @@ namespace karabo {
                 }
 
                 void write(const karabo::util::Hash::Node& node, hsize_t len, hid_t dataSet, hid_t fileDataSpace) {
-                    KARABO_LOG_FRAMEWORK_TRACE_CF << "entered (ptr, buffer)";
+                    KARABO_LOG_FRAMEWORK_TRACE_C(_LOGGER_CATEGORY) << "entered write(bool, ptr, buffer)";
 
                     hsize_t lenTotal = len * m_dims.size();
                     const bool* ptr = node.getValue<bool*>();
@@ -285,7 +289,7 @@ namespace karabo {
                 }
 
                 void write(const karabo::util::Hash::Node& node, hid_t dataSet, hid_t fileDataSpace) {
-                    KARABO_LOG_FRAMEWORK_TRACE_CF << "entered (scalar)";
+                    KARABO_LOG_FRAMEWORK_TRACE_C(_LOGGER_CATEGORY) << "entered write(scalar)";
                     const T& value = node.getValue<T>();
                     hid_t tid = ScalarTypes::getHdf5NativeType<T > ();
                     herr_t status = H5Dwrite(dataSet, tid, this->m_memoryDataSpace, fileDataSpace, H5P_DEFAULT, &value);
@@ -294,15 +298,15 @@ namespace karabo {
                 }
 
                 void write(const karabo::util::Hash::Node& node, hsize_t len, hid_t dataSet, hid_t fileDataSpace) {
-                    KARABO_LOG_FRAMEWORK_TRACE_CF << "entered (scalar, buffer)";
+                    KARABO_LOG_FRAMEWORK_TRACE_C(_LOGGER_CATEGORY) << "entered write(scalar, buffer)";
                     const T* ptr = 0;
 
 
                     if (node.is<T*>()) {
-                        KARABO_LOG_FRAMEWORK_TRACE_CF << "buffer is raw pointer";
+                        KARABO_LOG_FRAMEWORK_TRACE_C(_LOGGER_CATEGORY) << "buffer is raw pointer";
                         ptr = node.getValue<T*>();
                     } else if (node.is< std::vector<T> >()) {
-                        KARABO_LOG_FRAMEWORK_TRACE_CF << "buffer is a vector";
+                        KARABO_LOG_FRAMEWORK_TRACE_C(_LOGGER_CATEGORY) << "buffer is a vector";
                         const std::vector<T>& vec = node.getValue<std::vector<T> >();
                         ptr = &vec[0];
                     } else {
@@ -330,7 +334,7 @@ namespace karabo {
                 }
 
                 void write(const karabo::util::Hash::Node& node, hid_t dataSet, hid_t fileDataSpace) {
-                    KARABO_LOG_FRAMEWORK_TRACE_CF << "entered (bool)";
+                    KARABO_LOG_FRAMEWORK_TRACE_C(_LOGGER_CATEGORY) << "entered write(bool)";
                     const bool& value = node.getValue<bool>();
                     unsigned char converted = boost::numeric_cast<unsigned char>(value);
                     hid_t tid = ScalarTypes::getHdf5NativeType<bool> ();
@@ -340,7 +344,7 @@ namespace karabo {
                 }
 
                 void write(const karabo::util::Hash::Node& node, hsize_t len, hid_t dataSet, hid_t fileDataSpace) {
-                    KARABO_LOG_FRAMEWORK_TRACE_CF << "entered (bool, buffer) len=" << len;
+                    KARABO_LOG_FRAMEWORK_TRACE_C(_LOGGER_CATEGORY) << "entered write(bool, buffer) len=" << len;
 
                     const bool* ptr = node.getValue<bool*>();
                     std::vector<unsigned char> converted(len, 0);
@@ -356,6 +360,7 @@ namespace karabo {
 
             };
 
+            #undef _LOGGER_CATEGORY
 
         }
     }

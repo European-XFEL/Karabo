@@ -14,11 +14,12 @@
 class H5File_Test : public CPPUNIT_NS::TestFixture {
 
     CPPUNIT_TEST_SUITE(H5File_Test);
-    //    CPPUNIT_TEST(testBufferWrite);
-    CPPUNIT_TEST(testVectorBufferWrite);
+    CPPUNIT_TEST(testBufferWrite);
+    CPPUNIT_TEST(testBufferRead);
+    //    CPPUNIT_TEST(testVectorBufferWrite);
     CPPUNIT_TEST(testWrite);
     CPPUNIT_TEST(testRead);
-    CPPUNIT_TEST(testReadTable);                
+    CPPUNIT_TEST(testReadTable);
     CPPUNIT_TEST_SUITE_END();
 
 public:
@@ -33,16 +34,17 @@ public:
 private:
 
     size_t m_numberOfRecords;
-    
+
     size_t m_v3Size;
     std::vector<std::string> m_v3;
-    
+
 
     bool m_reportTime;
-    
+
     void testWrite();
     void testBufferWrite();
-    void testVectorBufferWrite();
+    void testBufferRead();
+    //void testVectorBufferWrite();
     void testRead();
     void testReadTable();
 };

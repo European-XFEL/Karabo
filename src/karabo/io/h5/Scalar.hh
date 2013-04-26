@@ -92,24 +92,43 @@ namespace karabo {
                         m_datasetReader->bind(&value);
                         //m_readData = &value;
                     }
+                }
+
+                void bind(karabo::util::Hash & data, hsize_t bufferLen) {
+
+                    boost::optional<karabo::util::Hash::Node&> node = data.find(m_key, '/');
+
+                    if (!node) {
+                        std::vector<T>& buf = data.bindReference<std::vector<T> > (m_key, '/');
+                        buf.resize(bufferLen);
+                        m_datasetReader->bind(buf);
+                    } else {
+                        if (karabo::util::Types::isVector(node->getType())) {
+                            std::vector<T>& buf = node->getValue<std::vector<T> >();                            
+                            m_datasetReader->bind(buf);
+                        } else if (karabo::util::Types::isPointer(node->getType())) {
+                            T* ptr = node->getValue<T* >();
+                            m_datasetReader->bind(ptr);
+                            data.setAttribute(m_key, "dims", dims().toVector(), '/');
+                        }
+                    }
 
                 }
 
                 void readRecord(const hid_t& dataSet, const hid_t& fileDataSpace) {
                     try {
                         m_datasetReader->read(dataSet, fileDataSpace);
-                       // DatasetReader<T>::read(m_readData, dataSet, m_memoryDataSpace1, fileDataSpace);
                     } catch (...) {
                         KARABO_RETHROW;
                     }
                 }
 
                 void readRecords(hsize_t len, const hid_t& dataSet, const hid_t& fileDataSpace) {
-                    //                    try {
-                    //                        DatasetReader<T>::read(m_readData, len, dataSet, m_memoryDataSpace1, fileDataSpace);
-                    //                    } catch (...) {
-                    //                        KARABO_RETHROW;
-                    //                    }
+                    try {
+                        m_datasetReader->read(len, dataSet, fileDataSpace);
+                    } catch (...) {
+                        KARABO_RETHROW;
+                    }
 
                 }
 
