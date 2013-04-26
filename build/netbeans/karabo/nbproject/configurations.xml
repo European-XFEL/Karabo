@@ -2301,6 +2301,11 @@
             tool="1"
             flavor2="0">
       </item>
+      <item path="../../../src/karabo/tests/webAuth/Authenticate_Test.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
       <item path="../../../src/karabo/tests/webAuth/Authenticate_Test.hh"
             ex="false"
             tool="3"
@@ -2559,6 +2564,56 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/util/util.hh" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../../../src/karabo/webAuth/Authenticator.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/webAuth/Authenticator.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/webAuth/ClientAuthentication.h"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/webAuth/soapAuthenticationPortBindingProxy.cpp"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/webAuth/soapAuthenticationPortBindingProxy.h"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/webAuth/soapC.cpp"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/webAuth/soapH.h"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/webAuth/soapStub.h"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/webAuth/stdsoap2.cpp"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/webAuth/stdsoap2.h"
+            ex="false"
+            tool="3"
+            flavor2="0">
       </item>
       <item path="../../../src/karabo/xms/Memory.cc" ex="false" tool="1" flavor2="0">
       </item>
