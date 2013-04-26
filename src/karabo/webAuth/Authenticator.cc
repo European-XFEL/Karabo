@@ -22,7 +22,9 @@ namespace karabo {
         Authenticator::Authenticator(const std::string& username, const std::string& password, const std::string& provider,
                                      const std::string& ipAddress, const std::string& hostname, const std::string& portNumber,
                                      const std::string& software)
-        : m_username(username), m_password(password), m_provider(provider), m_ipAddress(ipAddress), m_hostname(hostname), m_portNumber(portNumber), m_software(software), m_service(new AuthenticationPortBindingProxy) {
+        : m_username(username), m_password(password), m_provider(provider), m_ipAddress(ipAddress), m_hostname(hostname), m_portNumber(portNumber), m_software(software), m_service(new AuthenticationPortBindingProxy),
+        // Variables initialized with defaults (otherwise primitive types get whatever arbitrary junk happened to be at that memory location previously)
+        m_userId(-100), m_softwareId(-100), m_roleId(-100), m_nonce(""), m_sessionToken(""), m_welcomeMessage(""), m_roleDesc("") {
         }
 
 
@@ -76,17 +78,17 @@ namespace karabo {
         }
 
 
-        unsigned long long int Authenticator::getRoleId() const {
+        long long int Authenticator::getRoleId() const {
             return m_roleId;
         }
 
 
-        unsigned long long int Authenticator::getSoftwareId() const {
+        long long int Authenticator::getSoftwareId() const {
             return m_softwareId;
         }
 
 
-        unsigned long long int Authenticator::getUserId() const {
+        long long int Authenticator::getUserId() const {
             return m_userId;
         }
 
@@ -109,17 +111,17 @@ namespace karabo {
         }
 
 
-        void Authenticator::setRoleId(const unsigned long long int roleId) {
+        void Authenticator::setRoleId(const long long int roleId) {
             this->m_roleId = roleId;
         }
 
 
-        void Authenticator::setSoftwareId(const unsigned long long int softwareId) {
+        void Authenticator::setSoftwareId(const long long int softwareId) {
             this->m_softwareId = softwareId;
         }
 
 
-        void Authenticator::setUserId(const unsigned long long int userId) {
+        void Authenticator::setUserId(const long long int userId) {
             this->m_userId = userId;
         }
 
@@ -185,8 +187,10 @@ namespace karabo {
                     setSessionToken("");
                     setWelcomeMessage("");
                     setRoleDesc("");
-                    //setRoleId(NULL);
-                    //m_roleId = NULL;
+                    //
+                    setRoleId(-100);
+                    setUserId(-100);
+                    setSoftwareId(-100);
                 }
             } else {
                 throw KARABO_NETWORK_EXCEPTION("Error: Problem with SOAP message: " + soapMessageNotOk(m_service->soap));
