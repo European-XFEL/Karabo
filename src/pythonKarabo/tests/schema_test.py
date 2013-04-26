@@ -343,10 +343,27 @@ class  Schema_TestCase(unittest.TestCase):
                     self.assertEqual(self.schema.hasAssignment(key), True)
                     self.assertEqual(self.schema.isAssignmentOptional(key), True)
                     self.assertEqual(self.schema.hasAccessMode(key), True)
-                    self.assertEqual(self.schema.isAccessReadOnly(key), True)
+                    self.assertEqual(self.schema.isAccessReadOnly(key), True)   
                     
         except Exception,e:
             self.fail("test_perKeyFunctionality exception group 1: " + str(e))
+    
+    def test_logger(self): 
+        s1 = Hash("Category.name", "s1", "Category.priority", "DEBUG")
+        conf = Hash("categories[0]", s1, "appenders[0].Ostream.layout", "Pattern")
+        Logger.configure(conf)
+        
+        testLog = Logger.getLogger("TestLogA")
+        testLog.INFO("This is INFO message")
+        testLog.DEBUG("This is DEBUG message") #will not be shown (default priority "INFO")
+        testLog.WARN("This is WARN message")
+        testLog.ERROR("This is ERROR message")
+        
+        slog = Logger.getLogger("s1")
+        slog.INFO("This is INFO message")
+        slog.DEBUG("This is DEBUG message")
+        slog.WARN("This is WARN message")
+        slog.ERROR("This is ERROR message")
     
     def test_helpFunction(self):
         pass
