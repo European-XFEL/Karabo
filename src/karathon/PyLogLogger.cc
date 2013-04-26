@@ -8,13 +8,13 @@
 
 #include "boost/python.hpp"
 
-#include <log4cpp/Category.hh>
-#include <log4cpp/Priority.hh>
+//#include <log4cpp/Category.hh>
+//#include <log4cpp/Priority.hh>
 #include <karabo/log/Logger.hh>
-#include "PythonFactoryMacros.hh"
 
 namespace bp = boost::python;
 using namespace karabo::log;
+using namespace karabo::util;
 using namespace log4cpp;
 using namespace std;
 
@@ -56,52 +56,19 @@ void exportPyLogLogger() {
     }
 
     {//karabo::log::Logger
-        
-        KARABO_PYTHON_FACTORY_TYPEDEFS(Logger);
-        
-        bp::class_< Logger > ("Logger")
-            .def("initialize"
-                , (void (Logger::*)())(&Logger::initialize))
-
-            .def("logger"
-                , (log4cpp::Category & (*)(string const &))(&Logger::logger)
-                , bp::arg("logCategory")
-                , bp::return_internal_reference<> ()).staticmethod("logger")
-
-            .def("configure"
-                , (void (Logger::*)(karabo::util::Hash const &))(&Logger::configure)
-                , (bp::arg("input")))
+        bp::class_< Logger > log("Logger", bp::init<Hash const &>((bp::arg("input"))));
+            log.def("configure"
+                , &Logger::configure
+                , (bp::arg("config") = Hash())).staticmethod("configure");
+            
+            log.def("reset", &Logger::reset).staticmethod("reset");
+            
+            log.def("getLogger"
+                , (log4cpp::Category& (*)(string const &))(&Logger::getLogger)
+                , (bp::arg("logCategorie"))
+                , bp::return_internal_reference<> ()).staticmethod("getLogger");
                 
-            KARABO_PYTHON_FACTORY_BINDING_BASE(Logger)
-           ;
-        
         bp::register_ptr_to_python< boost::shared_ptr< Logger > >();
     }
     
-    { //log4cpp::Priority
-        bp::class_<log4cpp::Priority> p("Priority");
-        
-        bp::enum_<log4cpp::Priority::PriorityLevel>("PriorityLevel")
-            .value("EMERG", log4cpp::Priority::EMERG)
-            .value("FATAL", log4cpp::Priority::FATAL)
-            .value("ALERT", log4cpp::Priority::ALERT)
-            .value("CRIT", log4cpp::Priority::CRIT)
-            .value("ERROR", log4cpp::Priority::ERROR)
-            .value("WARN", log4cpp::Priority::WARN)
-            .value("NOTICE", log4cpp::Priority::NOTICE)
-            .value("INFO", log4cpp::Priority::INFO)
-            .value("DEBUG", log4cpp::Priority::DEBUG)
-            .value("NOTSET", log4cpp::Priority::NOTSET)
-            .export_values();
-
-            p.def("getPriorityName"
-                , (string const & (*)(int))(&log4cpp::Priority::getPriorityName)
-                , bp::arg("priority")
-                , bp::return_value_policy< bp::copy_const_reference >()).staticmethod("getPriorityName");
-
-            p.def("getPriorityValue"
-                , (int (*)(string const &))(&log4cpp::Priority::getPriorityValue)
-                , bp::arg("priorityName")).staticmethod("getPriorityValue");
-
-    }
 }
