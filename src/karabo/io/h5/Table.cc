@@ -32,14 +32,10 @@ namespace karabo {
         namespace h5 {
 
 
-            const char* Table::NUMBER_OF_RECORDS = "numberOfRecords";
+            const char* Table::TABLE_SIZE = "tableSize";
 
 
-            Table::~Table() {
-                //                                KARABO_PROFILER_REPORT_TABLE1("write1");
-                //                KARABO_PROFILER_REPORT_TABLE1("test");
-                //                std::clog << "test" << ": " << table1 << std::endl;
-                //                std::clog << "test" << ": " << table1.getTime("write1").sec << " " << table1.getTime("write1").nsec << std::endl;
+            Table::~Table() {             
             }
 
 
@@ -124,28 +120,24 @@ namespace karabo {
 
 
             void Table::append(const karabo::util::Hash& data) {
-                size_t recordNumber = m_numberOfRecords;
+                size_t recordNumber = m_tableSize;
                 write(data, recordNumber);
             }
 
 
             void Table::write(const karabo::util::Hash& data, size_t recordId) {
 
-
-
-                KARABO_PROFILER_START_TABLE1("write1")
                 vector<boost::shared_ptr<Element> > elements = m_dataFormat->getElements();
                 for (size_t i = 0; i < elements.size(); ++i) {
                     elements[i]->write(data, recordId);
                 }
-                if (m_numberOfRecords <= recordId) {
-                    m_numberOfRecords++;
+                if (m_tableSize <= recordId) {
+                    m_tableSize = recordId + 1;
+                    updateTableSizeAttribute();
                 }
                 KARABO_CHECK_HDF5_STATUS(H5Fflush(m_h5file, H5F_SCOPE_LOCAL));
-                updateNumberOfRecordsAttribute();
+           
 
-                KARABO_PROFILER_STOP_TABLE1
-                        //                if (recordNumber >= m_numberOfRecords && recordNumber % m_chunkSize == 0) {
             }
 
 
@@ -155,11 +147,18 @@ namespace karabo {
                 for (size_t i = 0; i < elements.size(); ++i) {
                     elements[i]->write(data, recordId, len);
                 }
-                if (m_numberOfRecords <= recordId) {
-                    m_numberOfRecords += len;
+
+                hsize_t possibleNewSize = recordId + len;
+                if (m_tableSize < possibleNewSize ) {
+                    m_tableSize = possibleNewSize;
+                    updateTableSizeAttribute();
+                }
+
+                if (m_tableSize <= recordId) {
+                    m_tableSize += len;
                 }
                 KARABO_CHECK_HDF5_STATUS(H5Fflush(m_h5file, H5F_SCOPE_GLOBAL));
-                updateNumberOfRecordsAttribute();
+                updateTableSizeAttribute();
             }
 
 
@@ -258,8 +257,8 @@ namespace karabo {
             //
 
 
-            size_t Table::getNumberOfRecords() {
-                return m_numberOfRecords;
+            size_t Table::size() {
+                return m_tableSize;
             }
 
 
@@ -345,15 +344,15 @@ namespace karabo {
             void Table::createInitialNumberOfRecordsAttribute() {
 
                 hid_t dataSpace = H5Screate(H5S_SCALAR);
-                m_numberOfRecordsAttribute = H5Acreate(m_group, NUMBER_OF_RECORDS, H5T_STD_U64LE, dataSpace, H5P_DEFAULT, H5P_DEFAULT);
+                m_numberOfRecordsAttribute = H5Acreate(m_group, TABLE_SIZE, H5T_STD_U64LE, dataSpace, H5P_DEFAULT, H5P_DEFAULT);
                 KARABO_CHECK_HDF5_STATUS(m_numberOfRecordsAttribute);
-                updateNumberOfRecordsAttribute();
+                updateTableSizeAttribute();
             }
 
 
-            void Table::updateNumberOfRecordsAttribute() {
+            void Table::updateTableSizeAttribute() {
                 hid_t type = H5Tcopy(H5T_NATIVE_HSIZE);
-                herr_t status = H5Awrite(m_numberOfRecordsAttribute, type, &m_numberOfRecords);
+                herr_t status = H5Awrite(m_numberOfRecordsAttribute, type, &m_tableSize);
                 if (status < 0) {
                     throw KARABO_HDF_IO_EXCEPTION("Could not write numberOfRecords attribute");
                 }
@@ -362,19 +361,19 @@ namespace karabo {
 
             void Table::retrieveNumberOfRecordsFromFile() {
 
-                if (hasAttribute(m_group, NUMBER_OF_RECORDS)) {
-                    m_numberOfRecordsAttribute = H5Aopen(m_group, NUMBER_OF_RECORDS, H5P_DEFAULT);
+                if (hasAttribute(m_group, TABLE_SIZE)) {
+                    m_numberOfRecordsAttribute = H5Aopen(m_group, TABLE_SIZE, H5P_DEFAULT);
                     KARABO_CHECK_HDF5_STATUS(m_numberOfRecordsAttribute);
 
-                    KARABO_CHECK_HDF5_STATUS(H5Aread(m_numberOfRecordsAttribute, H5T_NATIVE_HSIZE, &m_numberOfRecords));
-                    KARABO_LOG_FRAMEWORK_TRACE_CF << "numberOfRecords attribute for " << m_name.c_str() << " is " << m_numberOfRecords;
+                    KARABO_CHECK_HDF5_STATUS(H5Aread(m_numberOfRecordsAttribute, H5T_NATIVE_HSIZE, &m_tableSize));
+                    KARABO_LOG_FRAMEWORK_TRACE_CF << "numberOfRecords attribute for " << m_name.c_str() << " is " << m_tableSize;
                 } else {
                     KARABO_LOG_FRAMEWORK_TRACE_CF << "numberOfRecords attribute not defined for " << m_name;
                     //calculateNumberOfRecords();
-                    KARABO_LOG_FRAMEWORK_TRACE_CF << "Calculated number of records: " << m_numberOfRecords;
+                    KARABO_LOG_FRAMEWORK_TRACE_CF << "Calculated number of records: " << m_tableSize;
                 }
             }
-            
+
             //
             //            void Table::calculateNumberOfRecords() {
             //                m_numberOfRecords = r_calculateNumberOfRecords(m_recordFormatHash);
@@ -390,17 +389,17 @@ namespace karabo {
 
                 try {
 
-//                    const Hash& dataFormatConfig = dataFormat->getConfig();
-                    
-//                    Schema schema = Format::getSchema("Format");
+                    //                    const Hash& dataFormatConfig = dataFormat->getConfig();
+
+                    //                    Schema schema = Format::getSchema("Format");
                     Hash persistentDataFormatConfig;
-//                    Hash& elements = persistentDataFormatConfig.bindReference<Hash>("Format");
-//                    HashFilter::byTag(schema, dataFormatConfig.get<Hash>("Format"), elements, "persistent");
+                    //                    Hash& elements = persistentDataFormatConfig.bindReference<Hash>("Format");
+                    //                    HashFilter::byTag(schema, dataFormatConfig.get<Hash>("Format"), elements, "persistent");
 
                     dataFormat->getPersistentConfig(persistentDataFormatConfig);
-                    
+
                     KARABO_LOG_FRAMEWORK_TRACE_CF << persistentDataFormatConfig;
-                    
+
                     Hash c("Xml.indentation", 1, "Xml.writeDataTypes", false);
                     TextSerializer<Hash>::Pointer serializer = TextSerializer<Hash>::create(c);
 

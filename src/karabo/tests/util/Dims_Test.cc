@@ -34,8 +34,17 @@ void Dims_Test::testDims() {
 
     Dims a0;
     CPPUNIT_ASSERT(a0.rank() == 0);
-    CPPUNIT_ASSERT(a0.size() == 1);
+    CPPUNIT_ASSERT(a0.size() == 0);
+    
+    Dims a1(1);
+    CPPUNIT_ASSERT(a1.rank() == 1);
+    CPPUNIT_ASSERT(a1.size() == 1);
 
+    Dims a2(1,1);
+    CPPUNIT_ASSERT(a2.rank() == 2);
+    CPPUNIT_ASSERT(a2.size() == 1);
+
+    
     Dims a(2, 12);
     CPPUNIT_ASSERT(a.rank() == 2);
     CPPUNIT_ASSERT(a.size() == 24);
@@ -113,7 +122,7 @@ void Dims_Test::testArrayTools() {
         //clog << "aaPtr:  " << aaPtr << " value: " << *aaPtr << endl;
         CPPUNIT_ASSERT(*aaPtr == 287);
         CPPUNIT_ASSERT(dd.rank() == 0);
-        CPPUNIT_ASSERT(dd.size() == 1);
+        CPPUNIT_ASSERT(dd.size() == 0);
     }
 
 }

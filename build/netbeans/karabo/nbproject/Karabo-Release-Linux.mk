@@ -47,6 +47,7 @@ OBJECTFILES= \
 	${OBJECTDIR}/_ext/1072794519/TextFileOutput.o \
 	${OBJECTDIR}/_ext/769817549/Attribute.o \
 	${OBJECTDIR}/_ext/769817549/Dataset.o \
+	${OBJECTDIR}/_ext/769817549/DatasetReader.o \
 	${OBJECTDIR}/_ext/769817549/DatasetWriter.o \
 	${OBJECTDIR}/_ext/769817549/Element.o \
 	${OBJECTDIR}/_ext/769817549/ErrorHandler.o \
@@ -90,6 +91,7 @@ OBJECTFILES= \
 	${OBJECTDIR}/_ext/163016059/StringTools.o \
 	${OBJECTDIR}/_ext/163016059/Time.o \
 	${OBJECTDIR}/_ext/163016059/Timer.o \
+	${OBJECTDIR}/_ext/163016059/Timestamp.o \
 	${OBJECTDIR}/_ext/163016059/Units.o \
 	${OBJECTDIR}/_ext/163016059/Validator.o \
 	${OBJECTDIR}/_ext/1103122747/Memory.o \
@@ -126,7 +128,7 @@ FFLAGS=
 ASFLAGS=
 
 # Link Libraries and Options
-LDLIBSOPTIONS=-L/opt/local/lib/nss -L/opt/local/lib/nspr -L${KARABO}/extern/lib -Wl,-rpath,\$$ORIGIN/../extern/lib -lboost_chrono -lboost_date_time -lboost_filesystem -lboost_python -lboost_regex -lboost_signals -lboost_system -lboost_thread -lcppunit -lhdf5 -llog4cpp -lnetsnmp -lnetsnmpagent -lnetsnmphelpers -lnetsnmpmibs -lnetsnmptrapd -lopenmqc -lgsoap++ -lgsoapck++ -lpython2.7 -ldl -lpthread -lrt
+LDLIBSOPTIONS=-L/opt/local/lib/nss -L/opt/local/lib/nspr -L${KARABO}/extern/lib -Wl,-rpath,\$$ORIGIN/../extern/lib -lboost_chrono -lboost_date_time -lboost_filesystem -lboost_python -lboost_regex -lboost_signals -lboost_system -lboost_thread -lcppunit -lhdf5 -llog4cpp -lnetsnmp -lnetsnmpagent -lnetsnmphelpers -lnetsnmpmibs -lnetsnmptrapd -lopenmqc -lgsoap++ -lgsoapck++ -lpython2.7 -ldl -lpthread -lrt `cppunit-config --libs`  
 
 # Build Targets
 .build-conf: ${BUILD_SUBPROJECTS}
@@ -195,6 +197,11 @@ ${OBJECTDIR}/_ext/769817549/Dataset.o: ../../../src/karabo/io/h5/Dataset.cc
 	${MKDIR} -p ${OBJECTDIR}/_ext/769817549
 	${RM} $@.d
 	$(COMPILE.cc) -O2 -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/769817549/Dataset.o ../../../src/karabo/io/h5/Dataset.cc
+
+${OBJECTDIR}/_ext/769817549/DatasetReader.o: ../../../src/karabo/io/h5/DatasetReader.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/769817549
+	${RM} $@.d
+	$(COMPILE.cc) -O2 -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/769817549/DatasetReader.o ../../../src/karabo/io/h5/DatasetReader.cc
 
 ${OBJECTDIR}/_ext/769817549/DatasetWriter.o: ../../../src/karabo/io/h5/DatasetWriter.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/769817549
@@ -411,6 +418,11 @@ ${OBJECTDIR}/_ext/163016059/Timer.o: ../../../src/karabo/util/Timer.cc
 	${RM} $@.d
 	$(COMPILE.cc) -O2 -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163016059/Timer.o ../../../src/karabo/util/Timer.cc
 
+${OBJECTDIR}/_ext/163016059/Timestamp.o: ../../../src/karabo/util/Timestamp.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
+	${RM} $@.d
+	$(COMPILE.cc) -O2 -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163016059/Timestamp.o ../../../src/karabo/util/Timestamp.cc
+
 ${OBJECTDIR}/_ext/163016059/Units.o: ../../../src/karabo/util/Units.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
 	${RM} $@.d
@@ -473,7 +485,7 @@ ${TESTDIR}/TestFiles/f4: ${TESTDIR}/_ext/936498188/JmsBroker_Test.o ${TESTDIR}/_
 	${MKDIR} -p ${TESTDIR}/TestFiles
 	${LINK.cc}   -o ${TESTDIR}/TestFiles/f4 $^ ${LDLIBSOPTIONS} -Wl,-rpath,${KARABO}/lib -Wl,-rpath,${KARABO}/extern/lib `cppunit-config --libs`   
 
-${TESTDIR}/TestFiles/f1: ${TESTDIR}/_ext/1033104525/ConfigurationTestClasses.o ${TESTDIR}/_ext/1033104525/Dims_Test.o ${TESTDIR}/_ext/1033104525/Factory_Test.o ${TESTDIR}/_ext/1033104525/HashFilter_Test.o ${TESTDIR}/_ext/1033104525/Hash_Test.o ${TESTDIR}/_ext/1033104525/Schema_Test.o ${TESTDIR}/_ext/1033104525/Types_Test.o ${TESTDIR}/_ext/1033104525/utilTestRunner.o ${OBJECTFILES:%.o=%_nomain.o}
+${TESTDIR}/TestFiles/f1: ${TESTDIR}/_ext/1033104525/ConfigurationTestClasses.o ${TESTDIR}/_ext/1033104525/Dims_Test.o ${TESTDIR}/_ext/1033104525/Factory_Test.o ${TESTDIR}/_ext/1033104525/HashFilter_Test.o ${TESTDIR}/_ext/1033104525/Hash_Test.o ${TESTDIR}/_ext/1033104525/Schema_Test.o ${TESTDIR}/_ext/1033104525/Timestamp_Test.o ${TESTDIR}/_ext/1033104525/Types_Test.o ${TESTDIR}/_ext/1033104525/utilTestRunner.o ${OBJECTFILES:%.o=%_nomain.o}
 	${MKDIR} -p ${TESTDIR}/TestFiles
 	${LINK.cc}   -o ${TESTDIR}/TestFiles/f1 $^ ${LDLIBSOPTIONS} -Wl,-rpath,${KARABO}/lib -Wl,-rpath,${KARABO}/extern/lib 
 
@@ -592,6 +604,12 @@ ${TESTDIR}/_ext/1033104525/Schema_Test.o: ../../../src/karabo/tests/util/Schema_
 	${MKDIR} -p ${TESTDIR}/_ext/1033104525
 	${RM} $@.d
 	$(COMPILE.cc) -O2 -Wall -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/include/hdf5 -MMD -MP -MF $@.d -o ${TESTDIR}/_ext/1033104525/Schema_Test.o ../../../src/karabo/tests/util/Schema_Test.cc
+
+
+${TESTDIR}/_ext/1033104525/Timestamp_Test.o: ../../../src/karabo/tests/util/Timestamp_Test.cc 
+	${MKDIR} -p ${TESTDIR}/_ext/1033104525
+	${RM} $@.d
+	$(COMPILE.cc) -O2 -Wall -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/include/hdf5 -MMD -MP -MF $@.d -o ${TESTDIR}/_ext/1033104525/Timestamp_Test.o ../../../src/karabo/tests/util/Timestamp_Test.cc
 
 
 ${TESTDIR}/_ext/1033104525/Types_Test.o: ../../../src/karabo/tests/util/Types_Test.cc 
@@ -778,6 +796,19 @@ ${OBJECTDIR}/_ext/769817549/Dataset_nomain.o: ${OBJECTDIR}/_ext/769817549/Datase
 	    $(COMPILE.cc) -O2 -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/769817549/Dataset_nomain.o ../../../src/karabo/io/h5/Dataset.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/769817549/Dataset.o ${OBJECTDIR}/_ext/769817549/Dataset_nomain.o;\
+	fi
+
+${OBJECTDIR}/_ext/769817549/DatasetReader_nomain.o: ${OBJECTDIR}/_ext/769817549/DatasetReader.o ../../../src/karabo/io/h5/DatasetReader.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/769817549
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/769817549/DatasetReader.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} $@.d;\
+	    $(COMPILE.cc) -O2 -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/769817549/DatasetReader_nomain.o ../../../src/karabo/io/h5/DatasetReader.cc;\
+	else  \
+	    ${CP} ${OBJECTDIR}/_ext/769817549/DatasetReader.o ${OBJECTDIR}/_ext/769817549/DatasetReader_nomain.o;\
 	fi
 
 ${OBJECTDIR}/_ext/769817549/DatasetWriter_nomain.o: ${OBJECTDIR}/_ext/769817549/DatasetWriter.o ../../../src/karabo/io/h5/DatasetWriter.cc 
@@ -1337,6 +1368,19 @@ ${OBJECTDIR}/_ext/163016059/Timer_nomain.o: ${OBJECTDIR}/_ext/163016059/Timer.o 
 	    $(COMPILE.cc) -O2 -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163016059/Timer_nomain.o ../../../src/karabo/util/Timer.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/163016059/Timer.o ${OBJECTDIR}/_ext/163016059/Timer_nomain.o;\
+	fi
+
+${OBJECTDIR}/_ext/163016059/Timestamp_nomain.o: ${OBJECTDIR}/_ext/163016059/Timestamp.o ../../../src/karabo/util/Timestamp.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/163016059/Timestamp.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} $@.d;\
+	    $(COMPILE.cc) -O2 -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163016059/Timestamp_nomain.o ../../../src/karabo/util/Timestamp.cc;\
+	else  \
+	    ${CP} ${OBJECTDIR}/_ext/163016059/Timestamp.o ${OBJECTDIR}/_ext/163016059/Timestamp_nomain.o;\
 	fi
 
 ${OBJECTDIR}/_ext/163016059/Units_nomain.o: ${OBJECTDIR}/_ext/163016059/Units.o ../../../src/karabo/util/Units.cc 

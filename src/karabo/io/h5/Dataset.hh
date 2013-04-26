@@ -14,6 +14,7 @@
 
 #include <karabo/util/Configurator.hh>
 #include <karabo/util/Dims.hh>
+#include <karabo/log/Logger.hh>
 
 #include "Element.hh"
 #include "ErrorHandler.hh"
@@ -39,56 +40,56 @@ namespace karabo {
                 virtual ~Dataset() {
                 }
 
+
+
                 void write(const karabo::util::Hash& data, hsize_t recordId);
 
                 void write(const karabo::util::Hash& data, hsize_t recordId, hsize_t len);
 
+            protected:
                 virtual void writeNode(const karabo::util::Hash::Node& data,
                                        hid_t dataSet, hid_t fileDataSpace) = 0;
 
                 virtual void writeNode(const karabo::util::Hash::Node& data, hsize_t len,
                                        hid_t dataSet, hid_t fileDataSpace) = 0;
 
-                static hid_t dataSpace(karabo::util::Dims& dims) {
-                    if (dims.rank() == 0) {
-                        return dataSpace();
-                    }
-                    std::vector<hsize_t> curdims(dims.rank(), 0);
-                    std::vector<hsize_t> maxdims(dims.rank(), 0);
-                    for (size_t i = 0; i < dims.rank(); ++i) {
-                        curdims[i] = dims.extentIn(i);
-                        maxdims[i] = curdims[i];
-                    }
-                    maxdims[0] = H5S_UNLIMITED;
-                    hid_t ds = H5Screate_simple(dims.rank(), &curdims[0], &maxdims[0]);
-                    //std::clog << "dataSpace " << ds << std::endl;
-                    KARABO_CHECK_HDF5_STATUS(ds);
-                    return ds;
-                }
+            public:
 
-                static hid_t dataSpace1dim(hsize_t len) {
-                    hsize_t dims[] = {len};
-                    hsize_t maxdims[] = {H5S_UNLIMITED};
-                    hid_t ds = H5Screate_simple(1, dims, maxdims);
-                    KARABO_CHECK_HDF5_STATUS(ds);
-                    return ds;
-                }
+                void read(hsize_t recordId);
+                
+                void read(hsize_t recordId, hsize_t len);
 
             protected:
 
-                void createDataSetProperties(karabo::util::Dims& chunkDims) {
-                    m_dataSetProperties = H5Pcreate(H5P_DATASET_CREATE);
-                    herr_t status = H5Pset_layout(m_dataSetProperties, H5D_CHUNKED);
-                    KARABO_CHECK_HDF5_STATUS(status);
-                    std::clog << "Dataset property list created, chunkDims.rank=" << chunkDims.rank() << std::endl;
-                    if (m_compressionLevel > 0) {
-                        //         m_dataSetProperties->setShuffle();
-                        status = H5Pset_deflate(m_dataSetProperties, m_compressionLevel);
-                        KARABO_CHECK_HDF5_STATUS(status);
-                    }
-                    status = H5Pset_chunk(m_dataSetProperties, chunkDims.rank(), &(chunkDims.toVector())[0]);
-                    KARABO_CHECK_HDF5_STATUS(status);
+                virtual void readRecord(const hid_t& dataSet, const hid_t& fileDataSpace) = 0;
+                
+                virtual void readRecords(hsize_t len, const hid_t& dataSet, const hid_t& fileDataSpace) { 
+                    //TODO implement                    
                 }
+
+            public:
+
+                static void getDataSpaceInfo(hid_t dataSpace, const std::string& msg) {
+                    int ndims = H5Sget_simple_extent_ndims(dataSpace);
+                    KARABO_CHECK_HDF5_STATUS(ndims);
+                    std::vector<hsize_t> extent(ndims, 0);                   
+                    std::vector<hsize_t> maxExtent(ndims, 0);
+                    KARABO_CHECK_HDF5_STATUS(H5Sget_simple_extent_dims(dataSpace, &extent[0], &maxExtent[0]));
+                }
+
+                static hid_t dataSpace(const karabo::util::Dims& dims);
+
+                static hid_t dataSpace1dim(hsize_t len);
+
+                void create(hsize_t chunkSize);
+
+            protected:
+
+                const karabo::util::Dims& dims() const {
+                    return m_dims;
+                }
+
+                virtual hid_t getDatasetTypeId() = 0;
 
                 static hid_t dataSpace() {
                     hsize_t dims[] = {1};
@@ -104,55 +105,36 @@ namespace karabo {
 
                 static hid_t extend(hid_t dataSet, hid_t dataSpace, hsize_t len);
 
-                static hid_t selectScalarRecord(hid_t dataSpace, hsize_t recordId, hsize_t len = 1) {
-
-                    hsize_t start[] = {recordId};
-                    hsize_t count[] = {len};
-                    herr_t status = H5Sselect_hyperslab(dataSpace, H5S_SELECT_SET, start, NULL, count, NULL);
-                    KARABO_CHECK_HDF5_STATUS(status);
-                    return dataSpace;
-
-                }
-
-                static hid_t selectRecord(hid_t dataSpace, hsize_t recordId, hsize_t len = 1) {
-                    int ndims = H5Sget_simple_extent_ndims(dataSpace);
-                    KARABO_CHECK_HDF5_STATUS(ndims);
-
-                    std::vector<hsize_t> start(ndims, 0);
-                    start[0] = recordId;
-
-                    std::vector<hsize_t> count(ndims, 0);
-                    std::vector<hsize_t> maxExtent(ndims, 0);
-                    int status = H5Sget_simple_extent_dims(dataSpace, &count[0], &maxExtent[0]);
-                    KARABO_CHECK_HDF5_STATUS(status);
-                    count[0] = len;
-                    herr_t st = H5Sselect_hyperslab(dataSpace, H5S_SELECT_SET, &start[0], NULL, &count[0], NULL);
-                    KARABO_CHECK_HDF5_STATUS(st);
-                    return dataSpace;
-                }
-
 
                 virtual void open(hid_t group);
 
                 virtual void close();
 
-                int m_compressionLevel;
-
                 hid_t m_dataSet;
 
 
-                hid_t m_fileDataSpace;
+
+
+            private:
+                int m_compressionLevel;
                 hsize_t m_numberAllocatedRecords;
+
+                karabo::util::Dims m_dims; // dimension of written/read objects (= dataset dims minus one)
+
+                // description of file data space
                 std::vector<hsize_t> m_dataSetExtent;
                 std::vector<hsize_t> m_dataSetMaxExtent;
 
                 hsize_t m_chunkSize;
                 hid_t m_dataSetProperties;
 
-
+                hid_t m_fileDataSpace;
 
             private:
+
+                void configureDataDimensions(const karabo::util::Hash& input);
                 void configureFileDataSpace(const karabo::util::Hash& input);
+                void createDataSetProperties();
 
             };
 

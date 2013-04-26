@@ -18,6 +18,7 @@
         <itemPath>../../../src/karabo/io/h5/Attribute.hh</itemPath>
         <itemPath>../../../src/karabo/io/h5/Dataset.cc</itemPath>
         <itemPath>../../../src/karabo/io/h5/Dataset.hh</itemPath>
+        <itemPath>../../../src/karabo/io/h5/DatasetReader.cc</itemPath>
         <itemPath>../../../src/karabo/io/h5/DatasetReader.hh</itemPath>
         <itemPath>../../../src/karabo/io/h5/DatasetWriter.cc</itemPath>
         <itemPath>../../../src/karabo/io/h5/DatasetWriter.hh</itemPath>
@@ -555,6 +556,11 @@
       <item path="../../../src/karabo/io/h5/Dataset.hh"
             ex="false"
             tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/h5/DatasetReader.cc"
+            ex="false"
+            tool="1"
             flavor2="0">
       </item>
       <item path="../../../src/karabo/io/h5/DatasetReader.hh"
@@ -1781,6 +1787,11 @@
             tool="3"
             flavor2="0">
       </item>
+      <item path="../../../src/karabo/io/h5/DatasetReader.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
       <item path="../../../src/karabo/io/h5/DatasetReader.hh"
             ex="false"
             tool="3"
@@ -2297,11 +2308,6 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/tests/util/utilTestRunner.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/tests/webAuth/Authenticate_Test.cc"
             ex="false"
             tool="1"
             flavor2="0">
