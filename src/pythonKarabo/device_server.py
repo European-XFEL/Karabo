@@ -284,7 +284,7 @@ class DeviceServer(object):
             deviceClass.inheritanceChain = inheritanceChain
             try:
                 schema = PythonDevice.getSchema(deviceClass)
-                xsd = deviceClass.convertToXsd(schema)
+                xsd = SchemaXsdSerializer().save(schema)
                 self.availableModules[name] = deviceClass.__classid__
                 self.availableDevices[deviceClass.__classid__] = {"mustNotify": True, "module": name, "xsd": xsd}
                 self.newPluginAvailable()
@@ -331,23 +331,19 @@ class DeviceServer(object):
         self.log.DEBUG("Trying to start device with the following configuration:\n{}".format(conf))
         modified = Hash(conf)
         classId = iter(modified).next().key
-        modified.setFromPath(classId + ".devSrvInstId", self._devSrvInstId)
-        if modified.hasFromPath(classId + ".devInstId"):
-            devInstId = modified.getFromPath(classId + ".devInstId")
+        modified[classId + ".devSrvInstId"] = self._devSrvInstId
+        if classId + ".devInstId" in modified:
+            devInstId = modified[classId + ".devInstId"]
         else:
             devInstId = self._generateDefaultDeviceInstanceId(classId)
-            modified.setFromPath(classId + ".devInstId", devInstId)
-        d = self.availableDevices[classId]
-        module_name = d["module"]
-        # check that configuration parameters are valid
+            modified[classId + ".devInstId"] = devInstId
+        # create temporary instance to check the configuration parameters are valid
         try:
-            module = __import__(module_name)
-            userDeviceClass = getattr(module, classId)
-            schema = userDeviceClass.getExpectedParameters()
-            schema.validate(modified)
+            instance = PythonDevice.create(modified) # create instance in this interpreter
         except RuntimeError, e:
             self.log.WARN("Wrong input configuration for class '{}': {}".format(classId, e.message))
             return
+        module_name = self.availableDevices[classId]["module"]
         launcher = DeviceServer.Launcher(self.pluginsDir, module_name, classId, modified).start()
         self.deviceInstanceMap[devInstId] = launcher
 

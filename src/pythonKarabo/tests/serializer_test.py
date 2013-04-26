@@ -49,6 +49,18 @@ class  Serializer_TestCase(unittest.TestCase):
         except Exception,e:
             self.fail("test_serializer_schemaxsd exception group 1: " + str(e))
 
+    def test_serializer_hashbinary(self):
+        try:
+            ser = HashBinarySerializer()
+            hash = Hash('a.b.c',1,'x.y.z',[1,2,3,4,5,6,7])
+            archive = ser.save(hash)      # serialize hash
+            self.assertEqual(archive.__class__.__name__, 'bytearray')
+            hash2 = ser.load(archive)
+            self.assertEqual(similar(hash, hash2), True)
+            
+        except Exception,e:
+            self.fail("test_serializer_schemaxsd exception group 1: " + str(e))
+
         
 if __name__ == '__main__':
     unittest.main()
