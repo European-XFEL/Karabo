@@ -31,16 +31,17 @@ namespace karabo {
             std::string m_portNumber;
             std::string m_software;
             //
+            boost::shared_ptr<AuthenticationPortBindingProxy> m_service;
+
             // Information returned when login is made
-            unsigned long long int m_userId;
-            unsigned long long int m_softwareId;
-            unsigned long long int m_roleId;
+            long long int m_userId;
+            long long int m_softwareId;
+            long long int m_roleId;
             std::string m_nonce;
             std::string m_sessionToken;
             std::string m_welcomeMessage;
             std::string m_roleDesc;
 
-            boost::shared_ptr<AuthenticationPortBindingProxy> m_service;
 
         public:
 
@@ -70,9 +71,9 @@ namespace karabo {
             std::string getRoleDesc() const;
             std::string getWelcomeMessage() const;
 
-            unsigned long long int getRoleId() const;
-            unsigned long long int getSoftwareId() const;
-            unsigned long long int getUserId() const;
+            long long int getRoleId() const;
+            long long int getSoftwareId() const;
+            long long int getUserId() const;
 
         private:
 
@@ -83,9 +84,9 @@ namespace karabo {
             void setSessionToken(const std::string& newSessionToken);
             void setRoleDesc(const std::string& roleDesc);
             void setWelcomeMessage(const std::string& welcomeMessage);
-            void setRoleId(const unsigned long long int roleId);
-            void setSoftwareId(const unsigned long long int softwareId);
-            void setUserId(const unsigned long long int userId);
+            void setRoleId(const long long int roleId);
+            void setSoftwareId(const long long int softwareId);
+            void setUserId(const long long int userId);
 
             void printObject(ns1__loginResponse nsLoginResp);
 
