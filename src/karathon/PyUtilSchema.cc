@@ -727,6 +727,16 @@ namespace schemawrap {
         throw KARABO_PYTHON_EXCEPTION("Python argument in 'getAllowedStates' should be a string");
     }
 
+    
+    bp::object getAllowedRoles(const Schema& schema, const bp::object& obj) {
+        if (PyString_Check(obj.ptr())) {
+            string path = bp::extract<string>(obj);
+            vector<string> v = schema.getAllowedRoles(path);
+            return karabo::pyexfel::Wrapper::fromStdVectorToPyArray<string>(v);
+        }
+        throw KARABO_PYTHON_EXCEPTION("Python argument in 'getAllowedRoles' should be a string");
+    }
+    
     //*************************************************************
     // Wrapper functions for : getDefaultValue, getDefaultValueAs *
     //*************************************************************
@@ -979,7 +989,9 @@ void exportPyUtilSchema() {
         s.def("getTags", &schemawrap::getTags);
 
         s.def("getAllowedStates", &schemawrap::getAllowedStates);
-
+        
+        s.def("getAllowedRoles", &schemawrap::getAllowedRoles);
+        
         s.def("getDefaultValue", &schemawrap::getDefaultValue);
 
         s.def("getDefaultValueAs", &schemawrap::getDefaultValueAs);
