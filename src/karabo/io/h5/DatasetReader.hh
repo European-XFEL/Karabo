@@ -164,9 +164,7 @@ namespace karabo {
                 }
 
                 void read(hid_t dataSet, hid_t fileDataSpace) {
-
-
-                    KARABO_LOG_FRAMEWORK_TRACE << "vector size: ";
+                    
 
                     m_readData->m_ch.resize(m_readData->m_len);
                     char** chPtr = &(m_readData->m_ch[0]);
