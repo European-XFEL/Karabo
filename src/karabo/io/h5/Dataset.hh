@@ -63,9 +63,7 @@ namespace karabo {
 
                 virtual void readRecord(const hid_t& dataSet, const hid_t& fileDataSpace) = 0;
                 
-                virtual void readRecords(hsize_t len, const hid_t& dataSet, const hid_t& fileDataSpace) { 
-                    //TODO implement                    
-                }
+                virtual void readRecords(hsize_t len, const hid_t& dataSet, const hid_t& fileDataSpace) = 0;
 
             public:
 
@@ -99,7 +97,7 @@ namespace karabo {
                     return ds;
                 }
 
-                void extend(hsize_t recordId, hsize_t len);
+                void extendFileDataspace(hsize_t recordId, hsize_t len);
                 void selectFileRecords(hsize_t recordId, hsize_t len = 1);
 
 

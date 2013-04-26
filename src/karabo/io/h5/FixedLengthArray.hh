@@ -20,7 +20,6 @@
 #include <karabo/util/FromLiteral.hh>
 
 #include "Dataset.hh"
-//#include "Scalar.hh"
 #include "TypeTraits.hh"
 #include "DatasetReader.hh"
 #include "DatasetWriter.hh"
@@ -48,7 +47,6 @@ namespace karabo {
                     m_hashType = karabo::util::FromType<karabo::util::FromLiteral>::from(input.get<std::string>("type"));
 
                     std::string datasetWriterClassId = "DatasetWriter_" + input.get<std::string>("type");
-                    //std::string datasetReaderClassId = "DatasetReader_" + input.get<std::string>("type");
                     KARABO_LOG_FRAMEWORK_TRACE_CF << "dWClassId " << datasetWriterClassId;
                     KARABO_LOG_FRAMEWORK_TRACE_CF << "classId " << Self::classInfo().getClassId();
                     karabo::util::Hash config("dims", dims().toVector());
@@ -103,43 +101,44 @@ namespace karabo {
 
                 void bind(karabo::util::Hash & data) {
 
-                    //                    karabo::util::Hash config("dims", dims().toVector());
-                    //                    m_datasetReader = DatasetReader<T>::create("DatasetReader", config);
-
                     boost::optional<karabo::util::Hash::Node&> node = data.find(m_key, '/');
                     if (!node) {
                         std::vector<T>& vec = data.bindReference<std::vector<T> >(m_key, '/');
                         vec.resize(dims().size());
                         data.setAttribute(m_key, "dims", dims().toVector(), '/');
-                        //                        m_readData = DatasetReader<T>::getPointerFromVector(vec);
                         m_datasetReader->bind(vec);
 
                     } else {
                         if (karabo::util::Types::isVector(node->getType())) {
                             std::vector<T>& vec = node->getValue< std::vector<T> >();
-                            //                            m_readData = DatasetReader<T>::getPointerFromVector(vec);
                             m_datasetReader->bind(vec);
                         } else if (karabo::util::Types::isPointer(node->getType())) {
                             T* ptr = node->getValue<T* >();
                             m_datasetReader->bind(ptr);
-                            //                            m_readData = DatasetReader<T>::getPointerFromRaw(ptr, dims().size());
                             data.setAttribute(m_key, "dims", dims().toVector(), '/');
                         }
                     }
 
                 }
 
-                void readRecord(const hid_t& dataSet, const hid_t& fileDataSpace) {
+                void bind(karabo::util::Hash & data, hsize_t len) {
+                }
 
-                    Dataset::getDataSpaceInfo(m_memoryDataSpace1, "read memory data space");
-                    Dataset::getDataSpaceInfo(fileDataSpace, "read file data space");
+                void readRecord(const hid_t& dataSet, const hid_t& fileDataSpace) {
                     try {
                         m_datasetReader->read(dataSet, fileDataSpace);
-
-                        //DatasetReader<T>::read(m_readData, dataSet, m_memoryDataSpace1, fileDataSpace);
                     } catch (...) {
                         KARABO_RETHROW;
                     }
+                }
+
+                void readRecords(hsize_t len, const hid_t& dataSet, const hid_t& fileDataSpace) {
+                    try {
+                        m_datasetReader->read(len, dataSet, fileDataSpace);
+                    } catch (...) {
+                        KARABO_RETHROW;
+                    }
+
                 }
 
 
@@ -229,7 +228,7 @@ namespace karabo {
                 typename karabo::io::h5::DatasetReader<T>::Pointer m_datasetReader;
 
 
-            //    U m_readData; // this is a pointer to the data Hash (apart from case of bool and string type )
+                //    U m_readData; // this is a pointer to the data Hash (apart from case of bool and string type )
                 hid_t m_memoryDataSpace1; // memory data space for one record element, defined here for performance optimization
 
             };
@@ -245,8 +244,8 @@ namespace karabo {
             typedef FixedLengthArray<unsigned long long > UInt64ArrayElement;
             typedef FixedLengthArray<double> DoubleArrayElement;
             typedef FixedLengthArray<float> FloatArrayElement;
-//            typedef FixedLengthArray<std::string, boost::shared_ptr<DatasetReader<std::string>::Mapping > > StringArrayElement;
-//            typedef FixedLengthArray<bool, boost::shared_ptr<DatasetReader<bool>::Mapping > > BoolArrayElement;
+            //            typedef FixedLengthArray<std::string, boost::shared_ptr<DatasetReader<std::string>::Mapping > > StringArrayElement;
+            //            typedef FixedLengthArray<bool, boost::shared_ptr<DatasetReader<bool>::Mapping > > BoolArrayElement;
             typedef FixedLengthArray<std::string> StringArrayElement;
             typedef FixedLengthArray<bool> BoolArrayElement;
 

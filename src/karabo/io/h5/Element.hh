@@ -134,14 +134,14 @@ namespace karabo {
                  * @param data Hash where the data will be stored when using read function
                  */
                 virtual void bind(karabo::util::Hash& data) = 0;
-                //
-                //                /**
-                //                 * allocate memory for len number of records
-                //                 * @param data Hash where the data will be stored when using read function
-                //                 * @param len number of records to be allocated
-                //                 */
-                //                virtual void allocate(karabo::util::Hash& buffer, size_t len) = 0;
-                //
+                
+                /**
+                 * allocate memory for len number of records
+                 * @param data Hash where the data will be stored when using read function
+                 * @param len number of records to be allocated
+                 */
+                virtual void bind(karabo::util::Hash& buffer, hsize_t len) = 0;
+                
                 //                /*
                 //                 * Read data from the dataset. Hash structure is filled with the key, value pair.
                 //                 * The key is the name of the dataset, value is read from file.
@@ -156,9 +156,8 @@ namespace karabo {
                 
                 virtual void read( hsize_t recordId) = 0;
                 
-                //
-                //
-                //                virtual void read(karabo::util::Hash& data, hsize_t recordId, hsize_t len) = 0;
+                
+                virtual void read( hsize_t recordId, hsize_t len) = 0;
                 //
                 //
                 //

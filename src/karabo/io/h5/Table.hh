@@ -72,6 +72,8 @@ namespace karabo {
 
 
                 void bind(karabo::util::Hash& data);
+                
+                void bind(karabo::util::Hash& data, size_t bufferLen);
 
 
                 /**
@@ -79,16 +81,16 @@ namespace karabo {
                  * @param data Hash object filled with values read from the table.
                  * @param recordNumber Number identifying record to be read. Record numbers start from 0.
                  */
-                void read(size_t recordNumber);
+                size_t read(size_t recordNumber);
 
-                //                /**
-                //                 * Buffered reading
-                //                 * @param data
-                //                 * @param recordNumber
-                //                 * @param 
-                //                 */
-                //                void readBuffer(karabo::util::Hash& data, size_t recordNumber, size_t len);
-                //
+                /**
+                 * Buffered reading
+                 * @param data
+                 * @param recordNumber
+                 * @param 
+                 */
+                size_t read(size_t recordNumber, size_t len);
+                
                 //                void read(size_t recordNumber);
                 //                void readAttributes(karabo::util::Hash & attr);
 

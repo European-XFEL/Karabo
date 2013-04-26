@@ -30,7 +30,7 @@ H5File_Test::H5File_Test() {
     karabo::log::Tracer tr;
     tr.disableAll();
     tr.enable("karabo.io.h5");
-    //tr.disable("karabo.io.h5.DatasetWriter_VECTOR_UINT16");
+    //tr.disable("karabo.io.h5.DatasetWriter");
     //    tr.enable("karabo.io.h5.Table");
     //    tr.enable("karabo.io.h5.Table.saveTableFormatAsAttribute");
     //    tr.enable("karabo.io.h5.Table.openNew");
@@ -409,7 +409,7 @@ void H5File_Test::testReadTable() {
 }
 
 
-void H5File_Test::testVectorBufferWrite() {
+void H5File_Test::testBufferWrite() {
 
 
     Hash data;
@@ -419,46 +419,65 @@ void H5File_Test::testVectorBufferWrite() {
     p.start("format");
     Format::Pointer format = Format::createEmptyFormat();
 
-    Hash h1(
-            "h5path", "",
-            "h5name", "mercury"
-            );
+    {
+        Hash h1(
+                "h5path", "",
+                "h5name", "mercury"
+                );
+        h5::Element::Pointer e1 = h5::Element::create("INT32", h1);
+        format->addElement(e1);
+    }
 
-    h5::Element::Pointer e1 = h5::Element::create("INT32", h1);
+    {
+        Hash h2(
+                "h5path", "",
+                "h5name", "venus"
+                );
+        h5::Element::Pointer e2 = h5::Element::create("UINT16", h2);
+        format->addElement(e2);
+    }
 
-    Hash h2(
-            "h5path", "",
-            "h5name", "venus"
-            );
+    {
+        Hash h3(
+                "h5path", "",
+                "h5name", "earth"
+                );
+        h5::Element::Pointer e3 = h5::Element::create("FLOAT", h3);
+        format->addElement(e3);
+    }
 
-    h5::Element::Pointer e2 = h5::Element::create("UINT16", h2);
+    {
+        Hash h4(
+                "h5path", "",
+                "h5name", "mars"
+                );
+        h5::Element::Pointer e4 = h5::Element::create("BOOL", h4);
+        format->addElement(e4);
+    }
 
-    Hash h3(
-            "h5path", "",
-            "h5name", "earth"
-            );
+    {
 
-    h5::Element::Pointer e3 = h5::Element::create("FLOAT", h3);
+        Hash h5(
+                "h5path", "",
+                "h5name", "jupiter"
+                );
+        h5::Element::Pointer e5 = h5::Element::create("STRING", h5);
+        format->addElement(e5);
+    }
 
-    Hash h4(
-            "h5path", "",
-            "h5name", "mars"
-            );
+    {
+        Dims dims(2,5);
+        Hash h1(
+                "h5path", "vector",
+                "h5name", "a1",
+                "dims", dims.toVector()        
+                );
+        h5::Element::Pointer e1 = h5::Element::create("VECTOR_INT32", h1);
+        format->addElement(e1);
+    }
 
-    h5::Element::Pointer e4 = h5::Element::create("BOOL", h4);
 
-    Hash h5(
-            "h5path", "",
-            "h5name", "jupiter"
-            );
 
-    h5::Element::Pointer e5 = h5::Element::create("STRING", h5);
-
-    format->addElement(e1);
-    format->addElement(e2);
-    format->addElement(e3);
-    format->addElement(e4);
-    format->addElement(e5);
 
     p.stop("format");
 
@@ -470,14 +489,15 @@ void H5File_Test::testVectorBufferWrite() {
     //size_t maxIterations = 100;
     size_t maxIterations = 2;
 
-    unsigned long long totalSize = maxIterations * maxRec * (4 + 2 + 4 + 1 + 12) / 1000000; 
+    unsigned long long totalSize = maxIterations * maxRec * (4 + 2 + 4 + 1 + 12) / 1000000;
 
     vector<int> mercury(maxRec, 1);
     vector<unsigned short> venus(maxRec, 2);
     vector<float> earth(maxRec, 3);
     bool mars[maxRec];
     vector<std::string> jupiter(maxRec, "Hello 000000");
-    
+
+    vector<int> a1(maxRec * 10, 0);
 
 
     for (size_t i = 0; i < maxRec; ++i) {
@@ -489,9 +509,12 @@ void H5File_Test::testVectorBufferWrite() {
         if (i % 2) mars[i] = false;
 
         ostringstream oss;
-        oss << "Hello " <<  std::setw(6) << std::setfill('0') << i;
+        oss << "Hello " << std::setw(6) << std::setfill('0') << i;
         jupiter[i] = oss.str();
-        
+    }
+
+    for (size_t j = 0; j < maxRec * 10; ++j) {
+        a1[j] = j%20;
     }
 
     p.stop("initialize");
@@ -515,6 +538,8 @@ void H5File_Test::testVectorBufferWrite() {
     //we cannot use vector of bool this way
     data.set("mars", &mars[i]);
     data.set("jupiter", &jupiter[i]);
+    data.set("vector.a1", a1);
+    
     t->write(data, i, l);
 
     i = i + l;
@@ -603,8 +628,9 @@ void H5File_Test::testVectorBufferWrite() {
     data.set("earth", &earth[0]);
     data.set("mars", &mars[0]);
     data.set("jupiter", &jupiter[0]);
-    
-    
+    data.set("vector.a1", a1);
+
+
 
     for (size_t j = 0; j < maxIterations; ++j) {
         t->write(data, maxRec*j, maxRec);
@@ -638,65 +664,117 @@ void H5File_Test::testVectorBufferWrite() {
 }
 
 
-void H5File_Test::testBufferWrite() {
-
-    {
-        // clog << "TestBufferWrite" << endl;
-
-        return;
-
-        Hash data;
-
-        data.set("instrument.a", 100);
-        data.set("instrument.b", static_cast<float> (10));
-        data.set("instrument.c", true);
-
-        Hash config;
-        Format::discoverFromHash(data, config);
-        Format::Pointer dataFormat = Format::createNode("Format", "Format", config);
-
-
-        //        clog << "after format discovery" << endl;
-        const int bufSize = 100;
-        vector<int> a(bufSize, 4);
-        vector<float> b(bufSize, 5.2);
-        bool c[bufSize];
-        for (int i = 0; i < bufSize; ++i) {
-            c[i] = false;
-            if (i % 2) c[i] = true;
-        }
-
-
-        karabo::util::addPointerToHash(data, "instrument.a", &a[0], Dims(bufSize));
-        karabo::util::addPointerToHash(data, "instrument.b", &b[0], Dims(bufSize));
-        karabo::util::addPointerToHash(data, "instrument.c", &c[0], Dims(bufSize));
+void H5File_Test::testBufferRead() {
 
 
 
-        //data.set("instrument.d", true);
-        //data.set("instrument.e", static_cast<char> (10));
+    Profiler p("VectorBufferWrite");
 
-        //data.setAttribute("instrument","at1",20);
+    p.start("format");
+    Format::Pointer format = Format::createEmptyFormat();
+
+    Hash h1(
+            "h5path", "",
+            "h5name", "mercury"
+            );
+
+    h5::Element::Pointer e1 = h5::Element::create("INT32", h1);
+
+    format->addElement(e1);
+
+    string filename = "/dev/shm/file3.h5";
+    filename = resourcePath("file3.h5");
+    File file(filename);
+    file.open(File::READONLY);
+
+    Table::Pointer t = file.getTable("/planets", format);
+
+    Hash data;
+
+
+    vector<int>& mercuryBuffer = data.bindReference<vector<int> >("mercury");
+    mercuryBuffer.resize(100);
+
+    t->bind(data, 100);
+
+    t->read(0, 100);
+
+//    for (size_t i = 0; i < mercuryBuffer.size(); ++i) {
+//        clog << "buffer[" << i << "] = " << mercuryBuffer[i] << endl;
+//    }
+
+    file.close();
 
 
 
 
 
-        File file(resourcePath("file1.h5"));
-        file.open(File::TRUNCATE);
 
-
-        Table::Pointer t = file.createTable("/abc", dataFormat, 1000);
-
-        for (int i = 0; i < 10; ++i)
-            t->write(data, i * bufSize, bufSize);
-
-
-        file.close();
-
-
-    }
 
 
 
 }
+
+//
+//void H5File_Test::testBufferWrite() {
+//
+//    {
+//        // clog << "TestBufferWrite" << endl;
+//
+//        return;
+//
+//        Hash data;
+//
+//        data.set("instrument.a", 100);
+//        data.set("instrument.b", static_cast<float> (10));
+//        data.set("instrument.c", true);
+//
+//        Hash config;
+//        Format::discoverFromHash(data, config);
+//        Format::Pointer dataFormat = Format::createNode("Format", "Format", config);
+//
+//
+//        //        clog << "after format discovery" << endl;
+//        const int bufSize = 100;
+//        vector<int> a(bufSize, 4);
+//        vector<float> b(bufSize, 5.2);
+//        bool c[bufSize];
+//        for (int i = 0; i < bufSize; ++i) {
+//            c[i] = false;
+//            if (i % 2) c[i] = true;
+//        }
+//
+//
+//        karabo::util::addPointerToHash(data, "instrument.a", &a[0], Dims(bufSize));
+//        karabo::util::addPointerToHash(data, "instrument.b", &b[0], Dims(bufSize));
+//        karabo::util::addPointerToHash(data, "instrument.c", &c[0], Dims(bufSize));
+//
+//
+//
+//        //data.set("instrument.d", true);
+//        //data.set("instrument.e", static_cast<char> (10));
+//
+//        //data.setAttribute("instrument","at1",20);
+//
+//
+//
+//
+//
+//        File file(resourcePath("file1.h5"));
+//        file.open(File::TRUNCATE);
+//
+//
+//        Table::Pointer t = file.createTable("/abc", dataFormat, 1000);
+//
+//        for (int i = 0; i < 10; ++i)
+//            t->write(data, i * bufSize, bufSize);
+//
+//
+//        file.close();
+//
+//
+//    }
+//
+//
+//
+//}
