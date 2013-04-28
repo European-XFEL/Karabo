@@ -8,6 +8,7 @@
 #include "H5File_Test.hh"
 #include "karabo/util/ArrayTools.hh"
 #include "TestPathSetup.hh"
+#include "karabo/io/TextSerializer.hh"
 #include <karabo/util/Hash.hh>
 
 #include <karabo/io/h5/File.hh>
@@ -25,7 +26,7 @@ using namespace log4cpp;
 CPPUNIT_TEST_SUITE_REGISTRATION(H5File_Test);
 
 
-H5File_Test::H5File_Test() {
+H5File_Test::H5File_Test() : m_maxRec(100) {
 
     karabo::log::Tracer tr;
     tr.disableAll();
@@ -51,14 +52,32 @@ H5File_Test::~H5File_Test() {
 
 
 void H5File_Test::setUp() {
+    {
+        m_v3Size = 5;
+        ostringstream oss;
+        oss << "vecString";
+        m_v3 = vector<string>(m_v3Size, "");
+        for (size_t i = 0; i < m_v3.size(); ++i) {
+            oss << " " << i;
+            m_v3[i] = oss.str();
+        }
+    }
 
-    m_v3Size = 5;
-    ostringstream oss;
-    oss << "vecString";
-    m_v3 = vector<string>(m_v3Size, "");
-    for (size_t i = 0; i < m_v3.size(); ++i) {
-        oss << " " << i;
-        m_v3[i] = oss.str();
+    {
+        // used in: testBufferWrite and testBufferRead        
+        m_dimsVec = Dims(2, 5);
+        m_a1.resize(m_maxRec * m_dimsVec.size(), 0);
+        m_a2.resize(m_maxRec * m_dimsVec.size(), "");
+        m_a3.resize(m_maxRec * m_dimsVec.size(), false);
+
+        for (size_t j = 0; j < m_maxRec * m_dimsVec.size(); ++j) {
+            m_a1[j] = j % 1000000;
+            ostringstream oss;
+            oss << "[Hi " << j % 1000000 << "]";
+            m_a2[j] = oss.str();
+
+            if (j % 3) m_a3[j] = true;
+        }
     }
 
 }
@@ -467,18 +486,34 @@ void H5File_Test::testBufferWrite() {
     }
 
     {
-        Dims dims(2, 5);
         Hash h1(
                 "h5path", "vector",
                 "h5name", "a1",
-                "dims", dims.toVector()
+                "dims", m_dimsVec.toVector()
                 );
         h5::Element::Pointer e1 = h5::Element::create("VECTOR_INT32", h1);
         format->addElement(e1);
     }
 
+    {
+        Hash h1(
+                "h5path", "vector",
+                "h5name", "a2",
+                "dims", m_dimsVec.toVector()
+                );
+        h5::Element::Pointer e1 = h5::Element::create("VECTOR_STRING", h1);
+        format->addElement(e1);
+    }
 
-
+    {
+        Hash h1(
+                "h5path", "vector",
+                "h5name", "a3",
+                "dims", m_dimsVec.toVector()
+                );
+        h5::Element::Pointer e1 = h5::Element::create("VECTOR_BOOL", h1);
+        format->addElement(e1);
+    }
 
     p.stop("format");
 
@@ -486,22 +521,21 @@ void H5File_Test::testBufferWrite() {
     //data.set("vectors.image", v0).setAttribute("dims", Dims(1024, 1024).toVector());
 
     p.start("initialize");
-    const size_t maxRec = 1000000;
+
     //size_t maxIterations = 100;
     size_t maxIterations = 2;
 
-    unsigned long long totalSize = maxIterations * maxRec * (4 + 2 + 4 + 1 + 12) / 1000000;
+    //TODO: update size for vectors
+    unsigned long long totalSize = maxIterations * m_maxRec * (4 + 2 + 4 + 1 + 12) / 1000000;
 
-    vector<int> mercury(maxRec, 1);
-    vector<unsigned short> venus(maxRec, 2);
-    vector<float> earth(maxRec, 3);
-    bool mars[maxRec];
-    vector<std::string> jupiter(maxRec, "Hello 000000");
-
-    vector<int> a1(maxRec * 10, 0);
+    vector<int> mercury(m_maxRec, 1);
+    vector<unsigned short> venus(m_maxRec, 2);
+    vector<float> earth(m_maxRec, 3);
+    bool mars[m_maxRec];
+    vector<std::string> jupiter(m_maxRec, "Hello 000000");
 
 
-    for (size_t i = 0; i < maxRec; ++i) {
+    for (size_t i = 0; i < m_maxRec; ++i) {
         mercury[i] = i + 1000;
         venus[i] = i;
         earth[i] = i * 2.5;
@@ -514,9 +548,6 @@ void H5File_Test::testBufferWrite() {
         jupiter[i] = oss.str();
     }
 
-    for (size_t j = 0; j < maxRec * 10; ++j) {
-        a1[j] = j % 20;
-    }
 
     p.stop("initialize");
     p.start("create");
@@ -527,7 +558,7 @@ void H5File_Test::testBufferWrite() {
     File file(filename);
     file.open(File::TRUNCATE);
 
-    Table::Pointer t = file.createTable("/planets", format, 1000000);
+    Table::Pointer t = file.createTable("/planets", format, 100);
 
     p.stop("create");
     p.start("write0");
@@ -539,8 +570,9 @@ void H5File_Test::testBufferWrite() {
     //we cannot use vector of bool this way
     data.set("mars", &mars[i]);
     data.set("jupiter", &jupiter[i]);
-    data.set("vector.a1", a1);
-
+    data.set("vector.a1", m_a1);
+    data.set("vector.a2", m_a2);
+    data.set("vector.a3", m_a3);
     t->write(data, i, l);
 
     i = i + l;
@@ -629,12 +661,13 @@ void H5File_Test::testBufferWrite() {
     data.set("earth", &earth[0]);
     data.set("mars", &mars[0]);
     data.set("jupiter", &jupiter[0]);
-    data.set("vector.a1", a1);
-
+    data.set("vector.a1", m_a1);
+    data.set("vector.a2", m_a2);
+    data.set("vector.a3", m_a3);
 
 
     for (size_t j = 0; j < maxIterations; ++j) {
-        t->write(data, maxRec*j, maxRec);
+        t->write(data, m_maxRec*j, m_maxRec);
     }
     p.stop("write");
 
@@ -671,7 +704,7 @@ void H5File_Test::testBufferRead() {
     try {
 
 
-        Profiler p("VectorBufferWrite");
+        Profiler p("VectorBufferRead");
 
         p.start("format");
         Format::Pointer format = Format::createEmptyFormat();
@@ -684,16 +717,49 @@ void H5File_Test::testBufferRead() {
             format->addElement(e1);
         }
 
-        Dims a1Dims(2, 5);
         {
             Hash h1(
                     "h5path", "vector",
                     "h5name", "a1",
-                    "dims", a1Dims.toVector()
+                    "dims", m_dimsVec.toVector()
                     );
             h5::Element::Pointer e1 = h5::Element::create("VECTOR_INT32", h1);
             format->addElement(e1);
         }
+
+        {
+            Hash h1(
+                    "h5path", "vector",
+                    "h5name", "a2",
+                    "dims", m_dimsVec.toVector()
+                    );
+            h5::Element::Pointer e1 = h5::Element::create("VECTOR_STRING", h1);
+            format->addElement(e1);
+        }
+
+        {
+            Hash h1(
+                    "h5path", "vector",
+                    "h5name", "a3",
+                    "dims", m_dimsVec.toVector()
+                    );
+            h5::Element::Pointer e1 = h5::Element::create("VECTOR_BOOL", h1);
+            format->addElement(e1);
+        }
+
+        //        string dataFormatConfigXml;
+        //        Hash config;
+        //        format->getPersistentConfig(config);
+        //        Hash c("Xml.indentation", 1, "Xml.writeDataTypes", false);
+        //        TextSerializer<Hash>::Pointer serializer = TextSerializer<Hash>::create(c);
+        //        serializer->save(config, dataFormatConfigXml);
+        //        clog << "1: \n" << dataFormatConfigXml << "\ndupa\n" << endl;
+        //
+        //        config.clear();
+        //        serializer->load(config, dataFormatConfigXml);
+        //
+        //        serializer->save(config, dataFormatConfigXml);
+        //        clog << "2: \n" << dataFormatConfigXml << endl;
 
 
         string filename = "/dev/shm/file3.h5";
@@ -704,7 +770,6 @@ void H5File_Test::testBufferRead() {
         Table::Pointer t = file.getTable("/planets");
 
         Hash data;
-
         const size_t bufLen = 100;
 
         vector<int>& mercuryBuffer = data.bindReference<vector<int> >("mercury");
@@ -715,7 +780,9 @@ void H5File_Test::testBufferRead() {
         t->bind(data, bufLen);
 
         vector<int>& a1 = data.get< vector<int> >("vector.a1");
-
+        vector<string>& a2 = data.get< vector<string> >("vector.a2");
+        vector<bool>& a3 = data.get< vector<bool> >("vector.a3");
+        
         size_t numReadRecords = t->read(0, bufLen);
 
         for (size_t i = 0; i < mercuryBuffer.size(); ++i) {
@@ -725,9 +792,14 @@ void H5File_Test::testBufferRead() {
         size_t m = 0;
         for (size_t j = 0; j < numReadRecords; ++j) {
             KARABO_LOG_FRAMEWORK_TRACE_CF << "{" << j << "}: ";
-            for (size_t k = 0; k < a1Dims.extentIn(0); ++k) {
-                for (size_t l = 0; l < a1Dims.extentIn(1); ++l) {
+            for (size_t k = 0; k < m_dimsVec.extentIn(0); ++k) {
+                for (size_t l = 0; l < m_dimsVec.extentIn(1); ++l) {
                     KARABO_LOG_FRAMEWORK_TRACE_CF << "[" << k << "," << l << "]=" << a1[m];
+                    KARABO_LOG_FRAMEWORK_TRACE_CF << "[" << k << "," << l << "]=" << a2[m];
+                    KARABO_LOG_FRAMEWORK_TRACE_CF << "[" << k << "," << l << "]=" << a3[m];
+                    CPPUNIT_ASSERT(a1[m] == m_a1[m]);
+                    CPPUNIT_ASSERT(a2[m] == m_a2[m]);
+                    CPPUNIT_ASSERT(a3[m] == m_a3[m]);
                     m++;
                 }
             }

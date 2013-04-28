@@ -18,11 +18,12 @@
 
 
 using namespace karabo::util;
- 
+
 
 namespace karabo {
     namespace io {
         namespace h5 {
+
 
             void Element::expectedParameters(Schema& expected) {
 
@@ -41,7 +42,7 @@ namespace karabo {
                         .tags("persistent")
                         .displayedName("H5 Path")
                         .description("Path to that element. i.e. instrument.XXX.LPD")
-                        .assignmentMandatory()
+                        .assignmentOptional().noDefaultValue()
                         .reconfigurable()
                         .commit();
 
@@ -53,18 +54,18 @@ namespace karabo {
                         .reconfigurable()
                         .commit();
 
-//                STRING_ELEMENT(expected)
-//                        .key("type")
-//                        .displayedName("Type")
-//                        .description("Data Type in Hash")
-//                        .assignmentMandatory()
-//                        .reconfigurable()
-//                        .commit();
+                //                STRING_ELEMENT(expected)
+                //                        .key("type")
+                //                        .displayedName("Type")
+                //                        .description("Data Type in Hash")
+                //                        .assignmentMandatory()
+                //                        .reconfigurable()
+                //                        .commit();
 
 
                 LIST_ELEMENT(expected)
                         .key("attributes")
-                        .displayedName("Attributes")                        
+                        .displayedName("Attributes")
                         .description("Definition of hdf5 attributes.")
                         .appendNodesOfConfigurationBase<Attribute > ()
                         .assignmentOptional().noDefaultValue()
@@ -81,31 +82,42 @@ namespace karabo {
                  */
             }
 
+
             Element::Element(const Hash& input) {
-                m_h5name = input.get<string > ("h5name");
-                m_h5path = input.get<string > ("h5path");
-                if (m_h5path != "") m_h5PathName = m_h5path + "/" + m_h5name;
-                else m_h5PathName = m_h5name;
+                try {
+                    m_h5name = input.get<string > ("h5name");
+                    m_h5path = "";
+                    if (input.has("h5path")) {
+                        m_h5path = input.get<string > ("h5path");
+                    }
+                    if (m_h5path != "") m_h5PathName = m_h5path + "/" + m_h5name;
+                    else m_h5PathName = m_h5name;
 
-                if (input.has("key")) {
-                    m_key = boost::replace_all_copy(input.get<string > ("key"), ".", "/");                    
-                } else {
-                    m_key = m_h5PathName;
-                }
+                    if (input.has("key")) {
+                        m_key = boost::replace_all_copy(input.get<string > ("key"), ".", "/");
+                    } else {
+                        m_key = m_h5PathName;
+                    }
 
-                if (m_key.size() == 0 || m_h5name.size() == 0) {
-                    throw KARABO_PARAMETER_EXCEPTION("Name cannot be an empty string");
+                    if (m_key.size() == 0 || m_h5name.size() == 0) {
+                        throw KARABO_PARAMETER_EXCEPTION("Name cannot be an empty string");
+                    }
+                    m_config = input;
+                } catch (...) {
+                    KARABO_RETHROW_AS("Error setting Element " );
                 }
-                m_config = input;
             }
+
 
             const string& Element::getFullName() {
                 return m_h5PathName;
             }
 
+
             void Element::getElement(Hash& element) {
                 element.set(m_h5name, shared_from_this());
             }
+
 
             void Element::openParentGroup(std::map<std::string, hid_t >& groups) {
 
@@ -143,7 +155,7 @@ namespace karabo {
                     }
 
                 } catch (...) {
-                    KARABO_RETHROW_AS( KARABO_PROPAGATED_EXCEPTION("Could not create one of the parent group"));
+                    KARABO_RETHROW_AS(KARABO_PROPAGATED_EXCEPTION("Could not create one of the parent group"));
                 }
             }
 
