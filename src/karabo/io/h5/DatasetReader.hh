@@ -81,12 +81,12 @@ namespace karabo {
                 void read(hsize_t len, hid_t dataSet, hid_t fileDataSpace) {
 
                     KARABO_LOG_FRAMEWORK_TRACE << "enter read T*";
-                    
+
                     std::vector<hsize_t> vdims = this->m_dimsBuffer.toVector();
                     vdims[0] = len;
                     karabo::util::Dims memoryDims(vdims);
                     hid_t mds = Dataset::dataSpace(memoryDims);
-                    
+
                     KARABO_CHECK_HDF5_STATUS(
                                              H5Dread(dataSet, ScalarTypes::getHdf5NativeType<T > (), mds, fileDataSpace, H5P_DEFAULT, m_readData)
                                              );
@@ -99,7 +99,7 @@ namespace karabo {
                 void bind(T* ptr) {
                     m_readData = ptr;
                 }
-               
+
 
 
             protected:
@@ -164,7 +164,7 @@ namespace karabo {
                 }
 
                 void read(hid_t dataSet, hid_t fileDataSpace) {
-                    
+
 
                     m_readData->m_ch.resize(m_readData->m_len);
                     char** chPtr = &(m_readData->m_ch[0]);
@@ -185,9 +185,37 @@ namespace karabo {
 
 
                 }
-                
+
                 void read(hsize_t len, hid_t dataSet, hid_t fileDataSpace) {
-                    
+
+                    KARABO_LOG_FRAMEWORK_TRACE << "enter read (string,buffer) len=" << len;
+
+                    m_readData->m_ch.resize(m_readData->m_len);
+                    char** chPtr = &(m_readData->m_ch[0]);
+
+
+
+                    std::vector<hsize_t> vdims = this->m_dimsBuffer.toVector();
+                    vdims[0] = len;
+                    karabo::util::Dims memoryDims(vdims);
+                    hid_t mds = Dataset::dataSpace(memoryDims);
+
+
+                    KARABO_CHECK_HDF5_STATUS(
+                                             H5Dread(dataSet, ScalarTypes::getHdf5NativeType<std::string> (),
+                                                     mds, fileDataSpace, H5P_DEFAULT, chPtr)
+                                             );
+
+                    if (m_readData->m_useVector) {
+                        for (size_t i = 0; i < m_readData->m_len; ++i) {
+                            m_readData->m_vec[i] = m_readData->m_ch[i];
+                        }
+                    } else {
+                        for (size_t i = 0; i < m_readData->m_len; ++i) {
+                            m_readData->m_ptr[i] = m_readData->m_ch[i];
+                        }
+                    }
+
                 }
 
             private:
@@ -297,7 +325,7 @@ namespace karabo {
                 void read(hid_t dataSet, hid_t fileDataSpace) {
 
 
-                    KARABO_LOG_FRAMEWORK_TRACE << "enter read boost::shared_ptr< ScalarReader<bool>::Mapping >";
+                    KARABO_LOG_FRAMEWORK_TRACE << "enter read(bool)";
                     m_readData->m_uch.resize(m_readData->m_len);
                     unsigned char* uchPtr = &(m_readData->m_uch[0]);
 
@@ -316,9 +344,35 @@ namespace karabo {
 
 
                 }
-                
+
                 void read(hsize_t len, hid_t dataSet, hid_t fileDataSpace) {
+
+                    KARABO_LOG_FRAMEWORK_TRACE << "enter read(bool, buffer) len=" << len;
+                    m_readData->m_uch.resize(m_readData->m_len);
+                    unsigned char* uchPtr = &(m_readData->m_uch[0]);
                     
+                    
+                    std::vector<hsize_t> vdims = this->m_dimsBuffer.toVector();
+                    vdims[0] = len;
+                    karabo::util::Dims memoryDims(vdims);
+                    hid_t mds = Dataset::dataSpace(memoryDims);
+
+
+                    KARABO_CHECK_HDF5_STATUS(
+                                             H5Dread(dataSet, ScalarTypes::getHdf5NativeType<bool > (), mds,
+                                             fileDataSpace, H5P_DEFAULT, uchPtr));
+
+                    if (m_readData->m_useVector) {
+                        for (size_t i = 0; i < m_readData->m_len; ++i) {
+                            m_readData->m_vec[i] = boost::numeric_cast<bool>(m_readData->m_uch[i]);
+                        }
+                    } else {
+                        for (size_t i = 0; i < m_readData->m_len; ++i) {
+                            m_readData->m_ptr[i] = boost::numeric_cast<bool>(m_readData->m_uch[i]);
+                        }
+                    }
+
+
                 }
 
 
