@@ -100,6 +100,7 @@ namespace karabo {
                     if (hasAttribute(m_group, "table")) {
                         Hash readDataFormatConfig;
                         readTableFormatFromAttribute(readDataFormatConfig);
+                        KARABO_LOG_FRAMEWORK_TRACE_CF << "read format: \n" << readDataFormatConfig;
                         m_dataFormat = Format::createNode("Format", "Format", readDataFormatConfig);
                     } else {
                         throw KARABO_HDF_IO_EXCEPTION("auto discovery not enabled yet");
@@ -342,7 +343,7 @@ namespace karabo {
 
                     KARABO_LOG_FRAMEWORK_TRACE_CF << persistentDataFormatConfig;
 
-                    Hash c("Xml.indentation", 1, "Xml.writeDataTypes", false);
+                    Hash c("Xml.indentation", 1);//, "Xml.writeDataTypes", false);
                     TextSerializer<Hash>::Pointer serializer = TextSerializer<Hash>::create(c);
 
                     string dataFormatConfigXml;

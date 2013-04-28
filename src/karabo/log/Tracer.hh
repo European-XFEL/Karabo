@@ -77,6 +77,7 @@ namespace karabo {
             }
 
             void reconfigure() {
+                karabo::log::Logger::reset();
                 karabo::log::Logger::configure(m_conf);
             }
 
