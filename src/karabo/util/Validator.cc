@@ -391,7 +391,9 @@ namespace karabo {
                     double value = workNode.getValueAs<double>();
                     if (value < threshold) {
                         string msg("Value " + workNode.getValueAs<string>() + " of parameter \"" + scope + "\" went below warn level of " + karabo::util::toString(threshold));
-                        m_parametersInWarnOrAlarm.set(scope, Hash("type", "WARN_LOW", "message", msg), '\0');
+                        Hash::Node& tmp = m_parametersInWarnOrAlarm.set(scope, Hash("type", "WARN_LOW", "message", msg), '\0');
+                        if (workNode.hasAttribute("msSinceEpoch")) tmp.setAttribute("msSinceEpoch", workNode.getAttributeAsAny("msSinceEpoch"));
+                       
                     }
                 }
 
@@ -400,7 +402,8 @@ namespace karabo {
                     double value = workNode.getValueAs<double>();
                     if (value > threshold) {
                         string msg("Value " + workNode.getValueAs<string>() + " of parameter \"" + scope + "\" went above warn level of " + karabo::util::toString(threshold));
-                        m_parametersInWarnOrAlarm.set(scope, Hash("type", "WARN_HIGH", "message", msg), '\0');
+                        Hash::Node& tmp = m_parametersInWarnOrAlarm.set(scope, Hash("type", "WARN_HIGH", "message", msg), '\0');
+                        if (workNode.hasAttribute("msSinceEpoch")) tmp.setAttribute("msSinceEpoch", workNode.getAttributeAsAny("msSinceEpoch"));
                     }
                 }
 
@@ -409,7 +412,8 @@ namespace karabo {
                     double value = workNode.getValueAs<double>();
                     if (value < threshold) {
                         string msg("Value " + workNode.getValueAs<string>() + " of parameter \"" + scope + "\" went below alarm level of " + karabo::util::toString(threshold));
-                        m_parametersInWarnOrAlarm.set(scope, Hash("type", "ALARM_LOW", "message", msg), '\0');
+                        Hash::Node& tmp = m_parametersInWarnOrAlarm.set(scope, Hash("type", "ALARM_LOW", "message", msg), '\0');
+                        if (workNode.hasAttribute("msSinceEpoch")) tmp.setAttribute("msSinceEpoch", workNode.getAttributeAsAny("msSinceEpoch"));
                     }
                 }
 
@@ -418,7 +422,8 @@ namespace karabo {
                     double value = workNode.getValueAs<double>();
                     if (value > threshold) {
                         string msg("Value " + workNode.getValueAs<string>() + " of parameter \"" + scope + "\" went above alarm level of " + karabo::util::toString(threshold));
-                        m_parametersInWarnOrAlarm.set(scope, Hash("type", "ALARM_HIGH", "message", msg), '\0');
+                        Hash::Node& tmp = m_parametersInWarnOrAlarm.set(scope, Hash("type", "ALARM_HIGH", "message", msg), '\0');
+                        if (workNode.hasAttribute("msSinceEpoch")) tmp.setAttribute("msSinceEpoch", workNode.getAttributeAsAny("msSinceEpoch"));
                     }
                 }
 

@@ -38,6 +38,7 @@ namespace karabo {
 
 
         void DeviceClient::setupSlots() {
+            karabo::log::Logger::configure(Hash("priority", "DEBUG")); // TODO REMOVE LATER
             m_signalSlotable->registerSlot<Hash, string > (boost::bind(&karabo::core::DeviceClient::slotChanged, this, _1, _2), "slotChanged");
             m_signalSlotable->registerSlot<string, Hash > (boost::bind(&karabo::core::DeviceClient::slotInstanceUpdated, this, _1, _2), "slotInstanceUpdated", SignalSlotable::GLOBAL);
             m_signalSlotable->registerSlot<string > (boost::bind(&karabo::core::DeviceClient::slotInstanceGone, this, _1), "slotInstanceGone", SignalSlotable::GLOBAL);
@@ -56,12 +57,12 @@ namespace karabo {
                 Hash entry;
                 Hash::Node & entryNode = entry.set(type + "." + instanceId, Hash());
                 for (Hash::const_iterator it = instanceInfo.begin(); it != instanceInfo.end(); ++it) {
-
-
                     entryNode.setAttribute(it->getKey(), it->getValueAsAny());
                 }
                 m_runtimeSystemDescription.merge(entry);
             }
+            KARABO_LOG_FRAMEWORK_DEBUG << "cacheAvailableInstances() was called, runtimeSystemDescription looks like:";
+            KARABO_LOG_FRAMEWORK_DEBUG << m_runtimeSystemDescription;
         }
 
 
@@ -87,12 +88,16 @@ namespace karabo {
                 entryNode.setAttribute(it->getKey(), it->getValueAsAny());
             }
             m_runtimeSystemDescription.merge(entry);
+            KARABO_LOG_FRAMEWORK_DEBUG << "slotInstanceUpdated() was called, runtimeSystemDescription looks like:";
+            KARABO_LOG_FRAMEWORK_DEBUG << m_runtimeSystemDescription;
         }
 
 
         void DeviceClient::slotInstanceGone(const std::string& instanceId) {
             boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
             m_runtimeSystemDescription.erase("device." + instanceId);
+            KARABO_LOG_FRAMEWORK_DEBUG << "slotInstanceGone() was called, runtimeSystemDescription looks like:";
+            KARABO_LOG_FRAMEWORK_DEBUG << m_runtimeSystemDescription;
         }
 
 
@@ -218,7 +223,7 @@ namespace karabo {
 
         karabo::util::Schema DeviceClient::cacheAndGetActiveSchema(const std::string& instanceId) {
             std::string state = this->get<std::string > (instanceId, "state");
-            std::string path("device." + instanceId + ".activeSchema." + state + "." + m_role);
+            std::string path("device." + instanceId + ".activeSchema." + state);
             boost::optional<Hash::Node&> node = m_runtimeSystemDescription.find(path);
             if (!node) { // Not found, request and cache it
                 // Request schema
@@ -232,8 +237,6 @@ namespace karabo {
                 }
                 return m_runtimeSystemDescription.set(path, schema).getValue<Schema>();
             } else {
-
-
                 return node->getValue<Schema>();
             }
         }

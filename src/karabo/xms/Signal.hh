@@ -17,7 +17,7 @@
 #include <karabo/net/BrokerChannel.hh>
 
 /**
- * The main European XFEL namespace
+ * The main Karabo namespace
  */
 namespace karabo {
 
@@ -25,6 +25,9 @@ namespace karabo {
      * Namespace for package io
      */
     namespace xms {
+        
+        // Forward SignalSlotable
+        class SignalSlotable;
 
         class Signal {
 
@@ -32,36 +35,16 @@ namespace karabo {
 
             KARABO_CLASSINFO(Signal, "Signal", "1.0")
 
-            Signal(const karabo::net::BrokerChannel::Pointer& channel, const std::string& signalInstanceId, const std::string& signalFunction) :
-            m_channel(channel), m_signalInstanceId(signalInstanceId), m_signalFunction(signalFunction) {
-                updateConnectedSlotsString();
-            }
+            Signal(const SignalSlotable* signalSlotable, const karabo::net::BrokerChannel::Pointer& channel, const std::string& signalInstanceId, const std::string& signalFunction);
 
             virtual ~Signal() {
             }
 
-            size_t nRegisteredSlots() const {
-                return m_registeredSlotFunctions.size();
-            }
+            size_t nRegisteredSlots() const;
 
-            void registerSlot(const std::string& slotInstanceId, const std::string& slotFunction) {
-                m_registeredSlotInstanceIds[slotInstanceId]++;
-                m_registeredSlotFunctions[slotFunction]++;
-                updateConnectedSlotsString();
-            }
+            void registerSlot(const std::string& slotInstanceId, const std::string& slotFunction);
 
-            bool unregisterSlot(const std::string& slotInstanceId, const std::string& slotFunction) {
-                std::map<std::string, size_t>::iterator itI = m_registeredSlotInstanceIds.find(slotInstanceId);
-                std::map<std::string, size_t>::iterator itF = m_registeredSlotFunctions.find(slotFunction);
-                if (itI != m_registeredSlotInstanceIds.end() && itF != m_registeredSlotFunctions.end()) {
-                    if (--(itI->second) == 0) m_registeredSlotInstanceIds.erase(itI);
-                    if (--(itF->second) == 0) m_registeredSlotFunctions.erase(itF);
-                    updateConnectedSlotsString();
-                    return true;
-                } else {
-                    return false;
-                }
-            }
+            bool unregisterSlot(const std::string& slotInstanceId, const std::string& slotFunction);
 
             void emit0() {
                 send(karabo::util::Hash());
@@ -94,46 +77,15 @@ namespace karabo {
             //private:
         protected:
 
-            void updateConnectedSlotsString() {
-                m_registeredSlotFunctionsString.clear();
-                m_registeredSlotInstanceIdsString.clear();
-                if (nRegisteredSlots() == 0) {
-                    m_registeredSlotFunctionsString = "__none__";
-                    m_registeredSlotInstanceIdsString = "__none__";
-                } else {
-                    for (std::map<std::string, size_t>::const_iterator it = m_registeredSlotFunctions.begin(); it != m_registeredSlotFunctions.end(); ++it) {
-                        m_registeredSlotFunctionsString += it->first + "|";
-                    }
-                    for (std::map<std::string, size_t>::const_iterator it = m_registeredSlotInstanceIds.begin(); it != m_registeredSlotInstanceIds.end(); ++it) {
-                        m_registeredSlotInstanceIdsString += it->first + "|";
-                    }
-                }
-            }
+            void updateConnectedSlotsString();
 
-            void send(const karabo::util::Hash& message) {
-                try {
-                    // Do not send if no slots are connected
-                    //if (m_connectedSlotsString == "none") return;
-                    karabo::util::Hash header = prepareHeader();
-                    m_channel->write(message, header);
-                } catch (const karabo::util::Exception& e) {
-                    KARABO_RETHROW_AS(KARABO_SIGNALSLOT_EXCEPTION("Problem sending a signal"))
-                }
-            }
+            void send(const karabo::util::Hash& message);
 
-            karabo::util::Hash prepareHeader() const {
-                karabo::util::Hash header;
-                header.set("signalFunction", m_signalFunction);
-                header.set("signalInstanceId", m_signalInstanceId);
-                header.set("slotFunction", m_registeredSlotFunctionsString);
-                header.set("slotInstanceId", m_registeredSlotInstanceIdsString);
-                header.set("hostName", boost::asio::ip::host_name());
-                header.set("classId", "Signal");
-                return header;
-            }
+            karabo::util::Hash prepareHeader() const;
 
         protected:
 
+            const SignalSlotable* m_signalSlotable;
             karabo::net::BrokerChannel::Pointer m_channel;
             std::string m_signalInstanceId;
             std::string m_signalFunction;

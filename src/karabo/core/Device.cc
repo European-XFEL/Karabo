@@ -14,7 +14,7 @@
 namespace karabo {
     namespace core {
 
-        KARABO_REGISTER_FOR_CONFIGURATION(Device<OkErrorFsm>);
+        //KARABO_REGISTER_FOR_CONFIGURATION(Device<OkErrorFsm>);
        
 
 //        void Device::triggerErrorFound(const std::string& shortMessage, const std::string& detailedMessage) const {

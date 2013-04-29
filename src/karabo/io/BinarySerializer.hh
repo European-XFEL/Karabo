@@ -34,6 +34,27 @@ namespace karabo {
             void load(T& object, const std::vector<char>& archive) {
                 load(object, &archive[0], archive.size());
             }
+            
+            std::vector<char> save(const T& object) {
+                std::vector<char> archive;
+                this->save(object, archive);
+                return archive;
+            }
+            
+            T load(const char* archive, const size_t nBytes) {
+                T object;
+                this->load(object, archive, nBytes);
+                return object;
+            }
+            
+            T load(const std::vector<char>& archive) {
+                T object;
+                this->load(object, archive);
+                return object;
+            }
+            
+            
+
         };
     }
 }

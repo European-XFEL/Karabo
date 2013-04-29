@@ -11,7 +11,8 @@
 #ifndef KARABO_CORE_SIGNALSLOTABLE_HH
 #define	KARABO_CORE_SIGNALSLOTABLE_HH
 
-#include <karabo/util/Factory.hh>
+#include <karabo/util/Configurator.hh>
+#include <karabo/log/Logger.hh>
 #include <karabo/net/BrokerConnection.hh>
 #include <karabo/io/Input.hh>
 #include <karabo/io/Output.hh>
@@ -166,9 +167,10 @@ namespace karabo {
              */
             void runEventLoop(bool emitHeartbeat = true);
 
-
+            /**
+             * This function will stop all consumers and un-block the runEventLoop() function
+             */
             void stopEventLoop();
-
 
             /**
              * Access to the identification of the current instance using signals and slots
@@ -211,12 +213,13 @@ namespace karabo {
             std::vector<std::string> getAvailableSlots(const std::string& instanceId);
 
             /**
-             * The slotPing is a default global slot which emits the signalGotPinged signal
+             * This function must only be called within a slotFunctions body. It returns the current object handling
+             * the callback which provides more information on the sender.
+             * @param slotFunction The string-ified name of the slotFunction you are currently in
+             * @return instance of a Slot object (handler object for this callback)
              */
-            void slotPing(const std::string& instanceId, const bool& replyIfInstanceIdIsDuplicated);
-
-            void slotPingAnswer(const std::string& instanceId, const karabo::util::Hash& hash);
-
+            const SlotInstancePointer& getSenderInfo(const std::string& slotFunction);
+                
             /**
              * Connects a signal and slot by explicitely seperating instanceId from the slotId/signalId.
              * @param signalInstanceId
@@ -344,7 +347,7 @@ namespace karabo {
             }
 
             void call(std::string instanceId, const std::string& functionName) const {
-                Signal s(m_signalChannel, m_instanceId, "call");
+                Signal s(this, m_signalChannel, m_instanceId, "call");
                 if (instanceId.empty()) instanceId = m_instanceId;
                 s.registerSlot(instanceId, functionName);
                 s.emit0();
@@ -377,7 +380,7 @@ namespace karabo {
 
             template <class A1>
             void call(std::string instanceId, const std::string& functionName, const A1& a1) const {
-                Signal s(m_signalChannel, m_instanceId, "call");
+                Signal s(this, m_signalChannel, m_instanceId, "call");
                 if (instanceId.empty()) instanceId = m_instanceId;
                 s.registerSlot(instanceId, functionName);
                 s.emit1(a1);
@@ -422,7 +425,7 @@ namespace karabo {
 
             template <class A1, class A2>
             void call(std::string instanceId, const std::string& functionName, const A1& a1, const A2& a2) const {
-                Signal s(m_signalChannel, m_instanceId, "call");
+                Signal s(this, m_signalChannel, m_instanceId, "call");
                 if (instanceId.empty()) instanceId = m_instanceId;
                 s.registerSlot(instanceId, functionName);
                 s.emit2(a1, a2);
@@ -454,7 +457,7 @@ namespace karabo {
 
             template <class A1, class A2, class A3>
             void call(std::string instanceId, const std::string& functionName, const A1& a1, const A2& a2, const A3& a3) const {
-                Signal s(m_signalChannel, m_instanceId, "call");
+                Signal s(this, m_signalChannel, m_instanceId, "call");
                 if (instanceId.empty()) instanceId = m_instanceId;
                 s.registerSlot(instanceId, functionName);
                 s.emit3(a1, a2, a3);
@@ -487,7 +490,7 @@ namespace karabo {
 
             template <class A1, class A2, class A3, class A4>
             void call(std::string instanceId, const std::string& functionName, const A1& a1, const A2& a2, const A3& a3, const A4& a4) const {
-                Signal s(m_signalChannel, m_instanceId, "call");
+                Signal s(this, m_signalChannel, m_instanceId, "call");
                 if (instanceId.empty()) instanceId = m_instanceId;
                 s.registerSlot(instanceId, functionName);
                 s.emit4(a1, a2, a3, a4);
@@ -530,7 +533,7 @@ namespace karabo {
 
             void registerSignal(const std::string& funcName) {
                 if (m_signalInstances.find(funcName) != m_signalInstances.end()) return; // Already registered
-                boost::shared_ptr<karabo::xms::Signal> s(new karabo::xms::Signal(m_signalChannel, m_instanceId, funcName));
+                boost::shared_ptr<karabo::xms::Signal> s(new karabo::xms::Signal(this, m_signalChannel, m_instanceId, funcName));
                 boost::function<void() > f(boost::bind(&karabo::xms::Signal::emit0, s));
                 storeSignal(funcName, s, f);
             }
@@ -538,7 +541,7 @@ namespace karabo {
             template <class A1>
             void registerSignal(const std::string& funcName) {
                 if (m_signalInstances.find(funcName) != m_signalInstances.end()) return;
-                boost::shared_ptr<karabo::xms::Signal> s(new karabo::xms::Signal(m_signalChannel, m_instanceId, funcName));
+                boost::shared_ptr<karabo::xms::Signal> s(new karabo::xms::Signal(this, m_signalChannel, m_instanceId, funcName));
                 boost::function<void (const A1&) > f(boost::bind(&karabo::xms::Signal::emit1<A1>, s, _1));
                 storeSignal(funcName, s, f);
             }
@@ -546,7 +549,7 @@ namespace karabo {
             template <class A1, class A2>
             void registerSignal(const std::string& funcName) {
                 if (m_signalInstances.find(funcName) != m_signalInstances.end()) return;
-                boost::shared_ptr<karabo::xms::Signal> s(new karabo::xms::Signal(m_signalChannel, m_instanceId, funcName));
+                boost::shared_ptr<karabo::xms::Signal> s(new karabo::xms::Signal(this, m_signalChannel, m_instanceId, funcName));
                 boost::function<void (const A1&, const A2&) > f(boost::bind(&karabo::xms::Signal::emit2<A1, A2>, s, _1, _2));
                 storeSignal(funcName, s, f);
             }
@@ -554,7 +557,7 @@ namespace karabo {
             template <class A1, class A2, class A3>
             void registerSignal(const std::string& funcName) {
                 if (m_signalInstances.find(funcName) != m_signalInstances.end()) return;
-                boost::shared_ptr<karabo::xms::Signal> s(new karabo::xms::Signal(m_signalChannel, m_instanceId, funcName));
+                boost::shared_ptr<karabo::xms::Signal> s(new karabo::xms::Signal(this, m_signalChannel, m_instanceId, funcName));
                 boost::function<void (const A1&, const A2&, const A3&) > f(boost::bind(&karabo::xms::Signal::emit3<A1, A2, A3>, s, _1, _2, _3));
                 storeSignal(funcName, s, f);
             }
@@ -562,7 +565,7 @@ namespace karabo {
             template <class A1, class A2, class A3, class A4>
             void registerSignal(const std::string& funcName) {
                 if (m_signalInstances.find(funcName) != m_signalInstances.end()) return;
-                boost::shared_ptr<karabo::xms::Signal> s(new karabo::xms::Signal(m_signalChannel, m_instanceId, funcName));
+                boost::shared_ptr<karabo::xms::Signal> s(new karabo::xms::Signal(this, m_signalChannel, m_instanceId, funcName));
                 boost::function<void (const A1&, const A2&, const A3&, const A4&) > f(boost::bind(&karabo::xms::Signal::emit4<A1, A2, A3, A4>, s, _1, _2, _3, _4));
                 storeSignal(funcName, s, f);
             }
@@ -698,6 +701,13 @@ namespace karabo {
 
 
         private: // Functions
+            
+             /**
+             * The slotPing is a default global slot which emits the signalGotPinged signal
+             */
+            void slotPing(const std::string& instanceId, const bool& replyIfInstanceIdIsDuplicated);
+
+            void slotPingAnswer(const std::string& instanceId, const karabo::util::Hash& hash);
 
             std::pair<bool, karabo::util::Hash> digestPotentialReply();
 

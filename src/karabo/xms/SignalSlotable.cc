@@ -245,6 +245,13 @@ namespace karabo {
         }
 
 
+        const SignalSlotable::SlotInstancePointer& SignalSlotable::getSenderInfo(const std::string& slotFunction) {
+            SlotInstancesConstIt it = m_slotInstances.find(slotFunction);
+            if (it == m_slotInstances.end()) throw KARABO_SIGNALSLOT_EXCEPTION("No slot-object could be found for slotFunction \"" + slotFunction + "\"");
+            return it->second;
+        }
+
+
         void SignalSlotable::slotGetAvailableFunctions(const std::string& type) {
             std::vector<string> functions;
             if (type == "signals") {

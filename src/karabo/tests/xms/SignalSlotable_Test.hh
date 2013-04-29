@@ -37,7 +37,9 @@ public:
         // Assertions
         m_messageCount++;
         if (msg != "Hello World!") m_allOk = false;
-        
+        if (getSenderInfo("slotA")->getInstanceIdOfSender() != "SignalSlotDemo") {
+            m_messageCount += 1000; // Invalidate message count will let the test fail!
+        }
         SIGNAL2("signalB", int, karabo::util::Hash);
         connectN("signalB", "slotB");
         emit("signalB", 42, karabo::util::Hash("Was.soll.das.bedeuten", "nix"));

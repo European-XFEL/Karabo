@@ -54,9 +54,9 @@ namespace karabo {
                 return Wrapper::fromStdVectorToPyList(this->getDeviceClasses(deviceServer));
             }
 
-//            bp::object getDevicesPy(const std::string& deviceServer) {
-//                return Wrapper::fromStdVectorToPyList(this->getDevices(deviceServer));
-//            }
+            //            bp::object getDevicesPy(const std::string& deviceServer) {
+            //                return Wrapper::fromStdVectorToPyList(this->getDevices(deviceServer));
+            //            }
 
             bp::object getDevicesPy() {
                 return Wrapper::fromStdVectorToPyList(this->getDevices());
@@ -148,68 +148,68 @@ namespace karabo {
                 m_signalSlotableWrap->callPy4(instanceId, functionName, a1, a2, a3, a4);
             }
 
-            //            bp::tuple executeWaitPy0(std::string instanceId, const std::string& functionName, int timeout = -1) {
-            //                std::pair<bool, std::string> result;
-            //                bp::tuple tuple;
-            //                {
-            //                    ScopedGILRelease nogil;
-            //                    result = this->executeWait(instanceId, functionName, timeout);
-            //                }
-            //                tuple = bp::make_tuple(result.first, result.second);
-            //                return tuple;
-            //            }
-            //
-            //            bp::tuple executeWaitPy1(std::string instanceId, const std::string& functionName, const bp::object& a1, int timeout = -1) const {
-            //                if (timeout == -1) timeout = m_defaultTimeout;
-            //
-            //                bp::tuple result;
-            //
-            //                try {
-            //                    result = m_signalSlotableWrap->requestPy1(instanceId, functionName, a1).waitForReply(timeout);
-            //                } catch (const karabo::util::Exception& e) {
-            //                    return bp::make_tuple(false, e.userFriendlyMsg());
-            //                }
-            //                return bp::make_tuple(true, result[0]);
-            //            }
-            //
-            //            bp::tuple executeWaitPy2(std::string instanceId, const std::string& functionName, const bp::object& a1, const bp::object& a2, int timeout = -1) const {
-            //                if (timeout == -1) timeout = m_defaultTimeout;
-            //
-            //                bp::tuple result;
-            //
-            //                try {
-            //                    result = m_signalSlotableWrap->requestPy2(instanceId, functionName, a1, a2).waitForReply(timeout);
-            //                } catch (const karabo::util::Exception& e) {
-            //                    return bp::make_tuple(false, e.userFriendlyMsg());
-            //                }
-            //                return bp::make_tuple(true, result[0]);
-            //            }
-            //
-            //            bp::tuple executeWaitPy3(std::string instanceId, const std::string& functionName, const bp::object& a1, const bp::object& a2, const bp::object& a3, int timeout = -1) const {
-            //                if (timeout == -1) timeout = m_defaultTimeout;
-            //
-            //                bp::tuple result;
-            //
-            //                try {
-            //                    result = m_signalSlotableWrap->requestPy3(instanceId, functionName, a1, a2, a3).waitForReply(timeout);
-            //                } catch (const karabo::util::Exception& e) {
-            //                    return bp::make_tuple(false, e.userFriendlyMsg());
-            //                }
-            //                return bp::make_tuple(true, result[0]);
-            //            }
-            //
-            //            bp::tuple executeWaitPy4(std::string instanceId, const std::string& functionName, const bp::object& a1, const bp::object& a2, const bp::object& a3, const bp::object& a4, int timeout = -1) const {
-            //                if (timeout == -1) timeout = m_defaultTimeout;
-            //
-            //                bp::tuple result;
-            //
-            //                try {
-            //                    result = m_signalSlotableWrap->requestPy4(instanceId, functionName, a1, a2, a3, a4).waitForReply(timeout);
-            //                } catch (const karabo::util::Exception& e) {
-            //                    return bp::make_tuple(false, e.userFriendlyMsg());
-            //                }
-            //                return bp::make_tuple(true, result[0]);
-            //            }
+            bp::tuple executeWaitPy0(std::string instanceId, const std::string& functionName, int timeout = -1) {
+                std::pair<bool, std::string> result;
+                bp::tuple tuple;
+                {
+                    ScopedGILRelease nogil;
+                    result = this->executeWait(instanceId, functionName, timeout);
+                }
+                tuple = bp::make_tuple(result.first, result.second);
+                return tuple;
+            }
+
+            bp::tuple executeWaitPy1(std::string instanceId, const std::string& functionName, const bp::object& a1, int timeout = -1) const {
+                if (timeout == -1) timeout = m_defaultTimeout;
+
+                bp::tuple result;
+
+                try {
+                    result = m_signalSlotableWrap->requestPy1(instanceId, functionName, a1).waitForReply(timeout);
+                } catch (const karabo::util::Exception& e) {
+                    return bp::make_tuple(false, e.userFriendlyMsg());
+                }
+                return bp::make_tuple(true, result[0]);
+            }
+
+            bp::tuple executeWaitPy2(std::string instanceId, const std::string& functionName, const bp::object& a1, const bp::object& a2, int timeout = -1) const {
+                if (timeout == -1) timeout = m_defaultTimeout;
+
+                bp::tuple result;
+
+                try {
+                    result = m_signalSlotableWrap->requestPy2(instanceId, functionName, a1, a2).waitForReply(timeout);
+                } catch (const karabo::util::Exception& e) {
+                    return bp::make_tuple(false, e.userFriendlyMsg());
+                }
+                return bp::make_tuple(true, result[0]);
+            }
+
+            bp::tuple executeWaitPy3(std::string instanceId, const std::string& functionName, const bp::object& a1, const bp::object& a2, const bp::object& a3, int timeout = -1) const {
+                if (timeout == -1) timeout = m_defaultTimeout;
+
+                bp::tuple result;
+
+                try {
+                    result = m_signalSlotableWrap->requestPy3(instanceId, functionName, a1, a2, a3).waitForReply(timeout);
+                } catch (const karabo::util::Exception& e) {
+                    return bp::make_tuple(false, e.userFriendlyMsg());
+                }
+                return bp::make_tuple(true, result[0]);
+            }
+
+            bp::tuple executeWaitPy4(std::string instanceId, const std::string& functionName, const bp::object& a1, const bp::object& a2, const bp::object& a3, const bp::object& a4, int timeout = -1) const {
+                if (timeout == -1) timeout = m_defaultTimeout;
+
+                bp::tuple result;
+
+                try {
+                    result = m_signalSlotableWrap->requestPy4(instanceId, functionName, a1, a2, a3, a4).waitForReply(timeout);
+                } catch (const karabo::util::Exception& e) {
+                    return bp::make_tuple(false, e.userFriendlyMsg());
+                }
+                return bp::make_tuple(true, result[0]);
+            }
 
         private:
 

@@ -17,7 +17,7 @@
 namespace karabo {
     namespace core {
 
-        class StartStopFsm : public FsmBase {
+        class StartStopFsm : public BaseFsm {
 
         public:
 

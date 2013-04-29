@@ -15,7 +15,7 @@ namespace karabo {
     namespace core {
         
         
-        class FsmBase : public virtual karabo::xms::SignalSlotable {
+        class BaseFsm : public virtual karabo::xms::SignalSlotable {
             
         public:
             
@@ -30,8 +30,6 @@ namespace karabo {
             virtual void onStateUpdate(const std::string& currentState) = 0;
             
             virtual void startFsm() = 0;
-            
-            KARABO_FSM_LOGGER(DEBUG); // TODO Clean up to use new logging system
             
             KARABO_FSM_ON_EXCEPTION(errorFound);
             
