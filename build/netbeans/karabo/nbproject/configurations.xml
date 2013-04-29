@@ -43,7 +43,6 @@
         <itemPath>../../../src/karabo/io/h5/ScalarFilter.hh</itemPath>
         <itemPath>../../../src/karabo/io/h5/Table.cc</itemPath>
         <itemPath>../../../src/karabo/io/h5/Table.hh</itemPath>
-        <itemPath>../../../src/karabo/io/h5/Tracer.hh</itemPath>
         <itemPath>../../../src/karabo/io/h5/TypeTraits.cc</itemPath>
         <itemPath>../../../src/karabo/io/h5/TypeTraits.hh</itemPath>
         <itemPath>../../../src/karabo/io/h5/ioProfiler.hh</itemPath>
@@ -663,11 +662,6 @@
       <item path="../../../src/karabo/io/h5/Table.cc" ex="false" tool="1" flavor2="0">
       </item>
       <item path="../../../src/karabo/io/h5/Table.hh" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="../../../src/karabo/io/h5/Tracer.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
       </item>
       <item path="../../../src/karabo/io/h5/TypeTraits.cc"
             ex="false"
@@ -1887,11 +1881,6 @@
       <item path="../../../src/karabo/io/h5/Table.cc" ex="false" tool="1" flavor2="0">
       </item>
       <item path="../../../src/karabo/io/h5/Table.hh" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="../../../src/karabo/io/h5/Tracer.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
       </item>
       <item path="../../../src/karabo/io/h5/TypeTraits.cc"
             ex="false"
