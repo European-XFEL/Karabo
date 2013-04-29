@@ -84,17 +84,6 @@ namespace karabo {
 
                 void openParentGroup(std::map<std::string, hid_t >& groups);
 
-
-
-                //
-                //
-                //                /**
-                //                 * Extend CHUNKED HDF5 dataset.
-                //                 * @param size The size of extended space corresponding to the number of newly added records
-                //                 */
-                //                virtual void extend(hsize_t size);
-
-
                 /**
                  * Open existing HDF5 dataset.
                  * @param group Hdf5 group where the dataset belongs to.
@@ -111,10 +100,8 @@ namespace karabo {
                 //                 * @param recordId Record number (numbering starts from 0)
                 //                 */
                virtual void write(const karabo::util::Hash& data, hsize_t recordId) = 0;
-                //
-                //
 
-                /**
+               /**
                  * Write many records of data to a dataset (buffered writing).
                  * The value of the Hash must be a vector(?) of values of type as defined at the dataset creation time.
                  * The length of the vector must be at least len.
@@ -152,7 +139,7 @@ namespace karabo {
                 //                 * @param data Hash to be filled
                 //                 * @param recordId Record number (numbering starts from 0)
                 //                 */
-                //virtual void read(karabo::util::Hash& data, hsize_t recordId) = 0;
+               
                 
                 virtual void read( hsize_t recordId) = 0;
                 
@@ -166,16 +153,6 @@ namespace karabo {
                 //                //      void addFilter(karabo::io::WriteFilter::Pointer filter) {
                 //                //        m_writeFilter->add(filter);
                 //                //      }
-                //
-                //
-                //                /**
-                //                 * Get number of records in the hdf5 dataset
-                //                 * @return number of records
-                //                 */
-                //                hsize_t getNumberOfRecords();
-                //
-                //                hsize_t getChunkSize();
-                //
 
 
 

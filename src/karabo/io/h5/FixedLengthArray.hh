@@ -42,9 +42,7 @@ namespace karabo {
                 KARABO_CLASSINFO(FixedLengthArray, "VECTOR_" + karabo::util::ToType<karabo::util::ToLiteral>::to(karabo::util::FromType<karabo::util::FromTypeInfo>::from(typeid (T))), "2.0")
 
 
-                FixedLengthArray(const karabo::util::Hash& input) : Dataset(input) {
-                    m_memoryDataSpace1 = Dataset::dataSpace(dims());
-                    m_hashType = karabo::util::FromType<karabo::util::FromLiteral>::from(input.get<std::string>("type"));
+                FixedLengthArray(const karabo::util::Hash& input) : Dataset(input) {                 
 
                     std::string datasetWriterClassId = "DatasetWriter_" + input.get<std::string>("type");
                     KARABO_LOG_FRAMEWORK_TRACE_CF << "dWClassId " << datasetWriterClassId;
@@ -73,7 +71,6 @@ namespace karabo {
                 }
 
                 void close() {
-                    KARABO_CHECK_HDF5_STATUS(H5Sclose(m_memoryDataSpace1));
                     Dataset::close();
                 }
 
@@ -163,73 +160,6 @@ namespace karabo {
 
 
 
-                //
-                //                // buffered reading
-                //
-                //                void read(karabo::util::Hash& data, hsize_t recordId, hsize_t len) {
-                //
-                //                    // "any" must contain a vector of ArrayView's of type T
-                //                    // and it must be a continues block of memory to fit all elements of the vector (single buffer)
-                //                    try {
-                //                        selectFileRecord(recordId, len);
-                //                        karabo::util::Hash::iterator it = data.find(m_key);
-                //                        boost::any& any = data.getAny(it);
-                //                        if (!m_bufferFilter) {
-                //                            //std::cout << "creating read filter" << std::endl;
-                //                            m_bufferFilter = FLArrayFilterBuffer<T>::createDefault(any.type().name());
-                //                        }
-                //                        m_bufferFilter->read(*this, any, dims(), len);
-                //
-                //                    } catch (...) {
-                //                        KARABO_RETHROW
-                //                    }
-                //
-                //
-                //                }
-                //
-                //                /*
-                //                 * This function is not available via RecordElement interface
-                //                 * To be used by filters only
-                //                 */
-                //
-                //                template<class U>
-                //                inline void read(U* ptr) const {
-                //                    try {
-                //                        m_dataSet.read(ptr, ArrayTypes::getHdf5NativeType<U > (dims()), m_memoryDataSpace, m_fileDataSpace);
-                //                    } catch (...) {
-                //                        KARABO_RETHROW
-                //                    }
-                //                }
-                //
-                //                /*
-                //                 * This function is not available via RecordElement interface
-                //                 * To be used by filters only.
-                //                 * Variant with two parameters. Used for strings (and possibly to be used for converters)
-                //                 */
-                //                template<class U, class V >
-                //                inline void read(U* ptr, const V& p) const {
-                //                    try {
-                //                        m_dataSet.read(ptr, ArrayTypes::getHdf5NativeType<V > (dims()), m_memoryDataSpace, m_fileDataSpace);
-                //                    } catch (...) {
-                //                        KARABO_RETHROW
-                //                    }
-                //                }
-                //
-                //                /*
-                //                 * This function is not available via RecordElement interface
-                //                 * To be used by filters only
-                //                 */
-                //
-                //                template<class U>
-                //                inline void readBuffer(U* ptr, size_t len) const {
-                //                    try {
-                //                        H5::DataSpace mds = this->getBufferDataSpace(len);
-                //                        m_dataSet.read(ptr, ArrayTypes::getHdf5NativeType<U > (dims()), mds, m_fileDataSpace);
-                //                    } catch (...) {
-                //                        KARABO_RETHROW
-                //                    }
-                //                }
-                //
                 //                void readSpecificAttributes(karabo::util::Hash& attributes) {
                 //                    attributes.setFromPath(m_key + ".rank", static_cast<int> (dims().size()));
                 //                    attributes.setFromPath(m_key + ".dims", dims());
@@ -240,16 +170,8 @@ namespace karabo {
 
             protected:
 
-
-                hid_t m_dataAccessPropListId;
-
-                karabo::util::Types::ReferenceType m_hashType;
                 typename karabo::io::h5::DatasetWriter<T>::Pointer m_datasetWriter;
                 typename karabo::io::h5::DatasetReader<T>::Pointer m_datasetReader;
-
-
-                //    U m_readData; // this is a pointer to the data Hash (apart from case of bool and string type )
-                hid_t m_memoryDataSpace1; // memory data space for one record element, defined here for performance optimization
 
             };
 
@@ -264,8 +186,6 @@ namespace karabo {
             typedef FixedLengthArray<unsigned long long > UInt64ArrayElement;
             typedef FixedLengthArray<double> DoubleArrayElement;
             typedef FixedLengthArray<float> FloatArrayElement;
-            //            typedef FixedLengthArray<std::string, boost::shared_ptr<DatasetReader<std::string>::Mapping > > StringArrayElement;
-            //            typedef FixedLengthArray<bool, boost::shared_ptr<DatasetReader<bool>::Mapping > > BoolArrayElement;
             typedef FixedLengthArray<std::string> StringArrayElement;
             typedef FixedLengthArray<bool> BoolArrayElement;
 

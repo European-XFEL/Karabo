@@ -87,7 +87,7 @@ namespace karabo {
                 m_dataSetExtent = vector<hsize_t>(dimsVector.size() + 1, 0);
                 m_dataSetMaxExtent = vector<hsize_t>(dimsVector.size() + 1, 0);
 
-                // m_dataSetExtent is zero
+                // m_dataSetExtent[0] is zero
                 m_dataSetMaxExtent[0] = H5S_UNLIMITED;
                 for (hsize_t i = 1; i < m_dataSetExtent.size(); ++i) {
                     m_dataSetExtent[i] = dimsVector[i - 1];

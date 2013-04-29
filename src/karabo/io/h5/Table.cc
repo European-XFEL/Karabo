@@ -35,7 +35,7 @@ namespace karabo {
             const char* Table::TABLE_SIZE = "tableSize";
 
 
-            Table::~Table() {             
+            Table::~Table() {
             }
 
 
@@ -114,7 +114,7 @@ namespace karabo {
 
                 vector<boost::shared_ptr<Element> > elements = m_dataFormat->getElements();
                 KARABO_LOG_FRAMEWORK_TRACE_CF << "elements.size() : " << elements.size();
-                for (size_t i = 0; i < elements.size(); ++i) {                    
+                for (size_t i = 0; i < elements.size(); ++i) {
                     elements[i]->open(m_group);
                 }
                 retrieveNumberOfRecordsFromFile();
@@ -138,7 +138,7 @@ namespace karabo {
                     updateTableSizeAttribute();
                 }
                 KARABO_CHECK_HDF5_STATUS(H5Fflush(m_h5file, H5F_SCOPE_LOCAL));
-           
+
 
             }
 
@@ -151,15 +151,15 @@ namespace karabo {
                 }
 
                 hsize_t possibleNewSize = recordId + len;
-                if (m_tableSize < possibleNewSize ) {
+                if (m_tableSize < possibleNewSize) {
                     m_tableSize = possibleNewSize;
                     updateTableSizeAttribute();
                 }
-            
+
                 KARABO_CHECK_HDF5_STATUS(H5Fflush(m_h5file, H5F_SCOPE_GLOBAL));
                 updateTableSizeAttribute();
             }
-           
+
 
             void Table::bind(karabo::util::Hash& data) {
                 vector<boost::shared_ptr<Element> > elements = m_dataFormat->getElements();
@@ -167,18 +167,19 @@ namespace karabo {
                     elements[i]->bind(data);
                 }
             }
-            
-            
+
+
             void Table::bind(karabo::util::Hash& data, size_t bufferLen) {
                 vector<boost::shared_ptr<Element> > elements = m_dataFormat->getElements();
                 for (size_t i = 0; i < elements.size(); ++i) {
                     elements[i]->bind(data, bufferLen);
                 }
             }
-            
+
+
             size_t Table::read(size_t recordNumber) {
 
-                if ( recordNumber >= m_tableSize ) return 0;
+                if (recordNumber >= m_tableSize) return 0;
                 vector<boost::shared_ptr<Element> > elements = m_dataFormat->getElements();
                 for (size_t i = 0; i < elements.size(); ++i) {
                     KARABO_LOG_FRAMEWORK_TRACE_CF << "Table::read  element " << i;
@@ -187,10 +188,11 @@ namespace karabo {
                 return 1ul;
 
             }
-            
+
+
             size_t Table::read(size_t recordNumber, size_t len) {
 
-                size_t numberReadRecords = (recordNumber + len ) < m_tableSize ? len : (m_tableSize - recordNumber);
+                size_t numberReadRecords = (recordNumber + len) < m_tableSize ? len : (m_tableSize - recordNumber);
                 vector<boost::shared_ptr<Element> > elements = m_dataFormat->getElements();
                 for (size_t i = 0; i < elements.size(); ++i) {
                     KARABO_LOG_FRAMEWORK_TRACE_CF << "Table::read  element " << i;
@@ -198,7 +200,7 @@ namespace karabo {
                 }
                 return numberReadRecords;
             }
-            
+
 
             size_t Table::size() {
                 return m_tableSize;
@@ -332,18 +334,10 @@ namespace karabo {
 
                 try {
 
-                    //                    const Hash& dataFormatConfig = dataFormat->getConfig();
-
-                    //                    Schema schema = Format::getSchema("Format");
                     Hash persistentDataFormatConfig;
-                    //                    Hash& elements = persistentDataFormatConfig.bindReference<Hash>("Format");
-                    //                    HashFilter::byTag(schema, dataFormatConfig.get<Hash>("Format"), elements, "persistent");
-
                     dataFormat->getPersistentConfig(persistentDataFormatConfig);
-
                     KARABO_LOG_FRAMEWORK_TRACE_CF << persistentDataFormatConfig;
-
-                    Hash c("Xml.indentation", 1);//, "Xml.writeDataTypes", false);
+                    Hash c("Xml.indentation", 1); //, "Xml.writeDataTypes", false);
                     TextSerializer<Hash>::Pointer serializer = TextSerializer<Hash>::create(c);
 
                     string dataFormatConfigXml;
@@ -380,34 +374,10 @@ namespace karabo {
                     TextSerializer<Hash>::Pointer serializer = TextSerializer<Hash>::create("Xml");
                     serializer->load(dataFormatConfig, dataFormatConfigXml);
 
-
-
-
                 } catch (...) {
                     KARABO_RETHROW
                 }
             }
-
-
-
-            //
-            //
-            //            void Table::refreshRecordFormatVector() {
-            //                m_recordFormatVector.clear();
-            //                r_refreshRecordFormatVector(m_recordFormatHash, m_recordFormatVector);
-            //            }
-            //
-            //            void Table::r_refreshRecordFormatVector(const karabo::util::Hash& recordFormat, std::vector< const boost::any*>& recordFormatVector) {
-            //                for (Hash::const_iterator it = recordFormat.begin(); it != recordFormat.end(); ++it) {
-            //                    if (recordFormat.getTypeAsId(it) == Types::HASH) {
-            //                        r_refreshRecordFormatVector(recordFormat.get<Hash > (it), recordFormatVector);
-            //                        continue;
-            //                    }
-            //                    m_recordFormatVector.push_back(&(it->second));
-            //                }
-            //
-            //            }
-            //
 
 
             void Table::defineStructure() {
@@ -418,105 +388,7 @@ namespace karabo {
                     elements[i]->create(m_chunkSize);
                 }
             }
-            //
-            //            void Table::r_openStructure(const Hash& recordFormat, boost::shared_ptr<H5::Group> group) {
-            //
-            //                for (Hash::const_iterator it = recordFormat.begin(); it != recordFormat.end(); ++it) {
-            //                    const string& key = it->first;
-            //                    if (recordFormat.getTypeAsId(it) == Types::HASH) {
-            //                        boost::shared_ptr<H5::Group> groupNext = boost::shared_ptr<H5::Group > (new H5::Group(group->openGroup(key)));
-            //                        r_openStructure(recordFormat.get<Hash > (it), groupNext);
-            //                        continue;
-            //                    }
-            //                    boost::shared_ptr<RecordElement> element = recordFormat.get<boost::shared_ptr<RecordElement> >(it);
-            //                    element->open(group);
-            //                }
-            //            }
-            //
 
-
-            //
-            //            void Table::r_write(const karabo::util::Hash& data, size_t recordNumber, size_t len, const Hash& recordFormat) {
-            //
-            //                for (Hash::const_iterator it = recordFormat.begin(); it != recordFormat.end(); ++it) {
-            //                    const string& key = it->first;
-            //                    if (recordFormat.getTypeAsId(it) == Types::HASH) {
-            //                        r_write(data.get<Hash > (key), recordNumber, len, recordFormat.get<Hash > (it));
-            //                        continue;
-            //                    }
-            //                    boost::shared_ptr<RecordElement> element = recordFormat.get<boost::shared_ptr<RecordElement> >(it);
-            //                    element->write(data, recordNumber, len);
-            //                }
-            //            }
-            //
-            //            void Table::r_extendRecordSpace(size_t len, const Hash & recordFormat) {
-            //
-            //                for (Hash::const_iterator it = recordFormat.begin(); it != recordFormat.end(); ++it) {
-            //                    if (recordFormat.getTypeAsId(it) == Types::HASH) {
-            //                        r_extendRecordSpace(len, recordFormat.get<Hash > (it));
-            //                        continue;
-            //                    }
-            //                    boost::shared_ptr<RecordElement> element = recordFormat.get<boost::shared_ptr<RecordElement> >(it);
-            //                    element->extend(len);
-            //                }
-            //            }
-            //
-            //            void Table::r_allocate(karabo::util::Hash& data, const karabo::util::Hash& recordFormat) {
-            //
-            //                for (Hash::const_iterator it = recordFormat.begin(); it != recordFormat.end(); ++it) {
-            //                    const string& key = it->first;
-            //                    if (recordFormat.getTypeAsId(it) == Types::HASH) {
-            //                        if (!data.has(key)) {
-            //                            data.set(key, Hash());
-            //                        }
-            //                        r_allocate(data.get<Hash > (key), recordFormat.get<Hash > (it));
-            //                        continue;
-            //                    }
-            //                    boost::shared_ptr<RecordElement> element = recordFormat.get<boost::shared_ptr<RecordElement> >(it);
-            //                    element->allocate(data);
-            //                }
-            //            }
-            //
-            //            void Table::r_allocate(karabo::util::Hash& data, size_t len, const karabo::util::Hash& recordFormat) {
-            //
-            //                for (Hash::const_iterator it = recordFormat.begin(); it != recordFormat.end(); ++it) {
-            //                    const string& key = it->first;
-            //                    if (recordFormat.getTypeAsId(it) == Types::HASH) {
-            //                        if (!data.has(key)) {
-            //                            data.set(key, Hash());
-            //                        }
-            //                        r_allocate(data.get<Hash > (key), len, recordFormat.get<Hash > (it));
-            //                        continue;
-            //                    }
-            //                    boost::shared_ptr<RecordElement> element = recordFormat.get<boost::shared_ptr<RecordElement> >(it);
-            //                    element->allocate(data, len);
-            //                }
-            //            }
-            //
-            //            void Table::r_read(karabo::util::Hash& data, size_t recordNumber, const Hash & recordFormat) {
-            //                for (Hash::const_iterator it = recordFormat.begin(); it != recordFormat.end(); ++it) {
-            //                    const string& key = it->first;
-            //                    if (recordFormat.getTypeAsId(it) == Types::HASH) {
-            //                        r_read(data.get<Hash > (key), recordNumber, recordFormat.get<Hash > (it));
-            //                        continue;
-            //                    }
-            //                    boost::shared_ptr<RecordElement> element = recordFormat.get<boost::shared_ptr<RecordElement> >(it);
-            //                    element->read(data, recordNumber);
-            //                }
-            //            }
-            //
-            //            void Table::r_read(karabo::util::Hash& data, size_t recordNumber, size_t len, const Hash & recordFormat) {
-            //                for (Hash::const_iterator it = recordFormat.begin(); it != recordFormat.end(); ++it) {
-            //                    const string& key = it->first;
-            //                    if (recordFormat.getTypeAsId(it) == Types::HASH) {
-            //                        r_read(data.get<Hash > (key), recordNumber, len, recordFormat.get<Hash > (it));
-            //                        continue;
-            //                    }
-            //                    boost::shared_ptr<RecordElement> element = recordFormat.get<boost::shared_ptr<RecordElement> >(it);
-            //                    element->read(data, recordNumber, len);
-            //                }
-            //            }
-            //
             //            void Table::r_readAttributes(karabo::util::Hash& attr, const Hash & recordFormat) {
             //                for (Hash::const_iterator it = recordFormat.begin(); it != recordFormat.end(); ++it) {
             //                    const string& key = it->first;

@@ -44,7 +44,6 @@ namespace karabo {
 
                 Scalar(const karabo::util::Hash& input) : Dataset(input) {
                     karabo::util::Dims dims;
-                    m_memoryDataSpace1 = Dataset::dataSpace(dims);
                     karabo::util::Hash config("dims", dims.toVector());
                     m_datasetWriter = DatasetWriter<T>::create("DatasetWriter_" + Scalar<T>::classInfo().getClassId(), config);
                     m_datasetReader = DatasetReader<T>::create("DatasetReader", config);
@@ -56,7 +55,6 @@ namespace karabo {
                 }
 
                 void close() {
-                    KARABO_CHECK_HDF5_STATUS(H5Sclose(m_memoryDataSpace1));
                     Dataset::close();
                 }
 
@@ -86,11 +84,10 @@ namespace karabo {
                     if (!data.has(m_key, '/')) {
                         T & value = data.bindReference<T > (m_key, '/');
                         m_datasetReader->bind(&value);
-                        //m_readData = &value;
                     } else {
                         T & value = data.get<T > (m_key, '/');
                         m_datasetReader->bind(&value);
-                        //m_readData = &value;
+                       
                     }
                 }
 
@@ -132,33 +129,6 @@ namespace karabo {
 
                 }
 
-                //                inline void readValue(T& value, hsize_t recordId) {
-                //                    try {
-                //                        selectFileRecord(recordId);
-                //                        DatasetReader<T>::read(value, m_dataSet, m_memoryDataSpace, m_fileDataSpace);
-                //                    } catch (...) {
-                //                        KARABO_RETHROW
-                //                    }
-                //                }
-                //
-                //
-                //                // buffered reading
-                //
-                //                void read(karabo::util::Hash& data, hsize_t recordId, hsize_t len) {
-                //                    try {
-                //                        selectFileRecord(recordId, len);
-                //                        karabo::util::Hash::iterator it = data.find(m_key);
-                //                        boost::any& any = data.getAny(it);
-                //                        if (!m_filter) {
-                //                            tracer << "creating read filter" << std::endl;
-                //                            m_filter = ScalarFilter<T>::createDefault(any.type().name());
-                //                        }
-                //                        m_filter->read(*this, any, len);
-                //                    } catch (...) {
-                //                        KARABO_RETHROW
-                //                    }
-                //
-                //                }
                 //
                 //                inline void readSpecificAttributes(karabo::util::Hash& attributes) {
                 //                    attributes.setFromPath(m_key + ".rank", 0);
@@ -167,8 +137,6 @@ namespace karabo {
                 //
 
 
-                T* m_readData;
-                hid_t m_memoryDataSpace1;
                 typename karabo::io::h5::DatasetWriter<T>::Pointer m_datasetWriter;
                 typename karabo::io::h5::DatasetReader<T>::Pointer m_datasetReader;
 
