@@ -89,9 +89,7 @@ namespace karabo {
                  * @param recordNumber
                  * @param 
                  */
-                size_t read(size_t recordNumber, size_t len);
-                
-                //                void read(size_t recordNumber);
+                size_t read(size_t recordNumber, size_t len);                
                 //                void readAttributes(karabo::util::Hash & attr);
 
                 /*
@@ -114,24 +112,7 @@ namespace karabo {
                 void openReadOnly(const karabo::io::h5::Format::Pointer dataFormat);
                 void openReadOnly();
                 //
-                //                void refreshRecordFormatVector();
-                //                void r_refreshRecordFormatVector(const karabo::util::Hash& recordFormat, std::vector< const boost::any*>& recordVector);
-                //
-                //void r_defineStructure(const karabo::util::Hash& recordFormat, boost::shared_ptr<H5::Group> group);
                 void defineStructure();
-                //                void r_openStructure(const karabo::util::Hash& recordFormat, boost::shared_ptr<H5::Group> group);
-                //                void r_write(const karabo::util::Hash& data, size_t recordNumber, const karabo::util::Hash& dataSetsInfo);
-                //                void r_write(const karabo::util::Hash& data, size_t recordNumber, size_t len, const karabo::util::Hash& dataSetsInfo);
-                //                void r_read(karabo::util::Hash& data, size_t recordNumber, const karabo::util::Hash& dataSetsDescription);
-                //                void r_read(karabo::util::Hash& data, size_t recordNumber, size_t len, const karabo::util::Hash& dataSetsDescription);
-                //                void r_readAttributes(karabo::util::Hash & attributes, const karabo::util::Hash& dataSetsDescription);
-                //                void r_extendRecordSpace(size_t len, const karabo::util::Hash& recordDescription);
-                //                void r_filter(const karabo::util::Hash& discovered, const karabo::util::Hash& selection, karabo::util::Hash& output);
-                //                hsize_t r_calculateNumberOfRecords(const karabo::util::Hash& recordFormat, bool firstTime = true);
-                //                hsize_t r_getChunkSize(const karabo::util::Hash& recordFormat, bool firstTime = true);
-                //
-                //                void r_allocate(karabo::util::Hash& data, const karabo::util::Hash& dataSetsDescription);
-                //                void r_allocate(karabo::util::Hash& data, size_t len, const karabo::util::Hash& dataSetsDescription);
                 //
                 //                void r_copyFromCache(karabo::util::Hash& data, size_t recordNumber, const karabo::util::Hash& recordFormat);
                 //                // calback method for used by discover function
@@ -150,8 +131,6 @@ namespace karabo {
                 void saveTableFormatAsAttribute(const karabo::io::h5::Format::Pointer dataFormat);
                 void readTableFormatFromAttribute(karabo::util::Hash& dataFormatConfig);
 
-                //
-                //
                 bool hasAttribute(hid_t group, const std::string& name) const;
                 //
                 //                template <class T>
@@ -185,7 +164,6 @@ namespace karabo {
 
 
 
-                //boost::shared_ptr<H5::Group> 
                 hid_t m_group; // hdf5 group to this table
 
                 //std::map<std::string,boost::shared_ptr<H5::Group> > 
@@ -193,13 +171,6 @@ namespace karabo {
 
 
                 boost::shared_ptr<Format> m_dataFormat;
-                //
-                //
-                //                // selected record format in Hash representation
-                //                karabo::util::Hash m_recordFormatHash;
-                //
-                //                karabo::util::Hash m_readData;
-                //
 
                 hsize_t m_chunkSize;
                 hsize_t m_tableSize;
