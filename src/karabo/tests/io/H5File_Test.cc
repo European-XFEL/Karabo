@@ -747,20 +747,6 @@ void H5File_Test::testBufferRead() {
             format->addElement(e1);
         }
 
-        //        string dataFormatConfigXml;
-        //        Hash config;
-        //        format->getPersistentConfig(config);
-        //        Hash c("Xml.indentation", 1, "Xml.writeDataTypes", false);
-        //        TextSerializer<Hash>::Pointer serializer = TextSerializer<Hash>::create(c);
-        //        serializer->save(config, dataFormatConfigXml);
-        //        clog << "1: \n" << dataFormatConfigXml << "\ndupa\n" << endl;
-        //
-        //        config.clear();
-        //        serializer->load(config, dataFormatConfigXml);
-        //
-        //        serializer->save(config, dataFormatConfigXml);
-        //        clog << "2: \n" << dataFormatConfigXml << endl;
-
 
         string filename = "/dev/shm/file3.h5";
         filename = resourcePath("file3.h5");
