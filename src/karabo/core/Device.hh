@@ -21,7 +21,7 @@
 
 #include "FsmMacros.hh"
 #include "FsmBase.hh"
-//#include "DeviceClient.hh"
+#include "DeviceClient.hh"
 
 /**
  * The main European XFEL namespace
@@ -36,16 +36,29 @@ namespace karabo {
         #define KARABO_LOG_WARN  log() << log4cpp::Priority::WARN 
         #define KARABO_LOG_ERROR log() << log4cpp::Priority::ERROR 
 
+        class BaseDevice : public virtual karabo::xms::SignalSlotable {
+
+        public:
+            
+            KARABO_CLASSINFO(BaseDevice, "BaseDevice", "1.0")
+            KARABO_CONFIGURATION_BASE_CLASS;
+
+            virtual void run() = 0;
+            
+            virtual const karabo::util::Hash& getCurrentConfiguration() const = 0;
+
+        };
+
         /**
          * The Device class.
          */
-        template <class FSM = FsmBase>
-        class Device : public virtual karabo::xms::SignalSlotable, public FSM {
+        template <class FSM = BaseFsm>
+        class Device : public BaseDevice, public FSM {
 
             karabo::util::Validator m_validatorIntern;
             karabo::util::Validator m_validatorExtern;
 
-            //boost::shared_ptr<DeviceClient> m_deviceClient;
+            boost::shared_ptr<DeviceClient> m_deviceClient;
 
             karabo::util::Hash m_instanceInfo;
 
@@ -71,8 +84,7 @@ namespace karabo {
 
         public:
 
-            KARABO_CLASSINFO(Device, "Device", "0.1")
-            KARABO_CONFIGURATION_BASE_CLASS
+            KARABO_CLASSINFO(Device, "Device", "1.0")
 
             static void expectedParameters(karabo::util::Schema& expected) {
                 using namespace karabo::util;
@@ -127,18 +139,18 @@ namespace karabo {
             }
 
             Device(const karabo::util::Hash& configuration) {
-                
+
                 // Make the configuration the initial state of the device
                 m_parameters = configuration;
-                
+
                 // Set serverId
                 if (configuration.has("serverId")) configuration.get("serverId", m_serverId);
                 else m_serverId = "__none__";
-                
+
                 // Set deviceId
                 if (configuration.has("deviceId")) configuration.get("deviceId", m_deviceId);
                 else m_deviceId = "__none__"; // TODO generate uuid
-                
+
             }
 
             virtual ~Device() {
@@ -163,13 +175,13 @@ namespace karabo {
              * 
              * @return DeviceClient instance
              */
-            //            DeviceClient& remote() {
-            //                if (!m_deviceClient) {
-            //                    // Initialize an embedded device client (for composition)
-            //                    m_deviceClient = boost::shared_ptr<DeviceClient > (new DeviceClient(shared_from_this()));
-            //                }
-            //                return *(m_deviceClient);
-            //            }
+            DeviceClient& remote() {
+                if (!m_deviceClient) {
+                    // Initialize an embedded device client (for composition)
+                    m_deviceClient = boost::shared_ptr<DeviceClient > (new DeviceClient(shared_from_this()));
+                }
+                return *(m_deviceClient);
+            }
 
             /**
              * Updates the state of the device. This function automatically notifies any observers in the distributed system.
@@ -226,7 +238,7 @@ namespace karabo {
                 } catch (const karabo::util::Exception& e) {
                     KARABO_RETHROW_AS(KARABO_PARAMETER_EXCEPTION("Error whilst retrieving parameter (" + key + ") from device"));
                 }
-                return var;  // never reached. Keep it to make a compiler happy.
+                return var; // never reached. Keep it to make a compiler happy.
             }
 
             /**
@@ -303,12 +315,10 @@ namespace karabo {
             }
 
             void resetProgress() {
-
                 emit("signalProgressUpdated", m_progressMin, "");
             }
 
             void setProgressRange(const int minimum, const int maximum) {
-
                 m_progressMin = minimum;
                 m_progressMax = maximum;
             }
@@ -396,7 +406,7 @@ namespace karabo {
                 return m_parameters;
             }
 
-            const std::string& getDeviceServerInstanceId() const {
+            const std::string& getServerId() const {
                 return m_serverId;
             }
 
@@ -404,14 +414,7 @@ namespace karabo {
 
         protected: // Functions and Classes
 
-            void onStateUpdate(const std::string& currentState) { // private
-                KARABO_LOG_FRAMEWORK_DEBUG << "onStateUpdate: " << currentState;
-                if (get<std::string>("state") != currentState) {
-                    set("state", currentState);
-                }
-                // Reply new state to interested event initiators
-                reply(currentState);
-            }
+           
 
             // This function will polymorphically be called by the FSM template
 
@@ -439,9 +442,9 @@ namespace karabo {
             void initDevice() {
                 using namespace karabo::util;
 
-                // Speed access to own classId
+                // ClassId
                 m_classId = getClassInfo().getClassId();
-
+                
                 // The static schema is the regular schema as assembled by parsing the expectedParameters functions
                 m_staticSchema = getSchema(m_classId, karabo::util::Schema::AssemblyRules(INIT | WRITE | READ));
 
@@ -482,6 +485,15 @@ namespace karabo {
 
                 set("classId", m_classId);
             }
+            
+            void onStateUpdate(const std::string& currentState) { // private
+                KARABO_LOG_FRAMEWORK_DEBUG << "onStateUpdate: " << currentState;
+                if (get<std::string>("state") != currentState) {
+                    set("state", currentState);
+                }
+                // Reply new state to interested event initiators
+                reply(currentState);
+            }
 
             void noStateTransition(const std::string& typeId, int state) {
                 std::string eventName(typeId);
@@ -500,39 +512,47 @@ namespace karabo {
             void initDeviceSlots() {
                 using namespace std;
 
+                SIGNAL2("signalChanged", karabo::util::Hash, string); // changeHash, instanceId
+                connectN("", "signalChanged", "*", "slotChanged");
+                
                 SIGNAL4("signalErrorFound", string, string, string, string); // timeStamp, shortMsg, longMsg, instanceId
+                connectN("", "signalErrorFound", "*", "slotErrorFound");
+                
                 SIGNAL2("signalBadReconfiguration", string, string); // shortMsg, instanceId 
+                connectN("", "signalBadReconfiguration", "*", "slotBadReconfiguration");
+                
                 SIGNAL2("signalNoTransition", string, string);
-                SIGNAL3("signalChanged", karabo::util::Hash, string, string); // changeHash, instanceId, classId
-
+                connectN("", "signalNoTransition", "*", "slotNoTransition");
+                
                 SIGNAL4("signalWarningOrAlarm", string, string, string, string); // timeStamp, message, type, instanceId
+                
+                // TODO Deprecate!
                 SIGNAL4("signalWarning", string, string, string, string); // timeStamp, warnMsg, instanceId, priority
+                connectN("", "signalWarning", "*", "slotWarning");
+                
                 SIGNAL4("signalAlarm", string, string, string, string); // timeStamp, alarmMsg, instanceId, priority
-
+                connectN("", "signalAlarm", "*", "slotAlarm");
+                
                 SIGNAL3("signalSchemaUpdated", string, string, string); // schema, instanceId, classId
+                connectN("", "signalSchemaUpdated", "*", "slotSchemaUpdated");
+                
+                // TODO Deprecate!
                 SIGNAL2("signalDeviceInstanceGone", string, string); // DeviceServerInstanceId, deviceInstanceId
+                connectN("", "signalDeviceInstanceGone", "*", "slotDeviceInstanceGone");
+                
                 SIGNAL3("signalProgressUpdated", int, string, string); // Progress value [0,100], label, deviceInstanceIdre
+                connectN("", "progressUpdate", "*", "slotProgressUpdated");
 
+                
                 SLOT1(slotReconfigure, karabo::util::Hash)
                 SLOT0(slotRefresh)
                 SLOT1(slotGetSchema, bool); // onlyCurrentState
                 SLOT0(slotKillDeviceInstance)
 
-                // Hard-coded connects (for global slots with this name)
-                connectN("", "signalChanged", "*", "slotChanged");
-                connectN("", "signalBadReconfiguration", "*", "slotBadReconfiguration");
-                connectN("", "signalNoTransition", "*", "slotNoTransition");
-                connectN("", "signalErrorFound", "*", "slotErrorFound");
-                connectN("", "signalWarning", "*", "slotWarning");
-                connectN("", "signalAlarm", "*", "slotAlarm");
-                connectN("", "signalSchemaUpdated", "*", "slotSchemaUpdated");
-                connectN("", "signalDeviceInstanceGone", "*", "slotDeviceInstanceGone");
-                connectN("", "progressUpdate", "*", "slotProgressUpdated");
             }
 
             void slotRefresh() {
-                emit("signalChanged", m_parameters, m_instanceId, m_classId); // TODO: Check whether needed
-                //cout << "Refresh " << all << std::endl;
+                emit("signalChanged", m_parameters, m_instanceId);
                 reply(m_parameters);
             }
 
@@ -568,14 +588,13 @@ namespace karabo {
             }
 
             void applyReconfiguration(const karabo::util::Hash& reconfiguration) {
-                
+
                 m_objectStateChangeMutex.lock();
                 m_parameters.merge(reconfiguration);
                 m_objectStateChangeMutex.unlock();
-                
+
                 KARABO_LOG_DEBUG << "After user interaction:\n" << reconfiguration;
                 emit("signalChanged", reconfiguration, getInstanceId(), m_classId);
-                KARABO_LOG_DEBUG << "Current state:\n" << m_parameters;
                 this->postReconfigure();
             }
 

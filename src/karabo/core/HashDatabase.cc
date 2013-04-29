@@ -8,8 +8,9 @@
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
 
-#include <karabo/io/Reader.hh>
+#include <karabo/io/Input.hh>
 #include "HashDatabase.hh"
+#include "karabo/io/FileTools.hh"
 
 namespace karabo {
     namespace core {
@@ -28,7 +29,7 @@ namespace karabo {
             boost::mutex::scoped_lock lock(m_databaseMutex);
             
             if (boost::filesystem::exists(KARABO_DB_FILE)) {
-                Reader<Hash>::create("TextFile", Hash("filename", KARABO_DB_FILE))->read(m_database);
+                karabo::io::loadFromFile<Hash>(m_database, KARABO_DB_FILE);
                 return true;
             }
             return false;
@@ -102,10 +103,9 @@ namespace karabo {
         
         void HashDatabase::saveDatabase() {
             boost::mutex::scoped_lock lock(m_databaseMutex);
-            Hash p;
-            p.setFromPath("filename", KARABO_DB_FILE);
-            p.setFromPath("format.Xml.printDataType", true);
-            Writer<Hash>::create("TextFile", p)->write(m_database);
+            Hash config;
+            config.set("format.Xml.printDataType", true);
+            karabo::io::saveToFile<Hash>(m_database, KARABO_DB_FILE, config);
         }
         
         unsigned int HashDatabase::insert(const std::string& tableName, karabo::util::Hash keyValuePairs) {
