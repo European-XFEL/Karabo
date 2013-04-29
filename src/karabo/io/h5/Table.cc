@@ -337,7 +337,7 @@ namespace karabo {
                     Hash persistentDataFormatConfig;
                     dataFormat->getPersistentConfig(persistentDataFormatConfig);
                     KARABO_LOG_FRAMEWORK_TRACE_CF << persistentDataFormatConfig;
-                    Hash c("Xml.indentation", 1); //, "Xml.writeDataTypes", false);
+                    Hash c("Xml.indentation", 1 , "Xml.writeDataTypes", false);
                     TextSerializer<Hash>::Pointer serializer = TextSerializer<Hash>::create(c);
 
                     string dataFormatConfigXml;
