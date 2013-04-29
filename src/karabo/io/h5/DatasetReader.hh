@@ -38,7 +38,7 @@ namespace karabo {
                 KARABO_CLASSINFO(DatasetReader, "DatasetReader", "1.0")
                 KARABO_CONFIGURATION_BASE_CLASS
 
-
+                virtual ~DatasetReader(){}
 
                 static void expectedParameters(karabo::util::Schema& expected) {
 
@@ -117,7 +117,7 @@ namespace karabo {
                 KARABO_CLASSINFO(DatasetReader, "DatasetReader", "1.0")
                 KARABO_CONFIGURATION_BASE_CLASS
 
-
+                virtual ~DatasetReader(){}
 
                 static void expectedParameters(karabo::util::Schema& expected) {
 
@@ -277,6 +277,8 @@ namespace karabo {
                 };
 
             public:
+                
+                virtual ~DatasetReader(){}
 
                 static void expectedParameters(karabo::util::Schema& expected) {
 
