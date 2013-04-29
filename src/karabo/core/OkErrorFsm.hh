@@ -18,7 +18,7 @@
 namespace karabo {
     namespace core {
 
-        class OkErrorFsm : public FsmBase {
+        class OkErrorFsm : public BaseFsm {
 
         public:
 

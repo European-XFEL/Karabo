@@ -7,7 +7,7 @@
  */
 
 
-#include <karabo/io/Reader.hh>
+#include <karabo/io/Input.hh>
 #include "MasterDevice.hh"
 #include "DeviceServer.hh"
 #include "HashDatabase.hh"
@@ -22,7 +22,7 @@ namespace karabo {
         using namespace karabo::util;
         using namespace karabo::io;
         
-        KARABO_REGISTER_FACTORY_CC(Device, MasterDevice)
+        KARABO_REGISTER_FOR_CONFIGURATION(BaseDevice, Device<OkErrorFsm>, MasterDevice)
 
         MasterDevice::~MasterDevice() {
         }
@@ -30,7 +30,7 @@ namespace karabo {
         void MasterDevice::expectedParameters(Schema& expected) {
         }
 
-        void MasterDevice::configure(const Hash& input) {
+        MasterDevice::MasterDevice(const Hash& input) : Device<OkErrorFsm>(input) {
             
             GLOBAL_SLOT1(slotDeviceServerProvideName, string) /* Hostname */
 
@@ -74,23 +74,19 @@ namespace karabo {
 //            connectN("", "signalUpdateDeviceInstance","*", "slotUpdateDeviceInstance");
 //            
 //            SIGNAL3("signalSchemaUpdatedToGui", string, string, string); // schema, instanceId, classId
-//            connectN("", "signalSchemaUpdatedToGui", "*", "slotSchemaUpdatedToGui");        
-        }
-
-        void MasterDevice::run() {
-            //startStateMachine();
-            initialize();
-            runEventLoop(false);
+//            connectN("", "signalSchemaUpdatedToGui", "*", "slotSchemaUpdatedToGui");
+            
+             initialize();
         }
 
         void MasterDevice::initialize() {
             bool exists = KARABO_DB_READ;
             // Check for existing database
             if(exists) {
-                log() << Priority::INFO << "Found existing database";
+                KARABO_LOG_DEBUG << "Found existing central database";
                 trackInstances();
             } else { // Create new one
-                log() << Priority::INFO << "No database information found, creating new...";
+                KARABO_LOG_INFO << "No database information found, creating new...";
                 KARABO_DB_SETUP
                 KARABO_DB_SAVE
             }
@@ -193,7 +189,7 @@ namespace karabo {
                 KARABO_DB_SELECT(result, "instanceId", "DeviceServerInstance", true);
             }
 
-            string instanceId = hostname + "/DeviceServer/" + String::toString(result.size());
+            string instanceId = hostname + "/DeviceServer/" + karabo::util::toString(result.size());
             this->sanifyDeviceServerInstanceId(instanceId); 
             
             log() << Priority::INFO << "This will be the " << result.size() + 1 << " device-server online on host \"" << hostname << "\"";
@@ -256,7 +252,7 @@ namespace karabo {
                     Hash keyValue("status", "online");
                     KARABO_DB_UPDATE("DeviceServerInstance", keyValue, row.get<string > ("instanceId") == devSrvInstId)
                     Hash data(result[0]);
-                    data.update(keyValue);
+                    data.merge(keyValue);
                     //emit("signalNewDeviceServerInstance", data);
                     call("*", "slotNewDeviceServerInstance", data);
                 } else if (status == "offline") { // back in business
@@ -282,7 +278,7 @@ namespace karabo {
             log() << Priority::INFO << "New standalone device instance from host \"" << hostname << "\" wants to register with id \"" << devInstId << "\"";
             
             string devSrvInstId = "no server (standalone devices)";
-            const string& devClassId = deviceConfig.begin()->first; // Root node corresponds to devClassId
+            const string& devClassId = deviceConfig.begin()->getKey(); // Root node corresponds to devClassId
             slotNewDeviceServerAvailable(hostname, devSrvInstId);
             slotNewDeviceClassAvailable(devSrvInstId, devClassId, deviceXsd);
             slotNewDeviceInstanceAvailable(devSrvInstId, deviceConfig);
@@ -335,7 +331,7 @@ namespace karabo {
         
         void MasterDevice::slotNewDeviceInstanceAvailable(const std::string& devSrvInstId, const karabo::util::Hash& deviceConfig) {
             
-            const string& devClassId = deviceConfig.begin()->first; // Root node corresponds to devClassId
+            const string& devClassId = deviceConfig.begin()->getKey(); // Root node corresponds to devClassId
             
             // Skip myself
             if (devClassId == "MasterDevice" || devClassId == "GuiServerDevice") return;

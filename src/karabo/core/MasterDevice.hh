@@ -11,9 +11,10 @@
 #define	KARABO_CORE_MASTERDEVICE_HH
 
 #include "Device.hh"
+#include "OkErrorFsm.hh"
 
 /**
- * The main European XFEL namespace
+ * The main karabo namespace
  */
 namespace karabo {
 
@@ -22,23 +23,17 @@ namespace karabo {
      */
     namespace core {
 
-        class MasterDevice : public Device {
+        class MasterDevice : public Device<OkErrorFsm> {
         public:
 
             KARABO_CLASSINFO(MasterDevice, "MasterDevice", "1.0")
 
-            MasterDevice() : Device(this) {
-            }
-
-            virtual ~MasterDevice();
-
             static void expectedParameters(karabo::util::Schema& expected);
 
-            void configure(const karabo::util::Hash& input);
+            MasterDevice(const karabo::util::Hash& input);
+            
+            virtual ~MasterDevice();
 
-            void run();
-
-        public:
 
         private: // Functions
             
@@ -80,8 +75,6 @@ namespace karabo {
             
             void sanifyDeviceServerInstanceId(std::string& originalInstanceId) const;
                         
-        private: // Members
-
         };
     }
 }

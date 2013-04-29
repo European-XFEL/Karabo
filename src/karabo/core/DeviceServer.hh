@@ -11,7 +11,7 @@
 #ifndef KARABO_CORE_DEVICESERVER_HH
 #define	KARABO_CORE_DEVICESERVER_HH
 
-#include <karabo/util/Factory.hh>
+#include <karabo/util/Configurator.hh>
 #include <karabo/util/PluginLoader.hh>
 #include <karabo/xms/SignalSlotable.hh>
 #include <karabo/log/Logger.hh>
@@ -40,7 +40,7 @@ namespace karabo {
         public:
 
             KARABO_CLASSINFO(DeviceServer, "DeviceServer", "1.0")
-            KARABO_FACTORY_BASE_CLASS
+            KARABO_CONFIGURATION_BASE_CLASS
 
             DeviceServer();
 
@@ -48,21 +48,21 @@ namespace karabo {
 
             static void expectedParameters(karabo::util::Schema&);
 
-            void configure(const karabo::util::Hash&);
+            DeviceServer(const karabo::util::Hash&);
 
             void run();
+            
+            
             
             /**************************************************************/
             /*                 Special Functions                          */
             /**************************************************************/
            
-            KARABO_FSM_LOGGER(log, log4cpp::CategoryStream, log4cpp::Priority::DEBUG)                    
-                    
             KARABO_FSM_ON_EXCEPTION(errorFound)
 
             KARABO_FSM_NO_TRANSITION_V_ACTION(noStateTransition)
             
-            KARABO_FSM_ON_CURRENT_STATE_CHANGE(updateCurrentState)
+            KARABO_FSM_ON_CURRENT_STATE_CHANGE(onStateUpdate)
 
             /**************************************************************/
             /*                        Events                              */
@@ -141,7 +141,7 @@ namespace karabo {
             KARABO_FSM_STATE_MACHINE(DeviceServerMachine, DeviceServerMachineTransitionTable, AllOkState, Self)
 
 
-            void startStateMachine() {
+            void startFsm() {
 
                 KARABO_FSM_CREATE_MACHINE(DeviceServerMachine, m_fsm);
 
@@ -154,6 +154,8 @@ namespace karabo {
             
 
         private: // Functions
+            
+            void onStateUpdate(const std::string& currentState);
             
             void loadLogger(const karabo::util::Hash& input);
 
@@ -197,9 +199,9 @@ namespace karabo {
             DeviceInstanceMap m_deviceInstanceMap;
             unsigned int m_deviceInstanceCount;
                         
-            karabo::io::Format<karabo::util::Schema>::Pointer m_format;
+            karabo::io::TextSerializer<karabo::util::Schema>::Pointer m_schemaSerializer;
             
-            std::string m_devSrvInstId;
+            std::string m_serverId;
             karabo::net::BrokerConnection::Pointer m_connection;
             
             karabo::util::Hash m_connectionConfig;
@@ -209,6 +211,7 @@ namespace karabo {
     } 
 } 
 
-KARABO_REGISTER_FACTORY_BASE_HH(karabo::core::DeviceServer, TEMPLATE_CORE, DECLSPEC_CORE)
+// TODO windows
+//KARABO_REGISTER_FACTORY_BASE_HH(karabo::core::DeviceServer, TEMPLATE_CORE, DECLSPEC_CORE)
 
 #endif

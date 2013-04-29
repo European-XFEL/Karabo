@@ -18,6 +18,29 @@ namespace karabo {
          * The Karabo Device Client
          * This class can be used to (remotely) control devices of the distributed system
          * Synchronous calls (i.e. get()) are in fact asynchronous under the hood
+         * 
+         * Following signals and slots are available on the various components:
+         * 
+         * All instances:
+         * 
+         * ## SIGNALS ##
+         *   1) signalInstanceUpdated(string, Hash) // instanceId, instanceInfo
+         *      Implemented in SignalSlotable and emitted if new instance is started.
+         *      Re-emitted whenever instanceInfo changes.
+         *  
+         *   2) signalInstanceGone(string) // instanceId
+         *      Implemented in SignalSlotable and emitted if instance is going down.
+         * 
+         *   NOTE: Both signals are connected to corresponding global slots
+         * 
+         * ## SLOTS ##
+         *   1) slotStopEventLoop()
+         *      Calls stop() on the IOService object, will unblock the run() method and stop communicating  
+         * Device:
+         *   1) signalChanged(Hash, string) // Changed configuration, deviceId
+         *   2) 
+         * 
+         * 
          */
         class DeviceClient {
 
@@ -37,11 +60,10 @@ namespace karabo {
              *     
              * device +
              *   <deviceId> type host classId serverId version +
-             *      fullSchema SCHEMA
+             *      fullSchema => SCHEMA
              *      activeSchema +
-             *         <stateName> +
-             *           <roleName> SCHEMA
-             *      configuration HASH
+             *         <stateName> => SCHEMA
+             *      configuration => HASH
              */
             karabo::util::Hash m_runtimeSystemDescription;
 
