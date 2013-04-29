@@ -284,6 +284,8 @@ namespace karabo {
                                     e.clearTrace();
                                 }
                             }
+                        } else {
+                            hash.set(nodeName, string());
                         }
                     } else {
                         hash.set(nodeName, string());
