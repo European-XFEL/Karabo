@@ -863,6 +863,10 @@ namespace schemawrap {
             throw KARABO_PYTHON_EXCEPTION("Python argument in 'getKeyFromAlias': type is not supported");
         }
     }
+    
+    void help(Schema& schema, const std::string& classId = "") {
+        schema.help(classId);
+    }
 
 }
 
@@ -1089,7 +1093,7 @@ void exportPyUtilSchema() {
         s.def("isLeaf", &Schema::isLeaf);
         s.def("isNode", &Schema::isNode);
 
-        s.def("help", &Schema::help, (bp::arg("classId") = ""));
+        s.def("help", &schemawrap::help, (bp::arg("classId") = ""));
 
         s.def("getClassInfo"
               , (ClassInfo(Schema::*)() const) (&Schema::getClassInfo)
