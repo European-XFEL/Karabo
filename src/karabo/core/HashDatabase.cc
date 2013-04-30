@@ -103,9 +103,7 @@ namespace karabo {
         
         void HashDatabase::saveDatabase() {
             boost::mutex::scoped_lock lock(m_databaseMutex);
-            Hash config;
-            config.set("format.Xml.printDataType", true);
-            karabo::io::saveToFile<Hash>(m_database, KARABO_DB_FILE, config);
+            karabo::io::saveToFile<Hash>(m_database, KARABO_DB_FILE);
         }
         
         unsigned int HashDatabase::insert(const std::string& tableName, karabo::util::Hash keyValuePairs) {

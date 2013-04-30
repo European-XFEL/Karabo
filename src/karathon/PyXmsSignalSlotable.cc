@@ -34,8 +34,7 @@ void exportPyXmsSignalSlotable() {//exposing karabo::xms::SignalSlotable
             ;
 
     bp::class_<SignalSlotable, boost::noncopyable > ("SignalSlotableIntern")
-            .def(bp::init<const karabo::net::BrokerConnection::Pointer&, const std::string&, const karabo::util::Hash&, int>())
-            .def(bp::init<const karabo::net::BrokerConnection::Pointer&, const std::string&, const karabo::util::Hash&>())
+            .def(bp::init<const karabo::net::BrokerConnection::Pointer&, const std::string&, int>())
             .def(bp::init<const karabo::net::BrokerConnection::Pointer&, const std::string&>())
             ;
 
@@ -78,7 +77,6 @@ void exportPyXmsSignalSlotable() {//exposing karabo::xms::SignalSlotable
             .def("getAvailableSignals", &SignalSlotableWrap::getAvailableSignalsPy, bp::arg("instanceId"))
             .def("getAvailableSlots", &SignalSlotableWrap::getAvailableSlotsPy, bp::arg("instanceId"))
 
-            .def("slotPing", (void (SignalSlotable::*)()) (&SignalSlotable::slotPing))
             .def("disconnect", (void (SignalSlotable::*)(string const &, string const &)) (&SignalSlotable::disconnect), (bp::arg("signal"), bp::arg("slot")))
             .def("getInstanceId"
                  , (string const & (SignalSlotable::*)() const) (&SignalSlotable::getInstanceId)

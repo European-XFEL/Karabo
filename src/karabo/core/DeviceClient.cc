@@ -24,7 +24,7 @@ namespace karabo {
             karabo::net::BrokerConnection::Pointer connection = karabo::net::BrokerConnection::create(connectionType, connectionParameters);
             std::string ownInstanceId = generateOwnInstanceId();
             m_signalSlotable = boost::shared_ptr<SignalSlotable > (new SignalSlotable(connection, ownInstanceId));
-            m_eventThread = boost::thread(boost::bind(&karabo::xms::SignalSlotable::runEventLoop, m_signalSlotable, true));
+            m_eventThread = boost::thread(boost::bind(&karabo::xms::SignalSlotable::runEventLoop, m_signalSlotable, true, Hash()));
             this->setupSlots();
             this->cacheAvailableInstances();
 
@@ -96,6 +96,7 @@ namespace karabo {
         void DeviceClient::slotInstanceGone(const std::string& instanceId) {
             boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
             m_runtimeSystemDescription.erase("device." + instanceId);
+            KARABO_LOG_FRAMEWORK_INFO << "Instance \"" << instanceId << "\" is gone.";
             KARABO_LOG_FRAMEWORK_DEBUG << "slotInstanceGone() was called, runtimeSystemDescription looks like:";
             KARABO_LOG_FRAMEWORK_DEBUG << m_runtimeSystemDescription;
         }

@@ -76,10 +76,10 @@ namespace karabo {
 //            SIGNAL3("signalSchemaUpdatedToGui", string, string, string); // schema, instanceId, classId
 //            connectN("", "signalSchemaUpdatedToGui", "*", "slotSchemaUpdatedToGui");
             
-             initialize();
+             initializeDatabase();
         }
 
-        void MasterDevice::initialize() {
+        void MasterDevice::initializeDatabase() {
             bool exists = KARABO_DB_READ;
             // Check for existing database
             if(exists) {
@@ -274,15 +274,15 @@ namespace karabo {
             KARABO_DB_SAVE
         }
 
-        void MasterDevice::slotNewStandaloneDeviceInstanceAvailable(const std::string& hostname, const karabo::util::Hash& deviceConfig, const std::string& devInstId, const std::string& deviceXsd) {
-            log() << Priority::INFO << "New standalone device instance from host \"" << hostname << "\" wants to register with id \"" << devInstId << "\"";
+        void MasterDevice::slotNewStandaloneDeviceInstanceAvailable(const std::string& hostname, const karabo::util::Hash& deviceConfig, const std::string& deviceId, const std::string& deviceXsd) {
+            log() << Priority::INFO << "New standalone device instance from host \"" << hostname << "\" wants to register with id \"" << deviceId << "\"";
             
             string devSrvInstId = "no server (standalone devices)";
             const string& devClassId = deviceConfig.begin()->getKey(); // Root node corresponds to devClassId
             slotNewDeviceServerAvailable(hostname, devSrvInstId);
             slotNewDeviceClassAvailable(devSrvInstId, devClassId, deviceXsd);
             slotNewDeviceInstanceAvailable(devSrvInstId, deviceConfig);
-            trackExistenceOfInstance(devInstId);
+            trackExistenceOfInstance(deviceId);
         }
         
         void MasterDevice::slotNewDeviceClassAvailable(const std::string& devSrvInstId, const std::string& devClassId, const std::string& deviceXsd) {
@@ -329,7 +329,7 @@ namespace karabo {
             }
         }
         
-        void MasterDevice::slotNewDeviceInstanceAvailable(const std::string& devSrvInstId, const karabo::util::Hash& deviceConfig) {
+        void MasterDevice::slotNewDeviceInstanceAvailable(const std::string& serverId, const karabo::util::Hash& deviceConfig) {
             
             const string& devClassId = deviceConfig.begin()->getKey(); // Root node corresponds to devClassId
             
@@ -339,12 +339,12 @@ namespace karabo {
             cout << deviceConfig << endl;
             
             const Hash& config = deviceConfig.get<Hash>(devClassId);
-            const string& devInstId = config.get<string>("devInstId");
+            const string& deviceId = config.get<string>("deviceId");
             
-            log() << Priority::INFO << "New device instance \"" << devInstId << "\" on device-server \"" << devSrvInstId << "\" available";
+            log() << Priority::INFO << "New device instance \"" << deviceId << "\" on device-server \"" << serverId << "\" available";
             
             HashDatabase::ResultType result;
-            KARABO_DB_SELECT(result, "id", "DeviceServerInstance", row.get<string>("instanceId") == devSrvInstId);
+            KARABO_DB_SELECT(result, "id", "DeviceServerInstance", row.get<string>("instanceId") == serverId);
             
             unsigned int devSerInsId;
             if (result.size() == 1) {
@@ -366,7 +366,7 @@ namespace karabo {
             }
 
             // Insert new deviceInstance
-            Hash data("instanceId", devInstId, "configuration", deviceConfig, "devClaId", devClaId, "schema", schema);
+            Hash data("instanceId", deviceId, "configuration", deviceConfig, "devClaId", devClaId, "schema", schema);
             unsigned int id = KARABO_DB_INSERT("DeviceInstance", data);
             KARABO_DB_SAVE
             

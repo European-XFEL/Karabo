@@ -31,12 +31,12 @@ namespace karabo {
         std::set<int> SignalSlotable::m_reconnectIntervals = std::set<int>();
 
 
-        SignalSlotable::SignalSlotable() /*: m_isProcessingSlot(false)*/ {
+        SignalSlotable::SignalSlotable() {
         }
 
 
-        SignalSlotable::SignalSlotable(const BrokerConnection::Pointer& connection, const string& instanceId, const karabo::util::Hash& instanceInfo, int heartbeatRate) /*: m_isProcessingSlot(false)*/ {
-            init(connection, instanceId, instanceInfo, heartbeatRate);
+        SignalSlotable::SignalSlotable(const BrokerConnection::Pointer& connection, const string& instanceId, int heartbeatRate) {
+            init(connection, instanceId, heartbeatRate);
         }
 
 
@@ -44,11 +44,10 @@ namespace karabo {
         }
 
 
-        void SignalSlotable::init(const karabo::net::BrokerConnection::Pointer& connection, const std::string& instanceId, const karabo::util::Hash& instanceInfo, int heartbeatRate) {
+        void SignalSlotable::init(const karabo::net::BrokerConnection::Pointer& connection, const std::string& instanceId, int heartbeatRate) {
 
             m_connection = connection;
             m_instanceId = instanceId;
-            m_instanceInfo = instanceInfo;
             m_timeToLive = heartbeatRate;
 
             // Create the managing ioService object
@@ -150,13 +149,14 @@ namespace karabo {
         }
 
 
-        void SignalSlotable::runEventLoop(bool emitHeartbeat) {
+        void SignalSlotable::runEventLoop(bool emitHeartbeat, const karabo::util::Hash& instanceInfo) {
+
+            updateInstanceInfo(instanceInfo);
+
             if (emitHeartbeat) {
                 m_sendHeartbeats = true;
                 // Send heartbeat and sleep for m_timeToLive seconds
                 boost::thread heartbeatThread(boost::bind(&karabo::xms::SignalSlotable::emitHeartbeat, this));
-                // Signal that a new instance is available
-                call("*", "slotInstanceUpdated", m_instanceId, m_instanceInfo);
                 m_ioService->work(); // blocks
                 m_sendHeartbeats = false;
                 heartbeatThread.join();
@@ -297,7 +297,7 @@ namespace karabo {
 
         void SignalSlotable::updateInstanceInfo(const karabo::util::Hash& update) {
             m_instanceInfo.merge(update);
-            call("*", "slotInstanceUpdated", m_instanceInfo);
+            call("*", "slotInstanceUpdated", m_instanceId, m_instanceInfo);
         }
 
 
@@ -356,7 +356,7 @@ namespace karabo {
 
             bool connectionEstablished = false;
             if (signalExists && slotExists) {
-                emit("signalConnected", signalInstanceId, signalFunction, slotInstanceId, slotFunction);
+                if (slotInstanceId != "*") emit("signalConnected", signalInstanceId, signalFunction, slotInstanceId, slotFunction);
                 connectionEstablished = true;
                 if (isVerbose) cout << "INFO  : Connection successfully established." << endl;
             } else if (signalExists) {
@@ -429,6 +429,8 @@ namespace karabo {
 
 
         bool SignalSlotable::tryToFindSlot(const std::string& signalInstanceId, const std::string& signalFunction, const std::string& slotInstanceId, const std::string& slotFunction, const int& connectionType, const bool isVerbose) {
+
+            if (slotInstanceId == "*") return true; // GLOBAL slots may or may not exist
 
             bool slotExists = false;
 

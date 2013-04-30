@@ -41,6 +41,7 @@ OBJECTFILES= \
 	${OBJECTDIR}/_ext/381567218/PyCoreDeviceClient.o \
 	${OBJECTDIR}/_ext/381567218/PyIoFileTools.o \
 	${OBJECTDIR}/_ext/381567218/PyIoSerialization.o \
+	${OBJECTDIR}/_ext/381567218/PyLogLogger.o \
 	${OBJECTDIR}/_ext/381567218/PyUtilClassInfo.o \
 	${OBJECTDIR}/_ext/381567218/PyUtilHash.o \
 	${OBJECTDIR}/_ext/381567218/PyUtilSchema.o \
@@ -111,6 +112,11 @@ ${OBJECTDIR}/_ext/381567218/PyIoSerialization.o: ../../../src/karathon/PyIoSeria
 	${MKDIR} -p ${OBJECTDIR}/_ext/381567218
 	${RM} $@.d
 	$(COMPILE.cc) -O2 -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/include -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/381567218/PyIoSerialization.o ../../../src/karathon/PyIoSerialization.cc
+
+${OBJECTDIR}/_ext/381567218/PyLogLogger.o: ../../../src/karathon/PyLogLogger.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/381567218
+	${RM} $@.d
+	$(COMPILE.cc) -O2 -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/include -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/381567218/PyLogLogger.o ../../../src/karathon/PyLogLogger.cc
 
 ${OBJECTDIR}/_ext/381567218/PyUtilClassInfo.o: ../../../src/karathon/PyUtilClassInfo.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/381567218
@@ -255,6 +261,19 @@ ${OBJECTDIR}/_ext/381567218/PyIoSerialization_nomain.o: ${OBJECTDIR}/_ext/381567
 	    $(COMPILE.cc) -O2 -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/include -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/381567218/PyIoSerialization_nomain.o ../../../src/karathon/PyIoSerialization.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/381567218/PyIoSerialization.o ${OBJECTDIR}/_ext/381567218/PyIoSerialization_nomain.o;\
+	fi
+
+${OBJECTDIR}/_ext/381567218/PyLogLogger_nomain.o: ${OBJECTDIR}/_ext/381567218/PyLogLogger.o ../../../src/karathon/PyLogLogger.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/381567218
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/381567218/PyLogLogger.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} $@.d;\
+	    $(COMPILE.cc) -O2 -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/include -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/381567218/PyLogLogger_nomain.o ../../../src/karathon/PyLogLogger.cc;\
+	else  \
+	    ${CP} ${OBJECTDIR}/_ext/381567218/PyLogLogger.o ${OBJECTDIR}/_ext/381567218/PyLogLogger_nomain.o;\
 	fi
 
 ${OBJECTDIR}/_ext/381567218/PyUtilClassInfo_nomain.o: ${OBJECTDIR}/_ext/381567218/PyUtilClassInfo.o ../../../src/karathon/PyUtilClassInfo.cc 

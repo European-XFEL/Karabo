@@ -37,7 +37,7 @@ namespace karabo {
 
         private: // Functions
             
-            void initialize();
+            void initializeDatabase();
             
             void slotDeviceServerProvideName(const std::string& hostname);
 

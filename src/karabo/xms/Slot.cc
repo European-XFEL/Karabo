@@ -21,12 +21,16 @@ namespace karabo {
             return m_instanceIdOfSender;
         }
         
-        const std::string& Slot::getRoleOfSender() const {
+        const std::string& Slot::getRoleIdOfSender() const {
             return m_roleOfSender;
         }
         
         const std::string& Slot::getUserIdOfSender() const {
             return m_userIdOfSender;
+        }
+        
+        const std::string& Slot::getSessionTokenOfSender() const {
+            return m_sessionTokenOfSender;
         }
 
         void Slot::handlePossibleReply(const karabo::util::Hash& header) {

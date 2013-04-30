@@ -73,7 +73,6 @@ namespace karabo {
         }
 
         void GuiServerDevice::okStateOnEntry() {
-            KARABO_LOG_INFO << "Starting the Karabo GuiServer";
             m_dataConnection->startAsync(boost::bind(&karabo::core::GuiServerDevice::onConnect, this, _1));
             // Use one thread currently (you may start this multiple time for having more threads doing the work)
             boost::thread(boost::bind(&karabo::net::IOService::run, m_ioService));

@@ -9,6 +9,7 @@
 #include <karabo/util/Schema.hh>
 #include <karabo/util/SimpleElement.hh>
 #include <karabo/util/FromLiteral.hh>
+#include <karabo/log/Logger.hh>
 #include "HashXmlSerializer.hh"
 
 using namespace karabo::util;
@@ -206,7 +207,8 @@ namespace karabo {
                     try {
                         type = Types::from<FromLiteral > (attributeValue.substr(m_prefix.size(), pos - m_prefix.size()));
                     } catch (const karabo::util::Exception& e) {
-                        cout << "WARN: Could not understand xml attribute type: \"" << attributeValue.substr(m_prefix.size(), pos - m_prefix.size()) << "\". Will interprete type as string." << endl;
+                        KARABO_LOG_FRAMEWORK_WARN << "Could not understand xml attribute type: \"" << attributeValue.substr(m_prefix.size(), pos - m_prefix.size()) << "\". Will interprete type as string.";
+                        KARABO_LOG_FRAMEWORK_DEBUG << "Failure details: " << e.detailedMsg();
                         type = Types::UNKNOWN;
                         e.clearTrace();
                     }
@@ -275,6 +277,7 @@ namespace karabo {
                             // Special case: Schema
                             if (attributeValue == "HASH") hash.set(nodeName, Hash());
                             else if (attributeValue == "SCHEMA") hash.set(nodeName, Schema());
+                            else if (attributeValue == "VECTOR_HASH") hash.set(nodeName, vector<Hash>());
                             else {
                                 Hash::Node& hashNode = hash.set(nodeName, string());
                                 try {
