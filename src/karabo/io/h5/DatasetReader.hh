@@ -56,8 +56,10 @@ namespace karabo {
                     m_dims = karabo::util::Dims(input.get<std::vector<unsigned long long> >("dims"));
 
                     m_memoryDataSpace = Dataset::dataSpace(m_dims);
-                    #ifdef KARABO_ENABLE_LOG_TARCE
-                    Dataset::getDataSpaceInfo(this->m_memoryDataSpace, "DatasetWriter:constr m_memoryDataSpace");
+                    #ifdef KARABO_ENABLE_TRACE_LOG
+                    std::ostringstream oss;
+                    Dataset::getDataSpaceInfo(this->m_memoryDataSpace, oss);
+                    KARABO_LOG_FRAMEWORK_TRACE << oss.str();
                     #endif
 
                     std::vector<unsigned long long> bufferVector(m_dims.rank() + 1, 0);
@@ -136,7 +138,9 @@ namespace karabo {
 
                     m_memoryDataSpace = Dataset::dataSpace(m_dims);
                     #ifdef KARABO_ENABLE_LOG_TARCE
-                    Dataset::getDataSpaceInfo(this->m_memoryDataSpace, "DatasetWriter:constr m_memoryDataSpace");
+                    std::ostringstream oss;
+                    Dataset::getDataSpaceInfo(this->m_memoryDataSpace, oss);
+                    KARABO_LOG_FRAMEWORK_TRACE << oss.str();                    
                     #endif
 
                     std::vector<unsigned long long> bufferVector(m_dims.rank() + 1, 0);
@@ -297,7 +301,9 @@ namespace karabo {
 
                     m_memoryDataSpace = Dataset::dataSpace(m_dims);
                     #ifdef KARABO_ENABLE_LOG_TARCE
-                    Dataset::getDataSpaceInfo(this->m_memoryDataSpace, "DatasetWriter:constr m_memoryDataSpace");
+                    std::ostringstream oss;
+                    Dataset::getDataSpaceInfo(this->m_memoryDataSpace, oss);
+                    KARABO_LOG_FRAMEWORK_TRACE << oss.str();                    
                     #endif
 
                     std::vector<unsigned long long> bufferVector(m_dims.rank() + 1, 0);
@@ -382,7 +388,6 @@ namespace karabo {
                 karabo::util::Dims m_dims;
                 karabo::util::Dims m_dimsBuffer;
                 hid_t m_memoryDataSpace;
-                //T* m_readData;
                 boost::shared_ptr<Mapping > m_readData;
 
             };

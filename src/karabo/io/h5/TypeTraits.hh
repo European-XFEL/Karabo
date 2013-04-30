@@ -11,6 +11,7 @@
 #define	KARABO_IO_TYPETRAITS_HH
 
 #include <string>
+#include <complex>
 #include <hdf5/hdf5.h>
 
 namespace karabo {
@@ -41,7 +42,9 @@ namespace karabo {
             template<> const hid_t ScalarTypes::getHdf5NativeType(const unsigned int&);
             template<> const hid_t ScalarTypes::getHdf5NativeType(const unsigned long long&);
             template<> const hid_t ScalarTypes::getHdf5NativeType(const float&);
+            template<> const hid_t ScalarTypes::getHdf5NativeType(const std::complex<float>&);
             template<> const hid_t ScalarTypes::getHdf5NativeType(const double&);
+            template<> const hid_t ScalarTypes::getHdf5NativeType(const std::complex<double>&);
             template<> const hid_t ScalarTypes::getHdf5NativeType(const bool&);
             template<> const hid_t ScalarTypes::getHdf5NativeType(const std::string&);
 
@@ -55,7 +58,9 @@ namespace karabo {
             template<> const hid_t ScalarTypes::getHdf5StandardType(const unsigned int&);
             template<> const hid_t ScalarTypes::getHdf5StandardType(const unsigned long long&);
             template<> const hid_t ScalarTypes::getHdf5StandardType(const float&);
+            template<> const hid_t ScalarTypes::getHdf5StandardType(const std::complex<float>&);            
             template<> const hid_t ScalarTypes::getHdf5StandardType(const double&);
+            template<> const hid_t ScalarTypes::getHdf5StandardType(const std::complex<double>&);            
             template<> const hid_t ScalarTypes::getHdf5StandardType(const bool&);
             template<> const hid_t ScalarTypes::getHdf5StandardType(const std::string&);
 

@@ -54,25 +54,23 @@ namespace karabo {
             }
 
 
-            Dataset::Dataset(const karabo::util::Hash& input) : Element(input), m_numberAllocatedRecords(0) {
-                m_compressionLevel = input.get<int>("compressionLevel");
-                configureDataDimensions(input);
-                configureFileDataSpace(input);
+            void Dataset::configureDataDimensions(const karabo::util::Hash& input, const Dims& singleValueDims) {
 
-            }
-
-
-            void Dataset::configureDataDimensions(const karabo::util::Hash& input) {
+                size_t singleValueRank = singleValueDims.rank();
                 if (input.has("dims")) {
-                    m_dims = Dims(input.get< vector<unsigned long long> >("dims"));
+                    vector<unsigned long long> dims = input.get< vector<unsigned long long> >("dims");
+                    for (size_t i = 0; i < singleValueRank; ++i) {
+                        dims.push_back(singleValueDims.extentIn(i));
+                    }
+                    m_dims = Dims(dims);
+
                 } else {
-                    // assume scalar value
-                    m_dims = Dims();
+                    m_dims = singleValueDims;
                 }
 
+                #ifdef KARABO_ENABLE_TRACE_LOG
                 KARABO_LOG_FRAMEWORK_TRACE_C("karabo.io.h5.Dataset.configureDataDimensions") << m_dims.rank();
-                #ifdef KARABO_LOG_ENABLE_TRACE
-                for (int i = 0; i < m_dims.rank(); ++i) {
+                for (size_t i = 0; i < m_dims.rank(); ++i) {
                     KARABO_LOG_FRAMEWORK_TRACE_C("karabo.io.h5.Dataset.configureDataDimensions") << "m_dims[" << i << "] = " << m_dims.extentIn(i);
                 }
                 #endif                
@@ -291,9 +289,6 @@ namespace karabo {
                 maxdims[0] = H5S_UNLIMITED;
                 hid_t ds = H5Screate_simple(dims.rank(), &curdims[0], &maxdims[0]);
                 KARABO_CHECK_HDF5_STATUS(ds);
-                #ifdef KARABO_LOG_ENABLE_TRACE
-                getDataSpaceInfo(ds, "Just after creating dataspace");
-                #endif
                 return ds;
             }
 
