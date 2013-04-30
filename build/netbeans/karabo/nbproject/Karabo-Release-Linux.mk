@@ -50,6 +50,7 @@ OBJECTFILES= \
 	${OBJECTDIR}/_ext/1072794519/TextFileInput.o \
 	${OBJECTDIR}/_ext/1072794519/TextFileOutput.o \
 	${OBJECTDIR}/_ext/769817549/Attribute.o \
+	${OBJECTDIR}/_ext/769817549/Complex.o \
 	${OBJECTDIR}/_ext/769817549/Dataset.o \
 	${OBJECTDIR}/_ext/769817549/DatasetReader.o \
 	${OBJECTDIR}/_ext/769817549/DatasetWriter.o \
@@ -221,6 +222,11 @@ ${OBJECTDIR}/_ext/769817549/Attribute.o: ../../../src/karabo/io/h5/Attribute.cc
 	${MKDIR} -p ${OBJECTDIR}/_ext/769817549
 	${RM} $@.d
 	$(COMPILE.cc) -O2 -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/769817549/Attribute.o ../../../src/karabo/io/h5/Attribute.cc
+
+${OBJECTDIR}/_ext/769817549/Complex.o: ../../../src/karabo/io/h5/Complex.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/769817549
+	${RM} $@.d
+	$(COMPILE.cc) -O2 -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/769817549/Complex.o ../../../src/karabo/io/h5/Complex.cc
 
 ${OBJECTDIR}/_ext/769817549/Dataset.o: ../../../src/karabo/io/h5/Dataset.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/769817549
@@ -895,6 +901,19 @@ ${OBJECTDIR}/_ext/769817549/Attribute_nomain.o: ${OBJECTDIR}/_ext/769817549/Attr
 	    $(COMPILE.cc) -O2 -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/769817549/Attribute_nomain.o ../../../src/karabo/io/h5/Attribute.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/769817549/Attribute.o ${OBJECTDIR}/_ext/769817549/Attribute_nomain.o;\
+	fi
+
+${OBJECTDIR}/_ext/769817549/Complex_nomain.o: ${OBJECTDIR}/_ext/769817549/Complex.o ../../../src/karabo/io/h5/Complex.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/769817549
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/769817549/Complex.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} $@.d;\
+	    $(COMPILE.cc) -O2 -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/769817549/Complex_nomain.o ../../../src/karabo/io/h5/Complex.cc;\
+	else  \
+	    ${CP} ${OBJECTDIR}/_ext/769817549/Complex.o ${OBJECTDIR}/_ext/769817549/Complex_nomain.o;\
 	fi
 
 ${OBJECTDIR}/_ext/769817549/Dataset_nomain.o: ${OBJECTDIR}/_ext/769817549/Dataset.o ../../../src/karabo/io/h5/Dataset.cc 

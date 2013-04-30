@@ -35,7 +35,14 @@ namespace karabo {
 
                 static void expectedParameters(karabo::util::Schema& expected);
 
-                Dataset(const karabo::util::Hash& input);
+                template <class Derived>
+                Dataset(const karabo::util::Hash& input, Derived* d) : Element(input), m_numberAllocatedRecords(0) {
+                    m_compressionLevel = input.get<int>("compressionLevel");
+                    karabo::util::Dims singleValueDims = Derived::getSingleValueDimensions();
+                    configureDataDimensions(input, singleValueDims);
+                    configureFileDataSpace(input);
+                }
+                
 
                 virtual ~Dataset() {
                 }
@@ -56,24 +63,30 @@ namespace karabo {
             public:
 
                 void read(hsize_t recordId);
-                
+
                 void read(hsize_t recordId, hsize_t len);
 
             protected:
 
                 virtual void readRecord(const hid_t& dataSet, const hid_t& fileDataSpace) = 0;
-                
+
                 virtual void readRecords(hsize_t len, const hid_t& dataSet, const hid_t& fileDataSpace) = 0;
 
             public:
 
-                static void getDataSpaceInfo(hid_t dataSpace, const std::string& msg) {
+                static void getDataSpaceInfo(hid_t dataSpace, std::ostringstream& oss) {
                     int ndims = H5Sget_simple_extent_ndims(dataSpace);
                     KARABO_CHECK_HDF5_STATUS(ndims);
-                    std::vector<hsize_t> extent(ndims, 0);                   
+                    std::vector<hsize_t> extent(ndims, 0);
                     std::vector<hsize_t> maxExtent(ndims, 0);
                     KARABO_CHECK_HDF5_STATUS(H5Sget_simple_extent_dims(dataSpace, &extent[0], &maxExtent[0]));
+                    for (int i = 0; i < ndims; ++i) {
+                        oss << "[0]={" << extent[i] << "," << maxExtent[i] << "}; ";
+                    }
                 }
+
+
+
 
                 static hid_t dataSpace(const karabo::util::Dims& dims);
 
@@ -130,7 +143,7 @@ namespace karabo {
 
             private:
 
-                void configureDataDimensions(const karabo::util::Hash& input);
+                void configureDataDimensions(const karabo::util::Hash& input, const karabo::util::Dims& singleValueDims);
                 void configureFileDataSpace(const karabo::util::Hash& input);
                 void createDataSetProperties();
 

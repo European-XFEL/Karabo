@@ -42,13 +42,17 @@ namespace karabo {
                                  )
 
 
-                Scalar(const karabo::util::Hash& input) : Dataset(input) {
+                Scalar(const karabo::util::Hash& input) : Dataset(input, this) {
                     karabo::util::Dims dims;
                     karabo::util::Hash config("dims", dims.toVector());
                     m_datasetWriter = DatasetWriter<T>::create("DatasetWriter_" + Scalar<T>::classInfo().getClassId(), config);
                     m_datasetReader = DatasetReader<T>::create("DatasetReader", config);
                 }
 
+                static const karabo::util::Dims getSingleValueDimensions(){
+                   return karabo::util::Dims();
+                }
+                
             public:
 
                 virtual ~Scalar() {
@@ -63,7 +67,7 @@ namespace karabo {
                 }
 
                 void writeNode(const karabo::util::Hash::Node& node, hid_t dataSet, hid_t fileDataSpace) {
-                    KARABO_LOG_FRAMEWORK_TRACE_C("Scalar") << "writing one record of " << m_key;
+                    KARABO_LOG_FRAMEWORK_TRACE_C("karabo.io.h5.Scalar") << "writing one record of " << m_key;
                     try {
                         m_datasetWriter->write(node, dataSet, fileDataSpace);
                     } catch (...) {
@@ -72,7 +76,7 @@ namespace karabo {
                 }
 
                 void writeNode(const karabo::util::Hash::Node& node, hsize_t len, hid_t dataSet, hid_t fileDataSpace) {
-                    KARABO_LOG_FRAMEWORK_TRACE_C("Scalar") << "writing " << len << " records of " << m_key;
+                    KARABO_LOG_FRAMEWORK_TRACE_C("karabo.io.h5.Scalar") << "writing " << len << " records of " << m_key;
                     try {
                         m_datasetWriter->write(node, len, dataSet, fileDataSpace);
                     } catch (...) {

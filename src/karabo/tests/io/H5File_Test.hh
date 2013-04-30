@@ -11,15 +11,15 @@
 #include <cppunit/extensions/HelperMacros.h>
 #include <karabo/util/Configurator.hh>
 #include <karabo/util/Dims.hh>
+#include <complex>
 
 class H5File_Test : public CPPUNIT_NS::TestFixture {
 
     CPPUNIT_TEST_SUITE(H5File_Test);
-    CPPUNIT_TEST(testBufferWrite);
-    CPPUNIT_TEST(testBufferRead);
-    //    CPPUNIT_TEST(testVectorBufferWrite);
+    //    CPPUNIT_TEST(testBufferWrite);
+    //    CPPUNIT_TEST(testBufferRead); 
     CPPUNIT_TEST(testWrite);
-    CPPUNIT_TEST(testRead);
+    //CPPUNIT_TEST(testRead);
     //    CPPUNIT_TEST(testReadTable);
     CPPUNIT_TEST_SUITE_END();
 
@@ -39,6 +39,12 @@ private:
     size_t m_v3Size;
     std::vector<std::string> m_v3;
 
+    size_t m_v4Size;
+    std::vector<std::complex<float> > m_v4;
+
+    
+    
+    
 
     const size_t m_maxRec;
     karabo::util::Dims m_dimsVec;

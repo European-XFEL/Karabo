@@ -9,7 +9,7 @@
 
 #include "DatasetWriter.hh"
 using namespace karabo::io;
-  
+
 namespace karabo {
     namespace io {
         namespace h5 {
@@ -57,6 +57,12 @@ namespace karabo {
             KARABO_REGISTER_FOR_CONFIGURATION(DatasetWriter<float>, DatasetScalarWriter<float>)
             KARABO_REGISTER_FOR_CONFIGURATION(DatasetWriter<std::string>, DatasetScalarWriter<std::string>)
             KARABO_REGISTER_FOR_CONFIGURATION(DatasetWriter<bool>, DatasetScalarWriter<bool>)
+
+            KARABO_REGISTER_FOR_CONFIGURATION(DatasetWriter<float >, DatasetComplexWriter<float>)
+            KARABO_REGISTER_FOR_CONFIGURATION(DatasetWriter<double>, DatasetComplexWriter<double>)
+
+            KARABO_REGISTER_FOR_CONFIGURATION(DatasetWriter< std::complex<float> >, DatasetVectorWriter< std::complex<float> >)
+                
 
         }
     }

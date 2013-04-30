@@ -38,12 +38,14 @@ H5File_Test::H5File_Test() : m_maxRec(100) {
     //    tr.enable("karabo.io.h5.Table.openReadOnly");
     //        tr.enable("H5File_Test.testReadTable");
     //tr.enable("H5File_Test.testBufferWrite");
-    tr.enable("H5File_Test.testBufferRead");
+    //tr.enable("H5File_Test.testBufferRead");
+    tr.enable("H5File_Test.testRead");
+    tr.enable("H5File_Test.testWrite");
     tr.reconfigure();
 
 
     m_reportTime = false; //true;
-    m_numberOfRecords = 512;
+    m_numberOfRecords = 2; //512;
 }
 
 
@@ -61,6 +63,13 @@ void H5File_Test::setUp() {
             oss << " " << i;
             m_v3[i] = oss.str();
         }
+
+        m_v4Size = 6;
+        m_v4 = vector<complex<float> >(m_v4Size);
+        for (size_t i = 0; i < m_v4.size(); ++i) {
+            m_v4[i] = complex<float>(i + 0.1, i + 0.3);
+        }
+
     }
 
     {
@@ -90,6 +99,7 @@ void H5File_Test::tearDown() {
 void H5File_Test::testWrite() {
 
 
+    clog << "AAAAA: " << "DatasetWriter_" + karabo::util::ToType<karabo::util::ToLiteral>::to(karabo::util::FromType<karabo::util::FromTypeInfo>::from(typeid (std::complex<float>))) << endl;
 
     try {
 
@@ -100,6 +110,8 @@ void H5File_Test::testWrite() {
         data.set("instrument.c", "abc");
         data.set("instrument.d", true).setAttribute("att1", 123);
         data.set("instrument.e", static_cast<char> (58));
+        complex<float> cf(14.0, 18.2);
+        data.set("instrument.f", cf);
 
         size_t s = 4 * 32 * 256;
         //s = 1024 * 1024;
@@ -109,7 +121,6 @@ void H5File_Test::testWrite() {
         }
 
         data.set("instrument.LPD.image", &v0[0]).setAttribute("dims", Dims(4, 32, 256).toVector());
-
 
 
         s = 12;
@@ -125,20 +136,8 @@ void H5File_Test::testWrite() {
             if (i % 2) v2[i] = true;
         }
         data.set("vectors.bool", v2).setAttribute("dims", Dims(2, 5).toVector());
-
-
-        s = 5;
-        ostringstream oss;
-        oss << "vecString";
-        vector<string> v3(s, "");
-        for (size_t i = 0; i < v3.size(); ++i) {
-            oss << " " << i;
-            v3[i] = oss.str();
-        }
-        data.set("vectors.str", v3).setAttribute("dims", Dims(5).toVector());
-
-
-        //data.setAttribute("instrument","at1",20);
+        data.set("vectors.str", m_v3).setAttribute("dims", Dims(5).toVector());
+        data.set("vectors.cf", m_v4).setAttribute("dims", Dims(6).toVector());
 
         Hash config;
         Format::discoverFromHash(data, config);
@@ -170,6 +169,8 @@ void H5File_Test::testWrite() {
                  );
         h5::Element::Pointer e2 = h5::Element::create("UINT32", uel);
         dataFormat->addElement(e2);
+
+
 
         //        dataFormat->removeElement("instrument/e");
         //        dataFormat->removeElement("instrument/d");
@@ -284,6 +285,17 @@ void H5File_Test::testRead() {
         h5::Element::Pointer e6 = h5::Element::create("VECTOR_STRING", c6);
         format->addElement(e6);
 
+        Dims complexFloatDims(6);
+        Hash c7(
+                "h5path", "vectors",
+                "h5name", "cf",
+                "dims", complexFloatDims.toVector()
+                );
+
+        h5::Element::Pointer e7 = h5::Element::create("VECTOR_COMPLEX_FLOAT", c7);
+        format->addElement(e7);
+
+
 
         // End of definition of what is read
 
@@ -319,6 +331,9 @@ void H5File_Test::testRead() {
         vector<string>& strings = data.bindReference<vector<string> >("strings");
         strings.resize(stringsDims.size());
 
+        vector<complex<float> >& cf = data.bindReference<vector<std::complex<float> > >("vectors/cf");
+        cf.resize(complexFloatDims.size());
+
         // /abc/instrument/d will be accessible as Hash element with key "d"
         // because we do not use binding
         // Memory is managed by our API
@@ -330,7 +345,7 @@ void H5File_Test::testRead() {
         // get number of records in the file
         size_t nRecords = table->size();
 
-        KARABO_LOG_FRAMEWORK_TRACE << "number of records: " << nRecords;
+        KARABO_LOG_FRAMEWORK_TRACE_CF << "number of records: " << nRecords;
         CPPUNIT_ASSERT(nRecords == m_numberOfRecords);
 
 
@@ -338,7 +353,7 @@ void H5File_Test::testRead() {
         // read first record
         table->read(0);
 
-        KARABO_LOG_FRAMEWORK_TRACE << "after reading: ";
+        KARABO_LOG_FRAMEWORK_TRACE_CF << "after reading: ";
 
         // assert values
         CPPUNIT_ASSERT(bla == 1006);
@@ -354,19 +369,25 @@ void H5File_Test::testRead() {
         for (size_t i = 0; i < boolDims.size(); ++i) {
             if (i % 2) CPPUNIT_ASSERT(bArray[i] == true);
             else CPPUNIT_ASSERT(bArray[i] == false);
-
         }
-        //        clog << endl;
 
-        KARABO_LOG_FRAMEWORK_TRACE << "string reference value: abc, actual value: " << data.get<string>("c");
+        KARABO_LOG_FRAMEWORK_TRACE_CF << "string reference value: abc, actual value: " << data.get<string>("c");
         CPPUNIT_ASSERT(data.get<string>("c") == "abc");
 
         //vector<string>& strings = data.get<vector<string> >("strings");
 
         for (size_t i = 0; i < stringsDims.size(); ++i) {
-            KARABO_LOG_FRAMEWORK_TRACE << "strings[" << i << "] = " << strings[i];
+            KARABO_LOG_FRAMEWORK_TRACE_CF << "strings[" << i << "] = " << strings[i];
             CPPUNIT_ASSERT(strings[i] == m_v3[i]);
         }
+
+        for (size_t i = 0; i < complexFloatDims.size(); ++i) {
+            KARABO_LOG_FRAMEWORK_TRACE_CF << "complex[" << i << "] = " << cf[i];
+            CPPUNIT_ASSERT(cf[i].real() == m_v4[i].real());
+            CPPUNIT_ASSERT(cf[i].imag() == m_v4[i].imag());
+        }
+
+
 
 
 
@@ -767,8 +788,8 @@ void H5File_Test::testBufferRead() {
 
         vector<int>& a1 = data.get< vector<int> >("vector.a1");
         vector<string>& a2 = data.get< vector<string> >("vector.a2");
-        vector<bool>& a3 = data.get< vector<bool> >("vector.a3");
-        
+        vector<bool>& a3 = data.get < vector<bool> >("vector.a3");
+
         size_t numReadRecords = t->read(0, bufLen);
 
         for (size_t i = 0; i < mercuryBuffer.size(); ++i) {

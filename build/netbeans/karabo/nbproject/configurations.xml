@@ -26,6 +26,8 @@
       <logicalFolder name="f1" displayName="h5" projectFiles="true">
         <itemPath>../../../src/karabo/io/h5/Attribute.cc</itemPath>
         <itemPath>../../../src/karabo/io/h5/Attribute.hh</itemPath>
+        <itemPath>../../../src/karabo/io/h5/Complex.cc</itemPath>
+        <itemPath>../../../src/karabo/io/h5/Complex.hh</itemPath>
         <itemPath>../../../src/karabo/io/h5/Dataset.cc</itemPath>
         <itemPath>../../../src/karabo/io/h5/Dataset.hh</itemPath>
         <itemPath>../../../src/karabo/io/h5/DatasetReader.cc</itemPath>
@@ -42,6 +44,8 @@
         <itemPath>../../../src/karabo/io/h5/FixedLengthArray.hh</itemPath>
         <itemPath>../../../src/karabo/io/h5/FixedLengthArrayAttribute.cc</itemPath>
         <itemPath>../../../src/karabo/io/h5/FixedLengthArrayAttribute.hh</itemPath>
+        <itemPath>../../../src/karabo/io/h5/FixedLengthArrayComplex.cc</itemPath>
+        <itemPath>../../../src/karabo/io/h5/FixedLengthArrayComplex.hh</itemPath>
         <itemPath>../../../src/karabo/io/h5/Format.cc</itemPath>
         <itemPath>../../../src/karabo/io/h5/Format.hh</itemPath>
         <itemPath>../../../src/karabo/io/h5/Group.cc</itemPath>
@@ -603,6 +607,16 @@
             tool="3"
             flavor2="0">
       </item>
+      <item path="../../../src/karabo/io/h5/Complex.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/h5/Complex.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="../../../src/karabo/io/h5/Dataset.cc"
             ex="false"
             tool="1"
@@ -673,6 +687,16 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/io/h5/FixedLengthArrayAttribute.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/h5/FixedLengthArrayComplex.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/h5/FixedLengthArrayComplex.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -1869,6 +1893,16 @@
             tool="3"
             flavor2="0">
       </item>
+      <item path="../../../src/karabo/io/h5/Complex.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/h5/Complex.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="../../../src/karabo/io/h5/Dataset.cc"
             ex="false"
             tool="1"
@@ -1939,6 +1973,16 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/io/h5/FixedLengthArrayAttribute.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/h5/FixedLengthArrayComplex.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/h5/FixedLengthArrayComplex.hh"
             ex="false"
             tool="3"
             flavor2="0">

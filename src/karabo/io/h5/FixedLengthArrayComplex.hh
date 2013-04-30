@@ -1,5 +1,5 @@
 /*
- * $Id$
+ * $Id: FixedLengthArrayComplex.hh 9561 2013-04-29 08:01:43Z wrona $
  *
  * Author: <krzysztof.wrona@xfel.eu>
  *
@@ -7,8 +7,8 @@
  */
 
 
-#ifndef KARABO_IO_H5_FIXEDLENGTHARRAY_HH
-#define	KARABO_IO_H5_FIXEDLENGTHARRAY_HH
+#ifndef KARABO_IO_H5_FIXEDLENGTHARRAYCOMPLEX_HH
+#define	KARABO_IO_H5_FIXEDLENGTHARRAYCOMPLEX_HH
 
 
 #include <vector>
@@ -35,30 +35,30 @@ namespace karabo {
         namespace h5 {
 
             template<typename T>
-            class FixedLengthArray : public Dataset {
+            class FixedLengthArrayComplex : public Dataset {
 
             public:
 
-                KARABO_CLASSINFO(FixedLengthArray, "VECTOR_" + karabo::util::ToType<karabo::util::ToLiteral>::to(karabo::util::FromType<karabo::util::FromTypeInfo>::from(typeid (T))), "2.0")
+                KARABO_CLASSINFO(FixedLengthArrayComplex, "VECTOR_" + karabo::util::ToType<karabo::util::ToLiteral>::to(karabo::util::FromType<karabo::util::FromTypeInfo>::from(typeid (std::complex<T>))), "2.0")
 
 
-                FixedLengthArray(const karabo::util::Hash& input) : Dataset(input, this) {
-
+                FixedLengthArrayComplex(const karabo::util::Hash& input) : Dataset(input, this) {
+      
                     std::string datasetWriterClassId = "DatasetWriter_" + input.get<std::string>("type");
                     KARABO_LOG_FRAMEWORK_TRACE_CF << "dWClassId " << datasetWriterClassId;
                     KARABO_LOG_FRAMEWORK_TRACE_CF << "classId " << Self::classInfo().getClassId();
                     karabo::util::Hash config("dims", dims().toVector());
                     KARABO_LOG_FRAMEWORK_TRACE_CF << "config " << config;
-                    m_datasetWriter = DatasetWriter<T>::create(datasetWriterClassId, config);
-                    m_datasetReader = DatasetReader<T>::create("DatasetReader", config);
+                    m_datasetWriter = DatasetWriter<std::complex<T> >::create(datasetWriterClassId, config);
+                    m_datasetReader = DatasetReader<std::complex<T> >::create("DatasetReader", config);
 
                 }
 
                 static const karabo::util::Dims getSingleValueDimensions() {
-                    return karabo::util::Dims();
+                    return karabo::util::Dims(2);
                 }
 
-                virtual ~FixedLengthArray() {
+                virtual ~FixedLengthArrayComplex() {
                 }
 
                 static void expectedParameters(karabo::util::Schema& expected) {
@@ -68,7 +68,7 @@ namespace karabo {
                             .key("type")
                             .displayedName("Type")
                             .description("Data Type in Hash")
-                            .assignmentOptional().defaultValue(FixedLengthArray<T>::classInfo().getClassId())
+                            .assignmentOptional().defaultValue(FixedLengthArrayComplex<T>::classInfo().getClassId())
                             .reconfigurable()
                             .commit();
 
@@ -79,11 +79,11 @@ namespace karabo {
                 }
 
                 hid_t getDatasetTypeId() {
-                    return ScalarTypes::getHdf5StandardType<T > ();
+                    return ScalarTypes::getHdf5StandardType< std::complex<T> > ();
                 }
 
                 void writeNode(const karabo::util::Hash::Node& node, hid_t dataSet, hid_t fileDataSpace) {
-                    KARABO_LOG_FRAMEWORK_TRACE_C("karabo.io.h5.FixedLengthArray") << "writing one record of " << m_key;
+                    KARABO_LOG_FRAMEWORK_TRACE_C("karabo.io.h5.FixedLengthArrayComplex") << "writing one record of " << m_key;
                     try {
                         m_datasetWriter->write(node, 1, dataSet, fileDataSpace);
                     } catch (...) {
@@ -92,7 +92,7 @@ namespace karabo {
                 }
 
                 void writeNode(const karabo::util::Hash::Node& node, hsize_t len, hid_t dataSet, hid_t fileDataSpace) {
-                    KARABO_LOG_FRAMEWORK_TRACE_C("karabo.io.h5.FixedLengthArray") << "writing " << len << " records of " << m_key;
+                    KARABO_LOG_FRAMEWORK_TRACE_C("karabo.io.h5.FixedLengthArrayComplex") << "writing " << len << " records of " << m_key;
                     try {
                         m_datasetWriter->write(node, len, dataSet, fileDataSpace);
                     } catch (...) {
@@ -104,17 +104,17 @@ namespace karabo {
 
                     boost::optional<karabo::util::Hash::Node&> node = data.find(m_key, '/');
                     if (!node) {
-                        std::vector<T>& vec = data.bindReference<std::vector<T> >(m_key, '/');
+                        std::vector<std::complex<T> >& vec = data.bindReference<std::vector<std::complex<T> > >(m_key, '/');
                         vec.resize(dims().size());
                         data.setAttribute(m_key, "dims", dims().toVector(), '/');
                         m_datasetReader->bind(vec);
 
                     } else {
                         if (karabo::util::Types::isVector(node->getType())) {
-                            std::vector<T>& vec = node->getValue< std::vector<T> >();
+                            std::vector<std::complex<T> >& vec = node->getValue< std::vector<std::complex<T> > >();
                             m_datasetReader->bind(vec);
                         } else if (karabo::util::Types::isPointer(node->getType())) {
-                            T* ptr = node->getValue<T* >();
+                            std::complex<T>* ptr = node->getValue<std::complex<T> * >();
                             m_datasetReader->bind(ptr);
                             data.setAttribute(m_key, "dims", dims().toVector(), '/');
                         }
@@ -126,17 +126,17 @@ namespace karabo {
 
                     boost::optional<karabo::util::Hash::Node&> node = data.find(m_key, '/');
                     if (!node) {
-                        std::vector<T>& vec = data.bindReference<std::vector<T> >(m_key, '/');
+                        std::vector<std::complex<T> >& vec = data.bindReference<std::vector<std::complex<T> > >(m_key, '/');
                         vec.resize(dims().size() * len);
                         data.setAttribute(m_key, "dims", dims().toVector(), '/');
                         m_datasetReader->bind(vec);
 
                     } else {
                         if (karabo::util::Types::isVector(node->getType())) {
-                            std::vector<T>& vec = node->getValue< std::vector<T> >();
+                            std::vector<std::complex<T> >& vec = node->getValue< std::vector<std::complex<T> > >();
                             m_datasetReader->bind(vec);
                         } else if (karabo::util::Types::isPointer(node->getType())) {
-                            T* ptr = node->getValue<T* >();
+                            std::complex<T>* ptr = node->getValue<std::complex<T>* >();
                             m_datasetReader->bind(ptr);
                             data.setAttribute(m_key, "dims", dims().toVector(), '/');
                         }
@@ -167,35 +167,26 @@ namespace karabo {
                 //                void readSpecificAttributes(karabo::util::Hash& attributes) {
                 //                    attributes.setFromPath(m_key + ".rank", static_cast<int> (dims().size()));
                 //                    attributes.setFromPath(m_key + ".dims", dims());
-                //                    attributes.setFromPath(m_key + ".typeCategory", "FixedLengthArray");
+                //                    attributes.setFromPath(m_key + ".typeCategory", "FixedLengthArrayComplex");
                 //                }
                 //
 
 
             protected:
 
-                typename karabo::io::h5::DatasetWriter<T>::Pointer m_datasetWriter;
-                typename karabo::io::h5::DatasetReader<T>::Pointer m_datasetReader;
+                typename karabo::io::h5::DatasetWriter<std::complex<T> >::Pointer m_datasetWriter;
+                typename karabo::io::h5::DatasetReader<std::complex<T> >::Pointer m_datasetReader;
 
             };
 
             // typedefs
-            typedef FixedLengthArray<signed char> Int8ArrayElement;
-            typedef FixedLengthArray<short> Int16ArrayElement;
-            typedef FixedLengthArray<int> Int32ArrayElement;
-            typedef FixedLengthArray<long long > Int64ArrayElement;
-            typedef FixedLengthArray<unsigned char> UInt8ArrayElement;
-            typedef FixedLengthArray<unsigned short> UInt16ArrayElement;
-            typedef FixedLengthArray<unsigned int> UInt32ArrayElement;
-            typedef FixedLengthArray<unsigned long long > UInt64ArrayElement;
-            typedef FixedLengthArray<double> DoubleArrayElement;
-            typedef FixedLengthArray<float> FloatArrayElement;
-            typedef FixedLengthArray<std::string> StringArrayElement;
-            typedef FixedLengthArray<bool> BoolArrayElement;
+            typedef FixedLengthArrayComplex<double> DoubleArrayComplexElement;
+            typedef FixedLengthArrayComplex<float> FloatArrayComplexElement;
+           
 
 
         }
     }
 }
 
-#endif	/* KARABO_IO_FIXEDLENGTHARRAY_HH */
+#endif	
