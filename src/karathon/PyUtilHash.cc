@@ -146,18 +146,18 @@ void exportPyUtilHash() {
     bp::class_<HashNode, boost::shared_ptr<HashNode> > n("HashNode", bp::init<>());
     n.def("__repr__", &NodeWrap().getKey);
     n.def("__str__", &NodeWrap().getKey);
-    n.def("getKey", &NodeWrap().getKey);
-    n.def("setValue", &NodeWrap().setValue, (bp::arg("value")));
-    n.def("getValue", &NodeWrap().getValue);
-    n.def("getValueAs", &NodeWrap().getValueAs, (bp::arg("type")));
-    n.def("setAttribute", &NodeWrap().setAttribute, (bp::arg("key"), bp::arg("value")));
-    n.def("getAttribute", &NodeWrap().getAttribute, (bp::arg("key")));
-    n.def("getAttributeAs", &NodeWrap().getAttributeAs, (bp::arg("key"), bp::arg("type")));
-    n.def("hasAttribute", &NodeWrap().hasAttribute, (bp::arg("key")));
-    n.def("setAttributes", &NodeWrap().setAttributes, (bp::arg("attributes")));
-    n.def("getAttributes", &NodeWrap().getAttributes);
-    n.def("getType", &NodeWrap().getType);
-    n.def("setType", &NodeWrap().setType, (bp::arg("type")));
+    n.def("getKey", &NodeWrap().getKey, "Returns the key of current node.");
+    n.def("setValue", &NodeWrap().setValue, (bp::arg("value")), "Sets the new value of current node.");
+    n.def("getValue", &NodeWrap().getValue, "Gets the value of current node.");
+    n.def("getValueAs", &NodeWrap().getValueAs, (bp::arg("type")), "Gets the value of current node converted to given reference type");
+    n.def("setAttribute", &NodeWrap().setAttribute, (bp::arg("key"), bp::arg("value")), "Sets the \"key\" attribute to some \"value\" in current node.");
+    n.def("getAttribute", &NodeWrap().getAttribute, (bp::arg("key")), "Gets the value of \"key\" attribute  in current node.");
+    n.def("getAttributeAs", &NodeWrap().getAttributeAs, (bp::arg("key"), bp::arg("type")), "Gets the value of \"key\" attribute converted to type \"type\".");
+    n.def("hasAttribute", &NodeWrap().hasAttribute, (bp::arg("key")), "Check that current node has the \"key\" attribute.");
+    n.def("setAttributes", &NodeWrap().setAttributes, (bp::arg("attributes")),"Sets new set of attributes in current node.");
+    n.def("getAttributes", &NodeWrap().getAttributes, "Gets all attributes in current node as HashAttributes object.");
+    n.def("getType", &NodeWrap().getType, "Gets the value type as a reference type");
+    n.def("setType", &NodeWrap().setType, (bp::arg("type")), "Sets the value type as a reference \"type\".");
 
 
     bp::class_<Hash, boost::shared_ptr<Hash> > h("Hash", "The Hash class can be regarded as a generic hash container, which associates a string key to a value of any type.\n"
