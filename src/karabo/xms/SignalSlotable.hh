@@ -156,16 +156,16 @@ namespace karabo {
 
             SignalSlotable();
 
-            SignalSlotable(const karabo::net::BrokerConnection::Pointer& connection, const std::string& instanceId, const karabo::util::Hash& instanceInfo = karabo::util::Hash(), int heartbeatRate = 5);
+            SignalSlotable(const karabo::net::BrokerConnection::Pointer& connection, const std::string& instanceId, int heartbeatRate = 5);
 
             virtual ~SignalSlotable();
 
-            void init(const karabo::net::BrokerConnection::Pointer& connection, const std::string& instanceId, const karabo::util::Hash& instanceInfo = karabo::util::Hash(), int heartbeatRate = 5);
+            void init(const karabo::net::BrokerConnection::Pointer& connection, const std::string& instanceId, int heartbeatRate = 5);
 
             /**
              * This function will block the main-thread.
              */
-            void runEventLoop(bool emitHeartbeat = true);
+            void runEventLoop(bool emitHeartbeat = true, const karabo::util::Hash& instanceInfo = karabo::util::Hash());
 
             /**
              * This function will stop all consumers and un-block the runEventLoop() function
@@ -503,31 +503,26 @@ namespace karabo {
             }
 
             void reply() {
-                //if (!m_isProcessingSlot) return;
                 registerReply(karabo::util::Hash());
             }
 
             template <class A1>
             void reply(const A1& a1) {
-                //if (!m_isProcessingSlot) return;
                 registerReply(karabo::util::Hash("a1", a1));
             }
 
             template <class A1, class A2>
             void reply(const A1& a1, const A2& a2) {
-                //if (!m_isProcessingSlot) return;
                 registerReply(karabo::util::Hash("a1", a1, "a2", a2));
             }
 
             template <class A1, class A2, class A3>
             void reply(const A1& a1, const A2& a2, const A3& a3) {
-                //if (!m_isProcessingSlot) return;
                 registerReply(karabo::util::Hash("a1", a1, "a2", a2, "a3", a3));
             }
 
             template <class A1, class A2, class A3, class A4>
             void reply(const A1& a1, const A2& a2, const A3& a3, A4& a4) {
-                //if (!m_isProcessingSlot) return;
                 registerReply(karabo::util::Hash("a1", a1, "a2", a2, "a3", a3, "a4", a4));
             }
 
@@ -710,11 +705,6 @@ namespace karabo {
             void slotPingAnswer(const std::string& instanceId, const karabo::util::Hash& hash);
 
             std::pair<bool, karabo::util::Hash> digestPotentialReply();
-
-            //            void setSlotProcessingFlag(const bool flag) {
-            //                boost::mutex::scoped_lock lock(m_isProcessingSlotMutex);
-            //                m_isProcessingSlot = flag;
-            //            }
 
             void emitHeartbeat();
 
