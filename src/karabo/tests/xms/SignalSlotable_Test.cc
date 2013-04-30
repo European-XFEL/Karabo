@@ -48,7 +48,7 @@ void SignalSlotable_Test::testMethod() {
 
         SignalSlotDemo ssDemo(connection, "SignalSlotDemo");
 
-        boost::thread t(boost::bind(&SignalSlotable::runEventLoop, &ssDemo, false));
+        boost::thread t(boost::bind(&SignalSlotable::runEventLoop, &ssDemo, false, Hash()));
 
         ssDemo.connectN("signalA", "slotA");
 
