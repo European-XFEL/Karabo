@@ -107,7 +107,7 @@ namespace karabo {
                 input.get("serverId", m_serverId);
             } else {
                 if (m_isMaster) {
-                    m_serverId = "Master/DeviceServer/1";
+                    m_serverId = "Master_DeviceServer_1";
                 } else {
                     m_serverId = "";
                 }
@@ -127,7 +127,7 @@ namespace karabo {
             Hash config = input.get<Hash>("Logger");
             vector<Hash>& appenders = config.get<vector<Hash> >("appenders");
             Hash appenderConfig;
-            appenderConfig.set("Network.layout.Pattern.pattern", "%d{%F %H:%M:%S} | %p | %c | %m");
+            appenderConfig.set("Network.layout.Pattern.format", "%d{%F %H:%M:%S} | %p | %c | %m");
             appenderConfig.set("Network.connection", m_connectionConfig);
             appenders.push_back(appenderConfig);
             Logger::configure(config);
@@ -154,15 +154,19 @@ namespace karabo {
             // Initialize category
             m_log = &(karabo::log::Logger::getLogger(m_serverId));
             
-            log() << Priority::INFO << "Starting European XFEL DeviceServer on host: " << boost::asio::ip::host_name();
+            log() << Priority::INFO << "Starting Karabo DeviceServer on host: " << boost::asio::ip::host_name();
 
             // Initialize SignalSlotable instance
             init(m_connection, m_serverId);
 
             registerAndConnectSignalsAndSlots();
 
-            startFsm();
-            runEventLoop(hasHearbeat); // Block
+            boost::thread t(boost::bind(&karabo::core::DeviceServer::runEventLoop, this, hasHearbeat, Hash()));
+            this->startFsm();
+            t.join();
+            
+            //startFsm();
+            //runEventLoop(hasHearbeat); // Block
             m_pluginThread.join();
         }
 
@@ -212,8 +216,8 @@ namespace karabo {
             log() << Priority::INFO << "DeviceServer starts up with id: " << m_serverId;
 
             if (m_isMaster) {
-                slotStartDevice(Hash("MasterDevice.devInstId", "Master/MasterDevice/1", "MasterDevice.connection", m_connectionConfig));
-                slotStartDevice(Hash("GuiServerDevice.devInstId", "Master/GuiServerDevice/1", "GuiServerDevice.connection", m_connectionConfig, "GuiServerDevice.loggerConnection", m_connectionConfig));
+                slotStartDevice(Hash("MasterDevice.deviceId", "Master_MasterDevice_1", "MasterDevice.connection", m_connectionConfig));
+                slotStartDevice(Hash("GuiServerDevice.deviceId", "Master_GuiServerDevice_1", "GuiServerDevice.connection", m_connectionConfig, "GuiServerDevice.loggerConnection", m_connectionConfig));
                 
             } else {
                 // Check whether we have installed devices available
@@ -287,17 +291,19 @@ namespace karabo {
 
         void DeviceServer::startDeviceAction(const karabo::util::Hash& config) {
             try {
-                log() << Priority::INFO << "Trying to start device with the following configuration:\n" << config;
+                std::string classId = config.begin()->getKey();
+                 
+                log() << Priority::INFO << "Trying to start " << classId << "...";
+                log() << Priority::DEBUG << "with the following configuration:\n" << config;
                 
                 // Inject device-server information
                 Hash modifiedConfig(config);
                 Hash& tmp = modifiedConfig.begin()->getValue<Hash>();
                 tmp.set("serverId", m_serverId);
                 // Apply sensible default in case no device instance id is supplied
-                if (!tmp.has("devInstId")) {
-                    std::string classId = modifiedConfig.begin()->getKey();
-                    std::string devInstId = this->generateDefaultDeviceInstanceId(classId);
-                    tmp.set("devInstId", devInstId);
+                if (!tmp.has("deviceId")) {
+                    std::string deviceId = this->generateDefaultDeviceInstanceId(classId);
+                    tmp.set("deviceId", deviceId);
                 }
                 BaseDevice::Pointer device = BaseDevice::create(modifiedConfig);
                 boost::thread* t = m_deviceThreads.create_thread(boost::bind(&karabo::core::BaseDevice::run, device));
@@ -306,7 +312,7 @@ namespace karabo {
                 string deviceInstanceId = device->getInstanceId();
                 m_deviceInstanceMap[deviceInstanceId] = t;
                 
-                emit("signalNewDeviceInstanceAvailable", getInstanceId(), device->getCurrentConfiguration());
+                emit("signalNewDeviceInstanceAvailable", getInstanceId(), Hash(classId, device->getCurrentConfiguration()));
             } catch (const Exception& e) {
                 log() << Priority::ERROR << "Device could not be started because: " << e.userFriendlyMsg();
                 return;

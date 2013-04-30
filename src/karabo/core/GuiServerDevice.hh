@@ -108,7 +108,6 @@ namespace karabo {
 //            void slotConnected(const std::string& signal, const std::string& slot);
 //
             void slotChanged(const karabo::util::Hash& what, const std::string& instanceId, const std::string& classId);
-//
 
             void onLog(karabo::net::BrokerChannel::Pointer channel, const std::string& logMessage, const karabo::util::Hash& header);
             

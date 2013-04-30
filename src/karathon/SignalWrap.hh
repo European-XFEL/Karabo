@@ -17,13 +17,18 @@
 namespace bp = boost::python;
 
 namespace karabo {
-
+    
+    namespace xms {
+        // Forward SignalSlotable
+        class SignalSlotable;
+    }
+    
     namespace pyexfel {
         
         class SignalWrap : public karabo::xms::Signal {
         public:
-            SignalWrap(const karabo::net::BrokerChannel::Pointer& channel, const std::string& instanceId, const std::string& signalId) : 
-            karabo::xms::Signal(channel, instanceId, signalId ){}
+            SignalWrap(const karabo::xms::SignalSlotable* signalSlotable, const karabo::net::BrokerChannel::Pointer& channel, const std::string& instanceId, const std::string& signalId) : 
+            karabo::xms::Signal(signalSlotable, channel, instanceId, signalId ){}
                        
             void emitPy1(const bp::object& a1) {
                karabo::util::Hash message;

@@ -33,7 +33,7 @@ namespace karabo {
                         PyEval_InitThreads();
                 karabo::net::BrokerConnection::Pointer connection = karabo::net::BrokerConnection::create(connectionType, connectionParameters);
                 this->init(connection, instanceId);
-                m_eventLoop = boost::thread(boost::bind(&karabo::xms::SignalSlotable::runEventLoop, this, true));
+                m_eventLoop = boost::thread(boost::bind(&karabo::xms::SignalSlotable::runEventLoop, this, true, karabo::util::Hash())); // TODO put instance info here
             }
 
             virtual ~SignalSlotableWrap() {
@@ -90,52 +90,52 @@ namespace karabo {
             }
 
             void registerSignalPy1(const std::string& funcName, const bp::object&) {
-                boost::shared_ptr<karabo::pyexfel::SignalWrap> s(new karabo::pyexfel::SignalWrap(m_signalChannel, m_instanceId, funcName));
+                boost::shared_ptr<karabo::pyexfel::SignalWrap> s(new karabo::pyexfel::SignalWrap(this, m_signalChannel, m_instanceId, funcName));
                 boost::function<void (const bp::object&) > f(boost::bind(&karabo::pyexfel::SignalWrap::emitPy1, s, _1));
                 storeSignal(funcName, s, f);
             }
 
             void registerSignalPy2(const std::string& funcName, const bp::object&, const bp::object&) {
-                boost::shared_ptr<karabo::pyexfel::SignalWrap> s(new karabo::pyexfel::SignalWrap(m_signalChannel, m_instanceId, funcName));
+                boost::shared_ptr<karabo::pyexfel::SignalWrap> s(new karabo::pyexfel::SignalWrap(this, m_signalChannel, m_instanceId, funcName));
                 boost::function<void (const bp::object&, const bp::object&) > f(boost::bind(&karabo::pyexfel::SignalWrap::emitPy2, s, _1, _2));
                 storeSignal(funcName, s, f);
             }
 
             void registerSignalPy3(const std::string& funcName, const bp::object&, const bp::object&, const bp::object&) {
-                boost::shared_ptr<karabo::pyexfel::SignalWrap> s(new karabo::pyexfel::SignalWrap(m_signalChannel, m_instanceId, funcName));
+                boost::shared_ptr<karabo::pyexfel::SignalWrap> s(new karabo::pyexfel::SignalWrap(this, m_signalChannel, m_instanceId, funcName));
                 boost::function<void (const bp::object&, const bp::object&, const bp::object&) > f(boost::bind(&karabo::pyexfel::SignalWrap::emitPy3, s, _1, _2, _3));
                 storeSignal(funcName, s, f);
             }
 
             void registerSignalPy4(const std::string& funcName, const bp::object&, const bp::object&, const bp::object&, const bp::object&) {
-                boost::shared_ptr<karabo::pyexfel::SignalWrap> s(new karabo::pyexfel::SignalWrap(m_signalChannel, m_instanceId, funcName));
+                boost::shared_ptr<karabo::pyexfel::SignalWrap> s(new karabo::pyexfel::SignalWrap(this, m_signalChannel, m_instanceId, funcName));
                 boost::function<void (const bp::object&, const bp::object&, const bp::object&, const bp::object&) > f(boost::bind(&karabo::pyexfel::SignalWrap::emitPy4, s, _1, _2, _3, _4));
                 storeSignal(funcName, s, f);
             }
 
             void callPy1(std::string instanceId, const std::string& functionName, const bp::object& a1) const {
-                SignalWrap s(m_signalChannel, m_instanceId, "call");
+                SignalWrap s(this, m_signalChannel, m_instanceId, "call");
                 if (instanceId.empty()) instanceId = m_instanceId;
                 s.registerSlot(instanceId, functionName);
                 s.emitPy1(a1);
             }
 
             void callPy2(std::string instanceId, const std::string& functionName, const bp::object& a1, const bp::object& a2) const {
-                SignalWrap s(m_signalChannel, m_instanceId, "call");
+                SignalWrap s(this, m_signalChannel, m_instanceId, "call");
                 if (instanceId.empty()) instanceId = m_instanceId;
                 s.registerSlot(instanceId, functionName);
                 s.emitPy2(a1, a2);
             }
 
             void callPy3(std::string instanceId, const std::string& functionName, const bp::object& a1, const bp::object& a2, const bp::object& a3) const {
-                SignalWrap s(m_signalChannel, m_instanceId, "call");
+                SignalWrap s(this, m_signalChannel, m_instanceId, "call");
                 if (instanceId.empty()) instanceId = m_instanceId;
                 s.registerSlot(instanceId, functionName);
                 s.emitPy3(a1, a2, a3);
             }
 
             void callPy4(std::string instanceId, const std::string& functionName, const bp::object& a1, const bp::object& a2, const bp::object& a3, const bp::object& a4) const {
-                SignalWrap s(m_signalChannel, m_instanceId, "call");
+                SignalWrap s(this, m_signalChannel, m_instanceId, "call");
                 if (instanceId.empty()) instanceId = m_instanceId;
                 s.registerSlot(instanceId, functionName);
                 s.emitPy4(a1, a2, a3, a4);
