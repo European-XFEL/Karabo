@@ -30,9 +30,11 @@ class Network(QObject):
     def __init__(self):
         super(Network, self).__init__()
         
-        self.__serializer = FormatHash.create("Xml", Hash("printDataType", 1))
+        #self.__serializer = FormatHash.create("Xml", Hash("printDataType", 1))
+        self.__serializer = HashXmlSerializer() #Hash("readDataTypes", True))
         
-        self.__binarySerializer = FormatHash.create("Bin", Hash())
+        #self.__binarySerializer = FormatHash.create("Bin", Hash())
+        self.__binarySerializer = HashBinarySerializer()
                        
         self.__tcpSocket = QTcpSocket(self)
         self.__tcpSocket.connected.connect(self.onConnected)
