@@ -187,7 +187,11 @@ namespace karabo {
                     throw KARABO_PYTHON_EXCEPTION("Python object is not of a Hash.Attributes type");
             }
 
-            static bp::object getAttributes(const Pointer& node) {
+            static const karabo::util::Hash::Attributes& getAttributes(const Pointer& node) {
+                return static_cast<const karabo::util::Hash::Attributes&>(node->getAttributes());
+            }
+
+            static bp::object copyAttributes(const Pointer& node) {
                 return bp::object(node->getAttributes());
             }
 

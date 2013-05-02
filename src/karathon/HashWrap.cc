@@ -518,8 +518,16 @@ namespace karabo {
             throw KARABO_NOT_SUPPORTED_EXCEPTION("Type is not yet supported");
         }
 
-        bp::object
+        const karabo::util::Hash::Attributes&
         HashWrap::getAttributes(karabo::util::Hash& self,
+                                      const std::string& path,
+                                      const std::string& separator) {
+
+            return static_cast<const karabo::util::Hash::Attributes&>(self.getAttributes(path, separator.at(0)));
+        }
+
+        bp::object
+        HashWrap::copyAttributes(karabo::util::Hash& self,
                                       const std::string& path,
                                       const std::string& separator) {
 
