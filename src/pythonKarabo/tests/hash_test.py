@@ -527,7 +527,9 @@ class  Hash_TestCase(unittest.TestCase):
             attrs = h.getAttributes("a.b.a.b")
             self.assertEqual(attrs.size(), 2)
             self.assertEqual(attrs.get("attr1"), True)
+            self.assertEqual(attrs["attr1"], True)
             self.assertEqual(attrs.get("attr2"), 43)
+            self.assertEqual(attrs["attr2"], 43)
             
             node = attrs.getNode("attr1")
             self.assertEqual(node.getType(), "BOOL")
@@ -590,6 +592,51 @@ class  Hash_TestCase(unittest.TestCase):
                 self.assertEqual(h.getAttributeAs('a.b.c','attr1',Types.VECTOR_DOUBLE), [1.234,2.987,5.555])
         except Exception,e:
             self.fail("test_attributes exception group 7: " + str(e))
+
+    def test_attributes_get_copy(self):
+        try:
+            h = Hash("a.b.a.b", 42)
+            h.setAttribute("a.b.a.b","attr1", True)
+            self.assertEqual(h.getAttribute("a.b.a.b","attr1"), True)
+            
+            attrs = h.copyAttributes("a.b.a.b")
+            attrs["attr1"] = False
+            self.assertEqual(h.getAttribute("a.b.a.b","attr1"), True)
+        except Exception,e:
+            self.fail("test_attributes_get_copy exception group 1: " + str(e))
+
+        try:
+            h = Hash("a.b.a.b", 42)
+            h.setAttribute("a.b.a.b","attr1", True)
+            self.assertEqual(h.getAttribute("a.b.a.b","attr1"), True)
+            
+            attrs = h.getAttributes("a.b.a.b")
+            attrs["attr1"] = False
+            self.assertEqual(h.getAttribute("a.b.a.b","attr1"), False)
+        except Exception,e:
+            self.fail("test_attributes_get_copy exception group 2: " + str(e))
+
+        try:
+            h = Hash("a.b.a.b", 42)
+            h.setAttribute("a.b.a.b","attr1", True)
+            self.assertEqual(h.getAttribute("a.b.a.b","attr1"), True)
+            node = h.getNode("a.b.a.b")
+            attrs = node.copyAttributes()
+            attrs["attr1"] = False
+            self.assertEqual(h.getAttribute("a.b.a.b","attr1"), True)
+        except Exception,e:
+            self.fail("test_attributes_get_copy exception group 3: " + str(e))
+
+        try:
+            h = Hash("a.b.a.b", 42)
+            h.setAttribute("a.b.a.b","attr1", True)
+            self.assertEqual(h.getAttribute("a.b.a.b","attr1"), True)
+            node = h.getNode("a.b.a.b")
+            attrs = node.getAttributes()
+            attrs["attr1"] = False
+            self.assertEqual(h.getAttribute("a.b.a.b","attr1"), False)
+        except Exception,e:
+            self.fail("test_attributes_get_copy exception group 4: " + str(e))
 
 
     def test_merge(self):
