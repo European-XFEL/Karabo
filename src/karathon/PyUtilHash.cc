@@ -127,11 +127,15 @@ void exportPyUtilHash() {
           std::string const &, bp::object const &,
           std::string const &, bp::object const &,
           std::string const &, bp::object const & >());
-    a.def("has", &AttributesWrap().has, (bp::arg("key")));
-    a.def("isType", &AttributesWrap().has, (bp::arg("key"), bp::arg("type")));
+    a.def("has", &AttributesWrap().has, (bp::arg("key")), "Returns True if HashAttributes container contains given \"key\"");
+    a.def("__contains__", &AttributesWrap().has, (bp::arg("key")), "Returns True if HashAttributes container contains given \"key\"");
+    a.def("isType", &AttributesWrap().has, (bp::arg("key"), bp::arg("type")), "Returns True if HashAttributes container has given \"key\" of reference \"type\"..");
     a.def("erase", &AttributesWrap().erase, (bp::arg("key")));
+    a.def("__delitem__", &AttributesWrap().erase, (bp::arg("key")));
     a.def("size", &AttributesWrap().size);
+    a.def("__len__", &AttributesWrap().size);
     a.def("empty", &AttributesWrap().empty);
+    a.def("bool", &AttributesWrap().size);
     a.def("clear", &AttributesWrap().clear);
     a.def("getNode", &AttributesWrap().getNode, (bp::arg("key")));
     a.def("get", &AttributesWrap().get, (bp::arg("key")));
@@ -247,6 +251,7 @@ void exportPyUtilHash() {
           "del b['b.x']\n\tprint h\n\th.erase('b.y')\n\tprint h\n\tdel h['b']");
     h.def("__len__", &Hash::size,
           "h.__len__() -> number of (top level) items of Hash mapping <==> len(h) <==> len(h.keys())");
+    h.def("bool", &Hash::size);
     h.def("__iter__", bp::iterator<Hash > (),
           "h.__iter__() <==> iter(h) : iterator of (top level) items of 'h' mapping.\nExample:\n\t"
           "h = Hash('a.b.c', 1, 'b.x', 2.22, 'b.y', 7.432, 'c', [1,2,3])\n\ti = iter(h)       # create iterator\n\t"
