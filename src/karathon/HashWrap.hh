@@ -146,8 +146,13 @@ namespace karabo {
                                  const PyTypes::ReferenceType& type,
                                  const std::string& separator = ".");
 
-            static bp::object
+            static const karabo::util::Hash::Attributes&
             getAttributes(karabo::util::Hash& self,
+                                const std::string& path,
+                                const std::string& separator = ".");
+
+            static bp::object
+            copyAttributes(karabo::util::Hash& self,
                                 const std::string& path,
                                 const std::string& separator = ".");
 

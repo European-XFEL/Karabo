@@ -155,7 +155,8 @@ void exportPyUtilHash() {
     n.def("getAttributeAs", &NodeWrap().getAttributeAs, (bp::arg("key"), bp::arg("type")), "Gets the value of \"key\" attribute converted to type \"type\".");
     n.def("hasAttribute", &NodeWrap().hasAttribute, (bp::arg("key")), "Check that current node has the \"key\" attribute.");
     n.def("setAttributes", &NodeWrap().setAttributes, (bp::arg("attributes")),"Sets new set of attributes in current node.");
-    n.def("getAttributes", &NodeWrap().getAttributes, "Gets all attributes in current node as HashAttributes object.");
+    n.def("getAttributes", &NodeWrap().getAttributes, bp::return_internal_reference<1> (), "Gets all attributes in current node as HashAttributes object. This object is internal reference not a copy.");
+    n.def("copyAttributes", &NodeWrap().copyAttributes, "Gets a copy of all attributes in current node as HashAttributes object.");
     n.def("getType", &NodeWrap().getType, "Gets the value type as a reference type");
     n.def("setType", &NodeWrap().setType, (bp::arg("type")), "Sets the value type as a reference \"type\".");
 
@@ -318,12 +319,22 @@ void exportPyUtilHash() {
           "h = Hash('a.b.c', 1, 'b.x', 2.22, 'b.y', 7.432, 'c', [1,2,3])\n\th.setAttribute('a.b.c', 'attr1', [1.234,2.987,5.555])\n"
           "\nHere you have to be sure that you have imported numpy as np:\n\n\timport numpy as np\n\t"
           "assert h.getAttributeAs('a.b.c', 'attr1', Types.NDARRAY_DOUBLE).all() == np.array([1.234,2.987,5.555], dtype=np.double).all()");
-    h.def("getAttributes", &HashWrap().getAttributes, (bp::arg("path"), bp::arg("sep") = "."),
-          "h.getAttributes(path, sep='.') -> iterable container of attributes.\nExample:\n\t"
+    h.def("getAttributes", &HashWrap().getAttributes, (bp::arg("path"), bp::arg("sep") = "."), bp::return_internal_reference<1> (),
+          "h.getAttributes(path, sep='.') -> iterable container of attributes which is an internal reference, not a copy.\nExample:\n\t"
           "h = Hash('a.b.c', 1, 'b.x', 2.22, 'b.y', 7.432, 'c', [1,2,3])\n\t"
           "h.setAttribute('a.b.c', 'attr1', [1.234,2.987,5.555])\n\th.setAttribute('a.b.c', 'attr2', 1)\n\t"
           "h.setAttribute('a.b.c', 'attr3', )\n\t"
-          "for a in h.getAttributes('a.b.c'):\n\t\tprint a.getKey(), a.getValue()");
+          "for a in h.getAttributes('a.b.c'):\n\t\tprint a.getKey(), a.getValue()\n\t"
+          "attrs = h.getAttributes('a.b.c')\n\tattrs['attr2'] = 2\n\t"
+          "assert h.getAttribute('a.b.c', 'attr2') == 2");
+    h.def("copyAttributes", &HashWrap().copyAttributes, (bp::arg("path"), bp::arg("sep") = "."),
+          "h.copyAttributes(path, sep='.') -> iterable container of attributes.\nExample:\n\t"
+          "h = Hash('a.b.c', 1, 'b.x', 2.22, 'b.y', 7.432, 'c', [1,2,3])\n\t"
+          "h.setAttribute('a.b.c', 'attr1', [1.234,2.987,5.555])\n\th.setAttribute('a.b.c', 'attr2', 1)\n\t"
+          "h.setAttribute('a.b.c', 'attr3', )\n\t"
+          "for a in h.copyAttributes('a.b.c'):\n\t\tprint a.getKey(), a.getValue()"
+          "attrs = h.copyAttributes('a.b.c')\n\tattrs['attr2'] = 2\n\t"
+          "assert h.getAttribute('a.b.c', 'attr2') == 1");
     h.def("setAttribute", &HashWrap().setAttribute, (bp::arg("path"), bp::arg("attribute"), bp::arg("value"), bp::arg("sep") = "."),
           "Set attribute associated with path.\nExample:\n\th = Hash('a.b.c', 1, 'b.x', 2.22, 'b.y', 7.432, 'c', [1,2,3])\n\t"
           "h.setAttribute('a.b.c', 'attr1', [1.234,2.987,5.555])\n\tassert h.getAttribute('a.b.c', 'attr1') == [1.234,2.987,5.555]");
