@@ -323,7 +323,7 @@ void exportPyUtilHash() {
           "h.getAttributes(path, sep='.') -> iterable container of attributes which is an internal reference, not a copy.\nExample:\n\t"
           "h = Hash('a.b.c', 1, 'b.x', 2.22, 'b.y', 7.432, 'c', [1,2,3])\n\t"
           "h.setAttribute('a.b.c', 'attr1', [1.234,2.987,5.555])\n\th.setAttribute('a.b.c', 'attr2', 1)\n\t"
-          "h.setAttribute('a.b.c', 'attr3', )\n\t"
+          "h.setAttribute('a.b.c', 'attr3', False)\n\t"
           "for a in h.getAttributes('a.b.c'):\n\t\tprint a.getKey(), a.getValue()\n\t"
           "attrs = h.getAttributes('a.b.c')\n\tattrs['attr2'] = 2\n\t"
           "assert h.getAttribute('a.b.c', 'attr2') == 2");
@@ -331,7 +331,7 @@ void exportPyUtilHash() {
           "h.copyAttributes(path, sep='.') -> iterable container of attributes.\nExample:\n\t"
           "h = Hash('a.b.c', 1, 'b.x', 2.22, 'b.y', 7.432, 'c', [1,2,3])\n\t"
           "h.setAttribute('a.b.c', 'attr1', [1.234,2.987,5.555])\n\th.setAttribute('a.b.c', 'attr2', 1)\n\t"
-          "h.setAttribute('a.b.c', 'attr3', )\n\t"
+          "h.setAttribute('a.b.c', 'attr3', False)\n\t"
           "for a in h.copyAttributes('a.b.c'):\n\t\tprint a.getKey(), a.getValue()"
           "attrs = h.copyAttributes('a.b.c')\n\tattrs['attr2'] = 2\n\t"
           "assert h.getAttribute('a.b.c', 'attr2') == 1");
@@ -342,7 +342,7 @@ void exportPyUtilHash() {
           "h.setAttributes(path, attributes, sep='.') allows to associate 'attributes' with 'path' in this Hash.\nExample:\n\t"
           "h = Hash('a.b.c', 1, 'b.x', 2.22, 'b.y', 7.432, 'c', [1,2,3])\n\t"
           "h.setAttribute('a.b.c', 'attr1', [1.234,2.987,5.555])\n\th.setAttribute('a.b.c', 'attr2', 1)\n\t"
-          "h.setAttribute('a.b.c', 'attr3', )\n\ta = h.getAttributes('a.b.c')\n\t"
+          "h.setAttribute('a.b.c', 'attr3', False)\n\ta = h.getAttributes('a.b.c')\n\t"
           "h.setAttributes('c', a)    # copy attributes under the different path");
 
     bp::class_<std::vector<Hash> > v("VectorHash");
