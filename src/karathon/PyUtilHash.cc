@@ -29,7 +29,7 @@ void exportPyUtilHash() {
     bp::docstring_options docs(true, true, false);
 
     // Types
-    bp::enum_<PyTypes::ReferenceType>("Types")
+    bp::enum_<PyTypes::ReferenceType>("Types", "This enumeration describes reference types supported in configuration system.")
             .value("BOOL", PyTypes::BOOL)
             .value("VECTOR_BOOL", PyTypes::VECTOR_BOOL)
             .value("CHAR", PyTypes::CHAR)
@@ -88,12 +88,13 @@ void exportPyUtilHash() {
     //    using boost::python::iterator;
     //    bp::def("range", &karabo::pyexfel::range);
 
-    bp::class_<Hash::Attributes::map_iterator>("HashAttributesMapIterator", bp::no_init);
-
-    bp::class_<Hash::Attributes::const_map_iterator>("HashAttributesConstMapIterator", bp::no_init);
+    //    bp::class_<Hash::Attributes::map_iterator>("HashAttributesMapIterator", bp::no_init);
+    //
+    //    bp::class_<Hash::Attributes::const_map_iterator>("HashAttributesConstMapIterator", bp::no_init);
 
     bp::class_<Hash::Attributes::Node, boost::shared_ptr<Hash::Attributes::Node> > an("HashAttributesNode", bp::no_init);
     an.def("getKey", &AttributesNodeWrap().getKey, "Get key of current node in attribute's container");
+    an.def("__str__", &AttributesNodeWrap().getKey);
     an.def("setValue", &AttributesNodeWrap().setValue, (bp::arg("value")), "Set value for current node in attribute's container");
     an.def("getValue", &AttributesNodeWrap().getValue, "Get value for current node in attribute's container");
     an.def("getValueAs", &AttributesNodeWrap().getValueAs, (bp::arg("type")), "Get value as a type given as an argument for current node");
@@ -130,21 +131,21 @@ void exportPyUtilHash() {
     a.def("has", &AttributesWrap().has, (bp::arg("key")), "Returns True if HashAttributes container contains given \"key\"");
     a.def("__contains__", &AttributesWrap().has, (bp::arg("key")), "Returns True if HashAttributes container contains given \"key\"");
     a.def("isType", &AttributesWrap().has, (bp::arg("key"), bp::arg("type")), "Returns True if HashAttributes container has given \"key\" of reference \"type\"..");
-    a.def("erase", &AttributesWrap().erase, (bp::arg("key")));
-    a.def("__delitem__", &AttributesWrap().erase, (bp::arg("key")));
-    a.def("size", &AttributesWrap().size);
-    a.def("__len__", &AttributesWrap().size);
-    a.def("empty", &AttributesWrap().empty);
-    a.def("bool", &AttributesWrap().size);
-    a.def("clear", &AttributesWrap().clear);
-    a.def("getNode", &AttributesWrap().getNode, (bp::arg("key")));
-    a.def("get", &AttributesWrap().get, (bp::arg("key")));
-    a.def("__getitem__", &AttributesWrap().get, (bp::arg("key")));
-    a.def("getAs", &AttributesWrap().getAs, (bp::arg("key"), bp::arg("type")));
-    a.def("set", &AttributesWrap().set, (bp::arg("key"), bp::arg("value")));
-    a.def("__setitem__", &AttributesWrap().set, (bp::arg("key"), bp::arg("value")));
-    a.def("find", &AttributesWrap().find, (bp::arg("key")));
-    a.def("getIt", &AttributesWrap().getIt, (bp::arg("it")));
+    a.def("erase", &AttributesWrap().erase, (bp::arg("key")), "Erase \"key\" attribute");
+    a.def("__delitem__", &AttributesWrap().erase, (bp::arg("key")), "Erase \"key\" attribute");
+    a.def("size", &AttributesWrap().size, "Returns number of entries in HashAttributes container");
+    a.def("__len__", &AttributesWrap().size, "Returns number of entries in HashAttributes container");
+    a.def("empty", &AttributesWrap().empty, "Returns True if HashAttributes container is empty.");
+    a.def("bool", &AttributesWrap().size, "This function automatically called when HashAttributes object checked in \"if\" expression. \"False\" means that container is empty.");
+    a.def("clear", &AttributesWrap().clear, "Make HashAttributes container empty.");
+    a.def("getNode", &AttributesWrap().getNode, (bp::arg("key")), "Returns HashAttributesNode object associated with \"key\" attribute.");
+    a.def("get", &AttributesWrap().get, (bp::arg("key")), "Returns value for \"key\" attribute.");
+    a.def("__getitem__", &AttributesWrap().__getitem__, (bp::arg("key")), "Pythonic style for getting value of attribute: x = attrs['abc']");
+    a.def("getAs", &AttributesWrap().getAs, (bp::arg("key"), bp::arg("type")), "Get the value of the \"key\" attribute and convert it to type \"type\".");
+    a.def("set", &AttributesWrap().set, (bp::arg("key"), bp::arg("value")), "Set the \"value\" for \"key\" attribute.");
+    a.def("__setitem__", &AttributesWrap().set, (bp::arg("key"), bp::arg("value")), "Pythonic style for setting value of attribute: attrs['abc'] = 123");
+//    a.def("find", &AttributesWrap().find, (bp::arg("key")), "");
+//    a.def("getIt", &AttributesWrap().getIt, (bp::arg("it")));
     a.def("__iter__", bp::iterator<Hash::Attributes>());
 
     bp::class_<HashNode, boost::shared_ptr<HashNode> > n("HashNode", bp::init<>());
