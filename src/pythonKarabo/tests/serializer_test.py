@@ -14,7 +14,7 @@ class  Serializer_TestCase(unittest.TestCase):
     #def tearDown(self):
     #    self.foo.dispose()
     #    self.foo = None
-
+    '''
     def test_serializer_hashxml(self):
         try:
             ser = HashXmlSerializer()     # create default serializer
@@ -60,7 +60,7 @@ class  Serializer_TestCase(unittest.TestCase):
             
         except Exception,e:
             self.fail("test_serializer_schemaxsd exception group 1: " + str(e))
-
+    '''
         
 if __name__ == '__main__':
     unittest.main()
