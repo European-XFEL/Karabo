@@ -28,24 +28,6 @@ namespace bp = boost::python;
         "The factory method to create the instance of C++ class with \"classId\" derived from C++ base class \"" #baseClass "\" using \"input\" configuration.\n" \
         "The last argument is a flag to determine if the input configuration should be validated." \
         ).staticmethod("create")\
-.def("createChoice"\
-        , (boost::shared_ptr<baseClass> (*)(std::string const &, karabo::util::Hash const &,bool const ))( &karabo::util::Configurator<baseClass>::createChoice) \
-        , (bp::arg("choiceName"), bp::arg("input"), bp::arg("validate")=(bool const)(true)), \
-        "The helper method to create the instance of C++ class derived from C++ base class \""  #baseClass "\" using \"choiceName\" and \"input\" configuration.\n" \
-        "The last argument is a flag to determine if the input configuration should be validated." \
-        ).staticmethod("createChoice") \
-.def("createList"\
-        , (std::vector< boost::shared_ptr<baseClass> > (*)(std::string const &,karabo::util::Hash const &,bool const ))( &karabo::util::Configurator<baseClass>::createList)\
-        , (bp::arg("listName"), bp::arg("input"), bp::arg("validate")=(bool const)(true)), \
-        "The helper method to create the list of instances of C++ classes derived from C++ base class \""  #baseClass "\" using \"listName\" used as a key to the list and \"input\" configuration.\n" \
-        "The last argument is a flag to determine if the input configuration should be validated."\
-        ).staticmethod("createList")\
-.def("createNode"\
-        , (boost::shared_ptr<baseClass> (*)(std::string const &,std::string const &,karabo::util::Hash const &,bool const ))(&karabo::util::Configurator<baseClass>::createNode)\
-        , (bp::arg("nodeName"), bp::arg("classId"), bp::arg("input"), bp::arg("validate")=(bool const)(true)), \
-        "The helper method to create instance of C++ class specified by \"classId\" derived from \"" #baseClass "\" using sub-configuration specified by \"nodeName\"\n" \
-        "which has to be a part of \"input\" configuration.  The last argument is a flag to determine if the input configuration should be validated." \
-        ).staticmethod("createNode") \
 .def("getClassInfo"\
         , (karabo::util::ClassInfo(karabo::util::Configurator<baseClass>::* )() const)(&karabo::util::Configurator<baseClass>::getClassInfo))\
 .def("getRegisteredClasses"\

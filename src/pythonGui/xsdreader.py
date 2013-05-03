@@ -455,7 +455,7 @@ class XsdReader(QXmlStreamReader):
 
         description = None
         displayedName = None
-        expertLevel = None
+        expertLevel = ""
         default = None
         unitName = None
         unitSymbol = None
