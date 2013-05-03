@@ -16,10 +16,12 @@
 class H5File_Test : public CPPUNIT_NS::TestFixture {
 
     CPPUNIT_TEST_SUITE(H5File_Test);
+
+    CPPUNIT_TEST(testBuffer);
     //    CPPUNIT_TEST(testBufferWrite);
-    //    CPPUNIT_TEST(testBufferRead); 
+    //    CPPUNIT_TEST(testBufferRead);
     CPPUNIT_TEST(testWrite);
-    //CPPUNIT_TEST(testRead);
+    CPPUNIT_TEST(testRead);
     //    CPPUNIT_TEST(testReadTable);
     CPPUNIT_TEST_SUITE_END();
 
@@ -42,21 +44,37 @@ private:
     size_t m_v4Size;
     std::vector<std::complex<float> > m_v4;
 
-    
-    
-    
+
+
+
 
     const size_t m_maxRec;
     karabo::util::Dims m_dimsVec;
+
+    karabo::util::Dims m_dimsVecA1;
     std::vector<int> m_a1;
+
+    karabo::util::Dims m_dimsVecA2;
     std::vector<std::string> m_a2;
+
+    karabo::util::Dims m_dimsVecA3;
     std::vector<bool> m_a3;
+
+    karabo::util::Dims m_dimsVecA4;
+    std::vector<std::complex<float> > m_a4;
+
+    karabo::util::Dims m_dimsVecA5;
+    std::vector<std::complex<double> > m_a5;
+
+    bool m_testBufferWriteSuccess;
 
     bool m_reportTime;
 
     void testWrite();
     void testBufferWrite();
     void testBufferRead();
+    void testBuffer();
+
     //void testVectorBufferWrite();
     void testRead();
     void testReadTable();

@@ -155,11 +155,18 @@ namespace karabo {
 
             void Dataset::write(const karabo::util::Hash& data, hsize_t recordId) {
 
+                KARABO_LOG_FRAMEWORK_TRACE_C("karabo.io.h5.Dataset") << "Writing hash data: key=" << m_key <<
+                        " recordId=" << recordId << " len=1";
                 try {
-                    extendFileDataspace(recordId, 1);
-                    selectFileRecords(recordId, 1);
-                    const Hash::Node& node = data.getNode(m_key, '/');
-                    writeNode(node, m_dataSet, m_fileDataSpace);
+
+                    if (data.has(m_key, '/')) {
+                        extendFileDataspace(recordId, 1);
+                        selectFileRecords(recordId, 1);
+                        const Hash::Node& node = data.getNode(m_key, '/');
+                        writeNode(node, m_dataSet, m_fileDataSpace);
+                    } else {
+                        throw KARABO_HDF_IO_EXCEPTION("No " + m_key + " key in the hash");
+                    }
                 } catch (karabo::util::Exception& e) {
                     KARABO_RETHROW_AS(KARABO_PROPAGATED_EXCEPTION("Cannot write Hash node " + m_key + " to dataset /" + m_h5PathName));
                 }
@@ -169,16 +176,21 @@ namespace karabo {
 
             void Dataset::write(const karabo::util::Hash& data, hsize_t recordId, hsize_t len) {
 
-                try {
-                    extendFileDataspace(recordId, len);
-                    selectFileRecords(recordId, len);
-                    const Hash::Node& node = data.getNode(m_key, '/');
-                    writeNode(node, len, m_dataSet, m_fileDataSpace);
+                KARABO_LOG_FRAMEWORK_TRACE_C("karabo.io.h5.Dataset") << "Writing hash data: key=" << m_key <<
+                        " recordId=" << recordId << " len=" << len;
 
+                try {
+                    if (data.has(m_key, '/')) {
+                        extendFileDataspace(recordId, len);
+                        selectFileRecords(recordId, len);
+                        const Hash::Node& node = data.getNode(m_key, '/');
+                        writeNode(node, len, m_dataSet, m_fileDataSpace);
+                    } else {                        
+                        throw KARABO_HDF_IO_EXCEPTION("No " + m_key + " key in the hash");
+                    }
                 } catch (karabo::util::Exception& e) {
                     KARABO_RETHROW_AS(KARABO_PROPAGATED_EXCEPTION("Cannot write Hash node " + m_key + " to dataset /" + m_h5PathName));
                 }
-
             }
 
 
@@ -276,7 +288,7 @@ namespace karabo {
             }
 
 
-            hid_t Dataset::dataSpace(const karabo::util::Dims& dims) {
+            hid_t Dataset::dataSpace(const karabo::util::Dims & dims) {
                 if (dims.rank() == 0) {
                     return dataSpace();
                 }

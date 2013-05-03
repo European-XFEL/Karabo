@@ -25,13 +25,23 @@ namespace karabo {
 
         namespace h5 {
 
+
+
+            //         DatasetWriter class is used to support bool type via specialization. 
+            //         HDF5 does not support bool and we need to specialize
+            //         this class. bool values are stored as unsigned chars (1byte)
+
+
             #define _LOGGER_CATEGORY "karabo.io.h5.DatasetWriter"
 
             template <typename T>
             class DatasetWriter {
 
             public:
-                KARABO_CLASSINFO(DatasetWriter, "DatasetWriter" + karabo::util::ToType<karabo::util::ToLiteral>::to(karabo::util::FromType<karabo::util::FromTypeInfo>::from(typeid (T))), "1.0");
+                KARABO_CLASSINFO(DatasetWriter,
+                                 "DatasetWriter" +
+                                 karabo::util::ToType<karabo::util::ToLiteral>::to
+                                 (karabo::util::FromType<karabo::util::FromTypeInfo>::from(typeid (T))), "1.0");
 
                 KARABO_CONFIGURATION_BASE_CLASS
 
@@ -80,10 +90,59 @@ namespace karabo {
 
             };
 
-            /**
-             * DatasetWriter is needed to support bool type. HDF5 does not support bool and we need to specialize
-             * this class. bool values are stored as unsigned chars (1byte)
-             */
+            template< typename T >
+            class DatasetScalarWriter : public DatasetWriter<T> {
+
+            public:
+
+                KARABO_CLASSINFO(DatasetScalarWriter,
+                                 "DatasetWriter_" +
+                                 karabo::util::ToType<karabo::util::ToLiteral>::to
+                                 (karabo::util::FromType<karabo::util::FromTypeInfo>::from(typeid (T))), "1.0")
+
+                DatasetScalarWriter(const karabo::util::Hash& input) : DatasetWriter<T>(input) {
+                }
+
+                void write(const karabo::util::Hash::Node& node, hid_t dataSet, hid_t fileDataSpace) {
+                    KARABO_LOG_FRAMEWORK_TRACE_C(_LOGGER_CATEGORY) << "entered write(scalar)";
+                    const T& value = node.getValue<T>();
+                    hid_t tid = ScalarTypes::getHdf5NativeType<T > ();
+                    herr_t status = H5Dwrite(dataSet, tid, this->m_memoryDataSpace, fileDataSpace, H5P_DEFAULT, &value);
+                    KARABO_CHECK_HDF5_STATUS(status);
+                    KARABO_CHECK_HDF5_STATUS(H5Tclose(tid));
+                }
+
+                void write(const karabo::util::Hash::Node& node, hsize_t len, hid_t dataSet, hid_t fileDataSpace) {
+                    KARABO_LOG_FRAMEWORK_TRACE_C(_LOGGER_CATEGORY) << "entered write(scalar, buffer)";
+                    const T* ptr = 0;
+
+
+                    if (node.is<T*>()) {
+                        KARABO_LOG_FRAMEWORK_TRACE_C(_LOGGER_CATEGORY) << "buffer is raw pointer";
+                        ptr = node.getValue<T*>();
+                    } else if (node.is< std::vector<T> >()) {
+                        KARABO_LOG_FRAMEWORK_TRACE_C(_LOGGER_CATEGORY) << "buffer is a vector";
+                        const std::vector<T>& vec = node.getValue<std::vector<T> >();
+                        ptr = &vec[0];
+                    } else {
+                        throw KARABO_HDF_IO_EXCEPTION("buffer type not supported. Use vector or raw pointer");
+                    }
+
+                    hid_t tid = ScalarTypes::getHdf5NativeType<T > ();
+
+                    std::vector<hsize_t> vdims = this->m_dimsBuffer.toVector();
+                    vdims[0] = len;
+                    karabo::util::Dims memoryDims(vdims);
+                    hid_t mds = Dataset::dataSpace(memoryDims);
+
+                    herr_t status = H5Dwrite(dataSet, tid, mds, fileDataSpace, H5P_DEFAULT, ptr);
+                    KARABO_CHECK_HDF5_STATUS(status);
+                    KARABO_CHECK_HDF5_STATUS(H5Tclose(tid));
+                }
+
+
+            };
+
             template< typename T >
             class DatasetVectorWriter : public DatasetWriter<T> {
 
@@ -92,7 +151,10 @@ namespace karabo {
                 DatasetVectorWriter(const karabo::util::Hash& input) : DatasetWriter<T>(input) {
                 }
 
-                KARABO_CLASSINFO(DatasetVectorWriter, "DatasetWriter_" + karabo::util::ToType<karabo::util::ToLiteral>::to(karabo::util::FromType<karabo::util::FromTypeInfo>::from(typeid (std::vector<T>))), "1.0")
+                KARABO_CLASSINFO(DatasetVectorWriter,
+                                 "DatasetWriter_" +
+                                 karabo::util::ToType<karabo::util::ToLiteral>::to
+                                 (karabo::util::FromType<karabo::util::FromTypeInfo>::from(typeid (std::vector<T>))), "1.0")
 
 
 
@@ -128,11 +190,11 @@ namespace karabo {
                     #ifdef KARABO_ENABLE_TRACE_LOG
                     std::ostringstream oss;
                     Dataset::getDataSpaceInfo(mds, oss);
-                    KARABO_LOG_FRAMEWORK_TRACE_C(_LOGGER_CATEGORY) << "memory space: "  << oss.str();
+                    KARABO_LOG_FRAMEWORK_TRACE_C(_LOGGER_CATEGORY) << "memory space: " << oss.str();
                     oss.str("");
                     Dataset::getDataSpaceInfo(fileDataSpace, oss);
                     KARABO_LOG_FRAMEWORK_TRACE_C(_LOGGER_CATEGORY) << "  file space: " << oss.str();
-                    
+
                     KARABO_LOG_FRAMEWORK_TRACE_C(_LOGGER_CATEGORY) << "vec[0]=" << vec[0];
                     #endif
 
@@ -153,7 +215,10 @@ namespace karabo {
 
             public:
 
-                KARABO_CLASSINFO(DatasetPointerWriter, "DatasetWriter_" + karabo::util::ToType<karabo::util::ToLiteral>::to(karabo::util::FromType<karabo::util::FromTypeInfo>::from(typeid (T*))), "1.0")
+                KARABO_CLASSINFO(DatasetPointerWriter,
+                                 "DatasetWriter_" +
+                                 karabo::util::ToType<karabo::util::ToLiteral>::to
+                                 (karabo::util::FromType<karabo::util::FromTypeInfo>::from(typeid (T*))), "1.0")
 
                 DatasetPointerWriter(const karabo::util::Hash& input) : DatasetWriter<T>(input) {
                 }
@@ -191,12 +256,71 @@ namespace karabo {
 
             };
 
+
+
+
+
+
+
+
+
+            //      bool specializations            
+
+            template<>
+            class DatasetScalarWriter<bool> : public DatasetWriter<bool> {
+
+            public:
+
+                KARABO_CLASSINFO(DatasetScalarWriter,
+                                 "DatasetWriter_" +
+                                 karabo::util::ToType<karabo::util::ToLiteral>::to
+                                 (karabo::util::FromType<karabo::util::FromTypeInfo>::from(typeid (bool))), "1.0")
+
+                DatasetScalarWriter(const karabo::util::Hash& input) : DatasetWriter<bool>(input) {
+                }
+
+                void write(const karabo::util::Hash::Node& node, hid_t dataSet, hid_t fileDataSpace) {
+                    KARABO_LOG_FRAMEWORK_TRACE_C(_LOGGER_CATEGORY) << "entered write(bool)";
+                    const bool& value = node.getValue<bool>();
+                    unsigned char converted = boost::numeric_cast<unsigned char>(value);
+                    hid_t tid = ScalarTypes::getHdf5NativeType<bool> ();
+                    herr_t status = H5Dwrite(dataSet, tid, m_memoryDataSpace, fileDataSpace, H5P_DEFAULT, &converted);
+                    KARABO_CHECK_HDF5_STATUS(status);
+                    KARABO_CHECK_HDF5_STATUS(H5Tclose(tid));
+                }
+
+                void write(const karabo::util::Hash::Node& node, hsize_t len, hid_t dataSet, hid_t fileDataSpace) {
+                    KARABO_LOG_FRAMEWORK_TRACE_C(_LOGGER_CATEGORY) << "entered write(bool, buffer) len=" << len;
+
+                    const bool* ptr = node.getValue<bool*>();
+                    std::vector<unsigned char> converted(len, 0);
+                    std::ostringstream oss;
+                    for (size_t i = 0; i < len; ++i) {
+                        oss << " [" << i << "] b:" << ptr[i];
+                        converted[i] = boost::numeric_cast<unsigned char>(ptr[i]);
+                        oss << " c:" << (int) converted[i];
+                    }
+                    KARABO_LOG_FRAMEWORK_TRACE_C(_LOGGER_CATEGORY) << oss.str();
+                    hid_t tid = ScalarTypes::getHdf5NativeType<bool> ();
+                    hid_t memoryDataSpace = Dataset::dataSpace1dim(len);
+                    herr_t status = H5Dwrite(dataSet, tid, memoryDataSpace, fileDataSpace, H5P_DEFAULT, &converted[0]);
+                    KARABO_CHECK_HDF5_STATUS(status);
+                    KARABO_CHECK_HDF5_STATUS(H5Tclose(tid));
+                }
+
+            };
+
             template<>
             class DatasetVectorWriter<bool> : public DatasetWriter<bool> {
 
             public:
 
-                KARABO_CLASSINFO(DatasetVectorWriter, "DatasetWriter_" + karabo::util::ToType<karabo::util::ToLiteral>::to(karabo::util::FromType<karabo::util::FromTypeInfo>::from(typeid (std::vector<bool>))), "1.0")
+                KARABO_CLASSINFO(DatasetVectorWriter,
+                                 "DatasetWriter_" +
+                                 karabo::util::ToType<karabo::util::ToLiteral>::to
+                                 (karabo::util::FromType<karabo::util::FromTypeInfo>::from
+                                  (typeid (std::vector<bool>))), "1.0"
+                                 )
 
 
                 DatasetVectorWriter(const karabo::util::Hash& input) : DatasetWriter<bool>(input) {
@@ -251,7 +375,10 @@ namespace karabo {
 
             public:
 
-                KARABO_CLASSINFO(DatasetPointerWriter, "DatasetWriter_" + karabo::util::ToType<karabo::util::ToLiteral>::to(karabo::util::FromType<karabo::util::FromTypeInfo>::from(typeid (bool*))), "1.0")
+                KARABO_CLASSINFO(DatasetPointerWriter,
+                                 "DatasetWriter_" +
+                                 karabo::util::ToType<karabo::util::ToLiteral>::to
+                                 (karabo::util::FromType<karabo::util::FromTypeInfo>::from(typeid (bool*))), "1.0")
 
 
                 DatasetPointerWriter(const karabo::util::Hash& input) : DatasetWriter<bool>(input) {
@@ -297,145 +424,6 @@ namespace karabo {
 
 
             };
-
-            template< typename T >
-            class DatasetScalarWriter : public DatasetWriter<T> {
-
-            public:
-
-                KARABO_CLASSINFO(DatasetScalarWriter, "DatasetWriter_" + karabo::util::ToType<karabo::util::ToLiteral>::to(karabo::util::FromType<karabo::util::FromTypeInfo>::from(typeid (T))), "1.0")
-
-                DatasetScalarWriter(const karabo::util::Hash& input) : DatasetWriter<T>(input) {
-                }
-
-                void write(const karabo::util::Hash::Node& node, hid_t dataSet, hid_t fileDataSpace) {
-                    KARABO_LOG_FRAMEWORK_TRACE_C(_LOGGER_CATEGORY) << "entered write(scalar)";
-                    const T& value = node.getValue<T>();
-                    hid_t tid = ScalarTypes::getHdf5NativeType<T > ();
-                    herr_t status = H5Dwrite(dataSet, tid, this->m_memoryDataSpace, fileDataSpace, H5P_DEFAULT, &value);
-                    KARABO_CHECK_HDF5_STATUS(status);
-                    KARABO_CHECK_HDF5_STATUS(H5Tclose(tid));
-                }
-
-                void write(const karabo::util::Hash::Node& node, hsize_t len, hid_t dataSet, hid_t fileDataSpace) {
-                    KARABO_LOG_FRAMEWORK_TRACE_C(_LOGGER_CATEGORY) << "entered write(scalar, buffer)";
-                    const T* ptr = 0;
-
-
-                    if (node.is<T*>()) {
-                        KARABO_LOG_FRAMEWORK_TRACE_C(_LOGGER_CATEGORY) << "buffer is raw pointer";
-                        ptr = node.getValue<T*>();
-                    } else if (node.is< std::vector<T> >()) {
-                        KARABO_LOG_FRAMEWORK_TRACE_C(_LOGGER_CATEGORY) << "buffer is a vector";
-                        const std::vector<T>& vec = node.getValue<std::vector<T> >();
-                        ptr = &vec[0];
-                    } else {
-                        throw KARABO_HDF_IO_EXCEPTION("buffer type not supported. Use vector or raw pointer");
-                    }
-
-                    hid_t tid = ScalarTypes::getHdf5NativeType<T > ();
-                    hid_t memoryDataSpace = Dataset::dataSpace1dim(len);
-                    herr_t status = H5Dwrite(dataSet, tid, memoryDataSpace, fileDataSpace, H5P_DEFAULT, ptr);
-                    KARABO_CHECK_HDF5_STATUS(status);
-                    KARABO_CHECK_HDF5_STATUS(H5Tclose(tid));
-                }
-
-
-            };
-
-            template<>
-            class DatasetScalarWriter<bool> : public DatasetWriter<bool> {
-
-            public:
-
-                KARABO_CLASSINFO(DatasetScalarWriter, "DatasetWriter_" + karabo::util::ToType<karabo::util::ToLiteral>::to(karabo::util::FromType<karabo::util::FromTypeInfo>::from(typeid (bool))), "1.0")
-
-                DatasetScalarWriter(const karabo::util::Hash& input) : DatasetWriter<bool>(input) {
-                }
-
-                void write(const karabo::util::Hash::Node& node, hid_t dataSet, hid_t fileDataSpace) {
-                    KARABO_LOG_FRAMEWORK_TRACE_C(_LOGGER_CATEGORY) << "entered write(bool)";
-                    const bool& value = node.getValue<bool>();
-                    unsigned char converted = boost::numeric_cast<unsigned char>(value);
-                    hid_t tid = ScalarTypes::getHdf5NativeType<bool> ();
-                    herr_t status = H5Dwrite(dataSet, tid, m_memoryDataSpace, fileDataSpace, H5P_DEFAULT, &converted);
-                    KARABO_CHECK_HDF5_STATUS(status);
-                    KARABO_CHECK_HDF5_STATUS(H5Tclose(tid));
-                }
-
-                void write(const karabo::util::Hash::Node& node, hsize_t len, hid_t dataSet, hid_t fileDataSpace) {
-                    KARABO_LOG_FRAMEWORK_TRACE_C(_LOGGER_CATEGORY) << "entered write(bool, buffer) len=" << len;
-
-                    const bool* ptr = node.getValue<bool*>();
-                    std::vector<unsigned char> converted(len, 0);
-                    std::ostringstream oss;
-                    for (size_t i = 0; i < len; ++i) {
-                        oss << " [" << i << "] b:" << ptr[i];
-                        converted[i] = boost::numeric_cast<unsigned char>(ptr[i]);
-                        oss << " c:" << (int) converted[i];
-                    }
-                    KARABO_LOG_FRAMEWORK_TRACE_C(_LOGGER_CATEGORY) << oss.str();
-                    hid_t tid = ScalarTypes::getHdf5NativeType<bool> ();
-                    hid_t memoryDataSpace = Dataset::dataSpace1dim(len);
-                    herr_t status = H5Dwrite(dataSet, tid, memoryDataSpace, fileDataSpace, H5P_DEFAULT, &converted[0]);
-                    KARABO_CHECK_HDF5_STATUS(status);
-                    KARABO_CHECK_HDF5_STATUS(H5Tclose(tid));
-                }
-
-            };
-
-            template<class T>
-            class DatasetComplexWriter : public DatasetWriter<T > {
-
-            public:
-
-                KARABO_CLASSINFO(DatasetComplexWriter, "DatasetWriter_" + karabo::util::ToType<karabo::util::ToLiteral>::to(karabo::util::FromType<karabo::util::FromTypeInfo>::from(typeid (std::complex<T>))), "1.0")
-
-                DatasetComplexWriter(const karabo::util::Hash& input) : DatasetWriter<T>(input) {
-                    KARABO_LOG_FRAMEWORK_TRACE_C(_LOGGER_CATEGORY) << "constructor Complex";
-                }
-
-                void write(const karabo::util::Hash::Node& node, hid_t dataSet, hid_t fileDataSpace) {
-                    KARABO_LOG_FRAMEWORK_TRACE_C(_LOGGER_CATEGORY) << "entered write(std::complex<T>)";
-                    const std::complex<T>& value = node.getValue<std::complex<T> >();
-                    hid_t tid = ScalarTypes::getHdf5NativeType<T> ();
-
-                    #ifdef KARABO_ENABLE_TRACE_LOG
-                    std::ostringstream oss;
-                    Dataset::getDataSpaceInfo(this->m_memoryDataSpace, oss);
-                    KARABO_LOG_FRAMEWORK_TRACE << oss.str();
-                    oss.str("");
-                    Dataset::getDataSpaceInfo(fileDataSpace, oss);
-                    KARABO_LOG_FRAMEWORK_TRACE << oss.str();
-                    #endif
-
-                    herr_t status = H5Dwrite(dataSet, tid, this->m_memoryDataSpace, fileDataSpace, H5P_DEFAULT, &value);
-                    KARABO_CHECK_HDF5_STATUS(status);
-                    KARABO_CHECK_HDF5_STATUS(H5Tclose(tid));
-                }
-
-                void write(const karabo::util::Hash::Node& node, hsize_t len, hid_t dataSet, hid_t fileDataSpace) {
-                    KARABO_LOG_FRAMEWORK_TRACE_C(_LOGGER_CATEGORY) << "entered write(complex buffer) len=" << len;
-                    //
-                    //                    const bool* ptr = node.getValue<bool*>();
-                    //                    std::vector<unsigned char> converted(len, 0);
-                    //                    std::ostringstream oss;
-                    //                    for (size_t i = 0; i < len; ++i) {
-                    //                        oss << " [" << i << "] b:" << ptr[i];
-                    //                        converted[i] = boost::numeric_cast<unsigned char>(ptr[i]);
-                    //                        oss << " c:" << (int) converted[i];
-                    //                    }
-                    //                    KARABO_LOG_FRAMEWORK_TRACE_C(_LOGGER_CATEGORY) << oss.str();
-                    //                    hid_t tid = ScalarTypes::getHdf5NativeType<bool> ();
-                    //                    hid_t memoryDataSpace = Dataset::dataSpace1dim(len);
-                    //                    herr_t status = H5Dwrite(dataSet, tid, memoryDataSpace, fileDataSpace, H5P_DEFAULT, &converted[0]);
-                    //                    KARABO_CHECK_HDF5_STATUS(status);
-                    //                    KARABO_CHECK_HDF5_STATUS(H5Tclose(tid));
-                }
-
-            };
-
-
 
 
             #undef _LOGGER_CATEGORY
