@@ -2,16 +2,21 @@
  * $Id$
  *
  * Author: <irina.kozlova@xfel.eu>
+ * Modified (2 May 2013): <burkhard.heisen@xfel.eu>
  *
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
 
 #include <boost/python.hpp>
 
-#include <karabo/io/TextFileOutput.hh>
-#include <karabo/io/TextFileInput.hh>
+#include <karabo/io/Output.hh>
+#include <karabo/io/Input.hh>
+#include <karabo/io/TextSerializer.hh>
+#include <karabo/io/BinarySerializer.hh>
 #include <karabo/io/FileTools.hh>
+
 #include "PythonFactoryMacros.hh"
+#include "Wrapper.hh"
 
 using namespace karabo::util;
 using namespace karabo::io;
@@ -35,39 +40,153 @@ void exportPyIoFileTools() {
             , (void (*) (Hash &, string const &, Hash const &))(&karabo::io::loadFromFile)
             , (bp::arg("object"), bp::arg("filename"), bp::arg("config") = karabo::util::Hash())
             );
-    
+}
+
+
+template <class T>
+void exportPyIoOutput() {
+
     {//exposing karabo::io::Output<karabo::util::Hash>
-        typedef karabo::io::Output<karabo::util::Hash> WriterHash;
-        bp::class_<WriterHash, boost::noncopyable >("WriterHash", bp::no_init)
+        typedef karabo::io::Output<T> SpecificOutput;
+        bp::class_<SpecificOutput, boost::noncopyable >(string("Output" + T::classInfo().getClassName()).c_str(), bp::no_init)
                 .def("write"
-                     , (void (WriterHash::*)(Hash const &))(&WriterHash::write)
+                     , (void (SpecificOutput::*)(T const &))(&SpecificOutput::write)
                      , (bp::arg("data")))
-                KARABO_PYTHON_FACTORY_CONFIGURATOR(WriterHash)
+                KARABO_PYTHON_FACTORY_CONFIGURATOR(SpecificOutput)
                 ;
-        bp::register_ptr_to_python< boost::shared_ptr<WriterHash> >();
-    }
-    
-    {//exposing karabo::io::Input<karabo::util::Hash>
-        typedef karabo::io::Input<karabo::util::Hash> ReaderHash;
-        bp::class_<ReaderHash, boost::noncopyable >("ReaderHash", bp::no_init)
-                .def("read"
-                    , (void (ReaderHash::*)(Hash &, size_t))(&ReaderHash::read)
-                    , (bp::arg("data"), bp::arg("idx")=0))
-                .def("size" 
-                     , (size_t (ReaderHash::*)() const)(&ReaderHash::size))
-                KARABO_PYTHON_FACTORY_CONFIGURATOR(ReaderHash)
-                ;
-        bp::register_ptr_to_python< boost::shared_ptr<ReaderHash> >();
-    }
-    
-    {//exposing karabo::io::Output<karabo::util::Schema>
-        typedef karabo::io::Output<karabo::util::Schema> WriterSchema;
-        bp::class_<WriterSchema, boost::noncopyable > ("WriterSchema", bp::no_init)
-                .def("write"
-                     , (void (WriterSchema::*)(Schema const &))(&WriterSchema::write)
-                     , (bp::arg("data")))
-                KARABO_PYTHON_FACTORY_CONFIGURATOR(WriterSchema)
-                ;
-        bp::register_ptr_to_python< boost::shared_ptr<WriterSchema> >();
+        bp::register_ptr_to_python< boost::shared_ptr<SpecificOutput> >();
     }
 }
+template void exportPyIoOutput<karabo::util::Hash>();
+template void exportPyIoOutput<karabo::util::Schema>();
+
+
+template <class T>
+void exportPyIoInput() {
+
+    {//exposing karabo::io::Input<karabo::util::Hash>
+        typedef karabo::io::Input<T> SpecificInput;
+        bp::class_<SpecificInput, boost::noncopyable >(string("Input" + T::classInfo().getClassName()).c_str(), bp::no_init)
+                .def("read"
+                     , (void (SpecificInput::*)(T &, size_t))(&SpecificInput::read)
+                     , (bp::arg("data"), bp::arg("idx") = 0))
+                .def("size"
+                     , (size_t(SpecificInput::*)() const) (&SpecificInput::size))
+                KARABO_PYTHON_FACTORY_CONFIGURATOR(SpecificInput)
+                ;
+        bp::register_ptr_to_python< boost::shared_ptr<SpecificInput> >();
+    }
+}
+template void exportPyIoInput<karabo::util::Hash>();
+template void exportPyIoInput<karabo::util::Schema>();
+
+template <class T>
+class TextSerializerWrap {
+
+public:
+
+
+    static bp::object save(karabo::io::TextSerializer<T>& s, const T& object) {
+        std::string archive;
+        s.save(object, archive);
+        return bp::object(archive);
+    }
+
+
+    static bp::object load(karabo::io::TextSerializer<T>& s, const bp::object& obj) {
+        if (PyByteArray_Check(obj.ptr())) {
+            PyObject* bytearray = PyByteArray_FromObject(obj.ptr());
+            size_t size = PyByteArray_Size(bytearray);
+            char* data = PyByteArray_AsString(bytearray);
+            T object;
+            s.load(object, data, size);
+            return bp::object(object);
+        } else if (bp::extract<std::string>(obj).check()) {
+            T object;
+            s.load(object, bp::extract<std::string>(obj));
+            return bp::object(object);
+        }
+        throw KARABO_PYTHON_EXCEPTION("Python object must be either of type bytearray or string");
+    }
+};
+
+
+template <class T>
+void exportPyIoTextSerializer() {
+
+    {//exposing karabo::io::Input<karabo::util::Hash>
+        typedef karabo::io::TextSerializer<T> SpecificSerializer;
+        bp::class_<SpecificSerializer, boost::noncopyable >(string("TextSerializer" + T::classInfo().getClassName()).c_str(), bp::no_init)
+                .def("save"
+                     , &TextSerializerWrap<T>().save
+                     , (bp::arg("object"))
+                     , "Saves an object as a string.\nExample:\n\t"
+                     "h = Hash('a.b.c',1,'x.y.z',[1,2,3,4,5,6,7])\n\tser = TextSerializerHash()\n\tarchive = ser.save(h)\n\tassert archive.__class__.__name__ == 'str'")
+                .def("load"
+                     , &TextSerializerWrap<T>().load
+                     , (bp::arg("archive"))
+                     , "Loads \"bytearray\" or \"str\" archive and returns a new object.\nExample:\n\th = Hash('a.b.c',1,'x.y.z',[1,2,3,4,5,6,7])\n\tser = TextSerializerHash()\n\t"
+                     "archive = ser.save(h)\n\th2 = ser.load(archive)\n\tassert similar(h, h2)")
+                KARABO_PYTHON_FACTORY_CONFIGURATOR(SpecificSerializer)
+                ;
+        bp::register_ptr_to_python< boost::shared_ptr<SpecificSerializer> >();
+    }
+}
+
+template void exportPyIoTextSerializer<karabo::util::Hash>();
+template void exportPyIoTextSerializer<karabo::util::Schema>();
+
+template <class T>
+class BinarySerializerWrap {
+
+public:
+
+
+    static bp::object save(karabo::io::BinarySerializer<T>& s, const T& object) {
+        std::vector<char> v;
+        s.save(object, v);
+        return bp::object(bp::handle<>(PyByteArray_FromStringAndSize(&v[0], v.size())));
+    }
+
+
+    static bp::object load(karabo::io::BinarySerializer<T>& s, const bp::object& obj) {
+        if (PyByteArray_Check(obj.ptr())) {
+            PyObject* bytearray = PyByteArray_FromObject(obj.ptr());
+            size_t size = PyByteArray_Size(bytearray);
+            char* data = PyByteArray_AsString(bytearray);
+            T object;
+            s.load(object, data, size);
+            return bp::object(object);
+        }
+        throw KARABO_PYTHON_EXCEPTION("Python object type is not a bytearray!");
+    }
+};
+
+
+template <class T>
+void exportPyIoBinarySerializer() {
+    bp::docstring_options docs(true, true, false);
+    typedef karabo::io::BinarySerializer<T> SpecificSerializer;
+    bp::class_<SpecificSerializer, boost::noncopyable >(string("BinarySerializer" + T::classInfo().getClassName()).c_str(), bp::no_init)
+            .def("save"
+                 , &BinarySerializerWrap<T>().save
+                 , (bp::arg("object"))
+                 , "Saves an object as a bytearray.\nExample:\n\t"
+                 "h = Hash('a.b.c',1,'x.y.z',[1,2,3,4,5,6,7])\n\tser = BinarySerializerHash()\n\tarchive = ser.save(h)\n\tassert archive.__class__.__name__ == 'bytearray'")
+
+            .def("load"
+                 , &BinarySerializerWrap<T>().load
+                 , (bp::arg("archive"))
+                 , "Loads \"bytearray\" archive and returns new object.\nExample:\n\th = Hash('a.b.c',1,'x.y.z',[1,2,3,4,5,6,7])\n\tser = BinarySerializerHash()\n\t"
+                 "archive = ser.save(h)\n\th2 = ser.load(archive)\n\tassert similar(h, h2)")
+            KARABO_PYTHON_FACTORY_CONFIGURATOR(SpecificSerializer)
+            ;
+    bp::register_ptr_to_python< boost::shared_ptr<SpecificSerializer> >();
+}
+
+template void exportPyIoBinarySerializer<karabo::util::Hash>();
+template void exportPyIoBinarySerializer<karabo::util::Schema>();
+
+
+
+

@@ -33,35 +33,35 @@ namespace karabo {
          * The DeviceServer class.
          */
         class DeviceServer : public karabo::xms::SignalSlotable {
-            
+
             typedef std::map<std::string, boost::thread*> DeviceInstanceMap;
-            
-            
+
+
         public:
 
             KARABO_CLASSINFO(DeviceServer, "DeviceServer", "1.0")
             KARABO_CONFIGURATION_BASE_CLASS
 
-            DeviceServer();
-
-            virtual ~DeviceServer();
 
             static void expectedParameters(karabo::util::Schema&);
 
             DeviceServer(const karabo::util::Hash&);
 
+            virtual ~DeviceServer();
+
             void run();
-            
-            
-            
+
+
+
             /**************************************************************/
             /*                 Special Functions                          */
+
             /**************************************************************/
-           
+
             KARABO_FSM_ON_EXCEPTION(errorFound)
 
             KARABO_FSM_NO_TRANSITION_V_ACTION(noStateTransition)
-            
+
             KARABO_FSM_ON_CURRENT_STATE_CHANGE(onStateUpdate)
 
             /**************************************************************/
@@ -78,17 +78,17 @@ namespace karabo {
             KARABO_FSM_EVENT0(m_fsm, InbuildDevicesAvailableEvent, inbuildDevicesAvailable)
 
             KARABO_FSM_EVENT1(m_fsm, StartDeviceEvent, slotStartDevice, karabo::util::Hash)
-            
+
             KARABO_FSM_EVENT1(m_fsm, RegistrationOkEvent, slotRegistrationOk, std::string)
-            
+
             KARABO_FSM_EVENT1(m_fsm, RegistrationFailedEvent, slotRegistrationFailed, std::string)
-                      
+
             /**************************************************************/
             /*                        States                              */
             /**************************************************************/
 
             KARABO_FSM_STATE_V_E(RegistrationState, registrationStateOnEntry)
-            
+
             KARABO_FSM_STATE(ErrorState)
 
             KARABO_FSM_STATE_V_E(IdleState, idleStateOnEntry)
@@ -106,11 +106,11 @@ namespace karabo {
             KARABO_FSM_V_ACTION0(NotifyNewDeviceAction, notifyNewDeviceAction)
 
             KARABO_FSM_V_ACTION1(StartDeviceAction, startDeviceAction, karabo::util::Hash)
-            
+
             KARABO_FSM_V_ACTION1(RegistrationFailedAction, registrationFailed, std::string)
-            
+
             KARABO_FSM_V_ACTION1(RegistrationOkAction, registrationOk, std::string)
-            
+
             /**************************************************************/
             /*                      AllOk Machine                         */
             /**************************************************************/
@@ -123,7 +123,7 @@ namespace karabo {
             Row< IdleState, StartDeviceEvent, ServingState, StartDeviceAction, none >,
             Row< ServingState, StartDeviceEvent, none, StartDeviceAction, none>
             KARABO_FSM_TABLE_END
-            
+
             //                       Name          Transition-Table     Initial-State  Context
             KARABO_FSM_STATE_MACHINE(AllOkState, AllOkStateTransitionTable, RegistrationState, Self)
 
@@ -137,7 +137,7 @@ namespace karabo {
             Row< ErrorState, EndErrorEvent, AllOkState, EndErrorAction, none >
             KARABO_FSM_TABLE_END
 
-            
+
             KARABO_FSM_STATE_MACHINE(DeviceServerMachine, DeviceServerMachineTransitionTable, AllOkState, Self)
 
 
@@ -147,24 +147,24 @@ namespace karabo {
 
                 KARABO_FSM_SET_CONTEXT_TOP(this, m_fsm);
                 KARABO_FSM_SET_CONTEXT_SUB(this, m_fsm, AllOkState);
-                        
+
                 KARABO_FSM_START_MACHINE(m_fsm);
             }
-            
-            
+
+
 
         private: // Functions
-            
+
             void onStateUpdate(const std::string& currentState);
-            
+
             void loadLogger(const karabo::util::Hash& input);
 
             void loadPluginLoader(const karabo::util::Hash& input);
-            
+
             void stopDeviceServer();
 
             log4cpp::Category& log();
-            
+
             void registerAndConnectSignalsAndSlots();
 
             void updateAvailableDevices();
@@ -172,17 +172,17 @@ namespace karabo {
             void scanPlugins();
 
             void sayHello();
-            
+
             void slotKillDeviceServerInstance();
-            
+
             void slotKillDeviceInstance(const std::string& instanceId);
-            
+
             std::string generateDefaultDeviceInstanceId(const std::string& classId);
-            
+
         private: // Member variables
-            
+
             log4cpp::Category* m_log;
-            
+
             KARABO_FSM_DECLARE_MACHINE(DeviceServerMachine, m_fsm);
 
             karabo::util::PluginLoader::Pointer m_pluginLoader;
@@ -198,18 +198,18 @@ namespace karabo {
             boost::thread_group m_deviceThreads;
             DeviceInstanceMap m_deviceInstanceMap;
             unsigned int m_deviceInstanceCount;
-                        
+
             karabo::io::TextSerializer<karabo::util::Schema>::Pointer m_schemaSerializer;
-            
+
             std::string m_serverId;
             karabo::net::BrokerConnection::Pointer m_connection;
-            
+
             karabo::util::Hash m_connectionConfig;
-            
-            
+
+
         };
-    } 
-} 
+    }
+}
 
 // TODO windows
 //KARABO_REGISTER_FACTORY_BASE_HH(karabo::core::DeviceServer, TEMPLATE_CORE, DECLSPEC_CORE)

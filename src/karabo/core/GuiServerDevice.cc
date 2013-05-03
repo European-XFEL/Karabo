@@ -64,7 +64,7 @@ namespace karabo {
             config.set("serializationType", "text");
             m_dataConnection = Connection::create("Tcp", config);
             m_ioService = m_dataConnection->getIOService();
-            //m_textSerializer = Format<Hash>::create("Xml"); // for reading
+            m_textSerializer = TextSerializer<Hash>::create("Xml"); // for reading      
             //m_binarySerializer = Format<Hash>::create("Bin"); // for writing changes
 
             m_loggerConnection = BrokerConnection::createChoice("loggerConnection", input);
@@ -177,6 +177,7 @@ namespace karabo {
             if (it != m_channels.end()) {
                 it->second.insert(instanceId);
             }
+            KARABO_LOG_INFO << "onNewVisibleDeviceInstance " << instanceId;
             // TODO: optimize further in doing the signal/slot connect here
             call(instanceId, "slotRefresh");
         }
@@ -224,7 +225,7 @@ namespace karabo {
             // Broadcast to all GUIs
             typedef std::map< karabo::net::Channel::Pointer, std::set<std::string> >::const_iterator channelIterator;
             for (channelIterator it = m_channels.begin(); it != m_channels.end(); ++it) {
-                it->first->write(row, header);
+                it->first->write(header, row);
             }
         }
 
@@ -236,7 +237,7 @@ namespace karabo {
             // Broadcast to all GUIs
             typedef std::map< karabo::net::Channel::Pointer, std::set<std::string> >::const_iterator channelIterator;
             for (channelIterator it = m_channels.begin(); it != m_channels.end(); ++it) {
-                it->first->write(row, header);
+                it->first->write(header, row);
             }
         }
 
@@ -248,7 +249,7 @@ namespace karabo {
             // Broadcast to all GUIs
             typedef std::map< karabo::net::Channel::Pointer, std::set<std::string> >::const_iterator channelIterator;
             for (channelIterator it = m_channels.begin(); it != m_channels.end(); ++it) {
-                it->first->write(row, header);
+                it->first->write(header, row);
             }
         }
 
@@ -260,7 +261,7 @@ namespace karabo {
             // Broadcast to all GUIs
             typedef std::map< karabo::net::Channel::Pointer, std::set<std::string> >::const_iterator channelIterator;
             for (channelIterator it = m_channels.begin(); it != m_channels.end(); ++it) {
-                it->first->write(row, header);
+                it->first->write(header, row);
             }
         }
 
@@ -272,7 +273,7 @@ namespace karabo {
             // Broadcast to all GUIs
             typedef std::map< karabo::net::Channel::Pointer, std::set<std::string> >::const_iterator channelIterator;
             for (channelIterator it = m_channels.begin(); it != m_channels.end(); ++it) {
-                it->first->write(row, header);
+                it->first->write(header, row);
             }
         }
 
@@ -284,7 +285,7 @@ namespace karabo {
             // Broadcast to all GUIs
             typedef std::map< karabo::net::Channel::Pointer, std::set<std::string> >::const_iterator channelIterator;
             for (channelIterator it = m_channels.begin(); it != m_channels.end(); ++it) {
-                it->first->write(row, header);
+                it->first->write(header, row);
             }
         }
 
@@ -381,10 +382,10 @@ namespace karabo {
             typedef std::map< karabo::net::Channel::Pointer, std::set<std::string> >::const_iterator channelIterator;
             for (channelIterator it = m_channels.begin(); it != m_channels.end(); ++it) {
                 // Optimization: broadcast only to visible DeviceInstances
-                std::vector<char> body;
+                //std::string body;
                 if (it->second.find(instanceId) != it->second.end()) {
-                    m_binarySerializer->save(modified, body);
-                    it->first->write(header, body);
+                    //m_textSerializer->save(modified, body);
+                    it->first->write(header, modified);
                 }
             }
         }

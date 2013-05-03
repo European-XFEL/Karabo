@@ -98,7 +98,7 @@ namespace karabo {
             UINT32_ELEMENT(expected)
                     .key("ping")
                     .displayedName("Ping")
-                    .description("Client's ping interval to test whether the connection to the broker is still alive [seconds]")
+                    .description("Client ping interval to test whether the connection to the broker is still alive [seconds]")
                     .assignmentOptional().defaultValue(20)
                     .minInc(1)
                     .advanced()
@@ -107,7 +107,7 @@ namespace karabo {
             BOOL_ELEMENT(expected)
                     .key("trustBroker")
                     .displayedName("Trust Broker")
-                    .description("Should the broker's certificate be trusted?")
+                    .description("Should the broker certificate be trusted?")
                     .assignmentOptional().defaultValue(true)
                     .advanced()
                     .commit();
@@ -123,7 +123,7 @@ namespace karabo {
             BOOL_ELEMENT(expected)
                     .key("deliveryInhibition")
                     .displayedName("Message Self Delivery Inhibition")
-                    .description("Should be inhibited delivery of messages published on the topic by this consumer's own connection?")
+                    .description("Should be inhibited delivery of messages published on the topic by this consumer own connection?")
                     .assignmentOptional().defaultValue(false)
                     .advanced()
                     .commit();
@@ -147,7 +147,7 @@ namespace karabo {
 
             INT32_ELEMENT(expected)
                     .key("messageTimeToLive")
-                    .displayedName("Message's Time to Live")
+                    .displayedName("Message Time to Live")
                     .description("Time to live for an individual message send by a producer (0 = unlimited) [ms]")
                     .assignmentOptional().defaultValue(10000)
                     .minInc(0)

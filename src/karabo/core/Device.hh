@@ -554,7 +554,7 @@ namespace karabo {
             }
 
             void slotRefresh() {
-                emit("signalChanged", m_parameters, m_instanceId);
+                emit("signalChanged", m_parameters, m_instanceId, m_classId);
                 reply(m_parameters);
             }
 

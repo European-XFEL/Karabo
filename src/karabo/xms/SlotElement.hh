@@ -13,6 +13,7 @@
 #define	KARABO_UTIL_SLOTELEMENT_HH
 
 #include <karabo/util/GenericElement.hh>
+#include <karabo/util/ToLiteral.hh>
 
 namespace karabo {
     namespace xms {
@@ -39,6 +40,9 @@ namespace karabo {
                 m_child.setAttribute<int>("connectedSignals", KARABO_SCHEMA_ASSIGNMENT, karabo::util::Schema::OPTIONAL_PARAM);
                 m_child.setAttribute<int>("connectedSignals", KARABO_SCHEMA_NODE_TYPE, karabo::util::Schema::LEAF);
                 m_child.setAttribute<int>("connectedSignals", KARABO_SCHEMA_LEAF_TYPE, karabo::util::Schema::COMMAND);
+                m_child.setAttribute("connectedSignals", KARABO_SCHEMA_VALUE_TYPE, karabo::util::ToLiteral::to<karabo::util::Types::VECTOR_STRING>());
+                
+                connectionsAreReconfigurable();
             }
 
             /**
