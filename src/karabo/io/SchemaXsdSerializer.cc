@@ -272,14 +272,14 @@ namespace karabo {
             node.append_attribute("name") = lastKey.c_str();
 
             //type
-            if (schema.getNodeType(key) == Schema::LEAF && !schema.hasOptions(key) &&
+            if ((schema.getNodeType(key) == Schema::LEAF) && !schema.hasOptions(key) &&
                     !schema.hasMinInc(key) && !schema.hasMinExc(key) && !schema.hasMaxInc(key) && !schema.hasMaxExc(key)) {
                 string xsdType = Types::to<ToXsd > (schema.getValueType(key));
                 node.append_attribute("type") = xsdType.c_str();
             }
             
             //default
-            if (schema.getNodeType(key) == Schema::LEAF && schema.hasDefaultValue(key)){
+            if ((schema.getNodeType(key) == Schema::LEAF) && schema.hasDefaultValue(key)){
                 string defaultValue = schema.getDefaultValueAs<string>(key);
                 node.append_attribute("default") = defaultValue.c_str();
             }
