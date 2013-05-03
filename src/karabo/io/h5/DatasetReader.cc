@@ -32,6 +32,7 @@ namespace karabo {
             KARABO_REGISTER_FOR_CONFIGURATION(DatasetReader<bool>)
 
             KARABO_REGISTER_FOR_CONFIGURATION(DatasetReader< std::complex<float> >)
+            KARABO_REGISTER_FOR_CONFIGURATION(DatasetReader< std::complex<double> >)
 
         }
     }

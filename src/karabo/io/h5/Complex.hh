@@ -51,7 +51,10 @@ namespace karabo {
                     //karabo::util::Dims dims = getSingleValueDimensions();
                     karabo::util::Hash config("dims", dims().toVector());
                     KARABO_LOG_FRAMEWORK_TRACE_CF << "classId " << Self::classInfo().getClassId();
-                    m_datasetWriter = DatasetWriter<T>::create("DatasetWriter_" + Complex<T>::classInfo().getClassId(), config);
+                    
+//                    std::string typeName = karabo::util::ToType<karabo::util::ToLiteral>::to(
+//                               karabo::util::FromType<karabo::util::FromTypeInfo>::from(typeid (T)));
+                    m_datasetWriter = DatasetWriter<std::complex<T> >::create("DatasetWriter_" + Self::classInfo().getClassId(), config);
                     m_datasetReader = DatasetReader<T>::create("DatasetReader", config);
                 }
 
@@ -175,7 +178,7 @@ namespace karabo {
 
             protected:
 
-                typename karabo::io::h5::DatasetWriter<T>::Pointer m_datasetWriter;
+                typename karabo::io::h5::DatasetWriter<std::complex<T> >::Pointer m_datasetWriter;
                 typename karabo::io::h5::DatasetReader<T>::Pointer m_datasetReader;
 
             };

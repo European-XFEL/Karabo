@@ -1,6 +1,5 @@
 /* 
- * File:   H5File_Test.cc
- * Author: wrona
+ * Author: <krzysztof.wrona@xfel.eu>
  * 
  * Created on February 20, 2013, 2:33 PM
  */
@@ -26,7 +25,7 @@ using namespace log4cpp;
 CPPUNIT_TEST_SUITE_REGISTRATION(H5File_Test);
 
 
-H5File_Test::H5File_Test() : m_maxRec(100) {
+H5File_Test::H5File_Test() : m_maxRec(100), m_testBufferWriteSuccess(false) {
 
     karabo::log::Tracer tr;
     tr.disableAll();
@@ -37,8 +36,8 @@ H5File_Test::H5File_Test() : m_maxRec(100) {
     //    tr.enable("karabo.io.h5.Table.openNew");
     //    tr.enable("karabo.io.h5.Table.openReadOnly");
     //        tr.enable("H5File_Test.testReadTable");
-    //tr.enable("H5File_Test.testBufferWrite");
-    //tr.enable("H5File_Test.testBufferRead");
+    tr.enable("H5File_Test.testBufferWrite");
+    tr.enable("H5File_Test.testBufferRead");
     tr.enable("H5File_Test.testRead");
     tr.enable("H5File_Test.testWrite");
     tr.reconfigure();
@@ -72,21 +71,45 @@ void H5File_Test::setUp() {
 
     }
 
+
+
     {
         // used in: testBufferWrite and testBufferRead        
         m_dimsVec = Dims(2, 5);
-        m_a1.resize(m_maxRec * m_dimsVec.size(), 0);
-        m_a2.resize(m_maxRec * m_dimsVec.size(), "");
-        m_a3.resize(m_maxRec * m_dimsVec.size(), false);
 
+        m_dimsVecA1 = Dims(2, 5);
+        m_a1.resize(m_maxRec * m_dimsVecA1.size(), 0);
         for (size_t j = 0; j < m_maxRec * m_dimsVec.size(); ++j) {
             m_a1[j] = j % 1000000;
+        }
+
+
+        m_dimsVecA2 = Dims(2, 5);
+        m_a2.resize(m_maxRec * m_dimsVecA2.size(), "");
+        for (size_t j = 0; j < m_maxRec * m_dimsVec.size(); ++j) {
             ostringstream oss;
             oss << "[Hi " << j % 1000000 << "]";
             m_a2[j] = oss.str();
+        }
 
+        m_dimsVecA3 = Dims(2, 5);
+        m_a3.resize(m_maxRec * m_dimsVecA3.size(), false);
+        for (size_t j = 0; j < m_maxRec * m_dimsVec.size(); ++j) {
             if (j % 3) m_a3[j] = true;
         }
+
+        m_dimsVecA4 = Dims(2, 5);
+        m_a4.resize(m_maxRec * m_dimsVecA4.size());
+        for (size_t j = 0; j < m_maxRec * m_dimsVec.size(); ++j) {
+            m_a4[j] = std::complex<float>(j + 0.2, j + 0.4);
+        }
+
+        m_dimsVecA5 = Dims(2, 5);
+        m_a5.resize(m_maxRec * m_dimsVecA5.size());
+        for (size_t j = 0; j < m_maxRec * m_dimsVec.size(); ++j) {
+            m_a5[j] = std::complex<double>(j + 0.2, j + 0.4);
+        }
+
     }
 
 }
@@ -98,8 +121,6 @@ void H5File_Test::tearDown() {
 
 void H5File_Test::testWrite() {
 
-
-    clog << "AAAAA: " << "DatasetWriter_" + karabo::util::ToType<karabo::util::ToLiteral>::to(karabo::util::FromType<karabo::util::FromTypeInfo>::from(typeid (std::complex<float>))) << endl;
 
     try {
 
@@ -199,9 +220,9 @@ void H5File_Test::testWrite() {
 
 
 
-    } catch (karabo::util::Exception& e) {
-        cerr << e.detailedMsg() << endl;
-        KARABO_RETHROW;
+    } catch (karabo::util::Exception& ex) {
+        clog << ex.detailedMsg() << endl;
+        CPPUNIT_FAIL(ex.detailedMsg());
     }
 
 
@@ -331,7 +352,7 @@ void H5File_Test::testRead() {
         vector<string>& strings = data.bindReference<vector<string> >("strings");
         strings.resize(stringsDims.size());
 
-        vector<complex<float> >& cf = data.bindReference<vector<std::complex<float> > >("vectors/cf");
+        vector<complex<float> >& cf = data.bindReference<vector<std::complex<float> > >("vectors.cf");
         cf.resize(complexFloatDims.size());
 
         // /abc/instrument/d will be accessible as Hash element with key "d"
@@ -397,7 +418,7 @@ void H5File_Test::testRead() {
 
     } catch (Exception& ex) {
         clog << ex << endl;
-        CPPUNIT_ASSERT(true == false);
+        CPPUNIT_FAIL(ex.detailedMsg());
     }
 
 }
@@ -443,292 +464,35 @@ void H5File_Test::testReadTable() {
         file.close();
     } catch (Exception& ex) {
         clog << ex << endl;
-        CPPUNIT_ASSERT(true == false);
+        CPPUNIT_FAIL(ex.detailedMsg());
     }
 
+
+}
+
+
+void H5File_Test::testBuffer() {
+    try {
+        testBufferWrite();
+        testBufferRead();
+    } catch (...) {
+        CPPUNIT_FAIL("TestBuffer failed");
+    }
 
 }
 
 
 void H5File_Test::testBufferWrite() {
 
-
-    Hash data;
-
-    Profiler p("VectorBufferWrite");
-
-    p.start("format");
-    Format::Pointer format = Format::createEmptyFormat();
-
-    {
-        Hash h1(
-                "h5path", "",
-                "h5name", "mercury"
-                );
-        h5::Element::Pointer e1 = h5::Element::create("INT32", h1);
-        format->addElement(e1);
-    }
-
-    {
-        Hash h2(
-                "h5path", "",
-                "h5name", "venus"
-                );
-        h5::Element::Pointer e2 = h5::Element::create("UINT16", h2);
-        format->addElement(e2);
-    }
-
-    {
-        Hash h3(
-                "h5path", "",
-                "h5name", "earth"
-                );
-        h5::Element::Pointer e3 = h5::Element::create("FLOAT", h3);
-        format->addElement(e3);
-    }
-
-    {
-        Hash h4(
-                "h5path", "",
-                "h5name", "mars"
-                );
-        h5::Element::Pointer e4 = h5::Element::create("BOOL", h4);
-        format->addElement(e4);
-    }
-
-    {
-
-        Hash h5(
-                "h5path", "",
-                "h5name", "jupiter"
-                );
-        h5::Element::Pointer e5 = h5::Element::create("STRING", h5);
-        format->addElement(e5);
-    }
-
-    {
-        Hash h1(
-                "h5path", "vector",
-                "h5name", "a1",
-                "dims", m_dimsVec.toVector()
-                );
-        h5::Element::Pointer e1 = h5::Element::create("VECTOR_INT32", h1);
-        format->addElement(e1);
-    }
-
-    {
-        Hash h1(
-                "h5path", "vector",
-                "h5name", "a2",
-                "dims", m_dimsVec.toVector()
-                );
-        h5::Element::Pointer e1 = h5::Element::create("VECTOR_STRING", h1);
-        format->addElement(e1);
-    }
-
-    {
-        Hash h1(
-                "h5path", "vector",
-                "h5name", "a3",
-                "dims", m_dimsVec.toVector()
-                );
-        h5::Element::Pointer e1 = h5::Element::create("VECTOR_BOOL", h1);
-        format->addElement(e1);
-    }
-
-    p.stop("format");
-
-
-    //data.set("vectors.image", v0).setAttribute("dims", Dims(1024, 1024).toVector());
-
-    p.start("initialize");
-
-    //size_t maxIterations = 100;
-    size_t maxIterations = 2;
-
-    //TODO: update size for vectors
-    unsigned long long totalSize = maxIterations * m_maxRec * (4 + 2 + 4 + 1 + 12) / 1000000;
-
-    vector<int> mercury(m_maxRec, 1);
-    vector<unsigned short> venus(m_maxRec, 2);
-    vector<float> earth(m_maxRec, 3);
-    bool mars[m_maxRec];
-    vector<std::string> jupiter(m_maxRec, "Hello 000000");
-
-
-    for (size_t i = 0; i < m_maxRec; ++i) {
-        mercury[i] = i + 1000;
-        venus[i] = i;
-        earth[i] = i * 2.5;
-
-        mars[i] = true;
-        if (i % 2) mars[i] = false;
-
-        ostringstream oss;
-        oss << "Hello " << std::setw(6) << std::setfill('0') << i;
-        jupiter[i] = oss.str();
-    }
-
-
-    p.stop("initialize");
-    p.start("create");
-
-
-    string filename = "/dev/shm/file3.h5";
-    filename = resourcePath("file3.h5");
-    File file(filename);
-    file.open(File::TRUNCATE);
-
-    Table::Pointer t = file.createTable("/planets", format, 100);
-
-    p.stop("create");
-    p.start("write0");
-
-    int i = 0, l = 23;
-    data.set("mercury", &mercury[i]);
-    data.set("venus", &venus[i]);
-    data.set("earth", &earth[i]);
-    //we cannot use vector of bool this way
-    data.set("mars", &mars[i]);
-    data.set("jupiter", &jupiter[i]);
-    data.set("vector.a1", m_a1);
-    data.set("vector.a2", m_a2);
-    data.set("vector.a3", m_a3);
-    t->write(data, i, l);
-
-    i = i + l;
-    l = 5;
-    data.set("mercury", &mercury[i]);
-    data.set("venus", &venus[i]);
-    data.set("earth", &earth[i]);
-    data.set("mars", &mars[i]);
-    t->write(data, i, l);
-
-    // 5 records are intentionally skipped
-    // should appear in file with zeros ( recordId=28, len=5)
-    i = i + l + 5;
-    l = 6;
-    data.set("mercury", &mercury[i]);
-    data.set("venus", &venus[i]);
-    data.set("earth", &earth[i]);
-    data.set("mars", &mars[i]);
-    t->write(data, i, l);
-
-
-    i = i + l;
-    l = 3;
-    data.set("mercury", &mercury[i]);
-    data.set("venus", &venus[i]);
-    data.set("earth", &earth[i]);
-    data.set("mars", &mars[i]);
-    t->write(data, i, l);
-
-    i = i + l;
-    l = 8;
-    data.set("mercury", &mercury[i]);
-    data.set("venus", &venus[i]);
-    data.set("earth", &earth[i]);
-    data.set("mars", &mars[i]);
-    t->write(data, i, l);
-
-    i = i + l;
-    l = 25;
-    data.set("mercury", &mercury[i]);
-    data.set("venus", &venus[i]);
-    data.set("earth", &earth[i]);
-    data.set("mars", &mars[i]);
-    t->write(data, i, l);
-
-
-    i = i + l;
-    l = 5;
-    data.set("mercury", &mercury[i]);
-    data.set("venus", &venus[i]);
-    data.set("earth", &earth[i]);
-    data.set("mars", &mars[i]);
-    t->write(data, i, l);
-
-    //    for (int j = 0; j < 4; ++j) {
-    //        data.set("mercury", mercury[i+j]);
-    //        data.set("venus", venus[i+j]);
-    //        data.set("earth", earth[i+j]);
-    //        t->write(data, i+j);
-    //    }
-
-    i = i + l;
-    l = 19;
-    data.set("mercury", &mercury[i]);
-    data.set("venus", &venus[i]);
-    data.set("earth", &earth[i]);
-    data.set("mars", &mars[i]);
-    t->write(data, i, l);
-
-    i = i + l;
-    l = 1;
-    KARABO_LOG_FRAMEWORK_TRACE_CF << " i=" << i << " l=" << l;
-    data.set("mercury", &mercury[i]);
-    data.set("venus", &venus[i]);
-    data.set("earth", &earth[i]);
-    data.set("mars", &mars[i]);
-    t->write(data, i, l);
-
-
-    p.stop("write0");
-    p.start("write");
-
-
-    data.set("mercury", &mercury[0]);
-    data.set("venus", &venus[0]);
-    data.set("earth", &earth[0]);
-    data.set("mars", &mars[0]);
-    data.set("jupiter", &jupiter[0]);
-    data.set("vector.a1", m_a1);
-    data.set("vector.a2", m_a2);
-    data.set("vector.a3", m_a3);
-
-
-    for (size_t j = 0; j < maxIterations; ++j) {
-        t->write(data, m_maxRec*j, m_maxRec);
-    }
-    p.stop("write");
-
-    p.start("close");
-    file.close();
-    p.stop("close");
-
-    double formatTime = HighResolutionTimer::time2double(p.getTime("format"));
-    double initializeTime = HighResolutionTimer::time2double(p.getTime("initialize"));
-    double createTime = HighResolutionTimer::time2double(p.getTime("create"));
-    double writeTime = HighResolutionTimer::time2double(p.getTime("write"));
-    double closeTime = HighResolutionTimer::time2double(p.getTime("close"));
-
-    if (m_reportTime) {
-        clog << endl;
-        clog << "file: " << filename << endl;
-        clog << "initialize data                  : " << initializeTime << " [s]" << endl;
-        clog << "format                           : " << formatTime << " [s]" << endl;
-        clog << "open/prepare file                : " << createTime << " [s]" << endl;
-        clog << "write data (may use memory cache): " << writeTime << " [s]" << endl;
-        clog << "written data size                : " << totalSize << " [MB]" << endl;
-        clog << "writing speed                    : " << totalSize / writeTime << " [MB/s]" << endl;
-        clog << "close                            : " << closeTime << " [s]" << endl;
-        clog << "write+close(flush to disk)       : " << writeTime + closeTime << " [s]" << endl;
-        clog << "write+close(flush to disk) speed : " << totalSize / (writeTime + closeTime) << " [MB/s]" << endl;
-    }
-
-}
-
-
-void H5File_Test::testBufferRead() {
-
-
     try {
 
+        Hash data;
 
-        Profiler p("VectorBufferRead");
+        Profiler p("VectorBufferWrite");
 
         p.start("format");
         Format::Pointer format = Format::createEmptyFormat();
+
         {
             Hash h1(
                     "h5path", "",
@@ -739,10 +503,56 @@ void H5File_Test::testBufferRead() {
         }
 
         {
+            Hash h2(
+                    "h5path", "",
+                    "h5name", "venus"
+                    );
+            h5::Element::Pointer e2 = h5::Element::create("UINT16", h2);
+            format->addElement(e2);
+        }
+
+        {
+            Hash h3(
+                    "h5path", "",
+                    "h5name", "earth"
+                    );
+            h5::Element::Pointer e3 = h5::Element::create("FLOAT", h3);
+            format->addElement(e3);
+        }
+
+        {
+            Hash h4(
+                    "h5path", "",
+                    "h5name", "mars"
+                    );
+            h5::Element::Pointer e4 = h5::Element::create("BOOL", h4);
+            format->addElement(e4);
+        }
+
+        {
+
+            Hash h5(
+                    "h5path", "",
+                    "h5name", "jupiter"
+                    );
+            h5::Element::Pointer e5 = h5::Element::create("STRING", h5);
+            format->addElement(e5);
+        }
+
+        {
+            Hash h1(
+                    "h5path", "",
+                    "h5name", "neptun"
+                    );
+            h5::Element::Pointer e1 = h5::Element::create("COMPLEX_FLOAT", h1);
+            format->addElement(e1);
+        }
+
+        {
             Hash h1(
                     "h5path", "vector",
                     "h5name", "a1",
-                    "dims", m_dimsVec.toVector()
+                    "dims", m_dimsVecA1.toVector()
                     );
             h5::Element::Pointer e1 = h5::Element::create("VECTOR_INT32", h1);
             format->addElement(e1);
@@ -752,7 +562,7 @@ void H5File_Test::testBufferRead() {
             Hash h1(
                     "h5path", "vector",
                     "h5name", "a2",
-                    "dims", m_dimsVec.toVector()
+                    "dims", m_dimsVecA2.toVector()
                     );
             h5::Element::Pointer e1 = h5::Element::create("VECTOR_STRING", h1);
             format->addElement(e1);
@@ -762,12 +572,300 @@ void H5File_Test::testBufferRead() {
             Hash h1(
                     "h5path", "vector",
                     "h5name", "a3",
-                    "dims", m_dimsVec.toVector()
+                    "dims", m_dimsVecA3.toVector()
                     );
             h5::Element::Pointer e1 = h5::Element::create("VECTOR_BOOL", h1);
             format->addElement(e1);
         }
 
+        {
+            Hash h1(
+                    "h5path", "vector",
+                    "h5name", "a4",
+                    "dims", m_dimsVecA4.toVector()
+                    );
+            h5::Element::Pointer e1 = h5::Element::create("VECTOR_COMPLEX_FLOAT", h1);
+            format->addElement(e1);
+        }
+
+        {
+            Hash h1(
+                    "h5path", "vector",
+                    "h5name", "a5",
+                    "dims", m_dimsVecA5.toVector()
+                    );
+            h5::Element::Pointer e1 = h5::Element::create("VECTOR_COMPLEX_DOUBLE", h1);
+            format->addElement(e1);
+        }
+
+
+        p.stop("format");
+
+
+        //data.set("vectors.image", v0).setAttribute("dims", Dims(1024, 1024).toVector());
+
+        p.start("initialize");
+
+        //size_t maxIterations = 100;
+        size_t maxIterations = 2;
+
+        //TODO: update size for vectors
+        unsigned long long totalSize = maxIterations * m_maxRec * (4 + 2 + 4 + 1 + 12) / 1000000;
+
+        vector<int> mercury(m_maxRec, 1);
+        vector<unsigned short> venus(m_maxRec, 2);
+        vector<float> earth(m_maxRec, 3);
+        bool mars[m_maxRec];
+        vector<std::string> jupiter(m_maxRec, "Hello 000000");
+        vector<std::complex<float> > neptun(m_maxRec);
+
+
+        for (size_t i = 0; i < m_maxRec; ++i) {
+            mercury[i] = i + 1000;
+            venus[i] = i;
+            earth[i] = i * 2.5;
+
+            mars[i] = true;
+            if (i % 2) mars[i] = false;
+
+            ostringstream oss;
+            oss << "Hello " << std::setw(6) << std::setfill('0') << i;
+            jupiter[i] = oss.str();
+
+            neptun[i] = complex<float>(i + 0.1, i + 0.2);
+        }
+
+
+        p.stop("initialize");
+        p.start("create");
+
+
+        string filename = "/dev/shm/file3.h5";
+        filename = resourcePath("file3.h5");
+        File file(filename);
+        file.open(File::TRUNCATE);
+
+        Table::Pointer t = file.createTable("/planets", format, 100);
+
+        p.stop("create");
+        p.start("write0");
+
+        int i = 0, l = 23;
+        data.set("mercury", &mercury[i]);
+        data.set("venus", &venus[i]);
+        data.set("earth", &earth[i]);
+        //we cannot use vector of bool this way
+        data.set("mars", &mars[i]);
+        data.set("jupiter", &jupiter[i]);
+        data.set("neptun", &neptun[i]);
+        data.set("vector.a1", m_a1);
+        data.set("vector.a2", m_a2);
+        data.set("vector.a3", m_a3);
+        data.set("vector.a4", m_a4);
+        data.set("vector.a5", m_a5);
+        t->write(data, i, l);
+
+        i = i + l;
+        l = 5;
+        data.set("mercury", &mercury[i]);
+        data.set("venus", &venus[i]);
+        data.set("earth", &earth[i]);
+        data.set("mars", &mars[i]);
+        data.set("neptun", &neptun[i]);
+        t->write(data, i, l);
+
+        // 5 records are intentionally skipped
+        // should appear in file with zeros ( recordId=28, len=5)
+        i = i + l + 5;
+        l = 6;
+        data.set("mercury", &mercury[i]);
+        data.set("venus", &venus[i]);
+        data.set("earth", &earth[i]);
+        data.set("mars", &mars[i]);
+        data.set("neptun", &neptun[i]);
+        t->write(data, i, l);
+
+
+        i = i + l;
+        l = 3;
+        data.set("mercury", &mercury[i]);
+        data.set("venus", &venus[i]);
+        data.set("earth", &earth[i]);
+        data.set("mars", &mars[i]);
+        data.set("neptun", &neptun[i]);
+        t->write(data, i, l);
+
+        i = i + l;
+        l = 8;
+        data.set("mercury", &mercury[i]);
+        data.set("venus", &venus[i]);
+        data.set("earth", &earth[i]);
+        data.set("mars", &mars[i]);
+        data.set("neptun", &neptun[i]);
+        t->write(data, i, l);
+
+        i = i + l;
+        l = 25;
+        data.set("mercury", &mercury[i]);
+        data.set("venus", &venus[i]);
+        data.set("earth", &earth[i]);
+        data.set("mars", &mars[i]);
+        data.set("neptun", &neptun[i]);
+        t->write(data, i, l);
+
+
+        i = i + l;
+        l = 5;
+        data.set("mercury", &mercury[i]);
+        data.set("venus", &venus[i]);
+        data.set("earth", &earth[i]);
+        data.set("mars", &mars[i]);
+        data.set("neptun", &neptun[i]);
+        t->write(data, i, l);
+
+        //    for (int j = 0; j < 4; ++j) {
+        //        data.set("mercury", mercury[i+j]);
+        //        data.set("venus", venus[i+j]);
+        //        data.set("earth", earth[i+j]);
+        //        t->write(data, i+j);
+        //    }
+
+        i = i + l;
+        l = 19;
+        data.set("mercury", &mercury[i]);
+        data.set("venus", &venus[i]);
+        data.set("earth", &earth[i]);
+        data.set("mars", &mars[i]);
+        data.set("neptun", &neptun[i]);
+        t->write(data, i, l);
+
+        i = i + l;
+        l = 1;
+        KARABO_LOG_FRAMEWORK_TRACE_CF << " i=" << i << " l=" << l;
+        data.set("mercury", &mercury[i]);
+        data.set("venus", &venus[i]);
+        data.set("earth", &earth[i]);
+        data.set("mars", &mars[i]);
+        data.set("neptun", &neptun[i]);
+        t->write(data, i, l);
+
+
+        p.stop("write0");
+        p.start("write");
+
+
+        data.set("mercury", &mercury[0]);
+        data.set("venus", &venus[0]);
+        data.set("earth", &earth[0]);
+        data.set("mars", &mars[0]);
+        data.set("jupiter", &jupiter[0]);
+        data.set("neptun", &neptun[0]);
+        data.set("vector.a1", m_a1);
+        data.set("vector.a2", m_a2);
+        data.set("vector.a3", m_a3);
+        data.set("vector.a4", m_a4);
+
+        for (size_t j = 0; j < maxIterations; ++j) {
+            t->write(data, m_maxRec*j, m_maxRec);
+        }
+        p.stop("write");
+
+        p.start("close");
+        file.close();
+        p.stop("close");
+
+        double formatTime = HighResolutionTimer::time2double(p.getTime("format"));
+        double initializeTime = HighResolutionTimer::time2double(p.getTime("initialize"));
+        double createTime = HighResolutionTimer::time2double(p.getTime("create"));
+        double writeTime = HighResolutionTimer::time2double(p.getTime("write"));
+        double closeTime = HighResolutionTimer::time2double(p.getTime("close"));
+
+        if (m_reportTime) {
+            clog << endl;
+            clog << "file: " << filename << endl;
+            clog << "initialize data                  : " << initializeTime << " [s]" << endl;
+            clog << "format                           : " << formatTime << " [s]" << endl;
+            clog << "open/prepare file                : " << createTime << " [s]" << endl;
+            clog << "write data (may use memory cache): " << writeTime << " [s]" << endl;
+            clog << "written data size                : " << totalSize << " [MB]" << endl;
+            clog << "writing speed                    : " << totalSize / writeTime << " [MB/s]" << endl;
+            clog << "close                            : " << closeTime << " [s]" << endl;
+            clog << "write+close(flush to disk)       : " << writeTime + closeTime << " [s]" << endl;
+            clog << "write+close(flush to disk) speed : " << totalSize / (writeTime + closeTime) << " [MB/s]" << endl;
+        }
+
+
+    } catch (Exception& ex) {
+        clog << ex << endl;
+        CPPUNIT_FAIL(ex.detailedMsg());
+    }
+
+    m_testBufferWriteSuccess = true;
+}
+
+
+void H5File_Test::testBufferRead() {
+
+    if (!m_testBufferWriteSuccess) {
+        CPPUNIT_FAIL("Test testBufferRead not run due to a failure in testBufferWrite");
+    }
+
+    try {
+
+
+        Profiler p("VectorBufferRead");
+
+        p.start("format");
+        //        Format::Pointer format = Format::createEmptyFormat();
+        //        {
+        //            Hash h1(
+        //                    "h5path", "",
+        //                    "h5name", "mercury"
+        //                    );
+        //            h5::Element::Pointer e1 = h5::Element::create("INT32", h1);
+        //            format->addElement(e1);
+        //        }
+        //
+        //        {
+        //            Hash h1(
+        //                    "h5path", "vector",
+        //                    "h5name", "a1",
+        //                    "dims", m_dimsVecA1.toVector()
+        //                    );
+        //            h5::Element::Pointer e1 = h5::Element::create("VECTOR_INT32", h1);
+        //            format->addElement(e1);
+        //        }
+        //
+        //        {
+        //            Hash h1(
+        //                    "h5path", "vector",
+        //                    "h5name", "a2",
+        //                    "dims", m_dimsVecA2.toVector()
+        //                    );
+        //            h5::Element::Pointer e1 = h5::Element::create("VECTOR_STRING", h1);
+        //            format->addElement(e1);
+        //        }
+        //
+        //        {
+        //            Hash h1(
+        //                    "h5path", "vector",
+        //                    "h5name", "a3",
+        //                    "dims", m_dimsVecA3.toVector()
+        //                    );
+        //            h5::Element::Pointer e1 = h5::Element::create("VECTOR_BOOL", h1);
+        //            format->addElement(e1);
+        //        }
+        //        
+        //        {
+        //            Hash h1(
+        //                    "h5path", "vector",
+        //                    "h5name", "a4",
+        //                    "dims", m_dimsVecA4.toVector()
+        //                    );
+        //            h5::Element::Pointer e1 = h5::Element::create("VECTOR_COMPLEX_FLOAT", h1);
+        //            format->addElement(e1);
+        //        }
+        //
 
         string filename = "/dev/shm/file3.h5";
         filename = resourcePath("file3.h5");
@@ -789,6 +887,8 @@ void H5File_Test::testBufferRead() {
         vector<int>& a1 = data.get< vector<int> >("vector.a1");
         vector<string>& a2 = data.get< vector<string> >("vector.a2");
         vector<bool>& a3 = data.get < vector<bool> >("vector.a3");
+        vector<complex<float> >& a4 = data.get < vector<complex<float> > >("vector.a4");
+        vector<complex<double> >& a5 = data.get < vector<complex<double> > >("vector.a5");
 
         size_t numReadRecords = t->read(0, bufLen);
 
@@ -799,14 +899,42 @@ void H5File_Test::testBufferRead() {
         size_t m = 0;
         for (size_t j = 0; j < numReadRecords; ++j) {
             KARABO_LOG_FRAMEWORK_TRACE_CF << "{" << j << "}: ";
-            for (size_t k = 0; k < m_dimsVec.extentIn(0); ++k) {
-                for (size_t l = 0; l < m_dimsVec.extentIn(1); ++l) {
-                    KARABO_LOG_FRAMEWORK_TRACE_CF << "[" << k << "," << l << "]=" << a1[m];
-                    KARABO_LOG_FRAMEWORK_TRACE_CF << "[" << k << "," << l << "]=" << a2[m];
-                    KARABO_LOG_FRAMEWORK_TRACE_CF << "[" << k << "," << l << "]=" << a3[m];
+            for (size_t k = 0; k < m_dimsVecA1.extentIn(0); ++k) {
+                for (size_t l = 0; l < m_dimsVecA1.extentIn(1); ++l) {
+                    KARABO_LOG_FRAMEWORK_TRACE_CF << "a1: [" << k << "," << l << "]=" << a1[m];
                     CPPUNIT_ASSERT(a1[m] == m_a1[m]);
+                    m++;
+                }
+            }
+            m = 0;
+            for (size_t k = 0; k < m_dimsVecA2.extentIn(0); ++k) {
+                for (size_t l = 0; l < m_dimsVecA2.extentIn(1); ++l) {
+                    KARABO_LOG_FRAMEWORK_TRACE_CF << "a2: [" << k << "," << l << "]=" << a2[m];
                     CPPUNIT_ASSERT(a2[m] == m_a2[m]);
+                    m++;
+                }
+            }
+            m = 0;
+            for (size_t k = 0; k < m_dimsVecA3.extentIn(0); ++k) {
+                for (size_t l = 0; l < m_dimsVecA3.extentIn(1); ++l) {
+                    KARABO_LOG_FRAMEWORK_TRACE_CF << "a3: [" << k << "," << l << "]=" << a3[m];
                     CPPUNIT_ASSERT(a3[m] == m_a3[m]);
+                    m++;
+                }
+            }
+            m = 0;
+            for (size_t k = 0; k < m_dimsVecA4.extentIn(0); ++k) {
+                for (size_t l = 0; l < m_dimsVecA4.extentIn(1); ++l) {
+                    KARABO_LOG_FRAMEWORK_TRACE_CF << "a4: [" << k << "," << l << "]=" << a4[m];
+                    CPPUNIT_ASSERT(a4[m] == m_a4[m]);
+                    m++;
+                }
+            }
+            m = 0;
+            for (size_t k = 0; k < m_dimsVecA5.extentIn(0); ++k) {
+                for (size_t l = 0; l < m_dimsVecA5.extentIn(1); ++l) {
+                    KARABO_LOG_FRAMEWORK_TRACE_CF << "a5: [" << k << "," << l << "]=" << a5[m];
+                    CPPUNIT_ASSERT(a5[m] == m_a5[m]);
                     m++;
                 }
             }

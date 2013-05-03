@@ -182,7 +182,7 @@ namespace karabo {
                 if (recordNumber >= m_tableSize) return 0;
                 vector<boost::shared_ptr<Element> > elements = m_dataFormat->getElements();
                 for (size_t i = 0; i < elements.size(); ++i) {
-                    KARABO_LOG_FRAMEWORK_TRACE_CF << "Table::read  element " << i;
+                    KARABO_LOG_FRAMEWORK_TRACE_CF << "Table::read  element " << elements[i]->getFullName();
                     elements[i]->read(recordNumber);
                 }
                 return 1ul;

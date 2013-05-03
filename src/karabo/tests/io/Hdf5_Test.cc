@@ -9,6 +9,7 @@
 #include <hdf5/hdf5.h>
 #include <karabo/util/Profiler.hh>
 #include "TestPathSetup.hh"
+#include <karabo/log/Tracer.hh>
 #include <karabo/util/Dims.hh>
 
 #include <karabo/io/h5/Table.hh>
@@ -20,29 +21,39 @@ using namespace std;
 
 CPPUNIT_TEST_SUITE_REGISTRATION(Hdf5_Test);
 
+
 Hdf5_Test::Hdf5_Test() {
+
+    karabo::log::Tracer tr;
+    tr.disableAll();
+    tr.reconfigure();
+    
     m_numImages = 100; // number of images to be written
     m_extentMultiplier = 1; //image size multiplier: 1 means 1Mpx, 2 - 4Mpx, 3 - 9 Mpx, etc
     m_report = false;
 
 }
 
+
 Hdf5_Test::~Hdf5_Test() {
 }
+
 
 void Hdf5_Test::setUp() {
 
 }
 
+
 void Hdf5_Test::tearDown() {
 }
+
 
 void Hdf5_Test::testPureHdf5() {
 
 
 
-#define DET_NX 1024
-#define DET_NY 1024
+    #define DET_NX 1024
+    #define DET_NY 1024
 
     string filename = "/dev/shm/pure.h5"; // in memory file
     filename = resourcePath("pure.h5"); // file on disk ($KARABO/src/karabo/tests/io/resources/pure.h5)
@@ -181,11 +192,12 @@ void Hdf5_Test::testPureHdf5() {
 
 }
 
+
 void Hdf5_Test::testKaraboHdf5() {
 
 
-#define DET_NX 1024
-#define DET_NY 1024
+    #define DET_NX 1024
+    #define DET_NY 1024
 
 
     string filename = "/dev/shm/karabo.h5"; // in memory file
@@ -236,13 +248,13 @@ void Hdf5_Test::testKaraboHdf5() {
     p.start("close");
     t->close();
 
-// check if all objects are closed (apart from file) - requires making  m_h5file to be made temporary public in File.hh
-//    clog << "files    : " << H5Fget_obj_count(file.m_h5file, H5F_OBJ_FILE) << endl;
-//    clog << "datasets : " << H5Fget_obj_count(file.m_h5file, H5F_OBJ_DATASET)<< endl;
-//    clog << "datatypes: " << H5Fget_obj_count(file.m_h5file, H5F_OBJ_DATATYPE)<< endl;
-//    clog << "attribute: " << H5Fget_obj_count(file.m_h5file, H5F_OBJ_ATTR)<< endl;
-//    clog << "groups   : " << H5Fget_obj_count(file.m_h5file, H5F_OBJ_GROUP)<< endl;
-//    clog << "all      : " << H5Fget_obj_count(file.m_h5file, H5F_OBJ_ALL)<< endl;
+    // check if all objects are closed (apart from file) - requires making  m_h5file to be made temporary public in File.hh
+    //    clog << "files    : " << H5Fget_obj_count(file.m_h5file, H5F_OBJ_FILE) << endl;
+    //    clog << "datasets : " << H5Fget_obj_count(file.m_h5file, H5F_OBJ_DATASET)<< endl;
+    //    clog << "datatypes: " << H5Fget_obj_count(file.m_h5file, H5F_OBJ_DATATYPE)<< endl;
+    //    clog << "attribute: " << H5Fget_obj_count(file.m_h5file, H5F_OBJ_ATTR)<< endl;
+    //    clog << "groups   : " << H5Fget_obj_count(file.m_h5file, H5F_OBJ_GROUP)<< endl;
+    //    clog << "all      : " << H5Fget_obj_count(file.m_h5file, H5F_OBJ_ALL)<< endl;
 
 
     file.close();

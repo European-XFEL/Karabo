@@ -38,7 +38,8 @@ namespace karabo {
                 KARABO_CLASSINFO(DatasetReader, "DatasetReader", "1.0")
                 KARABO_CONFIGURATION_BASE_CLASS
 
-                virtual ~DatasetReader(){}
+                virtual ~DatasetReader() {
+                }
 
                 static void expectedParameters(karabo::util::Schema& expected) {
 
@@ -75,9 +76,9 @@ namespace karabo {
                 void read(hid_t dataSet, hid_t fileDataSpace) {
 
                     KARABO_LOG_FRAMEWORK_TRACE << "enter read T*";
-                    KARABO_CHECK_HDF5_STATUS(
-                                             H5Dread(dataSet, ScalarTypes::getHdf5NativeType<T > (), m_memoryDataSpace, fileDataSpace, H5P_DEFAULT, m_readData)
-                                             );
+                    KARABO_CHECK_HDF5_STATUS
+                            (H5Dread(dataSet, ScalarTypes::getHdf5NativeType<T > (),
+                                     m_memoryDataSpace, fileDataSpace, H5P_DEFAULT, m_readData));
                 }
 
                 void read(hsize_t len, hid_t dataSet, hid_t fileDataSpace) {
@@ -119,7 +120,8 @@ namespace karabo {
                 KARABO_CLASSINFO(DatasetReader, "DatasetReader", "1.0")
                 KARABO_CONFIGURATION_BASE_CLASS
 
-                virtual ~DatasetReader(){}
+                virtual ~DatasetReader() {
+                }
 
                 static void expectedParameters(karabo::util::Schema& expected) {
 
@@ -137,10 +139,10 @@ namespace karabo {
                     m_dims = karabo::util::Dims(input.get<std::vector<unsigned long long> >("dims"));
 
                     m_memoryDataSpace = Dataset::dataSpace(m_dims);
-                    #ifdef KARABO_ENABLE_LOG_TARCE
+                    #ifdef KARABO_ENABLE_TRACE_LOG
                     std::ostringstream oss;
                     Dataset::getDataSpaceInfo(this->m_memoryDataSpace, oss);
-                    KARABO_LOG_FRAMEWORK_TRACE << oss.str();                    
+                    KARABO_LOG_FRAMEWORK_TRACE << oss.str();
                     #endif
 
                     std::vector<unsigned long long> bufferVector(m_dims.rank() + 1, 0);
@@ -174,7 +176,8 @@ namespace karabo {
                     char** chPtr = &(m_readData->m_ch[0]);
 
                     KARABO_CHECK_HDF5_STATUS(
-                                             H5Dread(dataSet, ScalarTypes::getHdf5NativeType<std::string> (), m_memoryDataSpace, fileDataSpace, H5P_DEFAULT, chPtr)
+                                             H5Dread(dataSet, ScalarTypes::getHdf5NativeType<std::string> (), 
+                                                     m_memoryDataSpace, fileDataSpace, H5P_DEFAULT, chPtr)
                                              );
 
                     if (m_readData->m_useVector) {
@@ -281,8 +284,9 @@ namespace karabo {
                 };
 
             public:
-                
-                virtual ~DatasetReader(){}
+
+                virtual ~DatasetReader() {
+                }
 
                 static void expectedParameters(karabo::util::Schema& expected) {
 
@@ -300,10 +304,10 @@ namespace karabo {
                     m_dims = karabo::util::Dims(input.get<std::vector<unsigned long long> >("dims"));
 
                     m_memoryDataSpace = Dataset::dataSpace(m_dims);
-                    #ifdef KARABO_ENABLE_LOG_TARCE
+                    #ifdef KARABO_ENABLE_TRACE_LOG
                     std::ostringstream oss;
                     Dataset::getDataSpaceInfo(this->m_memoryDataSpace, oss);
-                    KARABO_LOG_FRAMEWORK_TRACE << oss.str();                    
+                    KARABO_LOG_FRAMEWORK_TRACE << oss.str();
                     #endif
 
                     std::vector<unsigned long long> bufferVector(m_dims.rank() + 1, 0);
@@ -358,8 +362,8 @@ namespace karabo {
                     KARABO_LOG_FRAMEWORK_TRACE << "enter read(bool, buffer) len=" << len;
                     m_readData->m_uch.resize(m_readData->m_len);
                     unsigned char* uchPtr = &(m_readData->m_uch[0]);
-                    
-                    
+
+
                     std::vector<hsize_t> vdims = this->m_dimsBuffer.toVector();
                     vdims[0] = len;
                     karabo::util::Dims memoryDims(vdims);
@@ -368,7 +372,7 @@ namespace karabo {
 
                     KARABO_CHECK_HDF5_STATUS(
                                              H5Dread(dataSet, ScalarTypes::getHdf5NativeType<bool > (), mds,
-                                             fileDataSpace, H5P_DEFAULT, uchPtr));
+                                                     fileDataSpace, H5P_DEFAULT, uchPtr));
 
                     if (m_readData->m_useVector) {
                         for (size_t i = 0; i < m_readData->m_len; ++i) {
