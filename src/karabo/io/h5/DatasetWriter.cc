@@ -28,6 +28,9 @@ namespace karabo {
             KARABO_REGISTER_FOR_CONFIGURATION(DatasetWriter<float>, DatasetVectorWriter<float>)
             KARABO_REGISTER_FOR_CONFIGURATION(DatasetWriter<std::string>, DatasetVectorWriter<std::string>)
             KARABO_REGISTER_FOR_CONFIGURATION(DatasetWriter<bool>, DatasetVectorWriter<bool>)
+            KARABO_REGISTER_FOR_CONFIGURATION(DatasetWriter< std::complex<float> >, DatasetVectorWriter< std::complex<float> >)
+            KARABO_REGISTER_FOR_CONFIGURATION(DatasetWriter< std::complex<double> >, DatasetVectorWriter< std::complex<double> >)
+
 
 
             KARABO_REGISTER_FOR_CONFIGURATION(DatasetWriter<char>, DatasetPointerWriter<char>)
@@ -43,6 +46,10 @@ namespace karabo {
             KARABO_REGISTER_FOR_CONFIGURATION(DatasetWriter<float>, DatasetPointerWriter<float>)
             KARABO_REGISTER_FOR_CONFIGURATION(DatasetWriter<std::string>, DatasetPointerWriter<std::string>)
             KARABO_REGISTER_FOR_CONFIGURATION(DatasetWriter<bool>, DatasetPointerWriter<bool>)
+            KARABO_REGISTER_FOR_CONFIGURATION(DatasetWriter< std::complex<float> >, DatasetPointerWriter< std::complex<float> >)
+            KARABO_REGISTER_FOR_CONFIGURATION(DatasetWriter< std::complex<double> >, DatasetPointerWriter< std::complex<double> >)
+
+
 
             KARABO_REGISTER_FOR_CONFIGURATION(DatasetWriter<char>, DatasetScalarWriter<char>)
             KARABO_REGISTER_FOR_CONFIGURATION(DatasetWriter<signed char>, DatasetScalarWriter<signed char>)
@@ -57,12 +64,9 @@ namespace karabo {
             KARABO_REGISTER_FOR_CONFIGURATION(DatasetWriter<float>, DatasetScalarWriter<float>)
             KARABO_REGISTER_FOR_CONFIGURATION(DatasetWriter<std::string>, DatasetScalarWriter<std::string>)
             KARABO_REGISTER_FOR_CONFIGURATION(DatasetWriter<bool>, DatasetScalarWriter<bool>)
+            KARABO_REGISTER_FOR_CONFIGURATION(DatasetWriter<std::complex<float> >, DatasetScalarWriter<std::complex<float> >)
+            KARABO_REGISTER_FOR_CONFIGURATION(DatasetWriter<std::complex<double> >, DatasetScalarWriter<std::complex<double> >)
 
-            KARABO_REGISTER_FOR_CONFIGURATION(DatasetWriter<float >, DatasetComplexWriter<float>)
-            KARABO_REGISTER_FOR_CONFIGURATION(DatasetWriter<double>, DatasetComplexWriter<double>)
-
-            KARABO_REGISTER_FOR_CONFIGURATION(DatasetWriter< std::complex<float> >, DatasetVectorWriter< std::complex<float> >)
-                
 
         }
     }
