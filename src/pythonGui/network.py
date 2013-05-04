@@ -272,6 +272,7 @@ class Network(QObject):
                 self._handleAlarm(str(self.__bodyBytes))
             elif type == "currentInstances":
                 bodyHash = self.__textSerializer.load(self.__bodyBytes)
+                print bodyHash
                 self._handleInstanceIds(bodyHash)
                 #self._tcpWrite(headerHash, bodyHash)
             elif type == "newNode":
@@ -427,13 +428,8 @@ class Network(QObject):
         id = row.get("id")
         name = row.get("name")
         schema = row.get("schema")
-        file = QFile("/home/heisenb/Development/DemoDevice2.xsd")
-        if file.open(QIODevice.WriteOnly | QIODevice.Text) is False:
-            return
-        out = QTextStream(file)
-        out << schema
-        file.close()
         devSerInsId = row.get("devSerInsId")
+        print "_collectDeviceClassInformation", id, name, devSerInsId
         return dict(id=id, name=name, schema=schema, refId=devSerInsId)
     
     
