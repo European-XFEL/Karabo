@@ -63,7 +63,7 @@ namespace karabo {
 
 
             void Format::getPersistentConfig(karabo::util::Hash& config) const {
-                Schema schema = Format::getSchema("Format");                
+                Schema schema = Format::getSchema("Format");
                 Hash& elements = config.bindReference<Hash>("Format");
                 HashFilter::byTag(schema, m_config.get<Hash>("Format"), elements, "persistent");
             }
@@ -72,8 +72,7 @@ namespace karabo {
             void Format::discoverFromHash(const Hash& data, Hash& config) {
                 Hash& hh = config.bindReference<Hash > ("Format");
                 vector<Hash>& vec = hh.bindReference< vector<Hash> >("elements");
-                string path = "";
-                discoverFromHash(data, vec, path);
+                discoverFromHash(data, vec, "", "");
                 KARABO_LOG_FRAMEWORK_TRACE_CF << "after discovery:\n" << config;
 
 
@@ -131,59 +130,72 @@ namespace karabo {
             }
 
 
-            void Format::discoverFromHash(const Hash& data, vector<Hash>& config, const string& path) {
+            void Format::discoverFromHash(const Hash& data, vector<Hash>& config, const string& path, const string& keyPath) {
 
                 // This hash does not have attributes
                 // It is not rooted. Either top or element of vector<Hash>
-
+                KARABO_LOG_FRAMEWORK_TRACE_CF << "path: " << path << " keyPath: " << keyPath;
                 for (Hash::const_iterator it = data.begin(); it != data.end(); ++it) {
                     if (it->is<Hash > ()) {
-                        discoverFromHashElement(*it, config, path);
+                        discoverFromHashElement(*it, config, path, keyPath);
                     } else if (it->is<vector<Hash> >()) {
-                        discoverFromVectorOfHashesElement(*it, config, path);
+                        discoverFromVectorOfHashesElement(*it, config, path, keyPath);
                     } else {
-                        discoverFromDataElement(*it, config, path);
+                        discoverFromDataElement(*it, config, path, keyPath);
                     }
                 }
             }
 
 
-            void Format::discoverFromHashElement(const Hash::Node& el, vector<Hash>& config, const string& path) {
+            void Format::discoverFromHashElement(const Hash::Node& el, vector<Hash>& config, const string& path, const string& keyPath) {
 
                 const Hash& h = el.getValue<Hash > ();
                 const std::string& key = el.getKey();
-                if (!el.getAttributes().empty()) {
-                    config.push_back(Hash());
-                    Hash& hcGroup = config.back();
-                    Hash& hc = hcGroup.bindReference<Hash > ("Group");
-                    hc.set("h5name", key);
-                    hc.set("h5path", path);
-                    //hc.set("type", "HASH");
-                    discoverAttributes(el, hc);
-                    
-                    KARABO_LOG_FRAMEWORK_TRACE_CF << "HashElement:\n" << config.back();
-                }
-                
-
                 std::string newPath;
                 if (path != "") {
                     newPath = path + m_h5Sep + key;
                 } else {
                     newPath = key;
                 }
+                KARABO_LOG_FRAMEWORK_TRACE_CF << "1 path: " << path << " key: " << key << " newPath: " << newPath;
+
+                std::string newKeyPath;
+                if (keyPath != "") {
+                    newKeyPath = keyPath + m_h5Sep + key;
+                } else {
+                    newKeyPath = key;
+                }
+                KARABO_LOG_FRAMEWORK_TRACE_CF << "2 keyPath: " << keyPath << " key: " << key << " newKeyPath: " << newKeyPath;
+
+
+                if (!el.getAttributes().empty() || h.size() == 0) {
+                    config.push_back(Hash());
+                    Hash& hcGroup = config.back();
+                    Hash& hc = hcGroup.bindReference<Hash > ("Group");
+                    hc.set("h5name", key);
+                    hc.set("h5path", path);
+                    hc.set("key", newKeyPath);
+                    //hc.set("type", "HASH");
+                    discoverAttributes(el, hc);
+
+                    KARABO_LOG_FRAMEWORK_TRACE_CF << "HashElement:\n" << config.back();
+                }
+
+
+
                 for (Hash::const_iterator it = h.begin(); it != h.end(); ++it) {
                     if (it->is<Hash > ()) {
-                        discoverFromHashElement(*it, config, newPath);
+                        discoverFromHashElement(*it, config, newPath, newKeyPath);
                     } else if (it->is<vector<Hash> >()) {
-                        discoverFromVectorOfHashesElement(*it, config, newPath);
+                        discoverFromVectorOfHashesElement(*it, config, newPath, newKeyPath);
                     } else {
-                        discoverFromDataElement(*it, config, newPath);
+                        discoverFromDataElement(*it, config, newPath, newKeyPath);
                     }
                 }
             }
 
 
-            void Format::discoverFromVectorOfHashesElement(const Hash::Node& el, vector<Hash>& config, const string& path) {
+            void Format::discoverFromVectorOfHashesElement(const Hash::Node& el, vector<Hash>& config, const string& path, const string& keyPath) {
 
                 const vector<Hash>& vec = el.getValue<vector<Hash> >();
 
@@ -194,10 +206,21 @@ namespace karabo {
                 Hash& hcGroup = config.back();
                 Hash& hc = hcGroup.bindReference<Hash > ("Group");
 
+                std::string newKeyPath;
+                if (keyPath != "") {
+                    newKeyPath = keyPath + m_h5Sep + key;
+                } else {
+                    newKeyPath = key;
+                }
+                KARABO_LOG_FRAMEWORK_TRACE_CF << "/1/ keyPath: " << keyPath << " key: " << key << " newKeyPath: " << newKeyPath;
+
                 hc.set("h5name", key);
                 hc.set("h5path", path);
-                //hc.set("type", "VECTOR_HASH");
+                hc.set("key", newKeyPath);
+                hc.set("type", "VECTOR_HASH");
                 hc.set("size", static_cast<unsigned long long> (vec.size()));
+                KARABO_LOG_FRAMEWORK_TRACE_CF << "/A/ h5name: " << key << " h5path: " << path << " key: " << newKeyPath
+                        << " type: VECTOR_HASH size: " << vec.size();
                 discoverAttributes(el, hc);
 
                 for (size_t i = 0; i < vec.size(); ++i) {
@@ -209,18 +232,36 @@ namespace karabo {
                     ostringstream oss1;
                     oss1 << "[" << i << "]";
 
-                    hc.set("h5name", oss1.str());
+
+                    hc.set("h5name", key + oss1.str());
+
+                    std::string newPath;
+                    if (path != "") {
+                        newPath = path + m_h5Sep + key;
+                    } else {
+                        newPath = key;
+                    }
+                    KARABO_LOG_FRAMEWORK_TRACE_CF << "/2/ path: " << path << " key: " << key << " newPath: " << newPath;
 
 
-                    std::string newPath = path + m_h5Sep + key;
-                    hc.set("h5path", newPath);
+
+                    hc.set("h5path", path);
+                    //hc.set("key", newKeyPath);
+                    hc.set("key", newKeyPath + oss1.str());
+                    KARABO_LOG_FRAMEWORK_TRACE_CF << "/B/ h5name: " << oss1.str() << " h5Path: " << newPath
+                            << " key: " << newKeyPath << oss1.str();
+
                     //hc.set("type", "HASH");
                     discoverAttributes(el, hc);
 
-                    ostringstream oss2;
-                    oss2 << path << m_h5Sep << key << m_h5Sep << "[" << i << "]";
-
-                    discoverFromHash(vec[i], config, oss2.str());
+                    ostringstream oss2, oss3;
+                    if (path != "") {
+                        oss2 << path << m_h5Sep;
+                    }
+                    oss2 << key << "[" << i << "]";
+                    oss3 << newKeyPath << "[" << i << "]";
+                    KARABO_LOG_FRAMEWORK_TRACE_CF << " before discoverFromHash, path: " << path << " key: " << key;
+                    discoverFromHash(vec[i], config, oss2.str(), oss3.str());
                 }
 
             }
@@ -230,12 +271,22 @@ namespace karabo {
             #define _KARABO_IO_H5_SEQUENCE_PTR_SIZE(T,cppType) case Types::PTR_##T:  Format::discoverPtrSize<cppType>(h,el); break;      
 
 
-            void Format::discoverFromDataElement(const Hash::Node& el, vector<Hash>& config, const string& path) {
+            void Format::discoverFromDataElement(const Hash::Node& el, vector<Hash>& config, const string& path, const string& keyPath) {
 
                 Types::ReferenceType t = el.getType();
                 const std::string& key = el.getKey();
                 config.push_back(Hash());
                 Hash& hc = config.back();
+
+
+                std::string newKeyPath;
+                if (keyPath != "") {
+                    newKeyPath = keyPath + m_h5Sep + key;
+                } else {
+                    newKeyPath = key;
+                }
+                KARABO_LOG_FRAMEWORK_TRACE_CF << "keyPath: " << keyPath << " key: " << key << " newKeyPath: " << newKeyPath;
+
                 if (Types::isPointer(t)) {
                     string ptrType = ToType<ToLiteral>::to(t);
                     KARABO_LOG_FRAMEWORK_TRACE_CF << "SEQUENCE: " << ptrType;
@@ -243,6 +294,7 @@ namespace karabo {
                     Hash& h = hc.bindReference<Hash > (vecType);
                     h.set("h5name", key);
                     h.set("h5path", path);
+                    h.set("key", newKeyPath);
                     h.set("type", ptrType);
                     if (Types::category(t) == Types::SEQUENCE) {
                         KARABO_LOG_FRAMEWORK_TRACE_CF << "SEQUENCE: " << key;
@@ -274,6 +326,7 @@ namespace karabo {
                     Hash& h = hc.bindReference<Hash > (ToType<ToLiteral>::to(t));
                     h.set("h5name", key);
                     h.set("h5path", path);
+                    h.set("key", newKeyPath);
                     if (Types::category(t) == Types::SEQUENCE) {
                         KARABO_LOG_FRAMEWORK_TRACE_CF << "SEQUENCE: " << key;
                         switch (t) {

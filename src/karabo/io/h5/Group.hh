@@ -31,8 +31,17 @@ namespace karabo {
 
                 static void expectedParameters(karabo::util::Schema& expected);
 
-                Group(const karabo::util::Hash& input) : Element(input) {
+                Group(const karabo::util::Hash& input) : Element(input), 
+                m_isVectorHash(false), m_vectorSize(0) {
 
+                    if (input.has("type")) {
+                        if ( input.get<std::string>("type") == "VECTOR_HASH" ){
+                            m_isVectorHash = true;
+                            if( input.has("size")){
+                                m_vectorSize = input.get<unsigned long long>("size");
+                            }
+                        }
+                    }
                 }
 
                 virtual ~Group() {
@@ -50,22 +59,23 @@ namespace karabo {
 
                 void close();
 
-                void bind(karabo::util::Hash & data) {
-                }
+                void bind(karabo::util::Hash & data);                
 
-                void bind(karabo::util::Hash & data, hsize_t len) {
-                }
+                void bind(karabo::util::Hash & data, hsize_t len);
+                
 
                 void read(karabo::util::Hash& data, hsize_t recordId) {
                 }
 
-                inline void read( hsize_t recordId) {
+                inline void read(hsize_t recordId) {
                 }
 
-                void read(hsize_t recordId, hsize_t len) {    
+                void read(hsize_t recordId, hsize_t len) {
                 }
 
                 hid_t m_group; // this group
+                bool m_isVectorHash;
+                unsigned long long m_vectorSize;
 
 
             };

@@ -70,16 +70,16 @@ namespace karabo {
             private:
 
                 static void discoverFromHash(const karabo::util::Hash& data,
-                        std::vector<karabo::util::Hash>& config, const std::string& path);
+                        std::vector<karabo::util::Hash>& config, const std::string& path, const std::string& keyPath);
 
                 static void discoverFromHashElement(const karabo::util::Hash::Node& el,
-                        std::vector<karabo::util::Hash>& config, const std::string& path);
+                        std::vector<karabo::util::Hash>& config, const std::string& path, const std::string& keyPath);
 
                 static void discoverFromVectorOfHashesElement(const karabo::util::Hash::Node& el,
-                        std::vector<karabo::util::Hash>& config, const std::string& path);
+                        std::vector<karabo::util::Hash>& config, const std::string& path, const std::string& keyPath);
 
                 static void discoverFromDataElement(const karabo::util::Hash::Node& el,
-                        std::vector<karabo::util::Hash>& config, const std::string& path);
+                        std::vector<karabo::util::Hash>& config, const std::string& path, const std::string& keyPath);
 
                 static void discoverAttributes(const karabo::util::Hash::Node& el, karabo::util::Hash& config);
 
