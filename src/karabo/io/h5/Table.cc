@@ -225,7 +225,7 @@ namespace karabo {
 
             void Table::createEmptyTable(hid_t h5file, const boost::filesystem::path& fullPath) {
 
-                //                clog << "Table fullpath: " << fullPath.string() << endl;
+                KARABO_LOG_FRAMEWORK_TRACE_CF << "Table fullpath: " << fullPath.string();
                 try {
                     vector<string> tokens;
                     boost::split(tokens, fullPath.string(), boost::is_any_of("/"));
@@ -257,6 +257,7 @@ namespace karabo {
                     m_group = H5Gopen(h5file, fullPath.c_str(), H5P_DEFAULT);
                     KARABO_CHECK_HDF5_STATUS(m_group);
                     m_h5Groups[""] = m_group;
+                    KARABO_LOG_FRAMEWORK_TRACE_CF << "Table: " << fullPath.string() << " created. group id = " << m_group;
                 } catch (...) {
                     KARABO_RETHROW
                 }
