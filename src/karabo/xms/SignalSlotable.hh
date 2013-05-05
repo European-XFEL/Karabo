@@ -74,6 +74,8 @@ namespace karabo {
 
             std::string m_instanceId;
             karabo::util::Hash m_instanceInfo;
+            
+            karabo::util::Hash m_sessionInfo;
 
             SignalInstances m_signalInstances;
             SlotInstances m_slotInstances;
@@ -87,7 +89,7 @@ namespace karabo {
             Replies m_replies;
             boost::mutex m_replyMutex;
 
-            boost::mutex m_isProcessingSlotMutex;
+            //boost::mutex m_isProcessingSlotMutex;
             //bool m_isProcessingSlot;
 
             karabo::util::Hash m_emitFunctions;
