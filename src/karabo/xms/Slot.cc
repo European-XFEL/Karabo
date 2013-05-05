@@ -50,12 +50,15 @@ namespace karabo {
             if (node) m_roleOfSender = node->getValue<string>();
             node = header.find("signalInstanceId");
             if (node) m_instanceIdOfSender = node->getValue<string>();
+            node = header.find("sessionToken");
+            if (node) m_sessionTokenOfSender = node->getValue<string>();
         }
         
         void Slot::invalidateSenderInformation() {
             m_userIdOfSender = "";
             m_roleOfSender = "";
             m_instanceIdOfSender = "";
+            m_sessionTokenOfSender = "";
         }
         
 //        void Slot::startSlotProcessing() {
