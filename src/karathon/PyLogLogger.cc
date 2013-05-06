@@ -7,9 +7,6 @@
  */
 
 #include "boost/python.hpp"
-
-//#include <log4cpp/Category.hh>
-//#include <log4cpp/Priority.hh>
 #include <karabo/log/Logger.hh>
 
 namespace bp = boost::python;
