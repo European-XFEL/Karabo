@@ -13,51 +13,6 @@ compiling, linking, and/or using OpenSSL is allowed.
 
 AuthenticationPortBindingProxy::AuthenticationPortBindingProxy() {
     this->soap = soap_new();
-
-    /* Init SSL */
-    soap_ssl_init(); /* init OpenSSL (just once) */
-    //            if (CRYPTO_thread_setup()) {
-    //                fprintf(stderr, "Cannot setup thread mutex for OpenSSL\n");
-    //                exit(1);
-    //            }
-
-    /* Init gSOAP context */
-    soap_init(soap);
-    /* The supplied server certificate "server.pem" assumes that the server is
-      running on 'localhost', so clients can only connect from the same host when
-      verifying the server's certificate. Use SOAP_SSL_NO_AUTHENTICATION to omit
-      the authentication of the server and use encryption directly from any site.
-      To verify the certificates of third-party services, they must provide a
-      certificate issued by Verisign or another trusted CA. At the client-side,
-      the capath parameter should point to a directory that contains these
-      trusted (root) certificates or the cafile parameter should refer to one
-      file will all certificates. To help you out, the supplied "cacerts.pem"
-      file contains the certificates issued by various CAs. You should use this
-      file for the cafile parameter instead of "cacert.pem" to connect to trusted
-      servers.  Note that the client may fail to connect if the server's
-      credentials have problems (e.g. expired). Use SOAP_SSL_NO_AUTHENTICATION
-      and set cacert to NULL to encrypt messages if you don't care about the
-      trustworthyness of the server.
-      Note 1: the password and capath are not used with GNUTLS
-      Note 2: setting capath may not work on Windows.
-     */
-    if (soap_ssl_client_context(soap,
-                                SOAP_SSL_NO_AUTHENTICATION, /* for encryption w/o authentication */
-                                /* SOAP_SSL_DEFAULT | SOAP_SSL_SKIP_HOST_CHECK, */ /* if we don't want the host name checks since these will change from machine to machine */
-                                /* SOAP_SSL_DEFAULT,*/ /* use SOAP_SSL_DEFAULT in production code */
-                                NULL, /* keyfile (cert+key): required only when client must authenticate to server (see SSL docs to create this file) */
-                                NULL, /* password to read the keyfile */
-                                NULL, /*"cacert.pem" | NULL, */ /* optional cacert file to store trusted certificates, use cacerts.pem for all public certificates issued by common CAs */
-                                NULL, /* optional capath to directory with trusted certificates */
-                                NULL /* if randfile!=NULL: use a file with random data to seed randomness */
-                                )) {
-        soap_print_fault(stderr);
-        exit(1);
-    }
-    soap->connect_timeout = 60; /* try to connect for 1 minute */
-    soap->send_timeout = soap->recv_timeout = 30; /* if I/O stalls, then timeout after 30 seconds */
-
-
     this->own = true;
     AuthenticationPortBindingProxy_init(SOAP_IO_DEFAULT, SOAP_IO_DEFAULT);
 }
@@ -119,6 +74,51 @@ void AuthenticationPortBindingProxy::AuthenticationPortBindingProxy_init(soap_mo
         {NULL, NULL, NULL, NULL}
     };
     soap_set_namespaces(this->soap, namespaces);
+
+
+    /* Init SSL */
+    soap_ssl_init(); /* init OpenSSL (just once) */
+    //            if (CRYPTO_thread_setup()) {
+    //                fprintf(stderr, "Cannot setup thread mutex for OpenSSL\n");
+    //                exit(1);
+    //            }
+
+    /* Init gSOAP context */
+    soap_init(this->soap);
+    /* The supplied server certificate "server.pem" assumes that the server is
+      running on 'localhost', so clients can only connect from the same host when
+      verifying the server's certificate. Use SOAP_SSL_NO_AUTHENTICATION to omit
+      the authentication of the server and use encryption directly from any site.
+      To verify the certificates of third-party services, they must provide a
+      certificate issued by Verisign or another trusted CA. At the client-side,
+      the capath parameter should point to a directory that contains these
+      trusted (root) certificates or the cafile parameter should refer to one
+      file will all certificates. To help you out, the supplied "cacerts.pem"
+      file contains the certificates issued by various CAs. You should use this
+      file for the cafile parameter instead of "cacert.pem" to connect to trusted
+      servers.  Note that the client may fail to connect if the server's
+      credentials have problems (e.g. expired). Use SOAP_SSL_NO_AUTHENTICATION
+      and set cacert to NULL to encrypt messages if you don't care about the
+      trustworthyness of the server.
+      Note 1: the password and capath are not used with GNUTLS
+      Note 2: setting capath may not work on Windows.
+     */
+    if (soap_ssl_client_context(this->soap,
+                                SOAP_SSL_NO_AUTHENTICATION, /* for encryption w/o authentication */
+                                /* SOAP_SSL_DEFAULT | SOAP_SSL_SKIP_HOST_CHECK, */ /* if we don't want the host name checks since these will change from machine to machine */
+                                /* SOAP_SSL_DEFAULT,*/ /* use SOAP_SSL_DEFAULT in production code */
+                                NULL, /* keyfile (cert+key): required only when client must authenticate to server (see SSL docs to create this file) */
+                                NULL, /* password to read the keyfile */
+                                NULL, //"./cacert.pem", /*"cacert.pem" | NULL, */ /* optional cacert file to store trusted certificates, use cacerts.pem for all public certificates issued by common CAs */
+                                NULL, /* optional capath to directory with trusted certificates */
+                                NULL /* if randfile!=NULL: use a file with random data to seed randomness */
+                                )) {
+        soap_print_fault(stderr);
+        exit(1);
+    }
+    //this->soap->connect_timeout = 60; /* try to connect for 1 minute */
+    //this->soap->send_timeout = this->soap->recv_timeout = 30; /* if I/O stalls, then timeout after 30 seconds */
+
 }
 
 
