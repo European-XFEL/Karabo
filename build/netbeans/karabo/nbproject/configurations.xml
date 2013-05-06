@@ -54,7 +54,6 @@
         <itemPath>../../../src/karabo/io/h5/Scalar.hh</itemPath>
         <itemPath>../../../src/karabo/io/h5/ScalarAttribute.cc</itemPath>
         <itemPath>../../../src/karabo/io/h5/ScalarAttribute.hh</itemPath>
-        <itemPath>../../../src/karabo/io/h5/ScalarFilter.hh</itemPath>
         <itemPath>../../../src/karabo/io/h5/Table.cc</itemPath>
         <itemPath>../../../src/karabo/io/h5/Table.hh</itemPath>
         <itemPath>../../../src/karabo/io/h5/TypeTraits.cc</itemPath>
@@ -65,6 +64,8 @@
         <itemPath>../../../src/karabo/io/AbstractInput.hh</itemPath>
         <itemPath>../../../src/karabo/io/BinaryFileInput.cc</itemPath>
         <itemPath>../../../src/karabo/io/BinaryFileInput.hh</itemPath>
+        <itemPath>../../../src/karabo/io/Hdf5FileInput.cc</itemPath>
+        <itemPath>../../../src/karabo/io/Hdf5FileInput.hh</itemPath>
         <itemPath>../../../src/karabo/io/Input.hh</itemPath>
         <itemPath>../../../src/karabo/io/TextFileInput.cc</itemPath>
         <itemPath>../../../src/karabo/io/TextFileInput.hh</itemPath>
@@ -73,6 +74,8 @@
         <itemPath>../../../src/karabo/io/AbstractOutput.hh</itemPath>
         <itemPath>../../../src/karabo/io/BinaryFileOutput.cc</itemPath>
         <itemPath>../../../src/karabo/io/BinaryFileOutput.hh</itemPath>
+        <itemPath>../../../src/karabo/io/Hdf5FileOutput.cc</itemPath>
+        <itemPath>../../../src/karabo/io/Hdf5FileOutput.hh</itemPath>
         <itemPath>../../../src/karabo/io/Output.hh</itemPath>
         <itemPath>../../../src/karabo/io/TextFileOutput.cc</itemPath>
         <itemPath>../../../src/karabo/io/TextFileOutput.hh</itemPath>
@@ -546,6 +549,26 @@
             tool="3"
             flavor2="0">
       </item>
+      <item path="../../../src/karabo/io/Hdf5FileInput.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/Hdf5FileInput.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/Hdf5FileOutput.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/Hdf5FileOutput.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="../../../src/karabo/io/Input.hh" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../../../src/karabo/io/Output.hh" ex="false" tool="3" flavor2="0">
@@ -729,11 +752,6 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/io/h5/ScalarAttribute.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/io/h5/ScalarFilter.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -1832,6 +1850,26 @@
             tool="3"
             flavor2="0">
       </item>
+      <item path="../../../src/karabo/io/Hdf5FileInput.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/Hdf5FileInput.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/Hdf5FileOutput.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/Hdf5FileOutput.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="../../../src/karabo/io/Input.hh" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../../../src/karabo/io/Output.hh" ex="false" tool="3" flavor2="0">
@@ -2015,11 +2053,6 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/io/h5/ScalarAttribute.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/io/h5/ScalarFilter.hh"
             ex="false"
             tool="3"
             flavor2="0">

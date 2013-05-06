@@ -45,6 +45,8 @@ OBJECTFILES= \
 	${OBJECTDIR}/_ext/1072794519/BinaryFileOutput.o \
 	${OBJECTDIR}/_ext/1072794519/HashBinarySerializer.o \
 	${OBJECTDIR}/_ext/1072794519/HashXmlSerializer.o \
+	${OBJECTDIR}/_ext/1072794519/Hdf5FileInput.o \
+	${OBJECTDIR}/_ext/1072794519/Hdf5FileOutput.o \
 	${OBJECTDIR}/_ext/1072794519/SchemaXmlSerializer.o \
 	${OBJECTDIR}/_ext/1072794519/SchemaXsdSerializer.o \
 	${OBJECTDIR}/_ext/1072794519/TextFileInput.o \
@@ -59,6 +61,7 @@ OBJECTFILES= \
 	${OBJECTDIR}/_ext/769817549/File.o \
 	${OBJECTDIR}/_ext/769817549/FixedLengthArray.o \
 	${OBJECTDIR}/_ext/769817549/FixedLengthArrayAttribute.o \
+	${OBJECTDIR}/_ext/769817549/FixedLengthArrayComplex.o \
 	${OBJECTDIR}/_ext/769817549/Format.o \
 	${OBJECTDIR}/_ext/769817549/Group.o \
 	${OBJECTDIR}/_ext/769817549/Scalar.o \
@@ -198,6 +201,16 @@ ${OBJECTDIR}/_ext/1072794519/HashXmlSerializer.o: ../../../src/karabo/io/HashXml
 	${RM} $@.d
 	$(COMPILE.cc) -O2 -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1072794519/HashXmlSerializer.o ../../../src/karabo/io/HashXmlSerializer.cc
 
+${OBJECTDIR}/_ext/1072794519/Hdf5FileInput.o: ../../../src/karabo/io/Hdf5FileInput.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1072794519
+	${RM} $@.d
+	$(COMPILE.cc) -O2 -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1072794519/Hdf5FileInput.o ../../../src/karabo/io/Hdf5FileInput.cc
+
+${OBJECTDIR}/_ext/1072794519/Hdf5FileOutput.o: ../../../src/karabo/io/Hdf5FileOutput.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1072794519
+	${RM} $@.d
+	$(COMPILE.cc) -O2 -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1072794519/Hdf5FileOutput.o ../../../src/karabo/io/Hdf5FileOutput.cc
+
 ${OBJECTDIR}/_ext/1072794519/SchemaXmlSerializer.o: ../../../src/karabo/io/SchemaXmlSerializer.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1072794519
 	${RM} $@.d
@@ -267,6 +280,11 @@ ${OBJECTDIR}/_ext/769817549/FixedLengthArrayAttribute.o: ../../../src/karabo/io/
 	${MKDIR} -p ${OBJECTDIR}/_ext/769817549
 	${RM} $@.d
 	$(COMPILE.cc) -O2 -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/769817549/FixedLengthArrayAttribute.o ../../../src/karabo/io/h5/FixedLengthArrayAttribute.cc
+
+${OBJECTDIR}/_ext/769817549/FixedLengthArrayComplex.o: ../../../src/karabo/io/h5/FixedLengthArrayComplex.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/769817549
+	${RM} $@.d
+	$(COMPILE.cc) -O2 -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/769817549/FixedLengthArrayComplex.o ../../../src/karabo/io/h5/FixedLengthArrayComplex.cc
 
 ${OBJECTDIR}/_ext/769817549/Format.o: ../../../src/karabo/io/h5/Format.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/769817549
@@ -838,6 +856,32 @@ ${OBJECTDIR}/_ext/1072794519/HashXmlSerializer_nomain.o: ${OBJECTDIR}/_ext/10727
 	    ${CP} ${OBJECTDIR}/_ext/1072794519/HashXmlSerializer.o ${OBJECTDIR}/_ext/1072794519/HashXmlSerializer_nomain.o;\
 	fi
 
+${OBJECTDIR}/_ext/1072794519/Hdf5FileInput_nomain.o: ${OBJECTDIR}/_ext/1072794519/Hdf5FileInput.o ../../../src/karabo/io/Hdf5FileInput.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1072794519
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/1072794519/Hdf5FileInput.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} $@.d;\
+	    $(COMPILE.cc) -O2 -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1072794519/Hdf5FileInput_nomain.o ../../../src/karabo/io/Hdf5FileInput.cc;\
+	else  \
+	    ${CP} ${OBJECTDIR}/_ext/1072794519/Hdf5FileInput.o ${OBJECTDIR}/_ext/1072794519/Hdf5FileInput_nomain.o;\
+	fi
+
+${OBJECTDIR}/_ext/1072794519/Hdf5FileOutput_nomain.o: ${OBJECTDIR}/_ext/1072794519/Hdf5FileOutput.o ../../../src/karabo/io/Hdf5FileOutput.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1072794519
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/1072794519/Hdf5FileOutput.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} $@.d;\
+	    $(COMPILE.cc) -O2 -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1072794519/Hdf5FileOutput_nomain.o ../../../src/karabo/io/Hdf5FileOutput.cc;\
+	else  \
+	    ${CP} ${OBJECTDIR}/_ext/1072794519/Hdf5FileOutput.o ${OBJECTDIR}/_ext/1072794519/Hdf5FileOutput_nomain.o;\
+	fi
+
 ${OBJECTDIR}/_ext/1072794519/SchemaXmlSerializer_nomain.o: ${OBJECTDIR}/_ext/1072794519/SchemaXmlSerializer.o ../../../src/karabo/io/SchemaXmlSerializer.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1072794519
 	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/1072794519/SchemaXmlSerializer.o`; \
@@ -1018,6 +1062,19 @@ ${OBJECTDIR}/_ext/769817549/FixedLengthArrayAttribute_nomain.o: ${OBJECTDIR}/_ex
 	    $(COMPILE.cc) -O2 -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/769817549/FixedLengthArrayAttribute_nomain.o ../../../src/karabo/io/h5/FixedLengthArrayAttribute.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/769817549/FixedLengthArrayAttribute.o ${OBJECTDIR}/_ext/769817549/FixedLengthArrayAttribute_nomain.o;\
+	fi
+
+${OBJECTDIR}/_ext/769817549/FixedLengthArrayComplex_nomain.o: ${OBJECTDIR}/_ext/769817549/FixedLengthArrayComplex.o ../../../src/karabo/io/h5/FixedLengthArrayComplex.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/769817549
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/769817549/FixedLengthArrayComplex.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} $@.d;\
+	    $(COMPILE.cc) -O2 -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/769817549/FixedLengthArrayComplex_nomain.o ../../../src/karabo/io/h5/FixedLengthArrayComplex.cc;\
+	else  \
+	    ${CP} ${OBJECTDIR}/_ext/769817549/FixedLengthArrayComplex.o ${OBJECTDIR}/_ext/769817549/FixedLengthArrayComplex_nomain.o;\
 	fi
 
 ${OBJECTDIR}/_ext/769817549/Format_nomain.o: ${OBJECTDIR}/_ext/769817549/Format.o ../../../src/karabo/io/h5/Format.cc 

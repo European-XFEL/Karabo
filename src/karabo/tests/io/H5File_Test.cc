@@ -8,6 +8,8 @@
 #include "karabo/util/ArrayTools.hh"
 #include "TestPathSetup.hh"
 #include "karabo/io/TextSerializer.hh"
+#include "karabo/io/HashXmlSerializer.hh"
+#include "HashXmlSerializer_Test.hh"
 #include <karabo/util/Hash.hh>
 
 #include <karabo/io/h5/File.hh>
@@ -41,6 +43,7 @@ H5File_Test::H5File_Test() : m_maxRec(100), m_testBufferWriteSuccess(false) {
     tr.enable("H5File_Test.testRead");
     tr.enable("H5File_Test.testWrite");
     tr.reconfigure();
+
 
 
     m_reportTime = false; //true;
@@ -949,66 +952,105 @@ void H5File_Test::testBufferRead() {
 
 }
 
-//
-//void H5File_Test::testBufferWrite() {
-//
-//    {
-//        // clog << "TestBufferWrite" << endl;
-//
-//        return;
-//
-//        Hash data;
-//
-//        data.set("instrument.a", 100);
-//        data.set("instrument.b", static_cast<float> (10));
-//        data.set("instrument.c", true);
-//
-//        Hash config;
-//        Format::discoverFromHash(data, config);
-//        Format::Pointer dataFormat = Format::createNode("Format", "Format", config);
-//
-//
-//        //        clog << "after format discovery" << endl;
-//        const int bufSize = 100;
-//        vector<int> a(bufSize, 4);
-//        vector<float> b(bufSize, 5.2);
-//        bool c[bufSize];
-//        for (int i = 0; i < bufSize; ++i) {
-//            c[i] = false;
-//            if (i % 2) c[i] = true;
-//        }
-//
-//
-//        karabo::util::addPointerToHash(data, "instrument.a", &a[0], Dims(bufSize));
-//        karabo::util::addPointerToHash(data, "instrument.b", &b[0], Dims(bufSize));
-//        karabo::util::addPointerToHash(data, "instrument.c", &c[0], Dims(bufSize));
-//
-//
-//
-//        //data.set("instrument.d", true);
-//        //data.set("instrument.e", static_cast<char> (10));
-//
-//        //data.setAttribute("instrument","at1",20);
-//
-//
-//
-//
-//
-//        File file(resourcePath("file1.h5"));
-//        file.open(File::TRUNCATE);
-//
-//
-//        Table::Pointer t = file.createTable("/abc", dataFormat, 1000);
-//
-//        for (int i = 0; i < 10; ++i)
-//            t->write(data, i * bufSize, bufSize);
-//
-//
-//        file.close();
-//
-//
-//    }
-//
-//
-//
-//}
+
+void H5File_Test::testVectorOfHashes() {
+
+
+    Hash data;
+    vector<Hash> data1(3);
+    {
+        Hash h1;
+        h1.set("ha1", 10);
+        h1.set("ha2", "abc");
+        h1.set("ha3", 10.2);
+        data1[0] = h1;
+    }
+
+    {
+        Hash h1;
+        h1.set("hb1", 10.1);
+        h1.set("hb2", 102);
+        h1.set("hb3", 103);
+        data1[1] = h1;
+    }
+
+    {
+        Hash h1;
+        h1.set("hc1", 190u);
+        h1.set("hc2", 191uLL);
+        h1.set("hc3", 192LL);
+        data1[2] = h1;
+    }
+
+
+
+    data.set("x.y", Hash());
+    data.set("c", Hash());
+    data.set("a.vector", data1);
+    data.set("x.y.z.a.m", 20);
+    data.set("b.v[0].p", "Hello");
+    data.set("b.v[0].q", 1000);
+    data.set("b.v[1].q", 1000);
+    data.set("b.v[2].q", 1000);
+    data.set("b.v[3].q", 1000);
+    data.set("b.v[4].q", 1000);
+    data.set("b.v[5].q", 1000);
+    data.set("b.v[6].q", 1000);
+    data.set("b.v[7].q", 1000);
+    data.set("b.v[8].q", 1000);
+    data.set("b.v[9].q", 1000);
+    data.set("b.v[10].q", 1000);
+    data.set("b.v[11].q", 1000);
+    data.set("c.d.e", Hash());
+
+    //    Hash h2("vh1", data1);
+    //    data.set("hvh", h2);
+
+    //    int a = data.get<int>("vector[0].ha1");
+    //    clog << "a=" << a << endl;
+
+
+
+    try {
+        Hash config;
+        Format::discoverFromHash(data, config);
+        Format::Pointer dataFormat = Format::createFormat(config);
+        File file(resourcePath("file4.h5"));
+        file.open(File::TRUNCATE);
+
+        Table::Pointer t = file.createTable("/abc", dataFormat, 1);
+        for (size_t i = 0; i < m_numberOfRecords; ++i) {
+            t->write(data, i);
+        }
+
+        Hash rdata;
+
+        t->bind(rdata);
+
+        t->read(0);
+
+        file.close();
+
+        // compare original and read Hash using xml serializer
+        // this way we depend on the properly functional XML serializer but we can easily
+        // compare two Hash'es including order of elements
+        // This test may fail if XML serializer test fails
+        
+        Hash c("Xml.indentation", 1, "Xml.writeDataTypes", false);
+        TextSerializer<Hash>::Pointer s = TextSerializer<Hash>::create(c);
+        string sdata, srdata;
+        s->save(data, sdata);
+        s->save(rdata, srdata);
+
+//        clog << " data\n" << sdata << endl;
+//        clog << "rdata\n" << srdata << endl;
+        CPPUNIT_ASSERT(sdata == srdata);
+
+
+    } catch (Exception& ex) {
+        clog << ex << endl;
+        CPPUNIT_FAIL(ex.detailedMsg());
+    }
+
+
+}
