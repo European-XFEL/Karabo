@@ -51,11 +51,11 @@ namespace karabo {
                     //karabo::util::Dims dims = getSingleValueDimensions();
                     karabo::util::Hash config("dims", dims().toVector());
                     KARABO_LOG_FRAMEWORK_TRACE_CF << "classId " << Self::classInfo().getClassId();
-                    
-//                    std::string typeName = karabo::util::ToType<karabo::util::ToLiteral>::to(
-//                               karabo::util::FromType<karabo::util::FromTypeInfo>::from(typeid (T)));
+
+                    //                    std::string typeName = karabo::util::ToType<karabo::util::ToLiteral>::to(
+                    //                               karabo::util::FromType<karabo::util::FromTypeInfo>::from(typeid (T)));
                     m_datasetWriter = DatasetWriter<std::complex<T> >::create("DatasetWriter_" + Self::classInfo().getClassId(), config);
-                    m_datasetReader = DatasetReader<T>::create("DatasetReader", config);
+                    m_datasetReader = DatasetReader<std::complex<T> >::create("DatasetReader", config);
                 }
 
                 static const karabo::util::Dims getSingleValueDimensions() {
@@ -108,43 +108,38 @@ namespace karabo {
 
                     boost::optional<karabo::util::Hash::Node&> node = data.find(m_key, '/');
                     if (!node) {
-                        std::vector<T>& vec = data.bindReference<std::vector<T> >(m_key, '/');
-                        vec.resize(dims().size());
-                        data.setAttribute(m_key, "dims", dims().toVector(), '/');
-                        m_datasetReader->bind(vec);
+                        std::complex<T>& cx = data.bindReference<std::complex<T> >(m_key, '/');
+                        m_datasetReader->bind(&cx);
 
                     } else {
-                        if (karabo::util::Types::isVector(node->getType())) {
-                            std::vector<T>& vec = node->getValue< std::vector<T> >();
-                            m_datasetReader->bind(vec);
-                        } else if (karabo::util::Types::isPointer(node->getType())) {
-                            T* ptr = node->getValue<T* >();
-                            m_datasetReader->bind(ptr);
-                            data.setAttribute(m_key, "dims", dims().toVector(), '/');
-                        }
+
+                        std::complex<T>& cx = node->getValue< std::complex<T> >();
+                        m_datasetReader->bind(&cx);
+
                     }
 
                 }
 
                 void bind(karabo::util::Hash & data, hsize_t len) {
-                    //
-                    //                    boost::optional<karabo::util::Hash::Node&> node = data.find(m_key, '/');
-                    //                    if (!node) {
-                    //                        std::vector<T>& vec = data.bindReference<std::vector<T> >(m_key, '/');
-                    //                        vec.resize(dims().size() * len);
-                    //                        data.setAttribute(m_key, "dims", dims().toVector(), '/');
-                    //                        m_datasetReader->bind(vec);
-                    //
-                    //                    } else {
-                    //                        if (karabo::util::Types::isVector(node->getType())) {
-                    //                            std::vector<T>& vec = node->getValue< std::vector<T> >();
-                    //                            m_datasetReader->bind(vec);
-                    //                        } else if (karabo::util::Types::isPointer(node->getType())) {
-                    //                            T* ptr = node->getValue<T* >();
-                    //                            m_datasetReader->bind(ptr);
-                    //                            data.setAttribute(m_key, "dims", dims().toVector(), '/');
-                    //                        }
-                    //                    }
+                    KARABO_LOG_FRAMEWORK_TRACE_C("karabo.io.h5.Complex") << "bind " << len << " records of " << m_key;
+                    boost::optional<karabo::util::Hash::Node&> node = data.find(m_key, '/');
+                    if (!node) {
+                        std::vector<std::complex<T> >& vec = data.bindReference<std::vector<std::complex<T> > >(m_key, '/');
+                        vec.resize(len);
+
+                        data.setAttribute(m_key, "dims", dims().toVector(), '/');
+                        m_datasetReader->bind(vec);
+
+                    } else {
+                        if (karabo::util::Types::isVector(node->getType())) {
+                            std::vector<std::complex<T> >& vec = node->getValue< std::vector<std::complex<T> > >();
+                            m_datasetReader->bind(vec);
+                        } else if (karabo::util::Types::isPointer(node->getType())) {
+                            std::complex<T>* ptr = node->getValue<std::complex<T>* >();
+                            m_datasetReader->bind(ptr);
+                            data.setAttribute(m_key, "dims", dims().toVector(), '/');
+                        }
+                    }
 
 
                 }
@@ -179,7 +174,7 @@ namespace karabo {
             protected:
 
                 typename karabo::io::h5::DatasetWriter<std::complex<T> >::Pointer m_datasetWriter;
-                typename karabo::io::h5::DatasetReader<T>::Pointer m_datasetReader;
+                typename karabo::io::h5::DatasetReader<std::complex<T> >::Pointer m_datasetReader;
 
             };
 
