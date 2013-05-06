@@ -272,7 +272,6 @@ class Network(QObject):
                 self._handleAlarm(str(self.__bodyBytes))
             elif type == "currentInstances":
                 bodyHash = self.__textSerializer.load(self.__bodyBytes)
-                print bodyHash
                 self._handleInstanceIds(bodyHash)
                 #self._tcpWrite(headerHash, bodyHash)
             elif type == "newNode":
@@ -316,7 +315,6 @@ class Network(QObject):
 
 
     def _sendRefreshRequest(self, instanceId):
-        print "_sendRefreshRequest", instanceId
         header = Hash()
         header.set("type", "refreshInstance")
         header.set("instanceId", str(instanceId))
@@ -429,7 +427,6 @@ class Network(QObject):
         name = row.get("name")
         schema = row.get("schema")
         devSerInsId = row.get("devSerInsId")
-        print "_collectDeviceClassInformation", id, name, devSerInsId
         return dict(id=id, name=name, schema=schema, refId=devSerInsId)
     
     
