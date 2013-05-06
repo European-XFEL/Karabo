@@ -679,6 +679,20 @@ class  Hash_TestCase(unittest.TestCase):
         except Exception,e:
             self.fail("test_iteration exception group 1: " + str(e))
             
+    def test_dict(self):
+        try:
+            h = Hash("a", {"b" : { "c" : {"d" : [1, 2, 3, 4, 5]}}})
+            
+            self.assertEqual(h["a.b.c.d"], [1, 2, 3, 4, 5])
+            self.assertEqual(h["a"]["b"]["c"]["d"], [1, 2, 3, 4, 5])
+    
+            h.set('x', {'y' : {'z' : True}})
+            
+            self.assertEqual(h["x.y.z"], True)
+            
+        except Exception,e:
+            self.fail("test_dict exception group 1: " + str(e))
+            
             
 if __name__ == '__main__':
     unittest.main()
