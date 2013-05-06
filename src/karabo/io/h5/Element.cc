@@ -123,20 +123,18 @@ namespace karabo {
 
                 typedef std::map<std::string, hid_t> H5GroupsMap;
 
-                clog << "m_h5path: " << m_h5path << endl;
-                for (H5GroupsMap::iterator it = groups.begin(); it != groups.end(); ++it) {
-                    clog << "map: |" << it->first << "|" << it->second << "|" << endl;
-                }
+//                clog << "m_h5path: " << m_h5path << endl;
+//                for (H5GroupsMap::iterator it = groups.begin(); it != groups.end(); ++it) {
+//                    clog << "map: |" << it->first << "|" << it->second << "|" << endl;
+//                }
 
                 try {
 
                     H5GroupsMap::iterator it = groups.find(m_h5path);
                     if (it != groups.end()) {
                         m_parentGroup = it->second;
-                        clog << "m_parentGroup: " << it->first << endl;
+//                        clog << "m_parentGroup: " << it->first << endl;
                     } else {
-                        //
-
                         std::vector<std::string> tokens;
                         boost::split(tokens, m_h5path, boost::is_any_of("/"));
                         hid_t groupId = groups[""];
@@ -150,12 +148,12 @@ namespace karabo {
                             } else {
                                 relativePath = tokens[i];
                             }
-                            clog << "relativePath: " << relativePath << endl;
+//                            clog << "relativePath: " << relativePath << endl;
                             if (H5Lexists(groupId, relativePath.c_str(), H5P_DEFAULT) != 0) {
-                                clog << "relativePath: " << relativePath << " exists" << endl;
+//                                clog << "relativePath: " << relativePath << " exists" << endl;
                                 continue;
                             } else {
-                                clog << "relativePath: " << relativePath << ". Full path " << m_h5path << " to be created in parent group " << groupId << endl;
+//                                clog << "relativePath: " << relativePath << ". Full path " << m_h5path << " to be created in parent group " << groupId << endl;
                                 hid_t lcpl = H5Pcreate(H5P_LINK_CREATE);
                                 KARABO_CHECK_HDF5_STATUS(lcpl);
                                 KARABO_CHECK_HDF5_STATUS(H5Pset_create_intermediate_group(lcpl, 1) ); 
