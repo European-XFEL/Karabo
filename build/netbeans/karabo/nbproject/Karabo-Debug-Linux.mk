@@ -45,6 +45,8 @@ OBJECTFILES= \
 	${OBJECTDIR}/_ext/1072794519/BinaryFileOutput.o \
 	${OBJECTDIR}/_ext/1072794519/HashBinarySerializer.o \
 	${OBJECTDIR}/_ext/1072794519/HashXmlSerializer.o \
+	${OBJECTDIR}/_ext/1072794519/Hdf5FileInput.o \
+	${OBJECTDIR}/_ext/1072794519/Hdf5FileOutput.o \
 	${OBJECTDIR}/_ext/1072794519/SchemaXmlSerializer.o \
 	${OBJECTDIR}/_ext/1072794519/SchemaXsdSerializer.o \
 	${OBJECTDIR}/_ext/1072794519/TextFileInput.o \
@@ -198,6 +200,16 @@ ${OBJECTDIR}/_ext/1072794519/HashXmlSerializer.o: ../../../src/karabo/io/HashXml
 	${MKDIR} -p ${OBJECTDIR}/_ext/1072794519
 	${RM} $@.d
 	$(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1072794519/HashXmlSerializer.o ../../../src/karabo/io/HashXmlSerializer.cc
+
+${OBJECTDIR}/_ext/1072794519/Hdf5FileInput.o: ../../../src/karabo/io/Hdf5FileInput.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1072794519
+	${RM} $@.d
+	$(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1072794519/Hdf5FileInput.o ../../../src/karabo/io/Hdf5FileInput.cc
+
+${OBJECTDIR}/_ext/1072794519/Hdf5FileOutput.o: ../../../src/karabo/io/Hdf5FileOutput.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1072794519
+	${RM} $@.d
+	$(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1072794519/Hdf5FileOutput.o ../../../src/karabo/io/Hdf5FileOutput.cc
 
 ${OBJECTDIR}/_ext/1072794519/SchemaXmlSerializer.o: ../../../src/karabo/io/SchemaXmlSerializer.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1072794519
@@ -842,6 +854,32 @@ ${OBJECTDIR}/_ext/1072794519/HashXmlSerializer_nomain.o: ${OBJECTDIR}/_ext/10727
 	    $(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1072794519/HashXmlSerializer_nomain.o ../../../src/karabo/io/HashXmlSerializer.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/1072794519/HashXmlSerializer.o ${OBJECTDIR}/_ext/1072794519/HashXmlSerializer_nomain.o;\
+	fi
+
+${OBJECTDIR}/_ext/1072794519/Hdf5FileInput_nomain.o: ${OBJECTDIR}/_ext/1072794519/Hdf5FileInput.o ../../../src/karabo/io/Hdf5FileInput.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1072794519
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/1072794519/Hdf5FileInput.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} $@.d;\
+	    $(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1072794519/Hdf5FileInput_nomain.o ../../../src/karabo/io/Hdf5FileInput.cc;\
+	else  \
+	    ${CP} ${OBJECTDIR}/_ext/1072794519/Hdf5FileInput.o ${OBJECTDIR}/_ext/1072794519/Hdf5FileInput_nomain.o;\
+	fi
+
+${OBJECTDIR}/_ext/1072794519/Hdf5FileOutput_nomain.o: ${OBJECTDIR}/_ext/1072794519/Hdf5FileOutput.o ../../../src/karabo/io/Hdf5FileOutput.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1072794519
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/1072794519/Hdf5FileOutput.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} $@.d;\
+	    $(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1072794519/Hdf5FileOutput_nomain.o ../../../src/karabo/io/Hdf5FileOutput.cc;\
+	else  \
+	    ${CP} ${OBJECTDIR}/_ext/1072794519/Hdf5FileOutput.o ${OBJECTDIR}/_ext/1072794519/Hdf5FileOutput_nomain.o;\
 	fi
 
 ${OBJECTDIR}/_ext/1072794519/SchemaXmlSerializer_nomain.o: ${OBJECTDIR}/_ext/1072794519/SchemaXmlSerializer.o ../../../src/karabo/io/SchemaXmlSerializer.cc 
