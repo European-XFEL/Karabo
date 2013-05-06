@@ -20,7 +20,7 @@
 
 __all__ = ["EditableDoubleSpinBox"]
 
-#import sys
+import sys
 
 from editablewidget import EditableWidget
 from scientificdoublespinbox import ScientificDoubleSpinBox
@@ -35,20 +35,34 @@ def getCategoryAliasClassName():
 
 class EditableDoubleSpinBox(EditableWidget):
     
+    EPSILON_MIN = 1e-4
+    EPSILON_MAX = 1e+4
+    
     def __init__(self, **params):
         super(EditableDoubleSpinBox, self).__init__(**params)
 
         # Using new scientific doublespinbox
-        self.__doubleSpinBox = ScientificDoubleSpinBox()
-        #self.__doubleSpinBox = QDoubleSpinBox()
-	# Set Range to maximum possible values
-	#doubleMax = sys.float_info.max
-	#self.__doubleSpinBox.setRange(-doubleMax, doubleMax)
-        #self.__doubleSpinBox.setDecimals(6)
-        #self.__doubleSpinBox.setSingleStep(0.000001)
+        self.__scientificSpinBox = ScientificDoubleSpinBox()
+        self.__scientificSpinBox.setVisible(False)
         
-        self.__doubleSpinBox.installEventFilter(self)
-        self.__doubleSpinBox.valueChanged.connect(self.onEditingFinished)
+        self.__scientificSpinBox.installEventFilter(self)
+        self.__scientificSpinBox.valueChanged.connect(self.onEditingFinished)
+        
+        # Using normal doublespinbox
+        self.__normalSpinBox = QDoubleSpinBox()
+	# Set Range to maximum possible values
+	doubleMax = sys.float_info.max
+	self.__normalSpinBox.setRange(-doubleMax, doubleMax)
+        self.__normalSpinBox.setDecimals(6)
+        self.__normalSpinBox.setSingleStep(0.000001)
+        
+        self.__normalSpinBox.installEventFilter(self)
+        self.__normalSpinBox.valueChanged.connect(self.onEditingFinished)
+        
+        self.__spinBoxWidget = QWidget()
+        layout = QHBoxLayout(self.__spinBoxWidget)
+        layout.addWidget(self.__scientificSpinBox)
+        layout.addWidget(self.__normalSpinBox)
         
         # Minimum and maximum number of associated keys, 1 by default for each
         self.__minMaxAssociatedKeys = (1,1) # tuple<min,max>
@@ -66,7 +80,12 @@ class EditableDoubleSpinBox(EditableWidget):
 
     def eventFilter(self, object, event):
         # Block wheel event on QDoubleSpinBox
-        if event.type() == QEvent.Wheel and object == self.__doubleSpinBox:
+        if self.__scientificSpinBox.isVisible():
+            doubleSpinBox = self.__scientificSpinBox
+        else:
+            doubleSpinBox = self.__normalSpinBox
+        
+        if (event.type() == QEvent.Wheel) and (object == doubleSpinBox):
             return True
         return False
 
@@ -79,7 +98,7 @@ class EditableDoubleSpinBox(EditableWidget):
 
     # Returns the actual widget which is part of the composition
     def _getWidget(self):
-        return self.__doubleSpinBox
+        return self.__spinBoxWidget
     widget = property(fget=_getWidget)
 
 
@@ -99,21 +118,17 @@ class EditableDoubleSpinBox(EditableWidget):
         if min is None:
             min = params.get('minimum')
         if min is not None:
-            self.__doubleSpinBox.blockSignals(True)
-            self.__doubleSpinBox.setMinimum(min)
-            self.__doubleSpinBox.blockSignals(False)
+            self.minimum = min
 
         max = params.get(QString('maximum'))
         if max is None:
             max = params.get('maximum')
         if max is not None:
-            self.__doubleSpinBox.blockSignals(True)
-            self.__doubleSpinBox.setMaximum(max)
-            self.__doubleSpinBox.blockSignals(False)
+            self.maximum = max
 
 
     def _value(self):
-        return self.__doubleSpinBox.value()
+        return self.__normalSpinBox.value()
     value = property(fget=_value)
 
 
@@ -127,26 +142,51 @@ class EditableDoubleSpinBox(EditableWidget):
 
 
     def _setMinimum(self, min):
-        self.__doubleSpinBox.blockSignals(True)
-        self.__doubleSpinBox.setMinimum(min)
-        self.__doubleSpinBox.blockSignals(False)
+        self.__scientificSpinBox.blockSignals(True)
+        self.__scientificSpinBox.setMinimum(min)
+        self.__scientificSpinBox.blockSignals(False)
+
+        self.__normalSpinBox.blockSignals(True)
+        self.__normalSpinBox.setMinimum(min)
+        self.__normalSpinBox.blockSignals(False)
     minimum = property(fset=_setMinimum)
 
 
     def _setMaximum(self, max):
-        self.__doubleSpinBox.blockSignals(True)
-        self.__doubleSpinBox.setMaximum(max)
-        self.__doubleSpinBox.blockSignals(False)
+        self.__scientificSpinBox.blockSignals(True)
+        self.__scientificSpinBox.setMaximum(max)
+        self.__scientificSpinBox.blockSignals(False)
+        
+        self.__normalSpinBox.blockSignals(True)
+        self.__normalSpinBox.setMaximum(max)
+        self.__normalSpinBox.blockSignals(False)
     maximum = property(fset=_setMaximum)
+
+
+    def _setWidgetVisibility(self, value):
+        if ((value > EditableDoubleSpinBox.EPSILON_MIN)
+        and (value < EditableDoubleSpinBox.EPSILON_MAX)):
+            self.__scientificSpinBox.setVisible(False)
+            self.__normalSpinBox.setVisible(True)
+        else:
+            self.__scientificSpinBox.setVisible(True)
+            self.__normalSpinBox.setVisible(False)
 
 
     def valueChanged(self, key, value, timestamp=None, forceRefresh=False):
         if value is None:
             return
         
-        self.__doubleSpinBox.blockSignals(True)
-        self.__doubleSpinBox.setValue(value)
-        self.__doubleSpinBox.blockSignals(False)      
+        # Show either normal or scientific view
+        self._setWidgetVisibility(value)
+
+        self.__scientificSpinBox.blockSignals(True)
+        self.__scientificSpinBox.setValue(value)
+        self.__scientificSpinBox.blockSignals(False)  
+        
+        self.__normalSpinBox.blockSignals(True)
+        self.__normalSpinBox.setValue(value)
+        self.__normalSpinBox.blockSignals(False)      
         
         if forceRefresh:
             # Needs to be called to update possible apply buttons
@@ -155,6 +195,9 @@ class EditableDoubleSpinBox(EditableWidget):
 
 ### slots ###
     def onEditingFinished(self, value):
+        # Show either normal or scientific view
+        self._setWidgetVisibility(value)
+        
         self.valueEditingFinished(self.__key, value)
 
 
