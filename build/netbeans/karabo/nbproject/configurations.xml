@@ -1438,6 +1438,9 @@
             ex="false"
             tool="1"
             flavor2="0">
+        <ccTool>
+          <commandLine>-DWITH_OPENSSL</commandLine>
+        </ccTool>
       </item>
       <item path="../../../src/karabo/webAuth/Authenticator.hh"
             ex="false"
@@ -1453,6 +1456,9 @@
             ex="false"
             tool="1"
             flavor2="0">
+        <ccTool>
+          <commandLine>-DWITH_OPENSSL</commandLine>
+        </ccTool>
       </item>
       <item path="../../../src/karabo/webAuth/soapAuthenticationPortBindingProxy.h"
             ex="false"
@@ -1463,6 +1469,9 @@
             ex="false"
             tool="1"
             flavor2="0">
+        <ccTool>
+          <commandLine>-DWITH_OPENSSL</commandLine>
+        </ccTool>
       </item>
       <item path="../../../src/karabo/webAuth/soapH.h"
             ex="false"

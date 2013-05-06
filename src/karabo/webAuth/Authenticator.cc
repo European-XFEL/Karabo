@@ -12,6 +12,7 @@
 #include "Authenticator.hh"
 #include "soapAuthenticationPortBindingProxy.h"
 #include "AuthenticationPortBinding.nsmap"
+#include <signal.h>		/* defines SIGPIPE */
 
 using namespace std;
 
@@ -334,6 +335,16 @@ namespace karabo {
                 errorMsg = errorMsg + "\n";
             }
             return errorMsg;
+        }
+
+
+/******************************************************************************\
+         *
+         *	SIGPIPE
+         *
+\******************************************************************************/
+
+        void sigpipe_handle(int x) {
         }
 
     } // namespace packageName

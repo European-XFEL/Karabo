@@ -141,7 +141,7 @@ FFLAGS=
 ASFLAGS=
 
 # Link Libraries and Options
-LDLIBSOPTIONS=-L/opt/local/lib/nss -L/opt/local/lib/nspr -L${KARABO}/extern/lib -Wl,-rpath,\$$ORIGIN/../extern/lib -lboost_chrono -lboost_date_time -lboost_filesystem -lboost_python -lboost_regex -lboost_signals -lboost_system -lboost_thread -lcppunit -lhdf5 -llog4cpp -lnetsnmp -lnetsnmpagent -lnetsnmphelpers -lnetsnmpmibs -lnetsnmptrapd -lopenmqc -lgsoap++ -lgsoapck++ -lpython2.7 -ldl -lpthread -lrt `cppunit-config --libs`  
+LDLIBSOPTIONS=-L/opt/local/lib/nss -L/opt/local/lib/nspr -L${KARABO}/extern/lib -Wl,-rpath,\$$ORIGIN/../extern/lib -lboost_chrono -lboost_date_time -lboost_filesystem -lboost_python -lboost_regex -lboost_signals -lboost_system -lboost_thread -lcppunit -lhdf5 -llog4cpp -lnetsnmp -lnetsnmpagent -lnetsnmphelpers -lnetsnmpmibs -lnetsnmptrapd -lopenmqc -lgsoap++ -lgsoapck++ -lpython2.7 -ldl -lpthread -lrt `cppunit-config --libs` -lssl  
 
 # Build Targets
 .build-conf: ${BUILD_SUBPROJECTS}
@@ -504,7 +504,7 @@ ${OBJECTDIR}/_ext/1760428615/soapC.o: ../../../src/karabo/webAuth/soapC.cpp
 ${OBJECTDIR}/_ext/1760428615/stdsoap2.o: ../../../src/karabo/webAuth/stdsoap2.cpp 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1760428615
 	${RM} $@.d
-	$(COMPILE.cc) -O2 -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1760428615/stdsoap2.o ../../../src/karabo/webAuth/stdsoap2.cpp
+	$(COMPILE.cc) -O2 -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -DWITH_OPENSSL -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1760428615/stdsoap2.o ../../../src/karabo/webAuth/stdsoap2.cpp
 
 ${OBJECTDIR}/_ext/1103122747/Memory.o: ../../../src/karabo/xms/Memory.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1103122747
@@ -1644,7 +1644,7 @@ ${OBJECTDIR}/_ext/1760428615/stdsoap2_nomain.o: ${OBJECTDIR}/_ext/1760428615/std
 	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
 	then  \
 	    ${RM} $@.d;\
-	    $(COMPILE.cc) -O2 -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1760428615/stdsoap2_nomain.o ../../../src/karabo/webAuth/stdsoap2.cpp;\
+	    $(COMPILE.cc) -O2 -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -DWITH_OPENSSL -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1760428615/stdsoap2_nomain.o ../../../src/karabo/webAuth/stdsoap2.cpp;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/1760428615/stdsoap2.o ${OBJECTDIR}/_ext/1760428615/stdsoap2_nomain.o;\
 	fi

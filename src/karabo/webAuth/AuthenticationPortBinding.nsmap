@@ -7,5 +7,13 @@ SOAP_NMAC struct Namespace namespaces[] =
 	{"xsi", "http://www.w3.org/2001/XMLSchema-instance", "http://www.w3.org/*/XMLSchema-instance", NULL},
 	{"xsd", "http://www.w3.org/2001/XMLSchema", "http://www.w3.org/*/XMLSchema", NULL},
 	{"ns1", "http://server.xfelauthwebservice.xfel.eu/", NULL, NULL},
+	{"c14n", "http://www.w3.org/2001/10/xml-exc-c14n#", NULL, NULL},
+	{"wsu", "http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd", NULL, NULL},
+	{"xenc", "http://www.w3.org/2001/04/xmlenc#", NULL, NULL},
+	{"wsc", "http://schemas.xmlsoap.org/ws/2005/02/sc", NULL, NULL},
+	{"ds", "http://www.w3.org/2000/09/xmldsig#", NULL, NULL},
+	{"wsse", "http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd", "http://docs.oasis-open.org/wss/oasis-wss-wssecurity-secext-1.1.xsd", NULL},
+	{"chan", "http://schemas.microsoft.com/ws/2005/02/duplex", NULL, NULL},
+	{"wsa5", "http://www.w3.org/2005/08/addressing", "http://schemas.xmlsoap.org/ws/2004/08/addressing", NULL},
 	{NULL, NULL, NULL, NULL}
 };
