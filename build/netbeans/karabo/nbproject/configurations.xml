@@ -402,6 +402,7 @@
             <linkerLibLibItem>pthread</linkerLibLibItem>
             <linkerLibLibItem>rt</linkerLibLibItem>
             <linkerOptionItem>`cppunit-config --libs`</linkerOptionItem>
+            <linkerLibLibItem>ssl</linkerLibLibItem>
           </linkerLibItems>
         </linkerTool>
       </compileType>
@@ -1172,6 +1173,9 @@
             ex="false"
             tool="1"
             flavor2="0">
+        <ccTool>
+          <additionalDep></additionalDep>
+        </ccTool>
       </item>
       <item path="../../../src/karabo/tests/webAuth/Authenticate_Test.hh"
             ex="false"
@@ -1474,6 +1478,9 @@
             ex="false"
             tool="1"
             flavor2="0">
+        <ccTool>
+          <commandLine>-DWITH_OPENSSL</commandLine>
+        </ccTool>
       </item>
       <item path="../../../src/karabo/webAuth/stdsoap2.h"
             ex="false"
