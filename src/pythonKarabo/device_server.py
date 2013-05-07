@@ -330,7 +330,7 @@ class DeviceServer(object):
     def startDeviceAction(self, conf):
         self.log.DEBUG("Trying to start device with the following configuration:\n{}".format(conf))
         modified = Hash(conf)
-        classId = iter(modified).next().key
+        classId = iter(modified).next().getKey()
         modified[classId + ".devSrvInstId"] = self._devSrvInstId
         if classId + ".devInstId" in modified:
             devInstId = modified[classId + ".devInstId"]
