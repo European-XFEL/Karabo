@@ -61,9 +61,10 @@ namespace karabo {
              * device +
              *   <deviceId> type host classId serverId version +
              *      description => SCHEMA
+             *      configuration => HASH
              *      activeSchema +
              *         <stateName> => SCHEMA
-             *      configuration => HASH
+             *   
              */
             karabo::util::Hash m_runtimeSystemDescription;
 
