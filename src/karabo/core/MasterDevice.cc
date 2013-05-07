@@ -109,6 +109,7 @@ namespace karabo {
 
         void MasterDevice::instanceNotAvailable(const std::string& instanceId) {
             log() << Priority::INFO << "Instance: \"" << instanceId << "\" not available.";
+            //call("*", "slotInstanceGone", instanceId);
             
             HashDatabase::ResultType ids;
             KARABO_DB_SELECT(ids, "id", "DeviceServerInstance", row.get<string>("instanceId") == instanceId)

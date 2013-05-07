@@ -38,7 +38,7 @@ namespace karabo {
 
 
         void DeviceClient::setupSlots() {
-            karabo::log::Logger::configure(Hash("priority", "DEBUG")); // TODO REMOVE LATER
+            //karabo::log::Logger::configure(Hash("priority", "DEBUG")); // TODO REMOVE LATER
             m_signalSlotable->registerSlot<Hash, string > (boost::bind(&karabo::core::DeviceClient::slotChanged, this, _1, _2), "slotChanged");
             m_signalSlotable->registerSlot<string, Hash > (boost::bind(&karabo::core::DeviceClient::slotInstanceUpdated, this, _1, _2), "slotInstanceUpdated", SignalSlotable::GLOBAL);
             m_signalSlotable->registerSlot<string > (boost::bind(&karabo::core::DeviceClient::slotInstanceGone, this, _1), "slotInstanceGone", SignalSlotable::GLOBAL);
@@ -52,7 +52,7 @@ namespace karabo {
                 const string& instanceId = instances[i].first;
                 const Hash& instanceInfo = instances[i].second;
                 boost::optional<const Hash::Node&> node = instanceInfo.find("type");
-                string type = "unknownType";
+                string type = "unknown";
                 if (node) type = node->getValue<string>();
                 Hash entry;
                 Hash::Node & entryNode = entry.set(type + "." + instanceId, Hash());
@@ -95,10 +95,18 @@ namespace karabo {
 
         void DeviceClient::slotInstanceGone(const std::string& instanceId) {
             boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
-            m_runtimeSystemDescription.erase("device." + instanceId);
-            KARABO_LOG_FRAMEWORK_INFO << "Instance \"" << instanceId << "\" is gone.";
-            KARABO_LOG_FRAMEWORK_DEBUG << "slotInstanceGone() was called, runtimeSystemDescription looks like:";
-            KARABO_LOG_FRAMEWORK_DEBUG << m_runtimeSystemDescription;
+            for (Hash::iterator it = m_runtimeSystemDescription.begin(); it != m_runtimeSystemDescription.end(); ++it) {
+                Hash& tmp = it->getValue<Hash>();
+                boost::optional<Hash::Node&> node = tmp.find(instanceId);
+                if (node) {
+                    tmp.erase(instanceId);
+                    KARABO_LOG_FRAMEWORK_INFO << "Instance \"" << instanceId << "\" is gone.";
+                    KARABO_LOG_FRAMEWORK_DEBUG << "slotInstanceGone() was called, runtimeSystemDescription looks like:";
+                    KARABO_LOG_FRAMEWORK_DEBUG << m_runtimeSystemDescription;        
+                    break;
+                }
+            }
+            KARABO_LOG_FRAMEWORK_WARN << "Instance \"" << instanceId << "\" signaled death but is not known to the client...";
         }
 
 
@@ -168,6 +176,12 @@ namespace karabo {
                 vector<string> devices;
                 devices.reserve(tmp.size());
                 for (Hash::const_iterator it = tmp.begin(); it != tmp.end(); ++it) {
+                    if (it->hasAttribute("visibility")) {
+                        const vector<string>& roles = it->getAttribute<vector<string> >("visibility");
+                        if (!roles.empty()) {
+                            if (std::find(roles.begin(), roles.end(), m_role) == roles.end()) continue;
+                        }
+                    }
                     devices.push_back(it->getKey());
                 }
                 return devices;
@@ -185,6 +199,12 @@ namespace karabo {
                 devices.reserve(tmp.size());
                 for (Hash::const_iterator it = tmp.begin(); it != tmp.end(); ++it) {
                     if (it->getAttribute<string>("serverId") == deviceServer) {
+                        if (it->hasAttribute("visibility")) {
+                            const vector<string>& roles = it->getAttribute<vector<string> >("visibility");
+                            if (!roles.empty()) {
+                                if (std::find(roles.begin(), roles.end(), m_role) == roles.end()) continue;
+                            }
+                        }
                         devices.push_back(it->getKey());
                     }
                 }

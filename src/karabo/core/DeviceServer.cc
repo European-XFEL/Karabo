@@ -43,9 +43,6 @@ namespace karabo {
 
         KARABO_REGISTER_FOR_CONFIGURATION(DeviceServer)
 
-
-
-
         void DeviceServer::expectedParameters(Schema& expected) {
 
             STRING_ELEMENT(expected).key("serverId")
@@ -107,7 +104,7 @@ namespace karabo {
                 input.get("serverId", m_serverId);
             } else {
                 if (m_isMaster) {
-                    m_serverId = "Master_DeviceServer_1";
+                    m_serverId = "MasterServer1";
                 } else {
                     m_serverId = "";
                 }
@@ -168,7 +165,8 @@ namespace karabo {
 
             registerAndConnectSignalsAndSlots();
 
-            boost::thread t(boost::bind(&karabo::core::DeviceServer::runEventLoop, this, hasHearbeat, Hash()));
+            karabo::util::Hash info("type", "server", "serverId", m_serverId, "version", DeviceServer::classInfo().getVersion(), "host", boost::asio::ip::host_name());
+            boost::thread t(boost::bind(&karabo::core::DeviceServer::runEventLoop, this, hasHearbeat, info));
             this->startFsm();
             t.join();
 
@@ -230,9 +228,9 @@ namespace karabo {
             log() << Priority::INFO << "DeviceServer starts up with id: " << m_serverId;
 
             if (m_isMaster) {
-                slotStartDevice(Hash("MasterDevice.deviceId", "Master_MasterDevice_1", "MasterDevice.connection", m_connectionConfig));
-                slotStartDevice(Hash("GuiServerDevice.deviceId", "Master_GuiServerDevice_1", "GuiServerDevice.connection", m_connectionConfig, "GuiServerDevice.loggerConnection", m_connectionConfig));
-
+                slotStartDevice(Hash("MasterDevice.deviceId", "MasterDevice1", "MasterDevice.connection", m_connectionConfig));
+                slotStartDevice(Hash("MasterDevice2.deviceId", "MasterDevice2", "MasterDevice2.connection", m_connectionConfig));
+                slotStartDevice(Hash("GuiServerDevice.deviceId", "GuiServerDevice1", "GuiServerDevice.connection", m_connectionConfig, "GuiServerDevice.loggerConnection", m_connectionConfig));
             } else {
                 // Check whether we have installed devices available
                 updateAvailableDevices();
@@ -342,7 +340,10 @@ namespace karabo {
 
 
         void DeviceServer::notifyNewDeviceAction() {
+            vector<string> deviceClasses;
+            deviceClasses.reserve(m_availableDevices.size());
             for (Hash::iterator it = m_availableDevices.begin(); it != m_availableDevices.end(); ++it) {
+                deviceClasses.push_back(it->getKey());
                 Hash& tmp = it->getValue<Hash>();
                 if (tmp.get<bool>("mustNotify") == true) {
                     tmp.set("mustNotify", false);
@@ -350,6 +351,7 @@ namespace karabo {
                     emit("signalNewDeviceClassAvailable", getInstanceId(), it->getKey(), tmp.get<string > ("xsd"));
                 }
             }
+            this->updateInstanceInfo(Hash("deviceClasses", deviceClasses));
         }
 
 

@@ -75,7 +75,7 @@ namespace karabo {
             std::string m_instanceId;
             karabo::util::Hash m_instanceInfo;
             
-            karabo::util::Hash m_sessionInfo;
+            karabo::util::Hash m_senderInfo;
 
             SignalInstances m_signalInstances;
             SlotInstances m_slotInstances;
@@ -173,6 +173,10 @@ namespace karabo {
              * This function will stop all consumers and un-block the runEventLoop() function
              */
             void stopEventLoop();
+            
+            void setSenderInfo(const karabo::util::Hash& senderInfo);
+            
+            const karabo::util::Hash& getSenderInfo() const;
 
             /**
              * Access to the identification of the current instance using signals and slots

@@ -130,17 +130,11 @@
             <linkerLibLibItem>boost_signals</linkerLibLibItem>
             <linkerLibLibItem>boost_system</linkerLibLibItem>
             <linkerLibLibItem>boost_thread</linkerLibLibItem>
-            <linkerLibLibItem>cppunit</linkerLibLibItem>
             <linkerLibLibItem>hdf5</linkerLibLibItem>
             <linkerLibLibItem>hdf5_cpp</linkerLibLibItem>
             <linkerLibLibItem>hdf5_hl</linkerLibLibItem>
             <linkerLibLibItem>hdf5_hl_cpp</linkerLibLibItem>
             <linkerLibLibItem>log4cpp</linkerLibLibItem>
-            <linkerLibLibItem>netsnmp</linkerLibLibItem>
-            <linkerLibLibItem>netsnmpagent</linkerLibLibItem>
-            <linkerLibLibItem>netsnmphelpers</linkerLibLibItem>
-            <linkerLibLibItem>netsnmpmibs</linkerLibLibItem>
-            <linkerLibLibItem>netsnmptrapd</linkerLibLibItem>
             <linkerLibLibItem>openmqc</linkerLibLibItem>
             <linkerLibLibItem>python2.7</linkerLibLibItem>
           </linkerLibItems>
@@ -297,11 +291,17 @@
       </item>
       <folder path="TestFiles">
         <linkerTool>
+          <linkerAddLib>
+            <pElem>${KARABO}/extern/lib</pElem>
+          </linkerAddLib>
           <linkerDynSerch>
             <pElem>${KARATHON}/karabo/extern/lib</pElem>
             <pElem>${KARATHON}/karabo</pElem>
             <pElem>${KARATHON}</pElem>
           </linkerDynSerch>
+          <linkerLibItems>
+            <linkerLibLibItem>cppunit</linkerLibLibItem>
+          </linkerLibItems>
         </linkerTool>
       </folder>
       <folder path="TestFiles/f1">
@@ -376,17 +376,11 @@
             <linkerLibLibItem>boost_signals</linkerLibLibItem>
             <linkerLibLibItem>boost_system</linkerLibLibItem>
             <linkerLibLibItem>boost_thread</linkerLibLibItem>
-            <linkerLibLibItem>cppunit</linkerLibLibItem>
             <linkerLibLibItem>hdf5</linkerLibLibItem>
             <linkerLibLibItem>hdf5_cpp</linkerLibLibItem>
             <linkerLibLibItem>hdf5_hl</linkerLibLibItem>
             <linkerLibLibItem>hdf5_hl_cpp</linkerLibLibItem>
             <linkerLibLibItem>log4cpp</linkerLibLibItem>
-            <linkerLibLibItem>netsnmp</linkerLibLibItem>
-            <linkerLibLibItem>netsnmpagent</linkerLibLibItem>
-            <linkerLibLibItem>netsnmphelpers</linkerLibLibItem>
-            <linkerLibLibItem>netsnmpmibs</linkerLibLibItem>
-            <linkerLibLibItem>netsnmptrapd</linkerLibLibItem>
             <linkerLibLibItem>openmqc</linkerLibLibItem>
             <linkerLibLibItem>python2.7</linkerLibLibItem>
           </linkerLibItems>
@@ -546,6 +540,18 @@
             tool="1"
             flavor2="0">
       </item>
+      <folder path="TestFiles">
+        <linkerTool>
+          <linkerAddLib>
+            <pElem>${KARABO}/extern/lib</pElem>
+          </linkerAddLib>
+          <linkerDynSerch>
+            <pElem>${KARATHON}/karabo/extern/lib</pElem>
+            <pElem>${KARATHON}/karabo</pElem>
+            <pElem>${KARATHON}</pElem>
+          </linkerDynSerch>
+        </linkerTool>
+      </folder>
       <folder path="TestFiles/f1">
         <cTool>
           <commandLine>`cppunit-config --cflags`</commandLine>
