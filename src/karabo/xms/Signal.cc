@@ -83,7 +83,8 @@ namespace karabo {
             header.set("slotFunction", m_registeredSlotFunctionsString);
             header.set("slotInstanceId", m_registeredSlotInstanceIdsString);
             header.set("hostName", boost::asio::ip::host_name());
-            header.set("classId", "Signal");
+            header.set("classId", m_signalSlotable->getClassInfo().getClassId());
+            header.merge(m_signalSlotable->getSenderInfo());
             return header;
         }
 

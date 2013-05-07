@@ -105,6 +105,14 @@ namespace karabo {
                         .advanced()
                         .init()
                         .commit();
+                
+                VECTOR_STRING_ELEMENT(expected).key("visibility")
+                        .displayedName("Visibility")
+                        .description("Configures who is allowed to see this device at all")
+                        .assignmentOptional().defaultValueFromString("")
+                        .advanced()
+                        .reconfigurable()
+                        .commit();
 
                 STRING_ELEMENT(expected).key("classId")
                         .displayedName("ClassID")
@@ -195,7 +203,7 @@ namespace karabo {
                 
                 // Prepare some info further describing this particular instance
                 // status, visibility, owner
-                karabo::util::Hash info("type", "device", "classId", m_classId, "serverId", m_serverId, "version", Device::classInfo().getVersion(), "host", boost::asio::ip::host_name());
+                karabo::util::Hash info("type", "device", "classId", m_classId, "serverId", m_serverId, "visibility", this->get<std::vector<std::string> >("visibility"), "version", Device::classInfo().getVersion(), "host", boost::asio::ip::host_name());
                 
                 
                 boost::thread t(boost::bind(&karabo::core::Device<FSM>::runEventLoop, this, true, info));

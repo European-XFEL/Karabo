@@ -61,7 +61,7 @@ namespace karabo {
                 STRING_ELEMENT(expected).key("writeMode")
                         .description("Defines the behaviour in case of already existent file")
                         .displayedName("Write Mode")
-                        .options("abort, truncate, append")
+                        .options("exclusive, truncate, append")
                         .assignmentOptional().defaultValue(std::string("truncate"))
                         .commit();
 
@@ -116,7 +116,7 @@ namespace karabo {
                 using namespace std;
 
                 string filename = m_filename.string();
-                if (m_writeMode == "abort") {
+                if (m_writeMode == "exclusive") {
                     if (boost::filesystem::exists(m_filename)) {
                         throw KARABO_IO_EXCEPTION("File " + filename + " does already exist");
                     }

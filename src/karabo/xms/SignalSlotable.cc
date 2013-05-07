@@ -177,6 +177,14 @@ namespace karabo {
             m_ioService->stop();
             call("*", "slotInstanceGone", m_instanceId);
         }
+        
+        void SignalSlotable::setSenderInfo(const karabo::util::Hash& senderInfo) {
+            m_senderInfo = senderInfo;
+        }
+        
+        const karabo::util::Hash& SignalSlotable::getSenderInfo() const {
+            return m_senderInfo;
+        }
 
 
         BrokerConnection::Pointer SignalSlotable::getConnection() const {
