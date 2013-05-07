@@ -26,7 +26,6 @@
     </logicalFolder>
     <logicalFolder name="f4" displayName="IO Binding" projectFiles="true">
       <itemPath>../../../src/karathon/PyIoFileTools.cc</itemPath>
-      <itemPath>../../../src/karathon/PyIoSerialization.cc</itemPath>
     </logicalFolder>
     <logicalFolder name="f9" displayName="Logger Binding" projectFiles="true">
       <itemPath>../../../src/karathon/PyLogLogger.cc</itemPath>
@@ -448,11 +447,6 @@
             flavor2="0">
       </item>
       <item path="../../../src/karathon/PyIoFileTools.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karathon/PyIoSerialization.cc"
             ex="false"
             tool="1"
             flavor2="0">
