@@ -24,20 +24,15 @@
 #include "Output.hh"
 #include "BinarySerializer.hh"
 
-/**
- * The main European XFEL namespace
- */
 namespace karabo {
 
-    /**
-     * Namespace for package packageName
-     */
     namespace io {
 
         /**
          * The BinaryFileOutput class.
          */
-        template <class T>
+        template <
+        class T>
         class BinaryFileOutput : public Output<T> {
 
             boost::filesystem::path m_filename;
@@ -61,7 +56,7 @@ namespace karabo {
                 STRING_ELEMENT(expected).key("writeMode")
                         .description("Defines the behaviour in case of already existent file")
                         .displayedName("Write Mode")
-                        .options("exclusive, truncate, append")
+                        .options("exclusive, truncate")
                         .assignmentOptional().defaultValue(std::string("truncate"))
                         .commit();
 
@@ -127,11 +122,7 @@ namespace karabo {
                     ofstream file(filename.c_str(), ios::out | ios::trunc | ios::binary);
                     file.write(&buffer[0], buffer.size());
                     file.close();
-                } else if (m_writeMode == "append") {
-                    ofstream file(filename.c_str(), ios::out | ios::app | ios::binary);
-                    file.write(&buffer[0], buffer.size());
-                    file.close();
-                }
+                } 
             }
 
 

@@ -26,7 +26,8 @@ namespace karabo {
             KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::h5::File)
 
 
-            File::File(const Hash& input) : m_filename("") {
+            File::File(const Hash& input){
+                m_filename = boost::filesystem::path( input.get<std::string > ("filename") );
             }
 
             File::File(const boost::filesystem::path& filename)
@@ -46,10 +47,7 @@ namespace karabo {
                         .commit();
             }
 
-            void File::configure(const Hash& input) {
-                m_filename = input.get<boost::filesystem::path > ("filename");
-            }
-
+            
             void File::open(File::AccessMode mode) {
                 try {
                     if (mode == TRUNCATE) {
