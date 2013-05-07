@@ -36,9 +36,6 @@ namespace karabo {
         template <class T>
         class Hdf5FileInput : public Input<T> {
 
-            boost::filesystem::path m_filename;
-
-
         public:
 
             KARABO_CLASSINFO(Hdf5FileInput<T>, "Hdf5File", "1.0");
@@ -55,66 +52,35 @@ namespace karabo {
 
             }
 
-            Hdf5FileInput(const karabo::util::Hash& config) : Input<T>(config) {
-                m_filename = config.get<std::string > ("filename");
+            Hdf5FileInput(const karabo::util::Hash& config) : Input<T>(config), m_file(config) {
+                m_file.open(karabo::io::h5::File::READONLY);
+                m_table = m_file.getTable("/root");
+            }
+
+            virtual ~Hdf5FileInput() {
+                m_file.close();
             }
 
             void read(T& data, size_t idx = 0) {
                 try {
-                    karabo::io::h5::File file(m_filename.string());
-                    file.open(karabo::io::h5::File::READONLY);
-                    karabo::io::h5::Table::Pointer table = file.getTable("/root");
-                    table->bind(data);
-                    table->read(idx);
-                    file.close();
+
+                    m_table->bind(data);
+                    m_table->read(idx);
+
                 } catch (...) {
-                    KARABO_RETHROW_AS(KARABO_PROPAGATED_EXCEPTION("Cannot serialize object from file " + m_filename.string()))
+                    KARABO_RETHROW_AS(KARABO_PROPAGATED_EXCEPTION("Cannot serialize object from file " + m_file.getName()))
                 }
 
             }
 
             size_t size() const {
-                return 1;
+                return m_table->size();
             }
 
         private:
 
-            //            void guessAndSetFormat() {
-            //
-            //                using namespace std;
-            //                using namespace karabo::util;
-            //
-            //                vector<string> keys = TextSerializer<T>::getRegisteredClasses();
-            //                string extension = boost::filesystem::path(m_filename).extension().string().substr(1);
-            //                boost::to_lower(extension);
-            //
-            //                BOOST_FOREACH(string key, keys) {
-            //                    string lKey(key);
-            //                    boost::to_lower(lKey);
-            //                    if (lKey == extension) {
-            //                        m_serializer = TextSerializer<T>::create(key);
-            //                        return;
-            //                    }
-            //                }
-            //                throw KARABO_NOT_SUPPORTED_EXCEPTION("Can not interprete extension: \"" + extension + "\"");
-            //            }
-            //
-            //            void readFile(std::stringstream& buffer) {
-            //
-            //                using namespace std;
-            //
-            //                string line;
-            //                ifstream inputStream(m_filename.string().c_str());
-            //                if (inputStream.is_open()) {
-            //                    while (!inputStream.eof()) {
-            //                        getline(inputStream, line);
-            //                        buffer << line << endl;
-            //                    }
-            //                    inputStream.close();
-            //                } else {
-            //                    throw KARABO_IO_EXCEPTION("Cannot open file: " + m_filename.string());
-            //                }
-            //            }
+            karabo::io::h5::File m_file;
+            karabo::io::h5::Table::Pointer m_table;
         };
     }
 }

@@ -31,6 +31,7 @@ namespace karabo {
              * Each File may contain any number of Tables.
              */
             class File {
+
             public:
 
                 KARABO_CLASSINFO(File, "Hdf5", "1.0")
@@ -104,8 +105,13 @@ namespace karabo {
                  */
                 void close();
 
+                /*
+                 * Return file name
+                 */
+                std::string getName() const {
+                    return m_filename.string();
+                }
 
-                
             private:
 
                 boost::filesystem::path m_filename;
@@ -122,6 +128,5 @@ namespace karabo {
     }
 }
 
-//KARABO_REGISTER_FACTORY_BASE_HH(karabo::io::hdf5::File, TEMPLATE_IO, DECLSPEC_IO)
 
 #endif	
