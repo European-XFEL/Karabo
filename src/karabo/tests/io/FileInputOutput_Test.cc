@@ -8,6 +8,7 @@
 #include <boost/filesystem/path.hpp>
 
 #include <karabo/io/FileTools.hh>
+#include <karabo/util/Profiler.hh>
 
 #include "TestPathSetup.hh"
 #include "FileInputOutput_Test.hh"
@@ -117,12 +118,18 @@ void FileInputOutput_Test::readTextFile() {
 
 void FileInputOutput_Test::writeBinaryFile() {
 
+    Profiler p("writeBinaryFile");
+
     // Using the Factory interface
     Output<Hash>::Pointer out = Output<Hash>::create("BinaryFile", Hash("filename", resourcePath("file1.bin")));
     out->write(m_rootedHash);
 
+    p.start("bigHash");
     out = Output<Hash>::create("BinaryFile", Hash("filename", resourcePath("file2.bin")));
     out->write(m_bigHash);
+    p.stop("bigHash");
+    double time = HighResolutionTimer::time2double(p.getTime("bigHash"));
+//    clog << "writing big Hash (binary) took " << time << " [s]" << endl;
 
     out = Output<Hash>::create("BinaryFile", Hash("filename", resourcePath("file3.bin")));
     out->write(m_unrootedHash);
@@ -148,6 +155,7 @@ void FileInputOutput_Test::readBinaryFile() {
     in = Input<Hash>::create("BinaryFile", Hash("filename", resourcePath("file2.bin"), "format", "Bin"));
     Hash h2;
     in->read(h2);
+//    cout << h2 << endl;
 
     in = Input<Hash>::create("BinaryFile", Hash("filename", resourcePath("file3.bin")));
     Hash h3;
@@ -175,7 +183,10 @@ void FileInputOutput_Test::readBinaryFile() {
 
 void FileInputOutput_Test::writeHdf5File() {
 
-    try {// Using the Factory interface
+    Profiler p("writeHdf5File");
+
+    try {
+
         Output<Hash>::Pointer out = Output<Hash>::create("Hdf5File", Hash("filename", resourcePath("fileS1.h5")));
         out->write(m_rootedHash);
 
@@ -186,8 +197,13 @@ void FileInputOutput_Test::writeHdf5File() {
         for (size_t i = 0; i < tmp.size(); ++i) {
             tmp[i] = m_rootedHash;
         }
+
+        p.start("bigHash");
         out = Output<Hash>::create("Hdf5File", Hash("filename", resourcePath("fileS2.h5")));
         out->write(big);
+        p.stop("bigHash");
+        double time = HighResolutionTimer::time2double(p.getTime("bigHash"));
+//        clog << "writing big Hash (Hdf5) took " << time << " [s]" << endl;
 
 
         out = Output<Hash>::create("Hdf5File", Hash("filename", resourcePath("fileS3.h5")));
@@ -228,7 +244,7 @@ void FileInputOutput_Test::readHdf5File() {
         //
         //    Hash h2a;
         //    loadFromFile(h2a, resourcePath("fileS2a.h5"));
-//        //
+        //        //
         //    Hash h3a;
         //    loadFromFile(h3a, resourcePath("fileS3a.h5"));
 
@@ -237,8 +253,8 @@ void FileInputOutput_Test::readHdf5File() {
         CPPUNIT_FAIL("Hdf5 test failed");
     }
 
-//    clog << "h1\n" << h1 << endl;
-//    clog << "ref\n" << m_rootedHash << endl;
+    //    clog << "h1\n" << h1 << endl;
+    //    clog << "ref\n" << m_rootedHash << endl;
     CPPUNIT_ASSERT(karabo::util::similar(h1, m_rootedHash));
     //    CPPUNIT_ASSERT(karabo::util::similar(h1, h1a));
     //    CPPUNIT_ASSERT(karabo::util::similar(h2, m_bigHash));

@@ -12,9 +12,7 @@
 #ifndef KARABO_IO_HDF5FILEOUTPUT_HH
 #define	KARABO_IO_HDF5FILEOUTPUT_HH
 
-#include <iosfwd>
-#include <fstream>
-#include <sstream>
+
 #include <boost/filesystem.hpp>
 
 #include <karabo/util/Configurator.hh>
@@ -54,7 +52,7 @@ namespace karabo {
         class Hdf5FileOutput : public Output<T> {
 
             boost::filesystem::path m_filename;
-            std::string m_writeMode;
+            karabo::io::h5::File::AccessMode m_writeMode;
 
 
         public:
@@ -74,14 +72,25 @@ namespace karabo {
                 STRING_ELEMENT(expected).key("writeMode")
                         .description("Defines the behaviour in case of already existent file")
                         .displayedName("Write Mode")
-                        .options("abort, truncate, append")
+                        .options("exclusive, truncate")
                         .assignmentOptional().defaultValue(std::string("truncate"))
                         .commit();
             }
 
-            Hdf5FileOutput(const karabo::util::Hash& config) : Output<karabo::util::Hash>(config) {
+            Hdf5FileOutput(const karabo::util::Hash& config) : Output<karabo::util::Hash>(config)  {
                 m_filename = config.get<std::string>("filename");
-                config.get("writeMode", m_writeMode);
+                configureWriteMode(config);                
+            }
+
+            
+            void configureWriteMode(const karabo::util::Hash& config) {
+                std::string writeModeString;
+                config.get("writeMode", writeModeString);
+                if (writeModeString == "truncate") {
+                    m_writeMode = karabo::io::h5::File::TRUNCATE;
+                } else if (writeModeString == "exclusive"){
+                    m_writeMode = karabo::io::h5::File::EXCLUSIVE;
+                }
             }
 
             void write(const T& data) {
@@ -90,8 +99,7 @@ namespace karabo {
                     karabo::io::h5::Format::discoverFromHash(data, config);
                     karabo::io::h5::Format::Pointer dataFormat = karabo::io::h5::Format::createFormat(config);
                     karabo::io::h5::File file(m_filename.string());
-                    file.open(karabo::io::h5::File::TRUNCATE);
-
+                    file.open(m_writeMode);
                     karabo::io::h5::Table::Pointer t = file.createTable("/root", dataFormat, 1);
                     t->write(data, 0);
                     file.close();
@@ -103,27 +111,7 @@ namespace karabo {
             }
 
         private:
-
-                                                                  //            void writeFile(std::string & sourceContent) {
-                                                                  //
-                                                                  //                using namespace std;
-                                                                  //
-                                                                  //                string filename = m_filename.string();
-                                                                  //                if (m_writeMode == "abort") {
-                                                                  //                    if (boost::filesystem::exists(m_filename)) {
-                                                                  //                        throw KARABO_IO_EXCEPTION("Hdf5FileOutput::write -> File " + filename + " does already exist");
-                                                                  //                    }
-                                                                  //                    ofstream outputStream(filename.c_str());
-                                                                  //                    outputStream << sourceContent;
-                                                                  //                } else if (m_writeMode == "truncate") {
-                                                                  //                    ofstream outputStream(filename.c_str(), ios::trunc);
-                                                                  //                    outputStream << sourceContent;
-                                                                  //                } else if (m_writeMode == "append") {
-                                                                  //                    ofstream outputStream(filename.c_str(), ios::app);
-                                                                  //                    outputStream << sourceContent;
-                                                                  //                }
-                                                                  //            }
-
+            
 
         };
 
