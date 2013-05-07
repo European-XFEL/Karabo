@@ -17,14 +17,21 @@
 
 using namespace std;
 using namespace karabo::util;
+using namespace karabo::io;
 using namespace boost::signals2;
 
 namespace karabo {
     namespace net {
 
-        JmsBrokerChannel::JmsBrokerChannel(JmsBrokerConnection& connection) : BrokerChannel(connection), m_jmsConnection(connection), m_filterCondition(""),
+
+        JmsBrokerChannel::JmsBrokerChannel(JmsBrokerConnection& connection) :
+        BrokerChannel(connection), m_jmsConnection(connection), m_serializationType(connection.m_serializationType), m_filterCondition(""),
         m_isStopped(false), m_hasAsyncHandler(false), m_syncReadTimeout(100000) {
+
+            // Get the type specific IO service
             m_ioService = m_jmsConnection.getIOService()->castTo<JmsBrokerIOService > ();
+
+            // Transaction mode
             m_isTransacted = MQ_FALSE;
             if (m_jmsConnection.m_acknowledgeMode == MQ_SESSION_TRANSACTED) {
                 m_isTransacted = MQ_TRUE;
@@ -32,7 +39,13 @@ namespace karabo {
 
             MQ_SAFE_CALL(MQCreateSession(m_jmsConnection.m_connectionHandle, m_isTransacted, m_jmsConnection.m_acknowledgeMode, MQ_SESSION_SYNC_RECEIVE, &m_sessionHandle))
             MQ_SAFE_CALL(MQCreateDestination(m_sessionHandle, m_jmsConnection.m_destinationName.c_str(), m_jmsConnection.m_destinationType, &m_destinationHandle))
+            
+            // Create the serializers
+            m_textSerializer = TextSerializer<Hash>::create("Xml", Hash("indentation", -1));
+            m_binarySerializer = BinarySerializer<Hash>::create("Bin");
+            
         }
+
 
         JmsBrokerChannel::~JmsBrokerChannel() {
             // Close everything
@@ -40,24 +53,37 @@ namespace karabo {
             MQCloseSession(m_sessionHandle);
         }
 
+
         void JmsBrokerChannel::setFilter(const std::string& filterCondition) {
             m_filterCondition = filterCondition;
         }
+
 
         const string& JmsBrokerChannel::getFilter() const {
             return m_filterCondition;
         }
 
+
         void JmsBrokerChannel::setTimeoutSyncRead(int milliseconds) {
             m_syncReadTimeout = milliseconds;
         }
+
 
         void JmsBrokerChannel::preRegisterSynchronousRead() {
             MQ_SAFE_CALL(MQCreateMessageConsumer(m_sessionHandle, m_destinationHandle, m_filterCondition.c_str(), m_jmsConnection.m_deliveryInhibition, &m_syncConsumerHandle));
             m_hasSyncConsumer = true;
         }
 
-        void JmsBrokerChannel::read(string& data, Hash& header) {
+
+        void JmsBrokerChannel::read(std::vector<char>& body, karabo::util::Hash& header) {
+            string data;
+            this->read(data, header);
+            body.reserve(body.size() + data.size());
+            std::copy(data.begin(), data.end(), back_inserter(body));
+        }
+
+
+        void JmsBrokerChannel::read(std::string& body, karabo::util::Hash& header) {
             try {
 
                 MQConsumerHandle consumerHandle = MQ_INVALID_HANDLE;
@@ -70,12 +96,14 @@ namespace karabo {
                     MQ_SAFE_CALL(MQCreateMessageConsumer(m_sessionHandle, m_destinationHandle, m_filterCondition.c_str(), m_jmsConnection.m_deliveryInhibition, &consumerHandle));
                 }
                 MQStatus status = MQReceiveMessageWithTimeout(consumerHandle, m_syncReadTimeout, &messageHandle);
-                if (MQStatusIsError(status)) throw TIMEOUT_EXCEPTION("Synchronous read timed out");
+                if (MQStatusIsError(status)) throw KARABO_TIMEOUT_EXCEPTION("Synchronous read timed out");
                 MQ_SAFE_CALL(MQGetMessageType(messageHandle, &messageType))
-                if (messageType == MQ_TEXT_MESSAGE) {
-                    ConstMQString msgBody;
-                    MQ_SAFE_CALL(MQGetTextMessageText(messageHandle, &msgBody))
-                    data = msgBody;
+                if (messageType == MQ_BYTES_MESSAGE) {
+                    // Body
+                    int nBytes;
+                    const MQInt8* bytes;
+                    MQGetBytesMessageBytes(messageHandle, &bytes, &nBytes);
+                    body = string(reinterpret_cast<const char*> (bytes), nBytes);
                     MQPropertiesHandle propertiesHandle, headerHandle;
                     MQ_SAFE_CALL(MQGetMessageProperties(messageHandle, &propertiesHandle))
                     MQ_SAFE_CALL(MQGetMessageHeaders(messageHandle, &headerHandle))
@@ -83,12 +111,10 @@ namespace karabo {
                     getProperties(header, headerHandle);
                     MQ_SAFE_CALL(MQFreeProperties(propertiesHandle))
                     MQ_SAFE_CALL(MQFreeProperties(headerHandle))
-                } else if (messageType == MQ_BYTES_MESSAGE) {
-                    // Body
-                    int nBytes;
-                    const MQInt8* bytes;
-                    MQGetBytesMessageBytes(messageHandle, &bytes, &nBytes);
-                    data = string(reinterpret_cast<const char*> (bytes), nBytes);
+                } else if (messageType == MQ_TEXT_MESSAGE) {
+                    ConstMQString msgBody;
+                    MQ_SAFE_CALL(MQGetTextMessageText(messageHandle, &msgBody))
+                    body = msgBody;
                     MQPropertiesHandle propertiesHandle, headerHandle;
                     MQ_SAFE_CALL(MQGetMessageProperties(messageHandle, &propertiesHandle))
                     MQ_SAFE_CALL(MQGetMessageHeaders(messageHandle, &headerHandle))
@@ -97,41 +123,68 @@ namespace karabo {
                     MQ_SAFE_CALL(MQFreeProperties(propertiesHandle))
                     MQ_SAFE_CALL(MQFreeProperties(headerHandle))
                 } else {
-                    throw MESSAGE_EXCEPTION("Recieved non-text message, but tried to read as text");
+                    throw KARABO_MESSAGE_EXCEPTION("Received message which is neither text nor binary");
                 }
                 MQ_SAFE_CALL(MQAcknowledgeMessages(m_sessionHandle, messageHandle))
                 // Clean up
                 MQ_SAFE_CALL(MQFreeMessage(messageHandle));
                 MQ_SAFE_CALL(MQCloseMessageConsumer(consumerHandle))
             } catch (...) {
-                RETHROW
+                KARABO_RETHROW
             }
         }
 
+
         void JmsBrokerChannel::read(karabo::util::Hash& body, karabo::util::Hash& header) {
-            std::string s;
             try {
-                this->read(s, header);
-            } catch (...) {
-                RETHROW
-            }
-            stringstream ss(s);
-            if (m_jmsConnection.m_autoDetectMessageFormat) {
-                string format("Xml"); // Default if no format is given
-                header.tryToGet("__format", format);
-                HashFormatsConstIt it = m_hashFormats.find(format);
-                if (it == m_hashFormats.end()) {
-                    try {
-                        m_hashFormats[format] = HashFormat::create(Hash(format));
-                    } catch (const Exception& e) {
-                        throw MESSAGE_EXCEPTION("Could not understand/automatically create a Hash from the given \"" + format + "\" format");
-                    }
+
+                MQConsumerHandle consumerHandle = MQ_INVALID_HANDLE;
+                MQMessageHandle messageHandle = MQ_INVALID_HANDLE;
+                MQMessageType messageType;
+
+                if (m_hasSyncConsumer) {
+                    consumerHandle = m_syncConsumerHandle;
+                } else {
+                    MQ_SAFE_CALL(MQCreateMessageConsumer(m_sessionHandle, m_destinationHandle, m_filterCondition.c_str(), m_jmsConnection.m_deliveryInhibition, &consumerHandle));
                 }
-                m_hashFormats[format]->convert(ss, body);
-            } else {
-                stringToHash(s, body);
+                MQStatus status = MQReceiveMessageWithTimeout(consumerHandle, m_syncReadTimeout, &messageHandle);
+                if (MQStatusIsError(status)) throw KARABO_TIMEOUT_EXCEPTION("Synchronous read timed out");
+                MQ_SAFE_CALL(MQGetMessageType(messageHandle, &messageType))
+                if (messageType == MQ_BYTES_MESSAGE) {
+                    int nBytes;
+                    const MQInt8* bytes;
+                    MQGetBytesMessageBytes(messageHandle, &bytes, &nBytes);
+                    m_binarySerializer->load(body, reinterpret_cast<const char*> (bytes), static_cast<size_t> (nBytes));
+                    MQPropertiesHandle propertiesHandle, headerHandle;
+                    MQ_SAFE_CALL(MQGetMessageProperties(messageHandle, &propertiesHandle))
+                    MQ_SAFE_CALL(MQGetMessageHeaders(messageHandle, &headerHandle))
+                    getProperties(header, propertiesHandle);
+                    getProperties(header, headerHandle);
+                    MQ_SAFE_CALL(MQFreeProperties(propertiesHandle))
+                    MQ_SAFE_CALL(MQFreeProperties(headerHandle))
+                } else if (messageType == MQ_TEXT_MESSAGE) {
+                    ConstMQString msgBody;
+                    MQ_SAFE_CALL(MQGetTextMessageText(messageHandle, &msgBody))
+                    m_textSerializer->load(body, msgBody);
+                    MQPropertiesHandle propertiesHandle, headerHandle;
+                    MQ_SAFE_CALL(MQGetMessageProperties(messageHandle, &propertiesHandle))
+                    MQ_SAFE_CALL(MQGetMessageHeaders(messageHandle, &headerHandle))
+                    getProperties(header, propertiesHandle);
+                    getProperties(header, headerHandle);
+                    MQ_SAFE_CALL(MQFreeProperties(propertiesHandle))
+                    MQ_SAFE_CALL(MQFreeProperties(headerHandle))
+                } else {
+                    throw KARABO_MESSAGE_EXCEPTION("Received non-text message, but tried to read as text");
+                }
+                MQ_SAFE_CALL(MQAcknowledgeMessages(m_sessionHandle, messageHandle))
+                // Clean up
+                MQ_SAFE_CALL(MQFreeMessage(messageHandle));
+                MQ_SAFE_CALL(MQCloseMessageConsumer(consumerHandle))
+            } catch (...) {
+                KARABO_RETHROW
             }
         }
+
 
         void JmsBrokerChannel::getProperties(Hash& properties, const MQPropertiesHandle& propertiesHandle) const {
             try {
@@ -206,15 +259,16 @@ namespace karabo {
                     }
                 }
             } catch (...) {
-                RETHROW
+                KARABO_RETHROW
             }
         }
+
 
         void JmsBrokerChannel::readAsyncStringHash(const ReadStringHashHandler& readHandler) {
 
             if (m_hasAsyncHandler) {
-                throw NOT_SUPPORTED_EXCEPTION("You may only register exactly one handler per channel, "
-                        "if you need more handlers create a new channel on the connection and register there");
+                throw KARABO_NOT_SUPPORTED_EXCEPTION("You may only register exactly one handler per channel, "
+                                                     "if you need more handlers create a new channel on the connection and register there");
             }
             m_hasAsyncHandler = true;
 
@@ -227,6 +281,7 @@ namespace karabo {
             // Start listening for messages by starting an individual thread
             m_ioService->registerTextMessageChannel(this);
         }
+
 
         void JmsBrokerChannel::listenForTextMessages() {
 
@@ -245,9 +300,10 @@ namespace karabo {
             }
         }
 
+
         bool JmsBrokerChannel::signalIncomingTextMessage() {
             try {
-                
+
                 MQMessageHandle messageHandle = MQ_INVALID_HANDLE;
                 MQMessageType messageType;
 
@@ -277,22 +333,23 @@ namespace karabo {
                         // Just ignore binary messages
                     } else {
                         // Give an error if unexpected message types are going round the broker
-                        throw MESSAGE_EXCEPTION("Received message of unsupported type (i.e. neither <text> nor <bytes>)");
+                        throw KARABO_MESSAGE_EXCEPTION("Received message of unsupported type (i.e. neither <text> nor <bytes>)");
                     }
                     return true;
                 }
             } catch (const Exception& e) {
                 m_signalError(shared_from_this(), e.userFriendlyMsg());
             } catch (...) {
-                m_signalError(shared_from_this(), "Unknown expection was raised whilst reading asynchronously");
+                m_signalError(shared_from_this(), "Unknown exception was raised whilst reading asynchronously");
             }
             return false;
         }
 
+
         void JmsBrokerChannel::readAsyncRawHash(const ReadRawHashHandler& readHandler) {
             if (m_hasAsyncHandler) {
-                throw NOT_SUPPORTED_EXCEPTION("You may only register exactly one handler per channel, "
-                        "if you need more handlers create a new channel on the connection and register there");
+                throw KARABO_NOT_SUPPORTED_EXCEPTION("You may only register exactly one handler per channel, "
+                                                     "if you need more handlers create a new channel on the connection and register there");
             }
             m_hasAsyncHandler = true;
 
@@ -306,10 +363,12 @@ namespace karabo {
             m_ioService->registerBinaryMessageChannel(this);
         }
 
+
         void JmsBrokerChannel::readAsyncHashHash(const ReadHashHashHandler& handler) {
             m_readHashHashHandler = handler;
             readAsyncRawHash(boost::bind(&karabo::net::JmsBrokerChannel::rawHash2HashHash, this, _1, _2, _3, _4));
         }
+
 
         void JmsBrokerChannel::listenForBinaryMessages() {
 
@@ -327,6 +386,7 @@ namespace karabo {
                 Exception::memorize();
             }
         }
+
 
         bool JmsBrokerChannel::signalIncomingBinaryMessage() {
             try {
@@ -377,12 +437,12 @@ namespace karabo {
                             MQ_SAFE_CALL(MQCloseMessageConsumer(m_asyncConsumerHandle));
                             m_hasAsyncHandler = false;
                         }
-                        // TODO Check, wheter to free the propertiesHandle
-                        m_readRawHashHandler(shared_from_this(), reinterpret_cast<const char*> (msgBody), string(msgBody).size(), header);
+                        // TODO Check, whether to free the propertiesHandle
+                        m_readRawHashHandler(shared_from_this(), msgBody, strlen(msgBody), header);
                         MQ_SAFE_CALL(MQFreeMessage(messageHandle));
                     } else {
                         // Give an error if unexpected message types are going round the broker
-                        throw MESSAGE_EXCEPTION("Received message of unsupported type (i.e. neither <text> nor <bytes>)");
+                        throw KARABO_MESSAGE_EXCEPTION("Received message of unsupported type (i.e. neither <text> nor <bytes>)");
                     }
                     return true;
                 }
@@ -393,6 +453,7 @@ namespace karabo {
             }
             return false;
         }
+
 
         void JmsBrokerChannel::write(const std::string& messageBody, const Hash& header) {
 
@@ -427,9 +488,10 @@ namespace karabo {
                 MQ_SAFE_CALL(MQCloseMessageProducer(producerHandle))
 
             } catch (...) {
-                RETHROW
+                KARABO_RETHROW
             }
         }
+
 
         void JmsBrokerChannel::write(const char* messageBody, const size_t& size, const Hash& header) {
 
@@ -463,108 +525,125 @@ namespace karabo {
 
                 MQ_SAFE_CALL(MQCloseMessageProducer(producerHandle))
             } catch (...) {
-                RETHROW
+                KARABO_RETHROW
             }
         }
 
+
         void JmsBrokerChannel::write(const karabo::util::Hash& data, const karabo::util::Hash& header) {
-            string s;
-            string format = getHashFormat();
+
             Hash modifiedHeader(header);
-            modifiedHeader.set("__format", format);
-            hashToString(data, s);
-            if (format == "Xml" || format == "LibConfig") {
-                write(s, modifiedHeader);
-            } else if (format == "Bin") {
-                std::vector<char> v(s.begin(), s.end());
-                write(&v[0], v.size(), modifiedHeader);
+            if (m_serializationType == "text") {
+                modifiedHeader.set("__format", "Xml");
+                string buffer;
+                m_textSerializer->save(data, buffer);
+                this->write(buffer, modifiedHeader);
+            } else if (m_serializationType == "binary") {
+                modifiedHeader.set("__format", "Bin");
+                std::vector<char> buffer;
+                m_binarySerializer->save(data, buffer);
+                this->write(&buffer[0], buffer.size(), modifiedHeader);
             }
         }
+
 
         void JmsBrokerChannel::setProperties(const Hash& properties, const MQPropertiesHandle& propertiesHandle) {
             try {
                 for (Hash::const_iterator it = properties.begin(); it != properties.end(); it++) {
-                    Types::Type type = properties.getTypeAsId(it);
+                    Types::ReferenceType type = it->getType();
                     switch (type) {
                         case Types::STRING:
-                            MQ_SAFE_CALL(MQSetStringProperty(propertiesHandle, it->first.c_str(), properties.get<string > (it).c_str()))
+                            MQ_SAFE_CALL(MQSetStringProperty(propertiesHandle, it->getKey().c_str(), it->getValue<string>().c_str()))
                             break;
                         case Types::INT8:
-                            MQ_SAFE_CALL(MQSetInt8Property(propertiesHandle, it->first.c_str(), properties.get<signed char>(it)))
+                            MQ_SAFE_CALL(MQSetInt8Property(propertiesHandle, it->getKey().c_str(), it->getValue<signed char>()))
                             break;
                         case Types::UINT16:
                         case Types::INT16:
-                            MQ_SAFE_CALL(MQSetInt16Property(propertiesHandle, it->first.c_str(), properties.getNumeric<short>(it)))
+                            MQ_SAFE_CALL(MQSetInt16Property(propertiesHandle, it->getKey().c_str(), it->getValue<short>()))
                             break;
                         case Types::UINT32:
+                            MQ_SAFE_CALL(MQSetInt32Property(propertiesHandle, it->getKey().c_str(), it->getValue<unsigned int>()))
+                            break;
                         case Types::INT32:
-                            MQ_SAFE_CALL(MQSetInt32Property(propertiesHandle, it->first.c_str(), properties.getNumeric<int>(it)))
+                            MQ_SAFE_CALL(MQSetInt32Property(propertiesHandle, it->getKey().c_str(), it->getValue<int>()))
                             break;
                         case Types::UINT64:
+                            MQ_SAFE_CALL(MQSetInt64Property(propertiesHandle, it->getKey().c_str(), it->getValue<unsigned long long>()))
+                            break;
                         case Types::INT64:
-                            MQ_SAFE_CALL(MQSetInt64Property(propertiesHandle, it->first.c_str(), properties.getNumeric<long long>(it)))
+                            MQ_SAFE_CALL(MQSetInt64Property(propertiesHandle, it->getKey().c_str(), it->getValue<long long>()))
                             break;
                         case Types::FLOAT:
-                            MQ_SAFE_CALL(MQSetFloat32Property(propertiesHandle, it->first.c_str(), properties.get<float>(it)))
+                            MQ_SAFE_CALL(MQSetFloat32Property(propertiesHandle, it->getKey().c_str(), it->getValue<float>()))
                             break;
                         case Types::DOUBLE:
-                            MQ_SAFE_CALL(MQSetFloat64Property(propertiesHandle, it->first.c_str(), properties.get<double>(it)))
+                            MQ_SAFE_CALL(MQSetFloat64Property(propertiesHandle, it->getKey().c_str(), it->getValue<double>()))
                             break;
                         case Types::BOOL:
-                            MQ_SAFE_CALL(MQSetBoolProperty(propertiesHandle, it->first.c_str(), properties.get<bool>(it)))
+                            MQ_SAFE_CALL(MQSetBoolProperty(propertiesHandle, it->getKey().c_str(), it->getValue<bool>()))
                             break;
                         default:
-                            throw NOT_SUPPORTED_EXCEPTION("Given property value type (" + Types::convert(type) + ") is not supported by the OpenMQ");
+                            throw KARABO_NOT_SUPPORTED_EXCEPTION("Given property value type (" + Types::to<ToLiteral>(type) + ") is not supported by the OpenMQ");
                             break;
                     }
                 }
             } catch (...) {
-                RETHROW
+                KARABO_RETHROW
             }
         }
+
 
         void JmsBrokerChannel::setErrorHandler(const BrokerErrorHandler& handler) {
             m_signalError.connect(handler);
         }
 
+
         void JmsBrokerChannel::waitAsync(int milliseconds, const WaitHandler& handler) {
             m_ioService->registerWaitChannel(this, handler, milliseconds);
         }
+
 
         void JmsBrokerChannel::deadlineTimer(const WaitHandler& handler, int milliseconds) {
             boost::this_thread::sleep(boost::posix_time::milliseconds(milliseconds));
             handler(shared_from_this());
         }
 
+
         void JmsBrokerChannel::stop() {
             m_isStopped = true;
         }
+
 
         void JmsBrokerChannel::close() {
             stop();
             unregisterChannel(shared_from_this());
         }
 
+
         void JmsBrokerChannel::rawHash2HashHash(BrokerChannel::Pointer channel, const char* data, const size_t& size, const karabo::util::Hash& header) {
             Hash h;
-            if (m_jmsConnection.m_autoDetectMessageFormat) {
-                stringstream ss(string(data, size));
-                string format("Xml"); // Default if no format is given
-                header.tryToGet("__format", format);
-                HashFormatsConstIt it = m_hashFormats.find(format);
-                if (it == m_hashFormats.end()) {
+            if (header.has("__format")) {
+                std::string format = header.get<string>("__format");
+                if (format == "Xml") {
                     try {
-                        m_hashFormats[format] = HashFormat::create(Hash(format));
+                        m_textSerializer->load(h, data);
                     } catch (const Exception& e) {
-                        throw MESSAGE_EXCEPTION("Could not understand/automatically create a Hash from the given \"" + format + "\" format");
+                        throw KARABO_MESSAGE_EXCEPTION("Could not de-serialize text message into Hash");
                     }
+                } else if (format == "Bin") {
+                    try {
+                        m_binarySerializer->load(h, data, size);
+                    } catch (const Exception& e) {
+                        throw KARABO_MESSAGE_EXCEPTION("Could not de-serialize binary message into Hash");
+                    }
+                } else {
+                    throw KARABO_MESSAGE_EXCEPTION("Encountered message with unknown format: \"" + format + "\"");
                 }
-                m_hashFormats[format]->convert(ss, h);
             } else {
-                string s(data, size);
-                stringToHash(s, h);
+                throw KARABO_MESSAGE_EXCEPTION("De-serialization of message without __format tag is not possible");
             }
             m_readHashHashHandler(channel, h, header);
         }
-    } // namespace net
-} // namespace karabo
+    }
+}

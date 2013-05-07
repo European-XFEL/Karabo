@@ -90,10 +90,10 @@ namespace karabo {
                                 return;
                             }
                         }
-                        throw IMAGE_TYPE_EXCEPTION("Can not read image of type \"" + extension + "\"");
+                        throw KARABO_IMAGE_TYPE_EXCEPTION("Can not read image of type \"" + extension + "\"");
                     }
                 } catch (...) {
-                    RETHROW_AS(IO_EXCEPTION("Problems reading image " + m_filename.string()));
+                    KARABO_RETHROW_AS(KARABO_IO_EXCEPTION("Problems reading image " + m_filename.string()));
                 }
             }
 

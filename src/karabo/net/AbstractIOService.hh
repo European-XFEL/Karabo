@@ -9,9 +9,8 @@
 #define	KARABO_NET_ABSTRACTIOSERVICE_HH
 
 #include <boost/shared_ptr.hpp>
-#include <karabo/util/Factory.hh>
-#include <karabo/util/Hash.hh>
-#include "netdll.hh"
+#include <karabo/util/Configurator.hh>
+#include "karabo/util/karaboDll.hh"
 
 namespace karabo {
     namespace net {
@@ -20,8 +19,7 @@ namespace karabo {
         public:
 
             KARABO_CLASSINFO(AbstractIOService, "AbstractIOService", "1.0")
-            KARABO_FACTORY_BASE_CLASS
-
+            
             virtual void run() = 0;
             
             virtual void work() = 0;
@@ -35,7 +33,8 @@ namespace karabo {
     }
 }
 
-KARABO_REGISTER_FACTORY_BASE_HH(karabo::net::AbstractIOService, TEMPLATE_NET, DECLSPEC_NET)
+// TODO Windows
+//KARABO_REGISTER_FACTORY_BASE_HH(karabo::net::AbstractIOService, TEMPLATE_NET, DECLSPEC_NET)
 
 #endif	/* KARABO_NET_ABSTRACTIOSERVICE_HH */
 

@@ -39,13 +39,11 @@ namespace karabo {
       
       friend class JmsBrokerChannel;
 
-      JmsBrokerConnection();
-      
-      ~JmsBrokerConnection();
+      virtual ~JmsBrokerConnection();
 
       static void expectedParameters(karabo::util::Schema& expected);
 
-      void configure(const karabo::util::Hash& input);
+      JmsBrokerConnection(const karabo::util::Hash& input);
 
       BrokerChannel::Pointer start();
 
@@ -73,7 +71,6 @@ namespace karabo {
       unsigned int m_acknowledgeTimeout;
       MQAckMode m_acknowledgeMode;
       int m_messageTimeToLive;
-      bool m_autoDetectMessageFormat;
 
       MQConnectionHandle m_connectionHandle;
 

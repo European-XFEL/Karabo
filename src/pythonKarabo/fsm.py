@@ -22,15 +22,6 @@ _interrupts_ = {}
 _actions_ = {'none':(NOOP, ())}
 _guards_ = {'none':(GNOOP, ())}
 _machines_ = {'none':None}
-
-class KARABO_FSM_ON_ERROR(object): pass
-
-def KARABO_FSM_ON_EXCEPTION(obj, error_function):
-    def onError(a1, a2):
-        getattr(obj, error_function)(a1, a2)
-    onError = staticmethod(onError)
-    setattr(KARABO_FSM_ON_ERROR, 'onError', onError)
-        
 # events
 def KARABO_FSM_EVENT0(self, event_name, method_name):
     def inner(self):

@@ -13,9 +13,6 @@
 #include <vector>
 
 #include <karabo/util/Factory.hh>
-#include <karabo/io/Reader.hh>
-#include <karabo/io/Writer.hh>
-
 #include "BrokerConnection.hh"
 
 /**
@@ -29,11 +26,11 @@ namespace karabo {
     namespace net {
 
         class BrokerChannel {
+
         public:
 
             KARABO_CLASSINFO(BrokerChannel, "BrokerChannel", "1.0")
 
-            typedef boost::shared_ptr<BrokerChannel> Pointer;
             typedef boost::function<void (BrokerChannel::Pointer, const char*, const size_t&) > ReadRawHandler;
             typedef boost::function<void (BrokerChannel::Pointer, const std::vector<char>&) > ReadVectorHandler;
             typedef boost::function<void (BrokerChannel::Pointer, const std::string&) > ReadStringHandler;
@@ -45,9 +42,6 @@ namespace karabo {
             typedef boost::function<void (BrokerChannel::Pointer, const karabo::util::Hash&, const karabo::util::Hash&) > ReadHashHashHandler;
 
             typedef boost::function<void (BrokerChannel::Pointer) > WriteCompleteHandler;
-
-//            typedef boost::function<void (BrokerChannel::Pointer, const std::string&) > ErrorHandler;
-
             typedef boost::function<void (BrokerChannel::Pointer) > WaitHandler;
 
             BrokerChannel(BrokerConnection& connection) : m_connection(connection) {
@@ -55,7 +49,7 @@ namespace karabo {
 
             virtual ~BrokerChannel() {
             }
-            
+
             BrokerConnection::Pointer getConnection() const {
                 return m_connection.getConnectionPointer();
             }
@@ -64,59 +58,35 @@ namespace karabo {
             /**************************************************************/
             /*              Synchronous Read - No Header                  */
             /**************************************************************/
-            
-            /**
-             * This function hands over an allocated stretch of raw memory
-             * @param data Pointer to allocated memory block
-             * @param size Size (in bytes) of the memory block
-             */
-            virtual void read(char*& data, size_t& size) {
-                throw NOT_SUPPORTED_EXCEPTION("Not implemented!");
-            }
 
             /**
              * This function reads from a channel into vector of chars 
              * The reading will block until the data record is read.
-             * The size of data record is the first 4 bytes in a channel stream.
              * The vector will be updated accordingly.
              * @return void 
              */
             virtual void read(std::vector<char>& data) {
-                char* raw = 0;
-                size_t size = 0;
-                read(raw, size);
-                data.assign(raw, raw + size);
+                throw KARABO_NOT_IMPLEMENTED_EXCEPTION("Function not implemented by this broker implementation");
             }
 
             /**
              * This function reads from a channel into string 
              * The reading will block until the data record is read.
-             * The size of data record is the first 4 bytes in a channel stream.
              * The string will be updated accordingly.
              * @return void 
              */
             virtual void read(std::string& data) {
-                char* raw = 0;
-                size_t size = 0;
-                read(raw, size);
-                data.assign(raw, size);
+                throw KARABO_NOT_IMPLEMENTED_EXCEPTION("Function not implemented by this broker implementation");
             }
 
             /**
              * This function reads from a channel into vector of chars 
              * The reading will block until the data record is read.
-             * The size of data record is the first 4 bytes in a channel stream.
              * The hash will be updated accordingly.
              * @return void 
              */
             virtual void read(karabo::util::Hash& data) {
-                char* raw = 0;
-                size_t size = 0;
-                read(raw, size);
-                std::string s(raw, size);
-                if (s.size() > 0) {
-                    stringToHash(s, data);
-                }
+                throw KARABO_NOT_IMPLEMENTED_EXCEPTION("Function not implemented by this broker implementation");
             }
 
             /**************************************************************/
@@ -124,65 +94,26 @@ namespace karabo {
             /**************************************************************/
 
             /**
-             * This function hands over an allocated stretch of raw memory and header information
-             * @param data Pointer to allocated memory block
-             * @param size Size (in bytes) of the memory block
-             * @param header Hash that will be automatically updated
-             */
-            virtual void read(char*& data, size_t& size, karabo::util::Hash& header) {
-                throw NOT_SUPPORTED_EXCEPTION("Not implemented");
-            }
-
-            /**
              * This function reads from a channel into vector of chars 
              * The reading will block until the header and data records are read.
-             * The size of data record is the first 4 bytes in a channel stream
-             * followed by 4 byte's length of header, then header and data.
-             * The vector data and hash header will be updated accordingly.
              * @return void 
              */
-            virtual void read(std::vector<char>& data, karabo::util::Hash& header) {
-                char* raw = 0;
-                size_t size;
-                read(raw, size, header);
-                data.resize(size);
-                memcpy(&data[0], raw, size);
-            }
-
+            virtual void read(std::vector<char>& data, karabo::util::Hash& header) = 0;
             /**
              * This function reads from a channel into std::string 
              * The reading will block until the header and data records are read.
-             * The size of data record is the first 4 bytes in a channel stream
-             * followed by 4 byte's length of a header, then header and data.
-             * The string data and hash header will be updated accordingly.
              * @return void 
              */
-            virtual void read(std::string& data, karabo::util::Hash& header) {
-                char* raw = 0;
-                size_t size;
-                read(raw, size, header);
-                data.assign(raw, size);
-            }
+            virtual void read(std::string& data, karabo::util::Hash& header) = 0;
 
-            virtual void read(karabo::util::Hash& body, karabo::util::Hash& header) {
-                std::string s;
-                karabo::util::Hash h;
-                read(s, header);
-                if (s.size() > 0) {
-                    stringToHash(s, body);
-                }
-            }
+            virtual void read(karabo::util::Hash& body, karabo::util::Hash& header) = 0;
 
             //**************************************************************/
             //*              Asynchronous Read - No Header                 */
             //**************************************************************/
 
             virtual void readAsyncRaw(const ReadRawHandler& handler) {
-                throw NOT_SUPPORTED_EXCEPTION("Not implemented!");
-            }
-
-            virtual void readAsyncRaw(char*& data, size_t& size, const ReadRawHandler& handler) {
-                throw NOT_SUPPORTED_EXCEPTION("Not implemented!");
+                 throw KARABO_NOT_IMPLEMENTED_EXCEPTION("Function not implemented by this broker implementation");
             }
 
             virtual void readAsyncVector(const ReadVectorHandler& handler) {
@@ -196,18 +127,15 @@ namespace karabo {
             }
 
             virtual void readAsyncHash(const ReadHashHandler& handler) {
-                m_readHashHandler = handler;
-                readAsyncRaw(boost::bind(&karabo::net::BrokerChannel::raw2Hash, this, _1, _2, _3));
+                throw KARABO_NOT_IMPLEMENTED_EXCEPTION("Function not implemented by this broker implementation");
             }
 
             //**************************************************************/
             //*              Asynchronous Read - With Header               */
             //**************************************************************/
 
-            virtual void readAsyncRawHash(const ReadRawHashHandler& handler) {
-                throw NOT_SUPPORTED_EXCEPTION("Not implemented!");
-            }
-
+            virtual void readAsyncRawHash(const ReadRawHashHandler& handler) = 0;
+            
             virtual void readAsyncVectorHash(const ReadVectorHashHandler& handler) {
                 m_readVectorHashHandler = handler;
                 readAsyncRawHash(boost::bind(&karabo::net::BrokerChannel::rawHash2VectorHash, this, _1, _2, _3, _4));
@@ -218,17 +146,15 @@ namespace karabo {
                 readAsyncRawHash(boost::bind(&karabo::net::BrokerChannel::rawHash2StringHash, this, _1, _2, _3, _4));
             }
 
-            virtual void readAsyncHashHash(const ReadHashHashHandler& handler) {
-                m_readHashHashHandler = handler;
-                readAsyncRawHash(boost::bind(&karabo::net::BrokerChannel::rawHash2HashHash, this, _1, _2, _3, _4));
-            }
-
+            virtual void readAsyncHashHash(const ReadHashHashHandler& handler) = 0;
+            
+            
             //**************************************************************/
             //*              Synchronous Write - No Header                 */
             //**************************************************************/
 
             virtual void write(const char* data, const size_t& size) {
-                throw NOT_SUPPORTED_EXCEPTION("Not implemented!");
+                throw KARABO_NOT_IMPLEMENTED_EXCEPTION("Function not implemented by this broker implementation");
             }
 
             virtual void write(const std::vector<char>& data) {
@@ -236,13 +162,11 @@ namespace karabo {
             }
 
             virtual void write(const std::string& data) {
-                write(data.c_str(), data.size());
+                throw KARABO_NOT_IMPLEMENTED_EXCEPTION("Function not implemented by this broker implementation");
             }
 
             virtual void write(const karabo::util::Hash& data) {
-                std::string s;
-                hashToString(data, s);
-                write(s);
+                throw KARABO_NOT_IMPLEMENTED_EXCEPTION("Function not implemented by this broker implementation");
             }
 
             //**************************************************************/
@@ -250,63 +174,17 @@ namespace karabo {
             //**************************************************************/
 
             virtual void write(const char* data, const size_t& size, const karabo::util::Hash& header) {
-                throw NOT_SUPPORTED_EXCEPTION("Not implemented!");
+                throw KARABO_NOT_SUPPORTED_EXCEPTION("Not implemented!");
             }
 
             virtual void write(const std::vector<char>& data, const karabo::util::Hash& header) {
-                write(static_cast<const char*>(&data[0]), data.size(), header);
+                write(static_cast<const char*> (&data[0]), data.size(), header);
             }
 
-            virtual void write(const std::string& data, const karabo::util::Hash& header) {
-                write(data.c_str(), data.size(), header);
-            }
+            virtual void write(const std::string& data, const karabo::util::Hash& header) = 0;
 
-            virtual void write(const karabo::util::Hash& data, const karabo::util::Hash& header) {
-                std::string s;
-                hashToString(data, s);
-                write(s, header);
-            }
+            virtual void write(const karabo::util::Hash& data, const karabo::util::Hash& header) = 0;
 
-            //**************************************************************/
-            //*              Asynchronous Write - No Header                */
-            //**************************************************************/
-
-            virtual void writeAsyncRaw(const char* data, const size_t& size, const WriteCompleteHandler& handler) {
-                throw NOT_SUPPORTED_EXCEPTION("Not implemented!");
-            }
-
-            virtual void writeAsyncVector(const std::vector<char>& data, const WriteCompleteHandler& handler) {
-                throw NOT_SUPPORTED_EXCEPTION("Not implemented!");
-            }
-
-            virtual void writeAsyncString(const std::string& data, const WriteCompleteHandler& handler) {
-                throw NOT_SUPPORTED_EXCEPTION("Not implemented!");
-            }
-
-            virtual void writeAsyncHash(const karabo::util::Hash& data, const WriteCompleteHandler& handler) {
-                throw NOT_SUPPORTED_EXCEPTION("Not implemented!");
-            }
-
-            //**************************************************************/
-            //*              Asynchronous Write - With Header              */
-            //**************************************************************/
-
-            virtual void writeAsyncRawHash(const char* data, const size_t& size, const karabo::util::Hash& header, const WriteCompleteHandler& handler) {
-                throw NOT_SUPPORTED_EXCEPTION("Not implemented!");
-            }
-
-            virtual void writeAsyncVectorHash(const std::vector<char>& data, const karabo::util::Hash& header, const WriteCompleteHandler& handler) {
-                throw NOT_SUPPORTED_EXCEPTION("Not implemented!");
-            }
-
-            virtual void writeAsyncStringHash(const std::string& data, const karabo::util::Hash& header, const WriteCompleteHandler& handler) {
-                throw NOT_SUPPORTED_EXCEPTION("Not implemented!");
-            }
-
-            virtual void writeAsyncHashHash(const karabo::util::Hash& data, const karabo::util::Hash& header, const WriteCompleteHandler& handler) {
-                throw NOT_SUPPORTED_EXCEPTION("Not implemented!");
-            }
-            
             //**************************************************************/
             //*                Errors, Timing, Selections                  */
             //**************************************************************/
@@ -314,44 +192,32 @@ namespace karabo {
             virtual void setErrorHandler(const BrokerErrorHandler& handler) = 0;
 
             virtual void waitAsync(int milliseconds, const WaitHandler& handler) {
-                throw NOT_SUPPORTED_EXCEPTION("Not implemented!");
+                throw KARABO_NOT_SUPPORTED_EXCEPTION("Not implemented!");
             }
-            
+
             virtual void setTimeoutSyncRead(int milliseconds) {
-                throw NOT_SUPPORTED_EXCEPTION("Not implemented!");
+                throw KARABO_NOT_SUPPORTED_EXCEPTION("Not implemented!");
             }
 
             virtual void setFilter(const std::string& filterCondition) {
-                throw NOT_SUPPORTED_EXCEPTION("Filtering is not supported for this network protocol");
+                throw KARABO_NOT_SUPPORTED_EXCEPTION("Filtering is not supported for this network protocol");
             }
-            
+
             virtual const std::string& getFilter() const {
-                throw NOT_SUPPORTED_EXCEPTION("Filtering is not supported for this network protocol");
+                throw KARABO_NOT_SUPPORTED_EXCEPTION("Filtering is not supported for this network protocol");
             }
-            
+
             virtual void preRegisterSynchronousRead() {
-                throw NOT_SUPPORTED_EXCEPTION("Pre-registration of synchronous reads is not support by this broker protocol");
+                throw KARABO_NOT_SUPPORTED_EXCEPTION("Pre-registration of synchronous reads is not supported by this broker protocol");
             }
-            
+
             virtual void close() = 0;
 
 
         protected: // functions
 
-            void hashToString(const karabo::util::Hash& hash, std::string& serializedHash) {
-                m_connection.hashToString(hash, serializedHash);
-            }
-
-            void stringToHash(const std::string& serializedHash, karabo::util::Hash& hash) {
-                m_connection.stringToHash(serializedHash, hash);
-            }
-
             void unregisterChannel(BrokerChannel::Pointer channel) {
                 m_connection.unregisterChannel(channel);
-            }
-            
-            std::string getHashFormat() {
-                return m_connection.getHashFormat();
             }
 
         protected: // members
@@ -371,14 +237,7 @@ namespace karabo {
                 std::string s(data, size);
                 m_readStringHandler(channel, s);
             }
-
-            void raw2Hash(BrokerChannel::Pointer channel, const char* data, const size_t& size) {
-                karabo::util::Hash h;
-                std::string s(data, size);
-                stringToHash(s, h);
-                m_readHashHandler(channel, h);
-            }
-
+         
             void rawHash2VectorHash(BrokerChannel::Pointer channel, const char* data, const size_t& size, const karabo::util::Hash& header) {
                 std::vector<char> v;
                 v.resize(size);
@@ -391,13 +250,6 @@ namespace karabo {
                 m_readStringHashHandler(channel, s, header);
             }
 
-            void rawHash2HashHash(BrokerChannel::Pointer channel, const char* data, const size_t& size, const karabo::util::Hash& header) {
-                karabo::util::Hash h;
-                std::string s(data, size);
-                stringToHash(s, h);
-                m_readHashHashHandler(channel, h, header);
-            }
-            
 
         private: // members
 
@@ -405,13 +257,9 @@ namespace karabo {
 
             ReadStringHandler m_readStringHandler;
 
-            ReadHashHandler m_readHashHandler;
-
             ReadVectorHashHandler m_readVectorHashHandler;
 
             ReadStringHashHandler m_readStringHashHandler;
-
-            ReadHashHashHandler m_readHashHashHandler;
 
         };
     }

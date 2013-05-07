@@ -11,15 +11,17 @@
 #ifndef KARABO_CORE_SIGNALSLOTABLE_HH
 #define	KARABO_CORE_SIGNALSLOTABLE_HH
 
-#include <karabo/util/Factory.hh>
+#include <karabo/util/Configurator.hh>
+#include <karabo/log/Logger.hh>
 #include <karabo/net/BrokerConnection.hh>
+#include <karabo/io/Input.hh>
+#include <karabo/io/Output.hh>
 
 #include "Signal.hh"
 #include "Slot.hh"
 #include "Requestor.hh"
 
-#include "Input.hh"
-#include "Output.hh"
+
 
 /**
  * The main European XFEL namespace
@@ -44,6 +46,7 @@ namespace karabo {
          *
          */
         class SignalSlotable : public boost::enable_shared_from_this<SignalSlotable> {
+
             friend class Slot;
 
             // Internally used typedefs
@@ -57,17 +60,62 @@ namespace karabo {
 
             typedef std::map<std::string, karabo::net::BrokerChannel::Pointer> SlotChannels;
             typedef SlotChannels::const_iterator SlotChannelsConstIt;
-            
+
             typedef std::map<boost::thread::id, karabo::util::Hash> Replies;
 
             typedef std::pair<std::string, int> AssocEntry;
             typedef std::set<AssocEntry> AssocType;
             typedef AssocType::const_iterator AssocTypeConstIterator;
-                        
-        public:
+
+            typedef std::map<std::string, karabo::io::AbstractInput::Pointer> InputChannels;
+            typedef std::map<std::string, karabo::io::AbstractOutput::Pointer> OutputChannels;
+
+        protected: // Members
+
+            std::string m_instanceId;
+            karabo::util::Hash m_instanceInfo;
             
-            typedef std::map<std::string, AbstractInput::Pointer> InputChannels;
-            typedef std::map<std::string, AbstractOutput::Pointer> OutputChannels;
+            karabo::util::Hash m_senderInfo;
+
+            SignalInstances m_signalInstances;
+            SlotInstances m_slotInstances;
+
+            karabo::net::BrokerIOService::Pointer m_ioService;
+            karabo::net::BrokerConnection::Pointer m_connection;
+            karabo::net::BrokerChannel::Pointer m_signalChannel;
+
+            // Reply/Request related
+            karabo::net::BrokerChannel::Pointer m_requestChannel;
+            Replies m_replies;
+            boost::mutex m_replyMutex;
+
+            //boost::mutex m_isProcessingSlotMutex;
+            //bool m_isProcessingSlot;
+
+            karabo::util::Hash m_emitFunctions;
+            std::vector<boost::any> m_slots;
+
+            SlotChannels m_slotChannels;
+
+            karabo::util::Hash m_trackedComponents;
+            int m_timeToLive;
+            static std::set<int> m_reconnectIntervals;
+
+            bool m_sendHeartbeats;
+
+            boost::mutex m_connectMutex;
+            boost::mutex m_heartbeatMutex;
+
+            boost::thread m_trackingThread;
+            bool m_doTracking;
+
+            std::vector<std::pair<std::string, karabo::util::Hash> > m_availableInstances;
+
+            // IO channel related
+            InputChannels m_inputChannels;
+            OutputChannels m_outputChannels;
+
+        public:
 
             KARABO_CLASSINFO(SignalSlotable, "SignalSlotable", "1.0")
 
@@ -78,36 +126,37 @@ namespace karabo {
              *
              */
             enum SlotType {
+
                 SPECIFIC,
                 GLOBAL
             };
 
             enum ConnectionType {
+
                 NO_TRACK,
                 TRACK,
                 RECONNECT
             };
 
-#define SIGNAL0(signalName) registerSignal(signalName);
-#define SIGNAL1(signalName, a1) registerSignal<a1>(signalName);
-#define SIGNAL2(signalName, a1, a2) registerSignal<a1,a2>(signalName);
-#define SIGNAL3(signalName, a1, a2, a3) registerSignal<a1,a2,a3>(signalName);
-#define SIGNAL4(signalName, a1, a2, a3, a4) registerSignal<a1,a2,a3,a4>(signalName);
+            #define SIGNAL0(signalName) registerSignal(signalName);
+            #define SIGNAL1(signalName, a1) registerSignal<a1>(signalName);
+            #define SIGNAL2(signalName, a1, a2) registerSignal<a1,a2>(signalName);
+            #define SIGNAL3(signalName, a1, a2, a3) registerSignal<a1,a2,a3>(signalName);
+            #define SIGNAL4(signalName, a1, a2, a3, a4) registerSignal<a1,a2,a3,a4>(signalName);
 
-#define SLOT0(slotName) registerSlot(boost::bind(&Self::slotName,this),#slotName);
-#define SLOT1(slotName, a1) registerSlot<a1>(boost::bind(&Self::slotName,this,_1),#slotName);
-#define SLOT2(slotName, a1, a2) registerSlot<a1,a2>(boost::bind(&Self::slotName,this,_1,_2),#slotName);
-#define SLOT3(slotName, a1, a2, a3) registerSlot<a1,a2,a3>(boost::bind(&Self::slotName,this,_1,_2,_3),#slotName);
-#define SLOT4(slotName, a1, a2, a3, a4) registerSlot<a1,a2,a3,a4>(boost::bind(&Self::slotName,this,_1,_2,_3,_4),#slotName);
+            #define SLOT0(slotName) registerSlot(boost::bind(&Self::slotName,this),#slotName);
+            #define SLOT1(slotName, a1) registerSlot<a1>(boost::bind(&Self::slotName,this,_1),#slotName);
+            #define SLOT2(slotName, a1, a2) registerSlot<a1,a2>(boost::bind(&Self::slotName,this,_1,_2),#slotName);
+            #define SLOT3(slotName, a1, a2, a3) registerSlot<a1,a2,a3>(boost::bind(&Self::slotName,this,_1,_2,_3),#slotName);
+            #define SLOT4(slotName, a1, a2, a3, a4) registerSlot<a1,a2,a3,a4>(boost::bind(&Self::slotName,this,_1,_2,_3,_4),#slotName);
 
-#define GLOBAL_SLOT0(slotName) registerSlot(boost::bind(&Self::slotName,this),#slotName, GLOBAL);
-#define GLOBAL_SLOT1(slotName, a1) registerSlot<a1>(boost::bind(&Self::slotName,this,_1),#slotName, GLOBAL);
-#define GLOBAL_SLOT2(slotName, a1, a2) registerSlot<a1,a2>(boost::bind(&Self::slotName,this,_1,_2),#slotName, GLOBAL);
-#define GLOBAL_SLOT3(slotName, a1, a2, a3) registerSlot<a1,a2,a3>(boost::bind(&Self::slotName,this,_1,_2,_3),#slotName, GLOBAL);
-#define GLOBAL_SLOT4(slotName, a1, a2, a3, a4) registerSlot<a1,a2,a3,a4>(boost::bind(&Self::slotName,this,_1,_2,_3,_4),#slotName, GLOBAL);
+            #define GLOBAL_SLOT0(slotName) registerSlot(boost::bind(&Self::slotName,this),#slotName, GLOBAL);
+            #define GLOBAL_SLOT1(slotName, a1) registerSlot<a1>(boost::bind(&Self::slotName,this,_1),#slotName, GLOBAL);
+            #define GLOBAL_SLOT2(slotName, a1, a2) registerSlot<a1,a2>(boost::bind(&Self::slotName,this,_1,_2),#slotName, GLOBAL);
+            #define GLOBAL_SLOT3(slotName, a1, a2, a3) registerSlot<a1,a2,a3>(boost::bind(&Self::slotName,this,_1,_2,_3),#slotName, GLOBAL);
+            #define GLOBAL_SLOT4(slotName, a1, a2, a3, a4) registerSlot<a1,a2,a3,a4>(boost::bind(&Self::slotName,this,_1,_2,_3,_4),#slotName, GLOBAL);
 
             SignalSlotable();
-
 
             SignalSlotable(const karabo::net::BrokerConnection::Pointer& connection, const std::string& instanceId, int heartbeatRate = 5);
 
@@ -118,19 +167,25 @@ namespace karabo {
             /**
              * This function will block the main-thread.
              */
-            void runEventLoop(bool emitHeartbeat = true);
+            void runEventLoop(bool emitHeartbeat = true, const karabo::util::Hash& instanceInfo = karabo::util::Hash());
 
-
+            /**
+             * This function will stop all consumers and un-block the runEventLoop() function
+             */
             void stopEventLoop();
-
             
+            void setSenderInfo(const karabo::util::Hash& senderInfo);
+            
+            const karabo::util::Hash& getSenderInfo() const;
+
             /**
              * Access to the identification of the current instance using signals and slots
              * @return instanceId
              */
             virtual const std::string& getInstanceId() const;
 
-            
+            void updateInstanceInfo(const karabo::util::Hash& update);
+
             /**
              * TO BE DEPRECATED - DO NOT USE!
              * Use request() instead !
@@ -157,19 +212,20 @@ namespace karabo {
 
             virtual void connectionAvailableAgain(const std::string& instanceId, const std::vector<karabo::util::Hash>& connections);
 
-            const std::vector<std::string>& getAvailableInstances();
+            const std::vector<std::pair<std::string, karabo::util::Hash> >& getAvailableInstances();
 
             std::vector<std::string> getAvailableSignals(const std::string& instanceId);
 
             std::vector<std::string> getAvailableSlots(const std::string& instanceId);
 
             /**
-             * The slotPing is a default global slot which emits the signalGotPinged signal
+             * This function must only be called within a slotFunctions body. It returns the current object handling
+             * the callback which provides more information on the sender.
+             * @param slotFunction The string-ified name of the slotFunction you are currently in
+             * @return instance of a Slot object (handler object for this callback)
              */
-            void slotPing(const std::string& instanceId, const bool& replyIfInstanceIdIsDuplicated);
-
-            void slotPingAnswer(const std::string& instanceId);
-
+            const SlotInstancePointer& getSenderInfo(const std::string& slotFunction);
+                
             /**
              * Connects a signal and slot by explicitely seperating instanceId from the slotId/signalId.
              * @param signalInstanceId
@@ -297,7 +353,7 @@ namespace karabo {
             }
 
             void call(std::string instanceId, const std::string& functionName) const {
-                Signal s(m_signalChannel, m_instanceId, "call");
+                Signal s(this, m_signalChannel, m_instanceId, "call");
                 if (instanceId.empty()) instanceId = m_instanceId;
                 s.registerSlot(instanceId, functionName);
                 s.emit0();
@@ -320,13 +376,17 @@ namespace karabo {
                 try {
                     emitFunction(a1);
                 } catch (...) {
-                    RETHROW_AS(SIGNALSLOT_EXCEPTION("Problems whilst emitting from a valid signal, please ask BH"))
+                    KARABO_RETHROW_AS(KARABO_SIGNALSLOT_EXCEPTION("Problems whilst emitting from a valid signal, please ask BH"))
                 }
+            }
+
+            void emit(const std::string& signalFunction, const char* const& a1) const {
+                emit(signalFunction, std::string(a1));
             }
 
             template <class A1>
             void call(std::string instanceId, const std::string& functionName, const A1& a1) const {
-                Signal s(m_signalChannel, m_instanceId, "call");
+                Signal s(this, m_signalChannel, m_instanceId, "call");
                 if (instanceId.empty()) instanceId = m_instanceId;
                 s.registerSlot(instanceId, functionName);
                 s.emit1(a1);
@@ -351,13 +411,27 @@ namespace karabo {
                     m_emitFunctions.get(signalFunction, emitFunction);
                     emitFunction(a1, a2);
                 } catch (...) {
-                    RETHROW;
+                    KARABO_RETHROW;
                 }
+            }
+
+            template <class A1>
+            void emit(const std::string& signalFunction, const A1& a1, const char* const& a2) const {
+                emit(signalFunction, a1, std::string(a2));
+            }
+
+            template <class A2>
+            void emit(const std::string& signalFunction, const char* const& a1, const A2& a2) const {
+                emit(signalFunction, std::string(a1), a2);
+            }
+
+            void emit(const std::string& signalFunction, const char* const& a1, const char* const& a2) const {
+                emit(signalFunction, std::string(a1), std::string(a2));
             }
 
             template <class A1, class A2>
             void call(std::string instanceId, const std::string& functionName, const A1& a1, const A2& a2) const {
-                Signal s(m_signalChannel, m_instanceId, "call");
+                Signal s(this, m_signalChannel, m_instanceId, "call");
                 if (instanceId.empty()) instanceId = m_instanceId;
                 s.registerSlot(instanceId, functionName);
                 s.emit2(a1, a2);
@@ -383,13 +457,13 @@ namespace karabo {
                     m_emitFunctions.get(signalFunction, emitFunction);
                     emitFunction(a1, a2, a3);
                 } catch (...) {
-                    RETHROW;
+                    KARABO_RETHROW;
                 }
             }
 
             template <class A1, class A2, class A3>
             void call(std::string instanceId, const std::string& functionName, const A1& a1, const A2& a2, const A3& a3) const {
-                Signal s(m_signalChannel, m_instanceId, "call");
+                Signal s(this, m_signalChannel, m_instanceId, "call");
                 if (instanceId.empty()) instanceId = m_instanceId;
                 s.registerSlot(instanceId, functionName);
                 s.emit3(a1, a2, a3);
@@ -416,13 +490,13 @@ namespace karabo {
                     m_emitFunctions.get(signalFunction, emitFunction);
                     emitFunction(a1, a2, a3, a4);
                 } catch (...) {
-                    RETHROW;
+                    KARABO_RETHROW;
                 }
             }
 
             template <class A1, class A2, class A3, class A4>
             void call(std::string instanceId, const std::string& functionName, const A1& a1, const A2& a2, const A3& a3, const A4& a4) const {
-                Signal s(m_signalChannel, m_instanceId, "call");
+                Signal s(this, m_signalChannel, m_instanceId, "call");
                 if (instanceId.empty()) instanceId = m_instanceId;
                 s.registerSlot(instanceId, functionName);
                 s.emit4(a1, a2, a3, a4);
@@ -435,37 +509,32 @@ namespace karabo {
             }
 
             void reply() {
-                if (!m_isProcessingSlot) return;
                 registerReply(karabo::util::Hash());
             }
 
             template <class A1>
             void reply(const A1& a1) {
-                if (!m_isProcessingSlot) return;
                 registerReply(karabo::util::Hash("a1", a1));
             }
 
             template <class A1, class A2>
             void reply(const A1& a1, const A2& a2) {
-                if (!m_isProcessingSlot) return;
                 registerReply(karabo::util::Hash("a1", a1, "a2", a2));
             }
 
             template <class A1, class A2, class A3>
             void reply(const A1& a1, const A2& a2, const A3& a3) {
-                if (!m_isProcessingSlot) return;
                 registerReply(karabo::util::Hash("a1", a1, "a2", a2, "a3", a3));
             }
 
             template <class A1, class A2, class A3, class A4>
             void reply(const A1& a1, const A2& a2, const A3& a3, A4& a4) {
-                if (!m_isProcessingSlot) return;
                 registerReply(karabo::util::Hash("a1", a1, "a2", a2, "a3", a3, "a4", a4));
             }
 
             void registerSignal(const std::string& funcName) {
                 if (m_signalInstances.find(funcName) != m_signalInstances.end()) return; // Already registered
-                boost::shared_ptr<karabo::xms::Signal> s(new karabo::xms::Signal(m_signalChannel, m_instanceId, funcName));
+                boost::shared_ptr<karabo::xms::Signal> s(new karabo::xms::Signal(this, m_signalChannel, m_instanceId, funcName));
                 boost::function<void() > f(boost::bind(&karabo::xms::Signal::emit0, s));
                 storeSignal(funcName, s, f);
             }
@@ -473,7 +542,7 @@ namespace karabo {
             template <class A1>
             void registerSignal(const std::string& funcName) {
                 if (m_signalInstances.find(funcName) != m_signalInstances.end()) return;
-                boost::shared_ptr<karabo::xms::Signal> s(new karabo::xms::Signal(m_signalChannel, m_instanceId, funcName));
+                boost::shared_ptr<karabo::xms::Signal> s(new karabo::xms::Signal(this, m_signalChannel, m_instanceId, funcName));
                 boost::function<void (const A1&) > f(boost::bind(&karabo::xms::Signal::emit1<A1>, s, _1));
                 storeSignal(funcName, s, f);
             }
@@ -481,7 +550,7 @@ namespace karabo {
             template <class A1, class A2>
             void registerSignal(const std::string& funcName) {
                 if (m_signalInstances.find(funcName) != m_signalInstances.end()) return;
-                boost::shared_ptr<karabo::xms::Signal> s(new karabo::xms::Signal(m_signalChannel, m_instanceId, funcName));
+                boost::shared_ptr<karabo::xms::Signal> s(new karabo::xms::Signal(this, m_signalChannel, m_instanceId, funcName));
                 boost::function<void (const A1&, const A2&) > f(boost::bind(&karabo::xms::Signal::emit2<A1, A2>, s, _1, _2));
                 storeSignal(funcName, s, f);
             }
@@ -489,7 +558,7 @@ namespace karabo {
             template <class A1, class A2, class A3>
             void registerSignal(const std::string& funcName) {
                 if (m_signalInstances.find(funcName) != m_signalInstances.end()) return;
-                boost::shared_ptr<karabo::xms::Signal> s(new karabo::xms::Signal(m_signalChannel, m_instanceId, funcName));
+                boost::shared_ptr<karabo::xms::Signal> s(new karabo::xms::Signal(this, m_signalChannel, m_instanceId, funcName));
                 boost::function<void (const A1&, const A2&, const A3&) > f(boost::bind(&karabo::xms::Signal::emit3<A1, A2, A3>, s, _1, _2, _3));
                 storeSignal(funcName, s, f);
             }
@@ -497,7 +566,7 @@ namespace karabo {
             template <class A1, class A2, class A3, class A4>
             void registerSignal(const std::string& funcName) {
                 if (m_signalInstances.find(funcName) != m_signalInstances.end()) return;
-                boost::shared_ptr<karabo::xms::Signal> s(new karabo::xms::Signal(m_signalChannel, m_instanceId, funcName));
+                boost::shared_ptr<karabo::xms::Signal> s(new karabo::xms::Signal(this, m_signalChannel, m_instanceId, funcName));
                 boost::function<void (const A1&, const A2&, const A3&, const A4&) > f(boost::bind(&karabo::xms::Signal::emit4<A1, A2, A3, A4>, s, _1, _2, _3, _4));
                 storeSignal(funcName, s, f);
             }
@@ -550,41 +619,41 @@ namespace karabo {
                 s->registerSlotFunction(slot);
                 storeSlot(funcName, s, channel);
             }
-            
+
             template <class InputType>
-            boost::shared_ptr<InputType > createInputChannel(const std::string& name, const karabo::util::Hash input, const boost::function<void (const boost::shared_ptr<InputType>&) >& onInputAvailable = boost::function<void (const boost::shared_ptr<InputType>&) >()) {
+            boost::shared_ptr<InputType > createInputChannel(const std::string& name, const karabo::util::Hash input, const boost::function<void (const boost::shared_ptr<InputType>&) >& onInputAvailableHandler = boost::function<void (const boost::shared_ptr<InputType>&) >()) {
                 using namespace karabo::util;
-                AbstractInput::Pointer channel = AbstractInput::createChoice(name, input);
+                karabo::io::AbstractInput::Pointer channel = karabo::io::AbstractInput::createChoice(name, input);
                 channel->setInstanceId(m_instanceId);
-                if (!onInputAvailable.empty()) {
-                    channel->registerIOEventHandler(onInputAvailable);
+                if (!onInputAvailableHandler.empty()) {
+                    channel->registerIOEventHandler(onInputAvailableHandler);
                 }
                 m_inputChannels[name] = channel;
                 return boost::static_pointer_cast<InputType >(channel);
             }
-            
+
             template <class OutputType>
-            boost::shared_ptr<OutputType > createOutputChannel(const std::string& name, const karabo::util::Hash& input, const boost::function<void (const boost::shared_ptr<OutputType>&) >& onOutputPossible = boost::function<void (const boost::shared_ptr<OutputType>&) >()) {
+            boost::shared_ptr<OutputType > createOutputChannel(const std::string& name, const karabo::util::Hash& input, const boost::function<void (const boost::shared_ptr<OutputType>&) >& onOutputPossibleHandler = boost::function<void (const boost::shared_ptr<OutputType>&) >()) {
                 using namespace karabo::util;
-                AbstractOutput::Pointer channel = AbstractOutput::createChoice(name, input);
+                karabo::io::AbstractOutput::Pointer channel = karabo::io::AbstractOutput::createChoice(name, input);
                 channel->setInstanceId(m_instanceId);
-                 if (!onOutputPossible.empty()) { 
-                     channel->registerIOEventHandler(onOutputPossible);
-                 }
+                if (!onOutputPossibleHandler.empty()) {
+                    channel->registerIOEventHandler(onOutputPossibleHandler);
+                }
                 m_outputChannels[name] = channel;
                 return boost::static_pointer_cast<OutputType >(channel);
             }
-            
+
             const InputChannels& getInputChannels() const {
                 return m_inputChannels;
             }
-            
+
             const OutputChannels& getOutputChannels() const {
                 return m_outputChannels;
             }
-            
+
             void connectInputChannels();
-            
+
         protected: // Functions
 
             /**
@@ -614,20 +683,15 @@ namespace karabo {
 
             template <class TFunc>
             void retrieveEmitFunction(const std::string& signalFunction, TFunc& emitFunction) const {
-                karabo::util::Hash::const_iterator it = m_emitFunctions.find(signalFunction);
-                // Check whether signal was registered at all
-                if (it != m_emitFunctions.end()) {
-                    // Check whether requested function is of proper arity
-                    if (m_emitFunctions.is<TFunc > (it)) {
-                        emitFunction = m_emitFunctions.get<TFunc > (it);
-                    } else {
-                        throw SIGNALSLOT_EXCEPTION("Argument mismatch: The requested signal \"" + signalFunction + "\" was registered with a different number of arguments before.");
-                    }
-                } else {
-                    throw SIGNALSLOT_EXCEPTION("The requested signal \"" + signalFunction + "\" could not be found. Ensure proper registration of the signal before you call emit.");
+                try {
+                    emitFunction = m_emitFunctions.get<TFunc > (signalFunction);
+                } catch (const karabo::util::CastException& e) {
+                    throw KARABO_SIGNALSLOT_EXCEPTION("Argument mismatch: The requested signal \"" + signalFunction + "\" was registered with a different number of arguments before.");
+                } catch (const karabo::util::ParameterException& e) {
+                    throw KARABO_SIGNALSLOT_EXCEPTION("The requested signal \"" + signalFunction + "\" could not be found. Ensure proper registration of the signal before you call emit.");
                 }
             }
-            
+
             void registerReply(const karabo::util::Hash& reply) {
                 boost::mutex::scoped_lock lock(m_replyMutex);
                 m_replies[boost::this_thread::get_id()] = reply;
@@ -635,17 +699,18 @@ namespace karabo {
 
         protected: // Member variables
 
-            std::string m_instanceId;
+
 
         private: // Functions
             
-            std::pair<bool, karabo::util::Hash> digestPotentialReply();
-            
+             /**
+             * The slotPing is a default global slot which emits the signalGotPinged signal
+             */
+            void slotPing(const std::string& instanceId, const bool& replyIfInstanceIdIsDuplicated);
 
-            void setSlotProcessingFlag(const bool flag) {
-                boost::mutex::scoped_lock lock(m_isProcessingSlotMutex);
-                m_isProcessingSlot = flag;
-            }
+            void slotPingAnswer(const std::string& instanceId, const karabo::util::Hash& hash);
+
+            std::pair<bool, karabo::util::Hash> digestPotentialReply();
 
             void emitHeartbeat();
 
@@ -662,7 +727,7 @@ namespace karabo {
             bool tryToFindSlot(const std::string& signalInstanceId, const std::string& signalFunction, const std::string& slotInstanceId, const std::string& slotFunction, const int& connectionType, const bool isVerbose);
 
             void slotConnect(const std::string& signalFunction, const std::string& slotInstanceId, const std::string& slotFunction, const int& connectionType);
-            
+
             void slotHasSlot(const std::string& signalInstanceId, const std::string& signalFunction, const std::string& slotFunction, const int& connectionType);
 
             bool tryToDisconnectFromSignal(std::string signalInstanceId, const std::string& signalFunction, std::string slotInstanceId, const std::string& slotFunction, const bool isVerbose);
@@ -693,56 +758,18 @@ namespace karabo {
             void slotTryReconnectNow();
 
             void slotGetAvailableFunctions(const std::string& type);
-            
+
             void connectionLost(const std::string& instanceId, const std::vector<karabo::util::Hash>& connections);
-            
+
             // IO channel related
-            
-            
-            
+
+
+
             void slotGetOutputChannelInformation(const std::string& ioChannelId, const int& processId);
-            
 
-        protected: // Member variables
 
-            SignalInstances m_signalInstances;
-            SlotInstances m_slotInstances;
 
-            karabo::net::BrokerIOService::Pointer m_ioService;
-            karabo::net::BrokerConnection::Pointer m_connection;
-            karabo::net::BrokerChannel::Pointer m_signalChannel;
 
-            // Reply/Request related
-            karabo::net::BrokerChannel::Pointer m_requestChannel;
-            Replies m_replies;
-            boost::mutex m_replyMutex;
-
-            boost::mutex m_isProcessingSlotMutex;
-            bool m_isProcessingSlot;
-
-            karabo::util::Hash m_emitFunctions;
-            std::vector<boost::any> m_slots;
-
-            SlotChannels m_slotChannels;
-
-            karabo::util::Hash m_trackedComponents;
-            int m_timeToLive;
-            static std::set<int> m_reconnectIntervals;
-
-            bool m_sendHeartbeats;
-
-            boost::mutex m_connectMutex;
-            boost::mutex m_heartbeatMutex;
-
-            boost::thread m_trackingThread;
-            bool m_doTracking;
-
-            std::vector<std::string> m_availableInstances;
-            
-            // IO channel related
-            InputChannels m_inputChannels;
-            OutputChannels m_outputChannels;
-            
 
         };
 

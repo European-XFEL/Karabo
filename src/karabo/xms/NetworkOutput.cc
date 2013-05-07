@@ -10,11 +10,14 @@
 
 #include "NetworkOutput.hh"
 
+using namespace karabo::util;
+using namespace karabo::io;
+
 namespace karabo {
     namespace xms {
 
-        KARABO_REGISTER_FACTORY_2_CC(AbstractOutput, Output<karabo::util::Hash >, NetworkOutput<karabo::util::Hash>)
-        KARABO_REGISTER_FACTORY_CC(Output<karabo::util::Hash >, NetworkOutput<karabo::util::Hash>)
+        KARABO_REGISTER_FOR_CONFIGURATION(AbstractOutput, Output<Hash >, NetworkOutput<Hash>)
+        KARABO_REGISTER_FOR_CONFIGURATION(Output<Hash >, NetworkOutput<Hash>)
         
     }
 }

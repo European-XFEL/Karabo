@@ -7,7 +7,7 @@
  */
 
 
-#include <karabo/io/Reader.hh>
+#include <karabo/io/Input.hh>
 #include "MasterDevice.hh"
 #include "DeviceServer.hh"
 #include "HashDatabase.hh"
@@ -22,7 +22,7 @@ namespace karabo {
         using namespace karabo::util;
         using namespace karabo::io;
         
-        KARABO_REGISTER_FACTORY_CC(Device, MasterDevice)
+        KARABO_REGISTER_FOR_CONFIGURATION(BaseDevice, Device<OkErrorFsm>, MasterDevice)
 
         MasterDevice::~MasterDevice() {
         }
@@ -30,7 +30,7 @@ namespace karabo {
         void MasterDevice::expectedParameters(Schema& expected) {
         }
 
-        void MasterDevice::configure(const Hash& input) {
+        MasterDevice::MasterDevice(const Hash& input) : Device<OkErrorFsm>(input) {
             
             GLOBAL_SLOT1(slotDeviceServerProvideName, string) /* Hostname */
 
@@ -74,23 +74,19 @@ namespace karabo {
 //            connectN("", "signalUpdateDeviceInstance","*", "slotUpdateDeviceInstance");
 //            
 //            SIGNAL3("signalSchemaUpdatedToGui", string, string, string); // schema, instanceId, classId
-//            connectN("", "signalSchemaUpdatedToGui", "*", "slotSchemaUpdatedToGui");        
+//            connectN("", "signalSchemaUpdatedToGui", "*", "slotSchemaUpdatedToGui");
+            
+             initializeDatabase();
         }
 
-        void MasterDevice::run() {
-            //startStateMachine();
-            initialize();
-            runEventLoop(false);
-        }
-
-        void MasterDevice::initialize() {
+        void MasterDevice::initializeDatabase() {
             bool exists = KARABO_DB_READ;
             // Check for existing database
             if(exists) {
-                log() << Priority::INFO << "Found existing database";
+                KARABO_LOG_DEBUG << "Found existing central database";
                 trackInstances();
             } else { // Create new one
-                log() << Priority::INFO << "No database information found, creating new...";
+                KARABO_LOG_INFO << "No database information found, creating new...";
                 KARABO_DB_SETUP
                 KARABO_DB_SAVE
             }
@@ -113,6 +109,7 @@ namespace karabo {
 
         void MasterDevice::instanceNotAvailable(const std::string& instanceId) {
             log() << Priority::INFO << "Instance: \"" << instanceId << "\" not available.";
+            //call("*", "slotInstanceGone", instanceId);
             
             HashDatabase::ResultType ids;
             KARABO_DB_SELECT(ids, "id", "DeviceServerInstance", row.get<string>("instanceId") == instanceId)
@@ -193,7 +190,7 @@ namespace karabo {
                 KARABO_DB_SELECT(result, "instanceId", "DeviceServerInstance", true);
             }
 
-            string instanceId = hostname + "/DeviceServer/" + String::toString(result.size());
+            string instanceId = hostname + "/DeviceServer/" + karabo::util::toString(result.size());
             this->sanifyDeviceServerInstanceId(instanceId); 
             
             log() << Priority::INFO << "This will be the " << result.size() + 1 << " device-server online on host \"" << hostname << "\"";
@@ -256,7 +253,7 @@ namespace karabo {
                     Hash keyValue("status", "online");
                     KARABO_DB_UPDATE("DeviceServerInstance", keyValue, row.get<string > ("instanceId") == devSrvInstId)
                     Hash data(result[0]);
-                    data.update(keyValue);
+                    data.merge(keyValue);
                     //emit("signalNewDeviceServerInstance", data);
                     call("*", "slotNewDeviceServerInstance", data);
                 } else if (status == "offline") { // back in business
@@ -273,20 +270,20 @@ namespace karabo {
                 }
                 trackExistenceOfInstance(devSrvInstId);
             } else if (result.size() > 1) {
-                throw LOGIC_EXCEPTION("Internal error: Inconsistent database");
+                throw KARABO_LOGIC_EXCEPTION("Internal error: Inconsistent database");
             }
             KARABO_DB_SAVE
         }
 
-        void MasterDevice::slotNewStandaloneDeviceInstanceAvailable(const std::string& hostname, const karabo::util::Hash& deviceConfig, const std::string& devInstId, const std::string& deviceXsd) {
-            log() << Priority::INFO << "New standalone device instance from host \"" << hostname << "\" wants to register with id \"" << devInstId << "\"";
+        void MasterDevice::slotNewStandaloneDeviceInstanceAvailable(const std::string& hostname, const karabo::util::Hash& deviceConfig, const std::string& deviceId, const std::string& deviceXsd) {
+            log() << Priority::INFO << "New standalone device instance from host \"" << hostname << "\" wants to register with id \"" << deviceId << "\"";
             
             string devSrvInstId = "no server (standalone devices)";
-            const string& devClassId = deviceConfig.begin()->first; // Root node corresponds to devClassId
+            const string& devClassId = deviceConfig.begin()->getKey(); // Root node corresponds to devClassId
             slotNewDeviceServerAvailable(hostname, devSrvInstId);
             slotNewDeviceClassAvailable(devSrvInstId, devClassId, deviceXsd);
             slotNewDeviceInstanceAvailable(devSrvInstId, deviceConfig);
-            trackExistenceOfInstance(devInstId);
+            trackExistenceOfInstance(deviceId);
         }
         
         void MasterDevice::slotNewDeviceClassAvailable(const std::string& devSrvInstId, const std::string& devClassId, const std::string& deviceXsd) {
@@ -303,7 +300,7 @@ namespace karabo {
             if (result.size() == 1) {
                 result[0].get("id", devSerInsId);
             } else {
-                throw LOGIC_EXCEPTION("Missing device-server instance");
+                throw KARABO_LOGIC_EXCEPTION("Missing device-server instance");
             }
             
             result.clear();
@@ -333,9 +330,9 @@ namespace karabo {
             }
         }
         
-        void MasterDevice::slotNewDeviceInstanceAvailable(const std::string& devSrvInstId, const karabo::util::Hash& deviceConfig) {
+        void MasterDevice::slotNewDeviceInstanceAvailable(const std::string& serverId, const karabo::util::Hash& deviceConfig) {
             
-            const string& devClassId = deviceConfig.begin()->first; // Root node corresponds to devClassId
+            const string& devClassId = deviceConfig.begin()->getKey(); // Root node corresponds to devClassId
             
             // Skip myself
             if (devClassId == "MasterDevice" || devClassId == "GuiServerDevice") return;
@@ -343,18 +340,18 @@ namespace karabo {
             cout << deviceConfig << endl;
             
             const Hash& config = deviceConfig.get<Hash>(devClassId);
-            const string& devInstId = config.get<string>("devInstId");
+            const string& deviceId = config.get<string>("deviceId");
             
-            log() << Priority::INFO << "New device instance \"" << devInstId << "\" on device-server \"" << devSrvInstId << "\" available";
+            log() << Priority::INFO << "New device instance \"" << deviceId << "\" on device-server \"" << serverId << "\" available";
             
             HashDatabase::ResultType result;
-            KARABO_DB_SELECT(result, "id", "DeviceServerInstance", row.get<string>("instanceId") == devSrvInstId);
+            KARABO_DB_SELECT(result, "id", "DeviceServerInstance", row.get<string>("instanceId") == serverId);
             
             unsigned int devSerInsId;
             if (result.size() == 1) {
                 result[0].get("id", devSerInsId);
             } else {
-                throw LOGIC_EXCEPTION("Missing device-server instance");
+                throw KARABO_LOGIC_EXCEPTION("Missing device-server instance");
             }
             
             result.clear();
@@ -366,11 +363,11 @@ namespace karabo {
                 result[0].get("id", devClaId);
                 result[0].get("schema", schema);
             } else {
-                throw LOGIC_EXCEPTION("Missing device-server instance");
+                throw KARABO_LOGIC_EXCEPTION("Missing device-server instance");
             }
 
             // Insert new deviceInstance
-            Hash data("instanceId", devInstId, "configuration", deviceConfig, "devClaId", devClaId, "schema", schema);
+            Hash data("instanceId", deviceId, "configuration", deviceConfig, "devClaId", devClaId, "schema", schema);
             unsigned int id = KARABO_DB_INSERT("DeviceInstance", data);
             KARABO_DB_SAVE
             

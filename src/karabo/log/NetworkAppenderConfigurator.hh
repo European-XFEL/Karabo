@@ -17,6 +17,7 @@ namespace karabo {
     namespace log {
 
         class NetworkAppenderConfigurator : public AppenderConfigurator {
+
         public:
             KARABO_CLASSINFO(NetworkAppenderConfigurator, "Network", "1.0")
 
@@ -27,16 +28,14 @@ namespace karabo {
             log4cpp::Appender* create();
 
             static void expectedParameters(karabo::util::Schema& expected);
-            void configure(const karabo::util::Hash& input);
+            NetworkAppenderConfigurator(const karabo::util::Hash& input);
 
         private:
             karabo::net::BrokerConnection::Pointer m_connection;
 
         };
-
     }
 }
-
 
 #endif	/* KARABO_LOGCONFIG_NETWORKAPPENDERCONFIGURATOR_HH */
 

@@ -142,7 +142,7 @@ namespace karabo {
                             }
                             continue;
                         } else {
-                            throw NETWORK_EXCEPTION("Could not start TcpServer for output channel");
+                            throw KARABO_NETWORK_EXCEPTION("Could not start TcpServer for output channel");
                         }
                     }
                     tryAgain = 0;
@@ -336,7 +336,7 @@ namespace karabo {
                 }
 
                 if (m_onNoSharedInputChannelAvailable == "throw") {
-                    throw IO_EXCEPTION("Can not write accumulated data because no (shared) input is available");
+                    throw KARABO_IO_EXCEPTION("Can not write accumulated data because no (shared) input is available");
                     return false;
                 }
 
@@ -357,7 +357,7 @@ namespace karabo {
                 }
 
                 // We should never be here!!
-                throw LOGIC_EXCEPTION("Output channel case internally misconfigured, ask BH");
+                throw KARABO_LOGIC_EXCEPTION("Output channel case internally misconfigured, ask BH");
                 return false;
             }
 
@@ -429,7 +429,7 @@ namespace karabo {
                         std::cout << "done" << std::endl;
                     }
                 } else {
-                    throw LOGIC_EXCEPTION("Bad async write encountered");
+                    throw KARABO_LOGIC_EXCEPTION("Bad async write encountered");
                 }
             }
 
@@ -471,7 +471,7 @@ namespace karabo {
                     return true;
                 }
                 if (m_onNoCopiedInputChannelAvailable == "throw") {
-                    throw IO_EXCEPTION("Can not write accumulated data because not all (shared) inputs are available");
+                    throw KARABO_IO_EXCEPTION("Can not write accumulated data because not all (shared) inputs are available");
                     return false;
                 }
                 //                    if (m_onNoCopiedInputChannelAvailable == "queue") {

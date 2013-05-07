@@ -19,7 +19,7 @@ typedef int clockid_t;
 #endif
 
 #include <boost/date_time.hpp>
-#include "utildll.hh"
+#include "karaboDll.hh"
 
 namespace karabo {
     namespace util {
@@ -28,19 +28,21 @@ namespace karabo {
         // High resolution timer using QPC/QPF
         // Problem : QPC sometimes jumps forward on some multi-core processors
         //------------------------------------------------------------------------------
-#ifdef _WIN32
+        #ifdef _WIN32
         typedef unsigned long long int uint64_t;
         typedef unsigned int uint32_t;
-#else
+        #else
         #include <stdint.h>
-#endif
+        #endif
 
         typedef union {
+
             uint64_t epoch;
 
             struct {
-                uint32_t nsec;
-                uint32_t sec;
+
+                uint64_t nsec;
+                uint64_t sec;
             };
         } timestamp;
 
@@ -49,25 +51,26 @@ namespace karabo {
 
         // TODO: merge it with util::Time class
 
-        class DECLSPEC_UTIL HighResolutionTimer {
-#ifdef _WIN32
+        class KARABO_DECLSPEC HighResolutionTimer {
+
+            #ifdef _WIN32
             timestamp m_CpuFrequency;
-#endif
+            #endif
         public:
 
             HighResolutionTimer();
             ~HighResolutionTimer();
 
-#ifdef _WIN32
+            #ifdef _WIN32
             static HighResolutionTimer& getInstance();
             static inline uint32_t getFrequency();
-#endif
+            #endif
             // Return the current time (Real-time / Thread-time ...)
-#ifdef _WIN32
+            #ifdef _WIN32
             static timestamp now();
-#else
+            #else
             static timestamp now(clockid_t whichtime = CLOCK_REALTIME);
-#endif
+            #endif
 
             // Convert time <--> double
             static double time2double(const timestamp& time);
@@ -89,10 +92,10 @@ namespace karabo {
             static std::string fractionsOfSecond(uint32_t nanosecs, int precision);
         };
 
-        DECLSPEC_UTIL bool operator!=(const timestamp& left, const timestamp& right);
-        DECLSPEC_UTIL bool operator==(const timestamp& left, const timestamp& right);
-        DECLSPEC_UTIL timestamp operator+(const timestamp& left, const timestamp& right);
-        DECLSPEC_UTIL timestamp operator-(const timestamp& left, const timestamp& right);
+        KARABO_DECLSPEC bool operator!=(const timestamp& left, const timestamp& right);
+        KARABO_DECLSPEC bool operator==(const timestamp& left, const timestamp& right);
+        KARABO_DECLSPEC timestamp operator+(const timestamp& left, const timestamp& right);
+        KARABO_DECLSPEC timestamp operator-(const timestamp& left, const timestamp& right);
     }
 }
 

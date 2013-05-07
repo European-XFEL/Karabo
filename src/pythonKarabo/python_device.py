@@ -72,10 +72,7 @@ class PythonDevice(object):
         
         self._injectedExpectedParameters = Schema()
         self._incomingValidatedReconfiguration = Hash()
-
-        # Define an event that has to be used on exception
-        KARABO_FSM_ON_EXCEPTION(self, 'onException')
-                
+        
         try:
             # classId
             self._classId = cls.__name__
@@ -105,8 +102,8 @@ class PythonDevice(object):
             self._initialParameters = self._expectedInitialParameters.validate(tmp, True, False, True).get(self._classId)
             self._reconfigurableParameters = self._expectedReconfigurableParameters.validate(tmp, True, False, True).get(self._classId)
             self._monitoredParameters = self._expectedMonitoredParameters.validate(tmp, True, False, True).get(self._classId)
-            print "\nInitialize Device SignalSlotable object via create factory function...\n"
-            self._ss = SignalSlotable.create(self._devInstId)
+            print "\nInitialize Device SignalSlotable object...\n"
+            self._ss = SignalSlotable(self._devInstId)
             print "\nInitialize Device Logging...\n"
             currentConfig = self.getCurrentConfiguration()
             connectionConfig = currentConfig.getFromPath(self._classId + ".connection")
@@ -199,7 +196,7 @@ class PythonDevice(object):
         
     def remote(self):
         if self._client is None:
-            self._client = DeviceClient(self._ss)  # connectionType="Jms" config=Hash()
+            self._client = DeviceClient()  # connectionType="Jms" config=Hash()
         return self._client
     
     def postprocessing(self):
@@ -373,14 +370,11 @@ class PythonDevice(object):
         ret = Hash(self._classId, config)
         return ret
     
-    def getAvailableInstances(self):
-        return self._ss.getAvailableInstances()
-    
     def reconfigure(self, instanceId, configuration):
         self._ss.call(instanceId, "slotReconfigure", configuration)
     
     def errorFoundAction(self, shortMessage, detailedMessage):
-        print "*** ERROR Found ...\n\tDescription: {}\n\tDetails    : {}".format(shortMessage, detailedMessage)
+        self.triggerErrorFound(shortMessage, detailedMessage)
     
     def updateCurrentState(self, state):
         self.set("state", state)
@@ -389,13 +383,7 @@ class PythonDevice(object):
     def processEvent(self, event):
         if self.fsm is not None:
             self.updateCurrentState("Changing...")
-            try:
-                self.fsm.process_event(event)
-            except Exception,e:
-                m1 = "Exception while processing \"{}\" event".format(event.__class__.__name__)
-                m2 = str(e)
-                self.triggerErrorFound(m1, m2)
-                KARABO_FSM_ON_ERROR.onError(m1, m2)
+            self.fsm.process_event(event)
             self.updateCurrentState(self.fsm.get_state())
     
     def startStateMachine(self):
@@ -403,9 +391,7 @@ class PythonDevice(object):
         if self.fsm is not None:
             self.fsm.start()
             self.updateCurrentState(self.fsm.get_state())
-     
-    def onException(self, m1, m2): print "*** WARN **** 'onException(self, m1, m2) method is not implemented in subclass"
-    
+        
     def slotKillDeviceInstance(self):
         self.log.INFO("Device is going down...")
         self.onKill()
@@ -529,16 +515,7 @@ class PythonDevice(object):
             self._ss.reply(self._getStateDependentSchema(currentState))
         else:
             self._ss.reply(self._allExpectedParameters)
-
-    def registerSlot(self, slotString):
-        self._ss.registerSlot(getattr(self, slotString), self);
-        
-    def registerSignal(self, signalString):
-        self._ss.registerSignal(signalString)
-        
-    def connect(self, localId, signalString, remoteId, slotString, type, flag):
-        self._ss.connect(localId, signalString, remoteId, slotString, type, flag)
-        
+   
     def getCurrentDateTime(self):
         dt = datetime.datetime(1,1,1).today()
         return dt.isoformat(' ')

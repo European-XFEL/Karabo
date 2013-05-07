@@ -1,0 +1,225 @@
+<?xml version="1.0"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:a="http://www.karabo.eu">
+  <xs:element name="TestSchema">
+    <xs:complexType>
+      <xs:all>
+        <xs:element name="exampleKey1" default="Navigation" minOccurs="0" maxOccurs="1">
+          <xs:annotation>
+            <xs:documentation>
+              <a:description>Example key 1 description</a:description>
+              <a:displayedName>Example key 1</a:displayedName>
+              <a:expertLevel>2</a:expertLevel>
+              <a:default>Navigation</a:default>
+              <a:accessType>1</a:accessType>
+              <a:tags>hardware,poll</a:tags>
+            </xs:documentation>
+          </xs:annotation>
+          <xs:simpleType>
+            <xs:restriction base="xs:string">
+              <xs:enumeration value="Radio" />
+              <xs:enumeration value="Air Condition" />
+              <xs:enumeration value="Navigation" />
+            </xs:restriction>
+          </xs:simpleType>
+        </xs:element>
+        <xs:element name="MyNodeElement">
+          <xs:annotation>
+            <xs:documentation>
+              <a:description>Description of my node elem</a:description>
+              <a:displayedName>MyNodeElem</a:displayedName>
+              <a:accessType>7</a:accessType>
+              <a:tags>myNode</a:tags>
+            </xs:documentation>
+          </xs:annotation>
+          <xs:complexType>
+            <xs:all>
+              <xs:element name="a" type="xs:double" minOccurs="1" maxOccurs="1">
+                <xs:annotation>
+                  <xs:documentation>
+                    <a:description>Description of my node elem A</a:description>
+                    <a:displayedName>MyNodeElem_A</a:displayedName>
+                    <a:accessType>1</a:accessType>
+                    <a:tags>myNode</a:tags>
+                  </xs:documentation>
+                </xs:annotation>
+              </xs:element>
+              <xs:element name="b" type="xs:string" minOccurs="1" maxOccurs="1">
+                <xs:annotation>
+                  <xs:documentation>
+                    <a:description>Description of my node elem B</a:description>
+                    <a:displayedName>MyNodeElem_B</a:displayedName>
+                    <a:accessType>1</a:accessType>
+                    <a:tags>myNode</a:tags>
+                  </xs:documentation>
+                </xs:annotation>
+              </xs:element>
+            </xs:all>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="exampleKey5" type="xs:long" default="1442244" minOccurs="0" maxOccurs="1">
+          <xs:annotation>
+            <xs:documentation>
+              <a:description>Example key 5 description</a:description>
+              <a:displayedName>Example key 5</a:displayedName>
+              <a:alias>exampleAlias5</a:alias>
+              <a:default>1442244</a:default>
+              <a:accessType>2</a:accessType>
+              <a:tags>h/w,d.m.y</a:tags>
+            </xs:documentation>
+          </xs:annotation>
+        </xs:element>
+        <xs:element name="shapes" minOccurs="0" maxOccurs="1">
+          <xs:annotation>
+            <xs:documentation>
+              <a:description>Description of Choice-element shapes</a:description>
+              <a:displayedName>shapesAsChoice</a:displayedName>
+              <a:default>circle</a:default>
+              <a:accessType>7</a:accessType>
+            </xs:documentation>
+          </xs:annotation>
+          <xs:complexType>
+            <xs:choice>
+              <xs:element name="circle">
+                <xs:annotation>
+                  <xs:documentation>
+                    <a:description>Description of circle</a:description>
+                    <a:displayedName>Circle</a:displayedName>
+                    <a:accessType>7</a:accessType>
+                    <a:tags>shape</a:tags>
+                  </xs:documentation>
+                </xs:annotation>
+                <xs:complexType>
+                  <xs:all>
+                    <xs:element name="radius" default="5" minOccurs="0" maxOccurs="1">
+                      <xs:annotation>
+                        <xs:documentation>
+                          <a:description>Radius of circle</a:description>
+                          <a:displayedName>radius</a:displayedName>
+                          <a:default>5</a:default>
+                          <a:accessType>1</a:accessType>
+                          <a:tags>shape</a:tags>
+                        </xs:documentation>
+                      </xs:annotation>
+                      <xs:simpleType>
+                        <xs:restriction base="xs:int">
+                          <xs:minInclusive value="5" />
+                          <xs:maxExclusive value="10" />
+                        </xs:restriction>
+                      </xs:simpleType>
+                    </xs:element>
+                    <xs:element name="color" default="5" minOccurs="0" maxOccurs="1">
+                      <xs:annotation>
+                        <xs:documentation>
+                          <a:description>Color of circle</a:description>
+                          <a:displayedName>color</a:displayedName>
+                          <a:default>5</a:default>
+                          <a:accessType>1</a:accessType>
+                          <a:tags>shape</a:tags>
+                        </xs:documentation>
+                      </xs:annotation>
+                      <xs:simpleType>
+                        <xs:restriction base="xs:int">
+                          <xs:minExclusive value="2" />
+                          <xs:maxInclusive value="20" />
+                        </xs:restriction>
+                      </xs:simpleType>
+                    </xs:element>
+                    <xs:element name="newnode">
+                      <xs:annotation>
+                        <xs:documentation>
+                          <a:description>Description of NEW NODE of circle</a:description>
+                          <a:displayedName>NewNodeOfCircle</a:displayedName>
+                          <a:accessType>7</a:accessType>
+                          <a:tags>shape</a:tags>
+                        </xs:documentation>
+                      </xs:annotation>
+                      <xs:complexType>
+                        <xs:all>
+                          <xs:element name="mynewint" type="xs:int" default="555" minOccurs="0" maxOccurs="1">
+                            <xs:annotation>
+                              <xs:documentation>
+                                <a:description>Descr of shapes circle newnode MyNewInt</a:description>
+                                <a:displayedName>MyNewInt</a:displayedName>
+                                <a:default>555</a:default>
+                                <a:accessType>1</a:accessType>
+                                <a:tags>shape</a:tags>
+                              </xs:documentation>
+                            </xs:annotation>
+                          </xs:element>
+                        </xs:all>
+                      </xs:complexType>
+                    </xs:element>
+                  </xs:all>
+                </xs:complexType>
+              </xs:element>
+              <xs:element name="rectangle">
+                <xs:annotation>
+                  <xs:documentation>
+                    <a:description>Description of rectangle</a:description>
+                    <a:displayedName>rectangle</a:displayedName>
+                    <a:accessType>7</a:accessType>
+                    <a:tags>shape</a:tags>
+                  </xs:documentation>
+                </xs:annotation>
+                <xs:complexType>
+                  <xs:all>
+                    <xs:element name="square" type="xs:double" minOccurs="0" maxOccurs="1">
+                      <xs:annotation>
+                        <xs:documentation>
+                          <a:description>Description of square of rectangle</a:description>
+                          <a:displayedName>square</a:displayedName>
+                          <a:accessType>1</a:accessType>
+                          <a:tags>shape</a:tags>
+                        </xs:documentation>
+                      </xs:annotation>
+                    </xs:element>
+                  </xs:all>
+                </xs:complexType>
+              </xs:element>
+            </xs:choice>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="strVector" type="xs:string" default="first line,second line" minOccurs="0" maxOccurs="1">
+          <xs:annotation>
+            <xs:documentation>
+              <a:displayedName>myVectorString</a:displayedName>
+              <a:default>first line,second line</a:default>
+              <a:accessType>1</a:accessType>
+              <a:displayType>VECTOR_STRING</a:displayType>
+            </xs:documentation>
+          </xs:annotation>
+        </xs:element>
+        <xs:element name="intVector" type="xs:string" default="5,15" minOccurs="0" maxOccurs="1">
+          <xs:annotation>
+            <xs:documentation>
+              <a:displayedName>MyVectorInt</a:displayedName>
+              <a:default>5,15</a:default>
+              <a:accessType>1</a:accessType>
+              <a:displayType>VECTOR_INT32</a:displayType>
+              <a:minSize>2</a:minSize>
+              <a:maxSize>5</a:maxSize>
+            </xs:documentation>
+          </xs:annotation>
+        </xs:element>
+        <xs:element name="SimpleElem" type="xs:int" default="0" minOccurs="0" maxOccurs="1">
+          <xs:annotation>
+            <xs:documentation>
+              <a:description>Description of SimpleElem</a:description>
+              <a:displayedName>SimpleElem</a:displayedName>
+              <a:default>0</a:default>
+              <a:accessType>2</a:accessType>
+              <a:unitName>meter</a:unitName>
+              <a:unitSymbol>m</a:unitSymbol>
+              <a:metricPrefixName>milli</a:metricPrefixName>
+              <a:metricPrefixSymbol>m</a:metricPrefixSymbol>
+              <a:warnLow>0</a:warnLow>
+              <a:warnHigh>1</a:warnHigh>
+              <a:alarmLow>2</a:alarmLow>
+              <a:alarmHigh>7</a:alarmHigh>
+            </xs:documentation>
+          </xs:annotation>
+        </xs:element>
+      </xs:all>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>

@@ -9,6 +9,6 @@
 
 namespace karabo {
     namespace net {
-        KARABO_REGISTER_FACTORY_CC(AbstractIOService, AsioIOService)
+        KARABO_REGISTER_IN_FACTORY(AbstractIOService, AsioIOService)
     }
 }

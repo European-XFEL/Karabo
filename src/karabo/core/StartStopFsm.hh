@@ -9,31 +9,50 @@
  */
 
 
-#ifndef KARABO_CORE_STARTSTOPFSM_HH
-#define	KARABO_CORE_STARTSTOPFSM_HH
+#ifndef KARABO_CORE_START_STOP_FSM_HH
+#define	KARABO_CORE_START_STOP_FSM_HH
 
 #include "Device.hh"
 
 namespace karabo {
     namespace core {
 
-        class StartStopFsm : public karabo::core::Device {
+        class StartStopFsm : public BaseFsm {
+
         public:
 
-            KARABO_CLASSINFO(StartStopFsm, "StartStopFsm", "1.0")
+            KARABO_CLASSINFO(StartStopFsm, "StartStopFsm", "0.1")
 
-            template <class Derived>
-            StartStopFsm(Derived* derived) : Device(derived) {
+
+            static void expectedParameters(karabo::util::Schema& expected) {
+                using namespace karabo::xms;
+
+                SLOT_ELEMENT(expected).key("start")
+                        .displayedName("Start")
+                        .description("Instructs device to go to started state")
+                        .allowedStates("Ok.Stopped")
+                        .commit();
+
+                SLOT_ELEMENT(expected).key("stop")
+                        .displayedName("Stop")
+                        .description("Instructs device to go to stopped state")
+                        .allowedStates("Ok.Started")
+                        .commit();
+
+
+                SLOT_ELEMENT(expected).key("reset")
+                        .displayedName("Reset")
+                        .description("Resets the device in case of an error")
+                        .allowedStates("Error")
+                        .commit();
+
             }
 
-            virtual ~StartStopFsm() {
+            void initFsmSlots() {
+                SLOT0(start);
+                SLOT0(stop);
+                SLOT0(reset);
             }
-
-            static void expectedParameters(karabo::util::Schema& expected);
-
-            void configure(const karabo::util::Hash& input);
-            
-            virtual void run();
 
         public:
 
@@ -41,48 +60,50 @@ namespace karabo {
             /*                        Events                              */
             /**************************************************************/
 
-            // Standard events
+            KARABO_FSM_EVENT2(m_fsm, ErrorFoundEvent, errorFound, std::string, std::string)
 
-            KARABO_FSM_EVENT2(m_fsm, ErrorFoundEvent, onException, std::string, std::string)
+            KARABO_FSM_EVENT0(m_fsm, ResetEvent, reset)
 
-            KARABO_FSM_EVENT0(m_fsm, EndErrorEvent, slotEndError)
+            KARABO_FSM_EVENT0(m_fsm, StartEvent, start)
 
-            KARABO_FSM_EVENT0(m_fsm, StartEvent, slotStart)
-
-            KARABO_FSM_EVENT0(m_fsm, StopEvent, slotStop)
+            KARABO_FSM_EVENT0(m_fsm, StopEvent, stop)
 
             /**************************************************************/
             /*                        States                              */
             /**************************************************************/
 
-            KARABO_FSM_STATE_V_EE(ErrorState, errorStateOnEntry, errorStateOnExit)
-            
-            KARABO_FSM_STATE_V_EE(InitializationState, initializationStateOnEntry, initializationStateOnExit)
+            KARABO_FSM_STATE_VE_EE(Error, errorStateOnEntry, errorStateOnExit)
 
-            KARABO_FSM_STATE_V_EE(StartedState, startedStateOnEntry, startedStateOnExit)
+            KARABO_FSM_STATE_VE_EE(Initialization, initializationStateOnEntry, initializationStateOnExit)
 
-            KARABO_FSM_STATE_V_EE(StoppedState, stoppedStateOnEntry, stoppedStateOnExit)
+            KARABO_FSM_STATE_VE_EE(Started, startedStateOnEntry, startedStateOnExit)
+
+            KARABO_FSM_STATE_VE_EE(Stopped, stoppedStateOnEntry, stoppedStateOnExit)
 
             /**************************************************************/
             /*                    Transition Actions                      */
             /**************************************************************/
 
-            KARABO_FSM_V_ACTION0(StartAction, startAction)
+            KARABO_FSM_VE_ACTION2(ErrorFoundAction, errorFoundAction, std::string, std::string);
 
-            KARABO_FSM_V_ACTION0(StopAction, stopAction)
+            KARABO_FSM_VE_ACTION0(ResetAction, resetAction);
+
+            KARABO_FSM_VE_ACTION0(StartAction, startAction)
+
+            KARABO_FSM_VE_ACTION0(StopAction, stopAction)
 
             /**************************************************************/
             /*                      AllOkState Machine                    */
             /**************************************************************/
 
-            KARABO_FSM_TABLE_BEGIN(AllOkStateTransitionTable)
+            KARABO_FSM_TABLE_BEGIN(OkStateTransitionTable)
             //  Source-State      Event    Target-State    Action     Guard
-            Row< StoppedState, StartEvent, StartedState, StartAction, none >,
-            Row< StartedState, StopEvent, StoppedState, StopAction, none >
+            Row< Stopped, StartEvent, Started, StartAction, none >,
+            Row< Started, StopEvent, Stopped, StopAction, none >
             KARABO_FSM_TABLE_END
 
             //                       Name      Transition-Table           Initial-State  Context
-            KARABO_FSM_STATE_MACHINE(AllOkState, AllOkStateTransitionTable, StoppedState, Self)
+            KARABO_FSM_STATE_MACHINE(Ok, OkStateTransitionTable, Stopped, Self)
 
             /**************************************************************/
             /*                      Top Machine                         */
@@ -90,33 +111,23 @@ namespace karabo {
 
             //  Source-State    Event        Target-State    Action         Guard
             KARABO_FSM_TABLE_BEGIN(StartStopMachineTransitionTable)
-            Row< InitializationState, none, AllOkState, none, none >,
-            Row< AllOkState, ErrorFoundEvent, ErrorState, ErrorFoundAction, none >,
-            Row< ErrorState, EndErrorEvent, AllOkState, none, none >
+            Row< Initialization, none, Ok, none, none >,
+            Row< Ok, ErrorFoundEvent, Error, ErrorFoundAction, none >,
+            Row< Error, ResetEvent, Ok, none, none >
             KARABO_FSM_TABLE_END
 
 
             //                                 Name                   Transition-Table       Initial-State Context
-            KARABO_FSM_STATE_MACHINE(StartStopMachine, StartStopMachineTransitionTable, InitializationState, Self)
+            KARABO_FSM_STATE_MACHINE(StartStopMachine, StartStopMachineTransitionTable, Initialization, Self)
 
-
-            void startStateMachine() {
+            void startFsm() {
 
                 KARABO_FSM_CREATE_MACHINE(StartStopMachine, m_fsm);
                 KARABO_FSM_SET_CONTEXT_TOP(this, m_fsm)
-                KARABO_FSM_SET_CONTEXT_SUB(this, m_fsm, AllOkState)
+                KARABO_FSM_SET_CONTEXT_SUB(this, m_fsm, Ok)
                 KARABO_FSM_START_MACHINE(m_fsm)
             }
 
-
-            // Override this function if you need to handle the reconfigured data (e.g. send to a hardware)
-            virtual void onReconfigure(karabo::util::Hash& incomingReconfiguration) {
-            }
-
-
-        private: // functions
-
-            
         private: // members
 
             KARABO_FSM_DECLARE_MACHINE(StartStopMachine, m_fsm);

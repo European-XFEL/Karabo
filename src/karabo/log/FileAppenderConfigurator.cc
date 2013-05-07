@@ -13,6 +13,8 @@
 #include "log4cpp/FileAppender.hh"
 #include "log4cpp/Priority.hh"
 #include <karabo/util/Hash.hh>
+#include <karabo/util/PathElement.hh>
+#include <karabo/util/SimpleElement.hh>
 #include <string>
 #include <iostream>
 
@@ -21,80 +23,81 @@ using namespace log4cpp;
 
 
 namespace karabo {
-  namespace log {
+    namespace log {
 
-    FileAppenderConfigurator::FileAppenderConfigurator() {
+
+        KARABO_REGISTER_FOR_CONFIGURATION(AppenderConfigurator, FileAppenderConfigurator)
+
+
+        void FileAppenderConfigurator::expectedParameters(Schema& expected) {
+
+
+            PATH_ELEMENT(expected)
+                    .description("File name")
+                    .key("filename")
+                    .displayedName("Filename")
+                    .isOutputFile()
+                    .assignmentOptional().defaultValue("karabo.log")
+                    .commit();
+
+
+            BOOL_ELEMENT(expected)
+                    .description("Append mode")
+                    .key("append")
+                    .displayedName("Append")
+                    .assignmentOptional().defaultValue(true)
+                    .commit();
+
+
+            UINT32_ELEMENT(expected)
+                    .description("Access mode")
+                    .key("mode")
+                    .displayedName("AccessMode")
+                    .assignmentOptional().defaultValue((unsigned int) 00644)
+                    .commit();
+
+        }
+
+
+        FileAppenderConfigurator::FileAppenderConfigurator(const Hash& input) : AppenderConfigurator(input) {
+            configureFilename(input);
+            configureAppendMode(input);
+            configureAccessMode(input);
+        }
+
+
+        void FileAppenderConfigurator::configureFilename(const karabo::util::Hash& input) {
+            m_fileName = input.get<string> ("filename");
+        }
+
+
+        void FileAppenderConfigurator::configureAppendMode(const karabo::util::Hash& input) {
+            m_append = input.get<bool>("append");
+        }
+
+
+        void FileAppenderConfigurator::configureAccessMode(const karabo::util::Hash& input) {
+            m_accessMode = input.getAs<mode_t > ("mode");
+        }
+
+
+        log4cpp::Appender* FileAppenderConfigurator::create() {
+            return new log4cpp::FileAppender(getName(), getFilename().string(), isAppendMode(), getAccessMode());
+        }
+
+
+        const boost::filesystem::path& FileAppenderConfigurator::getFilename() const {
+            return m_fileName;
+        }
+
+
+        bool FileAppenderConfigurator::isAppendMode() const {
+            return m_append;
+        }
+
+
+        mode_t FileAppenderConfigurator::getAccessMode() const {
+            return m_accessMode;
+        }
     }
-
-    FileAppenderConfigurator::~FileAppenderConfigurator() {
-    }
-
-    log4cpp::Appender* FileAppenderConfigurator::create() {
-      return new log4cpp::FileAppender(getName(), getFilename().string(), isAppendMode(), getAccessMode());
-    }
-
-    void FileAppenderConfigurator::expectedParameters(Schema& expected) {
-
-
-      PATH_ELEMENT(expected)
-              .description("File name")
-              .key("filename")
-              .displayedName("Filename")
-              .assignmentOptional()
-              .defaultValue(boost::filesystem::path("application.log"))
-              .commit();
-
-
-      BOOL_ELEMENT(expected)
-              .description("Append mode")
-              .key("append")
-              .displayedName("Append")
-              .assignmentOptional().defaultValue(true)
-              .commit();
-
-
-      UINT32_ELEMENT(expected)
-              .description("Access mode")
-              .key("mode")
-              .displayedName("AccessMode")
-              .assignmentOptional().defaultValue((unsigned int) 00644)
-              .commit();
-
-    }
-
-    void FileAppenderConfigurator::configure(const Hash& input) {
-      configureFilename(input);
-      configureAppendMode(input);
-      configureAccessMode(input);
-    }
-
-    void FileAppenderConfigurator::configureFilename(const karabo::util::Hash& input) {
-      m_fileName = input.get<boost::filesystem::path > ("filename");
-    }
-
-    void FileAppenderConfigurator::configureAppendMode(const karabo::util::Hash& input) {
-      m_append = input.get<bool>("append");
-    }
-
-    void FileAppenderConfigurator::configureAccessMode(const karabo::util::Hash& input) {
-      m_accessMode = input.getNumeric<mode_t > ("mode");
-    }
-
-    const boost::filesystem::path& FileAppenderConfigurator::getFilename() const {
-      return m_fileName;
-    }
-
-    bool FileAppenderConfigurator::isAppendMode() const {
-      return m_append;
-    }
-
-    mode_t FileAppenderConfigurator::getAccessMode() const {
-      return m_accessMode;
-    }
-
-    KARABO_REGISTER_FACTORY_CC(AppenderConfigurator, FileAppenderConfigurator)
-
-
-
-  }
 }

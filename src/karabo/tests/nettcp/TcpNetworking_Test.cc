@@ -14,153 +14,260 @@ using namespace karabo::net;
 
 CPPUNIT_TEST_SUITE_REGISTRATION(TcpNetworking_Test);
 
-
 TcpNetworking_Test::TcpNetworking_Test() {
 }
-
 
 TcpNetworking_Test::~TcpNetworking_Test() {
 }
 
-
 void TcpNetworking_Test::setUp() {
 }
-
 
 void TcpNetworking_Test::tearDown() {
 }
 
+//////////////  TcpServer implementation  /////////////////////////
 
 namespace karabo {
-    namespace tcpclientserver {
+    namespace net {
 
+        void TcpServer::run() {
+            // this factory crates connection and, silently, IOService object ...
+            m_connection = Connection::create(Hash(
+                    "Tcp.port", 22222,
+                    "Tcp.type", "server",
+                    "Tcp.sizeofLength", 2,
+                    "Tcp.hashSerialization.Xml.printDataType", true)); // create a connection
+            m_connection->startAsync(boost::bind(&TcpServer::connectHandler, this, _1)); // ... and start it (connect!) asynchronously
 
-        TcpClientServer::TcpClientServer(const string& rhost, unsigned short rport, unsigned short lport) :
-        m_remoteCount(0), m_localCount(0), m_remoteHost(rhost), m_remotePort(rport), m_localPort(lport) {
+            // Usually, we might write here simply ...
+            // m_connection->getIOService()->run();  // block here
+            // However, start io_service::run method in other thread, just for FUN!
+            // All the handlers will be called in that thread ...
+            boost::thread ioThread(boost::bind(&IOService::run, m_connection->getIOService()));
+
+            ioThread.join(); // block here
+
         }
 
+        void TcpServer::connectHandler(Channel::Pointer channel) {
+            channel->setErrorHandler(boost::bind(&TcpServer::errorHandler, this, _1, _2));
+            channel->readAsyncVectorHash(boost::bind(&TcpServer::readVectorHashHandler, this, _1, _2, _3));
 
-        TcpClientServer::~TcpClientServer() {
         }
 
-
-        void TcpClientServer::run() {
-            IOService::Pointer io(new IOService);
-            Hash sconf("Tcp.port", m_localPort, "Tcp.type", "server", "Tcp.IOService", io);
-            sconf.setFromPath("Tcp.sizeofLength", 4);
-            sconf.setFromPath("Tcp.messageTagIsText", false);
-            m_serverConnection = Connection::create(sconf);
-            m_serverConnection->startAsync(boost::bind(&TcpClientServer::serverConnectHandler, this, _1));
-            Hash cconf("Tcp.port", m_remotePort, "Tcp.hostname", m_remoteHost, "Tcp.IOService", io);
-            cconf.setFromPath("Tcp.sizeofLength", 4);
-            cconf.setFromPath("Tcp.messageTagIsText", false);
-            m_clientConnection = Connection::create(cconf);
-            m_clientConnection->setErrorHandler(boost::bind(&TcpClientServer::clientConnectionErrorHandler, this, _1, _2));
-            m_clientConnection->startAsync(boost::bind(&TcpClientServer::clientConnectHandler, this, _1));
-            io->run();
-        }
-
-
-        void TcpClientServer::serverConnectHandler(Channel::Pointer channel) {
-            channel->setErrorHandler(boost::bind(&TcpClientServer::serverErrorHandler, this, _1, _2));
-            channel->readAsyncHash(boost::bind(&TcpClientServer::serverReadHashHandler, this, _1, _2));
-        }
-
-
-        void TcpClientServer::clientConnectHandler(Channel::Pointer channel) {
-            channel->setErrorHandler(boost::bind(&TcpClientServer::clientErrorHandler, this, _1, _2));
-            Hash data("a.b", "?", "a.c", 42.22f, "a.d", 12);
-            channel->writeAsyncHash(data, boost::bind(&TcpClientServer::clientWriteCompleteHandler, this, _1));
-        }
-
-
-        void TcpClientServer::clientConnectionErrorHandler(karabo::net::Channel::Pointer channel, const std::string& errmsg) {
-            //cout << "CLIENT_ERROR: Failed to connect to remote server. Sleep and try again\n";
-            boost::this_thread::sleep(boost::posix_time::milliseconds(2000));
-            channel->close();
-            m_clientConnection->startAsync(boost::bind(&TcpClientServer::clientConnectHandler, this, _1));
-        }
-
-
-        void TcpClientServer::serverErrorHandler(Channel::Pointer channel, const string& errmsg) {
-            CPPUNIT_ASSERT(errmsg == "End of file and transferred 0 bytes.");
-            channel->close();
-        }
-
-
-        void TcpClientServer::clientErrorHandler(Channel::Pointer channel, const string& errmsg) {
-            channel->close();
-            CPPUNIT_FAIL(errmsg);
-        }
-
-
-        void TcpClientServer::serverReadHashHandler(Channel::Pointer channel, const Hash& hash) {
-            m_localCount++;
-            //cout << "SERVER_INFO: count " << m_localCount << "\n" << hash << "-----------------\n";
-            CPPUNIT_ASSERT(hash.hasFromPath("a.d") == true);
-            CPPUNIT_ASSERT(hash.isFromPath("a.c", Types::FLOAT) == true);
-            CPPUNIT_ASSERT(hash.isFromPath<float>("a.c") == true);
-            string john = hash.getFromPath<string>("a.b");
-            CPPUNIT_ASSERT(john == "John Doe" || john == "?");
-            //cout << "SERVER_INFO: hash.getFromPath<string>(\"a.b\") = '" << john << "'" << endl;
-            Hash data(hash);
-            if (data.empty())
-                data.setFromPath("a.e", "server data");
-            else {
-                if (data.has("a") && data.getFromPath<string > ("a.b") == "?")
-                    data.setFromPath("a.b", "server reply");
-                else
-                    data.setFromPath("a.b", "counter " + String::toString(m_localCount));
+        void TcpServer::readVectorHashHandler(Channel::Pointer channel, const vector<char>& data, const Hash& hdr) {
+            string s(data.begin(), data.end());                     
+            // put business logic of data processing here : do something with read data :)
+            // ...
+            
+            //CppUnit TEST: check content of 's':
+            if (m_count == 0) {
+                string etalon(80, '5');
+                CPPUNIT_ASSERT(s.compare(etalon) == 0);
+                CPPUNIT_ASSERT(hdr.getFromPath<string>("Crate2.Module3.Administrator") == "QuestionMark");
+            } else { 
+                string etalon(50, '7');
+                CPPUNIT_ASSERT(s.compare(etalon) == 0);
             }
-            channel->writeAsyncHash(data, boost::bind(&TcpClientServer::serverWriteCompleteHandler, this, _1));
+                        
+            // Prepare the answer to the client
+            m_count++;
+
+            // fill header
+            m_hash.clear();
+
+            if (!hdr.empty()) {
+                m_hash.append(hdr);
+                if (m_hash.has("Crate2") && m_hash.getFromPath<string > ("Crate2.Module3.Administrator") == "QuestionMark")
+                    m_hash.setFromPath("Crate2.Module3.Administrator", "C.Youngman");
+            } else
+                m_hash.setFromPath("Crate2.Module3.TechDirector", "APPROVED!");
+
+            // fill data
+            m_data.clear();
+            m_data.assign(60, '9');
+
+
+            //*************************************************************************************
+            // NOTE: this 'write' is asynchronous operation and the user should care about 
+            // live time of the data, but string and Hash data are copied internally (not a vector)
+            // so we do nothing here
+            //*************************************************************************************
+            channel->writeAsyncVectorHash(m_data, m_hash, boost::bind(&TcpServer::writeCompleteHandler, this, _1));
         }
 
-
-        void TcpClientServer::clientReadHashHandler(karabo::net::Channel::Pointer channel, const karabo::util::Hash& data) {
-            m_remoteCount++;
-            if (m_remoteCount > 5) {
-                channel->close();
-                CPPUNIT_ASSERT(m_remoteCount == 6);
-                return;
-            }
-            channel->waitAsync(200, boost::bind(&TcpClientServer::timerHandler, this, channel));
+        void TcpServer::writeCompleteHandler(Channel::Pointer channel) {
+            channel->readAsyncVectorHash(boost::bind(&TcpServer::readVectorHashHandler, this, _1, _2, _3));
         }
 
-
-        void TcpClientServer::serverWriteCompleteHandler(karabo::net::Channel::Pointer channel) {
-            channel->readAsyncHash(boost::bind(&TcpClientServer::serverReadHashHandler, this, _1, _2));
-        }
-
-
-        void TcpClientServer::clientWriteCompleteHandler(karabo::net::Channel::Pointer channel) {
-            channel->readAsyncHash(boost::bind(&TcpClientServer::clientReadHashHandler, this, _1, _2));
-        }
-
-
-        void TcpClientServer::timerHandler(karabo::net::Channel::Pointer channel) {
-            Hash data;
-            data.setFromPath("a.b", "John Doe");
-            data.setFromPath("a.c", 1.0f * (static_cast<unsigned> (::rand()) % 1000));
-            data.setFromPath("a.d", static_cast<int> (::rand()) % 100);
-            vector<unsigned char> pixels;
-            data.setFromPath("a.v", pixels);
-            vector<unsigned char>& x = data.getFromPath<vector<unsigned char> >("a.v");
-            for (int i = 1; i <= 20; i++) x.push_back(static_cast<unsigned char> (i % 256));
-            channel->writeAsyncHash(data, boost::bind(&TcpClientServer::clientWriteCompleteHandler, this, _1));
+        void TcpServer::errorHandler(Channel::Pointer channel, const string & errmsg) {
+            channel->close();
         }
     }
 }
 
+//////////////////  TcpClient implementation  ///////////////////////////////
+
+namespace karabo {
+    namespace net {
+
+        void TcpClient::run() {
+            // create connection instance with given parameters
+            m_connection = Connection::create(Hash(
+                    "Tcp.hostname", "localhost",
+                    "Tcp.port", 22222,
+                    "Tcp.sizeofLength", 2,
+                    "Tcp.hashSerialization.Xml.printDataType", true));
+            IOService::Pointer io = m_connection->getIOService();
+            m_connection->startAsync(boost::bind(&TcpClient::connectHandler, this, _1));
+            boost::thread ioThread(boost::bind(&IOService::run, io));
+
+            ioThread.join(); // block here
+
+        }
+
+        void TcpClient::connectHandler(Channel::Pointer channel) {
+
+            try {
+                // register error handler
+                channel->setErrorHandler(boost::bind(&TcpClient::errorHandler, this, _1, _2));
+                // fill header
+                m_hash.clear();
+                m_hash.setFromPath("Crate2.Module3.Administrator", "QuestionMark");
+
+                // fill data
+                m_data.clear();
+                m_data.assign(80, '5');
+
+                // synchronous write
+                channel->write(m_data, m_hash);
+
+                // register read handler
+                channel->readAsyncStringHash(boost::bind(&TcpClient::readStringHashHandler, this, _1, _2, _3));
+
+            } catch (...) {
+                KARABO_RETHROW
+            }
+        }
+
+        void TcpClient::errorHandler(Channel::Pointer channel, const string & errmsg) {
+
+            channel->close(); // close connection
+            // sleep 5 seconds
+            boost::this_thread::sleep(boost::posix_time::milliseconds(5000));
+            m_connection->startAsync(boost::bind(&TcpClient::connectHandler, this, _1)); // repeat connection attempt
+
+        }
+
+        void TcpClient::readStringHashHandler(Channel::Pointer channel, const string& data, const Hash& hdr) {
+
+            //uncomment to see 'data' and 'header':
+            //cout<<"\n data: \n" << data << endl;
+            //cout << "hdr: \n" << hdr << endl;
+            
+            //CppUnit TEST: check content of 'data':
+            string etalon(60,'9');
+            CPPUNIT_ASSERT(data.compare(etalon) == 0);
+
+            //CppUnit TEST: check content of header:
+            if (m_count == 0) {
+                CPPUNIT_ASSERT(hdr.getFromPath<string>("Crate2.Module3.Administrator") == "C.Youngman");
+            } else {
+                CPPUNIT_ASSERT(hdr.getFromPath<string>("Crate2.Module3.Administrator") == "N.Coppola");
+                CPPUNIT_ASSERT(hdr.getFromPath<float>("Crate2.Module3.Channel0.Voltage") == 201.500000);
+                CPPUNIT_ASSERT(hdr.getFromPath<string>("Crate2.Module3.Location") == "Located AER19, room 2-21, rack 4");
+            }
+            
+            // check if we have to stop sending
+            if (m_count >= 5) {
+                channel->close();
+                return;
+            }
+            // wait a bit to be polite to the server :)
+            channel->waitAsync(100, boost::bind(&TcpClient::timerHandler, this, channel));
+        }
+
+        void TcpClient::timerHandler(Channel::Pointer channel) {
+            // send next message, increase counter
+            try {
+
+                // fill header
+                vector<short> v;
+                m_hash.clear();
+                m_hash.setFromPath("Crate2.Module3.Administrator", "N.Coppola");
+                m_hash.setFromPath("Crate2.Module3.Location", "Located AER19, room 2-21, rack 4");
+                m_hash.setFromPath("Crate2.Module3.Channel0.Voltage", 201.5f);
+                m_hash.setFromPath("Crate2.Module3.Channel0.RampUp", 20.3f);
+                m_hash.setFromPath("Crate2.Module3.Channel0.RampDown", 22.2f);
+                m_hash.setFromPath("Crate2.Module3.Channel1.Voltage", 15.0f);
+                m_hash.setFromPath("Crate2.Module3.Channel1.RampUp", 30.3f);
+                m_hash.setFromPath("Crate2.Module3.Channel1.RampDown", 30.3f);
+                m_hash.setFromPath("Crate2.Module3.Channel2.Voltage", 70.0f);
+                m_hash.setFromPath("Crate2.Module3.Channel2.RampUp", 10.0f);
+                m_hash.setFromPath("Crate2.Module3.Channel2.RampDown", 10.0f);
+                m_hash.setFromPath("Crate2.Module3.Image", v);
+                vector<short>& x = m_hash.getFromPath<vector<short> >("Crate2.Module3.Image");
+                x.push_back(12);
+                x.push_back(42);
+                x.push_back(77);
+                x.push_back(101);
+                x.push_back(-3);
+                x.push_back(-101);
+                x.push_back(0);
+                for (short i = 0; i < 10; i++) {
+                    x.push_back(i);
+                }
+
+                CPPUNIT_ASSERT(x.capacity() == 32);
+
+                string longMsg("This is a long message to check that vector of char, signed and unsigned char works properly!");
+                vector<unsigned char> longV(longMsg.begin(), longMsg.end());
+                m_hash.setFromPath("Crate2.Module3.CharImage", longV);
+
+                // fill data
+                m_data.clear();
+                m_data.assign(50, '7');
+
+                // write synchronously
+                channel->write(m_data, m_hash);
+                m_count++;
+
+                // register read handler
+                channel->readAsyncStringHash(boost::bind(&TcpClient::readStringHashHandler, this, _1, _2, _3));
+                
+            } catch (...) {
+                KARABO_RETHROW
+            }
+        }
+    }
+}
 
 void TcpNetworking_Test::testMethod() {
     try {
-        std::string host("localhost");
-        unsigned short rport = 11111;
-        unsigned short lport = 11111;
-        karabo::tcpclientserver::TcpClientServer cserv(host, rport, lport);
-        cserv.run();
+
+        // Create server object and run it in different thread
+        TcpServer server;
+        boost::thread serverThread(boost::bind(&TcpServer::run, &server));
+
+        // suspend main thread to give a chance for server thread really to start
+        boost::this_thread::sleep(boost::posix_time::milliseconds(100));
+
+        // create client object and run it in main thread
+        TcpClient client;
+        client.run();
+
+        // when client id done the main thread is waiting for server thread to join
+        serverThread.join();
+
     } catch (const Exception& e) {
-        RETHROW
+        cout << "Test produced an error:" << endl;
+        cout << e.userFriendlyMsg() << endl << endl;
+        cout << "Details:" << endl;
+        cout << e.detailedMsg();
+
+    } catch (...) {
+        KARABO_RETHROW
     }
 }
 

@@ -27,6 +27,7 @@ namespace karabo {
         std::map<void*, Exception::ExceptionHandler> Exception::m_exceptionHandlers;
         bool Exception::m_hasUnhandled = false;
 
+
         Exception::Exception(const string& message, const string& type, const string& filename, const string& function, int lineNumber) {
             m_exceptionInfo.message = message;
             m_exceptionInfo.type = type;
@@ -54,15 +55,18 @@ namespace karabo {
             m_exceptionInfo.timestamp = to_simple_string(ptime(microsec_clock::local_time()));
         }
 
+
         void Exception::addToTrace(const ExceptionInfo& value) {
             boost::mutex::scoped_lock lock(Exception::m_mutex);
             m_hasUnhandled = true;
             m_trace.push_back(value);
         }
 
+
         void Exception::addToTrace(const Exception& e) {
             addToTrace(e.m_exceptionInfo);
         }
+
 
         void Exception::clearTrace() {
             boost::mutex::scoped_lock lock(Exception::m_mutex);
@@ -70,14 +74,10 @@ namespace karabo {
             Exception::m_trace.clear();
         }
 
-//        void Exception::rethrow(const karabo::util::Exception& exception) {
-//            Exception::memorize();
-//            throw exception;
-//        }
 
         void Exception::memorize() {
 
-#define KARABO_EXCEPTION(CLASS) Exception::ExceptionInfo myException; \
+            #define KARABO_EXCEPTION(CLASS) Exception::ExceptionInfo myException; \
   myException.type = CLASS; \
   myException.message = string(e.what()); \
   myException.filename = ""; \
@@ -116,14 +116,6 @@ namespace karabo {
                 myException.function = "";
                 myException.lineNumber = "";
                 Exception::addToTrace(myException);
-                // TODO Discuss about source level external dependeny resolution
-                //      } catch (H5::Exception & e) {
-                //        Exception::exceptionInfo myException;
-                //        myException.type = "HDF5 Exception";
-                //        myException.message = e.getDetailMsg();
-                //        myException.filename = e.getFuncName();
-                //        myException.lineNumber = "";
-                //        Exception::_addToTrace(myException);
             } catch (...) { // ---- Forwarded exception is of unknown type ----
                 Exception::ExceptionInfo myException;
                 myException.type = "Unknown and unhandled exception";
@@ -135,23 +127,25 @@ namespace karabo {
             }
         }
 
-        void Exception::showTrace() {
+
+        void Exception::showTrace(ostream& os) {
             boost::mutex::scoped_lock lock(Exception::m_mutex);
             if (m_trace.empty()) return;
-            ostringstream os;
-            os << endl << " Exception with trace (listed from inner to outer):" << endl;
+            ostringstream oss;
+            oss << endl << " Exception with trace (listed from inner to outer):" << endl;
             for (unsigned int i = 0; i < Exception::m_trace.size(); ++i) {
                 string fill(i * 3, ' ');
-                os << fill << i + 1 << ". Exception " << string(5, '=') << ">  {" << endl;
-                format(os, Exception::m_trace[i], fill);
-                os << fill << "}" << endl << endl;
+                oss << fill << i + 1 << ". Exception " << string(5, '=') << ">  {" << endl;
+                format(oss, Exception::m_trace[i], fill);
+                oss << fill << "}" << endl << endl;
             }
-            cout << os.str();
+            os << oss.str();
         }
+
 
         ostream & operator<<(ostream& os, const Exception& exception) {
             if (Exception::m_trace.size() >= 1) {
-                Exception::showTrace();
+                Exception::showTrace(os);
             }
             string fill(Exception::m_trace.size()*3, ' ');
             os << fill << Exception::m_trace.size() + 1 << ". Exception " << string(5, '=') << ">  {" << endl;
@@ -162,18 +156,21 @@ namespace karabo {
             return os;
         }
 
+
         void Exception::format(ostream& os, const ExceptionInfo& exceptionInfo, const string& spacing) {
-            if (!exceptionInfo.type.empty()) os << spacing << "  Exception Type....:  " << exceptionInfo.type << endl;
-            if (!exceptionInfo.message.empty()) os << spacing << "  Message...........:  " << exceptionInfo.message << endl;
-            if (!exceptionInfo.filename.empty()) os << spacing << "  File..............:  " << exceptionInfo.filename << endl;
-            if (!exceptionInfo.function.empty()) os << spacing << "  Function..........:  " << exceptionInfo.function << endl;
-            if (!exceptionInfo.lineNumber.empty()) os << spacing << "  Line Number.......:  " << exceptionInfo.lineNumber << endl;
-            if (!exceptionInfo.timestamp.empty()) os << spacing << "  Timestamp.........:  " << exceptionInfo.timestamp << endl;
+            if (!exceptionInfo.type.empty()) os << spacing << "    Exception Type....:  " << exceptionInfo.type << endl;
+            if (!exceptionInfo.message.empty()) os << spacing << "    Message...........:  " << exceptionInfo.message << endl;
+            if (!exceptionInfo.filename.empty()) os << spacing << "    File..............:  " << exceptionInfo.filename << endl;
+            if (!exceptionInfo.function.empty()) os << spacing << "    Function..........:  " << exceptionInfo.function << endl;
+            if (!exceptionInfo.lineNumber.empty()) os << spacing << "    Line Number.......:  " << exceptionInfo.lineNumber << endl;
+            if (!exceptionInfo.timestamp.empty()) os << spacing << "    Timestamp.........:  " << exceptionInfo.timestamp << endl;
         }
 
-        void Exception::msg() const {
-            cout << *this;
+
+        void Exception::msg(std::ostream& os) const {
+            os << *this;
         }
+
 
         const char* Exception::what() const throw () {
             string& err = const_cast<string&> (m_exceptionText);
@@ -195,11 +192,13 @@ namespace karabo {
             return err.c_str();
         }
 
+
         string Exception::userFriendlyMsg() const {
             string err = "An error has occured: ";
             err += what();
             return err;
         }
+
 
         string Exception::detailedMsg() const {
             std::ostringstream os;

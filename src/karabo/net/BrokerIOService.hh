@@ -9,7 +9,7 @@
 #define	KARABO_NET_BROKERIOSERVICE_HH
 
 #include <boost/shared_ptr.hpp>
-#include <karabo/util/ClassInfo.hh>
+#include <karabo/util/Factory.hh>
 #include "AbstractIOService.hh"
 
 namespace karabo {
@@ -24,22 +24,37 @@ namespace karabo {
 
             friend class karabo::net::BrokerConnection;
 
-            typedef boost::shared_ptr<BrokerIOService> Pointer;
-
             virtual ~BrokerIOService() {
             }
-
+            
+            
+            /**
+             * Runs all registered handlers once.
+             * If the same handler should stay active it must be re-registered whilst running has not returned.
+             * Re-registration of a handler can for example be done in the handlers function body.
+             * New handlers can be registered whilst run() has not returned.
+             * The run() function will automatically return if no handlers are registered anymore.
+             */
             void run() {
                 if (m_service)
                     m_service->run();
             }
             
+            
+            /**
+             * Work will block until stop() is called.
+             * All handlers will automatically be re-registered!
+             * Registration of new handlers is always possible. 
+             */
             void work() {
               if (m_service) {
                 m_service->work();
               }
             }
             
+            /**
+             * Will stop work();
+             */
             void stop() {
               if(m_service) {
                 m_service->stop();
@@ -57,10 +72,10 @@ namespace karabo {
 
             void setService(const std::string& classId) {
                 if (!m_service)
-                    m_service = AbstractIOService::createDefault(classId);
+                    m_service = karabo::util::Factory<AbstractIOService>::create(classId);
                 else {
                     if (classId != m_service->getClassInfo().getClassId()) {
-                        throw LOGIC_EXCEPTION("Service was set to " + m_service->getClassInfo().getClassId() + " before. Cannot be used with " + classId + " now.");
+                        throw KARABO_LOGIC_EXCEPTION("Service was set to " + m_service->getClassInfo().getClassId() + " before. Cannot be used with " + classId + " now.");
                     } else {
                         //OK, another connection wants to use us
                     }

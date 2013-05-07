@@ -36,41 +36,48 @@ namespace karabo {
         using namespace std;
         using namespace boost;
 
+
         HighResolutionTimer::HighResolutionTimer() {
-#ifdef _WIN32
+            #ifdef _WIN32
             //Increasing the accuracy of Sleep to 1ms using timeBeginPeriod
             timeBeginPeriod(1); //Add Winmm.lib in Project
             QueryPerformanceFrequency((LARGE_INTEGER*) & m_CpuFrequency); //Determine the frequency
-#endif
+            #endif
         }
+
 
         HighResolutionTimer::~HighResolutionTimer() {
-#ifdef _WIN32
+            #ifdef _WIN32
             timeEndPeriod(1); //Must be called if timeBeginPeriod() was called
-#endif
+            #endif
         }
 
-#ifdef _WIN32
+        #ifdef _WIN32
+
 
         HighResolutionTimer& HighResolutionTimer::getInstance() {
             static HighResolutionTimer timer;
             return timer;
         }
 
+
         inline uint32_t HighResolutionTimer::getFrequency() {
             return HighResolutionTimer::getInstance().m_CpuFrequency.nsec;
         }
-#endif
+        #endif
 
         // A set of operators to manipulate timestamp
+
 
         bool operator!=(const timestamp& left, const timestamp& right) {
             return (left.sec != right.sec) || (left.nsec != right.nsec);
         }
 
+
         bool operator==(const timestamp& left, const timestamp& right) {
             return !(left != right);
         }
+
 
         timestamp operator+(const timestamp& left, const timestamp& right) {
             timestamp tmp(left);
@@ -82,6 +89,7 @@ namespace karabo {
         }
 
         // Calculates the difference between two instant
+
 
         timestamp operator-(const timestamp& left, const timestamp& right) {
 
@@ -98,7 +106,8 @@ namespace karabo {
         }
 
         // retrieve the current time
-#ifdef _WIN32
+        #ifdef _WIN32
+
 
         timestamp HighResolutionTimer::now() {
             static timestamp current_time;
@@ -113,7 +122,8 @@ namespace karabo {
             return current_time;
         }
 
-#elif __MACH__
+        #elif __MACH__
+
 
         timestamp HighResolutionTimer::now(clockid_t whichtime) {//    CLOCK_REALTIME,  CLOCK_PROCESS_CPUTIME_ID
             static timestamp current_time;
@@ -126,7 +136,8 @@ namespace karabo {
             current_time.sec = mts.tv_sec;
             return current_time;
         }
-#else
+        #else
+
 
         timestamp HighResolutionTimer::now(clockid_t whichtime) {//    CLOCK_REALTIME,  CLOCK_PROCESS_CPUTIME_ID
             static timestamp current_time;
@@ -140,13 +151,15 @@ namespace karabo {
 
             return current_time;
         }
-#endif
+        #endif
 
         // Convert time <--> double
+
 
         double HighResolutionTimer::time2double(const timestamp& time) {
             return double(time.sec) + double(time.nsec) * 1.0e-9L;
         }
+
 
         timestamp HighResolutionTimer::double2time(const double& time) {
             timestamp temp;
@@ -158,12 +171,14 @@ namespace karabo {
 
         // Convert time <--> timestamp
 
+
         uint64_t HighResolutionTimer::time2int(const timestamp& time) {
             //            uint64_t tmp = time.sec;
             //            tmp <<= 32;
             //            tmp += time.nsec;
             return time.epoch;
         }
+
 
         timestamp HighResolutionTimer::int2time(const uint64_t& time) {
             timestamp result;
@@ -173,6 +188,7 @@ namespace karabo {
         }
 
         // Convert time <--> string
+
 
         std::string HighResolutionTimer::time2string(timestamp time, int prec) {
             // strformat = %y %m %d %h %t %s %l %u %n
@@ -194,6 +210,7 @@ namespace karabo {
             return oss.str();
         }
 
+
         timestamp HighResolutionTimer::string2time(const std::string& time) {
             using namespace boost::posix_time;
 
@@ -214,6 +231,7 @@ namespace karabo {
         // format a timestamp into human readable string 
         // possible formatter are
         // %h: hours,  %m: minutes, %s: seconds, %l:milli-seconds, %u: micro-seconds, %n: nano-seconds
+
 
         std::string HighResolutionTimer::format(timestamp time, const char* strformat, int prec) {
             using namespace boost::posix_time;
@@ -266,6 +284,7 @@ namespace karabo {
         }
 
         // return only requested decimals
+
 
         std::string HighResolutionTimer::fractionsOfSecond(uint32_t nanosecs, int precision) {
             std::ostringstream oss;

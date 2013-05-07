@@ -29,6 +29,22 @@ namespace karabo {
         class SignalSlotable;
 
         class Slot {
+
+            std::string m_instanceIdOfSender;
+            std::string m_userIdOfSender;
+            std::string m_roleOfSender;
+            std::string m_sessionTokenOfSender;
+            
+        public:
+
+            const std::string& getInstanceIdOfSender() const;
+
+            const std::string& getUserIdOfSender() const;
+
+            const std::string& getRoleIdOfSender() const;
+            
+            const std::string& getSessionTokenOfSender() const;
+
         protected:
 
             Slot(SignalSlotable* signalSlotable, const karabo::net::BrokerChannel::Pointer& channel, const std::string& slotInstanceId, const std::string& slotFunction)
@@ -42,28 +58,33 @@ namespace karabo {
             }
 
             void handlePossibleReply(const karabo::util::Hash& header);
-            
-            void startSlotProcessing();
-            
-            void stopSlotProcessing();
+
+            void extractSenderInformation(const karabo::util::Hash& header);
+
+            void invalidateSenderInformation();
+
+            //void startSlotProcessing();
+
+            //void stopSlotProcessing();
 
             template <class T>
             const T& getAndCast(const std::string& key, const karabo::util::Hash& hash) const {
                 return hash.get<T > (key);
             }
-            
+
             SignalSlotable* m_signalSlotable;
             karabo::net::BrokerChannel::Pointer m_channel;
             std::string m_slotInstanceId;
             std::string m_slotFunction;
 
         };
-        
+
         // This one does appropriate conversions for a boolean target type
         template <>
         const bool& Slot::getAndCast(const std::string& key, const karabo::util::Hash& hash) const;
-       
+
         class Slot0 : public Slot {
+
             typedef boost::function<void () > SlotHandler;
 
         public:
@@ -85,12 +106,12 @@ namespace karabo {
         private:
 
             void callRegisteredSlotFunctions(karabo::net::BrokerChannel::Pointer /*channel*/, const karabo::util::Hash& body, const karabo::util::Hash& header) {
-                startSlotProcessing();
+                extractSenderInformation(header);
                 for (size_t i = 0; i < m_slotHandlers.size(); ++i) {
                     m_slotHandlers[i]();
                     handlePossibleReply(header);
                 }
-                stopSlotProcessing();
+                invalidateSenderInformation();
             }
 
             std::vector<SlotHandler> m_slotHandlers;
@@ -98,6 +119,7 @@ namespace karabo {
 
         template <class A1>
         class Slot1 : public Slot {
+
             typedef boost::function<void (const A1&) > SlotHandler;
 
         public:
@@ -120,17 +142,17 @@ namespace karabo {
 
             void callRegisteredSlotFunctions(karabo::net::BrokerChannel::Pointer /*channel*/, const karabo::util::Hash& body, const karabo::util::Hash& header) {
                 try {
-                    startSlotProcessing();
+                    extractSenderInformation(header);
                     const A1& a1 = getAndCast<A1>("a1", body);
                     for (size_t i = 0; i < m_slotHandlers.size(); ++i) {
                         m_slotHandlers[i](a1);
                         handlePossibleReply(header);
                     }
-                    stopSlotProcessing();
+                    invalidateSenderInformation();
                 } catch (const karabo::util::CastException& e) {
                     karabo::util::Exception::addToTrace(e);
-                    std::cout << SIGNALSLOT_EXCEPTION("Received incompatible argument (see above) for slot \"" + m_slotFunction + "\". Check your connection!") << std::endl;
-                    stopSlotProcessing();
+                    KARABO_LOG_FRAMEWORK_ERROR << KARABO_SIGNALSLOT_EXCEPTION("Received incompatible argument (see above) for slot \"" + m_slotFunction + "\". Check your connection!");
+                    invalidateSenderInformation();
                 }
             }
 
@@ -139,6 +161,7 @@ namespace karabo {
 
         template <class A1, class A2>
         class Slot2 : public Slot {
+
             typedef boost::function<void (const A1&, const A2&) > SlotHandler;
 
         public:
@@ -161,18 +184,18 @@ namespace karabo {
 
             void callRegisteredSlotFunctions(karabo::net::BrokerChannel::Pointer /*channel*/, const karabo::util::Hash& body, const karabo::util::Hash& header) {
                 try {
-                    startSlotProcessing();
+                    extractSenderInformation(header);
                     const A1& a1 = getAndCast<A1>("a1", body);
                     const A2& a2 = getAndCast<A2>("a2", body);
                     for (size_t i = 0; i < m_slotHandlers.size(); ++i) {
                         m_slotHandlers[i](a1, a2);
                         handlePossibleReply(header);
                     }
-                    stopSlotProcessing();
+                    invalidateSenderInformation();
                 } catch (const karabo::util::CastException& e) {
                     karabo::util::Exception::addToTrace(e);
-                    std::cout << SIGNALSLOT_EXCEPTION("Received incompatible arguments (see above) for slot \"" + m_slotFunction + "\". Check your connection!") << std::endl;
-                    stopSlotProcessing();
+                    std::cout << KARABO_SIGNALSLOT_EXCEPTION("Received incompatible arguments (see above) for slot \"" + m_slotFunction + "\". Check your connection!") << std::endl;
+                    invalidateSenderInformation();
                 }
             }
 
@@ -181,6 +204,7 @@ namespace karabo {
 
         template <class A1, class A2, class A3>
         class Slot3 : public Slot {
+
             typedef boost::function<void (const A1&, const A2&, const A3&) > SlotHandler;
 
         public:
@@ -203,7 +227,7 @@ namespace karabo {
 
             void callRegisteredSlotFunctions(karabo::net::BrokerChannel::Pointer /*channel*/, const karabo::util::Hash& body, const karabo::util::Hash& header) {
                 try {
-                    startSlotProcessing();
+                    extractSenderInformation(header);
                     const A1& a1 = getAndCast<A1 > ("a1", body);
                     const A2& a2 = getAndCast<A2 > ("a2", body);
                     const A3& a3 = getAndCast<A3 > ("a3", body);
@@ -211,11 +235,11 @@ namespace karabo {
                         m_slotHandlers[i](a1, a2, a3);
                         handlePossibleReply(header);
                     }
-                    stopSlotProcessing();
+                    invalidateSenderInformation();
                 } catch (const karabo::util::CastException& e) {
                     karabo::util::Exception::addToTrace(e);
-                    std::cout << SIGNALSLOT_EXCEPTION("Received incompatible arguments (see above) for slot \"" + m_slotFunction + "\". Check your connection!") << std::endl;
-                    stopSlotProcessing();
+                    std::cout << KARABO_SIGNALSLOT_EXCEPTION("Received incompatible arguments (see above) for slot \"" + m_slotFunction + "\". Check your connection!") << std::endl;
+                    invalidateSenderInformation();
                 }
             }
 
@@ -224,6 +248,7 @@ namespace karabo {
 
         template <class A1, class A2, class A3, class A4>
         class Slot4 : public Slot {
+
             typedef boost::function<void (const A1&, const A2&, const A3&, const A4&) > SlotHandler;
 
         public:
@@ -246,7 +271,7 @@ namespace karabo {
 
             void callRegisteredSlotFunctions(karabo::net::BrokerChannel::Pointer /*channel*/, const karabo::util::Hash& body, const karabo::util::Hash& header) {
                 try {
-                    startSlotProcessing();
+                    extractSenderInformation(header);
                     const A1& a1 = getAndCast<A1 > ("a1", body);
                     const A2& a2 = getAndCast<A2 > ("a2", body);
                     const A3& a3 = getAndCast<A3 > ("a3", body);
@@ -255,11 +280,11 @@ namespace karabo {
                         m_slotHandlers[i](a1, a2, a3, a4);
                         handlePossibleReply(header);
                     }
-                    stopSlotProcessing();
+                    invalidateSenderInformation();
                 } catch (const karabo::util::CastException& e) {
                     karabo::util::Exception::addToTrace(e);
-                    std::cout << SIGNALSLOT_EXCEPTION("Received incompatible arguments (see above) for slot \"" + m_slotFunction + "\". Check your connection!") << std::endl;
-                    stopSlotProcessing();
+                    std::cout << KARABO_SIGNALSLOT_EXCEPTION("Received incompatible arguments (see above) for slot \"" + m_slotFunction + "\". Check your connection!") << std::endl;
+                    invalidateSenderInformation();
                 }
             }
             std::vector<SlotHandler> m_slotHandlers;

@@ -9,80 +9,113 @@
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
 
+#include <log4cpp/BasicLayout.hh>
+#include <log4cpp/SimpleLayout.hh>
+#include <log4cpp/PatternLayout.hh>
+#include <karabo/util/SimpleElement.hh>
+#include <karabo/util/ChoiceElement.hh>
+#include <karabo/util/NodeElement.hh>
 
 #include "AppenderConfigurator.hh"
-#include "log4cpp/Layout.hh"
-#include "LayoutConfigurator.hh"
+
 using namespace std;
 using namespace karabo::util;
 using namespace log4cpp;
 
-
 namespace karabo {
-  namespace log {
-
-    void AppenderConfigurator::expectedParameters(Schema& expected) {
+    namespace log {
 
 
-      STRING_ELEMENT(expected)
-              .key("name")
-              .displayedName("AppenderName")
-              .description("Appender name")
-              .assignmentOptional().defaultValue("default")
-              .commit();
+        void AppenderConfigurator::expectedParameters(Schema& expected) {
+
+            STRING_ELEMENT(expected)
+                    .key("name")
+                    .displayedName("AppenderName")
+                    .description("Appender name")
+                    .assignmentOptional().defaultValue("default")
+                    .commit();
 
 
-      STRING_ELEMENT(expected)
-              .description("Set the threshold for the appender")
-              .key("threshold")
-              .displayedName("Threshold")
-              .options("DEBUG INFO WARN ERROR NOTSET")
-              .assignmentOptional() .defaultValue("NOTSET")
-              .commit();
+            STRING_ELEMENT(expected)
+                    .description("Set the threshold for the appender")
+                    .key("threshold")
+                    .displayedName("Threshold")
+                    .options("DEBUG INFO WARN ERROR NOTSET")
+                    .assignmentOptional() .defaultValue("NOTSET")
+                    .commit();
+
+            CHOICE_ELEMENT(expected)
+                    .key("layout")
+                    .displayedName("Layout")
+                    .description("Configures layout")
+                    .assignmentOptional().defaultValue("Simple")
+                    .commit();
+
+            NODE_ELEMENT(expected).key("layout.Simple")
+                    .description("Simple Layout")
+                    .displayedName("Simple")
+                    .commit();
+
+            NODE_ELEMENT(expected).key("layout.Basic")
+                    .description("Basic Layout")
+                    .displayedName("Basic")
+                    .commit();
+            
+            NODE_ELEMENT(expected).key("layout.Pattern")
+                    .description("Allows to define a pattern for the log string")
+                    .displayedName("Pattern")
+                    .commit();
+            
+            STRING_ELEMENT(expected).key("layout.Pattern.format")
+                    .description("Set conversion pattern for the layout. See log4cpp documentation.")
+                    .displayedName("Format")
+                    .assignmentOptional() .defaultValue("%d %c %p %m %n")
+                    .commit();
+        }
 
 
-      CHOICE_ELEMENT<LayoutConfigurator > (expected)
-              .key("layout")
-              .displayedName("Layout")
-              .description("Configures layout")
-              .assignmentOptional().defaultValue("Simple")
-              .commit();
+        AppenderConfigurator::AppenderConfigurator(const Hash& input) {
+            configureName(input);
+            configureThreshold(input);
+            configureLayout(input);
+        }
+
+
+        void AppenderConfigurator::configureName(const Hash& input) {
+            m_appenderName = input.get<string > ("name");
+        }
+
+
+        void AppenderConfigurator::configureThreshold(const Hash& input) {
+            string threshold = input.get<string > ("threshold");
+            m_threshold = Priority::getPriorityValue(threshold);
+
+        }
+
+
+        void AppenderConfigurator::configureLayout(const Hash& input) {
+            if (input.has("layout.Basic")) {
+                m_layout = new log4cpp::BasicLayout();
+            } else if (input.has("layout.Simple")) {
+                m_layout = new log4cpp::SimpleLayout();
+            } else if (input.has("layout.Pattern")) {
+                PatternLayout* layout = new log4cpp::PatternLayout();
+                layout->setConversionPattern(input.get<string>("layout.Pattern.format"));
+                m_layout = layout;
+            }
+        }
+
+
+        Appender* AppenderConfigurator::getConfigured() {
+            Appender* appender = create();
+            assert(appender != 0);
+            appender->setLayout(m_layout);
+            if (m_threshold != log4cpp::Priority::NOTSET) {
+                appender->setThreshold(m_threshold);
+            }
+            return appender;
+        }
 
 
     }
-
-    void AppenderConfigurator::configure(const Hash& input) {
-      configureName(input);
-      configureThreshold(input);
-      configureLayout(input);
-    }
-
-    void AppenderConfigurator::configureName(const Hash& input) {
-      m_appenderName = input.get<string > ("name");
-    }
-
-    void AppenderConfigurator::configureThreshold(const Hash& input) {
-      string threshold = input.get<string > ("threshold");
-      m_threshold = Priority::getPriorityValue(threshold);
-
-    }
-
-    void AppenderConfigurator::configureLayout(const Hash& input) {
-      LayoutConfigurator::Pointer layoutConfig = LayoutConfigurator::createChoice("layout", input);
-      m_layout = layoutConfig->create();
-
-    }
-
-    Appender* AppenderConfigurator::getConfigured() {
-      Appender* appender = create();
-      assert(appender != 0);
-      appender->setLayout(m_layout);
-      if (m_threshold != log4cpp::Priority::NOTSET) {
-        appender->setThreshold(m_threshold);
-      }
-      return appender;
-    }
-
-
-  }
 }

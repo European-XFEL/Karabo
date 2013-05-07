@@ -1,0 +1,577 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configurationDescriptor version="88">
+  <logicalFolder name="root" displayName="root" projectFiles="true" kind="ROOT">
+    <logicalFolder name="f8"
+                   displayName="Authenticator Binding"
+                   projectFiles="true">
+      <itemPath>../../../src/karathon/PyWebAuthenticator.cc</itemPath>
+    </logicalFolder>
+    <logicalFolder name="f7" displayName="Binding Tools" projectFiles="true">
+      <itemPath>../../../src/karathon/ScopedGILAcquire.hh</itemPath>
+      <itemPath>../../../src/karathon/ScopedGILRelease.hh</itemPath>
+      <itemPath>../../../src/karathon/Wrapper.cc</itemPath>
+      <itemPath>../../../src/karathon/Wrapper.hh</itemPath>
+    </logicalFolder>
+    <logicalFolder name="f5" displayName="DeviceClient Binding" projectFiles="true">
+      <itemPath>../../../src/karathon/DeviceClientWrap.hh</itemPath>
+      <itemPath>../../../src/karathon/PyCoreDeviceClient.cc</itemPath>
+    </logicalFolder>
+    <logicalFolder name="f1" displayName="Hash Binding" projectFiles="true">
+      <itemPath>../../../src/karathon/AttributesNodeWrap.hh</itemPath>
+      <itemPath>../../../src/karathon/AttributesWrap.hh</itemPath>
+      <itemPath>../../../src/karathon/HashWrap.cc</itemPath>
+      <itemPath>../../../src/karathon/HashWrap.hh</itemPath>
+      <itemPath>../../../src/karathon/NodeWrap.hh</itemPath>
+      <itemPath>../../../src/karathon/PyUtilHash.cc</itemPath>
+    </logicalFolder>
+    <logicalFolder name="f4" displayName="IO Binding" projectFiles="true">
+      <itemPath>../../../src/karathon/PyIoFileTools.cc</itemPath>
+      <itemPath>../../../src/karathon/PyIoSerialization.cc</itemPath>
+    </logicalFolder>
+    <logicalFolder name="f9" displayName="Logger Binding" projectFiles="true">
+      <itemPath>../../../src/karathon/PyLogLogger.cc</itemPath>
+    </logicalFolder>
+    <logicalFolder name="f3"
+                   displayName="Point-2-Point Binding"
+                   projectFiles="true">
+      <itemPath>../../../src/karathon/ChannelWrap.cc</itemPath>
+      <itemPath>../../../src/karathon/ChannelWrap.hh</itemPath>
+      <itemPath>../../../src/karathon/ConnectionWrap.cc</itemPath>
+      <itemPath>../../../src/karathon/ConnectionWrap.hh</itemPath>
+      <itemPath>../../../src/karathon/IOServiceWrap.hh</itemPath>
+      <itemPath>../../../src/karathon/p2pbinding.cc</itemPath>
+    </logicalFolder>
+    <logicalFolder name="f2" displayName="Schema Binding" projectFiles="true">
+      <itemPath>../../../src/karathon/DefaultValueVectorWrap.hh</itemPath>
+      <itemPath>../../../src/karathon/PyUtilClassInfo.cc</itemPath>
+      <itemPath>../../../src/karathon/PyUtilSchema.cc</itemPath>
+      <itemPath>../../../src/karathon/PythonFactoryMacros.hh</itemPath>
+      <itemPath>../../../src/karathon/PythonMacros.hh</itemPath>
+    </logicalFolder>
+    <logicalFolder name="f6"
+                   displayName="SignalSlotable Binding"
+                   projectFiles="true">
+      <itemPath>../../../src/karathon/MemberSlotWrap.hh</itemPath>
+      <itemPath>../../../src/karathon/PyXmsRequestor.cc</itemPath>
+      <itemPath>../../../src/karathon/PyXmsSignalSlotable.cc</itemPath>
+      <itemPath>../../../src/karathon/RequestorWrap.hh</itemPath>
+      <itemPath>../../../src/karathon/SignalSlotableWrap.hh</itemPath>
+      <itemPath>../../../src/karathon/SignalWrap.hh</itemPath>
+      <itemPath>../../../src/karathon/SlotWrap.hh</itemPath>
+    </logicalFolder>
+    <logicalFolder name="SourceFiles"
+                   displayName="Source Files"
+                   projectFiles="true">
+      <itemPath>../../../src/karathon/karathon.cc</itemPath>
+    </logicalFolder>
+    <logicalFolder name="TestFiles"
+                   displayName="Test Files"
+                   projectFiles="false"
+                   kind="TEST_LOGICAL_FOLDER">
+      <logicalFolder name="f1"
+                     displayName="karathon_test"
+                     projectFiles="true"
+                     kind="TEST">
+        <itemPath>tests/HashWrap_Test.cc</itemPath>
+        <itemPath>tests/HashWrap_Test.hh</itemPath>
+        <itemPath>tests/karathonTestRunner.cc</itemPath>
+      </logicalFolder>
+    </logicalFolder>
+    <logicalFolder name="ExternalFiles"
+                   displayName="Important Files"
+                   projectFiles="false"
+                   kind="IMPORTANT_FILES_FOLDER">
+      <itemPath>Makefile</itemPath>
+    </logicalFolder>
+  </logicalFolder>
+  <sourceRootList>
+    <Elem>../../../src/karathon</Elem>
+  </sourceRootList>
+  <projectmakefile>Makefile</projectmakefile>
+  <confs>
+    <conf name="Debug" type="2">
+      <toolsSet>
+        <remote-sources-mode>LOCAL_SOURCES</remote-sources-mode>
+        <compilerSet>default</compilerSet>
+        <dependencyChecking>true</dependencyChecking>
+        <rebuildPropChanged>false</rebuildPropChanged>
+      </toolsSet>
+      <compileType>
+        <ccTool>
+          <incDir>
+            <pElem>../../../src</pElem>
+            <pElem>${KARABO}/include</pElem>
+            <pElem>${KARABO}/extern/include/hdf5</pElem>
+            <pElem>${KARABO}/extern/include/python2.7</pElem>
+            <pElem>${KARABO}/extern/include</pElem>
+          </incDir>
+        </ccTool>
+        <linkerTool>
+          <linkerAddLib>
+            <pElem>/opt/local/nss</pElem>
+            <pElem>/opt/local/nspr</pElem>
+            <pElem>${KARABO}/lib</pElem>
+            <pElem>${KARABO}/extern/lib</pElem>
+          </linkerAddLib>
+          <linkerDynSerch>
+            <pElem>\$$ORIGIN</pElem>
+            <pElem>\$$ORIGIN/../extern/lib</pElem>
+            <pElem>${KARABO}/extern/lib</pElem>
+            <pElem>${KARABO}/lib</pElem>
+          </linkerDynSerch>
+          <linkerLibItems>
+            <linkerLibLibItem>karabo</linkerLibLibItem>
+            <linkerLibLibItem>boost_chrono</linkerLibLibItem>
+            <linkerLibLibItem>boost_date_time</linkerLibLibItem>
+            <linkerLibLibItem>boost_filesystem</linkerLibLibItem>
+            <linkerLibLibItem>boost_numpy</linkerLibLibItem>
+            <linkerLibLibItem>boost_python</linkerLibLibItem>
+            <linkerLibLibItem>boost_regex</linkerLibLibItem>
+            <linkerLibLibItem>boost_signals</linkerLibLibItem>
+            <linkerLibLibItem>boost_system</linkerLibLibItem>
+            <linkerLibLibItem>boost_thread</linkerLibLibItem>
+            <linkerLibLibItem>hdf5</linkerLibLibItem>
+            <linkerLibLibItem>hdf5_cpp</linkerLibLibItem>
+            <linkerLibLibItem>hdf5_hl</linkerLibLibItem>
+            <linkerLibLibItem>hdf5_hl_cpp</linkerLibLibItem>
+            <linkerLibLibItem>log4cpp</linkerLibLibItem>
+            <linkerLibLibItem>openmqc</linkerLibLibItem>
+            <linkerLibLibItem>python2.7</linkerLibLibItem>
+          </linkerLibItems>
+        </linkerTool>
+      </compileType>
+      <item path="../../../src/karathon/AttributesNodeWrap.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karathon/AttributesWrap.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karathon/ChannelWrap.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karathon/ChannelWrap.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karathon/ConnectionWrap.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karathon/ConnectionWrap.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karathon/DefaultValueVectorWrap.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karathon/DeviceClientWrap.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karathon/HashWrap.cc" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="../../../src/karathon/HashWrap.hh" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../../../src/karathon/IOServiceWrap.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karathon/MemberSlotWrap.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karathon/NodeWrap.hh" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../../../src/karathon/PyCoreDeviceClient.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karathon/PyIoFileTools.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karathon/PyLogLogger.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karathon/PyUtilClassInfo.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karathon/PyUtilHash.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karathon/PyUtilSchema.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karathon/PyWebAuthenticator.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karathon/PyXmsRequestor.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karathon/PyXmsSignalSlotable.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karathon/PythonFactoryMacros.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karathon/PythonMacros.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karathon/RequestorWrap.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karathon/ScopedGILAcquire.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karathon/ScopedGILRelease.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karathon/SignalSlotableWrap.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karathon/SignalWrap.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karathon/SlotWrap.hh" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../../../src/karathon/Wrapper.cc" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="../../../src/karathon/Wrapper.hh" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../../../src/karathon/karathon.cc" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="../../../src/karathon/p2pbinding.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <folder path="TestFiles">
+        <linkerTool>
+          <linkerAddLib>
+            <pElem>${KARABO}/extern/lib</pElem>
+          </linkerAddLib>
+          <linkerDynSerch>
+            <pElem>${KARATHON}/karabo/extern/lib</pElem>
+            <pElem>${KARATHON}/karabo</pElem>
+            <pElem>${KARATHON}</pElem>
+          </linkerDynSerch>
+          <linkerLibItems>
+            <linkerLibLibItem>cppunit</linkerLibLibItem>
+          </linkerLibItems>
+        </linkerTool>
+      </folder>
+      <folder path="TestFiles/f1">
+        <cTool>
+          <commandLine>`cppunit-config --cflags`</commandLine>
+        </cTool>
+        <ccTool>
+          <commandLine>`cppunit-config --cflags`</commandLine>
+        </ccTool>
+        <linkerTool>
+          <output>${TESTDIR}/TestFiles/f1</output>
+          <linkerLibItems>
+            <linkerOptionItem>`cppunit-config --libs`</linkerOptionItem>
+          </linkerLibItems>
+        </linkerTool>
+      </folder>
+      <item path="tests/HashWrap_Test.cc" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="tests/HashWrap_Test.hh" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="tests/karathonTestRunner.cc" ex="false" tool="1" flavor2="0">
+      </item>
+    </conf>
+    <conf name="Release" type="2">
+      <toolsSet>
+        <remote-sources-mode>LOCAL_SOURCES</remote-sources-mode>
+        <compilerSet>default</compilerSet>
+        <dependencyChecking>true</dependencyChecking>
+        <rebuildPropChanged>false</rebuildPropChanged>
+      </toolsSet>
+      <compileType>
+        <cTool>
+          <developmentMode>5</developmentMode>
+        </cTool>
+        <ccTool>
+          <developmentMode>5</developmentMode>
+          <incDir>
+            <pElem>../../../src</pElem>
+            <pElem>${KARABO}/include</pElem>
+            <pElem>${KARABO}/extern/include/hdf5</pElem>
+            <pElem>${KARABO}/extern/include/python2.7</pElem>
+            <pElem>${KARABO}/extern/include</pElem>
+          </incDir>
+        </ccTool>
+        <fortranCompilerTool>
+          <developmentMode>5</developmentMode>
+        </fortranCompilerTool>
+        <asmTool>
+          <developmentMode>5</developmentMode>
+        </asmTool>
+        <linkerTool>
+          <linkerAddLib>
+            <pElem>/opt/local/nss</pElem>
+            <pElem>/opt/local/nspr</pElem>
+            <pElem>${KARABO}/lib</pElem>
+            <pElem>${KARABO}/extern/lib</pElem>
+          </linkerAddLib>
+          <linkerDynSerch>
+            <pElem>\$$ORIGIN</pElem>
+            <pElem>\$$ORIGIN/../extern/lib</pElem>
+            <pElem>${KARABO}/extern/lib</pElem>
+            <pElem>${KARABO}/lib</pElem>
+          </linkerDynSerch>
+          <linkerLibItems>
+            <linkerLibLibItem>karabo</linkerLibLibItem>
+            <linkerLibLibItem>boost_chrono</linkerLibLibItem>
+            <linkerLibLibItem>boost_date_time</linkerLibLibItem>
+            <linkerLibLibItem>boost_filesystem</linkerLibLibItem>
+            <linkerLibLibItem>boost_numpy</linkerLibLibItem>
+            <linkerLibLibItem>boost_python</linkerLibLibItem>
+            <linkerLibLibItem>boost_regex</linkerLibLibItem>
+            <linkerLibLibItem>boost_signals</linkerLibLibItem>
+            <linkerLibLibItem>boost_system</linkerLibLibItem>
+            <linkerLibLibItem>boost_thread</linkerLibLibItem>
+            <linkerLibLibItem>hdf5</linkerLibLibItem>
+            <linkerLibLibItem>hdf5_cpp</linkerLibLibItem>
+            <linkerLibLibItem>hdf5_hl</linkerLibLibItem>
+            <linkerLibLibItem>hdf5_hl_cpp</linkerLibLibItem>
+            <linkerLibLibItem>log4cpp</linkerLibLibItem>
+            <linkerLibLibItem>openmqc</linkerLibLibItem>
+            <linkerLibLibItem>python2.7</linkerLibLibItem>
+          </linkerLibItems>
+        </linkerTool>
+      </compileType>
+      <item path="../../../src/karathon/AttributesNodeWrap.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karathon/AttributesWrap.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karathon/ChannelWrap.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karathon/ChannelWrap.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karathon/ConnectionWrap.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karathon/ConnectionWrap.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karathon/DefaultValueVectorWrap.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karathon/DeviceClientWrap.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karathon/HashWrap.cc" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="../../../src/karathon/HashWrap.hh" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../../../src/karathon/IOServiceWrap.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karathon/MemberSlotWrap.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karathon/NodeWrap.hh" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../../../src/karathon/PyCoreDeviceClient.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karathon/PyIoFileTools.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karathon/PyIoSerialization.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karathon/PyLogLogger.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karathon/PyUtilClassInfo.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karathon/PyUtilHash.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karathon/PyUtilSchema.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karathon/PyWebAuthenticator.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karathon/PyXmsRequestor.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karathon/PyXmsSignalSlotable.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karathon/PythonFactoryMacros.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karathon/PythonMacros.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karathon/RequestorWrap.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karathon/ScopedGILAcquire.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karathon/ScopedGILRelease.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karathon/SignalSlotableWrap.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karathon/SignalWrap.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karathon/SlotWrap.hh" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../../../src/karathon/Wrapper.cc" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="../../../src/karathon/Wrapper.hh" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../../../src/karathon/karathon.cc" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="../../../src/karathon/p2pbinding.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <folder path="TestFiles">
+        <linkerTool>
+          <linkerAddLib>
+            <pElem>${KARABO}/extern/lib</pElem>
+          </linkerAddLib>
+          <linkerDynSerch>
+            <pElem>${KARATHON}/karabo/extern/lib</pElem>
+            <pElem>${KARATHON}/karabo</pElem>
+            <pElem>${KARATHON}</pElem>
+          </linkerDynSerch>
+        </linkerTool>
+      </folder>
+      <folder path="TestFiles/f1">
+        <cTool>
+          <commandLine>`cppunit-config --cflags`</commandLine>
+        </cTool>
+        <ccTool>
+          <commandLine>`cppunit-config --cflags`</commandLine>
+        </ccTool>
+        <linkerTool>
+          <output>${TESTDIR}/TestFiles/f1</output>
+          <linkerLibItems>
+            <linkerOptionItem>`cppunit-config --libs`</linkerOptionItem>
+          </linkerLibItems>
+        </linkerTool>
+      </folder>
+      <item path="tests/HashWrap_Test.cc" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="tests/HashWrap_Test.hh" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="tests/karathonTestRunner.cc" ex="false" tool="1" flavor2="0">
+      </item>
+    </conf>
+  </confs>
+</configurationDescriptor>

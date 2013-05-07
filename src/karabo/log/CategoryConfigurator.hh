@@ -16,50 +16,53 @@
 #include <string>
 #include <vector>
 #include "log4cpp/Priority.hh"
-#include "FileAppenderConfigurator.hh"
-#include <karabo/util/Factory.hh>
+#include <karabo/util/Configurator.hh>
 #include "AppenderConfigurator.hh"
-#include "logdll.hh"
 
 /**
  * The main European XFEL namespace
  */
 namespace karabo {
 
-  /**
-   * Namespace for package log
-   */
-  namespace log {
+    /**
+     * Namespace for package log
+     */
+    namespace log {
 
-    class CategoryConfigurator {
-      std::string m_name;
-      log4cpp::Priority::Value m_level;
-      bool m_additivity;
-      std::vector<AppenderConfigurator::Pointer> m_appenderConfigurators;
+        class CategoryConfigurator {
 
-    public:
-      KARABO_CLASSINFO(CategoryConfigurator, "Category", "1.0")
-      KARABO_FACTORY_BASE_CLASS
+            std::string m_name;
+            log4cpp::Priority::Value m_level;
+            bool m_additivity;
+            std::vector<AppenderConfigurator::Pointer> m_appenderConfigurators;
 
-      CategoryConfigurator();
-      virtual ~CategoryConfigurator();
+        public:
+            KARABO_CLASSINFO(CategoryConfigurator, "Category", "1.0")
+            KARABO_CONFIGURATION_BASE_CLASS
+           
+            virtual ~CategoryConfigurator();
 
-      void setup();
+            void setup();
 
-      static void expectedParameters(karabo::util::Schema& expected);
-      void configure(const karabo::util::Hash& input);
+            static void expectedParameters(karabo::util::Schema& expected);
+            
+            CategoryConfigurator(const karabo::util::Hash& input);
 
-    private:
+        private:
 
-      void configureName(const karabo::util::Hash& input);
-      void configurePriority(const karabo::util::Hash& input);
-      void configureAdditivity(const karabo::util::Hash& input);
-      void configureAppenders(const karabo::util::Hash& input);
-    };
+            void configureName(const karabo::util::Hash& input);
+            
+            void configurePriority(const karabo::util::Hash& input);
+            
+            void configureAdditivity(const karabo::util::Hash& input);
+            
+            void configureAppenders(const karabo::util::Hash& input);
+        };
 
-  }
+    }
 }
 
-KARABO_REGISTER_FACTORY_BASE_HH(karabo::log::CategoryConfigurator, TEMPLATE_LOG, DECLSPEC_LOG)
+// TODO WINDOWS
+//KARABO_REGISTER_FACTORY_BASE_HH(karabo::log::CategoryConfigurator, TEMPLATE_LOG, DECLSPEC_LOG)
 
 #endif	/* KARABO_LOGCONFIG_CATEGORYCONFIGURATOR_HH */

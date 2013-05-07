@@ -1,0 +1,351 @@
+/*
+ *
+ * File:   Authenticator.cc
+ * Author: <luis.maia@xfel.eu>
+ *
+ * Created on April 12, 2013, 4:31 PM
+ *
+ * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
+ */
+
+#include <karabo/log/Logger.hh>
+#include "Authenticator.hh"
+#include "soapAuthenticationPortBindingProxy.h"
+#include "AuthenticationPortBinding.nsmap"
+#include <signal.h>		/* defines SIGPIPE */
+
+using namespace std;
+
+namespace karabo {
+    namespace webAuth {
+
+
+        Authenticator::Authenticator(const std::string& username, const std::string& password, const std::string& provider,
+                                     const std::string& ipAddress, const std::string& hostname, const std::string& portNumber,
+                                     const std::string& software)
+        : m_username(username), m_password(password), m_provider(provider), m_ipAddress(ipAddress), m_hostname(hostname), m_portNumber(portNumber), m_software(software), m_service(new AuthenticationPortBindingProxy),
+        // Variables initialized with defaults (otherwise primitive types get whatever arbitrary junk happened to be at that memory location previously)
+        m_userId(-100), m_softwareId(-100), m_roleId(-100), m_nonce(""), m_sessionToken(""), m_welcomeMessage(""), m_roleDesc("") {
+        }
+
+
+        std::string Authenticator::getSessionToken() const {
+            return m_sessionToken;
+        }
+
+
+        std::string Authenticator::getSoftware() const {
+            return m_software;
+        }
+
+
+        std::string Authenticator::getPortNumber() const {
+            return m_portNumber;
+        }
+
+
+        std::string Authenticator::getHostname() const {
+            return m_hostname;
+        }
+
+
+        std::string Authenticator::getIpAddress() const {
+            return m_ipAddress;
+        }
+
+
+        std::string Authenticator::getProvider() const {
+            return m_provider;
+        }
+
+
+        std::string Authenticator::getPassword() const {
+            return m_password;
+        }
+
+
+        std::string Authenticator::getUsername() const {
+            return m_username;
+        }
+
+
+        std::string Authenticator::getRoleDesc() const {
+            return m_roleDesc;
+        }
+
+
+        std::string Authenticator::getWelcomeMessage() const {
+            return m_welcomeMessage;
+        }
+
+
+        long long int Authenticator::getRoleId() const {
+            return m_roleId;
+        }
+
+
+        long long int Authenticator::getSoftwareId() const {
+            return m_softwareId;
+        }
+
+
+        long long int Authenticator::getUserId() const {
+            return m_userId;
+        }
+
+
+        /*
+         * Setters
+         */
+        void Authenticator::setSessionToken(const std::string& newSessionToken) {
+            this->m_sessionToken = newSessionToken;
+        }
+
+
+        void Authenticator::setRoleDesc(const std::string& roleDesc) {
+            this->m_roleDesc = roleDesc;
+        }
+
+
+        void Authenticator::setWelcomeMessage(const std::string& welcomeMessage) {
+            this->m_welcomeMessage = welcomeMessage;
+        }
+
+
+        void Authenticator::setRoleId(const long long int roleId) {
+            this->m_roleId = roleId;
+        }
+
+
+        void Authenticator::setSoftwareId(const long long int softwareId) {
+            this->m_softwareId = softwareId;
+        }
+
+
+        void Authenticator::setUserId(const long long int userId) {
+            this->m_userId = userId;
+        }
+
+
+        /*
+         * Specific logical functions
+         */
+        bool Authenticator::login(const karabo::util::Timestamp& timestamp) {
+
+            ns1__getUserNonceResponse nsUserNonceResp;
+            ns1__loginResponse nsLoginResp;
+
+            // Get the nonce that must be used in Authentication method
+            nsUserNonceResp = getUserNonce();
+            if (*(nsUserNonceResp.return_->operationSuccess) == 0) {
+                KARABO_LOG_FRAMEWORK_DEBUG << "Error: " << string(nsLoginResp.return_->operationResultMsg->c_str());
+                return false;
+            }
+
+            // Store nonce generated to this user/domain/ipAddress
+            m_nonce = nsUserNonceResp.return_->sessionToken->c_str();
+
+            // Try authenticate the user
+            nsLoginResp = authenticate(timestamp);
+            if (*(nsLoginResp.return_->operationSuccess) == 0) {
+                KARABO_LOG_FRAMEWORK_DEBUG << "Error: " << string(nsLoginResp.return_->operationResultMsg->c_str());
+                return false;
+            } else {
+                KARABO_LOG_FRAMEWORK_DEBUG << "Debug: The sessionToken is " << string(nsLoginResp.return_->sessionToken->c_str());
+                // Populate object with session related information
+                setSessionToken(*(nsLoginResp.return_->sessionToken));
+                setWelcomeMessage(*(nsLoginResp.return_->welcomeMessage));
+                setRoleDesc(*(nsLoginResp.return_->roleDesc));
+                // Saved ID's
+                setRoleId(*(nsLoginResp.return_->roleId));
+                setUserId(*(nsLoginResp.return_->userId));
+                setSoftwareId(*(nsLoginResp.return_->softwareId));
+                // Clear m_nonce value
+                m_nonce = "";
+                return true;
+            }
+        }
+
+
+        bool Authenticator::logout() {
+
+            ns1__logout nsLogout;
+            ns1__logoutResponse nsLogoutResp;
+
+            nsLogout.username = &m_username;
+            nsLogout.provider = &m_provider;
+            nsLogout.sessionToken = &m_sessionToken;
+
+            // If obtain successfully answer from Web Service the logic proceeds!
+            if (m_service->logout(&nsLogout, &nsLogoutResp) == SOAP_OK) {
+                KARABO_LOG_FRAMEWORK_DEBUG << "Debug: SOAP message is OK";
+                if (*(nsLogoutResp.return_) == 0) {
+                    KARABO_LOG_FRAMEWORK_DEBUG << "Error: Logout didn't succeed";
+                    return false;
+                } else {
+                    KARABO_LOG_FRAMEWORK_DEBUG << "Debug: Logout did succeed";
+                    // Clean from object session related information
+                    setSessionToken("");
+                    setWelcomeMessage("");
+                    setRoleDesc("");
+                    //
+                    setRoleId(-100);
+                    setUserId(-100);
+                    setSoftwareId(-100);
+                }
+            } else {
+                throw KARABO_NETWORK_EXCEPTION("Error: Problem with SOAP message: " + soapMessageNotOk(m_service->soap));
+            }
+
+            return true; // If no problems happened it returns true
+        }
+
+
+        ns1__getUserNonceResponse Authenticator::getUserNonce() {
+            ns1__getUserNonce nsUserNonce;
+            ns1__getUserNonceResponse nsUserNonceResp;
+
+            nsUserNonce.username = &m_username;
+            nsUserNonce.provider = &m_provider;
+            nsUserNonce.ipAddress = &m_ipAddress;
+
+            // If obtain successfully answer from Web Service the logic proceeds!
+            if (m_service->getUserNonce(&nsUserNonce, &nsUserNonceResp) == SOAP_OK) {
+                KARABO_LOG_FRAMEWORK_DEBUG << "Debug: SOAP message is OK";
+                if (*(nsUserNonceResp.return_->operationSuccess) == 0) {
+                    KARABO_LOG_FRAMEWORK_DEBUG << "Error: " << string(nsUserNonceResp.return_->operationResultMsg->c_str());
+                } else {
+                    KARABO_LOG_FRAMEWORK_DEBUG << "Debug: The userNonce is " << string(nsUserNonceResp.return_->sessionToken->c_str());
+                }
+            } else {
+                throw KARABO_NETWORK_EXCEPTION("Error: Problem with SOAP message: " + soapMessageNotOk(m_service->soap));
+            }
+
+            return nsUserNonceResp; // If no problems happened it returns new userNonceResponse information
+        }
+
+
+        ns1__loginResponse Authenticator::authenticate(const karabo::util::Timestamp& timestamp) {
+            ns1__login nsLogin;
+            ns1__loginResponse nsLoginResp;
+
+            nsLogin.username = &m_username;
+            nsLogin.password = &m_password;
+            nsLogin.provider = &m_provider;
+            nsLogin.ipAddress = &m_ipAddress;
+            nsLogin.hostname = &m_hostname;
+            nsLogin.portNumber = &m_portNumber;
+            nsLogin.nonce = &m_nonce;
+            nsLogin.software = &m_software;
+
+            // Convert received date to String to send to the WebServer
+            karabo::util::Timestamp contextTime = karabo::util::Timestamp(timestamp);
+            string contextTimeStr = contextTime.toFormattedString("%Y-%m-%d %H:%M:%S.%f");
+            nsLogin.time = &contextTimeStr;
+
+            // If obtain successfully answer from Web Service it print message returned!
+            if (m_service->login(&nsLogin, &nsLoginResp) == SOAP_OK) {
+                KARABO_LOG_FRAMEWORK_DEBUG << "Debug: SOAP message is OK";
+                if (*(nsLoginResp.return_->operationSuccess) == 0) {
+                    KARABO_LOG_FRAMEWORK_DEBUG << "Error: " << string(nsLoginResp.return_->operationResultMsg->c_str());
+                } else {
+                    KARABO_LOG_FRAMEWORK_DEBUG << "Debug: The sessionToken is " << string(nsLoginResp.return_->sessionToken->c_str());
+                }
+            } else {
+                throw KARABO_NETWORK_EXCEPTION("Error: Problem with SOAP message: " + soapMessageNotOk(m_service->soap));
+            }
+
+            return nsLoginResp; // If no problems happened it returns new loginResponse information
+        }
+
+
+        std::string Authenticator::getSingleSignOn(const std::string ipAddress) {
+            ns1__singleSignOn nsSingleSignOn;
+            ns1__singleSignOnResponse nsSingleSignOnResp;
+
+            nsSingleSignOn.username = &m_username;
+            nsSingleSignOn.provider = &m_provider;
+
+            string idAddressStr = string(ipAddress);
+            nsSingleSignOn.ipAddress = &idAddressStr;
+
+            // If obtain successfully answer from Web Service it print message returned!
+            if (m_service->singleSignOn(&nsSingleSignOn, &nsSingleSignOnResp) == SOAP_OK) {
+                KARABO_LOG_FRAMEWORK_DEBUG << "Debug: SOAP message is OK";
+                if (*(nsSingleSignOnResp.return_->operationSuccess) == 0) {
+                    KARABO_LOG_FRAMEWORK_DEBUG << "Error: " << string(nsSingleSignOnResp.return_->operationResultMsg->c_str());
+                    return "";
+                } else {
+                    KARABO_LOG_FRAMEWORK_DEBUG << "Debug: The sessionToken is " << string(nsSingleSignOnResp.return_->sessionToken->c_str());
+                }
+            } else {
+                throw KARABO_NETWORK_EXCEPTION("Error: Problem with SOAP message: " + soapMessageNotOk(m_service->soap));
+            }
+
+            return string(nsSingleSignOnResp.return_->sessionToken->c_str()); // If no problems happened it returns SessionToken
+        }
+
+
+        /*
+         * Auxiliar functions
+         */
+        void Authenticator::printObject(ns1__loginResponse nsLoginResp) {
+            KARABO_LOG_FRAMEWORK_DEBUG << "Information received: \n";
+            KARABO_LOG_FRAMEWORK_DEBUG << "firstName: " << string(nsLoginResp.return_->firstName->c_str()) << "\n";
+            KARABO_LOG_FRAMEWORK_DEBUG << "familyName: " << string(nsLoginResp.return_->familyName->c_str()) << "\n";
+            KARABO_LOG_FRAMEWORK_DEBUG << "username: " << string(nsLoginResp.return_->username->c_str()) << "\n";
+            KARABO_LOG_FRAMEWORK_DEBUG << "provider: " << string(nsLoginResp.return_->provider->c_str()) << "\n";
+            KARABO_LOG_FRAMEWORK_DEBUG << "roleDesc: " << string(nsLoginResp.return_->roleDesc->c_str()) << "\n";
+            KARABO_LOG_FRAMEWORK_DEBUG << "softwareDesc: " << string(nsLoginResp.return_->softwareDesc->c_str()) << "\n";
+            KARABO_LOG_FRAMEWORK_DEBUG << "sessionToken: " << string(nsLoginResp.return_->sessionToken->c_str()) << "\n";
+            KARABO_LOG_FRAMEWORK_DEBUG << "welcomeMessage: " << string(nsLoginResp.return_->welcomeMessage->c_str()) << "\n";
+            if (*(nsLoginResp.return_->operationSuccess) == 0) {
+                KARABO_LOG_FRAMEWORK_DEBUG << "operationSuccess: No\n";
+            } else {
+                KARABO_LOG_FRAMEWORK_DEBUG << "operationSuccess: Yes\n";
+            }
+        }
+
+
+        std::string Authenticator::soapMessageNotOk(struct soap *soap) {
+            string errorMsg;
+
+            if (soap_check_state(soap))
+                errorMsg = "Error: soap struct state not initialized\n";
+            else if (soap->error) {
+                const char **c, *v = NULL, *s, *d;
+                c = soap_faultcode(soap);
+                if (!*c)
+                    soap_set_fault(soap);
+                if (soap->version == 2)
+                    v = soap_check_faultsubcode(soap);
+                s = *soap_faultstring(soap);
+                d = soap_check_faultdetail(soap);
+
+                errorMsg = soap->version ? "SOAP 1." : "Error ";
+                errorMsg = errorMsg + boost::lexical_cast<std::string>(soap->version ? (int) soap->version : soap->error);
+                errorMsg = errorMsg + " fault: ";
+                errorMsg = errorMsg + *c;
+                errorMsg = errorMsg + " [";
+                errorMsg = errorMsg + boost::lexical_cast<std::string>(v ? v : "no subcode");
+                errorMsg = errorMsg + " ]\n\"";
+                errorMsg = errorMsg + boost::lexical_cast<std::string>(s ? s : "[no reason]");
+                errorMsg = errorMsg + "\"\nDetail: ";
+                errorMsg = errorMsg + boost::lexical_cast<std::string>(d ? d : "[no detail]");
+                errorMsg = errorMsg + "\n";
+            }
+            return errorMsg;
+        }
+
+
+/******************************************************************************\
+         *
+         *	SIGPIPE
+         *
+\******************************************************************************/
+
+        void sigpipe_handle(int x) {
+        }
+
+    } // namespace packageName
+} // namespace karabo

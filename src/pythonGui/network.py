@@ -12,7 +12,7 @@
 __all__ = ["Network"]
 
 
-from libkarabo import *
+from libkarathon import *
 from logindialog import LoginDialog
 from manager import Manager
 from struct import *
@@ -24,16 +24,16 @@ from PyQt4.QtGui import *
 
 BYTES_TOTAL_SIZE_TAG = 4
 BYTES_HEADER_SIZE_TAG = 4
+BYTES_MESSAGE_SIZE_TAG = 4
 
 class Network(QObject):
            
     def __init__(self):
         super(Network, self).__init__()
         
-        self.__serializer = FormatHash.create("Xml", Hash("printDataType", 1))
+        self.__textSerializer = TextSerializerHash.create("Xml")
+        self.__binarySerializer = BinarySerializerHash.create("Bin")
         
-        self.__binarySerializer = FormatHash.create("Bin", Hash())
-                       
         self.__tcpSocket = QTcpSocket(self)
         self.__tcpSocket.connected.connect(self.onConnected)
         self.__tcpSocket.disconnected.connect(self.onDisconnected)
@@ -53,15 +53,18 @@ class Network(QObject):
         
         Manager().notifier.signalCreateNewDeviceClassPlugin.connect(self.onCreateNewDeviceClassPlugin)
         
-        self.__totalSize = 0
         self.__headerSize = 0
+        self.__bodySize = 0
+        self.__headerBytes = bytearray()
+        self.__bodyBytes = bytearray()
+        
         
         
     def onStartConnection(self):
         dialog = LoginDialog()
         if dialog.exec_() == QDialog.Accepted :
             # test request to server
-            self.__totalSize = 0
+            self.__bodySize = 0
             self.__tcpSocket.abort()
             self.__tcpSocket.connectToHost(dialog.hostname, dialog.port)
             self._sendLoginInformation(dialog.username, dialog.password)
@@ -104,7 +107,7 @@ class Network(QObject):
         header.set("type", "reconfigure")
         header.set("instanceId", str(instanceId))
         body = Hash()
-        body.setFromPath(str(attributeId), attributeValue)
+        body.set(str(attributeId), attributeValue)
         self._tcpWriteHashHash(header, body)
 
 
@@ -166,42 +169,40 @@ class Network(QObject):
         header = Hash()
         header.set("type", "newVisibleDeviceInstance")
         header.set("instanceId", str(instanceId))
-        self._tcpWriteHashString(header, Hash())
+        self._tcpWriteHashHash(header, Hash())
 
 
     def onRemoveVisibleDeviceInstance(self, instanceId):
         header = Hash()
         header.set("type", "removeVisibleDeviceInstance")
         header.set("instanceId", str(instanceId))
-        self._tcpWriteHashString(header, Hash())
+        self._tcpWriteHashHash(header, Hash())
 
 
     def _tcpWriteHashHash(self, headerHash, bodyHash):
         stream = QByteArray()
-        headerString = QByteArray(self.__serializer.serialize(headerHash))
-        bodyString = QByteArray(self.__serializer.serialize(bodyHash))
+        headerString = QByteArray(self.__textSerializer.save(headerHash))
+        bodyString = QByteArray(self.__textSerializer.save(bodyHash))
         nBytesHeader = headerString.size()
         nBytesBody = bodyString.size()
                 
-        nBytesTotal = nBytesHeader + nBytesBody
-        stream.push_back(QByteArray(pack('I', nBytesTotal)))
         stream.push_back(QByteArray(pack('I', nBytesHeader)))
         stream.push_back(headerString)
+        stream.push_back(QByteArray(pack('I', nBytesBody)))
         stream.push_back(bodyString)
         self.__tcpSocket.write(stream)
         
         
     def _tcpWriteHashString(self, headerHash, body):
         stream = QByteArray()
-        headerString = QByteArray(self.__serializer.serialize(headerHash))
+        headerString = QByteArray(self.__textSerializer.save(headerHash))
         bodyString = QByteArray(str(body))
         nBytesHeader = headerString.size()
         nBytesBody = bodyString.size()
-        nBytesTotal = nBytesHeader + nBytesBody
-        
-        stream.push_back(QByteArray(pack('I', nBytesTotal)))
+                
         stream.push_back(QByteArray(pack('I', nBytesHeader)))
         stream.push_back(headerString)
+        stream.push_back(QByteArray(pack('I', nBytesBody)))
         stream.push_back(bodyString)
         self.__tcpSocket.write(stream)
         
@@ -210,73 +211,93 @@ class Network(QObject):
         input = QDataStream(self.__tcpSocket)
         input.setByteOrder(QDataStream.LittleEndian)
 
-        #print self.__tcpSocket.bytesAvailable(), " bytes are coming in"
+        print self.__tcpSocket.bytesAvailable(), " bytes are coming in"
         while True:
 
-            if self.__totalSize == 0 :
+            if self.__headerSize == 0 :
             
-                if self.__tcpSocket.bytesAvailable() < (BYTES_TOTAL_SIZE_TAG + BYTES_HEADER_SIZE_TAG) :
+                if self.__tcpSocket.bytesAvailable() < (BYTES_MESSAGE_SIZE_TAG) :
                     break
 
-                self.__totalSize = input.readUInt32()
                 self.__headerSize = input.readUInt32()
-          
-            if self.__tcpSocket.bytesAvailable() < self.__totalSize :
-                break
+                          
+            if len(self.__headerBytes) == 0 :
+            
+                if self.__tcpSocket.bytesAvailable() < self.__headerSize :
+                    break
+                
+                self.__headerBytes = bytearray(self.__headerSize)
+                self.__headerBytes = input.readRawData(self.__headerSize)
+                
+            if self.__bodySize == 0 :
+            
+                if self.__tcpSocket.bytesAvailable() < (BYTES_MESSAGE_SIZE_TAG) :
+                    break
 
-            # Fill header
-            headerString = QString()
-            headerString.resize(self.__headerSize)
-            headerString = input.readRawData(self.__headerSize)
+                self.__bodySize = input.readUInt32()
+                          
+            if len(self.__bodyBytes) == 0 :
             
-            # Fill body
-            bodyString = QString()
-            bodySize = self.__totalSize - self.__headerSize
-            bodyString.resize(bodySize)
-            bodyString = input.readRawData(bodySize)
-            
+                if self.__tcpSocket.bytesAvailable() < self.__bodySize :
+                    break
+                
+                self.__bodyBytes = bytearray(self.__bodySize)
+                self.__bodyBytes = input.readRawData(self.__bodySize)
+                
+                    
             # Fork on responseType
-            headerHash = self.__serializer.unserialize(str(headerString))
+            headerHash = self.__textSerializer.load(self.__headerBytes)
+            #bodyHash = self.__textSerializer.load(self.__bodyBytes)
             
             type = headerHash.get("type")
-            #print "Request: ", type
-            if type == "change":
-                bodyHash = self.__binarySerializer.unserialize(str(bodyString))
+            print "Request: ", type
+            
+            # "instanceUpdated" (instanceId, instanceInfo)
+            # "instanceGone" (instanceId)
+            # "configurationChange" (config, instanceId)
+            # "log" (logMessage)
+            # "notify" (instanceId, type, text)
+            # "invalidateCache" (instanceId)
+            
+            if type == "change": 
+                bodyHash = self.__textSerializer.load(self.__bodyBytes)
                 self._handleChange(headerHash, bodyHash)
-            elif type == "log":
-                self._handleLog(bodyString)
+            elif type == "log": 
+                self._handleLog(str(self.__bodyBytes))
             elif type == "error":
-                self._handleError(bodyString)
+                self._handleError(str(self.__bodyBytes))
             elif type == "warning":
-                self._handleWarning(bodyString)
+                self._handleWarning(str(self.__bodyBytes))
             elif type == "alarm":
-                self._handleAlarm(bodyString)
+                self._handleAlarm(str(self.__bodyBytes))
             elif type == "currentInstances":
-                bodyHash = self.__serializer.unserialize(str(bodyString))
+                bodyHash = self.__textSerializer.load(self.__bodyBytes)
                 self._handleInstanceIds(bodyHash)
                 #self._tcpWrite(headerHash, bodyHash)
             elif type == "newNode":
-                bodyHash = self.__serializer.unserialize(str(bodyString))
+                bodyHash = self.__textSerializer.load(self.__bodyBytes)
                 self._handleNewNode(bodyHash)
             elif type == "newDeviceServerInstance":
-                bodyHash = self.__serializer.unserialize(str(bodyString))
+                bodyHash = self.__textSerializer.load(self.__bodyBytes)
                 self._handleNewDeviceServerInstance(bodyHash)
             elif type == "newDeviceClass":
-                bodyHash = self.__serializer.unserialize(str(bodyString))
+                bodyHash = self.__textSerializer.load(self.__bodyBytes)
                 self._handleNewDeviceClass(bodyHash)
             elif type == "newDeviceInstance":
-                bodyHash = self.__serializer.unserialize(str(bodyString))
+                bodyHash = self.__textSerializer.load(self.__bodyBytes)
                 self._handleNewDeviceInstanceOnRunning(bodyHash)
             elif type == "updateDeviceServerInstance":
-                bodyHash = self.__serializer.unserialize(str(bodyString))
+                bodyHash = self.__textSerializer.load(self.__bodyBytes)
                 self._handleUpdateDeviceServerInstance(bodyHash)
             elif type == "updateDeviceInstance":
-                bodyHash = self.__serializer.unserialize(str(bodyString))
+                bodyHash = self.__textSerializer.load(self.__bodyBytes)
                 self._handleUpdateDeviceInstance(bodyHash)
             elif type == "schemaUpdated":
-                self._handleSchemaUpdated(headerHash, bodyString)
+                self._handleSchemaUpdated(headerHash, str(self.__bodyBytes))
                     
-            self.__totalSize = self.__headerSize = 0
+            # Invalidate variables            
+            self.__bodySize = self.__headerSize = 0
+            self.__headerBytes = self.__bodyBytes = bytearray()
 
 
     def onDisplayServerError(self, socketError):
@@ -284,12 +305,12 @@ class Network(QObject):
 
 
     def onConnected(self):
-        #print "Connected to server"
+        print "Connected to server"
         pass
         
         
     def onDisconnected(self):
-        #print "Disconnected from server"
+        print "Disconnected from server"
         pass
 
 

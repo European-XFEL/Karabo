@@ -15,11 +15,12 @@
 #include <string>
 #include <boost/signals2.hpp>
 #include <boost/shared_ptr.hpp>
-#include <karabo/util/Factory.hh>
-#include <karabo/io/Format.hh>
+#include <karabo/util/Configurator.hh>
+#include <karabo/io/BinarySerializer.hh>
+#include <karabo/io/TextSerializer.hh>
 
 #include "BrokerIOService.hh"
-#include "netdll.hh"
+
 
 /**
  * The main European XFEL namespace
@@ -31,12 +32,9 @@ namespace karabo {
      */
     namespace net {
 
-        typedef boost::system::error_code ErrorCode;
-
-
         class BrokerChannel;
-        typedef boost::shared_ptr<BrokerChannel> BrokerChannelPointer;
-        typedef boost::function<void (BrokerChannelPointer, const std::string&) > BrokerErrorHandler;
+        
+        typedef boost::function<void (boost::shared_ptr<BrokerChannel>, const std::string&) > BrokerErrorHandler;
 
         /**
          * The BrokerConnection class.
@@ -44,36 +42,34 @@ namespace karabo {
          * A connection is only established upon call of the start() function.
          */
         class BrokerConnection : public boost::enable_shared_from_this<BrokerConnection> {
+
+            typedef boost::shared_ptr<BrokerChannel> BrokerChannelPointer;
+            
+
             friend class BrokerChannel;
+
+            std::set<BrokerChannelPointer> m_channels;
+
+            boost::mutex m_channelMutex;
 
         public:
 
             KARABO_CLASSINFO(BrokerConnection, "Connection", "1.0")
-            KARABO_FACTORY_BASE_CLASS
+            KARABO_CONFIGURATION_BASE_CLASS;
 
             typedef boost::function<void (BrokerChannelPointer) > ConnectionHandler;
-
-
-            typedef karabo::io::Format<karabo::util::Hash> HashFormat;
 
             virtual ~BrokerConnection() {
             }
 
             static void expectedParameters(karabo::util::Schema& expected);
 
-            void configure(const karabo::util::Hash& input);
+            BrokerConnection(const karabo::util::Hash& input);
 
             /**
              * Starts the connection
              */
             virtual BrokerChannelPointer start() = 0;
-
-            /**
-             * Starts the connection asynchronously
-             */
-            virtual void startAsync(const ConnectionHandler& handler) {
-                throw NOT_SUPPORTED_EXCEPTION("Asynchronous connect is not available for " + this->classInfo().getClassId() + "connections");
-            }
 
             /**
              * Stops the connection
@@ -109,14 +105,6 @@ namespace karabo {
                 m_errorHandler = handler;
             }
 
-            /**
-             * @return size of message length field in protocol
-             * 
-             */
-            std::size_t getSizeofLength() {
-                return m_sizeofLength;
-            }
-
         protected: // functions
 
             void registerChannel(BrokerChannelPointer channel) {
@@ -131,12 +119,13 @@ namespace karabo {
 
             BrokerIOService::Pointer m_service;
             BrokerErrorHandler m_errorHandler;
+            std::string m_serializationType;
 
         private: // functions
 
-            void hashToString(const karabo::util::Hash& hash, std::string& serializedHash);
-
-            void stringToHash(const std::string& serializedHash, karabo::util::Hash& hash);
+            //            void hashToString(const karabo::util::Hash& hash, std::string& serializedHash);
+            //
+            //            void stringToHash(const std::string& serializedHash, karabo::util::Hash& hash);
 
             void unregisterChannel(BrokerChannelPointer channel) {
                 boost::mutex::scoped_lock lock(m_channelMutex);
@@ -150,25 +139,20 @@ namespace karabo {
                 return shared_from_this();
             }
 
-            std::string getHashFormat() {
-                return m_hashFormat->getClassInfo().getClassId();
-            }
+            //            std::string getHashFormat() {
+            //                return m_hashFormat->getClassInfo().getClassId();
+            //            }
 
         private: // members
 
-            HashFormat::Pointer m_hashFormat;
 
-            std::set<BrokerChannelPointer> m_channels;
-
-            boost::mutex m_channelMutex;
-
-            unsigned int m_sizeofLength;
         };
 
 
     }
 }
 
-KARABO_REGISTER_FACTORY_BASE_HH(karabo::net::BrokerConnection, TEMPLATE_NET, DECLSPEC_NET)
+// TODO Windows
+//KARABO_REGISTER_FACTORY_BASE_HH(karabo::net::BrokerConnection, TEMPLATE_NET, DECLSPEC_NET)
 
-#endif	/* KARABO_NET_ACONNECTION_HH */
+#endif

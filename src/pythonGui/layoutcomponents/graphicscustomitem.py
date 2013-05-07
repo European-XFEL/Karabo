@@ -11,7 +11,7 @@
 __all__ = ["GraphicsCustomItem", "PrivateXsdReader"]
 
 
-from libkarabo import *
+from libkarathon import *
 
 from graphicsinputchannelitem import GraphicsInputChannelItem
 from graphicsoutputchannelitem import GraphicsOutputChannelItem

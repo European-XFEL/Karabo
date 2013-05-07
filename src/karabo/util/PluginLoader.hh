@@ -12,7 +12,10 @@
 #ifndef KARABO_UTIL_PLUGINLOADER_HH
 #define	KARABO_UTIL_PLUGINLOADER_HH
 
+#include <boost/filesystem.hpp>
+
 #include "Schema.hh"
+#include "Configurator.hh"
 
 
 /**
@@ -20,49 +23,45 @@
  */
 namespace karabo {
 
-  /**
-   * Namespace for package packageName
-   */
-  namespace util {
-
     /**
-     * The PluginLoader class.
+     * Namespace for package packageName
      */
-    class PluginLoader {
-    public:
+    namespace util {
 
-      KARABO_CLASSINFO(PluginLoader, "PluginLoader", "1.0")
-      KARABO_FACTORY_BASE_CLASS
+        /**
+         * The PluginLoader class.
+         */
+        class PluginLoader {
 
-      PluginLoader() {
-      };
+        public:
 
-      PluginLoader(const boost::filesystem::path& pluginDirectory) : m_pluginDirectory(pluginDirectory) {
-      }
+            KARABO_CLASSINFO(PluginLoader, "PluginLoader", "1.0")
+            KARABO_CONFIGURATION_BASE_CLASS
 
-      static void expectedParameters(karabo::util::Schema& expected);
+            PluginLoader(const std::string& pluginDirectory) : m_pluginDirectory(pluginDirectory) {
+            }
 
-      void configure(const karabo::util::Hash& input);
+            static void expectedParameters(karabo::util::Schema& expected);
 
-      virtual ~PluginLoader() {
-      };
+            PluginLoader(const karabo::util::Hash& input);
 
-      bool update();
+            virtual ~PluginLoader() {
+            };
 
-      const boost::filesystem::path& getPluginDirectory() const;
+            bool update();
 
-    protected:
+            const boost::filesystem::path& getPluginDirectory() const;
 
-    private:
+        protected:
 
-      boost::filesystem::path m_pluginDirectory;
+        private:
 
-      static std::map<boost::filesystem::path, void*> m_loadedPlugins;
+            boost::filesystem::path m_pluginDirectory;
 
-    };
-  } // namespace util
+            static std::map<boost::filesystem::path, void*> m_loadedPlugins;
+
+        };
+    } // namespace util
 } // namespace karabo
-
-KARABO_REGISTER_FACTORY_BASE_HH(karabo::util::PluginLoader, TEMPLATE_UTIL, DECLSPEC_UTIL)
 
 #endif	/* KARABO_PACKAGENAME_PLUGINLOADER_HH */
