@@ -88,28 +88,26 @@ build: .build-post
 	@$(CP) -f $(CND_BASEDIR)/nbproject/Makefile-$(CONF).mk $(CND_BASEDIR)/nbproject/Karabo-$(CONF)-$(CURRENT_PLATFORM).mk
 
 # Add your post 'build' code here...
-	@if test ! -d $(KARABO)/include/karabo/core;    then $(MKDIR) -p  $(KARABO)/include/karabo/core; fi
-	@if test ! -d $(KARABO)/include/karabo/io/hdf5; then $(MKDIR) -p  $(KARABO)/include/karabo/io/hdf5; fi
-	@if test ! -d $(KARABO)/include/karabo/log;     then $(MKDIR) -p  $(KARABO)/include/karabo/log; fi
-	@if test ! -d $(KARABO)/include/karabo/net;     then $(MKDIR) -p  $(KARABO)/include/karabo/net; fi
-	@if test ! -d $(KARABO)/include/karabo/python;  then $(MKDIR) -p  $(KARABO)/include/karabo/python; fi
 	@if test ! -d $(KARABO)/include/karabo/util;    then $(MKDIR) -p  $(KARABO)/include/karabo/util; fi
-	@if test ! -d $(KARABO)/include/karabo/xip;     then $(MKDIR) -p  $(KARABO)/include/karabo/xip; fi
-	@if test ! -d $(KARABO)/include/karabo/xml;     then $(MKDIR) -p  $(KARABO)/include/karabo/xml; fi
+	@if test ! -d $(KARABO)/include/karabo/log;     then $(MKDIR) -p  $(KARABO)/include/karabo/log; fi
+	@if test ! -d $(KARABO)/include/karabo/webAuth;     then $(MKDIR) -p  $(KARABO)/include/karabo/webAuth; fi
+	@if test ! -d $(KARABO)/include/karabo/io/h5; then $(MKDIR) -p  $(KARABO)/include/karabo/io/h5; fi
+	@if test ! -d $(KARABO)/include/karabo/net;     then $(MKDIR) -p  $(KARABO)/include/karabo/net; fi
 	@if test ! -d $(KARABO)/include/karabo/xms;     then $(MKDIR) -p  $(KARABO)/include/karabo/xms; fi
-	@$(CP) $(CND_BASEDIR)/../../../src/karabo/core/*.hh $(KARABO)/include/karabo/core
-	@$(CP) $(CND_BASEDIR)/../../../src/karabo/io/*.hh $(KARABO)/include/karabo/io
-	@$(CP) $(CND_BASEDIR)/../../../src/karabo/io/hdf5/*.hh $(KARABO)/include/karabo/io/hdf5
-	@$(CP) $(CND_BASEDIR)/../../../src/karabo/log/*.hh $(KARABO)/include/karabo/log
-	@$(CP) $(CND_BASEDIR)/../../../src/karabo/net/*.hh $(KARABO)/include/karabo/net
-	@$(CP) $(CND_BASEDIR)/../../../src/karabo/python/*.hh $(KARABO)/include/karabo/python
-	@$(CP) $(CND_BASEDIR)/../../../src/karabo/util/*.hh $(KARABO)/include/karabo/util
-	@$(CP) $(CND_BASEDIR)/../../../src/karabo/xip/*.hh $(KARABO)/include/karabo/xip
-	@$(CP) $(CND_BASEDIR)/../../../src/karabo/xip/*.h  $(KARABO)/include/karabo/xip
-	@$(CP) $(CND_BASEDIR)/../../../src/karabo/xml/*.hh $(KARABO)/include/karabo/xml
-	@$(CP) $(CND_BASEDIR)/../../../src/karabo/xml/*.h  $(KARABO)/include/karabo/xml
-	@$(CP) $(CND_BASEDIR)/../../../src/karabo/xms/*.hh $(KARABO)/include/karabo/xms
-
+	@if test ! -d $(KARABO)/include/karabo/core;    then $(MKDIR) -p  $(KARABO)/include/karabo/core; fi
+	@if test ! -d $(KARABO)/include/karabo/xip;     then $(MKDIR) -p  $(KARABO)/include/karabo/xip; fi
+	@$(CP) $(CND_BASEDIR)/../../../src/karabo/util/*.h* $(KARABO)/include/karabo/util
+	@$(CP) $(CND_BASEDIR)/../../../src/karabo/log/*.h* $(KARABO)/include/karabo/log
+	@$(CP) $(CND_BASEDIR)/../../../src/karabo/webAuth/*.h* $(KARABO)/include/karabo/webAuth
+	@$(CP) $(CND_BASEDIR)/../../../src/karabo/io/*.h* $(KARABO)/include/karabo/io
+	@$(CP) $(CND_BASEDIR)/../../../src/karabo/io/h5/*.h* $(KARABO)/include/karabo/io/h5
+	@$(CP) $(CND_BASEDIR)/../../../src/karabo/net/*.h* $(KARABO)/include/karabo/net
+	@$(CP) $(CND_BASEDIR)/../../../src/karabo/xms/*.h* $(KARABO)/include/karabo/xms
+	@$(CP) $(CND_BASEDIR)/../../../src/karabo/core/*.h* $(KARABO)/include/karabo/core
+	@$(CP) $(CND_BASEDIR)/../../../src/karabo/xip/*.h* $(KARABO)/include/karabo/xip
+	@$(CP) $(CND_BASEDIR)/../../../src/karabo/*.hpp $(KARABO)/include/karabo
+	
+	
 # Force extern re-build
 .PHONY: extern package cmd
 extern:

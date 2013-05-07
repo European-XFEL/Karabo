@@ -25,6 +25,8 @@ namespace karabo {
         using namespace karabo::util;
         using namespace karabo::tinyxml;
 
+        
+
         void SchemaXsdFormat::expectedParameters(karabo::util::Schema& expected) {
 
             INT32_ELEMENT(expected)
@@ -55,22 +57,22 @@ namespace karabo {
         }
 
         /**
-         * Reading an XSD file (we do not need such functionality, therefore function is not implemented).
-         * Function reads XSD Document and
-         * creates an object of the class karabo::util::Schema
-         * @param in Input parameter representing XSD document
-         * @param out Output parameter representing object of the class karabo::util::Schema
+         * Reading a configuration file.
+         * Function reads configuration file (XML Document) and
+         * creates an object of the class karabo::util::Hash
+         * @param in Input parameter representing XML document
+         * @param out Output parameter representing object of the class karabo::util::Hash
          */
         void SchemaXsdFormat::convert(stringstream& in, Schema& out) {
-            throw NOT_IMPLEMENTED_EXCEPTION("Reading (de-serialization) of .xsd file into Schema objects is currently not implemented");
+            throw KARABO_NOT_IMPLEMENTED_EXCEPTION("Reading (de-serialization) of .xsd file into Schema objects is currently not implemented");
         }
 
         /**
-         * Writing an XSD file.
-         * Function gets as input an object of the class karabo::util::Schema
-         * and creates an XSD file.
-         * @param in Input parameter representing an object of the class karabo::util::Schema
-         * @param out Output parameter representing constructed XSD Document
+         * Writing a configuration file.
+         * Function gets as input an object of the class karabo::util::Hash
+         * and creates a configuration file in XML format.
+         * @param in Input parameter representing an object of the class karabo::util::Hash
+         * @param out Output parameter representing constructed XML Document
          */
         void SchemaXsdFormat::convert(const Schema& in, stringstream& out) {
 
@@ -230,7 +232,7 @@ namespace karabo {
                                 simpleElem->LinkEndChild(annotationTag);
                             }
 
-                            Types::Type typeOfElem = desc.get<Types::Type > ("simpleType");
+                            Types::ReferenceType typeOfElem = desc.get<Types::ReferenceType > ("simpleType");
 
                             //type of element or type of all elements of the vector
                             string typeOfElemXsd = Types::convertToXsd(typeOfElem);
@@ -388,7 +390,7 @@ namespace karabo {
                 }//for-loop over root-elements
 
             } catch (...) {
-                RETHROW;
+                KARABO_RETHROW;
             }
         }
 

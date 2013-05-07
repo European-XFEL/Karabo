@@ -85,7 +85,7 @@ void Hdf5File_Test::testWrite() {
         try {
             dataFormat = DataFormat::discoverFromData(data[0]);
         } catch (...) {
-            RETHROW;
+            KARABO_RETHROW;
         }
         dfc = dataFormat->getConfig();
         tracer << "dataFormatConfig: " << endl << dfc << endl;

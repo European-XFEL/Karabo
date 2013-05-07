@@ -19,6 +19,7 @@ namespace karabo {
         typedef boost::shared_ptr<boost::asio::io_service::work> WorkPointer;
 
         class AsioIOService : public AbstractIOService {
+
         public:
 
             KARABO_CLASSINFO(AsioIOService, "Asio", "1.0")
@@ -31,20 +32,22 @@ namespace karabo {
 
             void run() {
                 if (!m_ioservice)
-                    throw PARAMETER_EXCEPTION("AsioIOService is not configured");
+                    throw KARABO_PARAMETER_EXCEPTION("AsioIOService is not configured");
+                
                 m_ioservice->run();
             }
 
             void work() {
                 if (!m_ioservice)
-                    throw PARAMETER_EXCEPTION("AsioIOService is not configured");
+                    throw KARABO_PARAMETER_EXCEPTION("AsioIOService is not configured");
                 m_work = WorkPointer(new boost::asio::io_service::work(*m_ioservice));
+                
                 m_ioservice->run();
             }
 
             void stop() {
                 if (!m_ioservice)
-                    throw PARAMETER_EXCEPTION("AsioIOService is not configured");
+                    throw KARABO_PARAMETER_EXCEPTION("AsioIOService is not configured");
                 m_ioservice->stop();
             }
 

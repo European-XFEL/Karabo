@@ -17,7 +17,7 @@
 #include <boost/bind.hpp>
 #include <boost/thread.hpp>
 
-#include <karabo/util/Hash.hh>
+#include <karabo/net/IOService.hh>
 #include <karabo/net/Connection.hh>
 #include <karabo/net/Channel.hh>
 
@@ -40,36 +40,48 @@ private:
 };
 
 namespace karabo {
-    namespace tcpclientserver {
+    namespace net {
 
-        class TcpClientServer {
-        public:
-            TcpClientServer(const std::string& rHost, unsigned short rPort, unsigned short lPort);
-            ~TcpClientServer();
+        struct TcpServer {
+
+            TcpServer() : m_count(0) {
+            }
+
+            virtual ~TcpServer() {
+            }
+
+            void connectHandler(karabo::net::Channel::Pointer channel);
+            void readVectorHashHandler(karabo::net::Channel::Pointer channel, const std::vector<char>& data, const karabo::util::Hash & hash);
+            void writeCompleteHandler(karabo::net::Channel::Pointer channel);
+            void errorHandler(karabo::net::Channel::Pointer channel, const std::string & errmsg);
             void run();
-            
-            void clientConnectHandler(karabo::net::Channel::Pointer channel);
-            void clientConnectionErrorHandler(karabo::net::Channel::Pointer channel, const std::string & errmsg);
-            void clientErrorHandler(karabo::net::Channel::Pointer channel, const std::string & errmsg);
-            void clientReadHashHandler(karabo::net::Channel::Pointer channel, const karabo::util::Hash & data);
-            void clientWriteCompleteHandler(karabo::net::Channel::Pointer channel);
-            void timerHandler(karabo::net::Channel::Pointer channel);
-            
-            void serverConnectHandler(karabo::net::Channel::Pointer channel);
-            void serverErrorHandler(karabo::net::Channel::Pointer channel, const std::string & errmsg);
-            void serverReadHashHandler(karabo::net::Channel::Pointer channel, const karabo::util::Hash& data);
-            void serverWriteCompleteHandler(karabo::net::Channel::Pointer channel);
-            
+
         private:
-            int m_remoteCount;
-            int m_localCount;
-            std::string m_remoteHost;
-            unsigned short m_remotePort;
-            unsigned short m_localPort;
-            karabo::net::Connection::Pointer m_clientConnection;
-            karabo::net::Connection::Pointer m_serverConnection;
-            karabo::util::Hash m_clientData;
-            karabo::util::Hash m_serverData;
+            int m_count;
+            karabo::net::Connection::Pointer m_connection;
+            karabo::util::Hash m_hash;
+            std::vector<char> m_data;
+        };
+
+        struct TcpClient {
+
+            TcpClient() : m_count(0){
+            }
+
+            virtual ~TcpClient() {
+            }
+
+            void run();
+            void errorHandler(karabo::net::Channel::Pointer channel, const std::string & errmsg);
+            void readStringHashHandler(karabo::net::Channel::Pointer channel, const std::string& data, const karabo::util::Hash & hash);
+            void connectHandler(karabo::net::Channel::Pointer channel);
+            void timerHandler(karabo::net::Channel::Pointer channel);
+
+        private:
+            int m_count;
+            karabo::net::Connection::Pointer m_connection;
+            karabo::util::Hash m_hash;
+            std::string m_data;
         };
     }
 }

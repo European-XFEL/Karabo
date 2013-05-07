@@ -34,7 +34,7 @@ from manager import Manager
 from navigationtreeview import NavigationTreeView
 from xsdreader import XsdReader
 
-from libkarabo import *
+from libkarathon import *
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 from PyQt4.QtXmlPatterns import *

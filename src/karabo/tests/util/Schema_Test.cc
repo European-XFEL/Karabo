@@ -9,319 +9,401 @@
 
 using namespace std;
 using namespace karabo::util;
-using namespace karabo::xms;
+using namespace configurationTest;
 
 CPPUNIT_TEST_SUITE_REGISTRATION(Schema_Test);
+
 
 Schema_Test::Schema_Test() {
 }
 
+
 Schema_Test::~Schema_Test() {
 }
 
-void Schema_Test::settingExpectedParameters(Schema& expected) {
 
-    STRING_ELEMENT(expected).key("exampleKey1")
-            .displayedName("Example key 1")
-            .description("Example key 1 description")
-            .assignmentOptional().defaultValue("Some default string")
-            .reconfigurable()
-            .commit();
+void Schema_Test::testBuildUp() {
 
-    INT32_ELEMENT(expected).key("exampleKey2").alias(10)
-            .displayedName("Example key 2")
-            .description("Example key 2 description")
-            .assignmentOptional().defaultValue(10)
-            .commit();
+    try {
+        {
+            Schema schema = Configurator<Shape>::getSchema("Circle");
+            CPPUNIT_ASSERT(schema.isAccessInitOnly("shadowEnabled") == true);
+            CPPUNIT_ASSERT(schema.isAccessInitOnly("radius") == true);
+            CPPUNIT_ASSERT(schema.isLeaf("radius") == true);
+            }
+        {
+            Schema schema("test");
+            GraphicsRenderer1::expectedParameters(schema);
+            CPPUNIT_ASSERT(schema.isAccessInitOnly("shapes.circle.radius") == true);
+            CPPUNIT_ASSERT(schema.isLeaf("shapes.circle.radius") == true);
+            }
+        GraphicsRenderer::Pointer p = GraphicsRenderer::create("GraphicsRenderer", Hash("shapes.Circle.radius", 0.5, "color", "red", "antiAlias", "true"));
+        //cout << Configurator<GraphicsRenderer>::getSchema("GraphicsRenderer"); 
 
-    UINT32_ELEMENT(expected).key("exampleKey3").alias(5.5)
-            .displayedName("Example key 3")
-            .description("Example key 3 description")
-            .assignmentOptional().defaultValue(20)
-            .reconfigurable()
-            .commit();
-
-    FLOAT_ELEMENT(expected).key("exampleKey4").alias("exampleAlias4")
-            .displayedName("Example key 4")
-            .description("Example key 4 description")
-            .assignmentOptional().defaultValue(0)
-            .readOnly()
-            .commit();
-
-    INT64_ELEMENT(expected).key("exampleKey5").alias("exampleAlias5")
-            .displayedName("Example key 5")
-            .description("Example key 5 description")
-            .assignmentOptional().defaultValue(0)
-            .readOnly()
-            .commit();
-
-    IMAGE_ELEMENT(expected).key("image")
-            .displayedName("Image")
-            .description("Image")
-            .commit();
-
+    } catch (karabo::util::Exception e) {
+        cout << e << endl;
+    }
 }
 
-void Schema_Test::slotElementExpectParams(Schema& expected) {
-    
-    SLOT_ELEMENT(expected).key("slotTest")
-            .displayedName("Reset")
-            .description("Resets the camera in case of an error")
-            .allowedStates("stateTest")
-            .commit();
 
+void Schema_Test::testPaths() {
+    Schema schema("test");
+    GraphicsRenderer::expectedParameters(schema);
+
+    vector<string> paths = schema.getPaths();
+    CPPUNIT_ASSERT(paths[0] == "antiAlias");
+    CPPUNIT_ASSERT(paths[1] == "color");
+    CPPUNIT_ASSERT(paths[2] == "bold");
+    CPPUNIT_ASSERT(paths[3] == "shapes.Circle.shadowEnabled");
+    CPPUNIT_ASSERT(paths[4] == "shapes.Circle.radius");
+    CPPUNIT_ASSERT(paths[5] == "shapes.EditableCircle.shadowEnabled");
+    CPPUNIT_ASSERT(paths[6] == "shapes.EditableCircle.radius");
+    CPPUNIT_ASSERT(paths[7] == "shapes.Rectangle.shadowEnabled");
+    CPPUNIT_ASSERT(paths[8] == "shapes.Rectangle.a");
+    CPPUNIT_ASSERT(paths[9] == "shapes.Rectangle.b");
 }
 
-void Schema_Test::oneElementExpectParams(Schema& expected) {
-
-    STRING_ELEMENT(expected).key("testKey").alias("testAlias")
-            .displayedName("sample Displayed Name")
-            .description("sample Description")
-            .assignmentOptional().defaultValue("Some default string")
-            .reconfigurable()
-            .commit();
-}
 
 void Schema_Test::setUp() {
-    Schema& tmp = sch.initParameterDescription("test", READ | WRITE | INIT);
-    settingExpectedParameters(tmp);
+    try {
+        m_schema = Schema("MyTest", Schema::AssemblyRules(READ | WRITE | INIT));
+        TestStruct1::expectedParameters(m_schema);
+    } catch (karabo::util::Exception e) {
+        cout << e << endl;
+    }
 }
 
-void Schema_Test::testHasKey() {
 
-    CPPUNIT_ASSERT(sch.hasKey("exampleKey1"));
-    CPPUNIT_ASSERT(sch.hasKey("exampleKey2"));
-    CPPUNIT_ASSERT(sch.hasKey("image"));
-    CPPUNIT_ASSERT(sch.hasKey("image.pixelArray"));
-    CPPUNIT_ASSERT(!sch.hasKey("abcd"));
-
+void Schema_Test::testGetRootName() {
+    CPPUNIT_ASSERT(m_schema.getRootName() == "MyTest");
 }
+
+
+void Schema_Test::testGetTags() {
+    CPPUNIT_ASSERT(m_schema.getTags("exampleKey1")[0] == "hardware");
+    CPPUNIT_ASSERT(m_schema.getTags("exampleKey1")[1] == "poll");
+    CPPUNIT_ASSERT(m_schema.getTags("exampleKey2")[0] == "hardware");
+    CPPUNIT_ASSERT(m_schema.getTags("exampleKey2")[1] == "poll");
+    CPPUNIT_ASSERT(m_schema.getTags("exampleKey3")[0] == "hardware");
+    CPPUNIT_ASSERT(m_schema.getTags("exampleKey3")[1] == "set");
+    CPPUNIT_ASSERT(m_schema.getTags("exampleKey4")[0] == "software");
+    CPPUNIT_ASSERT(m_schema.getTags("exampleKey5")[0] == "h/w");
+    CPPUNIT_ASSERT(m_schema.getTags("exampleKey5")[1] == "d.m.y");
+}
+
+
+void Schema_Test::testGetNodeType() {
+
+    int nodeType = m_schema.getNodeType("exampleKey1");
+    CPPUNIT_ASSERT(nodeType == Schema::LEAF);
+
+    CPPUNIT_ASSERT(m_schema.getNodeType("exampleKey5") == Schema::LEAF);
+}
+
+
+void Schema_Test::testGetValueType() {
+    Types::ReferenceType valueType = m_schema.getValueType("exampleKey1");
+    CPPUNIT_ASSERT(valueType == Types::STRING);
+
+    CPPUNIT_ASSERT(m_schema.getValueType("exampleKey2") == Types::INT32);
+    CPPUNIT_ASSERT(m_schema.getValueType("exampleKey3") == Types::UINT32);
+    CPPUNIT_ASSERT(m_schema.getValueType("exampleKey4") == Types::FLOAT);
+    CPPUNIT_ASSERT(m_schema.getValueType("exampleKey5") == Types::INT64);
+}
+
 
 void Schema_Test::testKeyHasAlias() {
-
-    CPPUNIT_ASSERT(!sch.keyHasAlias("exampleKey1"));
-    CPPUNIT_ASSERT(!sch.keyHasAlias("image"));
-
-    CPPUNIT_ASSERT(sch.keyHasAlias("exampleKey2"));
-    CPPUNIT_ASSERT(sch.keyHasAlias("exampleKey3"));
-    CPPUNIT_ASSERT(sch.keyHasAlias("exampleKey4"));
-    CPPUNIT_ASSERT(sch.keyHasAlias("exampleKey5"));
+    CPPUNIT_ASSERT(m_schema.keyHasAlias("exampleKey1") == false);
+    CPPUNIT_ASSERT(m_schema.keyHasAlias("exampleKey2") == true);
+    CPPUNIT_ASSERT(m_schema.keyHasAlias("exampleKey3") == true);
+    CPPUNIT_ASSERT(m_schema.keyHasAlias("exampleKey4") == true);
+    CPPUNIT_ASSERT(m_schema.keyHasAlias("exampleKey5") == true);
 }
 
-void Schema_Test::testHasAlias() {
 
-    CPPUNIT_ASSERT(sch.hasAlias(10));
-    CPPUNIT_ASSERT(sch.hasAlias(5.5));
-    CPPUNIT_ASSERT(sch.hasAlias("exampleAlias4"));
-    CPPUNIT_ASSERT(sch.hasAlias("exampleAlias5"));
+void Schema_Test::testAliasHasKey() {
+    CPPUNIT_ASSERT(m_schema.aliasHasKey(10) == true);
+    CPPUNIT_ASSERT(m_schema.aliasHasKey(5.5) == true);
+    CPPUNIT_ASSERT(m_schema.aliasHasKey("exampleAlias4") == true);
+
+    vector<int> vecIntAlias;
+    vecIntAlias.push_back(10);
+    vecIntAlias.push_back(20);
+    vecIntAlias.push_back(30);
+    CPPUNIT_ASSERT(m_schema.aliasHasKey(vecIntAlias) == true);
+
+    CPPUNIT_ASSERT(m_schema.aliasHasKey(7) == false);
 }
 
-void Schema_Test::testAliasIsOfType() {
 
-    CPPUNIT_ASSERT(sch.aliasIsOfType<int>("exampleKey2"));
-    CPPUNIT_ASSERT(sch.aliasIsOfType<double>("exampleKey3"));
-    CPPUNIT_ASSERT(sch.aliasIsOfType<std::string > ("exampleKey4"));
+void Schema_Test::testGetAliasFromKey() {
+    CPPUNIT_ASSERT(m_schema.getAliasFromKey<int>("exampleKey2") == 10);
+    CPPUNIT_ASSERT(m_schema.getAliasFromKey<double>("exampleKey3") == 5.5);
+    CPPUNIT_ASSERT(m_schema.getAliasFromKey<string > ("exampleKey4") == "exampleAlias4");
 
-}
-
-void Schema_Test::testParameterIsOfType() {
-
-    CPPUNIT_ASSERT(sch.parameterIsOfType<std::string > ("exampleKey1"));
-    CPPUNIT_ASSERT(sch.parameterIsOfType<int>("exampleKey2"));
-    CPPUNIT_ASSERT(sch.parameterIsOfType<unsigned int>("exampleKey3"));
-    CPPUNIT_ASSERT(sch.parameterIsOfType<float>("exampleKey4"));
-    CPPUNIT_ASSERT(sch.parameterIsOfType<long long>("exampleKey5"));
-
-}
-
-void Schema_Test::testKey2Alias() {
-
-    CPPUNIT_ASSERT(sch.key2alias<int>("exampleKey2") == 10);
-    CPPUNIT_ASSERT(sch.key2alias<double>("exampleKey3") == 5.5);
-    CPPUNIT_ASSERT(sch.key2alias<std::string > ("exampleKey4") == "exampleAlias4");
+    vector<int> aliasVec = m_schema.getAliasFromKey<vector<int> > ("exampleKey5");
+    CPPUNIT_ASSERT(aliasVec[0] == 10);
+    CPPUNIT_ASSERT(aliasVec[1] == 20);
+    CPPUNIT_ASSERT(aliasVec[2] == 30);
 
 }
 
-void Schema_Test::testAlias2Key() {
 
-    CPPUNIT_ASSERT(sch.alias2key(10) == "exampleKey2");
-    CPPUNIT_ASSERT(sch.alias2key(5.5) == "exampleKey3");
-    CPPUNIT_ASSERT(sch.alias2key("exampleAlias4") == "exampleKey4");
+void Schema_Test::testGetKeyFromAlias() {
+    CPPUNIT_ASSERT(m_schema.getKeyFromAlias(10) == "exampleKey2");
+    CPPUNIT_ASSERT(m_schema.getKeyFromAlias(5.5) == "exampleKey3");
+    CPPUNIT_ASSERT(m_schema.getKeyFromAlias("exampleAlias4") == "exampleKey4");
 
+    vector<int> vecIntAlias;
+    vecIntAlias.push_back(10);
+    vecIntAlias.push_back(20);
+    vecIntAlias.push_back(30);
+    CPPUNIT_ASSERT(m_schema.getKeyFromAlias(vecIntAlias) == "exampleKey5");
 }
+
+
+void Schema_Test::testGetAliasAsString() {
+    CPPUNIT_ASSERT(m_schema.getAliasAsString("exampleKey2") == "10");
+    CPPUNIT_ASSERT(m_schema.getAliasAsString("exampleKey3") == "5.500000000000000");
+    CPPUNIT_ASSERT(m_schema.getAliasAsString("exampleKey4") == "exampleAlias4");
+
+    string aliasStr = m_schema.getAliasAsString("exampleKey5");
+    CPPUNIT_ASSERT(aliasStr == "10,20,30");
+}
+
 
 void Schema_Test::testGetAccessMode() {
+    int accessModeKey1 = m_schema.getAccessMode("exampleKey1");
+    CPPUNIT_ASSERT(accessModeKey1 == WRITE);
 
-    CPPUNIT_ASSERT(sch.getAccessMode() == (READ | WRITE | INIT));
+    CPPUNIT_ASSERT(m_schema.getAccessMode("exampleKey2") == INIT);
+    CPPUNIT_ASSERT(m_schema.getAccessMode("exampleKey3") == WRITE);
+    CPPUNIT_ASSERT(m_schema.getAccessMode("exampleKey4") == INIT);
+    CPPUNIT_ASSERT(m_schema.getAccessMode("exampleKey5") == READ);
+}
+
+
+void Schema_Test::testGetAssignment() {
+    int assignment = m_schema.getAssignment("exampleKey1");
+    CPPUNIT_ASSERT(assignment == Schema::OPTIONAL_PARAM);
+
+    CPPUNIT_ASSERT(m_schema.getAssignment("exampleKey2") == Schema::OPTIONAL_PARAM);
+    CPPUNIT_ASSERT(m_schema.getAssignment("exampleKey3") == Schema::MANDATORY_PARAM);
+    CPPUNIT_ASSERT(m_schema.getAssignment("exampleKey4") == Schema::INTERNAL_PARAM);
+    CPPUNIT_ASSERT(m_schema.getAssignment("exampleKey5") == Schema::OPTIONAL_PARAM);
+}
+
+
+void Schema_Test::testGetOptions() {
+    vector<std::string> options = m_schema.getOptions("exampleKey1");
+    CPPUNIT_ASSERT(options[0] == "Radio");
+    CPPUNIT_ASSERT(options[1] == "Air Condition");
+    CPPUNIT_ASSERT(options[2] == "Navigation");
+
+    CPPUNIT_ASSERT(m_schema.getOptions("exampleKey2")[0] == "5");
+    CPPUNIT_ASSERT(m_schema.getOptions("exampleKey2")[1] == "25");
+    CPPUNIT_ASSERT(m_schema.getOptions("exampleKey2")[2] == "10");
+
+    CPPUNIT_ASSERT(m_schema.getOptions("exampleKey4")[0] == "1.11");
+    CPPUNIT_ASSERT(m_schema.getOptions("exampleKey4")[1] == "-2.22");
+    CPPUNIT_ASSERT(m_schema.getOptions("exampleKey4")[2] == "5.55");
+}
+
+
+void Schema_Test::testGetDefaultValue() {
+    string defaultValueKey1 = m_schema.getDefaultValue<string > ("exampleKey1");
+    CPPUNIT_ASSERT(defaultValueKey1 == "Navigation");
+
+    int defaultValueKey2 = m_schema.getDefaultValue<int>("exampleKey2");
+    CPPUNIT_ASSERT(defaultValueKey2 == 10);
+    string defaultValueAsString2 = m_schema.getDefaultValueAs<string > ("exampleKey2");
+    CPPUNIT_ASSERT(defaultValueAsString2 == "10");
+
+    long long defaultValue = m_schema.getDefaultValue<long long>("exampleKey5");
+    CPPUNIT_ASSERT(defaultValue == 1442244);
+    string defaultValueAsString5 = m_schema.getDefaultValueAs<string > ("exampleKey5");
+    CPPUNIT_ASSERT(defaultValueAsString5 == "1442244");
+}
+
+
+void Schema_Test::testGetAllowedStates() {
+    vector<string> allowedStates = m_schema.getAllowedStates("exampleKey3");
+    CPPUNIT_ASSERT(allowedStates[0] == "AllOk.Started");
+    CPPUNIT_ASSERT(allowedStates[1] == "AllOk.Stopped");
+    CPPUNIT_ASSERT(m_schema.getAllowedStates("exampleKey3")[2] == "AllOk.Run.On");
+    CPPUNIT_ASSERT(m_schema.getAllowedStates("exampleKey3")[3] == "NewState");
+}
+
+void Schema_Test::testGetAllowedRoles() {
+    vector<string> allowedRoles = m_schema.getAllowedRoles("exampleKey4");
+    CPPUNIT_ASSERT(allowedRoles[0] == "Admin");
+    CPPUNIT_ASSERT(allowedRoles[1] == "User");
+    CPPUNIT_ASSERT(m_schema.getAllowedRoles("exampleKey4")[2] == "OtherRole");
+}
+
+void Schema_Test::testGetUnit() {
+    int units = m_schema.getUnit("exampleKey2");
+    CPPUNIT_ASSERT(units == Units::METER);
+
+    string unitName = m_schema.getUnitName("exampleKey2");
+    CPPUNIT_ASSERT(unitName == "meter");
+
+    string unitSymbol = m_schema.getUnitSymbol("exampleKey2");
+    CPPUNIT_ASSERT(unitSymbol == "m");
+}
+
+
+void Schema_Test::testGetMetricPrefix() {
+    CPPUNIT_ASSERT(m_schema.getMetricPrefix("exampleKey2") == Units::MILLI);
+    CPPUNIT_ASSERT(m_schema.getMetricPrefixName("exampleKey2") == "milli");
+    CPPUNIT_ASSERT(m_schema.getMetricPrefixSymbol("exampleKey2") == "m");
+}
+
+
+void Schema_Test::testGetMinIncMaxInc() {
+
+    int minInc = m_schema.getMinInc<int>("exampleKey2");
+    string minIncStr = m_schema.getMinIncAs<string>("exampleKey2");
+    CPPUNIT_ASSERT(minInc == 5);
+    CPPUNIT_ASSERT(minIncStr == "5");
+
+
+    int maxInc = m_schema.getMaxInc<int>("exampleKey2");
+    string maxIncStr = m_schema.getMaxIncAs<string>("exampleKey2");
+    CPPUNIT_ASSERT(maxInc == 25);
+    CPPUNIT_ASSERT(maxIncStr == "25");
+}
+
+
+void Schema_Test::testGetMinExcMaxExc() {
+
+    unsigned int minExc = m_schema.getMinExc<unsigned int>("exampleKey3");
+    string minExcStr = m_schema.getMinExcAs<string>("exampleKey3");
+    CPPUNIT_ASSERT(minExc == 10);
+    CPPUNIT_ASSERT(minExcStr == "10");
+
+    unsigned int maxExc = m_schema.getMaxExc<unsigned int>("exampleKey3");
+    string maxExcStr = m_schema.getMaxExcAs<string>("exampleKey3");
+    CPPUNIT_ASSERT(maxExc == 20);
+    CPPUNIT_ASSERT(maxExcStr == "20");
 
 }
 
-void Schema_Test::testGetCurrentState() {
-    Schema s;
-    Schema& tmp = s.initParameterDescription("testS", READ | WRITE | INIT, "stateNew");
 
-    string str = s.getCurrentState();    
-    CPPUNIT_ASSERT(str == "stateNew"); 
-
+void Schema_Test::testGetAlarmLowAlarmHigh() {
+    CPPUNIT_ASSERT(m_schema.getAlarmLow<long long>("exampleKey5") == -20);
+    CPPUNIT_ASSERT(m_schema.getAlarmHigh<long long>("exampleKey5") == 20);
 }
 
-void Schema_Test::testHasParameters() {
 
-    CPPUNIT_ASSERT(sch.hasParameters());
-
+void Schema_Test::testGetWarnLowWarnHigh() {
+    CPPUNIT_ASSERT(m_schema.getWarnLow<long long>("exampleKey5") == -10);
+    CPPUNIT_ASSERT(m_schema.getWarnHigh<long long>("exampleKey5") == 10);
 }
 
-void Schema_Test::testGetAllParameters() {
 
-    vector<string> vecStr = sch.getAllParameters();
-
-    CPPUNIT_ASSERT(vecStr[0] == "exampleKey1");
-    CPPUNIT_ASSERT(vecStr[4] == "exampleKey5");
-    CPPUNIT_ASSERT(vecStr[5] == "image");
-    CPPUNIT_ASSERT(vecStr[6] == "image.dims");
-    CPPUNIT_ASSERT(vecStr[7] == "image.format");
-    CPPUNIT_ASSERT(vecStr[8] == "image.pixelArray");
-
+void Schema_Test::testHasAlarmWarn() {
+    CPPUNIT_ASSERT(m_schema.hasWarnLow("exampleKey5") == true);
+    CPPUNIT_ASSERT(m_schema.hasWarnHigh("exampleKey5") == true);
+    CPPUNIT_ASSERT(m_schema.hasAlarmLow("exampleKey5") == true);
+    CPPUNIT_ASSERT(m_schema.hasAlarmHigh("exampleKey5") == true);
 }
 
-void Schema_Test::testHasRoot() {
-
-    CPPUNIT_ASSERT(sch.hasRoot());
-
-}
-
-void Schema_Test::testGetRoot() {
-
-    CPPUNIT_ASSERT(sch.getRoot() == "test");
-
-}
-
-void Schema_Test::testIsAttribute() {
-
-    CPPUNIT_ASSERT(sch.isAttribute());
-
-}
 
 void Schema_Test::testPerKeyFunctionality() {
-    
-    //tests for Schema containing one STRING_ELEMENT
-    Schema testSch;
-    Schema& tmp = testSch.initParameterDescription("testSchema", READ | WRITE | INIT);
-    oneElementExpectParams(tmp);
 
-    CPPUNIT_ASSERT(testSch.hasRoot());
-    string node = testSch.getRoot();
-    CPPUNIT_ASSERT(node == "testSchema");
+    std::vector<std::string> keys = m_schema.getKeys();
 
-    CPPUNIT_ASSERT(testSch.isNode());
+    for (size_t i = 0; i < keys.size(); ++i) {
 
-    CPPUNIT_ASSERT(testSch.hasParameters());
-    Schema schemaParams = testSch.getParameters();
+        if (keys[i] == "exampleKey1") {
+            bool hasAssignment = m_schema.hasAssignment(keys[i]);
+            CPPUNIT_ASSERT(hasAssignment == true);
+            CPPUNIT_ASSERT(m_schema.isAssignmentOptional(keys[i]) == true);
 
-    CPPUNIT_ASSERT(!schemaParams.isNode());
+            CPPUNIT_ASSERT(m_schema.hasDefaultValue(keys[i]) == true);
 
-    for (Schema::const_iterator it = schemaParams.begin(); it != schemaParams.end(); it++) {
+            CPPUNIT_ASSERT(m_schema.hasAccessMode(keys[i]) == true);
+            CPPUNIT_ASSERT(m_schema.isAccessReconfigurable(keys[i]) == true);
 
-        //Fetch individual description
-        const Schema& desc = schemaParams.get<Schema > (it);
+            CPPUNIT_ASSERT(m_schema.hasOptions(keys[i]) == true);
+            CPPUNIT_ASSERT(m_schema.hasTags(keys[i]) == true);
 
-        CPPUNIT_ASSERT(desc.hasKey());
-        string key = desc.getKey();
-        CPPUNIT_ASSERT(key == "testKey");
+            CPPUNIT_ASSERT(m_schema.hasUnit(keys[i]) == false);
+            CPPUNIT_ASSERT(m_schema.hasMetricPrefix(keys[i]) == false);
+        }
 
-        CPPUNIT_ASSERT(desc.hasAssignment());
-        Schema::AssignmentType assignment = desc.getAssignment();
-        CPPUNIT_ASSERT(assignment == 0);
-        CPPUNIT_ASSERT(assignment == karabo::util::Schema::OPTIONAL_PARAM);
+        if (keys[i] == "exampleKey2") {
+            CPPUNIT_ASSERT(m_schema.hasDefaultValue(keys[i]) == true);
 
-        CPPUNIT_ASSERT(!desc.isCommand());
-        CPPUNIT_ASSERT(desc.isAttribute());
-        CPPUNIT_ASSERT(desc.isLeaf());
-        CPPUNIT_ASSERT(!desc.isNode());
+            CPPUNIT_ASSERT(m_schema.hasAccessMode(keys[i]) == true);
+            CPPUNIT_ASSERT(m_schema.isAccessInitOnly(keys[i]) == true);
 
-        CPPUNIT_ASSERT(desc.isAccessReconfigurable());
-        CPPUNIT_ASSERT(desc.isAssignmentOptional());
+            CPPUNIT_ASSERT(m_schema.hasOptions(keys[i]) == true);
+            CPPUNIT_ASSERT(m_schema.hasTags(keys[i]) == true);
 
-        CPPUNIT_ASSERT(desc.isValueOfType<string > ());
+            CPPUNIT_ASSERT(m_schema.hasAllowedStates(keys[i]) == false);
 
-        Types::Type valueType = desc.getValueType();
-        CPPUNIT_ASSERT(valueType == Types::STRING);
+            CPPUNIT_ASSERT(m_schema.hasUnit(keys[i]) == true);
+            CPPUNIT_ASSERT(m_schema.hasMetricPrefix(keys[i]) == true);
 
-        CPPUNIT_ASSERT(desc.getValueTypeAsString() == "STRING");
+            CPPUNIT_ASSERT(m_schema.hasMinInc(keys[i]) == true);
+            CPPUNIT_ASSERT(m_schema.hasMaxInc(keys[i]) == true);
+        }
 
-        CPPUNIT_ASSERT(desc.hasDisplayedName());
-        CPPUNIT_ASSERT(desc.getDisplayedName() == "sample Displayed Name");
+        if (keys[i] == "exampleKey3") {
 
-        CPPUNIT_ASSERT(!desc.hasDisplayType());
+            CPPUNIT_ASSERT(m_schema.hasAssignment(keys[i]) == true);
+            CPPUNIT_ASSERT(m_schema.isAssignmentMandatory(keys[i]) == true);
 
-        CPPUNIT_ASSERT(desc.hasDescription());
-        CPPUNIT_ASSERT(desc.getDescription() == "sample Description");
+            CPPUNIT_ASSERT(m_schema.hasDefaultValue(keys[i]) == false);
 
-        CPPUNIT_ASSERT(!desc.hasValueOptions());
+            CPPUNIT_ASSERT(m_schema.hasOptions(keys[i]) == false);
 
-        CPPUNIT_ASSERT(!desc.hasAllowedStates());
+            CPPUNIT_ASSERT(m_schema.hasAllowedStates(keys[i]) == true);
 
-        CPPUNIT_ASSERT(desc.hasAccess());
-        AccessType access = desc.getAccess();
-        CPPUNIT_ASSERT(access == WRITE);
+            CPPUNIT_ASSERT(m_schema.hasMinExc(keys[i]) == true);
+            CPPUNIT_ASSERT(m_schema.hasMaxExc(keys[i]) == true);
+        }
 
-        CPPUNIT_ASSERT(desc.hasDefaultValue());
-        CPPUNIT_ASSERT(desc.getDefaultValue<string > () == "Some default string");
+        if (keys[i] == "exampleKey4") {
+            CPPUNIT_ASSERT(m_schema.hasDefaultValue(keys[i]) == false);
 
-        CPPUNIT_ASSERT(desc.hasAlias());
-        string alias = desc.getAlias<string > ();
-        CPPUNIT_ASSERT(alias == "testAlias");
+            CPPUNIT_ASSERT(m_schema.isAssignmentInternal(keys[i]) == true);
 
-        CPPUNIT_ASSERT(!desc.hasUnitName());
-        CPPUNIT_ASSERT(!desc.hasUnitSymbol());
+            CPPUNIT_ASSERT(m_schema.hasAccessMode(keys[i]) == true);
+            CPPUNIT_ASSERT(m_schema.isAccessInitOnly(keys[i]) == true);
+            
+            CPPUNIT_ASSERT(m_schema.hasAllowedRoles(keys[i]) == true);
+        }
+
+        if (keys[i] == "exampleKey5") {
+            CPPUNIT_ASSERT(m_schema.hasDefaultValue(keys[i]) == true);
+
+            CPPUNIT_ASSERT(m_schema.hasAssignment(keys[i]) == true);
+            CPPUNIT_ASSERT(m_schema.isAssignmentOptional(keys[i]) == true);
+
+            CPPUNIT_ASSERT(m_schema.hasAccessMode(keys[i]) == true);
+            CPPUNIT_ASSERT(m_schema.isAccessReadOnly(keys[i]) == true);
+        }
     }
-    
-    //tests for Schema containing one SLOT_ELEMENT
-    Schema slotSch;
-    Schema& slt = slotSch.initParameterDescription("slotSchema", READ | WRITE | INIT);
-    slotElementExpectParams(slt);
-    
-    Schema schParams = slotSch.getParameters();
-    for (Schema::const_iterator it = schParams.begin(); it != schParams.end(); it++) {
-        const Schema& desc = schParams.get<Schema > (it);
-        CPPUNIT_ASSERT(desc.hasAllowedStates());
-        
-        vector<string> allowedStates = desc.getAllowedStates();
-        CPPUNIT_ASSERT(allowedStates[0] == "stateTest");
-    }
-    
+
 }
 
-void Schema_Test::testAccessType() {
 
-    Schema sch1;
-    Schema& tmp1 = sch1.initParameterDescription("testDefault");
-    AccessType at1 = sch1.getAccessMode();
-    CPPUNIT_ASSERT(at1 == (WRITE | INIT));
+void Schema_Test::testHelpFunction() {
 
-    Schema sch2;
-    Schema& tmp2 = sch2.initParameterDescription("testR", READ);
-    AccessType at2 = sch2.getAccessMode();
-    CPPUNIT_ASSERT(at2 == READ);
-
-    Schema sch3;
-    Schema& tmp3 = sch3.initParameterDescription("testW", WRITE);
-    AccessType at3 = sch3.getAccessMode();
-    CPPUNIT_ASSERT(at3 == WRITE);
-
-    Schema sch4;
-    Schema& tmp4 = sch4.initParameterDescription("testI", INIT);
-    AccessType at4 = sch4.getAccessMode();
-    CPPUNIT_ASSERT(at4 == INIT);
-
-    Schema sch5;
-    Schema& tmp5 = sch5.initParameterDescription("testRW", READ | WRITE);
-    AccessType at5 = sch5.getAccessMode();
-    CPPUNIT_ASSERT(at5 == (READ | WRITE));
-
-    Schema sch6;
-    Schema& tmp6 = sch6.initParameterDescription("testRWI", READ | WRITE | INIT);
-    AccessType at6 = sch6.getAccessMode();
-    CPPUNIT_ASSERT(at6 == (READ | WRITE | INIT));
-
+    //===== uncomment to see 'help()' functionality =====:
+    /*
+    Schema schema("GraphicsRenderer1", Schema::AssemblyRules(READ | WRITE | INIT));
+    GraphicsRenderer1::expectedParameters(schema);
+  
+    schema.help();
+    schema.help("shapes");
+    schema.help("shapes.circle");
+    schema.help("shapes.circle.radius");
+    schema.help("shapes.rectangle");
+    schema.help("shapes.rectangle.b");
+    schema.help("triangle");
+     */
 }

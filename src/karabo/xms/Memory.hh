@@ -9,8 +9,6 @@
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
 
-
-
 #ifndef KARABO_XMS_MEMORY_HH
 #define	KARABO_XMS_MEMORY_HH
 
@@ -58,8 +56,8 @@ namespace karabo {
             
             static boost::shared_ptr<karabo::io::BinarySerializer<DataType> > m_serializer;
             
-            static const int MAX_N_CHANNELS = 2048;
-            static const int MAX_N_CHUNKS = 2048;
+            static const int MAX_N_CHANNELS = 512;
+            static const int MAX_N_CHUNKS = 512;
 
             Memory() {
             }
@@ -80,7 +78,7 @@ namespace karabo {
             static size_t getChannelIdxFromName(const std::string& name) {
                 boost::mutex::scoped_lock lock(m_accessMutex);
                 std::map<std::string, size_t>::const_iterator it = m_name2Idx.find(name);
-                if (it == m_name2Idx.end()) throw IMAGE_EXCEPTION("Requested channel \"" + name + "\" does not exist");
+                if (it == m_name2Idx.end()) throw KARABO_IMAGE_EXCEPTION("Requested channel \"" + name + "\" does not exist");
                 return it->second;
             }
 
@@ -93,7 +91,7 @@ namespace karabo {
                         return i;
                     }
                 }
-                throw MEMORY_INIT_EXCEPTION("Total number channels is exhausted");
+                throw KARABO_MEMORY_INIT_EXCEPTION("Total number channels is exhausted");
             }
 
             static size_t registerChunk(const size_t channelIdx) {
@@ -105,7 +103,7 @@ namespace karabo {
                         return i;
                     }
                 }
-                throw MEMORY_INIT_EXCEPTION("Total number chunks is exhausted");
+                throw KARABO_MEMORY_INIT_EXCEPTION("Total number chunks is exhausted");
             }
             
             static int getChannelStatus(const size_t channelIdx) {
@@ -263,7 +261,7 @@ namespace karabo {
             static size_t getChannelIdxFromName(const std::string& name) {
                 boost::mutex::scoped_lock lock(m_accessMutex);
                 std::map<std::string, size_t>::const_iterator it = m_name2Idx.find(name);
-                if (it == m_name2Idx.end()) throw IMAGE_EXCEPTION("Requested channel \"" + name + "\" does not exist");
+                if (it == m_name2Idx.end()) throw KARABO_IMAGE_EXCEPTION("Requested channel \"" + name + "\" does not exist");
                 return it->second;
             }
 
@@ -276,7 +274,7 @@ namespace karabo {
                         return i;
                     }
                 }
-                throw MEMORY_INIT_EXCEPTION("Total number channels is exhausted");
+                throw KARABO_MEMORY_INIT_EXCEPTION("Total number of channels is exhausted");
             }
 
             static size_t registerChunk(const size_t channelIdx) {
@@ -288,7 +286,7 @@ namespace karabo {
                         return i;
                     }
                 }
-                throw MEMORY_INIT_EXCEPTION("Total number chunks is exhausted");
+                throw KARABO_MEMORY_INIT_EXCEPTION("Total number of chunks is exhausted");
             }
             
             static int getChannelStatus(const size_t channelIdx) {

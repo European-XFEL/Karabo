@@ -13,6 +13,7 @@
 #include <string>
 #include "OstreamAppenderConfigurator.hh"
 #include "log4cpp/OstreamAppender.hh"
+#include <karabo/util/SimpleElement.hh>
 
 using namespace std;
 using namespace karabo::util;
@@ -20,41 +21,36 @@ using namespace log4cpp;
 
 
 namespace karabo {
-  namespace log {
+    namespace log {
 
-    OstreamAppenderConfigurator::OstreamAppenderConfigurator() {
+
+        KARABO_REGISTER_FOR_CONFIGURATION(AppenderConfigurator, OstreamAppenderConfigurator)
+
+        void OstreamAppenderConfigurator::expectedParameters(Schema& expected) {
+
+            STRING_ELEMENT(expected)
+                    .description("Output stream")
+                    .key("output")
+                    .displayedName("OutputStream")
+                    .options("STDERR,STDOUT")
+                    .assignmentOptional().defaultValue("STDERR")
+                    .commit();
+        }
+
+
+        OstreamAppenderConfigurator::OstreamAppenderConfigurator(const Hash& input) : AppenderConfigurator(input) {
+            m_out = input.get<string > ("output");
+        }
+
+
+        log4cpp::Appender* OstreamAppenderConfigurator::create() {
+            if (m_out == "STDERR") {
+                return new log4cpp::OstreamAppender(getName(), &std::cerr);
+            }
+            if (m_out == "STDOUT") {
+                return new log4cpp::OstreamAppender(getName(), &std::cout);
+            }
+            return new log4cpp::OstreamAppender(getName(), &std::cerr);
+        }
     }
-
-    OstreamAppenderConfigurator::~OstreamAppenderConfigurator() {
-    }
-
-    log4cpp::Appender* OstreamAppenderConfigurator::create() {
-      if (m_out == "STDERR") {
-        return new log4cpp::OstreamAppender(getName(), &std::cerr);
-      }
-      if (m_out == "STDOUT") {
-        return new log4cpp::OstreamAppender(getName(), &std::cout);
-      }
-      return new log4cpp::OstreamAppender(getName(), &std::cerr);
-    }
-
-    void OstreamAppenderConfigurator::expectedParameters(Schema& expected) {
-
-
-      STRING_ELEMENT(expected)
-              .description("Output stream")
-              .key("output")
-              .displayedName("OutputStream")
-              .options("STDERR,STDOUT")
-              .assignmentOptional().defaultValue("STDERR")
-              .commit();
-    }
-
-    void OstreamAppenderConfigurator::configure(const Hash& input) {
-      m_out = input.get<string > ("output");
-    }
-
-    KARABO_REGISTER_FACTORY_CC(AppenderConfigurator, OstreamAppenderConfigurator)
-
-  }
 }

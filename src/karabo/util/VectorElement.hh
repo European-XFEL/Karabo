@@ -13,66 +13,43 @@
 #ifndef KARABO_UTIL_VECTORELEMENT_HH
 #define	KARABO_UTIL_VECTORELEMENT_HH
 
-#include "GenericElement.hh"
+#include "LeafElement.hh"
 
 namespace karabo {
     namespace util {
 
         template<typename T,
-                template <typename ELEM, typename = std::allocator<ELEM> > class CONT = std::vector>
-                class VectorElement : public GenericElement<VectorElement<T, CONT>, CONT<T> > {
+        template <typename ELEM, typename = std::allocator<ELEM> > class CONT = std::vector>
+        class VectorElement : public LeafElement<VectorElement<T, CONT>, CONT<T> > {
+
         public:
 
-            VectorElement() : GenericElement<VectorElement<T>, CONT<T> >() {
-                this->initializeElementPointer(this);
-                this->m_element.simpleType(Types::getTypeAsId(CONT<T > ()));
+            VectorElement(Schema& expected) : LeafElement<VectorElement, CONT<T> >(expected) {
             }
 
-            VectorElement(Schema& expected) : GenericElement<VectorElement, CONT<T> >(expected) {
-
-                this->initializeElementPointer(this);
-                if (this->m_expected) {
-                    AccessType at = this->m_expected->getAccessMode();
-                    this->m_element.setAccessMode(at);
-                }
-                this->m_element.simpleType(Types::getTypeAsId(CONT<T > ()));
-            }
-
-            VectorElement& minInc(T const& val) {
-                this->m_element.minInc(val);
+            VectorElement& minSize(const unsigned int& value) {
+                this->m_node->setAttribute(KARABO_SCHEMA_MIN_SIZE, value);
                 return *this;
             }
 
-            VectorElement& maxInc(T const& val) {
-                this->m_element.maxInc(val);
+            VectorElement& maxSize(const unsigned int& value) {
+                this->m_node->setAttribute(KARABO_SCHEMA_MAX_SIZE, value);
                 return *this;
             }
 
-            VectorElement& minExc(T const& val) {
-                this->m_element.minExc(val);
-                return *this;
-            }
+        protected:
 
-            VectorElement& maxExc(T const& val) {
-                this->m_element.maxExc(val);
-                return *this;
-            }
+            void beforeAddition() {
 
-            VectorElement& minSize(const int& value) {
-                this->m_element.minSize(value);
-                return *this;
-            }
+                this->m_node->template setAttribute<int>(KARABO_SCHEMA_NODE_TYPE, Schema::LEAF);
+                this->m_node->template setAttribute<int>(KARABO_SCHEMA_LEAF_TYPE, karabo::util::Schema::PROPERTY);
+                this->m_node->setAttribute(KARABO_SCHEMA_VALUE_TYPE, Types::to<ToLiteral>(Types::from<CONT<T> >()));
 
-            VectorElement& maxSize(const int& value) {
-                this->m_element.maxSize(value);
-                return *this;
-            }
-
-            void checkConsistency() {
+                if (this->m_node->hasAttribute(KARABO_SCHEMA_ACCESS_MODE)) this->init(); // This is the default
             }
         };
 
-        typedef VectorElement<bool, std::deque> VECTOR_BOOL_ELEMENT;
+        typedef VectorElement<bool> VECTOR_BOOL_ELEMENT;
         typedef VectorElement<signed char> VECTOR_INT8_ELEMENT;
         typedef VectorElement<char> VECTOR_CHAR_ELEMENT;
         typedef VectorElement<signed short> VECTOR_INT16_ELEMENT;
@@ -85,8 +62,6 @@ namespace karabo {
         typedef VectorElement<float> VECTOR_FLOAT_ELEMENT;
         typedef VectorElement<double> VECTOR_DOUBLE_ELEMENT;
         typedef VectorElement<std::string> VECTOR_STRING_ELEMENT;
-        typedef VectorElement<boost::filesystem::path> VECTOR_PATH_ELEMENT;
-
     }
 }
 

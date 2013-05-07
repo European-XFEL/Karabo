@@ -46,30 +46,34 @@ mkdir -p $PACKAGEDIR
 
 # karabo
 make -j$NUM_CORES CONF=$CONF
-cp -urf $DISTDIR/$CONF/$PLATFORM/lib $PACKAGEDIR/
-cp -urf $DISTDIR/$CONF/$PLATFORM/include $PACKAGEDIR/
-cp -urf ../../../extern/$PLATFORM $PACKAGEDIR/extern
+cp -rf $DISTDIR/$CONF/$PLATFORM/lib $PACKAGEDIR/
+cp -rf $DISTDIR/$CONF/$PLATFORM/include $PACKAGEDIR/
+cp -rf ../../../extern/$PLATFORM $PACKAGEDIR/extern
 if [ $OS = "Darwin" ]; then
     cd $PACKAGEDIR/lib
     ln -s libkarabo.dylib libkarabo.so
     cd -
 fi
 
+# karathon
+cd ../karathon
+cp -rf $DISTDIR/$CONF/$PLATFORM/*.so $PACKAGEDIR/lib
+
 # deviceServer
 cd ../deviceServer
 make -j$NUM_CORES CONF=$CONF
-cp -urf $DISTDIR/$CONF/$PLATFORM/bin $PACKAGEDIR/
+cp -rf $DISTDIR/$CONF/$PLATFORM/bin $PACKAGEDIR/
 
 # brokerMessageLogger
 cd ../brokerMessageLogger
 make -j$NUM_CORES CONF=$CONF
-cp -urf $DISTDIR/$CONF/$PLATFORM/bin $PACKAGEDIR/
+cp -rf $DISTDIR/$CONF/$PLATFORM/bin $PACKAGEDIR/
 
 # pythonKarabo
 cd ../pythonKarabo
 ./build.sh
-cp -urf $DISTDIR/$OS/bin $PACKAGEDIR/
-cp -urf $DISTDIR/$OS/lib $PACKAGEDIR/
+cp -rf $DISTDIR/$OS/bin $PACKAGEDIR/
+cp -rf $DISTDIR/$OS/lib $PACKAGEDIR/
 
 
 # pythonGui
@@ -78,15 +82,15 @@ if [ $PACKAGE_OPTION = "NOGUI" ]; then
 elif [ $PACKAGE_OPTION = "GUI" ]; then
    cd ../pythonGui
    ./build.sh
-   cp -urf $DISTDIR/$OS/bin $PACKAGEDIR/
-   cp -urf $DISTDIR/$OS/lib $PACKAGEDIR/
+   cp -rf $DISTDIR/$OS/bin $PACKAGEDIR/
+   cp -rf $DISTDIR/$OS/lib $PACKAGEDIR/
 fi
 
 # pythonCli
 cd ../pythonCli
 ./build.sh
-cp -urf $DISTDIR/$OS/bin $PACKAGEDIR/
-cp -urf $DISTDIR/$OS/lib $PACKAGEDIR/
+cp -rf $DISTDIR/$OS/bin $PACKAGEDIR/
+cp -rf $DISTDIR/$OS/lib $PACKAGEDIR/
 
 if [ "$OS" = "Linux" ]; then
 	PACKAGEDIR=$(readlink -f $PACKAGEDIR)

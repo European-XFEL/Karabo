@@ -21,53 +21,58 @@
 
 
 namespace log4cpp {
-  class Appender;
+    class Appender;
 }
 /**
  * The main European XFEL namespace
  */
 namespace karabo {
 
-  namespace util {
-    class Hash;
-  }
-  /**
-   * Namespace for package log
-   */
-  namespace log {
-
+    namespace util {
+        class Hash;
+    }
     /**
-     * Configures log4cpp FileAppender
+     * Namespace for package log
      */
-    class FileAppenderConfigurator : public AppenderConfigurator {
-    public:
-      KARABO_CLASSINFO(FileAppenderConfigurator, "File", "1.0")
+    namespace log {
 
-      FileAppenderConfigurator();
-      virtual ~FileAppenderConfigurator();
+        /**
+         * Configures log4cpp FileAppender
+         */
+        class FileAppenderConfigurator : public AppenderConfigurator {
 
-      static void expectedParameters(karabo::util::Schema& expected);
-      void configure(const karabo::util::Hash& input);
+            boost::filesystem::path m_fileName;
+            bool m_append;
+            mode_t m_accessMode;
 
-      const boost::filesystem::path& getFilename() const;
-      bool isAppendMode() const;
-      mode_t getAccessMode() const;
+        public:
+            KARABO_CLASSINFO(FileAppenderConfigurator, "File", "1.0")
 
-    protected:
-      virtual log4cpp::Appender* create();
+            static void expectedParameters(karabo::util::Schema& expected);
 
-      void configureFilename(const karabo::util::Hash& input);
-      void configureAppendMode(const karabo::util::Hash& input);
-      void configureAccessMode(const karabo::util::Hash& input);
+            FileAppenderConfigurator(const karabo::util::Hash& input);
 
-    private:
+            virtual ~FileAppenderConfigurator() {
+            };
 
-      boost::filesystem::path m_fileName;
-      bool m_append;
-      mode_t m_accessMode;
-    };
+            const boost::filesystem::path& getFilename() const;
 
-  }
+            bool isAppendMode() const;
+
+            mode_t getAccessMode() const;
+
+        protected:
+
+            virtual log4cpp::Appender* create();
+
+            void configureFilename(const karabo::util::Hash& input);
+
+            void configureAppendMode(const karabo::util::Hash& input);
+
+            void configureAccessMode(const karabo::util::Hash& input);
+
+        };
+    }
 }
 
 #endif	/* KARABO_LOGCONFIG_FILEAPPENDERCONFIGURATOR_HH */

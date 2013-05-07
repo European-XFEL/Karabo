@@ -1,223 +1,699 @@
 '''
 Created on Oct 17, 2012
 
-@author: irinak
+@author: Sergey Esenov <serguei.essenov@xfel.eu>, Irina Kozlova <irina.kozlova@xfel.eu>
 '''
 
 import unittest
-from libkarabo import *
+import numpy as np
+from libkarathon import *
 
 class  Hash_TestCase(unittest.TestCase):
 
-    def test_setget_(self):
-        #======= Testing h.set() ========
-        h = Hash()
-        h.set("integerValue", 5)
-        h.set("stringValue", "Hello World")
-        h.set("intMinusValue", -5)
-        h.setAsBool("boolValue", True)
-        h.set("doubleValue", 1.5)
-        #print "printing hash 'h' :\n", h
+    def test_constructors(self):
+        
+        # Check properties of empty Hash
+        try:
+            h = Hash()
+            self.assertEqual(len(h), 0)
+            self.assertEqual(h.empty(), True)
+        except Exception, e:
+            self.fail("test_constructors exception group 1: " + str(e))
 
-        #======= Testing h.get() ======= 
-        hGetIntValue = h.get("integerValue")
-        self.assertEqual(hGetIntValue, 5)
+        # Check Hash with one property
+        try:
+            h = Hash('a', 1)
+            self.assertEqual(len(h), 1)
+            self.assertEqual(h.empty(), False)
+            self.assertEqual(h.get('a'), 1)
+            self.assertEqual(h['a'], 1)
+        except Exception,e:
+            self.fail("test_constructors exception group 2: " + str(e))
+            
+        # Check Hash with 2 properties
+        try:
+            h = Hash('a', 1, 'b', 2.0)
+            self.assertEqual(h.empty(), False)
+            self.assertEqual(len(h), 2)
+            self.assertEqual(h['a'], 1)
+            self.assertEqual(h['b'], 2.0)
+        except Exception,e:
+            self.fail("test_constructors exception group 3: " + str(e))
         
-        hGetStringValue = h.get("stringValue")
-        self.assertEqual(hGetStringValue, "Hello World")
-
-        hGetDoubleAsString = h.getAsString("doubleValue")
-        self.assertEqual(hGetDoubleAsString, "1.500000")
-        
-        self.assertEqual(h.get("doubleValue"), 1.500000)
-
-        hGetBoolAsString = h.getAsString("boolValue")
-        self.assertEqual(hGetBoolAsString, "true")
-        
-        self.assertEqual(h.get("boolValue"), True)
-
-    def test_setgetfrompath_(self):
-        h = Hash()
-        h.setFromPath("a.b.c", 15)
-        h.setFromPath("a.b.d", "myString")
-        h.setFromPath("a.b.e", 5.5)
-        
-        self.assertEqual(h.getFromPath("a.b.c"), 15, "getFromPath integer")
-        self.assertEqual(h.getFromPath("a.b.d"), "myString", "getFromPath string")
-        self.assertEqual(h.getFromPath("a.b.e"), 5.5, "getFromPath double")
-        
-        myVecInt=[5,10,15]
-        h.setFromPath("a|b|myVecInt", myVecInt, "|")
-
-        myVecString=["Hallo", "test1 and test2", "new text"]
-        h.setFromPath("a-b-myVecString", myVecString, "-")
-        
-        myVecDouble=[1.1, 2.2, 5.5]
-        h.setFromPath("a.b.myVecDouble", myVecDouble)
-        
-        self.assertEqual(h.getFromPath("a.b.myVecInt"), [5, 10, 15], "getFromPath vector integer")
-        self.assertEqual(h.getFromPath("a.b.myVecString"), ["Hallo", "test1 and test2", "new text"], "getFromPath vector string")
-        self.assertEqual(h.getFromPath("a.b.myVecDouble"), [1.1, 2.2, 5.5], "getFromPath vector double")
-        self.assertEqual(h.getTypeAsId("a"), Types.HASH, "getTypeAsId type HASH" )
-        self.assertEqual(h.getTypeAsString("a"), "HASH", "getTypeAsString type HASH")
-        
-        #======= Testing h.getLeaves() =======
-        hVec = h.getLeaves()
-        self.assertEqual(hVec, ['a.b.c', 'a.b.d', 'a.b.e', 'a.b.myVecDouble', 'a.b.myVecInt', 'a.b.myVecString'])
-
-        #======= Testing h.getKeys() =======
-        h.set("x", 10)
-        h.set("y", 15)
-        hKeys = h.getKeys()
-        self.assertEqual(hKeys, ['a', 'x', 'y'])
-        
-        #======= Testing h.has() =======
-        self.assertEqual(h.has("a"), True)
-        self.assertEqual(h.has("x"), True)
-        self.assertEqual(h.has("y"), True)
-        hSub = h.getFromPath("a.b")
-        self.assertEqual(hSub.has("c"), True)
-        self.assertEqual(hSub.has("myVecString"), True)
-        
-    def test_append_update_(self):
-
-        #===== Test functions: append, update =====
-        h1=Hash()
-        h1.setFromPath("a.b.c", 1)
-        h1.setFromPath("a.b.d", 2)
-        h1.setFromPath("a.b.e", 3)
-        h1.set("x", 15)
-        
-        h2=Hash()
-        h2.setFromPath("a.b.f", 4)
-        h2.setFromPath("a.b.d", 22)
-        h2.setFromPath("y", 10)
-
-        hApp = h1.append(h2)
-        self.assertEqual(hApp.getFromPath("a.b.d"), 22)  #value of key 'a.b.d' in now 22
-        self.assertEqual(hApp.getFromPath("a.b.f"), 4) 
-        self.assertEqual(hApp.get("x"), 15)
-        self.assertEqual(hApp.get("y"), 10)
-        self.assertEqual(hApp.hasFromPath("a.b.c"), False) #key 'a.b.c' does not exist
-        self.assertEqual(hApp.hasFromPath("a.b.e"), False) #key 'a.b.e' does not exist
-
-        #print 'hApp=h1.append(h2) , print hApp : \n', hApp
-        
-        #hash 'h2' as above. we create new hash 'h3' and update it by 'h2'
-        h3=Hash()
-        h3.setFromPath("a.b.c", 1)
-        h3.setFromPath("a.b.d", 2)
-        h3.setFromPath("a.b.e", 3)
-        h3.set("z", 7)
-
-        h3.update(h2)
-        #check updated 'h3'
-        self.assertEqual(h3.getFromPath("a.b.c"), 1)
-        self.assertEqual(h3.getFromPath("a.b.d"), 22)
-        self.assertEqual(h3.getFromPath("a.b.e"), 3)
-        self.assertEqual(h3.getFromPath("a.b.f"), 4)
-        self.assertEqual(h3.get("y"), 10)
-        self.assertEqual(h3.get("z"), 7)
-
-    def test_vectorhash1_(self):
-        #===== Test VECTOR_HASH ======
-        h4 = Hash()
-        h4.setFromPath("a[0].b", 10)
-        h4.setFromPath("a[0].c", 20)
-        h4.setFromPath("a[1].c", "Hallo World")
-        
-        #print 'h4: \n', h4
-        #v4=h4.get("a")
-        #print "\nShow v4 in loop:"
-        #for x in v4: print x
-        
-        self.assertEqual(h4.getFromPath("a[0].b"), 10)
-        self.assertEqual(h4.getFromPath("a[0].c"), 20)
-        self.assertEqual(h4.getFromPath("a[1].c"), "Hallo World")
-        
-        self.assertEqual(h4.isFromPath("a[1].c", Types.STRING), True)
-        self.assertEqual(h4.getTypeAsString("a"), "VECTOR_HASH")
-
-        h5 = Hash()
-        h5.setFromPath("a.b.c", 15)
-        h5.setFromPath("a.b.d", "myString")
-        h5.setFromPath("a.b.e", 5.5)
-        h5.setFromPath("a.b.v[0].first", 10)
-        h5.setFromPath("a.b.v[0].next", 7.7)
-        h5.setFromPath("a.b.v[1].second", -30)
-        h5.setFromPath("a.b.v[1].doubleVal", -5.5)
-        
-        self.assertEqual(h5.isFromPath("a.b.v[0].first", Types.INT32), True)
-        self.assertEqual(h5.getFromPath("a.b.v[0].first"), 10)
-        
-        self.assertEqual(h5.isFromPath("a.b.v", Types.VECTOR_HASH), True)
-        self.assertEqual(h5.getFromPath("a.b.v[1].doubleVal"), -5.5)
-        
-        #print 'h5: \n', h5
-        #v5=h5.getFromPath("a.b.v")
-        #print "\nShow v5 in loop:"
-        #for x in v5: print x
-
-    def test_hasfrompath_isfrompath_(self):
-        #======= Test functions: hasFromPath, isFromPath =======
-        h=Hash()
-        h.setFromPath("a.b.c", 44)
-        r1 = h.hasFromPath("a") 
-        self.assertEqual(r1, True)
-        
-        r2 = h.hasFromPath("a.b") 
-        self.assertEqual(r2, True)
-        
-        self.assertTrue(h.hasFromPath("a.b.c"))
-        
-        self.assertFalse(h.hasFromPath("a.b.w"))
-
-        #add additional elements to hash 'h'
-        h.setFromPath("a.b.s", "Hallo")
-        h.setFromPath("a.b.doubleVal", -5.5)
-        
-        t1 = h.isFromPath("a.b", Types.HASH)
-        self.assertEqual(t1, True)
-        
-        t2 = h.isFromPath("a.b.c", Types.INT32)
-        self.assertEqual(t2, True)
-
-        self.assertTrue(h.isFromPath("a.b.s", Types.STRING))
-        
-        #element 'a.b.s' is not of type INT32
-        self.assertEqual(h.isFromPath("a.b.s", Types.INT32), False)
-        
-        self.assertEqual(h.isFromPath("a.b.doubleVal", Types.DOUBLE), True)
+        # Check Hash with 6 properties of different types
+        try:
+            h = Hash("a.b.c", 1, "b.c", 2.0, "c", 3.7, "d.e", "4",
+                    "e.f.g.h", [5,5,5,5,5], "F.f.f.f.f", Hash("x.y.z", 99))
+            self.assertEqual(h.empty(), False)
+            self.assertEqual(len(h), 6)
+            self.assertEqual(h['a.b.c'], 1)
+            self.assertEqual(h['b.c'], 2.0)
+            self.assertEqual(h['c'], 3.7)
+            self.assertEqual(h['d.e'], "4")
+            self.assertEqual(h['e.f.g.h'][0], 5)
+            self.assertEqual(len(h['e.f.g.h']), 5)
+            self.assertEqual(h['F.f.f.f.f']['x.y.z'], 99)
+            self.assertEqual(h['F.f.f.f.f.x.y.z'], 99)
+            self.assertEqual(h['F']['f']['f']['f']['f']['x']['y']['z'], 99)
+            # Make Hash flat
+            flat = Hash()
+            Hash.flatten(h, flat)
+            self.assertEqual(flat.empty(), False)
+            self.assertEqual(len(flat), 6)
+            self.assertEqual(flat.get('a.b.c', ' '), 1)
+            self.assertEqual(flat.get('b.c', ' '), 2.0)
+            self.assertEqual(flat.get('c', ' '), 3.7)
+            self.assertEqual(flat.get('d.e', ' '), "4")
+            self.assertEqual(flat.get('e.f.g.h', ' ')[0], 5)
+            self.assertEqual(len(flat.get('e.f.g.h', ' ')), 5)
+            self.assertEqual(flat.get('F.f.f.f.f.x.y.z', ' '), 99)
+            
+            # Make flat Hash unflatten again
+            tree = Hash()
+            flat.unflatten(tree)
+            self.assertEqual(tree.empty(), False)
+            self.assertEqual(len(tree), 6)
+            self.assertEqual(tree['a.b.c'], 1)
+            self.assertEqual(tree['b.c'], 2.0)
+            self.assertEqual(tree['c'], 3.7)
+            self.assertEqual(tree['d.e'], "4")
+            self.assertEqual(tree['e.f.g.h'][0], 5)
+            self.assertEqual(len(tree['e.f.g.h']), 5)
+            self.assertEqual(tree['F.f.f.f.f']['x.y.z'], 99)
+            self.assertEqual(tree['F.f.f.f.f.x.y.z'], 99)
+        except Exception,e:
+            self.fail("test_constructors exception group 4: " + str(e))
         
 
-    def test_hasfrompath_isfrompath_(self):
-        #======= Test function eraseFromPath =======
-        '''
-        Erase leaf of Hash tree represented by path
-        returns 0 if no erase, and 1 if the leaf was erased
-        '''
-        h = Hash()
-        h.setFromPath("a.b.c", 15)
-        h.setFromPath("a.b.d", "myString")
-        h.setFromPath("a.b.e", 5.5)
+    def test_getSet(self):
         
-        #Erase 'a.b.e'
-        check = h.eraseFromPath("a&b&e", "&")
-        self.assertEqual(check, 1)
-        self.assertFalse(h.hasFromPath("a.b.e"))
+        try:
+            h = Hash()
+            h.set("a.b.c1.d", 1)
+            self.assertEqual(h.get("a").has("b"), True, '"b" not found')
+            self.assertEqual(h.get("a.b").has("c1"), True, '"c1" not found')
+            self.assertEqual(h.get("a.b.c1").has("d"), True, '"d" not found')
+            self.assertEqual(h.get("a.b.c1.d"), 1, '"get" should return 1')
+            self.assertEqual(h.has("a.b.c1.d"), True, '"a.b.c1.d" key not found')
+            if "a.b.c1.d" not in h:
+                self.fail("test_getSet group 1: h __contains__ \"a.b.c1.d\" failed")
+            self.assertEqual(h.get("a").has("b.c1"), True, '"b.c1" key not found')
+            if "b.c1" not in h["a"]:
+                self.fail("test_getSet group 1: h['a'] __contains__ \"b.c1\" failed")
+        
+            h.set("a.b.c2.d", 2.0)
+            self.assertEqual(h.get("a.b").has("c2.d"), True, '"c2.d" not found')
+            self.assertEqual(h.get("a.b").has("c1.d"), True, '"c1.d" not found')
+            self.assertEqual(h.get("a.b.c1.d"), 1, '"get" should return 1')
+            self.assertEqual(h.get("a.b.c2.d"), 2.0, '"get" should return 2.0')
+            
+            h.set("a.b[0]", Hash("a", 1))
+            self.assertEqual(h.get("a").has("b"), True, "'b' not found")
+            self.assertEqual(h["a"].has("b"), True, "'b' not found")
+            if "b" not in h["a"]:
+                self.fail("test_getSet group 1: h['a'] __contains__ \"b\" failed")
+            self.assertEqual(len(h.get("a")), 1, "'len' should give 1")
+            self.assertEqual(len(h["a"]), 1, "'len' should give 1")
+            self.assertEqual(len(h.get("a.b")), 1, "'len' should give 1")
+            self.assertEqual(len(h["a.b"]), 1, "'len' should give 1")
+            self.assertEqual(len(h.get("a.b")[0]), 1, "'len' should give 1")
+            self.assertEqual(len(h["a.b"][0]), 1, "'len' should give 1")
+            self.assertEqual(h["a.b"][0]["a"], 1, '"get" should return 1')
+            self.assertEqual(h["a.b[0].a"], 1, '"get" should return 1')
+            self.assertEqual(h.get("a.b")[0].get("a"), 1, '"get" should return 1')
+            self.assertEqual(h.get("a.b[0].a"), 1, '"get" should return 1')
+            
+            h.set("a.b[2]", Hash("a", 1))
+            self.assertEqual(h.get("a").has("b"), True, "'b' not found")
+            self.assertEqual(len(h["a"]), 1, "'len' should give 1")
+            self.assertEqual(len(h["a.b"]), 3, "'len' should give 3")   # 0, 1, 2
+            self.assertEqual(h["a.b[0].a"], 1, '"get" should return 1')
+            self.assertEqual(h["a.b[2].a"], 1, '"get" should return 1')
+            self.assertEqual(h["a.b"][0]["a"], 1, '"get" should return 1')
+            self.assertEqual(h["a.b"][2]["a"], 1, '"get" should return 1')
+            self.assertEqual(h["a.b"][1].empty(), True, 'h["a.b"][1] should be empty Hash')
+            
+        except Exception,e:
+            self.fail("test_getSet exception group 1: " + str(e))
+            
+        try:
+            h = Hash()
+            h["a.b.c"] = 1    # statement is equivalent to h.set("a.b.c", 1)
+            h["a.b.c"] = 2
+            self.assertEqual(h["a.b.c"], 2, "Value should be overwritten by 2")
+            self.assertEqual(h.has("a.b"), True, "Key 'a.b' not found")
+            self.assertEqual(h.has("a.b.c.d"), False, "Key 'a.b.c.d' should not be found")
+            # similarity with python dictionary...
+            self.assertEqual(h["a"]["b"]["c"], 2)
+            h["a"]["b"]["c"] = 77
+            self.assertEqual(h["a"]["b"]["c"], 77)
+            self.assertEqual(h["a.b.c"], 77)
+        except Exception,e:
+            self.fail("test_getSet exception group 2: " + str(e))
+            
+        try:
+            h = Hash("a[0]", Hash("a", 1), "a[1]", Hash("a", 1))
+            self.assertEqual(h["a[0].a"], 1, "Value should be 1")
+            self.assertEqual(h["a[1].a"], 1, "Value should be 1")
+            self.assertEqual(h["a"][0]["a"], 1, "Value should be 1")
+            self.assertEqual(h["a"][1]["a"], 1, "Value should be 1")
+        except Exception,e:
+            self.fail("test_getSet exception group 3: " + str(e))
+            
+        try:
+            h = Hash()
+            h["x[0].y[0]"] = Hash("a", 4.2, "b", "red", "c", True)
+            h["x[1].y[0]"] = Hash("a", 4.0, "b", "green", "c", False)
+            self.assertEqual(h["x[0].y[0].c"], True, "Failure in array case")
+            self.assertEqual(h["x[1].y[0].c"], False, "Failure in array case")
+            self.assertEqual(h["x[0].y[0].b"], "red", "Failure in array case")
+            self.assertEqual(h["x[1].y[0].b"], "green", "Failure in array case")
+        except Exception,e:
+            self.fail("test_getSet exception group 4: " + str(e))
+            
+        try:
+            h1 = Hash("a[0].b[0]", Hash("a", 1))
+            h2 = Hash("a[0].b[0]", Hash("a", 2))
+            self.assertEqual(h1["a[0].b[0].a"], 1, "Value should be equal 1")
+            h1["a[0]"] = h2
+            self.assertEqual(h1["a[0].a[0].b[0].a"], 2, "Value should be equal 2")
+            h1["a"] = h2
+            self.assertEqual(h1["a.a[0].b[0].a"], 2, "Value should be equal 2")
+        except Exception,e:
+            self.fail("test_getSet exception group 5: " + str(e))
+            
+        try:
+            h = Hash()
+            b = True
+            h["a"] = b
+            self.assertEqual(str(h.getType("a")), "BOOL", 'The type should be "BOOL"')
+            self.assertEqual(h.getType("a"), Types.BOOL, 'The type ID for "BOOL" should be Types.BOOL')
+        except Exception,e:
+            self.fail("test_getSet exception group 6: " + str(e))
+            
+        try:
+            h = Hash('a.b.c', [1, 2, 3, 4, 5, 6, 7], 'b.c.d', [False, False, True, True, True, False, True])
+            self.assertEqual(isStdVectorDefaultConversion(Types.PYTHON), True)
+            self.assertEqual(h.isType('a.b.c', Types.VECTOR_INT32), True)
+            self.assertEqual(str(type(h['a.b.c'])), "<type 'list'>")
+            try:
+                setStdVectorDefaultConversion(Types.VECTOR_INT32)
+            except RuntimeError,e:
+                pass
+            self.assertEqual(isStdVectorDefaultConversion(Types.PYTHON), True)
+            setStdVectorDefaultConversion(Types.NUMPY)
+            self.assertEqual(isStdVectorDefaultConversion(Types.PYTHON), False)
+            self.assertEqual(isStdVectorDefaultConversion(Types.NUMPY), True)
+            self.assertEqual(str(type(h['a.b.c'])), "<type 'numpy.ndarray'>")
+            self.assertEqual(str(type(h['b.c.d'])), "<type 'numpy.ndarray'>")
+            setStdVectorDefaultConversion(Types.PYTHON)
+            self.assertEqual(isStdVectorDefaultConversion(Types.PYTHON), True)
+        except Exception,e:
+            self.fail("test_getSet exception group 7: " + str(e))
+            
+            
+    def test_getAs(self):
+        
+        try:
+            h = Hash("a", True)
+            self.assertEqual(h.getAs("a", Types.STRING), "1", 'Should return "1" as python string')
+            self.assertEqual(h.getAs("a", Types.INT32), 1, 'Should return 1 as an python int')
+            self.assertEqual(h.getAs("a", Types.INT64), 1L, 'Should return 1L as python long')
+            self.assertEqual(h.getAs("a", Types.FLOAT), 1.0, 'Should return 1.0 as python float')
+            self.assertEqual(h.getAs("a", Types.DOUBLE), 1.0, 'Should return 1.0 as python float')
+        except Exception,e:
+            self.fail("test_getAs exception group 1: " + str(e))
+
+        try:
+            h = Hash("a", True)
+            h.setAttribute("a", "a", True)
+            self.assertEqual(h.getAttributeAs("a","a",Types.STRING), "1", 'Should return "1" as python string')
+            self.assertEqual(h.getAttributeAs("a","a", Types.INT32), 1, 'Should return 1 as python int')
+            self.assertEqual(h.getAttributeAs("a","a", Types.DOUBLE), 1.0, 'Should return 1.0 as python float')
+            h.setAttribute("a", "b", 12)
+            h.setAttribute("a", "c", 1.23)
+            attrs = h.getAttributes("a")
+            g = Hash("Z.a.b.c", "value")
+            g.setAttributes("Z.a.b.c", attrs)
+            self.assertEqual(g.getAttributeAs("Z.a.b.c","a", Types.STRING), "1", 'Should return "1" as python string')
+            self.assertEqual(g.getAttributeAs("Z.a.b.c","a", Types.INT32), 1, 'Should return 1 as python int')
+            self.assertEqual(g.getAttributeAs("Z.a.b.c","a", Types.DOUBLE), 1.0, 'Should return 1.0 as python float')
+        
+        except Exception,e:
+            self.fail("test_getAs exception group 2: " + str(e))
+
+        try:
+            h = Hash("a", np.array([False,False,False,False])) # value is numpy array of boolean -> std::vector<bool>
+            self.assertEqual(h.getAs("a", Types.STRING), "0,0,0,0", 'Should return "0,0,0,0" as python string')
+            self.assertEqual(h.getAs("a", Types.VECTOR_INT32)[3], 0, "Should return 0")
+        except Exception,e:
+            self.fail("test_getAs exception group 3: " + str(e))
+
+        try:
+            h = Hash("a", [False,False,False,False])     # value is python list of boolean -> std::vector<bool>
+            self.assertEqual(h.getAs("a", Types.STRING), "0,0,0,0", 'Should return "0,0,0,0" as python string')
+            self.assertEqual(h.getAs("a", Types.VECTOR_INT32)[3], 0, "Should return 0")
+        except Exception,e:
+            self.fail("test_getAs exception group 4: " + str(e))
+
+        try:
+            h = Hash("a", bytearray(['1','2','3','4']))   # value is python bytearray -> std::vector<char>
+            self.assertEqual(h.getAs("a", Types.STRING), "1,2,3,4", 'Should return "1,2,3,4" as python string')
+            self.assertEqual(h.getAs("a", Types.VECTOR_INT32)[3], 4, "Should return 4")
+        except Exception,e:
+            self.fail("test_getAs exception group 4: " + str(e))
+
+        try:
+            h = Hash("a", ['1','2','3','4'])              # value is python list -> std::vector<char>
+            self.assertEqual(h.getAs("a", Types.STRING), "1,2,3,4", 'Should return "1,2,3,4" as python string')
+            self.assertEqual(h.getAs("a", Types.VECTOR_INT32)[3], 4, "Should return 4")
+        except Exception,e:
+            self.fail("test_getAs exception group 5: " + str(e))
+            
+        try:
+            h = Hash("a", [13,13,13,13])
+            self.assertEqual(h.getAs("a", Types.STRING), "13,13,13,13")
+        except Exception,e:
+            self.fail("test_getAs exception group 6: " + str(e))
+            
+        try:
+            h = Hash("a", -42L)
+        except Exception,e:
+            self.fail("test_getAs exception group 7: " + str(e))
+            
+        try:
+            h = Hash("a", [-42L])
+            self.assertEqual(h.getAs("a", Types.STRING), "-42", 'Should return "-42" as str')
+        except Exception,e:
+            self.fail("test_getAs exception group 8: " + str(e))
+            
+        try:
+            h = Hash("a", np.array([-42L]))
+            self.assertEqual(h.getAs("a", Types.STRING), "-42", 'Should return "-42" as str')
+        except Exception,e:
+            self.fail("test_getAs exception group 9: " + str(e))
+            
+        try:
+            h = Hash("a", np.array([], dtype=int))
+            self.assertEqual(h.getAs("a", Types.STRING), "", 'Should return empty str')
+        except Exception,e:
+            self.fail("test_getAs exception group 10: " + str(e))
+            
+        try:
+            h = Hash("a", -2147483647L)
+            self.assertEqual(h.getAs("a", Types.STRING), "-2147483647", 'Should return "-2147483647" str')
+        except Exception,e:
+            self.fail("test_getAs exception group 11: " + str(e))
+            
+        try:
+            h = Hash("a", 1234567890123456789L)
+            self.assertEqual(h.getAs("a", Types.STRING), "1234567890123456789", 'Should return "1234567890123456789" str')
+            self.assertEqual(h.getType("a"), Types.INT64)
+            self.assertEqual(str(h.getType("a")), "INT64")
+        except Exception,e:
+            self.fail("test_getAs exception group 12: " + str(e))
+            
+        try:
+            h = Hash("a", 0.123456789123456)
+            self.assertEqual(h.getAs("a", Types.STRING), "0.123456789123456", 'Should return "0.123456789123456" str')
+            self.assertEqual(h.getType("a"), Types.DOUBLE)
+        except Exception,e:
+            self.fail("test_getAs exception group 13: " + str(e))
+            
+        
+    def test_find(self):
+        try:
+            h = Hash("a.b.c1.d", 1)
+            node = h.find("a.b.c1.d")
+            if node is not None:
+                self.assertEqual(node.getKey(), "d", 'Bad key returned by "getKey" method')
+                self.assertEqual(node.getValue(), 1, 'Should return 1');
+            else:
+                self.assertEqual(True, False)
+            node = h.find("a.b.c1.f")
+            if node is not None:
+                self.assertEqual(True, False)
+            else:
+                self.assertEqual(True, True)
+        except Exception,e:
+            self.fail("test_find exception group 1: " + str(e))
     
-        #Erase 'a.b.d' and check that 'h' has no key 'a.b.d' any more
-        h.eraseFromPath("a.b.d")
-        self.assertFalse(h.hasFromPath("a.b.d"))
-        
-        #Erase not existing element 'x' 
-        self.assertEqual(h.eraseFromPath("a.b.x"), 0)
-         
-        self.assertEqual(h.eraseFromPath("a.b"), 1)
-        
-        self.assertEqual(h.eraseFromPath("a"), 1)
-        self.assertTrue(h.empty())
 
+        try:
+            h = Hash("a.b.c", "1")
+            node = h.find("a.b.c")
+            if node is not None:
+                node.setValue(2)
+                self.assertEqual(h.get("a.b.c"), 2);
+            node = h.find("a.b.c", '/')
+            if node is not None:
+                self.assertEqual(True, False)
+            else:
+                self.assertEqual(True, True)
+        except Exception,e:
+            self.fail("test_find exception group 2: " + str(e))
+        
+
+    def test_iteration(self):
+        h = Hash("should", 1, "be", 2, "iterated", 3, "in", 4, "correct", 5, "order", 6)
+        a = HashAttributes("should", 1, "be", 2, "iterated", 3, "in", 4, "correct", 5, "order", 6)
+        try:
+            insertionOrder = list()
+            for k in h:
+                insertionOrder.append(str(k))
+            self.assertEqual(insertionOrder[0], "should");
+            self.assertEqual(insertionOrder[1], "be");
+            self.assertEqual(insertionOrder[2], "iterated");
+            self.assertEqual(insertionOrder[3], "in");
+            self.assertEqual(insertionOrder[4], "correct");
+            self.assertEqual(insertionOrder[5], "order");
+            
+        except Exception,e:
+            self.fail("test_iteration exception group 1: " + str(e))
+
+        try:
+            alphaNumericOrder = list()
+            for k in h:
+                alphaNumericOrder.append(k.getKey())
+            alphaNumericOrder.sort()
+            self.assertEqual(alphaNumericOrder[0], "be")
+            self.assertEqual(alphaNumericOrder[1], "correct")
+            self.assertEqual(alphaNumericOrder[2], "in")
+            self.assertEqual(alphaNumericOrder[3], "iterated")
+            self.assertEqual(alphaNumericOrder[4], "order")
+            self.assertEqual(alphaNumericOrder[5], "should")
+        except Exception,e:
+            self.fail("test_iteration exception group 2: " + str(e))
+
+        h.set("be", "2") # Has no effect on order
+
+        try:
+            insertionOrder = list()
+            for k in h:
+                insertionOrder.append(str(k.getKey()))
+        
+            self.assertEqual(insertionOrder[0], "should")
+            self.assertEqual(insertionOrder[1], "be")
+            self.assertEqual(insertionOrder[2], "iterated")
+            self.assertEqual(insertionOrder[3], "in")
+            self.assertEqual(insertionOrder[4], "correct")
+            self.assertEqual(insertionOrder[5], "order")
+        except Exception,e:
+            self.fail("test_iteration exception group 3: " + str(e))
+
+        try:
+            alphaNumericOrder = list()
+            for k in h:
+                alphaNumericOrder.append(str(k.getKey()))
+            alphaNumericOrder.sort()
+            self.assertEqual(alphaNumericOrder[0], "be")
+            self.assertEqual(alphaNumericOrder[1], "correct")
+            self.assertEqual(alphaNumericOrder[2], "in")
+            self.assertEqual(alphaNumericOrder[3], "iterated")
+            self.assertEqual(alphaNumericOrder[4], "order")
+            self.assertEqual(alphaNumericOrder[5], "should")
+        except Exception,e:
+            self.fail("test_iteration exception group 4: " + str(e))
+
+        h.erase("be")  # Remove
+        h.set("be", "2")   # Must be last element in sequence now
+
+        try:
+            insertionOrder = list()
+            for k in h:
+                insertionOrder.append(str(k.getKey()))
+        
+            self.assertEqual(insertionOrder[0], "should")
+            self.assertEqual(insertionOrder[1], "iterated")
+            self.assertEqual(insertionOrder[2], "in")
+            self.assertEqual(insertionOrder[3], "correct")
+            self.assertEqual(insertionOrder[4], "order")
+            self.assertEqual(insertionOrder[5], "be")
+        except Exception,e:
+            self.fail("test_iteration exception group 5: " + str(e))
+
+        try:
+            alphaNumericOrder = list()
+            for k in h:
+                alphaNumericOrder.append(str(k.getKey()))
+            alphaNumericOrder.sort()
+            self.assertEqual(alphaNumericOrder[0], "be")
+            self.assertEqual(alphaNumericOrder[1], "correct")
+            self.assertEqual(alphaNumericOrder[2], "in")
+            self.assertEqual(alphaNumericOrder[3], "iterated")
+            self.assertEqual(alphaNumericOrder[4], "order")
+            self.assertEqual(alphaNumericOrder[5], "should")
+        except Exception,e:
+            self.fail("test_iteration exception group 6: " + str(e))
+
+        #  getKeys(...) to ...
+        #         "list" and sort it  ... like C++ set
+        try:
+            tmp = list()           # create empty set
+            h.getKeys(tmp)         # fill set by keys
+            tmp.sort()
+            it = iter(tmp)
+            self.assertEqual(str(it.next()), "be")
+            self.assertEqual(str(it.next()), "correct")
+            self.assertEqual(str(it.next()), "in")
+            self.assertEqual(str(it.next()), "iterated")
+            self.assertEqual(str(it.next()), "order")
+            self.assertEqual(str(it.next()), "should")
+        except Exception,e:
+            self.fail("test_iteration exception group 7: " + str(e))
+
+        #        "list" ... like C++ vector
+        try:
+            tmp = list()           # create empty vector
+            h.getKeys(tmp)         # fill vector by keys
+            it = iter(tmp)
+            self.assertEqual(str(it.next()), "should")
+            self.assertEqual(str(it.next()), "iterated")
+            self.assertEqual(str(it.next()), "in")
+            self.assertEqual(str(it.next()), "correct")
+            self.assertEqual(str(it.next()), "order")
+            self.assertEqual(str(it.next()), "be")
+        except Exception,e:
+            self.fail("test_iteration exception group 8: " + str(e))
+
+        try:
+            h = Hash("b", "bla-la-la", "a.b.c", 1, "abc.2", 2.2222222, "a.b.c1.d", "abc1d", "abc.1", 1.11111111)
+            
+            l = [];
+            h.getKeys(l)    # use top level keys
+            self.assertEqual(len(l), 3)
+            i = iter(l)                         # "canonical" order: on every level insertion order
+            self.assertEqual(str(i.next()), "b")
+            self.assertEqual(str(i.next()), "a")
+            self.assertEqual(str(i.next()), "abc")
+            
+            l = [];
+            h.getPaths(l)   # use full keys 
+            self.assertEqual(len(l), 5)
+            i = iter(l)
+            self.assertEqual(str(i.next()), "b")
+            self.assertEqual(str(i.next()), "a.b.c")
+            self.assertEqual(str(i.next()), "a.b.c1.d")
+            self.assertEqual(str(i.next()), "abc.2")
+            self.assertEqual(str(i.next()), "abc.1")
+        except Exception,e:
+            self.fail("test_iteration exception group 9: " + str(e))
+
+    def test_attributes(self):
+        try:
+            h = Hash("a.b.a.b", 42)
+            h.setAttribute("a.b.a.b","attr1", "someValue")
+            self.assertEqual(h.getAttribute("a.b.a.b","attr1"), "someValue", 'Should return "someValue"')
+        except Exception,e:
+            self.fail("test_attributes exception group 1: " + str(e))
+
+        try:
+            h = Hash("a.b.a.b", 42)
+            h.setAttribute("a.b.a.b","attr1", "someValue")
+            self.assertEqual(h.getAttribute("a.b.a.b","attr1"), "someValue", 'Should return "someValue"')
+            
+            h.setAttribute("a.b.a.b", "attr2", 42)
+            self.assertEqual(h.getAttribute("a.b.a.b","attr1"), "someValue", 'Should return "someValue"')
+            self.assertEqual(h.getAttribute("a.b.a.b","attr2"), 42, 'Should return 42')
+            
+            h.setAttribute("a.b.a.b", "attr2", 43)
+            self.assertEqual(h.getAttribute("a.b.a.b","attr1"), "someValue", 'Should return "someValue"')
+            self.assertEqual(h.getAttribute("a.b.a.b","attr2"), 43, 'Should return 42')
+            
+            h.setAttribute("a.b.a.b", "attr1", True)
+            self.assertEqual(h.getAttribute("a.b.a.b","attr1"), True, 'Should return "someValue"')
+            self.assertEqual(h.getAttribute("a.b.a.b","attr2"), 43, 'Should return 42')
+            
+            attrs = h.getAttributes("a.b.a.b")
+            self.assertEqual(attrs.size(), 2)
+            self.assertEqual(attrs.get("attr1"), True)
+            self.assertEqual(attrs["attr1"], True)
+            self.assertEqual(attrs.get("attr2"), 43)
+            self.assertEqual(attrs["attr2"], 43)
+            
+            node = attrs.getNode("attr1")
+            self.assertEqual(node.getType(), "BOOL")
+
+            node = attrs.getNode("attr2")
+            self.assertEqual(node.getType(), "INT32")
+
+        except Exception,e:
+            self.fail("test_attributes exception group 2: " + str(e))
+
+        try:
+            h = Hash("a.b.a.b", 1)
+            h.setAttribute("a.b.a.b","attr1", [1,2,3])
+            self.assertEqual(h.getAttribute("a.b.a.b","attr1")[1], 2)
+        except Exception,e:
+            self.fail("test_attributes exception group 3: " + str(e))
+
+        try:
+            h = Hash("a.b.a.b", 42)
+            h.setAttribute("a.b.a.b","attr1", "someValue")
+            self.assertEqual(h.getAttribute("a.b.a.b","attr1"), "someValue", 'Should return "someValue"')
+        except Exception,e:
+            self.fail("test_attributes exception group 4: " + str(e))
+
+        try:
+            h = Hash("a.b.a.b", 42)
+            h.setAttribute("a.b.a.b","attr1", "someValue")
+            self.assertEqual(h.getAttribute("a.b.a.b","attr1"), "someValue", 'Should return "someValue"')
+        except Exception,e:
+            self.fail("test_attributes exception group 5: " + str(e))
+
+        try:
+            h = Hash("a.b.a.b", 42)
+            h.setAttribute("a.b.a.b","attr1", [1,2,3,4,5,6,7])
+            
+            setStdVectorDefaultConversion(Types.PYTHON)
+            if isStdVectorDefaultConversion(Types.PYTHON):
+                self.assertEqual(h.getAttribute("a.b.a.b","attr1"), [1,2,3,4,5,6,7])
+            if isStdVectorDefaultConversion(Types.NUMPY):
+                self.assertEqual(h.getAttribute("a.b.a.b","attr1").all(), np.array([1,2,3,4,5,6,7], dtype=np.int32).all())
+            
+            setStdVectorDefaultConversion(Types.NUMPY)
+            if isStdVectorDefaultConversion(Types.PYTHON):
+                self.assertEqual(h.getAttribute("a.b.a.b","attr1"), [1,2,3,4,5,6,7])
+            if isStdVectorDefaultConversion(Types.NUMPY):
+                self.assertEqual(h.getAttribute("a.b.a.b","attr1").all(), np.array([1,2,3,4,5,6,7], dtype=np.int32).all())
+                
+            setStdVectorDefaultConversion(Types.PYTHON)
+        except Exception,e:
+            self.fail("test_attributes exception group 6: " + str(e))
+            
+        try:
+            h = Hash('a.b.c', 1, 'b.x', 2.22, 'b.y', 7.432, 'c', [1,2,3])
+            h.setAttribute('a.b.c','attr1',[1.234,2.987,5.555])
+            if isStdVectorDefaultConversion(Types.PYTHON):
+                self.assertEqual(h.getAttribute('a.b.c','attr1'), [1.234,2.987,5.555])
+                self.assertEqual(h.getAttributeAs('a.b.c','attr1',Types.NDARRAY_DOUBLE).all(), np.array([1.234,2.987,5.555], dtype=np.double).all())
+            if isStdVectorDefaultConversion(Types.NUMPY):
+                self.assertEqual(h.getAttribute('a.b.c','attr1').all(), np.array([1.234,2.987,5.555], dtype=np.double).all())
+                self.assertEqual(h.getAttributeAs('a.b.c','attr1',Types.VECTOR_DOUBLE), [1.234,2.987,5.555])
+        except Exception,e:
+            self.fail("test_attributes exception group 7: " + str(e))
+
+    def test_attributes_get_copy(self):
+        try:
+            h = Hash("a.b.a.b", 42)
+            h.setAttribute("a.b.a.b","attr1", True)
+            self.assertEqual(h.getAttribute("a.b.a.b","attr1"), True)
+            
+            attrs = h.copyAttributes("a.b.a.b")
+            attrs["attr1"] = False
+            self.assertEqual(h.getAttribute("a.b.a.b","attr1"), True)
+        except Exception,e:
+            self.fail("test_attributes_get_copy exception group 1: " + str(e))
+
+        try:
+            h = Hash("a.b.a.b", 42)
+            h.setAttribute("a.b.a.b","attr1", True)
+            self.assertEqual(h.getAttribute("a.b.a.b","attr1"), True)
+            
+            attrs = h.getAttributes("a.b.a.b")
+            attrs["attr1"] = False
+            self.assertEqual(h.getAttribute("a.b.a.b","attr1"), False)
+        except Exception,e:
+            self.fail("test_attributes_get_copy exception group 2: " + str(e))
+
+        try:
+            h = Hash("a.b.a.b", 42)
+            h.setAttribute("a.b.a.b","attr1", True)
+            self.assertEqual(h.getAttribute("a.b.a.b","attr1"), True)
+            node = h.getNode("a.b.a.b")
+            attrs = node.copyAttributes()
+            attrs["attr1"] = False
+            self.assertEqual(h.getAttribute("a.b.a.b","attr1"), True)
+        except Exception,e:
+            self.fail("test_attributes_get_copy exception group 3: " + str(e))
+
+        try:
+            h = Hash("a.b.a.b", 42)
+            h.setAttribute("a.b.a.b","attr1", True)
+            self.assertEqual(h.getAttribute("a.b.a.b","attr1"), True)
+            node = h.getNode("a.b.a.b")
+            attrs = node.getAttributes()
+            attrs["attr1"] = False
+            self.assertEqual(h.getAttribute("a.b.a.b","attr1"), False)
+        except Exception,e:
+            self.fail("test_attributes_get_copy exception group 4: " + str(e))
+
+
+    def test_merge(self):
+        try:
+            h1 = Hash("a", 1,
+                      "b", 2,
+                      "c.b[0].g", 3,
+                      "c.c[0].d", 4,
+                      "c.c[1]", Hash("a.b.c", 6),
+                      "d.e", 7
+                     )
+            
+            h2 = Hash("a", 21,
+                      "b.c", 22,
+                      "c.b[0]", Hash("key", "value"),
+                      "c.b[1].d", 24,
+                      "e", 27
+                     )
+            
+            h1 += h2
+            
+            self.assertEqual(h1.has("a"), True)
+            self.assertEqual(h1.get("a"), 21)
+            self.assertEqual(h1["a"], 21)
+            self.assertEqual(h1.has("b"), True)
+            self.assertEqual(h1.has("c.b.d"), False)
+            self.assertEqual(h1.has("c.b[0]"), True)
+            self.assertEqual(h1.has("c.b[1]"), True)
+            self.assertEqual(h1.has("c.b[2]"), True)
+            self.assertEqual(h1.get("c.b[2].d"), 24)
+            self.assertEqual(h1.has("c.c[0].d"), True)
+            self.assertEqual(h1.has("c.c[1].a.b.c"), True)
+            self.assertEqual(h1.has("d.e"), True)
+            self.assertEqual(h1.has("e"), True)
+
+            h3 = h1
+
+            self.assertEqual(similar(h1, h3), True)
+            
+        except Exception,e:
+            self.fail("test_iteration exception group 1: " + str(e))
+            
+    def test_dict(self):
+        try:
+            h = Hash("a", {"b" : { "c" : {"d" : [1, 2, 3, 4, 5]}}})
+            
+            self.assertEqual(h["a.b.c.d"], [1, 2, 3, 4, 5])
+            self.assertEqual(h["a"]["b"]["c"]["d"], [1, 2, 3, 4, 5])
+    
+            h.set('x', {'y' : {'z' : True}})
+            
+            self.assertEqual(h["x.y.z"], True)
+            
+        except Exception,e:
+            self.fail("test_dict exception group 1: " + str(e))
+            
+            
 if __name__ == '__main__':
     unittest.main()
 
