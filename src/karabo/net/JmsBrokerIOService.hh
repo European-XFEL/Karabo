@@ -75,8 +75,6 @@ namespace karabo {
             std::vector<boost::tuple<JmsBrokerChannel*, WaitHandler, int> > m_waitHandlers;
             boost::mutex m_mutex;
             
-            //static int m_threadCount;
-
         private: // functions
 
             bool activateRegisteredTextMessageHandlers();
@@ -86,9 +84,8 @@ namespace karabo {
             bool activateRegisteredWaitHandlers();
 
         };
-
-    } // namespace net
-} // namespace karabo
+    } 
+}
 
 #endif 
 

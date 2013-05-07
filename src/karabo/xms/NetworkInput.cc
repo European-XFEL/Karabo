@@ -10,11 +10,14 @@
 
 #include "NetworkInput.hh"
 
+using namespace karabo::util;
+using namespace karabo::io;
+
 namespace karabo {
     namespace xms {
-        
-        KARABO_REGISTER_FACTORY_2_CC(AbstractInput, Input<karabo::util::Hash >, NetworkInput<karabo::util::Hash>)
-        KARABO_REGISTER_FACTORY_CC(Input<karabo::util::Hash >, NetworkInput<karabo::util::Hash>)
-                
+
+        KARABO_REGISTER_FOR_CONFIGURATION(AbstractInput, Input<Hash >, NetworkInput<Hash>)
+        KARABO_REGISTER_FOR_CONFIGURATION(Input<Hash >, NetworkInput<Hash>)
+
     }
 }

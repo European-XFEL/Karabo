@@ -16,107 +16,38 @@
 #include <karabo/net/BrokerChannel.hh>
 
 #include "Device.hh"
+#include "OkErrorFsm.hh"
+
 /**
- * The main European XFEL namespace
+ * The main karabo namespace
  */
 namespace karabo {
 
-    /**
-     * Namespace for package sink
-     */
     namespace core {
 
-        class GuiServerDevice : public karabo::core::Device {
+        class GuiServerDevice : public karabo::core::Device<OkErrorFsm> {
         public:
 
             KARABO_CLASSINFO(GuiServerDevice, "GuiServerDevice", "1.0")
 
-            /**
-             * Constructor explicitly calling base Device constructor
-             */
-            GuiServerDevice() : Device(this) {
-            }
+            static void expectedParameters(karabo::util::Schema& expected);
 
+            GuiServerDevice(const karabo::util::Hash& input);
+            
             virtual ~GuiServerDevice() {
             }
 
-            /**
-             * Necessary method as part of the factory/configuration system
-             * @param expected Will contain a description of expected parameters for this device
-             */
-            static void expectedParameters(karabo::util::Schema& expected);
-
-            /**
-             * If this object is constructed using the factory/configuration system this method is called
-             * upon construction (can be regarded as a second constructor)
-             * @param input Validated (@see expectedParameters) and default-filled configuration
-             */
-            void configure(const karabo::util::Hash& input);
-
-            /**
-             * Typically starts the state machine and the signals and slots event loop
-             */
-            void run();
-
-        public:
-
-            /**************************************************************/
-            /*                        Events                              */
-            /**************************************************************/
-
-            // Standard events
-
-            KARABO_FSM_EVENT2(m_fsm, ErrorFoundEvent, onException, std::string, std::string)
-
-            KARABO_FSM_EVENT0(m_fsm, EndErrorEvent, slotEndError)
-
-
-            /**************************************************************/
-            /*                        States                              */
-
-            /**************************************************************/
-
-            KARABO_FSM_STATE(AllOkState)
-
-            KARABO_FSM_STATE(ErrorState)
-
-
-            /**************************************************************/
-            /*                    Transition Actions                      */
-            /**************************************************************/
-
-
-
-            /**************************************************************/
-            /*                      Top Machine                           */
-            /**************************************************************/
-
-            KARABO_FSM_TABLE_BEGIN(GuiServerDeviceMachineTransitionTable)
-            //  Source-State    Event        Target-State    Action         Guard
-            Row< AllOkState, ErrorFoundEvent, ErrorState, ErrorFoundAction, none >,
-            Row< ErrorState, EndErrorEvent, AllOkState, none, none >
-            KARABO_FSM_TABLE_END
-
-
-            //                                 Name                Transition-Table              Initial-State Context Entry-function
-            KARABO_FSM_STATE_MACHINE_V_E(GuiServerDeviceMachine, GuiServerDeviceMachineTransitionTable, AllOkState, Self, startServer)
-
-            void startStateMachine() {
-
-                KARABO_FSM_CREATE_MACHINE(GuiServerDeviceMachine, m_fsm);
-                KARABO_FSM_SET_CONTEXT_TOP(this, m_fsm)
-                KARABO_FSM_START_MACHINE(m_fsm)
-            }
-
+            
+            void okStateOnEntry();
+            
+      
         private: // Members
-
-            KARABO_FSM_DECLARE_MACHINE(GuiServerDeviceMachine, m_fsm);
 
             karabo::net::IOService::Pointer m_ioService;
             karabo::net::Connection::Pointer m_dataConnection;
             
-            karabo::io::Format<karabo::util::Hash>::Pointer m_xmlSerializer;
-            karabo::io::Format<karabo::util::Hash>::Pointer m_binarySerializer;
+            karabo::io::TextSerializer<karabo::util::Hash>::Pointer m_textSerializer;
+            karabo::io::BinarySerializer<karabo::util::Hash>::Pointer m_binarySerializer;
             std::map<karabo::net::Channel::Pointer, std::set<std::string> > m_channels;
             boost::mutex m_channelMutex;
             
@@ -128,11 +59,11 @@ namespace karabo {
 
         private: // Functions
 
-            void onError(karabo::net::Channel::Pointer channel, const std::string& errorMessage);
+            void onError(karabo::net::Channel::Pointer channel, const karabo::net::ErrorCode& errorMessage);
 
             void onConnect(karabo::net::Channel::Pointer channel);
 
-            void onRead(karabo::net::Channel::Pointer channel, const std::string& body, const karabo::util::Hash& header);
+            void onRead(karabo::net::Channel::Pointer channel, const karabo::util::Hash& header, const std::string& body);
             
             void onLogin(karabo::net::Channel::Pointer channel, const std::string& body);
             
@@ -177,7 +108,6 @@ namespace karabo {
 //            void slotConnected(const std::string& signal, const std::string& slot);
 //
             void slotChanged(const karabo::util::Hash& what, const std::string& instanceId, const std::string& classId);
-//
 
             void onLog(karabo::net::BrokerChannel::Pointer channel, const std::string& logMessage, const karabo::util::Hash& header);
             

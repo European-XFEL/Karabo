@@ -22,6 +22,9 @@ namespace karabo {
 
     namespace io {
 
+        /**
+         * The MasterConfigXsdFormat class.
+         */
         class SchemaXsdFormat : public Format<karabo::util::Schema> {
         public:
 
@@ -38,23 +41,23 @@ namespace karabo {
             void configure(const karabo::util::Hash& input);
 
             /**
-             * Reading an XSD file (we do not need such functionality, therefore function is not implemented).
-             * Function reads XSD Document and
-             * creates an object of the class karabo::util::Schema
-             * @param in Input parameter representing XSD document
-             * @param out Output parameter representing object of the class karabo::util::Schema
+             * Reading a configuration file.
+             * Function reads configuration file (XML Document) and
+             * creates an object of the class karabo::util::Hash
+             * @param in Input parameter representing XML document
+             * @param out Output parameter representing object of the class karabo::util::Hash
              */
-             void convert(std::stringstream& in, karabo::util::Schema& out);
+            void convert(std::stringstream& in, karabo::util::Schema& out);
 
 
             /**
-             * Writing an XSD file.
-             * Function gets as input an object of the class karabo::util::Schema
-             * and creates an XSD file.
-             * @param in Input parameter representing an object of the class karabo::util::Schema
-             * @param out Output parameter representing constructed XSD Document
+             * Writing a configuration file.
+             * Function gets as input an object of the class karabo::util::Hash
+             * and creates a configuration file in XML format.
+             * @param in Input parameter representing an object of the class karabo::util::Hash
+             * @param out Output parameter representing constructed XML Document
              */
-             void convert(const karabo::util::Schema& in, std::stringstream& out);
+            void convert(const karabo::util::Schema& in, std::stringstream& out);
 
         private: // members
 
@@ -72,7 +75,7 @@ namespace karabo {
 
             void setAppearenceAllTag(const karabo::util::Schema& complex, karabo::tinyxml::TiXmlElement* complexTypeTag, int minOccurs);
 
-            std::string rewriteTypeToXsd(const karabo::util::Types::Type typeOfElement);
+            std::string rewriteTypeToXsd(const karabo::util::Types::ReferenceType typeOfElement);
         };
     } // namespace io
 } // namespace karabo

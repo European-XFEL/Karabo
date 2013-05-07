@@ -9,22 +9,23 @@
 #define	KARABO_NET_IOSERVICE_HH
 
 #include <boost/shared_ptr.hpp>
-#include <karabo/util/ClassInfo.hh>
+#include <karabo/util/Factory.hh>
 #include "AbstractIOService.hh"
 
 namespace karabo {
     namespace net {
 
         class Connection;
+        class BrokerConnection;
 
         class IOService {
+
         public:
 
             KARABO_CLASSINFO(IOService, "IOService", "1.0")
 
-            friend class karabo::net::Connection;
-
-            typedef boost::shared_ptr<IOService> Pointer;
+            friend class Connection;
+            friend class BrokerConnection;
 
             virtual ~IOService() {
             }
@@ -33,22 +34,22 @@ namespace karabo {
                 if (m_service)
                     m_service->run();
             }
-            
+
             void work() {
-              if (m_service) {
-                m_service->work();
-              }
+                if (m_service) {
+                    m_service->work();
+                }
             }
-            
+
             void stop() {
-              if(m_service) {
-                m_service->stop();
-              }
+                if (m_service) {
+                    m_service->stop();
+                }
             }
-            
+
             template <class T>
             boost::shared_ptr<T> castTo() {
-              return boost::static_pointer_cast<T>(m_service);
+                return boost::static_pointer_cast<T>(m_service);
             }
 
         private:
@@ -57,10 +58,10 @@ namespace karabo {
 
             void setService(const std::string& classId) {
                 if (!m_service)
-                    m_service = AbstractIOService::createDefault(classId);
+                    m_service = karabo::util::Factory<AbstractIOService>::create(classId);
                 else {
                     if (classId != m_service->getClassInfo().getClassId()) {
-                        throw LOGIC_EXCEPTION("Service was set to " + m_service->getClassInfo().getClassId() + " before. Cannot be used with " + classId + " now.");
+                        throw KARABO_LOGIC_EXCEPTION("Service was set to " + m_service->getClassInfo().getClassId() + " before. Cannot be used with " + classId + " now.");
                     } else {
                         //OK, another connection wants to use us
                     }
@@ -70,5 +71,5 @@ namespace karabo {
     }
 }
 
-#endif	/* KARABO_NET_IOSERVICE_HH */
+#endif
 

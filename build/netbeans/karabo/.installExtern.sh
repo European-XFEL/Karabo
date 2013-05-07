@@ -39,7 +39,7 @@ do
         echo 
         echo "### PROBLEMS building $i, exiting... ###"
         echo
-        exit $rv
+    #    exit $rv
     fi
 done
 

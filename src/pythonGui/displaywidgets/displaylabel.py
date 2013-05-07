@@ -22,7 +22,7 @@ __all__ = ["DisplayLabel"]
 
 
 from displaywidget import DisplayWidget
-from libkarabo import *
+from libkarathon import *
 
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *

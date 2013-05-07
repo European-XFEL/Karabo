@@ -10,6 +10,8 @@
  */
 
 #include <vector>
+#include <karabo/util/SimpleElement.hh>
+#include <karabo/util/ListElement.hh>
 #include "Logger.hh"
 #include "AppenderConfigurator.hh"
 #include "CategoryConfigurator.hh"
@@ -24,56 +26,60 @@ using namespace log4cpp;
 namespace karabo {
     namespace log {
 
+        KARABO_REGISTER_FOR_CONFIGURATION(Logger)
+        
         // Static initialization of logMutex
         boost::mutex Logger::m_logMutex;
+        
+        // Static initialization of LogStreamRegistry
+        Logger::LogStreamRegistry Logger::m_logStreams;
+
 
         void Logger::expectedParameters(Schema& expected) {
 
-
-
-            LIST_ELEMENT<AppenderConfigurator > (expected)
+            LIST_ELEMENT(expected)
                     .key("appenders")
                     .displayedName("Define Appenders")
                     .description("Configures root appenders")
-                    .assignmentOptional().defaultValue("Ostream")
+                    .appendNodesOfConfigurationBase<AppenderConfigurator>()
+                    .assignmentOptional().defaultValueFromString("Ostream")
                     .commit();
 
             STRING_ELEMENT(expected)
-                    .description("Default Priority")
                     .key("priority")
+                    .description("Default Priority")
                     .displayedName("Priority")
                     .options("DEBUG INFO WARN ERROR")
                     .assignmentOptional().defaultValue("INFO")
                     .commit();
-
-
+            
             // Setup for additional categories, optional
-
-            LIST_ELEMENT<CategoryConfigurator > (expected)
+            LIST_ELEMENT(expected)
                     .key("categories")
                     .displayedName("Categories")
                     .description("Configures categories")
+                    .appendNodesOfConfigurationBase<CategoryConfigurator>()
                     .assignmentOptional().noDefaultValue()
                     .commit();
-
-
-
         }
 
-        void Logger::configure(const Hash& input) {
 
+        Logger::Logger(const Hash& input) {
             configureAppenders(input);
             configurePriority(input);
             configureCategories(input);
+            initialize();
         }
 
-        void Logger::initialize() {
 
+        void Logger::initialize() {
 
             Category& rootLog = Category::getRoot();
 
             rootLog.setRootPriority(m_rootPriority);
 
+            
+            
             for (size_t i = 0; i < m_rootAppenderConfigs.size(); ++i) {
                 Appender* app = m_rootAppenderConfigs[i]->getConfigured();
                 rootLog.addAppender(app);
@@ -84,22 +90,28 @@ namespace karabo {
             }
 
         }
+        
+        void Logger::reset() {
+            Category& rootLog = Category::getRoot();
+            rootLog.removeAllAppenders();
+        }
+
 
         void Logger::configureAppenders(const Hash& input) {
             m_rootAppenderConfigs = AppenderConfigurator::createList("appenders", input);
         }
+
 
         void Logger::configurePriority(const Hash& input) {
             string prio = input.get<string > ("priority");
             m_rootPriority = Priority::getPriorityValue(prio);
         }
 
+
         void Logger::configureCategories(const Hash& input) {
             if (input.has("categories")) {
                 m_categories = CategoryConfigurator::createList("categories", input);
             }
         }
-
-        KARABO_REGISTER_ONLY_ME_CC(Logger)
     }
 }

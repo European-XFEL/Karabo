@@ -12,11 +12,11 @@
 #define	KARABO_LOGCONFIG_ROLLINGFILEAPPENDERCONFIGURATOR_HH
 
 #include "FileAppenderConfigurator.hh"
-#include <karabo/util/Factory.hh>
+#include <karabo/util/Configurator.hh>
 #include <boost/filesystem.hpp>
 
 namespace log4cpp {
-  class Appender;
+    class Appender;
 }
 
 /**
@@ -24,37 +24,37 @@ namespace log4cpp {
  */
 namespace karabo {
 
-  /**
-   * Namespace for package log
-   */
-  namespace log {
+    /**
+     * Namespace for package log
+     */
+    namespace log {
 
-    class RollingFileAppenderConfigurator : public FileAppenderConfigurator {
+        class RollingFileAppenderConfigurator : public FileAppenderConfigurator {
 
-      unsigned int m_maxFileSize;
-      unsigned short m_maxBackupIndex;
-      
+            unsigned int m_maxFileSize;
+            unsigned short m_maxBackupIndex;
 
-    public:
+        public:
 
-      KARABO_CLASSINFO(RollingFileAppenderConfigurator, "RollingFile", "1.0")
+            KARABO_CLASSINFO(RollingFileAppenderConfigurator, "RollingFile", "1.0")
 
-      RollingFileAppenderConfigurator();
-      virtual ~RollingFileAppenderConfigurator();
+            static void expectedParameters(karabo::util::Schema& expected);
 
+            RollingFileAppenderConfigurator(const karabo::util::Hash& input);
 
-      static void expectedParameters(karabo::util::Schema& expected);
-      void configure(const karabo::util::Hash& input);
+            virtual ~RollingFileAppenderConfigurator() {
+            };
 
-      log4cpp::Appender* create();
-      
-    private:
-      void configureMaxSize(const karabo::util::Hash& input);
-      void configureMaxBackupIndex(const karabo::util::Hash& input);
-      
-    };
+            log4cpp::Appender* create();
 
-  }
+        private: // functions
+
+            void configureMaxSize(const karabo::util::Hash& input);
+
+            void configureMaxBackupIndex(const karabo::util::Hash& input);
+
+        };
+    }
 }
 
 #endif	/* KARABO_LOGCONFIG_ROLLINGFILEAPPENDERCONFIGURATOR_HH */

@@ -40,27 +40,26 @@ namespace karabo {
         typedef boost::shared_ptr<boost::asio::ip::tcp::socket> BoostTcpSocket;
         typedef boost::shared_ptr<boost::asio::ip::tcp::resolver> BoostTcpResolver;
         typedef boost::shared_ptr<boost::asio::ip::tcp::acceptor> BoostTcpAcceptor;
-        
+
         /**
          * The Connection class.
          * This class serves as the interface for all connections.
          * A connection is only established upon call of the start() function.
          */
-        class TcpConnection : public Connection {
+        class TcpConnection : public Connection, public boost::enable_shared_from_this<TcpConnection>{
+
             friend class TcpChannel;
 
         public:
 
             KARABO_CLASSINFO(TcpConnection, "Tcp", "1.0")
 
-            TcpConnection();
-
             virtual ~TcpConnection() {
             }
 
             static void expectedParameters(karabo::util::Schema& expected);
 
-            void configure(const karabo::util::Hash& input);
+            TcpConnection(const karabo::util::Hash& input);
 
             /**
              * Starts the connection
@@ -73,14 +72,9 @@ namespace karabo {
             virtual void startAsync(const ConnectionHandler& slot);
 
             /**
-             * Stops the connection
-             */
-            virtual void stop();
-
-            /**
              * Closes the connection
              */
-            virtual void close();
+            virtual void stop();
 
             /**
              * This function creates a "channel" for the given connection.
@@ -88,7 +82,16 @@ namespace karabo {
              */
             virtual ChannelPointer createChannel();
             
+            size_t getSizeofLength() const {
+                return m_sizeofLength;
+            }
+            
+            bool lengthIsText() const {
+                return m_lengthIsTextFlag;
+            }
+
         private:
+
             void resolveHandler(const ConnectionHandler&, const ErrorCode&, boost::asio::ip::tcp::resolver::iterator);
             void acceptHandler(ChannelPointer, const ConnectionHandler&, const ErrorCode&);
             void connectHandler(ChannelPointer, const ConnectionHandler&, const ErrorCode&);
@@ -96,18 +99,20 @@ namespace karabo {
             ChannelPointer startClient();
             void startServer(const ConnectionHandler&);
             void startClient(const ConnectionHandler&);
-            
-            
+
+
         private:
-          
-            //TcpIOServicePointer m_ioService;
-            BoostIOServicePointer m_boost_io_service;
+
+            BoostIOServicePointer m_boostIoServicePointer;
             BoostTcpResolver m_resolver;
             BoostTcpAcceptor m_acceptor;
             std::string m_connectionType;
             std::string m_hostname;
             unsigned int m_port;
             bool m_isAsyncConnect;
+            unsigned int m_sizeofLength;
+            bool m_lengthIsTextFlag;
+            bool m_manageAsyncData;
         };
     }
 }

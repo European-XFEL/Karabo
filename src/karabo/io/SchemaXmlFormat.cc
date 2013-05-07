@@ -83,7 +83,7 @@ namespace karabo {
                 removeNamespaceAttribute(rootNode);
                 r_readXmlDocument(rootNode, out);
             } catch (...) {
-                RETHROW;
+                KARABO_RETHROW;
             }
         }
 
@@ -119,7 +119,7 @@ namespace karabo {
                         boost::to_upper(attributeName);
                         boost::to_upper(attributeValue);
                         if (!m_ignoreDataType && attributeName == "DATATYPE") {
-                            Types::Type dataType = Types::convert(attributeValue);
+                            Types::ReferenceType dataType = Types::convert(attributeValue);
                             data.convertFromString(elementName, dataType);
                         } else {
                             cout << "Ignoring attribute \"" << attributeName << "\" of XML element \"" << elementName << "\"" << endl;
@@ -164,7 +164,7 @@ namespace karabo {
                         while (childElement != 0) {
                             string childName = childElement->Value();
                             if (childName != "item") {
-                                throw PARAMETER_EXCEPTION("SchemaXmlFormat::r_readXmlDocument -> Unexpected child element: <" + childName + "> in the LIST-element <" + elementName + ">. List entries have to be surrounded by <item>[...]</item> elements");
+                                throw KARABO_PARAMETER_EXCEPTION("SchemaXmlFormat::r_readXmlDocument -> Unexpected child element: <" + childName + "> in the LIST-element <" + elementName + ">. List entries have to be surrounded by <item>[...]</item> elements");
                             }
                             list.push_back(Schema());
                             r_readXmlDocument(childElement->FirstChild(), *(list.rbegin()));
@@ -201,14 +201,14 @@ namespace karabo {
             while (childElement != 0) {
                 string childName = childElement->Value();
                 if (childName != "item") {
-                    throw CAST_EXCEPTION("SchemaXmlFormat::r_readXmlDocument -> Unexpected child element \"" + childName + "\" in the ARRAY-element \"" + elementName + "\". Expected: \"item\".");
+                    throw KARABO_CAST_EXCEPTION("SchemaXmlFormat::r_readXmlDocument -> Unexpected child element \"" + childName + "\" in the ARRAY-element \"" + elementName + "\". Expected: \"item\".");
                 }
                 string valueOfItem = childElement->FirstChild()->ToText()->Value();
                 tmpArray.push_back(valueOfItem);
                 childElement = childElement->NextSiblingElement();
             }
             if (arrayType != "") {
-                Types::Type type = Types::convert("VECTOR_" + arrayType);
+                Types::ReferenceType type = Types::convert("VECTOR_" + arrayType);
                 string stringArray = String::sequenceToString(tmpArray);
                 data.set(elementName, stringArray);
                 data.convertFromString(elementName, type);
@@ -267,7 +267,7 @@ namespace karabo {
             try {
                 for (Schema::const_iterator it = data.begin(); it != data.end(); it++) {
                     string nameOfElement = it->first;
-                    Types::Type type = data.getTypeAsId(it);
+                    Types::ReferenceType type = data.getTypeAsId(it);
                     switch (type) {
                         case Types::SCHEMA:
                         {
@@ -378,7 +378,7 @@ namespace karabo {
                     } // switch
                 } // for
             } catch (...) {
-                RETHROW;
+                KARABO_RETHROW;
             }
 
         } //SchemaXmlFormat::r_createXmlFile
@@ -445,7 +445,7 @@ namespace karabo {
 
                 pTheElement->LinkEndChild(newElement);
             } catch (...) {
-                RETHROW;
+                KARABO_RETHROW;
             }
 
         }//SchemaXmlFormat::fillXmlBoolDeque
@@ -470,7 +470,7 @@ namespace karabo {
                 }
                 pTheElement->LinkEndChild(newElement);
             } catch (...) {
-                RETHROW;
+                KARABO_RETHROW;
             }
         }
 
@@ -494,7 +494,7 @@ namespace karabo {
                 }
                 pTheElement->LinkEndChild(newElement);
             } catch (...) {
-                RETHROW;
+                KARABO_RETHROW;
             }
         }
 
@@ -518,7 +518,7 @@ namespace karabo {
                 }
                 pTheElement->LinkEndChild(newElement);
             } catch (...) {
-                RETHROW;
+                KARABO_RETHROW;
             }
         }
 

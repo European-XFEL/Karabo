@@ -9,36 +9,41 @@
 #include "NetworkAppender.hh"
 
 using namespace karabo::util;
+using namespace karabo::net;
 
 namespace karabo {
     namespace log {
 
-        KARABO_REGISTER_FACTORY_CC(AppenderConfigurator, NetworkAppenderConfigurator)
+
+        KARABO_REGISTER_FOR_CONFIGURATION(AppenderConfigurator, NetworkAppenderConfigurator)
 
         NetworkAppenderConfigurator::NetworkAppenderConfigurator() {
         }
 
+
         NetworkAppenderConfigurator::~NetworkAppenderConfigurator() {
         }
+
 
         log4cpp::Appender* NetworkAppenderConfigurator::create() {
             return new NetworkAppender(getName(), m_connection->createChannel());
         }
 
+
         void NetworkAppenderConfigurator::expectedParameters(Schema& expected) {
 
-            CHOICE_ELEMENT<karabo::net::BrokerConnection > (expected)
+            CHOICE_ELEMENT(expected)
                     .key("connection")
                     .displayedName("Connection")
                     .description("Connection")
+                    .appendNodesOfConfigurationBase<BrokerConnection>()
                     .assignmentOptional().defaultValue("Jms")
                     .commit();
-            
-            //OVERWRITE_ELEMENT
         }
 
-        void NetworkAppenderConfigurator::configure(const Hash& input) {
-            m_connection = karabo::net::BrokerConnection::createChoice("connection", input);
+
+        NetworkAppenderConfigurator::NetworkAppenderConfigurator(const Hash& input) : AppenderConfigurator(input) {
+            m_connection = BrokerConnection::createChoice("connection", input);
             m_connection->start();
         }
 

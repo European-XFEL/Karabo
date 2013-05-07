@@ -23,7 +23,7 @@ __all__ = ["Notifier", "Manager"]
 from datanotifier import DataNotifier
 from enums import NavigationItemTypes
 from enums import ConfigChangeTypes
-from libkarabo import *
+from libkarathon import *
 from navigationhierarchymodel import NavigationHierarchyModel
 from singleton import Singleton
 from sqldatabase import SqlDatabase
@@ -146,7 +146,7 @@ class Manager(Singleton):
 
     
     def getFromPathAsHash(self, key):
-        return self.__hash.getFromPath(str(key))
+        return self.__hash.get(str(key))
 
 
     def _setFromPath(self, key, value):
@@ -157,7 +157,7 @@ class Manager(Singleton):
         if isinstance(value, QString):
             value = str(value)
         # Merge with central hash
-        self.__hash.setFromPath(key, value)
+        self.__hash.set(key, value)
 
 
     def registerEditableComponent(self, key, component):
@@ -341,7 +341,7 @@ class Manager(Singleton):
             if len(leaf) < 1: continue
             
             key = instanceKey + "." + leaf
-            value = config.getFromPath(leaf)
+            value = config.get(leaf)
             self._setFromPath(key, value)
 
             dataNotifier = self._getDataNotifierEditableValue(key)
@@ -363,8 +363,8 @@ class Manager(Singleton):
         #print self.__hash
         
         h = Hash()
-        if self.__hash.hasFromPath(internalKey):
-            h = self.__hash.getFromPath(internalKey)
+        if self.__hash.has(internalKey):
+            h = self.__hash.get(internalKey)
         
         # TODO: Remove dirty hack for scientific computing again!!!
         croppedDevClaId = devClaId.split("-")
@@ -576,7 +576,7 @@ class Manager(Singleton):
 
         # TODO: serializer needed?
         serializer = FormatHash.create("Xml", Hash())
-        config = serializer.unserialize(xmlContent).getFromPath(devClaId)
+        config = serializer.unserialize(xmlContent).get(devClaId)
 
         # TODO: Reload XSD in configuration panel
         # ...
@@ -600,11 +600,7 @@ class Manager(Singleton):
 
 
     def saveAsXml(self, filename, devClaId, internalKey):
-        writeHash = Hash("TextFile.filename", str(filename))
-        writeHash.setFromPath("TextFile.format.Xml.indentation", 1)
-        writeHash.setFromPath("TextFile.format.Xml.printDataType", True)
-        xmlWriter = WriterHash.create(writeHash)
-        xmlWriter.write(Hash(devClaId, self.getFromPathAsHash(internalKey)))
+        saveToFile(Hash(devClaId, self.getFromPathAsHash(internalKey)), filename)
 
     
     def onSaveAsXml(self, devClaId, internalKey):

@@ -516,12 +516,12 @@ namespace karabo {
             //! Read a pixel value with Neumann boundary conditions.
 
             TPix& at(const int offset) {
-                if (this->isEmpty()) throw IMAGE_DIMENSION_EXCEPTION("Empty image");
+                if (this->isEmpty()) throw KARABO_IMAGE_DIMENSION_EXCEPTION("Empty image");
                 return m_cimg._at(offset);
             }
 
             TPix at(const int offset) const {
-                if (this->isEmpty()) throw IMAGE_DIMENSION_EXCEPTION("Empty image");
+                if (this->isEmpty()) throw KARABO_IMAGE_DIMENSION_EXCEPTION("Empty image");
                 return m_cimg._at(offset);
             }
 
@@ -538,12 +538,12 @@ namespace karabo {
             //! Read a pixel value with Neumann boundary conditions for the first coordinates (\c x).
 
             TPix& atX(const int x, const int y = 0, const int z = 0) {
-                if (this->isEmpty()) throw IMAGE_DIMENSION_EXCEPTION("Empty image");
+                if (this->isEmpty()) throw KARABO_IMAGE_DIMENSION_EXCEPTION("Empty image");
                 return m_cimg._atX(x, y, z, 0);
             }
 
             TPix atX(const int x, const int y = 0, const int z = 0) const {
-                if (this->isEmpty()) throw IMAGE_DIMENSION_EXCEPTION("Empty image");
+                if (this->isEmpty()) throw KARABO_IMAGE_DIMENSION_EXCEPTION("Empty image");
                 return m_cimg._atX(x, y, z, 0);
             }
 
@@ -556,12 +556,12 @@ namespace karabo {
             }
 
             TPix& atXY(const int x, const int y = 0, const int z = 0) {
-                if (this->isEmpty()) throw IMAGE_DIMENSION_EXCEPTION("Empty image");
+                if (this->isEmpty()) throw KARABO_IMAGE_DIMENSION_EXCEPTION("Empty image");
                 return m_cimg._atXY(x, y, z, 0);
             }
 
             TPix atXY(const int x, const int y = 0, const int z = 0) const {
-                if (this->isEmpty()) throw IMAGE_DIMENSION_EXCEPTION("Empty image");
+                if (this->isEmpty()) throw KARABO_IMAGE_DIMENSION_EXCEPTION("Empty image");
                 return m_cimg._atXY(x, y, z, 0);
             }
 
@@ -576,12 +576,12 @@ namespace karabo {
             //! Read a pixel value with Neumann boundary conditions for the first coordinates (\c x).
 
             TPix& atXYZ(const int x, const int y = 0, const int z = 0) {
-                if (this->isEmpty()) throw IMAGE_DIMENSION_EXCEPTION("Empty image");
+                if (this->isEmpty()) throw KARABO_IMAGE_DIMENSION_EXCEPTION("Empty image");
                 return m_cimg._atXYZ(x, y, z, 0);
             }
 
             TPix atXYZ(const int x, const int y = 0, const int z = 0) const {
-                if (this->isEmpty()) throw IMAGE_DIMENSION_EXCEPTION("Empty image");
+                if (this->isEmpty()) throw KARABO_IMAGE_DIMENSION_EXCEPTION("Empty image");
                 return m_cimg._atXYZ(x, y, z, 0);
             }
 
@@ -590,7 +590,7 @@ namespace karabo {
             }
 
             double linearAtX(const float fx, const int y = 0, const int z = 0) const {
-                if (this->isEmpty()) throw IMAGE_DIMENSION_EXCEPTION("Empty image");
+                if (this->isEmpty()) throw KARABO_IMAGE_DIMENSION_EXCEPTION("Empty image");
                 return m_cimg._linear_atX(fx, y, z, 0);
             }
 
@@ -599,7 +599,7 @@ namespace karabo {
             }
 
             double linearAtXY(const float fx, const float y = 0, const int z = 0) const {
-                if (this->isEmpty()) throw IMAGE_DIMENSION_EXCEPTION("Empty image");
+                if (this->isEmpty()) throw KARABO_IMAGE_DIMENSION_EXCEPTION("Empty image");
                 return m_cimg._linear_atXY(fx, y, z, 0);
             }
 
@@ -608,7 +608,7 @@ namespace karabo {
             }
 
             double linearAtXYZ(const float fx, const float y = 0, const float z = 0) const {
-                if (this->isEmpty()) throw IMAGE_DIMENSION_EXCEPTION("Empty image");
+                if (this->isEmpty()) throw KARABO_IMAGE_DIMENSION_EXCEPTION("Empty image");
                 return m_cimg._linear_atXYZ(fx, y, z, 0);
             }
 
@@ -617,7 +617,7 @@ namespace karabo {
             }
 
             double cubicAtX(const float fx, const int y = 0, const int z = 0) const {
-                if (this->isEmpty()) throw IMAGE_DIMENSION_EXCEPTION("Empty image");
+                if (this->isEmpty()) throw KARABO_IMAGE_DIMENSION_EXCEPTION("Empty image");
                 return m_cimg._cubic_atX(fx, y, z, 0);
             }
 
@@ -626,7 +626,7 @@ namespace karabo {
             }
 
             double cubicAtXY(const float fx, const float y = 0, const int z = 0) const {
-                if (this->isEmpty()) throw IMAGE_DIMENSION_EXCEPTION("Empty image");
+                if (this->isEmpty()) throw KARABO_IMAGE_DIMENSION_EXCEPTION("Empty image");
                 return m_cimg._cubic_atXY(fx, y, z, 0);
             }
 
@@ -635,7 +635,7 @@ namespace karabo {
             }
 
             double cubicAtXYZ(const float fx, const float y = 0, const float z = 0) const {
-                if (this->isEmpty()) throw IMAGE_DIMENSION_EXCEPTION("Empty image");
+                if (this->isEmpty()) throw KARABO_IMAGE_DIMENSION_EXCEPTION("Empty image");
                 return m_cimg._cubic_atXYZ(fx, y, z, 0);
             }
 
@@ -933,27 +933,27 @@ namespace karabo {
             }
 
             void display3dVectors(const std::string& title) {
-                if (dimZ() != 1) throw IMAGE_DIMENSION_EXCEPTION("Expecting 3d vector type data");
+                if (dimZ() != 1) throw KARABO_IMAGE_DIMENSION_EXCEPTION("Expecting 3d vector type data");
                 if (dimY() != 3 && dimX() == 3) {
                     ci::CImg<TPix> tmp = m_cimg.get_permute_axes("yxzc");
                     ci::CImg<unsigned char>().display_object3d(title.c_str(), tmp);
                 } else if (dimY() == 3) {
                     ci::CImg<unsigned char>().display_object3d(title.c_str(), m_cimg);
                 } else {
-                    throw IMAGE_DIMENSION_EXCEPTION("Expecting 3d vector type data");
+                    throw KARABO_IMAGE_DIMENSION_EXCEPTION("Expecting 3d vector type data");
                 }
             }
 
             void displayAndKeep3dVectors(const std::string& title) {
                 CImgDisplayPointer d = CImgDisplayPointer(new ci::CImgDisplay());
-                if (dimZ() != 1) throw IMAGE_DIMENSION_EXCEPTION("Expecting 3d vector type data");
+                if (dimZ() != 1) throw KARABO_IMAGE_DIMENSION_EXCEPTION("Expecting 3d vector type data");
                 if (dimY() != 3 && dimX() == 3) {
                     ci::CImg<TPix> tmp = m_cimg.get_permute_axes("yxzc");
                     ci::CImg<unsigned char>().display_object3d(*d, tmp);
                 } else if (dimY() == 3) {
                     ci::CImg<unsigned char>().display_object3d(*d, m_cimg);
                 } else {
-                    throw IMAGE_DIMENSION_EXCEPTION("Expecting 3d vector type data");
+                    throw KARABO_IMAGE_DIMENSION_EXCEPTION("Expecting 3d vector type data");
                 }
                 m_displays.push_back(d);
             }

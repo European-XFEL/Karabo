@@ -16,7 +16,7 @@ import attributetreewidgetitem
 from editableapplylatercomponent import EditableApplyLaterComponent
 from enums import ConfigChangeTypes
 from enums import NavigationItemTypes
-from libkarabo import *
+from libkarathon import *
 from manager import Manager
 
 from PyQt4.QtCore import *
@@ -95,7 +95,7 @@ class AttributeTreeWidget(QTreeWidget):
         if (editableComponent is not None) and (editableComponent.applyEnabled is True):
             keys = str(item.internalKey).split('.', 1)
             attributeKey = keys[1]
-            config.setFromPath(str(attributeKey), editableComponent.value)
+            config.set(str(attributeKey), editableComponent.value)
             editableComponent.changeApplyToBusy(True)
 
 

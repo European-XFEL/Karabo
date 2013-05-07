@@ -1,7 +1,7 @@
 /*
  * $Id: Connection.hh 3602 2011-05-31 21:09:02Z esenov@DESY.DE $
  *
- * File:   AConnection.hh
+ * File:   Connection.hh
  * Author: WP76 <wp76@xfel.eu>
  *
  * Created on June 3, 2011, 9:47 AM
@@ -10,17 +10,13 @@
  */
 
 
-#ifndef KARABO_NET_ACONNECTION_HH
-#define	KARABO_NET_ACONNECTION_HH
+#ifndef KARABO_NET_CONNECTION_HH
+#define	KARABO_NET_CONNECTION_HH
 
 #include <string>
-#include <boost/signals2.hpp>
 #include <boost/shared_ptr.hpp>
 #include <karabo/util/Factory.hh>
-#include <karabo/io/Format.hh>
-
 #include "IOService.hh"
-#include "netdll.hh"
 
 /**
  * The main European XFEL namespace
@@ -34,35 +30,36 @@ namespace karabo {
 
         typedef boost::system::error_code ErrorCode;
 
-
         class Channel;
-        typedef boost::shared_ptr<Channel> ChannelPointer;
-        typedef boost::function<void (ChannelPointer, const std::string&) > ErrorHandler;
+        
+        typedef boost::function<void (boost::shared_ptr<Channel>, const ErrorCode&) > ErrorHandler;
 
         /**
          * The Connection class.
          * This class serves as the interface for all connections.
          * A connection is only established upon call of the start() function.
          */
-        class Connection : public boost::enable_shared_from_this<Connection> {
+        class Connection {
+
             friend class Channel;
+            
+        protected:
+            
+            typedef boost::shared_ptr<Channel> ChannelPointer;
 
         public:
 
             KARABO_CLASSINFO(Connection, "Connection", "1.0")
-            KARABO_FACTORY_BASE_CLASS
+            KARABO_CONFIGURATION_BASE_CLASS
 
             typedef boost::function<void (ChannelPointer) > ConnectionHandler;
-
-
-            typedef karabo::io::Format<karabo::util::Hash> HashFormat;
 
             virtual ~Connection() {
             }
 
             static void expectedParameters(karabo::util::Schema& expected);
 
-            void configure(const karabo::util::Hash& input);
+            Connection(const karabo::util::Hash& input);
 
             /**
              * Starts the connection
@@ -71,9 +68,10 @@ namespace karabo {
 
             /**
              * Starts the connection asynchronously
+             * @param handler A callback with the following signature: void myHandler(ChannelPointer)
              */
             virtual void startAsync(const ConnectionHandler& handler) {
-                throw NOT_SUPPORTED_EXCEPTION("Asynchronous connect is not available for " + this->classInfo().getClassId() + "connections");
+                throw KARABO_NOT_SUPPORTED_EXCEPTION("Asynchronous connect is not available for " + this->classInfo().getClassId() + "connections");
             }
 
             /**
@@ -81,10 +79,6 @@ namespace karabo {
              */
             virtual void stop() = 0;
 
-            /**
-             * Closes the connection
-             */
-            virtual void close() = 0;
 
             /**
              * This function creates a "channel" for the given connection.
@@ -103,28 +97,13 @@ namespace karabo {
 
             /**
              * This function sets the error handler that will be called if connection process failed
-             * @param Handler as a function object of ErrorHandler type
+             * @param Call-back function of signature: void (boost::shared_ptr<Channel>, const ErrorCode&)
              * @return void
              */
             void setErrorHandler(const ErrorHandler& handler) {
                 m_errorHandler = handler;
             }
 
-            /**
-             * @return size of message length field in protocol
-             * 
-             */
-            std::size_t getSizeofLength() {
-                return m_sizeofLength;
-            }
-
-            /**
-             * @return true if content of message_length field should be considered as text string
-             */
-            bool lengthIsText() {
-                return m_lengthIsTextFlag;
-            }
-            
         protected: // functions
 
             void registerChannel(ChannelPointer channel) {
@@ -139,12 +118,7 @@ namespace karabo {
 
             IOService::Pointer m_service;
             ErrorHandler m_errorHandler;
-
-        private: // functions
-
-            void hashToString(const karabo::util::Hash& hash, std::string& serializedHash);
-
-            void stringToHash(const std::string& serializedHash, karabo::util::Hash& hash);
+            std::string m_serializationType;
 
             void unregisterChannel(ChannelPointer channel) {
                 boost::mutex::scoped_lock lock(m_channelMutex);
@@ -154,30 +128,18 @@ namespace karabo {
                 }
             }
 
-            boost::shared_ptr<Connection> getConnectionPointer() {
-                return shared_from_this();
-            }
-
-            std::string getHashFormat() {
-                return m_hashFormat->getClassInfo().getClassId();
-            }
-
         private: // members
 
-            HashFormat::Pointer m_hashFormat;
-
             std::set<ChannelPointer> m_channels;
-
             boost::mutex m_channelMutex;
 
-            unsigned int m_sizeofLength;
-            bool m_lengthIsTextFlag;
         };
 
 
     }
 }
 
-KARABO_REGISTER_FACTORY_BASE_HH(karabo::net::Connection, TEMPLATE_NET, DECLSPEC_NET)
+// TODO Windows
+//KARABO_REGISTER_FACTORY_BASE_HH(karabo::net::Connection, TEMPLATE_NET, DECLSPEC_NET)
 
 #endif	/* KARABO_NET_ACONNECTION_HH */

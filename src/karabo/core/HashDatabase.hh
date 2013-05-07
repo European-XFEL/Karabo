@@ -69,10 +69,9 @@ namespace karabo {
         if (condition) { \
             Hash rowResult; \
             for (size_t i = 0; i < _fields.size(); ++i) { \
-                Hash::const_iterator fieldIt = row.find(_fields[i]); \
-                if (fieldIt == row.end()) throw PARAMETER_EXCEPTION("Selection key \"" + _fields[i] + "\" is not a valid field name in table \"" + tableName + "\""); \
-                const string& field = _fields[i]; \
-                rowResult[field] = row.find(field)->second; \
+                boost::optional<const Hash::Node&> fieldIt = row.find(_fields[i]); \
+                if (!fieldIt) throw KARABO_PARAMETER_EXCEPTION("Selection key \"" + _fields[i] + "\" is not a valid field name in table \"" + tableName + "\""); \
+                rowResult.setNode(*fieldIt); \
             } \
             result.push_back(rowResult); \
         } \
@@ -86,7 +85,7 @@ namespace karabo {
     for (size_t i = 0; i < table.size(); ++i) { \
         Hash& row = table[i]; \
         if (condition) { \
-            row.update(keyValuePairs); \
+            row.merge(keyValuePairs); \
         } \
     } \
 }

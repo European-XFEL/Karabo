@@ -1,314 +1,373 @@
-'''
-Created on Oct 22, 2012
-
-@author: irinak
-'''
 
 import unittest
-import filecmp
-from libkarabo import *
-
-'''
-Free function to write given 'schema' in XSD format into file 'fileName'
-'''
-def schemaToXsd(schema, fileName):
-    inFile = Hash()
-    inFile.setFromPath("TextFile.filename", fileName)
-    inFile.setFromPath("TextFile.format.Xsd.indentation", 2)
-    outWrite = WriterSchema.create(inFile)
-    outWrite.write(schema)
-    print "\nExpected parameters written into file: ", fileName, "\n"
-
-'''
-Decoration function to hide some details on schema creation from the user
-'''
-def schemamethod(f):
-
-    def deco(cls):
-        master = Schema()
-        expected = master.initParameterDescription(cls.__name__, AccessType(INIT|READ|WRITE), "")
-        f(expected)
-        return master
-
-    deco = classmethod(deco)
-    return deco
-
-'''
-Class for testing simple schema elements of types INT32, INT64, DOUBLE, STRING, BOOL 
-'''
-class TestClass1(object):
-    @schemamethod  
-    def expectedParameters(expected):
-        e = INT32_ELEMENT(expected)
-        e.key("myInt")
-        e.displayedName("myIntegerElement")
-        e.description("Input first integer element")
-        e.alias(10) #alias of integer type 
-        e.assignmentOptional().defaultValue(5)
-        e.reconfigurable()
-        e.commit()
-        
-        e = UINT32_ELEMENT(expected)
-        e.key("myUInt")
-        e.alias(5.5) #alias of double type 
-        e.displayedName("myIntegerElement")
-        e.description("Input first integer element")
-        e.assignmentOptional().defaultValue(10)
-        e.reconfigurable()
-        e.commit()
-        
-        e = INT64_ELEMENT(expected)
-        e.key("myIntLong")
-        e.alias("testAlias") #alias of string type
-        e.displayedName("myIntegerLongElement")
-        e.description("Input second long long element")
-        e.assignmentMandatory()
-        e.reconfigurable()
-        e.commit()
-        
-        e = DOUBLE_ELEMENT(expected)
-        e.key("myDouble")
-        e.displayedName("myDoubleElement")
-        e.description("Input double element")
-        e.assignmentMandatory()
-        e.reconfigurable()
-        e.commit()
-
-        e = STRING_ELEMENT(expected)
-        e.key("myString") 
-        e.displayedName("myStringElement")
-        e.description("Input string element")
-        e.options("test, Hello, World", ",")
-        e.assignmentOptional().defaultValue("Hello")
-        e.reconfigurable()
-        e.commit()
-
-        e = BOOL_ELEMENT(expected)
-        e.key("myBool")
-        e.displayedName("myBoolElement")
-        e.description("Input bool element")
-        e.assignmentOptional().defaultValue(True)
-        e.reconfigurable()
-        e.commit()
-
-
-
-'''
-Class 'TestClass2' for testing vector schema elements of types 
-VECTOR_INT32, VECTOR_INT64, VECTOR_DOUBLE, VECTOR_STRING, VECTOR_BOOL 
-'''
-class TestClass2(object):   
-    @schemamethod	  
-    def expectedParameters(expected):
-        e = VECTOR_INT32_ELEMENT(expected)
-        e.key("myVecInt1")
-        e.displayedName("First Integer Vector")
-        e.description("First integer vector element")
-        e.assignmentOptional().defaultValueFromString('1, 2, 3, 4, 5')
-        e.minSize(4).maxSize(10)
-        e.minInc(1).maxExc(20)        
-        e.reconfigurable()
-        e.commit()
-
-        e = VECTOR_INT32_ELEMENT(expected)
-        e.key("myVecInt2")
-        e.displayedName("Second Integer Vector")
-        e.description("Second integer vector element")
-        e.assignmentOptional().defaultValue([10, 20, 30])
-        e.reconfigurable()
-        e.commit()
-
-        e = VECTOR_INT64_ELEMENT(expected)
-        e.key("myVecLongInt")
-        e.displayedName("Long Vector")
-        e.description("Long vector element")
-        e.assignmentOptional().defaultValue([5L, 7L, 9L])
-        e.reconfigurable()
-        e.commit()
-
-        e = VECTOR_DOUBLE_ELEMENT(expected)
-        e.key("myVecDouble")
-        e.displayedName("Double Vector")
-        e.description("Double vector element")
-        e.unitName("watt")
-        e.unitSymbol("W")
-        e.assignmentOptional().defaultValue([1.1, -1.1, 1.111])
-        e.reconfigurable()
-        e.commit()
- 
-        e = VECTOR_BOOL_ELEMENT(expected)
-        e.key("myBoolVector")
-        e.displayedName("Bool Vector")
-        e.description("Bool vector element")
-        e.assignmentOptional().defaultValue([True, False, True])
-        e.reconfigurable()
-        e.commit()
-
-        e = VECTOR_STRING_ELEMENT(expected)
-        e.key("myVecString")
-        e.displayedName("String Vector")
-        e.description("String vector description")
-        e.assignmentOptional().defaultValue(["hallo", "next", "elem"])
-        e.reconfigurable()
-        e.commit()
-        
-
-'''
-Class 'TestClass3' for testing schema elements:
-CHOICE_ELEMENT_CONNECTION, CHOICE_ELEMENT_BROKERCONNECTION, 
-IMAGE_ELEMENT, INTERNAL_ANY_ELEMENT
-as well as 
-customer's Element of Complex Type defined by a customer
-in the class 'SomeCustomerElement' 
-that inherits from the base class 'ComplexElement'.
-'''
-class SomeCustomerElement(ComplexElement):
-    
-    def __init__(self, expected):
-        self.m_outerElement=ComplexElement(expected)
-
-        self.m_outerElement.reconfigureAndRead()
-
-        self.innerElement=Schema()
-
-        self.m_myInt=INT32_ELEMENT(expected)
-        self.m_myInt.key("myNewInt")
-        self.m_myInt.displayedName("myNewIntegerElement")
-        self.m_myInt.description("Input new integer element")
-        self.m_myInt.assignmentOptional().defaultValue(7)
-        self.m_myInt.reconfigurable()
-        
-        self.m_myStr=STRING_ELEMENT(expected)
-        self.m_myStr.key("myNewString")
-        self.m_myStr.displayedName("myNewStringElement")
-        self.m_myStr.description("Input NEW string element")
-        self.m_myStr.options("test, Hello, World, new", ",")
-        self.m_myStr.assignmentOptional().defaultValue("Hello")
-        self.m_myStr.reconfigurable()
-    
-    def key(self, keyName):
-        self.m_outerElement.key(keyName)      
-    
-    def displayedName(self, displayedName):
-        self.m_outerElement.displayedName(displayedName)      
-    
-    def description(self, desk):
-        self.m_outerElement.description(desk)
-        
-    def assignmentOptional(self):
-        self.m_outerElement.assignmentOptional()
-    
-    def readOnly(self):
-        self.m_outerElement.readOnly()
-    
-    def commit(self): 
-        self.m_outerElement.assignmentOptional()
-       
-        self.innerElement = self.m_outerElement.commit()
-        self.m_myInt.commit(self.innerElement)
-        self.m_myStr.commit(self.innerElement)
-        
-class TestClass3(object):   
-    
-    @schemamethod	  
-    def expectedParameters(expected):
-        e = CHOICE_ELEMENT_CONNECTION(expected)
-        e.key("myConnection")
-        e.displayedName("my Element Connection")
-        e.description("my Connection description")
-        e.assignmentOptional().defaultValue("Snmp")
-        e.reconfigurable()
-        e.commit()
-        
-        #element CHOICE_ELEMENT_BROKERCONNECTION works correctly, tested
-        #e = CHOICE_ELEMENT_BROKERCONNECTION(expected)
-        #e.key("myBrokerConnection")
-        #e.displayedName("my Element BrokerConnection")
-        #e.description("my Element BrokerConnection description")
-        #e.assignmentOptional().defaultValue("Jms")
-        #e.reconfigurable()
-        #e.commit()
-        
-        e = IMAGE_ELEMENT(expected)
-        e.key("myImage")
-        e.displayedName("myImage")
-        e.description("myImage description")
-        e.commit()
-        
-        e = INTERNAL_ANY_ELEMENT(expected)
-        e.key("anyInternalElemKey")
-        e.description("internal any element test")
-        e.reconfigurable()
-        e.commit()
-        
-        e = SomeCustomerElement(expected)
-        e.key("SomeCustomerElement")
-        e.displayedName("someCustomerElement")
-        e.description("someCustomerElement description")
-        e.assignmentOptional()
-        e.readOnly()
-        e.commit()
-        
-        e = OVERWRITE_ELEMENT(expected)
-        e.key("overwriteElemKey")
-        e.commit()
-
-        e = DOUBLE_TARGETACTUAL_ELEMENT(expected)
-        e.key("temperature")
-        e.displayedName("Sensor temperature")
-        e.unitName("degree celsius")
-        e.unitSymbol("deg")
-        e.description("Configures the temperature to which the device should be cooled")
-        e.targetAssignmentOptional().targetDefaultValue(0)
-        e.targetHardMin(-50)
-        e.actualWarnHigh(23)
-        e.actualAlarmHigh(40)
-        e.commit()
+from libkarathon import *
+from configuration_test_classes import *
 
 
 class  Schema_TestCase(unittest.TestCase):
     def setUp(self):
-        self.resourcesdir = "../../../src/pythonKarabo/tests/resources"
+        try:
+            self.schema = Schema("MyTest", AssemblyRules(AccessType(READ | WRITE | INIT)))
+            TestStruct1.expectedParameters(self.schema)
+        except Exception,e:
+            self.fail("setUp exception group 1: " + str(e))
 
-    def test_schema1_(self):
-        s1 = TestClass1.expectedParameters()
-        print "Expected parameters of TestClass1:\n", s1
-        schemaToXsd(s1, "/tmp/TestClass1.xsd")
+    #def tearDown(self):
+    #    self.foo.dispose()
+    #    self.foo = None
+
+    def test_buildUp(self):
+        try:
+            schema = Configurator("Shape").getSchema("Circle")
+            self.assertEqual(schema.isAccessInitOnly("shadowEnabled"), True)
+            self.assertEqual(schema.isAccessInitOnly("radius"), True)
+            self.assertEqual(schema.isLeaf("radius"), True)
+        except Exception,e:
+            self.fail("test_buildUp exception group 1: " + str(e))
         
-        compare = filecmp.cmp(self.resourcesdir+"/TestClass1_etalon.xsd", "/tmp/TestClass1.xsd")
-        self.assertEqual(compare, True, "Schema written into file '/tmp/TestClass1.xsd' differs from etalon file 'TestClass1_etalon.xsd' ")
+        try:
+            schema = Schema("test")
+            GraphicsRenderer1.expectedParameters(schema)
+            self.assertEqual(schema.isAccessInitOnly("shapes.circle.radius"), True)
+            self.assertEqual(schema.isLeaf("shapes.circle.radius"), True)
+        except Exception,e:
+            self.fail("test_buildUp exception group 2: " + str(e))
+            
+        try:
+            instance = GraphicsRenderer.create("GraphicsRenderer",
+                        Hash("shapes.Circle.radius", 0.5, "color", "red", "antiAlias", "true"))
+        except Exception,e:
+            self.fail("test_buildUp exception group 3: " + str(e))
+
+    def test_getRootName(self):
+        try:
+            self.assertEqual(self.schema.getRootName(), "MyTest")
+        except Exception,e:
+            self.fail("test_getRootName exception group 1: " + str(e))
+            
+    def test_getTags(self):
+        try:
+            self.assertEqual(self.schema.getTags("exampleKey1")[0], "hardware")
+            self.assertEqual(self.schema.getTags("exampleKey1")[1], "poll")
+            self.assertEqual(self.schema.getTags("exampleKey2")[0], "hardware")
+            self.assertEqual(self.schema.getTags("exampleKey2")[1], "poll")
+            self.assertEqual(self.schema.getTags("exampleKey3")[0], "hardware")
+            self.assertEqual(self.schema.getTags("exampleKey3")[1], "set")
+            self.assertEqual(self.schema.getTags("exampleKey4")[0], "software")
+            self.assertEqual(self.schema.getTags("exampleKey5")[0], "h/w")
+            self.assertEqual(self.schema.getTags("exampleKey5")[1], "d.m.y")
+        except Exception,e:
+            self.fail("test_getTags exception: " + str(e))
         
-        self.assertTrue(s1.hasKey("myInt"), "Check that schema 's1' has key 'myInt' ")
-        self.assertTrue(s1.hasAlias("testAlias"), "Check that schema 's1' has alias 'testAlias' ")
-        self.assertTrue(s1.hasAlias(10), "Check that schema 's1' has alias '10' ")
-        self.assertTrue(s1.hasAlias(5.5), "Check that schema 's1' has alias '5.5' ")
-        self.assertTrue(s1.keyHasAlias("myInt"), "Check that key 'myInt' of the schema 's1' has alias")
-        self.assertTrue(s1.keyHasAlias("myUInt"), "Check that key 'myUInt' of the schema 's1' has alias")
-        self.assertTrue(s1.keyHasAlias("myIntLong"), "Check that key 'myIntLong' of the schema 's1' has alias")
-        self.assertFalse(s1.keyHasAlias("myBool"), "Check that key 'myBool' of the schema 's1' has no alias")
+    def test_getNodeType(self):
+        try:
+            nodeType = self.schema.getNodeType("exampleKey1")
+            self.assertEqual(nodeType, NodeType.LEAF)
+            self.assertEqual(self.schema.getNodeType("exampleKey5"), NodeType.LEAF)
+        except Exception,e:
+            self.fail("test_getNodeType exception: " + str(e))
+        
+    def test_getValueType(self):
+        try:
+            self.assertEqual(self.schema.getValueType("exampleKey1"), Types.STRING)
+            self.assertEqual(self.schema.getValueType("exampleKey2"), Types.INT32)
+            self.assertEqual(self.schema.getValueType("exampleKey3"), Types.UINT32)
+            self.assertEqual(self.schema.getValueType("exampleKey4"), Types.DOUBLE)
+            self.assertEqual(self.schema.getValueType("exampleKey5"), Types.INT64)
+        except Exception,e:
+            self.fail("test_getValueType exception: " + str(e))
+
+    def test_getAliasAsString(self):
+        try:          
+            self.assertEqual(self.schema.getAliasAsString("exampleKey2"), "10")
+            self.assertEqual(self.schema.getAliasAsString("exampleKey3"), "5.500000000000000")
+           
+            self.assertEqual(self.schema.getAliasAsString("exampleKey4"), "exampleAlias4")
+            self.assertEqual(self.schema.getAliasAsString("exampleKey5"), "exampleAlias5")              
+        except Exception,e:
+            self.fail("test_getAliasAsString exception: " + str(e))
+
+    def test_keyHasAlias(self):
+        try:
+            self.assertEqual(self.schema.keyHasAlias("exampleKey1"), False)
+            self.assertEqual(self.schema.keyHasAlias("exampleKey2"), True)
+            self.assertEqual(self.schema.keyHasAlias("exampleKey3"), True)
+            self.assertEqual(self.schema.keyHasAlias("exampleKey4"), True)
+            self.assertEqual(self.schema.keyHasAlias("exampleKey5"), True)
+        except Exception,e:
+            self.fail("test_keyHasAlias exception: " + str(e))
+        
+    def test_aliasHasKey(self):
+          try:
+              self.assertEqual(self.schema.aliasHasKey(10), True)
+              self.assertEqual(self.schema.aliasHasKey(5.5), True)
+              self.assertEqual(self.schema.aliasHasKey("exampleAlias4"), True)
+              self.assertEqual(self.schema.aliasHasKey("exampleAlias5"), True)
+              self.assertEqual(self.schema.aliasHasKey(7), False)
+          except Exception,e:
+              self.fail("test_aliasHasKey exception: " + str(e))
+   
+    def test_getAliasFromKey(self):
+        try:
+            self.assertEqual(self.schema.getAliasFromKey("exampleKey2", Types.INT32), 10)
+            self.assertEqual(self.schema.getAliasFromKey("exampleKey3", Types.DOUBLE), 5.5)
+            self.assertEqual(self.schema.getAliasFromKey("exampleKey4", Types.STRING), "exampleAlias4")
+            self.assertEqual(self.schema.getAliasFromKey("exampleKey5", Types.STRING), "exampleAlias5")
+        except Exception,e:
+            self.fail("test_getAliasFromKey exception: " + str(e))
+            
+    def test_getKeyFromAlias(self):
+        try:
+            self.assertEqual(self.schema.getKeyFromAlias(10), "exampleKey2")
+            self.assertEqual(self.schema.getKeyFromAlias(5.5), "exampleKey3")
+            self.assertEqual(self.schema.getKeyFromAlias("exampleAlias4"), "exampleKey4")
+            self.assertEqual(self.schema.getKeyFromAlias("exampleAlias5"), "exampleKey5")
+        except Exception,e:
+            self.fail("test_KeyFromAlias exception: " + str(e))
+   
+    def test_getAccessMode(self):
+        try:
+            self.assertEqual(self.schema.getAccessMode("exampleKey1"), AccessType.WRITE)
+            self.assertEqual(self.schema.getAccessMode("exampleKey2"), AccessType.INIT)
+            self.assertEqual(self.schema.getAccessMode("exampleKey3"), AccessType.WRITE)
+            self.assertEqual(self.schema.getAccessMode("exampleKey4"), AccessType.INIT)
+            self.assertEqual(self.schema.getAccessMode("exampleKey5"), AccessType.READ)
+        except Exception,e:
+            self.fail("test_getAccessMode exception: " + str(e))
     
-    def test_schema2_(self):
-        s2 = TestClass2.expectedParameters()
-        print "Expected parameters of TestClass2:\n", s2
-        schemaToXsd(s2, "/tmp/TestClass2.xsd")
-        
-        compare = filecmp.cmp(self.resourcesdir+"/TestClass2_etalon.xsd", "/tmp/TestClass2.xsd")
-        self.assertEqual(compare, True, "Schema written into file '/tmp/TestClass2.xsd' differs from etalon file 'TestClass2_etalon.xsd' ")
-        
-        self.assertTrue(s2.hasKey("myVecString"), "Check that schema of 'TestClass2' has key 'myVecString' ")
-        print "get help : \n", s2.help("myVecString")
-
-        print "====================================================="
+    def test_getAssignment(self):
+        try:
+            self.assertEqual(self.schema.getAssignment("exampleKey1"), AssignmentType.OPTIONAL)
+            self.assertEqual(self.schema.getAssignment("exampleKey2"), AssignmentType.OPTIONAL)
+            self.assertEqual(self.schema.getAssignment("exampleKey3"), AssignmentType.MANDATORY)
+            self.assertEqual(self.schema.getAssignment("exampleKey4"), AssignmentType.INTERNAL)
+            self.assertEqual(self.schema.getAssignment("exampleKey5"), AssignmentType.OPTIONAL)
+        except Exception,e:
+            self.fail("test_getAssignment exception: " + str(e))
     
-    def test_schema3_(self):
-        s3 = TestClass3.expectedParameters()
-        print "Expected parameters of TestClass3:\n", s3
-        schemaToXsd(s3, "/tmp/TestClass3.xsd")
+    def test_getOptions(self):
+        try:
+            options = self.schema.getOptions("exampleKey1")
+            self.assertEqual(options[0], "Radio")
+            self.assertEqual(options[1], "Air Condition")
+            self.assertEqual(options[2], "Navigation")
+            
+            self.assertEqual(self.schema.getOptions("exampleKey2")[0], "5")
+            self.assertEqual(self.schema.getOptions("exampleKey2")[1], "25")
+            self.assertEqual(self.schema.getOptions("exampleKey2")[2], "10")
+            
+            self.assertEqual(self.schema.getOptions("exampleKey4")[0], "1.11")
+            self.assertEqual(self.schema.getOptions("exampleKey4")[1], "-2.22")
+            self.assertEqual(self.schema.getOptions("exampleKey4")[2], "5.55")
+        except Exception,e:
+            self.fail("test_getOptions exception: " + str(e))
+    
+    def test_getDefaultValue(self):
+        try:
+            self.assertEqual(self.schema.getDefaultValue("exampleKey1"), "Navigation")
+            self.assertEqual(self.schema.getDefaultValue("exampleKey2"), 10)
+            self.assertEqual(self.schema.getDefaultValueAs("exampleKey2", Types.STRING), "10")
+            self.assertEqual(self.schema.getDefaultValue("exampleKey5"), 1442244)
+            self.assertEqual(self.schema.getDefaultValueAs("exampleKey5", Types.STRING), "1442244")
+        except Exception,e:
+            self.fail("test_getDefaultValue exception: " + str(e))
+    
+    def test_getAllowedStates(self):
+        try:
+            allowedStates = self.schema.getAllowedStates("exampleKey3")
+            self.assertEqual(allowedStates[0], "AllOk.Started")
+            self.assertEqual(allowedStates[1], "AllOk.Stopped")
+            self.assertEqual(self.schema.getAllowedStates("exampleKey3")[2], "AllOk.Run.On")
+            self.assertEqual(self.schema.getAllowedStates("exampleKey3")[3], "NewState")
+        except Exception,e:
+            self.fail("test_getAllowedStates exception: " + str(e))
+    
+    def test_getUnit(self):
+        try:
+            self.assertEqual(self.schema.getUnit("exampleKey2"), Unit.METER)
+            self.assertEqual(self.schema.getUnitName("exampleKey2"), "meter")
+            self.assertEqual(self.schema.getUnitSymbol("exampleKey2"), "m")
+        except Exception,e:
+            self.fail("test_getUnit exception: " + str(e))
+    
+    def test_getMetricPrefix(self):
+        try:
+            self.assertEqual(self.schema.getMetricPrefix("exampleKey2"), MetricPrefix.MILLI)
+            self.assertEqual(self.schema.getMetricPrefixName("exampleKey2"), "milli")
+            self.assertEqual(self.schema.getMetricPrefixSymbol("exampleKey2"), "m")
+        except Exception,e:
+            self.fail("test_getMetricPrefix exception: " + str(e))
+    
+    def test_getMinIncMaxInc(self):
+        try:
+            self.assertEqual(self.schema.getMinInc("exampleKey2"), 5)
+            self.assertEqual(self.schema.getMinIncAs("exampleKey2", Types.STRING), "5")
+            self.assertEqual(self.schema.getMaxInc("exampleKey2"), 25)
+            self.assertEqual(self.schema.getMaxIncAs("exampleKey2", Types.STRING), "25")
+        except Exception,e:
+            self.fail("test_getMinIncMaxInc exception: " + str(e))
+    
+    def test_getMinExcMaxExc(self):
+        try:
+            self.assertEqual(self.schema.getMinExc("exampleKey3"), 10)
+            self.assertEqual(self.schema.getMinExc("exampleKey4"), -2.22)
+        except Exception,e:
+            self.fail("test_getMinExcMaxExc exception in getMinExc: " + str(e))
+            
+        try:    
+            self.assertEqual(self.schema.getMaxExc("exampleKey3"), 20)
+            self.assertEqual(self.schema.getMaxExc("exampleKey4"), 5.55)
+        except Exception,e:
+            self.fail("test_getMinExcMaxExc exception in getMaxExc: " + str(e))
+        
+        try:
+            self.assertEqual(self.schema.getMinExcAs("exampleKey3", Types.STRING), "10")
+            self.assertEqual(self.schema.getMinExcAs("exampleKey4", Types.STRING), "-2.220000000000000")
+        except Exception,e:
+            self.fail("test_getMinExcMaxExc exception in getMinExcAs: " + str(e))
+        
+        try:    
+            self.assertEqual(self.schema.getMaxExcAs("exampleKey3", Types.STRING), "20")
+            self.assertEqual(self.schema.getMaxExcAs("exampleKey4", Types.STRING), "5.550000000000000")
+        except Exception,e:
+            self.fail("test_getMinExcMaxExc exception in getMaxExcAs: " + str(e))
+    
+    def test_getWarnAlarmLowHigh(self):
+        try:
+            self.assertEqual(self.schema.getWarnLow("exampleKey5"), -10)
+            self.assertEqual(self.schema.getWarnLow("exampleKey6"), -5.5)
+        except Exception,e:
+            self.fail("test_getWarnAlarmLowHigh exception in getWarnLow: " + str(e))
+        
+        try:
+            self.assertEqual(self.schema.getWarnHigh("exampleKey5"), 10)
+            self.assertEqual(self.schema.getWarnHigh("exampleKey6"), 5.5)
+        except Exception,e:
+            self.fail("test_getWarnAlarmLowHigh exception in getWarnHigh: " + str(e))
+           
+        try:
+            self.assertEqual(self.schema.getAlarmLow("exampleKey5"), -20)
+            self.assertEqual(self.schema.getAlarmLow("exampleKey6"), -22.1)
+        except Exception,e:
+            self.fail("test_getWarnAlarmLowHigh exception in getAlarmLow: " + str(e))
+        
+        try:
+            self.assertEqual(self.schema.getAlarmHigh("exampleKey5"), 20)
+            self.assertEqual(self.schema.getAlarmHigh("exampleKey6"), 22.777)
+        except Exception,e:
+            self.fail("test_getWarnAlarmLowHigh exception in getAlarmHigh: " + str(e))
+    
+    def test_getWarnAlarmLowHighAs(self):
+        try:
+            self.assertEqual(self.schema.getWarnLowAs("exampleKey5", Types.STRING), "-10")
+            self.assertEqual(self.schema.getWarnLowAs("exampleKey6", Types.STRING), "-5.500000000000000")
+        except Exception,e:
+            self.fail("test_getWarnAlarmLowHighAs exception in getWarnLowAs: " + str(e))
+        
+        try:
+            self.assertEqual(self.schema.getWarnHighAs("exampleKey5", Types.STRING), "10")
+            self.assertEqual(self.schema.getWarnHighAs("exampleKey6", Types.STRING), "5.500000000000000")
+        except Exception,e:
+            self.fail("test_getWarnAlarmLowHighAs exception in getWarnHighAs: " + str(e))
+           
+        try:
+            self.assertEqual(self.schema.getAlarmLowAs("exampleKey5", Types.STRING), "-20")
+            self.assertEqual(self.schema.getAlarmLowAs("exampleKey6", Types.STRING), "-22.100000000000001")
+        except Exception,e:
+            self.fail("test_getWarnAlarmLowHighAs exception in getAlarmLowAs: " + str(e))
+        
+        try:
+            self.assertEqual(self.schema.getAlarmHighAs("exampleKey5", Types.STRING), "20")
+            self.assertEqual(self.schema.getAlarmHighAs("exampleKey6", Types.STRING), "22.777000000000001")
+        except Exception,e:
+            self.fail("test_getWarnAlarmLowHighAs exception in getAlarmHighAs: " + str(e))
+            
+    def test_hasWarnAlarm(self):
+        try:
+            self.assertEqual(self.schema.hasWarnLow("exampleKey5"), True)
+            self.assertEqual(self.schema.hasWarnHigh("exampleKey5"), True)
+            
+            self.assertEqual(self.schema.hasWarnLow("exampleKey6"), True)
+            self.assertEqual(self.schema.hasWarnHigh("exampleKey6"), True)
+            self.assertEqual(self.schema.hasAlarmLow("exampleKey6"), True)
+            self.assertEqual(self.schema.hasAlarmHigh("exampleKey6"), True)
+            
+            self.assertEqual(self.schema.hasAlarmHigh("exampleKey1"), False)
+        except Exception,e:
+            self.fail("test_hasWarnAlarm exception: " + str(e))         
+            
+    def test_perKeyFunctionality(self):
+        try:
+            keys = self.schema.getKeys()
+            for key in keys:
+                if key == "exampleKey1":
+                    self.assertEqual(self.schema.hasAssignment(key), True)
+                    self.assertEqual(self.schema.isAssignmentOptional(key), True)
+                    self.assertEqual(self.schema.hasDefaultValue(key), True)
+                    self.assertEqual(self.schema.hasAccessMode(key), True)
+                    self.assertEqual(self.schema.isAccessReconfigurable(key), True)
+                    self.assertEqual(self.schema.hasOptions(key), True)
+                    self.assertEqual(self.schema.hasTags(key), True)
+                    self.assertEqual(self.schema.hasUnit(key), False)
+                    self.assertEqual(self.schema.hasMetricPrefix(key), False)
+                    
+                if key == "exampleKey2":
+                    self.assertEqual(self.schema.hasDefaultValue(key), True)
+                    self.assertEqual(self.schema.hasAccessMode(key), True)
+                    self.assertEqual(self.schema.isAccessInitOnly(key), True)
+                    self.assertEqual(self.schema.hasOptions(key), True)
+                    self.assertEqual(self.schema.hasTags(key), True)
+                    self.assertEqual(self.schema.hasAllowedStates(key), False)
+                    self.assertEqual(self.schema.hasUnit(key), True)
+                    self.assertEqual(self.schema.hasMetricPrefix(key), True)
+                    self.assertEqual(self.schema.hasMinInc(key), True)
+                    self.assertEqual(self.schema.hasMaxInc(key), True)
+                    
+                if key == "exampleKey3":
+                    self.assertEqual(self.schema.hasAssignment(key), True)
+                    self.assertEqual(self.schema.isAssignmentMandatory(key), True)
+                    self.assertEqual(self.schema.hasDefaultValue(key), False)
+                    self.assertEqual(self.schema.hasOptions(key), False)
+                    self.assertEqual(self.schema.hasAllowedStates(key), True)
+                    self.assertEqual(self.schema.hasMinExc(key), True)
+                    self.assertEqual(self.schema.hasMaxExc(key), True)
+                    
+                if key == "exampleKey4":
+                    self.assertEqual(self.schema.hasDefaultValue(key), False)
+                    self.assertEqual(self.schema.isAssignmentInternal(key), True)
+                    self.assertEqual(self.schema.hasAccessMode(key), True)
+                    self.assertEqual(self.schema.isAccessInitOnly(key), True)
+                    
+                if key == "exampleKey5":
+                    self.assertEqual(self.schema.hasDefaultValue(key), True)
+                    self.assertEqual(self.schema.hasAssignment(key), True)
+                    self.assertEqual(self.schema.isAssignmentOptional(key), True)
+                    self.assertEqual(self.schema.hasAccessMode(key), True)
+                    self.assertEqual(self.schema.isAccessReadOnly(key), True)   
+                    
+        except Exception,e:
+            self.fail("test_perKeyFunctionality exception group 1: " + str(e))
+    
+    def test_logger(self): 
+        s1 = Hash("Category.name", "s1", "Category.priority", "DEBUG")
+        conf = Hash("categories[0]", s1, "appenders[0].Ostream.layout", "Pattern")
+        Logger.configure(conf)
+        
+        testLog = Logger.getLogger("TestLogA")
+        testLog.INFO("This is INFO message")
+        testLog.DEBUG("This is DEBUG message") #will not be shown (default priority "INFO")
+        testLog.WARN("This is WARN message")
+        testLog.ERROR("This is ERROR message")
+        
+        slog = Logger.getLogger("s1")
+        slog.INFO("This is INFO message")
+        slog.DEBUG("This is DEBUG message")
+        slog.WARN("This is WARN message")
+        slog.ERROR("This is ERROR message")
+    
+    def test_helpFunction(self):
+        pass
 
-        compare = filecmp.cmp(self.resourcesdir+"/TestClass3_etalon.xsd", "/tmp/TestClass3.xsd")
-        self.assertEqual(compare, True, "Schema written into file '/tmp/TestClass3.xsd' differs from etalon file 'TestClass3_etalon.xsd' ")
-        self.assertTrue(s3.hasKey("myImage"), "Check that schema of 'TestClass3' has key 'myImage' ")
-        self.assertTrue(s3.hasKey("anyInternalElemKey"), "Check that schema of 'TestClass3' has key 'anyInternalElemKey' ")
 
 if __name__ == '__main__':
     unittest.main()
