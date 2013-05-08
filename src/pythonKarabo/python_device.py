@@ -39,20 +39,85 @@ def inheritanceChain(cls):
 
 inheritanceChain = classmethod(inheritanceChain)
 
-
+@KARABO_CONFIGURATION_BASE_CLASS
+@KARABO_CLASSINFO("PythonDevice", "1.0")
 class PythonDevice(object):
 
     __metaclass__ = ABCMeta
     instanceCountPerDeviceServer = dict()
     instanceCountLock = threading.Lock()
     
-    def __init__(self, input):
-        """
-        The contructor covers functionality that in C++ provided by
-        C++ contructor + configure method.
-        Initialization of three containers of parameters (description + actual):
-        initial, monitored and reconfigurable. 
-        """
+    @staticmethod
+    def expectedParameters(expected):
+
+        e = STRING_ELEMENT(expected).key("version")
+        e.displayedName("Version").description("The version of this device class")
+        e.advanced().readOnly().initialValue(PythonDevice.__version__).commit()
+        
+        e = CHOICE_ELEMENT(expected).key("connection")
+        e.displayedName("Connection").description("The connection to the communication layer of the distributed system")
+        e.appendNodesOfConfigurationBase(BrokerConnection)
+        e.assignmentOptional().defaultValue("Jms").init().advanced().commit()
+        
+        e = VECTOR_STRING_ELEMENT(expected).key("visibility")
+        e.displayedName("Visibility").description("Configures who is allowed to see this device at all")
+        e.assignmentOptional().defaultValueFromString("")
+        e.advanced().reconfigurable().commit()
+        
+        e = STRING_ELEMENT(expected).key("classId")
+        e.displayedName("ClassID").description("The (factory)-name of the class of this device")
+        e.advanced().readOnly().initialValue(PythonDevice.__classid__).commit()
+        
+        e = STRING_ELEMENT(expected).key("serverId")
+        e.displayedName("ServerID").description("The device-server on which this device is running on")
+        e.advanced().assignmentInternal().noDefaultValue().init().commit()
+
+        e = STRING_ELEMENT(expected).key("deviceId")
+        e.displayedName("DeviceID").description("The device instance ID uniquely identifies a device instance in the distributed system")
+        e.assignmentOptional().noDefaultValue().init().commit()
+            
+        e = STRING_ELEMENT(expected).key("state")
+        e.displayedName("State").description("The current state the device is in")
+        e.assignmentOptional().defaultValue("uninitialized").readOnly().commit()
+        
+    def __init__(self, configuration):
+        super(PythonDevice, self).__init__()
+        
+        self.parameters = configuration
+        if "serverId" in configuration:
+            self.serverId = configuration["serverId"]
+        else:
+            self.serverId = "__none__"    
+        
+        if "deviceId" in configuration:
+            self.deviceId = configuration["deviceId"]
+        else:
+            self.deviceId = "__none__"    #TODO: generate uuid
+            
+        # Setup the validation classes
+        rules = ValidatorValidationRules()
+        rules.allowAdditionalKeys = False
+        rules.allowMissingKeys    = True
+        rules.allowUnrootedConfiguration = True
+        rules.injectDefaults = False
+        
+        self.validatorIntern   = Validator()
+        rules.injectTimestamps = True
+        self.validatorIntern.setValidationRules(rules)
+        
+        self.validatorExtern   = Validator()
+        rules.injectTimestamps = False
+        self.validatorExtern.setValidationRules(rules)
+        
+        # Setup device logger
+        self.log = Logger.getLogger(self._deviceId)
+        
+        
+        
+        
+        
+        # Stopped here  !!!!
+        
         cls = self.__class__
         self.running = True
         
@@ -163,37 +228,6 @@ class PythonDevice(object):
         # Call exit for child processes (os._exit(...)) to shutdown properly a SignalSlotable object
         os._exit(0)   
 
-    @schemamethod
-    def expectedParameters(expected):
-        """
-        This is a method for defining parameters descriptions. The implementation
-        should be provided by user. This function has to be used via decorator like 
-        schema = cls.expectedParameters() 
-        """
-        
-        e = CHOICE_ELEMENT_BROKERCONNECTION(expected)
-        e.key("connection").displayedName("Connection")
-        e.description("The connection to the communication layer of the distributed system")
-        e.assignmentOptional().defaultValue("Jms").init().advanced().commit()
-        
-        e = STRING_ELEMENT(expected)
-        e.key("devSrvInstId").displayedName("Device-Server Instance Id")
-        e.description("The device-server instance id, on which this device-instance is running on")
-        e.assignmentInternal().defaultValue("").commit()
-
-        e = STRING_ELEMENT(expected)
-        e.key("devInstId").displayedName("Device Instance Id")
-        e.description("Device Instance Id uniquely identifies a device instance in the distributed system")
-        e.assignmentOptional().noDefaultValue().init().advanced().commit()
-            
-        e = STRING_ELEMENT(expected)
-        e.key("devClaId").displayedName("Device Class Id")
-        e.description("The (factory)-name of the class of this device").readOnly().commit()
-            
-        e = STRING_ELEMENT(expected)
-        e.key("state").displayedName("State").description("The current state the device is in")
-        e.assignmentOptional().defaultValue("uninitialized").readOnly().commit()
-        
     def remote(self):
         if self._client is None:
             self._client = DeviceClient()  # connectionType="Jms" config=Hash()
@@ -452,23 +486,22 @@ class PythonDevice(object):
         
     @staticmethod
     def parseCommandLine(args):
-        script, modname, clsname, configname = tuple(args)
-        cfg = Hash("TextFile.filename", configname)
-        input = ReaderHash.create(cfg)
-        configuration = Hash()
-        input.read(configuration)
-        return (modname, clsname, configuration,)
+        script, xmlfile = tuple(args)
+        input = InputHash.create("TextFile", Hash("filename", xmlfile))
+        hash = Hash()
+        input.read(hash)
+        return (hash["module"], hash["classId"], hash["configuration"],)
  
-    @staticmethod
-    def create(modname, clsname, configuration):
-        module = __import__(modname)
-        userDeviceClass = getattr(module, clsname)
-        schema = userDeviceClass.getExpectedParameters()
-        schema.validate(configuration)
-        input = configuration.get(userDeviceClass.__name__)
-        device =  userDeviceClass(input)
-        device.postprocessing()
-        return device
+    #@staticmethod
+    #def create(modname, clsname, configuration):
+    #    module = __import__(modname)
+    #    userDeviceClass = getattr(module, clsname)
+    #    schema = userDeviceClass.getExpectedParameters()
+    #    schema.validate(configuration)
+    #    input = configuration.get(userDeviceClass.__name__)
+    #    device =  userDeviceClass(input)
+    #    device.postprocessing()
+    #    return device
    
     @abstractmethod
     def run(self): pass
@@ -536,7 +569,8 @@ class PythonDevice(object):
             self._devInstId, priority)
 
 def launchPythonDevice():
-    modname, clsname, configuration = PythonDevice.parseCommandLine(sys.argv)
-    demo = PythonDevice.create(modname, clsname, configuration)
-    demo.run()
+    modname, classid, configuration = PythonDevice.parseCommandLine(sys.argv)
+    module = __import__(modname)
+    device = PythonDevice.create(classid, configuration)
+    device.run()
     

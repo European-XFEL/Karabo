@@ -20,6 +20,15 @@ from fsm import event_instance
 from python_device import *
 from karabo_decorators import *
 from libkarathon import *
+from plugin_loader import PluginLoader
+
+
+# Forward declaration of python class
+class Launcher(threading.Thread):
+    def __init__(self, input):
+        pass
+    def run(self):
+        pass
 
 
 @KARABO_CONFIGURATION_BASE_CLASS
@@ -38,25 +47,28 @@ class DeviceServer(object):
     @staticmethod
     def expectedParameters(expected):
         
-        e = CHOICE_ELEMENT_BROKERCONNECTION(expected)
-        e.key("connection").displayedName("Connection")
-        e.description("The connection to the communication layer of the distributed system")
-        e.assignmentOptional().defaultValue("Jms").advanced().init().commit()
-
-        e = STRING_ELEMENT(expected)
-        e.key("devSrvInstId").displayedName("Device-Server Instance Id")
+        e = STRING_ELEMENT(expected).key("serverId").displayedName("Server ID")
         e.description("The device-server instance id uniquely identifies a device-server instance in the distributed system")
         e.assignmentOptional().noDefaultValue().commit()
         
-        e = UINT32_ELEMENT(expected)
-        e.key("nameRequestTimeout").displayedName("Name Request Timeout")
+        e = CHOICE_ELEMENT(expected).key("connection").displayedName("Connection")
+        e.description("The connection to the communication layer of the distributed system")
+        e.appendNodesOfConfigurationBase(BrokerConnection)
+        e.assignmentOptional().defaultValue("Jms").advanced().init().commit()
+
+        e = UINT32_ELEMENT(expected).key("nameRequestTimeout").displayedName("Name Request Timeout")
         e.description("Time to wait for name resolution (via name-server) until timeout [ms]")
         e.advanced().assignmentOptional().defaultValue(5000).commit()
         
-        e = STRING_ELEMENT(expected)
-        e.key("pluginsDir").displayedName("Plugins dir").description("Directory inspected for plugins")
-        e.assignmentOptional().defaultValue(os.environ['PWD'] + '/plugins').reconfigurable().commit()
-    
+        e = NODE_ELEMENT(expected).key("Logger").displayedName("Logger")
+        e.description("Logging settings")
+        e.appendParametersOfConfigurableClass(Logger, "Logger").commit()
+        
+        e = NODE_ELEMENT(expected).key("PluginLoader")
+        e.displayedName("Plugin Loader").description("Plugin Loader sub-configuration")
+        e.appendParametersOfConfigurableClass(PluginLoader, "PythonPluginLoader")
+        e.commit()
+        
     def setupFsm(self):
         '''
         Description of state machine
@@ -119,61 +131,7 @@ class DeviceServer(object):
         
         return KARABO_FSM_CREATE_MACHINE('DeviceServerMachine')
         
-
-    class PluginLoader(object):
-        
-        def __init__(self, pluginsDirectory):
-            self.plugins = pluginsDirectory
-            sys.path.append(self.plugins)
-            self.pattern = re.compile(r'.py')
-        
-        def getPluginsDirectory(self):
-            return self.plugins
-        
-        def update(self):
-            matches = filter(lambda m: not m is None, [self.pattern.search(x) for x in os.listdir(self.plugins)])
-            modules = list()
-            for m in matches:
-                name = m.string[0:m.start()]              # module name
-                path = self.plugins + "/" + m.string      # path to module source
-                if path.endswith(".pyc"):                 # skip compiled version
-                    continue
-                modules.append((name, path,))
-            return modules
-            
     
-    class Launcher(threading.Thread):
-    
-        def __init__(self, pluginsdir, modname, clsname, conf):
-            threading.Thread.__init__(self)
-            filename = "/tmp/" + modname + "." + clsname + ".configuration.xml"
-            cfg = Hash("TextFile.filename", filename, "TextFile.format.Xml.indentation", 2)
-            out = WriterHash.create(cfg)
-            out.write(conf)
-            try:
-                self.device = conf.getFromPath(clsname + ".devInstId")
-            except RuntimeError, e:
-                print e
-            self.script = os.path.realpath(pluginsdir + "/" + modname + ".py")
-            self.args = [self.script, modname, clsname, filename]
-        
-        def run(self):
-            with DeviceServer.cLock:
-                DeviceServer.live_threads.append(self)
-
-            self.pid = os.fork()
-            if self.pid == 0:
-                os.chmod(self.script, 0755)
-                os.execvpe(self.script, self.args, os.environ)
-            else:
-                print "\nLaunch device", self.device
-                id, status = os.waitpid(self.pid, 0)
-                print "Device %r finally died" % (self.device)
-                
-            with DeviceServer.cLock:
-                DeviceServer.dead_threads.append(self)
-                DeviceServer.live_threads.remove(self)
-        
     
     def __init__(self, input):
         '''Constructor'''
@@ -185,36 +143,33 @@ class DeviceServer(object):
         self.availableDevices = dict()
         self.deviceInstanceMap = dict()
         self.selfDestroyFlag = False
-        self._devSrvInstId = None
+        self._serverId = None
         self.nameRequestTimeout = 10
         if input.has('nameRequestTimeout'):
             self.nameRequestTimeout = input.get('nameRequestTimeout')
-        if input.has('devSrvInstId'):
-            self._devSrvInstId = input.get('devSrvInstId')
+        if input.has('serverId'):
+            self._serverId = input.get('serverId')
         self.running = True
-        self.pluginsDir = os.environ['PWD'] + '/plugins'
-        if input.has('pluginsDir'):
-            self.pluginsDir = input.get("pluginsDir")
-        self.pluginLoader = DeviceServer.PluginLoader(self.pluginsDir)
+        self.pluginLoader = PluginLoader.create("PythonPluginLoader", input)
         self.isRegistered = False
         
         print "Initialize SignalSlotable object...\n"
-        if self._devSrvInstId is None:
+        if self._serverId is None:
             s = SignalSlotable()
-            (self._devSrvInstId, ) = s.request("*", "slotDeviceServerProvideName").waitForReply(self.nameRequestTimeout)
+            (self._serverId, ) = s.request("*", "slotDeviceServerProvideName").waitForReply(self.nameRequestTimeout)
             del s
-        self.ss = SignalSlotable(self._devSrvInstId)
+        self.ss = SignalSlotable(self._serverId)
         
         print "\nInitialize Logging...\n"
         connectionConfig = input.get("connection")
 
         logConfig = Hash()
-        logConfig.setFromPath("Logger.categories[0].Category.name", self._devSrvInstId)
+        logConfig.setFromPath("Logger.categories[0].Category.name", self._serverId)
         logConfig.setFromPath("Logger.categories[0].Category.priority", "INFO")
         logConfig.setFromPath("Logger.categories[0].Category.appenders[0].Network.layout.Pattern.pattern", "%d{%F %H:%M:%S} | %p | %c | %m")
         logConfig.setFromPath("Logger.categories[0].Category.appenders[0].Network.connection", connectionConfig)
         Logger.create(logConfig).initialize()
-        self.log = Logger.logger(self._devSrvInstId)
+        self.log = Logger.logger(self._serverId)
 
         self._registerAndConnectSignalsAndSlots()
     
@@ -246,7 +201,7 @@ class DeviceServer(object):
             if self.selfDestroyFlag:
                 with DeviceServer.cLock:
                     if len(DeviceServer.live_threads) == 0 and len(DeviceServer.dead_threads) == 0:
-                        self.ss.call("*", "slotDeviceServerInstanceGone", self._devSrvInstId)
+                        self.ss.call("*", "slotDeviceServerInstanceGone", self._serverId)
                         self.stopDeviceServer()
             time.sleep(3)
     
@@ -284,7 +239,8 @@ class DeviceServer(object):
             deviceClass.inheritanceChain = inheritanceChain
             try:
                 schema = PythonDevice.getSchema(deviceClass)
-                xsd = SchemaXsdSerializer().save(schema)
+                config = Hash("indentation", -1)
+                xsd = TextSerializerSchema.create('Xsd', config).save(schema)
                 self.availableModules[name] = deviceClass.__classid__
                 self.availableDevices[deviceClass.__classid__] = {"mustNotify": True, "module": name, "xsd": xsd}
                 self.newPluginAvailable()
@@ -306,11 +262,11 @@ class DeviceServer(object):
         self.ss.reply(currentState)
     
     def registrationStateOnEntry(self):
-        self.ss.call("*", "slotNewDeviceServerAvailable", platform.node(), self._devSrvInstId)
+        self.ss.call("*", "slotNewDeviceServerAvailable", platform.node(), self._serverId)
     
     def idleStateOnEntry(self):
-        id = self._devSrvInstId
-        WriterHash.create("TextFile", Hash("filename", "autoload.xml")).write(Hash("DeviceServer.devSrvInstId", id))
+        id = self._serverId
+        WriterHash.create("TextFile", Hash("filename", "autoload.xml")).write(Hash("DeviceServer.serverId", id))
         #TODO: check what we have to implement here
         self.isRegistered = True   # this is the last statement!
     
@@ -331,7 +287,7 @@ class DeviceServer(object):
         self.log.DEBUG("Trying to start device with the following configuration:\n{}".format(conf))
         modified = Hash(conf)
         classId = iter(modified).next().getKey()
-        modified[classId + ".devSrvInstId"] = self._devSrvInstId
+        modified[classId + ".serverId"] = self._serverId
         if classId + ".devInstId" in modified:
             devInstId = modified[classId + ".devInstId"]
         else:
@@ -344,22 +300,28 @@ class DeviceServer(object):
             self.log.WARN("Wrong input configuration for class '{}': {}".format(classId, e.message))
             return
         module_name = self.availableDevices[classId]["module"]
-        launcher = DeviceServer.Launcher(self.pluginsDir, module_name, classId, modified).start()
+        input = Hash()
+        input["classId"] = classId
+        input["module"] = self.availableDevices[classId]["module"]
+        input["plugins"] = self.pluginLoader.getPluginDirectory()
+        input["configuration"] = modified
+        launcher = Launcher.create("PythonLauncher", input).start()
+        #launcher = DeviceServer.Launcher(self.pluginLoader.getPluginDirectory(), module_name, classId, modified).start()
         self.deviceInstanceMap[devInstId] = launcher
 
     def _generateDefaultDeviceInstanceId(self, devClassId):
         cls = self.__class__
         with cls.instanceCountLock:
-            if self._devSrvInstId not in cls.instanceCountPerDeviceServer:
-                cls.instanceCountPerDeviceServer[self._devSrvInstId] = 0
-            cls.instanceCountPerDeviceServer[self._devSrvInstId] += 1
-            _index = cls.instanceCountPerDeviceServer[self._devSrvInstId]
-            if self._devSrvInstId == "":
+            if self._serverId not in cls.instanceCountPerDeviceServer:
+                cls.instanceCountPerDeviceServer[self._serverId] = 0
+            cls.instanceCountPerDeviceServer[self._serverId] += 1
+            _index = cls.instanceCountPerDeviceServer[self._serverId]
+            if self._serverId == "":
                 #myHostName, someList, myHostAddrList = socket.gethostbyaddr(socket.gethostname())
                 possiblyFullHostName = socket.gethostname()
                 myHostName, dotsep, domainName = possiblyFullHostName.partition('.')
                 return myHostName + "/" + devClassId + "/" + str(_index)
-            tokens = self._devSrvInstId.split("/")
+            tokens = self._serverId.split("/")
             _domain = tokens.pop(0) + "-" + tokens.pop()
             _id = _domain + "/" + devClassId + "/" + str(_index)
             return _id
@@ -391,10 +353,53 @@ def getConfigurationFromCommandLine(argv):
     if argv is None:
         hostname = socket.gethostname()
         host, dot, domain = hostname.partition('.')
-        deviceServerId = host + "/" + DeviceServer.__classid__ + "/0"
-        return Hash("devSrvInstId", deviceServerId)
+        serverId = host + "/" + DeviceServer.__classid__ + "/0"
+        return Hash("serverId", serverId)
     
         
+@KARABO_CONFIGURATION_BASE_CLASS
+@KARABO_CLASSINFO("PythonLauncher", "1.0")
+class Launcher(threading.Thread):
+
+    def __init__(self, input):       #pluginsdir, modname, clsname, conf):
+        threading.Thread.__init__(self)
+        modname = input["module"]
+        clsname = input["classId"]
+        pluginsdir = input["plugins"]
+        configuration = input["configuration"]
+        try:
+            self.device = configuration[clsname + ".devInstId"]
+        except RuntimeError, e:
+            print e
+        self.script = os.path.realpath(pluginsdir + "/" + modname + ".py")
+        input["script"] = self.script
+        
+        filename = "/tmp/" + modname + "." + clsname + ".configuration.xml"
+        config = Hash("filename", filename, "format.Xml.indentation", 2)
+        cfg = Hash("TextFile.filename", filename, "TextFile.format.Xml.indentation", 2)
+        out = OutputHash.create("TextFile", config)
+        out.write(input)
+        
+        self.args = [self.script, filename]
+
+    def run(self):
+        with DeviceServer.cLock:
+            DeviceServer.live_threads.append(self)
+
+        self.pid = os.fork()
+        if self.pid == 0:
+            os.chmod(self.script, 0755)
+            os.execvpe(self.script, self.args, os.environ)
+        else:
+            print "\nLaunch device", self.device
+            id, status = os.waitpid(self.pid, 0)
+            print "Device %r finally died" % (self.device)
+
+        with DeviceServer.cLock:
+            DeviceServer.dead_threads.append(self)
+            DeviceServer.live_threads.remove(self)
+
+
 def main(argv):
     try:
         server = DeviceServer.create("DeviceServer", getConfigurationFromCommandLine(argv))
