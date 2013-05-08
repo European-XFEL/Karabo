@@ -65,7 +65,7 @@ void AuthenticationPortBindingProxy::AuthenticationPortBindingProxy_init(soap_mo
     soap_imode(this->soap, imode);
     soap_omode(this->soap, omode);
     soap_endpoint = NULL;
-    static const struct Namespace namespaces[] ={
+    static const struct Namespace namespaces[] = {
         {"SOAP-ENV", "http://schemas.xmlsoap.org/soap/envelope/", "http://www.w3.org/*/soap-envelope", NULL},
         {"SOAP-ENC", "http://schemas.xmlsoap.org/soap/encoding/", "http://www.w3.org/*/soap-encoding", NULL},
         {"xsi", "http://www.w3.org/2001/XMLSchema-instance", "http://www.w3.org/*/XMLSchema-instance", NULL},
@@ -82,51 +82,6 @@ void AuthenticationPortBindingProxy::AuthenticationPortBindingProxy_init(soap_mo
         {NULL, NULL, NULL, NULL}
     };
     soap_set_namespaces(this->soap, namespaces);
-
-    /* Init SSL */
-    soap_ssl_init(); /* init OpenSSL (just once) */
-    //            if (CRYPTO_thread_setup()) {
-    //                fprintf(stderr, "Cannot setup thread mutex for OpenSSL\n");
-    //                exit(1);
-    //            }
-
-    /* Init gSOAP context */
-    //soap_init(this->soap);
-    /* The supplied server certificate "server.pem" assumes that the server is
-      running on 'localhost', so clients can only connect from the same host when
-      verifying the server's certificate. Use SOAP_SSL_NO_AUTHENTICATION to omit
-      the authentication of the server and use encryption directly from any site.
-      To verify the certificates of third-party services, they must provide a
-      certificate issued by Verisign or another trusted CA. At the client-side,
-      the capath parameter should point to a directory that contains these
-      trusted (root) certificates or the cafile parameter should refer to one
-      file will all certificates. To help you out, the supplied "cacerts.pem"
-      file contains the certificates issued by various CAs. You should use this
-      file for the cafile parameter instead of "cacert.pem" to connect to trusted
-      servers.  Note that the client may fail to connect if the server's
-      credentials have problems (e.g. expired). Use SOAP_SSL_NO_AUTHENTICATION
-      and set cacert to NULL to encrypt messages if you don't care about the
-      trustworthyness of the server.
-      Note 1: the password and capath are not used with GNUTLS
-      Note 2: setting capath may not work on Windows.
-     */
-    if (soap_ssl_client_context(this->soap,
-                                SOAP_SSL_NO_AUTHENTICATION, /* for encryption w/o authentication */
-                                /* SOAP_SSL_DEFAULT | SOAP_SSL_SKIP_HOST_CHECK, */ /* if we don't want the host name checks since these will change from machine to machine */
-                                /* SOAP_SSL_DEFAULT,*/ /* use SOAP_SSL_DEFAULT in production code */
-                                NULL, /* keyfile (cert+key): required only when client must authenticate to server (see SSL docs to create this file) */
-                                NULL, /* password to read the keyfile */
-                                NULL, //"./cacert.pem", /*"cacert.pem" | NULL, */ /* optional cacert file to store trusted certificates, use cacerts.pem for all public certificates issued by common CAs */
-                                NULL, /* optional capath to directory with trusted certificates */
-                                NULL /* if randfile!=NULL: use a file with random data to seed randomness */
-                                )) {
-        soap_print_fault(stderr);
-        exit(1);
-    }
-    this->soap->connect_timeout = 0; /* try to connect for 1 minute */
-    this->soap->send_timeout = this->soap->recv_timeout = 0; /* if I/O stalls, then timeout after 30 seconds */
-
-
 }
 
 
@@ -219,7 +174,7 @@ int AuthenticationPortBindingProxy::login(const char *endpoint, const char *soap
     if (endpoint)
         soap_endpoint = endpoint;
     if (soap_endpoint == NULL)
-        soap_endpoint = "https://exflpcx18262:8181/XFELAuthWebService/Authentication";
+        soap_endpoint = "http://exflpcx18262:8080/XFELAuthWebService/Authentication";
     if (soap_action == NULL)
         soap_action = "http://server.xfelauthwebservice.xfel.eu/Authentication/loginRequest";
     soap->encodingStyle = NULL;
@@ -274,7 +229,7 @@ int AuthenticationPortBindingProxy::logout(const char *endpoint, const char *soa
     if (endpoint)
         soap_endpoint = endpoint;
     if (soap_endpoint == NULL)
-        soap_endpoint = "https://exflpcx18262:8181/XFELAuthWebService/Authentication";
+        soap_endpoint = "http://exflpcx18262:8080/XFELAuthWebService/Authentication";
     if (soap_action == NULL)
         soap_action = "http://server.xfelauthwebservice.xfel.eu/Authentication/logoutRequest";
     soap->encodingStyle = NULL;
@@ -329,7 +284,7 @@ int AuthenticationPortBindingProxy::singleSignOn(const char *endpoint, const cha
     if (endpoint)
         soap_endpoint = endpoint;
     if (soap_endpoint == NULL)
-        soap_endpoint = "https://exflpcx18262:8181/XFELAuthWebService/Authentication";
+        soap_endpoint = "http://exflpcx18262:8080/XFELAuthWebService/Authentication";
     if (soap_action == NULL)
         soap_action = "http://server.xfelauthwebservice.xfel.eu/Authentication/singleSignOnRequest";
     soap->encodingStyle = NULL;
@@ -384,7 +339,7 @@ int AuthenticationPortBindingProxy::sessionsByIp(const char *endpoint, const cha
     if (endpoint)
         soap_endpoint = endpoint;
     if (soap_endpoint == NULL)
-        soap_endpoint = "https://exflpcx18262:8181/XFELAuthWebService/Authentication";
+        soap_endpoint = "http://exflpcx18262:8080/XFELAuthWebService/Authentication";
     if (soap_action == NULL)
         soap_action = "http://server.xfelauthwebservice.xfel.eu/Authentication/sessionsByIpRequest";
     soap->encodingStyle = NULL;
@@ -439,7 +394,7 @@ int AuthenticationPortBindingProxy::hasActiveSession(const char *endpoint, const
     if (endpoint)
         soap_endpoint = endpoint;
     if (soap_endpoint == NULL)
-        soap_endpoint = "https://exflpcx18262:8181/XFELAuthWebService/Authentication";
+        soap_endpoint = "http://exflpcx18262:8080/XFELAuthWebService/Authentication";
     if (soap_action == NULL)
         soap_action = "http://server.xfelauthwebservice.xfel.eu/Authentication/hasActiveSessionRequest";
     soap->encodingStyle = NULL;
@@ -494,7 +449,7 @@ int AuthenticationPortBindingProxy::getUserNonce(const char *endpoint, const cha
     if (endpoint)
         soap_endpoint = endpoint;
     if (soap_endpoint == NULL)
-        soap_endpoint = "https://exflpcx18262:8181/XFELAuthWebService/Authentication";
+        soap_endpoint = "http://exflpcx18262:8080/XFELAuthWebService/Authentication";
     if (soap_action == NULL)
         soap_action = "http://server.xfelauthwebservice.xfel.eu/Authentication/getUserNonceRequest";
     soap->encodingStyle = NULL;

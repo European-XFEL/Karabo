@@ -172,12 +172,15 @@ namespace karabo {
             ns1__logout nsLogout;
             ns1__logoutResponse nsLogoutResp;
 
+//            const char end_point[] = "https://exflpcx18262:8181/XFELAuthWebService/Authentication_soap";
+//            const char soap_action[] = "#logout";
+
             nsLogout.username = &m_username;
             nsLogout.provider = &m_provider;
             nsLogout.sessionToken = &m_sessionToken;
 
             // If obtain successfully answer from Web Service the logic proceeds!
-            if (m_service->logout(&nsLogout, &nsLogoutResp) == SOAP_OK) {
+            if (m_service->logout(/*end_point, NULL,*/ &nsLogout, &nsLogoutResp) == SOAP_OK) {
                 KARABO_LOG_FRAMEWORK_DEBUG << "Debug: SOAP message is OK";
                 if (*(nsLogoutResp.return_) == 0) {
                     KARABO_LOG_FRAMEWORK_DEBUG << "Error: Logout didn't succeed";
@@ -205,6 +208,17 @@ namespace karabo {
             ns1__getUserNonce nsUserNonce;
             ns1__getUserNonceResponse nsUserNonceResp;
 
+            //const char end_point[] = "https://exflpcx18262:8181/XFELAuthWebService/Authentication";
+            //const char soap_action[] = "http://server.xfelauthwebservice.xfel.eu/Authentication/loginRequest";
+
+            //            soap_init(m_service->soap);
+            //            if (soap_ssl_client_context(m_service->soap,
+            //                                        SOAP_SSL_NO_AUTHENTICATION, NULL, NULL, NULL,
+            //                                        NULL, NULL)) {
+            //                soap_print_fault(m_service->soap, stderr);
+            //                exit(1);
+            //            }
+
             nsUserNonce.username = &m_username;
             nsUserNonce.provider = &m_provider;
             nsUserNonce.ipAddress = &m_ipAddress;
@@ -228,6 +242,17 @@ namespace karabo {
         ns1__loginResponse Authenticator::authenticate(const karabo::util::Timestamp& timestamp) {
             ns1__login nsLogin;
             ns1__loginResponse nsLoginResp;
+
+            //const char end_point[] = "https://exflpcx18262:8181/XFELAuthWebService/Authentication";
+            //const char soap_action[] = "http://server.xfelauthwebservice.xfel.eu/Authentication/loginRequest";
+
+            //            soap_init(m_service->soap);
+            //            if (soap_ssl_client_context(m_service->soap,
+            //                                        SOAP_SSL_NO_AUTHENTICATION, NULL, NULL, NULL,
+            //                                        NULL, NULL)) {
+            //                soap_print_fault(m_service->soap, stderr);
+            //                exit(1);
+            //            }
 
             nsLogin.username = &m_username;
             nsLogin.password = &m_password;
@@ -338,11 +363,11 @@ namespace karabo {
         }
 
 
-/******************************************************************************\
+        /******************************************************************************\
          *
          *	SIGPIPE
          *
-\******************************************************************************/
+        \******************************************************************************/
 
         void sigpipe_handle(int x) {
         }
