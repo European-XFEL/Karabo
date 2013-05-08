@@ -60,6 +60,22 @@ class  Serializer_TestCase(unittest.TestCase):
         except Exception,e:
             self.fail("test_binaryserializer_hash exception group 1: " + str(e))
     
+    def test_io_write_read_hash(self):
+        try:
+            config = Hash("filename", "/tmp/test_io_writeread_hash.xml", "format.Xml.indentation", -1)
+            out = OutputHash.create("TextFile", config)
+            hash = Hash('a.b.c',1,'x.y.z',[1,2,3,4,5,6,7])
+            out.write(hash)
+            
+            hash2 = Hash()
+            config = Hash("filename", "/tmp/test_io_writeread_hash.xml")
+            input = InputHash.create("TextFile", config)
+            input.read(hash2)
+            self.assertEqual(similar(hash, hash2), True)
+            
+        except Exception,e:
+            self.fail("test_io_saveload_hash exception group 1: " + str(e))
+        
        
 if __name__ == '__main__':
     unittest.main()
