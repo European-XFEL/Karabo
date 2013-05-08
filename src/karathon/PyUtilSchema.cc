@@ -22,7 +22,6 @@ namespace bp = boost::python;
 using namespace karabo::util;
 using namespace std;
 
-
 struct SchemaWrapper : Schema, bp::wrapper< Schema > {
 
 
@@ -52,8 +51,8 @@ struct SchemaWrapper : Schema, bp::wrapper< Schema > {
     }
 };
 
-
 class ValidatorWrap : Validator {
+
 public:
 
 
@@ -73,8 +72,19 @@ public:
         }
         throw KARABO_PYTHON_EXCEPTION("Python arguments are not supported types");
     }
-};
 
+
+    void setValidationRules(const bp::object& obj) {
+        if (bp::extract<Validator::ValidationRules>(obj).check()) {
+            const Validator::ValidationRules& rules = bp::extract<Validator::ValidationRules>(obj);
+            Validator::setValidationRules(rules);
+        }
+    }
+    
+    bp::object getValidationRules() {
+        return bp::object(Validator::getValidationRules());
+    }
+};
 
 struct NodeElementWrap {
 
@@ -123,7 +133,6 @@ struct NodeElementWrap {
 
 };
 
-
 struct ChoiceElementWrap {
 
 
@@ -159,7 +168,6 @@ struct ChoiceElementWrap {
         return self;
     }
 };
-
 
 struct ListElementWrap {
 
@@ -197,7 +205,6 @@ struct ListElementWrap {
     }
 };
 
-
 struct OverwriteElementWrap {
 
 
@@ -225,9 +232,11 @@ struct OverwriteElementWrap {
 
 namespace schemawrap {
 
+
     bp::object getParameterHash(const Schema& schema) {
         return bp::object(schema.getParameterHash());
     }
+
 
     karabo::pyexfel::PyTypes::ReferenceType getValueType(const Schema& schema, const bp::object& obj) {
         if (PyString_Check(obj.ptr())) {
@@ -727,7 +736,7 @@ namespace schemawrap {
         throw KARABO_PYTHON_EXCEPTION("Python argument in 'getAllowedStates' should be a string");
     }
 
-    
+
     bp::object getAllowedRoles(const Schema& schema, const bp::object& obj) {
         if (PyString_Check(obj.ptr())) {
             string path = bp::extract<string>(obj);
@@ -736,7 +745,7 @@ namespace schemawrap {
         }
         throw KARABO_PYTHON_EXCEPTION("Python argument in 'getAllowedRoles' should be a string");
     }
-    
+
     //*************************************************************
     // Wrapper functions for : getDefaultValue, getDefaultValueAs *
     //*************************************************************
@@ -863,7 +872,8 @@ namespace schemawrap {
             throw KARABO_PYTHON_EXCEPTION("Python argument in 'getKeyFromAlias': type is not supported");
         }
     }
-    
+
+
     void help(Schema& schema, const std::string& classId = "") {
         schema.help(classId);
     }
@@ -917,7 +927,7 @@ void exportPyUtilSchema() {
                 .def_readwrite("m_state", &Schema::AssemblyRules::m_state);
 
         s.def(bp::self_ns::str(bp::self));
-        
+
         s.def("getParameterHash", &schemawrap::getParameterHash);
 
         s.def("getAccessMode", &Schema::getAccessMode);
@@ -993,9 +1003,9 @@ void exportPyUtilSchema() {
         s.def("getTags", &schemawrap::getTags);
 
         s.def("getAllowedStates", &schemawrap::getAllowedStates);
-        
+
         s.def("getAllowedRoles", &schemawrap::getAllowedRoles);
-        
+
         s.def("getDefaultValue", &schemawrap::getDefaultValue);
 
         s.def("getDefaultValueAs", &schemawrap::getDefaultValueAs);
@@ -1017,21 +1027,21 @@ void exportPyUtilSchema() {
         s.def("getExpertLevel", &Schema::getExpertLevel);
 
         s.def("getWarnLow", &schemawrap::getWarnLow);
-        
+
         s.def("getWarnHigh", &schemawrap::getWarnHigh);
-        
+
         s.def("getAlarmLow", &schemawrap::getAlarmLow);
-        
+
         s.def("getAlarmHigh", &schemawrap::getAlarmHigh);
-        
+
         s.def("getWarnLowAs", &schemawrap::getWarnLowAs, (bp::arg("path"), bp::arg("pytype")));
-        
+
         s.def("getWarnHighAs", &schemawrap::getWarnHighAs, (bp::arg("path"), bp::arg("pytype")));
-        
+
         s.def("getAlarmLowAs", &schemawrap::getAlarmLowAs, (bp::arg("path"), bp::arg("pytype")));
-        
+
         s.def("getAlarmHighAs", &schemawrap::getAlarmHighAs, (bp::arg("path"), bp::arg("pytype")));
-        
+
         //all other get-s....
 
         //********* has methods ****************
@@ -1273,8 +1283,18 @@ void exportPyUtilSchema() {
     }
 
     {
+        bp::class_<Validator::ValidationRules>("ValidatorValidationRules", bp::init<>())
+                .def_readwrite("injectDefaults", &Validator::ValidationRules::injectDefaults)
+                .def_readwrite("allowUnrootedConfiguration", &Validator::ValidationRules::allowUnrootedConfiguration)
+                .def_readwrite("allowAdditionalKeys", &Validator::ValidationRules::allowAdditionalKeys)
+                .def_readwrite("allowMissingKeys", &Validator::ValidationRules::allowMissingKeys)
+                .def_readwrite("injectTimestamps", &Validator::ValidationRules::injectTimestamps)
+                ;
+
         bp::class_<ValidatorWrap>("Validator", bp::init<>())
                 .def("validate", &ValidatorWrap::validate, (bp::arg("schema"), bp::arg("configuration")))
+                .def("setValidationRules", &ValidatorWrap::setValidationRules, (bp::arg("rules")))
+                .def("getValidationRules", &ValidatorWrap::getValidationRules)
                 ;
     }
 
