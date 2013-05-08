@@ -495,22 +495,22 @@ ${OBJECTDIR}/_ext/163016059/Validator.o: ../../../src/karabo/util/Validator.cc
 ${OBJECTDIR}/_ext/1760428615/Authenticator.o: ../../../src/karabo/webAuth/Authenticator.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1760428615
 	${RM} $@.d
-	$(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -DWITH_OPENSSL -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1760428615/Authenticator.o ../../../src/karabo/webAuth/Authenticator.cc
+	$(COMPILE.cc) -g -Wall -DWITH_OPENSSL -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1760428615/Authenticator.o ../../../src/karabo/webAuth/Authenticator.cc
 
 ${OBJECTDIR}/_ext/1760428615/soapAuthenticationPortBindingProxy.o: ../../../src/karabo/webAuth/soapAuthenticationPortBindingProxy.cpp 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1760428615
 	${RM} $@.d
-	$(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -DWITH_OPENSSL -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1760428615/soapAuthenticationPortBindingProxy.o ../../../src/karabo/webAuth/soapAuthenticationPortBindingProxy.cpp
+	$(COMPILE.cc) -g -Wall -DWITH_OPENSSL -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1760428615/soapAuthenticationPortBindingProxy.o ../../../src/karabo/webAuth/soapAuthenticationPortBindingProxy.cpp
 
 ${OBJECTDIR}/_ext/1760428615/soapC.o: ../../../src/karabo/webAuth/soapC.cpp 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1760428615
 	${RM} $@.d
-	$(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -DWITH_OPENSSL -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1760428615/soapC.o ../../../src/karabo/webAuth/soapC.cpp
+	$(COMPILE.cc) -g -Wall -DWITH_OPENSSL -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1760428615/soapC.o ../../../src/karabo/webAuth/soapC.cpp
 
 ${OBJECTDIR}/_ext/1760428615/stdsoap2.o: ../../../src/karabo/webAuth/stdsoap2.cpp 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1760428615
 	${RM} $@.d
-	$(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -DWITH_OPENSSL -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1760428615/stdsoap2.o ../../../src/karabo/webAuth/stdsoap2.cpp
+	$(COMPILE.cc) -g -Wall -DWITH_OPENSSL -DWITH_NONAMESPACES -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1760428615/stdsoap2.o ../../../src/karabo/webAuth/stdsoap2.cpp
 
 ${OBJECTDIR}/_ext/1103122747/Memory.o: ../../../src/karabo/xms/Memory.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1103122747
@@ -575,7 +575,7 @@ ${TESTDIR}/TestFiles/f1: ${TESTDIR}/_ext/1033104525/ConfigurationTestClasses.o $
 
 ${TESTDIR}/TestFiles/f6: ${TESTDIR}/_ext/1856679435/Authenticate_Test.o ${TESTDIR}/_ext/1856679435/webAuthTestRunner.o ${OBJECTFILES:%.o=%_nomain.o}
 	${MKDIR} -p ${TESTDIR}/TestFiles
-	${LINK.cc}   -o ${TESTDIR}/TestFiles/f6 $^ ${LDLIBSOPTIONS} -L${KARABO}/extern/lib -Wl,-rpath,${KARABO}/lib -Wl,-rpath,${KARABO}/extern/lib -lcppunit `cppunit-config --libs`   
+	${LINK.cc}   -o ${TESTDIR}/TestFiles/f6 $^ ${LDLIBSOPTIONS} -L${KARABO}/extern/lib -Wl,-rpath,${KARABO}/lib -Wl,-rpath,${KARABO}/extern/lib -lcppunit 
 
 ${TESTDIR}/TestFiles/f5: ${TESTDIR}/_ext/936508045/SignalSlotable_Test.o ${TESTDIR}/_ext/936508045/xmsTestRunner.o ${OBJECTFILES:%.o=%_nomain.o}
 	${MKDIR} -p ${TESTDIR}/TestFiles
@@ -711,13 +711,13 @@ ${TESTDIR}/_ext/1033104525/utilTestRunner.o: ../../../src/karabo/tests/util/util
 ${TESTDIR}/_ext/1856679435/Authenticate_Test.o: ../../../src/karabo/tests/webAuth/Authenticate_Test.cc 
 	${MKDIR} -p ${TESTDIR}/_ext/1856679435
 	${RM} $@.d
-	$(COMPILE.cc) -g -Wall -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -DWITH_NONAMESPACES -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/include/hdf5 `cppunit-config --cflags` -MMD -MP -MF $@.d -o ${TESTDIR}/_ext/1856679435/Authenticate_Test.o ../../../src/karabo/tests/webAuth/Authenticate_Test.cc
+	$(COMPILE.cc) -g -Wall -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -DWITH_NONAMESPACES -DWITH_OPENSSL -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/include/hdf5 -MMD -MP -MF $@.d -o ${TESTDIR}/_ext/1856679435/Authenticate_Test.o ../../../src/karabo/tests/webAuth/Authenticate_Test.cc
 
 
 ${TESTDIR}/_ext/1856679435/webAuthTestRunner.o: ../../../src/karabo/tests/webAuth/webAuthTestRunner.cc 
 	${MKDIR} -p ${TESTDIR}/_ext/1856679435
 	${RM} $@.d
-	$(COMPILE.cc) -g -Wall -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -DWITH_NONAMESPACES -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/include/hdf5 `cppunit-config --cflags` -MMD -MP -MF $@.d -o ${TESTDIR}/_ext/1856679435/webAuthTestRunner.o ../../../src/karabo/tests/webAuth/webAuthTestRunner.cc
+	$(COMPILE.cc) -g -Wall -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -DWITH_NONAMESPACES -DWITH_OPENSSL -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/include/hdf5 -MMD -MP -MF $@.d -o ${TESTDIR}/_ext/1856679435/webAuthTestRunner.o ../../../src/karabo/tests/webAuth/webAuthTestRunner.cc
 
 
 ${TESTDIR}/_ext/936508045/SignalSlotable_Test.o: ../../../src/karabo/tests/xms/SignalSlotable_Test.cc 
@@ -1624,7 +1624,7 @@ ${OBJECTDIR}/_ext/1760428615/Authenticator_nomain.o: ${OBJECTDIR}/_ext/176042861
 	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
 	then  \
 	    ${RM} $@.d;\
-	    $(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -DWITH_OPENSSL -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1760428615/Authenticator_nomain.o ../../../src/karabo/webAuth/Authenticator.cc;\
+	    $(COMPILE.cc) -g -Wall -DWITH_OPENSSL -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1760428615/Authenticator_nomain.o ../../../src/karabo/webAuth/Authenticator.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/1760428615/Authenticator.o ${OBJECTDIR}/_ext/1760428615/Authenticator_nomain.o;\
 	fi
@@ -1637,7 +1637,7 @@ ${OBJECTDIR}/_ext/1760428615/soapAuthenticationPortBindingProxy_nomain.o: ${OBJE
 	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
 	then  \
 	    ${RM} $@.d;\
-	    $(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -DWITH_OPENSSL -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1760428615/soapAuthenticationPortBindingProxy_nomain.o ../../../src/karabo/webAuth/soapAuthenticationPortBindingProxy.cpp;\
+	    $(COMPILE.cc) -g -Wall -DWITH_OPENSSL -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1760428615/soapAuthenticationPortBindingProxy_nomain.o ../../../src/karabo/webAuth/soapAuthenticationPortBindingProxy.cpp;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/1760428615/soapAuthenticationPortBindingProxy.o ${OBJECTDIR}/_ext/1760428615/soapAuthenticationPortBindingProxy_nomain.o;\
 	fi
@@ -1650,7 +1650,7 @@ ${OBJECTDIR}/_ext/1760428615/soapC_nomain.o: ${OBJECTDIR}/_ext/1760428615/soapC.
 	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
 	then  \
 	    ${RM} $@.d;\
-	    $(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -DWITH_OPENSSL -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1760428615/soapC_nomain.o ../../../src/karabo/webAuth/soapC.cpp;\
+	    $(COMPILE.cc) -g -Wall -DWITH_OPENSSL -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1760428615/soapC_nomain.o ../../../src/karabo/webAuth/soapC.cpp;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/1760428615/soapC.o ${OBJECTDIR}/_ext/1760428615/soapC_nomain.o;\
 	fi
@@ -1663,7 +1663,7 @@ ${OBJECTDIR}/_ext/1760428615/stdsoap2_nomain.o: ${OBJECTDIR}/_ext/1760428615/std
 	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
 	then  \
 	    ${RM} $@.d;\
-	    $(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -DWITH_OPENSSL -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1760428615/stdsoap2_nomain.o ../../../src/karabo/webAuth/stdsoap2.cpp;\
+	    $(COMPILE.cc) -g -Wall -DWITH_OPENSSL -DWITH_NONAMESPACES -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1760428615/stdsoap2_nomain.o ../../../src/karabo/webAuth/stdsoap2.cpp;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/1760428615/stdsoap2.o ${OBJECTDIR}/_ext/1760428615/stdsoap2_nomain.o;\
 	fi
