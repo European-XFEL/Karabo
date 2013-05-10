@@ -12,7 +12,7 @@ __date__ ="$Jul 30, 2012 9:03:51 PM$"
 import sys
 import socket
 from abc import ABCMeta, abstractmethod
-from libkarabo import *
+from libkarathon import *
 from fsm import *
 from karabo_decorators import schemamethod
 from core_exceptions import ParameterException
@@ -110,116 +110,79 @@ class PythonDevice(object):
         self.validatorExtern.setValidationRules(rules)
         
         # Setup device logger
+        logging_config = Hash("categories[0]", Hash("Category.name", self._deviceId, "Category.priority", "DEBUG"),
+                    "appenders[0].Ostream.layout", "Pattern")
+        Logger.configure(logging_config)
         self.log = Logger.getLogger(self._deviceId)
         
+        # Instantiate connection
+        self._ss = SignalSlotable.create(self._deviceId, "Jms", configuration["connection.Jms"])
         
+        # Initialize FSM
+        self.fsm = BaseFsm.create("StartStopFsm")
+        self.fsm.setupFsm()
+        self.fsm.initFsmSlots(self._ss)
         
+        # Initialize Device slots
+        self.initDeviceSlots()
         
+    def initDeviceSlots(self):
+        #-------------------------------------------- register intrinsic signals
+        self._ss.registerSignal("signalChanged", Hash, str, str)                # changeHash, instanceId, classId
+        self._ss.connect("", "signalChanged", "*", "slotChanged", ConnectionType.NO_TRACK, False)
         
-        # Stopped here  !!!!
+        self._ss.registerSignal("signalErrorFound", str, str, str, str)         # timeStamp, shortMsg, longMsg, instanceId
+        self._ss.connect("", "signalErrorFound", "*", "slotErrorFound", ConnectionType.NO_TRACK, False)
         
-        cls = self.__class__
-        self.running = True
+        self._ss.registerSignal("signalBadReconfiguration", str, str)           # shortMsg, instanceId
+        self._ss.connect("", "signalBadReconfiguration", "*", "slotBadReconfiguration", ConnectionType.NO_TRACK, False)        
         
-        self._lock = threading.Lock()
-        self._stateChangeLock = threading.Lock()
-        self._stateDependentSchemaLock = threading.Lock()
+        self._ss.registerSignal("signalNoTransition", str, str)                 # 
+        self._ss.connect("", "signalNoTransition", "*", "slotNoTransition", ConnectionType.NO_TRACK, False)        
+        
+        self._ss.registerSignal("signalWarningOrAlarm", str, str, str, str)     # timeStamp, warnMsg, instanceId, priority
+        self._ss.registerSignal("signalWarning", str, str, str, str)            # timeStamp, warnMsg, instanceId, priority
+        self._ss.connect("", "signalWarning", "*", "slotWarning", ConnectionType.NO_TRACK, False)
+        
+        self._ss.registerSignal("signalAlarm", str, str, str, str)              # timeStamp, alarmMsg, instanceId, priority
+        self._ss.connect("", "signalAlarm", "*", "slotAlarm", ConnectionType.NO_TRACK, False)
+        
+        self._ss.registerSignal("signalSchemaUpdated", str, str, str)           # schema, instanceId, classId
+        self._ss.connect("", "signalSchemaUpdated", "*", "slotSchemaUpdated", ConnectionType.NO_TRACK, False)
 
-        self._stateDependentSchema = dict()
+        # TODO Deprecate!
+        self._ss.registerSignal("signalDeviceInstanceGone", str, str)           # DeviceServerInstanceId, deviceInstanceId
+        self._ss.connect("", "signalDeviceInstanceGone", "*", "slotDeviceInstanceGone", ConnectionType.NO_TRACK, False)
         
-        self.fsm = None
-        self._client = None
+        self._ss.registerSignal("signalProgressUpdated", int, str, str)         # Progress value [0,100], label, deviceInstanceId
+        self._ss.connect("", "signalProgressUpdated", "*", "slotProgressUpdated", ConnectionType.NO_TRACK, False)
         
-        self._expectedInitialParameters        = cls.getExpectedInitialParameters()
-        self._expectedReconfigurableParameters = cls.getExpectedReconfigurableParameters()
-        self._expectedMonitoredParameters      = cls.getExpectedMonitorableParameters()
-        self._allExpectedParameters            = cls.getFullExpectedParameters()
+        #---------------------------------------------- register intrinsic slots
+        self._ss.registerSlot(self.slotReconfigure, Hash)
+        self._ss.registerSlot(self.slotRefresh)
+        self._ss.registerSlot(self.slotGetSchema, bool)
+        self._ss.registerSlot(self.slotKillDeviceInstance)
         
-        self._injectedExpectedParameters = Schema()
-        self._incomingValidatedReconfiguration = Hash()
+    def errorFound(self, shortMessage, detailedMessage):
+        pass
+    
+    def errorFoundAction(self, shortMessage, detailedMessage):
+        self.triggerErrorFound(shortMessage, detailedMessage)
+    
+    def noStateTransition(self):
+        self._ss.emit("signalNoTransition", "No transition possible", self._deviceId)
         
-        try:
-            # classId
-            self._classId = cls.__name__
-            # devSrvInstId
-            if input.has("devSrvInstId"):
-                self._devSrvInstId = input.get("devSrvInstId")
-            else:
-                self._devSrvInstId = ""
-            
-            with cls.instanceCountLock:
-                if self._devSrvInstId not in cls.instanceCountPerDeviceServer:
-                    cls.instanceCountPerDeviceServer[self._devSrvInstId] = 0
-            
-            # Increase instance count
-            self._increaseInstanceCount();
-
-            # Construct needed for splitting the parameters (validate function needs this)
-            tmp = Hash(self._classId, input)
-            # devInstId
-            if input.has("devInstId"):
-                self._devInstId = input.get("devInstId")
-            else:
-                self._devInstId = self._generateDefaultDeviceInstanceId()
-                tmp.setFromPath(self._classId + ".devInstId", self._devInstId)
-            
-            # Split the configuration parameters into three pots
-            self._initialParameters = self._expectedInitialParameters.validate(tmp, True, False, True).get(self._classId)
-            self._reconfigurableParameters = self._expectedReconfigurableParameters.validate(tmp, True, False, True).get(self._classId)
-            self._monitoredParameters = self._expectedMonitoredParameters.validate(tmp, True, False, True).get(self._classId)
-            print "\nInitialize Device SignalSlotable object...\n"
-            self._ss = SignalSlotable(self._devInstId)
-            print "\nInitialize Device Logging...\n"
-            currentConfig = self.getCurrentConfiguration()
-            connectionConfig = currentConfig.getFromPath(self._classId + ".connection")
-
-            logConfig = Hash()
-            logConfig.setFromPath("Logger.categories[0].Category.name", self._devInstId)
-            logConfig.setFromPath("Logger.categories[0].Category.priority", "DEBUG")
-            logConfig.setFromPath("Logger.categories[0].Category.appenders[0].Network.layout.Pattern.pattern", "%d{%F %H:%M:%S} | %p | %c | %m")
-            logConfig.setFromPath("Logger.categories[0].Category.appenders[0].Network.connection", connectionConfig)
-            Logger.create(logConfig).initialize()
-            self.log = Logger.logger(self._devInstId)
-            
-            #-------------------------------------------------- register signals
-            self._ss.registerSignal("signalErrorFound", str, str, str, str)         # timeStamp, shortMsg, longMsg, instanceId
-            self._ss.registerSignal("signalBadReconfiguration", str, str)           # shortMsg, instanceId
-            self._ss.registerSignal("signalNoTransition", str, str)                 # 
-            self._ss.registerSignal("signalChanged", Hash, str, str)                # changeHash, instanceId, classId
-            self._ss.registerSignal("signalWarning", str, str, str, str)            # timeStamp, warnMsg, instanceId, priority
-            self._ss.registerSignal("signalAlarm", str, str, str, str)              # timeStamp, alarmMsg, instanceId, priority
-            self._ss.registerSignal("signalSchemaUpdated", str, str, str)           # schema, instanceId, classId
-            self._ss.registerSignal("signalDeviceInstanceGone", str, str)           # DeviceServerInstanceId, deviceInstanceId
-            self._ss.registerSignal("signalNewDeviceInstanceAvailable", str, Hash)  # DeviceServerInstanceId, currentConfig
-            #---------------------------------------------------  register slots
-            self._ss.registerSlot(self.slotReconfigure, self)
-            self._ss.registerSlot(self.slotRefresh, self)
-            self._ss.registerSlot(self.slotGetSchema, self)
-            self._ss.registerSlot(self.slotKillDeviceInstance, self)
-            #---------------------------- define hard-coded (global) connections
-            self._ss.connect("", "signalChanged", "*", "slotChanged", ConnectionType.NO_TRACK, False)
-            self._ss.connect("", "signalBadReconfiguration", "*", "slotBadReconfiguration", ConnectionType.NO_TRACK, False)
-            self._ss.connect("", "signalNoTransition", "*", "slotNoTransition", ConnectionType.NO_TRACK, False)
-            self._ss.connect("", "signalErrorFound", "*", "slotErrorFound", ConnectionType.NO_TRACK, False)
-            self._ss.connect("", "signalWarning", "*", "slotWarning", ConnectionType.NO_TRACK, False)
-            self._ss.connect("", "signalAlarm", "*", "slotAlarm", ConnectionType.NO_TRACK, False)
-            self._ss.connect("", "signalSchemaUpdated", "*", "slotSchemaUpdated", ConnectionType.NO_TRACK, False)
-            self._ss.connect("", "signalDeviceInstanceGone", "*", "slotDeviceInstanceGone", ConnectionType.NO_TRACK, False)
-            self._ss.connect("", "signalNewDeviceInstanceAvailable", "*", "slotNewDeviceInstanceAvailable", ConnectionType.NO_TRACK, False)
-            
-            self.log.INFO("Starting up {} on networkId {}".format(self._classId, self._devInstId))
-            
-            #myHostName, someList, myHostAddrList = socket.gethostbyaddr(socket.gethostname())
-            myFullHostName = socket.gethostname()
-            myHostName, dotsep, domainName = myFullHostName.partition('.')
-            if self._devSrvInstId == myHostName:
-                xsd = self.__class__.convertToXsd(self._allExpectedParameters)
-                self._ss.call("*", "slotNewStandaloneDeviceInstanceAvailable", myHostName, tmp, self._ss.getInstanceId(), xsd)
-
-            self.set("devClaId", self._classId)
-        except:
-            self.log.ERROR("Unexpected error: {}".format(sys.exc_info()[0]))
-            raise
+    def onStateUpdate(self, currentState):
+        self.set("state", currentState)
+        self._ss.reply(currentState)
+    
+    def processEvent(self, event):
+        if self.fsm is not None:
+            self.onStateUpdate("Changing...")
+            self.fsm.process_event(event)
+            self.onStateUpdate(self.fsm.get_state())
+    
+        
             
     def __del__(self):
         ''' PythonDevice destructor '''
@@ -407,25 +370,6 @@ class PythonDevice(object):
     def reconfigure(self, instanceId, configuration):
         self._ss.call(instanceId, "slotReconfigure", configuration)
     
-    def errorFoundAction(self, shortMessage, detailedMessage):
-        self.triggerErrorFound(shortMessage, detailedMessage)
-    
-    def updateCurrentState(self, state):
-        self.set("state", state)
-        self._ss.reply(state)
-    
-    def processEvent(self, event):
-        if self.fsm is not None:
-            self.updateCurrentState("Changing...")
-            self.fsm.process_event(event)
-            self.updateCurrentState(self.fsm.get_state())
-    
-    def startStateMachine(self):
-        """Start state machine"""
-        if self.fsm is not None:
-            self.fsm.start()
-            self.updateCurrentState(self.fsm.get_state())
-        
     def slotKillDeviceInstance(self):
         self.log.INFO("Device is going down...")
         self.onKill()
@@ -481,8 +425,6 @@ class PythonDevice(object):
             self._ss.emit("signalChanged", self._incomingValidatedReconfiguration, self._devInstId, self._classId)
             self._incomingValidatedReconfiguration.clear()
     
-    def noStateTransition(self):
-        self._ss.emit("signalNoTransition", "No transition possible", self._devInstId)
         
     @staticmethod
     def parseCommandLine(args):
