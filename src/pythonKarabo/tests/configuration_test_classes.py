@@ -11,6 +11,7 @@ class Shape(object):
     
     def __init__(self, configuration):
         self.configuration = configuration
+        print "Shape.__init__"
         
     @staticmethod
     def expectedParameters(expected):
@@ -34,6 +35,7 @@ class Circle(Shape):
     
     def __init__(self, configuration):
         super(Circle, self).__init__(configuration)
+        print "Circle.__init__"
         
     @staticmethod
     def expectedParameters(expected):
@@ -58,8 +60,9 @@ Editable Circle
 @KARABO_CLASSINFO("EditableCircle", "1.0")    
 class EditableCircle(Circle):
     
-    def init(self, configuration):
+    def __init__(self, configuration):
         super(EditableCircle, self).__init__(configuration)
+        print "EditableCircle.__init__"
         
     @staticmethod
     def expectedParameters(expected):
@@ -80,9 +83,10 @@ class Rectangle(Shape):
     
     def __init__(self, configuration):
         super(Rectangle, self).__init__(configuration)
+        print "Rectangle.__init__"
     
     @staticmethod
-    def expectedParameter(expected):
+    def expectedParameters(expected):
         
         e = DOUBLE_ELEMENT(expected).key("a").alias(1)
         e.description("Length of a")

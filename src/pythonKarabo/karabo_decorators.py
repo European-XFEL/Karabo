@@ -23,6 +23,12 @@ def KARABO_CLASSINFO(classid, version):
             theClass.__version__ = version
             if hasattr(theClass, "__base_classid__"):
                 Configurator(theClass.__base_classid__).registerClass(theClass)
+                theClass.__bases_classid__ = []
+                for base in theClass.__bases__:
+                    for i in base.__bases_classid__:
+                        if i not in theClass.__bases_classid__:
+                            theClass.__bases_classid__.append(i)
+                theClass.__bases_classid__ = tuple(theClass.__bases_classid__)
         return theClass
     return realDecorator
 
