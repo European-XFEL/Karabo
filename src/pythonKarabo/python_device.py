@@ -14,36 +14,29 @@ import socket
 from abc import ABCMeta, abstractmethod
 from libkarathon import *
 from fsm import *
-from karabo_decorators import schemamethod
+from karabo_decorators import *
 from core_exceptions import ParameterException
 
-def inheritanceChain(cls):
-    """
-    Class method allowing to generate a chain of class inheritance for given class
-    till PythonDevice.  The class should be a subclass of PythonDevice
-    """
-    def classInChain(cls):
-        while cls.__name__!='PythonDevice':
-            yield cls
-            (cls,) = cls.__bases__
-        else:
-            yield cls
-
-    cList = list()
-    if issubclass(cls,(PythonDevice,)):
-        for c in classInChain(cls):
-            cList.append(c)
-        cList.reverse()
-    return cList
-
-
-inheritanceChain = classmethod(inheritanceChain)
-
 @KARABO_CONFIGURATION_BASE_CLASS
-@KARABO_CLASSINFO("PythonDevice", "1.0")
-class PythonDevice(object):
-
+@KARABO_CLASSINFO("PythonBaseDevice", "1.0")
+class PythonBaseDevice(object):
     __metaclass__ = ABCMeta
+    
+    def __init__(self):
+        super(PythonBaseDevice, self).__init__()
+        
+    @abstractmethod
+    def run(self):
+        pass
+    
+    @abstractmethod
+    def getCurrentConfiguration(self):
+        return Hash()
+    
+
+@KARABO_CLASSINFO("PythonDevice", "1.0")
+class PythonDevice(PythonBaseDevice, BaseFsm):
+
     instanceCountPerDeviceServer = dict()
     instanceCountLock = threading.Lock()
     
@@ -80,20 +73,25 @@ class PythonDevice(object):
         e.displayedName("State").description("The current state the device is in")
         e.assignmentOptional().defaultValue("uninitialized").readOnly().commit()
         
-    def __init__(self, configuration):
-        super(PythonDevice, self).__init__()
-        
+    def __init__(self, configuration, *args, **kwargs):
+        super(PythonDevice, self).__init__(*args, **kwargs)
+
         self.parameters = configuration
-        if "serverId" in configuration:
-            self.serverId = configuration["serverId"]
+        if "serverId" in self.parameters:
+            self.serverid = self.parameters["serverId"]
         else:
-            self.serverId = "__none__"    
+            self.serverid = "__none__"    
         
-        if "deviceId" in configuration:
-            self.deviceId = configuration["deviceId"]
+        if "deviceId" in self.parameters:
+            self.deviceid = self.parameters["deviceId"]
         else:
-            self.deviceId = "__none__"    #TODO: generate uuid
-            
+            self.deviceid = "__none__"    #TODO: generate uuid
+        
+        # Initialize threading locks...
+        self._lock = threading.Lock()
+        self._stateChangeLock = threading.Lock()
+        self._stateDependentSchemaLock = threading.Lock()
+
         # Setup the validation classes
         rules = ValidatorValidationRules()
         rules.allowAdditionalKeys = False
@@ -116,12 +114,10 @@ class PythonDevice(object):
         self.log = Logger.getLogger(self._deviceId)
         
         # Instantiate connection
-        self._ss = SignalSlotable.create(self._deviceId, "Jms", configuration["connection.Jms"])
+        self._ss = SignalSlotable.create(self._deviceId, "Jms", self.parameters["connection.Jms"])
         
         # Initialize FSM
-        self.fsm = BaseFsm.create("StartStopFsm")
-        self.fsm.setupFsm()
-        self.fsm.initFsmSlots(self._ss)
+        self.initFsmSlots(self._ss)
         
         # Initialize Device slots
         self.initDeviceSlots()
@@ -176,17 +172,23 @@ class PythonDevice(object):
         self.set("state", currentState)
         self._ss.reply(currentState)
     
-    def processEvent(self, event):
-        if self.fsm is not None:
-            self.onStateUpdate("Changing...")
-            self.fsm.process_event(event)
-            self.onStateUpdate(self.fsm.get_state())
-    
+    def run(self):
+        self.classid = self.__class__.__classid__
+        self.staticSchema = getSchema(self.classid)
+        self.fullSchema = self.staticSchema
         
+        fullHostName = socket.gethostname()
+        self.hostName, dotsep, domainName = fullHostName.partition('.')
+        self.running = True
+        self.startFsm()
+        while self.running:
+            time.sleep(3)
             
+    def stopEventLoop(self):
+        self.running = False
+    
     def __del__(self):
         ''' PythonDevice destructor '''
-        self._decreaseInstanceCount()
         # Destroying device instance means finishing subprocess runnung a device instance.
         # Call exit for child processes (os._exit(...)) to shutdown properly a SignalSlotable object
         os._exit(0)   
@@ -196,136 +198,47 @@ class PythonDevice(object):
             self._client = DeviceClient()  # connectionType="Jms" config=Hash()
         return self._client
     
-    def postprocessing(self):
-        ''' Finalizing the building of a device instance '''
-        self._ss.emit("signalNewDeviceInstanceAvailable", self._devSrvInstId, self.getCurrentConfiguration())
-        
     def set(self, *args):
         """
         Updates the state of the device. This function automatically notifies any observers.
-        This function supports 2 args: key, value or 1 arg: hash
-        If 0 or more than 2 arguments, it does nothing
+        This function supports 3 args: key, value, timestamp or 2 arg: hash, timestamp
+        If 1 or more than 3 arguments, it does nothing
         """
         pars = tuple(args)
         with self._lock:
             # key, value args
-            if len(pars) == 2:
-                key, value = pars
-                try:
-                    if self._expectedMonitoredParameters.hasKey(key):
-                        self.checkWarningsAndAlarms(key,value)
-                        if type(value) is bool:
-                            self._monitoredParameters.setFromPathAsBool(key,value)
-                        else:
-                            self._monitoredParameters.setFromPath(key,value)
-                    elif self._expectedReconfigurableParameters.hasKey(key):
-                        if type(value) is bool:
-                            print 'PythonDevice.set as bool the key=', key, ' and value=', value
-                            self._reconfigurableParameters.setFromPathAsBool(key, value)
-                        else:
-                            self._reconfigurableParameters.setFromPath(key, value)
-                    elif self._expectedInitialParameters.hasKey(key):
-                        if type(value) is bool:
-                            self._initialParameters.setFromPathAsBool(key, value)
-                        else:
-                            self._initialParameters.setFromPath(key, value)
-                    else:
-                        self.log.WARN("Illegal trial to set parameter ({})"
-                            " which was not described in the expectedParameters section".format(key))
-                    config = Hash()
-                    if type(value) is bool:
-                        config.setAsBool(key,value)
-                    else:
-                        config.set(key,value)
-                    self._ss.emit("signalChanged", config, self._devInstId, self._classId)
-                except RuntimeError,e:
-                    self.log.ERROR("{}".format(e))
-                return
+            if len(pars) == 3:
+                key, value, timestamp = pars
+                pars = (Hash(key, value), timestamp,)
             
-            if len(pars) == 1:
+            if len(pars) == 2:
                 # hash arg
-                hash = args[0]
-                flat = hash.flatten()
-                for key in flat.keys():
-                    value = flat.getFromPath(key)
-                    if self._expectedMonitoredParameters.hasKey(key):
-                        self.checkWarningsAndAlarms(key, value)
-                        if type(value) == bool:
-                            self._monitoredParameters.setFromPathAsBool(key,value)
-                        else:                        
-                            self._monitoredParameters.setFromPath(key, value)
-                    elif self._expectedReconfigurableParameters.hasKey(key):
-                        if type(value) == bool:
-                            self._reconfigurableParameters.setFromPathAsBool(key, value)
-                        else:
-                            self._reconfigurableParameters.setFromPath(key, value)
-                    elif self._expectedInitialParameters.hasKey(key):
-                        if type(value) == bool:
-                            self._initialParameters.setFromPathAsBool(key, value)
-                        else:
-                            self._initialParameters.setFromPath(key, value)
-                    else:
-                        self.log.WARN("Illegal trial to set parameter ({})"
-                            " which was not described in the expectedParameters section".format(key))
-                self._ss.emit("signalChanged", flat.unflatten(), self._devInstId, self._classId)
+                hash, timestamp = pars
+                validated = Hash()
+                try:
+                    validated = self.validatorIntern.validate(self.fullSchema, hash)
+                except RuntimeError,e:
+                    raise RuntimeError,"Validation Exception: " + str(e)
+                if self.validatorIntern.hasParametersInWarnOrAlarm():
+                    warnings = self.validatorIntern.getParametersInWarnOrAlarm()
+                    for key in warnings:
+                        self.log.WARN(warnings[key]["message"])
+                        #TODO trigger warnOrAlarm
+                        
+                if not validated.empty():
+                    self.parameters += validated
+                    self._ss.emit("signalChanged", validated, self.getInstanceId(), self.classid)
 
     def get(self,key):
         with self._lock:
-            if self._monitoredParameters.hasFromPath(key):
-                return self._monitoredParameters.getFromPath(key)
-            elif self._reconfigurableParameters.hasFromPath(key):
-                return self._reconfigurableParameters.getFromPath(key)
-            elif self._initialParameters.hasFromPath(key):
-                return self._initialParameters.getFromPath(key)
-            else:
-                raise ParameterException("Illegal trial to get parameter (" + key + ") "
-                    "which was not described in the expectedParameters section")
-  
-    @classmethod
-    def getExpectedParameters(cls, at = AccessType(INIT|WRITE), state = ""):
-        """
-        Get expected parameters for given class and all its parents in inheritance hierarchy.
-        The resulting schema depends on given access type and current state
-        """
-        cls.inheritanceChain = inheritanceChain
-        schema = Schema()
-        schema.initParameterDescription(cls.__name__, at, state)
-        for cl in cls.inheritanceChain():
-            if hasattr(cl, 'expectedParameters'):
-                schema.addExternalSchema(cl.expectedParameters())
-        return schema
-
-    @classmethod
-    def getFullExpectedParameters(cls):
-        """Helper method to get all types of expected parameters"""
-        return cls.getExpectedParameters(AccessType(INIT|READ|WRITE))
-    
-    @classmethod
-    def getExpectedInitialParameters(cls):
-        """Get only writable parameters"""
-        return cls.getExpectedParameters(AccessType(INIT))
-    
-    @classmethod
-    def getExpectedMonitorableParameters(cls):
-        """Get only readable parameters"""
-        return cls.getExpectedParameters(AccessType(READ))
-    
-    @classmethod
-    def getExpectedReconfigurableParameters(cls):
-        """Get only writable parameters"""
-        return cls.getExpectedParameters(AccessType(WRITE))
-    
+            try:
+                return self.parameters[key]
+            except RuntimeError,e:
+                raise AttributeError,"Error while retrieving '" + key + "' from device"
+      
     def getFullSchema(self):
-        if not self._injectedExpectedParameters.empty():
-            schema = self.getFullExpectedParameters()
-            return schema.addExternalSchema(self._injectedExpectedParameters)
-        return self._allExpectedParameters
+        return self.fullSchema
         
-    def appendSchema(self, schema):
-        with self._stateChangeLock:
-            self._stateDependentSchema = dict()
-            self._injectedExpectedParameters.addExternalSchema(schema)
-    
     def _injectSchema(self, schema):
         with self._stateChangeLock:
             self._stateDependentSchema = dict()
@@ -340,33 +253,12 @@ class PythonDevice(object):
         self._ss.emit("signalSchemaUpdated", xsd, self._devInstId, self._classId)
         self.log.INFO("Schema updated")
     
-    @classmethod
-    def convertToXsd(cls, schema):
-        """Helper method to convert schema to XSD format"""
-        filename = "/tmp/" + cls.__name__ + ".xsd"
-        conf = Hash("TextFile.filename", filename, "TextFile.format.Xsd.indentation", -1)
-        out = WriterSchema.create(conf)
-        out.write(schema)
-        xsd = open(filename, 'r').read()
-        return xsd
-    
-    def getInitialParameters(self):
-        return self._initialParameters.flatten()
-    
-    def getReconfigurableParameters(self):
-        return self._reconfigurableParameters.flatten()
-    
-    def getMonitorableParameters(self):
-        return self._monitoredParameters.flatten()
-    
     def getCurrentConfiguration(self):
-        config = Hash()
-        config.update(self._initialParameters)
-        config.update(self._reconfigurableParameters)
-        config.update(self._monitoredParameters)
-        ret = Hash(self._classId, config)
-        return ret
+        return self.parameters
     
+    def getServerId(self):
+        return self.serverid
+        
     def reconfigure(self, instanceId, configuration):
         self._ss.call(instanceId, "slotReconfigure", configuration)
     
@@ -419,38 +311,20 @@ class PythonDevice(object):
                 self._stateDependentSchema[state].addExternalSchema(self._injectedExpectedParameters)
             return self._stateDependentSchema[state]
     
-    def _applyReconfiguration(self, user):
+    def _applyReconfiguration(self, reconfiguration):
         with self._stateChangeLock:
-            self._reconfigurableParameters.update(self._incomingValidatedReconfiguration)
-            self._ss.emit("signalChanged", self._incomingValidatedReconfiguration, self._devInstId, self._classId)
-            self._incomingValidatedReconfiguration.clear()
+            self.parameters += reconfiguration
+        self.log.DEBUG("After user interaction:\n{}".format(reconfiguration))
+        self._ss.emit("signalChanged", reconfiguration, self.deviceid, self.classid)
+        self.postReconfigure()
     
-        
-    @staticmethod
-    def parseCommandLine(args):
-        script, xmlfile = tuple(args)
-        input = InputHash.create("TextFile", Hash("filename", xmlfile))
-        hash = Hash()
-        input.read(hash)
-        return (hash["module"], hash["classId"], hash["configuration"],)
- 
-    #@staticmethod
-    #def create(modname, clsname, configuration):
-    #    module = __import__(modname)
-    #    userDeviceClass = getattr(module, clsname)
-    #    schema = userDeviceClass.getExpectedParameters()
-    #    schema.validate(configuration)
-    #    input = configuration.get(userDeviceClass.__name__)
-    #    device =  userDeviceClass(input)
-    #    device.postprocessing()
-    #    return device
+    def slotGetSchema(self, onlyCurrentState):
+        if onlyCurrentState:
+            currentState = self.get("state")
+            self._ss.reply(self._getStateDependentSchema(currentState))
+        else:
+            self._ss.reply(self._allExpectedParameters)
    
-    @abstractmethod
-    def run(self): pass
-
-    def stopEventLoop(self):
-        self.running = False
-    
     def onReconfigure(self, inputConfig): pass
 
     def onKill(self): pass
@@ -484,13 +358,6 @@ class PythonDevice(object):
         with cls.instanceCountLock:
             cls.instanceCountPerDeviceServer[self._devSrvInstId] -= 1
     
-    def slotGetSchema(self, onlyCurrentState):
-        if onlyCurrentState:
-            currentState = self.get("state")
-            self._ss.reply(self._getStateDependentSchema(currentState))
-        else:
-            self._ss.reply(self._allExpectedParameters)
-   
     def getCurrentDateTime(self):
         dt = datetime.datetime(1,1,1).today()
         return dt.isoformat(' ')
@@ -510,6 +377,14 @@ class PythonDevice(object):
             "signalAlarm", self.getCurrentDateTime(), alarmMessage,
             self._devInstId, priority)
 
+    @staticmethod
+    def parseCommandLine(args):
+        script, xmlfile = tuple(args)
+        input = InputHash.create("TextFile", Hash("filename", xmlfile))
+        hash = Hash()
+        input.read(hash)
+        return (hash["module"], hash["classId"], hash["configuration"],)
+ 
 def launchPythonDevice():
     modname, classid, configuration = PythonDevice.parseCommandLine(sys.argv)
     module = __import__(modname)

@@ -15,9 +15,12 @@ class BaseFsm(object):
     def expectedParameters(expected):
         pass
     
-    @abstractmethod
-    def setupFsm(self):
+    def __init__(self, *args, **kwargs):
+        super(BaseFsm, self).__init__()
         self.fsm = None
+    
+    def getFsm(self):
+        return self.fsm
     
     def initFsmSlots(self, sigslot):
         pass
@@ -40,6 +43,16 @@ class BaseFsm(object):
     
     def startFsm(self):
         """Start state machine"""
-        if self.fsm is not None:
-            self.fsm.start()
-            self.onStateUpdate(self.fsm.get_state())
+        fsm = self.getFsm()
+        if fsm is not None:
+            fsm.start()
+            self.onStateUpdate(fsm.get_state())
+    
+    def processEvent(self, event):
+        """Process input event, i.e. drive state machine to the next state."""
+        fsm = self.getFsm()
+        if fsm is not None:
+            self.onStateUpdate("Changing...")
+            fsm.process_event(event)
+            self.onStateUpdate(fsm.get_state())
+    

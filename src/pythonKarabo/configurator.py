@@ -18,6 +18,7 @@ class Configurator(object):
     def registerAsBaseClass(theClass):
         if theClass.__classid__ not in Configurator.registry:
             theClass.__base_classid__ = theClass.__classid__
+            theClass.__bases_classid__ = (theClass.__classid__,)
             Configurator.registry[theClass.__classid__] = {}
         Configurator.registry[theClass.__classid__][theClass.__classid__] = theClass  # self-registering
 
@@ -61,21 +62,25 @@ class Configurator(object):
             raise TypeError, "The first argument type '" + type(classid) + "' is not allowed. Must be a type or str."
         if classid not in self.baseRegistry:
             raise AttributeError,"Class Id '" + classid + "' not found in the base registry"
-        Derived = self.baseRegistry[classid]   # userclass -> Derived        
-        # generate list of classes in inheritance order from most derived to base
-        def inheritanceGenerator(c):
-            while c.__classid__ != c.__base_classid__:
-                yield c
-                c = c.__base__
-            else:
-                yield c
+        Derived = self.baseRegistry[classid]   # userclass -> Derived
+        # building list of classes in inheritance order from bases to the last derived
+        def inheritanceChain(c, bases_id, clist):
+            if not isinstance(c, type):
+                return
+            if c.__classid__ not in bases_id:
+                for x in c.__bases__:
+                    inheritanceChain(x, bases_id, clist)
+            if c not in clist:
+                clist.append(c)
+                
         clist = []
-        for c in inheritanceGenerator(Derived):
-            clist.insert(0,c) # base class will be the first!
+        inheritanceChain(Derived, Derived.__bases_classid__, clist)
+        # clist contains list of classes in inheritance order
         schema = Schema(classid, rules)
         for theClass in clist:
             try:
-                theClass.expectedParameters(schema) # fill schema in order from base to derived
+                if hasattr(theClass, "expectedParameters"):
+                    theClass.expectedParameters(schema) # fill schema in order from base to derived
             except AttributeError,e:
                 print "Exception while adding expected parameters for class %r: %r" % (theClass.__name__, e)
         return schema
