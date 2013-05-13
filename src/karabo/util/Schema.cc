@@ -142,7 +142,7 @@ namespace karabo {
 
 
         bool Schema::isCommand(const std::string& path) const {
-            if (this->isLeaf(path) && m_hash.getAttribute<int>(path, KARABO_SCHEMA_LEAF_TYPE) == COMMAND) return true;
+            if (this->isNode(path) && m_hash.getAttribute<string>(path, KARABO_SCHEMA_DISPLAY_TYPE) == "Slot") return true;
             else return false;
         }
 
