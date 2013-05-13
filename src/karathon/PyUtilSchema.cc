@@ -1085,6 +1085,10 @@ void exportPyUtilSchema() {
         s.def("hasAlarmLow", &Schema::hasAlarmLow);
 
         s.def("hasAlarmHigh", &Schema::hasAlarmHigh);
+        
+        s.def("hasDisplayedName", &Schema::hasDisplayedName);
+        
+        s.def("hasExpertLevel", &Schema::hasExpertLevel);
 
         //all other has .....
 
