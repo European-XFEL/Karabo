@@ -57,6 +57,7 @@ fi
 
 # karathon
 cd ../karathon
+make -j$NUM_CORES CONF=$CONF
 cp -rf $DISTDIR/$CONF/$PLATFORM/*.so $PACKAGEDIR/lib
 
 # deviceServer
