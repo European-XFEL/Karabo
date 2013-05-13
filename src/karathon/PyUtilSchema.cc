@@ -84,6 +84,14 @@ public:
     bp::object getValidationRules() {
         return bp::object(Validator::getValidationRules());
     }
+    
+    bp::object hasParametersInWarnOrAlarm() {
+        return bp::object(hasParametersInWarnOrAlarm());
+    }
+    
+    bp::object getParametersInWarnOrAlarm() {
+        return bp::object(getParametersInWarnOrAlarm());
+    }
 };
 
 struct NodeElementWrap {
@@ -1050,9 +1058,9 @@ void exportPyUtilSchema() {
 
         s.def("aliasHasKey", &schemawrap::aliasHasKey);
 
-        s.def("getAliasFromKey", &schemawrap::getAliasFromKey);
+        s.def("getAliasFromKey", &schemawrap::getAliasFromKey, (bp::arg("key"), bp::arg("referenceType")));
 
-        s.def("getKeyFromAlias", &schemawrap::getKeyFromAlias);
+        s.def("getKeyFromAlias", &schemawrap::getKeyFromAlias, (bp::arg("alias")));
 
         s.def("hasAccessMode", &Schema::hasAccessMode);
 
@@ -1299,6 +1307,8 @@ void exportPyUtilSchema() {
                 .def("validate", &ValidatorWrap::validate, (bp::arg("schema"), bp::arg("configuration")))
                 .def("setValidationRules", &ValidatorWrap::setValidationRules, (bp::arg("rules")))
                 .def("getValidationRules", &ValidatorWrap::getValidationRules)
+                .def("hasParametersInWarnOrAlarm", &ValidatorWrap::hasParametersInWarnOrAlarm)
+                .def("getParametersInWarnOrAlarm", &ValidatorWrap::getParametersInWarnOrAlarm)
                 ;
     }
 
