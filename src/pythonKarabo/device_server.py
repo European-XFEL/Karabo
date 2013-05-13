@@ -222,7 +222,7 @@ class DeviceServer(object):
                 self.log.WARN("scanPlugins: Cannot import module {} -- {}".format(name,e))
                 continue
             if "PythonDevice" not in dir(module):
-                raise ParameterException("Module '" + name + "' has no use of PythonDevice class")
+                raise IndexError,"Module '" + name + "' has no use of PythonDevice class"
                 continue
             candidates = [module.PythonDevice]
             for item in dir(module):
