@@ -148,7 +148,7 @@ namespace karabo {
             }
 
             Device(const karabo::util::Hash& configuration) {
-
+                
                 // Make the configuration the initial state of the device
                 m_parameters = configuration;
 
@@ -160,7 +160,7 @@ namespace karabo {
                 if (configuration.has("deviceId")) configuration.get("deviceId", m_deviceId);
                 else m_deviceId = "__none__"; // TODO generate uuid
                 
-                // Setup the validation classes
+                 // Setup the validation classes
                 karabo::util::Validator::ValidationRules rules;
                 rules.allowAdditionalKeys = false;
                 rules.allowMissingKeys = true;
@@ -170,7 +170,7 @@ namespace karabo {
                 m_validatorIntern.setValidationRules(rules);
                 rules.injectTimestamps = false;
                 m_validatorExtern.setValidationRules(rules);
-                
+
                 // Setup device logger
                 m_log = &(karabo::log::Logger::getLogger(m_deviceId)); // TODO use later: "device." + deviceId
                 
@@ -204,11 +204,11 @@ namespace karabo {
                 // Prepare some info further describing this particular instance
                 // status, visibility, owner
                 karabo::util::Hash info("type", "device", "classId", m_classId, "serverId", m_serverId, "visibility", this->get<std::vector<std::string> >("visibility"), "version", Device::classInfo().getVersion(), "host", boost::asio::ip::host_name());
-                
-                
                 boost::thread t(boost::bind(&karabo::core::Device<FSM>::runEventLoop, this, true, info));
                 this->startFsm();
                 KARABO_LOG_INFO << m_classId << " with deviceId: \"" << this->getInstanceId() << "\" got started";
+                // Emit full configuration first time
+                this->set(m_parameters);
                 t.join(); // Blocks 
             }
 
@@ -264,7 +264,7 @@ namespace karabo {
                 }
 
                 if (!validated.empty()) {
-                    m_parameters.merge(validated);
+                    m_parameters.merge(validated, karabo::util::Hash::REPLACE_ATTRIBUTES);
                     emit("signalChanged", validated, getInstanceId(), m_classId);
                 }
             }

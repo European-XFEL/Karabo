@@ -51,6 +51,11 @@ namespace karabo {
 
             typedef OrderedMap<std::string, Element<std::string> > Attributes;
             typedef Element<std::string, Attributes > Node;
+            
+            enum MergePolicy {
+                MERGE_ATTRIBUTES,
+                REPLACE_ATTRIBUTES
+            };
 
         private:
 
@@ -343,7 +348,7 @@ namespace karabo {
              * @param hash Another hash to be merged into current hash
              * @return A self-reference after the appending process (allows object chaining)
              */
-            void merge(const Hash&);
+            void merge(const Hash& other, const MergePolicy policy = REPLACE_ATTRIBUTES);
 
             /**
              * Flattens a hierarchical Hash into "one-level", <i>flat</i> Hash object 
@@ -393,6 +398,10 @@ namespace karabo {
             friend std::ostream& operator<<(std::ostream& os, const Hash& hash);
 
         private:
+            
+            void mergeAndMergeAttributes(const Hash& other);
+            
+            void mergeAndReplaceAttributes(const Hash& other);
 
             Hash* setNodesAsNeeded(const std::vector<std::string>& tokens, char seperator);
 

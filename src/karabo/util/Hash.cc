@@ -7,6 +7,7 @@
  */
 
 #include "Hash.hh"
+#include "Schema.hh"
 #include "ToLiteral.hh"
 
 namespace karabo {
@@ -307,32 +308,80 @@ namespace karabo {
         }
 
 
-        void Hash::merge(const Hash& other) {
-            if (!other.empty()) {
-                if (this->empty()) {
-                    *this = other;
-                    return;
-                }
+        void Hash::merge(const Hash& other, const Hash::MergePolicy policy) {
+            if (policy == MERGE_ATTRIBUTES) mergeAndMergeAttributes(other);
+            else if (policy == REPLACE_ATTRIBUTES) mergeAndReplaceAttributes(other);
+        }
 
-                for (Hash::const_iterator it = other.begin(); it != other.end(); ++it) {
-                    const Hash::Node& other_ele = *it;
-                    std::string key = other_ele.getKey();
 
-                    boost::optional<Hash::Node&> this_ele = this->find(key);
-                    if (this_ele) {
-                        if (this_ele->is<Hash > () && other_ele.is<Hash > ()) {
-                            this_ele->getValue<Hash > ().merge(other_ele.getValue<Hash > ());
-                            continue;
-                        }
-
-                        if (this_ele->is<vector<Hash> > () && other_ele.is<vector<Hash> > ()) {
-                            vector<Hash>& this_vec = this_ele->getValue<vector<Hash> > ();
-                            const vector<Hash>& other_vec = other_ele.getValue<vector<Hash> > ();
-                            this_vec.insert(this_vec.end(), other_vec.begin(), other_vec.end());
-                            continue;
-                        }
+        void Hash::mergeAndMergeAttributes(const Hash& other) {
+            if (this->empty() && !other.empty()) {
+                *this = other;
+                return;
+            }
+            for (Hash::const_iterator it = other.begin(); it != other.end(); ++it) {
+                const Hash::Node& otherNode = *it;
+                std::string key = otherNode.getKey();
+                boost::optional<Hash::Node&> thisNode = this->find(key);
+                if (thisNode) { // Key already exists
+                    // Always merge attributes
+                    const Hash::Attributes& attrs = otherNode.getAttributes();
+                    for (Hash::Attributes::const_iterator jt = attrs.begin(); jt != attrs.end(); ++jt) {
+                        thisNode->setAttribute(jt->getKey(), jt->getValueAsAny());
                     }
-                    this->m_container.set(key, other_ele.getValueAsAny());
+
+                    // Both nodes are Hash
+                    if (thisNode->is<Hash > () && otherNode.is<Hash > ()) {
+                        thisNode->getValue<Hash > ().mergeAndMergeAttributes(otherNode.getValue<Hash > ());
+                        continue;
+                    }
+
+                    // Both nodes are vector<Hash>
+                    if (thisNode->is<vector<Hash> > () && otherNode.is<vector<Hash> > ()) {
+                        vector<Hash>& this_vec = thisNode->getValue<vector<Hash> > ();
+                        const vector<Hash>& other_vec = otherNode.getValue<vector<Hash> > ();
+                        this_vec.insert(this_vec.end(), other_vec.begin(), other_vec.end());
+                        continue;
+                    }
+                    thisNode->setValue(otherNode.getValueAsAny());
+
+                } else { // Key does not exist
+                    this->setNode(otherNode);
+                }
+            }
+        }
+
+
+        void Hash::mergeAndReplaceAttributes(const Hash& other) {
+            if (this->empty() && !other.empty()) {
+                *this = other;
+                return;
+            }
+            for (Hash::const_iterator it = other.begin(); it != other.end(); ++it) {
+                const Hash::Node& otherNode = *it;
+                std::string key = otherNode.getKey();
+                boost::optional<Hash::Node&> thisNode = this->find(key);
+                if (thisNode) { // Key already exists
+                    // Always replace attributes
+                    const Hash::Attributes& attrs = otherNode.getAttributes();
+                    thisNode->setAttributes(attrs);
+                    // Both nodes are Hash
+                    if (thisNode->is<Hash > () && otherNode.is<Hash > ()) {
+                        thisNode->getValue<Hash > ().mergeAndReplaceAttributes(otherNode.getValue<Hash > ());
+                        continue;
+                    }
+
+                    // Both nodes are vector<Hash>
+                    if (thisNode->is<vector<Hash> > () && otherNode.is<vector<Hash> > ()) {
+                        vector<Hash>& this_vec = thisNode->getValue<vector<Hash> > ();
+                        const vector<Hash>& other_vec = otherNode.getValue<vector<Hash> > ();
+                        this_vec.insert(this_vec.end(), other_vec.begin(), other_vec.end());
+                        continue;
+                    }
+                    thisNode->setValue(otherNode.getValueAsAny());
+
+                } else { // Key does not exist
+                    this->setNode(otherNode);
                 }
             }
         }
@@ -449,6 +498,8 @@ namespace karabo {
                         os << fill << "[" << i << "]" << std::endl;
                         toStream(os, hashes[i], depth + 1);
                     }
+                } else if (type == Types::SCHEMA) {
+                    os << " => " << hit->getValue<Schema>() << std::endl;
                     // TODO Add pointer types
                 } else {
                     os << " => " << hit->getValueAs<string>() << " " << Types::to<ToLiteral>(type) << std::endl;

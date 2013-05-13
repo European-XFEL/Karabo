@@ -175,7 +175,7 @@ namespace karabo {
 
         void SignalSlotable::stopEventLoop() {
             m_ioService->stop();
-            call("*", "slotInstanceGone", m_instanceId);
+            call("*", "slotInstanceGone", m_instanceId, m_instanceInfo);
         }
         
         void SignalSlotable::setSenderInfo(const karabo::util::Hash& senderInfo) {
@@ -212,7 +212,7 @@ namespace karabo {
             call("*", "slotPing", m_instanceId, false);
             // The function slotPingAnswer will be called by all instances available now
             // Lets wait a fair amount of time - huaaah this is bad isn't it :-(
-            boost::this_thread::sleep(boost::posix_time::milliseconds(500));
+            boost::this_thread::sleep(boost::posix_time::milliseconds(1000));
             return m_availableInstances;
         }
 

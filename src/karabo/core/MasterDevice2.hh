@@ -41,25 +41,30 @@ namespace karabo {
              *      configuration => HASH
              *   
              */
-            karabo::util::Hash m_runtimeSystemDescription;
+            karabo::util::Hash m_runtimeSystemTopology;
             
-            boost::mutex m_runtimeSystemDescriptionMutex;
+            boost::mutex m_runtimeSystemTopologyMutex;
             
             
             /**
              * device +
-             *   <deviceId> @
-             *     [0]
-             *       description t0 = <timestamp> @
+             *   <deviceId> +
+             *     description t0 = <timestamp> @
+             *       [0]
+             *         val t="<timestamp>" => SCHEMA
+             *     configuration t0 = <timestamp> +
+             *       <key> @
              *         [0]
-             *           val t="<timestamp>" => SCHEMA
-             *       configuration t0 = <timestamp> +
-             *         <key> @
-             *           [0]
-             *             val t="<timestamp>" => VALUE
+             *           val t="<timestamp>" => VALUE
              *          
              */
             karabo::util::Hash m_systemArchive;
+            
+            boost::mutex m_systemArchiveMutex;
+            
+            bool m_persistData;
+            
+            boost::thread m_persistDataThread;
             
         public:
 
@@ -74,13 +79,30 @@ namespace karabo {
 
         private: // Functions
             
+            void okStateOnEntry();
+            
             void setupSlots();
             
             void cacheAvailableInstances();
             
-            void cacheAvailableContent();
-           
-                        
+            void handleInstanceUpdateForSystemTopology(const std::string& instanceId, const karabo::util::Hash& instanceInfo);
+            
+            void handleDeviceInstanceUpdateForSystemArchive(const std::string& deviceId);
+            
+            void handleInstanceGoneForSystemTopology(const std::string& instanceId, const karabo::util::Hash& instanceInfo);
+            
+            void handleDeviceInstanceGoneForSystemArchive(const std::string& deviceId);
+            
+            void slotInstanceUpdated(const std::string& instanceId, const karabo::util::Hash& instanceInfo);
+            
+            void slotInstanceGone(const std::string& instanceId, const karabo::util::Hash& instanceInfo);
+            
+            void instanceNotAvailable(const std::string& instanceId);
+            
+            void slotChanged(const karabo::util::Hash& changedConfig, const std::string& deviceId);
+            
+            void persistDataThread();
+            
         };
     }
 }

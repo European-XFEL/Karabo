@@ -136,14 +136,14 @@ namespace karabo {
              * Retrieves all device servers currently existing in the distributed system
              * @return array of device server ids
              */
-            std::vector<std::string> getDeviceServers();
+            std::vector<std::string> getServers();
 
             /**
              * Retrieves all device classes (plugins) available on a given device server
              * @param deviceServer device server id
              * @return array of device classes
              */
-            std::vector<std::string> getDeviceClasses(const std::string& deviceServer);
+            std::vector<std::string> getClasses(const std::string& deviceServer);
 
             std::vector<std::string> getDevices(const std::string& deviceServer);
 
@@ -405,6 +405,8 @@ namespace karabo {
             void castAndCall(const std::string& instanceId, const karabo::util::Hash& registered, const karabo::util::Hash& current, std::string path = "") const;
 
             virtual void clearCacheAndDisconnect(const std::string& instanceId);
+            
+            void extractCommands(const karabo::util::Schema& schema, const std::string& parentKey, std::vector<std::string>& commands);
 
 
 

@@ -102,7 +102,7 @@ namespace karabo {
                     tmp.erase(instanceId);
                     KARABO_LOG_FRAMEWORK_INFO << "Instance \"" << instanceId << "\" is gone.";
                     KARABO_LOG_FRAMEWORK_DEBUG << "slotInstanceGone() was called, runtimeSystemDescription looks like:";
-                    KARABO_LOG_FRAMEWORK_DEBUG << m_runtimeSystemDescription;        
+                    KARABO_LOG_FRAMEWORK_DEBUG << m_runtimeSystemDescription;
                     break;
                 }
             }
@@ -139,7 +139,7 @@ namespace karabo {
         }
 
 
-        std::vector<std::string> DeviceClient::getDeviceServers() {
+        std::vector<std::string> DeviceClient::getServers() {
             boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
             if (m_runtimeSystemDescription.has("server")) {
                 const Hash& tmp = m_runtimeSystemDescription.get<Hash>("server");
@@ -156,7 +156,7 @@ namespace karabo {
         }
 
 
-        std::vector<std::string> DeviceClient::getDeviceClasses(const std::string& deviceServer) {
+        std::vector<std::string> DeviceClient::getClasses(const std::string& deviceServer) {
             boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
             if (!m_runtimeSystemDescription.has("server." + deviceServer)) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Requested device server \"" << deviceServer << "\" does not exist.";
@@ -271,16 +271,23 @@ namespace karabo {
 
         std::vector<std::string> DeviceClient::getCurrentlyExecutableCommands(const std::string& instanceId) {
             Schema schema = cacheAndGetActiveSchema(instanceId);
-            vector<string> paths = schema.getPaths();
             vector<string> commands;
+            extractCommands(schema, "", commands);
+            return commands;
+        }
 
 
-            BOOST_FOREACH(std::string path, paths) {
-                if (schema.isCommand(path)) {
-                    commands.push_back(path);
+        void DeviceClient::extractCommands(const karabo::util::Schema& schema, const std::string& parentKey, std::vector<std::string>& commands) {
+            vector<string> keys = schema.getKeys(parentKey);
+
+
+            BOOST_FOREACH(std::string key, keys) {
+                if (schema.isCommand(key)) {
+                    commands.push_back(key);
+                } else if (!schema.isLeaf(key)) {
+                    extractCommands(schema, key, commands);
                 }
             }
-            return commands;
         }
 
 
@@ -384,7 +391,7 @@ namespace karabo {
                     return Hash();
                 }
                 // Keep up to date from now on
-                m_signalSlotable->connectR(instanceId, "signalChanged", "", "slotChanged");
+                m_signalSlotable->connectN(instanceId, "signalChanged", "", "slotChanged");
                 return m_runtimeSystemDescription.set(path, hash).getValue<Hash>();
             } else {
                 refreshInstanceUsage(instanceId); // Keep cache for longer
