@@ -1,0 +1,471 @@
+#############################################################################
+# Author: <kerstin.weger@xfel.eu>
+# Created on February 1, 2012
+# Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
+#############################################################################
+
+
+"""This module contains a class which represents the custom view panel in the middle
+   of the MainWindow which is un/dockable.
+   
+   As a dockable widget class used in DivWidget, it needs the following interfaces
+   implemented:
+   
+    def setupActions(self):
+        pass
+    def setupToolBar(self, toolBar):
+        pass
+    def onUndock(self):
+        pass
+    def onDock(self):
+        pass
+"""
+
+__all__ = ["CustomMiddlePanel"]
+
+
+from customwidget import CustomWidget
+
+from PyQt4.QtCore import *
+from PyQt4.QtGui import *
+
+
+class CustomMiddlePanel(QWidget):
+
+    def __init__(self):
+        super(CustomMiddlePanel, self).__init__()
+
+        self.__customWidget = CustomWidget(self)
+        self.__customWidget.lineInserted.connect(self.onLineInserted)
+        self.__customWidget.rectInserted.connect(self.onRectInserted)
+        self.__customWidget.sceneSelectionChanged.connect(self.updateActions)
+        
+        mainLayout = QVBoxLayout(self)
+        mainLayout.setContentsMargins(3,3,3,3)
+        mainLayout.addWidget(self.__customWidget)
+        
+        self.setupActions()
+        self.updateActions()
+
+
+    def setupActions(self):
+        text = "Change to control mode"
+        self.__acDesignMode = QAction(QIcon(":transform"), text, self)
+        self.__acDesignMode.setToolTip(text)
+        self.__acDesignMode.setStatusTip(text)
+        self.__acDesignMode.setCheckable(True)
+        self.__acDesignMode.setChecked(True)
+        self.__acDesignMode.toggled.connect(self.onDesignModeChanged)
+       
+        text = "Open"
+        self.__tbOpen = QToolButton(self)
+        self.__tbOpen.setIcon(QIcon(":open"))
+        self.__tbOpen.setToolTip(text)
+        self.__tbOpen.setStatusTip(text)
+        self.__tbOpen.setPopupMode(QToolButton.InstantPopup)
+        
+        text = "Open layout"
+        self.__acOpenLayout = QAction(QIcon(":open"), text, self)
+        self.__acOpenLayout.setStatusTip(text)
+        self.__acOpenLayout.setToolTip(text)
+        self.__acOpenLayout.triggered.connect(self.onOpenLayout)
+        
+        text = "Open configurations"
+        self.__acOpenConfigurations = QAction(QIcon(":open"), text, self)
+        self.__acOpenConfigurations.setStatusTip(text)
+        self.__acOpenConfigurations.setToolTip(text)
+        self.__acOpenConfigurations.setEnabled(False)
+        self.__acOpenConfigurations.triggered.connect(self.onOpenConfigurations)
+        
+        text = "Open layout and configurations"
+        self.__acOpenLayoutConfigurations = QAction(QIcon(":open"), text, self)
+        self.__acOpenLayoutConfigurations.setStatusTip(text)
+        self.__acOpenLayoutConfigurations.setToolTip(text)
+        self.__acOpenLayoutConfigurations.triggered.connect(self.onOpenLayoutConfigurations)
+        
+        self.__mOpen = QMenu()
+        self.__mOpen.addAction(self.__acOpenLayout)
+        self.__mOpen.addAction(self.__acOpenConfigurations)
+        self.__mOpen.addAction(self.__acOpenLayoutConfigurations)
+        self.__tbOpen.setMenu(self.__mOpen)
+
+        text = "Save as"
+        self.__tbSaveAs = QToolButton(self)
+        self.__tbSaveAs.setIcon(QIcon(":save-as"))
+        self.__tbSaveAs.setToolTip(text)
+        self.__tbSaveAs.setStatusTip(text)
+        self.__tbSaveAs.setPopupMode(QToolButton.InstantPopup)
+        
+        text = "Save layout as"
+        self.__acLayoutSaveAs = QAction(QIcon(":save-as"), text, self)
+        self.__acLayoutSaveAs.setStatusTip(text)
+        self.__acLayoutSaveAs.setToolTip(text)
+        self.__acLayoutSaveAs.triggered.connect(self.onSaveAsLayout)
+        
+        text = "Save configurations as"
+        self.__acConfigurationsSaveAs = QAction(QIcon(":save-as"), text, self)
+        self.__acConfigurationsSaveAs.setStatusTip(text)
+        self.__acConfigurationsSaveAs.setToolTip(text)
+        self.__acConfigurationsSaveAs.triggered.connect(self.onSaveAsConfigurations)
+        
+        text = "Save layout and configurations as"
+        self.__acLayoutConfigurationsSaveAs = QAction(QIcon(":save-as"), text, self)
+        self.__acLayoutConfigurationsSaveAs.setStatusTip(text)
+        self.__acLayoutConfigurationsSaveAs.setToolTip(text)
+        self.__acLayoutConfigurationsSaveAs.triggered.connect(self.onSaveAsLayoutConfigurations)
+        
+        self.__mSaveAs = QMenu()
+        self.__mSaveAs.addAction(self.__acLayoutSaveAs)
+        self.__mSaveAs.addAction(self.__acConfigurationsSaveAs)
+        self.__mSaveAs.addAction(self.__acLayoutConfigurationsSaveAs)
+        self.__tbSaveAs.setMenu(self.__mSaveAs)
+
+        #text = "Add shape"
+        #self.__tbAddShape = QToolButton(self)
+        #self.__tbAddShape.setIcon(QIcon(":shape"))
+        #self.__tbAddShape.setToolTip(text)
+        #self.__tbAddShape.setStatusTip(text)
+        #self.__tbAddShape.setPopupMode(QToolButton.InstantPopup)
+        
+        text = "Add text"
+        self.__acAddText = QAction(QIcon(":text"), text, self)
+        #self.__acAddText.setCheckable(True)
+        #self.__acAddText.setChecked(False)
+        self.__acAddText.setStatusTip(text)
+        self.__acAddText.setToolTip(text)
+        self.__acAddText.triggered.connect(self.onAddText)
+        
+        text = "Add line"
+        self.__acAddLine = QAction(QIcon(":line"), text, self)
+        self.__acAddLine.setCheckable(True)
+        self.__acAddLine.setChecked(False)
+        self.__acAddLine.setStatusTip(text)
+        self.__acAddLine.setToolTip(text)
+        self.__acAddLine.toggled.connect(self.onAddLine)
+        
+        text = "Add rectangle"
+        self.__acAddRect = QAction(QIcon(":rect"), text, self)
+        self.__acAddRect.setCheckable(True)
+        self.__acAddRect.setChecked(False)
+        self.__acAddRect.setStatusTip(text)
+        self.__acAddRect.setToolTip(text)
+        self.__acAddRect.toggled.connect(self.onAddRect)
+        
+        #self.__mAddShape = QMenu()
+        #self.__mAddShape.addAction(self.__acAddText)
+        #self.__mAddShape.addAction(self.__acAddLine)
+        #self.__mAddShape.addAction(self.__acAddRect)
+        #self.__tbAddShape.setMenu(self.__mAddShape)
+        
+        text = "Connect two nodes"
+        self.__acAddLink = QAction(QIcon(":link"), text, self)
+        self.__acAddLink.setStatusTip(text)
+        self.__acAddLink.setToolTip(text)
+        self.__acAddLink.triggered.connect(self.onAddLink)
+        
+        # TODO: temporary removed, because works not properly..
+        #text = "Add arrow link"
+        #self.__acAddArrow = QAction(QIcon(":arrow"), text, self)
+        #self.__acAddArrow.setStatusTip(text)
+        #self.__acAddArrow.setToolTip(text)
+        #self.__acAddArrow.triggered.connect(self.onAddArrowLink)
+        
+        text = "Cut"
+        self.__acCut = QAction(QIcon(":edit-cut"), text, self)
+        self.__acCut.setStatusTip(text)
+        self.__acCut.setToolTip(text)
+        self.__acCut.triggered.connect(self.onCut)
+        
+        text = "Copy"
+        self.__acCopy = QAction(QIcon(":edit-copy"), text, self)
+        self.__acCopy.setStatusTip(text)
+        self.__acCopy.setToolTip(text)
+        self.__acCopy.triggered.connect(self.onCopy)
+        
+        text = "Paste"
+        self.__acPaste = QAction(QIcon(":edit-paste"), text, self)
+        self.__acPaste.setStatusTip(text)
+        self.__acPaste.setToolTip(text)
+        self.__acPaste.triggered.connect(self.onPaste)
+        
+        text = "Remove"
+        self.__acRemove = QAction(QIcon(":edit-remove"), text, self)
+        self.__acRemove.setStatusTip(text)
+        self.__acRemove.setToolTip(text)
+        self.__acRemove.triggered.connect(self.onRemove)
+        
+        text = "Rotate"
+        self.__acRotate = QAction(QIcon(":transform-rotate"), text, self)
+        self.__acRotate.setStatusTip(text)
+        self.__acRotate.setToolTip(text)
+        self.__acRotate.triggered.connect(self.onRotate)
+        text = "Scale"
+        self.__acScale = QAction(QIcon(":transform-scale"), text, self)
+        self.__acScale.setStatusTip(text)
+        self.__acScale.setToolTip(text)
+        self.__acScale.triggered.connect(self.onScale)
+        
+        text = "Group"
+        self.__tbGroup = QToolButton(self)
+        self.__tbGroup.setIcon(QIcon(":group"))
+        self.__tbGroup.setToolTip(text)
+        self.__tbGroup.setStatusTip(text)
+        self.__tbGroup.setPopupMode(QToolButton.InstantPopup)
+        
+        text = "Group selected items"
+        self.__acGroupItems = QAction(QIcon(":group"), text, self)
+        self.__acGroupItems.setStatusTip(text)
+        self.__acGroupItems.setToolTip(text)
+        self.__acGroupItems.triggered.connect(self.onGroupItems)
+        
+        text = "Horizontal layout"
+        self.__acHLayout = QAction(text, self)
+        self.__acHLayout.setStatusTip(text)
+        self.__acHLayout.setToolTip(text)
+        self.__acHLayout.triggered.connect(self.onHorizontalLayout)
+        
+        text = "Vertical layout"
+        self.__acVLayout = QAction(text, self)
+        self.__acVLayout.setStatusTip(text)
+        self.__acVLayout.setToolTip(text)
+        self.__acVLayout.triggered.connect(self.onVerticalLayout)
+        
+        text = "Break layout"
+        self.__acBreakLayout = QAction(text, self)
+        self.__acBreakLayout.setStatusTip(text)
+        self.__acBreakLayout.setToolTip(text)
+        self.__acBreakLayout.triggered.connect(self.onBreakLayout)
+        
+        self.__mGroupInLayout = QMenu("Group selected items in")
+        self.__mGroupInLayout.addAction(self.__acHLayout)
+        self.__mGroupInLayout.addAction(self.__acVLayout)
+        self.__mGroupInLayout.addSeparator()
+        self.__mGroupInLayout.addAction(self.__acBreakLayout)
+        
+        text = "Ungroup selected items"
+        self.__acUnGroupItems = QAction(QIcon(":ungroup"), text, self)
+        self.__acUnGroupItems.setStatusTip(text)
+        self.__acUnGroupItems.setToolTip(text)
+        self.__acUnGroupItems.triggered.connect(self.onUnGroupItems)
+        
+        self.__mGroup = QMenu()
+        self.__mGroup.addAction(self.__acGroupItems)
+        self.__mGroup.addMenu(self.__mGroupInLayout)
+        self.__mGroup.addAction(self.__acUnGroupItems)
+        self.__tbGroup.setMenu(self.__mGroup)
+        
+        text = "Bring to front"
+        self.__acBringToFront = QAction(QIcon(":bringtofront"), text, self)
+        self.__acBringToFront.setStatusTip(text)
+        self.__acBringToFront.setToolTip(text)
+        self.__acBringToFront.triggered.connect(self.onBringToFront)
+        text = "Send to back"
+        self.__acSendToBack = QAction(QIcon(":sendtoback"), text, self)
+        self.__acSendToBack.setStatusTip(text)
+        self.__acSendToBack.setToolTip(text)
+        self.__acSendToBack.triggered.connect(self.onSendToBack)
+
+
+    def setupToolBar(self, toolBar):
+        toolBar.addAction(self.__acDesignMode)
+        
+        toolBar.addSeparator()
+        toolBar.addWidget(self.__tbOpen)
+        toolBar.addWidget(self.__tbSaveAs)
+        
+        toolBar.addSeparator()
+        #toolBar.addWidget(self.__tbAddShape)
+        toolBar.addAction(self.__acAddText)
+        toolBar.addAction(self.__acAddLine)
+        toolBar.addAction(self.__acAddRect)
+        
+        toolBar.addSeparator()
+        toolBar.addAction(self.__acAddLink)
+        #toolBar.addAction(self.__acAddArrow)
+        
+        toolBar.addSeparator()
+        toolBar.addAction(self.__acCut)
+        toolBar.addAction(self.__acCopy)
+        toolBar.addAction(self.__acPaste)
+        toolBar.addAction(self.__acRemove)
+        
+        toolBar.addSeparator()
+        toolBar.addAction(self.__acRotate)
+        toolBar.addAction(self.__acScale)
+        
+        toolBar.addSeparator()
+        toolBar.addWidget(self.__tbGroup)
+        
+        toolBar.addSeparator()
+        toolBar.addAction(self.__acBringToFront)
+        toolBar.addAction(self.__acSendToBack)
+
+
+    # Depending on the (non-)selected items the actions are enabled/disabled
+    def updateActions(self):
+        hasSelection = len(self.__customWidget.selectedItems()) > 0
+        isLink = self.__customWidget.selectedLinks() is not None
+        isItemPair = self.__customWidget.selectedItemPair() is not None
+        isItemGroup = self.__customWidget.selectedItemGroup() is not None
+        
+        if hasSelection:
+            self.__acAddLink.setDisabled(not isItemPair)
+            #self.__acAddArrow.setDisabled(not isItemPair)
+            
+            self.__acCut.setDisabled(isLink)
+            self.__acCopy.setDisabled(isLink)
+
+            self.__acRotate.setDisabled(isLink)
+            self.__acScale.setDisabled(isLink)
+
+            self.__acBringToFront.setDisabled(isLink)
+            self.__acSendToBack.setDisabled(isLink)
+        else:
+            self.__acAddLink.setDisabled(True)
+            #self.__acAddArrow.setDisabled(True)
+            
+            self.__acCut.setDisabled(True)
+            self.__acCopy.setDisabled(True)
+
+            self.__acRotate.setDisabled(True)
+            self.__acScale.setDisabled(True)
+
+            self.__acBringToFront.setDisabled(True)
+            self.__acSendToBack.setDisabled(True)
+        
+        self.__acPaste.setDisabled(not self.__customWidget.hasCopy())
+        self.__acRemove.setDisabled(not hasSelection)
+        
+        self.__tbGroup.setDisabled(not isItemGroup and len(self.__customWidget.selectedItems()) < 2)
+        self.__acGroupItems.setDisabled(isItemGroup)
+        self.__mGroupInLayout.setDisabled(isItemGroup)
+        self.__acUnGroupItems.setDisabled(not isItemGroup)
+
+
+    def onLineInserted(self):
+        self.__acAddLine.setChecked(False)
+
+
+    def onRectInserted(self):
+        self.__acAddRect.setChecked(False)
+
+
+### slots ###
+    def onDesignModeChanged(self, isChecked):
+        if isChecked:
+            text = "Change to control mode"
+        else:
+            text = "Change to design mode"
+        
+        self.__acDesignMode.setToolTip(text)
+        self.__acDesignMode.setStatusTip(text)
+        self.__customWidget.setDesignMode(isChecked)
+
+
+    def onOpenLayout(self):
+        self.__customWidget.openSceneLayout()
+
+
+    def onOpenConfigurations(self):
+        self.__customWidget.openSceneConfigurations()
+
+
+    def onOpenLayoutConfigurations(self):
+        self.__customWidget.openSceneLayoutConfigurations()
+
+
+    def onSaveAsLayout(self):
+        self.__customWidget.saveSceneAsLayout()
+
+
+    def onSaveAsConfigurations(self):
+        self.__customWidget.saveSceneAsConfigurations()
+
+
+    def onSaveAsLayoutConfigurations(self):
+        self.__customWidget.saveSceneAsLayoutConfigurations()
+
+
+    def onAddText(self):
+        self.__customWidget.addText()
+
+
+    def onAddLine(self, checked):
+        self.__customWidget.aboutToInsertLine(checked)
+
+
+    def onAddRect(self, checked):
+        self.__customWidget.aboutToInsertRect(checked)
+
+
+    def onAddLink(self):
+        self.__customWidget.addLink()
+
+    
+    def onAddArrowLink(self):
+        self.__customWidget.addArrowLink()
+
+
+    def onCut(self):
+        self.__customWidget.cut()
+        self.updateActions()
+
+
+    def onCopy(self):
+        self.__customWidget.copy()
+        self.updateActions()
+
+
+    def onPaste(self):
+        self.__customWidget.paste()
+
+
+    def onRemove(self):
+        self.__customWidget.remove()
+        
+
+    def onRotate(self):
+        self.__customWidget.rotate()
+
+
+    def onScale(self):
+        self.__customWidget.scale()
+
+
+    def onGroupItems(self):
+        self.__customWidget.groupItems()
+
+
+    def onHorizontalLayout(self):
+        self.__customWidget.horizontalLayout()
+
+
+    def onVerticalLayout(self):
+        self.__customWidget.verticalLayout()
+
+
+    def onBreakLayout(self):
+        self.__customWidget.breakLayout()
+
+
+    def onUnGroupItems(self):
+        self.__customWidget.unGroupItems()
+
+
+    def onBringToFront(self):
+        self.__customWidget.bringToFront()
+
+    
+    def onSendToBack(self):
+        self.__customWidget.sendToBack()
+
+
+    # virtual function
+    def onUndock(self):
+        pass
+
+
+    # virtual function
+    def onDock(self):
+        pass
+
