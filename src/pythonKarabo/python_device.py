@@ -91,7 +91,8 @@ class PythonDevice(PythonBaseDevice, BaseFsm):
         self._lock = threading.Lock()
         self._stateChangeLock = threading.Lock()
         self._stateDependentSchemaLock = threading.Lock()
-
+        self._stateDependentSchema = {}
+        
         # Setup the validation classes
         rules = ValidatorValidationRules()
         rules.allowAdditionalKeys = False
@@ -108,74 +109,26 @@ class PythonDevice(PythonBaseDevice, BaseFsm):
         self.validatorExtern.setValidationRules(rules)
         
         # Setup device logger
-        logging_config = Hash("categories[0]", Hash("Category.name", self._deviceId, "Category.priority", "DEBUG"),
+        logging_config = Hash("categories[0]", Hash("Category.name", self.deviceid, "Category.priority", "DEBUG"),
                     "appenders[0].Ostream.layout", "Pattern")
         Logger.configure(logging_config)
-        self.log = Logger.getLogger(self._deviceId)
+        self.log = Logger.getLogger(self.deviceid)
         
         # Instantiate connection
-        self._ss = SignalSlotable.create(self._deviceId, "Jms", self.parameters["connection.Jms"])
+        self._ss = SignalSlotable.create(self.deviceid, "Jms", self.parameters["connection.Jms"])
         
         # Initialize FSM
         self.initFsmSlots(self._ss)
         
         # Initialize Device slots
-        self.initDeviceSlots()
-        
-    def initDeviceSlots(self):
-        #-------------------------------------------- register intrinsic signals
-        self._ss.registerSignal("signalChanged", Hash, str, str)                # changeHash, instanceId, classId
-        self._ss.connect("", "signalChanged", "*", "slotChanged", ConnectionType.NO_TRACK, False)
-        
-        self._ss.registerSignal("signalErrorFound", str, str, str, str)         # timeStamp, shortMsg, longMsg, instanceId
-        self._ss.connect("", "signalErrorFound", "*", "slotErrorFound", ConnectionType.NO_TRACK, False)
-        
-        self._ss.registerSignal("signalBadReconfiguration", str, str)           # shortMsg, instanceId
-        self._ss.connect("", "signalBadReconfiguration", "*", "slotBadReconfiguration", ConnectionType.NO_TRACK, False)        
-        
-        self._ss.registerSignal("signalNoTransition", str, str)                 # 
-        self._ss.connect("", "signalNoTransition", "*", "slotNoTransition", ConnectionType.NO_TRACK, False)        
-        
-        self._ss.registerSignal("signalWarningOrAlarm", str, str, str, str)     # timeStamp, warnMsg, instanceId, priority
-        self._ss.registerSignal("signalWarning", str, str, str, str)            # timeStamp, warnMsg, instanceId, priority
-        self._ss.connect("", "signalWarning", "*", "slotWarning", ConnectionType.NO_TRACK, False)
-        
-        self._ss.registerSignal("signalAlarm", str, str, str, str)              # timeStamp, alarmMsg, instanceId, priority
-        self._ss.connect("", "signalAlarm", "*", "slotAlarm", ConnectionType.NO_TRACK, False)
-        
-        self._ss.registerSignal("signalSchemaUpdated", str, str, str)           # schema, instanceId, classId
-        self._ss.connect("", "signalSchemaUpdated", "*", "slotSchemaUpdated", ConnectionType.NO_TRACK, False)
-
-        # TODO Deprecate!
-        self._ss.registerSignal("signalDeviceInstanceGone", str, str)           # DeviceServerInstanceId, deviceInstanceId
-        self._ss.connect("", "signalDeviceInstanceGone", "*", "slotDeviceInstanceGone", ConnectionType.NO_TRACK, False)
-        
-        self._ss.registerSignal("signalProgressUpdated", int, str, str)         # Progress value [0,100], label, deviceInstanceId
-        self._ss.connect("", "signalProgressUpdated", "*", "slotProgressUpdated", ConnectionType.NO_TRACK, False)
-        
-        #---------------------------------------------- register intrinsic slots
-        self._ss.registerSlot(self.slotReconfigure, Hash)
-        self._ss.registerSlot(self.slotRefresh)
-        self._ss.registerSlot(self.slotGetSchema, bool)
-        self._ss.registerSlot(self.slotKillDeviceInstance)
+        self._initDeviceSlots()
         
     def errorFound(self, shortMessage, detailedMessage):
         pass
     
-    def errorFoundAction(self, shortMessage, detailedMessage):
-        self.triggerErrorFound(shortMessage, detailedMessage)
-    
-    def noStateTransition(self):
-        self._ss.emit("signalNoTransition", "No transition possible", self._deviceId)
-        
-    def onStateUpdate(self, currentState):
-        self.set("state", currentState)
-        self._ss.reply(currentState)
-    
     def run(self):
-        self.classid = self.__class__.__classid__
-        self.staticSchema = getSchema(self.classid)
-        self.fullSchema = self.staticSchema
+        self.initClassId()
+        self.initSchema()
         
         fullHostName = socket.gethostname()
         self.hostName, dotsep, domainName = fullHostName.partition('.')
@@ -239,77 +192,156 @@ class PythonDevice(PythonBaseDevice, BaseFsm):
     def getFullSchema(self):
         return self.fullSchema
         
-    def _injectSchema(self, schema):
-        with self._stateChangeLock:
-            self._stateDependentSchema = dict()
-            self._injectedExpectedParameters = schema
-   
     def updateSchema(self, schema):
         print "Update Schema requested"
         self._injectSchema(schema)
         print "Injected..."
         xsd = self.__class__.convertToXsd(self.getFullSchema())
         print "Serialized..."
-        self._ss.emit("signalSchemaUpdated", xsd, self._devInstId, self._classId)
+        self._ss.emit("signalSchemaUpdated", xsd, self.deviceid, self.classid)
         self.log.INFO("Schema updated")
+    
+    def setProgress(self, value, associatedText = ""):
+        v = self.progressMin + value / (self.progressMax - self.progressMin)
+        self._ss.emit("signalProgressUpdated", v, associatedText, self.deviceid)
+    
+    def resetProgress(self):
+        self._ss.emit("signalProgressUpdated", self.progressMin, "")
+    
+    def setProgressRange(self, minimum, maximum):
+        self.progressMin, self.progressMax = minimum, maximum
+    
+    def getAliasFromKey(self, key, aliasReferenceType):
+        try:
+            return self.fullSchema.getAliasFromKey(key, aliasReferenceType)
+        except RuntimeError,e:
+            raise AttributeError,"Error while retrieving alias from parameter (" + key + "): " + str(e)
+        
+    def key2alias(self, key, aliasReferenceType):
+        return self.getAliasFromKey(key, aliasReferenceType)
+    
+    def getKeyFromAlias(self, alias):
+        try:
+            return self.fullSchema.getKeyFromAlias(alias)
+        except RuntimeError,e:
+            raise AttributeError,"Error while retrieving parameter from alias (" + str(alias) + "): " + str(e)
+    
+    def alias2key(self, alias):
+        return self.getKeyFromAlias(alias)
+    
+    def aliasHasKey(self, alias):
+        return self.fullSchema.aliasHasKey(key)
+    
+    def keyHasAlias(self, key):
+        return self.fullSchema.keyHasAlias(key)
+        
+    def getValueType(self, key):
+        return self.fullSchema.getValueType(key)
     
     def getCurrentConfiguration(self):
         return self.parameters
     
     def getServerId(self):
         return self.serverid
-        
-    def reconfigure(self, instanceId, configuration):
-        self._ss.call(instanceId, "slotReconfigure", configuration)
+
+    # In C++: the following functions are protected
     
-    def slotKillDeviceInstance(self):
-        self.log.INFO("Device is going down...")
-        self.onKill()
-        self._ss.emit("signalDeviceInstanceGone", self._devSrvInstId, self._devInstId)
-        self.stopEventLoop()
-        self.log.INFO("dead.")
-   
+    def errorFoundAction(self, shortMessage, detailedMessage):
+        pass
+    
+    def preReconfigure(self, incomingReconfiguration):
+        pass
+    
+    def postReconfigure(self):
+        pass
+    
+    def preDestruction(self):
+        pass
+    
+    # In C++: the following functions are private...
+    
+    def initClassId(self):
+        self.classid = self.__class__.__classid__
+    
+    def initSchema(self):
+        self.staticSchema = getSchema(self.classid)
+        self.fullSchema = self.staticSchema
+        
+    def onStateUpdate(self, currentState):
+        self.log.DEBUG("onStateUpdate: {}".format(currentState))
+        self.set("state", currentState)
+        self._ss.reply(currentState)
+    
+    def noStateTransition(self):
+        self._ss.emit("signalNoTransition", "No transition possible", self.deviceid)
+        
+    def _initDeviceSlots(self):
+        #-------------------------------------------- register intrinsic signals
+        self._ss.registerSignal("signalChanged", Hash, str, str)                # changeHash, instanceId, classId
+        self._ss.connect("", "signalChanged", "*", "slotChanged", ConnectionType.NO_TRACK, False)
+        
+        self._ss.registerSignal("signalErrorFound", str, str, str, str)         # timeStamp, shortMsg, longMsg, instanceId
+        self._ss.connect("", "signalErrorFound", "*", "slotErrorFound", ConnectionType.NO_TRACK, False)
+        
+        self._ss.registerSignal("signalBadReconfiguration", str, str)           # shortMsg, instanceId
+        self._ss.connect("", "signalBadReconfiguration", "*", "slotBadReconfiguration", ConnectionType.NO_TRACK, False)        
+        
+        self._ss.registerSignal("signalNoTransition", str, str)                 # 
+        self._ss.connect("", "signalNoTransition", "*", "slotNoTransition", ConnectionType.NO_TRACK, False)        
+        
+        self._ss.registerSignal("signalWarningOrAlarm", str, str, str, str)     # timeStamp, warnMsg, instanceId, priority
+        self._ss.registerSignal("signalWarning", str, str, str, str)            # timeStamp, warnMsg, instanceId, priority
+        self._ss.connect("", "signalWarning", "*", "slotWarning", ConnectionType.NO_TRACK, False)
+        
+        self._ss.registerSignal("signalAlarm", str, str, str, str)              # timeStamp, alarmMsg, instanceId, priority
+        self._ss.connect("", "signalAlarm", "*", "slotAlarm", ConnectionType.NO_TRACK, False)
+        
+        self._ss.registerSignal("signalSchemaUpdated", str, str, str)           # schema, instanceId, classId
+        self._ss.connect("", "signalSchemaUpdated", "*", "slotSchemaUpdated", ConnectionType.NO_TRACK, False)
+
+        # TODO Deprecate!
+        self._ss.registerSignal("signalDeviceInstanceGone", str, str)           # DeviceServerInstanceId, deviceInstanceId
+        self._ss.connect("", "signalDeviceInstanceGone", "*", "slotDeviceInstanceGone", ConnectionType.NO_TRACK, False)
+        
+        self._ss.registerSignal("signalProgressUpdated", int, str, str)         # Progress value [0,100], label, deviceInstanceId
+        self._ss.connect("", "signalProgressUpdated", "*", "slotProgressUpdated", ConnectionType.NO_TRACK, False)
+        
+        #---------------------------------------------- register intrinsic slots
+        self._ss.registerSlot(self.slotReconfigure, Hash)
+        self._ss.registerSlot(self.slotRefresh)
+        self._ss.registerSlot(self.slotGetSchema, bool)
+        self._ss.registerSlot(self.slotKillDeviceInstance)
+        
     def slotRefresh(self):
-        all = Hash(self._initialParameters)
-        all.update(self._reconfigurableParameters)
-        all.update(self._monitoredParameters)
-        self._ss.emit("signalChanged", all, self._devInstId, self._classId);
-        self._ss.reply(all);
+        self._ss.emit("signalChanged", self.parameters, self.deviceid, self.classid);
+        self._ss.reply(self.parameters);
        
     def slotReconfigure(self, newConfiguration):
         if newConfiguration.empty():
             return
-        result, error = self._validate(newConfiguration)
+        validated = Hash()
+        result, error, validated = self._validate(newConfiguration)
         if result:
             try:
-                self.onReconfigure(self._incomingValidatedReconfiguration)
+                self.preReconfigure(validated)
             except Exception,e:
+                self.errorFound("Python Exception happened", str(e))
                 self._ss.reply(False, str(e))
-                self.triggerErrorFound("Python Exception happened", str(e))
                 return
-            self._applyReconfiguration(self._incomingValidatedReconfiguration)
+            self._applyReconfiguration(validated)
         self._ss.reply(result, error)
     
-    def _validate(self, newConfiguration):
+    def _validate(self, unvalidated):
         currentState = self.get("state")
         whiteList = self._getStateDependentSchema(currentState)
-        config = Hash(self._classId, newConfiguration)
+        self.log.DEBUG("Incoming (un-validated) reconfiguration:\n{}".format(unvalidated))
         try:
-            config = whiteList.validate(config, False, False, False, True)
-        except RuntimeError, e:
-            errorText = e + " in state: \"" + currentState + "\""
-            return (False, errorText,)
-        self._incomingValidatedReconfiguration = config.get(self._classId)
-        return (True, "",)
-    
-    def _getStateDependentSchema(self, state):
-        with self._stateDependentSchemaLock:
-            if state in self._stateDependentSchema:
-                return self._stateDependentSchema[state]
-            self._stateDependentSchema[state] = self.__class__.getExpectedParameters(AccessType(WRITE), state)
-            if not self._injectedExpectedParameters.empty():
-                self._stateDependentSchema[state].addExternalSchema(self._injectedExpectedParameters)
-            return self._stateDependentSchema[state]
+            validated = self.validatorExtern.validate(whiteList, unvalidated)
+        except RuntimeError,e:
+            errorText = str(e) + " in state: \"" + currentState + "\""
+            return (False, errorText, unvalidated)
+        self.log.DEBUG("Validated reconfiguration:\n{}".format(validated))
+        return (True,"",validated)
     
     def _applyReconfiguration(self, reconfiguration):
         with self._stateChangeLock:
@@ -323,59 +355,47 @@ class PythonDevice(PythonBaseDevice, BaseFsm):
             currentState = self.get("state")
             self._ss.reply(self._getStateDependentSchema(currentState))
         else:
-            self._ss.reply(self._allExpectedParameters)
+            self._ss.reply(self.fullSchema)
    
-    def onReconfigure(self, inputConfig): pass
-
-    def onKill(self): pass
+    def slotKillDeviceInstance(self):
+        self.log.INFO("Device is going down...")
+        self.preDestruction()
+        self._ss.emit("signalDeviceInstanceGone", self.serverid, self.deviceid)
+        self.stopEventLoop()
+        self.log.INFO("dead.")
+   
+    def _getStateDependentSchema(self, state):
+        with self._stateDependentSchemaLock:
+            if state in self._stateDependentSchema:
+                return self._stateDependentSchema[state]
+            self._stateDependentSchema[state] = self.__class__.getSchema(self.classid, AssemblyRules(AccessType(READ | WRITE | INIT), state))
+            if not self._injectedSchema.empty():
+                self._stateDependentSchema[state] += self._injectedSchema
+            return self._stateDependentSchema[state]
     
-    def _generateDefaultDeviceInstanceId(self):
-        cls = self.__class__
-        with cls.instanceCountLock:
-            if self._devSrvInstId not in cls.instanceCountPerDeviceServer:
-                cls.instanceCountPerDeviceServer[self._devSrvInstId] = 0
-            cls.instanceCountPerDeviceServer[self._devSrvInstId] += 1
-            _index = cls.instanceCountPerDeviceServer[self._devSrvInstId]
-            if self._devSrvInstId == "":
-                #myHostName, someList, myHostAddrList = socket.gethostbyaddr(socket.gethostname())
-                myFullHostName = socket.gethostname()
-                myHostName, dotsep, domainName = myFullHostName.partition('.')
-                return myHostName + "/" + self._classId + "/" + str(_index)
-            tokens = self._devSrvInstId.split("/")
-            _domain = tokens.pop(0) + "-" + tokens.pop()
-            _id = _domain + "/" + self._classId + "/" + str(_index)
-            return _id
-            
-    def checkWarningsAndAlarms(self, key, value): pass
-    
-    def _increaseInstanceCount(self):
-        cls = self.__class__
-        with cls.instanceCountLock:
-            cls.instanceCountPerDeviceServer[self._devSrvInstId] += 1
-    
-    def _decreaseInstanceCount(self):
-        cls = self.__class__
-        with cls.instanceCountLock:
-            cls.instanceCountPerDeviceServer[self._devSrvInstId] -= 1
-    
+    def _injectSchema(self, schema):
+        with self._stateChangeLock:
+            self._stateDependentSchema = {}
+            self._injectedSchema = schema
+            self.fullSchema += self._injectedSchema
+   
     def getCurrentDateTime(self):
-        dt = datetime.datetime(1,1,1).today()
-        return dt.isoformat(' ')
+        return datetime.datetime(1,1,1).today().isoformat(' ')
     
     def triggerErrorFound(self, shortMessage, detailedMessage):
         self._ss.emit(
             "signalErrorFound", self.getCurrentDateTime(), shortMessage,
-            detailedMessage, self._devInstId)
+            detailedMessage, self.deviceid)
 
     def triggerWarning(self, warningMessage, priority):
         self._ss.emit(
             "signalWarning", self.getCurrentDateTime(), warningMessage,
-            self._devInstId, priority)
+            self.deviceid, priority)
     
     def triggerAlarm(self, alarmMessage, priority):
         self._ss.emit(
             "signalAlarm", self.getCurrentDateTime(), alarmMessage,
-            self._devInstId, priority)
+            self.deviceid, priority)
 
     @staticmethod
     def parseCommandLine(args):
