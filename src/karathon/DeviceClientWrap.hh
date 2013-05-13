@@ -46,12 +46,12 @@ namespace karabo {
                 return Wrapper::fromStdPairToPyTuple(this->exists(instanceId));
             }
 
-            bp::object getDeviceServersPy() {
-                return Wrapper::fromStdVectorToPyList(this->getDeviceServers());
+            bp::object getServersPy() {
+                return Wrapper::fromStdVectorToPyList(this->getServers());
             }
 
-            bp::object getDeviceClassesPy(const std::string& deviceServer) {
-                return Wrapper::fromStdVectorToPyList(this->getDeviceClasses(deviceServer));
+            bp::object getClassesPy(const std::string& deviceServer) {
+                return Wrapper::fromStdVectorToPyList(this->getClasses(deviceServer));
             }
 
             //            bp::object getDevicesPy(const std::string& deviceServer) {
