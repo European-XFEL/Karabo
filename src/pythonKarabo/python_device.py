@@ -1,7 +1,8 @@
-import threading
-import os
-import time
-import datetime
+# To change this template, choose Tools | Templates
+# and open the template in the editor.
+
+__author__="esenov"
+__date__ ="$Jul 30, 2012 9:03:51 PM$"
 
 # To change this template, choose Tools | Templates
 # and open the template in the editor.
@@ -9,13 +10,16 @@ import datetime
 __author__="esenov"
 __date__ ="$Jul 30, 2012 9:03:51 PM$"
 
+import threading
+import os
+import time
+import datetime
 import sys
 import socket
 from abc import ABCMeta, abstractmethod
 from libkarathon import *
 from fsm import *
 from karabo_decorators import *
-from core_exceptions import ParameterException
 
 @KARABO_CONFIGURATION_BASE_CLASS
 @KARABO_CLASSINFO("PythonBaseDevice", "1.0")
@@ -378,6 +382,9 @@ class PythonDevice(PythonBaseDevice, BaseFsm):
             self._stateDependentSchema = {}
             self._injectedSchema = schema
             self.fullSchema += self._injectedSchema
+            
+    def getInstanceId(self):
+        return self._ss.getInstanceId()
    
     def getCurrentDateTime(self):
         return datetime.datetime(1,1,1).today().isoformat(' ')
