@@ -62,8 +62,8 @@ class PythonDevice(BaseFsm):
         e.displayedName("State").description("The current state the device is in")
         e.assignmentOptional().defaultValue("uninitialized").readOnly().commit()
         
-    def __init__(self, configuration, *args, **kwargs):
-        super(PythonDevice, self).__init__(*args, **kwargs)
+    def __init__(self, configuration):
+        super(PythonDevice, self).__init__(configuration)
 
         self.parameters = configuration
         if "serverId" in self.parameters:
@@ -106,7 +106,7 @@ class PythonDevice(BaseFsm):
         # Instantiate connection
         self._ss = SignalSlotable.create(self.deviceid, "Jms", self.parameters["connection.Jms"])
         
-        # Initialize FSM
+        # Initialize FSM slots for user defined FSM (polymorphic call) 
         self.initFsmSlots(self._ss)
         
         # Initialize Device slots
