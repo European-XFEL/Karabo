@@ -33,6 +33,7 @@ void exportPyWebAuthenticator();
 // xms
 void exportPyXmsRequestor();
 void exportPyXmsSignalSlotable();
+void exportPyXmsSlotElement();
 
 // core
 void exportPyCoreDeviceClient();
@@ -71,6 +72,7 @@ BOOST_PYTHON_MODULE(libkarathon) {
     // xms       
     exportPyXmsRequestor();
     exportPyXmsSignalSlotable();
+    exportPyXmsSlotElement();
     
     // core
     exportPyCoreDeviceClient();
