@@ -44,6 +44,7 @@
       <itemPath>../../../src/karathon/DefaultValueVectorWrap.hh</itemPath>
       <itemPath>../../../src/karathon/PyUtilClassInfo.cc</itemPath>
       <itemPath>../../../src/karathon/PyUtilSchema.cc</itemPath>
+      <itemPath>../../../src/karathon/PyXmsSlotElement.cc</itemPath>
       <itemPath>../../../src/karathon/PythonFactoryMacros.hh</itemPath>
       <itemPath>../../../src/karathon/PythonMacros.hh</itemPath>
     </logicalFolder>
@@ -236,6 +237,11 @@
             flavor2="0">
       </item>
       <item path="../../../src/karathon/PyXmsSignalSlotable.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karathon/PyXmsSlotElement.cc"
             ex="false"
             tool="1"
             flavor2="0">
@@ -482,6 +488,11 @@
             flavor2="0">
       </item>
       <item path="../../../src/karathon/PyXmsSignalSlotable.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karathon/PyXmsSlotElement.cc"
             ex="false"
             tool="1"
             flavor2="0">
