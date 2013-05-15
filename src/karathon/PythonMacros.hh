@@ -278,6 +278,26 @@ KARABO_PYTHON_COMMON_ATTRIBUTES \
 , bp::arg("expected")\
 , bp::return_internal_reference<> ())
 
+#define KARABO_PYTHON_PATH_ELEMENT(PathElem)\
+{\
+typedef PathElem T;\
+bp::implicitly_convertible< Schema &, T >();\
+bp::class_<T> ("PATH_ELEMENT", bp::init<Schema & >((bp::arg("expected"))))\
+KARABO_PYTHON_COMMON_ATTRIBUTES \
+KARABO_PYTHON_OPTIONS_NONVECTOR \
+.def("isInputFile"\
+, &PathElement::isInputFile\
+, bp::return_internal_reference<> ())\
+.def("isOutputFile"\
+, &PathElement::isOutputFile\
+, bp::return_internal_reference<> ())\
+.def("isDirectory"\
+, &PathElement::isDirectory\
+, bp::return_internal_reference<> ())\
+;\
+}
+
+
 //Macro KARABO_PYTHON_ANY_EXTRACT is used in pyexfel.cc and pyexfelportable.cc for binding.
 //Extracting boost.python object with correct data type from boost::any
 #define KARABO_PYTHON_ANY_EXTRACT(t)\
