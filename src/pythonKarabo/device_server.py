@@ -231,6 +231,10 @@ class DeviceServer(object):
             if "PythonDevice" not in dir(module):
                 raise IndexError,"Module '" + name + "' has no use of PythonDevice class"
             candidates = [module.PythonDevice]
+            #
+            # IMPORTANT!
+            # We do an assumption that module contains only one user device
+            #
             for item in dir(module):
                 obj = getattr(module, item)
                 if inspect.isclass(obj) and issubclass(obj, module.PythonDevice):
@@ -245,6 +249,7 @@ class DeviceServer(object):
                 except IndexError,e:
                     pass
                 return c
+            
             # get mostDerived from tree
             deviceClass = mostDerived(candidates)  # most derived class in hierarchy
             try:

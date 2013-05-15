@@ -28,8 +28,8 @@ class StartStopFsm(BaseFsm):
         e.allowedStates("Error")
         e.commit()
 
-    def __init__(self, *args, **kwargs):
-        super(StartStopFsm, self).__init__()
+    def __init__(self, configuration):
+        super(StartStopFsm, self).__init__(configuration)
         
         #**************************************************************
         #*                        Events                              *
