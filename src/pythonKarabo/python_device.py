@@ -164,13 +164,13 @@ class PythonDevice(PythonBaseDevice, BaseFsm):
         pars = tuple(args)
         with self._lock:
             # key, value args
-            if len(pars) == 3:
-                key, value, timestamp = pars
-                pars = (Hash(key, value), timestamp,)
-            
             if len(pars) == 2:
+                key, value = pars
+                pars = (Hash(key, value),)
+            
+            if len(pars) == 1:
                 # hash arg
-                hash, timestamp = pars
+                hash = pars
                 validated = Hash()
                 try:
                     validated = self.validatorIntern.validate(self.fullSchema, hash)
@@ -186,13 +186,19 @@ class PythonDevice(PythonBaseDevice, BaseFsm):
                     self.parameters += validated
                     self._ss.emit("signalChanged", validated, self.getInstanceId(), self.classid)
 
+    def __setitem__(self, key, value):
+        self.set(key, value)
+        
     def get(self,key):
         with self._lock:
             try:
                 return self.parameters[key]
             except RuntimeError,e:
                 raise AttributeError,"Error while retrieving '" + key + "' from device"
-      
+            
+    def __getitem__(self, key):
+        return self.get(key)
+    
     def getFullSchema(self):
         return self.fullSchema
         

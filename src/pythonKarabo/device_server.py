@@ -137,45 +137,38 @@ class DeviceServer(object):
         '''Constructor'''
         super(DeviceServer, self).__init__()
         # describe FSM
+        self.processEventLock = threading.RLock()
         self.fsm = self.setupFsm()
         self.ss = None
         self.availableModules = dict()
         self.availableDevices = dict()
         self.deviceInstanceMap = dict()
         self.selfDestroyFlag = False
-        self._serverId = None
+        self.serverid = None
         self.nameRequestTimeout = 10
-        if input.has('nameRequestTimeout'):
-            self.nameRequestTimeout = input.get('nameRequestTimeout')
-        if input.has('serverId'):
-            self._serverId = input.get('serverId')
+        if 'nameRequestTimeout' in input:
+            self.nameRequestTimeout = input['nameRequestTimeout']
+        if 'serverId' in input:
+            self.serverid = input['serverId']
         self.running = True
-        self.pluginLoader = PluginLoader.create("PythonPluginLoader", input)
         self.isRegistered = False
         
         print "Initialize SignalSlotable object...\n"
-        if self._serverId is None:
+        if self.serverid is None:
             s = SignalSlotable()
-            (self._serverId, ) = s.request("*", "slotDeviceServerProvideName").waitForReply(self.nameRequestTimeout)
+            (self.serverid, ) = s.request("*", "slotDeviceServerProvideName").waitForReply(self.nameRequestTimeout)
             del s
-        self.ss = SignalSlotable(self._serverId)
+        self.ss = SignalSlotable(self.serverid)
         
         print "\nInitialize Logging...\n"
-        connectionConfig = input.get("connection")
-
-        logConfig = Hash()
-        logConfig.setFromPath("Logger.categories[0].Category.name", self._serverId)
-        logConfig.setFromPath("Logger.categories[0].Category.priority", "INFO")
-        logConfig.setFromPath("Logger.categories[0].Category.appenders[0].Network.layout.Pattern.pattern", "%d{%F %H:%M:%S} | %p | %c | %m")
-        logConfig.setFromPath("Logger.categories[0].Category.appenders[0].Network.connection", connectionConfig)
-        Logger.create(logConfig).initialize()
-        self.log = Logger.logger(self._serverId)
-
-        self._registerAndConnectSignalsAndSlots()
+        self.loadLogger(input)
+        self.loadPluginLoader(input)
+        if "autoStart" in input:
+            self.autoStart = input["autoStart"]
     
     def _registerAndConnectSignalsAndSlots(self):
         cls = self.__class__
-        self.ss.registerSignal("signalNewDeviceClassAvailable", str, str, str) # DeviceServerInstanceId, classId, xsd
+        self.ss.registerSignal("signalNewDeviceClassAvailable", str, str, str) # DeviceServerInstanceId, classid, xsd
         self.ss.registerSignal("signalNewDeviceInstanceAvailable", str, Hash)  # DeviceServerInstanceId, currentConfig
         self.ss.registerSignal("signalDeviceServerInstanceGone", str)          # DeviceServerInstanceId
         self.ss.registerSlot(self.slotStartDevice, self)
@@ -186,7 +179,21 @@ class DeviceServer(object):
         self.ss.connect("", "signalNewDeviceClassAvailable", "*", "slotNewDeviceClassAvailable", ConnectionType.NO_TRACK, False)
         self.ss.connect("", "signalNewDeviceInstanceAvailable", "*", "slotNewDeviceInstanceAvailable", ConnectionType.NO_TRACK, False)
 
+    def logLogger(self, input):
+        config = input["Logger"]
+        appenders = config["appenders"]
+        appenderConfig = Hash()
+        appenderConfig["Network.layout.Pattern.format"] = "%d{%F %H:%M:%S} | %p | %c | %m"
+        appenderConfig["Network.connection"] = input["connection"]
+        appenders.append(appenderConfig)
+        Logger.configure(config)
+    
+    def loadPluginLoader(self, input):
+        self.pluginLoader = PluginLoader.createNode("PythonPluginLoader", "PythonPluginLoader", input)
+        
     def run(self):
+        self.log = Logger.getLogger(self.serverid)
+        self._registerAndConnectSignalsAndSlots()
         self.fsm.start()
         while self.running:
             with DeviceServer.cLock:
@@ -201,7 +208,7 @@ class DeviceServer(object):
             if self.selfDestroyFlag:
                 with DeviceServer.cLock:
                     if len(DeviceServer.live_threads) == 0 and len(DeviceServer.dead_threads) == 0:
-                        self.ss.call("*", "slotDeviceServerInstanceGone", self._serverId)
+                        self.ss.call("*", "slotDeviceServerInstanceGone", self.serverid)
                         self.stopDeviceServer()
             time.sleep(3)
     
@@ -221,51 +228,48 @@ class DeviceServer(object):
             except ImportError,e:
                 self.log.WARN("scanPlugins: Cannot import module {} -- {}".format(name,e))
                 continue
-            if "PythonDevice" not in dir(module):
-                raise IndexError,"Module '" + name + "' has no use of PythonDevice class"
-                continue
-            candidates = [module.PythonDevice]
+            if "PythonBaseDevice" not in dir(module):
+                raise IndexError,"Module '" + name + "' has no use of PythonBaseDevice class"
+            candidates = [module.PythonBaseDevice]
             for item in dir(module):
                 obj = getattr(module, item)
-                # take class candidate that originated from this module and
-                # has 'expectedParameters' attribute
-                if inspect.isclass(obj) and issubclass(obj, module.PythonDevice):
+                if inspect.isclass(obj) and issubclass(obj, module.PythonBaseDevice):
                     candidates.append(obj)
-            tree = inspect.getclasstree(candidates)  # build inheritance tree
-            # convert tree to the list
-            classList = []
-            self._getListOfClasses(tree, classList)
-            deviceClass = classList.pop()  # most derived class in hierarchy
-            deviceClass.inheritanceChain = inheritanceChain
+                    
+            def mostDerived(candidates):
+                tree = inspect.getclasstree(candidates)  # build inheritance tree
+                try:
+                    while True:
+                        c,b = tree[0]
+                        tree = tree[1]
+                except IndexError,e:
+                    pass
+                return c
+            # get mostDerived from tree
+            deviceClass = mostDerived(candidates)  # most derived class in hierarchy
             try:
-                schema = PythonDevice.getSchema(deviceClass)
+                schema = deviceClass.getSchema(deviceClass.__classid__)
                 config = Hash("indentation", -1)
                 xsd = TextSerializerSchema.create('Xsd', config).save(schema)
                 self.availableModules[name] = deviceClass.__classid__
                 self.availableDevices[deviceClass.__classid__] = {"mustNotify": True, "module": name, "xsd": xsd}
                 self.newPluginAvailable()
             except RuntimeError, e:
-                self.log.ERROR("Failure while building schema for class {} and base class {}: {}".format(deviceClass.__classid__, deviceClass.__base_classid__, e.message))
-    
-    def _getListOfClasses(self, tree, outList):
-        (cl, bases) = tree[0]
-        if hasattr(cl, 'expectedParameters'):
-            outList.append(cl)
-        if len(tree) == 1:
-            return
-        self._getListOfClasses(tree[1], outList)
+                self.log.ERROR("Failure while building schema for class {}, base class {} and bases {} : {}".format(
+                    deviceClass.__classid__, deviceClass.__base_classid__, deviceClass.__bases_classid__, e.message))
     
     def processEvent(self, event):
-        self.fsm.process_event(event)
+        with self.processEventLock:
+            self.fsm.process_event(event)
         
     def updateCurrentState(self, currentState):
         self.ss.reply(currentState)
     
     def registrationStateOnEntry(self):
-        self.ss.call("*", "slotNewDeviceServerAvailable", platform.node(), self._serverId)
+        self.ss.call("*", "slotNewDeviceServerAvailable", platform.node(), self.serverid)
     
     def idleStateOnEntry(self):
-        id = self._serverId
+        id = self.serverid
         WriterHash.create("TextFile", Hash("filename", "autoload.xml")).write(Hash("DeviceServer.serverId", id))
         #TODO: check what we have to implement here
         self.isRegistered = True   # this is the last statement!
@@ -277,59 +281,59 @@ class DeviceServer(object):
         pass
 
     def notifyNewDeviceAction(self):
-        for (classId, d) in self.availableDevices.items():
+        for (classid, d) in self.availableDevices.items():
             if d['mustNotify']:
                 d['mustNotify'] = False
                 self.log.DEBUG("Notifying about {}".format(d['module']))
-                self.ss.emit("signalNewDeviceClassAvailable", self.ss.getInstanceId(), classId, d["xsd"])
+                self.ss.emit("signalNewDeviceClassAvailable", self.ss.getInstanceId(), classid, d["xsd"])
 
     def startDeviceAction(self, conf):
         self.log.DEBUG("Trying to start device with the following configuration:\n{}".format(conf))
         modified = Hash(conf)
-        classId = iter(modified).next().getKey()
-        modified[classId + ".serverId"] = self._serverId
-        if classId + ".devInstId" in modified:
-            devInstId = modified[classId + ".devInstId"]
+        classid = iter(modified).next().getKey()
+        modified[classid + ".serverId"] = self.serverid
+        if classid + ".deviceId" in modified:
+            deviceid = modified[classid + ".deviceId"]
         else:
-            devInstId = self._generateDefaultDeviceInstanceId(classId)
-            modified[classId + ".devInstId"] = devInstId
+            deviceid = self._generateDefaultDeviceInstanceId(classid)
+            modified[classid + ".deviceId"] = deviceid
         # create temporary instance to check the configuration parameters are valid
         try:
             instance = PythonDevice.create(modified) # create instance in this interpreter
         except RuntimeError, e:
-            self.log.WARN("Wrong input configuration for class '{}': {}".format(classId, e.message))
+            self.log.WARN("Wrong input configuration for class '{}': {}".format(classid, e.message))
             return
-        module_name = self.availableDevices[classId]["module"]
+        module_name = self.availableDevices[classid]["module"]
         input = Hash()
-        input["classId"] = classId
-        input["module"] = self.availableDevices[classId]["module"]
+        input["classId"] = classid
+        input["module"] = self.availableDevices[classid]["module"]
         input["plugins"] = self.pluginLoader.getPluginDirectory()
         input["configuration"] = modified
         launcher = Launcher.create("PythonLauncher", input).start()
-        #launcher = DeviceServer.Launcher(self.pluginLoader.getPluginDirectory(), module_name, classId, modified).start()
-        self.deviceInstanceMap[devInstId] = launcher
+        #launcher = DeviceServer.Launcher(self.pluginLoader.getPluginDirectory(), module_name, classid, modified).start()
+        self.deviceInstanceMap[deviceid] = launcher
 
     def _generateDefaultDeviceInstanceId(self, devClassId):
         cls = self.__class__
         with cls.instanceCountLock:
-            if self._serverId not in cls.instanceCountPerDeviceServer:
-                cls.instanceCountPerDeviceServer[self._serverId] = 0
-            cls.instanceCountPerDeviceServer[self._serverId] += 1
-            _index = cls.instanceCountPerDeviceServer[self._serverId]
-            if self._serverId == "":
+            if self.serverid not in cls.instanceCountPerDeviceServer:
+                cls.instanceCountPerDeviceServer[self.serverid] = 0
+            cls.instanceCountPerDeviceServer[self.serverid] += 1
+            _index = cls.instanceCountPerDeviceServer[self.serverid]
+            if self.serverid == "":
                 #myHostName, someList, myHostAddrList = socket.gethostbyaddr(socket.gethostname())
                 possiblyFullHostName = socket.gethostname()
                 myHostName, dotsep, domainName = possiblyFullHostName.partition('.')
                 return myHostName + "/" + devClassId + "/" + str(_index)
-            tokens = self._serverId.split("/")
+            tokens = self.serverid.split("/")
             _domain = tokens.pop(0) + "-" + tokens.pop()
             _id = _domain + "/" + devClassId + "/" + str(_index)
             return _id
      
     def slotKillDeviceServerInstance(self):
         self.log.INFO("Received kill signal")
-        for devInstId in self.deviceInstanceMap.keys():
-            self.ss.call(devInstId, "slotKillDeviceInstance")
+        for deviceid in self.deviceInstanceMap.keys():
+            self.ss.call(deviceid, "slotKillDeviceInstance")
         self.selfDestroyFlag = True
         
     def slotKillDeviceInstance(self, id):
@@ -349,13 +353,6 @@ class DeviceServer(object):
         self.log.DEBUG("No transition")
    
 
-def getConfigurationFromCommandLine(argv):
-    if argv is None:
-        hostname = socket.gethostname()
-        host, dot, domain = hostname.partition('.')
-        serverId = host + "/" + DeviceServer.__classid__ + "/0"
-        return Hash("serverId", serverId)
-    
         
 @KARABO_CONFIGURATION_BASE_CLASS
 @KARABO_CLASSINFO("PythonLauncher", "1.0")
@@ -368,7 +365,7 @@ class Launcher(threading.Thread):
         pluginsdir = input["plugins"]
         configuration = input["configuration"]
         try:
-            self.device = configuration[clsname + ".devInstId"]
+            self.device = configuration[clsname + ".deviceId"]
         except RuntimeError, e:
             print e
         self.script = os.path.realpath(pluginsdir + "/" + modname + ".py")
@@ -400,6 +397,13 @@ class Launcher(threading.Thread):
             DeviceServer.live_threads.remove(self)
 
 
+def getConfigurationFromCommandLine(argv):
+    if argv is None:
+        hostname = socket.gethostname()
+        host, dot, domain = hostname.partition('.')
+        serverid = host + "/" + DeviceServer.__classid__ + "/0"
+        return Hash("serverId", serverid)
+    
 def main(argv):
     try:
         server = DeviceServer.create("DeviceServer", getConfigurationFromCommandLine(argv))
