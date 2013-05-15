@@ -228,12 +228,12 @@ class DeviceServer(object):
             except ImportError,e:
                 self.log.WARN("scanPlugins: Cannot import module {} -- {}".format(name,e))
                 continue
-            if "PythonBaseDevice" not in dir(module):
-                raise IndexError,"Module '" + name + "' has no use of PythonBaseDevice class"
-            candidates = [module.PythonBaseDevice]
+            if "PythonDevice" not in dir(module):
+                raise IndexError,"Module '" + name + "' has no use of PythonDevice class"
+            candidates = [module.PythonDevice]
             for item in dir(module):
                 obj = getattr(module, item)
-                if inspect.isclass(obj) and issubclass(obj, module.PythonBaseDevice):
+                if inspect.isclass(obj) and issubclass(obj, module.PythonDevice):
                     candidates.append(obj)
                     
             def mostDerived(candidates):

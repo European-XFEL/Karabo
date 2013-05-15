@@ -21,25 +21,10 @@ from libkarathon import *
 from fsm import *
 from karabo_decorators import *
 
-@KARABO_CONFIGURATION_BASE_CLASS
-@KARABO_CLASSINFO("PythonBaseDevice", "1.0")
-class PythonBaseDevice(object):
-    __metaclass__ = ABCMeta
-    
-    def __init__(self):
-        super(PythonBaseDevice, self).__init__()
-        
-    @abstractmethod
-    def run(self):
-        pass
-    
-    @abstractmethod
-    def getCurrentConfiguration(self):
-        return Hash()
-    
 
+@KARABO_CONFIGURATION_BASE_CLASS
 @KARABO_CLASSINFO("PythonDevice", "1.0")
-class PythonDevice(PythonBaseDevice, BaseFsm):
+class PythonDevice(BaseFsm):
 
     instanceCountPerDeviceServer = dict()
     instanceCountLock = threading.Lock()
