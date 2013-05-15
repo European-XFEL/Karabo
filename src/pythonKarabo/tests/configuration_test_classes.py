@@ -11,7 +11,7 @@ class Shape(object):
     
     def __init__(self, configuration):
         self.configuration = configuration
-        print "Shape.__init__"
+        #print "Shape.__init__"
         
     @staticmethod
     def expectedParameters(expected):
@@ -35,7 +35,7 @@ class Circle(Shape):
     
     def __init__(self, configuration):
         super(Circle, self).__init__(configuration)
-        print "Circle.__init__"
+        #print "Circle.__init__"
         
     @staticmethod
     def expectedParameters(expected):
@@ -62,7 +62,7 @@ class EditableCircle(Circle):
     
     def __init__(self, configuration):
         super(EditableCircle, self).__init__(configuration)
-        print "EditableCircle.__init__"
+        #print "EditableCircle.__init__"
         
     @staticmethod
     def expectedParameters(expected):
@@ -83,7 +83,7 @@ class Rectangle(Shape):
     
     def __init__(self, configuration):
         super(Rectangle, self).__init__(configuration)
-        print "Rectangle.__init__"
+        #print "Rectangle.__init__"
     
     @staticmethod
     def expectedParameters(expected):
