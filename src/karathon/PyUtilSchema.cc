@@ -12,6 +12,7 @@
 #include <karabo/util/ListElement.hh>
 #include <karabo/util/ChoiceElement.hh>
 #include <karabo/util/OverwriteElement.hh>
+#include <karabo/util/PathElement.hh>
 #include <karabo/util/Validator.hh>
 
 #include "PythonMacros.hh"
@@ -21,6 +22,7 @@
 namespace bp = boost::python;
 using namespace karabo::util;
 using namespace std;
+
 
 struct SchemaWrapper : Schema, bp::wrapper< Schema > {
 
@@ -51,8 +53,8 @@ struct SchemaWrapper : Schema, bp::wrapper< Schema > {
     }
 };
 
-class ValidatorWrap : Validator {
 
+class ValidatorWrap : Validator {
 public:
 
 
@@ -80,19 +82,23 @@ public:
             Validator::setValidationRules(rules);
         }
     }
-    
+
+
     bp::object getValidationRules() {
         return bp::object(Validator::getValidationRules());
     }
-    
+
+
     bp::object hasParametersInWarnOrAlarm() {
         return bp::object(hasParametersInWarnOrAlarm());
     }
-    
+
+
     bp::object getParametersInWarnOrAlarm() {
         return bp::object(getParametersInWarnOrAlarm());
     }
 };
+
 
 struct NodeElementWrap {
 
@@ -141,6 +147,7 @@ struct NodeElementWrap {
 
 };
 
+
 struct ChoiceElementWrap {
 
 
@@ -177,6 +184,7 @@ struct ChoiceElementWrap {
     }
 };
 
+
 struct ListElementWrap {
 
 
@@ -212,6 +220,7 @@ struct ListElementWrap {
         return self;
     }
 };
+
 
 struct OverwriteElementWrap {
 
@@ -1093,9 +1102,9 @@ void exportPyUtilSchema() {
         s.def("hasAlarmLow", &Schema::hasAlarmLow);
 
         s.def("hasAlarmHigh", &Schema::hasAlarmHigh);
-        
+
         s.def("hasDisplayedName", &Schema::hasDisplayedName);
-        
+
         s.def("hasExpertLevel", &Schema::hasExpertLevel);
 
         //all other has .....
@@ -1204,9 +1213,32 @@ void exportPyUtilSchema() {
     KARABO_PYTHON_VECTOR(string, STRING)
     KARABO_PYTHON_VECTOR(bool, BOOL)
 
-            //////////////////////////////////////////////////////////////////////
-            // Binding karabo::util::NodeElement       
-            // In Python : NODE_ELEMENT
+    //////////////////////////////////////////////////////////////////////
+    // Binding karabo::util::PathElement       
+    // In Python : PATH_ELEMENT
+    KARABO_PYTHON_PATH_ELEMENT(PathElement)
+
+   ///////////////////////////////////////////////////////////////////////////
+   //karabo::util::DefaultValue<karabo::util::PathElement, std::string>
+   {
+        typedef DefaultValue< PathElement, string > DefValue;
+        bp::class_< DefValue, boost::noncopyable > ("DefaultValuePathElement", bp::no_init)
+                .def("defaultValue"
+                     , (PathElement & (DefValue::*)(string const &))(&DefValue::defaultValue)
+                     , (bp::arg("defaultValue"))
+                     , bp::return_internal_reference<> ())
+                .def("defaultValueFromString"
+                     , (PathElement & (DefValue::*)(string const &))(&DefValue::defaultValueFromString)
+                     , (bp::arg("defaultValue"))
+                     , bp::return_internal_reference<> ())
+                .def("noDefaultValue"
+                     , (PathElement & (DefValue::*)())(&DefValue::noDefaultValue)
+                     , bp::return_internal_reference<> ())
+                ;
+    }
+    //////////////////////////////////////////////////////////////////////
+    // Binding karabo::util::NodeElement       
+    // In Python : NODE_ELEMENT
     {
         bp::implicitly_convertible< Schema &, NodeElement >();
         bp::class_<NodeElement> ("NODE_ELEMENT", bp::init<Schema & >((bp::arg("expected"))))
