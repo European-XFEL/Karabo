@@ -4,6 +4,7 @@
 __author__="Sergey Esenov <serguei.essenov at xfel.eu>"
 __date__ ="$May 10, 2013 2:17:13 PM$"
 
+import threading
 from abc import ABCMeta, abstractmethod
 from karabo_decorators import *
 
@@ -18,6 +19,7 @@ class BaseFsm(object):
     def __init__(self, *args, **kwargs):
         super(BaseFsm, self).__init__()
         self.fsm = None
+        self.processEventLock = threading.RLock()
     
     def getFsm(self):
         return self.fsm
@@ -50,9 +52,10 @@ class BaseFsm(object):
     
     def processEvent(self, event):
         """Process input event, i.e. drive state machine to the next state."""
-        fsm = self.getFsm()
-        if fsm is not None:
-            self.onStateUpdate("Changing...")
-            fsm.process_event(event)
-            self.onStateUpdate(fsm.get_state())
+        with self.processEventLock:
+            fsm = self.getFsm()
+            if fsm is not None:
+                self.onStateUpdate("Changing...")
+                fsm.process_event(event)
+                self.onStateUpdate(fsm.get_state())
     
