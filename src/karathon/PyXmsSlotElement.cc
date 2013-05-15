@@ -9,6 +9,7 @@
 #include "boost/python.hpp"
 
 #include <karabo/xms/SlotElement.hh>
+#include "PythonMacros.hh"
 
 namespace bp = boost::python;
 using namespace karabo::xms;
@@ -69,17 +70,17 @@ struct SLOT_ELEMENT_Wrapper : SLOT_ELEMENT, bp::wrapper<SLOT_ELEMENT > {
 void exportPyXmsSlotElement() {
 
     bp::class_< SlotElementBase_Wrapper, boost::noncopyable > sl("SlotElementBase", bp::init< Schema & > (bp::arg("expected")));
-    
+
     sl.def("allowedStates"
            , (SLOT_ELEMENT & (SlotElementBase<SLOT_ELEMENT>::*)(string const &, string const &))(&SlotElementBase<SLOT_ELEMENT >::allowedStates)
-           , (bp::arg("states"), bp::arg("sep")=" ,;")
+           , (bp::arg("states"), bp::arg("sep") = " ,;")
            , bp::return_internal_reference<> ());
-    
+
     sl.def("allowedRoles"
            , (SLOT_ELEMENT & (SlotElementBase<SLOT_ELEMENT>::*)(string const &, string const &))(&SlotElementBase<SLOT_ELEMENT >::allowedRoles)
-           , (bp::arg("states"), bp::arg("sep")=" ,;")
+           , (bp::arg("states"), bp::arg("sep") = " ,;")
            , bp::return_internal_reference<> ());
-    
+
     sl.def("commit"
            , bp::pure_virtual((void (SlotElementBase<SLOT_ELEMENT>::*)())(&SlotElementBase< SLOT_ELEMENT >::commit))
            , bp::return_internal_reference<> ());
@@ -113,6 +114,24 @@ void exportPyXmsSlotElement() {
     sl.def("key"
            , (SLOT_ELEMENT & (SlotElementBase<SLOT_ELEMENT>::*)(string const &))(&SlotElementBase<SLOT_ELEMENT >::key)
            , (bp::arg("name"))
+           , bp::return_internal_reference<> ());
+
+    sl.def("alias"
+           , &AliasAttributeWrap<SLOT_ELEMENT>::aliasPy
+           , bp::return_internal_reference<> ());
+
+    sl.def("tags"
+           , (SLOT_ELEMENT & (SlotElementBase<SLOT_ELEMENT>::*)(string const &, string const &))(&SlotElementBase<SLOT_ELEMENT >::tags)
+           , (bp::arg("tags"), bp::arg("sep") = " ,;")
+           , bp::return_internal_reference<> ());
+
+    sl.def("tags"
+           , (SLOT_ELEMENT & (SlotElementBase<SLOT_ELEMENT>::*)(vector<string> const &))(&SlotElementBase<SLOT_ELEMENT >::tags)
+           , (bp::arg("tags"))
+           , bp::return_internal_reference<> ());
+
+    sl.def("advanced"
+           , (SLOT_ELEMENT & (SlotElementBase<SLOT_ELEMENT>::*)())(&SlotElementBase<SLOT_ELEMENT >::advanced)
            , bp::return_internal_reference<> ());
 
     { //karabo::xms::SLOT_ELEMENT
