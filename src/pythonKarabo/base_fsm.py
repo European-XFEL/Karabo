@@ -16,7 +16,7 @@ class BaseFsm(object):
     def expectedParameters(expected):
         pass
     
-    def __init__(self, *args, **kwargs):
+    def __init__(self, configuration):
         super(BaseFsm, self).__init__()
         self.fsm = None
         self.processEventLock = threading.RLock()
