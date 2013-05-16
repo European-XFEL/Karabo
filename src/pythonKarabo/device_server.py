@@ -51,11 +51,6 @@ class DeviceServer(object):
         e.description("The device-server instance id uniquely identifies a device-server instance in the distributed system")
         e.assignmentOptional().noDefaultValue().commit()
         
-        e = CHOICE_ELEMENT(expected).key("connection").displayedName("Connection")
-        e.description("The connection to the communication layer of the distributed system")
-        e.appendNodesOfConfigurationBase(BrokerConnection)
-        e.assignmentOptional().defaultValue("Jms").advanced().init().commit()
-
         e = UINT32_ELEMENT(expected).key("nameRequestTimeout").displayedName("Name Request Timeout")
         e.description("Time to wait for name resolution (via name-server) until timeout [ms]")
         e.advanced().assignmentOptional().defaultValue(5000).commit()

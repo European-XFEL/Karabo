@@ -20,6 +20,7 @@ from abc import ABCMeta, abstractmethod
 from libkarathon import *
 from fsm import *
 from karabo_decorators import *
+from base_fsm import *
 
 
 @KARABO_CONFIGURATION_BASE_CLASS
@@ -35,11 +36,6 @@ class PythonDevice(BaseFsm):
         e = STRING_ELEMENT(expected).key("version")
         e.displayedName("Version").description("The version of this device class")
         e.advanced().readOnly().initialValue(PythonDevice.__version__).commit()
-        
-        e = CHOICE_ELEMENT(expected).key("connection")
-        e.displayedName("Connection").description("The connection to the communication layer of the distributed system")
-        e.appendNodesOfConfigurationBase(BrokerConnection)
-        e.assignmentOptional().defaultValue("Jms").init().advanced().commit()
         
         e = VECTOR_STRING_ELEMENT(expected).key("visibility")
         e.displayedName("Visibility").description("Configures who is allowed to see this device at all")

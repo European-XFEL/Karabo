@@ -63,6 +63,19 @@ class Configurator(object):
         if classid not in self.baseRegistry:
             raise AttributeError,"Class Id '" + classid + "' not found in the base registry"
         Derived = self.baseRegistry[classid]   # userclass -> Derived
+
+        # Check if the class is C++ class and has schema
+        try:
+            print "Directory of '{}'\n{}".format(classid, dir(Derived))
+            cpp_classid = Derived.__karabo_cpp_classid__
+        except AttributeError,e:
+            print "getSchema: AttributeError - ", str(e) 
+            cpp_classid = ""
+            
+        print "cpp_classid = ", cpp_classid, ",  classid = ", classid
+        if classid == cpp_classid:
+            return Derived.getSchema("classid")
+        
         # building list of classes in inheritance order from bases to the last derived
         def inheritanceChain(c, bases_id, clist):
             if not isinstance(c, type):
