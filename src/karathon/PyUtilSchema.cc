@@ -1220,9 +1220,9 @@ void exportPyUtilSchema() {
     // In Python : PATH_ELEMENT
     KARABO_PYTHON_PATH_ELEMENT(PathElement)
 
-   ///////////////////////////////////////////////////////////////////////////
-   //karabo::util::DefaultValue<karabo::util::PathElement, std::string>
-   {
+            ///////////////////////////////////////////////////////////////////////////
+            //karabo::util::DefaultValue<karabo::util::PathElement, std::string>
+    {
         typedef DefaultValue< PathElement, string > DefValue;
         bp::class_< DefValue, boost::noncopyable > ("DefaultValuePathElement", bp::no_init)
                 .def("defaultValue"
@@ -1238,6 +1238,22 @@ void exportPyUtilSchema() {
                      , bp::return_internal_reference<> ())
                 ;
     }
+
+    ///////////////////////////////////////////////////////////////////////////
+    //karabo::util::ReadOnlySpecific<karabo::util::PathElement, std::string>
+    // (skip as not applicable: initialValueFromString, alarmLow/High, warnLow/High )
+    {   
+        typedef ReadOnlySpecific< PathElement, string > ReadOnlySpec;
+        bp::class_< ReadOnlySpec, boost::noncopyable >("ReadOnlySpecificPathElem", bp::no_init)
+                .def("initialValue"
+                     , (ReadOnlySpec & (ReadOnlySpec::*)(string const &))(&ReadOnlySpec::initialValue)
+                     , bp::return_internal_reference<> ())
+                .def("commit", (void (ReadOnlySpec::*)())(&ReadOnlySpec::commit))
+                ;
+    }
+
+
+
     //////////////////////////////////////////////////////////////////////
     // Binding karabo::util::NodeElement       
     // In Python : NODE_ELEMENT
