@@ -33,15 +33,14 @@ struct AliasAttributeWrap {
         }
     }
 };
+
 ///////////////////////////////////////////////////////////////////////////
 //DefaultValue<SimpleElement< EType> > where EType:
 //BOOL, INT32, UINT32, INT64, UINT64, STRING, DOUBLE
-#define KARABO_PYTHON_ELEMENT_DEFAULT_VALUE(t , e)\
+#define KARABO_PYTHON_ELEMENT_DEFAULT_VALUE(U , EType, e)\
 {\
-typedef t EType;\
-typedef SimpleElement< EType > U;\
 typedef DefaultValue< U, EType > DefValue;\
-bp::class_< DefValue, boost::noncopyable > ("DefaultValueSimpleElement"#e, bp::no_init)\
+bp::class_< DefValue, boost::noncopyable > ("DefaultValue"#e, bp::no_init)\
 .def("defaultValue"\
 , (U & ( DefValue::* )( EType const & ) )( &DefValue::defaultValue )\
 , ( bp::arg("defaultValue") )\
@@ -65,7 +64,7 @@ typedef t EType;\
 typedef std::vector< EType > VType;\
 typedef karabo::util::VectorElement< EType, std::vector> U;\
 typedef karabo::util::DefaultValue< U, VType > DefValueVec;\
-bp::class_< DefValueVec, boost::noncopyable > ("DefaultValueVectorElement"#e, bp::no_init)\
+bp::class_< DefValueVec, boost::noncopyable > ("DefaultValueVector"#e, bp::no_init)\
 .def("defaultValue"\
 , &karabo::karathon::DefaultValueVectorWrap<EType>::pyList2VectorDefaultValue\
 , (bp::arg("defValueVec"), bp::arg("defaultValuePyList")))\
@@ -80,10 +79,8 @@ bp::class_< DefValueVec, boost::noncopyable > ("DefaultValueVectorElement"#e, bp
 }
 
 /////////////////////////////////////////////////////////////
-#define KARABO_PYTHON_ELEMENT_READONLYSPECIFIC(t , e)\
+#define KARABO_PYTHON_ELEMENT_READONLYSPECIFIC(U, EType, e)\
 {\
-typedef t EType;\
-typedef SimpleElement< EType > U;\
 typedef ReadOnlySpecific< U, EType > ReadOnlySpec;\
 bp::class_< ReadOnlySpec, boost::noncopyable >( "ReadOnlySpecific"#e, bp::no_init)\
 .def("alarmHigh"\
