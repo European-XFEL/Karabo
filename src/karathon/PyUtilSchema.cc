@@ -16,7 +16,6 @@
 #include <karabo/util/Validator.hh>
 
 #include "PythonMacros.hh"
-#include "DefaultValueVectorWrap.hh"
 #include "Wrapper.hh"
 
 namespace bp = boost::python;
@@ -109,7 +108,7 @@ struct NodeElementWrap {
             throw KARABO_PYTHON_EXCEPTION("Argument 'arg1' given in 'appendParametersOfConfigurableClass(arg1, arg2)' of NODE_ELEMENT must be a class in Python registered as base class in Configurator");
         }
         if (!PyObject_HasAttrString(baseobj.ptr(), "getSchema")) {
-                throw KARABO_PYTHON_EXCEPTION("Class with classid = '" + classid + "' given in 'appendParametersOfConfigurableClass(base, classid)' of NODE_ELELEMT has no 'getSchema' method.");
+            throw KARABO_PYTHON_EXCEPTION("Class with classid = '" + classid + "' given in 'appendParametersOfConfigurableClass(base, classid)' of NODE_ELELEMT has no 'getSchema' method.");
         }
         std::string baseClassId;
         if (PyObject_HasAttrString(baseobj.ptr(), "__karabo_cpp_classid__")) {
@@ -175,7 +174,7 @@ struct ChoiceElementWrap {
         } else {
             classid = bp::extract<std::string>(classobj.attr("__classid__"));
         }
-        
+
         if (self.getNode().getType() != Types::HASH) self.getNode().setValue(Hash());
         Hash& choiceOfNodes = self.getNode().getValue<Hash>();
 
@@ -218,7 +217,7 @@ struct ListElementWrap {
         } else {
             classid = bp::extract<std::string>(classobj.attr("__classid__"));
         }
-        
+
         if (self.getNode().getType() != Types::HASH) self.getNode().setValue(Hash());
         Hash& choiceOfNodes = self.getNode().getValue<Hash>();
 
@@ -1228,7 +1227,22 @@ void exportPyUtilSchema() {
     //////////////////////////////////////////////////////////////////////
     // Binding karabo::util::PathElement       
     // In Python : PATH_ELEMENT
-    KARABO_PYTHON_PATH_ELEMENT(PathElement)
+    {
+        bp::implicitly_convertible< Schema &, PathElement >();
+        bp::class_<PathElement> ("PATH_ELEMENT", bp::init<Schema & >((bp::arg("expected"))))
+                KARABO_PYTHON_COMMON_ATTRIBUTES(PathElement)
+                KARABO_PYTHON_OPTIONS_NONVECTOR(PathElement)
+                .def("isInputFile"
+                     , &PathElement::isInputFile
+                     , bp::return_internal_reference<> ())
+                .def("isOutputFile"
+                     , &PathElement::isOutputFile
+                     , bp::return_internal_reference<> ())
+                .def("isDirectory"
+                     , &PathElement::isDirectory
+                     , bp::return_internal_reference<> ())
+                ;
+    }
 
     //////////////////////////////////////////////////////////////////////
     // Binding karabo::util::VectorElement< EType, std::vector >
@@ -1244,9 +1258,9 @@ void exportPyUtilSchema() {
     KARABO_PYTHON_VECTOR(string, STRING)
     KARABO_PYTHON_VECTOR(bool, BOOL)
 
-   //////////////////////////////////////////////////////////////////////
-   // Binding karabo::util::NodeElement       
-   // In Python : NODE_ELEMENT
+    //////////////////////////////////////////////////////////////////////
+    // Binding karabo::util::NodeElement       
+    // In Python : NODE_ELEMENT
     {
         bp::implicitly_convertible< Schema &, NodeElement >();
         bp::class_<NodeElement> ("NODE_ELEMENT", bp::init<Schema & >((bp::arg("expected"))))
