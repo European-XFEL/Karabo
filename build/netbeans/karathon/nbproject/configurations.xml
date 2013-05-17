@@ -41,7 +41,6 @@
       <itemPath>../../../src/karathon/p2pbinding.cc</itemPath>
     </logicalFolder>
     <logicalFolder name="f2" displayName="Schema Binding" projectFiles="true">
-      <itemPath>../../../src/karathon/DefaultValueVectorWrap.hh</itemPath>
       <itemPath>../../../src/karathon/PyUtilClassInfo.cc</itemPath>
       <itemPath>../../../src/karathon/PyUtilSchema.cc</itemPath>
       <itemPath>../../../src/karathon/PyXmsSlotElement.cc</itemPath>
@@ -166,11 +165,6 @@
             flavor2="0">
       </item>
       <item path="../../../src/karathon/ConnectionWrap.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karathon/DefaultValueVectorWrap.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -417,11 +411,6 @@
             flavor2="0">
       </item>
       <item path="../../../src/karathon/ConnectionWrap.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karathon/DefaultValueVectorWrap.hh"
             ex="false"
             tool="3"
             flavor2="0">
