@@ -4,6 +4,9 @@
 __author__="Sergey Esenov <serguei.essenov at xfel.eu>"
 __date__ ="$May 8, 2013 12:55:50 PM$"
 
+import os
+import sys
+import re
 from karabo_decorators import *
 
 
@@ -14,9 +17,9 @@ class PluginLoader(object):
     @staticmethod
     def expectedParameters(expected):
         
-        e = STRING_ELEMENT(expected).key("pluginDirectory")
+        e = PATH_ELEMENT(expected).key("pluginDirectory")
         e.displayedName("Plugin Directory").description("Directory to search for plugins")
-        e.assignmentOptional().defaultValue(os.environ['PWD'] + "/plugins")
+        e.assignmentOptional().defaultValue("plugins")
         e.isDirectory().advanced().commit()
         
     def __init__(self, input):

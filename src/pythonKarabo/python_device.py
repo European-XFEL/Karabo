@@ -59,6 +59,9 @@ class PythonDevice(BaseFsm):
         e.assignmentOptional().defaultValue("uninitialized").readOnly().commit()
         
     def __init__(self, configuration):
+        if configuration is None:
+            raise ValueError,"Configuration must be Hash object, not None"
+        print "PythonDevice configuration\n", configuration
         super(PythonDevice, self).__init__(configuration)
 
         self.parameters = configuration
@@ -108,9 +111,6 @@ class PythonDevice(BaseFsm):
         # Initialize Device slots
         self._initDeviceSlots()
         
-    def errorFound(self, shortMessage, detailedMessage):
-        pass
-    
     def run(self):
         self.initClassId()
         self.initSchema()
@@ -238,7 +238,7 @@ class PythonDevice(BaseFsm):
     # In C++: the following functions are protected
     
     def errorFoundAction(self, shortMessage, detailedMessage):
-        pass
+        print "Error Found Action: {} -- {}".format(shortMessage, detailedMessage)
     
     def preReconfigure(self, incomingReconfiguration):
         pass
@@ -316,6 +316,7 @@ class PythonDevice(BaseFsm):
             try:
                 self.preReconfigure(validated)
             except Exception,e:
+                print "PythonDevice.slotReconfigure Exception:", str(e)
                 self.errorFound("Python Exception happened", str(e))
                 self._ss.reply(False, str(e))
                 return
