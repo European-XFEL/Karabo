@@ -130,6 +130,8 @@ class DeviceServer(object):
     
     def __init__(self, input):
         '''Constructor'''
+        if input is None:
+            raise ValueError,"Input configuration for constructor should be Hash, not None"
         super(DeviceServer, self).__init__()
         # describe FSM
         self.processEventLock = threading.RLock()
@@ -155,36 +157,38 @@ class DeviceServer(object):
             del s
         self.ss = SignalSlotable(self.serverid)
         
-        print "\nInitialize Logging...\n"
         self.loadLogger(input)
         self.loadPluginLoader(input)
         if "autoStart" in input:
             self.autoStart = input["autoStart"]
+        print "\n... DeviceServer object constructed.\n"
     
     def _registerAndConnectSignalsAndSlots(self):
         cls = self.__class__
         self.ss.registerSignal("signalNewDeviceClassAvailable", str, str, str) # DeviceServerInstanceId, classid, xsd
         self.ss.registerSignal("signalNewDeviceInstanceAvailable", str, Hash)  # DeviceServerInstanceId, currentConfig
         self.ss.registerSignal("signalDeviceServerInstanceGone", str)          # DeviceServerInstanceId
-        self.ss.registerSlot(self.slotStartDevice, self)
-        self.ss.registerSlot(self.slotRegistrationOk, self)
-        self.ss.registerSlot(self.slotRegistrationFailed, self)
-        self.ss.registerSlot(self.slotKillDeviceServerInstance, self)
-        self.ss.registerSlot(self.slotKillDeviceInstance, self)
+        self.ss.registerSlot(self.slotStartDevice)
+        self.ss.registerSlot(self.slotRegistrationOk)
+        self.ss.registerSlot(self.slotRegistrationFailed)
+        self.ss.registerSlot(self.slotKillDeviceServerInstance)
+        self.ss.registerSlot(self.slotKillDeviceInstance)
         self.ss.connect("", "signalNewDeviceClassAvailable", "*", "slotNewDeviceClassAvailable", ConnectionType.NO_TRACK, False)
         self.ss.connect("", "signalNewDeviceInstanceAvailable", "*", "slotNewDeviceInstanceAvailable", ConnectionType.NO_TRACK, False)
 
-    def logLogger(self, input):
-        config = input["Logger"]
+    def loadLogger(self, input):
+        if "Logger" in input:
+            config = input["Logger"]
         appenders = config["appenders"]
         appenderConfig = Hash()
         appenderConfig["Network.layout.Pattern.format"] = "%d{%F %H:%M:%S} | %p | %c | %m"
-        appenderConfig["Network.connection"] = input["connection"]
+        if "connection" in input:
+            appenderConfig["Network.connection"] = input["connection"]
         appenders.append(appenderConfig)
         Logger.configure(config)
     
     def loadPluginLoader(self, input):
-        self.pluginLoader = PluginLoader.createNode("PythonPluginLoader", "PythonPluginLoader", input)
+        self.pluginLoader = PluginLoader.createNode("PluginLoader", "PythonPluginLoader", input)
         
     def run(self):
         self.log = Logger.getLogger(self.serverid)
@@ -270,7 +274,7 @@ class DeviceServer(object):
     
     def idleStateOnEntry(self):
         id = self.serverid
-        WriterHash.create("TextFile", Hash("filename", "autoload.xml")).write(Hash("DeviceServer.serverId", id))
+        OutputHash.create("TextFile", Hash("filename", "autoload.xml")).write(Hash("DeviceServer.serverId", id))
         #TODO: check what we have to implement here
         self.isRegistered = True   # this is the last statement!
     
@@ -406,7 +410,14 @@ def getConfigurationFromCommandLine(argv):
     
 def main(argv):
     try:
-        server = DeviceServer.create("DeviceServer", getConfigurationFromCommandLine(argv))
+        configuration = getConfigurationFromCommandLine(argv)
+        if configuration is None:
+            hostname = socket.gethostname()
+            host, dot, domain = hostname.partition('.')
+            serverid = host + "/" + DeviceServer.__classid__ + "/0"
+            configuration = Hash("serverId", serverid)
+        print "DeviceServer config\n", configuration
+        server = DeviceServer.create("DeviceServer", configuration)
         server.run()
     except Exception,e:
         print "Exception caught: " + str(e)
