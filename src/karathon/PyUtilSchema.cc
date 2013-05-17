@@ -1126,7 +1126,7 @@ void exportPyUtilSchema() {
         s.def("hasAlarmHigh", &Schema::hasAlarmHigh);
 
         s.def("hasDisplayedName", &Schema::hasDisplayedName);
-        
+
         s.def("hasDescription", &Schema::hasDescription);
 
         s.def("hasExpertLevel", &Schema::hasExpertLevel);
@@ -1161,28 +1161,31 @@ void exportPyUtilSchema() {
     /////////////////////////////////////////////////////////////
     //DefaultValue<SimpleElement< EType >, EType >, where EType:
     //INT32, UINT32, INT64, UINT64, DOUBLE, STRING, BOOL
+    //and DefaultValue<PathElement, std::string >
 
 
-    KARABO_PYTHON_ELEMENT_DEFAULT_VALUE(int, INT32)
-    KARABO_PYTHON_ELEMENT_DEFAULT_VALUE(unsigned int, UINT32)
-    KARABO_PYTHON_ELEMENT_DEFAULT_VALUE(long long, INT64)
-    KARABO_PYTHON_ELEMENT_DEFAULT_VALUE(unsigned long long, UINT64)
-    KARABO_PYTHON_ELEMENT_DEFAULT_VALUE(double, DOUBLE)
-    KARABO_PYTHON_ELEMENT_DEFAULT_VALUE(std::string, STRING)
-    KARABO_PYTHON_ELEMENT_DEFAULT_VALUE(bool, BOOL)
+    KARABO_PYTHON_ELEMENT_DEFAULT_VALUE(SimpleElement<int>, int, INT32)
+    KARABO_PYTHON_ELEMENT_DEFAULT_VALUE(SimpleElement<unsigned int>, unsigned int, UINT32)
+    KARABO_PYTHON_ELEMENT_DEFAULT_VALUE(SimpleElement<long long>, long long, INT64)
+    KARABO_PYTHON_ELEMENT_DEFAULT_VALUE(SimpleElement<unsigned long long>, unsigned long long, UINT64)
+    KARABO_PYTHON_ELEMENT_DEFAULT_VALUE(SimpleElement<double>, double, DOUBLE)
+    KARABO_PYTHON_ELEMENT_DEFAULT_VALUE(SimpleElement<string>, string, STRING)
+    KARABO_PYTHON_ELEMENT_DEFAULT_VALUE(SimpleElement<bool>, bool, BOOL)
+    KARABO_PYTHON_ELEMENT_DEFAULT_VALUE(PathElement, string, PATH)
 
     ///////////////////////////////////////////////////////////////
     //ReadOnlySpecific<SimpleElement< EType >, EType >, where EType:
     //INT32, UINT32, INT64, UINT64, DOUBLE, STRING, BOOL
+    // and ReadOnlySpecific<PathElement, std::string >
 
-    KARABO_PYTHON_ELEMENT_READONLYSPECIFIC(int, INT32)
-    KARABO_PYTHON_ELEMENT_READONLYSPECIFIC(unsigned int, UINT32)
-    KARABO_PYTHON_ELEMENT_READONLYSPECIFIC(long long, INT64)
-    KARABO_PYTHON_ELEMENT_READONLYSPECIFIC(unsigned long long, UINT64)
-    KARABO_PYTHON_ELEMENT_READONLYSPECIFIC(double, DOUBLE)
-    KARABO_PYTHON_ELEMENT_READONLYSPECIFIC(std::string, STRING)
-    KARABO_PYTHON_ELEMENT_READONLYSPECIFIC(bool, BOOL)
-
+    KARABO_PYTHON_ELEMENT_READONLYSPECIFIC(SimpleElement<int>, int, INT32)
+    KARABO_PYTHON_ELEMENT_READONLYSPECIFIC(SimpleElement<unsigned int>, unsigned int, UINT32)
+    KARABO_PYTHON_ELEMENT_READONLYSPECIFIC(SimpleElement<long long>, long long, INT64)
+    KARABO_PYTHON_ELEMENT_READONLYSPECIFIC(SimpleElement<unsigned long long>, unsigned long long, UINT64)
+    KARABO_PYTHON_ELEMENT_READONLYSPECIFIC(SimpleElement<double>, double, DOUBLE)
+    KARABO_PYTHON_ELEMENT_READONLYSPECIFIC(SimpleElement<std::string>, std::string, STRING)
+    KARABO_PYTHON_ELEMENT_READONLYSPECIFIC(SimpleElement<bool>, bool, BOOL)
+    KARABO_PYTHON_ELEMENT_READONLYSPECIFIC(PathElement, std::string, PATH)
 
     ///////////////////////////////////////////////////////////
     //DefaultValue<VectorElement< EType, std::vector >, std::vector< EType > > where EType:
@@ -1208,7 +1211,6 @@ void exportPyUtilSchema() {
     KARABO_PYTHON_VECTOR_READONLYSPECIFIC(std::string, STRING)
     KARABO_PYTHON_VECTOR_READONLYSPECIFIC(bool, BOOL)
 
-
     //////////////////////////////////////////////////////////////////////
     //Binding karabo::util::SimpleElement< EType >, where EType:
     //int, long long, double, string, bool
@@ -1224,6 +1226,11 @@ void exportPyUtilSchema() {
     KARABO_PYTHON_SIMPLE(bool, BOOL)
 
     //////////////////////////////////////////////////////////////////////
+    // Binding karabo::util::PathElement       
+    // In Python : PATH_ELEMENT
+    KARABO_PYTHON_PATH_ELEMENT(PathElement)
+
+    //////////////////////////////////////////////////////////////////////
     // Binding karabo::util::VectorElement< EType, std::vector >
     // In Python : VECTOR_INT32_ELEMENT, VECTOR_UINT32_ELEMENT, 
     // VECTOR_INT64_ELEMENT, VECTOR_UINT64_ELEMENT, VECTOR_DOUBLE_ELEMENT,
@@ -1237,48 +1244,9 @@ void exportPyUtilSchema() {
     KARABO_PYTHON_VECTOR(string, STRING)
     KARABO_PYTHON_VECTOR(bool, BOOL)
 
-    //////////////////////////////////////////////////////////////////////
-    // Binding karabo::util::PathElement       
-    // In Python : PATH_ELEMENT
-    KARABO_PYTHON_PATH_ELEMENT(PathElement)
-
-            ///////////////////////////////////////////////////////////////////////////
-            //karabo::util::DefaultValue<karabo::util::PathElement, std::string>
-    {
-        typedef DefaultValue< PathElement, string > DefValue;
-        bp::class_< DefValue, boost::noncopyable > ("DefaultValuePathElement", bp::no_init)
-                .def("defaultValue"
-                     , (PathElement & (DefValue::*)(string const &))(&DefValue::defaultValue)
-                     , (bp::arg("defaultValue"))
-                     , bp::return_internal_reference<> ())
-                .def("defaultValueFromString"
-                     , (PathElement & (DefValue::*)(string const &))(&DefValue::defaultValueFromString)
-                     , (bp::arg("defaultValue"))
-                     , bp::return_internal_reference<> ())
-                .def("noDefaultValue"
-                     , (PathElement & (DefValue::*)())(&DefValue::noDefaultValue)
-                     , bp::return_internal_reference<> ())
-                ;
-    }
-
-    ///////////////////////////////////////////////////////////////////////////
-    //karabo::util::ReadOnlySpecific<karabo::util::PathElement, std::string>
-    // (skip as not applicable: initialValueFromString, alarmLow/High, warnLow/High )
-    {   
-        typedef ReadOnlySpecific< PathElement, string > ReadOnlySpec;
-        bp::class_< ReadOnlySpec, boost::noncopyable >("ReadOnlySpecificPathElem", bp::no_init)
-                .def("initialValue"
-                     , (ReadOnlySpec & (ReadOnlySpec::*)(string const &))(&ReadOnlySpec::initialValue)
-                     , bp::return_internal_reference<> ())
-                .def("commit", (void (ReadOnlySpec::*)())(&ReadOnlySpec::commit))
-                ;
-    }
-
-
-
-    //////////////////////////////////////////////////////////////////////
-    // Binding karabo::util::NodeElement       
-    // In Python : NODE_ELEMENT
+   //////////////////////////////////////////////////////////////////////
+   // Binding karabo::util::NodeElement       
+   // In Python : NODE_ELEMENT
     {
         bp::implicitly_convertible< Schema &, NodeElement >();
         bp::class_<NodeElement> ("NODE_ELEMENT", bp::init<Schema & >((bp::arg("expected"))))
