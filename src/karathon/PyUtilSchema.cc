@@ -72,7 +72,7 @@ public:
                 return bp::object(validated);
             throw KARABO_PYTHON_EXCEPTION(result.second);
         }
-        throw KARABO_PYTHON_EXCEPTION("Python arguments are not supported types");
+        throw KARABO_PYTHON_EXCEPTION("Python argument's types for 'validate' method are not 'Schema' and 'Hash'.");
     }
 
 
