@@ -34,6 +34,30 @@ struct AliasAttributeWrap {
     }
 };
 
+
+template <class T>
+struct DefaultValueVectorWrap {
+    typedef std::vector< T > VType;
+    typedef karabo::util::VectorElement< T > U;
+    typedef karabo::util::DefaultValue< U, VType > DefValueVec;
+
+    static U & defaultValue(DefValueVec& self, const bp::object& obj) {
+        if (PyList_Check(obj.ptr())) {
+            const bp::list& l = bp::extract<bp::list > (obj);
+            bp::ssize_t size = bp::len(l);
+
+            std::vector<T> v(size);
+            for (bp::ssize_t i = 0; i < size; ++i) {
+                v[i] = bp::extract<T > (obj[i]);
+            }
+            return self.defaultValue(v);
+        } else {
+            throw KARABO_PYTHON_EXCEPTION("Python type of the defaultValue of VectorElement must be a list");
+        }
+    }
+
+};
+
 ///////////////////////////////////////////////////////////////////////////
 //DefaultValue<SimpleElement< EType> > where EType:
 //BOOL, INT32, UINT32, INT64, UINT64, STRING, DOUBLE
@@ -66,11 +90,12 @@ typedef karabo::util::VectorElement< EType, std::vector> U;\
 typedef karabo::util::DefaultValue< U, VType > DefValueVec;\
 bp::class_< DefValueVec, boost::noncopyable > ("DefaultValueVector"#e, bp::no_init)\
 .def("defaultValue"\
-, &karabo::karathon::DefaultValueVectorWrap<EType>::pyList2VectorDefaultValue\
-, (bp::arg("defValueVec"), bp::arg("defaultValuePyList")))\
+, &DefaultValueVectorWrap<EType>::defaultValue\
+, (bp::arg("self"), bp::arg("pyList"))\
+, bp::return_internal_reference<> ())\
 .def("defaultValueFromString"\
 , (U & (DefValueVec::*)(std::string const &))(&DefValueVec::defaultValueFromString)\
-, (bp::arg("defaultValue"))\
+, (bp::arg("defaultValueString"))\
 , bp::return_internal_reference<> ())\
 .def("noDefaultValue"\
 , (U & (DefValueVec::*)())(&DefValueVec::noDefaultValue)\
@@ -120,7 +145,6 @@ bp::class_< ReadOnlySpecVec, boost::noncopyable > ("ReadOnlySpecificVector"#e, b
 ;\
 }
 
-
 /**
  * The following macro KARABO_PYTHON_SIMPLE
  * is used for python binding of
@@ -138,13 +162,13 @@ typedef t EType;\
 typedef SimpleElement< EType > T;\
 bp::implicitly_convertible< Schema &, T >();\
 bp::class_< T, boost::noncopyable >( #e"_ELEMENT", bp::init< Schema & >((bp::arg("expected"))) )\
-KARABO_PYTHON_COMMON_ATTRIBUTES \
-KARABO_PYTHON_OPTIONS_NONVECTOR \
-KARABO_PYTHON_NUMERIC_ATTRIBUTES \
+KARABO_PYTHON_COMMON_ATTRIBUTES(T) \
+KARABO_PYTHON_OPTIONS_NONVECTOR(T) \
+KARABO_PYTHON_NUMERIC_ATTRIBUTES(T) \
 ;\
 }
 
-#define KARABO_PYTHON_COMMON_ATTRIBUTES \
+#define KARABO_PYTHON_COMMON_ATTRIBUTES(T)\
 .def("advanced", &T::advanced\
 , bp::return_internal_reference<> () )\
 .def("allowedStates", &T::allowedStates\
@@ -191,7 +215,7 @@ KARABO_PYTHON_NUMERIC_ATTRIBUTES \
 , bp::return_internal_reference<> ())\
 
 
-#define KARABO_PYTHON_OPTIONS_NONVECTOR \
+#define KARABO_PYTHON_OPTIONS_NONVECTOR(T) \
 .def("options"\
 , (T & (T::*)(std::string const &, std::string const &))(&T::options)\
 , (bp::arg("opts"), bp::arg("sep")=" ,;")\
@@ -202,7 +226,7 @@ KARABO_PYTHON_NUMERIC_ATTRIBUTES \
 , bp::return_internal_reference<> ())
 
 
-#define KARABO_PYTHON_NUMERIC_ATTRIBUTES \
+#define KARABO_PYTHON_NUMERIC_ATTRIBUTES(T) \
 .def("maxExc", &T::maxExc\
 , bp::return_internal_reference<> ())\
 .def("maxInc", &T::maxInc\
@@ -229,7 +253,7 @@ typedef t EType;\
 typedef VectorElement< EType, std::vector > T;\
 bp::implicitly_convertible< Schema &, T >();\
 bp::class_< T, boost::noncopyable >( "VECTOR_"#e"_ELEMENT", bp::init< karabo::util::Schema & >(( bp::arg("expected") )) )\
-KARABO_PYTHON_COMMON_ATTRIBUTES \
+KARABO_PYTHON_COMMON_ATTRIBUTES(T) \
 .def("maxSize"\
 , (T & ( T::*)(int const & )) (&T::maxSize)\
 , bp::return_internal_reference<> () )\
@@ -274,25 +298,6 @@ KARABO_PYTHON_COMMON_ATTRIBUTES \
 , (NameElem & (NameElem::*)(karabo::util::Schema &))(&NameElem::commit)\
 , bp::arg("expected")\
 , bp::return_internal_reference<> ())
-
-#define KARABO_PYTHON_PATH_ELEMENT(PathElem)\
-{\
-typedef PathElem T;\
-bp::implicitly_convertible< Schema &, T >();\
-bp::class_<T> ("PATH_ELEMENT", bp::init<Schema & >((bp::arg("expected"))))\
-KARABO_PYTHON_COMMON_ATTRIBUTES \
-KARABO_PYTHON_OPTIONS_NONVECTOR \
-.def("isInputFile"\
-, &PathElement::isInputFile\
-, bp::return_internal_reference<> ())\
-.def("isOutputFile"\
-, &PathElement::isOutputFile\
-, bp::return_internal_reference<> ())\
-.def("isDirectory"\
-, &PathElement::isDirectory\
-, bp::return_internal_reference<> ())\
-;\
-}
 
 
 //Macro KARABO_PYTHON_ANY_EXTRACT is used in pyexfel.cc and pyexfelportable.cc for binding.
