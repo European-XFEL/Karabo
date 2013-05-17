@@ -108,12 +108,17 @@ struct NodeElementWrap {
         if (!PyType_Check(baseobj.ptr())) {
             throw KARABO_PYTHON_EXCEPTION("Argument 'arg1' given in 'appendParametersOfConfigurableClass(arg1, arg2)' of NODE_ELEMENT must be a class in Python registered as base class in Configurator");
         }
-        if (!baseobj.attr("expectedParameters")) {
-            throw KARABO_PYTHON_EXCEPTION("Class given in 'appendParametersOf' of NODE_ELELEMT must have 'expectedParameters' function");
+        if (!PyObject_HasAttrString(baseobj.ptr(), "getSchema")) {
+                throw KARABO_PYTHON_EXCEPTION("Class with classid = '" + classid + "' given in 'appendParametersOfConfigurableClass(base, classid)' of NODE_ELELEMT has no 'getSchema' method.");
         }
-
+        std::string baseClassId;
+        if (PyObject_HasAttrString(baseobj.ptr(), "__karabo_cpp_classid__")) {
+            // baseobj is object of C++ base class
+            baseClassId = bp::extract<std::string>(baseobj.attr("__karabo_cpp_classid__"));
+        } else {
+            baseClassId = bp::extract<std::string>(baseobj.attr("__classid__"));
+        }
         if (self.getNode().getType() != Types::HASH) self.getNode().setValue(Hash());
-        std::string baseClassId = bp::extract<std::string>(baseobj.attr("__classid__"));
         self.getNode().setAttribute(KARABO_SCHEMA_CLASS_ID, classid);
         self.getNode().setAttribute(KARABO_SCHEMA_DISPLAY_TYPE, baseClassId);
 
@@ -132,10 +137,15 @@ struct NodeElementWrap {
         if (!PyType_Check(obj.ptr())) {
             throw KARABO_PYTHON_EXCEPTION("Argument 'arg' given in 'appendParametersOf(arg)' of NODE_ELEMENT must be a class in Python");
         }
-        if (!obj.attr("expectedParameters")) {
-            throw KARABO_PYTHON_EXCEPTION("Class given in 'appendParametersOf' of NODE_ELELEMT must have 'expectedParameters' function");
+        if (!PyObject_HasAttrString(obj.ptr(), "getSchema")) {
+            throw KARABO_PYTHON_EXCEPTION("Class given in 'appendParametersOf' of NODE_ELELEMT has no 'getSchema' method");
         }
-        std::string classid = bp::extract<std::string>(obj.attr("__classid__"));
+        std::string classid;
+        if (PyObject_HasAttrString(obj.ptr(), "__karabo_cpp_classid__")) {
+            classid = bp::extract<std::string>(obj.attr("__karabo_cpp_classid__"));
+        } else {
+            classid = bp::extract<std::string>(obj.attr("__classid__"));
+        }
         bp::object schemaObj = obj.attr("getSchema")(classid);
         const karabo::util::Schema schemaPy = bp::extract<karabo::util::Schema> (schemaObj);
 
@@ -156,12 +166,18 @@ struct ChoiceElementWrap {
         if (!PyType_Check(classobj.ptr())) {
             throw KARABO_PYTHON_EXCEPTION("Argument 'arg' given in 'appendNodesOfConfigurationBase(arg)' of CHOICE_ELEMENT must be a class in Python");
         }
-        if (!classobj.attr("expectedParameters")) {
-            throw KARABO_PYTHON_EXCEPTION("Class given in 'appendNodesOfConfigurationBase' of CHOICE_ELEMENT must have 'expectedParameters' function");
+        if (!PyObject_HasAttrString(classobj.ptr(), "getSchema")) {
+            throw KARABO_PYTHON_EXCEPTION("Class given in 'appendNodesOfConfigurationBase' of CHOICE_ELEMENT must have 'getSchema' function");
         }
+        std::string classid;
+        if (PyObject_HasAttrString(classobj.ptr(), "__karabo_cpp_classid__")) {
+            classid = bp::extract<std::string>(classobj.attr("__karabo_cpp_classid__"));
+        } else {
+            classid = bp::extract<std::string>(classobj.attr("__classid__"));
+        }
+        
         if (self.getNode().getType() != Types::HASH) self.getNode().setValue(Hash());
         Hash& choiceOfNodes = self.getNode().getValue<Hash>();
-        std::string classid = bp::extract<std::string>(classobj.attr("__classid__"));
 
         bp::object nodeNameList = classobj.attr("getRegisteredClasses")();
         boost::any any;
@@ -193,12 +209,18 @@ struct ListElementWrap {
         if (!PyType_Check(classobj.ptr())) {
             throw KARABO_PYTHON_EXCEPTION("Argument 'arg' given in 'appendNodesOfConfigurationBase(arg)' of LIST_ELEMENT must be a class in Python");
         }
-        if (!classobj.attr("expectedParameters")) {
-            throw KARABO_PYTHON_EXCEPTION("Class given in 'appendNodesOfConfigurationBase' of LIST_ELEMENT must have 'expectedParameters' function");
+        if (!PyObject_HasAttrString(classobj.ptr(), "getSchema")) {
+            throw KARABO_PYTHON_EXCEPTION("Class given in 'appendNodesOfConfigurationBase' of LIST_ELEMENT has no 'getSchema' method");
         }
+        std::string classid;
+        if (PyObject_HasAttrString(classobj.ptr(), "__karabo_cpp_classid__")) {
+            classid = bp::extract<std::string>(classobj.attr("__karabo_cpp_classid__"));
+        } else {
+            classid = bp::extract<std::string>(classobj.attr("__classid__"));
+        }
+        
         if (self.getNode().getType() != Types::HASH) self.getNode().setValue(Hash());
         Hash& choiceOfNodes = self.getNode().getValue<Hash>();
-        std::string classid = bp::extract<std::string>(classobj.attr("__classid__"));
 
         bp::object nodeNameList = classobj.attr("getRegisteredClasses")();
         boost::any any;
