@@ -26,13 +26,21 @@ __all__ = ["ConfigurationPanel"]
 
 import const
 
-from attributetreewidget import AttributeTreeWidget
+from parametertreewidget import ParameterTreeWidget
 from docktabwindow import DockTabWindow
 from documentationpanel import DocumentationPanel
 from enums import NavigationItemTypes
 from manager import Manager
 from navigationtreeview import NavigationTreeView
-from xsdreader import XsdReader
+
+### Just for testing ###
+parseSchema = True
+if parseSchema:
+    from schemareader import SchemaReader
+    from schematest.sampleschema import SampleSchema
+else:
+    from xsdreader import XsdReader
+    
 
 from libkarathon import *
 from PyQt4.QtCore import *
@@ -52,7 +60,11 @@ class ConfigurationPanel(QWidget):
         
         # TODO: removed because is is not supported yet for SL6 (introduced with Qt 4.6)
         #self.__xmlSchema = QXmlSchema()
-        self.__xsdReader = XsdReader()
+        if parseSchema:
+            ### Just for testing ###
+            self.__schemaReader = SchemaReader()
+        else:
+            self.__xsdReader = XsdReader()
         
         title = "Configuration Editor"
         self.setWindowTitle(title)
@@ -97,11 +109,11 @@ class ConfigurationPanel(QWidget):
         Manager().notifier.signalErrorState.connect(self.onErrorState)
 
         self.__prevDevInsKey = str() # previous selected DEVICE_INSTANCE internalKey
-        self.__swAttributeEditor = QStackedWidget(splitTopPanes)
+        self.__swParameterEditor = QStackedWidget(splitTopPanes)
         # Initial page
-        twInitalAttributeEditorPage = AttributeTreeWidget(self)
-        twInitalAttributeEditorPage.setHeaderLabels(QStringList() << "Parameter" << "Value")
-        self.__swAttributeEditor.addWidget(twInitalAttributeEditorPage)
+        twInitalParameterEditorPage = ParameterTreeWidget(self)
+        twInitalParameterEditorPage.setHeaderLabels(QStringList() << "Parameter" << "Value")
+        self.__swParameterEditor.addWidget(twInitalParameterEditorPage)
         splitTopPanes.setStretchFactor(1, 3)
 
         hLayout = QHBoxLayout()
@@ -220,7 +232,7 @@ class ConfigurationPanel(QWidget):
 
 
     def setupToolBar(self, toolBar):
-        # this is done per AttributeTreeWidget
+        # this is done per ParameterTreeWidget
         self.__toolBar = toolBar
         
 
@@ -228,8 +240,8 @@ class ConfigurationPanel(QWidget):
         Manager().onDeviceInstanceChangedAsHash(key, config)
 
 
-    def getAttributeTreeWidgetItemByKey(self, key):
-        return self._r_getAttributeTreeWidgetItemByKey(self._getCurrentAttributeEditor().invisibleRootItem(), key)
+    def getParameterTreeWidgetItemByKey(self, key):
+        return self._r_getParameterTreeWidgetItemByKey(self._getCurrentParameterEditor().invisibleRootItem(), key)
 
 
     def getNavigationItemType(self):
@@ -252,7 +264,7 @@ class ConfigurationPanel(QWidget):
 
 
     def updateApplyAllActions(self):
-        nbSelected = self._getCurrentAttributeEditor().nbSelectedApplyEnabledItems()
+        nbSelected = self._getCurrentParameterEditor().nbSelectedApplyEnabledItems()
         if (self.__pbApplyAll.isEnabled() is True) and (nbSelected > 0):
             if nbSelected == 1:
                 text = "Apply selected"
@@ -292,7 +304,7 @@ class ConfigurationPanel(QWidget):
 
 
     def updateResetAllActions(self):
-        nbSelected = self._getCurrentAttributeEditor().nbSelectedApplyEnabledItems()
+        nbSelected = self._getCurrentParameterEditor().nbSelectedApplyEnabledItems()
         if (self.__pbResetAll.isEnabled() is True) and (nbSelected > 0):
             if nbSelected == 1:
                 text = "Reset selected"
@@ -308,6 +320,28 @@ class ConfigurationPanel(QWidget):
         self.__acResetAll.setText(text)
         self.__acResetAll.setStatusTip(text)
         self.__acResetAll.setToolTip(text)
+
+
+    def _parseSchema(self, itemInfo, twParameterEditorPage):
+        if parseSchema:
+            #schema = Connection.getSchema("Tcp")
+            #sampleSchemaClass = SampleSchema.create("SampleSchema", Hash("targetSpeed", 0.3))
+            schema = SampleSchema.getSchema("SampleSchema")
+            #schema = Configurator("SampleSchema").getSchema("SampleSchema")
+
+            # Distinguish between DEVICE_CLASS and DEVICE_INSTANCE
+            deviceType = itemInfo.get(QString('type'))
+            if deviceType is None:
+                deviceType = itemInfo.get('type')
+            self.__schemaReader.setDeviceType(deviceType)
+            
+            if self.__schemaReader.readSchema(schema, twParameterEditorPage):
+                QMessageBox.critical(self, "Schema", "The given schema is invalid")
+                return
+        else:
+            if self.__xsdReader.parseContent(twParameterEditorPage, itemInfo) == False:
+                QMessageBox.critical(self, "XSD Schema", "The given XSD schema file is invalid")
+                return
 
 
     def _createNewAttributePage(self, itemInfo):
@@ -330,22 +364,18 @@ class ConfigurationPanel(QWidget):
         #    QMessageBox.critical(None, "XML Schema", "The given XML schema file is invalid")
         #    return
 
-        twAttributeEditorPage = AttributeTreeWidget(self, internalKey, devClaId)
-        twAttributeEditorPage.setHeaderLabels(QStringList() << "Parameter" << "Current value on device" << "Value")
-        twAttributeEditorPage.addConfigAction(self.__acKillInstance)
-        twAttributeEditorPage.addConfigAction(self.__acApplyAll)
-        #twAttributeEditorPage.addConfigMenu(self.__mApply)
-        twAttributeEditorPage.addConfigAction(self.__acResetAll)
+        twParameterEditorPage = ParameterTreeWidget(self)#, internalKey, devClaId)
+        twParameterEditorPage.setHeaderLabels(QStringList() << "Parameter" << "Current value on device" << "Value")
+        twParameterEditorPage.addConfigAction(self.__acKillInstance)
+        twParameterEditorPage.addConfigAction(self.__acApplyAll)
+        #twParameterEditorPage.addConfigMenu(self.__mApply)
+        twParameterEditorPage.addConfigAction(self.__acResetAll)
         
         if type is NavigationItemTypes.DEVICE_CLASS:
-            twAttributeEditorPage.hideColumn(1)
+            twParameterEditorPage.hideColumn(1)
         
-        index = self.__swAttributeEditor.addWidget(twAttributeEditorPage)
-
-        if self.__xsdReader.parseContent(twAttributeEditorPage, self.__documentationPanel, itemInfo) == False:
-            QMessageBox.critical(self, "XSD Schema", "The given XSD schema file is invalid")
-            return
-
+        index = self.__swParameterEditor.addWidget(twParameterEditorPage)
+        self._parseSchema(itemInfo, twParameterEditorPage)
         return index
 
 
@@ -353,11 +383,6 @@ class ConfigurationPanel(QWidget):
     def _navigationTreeWidget(self):
         return self.__twNavigation
     navigationTreeWidget = property(fget=_navigationTreeWidget)
-
-
-    def _attributeStackedWidget(self):
-        return self.__swAttributeEditor
-    attributeStackedWidget = property(fget=_attributeStackedWidget)
 
 
     def _hasConflicts(self):
@@ -413,8 +438,8 @@ class ConfigurationPanel(QWidget):
         self.updateResetAllActions()
 
 
-    def _getCurrentAttributeEditor(self):
-        return self.__swAttributeEditor.currentWidget()
+    def _getCurrentParameterEditor(self):
+        return self.__swParameterEditor.currentWidget()
 
 
     def _updateButtonsVisibility(self, visible):
@@ -430,10 +455,10 @@ class ConfigurationPanel(QWidget):
     updateButtonsVisibility = property(fset=_updateButtonsVisibility)
 
 
-    def _r_getAttributeTreeWidgetItemByKey(self, item, key):
+    def _r_getParameterTreeWidgetItemByKey(self, item, key):
         for i in range(item.childCount()):
             childItem = item.child(i)
-            result = self._r_getAttributeTreeWidgetItemByKey(childItem, key)
+            result = self._r_getParameterTreeWidgetItemByKey(childItem, key)
             if (result is not None):
                 return result
             
@@ -444,29 +469,29 @@ class ConfigurationPanel(QWidget):
 
     def _applyAllChanges(self):
         config = Hash()
-        self._getCurrentAttributeEditor().onApplyAll(config)
-        self.applyAllAsHash(self._getCurrentAttributeEditor().instanceKey, config)
+        self._getCurrentParameterEditor().onApplyAll(config)
+        self.applyAllAsHash(self._getCurrentParameterEditor().instanceKey, config)
         self._setApplyAllEnabled(False)
 
 
     def _applySelectedChanges(self):
-        selectedItems = self._getCurrentAttributeEditor().selectedItems()
+        selectedItems = self._getCurrentParameterEditor().selectedItems()
         config = Hash()
         for item in selectedItems:
-            self._getCurrentAttributeEditor().addItemDataToHash(item, config)
+            self._getCurrentParameterEditor().addItemDataToHash(item, config)
         
-        self.applyAllAsHash(self._getCurrentAttributeEditor().instanceKey, config)
-        self._setApplyAllEnabled(self._getCurrentAttributeEditor().checkApplyButtonsEnabled()[0])
+        self.applyAllAsHash(self._getCurrentParameterEditor().instanceKey, config)
+        self._setApplyAllEnabled(self._getCurrentParameterEditor().checkApplyButtonsEnabled()[0])
 
 
     def _applyAllRemoteChanges(self):
-        self._getCurrentAttributeEditor().onApplyAllRemoteChanges()
+        self._getCurrentParameterEditor().onApplyAllRemoteChanges()
 
 
     def _applySelectedRemoteChanges(self):
-        selectedItems = self._getCurrentAttributeEditor().selectedItems()
+        selectedItems = self._getCurrentParameterEditor().selectedItems()
         for item in selectedItems:
-            self._getCurrentAttributeEditor().applyRemoteChanges(item)
+            self._getCurrentParameterEditor().applyRemoteChanges(item)
 
 
     def _r_unregisterEditableComponent(self, item):
@@ -497,7 +522,7 @@ class ConfigurationPanel(QWidget):
         if (key in self.__navItemInternalKeyIndexMap) and (key in self.__internalKeySchemaLoadedMap):
             index = self.__navItemInternalKeyIndexMap.get(key)
             if index is not None:
-                twAttributeEditorPage = self.__swAttributeEditor.widget(index)
+                twAttributeEditorPage = self.__swParameterEditor.widget(index)
                 
                 # Parsing of schema necessary?
                 schemaLoaded = self.__internalKeySchemaLoadedMap.get(key)
@@ -505,8 +530,8 @@ class ConfigurationPanel(QWidget):
                     # Unregister all widgets of TreeWidget from DataNotifier in Manager before clearing..
                     self._r_unregisterEditableComponent(twAttributeEditorPage.invisibleRootItem())
                     twAttributeEditorPage.clear()
-                    if self.__xsdReader.parseContent(twAttributeEditorPage, self.__documentationPanel, itemInfo) == False:
-                        QMessageBox.critical(self, "XSD Schema", "The given XSD schema file is invalid")
+
+                    self._parseSchema(itemInfo, twAttributeEditorPage)
                     self.__internalKeySchemaLoadedMap[key] = True
         else:
             self.__navItemInternalKeyIndexMap[key] = self._createNewAttributePage(itemInfo)
@@ -540,31 +565,31 @@ class ConfigurationPanel(QWidget):
         elif (type is NavigationItemTypes.DEVICE_SERVER_INSTANCE) or (type is NavigationItemTypes.DEVICE_INSTANCE):
             self.updateButtonsVisibility = False
         
-        # Hide apply button of current AttributeTreeWidget
-        self._getCurrentAttributeEditor().setActionsVisible(False)
+        # Hide apply button of current ParameterTreeWidget
+        self._getCurrentParameterEditor().setActionsVisible(False)
         if self.__prevDevInsKey != "":
             Manager().removeVisibleDeviceInstance(self.__prevDevInsKey)
             self.__prevDevInsKey = str()
 
         self.__twNavigation.itemChanged(itemInfo)
         
-        # Show correct attributes
+        # Show correct parameters
         index = self.__navItemInternalKeyIndexMap.get(QString(key))
         if index is not None:
-            self.__swAttributeEditor.blockSignals(True)
-            self.__swAttributeEditor.setCurrentIndex(index)
+            self.__swParameterEditor.blockSignals(True)
+            self.__swParameterEditor.setCurrentIndex(index)
             # Show apply button of current AttributeTreeWidget
-            self._getCurrentAttributeEditor().setActionsVisible(True)
-            self.__swAttributeEditor.blockSignals(False)
+            self._getCurrentParameterEditor().setActionsVisible(True)
+            self.__swParameterEditor.blockSignals(False)
             
             if (type is NavigationItemTypes.DEVICE_INSTANCE) and (self.__prevDevInsKey != key):
                 # visible DEVICE_INSTANCE has changed
                 Manager().newVisibleDeviceInstance(key)
                 self.__prevDevInsKey = key
         else:
-            self.__swAttributeEditor.blockSignals(True)
-            self.__swAttributeEditor.setCurrentIndex(0)
-            self.__swAttributeEditor.blockSignals(False)
+            self.__swParameterEditor.blockSignals(True)
+            self.__swParameterEditor.setCurrentIndex(0)
+            self.__swParameterEditor.blockSignals(False)
             
             # Hide buttons and actions
             self.__pbInitDevice.setVisible(False)
@@ -605,12 +630,12 @@ class ConfigurationPanel(QWidget):
         if index is None:
             index = self.__navItemInternalKeyIndexMap.get(str(internalKey))
         if index is not None:
-            twAttributeEditor = self.__swAttributeEditor.widget(index)
+            twAttributeEditor = self.__swParameterEditor.widget(index)
             twAttributeEditor.stateUpdated(state)
 
 
     def onConflictStateChanged(self, hasConflict):
-        result = self._getCurrentAttributeEditor().checkApplyButtonsEnabled()
+        result = self._getCurrentParameterEditor().checkApplyButtonsEnabled()
         if result[1] == hasConflict:
             self.hasConflicts = hasConflict
 
@@ -621,24 +646,17 @@ class ConfigurationPanel(QWidget):
                 self.__changingStateTimer.start(200)
         else:
             self.__changingStateTimer.stop()
-            self._getCurrentAttributeEditor().setReadOnly(False)
+            self._getCurrentParameterEditor().setReadOnly(False)
  
  
     def onErrorState(self, instanceId, hasError):
-        self._getCurrentAttributeEditor().setErrorState(hasError)
+        self._getCurrentParameterEditor().setErrorState(hasError)
         self.__twNavigation.setErrorState(instanceId, hasError)
  
 
     def onTimeOut(self):
         self.__changingStateTimer.stop()
-        self._getCurrentAttributeEditor().setReadOnly(True)
-
-
-    def onAttributeItemChanged(self, item):
-        if item is None:
-            self.__documentationPanel.setCurrentIndex(0)
-        else:
-            self.__documentationPanel.setCurrentIndex(item.descriptionIndex)
+        self._getCurrentParameterEditor().setReadOnly(True)
 
 
     def onApplyChanged(self, enable, hasConflicts=False):
@@ -649,7 +667,7 @@ class ConfigurationPanel(QWidget):
 
 
     def onApplyAll(self):
-        if self._getCurrentAttributeEditor().nbSelectedApplyEnabledItems() > 0:
+        if self._getCurrentParameterEditor().nbSelectedApplyEnabledItems() > 0:
             self._applySelectedChanges()
         else:
             self._applyAllChanges()
@@ -666,11 +684,11 @@ class ConfigurationPanel(QWidget):
 
     def onApplySelectedRemoteChanges(self):
         self._applySelectedRemoteChanges()
-        self._setApplyAllEnabled(self._getCurrentAttributeEditor().checkApplyButtonsEnabled()[0])
+        self._setApplyAllEnabled(self._getCurrentParameterEditor().checkApplyButtonsEnabled()[0])
 
 
     def onResetAll(self):
-        if self._getCurrentAttributeEditor().nbSelectedApplyEnabledItems() > 0:
+        if self._getCurrentParameterEditor().nbSelectedApplyEnabledItems() > 0:
             self._applySelectedRemoteChanges()
         else:
             self._applyAllRemoteChanges()

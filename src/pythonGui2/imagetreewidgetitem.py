@@ -12,12 +12,9 @@
 __all__ = ["ImageTreeWidgetItem"]
 
 
-import const
-
 from basetreewidgetitem import BaseTreeWidgetItem
 from displaycomponent import DisplayComponent
 from libkarathon import *
-from manager import Manager
 
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
@@ -41,25 +38,6 @@ class ImageTreeWidgetItem(BaseTreeWidgetItem):
         self.__imgData.set("dimZ", 0)
         self.__imgData.set("dimC", 0)
         self.__imgData.set("pixelArray", [])
-
-
-    # TODO: complete implementation
-    def copy(self, parentItem, keyName=str()):
-        copyItem = ImageTreeWidgetItem(self.internalKey, self.treeWidget(), parentItem)
-        #copyItem.setIcon(0, self.icon(0))
-        copyItem.setText(0, self.text(0))
-        
-        copyKeyName = str()
-        if len(keyName) < 1 :
-            copyItem.internalKey = self.internalKey
-        else :
-            copyItem.internalKey = keyName + "." + self.internalKey
-        
-        # copying children as well
-        for i in range(self.childCount()) :
-            self.child(i).copy(copyItem, copyKeyName)
-
-        return copyItem
 
 
 ### getter & setter functions ###
