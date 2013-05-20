@@ -5,10 +5,10 @@
 #############################################################################
 
 
-"""This module contains a class which inherits from a QTreeWidgetItem and represents
-   a base class item for the AttributeTreeWidget.
+"""This module contains a class which inherits from a QTreeWidgetItem.
    
-   Inherited by: AttributeTreeWidgetItem, ImageTreeWidgetItem, SlotTreeWidgetItem
+   Inherited by: PropertyTreeWidgetItem, ImageTreeWidgetItem, CommandTreeWidgetItem,
+                 AttributeTreeWidgetItem
 """
 
 __all__ = ["BaseTreeWidgetItem"]
@@ -21,51 +21,30 @@ from manager import Manager
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 
+
 class BaseTreeWidgetItem(QTreeWidgetItem):
     
     def __init__(self, key, parent, parentItem=None):
         
-        prevInternalKey = QString()
-        if parentItem is not None :
+        if parentItem:
             super(BaseTreeWidgetItem, self).__init__(parentItem)
-            prevInternalKey = parentItem.internalKey
-        else :
+        else:
             super(BaseTreeWidgetItem, self).__init__(parent)
-            prevInternalKey = parent.instanceKey
         
-        self.internalKey = prevInternalKey + "." + key
+        self.internalKey = key
+        print ""
+        print "-----", key
+        print ""
 
         # The components can be defined in Subclasses
         self.__displayComponent = None
         self.__editableComponent = None
-
-        self.classAlias = None
-        self.descriptionIndex = -1
-        self.updateNeeded = True
-        self.allowedStates = []
         
         self.mItem = None
 
 
-    # TODO: complete implementation
-    def copy(self, parentItem, keyName=str()):
-        copyItem = AttributeTreeWidgetItem(self.internalKey, self.treeWidget(), parentItem)
-        #copyItem.setIcon(0, self.icon(0))
-        copyItem.setText(0, self.text(0))
-        
-        copyKeyName = str()
-        if len(keyName) < 1 :
-            copyItem.internalKey = self.internalKey
-        else :
-            copyItem.internalKey = keyName + "." + self.internalKey
-        
-        copyItem.updateNeeded = self.updateNeeded
-
-        # copying children as well
-        for i in range(self.childCount()) :
-            self.child(i).copy(copyItem, copyKeyName)
-
-        return copyItem
+    def setupContextMenu(self):
+        raise NotImplementedError, "BaseTreeWidgetItem.setupContextMenu"
 
 
 ### getter and setter functions ###
@@ -74,13 +53,6 @@ class BaseTreeWidgetItem(QTreeWidgetItem):
     def _setEnabled(self, enabled):
         raise NotImplementedError, "BaseTreeWidgetItem._setEnabled"
     enabled = property(fget=_getEnabled, fset=_setEnabled)
-
-
-    def _getClassAlias(self):
-        return self.data(0, const.CLASS_ALIAS).toPyObject()
-    def _setClassAlias(self, alias):
-        self.setData(0, const.CLASS_ALIAS, alias)
-    classAlias = property(fget=_getClassAlias, fset=_setClassAlias)
 
 
     # Returns the display component of the item
@@ -96,6 +68,10 @@ class BaseTreeWidgetItem(QTreeWidgetItem):
         return self.__editableComponent
     def _setEditableComponent(self, component):
         self.__editableComponent = component
+        
+        self.setupContextMenu()
+        self.treeWidget().setItemWidget(self, 2, self.editableComponent.widget)
+        self.treeWidget().resizeColumnToContents(2)
     editableComponent = property(fget=_editableComponent, fset=_setEditableComponent)
 
 
@@ -111,20 +87,6 @@ class BaseTreeWidgetItem(QTreeWidgetItem):
     def _setUpdateNeeded(self, updateNeeded):
         self.setData(0, const.UPDATE_NEEDED, updateNeeded)
     updateNeeded = property(fget=_updateNeeded, fset=_setUpdateNeeded)
-
-
-    def _allowedStates(self):
-        return self.data(0, const.ALLOWED_STATE).toPyObject()
-    def _setAllowedStates(self, state):
-        self.setData(0, const.ALLOWED_STATE, state)
-    allowedStates = property(fget=_allowedStates, fset=_setAllowedStates)
-
-
-    def _isChoiceElement(self):
-        return self.data(0, const.IS_CHOICE_ELEMENT).toPyObject()
-    def _setIsChoiceElement(self, isChoiceElemet):
-        self.setData(0, const.IS_CHOICE_ELEMENT, isChoiceElemet)
-    isChoiceElement = property(fget=_isChoiceElement, fset=_setIsChoiceElement)
 
 
     def _descriptionIndex(self):

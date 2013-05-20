@@ -35,8 +35,8 @@ def getCategoryAliasClassName():
 
 class EditableDoubleSpinBox(EditableWidget):
     
-    EPSILON_MIN = 1e-4
-    EPSILON_MAX = 1e+4
+    DECIMALS_LEFT = 5
+    DECIMALS_RIGHT = 4
     
     def __init__(self, **params):
         super(EditableDoubleSpinBox, self).__init__(**params)
@@ -164,13 +164,18 @@ class EditableDoubleSpinBox(EditableWidget):
 
 
     def _setWidgetVisibility(self, value):
-        if ((value > EditableDoubleSpinBox.EPSILON_MIN)
-        and (value < EditableDoubleSpinBox.EPSILON_MAX)):
-            self.__scientificSpinBox.setVisible(False)
-            self.__normalSpinBox.setVisible(True)
-        else:
+        # Check number of decimal places
+        splittedValue = str(value).split(".")
+        if len(splittedValue) != 2:
+            return
+        
+        if ((len(splittedValue[0]) > EditableDoubleSpinBox.DECIMALS_LEFT)
+         or (len(splittedValue[1]) > EditableDoubleSpinBox.DECIMALS_RIGHT)):
             self.__scientificSpinBox.setVisible(True)
             self.__normalSpinBox.setVisible(False)
+        else:
+            self.__scientificSpinBox.setVisible(False)
+            self.__normalSpinBox.setVisible(True)
 
 
     def valueChanged(self, key, value, timestamp=None, forceRefresh=False):

@@ -30,7 +30,7 @@ class XsdReader(QXmlStreamReader):
         self.__type = None
 
 
-    def parseContent(self, twAttributeEditorPage, documentationPanel, itemInfo):
+    def parseContent(self, twAttributeEditorPage, itemInfo):
 
         self.__type = itemInfo.get(QString('type'))
         if self.__type is None:
@@ -56,11 +56,11 @@ class XsdReader(QXmlStreamReader):
             print "Configurator was fed with illegal XSD"
             return False
 
-        self.processMainElementTag(twAttributeEditorPage, documentationPanel)
+        self.processMainElementTag(twAttributeEditorPage)
         return True
 
 
-    def processMainElementTag(self, twAttributeEditorPage, documentationPanel):
+    def processMainElementTag(self, twAttributeEditorPage):
     
         while self.atEnd() == False:
             tokenType = self.readNext()
@@ -68,12 +68,12 @@ class XsdReader(QXmlStreamReader):
 
             if tokenType == QXmlStreamReader.StartElement:
                 if tagName == "element":
-                    self.processSimpleElements(twAttributeEditorPage, documentationPanel)
+                    self.processSimpleElements(twAttributeEditorPage)
             elif tokenType == QXmlStreamReader.EndElement:
                 break
 
 
-    def processSimpleElements(self, twAttributeEditorPage, documentationPanel):
+    def processSimpleElements(self, twAttributeEditorPage):
 
         while self.atEnd() == False:
             tokenType = self.readNext()
@@ -83,7 +83,7 @@ class XsdReader(QXmlStreamReader):
                 if tagName == "element" :
                     name, type, defaultValue, minOccurs, maxOccurs = self.processSimpleElementAttributes()
                     # following tags
-                    self.processFollowingElements(twAttributeEditorPage, documentationPanel,
+                    self.processFollowingElements(twAttributeEditorPage,
                                                   name, type, defaultValue, minOccurs, maxOccurs)
             elif tokenType == QXmlStreamReader.EndElement:
                 break
@@ -115,9 +115,10 @@ class XsdReader(QXmlStreamReader):
         return [name, type, defaultValue, minOccurs, maxOccurs]
 
 
-    def processFollowingElements(self, twAttributeEditorPage, documentationPanel,
-                                 name="", type="", defaultValue="", minOccurs="", maxOccurs="",
-                                 parentItem=None, isSequenceElement=False):
+    def processFollowingElements(self, twAttributeEditorPage,
+                                    name="", type="", defaultValue="",
+                                    minOccurs="", maxOccurs="",
+                                    parentItem=None, isSequenceElement=False):
 
         description = ""
         displayedName = ""
@@ -178,10 +179,9 @@ class XsdReader(QXmlStreamReader):
                         if len(expertLevel) > 0 :
                             complexItem.expertLevel = int(expertLevel)
                     
-                    self.populateDescription(documentationPanel, complexItem, description, minInclusive, maxInclusive, unitName, unitSymbol, default)
                     self.setUpdateStatus(parentItem, complexItem)
                     
-                    self.processComplexTypeTag(twAttributeEditorPage, documentationPanel, complexItem, isSequenceElement)
+                    self.processComplexTypeTag(twAttributeEditorPage, complexItem, isSequenceElement)
             elif tokenType == QXmlStreamReader.EndElement and tagName == "element":
                 break
 
@@ -210,8 +210,6 @@ class XsdReader(QXmlStreamReader):
 
                     #attributeItem.unitSymbol = unitSymbol
 
-                    self.populateDescription(documentationPanel, attributeItem, description, 
-                                             minInclusive, maxInclusive, unitName, unitSymbol, default)
                     self.setUpdateStatus(parentItem, attributeItem)
                     
                     createEditableComponent = True
@@ -527,7 +525,7 @@ class XsdReader(QXmlStreamReader):
         return [restrictionBase, minInclusive, maxInclusive, enumeration]
 
 
-    def processComplexTypeTag(self, twAttributeEditorPage, documentationPanel, parentItem, isSequenceElement=False):
+    def processComplexTypeTag(self, twAttributeEditorPage, parentItem, isSequenceElement=False):
 
         while self.atEnd() == False:
             tokenType = self.readNext()
@@ -535,13 +533,13 @@ class XsdReader(QXmlStreamReader):
 
             if tokenType == QXmlStreamReader.StartElement:
                 if tagName == "choice":
-                    self.processChoiceTag(twAttributeEditorPage, documentationPanel, parentItem, isSequenceElement)
+                    self.processChoiceTag(twAttributeEditorPage, parentItem, isSequenceElement)
                 elif tagName == "element":
                     name, type, defaultValue, minOccurs, maxOccurs = self.processSimpleElementAttributes()
                     # process children
-                    self.processFollowingElements(twAttributeEditorPage, documentationPanel, name, type, defaultValue, minOccurs, maxOccurs, parentItem)
+                    self.processFollowingElements(twAttributeEditorPage, name, type, defaultValue, minOccurs, maxOccurs, parentItem)
                 elif tagName == "sequence":
-                    self.processSequenceTag(twAttributeEditorPage, documentationPanel, parentItem)
+                    self.processSequenceTag(twAttributeEditorPage, parentItem)
                 elif tagName == "attribute":
                     name = self.attributes().value("name").toString()
                     type = self.attributes().value("type").toString()
@@ -550,7 +548,7 @@ class XsdReader(QXmlStreamReader):
                 break
 
 
-    def processChoiceTag(self, twAttributeEditorPage, documentationPanel, parentItem, isSequenceElement=False):
+    def processChoiceTag(self, twAttributeEditorPage, parentItem, isSequenceElement=False):
         choiceComponent = None
         
         defaultDataFromParent = None
@@ -598,7 +596,8 @@ class XsdReader(QXmlStreamReader):
                 if tagName == "element":
                     name, type, defaultValue, minOccurs, maxOccurs = self.processSimpleElementAttributes()
 
-                    childItem = self.processFollowingElements(twAttributeEditorPage, documentationPanel, name, type, defaultValue,
+                    childItem = self.processFollowingElements(twAttributeEditorPage,
+                                                              name, type, defaultValue,
                                                               minOccurs, maxOccurs, parentItem, isSequenceElement)
 
                     if (childItem is not None) and (childItem.text(0) != defaultDataFromParent):
@@ -612,7 +611,7 @@ class XsdReader(QXmlStreamReader):
         parentItem.onSetToDefault()
 
 
-    def processSequenceTag(self, twAttributeEditorPage, documentationPanel, parentItem):
+    def processSequenceTag(self, twAttributeEditorPage, parentItem):
 
         while self.atEnd() == False :
             tokenType = self.readNext()
@@ -622,7 +621,7 @@ class XsdReader(QXmlStreamReader):
                 if tagName == "element" :
                     name, type, defaultValue, minOccurs, maxOccurs = self.processSimpleElementAttributes()
 
-                self.processFollowingElements(twAttributeEditorPage, documentationPanel, name, type, defaultValue,
+                self.processFollowingElements(twAttributeEditorPage, name, type, defaultValue,
                                               minOccurs, maxOccurs, parentItem, True)
 
             elif tokenType == QXmlStreamReader.EndElement and tagName == "sequence" :
@@ -663,41 +662,4 @@ class XsdReader(QXmlStreamReader):
                 item.updateNeeded = True
         else :
             item.updateNeeded = False
-
-
-    def populateDescription(self, documentationPanel, attributeItem, description,
-                            minInclusive, maxInclusive, unitName, unitSymbol, default):
-
-        if attributeItem is None:
-            return
-
-        teDescriptionPage = QTextEdit()
-        teDescriptionPage.setReadOnly(True)
-
-        attributeItem.descriptionIndex = documentationPanel.addWidget(teDescriptionPage)
-
-        content = QString("<h3><b>Information</b></h3>")
-
-        if (description is not None) and len(description) > 0 :
-           content.append(QString("<b>Description:</b> %1<br />").arg(description))
-
-        keys = str(attributeItem.internalKey).split('.', 1)
-        systemKey = keys[0] + "/" + keys[1]
-        content.append(QString("<b>Full key:</b> %2<br /><br />").arg(systemKey))
-
-        if minInclusive and len(minInclusive) > 0:
-            content.append(QString("<b>minInclusive:</b> %1<br />").arg(minInclusive))
-        if maxInclusive and len(maxInclusive) > 0:
-            content.append(QString("<b>maxInclusive:</b> %1<br />").arg(maxInclusive))
-
-        if unitName and len(unitName) > 0:
-            content.append(QString("<b>Unit name:</b> %1<br />").arg(unitName))
-        if unitSymbol and len(unitSymbol) > 0:
-            content.append(QString("<b>Unit symbol:</b> %1<br />").arg(unitSymbol))
-
-        if default and len(default) > 0:
-            content.append(QString("<b>Default:</b> %1<br />").arg(default))
-
-        content.append(QString("<br />Further device documentation."))
-        teDescriptionPage.setText(content)
 

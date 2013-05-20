@@ -14,15 +14,16 @@ __all__ = ["MainWindow"]
 
 import qrc_icons
 
-from configurationpanel import ConfigurationPanel
-from custommiddlepanel import CustomMiddlePanel
 from docktabwindow import DockTabWindow
-from loggingpanel import LoggingPanel
 from manager import Manager
-from navigationpanel import NavigationPanel
 from network import Network
-from notificationpanel import NotificationPanel
-from scriptingpanel import ScriptingPanel
+
+from panels.configurationpanel import ConfigurationPanel
+from panels.custommiddlepanel import CustomMiddlePanel
+from panels.loggingpanel import LoggingPanel
+from panels.navigationpanel import NavigationPanel
+from panels.notificationpanel import NotificationPanel
+from panels.scriptingpanel import ScriptingPanel
 
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
