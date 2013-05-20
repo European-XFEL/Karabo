@@ -6,32 +6,31 @@
 
 
 """This module contains a class which represents the treewidget of the configuration
-   panel containing the attributes of a device class/instance.
+   panel containing the parameters of a device class/instance.
 """
 
-__all__ = ["AttributeTreeWidget"]
+__all__ = ["ParameterTreeWidget"]
 
 
-import attributetreewidgetitem
+#import attributetreewidgetitem
 from editableapplylatercomponent import EditableApplyLaterComponent
-from enums import ConfigChangeTypes
-from enums import NavigationItemTypes
+from enums import *
 from libkarathon import *
 from manager import Manager
 
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 
-class AttributeTreeWidget(QTreeWidget):
+
+class ParameterTreeWidget(QTreeWidget):
 
 
-    def __init__(self, configPanel, internalKey=str(), devClaId=None):
-        # configPanel - save parent widget
+    def __init__(self, configPanel, classId=None):
+        # configPanel - save parent widget for toolbar buttons
         # internalKey - full key of navigationItem (either DEVICE_CLASS or DEVICE_INSTANCE)
-        super(AttributeTreeWidget, self).__init__()
+        super(ParameterTreeWidget, self).__init__()
         
-        self.__devClaId = devClaId # DeviceClass name stored for XML save
-        self.__instanceKey = internalKey
+        self.__classId = classId # DeviceClass name stored for XML save
         
         self.__configPanel = configPanel
 
@@ -56,14 +55,6 @@ class AttributeTreeWidget(QTreeWidget):
             return
         
         self._performDrag()
-
-
-### getter & setter functions ###
-    def _getInstanceKey(self):
-        return self.__instanceKey
-    def _setInstanceKey(self, instanceKey):
-        self.__instanceKey = instanceKey
-    instanceKey = property(fget=_getInstanceKey, fset=_setInstanceKey)
 
 
 ### public functions ###
@@ -290,7 +281,6 @@ class AttributeTreeWidget(QTreeWidget):
         nbItems = len(self.selectedItems())
         if nbItems > 0:
             item = self.selectedItems()[nbItems-1]
-        self.__configPanel.onAttributeItemChanged(item)
 
 
     def onApplyChanged(self, enable):
@@ -317,24 +307,24 @@ class AttributeTreeWidget(QTreeWidget):
         elif type is NavigationItemTypes.DEVICE_INSTANCE:
             configChangeType = ConfigChangeTypes.DEVICE_INSTRANCE_CONFIG_CHANGED
         
-        if self.__devClaId is None:
+        if self.__classId is None:
             keys = self.__instanceKey.split('+', 1)
             if len(keys) is 2:
-                self.__devClaId = str(keys[1])
+                self.__classId = str(keys[1])
         
         # TODO: Remove dirty hack for scientific computing again!!!
-        croppedDevClaId = self.__devClaId.split("-")
-        self.__devClaId = croppedDevClaId[0]
+        croppedClassId = self.__classId.split("-")
+        self.__classId = croppedClassId[0]
         
-        Manager().onFileOpen(configChangeType, str(self.instanceKey), str(self.__devClaId))
+        Manager().onFileOpen(configChangeType, str(self.instanceKey), str(self.__classId))
 
 
     def onFileSaveAs(self):
-        if self.__devClaId is None:
+        if self.__classId is None:
             keys = self.__instanceKey.split('+', 1)
             if len(keys) is 2:
-                self.__devClaId = str(keys[1])
-        Manager().onSaveAsXml(str(self.__devClaId), self.instanceKey)
+                self.__classId = str(keys[1])
+        Manager().onSaveAsXml(str(self.__classId), self.instanceKey)
 
 
     def onAllItemsVisibility(self, show):

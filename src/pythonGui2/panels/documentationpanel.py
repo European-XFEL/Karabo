@@ -37,12 +37,6 @@ class DocumentationPanel(QWidget):
     def __init__(self):
         super(DocumentationPanel, self).__init__()
         
-        self.__swDocumentation = QStackedWidget()
-        # Initial page
-        teInitialDescriptionPage = QTextEdit()
-        teInitialDescriptionPage.setReadOnly(True)
-        self.__swDocumentation.addWidget(teInitialDescriptionPage)
-        
         self.__wikiTicket = ""
         self.__wikiView = QWebView()
         self.__wikiView.load(QUrl("https://docs.xfel.eu/alfresco/service/api/login?u=wiki&pw=$w1k1!"))
@@ -55,12 +49,11 @@ class DocumentationPanel(QWidget):
         #self.__reportView.loadFinished.connect(self.onLoadFinishedReport)
         
         self.__tabWidget = QTabWidget(self)
-        text = "Parameter information"
-        index = self.__tabWidget.addTab(self.__swDocumentation, text)
-        self.__tabWidget.setTabToolTip(index, text)
+        
         text = "Wiki"
         index = self.__tabWidget.addTab(self.__wikiView, text)
         self.__tabWidget.setTabToolTip(index, text)
+        
         text = "Report problem"
         index = self.__tabWidget.addTab(self.__reportView, text)
         self.__tabWidget.setTabToolTip(index, text)
@@ -116,14 +109,6 @@ class DocumentationPanel(QWidget):
         
         self._setWikiActionsVisible(False)
         self._setReportActionsVisible(False)
-
-
-    def addWidget(self, widget):
-        return self.__swDocumentation.addWidget(widget)
-
-
-    def setCurrentIndex(self, index):
-        self.__swDocumentation.setCurrentIndex(index)
 
 
 ### slots ###
