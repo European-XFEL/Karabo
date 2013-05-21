@@ -103,7 +103,7 @@ class PythonDevice(BaseFsm):
         self.log = Logger.getLogger(self.deviceid)
         
         # Instantiate connection
-        self._ss = SignalSlotable.create(self.deviceid, "Jms", self.parameters["connection.Jms"])
+        self._ss = SignalSlotable.create(self.deviceid)    #, "Jms", self.parameters["connection.Jms"])
         
         # Initialize FSM slots for user defined FSM (polymorphic call) 
         self.initFsmSlots(self._ss)
@@ -151,16 +151,16 @@ class PythonDevice(BaseFsm):
             
             if len(pars) == 1:
                 # hash arg
-                hash = pars
-                validated = Hash()
+                hash = pars[0]
                 try:
                     validated = self.validatorIntern.validate(self.fullSchema, hash)
                 except RuntimeError,e:
+                    print "Validation Exception (Intern): " + str(e)
                     raise RuntimeError,"Validation Exception: " + str(e)
-                if self.validatorIntern.hasParametersInWarnOrAlarm():
-                    warnings = self.validatorIntern.getParametersInWarnOrAlarm()
-                    for key in warnings:
-                        self.log.WARN(warnings[key]["message"])
+                #if self.validatorIntern.hasParametersInWarnOrAlarm():
+                #    warnings = self.validatorIntern.getParametersInWarnOrAlarm()
+                #    for key in warnings:
+                #        self.log.WARN(warnings[key]["message"])
                         #TODO trigger warnOrAlarm
                         
                 if not validated.empty():
@@ -255,7 +255,7 @@ class PythonDevice(BaseFsm):
         self.classid = self.__class__.__classid__
     
     def initSchema(self):
-        self.staticSchema = getSchema(self.classid)
+        self.staticSchema = PythonDevice.getSchema(self.classid)
         self.fullSchema = self.staticSchema
         
     def onStateUpdate(self, currentState):
@@ -298,9 +298,9 @@ class PythonDevice(BaseFsm):
         self._ss.connect("", "signalProgressUpdated", "*", "slotProgressUpdated", ConnectionType.NO_TRACK, False)
         
         #---------------------------------------------- register intrinsic slots
-        self._ss.registerSlot(self.slotReconfigure, Hash)
+        self._ss.registerSlot(self.slotReconfigure)
         self._ss.registerSlot(self.slotRefresh)
-        self._ss.registerSlot(self.slotGetSchema, bool)
+        self._ss.registerSlot(self.slotGetSchema)
         self._ss.registerSlot(self.slotKillDeviceInstance)
         
     def slotRefresh(self):
@@ -393,16 +393,27 @@ class PythonDevice(BaseFsm):
             self.deviceid, priority)
 
     @staticmethod
-    def parseCommandLine(args):
-        script, xmlfile = tuple(args)
+    def loadConfiguration(xmlfile):
         input = InputHash.create("TextFile", Hash("filename", xmlfile))
         hash = Hash()
         input.read(hash)
-        return (hash["module"], hash["classId"], hash["configuration"],)
+        print "Device parseCommandLine hash\n",hash
+        return hash
  
 def launchPythonDevice():
-    modname, classid, configuration = PythonDevice.parseCommandLine(sys.argv)
-    module = __import__(modname)
-    device = PythonDevice.create(classid, configuration)
-    device.run()
+    script, modname, classid, xmlfile = tuple(sys.argv)
+    config = PythonDevice.loadConfiguration(xmlfile)
+    if classid in config:
+        configuration = config[classid]
+    else:
+        configuration = Hash()
+    print "launchPythonDevice: configuration...\n", configuration
+    try:
+        module = __import__(modname)
+        device = PythonDevice.create(classid, configuration)
+        print "Device object created"
+        device.run()
+        print "device.run() returns..."
+    except Exception,e:
+        print "Exception caught: " + str(e)
     
