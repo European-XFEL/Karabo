@@ -303,19 +303,23 @@ class DeviceServer(object):
             modified[classid + ".deviceId"] = deviceid
         # create temporary instance to check the configuration parameters are valid
         try:
-            instance = PythonDevice.create(modified) # create instance in this interpreter
-        except RuntimeError, e:
+            configuration = modified[classid]
+            pluginDir = self.pluginLoader.getPluginDirectory()
+            modname = self.availableDevices[classid]["module"]
+            module = __import__(modname)
+            UserDevice = getattr(module, classid)
+            schema = UserDevice.getSchema(classid)
+            validator = Validator()
+            validated = validator.validate(schema, configuration)
+            #print "classId = {}, modname = {}, pluginDir = {}".format(classid, modname, pluginDir)
+            #print "Validated configuration...\n", validated
+            del validated
+            launcher = Launcher(pluginDir, modname, classid, modified).start()
+            self.deviceInstanceMap[deviceid] = launcher
+        except Exception, e:
             self.log.WARN("Wrong input configuration for class '{}': {}".format(classid, e.message))
             return
-        module_name = self.availableDevices[classid]["module"]
-        input = Hash()
-        input["classId"] = classid
-        input["module"] = self.availableDevices[classid]["module"]
-        input["plugins"] = self.pluginLoader.getPluginDirectory()
-        input["configuration"] = modified
-        launcher = Launcher.create("PythonLauncher", input).start()
-        #launcher = DeviceServer.Launcher(self.pluginLoader.getPluginDirectory(), module_name, classid, modified).start()
-        self.deviceInstanceMap[deviceid] = launcher
+        
 
     def _generateDefaultDeviceInstanceId(self, devClassId):
         cls = self.__class__
@@ -358,30 +362,24 @@ class DeviceServer(object):
    
 
         
-@KARABO_CONFIGURATION_BASE_CLASS
-@KARABO_CLASSINFO("PythonLauncher", "1.0")
 class Launcher(threading.Thread):
 
-    def __init__(self, input):       #pluginsdir, modname, clsname, conf):
+    def __init__(self, pluginDir, modname, classid, config):
         threading.Thread.__init__(self)
-        modname = input["module"]
-        clsname = input["classId"]
-        pluginsdir = input["plugins"]
-        configuration = input["configuration"]
+        if "deviceId" in config[classid]:
+            self.device = config[classid]["deviceId"]
+        else:
+            raise RuntimeError, "Access to " + classid + ".deviceId failed"
+        
         try:
-            self.device = configuration[clsname + ".deviceId"]
-        except RuntimeError, e:
-            print e
-        self.script = os.path.realpath(pluginsdir + "/" + modname + ".py")
-        input["script"] = self.script
-        
-        filename = "/tmp/" + modname + "." + clsname + ".configuration.xml"
-        config = Hash("filename", filename, "format.Xml.indentation", 2)
-        cfg = Hash("TextFile.filename", filename, "TextFile.format.Xml.indentation", 2)
-        out = OutputHash.create("TextFile", config)
-        out.write(input)
-        
-        self.args = [self.script, filename]
+            self.script = os.path.realpath(pluginDir + "/" + modname + ".py")
+            filename = "/tmp/" + modname + "." + classid + ".configuration.xml"
+            cfg = Hash("filename", filename, "format.Xml.indentation", 2) 
+            out = OutputHash.create("TextFile", cfg)
+            out.write(config)
+            self.args = [self.script, modname, classid, filename]
+        except Exception,e:
+            raise RuntimeError,"Exception happened while writing 'config' object: " + str(e) 
 
     def run(self):
         with DeviceServer.cLock:

@@ -6,6 +6,7 @@ __date__ ="$May 10, 2013 2:35:08 PM$"
 
 from karabo_decorators import *
 from base_fsm import *
+from fsm import *
 
 @KARABO_CLASSINFO("StartStopFsm", "1.0")
 class StartStopFsm(BaseFsm):
