@@ -16,7 +16,7 @@ class  Hash_TestCase(unittest.TestCase):
         try:
             h = Hash()
             self.assertEqual(len(h), 0)
-            self.assertEqual(h.empty(), True)
+            self.assertTrue(h.empty())
         except Exception, e:
             self.fail("test_constructors exception group 1: " + str(e))
 
@@ -24,7 +24,7 @@ class  Hash_TestCase(unittest.TestCase):
         try:
             h = Hash('a', 1)
             self.assertEqual(len(h), 1)
-            self.assertEqual(h.empty(), False)
+            self.assertFalse(h.empty())
             self.assertEqual(h.get('a'), 1)
             self.assertEqual(h['a'], 1)
         except Exception,e:
@@ -33,7 +33,7 @@ class  Hash_TestCase(unittest.TestCase):
         # Check Hash with 2 properties
         try:
             h = Hash('a', 1, 'b', 2.0)
-            self.assertEqual(h.empty(), False)
+            self.assertFalse(h.empty())
             self.assertEqual(len(h), 2)
             self.assertEqual(h['a'], 1)
             self.assertEqual(h['b'], 2.0)
@@ -44,7 +44,7 @@ class  Hash_TestCase(unittest.TestCase):
         try:
             h = Hash("a.b.c", 1, "b.c", 2.0, "c", 3.7, "d.e", "4",
                     "e.f.g.h", [5,5,5,5,5], "F.f.f.f.f", Hash("x.y.z", 99))
-            self.assertEqual(h.empty(), False)
+            self.assertFalse(h.empty())
             self.assertEqual(len(h), 6)
             self.assertEqual(h['a.b.c'], 1)
             self.assertEqual(h['b.c'], 2.0)
@@ -58,7 +58,7 @@ class  Hash_TestCase(unittest.TestCase):
             # Make Hash flat
             flat = Hash()
             Hash.flatten(h, flat)
-            self.assertEqual(flat.empty(), False)
+            self.assertFalse(flat.empty())
             self.assertEqual(len(flat), 6)
             self.assertEqual(flat.get('a.b.c', ' '), 1)
             self.assertEqual(flat.get('b.c', ' '), 2.0)
@@ -71,7 +71,7 @@ class  Hash_TestCase(unittest.TestCase):
             # Make flat Hash unflatten again
             tree = Hash()
             flat.unflatten(tree)
-            self.assertEqual(tree.empty(), False)
+            self.assertFalse(tree.empty())
             self.assertEqual(len(tree), 6)
             self.assertEqual(tree['a.b.c'], 1)
             self.assertEqual(tree['b.c'], 2.0)
@@ -90,28 +90,25 @@ class  Hash_TestCase(unittest.TestCase):
         try:
             h = Hash()
             h.set("a.b.c1.d", 1)
-            self.assertEqual(h.get("a").has("b"), True, '"b" not found')
-            self.assertEqual(h.get("a.b").has("c1"), True, '"c1" not found')
-            self.assertEqual(h.get("a.b.c1").has("d"), True, '"d" not found')
+            self.assertTrue(h.get("a").has("b"), '"b" not found')
+            self.assertTrue(h.get("a.b").has("c1"), '"c1" not found')
+            self.assertTrue(h.get("a.b.c1").has("d"), '"d" not found')
             self.assertEqual(h.get("a.b.c1.d"), 1, '"get" should return 1')
-            self.assertEqual(h.has("a.b.c1.d"), True, '"a.b.c1.d" key not found')
-            if "a.b.c1.d" not in h:
-                self.fail("test_getSet group 1: h __contains__ \"a.b.c1.d\" failed")
-            self.assertEqual(h.get("a").has("b.c1"), True, '"b.c1" key not found')
-            if "b.c1" not in h["a"]:
-                self.fail("test_getSet group 1: h['a'] __contains__ \"b.c1\" failed")
+            self.assertTrue(h.has("a.b.c1.d"), '"a.b.c1.d" key not found')
+            self.assertIn("a.b.c1.d", h, "test_getSet group 1: h __contains__ \"a.b.c1.d\" failed")
+            self.assertTrue(h.get("a").has("b.c1"), '"b.c1" key not found')
+            self.assertIn("b.c1", h["a"], "test_getSet group 1: h['a'] __contains__ \"b.c1\" failed")
         
             h.set("a.b.c2.d", 2.0)
-            self.assertEqual(h.get("a.b").has("c2.d"), True, '"c2.d" not found')
-            self.assertEqual(h.get("a.b").has("c1.d"), True, '"c1.d" not found')
+            self.assertTrue(h.get("a.b").has("c2.d"), '"c2.d" not found')
+            self.assertTrue(h.get("a.b").has("c1.d"), '"c1.d" not found')
             self.assertEqual(h.get("a.b.c1.d"), 1, '"get" should return 1')
             self.assertEqual(h.get("a.b.c2.d"), 2.0, '"get" should return 2.0')
             
             h.set("a.b[0]", Hash("a", 1))
-            self.assertEqual(h.get("a").has("b"), True, "'b' not found")
-            self.assertEqual(h["a"].has("b"), True, "'b' not found")
-            if "b" not in h["a"]:
-                self.fail("test_getSet group 1: h['a'] __contains__ \"b\" failed")
+            self.assertTrue(h.get("a").has("b"), "'b' not found")
+            self.assertTrue(h["a"].has("b"), "'b' not found")
+            self.assertIn("b", h["a"], "test_getSet group 1: h['a'] __contains__ \"b\" failed")
             self.assertEqual(len(h.get("a")), 1, "'len' should give 1")
             self.assertEqual(len(h["a"]), 1, "'len' should give 1")
             self.assertEqual(len(h.get("a.b")), 1, "'len' should give 1")
@@ -124,14 +121,14 @@ class  Hash_TestCase(unittest.TestCase):
             self.assertEqual(h.get("a.b[0].a"), 1, '"get" should return 1')
             
             h.set("a.b[2]", Hash("a", 1))
-            self.assertEqual(h.get("a").has("b"), True, "'b' not found")
+            self.assertTrue(h.get("a").has("b"), "'b' not found")
             self.assertEqual(len(h["a"]), 1, "'len' should give 1")
             self.assertEqual(len(h["a.b"]), 3, "'len' should give 3")   # 0, 1, 2
             self.assertEqual(h["a.b[0].a"], 1, '"get" should return 1')
             self.assertEqual(h["a.b[2].a"], 1, '"get" should return 1')
             self.assertEqual(h["a.b"][0]["a"], 1, '"get" should return 1')
             self.assertEqual(h["a.b"][2]["a"], 1, '"get" should return 1')
-            self.assertEqual(h["a.b"][1].empty(), True, 'h["a.b"][1] should be empty Hash')
+            self.assertTrue(h["a.b"][1].empty(), 'h["a.b"][1] should be empty Hash')
             
         except Exception,e:
             self.fail("test_getSet exception group 1: " + str(e))
@@ -141,8 +138,8 @@ class  Hash_TestCase(unittest.TestCase):
             h["a.b.c"] = 1    # statement is equivalent to h.set("a.b.c", 1)
             h["a.b.c"] = 2
             self.assertEqual(h["a.b.c"], 2, "Value should be overwritten by 2")
-            self.assertEqual(h.has("a.b"), True, "Key 'a.b' not found")
-            self.assertEqual(h.has("a.b.c.d"), False, "Key 'a.b.c.d' should not be found")
+            self.assertTrue(h.has("a.b"), "Key 'a.b' not found")
+            self.assertFalse(h.has("a.b.c.d"), "Key 'a.b.c.d' should not be found")
             # similarity with python dictionary...
             self.assertEqual(h["a"]["b"]["c"], 2)
             h["a"]["b"]["c"] = 77
@@ -164,8 +161,8 @@ class  Hash_TestCase(unittest.TestCase):
             h = Hash()
             h["x[0].y[0]"] = Hash("a", 4.2, "b", "red", "c", True)
             h["x[1].y[0]"] = Hash("a", 4.0, "b", "green", "c", False)
-            self.assertEqual(h["x[0].y[0].c"], True, "Failure in array case")
-            self.assertEqual(h["x[1].y[0].c"], False, "Failure in array case")
+            self.assertTrue(h["x[0].y[0].c"], "Failure in array case")
+            self.assertFalse(h["x[1].y[0].c"], "Failure in array case")
             self.assertEqual(h["x[0].y[0].b"], "red", "Failure in array case")
             self.assertEqual(h["x[1].y[0].b"], "green", "Failure in array case")
         except Exception,e:
@@ -325,16 +322,10 @@ class  Hash_TestCase(unittest.TestCase):
         try:
             h = Hash("a.b.c1.d", 1)
             node = h.find("a.b.c1.d")
-            if node is not None:
-                self.assertEqual(node.getKey(), "d", 'Bad key returned by "getKey" method')
-                self.assertEqual(node.getValue(), 1, 'Should return 1');
-            else:
-                self.assertEqual(True, False)
-            node = h.find("a.b.c1.f")
-            if node is not None:
-                self.assertEqual(True, False)
-            else:
-                self.assertEqual(True, True)
+            self.assertIsNotNone(node, "The 'node' object should be not 'None'")
+            self.assertEqual(node.getKey(), "d", 'Bad key returned by "getKey" method')
+            self.assertEqual(node.getValue(), 1, 'Should return 1');
+            self.assertIsNone(h.find("a.b.c1.f"), "The resulting object should be 'None'")
         except Exception,e:
             self.fail("test_find exception group 1: " + str(e))
     
@@ -342,14 +333,11 @@ class  Hash_TestCase(unittest.TestCase):
         try:
             h = Hash("a.b.c", "1")
             node = h.find("a.b.c")
-            if node is not None:
-                node.setValue(2)
-                self.assertEqual(h.get("a.b.c"), 2);
+            self.assertIsNotNone(node, "The 'node' should be not 'None")
+            node.setValue(2)
+            self.assertEqual(h["a.b.c"], 2);
             node = h.find("a.b.c", '/')
-            if node is not None:
-                self.assertEqual(True, False)
-            else:
-                self.assertEqual(True, True)
+            self.assertIsNone(node)
         except Exception,e:
             self.fail("test_find exception group 2: " + str(e))
         
@@ -361,12 +349,7 @@ class  Hash_TestCase(unittest.TestCase):
             insertionOrder = list()
             for k in h:
                 insertionOrder.append(str(k))
-            self.assertEqual(insertionOrder[0], "should");
-            self.assertEqual(insertionOrder[1], "be");
-            self.assertEqual(insertionOrder[2], "iterated");
-            self.assertEqual(insertionOrder[3], "in");
-            self.assertEqual(insertionOrder[4], "correct");
-            self.assertEqual(insertionOrder[5], "order");
+            self.assertEqual(insertionOrder, ["should","be","iterated","in","correct","order"])
             
         except Exception,e:
             self.fail("test_iteration exception group 1: " + str(e))
@@ -376,12 +359,7 @@ class  Hash_TestCase(unittest.TestCase):
             for k in h:
                 alphaNumericOrder.append(k.getKey())
             alphaNumericOrder.sort()
-            self.assertEqual(alphaNumericOrder[0], "be")
-            self.assertEqual(alphaNumericOrder[1], "correct")
-            self.assertEqual(alphaNumericOrder[2], "in")
-            self.assertEqual(alphaNumericOrder[3], "iterated")
-            self.assertEqual(alphaNumericOrder[4], "order")
-            self.assertEqual(alphaNumericOrder[5], "should")
+            self.assertEqual(alphaNumericOrder,["be","correct","in","iterated","order","should"])
         except Exception,e:
             self.fail("test_iteration exception group 2: " + str(e))
 
@@ -391,13 +369,7 @@ class  Hash_TestCase(unittest.TestCase):
             insertionOrder = list()
             for k in h:
                 insertionOrder.append(str(k.getKey()))
-        
-            self.assertEqual(insertionOrder[0], "should")
-            self.assertEqual(insertionOrder[1], "be")
-            self.assertEqual(insertionOrder[2], "iterated")
-            self.assertEqual(insertionOrder[3], "in")
-            self.assertEqual(insertionOrder[4], "correct")
-            self.assertEqual(insertionOrder[5], "order")
+            self.assertEqual(insertionOrder,["should","be","iterated","in","correct","order"])
         except Exception,e:
             self.fail("test_iteration exception group 3: " + str(e))
 
@@ -406,12 +378,7 @@ class  Hash_TestCase(unittest.TestCase):
             for k in h:
                 alphaNumericOrder.append(str(k.getKey()))
             alphaNumericOrder.sort()
-            self.assertEqual(alphaNumericOrder[0], "be")
-            self.assertEqual(alphaNumericOrder[1], "correct")
-            self.assertEqual(alphaNumericOrder[2], "in")
-            self.assertEqual(alphaNumericOrder[3], "iterated")
-            self.assertEqual(alphaNumericOrder[4], "order")
-            self.assertEqual(alphaNumericOrder[5], "should")
+            self.assertEqual(alphaNumericOrder,["be","correct","in","iterated","order","should"])
         except Exception,e:
             self.fail("test_iteration exception group 4: " + str(e))
 
@@ -422,13 +389,7 @@ class  Hash_TestCase(unittest.TestCase):
             insertionOrder = list()
             for k in h:
                 insertionOrder.append(str(k.getKey()))
-        
-            self.assertEqual(insertionOrder[0], "should")
-            self.assertEqual(insertionOrder[1], "iterated")
-            self.assertEqual(insertionOrder[2], "in")
-            self.assertEqual(insertionOrder[3], "correct")
-            self.assertEqual(insertionOrder[4], "order")
-            self.assertEqual(insertionOrder[5], "be")
+            self.assertEqual(insertionOrder,["should","iterated","in","correct","order","be"])
         except Exception,e:
             self.fail("test_iteration exception group 5: " + str(e))
 
@@ -437,12 +398,7 @@ class  Hash_TestCase(unittest.TestCase):
             for k in h:
                 alphaNumericOrder.append(str(k.getKey()))
             alphaNumericOrder.sort()
-            self.assertEqual(alphaNumericOrder[0], "be")
-            self.assertEqual(alphaNumericOrder[1], "correct")
-            self.assertEqual(alphaNumericOrder[2], "in")
-            self.assertEqual(alphaNumericOrder[3], "iterated")
-            self.assertEqual(alphaNumericOrder[4], "order")
-            self.assertEqual(alphaNumericOrder[5], "should")
+            self.assertEqual(alphaNumericOrder,["be","correct","in","iterated","order","should"])
         except Exception,e:
             self.fail("test_iteration exception group 6: " + str(e))
 
@@ -658,23 +614,23 @@ class  Hash_TestCase(unittest.TestCase):
             
             h1 += h2
             
-            self.assertEqual(h1.has("a"), True)
+            self.assertTrue(h1.has("a"))
             self.assertEqual(h1.get("a"), 21)
             self.assertEqual(h1["a"], 21)
-            self.assertEqual(h1.has("b"), True)
-            self.assertEqual(h1.has("c.b.d"), False)
-            self.assertEqual(h1.has("c.b[0]"), True)
-            self.assertEqual(h1.has("c.b[1]"), True)
-            self.assertEqual(h1.has("c.b[2]"), True)
+            self.assertTrue(h1.has("b"))
+            self.assertFalse(h1.has("c.b.d"))
+            self.assertTrue(h1.has("c.b[0]"))
+            self.assertTrue(h1.has("c.b[1]"))
+            self.assertTrue(h1.has("c.b[2]"))
             self.assertEqual(h1.get("c.b[2].d"), 24)
-            self.assertEqual(h1.has("c.c[0].d"), True)
-            self.assertEqual(h1.has("c.c[1].a.b.c"), True)
-            self.assertEqual(h1.has("d.e"), True)
-            self.assertEqual(h1.has("e"), True)
+            self.assertTrue(h1.has("c.c[0].d"))
+            self.assertTrue(h1.has("c.c[1].a.b.c"))
+            self.assertTrue(h1.has("d.e"))
+            self.assertTrue(h1.has("e"))
 
             h3 = h1
 
-            self.assertEqual(similar(h1, h3), True)
+            self.assertTrue(similar(h1, h3))
             
         except Exception,e:
             self.fail("test_iteration exception group 1: " + str(e))

@@ -55,7 +55,7 @@ class  Serializer_TestCase(unittest.TestCase):
             archive = ser.save(hash)      # serialize hash
             self.assertEqual(archive.__class__.__name__, 'bytearray')
             hash2 = ser.load(archive)
-            self.assertEqual(similar(hash, hash2), True)
+            self.assertTrue(similar(hash, hash2))
             
         except Exception,e:
             self.fail("test_binaryserializer_hash exception group 1: " + str(e))
@@ -71,7 +71,7 @@ class  Serializer_TestCase(unittest.TestCase):
             config = Hash("filename", "/tmp/test_io_writeread_hash.xml")
             input = InputHash.create("TextFile", config)
             input.read(hash2)
-            self.assertEqual(similar(hash, hash2), True)
+            self.assertTrue(similar(hash, hash2))
             
         except Exception,e:
             self.fail("test_io_saveload_hash exception group 1: " + str(e))
