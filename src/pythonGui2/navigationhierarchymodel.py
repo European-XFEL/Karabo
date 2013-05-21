@@ -105,10 +105,10 @@ class NavigationHierarchyModel(SqlTreeModel):
         nodeQuery = "SELECT id, name FROM tNode"
         devSerInsQuery = "SELECT d.id, d.nodId, d.name, d.status FROM tDeviceServerInstance AS d" \
                          " JOIN tNode AS n ON n.id = d.nodId"
-        devClaQuery = "SELECT dc.id, dc.devSerInsId, dc.name, dc.schema FROM tDeviceClass AS dc" \
-                      " JOIN tDeviceServerInstance AS d ON d.id = dc.devSerInsId AND d.status IS NOT 'offline'"
-        devInsQuery = "SELECT di.id, di.devClaId, di.name, di.schema, di.status FROM tDeviceInstance AS di" \
-                      " JOIN tDeviceClass AS dc ON dc.id = di.devClaId AND di.status IS NOT 'offline'"
+        devClaQuery = "SELECT dc.id, dc.serverId, dc.name, dc.schema FROM tDeviceClass AS dc" \
+                      " JOIN tDeviceServerInstance AS d ON d.id = dc.serverId AND d.status IS NOT 'offline'"
+        devInsQuery = "SELECT di.id, di.classId, di.name, di.schema, di.status FROM tDeviceInstance AS di" \
+                      " JOIN tDeviceClass AS dc ON dc.id = di.classId AND di.status IS NOT 'offline'"
         
         #sqlQuery = QSqlQuery()
         #sqlQuery.prepare(QString("%1 ORDER BY %2").arg(nodeQuery, self.__nodeOrder))
@@ -180,12 +180,12 @@ class NavigationHierarchyModel(SqlTreeModel):
                 if schema is None:
                     schema = itemInfo.get('schema')
                 
-                queryText = "INSERT INTO tDeviceClass (id, name, devSerInsId, schema) VALUES ('" + str(id) + "', '" + name + \
+                queryText = "INSERT INTO tDeviceClass (id, name, serverId, schema) VALUES ('" + str(id) + "', '" + name + \
                             "', '" + str(refId) + "', '" + schema + "');"
                 success = QSqlQuery().exec_(queryText)
                 if not success:
                     # Table row already exists
-                    queryText = "REPLACE INTO tDeviceClass (id, name, devSerInsId, schema) VALUES ('" + str(id) + "', '" + name + \
+                    queryText = "REPLACE INTO tDeviceClass (id, name, serverId, schema) VALUES ('" + str(id) + "', '" + name + \
                                 "', '" + str(refId) + "', '" + schema + "');"
                     QSqlQuery().exec_(queryText)
             elif type is NavigationItemTypes.DEVICE_INSTANCE:
@@ -195,12 +195,12 @@ class NavigationHierarchyModel(SqlTreeModel):
                 if schema is None:
                     schema = itemInfo.get('schema')
                 
-                queryText = "INSERT INTO tDeviceInstance (id, name, devClaId, status, schema) VALUES ('" + str(id) + "', '" + name + \
+                queryText = "INSERT INTO tDeviceInstance (id, name, classId, status, schema) VALUES ('" + str(id) + "', '" + name + \
                             "', '" + str(refId) + "', '" + status + "', '" + schema + "');"
                 success = QSqlQuery().exec_(queryText)
                 if not success:
                     # Table row already exists
-                    queryText = "REPLACE INTO tDeviceInstance (id, name, devClaId, status, schema) VALUES ('" + str(id) + "', '" + name + \
+                    queryText = "REPLACE INTO tDeviceInstance (id, name, classId, status, schema) VALUES ('" + str(id) + "', '" + name + \
                                 "', '" + str(refId) + "', '" + status + "', '" + schema + "');"  
                     QSqlQuery().exec_(queryText)
 
@@ -223,12 +223,12 @@ class NavigationHierarchyModel(SqlTreeModel):
         
         if status == 'offline':
             # Update DEVICE_INSTANCE
-            queryText = "SELECT id FROM tDeviceClass WHERE devSerInsId="+ str(id) +";"
+            queryText = "SELECT id FROM tDeviceClass WHERE serverId="+ str(id) +";"
             sqlQuery.exec_(queryText)
             while sqlQuery.next():
-                devClaId = sqlQuery.value(0).toString()
+                classId = sqlQuery.value(0).toString()
                 sqlQueryUpdate = QSqlQuery()
-                queryText = "UPDATE tDeviceInstance SET status='" + status + "' WHERE devClaId=" + str(devClaId) + ";"
+                queryText = "UPDATE tDeviceInstance SET status='" + status + "' WHERE classId=" + str(classId) + ";"
                 sqlQueryUpdate.exec_(queryText)
         
         # Update view with model...

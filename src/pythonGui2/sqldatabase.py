@@ -93,7 +93,7 @@ class SqlDatabase(object):
                 # Create table for event data
                 queryText = "CREATE TABLE tDeviceClass " \
                               "(id INTEGER PRIMARY KEY, " \
-                              "devSerInsId INTEGER, " \
+                              "serverId INTEGER, " \
                               "name CLOB, " \
                               "schema CLOB);"
                               #"version String(50));"
@@ -104,7 +104,7 @@ class SqlDatabase(object):
                 # Create table for event data
                 queryText = "CREATE TABLE tDeviceInstance " \
                               "(id INTEGER PRIMARY KEY, " \
-                              "devClaId INTEGER, " \
+                              "classId INTEGER, " \
                               "name CLOB, " \
                               "status String(50), " \
                               "schema CLOB);"
@@ -114,8 +114,8 @@ class SqlDatabase(object):
             print "An error occurred while opening the database connection."
 
 
-    def getDeviceServerInstanceById(self, devSerInsId):
-        queryText = "SELECT name FROM tDeviceServerInstance WHERE id="+ str(devSerInsId) +";"
+    def getDeviceServerInstanceById(self, serverId):
+        queryText = "SELECT name FROM tDeviceServerInstance WHERE id="+ str(serverId) +";"
         query = QSqlQuery()
         query.exec_(queryText)
         while query.next():
@@ -165,17 +165,17 @@ class SqlDatabase(object):
         return None
 
 
-    def createNewDeviceClassId(self, devClaId):
+    def createNewDeviceClassId(self, classId):
         query = QSqlQuery(self.__database)
-        queryText = "SELECT id FROM tDeviceClass WHERE name LIKE \'" + devClaId + "%\';"
+        queryText = "SELECT id FROM tDeviceClass WHERE name LIKE \'" + classId + "%\';"
         query.exec_(queryText)
         counter = 0
         while query.next():
             id = query.value(0).toInt()
             counter += 1
         
-        newDevClaId = devClaId + "-Config" + str(counter)
-        return newDevClaId
+        newClassId = classId + "-Config" + str(counter)
+        return newClassId
 
 
     def closeConnection(self):

@@ -37,16 +37,22 @@ class DocumentationPanel(QWidget):
     def __init__(self):
         super(DocumentationPanel, self).__init__()
         
-        self.__wikiTicket = ""
+        self.__loadedUrl = str()
+        
+        # String for wiki ticket
+        self.__wikiTicket = str()
+        # Hidden view to fetch ticket
+        self.__hiddenWikiTicketView = QWebView(self)
+        self.__hiddenWikiTicketView.loadFinished.connect(self.onLoadFinishedWikiTicket)
+        url = "https://docs.xfel.eu/alfresco/service/api/login?u=wiki&pw=$w1k1!"
+        self.__hiddenWikiTicketView.load(QUrl(url))
+        self.__hiddenWikiTicketView.setVisible(False)
+        
         self.__wikiView = QWebView()
-        self.__wikiView.load(QUrl("https://docs.xfel.eu/alfresco/service/api/login?u=wiki&pw=$w1k1!"))
-        #self.__wikiView.loadProgress.connect(self.onLoadProgressWiki)
-        self.__wikiView.loadFinished.connect(self.onLoadFinishedWiki)
+        self._loadWikiUrl("https://docs.xfel.eu/share/")
         
         self.__reportView = QWebView()
         self.__reportView.load(QUrl("http://www-exfel-wp76.desy.de/static/mantisbt/login_select_proj_page.php?ref=bug_report_page.php"))
-        #self.__reportView.loadProgress.connect(self.onLoadProgressReport)
-        #self.__reportView.loadFinished.connect(self.onLoadFinishedReport)
         
         self.__tabWidget = QTabWidget(self)
         
@@ -80,6 +86,15 @@ class DocumentationPanel(QWidget):
         self.__acStopReport.setVisible(visible)
 
 
+    def _loadWikiUrl(self, url):
+        if self.__loadedUrl == url:
+            return
+        
+        self.__loadedUrl = url
+        self.__wikiView.load(QUrl(self.__loadedUrl))
+        self.__wikiView.show()
+
+
     def setupActions(self):
         pass
 
@@ -107,54 +122,40 @@ class DocumentationPanel(QWidget):
         self.__toolBar.addAction(self.__acReloadReport)
         self.__toolBar.addAction(self.__acStopReport)
         
-        self._setWikiActionsVisible(False)
+        self._setWikiActionsVisible(True)
         self._setReportActionsVisible(False)
 
 
 ### slots ###
     def onCurrentTabChanged(self, index):
         if index == 0:
-            self._setWikiActionsVisible(False)
-            self._setReportActionsVisible(False)
-        elif index == 1:
             self._setWikiActionsVisible(True)
             self._setReportActionsVisible(False)
-        elif index == 2:
+        elif index == 1:
             self._setWikiActionsVisible(False)
             self._setReportActionsVisible(True)
 
 
     def onNavigationItemChanged(self, itemInfo):
-        devClaId = itemInfo.get(QString('devClaId'))
-        if devClaId is None:
-            devClaId = itemInfo.get('devClaId')
+        classId = itemInfo.get(QString('classId'))
+        if classId is None:
+            classId = itemInfo.get('classId')
         
-        if devClaId is None:
-            self.__wikiView.load(QUrl("https://docs.xfel.eu/share/page/site-index"))
+        if classId is None:
+            self._loadWikiUrl("https://docs.xfel.eu/share/")
             return
         
-        url = "https://docs.xfel.eu/share/page/site/karabo/device-page?title="+devClaId+"&action=view&parentNodeRef=workspace/SpacesStore/18cffe24-4ce3-4d26-b3c1-fdc953edff59&alf_ticket=" + self.__wikiTicket
-        self.__wikiView.load(QUrl(url))
-
-
-    #def onLoadProgressWiki(self, percent):
-    #    print "onLoadProgressWiki", percent
-
+        url = "https://docs.xfel.eu/share/page/site/karabo/device-page?title="+classId+"&action=view&parentNodeRef=workspace/SpacesStore/18cffe24-4ce3-4d26-b3c1-fdc953edff59&alf_ticket=" + self.__wikiTicket
+        self._loadWikiUrl(url)
     
-    def onLoadFinishedWiki(self, state):
-        if len(self.__wikiTicket) == 0:
-            self.__wikiTicket =  self.__wikiView.page().currentFrame().toPlainText()
-            self.__wikiView.blockSignals(True)
-            self.__wikiView.load(QUrl("https://docs.xfel.eu/share/"))
-            self.__wikiView.blockSignals(False)
-
-
-    #def onLoadProgressReport(self, percent):
-    #    print "onLoadProgressReport", percent
-
     
-    #def onLoadFinishedReport(self, state):
-    #    print "onLoadFinishedReport", state
+    def onLoadFinishedWikiTicket(self, state):
+        if len(self.__wikiTicket) > 0:
+            return
+        
+        self.__wikiTicket = self.__hiddenWikiTicketView.page().currentFrame().toPlainText()
+        # Disconnect slot after fetching ticket for Wiki
+        self.__hiddenWikiTicketView.loadFinished.disconnect(self.onLoadFinishedWikiTicket)
 
 
     # virtual function

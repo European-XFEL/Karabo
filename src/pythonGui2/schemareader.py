@@ -249,7 +249,7 @@ class SchemaReader(object):
     def _getDefaultValue(self, key, parentItem):
         if not self.__schema.hasDefaultValue(key):
             return None
-        
+
         defaultValue = self.__schema.getDefaultValue(key)
         text = QString("<b>Default value: </b>%1").arg(defaultValue)
         toolTip = parentItem.toolTip(0)
