@@ -58,6 +58,78 @@ struct DefaultValueVectorWrap {
 
 };
 
+
+template <class T>
+struct ReadOnlySpecificVectorWrap {
+    typedef std::vector< T > VType;
+    typedef karabo::util::VectorElement< T > U;
+    typedef karabo::util::ReadOnlySpecific< U, VType > ReadOnlySpecVec;
+
+    static ReadOnlySpecVec & initialValue(ReadOnlySpecVec& self, const bp::object& obj) {
+        if (PyList_Check(obj.ptr())) {
+              const bp::list& l = bp::extract<bp::list > (obj);
+            bp::ssize_t size = bp::len(l);
+
+            std::vector<T> v(size);
+            for (bp::ssize_t i = 0; i < size; ++i) {
+                v[i] = bp::extract<T > (obj[i]);
+            }
+            return self.initialValue(v);
+        } else {
+            throw KARABO_PYTHON_EXCEPTION("Python type of the initialValue of VectorElement must be a list");
+        }
+    }
+
+    static ReadOnlySpecVec & warnLowValue(ReadOnlySpecVec& self, const bp::object& obj) {
+        if (PyList_Check(obj.ptr())) {
+            VType v = pyList2StdVector(obj);
+            return self.warnLow(v);
+        } else {
+            throw KARABO_PYTHON_EXCEPTION("Python type of the warnLow value of VectorElement must be a list");
+        }
+    }
+
+    static ReadOnlySpecVec & warnHighValue(ReadOnlySpecVec& self, const bp::object& obj) {
+        if (PyList_Check(obj.ptr())) {
+            VType v = pyList2StdVector(obj);
+            return self.warnHigh(v);
+        } else {
+            throw KARABO_PYTHON_EXCEPTION("Python type of the warnHigh value of VectorElement must be a list");
+        }
+    }
+
+    static ReadOnlySpecVec & alarmLowValue(ReadOnlySpecVec& self, const bp::object& obj) {
+        if (PyList_Check(obj.ptr())) {
+            VType v = pyList2StdVector(obj);
+            return self.alarmLow(v);
+        } else {
+            throw KARABO_PYTHON_EXCEPTION("Python type of the alarmLow value of VectorElement must be a list");
+        }
+    }
+
+    static ReadOnlySpecVec & alarmHighValue(ReadOnlySpecVec& self, const bp::object& obj) {
+        if (PyList_Check(obj.ptr())) {
+            VType v = pyList2StdVector(obj);
+            return self.alarmHigh(v);
+        } else {
+            throw KARABO_PYTHON_EXCEPTION("Python type of the alarmHigh value of VectorElement must be a list");
+        }
+    }
+
+    static std::vector<T> pyList2StdVector(const bp::object & obj) {
+        const bp::list& l = bp::extract<bp::list > (obj);
+        bp::ssize_t size = bp::len(l);
+
+        std::vector<T> v(size);
+        for (bp::ssize_t i = 0; i < size; ++i) {
+            v[i] = bp::extract<T > (obj[i]);
+        }
+        return v;
+    }
+
+};
+
+
 ///////////////////////////////////////////////////////////////////////////
 //DefaultValue<SimpleElement< EType> > where EType:
 //BOOL, INT32, UINT32, INT64, UINT64, STRING, DOUBLE
@@ -138,12 +210,33 @@ typedef std::vector< EType > VType;\
 typedef karabo::util::VectorElement< EType, std::vector> U;\
 typedef karabo::util::ReadOnlySpecific< U, VType > ReadOnlySpecVec;\
 bp::class_< ReadOnlySpecVec, boost::noncopyable > ("ReadOnlySpecificVector"#e, bp::no_init)\
+.def("initialValue"\
+, &ReadOnlySpecificVectorWrap<EType>::initialValue\
+, (bp::arg("self"), bp::arg("pyList"))\
+, bp::return_internal_reference<> () )\
+.def("alarmHigh"\
+, &ReadOnlySpecificVectorWrap<EType>::alarmHighValue\
+, (bp::arg("self"), bp::arg("pyList"))\
+, bp::return_internal_reference<> () )\
+.def("alarmLow"\
+, &ReadOnlySpecificVectorWrap<EType>::alarmLowValue\
+, (bp::arg("self"), bp::arg("pyList"))\
+, bp::return_internal_reference<> () )\
+.def("warnHigh"\
+, &ReadOnlySpecificVectorWrap<EType>::warnHighValue\
+, (bp::arg("self"), bp::arg("pyList"))\
+, bp::return_internal_reference<> () )\
+.def("warnLow"\
+, &ReadOnlySpecificVectorWrap<EType>::warnLowValue\
+, (bp::arg("self"), bp::arg("pyList"))\
+, bp::return_internal_reference<> () )\
 .def("initialValueFromString"\
 , (ReadOnlySpecVec & (ReadOnlySpecVec::*)(std::string const &))( &ReadOnlySpecVec::initialValueFromString)\
 , bp::return_internal_reference<> () )\
 .def("commit", (void (ReadOnlySpecVec::*)())(&ReadOnlySpecVec::commit))\
 ;\
 }
+
 
 /**
  * The following macro KARABO_PYTHON_SIMPLE
