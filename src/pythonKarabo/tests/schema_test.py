@@ -19,17 +19,17 @@ class  Schema_TestCase(unittest.TestCase):
     def test_buildUp(self):
         try:
             schema = Configurator("Shape").getSchema("Circle")
-            self.assertEqual(schema.isAccessInitOnly("shadowEnabled"), True)
-            self.assertEqual(schema.isAccessInitOnly("radius"), True)
-            self.assertEqual(schema.isLeaf("radius"), True)
+            self.assertTrue(schema.isAccessInitOnly("shadowEnabled"))
+            self.assertTrue(schema.isAccessInitOnly("radius"))
+            self.assertTrue(schema.isLeaf("radius"))
         except Exception,e:
             self.fail("test_buildUp exception group 1: " + str(e))
         
         try:
             schema = Schema("test")
             GraphicsRenderer1.expectedParameters(schema)
-            self.assertEqual(schema.isAccessInitOnly("shapes.circle.radius"), True)
-            self.assertEqual(schema.isLeaf("shapes.circle.radius"), True)
+            self.assertTrue(schema.isAccessInitOnly("shapes.circle.radius"))
+            self.assertTrue(schema.isLeaf("shapes.circle.radius"))
         except Exception,e:
             self.fail("test_buildUp exception group 2: " + str(e))
             
@@ -89,21 +89,21 @@ class  Schema_TestCase(unittest.TestCase):
 
     def test_keyHasAlias(self):
         try:
-            self.assertEqual(self.schema.keyHasAlias("exampleKey1"), False)
-            self.assertEqual(self.schema.keyHasAlias("exampleKey2"), True)
-            self.assertEqual(self.schema.keyHasAlias("exampleKey3"), True)
-            self.assertEqual(self.schema.keyHasAlias("exampleKey4"), True)
-            self.assertEqual(self.schema.keyHasAlias("exampleKey5"), True)
+            self.assertFalse(self.schema.keyHasAlias("exampleKey1"))
+            self.assertTrue(self.schema.keyHasAlias("exampleKey2"))
+            self.assertTrue(self.schema.keyHasAlias("exampleKey3"))
+            self.assertTrue(self.schema.keyHasAlias("exampleKey4"))
+            self.assertTrue(self.schema.keyHasAlias("exampleKey5"))
         except Exception,e:
             self.fail("test_keyHasAlias exception: " + str(e))
         
     def test_aliasHasKey(self):
           try:
-              self.assertEqual(self.schema.aliasHasKey(10), True)
-              self.assertEqual(self.schema.aliasHasKey(5.5), True)
-              self.assertEqual(self.schema.aliasHasKey("exampleAlias4"), True)
-              self.assertEqual(self.schema.aliasHasKey("exampleAlias5"), True)
-              self.assertEqual(self.schema.aliasHasKey(7), False)
+              self.assertTrue(self.schema.aliasHasKey(10))
+              self.assertTrue(self.schema.aliasHasKey(5.5))
+              self.assertTrue(self.schema.aliasHasKey("exampleAlias4"))
+              self.assertTrue(self.schema.aliasHasKey("exampleAlias5"))
+              self.assertFalse(self.schema.aliasHasKey(7))
           except Exception,e:
               self.fail("test_aliasHasKey exception: " + str(e))
    
@@ -284,15 +284,15 @@ class  Schema_TestCase(unittest.TestCase):
             
     def test_hasWarnAlarm(self):
         try:
-            self.assertEqual(self.schema.hasWarnLow("exampleKey5"), True)
-            self.assertEqual(self.schema.hasWarnHigh("exampleKey5"), True)
+            self.assertTrue(self.schema.hasWarnLow("exampleKey5"))
+            self.assertTrue(self.schema.hasWarnHigh("exampleKey5"))
             
-            self.assertEqual(self.schema.hasWarnLow("exampleKey6"), True)
-            self.assertEqual(self.schema.hasWarnHigh("exampleKey6"), True)
-            self.assertEqual(self.schema.hasAlarmLow("exampleKey6"), True)
-            self.assertEqual(self.schema.hasAlarmHigh("exampleKey6"), True)
+            self.assertTrue(self.schema.hasWarnLow("exampleKey6"))
+            self.assertTrue(self.schema.hasWarnHigh("exampleKey6"))
+            self.assertTrue(self.schema.hasAlarmLow("exampleKey6"))
+            self.assertTrue(self.schema.hasAlarmHigh("exampleKey6"))
             
-            self.assertEqual(self.schema.hasAlarmHigh("exampleKey1"), False)
+            self.assertFalse(self.schema.hasAlarmHigh("exampleKey1"))
         except Exception,e:
             self.fail("test_hasWarnAlarm exception: " + str(e))         
             
@@ -301,49 +301,49 @@ class  Schema_TestCase(unittest.TestCase):
             keys = self.schema.getKeys()
             for key in keys:
                 if key == "exampleKey1":
-                    self.assertEqual(self.schema.hasAssignment(key), True)
-                    self.assertEqual(self.schema.isAssignmentOptional(key), True)
-                    self.assertEqual(self.schema.hasDefaultValue(key), True)
-                    self.assertEqual(self.schema.hasAccessMode(key), True)
-                    self.assertEqual(self.schema.isAccessReconfigurable(key), True)
-                    self.assertEqual(self.schema.hasOptions(key), True)
-                    self.assertEqual(self.schema.hasTags(key), True)
-                    self.assertEqual(self.schema.hasUnit(key), False)
-                    self.assertEqual(self.schema.hasMetricPrefix(key), False)
+                    self.assertTrue(self.schema.hasAssignment(key))
+                    self.assertTrue(self.schema.isAssignmentOptional(key))
+                    self.assertTrue(self.schema.hasDefaultValue(key))
+                    self.assertTrue(self.schema.hasAccessMode(key))
+                    self.assertTrue(self.schema.isAccessReconfigurable(key))
+                    self.assertTrue(self.schema.hasOptions(key))
+                    self.assertTrue(self.schema.hasTags(key))
+                    self.assertFalse(self.schema.hasUnit(key))
+                    self.assertFalse(self.schema.hasMetricPrefix(key))
                     
                 if key == "exampleKey2":
-                    self.assertEqual(self.schema.hasDefaultValue(key), True)
-                    self.assertEqual(self.schema.hasAccessMode(key), True)
-                    self.assertEqual(self.schema.isAccessInitOnly(key), True)
-                    self.assertEqual(self.schema.hasOptions(key), True)
-                    self.assertEqual(self.schema.hasTags(key), True)
-                    self.assertEqual(self.schema.hasAllowedStates(key), False)
-                    self.assertEqual(self.schema.hasUnit(key), True)
-                    self.assertEqual(self.schema.hasMetricPrefix(key), True)
-                    self.assertEqual(self.schema.hasMinInc(key), True)
-                    self.assertEqual(self.schema.hasMaxInc(key), True)
+                    self.assertTrue(self.schema.hasDefaultValue(key))
+                    self.assertTrue(self.schema.hasAccessMode(key))
+                    self.assertTrue(self.schema.isAccessInitOnly(key))
+                    self.assertTrue(self.schema.hasOptions(key))
+                    self.assertTrue(self.schema.hasTags(key))
+                    self.assertFalse(self.schema.hasAllowedStates(key))
+                    self.assertTrue(self.schema.hasUnit(key))
+                    self.assertTrue(self.schema.hasMetricPrefix(key))
+                    self.assertTrue(self.schema.hasMinInc(key))
+                    self.assertTrue(self.schema.hasMaxInc(key))
                     
                 if key == "exampleKey3":
-                    self.assertEqual(self.schema.hasAssignment(key), True)
-                    self.assertEqual(self.schema.isAssignmentMandatory(key), True)
-                    self.assertEqual(self.schema.hasDefaultValue(key), False)
-                    self.assertEqual(self.schema.hasOptions(key), False)
-                    self.assertEqual(self.schema.hasAllowedStates(key), True)
-                    self.assertEqual(self.schema.hasMinExc(key), True)
-                    self.assertEqual(self.schema.hasMaxExc(key), True)
+                    self.assertTrue(self.schema.hasAssignment(key))
+                    self.assertTrue(self.schema.isAssignmentMandatory(key))
+                    self.assertFalse(self.schema.hasDefaultValue(key))
+                    self.assertFalse(self.schema.hasOptions(key))
+                    self.assertTrue(self.schema.hasAllowedStates(key))
+                    self.assertTrue(self.schema.hasMinExc(key))
+                    self.assertTrue(self.schema.hasMaxExc(key))
                     
                 if key == "exampleKey4":
-                    self.assertEqual(self.schema.hasDefaultValue(key), False)
-                    self.assertEqual(self.schema.isAssignmentInternal(key), True)
-                    self.assertEqual(self.schema.hasAccessMode(key), True)
-                    self.assertEqual(self.schema.isAccessInitOnly(key), True)
+                    self.assertFalse(self.schema.hasDefaultValue(key))
+                    self.assertTrue(self.schema.isAssignmentInternal(key))
+                    self.assertTrue(self.schema.hasAccessMode(key))
+                    self.assertTrue(self.schema.isAccessInitOnly(key))
                     
                 if key == "exampleKey5":
-                    self.assertEqual(self.schema.hasDefaultValue(key), True)
-                    self.assertEqual(self.schema.hasAssignment(key), True)
-                    self.assertEqual(self.schema.isAssignmentOptional(key), True)
-                    self.assertEqual(self.schema.hasAccessMode(key), True)
-                    self.assertEqual(self.schema.isAccessReadOnly(key), True)   
+                    self.assertTrue(self.schema.hasDefaultValue(key))
+                    self.assertTrue(self.schema.hasAssignment(key))
+                    self.assertTrue(self.schema.isAssignmentOptional(key))
+                    self.assertTrue(self.schema.hasAccessMode(key))
+                    self.assertTrue(self.schema.isAccessReadOnly(key))   
                     
         except Exception,e:
             self.fail("test_perKeyFunctionality exception group 1: " + str(e))
