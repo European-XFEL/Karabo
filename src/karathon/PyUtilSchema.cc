@@ -525,6 +525,20 @@ namespace schemawrap {
                     return bp::object(schema.getWarnLow<string>(path));
                 case Types::DOUBLE:
                     return bp::object(schema.getWarnLow<double>(path));
+                case Types::VECTOR_BOOL:
+                    return karabo::pyexfel::Wrapper::fromStdVectorToPyArray(schema.getWarnLow<vector<bool> >(path));
+                case Types::VECTOR_INT32:
+                    return karabo::pyexfel::Wrapper::fromStdVectorToPyArray(schema.getWarnLow<vector<int> >(path));
+                case Types::VECTOR_UINT32:
+                    return karabo::pyexfel::Wrapper::fromStdVectorToPyArray(schema.getWarnLow<vector<unsigned int> >(path));
+                case Types::VECTOR_INT64:
+                    return karabo::pyexfel::Wrapper::fromStdVectorToPyArray(schema.getWarnLow<vector<long long> >(path));
+                case Types::VECTOR_UINT64:
+                    return karabo::pyexfel::Wrapper::fromStdVectorToPyArray(schema.getWarnLow<vector<unsigned long long> >(path));
+                case Types::VECTOR_STRING:
+                    return karabo::pyexfel::Wrapper::fromStdVectorToPyArray(schema.getWarnLow<vector<string> >(path));
+                case Types::VECTOR_DOUBLE:
+                    return karabo::pyexfel::Wrapper::fromStdVectorToPyArray(schema.getWarnLow<vector<double> >(path));
                 default:
                     break;
             }
@@ -552,6 +566,20 @@ namespace schemawrap {
                     return bp::object(schema.getWarnHigh<string>(path));
                 case Types::DOUBLE:
                     return bp::object(schema.getWarnHigh<double>(path));
+                case Types::VECTOR_BOOL:
+                    return karabo::pyexfel::Wrapper::fromStdVectorToPyArray(schema.getWarnHigh<vector<bool> >(path));
+                case Types::VECTOR_INT32:
+                    return karabo::pyexfel::Wrapper::fromStdVectorToPyArray(schema.getWarnHigh<vector<int> >(path));
+                case Types::VECTOR_UINT32:
+                    return karabo::pyexfel::Wrapper::fromStdVectorToPyArray(schema.getWarnHigh<vector<unsigned int> >(path));
+                case Types::VECTOR_INT64:
+                    return karabo::pyexfel::Wrapper::fromStdVectorToPyArray(schema.getWarnHigh<vector<long long> >(path));
+                case Types::VECTOR_UINT64:
+                    return karabo::pyexfel::Wrapper::fromStdVectorToPyArray(schema.getWarnHigh<vector<unsigned long long> >(path));
+                case Types::VECTOR_STRING:
+                    return karabo::pyexfel::Wrapper::fromStdVectorToPyArray(schema.getWarnHigh<vector<string> >(path));
+                case Types::VECTOR_DOUBLE:
+                    return karabo::pyexfel::Wrapper::fromStdVectorToPyArray(schema.getWarnHigh<vector<double> >(path));
                 default:
                     break;
             }
@@ -579,6 +607,20 @@ namespace schemawrap {
                     return bp::object(schema.getAlarmLow<string>(path));
                 case Types::DOUBLE:
                     return bp::object(schema.getAlarmLow<double>(path));
+                case Types::VECTOR_BOOL:
+                    return karabo::pyexfel::Wrapper::fromStdVectorToPyArray(schema.getAlarmLow<vector<bool> >(path));
+                case Types::VECTOR_INT32:
+                    return karabo::pyexfel::Wrapper::fromStdVectorToPyArray(schema.getAlarmLow<vector<int> >(path));
+                case Types::VECTOR_UINT32:
+                    return karabo::pyexfel::Wrapper::fromStdVectorToPyArray(schema.getAlarmLow<vector<unsigned int> >(path));
+                case Types::VECTOR_INT64:
+                    return karabo::pyexfel::Wrapper::fromStdVectorToPyArray(schema.getAlarmLow<vector<long long> >(path));
+                case Types::VECTOR_UINT64:
+                    return karabo::pyexfel::Wrapper::fromStdVectorToPyArray(schema.getAlarmLow<vector<unsigned long long> >(path));
+                case Types::VECTOR_STRING:
+                    return karabo::pyexfel::Wrapper::fromStdVectorToPyArray(schema.getAlarmLow<vector<string> >(path));
+                case Types::VECTOR_DOUBLE:
+                    return karabo::pyexfel::Wrapper::fromStdVectorToPyArray(schema.getAlarmLow<vector<double> >(path));
                 default:
                     break;
             }
@@ -606,6 +648,20 @@ namespace schemawrap {
                     return bp::object(schema.getAlarmHigh<string>(path));
                 case Types::DOUBLE:
                     return bp::object(schema.getAlarmHigh<double>(path));
+                case Types::VECTOR_BOOL:
+                    return karabo::pyexfel::Wrapper::fromStdVectorToPyArray(schema.getAlarmHigh<vector<bool> >(path));
+                case Types::VECTOR_INT32:
+                    return karabo::pyexfel::Wrapper::fromStdVectorToPyArray(schema.getAlarmHigh<vector<int> >(path));
+                case Types::VECTOR_UINT32:
+                    return karabo::pyexfel::Wrapper::fromStdVectorToPyArray(schema.getAlarmHigh<vector<unsigned int> >(path));
+                case Types::VECTOR_INT64:
+                    return karabo::pyexfel::Wrapper::fromStdVectorToPyArray(schema.getAlarmHigh<vector<long long> >(path));
+                case Types::VECTOR_UINT64:
+                    return karabo::pyexfel::Wrapper::fromStdVectorToPyArray(schema.getAlarmHigh<vector<unsigned long long> >(path));
+                case Types::VECTOR_STRING:
+                    return karabo::pyexfel::Wrapper::fromStdVectorToPyArray(schema.getAlarmHigh<vector<string> >(path));
+                case Types::VECTOR_DOUBLE:
+                    return karabo::pyexfel::Wrapper::fromStdVectorToPyArray(schema.getAlarmHigh<vector<double> >(path));
                 default:
                     break;
             }
@@ -809,12 +865,26 @@ namespace schemawrap {
                     return bp::object(schema.getDefaultValue<string>(path));
                 case Types::DOUBLE:
                     return bp::object(schema.getDefaultValue<double>(path));
+                case Types::VECTOR_BOOL:
+                    return karabo::pyexfel::Wrapper::fromStdVectorToPyArray(schema.getDefaultValue<vector<bool> >(path));
+                case Types::VECTOR_INT32:
+                    return karabo::pyexfel::Wrapper::fromStdVectorToPyArray(schema.getDefaultValue<vector<int> >(path));
+                case Types::VECTOR_UINT32:
+                    return karabo::pyexfel::Wrapper::fromStdVectorToPyArray(schema.getDefaultValue<vector<unsigned int> >(path));
+                case Types::VECTOR_INT64:
+                    return karabo::pyexfel::Wrapper::fromStdVectorToPyArray(schema.getDefaultValue<vector<long long> >(path));
+                case Types::VECTOR_UINT64:
+                    return karabo::pyexfel::Wrapper::fromStdVectorToPyArray(schema.getDefaultValue<vector<unsigned long long> >(path));
+                case Types::VECTOR_STRING:
+                    return karabo::pyexfel::Wrapper::fromStdVectorToPyArray(schema.getDefaultValue<vector<string> >(path));
+                case Types::VECTOR_DOUBLE:
+                    return karabo::pyexfel::Wrapper::fromStdVectorToPyArray(schema.getDefaultValue<vector<double> >(path));
                 default:
                     break;
             }
             throw KARABO_NOT_SUPPORTED_EXCEPTION("Type is not supported");
         }
-        throw KARABO_PYTHON_EXCEPTION("Python argument in 'getDefaultValue' should be a string");
+        throw KARABO_PYTHON_EXCEPTION("Python argument defining the key name in 'getDefaultValue' should be a string");
     }
 
 
