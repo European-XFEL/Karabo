@@ -295,7 +295,30 @@ class  Schema_TestCase(unittest.TestCase):
             self.assertFalse(self.schema.hasAlarmHigh("exampleKey1"))
         except Exception,e:
             self.fail("test_hasWarnAlarm exception: " + str(e))         
+
+    def test_vectorElement(self):
+        try:
+            self.assertEqual(self.schema.isAccessReadOnly("exampleKey7"), True)
+            self.assertEqual(self.schema.hasDefaultValue("exampleKey7"), True)
+            self.assertEqual(self.schema.getDefaultValue("exampleKey7"), [1,2,3])
+
+            self.assertEqual(self.schema.getAlarmLow("exampleKey7"), [-1,-1,-1])
+            self.assertEqual(self.schema.getAlarmHigh("exampleKey7"), [-2,2,-2])
+            self.assertEqual(self.schema.getWarnLow("exampleKey7"), [0,0,0])
+            self.assertEqual(self.schema.getWarnHigh("exampleKey7"), [10,20,30])
             
+            self.assertEqual(self.schema.getDefaultValue("exampleKey8"), [1.1,2.2,3.3])
+            self.assertEqual(self.schema.getAlarmLow("exampleKey8"), [-1.1,-2.2,-3.3])
+            self.assertEqual(self.schema.getWarnHigh("exampleKey8"), [5.5, 7.7, 9.9])
+            
+            self.assertEqual(self.schema.getDefaultValue("exampleKey9"), ["Hallo", "World"])
+            self.assertEqual(self.schema.getAlarmLow("exampleKey9"), ["a","b"])
+            self.assertEqual(self.schema.getWarnHigh("exampleKey9"), ["c", "d"])
+            
+        except Exception,e:
+            self.fail("test_vectorElement exception: " + str(e))  
+        
+                
     def test_perKeyFunctionality(self):
         try:
             keys = self.schema.getKeys()
@@ -367,6 +390,8 @@ class  Schema_TestCase(unittest.TestCase):
     
     def test_helpFunction(self):
         pass
+        #uncomment to see help:
+        #self.schema.help()
 
 
 if __name__ == '__main__':
