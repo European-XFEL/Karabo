@@ -213,12 +213,12 @@ class GraphicsView(QGraphicsView):
             internalKey = str(internalKeyText[0])
             text = str(internalKeyText[1])
             filename = str(dirPath + "/" + text + ".xml")
-            # openAsXml(self, filename, internalKey, configChange=ConfigChangeTypes.DEVICE_CLASS_CONFIG_CHANGED, devClaId=str())
+            # openAsXml(self, filename, internalKey, configChange=ConfigChangeTypes.DEVICE_CLASS_CONFIG_CHANGED, classId=str())
 
             # TODO: Remove dirty hack for scientific computing again!!!
-            croppedDevClaId = text.split("-")
-            devClaId = croppedDevClaId[0]
-            Manager().openAsXml(filename, internalKey, ConfigChangeTypes.DEVICE_CLASS_CONFIG_CHANGED, devClaId)
+            croppedClassId = text.split("-")
+            classId = croppedClassId[0]
+            Manager().openAsXml(filename, internalKey, ConfigChangeTypes.DEVICE_CLASS_CONFIG_CHANGED, classId)
 
 
     # Helper function opens *.scene file
@@ -313,9 +313,9 @@ class GraphicsView(QGraphicsView):
         for item in items:
             if isinstance(item, GraphicsCustomItem):
                 # TODO: Remove dirty hack for scientific computing again!!!
-                croppedDevClaId = item.text().split("-")
-                devClaId = croppedDevClaId[0]
-                Manager().saveAsXml(str(dirPath + "/" + item.text() + ".xml"), str(devClaId), str(item.internalKey()))
+                croppedClassId = item.text().split("-")
+                classId = croppedClassId[0]
+                Manager().saveAsXml(str(dirPath + "/" + item.text() + ".xml"), str(classId), str(item.internalKey()))
 
 
     # A new instance of a text is created and passed to the _setupItem function
@@ -803,7 +803,7 @@ class GraphicsView(QGraphicsView):
                 else:
                     navigationItemType = None
                 # Device server instance id
-                devSrvInsId = QString(mimeData.data("devSerInsId"))
+                devSrvInsId = QString(mimeData.data("serverId"))
                 # Internal key
                 internalKey = QString(mimeData.data("internalKey"))
                 # Display name
@@ -816,15 +816,15 @@ class GraphicsView(QGraphicsView):
                     showAdditionalInfo = True
                     if not ("-" in displayName):
                         # Get unique device class id for new plugin
-                        newDevClaId = Manager().createNewDeviceClassId(displayName)
+                        newClassId = Manager().createNewDeviceClassId(displayName)
 
                         keys = internalKey.split('+', 1)
                         if len(keys) is 2:
-                            internalKey = str(keys[0]) + "+" + newDevClaId
+                            internalKey = str(keys[0]) + "+" + newClassId
 
                         # Create new device class plugin if Device Class is dropped
-                        Manager().createNewDeviceClassPlugin(devSrvInsId, displayName, newDevClaId)
-                        displayName = newDevClaId
+                        Manager().createNewDeviceClassPlugin(devSrvInsId, displayName, newClassId)
+                        displayName = newClassId
 
                 # Create graphical item
                 customItem = GraphicsCustomItem(internalKey, self.__isDesignMode, displayName, schema, showAdditionalInfo)

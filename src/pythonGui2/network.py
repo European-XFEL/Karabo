@@ -133,12 +133,12 @@ class Network(QObject):
         self._tcpWriteHashHash(header, config)
 
 
-    def onCreateNewDeviceClassPlugin(self, devSrvInsId, devClaId, newDevClaId):
+    def onCreateNewDeviceClassPlugin(self, devSrvInsId, classId, newClassId):
         header = Hash("type", "createNewDeviceClassPlugin")
         body = Hash()
         body.set("devSrvInsId", str(devSrvInsId))
-        body.set("devClaId", str(devClaId))
-        body.set("newDevClaId", str(newDevClaId))
+        body.set("classId", str(classId))
+        body.set("newClassId", str(newClassId))
         self._tcpWriteHashHash(header, body)
 
 
@@ -426,14 +426,14 @@ class Network(QObject):
         id = row.get("id")
         name = row.get("name")
         schema = row.get("schema")
-        devSerInsId = row.get("devSerInsId")
-        return dict(id=id, name=name, schema=schema, refId=devSerInsId)
+        serverId = row.get("devSerInsId") #row.get("serverId")
+        return dict(id=id, name=name, schema=schema, refId=serverId)
     
     
     def _collectDeviceInstanceInformation(self, row):
         id = row.get("id")
         name = row.get("instanceId")
-        devClaId = row.get("devClaId")
+        classId = row.get("devClaId") #row.get("classId")
         schema = row.get("schema")
-        return dict(id=id, name=name, refId=devClaId, schema=schema)
+        return dict(id=id, name=name, refId=classId, schema=schema)
 

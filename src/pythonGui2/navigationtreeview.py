@@ -63,9 +63,9 @@ class NavigationTreeView(QTreeView):
         if len(itemInfo) == 0:
             return
         
-        devSerInsId  = itemInfo.get(QString('devSerInsId'))
-        if devSerInsId is None:
-            devSerInsId = itemInfo.get('devSerInsId')
+        serverId  = itemInfo.get(QString('serverId'))
+        if serverId is None:
+            serverId = itemInfo.get('serverId')
         
         navigationItemType = itemInfo.get(QString('type'))
         if navigationItemType is None:
@@ -78,9 +78,9 @@ class NavigationTreeView(QTreeView):
         displayName = internalKey
         schema = None
         if navigationItemType is NavigationItemTypes.DEVICE_CLASS:
-            displayName = itemInfo.get(QString('devClaId'))
+            displayName = itemInfo.get(QString('classId'))
             if displayName is None:
-                displayName = itemInfo.get('devClaId')
+                displayName = itemInfo.get('classId')
         
         schema = itemInfo.get(QString('schema'))
         if schema is None:
@@ -94,9 +94,9 @@ class NavigationTreeView(QTreeView):
         if navigationItemType:
             # Item type
             mimeData.setData("navigationItemType", QByteArray.number(navigationItemType))
-        if devSerInsId:
+        if serverId:
             # Device server instance id
-            mimeData.setData("devSerInsId", QString(devSerInsId).toAscii())
+            mimeData.setData("serverId", QString(serverId).toAscii())
         if internalKey:
             # Internal key
             mimeData.setData("internalKey", QString(internalKey).toAscii())
@@ -190,7 +190,7 @@ class NavigationTreeView(QTreeView):
         rowId = self.__model.rowId(index)
         key = index.data().toString()
         
-        devClaId = None
+        classId = None
         
         if level == 0:
             type = NavigationItemTypes.NODE
@@ -200,19 +200,19 @@ class NavigationTreeView(QTreeView):
             type = NavigationItemTypes.DEVICE_CLASS
             parentIndex = index.parent()
             key = parentIndex.data().toString() + "+" + index.data().toString()
-            devClaId = index.data().toString()
+            classId = index.data().toString()
             # Get schema from model
             schema = self.__model.getSchema(level, row)
             Manager().onSchemaAvailable(dict(key=key, type=type, schema=schema))
         elif level == 3:
             type = NavigationItemTypes.DEVICE_INSTANCE
             parentIndex = index.parent()
-            devClaId = parentIndex.data().toString()
+            classId = parentIndex.data().toString()
             # Get schema from model
             schema = self.__model.getSchema(level, row)
-            Manager().onSchemaAvailable(dict(devClaId=parentIndex.data().toString(), key=key, type=type, schema=schema))
+            Manager().onSchemaAvailable(dict(classId=parentIndex.data().toString(), key=key, type=type, schema=schema))
         
-        itemInfo = dict(key=key, type=type, devClaId=devClaId, level=level, rowId=rowId, column=1)
+        itemInfo = dict(key=key, type=type, classId=classId, level=level, rowId=rowId, column=1)
         Manager().onNavigationItemChanged(itemInfo)
         
         return type # Needed in ConfigurationPanel
@@ -304,31 +304,31 @@ class NavigationTreeView(QTreeView):
             return dict(internalKey=internalKey, type=NavigationItemTypes.NODE)
         elif level == 1:
             # DEVICE_SERVER_INSTANCE
-            devSerInsId = index.data().toString()
-            internalKey = devSerInsId
-            return dict(devSerInsId=devSerInsId, internalKey=internalKey, type=NavigationItemTypes.DEVICE_SERVER_INSTANCE)
+            serverId = index.data().toString()
+            internalKey = serverId
+            return dict(serverId=serverId, internalKey=internalKey, type=NavigationItemTypes.DEVICE_SERVER_INSTANCE)
         elif level == 2:
             # DEVICE_CLASS
             parentIndex = index.parent()
-            devSerInsId = parentIndex.data().toString()
-            devClaId = index.data().toString()
-            internalKey = devSerInsId+"+"+devClaId
+            serverId = parentIndex.data().toString()
+            classId = index.data().toString()
+            internalKey = serverId+"+"+classId
             # Get schema
             level = self.__model.levelOf(index)
             row = self.__model.mappedRow(index)
             schema = self.__model.getSchema(level, row)
-            return dict(devSerInsId=devSerInsId, devClaId=devClaId, internalKey=internalKey, schema=schema, type=NavigationItemTypes.DEVICE_CLASS)
+            return dict(serverId=serverId, classId=classId, internalKey=internalKey, schema=schema, type=NavigationItemTypes.DEVICE_CLASS)
         elif level == 3:
             # DEVICE_INSTANCE
             parentIndex = index.parent()
-            devClaId = parentIndex.data().toString()
-            devSerInsId = parentIndex.parent().data().toString()
+            classId = parentIndex.data().toString()
+            serverId = parentIndex.parent().data().toString()
             internalKey = index.data().toString()
             # Get schema
             level = self.__model.levelOf(index)
             row = self.__model.mappedRow(index)
             schema = self.__model.getSchema(level, row)
-            return dict(devSerInsId=devSerInsId, devClaId=devClaId, internalKey=internalKey, schema=schema, type=NavigationItemTypes.DEVICE_INSTANCE)
+            return dict(serverId=serverId, classId=classId, internalKey=internalKey, schema=schema, type=NavigationItemTypes.DEVICE_INSTANCE)
 
 
     def currentInternalDeviceKey(self):
@@ -359,14 +359,14 @@ class NavigationTreeView(QTreeView):
 ### slots ###
     def onKillDeviceInstance(self):
         itemInfo = self.currentIndexInfo()
-        devSerInsId = itemInfo.get(QString('devSerInsId'))
-        if devSerInsId is None:
-            devSerInsId = itemInfo.get('devSerInsId')
+        serverId = itemInfo.get(QString('serverId'))
+        if serverId is None:
+            serverId = itemInfo.get('serverId')
         
         internalKey = itemInfo.get(QString('internalKey'))
         if internalKey is None:
             internalKey = itemInfo.get('internalKey')
-        Manager().killDeviceInstance(devSerInsId, internalKey)
+        Manager().killDeviceInstance(serverId, internalKey)
 
 
     def onKillDeviceServerInstance(self):
@@ -375,15 +375,15 @@ class NavigationTreeView(QTreeView):
 
     def onFileSaveAs(self):
         itemInfo = self.currentIndexInfo()
-        devClaId = itemInfo.get(QString('devClaId'))
-        if devClaId is None:
-            devClaId = itemInfo.get('devClaId')
+        classId = itemInfo.get(QString('classId'))
+        if classId is None:
+            classId = itemInfo.get('classId')
         
         internalKey = itemInfo.get(QString('internalKey'))
         if internalKey is None:
             internalKey = itemInfo.get('internalKey')
         
-        Manager().onSaveAsXml(str(devClaId), str(internalKey))
+        Manager().onSaveAsXml(str(classId), str(internalKey))
 
 
     def onFileOpen(self):
@@ -391,24 +391,24 @@ class NavigationTreeView(QTreeView):
         index = self.currentIndex()
         
         configChangeType = None
-        devClaId = str()
+        classId = str()
         instanceId = str()
         if type is NavigationItemTypes.DEVICE_CLASS:
             configChangeType = ConfigChangeTypes.DEVICE_CLASS_CONFIG_CHANGED
-            devClaId = index.data().toString()
+            classId = index.data().toString()
             parentIndex = index.parent()
-            instanceId = parentIndex.data().toString()+"+"+devClaId
+            instanceId = parentIndex.data().toString()+"+"+classId
         elif type is NavigationItemTypes.DEVICE_INSTANCE:
             configChangeType = ConfigChangeTypes.DEVICE_INSTRANCE_CONFIG_CHANGED
             parentIndex = index.parent()
-            devClaId = parentIndex.data().toString()
+            classId = parentIndex.data().toString()
             instanceId = index.data().toString()
         
         # TODO: Remove dirty hack for scientific computing again!!!
-        croppedDevClaId = devClaId.split("-")
-        devClaId = croppedDevClaId[0]
+        croppedClassId = classId.split("-")
+        classId = croppedClassId[0]
         
-        Manager().onFileOpen(configChangeType, str(instanceId), str(devClaId))
+        Manager().onFileOpen(configChangeType, str(instanceId), str(classId))
 
 
     def onCustomContextMenuRequested(self, pos):

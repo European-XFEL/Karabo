@@ -35,7 +35,7 @@ class Notifier(QObject):
     """Class for signals which can not be integrated in Manager class"""
     # signals
     signalNewNavigationItem = pyqtSignal(dict) # id, name, type, (status), (refType), (refId), (schema)
-    signalSelectNewNavigationItem = pyqtSignal(dict) # id, name, devClaId, schema
+    signalSelectNewNavigationItem = pyqtSignal(dict) # id, name, classId, schema
     signalSchemaAvailable = pyqtSignal(dict) # key, schema
     signalNavigationItemChanged = pyqtSignal(dict) # type, key
     signalDeviceInstanceChanged = pyqtSignal(dict, str)
@@ -67,7 +67,7 @@ class Notifier(QObject):
     signalAlarmFound = pyqtSignal(str) # alarmData
     signalWarningFound = pyqtSignal(str) # warningData
     
-    signalCreateNewDeviceClassPlugin = pyqtSignal(str, str, str) # devSrvInsId, devClaId, newDevClaId
+    signalCreateNewDeviceClassPlugin = pyqtSignal(str, str, str) # devSrvInsId, classId, newclassId
 
     def __init__(self):
         super(Notifier, self).__init__()
@@ -358,7 +358,7 @@ class Manager(Singleton):
         self.__notifier.signalConflictStateChanged.emit(hasConflict)
 
 
-    def initDevice(self, devSerInsId, devClaId, internalKey):
+    def initDevice(self, serverId, classId, internalKey):
         #print "initDevice", internalKey
         #print self.__hash
         
@@ -367,12 +367,12 @@ class Manager(Singleton):
             h = self.__hash.get(internalKey)
         
         # TODO: Remove dirty hack for scientific computing again!!!
-        croppedDevClaId = devClaId.split("-")
-        devClaId = croppedDevClaId[0]
+        croppedClassId = classId.split("-")
+        classId = croppedClassId[0]
         
-        config = Hash(devClaId, h)
+        config = Hash(classId, h)
         
-        self.__notifier.signalInitDevice.emit(devSerInsId, config)
+        self.__notifier.signalInitDevice.emit(serverId, config)
         self.__isInitDeviceCurrentlyProcessed = True
 
 
@@ -401,12 +401,12 @@ class Manager(Singleton):
 
 
 ### TODO: Temporary functions for scientific computing START ###
-    def createNewDeviceClassId(self, devClaId):
-        return self.__sqlDatabase.createNewDeviceClassId(devClaId)
+    def createNewDeviceClassId(self, classId):
+        return self.__sqlDatabase.createNewDeviceClassId(classId)
 
 
-    def createNewDeviceClassPlugin(self, devSrvInsId, devClaId, newDevClaId):
-        self.__notifier.signalCreateNewDeviceClassPlugin.emit(devSrvInsId, devClaId, newDevClaId)
+    def createNewDeviceClassPlugin(self, devSrvInsId, classId, newClassId):
+        self.__notifier.signalCreateNewDeviceClassPlugin.emit(devSrvInsId, classId, newClassId)
     
     
     def getSchemaByInternalKey(self, internalKey):
@@ -504,10 +504,10 @@ class Manager(Singleton):
         if className is None:
             className = itemInfo.get('name')
         
-        devSerInsId = itemInfo.get(QString('refId'))
-        if devSerInsId is None:
-            devSerInsId = itemInfo.get('refId')
-        devSerInsName = self.__sqlDatabase.getDeviceServerInstanceById(devSerInsId)
+        serverId = itemInfo.get(QString('refId'))
+        if serverId is None:
+            serverId = itemInfo.get('refId')
+        devSerInsName = self.__sqlDatabase.getDeviceServerInstanceById(serverId)
         
         # Remove device class data from internal hash
         self._setFromPath(devSerInsName + "+" + className, Hash())
@@ -565,7 +565,7 @@ class Manager(Singleton):
         self.__notifier.signalDeviceInstanceChanged.emit(itemInfo, xml)
 
 
-    def openAsXml(self, filename, internalKey, configChangeType, devClaId):
+    def openAsXml(self, filename, internalKey, configChangeType, classId):
         file = QFile(filename)
         if file.open(QIODevice.ReadOnly | QIODevice.Text) == False:
             return
@@ -576,7 +576,7 @@ class Manager(Singleton):
 
         # TODO: serializer needed?
         serializer = FormatHash.create("Xml", Hash())
-        config = serializer.unserialize(xmlContent).get(devClaId)
+        config = serializer.unserialize(xmlContent).get(classId)
 
         # TODO: Reload XSD in configuration panel
         # ...
@@ -587,7 +587,7 @@ class Manager(Singleton):
         self._changeHash(internalKey, config, configChangeType)
 
 
-    def onFileOpen(self, configChangeType, internalKey, devClaId=str()):
+    def onFileOpen(self, configChangeType, internalKey, classId=str()):
         filename = QFileDialog.getOpenFileName(None, "Open saved configuration", QDir.tempPath(), "XML (*.xml)")
         if filename.isEmpty():
             return
@@ -596,14 +596,14 @@ class Manager(Singleton):
         if file.open(QIODevice.ReadOnly | QIODevice.Text) == False:
             return
         
-        self.openAsXml(filename, internalKey, configChangeType, devClaId)
+        self.openAsXml(filename, internalKey, configChangeType, classId)
 
 
-    def saveAsXml(self, filename, devClaId, internalKey):
-        saveToFile(Hash(devClaId, self.getFromPathAsHash(internalKey)), filename)
+    def saveAsXml(self, filename, classId, internalKey):
+        saveToFile(Hash(classId, self.getFromPathAsHash(internalKey)), filename)
 
     
-    def onSaveAsXml(self, devClaId, internalKey):
+    def onSaveAsXml(self, classId, internalKey):
         filename = QFileDialog.getSaveFileName(None, "Save file as", QDir.tempPath(), "XML (*.xml)")
         if filename.isEmpty() :
             return
@@ -612,7 +612,7 @@ class Manager(Singleton):
         if fi.suffix().isEmpty():
             filename += ".xml"
 
-        self.saveAsXml(filename, devClaId, internalKey)
+        self.saveAsXml(filename, classId, internalKey)
 
 
     def onNavigationItemChanged(self, itemInfo):

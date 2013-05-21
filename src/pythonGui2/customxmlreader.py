@@ -395,18 +395,18 @@ class CustomXmlReader(QXmlStreamReader):
             # DeviceClass configuration not found
             
             # TODO: Remove dirty hack for scientific computing again!!!
-            croppedDevClaId = text.split("-")
-            newDevClaId = croppedDevClaId[0]
+            croppedClassId = text.split("-")
+            newClassId = croppedClassId[0]
             
             newInternalKey = internalKey
             keys = internalKey.split('+', 1)
             if len(keys) is 2:
                 devSrvInsId = str(keys[0])
-                newInternalKey = str(keys[0]) + "+" + newDevClaId
+                newInternalKey = str(keys[0]) + "+" + newClassId
                 # Try to get schema again with new internalKey
                 schema = Manager().getSchemaByInternalKey(newInternalKey)
                 # Create new device class plugin
-                Manager().createNewDeviceClassPlugin(devSrvInsId, newDevClaId, text)
+                Manager().createNewDeviceClassPlugin(devSrvInsId, newClassId, text)
         
         customItem = GraphicsCustomItem(internalKey, self.__view.isDesignMode, text, schema)
         

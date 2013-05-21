@@ -6,7 +6,6 @@
 
 
 from karabo_decorators import *
-#from base_fsm import *
 from libkarathon import *
 
 
@@ -14,8 +13,10 @@ from libkarathon import *
 @KARABO_CLASSINFO("SampleSchema", "1.0")
 class SampleSchema(object):
 
+
     def __init__(self, configuration):
         self.configuration = configuration
+
 
     @staticmethod
     def expectedParameters(expected):
@@ -39,15 +40,44 @@ class SampleSchema(object):
         e.allowedStates("Ok.Stopped")
         e.reconfigurable().commit()
         
-#        e = SLOT_ELEMENT(expected)
-#        e.key("start").displayedName("Start").description("Instructs device to go to started state")
-#        e.allowedStates("Ok.Stopped")
-#        e.commit()
 
-#        e = SLOT_ELEMENT(expected)
-#        e.key("stop").displayedName("Stop").description("Instructs device to go to stopped state")
-#        e.allowedStates("Ok.Started")
-#        e.commit()
+        e = PATH_ELEMENT(expected)
+        e.key("filename").description("Name of the file to be read")
+        e.displayedName("Filename")
+        e.assignmentMandatory()
+        e.commit()
+
+        #e = VECTOR_STRING_ELEMENT(expected).key("visibility")
+        #e.displayedName("Visibility").description("Configures who is allowed to see this device at all")
+        #e.assignmentOptional().defaultValueFromString("")
+        #e.advanced().reconfigurable()
+        #e.commit()
+
+        #e = VECTOR_INT32_ELEMENT(expected).key("vectorIntElement")
+        #e.displayedName("V Element")
+        #e.description("Vector Int Element for testing")
+        #e.minSize(1)
+        #e.maxSize(10)
+        #e.assignmentOptional().defaultValueFromString("5,3,4")
+        #e.reconfigurable()
+        #e.commit()
+      
+        #e = VECTOR_STRING_ELEMENT(expected).key("vectorStringElement")
+        #e.displayedName("Vector String Element")
+        #e.description("Vector String Element for testing")
+        #e.assignmentOptional().defaultValueFromString("string1,string2,string3")
+        #e.reconfigurable()
+        #e.commit()
+        
+        e = SLOT_ELEMENT(expected)
+        e.key("start").displayedName("Start").description("Instructs device to go to started state")
+        e.allowedStates("Ok.Stopped")
+        e.commit()
+
+        e = SLOT_ELEMENT(expected)
+        e.key("stop").displayedName("Stop").description("Instructs device to go to stopped state")
+        e.allowedStates("Ok.Started")
+        e.commit()
 
         e = SLOT_ELEMENT(expected)
         e.key("reset").displayedName("Reset").description("Resets the device in case of an error")
@@ -121,11 +151,6 @@ class SampleSchema(object):
         e.key("composedWord").displayedName("Composed word").description("The composed word")
         e.assignmentOptional().noDefaultValue()
         e.readOnly().commit()
-        
-        #e = VECTOR_STRING_ELEMENT(expected).key("visibility")
-        #e.displayedName("Visibility").description("Configures who is allowed to see this device at all")
-        #e.assignmentOptional().defaultValueFromString("")
-        #e.advanced().reconfigurable().commit()
 
         #e = STRING_ELEMENT(expected).key("testString")
         #e.tags("hardware, set")
@@ -159,20 +184,24 @@ class Shape(object):
         e.assignmentOptional().defaultValue(False)
         e.init()
         e.commit()
-        
+
+
     def getConfiguration(self):
         return self.configuration
-        
+
+
     def draw(self):
         pass
     
     
 @KARABO_CLASSINFO("Circle", "1.0")    
 class Circle(Shape):
-    
+
+
     def __init__(self, configuration):
         super(Circle, self).__init__(configuration)
-        
+
+
     @staticmethod
     def expectedParameters(expected):
         
@@ -185,7 +214,8 @@ class Circle(Shape):
         e.assignmentOptional().defaultValue(10)
         e.init()
         e.commit()
-        
+
+
     def draw(self):
         return self.__class__.__name__
 
