@@ -345,9 +345,9 @@ class ConfigurationPanel(QWidget):
 
 
     def _createNewAttributePage(self, itemInfo):
-        devClaId = itemInfo.get(QString('devClaId'))
-        if devClaId is None:
-            devClaId = itemInfo.get('devClaId')
+        classId = itemInfo.get(QString('classId'))
+        if classId is None:
+            classId = itemInfo.get('classId')
         internalKey = itemInfo.get(QString('key'))
         if internalKey is None:
             internalKey = itemInfo.get('key')
@@ -364,7 +364,7 @@ class ConfigurationPanel(QWidget):
         #    QMessageBox.critical(None, "XML Schema", "The given XML schema file is invalid")
         #    return
 
-        twParameterEditorPage = ParameterTreeWidget(self)#, internalKey, devClaId)
+        twParameterEditorPage = ParameterTreeWidget(self)#, internalKey, classId)
         twParameterEditorPage.setHeaderLabels(QStringList() << "Parameter" << "Current value on device" << "Value")
         twParameterEditorPage.addConfigAction(self.__acKillInstance)
         twParameterEditorPage.addConfigAction(self.__acApplyAll)
@@ -701,16 +701,16 @@ class ConfigurationPanel(QWidget):
         if type is None:
             type = itemInfo.get('type')
         
-        devSerInsId = itemInfo.get(QString('devSerInsId'))
-        if devSerInsId is None:
-            devSerInsId = itemInfo.get('devSerInsId')
+        serverId = itemInfo.get(QString('serverId'))
+        if serverId is None:
+            serverId = itemInfo.get('serverId')
         
         internalKey = itemInfo.get(QString('internalKey'))
         if internalKey is None:
             internalKey = itemInfo.get('internalKey')
         
         if type is NavigationItemTypes.DEVICE_INSTANCE:
-            Manager().killDeviceInstance(devSerInsId, internalKey)
+            Manager().killDeviceInstance(serverId, internalKey)
         elif type is NavigationItemTypes.DEVICE_SERVER_INSTANCE:
             Manager().killDeviceServerInstance(internalKey)
 
@@ -720,19 +720,19 @@ class ConfigurationPanel(QWidget):
         if len(itemInfo) == 0:
             return
         
-        devSerInsId = itemInfo.get(QString('devSerInsId'))
-        if devSerInsId is None:
-            devSerInsId = itemInfo.get('devSerInsId')
+        serverId = itemInfo.get(QString('serverId'))
+        if serverId is None:
+            serverId = itemInfo.get('serverId')
         
-        devClaId = itemInfo.get(QString('devClaId'))
-        if devClaId is None:
-            devClaId = itemInfo.get('devClaId')
+        classId = itemInfo.get(QString('classId'))
+        if classId is None:
+            classId = itemInfo.get('classId')
         
         internalKey = itemInfo.get(QString('internalKey'))
         if internalKey is None:
             internalKey = itemInfo.get('internalKey')
         
-        Manager().initDevice(str(devSerInsId), str(devClaId), str(internalKey))
+        Manager().initDevice(str(serverId), str(classId), str(internalKey))
 
 
     def onDeviceInstanceSchemaUpdated(self, instanceId, schema):
