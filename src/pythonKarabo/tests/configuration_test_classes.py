@@ -285,3 +285,15 @@ class TestStruct1(object):
         e.description("Example key 6 description")
         e.readOnly().initialValue(1.11).alarmLow(-22.1).alarmHigh(22.777).warnLow(-5.5).warnHigh(5.5)
         e.commit()
+        
+        e = VECTOR_INT32_ELEMENT(expected).key("exampleKey7")
+        e.displayedName("Example key 7")
+        e.readOnly().initialValue([1,2,3]).alarmLow([-1,-1,-1]).alarmHigh([-2,2,-2]).warnLow([0,0,0]).warnHigh([10,20,30])
+        e.commit()
+        
+        e = VECTOR_DOUBLE_ELEMENT(expected).key("exampleKey8")
+        e.readOnly().initialValue([1.1, 2.2, 3.3]).alarmLow([-1.1,-2.2,-3.3]).warnHigh([5.5, 7.7, 9.9]).commit()
+        
+        e = VECTOR_STRING_ELEMENT(expected).key("exampleKey9")
+        e.readOnly().initialValue(["Hallo", "World"]).alarmLow(["a","b"]).warnHigh(["c", "d"])
+        e.commit()
