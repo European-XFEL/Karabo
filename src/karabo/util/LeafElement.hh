@@ -223,7 +223,7 @@ namespace karabo {
         };
 
         /**
-         * The DefaultValue class defines a default value for element.
+         * The ReadOnlySpecific class defines specific values for 'readOnly'-element.
          */
         template<class Element, class ValueType>
         class ReadOnlySpecific {
@@ -281,7 +281,7 @@ namespace karabo {
 
         private:
 
-            // DefaultValue object can be only constructed by its friends
+            // ReadOnlySpecific object can be only constructed by its friends
 
             ReadOnlySpecific() : m_genericElement(0) {
             }
