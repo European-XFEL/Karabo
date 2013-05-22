@@ -115,6 +115,10 @@ class PythonDevice(BaseFsm):
         self.initClassId()
         self.initSchema()
         
+        self._ss.registerSignal("signalNewDeviceInstanceAvailable", str, Hash)  # DeviceServerInstanceId, currentConfig
+        self._ss.connect("", "signalNewDeviceInstanceAvailable", "*", "slotNewDeviceInstanceAvailable", ConnectionType.NO_TRACK, False)
+        self._ss.emit("signalNewDeviceInstanceAvailable", self.serverid, Hash(self.classid, self.parameters))
+        
         fullHostName = socket.gethostname()
         self.hostName, dotsep, domainName = fullHostName.partition('.')
         self.running = True
@@ -157,12 +161,13 @@ class PythonDevice(BaseFsm):
                 except RuntimeError,e:
                     print "Validation Exception (Intern): " + str(e)
                     raise RuntimeError,"Validation Exception: " + str(e)
+
                 #if self.validatorIntern.hasParametersInWarnOrAlarm():
                 #    warnings = self.validatorIntern.getParametersInWarnOrAlarm()
                 #    for key in warnings:
                 #        self.log.WARN(warnings[key]["message"])
-                        #TODO trigger warnOrAlarm
-                        
+                #        #TODO trigger warnOrAlarm
+
                 if not validated.empty():
                     self.parameters += validated
                     self._ss.emit("signalChanged", validated, self.getInstanceId(), self.classid)
@@ -374,6 +379,7 @@ class PythonDevice(BaseFsm):
     def getInstanceId(self):
         return self._ss.getInstanceId()
    
+    '''
     def getCurrentDateTime(self):
         return datetime.datetime(1,1,1).today().isoformat(' ')
     
@@ -391,7 +397,8 @@ class PythonDevice(BaseFsm):
         self._ss.emit(
             "signalAlarm", self.getCurrentDateTime(), alarmMessage,
             self.deviceid, priority)
-
+    '''
+    
     @staticmethod
     def loadConfiguration(xmlfile):
         input = InputHash.create("TextFile", Hash("filename", xmlfile))

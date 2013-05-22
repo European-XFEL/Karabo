@@ -292,15 +292,16 @@ class DeviceServer(object):
                 self.ss.emit("signalNewDeviceClassAvailable", self.ss.getInstanceId(), classid, d["xsd"])
 
     def startDeviceAction(self, conf):
-        self.log.DEBUG("Trying to start device with the following configuration:\n{}".format(conf))
         modified = Hash(conf)
         classid = iter(modified).next().getKey()
-        modified[classid + ".serverId"] = self.serverid
+        self.log.INFO("Trying to start {}...".format(classid))
+        self.log.DEBUG("with the following configuration:\n".format(conf))
+        modified[classid]["serverId"] = self.serverid
         if classid + ".deviceId" in modified:
-            deviceid = modified[classid + ".deviceId"]
+            deviceid = modified[classid]["deviceId"]
         else:
             deviceid = self._generateDefaultDeviceInstanceId(classid)
-            modified[classid + ".deviceId"] = deviceid
+            modified[classid]["deviceId"] = deviceid
         # create temporary instance to check the configuration parameters are valid
         try:
             configuration = modified[classid]
@@ -313,9 +314,10 @@ class DeviceServer(object):
             validated = validator.validate(schema, configuration)
             #print "classId = {}, modname = {}, pluginDir = {}".format(classid, modname, pluginDir)
             #print "Validated configuration...\n", validated
-            del validated
             launcher = Launcher(pluginDir, modname, classid, modified).start()
             self.deviceInstanceMap[deviceid] = launcher
+            #self.ss.emit("signalNewDeviceInstanceAvailable", self.getInstanceId(), Hash(classid, validated))
+            del validated
         except Exception, e:
             self.log.WARN("Wrong input configuration for class '{}': {}".format(classid, e.message))
             return
