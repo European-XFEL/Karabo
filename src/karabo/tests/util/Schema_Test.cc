@@ -30,13 +30,13 @@ void Schema_Test::testBuildUp() {
             CPPUNIT_ASSERT(schema.isAccessInitOnly("shadowEnabled") == true);
             CPPUNIT_ASSERT(schema.isAccessInitOnly("radius") == true);
             CPPUNIT_ASSERT(schema.isLeaf("radius") == true);
-            }
+        }
         {
             Schema schema("test");
             GraphicsRenderer1::expectedParameters(schema);
             CPPUNIT_ASSERT(schema.isAccessInitOnly("shapes.circle.radius") == true);
             CPPUNIT_ASSERT(schema.isLeaf("shapes.circle.radius") == true);
-            }
+        }
         GraphicsRenderer::Pointer p = GraphicsRenderer::create("GraphicsRenderer", Hash("shapes.Circle.radius", 0.5, "color", "red", "antiAlias", "true"));
         //cout << Configurator<GraphicsRenderer>::getSchema("GraphicsRenderer"); 
 
@@ -223,6 +223,17 @@ void Schema_Test::testGetDefaultValue() {
     CPPUNIT_ASSERT(defaultValue == 1442244);
     string defaultValueAsString5 = m_schema.getDefaultValueAs<string > ("exampleKey5");
     CPPUNIT_ASSERT(defaultValueAsString5 == "1442244");
+
+    CPPUNIT_ASSERT(m_schema.getDefaultValue<string>("sampleKey") == "10"); //TODO check
+    //int defaultValueKey = m_schema.getDefaultValue<int>("sampleKey"); //TODO check failed conversion from "string" into "int" on key "defaultValue"
+
+    CPPUNIT_ASSERT(m_schema.getDefaultValueAs<string>("sampleKey") == "10");
+    CPPUNIT_ASSERT(m_schema.getDefaultValueAs<int>("sampleKey") == 10);
+
+    //TODO check. According to implementation: readOnly element has default value and it is equal to string "0"
+    //(does not matter what is the type of the element itself)
+    CPPUNIT_ASSERT(m_schema.hasDefaultValue("sampleKey2") == true);
+    CPPUNIT_ASSERT(m_schema.getDefaultValue<string>("sampleKey2") == "0");
 }
 
 
@@ -234,12 +245,14 @@ void Schema_Test::testGetAllowedStates() {
     CPPUNIT_ASSERT(m_schema.getAllowedStates("exampleKey3")[3] == "NewState");
 }
 
+
 void Schema_Test::testGetAllowedRoles() {
     vector<string> allowedRoles = m_schema.getAllowedRoles("exampleKey4");
     CPPUNIT_ASSERT(allowedRoles[0] == "Admin");
     CPPUNIT_ASSERT(allowedRoles[1] == "User");
     CPPUNIT_ASSERT(m_schema.getAllowedRoles("exampleKey4")[2] == "OtherRole");
 }
+
 
 void Schema_Test::testGetUnit() {
     int units = m_schema.getUnit("exampleKey2");
@@ -373,7 +386,7 @@ void Schema_Test::testPerKeyFunctionality() {
 
             CPPUNIT_ASSERT(m_schema.hasAccessMode(keys[i]) == true);
             CPPUNIT_ASSERT(m_schema.isAccessInitOnly(keys[i]) == true);
-            
+
             CPPUNIT_ASSERT(m_schema.hasAllowedRoles(keys[i]) == true);
         }
 
@@ -388,6 +401,106 @@ void Schema_Test::testPerKeyFunctionality() {
         }
     }
 
+}
+
+
+void Schema_Test::testSlotSchemaElement() {
+    Schema sch("OtherSchemaElements", Schema::AssemblyRules(READ | WRITE | INIT));
+    OtherSchemaElements::expectedParameters(sch);
+
+    CPPUNIT_ASSERT(sch.getDescription("slotTest") == "Test slot element");
+    CPPUNIT_ASSERT(sch.getAllowedStates("slotTest")[0] == "Started");
+    CPPUNIT_ASSERT(sch.getAllowedStates("slotTest")[2] == "Reset");
+
+}
+
+
+void Schema_Test::testVectorElements() {
+    Schema sch("OtherSchemaElements", Schema::AssemblyRules(READ | WRITE | INIT));
+    OtherSchemaElements::expectedParameters(sch);
+
+    vector<int> vecDef;
+    vecDef.push_back(10);
+    vecDef.push_back(20);
+    vecDef.push_back(30);
+    CPPUNIT_ASSERT(sch.getDefaultValue<vector<int> >("vecInt") == vecDef);
+    CPPUNIT_ASSERT(sch.getValueType("vecInt") == Types::VECTOR_INT32);
+    CPPUNIT_ASSERT(sch.getWarnLow<vector<int> >("vecInt") == vector<int>(3, 50));
+    CPPUNIT_ASSERT(sch.getWarnHigh<vector<int> >("vecInt") == vector<int>(3, 100));
+    CPPUNIT_ASSERT(sch.isAccessReadOnly("vecInt") == true);
+    CPPUNIT_ASSERT(sch.isAssignmentOptional("vecInt") == true);
+    CPPUNIT_ASSERT(sch.hasDefaultValue("vecInt") == true);
+
+    CPPUNIT_ASSERT(sch.getValueType("vecDouble") == Types::VECTOR_DOUBLE);
+    CPPUNIT_ASSERT(sch.getAlarmLow<vector<double> >("vecDouble") == vector<double>(3, -5.5));
+    CPPUNIT_ASSERT(sch.getAlarmHigh<vector<double> >("vecDouble") == vector<double>(3, 7.7));
+    CPPUNIT_ASSERT(sch.isAccessReadOnly("vecDouble") == true);
+    CPPUNIT_ASSERT(sch.isAssignmentOptional("vecDouble") == true);
+
+    //TODO check. According to implementation: 
+    //readOnly element has default value (even if initialValue not specified) and it's value is string "0"
+    CPPUNIT_ASSERT(sch.hasDefaultValue("vecDouble") == true);
+    CPPUNIT_ASSERT(sch.getDefaultValue<string>("vecDouble") == "0");
+
+    CPPUNIT_ASSERT(sch.hasAlarmLow("vecDouble") == true);
+    CPPUNIT_ASSERT(sch.hasAlarmHigh("vecDouble") == true);
+    CPPUNIT_ASSERT(sch.hasWarnLow("vecDouble") == false);
+    CPPUNIT_ASSERT(sch.hasWarnHigh("vecDouble") == false);
+
+    CPPUNIT_ASSERT(sch.isAccessReconfigurable("vecIntReconfig") == true);
+    CPPUNIT_ASSERT(sch.isAssignmentOptional("vecIntReconfig") == true);
+    CPPUNIT_ASSERT(sch.hasDefaultValue("vecIntReconfig") == true);
+    CPPUNIT_ASSERT(sch.getDefaultValue<vector<int> >("vecIntReconfig") == vecDef);
+
+    CPPUNIT_ASSERT(sch.hasDefaultValue("vecIntReconfigStr") == true);
+
+    //TODO check (if default value given by defaultValueFromString, then it remains 'string' no matter of element type?):
+    //vector<int> defVec = sch.getDefaultValue<vector<int> >("vecIntReconfigStr");//error
+    //string defStr = sch.getDefaultValue<string>("vecIntReconfigStr");
+    //cout << defStr << endl; //"11, 22, 33"
+
+    CPPUNIT_ASSERT(sch.isAccessInitOnly("vecBool") == true);
+    CPPUNIT_ASSERT(sch.isAssignmentOptional("vecBool") == false);
+    CPPUNIT_ASSERT(sch.isAssignmentMandatory("vecBool") == true);
+    CPPUNIT_ASSERT(sch.hasMinSize("vecBool") == true);
+    CPPUNIT_ASSERT(sch.hasMaxSize("vecBool") == true);
+    CPPUNIT_ASSERT(sch.getMinSize("vecBool") == 2);
+    CPPUNIT_ASSERT(sch.getMaxSize("vecBool") == 7);
+
+    CPPUNIT_ASSERT(sch.getTags("vecBool")[0] == "h/w");
+    CPPUNIT_ASSERT(sch.getTags("vecBool")[1] == "d.m.y");
+
+    vector<string> allowedStates = sch.getAllowedStates("vecBool");
+    CPPUNIT_ASSERT(allowedStates[0] == "AllOk.Started");
+    CPPUNIT_ASSERT(allowedStates[1] == "AllOk.Stopped");
+
+    vector<string> allowedRoles = sch.getAllowedRoles("vecBool");
+    CPPUNIT_ASSERT(allowedRoles[0] == "user");
+    CPPUNIT_ASSERT(allowedRoles[1] == "admin");
+
+}
+
+
+void Schema_Test::testPathElement() {
+    Schema sch("OtherSchemaElements", Schema::AssemblyRules(READ | WRITE | INIT));
+    OtherSchemaElements::expectedParameters(sch);
+
+    CPPUNIT_ASSERT(sch.getValueType("filename") == Types::STRING);
+    CPPUNIT_ASSERT(sch.getAliasAsString("filename") == "5");
+    CPPUNIT_ASSERT(sch.hasOptions("filename") == true);
+    CPPUNIT_ASSERT(sch.getOptions("filename")[0] == "file1");
+    CPPUNIT_ASSERT(sch.getOptions("filename")[1] == "file2");
+    CPPUNIT_ASSERT(sch.hasDefaultValue("filename") == true);
+    CPPUNIT_ASSERT(sch.getDefaultValue<string>("filename") == "karabo.log");
+    CPPUNIT_ASSERT(sch.isAccessReconfigurable("filename") == true);
+    CPPUNIT_ASSERT(sch.getAssignment("filename") == Schema::OPTIONAL_PARAM);
+
+
+    CPPUNIT_ASSERT(sch.isAccessReadOnly("testfile") == true);
+    CPPUNIT_ASSERT(sch.hasDefaultValue("testfile") == true);
+    CPPUNIT_ASSERT(sch.getDefaultValue<string>("testfile") == "initFile");
+    CPPUNIT_ASSERT(sch.hasAlarmHigh("testfile") == true);
+    CPPUNIT_ASSERT(sch.getAlarmLow<string>("testfile") == "b");
 }
 
 

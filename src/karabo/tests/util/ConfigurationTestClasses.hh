@@ -13,6 +13,8 @@
 #include <karabo/util/NodeElement.hh>
 #include <karabo/util/ListElement.hh>
 #include <karabo/util/VectorElement.hh>
+#include <karabo/util/PathElement.hh>
+#include <karabo/xms/SlotElement.hh>
 
 #include <karabo/util/Configurator.hh>
 
@@ -21,9 +23,10 @@
 namespace configurationTest {
 
     using namespace karabo::util;
+    using namespace karabo::xms;
+
 
     struct Shape {
-
         KARABO_CLASSINFO(Shape, "Shape", "1.0");
         KARABO_CONFIGURATION_BASE_CLASS;
 
@@ -39,9 +42,10 @@ namespace configurationTest {
 
         Shape(const Hash & configuration) : m_configuration(configuration) {
         }
-        
-        virtual ~Shape(){}
-        
+
+        virtual ~Shape() {
+        }
+
         const Hash & getConfiguration() {
             return m_configuration;
         }
@@ -56,8 +60,8 @@ namespace configurationTest {
     //                Circle                       *
     //**********************************************
 
-    struct Circle : public Shape {
 
+    struct Circle : public Shape {
         KARABO_CLASSINFO(Circle, "Circle", "1.0");
 
         static void expectedParameters(karabo::util::Schema & expected) {
@@ -89,8 +93,8 @@ namespace configurationTest {
     //            Editable Circle                  *
     //**********************************************
 
-    struct EditableCircle : public Circle {
 
+    struct EditableCircle : public Circle {
         KARABO_CLASSINFO(EditableCircle, "EditableCircle", "1.0");
 
         static void expectedParameters(karabo::util::Schema & expected) {
@@ -115,8 +119,8 @@ namespace configurationTest {
     //                 Rectangle                   *
     //**********************************************
 
-    struct Rectangle : public Shape {
 
+    struct Rectangle : public Shape {
         KARABO_CLASSINFO(Rectangle, "Rectangle", "1.0");
 
         static void expectedParameters(karabo::util::Schema & expected) {
@@ -155,8 +159,8 @@ namespace configurationTest {
         }
     };
 
-    struct GraphicsRenderer {
 
+    struct GraphicsRenderer {
         KARABO_CLASSINFO(GraphicsRenderer, "GraphicsRenderer", "1.0")
         KARABO_CONFIGURATION_BASE_CLASS;
 
@@ -194,7 +198,7 @@ namespace configurationTest {
                     .appendNodesOfConfigurationBase<Shape > ()
                     .assignmentOptional().defaultValue("Rectangle")
                     .commit();
-            
+
             STRING_ELEMENT(expected).key("version")
                     .displayedName("Version")
                     .description("Version information")
@@ -213,13 +217,14 @@ namespace configurationTest {
         virtual ~GraphicsRenderer() {
         }
     };
-    
-    struct GraphicsRenderer1 {
 
+
+    struct GraphicsRenderer1 {
         KARABO_CLASSINFO(GraphicsRenderer1, "GraphicsRenderer1", "1.0");
-        
-        virtual ~GraphicsRenderer1(){}
-        
+
+        virtual ~GraphicsRenderer1() {
+        }
+
         static void expectedParameters(karabo::util::Schema & expected) {
 
             BOOL_ELEMENT(expected).key("antiAlias")
@@ -285,12 +290,13 @@ namespace configurationTest {
         }
     };
 
-    struct TestStruct1 {
 
+    struct TestStruct1 {
         KARABO_CLASSINFO(TestStruct1, "TestStruct1", "1.0");
 
-        virtual ~TestStruct1(){}
-        
+        virtual ~TestStruct1() {
+        }
+
         static void expectedParameters(karabo::util::Schema & expected) {
 
             STRING_ELEMENT(expected).key("exampleKey1")
@@ -334,7 +340,7 @@ namespace configurationTest {
                     .options("1.11     -2.22 5.55")
                     .assignmentInternal().noDefaultValue()
                     .commit();
-            
+
             vector<int> vecIntAlias;
             vecIntAlias.push_back(10);
             vecIntAlias.push_back(20);
@@ -348,6 +354,98 @@ namespace configurationTest {
                     .warnLow(-10).warnHigh(10)
                     .alarmLow(-20).alarmHigh(20)
                     .commit();
+
+            INT32_ELEMENT(expected).key("sampleKey")
+                    .assignmentOptional().defaultValueFromString("10")
+                    .reconfigurable()
+                    .commit();
+
+            INT32_ELEMENT(expected).key("sampleKey2")
+                    .readOnly()
+                    .commit();
+        }
+    };
+
+
+    struct OtherSchemaElements {
+        KARABO_CLASSINFO(OtherSchemaElements, "OtherSchemaElements", "1.0");
+
+        virtual ~OtherSchemaElements() {
+        }
+
+        static void expectedParameters(karabo::util::Schema & expected) {
+            SLOT_ELEMENT(expected).key("slotTest")
+                    .displayedName("Reset")
+                    .description("Test slot element")
+                    .allowedStates("Started, Stopped, Reset")
+                    .commit();
+
+            PATH_ELEMENT(expected)
+                    .description("File name")
+                    .key("filename")
+                    .alias(5)
+                    .displayedName("Filename")
+                    .isOutputFile()
+                    .options("file1, file2")
+                    .assignmentOptional().defaultValue("karabo.log")
+                    .reconfigurable()
+                    .commit();
+
+            PATH_ELEMENT(expected)
+                    .key("testfile")
+                    .isInputFile()
+                    .readOnly().initialValue("initFile")
+                    .alarmHigh("a").alarmLow("b")
+                    .warnHigh("c").warnLow("d")
+                    .commit();
+
+            vector<int> vecInit;
+            vecInit.push_back(10);
+            vecInit.push_back(20);
+            vecInit.push_back(30);
+
+            vector<int> vecWarnL(3, 50);
+            vector<int> vecWarnH(3, 100);
+
+            VECTOR_INT32_ELEMENT(expected)
+                    .key("vecInt")
+                    .readOnly()
+                    .initialValue(vecInit)
+                    .warnLow(vecWarnL)
+                    .warnHigh(vecWarnH)
+                    .commit();
+
+            vector<double> vecAlarmL(3, -5.5);
+            vector<double> vecAlarmH(3, 7.7);
+            VECTOR_DOUBLE_ELEMENT(expected)
+                    .key("vecDouble")
+                    .readOnly()
+                    .alarmLow(vecAlarmL)
+                    .alarmHigh(vecAlarmH)
+                    .commit();
+
+            VECTOR_INT32_ELEMENT(expected)
+                    .key("vecIntReconfig")
+                    .assignmentOptional().defaultValue(vecInit)
+                    .reconfigurable()
+                    .commit();
+
+            VECTOR_INT32_ELEMENT(expected)
+                    .key("vecIntReconfigStr")
+                    .assignmentOptional().defaultValueFromString("11, 22, 33")
+                    .reconfigurable()
+                    .commit();
+
+            VECTOR_BOOL_ELEMENT(expected)
+                    .key("vecBool")
+                    .tags("h/w; d.m.y", ";")
+                    .allowedStates("AllOk.Started, AllOk.Stopped")
+                    .allowedRoles("user, admin")
+                    .minSize(2)
+                    .maxSize(7)
+                    .assignmentMandatory()
+                    .commit();
+
         }
     };
 
