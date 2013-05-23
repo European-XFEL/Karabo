@@ -12,7 +12,7 @@
 __all__ = ["ParameterTreeWidget"]
 
 
-#import attributetreewidgetitem
+import treewidgetitems.attributetreewidgetitem
 from editableapplylatercomponent import EditableApplyLaterComponent
 from enums import *
 from libkarathon import *
@@ -25,13 +25,13 @@ from PyQt4.QtGui import *
 class ParameterTreeWidget(QTreeWidget):
 
 
-    def __init__(self, configPanel, classId=None):
+    def __init__(self, configPanel, internalKey=str(), classId=None):
         # configPanel - save parent widget for toolbar buttons
         # internalKey - full key of navigationItem (either DEVICE_CLASS or DEVICE_INSTANCE)
         super(ParameterTreeWidget, self).__init__()
         
         self.__classId = classId # DeviceClass name stored for XML save
-        
+        self.__instanceKey = internalKey
         self.__configPanel = configPanel
 
         self.setWordWrap(True)
@@ -57,14 +57,22 @@ class ParameterTreeWidget(QTreeWidget):
         self._performDrag()
 
 
+### getter & setter functions ###
+    def _getInstanceKey(self):
+        return self.__instanceKey
+    def _setInstanceKey(self, instanceKey):
+        self.__instanceKey = instanceKey
+    instanceKey = property(fget=_getInstanceKey, fset=_setInstanceKey)
+
+
 ### public functions ###
     def checkApplyButtonsEnabled(self):
         # Returns a tuple containing the enabled and the conflicted state
         return self._r_applyButtonsEnabled(self.invisibleRootItem())
 
 
-    def getAttributeTreeWidgetItemByKey(self, key):
-        return self.__configPanel.getAttributeTreeWidgetItemByKey(key)
+    def getParameterTreeWidgetItemByKey(self, key):
+        return self.__configPanel.getParameterTreeWidgetItemByKey(key)
 
 
     def stateUpdated(self, state):
@@ -185,11 +193,15 @@ class ParameterTreeWidget(QTreeWidget):
         if item is None:
             return
         
+        # Attributes can not be dropped
+        if isinstance(item, attributetreewidgetitem.AttributeTreeWidgetItem):
+            return
+        
         mimeData = QMimeData()        
 
         # Put necessary data in MimeData:
         # Source type
-        mimeData.setData("sourceType", "AttributeTreeWidget")
+        mimeData.setData("sourceType", "ParameterTreeWidget")
         # Internal key
         mimeData.setData("internalKey", QString(item.internalKey).toAscii())
         # Display name
@@ -308,7 +320,7 @@ class ParameterTreeWidget(QTreeWidget):
             configChangeType = ConfigChangeTypes.DEVICE_INSTRANCE_CONFIG_CHANGED
         
         if self.__classId is None:
-            keys = self.__instanceKey.split('+', 1)
+            keys = self.instanceKey.split('+', 1)
             if len(keys) is 2:
                 self.__classId = str(keys[1])
         
@@ -320,10 +332,6 @@ class ParameterTreeWidget(QTreeWidget):
 
 
     def onFileSaveAs(self):
-        if self.__classId is None:
-            keys = self.__instanceKey.split('+', 1)
-            if len(keys) is 2:
-                self.__classId = str(keys[1])
         Manager().onSaveAsXml(str(self.__classId), self.instanceKey)
 
 

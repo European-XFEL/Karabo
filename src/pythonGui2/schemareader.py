@@ -14,8 +14,8 @@ from editablenoapplycomponent import EditableNoApplyComponent
 
 from enums import NavigationItemTypes
 
-from attributetreewidgetitem import *
-from propertytreewidgetitem import *
+from treewidgetitems.attributetreewidgetitem import *
+from treewidgetitems.propertytreewidgetitem import *
 
 from libkarathon import *
 
@@ -361,13 +361,13 @@ class SchemaReader(object):
 
 ### functions for setting editable components depending on value type ###
     def _handleBool(self, key, item, defaultValue, unitSymbol):
-        classAlias = "Toggle Field"
+        item.classAlias = "Toggle Field"
         if self.__deviceType is NavigationItemTypes.DEVICE_CLASS:
-            editableComponent = EditableNoApplyComponent(classAlias, key=item.internalKey,
+            editableComponent = EditableNoApplyComponent(classAlias=item.classAlias, key=item.internalKey,
                                                          value=defaultValue, unitSymbol=unitSymbol)
             #, value=item.defaultValue, valueType=item.valueType, unitSymbol=unitSymbol)
         else:
-            editableComponent = EditableApplyLaterComponent(classAlias, key=item.internalKey,
+            editableComponent = EditableApplyLaterComponent(classAlias=item.classAlias, key=item.internalKey,
                                                             unitSymbol=unitSymbol)
             #, value=None, valueType=item.valueType, unitSymbol=unitSymbol)
             editableComponent.signalApplyChanged.connect(self.__treeWidget.onApplyChanged)
@@ -379,22 +379,22 @@ class SchemaReader(object):
     def _handleString(self, key, item, defaultValue, unitSymbol):
         hasOptions = self.__schema.hasOptions(key)
         if hasOptions:
-            classAlias = "Selection Field"
+            item.classAlias = "Selection Field"
             enumeration = self.__schema.getOptions(key)
             item.setIcon(0, QIcon(":enum"))
         else:
-            classAlias = "Text Field"
+            item.classAlias = "Text Field"
             enumeration = None
             item.setIcon(0, QIcon(":string"))
         
         # TODO: do not forget PATH_ELEMENT "File Path"
         if self.__deviceType is NavigationItemTypes.DEVICE_CLASS:
-            editableComponent = EditableNoApplyComponent(classAlias=classAlias, key=item.internalKey,
+            editableComponent = EditableNoApplyComponent(classAlias=item.classAlias, key=item.internalKey,
                                                          value=defaultValue, enumeration=enumeration,
                                                          unitSymbol=unitSymbol)
             #value=item.defaultValue, valueType=item.valueType, unitSymbol=unitSymbol)
         else:
-            editableComponent = EditableApplyLaterComponent(classAlias=classAlias, key=item.internalKey,
+            editableComponent = EditableApplyLaterComponent(classAlias=item.classAlias, key=item.internalKey,
                                                             enumeration=enumeration, unitSymbol=unitSymbol)
             #value=None, valueType=item.valueType, unitSymbol=unitSymbol)
             editableComponent.signalApplyChanged.connect(self.__treeWidget.onApplyChanged)
@@ -406,21 +406,21 @@ class SchemaReader(object):
     def _handleInteger(self, key, item, defaultValue, unitSymbol):
         hasOptions = self.__schema.hasOptions(key)
         if hasOptions:
-            classAlias = "Selection Field"
+            item.classAlias = "Selection Field"
             enumeration = self.__schema.getOptions(key)
             item.setIcon(0, QIcon(":enum"))
         else:
-            classAlias = "Integer Field"
+            item.classAlias = "Integer Field"
             enumeration = None
             item.setIcon(0, QIcon(":int"))
             
         if self.__deviceType is NavigationItemTypes.DEVICE_CLASS:
-            editableComponent = EditableNoApplyComponent(classAlias, key=item.internalKey,
+            editableComponent = EditableNoApplyComponent(classAlias=item.classAlias, key=item.internalKey,
                                                          value=defaultValue, enumeration=enumeration,
                                                          unitSymbol=unitSymbol)
             #, value=item.defaultValue, valueType=item.valueType, unitSymbol=unitSymbol)
         else:
-            editableComponent = EditableApplyLaterComponent(classAlias, key=item.internalKey,
+            editableComponent = EditableApplyLaterComponent(classAlias=item.classAlias, key=item.internalKey,
                                                             enumeration=enumeration, unitSymbol=unitSymbol)
             #, value=None, valueType=item.valueType, unitSymbol=unitSymbol)
             editableComponent.signalApplyChanged.connect(self.__treeWidget.onApplyChanged)
@@ -435,21 +435,21 @@ class SchemaReader(object):
     def _handleFloat(self, key, item, defaultValue, unitSymbol):
         hasOptions = self.__schema.hasOptions(key)
         if hasOptions:
-            classAlias = "Selection Field"
+            item.classAlias = "Selection Field"
             enumeration = self.__schema.getOptions(key)
             item.setIcon(0, QIcon(":enum"))
         else:
-            classAlias = "Float Field"
+            item.classAlias = "Float Field"
             enumeration = None
             item.setIcon(0, QIcon(":float"))
         
         if self.__deviceType is NavigationItemTypes.DEVICE_CLASS:
-            editableComponent = EditableNoApplyComponent(classAlias, key=item.internalKey,
+            editableComponent = EditableNoApplyComponent(classAlias=item.classAlias, key=item.internalKey,
                                                          value=defaultValue, enumeration=enumeration,
                                                          unitSymbol=unitSymbol)
             #value=attributeItem.defaultValue, valueType=attributeItem.valueType, unitSymbol=unitSymbol)
         else:
-            editableComponent = EditableApplyLaterComponent(classAlias, key=item.internalKey,
+            editableComponent = EditableApplyLaterComponent(classAlias=item.classAlias, key=item.internalKey,
                                                             enumeration=enumeration, unitSymbol=unitSymbol)
             #value=None, valueType=attributeItem.valueType, unitSymbol=unitSymbol)
             editableComponent.signalApplyChanged.connect(self.__treeWidget.onApplyChanged)
@@ -469,14 +469,14 @@ class SchemaReader(object):
         
         print "_handleFloatAttribute", key, text, value
         
-        classAlias = "Float Field"
+        item.classAlias = "Float Field"
         item.setIcon(0, QIcon(":float"))
         
         if self.__deviceType is NavigationItemTypes.DEVICE_CLASS:
-            editableComponent = EditableNoApplyComponent(classAlias, key=item.internalKey, value=value)
+            editableComponent = EditableNoApplyComponent(classAlias=item.classAlias, key=item.internalKey, value=value)
             #value=attributeItem.defaultValue, valueType=attributeItem.valueType, unitSymbol=unitSymbol)
         else:
-            editableComponent = EditableApplyLaterComponent(classAlias, key=item.internalKey, value=value)
+            editableComponent = EditableApplyLaterComponent(classAlias=item.classAlias, key=item.internalKey, value=value)
             #value=None, valueType=attributeItem.valueType, unitSymbol=unitSymbol)
             editableComponent.signalApplyChanged.connect(self.__treeWidget.onApplyChanged)
 

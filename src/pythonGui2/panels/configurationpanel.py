@@ -364,7 +364,7 @@ class ConfigurationPanel(QWidget):
         #    QMessageBox.critical(None, "XML Schema", "The given XML schema file is invalid")
         #    return
 
-        twParameterEditorPage = ParameterTreeWidget(self)#, internalKey, classId)
+        twParameterEditorPage = ParameterTreeWidget(self, internalKey, classId)
         twParameterEditorPage.setHeaderLabels(QStringList() << "Parameter" << "Current value on device" << "Value")
         twParameterEditorPage.addConfigAction(self.__acKillInstance)
         twParameterEditorPage.addConfigAction(self.__acApplyAll)
@@ -578,7 +578,7 @@ class ConfigurationPanel(QWidget):
         if index is not None:
             self.__swParameterEditor.blockSignals(True)
             self.__swParameterEditor.setCurrentIndex(index)
-            # Show apply button of current AttributeTreeWidget
+            # Show apply button of current ParameterTreeWidget
             self._getCurrentParameterEditor().setActionsVisible(True)
             self.__swParameterEditor.blockSignals(False)
             

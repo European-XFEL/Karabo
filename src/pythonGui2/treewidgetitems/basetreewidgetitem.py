@@ -40,6 +40,8 @@ class BaseTreeWidgetItem(QTreeWidgetItem):
         self.__displayComponent = None
         self.__editableComponent = None
         
+        self.classAlias = None
+        
         self.mItem = None
 
 
@@ -53,6 +55,13 @@ class BaseTreeWidgetItem(QTreeWidgetItem):
     def _setEnabled(self, enabled):
         raise NotImplementedError, "BaseTreeWidgetItem._setEnabled"
     enabled = property(fget=_getEnabled, fset=_setEnabled)
+
+
+    def _getClassAlias(self):
+        return self.data(0, const.CLASS_ALIAS).toPyObject()
+    def _setClassAlias(self, alias):
+        self.setData(0, const.CLASS_ALIAS, alias)
+    classAlias = property(fget=_getClassAlias, fset=_setClassAlias)
 
 
     # Returns the display component of the item
