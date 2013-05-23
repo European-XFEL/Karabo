@@ -357,7 +357,7 @@ namespace karabo {
             bool hasAllowedStates(const std::string& path) const;
 
             const std::vector<std::string>& getAllowedStates(const std::string& path) const;
-     
+
             //*********************************************
             //                AllowedRoles                *
             //*********************************************
@@ -367,7 +367,7 @@ namespace karabo {
             bool hasAllowedRoles(const std::string& path) const;
 
             const std::vector<std::string>& getAllowedRoles(const std::string& path) const;
-            
+
             //**********************************************
             //                  ExpertLevel                *
             //**********************************************
@@ -403,6 +403,11 @@ namespace karabo {
             template <class T>
             T getDefaultValueAs(const std::string& path) const {
                 return m_hash.getAttributeAs<T > (path, KARABO_SCHEMA_DEFAULT_VALUE);
+            }
+
+            template<typename T, template <typename Elem, typename = std::allocator<Elem> > class Cont >
+            Cont<T> getDefaultValueAs(const std::string& path) const {
+                return m_hash.getAttributeAs<T, Cont>(path, KARABO_SCHEMA_DEFAULT_VALUE);
             }
 
             //**********************************************

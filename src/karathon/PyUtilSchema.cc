@@ -907,12 +907,26 @@ namespace schemawrap {
                     return bp::object(schema.getDefaultValueAs<string>(path));
                 case karabo::pyexfel::PyTypes::DOUBLE:
                     return bp::object(schema.getDefaultValueAs<double>(path));
+                case Types::VECTOR_BOOL:
+                    return karabo::pyexfel::Wrapper::fromStdVectorToPyArray(schema.getDefaultValueAs<bool, vector >(path));
+                case Types::VECTOR_INT32:
+                    return karabo::pyexfel::Wrapper::fromStdVectorToPyArray(schema.getDefaultValueAs<int, vector >(path));
+                case Types::VECTOR_UINT32:
+                    return karabo::pyexfel::Wrapper::fromStdVectorToPyArray(schema.getDefaultValueAs<unsigned int, vector >(path));
+                case Types::VECTOR_INT64:
+                    return karabo::pyexfel::Wrapper::fromStdVectorToPyArray(schema.getDefaultValueAs<long long, vector >(path));
+                case Types::VECTOR_UINT64:
+                    return karabo::pyexfel::Wrapper::fromStdVectorToPyArray(schema.getDefaultValueAs<unsigned long long, vector >(path));
+                case Types::VECTOR_STRING:
+                    return karabo::pyexfel::Wrapper::fromStdVectorToPyArray(schema.getDefaultValueAs<string, vector >(path));
+                case Types::VECTOR_DOUBLE:
+                    return karabo::pyexfel::Wrapper::fromStdVectorToPyArray(schema.getDefaultValueAs<double, vector >(path));
                 default:
                     break;
             }
             throw KARABO_NOT_SUPPORTED_EXCEPTION("Type is not supported");
         }
-        throw KARABO_PYTHON_EXCEPTION("Python first argument in 'getDefaultValueAs' should be a string");
+        throw KARABO_PYTHON_EXCEPTION("Python first argument in 'getDefaultValueAs' should be a string (defining a key name)");
     }
 
     //************************************************************************

@@ -230,7 +230,7 @@ void Schema_Test::testGetDefaultValue() {
     CPPUNIT_ASSERT(m_schema.getDefaultValueAs<string>("sampleKey") == "10");
     CPPUNIT_ASSERT(m_schema.getDefaultValueAs<int>("sampleKey") == 10);
 
-    //TODO check. According to implementation: readOnly element has default value and it is equal to string "0"
+    //readOnly element has default value which is equal to string "0"
     //(does not matter what is the type of the element itself)
     CPPUNIT_ASSERT(m_schema.hasDefaultValue("sampleKey2") == true);
     CPPUNIT_ASSERT(m_schema.getDefaultValue<string>("sampleKey2") == "0");
@@ -437,8 +437,7 @@ void Schema_Test::testVectorElements() {
     CPPUNIT_ASSERT(sch.isAccessReadOnly("vecDouble") == true);
     CPPUNIT_ASSERT(sch.isAssignmentOptional("vecDouble") == true);
 
-    //TODO check. According to implementation: 
-    //readOnly element has default value (even if initialValue not specified) and it's value is string "0"
+    //readOnly element has default value (even if initialValue not specified) and default value is string "0"
     CPPUNIT_ASSERT(sch.hasDefaultValue("vecDouble") == true);
     CPPUNIT_ASSERT(sch.getDefaultValue<string>("vecDouble") == "0");
 
@@ -453,12 +452,31 @@ void Schema_Test::testVectorElements() {
     CPPUNIT_ASSERT(sch.getDefaultValue<vector<int> >("vecIntReconfig") == vecDef);
 
     CPPUNIT_ASSERT(sch.hasDefaultValue("vecIntReconfigStr") == true);
-
-    //TODO check (if default value given by defaultValueFromString, then it remains 'string' no matter of element type?):
-    //vector<int> defVec = sch.getDefaultValue<vector<int> >("vecIntReconfigStr");//error
-    //string defStr = sch.getDefaultValue<string>("vecIntReconfigStr");
-    //cout << defStr << endl; //"11, 22, 33"
-
+    
+    //get default value of integer vector (set by defaultValueFromString) as string:
+    string defStr = sch.getDefaultValue<string>("vecIntReconfigStr"); 
+    CPPUNIT_ASSERT(defStr == "11, 22, 33");
+    
+    vector<int> compare;
+    compare.push_back(11);
+    compare.push_back(22);
+    compare.push_back(33);
+    //get default value of integer vector (set by defaultValueFromString) according to the element type:
+    vector<int> defVec = sch.getDefaultValueAs<int, vector >("vecIntReconfigStr");    
+    CPPUNIT_ASSERT(defVec == compare);
+    
+    //get default value of double vector (set by defaultValueFromString) as string:
+    string defSt = sch.getDefaultValue<string>("vecDoubleReconfigStr"); 
+    CPPUNIT_ASSERT(defSt == "1.1, 2.2, 3.3");
+    
+    vector<double> comp;
+    comp.push_back(1.1);
+    comp.push_back(2.2);
+    comp.push_back(3.3);
+    //get default value of double vector (set by defaultValueFromString) according to the element type:
+    vector<double> defDVec = sch.getDefaultValueAs<double, vector >("vecDoubleReconfigStr");
+    CPPUNIT_ASSERT(defDVec == comp);
+    
     CPPUNIT_ASSERT(sch.isAccessInitOnly("vecBool") == true);
     CPPUNIT_ASSERT(sch.isAssignmentOptional("vecBool") == false);
     CPPUNIT_ASSERT(sch.isAssignmentMandatory("vecBool") == true);

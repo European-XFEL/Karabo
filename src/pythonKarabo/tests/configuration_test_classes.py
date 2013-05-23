@@ -307,13 +307,18 @@ class TestStruct1(object):
         e.displayedName("Example key 10")
         e.minSize(2)
         e.maxSize(7)
-        e.assignmentOptional().defaultValueFromString("10,20,30")
+        e.assignmentOptional().defaultValueFromString("10, 20, 30")
         e.reconfigurable()
         e.commit()
         
         e = VECTOR_INT32_ELEMENT(expected).key("exampleKey11")
         e.displayedName("Example key 11")
         e.assignmentOptional().defaultValue([10,20,30])
+        e.reconfigurable()
+        e.commit()
+        
+        e = VECTOR_DOUBLE_ELEMENT(expected).key("exampleKey12")
+        e.assignmentOptional().defaultValueFromString("1.1, -2.2, 3.3")
         e.reconfigurable()
         e.commit()
         
