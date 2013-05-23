@@ -258,7 +258,7 @@ class TestStruct1(object):
         e.tags("hardware, set")
         e.displayedName("Example key 3")
         e.description("Example key 3 description")
-        e.allowedStates("AllOk.Started, AllOk.Stopped, AllOk.Run.On, NewState") #TODO check
+        e.allowedStates("AllOk.Started, AllOk.Stopped, AllOk.Run.On, NewState")
         e.minExc(10).maxExc(20)
         e.assignmentMandatory()
         e.reconfigurable()
@@ -288,6 +288,7 @@ class TestStruct1(object):
         
         e = VECTOR_INT32_ELEMENT(expected).key("exampleKey7")
         e.displayedName("Example key 7")
+        e.allowedStates("Started, AllOk")
         e.readOnly().initialValue([1,2,3]).alarmLow([-1,-1,-1]).alarmHigh([-2,2,-2]).warnLow([0,0,0]).warnHigh([10,20,30])
         e.commit()
         
@@ -296,4 +297,46 @@ class TestStruct1(object):
         
         e = VECTOR_STRING_ELEMENT(expected).key("exampleKey9")
         e.readOnly().initialValue(["Hallo", "World"]).alarmLow(["a","b"]).warnHigh(["c", "d"])
+        e.commit()
+        
+        e = VECTOR_INT32_ELEMENT(expected).key("vectInt")
+        e.readOnly().alarmLow([1,2,2])
+        e.commit()
+        
+        e = VECTOR_INT32_ELEMENT(expected).key("exampleKey10")
+        e.displayedName("Example key 10")
+        e.minSize(2)
+        e.maxSize(7)
+        e.assignmentOptional().defaultValueFromString("10,20,30")
+        e.reconfigurable()
+        e.commit()
+        
+        e = VECTOR_INT32_ELEMENT(expected).key("exampleKey11")
+        e.displayedName("Example key 11")
+        e.assignmentOptional().defaultValue([10,20,30])
+        e.reconfigurable()
+        e.commit()
+        
+        e = INT32_ELEMENT(expected).key("exampleIntKey")
+        e.assignmentOptional().defaultValueFromString("20")
+        e.reconfigurable()
+        e.commit()
+        
+        e = PATH_ELEMENT(expected).key("testPath")
+        e.alias(5)
+        e.displayedName("Filename")
+        e.isOutputFile()
+        e.options("file1, file2")
+        e.assignmentOptional().defaultValue("karabo.log")
+        e.reconfigurable()
+        e.commit()
+
+        e = PATH_ELEMENT(expected).key("testPath2")
+        e.isInputFile()
+        e.readOnly().alarmHigh("a").alarmLow("b").warnHigh("c").warnLow("d")
+        e.commit()
+        
+        e = PATH_ELEMENT(expected).key("testPath3")
+        e.isDirectory()
+        e.assignmentMandatory()
         e.commit()
