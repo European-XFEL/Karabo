@@ -435,7 +435,13 @@ namespace configurationTest {
                     .assignmentOptional().defaultValueFromString("11, 22, 33")
                     .reconfigurable()
                     .commit();
-
+            
+            VECTOR_DOUBLE_ELEMENT(expected)
+                    .key("vecDoubleReconfigStr")
+                    .assignmentOptional().defaultValueFromString("1.1, 2.2, 3.3")
+                    .reconfigurable()
+                    .commit();
+            
             VECTOR_BOOL_ELEMENT(expected)
                     .key("vecBool")
                     .tags("h/w; d.m.y", ";")
