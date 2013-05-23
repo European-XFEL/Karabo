@@ -99,6 +99,8 @@ class EditableLineEdit(EditableWidget):
             return
         
         self.__lineEdit.blockSignals(True)
+        if type(value) is list:
+            value = value[0]
         self.__lineEdit.setText(value)
         self.__lineEdit.blockSignals(False)
         
