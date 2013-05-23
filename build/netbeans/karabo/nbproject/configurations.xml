@@ -2336,6 +2336,11 @@
             tool="3"
             flavor2="0">
       </item>
+      <item path="../../../src/karabo/tests/io/FileInputOutput_Test.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
       <item path="../../../src/karabo/tests/io/FileInputOutput_Test.hh"
             ex="false"
             tool="3"
