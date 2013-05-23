@@ -17,6 +17,7 @@ using namespace log4cpp;
 namespace karabo {
     namespace core {
 
+
         void ComputeFsm::expectedParameters(karabo::util::Schema& expected) {
 
             SLOT_ELEMENT(expected).key("slotStartRun")
@@ -51,6 +52,7 @@ namespace karabo {
                     .commit();
         }
 
+
         void ComputeFsm::configure(const karabo::util::Hash& input) {
 
             SLOT0(slotStartRun);
@@ -59,26 +61,32 @@ namespace karabo {
             SLOT0(slotReset);
         }
 
+
         void ComputeFsm::run() {
             startStateMachine();
             runEventLoop();
         }
-        
+
+
         void ComputeFsm::slotAbort() {
             m_isAborted = true;
         }
-        
+
+
         bool ComputeFsm::isAborted() {
             return m_isAborted;
         }
 
+
         void ComputeFsm::onInputAvailable(const AbstractInput::Pointer&) {
-            
+
         }
-        
+
+
         void ComputeFsm::onOutputPossible(const AbstractOutput::Pointer&) {
-           
+
         }
+
 
         bool ComputeFsm::canCompute() {
 
@@ -89,6 +97,7 @@ namespace karabo {
             }
         }
 
+
         bool ComputeFsm::canReadFromAllInputChannels() const {
             const InputChannels& inputChannels = this->getInputChannels();
             for (InputChannels::const_iterator it = inputChannels.begin(); it != inputChannels.end(); ++it) {
@@ -96,6 +105,7 @@ namespace karabo {
             }
             return true;
         }
+
 
         bool ComputeFsm::canWriteToAllOutputChannels() const {
             const OutputChannels& outputChannels = this->getOutputChannels();
@@ -105,8 +115,10 @@ namespace karabo {
             return true;
         }
 
+
         void ComputeFsm::onStartRun() {
         }
+
 
         void ComputeFsm::connectingIOOnEntry() {
             const InputChannels& inputChannels = this->getInputChannels();
@@ -119,25 +131,30 @@ namespace karabo {
             this->connectInputChannels();
         }
 
+
         void ComputeFsm::connectingIOOnExit() {
         }
+
 
         void ComputeFsm::readyStateOnEntry() {
             if (this->get<bool>("autoCompute")) this->slotCompute();
         }
 
+
         void ComputeFsm::computingStateOnEntry() {
             this->compute();
             if (!isAborted()) computeFinished();
         }
-        
-            
+
+
         void ComputeFsm::computingStateOnExit() {
         }
+
 
         void ComputeFsm::waitingIOOnEntry() {
             this->updateChannels();
         }
+
 
         void ComputeFsm::updateChannels() {
 
@@ -151,6 +168,7 @@ namespace karabo {
                 it->second->update();
             }
         }
+
 
         void ComputeFsm::waitingIOOnExit() {
         }

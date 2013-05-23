@@ -33,6 +33,7 @@ namespace karabo {
          * The DeviceOutput class.
          */
         class FileWrapNetworkOutput : public Output<std::string> {
+
             typedef boost::shared_ptr<karabo::net::Channel> TcpChannelPointer;
 
             /*
@@ -412,7 +413,7 @@ namespace karabo {
             const std::pair<std::vector<char>, karabo::util::Hash>& getAsyncWriteData(const unsigned int& chunkId) {
                 return Memory<std::vector<char> >::readContiguousBlockCache(m_channelId, chunkId);
             }
-            
+
             void onWriteCompleted(TcpChannelPointer channel) {
 
                 boost::mutex::scoped_lock lock(m_currentWritersCountMutex);

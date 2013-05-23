@@ -10,6 +10,9 @@
 #include "karabo/io/TextSerializer.hh"
 #include "karabo/io/HashXmlSerializer.hh"
 #include "HashXmlSerializer_Test.hh"
+#include "karabo/io/h5/Group.hh"
+#include "karabo/io/h5/FixedLengthArray.hh"
+#include "Hdf5_Test.hh"
 #include <karabo/util/Hash.hh>
 
 #include <karabo/io/h5/File.hh>
@@ -37,7 +40,7 @@ H5File_Test::H5File_Test() : m_maxRec(100), m_testBufferWriteSuccess(false) {
     //    tr.enable("karabo.io.h5.Table.saveTableFormatAsAttribute");
     //    tr.enable("karabo.io.h5.Table.openNew");
     //    tr.enable("karabo.io.h5.Table.openReadOnly");
-    //        tr.enable("H5File_Test.testReadTable");
+    tr.enable("H5File_Test.testReadTable");
     tr.enable("H5File_Test.testBufferWrite");
     tr.enable("H5File_Test.testBufferRead");
     tr.enable("H5File_Test.testRead");
@@ -132,6 +135,18 @@ void H5File_Test::testWrite() {
         data.set("instrument.a", 100);
         data.set("instrument.b", static_cast<float> (10));
         data.set("instrument.c", "abc");
+
+        Hash::Attributes a;
+
+
+        vector<bool> vAttr(5, true);
+        vAttr[3] = false;
+        // a.set("att1", true);
+        a.set("att2", 2345);
+        //  a.set("att3", vAttr); 
+        //   a.set("att4", "J");
+        data.setAttributes("instrument.c", a);
+
         data.set("instrument.d", true).setAttribute("att1", 123);
         data.set("instrument.e", static_cast<char> (58));
         complex<float> cf(14.0, 18.2);
@@ -145,6 +160,12 @@ void H5File_Test::testWrite() {
         }
 
         data.set("instrument.LPD.image", &v0[0]).setAttribute("dims", Dims(4, 32, 256).toVector());
+
+        data.set("instrument.OTHER.image1", &v0[0]).setAttribute("dims", Dims(128, 256).toVector());
+
+        addPointerToHash(data, "instrument.OTHER.image2", &v0[0], Dims(128, 256));
+
+
 
 
         s = 12;
@@ -163,12 +184,15 @@ void H5File_Test::testWrite() {
         data.set("vectors.str", m_v3).setAttribute("dims", Dims(5).toVector());
         data.set("vectors.cf", m_v4).setAttribute("dims", Dims(6).toVector());
 
-        Hash config;
-        Format::discoverFromHash(data, config);
-        Format::Pointer dataFormat = Format::createFormat(config);
+
+
+        //discover format from the Hash data        
+        Format::Pointer dataFormat = Format::discover(data);
 
 
 
+
+        // add additional data elements
 
         Hash i32el(
                    "h5path", "experimental",
@@ -215,9 +239,9 @@ void H5File_Test::testWrite() {
         Table::Pointer t = file.createTable("/abc", dataFormat, 1);
 
 
+        t->writeAttributes(data);
         for (size_t i = 0; i < m_numberOfRecords; ++i)
             t->write(data, i);
-
 
         file.close();
 
@@ -291,7 +315,7 @@ void H5File_Test::testRead() {
         Hash c5(
                 "h5path", "instrument",
                 "h5name", "c",
-                "key", "c"
+                "attributes[0].INT32.h5name", "att2"
                 );
 
         h5::Element::Pointer e5 = h5::Element::create("STRING", c5);
@@ -332,6 +356,9 @@ void H5File_Test::testRead() {
 
         // Define the table to be read using defined format
         Table::Pointer table = file.getTable("/abc", format);
+
+        // The following would read entire table data
+        // Table::Pointer table = file.getTable("/abc");
 
         // Declare container for data
         Hash data;
@@ -374,10 +401,13 @@ void H5File_Test::testRead() {
 
 
 
+        table->readAttributes(data);
         // read first record
         table->read(0);
 
         KARABO_LOG_FRAMEWORK_TRACE_CF << "after reading: ";
+
+        KARABO_LOG_FRAMEWORK_TRACE_CF << "READ DATA instrument\n" << data.get<Hash>("instrument");
 
         // assert values
         CPPUNIT_ASSERT(bla == 1006);
@@ -391,12 +421,13 @@ void H5File_Test::testRead() {
         CPPUNIT_ASSERT(data.get<bool>("d") == true);
 
         for (size_t i = 0; i < boolDims.size(); ++i) {
+            KARABO_LOG_FRAMEWORK_TRACE_CF << "bArray[" << i << "] = " << bArray[i];
             if (i % 2) CPPUNIT_ASSERT(bArray[i] == true);
             else CPPUNIT_ASSERT(bArray[i] == false);
         }
 
-        KARABO_LOG_FRAMEWORK_TRACE_CF << "string reference value: abc, actual value: " << data.get<string>("c");
-        CPPUNIT_ASSERT(data.get<string>("c") == "abc");
+        KARABO_LOG_FRAMEWORK_TRACE_CF << "string reference value: abc, actual value: " << data; //.get<string>("instrument.c");
+        CPPUNIT_ASSERT(data.get<string>("instrument.c") == "abc");
 
         //vector<string>& strings = data.get<vector<string> >("strings");
 
@@ -435,23 +466,43 @@ void H5File_Test::testReadTable() {
         file.open(File::READONLY);
 
 
-        // Define the table to be read using defined format
+        // Define the table to be read using defined format 
         Table::Pointer table = file.getTable("/abc");
 
-        // Declare container for data
-        Hash data;
 
-        // test23 will contain data from /abc/experimental/test23
-        unsigned int& test23 = data.bindReference<unsigned int>("experimental.test23");
+        Format::ConstPointer fp = table->getFormat();
+        h5::Element::ConstPointer imageElement = fp->getElement("instrument.LPD.image");
+
+
+        Hash data, attributes;
+        boost::shared_array<unsigned short> image;
+        size_t arraySize = 0;
+
+
+        if (imageElement->getMemoryType() == Types::VECTOR_UINT16) {
+            //clog << "image is an array" << endl;
+            arraySize = imageElement->getDims().size();
+            image = boost::shared_array<unsigned short>(new unsigned short[arraySize]);
+            data.set("instrument.LPD.image", image.get());
+        }
+
+
+
+
+        // Declare container for data
+
+        table->readAttributes(attributes);
+        //KARABO_LOG_FRAMEWORK_TRACE_CF << "Attributes:\n" << attributes;
+
 
         table->bind(data);
-
         table->read(0);
 
-        //KARABO_LOG_FRAMEWORK_TRACE_CF << "DATA:\n" << data;
 
-        KARABO_LOG_FRAMEWORK_TRACE_CF << "test23: " << test23;
-        CPPUNIT_ASSERT(test23 == 1006);
+//        size_t printSize = (arraySize < 6 ? arraySize : 6);
+//        for (size_t i = 0; i < printSize; ++i) {
+//            clog << "image[" << i << "] = " << image[i] << endl;
+//        }
 
         float b = data.get<float>("instrument.b");
         KARABO_LOG_FRAMEWORK_TRACE_CF << "data(\"instrument.b\"): " << b;
@@ -1012,9 +1063,8 @@ void H5File_Test::testVectorOfHashes() {
 
 
     try {
-        Hash config;
-        Format::discoverFromHash(data, config);
-        Format::Pointer dataFormat = Format::createFormat(config);
+
+        Format::Pointer dataFormat = Format::discover(data);
         File file(resourcePath("file4.h5"));
         file.open(File::TRUNCATE);
 
@@ -1035,15 +1085,15 @@ void H5File_Test::testVectorOfHashes() {
         // this way we depend on the properly functional XML serializer but we can easily
         // compare two Hash'es including order of elements
         // This test may fail if XML serializer test fails
-        
+
         Hash c("Xml.indentation", 1, "Xml.writeDataTypes", false);
         TextSerializer<Hash>::Pointer s = TextSerializer<Hash>::create(c);
         string sdata, srdata;
         s->save(data, sdata);
         s->save(rdata, srdata);
 
-//        clog << " data\n" << sdata << endl;
-//        clog << "rdata\n" << srdata << endl;
+        //        clog << " data\n" << sdata << endl;
+        //        clog << "rdata\n" << srdata << endl;
         CPPUNIT_ASSERT(sdata == srdata);
 
 
@@ -1052,5 +1102,393 @@ void H5File_Test::testVectorOfHashes() {
         CPPUNIT_FAIL(ex.detailedMsg());
     }
 
+}
+
+
+void H5File_Test::testWriteFailure() {
+
+    try {
+
+        Hash data;
+
+        data.set("instrument.a", 100);
+        data.set("instrument.b", static_cast<float> (10));
+        data.set("instrument.c", "abc");
+
+        File file(resourcePath("fileFail.h5"));
+        file.open(File::TRUNCATE);
+
+
+        //discover format from the Hash data
+        Format::Pointer dataFormat = Format::discover(data);
+
+
+        Table::Pointer t = file.createTable("/base", dataFormat, 1);
+
+
+        //        t->writeAttributes(data);
+
+        t->write(data, 0);
+        t->write(data, 1);
+        //force error
+        data.erase("instrument.b");
+
+        t->write(data, 2);
+        data.set("instrument.b", static_cast<float> (22));
+        t->write(data, 3);
+        file.close();
+
+
+    } catch (Exception& ex) {
+        CPPUNIT_FAIL("Error");
+    }
+}
+
+
+void H5File_Test::testManyGroups() {
+    Profiler p("ManyGroups");
+
+  
+    try {
+
+        Hash data, d1, d2, d3, d4;
+
+        int n = 500;
+        int rec = 100;
+        float totalSize = rec * (4 + 4 + 8 + 2) * n / 1024;
+        for (int i = 0; i < n; ++i) {
+            d1.set(toString(i), i);
+            d2.set(toString(i), static_cast<float> (i));
+            d3.set(toString(i), static_cast<double> (i));
+            d4.set(toString(i), static_cast<unsigned short> (i));
+        }
+
+        data.set("d1", d1);
+        data.set("d2", d2);
+        data.set("d3", d3);
+        data.set("d4", d4);
+        
+        p.start("format");
+        Format::Pointer dataFormat = Format::discover(data);
+        vector<string> el;
+        dataFormat->getElementsNames(el);
+        for (size_t i = 0; i < el.size(); ++i) {
+            dataFormat->getElement(el[i])->setCompressionLevel(0);
+        }
+        p.stop("format");
+
+        for (int i = 0; i < n; ++i) {
+            d1.set(toString(i), vector<int>(rec, i));
+            d2.set(toString(i), vector<float> (rec, i));
+            d3.set(toString(i), vector<double> (rec, i));
+            d4.set(toString(i), vector<unsigned short> (rec, i));
+        }
+
+        data.set("d1", d1);
+        data.set("d2", d2);
+        data.set("d3", d3);
+        data.set("d4", d4);
+
+
+        string filename = "/dev/shm/fileMany.h5";
+        filename   = resourcePath("fileMany.h5");
+        File file(filename);
+        file.open(File::TRUNCATE);
+        KARABO_LOG_FRAMEWORK_TRACE_CF << "File is open";
+
+
+        p.start("create");
+        Table::Pointer t = file.createTable("/base", dataFormat, 100);
+        KARABO_LOG_FRAMEWORK_TRACE_CF << "File structure is created";
+        p.stop("create");
+
+        //        t->writeAttributes(data);
+        p.start("write");
+        //        for (int i = 0; i < rec; ++i) {
+        //            t->write(data, i);
+        //        }
+
+        int m = 1;
+        for (int i = 0; i < m; ++i) {
+            t->write(data, i*rec, rec);
+        }
+        totalSize *= m;
+
+        p.stop("write");
+
+        p.start("close");
+        file.close();
+        p.stop("close");
+
+        double formatTime = HighResolutionTimer::time2double(p.getTime("format"));
+        double discoverTime = HighResolutionTimer::time2double(p.getTime("discover"));
+        double createTime = HighResolutionTimer::time2double(p.getTime("create"));
+        double writeTime = HighResolutionTimer::time2double(p.getTime("write"));
+        double closeTime = HighResolutionTimer::time2double(p.getTime("close"));
+
+        if (false) {
+            clog << endl;
+            clog << "file: " << filename << endl;
+            //          clog << "initialize data                  : " << initializeTime << " [s]" << endl;
+            clog << "discover                           : " << discoverTime << " [s]" << endl;
+            clog << "format                           : " << formatTime << " [s]" << endl;
+            clog << "open/prepare file                : " << createTime << " [s]" << endl;
+            clog << "write data (may use memory cache): " << writeTime << " [s]" << endl;
+            clog << "written data size                : " << totalSize << " [kB]" << endl;
+            clog << "writing speed                    : " << totalSize / writeTime << " [kB/s]" << endl;
+            clog << "close                            : " << closeTime << " [s]" << endl;
+            clog << "write+close(flush to disk)       : " << writeTime + closeTime << " [s]" << endl;
+            clog << "write+close(flush to disk) speed : " << totalSize / (writeTime + closeTime) << " [kB/s]" << endl;
+        }
+
+
+    } catch (Exception& ex) {
+        clog << ex << endl;
+        CPPUNIT_FAIL("Error");
+    }
+
+}
+
+
+void H5File_Test::testManyTables() {
+    Profiler p("ManyTable");
+
+    KARABO_LOG_FRAMEWORK_TRACE_CF << "start ManyTables";
+    try {
+
+        Hash d1, d2, d3, d4;
+
+        int n = 500; //5000; //500;//5000;//20000;//25000;
+        int rec = 200;
+        float totalSize = rec * (4 + 4 + 8 + 2) * n / 1024;
+        for (int i = 0; i < n; ++i) {
+            d1.set(toString(i), i);
+            d2.set(toString(i), static_cast<float> (i));
+            d3.set(toString(i), static_cast<double> (i));
+            d4.set(toString(i), static_cast<unsigned short> (i));
+            //    d1.setAttribute(toString(i), "unit", "mA");
+            //    d1.setAttribute(toString(i), "a", 234);
+            //    d2.setAttribute(toString(i), "unit", "mA"); 
+            //    d2.setAttribute(toString(i), "a", 234);
+            //    d3.setAttribute(toString(i), "unit", "mA");
+            //    d3.setAttribute(toString(i), "a", 234);
+            //    d4.setAttribute(toString(i), "unit", "mA");
+            //    d4.setAttribute(toString(i), "a", 23            
+        }
+
+        //        vector<unsigned char>& status = d1.bindReference<vector<unsigned char> >("status");
+        //        status.resize(n*200, 1);
+        //        d1.setAttribute("status","dims",Dims(200,n).toVector());
+
+
+        p.start("format");
+
+        FormatDiscoveryPolicy::Pointer policy = FormatDiscoveryPolicy::create(Hash("Policy.chunkSize", rec));
+        Format::Pointer dataFormat1 = Format::discover(d1, policy);
+        Format::Pointer dataFormat2 = Format::discover(d2, policy);
+        Format::Pointer dataFormat3 = Format::discover(d3, policy);
+        Format::Pointer dataFormat4 = Format::discover(d4, policy);
+
+        p.stop("format");
+
+
+        //        Hash c1, c2, c3, c4;
+        //        p.start("discover");
+        //        Format::discoverFromHash(d1, c1);
+        //        Format::discoverFromHash(d2, c2);
+        //        Format::discoverFromHash(d3, c3);
+        //        Format::discoverFromHash(d4, c4);
+        //        p.stop("discover");
+        //
+        //        //        data.set("d1", d1);
+        //        //        data.set("d2", d2);
+        //        //        data.set("d3", d3);
+        //        //        data.set("d4", d4);
+        //
+        //
+        //        p.start("format");
+        //        Format::Pointer dataFormat1 = Format::createFormat(c1, false);
+        //        //        vector<string> el;
+        //        //        dataFormat1->getElementsNames(el);
+        //        //        for (size_t i = 0; i < el.size(); ++i) {
+        //        //            dataFormat1->getElement(el[i])->setCompressionLevel(6);
+        //        //        }
+        //        Format::Pointer dataFormat2 = Format::createFormat(c2, false);
+        //
+        //        //        dataFormat2->getElementsNames(el);
+        //        //        for (size_t i = 0; i < el.size(); ++i) {
+        //        //            dataFormat2->getElement(el[i])->setCompressionLevel(6);
+        //        //        }
+        //        Format::Pointer dataFormat3 = Format::createFormat(c3, false);
+        //
+        //        //        dataFormat3->getElementsNames(el);
+        //        //        for (size_t i = 0; i < el.size(); ++i) {
+        //        //            dataFormat3->getElement(el[i])->setCompressionLevel(6);
+        //        //        }
+        //        Format::Pointer dataFormat4 = Format::createFormat(c4, false);
+        //
+        //        //        dataFormat4->getElementsNames(el);
+        //        //        for (size_t i = 0; i < el.size(); ++i) {
+        //        //            dataFormat4->getElement(el[i])->setCompressionLevel(6);
+        //        //        }
+
+        p.stop("format");
+
+
+
+        string filename = "/dev/shm/fileManyTables.h5";
+        filename   = resourcePath("fileManyTables.h5");
+        File file(filename);
+        file.open(File::TRUNCATE);
+        KARABO_LOG_FRAMEWORK_TRACE_CF << "File is open";
+
+
+        p.start("create");
+        size_t chunk = rec;
+        Table::Pointer t1 = file.createTable("/base/c1", dataFormat1, chunk);
+        Table::Pointer t2 = file.createTable("/base/c2", dataFormat2, chunk);
+        Table::Pointer t3 = file.createTable("/base/c3", dataFormat3, chunk);
+        Table::Pointer t4 = file.createTable("/base/c4", dataFormat4, chunk);
+        KARABO_LOG_FRAMEWORK_TRACE_CF << "File structure is created";
+        p.stop("create");
+
+        //        p.start("attribute");
+        //        t1->writeAttributes(d1);
+        //        t2->writeAttributes(d2);
+        //        t3->writeAttributes(d3);
+        //        t4->writeAttributes(d4);
+        //        p.stop("attribute");
+
+
+        for (int i = 0; i < n; ++i) {
+            d1.set(toString(i), vector<int>(rec, i));
+            d2.set(toString(i), vector<float> (rec, i));
+            d3.set(toString(i), vector<double> (rec, i));
+            d4.set(toString(i), vector<unsigned short> (rec, i));
+        }
+        //            vector<unsigned char>& status1 = d1.bindReference<vector<unsigned char> >("status");
+        //            status1.resize(200*n*rec, 1);
+
+
+
+
+        p.start("write");
+
+        //        int m = 10; 
+        //        for (int i = 0; i < m*rec; ++i) {
+        //            t1->write(d1, i);
+        //            t2->write(d2, i);
+        //            t3->write(d3, i);
+        //            t4->write(d4, i);
+        //        }
+
+        int m = 10;
+        for (int i = 0; i < m; ++i) {
+            t1->write(d1, i*rec, rec);
+            t2->write(d2, i*rec, rec);
+            t3->write(d3, i*rec, rec);
+            t4->write(d4, i*rec, rec);
+        }
+        totalSize *= m;
+
+        p.stop("write");
+
+        p.start("close");
+        file.close();
+        p.stop("close");
+
+        double formatTime = HighResolutionTimer::time2double(p.getTime("format"));
+        double createTime = HighResolutionTimer::time2double(p.getTime("create"));
+        double attributeTime = HighResolutionTimer::time2double(p.getTime("attribute"));
+        double writeTime = HighResolutionTimer::time2double(p.getTime("write"));
+        double closeTime = HighResolutionTimer::time2double(p.getTime("close"));
+
+        if (false) {
+            clog << endl;
+            //            clog << "file: " << filename << endl;
+            //          clog << "initialize data                  : " << initializeTime << " [s]" << endl;
+            clog << "format                           : " << formatTime << " [s]" << endl;
+            clog << "open/prepare file                : " << createTime << " [s]" << endl;
+            clog << "write attributes                 : " << attributeTime << " [s]" << endl;
+            clog << "write data (may use memory cache): " << writeTime << " [s]" << endl;
+            clog << "written data size                : " << totalSize << " [kB]" << endl;
+            clog << "writing speed                    : " << totalSize / writeTime << " [kB/s]" << endl;
+            clog << "close                            : " << closeTime << " [s]" << endl;
+            clog << "write+close(flush to disk)       : " << writeTime + closeTime << " [s]" << endl;
+            clog << "write+close(flush to disk) speed : " << totalSize / (writeTime + closeTime) << " [kB/s]" << endl;
+            clog << "Total time                       : " << formatTime + createTime + attributeTime + writeTime + closeTime << " [s]" << endl;
+        }
+
+
+    } catch (Exception& ex) {
+        clog << ex << endl;
+        CPPUNIT_FAIL("Error");
+    }
+
+}
+
+
+void H5File_Test::testVLWrite() {
+
+    Profiler p("VLWrite");
+    Hash data;
+    try {
+
+
+        Format::Pointer dataFormat = Format::createEmptyFormat();
+
+        Hash h1(
+                "h5path", "experimental",
+                "h5name", "test"
+                );
+
+        h5::Element::Pointer e1 = h5::Element::create("VLARRAY_INT32", h1);
+
+        vector<int> v(20, 2);
+        data.set("experimental.test", &v[0]).setAttribute("size", 20);
+        dataFormat->addElement(e1);
+
+        string filename = "/dev/shm/fileVL.h5";
+        filename = resourcePath("fileVL.h5");
+        File file(filename);
+        file.open(File::TRUNCATE);
+
+
+
+        p.start("create");
+        Table::Pointer t = file.createTable("/base", dataFormat, 1);
+        p.stop("create");
+
+        //        t->writeAttributes(data);
+        p.start("write");
+        //        for (int i = 0; i < rec; ++i) {
+
+        {
+            vector<int> v(20, 2);
+            data.set("experimental.test", &v[0]).setAttribute("size", 20);
+            t->write(data, 0);
+        }
+        {
+            vector<int> v(3, 8);
+            data.set("experimental.test", &v[0]).setAttribute("size", 3);
+            t->write(data, 1);
+        }
+        {
+
+            vector<int> v(9, 24);
+            data.set("experimental.test", &v[0]).setAttribute("size", 9);
+            t->write(data, 2);
+        }
+        //        }
+        p.stop("write");
+
+        p.start("close");
+        file.close();
+        p.stop("close");
+
+    } catch (Exception& ex) {
+        clog << ex << endl;
+        CPPUNIT_FAIL("Error");
+    }
 
 }

@@ -25,7 +25,7 @@ namespace karabo {
      * Namespace for package io
      */
     namespace xms {
-        
+
         // Forward SignalSlotable
         class SignalSlotable;
 

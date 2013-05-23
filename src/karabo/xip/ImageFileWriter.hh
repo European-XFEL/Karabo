@@ -27,13 +27,16 @@ namespace karabo {
 
         template <class TPix>
         class ImageFileWriter : public karabo::xms::Output< CpuImage<TPix> > {
+
         public:
-            
+
             KARABO_CLASSINFO(ImageFileWriter, "File", "1.0")
 
-            ImageFileWriter(){};
-            
-            virtual ~ImageFileWriter(){};
+            ImageFileWriter() {
+            };
+
+            virtual ~ImageFileWriter() {
+            };
 
             /**
              * Necessary method as part of the factory/configuration system
@@ -49,8 +52,8 @@ namespace karabo {
                         .displayType("Path")
                         .assignmentMandatory()
                         .commit();
-                
-                BOOL_ELEMENT(expected).key("addNumbers") 
+
+                BOOL_ELEMENT(expected).key("addNumbers")
                         .description("If true, several calls to write will result in filenames that have a six-digit number appended to the filename, otherwise the file will be overwritten each time")
                         .displayedName("Add Numbers")
                         .assignmentOptional().defaultValue(false)

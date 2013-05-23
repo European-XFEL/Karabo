@@ -15,18 +15,18 @@ namespace karabo {
     namespace core {
 
         //KARABO_REGISTER_FOR_CONFIGURATION(Device<OkErrorFsm>);
-       
 
-//        void Device::triggerErrorFound(const std::string& shortMessage, const std::string& detailedMessage) const {
-//            emit("signalErrorFound", karabo::util::Time::getCurrentDateTime(), shortMessage, detailedMessage, getInstanceId());
-//        }
-//
-//        void Device::triggerWarning(const std::string& warningMessage) const {
-//            emit("signalWarning", karabo::util::Time::getCurrentDateTime(), warningMessage, getInstanceId());
-//        }
-//
-//        void Device::triggerAlarm(const std::string& alarmMessage) const {
-//            emit("signalAlarm", karabo::util::Time::getCurrentDateTime(), alarmMessage, getInstanceId());
-//        }
+
+        //        void Device::triggerErrorFound(const std::string& shortMessage, const std::string& detailedMessage) const {
+        //            emit("signalErrorFound", karabo::util::Time::getCurrentDateTime(), shortMessage, detailedMessage, getInstanceId());
+        //        }
+        //
+        //        void Device::triggerWarning(const std::string& warningMessage) const {
+        //            emit("signalWarning", karabo::util::Time::getCurrentDateTime(), warningMessage, getInstanceId());
+        //        }
+        //
+        //        void Device::triggerAlarm(const std::string& alarmMessage) const {
+        //            emit("signalAlarm", karabo::util::Time::getCurrentDateTime(), alarmMessage, getInstanceId());
+        //        }
     }
 }

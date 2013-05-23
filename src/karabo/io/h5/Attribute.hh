@@ -14,99 +14,111 @@
 #define	KARABO_IO_H5_ATTRIBUTE_HH
 
 
-#include <iostream>
 #include <string>
-#include <vector>
-#include <map>
 
-#include <karabo/util/Factory.hh>
-#include <karabo/util/Hash.hh>
 #include <karabo/util/Configurator.hh>
-#include <karabo/util/ToLiteral.hh>
+#include <karabo/util/Dims.hh>
+#include <karabo/log/Logger.hh>
 
-#include <karabo/util/Types.hh>
-#include <karabo/util/FromTypeInfo.hh>
+#include "ErrorHandler.hh"
 
-#include <hdf5/hdf5.h>
-
-#include <boost/enable_shared_from_this.hpp>
+#include "TypeTraits.hh"
+//#include <boost/enable_shared_from_this.hpp>
 
 
 namespace karabo {
     namespace io {
         namespace h5 {
 
-            class Table;
+            class Attribute {
 
-            class Attribute : public boost::enable_shared_from_this<Attribute> {
             public:
                 KARABO_CLASSINFO(Attribute, "Attribute", "1.0");
                 KARABO_CONFIGURATION_BASE_CLASS
 
                 static void expectedParameters(karabo::util::Schema& expected);
 
-                void configure(const karabo::util::Hash& input);
+                template <class Derived>
+                Attribute(const karabo::util::Hash& input, Derived* d) {
 
-                Attribute(const karabo::util::Hash& input);
+                    input.get("h5name", m_h5name);
+                    if (input.has("key")) {
+                        input.get("key", m_key);
+                    } else {
+                        m_key = m_h5name;
+                    }
+                    karabo::util::Dims singleValueDims = Derived::getSingleValueDimensions();
+                    configureDataDimensions(input, singleValueDims);
+                    configureDataSpace();
+                    m_nativeTypeId = Derived::getNativeTypeId() ;
+                    m_standardTypeId = Derived::getStandardTypeId();
+                }
 
                 virtual ~Attribute() {
                 }
 
-                /**
-                 * Get element name. Attribute can represent hdf5 group or dataset
-                 * @return name element name
-                 */
-                const std::string& getName();
 
-                /** 
-                 * Get Hash representation of this Attribute.
-                 * 
-                 * @param Hash this object will be filled by the function. 
-                 * Key is equal to element name, value is this object.
-                 * In case nested groups are defined, for each group an instance of Hash is created.
-                 * i.e. if dataset is "a.b.c" -> hash looks like:
-                 * a => Hash
-                 *   b => Hash
-                 *     c => RecordAttribute
-                 */
-                virtual void getAttribute(karabo::util::Hash& element);
+                void write(const karabo::util::Hash::Node& data);
 
-                /**
-                 * Create UNLIMITED CHUNKED HDF5 dataset.
-                 * @param group Hdf5 group where the dataset belongs to.
-                 * @param chunkSize Chunk size as defined by hdf5
-                 */
-                virtual void create(hsize_t chunkSize) = 0;
+            protected:
 
+                
+                virtual void writeNodeAttribute(const karabo::util::Element<std::string>& node,
+                                        hid_t attribute) = 0;
 
-                virtual void write(const karabo::util::Hash& data, hsize_t recordId) = 0;
-                //
-                //
+            public:
+
+                void read(karabo::util::Hash::Node& data);
+
+            protected:
+
+                virtual void readNodeAttribute(karabo::util::Element<std::string>& attrNode,
+                                        hid_t attribute) = 0;
+
+            public:
 
                 /**
-                 * Write many records of data to a dataset (buffered writing).
-                 * The value of the Hash must be a vector(?) of values of type as defined at the dataset creation time.
-                 * The length of the vector must be at least len.
-                 * The key is the name of the dataset, value must correspond to the type as defined at the dataset creation time
-                 * 
-                 *
-                 * @param data Hash with data to be written.
-                 * @param recordId Record number (numbering starts from 0)
-                 * @param len Number of values to be written
+                 * Create attribute                 
                  */
-                virtual void write(const karabo::util::Hash& data, hsize_t recordId, hsize_t len) = 0;
+                virtual void create(hid_t element); // = 0;
+
+                // to be removed from here
+
+                virtual void open(hid_t element);
+
+                virtual void close() {
+                }
+
+                virtual karabo::util::Element<std::string>& bindAttribute(karabo::util::Hash::Node&) = 0;
+
+
 
 
 
             protected:
 
-                std::string m_h5name; // name of this element
-                std::string m_h5path; // path to the parent of this element from the root of the table (/ as separator)
-                std::string m_h5PathName;
-                std::string m_key; // attribute key
-                hid_t m_group; // parent group of this element
-                
-                karabo::util::Hash m_config;
+                const karabo::util::Dims& dims() const {
+                    return m_dims;
+                }
+
+
+
+                std::string m_h5name;
+                std::string m_key;
+
+                hid_t m_attribute;
+                hid_t m_element;
+
+            private:
+                karabo::util::Dims m_dims; // dimension of written/read objects 
+                hid_t m_dataSetProperties;
+                hid_t m_dataSpace;
+
+                hid_t m_nativeTypeId;
+                hid_t m_standardTypeId;
+
+                void configureDataDimensions(const karabo::util::Hash& input, const karabo::util::Dims& singleValueDims);
+                void configureDataSpace();
 
             };
 

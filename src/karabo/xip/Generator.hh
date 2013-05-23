@@ -21,6 +21,7 @@ namespace karabo {
 
         template <class TImage>
         class Generator {
+
         public:
 
             KARABO_CLASSINFO(Generator, "Generator", "1.0")

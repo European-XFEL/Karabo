@@ -14,7 +14,7 @@
 namespace karabo {
     namespace xip {
 
-        
+
 
     }
 }

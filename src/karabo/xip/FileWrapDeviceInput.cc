@@ -13,9 +13,9 @@
 
 namespace exfel {
     namespace xip {
-        
+
         EXFEL_REGISTER_FACTORY_2_CC(AbstractInput, Input<std::string >, FileWrapDeviceInput)
         EXFEL_REGISTER_FACTORY_CC(Input<std::string >, FileWrapDeviceInput)
-                
+
     }
 }

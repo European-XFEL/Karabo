@@ -12,9 +12,9 @@
 
 namespace karabo {
     namespace xms {
-        
+
         KARABO_REGISTER_FACTORY_2_CC(AbstractInput, Input<std::string >, FileWrapNetworkInput)
         KARABO_REGISTER_FACTORY_CC(Input<std::string >, FileWrapNetworkInput)
-                
+
     }
 }

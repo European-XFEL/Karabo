@@ -18,8 +18,8 @@ namespace exfel {
         //EXFEL_REGISTER_FACTORY_CC(Output<CpuImage<int> >, DeviceOutput<CpuImage<int> >)
         EXFEL_REGISTER_FACTORY_2_CC(AbstractOutput, Output<exfel::util::Hash >, DeviceOutput<exfel::util::Hash>)
         EXFEL_REGISTER_FACTORY_CC(Output<exfel::util::Hash >, DeviceOutput<exfel::util::Hash>)
-        
-        
+
+
 
     }
 }

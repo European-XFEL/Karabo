@@ -31,6 +31,7 @@ namespace karabo {
          * The DeviceInput class.
          */
         class FileWrapNetworkInput : public Input<std::string> {
+
             typedef std::set<karabo::net::Connection::Pointer> TcpConnections;
             typedef std::set<karabo::net::Channel::Pointer> TcpChannels;
 
@@ -80,7 +81,7 @@ namespace karabo {
                         .assignmentOptional().defaultValue("copy")
                         .init()
                         .commit();
-                
+
                 UINT32_ELEMENT(expected).key("minData")
                         .displayedName("Minimum number input packets")
                         .description("The number of elements to be read before any computation is started (0 = all)")
@@ -125,7 +126,7 @@ namespace karabo {
                         m_connectedOutputChannels.push_back(karabo::util::Hash("instanceId", tmp[0], "channelId", tmp[1]));
                     }
                 }
-                
+
                 if (input.has("dataDistribution")) input.get("dataDistribution", m_dataDistribution);
                 if (input.has("minData")) input.get("minData", m_minData);
             }
@@ -150,7 +151,7 @@ namespace karabo {
             unsigned int getMinimumNumberOfData() const {
                 return m_minData;
             }
-            
+
             void connectNow(const karabo::util::Hash& outputChannelInfo) {
 
 

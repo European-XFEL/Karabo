@@ -32,6 +32,7 @@ namespace karabo {
          */
         template<class TPix>
         class AbstractImage {
+
         public:
 
             KARABO_CLASSINFO(AbstractImage, AbstractImageType::classId<TPix>(), "1.0")
@@ -214,8 +215,7 @@ namespace karabo {
              */
             virtual AbstractImage& operator=(const AbstractImage& image) {
             }
-            
-            
+
             /**************************
              *        Operator +      *
              **************************/
@@ -240,11 +240,11 @@ namespace karabo {
 
             virtual AbstractImage& operator+(const AbstractImage& image) {
             }
-            
+
             /**************************
              *        Operator -      *
              **************************/
-            
+
             virtual AbstractImage& operator-=(const TPix& value) {
             }
 
@@ -253,7 +253,7 @@ namespace karabo {
 
             virtual AbstractImage& operator-=(const AbstractImage& image) {
             }
-            
+
             virtual AbstractImage& operator-(const TPix& value) const {
             }
 
@@ -457,7 +457,6 @@ namespace karabo {
              * @return Image
              */
             virtual const AbstractImage& print(const std::string& title = "", const bool displayPixels = true, int maxDimX = 28, int maxDimY = 28, int maxDimZ = 8) const = 0;
-            
 
             /***************************************
              *              Display                *

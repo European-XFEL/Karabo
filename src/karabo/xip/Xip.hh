@@ -18,27 +18,28 @@
  */
 namespace karabo {
 
-  /**
-   * Namespace for package xip
-   */
-  namespace xip {
+    /**
+     * Namespace for package xip
+     */
+    namespace xip {
 
-    class Xip : public karabo::core::Module {
-    public:
-      KARABO_CLASSINFO("Xip")
+        class Xip : public karabo::core::Module {
 
-      Xip();
-      virtual ~Xip();
+        public:
+            KARABO_CLASSINFO("Xip")
+
+            Xip();
+            virtual ~Xip();
 
 
-      static void expectedParameters(karabo::util::Config& expected);
-      void configure(const karabo::util::Config& input);
+            static void expectedParameters(karabo::util::Config& expected);
+            void configure(const karabo::util::Config& input);
 
-      void compute();
+            void compute();
 
-    };
+        };
 
-  }
+    }
 }
 
 #endif	/* KARABO_XIP_XIP_HH */

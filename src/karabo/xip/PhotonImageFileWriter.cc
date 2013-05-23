@@ -10,10 +10,10 @@
 #include "PhotonImageFileWriter.hh"
 
 namespace exfel {
-  namespace xip {
+    namespace xip {
 
-      //EXFEL_REGISTER_FACTORY_CC(Output<CpuImgI>, PhotonImageFileWriter<int>)
-      //EXFEL_REGISTER_FACTORY_CC(Output<CpuImgD >, PhotonImageFileWriter<double>)
-      
-  } 
-} 
+        //EXFEL_REGISTER_FACTORY_CC(Output<CpuImgI>, PhotonImageFileWriter<int>)
+        //EXFEL_REGISTER_FACTORY_CC(Output<CpuImgD >, PhotonImageFileWriter<double>)
+
+    }
+}

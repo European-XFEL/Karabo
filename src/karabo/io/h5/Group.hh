@@ -31,14 +31,16 @@ namespace karabo {
 
                 static void expectedParameters(karabo::util::Schema& expected);
 
-                Group(const karabo::util::Hash& input) : Element(input), 
+                Group(const karabo::util::Hash& input) : Element(input),
                 m_isVectorHash(false), m_vectorSize(0) {
 
                     if (input.has("type")) {
-                        if ( input.get<std::string>("type") == "VECTOR_HASH" ){
+                        if (input.get<std::string>("type") == "VECTOR_HASH") {
                             m_isVectorHash = true;
-                            if( input.has("size")){
+                            if (input.has("size")) {
                                 m_vectorSize = input.get<unsigned long long>("size");
+                            } else {
+                                m_vectorSize = 0;
                             }
                         }
                     }
@@ -47,7 +49,25 @@ namespace karabo {
                 virtual ~Group() {
                 }
 
+                bool isGroup() const {
+                    return true;
+                }
+
+                bool isDataset() const {
+                    return false;
+                }
+                
+                karabo::util::Types::ReferenceType getMemoryType() const {
+                    if (m_isVectorHash) return karabo::util::Types::VECTOR_HASH;
+                    return karabo::util::Types::HASH;
+                }
+
+
                 void create(hsize_t chunkSize);
+                
+                void create(hid_t tableGroup);
+
+                void createAttributes(hid_t element);
 
                 void write(const karabo::util::Hash& data, hsize_t recordId) {
                 }
@@ -55,14 +75,13 @@ namespace karabo {
                 void write(const karabo::util::Hash& data, hsize_t recordId, hsize_t len) {
                 }
 
-                void open(hid_t group);
+
 
                 void close();
 
-                void bind(karabo::util::Hash & data);                
+                void bind(karabo::util::Hash & data);
 
                 void bind(karabo::util::Hash & data, hsize_t len);
-                
 
                 void read(karabo::util::Hash& data, hsize_t recordId) {
                 }
@@ -73,10 +92,19 @@ namespace karabo {
                 void read(hsize_t recordId, hsize_t len) {
                 }
 
+                karabo::util::Dims getDims() const {
+                    return karabo::util::Dims(m_vectorSize);
+                }
+
+            protected:
+
+                hid_t openElement(hid_t group);
+
+
+
                 hid_t m_group; // this group
                 bool m_isVectorHash;
                 unsigned long long m_vectorSize;
-
 
             };
 

@@ -20,6 +20,7 @@ using namespace karabo::io;
 namespace karabo {
     namespace core {
 
+
         KARABO_REGISTER_FOR_CONFIGURATION(BaseDevice, Device<OkErrorFsm>, GuiServerDevice)
 
         void GuiServerDevice::expectedParameters(Schema& expected) {
@@ -71,6 +72,7 @@ namespace karabo {
             m_loggerIoService = m_loggerConnection->getIOService();
 
         }
+
 
         void GuiServerDevice::okStateOnEntry() {
             m_dataConnection->startAsync(boost::bind(&karabo::core::GuiServerDevice::onConnect, this, _1));
@@ -309,8 +311,8 @@ namespace karabo {
                 if (dims.size() < 2)
                     continue; // empty image?
 
-//                unsigned int& dimX = dims[0];
-//                unsigned int& dimY = dims[1];
+                //                unsigned int& dimX = dims[0];
+                //                unsigned int& dimY = dims[1];
 
                 vector<unsigned char>& vdata = input.get<vector<unsigned char> >("pixelArray");
 
@@ -321,7 +323,7 @@ namespace karabo {
                 boost::split(vhdr, fmt, boost::is_any_of("-"));
                 string& imgType = vhdr[0];
                 unsigned int bytesPerPixel = boost::lexical_cast<unsigned int>(vhdr[1]);
-//                unsigned int bitsPerPixel = boost::lexical_cast<unsigned int>(vhdr[2]);
+                //                unsigned int bitsPerPixel = boost::lexical_cast<unsigned int>(vhdr[2]);
                 bool msbFlag = vhdr[3] == "MSB" ? true : false;
 
                 vector<unsigned char> dataImage;

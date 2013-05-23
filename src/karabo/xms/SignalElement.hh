@@ -18,19 +18,19 @@ namespace karabo {
     namespace xms {
 
         class SignalElement {
-            
+
         protected:
 
             karabo::util::ComplexElement m_outerElement;
             karabo::util::SimpleElement<std::vector<std::string> > m_connectedSlots;
-            
+
         public:
 
             SignalElement(karabo::util::Schema& expected) : m_outerElement(karabo::util::ComplexElement(expected)) {
                 m_outerElement.reconfigureAndRead();
                 m_connectedSlots.key("connectedSlots");
                 m_connectedSlots.displayedName("Connected Slots");
-                
+
                 // By default connections are reconfigurable and optional
                 connectionAssignmentIsOptional();
                 connectionsAreReconfigurable();
@@ -40,7 +40,7 @@ namespace karabo {
                 m_outerElement.key(name);
                 return *this;
             }
-            
+
             SignalElement& displayedName(const std::string& displayedName) {
                 m_outerElement.displayedName(displayedName);
                 return *this;
@@ -80,7 +80,7 @@ namespace karabo {
                 m_connectedSlots.commit(innerElement);
             }
         };
-        
+
         typedef SignalElement SIGNAL_ELEMENT;
     }
 }

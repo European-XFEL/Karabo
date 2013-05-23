@@ -15,8 +15,8 @@ namespace karabo {
 
         KARABO_REGISTER_FACTORY_2_CC(AbstractOutput, Output<std::string >, FileWrapNetworkOutput)
         KARABO_REGISTER_FACTORY_CC(Output<std::string >, FileWrapNetworkOutput)
-        
-        
+
+
 
     }
 }

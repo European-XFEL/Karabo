@@ -18,6 +18,7 @@ namespace karabo {
 
         template <class TImage>
         class SingleProcessor {
+
         public:
 
             KARABO_CLASSINFO(SingleProcessor, "SingleProcessor", "1.0")

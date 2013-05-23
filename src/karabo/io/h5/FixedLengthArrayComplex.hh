@@ -43,19 +43,28 @@ namespace karabo {
 
 
                 FixedLengthArrayComplex(const karabo::util::Hash& input) : Dataset(input, this) {
-      
-                    std::string datasetWriterClassId = "DatasetWriter_" + input.get<std::string>("type");
+
+                    std::string type = FixedLengthArrayComplex<T>::classInfo().getClassId();
+                    if (input.has("type")) {
+                        type = input.get<std::string>("type");
+                    }
+                    std::string datasetWriterClassId = "DatasetWriter_" + type;
                     KARABO_LOG_FRAMEWORK_TRACE_CF << "dWClassId " << datasetWriterClassId;
                     KARABO_LOG_FRAMEWORK_TRACE_CF << "classId " << Self::classInfo().getClassId();
                     karabo::util::Hash config("dims", dims().toVector());
                     KARABO_LOG_FRAMEWORK_TRACE_CF << "config " << config;
-                    m_datasetWriter = DatasetWriter<std::complex<T> >::create(datasetWriterClassId, config);
-                    m_datasetReader = DatasetReader<std::complex<T> >::create("DatasetReader", config);
+                    m_datasetWriter = karabo::util::Configurator<DatasetWriter<std::complex<T> > >::create(datasetWriterClassId, config, false);
+                    m_datasetReader = karabo::util::Configurator<DatasetReader<std::complex<T> > >::create("DatasetReader", config, false);
 
                 }
 
                 static const karabo::util::Dims getSingleValueDimensions() {
                     return karabo::util::Dims(2);
+                }
+
+
+                karabo::util::Types::ReferenceType getMemoryType() const {
+                    return karabo::util::FromType<karabo::util::FromTypeInfo>::from(typeid (std::vector< std::complex<T> >));
                 }
 
                 virtual ~FixedLengthArrayComplex() {
@@ -68,7 +77,7 @@ namespace karabo {
                             .key("type")
                             .displayedName("Type")
                             .description("Data Type in Hash")
-                            .assignmentOptional().defaultValue(FixedLengthArrayComplex<T>::classInfo().getClassId())
+                            .assignmentOptional().noDefaultValue() //FixedLengthArrayComplex<T>::classInfo().getClassId())
                             .reconfigurable()
                             .commit();
 
@@ -182,7 +191,7 @@ namespace karabo {
             // typedefs
             typedef FixedLengthArrayComplex<double> DoubleArrayComplexElement;
             typedef FixedLengthArrayComplex<float> FloatArrayComplexElement;
-           
+
 
 
         }

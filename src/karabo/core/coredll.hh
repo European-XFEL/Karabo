@@ -14,29 +14,29 @@
 /********************************************
  *         Disable Specific Warnings         *
  ********************************************/
-    
 
-   
+
+
 /********************************************
  *            Windows DLL stuff             *  
  ********************************************/
 
-    #if defined(CORE_DLL)
-        #if defined(_WIN32)
-            #define DECLSPEC_CORE __declspec(dllexport)
-            #define TEMPLATE_CORE
-        #else
-            #define DECLSPEC_CORE
-            #define TEMPLATE_CORE
-        #endif
-    #else
-        #if defined(_WIN32)
-            #define DECLSPEC_CORE __declspec(dllimport)
-            #define TEMPLATE_CORE extern
-        #else
-            #define DECLSPEC_CORE
-            #define TEMPLATE_CORE extern
-        #endif
-    #endif
+#if defined(CORE_DLL)
+#if defined(_WIN32)
+#define DECLSPEC_CORE __declspec(dllexport)
+#define TEMPLATE_CORE
+#else
+#define DECLSPEC_CORE
+#define TEMPLATE_CORE
+#endif
+#else
+#if defined(_WIN32)
+#define DECLSPEC_CORE __declspec(dllimport)
+#define TEMPLATE_CORE extern
+#else
+#define DECLSPEC_CORE
+#define TEMPLATE_CORE extern
+#endif
+#endif
 
 #endif

@@ -22,6 +22,7 @@ namespace exfel {
     namespace xip {
 
         class AbstractInput : public boost::enable_shared_from_this<AbstractInput> {
+
         public:
 
             EXFEL_CLASSINFO(AbstractInput, "AbstractInput", "1.0")
@@ -62,8 +63,8 @@ namespace exfel {
             void registerIOEventHandler(const IOEventHandler& ioEventHandler) {
                 m_ioEventHandler = ioEventHandler;
             }
-            
-            void registerCanReadEventHandler( const CanReadEventHandler& canReadEventHandler) {
+
+            void registerCanReadEventHandler(const CanReadEventHandler& canReadEventHandler) {
                 m_canReadEventHandler = canReadEventHandler;
             }
 
@@ -101,9 +102,9 @@ namespace exfel {
             void triggerCanReadEvent() {
                 if (m_canReadEventHandler) m_canReadEventHandler(shared_from_this());
             }
-            
+
             void triggerIOEvent() const {
-                if(m_ioEventHandler) m_ioEventHandler();
+                if (m_ioEventHandler) m_ioEventHandler();
             }
 
         private:

@@ -18,6 +18,7 @@ namespace karabo {
     namespace core {
 
         class CameraFsm : public karabo::core::Device {
+
         public:
 
             KARABO_CLASSINFO(CameraFsm, "CameraFsm", "1.0")
@@ -32,7 +33,7 @@ namespace karabo {
             static void expectedParameters(karabo::util::Schema& expected);
 
             void configure(const karabo::util::Hash& input);
-            
+
             virtual void run();
 
         public:
@@ -120,12 +121,12 @@ namespace karabo {
             }
 
         protected: // Functions and Classes
-            
+
             template <class T>
             bool ensureSoftwareHardwareConsistency(const std::string key, const T& targetValue, const T& actualValue, karabo::util::Hash& configuration) {
                 // TODO One should maybe think of a more sophisticated method than converting to string and compare those...
                 if (karabo::util::String::toString(targetValue) != karabo::util::String::toString(actualValue)) {
-                    
+
                     std::ostringstream msg;
                     msg << "Hardware rejected to accept (re-)configuration for key \"" << key << "\" to target \""
                             << karabo::util::String::toString(targetValue) << "\". Actual value is \"" << karabo::util::String::toString(actualValue) << "\"";
@@ -135,17 +136,17 @@ namespace karabo {
                     return false;
                 } else return true;
             }
-            
+
         protected: // Members
-            
-            
+
+
         private: // functions
-            
-            
+
+
         private: // members
-            
+
             KARABO_FSM_DECLARE_MACHINE(CameraMachine, m_fsm);
-            
+
         };
 
     }

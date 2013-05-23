@@ -200,11 +200,10 @@ void FileInputOutput_Test::writeHdf5File() {
 
         p.start("bigHash");
         out = Output<Hash>::create("Hdf5File", Hash("filename", resourcePath("fileS2.h5")));
-        out->write(big);
+        out->write(m_bigHash);
         p.stop("bigHash");
         double time = HighResolutionTimer::time2double(p.getTime("bigHash"));
-//        clog << "writing big Hash (Hdf5) took " << time << " [s]" << endl;
-
+        clog << "writing big Hash (Hdf5) took " << time << " [s]" << endl;
 
         out = Output<Hash>::create("Hdf5File", Hash("filename", resourcePath("fileS3.h5")));
         out->write(m_unrootedHash);

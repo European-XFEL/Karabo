@@ -20,6 +20,7 @@ namespace exfel {
 
         template <class T>
         class Input : public AbstractInput {
+
         public:
 
             EXFEL_CLASSINFO(Input, "Input", "1.0")
@@ -30,7 +31,7 @@ namespace exfel {
              * @param expected [out] Description of expected parameters for this object (Schema)
              */
             static void expectedParameters(exfel::util::Schema& expected) {
-                
+
                 AbstractInput::expectedParameters(expected);
             }
 
@@ -40,14 +41,14 @@ namespace exfel {
              */
             void configure(const exfel::util::Hash & input) {
             }
-            
-       
+
+
             virtual void read(T& data, size_t idx = 0) = 0;
-            
+
             virtual size_t size() const = 0;
-            
+
         };
-        
+
         typedef exfel::xip::Input<exfel::util::Hash > HashInput;
         typedef exfel::xip::Input<std::string> FileWrapInput;
     }

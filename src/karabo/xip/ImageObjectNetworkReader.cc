@@ -10,7 +10,7 @@
 
 namespace exfel {
     namespace xip {
-        
+
         EXFEL_REGISTER_FACTORY_CC(Input<CpuImgD>, ImageObjectNetworkReader<double>)
 
     }

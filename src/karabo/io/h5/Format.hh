@@ -24,6 +24,7 @@
 #include <vector>
 
 #include "Element.hh"
+#include "FormatDiscoveryPolicy.hh"
 
 
 namespace karabo {
@@ -33,6 +34,7 @@ namespace karabo {
             class Table;
 
             class Format {
+
                 friend class Table;
             public:
 
@@ -40,51 +42,58 @@ namespace karabo {
                 KARABO_CONFIGURATION_BASE_CLASS
 
                 Format(const karabo::util::Hash& input);
-                
-                        
+
                 virtual ~Format() {
                 }
 
                 static void expectedParameters(karabo::util::Schema& expected);
 
+                static Format::Pointer createFormat(const karabo::util::Hash& config, bool validate = true);
 
-                static Format::Pointer createFormat(const karabo::util::Hash& config);
-                
                 static Format::Pointer createEmptyFormat();
-                
-                static void discoverFromHash(const karabo::util::Hash& data, karabo::util::Hash& config);
+
+                static Format::Pointer discover(const karabo::util::Hash& data, FormatDiscoveryPolicy::ConstPointer);
+
+                static Format::Pointer discover(const karabo::util::Hash& data);
 
                 const karabo::util::Hash& getConfig() const {
                     return m_config;
                 }
-                
+
                 void getPersistentConfig(karabo::util::Hash& config) const;
 
+                void getElementsNames(std::vector<std::string>& names) const;
+
                 void addElement(karabo::io::h5::Element::Pointer element);
-                
-                void removeElement(const std::string& fullPath );
-                
+
+                void removeElement(const std::string& fullPath);
+
                 void replaceElement(const std::string& fullPath, karabo::io::h5::Element::Pointer element);
-                
-                
+
+                karabo::io::h5::Element::Pointer getElement(const std::string& fullPath);
+
+                karabo::io::h5::Element::ConstPointer getElement(const std::string& fullPath) const;
+
             private:
 
-                static void discoverFromHash(const karabo::util::Hash& data,
-                        std::vector<karabo::util::Hash>& config, const std::string& path, const std::string& keyPath);
+                static void discoverFromHash(const karabo::util::Hash& data, FormatDiscoveryPolicy::ConstPointer policy, karabo::util::Hash& config);
 
-                static void discoverFromHashElement(const karabo::util::Hash::Node& el,
-                        std::vector<karabo::util::Hash>& config, const std::string& path, const std::string& keyPath);
+                static void discoverFromHash(const karabo::util::Hash& data, FormatDiscoveryPolicy::ConstPointer policy,
+                                             std::vector<karabo::util::Hash>& config, const std::string& path, const std::string& keyPath);
 
-                static void discoverFromVectorOfHashesElement(const karabo::util::Hash::Node& el,
-                        std::vector<karabo::util::Hash>& config, const std::string& path, const std::string& keyPath);
+                static void discoverFromHashElement(const karabo::util::Hash::Node& el, FormatDiscoveryPolicy::ConstPointer policy,
+                                                    std::vector<karabo::util::Hash>& config, const std::string& path, const std::string& keyPath);
 
-                static void discoverFromDataElement(const karabo::util::Hash::Node& el,
-                        std::vector<karabo::util::Hash>& config, const std::string& path, const std::string& keyPath);
+                static void discoverFromVectorOfHashesElement(const karabo::util::Hash::Node& el, FormatDiscoveryPolicy::ConstPointer policy,
+                                                              std::vector<karabo::util::Hash>& config, const std::string& path, const std::string& keyPath);
+
+                static void discoverFromDataElement(const karabo::util::Hash::Node& el, FormatDiscoveryPolicy::ConstPointer policy,
+                                                    std::vector<karabo::util::Hash>& config, const std::string& path, const std::string& keyPath);
 
                 static void discoverAttributes(const karabo::util::Hash::Node& el, karabo::util::Hash& config);
 
-                template< class T> static void discoverVectorSize(karabo::util::Hash& h, const karabo::util::Hash::Node& el) {
-                    
+                template< class T>
+                static void discoverVectorSize(karabo::util::Hash& h, const karabo::util::Hash::Node& el) {
                     std::vector<unsigned long long> dims;
                     if (el.hasAttribute("dims")) {
                         dims = el.getAttribute<std::vector<unsigned long long> >("dims");
@@ -95,30 +104,27 @@ namespace karabo {
                     h.set("dims", dims);
                 }
 
-                template< class T> static void discoverVectorSize(karabo::util::Hash& h, const karabo::util::Hash::Attributes::Node el) {
+                template< class T>
+                static void discoverVectorSize(karabo::util::Hash& h, const karabo::util::Hash::Attributes::Node el) {
                     const std::vector<T>& vec = el.getValue< std::vector<T> >();
                     unsigned long long size = vec.size();
                     h.set("dims", std::vector<unsigned long long>(1, size));
                 }
 
-                template< class T> static void discoverPtrSize(karabo::util::Hash& h, const karabo::util::Hash::Node& el) {
+                template< class T>
+                static void discoverPtrSize(karabo::util::Hash& h, const karabo::util::Hash::Node& el) {
                     const std::vector<unsigned long long>& dims = el.getAttribute<std::vector<unsigned long long> >("dims");
                     h.set("dims", dims);
-//                    unsigned long long size = dims[0];
-//                    for (size_t i = 1; i < dims.size(); ++i) {
-//                        size *= dims[i];
-//                    }
-//                    h.set("dims", size);
                 }
 
-
-                std::vector<Element::Pointer> getElements() {
+                const std::vector<Element::Pointer>& getElements() const {
                     return m_elements;
                 }
 
-                void mapElementsToKeys();
-                
             private:
+
+                void mapElementsToKeys();
+
                 static const char m_h5Sep = '/';
                 karabo::util::Hash m_config;
                 std::vector<karabo::io::h5::Element::Pointer> m_elements;
@@ -133,5 +139,5 @@ namespace karabo {
 
 //KARABO_REGISTER_FACTORY_BASE_HH(karabo::io::h5::Format, TEMPLATE_IO, DECLSPEC_IO)
 
-#endif	/* KARABO_IO_H5_FORMAT_HH */
+#endif
 
