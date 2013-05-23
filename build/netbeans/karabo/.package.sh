@@ -87,6 +87,16 @@ elif [ $PACKAGE_OPTION = "GUI" ]; then
    cp -rf $DISTDIR/$OS/lib $PACKAGEDIR/
 fi
 
+# pythonGui2
+if [ $PACKAGE_OPTION = "NOGUI" ]; then
+   echo
+elif [ $PACKAGE_OPTION = "GUI" ]; then
+   cd ../pythonGui2
+   ./build.sh
+   cp -rf $DISTDIR/$OS/bin $PACKAGEDIR/
+   cp -rf $DISTDIR/$OS/lib $PACKAGEDIR/
+fi
+
 # pythonCli
 cd ../pythonCli
 ./build.sh
