@@ -184,7 +184,7 @@
             <xs:documentation>
               <a:displayedName>myVectorString</a:displayedName>
               <a:default>first line,second line</a:default>
-              <a:accessType>1</a:accessType>
+              <a:accessType>4</a:accessType>
               <a:displayType>VECTOR_STRING</a:displayType>
             </xs:documentation>
           </xs:annotation>
@@ -194,7 +194,7 @@
             <xs:documentation>
               <a:displayedName>MyVectorInt</a:displayedName>
               <a:default>5,15</a:default>
-              <a:accessType>1</a:accessType>
+              <a:accessType>4</a:accessType>
               <a:displayType>VECTOR_INT32</a:displayType>
               <a:minSize>2</a:minSize>
               <a:maxSize>5</a:maxSize>
