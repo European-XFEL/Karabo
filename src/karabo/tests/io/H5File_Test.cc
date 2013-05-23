@@ -236,7 +236,7 @@ void H5File_Test::testWrite() {
         file.open(File::TRUNCATE);
 
 
-        Table::Pointer t = file.createTable("/abc", dataFormat, 1);
+        Table::Pointer t = file.createTable("/abc", dataFormat);
 
 
         t->writeAttributes(data);
@@ -699,7 +699,7 @@ void H5File_Test::testBufferWrite() {
         File file(filename);
         file.open(File::TRUNCATE);
 
-        Table::Pointer t = file.createTable("/planets", format, 100);
+        Table::Pointer t = file.createTable("/planets", format);
 
         p.stop("create");
         p.start("write0");
@@ -1068,7 +1068,7 @@ void H5File_Test::testVectorOfHashes() {
         File file(resourcePath("file4.h5"));
         file.open(File::TRUNCATE);
 
-        Table::Pointer t = file.createTable("/abc", dataFormat, 1);
+        Table::Pointer t = file.createTable("/abc", dataFormat);
         for (size_t i = 0; i < m_numberOfRecords; ++i) {
             t->write(data, i);
         }
@@ -1123,7 +1123,7 @@ void H5File_Test::testWriteFailure() {
         Format::Pointer dataFormat = Format::discover(data);
 
 
-        Table::Pointer t = file.createTable("/base", dataFormat, 1);
+        Table::Pointer t = file.createTable("/base", dataFormat);
 
 
         //        t->writeAttributes(data);
@@ -1169,7 +1169,7 @@ void H5File_Test::testManyGroups() {
         data.set("d4", d4);
         
         p.start("format");
-        Format::Pointer dataFormat = Format::discover(data);
+        Format::Pointer dataFormat = Format::discover(data, FormatDiscoveryPolicy::create(Hash("Policy.chunkSize", 100)));
         vector<string> el;
         dataFormat->getElementsNames(el);
         for (size_t i = 0; i < el.size(); ++i) {
@@ -1198,7 +1198,7 @@ void H5File_Test::testManyGroups() {
 
 
         p.start("create");
-        Table::Pointer t = file.createTable("/base", dataFormat, 100);
+        Table::Pointer t = file.createTable("/base", dataFormat);
         KARABO_LOG_FRAMEWORK_TRACE_CF << "File structure is created";
         p.stop("create");
 
@@ -1343,12 +1343,11 @@ void H5File_Test::testManyTables() {
         KARABO_LOG_FRAMEWORK_TRACE_CF << "File is open";
 
 
-        p.start("create");
-        size_t chunk = rec;
-        Table::Pointer t1 = file.createTable("/base/c1", dataFormat1, chunk);
-        Table::Pointer t2 = file.createTable("/base/c2", dataFormat2, chunk);
-        Table::Pointer t3 = file.createTable("/base/c3", dataFormat3, chunk);
-        Table::Pointer t4 = file.createTable("/base/c4", dataFormat4, chunk);
+        p.start("create");        
+        Table::Pointer t1 = file.createTable("/base/c1", dataFormat1);
+        Table::Pointer t2 = file.createTable("/base/c2", dataFormat2);
+        Table::Pointer t3 = file.createTable("/base/c3", dataFormat3);
+        Table::Pointer t4 = file.createTable("/base/c4", dataFormat4);
         KARABO_LOG_FRAMEWORK_TRACE_CF << "File structure is created";
         p.stop("create");
 
@@ -1456,7 +1455,7 @@ void H5File_Test::testVLWrite() {
 
 
         p.start("create");
-        Table::Pointer t = file.createTable("/base", dataFormat, 1);
+        Table::Pointer t = file.createTable("/base", dataFormat);
         p.stop("create");
 
         //        t->writeAttributes(data);

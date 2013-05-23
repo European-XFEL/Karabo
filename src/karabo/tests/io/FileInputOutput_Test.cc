@@ -128,7 +128,7 @@ void FileInputOutput_Test::writeBinaryFile() {
     out = Output<Hash>::create("BinaryFile", Hash("filename", resourcePath("file2.bin")));
     out->write(m_bigHash);
     p.stop("bigHash");
-    double time = HighResolutionTimer::time2double(p.getTime("bigHash"));
+//    double time = HighResolutionTimer::time2double(p.getTime("bigHash"));
 //    clog << "writing big Hash (binary) took " << time << " [s]" << endl;
 
     out = Output<Hash>::create("BinaryFile", Hash("filename", resourcePath("file3.bin")));

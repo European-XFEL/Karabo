@@ -16,13 +16,10 @@
 #include "ErrorHandler.hh"
 #include "TypeTraits.hh"
 #include <karabo/util/Configurator.hh>
-#include <karabo/log/Tracer.hh>
 
 #include "DatasetReader.hh"
 #include "DatasetWriter.hh"
 
-
-#include "ioProfiler.hh"
 
 namespace karabo {
 

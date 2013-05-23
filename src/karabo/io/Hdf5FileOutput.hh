@@ -84,7 +84,7 @@ namespace karabo {
                     karabo::io::h5::Format::Pointer dataFormat = karabo::io::h5::Format::discover(data);
                     karabo::io::h5::File file(m_filename.string());
                     file.open(m_writeMode);
-                    karabo::io::h5::Table::Pointer t = file.createTable("/root", dataFormat, 1);
+                    karabo::io::h5::Table::Pointer t = file.createTable("/root", dataFormat);
                     t->write(data, 0);
                     file.close();
 

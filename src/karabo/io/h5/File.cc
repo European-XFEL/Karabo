@@ -78,13 +78,13 @@ namespace karabo {
             }
 
 
-            Table::Pointer File::createTable(const string& name, const Format::Pointer dataFormat, size_t chunkSize) {
+            Table::Pointer File::createTable(const string& name, const Format::Pointer dataFormat) {
 
                 if (m_accMode == READONLY || m_accMode == APPEND) {
                     throw KARABO_IO_EXCEPTION("Cannot create table when file is opened in READONLY or APPEND mode");
                 }
 
-                Table::Pointer table = Table::Pointer(new Table(m_h5file, name, chunkSize));
+                Table::Pointer table = Table::Pointer(new Table(m_h5file, name));
                 table->openNew(dataFormat);
                 updateTableIndex(name);
                 return table;
