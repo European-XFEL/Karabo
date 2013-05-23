@@ -74,7 +74,7 @@ namespace karabo {
 
             std::string m_instanceId;
             karabo::util::Hash m_instanceInfo;
-            
+
             karabo::util::Hash m_senderInfo;
 
             SignalInstances m_signalInstances;
@@ -173,9 +173,9 @@ namespace karabo {
              * This function will stop all consumers and un-block the runEventLoop() function
              */
             void stopEventLoop();
-            
+
             void setSenderInfo(const karabo::util::Hash& senderInfo);
-            
+
             const karabo::util::Hash& getSenderInfo() const;
 
             /**
@@ -225,7 +225,7 @@ namespace karabo {
              * @return instance of a Slot object (handler object for this callback)
              */
             const SlotInstancePointer& getSenderInfo(const std::string& slotFunction);
-                
+
             /**
              * Connects a signal and slot by explicitely seperating instanceId from the slotId/signalId.
              * @param signalInstanceId
@@ -702,8 +702,8 @@ namespace karabo {
 
 
         private: // Functions
-            
-             /**
+
+            /**
              * The slotPing is a default global slot which emits the signalGotPinged signal
              */
             void slotPing(const std::string& instanceId, const bool& replyIfInstanceIdIsDuplicated);

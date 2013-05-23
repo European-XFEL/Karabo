@@ -18,8 +18,9 @@ using namespace log4cpp;
 namespace karabo {
     namespace core {
 
+
         void ReconfigurableFsm::expectedParameters(karabo::util::Schema& expected) {
-            
+
             SLOT_ELEMENT(expected).key("slotEndError")
                     .displayedName("Reset")
                     .description("Resets the device in case of an error")
@@ -27,26 +28,32 @@ namespace karabo {
                     .commit();
         }
 
+
         void ReconfigurableFsm::configure(const karabo::util::Hash& input) {
             SLOT0(slotEndError)
         }
+
 
         void ReconfigurableFsm::run() {
             startStateMachine();
             runEventLoop();
         }
 
+
         void ReconfigurableFsm::allOkStateOnEntry() {
 
         }
+
 
         void ReconfigurableFsm::allOkStateOnExit() {
 
         }
 
+
         void ReconfigurableFsm::errorStateOnEntry() {
 
         }
+
 
         void ReconfigurableFsm::errorStateOnExit() {
 

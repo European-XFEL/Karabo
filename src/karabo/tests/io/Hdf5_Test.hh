@@ -12,8 +12,9 @@
 
 class Hdf5_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST_SUITE(Hdf5_Test);    
-    CPPUNIT_TEST(testPureHdf5);
-    CPPUNIT_TEST(testKaraboHdf5);
+//    CPPUNIT_TEST(testPureHdf5);
+//    CPPUNIT_TEST(testKaraboHdf5);
+    CPPUNIT_TEST(testManyDatasets);
     CPPUNIT_TEST_SUITE_END();
 
 public:
@@ -30,6 +31,7 @@ private:
 
     void testPureHdf5();
     void testKaraboHdf5();
+    void testManyDatasets();
 };
 
 #endif	/* HDF5_TEST_HH */

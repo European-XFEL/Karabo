@@ -24,7 +24,7 @@ namespace karabo {
     namespace core {
 
         class MasterDevice2 : public Device<OkErrorFsm> {
-            
+
             /**
              * server +
              *   <serverId> type host deviceClasses version +
@@ -42,10 +42,10 @@ namespace karabo {
              *   
              */
             karabo::util::Hash m_runtimeSystemTopology;
-            
+
             boost::mutex m_runtimeSystemTopologyMutex;
-            
-            
+
+
             /**
              * device +
              *   <deviceId> +
@@ -59,7 +59,7 @@ namespace karabo {
              *          
              */
             karabo::util::Hash m_systemArchive;
-            
+
             boost::mutex m_systemArchiveMutex;
             
             bool m_persistData;
@@ -73,18 +73,18 @@ namespace karabo {
             static void expectedParameters(karabo::util::Schema& expected);
 
             MasterDevice2(const karabo::util::Hash& input);
-            
+
             virtual ~MasterDevice2();
 
 
         private: // Functions
-            
+
             void okStateOnEntry();
             
             void setupSlots();
-            
+
             void cacheAvailableInstances();
-            
+
             void handleInstanceUpdateForSystemTopology(const std::string& instanceId, const karabo::util::Hash& instanceInfo);
             
             void handleDeviceInstanceUpdateForSystemArchive(const std::string& deviceId);

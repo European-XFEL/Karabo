@@ -18,6 +18,6 @@ namespace karabo {
 
         KARABO_REGISTER_FOR_CONFIGURATION(AbstractOutput, Output<Hash >, NetworkOutput<Hash>)
         KARABO_REGISTER_FOR_CONFIGURATION(Output<Hash >, NetworkOutput<Hash>)
-        
+
     }
 }

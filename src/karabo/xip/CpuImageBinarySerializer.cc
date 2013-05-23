@@ -12,9 +12,9 @@
 
 namespace karabo {
     namespace xip {
-        
-        KARABO_REGISTER_FACTORY_CC(karabo::io::BinarySerializer<CpuImage<float> >, CpuImageBinarySerializer<float> )
-                
+
+        KARABO_REGISTER_FACTORY_CC(karabo::io::BinarySerializer<CpuImage<float> >, CpuImageBinarySerializer<float>)
+
 
 
     }

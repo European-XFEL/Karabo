@@ -1,4 +1,4 @@
-/*
+/*00
  * $Id$
  *
  * Author: <krzysztof.wrona@xfel.eu>
@@ -8,12 +8,14 @@
 
 
 #include "Element.hh"
+#include "Dataset.hh"
 #include "karabo/util/ListElement.hh"
 #include "ErrorHandler.hh"
 #include <karabo/util/Factory.hh>
 #include <karabo/util/Configurator.hh>
 #include <karabo/util/SimpleElement.hh>
 #include <karabo/io/h5/Attribute.hh>
+#include <karabo/log/Logger.hh>
 #include <boost/algorithm/string/replace.hpp>
 
 
@@ -24,6 +26,7 @@ namespace karabo {
     namespace io {
         namespace h5 {
 
+            
 
             void Element::expectedParameters(Schema& expected) {
 
@@ -54,15 +57,6 @@ namespace karabo {
                         .reconfigurable()
                         .commit();
 
-                //                STRING_ELEMENT(expected)
-                //                        .key("type")
-                //                        .displayedName("Type")
-                //                        .description("Data Type in Hash")
-                //                        .assignmentMandatory()
-                //                        .reconfigurable()
-                //                        .commit();
-
-
                 LIST_ELEMENT(expected)
                         .key("attributes")
                         .displayedName("Attributes")
@@ -71,15 +65,6 @@ namespace karabo {
                         .assignmentOptional().noDefaultValue()
                         .commit();
 
-
-                /*BOOL_ELEMENT(expected)
-                        .key("enable")
-                        .displayedName("Enable")
-                        .description("Flag indicating if this element will be written to HDF5 file")
-                        .assignmentOptional().defaultValue(true)                        
-                        .reconfigurable()
-                        .commit();
-                 */
             }
 
 
@@ -103,80 +88,100 @@ namespace karabo {
                         throw KARABO_PARAMETER_EXCEPTION("Name cannot be an empty string");
                     }
                     m_config = input;
+
+                    if (input.has("attributes")) {
+                        m_attributes = Configurator<Attribute>::createList("attributes", input, false);
+                    }
+
                 } catch (...) {
                     KARABO_RETHROW_AS("Error setting Element ");
                 }
             }
 
 
-            const string& Element::getFullName() {
-                return m_h5PathName;
-            }
-
-
-            void Element::getElement(Hash& element) {
-                element.set(m_h5name, shared_from_this());
-            }
-
-
-            void Element::openParentGroup(std::map<std::string, hid_t >& groups) {
-
-                typedef std::map<std::string, hid_t> H5GroupsMap;
-
-//                clog << "m_h5path: " << m_h5path << endl;
-//                for (H5GroupsMap::iterator it = groups.begin(); it != groups.end(); ++it) {
-//                    clog << "map: |" << it->first << "|" << it->second << "|" << endl;
-//                }
-
-                try {
-
-                    H5GroupsMap::iterator it = groups.find(m_h5path);
-                    if (it != groups.end()) {
-                        m_parentGroup = it->second;
-//                        clog << "m_parentGroup: " << it->first << endl;
-                    } else {
-                        std::vector<std::string> tokens;
-                        boost::split(tokens, m_h5path, boost::is_any_of("/"));
-                        hid_t groupId = groups[""];
-                        std::string relativePath;
-
-                        for (size_t i = 0; i < tokens.size(); ++i) {
-                            // skip empty tokens (like in: "/a/b//c" -> "a","b","","c") 
-                            if (tokens[i].size() == 0) continue;
-                            if (relativePath != "") {
-                                relativePath += "/" + tokens[i];
-                            } else {
-                                relativePath = tokens[i];
-                            }
-//                            clog << "relativePath: " << relativePath << endl;
-                            if (H5Lexists(groupId, relativePath.c_str(), H5P_DEFAULT) != 0) {
-//                                clog << "relativePath: " << relativePath << " exists" << endl;
-                                continue;
-                            } else {
-//                                clog << "relativePath: " << relativePath << ". Full path " << m_h5path << " to be created in parent group " << groupId << endl;
-                                hid_t lcpl = H5Pcreate(H5P_LINK_CREATE);
-                                KARABO_CHECK_HDF5_STATUS(lcpl);
-                                KARABO_CHECK_HDF5_STATUS(H5Pset_create_intermediate_group(lcpl, 1) ); 
-                                hid_t gcpl = H5Pcreate(H5P_GROUP_CREATE);
-                                KARABO_CHECK_HDF5_STATUS(H5Pset_link_creation_order(gcpl,H5P_CRT_ORDER_TRACKED));
-                                m_parentGroup = H5Gcreate(groupId, m_h5path.c_str(), lcpl, gcpl, H5P_DEFAULT);
-                                KARABO_CHECK_HDF5_STATUS(m_parentGroup);
-                                groups[m_h5path] = m_parentGroup;
-                                return;
-                            }
-                        }
-                        m_parentGroup = H5Gopen(groupId, m_h5path.c_str(), H5P_DEFAULT);
-                        KARABO_CHECK_HDF5_STATUS(m_parentGroup);
-                        groups[m_h5path] = m_parentGroup;
-                    }
-
-                } catch (...) {
-                    KARABO_RETHROW_AS(KARABO_PROPAGATED_EXCEPTION("Could not create one of the parent group"));
+            void Element::openAttributes(hid_t element) {
+                KARABO_LOG_FRAMEWORK_TRACE_CF << "opening attributes";
+                for (size_t i = 0; i < m_attributes.size(); ++i) {
+                    m_attributes[i]->open(element);
                 }
             }
 
 
+            void Element::writeAttributes(const karabo::util::Hash& data) {
+                if (data.has(m_key, '/')) {
+                    const Hash::Node& node = data.getNode(m_key, '/');
+                    for (size_t i = 0; i < m_attributes.size(); ++i) {
+                        m_attributes[i]->write(node);
+                    }
+                }
+            }
 
+
+            void Element::readAttributes(karabo::util::Hash& data) {
+                KARABO_LOG_FRAMEWORK_TRACE_CF << "reading attributes";
+                Hash::Node& node = data.getNode(m_key, '/');
+                for (size_t i = 0; i < m_attributes.size(); ++i) {
+                    m_attributes[i]->read(node);
+                }
+
+            }
+
+
+//            void Element::openParentGroup(std::map<std::string, hid_t >& groups) {
+//
+//                typedef std::map<std::string, hid_t> H5GroupsMap;
+//
+//                //              clog << "m_h5path: " << m_h5path << endl;
+//                //                for (H5GroupsMap::iterator it = groups.begin(); it != groups.end(); ++it) {
+//                //                    clog << "map: |" << it->first << "|" << it->second << "|" << endl;
+//                //                }
+//
+//                try {
+//
+//                    H5GroupsMap::iterator it = groups.find(m_h5path);
+//                    if (it != groups.end()) {
+//                        m_parentGroup = it->second;
+//                        //                        clog << "m_parentGroup: " << it->first << endl;
+//                    } else {
+//                        std::vector<std::string> tokens;
+//                        boost::split(tokens, m_h5path, boost::is_any_of("/"));
+//                        hid_t groupId = groups[""];
+//                        std::string relativePath;
+//
+//                        for (size_t i = 0; i < tokens.size(); ++i) {
+//                            // skip empty tokens (like in: "/a/b//c" -> "a","b","","c") 
+//                            if (tokens[i].size() == 0) continue;
+//                            if (relativePath != "") {
+//                                relativePath += "/" + tokens[i];
+//                            } else {
+//                                relativePath = tokens[i];
+//                            }
+//                            //                            clog << "relativePath: " << relativePath << endl;
+//                            if (H5Lexists(groupId, relativePath.c_str(), H5P_DEFAULT) != 0) {
+//                                //                                clog << "relativePath: " << relativePath << " exists" << endl;
+//                                continue;
+//                            } else {
+//                                //                                clog << "relativePath: " << relativePath << ". Full path " << m_h5path << " to be created in parent group " << groupId << endl;
+//                                hid_t lcpl = H5Pcreate(H5P_LINK_CREATE);
+//                                KARABO_CHECK_HDF5_STATUS(lcpl);
+//                                KARABO_CHECK_HDF5_STATUS(H5Pset_create_intermediate_group(lcpl, 1));
+//                                hid_t gcpl = H5Pcreate(H5P_GROUP_CREATE);
+//                                KARABO_CHECK_HDF5_STATUS(H5Pset_link_creation_order(gcpl, H5P_CRT_ORDER_TRACKED));
+//                                m_parentGroup = H5Gcreate(groupId, m_h5path.c_str(), lcpl, gcpl, H5P_DEFAULT);
+//                                KARABO_CHECK_HDF5_STATUS(m_parentGroup);
+//                                groups[m_h5path] = m_parentGroup;
+//                                return;
+//                            }
+//                        }
+//                        m_parentGroup = H5Gopen(groupId, m_h5path.c_str(), H5P_DEFAULT);
+//                        KARABO_CHECK_HDF5_STATUS(m_parentGroup);
+//                        groups[m_h5path] = m_parentGroup;
+//                    }
+//
+//                } catch (...) {
+//                    KARABO_RETHROW_AS(KARABO_PROPAGATED_EXCEPTION("Could not create one of the parent group"));
+//                }
+//            }
 
         }
     }

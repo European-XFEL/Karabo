@@ -27,7 +27,9 @@ using namespace exfel::net;
 using namespace exfel::xms;
 
 class SignalSlotDemo : public SignalSlotable {
+
 public:
+
 
     EXFEL_CLASSINFO(SignalSlotDemo, "SignalSlotDemo", "1.0")
 
@@ -41,12 +43,14 @@ public:
 
     }
 
+
     void slotGreet(const std::string& msg) {
         cout << msg << endl;
         SIGNAL2("signalAnswer", int, Hash);
         connectN("signalAnswer", "slotAnswer");
         emit("signalAnswer", 42, Hash("Was.soll.das.bedeuten", "nix"));
     }
+
 
     void slotAnswer(const int& someInteger, const Hash& someConfig) {
         cout << someInteger << endl;
@@ -55,6 +59,7 @@ public:
 
 
 };
+
 
 int main(int argc, char** argv) {
 
@@ -66,13 +71,13 @@ int main(int argc, char** argv) {
         SignalSlotDemo ssDemo(connection, "SignalSlotDemo");
 
         boost::thread t(boost::bind(&SignalSlotable::runEventLoop, &ssDemo, false));
-        
+
         ssDemo.connectN("signalHello", "slotGreet");
 
-        ssDemo.emit("signalHello", (string) "Hello World!");    
-        
+        ssDemo.emit("signalHello", (string) "Hello World!");
+
         ssDemo.stopEventLoop();
-        
+
         t.join();
 
     } catch (const Exception& e) {

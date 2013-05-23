@@ -18,6 +18,7 @@ namespace karabo {
 
         template <class TImage>
         class NoiseType {
+
         public:
 
             KARABO_CLASSINFO(NoiseType, "NoiseType", "1.0")
@@ -31,13 +32,16 @@ namespace karabo {
 
         template <class TPix>
         class PoissonNoise : public NoiseType< CpuImage<TPix> > {
+
         public:
 
             KARABO_CLASSINFO(PoissonNoise, "Poisson", "1.0")
-            
-            static void expectedParameters(karabo::util::Schema& expected) {}
-            
-            void configure(const karabo::util::Hash & input) {}
+
+            static void expectedParameters(karabo::util::Schema& expected) {
+            }
+
+            void configure(const karabo::util::Hash & input) {
+            }
 
             virtual void processInPlace(CpuImage<TPix>& image) {
                 image.getCImg().noise(1.0, 3);
@@ -53,9 +57,9 @@ namespace karabo {
 
         template <class TPix>
         class GaussianNoise : public NoiseType< CpuImage<TPix> > {
-            
+
             float m_sigma;
-            
+
         public:
 
             KARABO_CLASSINFO(GaussianNoise, "Gaussian", "1.0")
@@ -82,11 +86,11 @@ namespace karabo {
             void configure(const karabo::util::Hash & input) {
                 input.get("sigma", m_sigma);
             }
-            
+
             void processInPlace(CpuImage<TPix>& image) {
                 image.getCImg().noise(m_sigma, 0);
             }
-            
+
             CpuImage<TPix> process(const CpuImage<TPix>& image) {
                 CpuImage<TPix> tmp(image);
                 this->processInPlace(tmp);
@@ -97,6 +101,7 @@ namespace karabo {
 
         template <class TPix>
         class NoiseProcessor : public SingleProcessor< CpuImage<TPix> > {
+
         public:
 
             KARABO_CLASSINFO(NoiseProcessor, "Noise", "1.0")

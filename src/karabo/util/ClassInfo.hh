@@ -49,7 +49,8 @@ namespace karabo {
 static karabo::util::ClassInfo classInfo() { return karabo::util::ClassInfo(classId, BOOST_CURRENT_FUNCTION, classVersion); } \
 virtual karabo::util::ClassInfo getClassInfo() const { return classInfo(); } \
 typedef className Self; \
-typedef boost::shared_ptr<className> Pointer;
+typedef boost::shared_ptr<className> Pointer; \
+typedef boost::shared_ptr<const className> ConstPointer;
 
 
 #endif

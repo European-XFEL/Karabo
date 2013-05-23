@@ -29,6 +29,7 @@ namespace karabo {
          */
         template <class T>
         class NetworkInput : public karabo::io::Input<T> {
+
             typedef std::set<karabo::net::Connection::Pointer> TcpConnections;
             typedef std::set<karabo::net::Channel::Pointer> TcpChannels;
 
@@ -87,7 +88,7 @@ namespace karabo {
                 BOOL_ELEMENT(expected).key("updateOnNewInput")
                         .displayedName("Update on new input")
                         .description("If true, keeps data until new data from an connected output is provided. "
-                        "If new data is available the previous chunk is automatically deleted and the new one is made available for reading")
+                                     "If new data is available the previous chunk is automatically deleted and the new one is made available for reading")
                         .assignmentOptional().defaultValue(false)
                         .reconfigurable()
                         .commit();
@@ -242,7 +243,7 @@ namespace karabo {
 
                 channel->readAsyncHashVector(boost::bind(&karabo::xms::NetworkInput<T>::onTcpChannelRead, this, _1, _2, _3));
             }
-            
+
             void swapBuffers() {
                 boost::mutex::scoped_lock lock(m_swapBuffersMutex);
                 std::swap(m_activeChunk, m_inactiveChunk);
@@ -255,9 +256,9 @@ namespace karabo {
             }
 
             void update() {
-                
+
                 if (m_updateOnNewInput) return;
-                
+
                 m_mutex.lock();
                 // Clear active chunk
                 Memory<T>::clearChunk(m_channelId, m_activeChunk);

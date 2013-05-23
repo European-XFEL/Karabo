@@ -14,59 +14,62 @@
 
 namespace exfel {
 
-  namespace core {
-    
-    using namespace std;
-    using namespace exfel::util;
-    using namespace deviceServer;
+    namespace core {
 
-    struct DeviceServerLogic::Impl {
-      
+        using namespace std;
+        using namespace exfel::util;
+        using namespace deviceServer;
 
-      Impl() : m_fsm(0) {
-      }
-
-      void start(DeviceServerLogic* p) {
-        m_fsm = new TopMachine(p);
-        m_fsm->start();
-      }
-
-      FSM_EVENT_IMPL2(ErrorFoundEvent, string, string)
-      FSM_EVENT_IMPL0(EndErrorEvent)
-      FSM_EVENT_IMPL1(ReceiveNameEvent, string)
-      FSM_EVENT_IMPL1(TimeoutEvent, string)
-      FSM_EVENT_IMPL0(InbuildDevicesAvailableEvent)
-      FSM_EVENT_IMPL0(NewPluginAvailableEvent)
-      FSM_EVENT_IMPL1(StartDeviceEvent, Config)
-     
-    private:
-      TopMachine* m_fsm;
-    };
-
-    typedef exfel::core::DeviceServerLogic Self;
-
-    FSM_EVENT_SLOT2(Self, ErrorFoundEvent, std::string, std::string)
-    FSM_EVENT_SLOT0(Self, EndErrorEvent)
-    FSM_EVENT_SLOT1(Self, ReceiveNameEvent, std::string)
-    FSM_EVENT_SLOT1(Self, TimeoutEvent, std::string)
-    FSM_EVENT_SLOT0(Self, NewPluginAvailableEvent)
-    FSM_EVENT_SLOT0(Self, InbuildDevicesAvailableEvent)
-    FSM_EVENT_SLOT1(Self, StartDeviceEvent, Config)
-
-    void DeviceServerLogic::startStateMachine() {
-      declareEventSlots();
-      m_impl->start(this);
-    }
-
-    void DeviceServerLogic::declareEventSlots() {
-      SLOT2(Self, slotErrorFoundEvent, std::string, std::string)
-      SLOT0(Self, slotEndErrorEvent)
-      SLOT1(Self, slotReceiveNameEvent, std::string)
-      SLOT1(Self, slotStartDeviceEvent, Config)
-    }
+        struct DeviceServerLogic::Impl {
 
 
+            Impl() : m_fsm(0) {
+            }
 
-  } // namespace core
+
+            void start(DeviceServerLogic* p) {
+                m_fsm = new TopMachine(p);
+                m_fsm->start();
+            }
+
+            FSM_EVENT_IMPL2(ErrorFoundEvent, string, string)
+            FSM_EVENT_IMPL0(EndErrorEvent)
+            FSM_EVENT_IMPL1(ReceiveNameEvent, string)
+            FSM_EVENT_IMPL1(TimeoutEvent, string)
+            FSM_EVENT_IMPL0(InbuildDevicesAvailableEvent)
+            FSM_EVENT_IMPL0(NewPluginAvailableEvent)
+            FSM_EVENT_IMPL1(StartDeviceEvent, Config)
+
+        private:
+            TopMachine* m_fsm;
+        };
+
+        typedef exfel::core::DeviceServerLogic Self;
+
+
+        FSM_EVENT_SLOT2(Self, ErrorFoundEvent, std::string, std::string)
+        FSM_EVENT_SLOT0(Self, EndErrorEvent)
+        FSM_EVENT_SLOT1(Self, ReceiveNameEvent, std::string)
+        FSM_EVENT_SLOT1(Self, TimeoutEvent, std::string)
+        FSM_EVENT_SLOT0(Self, NewPluginAvailableEvent)
+        FSM_EVENT_SLOT0(Self, InbuildDevicesAvailableEvent)
+        FSM_EVENT_SLOT1(Self, StartDeviceEvent, Config)
+
+        void DeviceServerLogic::startStateMachine() {
+            declareEventSlots();
+            m_impl->start(this);
+        }
+
+
+        void DeviceServerLogic::declareEventSlots() {
+            SLOT2(Self, slotErrorFoundEvent, std::string, std::string)
+            SLOT0(Self, slotEndErrorEvent)
+            SLOT1(Self, slotReceiveNameEvent, std::string)
+            SLOT1(Self, slotStartDeviceEvent, Config)
+        }
+
+
+
+    } // namespace core
 } // namespace exfel
 

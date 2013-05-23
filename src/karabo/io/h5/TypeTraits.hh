@@ -22,47 +22,49 @@ namespace karabo {
             public:
 
                 template <class U>
-                static const hid_t getHdf5NativeType(const U& var = U()) {
-                    return NotImplementedType(var);
+                static const hid_t getHdf5NativeType() {
+                    U* a;
+                    return NotImplementedType(a);
                 }
 
                 template <class U>
-                static const hid_t getHdf5StandardType(const U& var = U()) {
-                    return NotImplementedType(var);
+                static const hid_t getHdf5StandardType() {
+                    U *a;
+                    return NotImplementedType(a);
                 }
             };
 
-            template<> const hid_t ScalarTypes::getHdf5NativeType(const char&);
-            template<> const hid_t ScalarTypes::getHdf5NativeType(const signed char&);
-            template<> const hid_t ScalarTypes::getHdf5NativeType(const short&);
-            template<> const hid_t ScalarTypes::getHdf5NativeType(const int&);
-            template<> const hid_t ScalarTypes::getHdf5NativeType(const long long&);
-            template<> const hid_t ScalarTypes::getHdf5NativeType(const unsigned char&);
-            template<> const hid_t ScalarTypes::getHdf5NativeType(const unsigned short&);
-            template<> const hid_t ScalarTypes::getHdf5NativeType(const unsigned int&);
-            template<> const hid_t ScalarTypes::getHdf5NativeType(const unsigned long long&);
-            template<> const hid_t ScalarTypes::getHdf5NativeType(const float&);
-            template<> const hid_t ScalarTypes::getHdf5NativeType(const std::complex<float>&);
-            template<> const hid_t ScalarTypes::getHdf5NativeType(const double&);
-            template<> const hid_t ScalarTypes::getHdf5NativeType(const std::complex<double>&);
-            template<> const hid_t ScalarTypes::getHdf5NativeType(const bool&);
-            template<> const hid_t ScalarTypes::getHdf5NativeType(const std::string&);
+            template<> const hid_t ScalarTypes::getHdf5NativeType<char >();
+            template<> const hid_t ScalarTypes::getHdf5NativeType<signed char >();
+            template<> const hid_t ScalarTypes::getHdf5NativeType<short >();
+            template<> const hid_t ScalarTypes::getHdf5NativeType<int>();
+            template<> const hid_t ScalarTypes::getHdf5NativeType<long long >();
+            template<> const hid_t ScalarTypes::getHdf5NativeType<unsigned char >();
+            template<> const hid_t ScalarTypes::getHdf5NativeType<unsigned short >();
+            template<> const hid_t ScalarTypes::getHdf5NativeType<unsigned int >();
+            template<> const hid_t ScalarTypes::getHdf5NativeType<unsigned long long >();
+            template<> const hid_t ScalarTypes::getHdf5NativeType<float >();
+            template<> const hid_t ScalarTypes::getHdf5NativeType<std::complex<float> >();
+            template<> const hid_t ScalarTypes::getHdf5NativeType<double >();
+            template<> const hid_t ScalarTypes::getHdf5NativeType<std::complex<double> >();
+            template<> const hid_t ScalarTypes::getHdf5NativeType<bool >();
+            template<> const hid_t ScalarTypes::getHdf5NativeType<std::string >();
 
-            template<> const hid_t ScalarTypes::getHdf5StandardType(const char&);
-            template<> const hid_t ScalarTypes::getHdf5StandardType(const signed char&);
-            template<> const hid_t ScalarTypes::getHdf5StandardType(const short&);
-            template<> const hid_t ScalarTypes::getHdf5StandardType(const int&);
-            template<> const hid_t ScalarTypes::getHdf5StandardType(const long long&);
-            template<> const hid_t ScalarTypes::getHdf5StandardType(const unsigned char&);
-            template<> const hid_t ScalarTypes::getHdf5StandardType(const unsigned short&);
-            template<> const hid_t ScalarTypes::getHdf5StandardType(const unsigned int&);
-            template<> const hid_t ScalarTypes::getHdf5StandardType(const unsigned long long&);
-            template<> const hid_t ScalarTypes::getHdf5StandardType(const float&);
-            template<> const hid_t ScalarTypes::getHdf5StandardType(const std::complex<float>&);            
-            template<> const hid_t ScalarTypes::getHdf5StandardType(const double&);
-            template<> const hid_t ScalarTypes::getHdf5StandardType(const std::complex<double>&);            
-            template<> const hid_t ScalarTypes::getHdf5StandardType(const bool&);
-            template<> const hid_t ScalarTypes::getHdf5StandardType(const std::string&);
+            template<> const hid_t ScalarTypes::getHdf5StandardType<char >();
+            template<> const hid_t ScalarTypes::getHdf5StandardType<signed char >();
+            template<> const hid_t ScalarTypes::getHdf5StandardType< short >();
+            template<> const hid_t ScalarTypes::getHdf5StandardType< int >();
+            template<> const hid_t ScalarTypes::getHdf5StandardType< long long >();
+            template<> const hid_t ScalarTypes::getHdf5StandardType< unsigned char >();
+            template<> const hid_t ScalarTypes::getHdf5StandardType< unsigned short >();
+            template<> const hid_t ScalarTypes::getHdf5StandardType< unsigned int >();
+            template<> const hid_t ScalarTypes::getHdf5StandardType< unsigned long long >();
+            template<> const hid_t ScalarTypes::getHdf5StandardType< float >();
+            template<> const hid_t ScalarTypes::getHdf5StandardType< std::complex<float> >();            
+            template<> const hid_t ScalarTypes::getHdf5StandardType< double >();
+            template<> const hid_t ScalarTypes::getHdf5StandardType< std::complex<double> >();            
+            template<> const hid_t ScalarTypes::getHdf5StandardType< bool >();
+            template<> const hid_t ScalarTypes::getHdf5StandardType< std::string >();
 
 
         }

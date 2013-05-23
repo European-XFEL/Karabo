@@ -92,6 +92,15 @@ void H5Format_Test::testManualFormat() {
     CPPUNIT_ASSERT(vec1[0].has("UINT32.compressionLevel") == true);
 
 
+    h5::Element::Pointer p1 = format->getElement("experimental.test23");
+    CPPUNIT_ASSERT(p1->getH5name() == "test23");
+    CPPUNIT_ASSERT(p1->getKey() == "instrument.test");
+    CPPUNIT_ASSERT(p1->getFullName() == "experimental/test23");
+    CPPUNIT_ASSERT(p1->getMemoryType() == Types::UINT32);
+    CPPUNIT_ASSERT(p1->getDims().rank() == 0);
+    CPPUNIT_ASSERT(p1->getDims().size() == 0);
+
+          
     Hash config1p;
     format->getPersistentConfig(config1p);
 
@@ -120,6 +129,17 @@ void H5Format_Test::testManualFormat() {
         h5::Element::Pointer e2 = h5::Element::create("VECTOR_INT32", c2);
         format->replaceElement("experimental.test23", e2);
 
+        h5::Element::Pointer p1 = format->getElement("experimental2.test1000");
+        CPPUNIT_ASSERT(p1->getH5name() == "test1000");
+        CPPUNIT_ASSERT(p1->getKey() == "instrument.test2");
+        CPPUNIT_ASSERT(p1->getFullName() == "experimental2/test1000");
+        CPPUNIT_ASSERT(p1->getMemoryType() == Types::VECTOR_INT32);
+        CPPUNIT_ASSERT(p1->getDims().rank() == 2);
+        CPPUNIT_ASSERT(p1->getDims().extentIn(0) == 10);
+        CPPUNIT_ASSERT(p1->getDims().extentIn(1) == 10);
+        CPPUNIT_ASSERT(p1->getDims().size() == 100);
+
+
         const Hash config2 = format->getConfig();
 
         const vector<Hash>& vec2 = config2.get<vector<Hash> >("Format.elements");
@@ -130,6 +150,7 @@ void H5Format_Test::testManualFormat() {
         CPPUNIT_ASSERT(vec2[0].has("VECTOR_INT32.key") == true);
         CPPUNIT_ASSERT(vec2[0].has("VECTOR_INT32.compressionLevel") == true);
         CPPUNIT_ASSERT(vec2[0].has("VECTOR_INT32.dims") == true);
+
 
 
 
@@ -217,10 +238,18 @@ void H5Format_Test::testDiscoverFromHash() {
             vector<int> vecInt(100, 2);
             data.set("a.b.x", vecInt);
             addPointerToHash(data, "a.b.y", &vecInt[0], Dims(2, 5, 10));
+            data.set("b.b1", 123);
+            data.set("b.b2", 123u);
+            data.set("b.b3", 123LL);
+            data.set("b.b4", complex<float>(2,6));
+            data.set("b.b5", true);
+            data.set("c.c1",Hash());
+            data.set("c.c2",vector<Hash>(4,Hash()));
+            
+                        
 
-            Hash config;
-            Format::discoverFromHash(data, config);
-            Format::Pointer dataFormat = Format::createFormat(config);
+            
+            Format::Pointer dataFormat = Format::discover(data);
 
 
             KARABO_LOG_FRAMEWORK_TRACE_CF << "config\n" << dataFormat->getConfig();
@@ -230,6 +259,17 @@ void H5Format_Test::testDiscoverFromHash() {
 
             KARABO_LOG_FRAMEWORK_TRACE_CF << "persistent config\n" << pers;
 
+            vector<string> names;
+            dataFormat->getElementsNames(names);
+            for( size_t i=0; i< names.size(); ++i){
+              //  clog << "names[" << i << "] = " << names[i] << endl;
+                h5::Element::Pointer el = dataFormat->getElement(names[i]);
+              //  clog << "Memory type: " << Types::to<ToLiteral>(el->getMemoryType() ) << endl;
+               // clog << "Element type: " << el->getElementType()  << endl;
+                Dims dims = el->getDims();
+              //  clog << ":size " << dims.size()  << endl;
+            }
+                       
         } catch (Exception e) {
             clog << e.detailedMsg() << endl;
             KARABO_RETHROW

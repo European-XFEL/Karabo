@@ -37,12 +37,19 @@ namespace karabo {
 
                 template <class Derived>
                 Dataset(const karabo::util::Hash& input, Derived* d) : Element(input), m_numberAllocatedRecords(0) {
-                    m_compressionLevel = input.get<int>("compressionLevel");
+                    if (input.has("compressionLevel")) {
+                        m_compressionLevel = input.get<int>("compressionLevel");
+                    } else {
+                        m_compressionLevel = 0;
+                    }
+                    if (input.has("chunkSize")) {
+                        m_chunkSize = input.get<unsigned long long>("chunkSize");
+                    }else{
+                        m_chunkSize = 1;
+                    }                    
                     karabo::util::Dims singleValueDims = Derived::getSingleValueDimensions();
                     configureDataDimensions(input, singleValueDims);
-                    configureFileDataSpace(input);
                 }
-                
 
                 virtual ~Dataset() {
                 }
@@ -92,7 +99,32 @@ namespace karabo {
 
                 static hid_t dataSpace1dim(hsize_t len);
 
-                void create(hsize_t chunkSize);
+                virtual hid_t createDataspace(const std::vector<hsize_t>& ex, const std::vector<hsize_t>& maxEx) {                    
+                    return H5Screate_simple(ex.size(), &ex[0], &maxEx[0]);
+                }
+
+                virtual void create(hsize_t chunkSize);
+
+                void create(hid_t tableGroup); 
+
+                void createAttributes(hid_t element);
+
+                bool isDataset() const {
+                    return true;
+                }
+
+                bool isGroup() const {
+                    return false;
+                }
+
+                karabo::util::Dims getDims() const {
+                    return m_dims;
+                }
+
+                void setCompressionLevel(int level) {
+                    m_compressionLevel = level;
+                }
+
 
             protected:
 
@@ -117,7 +149,7 @@ namespace karabo {
                 static hid_t extend(hid_t dataSet, hid_t dataSpace, hsize_t len);
 
 
-                virtual void open(hid_t group);
+                virtual hid_t openElement(hid_t group);
 
                 virtual void close();
 
@@ -137,15 +169,30 @@ namespace karabo {
                 std::vector<hsize_t> m_dataSetMaxExtent;
 
                 hsize_t m_chunkSize;
-                hid_t m_dataSetProperties;
+
 
                 hid_t m_fileDataSpace;
 
             private:
 
                 void configureDataDimensions(const karabo::util::Hash& input, const karabo::util::Dims& singleValueDims);
-                void configureFileDataSpace(const karabo::util::Hash& input);
+                void configureFileDataSpace();
                 void createDataSetProperties();
+
+
+                static hid_t m_dataSetProperties;
+                static hid_t m_linkCreateProperties;
+
+                static hid_t initDataSetProperties() {
+                    return H5Pcreate(H5P_DATASET_CREATE);
+                }
+
+                static hid_t initLinkCreateProperties() {
+                    hid_t lid = H5Pcreate(H5P_LINK_CREATE);
+                    KARABO_CHECK_HDF5_STATUS(lid);
+                    KARABO_CHECK_HDF5_STATUS(H5Pset_create_intermediate_group(lid, 1));
+                    return lid;
+                }
 
             };
 

@@ -21,9 +21,9 @@ namespace karabo {
 
         template <class TImage>
         class Projector {
-            
-            public:
-            
+
+        public:
+
             KARABO_CLASSINFO(Projector, "Projector", "1.0")
             KARABO_FACTORY_BASE_CLASS
 
@@ -31,14 +31,15 @@ namespace karabo {
              * Necessary method as part of the factory/configuration system
              * @param expected [out] Description of expected parameters for this object (Schema)
              */
-            static void expectedParameters(karabo::util::Schema& expected){}
-
+            static void expectedParameters(karabo::util::Schema& expected) {
+            }
 
             /**
              * If this object is constructed using the factory/configuration system this method is called
              * @param input Validated (@see expectedParameters) and default-filled configuration
              */
-            void configure(const karabo::util::Hash & input){}
+            void configure(const karabo::util::Hash & input) {
+            }
 
             virtual void projectInPlace(TImage& image3d) = 0;
 

@@ -25,14 +25,9 @@
 #include "Output.hh"
 #include "TextSerializer.hh"
 
-/**
- * The main European XFEL namespace
- */
+
 namespace karabo {
 
-    /**
-     * Namespace for package packageName
-     */
     namespace io {
 
         /**
@@ -62,7 +57,7 @@ namespace karabo {
                 STRING_ELEMENT(expected).key("writeMode")
                         .description("Defines the behaviour in case of already existent file")
                         .displayedName("Write Mode")
-                        .options("abort, truncate, append")
+                        .options("exclusive, truncate")
                         .assignmentOptional().defaultValue(std::string("truncate"))
                         .commit();
 
@@ -117,7 +112,7 @@ namespace karabo {
                 using namespace std;
 
                 string filename = m_filename.string();
-                if (m_writeMode == "abort") {
+                if (m_writeMode == "exclusive") {
                     if (boost::filesystem::exists(m_filename)) {
                         throw KARABO_IO_EXCEPTION("TextFileOutput::write -> File " + filename + " does already exist");
                     }
@@ -125,9 +120,6 @@ namespace karabo {
                     outputStream << sourceContent;
                 } else if (m_writeMode == "truncate") {
                     ofstream outputStream(filename.c_str(), ios::trunc);
-                    outputStream << sourceContent;
-                } else if (m_writeMode == "append") {
-                    ofstream outputStream(filename.c_str(), ios::app);
                     outputStream << sourceContent;
                 }
             }

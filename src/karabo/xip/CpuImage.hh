@@ -30,29 +30,32 @@ namespace karabo {
 
         template <class TPix> class ImageFileReader;
         template <class TPix> class ImageFileWriter;
-        
+
         struct CpuImageType {
+
             template <class T>
-            static std::string classId() {return "Image" + karabo::util::Types::getTypeAsString<T, karabo::util::Types::FORMAT_INTERN>();}
+            static std::string classId() {
+                return "Image" + karabo::util::Types::getTypeAsString<T, karabo::util::Types::FORMAT_INTERN>();
+            }
         };
-                
+
         /**
          * Image class (computing done on CPU)
          */
         template<class TPix>
         class CpuImage : public AbstractImage<TPix> {
+
             // Grant friendship in order to copy-construct from foreign pixelTypes
             template <class UPix> friend class CpuImage;
 
             template <class UPix> friend class ImageFileReader;
             template <class UPix> friend class ImageFileWriter;
-           
+
             typedef boost::shared_ptr<ci::CImgDisplay> CImgDisplayPointer;
-            
+
         public:
-            
-            
-            KARABO_CLASSINFO(CpuImage, CpuImageType::classId<TPix>() , "1.0")
+
+            KARABO_CLASSINFO(CpuImage, CpuImageType::classId<TPix>(), "1.0")
 
             /***************************************
              *            Constructors             *
@@ -98,7 +101,7 @@ namespace karabo {
             CpuImage(const karabo::util::Hash& header) : m_cimg(ci::CImg<TPix>(header.get<int>("dimX"), header.get<int>("dimY"), header.get<int>("dimZ"))) {
                 m_header = header;
             }
-            
+
             CpuImage(const karabo::util::Hash& header, const TPix& value) : m_cimg(ci::CImg<TPix>(header.get<int>("dimX"), header.get<int>("dimY"), header.get<int>("dimZ"), value)) {
                 m_header = header;
             }
@@ -215,7 +218,7 @@ namespace karabo {
                 CpuImage& tmp = const_cast<CpuImage&> (image);
                 this->swap(tmp);
             }
-            
+
             /**
              * Moves the content of the instance image into another one in a way that memory copies are avoided if possible.
              * 
@@ -318,8 +321,7 @@ namespace karabo {
             inline TPix& operator[](const size_t offset) {
                 return m_cimg[offset];
             }
-            
-            
+
             inline const TPix& operator()(const size_t x, const size_t y = 0, const size_t z = 0) const {
                 return m_cimg(x, y, z);
             }
@@ -380,7 +382,7 @@ namespace karabo {
              * @return Image 
              */
             template <typename U>
-                    CpuImage& operator=(const CpuImage<U>& image) {
+            CpuImage& operator=(const CpuImage<U>& image) {
                 return assign(image);
             }
 
@@ -395,7 +397,7 @@ namespace karabo {
              * Operator+=();
              */
             template <typename U>
-                    CpuImage<TPix>& operator+=(const U& val) {
+            CpuImage<TPix>& operator+=(const U& val) {
                 m_cimg.operator+=(val);
                 return *this;
             }
@@ -411,7 +413,7 @@ namespace karabo {
              * @return Image
              */
             template <typename U>
-                    CpuImage<TPix>& operator+=(const CpuImage<U>& image) {
+            CpuImage<TPix>& operator+=(const CpuImage<U>& image) {
                 m_cimg.operator+=(image.getCImg());
                 return *this;
             }
@@ -425,68 +427,66 @@ namespace karabo {
             CpuImage< typename ci::cimg::superset<TPix, U>::type > operator+(const U& val) const {
                 return CpuImage< typename ci::cimg::superset<TPix, U>::type > (*this, false) += val;
             }
-            
+
             template <class UPix>
             CpuImage& operator*=(const UPix value) {
                 m_cimg.operator*=(value);
                 return *this;
             }
-            
+
             CpuImage& operator*=(const std::string& expression) {
                 m_cimg.operator*=(expression.c_str());
                 return *this;
             }
-            
+
             template <class UPix>
             CpuImage& operator*=(const CpuImage<UPix>& image) {
-                return ((*this)*image).moveTo(*this);
+                return ((*this) * image).moveTo(*this);
             }
-            
+
             template<class UPix>
             CpuImage<typename ci::cimg::superset<TPix, UPix>::type> operator*(const UPix value) {
-                return CpuImage<typename ci::cimg::superset<TPix, UPix>::type >(*this)*=value;
+                return CpuImage<typename ci::cimg::superset<TPix, UPix>::type > (*this) *= value;
             }
-            
-            CpuImage<double> operator*(const std::string& expression ) {
-                return CpuImage<double>(*this)*=expression;
+
+            CpuImage<double> operator*(const std::string& expression) {
+                return CpuImage<double>(*this) *= expression;
             }
-            
+
             template <class UPix>
             CpuImage<typename ci::cimg::superset<TPix, UPix>::type> operator*(const CpuImage<UPix>& image) const {
                 return CpuImage<typename ci::cimg::superset<TPix, UPix>::type > (m_cimg.operator*(image.getCImg()));
             }
-            
+
             template <class UPix>
             CpuImage& operator/=(const UPix value) {
                 m_cimg.operator/=(value);
                 return *this;
             }
-            
+
             CpuImage& operator/=(const std::string& expression) {
                 m_cimg.operator/=(expression.c_str());
                 return *this;
             }
-            
+
             template <class UPix>
             CpuImage& operator/=(const CpuImage<UPix>& image) {
-                return ((*this)/image).moveTo(*this);
+                return ((*this) / image).moveTo(*this);
             }
-            
+
             template<class UPix>
             CpuImage<typename ci::cimg::superset<TPix, UPix>::type> operator/(const UPix value) {
-                return CpuImage<typename ci::cimg::superset<TPix, UPix>::type >(*this)/=value;
+                return CpuImage<typename ci::cimg::superset<TPix, UPix>::type > (*this) /= value;
             }
-            
-            CpuImage<double> operator/(const std::string& expression ) {
-                return CpuImage<double>(*this)/=expression;
+
+            CpuImage<double> operator/(const std::string& expression) {
+                return CpuImage<double>(*this) /= expression;
             }
-            
+
             template <class UPix>
             CpuImage<typename ci::cimg::superset<TPix, UPix>::type> operator/(const CpuImage<UPix>& image) const {
                 return CpuImage<typename ci::cimg::superset<TPix, UPix>::type > (m_cimg.operator/(image.getCImg()));
             }
-            
-            
 
             /***************************************
              *             Pixel Access            *  
@@ -675,70 +675,70 @@ namespace karabo {
             }
 
             static CpuImage vector(const TPix& a0, const TPix& a1, const TPix& a2, const TPix& a3, const TPix& a4,
-                    const TPix& a5) {
+                                   const TPix& a5) {
                 return CpuImage(ci::CImg<TPix>::vector(a0, a1, a2, a3, a4, a5));
 
             }
 
             static CpuImage vector(const TPix& a0, const TPix& a1, const TPix& a2, const TPix& a3, const TPix& a4,
-                    const TPix& a5, const TPix& a6) {
+                                   const TPix& a5, const TPix& a6) {
                 return CpuImage(ci::CImg<TPix>::vector(a0, a1, a2, a3, a4, a5, a6));
 
             }
 
             static CpuImage vector(const TPix& a0, const TPix& a1, const TPix& a2, const TPix& a3, const TPix& a4,
-                    const TPix& a5, const TPix& a6, const TPix& a7) {
+                                   const TPix& a5, const TPix& a6, const TPix& a7) {
                 return CpuImage(ci::CImg<TPix>::vector(a0, a1, a2, a3, a4, a5, a6, a7));
 
             }
 
             static CpuImage vector(const TPix& a0, const TPix& a1, const TPix& a2, const TPix& a3, const TPix& a4,
-                    const TPix& a5, const TPix& a6, const TPix& a7, const TPix& a8) {
+                                   const TPix& a5, const TPix& a6, const TPix& a7, const TPix& a8) {
                 return CpuImage(ci::CImg<TPix>::vector(a0, a1, a2, a3, a4, a5, a6, a7, a8));
 
             }
 
             static CpuImage vector(const TPix& a0, const TPix& a1, const TPix& a2, const TPix& a3, const TPix& a4,
-                    const TPix& a5, const TPix& a6, const TPix& a7, const TPix& a8, const TPix& a9) {
+                                   const TPix& a5, const TPix& a6, const TPix& a7, const TPix& a8, const TPix& a9) {
                 return CpuImage(ci::CImg<TPix>::vector(a0, a1, a2, a3, a4, a5, a6, a7, a8, a9));
 
             }
 
             static CpuImage vector(const TPix& a0, const TPix& a1, const TPix& a2, const TPix& a3, const TPix& a4,
-                    const TPix& a5, const TPix& a6, const TPix& a7, const TPix& a8, const TPix& a9, const TPix& a10) {
+                                   const TPix& a5, const TPix& a6, const TPix& a7, const TPix& a8, const TPix& a9, const TPix& a10) {
                 return CpuImage(ci::CImg<TPix>::vector(a0, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10));
 
             }
 
             static CpuImage vector(const TPix& a0, const TPix& a1, const TPix& a2, const TPix& a3, const TPix& a4,
-                    const TPix& a5, const TPix& a6, const TPix& a7, const TPix& a8, const TPix& a9, const TPix& a10,
-                    const TPix& a11) {
+                                   const TPix& a5, const TPix& a6, const TPix& a7, const TPix& a8, const TPix& a9, const TPix& a10,
+                                   const TPix& a11) {
                 return CpuImage(ci::CImg<TPix>::vector(a0, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11));
 
             }
 
             static CpuImage vector(const TPix& a0, const TPix& a1, const TPix& a2, const TPix& a3, const TPix& a4,
-                    const TPix& a5, const TPix& a6, const TPix& a7, const TPix& a8, const TPix& a9, const TPix& a10,
-                    const TPix& a11, const TPix& a12) {
+                                   const TPix& a5, const TPix& a6, const TPix& a7, const TPix& a8, const TPix& a9, const TPix& a10,
+                                   const TPix& a11, const TPix& a12) {
                 return CpuImage(ci::CImg<TPix>::vector(a0, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12));
 
             }
 
             static CpuImage vector(const TPix& a0, const TPix& a1, const TPix& a2, const TPix& a3, const TPix& a4,
-                    const TPix& a5, const TPix& a6, const TPix& a7, const TPix& a8, const TPix& a9, const TPix& a10,
-                    const TPix& a11, const TPix& a12, const TPix& a13) {
+                                   const TPix& a5, const TPix& a6, const TPix& a7, const TPix& a8, const TPix& a9, const TPix& a10,
+                                   const TPix& a11, const TPix& a12, const TPix& a13) {
                 return CpuImage(ci::CImg<TPix>::vector(a0, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13));
             }
 
             static CpuImage vector(const TPix& a0, const TPix& a1, const TPix& a2, const TPix& a3, const TPix& a4,
-                    const TPix& a5, const TPix& a6, const TPix& a7, const TPix& a8, const TPix& a9, const TPix& a10,
-                    const TPix& a11, const TPix& a12, const TPix& a13, const TPix& a14) {
+                                   const TPix& a5, const TPix& a6, const TPix& a7, const TPix& a8, const TPix& a9, const TPix& a10,
+                                   const TPix& a11, const TPix& a12, const TPix& a13, const TPix& a14) {
                 return CpuImage(ci::CImg<TPix>::vector(a0, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14));
             }
 
             static CpuImage vector(const TPix& a0, const TPix& a1, const TPix& a2, const TPix& a3, const TPix& a4,
-                    const TPix& a5, const TPix& a6, const TPix& a7, const TPix& a8, const TPix& a9, const TPix& a10,
-                    const TPix& a11, const TPix& a12, const TPix& a13, const TPix& a14, const TPix& a15) {
+                                   const TPix& a5, const TPix& a6, const TPix& a7, const TPix& a8, const TPix& a9, const TPix& a10,
+                                   const TPix& a11, const TPix& a12, const TPix& a13, const TPix& a14, const TPix& a15) {
                 return CpuImage(ci::CImg<TPix>::vector(a0, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15));
             }
 
@@ -751,25 +751,25 @@ namespace karabo {
             }
 
             static CpuImage matrix(const TPix& a0, const TPix& a1, const TPix& a2,
-                    const TPix& a3, const TPix& a4, const TPix& a5,
-                    const TPix& a6, const TPix& a7, const TPix& a8) {
+                                   const TPix& a3, const TPix& a4, const TPix& a5,
+                                   const TPix& a6, const TPix& a7, const TPix& a8) {
                 return CpuImage(ci::CImg<TPix>::matrix(a0, a1, a2, a3, a4, a5, a6, a7, a8));
             }
 
             static CpuImage matrix(const TPix& a0, const TPix& a1, const TPix& a2, const TPix& a3,
-                    const TPix& a4, const TPix& a5, const TPix& a6, const TPix& a7,
-                    const TPix& a8, const TPix& a9, const TPix& a10, const TPix& a11,
-                    const TPix& a12, const TPix& a13, const TPix& a14, const TPix& a15) {
+                                   const TPix& a4, const TPix& a5, const TPix& a6, const TPix& a7,
+                                   const TPix& a8, const TPix& a9, const TPix& a10, const TPix& a11,
+                                   const TPix& a12, const TPix& a13, const TPix& a14, const TPix& a15) {
                 return CpuImage(ci::CImg<TPix>::matrix(a0, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15));
             }
 
             static CpuImage matrix(const TPix& a0, const TPix& a1, const TPix& a2, const TPix& a3, const TPix& a4,
-                    const TPix& a5, const TPix& a6, const TPix& a7, const TPix& a8, const TPix& a9,
-                    const TPix& a10, const TPix& a11, const TPix& a12, const TPix& a13, const TPix& a14,
-                    const TPix& a15, const TPix& a16, const TPix& a17, const TPix& a18, const TPix& a19,
-                    const TPix& a20, const TPix& a21, const TPix& a22, const TPix& a23, const TPix& a24) {
+                                   const TPix& a5, const TPix& a6, const TPix& a7, const TPix& a8, const TPix& a9,
+                                   const TPix& a10, const TPix& a11, const TPix& a12, const TPix& a13, const TPix& a14,
+                                   const TPix& a15, const TPix& a16, const TPix& a17, const TPix& a18, const TPix& a19,
+                                   const TPix& a20, const TPix& a21, const TPix& a22, const TPix& a23, const TPix& a24) {
                 return CpuImage(ci::CImg<TPix>::matrix(a0, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15,
-                        a16, a17, a18, a19, a20, a21, a22, a23, a24));
+                                                       a16, a17, a18, a19, a20, a21, a22, a23, a24));
             }
 
             static CpuImage rotationMatrix3x3(const float x, const float y, const float z, const float w, const bool isQuaternionData = false) {
@@ -779,7 +779,7 @@ namespace karabo {
             /***************************************
              *        Convenience Functions        *
              ***************************************/
-            
+
             /**
              * Computes the sum of all pixels
              * @return total sum of all pixels
@@ -787,13 +787,13 @@ namespace karabo {
             double getSum() const {
                 return m_cimg.sum();
             }
-            
+
             double getMean() const {
                 return m_cimg.mean();
             }
-            
-            
-            
+
+
+
             /***************************************
              *          Value Manipulation         *
              ***************************************/
@@ -835,15 +835,11 @@ namespace karabo {
                 m_cimg.permute_axes(fullOrder.c_str());
                 return *this;
             }
-            
+
             CpuImage& getPermuteAxis(const std::string& order) {
                 CpuImage ret(*this);
                 return ret.permuteAxis(order);
             }
-            
-            
-            
-            
 
             /**
              * Prints image information to console
@@ -1024,13 +1020,13 @@ namespace karabo {
         typedef CpuImage<int> CpuImgI;
         typedef CpuImage<float> CpuImgF;
         typedef CpuImage<double> CpuImgD;
-        
+
         typedef karabo::xms::Input<CpuImgD> InputCpuImgD;
         typedef karabo::xms::Output<CpuImgD> OutputCpuImgD;
-        
-        typedef  karabo::xms::Input<CpuImgI> InputCpuImgI;
-        typedef  karabo::xms::Output<CpuImgI> OutputCpuImgI;
-        
+
+        typedef karabo::xms::Input<CpuImgI> InputCpuImgI;
+        typedef karabo::xms::Output<CpuImgI> OutputCpuImgI;
+
         typedef karabo::util::Hash Config;
 
 

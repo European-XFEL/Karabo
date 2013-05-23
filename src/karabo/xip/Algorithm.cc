@@ -17,6 +17,7 @@ using namespace karabo::xms;
 namespace karabo {
     namespace xip {
 
+
         void Algorithm::expectedParameters(karabo::util::Schema& expected) {
 
             SLOT_ELEMENT(expected).key("slotStartRun")
@@ -38,6 +39,7 @@ namespace karabo {
                     .commit();
         }
 
+
         void Algorithm::configure(const karabo::util::Hash & input) {
 
             SLOT0(slotStartRun);
@@ -51,10 +53,12 @@ namespace karabo {
 
         }
 
+
         void Algorithm::onStartRun() {
 
             connectDeviceInputs();
         }
+
 
         bool Algorithm::canCompute() {
             // Loop channels
@@ -78,11 +82,13 @@ namespace karabo {
             return true;
         }
 
+
         void Algorithm::computingStateOnEntry() {
             if (m_computeThread.joinable()) m_computeThread.join();
             notifyOutputChannelsForPossibleRead();
             m_computeThread = boost::thread(boost::bind(&karabo::xip::Algorithm::doCompute, this));
         }
+
 
         void Algorithm::computingStateOnExit() {
             for (OutputChannels::const_iterator it = m_outputChannels.begin(); it != m_outputChannels.end(); ++it) {
@@ -93,10 +99,12 @@ namespace karabo {
             }
         }
 
+
         void Algorithm::doCompute() {
             this->compute();
             computeFinished();
         }
+
 
         void Algorithm::connectDeviceInputs() {
             // Loop channels
@@ -127,6 +135,7 @@ namespace karabo {
             }
         }
 
+
         void Algorithm::notifyOutputChannelsForPossibleRead() {
             // Loop channels
             for (InputChannels::const_iterator it = m_inputChannels.begin(); it != m_inputChannels.end(); ++it) {
@@ -136,6 +145,7 @@ namespace karabo {
                 }
             }
         }
+
 
         void Algorithm::notifyOutputChannelForPossibleRead(const AbstractInput::Pointer& channel) {
             std::vector<karabo::util::Hash> outputChannels = channel->getConnectedOutputChannels();
@@ -155,6 +165,7 @@ namespace karabo {
             }
         }
 
+
         void Algorithm::slotGetOutputChannelInformation(const std::string& ioChannelId, const std::string& sendersDeviceServerInstanceId) {
             OutputChannels::const_iterator it = m_outputChannels.find(ioChannelId);
             if (it != m_outputChannels.end()) {
@@ -169,6 +180,7 @@ namespace karabo {
                 reply(false, karabo::util::Hash());
             }
         }
+
 
         void Algorithm::slotInputChannelCanRead(const std::string& ioChannelId, const std::string& inputChannelInstanceId) {
             OutputChannels::const_iterator it = m_outputChannels.find(ioChannelId);

@@ -26,22 +26,8 @@
 #include "h5/Format.hh"
 
 
-
-
-
-
-
-
-
-
-/**
- * The main European XFEL namespace
- */
 namespace karabo {
-
-    /**
-     * Namespace for package packageName
-     */
+ 
     namespace io {
 
         /**
@@ -95,9 +81,7 @@ namespace karabo {
 
             void write(const T& data) {
                 try {
-                    karabo::util::Hash config;
-                    karabo::io::h5::Format::discoverFromHash(data, config);
-                    karabo::io::h5::Format::Pointer dataFormat = karabo::io::h5::Format::createFormat(config);
+                    karabo::io::h5::Format::Pointer dataFormat = karabo::io::h5::Format::discover(data);
                     karabo::io::h5::File file(m_filename.string());
                     file.open(m_writeMode);
                     karabo::io::h5::Table::Pointer t = file.createTable("/root", dataFormat, 1);

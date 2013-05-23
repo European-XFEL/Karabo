@@ -14,7 +14,7 @@ namespace exfel {
     namespace xip {
 
         boost::uuids::random_generator Statics::m_uuidGenerator;
-        
+
         unsigned int Statics::m_serverPorts = 0;
 
     }

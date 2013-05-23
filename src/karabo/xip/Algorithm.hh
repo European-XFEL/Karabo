@@ -22,7 +22,7 @@ namespace karabo {
     namespace xip {
 
         class Algorithm : public karabo::core::Device {
-            
+
         public:
 
             KARABO_CLASSINFO(Algorithm, "Algorithm", "1.0")
@@ -41,19 +41,20 @@ namespace karabo {
              * @param expected [out] Description of expected parameters for this object (Schema)
              */
             static void expectedParameters(karabo::util::Schema& expected);
-            
+
 
             /**
              * If this object is constructed using the factory/configuration system this method is called
              * @param input Validated (@see expectedParameters) and default-filled configuration
              */
             void configure(const karabo::util::Hash & input);
-            
-           
-            
-            
-             /**************************************************************/
+
+
+
+
+            /**************************************************************/
             /*                        Events                              */
+
             /**************************************************************/
 
             KARABO_FSM_EVENT2(m_fsm, ErrorFoundEvent, onException, std::string, std::string)
@@ -63,23 +64,23 @@ namespace karabo {
             KARABO_FSM_EVENT0(m_fsm, ComputeEvent, slotCompute)
 
             KARABO_FSM_EVENT0(m_fsm, StartRunEvent, slotStartRun)
-            
+
             KARABO_FSM_EVENT0(m_fsm, EndOfStreamEvent, slotEndOfStream)
-            
+
             KARABO_FSM_EVENT0(m_fsm, PauseEvent, slotPause)
-            
+
             KARABO_FSM_EVENT0(m_fsm, AbortEvent, slotAbort)
-            
+
             KARABO_FSM_EVENT0(m_fsm, IOEvent, slotIOEvent)
-            
+
             KARABO_FSM_EVENT0(m_fsm, ComputeFinishedEvent, computeFinished)
-            
+
             KARABO_FSM_EVENT0(m_fsm, ResetEvent, slotReset)
 
             /**************************************************************/
             /*                        States                              */
             /**************************************************************/
-            
+
             KARABO_FSM_STATE(Idle)
 
             KARABO_FSM_STATE(WaitingIO)
@@ -87,15 +88,15 @@ namespace karabo {
             KARABO_FSM_STATE(Ready)
 
             KARABO_FSM_STATE_V_EE(Computing, computingStateOnEntry, computingStateOnExit)
-            
+
             KARABO_FSM_STATE(Paused)
-            
+
             KARABO_FSM_STATE(Finished)
-            
+
             KARABO_FSM_STATE(Aborted)
-            
+
             KARABO_FSM_STATE(Ok)
-            
+
             KARABO_FSM_STATE(Error)
 
             /**************************************************************/
@@ -103,11 +104,11 @@ namespace karabo {
             /**************************************************************/
 
             KARABO_FSM_V_ACTION0(StartRunAction, onStartRun)
-            
+
             /**************************************************************/
             /*                           Guards                           */
             /**************************************************************/
-            
+
             KARABO_FSM_V_GUARD0(CanCompute, canCompute)
 
             /**************************************************************/
@@ -132,7 +133,7 @@ namespace karabo {
             Row< Ok, ErrorFoundEvent, Error, ErrorFoundAction, none >,
             Row< Error, ResetEvent, Ok, none, none >
             KARABO_FSM_TABLE_END
- 
+
             //                         Name       Transition-Table      Initial-State         Context
             KARABO_FSM_STATE_MACHINE(StateMachine, TransitionTable, KARABO_FSM_REGION(Ok, Idle), Self)
 
@@ -142,45 +143,45 @@ namespace karabo {
                 KARABO_FSM_SET_CONTEXT_TOP(this, m_fsm)
                 KARABO_FSM_START_MACHINE(m_fsm)
             }
-            
-             void run() {
-                 startStateMachine();
-                 runEventLoop(); // This will block
-             }
 
-             virtual void compute() = 0;
-            
-           
-            
+            void run() {
+                startStateMachine();
+                runEventLoop(); // This will block
+            }
+
+            virtual void compute() = 0;
+
+
+
         private: //functions
-            
+
             void connectDeviceInputs();
-            
+
             void slotGetOutputChannelInformation(const std::string& ioChannelId, const std::string& senderInstanceId);
-            
+
             void slotInputChannelCanRead(const std::string& ioChannelId, const std::string& senderInstanceId);
-            
+
             void doCompute();
-            
+
             void notifyOutputChannelsForPossibleRead();
-            
+
             void notifyOutputChannelForPossibleRead(const AbstractInput::Pointer& channel);
-            
+
             void canReadEvent(const AbstractInput::Pointer& channel) {
                 notifyOutputChannelForPossibleRead(channel);
             }
-            
-            
 
-           
+
+
+
 
         private: // members
-            
+
             KARABO_FSM_DECLARE_MACHINE(StateMachine, m_fsm);
 
             InputChannels m_inputChannels;
             OutputChannels m_outputChannels;
-            
+
             boost::thread m_computeThread;
 
         };

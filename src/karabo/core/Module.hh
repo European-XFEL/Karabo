@@ -21,37 +21,38 @@
  */
 namespace karabo {
 
-  namespace core {
+    namespace core {
 
-    /**
-     * The Module class.
-     */
-    class Module {
-    public:
+        /**
+         * The Module class.
+         */
+        class Module {
 
-      KARABO_CLASSINFO(Module, "Module", "1.0")
-      KARABO_FACTORY_BASE_CLASS
-      
-      Module() {
-      }
+        public:
 
-      static void expectedParameters(karabo::util::Schema& expected) {
-      }
+            KARABO_CLASSINFO(Module, "Module", "1.0")
+            KARABO_FACTORY_BASE_CLASS
 
-      virtual ~Module() {
-      }
+            Module() {
+            }
 
-      virtual void compute() = 0;
-      const std::string getName() const;
+            static void expectedParameters(karabo::util::Schema& expected) {
+            }
 
-    protected:
+            virtual ~Module() {
+            }
 
-    private:
-      
-    };
+            virtual void compute() = 0;
+            const std::string getName() const;
+
+        protected:
+
+        private:
+
+        };
 
 
-  } // namespace core
+    } // namespace core
 } // namespace karabo
 
 KARABO_REGISTER_FACTORY_BASE_HH(karabo::core::Module, TEMPLATE_CORE, DECLSPEC_CORE)

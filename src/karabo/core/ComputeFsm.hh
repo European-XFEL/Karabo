@@ -18,6 +18,7 @@ namespace karabo {
     namespace core {
 
         class ComputeFsm : public karabo::core::Device {
+
         public:
 
             KARABO_CLASSINFO(ComputeFsm, "ComputeFsm", "1.0")
@@ -28,13 +29,13 @@ namespace karabo {
 
             virtual ~ComputeFsm() {
             }
-            
+
             static void expectedParameters(karabo::util::Schema& expected);
-              
+
 
             void configure(const karabo::util::Hash& input);
 
-        
+
         public:
 
             /**************************************************************/
@@ -55,9 +56,9 @@ namespace karabo {
             KARABO_FSM_EVENT0(m_fsm, PauseEvent, slotPause)
 
             KARABO_FSM_EVENT0(m_fsm, AbortEvent, abort)
-            
+
             KARABO_FSM_EVENT0(m_fsm, ComputeFinishedEvent, computeFinished)
-            
+
             KARABO_FSM_EVENT0(m_fsm, ResetEvent, slotReset)
 
             /**************************************************************/
@@ -71,7 +72,7 @@ namespace karabo {
             KARABO_FSM_STATE_V_E(Ready, readyStateOnEntry)
 
             KARABO_FSM_STATE_V_EE(Computing, computingStateOnEntry, computingStateOnExit)
-            
+
             KARABO_FSM_STATE_V_EE(WaitingIO, waitingIOOnEntry, waitingIOOnExit)
 
             KARABO_FSM_STATE(Paused)
@@ -99,7 +100,7 @@ namespace karabo {
             /**************************************************************/
             /*                      AllOkState Machine                    */
             /**************************************************************/
-            
+
             //  Source-State      Event    Target-State    Action     Guard
             KARABO_FSM_TABLE_BEGIN(TransitionTable)
             Row< Idle, StartRunEvent, ConnectingIO, StartRunAction, none >,
@@ -109,7 +110,7 @@ namespace karabo {
             Row< Ready, AbortEvent, Aborted, none, none >,
             Row< Computing, ComputeFinishedEvent, WaitingIO, none, none >,
             Row< Computing, AbortEvent, Aborted, none, none >,
-            Row< WaitingIO, none, Ready, none, none >, 
+            Row< WaitingIO, none, Ready, none, none >,
             Row< Aborted, ResetEvent, Idle, none, none >,
             Row< Finished, ResetEvent, Idle, none, none >,
             Row< Ok, ErrorFoundEvent, Error, ErrorFoundAction, none >,
@@ -128,42 +129,43 @@ namespace karabo {
 
 
             // Override this function if you need to handle the reconfigured data (e.g. send to a hardware)
+
             virtual void onReconfigure(karabo::util::Hash& incomingReconfiguration) {
             }
 
             void run();
-            
+
             virtual void compute() = 0;
-            
+
             bool isAborted();
-            
+
             void onInputAvailable(const karabo::xms::AbstractInput::Pointer&);
-            
+
             void onOutputPossible(const karabo::xms::AbstractOutput::Pointer&);
 
         private: // functions
 
-            
+
             void slotAbort();
-            
+
             bool canReadFromAllInputChannels() const;
-            
+
             bool canWriteToAllOutputChannels() const;
-            
+
             void doCompute();
-            
+
             void updateChannels();
-            
+
         private: // members
-            
-            
+
+
 
             KARABO_FSM_DECLARE_MACHINE(StateMachine, m_fsm);
-            
+
             bool m_isAborted;
-          
+
             boost::thread m_computeThread;
-            
+
             karabo::util::Hash m_channels;
 
         };

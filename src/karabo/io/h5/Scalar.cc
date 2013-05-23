@@ -5,11 +5,11 @@
  *
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
-
-
+ 
+ 
 #include "Scalar.hh"
 using namespace karabo::io::h5;
-      
+ 
 namespace karabo {
     namespace io { 
         namespace h5 {  

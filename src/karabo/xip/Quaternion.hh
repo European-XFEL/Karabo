@@ -19,15 +19,15 @@ namespace karabo {
     namespace xip {
 
         class Quaternion {
-            
+
         public:
 
             Quaternion(const double x, const double y, const double z, const double w) : m_x(x), m_y(y), m_z(z), m_w(w) {
             }
-            
+
             template <class TPix>
             explicit Quaternion(const CpuImage<TPix> image) {
-                if(image.size() < 4) throw IMAGE_DIMENSION_EXCEPTION("Quaternion construction expects at least four elements");
+                if (image.size() < 4) throw IMAGE_DIMENSION_EXCEPTION("Quaternion construction expects at least four elements");
                 m_x = image[0];
                 m_y = image[1];
                 m_z = image[2];
@@ -67,7 +67,7 @@ namespace karabo {
                 m(3, 3) = 1.0;
                 return m;
             }
-            
+
             static CpuImage<double> getTransform(const double x, const double y, const double z, const double w) {
                 CpuImage<double> m(4, 4);
                 double Nq = x * x + y * y + z * z + w * w;

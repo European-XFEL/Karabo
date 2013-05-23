@@ -18,6 +18,7 @@ namespace karabo {
 
         template <class TPix>
         class NormalizationProcessor : public SingleProcessor< CpuImage<TPix> > {
+
         public:
 
             KARABO_CLASSINFO(NormalizationProcessor, "Normalization", "1.0")

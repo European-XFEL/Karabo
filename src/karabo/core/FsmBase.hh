@@ -13,28 +13,29 @@
 
 namespace karabo {
     namespace core {
-        
-        
+
         class BaseFsm : public virtual karabo::xms::SignalSlotable {
-            
+
         public:
-            
-            static void expectedParameters(const karabo::util::Schema&) {}
-            
-            virtual void initFsmSlots() {}
-            
+
+            static void expectedParameters(const karabo::util::Schema&) {
+            }
+
+            virtual void initFsmSlots() {
+            }
+
             virtual void errorFound(const std::string&, const std::string&) = 0;
-            
+
             virtual void errorFoundAction(const std::string&, const std::string&) = 0;
-            
+
             virtual void onStateUpdate(const std::string& currentState) = 0;
-            
+
             virtual void startFsm() = 0;
-            
+
             KARABO_FSM_ON_EXCEPTION(errorFound);
-            
+
             KARABO_FSM_NO_TRANSITION_PV_ACTION(noStateTransition);
-            
+
             KARABO_FSM_ON_CURRENT_STATE_CHANGE(onStateUpdate);
 
         };

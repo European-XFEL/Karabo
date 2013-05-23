@@ -14,27 +14,28 @@
 
 namespace karabo {
     namespace core {
-        
+
         using namespace log4cpp;
         using namespace std;
         using namespace karabo::util;
         using namespace karabo::io;
-        
-        karabo::util::Hash HashDatabase::m_database; 
+
+        karabo::util::Hash HashDatabase::m_database;
         boost::mutex HashDatabase::m_databaseMutex;
-        
-        
+
+
         bool HashDatabase::readDatabase() {
-            
+
             boost::mutex::scoped_lock lock(m_databaseMutex);
-            
+
             if (boost::filesystem::exists(KARABO_DB_FILE)) {
                 karabo::io::loadFromFile<Hash>(m_database, KARABO_DB_FILE);
                 return true;
             }
             return false;
         }
-        
+
+
         void HashDatabase::setupDatabase() {
 
             boost::mutex::scoped_lock lock(m_databaseMutex);
@@ -99,18 +100,19 @@ namespace karabo {
             m_database.set("Database", tables);
 
         }
-        
-        
+
+
         void HashDatabase::saveDatabase() {
             boost::mutex::scoped_lock lock(m_databaseMutex);
             karabo::io::saveToFile<Hash>(m_database, KARABO_DB_FILE);
         }
-        
+
+
         unsigned int HashDatabase::insert(const std::string& tableName, karabo::util::Hash keyValuePairs) {
             boost::mutex::scoped_lock lock(m_databaseMutex);
             Hash& database = m_database.get<Hash > (KARABO_DB_NAME);
             vector<Hash>& table = database.get<vector<Hash> > (tableName);
-            
+
             unsigned int id = 0;
             if (!table.empty()) {
                 id = table.back().get<unsigned int>("id");

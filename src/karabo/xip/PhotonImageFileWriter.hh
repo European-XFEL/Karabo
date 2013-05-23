@@ -29,6 +29,7 @@ namespace exfel {
 
         template <class TPix>
         class PhotonImageFileWriter /*: public Output< CpuImage<TPix> >*/ {
+
         public:
 
             EXFEL_CLASSINFO(PhotonImageFileWriter, "PhotonFile", "1.0")
@@ -51,7 +52,7 @@ namespace exfel {
                         .displayedName("Filename")
                         .assignmentOptional().defaultValue("photons.dat")
                         .commit();
-                
+
                 FLOAT_ELEMENT(expected).key("meanTotalIntensity")
                         .description("Mean total intensity")
                         .displayedName("Mean Intensity")
@@ -73,7 +74,7 @@ namespace exfel {
                     //std::ofstream m_os(m_filename.string().c_str(), std::ios::trunc);
                     std::vector<size_t> ones;
                     std::vector<std::pair<size_t, TPix> > multis;
-                    
+
                     // Loop all images
                     for (size_t i = 0; i < image.size(); ++i) {
                         if (image[i] == 1) {
@@ -87,7 +88,7 @@ namespace exfel {
                     RETHROW_AS(IO_EXCEPTION("Problems writing image " + m_filename.string()));
                 }
             }
-            
+
             void update() {
                 m_os.close();
             }

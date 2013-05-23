@@ -12,13 +12,14 @@
 
 using namespace exfel::core;
 using namespace exfel::xip;
-        
+
+
 int main(int argc, char** argv) {
-    try {    
-        
+    try {
+
         Algorithm::Pointer algorithm = Runner<Algorithm>::instantiate(argc, argv);
         if (algorithm) algorithm->compute();
-                
+
     } catch (const exfel::util::Exception& e) {
         std::cout << e;
     } catch (...) {

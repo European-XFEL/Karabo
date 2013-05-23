@@ -17,75 +17,87 @@
 
 namespace karabo {
 
-  namespace core {
+    namespace core {
 
-    /**
-     * The StateMachine class.
-     */
-    class DeviceServerLogic : public StateMachine {
+        /**
+         * The StateMachine class.
+         */
+        class DeviceServerLogic : public StateMachine {
 
-    public:
+        public:
 
-      KARABO_CLASSINFO("DeviceServerStateMachine");
+            KARABO_CLASSINFO("DeviceServerStateMachine");
 
-      DeviceServerLogic(){}
+            DeviceServerLogic() {
+            }
 
-      void startStateMachine();
+            void startStateMachine();
 
-      /**************************************************************/
-      /*                        EventSlots                          */
-      /**************************************************************/
+            /**************************************************************/
+            /*                        EventSlots                          */
+            /**************************************************************/
 
-      void slotErrorFoundEvent(const std::string&, const std::string&);
+            void slotErrorFoundEvent(const std::string&, const std::string&);
 
-      void slotEndErrorEvent();
+            void slotEndErrorEvent();
 
-      void slotReceiveNameEvent(const std::string&);
+            void slotReceiveNameEvent(const std::string&);
 
-      void slotNewPluginAvailableEvent();
+            void slotNewPluginAvailableEvent();
 
-      void slotInbuildDevicesAvailableEvent();
+            void slotInbuildDevicesAvailableEvent();
 
-      void slotStartDeviceEvent(const karabo::util::Config&);
+            void slotStartDeviceEvent(const karabo::util::Config&);
 
-      void slotTimeoutEvent(const std::string&);
+            void slotTimeoutEvent(const std::string&);
 
-      /**************************************************************/
-      /*                        States                              */
-      /**************************************************************/
+            /**************************************************************/
+            /*                        States                              */
 
-      virtual void errorStateOnEntry() {}
+            /**************************************************************/
 
-      virtual void waitingForNameStateOnEntry() {}
+            virtual void errorStateOnEntry() {
+            }
 
-      virtual void idleStateOnEntry() {}
+            virtual void waitingForNameStateOnEntry() {
+            }
 
-      virtual void servingStateOnEntry() {}
+            virtual void idleStateOnEntry() {
+            }
 
-      /**************************************************************/
-      /*                    Transition Actions                      */
-      /**************************************************************/
+            virtual void servingStateOnEntry() {
+            }
 
-      virtual void errorFoundAction(const std::string&, const std::string&) {}
+            /**************************************************************/
+            /*                    Transition Actions                      */
 
-      virtual void endErrorAction() {}
+            /**************************************************************/
 
-      virtual void setNameAction(const std::string&) {}
+            virtual void errorFoundAction(const std::string&, const std::string&) {
+            }
 
-      virtual void notifyNewDeviceAction() {}
+            virtual void endErrorAction() {
+            }
 
-      virtual void startDeviceAction(const karabo::util::Config&) {}
+            virtual void setNameAction(const std::string&) {
+            }
 
-    private:
+            virtual void notifyNewDeviceAction() {
+            }
 
-      void declareEventSlots();
+            virtual void startDeviceAction(const karabo::util::Config&) {
+            }
 
-      struct Impl;
-      Impl* m_impl;
+        private:
 
-    };
+            void declareEventSlots();
 
-  } // namespace core
+            struct Impl;
+            Impl* m_impl;
+
+        };
+
+    } // namespace core
 } // namespace karabo
 
 #endif 

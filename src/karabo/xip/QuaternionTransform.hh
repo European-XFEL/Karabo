@@ -28,6 +28,7 @@ namespace karabo {
 
         template <class TPix>
         class QuaternionTransform : public SingleProcessor< CpuImage<TPix> > {
+
         public:
 
             QuaternionTransform(double x, double y, double z, double w);

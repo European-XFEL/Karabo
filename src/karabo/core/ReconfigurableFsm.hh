@@ -16,7 +16,7 @@
 
 namespace karabo {
     namespace core {
-        
+
         /**
          * ReconfigurableFsm
          * 
@@ -39,6 +39,7 @@ namespace karabo {
          * 
          */
         class ReconfigurableFsm : public karabo::core::Device {
+
         public:
 
             KARABO_CLASSINFO(ReconfigurableFsm, "ReconfigurableFsm", "1.0")
@@ -53,7 +54,7 @@ namespace karabo {
             static void expectedParameters(karabo::util::Schema& expected);
 
             void configure(const karabo::util::Hash& input);
-            
+
             virtual void run();
 
         public:
@@ -80,7 +81,7 @@ namespace karabo {
             /*                    Transition Actions                      */
             /**************************************************************/
 
-        
+
 
             /**************************************************************/
             /*                      Top Machine                         */

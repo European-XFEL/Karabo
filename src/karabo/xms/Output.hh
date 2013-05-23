@@ -23,10 +23,11 @@ namespace karabo {
 
         template <class T>
         class Output : public AbstractOutput {
+
         public:
 
             KARABO_CLASSINFO(Output, "Output", "1.0")
-            
+
             KARABO_FACTORY_BASE_CLASS
 
             Output() {
@@ -34,13 +35,13 @@ namespace karabo {
 
             virtual ~Output() {
             }
-            
+
             /**
              * Necessary method as part of the factory/configuration system
              * @param expected [out] Description of expected parameters for this object (Schema)
              */
             static void expectedParameters(karabo::util::Schema& expected) {
-                
+
                 AbstractOutput::expectedParameters(expected);
             }
 
@@ -50,11 +51,11 @@ namespace karabo {
              */
             void configure(const karabo::util::Hash & input) {
             }
-            
+
             virtual void write(const T& object) = 0;
         };
-        
-        
+
+
         typedef karabo::xms::Output<karabo::util::Hash > HashOutput;
         typedef karabo::xms::Output<std::string> FileWrapOutput;
     }

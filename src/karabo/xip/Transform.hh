@@ -15,15 +15,13 @@
 
 namespace karabo {
     namespace xip {
-        
+
         class Transform : private Image<double, CPU> {
-            
-            
-            
+
         };
-        
-        
-        
+
+
+
     }
 }
 

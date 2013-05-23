@@ -11,7 +11,7 @@
 
 namespace karabo {
     namespace xip {
-      
+
         KARABO_REGISTER_FACTORY_CC(SingleProcessor<CpuImgD>, NormalizationProcessor<double>)
 
     }

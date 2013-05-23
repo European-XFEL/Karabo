@@ -28,6 +28,7 @@ namespace karabo {
          * The Statics class.
          */
         class Statics {
+
         public:
 
             /**
@@ -45,11 +46,11 @@ namespace karabo {
             static std::string generateUUID() {
                 return boost::uuids::to_string(m_uuidGenerator());
             }
-            
+
             static unsigned int generateServerPort() {
                 return 10000 + ((m_serverPorts++) % 50000);
             }
-            
+
             static int randomNumberPoisson(double m) {
                 int i = 0;
                 double p, q, r;
@@ -66,15 +67,15 @@ namespace karabo {
 
                 return i;
             }
-            
-       
-            
+
+
+
         private: // members
-            
+
             static boost::uuids::random_generator m_uuidGenerator;
-            
+
             static unsigned int m_serverPorts;
-            
+
         private: // functions
 
         };

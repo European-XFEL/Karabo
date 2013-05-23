@@ -21,6 +21,7 @@ namespace karabo {
 
         template <class TPix>
         class CpuImageList : public std::deque< CpuImage<TPix> > {
+
         public:
 
             CpuImageList() : std::deque<CpuImage<TPix> >() {
@@ -49,29 +50,29 @@ namespace karabo {
                     }
                 }
             }
-            
+
             void createMetaDataHeader(karabo::util::Hash& header) const {
                 if (!this->empty()) {
                     const CpuImage<TPix>& first = this->front();
-                    header.set("dimX", (unsigned int)first.dimX());
-                    header.set("dimY", (unsigned int)first.dimY());
-                    header.set("dimZ", (unsigned int)first.dimZ());
+                    header.set("dimX", (unsigned int) first.dimX());
+                    header.set("dimY", (unsigned int) first.dimY());
+                    header.set("dimZ", (unsigned int) first.dimZ());
                     header.set("nImages", (unsigned int) this->size());
-                    header.set("pixelType", (int)karabo::util::Types::getTypeAsId<TPix>());
+                    header.set("pixelType", (int) karabo::util::Types::getTypeAsId<TPix>());
                 }
             }
 
         };
-        
+
         typedef CpuImageList<int> CpuImgIList;
         typedef CpuImageList<double> CpuImgDList;
-       
+
         typedef Input<CpuImgIList> InputCpuImgIList;
         typedef Output<CpuImgIList> OutputCpuImgIList;
-        
+
         typedef Input<CpuImgDList> InputCpuImgDList;
         typedef Output<CpuImgDList> OutputCpuImgDList;
-        
+
 
     }
 }

@@ -45,15 +45,30 @@ namespace karabo {
                 Scalar(const karabo::util::Hash& input) : Dataset(input, this) {
                     karabo::util::Dims dims;
                     karabo::util::Hash config("dims", dims.toVector());
-                    m_datasetWriter = DatasetWriter<T>::create("DatasetWriter_" + Scalar<T>::classInfo().getClassId(), config);
-                    m_datasetReader = DatasetReader<T>::create("DatasetReader", config);
+                    m_datasetWriter = karabo::util::Configurator<DatasetWriter<T> >::create("DatasetWriter_" + Scalar<T>::classInfo().getClassId(), config, false);
+                    m_datasetReader = karabo::util::Configurator<DatasetReader<T> >::create("DatasetReader", config, false);
                 }
 
-                static const karabo::util::Dims getSingleValueDimensions(){
-                   return karabo::util::Dims();
+                static const karabo::util::Dims getSingleValueDimensions() {
+                    return karabo::util::Dims();
                 }
-                
-            public:
+
+                karabo::util::Types::ReferenceType getMemoryType() const {
+                    return karabo::util::FromType<karabo::util::FromTypeInfo>::from(typeid (T));
+                }
+
+                static hid_t m_dspace;
+
+                static hid_t initDataSpace() {
+                    hsize_t ex[] = {0};
+                    hsize_t maxEx[] = {H5S_UNLIMITED};
+                    return H5Screate_simple(1, ex, maxEx);
+                }
+
+                hid_t createDataspace(const std::vector<hsize_t>& ex, const std::vector<hsize_t>& maxEx) {
+                    //std::clog << "createDataspace: " << m_dspace << std::endl;
+                    return this->m_dspace;
+                }
 
                 virtual ~Scalar() {
                 }
@@ -91,7 +106,7 @@ namespace karabo {
                     } else {
                         T & value = data.get<T > (m_key, '/');
                         m_datasetReader->bind(&value);
-                       
+
                     }
                 }
 
@@ -105,7 +120,7 @@ namespace karabo {
                         m_datasetReader->bind(buf);
                     } else {
                         if (karabo::util::Types::isVector(node->getType())) {
-                            std::vector<T>& buf = node->getValue<std::vector<T> >();                            
+                            std::vector<T>& buf = node->getValue<std::vector<T> >();
                             m_datasetReader->bind(buf);
                         } else if (karabo::util::Types::isPointer(node->getType())) {
                             T* ptr = node->getValue<T* >();
@@ -133,13 +148,6 @@ namespace karabo {
 
                 }
 
-                //
-                //                inline void readSpecificAttributes(karabo::util::Hash& attributes) {
-                //                    attributes.setFromPath(m_key + ".rank", 0);
-                //                    attributes.setFromPath(m_key + ".typeCategory", "Scalar");
-                //                }
-                //
-
 
                 typename karabo::io::h5::DatasetWriter<T>::Pointer m_datasetWriter;
                 typename karabo::io::h5::DatasetReader<T>::Pointer m_datasetReader;
@@ -164,6 +172,8 @@ namespace karabo {
             typedef Scalar<bool> BoolElement;
 
 
+            template<class T>
+            hid_t Scalar<T>::m_dspace = Scalar<T>::initDataSpace();
         }
     }
 }

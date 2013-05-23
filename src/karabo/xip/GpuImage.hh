@@ -36,6 +36,7 @@ namespace karabo {
          */
         template<class TPix>
         class KARABO_API GpuImage {
+
             template <class UPix> friend class GpuImage;
 
             unsigned int m_dimX;
@@ -132,7 +133,7 @@ namespace karabo {
                 GpuImage gpuImg(image.pixelPointer(), image.dimX(), image.dimY(), image.dimZ());
                 this->swap(gpuImg);
             }
-            
+
             template <class TImage>
             TImage to() {
                 TImage tmp(this->dimX(), this->dimY(), this->dimZ());
@@ -253,13 +254,13 @@ namespace karabo {
             inline GpuImage& clear() {
                 return assign();
             }
-            
+
             GpuImage& read(const std::string& filename) {
                 GpuImage tmp(filename);
                 this->swap(tmp);
                 return *this;
             }
-            
+
             const GpuImage& write(const std::string& filename, const int number = -1) const {
                 karabo::util::Hash h("AnyFormat.filename", filename, "AnyFormat.number", number);
                 boost::shared_ptr<Output<CpuImage<TPix> > > out = Output<CpuImage<TPix> >::create(h);
@@ -267,20 +268,21 @@ namespace karabo {
                 out->write(tmp);
                 return *this;
             }
-            
+
             //! Offset function for data pointer position
+
             inline size_t offset(const unsigned int x = 0) const {
                 return x;
             }
-            
+
             inline size_t offset(const unsigned int x, const unsigned int y) const {
                 return x + m_dimX * y;
             }
-            
+
             inline size_t offset(const unsigned int x, const unsigned int y, const unsigned int z) const {
                 return x + m_dimX * (y + m_dimY * z);
             }
-            
+
             /***************************************
              *      Instance Characteristics       *
              ***************************************/
@@ -296,15 +298,15 @@ namespace karabo {
             }
 
             inline int dimX() const {
-                return (int)m_dimX;
+                return (int) m_dimX;
             }
 
             inline int dimY() const {
-                return (int)m_dimY;
+                return (int) m_dimY;
             }
 
             inline int dimZ() const {
-                return (int)m_dimZ;
+                return (int) m_dimZ;
             }
 
             const karabo::util::Hash& getHeader() const {
@@ -331,17 +333,17 @@ namespace karabo {
             inline TPix* pixelPointer() {
                 return m_data;
             }
-            
+
             inline std::string pixelType() const {
                 return karabo::util::Types::getTypeAsString<TPix, karabo::util::Types::FORMAT_INTERN > ();
             }
-            
+
             /***************************************
              *              Operators              *
              ***************************************/
-           
+
             inline const TPix& operator()(const unsigned int x, const unsigned int y = 0, const unsigned int z = 0) const {
-                return m_data[offset(x,y,z)];
+                return m_data[offset(x, y, z)];
             }
 
             inline TPix& operator()(const unsigned int x, const unsigned int y = 0, const unsigned int z = 0) {

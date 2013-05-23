@@ -39,12 +39,12 @@ namespace karabo {
         class BaseDevice : public virtual karabo::xms::SignalSlotable {
 
         public:
-            
+
             KARABO_CLASSINFO(BaseDevice, "BaseDevice", "1.0")
             KARABO_CONFIGURATION_BASE_CLASS;
 
             virtual void run() = 0;
-            
+
             virtual const karabo::util::Hash& getCurrentConfiguration() const = 0;
 
         };
@@ -105,7 +105,7 @@ namespace karabo {
                         .advanced()
                         .init()
                         .commit();
-                
+
                 VECTOR_STRING_ELEMENT(expected).key("visibility")
                         .displayedName("Visibility")
                         .description("Configures who is allowed to see this device at all")
@@ -159,7 +159,7 @@ namespace karabo {
                 // Set deviceId
                 if (configuration.has("deviceId")) configuration.get("deviceId", m_deviceId);
                 else m_deviceId = "__none__"; // TODO generate uuid
-                
+
                  // Setup the validation classes
                 karabo::util::Validator::ValidationRules rules;
                 rules.allowAdditionalKeys = false;
@@ -173,11 +173,11 @@ namespace karabo {
 
                 // Setup device logger
                 m_log = &(karabo::log::Logger::getLogger(m_deviceId)); // TODO use later: "device." + deviceId
-                
+
                 // Instantiate connection
                 karabo::net::BrokerConnection::Pointer connection = karabo::net::BrokerConnection::createChoice("connection", configuration);
-                
-                 // Initialize the SignalSlotable instance
+
+                // Initialize the SignalSlotable instance
                 init(connection, m_deviceId);
 
                 // Initialize FSM slots (the interface of this function must be inherited from the templated FSM)
@@ -196,11 +196,11 @@ namespace karabo {
              * the device into an event driven mode of operation.
              */
             virtual void run() {
-                
+
                 // This initializations or done here and not in the constructor as they involve virtual function calls
                 initClassId();
                 initSchema();
-                
+
                 // Prepare some info further describing this particular instance
                 // status, visibility, owner
                 karabo::util::Hash info("type", "device", "classId", m_classId, "serverId", m_serverId, "visibility", this->get<std::vector<std::string> >("visibility"), "version", Device::classInfo().getVersion(), "host", boost::asio::ip::host_name());
@@ -458,7 +458,7 @@ namespace karabo {
 
         protected: // Functions and Classes
 
-           
+
 
             // This function will polymorphically be called by the FSM template
 
@@ -486,7 +486,7 @@ namespace karabo {
             void initClassId() {
                 m_classId = getClassInfo().getClassId();
             }
-            
+
             void initSchema() {
                 using namespace karabo::util;
                 // The static schema is the regular schema as assembled by parsing the expectedParameters functions
@@ -495,7 +495,7 @@ namespace karabo {
                 // At startup the static schema is identical with the runtime schema
                 m_fullSchema = m_staticSchema;
             }
-            
+
             void onStateUpdate(const std::string& currentState) { // private
                 KARABO_LOG_FRAMEWORK_DEBUG << "onStateUpdate: " << currentState;
                 if (get<std::string>("state") != currentState) {
@@ -524,36 +524,36 @@ namespace karabo {
 
                 SIGNAL3("signalChanged", karabo::util::Hash, string, string); // changeHash, instanceId, classId
                 connectN("", "signalChanged", "*", "slotChanged");
-                
+
                 SIGNAL4("signalErrorFound", string, string, string, string); // timeStamp, shortMsg, longMsg, instanceId
                 connectN("", "signalErrorFound", "*", "slotErrorFound");
-                
+
                 SIGNAL2("signalBadReconfiguration", string, string); // shortMsg, instanceId 
                 connectN("", "signalBadReconfiguration", "*", "slotBadReconfiguration");
-                
+
                 SIGNAL2("signalNoTransition", string, string);
                 connectN("", "signalNoTransition", "*", "slotNoTransition");
-                
+
                 SIGNAL4("signalWarningOrAlarm", string, string, string, string); // timeStamp, message, type, instanceId
-                
+
                 // TODO Deprecate!
                 SIGNAL4("signalWarning", string, string, string, string); // timeStamp, warnMsg, instanceId, priority
                 connectN("", "signalWarning", "*", "slotWarning");
-                
+
                 SIGNAL4("signalAlarm", string, string, string, string); // timeStamp, alarmMsg, instanceId, priority
                 connectN("", "signalAlarm", "*", "slotAlarm");
-                
+
                 SIGNAL3("signalSchemaUpdated", string, string, string); // schema, instanceId, classId
                 connectN("", "signalSchemaUpdated", "*", "slotSchemaUpdated");
-                
+
                 // TODO Deprecate!
                 SIGNAL2("signalDeviceInstanceGone", string, string); // DeviceServerInstanceId, deviceInstanceId
                 connectN("", "signalDeviceInstanceGone", "*", "slotDeviceInstanceGone");
-                
+
                 SIGNAL3("signalProgressUpdated", int, string, string); // Progress value [0,100], label, deviceInstanceIdre
                 connectN("", "progressUpdate", "*", "slotProgressUpdated");
 
-                
+
                 SLOT1(slotReconfigure, karabo::util::Hash)
                 SLOT0(slotRefresh)
                 SLOT1(slotGetSchema, bool); // onlyCurrentState

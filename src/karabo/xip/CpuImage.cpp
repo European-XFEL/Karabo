@@ -11,18 +11,18 @@
 #include "CpuImage.hh"
 
 namespace exfel {
-  namespace xip {
-    
-      //EXFEL_REGISTER_FACTORY_2_CC(AbstractInput, Input<CpuImage<float> >, ImageFileReader<float>)
-              
-      //EXFEL_REGISTER_FACTORY_2_CC(AbstractInput, Input<CpuImage<float> >, DeviceInput<CpuImage<float> >)
-              
-      //EXFEL_REGISTER_FACTORY_2_CC(AbstractOutput, Output<CpuImage<float> >, ImageFileWriter<CpuImage<float> >)
-              
-      //EXFEL_REGISTER_FACTORY_2_CC(AbstractOutput, Output<CpuImage<float> >, DeviceOutput<CpuImage<float> >)
-              
-      
-      
-      
-  } 
-} 
+    namespace xip {
+
+        //EXFEL_REGISTER_FACTORY_2_CC(AbstractInput, Input<CpuImage<float> >, ImageFileReader<float>)
+
+        //EXFEL_REGISTER_FACTORY_2_CC(AbstractInput, Input<CpuImage<float> >, DeviceInput<CpuImage<float> >)
+
+        //EXFEL_REGISTER_FACTORY_2_CC(AbstractOutput, Output<CpuImage<float> >, ImageFileWriter<CpuImage<float> >)
+
+        //EXFEL_REGISTER_FACTORY_2_CC(AbstractOutput, Output<CpuImage<float> >, DeviceOutput<CpuImage<float> >)
+
+
+
+
+    }
+}

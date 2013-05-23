@@ -43,20 +43,33 @@ namespace karabo {
 
 
                 FixedLengthArray(const karabo::util::Hash& input) : Dataset(input, this) {
+                    std::string type = FixedLengthArray<T>::classInfo().getClassId();
+                    if (input.has("type")) {
+                        type = input.get<std::string>("type");
+                    }
+                    m_memoryType = karabo::util::Types::from<karabo::util::FromLiteral>(type);
+                    std::string datasetWriterClassId = "DatasetWriter_" + type;
 
-                    std::string datasetWriterClassId = "DatasetWriter_" + input.get<std::string>("type");
                     KARABO_LOG_FRAMEWORK_TRACE_CF << "dWClassId " << datasetWriterClassId;
                     KARABO_LOG_FRAMEWORK_TRACE_CF << "classId " << Self::classInfo().getClassId();
                     karabo::util::Hash config("dims", dims().toVector());
                     KARABO_LOG_FRAMEWORK_TRACE_CF << "config " << config;
-                    m_datasetWriter = DatasetWriter<T>::create(datasetWriterClassId, config);
-                    m_datasetReader = DatasetReader<T>::create("DatasetReader", config);
+                    m_datasetWriter = karabo::util::Configurator<DatasetWriter<T> >::create(datasetWriterClassId, config, false);
+                    m_datasetReader = karabo::util::Configurator<DatasetReader<T> >::create("DatasetReader", config, false);
 
                 }
 
                 static const karabo::util::Dims getSingleValueDimensions() {
                     return karabo::util::Dims();
                 }
+
+                karabo::util::Types::ReferenceType getMemoryType() const {
+                    return m_memoryType;
+                }
+
+                //                const std::string& getElementType() const {
+                //                    return getClassInfo().getClassId();
+                //                }
 
                 virtual ~FixedLengthArray() {
                 }
@@ -68,7 +81,7 @@ namespace karabo {
                             .key("type")
                             .displayedName("Type")
                             .description("Data Type in Hash")
-                            .assignmentOptional().defaultValue(FixedLengthArray<T>::classInfo().getClassId())
+                            .assignmentOptional().noDefaultValue()
                             .reconfigurable()
                             .commit();
 
@@ -176,6 +189,7 @@ namespace karabo {
 
                 typename karabo::io::h5::DatasetWriter<T>::Pointer m_datasetWriter;
                 typename karabo::io::h5::DatasetReader<T>::Pointer m_datasetReader;
+                karabo::util::Types::ReferenceType m_memoryType;
 
             };
 

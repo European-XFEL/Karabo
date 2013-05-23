@@ -40,11 +40,12 @@ namespace karabo {
                         .appendNodesOfConfigurationBase<Element > ()
                         .assignmentOptional().noDefaultValue()
                         .commit();
+
             }
 
 
-            Format::Pointer Format::createFormat(const karabo::util::Hash& config) {
-                return Format::createNode("Format", "Format", config);
+            Format::Pointer Format::createFormat(const karabo::util::Hash& config, bool validate) {
+                return karabo::util::Configurator<Self>::createNode("Format", "Format", config, false);
             }
 
 
@@ -55,10 +56,24 @@ namespace karabo {
 
 
             Format::Format(const karabo::util::Hash& input) {
-
-                m_elements = Element::createList("elements", input);
+                m_elements = Configurator<Element>::createList("elements", input, false);
                 m_config = Hash("Format", input);
                 mapElementsToKeys();
+            }
+
+
+            Format::Pointer Format::discover(const karabo::util::Hash& data, FormatDiscoveryPolicy::ConstPointer policy) {
+                Hash config;
+                discoverFromHash(data, policy, config);
+                return karabo::util::Configurator<Format>::createNode("Format", "Format", config, false);
+            }
+
+
+            Format::Pointer Format::discover(const karabo::util::Hash& data) {
+                Hash config;
+                FormatDiscoveryPolicy::Pointer policy = FormatDiscoveryPolicy::create(Hash("Policy"));
+                discoverFromHash(data, policy, config);
+                return karabo::util::Configurator<Format>::createNode("Format", "Format", config, false);
             }
 
 
@@ -69,13 +84,19 @@ namespace karabo {
             }
 
 
-            void Format::discoverFromHash(const Hash& data, Hash& config) {
+            void Format::discoverFromHash(const Hash& data, FormatDiscoveryPolicy::ConstPointer policy, Hash& config) {
                 Hash& hh = config.bindReference<Hash > ("Format");
                 vector<Hash>& vec = hh.bindReference< vector<Hash> >("elements");
-                discoverFromHash(data, vec, "", "");
+                discoverFromHash(data, policy, vec, "", "");
                 KARABO_LOG_FRAMEWORK_TRACE_CF << "after discovery:\n" << config;
+            }
 
 
+            void Format::getElementsNames(std::vector<std::string>& names) const {
+                for (std::map<std::string, size_t>::const_iterator it = m_mapElements.begin();
+                        it != m_mapElements.end(); ++it) {
+                    names.push_back(boost::replace_all_copy(it->first, "/", "."));
+                }
             }
 
 
@@ -130,24 +151,44 @@ namespace karabo {
             }
 
 
-            void Format::discoverFromHash(const Hash& data, vector<Hash>& config, const string& path, const string& keyPath) {
+            boost::shared_ptr<karabo::io::h5::Element> Format::getElement(const std::string& fullPath) {
+                string fullPathSlash = boost::replace_all_copy(fullPath, ".", "/");
+                size_t idx = m_mapElements[fullPathSlash];
+                return m_elements[idx];
+
+            }
+
+
+            boost::shared_ptr<const karabo::io::h5::Element> Format::getElement(const std::string& fullPath) const {
+                string fullPathSlash = boost::replace_all_copy(fullPath, ".", "/");
+                map<string, size_t>::const_iterator it = m_mapElements.find(fullPathSlash);
+                if (it != m_mapElements.end()) {
+                    size_t idx = it->second;
+                    return m_elements[idx];
+                }
+                return boost::shared_ptr<const karabo::io::h5::Element>();
+
+            }
+
+
+            void Format::discoverFromHash(const Hash& data, FormatDiscoveryPolicy::ConstPointer policy, vector<Hash>& config, const string& path, const string& keyPath) {
 
                 // This hash does not have attributes
                 // It is not rooted. Either top or element of vector<Hash>
                 KARABO_LOG_FRAMEWORK_TRACE_CF << "path: " << path << " keyPath: " << keyPath;
                 for (Hash::const_iterator it = data.begin(); it != data.end(); ++it) {
                     if (it->is<Hash > ()) {
-                        discoverFromHashElement(*it, config, path, keyPath);
+                        discoverFromHashElement(*it, policy, config, path, keyPath);
                     } else if (it->is<vector<Hash> >()) {
-                        discoverFromVectorOfHashesElement(*it, config, path, keyPath);
+                        discoverFromVectorOfHashesElement(*it, policy, config, path, keyPath);
                     } else {
-                        discoverFromDataElement(*it, config, path, keyPath);
+                        discoverFromDataElement(*it, policy, config, path, keyPath);
                     }
                 }
             }
 
 
-            void Format::discoverFromHashElement(const Hash::Node& el, vector<Hash>& config, const string& path, const string& keyPath) {
+            void Format::discoverFromHashElement(const Hash::Node& el, FormatDiscoveryPolicy::ConstPointer policy, vector<Hash>& config, const string& path, const string& keyPath) {
 
                 const Hash& h = el.getValue<Hash > ();
                 const std::string& key = el.getKey();
@@ -185,17 +226,17 @@ namespace karabo {
 
                 for (Hash::const_iterator it = h.begin(); it != h.end(); ++it) {
                     if (it->is<Hash > ()) {
-                        discoverFromHashElement(*it, config, newPath, newKeyPath);
+                        discoverFromHashElement(*it, policy, config, newPath, newKeyPath);
                     } else if (it->is<vector<Hash> >()) {
-                        discoverFromVectorOfHashesElement(*it, config, newPath, newKeyPath);
+                        discoverFromVectorOfHashesElement(*it, policy, config, newPath, newKeyPath);
                     } else {
-                        discoverFromDataElement(*it, config, newPath, newKeyPath);
+                        discoverFromDataElement(*it, policy, config, newPath, newKeyPath);
                     }
                 }
             }
 
 
-            void Format::discoverFromVectorOfHashesElement(const Hash::Node& el, vector<Hash>& config, const string& path, const string& keyPath) {
+            void Format::discoverFromVectorOfHashesElement(const Hash::Node& el, FormatDiscoveryPolicy::ConstPointer policy, vector<Hash>& config, const string& path, const string& keyPath) {
 
                 const vector<Hash>& vec = el.getValue<vector<Hash> >();
 
@@ -261,7 +302,7 @@ namespace karabo {
                     oss2 << key << "[" << i << "]";
                     oss3 << newKeyPath << "[" << i << "]";
                     KARABO_LOG_FRAMEWORK_TRACE_CF << " before discoverFromHash, path: " << path << " key: " << key;
-                    discoverFromHash(vec[i], config, oss2.str(), oss3.str());
+                    discoverFromHash(vec[i], policy, config, oss2.str(), oss3.str());
                 }
 
             }
@@ -271,7 +312,8 @@ namespace karabo {
             #define _KARABO_IO_H5_SEQUENCE_PTR_SIZE(T,cppType) case Types::PTR_##T:  Format::discoverPtrSize<cppType>(h,el); break;      
 
 
-            void Format::discoverFromDataElement(const Hash::Node& el, vector<Hash>& config, const string& path, const string& keyPath) {
+            void Format::discoverFromDataElement(const Hash::Node& el, FormatDiscoveryPolicy::ConstPointer policy,
+                                                 vector<Hash>& config, const string& path, const string& keyPath) {
 
                 Types::ReferenceType t = el.getType();
                 const std::string& key = el.getKey();
@@ -296,6 +338,8 @@ namespace karabo {
                     h.set("h5path", path);
                     h.set("key", newKeyPath);
                     h.set("type", ptrType);
+                    h.set("chunkSize", policy->getDefaultChunkSize());
+                    h.set("compressionLevel", policy->getDefaultCompressionLevel());
                     if (Types::category(t) == Types::SEQUENCE) {
                         KARABO_LOG_FRAMEWORK_TRACE_CF << "SEQUENCE: " << key;
                         switch (t) {
@@ -327,6 +371,8 @@ namespace karabo {
                     h.set("h5name", key);
                     h.set("h5path", path);
                     h.set("key", newKeyPath);
+                    h.set("chunkSize", policy->getDefaultChunkSize());
+                    h.set("compressionLevel", policy->getDefaultCompressionLevel());
                     if (Types::category(t) == Types::SEQUENCE) {
                         KARABO_LOG_FRAMEWORK_TRACE_CF << "SEQUENCE: " << key;
                         switch (t) {

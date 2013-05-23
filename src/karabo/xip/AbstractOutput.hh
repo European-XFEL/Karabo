@@ -20,6 +20,7 @@ namespace exfel {
     namespace xip {
 
         class AbstractOutput {
+
         public:
 
             EXFEL_CLASSINFO(AbstractOutput, "AbstractOutput", "1.0")
