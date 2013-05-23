@@ -71,7 +71,7 @@ namespace karabo {
                  *
                  * @see DataFormat::expectedParameters.
                  */
-                boost::shared_ptr<Table> createTable(const std::string& name, const Format::Pointer dataFormat, size_t chunkSize = 1);
+                boost::shared_ptr<Table> createTable(const std::string& name, const Format::Pointer dataFormat);
 
                 /**
                  * Open existing table in the file.

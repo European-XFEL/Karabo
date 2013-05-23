@@ -38,8 +38,8 @@ namespace karabo {
 
                 KARABO_CLASSINFO(Table, "Table", "1.0")
                
-                Table(hid_t h5file, boost::filesystem::path name, hsize_t chunkSize = 1)
-                : m_h5file(h5file), m_name(name), m_chunkSize(chunkSize), m_tableSize(0)
+                Table(hid_t h5file, boost::filesystem::path name)
+                : m_h5file(h5file), m_name(name), m_tableSize(0)
                 #ifdef KARABO_USE_PROFILER_TABLE1
                 , table1("table1")
                 #endif
@@ -140,8 +140,7 @@ namespace karabo {
                 hid_t m_group; // hdf5 group to this table
 
                 Format::Pointer m_dataFormat;
-
-                hsize_t m_chunkSize;
+                
                 hsize_t m_tableSize;
                 hid_t m_numberOfRecordsAttribute;
                 #ifdef KARABO_USE_PROFILER_TABLE1

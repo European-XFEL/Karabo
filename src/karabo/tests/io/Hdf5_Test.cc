@@ -235,7 +235,7 @@ void Hdf5_Test::testKaraboHdf5() {
 
     File file(filename);
     file.open(File::TRUNCATE);
-    Table::Pointer t = file.createTable("/karabo", dataFormat, 1);
+    Table::Pointer t = file.createTable("/karabo", dataFormat);
     p.stop("create");
 
     p.start("write");
