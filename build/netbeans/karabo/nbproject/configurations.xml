@@ -26,41 +26,51 @@
     </logicalFolder>
     <logicalFolder name="f2" displayName="io" projectFiles="true">
       <logicalFolder name="f1" displayName="h5" projectFiles="true">
+        <logicalFolder name="f2" displayName="AttributeImpl" projectFiles="true">
+          <itemPath>../../../src/karabo/io/h5/FixedLengthArrayAttribute.cc</itemPath>
+          <itemPath>../../../src/karabo/io/h5/FixedLengthArrayAttribute.hh</itemPath>
+          <itemPath>../../../src/karabo/io/h5/ScalarAttribute.cc</itemPath>
+          <itemPath>../../../src/karabo/io/h5/ScalarAttribute.hh</itemPath>
+        </logicalFolder>
+        <logicalFolder name="f1" displayName="ElementImpl" projectFiles="true">
+          <itemPath>../../../src/karabo/io/h5/Complex.cc</itemPath>
+          <itemPath>../../../src/karabo/io/h5/Complex.hh</itemPath>
+          <itemPath>../../../src/karabo/io/h5/Dataset.cc</itemPath>
+          <itemPath>../../../src/karabo/io/h5/Dataset.hh</itemPath>
+          <itemPath>../../../src/karabo/io/h5/DatasetReader.cc</itemPath>
+          <itemPath>../../../src/karabo/io/h5/DatasetReader.hh</itemPath>
+          <itemPath>../../../src/karabo/io/h5/DatasetWriter.cc</itemPath>
+          <itemPath>../../../src/karabo/io/h5/DatasetWriter.hh</itemPath>
+          <itemPath>../../../src/karabo/io/h5/FixedLengthArray.cc</itemPath>
+          <itemPath>../../../src/karabo/io/h5/FixedLengthArray.hh</itemPath>
+          <itemPath>../../../src/karabo/io/h5/FixedLengthArrayComplex.cc</itemPath>
+          <itemPath>../../../src/karabo/io/h5/FixedLengthArrayComplex.hh</itemPath>
+          <itemPath>../../../src/karabo/io/h5/Group.cc</itemPath>
+          <itemPath>../../../src/karabo/io/h5/Group.hh</itemPath>
+          <itemPath>../../../src/karabo/io/h5/Scalar.cc</itemPath>
+          <itemPath>../../../src/karabo/io/h5/Scalar.hh</itemPath>
+          <itemPath>../../../src/karabo/io/h5/VLArray.cc</itemPath>
+          <itemPath>../../../src/karabo/io/h5/VLArray.hh</itemPath>
+        </logicalFolder>
+        <logicalFolder name="f3" displayName="Tools" projectFiles="true">
+          <itemPath>../../../src/karabo/io/h5/ErrorHandler.cc</itemPath>
+          <itemPath>../../../src/karabo/io/h5/ErrorHandler.hh</itemPath>
+          <itemPath>../../../src/karabo/io/h5/TypeTraits.cc</itemPath>
+          <itemPath>../../../src/karabo/io/h5/TypeTraits.hh</itemPath>
+          <itemPath>../../../src/karabo/io/h5/ioProfiler.hh</itemPath>
+        </logicalFolder>
         <itemPath>../../../src/karabo/io/h5/Attribute.cc</itemPath>
         <itemPath>../../../src/karabo/io/h5/Attribute.hh</itemPath>
-        <itemPath>../../../src/karabo/io/h5/Complex.cc</itemPath>
-        <itemPath>../../../src/karabo/io/h5/Complex.hh</itemPath>
-        <itemPath>../../../src/karabo/io/h5/Dataset.cc</itemPath>
-        <itemPath>../../../src/karabo/io/h5/Dataset.hh</itemPath>
-        <itemPath>../../../src/karabo/io/h5/DatasetReader.cc</itemPath>
-        <itemPath>../../../src/karabo/io/h5/DatasetReader.hh</itemPath>
-        <itemPath>../../../src/karabo/io/h5/DatasetWriter.cc</itemPath>
-        <itemPath>../../../src/karabo/io/h5/DatasetWriter.hh</itemPath>
         <itemPath>../../../src/karabo/io/h5/Element.cc</itemPath>
         <itemPath>../../../src/karabo/io/h5/Element.hh</itemPath>
-        <itemPath>../../../src/karabo/io/h5/ErrorHandler.cc</itemPath>
-        <itemPath>../../../src/karabo/io/h5/ErrorHandler.hh</itemPath>
         <itemPath>../../../src/karabo/io/h5/File.cc</itemPath>
         <itemPath>../../../src/karabo/io/h5/File.hh</itemPath>
-        <itemPath>../../../src/karabo/io/h5/FixedLengthArray.cc</itemPath>
-        <itemPath>../../../src/karabo/io/h5/FixedLengthArray.hh</itemPath>
-        <itemPath>../../../src/karabo/io/h5/FixedLengthArrayAttribute.cc</itemPath>
-        <itemPath>../../../src/karabo/io/h5/FixedLengthArrayAttribute.hh</itemPath>
-        <itemPath>../../../src/karabo/io/h5/FixedLengthArrayComplex.cc</itemPath>
-        <itemPath>../../../src/karabo/io/h5/FixedLengthArrayComplex.hh</itemPath>
         <itemPath>../../../src/karabo/io/h5/Format.cc</itemPath>
         <itemPath>../../../src/karabo/io/h5/Format.hh</itemPath>
-        <itemPath>../../../src/karabo/io/h5/Group.cc</itemPath>
-        <itemPath>../../../src/karabo/io/h5/Group.hh</itemPath>
-        <itemPath>../../../src/karabo/io/h5/Scalar.cc</itemPath>
-        <itemPath>../../../src/karabo/io/h5/Scalar.hh</itemPath>
-        <itemPath>../../../src/karabo/io/h5/ScalarAttribute.cc</itemPath>
-        <itemPath>../../../src/karabo/io/h5/ScalarAttribute.hh</itemPath>
+        <itemPath>../../../src/karabo/io/h5/FormatDiscoveryPolicy.cc</itemPath>
+        <itemPath>../../../src/karabo/io/h5/FormatDiscoveryPolicy.hh</itemPath>
         <itemPath>../../../src/karabo/io/h5/Table.cc</itemPath>
         <itemPath>../../../src/karabo/io/h5/Table.hh</itemPath>
-        <itemPath>../../../src/karabo/io/h5/TypeTraits.cc</itemPath>
-        <itemPath>../../../src/karabo/io/h5/TypeTraits.hh</itemPath>
-        <itemPath>../../../src/karabo/io/h5/ioProfiler.hh</itemPath>
       </logicalFolder>
       <logicalFolder name="f3" displayName="Input" projectFiles="true">
         <itemPath>../../../src/karabo/io/AbstractInput.hh</itemPath>
@@ -738,6 +748,16 @@
             tool="3"
             flavor2="0">
       </item>
+      <item path="../../../src/karabo/io/h5/FormatDiscoveryPolicy.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/h5/FormatDiscoveryPolicy.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="../../../src/karabo/io/h5/Group.cc" ex="false" tool="1" flavor2="0">
       </item>
       <item path="../../../src/karabo/io/h5/Group.hh" ex="false" tool="3" flavor2="0">
@@ -772,6 +792,16 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/io/h5/TypeTraits.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/h5/VLArray.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/h5/VLArray.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -994,11 +1024,6 @@
             tool="3"
             flavor2="0">
       </item>
-      <item path="../../../src/karabo/tests/io/H5Format_Test.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
       <item path="../../../src/karabo/tests/io/H5Format_Test.hh"
             ex="false"
             tool="3"
@@ -1022,11 +1047,6 @@
       <item path="../../../src/karabo/tests/io/HashXmlSerializer_Test.hh"
             ex="false"
             tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/tests/io/Hdf5_Test.cc"
-            ex="false"
-            tool="1"
             flavor2="0">
       </item>
       <item path="../../../src/karabo/tests/io/Hdf5_Test.hh"
@@ -1591,6 +1611,7 @@
           </incDir>
         </cTool>
         <ccTool>
+          <commandLine>-O2</commandLine>
           <preprocessorList>
             <Elem>KARABO_NO_ENABLE_TRACE_LOG</Elem>
           </preprocessorList>
@@ -2059,6 +2080,16 @@
             tool="3"
             flavor2="0">
       </item>
+      <item path="../../../src/karabo/io/h5/FormatDiscoveryPolicy.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/h5/FormatDiscoveryPolicy.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="../../../src/karabo/io/h5/Group.cc" ex="false" tool="1" flavor2="0">
       </item>
       <item path="../../../src/karabo/io/h5/Group.hh" ex="false" tool="3" flavor2="0">
@@ -2093,6 +2124,16 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/io/h5/TypeTraits.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/h5/VLArray.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/h5/VLArray.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -2293,11 +2334,6 @@
       <item path="../../../src/karabo/pugiXml/pugixml.hpp"
             ex="false"
             tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/tests/io/FileInputOutput_Test.cc"
-            ex="false"
-            tool="1"
             flavor2="0">
       </item>
       <item path="../../../src/karabo/tests/io/FileInputOutput_Test.hh"

@@ -12,12 +12,12 @@
 using namespace std;
 
 namespace karabo {
-  namespace xip {
+    namespace xip {
 
 
-  
 
-    
 
-  } 
-} 
+
+
+    }
+}

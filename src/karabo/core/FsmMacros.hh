@@ -48,7 +48,7 @@ namespace karabo {
                 // Technical correction: 
                 // if state-machine and state are the same name, the state is subcomposed into the former machine
                 if (stateName == fsmName) fsmName = m_currentFsm;
-                
+
                 if (m_stateName.empty()) {
                     m_stateName = stateName;
                     m_currentFsm = fsmName;
@@ -59,37 +59,37 @@ namespace karabo {
                 }
             }
 
-            const std::string& getState() {
+            const std::string & getState() {
                 return m_stateName;
             }
-            
+
         private:
             std::string m_stateName;
             std::string m_currentFsm;
         };
 
         struct FsmBaseState {
-            
+
             const std::string & getStateName() const {
                 return m_stateName;
             }
-            
+
             virtual void setStateName(const std::string& name) {
                 m_stateName = name;
             }
-            
-            const std::string& getFsmName() const {
+
+            const std::string & getFsmName() const {
                 return m_fsmName;
             }
-            
+
             virtual void setFsmName(const std::string& fsmName) {
                 m_fsmName = fsmName;
             }
-            
+
             const bool& isContained() const {
                 return m_isContained;
             }
-            
+
             void setContained(bool isContained) {
                 m_isContained = isContained;
             }
@@ -98,6 +98,7 @@ namespace karabo {
             typedef boost::msm::back::args<void, boost::shared_ptr<StateVisitor> > accept_sig;
 
             // This makes states polymorphic
+
             virtual ~FsmBaseState() {
             }
 

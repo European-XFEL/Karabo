@@ -121,6 +121,8 @@ namespace karabo {
                 AccessMode m_accMode;
 
                 boost::shared_ptr<Table> createReadOnlyTablePointer(const std::string& name);
+                
+                void updateTableIndex(const std::string& tablePath );
 
 
             };

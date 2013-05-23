@@ -27,6 +27,7 @@ namespace karabo {
 
         template <class TPix>
         class ImageFileReader : public karabo::xms::Input< CpuImage<TPix> > {
+
         public:
 
             KARABO_CLASSINFO(ImageFileReader, "File", "1.0")
@@ -94,7 +95,7 @@ namespace karabo {
             bool canCompute() const {
                 return boost::filesystem::exists(m_filename);
             }
-            
+
             size_t size() const {
                 // TODO Work on this
                 return 1;

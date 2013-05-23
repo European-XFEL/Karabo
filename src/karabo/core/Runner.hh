@@ -161,7 +161,7 @@ namespace karabo {
                     size_t pos = what.find_first_of(".");
                     if (pos != std::string::npos) {
                         classId = what.substr(0, pos);
-                        path = what.substr(pos+1);
+                        path = what.substr(pos + 1);
                     }
                     T::getSchema(classId).help(path);
                 }

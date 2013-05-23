@@ -20,31 +20,29 @@
 namespace karabo {
     namespace core {
 
-#define KARABO_DB_NAME "Database"
-#define KARABO_DB_FILE "database.xml"
+        #define KARABO_DB_NAME "Database"
+        #define KARABO_DB_FILE "database.xml"
 
-        
-        
         class HashDatabase {
-            
+
         public: // functions
-            
+
             typedef std::vector<karabo::util::Hash> ResultType;
 
             static bool readDatabase();
-            
+
             static void setupDatabase();
 
             static void saveDatabase();
-            
+
             static unsigned int insert(const std::string& tableName, karabo::util::Hash keyValuePairs);
-            
+
         public: // members
-            
+
             static karabo::util::Hash m_database;
-            
+
             static boost::mutex m_databaseMutex;
-            
+
         };
     }
 }

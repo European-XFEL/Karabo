@@ -13,13 +13,14 @@
 #include <string>
 
 namespace exfel {
-  namespace core {
+    namespace core {
 
-    using namespace std;
+        using namespace std;
 
-    const string Module::getName() const{
-      return getClassInfo().getClassId();
-    }
 
-  } // namespace core
+        const string Module::getName() const {
+            return getClassInfo().getClassId();
+        }
+
+    } // namespace core
 } // namespace exfel

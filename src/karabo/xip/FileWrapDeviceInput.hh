@@ -31,6 +31,7 @@ namespace exfel {
          * The FileWrapDeviceInput class.
          */
         class FileWrapDeviceInput : public Input<std::string > {
+
         public:
 
             EXFEL_CLASSINFO(FileWrapDeviceInput, "FileWrapDeviceInput", "1.0")
@@ -40,8 +41,9 @@ namespace exfel {
              */
             FileWrapDeviceInput() {
             }
-            
-            virtual ~FileWrapDeviceInput() {}
+
+            virtual ~FileWrapDeviceInput() {
+            }
 
             /**
              * Necessary method as part of the factory/configuration system

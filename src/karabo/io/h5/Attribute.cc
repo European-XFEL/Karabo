@@ -8,11 +8,10 @@
 
 
 #include "Attribute.hh"
-#include "karabo/util/ListElement.hh"
-#include <karabo/util/Factory.hh>
-#include <karabo/util/Configurator.hh>
 #include <karabo/util/SimpleElement.hh>
-
+#include <karabo/util/VectorElement.hh>
+#include <karabo/log/Logger.hh>
+#include <karabo/util/Dims.hh>
 
 using namespace karabo::util;
 
@@ -24,63 +23,124 @@ namespace karabo {
 
             void Attribute::expectedParameters(Schema& expected) {
 
+
                 STRING_ELEMENT(expected)
                         .key("h5name")
-                        .displayedName("Name")
-                        .description("Group or dataset name. i.e.: d1, g4.d2")
                         .tags("persistent")
-                        .assignmentOptional().defaultValue("aa")
-                        //.assignmentMandatory()
-                        .reconfigurable() // ???
+                        .displayedName("H5 Attribute Name")
+                        .description("Attribute name")
+                        .assignmentMandatory()
+                        .reconfigurable()
                         .commit();
 
-
-                //                STRING_ELEMENT(expected)
-                //                        .key("path")
-                //                        .displayedName("Path")
-                //                        .description("Path to that element. i.e. instrument.XXX.LPD")
-                //                        .assignmentOptional().defaultValue("instrument")
-                //                        //.assignmentMandatory()
-                //                        .reconfigurable() //???
-                //                        .commit();
 
                 STRING_ELEMENT(expected)
-                        .key("type")
-                        .displayedName("Type")
-                        .description("Type")
-                        .assignmentOptional().defaultValue("INT32")
-                        .reconfigurable() //???
+                        .key("key")
+                        .displayedName("Hash key")
+                        .description("Name of the attribute in the Hash node")
+                        .assignmentOptional().noDefaultValue()
+                        .reconfigurable()
+                        .commit();
+
+                karabo::util::VECTOR_UINT64_ELEMENT(expected)
+                        .key("dims")
+                        .displayedName("Dimensions")
+                        .description("Array dimensions.")
+                        .tags("persistent")
+                        .assignmentOptional().noDefaultValue()
+                        .init()
                         .commit();
 
             }
 
 
-            Attribute::Attribute(const Hash& input) {
-                m_h5name = input.get<string > ("h5name");
-                m_h5path = input.get<string > ("h5path");
-                if (m_h5path != "") m_h5PathName = m_h5path + "/" + m_h5name;
-                else m_h5PathName = m_h5name;
+            void Attribute::configureDataDimensions(const karabo::util::Hash& input, const Dims& singleValueDims) {
 
-                if (input.has("key")) {
-                    m_key = input.get<string > ("key");
+                size_t singleValueRank = singleValueDims.rank();
+                if (input.has("dims")) {
+                    vector<unsigned long long> dims = input.get< vector<unsigned long long> >("dims");
+                    for (size_t i = 0; i < singleValueRank; ++i) {
+                        dims.push_back(singleValueDims.extentIn(i));
+                    }
+                    m_dims = Dims(dims);
+
                 } else {
-                    m_key = m_h5PathName;
+                    m_dims = singleValueDims;
                 }
 
-                if (m_key.size() == 0 || m_h5name.size() == 0) {
-                    throw KARABO_PARAMETER_EXCEPTION("Name cannot be an empty string");
+                #ifdef KARABO_ENABLE_TRACE_LOG
+                KARABO_LOG_FRAMEWORK_TRACE_C("karabo.io.h5.Attribute.configureDataDimensions") << m_dims.rank();
+                for (size_t i = 0; i < m_dims.rank(); ++i) {
+                    KARABO_LOG_FRAMEWORK_TRACE_C("karabo.io.h5.Attribute.configureDataDimensions") << "m_dims[" << i << "] = " << m_dims.extentIn(i);
                 }
-                m_config = input;
+                #endif                
+
             }
 
 
-            const string& Attribute::getName() {
-                return m_key;
+            void Attribute::configureDataSpace() {
+
+                vector<unsigned long long> dimsVector = m_dims.toVector();
+                m_dataSpace = H5Screate_simple(dimsVector.size(),
+                                               &dimsVector[0],
+                                               NULL);
+                KARABO_CHECK_HDF5_STATUS(m_dataSpace);
             }
 
 
-            void Attribute::getAttribute(Hash& element) {
-                element.set(m_key, shared_from_this());
+            void Attribute::create(hid_t element) {
+
+                KARABO_LOG_FRAMEWORK_TRACE_C("karabo.io.h5.Attribute") << "Create attribute " << m_h5name;
+                try {
+                    m_attribute = H5Acreate(element, m_h5name.c_str(), m_standardTypeId, m_dataSpace, H5P_DEFAULT, H5P_DEFAULT);
+                    KARABO_CHECK_HDF5_STATUS(m_attribute);
+                } catch (...) {
+                    KARABO_RETHROW_AS(KARABO_PROPAGATED_EXCEPTION("Cannot create attribute /" + m_h5name));
+                }
+
+            }
+
+
+            void Attribute::open(hid_t element) {
+                KARABO_LOG_FRAMEWORK_TRACE_C("karabo.io.h5.Attribute") << "open attribute " << m_h5name;
+                try {
+                    m_attribute = H5Aopen(element, m_h5name.c_str(), H5P_DEFAULT);
+                    KARABO_CHECK_HDF5_STATUS(m_attribute);
+                } catch (...) {
+                    KARABO_RETHROW_AS(KARABO_PROPAGATED_EXCEPTION("Cannot open attribute /" + m_h5name));
+                }
+            }
+
+
+            void Attribute::write(const karabo::util::Hash::Node& node) {
+
+                KARABO_LOG_FRAMEWORK_TRACE_C("karabo.io.h5.Attribute") << "Writing hash attribute: key=" << m_key;
+                try {
+
+                    if (node.hasAttribute(m_key)) {
+                        const karabo::util::Element<std::string>& attrNode = node.getAttributes().getNode(m_key);
+                        writeNodeAttribute(attrNode, m_attribute);
+                    } else {
+                        throw KARABO_HDF_IO_EXCEPTION("No " + m_key + " attribute");
+                    }
+                } catch (karabo::util::Exception& e) {
+                    KARABO_RETHROW_AS(KARABO_PROPAGATED_EXCEPTION("Cannot write Hash node attribute " + m_key + " to H5 attribute" + m_h5name));
+                }
+
+            }
+
+
+            void Attribute::read(karabo::util::Hash::Node& node) {
+                try {
+
+                    karabo::util::Element<std::string>& attrNode = bindAttribute(node);
+                    readNodeAttribute(attrNode, m_attribute);
+                    //                    } else {
+                    //                        throw KARABO_HDF_IO_EXCEPTION("No " + m_key + " attribute");
+                    //                    }
+                } catch (karabo::util::Exception& e) {
+                    KARABO_RETHROW_AS(KARABO_PROPAGATED_EXCEPTION("Cannot write Hash node attribute " + m_key + " to H5 attribute" + m_h5name));
+                }
             }
 
 

@@ -22,6 +22,7 @@ namespace exfel {
 
         template <class TPix>
         class Cylinder3d : public Generator< CpuImage<TPix> > {
+
         public:
 
             EXFEL_CLASSINFO(Cylinder3d, "Cylinder3d", "1.0")
@@ -32,7 +33,7 @@ namespace exfel {
              */
             static void expectedParameters(exfel::util::Schema& expected) {
                 using namespace exfel::util;
-                
+
                 INT32_ELEMENT(expected).key("radius")
                         .displayedName("Radius")
                         .description("Cylinder radius")
@@ -41,7 +42,7 @@ namespace exfel {
                         .unitSymbol("px")
                         .assignmentOptional().defaultValue(10)
                         .commit();
-                
+
                 INT32_ELEMENT(expected).key("height")
                         .displayedName("Height")
                         .description("Cylinder height")
@@ -50,7 +51,7 @@ namespace exfel {
                         .unitSymbol("px")
                         .assignmentOptional().defaultValue(20)
                         .commit();
-                
+
                 INT32_ELEMENT(expected).key("resolution")
                         .displayedName("Resolution")
                         .description("The number of recursive subdivisions from an initial stretched icosahedron")
@@ -66,7 +67,7 @@ namespace exfel {
                 input.get("radius", m_radius);
                 input.get("height", m_height);
                 input.get("resolution", m_res);
-                
+
             }
 
             void generate(CpuImage<TPix>& image) const {
@@ -75,10 +76,10 @@ namespace exfel {
                 CImg<TPix> points3d = CImg<TPix>::cylinder3d(faces3d, m_radius, m_height, m_res);
                 image.swap(CpuImage<TPix>(points3d));
             }
-            
-            private:
-                
-                int m_radius, m_height, m_res;
+
+        private:
+
+            int m_radius, m_height, m_res;
 
         };
 

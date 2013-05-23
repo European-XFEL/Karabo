@@ -23,10 +23,11 @@ namespace exfel {
 
         template <class T>
         class Output : public AbstractOutput {
+
         public:
 
             EXFEL_CLASSINFO(Output, "Output", "1.0")
-            
+
             EXFEL_FACTORY_BASE_CLASS
 
             Output() {
@@ -34,13 +35,13 @@ namespace exfel {
 
             virtual ~Output() {
             }
-            
+
             /**
              * Necessary method as part of the factory/configuration system
              * @param expected [out] Description of expected parameters for this object (Schema)
              */
             static void expectedParameters(exfel::util::Schema& expected) {
-                
+
                 AbstractOutput::expectedParameters(expected);
             }
 
@@ -50,11 +51,11 @@ namespace exfel {
              */
             void configure(const exfel::util::Hash & input) {
             }
-            
+
             virtual void write(const T& object) = 0;
         };
-        
-        
+
+
         typedef exfel::xip::Output<exfel::util::Hash > HashOutput;
         typedef exfel::xip::Output<std::string> FileWrapOutput;
     }

@@ -64,11 +64,13 @@ OBJECTFILES= \
 	${OBJECTDIR}/_ext/769817549/FixedLengthArrayAttribute.o \
 	${OBJECTDIR}/_ext/769817549/FixedLengthArrayComplex.o \
 	${OBJECTDIR}/_ext/769817549/Format.o \
+	${OBJECTDIR}/_ext/769817549/FormatDiscoveryPolicy.o \
 	${OBJECTDIR}/_ext/769817549/Group.o \
 	${OBJECTDIR}/_ext/769817549/Scalar.o \
 	${OBJECTDIR}/_ext/769817549/ScalarAttribute.o \
 	${OBJECTDIR}/_ext/769817549/Table.o \
 	${OBJECTDIR}/_ext/769817549/TypeTraits.o \
+	${OBJECTDIR}/_ext/769817549/VLArray.o \
 	${OBJECTDIR}/_ext/1103111265/AppenderConfigurator.o \
 	${OBJECTDIR}/_ext/1103111265/CategoryConfigurator.o \
 	${OBJECTDIR}/_ext/1103111265/FileAppenderConfigurator.o \
@@ -297,6 +299,11 @@ ${OBJECTDIR}/_ext/769817549/Format.o: ../../../src/karabo/io/h5/Format.cc
 	${RM} $@.d
 	$(COMPILE.cc) -O2 -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/769817549/Format.o ../../../src/karabo/io/h5/Format.cc
 
+${OBJECTDIR}/_ext/769817549/FormatDiscoveryPolicy.o: ../../../src/karabo/io/h5/FormatDiscoveryPolicy.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/769817549
+	${RM} $@.d
+	$(COMPILE.cc) -O2 -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/769817549/FormatDiscoveryPolicy.o ../../../src/karabo/io/h5/FormatDiscoveryPolicy.cc
+
 ${OBJECTDIR}/_ext/769817549/Group.o: ../../../src/karabo/io/h5/Group.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/769817549
 	${RM} $@.d
@@ -321,6 +328,11 @@ ${OBJECTDIR}/_ext/769817549/TypeTraits.o: ../../../src/karabo/io/h5/TypeTraits.c
 	${MKDIR} -p ${OBJECTDIR}/_ext/769817549
 	${RM} $@.d
 	$(COMPILE.cc) -O2 -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/769817549/TypeTraits.o ../../../src/karabo/io/h5/TypeTraits.cc
+
+${OBJECTDIR}/_ext/769817549/VLArray.o: ../../../src/karabo/io/h5/VLArray.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/769817549
+	${RM} $@.d
+	$(COMPILE.cc) -O2 -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/769817549/VLArray.o ../../../src/karabo/io/h5/VLArray.cc
 
 ${OBJECTDIR}/_ext/1103111265/AppenderConfigurator.o: ../../../src/karabo/log/AppenderConfigurator.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1103111265
@@ -510,7 +522,7 @@ ${OBJECTDIR}/_ext/1760428615/soapC.o: ../../../src/karabo/webAuth/soapC.cpp
 ${OBJECTDIR}/_ext/1760428615/stdsoap2.o: ../../../src/karabo/webAuth/stdsoap2.cpp 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1760428615
 	${RM} $@.d
-	$(COMPILE.cc) -O2 -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -DWITH_OPENSSL -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1760428615/stdsoap2.o ../../../src/karabo/webAuth/stdsoap2.cpp
+	$(COMPILE.cc) -O2 -Wall -DWITH_NONAMESPACES -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -DWITH_OPENSSL -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1760428615/stdsoap2.o ../../../src/karabo/webAuth/stdsoap2.cpp
 
 ${OBJECTDIR}/_ext/1103122747/Memory.o: ../../../src/karabo/xms/Memory.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1103122747
@@ -557,7 +569,7 @@ ${OBJECTDIR}/_ext/1103122747/Statics.o: ../../../src/karabo/xms/Statics.cc
 
 # Build Test Targets
 .build-tests-conf: .build-conf ${TESTFILES}
-${TESTDIR}/TestFiles/f2: ${TESTDIR}/_ext/861493463/FileInputOutput_Test.o ${TESTDIR}/_ext/861493463/H5File_Test.o ${TESTDIR}/_ext/861493463/H5Format_Test.o ${TESTDIR}/_ext/861493463/HashBinarySerializer_Test.o ${TESTDIR}/_ext/861493463/HashXmlSerializer_Test.o ${TESTDIR}/_ext/861493463/Hdf5_Test.o ${TESTDIR}/_ext/861493463/SchemaXsdSerializer_Test.o ${TESTDIR}/_ext/861493463/ioTestRunner.o ${OBJECTFILES:%.o=%_nomain.o}
+${TESTDIR}/TestFiles/f2: ${TESTDIR}/_ext/861493463/H5File_Test.o ${TESTDIR}/_ext/861493463/H5Format_Test.o ${TESTDIR}/_ext/861493463/HashBinarySerializer_Test.o ${TESTDIR}/_ext/861493463/HashXmlSerializer_Test.o ${TESTDIR}/_ext/861493463/Hdf5_Test.o ${TESTDIR}/_ext/861493463/SchemaXsdSerializer_Test.o ${TESTDIR}/_ext/861493463/ioTestRunner.o ${OBJECTFILES:%.o=%_nomain.o}
 	${MKDIR} -p ${TESTDIR}/TestFiles
 	${LINK.cc}   -o ${TESTDIR}/TestFiles/f2 $^ ${LDLIBSOPTIONS} -Wl,-rpath,${KARABO}/lib -Wl,-rpath,${KARABO}/extern/lib -lcppunit 
 
@@ -580,12 +592,6 @@ ${TESTDIR}/TestFiles/f6: ${TESTDIR}/_ext/1856679435/Authenticate_Test.o ${TESTDI
 ${TESTDIR}/TestFiles/f5: ${TESTDIR}/_ext/936508045/SignalSlotable_Test.o ${TESTDIR}/_ext/936508045/xmsTestRunner.o ${OBJECTFILES:%.o=%_nomain.o}
 	${MKDIR} -p ${TESTDIR}/TestFiles
 	${LINK.cc}   -o ${TESTDIR}/TestFiles/f5 $^ ${LDLIBSOPTIONS} -Wl,-rpath,${KARABO}/lib -Wl,-rpath,${KARABO}/extern/lib -lcppunit `cppunit-config --libs`   
-
-
-${TESTDIR}/_ext/861493463/FileInputOutput_Test.o: ../../../src/karabo/tests/io/FileInputOutput_Test.cc 
-	${MKDIR} -p ${TESTDIR}/_ext/861493463
-	${RM} $@.d
-	$(COMPILE.cc) -O2 -Wall -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/include/hdf5 -MMD -MP -MF $@.d -o ${TESTDIR}/_ext/861493463/FileInputOutput_Test.o ../../../src/karabo/tests/io/FileInputOutput_Test.cc
 
 
 ${TESTDIR}/_ext/861493463/H5File_Test.o: ../../../src/karabo/tests/io/H5File_Test.cc 
@@ -1109,6 +1115,19 @@ ${OBJECTDIR}/_ext/769817549/Format_nomain.o: ${OBJECTDIR}/_ext/769817549/Format.
 	    ${CP} ${OBJECTDIR}/_ext/769817549/Format.o ${OBJECTDIR}/_ext/769817549/Format_nomain.o;\
 	fi
 
+${OBJECTDIR}/_ext/769817549/FormatDiscoveryPolicy_nomain.o: ${OBJECTDIR}/_ext/769817549/FormatDiscoveryPolicy.o ../../../src/karabo/io/h5/FormatDiscoveryPolicy.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/769817549
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/769817549/FormatDiscoveryPolicy.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} $@.d;\
+	    $(COMPILE.cc) -O2 -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/769817549/FormatDiscoveryPolicy_nomain.o ../../../src/karabo/io/h5/FormatDiscoveryPolicy.cc;\
+	else  \
+	    ${CP} ${OBJECTDIR}/_ext/769817549/FormatDiscoveryPolicy.o ${OBJECTDIR}/_ext/769817549/FormatDiscoveryPolicy_nomain.o;\
+	fi
+
 ${OBJECTDIR}/_ext/769817549/Group_nomain.o: ${OBJECTDIR}/_ext/769817549/Group.o ../../../src/karabo/io/h5/Group.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/769817549
 	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/769817549/Group.o`; \
@@ -1172,6 +1191,19 @@ ${OBJECTDIR}/_ext/769817549/TypeTraits_nomain.o: ${OBJECTDIR}/_ext/769817549/Typ
 	    $(COMPILE.cc) -O2 -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/769817549/TypeTraits_nomain.o ../../../src/karabo/io/h5/TypeTraits.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/769817549/TypeTraits.o ${OBJECTDIR}/_ext/769817549/TypeTraits_nomain.o;\
+	fi
+
+${OBJECTDIR}/_ext/769817549/VLArray_nomain.o: ${OBJECTDIR}/_ext/769817549/VLArray.o ../../../src/karabo/io/h5/VLArray.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/769817549
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/769817549/VLArray.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} $@.d;\
+	    $(COMPILE.cc) -O2 -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/769817549/VLArray_nomain.o ../../../src/karabo/io/h5/VLArray.cc;\
+	else  \
+	    ${CP} ${OBJECTDIR}/_ext/769817549/VLArray.o ${OBJECTDIR}/_ext/769817549/VLArray_nomain.o;\
 	fi
 
 ${OBJECTDIR}/_ext/1103111265/AppenderConfigurator_nomain.o: ${OBJECTDIR}/_ext/1103111265/AppenderConfigurator.o ../../../src/karabo/log/AppenderConfigurator.cc 
@@ -1663,7 +1695,7 @@ ${OBJECTDIR}/_ext/1760428615/stdsoap2_nomain.o: ${OBJECTDIR}/_ext/1760428615/std
 	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
 	then  \
 	    ${RM} $@.d;\
-	    $(COMPILE.cc) -O2 -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -DWITH_OPENSSL -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1760428615/stdsoap2_nomain.o ../../../src/karabo/webAuth/stdsoap2.cpp;\
+	    $(COMPILE.cc) -O2 -Wall -DWITH_NONAMESPACES -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -DWITH_OPENSSL -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1760428615/stdsoap2_nomain.o ../../../src/karabo/webAuth/stdsoap2.cpp;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/1760428615/stdsoap2.o ${OBJECTDIR}/_ext/1760428615/stdsoap2_nomain.o;\
 	fi

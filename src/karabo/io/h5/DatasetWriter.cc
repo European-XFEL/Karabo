@@ -13,8 +13,8 @@ using namespace karabo::io;
 namespace karabo {
     namespace io {
         namespace h5 {
-
-
+ 
+ 
             KARABO_REGISTER_FOR_CONFIGURATION(DatasetWriter<char>, DatasetVectorWriter<char>)
             KARABO_REGISTER_FOR_CONFIGURATION(DatasetWriter<signed char>, DatasetVectorWriter<signed char>)
             KARABO_REGISTER_FOR_CONFIGURATION(DatasetWriter<short>, DatasetVectorWriter<short>)

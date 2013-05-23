@@ -30,6 +30,7 @@ namespace exfel {
          */
         template <class T>
         class DeviceInput : public Input<T> {
+
         public:
 
             EXFEL_CLASSINFO(DeviceInput, "DeviceInput-" + T::classInfo().getClassId(), "1.0")
@@ -110,7 +111,7 @@ namespace exfel {
                         tcpConnection->setIOService(m_tcpIoService);
                     }
 
-                } 
+                }
             }
 
             exfel::util::Hash prepareConnectionConfiguration(const exfel::util::Hash& serverInfo) const {
@@ -153,11 +154,11 @@ namespace exfel {
                     this->triggerCanReadEvent();
                 } else if (Memory<T>::size(m_channelId, m_activeChunk) == 0) {
                     std::swap(m_activeChunk, m_inactiveChunk);
-                    std::cout<< "swapped buffers, can read more" << std::endl;
+                    std::cout << "swapped buffers, can read more" << std::endl;
                     this->triggerCanReadEvent();
                     this->triggerIOEvent();
-                }                 
-                
+                }
+
                 channel->readAsyncVectorHash(boost::bind(&exfel::xip::DeviceInput<T>::onTcpChannelRead, this, _1, _2, _3));
             }
 
@@ -200,13 +201,13 @@ namespace exfel {
 
 
         private: // functions
-            
+
             bool needsDeviceConnection() const {
                 return true;
             }
         };
-        
-        
+
+
     }
 }
 

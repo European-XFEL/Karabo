@@ -33,14 +33,13 @@ namespace exfel {
          * The FileWrapDeviceOutput class.
          */
         class FileWrapDeviceOutput : public Output<std::string > {
-            
-            
+
             typedef boost::shared_ptr<exfel::net::Channel> TcpChannelPointer;
             typedef std::pair<TcpChannelPointer, std::string> TcpChannelInfo;
             typedef std::map<std::string, TcpChannelInfo> TcpChannelMap;
             typedef std::deque< std::pair<unsigned int, TcpChannelInfo> > WriteNext;
-            
-           
+
+
         public:
 
             EXFEL_CLASSINFO(FileWrapDeviceOutput, "FileWrapDeviceOutput", "1.0")

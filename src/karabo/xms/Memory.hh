@@ -17,33 +17,33 @@
 
 namespace karabo {
     namespace xms {
-        
-        
-         enum MemoryStatus {
-                EMPTY = 0,
-                UNREAD,
-                READ,
-                CACHED,
-                CAN_DELETE
-            };
-        
+
+        enum MemoryStatus {
+
+            EMPTY = 0,
+            UNREAD,
+            READ,
+            CACHED,
+            CAN_DELETE
+        };
+
         template <class T>
         class Memory {
-            
+
             typedef T DataType;
             typedef boost::shared_ptr<DataType> DataPointer;
             typedef std::vector< DataPointer > Data;
             typedef std::vector< Data > Chunks;
             typedef std::vector< Chunks > Channels;
-            
+
             typedef std::pair<std::vector<char>, karabo::util::Hash> SerializedChunk;
             typedef boost::shared_ptr<SerializedChunk> SerializedChunkPointer;
             typedef std::vector< SerializedChunkPointer > SerializedChunks;
             typedef std::vector< SerializedChunks > SerializedChannels;
-            
+
             typedef std::vector<std::vector<bool> > ChunkStatus;
             typedef std::vector<bool> ChannelStatus;
-            
+
             static std::map<std::string, size_t> m_name2Idx;
 
             static std::vector<std::vector<bool> > m_chunkStatus;
@@ -51,11 +51,11 @@ namespace karabo {
 
             static Channels m_cache;
             static SerializedChannels m_serializedCache;
-            
+
             static boost::mutex m_accessMutex;
-            
+
             static boost::shared_ptr<karabo::io::BinarySerializer<DataType> > m_serializer;
-            
+
             static const int MAX_N_CHANNELS = 512;
             static const int MAX_N_CHUNKS = 512;
 
@@ -65,11 +65,11 @@ namespace karabo {
         public:
 
             KARABO_CLASSINFO(Memory, "Memory", "1.0")
-            
+
             static void write(const DataType& data, const size_t channelIdx, const size_t chunkIdx) {
                 m_cache[channelIdx][chunkIdx].push_back(DataPointer(new DataType(data)));
             }
-            
+
             static void writeChunk(const Data& chunk, const size_t channelIdx, const size_t chunkIdx) {
                 Data& src = m_cache[channelIdx][chunkIdx];
                 src.insert(src.end(), chunk.begin(), chunk.end());
@@ -105,28 +105,28 @@ namespace karabo {
                 }
                 throw KARABO_MEMORY_INIT_EXCEPTION("Total number chunks is exhausted");
             }
-            
+
             static int getChannelStatus(const size_t channelIdx) {
                 boost::mutex::scoped_lock lock(m_accessMutex);
                 return m_channelStatus[channelIdx];
             }
-            
+
             static void setChannelStatus(const size_t channelIdx, const int status) {
                 boost::mutex::scoped_lock lock(m_accessMutex);
                 m_channelStatus[channelIdx] = status;
             }
-            
+
             static int getChunkStatus(const size_t channelIdx, const size_t chunkIdx) {
                 boost::mutex::scoped_lock lock(m_accessMutex);
                 return m_chunkStatus[channelIdx][chunkIdx];
             }
-            
+
             static void setChunkStatus(const size_t channelIdx, const size_t chunkIdx, const int status) {
                 boost::mutex::scoped_lock lock(m_accessMutex);
                 m_chunkStatus[channelIdx][chunkIdx] = status;
             }
-            
-            static bool setChunkStatusFromTo(const size_t  channelIdx, const size_t chunkIdx, const int statusFrom, const int statusTo) {
+
+            static bool setChunkStatusFromTo(const size_t channelIdx, const size_t chunkIdx, const int statusFrom, const int statusTo) {
                 boost::mutex::scoped_lock lock(m_accessMutex);
                 if (m_chunkStatus[channelIdx][chunkIdx] == statusFrom) {
                     m_chunkStatus[channelIdx][chunkIdx] = statusTo;
@@ -139,13 +139,13 @@ namespace karabo {
             static void read(DataType& data, const size_t dataIdx, const size_t channelIdx, const size_t chunkIdx) {
                 data = *(m_cache[channelIdx][chunkIdx][dataIdx]);
             }
-            
+
             static const Data& readChunk(const size_t channelIdx, const size_t chunkIdx) {
                 return m_cache[channelIdx][chunkIdx];
             }
-            
+
             static void readAsContiguosBlock(std::vector<char>& buffer, karabo::util::Hash& header, const size_t channelIdx, const size_t chunkIdx) {
-                if(!m_serializer) m_serializer = karabo::io::BinarySerializer<DataType>::create("Default");
+                if (!m_serializer) m_serializer = karabo::io::BinarySerializer<DataType>::create("Default");
                 const Data& data = m_cache[channelIdx][chunkIdx];
                 std::vector<char> serializedDataElement;
                 std::vector<unsigned int> byteSizes(data.size());
@@ -165,20 +165,20 @@ namespace karabo {
                 header.set<unsigned int>("nData", data.size());
                 header.set<std::vector<unsigned int> >("byteSizes", byteSizes);
             }
-            
+
             static void cacheAsContiguousBlock(const size_t channelIdx, const size_t chunkIdx) {
                 SerializedChunkPointer scp = SerializedChunkPointer(new SerializedChunk);
                 Memory<T>::readAsContiguosBlock(scp->first, scp->second, channelIdx, chunkIdx);
                 m_serializedCache[channelIdx][chunkIdx] = scp;
             }
-            
+
             static const std::pair<std::vector<char>, karabo::util::Hash>& readContiguousBlockCache(const size_t channelIdx, const size_t chunkIdx) {
                 return *(m_serializedCache[channelIdx][chunkIdx]);
             }
-            
+
             static void writeAsContiguosBlock(const std::vector<char>& buffer, const karabo::util::Hash& header, const size_t channelIdx, const size_t chunkIdx) {
                 unsigned int nData = header.get<unsigned int>("nData");
-                if(!m_serializer) m_serializer = karabo::io::BinarySerializer<DataType>::create("Default");
+                if (!m_serializer) m_serializer = karabo::io::BinarySerializer<DataType>::create("Default");
                 const std::vector<unsigned int>& byteSizes = header.get<std::vector<unsigned int> >("byteSizes");
                 Data& chunkData = m_cache[channelIdx][chunkIdx];
                 size_t chunkDataIdx = chunkData.size();
@@ -192,9 +192,9 @@ namespace karabo {
                     offset += byteSize;
                 }
             }
-            
+
             static void clearContiguousBlockCache(const size_t channelIdx, const size_t chunkIdx) {
-               m_serializedCache[channelIdx][chunkIdx] = SerializedChunkPointer();
+                m_serializedCache[channelIdx][chunkIdx] = SerializedChunkPointer();
             }
 
             static void clearChannel(const size_t channelIdx) {
@@ -204,7 +204,7 @@ namespace karabo {
                     m_chunkStatus[channelIdx][i] = EMPTY;
                 }
             }
-            
+
             static void clearChunk(const size_t channelIdx, const size_t chunkIdx) {
                 m_cache[channelIdx][chunkIdx].clear();
                 m_chunkStatus[chunkIdx][chunkIdx] = EMPTY;
@@ -215,21 +215,21 @@ namespace karabo {
             }
 
         };
-        
+
         template <>
         class Memory<std::vector<char> > {
-            
+
             typedef std::vector<char> DataType;
             typedef boost::shared_ptr<DataType> DataPointer;
             typedef std::vector< DataPointer > Data;
             typedef std::vector< Data > Chunks;
             typedef std::vector< Chunks > Channels;
-            
+
             typedef std::pair<std::vector<char>, karabo::util::Hash> SerializedChunk;
             typedef boost::shared_ptr<SerializedChunk> SerializedChunkPointer;
             typedef std::vector< SerializedChunkPointer > SerializedChunks;
             typedef std::vector< SerializedChunks > SerializedChannels;
-            
+
             static std::map<std::string, size_t> m_name2Idx;
 
             static std::vector<std::vector<bool> > m_chunkStatus;
@@ -238,7 +238,7 @@ namespace karabo {
             static Channels m_cache;
             static boost::mutex m_accessMutex;
             static SerializedChannels m_serializedCache;
-            
+
             static const int MAX_N_CHANNELS = 2048;
             static const int MAX_N_CHUNKS = 2048;
 
@@ -248,16 +248,16 @@ namespace karabo {
         public:
 
             KARABO_CLASSINFO(Memory, "Memory", "1.0")
-            
+
             static void write(const DataType& data, const size_t channelIdx, const size_t chunkIdx) {
                 m_cache[channelIdx][chunkIdx].push_back(DataPointer(new DataType(data)));
             }
-            
+
             static void writeChunk(const Data& chunk, const size_t channelIdx, const size_t chunkIdx) {
                 Data& src = m_cache[channelIdx][chunkIdx];
                 src.insert(src.end(), chunk.begin(), chunk.end());
             }
-            
+
             static size_t getChannelIdxFromName(const std::string& name) {
                 boost::mutex::scoped_lock lock(m_accessMutex);
                 std::map<std::string, size_t>::const_iterator it = m_name2Idx.find(name);
@@ -288,28 +288,28 @@ namespace karabo {
                 }
                 throw KARABO_MEMORY_INIT_EXCEPTION("Total number of chunks is exhausted");
             }
-            
+
             static int getChannelStatus(const size_t channelIdx) {
                 boost::mutex::scoped_lock lock(m_accessMutex);
                 return m_channelStatus[channelIdx];
             }
-            
+
             static void setChannelStatus(const size_t channelIdx, const int status) {
                 boost::mutex::scoped_lock lock(m_accessMutex);
                 m_channelStatus[channelIdx] = status;
             }
-            
+
             static int getChunkStatus(const size_t channelIdx, const size_t chunkIdx) {
                 boost::mutex::scoped_lock lock(m_accessMutex);
                 return m_chunkStatus[channelIdx][chunkIdx];
             }
-            
+
             static void setChunkStatus(const size_t channelIdx, const size_t chunkIdx, const int status) {
                 boost::mutex::scoped_lock lock(m_accessMutex);
                 m_chunkStatus[channelIdx][chunkIdx] = status;
             }
-            
-            static bool setChunkStatusFromTo(const size_t  channelIdx, const size_t chunkIdx, const int statusFrom, const int statusTo) {
+
+            static bool setChunkStatusFromTo(const size_t channelIdx, const size_t chunkIdx, const int statusFrom, const int statusTo) {
                 boost::mutex::scoped_lock lock(m_accessMutex);
                 if (m_chunkStatus[channelIdx][chunkIdx] == statusFrom) {
                     m_chunkStatus[channelIdx][chunkIdx] = statusTo;
@@ -322,11 +322,11 @@ namespace karabo {
             static void read(DataType& data, const size_t dataIdx, const size_t channelIdx, const size_t chunkIdx) {
                 data = *(m_cache[channelIdx][chunkIdx][dataIdx]);
             }
-            
+
             static const Data& readChunk(const size_t channelIdx, const size_t chunkIdx) {
                 return m_cache[channelIdx][chunkIdx];
             }
-            
+
             static void readAsContiguosBlock(std::vector<char>& buffer, karabo::util::Hash& header, const size_t channelIdx, const size_t chunkIdx) {
                 const Data& data = m_cache[channelIdx][chunkIdx];
                 std::vector<unsigned int> byteSizes(data.size());
@@ -343,23 +343,23 @@ namespace karabo {
                 header.clear();
                 header.set<unsigned int>("nData", data.size());
                 header.set<std::vector<unsigned int> >("byteSizes", byteSizes);
-                
+
             }
-            
+
             static void cacheAsContiguousBlock(const size_t channelIdx, const size_t chunkIdx) {
                 SerializedChunkPointer scp = SerializedChunkPointer(new SerializedChunk);
                 Memory<std::vector<char> >::readAsContiguosBlock(scp->first, scp->second, channelIdx, chunkIdx);
                 m_serializedCache[channelIdx][chunkIdx] = scp;
             }
-            
+
             static const std::pair<std::vector<char>, karabo::util::Hash>& readContiguousBlockCache(const size_t channelIdx, const size_t chunkIdx) {
                 return *(m_serializedCache[channelIdx][chunkIdx]);
             }
-            
+
             static void clearContiguousBlockCache(const size_t channelIdx, const size_t chunkIdx) {
-               m_serializedCache[channelIdx][chunkIdx] = SerializedChunkPointer();
+                m_serializedCache[channelIdx][chunkIdx] = SerializedChunkPointer();
             }
-            
+
             static void writeAsContiguosBlock(const std::vector<char>& buffer, const karabo::util::Hash& header, const size_t channelIdx, const size_t chunkIdx) {
                 unsigned int nData = header.get<unsigned int>("nData");
                 const std::vector<unsigned int>& byteSizes = header.get<std::vector<unsigned int> >("byteSizes");
@@ -382,7 +382,7 @@ namespace karabo {
                     m_chunkStatus[channelIdx][i] = EMPTY;
                 }
             }
-            
+
             static void clearChunk(const size_t channelIdx, const size_t chunkIdx) {
                 m_cache[channelIdx][chunkIdx].clear();
                 m_chunkStatus[chunkIdx][chunkIdx] = EMPTY;
@@ -393,13 +393,13 @@ namespace karabo {
             }
 
         };
-        
-        
+
+
         // Static initializations
         template <class T>
         //std::vector< std::vector< std::vector<boost::shared_ptr<T> > > > Memory<T>::m_cache = std::vector< std::vector< std::vector< boost::shared_ptr<T> > > >(MAX_N_CHANNELS, std::vector< std::vector< boost::shared_ptr<T> > >(MAX_N_CHUNKS));
         typename Memory<T>::Channels Memory<T>::m_cache = typename Memory<T>::Channels(MAX_N_CHANNELS, typename Memory<T>::Chunks(MAX_N_CHUNKS));
-        
+
         template <class T>
         //std::vector<std::vector<bool> > Memory<T>::m_chunkStatus = std::vector<std::vector<bool> >(MAX_N_CHANNELS, std::vector<bool>(MAX_N_CHUNKS));
         typename Memory<T>::ChunkStatus Memory<T>::m_chunkStatus = typename Memory<T>::ChunkStatus(MAX_N_CHANNELS, std::vector<bool> (MAX_N_CHUNKS));
@@ -415,7 +415,7 @@ namespace karabo {
 
         template <class T>
         boost::mutex Memory<T>::m_accessMutex;
-        
+
         template <class T>
         boost::shared_ptr<karabo::io::BinarySerializer<T> > Memory<T>::m_serializer;
     }

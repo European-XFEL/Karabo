@@ -14,7 +14,7 @@ namespace karabo {
     namespace xms {
 
         boost::uuids::random_generator Statics::m_uuidGenerator;
-        
+
         unsigned int Statics::m_serverPorts = 0;
 
     }

@@ -30,16 +30,17 @@ namespace karabo {
     namespace core {
 
         // Convenient logging
-#define KARABO_LOG_DEBUG log() << log4cpp::Priority::DEBUG 
-#define KARABO_LOG_INFO  log() << log4cpp::Priority::INFO 
-#define KARABO_LOG_WARN  log() << log4cpp::Priority::WARN 
-#define KARABO_LOG_ERROR log() << log4cpp::Priority::ERROR 
+        #define KARABO_LOG_DEBUG log() << log4cpp::Priority::DEBUG 
+        #define KARABO_LOG_INFO  log() << log4cpp::Priority::INFO 
+        #define KARABO_LOG_WARN  log() << log4cpp::Priority::WARN 
+        #define KARABO_LOG_ERROR log() << log4cpp::Priority::ERROR 
 
         /**
          * The Device2 class.
          */
         template <class FSM >
         class Device2 : public karabo::xms::SignalSlotable, FSM {
+
         public:
 
             KARABO_CLASSINFO(Device2, "Device2", "1.0")

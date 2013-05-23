@@ -23,6 +23,7 @@ namespace karabo {
 
         template <class TPix>
         class RandomProjector : public Projector< CpuImage<TPix> > {
+
         public:
 
             KARABO_CLASSINFO(RandomProjector, "Random", "1.0")
@@ -42,7 +43,7 @@ namespace karabo {
                         .unitSymbol("#")
                         .assignmentOptional().defaultValue(1024)
                         .commit();
-                
+
                 CHOICE_ELEMENT<SingleProcessor<CpuImage<TPix> > > (expected).key("processProjection")
                         .displayedName("Process Projection")
                         .description("Post process the 2D projections with this processor")
@@ -57,25 +58,25 @@ namespace karabo {
              */
             void configure(const karabo::util::Hash & input) {
 
-                
+
             }
 
             CpuImageList<TPix> project(const CpuImage<TPix>& volume3d, const CpuImage<TPix>& referencePlane = CpuImage<TPix>()) const {
-                
+
                 for (int i = 0; i < m_nRotations; ++i) {
-                    
+
                     CpuImage<TPix> projection();
-                    
+
                     const CpuImage<TPix> rotMat = getRandomRotation();
-                    
+
                     for (int j = 0; j < referencePlane.dimX(); ++j) {
-                        CpuImage<TPix> vRef = CpuImage<TPix>::vector(referencePlane(j,0), referencePlane(j,1), referencePlane(j,2));
+                        CpuImage<TPix> vRef = CpuImage<TPix>::vector(referencePlane(j, 0), referencePlane(j, 1), referencePlane(j, 2));
                         CpuImage<TPix> vRot = rotMat * vRef;
-                        
-                        
+
+
                     }
-                    
-                    
+
+
                 }
 
 
@@ -85,9 +86,9 @@ namespace karabo {
         private: // functions
 
             CpuImage<TPix> getRandomRotation() {
-                
+
                 std::vector<double> quat(4, 0.0);
-                
+
                 double qq;
                 do {
                     qq = 0.0;
@@ -103,11 +104,11 @@ namespace karabo {
                 }
                 return CpuImage<TPix>::rotationMatrix3x3(quat[0], quat[1], quat[2], quat[3], true);
             }
-            
-            private: // members
-                
-                int m_nRotations;
-                
+
+        private: // members
+
+            int m_nRotations;
+
         };
     }
 }

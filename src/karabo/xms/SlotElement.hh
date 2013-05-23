@@ -41,7 +41,7 @@ namespace karabo {
                 m_child.setAttribute<int>("connectedSignals", KARABO_SCHEMA_NODE_TYPE, karabo::util::Schema::LEAF);
                 m_child.setAttribute<int>("connectedSignals", KARABO_SCHEMA_LEAF_TYPE, karabo::util::Schema::COMMAND);
                 m_child.setAttribute("connectedSignals", KARABO_SCHEMA_VALUE_TYPE, karabo::util::ToLiteral::to<karabo::util::Types::VECTOR_STRING>());
-                
+
                 connectionsAreReconfigurable();
             }
 

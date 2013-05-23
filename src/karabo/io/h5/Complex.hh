@@ -54,14 +54,22 @@ namespace karabo {
 
                     //                    std::string typeName = karabo::util::ToType<karabo::util::ToLiteral>::to(
                     //                               karabo::util::FromType<karabo::util::FromTypeInfo>::from(typeid (T)));
-                    m_datasetWriter = DatasetWriter<std::complex<T> >::create("DatasetWriter_" + Self::classInfo().getClassId(), config);
-                    m_datasetReader = DatasetReader<std::complex<T> >::create("DatasetReader", config);
+                    m_datasetWriter = karabo::util::Configurator<DatasetWriter<std::complex<T> > >::create("DatasetWriter_" + Self::classInfo().getClassId(), config, false);
+                    m_datasetReader = karabo::util::Configurator<DatasetReader<std::complex<T> > >::create("DatasetReader", config, false);
                 }
 
                 static const karabo::util::Dims getSingleValueDimensions() {
                     return karabo::util::Dims(2);
                 }
 
+                karabo::util::Types::ReferenceType getMemoryType() const {
+                    return karabo::util::FromType<karabo::util::FromTypeInfo>::from(typeid (std::complex<T>));
+                }
+
+//                const std::string& getElementType() const{
+//                    return getClassInfo().getClassId();
+//                }
+                
                 virtual ~Complex() {
                 }
 

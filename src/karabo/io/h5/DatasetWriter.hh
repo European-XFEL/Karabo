@@ -139,10 +139,10 @@ namespace karabo {
                     KARABO_CHECK_HDF5_STATUS(status);
                     KARABO_CHECK_HDF5_STATUS(H5Tclose(tid));
                 }
-
+                
 
             };
-
+            
             template< typename T >
             class DatasetVectorWriter : public DatasetWriter<T> {
 
@@ -171,7 +171,7 @@ namespace karabo {
                     Dataset::getDataSpaceInfo(fileDataSpace, oss);
                     KARABO_LOG_FRAMEWORK_TRACE << "  file space: " << oss.str();
                     #endif
-                    herr_t status = H5Dwrite(dataSet, tid, this->m_memoryDataSpace, fileDataSpace, H5P_DEFAULT, ptr);
+                    herr_t status = H5Dwrite(dataSet, tid, this->m_memoryDataSpace, fileDataSpace, H5P_DEFAULT, ptr); 
                     KARABO_CHECK_HDF5_STATUS(status)
                     KARABO_CHECK_HDF5_STATUS(H5Tclose(tid));
                 }
@@ -227,8 +227,6 @@ namespace karabo {
                     KARABO_LOG_FRAMEWORK_TRACE_C(_LOGGER_CATEGORY) << "entered write(pointer)";
                     const T* ptr = node.getValue<T*>();
                     hid_t tid = ScalarTypes::getHdf5NativeType<T > ();
-                    //                    Dataset::getDataSpaceInfo(this->m_memoryDataSpace, "DatasetWriter::write pointer m_memoryDataSpace");
-                    //                    Dataset::getDataSpaceInfo(fileDataSpace, "DatasetWriter::write pointer fileDataSpace");
                     herr_t status = H5Dwrite(dataSet, tid, this->m_memoryDataSpace, fileDataSpace, H5P_DEFAULT, ptr);
                     KARABO_CHECK_HDF5_STATUS(status);
                     KARABO_CHECK_HDF5_STATUS(H5Tclose(tid));

@@ -14,24 +14,29 @@
 using namespace karabo::util;
 
 namespace karabo {
-    
+
     namespace xms {
-        
+
+
         const std::string& Slot::getInstanceIdOfSender() const {
             return m_instanceIdOfSender;
         }
-        
+
+
         const std::string& Slot::getRoleIdOfSender() const {
             return m_roleOfSender;
         }
-        
+
+
         const std::string& Slot::getUserIdOfSender() const {
             return m_userIdOfSender;
         }
-        
+
+
         const std::string& Slot::getSessionTokenOfSender() const {
             return m_sessionTokenOfSender;
         }
+
 
         void Slot::handlePossibleReply(const karabo::util::Hash& header) {
             std::pair<bool, karabo::util::Hash> possibleReply = m_signalSlotable->digestPotentialReply();
@@ -42,7 +47,8 @@ namespace karabo {
                 }
             }
         }
-        
+
+
         void Slot::extractSenderInformation(const karabo::util::Hash& header) {
             boost::optional<const Hash::Node&> node = header.find("userId");
             if (node) m_userIdOfSender = node->getValue<string>();
@@ -53,22 +59,24 @@ namespace karabo {
             node = header.find("sessionToken");
             if (node) m_sessionTokenOfSender = node->getValue<string>();
         }
-        
+
+
         void Slot::invalidateSenderInformation() {
             m_userIdOfSender = "";
             m_roleOfSender = "";
             m_instanceIdOfSender = "";
             m_sessionTokenOfSender = "";
         }
-        
-//        void Slot::startSlotProcessing() {
-//            m_signalSlotable->setSlotProcessingFlag(true);
-//        }
-        
-//        void Slot::stopSlotProcessing() {
-//            m_signalSlotable->setSlotProcessingFlag(false);
-//        }
-        
+
+        //        void Slot::startSlotProcessing() {
+        //            m_signalSlotable->setSlotProcessingFlag(true);
+        //        }
+
+        //        void Slot::stopSlotProcessing() {
+        //            m_signalSlotable->setSlotProcessingFlag(false);
+        //        }
+
+
         template <>
         const bool& Slot::getAndCast(const std::string& key, const karabo::util::Hash& hash) const {
             //std::cout << "int -> boolean caster in action..." << std::endl;
@@ -88,4 +96,4 @@ namespace karabo {
             }
         }
     }
-} 
+}

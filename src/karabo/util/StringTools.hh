@@ -96,7 +96,7 @@ namespace karabo {
         inline std::string toString(const std::wstring& value) {
             return toString(value.c_str());
         }
-
+        
         template <typename T>
         inline std::string toString(const std::vector<T>& value) {
             if (value.empty()) return "";
