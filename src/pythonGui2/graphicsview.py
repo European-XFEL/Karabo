@@ -794,7 +794,7 @@ class GraphicsView(QGraphicsView):
             mimeData = event.mimeData()
             # Source type
             sourceType = mimeData.data("sourceType")
-            # Drop from NavigationTreeView or AttributeTreeWidget?
+            # Drop from NavigationTreeView or ParameterTreeWidget?
             if sourceType == "NavigationTreeView":
                 # Navigation item type
                 navigationItemType = mimeData.data("navigationItemType").toInt()
@@ -843,7 +843,7 @@ class GraphicsView(QGraphicsView):
                     # Register for value changes of devInstId
                     Manager().registerEditableComponent(customItem.devInstIdKey, customItem)
 
-            elif sourceType == "AttributeTreeWidget":
+            elif sourceType == "ParameterTreeWidget":
                 # Internal key
                 internalKey = QString(mimeData.data("internalKey"))
                 # Display name
@@ -887,7 +887,7 @@ class GraphicsView(QGraphicsView):
                         displayText = str()
                         commandEnabled = False
                         command = str()
-                        attributeTreeWidgetItem = source.getAttributeTreeWidgetItemByKey(internalKey)
+                        attributeTreeWidgetItem = source.getParameterTreeWidgetItemByKey(internalKey)
                         if attributeTreeWidgetItem:
                             allowedStates = attributeTreeWidgetItem.allowedStates
                             displayText = attributeTreeWidgetItem.displayText
