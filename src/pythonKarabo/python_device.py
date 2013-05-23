@@ -124,7 +124,7 @@ class PythonDevice(BaseFsm):
         self.running = True
         self.startFsm()
         while self.running:
-            time.sleep(3)
+            time.sleep(1)
             
     def stopEventLoop(self):
         self.running = False
