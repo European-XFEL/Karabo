@@ -322,6 +322,16 @@ class TestStruct1(object):
         e.reconfigurable()
         e.commit()
         
+        e = VECTOR_STRING_ELEMENT(expected).key("exampleKey14")
+        e.assignmentOptional().defaultValue(["Hallo", "World", "Test"])
+        e.reconfigurable()
+        e.commit()
+        
+        e = VECTOR_STRING_ELEMENT(expected).key("exampleKey15")
+        e.assignmentOptional().defaultValueFromString("word1, word2, test")
+        e.reconfigurable()
+        e.commit()
+        
         e = INT32_ELEMENT(expected).key("exampleIntKey")
         e.assignmentOptional().defaultValueFromString("20")
         e.reconfigurable()
