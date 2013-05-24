@@ -16,7 +16,7 @@ export PYTHONPATH=\$PYTHONPATH\:\$karabo/lib\:\$karabo/lib/pythonKarabo
 export LD_LIBRARY_PATH=\$LD_LIBRARY_PATH\:\$karabo/extern/lib
 export DYLD_LIBRARY_PATH=\$karabo/extern/lib
 export PATH=\$karabo/extern/bin
-python \$karabo/lib/pythonKarabo/device_server.py
+python \$karabo/lib/pythonKarabo/device_server.py \$*
 
 End-of-file
 chmod u+x karabo-pythondeviceserver
