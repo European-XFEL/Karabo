@@ -22,7 +22,7 @@ class  Authenticator_TestCase(unittest.TestCase):
         provider = "LOCAL";
         ipAddress = "PythonUnitTestsIpAddress";
         hostname = "127.0.0.1";
-        portNumber = "4444";
+        portNumber = "44444";
         software = "Karabo";
         #
         timeStr = "20130120T122059.259188123";
