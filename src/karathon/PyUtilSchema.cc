@@ -1213,7 +1213,11 @@ void exportPyUtilSchema() {
         s.def("hasDescription", &Schema::hasDescription);
 
         s.def("hasExpertLevel", &Schema::hasExpertLevel);
-
+        
+        s.def("hasMin", &Schema::hasMin);
+        
+        s.def("hasMax", &Schema::hasMax);
+        
         //all other has .....
 
         //********* is methods ****************
