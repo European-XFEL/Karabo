@@ -42,7 +42,7 @@ class Schema_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST(testGetAlarmLowAlarmHigh);
     CPPUNIT_TEST(testGetWarnLowWarnHigh);
     CPPUNIT_TEST(testHasAlarmWarn);
-    CPPUNIT_TEST(testSlotSchemaElement);
+    CPPUNIT_TEST(testSlotElement);
     CPPUNIT_TEST(testVectorElements);
     CPPUNIT_TEST(testPathElement);
     
@@ -87,7 +87,7 @@ private: //functions
     void testGetAlarmLowAlarmHigh();
     void testGetWarnLowWarnHigh();
     void testHasAlarmWarn();
-    void testSlotSchemaElement();
+    void testSlotElement();
     void testVectorElements();
     void testPathElement();
 

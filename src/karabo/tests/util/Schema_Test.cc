@@ -404,16 +404,16 @@ void Schema_Test::testPerKeyFunctionality() {
 }
 
 
-void Schema_Test::testSlotSchemaElement() {
+void Schema_Test::testSlotElement() {
     Schema sch("OtherSchemaElements", Schema::AssemblyRules(READ | WRITE | INIT));
     OtherSchemaElements::expectedParameters(sch);
 
     CPPUNIT_ASSERT(sch.getDescription("slotTest") == "Test slot element");
     CPPUNIT_ASSERT(sch.getAllowedStates("slotTest")[0] == "Started");
     CPPUNIT_ASSERT(sch.getAllowedStates("slotTest")[2] == "Reset");
-
+    CPPUNIT_ASSERT(sch.isCommand("slotTest") == true);
+    CPPUNIT_ASSERT(sch.isProperty("slotTest") == false);
 }
-
 
 void Schema_Test::testVectorElements() {
     Schema sch("OtherSchemaElements", Schema::AssemblyRules(READ | WRITE | INIT));
@@ -519,6 +519,8 @@ void Schema_Test::testPathElement() {
     CPPUNIT_ASSERT(sch.getDefaultValue<string>("testfile") == "initFile");
     CPPUNIT_ASSERT(sch.hasAlarmHigh("testfile") == true);
     CPPUNIT_ASSERT(sch.getAlarmLow<string>("testfile") == "b");
+    
+    CPPUNIT_ASSERT(sch.isProperty("testfile") == true);
 }
 
 
