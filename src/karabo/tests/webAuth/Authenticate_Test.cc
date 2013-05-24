@@ -87,7 +87,7 @@ void Authenticate_Test::testCorrectLogin() {
     string provider = "LOCAL";
     string ipAddress = "c++UnitTestsIpAddress";
     string hostname = "127.0.0.1";
-    string portNumber = "4444";
+    string portNumber = "44444";
     string software = "Karabo";
     //
     string timeStr = "20130120T122059.259188123";
