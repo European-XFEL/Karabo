@@ -401,28 +401,12 @@ class Launcher(threading.Thread):
             DeviceServer.dead_threads.append(self)
             DeviceServer.live_threads.remove(self)
 
-
-def getConfigurationFromCommandLine(argv):
-    if argv is None:
-        hostname = socket.gethostname()
-        host, dot, domain = hostname.partition('.')
-        serverid = host + "/" + DeviceServer.__classid__ + "/0"
-        return Hash("serverId", serverid)
     
 def main(args):
     try:
         server = Runner(DeviceServer).instantiate(args)
         if server:
             server.run()
-        #configuration = getConfigurationFromCommandLine(argv)
-        #if configuration is None:
-        #    hostname = socket.gethostname()
-        #    host, dot, domain = hostname.partition('.')
-        #    serverid = host + "/" + DeviceServer.__classid__ + "/0"
-        #    configuration = Hash("serverId", serverid)
-        #print "DeviceServer config\n", configuration
-        #server = DeviceServer.create("DeviceServer", configuration)
-        #server.run()
     except Exception,e:
         print "Exception caught: " + str(e)
     
