@@ -354,6 +354,8 @@ class  Schema_TestCase(unittest.TestCase):
             self.assertEqual(self.schema.hasDefaultValue("exampleKey10"), True)
             self.assertEqual(self.schema.hasDefaultValue("exampleKey11"), True)
             self.assertEqual(self.schema.hasDefaultValue("exampleKey12"), True)
+            self.assertEqual(self.schema.hasDefaultValue("exampleKey14"), True)
+            self.assertEqual(self.schema.hasDefaultValue("exampleKey15"), True)
  
             self.assertEqual(self.schema.getAlarmLow("exampleKey7"), [-1,-1,-1])
             self.assertEqual(self.schema.getAlarmHigh("exampleKey7"), [-2,2,-2])
@@ -374,7 +376,16 @@ class  Schema_TestCase(unittest.TestCase):
 
             self.assertEqual(self.schema.getDefaultValueAs("exampleKey12", Types.STRING), "1.1, -2.2, 3.3")
             self.assertEqual(self.schema.getDefaultValueAs("exampleKey12", Types.VECTOR_DOUBLE), [1.1, -2.2, 3.3])
-
+            
+            self.assertEqual(self.schema.getDefaultValue("exampleKey14"), ["Hallo", "World", "Test"])
+            self.assertEqual(self.schema.getDefaultValueAs("exampleKey14", Types.STRING), "Hallo,World,Test")
+ 
+            ##If default value of vector was set with 'defaultValueFromString', then this will not work: 
+            #a = self.schema.getDefaultValue("exampleKey15")
+            ##Correct usage:
+            #b = self.schema.getDefaultValueAs("exampleKey15", Types.VECTOR_STRING)
+            self.assertEqual(self.schema.getDefaultValueAs("exampleKey15", Types.VECTOR_STRING), ["word1", "word2", "test"])
+ 
             self.assertEqual(self.schema.getMinSize("exampleKey10"), 2)
             self.assertEqual(self.schema.getMaxSize("exampleKey10"), 7)
         except Exception,e:
