@@ -1226,10 +1226,16 @@ void exportPyUtilSchema() {
         s.def("isAssignmentMandatory", &Schema::isAssignmentMandatory);
         s.def("isAssignmentOptional", &Schema::isAssignmentOptional);
 
+        s.def("isExpertLevelAdvanced", &Schema::isExpertLevelAdvanced);
+        s.def("isExpertLevelMedium", &Schema::isExpertLevelMedium);
+        s.def("isExpertLevelSimple", &Schema::isExpertLevelSimple);
+        
         s.def("isChoiceOfNodes", &Schema::isChoiceOfNodes);
         s.def("isListOfNodes", &Schema::isListOfNodes);
         s.def("isLeaf", &Schema::isLeaf);
         s.def("isNode", &Schema::isNode);
+        s.def("isCommand", &Schema::isCommand);
+        s.def("isProperty", &Schema::isProperty);
 
         s.def("help", &schemawrap::help, (bp::arg("classId") = ""));
 
