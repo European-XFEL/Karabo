@@ -351,7 +351,10 @@ class  Schema_TestCase(unittest.TestCase):
         try:
             self.assertEqual(self.schema.isAccessReadOnly("exampleKey7"), True)
             self.assertEqual(self.schema.hasDefaultValue("exampleKey7"), True)
-
+            self.assertEqual(self.schema.hasDefaultValue("exampleKey10"), True)
+            self.assertEqual(self.schema.hasDefaultValue("exampleKey11"), True)
+            self.assertEqual(self.schema.hasDefaultValue("exampleKey12"), True)
+ 
             self.assertEqual(self.schema.getAlarmLow("exampleKey7"), [-1,-1,-1])
             self.assertEqual(self.schema.getAlarmHigh("exampleKey7"), [-2,2,-2])
             self.assertEqual(self.schema.getWarnLow("exampleKey7"), [0,0,0])
