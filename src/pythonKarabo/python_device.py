@@ -1,13 +1,4 @@
-# To change this template, choose Tools | Templates
-# and open the template in the editor.
-
-__author__="esenov"
-__date__ ="$Jul 30, 2012 9:03:51 PM$"
-
-# To change this template, choose Tools | Templates
-# and open the template in the editor.
-
-__author__="esenov"
+__author__="Sergey Esenov <serguei.essenov at xfel.eu>"
 __date__ ="$Jul 30, 2012 9:03:51 PM$"
 
 import threading
