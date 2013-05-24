@@ -355,3 +355,9 @@ class TestStruct1(object):
         e.isDirectory()
         e.assignmentMandatory()
         e.commit()
+
+        e = SLOT_ELEMENT(expected).key("slotTest")
+        e.displayedName("Reset")
+        e.description("Test slot element")
+        e.allowedStates("Started, Stopped, Reset")
+        e.commit()

@@ -399,6 +399,20 @@ class  Schema_TestCase(unittest.TestCase):
         except Exception,e:
             self.fail("test_getDisplayType exception: " + str(e))  
     
+    def test_isCommand(self):
+        try:  
+            self.assertTrue(self.schema.isCommand("slotTest"))
+        except Exception,e:
+            self.fail("test_isCommand exception: " + str(e))
+            
+    def test_isProperty(self):
+        try:  
+            self.assertFalse(self.schema.isProperty("slotTest"))
+            self.assertTrue(self.schema.isProperty("testPath2"))
+            
+        except Exception,e:
+            self.fail("test_isProperty exception: " + str(e))
+            
     def test_perKeyFunctionality(self):
         try:
             keys = self.schema.getKeys()
@@ -469,8 +483,9 @@ class  Schema_TestCase(unittest.TestCase):
         slog.ERROR("This is ERROR message")
     
     def test_helpFunction(self):
+        pass
         #uncomment to see help:
-        print self.schema
+        #self.schema.help()
 
 
 if __name__ == '__main__':
