@@ -38,12 +38,12 @@ namespace karabo {
                 template <class Derived>
                 Dataset(const karabo::util::Hash& input, Derived* d) : Element(input), m_numberAllocatedRecords(0) {
                     if (input.has("compressionLevel")) {
-                        m_compressionLevel = input.get<int>("compressionLevel");
+                        m_compressionLevel = input.getAs<int>("compressionLevel");
                     } else {
                         m_compressionLevel = 0;
                     }
                     if (input.has("chunkSize")) {
-                        m_chunkSize = input.get<unsigned long long>("chunkSize");
+                        m_chunkSize = input.getAs<unsigned long long>("chunkSize");
                     }else{
                         m_chunkSize = 1;
                     }                    
@@ -105,9 +105,7 @@ namespace karabo {
 
                 virtual void create(hsize_t chunkSize);
 
-                void create(hid_t tableGroup); 
-
-                void createAttributes(hid_t element);
+                void create(hid_t tableGroup);                 
 
                 bool isDataset() const {
                     return true;
@@ -151,9 +149,8 @@ namespace karabo {
 
                 virtual hid_t openElement(hid_t group);
 
-                virtual void close();
-
-                hid_t m_dataSet;
+                void close();
+                
 
 
 

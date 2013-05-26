@@ -10,7 +10,7 @@
 #include "ScalarAttribute.hh"
 using namespace karabo::io::h5;
 
-namespace karabo {
+namespace karabo {  
     namespace io {
         namespace h5 {
 
