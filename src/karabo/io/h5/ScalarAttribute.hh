@@ -46,6 +46,18 @@ namespace karabo {
                 virtual ~ScalarAttribute() {
                 }
 
+                 static hid_t m_dspace;
+
+                static hid_t initDataSpace() {
+                    hsize_t ex[] = {1};                    
+                    return H5Screate_simple(1, ex, NULL);
+                }
+                
+                hid_t createDataspace(const std::vector<hsize_t>& ex, const std::vector<hsize_t>& maxEx) {
+//                    std::clog << "createDataspace: " << m_dspace << std::endl;
+                    return this->m_dspace;
+                }
+                
                 static hid_t getStandardTypeId() {
                     return ScalarTypes::getHdf5StandardType<T>();
                 }
@@ -130,6 +142,8 @@ namespace karabo {
 
             }
 
+            template<class T>
+            hid_t ScalarAttribute<T>::m_dspace = ScalarAttribute<T>::initDataSpace();
 
             // typedefs
             typedef ScalarAttribute<char> CharAttribute;

@@ -48,9 +48,9 @@ namespace karabo {
                 KARABO_CHECK_HDF5_STATUS(H5Pset_create_intermediate_group(lcpl, 1));
                 hid_t gcpl = H5Pcreate(H5P_GROUP_CREATE);
                 KARABO_CHECK_HDF5_STATUS(H5Pset_link_creation_order(gcpl, H5P_CRT_ORDER_TRACKED));
-                m_group = H5Gcreate(m_parentGroup, m_h5name.c_str(), lcpl, gcpl, H5P_DEFAULT);
-                KARABO_CHECK_HDF5_STATUS(m_group);
-                H5Gclose(m_group); //???
+                m_h5obj = H5Gcreate(m_parentGroup, m_h5name.c_str(), lcpl, gcpl, H5P_DEFAULT);
+                KARABO_CHECK_HDF5_STATUS(m_h5obj);
+                H5Gclose(m_h5obj); //???
             }
 
 
@@ -60,28 +60,22 @@ namespace karabo {
                 KARABO_CHECK_HDF5_STATUS(H5Pset_create_intermediate_group(lcpl, 1));
                 hid_t gcpl = H5Pcreate(H5P_GROUP_CREATE);
                 KARABO_CHECK_HDF5_STATUS(H5Pset_link_creation_order(gcpl, H5P_CRT_ORDER_TRACKED));
-                m_group = H5Gcreate(tableGroup, m_h5PathName.c_str(), lcpl, gcpl, H5P_DEFAULT);
-                KARABO_CHECK_HDF5_STATUS(m_group);
-                H5Gclose(m_group); 
+                m_h5obj = H5Gcreate(tableGroup, m_h5PathName.c_str(), lcpl, gcpl, H5P_DEFAULT);
+                KARABO_CHECK_HDF5_STATUS(m_h5obj);
+                H5Gclose(m_h5obj); 
             }
-
-
-            void Group::createAttributes(hid_t element) {
-                for (size_t i = 0; i < m_attributes.size(); ++i) {
-                    m_attributes[i]->create(m_group);
-                }
-            }
+           
 
 
             hid_t Group::openElement(hid_t group) {
-                m_group = H5Gopen(group, m_h5PathName.c_str(), H5P_DEFAULT);
-                KARABO_CHECK_HDF5_STATUS(m_group);
-                return m_group;
+                m_h5obj = H5Gopen(group, m_h5PathName.c_str(), H5P_DEFAULT);
+                KARABO_CHECK_HDF5_STATUS(m_h5obj);
+                return m_h5obj;
             }
 
 
             void Group::close() {
-                KARABO_CHECK_HDF5_STATUS(H5Gclose(m_group));
+                KARABO_CHECK_HDF5_STATUS(H5Gclose(m_h5obj));
             }
 
 

@@ -499,10 +499,10 @@ void H5File_Test::testReadTable() {
         table->read(0);
 
 
-//        size_t printSize = (arraySize < 6 ? arraySize : 6);
-//        for (size_t i = 0; i < printSize; ++i) {
-//            clog << "image[" << i << "] = " << image[i] << endl;
-//        }
+        //        size_t printSize = (arraySize < 6 ? arraySize : 6);
+        //        for (size_t i = 0; i < printSize; ++i) {
+        //            clog << "image[" << i << "] = " << image[i] << endl;
+        //        }
 
         float b = data.get<float>("instrument.b");
         KARABO_LOG_FRAMEWORK_TRACE_CF << "data(\"instrument.b\"): " << b;
@@ -1145,75 +1145,90 @@ void H5File_Test::testWriteFailure() {
 }
 
 
-void H5File_Test::testManyGroups() {
-    Profiler p("ManyGroups");
+void H5File_Test::testManyTables() {
+    Profiler p("ManyTables");
 
-  
+
     try {
 
         Hash data, d1, d2, d3, d4;
 
-        int n = 500;
+
+        int n = 5;
         int rec = 100;
+
         float totalSize = rec * (4 + 4 + 8 + 2) * n / 1024;
         for (int i = 0; i < n; ++i) {
-            d1.set(toString(i), i);
-            d2.set(toString(i), static_cast<float> (i));
-            d3.set(toString(i), static_cast<double> (i));
-            d4.set(toString(i), static_cast<unsigned short> (i));
+            data.set(toString(i), i);
+            data.set("id" + toString(i), (unsigned char) 0);
         }
 
-        data.set("d1", d1);
-        data.set("d2", d2);
-        data.set("d3", d3);
-        data.set("d4", d4);
-        
+
+
         p.start("format");
-        Format::Pointer dataFormat = Format::discover(data, FormatDiscoveryPolicy::create(Hash("Policy.chunkSize", 100)));
-        vector<string> el;
-        dataFormat->getElementsNames(el);
-        for (size_t i = 0; i < el.size(); ++i) {
-            dataFormat->getElement(el[i])->setCompressionLevel(0);
-        }
+        Format::Pointer dataFormat = Format::discover(data);
+        Hash h("h5name", "3");
+        h5::Element::Pointer e = h5::Element::create("VLARRAY_INT32", h);
+        dataFormat->replaceElement("3", e);
         p.stop("format");
 
-        for (int i = 0; i < n; ++i) {
-            d1.set(toString(i), vector<int>(rec, i));
-            d2.set(toString(i), vector<float> (rec, i));
-            d3.set(toString(i), vector<double> (rec, i));
-            d4.set(toString(i), vector<unsigned short> (rec, i));
-        }
-
-        data.set("d1", d1);
-        data.set("d2", d2);
-        data.set("d3", d3);
-        data.set("d4", d4);
-
-
-        string filename = "/dev/shm/fileMany.h5";
-        filename   = resourcePath("fileMany.h5");
+        //        for (int i = 0; i < n; ++i) {
+        //            d1.set(toString(i), vector<int>(rec, i));
+        //            d2.set(toString(i), vector<float> (rec, i));
+        //            d3.set(toString(i), vector<double> (rec, i));
+        //            d4.set(toString(i), vector<unsigned short> (rec, i));
+        //        }
+        //
+        //        data.set("d1", d1);
+        //        data.set("d2", d2);
+        //        data.set("d3", d3);
+        //        data.set("d4", d4);
+        //
+        //
+        string filename = "/dev/shm/fileManyTables.h5";
+        //        filename = resourcePath("fileManyTables.h5");
         File file(filename);
         file.open(File::TRUNCATE);
-        KARABO_LOG_FRAMEWORK_TRACE_CF << "File is open";
-
 
         p.start("create");
-        Table::Pointer t = file.createTable("/base", dataFormat);
-        KARABO_LOG_FRAMEWORK_TRACE_CF << "File structure is created";
+
+
+        Table::Pointer t = file.createTable("/monitor/motor1", dataFormat);
+
+        data.set("3", 234);
+
+//        clog << "File structure is created" << endl;
         p.stop("create");
-
-        //        t->writeAttributes(data);
+        //
+        //        //        t->writeAttributes(data);
         p.start("write");
-        //        for (int i = 0; i < rec; ++i) {
-        //            t->write(data, i);
+        h5::Element::Pointer e3 = t->getFormat()->getElement("3");
+        h5::Element::Pointer eid3 = t->getFormat()->getElement("id3");
+
+        vector<int> v(2, 0);
+        v[0] = 234;
+        v[1] = 88;
+        data.clear();
+        data.set("3", &v[0]).setAttribute("size", 2);
+        e3->write(data, 0);
+        unsigned char id3 = 0;
+        id3 = id3 | 1; // rec 0 -> 2^0 = 1
+        id3 = id3 | 8; // rec 3 -> 2^3 =   8
+//        clog << "id3: " << oct << (int) id3 << endl;
+        data.set("id3", id3);
+        eid3->write(data, 0);
+
+
+        //        //        for (int i = 0; i < rec; ++i) {
+        //        //            t->write(data, i);
+        //        //        }
+        //
+        //        int m = 1;
+        //        for (int i = 0; i < m; ++i) {
+        //            t->write(data, i*rec, rec);
         //        }
-
-        int m = 1;
-        for (int i = 0; i < m; ++i) {
-            t->write(data, i*rec, rec);
-        }
-        totalSize *= m;
-
+        //        totalSize *= m;
+        //
         p.stop("write");
 
         p.start("close");
@@ -1221,7 +1236,7 @@ void H5File_Test::testManyGroups() {
         p.stop("close");
 
         double formatTime = HighResolutionTimer::time2double(p.getTime("format"));
-        double discoverTime = HighResolutionTimer::time2double(p.getTime("discover"));
+        //        double discoverTime = HighResolutionTimer::time2double(p.getTime("discover"));
         double createTime = HighResolutionTimer::time2double(p.getTime("create"));
         double writeTime = HighResolutionTimer::time2double(p.getTime("write"));
         double closeTime = HighResolutionTimer::time2double(p.getTime("close"));
@@ -1229,16 +1244,14 @@ void H5File_Test::testManyGroups() {
         if (false) {
             clog << endl;
             clog << "file: " << filename << endl;
-            //          clog << "initialize data                  : " << initializeTime << " [s]" << endl;
-            clog << "discover                           : " << discoverTime << " [s]" << endl;
             clog << "format                           : " << formatTime << " [s]" << endl;
             clog << "open/prepare file                : " << createTime << " [s]" << endl;
             clog << "write data (may use memory cache): " << writeTime << " [s]" << endl;
-            clog << "written data size                : " << totalSize << " [kB]" << endl;
-            clog << "writing speed                    : " << totalSize / writeTime << " [kB/s]" << endl;
+            //            clog << "written data size                : " << totalSize << " [kB]" << endl;
+            //            clog << "writing speed                    : " << totalSize / writeTime << " [kB/s]" << endl;
             clog << "close                            : " << closeTime << " [s]" << endl;
             clog << "write+close(flush to disk)       : " << writeTime + closeTime << " [s]" << endl;
-            clog << "write+close(flush to disk) speed : " << totalSize / (writeTime + closeTime) << " [kB/s]" << endl;
+            //            clog << "write+close(flush to disk) speed : " << totalSize / (writeTime + closeTime) << " [kB/s]" << endl;
         }
 
 
@@ -1250,40 +1263,43 @@ void H5File_Test::testManyGroups() {
 }
 
 
-void H5File_Test::testManyTables() {
-    Profiler p("ManyTable");
+void H5File_Test::testManyGroups() {
+    Profiler p("ManyGroups");
 
-    KARABO_LOG_FRAMEWORK_TRACE_CF << "start ManyTables";
+    KARABO_LOG_FRAMEWORK_TRACE_CF << "start ManyGroups";
     try {
 
         Hash d1, d2, d3, d4;
 
-        int n = 500; //5000; //500;//5000;//20000;//25000;
-        int rec = 200;
+        int n = 100;//0; //5000; //500;//5000;//20000;//25000;
+        size_t rec = 100;
         float totalSize = rec * (4 + 4 + 8 + 2) * n / 1024;
+        bool attr = false;
         for (int i = 0; i < n; ++i) {
             d1.set(toString(i), i);
             d2.set(toString(i), static_cast<float> (i));
             d3.set(toString(i), static_cast<double> (i));
             d4.set(toString(i), static_cast<unsigned short> (i));
-            //    d1.setAttribute(toString(i), "unit", "mA");
-            //    d1.setAttribute(toString(i), "a", 234);
-            //    d2.setAttribute(toString(i), "unit", "mA"); 
-            //    d2.setAttribute(toString(i), "a", 234);
-            //    d3.setAttribute(toString(i), "unit", "mA");
-            //    d3.setAttribute(toString(i), "a", 234);
-            //    d4.setAttribute(toString(i), "unit", "mA");
-            //    d4.setAttribute(toString(i), "a", 23            
+            if (attr) {
+                d1.setAttribute(toString(i), "unit", 2);
+                //d1.setAttribute(toString(i), "a", 234);
+                d2.setAttribute(toString(i), "unit", 3);
+                //d2.setAttribute(toString(i), "a", 235);
+                d3.setAttribute(toString(i), "unit", 4);
+                //d3.setAttribute(toString(i), "a", 236);
+                d4.setAttribute(toString(i), "unit", 5);
+                //d4.setAttribute(toString(i), "a", 237);
+            }
         }
 
-        //        vector<unsigned char>& status = d1.bindReference<vector<unsigned char> >("status");
+        //        vector<unsigned char>& status = d1.bindReference<vector<unsigned char> >("status");0
         //        status.resize(n*200, 1);
         //        d1.setAttribute("status","dims",Dims(200,n).toVector());
 
-
-        p.start("format");
-
-        FormatDiscoveryPolicy::Pointer policy = FormatDiscoveryPolicy::create(Hash("Policy.chunkSize", rec));
+  
+        p.start("format"); 
+ 
+        FormatDiscoveryPolicy::Pointer policy = FormatDiscoveryPolicy::create("Policy", Hash("chunkSize", static_cast<unsigned long long>(rec), "compressionLevel", 0));
         Format::Pointer dataFormat1 = Format::discover(d1, policy);
         Format::Pointer dataFormat2 = Format::discover(d2, policy);
         Format::Pointer dataFormat3 = Format::discover(d3, policy);
@@ -1292,78 +1308,57 @@ void H5File_Test::testManyTables() {
         p.stop("format");
 
 
-        //        Hash c1, c2, c3, c4;
-        //        p.start("discover");
-        //        Format::discoverFromHash(d1, c1);
-        //        Format::discoverFromHash(d2, c2);
-        //        Format::discoverFromHash(d3, c3);
-        //        Format::discoverFromHash(d4, c4);
-        //        p.stop("discover");
-        //
-        //        //        data.set("d1", d1);
-        //        //        data.set("d2", d2);
-        //        //        data.set("d3", d3);
-        //        //        data.set("d4", d4);
-        //
-        //
-        //        p.start("format");
-        //        Format::Pointer dataFormat1 = Format::createFormat(c1, false);
-        //        //        vector<string> el;
-        //        //        dataFormat1->getElementsNames(el);
-        //        //        for (size_t i = 0; i < el.size(); ++i) {
-        //        //            dataFormat1->getElement(el[i])->setCompressionLevel(6);
-        //        //        }
-        //        Format::Pointer dataFormat2 = Format::createFormat(c2, false);
-        //
-        //        //        dataFormat2->getElementsNames(el);
-        //        //        for (size_t i = 0; i < el.size(); ++i) {
-        //        //            dataFormat2->getElement(el[i])->setCompressionLevel(6);
-        //        //        }
-        //        Format::Pointer dataFormat3 = Format::createFormat(c3, false);
-        //
-        //        //        dataFormat3->getElementsNames(el);
-        //        //        for (size_t i = 0; i < el.size(); ++i) {
-        //        //            dataFormat3->getElement(el[i])->setCompressionLevel(6);
-        //        //        }
-        //        Format::Pointer dataFormat4 = Format::createFormat(c4, false);
-        //
-        //        //        dataFormat4->getElementsNames(el);
-        //        //        for (size_t i = 0; i < el.size(); ++i) {
-        //        //            dataFormat4->getElement(el[i])->setCompressionLevel(6);
-        //        //        }
-
-        p.stop("format");
-
-
-
-        string filename = "/dev/shm/fileManyTables.h5";
-        filename   = resourcePath("fileManyTables.h5");
+        string filename = "/dev/shm/fileManyGroups.h5";
+        filename = resourcePath("fileManyGroups.h5");
         File file(filename);
         file.open(File::TRUNCATE);
         KARABO_LOG_FRAMEWORK_TRACE_CF << "File is open";
 
 
-        p.start("create");        
+        p.start("create");
         Table::Pointer t1 = file.createTable("/base/c1", dataFormat1);
         Table::Pointer t2 = file.createTable("/base/c2", dataFormat2);
         Table::Pointer t3 = file.createTable("/base/c3", dataFormat3);
         Table::Pointer t4 = file.createTable("/base/c4", dataFormat4);
         KARABO_LOG_FRAMEWORK_TRACE_CF << "File structure is created";
         p.stop("create");
-
-        //        p.start("attribute");
-        //        t1->writeAttributes(d1);
-        //        t2->writeAttributes(d2);
-        //        t3->writeAttributes(d3);
-        //        t4->writeAttributes(d4);
-        //        p.stop("attribute");
-
-
+ 
+        p.start("attribute");
+        if (attr) {
+            clog << "write attributes" << endl;
+            p.start("attribute1");
+            t1->writeAttributes(d1);
+            p.stop("attribute1");
+            double attTime1 = HighResolutionTimer::time2double(p.getTime("attribute1"));
+            clog << "t1: " << attTime1 << endl;
+            p.start("attribute2");
+            t2->writeAttributes(d2);
+            p.stop("attribute2");
+            double attTime2 = HighResolutionTimer::time2double(p.getTime("attribute2"));
+            clog << "t2: " << attTime2 << endl;
+            p.start("attribute3");
+            t3->writeAttributes(d3);
+            p.stop("attribute3");
+            double attTime3 = HighResolutionTimer::time2double(p.getTime("attribute3"));
+            clog << "t3: " << attTime3 << endl;
+            p.start("attribute4");
+            t4->writeAttributes(d4);
+            p.stop("attribute4");
+            double attTime4 = HighResolutionTimer::time2double(p.getTime("attribute4"));
+            clog << "t4: " << attTime4 << endl << "Attributes have been written" << endl;
+        }
+        p.stop("attribute");
+        #define AAA
+        #ifdef AAA
         for (int i = 0; i < n; ++i) {
-            d1.set(toString(i), vector<int>(rec, i));
-            d2.set(toString(i), vector<float> (rec, i));
-            d3.set(toString(i), vector<double> (rec, i));
-            d4.set(toString(i), vector<unsigned short> (rec, i));
+            vector<int>& v1 = d1.bindReference< vector<int> >(toString(i));
+            v1.resize(rec, i);
+            vector<float>& v2 = d2.bindReference < vector<float> >(toString(i));
+            v2.resize(rec, i);
+            vector<double>& v3 = d3.bindReference < vector<double> >(toString(i));
+            v3.resize(rec, i);
+            vector<unsigned short>& v4 = d4.bindReference < vector<unsigned short> >(toString(i));
+            v4.resize(rec, i);
         }
         //            vector<unsigned char>& status1 = d1.bindReference<vector<unsigned char> >("status");
         //            status1.resize(200*n*rec, 1);
@@ -1381,7 +1376,7 @@ void H5File_Test::testManyTables() {
         //            t4->write(d4, i);
         //        }
 
-        int m = 10;
+        int m = 1;
         for (int i = 0; i < m; ++i) {
             t1->write(d1, i*rec, rec);
             t2->write(d2, i*rec, rec);
@@ -1391,21 +1386,94 @@ void H5File_Test::testManyTables() {
         totalSize *= m;
 
         p.stop("write");
-
         p.start("close");
         file.close();
         p.stop("close");
+
+        {  
+            file.open(File::READONLY);
+            //clog << "a" << endl;
+            p.start("open");
+            Table::Pointer t1 = file.getTable("/base/c1");
+            Table::Pointer t2 = file.getTable("/base/c2");
+            Table::Pointer t3 = file.getTable("/base/c3");
+            Table::Pointer t4 = file.getTable("/base/c4");
+            KARABO_LOG_FRAMEWORK_TRACE_CF << "File structure is open";
+            p.stop("open");
+            //clog << "a" << endl;
+            Hash rd1, rd2, rd3, rd4;
+            p.start("bind");
+            t1->bind(rd1, rec);
+            t2->bind(rd2, rec);
+            t3->bind(rd3, rec);
+            t4->bind(rd4, rec);
+            p.stop("bind");
+
+
+            p.start("readAttr");
+            Hash a1, a2, a3, a4;
+            //            t1->readAttributes(a1);
+            //            t2->readAttributes(a2);
+            //            t3->readAttributes(a3);
+            //            t4->readAttributes(a4);            
+            p.stop("readAttr");
+
+            p.start("read");
+            t1->read(0, rec);
+            t2->read(0, rec);
+            t3->read(0, rec);
+            t4->read(0, rec);
+            p.stop("read");
+
+            p.start("close1");
+            file.close();
+            p.stop("close1");
+
+
+            for (int i = 0; i < n; ++i) {
+                vector<int>& v1 = d1.get<vector<int> >(toString(i));
+                vector<float>& v2 = d2.get<vector<float> >(toString(i));
+                vector<double>& v3 = d3.get<vector<double> >(toString(i));
+                vector<unsigned short>& v4 = d4.get<vector<unsigned short> >(toString(i));
+
+                vector<int>& rv1 = rd1.get<vector<int> >(toString(i));
+                vector<float>& rv2 = rd2.get<vector<float> >(toString(i));
+                vector<double>& rv3 = rd3.get<vector<double> >(toString(i));
+                vector<unsigned short>& rv4 = rd4.get<vector<unsigned short> >(toString(i));
+                CPPUNIT_ASSERT(v1.size() == rec);
+                CPPUNIT_ASSERT(v2.size() == rec);
+                CPPUNIT_ASSERT(v3.size() == rec);
+                CPPUNIT_ASSERT(v4.size() == rec);
+                CPPUNIT_ASSERT(rv1.size() == rec);
+                CPPUNIT_ASSERT(rv2.size() == rec);
+                CPPUNIT_ASSERT(rv3.size() == rec);
+                CPPUNIT_ASSERT(rv4.size() == rec);
+                for (size_t k = 0; k < rec; ++k) {
+                    CPPUNIT_ASSERT(rv1[k] == v1[k]);
+                    CPPUNIT_ASSERT(rv2[k] == v2[k]);
+                    CPPUNIT_ASSERT(rv3[k] == v3[k]);
+                    CPPUNIT_ASSERT(rv4[k] == v4[k]);
+                }
+            }
+        }
+        #endif
 
         double formatTime = HighResolutionTimer::time2double(p.getTime("format"));
         double createTime = HighResolutionTimer::time2double(p.getTime("create"));
         double attributeTime = HighResolutionTimer::time2double(p.getTime("attribute"));
         double writeTime = HighResolutionTimer::time2double(p.getTime("write"));
         double closeTime = HighResolutionTimer::time2double(p.getTime("close"));
+        double openTime = HighResolutionTimer::time2double(p.getTime("open"));
+        double bindTime = HighResolutionTimer::time2double(p.getTime("bind"));
+        double readTime = HighResolutionTimer::time2double(p.getTime("read"));
+        double readAttrTime = HighResolutionTimer::time2double(p.getTime("readAttr"));
+        double close1Time = HighResolutionTimer::time2double(p.getTime("close1"));
 
         if (false) {
             clog << endl;
-            //            clog << "file: " << filename << endl;
-            //          clog << "initialize data                  : " << initializeTime << " [s]" << endl;
+            clog << "file: " << filename << endl;
+            clog << "num properties                   : " << (4 * n) << endl;
+            clog << "number of records                : " << rec << endl;
             clog << "format                           : " << formatTime << " [s]" << endl;
             clog << "open/prepare file                : " << createTime << " [s]" << endl;
             clog << "write attributes                 : " << attributeTime << " [s]" << endl;
@@ -1415,7 +1483,13 @@ void H5File_Test::testManyTables() {
             clog << "close                            : " << closeTime << " [s]" << endl;
             clog << "write+close(flush to disk)       : " << writeTime + closeTime << " [s]" << endl;
             clog << "write+close(flush to disk) speed : " << totalSize / (writeTime + closeTime) << " [kB/s]" << endl;
-            clog << "Total time                       : " << formatTime + createTime + attributeTime + writeTime + closeTime << " [s]" << endl;
+            clog << "Total write time                 : " << formatTime + createTime + attributeTime + writeTime + closeTime << " [s]" << endl;
+            clog << "open for reading                 : " << openTime << " [s]" << endl;
+            clog << "bind                             : " << bindTime << " [s]" << endl;
+            clog << "read                             : " << readTime << " [s]" << endl;
+            clog << "read attributes                  : " << readAttrTime << " [s]" << endl;
+            clog << "close reading                    : " << close1Time << " [s]" << endl;
+            clog << "Total (open/bind/read/close) time: " << openTime + bindTime + readTime + close1Time << " [s]" << endl;
         }
 
 

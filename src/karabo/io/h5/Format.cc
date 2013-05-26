@@ -71,7 +71,7 @@ namespace karabo {
 
             Format::Pointer Format::discover(const karabo::util::Hash& data) {
                 Hash config;
-                FormatDiscoveryPolicy::Pointer policy = FormatDiscoveryPolicy::create(Hash("Policy"));
+                FormatDiscoveryPolicy::Pointer policy = FormatDiscoveryPolicy::create("Policy", Hash());
                 discoverFromHash(data, policy, config);
                 return karabo::util::Configurator<Format>::createNode("Format", "Format", config, false);
             }
