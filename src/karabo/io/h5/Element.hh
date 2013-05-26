@@ -37,7 +37,6 @@
 namespace karabo {
     namespace io {
         namespace h5 {
-                        
 
             class Element : public boost::enable_shared_from_this<Element> {
 
@@ -47,16 +46,14 @@ namespace karabo {
 
                 static void expectedParameters(karabo::util::Schema& expected);
 
-                
+
                 Element(const karabo::util::Hash& input);
-                
 
                 virtual ~Element() {
                 }
 
-                void getCreateParam(std::string& name, hid_t* dataset, hid_t& filespace, hid_t& typeId, hid_t& linkProp, hid_t& dsProp );
-                                
-                
+                void getCreateParam(std::string& name, hid_t* dataset, hid_t& filespace, hid_t& typeId, hid_t& linkProp, hid_t& dsProp);
+
                 /**
                  * Get element name. Element can represent hdf5 group or dataset
                  * @return name element name
@@ -102,35 +99,46 @@ namespace karabo {
                 void getConfig(karabo::util::Hash& config) {
                     config = m_config;
                 }
-                
-              
+
+
                 /**
                  * Create UNLIMITED CHUNKED HDF5 dataset.
                  * @param group Hdf5 group where the dataset belongs to.
                  * @param chunkSize Chunk size as defined by hdf5
                  */
                 virtual void create(hsize_t chunkSize) = 0;
-                
+
                 virtual void create(hid_t tableGroup) = 0;
 
-                virtual void createAttributes(hid_t element) = 0;
+                void createAttributes();
 
-                //void openParentGroup(std::map<std::string, hid_t >& groups);
+                void saveAttributes(hid_t tableGroup, const karabo::util::Hash& data) {
+                    if (data.has(m_key, '/')) {
+                        const karabo::util::Hash::Node& node = data.getNode(m_key, '/');
+//                        m_h5obj = H5Dopen2(tableGroup, m_h5PathName.c_str(), H5P_DEFAULT);
+//                        KARABO_CHECK_HDF5_STATUS(m_h5obj);
+                        for (size_t i = 0; i < m_attributes.size(); ++i) {
+                            m_attributes[i]->save(node, m_h5obj);
+                        }
+//                        H5Dclose(m_h5obj);
+                    }
+                }
+
+
+                void openAttributes();
 
                 /**
                  * Open existing HDF5 dataset and attributes.
                  * @param group Hdf5 group where the dataset belongs to.
                  */
                 void open(hid_t group) {
-                    hid_t element = openElement(group);
-                    openAttributes(element);
+                    openElement(group);
                 }
 
             protected:
                 virtual hid_t openElement(hid_t group) = 0;
 
 
-                void openAttributes(hid_t element);
 
             public:
 
@@ -163,6 +171,8 @@ namespace karabo {
                 virtual void writeAttributes(const karabo::util::Hash& data);
 
                 virtual void readAttributes(karabo::util::Hash& data);
+
+                void closeAttributes();
 
                 /**
                  * Allocate memory for single record
@@ -204,6 +214,7 @@ namespace karabo {
                 std::string m_h5path; // path to the parent of this element from the root of the table (/ as separator)
                 std::string m_h5PathName;
                 std::string m_key; // key  (including path) to the data element in hash                
+                hid_t m_h5obj; // this dataset or group
                 hid_t m_parentGroup; // parent group of this element
                 karabo::util::Hash m_config;
                 std::vector<Attribute::Pointer> m_attributes;

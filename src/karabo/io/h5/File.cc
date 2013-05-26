@@ -54,19 +54,22 @@ namespace karabo {
 
             void File::open(File::AccessMode mode) {
                 
-                
+                hid_t fapl = H5Pcreate(H5P_FILE_ACCESS);
+                H5Pset_libver_bounds(fapl, H5F_LIBVER_LATEST, H5F_LIBVER_LATEST);
+//                H5Pset_meta_block_size(fapl, 1024*1024);
+
                 try {
                     if (mode == TRUNCATE) {
 //                        hid_t fip = H5Pcreate(H5P_FILE_ACCESS );
 //                        H5Pset_meta_block_size(fip, 8*8192);
 //                        m_h5file = H5Fcreate(m_filename.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, fip);
-                        m_h5file = H5Fcreate(m_filename.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
+                        m_h5file = H5Fcreate(m_filename.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, fapl);
                     } else if (mode == EXCLUSIVE) {
-                        m_h5file = H5Fcreate(m_filename.c_str(), H5F_ACC_EXCL, H5P_DEFAULT, H5P_DEFAULT);
+                        m_h5file = H5Fcreate(m_filename.c_str(), H5F_ACC_EXCL, H5P_DEFAULT, fapl);
                     } else if (mode == READONLY) {
-                        m_h5file = H5Fopen(m_filename.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
+                        m_h5file = H5Fopen(m_filename.c_str(), H5F_ACC_RDONLY, fapl);
                     } else if (mode == APPEND) {
-                        m_h5file = H5Fopen(m_filename.c_str(), H5F_ACC_RDWR, H5P_DEFAULT);
+                        m_h5file = H5Fopen(m_filename.c_str(), H5F_ACC_RDWR, fapl);
                     }
                 } catch (...) {
                     ostringstream os;

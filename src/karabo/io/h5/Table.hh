@@ -96,10 +96,14 @@ namespace karabo {
                 
                 void close();
 
-                Format::ConstPointer getFormat() {
+                Format::ConstPointer getFormat() const {
                     return m_dataFormat;
                 }
-
+                
+                Format::Pointer getFormat() {
+                    return m_dataFormat;
+                }
+                
                 void writeAttributes(const karabo::util::Hash& data);
 
                 void readAttributes(karabo::util::Hash& data);

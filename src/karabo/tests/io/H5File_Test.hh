@@ -17,15 +17,15 @@ class H5File_Test : public CPPUNIT_NS::TestFixture {
 
     CPPUNIT_TEST_SUITE(H5File_Test);
 
-        CPPUNIT_TEST(testBuffer);
- 
+    CPPUNIT_TEST(testBuffer);
+
     CPPUNIT_TEST(testWrite);
     CPPUNIT_TEST(testWriteFailure);
-//
-//
+
+
     CPPUNIT_TEST(testRead);
     CPPUNIT_TEST(testReadTable);
-        CPPUNIT_TEST(testVectorOfHashes);
+    CPPUNIT_TEST(testVectorOfHashes);
 
     CPPUNIT_TEST(testManyGroups);
     CPPUNIT_TEST(testManyTables);
@@ -87,7 +87,7 @@ private:
     void testBuffer();
     void testManyGroups();
     void testManyTables();
-    
+
     void testRead();
     void testReadTable();
 

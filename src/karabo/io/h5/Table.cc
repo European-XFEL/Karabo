@@ -38,7 +38,7 @@ namespace karabo {
             Table::~Table() {
             }
 
-
+ 
             void Table::openNew(const Format::Pointer dataFormat) {
 
                 KARABO_LOG_FRAMEWORK_TRACE_CF << "Open new file: " << m_name;
@@ -49,7 +49,7 @@ namespace karabo {
                 m_dataFormat = dataFormat;
                 const vector<Element::Pointer>& elements = m_dataFormat->getElements();
                 for (size_t i = 0; i < elements.size(); ++i) {
-                    elements[i]->create(m_group);
+                    elements[i]->create(m_group);                    
                 }
 
             }
@@ -96,9 +96,12 @@ namespace karabo {
 
                     if (hasAttribute(m_group, "table")) {
                         Hash readDataFormatConfig;
-                        readTableFormatFromAttribute(readDataFormatConfig);
+                        //clog << m_name << " before read   " << HighResolutionTimer::now().sec << endl;
+                        readTableFormatFromAttribute(readDataFormatConfig);                        
+                        //clog << m_name << " before format " << HighResolutionTimer::now().sec << endl;
                         KARABO_LOG_FRAMEWORK_TRACE_CF << "read format: \n" << readDataFormatConfig;
-                        m_dataFormat = Format::createNode("Format", "Format", readDataFormatConfig);
+                        m_dataFormat = Format::createFormat(readDataFormatConfig);
+                        //clog << m_name << " after format  " << HighResolutionTimer::now().sec << endl;
                     } else {
                         throw KARABO_HDF_IO_EXCEPTION("auto discovery not enabled yet");
                         // if format not defined as attribute discover it from data structure
@@ -114,6 +117,7 @@ namespace karabo {
                 for (size_t i = 0; i < elements.size(); ++i) {
                     elements[i]->open(m_group);
                 }
+                //clog << m_name << " after open    " << HighResolutionTimer::now().sec << endl;
                 retrieveNumberOfRecordsFromFile();
             }
 
@@ -131,6 +135,7 @@ namespace karabo {
                         elements[i]->write(data, recordId);
                     } catch (Exception& ex) {
                         //TODO think what to do here
+                        ex.clearTrace();
                         clog << "element " << i << " could not be written" << endl;
                     }
                 }
@@ -164,8 +169,11 @@ namespace karabo {
 
             void Table::writeAttributes(const karabo::util::Hash& data) {
                 const vector<Element::Pointer>& elements = m_dataFormat->getElements();
-                for (size_t i = 0; i < elements.size(); ++i) {
-                    elements[i]->writeAttributes(data);
+                for (size_t i = 0; i < elements.size(); ++i) {                    
+                    //elements[i]->open(m_group);
+                    elements[i]->saveAttributes(m_group, data);  
+                    //elements[i]->close();
+                    
                 }
             }
 
@@ -214,8 +222,10 @@ namespace karabo {
             void Table::readAttributes(karabo::util::Hash& data) {
                 const vector<Element::Pointer >& elements = m_dataFormat->getElements();
                 for (size_t i = 0; i < elements.size(); ++i) {
+                    elements[i]->openAttributes();
                     elements[i]->bind(data);
                     elements[i]->readAttributes(data);
+                    elements[i]->closeAttributes();
                 }
             }
 

@@ -56,9 +56,19 @@ namespace karabo {
 
             void Attribute::configureDataDimensions(const karabo::util::Hash& input, const Dims& singleValueDims) {
 
+                vector<unsigned long long> dims;
                 size_t singleValueRank = singleValueDims.rank();
                 if (input.has("dims")) {
-                    vector<unsigned long long> dims = input.get< vector<unsigned long long> >("dims");
+                    Hash::Node node = input.getNode("dims");
+                    if (node.is<string>()) {
+                        try {                            
+                            node.setType(Types::VECTOR_UINT64);
+                        } catch (Exception& ex) {
+                            KARABO_RETHROW(KARABO_PROPAGATED_EXCEPTION("Not valid dims description for attributes"));
+                        }
+                    }
+
+                    dims = node.getValue< vector<unsigned long long> >();
                     for (size_t i = 0; i < singleValueRank; ++i) {
                         dims.push_back(singleValueDims.extentIn(i));
                     }
@@ -80,16 +90,20 @@ namespace karabo {
 
             void Attribute::configureDataSpace() {
 
+                //                clog << "configure dataspace " << endl;
                 vector<unsigned long long> dimsVector = m_dims.toVector();
-                m_dataSpace = H5Screate_simple(dimsVector.size(),
-                                               &dimsVector[0],
-                                               NULL);
-                KARABO_CHECK_HDF5_STATUS(m_dataSpace);
+                m_dataSpace = this->createDataspace(dimsVector, dimsVector);
+
+                //                m_dataSpace = H5Screate_simple(dimsVector.size(),
+                //                                               &dimsVector[0],
+                //                                               NULL);
+                //                KARABO_CHECK_HDF5_STATUS(m_dataSpace);
             }
 
 
             void Attribute::create(hid_t element) {
 
+                configureDataSpace();
                 KARABO_LOG_FRAMEWORK_TRACE_C("karabo.io.h5.Attribute") << "Create attribute " << m_h5name;
                 try {
                     m_attribute = H5Acreate(element, m_h5name.c_str(), m_standardTypeId, m_dataSpace, H5P_DEFAULT, H5P_DEFAULT);
@@ -125,6 +139,29 @@ namespace karabo {
                     }
                 } catch (karabo::util::Exception& e) {
                     KARABO_RETHROW_AS(KARABO_PROPAGATED_EXCEPTION("Cannot write Hash node attribute " + m_key + " to H5 attribute" + m_h5name));
+                }
+
+            }
+
+
+            void Attribute::save(const karabo::util::Hash::Node& node, hid_t element) {
+
+                KARABO_LOG_FRAMEWORK_TRACE_C("karabo.io.h5.Attribute") << "Writing hash attribute: key=" << m_key;
+                try {
+
+                    configureDataSpace();
+                    if (node.hasAttribute(m_key)) {
+                        const karabo::util::Element<std::string>& attrNode = node.getAttributes().getNode(m_key);
+                        m_attribute = H5Acreate(element, m_h5name.c_str(), m_standardTypeId, m_dataSpace, H5P_DEFAULT, H5P_DEFAULT);
+                        KARABO_CHECK_HDF5_STATUS(m_attribute);
+                        writeNodeAttribute(attrNode, m_attribute);
+                        KARABO_CHECK_HDF5_STATUS(H5Aclose(m_attribute));
+
+                    } else {
+                        throw KARABO_HDF_IO_EXCEPTION("No " + m_key + " attribute");
+                    }
+                } catch (karabo::util::Exception& e) {
+                    KARABO_RETHROW_AS(KARABO_PROPAGATED_EXCEPTION("Cannot save Hash node attribute " + m_key + " to H5 attribute" + m_h5name));
                 }
 
             }

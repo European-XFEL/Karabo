@@ -30,7 +30,7 @@ Hdf5_Test::Hdf5_Test() {
 
     m_numImages = 100; // number of images to be written
     m_extentMultiplier = 1; //image size multiplier: 1 means 1Mpx, 2 - 4Mpx, 3 - 9 Mpx, etc
-    m_report = false;
+    m_report = true;
 
 }
 
@@ -230,7 +230,7 @@ void Hdf5_Test::testKaraboHdf5() {
     p.stop("allocate");
 
     p.start("create");
-    
+
     Format::Pointer dataFormat = Format::discover(h);
 
     File file(filename);
@@ -289,7 +289,7 @@ void Hdf5_Test::testManyDatasets() {
 
 
     string filename = "/dev/shm/pureManyDs.h5"; // in memory file
-    filename = resourcePath("pureManyDs.h5"); // file on disk ($KARABO/src/karabo/tests/io/resources/pure.h5)
+    //filename = resourcePath("pureManyDs.h5"); // file on disk ($KARABO/src/karabo/tests/io/resources/pure.h5)
 
     // end of configure
 
@@ -327,7 +327,9 @@ void Hdf5_Test::testManyDatasets() {
     p.start("create");
 
     //create data file
-    fid = H5Fcreate(fname, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
+    hid_t fapl = H5Pcreate(H5P_FILE_ACCESS);
+    H5Pset_libver_bounds(fapl, H5F_LIBVER_LATEST, H5F_LIBVER_LATEST);
+    fid = H5Fcreate(fname, H5F_ACC_TRUNC, H5P_DEFAULT, fapl);
 
     //create dtype
     tid = H5Tcopy(H5T_NATIVE_UINT);
@@ -347,8 +349,9 @@ void Hdf5_Test::testManyDatasets() {
 
 
     //create the datasets
-
-    for (size_t i = 0; i < 100000L; ++i) {
+    size_t max = 10000L;
+    vector<hid_t> vdid(max, 0);
+    for (size_t i = 0; i < max; ++i) {
         //create the property list for the dataset
         pid = H5Pcreate(H5P_DATASET_CREATE);
         H5Pset_layout(pid, H5D_CHUNKED);
@@ -356,13 +359,36 @@ void Hdf5_Test::testManyDatasets() {
         H5Pset_chunk(pid, 2, dims);
 
         hid_t lid = H5Pcreate(H5P_LINK_CREATE);
-        
-        H5Pset_create_intermediate_group( lid, 1 );
-        
+
+        H5Pset_create_intermediate_group(lid, 1);
+
         string ds = "/base/c1/de/tec/tor" + toString(i);
-        did = H5Dcreate2(fid, ds.c_str(), tid, sid, lid, pid, H5P_DEFAULT);
+        vdid[i] = H5Dcreate2(fid, ds.c_str(), tid, sid, lid, pid, H5P_DEFAULT);
+        
+        H5Dclose(vdid[i]);                
         H5Pclose(lid);
+        H5Pclose(pid);
     }
+    hid_t scalar_id = H5Screate(H5S_SCALAR);
+    for (size_t i = 0; i < max; ++i) {
+        string ds = "/base/c1/de/tec/tor" + toString(i);
+        vdid[i] = H5Dopen(fid, ds.c_str(), H5P_DEFAULT);
+        if(vdid[i] < 0 ){          
+            clog << "Error opening dataset " << i << endl;
+        }
+        for (int j = 0; j < 2; j++) {
+            ostringstream oss;
+            oss << "Attr" << j;
+            hid_t attr_id = H5Acreate2(vdid[i], oss.str().c_str(), H5T_NATIVE_INT, scalar_id, H5P_DEFAULT, H5P_DEFAULT);
+            H5Awrite(attr_id, H5T_NATIVE_INT, &j);
+            H5Aclose(attr_id);
+        }
+        //    }
+        //    for (size_t i = 0; i < max; ++i) {
+        H5Dclose(vdid[i]);
+    }
+
+
     p.stop("create");
 
     // used for navigation in file
@@ -404,19 +430,47 @@ void Hdf5_Test::testManyDatasets() {
     H5Tclose(tid);
     H5Sclose(sid);
     H5Sclose(msid);
-    H5Dclose(did);
-    H5Pclose(pid);
+//    H5Dclose(did);
+//    H5Pclose(pid);
 
-    H5Fclose(fid);
+//    H5Fclose(fid);
 
+    // H5Fopen("pure.h5");
     p.stop("close");
 
     free(data);
 
+    p.start("open");
+
+    for (size_t i = 0; i < 100L; ++i) {
+
+        string ds = "/base/c1/de/tec/tor" + toString(i);
+        did = H5Dopen(fid, ds.c_str(), H5P_DEFAULT);
+
+        hid_t scalar_id = H5Screate(H5S_SCALAR);
+
+        for (int j = 0; j < 2; j++) {
+            ostringstream oss;
+            oss << "Attr" << j;
+            hid_t attr_id = H5Aopen(did, oss.str().c_str(), H5P_DEFAULT);
+            H5Aclose(attr_id);
+        }
+        H5Dclose(did);
+        H5Sclose(scalar_id);
+    }
+    p.stop("open");
+
+
+    H5Fclose(fid);
+
+
+
+
     double allocateTime = HighResolutionTimer::time2double(p.getTime("allocate"));
     double createTime = HighResolutionTimer::time2double(p.getTime("create"));
-    double writeTime = HighResolutionTimer::time2double(p.getTime("write"));
+    double writeTime = 0; //HighResolutionTimer::time2double(p.getTime("write"));
     double closeTime = HighResolutionTimer::time2double(p.getTime("close"));
+    double openTime = HighResolutionTimer::time2double(p.getTime("open"));
 
     if (m_report) {
         clog << endl;
@@ -424,11 +478,12 @@ void Hdf5_Test::testManyDatasets() {
         clog << "allocate memory                  : " << allocateTime << " [s]" << endl;
         clog << "open/prepare file                : " << createTime << " [s]" << endl;
         clog << "write data (may use memory cache): " << writeTime << " [s]" << endl;
-        clog << "written data size                : " << totalSize << " [MB]" << endl;
-        clog << "writing speed                    : " << totalSize / writeTime << " [MB/s]" << endl;
+        //        clog << "written data size                : " << totalSize << " [MB]" << endl;
+        //        clog << "writing speed                    : " << totalSize / writeTime << " [MB/s]" << endl;
         clog << "close                            : " << closeTime << " [s]" << endl;
-        clog << "write+close(flush to disk)       : " << writeTime + closeTime << " [s]" << endl;
-        clog << "write+close(flush to disk) speed : " << totalSize / (writeTime + closeTime) << " [MB/s]" << endl;
+        clog << "open                             : " << openTime << " [s]" << endl;
+        //        clog << "write+close(flush to disk)       : " << writeTime + closeTime << " [s]" << endl;
+        //        clog << "write+close(flush to disk) speed : " << totalSize / (writeTime + closeTime) << " [MB/s]" << endl;
 
     }
 

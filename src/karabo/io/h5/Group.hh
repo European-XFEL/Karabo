@@ -66,8 +66,7 @@ namespace karabo {
                 void create(hsize_t chunkSize);
                 
                 void create(hid_t tableGroup);
-
-                void createAttributes(hid_t element);
+                
 
                 void write(const karabo::util::Hash& data, hsize_t recordId) {
                 }
@@ -101,8 +100,6 @@ namespace karabo {
                 hid_t openElement(hid_t group);
 
 
-
-                hid_t m_group; // this group
                 bool m_isVectorHash;
                 unsigned long long m_vectorSize;
 

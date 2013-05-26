@@ -19,7 +19,7 @@ namespace karabo {
 //    KARABO_REGISTER_FOR_CONFIGURATION(Element, Dataset, Int16ArrayElement)
     KARABO_REGISTER_FOR_CONFIGURATION(Element, Dataset, Int32VLArrayElement) 
 //    KARABO_REGISTER_FOR_CONFIGURATION(Element, Dataset, Int64ArrayElement)
-//    KARABO_REGISTER_FOR_CONFIGURATION(Element, Dataset, UInt8ArrayElement)
+    //KARABO_REGISTER_FOR_CONFIGURATION(Element, Dataset, UInt8VLArrayElement)
 //    KARABO_REGISTER_FOR_CONFIGURATION(Element, Dataset, UInt16ArrayElement)
 //    KARABO_REGISTER_FOR_CONFIGURATION(Element, Dataset, UInt32ArrayElement)
 //    KARABO_REGISTER_FOR_CONFIGURATION(Element, Dataset, UInt64ArrayElement)
