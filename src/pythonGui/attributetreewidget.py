@@ -315,7 +315,7 @@ class AttributeTreeWidget(QTreeWidget):
         if type is NavigationItemTypes.DEVICE_CLASS:
             configChangeType = ConfigChangeTypes.DEVICE_CLASS_CONFIG_CHANGED
         elif type is NavigationItemTypes.DEVICE_INSTANCE:
-            configChangeType = ConfigChangeTypes.DEVICE_INSTRANCE_CONFIG_CHANGED
+            configChangeType = ConfigChangeTypes.DEVICE_INSTANCE_CONFIG_CHANGED
         
         if self.__devClaId is None:
             keys = self.__instanceKey.split('+', 1)

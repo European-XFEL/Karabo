@@ -237,7 +237,7 @@ class Manager(Singleton):
                 dataNotifier = self._getDataNotifierEditableValue(internalKey)
                 if dataNotifier is not None:
                     dataNotifier.signalUpdateComponent.emit(internalKey, value)
-            elif configChangeType is ConfigChangeTypes.DEVICE_INSTRANCE_CONFIG_CHANGED:
+            elif configChangeType is ConfigChangeTypes.DEVICE_INSTANCE_CONFIG_CHANGED:
                 dataNotifier = self._getDataNotifierEditableValue(internalKey)
                 if dataNotifier is not None:
                     dataNotifier.signalUpdateComponent.emit(internalKey, value)
@@ -575,8 +575,8 @@ class Manager(Singleton):
             xmlContent += str(file.readLine())
 
         # TODO: serializer needed?
-        serializer = FormatHash.create("Xml", Hash())
-        config = serializer.unserialize(xmlContent).get(devClaId)
+        serializer = TextSerializerHash.create("Xml")
+        config = serializer.load(xmlContent).get(devClaId)
 
         # TODO: Reload XSD in configuration panel
         # ...
@@ -612,7 +612,7 @@ class Manager(Singleton):
         if fi.suffix().isEmpty():
             filename += ".xml"
 
-        self.saveAsXml(filename, devClaId, internalKey)
+        self.saveAsXml(str(filename), devClaId, internalKey)
 
 
     def onNavigationItemChanged(self, itemInfo):
