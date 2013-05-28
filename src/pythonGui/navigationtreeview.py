@@ -399,7 +399,7 @@ class NavigationTreeView(QTreeView):
             parentIndex = index.parent()
             instanceId = parentIndex.data().toString()+"+"+devClaId
         elif type is NavigationItemTypes.DEVICE_INSTANCE:
-            configChangeType = ConfigChangeTypes.DEVICE_INSTRANCE_CONFIG_CHANGED
+            configChangeType = ConfigChangeTypes.DEVICE_INSTANCE_CONFIG_CHANGED
             parentIndex = index.parent()
             devClaId = parentIndex.data().toString()
             instanceId = index.data().toString()

@@ -26,6 +26,6 @@ class AccessTypes(object): # TODO use INTs?
 
 class ConfigChangeTypes(object):
     DEVICE_CLASS_CONFIG_CHANGED = 0 # new configuration for DEVICE_CLASS
-    DEVICE_INSTRANCE_CONFIG_CHANGED = 1 # new configuration for DEVICE_INSTANCE
+    DEVICE_INSTANCE_CONFIG_CHANGED = 1 # new configuration for DEVICE_INSTANCE
     DEVICE_INSTANCE_CURRENT_VALUES_CHANGED = 2 # current values for DEVICE_INSTANCE changed
 
