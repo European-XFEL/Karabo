@@ -73,6 +73,10 @@ void exportPyXmsSignalSlotable() {//exposing karabo::xms::SignalSlotable
                  bp::arg("connectionType") = SignalSlotable::TRACK,
                  bp::arg("isVerbose") = true))
 
+            .def("updateInstanceInfo",
+                 (void (SignalSlotable::*)(const Hash&))(&SignalSlotable::updateInstanceInfo),
+                 (bp::arg("updateHash")))
+            
             .def("getAvailableInstances", &SignalSlotableWrap::getAvailableInstancesPy)
             .def("getAvailableSignals", &SignalSlotableWrap::getAvailableSignalsPy, bp::arg("instanceId"))
             .def("getAvailableSlots", &SignalSlotableWrap::getAvailableSlotsPy, bp::arg("instanceId"))
