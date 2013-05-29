@@ -4,11 +4,12 @@
 __author__="Sergey Esenov <serguei.essenov at xfel.eu>"
 __date__ ="$May 12, 2013 5:09:05 PM$"
 
-from karabo_decorators import *
-from base_fsm import *
+from karabo_decorators import KARABO_CLASSINFO
+import base_fsm
+from fsm import *
 
 @KARABO_CLASSINFO("OkErrorFsm", "1.0")
-class OkErrorFsm(BaseFsm):
+class OkErrorFsm(base_fsm.BaseFsm):
     
     @staticmethod
     def expectedParameters(expected):
