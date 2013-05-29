@@ -54,7 +54,7 @@ def KARABO_CONFIGURATION_BASE_CLASS(theClass):
             of class to be created as a root element.
             Example:
                     configuration = Hash("EditableCircle.radius", 12.345)
-                    instance = Shape.createByConf(configuration)
+                    instance = Shape.create(configuration)
             '''
             if len(args) == 1:
                 return Configurator(cls.__base_classid__).create(args[0])
