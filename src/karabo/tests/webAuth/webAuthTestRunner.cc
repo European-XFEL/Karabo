@@ -11,6 +11,7 @@
 
 #include <cppunit/BriefTestProgressListener.h>
 #include <cppunit/CompilerOutputter.h>
+#include <cppunit/XmlOutputter.h>
 #include <cppunit/extensions/TestFactoryRegistry.h>
 #include <cppunit/TestResult.h>
 #include <cppunit/TestResultCollector.h>
@@ -37,6 +38,11 @@ int main() {
     // Print test in a compiler compatible format.
     CPPUNIT_NS::CompilerOutputter outputter(&result, CPPUNIT_NS::stdCOut());
     outputter.write();
+
+    // Output ML for Jenkins CPPunit plugin
+    std::ofstream xmlFileOut("testresults/webTest.xml");
+    CPPUNIT_NS::XmlOutputter xmlOut(&result, xmlFileOut);
+    xmlOut.write();
 
     return result.wasSuccessful() ? 0 : 1;
 }
