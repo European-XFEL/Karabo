@@ -8,15 +8,15 @@ import datetime
 import sys
 import socket
 from abc import ABCMeta, abstractmethod
-from libkarathon import *
-from fsm import *
-from karabo_decorators import *
-from base_fsm import *
+from libkarathon import STRING_ELEMENT, VECTOR_STRING_ELEMENT, Hash
+import libkarathon as karabo
+from karabo_decorators import KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS
+import base_fsm
 
 
 @KARABO_CONFIGURATION_BASE_CLASS
 @KARABO_CLASSINFO("PythonDevice", "1.0")
-class PythonDevice(BaseFsm):
+class PythonDevice(base_fsm.BaseFsm):
 
     instanceCountPerDeviceServer = dict()
     instanceCountLock = threading.Lock()
@@ -73,28 +73,28 @@ class PythonDevice(BaseFsm):
         self._stateDependentSchema = {}
         
         # Setup the validation classes
-        rules = ValidatorValidationRules()
+        rules = karabo.ValidatorValidationRules()
         rules.allowAdditionalKeys = False
         rules.allowMissingKeys    = True
         rules.allowUnrootedConfiguration = True
         rules.injectDefaults = False
         
-        self.validatorIntern   = Validator()
+        self.validatorIntern   = karabo.Validator()
         rules.injectTimestamps = True
         self.validatorIntern.setValidationRules(rules)
         
-        self.validatorExtern   = Validator()
+        self.validatorExtern   = karabo.Validator()
         rules.injectTimestamps = False
         self.validatorExtern.setValidationRules(rules)
         
         # Setup device logger
         logging_config = Hash("categories[0]", Hash("Category.name", self.deviceid, "Category.priority", "DEBUG"),
                     "appenders[0].Ostream.layout", "Pattern")
-        Logger.configure(logging_config)
-        self.log = Logger.getLogger(self.deviceid)
+        karabo.Logger.configure(logging_config)
+        self.log = karabo.Logger.getLogger(self.deviceid)
         
         # Instantiate connection
-        self._ss = SignalSlotable.create(self.deviceid)    #, "Jms", self.parameters["connection.Jms"])
+        self._ss = karabo.SignalSlotable.create(self.deviceid)    #, "Jms", self.parameters["connection.Jms"])
         
         # Initialize FSM slots for user defined FSM (polymorphic call) 
         self.initFsmSlots(self._ss)
@@ -107,7 +107,7 @@ class PythonDevice(BaseFsm):
         self.initSchema()
         
         self._ss.registerSignal("signalNewDeviceInstanceAvailable", str, Hash)  # DeviceServerInstanceId, currentConfig
-        self._ss.connect("", "signalNewDeviceInstanceAvailable", "*", "slotNewDeviceInstanceAvailable", ConnectionType.NO_TRACK, False)
+        self._ss.connect("", "signalNewDeviceInstanceAvailable", "*", "slotNewDeviceInstanceAvailable", karabo.ConnectionType.NO_TRACK, False)
         self._ss.emit("signalNewDeviceInstanceAvailable", self.serverid, Hash(self.classid, self.parameters))
         
         fullHostName = socket.gethostname()
@@ -128,7 +128,7 @@ class PythonDevice(BaseFsm):
 
     def remote(self):
         if self._client is None:
-            self._client = DeviceClient()  # connectionType="Jms" config=Hash()
+            self._client = karabo.DeviceClient()  # connectionType="Jms" config=Hash()
         return self._client
     
     def set(self, *args):
@@ -265,33 +265,33 @@ class PythonDevice(BaseFsm):
     def _initDeviceSlots(self):
         #-------------------------------------------- register intrinsic signals
         self._ss.registerSignal("signalChanged", Hash, str, str)                # changeHash, instanceId, classId
-        self._ss.connect("", "signalChanged", "*", "slotChanged", ConnectionType.NO_TRACK, False)
+        self._ss.connect("", "signalChanged", "*", "slotChanged", karabo.ConnectionType.NO_TRACK, False)
         
         self._ss.registerSignal("signalErrorFound", str, str, str, str)         # timeStamp, shortMsg, longMsg, instanceId
-        self._ss.connect("", "signalErrorFound", "*", "slotErrorFound", ConnectionType.NO_TRACK, False)
+        self._ss.connect("", "signalErrorFound", "*", "slotErrorFound", karabo.ConnectionType.NO_TRACK, False)
         
         self._ss.registerSignal("signalBadReconfiguration", str, str)           # shortMsg, instanceId
-        self._ss.connect("", "signalBadReconfiguration", "*", "slotBadReconfiguration", ConnectionType.NO_TRACK, False)        
+        self._ss.connect("", "signalBadReconfiguration", "*", "slotBadReconfiguration", karabo.ConnectionType.NO_TRACK, False)        
         
         self._ss.registerSignal("signalNoTransition", str, str)                 # 
-        self._ss.connect("", "signalNoTransition", "*", "slotNoTransition", ConnectionType.NO_TRACK, False)        
+        self._ss.connect("", "signalNoTransition", "*", "slotNoTransition", karabo.ConnectionType.NO_TRACK, False)        
         
         self._ss.registerSignal("signalWarningOrAlarm", str, str, str, str)     # timeStamp, warnMsg, instanceId, priority
         self._ss.registerSignal("signalWarning", str, str, str, str)            # timeStamp, warnMsg, instanceId, priority
-        self._ss.connect("", "signalWarning", "*", "slotWarning", ConnectionType.NO_TRACK, False)
+        self._ss.connect("", "signalWarning", "*", "slotWarning", karabo.ConnectionType.NO_TRACK, False)
         
         self._ss.registerSignal("signalAlarm", str, str, str, str)              # timeStamp, alarmMsg, instanceId, priority
-        self._ss.connect("", "signalAlarm", "*", "slotAlarm", ConnectionType.NO_TRACK, False)
+        self._ss.connect("", "signalAlarm", "*", "slotAlarm", karabo.ConnectionType.NO_TRACK, False)
         
         self._ss.registerSignal("signalSchemaUpdated", str, str, str)           # schema, instanceId, classId
-        self._ss.connect("", "signalSchemaUpdated", "*", "slotSchemaUpdated", ConnectionType.NO_TRACK, False)
+        self._ss.connect("", "signalSchemaUpdated", "*", "slotSchemaUpdated", karabo.ConnectionType.NO_TRACK, False)
 
         # TODO Deprecate!
         self._ss.registerSignal("signalDeviceInstanceGone", str, str)           # DeviceServerInstanceId, deviceInstanceId
-        self._ss.connect("", "signalDeviceInstanceGone", "*", "slotDeviceInstanceGone", ConnectionType.NO_TRACK, False)
+        self._ss.connect("", "signalDeviceInstanceGone", "*", "slotDeviceInstanceGone", karabo.ConnectionType.NO_TRACK, False)
         
         self._ss.registerSignal("signalProgressUpdated", int, str, str)         # Progress value [0,100], label, deviceInstanceId
-        self._ss.connect("", "signalProgressUpdated", "*", "slotProgressUpdated", ConnectionType.NO_TRACK, False)
+        self._ss.connect("", "signalProgressUpdated", "*", "slotProgressUpdated", karabo.ConnectionType.NO_TRACK, False)
         
         #---------------------------------------------- register intrinsic slots
         self._ss.registerSlot(self.slotReconfigure)
@@ -356,7 +356,7 @@ class PythonDevice(BaseFsm):
         with self._stateDependentSchemaLock:
             if state in self._stateDependentSchema:
                 return self._stateDependentSchema[state]
-            self._stateDependentSchema[state] = self.__class__.getSchema(self.classid, AssemblyRules(AccessType(READ | WRITE | INIT), state))
+            self._stateDependentSchema[state] = self.__class__.getSchema(self.classid, karabo.AssemblyRules(karabo.AccessType(karabo.READ | karabo.WRITE | karabo.INIT), state))
             if not self._injectedSchema.empty():
                 self._stateDependentSchema[state] += self._injectedSchema
             return self._stateDependentSchema[state]
@@ -392,7 +392,7 @@ class PythonDevice(BaseFsm):
     
     @staticmethod
     def loadConfiguration(xmlfile):
-        input = InputHash.create("TextFile", Hash("filename", xmlfile))
+        input = karabo.InputHash.create("TextFile", Hash("filename", xmlfile))
         hash = Hash()
         input.read(hash)
         print "Device parseCommandLine hash\n",hash

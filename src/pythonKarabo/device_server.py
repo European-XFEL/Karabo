@@ -15,11 +15,12 @@ import re
 import threading
 import time
 import inspect
+import libkarathon as karabo
 
-from fsm import event_instance
-from python_device import *
-from karabo_decorators import *
-from libkarathon import *
+from libkarathon import Hash, STRING_ELEMENT, UINT32_ELEMENT, NODE_ELEMENT
+from fsm import *
+from python_device import PythonDevice
+from karabo_decorators import KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS
 from plugin_loader import PluginLoader
 from runner import Runner
 
@@ -58,7 +59,7 @@ class DeviceServer(object):
         
         e = NODE_ELEMENT(expected).key("Logger").displayedName("Logger")
         e.description("Logging settings")
-        e.appendParametersOfConfigurableClass(Logger, "Logger").commit()
+        e.appendParametersOfConfigurableClass(karabo.Logger, "Logger").commit()
         
         e = NODE_ELEMENT(expected).key("PluginLoader")
         e.displayedName("Plugin Loader").description("Plugin Loader sub-configuration")
@@ -153,10 +154,12 @@ class DeviceServer(object):
         
         print "Initialize SignalSlotable object...\n"
         if self.serverid is None:
-            s = SignalSlotable()
-            (self.serverid, ) = s.request("*", "slotDeviceServerProvideName").waitForReply(self.nameRequestTimeout)
-            del s
-        self.ss = SignalSlotable(self.serverid)
+            import random
+            possiblyFullHostName = socket.gethostname()
+            myHostName, dotsep, domainName = possiblyFullHostName.partition('.')
+            r = random.Random()
+            self.serverid = myHostName + "/PythonDeviceServer/" + str(r.randint(0,10000))
+        self.ss = karabo.SignalSlotable(self.serverid)
         
         self.loadLogger(input)
         self.loadPluginLoader(input)
@@ -174,8 +177,8 @@ class DeviceServer(object):
         self.ss.registerSlot(self.slotRegistrationFailed)
         self.ss.registerSlot(self.slotKillDeviceServerInstance)
         self.ss.registerSlot(self.slotKillDeviceInstance)
-        self.ss.connect("", "signalNewDeviceClassAvailable", "*", "slotNewDeviceClassAvailable", ConnectionType.NO_TRACK, False)
-        self.ss.connect("", "signalNewDeviceInstanceAvailable", "*", "slotNewDeviceInstanceAvailable", ConnectionType.NO_TRACK, False)
+        self.ss.connect("", "signalNewDeviceClassAvailable", "*", "slotNewDeviceClassAvailable", karabo.ConnectionType.NO_TRACK, False)
+        self.ss.connect("", "signalNewDeviceInstanceAvailable", "*", "slotNewDeviceInstanceAvailable", karabo.ConnectionType.NO_TRACK, False)
 
     def loadLogger(self, input):
         if "Logger" in input:
@@ -186,13 +189,13 @@ class DeviceServer(object):
         if "connection" in input:
             appenderConfig["Network.connection"] = input["connection"]
         appenders.append(appenderConfig)
-        Logger.configure(config)
+        karabo.Logger.configure(config)
     
     def loadPluginLoader(self, input):
         self.pluginLoader = PluginLoader.createNode("PluginLoader", "PythonPluginLoader", input)
         
     def run(self):
-        self.log = Logger.getLogger(self.serverid)
+        self.log = karabo.Logger.getLogger(self.serverid)
         self._registerAndConnectSignalsAndSlots()
         self.fsm.start()
         while self.running:
@@ -255,7 +258,7 @@ class DeviceServer(object):
             try:
                 schema = deviceClass.getSchema(deviceClass.__classid__)
                 config = Hash("indentation", -1)
-                xsd = TextSerializerSchema.create('Xsd', config).save(schema)
+                xsd = karabo.TextSerializerSchema.create('Xsd', config).save(schema)
                 self.availableModules[name] = deviceClass.__classid__
                 self.availableDevices[deviceClass.__classid__] = {"mustNotify": True, "module": name, "xsd": xsd}
                 self.newPluginAvailable()
@@ -275,7 +278,7 @@ class DeviceServer(object):
     
     def idleStateOnEntry(self):
         id = self.serverid
-        OutputHash.create("TextFile", Hash("filename", "autoload.xml")).write(Hash("DeviceServer.serverId", id))
+        karabo.OutputHash.create("TextFile", Hash("filename", "autoload.xml")).write(Hash("DeviceServer.serverId", id))
         #TODO: check what we have to implement here
         self.isRegistered = True   # this is the last statement!
     
@@ -314,7 +317,7 @@ class DeviceServer(object):
             module = __import__(modname)
             UserDevice = getattr(module, classid)
             schema = UserDevice.getSchema(classid)
-            validator = Validator()
+            validator = karabo.Validator()
             validated = validator.validate(schema, configuration)
             #print "classId = {}, modname = {}, pluginDir = {}".format(classid, modname, pluginDir)
             #print "Validated configuration...\n", validated
@@ -381,7 +384,7 @@ class Launcher(threading.Thread):
             self.script = os.path.realpath(pluginDir + "/" + modname + ".py")
             filename = "/tmp/" + modname + "." + classid + ".configuration.xml"
             cfg = Hash("filename", filename, "format.Xml.indentation", 2) 
-            out = OutputHash.create("TextFile", cfg)
+            out = karabo.OutputHash.create("TextFile", cfg)
             out.write(config)
             self.args = [self.script, modname, classid, filename]
         except Exception,e:
