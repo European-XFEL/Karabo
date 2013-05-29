@@ -35,7 +35,7 @@ def KARABO_CLASSINFO(classid, version):
 def KARABO_CONFIGURATION_BASE_CLASS(theClass):
     '''
     This decorator should be place before "KARABO_CLASSINFO" decoratoro.  It registers the class as the base configurable class and adds the following classmethods:
-    "create", "createByConf", "createNode", "createChoice", "createList", "getSchema" and "getRegisteredClasses". It has no parameters.
+    "create", "createNode", "createChoice", "createList", "getSchema" and "getRegisteredClasses". It has no parameters.
     Example:
             @KARABO_CONFIGURATION_BASE_CLASS
             @KARABO_CLASSINFO("Shape","1.0")
@@ -44,26 +44,28 @@ def KARABO_CONFIGURATION_BASE_CLASS(theClass):
     '''
     if isinstance(theClass, type):
         Configurator.registerAsBaseClass(theClass)
-        def create(cls, classid, configuration):
+        def create(cls, *args):
             '''
             The factory classmethod to create the instance of class with "classId" using input "configuration".
             Example:
                     instance = Shape.create("EditableCircle", Hash("radius", 12.345))
-            '''
-            return Configurator(cls.__base_classid__).create(classid, configuration)
-        create = classmethod(create)
-        theClass.create = create
-        def createByConf(cls, configuration):
-            '''
+                    
             The factory classmethod to create instance according input "configuration".  The configuration should have "classId"
             of class to be created as a root element.
             Example:
                     configuration = Hash("EditableCircle.radius", 12.345)
                     instance = Shape.createByConf(configuration)
             '''
-            return Configurator(cls.__base_classid__).createByConf(configuration)
-        createByConf = classmethod(createByConf)
-        theClass.createByConf = createByConf
+            if len(args) == 1:
+                return Configurator(cls.__base_classid__).create(args[0])
+            elif len(args) == 2:
+                return Configurator(cls.__base_classid__).create(args[0], args[1])
+            elif len(args) == 3:
+                return Configurator(cls.__base_classid__).create(args[0], args[1], args[2])
+            else:
+                raise TypeError,"Wrong number of arguments and/or their types"
+        create = classmethod(create)
+        theClass.create = create
         def createNode(cls, nodename, classid, configuration):
             '''
             The helper classmethod to create instance of class specified by "classId" using sub-configuration specified

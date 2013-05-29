@@ -87,13 +87,41 @@ class Configurator(object):
         return schema
     
     
-    def create(self, classid, configuration, validation = True):
+    def create(self, *args):
         '''
         The factory method to create the instance of class with "classId" that inherits from base class given to constructor using "input" configuration.
         The last argument is a flag to determine if the input configuration should be validated.
         Example:
                 instance = Configurator(Shape).create("EditableCircle", Hash("radius", 12.345))
-        '''        
+                
+        The factory method to create instance of class that inherits from base class given to constructor using input "configuration".
+        The configuration should have "classId" of class to be created as a root element.  The last argument is a flag to determine
+        if the input "configuration" should be validated.
+        Example:
+                configuration = Hash("EditableCircle.radius", 12.345)
+                instance = Configurator(Shape).create(configuration)
+        '''
+        if len(args) == 3:
+            classid = args[0]
+            configuration = args[1]
+            validation = args[2]
+        elif len(args) == 2:
+            if type(args[1]) == bool:
+                configuration = args[0]
+                validation = args[1]
+                classid = configuration.keys()[0]
+                configuration = configuration[classid]
+            else:
+                classid = args[0]
+                configuration = args[1]
+                validation = True
+        elif len(args) == 1:
+            configuration = args[0]
+            validation = True
+            classid = configuration.keys()[0]
+            configuration = configuration[classid]
+        else:
+            raise TypeError,"Wrong number of arguments and/or their types"
         if isinstance(classid, type):
             classid = classid.__classid__
         if not isinstance(classid, str):
@@ -112,19 +140,6 @@ class Configurator(object):
             raise RuntimeError,"Validation Exception: " + str(e)
         return Derived(validated)
     
-    
-    def createByConf(self, configuration, validation = True):
-        '''
-        The factory method to create instance of class that inherits from base class given to constructor using input "configuration".
-        The configuration should have "classId" of class to be created as a root element.  The last argument is a flag to determine
-        if the input "configuration" should be validated.
-        Example:
-                configuration = Hash("EditableCircle.radius", 12.345)
-                instance = Configurator(Shape).createByConf(configuration)
-        '''
-        classid = configuration.keys()[0]
-        return self.create(classid, configuration[classid], validation)
-        
     
     def createNode(self, nodename, classid, configuration, validation = True):
         '''

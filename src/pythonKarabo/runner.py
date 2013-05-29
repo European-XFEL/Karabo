@@ -19,7 +19,7 @@ class Runner(object):
         try:
             configuration = self.parseCommandLine(args)
             if not configuration.empty():
-                instance = self.theClass.createByConf(configuration)
+                instance = self.theClass.create(configuration)
         except:
             print "Exception in user code:"
             print '-'*60
