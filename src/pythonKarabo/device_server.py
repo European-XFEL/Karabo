@@ -286,11 +286,14 @@ class DeviceServer(object):
         pass
 
     def notifyNewDeviceAction(self):
+        deviceClasses = []
         for (classid, d) in self.availableDevices.items():
+            deviceClasses.append(classid)
             if d['mustNotify']:
                 d['mustNotify'] = False
                 self.log.DEBUG("Notifying about {}".format(d['module']))
                 self.ss.emit("signalNewDeviceClassAvailable", self.ss.getInstanceId(), classid, d["xsd"])
+        self.ss.updateInstanceInfo(Hash("deviceClasses", deviceClasses))
 
     def startDeviceAction(self, conf):
         modified = Hash(conf)
