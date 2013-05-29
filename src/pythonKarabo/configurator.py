@@ -160,7 +160,7 @@ class Configurator(object):
         The helper method to create the instance of class derived from base class given to constructor using "choiceName" and
         input "configuration".  The last argument is a flag to determine if the input configuration should be validated.
         '''
-        return self.createByConf(configuration[choicename], validation)
+        return self.create(configuration[choicename], validation)
        
     def createList(self, listname, input, validation = True):
         '''
@@ -172,7 +172,7 @@ class Configurator(object):
             raise AttributeError,"Given list name \"" + listname + "\" is not a part of input configuration"
         instances = []
         for hash in input[listname]:
-            instances.append(createByConf(hash, validation))
+            instances.append(create(hash, validation))
         return instances
             
     def getRegisteredClasses(self):
