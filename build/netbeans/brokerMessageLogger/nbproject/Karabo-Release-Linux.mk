@@ -52,7 +52,7 @@ FFLAGS=
 ASFLAGS=
 
 # Link Libraries and Options
-LDLIBSOPTIONS=-L${KARABO}/extern/lib -Wl,-rpath,\$$ORIGIN/../lib -Wl,-rpath,\$$ORIGIN/../extern/lib -Wl,-rpath,../karabo/dist/Release/GNU-Linux-x86/lib -L../karabo/dist/Release/GNU-Linux-x86/lib -lkarabo -lboost_chrono -lboost_date_time -lboost_filesystem -lboost_python -lboost_regex -lboost_signals -lboost_system -lboost_thread -lcppunit -lhdf5 -lhdf5_cpp -lhdf5_hl -lhdf5_hl_cpp -llog4cpp -lnetsnmp -lnetsnmpagent -lnetsnmphelpers -lnetsnmpmibs -lnetsnmptrapd -lopenmqc -lpython2.7
+LDLIBSOPTIONS=-L${KARABO}/extern/lib -Wl,-rpath,\$$ORIGIN/../lib -Wl,-rpath,\$$ORIGIN/../extern/lib -Wl,-rpath,${KARABO}/extern/lib -Wl,-rpath,../karabo/dist/Release/GNU-Linux-x86/lib -L../karabo/dist/Release/GNU-Linux-x86/lib -lkarabo -lboost_chrono -lboost_date_time -lboost_filesystem -lboost_python -lboost_regex -lboost_signals -lboost_system -lboost_thread -lcppunit -lhdf5 -lhdf5_cpp -lhdf5_hl -lhdf5_hl_cpp -llog4cpp -lnetsnmp -lnetsnmpagent -lnetsnmphelpers -lnetsnmpmibs -lnetsnmptrapd -lopenmqc -lpython2.7
 
 # Build Targets
 .build-conf: ${BUILD_SUBPROJECTS}
@@ -62,7 +62,7 @@ ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/bin/karabo-brokermessagelogger: ../ka
 
 ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/bin/karabo-brokermessagelogger: ${OBJECTFILES}
 	${MKDIR} -p ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/bin
-	${LINK.cc} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/bin/karabo-brokermessagelogger ${OBJECTFILES} ${LDLIBSOPTIONS} 
+	${LINK.cc} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/bin/karabo-brokermessagelogger ${OBJECTFILES} ${LDLIBSOPTIONS}
 
 ${OBJECTDIR}/_ext/496226620/brokerMessageLogger.o: ../../../src/brokerMessageLogger/brokerMessageLogger.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/496226620
@@ -71,7 +71,7 @@ ${OBJECTDIR}/_ext/496226620/brokerMessageLogger.o: ../../../src/brokerMessageLog
 
 # Subprojects
 .build-subprojects:
-	cd ../karabo && ${MAKE} -j6 -f Makefile CONF=Release
+	cd ../karabo && ${MAKE} -f Makefile CONF=Release
 
 # Clean Targets
 .clean-conf: ${CLEAN_SUBPROJECTS}
@@ -80,7 +80,7 @@ ${OBJECTDIR}/_ext/496226620/brokerMessageLogger.o: ../../../src/brokerMessageLog
 
 # Subprojects
 .clean-subprojects:
-	cd ../karabo && ${MAKE} -j6 -f Makefile CONF=Release clean
+	cd ../karabo && ${MAKE} -f Makefile CONF=Release clean
 
 # Enable dependency checking
 .dep.inc: .depcheck-impl
