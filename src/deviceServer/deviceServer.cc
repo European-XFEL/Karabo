@@ -7,6 +7,7 @@
  */
 
 #include <karabo/core/DeviceServer.hh>
+#include <karabo/core/DeviceServer2.hh>
 #include <karabo/core/Runner.hh>
 
 using namespace karabo::core;
@@ -17,7 +18,7 @@ using namespace karabo::log;
 int main(int argc, char** argv) {
     try {
         
-        DeviceServer::Pointer deviceServer = Runner<DeviceServer>::instantiate(argc, argv);
+        DeviceServer2::Pointer deviceServer = Runner<DeviceServer2>::instantiate(argc, argv);
         if (deviceServer) deviceServer->run();
 
     } catch (const karabo::util::TimeoutException& e) {

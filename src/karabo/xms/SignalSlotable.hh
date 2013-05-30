@@ -158,11 +158,11 @@ namespace karabo {
 
             SignalSlotable();
 
-            SignalSlotable(const karabo::net::BrokerConnection::Pointer& connection, const std::string& instanceId, int heartbeatRate = 5);
+            SignalSlotable(const karabo::net::BrokerConnection::Pointer& connection, const std::string& instanceId, int heartbeatRate = 10);
 
             virtual ~SignalSlotable();
 
-            void init(const karabo::net::BrokerConnection::Pointer& connection, const std::string& instanceId, int heartbeatRate = 5);
+            void init(const karabo::net::BrokerConnection::Pointer& connection, const std::string& instanceId, int heartbeatRate = 10);
 
             /**
              * This function will block the main-thread.
