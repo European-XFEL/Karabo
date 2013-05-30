@@ -10,6 +10,7 @@
 #include <algorithm>
 #include <boost/filesystem.hpp>
 #include <karabo/util/Hash.hh>
+#include <karabo/util/Schema.hh>
 
 using namespace std;
 using namespace karabo::util;
@@ -142,6 +143,11 @@ namespace karabo {
                 any = h;
                 return;
             }
+            if (bp::extract<karabo::util::Schema>(obj).check()) {
+                Schema s = bp::extract<Schema>(obj);
+                any = s;
+                return;
+            }
             if (bp::extract<bn::ndarray>(obj).check()) {
                 const bn::ndarray& a = bp::extract<bn::ndarray>(obj);
                 int nd = a.get_nd();
@@ -251,6 +257,14 @@ namespace karabo {
                     std::vector<Hash> v(size);
                     for (bp::ssize_t i = 0; i < size; ++i) {
                         v[i] = bp::extract<Hash>(obj[i]);
+                    }
+                    any = v;
+                    return;
+                }
+                if (bp::extract<Schema>(list0).check()) {
+                    std::vector<Schema> v(size);
+                    for (bp::ssize_t i = 0; i < size; ++i) {
+                        v[i] = bp::extract<Schema>(obj[i]);
                     }
                     any = v;
                     return;
