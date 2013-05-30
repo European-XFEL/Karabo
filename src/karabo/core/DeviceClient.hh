@@ -91,6 +91,8 @@ namespace karabo {
             boost::mutex m_propertyChangedHandlersMutex;
 
             int m_defaultTimeout;
+            
+            bool m_systemHasMaster;
 
         public:
 
@@ -384,7 +386,7 @@ namespace karabo {
 
             virtual void slotChanged(const karabo::util::Hash& hash, const std::string& instanceId);
 
-            virtual void slotInstanceUpdated(const std::string& instanceId, const karabo::util::Hash& instanceInfo);
+            virtual void slotInstanceNew(const std::string& instanceId, const karabo::util::Hash& instanceInfo);
 
             virtual void slotInstanceGone(const std::string& instanceId);
 

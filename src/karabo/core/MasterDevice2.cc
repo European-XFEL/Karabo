@@ -31,7 +31,7 @@ namespace karabo {
 
         MasterDevice2::MasterDevice2(const Hash& input) : Device<OkErrorFsm>(input) {
             setupSlots();
-            m_systemArchive.set("device", Hash());
+            m_systemHistory.set("device", Hash());
         }
 
 
@@ -42,9 +42,49 @@ namespace karabo {
 
 
         void MasterDevice2::setupSlots() {
-            GLOBAL_SLOT2(slotInstanceUpdated, string /*instanceId*/, Hash /*instanceInfo*/);
+            GLOBAL_SLOT3(slotValidateInstanceId, string /*hostname*/, string /*instanceType*/, string /*instanceId*/);
+            GLOBAL_SLOT2(slotInstanceNew, string /*instanceId*/, Hash /*instanceInfo*/);
             GLOBAL_SLOT2(slotInstanceGone, string /*instanceId*/, Hash /*instanceInfo*/);
             SLOT2(slotChanged, Hash /*changedConfig*/, string /*deviceId*/);
+        }
+
+
+        void MasterDevice2::slotValidateInstanceId(const std::string& hostname, const std::string& instanceType, const std::string& instanceId) {
+            KARABO_LOG_INFO << "Device-server from host \"" << hostname << "\" requests device-server instanceId";
+            string id = instanceId;
+            if (id.empty()) { // Generate
+                if (instanceType == "server") {
+                    id = hostname + "_DeviceServer_" + karabo::util::toString(getNumberOfServersOnHost(hostname));
+                }
+            }
+
+            string foreignHost;
+            string welcomeMessage;
+            try {
+                request("*", "slotPing", id, true).timeout(100).receive(foreignHost);
+            } catch (const karabo::util::TimeoutException&) {
+                Exception::clearTrace();
+                if (m_systemNow.has("server." + id)) welcomeMessage = "Welcome back!";
+                else welcomeMessage = "Your name got accepted, welcome in the team!";
+                KARABO_LOG_DEBUG << "Shipping welcome message: " << welcomeMessage;
+                reply(true, id, welcomeMessage); // Ok, instance does not exist
+                return;
+            }
+            welcomeMessage = "Another device-server with the same instance is already online (on host: " + foreignHost + ")";
+            KARABO_LOG_DEBUG << "Shipping welcome message: " << welcomeMessage;
+            reply(false, id, welcomeMessage); // Shit, instance exists already
+        }
+
+
+        size_t MasterDevice2::getNumberOfServersOnHost(const std::string& hostname) {
+            boost::mutex::scoped_lock lock(m_systemNowMutex);
+            if (!m_systemNow.has("server")) return 0; // No server at all
+            const Hash& servers = m_systemNow.get<Hash>("server");
+            size_t count = 0;
+            for (Hash::const_iterator it = servers.begin(); it != servers.end(); ++it) {
+                if (it->getAttribute<string>("host") == hostname) count++;
+            }
+            return count;
         }
 
 
@@ -57,151 +97,152 @@ namespace karabo {
         }
 
 
-        void MasterDevice2::cacheAvailableInstances() {
-            vector<pair<string, Hash> > instances = getAvailableInstances();
-            for (size_t i = 0; i < instances.size(); ++i) {
-                const string& instanceId = instances[i].first;
-                const Hash& instanceInfo = instances[i].second;
-
-                // Start tracking
-                trackExistenceOfInstance(instanceId);
-
-                // Update runtime cache
-                handleInstanceUpdateForSystemTopology(instanceId, instanceInfo);
-
-                if (instanceInfo.has("type")) {
-                    string type(instanceInfo.get<std::string>("type"));
-                    if (type == "device") {
-                        handleDeviceInstanceUpdateForSystemArchive(instanceId);
-                    } else if (type == "server") {
-                        // TODO
-                    }
-                }
-            }
-            KARABO_LOG_DEBUG << "System archive:\n" << m_systemArchive;
-        }
-
-        void MasterDevice2::slotInstanceUpdated(const std::string& instanceId, const karabo::util::Hash& instanceInfo) {
-
-            handleInstanceUpdateForSystemTopology(instanceId, instanceInfo);
-
-            if (instanceInfo.has("type")) {
-                if (instanceInfo.get<std::string>("type") == "device") {
-                    handleDeviceInstanceUpdateForSystemArchive(instanceId);
-                }
-            }
+        void MasterDevice2::slotInstanceNew(const std::string& instanceId, const karabo::util::Hash& instanceInfo) {
             
+            KARABO_LOG_DEBUG << "New instance \"" << instanceId << "\" got registered";
+            
+            if (instanceId == "MasterDevice1" || instanceId == "MasterDevice2" || instanceId == "GuiServerDevice1") return; // TODO Check names
+
+            onInstanceNewForSystemNow(instanceId, instanceInfo);
+            onInstanceNewForSystemHistory(instanceId, instanceInfo);
+
             // Start tracking
             trackExistenceOfInstance(instanceId);
-            
+
             // Connect to changes
             connectN(instanceId, "signalChanged", "", "slotChanged");
         }
-        
-         void MasterDevice2::handleInstanceUpdateForSystemTopology(const std::string& instanceId, const karabo::util::Hash& instanceInfo) {
-            boost::mutex::scoped_lock lock(m_runtimeSystemTopologyMutex);
-            boost::optional<const Hash::Node&> node = instanceInfo.find("type");
-            string type = "unknown";
-            if (node) type = node->getValue<string>();
+
+
+        void MasterDevice2::onInstanceNewForSystemNow(const std::string& instanceId, const karabo::util::Hash& instanceInfo) {
+            boost::mutex::scoped_lock lock(m_systemNowMutex);
+
+            string type(getInstanceType(instanceInfo));
+            string path(type + "." + instanceId);
+
+            if (m_systemNow.has(path)) {
+                KARABO_LOG_WARN << "Quick shutdown and restart of " << type << "\" " << instanceId << "\" detected, adapting...";
+            }
+
             Hash entry;
-            Hash::Node& entryNode = entry.set(type + "." + instanceId, Hash());
+            Hash::Node& entryNode = entry.set(path, Hash());
             for (Hash::const_iterator it = instanceInfo.begin(); it != instanceInfo.end(); ++it) {
                 entryNode.setAttribute(it->getKey(), it->getValueAsAny());
             }
-            m_runtimeSystemTopology.merge(entry);
+
+            // Fill configuration for devices
+            if (type == "device") {
+                Schema description;
+                fetchDescription(instanceId, description);
+                Hash configuration;
+                fetchConfiguration(instanceId, configuration);
+                entryNode.setValue(Hash("description", description, "configuration", configuration));
+            }
+
+            if (type == "server") {
+                KARABO_LOG_INFO << "New server from host \"" << instanceInfo.get<string>("host") << "\" wants to register with id \"" << instanceId << "\"";
+
+            }
+
+            m_systemNow.merge(entry);
         }
 
 
-        void MasterDevice2::handleDeviceInstanceUpdateForSystemArchive(const std::string& deviceId) {
-            boost::mutex::scoped_lock lock(m_systemArchiveMutex);
-            string path("device." + deviceId);
-            if (!m_systemArchive.has(path)) {
+        std::string MasterDevice2::getInstanceType(const karabo::util::Hash& instanceInfo) const {
+            boost::optional<const Hash::Node&> node = instanceInfo.find("type");
+            string type("unknown");
+            if (node) type = node->getValue<string>();
+            return type;
+        }
 
-                Hash hash;
-                try {
-                    request(deviceId, "slotRefresh").timeout(2000).receive(hash);
-                } catch (const TimeoutException&) {
-                    KARABO_LOG_FRAMEWORK_ERROR << "Configuration request for device \"" << deviceId << "\" timed out";
-                    Exception::clearTrace();
-                }
-                Hash configuration;
-                for (Hash::const_iterator it = hash.begin(); it != hash.end(); ++it) {
-                    Hash val("v", it->getValueAsAny());
-                    val.setAttributes("v", it->getAttributes());
-                    configuration.set<vector<Hash> >(it->getKey(), vector<Hash>(1, val));
-                }
-                Schema schema;
-                try {
-                    request(deviceId, "slotGetSchema", true).timeout(2000).receive(schema); // Retrieves active schema
-                } catch (const TimeoutException&) {
-                    KARABO_LOG_FRAMEWORK_ERROR << "Schema request for device \"" << deviceId << "\" timed out";
-                    Exception::clearTrace();
-                }
-                Hash tmp("description", vector<Hash>(1, Hash("v", schema)), "configuration", configuration);
-                tmp.setAttribute("configuration", "t", karabo::util::Timestamp().getMsSinceEpoch());
-                tmp.setAttribute("description", "t", karabo::util::Timestamp().getMsSinceEpoch());
 
-                m_systemArchive.set(path, tmp);
+        void MasterDevice2::fetchConfiguration(const std::string& deviceId, karabo::util::Hash& configuration) const {
+            try {
+                request(deviceId, "slotGetConfiguration").timeout(2000).receive(configuration);
+            } catch (const TimeoutException&) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Configuration request for device \"" << deviceId << "\" timed out";
+                Exception::clearTrace();
             }
         }
+
+
+        void MasterDevice2::fetchDescription(const std::string& deviceId, karabo::util::Schema& description) const {
+            try {
+                request(deviceId, "slotGetDescription", false).timeout(2000).receive(description); // Retrieves active schema
+            } catch (const TimeoutException&) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Schema request for device \"" << deviceId << "\" timed out";
+                Exception::clearTrace();
+            }
+        }
+
+
+        void MasterDevice2::onInstanceNewForSystemHistory(const std::string& instanceId, const karabo::util::Hash& instanceInfo) {
+            boost::mutex::scoped_lock lock(m_systemHistoryMutex);
+            if (getInstanceType(instanceInfo) == "device") {
+                string path("device." + instanceId);
+                if (!m_systemHistory.has(path)) {
+
+                    const Schema& description = m_systemNow.get<Schema>(path + ".description");
+                    const Hash& hash = m_systemNow.get<Hash>(path + ".configuration");
+                    Hash configuration;
+                    for (Hash::const_iterator it = hash.begin(); it != hash.end(); ++it) {
+                        Hash val("v", it->getValueAsAny());
+                        val.setAttributes("v", it->getAttributes());
+                        configuration.set<vector<Hash> >(it->getKey(), vector<Hash>(1, val));
+                    }
+                    Hash tmp("description", vector<Hash>(1, Hash("v", description)), "configuration", configuration);
+                    tmp.setAttribute("description", "t", karabo::util::Timestamp().getMsSinceEpoch());
+                    tmp.setAttribute("configuration", "t", karabo::util::Timestamp().getMsSinceEpoch());
+
+                    m_systemHistory.set(path, tmp);
+                }
+            }
+        }
+
 
         void MasterDevice2::slotInstanceGone(const std::string& instanceId, const karabo::util::Hash& instanceInfo) {
-            handleInstanceGoneForSystemTopology(instanceId, instanceInfo);
-             if (instanceInfo.has("type")) {
-                if (instanceInfo.get<std::string>("type") == "device") {
-                    handleDeviceInstanceGoneForSystemArchive(instanceId);
-                }
-            }
+            onInstanceGoneForSystemNow(instanceId, instanceInfo);
+            onInstanceGoneForSystemHistory(instanceId, instanceInfo);
         }
-        
+
+
         void MasterDevice2::instanceNotAvailable(const std::string& instanceId) {
-            m_runtimeSystemTopologyMutex.lock();
+            m_systemNowMutex.lock();
             Hash fakeInstanceInfo;
-            for (Hash::const_iterator it = m_runtimeSystemTopology.begin(); it != m_runtimeSystemTopology.end(); ++it) {
-                if (m_runtimeSystemTopology.has(it->getKey() + "." + instanceId)) {
+            for (Hash::const_iterator it = m_systemNow.begin(); it != m_systemNow.end(); ++it) {
+                if (m_systemNow.has(it->getKey() + "." + instanceId)) {
                     fakeInstanceInfo.set("type", it->getKey());
-                    m_runtimeSystemTopologyMutex.unlock();
+                    m_systemNowMutex.unlock();
                     call("*", "slotInstanceGone", instanceId, fakeInstanceInfo);
                     break;
                 }
             }
         }
-        
-        void MasterDevice2::handleInstanceGoneForSystemTopology(const std::string& instanceId, const karabo::util::Hash& instanceInfo) {
-            boost::mutex::scoped_lock lock(m_runtimeSystemTopologyMutex);
+
+
+        void MasterDevice2::onInstanceGoneForSystemNow(const std::string& instanceId, const karabo::util::Hash& instanceInfo) {
+            boost::mutex::scoped_lock lock(m_systemNowMutex);
             boost::optional<const Hash::Node&> node = instanceInfo.find("type");
             string type = "unknown";
             if (node) type = node->getValue<string>();
             string path(type + "." + instanceId);
-            if (m_runtimeSystemTopology.has(path)) {
-                m_runtimeSystemTopology.erase(path);
+            if (m_systemNow.has(path)) {
+                m_systemNow.erase(path);
                 KARABO_LOG_DEBUG << "Removed " << type << " \"" << instanceId << "\" from system topology";
             } else {
                 KARABO_LOG_WARN << "Saw " << type << " \"" << instanceId << "\" being destroyed, which was not known before...";
             }
         }
-        
-        void MasterDevice2::handleDeviceInstanceGoneForSystemArchive(const std::string& deviceId) {
-            boost::mutex::scoped_lock lock(m_systemArchiveMutex);
-            KARABO_LOG_DEBUG << "Tagging device \"" << deviceId << "\" for being discontinued...";
-            string path("device." + deviceId + ".configuration");
-            if (m_systemArchive.has(path) && !m_systemArchive.get<Hash>(path).empty()) {
-                KARABO_LOG_DEBUG << "Still in memory";
-                Hash& tmp = m_systemArchive.get<Hash>(path);
-                for (Hash::const_iterator it = tmp.begin(); it != tmp.end(); ++it) {
-                    vector<Hash>& keyHistory = it->getValue<vector<Hash> >();
-                    Hash lastEntry = keyHistory.back();
-                    lastEntry.setAttribute("v", "t", karabo::util::Timestamp().getMsSinceEpoch());
-                    lastEntry.setAttribute("v", "isLast", true);
-                    keyHistory.push_back(lastEntry);
-                }
-            } else { // Need to fetch from file
-                boost::filesystem::path filePath("karaboHistory/" + deviceId + ".xml");
-                if (boost::filesystem::exists(filePath)) {
-                    KARABO_LOG_DEBUG << "Fetching back from file";
-                    Hash deviceHistory;
-                    loadFromFile(deviceHistory, filePath.string());
-                    Hash& tmp = deviceHistory.get<Hash>("configuration");
+
+
+        void MasterDevice2::onInstanceGoneForSystemHistory(const std::string& instanceId, const karabo::util::Hash& instanceInfo) {
+            boost::mutex::scoped_lock lock(m_systemHistoryMutex);
+            if (getInstanceType(instanceInfo) == "device") {
+                KARABO_LOG_DEBUG << "Tagging device \"" << instanceId << "\" for being discontinued...";
+                string path("device." + instanceId + ".configuration");
+                if (m_systemHistory.has(path) && !m_systemHistory.get<Hash>(path).empty()) {
+                    KARABO_LOG_DEBUG << "Still in memory";
+                    Hash& tmp = m_systemHistory.get<Hash>(path);
                     for (Hash::const_iterator it = tmp.begin(); it != tmp.end(); ++it) {
                         vector<Hash>& keyHistory = it->getValue<vector<Hash> >();
                         Hash lastEntry = keyHistory.back();
@@ -209,7 +250,22 @@ namespace karabo {
                         lastEntry.setAttribute("v", "isLast", true);
                         keyHistory.push_back(lastEntry);
                     }
-                    saveToFile(deviceHistory, filePath.string(), Hash("format.Xml.indentation", 1));
+                } else { // Need to fetch from file
+                    boost::filesystem::path filePath("karaboHistory/" + instanceId + ".xml");
+                    if (boost::filesystem::exists(filePath)) {
+                        KARABO_LOG_DEBUG << "Fetching back from file";
+                        Hash deviceHistory;
+                        loadFromFile(deviceHistory, filePath.string());
+                        Hash& tmp = deviceHistory.get<Hash>("configuration");
+                        for (Hash::const_iterator it = tmp.begin(); it != tmp.end(); ++it) {
+                            vector<Hash>& keyHistory = it->getValue<vector<Hash> >();
+                            Hash lastEntry = keyHistory.back();
+                            lastEntry.setAttribute("v", "t", karabo::util::Timestamp().getMsSinceEpoch());
+                            lastEntry.setAttribute("v", "isLast", true);
+                            keyHistory.push_back(lastEntry);
+                        }
+                        saveToFile(deviceHistory, filePath.string(), Hash("format.Xml.indentation", 1));
+                    }
                 }
             }
         }
@@ -217,10 +273,10 @@ namespace karabo {
 
         void MasterDevice2::slotChanged(const karabo::util::Hash& changedConfig, const std::string& deviceId) {
             cout << "slotChanged" << endl;
-            boost::mutex::scoped_lock lock(m_systemArchiveMutex);
+            boost::mutex::scoped_lock lock(m_systemHistoryMutex);
             string path("device." + deviceId + ".configuration");
-            if (m_systemArchive.has(path)) {
-                Hash& tmp = m_systemArchive.get<Hash>(path);
+            if (m_systemHistory.has(path)) {
+                Hash& tmp = m_systemHistory.get<Hash>(path);
                 for (Hash::const_iterator it = changedConfig.begin(); it != changedConfig.end(); ++it) {
                     Hash val("v", it->getValueAsAny());
                     val.setAttributes("v", it->getAttributes());
@@ -230,17 +286,17 @@ namespace karabo {
                     else tmp.set(it->getKey(), std::vector<Hash>(1, val));
                 }
             } else {
-                KARABO_LOG_WARN << "Could not find: " << path << " in " << m_systemArchive;
+                KARABO_LOG_WARN << "Could not find: " << path << " in " << m_systemHistory;
             }
         }
 
 
         void MasterDevice2::persistDataThread() {
-            
+
             while (m_persistData) {
 
-                m_systemArchiveMutex.lock();
-                Hash& tmp = m_systemArchive.get<Hash>("device");
+                m_systemHistoryMutex.lock();
+                Hash& tmp = m_systemHistory.get<Hash>("device");
                 for (Hash::iterator it = tmp.begin(); it != tmp.end(); ++it) { // Loops deviceIds
                     const string& deviceId = it->getKey();
                     if (!it->getValue<Hash>().get<Hash>("configuration").empty()) {
@@ -260,7 +316,7 @@ namespace karabo {
                         it->setValue(Hash("description", vector<Hash>(), "configuration", Hash()));
                     }
                 }
-                m_systemArchiveMutex.unlock();
+                m_systemHistoryMutex.unlock();
                 boost::this_thread::sleep(boost::posix_time::seconds(10));
             }
         }
