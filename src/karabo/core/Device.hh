@@ -45,6 +45,8 @@ namespace karabo {
 
             virtual void run() = 0;
 
+            // TODO
+            // Can be removed, if sending current configuration after instantiation by server is deprecated
             virtual const karabo::util::Hash& getCurrentConfiguration() const = 0;
 
         };
@@ -207,8 +209,17 @@ namespace karabo {
                 boost::thread t(boost::bind(&karabo::core::Device<FSM>::runEventLoop, this, true, info));
                 this->startFsm();
                 KARABO_LOG_INFO << m_classId << " with deviceId: \"" << this->getInstanceId() << "\" got started";
-                // Emit full configuration first time
-                this->set(m_parameters);
+                
+                // Repair classId
+                m_parameters.set("classId", m_classId);
+                
+                // Validate first time to assign timestamps
+                m_objectStateChangeMutex.lock();
+                karabo::util::Hash validated;
+                std::pair<bool, std::string> result = m_validatorIntern.validate(m_fullSchema, m_parameters, validated, karabo::util::Timestamp());
+                if (result.first == false) KARABO_LOG_WARN << "Bad parameter setting attempted, validation reports: " << result.second;
+                m_parameters.merge(validated, karabo::util::Hash::REPLACE_ATTRIBUTES);
+                m_objectStateChangeMutex.unlock();
                 t.join(); // Blocks 
             }
 
@@ -258,8 +269,9 @@ namespace karabo {
                 if (m_validatorIntern.hasParametersInWarnOrAlarm()) {
                     const Hash& h = m_validatorIntern.getParametersInWarnOrAlarm();
                     for (Hash::const_iterator it = h.begin(); it != h.end(); ++it) {
-                        KARABO_LOG_WARN << it->getValue<Hash>().get<string>("message");
-                        // TODO trigger warnOrAlarm
+                        const Hash& desc = it->getValue<Hash>();
+                        KARABO_LOG_WARN << desc.get<string>("message");
+                        emit("signalNotification", desc.get<string>("type"), desc.get<string>("message"), m_instanceId);
                     }
                 }
 
@@ -282,7 +294,7 @@ namespace karabo {
                 } catch (const karabo::util::Exception& e) {
                     KARABO_RETHROW_AS(KARABO_PARAMETER_EXCEPTION("Error whilst retrieving parameter (" + key + ") from device"));
                 }
-                return var; // never reached. Keep it to make a compiler happy.
+                return var; // never reached. Keep it to make the compiler happy.
             }
 
             /**
@@ -464,6 +476,7 @@ namespace karabo {
 
             virtual void errorFoundAction(const std::string& shortMessage, const std::string& detailedMessage) {
                 //triggerErrorFound(shortMessage, detailedMessage);
+                // TODO Check was has to be done here
             }
 
             virtual void preReconfigure(karabo::util::Hash& incomingReconfiguration) {
@@ -528,20 +541,10 @@ namespace karabo {
                 SIGNAL4("signalErrorFound", string, string, string, string); // timeStamp, shortMsg, longMsg, instanceId
                 connectN("", "signalErrorFound", "*", "slotErrorFound");
 
-                SIGNAL2("signalBadReconfiguration", string, string); // shortMsg, instanceId 
-                connectN("", "signalBadReconfiguration", "*", "slotBadReconfiguration");
-
                 SIGNAL2("signalNoTransition", string, string);
                 connectN("", "signalNoTransition", "*", "slotNoTransition");
 
-                SIGNAL4("signalWarningOrAlarm", string, string, string, string); // timeStamp, message, type, instanceId
-
-                // TODO Deprecate!
-                SIGNAL4("signalWarning", string, string, string, string); // timeStamp, warnMsg, instanceId, priority
-                connectN("", "signalWarning", "*", "slotWarning");
-
-                SIGNAL4("signalAlarm", string, string, string, string); // timeStamp, alarmMsg, instanceId, priority
-                connectN("", "signalAlarm", "*", "slotAlarm");
+                SIGNAL3("signalNotification", string, string, string); // type, message, instanceId
 
                 SIGNAL3("signalSchemaUpdated", string, string, string); // schema, instanceId, classId
                 connectN("", "signalSchemaUpdated", "*", "slotSchemaUpdated");
@@ -550,19 +553,24 @@ namespace karabo {
                 SIGNAL2("signalDeviceInstanceGone", string, string); // DeviceServerInstanceId, deviceInstanceId
                 connectN("", "signalDeviceInstanceGone", "*", "slotDeviceInstanceGone");
 
-                SIGNAL3("signalProgressUpdated", int, string, string); // Progress value [0,100], label, deviceInstanceIdre
+                SIGNAL3("signalProgressUpdated", int, string, string); // Progress value [0,100], label, deviceInstanceId
                 connectN("", "progressUpdate", "*", "slotProgressUpdated");
 
 
                 SLOT1(slotReconfigure, karabo::util::Hash)
-                SLOT0(slotRefresh)
-                SLOT1(slotGetSchema, bool); // onlyCurrentState
+                SLOT0(slotRefresh) // Deprecate
+                SLOT0(slotGetConfiguration)
+                SLOT1(slotGetDescription, bool); // onlyCurrentState
                 SLOT0(slotKillDeviceInstance)
 
             }
 
             void slotRefresh() {
                 emit("signalChanged", m_parameters, m_instanceId, m_classId);
+                reply(m_parameters);
+            }
+            
+            void slotGetConfiguration() {
                 reply(m_parameters);
             }
 
@@ -608,7 +616,7 @@ namespace karabo {
                 this->postReconfigure();
             }
 
-            void slotGetSchema(bool onlyCurrentState) {
+            void slotGetDescription(bool onlyCurrentState) {
                 if (onlyCurrentState) {
                     const std::string& currentState = get<std::string > ("state");
                     reply(getStateDependentSchema(currentState));
@@ -618,19 +626,29 @@ namespace karabo {
             }
 
             void slotKillDeviceInstance() {
-                KARABO_LOG_INFO << "Device is going down...";
-                preDestruction(); // Give devices a chance to react
-                emit("signalDeviceInstanceGone", m_serverId, m_instanceId);
-                stopEventLoop();
-                KARABO_LOG_INFO << "dead.";
+                // It is important to know who gave us the kill signal
+                std::string senderId = getSenderInfo("slotKillDeviceInstance")->getInstanceIdOfSender();
+                if (senderId == m_serverId) { // Our server killed us
+                    KARABO_LOG_INFO << "Device is going down as instructed by server";
+                    preDestruction(); // Give devices a chance to react
+                    emit("signalDeviceInstanceGone", m_serverId, m_instanceId); // TODO remove later
+                    stopEventLoop();
+                    
+                } else { // Someone else wants to see us dead, we should inform our server
+                    KARABO_LOG_INFO << "Device is going down as instructed by \"" << senderId << "\"";
+                    call(m_serverId, "slotDeviceGone", m_instanceId);
+                    stopEventLoop();
+                }
             }
 
             karabo::util::Schema& getStateDependentSchema(const std::string& currentState) {
+                KARABO_LOG_DEBUG << "call: getStateDependentSchema()";
                 boost::mutex::scoped_lock lock(m_stateDependendSchemaMutex);
                 // Check cache, whether a special set of state-dependent expected parameters was created before
                 std::map<std::string, karabo::util::Schema>::iterator it = m_stateDependendSchema.find(currentState);
                 if (it == m_stateDependendSchema.end()) { // No
                     it = m_stateDependendSchema.insert(make_pair(currentState, Device::getSchema(m_classId, karabo::util::Schema::AssemblyRules(karabo::util::WRITE, currentState)))).first; // New one
+                    KARABO_LOG_DEBUG << "Providing freshly cached state-dependent schema:\n" << it->second;
                     if (!m_injectedSchema.empty()) it->second.merge(m_injectedSchema);
                 }
                 return it->second;

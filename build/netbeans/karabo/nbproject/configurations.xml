@@ -8,12 +8,13 @@
         <itemPath>../../../src/karabo/core/OkErrorFsm.hh</itemPath>
         <itemPath>../../../src/karabo/core/StartStopFsm.hh</itemPath>
       </logicalFolder>
-      <itemPath>../../../src/karabo/core/Device.cc</itemPath>
       <itemPath>../../../src/karabo/core/Device.hh</itemPath>
       <itemPath>../../../src/karabo/core/DeviceClient.cc</itemPath>
       <itemPath>../../../src/karabo/core/DeviceClient.hh</itemPath>
       <itemPath>../../../src/karabo/core/DeviceServer.cc</itemPath>
       <itemPath>../../../src/karabo/core/DeviceServer.hh</itemPath>
+      <itemPath>../../../src/karabo/core/DeviceServer2.cc</itemPath>
+      <itemPath>../../../src/karabo/core/DeviceServer2.hh</itemPath>
       <itemPath>../../../src/karabo/core/GuiServerDevice.cc</itemPath>
       <itemPath>../../../src/karabo/core/GuiServerDevice.hh</itemPath>
       <itemPath>../../../src/karabo/core/HashDatabase.cc</itemPath>
@@ -419,8 +420,6 @@
         <packFileList>
         </packFileList>
       </packaging>
-      <item path="../../../src/karabo/core/Device.cc" ex="false" tool="1" flavor2="0">
-      </item>
       <item path="../../../src/karabo/core/Device.hh" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../../../src/karabo/core/DeviceClient.cc"
@@ -439,6 +438,16 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/core/DeviceServer.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/core/DeviceServer2.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/core/DeviceServer2.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -1751,8 +1760,6 @@
         <packFileList>
         </packFileList>
       </packaging>
-      <item path="../../../src/karabo/core/Device.cc" ex="false" tool="1" flavor2="0">
-      </item>
       <item path="../../../src/karabo/core/Device.hh" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../../../src/karabo/core/DeviceClient.cc"
@@ -1771,6 +1778,16 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/core/DeviceServer.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/core/DeviceServer2.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/core/DeviceServer2.hh"
             ex="false"
             tool="3"
             flavor2="0">

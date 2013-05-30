@@ -63,6 +63,7 @@ namespace karabo {
             }
 
             bp::object getCurrentlySettablePropertiesPy(const std::string& instanceId) {
+                ScopedGILRelease nogil;
                 return Wrapper::fromStdVectorToPyList(this->getCurrentlySettableProperties(instanceId));
             }
 
@@ -133,6 +134,7 @@ namespace karabo {
             }
 
             void executeNoWaitPy1(std::string instanceId, const std::string& functionName, const bp::object& a1) const {
+                ScopedGILRelease nogil;
                 m_signalSlotableWrap->callPy1(instanceId, functionName, a1);
             }
 

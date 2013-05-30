@@ -41,9 +41,9 @@ namespace karabo {
              *      configuration => HASH
              *   
              */
-            karabo::util::Hash m_runtimeSystemTopology;
+            karabo::util::Hash m_systemNow;
 
-            boost::mutex m_runtimeSystemTopologyMutex;
+            boost::mutex m_systemNowMutex;
 
 
             /**
@@ -55,12 +55,12 @@ namespace karabo {
              *     configuration t0 = <timestamp> +
              *       <key> @
              *         [0]
-             *           val t="<timestamp>" => VALUE
+             *           val t="<timestamp>" [isLast] => VALUE
              *          
              */
-            karabo::util::Hash m_systemArchive;
+            karabo::util::Hash m_systemHistory;
 
-            boost::mutex m_systemArchiveMutex;
+            boost::mutex m_systemHistoryMutex;
             
             bool m_persistData;
             
@@ -79,21 +79,31 @@ namespace karabo {
 
         private: // Functions
 
+            void slotValidateInstanceId(const std::string& hostname, const std::string& instanceType, const std::string& instanceId);
+            
+            size_t getNumberOfServersOnHost(const std::string& hostname);
+            
             void okStateOnEntry();
             
             void setupSlots();
 
-            void cacheAvailableInstances();
+            void slotInstanceNew(const std::string& instanceId, const karabo::util::Hash& instanceInfo);
 
-            void handleInstanceUpdateForSystemTopology(const std::string& instanceId, const karabo::util::Hash& instanceInfo);
+            void onInstanceNewForSystemNow(const std::string& instanceId, const karabo::util::Hash& instanceInfo);
             
-            void handleDeviceInstanceUpdateForSystemArchive(const std::string& deviceId);
+            std::string getInstanceType(const karabo::util::Hash& instanceInfo) const;
             
-            void handleInstanceGoneForSystemTopology(const std::string& instanceId, const karabo::util::Hash& instanceInfo);
+            void onInstanceNewForSystemHistory(const std::string& deviceId, const karabo::util::Hash& instanceInfo);
             
-            void handleDeviceInstanceGoneForSystemArchive(const std::string& deviceId);
+            void fetchConfiguration(const std::string& deviceId, karabo::util::Hash& configuration) const;
+                
+            void fetchDescription(const std::string& deviceId, karabo::util::Schema& description) const;
+                        
+            void onInstanceGoneForSystemNow(const std::string& instanceId, const karabo::util::Hash& instanceInfo);
             
-            void slotInstanceUpdated(const std::string& instanceId, const karabo::util::Hash& instanceInfo);
+            void onInstanceGoneForSystemHistory(const std::string& deviceId, const karabo::util::Hash& instanceInfo);
+            
+            
             
             void slotInstanceGone(const std::string& instanceId, const karabo::util::Hash& instanceInfo);
             

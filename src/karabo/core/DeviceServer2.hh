@@ -8,8 +8,8 @@
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
 
-#ifndef KARABO_CORE_DEVICESERVER_HH
-#define	KARABO_CORE_DEVICESERVER_HH
+#ifndef KARABO_CORE_DEVICESERVER2_HH
+#define	KARABO_CORE_DEVICESERVER2_HH
 
 #include <karabo/util/Configurator.hh>
 #include <karabo/util/PluginLoader.hh>
@@ -30,24 +30,24 @@ namespace karabo {
     namespace core {
 
         /**
-         * The DeviceServer class.
+         * The DeviceServer2 class.
          */
-        class DeviceServer : public karabo::xms::SignalSlotable {
+        class DeviceServer2 : public karabo::xms::SignalSlotable {
 
             typedef std::map<std::string, boost::thread*> DeviceInstanceMap;
 
 
         public:
 
-            KARABO_CLASSINFO(DeviceServer, "DeviceServer", "1.0")
+            KARABO_CLASSINFO(DeviceServer2, "DeviceServer2", "1.0")
             KARABO_CONFIGURATION_BASE_CLASS
 
 
             static void expectedParameters(karabo::util::Schema&);
 
-            DeviceServer(const karabo::util::Hash&);
+            DeviceServer2(const karabo::util::Hash&);
 
-            virtual ~DeviceServer();
+            virtual ~DeviceServer2();
 
             void run();
 
@@ -125,7 +125,7 @@ namespace karabo {
             KARABO_FSM_TABLE_END
 
             //                       Name          Transition-Table     Initial-State  Context
-            KARABO_FSM_STATE_MACHINE(AllOkState, AllOkStateTransitionTable, RegistrationState, Self)
+            KARABO_FSM_STATE_MACHINE(AllOkState, AllOkStateTransitionTable, IdleState, Self)
 
 
             /**************************************************************/
@@ -194,12 +194,9 @@ namespace karabo {
             bool m_gotName;
 
             karabo::util::Hash m_availableDevices;
-            std::vector<karabo::util::Hash> m_autoStart;
             boost::thread_group m_deviceThreads;
             DeviceInstanceMap m_deviceInstanceMap;
             unsigned int m_deviceInstanceCount;
-
-            karabo::io::TextSerializer<karabo::util::Schema>::Pointer m_schemaSerializer;
 
             std::string m_serverId;
             karabo::net::BrokerConnection::Pointer m_connection;

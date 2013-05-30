@@ -200,7 +200,7 @@ namespace karabo {
                 KARABO_DB_SELECT(result, "instanceId", "DeviceServerInstance", true);
             }
 
-            string instanceId = hostname + "/DeviceServer/" + karabo::util::toString(result.size());
+            string instanceId = hostname + "_DeviceServer_" + karabo::util::toString(result.size());
             this->sanifyDeviceServerInstanceId(instanceId);
 
             log() << Priority::INFO << "This will be the " << result.size() + 1 << " device-server online on host \"" << hostname << "\"";

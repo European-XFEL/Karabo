@@ -26,6 +26,15 @@ namespace karabo {
             m_signalSlotable = boost::shared_ptr<SignalSlotable > (new SignalSlotable(connection, ownInstanceId));
             m_eventThread = boost::thread(boost::bind(&karabo::xms::SignalSlotable::runEventLoop, m_signalSlotable, true, Hash()));
             this->setupSlots();
+
+            if (this->exists("MasterDevice2").first) {
+                m_systemHasMaster = true;
+                KARABO_LOG_FRAMEWORK_INFO << "Found a running master instance.";
+            } else {
+                m_systemHasMaster = false;
+                KARABO_LOG_FRAMEWORK_WARN << "No master instance found. Running in stand-alone mode.";
+            }
+
             this->cacheAvailableInstances();
 
         }
@@ -40,7 +49,7 @@ namespace karabo {
         void DeviceClient::setupSlots() {
             //karabo::log::Logger::configure(Hash("priority", "DEBUG")); // TODO REMOVE LATER
             m_signalSlotable->registerSlot<Hash, string > (boost::bind(&karabo::core::DeviceClient::slotChanged, this, _1, _2), "slotChanged");
-            m_signalSlotable->registerSlot<string, Hash > (boost::bind(&karabo::core::DeviceClient::slotInstanceUpdated, this, _1, _2), "slotInstanceUpdated", SignalSlotable::GLOBAL);
+            m_signalSlotable->registerSlot<string, Hash > (boost::bind(&karabo::core::DeviceClient::slotInstanceNew, this, _1, _2), "slotInstanceNew", SignalSlotable::GLOBAL);
             m_signalSlotable->registerSlot<string > (boost::bind(&karabo::core::DeviceClient::slotInstanceGone, this, _1), "slotInstanceGone", SignalSlotable::GLOBAL);
         }
 
@@ -77,7 +86,7 @@ namespace karabo {
         }
 
 
-        void DeviceClient::slotInstanceUpdated(const std::string& instanceId, const karabo::util::Hash& instanceInfo) {
+        void DeviceClient::slotInstanceNew(const std::string& instanceId, const karabo::util::Hash& instanceInfo) {
             boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
             boost::optional<const Hash::Node&> node = instanceInfo.find("type");
             string type = "unknownType";
@@ -88,7 +97,7 @@ namespace karabo {
                 entryNode.setAttribute(it->getKey(), it->getValueAsAny());
             }
             m_runtimeSystemDescription.merge(entry);
-            KARABO_LOG_FRAMEWORK_DEBUG << "slotInstanceUpdated() was called, runtimeSystemDescription looks like:";
+            KARABO_LOG_FRAMEWORK_DEBUG << "slotInstanceNew was called, runtimeSystemDescription looks like:";
             KARABO_LOG_FRAMEWORK_DEBUG << m_runtimeSystemDescription;
         }
 
@@ -219,13 +228,14 @@ namespace karabo {
 
 
         karabo::util::Schema DeviceClient::cacheAndGetFullSchema(const std::string & instanceId) {
+            boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
             std::string path("device." + instanceId + ".fullSchema");
             boost::optional<Hash::Node&> node = m_runtimeSystemDescription.find(path);
             if (!node) { // Not found, request and cache it
                 // Request schema
                 Schema schema;
                 try {
-                    m_signalSlotable->request(instanceId, "slotGetSchema", false).timeout(m_defaultTimeout).receive(schema); // Retrieves full schema
+                    m_signalSlotable->request(instanceId, "slotGetDescription", false).timeout(m_defaultTimeout).receive(schema); // Retrieves full schema
                 } catch (const TimeoutException&) {
                     KARABO_LOG_FRAMEWORK_ERROR << "Schema request for instance \"" << instanceId << "\" timed out";
                     Exception::clearTrace();
@@ -245,20 +255,23 @@ namespace karabo {
         karabo::util::Schema DeviceClient::cacheAndGetActiveSchema(const std::string& instanceId) {
             std::string state = this->get<std::string > (instanceId, "state");
             std::string path("device." + instanceId + ".activeSchema." + state);
-            boost::optional<Hash::Node&> node = m_runtimeSystemDescription.find(path);
-            if (!node) { // Not found, request and cache it
-                // Request schema
-                Schema schema;
-                try {
-                    m_signalSlotable->request(instanceId, "slotGetSchema", true).timeout(m_defaultTimeout).receive(schema); // Retrieves active schema
-                } catch (const TimeoutException&) {
-                    KARABO_LOG_FRAMEWORK_ERROR << "Schema request for instance \"" << instanceId << "\" timed out";
-                    Exception::clearTrace();
-                    return Schema();
+            {
+                boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
+                boost::optional<Hash::Node&> node = m_runtimeSystemDescription.find(path);
+                if (!node) { // Not found, request and cache it
+                    // Request schema
+                    Schema schema;
+                    try {
+                        m_signalSlotable->request(instanceId, "slotGetDescription", true).timeout(m_defaultTimeout).receive(schema); // Retrieves active schema
+                    } catch (const TimeoutException&) {
+                        KARABO_LOG_FRAMEWORK_ERROR << "Schema request for instance \"" << instanceId << "\" timed out";
+                        Exception::clearTrace();
+                        return Schema();
+                    }
+                    return m_runtimeSystemDescription.set(path, schema).getValue<Schema>();
+                } else {
+                    return node->getValue<Schema>();
                 }
-                return m_runtimeSystemDescription.set(path, schema).getValue<Schema>();
-            } else {
-                return node->getValue<Schema>();
             }
         }
 
@@ -384,7 +397,7 @@ namespace karabo {
                 // Request configuration
                 Hash hash;
                 try {
-                    m_signalSlotable->request(instanceId, "slotRefresh").timeout(m_defaultTimeout).receive(hash);
+                    m_signalSlotable->request(instanceId, "slotGetConfiguration").timeout(m_defaultTimeout).receive(hash);
                 } catch (const TimeoutException&) {
                     KARABO_LOG_FRAMEWORK_ERROR << "Configuration request for instance \"" << instanceId << "\" timed out";
                     Exception::clearTrace();
@@ -463,8 +476,6 @@ namespace karabo {
 
 
         void DeviceClient::refreshInstanceUsage(const std::string & instanceId) {
-
-
             boost::mutex::scoped_lock lock(m_instanceUsageMutex);
             m_instanceUsage[instanceId] = 0;
         }
@@ -489,8 +500,6 @@ namespace karabo {
         void DeviceClient::notifyPropertyChangedMonitors(const karabo::util::Hash& hash, const std::string & instanceId) {
             boost::mutex::scoped_lock lock(m_propertyChangedHandlersMutex);
             if (m_propertyChangedHandlers.has(instanceId)) {
-
-
                 castAndCall(instanceId, m_propertyChangedHandlers.get<karabo::util::Hash > (instanceId), hash);
             }
         }

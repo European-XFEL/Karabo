@@ -205,7 +205,7 @@ namespace karabo {
             KARABO_LOG_DEBUG << "Broadcasting availability of new device-server instance";
             string deviceServerInstanceId = header.get<string > ("devSrvInsId");
             string deviceInstanceId = header.get<string > ("devInsId");
-            call(deviceServerInstanceId, "slotKillDeviceInstance", deviceInstanceId);
+            call(deviceInstanceId, "slotKillDeviceInstance");
         }
 
 
