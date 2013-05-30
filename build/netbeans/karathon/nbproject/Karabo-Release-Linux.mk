@@ -47,6 +47,7 @@ OBJECTFILES= \
 	${OBJECTDIR}/_ext/381567218/PyWebAuthenticator.o \
 	${OBJECTDIR}/_ext/381567218/PyXmsRequestor.o \
 	${OBJECTDIR}/_ext/381567218/PyXmsSignalSlotable.o \
+	${OBJECTDIR}/_ext/381567218/PyXmsSlotElement.o \
 	${OBJECTDIR}/_ext/381567218/Wrapper.o \
 	${OBJECTDIR}/_ext/381567218/karathon.o \
 	${OBJECTDIR}/_ext/381567218/p2pbinding.o
@@ -141,6 +142,11 @@ ${OBJECTDIR}/_ext/381567218/PyXmsSignalSlotable.o: ../../../src/karathon/PyXmsSi
 	${MKDIR} -p ${OBJECTDIR}/_ext/381567218
 	${RM} $@.d
 	$(COMPILE.cc) -O2 -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/include -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/381567218/PyXmsSignalSlotable.o ../../../src/karathon/PyXmsSignalSlotable.cc
+
+${OBJECTDIR}/_ext/381567218/PyXmsSlotElement.o: ../../../src/karathon/PyXmsSlotElement.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/381567218
+	${RM} $@.d
+	$(COMPILE.cc) -O2 -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/include -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/381567218/PyXmsSlotElement.o ../../../src/karathon/PyXmsSlotElement.cc
 
 ${OBJECTDIR}/_ext/381567218/Wrapper.o: ../../../src/karathon/Wrapper.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/381567218
@@ -333,6 +339,19 @@ ${OBJECTDIR}/_ext/381567218/PyXmsSignalSlotable_nomain.o: ${OBJECTDIR}/_ext/3815
 	    $(COMPILE.cc) -O2 -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/include -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/381567218/PyXmsSignalSlotable_nomain.o ../../../src/karathon/PyXmsSignalSlotable.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/381567218/PyXmsSignalSlotable.o ${OBJECTDIR}/_ext/381567218/PyXmsSignalSlotable_nomain.o;\
+	fi
+
+${OBJECTDIR}/_ext/381567218/PyXmsSlotElement_nomain.o: ${OBJECTDIR}/_ext/381567218/PyXmsSlotElement.o ../../../src/karathon/PyXmsSlotElement.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/381567218
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/381567218/PyXmsSlotElement.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} $@.d;\
+	    $(COMPILE.cc) -O2 -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/include -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/381567218/PyXmsSlotElement_nomain.o ../../../src/karathon/PyXmsSlotElement.cc;\
+	else  \
+	    ${CP} ${OBJECTDIR}/_ext/381567218/PyXmsSlotElement.o ${OBJECTDIR}/_ext/381567218/PyXmsSlotElement_nomain.o;\
 	fi
 
 ${OBJECTDIR}/_ext/381567218/Wrapper_nomain.o: ${OBJECTDIR}/_ext/381567218/Wrapper.o ../../../src/karathon/Wrapper.cc 
