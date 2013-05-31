@@ -33,7 +33,10 @@ class Launcher(threading.Thread):
 @KARABO_CLASSINFO("DeviceServer", "1.0")
 class DeviceServer(object):
     '''
-    Device server
+    Device server serves as a launcher of python devices.  It scans 'plugins' directory
+    for new plugins (python scripts) available and communicates its findings to master device
+    server.  It communicates XSD form of schema of user devices and starts such devices as
+    separate process if user push "Initiate" button in GUI
     '''
 
     live_threads = []
@@ -64,7 +67,7 @@ class DeviceServer(object):
         
     def setupFsm(self):
         '''
-        Description of state machine
+        Description of DeviceServer state machine
         '''
         #**************************************************************
         #*                        Events                              *
