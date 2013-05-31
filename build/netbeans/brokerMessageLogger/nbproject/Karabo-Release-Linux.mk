@@ -67,7 +67,7 @@ ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/bin/karabo-brokermessagelogger: ${OBJ
 ${OBJECTDIR}/_ext/496226620/brokerMessageLogger.o: ../../../src/brokerMessageLogger/brokerMessageLogger.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/496226620
 	${RM} $@.d
-	$(COMPILE.cc) -O2 -I${KARABO}/include -I${KARABO}/extern/include -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/496226620/brokerMessageLogger.o ../../../src/brokerMessageLogger/brokerMessageLogger.cc
+	$(COMPILE.cc) -O2 -I../../../src -I${KARABO}/include -I${KARABO}/extern/include -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/496226620/brokerMessageLogger.o ../../../src/brokerMessageLogger/brokerMessageLogger.cc
 
 # Subprojects
 .build-subprojects:
