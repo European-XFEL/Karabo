@@ -104,15 +104,13 @@ class PythonDevice(BaseFsm):
     def run(self):
         self.initClassId()
         self.initSchema()
+        self.startFsm()
         
         self._ss.registerSignal("signalNewDeviceInstanceAvailable", str, Hash)  # DeviceServerInstanceId, currentConfig
         self._ss.connect("", "signalNewDeviceInstanceAvailable", "*", "slotNewDeviceInstanceAvailable", ConnectionType.NO_TRACK, False)
         self._ss.emit("signalNewDeviceInstanceAvailable", self.serverid, Hash(self.classid, self.parameters))
-        
-        fullHostName = socket.gethostname()
-        self.hostName, dotsep, domainName = fullHostName.partition('.')
+
         self.running = True
-        self.startFsm()
         while self.running:
             time.sleep(1)
             
