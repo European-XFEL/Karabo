@@ -18,7 +18,7 @@ using namespace karabo::log;
 int main(int argc, char** argv) {
     try {
         
-        DeviceServer2::Pointer deviceServer = Runner<DeviceServer2>::instantiate(argc, argv);
+        DeviceServer::Pointer deviceServer = Runner<DeviceServer>::instantiate(argc, argv);
         if (deviceServer) deviceServer->run();
 
     } catch (const karabo::util::TimeoutException& e) {
