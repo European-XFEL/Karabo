@@ -150,11 +150,8 @@ class DeviceServer(object):
         if self.serverid is None:
             possiblyFullHostName = socket.gethostname()
             myHostName, dotsep, domainName = possiblyFullHostName.partition('.')
-            ss = SignalSlotable()
-            (self.serverid,) = ss.request("*", "slotDeviceServerProvideName", myHostName).waitForReply(self.nameRequestTimeout)
-            del ss
-            import gc
-            gc.collect()
+            self.s = SignalSlotable()
+            (self.serverid,) = self.s.request("*", "slotDeviceServerProvideName", myHostName).waitForReply(self.nameRequestTimeout)
             print "Request for serverId returns: %r" % self.serverid
         self.ss = SignalSlotable(self.serverid)
         
