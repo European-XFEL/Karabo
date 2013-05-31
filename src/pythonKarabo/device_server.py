@@ -140,9 +140,7 @@ class DeviceServer(object):
         self.deviceInstanceMap = dict()
         self.selfDestroyFlag = False
         self.serverid = None
-        self.nameRequestTimeout = 10
-        if 'nameRequestTimeout' in input:
-            self.nameRequestTimeout = input['nameRequestTimeout']
+        self.nameRequestTimeout = input['nameRequestTimeout']
         if 'serverId' in input:
             self.serverid = input['serverId']
         self.running = True
@@ -150,11 +148,14 @@ class DeviceServer(object):
         
         print "Initialize SignalSlotable object...\n"
         if self.serverid is None:
-            import random
             possiblyFullHostName = socket.gethostname()
             myHostName, dotsep, domainName = possiblyFullHostName.partition('.')
-            r = random.Random()
-            self.serverid = myHostName + "/PythonDeviceServer/" + str(r.randint(0,10000))
+            ss = SignalSlotable()
+            (self.serverid,) = ss.request("*", "slotDeviceServerProvideName", myHostName).waitForReply(self.nameRequestTimeout)
+            del ss
+            import gc
+            gc.collect()
+            print "Request for serverId returns: %r" % self.serverid
         self.ss = SignalSlotable(self.serverid)
         
         self.loadLogger(input)
@@ -337,10 +338,10 @@ class DeviceServer(object):
                 #myHostName, someList, myHostAddrList = socket.gethostbyaddr(socket.gethostname())
                 possiblyFullHostName = socket.gethostname()
                 myHostName, dotsep, domainName = possiblyFullHostName.partition('.')
-                return myHostName + "/" + devClassId + "/" + str(_index)
-            tokens = self.serverid.split("/")
+                return myHostName + "_" + devClassId + "_" + str(_index)
+            tokens = self.serverid.split("_")
             _domain = tokens.pop(0) + "-" + tokens.pop()
-            _id = _domain + "/" + devClassId + "/" + str(_index)
+            _id = _domain + "_" + devClassId + "_" + str(_index)
             return _id
      
     def slotKillDeviceServerInstance(self):
