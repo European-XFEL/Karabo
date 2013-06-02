@@ -28,7 +28,7 @@ import const
 
 from enums import NavigationItemTypes
 from manager import Manager
-from navigationtreeview import NavigationTreeView
+from navigationtreeview2 import NavigationTreeView
 
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
@@ -50,6 +50,8 @@ class NavigationPanel(QWidget):
                     self.onNavigationItemClicked)
         
         # Make connects
+        Manager().notifier.signalNavigationChanged.connect(self.onNavigationChanged)
+        
         Manager().notifier.signalNewNavigationItem.connect(self.onNewNavigationItem)
         Manager().notifier.signalSelectNewNavigationItem.connect(self.onSelectNewNavigationItem)
         Manager().notifier.signalNavigationItemChanged.connect(self.onNavigationItemChanged)
@@ -146,6 +148,10 @@ class NavigationPanel(QWidget):
 
     def onDeviceInstanceSchemaUpdated(self, instanceId, schema):
         self.__twNavigation.updateDeviceInstanceSchema(instanceId, schema)
+
+
+    def onNavigationChanged(self, config):
+        self.__twNavigation.updateView(config)
 
 
     # virtual function

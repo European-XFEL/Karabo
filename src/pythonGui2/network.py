@@ -57,9 +57,8 @@ class Network(QObject):
         self.__bodySize = 0
         self.__headerBytes = bytearray()
         self.__bodyBytes = bytearray()
-        
-        
-        
+
+
     def onStartConnection(self):
         dialog = LoginDialog()
         if dialog.exec_() == QDialog.Accepted :
@@ -214,14 +213,14 @@ class Network(QObject):
         print self.__tcpSocket.bytesAvailable(), " bytes are coming in"
         while True:
 
-            if self.__headerSize == 0 :
+            if self.__headerSize == 0:
             
                 if self.__tcpSocket.bytesAvailable() < (BYTES_MESSAGE_SIZE_TAG) :
                     break
 
                 self.__headerSize = input.readUInt32()
                           
-            if len(self.__headerBytes) == 0 :
+            if len(self.__headerBytes) == 0:
             
                 if self.__tcpSocket.bytesAvailable() < self.__headerSize :
                     break
@@ -229,16 +228,16 @@ class Network(QObject):
                 self.__headerBytes = bytearray(self.__headerSize)
                 self.__headerBytes = input.readRawData(self.__headerSize)
                 
-            if self.__bodySize == 0 :
+            if self.__bodySize == 0:
             
                 if self.__tcpSocket.bytesAvailable() < (BYTES_MESSAGE_SIZE_TAG) :
                     break
 
                 self.__bodySize = input.readUInt32()
                           
-            if len(self.__bodyBytes) == 0 :
+            if len(self.__bodyBytes) == 0:
             
-                if self.__tcpSocket.bytesAvailable() < self.__bodySize :
+                if self.__tcpSocket.bytesAvailable() < self.__bodySize:
                     break
                 
                 self.__bodyBytes = bytearray(self.__bodySize)
@@ -252,12 +251,28 @@ class Network(QObject):
             type = headerHash.get("type")
             print "Request: ", type
             
+            # "instanceNew" (instanceId, instanceInfo)
             # "instanceUpdated" (instanceId, instanceInfo)
             # "instanceGone" (instanceId)
             # "configurationChange" (config, instanceId)
             # "log" (logMessage)
             # "notify" (instanceId, type, text)
             # "invalidateCache" (instanceId)
+            
+            if type == "instanceNew":
+                print "instanceNew"
+            elif type == "instanceUpdated":
+                print "instanceUpdated"
+            elif type == "instanceGone":
+                print "instanceGone"
+            elif type == "configurationChanged":
+                print "configurationChanged"
+            elif type == "log":
+                print "log"
+            elif type == "notify":
+                print "notify"
+            elif type == "invalidateCache":
+                print "invalidateCache"
             
             if type == "change": 
                 bodyHash = self.__textSerializer.load(self.__bodyBytes)
@@ -294,7 +309,7 @@ class Network(QObject):
                 self._handleUpdateDeviceInstance(bodyHash)
             elif type == "schemaUpdated":
                 self._handleSchemaUpdated(headerHash, str(self.__bodyBytes))
-                    
+        
             # Invalidate variables            
             self.__bodySize = self.__headerSize = 0
             self.__headerBytes = self.__bodyBytes = bytearray()

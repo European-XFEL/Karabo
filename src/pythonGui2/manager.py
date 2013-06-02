@@ -24,7 +24,7 @@ from datanotifier import DataNotifier
 from enums import NavigationItemTypes
 from enums import ConfigChangeTypes
 from libkarathon import *
-from navigationhierarchymodel import NavigationHierarchyModel
+from navigationhierarchymodel2 import NavigationHierarchyModel
 from singleton import Singleton
 from sqldatabase import SqlDatabase
 
@@ -34,40 +34,43 @@ from PyQt4.QtGui import *
 class Notifier(QObject):
     """Class for signals which can not be integrated in Manager class"""
     # signals
+    signalNavigationChanged = pyqtSignal(object)
+    
     signalNewNavigationItem = pyqtSignal(dict) # id, name, type, (status), (refType), (refId), (schema)
     signalSelectNewNavigationItem = pyqtSignal(dict) # id, name, classId, schema
     signalSchemaAvailable = pyqtSignal(dict) # key, schema
     signalNavigationItemChanged = pyqtSignal(dict) # type, key
     signalDeviceInstanceChanged = pyqtSignal(dict, str)
-    signalKillDeviceInstance = pyqtSignal(str, str) # devSrvIns, devInsId
-    signalKillDeviceServerInstance = pyqtSignal(str) # devSrvIns
-    signalDeviceInstanceSchemaUpdated = pyqtSignal(str, str) # instanceId, schema
+    signalKillDeviceInstance = pyqtSignal(str, str) # serverId, deviceId
+    signalKillDeviceServerInstance = pyqtSignal(str) # serverId
+    signalDeviceInstanceSchemaUpdated = pyqtSignal(str, str) # deviceId, schema
     
-    signalRefreshInstance = pyqtSignal(str) # instanceId
-    signalInitDevice = pyqtSignal(str, object) # instanceId, hash
-    signalSlotCommand = pyqtSignal(str, dict) # instanceId, slotName/arguments
+    signalRefreshInstance = pyqtSignal(str) # deviceId
+    signalInitDevice = pyqtSignal(str, object) # deviceId, hash
+    signalSlotCommand = pyqtSignal(str, dict) # deviceId, slotName/arguments
     
-    signalReconfigure = pyqtSignal(str, str, object) # instanceId, attributeId, attributeValue
+    signalReconfigure = pyqtSignal(str, str, object) # deviceId, attributeId, attributeValue
     signalReconfigureAsHash = pyqtSignal(str, object) # hash/dict
     signalDeviceInstanceStateChanged = pyqtSignal(str, str) # fullDeviceKey, state
     signalConflictStateChanged = pyqtSignal(bool) # isBusy
     signalChangingState = pyqtSignal(bool) # isChanging
-    signalErrorState = pyqtSignal(str, bool) # instanceId, isError
+    signalErrorState = pyqtSignal(str, bool) # deviceId, isError
     
     signalUpdateDeviceServerInstance = pyqtSignal(dict)
     signalUpdateDeviceServerInstanceFinished = pyqtSignal(dict)
     signalUpdateDeviceInstance = pyqtSignal(dict)
     signalUpdateDeviceInstanceFinished = pyqtSignal(dict)
     
-    signalNewVisibleDeviceInstance = pyqtSignal(str) # deviceInstanceId
-    signalRemoveVisibleDeviceInstance = pyqtSignal(str) # deviceInstanceId
+    signalNewVisibleDeviceInstance = pyqtSignal(str) # deviceId
+    signalRemoveVisibleDeviceInstance = pyqtSignal(str) # deviceId
 
     signalLogDataAvailable = pyqtSignal(str) # logData
     signalErrorFound = pyqtSignal(str) # errorData
     signalAlarmFound = pyqtSignal(str) # alarmData
     signalWarningFound = pyqtSignal(str) # warningData
     
-    signalCreateNewDeviceClassPlugin = pyqtSignal(str, str, str) # devSrvInsId, classId, newclassId
+    signalCreateNewDeviceClassPlugin = pyqtSignal(str, str, str) # serverId, classId, newClassId
+
 
     def __init__(self):
         super(Notifier, self).__init__()
@@ -90,7 +93,9 @@ class Manager(Singleton):
         self.__stateUpdateTimer = QTimer()
         self.__stateUpdateTimer.timeout.connect(self.onLastStateUpdateTimeOut)
         
+        # Central hash
         self.__hash = Hash()
+        
         # Map stores all keys and DataNofiers for editable widgets
         self.__keyNotifierMapEditableValue = dict()
         # Map stores all keys and DataNofiers for display widgets
@@ -107,8 +112,8 @@ class Manager(Singleton):
         self.__sqlDatabase = SqlDatabase()
         self.__treemodel = NavigationHierarchyModel()
         # Connect signals to treemodel for later updates which just need to be done once
-        self.__notifier.signalUpdateDeviceServerInstanceFinished.connect(self.__treemodel.onUpdateDeviceServerInstance)
-        self.__notifier.signalUpdateDeviceInstanceFinished.connect(self.__treemodel.onUpdateDeviceInstance)
+        #self.__notifier.signalUpdateDeviceServerInstanceFinished.connect(self.__treemodel.onUpdateDeviceServerInstance)
+        #self.__notifier.signalUpdateDeviceInstanceFinished.connect(self.__treemodel.onUpdateDeviceInstance)
 
 
     def _hash(self):
@@ -145,22 +150,34 @@ class Manager(Singleton):
         return self.__keyNotifierMapDisplayValue.get(key)
 
     
+    def _mergeIntoHash(self, config):
+        self.__hash += config
+        #print "_mergeIntoHash"
+        #print self.__hash
+        #print ""
+    
+    
     def getFromPathAsHash(self, key):
         return self.__hash.get(str(key))
 
 
     def _setFromPath(self, key, value):
         # pass key and value as list (immutable, important for ungoing procedures)
-        #print "key:", key, "value:", value
+        print "key:", key, "value:", value
         key = str(key)
         # Safety conversion before hashing
         if isinstance(value, QString):
             value = str(value)
         # Merge with central hash
         self.__hash.set(key, value)
+        
+        print ""
+        print self.__hash
+        print ""
 
 
     def registerEditableComponent(self, key, component):
+        print "registerEditableComponent", key
         key = str(key)
         dataNotifier = self._getDataNotifierEditableValue(key)
         if dataNotifier is None:
@@ -237,7 +254,7 @@ class Manager(Singleton):
                 dataNotifier = self._getDataNotifierEditableValue(internalKey)
                 if dataNotifier is not None:
                     dataNotifier.signalUpdateComponent.emit(internalKey, value)
-            elif configChangeType is ConfigChangeTypes.DEVICE_INSTRANCE_CONFIG_CHANGED:
+            elif configChangeType is ConfigChangeTypes.DEVICE_INSTANCE_CONFIG_CHANGED:
                 dataNotifier = self._getDataNotifierEditableValue(internalKey)
                 if dataNotifier is not None:
                     dataNotifier.signalUpdateComponent.emit(internalKey, value)
@@ -367,8 +384,8 @@ class Manager(Singleton):
             h = self.__hash.get(internalKey)
         
         # TODO: Remove dirty hack for scientific computing again!!!
-        croppedClassId = classId.split("-")
-        classId = croppedClassId[0]
+        croppedDevClaId = classId.split("-")
+        classId = croppedDevClaId[0]
         
         config = Hash(classId, h)
         
@@ -376,7 +393,7 @@ class Manager(Singleton):
         self.__isInitDeviceCurrentlyProcessed = True
 
 
-    def killDeviceInstance(self, devSrvInsId, devInsId):
+    def killDeviceInstance(self, serverId, deviceId):
         reply = QMessageBox.question(None, 'Message',
             "Do you really want to kill this instance?", QMessageBox.Yes |
             QMessageBox.No, QMessageBox.No)
@@ -386,10 +403,10 @@ class Manager(Singleton):
 
         # Remove device instance data from internal hash
         self._setFromPath(devInsId, Hash())
-        self.__notifier.signalKillDeviceInstance.emit(devSrvInsId, devInsId)
+        self.__notifier.signalKillDeviceInstance.emit(serverId, deviceId)
 
 
-    def killDeviceServerInstance(self, devSrvInsId):
+    def killDeviceServerInstance(self, serverId):
         reply = QMessageBox.question(None, 'Message',
             "Do you really want to kill this instance?", QMessageBox.Yes |
             QMessageBox.No, QMessageBox.No)
@@ -397,7 +414,7 @@ class Manager(Singleton):
         if reply == QMessageBox.No:
             return
         
-        self.__notifier.signalKillDeviceServerInstance.emit(devSrvInsId)
+        self.__notifier.signalKillDeviceServerInstance.emit(serverId)
 
 
 ### TODO: Temporary functions for scientific computing START ###
@@ -405,8 +422,8 @@ class Manager(Singleton):
         return self.__sqlDatabase.createNewDeviceClassId(classId)
 
 
-    def createNewDeviceClassPlugin(self, devSrvInsId, classId, newClassId):
-        self.__notifier.signalCreateNewDeviceClassPlugin.emit(devSrvInsId, classId, newClassId)
+    def createNewDeviceClassPlugin(self, serverId, classId, newDevClaId):
+        self.__notifier.signalCreateNewDeviceClassPlugin.emit(serverId, classId, newDevClaId)
     
     
     def getSchemaByInternalKey(self, internalKey):
@@ -504,10 +521,10 @@ class Manager(Singleton):
         if className is None:
             className = itemInfo.get('name')
         
-        serverId = itemInfo.get(QString('refId'))
-        if serverId is None:
-            serverId = itemInfo.get('refId')
-        devSerInsName = self.__sqlDatabase.getDeviceServerInstanceById(serverId)
+        devSerInsId = itemInfo.get(QString('refId'))
+        if devSerInsId is None:
+            devSerInsId = itemInfo.get('refId')
+        devSerInsName = self.__sqlDatabase.getDeviceServerInstanceById(devSerInsId)
         
         # Remove device class data from internal hash
         self._setFromPath(devSerInsName + "+" + className, Hash())
@@ -575,8 +592,8 @@ class Manager(Singleton):
             xmlContent += str(file.readLine())
 
         # TODO: serializer needed?
-        serializer = FormatHash.create("Xml", Hash())
-        config = serializer.unserialize(xmlContent).get(classId)
+        serializer = TextSerializerHash.create("Xml")
+        config = serializer.load(xmlContent).get(classId)
 
         # TODO: Reload XSD in configuration panel
         # ...
@@ -612,7 +629,7 @@ class Manager(Singleton):
         if fi.suffix().isEmpty():
             filename += ".xml"
 
-        self.saveAsXml(filename, classId, internalKey)
+        self.saveAsXml(str(filename), classId, internalKey)
 
 
     def onNavigationItemChanged(self, itemInfo):
@@ -626,3 +643,54 @@ class Manager(Singleton):
         # onXsdAvailable.emit()
         pass
 
+
+### New pythonGui2 stuff ###
+    def handleRuntimeSystemDescription(self, config):
+        
+        # Merge new configuration data into central hash
+        self._mergeIntoHash(config)
+        # Send full internal hash to navigation
+        self.__notifier.signalNavigationChanged.emit(self.__hash)
+        
+        return
+        
+        # Get server data
+        serverKey = "server"
+        serverConfig = config.get(serverKey)
+        serverIds = list()
+        serverConfig.getKeys(serverIds)
+        for serverId in serverIds:
+            print "ServerId:", serverId
+            # Get attributes
+            #serverAttributes = serverConfig.getAttributes(serverId)
+            host = serverConfig.getAttribute(serverId, "host")
+            status = serverConfig.getAttribute(serverId, "status")
+            #version = serverConfig.getAttribute(serverId, "version")
+            
+            #self.__notifier.signalNewNavigationItem.emit(dict(type="server", name=serverId, host=host, status=status))
+            
+            # Get classes data
+            classesConfig = serverConfig.get(serverId + ".classes")
+            classes = list()
+            classesConfig.getKeys(classes)
+            for classId in classes:
+                print "classId", classId
+                #self.__notifier.signalNewNavigationItem.emit(dict(type="class", name=classId))
+        
+        print ""
+        
+        # Get device data
+        deviceKey = "device"
+        deviceConfig = config.get(deviceKey)
+        deviceIds = list()
+        deviceConfig.getKeys(deviceIds)
+        for deviceId in deviceIds:
+            print "DeviceId:", deviceId
+            # Get attributes
+            #deviceAttributes = deviceConfig.getAttributes(deviceId)
+            host = deviceConfig.getAttribute(deviceId, "host")
+            status = deviceConfig.getAttribute(deviceId, "status")
+            serverId = deviceConfig.getAttribute(deviceId, "serverId")
+            
+            #self.__notifier.signalNewNavigationItem.emit(dict(type="device", name=deviceId, host=host, serverId=serverId, status=status))
+            
