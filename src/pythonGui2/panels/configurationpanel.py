@@ -31,7 +31,7 @@ from docktabwindow import DockTabWindow
 from documentationpanel import DocumentationPanel
 from enums import NavigationItemTypes
 from manager import Manager
-from navigationtreeview import NavigationTreeView
+from navigationtreeview2 import NavigationTreeView
 
 ### Just for testing ###
 parseSchema = True
@@ -94,6 +94,8 @@ class ConfigurationPanel(QWidget):
         splitTopPanes.setStretchFactor(0, 1)
         
         # Make connects
+        Manager().notifier.signalNavigationChanged.connect(self.onNavigationChanged)
+        
         Manager().notifier.signalNewNavigationItem.connect(self.onNewNavigationItem)
         Manager().notifier.signalSelectNewNavigationItem.connect(self.onSelectNewNavigationItem)
         Manager().notifier.signalSchemaAvailable.connect(self.onSchemaAvailable)
@@ -738,6 +740,11 @@ class ConfigurationPanel(QWidget):
     def onDeviceInstanceSchemaUpdated(self, instanceId, schema):
         self.__internalKeySchemaLoadedMap[instanceId] = False
         self.__twNavigation.updateDeviceInstanceSchema(instanceId, schema)
+
+
+    def onNavigationChanged(self, config):
+        pass
+        #self.__twNavigation.updateView(config)
 
 
     # virtual function

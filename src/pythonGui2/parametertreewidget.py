@@ -194,7 +194,7 @@ class ParameterTreeWidget(QTreeWidget):
             return
         
         # Attributes can not be dropped
-        if isinstance(item, attributetreewidgetitem.AttributeTreeWidgetItem):
+        if isinstance(item, treewidgetitems.attributetreewidgetitem.AttributeTreeWidgetItem):
             return
         
         mimeData = QMimeData()        
@@ -317,7 +317,7 @@ class ParameterTreeWidget(QTreeWidget):
         if type is NavigationItemTypes.DEVICE_CLASS:
             configChangeType = ConfigChangeTypes.DEVICE_CLASS_CONFIG_CHANGED
         elif type is NavigationItemTypes.DEVICE_INSTANCE:
-            configChangeType = ConfigChangeTypes.DEVICE_INSTRANCE_CONFIG_CHANGED
+            configChangeType = ConfigChangeTypes.DEVICE_INSTANCE_CONFIG_CHANGED
         
         if self.__classId is None:
             keys = self.instanceKey.split('+', 1)

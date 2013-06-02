@@ -69,18 +69,24 @@ class SchemaReader(object):
         else:
             item.displayText = key
 
+        #if self._schema.hasDisplayType(key):
+        #    print "hasDisplayType", self._schema.getDisplayType(key)
+
         if self.__schema.isLeaf(key):
-            print "isLeaf"
+            print "isLeaf", key
             self._handleLeaf(key, item)
         elif self.__schema.isNode(key):
-            print "isNode"
+            print "isNode", key
+            #print "isCommand", self.__schema.isCommand(key)
             self._handleNode(key, item)
         elif self.__schema.isChoiceOfNodes(key):
-            print "isChoiceOfNodes"
+            print "isChoiceOfNodes", key
             self._handleChoiceOfNodes(key, item)
         elif self.__schema.isListOfNodes(key):
-            print "isListOfNodes"
+            print "isListOfNodes", key
             self._handleListOfNodes(key, item)
+        elif self.__schema.isCommand(key):
+            print "isCommand"
 
 
     def _handleLeaf(self, key, item):
@@ -93,6 +99,12 @@ class SchemaReader(object):
         
         expertLevel = self._getExpertLevel(key, item)
         allowedStates = self._getAllowedStates(key, item)
+        
+        print ""
+        print "displayType", self.__schema.hasDisplayType(key)
+        if self.__schema.hasDisplayType(key):
+            print "type", self.__schema.getDisplayType(key)
+        print ""
         
         minInc = self._getMinInc(key, item)
         maxInc = self._getMaxInc(key, item)
