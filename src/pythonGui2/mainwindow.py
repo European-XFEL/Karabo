@@ -16,7 +16,7 @@ import qrc_icons
 
 from docktabwindow import DockTabWindow
 from manager import Manager
-from network import Network
+from network2 import Network
 
 from panels.configurationpanel import ConfigurationPanel
 from panels.custommiddlepanel import CustomMiddlePanel

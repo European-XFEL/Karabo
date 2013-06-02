@@ -37,7 +37,6 @@ class NavigationTreeView(QTreeView):
         
         self.__model = model
         self.setModel(self.__model)
-        #self.__model.layoutChanged.connect(self.updateView)
         
         self.setSelectionMode(QAbstractItemView.SingleSelection)
         self.setSortingEnabled(True)
