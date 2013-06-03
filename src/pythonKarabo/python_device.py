@@ -71,6 +71,9 @@ class PythonDevice(BaseFsm):
         self._stateDependentSchemaLock = threading.Lock()
         self._stateDependentSchema = {}
         
+        # Initialize _client to None (important!)
+        self._client = None
+        
         # Setup the validation classes
         rules = ValidatorValidationRules()
         rules.allowAdditionalKeys = False
