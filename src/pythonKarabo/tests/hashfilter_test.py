@@ -372,6 +372,38 @@ class  HashfilterTestCase(unittest.TestCase):
         except Exception, e:
             self.fail("test_hashfilter exception group 4: " + str(e))
         
+        try:
+            result = HashFilter.byTag(schema, config, "WP76", ",;")
+            
+            self.assertFalse("antiAlias" in result)
+            self.assertFalse("color" in result)
+            self.assertFalse("bold" in result)
+            self.assertFalse("shapes" in result)
+            self.assertFalse("shapes.rectangle" in result)
+            self.assertFalse("shapes.rectangle.b" in result)
+            self.assertFalse("shapes.rectangle.c" in result)
+            self.assertFalse("letter" in result)
+            self.assertFalse("letter.a" in result)
+            self.assertFalse("letter.b" in result)
+            self.assertFalse("letter.c" in result)
+            self.assertFalse("letter.d" in result)
+            self.assertFalse("letter.e" in result)
+            self.assertFalse("letter.f" in result)
+            self.assertFalse("chars" in result)
+            self.assertFalse("chars[0]" in result)
+            self.assertFalse("chars[0].P2" in result)
+            self.assertFalse("chars[0].P2.x" in result)
+            self.assertFalse("chars[0].P2.y" in result)
+            self.assertFalse("chars[0].P2.z" in result)
+            self.assertFalse("chars[1]" in result)
+            self.assertFalse("chars[1].P3" in result)
+            self.assertFalse("chars[1].P3.k" in result)
+            self.assertFalse("chars[1].P3.l" in result)
+            self.assertFalse("chars[1].P3.m" in result)
+            
+        except Exception, e:
+            self.fail("test_hashfilter exception group 5: " + str(e))
+        
             
 if __name__ == '__main__':
     unittest.main()
