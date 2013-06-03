@@ -24,8 +24,8 @@ namespace karabo {
 
     namespace pyexfel {
 
-        class DeviceClientWrap : public karabo::core::DeviceClient {
 
+        class DeviceClientWrap : public karabo::core::DeviceClient {
         public:
 
             DeviceClientWrap(const std::string& connectionType = "Jms", const karabo::util::Hash& connectionParameters = karabo::util::Hash()) :
@@ -75,40 +75,40 @@ namespace karabo {
                 return HashWrap::get(this->cacheAndGetConfiguration(instanceId), key, keySep);
             }
 
-            //            void registerDeviceMonitor(const std::string& instanceId, const bp::object& callbackFunction, const bp::object& userData = bp::object()) {
-            //                std::cout << "DeviceClientWrap::registerDeviceMonitor on instanceId : \"" << instanceId << "\"" << std::endl;
-            //                boost::mutex::scoped_lock lock(m_deviceChangedHandlersMutex);
-            //                this->cacheAndGetConfiguration(instanceId);
-            //                if (Wrapper::hasattr(callbackFunction, "__self__")) {
-            //                    const bp::object & selfObject(callbackFunction.attr("__self__"));
-            //                    std::string funcName(bp::extract<std::string > (callbackFunction.attr("__name__")));
-            //                    m_deviceChangedHandlers.set(instanceId + "._function", funcName);
-            //                    m_deviceChangedHandlers.set(instanceId + "._selfObject", selfObject.ptr());
-            //                } else {
-            //                    m_deviceChangedHandlers.set(instanceId + "._function", callbackFunction.ptr());
-            //                }
-            //                if (!userData.is_none()) m_deviceChangedHandlers.set(instanceId + "._userData", userData);
-            //            }
-            //
-            //            bool registerPropertyMonitor(const std::string& instanceId, const std::string& key, const bp::object& callbackFunction, const bp::object& userData = bp::object()) {
-            //                karabo::util::Schema schema = this->getSchema(instanceId);
-            //                if (schema.hasKey(key)) {
-            //                    boost::mutex::scoped_lock lock(m_propertyChangedHandlersMutex);
-            //                    this->cacheAndGetConfiguration(instanceId);
-            //                    if (hasattr(callbackFunction, "__self__")) {
-            //                        const bp::object & selfObject(callbackFunction.attr("__self__"));
-            //                        std::string funcName(bp::extract<std::string > (callbackFunction.attr("__name__")));
-            //                        m_propertyChangedHandlers.setFromPath(instanceId + "." + key + "._function", funcName);
-            //                        m_propertyChangedHandlers.setFromPath(instanceId + "." + key + "._selfObject", selfObject.ptr());
-            //                    } else {
-            //                        m_propertyChangedHandlers.setFromPath(instanceId + "." + key + "._function", callbackFunction.ptr());
-            //                    }
-            //                    if (!userData.is_none()) m_propertyChangedHandlers.setFromPath(instanceId + "." + key + "._userData", userData);
-            //                    return true;
-            //                } else {
-            //                    return false;
-            //                }
-            //            }
+            void registerDeviceMonitor(const std::string& instanceId, const bp::object& callbackFunction, const bp::object& userData = bp::object()) {
+                std::cout << "DeviceClientWrap::registerDeviceMonitor on instanceId : \"" << instanceId << "\"" << std::endl;
+                boost::mutex::scoped_lock lock(m_deviceChangedHandlersMutex);
+                this->cacheAndGetConfiguration(instanceId);
+                if (Wrapper::hasattr(callbackFunction, "__self__")) {
+                    const bp::object & selfObject(callbackFunction.attr("__self__"));
+                    std::string funcName(bp::extract<std::string > (callbackFunction.attr("__name__")));
+                    m_deviceChangedHandlers.set(instanceId + "._function", funcName);
+                    m_deviceChangedHandlers.set(instanceId + "._selfObject", selfObject.ptr());
+                } else {
+                    m_deviceChangedHandlers.set(instanceId + "._function", callbackFunction.ptr());
+                }
+                if (!userData.is_none()) m_deviceChangedHandlers.set(instanceId + "._userData", userData);
+            }
+
+            bool registerPropertyMonitor(const std::string& instanceId, const std::string& key, const bp::object& callbackFunction, const bp::object& userData = bp::object()) {
+                karabo::util::Schema schema = this->getFullSchema(instanceId);
+                if (schema.has(key)) {
+                    boost::mutex::scoped_lock lock(m_propertyChangedHandlersMutex);
+                    this->cacheAndGetConfiguration(instanceId);
+                    if (Wrapper::hasattr(callbackFunction, "__self__")) {
+                        const bp::object & selfObject(callbackFunction.attr("__self__"));
+                        std::string funcName(bp::extract<std::string > (callbackFunction.attr("__name__")));
+                        m_propertyChangedHandlers.set(instanceId + "." + key + "._function", funcName);
+                        m_propertyChangedHandlers.set(instanceId + "." + key + "._selfObject", selfObject.ptr());
+                    } else {
+                        m_propertyChangedHandlers.set(instanceId + "." + key + "._function", callbackFunction.ptr());
+                    }
+                    if (!userData.is_none()) m_propertyChangedHandlers.set(instanceId + "." + key + "._userData", userData);
+                    return true;
+                } else {
+                    return false;
+                }
+            }
 
             bp::tuple setWaitPy(const std::string& instanceId, const std::string& key, const bp::object& value, const std::string& keySep = ".", int timeout = -1) {
                 karabo::util::Hash tmp;
