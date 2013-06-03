@@ -240,6 +240,23 @@ struct ListElementWrap {
         }
         return self;
     }
+
+    typedef DefaultValue<ListElement, vector<string> > DefListElement;
+    static karabo::util::ListElement & defaultValueList(DefListElement& self, const bp::object& obj) {
+        if (PyList_Check(obj.ptr())) {
+            const bp::list& l = bp::extract<bp::list > (obj);
+            bp::ssize_t size = bp::len(l);
+
+            vector<string> v(size);
+            for (bp::ssize_t i = 0; i < size; ++i) {
+                v[i] = bp::extract<string> (obj[i]);
+            }
+            return self.defaultValue(v);
+        } else {
+            throw KARABO_PYTHON_EXCEPTION("Python type of the defaultValue of LIST_ELEMENT must be a list of strings");
+        }
+    }
+
 };
 
 
@@ -544,7 +561,7 @@ namespace schemawrap {
                 case Types::DOUBLE:
                     return bp::object(schema.getWarnLow<double>(path));
                 case Types::VECTOR_BOOL:
-                    return karabo::pyexfel::Wrapper::fromStdVectorToPyArray(schema.getWarnLow<vector<bool> >(path));
+                    return karabo::pyexfel::Wrapper::fromStdVectorToPyArray(schema.getWarnLow < vector<bool> >(path));
                 case Types::VECTOR_INT32:
                     return karabo::pyexfel::Wrapper::fromStdVectorToPyArray(schema.getWarnLow<vector<int> >(path));
                 case Types::VECTOR_UINT32:
@@ -1268,17 +1285,17 @@ void exportPyUtilSchema() {
         s.def("hasAlarmHigh", &Schema::hasAlarmHigh);
 
         s.def("hasDisplayedName", &Schema::hasDisplayedName);
-        
+
         s.def("hasDisplayType", &Schema::hasDisplayType);
 
         s.def("hasDescription", &Schema::hasDescription);
 
         s.def("hasExpertLevel", &Schema::hasExpertLevel);
-        
+
         s.def("hasMin", &Schema::hasMin);
-        
+
         s.def("hasMax", &Schema::hasMax);
-        
+
         //all other has .....
 
         //********* is methods ****************
@@ -1294,7 +1311,7 @@ void exportPyUtilSchema() {
         s.def("isExpertLevelAdvanced", &Schema::isExpertLevelAdvanced);
         s.def("isExpertLevelMedium", &Schema::isExpertLevelMedium);
         s.def("isExpertLevelSimple", &Schema::isExpertLevelSimple);
-        
+
         s.def("isChoiceOfNodes", &Schema::isChoiceOfNodes);
         s.def("isListOfNodes", &Schema::isListOfNodes);
         s.def("isLeaf", &Schema::isLeaf);
@@ -1384,9 +1401,9 @@ void exportPyUtilSchema() {
     KARABO_PYTHON_SIMPLE(string, STRING)
     KARABO_PYTHON_SIMPLE(bool, BOOL)
 
-    //////////////////////////////////////////////////////////////////////
-    // Binding karabo::util::PathElement       
-    // In Python : PATH_ELEMENT
+            //////////////////////////////////////////////////////////////////////
+            // Binding karabo::util::PathElement       
+            // In Python : PATH_ELEMENT
     {
         bp::implicitly_convertible< Schema &, PathElement >();
         bp::class_<PathElement> ("PATH_ELEMENT", bp::init<Schema & >((bp::arg("expected"))))
@@ -1419,9 +1436,9 @@ void exportPyUtilSchema() {
     KARABO_PYTHON_VECTOR(string, STRING)
     KARABO_PYTHON_VECTOR(bool, BOOL)
 
-    //////////////////////////////////////////////////////////////////////
-    // Binding karabo::util::NodeElement       
-    // In Python : NODE_ELEMENT
+            //////////////////////////////////////////////////////////////////////
+            // Binding karabo::util::NodeElement       
+            // In Python : NODE_ELEMENT
     {
         bp::implicitly_convertible< Schema &, NodeElement >();
         bp::class_<NodeElement> ("NODE_ELEMENT", bp::init<Schema & >((bp::arg("expected"))))
@@ -1504,8 +1521,8 @@ void exportPyUtilSchema() {
         typedef DefaultValue<ListElement, vector<string> > DefListElement;
         bp::class_< DefListElement, boost::noncopyable > ("DefaultValueListElement", bp::no_init)
                 .def("defaultValue"
-                     , (ListElement & (DefListElement::*)(string const &))(&DefListElement::defaultValue)
-                     , (bp::arg("defValue"))
+                     , &ListElementWrap::defaultValueList
+                     , (bp::arg("self"), bp::arg("pyList"))
                      , bp::return_internal_reference<> ())
                 .def("defaultValueFromString"
                      , (ListElement & (DefListElement::*)(string const &))(&DefListElement::defaultValueFromString)
@@ -1644,7 +1661,7 @@ void exportPyUtilSchema() {
                      , (void (OverwriteElement::*)())(&OverwriteElement::commit))
                 ;
     }
-    
+
     {
         bp::class_<HashFilterWrap, boost::noncopyable>("HashFilter", bp::no_init)
                 .def("byTag", HashFilterWrap::byTag, (bp::arg("schema"), bp::arg("config"), bp::arg("tags"), bp::arg("sep") = ","))
