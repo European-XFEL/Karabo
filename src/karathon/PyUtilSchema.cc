@@ -1432,6 +1432,10 @@ void exportPyUtilSchema() {
                      , (ChoiceElement & (DefChoiceElement::*)(string const &))(&DefChoiceElement::defaultValue)
                      , (bp::arg("defValue"))
                      , bp::return_internal_reference<> ())
+                .def("defaultValueFromString"
+                     , (ChoiceElement & (DefChoiceElement::*)(string const &))(&DefChoiceElement::defaultValueFromString)
+                     , (bp::arg("defValue"))
+                     , bp::return_internal_reference<> ())
                 .def("noDefaultValue"
                      , (ChoiceElement & (DefChoiceElement::*)())(&DefChoiceElement::noDefaultValue)
                      , bp::return_internal_reference<> ())
@@ -1444,6 +1448,10 @@ void exportPyUtilSchema() {
         typedef DefaultValue<ListElement, vector<string> > DefListElement;
         bp::class_< DefListElement, boost::noncopyable > ("DefaultValueListElement", bp::no_init)
                 .def("defaultValue"
+                     , (ListElement & (DefListElement::*)(string const &))(&DefListElement::defaultValue)
+                     , (bp::arg("defValue"))
+                     , bp::return_internal_reference<> ())
+                .def("defaultValueFromString"
                      , (ListElement & (DefListElement::*)(string const &))(&DefListElement::defaultValueFromString)
                      , (bp::arg("defValue"))
                      , bp::return_internal_reference<> ())
