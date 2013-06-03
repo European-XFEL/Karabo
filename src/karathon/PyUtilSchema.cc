@@ -306,6 +306,8 @@ namespace schemawrap {
                     return bp::object(schema.getMinInc<unsigned long long>(path));
                 case Types::STRING:
                     return bp::object(schema.getMinInc<string>(path));
+                case Types::FLOAT:
+                    return bp::object(schema.getMinInc<float>(path));
                 case Types::DOUBLE:
                     return bp::object(schema.getMinInc<double>(path));
                 default:
@@ -333,6 +335,8 @@ namespace schemawrap {
                     return bp::object(schema.getMaxInc<unsigned long long>(path));
                 case Types::STRING:
                     return bp::object(schema.getMaxInc<string>(path));
+                case Types::FLOAT:
+                    return bp::object(schema.getMaxInc<float>(path));
                 case Types::DOUBLE:
                     return bp::object(schema.getMaxInc<double>(path));
                 default:
@@ -360,6 +364,8 @@ namespace schemawrap {
                     return bp::object(schema.getMinExc<unsigned long long>(path));
                 case Types::STRING:
                     return bp::object(schema.getMinExc<string>(path));
+                case Types::FLOAT:
+                    return bp::object(schema.getMinExc<float>(path));
                 case Types::DOUBLE:
                     return bp::object(schema.getMinExc<double>(path));
                 default:
@@ -387,6 +393,8 @@ namespace schemawrap {
                     return bp::object(schema.getMaxExc<unsigned long long>(path));
                 case Types::STRING:
                     return bp::object(schema.getMaxExc<string>(path));
+                case Types::FLOAT:
+                    return bp::object(schema.getMaxExc<float>(path));
                 case Types::DOUBLE:
                     return bp::object(schema.getMaxExc<double>(path));
                 default:
@@ -416,6 +424,8 @@ namespace schemawrap {
                     return bp::object(schema.getMinIncAs<unsigned long long>(path));
                 case karabo::pyexfel::PyTypes::STRING:
                     return bp::object(schema.getMinIncAs<string>(path));
+                case karabo::pyexfel::PyTypes::FLOAT:
+                    return bp::object(schema.getMinIncAs<float>(path));
                 case karabo::pyexfel::PyTypes::DOUBLE:
                     return bp::object(schema.getMinIncAs<double>(path));
                 default:
@@ -441,6 +451,8 @@ namespace schemawrap {
                     return bp::object(schema.getMaxIncAs<unsigned long long>(path));
                 case karabo::pyexfel::PyTypes::STRING:
                     return bp::object(schema.getMaxIncAs<string>(path));
+                case karabo::pyexfel::PyTypes::FLOAT:
+                    return bp::object(schema.getMaxIncAs<float>(path));
                 case karabo::pyexfel::PyTypes::DOUBLE:
                     return bp::object(schema.getMaxIncAs<double>(path));
                 default:
@@ -466,6 +478,8 @@ namespace schemawrap {
                     return bp::object(schema.getMinExcAs<unsigned long long>(path));
                 case karabo::pyexfel::PyTypes::STRING:
                     return bp::object(schema.getMinExcAs<string>(path));
+                case karabo::pyexfel::PyTypes::FLOAT:
+                    return bp::object(schema.getMinExcAs<float>(path));
                 case karabo::pyexfel::PyTypes::DOUBLE:
                     return bp::object(schema.getMinExcAs<double>(path));
                 default:
@@ -491,6 +505,8 @@ namespace schemawrap {
                     return bp::object(schema.getMaxExcAs<unsigned long long>(path));
                 case karabo::pyexfel::PyTypes::STRING:
                     return bp::object(schema.getMaxExcAs<string>(path));
+                case karabo::pyexfel::PyTypes::FLOAT:
+                    return bp::object(schema.getMaxExcAs<float>(path));
                 case karabo::pyexfel::PyTypes::DOUBLE:
                     return bp::object(schema.getMaxExcAs<double>(path));
                 default:
@@ -523,6 +539,8 @@ namespace schemawrap {
                     return bp::object(schema.getWarnLow<unsigned long long>(path));
                 case Types::STRING:
                     return bp::object(schema.getWarnLow<string>(path));
+                case Types::FLOAT:
+                    return bp::object(schema.getWarnLow<float>(path));
                 case Types::DOUBLE:
                     return bp::object(schema.getWarnLow<double>(path));
                 case Types::VECTOR_BOOL:
@@ -537,6 +555,8 @@ namespace schemawrap {
                     return karabo::pyexfel::Wrapper::fromStdVectorToPyArray(schema.getWarnLow<vector<unsigned long long> >(path));
                 case Types::VECTOR_STRING:
                     return karabo::pyexfel::Wrapper::fromStdVectorToPyArray(schema.getWarnLow<vector<string> >(path));
+                case Types::VECTOR_FLOAT:
+                    return karabo::pyexfel::Wrapper::fromStdVectorToPyArray(schema.getWarnLow<vector<float> >(path));
                 case Types::VECTOR_DOUBLE:
                     return karabo::pyexfel::Wrapper::fromStdVectorToPyArray(schema.getWarnLow<vector<double> >(path));
                 default:
@@ -564,6 +584,8 @@ namespace schemawrap {
                     return bp::object(schema.getWarnHigh<unsigned long long>(path));
                 case Types::STRING:
                     return bp::object(schema.getWarnHigh<string>(path));
+                case Types::FLOAT:
+                    return bp::object(schema.getWarnHigh<float>(path));
                 case Types::DOUBLE:
                     return bp::object(schema.getWarnHigh<double>(path));
                 case Types::VECTOR_BOOL:
@@ -578,6 +600,8 @@ namespace schemawrap {
                     return karabo::pyexfel::Wrapper::fromStdVectorToPyArray(schema.getWarnHigh<vector<unsigned long long> >(path));
                 case Types::VECTOR_STRING:
                     return karabo::pyexfel::Wrapper::fromStdVectorToPyArray(schema.getWarnHigh<vector<string> >(path));
+                case Types::VECTOR_FLOAT:
+                    return karabo::pyexfel::Wrapper::fromStdVectorToPyArray(schema.getWarnHigh<vector<float> >(path));
                 case Types::VECTOR_DOUBLE:
                     return karabo::pyexfel::Wrapper::fromStdVectorToPyArray(schema.getWarnHigh<vector<double> >(path));
                 default:
@@ -605,6 +629,8 @@ namespace schemawrap {
                     return bp::object(schema.getAlarmLow<unsigned long long>(path));
                 case Types::STRING:
                     return bp::object(schema.getAlarmLow<string>(path));
+                case Types::FLOAT:
+                    return bp::object(schema.getAlarmLow<float>(path));
                 case Types::DOUBLE:
                     return bp::object(schema.getAlarmLow<double>(path));
                 case Types::VECTOR_BOOL:
@@ -619,6 +645,8 @@ namespace schemawrap {
                     return karabo::pyexfel::Wrapper::fromStdVectorToPyArray(schema.getAlarmLow<vector<unsigned long long> >(path));
                 case Types::VECTOR_STRING:
                     return karabo::pyexfel::Wrapper::fromStdVectorToPyArray(schema.getAlarmLow<vector<string> >(path));
+                case Types::VECTOR_FLOAT:
+                    return karabo::pyexfel::Wrapper::fromStdVectorToPyArray(schema.getAlarmLow<vector<float> >(path));
                 case Types::VECTOR_DOUBLE:
                     return karabo::pyexfel::Wrapper::fromStdVectorToPyArray(schema.getAlarmLow<vector<double> >(path));
                 default:
@@ -646,6 +674,8 @@ namespace schemawrap {
                     return bp::object(schema.getAlarmHigh<unsigned long long>(path));
                 case Types::STRING:
                     return bp::object(schema.getAlarmHigh<string>(path));
+                case Types::FLOAT:
+                    return bp::object(schema.getAlarmHigh<float>(path));
                 case Types::DOUBLE:
                     return bp::object(schema.getAlarmHigh<double>(path));
                 case Types::VECTOR_BOOL:
@@ -660,6 +690,8 @@ namespace schemawrap {
                     return karabo::pyexfel::Wrapper::fromStdVectorToPyArray(schema.getAlarmHigh<vector<unsigned long long> >(path));
                 case Types::VECTOR_STRING:
                     return karabo::pyexfel::Wrapper::fromStdVectorToPyArray(schema.getAlarmHigh<vector<string> >(path));
+                case Types::VECTOR_FLOAT:
+                    return karabo::pyexfel::Wrapper::fromStdVectorToPyArray(schema.getAlarmHigh<vector<float> >(path));
                 case Types::VECTOR_DOUBLE:
                     return karabo::pyexfel::Wrapper::fromStdVectorToPyArray(schema.getAlarmHigh<vector<double> >(path));
                 default:
@@ -690,6 +722,8 @@ namespace schemawrap {
                     return bp::object(schema.getWarnLowAs<unsigned long long>(path));
                 case karabo::pyexfel::PyTypes::STRING:
                     return bp::object(schema.getWarnLowAs<string>(path));
+                case karabo::pyexfel::PyTypes::FLOAT:
+                    return bp::object(schema.getWarnLowAs<float>(path));
                 case karabo::pyexfel::PyTypes::DOUBLE:
                     return bp::object(schema.getWarnLowAs<double>(path));
                 default:
@@ -715,6 +749,8 @@ namespace schemawrap {
                     return bp::object(schema.getWarnHighAs<unsigned long long>(path));
                 case karabo::pyexfel::PyTypes::STRING:
                     return bp::object(schema.getWarnHighAs<string>(path));
+                case karabo::pyexfel::PyTypes::FLOAT:
+                    return bp::object(schema.getWarnHighAs<float>(path));
                 case karabo::pyexfel::PyTypes::DOUBLE:
                     return bp::object(schema.getWarnHighAs<double>(path));
                 default:
@@ -740,6 +776,8 @@ namespace schemawrap {
                     return bp::object(schema.getAlarmLowAs<unsigned long long>(path));
                 case karabo::pyexfel::PyTypes::STRING:
                     return bp::object(schema.getAlarmLowAs<string>(path));
+                case karabo::pyexfel::PyTypes::FLOAT:
+                    return bp::object(schema.getAlarmLowAs<float>(path));
                 case karabo::pyexfel::PyTypes::DOUBLE:
                     return bp::object(schema.getAlarmLowAs<double>(path));
                 default:
@@ -765,6 +803,8 @@ namespace schemawrap {
                     return bp::object(schema.getAlarmHighAs<unsigned long long>(path));
                 case karabo::pyexfel::PyTypes::STRING:
                     return bp::object(schema.getAlarmHighAs<string>(path));
+                case karabo::pyexfel::PyTypes::FLOAT:
+                    return bp::object(schema.getAlarmHighAs<float>(path));
                 case karabo::pyexfel::PyTypes::DOUBLE:
                     return bp::object(schema.getAlarmHighAs<double>(path));
                 default:
@@ -863,6 +903,8 @@ namespace schemawrap {
                     return bp::object(schema.getDefaultValue<unsigned long long>(path));
                 case Types::STRING:
                     return bp::object(schema.getDefaultValue<string>(path));
+                case Types::FLOAT:
+                    return bp::object(schema.getDefaultValue<float>(path));
                 case Types::DOUBLE:
                     return bp::object(schema.getDefaultValue<double>(path));
                 case Types::VECTOR_BOOL:
@@ -877,6 +919,8 @@ namespace schemawrap {
                     return karabo::pyexfel::Wrapper::fromStdVectorToPyArray(schema.getDefaultValue<vector<unsigned long long> >(path));
                 case Types::VECTOR_STRING:
                     return karabo::pyexfel::Wrapper::fromStdVectorToPyArray(schema.getDefaultValue<vector<string> >(path));
+                case Types::VECTOR_FLOAT:
+                    return karabo::pyexfel::Wrapper::fromStdVectorToPyArray(schema.getDefaultValue<vector<float> >(path));
                 case Types::VECTOR_DOUBLE:
                     return karabo::pyexfel::Wrapper::fromStdVectorToPyArray(schema.getDefaultValue<vector<double> >(path));
                 default:
@@ -905,6 +949,8 @@ namespace schemawrap {
                     return bp::object(schema.getDefaultValueAs<unsigned long long>(path));
                 case karabo::pyexfel::PyTypes::STRING:
                     return bp::object(schema.getDefaultValueAs<string>(path));
+                case karabo::pyexfel::PyTypes::FLOAT:
+                    return bp::object(schema.getDefaultValueAs<float>(path));
                 case karabo::pyexfel::PyTypes::DOUBLE:
                     return bp::object(schema.getDefaultValueAs<double>(path));
                 case Types::VECTOR_BOOL:
@@ -919,6 +965,8 @@ namespace schemawrap {
                     return karabo::pyexfel::Wrapper::fromStdVectorToPyArray(schema.getDefaultValueAs<unsigned long long, vector >(path));
                 case Types::VECTOR_STRING:
                     return karabo::pyexfel::Wrapper::fromStdVectorToPyArray(schema.getDefaultValueAs<string, vector >(path));
+                case Types::VECTOR_FLOAT:
+                    return karabo::pyexfel::Wrapper::fromStdVectorToPyArray(schema.getDefaultValueAs<float, vector >(path));
                 case Types::VECTOR_DOUBLE:
                     return karabo::pyexfel::Wrapper::fromStdVectorToPyArray(schema.getDefaultValueAs<double, vector >(path));
                 default:
@@ -967,6 +1015,8 @@ namespace schemawrap {
                     return bp::object(schema.getAliasFromKey<unsigned long long>(path));
                 case karabo::pyexfel::PyTypes::STRING:
                     return bp::object(schema.getAliasFromKey<string>(path));
+                case karabo::pyexfel::PyTypes::FLOAT:
+                    return bp::object(schema.getAliasFromKey<float>(path));
                 case karabo::pyexfel::PyTypes::DOUBLE:
                     return bp::object(schema.getAliasFromKey<double>(path));
                 default:
@@ -1272,6 +1322,7 @@ void exportPyUtilSchema() {
     KARABO_PYTHON_ELEMENT_DEFAULT_VALUE(SimpleElement<unsigned int>, unsigned int, UINT32)
     KARABO_PYTHON_ELEMENT_DEFAULT_VALUE(SimpleElement<long long>, long long, INT64)
     KARABO_PYTHON_ELEMENT_DEFAULT_VALUE(SimpleElement<unsigned long long>, unsigned long long, UINT64)
+    KARABO_PYTHON_ELEMENT_DEFAULT_VALUE(SimpleElement<float>, float, FLOAT)
     KARABO_PYTHON_ELEMENT_DEFAULT_VALUE(SimpleElement<double>, double, DOUBLE)
     KARABO_PYTHON_ELEMENT_DEFAULT_VALUE(SimpleElement<string>, string, STRING)
     KARABO_PYTHON_ELEMENT_DEFAULT_VALUE(SimpleElement<bool>, bool, BOOL)
@@ -1286,6 +1337,7 @@ void exportPyUtilSchema() {
     KARABO_PYTHON_ELEMENT_READONLYSPECIFIC(SimpleElement<unsigned int>, unsigned int, UINT32)
     KARABO_PYTHON_ELEMENT_READONLYSPECIFIC(SimpleElement<long long>, long long, INT64)
     KARABO_PYTHON_ELEMENT_READONLYSPECIFIC(SimpleElement<unsigned long long>, unsigned long long, UINT64)
+    KARABO_PYTHON_ELEMENT_READONLYSPECIFIC(SimpleElement<float>, float, FLOAT)
     KARABO_PYTHON_ELEMENT_READONLYSPECIFIC(SimpleElement<double>, double, DOUBLE)
     KARABO_PYTHON_ELEMENT_READONLYSPECIFIC(SimpleElement<std::string>, std::string, STRING)
     KARABO_PYTHON_ELEMENT_READONLYSPECIFIC(SimpleElement<bool>, bool, BOOL)
@@ -1299,6 +1351,7 @@ void exportPyUtilSchema() {
     KARABO_PYTHON_VECTOR_DEFAULT_VALUE(unsigned int, UINT32)
     KARABO_PYTHON_VECTOR_DEFAULT_VALUE(long long, INT64)
     KARABO_PYTHON_VECTOR_DEFAULT_VALUE(unsigned long long, UINT64)
+    KARABO_PYTHON_VECTOR_DEFAULT_VALUE(float, FLOAT)
     KARABO_PYTHON_VECTOR_DEFAULT_VALUE(double, DOUBLE)
     KARABO_PYTHON_VECTOR_DEFAULT_VALUE(std::string, STRING)
     KARABO_PYTHON_VECTOR_DEFAULT_VALUE(bool, BOOL)
@@ -1311,6 +1364,7 @@ void exportPyUtilSchema() {
     KARABO_PYTHON_VECTOR_READONLYSPECIFIC(unsigned int, UINT32)
     KARABO_PYTHON_VECTOR_READONLYSPECIFIC(long long, INT64)
     KARABO_PYTHON_VECTOR_READONLYSPECIFIC(unsigned long long, UINT64)
+    KARABO_PYTHON_VECTOR_READONLYSPECIFIC(float, FLOAT)
     KARABO_PYTHON_VECTOR_READONLYSPECIFIC(double, DOUBLE)
     KARABO_PYTHON_VECTOR_READONLYSPECIFIC(std::string, STRING)
     KARABO_PYTHON_VECTOR_READONLYSPECIFIC(bool, BOOL)
@@ -1325,6 +1379,7 @@ void exportPyUtilSchema() {
     KARABO_PYTHON_SIMPLE(unsigned int, UINT32)
     KARABO_PYTHON_SIMPLE(long long, INT64)
     KARABO_PYTHON_SIMPLE(unsigned long long, UINT64)
+    KARABO_PYTHON_SIMPLE(float, FLOAT)
     KARABO_PYTHON_SIMPLE(double, DOUBLE)
     KARABO_PYTHON_SIMPLE(string, STRING)
     KARABO_PYTHON_SIMPLE(bool, BOOL)
@@ -1359,6 +1414,7 @@ void exportPyUtilSchema() {
     KARABO_PYTHON_VECTOR(unsigned int, UINT32)
     KARABO_PYTHON_VECTOR(long long, INT64)
     KARABO_PYTHON_VECTOR(unsigned long long, UINT64)
+    KARABO_PYTHON_VECTOR(float, FLOAT)
     KARABO_PYTHON_VECTOR(double, DOUBLE)
     KARABO_PYTHON_VECTOR(string, STRING)
     KARABO_PYTHON_VECTOR(bool, BOOL)
@@ -1480,7 +1536,7 @@ void exportPyUtilSchema() {
     }
 
     {
-        bp::class_<Units> ("Units");
+        //bp::class_<Units> ("Units");
         bp::enum_<Units::MetricPrefix>("MetricPrefix")
                 .value("YOTTA", Units::YOTTA)
                 .value("ZETTA", Units::ZETTA)
