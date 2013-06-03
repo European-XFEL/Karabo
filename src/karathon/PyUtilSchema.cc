@@ -14,6 +14,7 @@
 #include <karabo/util/OverwriteElement.hh>
 #include <karabo/util/PathElement.hh>
 #include <karabo/util/Validator.hh>
+#include <karabo/util/HashFilter.hh>
 
 #include "PythonMacros.hh"
 #include "Wrapper.hh"
@@ -1002,6 +1003,15 @@ namespace schemawrap {
 }
 
 
+struct HashFilterWrap {
+    static boost::shared_ptr<karabo::util::Hash> byTag(const Schema& schema, const Hash& config, const std::string& tags, const std::string& sep = ",") {
+        boost::shared_ptr<Hash> result(new Hash);
+        karabo::util::HashFilter::byTag(schema, config, *result, tags, sep);
+        return result;
+    }
+};
+
+
 void exportPyUtilSchema() {
 
     bp::enum_< karabo::util::AccessType>("AccessType")
@@ -1568,6 +1578,13 @@ void exportPyUtilSchema() {
                      , bp::return_internal_reference<> ())
                 .def("commit"
                      , (void (OverwriteElement::*)())(&OverwriteElement::commit))
+                ;
+    }
+    
+    {
+        bp::class_<HashFilterWrap, boost::noncopyable>("HashFilter", bp::no_init)
+                .def("byTag", HashFilterWrap::byTag, (bp::arg("schema"), bp::arg("config"), bp::arg("tags"), bp::arg("sep") = ","))
+                .staticmethod("byTag")
                 ;
     }
 } //end  exportPyUtilSchema
