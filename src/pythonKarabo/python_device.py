@@ -70,6 +70,7 @@ class PythonDevice(BaseFsm):
         self._stateChangeLock = threading.Lock()
         self._stateDependentSchemaLock = threading.Lock()
         self._stateDependentSchema = {}
+        self._injectedSchema = Schema()
         
         # Initialize _client to None (important!)
         self._client = None
