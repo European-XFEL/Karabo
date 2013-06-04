@@ -38,9 +38,7 @@ class P1(Base):
         e.tags("BH")
         e.displayedName("Example key 2").description("Example key 2 description")
         e.options("5, 25, 10")
-        e.minInc(5).maxInc(25)
-        e.unit(METER)
-        e.metricPrefix(MILLI)
+        e.minInc(5).maxInc(25).unit(METER).metricPrefix(MILLI)
         e.assignmentOptional().defaultValue(5)
         e.init().commit()
 
@@ -87,9 +85,7 @@ class P2(Base):
         e.tags("CY,LM,KW")
         e.displayedName("Example key 2").description("Example key 2 description")
         e.options("5, 25, 10")
-        e.minInc(5).maxInc(25)
-        e.unit(METER)
-        e.metricPrefix(MILLI)
+        e.minInc(5).maxInc(25).unit(METER).metricPrefix(MILLI)
         e.assignmentOptional().defaultValue(10)
         e.init().commit()
         
@@ -118,9 +114,7 @@ class P3(Base):
         e.tags("CY,DB,JE,BP,MK,PG,BF")
         e.displayedName("Example key 2").description("Example key 2 description")
         e.options("5, 25, 10")
-        e.minInc(5).maxInc(25)
-        e.unit(METER)
-        e.metricPrefix(MILLI)
+        e.minInc(5).maxInc(25).unit(METER).metricPrefix(MILLI)
         e.assignmentOptional().defaultValue(25)
         e.init().commit()
         
@@ -165,9 +159,7 @@ class GraphicsRenderer2(object):
         e = FLOAT_ELEMENT(expected).key("shapes.circle.radius")
         e.description("The radius of the circle").displayedName("Radius")
         e.tags("NC,KW")
-        e.minExc(0).maxExc(100)
-        e.unit(METER)
-        e.metricPrefix(MILLI)
+        e.minExc(0).maxExc(100).unit(METER).metricPrefix(MILLI)
         e.assignmentOptional().defaultValue(10)
         e.init().commit()
 
@@ -338,7 +330,7 @@ class  HashfilterTestCase(unittest.TestCase):
             self.assertTrue("chars[1].P3.m" in result)
             
         except Exception, e:
-            self.fail("test_hashfilter exception group 3: " + str(e))
+            self.fail("test_hashfilter exception group 4: " + str(e))
         
         try:
             result = HashFilter.byTag(schema, config, "BF", ",;")
@@ -370,7 +362,7 @@ class  HashfilterTestCase(unittest.TestCase):
             self.assertTrue("chars[1].P3.m" in result)
             
         except Exception, e:
-            self.fail("test_hashfilter exception group 4: " + str(e))
+            self.fail("test_hashfilter exception group 5: " + str(e))
         
         try:
             result = HashFilter.byTag(schema, config, "WP76", ",;")
@@ -402,7 +394,7 @@ class  HashfilterTestCase(unittest.TestCase):
             self.assertFalse("chars[1].P3.m" in result)
             
         except Exception, e:
-            self.fail("test_hashfilter exception group 5: " + str(e))
+            self.fail("test_hashfilter exception group 6: " + str(e))
         
             
 if __name__ == '__main__':
