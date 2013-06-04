@@ -287,6 +287,15 @@ struct OverwriteElementWrap {
 
 namespace schemawrap {
 
+//    void setAlias(Schema& self, const bp::object& obj, const bp::object& alias) {
+//        if (PyString_Check(obj.ptr())) {
+//            string path = bp::extract<string>(obj);
+//            boost::any any;
+//            karabo::pyexfel::Wrapper::toAny(alias, any);
+//            self.setAlias(path, any);
+//        }
+//        throw KARABO_PYTHON_EXCEPTION("Python argument defining the key name in 'setDefaultValue' should be a string");
+//    }
 
     bp::object getParameterHash(const Schema& schema) {
         return bp::object(schema.getParameterHash());
@@ -306,7 +315,16 @@ namespace schemawrap {
     // Wrapper functions for : getMinInc, getMaxInc, getMinExc, getMaxExc *
     //*********************************************************************
 
-
+    void setMinInc(Schema& self, const bp::object& obj, const bp::object& value) {
+        if (PyString_Check(obj.ptr())) {
+            string path = bp::extract<string>(obj);
+            boost::any any;
+            karabo::pyexfel::Wrapper::toAny(value, any);
+            self.setMinInc(path, any);
+        }
+        throw KARABO_PYTHON_EXCEPTION("Python argument in 'setMinInc' must be a string");
+    }
+    
     bp::object getMinInc(const Schema& schema, const bp::object& obj) {
         if (PyString_Check(obj.ptr())) {
             string path = bp::extract<string>(obj);
@@ -317,6 +335,16 @@ namespace schemawrap {
     }
 
 
+    void setMaxInc(Schema& self, const bp::object& obj, const bp::object& value) {
+        if (PyString_Check(obj.ptr())) {
+            string path = bp::extract<string>(obj);
+            boost::any any;
+            karabo::pyexfel::Wrapper::toAny(value, any);
+            self.setMaxInc(path, any);
+        }
+        throw KARABO_PYTHON_EXCEPTION("Python argument in 'setMinInc' must be a string");
+    }
+    
     bp::object getMaxInc(const Schema& schema, const bp::object& obj) {
         if (PyString_Check(obj.ptr())) {
             string path = bp::extract<string>(obj);
@@ -327,6 +355,16 @@ namespace schemawrap {
     }
 
 
+    void setMinExc(Schema& self, const bp::object& obj, const bp::object& value) {
+        if (PyString_Check(obj.ptr())) {
+            string path = bp::extract<string>(obj);
+            boost::any any;
+            karabo::pyexfel::Wrapper::toAny(value, any);
+            self.setMinExc(path, any);
+        }
+        throw KARABO_PYTHON_EXCEPTION("Python argument in 'setMinInc' must be a string");
+    }
+    
     bp::object getMinExc(const Schema& schema, const bp::object& obj) {
         if (PyString_Check(obj.ptr())) {
             string path = bp::extract<string>(obj);
@@ -337,6 +375,16 @@ namespace schemawrap {
     }
 
 
+    void setMaxExc(Schema& self, const bp::object& obj, const bp::object& value) {
+        if (PyString_Check(obj.ptr())) {
+            string path = bp::extract<string>(obj);
+            boost::any any;
+            karabo::pyexfel::Wrapper::toAny(value, any);
+            self.setMaxExc(path, any);
+        }
+        throw KARABO_PYTHON_EXCEPTION("Python argument in 'setMinInc' must be a string");
+    }
+    
     bp::object getMaxExc(const Schema& schema, const bp::object& obj) {
         if (PyString_Check(obj.ptr())) {
             string path = bp::extract<string>(obj);
@@ -464,6 +512,16 @@ namespace schemawrap {
     //*****************************************************************************
 
 
+    void setWarnLow(Schema& self, const bp::object& obj, const bp::object& value) {
+        if (PyString_Check(obj.ptr())) {
+            string path = bp::extract<string>(obj);
+            boost::any any;
+            karabo::pyexfel::Wrapper::toAny(value, any);
+            self.setWarnLow(path, any);
+        }
+        throw KARABO_PYTHON_EXCEPTION("Python argument in 'setMinInc' must be a string");
+    }
+    
     bp::object getWarnLow(const Schema& schema, const bp::object& obj) {
         if (PyString_Check(obj.ptr())) {
             string path = bp::extract<string>(obj);
@@ -474,6 +532,16 @@ namespace schemawrap {
     }
 
 
+    void setWarnHigh(Schema& self, const bp::object& obj, const bp::object& value) {
+        if (PyString_Check(obj.ptr())) {
+            string path = bp::extract<string>(obj);
+            boost::any any;
+            karabo::pyexfel::Wrapper::toAny(value, any);
+            self.setWarnHigh(path, any);
+        }
+        throw KARABO_PYTHON_EXCEPTION("Python argument in 'setMinInc' must be a string");
+    }
+    
     bp::object getWarnHigh(const Schema& schema, const bp::object& obj) {
         if (PyString_Check(obj.ptr())) {
             string path = bp::extract<string>(obj);
@@ -484,6 +552,16 @@ namespace schemawrap {
     }
 
 
+    void setAlarmLow(Schema& self, const bp::object& obj, const bp::object& value) {
+        if (PyString_Check(obj.ptr())) {
+            string path = bp::extract<string>(obj);
+            boost::any any;
+            karabo::pyexfel::Wrapper::toAny(value, any);
+            self.setAlarmLow(path, any);
+        }
+        throw KARABO_PYTHON_EXCEPTION("Python argument in 'setMinInc' must be a string");
+    }
+    
     bp::object getAlarmLow(const Schema& schema, const bp::object& obj) {
         if (PyString_Check(obj.ptr())) {
             string path = bp::extract<string>(obj);
@@ -494,6 +572,16 @@ namespace schemawrap {
     }
 
 
+    void setAlarmHigh(Schema& self, const bp::object& obj, const bp::object& value) {
+        if (PyString_Check(obj.ptr())) {
+            string path = bp::extract<string>(obj);
+            boost::any any;
+            karabo::pyexfel::Wrapper::toAny(value, any);
+            self.setAlarmHigh(path, any);
+        }
+        throw KARABO_PYTHON_EXCEPTION("Python argument in 'setMinInc' must be a string");
+    }
+    
     bp::object getAlarmHigh(const Schema& schema, const bp::object& obj) {
         if (PyString_Check(obj.ptr())) {
             string path = bp::extract<string>(obj);
@@ -682,10 +770,19 @@ namespace schemawrap {
     }
 
     //*************************************************************
-    // Wrapper functions for : getDefaultValue, getDefaultValueAs *
+    // Wrapper functions for : setDefaultValue, getDefaultValue, getDefaultValueAs *
     //*************************************************************
 
-
+    void setDefaultValue(Schema& self, const bp::object& obj, const bp::object& value) {
+        if (PyString_Check(obj.ptr())) {
+            string path = bp::extract<string>(obj);
+            boost::any any;
+            karabo::pyexfel::Wrapper::toAny(value, any);
+            self.setDefaultValue(path, any);
+        }
+        throw KARABO_PYTHON_EXCEPTION("Python argument defining the key name in 'setDefaultValue' should be a string");
+    }
+    
     bp::object getDefaultValue(const Schema& schema, const bp::object& obj) {               
         if (PyString_Check(obj.ptr())) {
             string path = bp::extract<string>(obj);            
@@ -694,7 +791,6 @@ namespace schemawrap {
         }
         throw KARABO_PYTHON_EXCEPTION("Python argument defining the key name in 'getDefaultValue' should be a string");
     }
-
 
     bp::object getDefaultValueAs(const Schema& schema, const bp::object& obj, const karabo::pyexfel::PyTypes::ReferenceType& pytype) {
         if (PyString_Check(obj.ptr())) {
@@ -1072,6 +1168,34 @@ void exportPyUtilSchema() {
 
         s.def("classInfo"
               , (ClassInfo(*)())(&Schema::classInfo)).staticmethod("classInfo");
+        
+        s.def("setAccessMode", &Schema::setAccessMode, (bp::arg("path"), bp::arg("value")));
+        s.def("setDisplayedName", &Schema::setDisplayedName, (bp::arg("path"), bp::arg("value")));
+        s.def("setDescription", &Schema::setDescription, (bp::arg("path"), bp::arg("value")));
+        s.def("setTags", &Schema::setTags, (bp::arg("path"), bp::arg("value"), bp::arg("sep") = ",;"));
+        s.def("setDisplayType", &Schema::setDisplayType, (bp::arg("path"), bp::arg("value")));
+        s.def("setAssignment", &Schema::setAssignment, (bp::arg("path"), bp::arg("value")));
+        s.def("setOptions", &Schema::setOptions, (bp::arg("path"), bp::arg("value"), bp::arg("sep") = ",;"));
+        s.def("setAllowedStates", &Schema::setAllowedStates, (bp::arg("path"), bp::arg("value"), bp::arg("sep") = ",;"));
+        s.def("setAllowedRoles", &Schema::setAllowedRoles, (bp::arg("path"), bp::arg("value"), bp::arg("sep") = ",;"));
+        s.def("setExpertLevel", &Schema::setExpertLevel, (bp::arg("path"), bp::arg("value")));
+        s.def("setDefaultValue", &schemawrap::setDefaultValue, (bp::arg("path"), bp::arg("value")));
+//        s.def("setAlias", &schemawrap::setAlias, (bp::arg("path"), bp::arg("value")));          // setAlias<type>
+        s.def("setUnit", &Schema::setUnit, (bp::arg("path"), bp::arg("value")));
+        s.def("setMetricPrefix", &Schema::setMetricPrefix, (bp::arg("path"), bp::arg("value")));
+        s.def("setMinInc", &schemawrap::setMinInc, (bp::arg("path"), bp::arg("value")));
+        s.def("setMaxInc", &schemawrap::setMaxInc, (bp::arg("path"), bp::arg("value")));
+        s.def("setMinExc", &schemawrap::setMinExc, (bp::arg("path"), bp::arg("value")));
+        s.def("setMaxExc", &schemawrap::setMaxExc, (bp::arg("path"), bp::arg("value")));
+        s.def("setMinSize", &Schema::setMinSize, (bp::arg("path"), bp::arg("value")));
+        s.def("setMaxSize", &Schema::setMaxSize, (bp::arg("path"), bp::arg("value")));
+        s.def("setWarnLow", &schemawrap::setWarnLow, (bp::arg("path"), bp::arg("value")));
+        s.def("setWarnHigh", &schemawrap::setWarnHigh, (bp::arg("path"), bp::arg("value")));
+        s.def("setAlarmLow", &schemawrap::setAlarmLow, (bp::arg("path"), bp::arg("value")));
+        s.def("setAlarmHigh", &schemawrap::setAlarmHigh, (bp::arg("path"), bp::arg("value")));
+        s.def("setMin", &Schema::setMin, (bp::arg("path"), bp::arg("value")));
+        s.def("setMax", &Schema::setMax, (bp::arg("path"), bp::arg("value")));
+        //s.def("", &Schema::, ());     // overwrite<>(default) not implemented
     }// end Schema
 
     /////////////////////////////////////////////////////////////
