@@ -224,9 +224,8 @@ void Schema_Test::testGetDefaultValue() {
     string defaultValueAsString5 = m_schema.getDefaultValueAs<string > ("exampleKey5");
     CPPUNIT_ASSERT(defaultValueAsString5 == "1442244");
 
-    CPPUNIT_ASSERT(m_schema.getDefaultValue<string>("sampleKey") == "10"); //TODO check
-    //int defaultValueKey = m_schema.getDefaultValue<int>("sampleKey"); //TODO check failed conversion from "string" into "int" on key "defaultValue"
-
+    CPPUNIT_ASSERT(m_schema.getDefaultValue<int>("sampleKey") == 10); // Was set from string, but maintains correct data typing
+    
     CPPUNIT_ASSERT(m_schema.getDefaultValueAs<string>("sampleKey") == "10");
     CPPUNIT_ASSERT(m_schema.getDefaultValueAs<int>("sampleKey") == 10);
 
@@ -453,32 +452,18 @@ void Schema_Test::testVectorElements() {
 
     CPPUNIT_ASSERT(sch.hasDefaultValue("vecIntReconfigStr") == true);
     
-    //get default value of integer vector (set by defaultValueFromString) as string:
-    string defStr = sch.getDefaultValue<string>("vecIntReconfigStr"); 
-    CPPUNIT_ASSERT(defStr == "11, 22, 33");
-    
     vector<int> compare;
     compare.push_back(11);
     compare.push_back(22);
     compare.push_back(33);
-    //get default value of integer vector (set by defaultValueFromString) according to the element type:
-    vector<int> defVec = sch.getDefaultValueAs<int, vector >("vecIntReconfigStr");    
-    CPPUNIT_ASSERT(defVec == compare);
     
     vector<int> defVecNew = sch.getDefaultValue<vector<int> >("vecIntReconfigStr");    
     CPPUNIT_ASSERT(defVecNew == compare);
-    
-    //get default value of double vector (set by defaultValueFromString) as string:
-    string defSt = sch.getDefaultValue<string>("vecDoubleReconfigStr"); 
-    CPPUNIT_ASSERT(defSt == "1.1, 2.2, 3.3");
-    
+  
     vector<double> comp;
     comp.push_back(1.1);
     comp.push_back(2.2);
     comp.push_back(3.3);
-    //get default value of double vector (set by defaultValueFromString) according to the element type:
-    vector<double> defDVec = sch.getDefaultValueAs<double, vector >("vecDoubleReconfigStr");
-    CPPUNIT_ASSERT(defDVec == comp);
     
     vector<double> defDVecNew = sch.getDefaultValue<vector<double> >("vecDoubleReconfigStr");
     CPPUNIT_ASSERT(defDVecNew == comp);

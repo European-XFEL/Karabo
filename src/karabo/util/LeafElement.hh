@@ -198,6 +198,9 @@ namespace karabo {
              */
             Element& defaultValueFromString(const std::string& defaultValue) {
                 m_genericElement->getNode().setAttribute(KARABO_SCHEMA_DEFAULT_VALUE, defaultValue);
+                Types::ReferenceType type = Types::from<FromTypeInfo>(typeid(ValueType));
+                Hash::Attributes::Node& attrNode = m_genericElement->getNode().getAttributeNode(KARABO_SCHEMA_DEFAULT_VALUE);
+                attrNode.setType(type);
                 return *m_genericElement;
             }
 
