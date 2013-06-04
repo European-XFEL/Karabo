@@ -902,48 +902,11 @@ namespace schemawrap {
     //*************************************************************
 
 
-    bp::object getDefaultValue(const Schema& schema, const bp::object& obj) {
+    bp::object getDefaultValue(const Schema& schema, const bp::object& obj) {               
         if (PyString_Check(obj.ptr())) {
-            string path = bp::extract<string>(obj);
-            Types::ReferenceType reftype = schema.getValueType(path);
-
-            switch (reftype) {
-                case Types::BOOL:
-                    return bp::object(schema.getDefaultValue<bool>(path));
-                case Types::INT32:
-                    return bp::object(schema.getDefaultValue<int>(path));
-                case Types::UINT32:
-                    return bp::object(schema.getDefaultValue<unsigned int>(path));
-                case Types::INT64:
-                    return bp::object(schema.getDefaultValue<long long>(path));
-                case Types::UINT64:
-                    return bp::object(schema.getDefaultValue<unsigned long long>(path));
-                case Types::STRING:
-                    return bp::object(schema.getDefaultValue<string>(path));
-                case Types::FLOAT:
-                    return bp::object(schema.getDefaultValue<float>(path));
-                case Types::DOUBLE:
-                    return bp::object(schema.getDefaultValue<double>(path));
-                case Types::VECTOR_BOOL:
-                    return karabo::pyexfel::Wrapper::fromStdVectorToPyArray(schema.getDefaultValue<vector<bool> >(path));
-                case Types::VECTOR_INT32:
-                    return karabo::pyexfel::Wrapper::fromStdVectorToPyArray(schema.getDefaultValue<vector<int> >(path));
-                case Types::VECTOR_UINT32:
-                    return karabo::pyexfel::Wrapper::fromStdVectorToPyArray(schema.getDefaultValue<vector<unsigned int> >(path));
-                case Types::VECTOR_INT64:
-                    return karabo::pyexfel::Wrapper::fromStdVectorToPyArray(schema.getDefaultValue<vector<long long> >(path));
-                case Types::VECTOR_UINT64:
-                    return karabo::pyexfel::Wrapper::fromStdVectorToPyArray(schema.getDefaultValue<vector<unsigned long long> >(path));
-                case Types::VECTOR_STRING:
-                    return karabo::pyexfel::Wrapper::fromStdVectorToPyArray(schema.getDefaultValue<vector<string> >(path));
-                case Types::VECTOR_FLOAT:
-                    return karabo::pyexfel::Wrapper::fromStdVectorToPyArray(schema.getDefaultValue<vector<float> >(path));
-                case Types::VECTOR_DOUBLE:
-                    return karabo::pyexfel::Wrapper::fromStdVectorToPyArray(schema.getDefaultValue<vector<double> >(path));
-                default:
-                    break;
-            }
-            throw KARABO_NOT_SUPPORTED_EXCEPTION("Type is not supported");
+            string path = bp::extract<string>(obj);            
+            Hash h = schema.getParameterHash();
+            return karabo::pyexfel::Wrapper::toObject(h.getAttributeAsAny(path, KARABO_SCHEMA_DEFAULT_VALUE), false);    
         }
         throw KARABO_PYTHON_EXCEPTION("Python argument defining the key name in 'getDefaultValue' should be a string");
     }
