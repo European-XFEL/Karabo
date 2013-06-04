@@ -41,13 +41,25 @@ class LoginDialog(QDialog):
         self.__hLine.setFrameShadow(QFrame.Sunken)
         
         formLayout = QFormLayout()
-        self.__leUsername = QLineEdit("username")
+        self.__leUsername = QLineEdit("guest") #("username")
         formLayout.addRow("Username:", self.__leUsername)
         self.__leUsername.textChanged.connect(self.onUsernameChanged)
         
-        self.__lePassword = QLineEdit("default")
+        self.__lePassword = QLineEdit("guest") #("default")
         self.__lePassword.setEchoMode(QLineEdit.Password)
         formLayout.addRow("Password:", self.__lePassword)
+        
+        # I was getting this error: QSpiAccessible::accessibleEvent not handled: "8008" obj: QObject(0x0) " invalid interface!"
+        #    when making mouse-over different options in the ComboBox.
+        # I solve it as documented here: http://code.google.com/p/clementine-player/issues/detail?id=1706
+        # Current open bug: https://bugs.launchpad.net/ubuntu/+source/qtcreator/+bug/959722
+        # Running "sudo apt-get remove qt-at-spi"
+        self.__leDomain = QComboBox()
+        self.__leDomain.setEditable(False)
+        domain_list = ["KERBEROS", "LOCAL"]
+        self.__leDomain.addItems(domain_list)
+        formLayout.addRow("Domain:", self.__leDomain)
+        self.__leDomain.currentIndexChanged['QString'].connect(self.onSelectConnectionChanged)
         
         self.__leHostname = QLineEdit("localhost")#("131.169.212.42")
         formLayout.addRow("Hostname:", self.__leHostname)
@@ -81,7 +93,12 @@ class LoginDialog(QDialog):
         return self.__lePassword.text()
     password = property(fget=_getPassword)
 
+    
+    def _getDomain(self):
+        return self.__leDomain.currentText()
+    domain = property(fget=_getDomain)
 
+    
     def _getHostname(self):
         return self.__leHostname.text()
     hostname = property(fget=_getHostname)
@@ -110,4 +127,9 @@ class LoginDialog(QDialog):
 
     def onSelectConnectionChanged(self, value):
         print "onSelectConnectionChanged", value
-
+    
+    
+    def onSelectDomainChanged(self, value):
+        print "onSelectDomainChanged", value
+    
+    
