@@ -851,7 +851,23 @@ void exportPyUtilSchema() {
                 .def_readwrite("m_state", &Schema::AssemblyRules::m_state);
 
         s.def(bp::self_ns::str(bp::self));
-
+        
+        
+        //********* General functions on Schema *******
+        
+        s.def("has" 
+              , (bool (Schema::*)(string const &)const)(&Schema::has)
+              , bp::arg("path"));
+        
+        s.def("empty"
+              , (bool (Schema::*)()const)(&Schema::empty));
+        
+        s.def("merge"
+              , (void (Schema::*)(Schema const &))(&Schema::merge)
+              , bp::arg("schema"));
+        
+        //********* 'get'-methods *********************
+        
         s.def("getParameterHash", &schemawrap::getParameterHash);
 
         s.def("getAccessMode", &Schema::getAccessMode);
@@ -966,9 +982,7 @@ void exportPyUtilSchema() {
 
         s.def("getAlarmHighAs", &schemawrap::getAlarmHighAs, (bp::arg("path"), bp::arg("pytype")));
 
-        //all other get-s....
-
-        //********* has methods ****************
+        //********* 'has'-methods ****************
 
         s.def("keyHasAlias", &Schema::keyHasAlias);
 
@@ -1022,9 +1036,7 @@ void exportPyUtilSchema() {
 
         s.def("hasMax", &Schema::hasMax);
 
-        //all other has .....
-
-        //********* is methods ****************
+        //********* 'is'-methods ****************
 
         s.def("isAccessInitOnly", &Schema::isAccessInitOnly);
         s.def("isAccessReadOnly", &Schema::isAccessReadOnly);
@@ -1044,7 +1056,8 @@ void exportPyUtilSchema() {
         s.def("isNode", &Schema::isNode);
         s.def("isCommand", &Schema::isCommand);
         s.def("isProperty", &Schema::isProperty);
-
+        
+        //********* Help function to show all parameters *******
         s.def("help", &schemawrap::help, (bp::arg("classId") = ""));
 
         s.def("getClassInfo"
