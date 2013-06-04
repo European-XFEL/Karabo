@@ -23,7 +23,6 @@ namespace bp = boost::python;
 using namespace karabo::util;
 using namespace std;
 
-
 struct SchemaWrapper : Schema, bp::wrapper< Schema > {
 
 
@@ -53,8 +52,8 @@ struct SchemaWrapper : Schema, bp::wrapper< Schema > {
     }
 };
 
-
 class ValidatorWrap : Validator {
+
 public:
 
 
@@ -99,10 +98,10 @@ public:
     }
 };
 
-
 struct NodeElementWrap {
 
-    static karabo::util::NodeElement& appendParametersOfConfigurableClass(karabo::util::NodeElement& self, const bp::object& baseobj, const std::string& classid) {
+
+    static karabo::util::NodeElement & appendParametersOfConfigurableClass(karabo::util::NodeElement& self, const bp::object& baseobj, const std::string& classid) {
 
         if (!PyType_Check(baseobj.ptr())) {
             throw KARABO_PYTHON_EXCEPTION("Argument 'arg1' given in 'appendParametersOfConfigurableClass(arg1, arg2)' of NODE_ELEMENT must be a class in Python registered as base class in Configurator");
@@ -156,7 +155,6 @@ struct NodeElementWrap {
 
 };
 
-
 struct ChoiceElementWrap {
 
 
@@ -198,7 +196,6 @@ struct ChoiceElementWrap {
         return self;
     }
 };
-
 
 struct ListElementWrap {
 
@@ -242,6 +239,8 @@ struct ListElementWrap {
     }
 
     typedef DefaultValue<ListElement, vector<string> > DefListElement;
+
+
     static karabo::util::ListElement & defaultValueList(DefListElement& self, const bp::object& obj) {
         if (PyList_Check(obj.ptr())) {
             const bp::list& l = bp::extract<bp::list > (obj);
@@ -258,7 +257,6 @@ struct ListElementWrap {
     }
 
 };
-
 
 struct OverwriteElementWrap {
 
@@ -287,6 +285,7 @@ struct OverwriteElementWrap {
 
 namespace schemawrap {
 
+
     void setAlias(Schema& self, const bp::object& obj, const bp::object& aliasObj) {
         if (PyString_Check(obj.ptr())) {
             string path = bp::extract<string>(obj);
@@ -302,9 +301,10 @@ namespace schemawrap {
             } else {
                 throw KARABO_PYTHON_EXCEPTION("Unknown data type of the 'alias' argument");
             }
-        }
-        throw KARABO_PYTHON_EXCEPTION("Python argument defining the key name in 'setAlias' should be a string");
+        } else
+            throw KARABO_PYTHON_EXCEPTION("Python argument defining the key name in 'setAlias' should be a string");
     }
+
 
     bp::object getParameterHash(const Schema& schema) {
         return bp::object(schema.getParameterHash());
@@ -324,21 +324,23 @@ namespace schemawrap {
     // Wrapper functions for : getMinInc, getMaxInc, getMinExc, getMaxExc *
     //*********************************************************************
 
+
     void setMinInc(Schema& self, const bp::object& obj, const bp::object& value) {
         if (PyString_Check(obj.ptr())) {
             string path = bp::extract<string>(obj);
             boost::any any;
             karabo::pyexfel::Wrapper::toAny(value, any);
             self.setMinInc(path, any);
-        }
-        throw KARABO_PYTHON_EXCEPTION("Python argument in 'setMinInc' must be a string");
+        } else
+            throw KARABO_PYTHON_EXCEPTION("Python argument in 'setMinInc' must be a string");
     }
-    
+
+
     bp::object getMinInc(const Schema& schema, const bp::object& obj) {
         if (PyString_Check(obj.ptr())) {
             string path = bp::extract<string>(obj);
             const Hash& h = schema.getParameterHash();
-            return karabo::pyexfel::Wrapper::toObject(h.getAttributeAsAny(path, KARABO_SCHEMA_MIN_INC), false);    
+            return karabo::pyexfel::Wrapper::toObject(h.getAttributeAsAny(path, KARABO_SCHEMA_MIN_INC), false);
         }
         throw KARABO_PYTHON_EXCEPTION("Python argument in 'getMinInc' must be a string");
     }
@@ -350,15 +352,16 @@ namespace schemawrap {
             boost::any any;
             karabo::pyexfel::Wrapper::toAny(value, any);
             self.setMaxInc(path, any);
-        }
-        throw KARABO_PYTHON_EXCEPTION("Python argument in 'setMinInc' must be a string");
+        } else
+            throw KARABO_PYTHON_EXCEPTION("Python argument in 'setMinInc' must be a string");
     }
-    
+
+
     bp::object getMaxInc(const Schema& schema, const bp::object& obj) {
         if (PyString_Check(obj.ptr())) {
             string path = bp::extract<string>(obj);
             const Hash& h = schema.getParameterHash();
-            return karabo::pyexfel::Wrapper::toObject(h.getAttributeAsAny(path, KARABO_SCHEMA_MAX_INC), false);   
+            return karabo::pyexfel::Wrapper::toObject(h.getAttributeAsAny(path, KARABO_SCHEMA_MAX_INC), false);
         }
         throw KARABO_PYTHON_EXCEPTION("Python argument in 'getMaxInc' must be a string");
     }
@@ -370,10 +373,11 @@ namespace schemawrap {
             boost::any any;
             karabo::pyexfel::Wrapper::toAny(value, any);
             self.setMinExc(path, any);
-        }
-        throw KARABO_PYTHON_EXCEPTION("Python argument in 'setMinInc' must be a string");
+        } else
+            throw KARABO_PYTHON_EXCEPTION("Python argument in 'setMinInc' must be a string");
     }
-    
+
+
     bp::object getMinExc(const Schema& schema, const bp::object& obj) {
         if (PyString_Check(obj.ptr())) {
             string path = bp::extract<string>(obj);
@@ -390,10 +394,11 @@ namespace schemawrap {
             boost::any any;
             karabo::pyexfel::Wrapper::toAny(value, any);
             self.setMaxExc(path, any);
-        }
-        throw KARABO_PYTHON_EXCEPTION("Python argument in 'setMinInc' must be a string");
+        } else
+            throw KARABO_PYTHON_EXCEPTION("Python argument in 'setMinInc' must be a string");
     }
-    
+
+
     bp::object getMaxExc(const Schema& schema, const bp::object& obj) {
         if (PyString_Check(obj.ptr())) {
             string path = bp::extract<string>(obj);
@@ -527,15 +532,16 @@ namespace schemawrap {
             boost::any any;
             karabo::pyexfel::Wrapper::toAny(value, any);
             self.setWarnLow(path, any);
-        }
-        throw KARABO_PYTHON_EXCEPTION("Python argument in 'setMinInc' must be a string");
+        } else
+            throw KARABO_PYTHON_EXCEPTION("Python argument in 'setMinInc' must be a string");
     }
-    
+
+
     bp::object getWarnLow(const Schema& schema, const bp::object& obj) {
         if (PyString_Check(obj.ptr())) {
             string path = bp::extract<string>(obj);
             const Hash& h = schema.getParameterHash();
-            return karabo::pyexfel::Wrapper::toObject(h.getAttributeAsAny(path, KARABO_SCHEMA_WARN_LOW), false);    
+            return karabo::pyexfel::Wrapper::toObject(h.getAttributeAsAny(path, KARABO_SCHEMA_WARN_LOW), false);
         }
         throw KARABO_PYTHON_EXCEPTION("Python argument in 'getWarnLow' must be a string");
     }
@@ -547,10 +553,11 @@ namespace schemawrap {
             boost::any any;
             karabo::pyexfel::Wrapper::toAny(value, any);
             self.setWarnHigh(path, any);
-        }
-        throw KARABO_PYTHON_EXCEPTION("Python argument in 'setMinInc' must be a string");
+        } else
+            throw KARABO_PYTHON_EXCEPTION("Python argument in 'setMinInc' must be a string");
     }
-    
+
+
     bp::object getWarnHigh(const Schema& schema, const bp::object& obj) {
         if (PyString_Check(obj.ptr())) {
             string path = bp::extract<string>(obj);
@@ -567,10 +574,11 @@ namespace schemawrap {
             boost::any any;
             karabo::pyexfel::Wrapper::toAny(value, any);
             self.setAlarmLow(path, any);
-        }
-        throw KARABO_PYTHON_EXCEPTION("Python argument in 'setMinInc' must be a string");
+        } else
+            throw KARABO_PYTHON_EXCEPTION("Python argument in 'setMinInc' must be a string");
     }
-    
+
+
     bp::object getAlarmLow(const Schema& schema, const bp::object& obj) {
         if (PyString_Check(obj.ptr())) {
             string path = bp::extract<string>(obj);
@@ -587,10 +595,11 @@ namespace schemawrap {
             boost::any any;
             karabo::pyexfel::Wrapper::toAny(value, any);
             self.setAlarmHigh(path, any);
-        }
-        throw KARABO_PYTHON_EXCEPTION("Python argument in 'setMinInc' must be a string");
+        } else
+            throw KARABO_PYTHON_EXCEPTION("Python argument in 'setMinInc' must be a string");
     }
-    
+
+
     bp::object getAlarmHigh(const Schema& schema, const bp::object& obj) {
         if (PyString_Check(obj.ptr())) {
             string path = bp::extract<string>(obj);
@@ -782,24 +791,27 @@ namespace schemawrap {
     // Wrapper functions for : setDefaultValue, getDefaultValue, getDefaultValueAs *
     //*************************************************************
 
+
     void setDefaultValue(Schema& self, const bp::object& obj, const bp::object& value) {
         if (PyString_Check(obj.ptr())) {
             string path = bp::extract<string>(obj);
             boost::any any;
             karabo::pyexfel::Wrapper::toAny(value, any);
             self.setDefaultValue(path, any);
-        }
-        throw KARABO_PYTHON_EXCEPTION("Python argument defining the key name in 'setDefaultValue' should be a string");
+        } else
+            throw KARABO_PYTHON_EXCEPTION("Python argument defining the key name in 'setDefaultValue' should be a string");
     }
-    
-    bp::object getDefaultValue(const Schema& schema, const bp::object& obj) {               
+
+
+    bp::object getDefaultValue(const Schema& schema, const bp::object& obj) {
         if (PyString_Check(obj.ptr())) {
-            string path = bp::extract<string>(obj);            
+            string path = bp::extract<string>(obj);
             const Hash& h = schema.getParameterHash();
-            return karabo::pyexfel::Wrapper::toObject(h.getAttributeAsAny(path, KARABO_SCHEMA_DEFAULT_VALUE), false);    
+            return karabo::pyexfel::Wrapper::toObject(h.getAttributeAsAny(path, KARABO_SCHEMA_DEFAULT_VALUE), false);
         }
         throw KARABO_PYTHON_EXCEPTION("Python argument defining the key name in 'getDefaultValue' should be a string");
     }
+
 
     bp::object getDefaultValueAs(const Schema& schema, const bp::object& obj, const karabo::pyexfel::PyTypes::ReferenceType& pytype) {
         if (PyString_Check(obj.ptr())) {
@@ -823,7 +835,7 @@ namespace schemawrap {
                 case karabo::pyexfel::PyTypes::DOUBLE:
                     return bp::object(schema.getDefaultValueAs<double>(path));
                 case Types::VECTOR_BOOL:
-                    return karabo::pyexfel::Wrapper::fromStdVectorToPyArray(schema.getDefaultValueAs<bool, vector >(path));
+                    return karabo::pyexfel::Wrapper::fromStdVectorToPyArray(schema.getDefaultValueAs<bool, vector > (path));
                 case Types::VECTOR_INT32:
                     return karabo::pyexfel::Wrapper::fromStdVectorToPyArray(schema.getDefaultValueAs<int, vector >(path));
                 case Types::VECTOR_UINT32:
@@ -871,7 +883,7 @@ namespace schemawrap {
         if (PyString_Check(obj.ptr())) {
             string path = bp::extract<string>(obj);
             const Hash& h = schema.getParameterHash();
-            return karabo::pyexfel::Wrapper::toObject(h.getAttributeAsAny(path, KARABO_SCHEMA_ALIAS), false);    
+            return karabo::pyexfel::Wrapper::toObject(h.getAttributeAsAny(path, KARABO_SCHEMA_ALIAS), false);
         } else {
             throw KARABO_PYTHON_EXCEPTION("Python argument in 'getAliasFromKey' should be a string");
         }
@@ -900,8 +912,9 @@ namespace schemawrap {
 
 }
 
-
 struct HashFilterWrap {
+
+
     static boost::shared_ptr<karabo::util::Hash> byTag(const Schema& schema, const Hash& config, const std::string& tags, const std::string& sep = ",") {
         boost::shared_ptr<Hash> result(new Hash);
         karabo::util::HashFilter::byTag(schema, config, *result, tags, sep);
@@ -956,23 +969,23 @@ void exportPyUtilSchema() {
                 .def_readwrite("m_state", &Schema::AssemblyRules::m_state);
 
         s.def(bp::self_ns::str(bp::self));
-        
-        
+
+
         //********* General functions on Schema *******
-        
-        s.def("has" 
-              , (bool (Schema::*)(string const &)const)(&Schema::has)
+
+        s.def("has"
+              , (bool (Schema::*)(string const &) const) (&Schema::has)
               , bp::arg("path"));
-        
+
         s.def("empty"
-              , (bool (Schema::*)()const)(&Schema::empty));
-        
+              , (bool (Schema::*)()const) (&Schema::empty));
+
         s.def("merge"
               , (void (Schema::*)(Schema const &))(&Schema::merge)
               , bp::arg("schema"));
-        
+
         //********* 'get'-methods *********************
-        
+
         s.def("getParameterHash", &schemawrap::getParameterHash);
 
         s.def("getAccessMode", &Schema::getAccessMode);
@@ -993,7 +1006,7 @@ void exportPyUtilSchema() {
               , &Schema::getDisplayedName
               , bp::return_value_policy< bp::copy_const_reference >());
 
-        s.def("getUnit", &Schema::getUnit);
+        s.def("getUnit", (const int (Schema::*)(const std::string& path) const)&Schema::getUnit, (bp::arg("path")));
 
         s.def("getUnitName"
               , &Schema::getUnitName
@@ -1102,9 +1115,9 @@ void exportPyUtilSchema() {
         s.def("hasAssignment", &Schema::hasAssignment);
 
         s.def("hasAllowedStates", &Schema::hasAllowedStates);
-        
+
         s.def("hasAllowedRoles", &Schema::hasAllowedRoles);
-        
+
         s.def("hasDefaultValue", &Schema::hasDefaultValue);
 
         s.def("hasOptions", &Schema::hasOptions);
@@ -1142,7 +1155,7 @@ void exportPyUtilSchema() {
         s.def("hasMin", &Schema::hasMin);
 
         s.def("hasMax", &Schema::hasMax);
-        
+
         s.def("hasMinSize", &Schema::hasMinSize);
 
         s.def("hasMaxSize", &Schema::hasMaxSize);
@@ -1167,7 +1180,7 @@ void exportPyUtilSchema() {
         s.def("isNode", &Schema::isNode);
         s.def("isCommand", &Schema::isCommand);
         s.def("isProperty", &Schema::isProperty);
-        
+
         //********* Help function to show all parameters *******
         s.def("help", &schemawrap::help, (bp::arg("classId") = ""));
 
@@ -1177,7 +1190,7 @@ void exportPyUtilSchema() {
 
         s.def("classInfo"
               , (ClassInfo(*)())(&Schema::classInfo)).staticmethod("classInfo");
-        
+
         s.def("setAccessMode", &Schema::setAccessMode, (bp::arg("path"), bp::arg("value")));
         s.def("setDisplayedName", &Schema::setDisplayedName, (bp::arg("path"), bp::arg("value")));
         s.def("setDescription", &Schema::setDescription, (bp::arg("path"), bp::arg("value")));
@@ -1189,7 +1202,7 @@ void exportPyUtilSchema() {
         s.def("setAllowedRoles", &Schema::setAllowedRoles, (bp::arg("path"), bp::arg("value"), bp::arg("sep") = ",;"));
         s.def("setExpertLevel", &Schema::setExpertLevel, (bp::arg("path"), bp::arg("value")));
         s.def("setDefaultValue", &schemawrap::setDefaultValue, (bp::arg("path"), bp::arg("value")));
-        s.def("setAlias", &schemawrap::setAlias, (bp::arg("path"), bp::arg("value")));          // setAlias<type>
+        s.def("setAlias", &schemawrap::setAlias, (bp::arg("path"), bp::arg("value"))); // setAlias<type>
         s.def("setUnit", &Schema::setUnit, (bp::arg("path"), bp::arg("value")));
         s.def("setMetricPrefix", &Schema::setMetricPrefix, (bp::arg("path"), bp::arg("value")));
         s.def("setMinInc", &schemawrap::setMinInc, (bp::arg("path"), bp::arg("value")));
@@ -1304,6 +1317,7 @@ void exportPyUtilSchema() {
     // In Python : VECTOR_INT32_ELEMENT, VECTOR_UINT32_ELEMENT, 
     // VECTOR_INT64_ELEMENT, VECTOR_UINT64_ELEMENT, VECTOR_DOUBLE_ELEMENT,
     // VECTOR_STRING_ELEMENT, VECTOR_BOOL_ELEMENT
+
 
     KARABO_PYTHON_VECTOR(int, INT32)
     KARABO_PYTHON_VECTOR(unsigned int, UINT32)
