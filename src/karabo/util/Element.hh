@@ -118,9 +118,13 @@ namespace karabo {
 
             template <class T>
             inline T getAttributeAs(const std::string& key) const;
-
+            
             template<typename T, template <typename Elem, typename = std::allocator<Elem> > class Cont >
             inline Cont<T> getAttributeAs(const std::string& key) const;
+            
+            Element<KeyType>& getAttributeNode(const std::string& key);
+            
+            const Element<KeyType>& getAttributeNode(const std::string& key) const;
 
             inline bool hasAttribute(const std::string& key) const;
 
@@ -387,6 +391,16 @@ namespace karabo {
         template<typename T, template <typename Elem, typename = std::allocator<Elem> > class Cont >
         inline Cont<T> Element<KeyType, AttributeType>::getAttributeAs(const std::string& key) const {
             return m_attributes.template getAs<T, Cont >(key);
+        }
+        
+        template<typename KeyType, typename AttributeType>
+        inline Element<KeyType>& Element<KeyType, AttributeType>::getAttributeNode(const std::string& key) {
+            return m_attributes.getNode(key);
+        }
+        
+        template<typename KeyType, typename AttributeType>
+        inline const Element<KeyType>& Element<KeyType, AttributeType>::getAttributeNode(const std::string& key) const {
+            return m_attributes.getNode(key);
         }
 
         template<typename KeyType, typename AttributeType>

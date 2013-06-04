@@ -386,6 +386,8 @@ namespace karabo {
 
             boost::any& getAttributeAsAny(const std::string& path,  const std::string& attribute, const char separator = '.');
             
+            const boost::any& getAttributeAsAny(const std::string& path,  const std::string& attribute, const char separator = '.') const;
+            
             const Attributes& getAttributes(const std::string& path, const char separator = '.') const;
             Attributes& getAttributes(const std::string& path, const char separator = '.');
 
