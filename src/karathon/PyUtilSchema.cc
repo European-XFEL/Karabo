@@ -997,7 +997,9 @@ void exportPyUtilSchema() {
         s.def("hasAssignment", &Schema::hasAssignment);
 
         s.def("hasAllowedStates", &Schema::hasAllowedStates);
-
+        
+        s.def("hasAllowedRoles", &Schema::hasAllowedRoles);
+        
         s.def("hasDefaultValue", &Schema::hasDefaultValue);
 
         s.def("hasOptions", &Schema::hasOptions);
@@ -1035,6 +1037,10 @@ void exportPyUtilSchema() {
         s.def("hasMin", &Schema::hasMin);
 
         s.def("hasMax", &Schema::hasMax);
+        
+        s.def("hasMinSize", &Schema::hasMinSize);
+
+        s.def("hasMaxSize", &Schema::hasMaxSize);
 
         //********* 'is'-methods ****************
 
