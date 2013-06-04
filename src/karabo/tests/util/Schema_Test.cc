@@ -465,6 +465,9 @@ void Schema_Test::testVectorElements() {
     vector<int> defVec = sch.getDefaultValueAs<int, vector >("vecIntReconfigStr");    
     CPPUNIT_ASSERT(defVec == compare);
     
+    vector<int> defVecNew = sch.getDefaultValue<vector<int> >("vecIntReconfigStr");    
+    CPPUNIT_ASSERT(defVecNew == compare);
+    
     //get default value of double vector (set by defaultValueFromString) as string:
     string defSt = sch.getDefaultValue<string>("vecDoubleReconfigStr"); 
     CPPUNIT_ASSERT(defSt == "1.1, 2.2, 3.3");
@@ -476,6 +479,9 @@ void Schema_Test::testVectorElements() {
     //get default value of double vector (set by defaultValueFromString) according to the element type:
     vector<double> defDVec = sch.getDefaultValueAs<double, vector >("vecDoubleReconfigStr");
     CPPUNIT_ASSERT(defDVec == comp);
+    
+    vector<double> defDVecNew = sch.getDefaultValue<vector<double> >("vecDoubleReconfigStr");
+    CPPUNIT_ASSERT(defDVecNew == comp);
     
     CPPUNIT_ASSERT(sch.isAccessInitOnly("vecBool") == true);
     CPPUNIT_ASSERT(sch.isAssignmentOptional("vecBool") == false);
