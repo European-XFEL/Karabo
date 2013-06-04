@@ -17,7 +17,7 @@
 
 namespace karabo {
     namespace util {
-
+        
         template<typename T,
         template <typename ELEM, typename = std::allocator<ELEM> > class CONT = std::vector>
         class VectorElement : public LeafElement<VectorElement<T, CONT>, CONT<T> > {
