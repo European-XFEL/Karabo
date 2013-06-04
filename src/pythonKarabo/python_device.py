@@ -230,7 +230,10 @@ class PythonDevice(BaseFsm):
     
     def getServerId(self):
         return self.serverid
-
+    
+    def getAvailableInstances(self):
+        return self._ss.getAvailableInstances()
+    
     # In C++: the following functions are protected
     
     def errorFoundAction(self, shortMessage, detailedMessage):
