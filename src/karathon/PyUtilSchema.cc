@@ -287,15 +287,24 @@ struct OverwriteElementWrap {
 
 namespace schemawrap {
 
-//    void setAlias(Schema& self, const bp::object& obj, const bp::object& alias) {
-//        if (PyString_Check(obj.ptr())) {
-//            string path = bp::extract<string>(obj);
-//            boost::any any;
-//            karabo::pyexfel::Wrapper::toAny(alias, any);
-//            self.setAlias(path, any);
-//        }
-//        throw KARABO_PYTHON_EXCEPTION("Python argument defining the key name in 'setDefaultValue' should be a string");
-//    }
+    void setAlias(Schema& self, const bp::object& obj, const bp::object& aliasObj) {
+        if (PyString_Check(obj.ptr())) {
+            string path = bp::extract<string>(obj);
+            if (PyInt_Check(aliasObj.ptr())) {
+                int alias = bp::extract<int>(aliasObj);
+                self.setAlias(path, alias);
+            } else if (PyString_Check(aliasObj.ptr())) {
+                std::string alias = bp::extract<std::string>(aliasObj);
+                self.setAlias(path, alias);
+            } else if (PyFloat_Check(aliasObj.ptr())) {
+                double alias = bp::extract<double>(aliasObj);
+                self.setAlias(path, alias);
+            } else {
+                throw KARABO_PYTHON_EXCEPTION("Unknown data type of the 'alias' argument");
+            }
+        }
+        throw KARABO_PYTHON_EXCEPTION("Python argument defining the key name in 'setAlias' should be a string");
+    }
 
     bp::object getParameterHash(const Schema& schema) {
         return bp::object(schema.getParameterHash());
@@ -1180,7 +1189,7 @@ void exportPyUtilSchema() {
         s.def("setAllowedRoles", &Schema::setAllowedRoles, (bp::arg("path"), bp::arg("value"), bp::arg("sep") = ",;"));
         s.def("setExpertLevel", &Schema::setExpertLevel, (bp::arg("path"), bp::arg("value")));
         s.def("setDefaultValue", &schemawrap::setDefaultValue, (bp::arg("path"), bp::arg("value")));
-//        s.def("setAlias", &schemawrap::setAlias, (bp::arg("path"), bp::arg("value")));          // setAlias<type>
+        s.def("setAlias", &schemawrap::setAlias, (bp::arg("path"), bp::arg("value")));          // setAlias<type>
         s.def("setUnit", &Schema::setUnit, (bp::arg("path"), bp::arg("value")));
         s.def("setMetricPrefix", &Schema::setMetricPrefix, (bp::arg("path"), bp::arg("value")));
         s.def("setMinInc", &schemawrap::setMinInc, (bp::arg("path"), bp::arg("value")));
