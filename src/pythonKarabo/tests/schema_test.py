@@ -115,11 +115,11 @@ class  Schema_TestCase(unittest.TestCase):
    
     def test_getAliasFromKey(self):
         try:
-            self.assertEqual(self.schema.getAliasFromKey("exampleKey2", Types.INT32), 10)
-            self.assertEqual(self.schema.getAliasFromKey("exampleKey3", Types.DOUBLE), 5.5)
-            self.assertEqual(self.schema.getAliasFromKey("exampleKey4", Types.STRING), "exampleAlias4")
-            self.assertEqual(self.schema.getAliasFromKey("exampleKey5", Types.STRING), "exampleAlias5")
-            self.assertEqual(self.schema.getAliasFromKey("testPath", Types.INT32), 5)
+            self.assertEqual(self.schema.getAliasFromKey("exampleKey2"), 10)
+            self.assertEqual(self.schema.getAliasFromKey("exampleKey3"), 5.5)
+            self.assertEqual(self.schema.getAliasFromKey("exampleKey4"), "exampleAlias4")
+            self.assertEqual(self.schema.getAliasFromKey("exampleKey5"), "exampleAlias5")
+            self.assertEqual(self.schema.getAliasFromKey("testPath"), 5)
         except Exception,e:
             self.fail("test_getAliasFromKey exception: " + str(e))
             

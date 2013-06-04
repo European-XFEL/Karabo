@@ -762,34 +762,13 @@ namespace schemawrap {
     }
 
 
-    bp::object getAliasFromKey(const Schema& schema, const bp::object& obj, const karabo::pyexfel::PyTypes::ReferenceType& pytype) {
+    bp::object getAliasFromKey(const Schema& schema, const bp::object& obj) {
         if (PyString_Check(obj.ptr())) {
             string path = bp::extract<string>(obj);
-
-            switch (pytype) {
-                case karabo::pyexfel::PyTypes::BOOL:
-                    return bp::object(schema.getAliasFromKey<bool>(path));
-                case karabo::pyexfel::PyTypes::INT32:
-                    return bp::object(schema.getAliasFromKey<int>(path));
-                case karabo::pyexfel::PyTypes::UINT32:
-                    return bp::object(schema.getAliasFromKey<unsigned int>(path));
-                case karabo::pyexfel::PyTypes::INT64:
-                    return bp::object(schema.getAliasFromKey<long long>(path));
-                case karabo::pyexfel::PyTypes::UINT64:
-                    return bp::object(schema.getAliasFromKey<unsigned long long>(path));
-                case karabo::pyexfel::PyTypes::STRING:
-                    return bp::object(schema.getAliasFromKey<string>(path));
-                case karabo::pyexfel::PyTypes::FLOAT:
-                    return bp::object(schema.getAliasFromKey<float>(path));
-                case karabo::pyexfel::PyTypes::DOUBLE:
-                    return bp::object(schema.getAliasFromKey<double>(path));
-                default:
-                    break;
-            }
-            throw KARABO_NOT_SUPPORTED_EXCEPTION("Type is not supported");
-
+            const Hash& h = schema.getParameterHash();
+            return karabo::pyexfel::Wrapper::toObject(h.getAttributeAsAny(path, KARABO_SCHEMA_ALIAS), false);    
         } else {
-            throw KARABO_PYTHON_EXCEPTION("Python first argument in 'getAliasFromKey' should be a string");
+            throw KARABO_PYTHON_EXCEPTION("Python argument in 'getAliasFromKey' should be a string");
         }
     }
 
@@ -995,7 +974,7 @@ void exportPyUtilSchema() {
 
         s.def("aliasHasKey", &schemawrap::aliasHasKey);
 
-        s.def("getAliasFromKey", &schemawrap::getAliasFromKey, (bp::arg("key"), bp::arg("referenceType")));
+        s.def("getAliasFromKey", &schemawrap::getAliasFromKey, (bp::arg("key")));
 
         s.def("getKeyFromAlias", &schemawrap::getKeyFromAlias, (bp::arg("alias")));
 
