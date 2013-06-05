@@ -174,9 +174,6 @@ namespace karabo {
             boost::thread t(boost::bind(&karabo::core::DeviceServer2::runEventLoop, this, hasHearbeat, info));
             this->startFsm();
             t.join();
-
-            //startFsm();
-            //runEventLoop(hasHearbeat); // Block
             m_pluginThread.join();
         }
 
@@ -184,10 +181,10 @@ namespace karabo {
         void DeviceServer2::registerAndConnectSignalsAndSlots() {
             SIGNAL3("signalNewDeviceClassAvailable", string, string, Schema) /* serverId, classId, Schema */
             SLOT1(slotStartDevice, Hash)
-            SLOT1(slotRegistrationOk, string)
-            SLOT1(slotRegistrationFailed, string)
             SLOT0(slotKillDeviceServerInstance)
             SLOT1(slotDeviceGone, string)
+            SLOT1(slotGetClassSchema, string)
+                    
 
             // Connect to global slot
             connectN("", "signalNewDeviceClassAvailable", "*", "slotNewDeviceClassAvailable");
@@ -203,27 +200,6 @@ namespace karabo {
             reply(currentState);
         }
 
-
-        void DeviceServer2::registrationStateOnEntry() {
-            if (m_isMaster) {
-                // Go on, we can not ask for a name
-                slotRegistrationOk("I am master!");
-            } else {
-                call("*", "slotNewDeviceServerAvailable", boost::asio::ip::host_name(), m_serverId);
-            }
-        }
-
-
-        void DeviceServer2::registrationFailed(const string& errorMessage) {
-            KARABO_LOG_ERROR << errorMessage;
-        }
-
-
-        void DeviceServer2::registrationOk(const std::string& message) {
-            KARABO_LOG_INFO << "Master says: " << message;
-        }
-
-
         void DeviceServer2::idleStateOnEntry() {
             // Write name to file
             karabo::io::saveToFile(Hash("DeviceServer.serverId", m_serverId), "autoload.xml");
@@ -231,7 +207,7 @@ namespace karabo {
 
             if (m_isMaster) {
                 slotStartDevice(Hash("MasterDevice2.deviceId", "MasterDevice2", "MasterDevice2.connection", m_connectionConfig));
-                //slotStartDevice(Hash("GuiServerDevice.deviceId", "GuiServerDevice1", "GuiServerDevice.connection", m_connectionConfig, "GuiServerDevice.loggerConnection", m_connectionConfig));
+                slotStartDevice(Hash("GuiServerDevice2.deviceId", "GuiServerDevice2", "GuiServerDevice2.connection", m_connectionConfig, "GuiServerDevice2.loggerConnection", m_connectionConfig));
             } else {
                 // Check whether we have installed devices available
                 updateAvailableDevices();
@@ -395,6 +371,11 @@ namespace karabo {
                 m_deviceInstanceMap.erase(it);
                 KARABO_LOG_INFO << "Device: \"" << instanceId << "\" removed from server.";
             }
+        }
+        
+        void DeviceServer2::slotGetClassSchema(const std::string& classId) {
+            Schema schema = BaseDevice::getSchema(classId);
+            reply(schema);
         }
 
 

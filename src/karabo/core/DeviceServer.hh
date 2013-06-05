@@ -30,7 +30,7 @@ namespace karabo {
     namespace core {
 
         /**
-         * The DeviceServer class.
+         * The DeviceServer2 class.
          */
         class DeviceServer : public karabo::xms::SignalSlotable {
 
@@ -79,15 +79,9 @@ namespace karabo {
 
             KARABO_FSM_EVENT1(m_fsm, StartDeviceEvent, slotStartDevice, karabo::util::Hash)
 
-            KARABO_FSM_EVENT1(m_fsm, RegistrationOkEvent, slotRegistrationOk, std::string)
-
-            KARABO_FSM_EVENT1(m_fsm, RegistrationFailedEvent, slotRegistrationFailed, std::string)
-
             /**************************************************************/
             /*                        States                              */
             /**************************************************************/
-
-            KARABO_FSM_STATE_V_E(RegistrationState, registrationStateOnEntry)
 
             KARABO_FSM_STATE(ErrorState)
 
@@ -107,17 +101,11 @@ namespace karabo {
 
             KARABO_FSM_V_ACTION1(StartDeviceAction, startDeviceAction, karabo::util::Hash)
 
-            KARABO_FSM_V_ACTION1(RegistrationFailedAction, registrationFailed, std::string)
-
-            KARABO_FSM_V_ACTION1(RegistrationOkAction, registrationOk, std::string)
-
             /**************************************************************/
             /*                      AllOk Machine                         */
             /**************************************************************/
 
             KARABO_FSM_TABLE_BEGIN(AllOkStateTransitionTable)
-            Row< RegistrationState, RegistrationOkEvent, IdleState, RegistrationOkAction, none>,
-            Row< RegistrationState, RegistrationFailedEvent, ErrorState, RegistrationFailedAction, none>,
             Row< IdleState, NewPluginAvailableEvent, none, NotifyNewDeviceAction, none >,
             Row< IdleState, InbuildDevicesAvailableEvent, none, NotifyNewDeviceAction, none >,
             Row< IdleState, StartDeviceEvent, ServingState, StartDeviceAction, none >,
@@ -125,7 +113,7 @@ namespace karabo {
             KARABO_FSM_TABLE_END
 
             //                       Name          Transition-Table     Initial-State  Context
-            KARABO_FSM_STATE_MACHINE(AllOkState, AllOkStateTransitionTable, RegistrationState, Self)
+            KARABO_FSM_STATE_MACHINE(AllOkState, AllOkStateTransitionTable, IdleState, Self)
 
 
             /**************************************************************/
@@ -173,9 +161,11 @@ namespace karabo {
 
             void sayHello();
 
-            void slotKillDeviceServerInstance();
+            void slotKillServer();
 
             void slotDeviceGone(const std::string& instanceId);
+            
+            void slotGetClassSchema(const std::string& classId);
 
             std::string generateDefaultDeviceInstanceId(const std::string& classId);
 
@@ -194,12 +184,9 @@ namespace karabo {
             bool m_gotName;
 
             karabo::util::Hash m_availableDevices;
-            std::vector<karabo::util::Hash> m_autoStart;
             boost::thread_group m_deviceThreads;
             DeviceInstanceMap m_deviceInstanceMap;
             unsigned int m_deviceInstanceCount;
-
-            karabo::io::TextSerializer<karabo::util::Schema>::Pointer m_schemaSerializer;
 
             std::string m_serverId;
             karabo::net::BrokerConnection::Pointer m_connection;

@@ -316,6 +316,8 @@ void exportPyUtilHash() {
           "these changes will be reflected in the current Hash object.\nExample:\n"
           "\th = Hash('a.b.c', 1, 'b.x', 2.22, 'b.y', 7.432, 'c', [1,2,3])\n\t"
           "n = h.getNode('b')\n\tg = Hash()\n\tg.setNode(n)\n\tprint g");
+    h.def("hasAttribute", &HashWrap().hasAttribute, (bp::arg("path"), bp::arg("attribute"), bp::arg("sep") = "."), 
+          "Returns true if the questioned attribute exists, else returns false.");
     h.def("getAttribute", &HashWrap().getAttribute, (bp::arg("path"), bp::arg("attribute"), bp::arg("sep") = "."),
           "Get attribute value following given 'path' and 'attribute' name. Optionally use separator.\nExample:\n\t"
           "h = Hash('a.b.c', 1, 'b.x', 2.22, 'b.y', 7.432, 'c', [1,2,3])\n\th.setAttribute('a.b.c', 'attr1', [1.234,2.987,5.555]\n\t"

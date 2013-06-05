@@ -168,7 +168,7 @@ namespace karabo {
 
         void MasterDevice2::fetchDescription(const std::string& deviceId, karabo::util::Schema& description) const {
             try {
-                request(deviceId, "slotGetDescription", false).timeout(2000).receive(description); // Retrieves active schema
+                request(deviceId, "slotGetSchema", false).timeout(2000).receive(description); // Retrieves active schema
             } catch (const TimeoutException&) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Schema request for device \"" << deviceId << "\" timed out";
                 Exception::clearTrace();
