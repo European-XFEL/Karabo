@@ -115,7 +115,7 @@ ip.set_hook('complete_command', auto_complete_full, re_key = '.*get')
 ip.set_hook('complete_command', auto_complete_full, re_key = '.*registerPropertyMonitor')
 ip.set_hook('complete_command', auto_complete_full, re_key = '.*registerDeviceMonitor')
 ip.set_hook('complete_command', auto_complete_full, re_key = '.*help')
-ip.set_hook('complete_command', auto_complete_full, re_key = '.*kill')
+ip.set_hook('complete_command', auto_complete_full, re_key = '.*killDevice')
 
 
 ip.set_hook('complete_command', auto_complete_set, re_key = '.*set')
@@ -135,8 +135,8 @@ class DeviceClient(object):
         self.__client.instantiateNoWait(deviceServerInstanceId, classId, initialConfiguration)
         
         
-    def kill(self, instanceId):
-        self.__client.kill(instanceId)
+    def killDeviceNoWait(self, instanceId):
+        self.__client.killDeviceNoWait(instanceId)
 
 
     def help(self, instanceId, parameter = None):
@@ -152,10 +152,36 @@ class DeviceClient(object):
             return self.__client.get(instanceId)
         else: 
             return self.__client.get(instanceId, propertyName)
+    
         
+    def getSystemInformation(self):
+        return self.__client.getSystemInformation()
+    
+    
+    def getSystemTopology(self):
+        return self.__client.getSystemTopology()
+    
+    
+    def getClassSchema(self, serverId, classId):
+        return self.__client.getClassSchema(serverId, classId);
+    
         
     def registerDeviceMonitor(self, instanceId, callbackFunction, userData = None):
-        """This function can be used to register an asynchronous call-back on change of the specified parameter"""
+        '''
+        This function can be used to register an asynchronous call-back on change of any device property.
+        The call-back function must have the following signature: f(str, Hash)
+        arg1: deviceId
+        arg2: currently changed part of the configuration
+        
+        
+        Example:        
+                      
+        def onDeviceChange(config, deviceId):
+            print deviceId, ":", config
+            
+        c = DeviceClient();
+        c.registerDeviceMonitor("Test_MyDevice_0", onDeviceChange)                       
+        '''
         if userData is None:
             return self.__client.registerDeviceMonitor(instanceId, callbackFunction)
         else :
@@ -167,7 +193,22 @@ class DeviceClient(object):
          
          
     def registerPropertyMonitor(self, instanceId, propertyName, callbackFunction, userData = None):
-        """This function can be used to register an asynchronous call-back on change of the specified parameter"""
+        '''
+        This function can be used to register an asynchronous call-back on change of the specified property.
+        The call-back function must have the following signature: f(str, str, object, Timestamp)
+        arg1: deviceId
+        arg2: key
+        arg3: value
+        arg4: timeStamp
+        
+        Example:
+            
+            def onPropertyChange(deviceId, key, value, timeStamp):
+                print deviceId, ":", key, "->", value, "(", timeStamp.getMsSinceEpoch(), ")"
+        
+        c = DeviceClient()
+        c.registerPropertyMonitor("Test_MyDevice_0", "result", onPropertyChange)
+        '''
         if userData is None:
             return self.__client.registerPropertyMonitor(instanceId, propertyName, callbackFunction)
         else :
@@ -179,18 +220,18 @@ class DeviceClient(object):
             
        
     def set(self, instanceId, propertyName, propertyValue, timeout = -1):
-        return self.__client.setWait(instanceId, propertyName, propertyValue, ".", timeout)
+        return self.__client.set(instanceId, propertyName, propertyValue, ".", timeout)
     
         
     def execute(self, instanceId, command):
         """Executes a command"""
-        self.__client.executeNoWait(instanceId, command)
+        self.__client.execute(instanceId, command)
         
         
-    def executeNoWait(deviceId, command):
+    def executeNoWait(self, deviceId, command):
         """Executes a command"""
         self.__client.executeNoWait(deviceId, command)
    
     
-    def sleep(secs):
+    def sleep(self, secs):
         time.sleep(secs)

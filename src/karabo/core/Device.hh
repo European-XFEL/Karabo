@@ -47,7 +47,7 @@ namespace karabo {
 
             // TODO
             // Can be removed, if sending current configuration after instantiation by server is deprecated
-            virtual const karabo::util::Hash& getCurrentConfiguration() const = 0;
+            virtual karabo::util::Hash getCurrentConfiguration(const std::string& tags = "") = 0;
 
         };
 
@@ -170,7 +170,6 @@ namespace karabo {
                 rules.injectDefaults = false;
                 rules.injectTimestamps = true;
                 m_validatorIntern.setValidationRules(rules);
-                rules.injectTimestamps = false;
                 m_validatorExtern.setValidationRules(rules);
 
                 // Setup device logger
@@ -192,36 +191,7 @@ namespace karabo {
             virtual ~Device() {
             };
 
-            /**
-             * This function will typically be called by the DeviceServer (or directly within the startDevice application).
-             * It must be overridden in any derived device class and typically should block the main thread - bringing
-             * the device into an event driven mode of operation.
-             */
-            virtual void run() {
-
-                // This initializations or done here and not in the constructor as they involve virtual function calls
-                initClassId();
-                initSchema();
-
-                // Prepare some info further describing this particular instance
-                // status, visibility, owner
-                karabo::util::Hash info("type", "device", "classId", m_classId, "serverId", m_serverId, "visibility", this->get<std::vector<std::string> >("visibility"), "version", Device::classInfo().getVersion(), "host", boost::asio::ip::host_name());
-                boost::thread t(boost::bind(&karabo::core::Device<FSM>::runEventLoop, this, true, info));
-                this->startFsm();
-                KARABO_LOG_INFO << m_classId << " with deviceId: \"" << this->getInstanceId() << "\" got started";
-                
-                // Repair classId
-                m_parameters.set("classId", m_classId);
-                
-                // Validate first time to assign timestamps
-                m_objectStateChangeMutex.lock();
-                karabo::util::Hash validated;
-                std::pair<bool, std::string> result = m_validatorIntern.validate(m_fullSchema, m_parameters, validated, karabo::util::Timestamp());
-                if (result.first == false) KARABO_LOG_WARN << "Bad parameter setting attempted, validation reports: " << result.second;
-                m_parameters.merge(validated, karabo::util::Hash::REPLACE_ATTRIBUTES);
-                m_objectStateChangeMutex.unlock();
-                t.join(); // Blocks 
-            }
+            
 
             /**
              * This function allows to communicate to other (remote) devices.
@@ -271,13 +241,13 @@ namespace karabo {
                     for (Hash::const_iterator it = h.begin(); it != h.end(); ++it) {
                         const Hash& desc = it->getValue<Hash>();
                         KARABO_LOG_WARN << desc.get<string>("message");
-                        emit("signalNotification", desc.get<string>("type"), desc.get<string>("message"), m_instanceId);
+                        emit("signalNotification", desc.get<string>("type"), desc.get<string>("message"), string(), m_instanceId);
                     }
                 }
 
                 if (!validated.empty()) {
                     m_parameters.merge(validated, karabo::util::Hash::REPLACE_ATTRIBUTES);
-                    emit("signalChanged", validated, getInstanceId(), m_classId);
+                    emit("signalChanged", validated, getInstanceId());
                 }
             }
 
@@ -353,15 +323,12 @@ namespace karabo {
              * @param schema
              */
             void updateSchema(const karabo::util::Schema& schema) {
-
-                std::cout << "Update Schema requested" << std::endl;
+                
+                KARABO_LOG_DEBUG << "Update Schema requested";
                 injectSchema(schema);
-                std::cout << "Injected..." << std::endl;
+                KARABO_LOG_DEBUG << "Injected...";
                 // Notify the distributed system
-                std::string serializedSchema;
-                karabo::io::TextSerializer<karabo::util::Schema>::create("Xsd", karabo::util::Hash("indentation", -1))->save(getFullSchema(), serializedSchema);
-                std::cout << "Serialized..." << std::endl;
-                emit("signalSchemaUpdated", serializedSchema, getInstanceId(), m_classId);
+                emit("signalSchemaUpdated", m_fullSchema, m_instanceId);
                 KARABO_LOG_INFO << "Schema updated";
             }
 
@@ -392,18 +359,7 @@ namespace karabo {
                     KARABO_RETHROW_AS(KARABO_PARAMETER_EXCEPTION("Error whilst retrieving alias from parameter (" + key + ")"));
                 }
             }
-
-            /**
-             * Converts a device parameter key into its aliased key (must be defined in the expectedParameters function)
-             * @param key A valid parameter of the device (must be defined in the expectedParameters function)
-             * @return Aliased representation of the parameter
-             * @deprecated
-             */
-            template <class T>
-            const T& key2alias(const std::string& key) {
-                return getAliasFromKey(key);
-            }
-
+          
             /**
              * Converts a device parameter alias into the original key (must be defined in the expectedParameters function)
              * @param key A valid parameter-alias of the device (must be defined in the expectedParameters function)
@@ -417,18 +373,7 @@ namespace karabo {
                     KARABO_RETHROW_AS(KARABO_PARAMETER_EXCEPTION("Error whilst retrieving parameter from alias (" + karabo::util::toString(alias) + ")"));
                 }
             }
-
-            /**
-             * Converts a device parameter alias into the original key (must be defined in the expectedParameters function)
-             * @param key A valid parameter-alias of the device (must be defined in the expectedParameters function)
-             * @return The original name of the parameter
-             * @deprecated use getKeyFromAlias instead
-             */
-            template <class T>
-            const std::string& alias2key(const T& alias) {
-                return getKeyFromAlias(alias);
-            }
-
+           
             /**
              * Checks if the argument is a valid alias of some key, i.e. defined in the expectedParameters function
              * @param alias Arbitrary argument of arbitrary type
@@ -458,8 +403,19 @@ namespace karabo {
                 return m_fullSchema.getValueType(key);
             }
 
-            const karabo::util::Hash& getCurrentConfiguration() const {
-                return m_parameters;
+            /**
+             * Retrieves the current configuration.
+             * If no argument is given, all parameters (those described in the expected parameters section) are returned.
+             * A subset of parameters can be retrieved by specifying one or more tags.
+             * @param tags The tags the parameter must carry to be retrieved
+             * @return A Hash containing the current value of the selected configuration
+             */
+            karabo::util::Hash getCurrentConfiguration(const std::string& tags = "") {
+                if (tags.empty()) return m_parameters;
+                boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
+                karabo::util::Hash filtered;
+                karabo::util::HashFilter::byTag(m_fullSchema, m_parameters, filtered, tags);
+                return filtered;
             }
 
             const std::string& getServerId() const {
@@ -470,13 +426,10 @@ namespace karabo {
 
         protected: // Functions and Classes
 
-
-
             // This function will polymorphically be called by the FSM template
-
             virtual void errorFoundAction(const std::string& shortMessage, const std::string& detailedMessage) {
-                //triggerErrorFound(shortMessage, detailedMessage);
-                // TODO Check was has to be done here
+               KARABO_LOG_ERROR << shortMessage;
+               emit("signalNotification", std::string("ERROR"), shortMessage, detailedMessage, m_instanceId);
             }
 
             virtual void preReconfigure(karabo::util::Hash& incomingReconfiguration) {
@@ -488,13 +441,37 @@ namespace karabo {
             virtual void preDestruction() {
             }
 
-            //            void triggerErrorFound(const std::string& shortMessage, const std::string& detailedMessage) const;
-            //            
-            //            void triggerWarning(const std::string& warningMessage, const std::string& priority) const;
-            //            
-            //            void triggerAlarm(const std::string& alarmMessage, const std::string& priority) const;
-
         private: // Functions
+            
+            /**
+             * This function will typically be called by the DeviceServer (or directly within the startDevice application).
+             * The call to run is blocking and afterwards communication should happen only via call-back hooks of the state-machine
+             */
+            void run() {
+
+                // This initializations or done here and not in the constructor as they involve virtual function calls
+                initClassId();
+                initSchema();
+
+                // Prepare some info further describing this particular instance
+                // status, visibility, owner
+                karabo::util::Hash info("type", "device", "classId", m_classId, "serverId", m_serverId, "visibility", this->get<std::vector<std::string> >("visibility"), "version", Device::classInfo().getVersion(), "host", boost::asio::ip::host_name());
+                boost::thread t(boost::bind(&karabo::core::Device<FSM>::runEventLoop, this, true, info));
+                this->startFsm();
+                KARABO_LOG_INFO << m_classId << " with deviceId: \"" << this->getInstanceId() << "\" got started";
+                
+                // Repair classId
+                m_parameters.set("classId", m_classId);
+                
+                // Validate first time to assign timestamps
+                m_objectStateChangeMutex.lock();
+                karabo::util::Hash validated;
+                std::pair<bool, std::string> result = m_validatorIntern.validate(m_fullSchema, m_parameters, validated, karabo::util::Timestamp());
+                if (result.first == false) KARABO_LOG_WARN << "Bad parameter setting attempted, validation reports: " << result.second;
+                m_parameters.merge(validated, karabo::util::Hash::REPLACE_ATTRIBUTES);
+                m_objectStateChangeMutex.unlock();
+                t.join(); // Blocks 
+            }
 
             void initClassId() {
                 m_classId = getClassInfo().getClassId();
@@ -535,38 +512,32 @@ namespace karabo {
             void initDeviceSlots() {
                 using namespace std;
 
-                SIGNAL3("signalChanged", karabo::util::Hash, string, string); // changeHash, instanceId, classId
+                SIGNAL2("signalChanged", karabo::util::Hash, string); // changeHash, instanceId
                 connectN("", "signalChanged", "*", "slotChanged");
-
-                SIGNAL4("signalErrorFound", string, string, string, string); // timeStamp, shortMsg, longMsg, instanceId
-                connectN("", "signalErrorFound", "*", "slotErrorFound");
-
+             
                 SIGNAL2("signalNoTransition", string, string);
                 connectN("", "signalNoTransition", "*", "slotNoTransition");
 
-                SIGNAL3("signalNotification", string, string, string); // type, message, instanceId
+                SIGNAL4("signalNotification", string, string, string, string); // type, messageShort, messageDetail, deviceId
+                connectN("", "signalNotification", "*", "slotNotification");
 
-                SIGNAL3("signalSchemaUpdated", string, string, string); // schema, instanceId, classId
-                connectN("", "signalSchemaUpdated", "*", "slotSchemaUpdated");
+                SIGNAL2("signalSchemaUpdated", karabo::util::Schema, string); // schema, deviceId
+                connectN("", "signalSchemaUpdated", "*", "slotSchemaUpdated"); 
 
-                // TODO Deprecate!
-                SIGNAL2("signalDeviceInstanceGone", string, string); // DeviceServerInstanceId, deviceInstanceId
-                connectN("", "signalDeviceInstanceGone", "*", "slotDeviceInstanceGone");
-
-                SIGNAL3("signalProgressUpdated", int, string, string); // Progress value [0,100], label, deviceInstanceId
+                SIGNAL3("signalProgressUpdated", int, string, string); // Progress value [0,100], label, deviceId
                 connectN("", "progressUpdate", "*", "slotProgressUpdated");
 
 
-                SLOT1(slotReconfigure, karabo::util::Hash)
+                SLOT1(slotReconfigure, karabo::util::Hash /*reconfiguration*/)
                 SLOT0(slotRefresh) // Deprecate
                 SLOT0(slotGetConfiguration)
-                SLOT1(slotGetDescription, bool); // onlyCurrentState
-                SLOT0(slotKillDeviceInstance)
+                SLOT1(slotGetSchema, bool /*onlyCurrentState*/); 
+                SLOT0(slotKillDevice)
 
             }
 
             void slotRefresh() {
-                emit("signalChanged", m_parameters, m_instanceId, m_classId);
+                emit("signalChanged", m_parameters, m_instanceId);
                 reply(m_parameters);
             }
             
@@ -612,11 +583,11 @@ namespace karabo {
                 m_objectStateChangeMutex.unlock();
 
                 KARABO_LOG_DEBUG << "After user interaction:\n" << reconfiguration;
-                emit("signalChanged", reconfiguration, getInstanceId(), m_classId);
+                emit("signalChanged", reconfiguration, getInstanceId());
                 this->postReconfigure();
             }
 
-            void slotGetDescription(bool onlyCurrentState) {
+            void slotGetSchema(bool onlyCurrentState) {
                 if (onlyCurrentState) {
                     const std::string& currentState = get<std::string > ("state");
                     reply(getStateDependentSchema(currentState));
@@ -625,13 +596,12 @@ namespace karabo {
                 }
             }
 
-            void slotKillDeviceInstance() {
+            void slotKillDevice() {
                 // It is important to know who gave us the kill signal
-                std::string senderId = getSenderInfo("slotKillDeviceInstance")->getInstanceIdOfSender();
+                std::string senderId = getSenderInfo("slotKillDevice")->getInstanceIdOfSender();
                 if (senderId == m_serverId) { // Our server killed us
                     KARABO_LOG_INFO << "Device is going down as instructed by server";
                     preDestruction(); // Give devices a chance to react
-                    emit("signalDeviceInstanceGone", m_serverId, m_instanceId); // TODO remove later
                     stopEventLoop();
                     
                 } else { // Someone else wants to see us dead, we should inform our server
@@ -665,10 +635,6 @@ namespace karabo {
                 m_injectedSchema = schema;
                 m_fullSchema.merge(m_injectedSchema);
             }
-
-
-
-
         };
     }
 }

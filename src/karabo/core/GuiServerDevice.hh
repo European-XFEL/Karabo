@@ -27,6 +27,18 @@ namespace karabo {
 
         class GuiServerDevice : public karabo::core::Device<OkErrorFsm> {
 
+            karabo::net::IOService::Pointer m_ioService;
+            karabo::net::Connection::Pointer m_dataConnection;
+
+            karabo::io::TextSerializer<karabo::util::Hash>::Pointer m_textSerializer;
+            karabo::io::BinarySerializer<karabo::util::Hash>::Pointer m_binarySerializer;
+            std::map<karabo::net::Channel::Pointer, std::set<std::string> > m_channels;
+            boost::mutex m_channelMutex;
+
+            karabo::net::BrokerConnection::Pointer m_loggerConnection;
+            karabo::net::BrokerIOService::Pointer m_loggerIoService;
+            karabo::net::BrokerChannel::Pointer m_loggerChannel;
+
         public:
 
             KARABO_CLASSINFO(GuiServerDevice, "GuiServerDevice", "1.0")
@@ -42,22 +54,6 @@ namespace karabo {
             void okStateOnEntry();
 
 
-        private: // Members
-
-            karabo::net::IOService::Pointer m_ioService;
-            karabo::net::Connection::Pointer m_dataConnection;
-
-            karabo::io::TextSerializer<karabo::util::Hash>::Pointer m_textSerializer;
-            karabo::io::BinarySerializer<karabo::util::Hash>::Pointer m_binarySerializer;
-            std::map<karabo::net::Channel::Pointer, std::set<std::string> > m_channels;
-            boost::mutex m_channelMutex;
-
-            karabo::net::BrokerConnection::Pointer m_loggerConnection;
-            karabo::net::BrokerIOService::Pointer m_loggerIoService;
-            karabo::net::BrokerChannel::Pointer m_loggerChannel;
-
-
-
         private: // Functions
 
             void onError(karabo::net::Channel::Pointer channel, const karabo::net::ErrorCode& errorMessage);
@@ -68,61 +64,53 @@ namespace karabo {
 
             void onLogin(karabo::net::Channel::Pointer channel, const std::string& body);
 
-            void onRefreshInstance(karabo::net::Channel::Pointer channel, const karabo::util::Hash& header);
-
             void onReconfigure(const karabo::util::Hash& header, const std::string& body);
+
+            void onExecute(const karabo::util::Hash& header, const std::string& body);
+
+            void onRefreshInstance(karabo::net::Channel::Pointer channel, const karabo::util::Hash& header);
 
             void onInitDevice(const karabo::util::Hash& header, const std::string& body);
 
-            void onKillDeviceServerInstance(const karabo::util::Hash& header, const std::string& body);
+            void onKillServer(const karabo::util::Hash& header, const std::string& body);
 
-            void onKillDeviceInstance(const karabo::util::Hash& header, const std::string& body);
+            void onKillDevice(const karabo::util::Hash& header, const std::string& body);
 
-            void onCreateNewDeviceClassPlugin(const karabo::util::Hash& header, const std::string& body);
+            void onNewVisibleDevice(karabo::net::Channel::Pointer channel, const karabo::util::Hash& header);
 
-            void onSlotCommand(const karabo::util::Hash& header, const std::string& body);
+            void onRemoveVisibleDevice(karabo::net::Channel::Pointer channel, const karabo::util::Hash& header);
+            
+            void onGetClassSchema(karabo::net::Channel::Pointer channel, const karabo::util::Hash& header, const std::string& body);
 
-            void onNewVisibleDeviceInstance(karabo::net::Channel::Pointer channel, const karabo::util::Hash& header);
 
-            void onRemoveVisibleDeviceInstance(karabo::net::Channel::Pointer channel, const karabo::util::Hash& header);
 
-            void sendCurrentIds(karabo::net::Channel::Pointer channel);
+            void sendSystemTopology(karabo::net::Channel::Pointer channel);
 
             void registerConnect(const karabo::net::Channel::Pointer& channel);
+            
 
-            void slotNewNode(const karabo::util::Hash& row);
+            void instanceNewHandler(const karabo::util::Hash& topologyEntry);
 
-            void slotNewDeviceServerInstance(const karabo::util::Hash& row);
+            void instanceUpdatedHandler(const karabo::util::Hash& topologyEntry);
 
-            void slotNewDeviceClass(const karabo::util::Hash& row);
+            void instanceGoneHandler(const std::string& instanceId);
 
-            void slotNewDeviceInstance(const karabo::util::Hash& row);
 
-            void slotUpdateDeviceServerInstance(const karabo::util::Hash& row);
+            void preprocessImageData(karabo::util::Hash& modified);
 
-            void slotUpdateDeviceInstance(const karabo::util::Hash& row);
+            void slotChanged(const karabo::util::Hash& what, const std::string& instanceId);
 
-            //            void slotNoTransition(const std::string& what, const std::string& who);
-            //
-            //            void slotBadReconfiguration(const std::string& what, const std::string& who);
-            //
-            //            void slotConnected(const std::string& signal, const std::string& slot);
-            //
-            void slotChanged(const karabo::util::Hash& what, const std::string& instanceId, const std::string& classId);
+            void slotSchemaUpdated(const karabo::util::Schema& description, const std::string& deviceId);
 
-            void onLog(karabo::net::BrokerChannel::Pointer channel, const std::string& logMessage, const karabo::util::Hash& header);
+            void logHandler(karabo::net::BrokerChannel::Pointer channel, const std::string& logMessage, const karabo::util::Hash& header);
 
-            void slotErrorFound(const std::string& timeStamp, const std::string& shortMessage, const std::string& detailedMessage, const std::string& instanceId);
+            void slotNotification(const std::string& type, const std::string& shortMessage, const std::string& detailedMessage, const std::string& deviceId);
 
-            void slotWarning(const std::string& timeStamp, const std::string& warnMessage, const std::string& instanceId, const std::string& priority);
 
-            void slotAlarm(const std::string& timeStamp, const std::string& alarmMessage, const std::string& instanceId, const std::string& priority);
-
-            void slotSchemaUpdatedToGui(const std::string& schema, const std::string& instanceId, const std::string& classId);
 
         };
 
     }
 }
 
-#endif	/* KARABO_GUISERVER_GUISERVERDEVICE_HH */
+#endif

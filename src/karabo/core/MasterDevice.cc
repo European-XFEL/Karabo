@@ -10,8 +10,8 @@
 #include <karabo/io/Input.hh>
 #include "MasterDevice.hh"
 #include "DeviceServer.hh"
-#include "HashDatabase.hh"
-
+#include "karabo/io/FileTools.hh"
+#include "karabo/tests/util/Timestamp_Test.hh"
 
 namespace karabo {
     namespace core {
@@ -25,437 +25,300 @@ namespace karabo {
 
         KARABO_REGISTER_FOR_CONFIGURATION(BaseDevice, Device<OkErrorFsm>, MasterDevice)
 
-        MasterDevice::~MasterDevice() {
-        }
-
-
         void MasterDevice::expectedParameters(Schema& expected) {
         }
 
 
         MasterDevice::MasterDevice(const Hash& input) : Device<OkErrorFsm>(input) {
-
-            GLOBAL_SLOT1(slotDeviceServerProvideName, string) /* Hostname */
-
-            GLOBAL_SLOT2(slotNewDeviceServerAvailable, string, string) /* Hostname, DeviceServerInstanceId */
-
-            GLOBAL_SLOT4(slotNewStandaloneDeviceInstanceAvailable, string, Hash, string, string) /* Hostname, CurrentConfig, DeviceInstanceId, XSD */
-
-            GLOBAL_SLOT3(slotSchemaUpdated, string, string, string)
-
-            GLOBAL_SLOT3(slotNewDeviceClassAvailable, string, string, string)
-
-            GLOBAL_SLOT2(slotNewDeviceInstanceAvailable, string, Hash)
-
-            GLOBAL_SLOT1(slotDeviceServerInstanceGone, string) /* DeviceServerInstanceId */
-
-            GLOBAL_SLOT2(slotDeviceInstanceGone, string, string) /* DeviceServerInstanceId, DeviceInstanceId */
-
-            GLOBAL_SLOT2(slotSelect, string, string)
-
-            GLOBAL_SLOT3(slotCreateNewDeviceClassPlugin, string, string, string)
-
-            //            SIGNAL1("signalNewNode", Hash)
-            //            connectN("", "signalNewNode", "*", "slotNewNode");
-            //            
-            //            SIGNAL1("signalNewDeviceServerInstance", Hash)
-            //            connectN("", "signalNewDeviceServerInstance", "*", "slotNewDeviceServerInstance");
-            //            
-            //            SIGNAL1("signalNewStandaloneDeviceServerInstance", Hash)
-            //            connectN("", "signalNewStandaloneDeviceServerInstance","*", "slotNewStandaloneDeviceServerInstance");
-            //            
-            //            SIGNAL1("signalNewDeviceClass", Hash)
-            //            connectN("", "signalNewDeviceClass","*", "slotNewDeviceClass");
-            //                    
-            //            SIGNAL1("signalNewDeviceInstance", Hash)
-            //            connectN("", "signalNewDeviceInstance", "*", "slotNewDeviceInstance");
-            //            
-            //            SIGNAL1("signalUpdateDeviceServerInstance", Hash)
-            //            connectN("", "signalUpdateDeviceServerInstance","*", "slotUpdateDeviceServerInstance");
-            //            
-            //            SIGNAL1("signalUpdateDeviceInstance", Hash)
-            //            connectN("", "signalUpdateDeviceInstance","*", "slotUpdateDeviceInstance");
-            //            
-            //            SIGNAL3("signalSchemaUpdatedToGui", string, string, string); // schema, instanceId, classId
-            //            connectN("", "signalSchemaUpdatedToGui", "*", "slotSchemaUpdatedToGui");
-
-            initializeDatabase();
+            setupSlots();
+            m_systemHistory.set("device", Hash());
         }
 
 
-        void MasterDevice::initializeDatabase() {
-            bool exists = KARABO_DB_READ;
-            // Check for existing database
-            if (exists) {
-                KARABO_LOG_DEBUG << "Found existing central database";
-                trackInstances();
-            } else { // Create new one
-                KARABO_LOG_INFO << "No database information found, creating new...";
-                KARABO_DB_SETUP
-                KARABO_DB_SAVE
+        MasterDevice::~MasterDevice() {
+            m_persistData = false;
+            m_persistDataThread.join();
+        }
+
+
+        void MasterDevice::setupSlots() {
+            GLOBAL_SLOT3(slotValidateInstanceId, string /*hostname*/, string /*instanceType*/, string /*instanceId*/);
+            GLOBAL_SLOT2(slotInstanceNew, string /*instanceId*/, Hash /*instanceInfo*/);
+            GLOBAL_SLOT2(slotInstanceGone, string /*instanceId*/, Hash /*instanceInfo*/);
+            SLOT2(slotChanged, Hash /*changedConfig*/, string /*deviceId*/);
+        }
+
+
+        void MasterDevice::slotValidateInstanceId(const std::string& hostname, const std::string& instanceType, const std::string& instanceId) {
+            KARABO_LOG_INFO << "Device-server from host \"" << hostname << "\" requests device-server instanceId";
+            string id = instanceId;
+            if (id.empty()) { // Generate
+                if (instanceType == "server") {
+                    id = hostname + "_DeviceServer_" + karabo::util::toString(getNumberOfServersOnHost(hostname));
+                }
+            }
+
+            string foreignHost;
+            string welcomeMessage;
+            try {
+                request("*", "slotPing", id, true).timeout(100).receive(foreignHost);
+            } catch (const karabo::util::TimeoutException&) {
+                Exception::clearTrace();
+                if (m_systemNow.has("server." + id)) welcomeMessage = "Welcome back!";
+                else welcomeMessage = "Your name got accepted, welcome in the team!";
+                KARABO_LOG_DEBUG << "Shipping welcome message: " << welcomeMessage;
+                reply(true, id, welcomeMessage); // Ok, instance does not exist
+                return;
+            }
+            welcomeMessage = "Another device-server with the same instance is already online (on host: " + foreignHost + ")";
+            KARABO_LOG_DEBUG << "Shipping welcome message: " << welcomeMessage;
+            reply(false, id, welcomeMessage); // Shit, instance exists already
+        }
+
+
+        size_t MasterDevice::getNumberOfServersOnHost(const std::string& hostname) {
+            boost::mutex::scoped_lock lock(m_systemNowMutex);
+            if (!m_systemNow.has("server")) return 0; // No server at all
+            const Hash& servers = m_systemNow.get<Hash>("server");
+            size_t count = 0;
+            for (Hash::const_iterator it = servers.begin(); it != servers.end(); ++it) {
+                if (it->getAttribute<string>("host") == hostname) count++;
+            }
+            return count;
+        }
+
+
+        void MasterDevice::okStateOnEntry() {
+            if (!boost::filesystem::exists("karaboHistory")) {
+                boost::filesystem::create_directory("karaboHistory");
+            }
+            m_persistData = true;
+            m_persistDataThread = boost::thread(boost::bind(&karabo::core::MasterDevice::persistDataThread, this));
+        }
+
+
+        void MasterDevice::slotInstanceNew(const std::string& instanceId, const karabo::util::Hash& instanceInfo) {
+            
+            KARABO_LOG_DEBUG << "New instance \"" << instanceId << "\" got registered";
+            
+            if (instanceId == "MasterDevice1" || instanceId == "MasterDevice2" || instanceId == "GuiServerDevice1") return; // TODO Check names
+
+            onInstanceNewForSystemNow(instanceId, instanceInfo);
+            onInstanceNewForSystemHistory(instanceId, instanceInfo);
+
+            // Start tracking
+            trackExistenceOfInstance(instanceId);
+
+            // Connect to changes
+            connectN(instanceId, "signalChanged", "", "slotChanged");
+        }
+
+
+        void MasterDevice::onInstanceNewForSystemNow(const std::string& instanceId, const karabo::util::Hash& instanceInfo) {
+            boost::mutex::scoped_lock lock(m_systemNowMutex);
+
+            string type(getInstanceType(instanceInfo));
+            string path(type + "." + instanceId);
+
+            if (m_systemNow.has(path)) {
+                KARABO_LOG_WARN << "Quick shutdown and restart of " << type << "\" " << instanceId << "\" detected, adapting...";
+            }
+
+            Hash entry;
+            Hash::Node& entryNode = entry.set(path, Hash());
+            for (Hash::const_iterator it = instanceInfo.begin(); it != instanceInfo.end(); ++it) {
+                entryNode.setAttribute(it->getKey(), it->getValueAsAny());
+            }
+
+            // Fill configuration for devices
+            if (type == "device") {
+                Schema description;
+                fetchDescription(instanceId, description);
+                Hash configuration;
+                fetchConfiguration(instanceId, configuration);
+                entryNode.setValue(Hash("description", description, "configuration", configuration));
+            }
+
+            if (type == "server") {
+                KARABO_LOG_INFO << "New server from host \"" << instanceInfo.get<string>("host") << "\" wants to register with id \"" << instanceId << "\"";
+
+            }
+
+            m_systemNow.merge(entry);
+        }
+
+
+        std::string MasterDevice::getInstanceType(const karabo::util::Hash& instanceInfo) const {
+            boost::optional<const Hash::Node&> node = instanceInfo.find("type");
+            string type("unknown");
+            if (node) type = node->getValue<string>();
+            return type;
+        }
+
+
+        void MasterDevice::fetchConfiguration(const std::string& deviceId, karabo::util::Hash& configuration) const {
+            try {
+                request(deviceId, "slotGetConfiguration").timeout(2000).receive(configuration);
+            } catch (const TimeoutException&) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Configuration request for device \"" << deviceId << "\" timed out";
+                Exception::clearTrace();
             }
         }
 
 
-        void MasterDevice::trackInstances() {
-            vector<Hash> result;
-            KARABO_DB_SELECT(result, "instanceId", "DeviceServerInstance", true);
-            for (size_t i = 0; i < result.size(); ++i) {
-                const string& name = result[i].get<string>("instanceId");
-                trackExistenceOfInstance(name);
+        void MasterDevice::fetchDescription(const std::string& deviceId, karabo::util::Schema& description) const {
+            try {
+                request(deviceId, "slotGetSchema", false).timeout(2000).receive(description); // Retrieves active schema
+            } catch (const TimeoutException&) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Schema request for device \"" << deviceId << "\" timed out";
+                Exception::clearTrace();
             }
-            result.clear();
-            KARABO_DB_SELECT(result, "instanceId", "DeviceInstance", true);
-            for (size_t i = 0; i < result.size(); ++i) {
-                const string& name = result[i].get<string>("instanceId");
-                trackExistenceOfInstance(name);
+        }
+
+
+        void MasterDevice::onInstanceNewForSystemHistory(const std::string& instanceId, const karabo::util::Hash& instanceInfo) {
+            boost::mutex::scoped_lock lock(m_systemHistoryMutex);
+            if (getInstanceType(instanceInfo) == "device") {
+                string path("device." + instanceId);
+                if (!m_systemHistory.has(path)) {
+
+                    const Schema& description = m_systemNow.get<Schema>(path + ".description");
+                    const Hash& hash = m_systemNow.get<Hash>(path + ".configuration");
+                    Hash configuration;
+                    for (Hash::const_iterator it = hash.begin(); it != hash.end(); ++it) {
+                        Hash val("v", it->getValueAsAny());
+                        val.setAttributes("v", it->getAttributes());
+                        configuration.set<vector<Hash> >(it->getKey(), vector<Hash>(1, val));
+                    }
+                    Hash tmp("description", vector<Hash>(1, Hash("v", description)), "configuration", configuration);
+                    tmp.setAttribute("description", "t", karabo::util::Timestamp().getMsSinceEpoch());
+                    tmp.setAttribute("configuration", "t", karabo::util::Timestamp().getMsSinceEpoch());
+
+                    m_systemHistory.set(path, tmp);
+                }
             }
+        }
+
+
+        void MasterDevice::slotInstanceGone(const std::string& instanceId, const karabo::util::Hash& instanceInfo) {
+            onInstanceGoneForSystemNow(instanceId, instanceInfo);
+            onInstanceGoneForSystemHistory(instanceId, instanceInfo);
         }
 
 
         void MasterDevice::instanceNotAvailable(const std::string& instanceId) {
-            log() << Priority::INFO << "Instance: \"" << instanceId << "\" not available.";
-            //call("*", "slotInstanceGone", instanceId);
-
-            HashDatabase::ResultType ids;
-            KARABO_DB_SELECT(ids, "id", "DeviceServerInstance", row.get<string>("instanceId") == instanceId)
-            if (ids.size() > 0) {
-                deviceServerInstanceNotAvailable(instanceId);
-                return;
-            }
-
-            ids.clear();
-            KARABO_DB_SELECT(ids, "id", "DeviceInstance", row.get<string>("instanceId") == instanceId)
-            if (ids.size() > 0) {
-                deviceInstanceNotAvailable(instanceId);
-                return;
-            }
-        }
-
-
-        void MasterDevice::deviceServerInstanceNotAvailable(const std::string& devSrvInstId) {
-            log() << Priority::INFO << "DeviceServerInstance: \"" << devSrvInstId << "\" not available.";
-
-            Hash keyValue("status", "offline");
-            KARABO_DB_UPDATE("DeviceServerInstance", keyValue, row.get<string > ("instanceId") == devSrvInstId);
-            // Everything below here is hell & slow and should be replaced by proper DB calls (chained delete etc.) in future
-            HashDatabase::ResultType ids;
-            KARABO_DB_SELECT(ids, "id,instanceId,status,nodId", "DeviceServerInstance", row.get<string>("instanceId") == devSrvInstId)
-            //emit("signalUpdateDeviceServerInstance", ids[0]);
-            call("*", "slotUpdateDeviceServerInstance", ids[0]);
-            HashDatabase::ResultType devClaIds;
-            KARABO_DB_SELECT(devClaIds, "id", "DeviceClass", row.get<unsigned int>("devSerInsId") == ids[0].get<unsigned int>("id"))
-            size_t nbDevCla = devClaIds.size();
-            for (size_t i = 0; i < nbDevCla; ++i) {
-                KARABO_DB_DELETE("DeviceInstance", row.get<unsigned int>("devClaId") == devClaIds[i].get<unsigned int>("id"))
-                        //KARABO_DB_DELETE("DeviceClass", row.get<unsigned int>("id") == devClaIds[i].get<unsigned int>("id"))
-            }
-            KARABO_DB_SAVE
-        }
-
-
-        void MasterDevice::deviceInstanceNotAvailable(const std::string& devInsId) {
-            log() << Priority::INFO << "DeviceInstance: \"" << devInsId << "\" not available.";
-
-            // Everything below here is hell & slow and should be replaced by proper DB calls (chained delete etc.) in future
-            HashDatabase::ResultType ids;
-            KARABO_DB_SELECT(ids, "id,instanceId,devClaId,schema", "DeviceInstance", row.get<string>("instanceId") == devInsId)
-            call("*", "slotUpdateDeviceInstance", ids[0]);
-            size_t nbDevIns = ids.size();
-            for (size_t i = 0; i < nbDevIns; ++i) {
-                KARABO_DB_DELETE("DeviceInstance", row.get<unsigned int>("id") == ids[i].get<unsigned int>("id"))
-            }
-
-            KARABO_DB_SAVE
-        }
-
-
-        void MasterDevice::instanceAvailableAgain(const std::string& instanceId) {
-            //            HashDatabase::ResultType ids;
-            //            KARABO_DB_SELECT(ids, "id,instanceId,status,nodId", "DeviceServerInstance", row.get<string>("instanceId") == devSrvInstId)
-            //            emit("signalUpdateDeviceServerInstance", ids[0]);
-            log() << Priority::INFO << "Instance: " << instanceId << " is back again.";
-        }
-
-
-        void MasterDevice::slotDeviceServerProvideName(const std::string& hostname) {
-
-            log() << Priority::INFO << "Device-server from host \"" << hostname << "\" requests device-server instance Id";
-
-            unsigned int nodId;
-
-            // Check whether the node is already known
-            vector<Hash> result;
-            KARABO_DB_SELECT(result, "id", "Node", row.get<string > ("name") == hostname);
-
-            if (result.empty()) {
-                Hash data("name", hostname);
-                nodId = KARABO_DB_INSERT("Node", data);
-                data.set("id", nodId);
-                //emit("signalNewNode", data);
-                call("*", "slotNewNode", data);
-            } else {
-                result[0].get("id", nodId);
-                result.clear();
-                KARABO_DB_SELECT(result, "instanceId", "DeviceServerInstance", true);
-            }
-
-            string instanceId = hostname + "_DeviceServer_" + karabo::util::toString(result.size());
-            this->sanifyDeviceServerInstanceId(instanceId);
-
-            log() << Priority::INFO << "This will be the " << result.size() + 1 << " device-server online on host \"" << hostname << "\"";
-            log() << Priority::INFO << "Device-Server instance id will be: " << instanceId;
-
-            Hash data("instanceId", instanceId, "alias", "", "status", "starting", "nodId", nodId);
-            unsigned int id = KARABO_DB_INSERT("DeviceServerInstance", data);
-            data.set("id", id);
-            //emit("signalNewDeviceServerInstance", data);
-            call("*", "slotNewDeviceServerInstance", data);
-            KARABO_DB_SAVE
-
-            trackExistenceOfInstance(instanceId);
-            reply(instanceId);
-        }
-
-
-        void MasterDevice::sanifyDeviceServerInstanceId(std::string& originalInstanceId) const {
-            for (std::string::iterator it = originalInstanceId.begin(); it != originalInstanceId.end(); ++it) {
-                if ((*it) == '.') (*it) = '-';
-            }
-        }
-
-
-        void MasterDevice::slotNewDeviceServerAvailable(const std::string& hostname, const std::string& devSrvInstId) {
-            log() << Priority::INFO << "New device-server from host \"" << hostname << "\" wants to register with id \"" << devSrvInstId << "\"";
-
-            SIGNAL1("answer", string)
-            string message;
-
-            vector<Hash> result;
-            KARABO_DB_SELECT(result, "id,status,instanceId,nodId", "DeviceServerInstance", row.get<string > ("instanceId") == devSrvInstId);
-
-            if (result.size() == 0) {
-
-                unsigned int nodId;
-                // Check whether the node is already known
-                vector<Hash> nodeResult;
-                KARABO_DB_SELECT(nodeResult, "id", "Node", row.get<string > ("name") == hostname)
-                if (nodeResult.empty()) {
-                    Hash data("name", hostname);
-                    nodId = KARABO_DB_INSERT("Node", data);
-                    data.set("id", nodId);
-                    //emit("signalNewNode", data);
-                    call("*", "slotNewNode", data);
-                } else {
-                    nodeResult[0].get("id", nodId);
+            m_systemNowMutex.lock();
+            Hash fakeInstanceInfo;
+            for (Hash::const_iterator it = m_systemNow.begin(); it != m_systemNow.end(); ++it) {
+                if (m_systemNow.has(it->getKey() + "." + instanceId)) {
+                    fakeInstanceInfo.set("type", it->getKey());
+                    m_systemNowMutex.unlock();
+                    call("*", "slotInstanceGone", instanceId, fakeInstanceInfo);
+                    break;
                 }
-                Hash data("instanceId", devSrvInstId, "alias", "", "status", "online", "nodId", nodId);
+            }
+        }
 
-                unsigned int devSerInsId = KARABO_DB_INSERT("DeviceServerInstance", data);
-                data.set("id", devSerInsId);
-                //emit("signalNewDeviceServerInstance", data);
-                call("*", "slotNewDeviceServerInstance", data);
-                trackExistenceOfInstance(devSrvInstId);
-                call(devSrvInstId, "slotRegistrationOk", "Your name got accepted, welcome in the team!");
 
-            } else if (result.size() == 1) {
-                string status = result[0].get<string > ("status");
-                if (status == "starting") {
-                    call(devSrvInstId, "slotRegistrationOk", "We are happy to have you in the team!");
-                    Hash keyValue("status", "online");
-                    KARABO_DB_UPDATE("DeviceServerInstance", keyValue, row.get<string > ("instanceId") == devSrvInstId)
-                    Hash data(result[0]);
-                    data.merge(keyValue);
-                    //emit("signalNewDeviceServerInstance", data);
-                    call("*", "slotNewDeviceServerInstance", data);
-                } else if (status == "offline") { // back in business
-                    call(devSrvInstId, "slotRegistrationOk", "Welcome back!");
-                    Hash keyValue("status", "online");
-                    KARABO_DB_UPDATE("DeviceServerInstance", keyValue, row.get<string > ("instanceId") == devSrvInstId);
-                    connectN("", "answer", devSrvInstId, "slotRegistrationOk");
+        void MasterDevice::onInstanceGoneForSystemNow(const std::string& instanceId, const karabo::util::Hash& instanceInfo) {
+            boost::mutex::scoped_lock lock(m_systemNowMutex);
+            boost::optional<const Hash::Node&> node = instanceInfo.find("type");
+            string type = "unknown";
+            if (node) type = node->getValue<string>();
+            string path(type + "." + instanceId);
+            if (m_systemNow.has(path)) {
+                m_systemNow.erase(path);
+                KARABO_LOG_DEBUG << "Removed " << type << " \"" << instanceId << "\" from system topology";
+            } else {
+                KARABO_LOG_WARN << "Saw " << type << " \"" << instanceId << "\" being destroyed, which was not known before...";
+            }
+        }
 
-                    result[0].set("status", "online");
-                    //emit("signalUpdateDeviceServerInstance", result[0]);
-                    call("*", "slotUpdateDeviceServerInstance", result[0]);
-                } else if (status == "online") { // already online (bad)
-                    call(devSrvInstId, "slotRegistrationFailed", "Another device-server with the same instance is already online");
+
+        void MasterDevice::onInstanceGoneForSystemHistory(const std::string& instanceId, const karabo::util::Hash& instanceInfo) {
+            boost::mutex::scoped_lock lock(m_systemHistoryMutex);
+            if (getInstanceType(instanceInfo) == "device") {
+                KARABO_LOG_DEBUG << "Tagging device \"" << instanceId << "\" for being discontinued...";
+                string path("device." + instanceId + ".configuration");
+                if (m_systemHistory.has(path) && !m_systemHistory.get<Hash>(path).empty()) {
+                    KARABO_LOG_DEBUG << "Still in memory";
+                    Hash& tmp = m_systemHistory.get<Hash>(path);
+                    for (Hash::const_iterator it = tmp.begin(); it != tmp.end(); ++it) {
+                        vector<Hash>& keyHistory = it->getValue<vector<Hash> >();
+                        Hash lastEntry = keyHistory.back();
+                        lastEntry.setAttribute("v", "t", karabo::util::Timestamp().getMsSinceEpoch());
+                        lastEntry.setAttribute("v", "isLast", true);
+                        keyHistory.push_back(lastEntry);
+                    }
+                } else { // Need to fetch from file
+                    boost::filesystem::path filePath("karaboHistory/" + instanceId + ".xml");
+                    if (boost::filesystem::exists(filePath)) {
+                        KARABO_LOG_DEBUG << "Fetching back from file";
+                        Hash deviceHistory;
+                        loadFromFile(deviceHistory, filePath.string());
+                        Hash& tmp = deviceHistory.get<Hash>("configuration");
+                        for (Hash::const_iterator it = tmp.begin(); it != tmp.end(); ++it) {
+                            vector<Hash>& keyHistory = it->getValue<vector<Hash> >();
+                            Hash lastEntry = keyHistory.back();
+                            lastEntry.setAttribute("v", "t", karabo::util::Timestamp().getMsSinceEpoch());
+                            lastEntry.setAttribute("v", "isLast", true);
+                            keyHistory.push_back(lastEntry);
+                        }
+                        saveToFile(deviceHistory, filePath.string(), Hash("format.Xml.indentation", 1));
+                    }
                 }
-                trackExistenceOfInstance(devSrvInstId);
-            } else if (result.size() > 1) {
-                throw KARABO_LOGIC_EXCEPTION("Internal error: Inconsistent database");
             }
-            KARABO_DB_SAVE
         }
 
 
-        void MasterDevice::slotNewStandaloneDeviceInstanceAvailable(const std::string& hostname, const karabo::util::Hash& deviceConfig, const std::string& deviceId, const std::string& deviceXsd) {
-            log() << Priority::INFO << "New standalone device instance from host \"" << hostname << "\" wants to register with id \"" << deviceId << "\"";
-
-            string devSrvInstId = "no server (standalone devices)";
-            const string& devClassId = deviceConfig.begin()->getKey(); // Root node corresponds to devClassId
-            slotNewDeviceServerAvailable(hostname, devSrvInstId);
-            slotNewDeviceClassAvailable(devSrvInstId, devClassId, deviceXsd);
-            slotNewDeviceInstanceAvailable(devSrvInstId, deviceConfig);
-            trackExistenceOfInstance(deviceId);
-        }
-
-
-        void MasterDevice::slotNewDeviceClassAvailable(const std::string& devSrvInstId, const std::string& devClassId, const std::string& deviceXsd) {
-            log() << Priority::INFO << "New device class \"" << devClassId << "\" on device-server \"" << devSrvInstId << "\" available";
-            // Skip myself
-            if (devClassId == getClassInfo().getClassId()) return;
-            // Skip inbuilt GuiServer
-            if (devClassId == "GuiServerDevice") return;
-
-            vector<Hash> result;
-            KARABO_DB_SELECT(result, "id", "DeviceServerInstance", row.get<string>("instanceId") == devSrvInstId);
-
-            unsigned int devSerInsId;
-            if (result.size() == 1) {
-                result[0].get("id", devSerInsId);
-            } else {
-                throw KARABO_LOGIC_EXCEPTION("Missing device-server instance");
-            }
-
-            result.clear();
-            KARABO_DB_SELECT(result, "id", "DeviceClass", row.get<string>("name") == devClassId && row.get<unsigned int>("devSerInsId") == devSerInsId);
-            if (result.size() == 0) {
-                // Insert new deviceClass if not seen before
-                Hash data("name", devClassId, "schema", deviceXsd, "devSerInsId", devSerInsId);
-                unsigned int id = KARABO_DB_INSERT("DeviceClass", data);
-                data.set("id", id);
-                //emit("signalNewDeviceClass", data);
-                call("*", "slotNewDeviceClass", data);
-                KARABO_DB_SAVE
-            } else {
-                // Update existing deviceClass
-                Hash keyValue("schema", deviceXsd);
-
-                size_t nbDevCla = result.size();
-                for (size_t i = 0; i < nbDevCla; ++i) {
-                    unsigned int id = result[i].get<unsigned int>("id");
-                    KARABO_DB_UPDATE("DeviceClass", keyValue, row.get<unsigned int>("id") == id)
-                    Hash data("id", id, "name", devClassId, "schema", deviceXsd, "devSerInsId", devSerInsId);
-                    call("*", "slotNewDeviceClass", data);
+        void MasterDevice::slotChanged(const karabo::util::Hash& changedConfig, const std::string& deviceId) {
+            cout << "slotChanged" << endl;
+            boost::mutex::scoped_lock lock(m_systemHistoryMutex);
+            string path("device." + deviceId + ".configuration");
+            if (m_systemHistory.has(path)) {
+                Hash& tmp = m_systemHistory.get<Hash>(path);
+                for (Hash::const_iterator it = changedConfig.begin(); it != changedConfig.end(); ++it) {
+                    Hash val("v", it->getValueAsAny());
+                    val.setAttributes("v", it->getAttributes());
+                    boost::optional<Hash::Node&> node = tmp.find(it->getKey());
+                    cout << val << endl;
+                    if (node) node->getValue<vector<Hash> >().push_back(val);
+                    else tmp.set(it->getKey(), std::vector<Hash>(1, val));
                 }
-                KARABO_DB_SAVE
-            }
-        }
-
-
-        void MasterDevice::slotNewDeviceInstanceAvailable(const std::string& serverId, const karabo::util::Hash& deviceConfig) {
-
-            const string& devClassId = deviceConfig.begin()->getKey(); // Root node corresponds to devClassId
-
-            // Skip myself
-            if (devClassId == "MasterDevice" || devClassId == "GuiServerDevice") return;
-
-            cout << deviceConfig << endl;
-
-            const Hash& config = deviceConfig.get<Hash>(devClassId);
-            const string& deviceId = config.get<string>("deviceId");
-
-            log() << Priority::INFO << "New device instance \"" << deviceId << "\" on device-server \"" << serverId << "\" available";
-
-            HashDatabase::ResultType result;
-            KARABO_DB_SELECT(result, "id", "DeviceServerInstance", row.get<string>("instanceId") == serverId);
-
-            unsigned int devSerInsId;
-            if (result.size() == 1) {
-                result[0].get("id", devSerInsId);
             } else {
-                throw KARABO_LOGIC_EXCEPTION("Missing device-server instance");
+                KARABO_LOG_WARN << "Could not find: " << path << " in " << m_systemHistory;
             }
+        }
 
-            result.clear();
-            KARABO_DB_SELECT(result, "id,schema", "DeviceClass", row.get<string>("name") == devClassId && row.get<unsigned int>("devSerInsId") == devSerInsId);
 
-            unsigned int devClaId;
-            string schema;
-            if (result.size() == 1) {
-                result[0].get("id", devClaId);
-                result[0].get("schema", schema);
-            } else {
-                throw KARABO_LOGIC_EXCEPTION("Missing device-server instance");
+        void MasterDevice::persistDataThread() {
+
+            while (m_persistData) {
+
+                m_systemHistoryMutex.lock();
+                Hash& tmp = m_systemHistory.get<Hash>("device");
+                for (Hash::iterator it = tmp.begin(); it != tmp.end(); ++it) { // Loops deviceIds
+                    const string& deviceId = it->getKey();
+                    if (!it->getValue<Hash>().get<Hash>("configuration").empty()) {
+                        boost::filesystem::path filePath("karaboHistory/" + deviceId + ".xml");
+                        if (boost::filesystem::exists(filePath)) {
+                            // Read - Merge - Write
+                            Hash& current = it->getValue<Hash>();
+                            Hash hist;
+                            loadFromFile(hist, filePath.string());
+                            hist.merge(current, karabo::util::Hash::MERGE_ATTRIBUTES);
+                            saveToFile(hist, filePath.string(), Hash("format.Xml.indentation", 1));
+                        } else {
+                            // Write
+                            saveToFile(it->getValue<Hash>(), filePath.string());
+                        }
+                        // Release memory
+                        it->setValue(Hash("description", vector<Hash>(), "configuration", Hash()));
+                    }
+                }
+                m_systemHistoryMutex.unlock();
+                boost::this_thread::sleep(boost::posix_time::seconds(10));
             }
-
-            // Insert new deviceInstance
-            Hash data("instanceId", deviceId, "configuration", deviceConfig, "devClaId", devClaId, "schema", schema);
-            unsigned int id = KARABO_DB_INSERT("DeviceInstance", data);
-            KARABO_DB_SAVE
-
-            data.set("id", id);
-
-            call("*", "slotNewDeviceInstance", data);
-        }
-
-
-        void MasterDevice::slotSchemaUpdated(const std::string& schema, const std::string& instanceId, const std::string& classId) {
-            // Replace current schema with new schema
-            Hash keyValue("schema", schema);
-            KARABO_DB_UPDATE("DeviceInstance", keyValue, row.get<string > ("instanceId") == instanceId);
-            KARABO_DB_SAVE
-
-            //emit("signalSchemaUpdatedToGui", schema, instanceId, classId);
-            call("*", "slotSchemaUpdatedToGui", schema, instanceId, classId);
-        }
-
-
-        void MasterDevice::slotDeviceServerInstanceGone(const std::string& deviceServerInstanceId) {
-            log() << Priority::INFO << deviceServerInstanceId << " is going to die soon";
-            deviceServerInstanceNotAvailable(deviceServerInstanceId);
-        }
-
-
-        void MasterDevice::slotDeviceInstanceGone(const std::string& deviceServerInstanceId, const std::string& deviceInstanceId) {
-            deviceInstanceNotAvailable(deviceInstanceId);
-        }
-
-        //        void MasterDevice::slotGetDeviceServersAndDevices() {
-        //            
-        //            Hash hash;
-        //            HashDatabase::ResultType result;
-        //            
-        //            vector<Hash>& deviceServers = hash.bindReference<vector<Hash> >("deviceServers");
-        //            KARABO_DB_SELECT(result, "instanceId,status", "DeviceServerInstance", true);
-        //            deviceServers = result;
-        //            result.clear();
-        //            
-        //            vector<Hash >& devices = hash.bindReference<vector<Hash> >("devices");
-        //            KARABO_DB_SELECT(result, "instanceId", "DeviceInstance", true);
-        //            devices = result;
-        //            result.clear();
-        //            
-        //            reply(hash);
-        //        }
-
-
-        void MasterDevice::slotSelect(const std::string& fields, const std::string& table) {
-            std::vector<karabo::util::Hash> result;
-            KARABO_DB_SELECT(result, fields, table, true);
-            reply(result);
-
-        }
-
-
-        void MasterDevice::slotCreateNewDeviceClassPlugin(const std::string& devSerInsId, const std::string& devClaId, const std::string& newDevClaId) {
-            vector<Hash> result;
-
-            KARABO_DB_SELECT(result, "id", "DeviceServerInstance", row.get<string>("instanceId") == devSerInsId);
-            unsigned int id;
-            if (result.size() == 1) {
-                result[0].get("id", id);
-            }
-
-            result.clear();
-            KARABO_DB_SELECT(result, "id,schema", "DeviceClass", row.get<string>("name") == devClaId && row.get<unsigned int>("devSerInsId") == id);
-
-            string schema;
-            if (result.size() == 1) {
-                result[0].get("schema", schema);
-            }
-
-            slotNewDeviceClassAvailable(devSerInsId, newDevClaId, schema);
         }
     }
 }
