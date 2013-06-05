@@ -22,14 +22,23 @@ void exportPyWebAuthenticator() {
 
     bp::class_<Timestamp> ts("Timestamp");
     ts.def(bp::init<>());
+    ts.def(bp::init<boost::posix_time::ptime const>(bp::arg("pt")));
     ts.def(bp::init<string const &>(bp::arg("timeStr")));
     ts.def("setMsSinceEpoch"
            , (void (Timestamp::*)(unsigned long long const))(&Timestamp::setMsSinceEpoch)
            , bp::arg("msSinceEpoch"));
+    ts.def("setTime"
+           , (void (Timestamp::*)(boost::posix_time::ptime const &))(&Timestamp::setTime)
+           , bp::arg("timePoint"));
+    ts.def("setTime"
+           , (void (Timestamp::*)(std::string const &))(&Timestamp::setTime)
+           , bp::arg("timePoint"));
     ts.def("getMsSinceEpoch"
            , (unsigned long long (Timestamp::*)() const)(&Timestamp::getMsSinceEpoch));
-    
+    ts.def("getTime"
+           , (boost::posix_time::ptime (Timestamp::*)() const)(&Timestamp::getTime));
 
+    
     bp::class_<Authenticator> a("Authenticator", bp::init<string const &, string const &, string const &, string const &, string const &, string const &, string const & >((bp::arg("username"), bp::arg("password"), bp::arg("provider"), bp::arg("ipAddress"), bp::arg("hostname"), bp::arg("portNumber"), bp::arg("software"))));
     a.def("login"
           , (bool (Authenticator::*)(Timestamp const &))(&Authenticator::login)

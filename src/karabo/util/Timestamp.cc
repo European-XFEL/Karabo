@@ -73,7 +73,10 @@ namespace karabo {
             boost::posix_time::ptime now = getStringFormated2PTime(timePoint);
             Timestamp::setTime(now);
         }
-
+        
+        void Timestamp::setMsSinceEpoch(const unsigned long long msSinceEpoch) {
+            m_msSinceEpoch = msSinceEpoch;
+        }
 
         boost::posix_time::ptime Timestamp::getTime() const {
             return m_timePoint;
