@@ -328,7 +328,7 @@ class ConfigurationPanel(QWidget):
         if parseSchema:
             #schema = Connection.getSchema("Tcp")
             #sampleSchemaClass = SampleSchema.create("SampleSchema", Hash("targetSpeed", 0.3))
-            schema = SampleSchema.getSchema("SampleSchema")
+            schema = itemInfo.get('schema')
             #schema = Configurator("SampleSchema").getSchema("SampleSchema")
 
             # Distinguish between DEVICE_CLASS and DEVICE_INSTANCE
