@@ -80,7 +80,7 @@ class ParameterTreeWidget(QTreeWidget):
 
 
     def setActionsVisible(self, visible):
-        # called when NavigationItem changed
+        # Called when NavigationItem changed
         self.__acFileOpen.setVisible(visible)
         self.__acFileSaveAs.setVisible(visible)
         self.__acItemsVisibility.setVisible(visible)
@@ -144,6 +144,7 @@ class ParameterTreeWidget(QTreeWidget):
 
 
     def _setupActions(self):
+        print "_setupActions"
         text = "Open configuration (*.xml)"
         self.__acFileOpen = QAction(QIcon(":open"), "&Open configuration", self)
         self.__acFileOpen.setStatusTip(text)

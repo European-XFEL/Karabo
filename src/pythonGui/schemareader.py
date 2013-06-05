@@ -263,7 +263,15 @@ class SchemaReader(object):
             return None
 
         defaultValue = self.__schema.getDefaultValue(key)
-        text = QString("<b>Default value: </b>%1").arg(defaultValue)
+        
+        if isinstance(defaultValue, list):
+            defaultValueStr = str()
+            for value in defaultValue:
+                defaultValueStr += value + ","
+            text = QString("<b>Default value: </b>%1").arg(defaultValueStr)
+        else:
+            text = QString("<b>Default value: </b>%1").arg(defaultValue)
+        
         toolTip = parentItem.toolTip(0)
         if toolTip.isEmpty():
             parentItem.setToolTip(0, text)

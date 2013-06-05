@@ -652,7 +652,6 @@ class Manager(Singleton):
 
 ### New pythonGui2 stuff ###
     def handleSystemTopology(self, config):
-        
         # Merge new configuration data into central hash
         self._mergeIntoHash(config)
         # Send full internal hash to navigation
@@ -660,7 +659,6 @@ class Manager(Singleton):
 
 
     def handleClassSchema(self, config):
-        print config
         path = str(config.paths()[0])
         print "path", path
         schema = config.get(path)
@@ -675,5 +673,5 @@ class Manager(Singleton):
             return self.__hash.get(path)
         # Send network request
         self.__notifier.signalGetClassSchema.emit(serverId, classId)
-      
-            
+        return None
+
