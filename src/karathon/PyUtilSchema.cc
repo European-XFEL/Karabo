@@ -932,6 +932,74 @@ void exportPyUtilSchema() {
             .export_values()
             ;
 
+    {
+        //bp::class_<Units> ("Units");
+        bp::enum_<Units::MetricPrefix>("MetricPrefix")
+                .value("YOTTA", Units::YOTTA)
+                .value("ZETTA", Units::ZETTA)
+                .value("EXA", Units::EXA)
+                .value("PETA", Units::PETA)
+                .value("TERA", Units::TERA)
+                .value("GIGA", Units::GIGA)
+                .value("MEGA", Units::MEGA)
+                .value("KILO", Units::KILO)
+                .value("HECTO", Units::HECTO)
+                .value("DECA", Units::DECA)
+                .value("NONE", Units::NONE)
+                .value("DECI", Units::DECI)
+                .value("CENTI", Units::CENTI)
+                .value("MILLI", Units::MILLI)
+                .value("MICRO", Units::MICRO)
+                .value("NANO", Units::NANO)
+                .value("PICO", Units::PICO)
+                .value("FEMTO", Units::FEMTO)
+                .value("ATTO", Units::ATTO)
+                .value("ZEPTO", Units::ZEPTO)
+                .value("YOCTO", Units::YOCTO)
+                .export_values()
+                ;
+        bp::enum_< karabo::util::Units::Unit>("Unit")
+                .value("METER", Units::METER)
+                .value("GRAM", Units::GRAM)
+                .value("SECOND", Units::SECOND)
+                .value("AMPERE", Units::AMPERE)
+                .value("KELVIN", Units::KELVIN)
+                .value("MOLE", Units::MOLE)
+                .value("CANDELA", Units::CANDELA)
+                .value("HERTZ", Units::HERTZ)
+                .value("RADIAN", Units::RADIAN)
+                .value("STERADIAN", Units::STERADIAN)
+                .value("NEWTON", Units::NEWTON)
+                .value("PASCAL", Units::PASCAL)
+                .value("JOULE", Units::JOULE)
+                .value("WATT", Units::WATT)
+                .value("COULOMB", Units::COULOMB)
+                .value("VOLT", Units::VOLT)
+                .value("FARAD", Units::FARAD)
+                .value("OHM", Units::OHM)
+                .value("SIEMENS", Units::SIEMENS)
+                .value("WEBER", Units::WEBER)
+                .value("TESLA", Units::TESLA)
+                .value("HENRY", Units::HENRY)
+                .value("DEGREE_CELSIUS", Units::DEGREE_CELSIUS)
+                .value("LUMEN", Units::LUMEN)
+                .value("LUX", Units::LUX)
+                .value("BECQUEREL", Units::BECQUEREL)
+                .value("GRAY", Units::GRAY)
+                .value("SIEVERT", Units::SIEVERT)
+                .value("KATAL", Units::KATAL)
+                .value("MINUTE", Units::MINUTE)
+                .value("HOUR", Units::HOUR)
+                .value("DAY", Units::DAY)
+                .value("YEAR", Units::YEAR)
+                .value("BAR", Units::BAR)
+                .value("PIXEL", Units::PIXEL)
+                .value("BYTE", Units::BYTE)
+                .value("BIT", Units::BIT)
+                .export_values()
+                ;
+    }
+
     {//exposing ::karabo::util::Schema
 
         bp::class_< Schema > s("Schema");
@@ -1006,7 +1074,7 @@ void exportPyUtilSchema() {
               , &Schema::getDisplayedName
               , bp::return_value_policy< bp::copy_const_reference >());
 
-        s.def("getUnit", (const int (Schema::*)(const std::string& path) const)&Schema::getUnit, (bp::arg("path")));
+        s.def("getUnit", (const int (Schema::*)(const std::string & path) const) &Schema::getUnit, (bp::arg("path")));
 
         s.def("getUnitName"
               , &Schema::getUnitName
@@ -1191,6 +1259,7 @@ void exportPyUtilSchema() {
         s.def("classInfo"
               , (ClassInfo(*)())(&Schema::classInfo)).staticmethod("classInfo");
 
+        s.def("setAssemblyRules", (void (Schema::*)(const Schema::AssemblyRules&)) & Schema::setAssemblyRules, (bp::arg("rules")));
         s.def("setAccessMode", &Schema::setAccessMode, (bp::arg("path"), bp::arg("value")));
         s.def("setDisplayedName", &Schema::setDisplayedName, (bp::arg("path"), bp::arg("value")));
         s.def("setDescription", &Schema::setDescription, (bp::arg("path"), bp::arg("value")));
@@ -1441,74 +1510,6 @@ void exportPyUtilSchema() {
                 .def("getValidationRules", &ValidatorWrap::getValidationRules)
                 .def("hasParametersInWarnOrAlarm", &ValidatorWrap::hasParametersInWarnOrAlarm)
                 .def("getParametersInWarnOrAlarm", &ValidatorWrap::getParametersInWarnOrAlarm)
-                ;
-    }
-
-    {
-        //bp::class_<Units> ("Units");
-        bp::enum_<Units::MetricPrefix>("MetricPrefix")
-                .value("YOTTA", Units::YOTTA)
-                .value("ZETTA", Units::ZETTA)
-                .value("EXA", Units::EXA)
-                .value("PETA", Units::PETA)
-                .value("TERA", Units::TERA)
-                .value("GIGA", Units::GIGA)
-                .value("MEGA", Units::MEGA)
-                .value("KILO", Units::KILO)
-                .value("HECTO", Units::HECTO)
-                .value("DECA", Units::DECA)
-                .value("NONE", Units::NONE)
-                .value("DECI", Units::DECI)
-                .value("CENTI", Units::CENTI)
-                .value("MILLI", Units::MILLI)
-                .value("MICRO", Units::MICRO)
-                .value("NANO", Units::NANO)
-                .value("PICO", Units::PICO)
-                .value("FEMTO", Units::FEMTO)
-                .value("ATTO", Units::ATTO)
-                .value("ZEPTO", Units::ZEPTO)
-                .value("YOCTO", Units::YOCTO)
-                .export_values()
-                ;
-        bp::enum_< karabo::util::Units::Unit>("Unit")
-                .value("METER", Units::METER)
-                .value("GRAM", Units::GRAM)
-                .value("SECOND", Units::SECOND)
-                .value("AMPERE", Units::AMPERE)
-                .value("KELVIN", Units::KELVIN)
-                .value("MOLE", Units::MOLE)
-                .value("CANDELA", Units::CANDELA)
-                .value("HERTZ", Units::HERTZ)
-                .value("RADIAN", Units::RADIAN)
-                .value("STERADIAN", Units::STERADIAN)
-                .value("NEWTON", Units::NEWTON)
-                .value("PASCAL", Units::PASCAL)
-                .value("JOULE", Units::JOULE)
-                .value("WATT", Units::WATT)
-                .value("COULOMB", Units::COULOMB)
-                .value("VOLT", Units::VOLT)
-                .value("FARAD", Units::FARAD)
-                .value("OHM", Units::OHM)
-                .value("SIEMENS", Units::SIEMENS)
-                .value("WEBER", Units::WEBER)
-                .value("TESLA", Units::TESLA)
-                .value("HENRY", Units::HENRY)
-                .value("DEGREE_CELSIUS", Units::DEGREE_CELSIUS)
-                .value("LUMEN", Units::LUMEN)
-                .value("LUX", Units::LUX)
-                .value("BECQUEREL", Units::BECQUEREL)
-                .value("GRAY", Units::GRAY)
-                .value("SIEVERT", Units::SIEVERT)
-                .value("KATAL", Units::KATAL)
-                .value("MINUTE", Units::MINUTE)
-                .value("HOUR", Units::HOUR)
-                .value("DAY", Units::DAY)
-                .value("YEAR", Units::YEAR)
-                .value("BAR", Units::BAR)
-                .value("PIXEL", Units::PIXEL)
-                .value("BYTE", Units::BYTE)
-                .value("BIT", Units::BIT)
-                .export_values()
                 ;
     }
 
