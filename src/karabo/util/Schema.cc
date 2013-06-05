@@ -535,7 +535,7 @@ namespace karabo {
         void Schema::setUnit(const std::string& path, const Units::Unit& value) {
 
 
-            m_hash.setAttribute(path, KARABO_SCHEMA_UNIT_ENUM, value);
+            m_hash.setAttribute<int>(path, KARABO_SCHEMA_UNIT_ENUM, value);
             pair<string, string> names = Units::getUnit(value);
             m_hash.setAttribute(path, KARABO_SCHEMA_UNIT_NAME, names.first);
             m_hash.setAttribute(path, KARABO_SCHEMA_UNIT_SYMBOL, names.second);
@@ -578,7 +578,7 @@ namespace karabo {
         void Schema::setMetricPrefix(const std::string& path, const Units::MetricPrefix& value) {
 
 
-            m_hash.setAttribute(path, KARABO_SCHEMA_METRIC_PREFIX_ENUM, value);
+            m_hash.setAttribute<int>(path, KARABO_SCHEMA_METRIC_PREFIX_ENUM, value);
             pair<string, string> names = Units::getMetricPrefix(value);
             m_hash.setAttribute(path, KARABO_SCHEMA_METRIC_PREFIX_NAME, names.first);
             m_hash.setAttribute(path, KARABO_SCHEMA_METRIC_PREFIX_SYMBOL, names.second);
