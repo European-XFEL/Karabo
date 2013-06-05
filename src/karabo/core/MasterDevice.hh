@@ -25,6 +25,47 @@ namespace karabo {
 
         class MasterDevice : public Device<OkErrorFsm> {
 
+            /**
+             * server +
+             *   <serverId> type host deviceClasses version +
+             *     classes +
+             *       <classId> +
+             *         description SCHEMA
+             *         configuration HASH
+             *     description SCHEMA
+             *     configuration HASH
+             *     
+             * device +
+             *   <deviceId> type host classId serverId version +
+             *      description => SCHEMA
+             *      configuration => HASH
+             *   
+             */
+            karabo::util::Hash m_systemNow;
+
+            boost::mutex m_systemNowMutex;
+
+
+            /**
+             * device +
+             *   <deviceId> +
+             *     description t0 = <timestamp> @
+             *       [0]
+             *         val t="<timestamp>" => SCHEMA
+             *     configuration t0 = <timestamp> +
+             *       <key> @
+             *         [0]
+             *           val t="<timestamp>" [isLast] => VALUE
+             *          
+             */
+            karabo::util::Hash m_systemHistory;
+
+            boost::mutex m_systemHistoryMutex;
+            
+            bool m_persistData;
+            
+            boost::thread m_persistDataThread;
+            
         public:
 
             KARABO_CLASSINFO(MasterDevice, "MasterDevice", "1.0")
@@ -38,44 +79,40 @@ namespace karabo {
 
         private: // Functions
 
-            void initializeDatabase();
+            void slotValidateInstanceId(const std::string& hostname, const std::string& instanceType, const std::string& instanceId);
+            
+            size_t getNumberOfServersOnHost(const std::string& hostname);
+            
+            void okStateOnEntry();
+            
+            void setupSlots();
 
-            void slotDeviceServerProvideName(const std::string& hostname);
+            void slotInstanceNew(const std::string& instanceId, const karabo::util::Hash& instanceInfo);
 
-            void slotNewDeviceServerAvailable(const std::string& hostname, const std::string& deviceServerInstanceId);
-
-            void slotNewStandaloneDeviceInstanceAvailable(const std::string& hostname, const karabo::util::Hash& config, const std::string& deviceInstanceId, const std::string& xsd);
-
-            void slotNewDeviceClassAvailable(const std::string& deviceServerInstanceId, const std::string& classId, const std::string& xsd);
-
-            void slotNewDeviceInstanceAvailable(const std::string& deviceInstanceId, const karabo::util::Hash& config);
-
-            void slotSchemaUpdated(const std::string& schema, const std::string& instanceId, const std::string& classId);
-
-            void slotDeviceServerInstanceGone(const std::string& deviceServerInstanceId);
-
-            void slotDeviceInstanceGone(const std::string& deviceServerInstanceId, const std::string& deviceInstanceId);
-
-            void slotSelect(const std::string& fields, const std::string& table);
-
-            void instanceNotAvailable(const std::string& networkId);
-
-            void deviceServerInstanceNotAvailable(const std::string& networkId);
-
-            void deviceInstanceNotAvailable(const std::string& networkId);
-
-            void instanceAvailableAgain(const std::string& networkId);
-
-            void slotCreateNewDeviceClassPlugin(const std::string& devSerInsId, const std::string& devClaId, const std::string& newDevClaId);
-
-
-            /**
-             * Tracks the existence of all device server AND device instances.
-             */
-            void trackInstances();
-
-            void sanifyDeviceServerInstanceId(std::string& originalInstanceId) const;
-
+            void onInstanceNewForSystemNow(const std::string& instanceId, const karabo::util::Hash& instanceInfo);
+            
+            std::string getInstanceType(const karabo::util::Hash& instanceInfo) const;
+            
+            void onInstanceNewForSystemHistory(const std::string& deviceId, const karabo::util::Hash& instanceInfo);
+            
+            void fetchConfiguration(const std::string& deviceId, karabo::util::Hash& configuration) const;
+                
+            void fetchDescription(const std::string& deviceId, karabo::util::Schema& description) const;
+                        
+            void onInstanceGoneForSystemNow(const std::string& instanceId, const karabo::util::Hash& instanceInfo);
+            
+            void onInstanceGoneForSystemHistory(const std::string& deviceId, const karabo::util::Hash& instanceInfo);
+            
+            
+            
+            void slotInstanceGone(const std::string& instanceId, const karabo::util::Hash& instanceInfo);
+            
+            void instanceNotAvailable(const std::string& instanceId);
+            
+            void slotChanged(const karabo::util::Hash& changedConfig, const std::string& deviceId);
+            
+            void persistDataThread();
+            
         };
     }
 }

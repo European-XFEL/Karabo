@@ -80,8 +80,8 @@ namespace karabo {
                     return fromStdVectorToPyArray(boost::any_cast<std::vector<double> >(operand), numpyFlag);
                 } else if (operand.type() == typeid (karabo::util::Hash)) {
                     return bp::object(boost::any_cast<karabo::util::Hash>(operand));
-//                } else if (operand.type() == typeid (karabo::util::Schema)) {
-//                    return bp::object(boost::any_cast<karabo::util::Schema>(operand));
+                } else if (operand.type() == typeid (karabo::util::Schema)) {
+                    return bp::object(boost::any_cast<karabo::util::Schema>(operand));
                 } else if (operand.type() == typeid (std::vector<std::string>)) {
                     return fromStdVectorToPyList(boost::any_cast < std::vector<std::string> >(operand));
                 } else if (operand.type() == typeid (std::vector<karabo::util::Hash>)) {

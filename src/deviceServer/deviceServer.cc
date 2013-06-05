@@ -7,7 +7,6 @@
  */
 
 #include <karabo/core/DeviceServer.hh>
-#include <karabo/core/DeviceServer2.hh>
 #include <karabo/core/Runner.hh>
 
 using namespace karabo::core;

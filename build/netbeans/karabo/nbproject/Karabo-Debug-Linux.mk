@@ -37,11 +37,8 @@ OBJECTDIR=${CND_BUILDDIR}/${CND_CONF}/${CND_PLATFORM}
 OBJECTFILES= \
 	${OBJECTDIR}/_ext/163556830/DeviceClient.o \
 	${OBJECTDIR}/_ext/163556830/DeviceServer.o \
-	${OBJECTDIR}/_ext/163556830/DeviceServer2.o \
 	${OBJECTDIR}/_ext/163556830/GuiServerDevice.o \
-	${OBJECTDIR}/_ext/163556830/HashDatabase.o \
 	${OBJECTDIR}/_ext/163556830/MasterDevice.o \
-	${OBJECTDIR}/_ext/163556830/MasterDevice2.o \
 	${OBJECTDIR}/_ext/1072794519/BinaryFileInput.o \
 	${OBJECTDIR}/_ext/1072794519/BinaryFileOutput.o \
 	${OBJECTDIR}/_ext/1072794519/HashBinarySerializer.o \
@@ -164,30 +161,15 @@ ${OBJECTDIR}/_ext/163556830/DeviceServer.o: ../../../src/karabo/core/DeviceServe
 	${RM} $@.d
 	$(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163556830/DeviceServer.o ../../../src/karabo/core/DeviceServer.cc
 
-${OBJECTDIR}/_ext/163556830/DeviceServer2.o: ../../../src/karabo/core/DeviceServer2.cc 
-	${MKDIR} -p ${OBJECTDIR}/_ext/163556830
-	${RM} $@.d
-	$(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163556830/DeviceServer2.o ../../../src/karabo/core/DeviceServer2.cc
-
 ${OBJECTDIR}/_ext/163556830/GuiServerDevice.o: ../../../src/karabo/core/GuiServerDevice.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/163556830
 	${RM} $@.d
 	$(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163556830/GuiServerDevice.o ../../../src/karabo/core/GuiServerDevice.cc
 
-${OBJECTDIR}/_ext/163556830/HashDatabase.o: ../../../src/karabo/core/HashDatabase.cc 
-	${MKDIR} -p ${OBJECTDIR}/_ext/163556830
-	${RM} $@.d
-	$(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163556830/HashDatabase.o ../../../src/karabo/core/HashDatabase.cc
-
 ${OBJECTDIR}/_ext/163556830/MasterDevice.o: ../../../src/karabo/core/MasterDevice.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/163556830
 	${RM} $@.d
 	$(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163556830/MasterDevice.o ../../../src/karabo/core/MasterDevice.cc
-
-${OBJECTDIR}/_ext/163556830/MasterDevice2.o: ../../../src/karabo/core/MasterDevice2.cc 
-	${MKDIR} -p ${OBJECTDIR}/_ext/163556830
-	${RM} $@.d
-	$(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163556830/MasterDevice2.o ../../../src/karabo/core/MasterDevice2.cc
 
 ${OBJECTDIR}/_ext/1072794519/BinaryFileInput.o: ../../../src/karabo/io/BinaryFileInput.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1072794519
@@ -758,19 +740,6 @@ ${OBJECTDIR}/_ext/163556830/DeviceServer_nomain.o: ${OBJECTDIR}/_ext/163556830/D
 	    ${CP} ${OBJECTDIR}/_ext/163556830/DeviceServer.o ${OBJECTDIR}/_ext/163556830/DeviceServer_nomain.o;\
 	fi
 
-${OBJECTDIR}/_ext/163556830/DeviceServer2_nomain.o: ${OBJECTDIR}/_ext/163556830/DeviceServer2.o ../../../src/karabo/core/DeviceServer2.cc 
-	${MKDIR} -p ${OBJECTDIR}/_ext/163556830
-	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/163556830/DeviceServer2.o`; \
-	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
-	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
-	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
-	then  \
-	    ${RM} $@.d;\
-	    $(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163556830/DeviceServer2_nomain.o ../../../src/karabo/core/DeviceServer2.cc;\
-	else  \
-	    ${CP} ${OBJECTDIR}/_ext/163556830/DeviceServer2.o ${OBJECTDIR}/_ext/163556830/DeviceServer2_nomain.o;\
-	fi
-
 ${OBJECTDIR}/_ext/163556830/GuiServerDevice_nomain.o: ${OBJECTDIR}/_ext/163556830/GuiServerDevice.o ../../../src/karabo/core/GuiServerDevice.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/163556830
 	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/163556830/GuiServerDevice.o`; \
@@ -784,19 +753,6 @@ ${OBJECTDIR}/_ext/163556830/GuiServerDevice_nomain.o: ${OBJECTDIR}/_ext/16355683
 	    ${CP} ${OBJECTDIR}/_ext/163556830/GuiServerDevice.o ${OBJECTDIR}/_ext/163556830/GuiServerDevice_nomain.o;\
 	fi
 
-${OBJECTDIR}/_ext/163556830/HashDatabase_nomain.o: ${OBJECTDIR}/_ext/163556830/HashDatabase.o ../../../src/karabo/core/HashDatabase.cc 
-	${MKDIR} -p ${OBJECTDIR}/_ext/163556830
-	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/163556830/HashDatabase.o`; \
-	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
-	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
-	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
-	then  \
-	    ${RM} $@.d;\
-	    $(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163556830/HashDatabase_nomain.o ../../../src/karabo/core/HashDatabase.cc;\
-	else  \
-	    ${CP} ${OBJECTDIR}/_ext/163556830/HashDatabase.o ${OBJECTDIR}/_ext/163556830/HashDatabase_nomain.o;\
-	fi
-
 ${OBJECTDIR}/_ext/163556830/MasterDevice_nomain.o: ${OBJECTDIR}/_ext/163556830/MasterDevice.o ../../../src/karabo/core/MasterDevice.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/163556830
 	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/163556830/MasterDevice.o`; \
@@ -808,19 +764,6 @@ ${OBJECTDIR}/_ext/163556830/MasterDevice_nomain.o: ${OBJECTDIR}/_ext/163556830/M
 	    $(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163556830/MasterDevice_nomain.o ../../../src/karabo/core/MasterDevice.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/163556830/MasterDevice.o ${OBJECTDIR}/_ext/163556830/MasterDevice_nomain.o;\
-	fi
-
-${OBJECTDIR}/_ext/163556830/MasterDevice2_nomain.o: ${OBJECTDIR}/_ext/163556830/MasterDevice2.o ../../../src/karabo/core/MasterDevice2.cc 
-	${MKDIR} -p ${OBJECTDIR}/_ext/163556830
-	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/163556830/MasterDevice2.o`; \
-	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
-	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
-	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
-	then  \
-	    ${RM} $@.d;\
-	    $(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163556830/MasterDevice2_nomain.o ../../../src/karabo/core/MasterDevice2.cc;\
-	else  \
-	    ${CP} ${OBJECTDIR}/_ext/163556830/MasterDevice2.o ${OBJECTDIR}/_ext/163556830/MasterDevice2_nomain.o;\
 	fi
 
 ${OBJECTDIR}/_ext/1072794519/BinaryFileInput_nomain.o: ${OBJECTDIR}/_ext/1072794519/BinaryFileInput.o ../../../src/karabo/io/BinaryFileInput.cc 

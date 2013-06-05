@@ -45,6 +45,10 @@ namespace karabo {
         class DeviceClient {
 
             typedef std::map<std::string, unsigned int> InstanceUsage;
+            typedef boost::function<void (const karabo::util::Hash& /*topologyEntry*/) > InstanceNewHandler;
+            typedef boost::function<void (const karabo::util::Hash& /*topologyEntry*/) > InstanceUpdatedHandler;
+            typedef boost::function<void (const std::string& /*instanceId*/) > InstanceGoneHandler;
+            typedef boost::function<void (const karabo::util::Schema& /*description*/, const std::string& /*deviceId*/) > SchemaUpdatedHandler;
 
         protected: // members
 
@@ -91,8 +95,13 @@ namespace karabo {
             boost::mutex m_propertyChangedHandlersMutex;
 
             int m_defaultTimeout;
-            
+
             bool m_systemHasMaster;
+
+            InstanceNewHandler m_instanceNewHandler;
+            InstanceUpdatedHandler m_instanceUpdatedHandler;
+            InstanceGoneHandler m_instanceGoneHandler;
+            SchemaUpdatedHandler m_schemaUpdatedHandler;
 
         public:
 
@@ -135,6 +144,19 @@ namespace karabo {
             std::pair<bool, std::string> exists(const std::string& instanceId);
 
             /**
+             * Returns the full information about the current (runtime) distributed system
+             * @return a Hash containing the full system description
+             */
+            karabo::util::Hash getSystemInformation();
+
+
+            /**
+             * Returns only the topology of the current system (no instance configurations or descriptions)
+             * @return Hash containing the topology of the runtime system
+             */
+            karabo::util::Hash getSystemTopology();
+
+            /**
              * Retrieves all device servers currently existing in the distributed system
              * @return array of device server ids
              */
@@ -170,11 +192,11 @@ namespace karabo {
              * Retrieves a schema from static context of a loaded Device class plug-in.
              * This schema represents a description of parameters possible to configure for instantiation.
              * I.e. returns in fact a description of the constructor arguments to that device class.
-             * @param deviceServer instanceId of a deviceServer
-             * @param className name of loaded class on the deviceServer (classId)
+             * @param serverId instanceId of a deviceServer
+             * @param classId name of loaded class on the deviceServer (classId)
              * @return Schema describing parameters available at instantiation time
              */
-            karabo::util::Schema getClassSchema(const std::string& deviceServer, const std::string& className);
+            karabo::util::Schema getClassSchema(const std::string& serverId, const std::string& classId);
 
             std::vector<std::string> getCurrentlyExecutableCommands(const std::string& instanceId);
 
@@ -184,18 +206,18 @@ namespace karabo {
 
             karabo::util::Hash loadConfigurationFromFile(const std::string& filename);
 
+            std::pair<bool, std::string> instantiate(const std::string& serverInstanceId, const std::string& classId,
+                                                     const karabo::util::Hash& configuration = karabo::util::Hash(), int timeout = -1);
+
+            std::pair<bool, std::string> instantiate(const std::string& serverInstanceId, const karabo::util::Hash& configuration, int timeout = -1);
+
             void instantiateNoWait(const std::string& serverInstanceId, const std::string& classId, const karabo::util::Hash& configuration = karabo::util::Hash());
 
             void instantiateNoWait(const std::string& serverInstanceId, const karabo::util::Hash& configuration);
 
-            std::pair<bool, std::string> instantiateWait(const std::string& serverInstanceId, const std::string& classId,
-                                                         const karabo::util::Hash& configuration = karabo::util::Hash(), int timeout = -1);
+            std::pair<bool, std::string> killDevice(const std::string& instanceId);
 
-            std::pair<bool, std::string> instantiateWait(const std::string& serverInstanceId, const karabo::util::Hash& configuration, int timeout = -1);
-
-            void killNoWait(const std::string& instanceId);
-
-            std::pair<bool, std::string> killWait(const std::string& instanceId);
+            void killDeviceNoWait(const std::string& instanceId);
 
             karabo::util::Hash get(const std::string& instanceId);
 
@@ -211,8 +233,17 @@ namespace karabo {
                 return cacheAndGetConfiguration(instanceId).get(key, value, keySep);
             }
 
+            void registerInstanceNewMonitor(const InstanceNewHandler& callBackFunction);
+
+            void registerInstanceUpdatedMonitor(const InstanceNewHandler& callBackFunction);
+
+            void registerInstanceGoneMonitor(const InstanceGoneHandler& callBackFunction);
+
+            void registerSchemaUpdatedMonitor(const SchemaUpdatedHandler& callBackFunction);
+
             template <class ValueType>
-            bool registerPropertyMonitor(const std::string& instanceId, const std::string& key, const boost::function<void (const ValueType&, const std::string&) >& callbackFunction) {
+            bool registerPropertyMonitor(const std::string& instanceId, const std::string& key,
+                                         const boost::function<void (const std::string& /*deviceId*/, const std::string& /*key*/, const ValueType& /*value*/, const karabo::util::Timestamp& /*timestamp*/) >& callbackFunction) {
                 karabo::util::Schema schema = this->getFullSchema(instanceId);
                 if (schema.has(key)) {
                     boost::mutex::scoped_lock lock(m_propertyChangedHandlersMutex);
@@ -224,9 +255,11 @@ namespace karabo {
                 }
             }
 
+            // TODO provide timestamp in callback
+
             template <class ValueType, class UserDataType>
-            bool registerPropertyMonitor(const std::string& instanceId, const std::string& key, const boost::function<void (const ValueType&,
-                                         const std::string&, const boost::any&) >& callbackFunction, const UserDataType& userData) {
+            bool registerPropertyMonitor(const std::string& instanceId, const std::string& key, const boost::function<void ( const std::string& /*deviceId*/, const std::string& /*key*/,
+                                         const ValueType& /*value*/, const karabo::util::Timestamp& /*timestamp*/, const boost::any& /*userData*/) >& callbackFunction, const UserDataType& userData) {
                 karabo::util::Schema schema = this->getFullSchema(instanceId);
                 if (schema.has(key)) {
                     boost::mutex::scoped_lock lock(m_propertyChangedHandlersMutex);
@@ -241,10 +274,10 @@ namespace karabo {
 
             void unregisterPropertyMonitor(const std::string& instanceId, const std::string& key);
 
-            void registerDeviceMonitor(const std::string& instanceId, const boost::function<void (const karabo::util::Hash&, const std::string&)>& callbackFunction);
+            void registerDeviceMonitor(const std::string& instanceId, const boost::function<void (const std::string&, const karabo::util::Hash&)>& callbackFunction);
 
             template <class UserDataType>
-            void registerDeviceMonitor(const std::string& instanceId, const boost::function<void (const karabo::util::Hash&, const std::string&, const boost::any&)>& callbackFunction,
+            void registerDeviceMonitor(const std::string& instanceId, const boost::function<void (const std::string&, const karabo::util::Hash&, const boost::any&)>& callbackFunction,
                                        const UserDataType& userData) {
                 boost::mutex::scoped_lock lock(m_deviceChangedHandlersMutex);
                 // Make sure we are caching this instanceId
@@ -256,22 +289,22 @@ namespace karabo {
             void unregisterDeviceMonitor(const std::string& instanceId);
 
             template <class T>
-            std::pair<bool, std::string> setWait(const std::string& instanceId, const std::string& key, const T& value, int timeout = -1, const char keySep = '.') const {
+            std::pair<bool, std::string> set(const std::string& instanceId, const std::string& key, const T& value, int timeout = -1, const char keySep = '.') {
                 karabo::util::Hash tmp;
                 tmp.set(key, value, keySep);
-                return setWait(instanceId, tmp, timeout);
+                return set(instanceId, tmp, timeout);
             }
 
             template <class T>
-            void setNoWait(const std::string& instanceId, const std::string& key, const T& value, const char keySep = '.') const {
+            void setNoWait(const std::string& instanceId, const std::string& key, const T& value, const char keySep = '.') {
                 karabo::util::Hash tmp;
                 tmp.set(key, value, keySep);
                 setNoWait(instanceId, tmp);
             }
 
-            std::pair<bool, std::string> setWait(const std::string& instanceId, const karabo::util::Hash& values, int timeout = -1) const;
+            std::pair<bool, std::string> set(const std::string& instanceId, const karabo::util::Hash& values, int timeout = -1);
 
-            void setNoWait(const std::string& instanceId, const karabo::util::Hash& values) const;
+            void setNoWait(const std::string& instanceId, const karabo::util::Hash& values);
 
             void executeNoWait(const std::string& instanceId, const std::string& command) {
                 m_signalSlotable->call(instanceId, command);
@@ -297,7 +330,7 @@ namespace karabo {
                 m_signalSlotable->call(instanceId, command, a1, a2, a3, a4);
             }
 
-            std::pair<bool, std::string> executeWait(const std::string& instanceId, const std::string& command, int timeout = -1) {
+            std::pair<bool, std::string> execute(const std::string& instanceId, const std::string& command, int timeout = -1) {
                 if (timeout == -1) timeout = m_defaultTimeout;
 
                 bool ok = true;
@@ -313,7 +346,7 @@ namespace karabo {
             }
 
             template <class A1>
-            std::pair<bool, std::string> executeWait(const std::string& instanceId, const std::string& command, const A1& a1, int timeout = -1) {
+            std::pair<bool, std::string> execute(const std::string& instanceId, const std::string& command, const A1& a1, int timeout = -1) {
                 if (timeout == -1) timeout = m_defaultTimeout;
 
                 bool ok = true;
@@ -329,7 +362,7 @@ namespace karabo {
             }
 
             template <class A1, class A2>
-            std::pair<bool, std::string> executeWait(const std::string& instanceId, const std::string& command, const A1& a1, const A2& a2, int timeout = -1) {
+            std::pair<bool, std::string> execute(const std::string& instanceId, const std::string& command, const A1& a1, const A2& a2, int timeout = -1) {
                 if (timeout == -1) timeout = m_defaultTimeout;
 
                 bool ok = true;
@@ -345,8 +378,8 @@ namespace karabo {
             }
 
             template <class A1, class A2, class A3>
-            std::pair<bool, std::string> executeWait(const std::string& instanceId, const std::string& command,
-                                                     const A1& a1, const A2& a2, const A3& a3, int timeout = -1) {
+            std::pair<bool, std::string> execute(const std::string& instanceId, const std::string& command,
+                                                 const A1& a1, const A2& a2, const A3& a3, int timeout = -1) {
                 if (timeout == -1) timeout = m_defaultTimeout;
 
                 bool ok = true;
@@ -362,8 +395,8 @@ namespace karabo {
             }
 
             template <class A1, class A2, class A3, class A4>
-            std::pair<bool, std::string> executeWait(const std::string& instanceId, const std::string& command,
-                                                     const A1& a1, const A2& a2, const A3& a3, const A4& a4, int timeout = -1) {
+            std::pair<bool, std::string> execute(const std::string& instanceId, const std::string& command,
+                                                 const A1& a1, const A2& a2, const A3& a3, const A4& a4, int timeout = -1) {
                 if (timeout == -1) timeout = m_defaultTimeout;
 
                 bool ok = true;
@@ -388,9 +421,15 @@ namespace karabo {
 
             virtual void slotInstanceNew(const std::string& instanceId, const karabo::util::Hash& instanceInfo);
 
+            virtual void slotInstanceUpdated(const std::string& instanceId, const karabo::util::Hash& instanceInfo);
+
             virtual void slotInstanceGone(const std::string& instanceId);
 
+            virtual void slotSchemaUpdated(const karabo::util::Schema& schema, const std::string& deviceId);
+
             static std::string generateOwnInstanceId();
+
+            karabo::util::Schema cacheAndGetClassSchema(const std::string& serverId, const std::string& classId);
 
             karabo::util::Schema cacheAndGetFullSchema(const std::string& instanceId);
 
@@ -398,7 +437,7 @@ namespace karabo {
 
             karabo::util::Hash cacheAndGetConfiguration(const std::string& instanceId);
 
-            void refreshInstanceUsage(const std::string& instanceId);
+            void stayConnected(const std::string& instanceId);
 
             virtual void notifyDeviceChangedMonitors(const karabo::util::Hash& hash, const std::string& instanceId);
 
@@ -407,9 +446,8 @@ namespace karabo {
             void castAndCall(const std::string& instanceId, const karabo::util::Hash& registered, const karabo::util::Hash& current, std::string path = "") const;
 
             virtual void clearCacheAndDisconnect(const std::string& instanceId);
-            
-            void extractCommands(const karabo::util::Schema& schema, const std::string& parentKey, std::vector<std::string>& commands);
 
+            void extractCommands(const karabo::util::Schema& schema, const std::string& parentKey, std::vector<std::string>& commands);
 
 
         };

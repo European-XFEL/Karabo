@@ -13,16 +13,10 @@
       <itemPath>../../../src/karabo/core/DeviceClient.hh</itemPath>
       <itemPath>../../../src/karabo/core/DeviceServer.cc</itemPath>
       <itemPath>../../../src/karabo/core/DeviceServer.hh</itemPath>
-      <itemPath>../../../src/karabo/core/DeviceServer2.cc</itemPath>
-      <itemPath>../../../src/karabo/core/DeviceServer2.hh</itemPath>
       <itemPath>../../../src/karabo/core/GuiServerDevice.cc</itemPath>
       <itemPath>../../../src/karabo/core/GuiServerDevice.hh</itemPath>
-      <itemPath>../../../src/karabo/core/HashDatabase.cc</itemPath>
-      <itemPath>../../../src/karabo/core/HashDatabase.hh</itemPath>
       <itemPath>../../../src/karabo/core/MasterDevice.cc</itemPath>
       <itemPath>../../../src/karabo/core/MasterDevice.hh</itemPath>
-      <itemPath>../../../src/karabo/core/MasterDevice2.cc</itemPath>
-      <itemPath>../../../src/karabo/core/MasterDevice2.hh</itemPath>
       <itemPath>../../../src/karabo/core/Runner.hh</itemPath>
     </logicalFolder>
     <logicalFolder name="f2" displayName="io" projectFiles="true">
@@ -442,16 +436,6 @@
             tool="3"
             flavor2="0">
       </item>
-      <item path="../../../src/karabo/core/DeviceServer2.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/core/DeviceServer2.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
       <item path="../../../src/karabo/core/FsmBase.hh"
             ex="false"
             tool="3"
@@ -472,32 +456,12 @@
             tool="3"
             flavor2="0">
       </item>
-      <item path="../../../src/karabo/core/HashDatabase.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/core/HashDatabase.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
       <item path="../../../src/karabo/core/MasterDevice.cc"
             ex="false"
             tool="1"
             flavor2="0">
       </item>
       <item path="../../../src/karabo/core/MasterDevice.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/core/MasterDevice2.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/core/MasterDevice2.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -1782,16 +1746,6 @@
             tool="3"
             flavor2="0">
       </item>
-      <item path="../../../src/karabo/core/DeviceServer2.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/core/DeviceServer2.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
       <item path="../../../src/karabo/core/FsmBase.hh"
             ex="false"
             tool="3"
@@ -1812,32 +1766,12 @@
             tool="3"
             flavor2="0">
       </item>
-      <item path="../../../src/karabo/core/HashDatabase.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/core/HashDatabase.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
       <item path="../../../src/karabo/core/MasterDevice.cc"
             ex="false"
             tool="1"
             flavor2="0">
       </item>
       <item path="../../../src/karabo/core/MasterDevice.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/core/MasterDevice2.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/core/MasterDevice2.hh"
             ex="false"
             tool="3"
             flavor2="0">

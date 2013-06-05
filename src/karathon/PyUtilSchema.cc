@@ -751,7 +751,7 @@ namespace schemawrap {
     bp::object getTags(const Schema& schema, const bp::object& obj) {
         if (PyString_Check(obj.ptr())) {
             string path = bp::extract<string>(obj);
-            const vector<string>& v = schema.getTags(path);
+            const std::vector<std::string>& v = schema.getTags(path);
             return karabo::pyexfel::Wrapper::fromStdVectorToPyArray<string>(v);
         }
         throw KARABO_PYTHON_EXCEPTION("Python argument in 'getTags' should be a string");
