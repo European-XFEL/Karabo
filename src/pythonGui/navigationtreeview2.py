@@ -62,6 +62,8 @@ class NavigationTreeView(QTreeView):
         
         classId = None
         
+        # TODO: rename to HOST, ...
+        
         if level == 0:
             type = NavigationItemTypes.NODE
         elif level == 1:
@@ -69,8 +71,10 @@ class NavigationTreeView(QTreeView):
         elif level == 2:
             type = NavigationItemTypes.DEVICE_CLASS
             parentIndex = index.parent()
-            key = parentIndex.data().toString() + "+" + index.data().toString()
+            serverId = parentIndex.data().toString()
             classId = index.data().toString()
+            
+            schema = Manager().getDescription(serverId, classId)
             # Get schema from model
             #schema = self.__model.getSchema(level, row)
             #Manager().onSchemaAvailable(dict(key=key, type=type, schema=schema))

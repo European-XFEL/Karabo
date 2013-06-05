@@ -53,6 +53,8 @@ class Network(QObject):
         
         #Manager().notifier.signalCreateNewDeviceClassPlugin.connect(self.onCreateNewDeviceClassPlugin)
         
+        Manager().notifier.signalGetClassSchema.connect(self.onGetClassSchema)
+        
         self.__headerSize = 0
         self.__bodySize = 0
         self.__headerBytes = bytearray()
@@ -132,49 +134,29 @@ class Network(QObject):
             # "notify" (instanceId, type, text)
             # "invalidateCache" (instanceId)
             
-            if type == "instanceNew":
-                print "instanceNew"
+            if type == "systemTopology":
+                bodyHash = self.__textSerializer.load(self.__bodyBytes)
+                Manager().handleSystemTopology(bodyHash)
+            elif type == "instanceNew":
+                bodyHash = self.__textSerializer.load(self.__bodyBytes)
+                Manager().handleSystemTopology(bodyHash)
             elif type == "instanceUpdated":
-                print "instanceUpdated"
+                bodyHash = self.__textSerializer.load(self.__bodyBytes)
+                Manager().handleSystemTopology(bodyHash)
             elif type == "instanceGone":
-                print "instanceGone"
+                bodyHash = self.__textSerializer.load(self.__bodyBytes)
+                Manager().handleSystemTopology(bodyHash)
+            elif type == "classDescription":
+                bodyHash = self.__textSerializer.load(self.__bodyBytes)
+                Manager().handleClassSchema(bodyHash)
             elif type == "configurationChanged":
                 print "configurationChanged"
             elif type == "log":
-                print "log"
+                self._handleLog(str(self.__bodyBytes))
             elif type == "notify":
                 print "notify"
             elif type == "invalidateCache":
                 print "invalidateCache"
-            
-            # Old stuff with test hash...
-            if type == "currentInstances":
-                # Get system configuration
-                testConfig = Hash()
-                testConfig.set("server.HEGEL_DeviceServer_0.classes.Conveyor", Hash())
-                #testConfig.set("server.HEGEL_DeviceServer_0.classes.Conveyor.description", Schema())
-                #testConfig.set("server.HEGEL_DeviceServer_0.classes.Conveyor.configuration", Hash())
-
-                testConfig.setAttribute("server.HEGEL_DeviceServer_0", "host", "HEGEL")
-                testConfig.setAttribute("server.HEGEL_DeviceServer_0", "status", "on")
-
-                testConfig.set("server.HEGEL_DeviceServer_1.classes.HelloWorld", Hash())
-                testConfig.setAttribute("server.HEGEL_DeviceServer_1", "host", "HEGEL")
-                testConfig.setAttribute("server.HEGEL_DeviceServer_1", "status", "on")
-
-                testConfig.set("device.HEGEL_Conveyor_0", Hash())
-                #testConfig.set("device.HEGEL_Conveyor_0.description", Schema())
-                #testConfig.set("device.HEGEL_Conveyor_0.configuration", Hash())
-                testConfig.setAttribute("device.HEGEL_Conveyor_0", "host", "HEGEL")
-                testConfig.setAttribute("device.HEGEL_Conveyor_0", "classId", "Conveyor")
-                testConfig.setAttribute("device.HEGEL_Conveyor_0", "serverId", "HEGEL_DeviceServer_0")
-                testConfig.setAttribute("device.HEGEL_Conveyor_0", "status", "ok")
-                
-                #print ""
-                #print testConfig
-                #print ""
-                Manager().handleRuntimeSystemDescription(testConfig)
-            
         
             # Invalidate variables            
             self.__bodySize = self.__headerSize = 0
@@ -286,6 +268,13 @@ class Network(QObject):
         self._tcpWriteHashHash(header, Hash())
 
 
+    def onGetClassSchema(self, serverId, classId):
+        header = Hash("type", "getClassSchema")
+        header.set("serverId", str(serverId))
+        header.set("classId", str(classId))
+        self._tcpWriteHashHash(header, Hash())
+
+
 ### private functions ###
     def _sendLoginInformation(self, username, password):
         header = Hash("type", "login")
@@ -321,4 +310,8 @@ class Network(QObject):
         stream.push_back(QByteArray(pack('I', nBytesBody)))
         stream.push_back(bodyString)
         self.__tcpSocket.write(stream)
+
+
+    def _handleLog(self, logMessage):
+        Manager().onLogDataAvailable(logMessage)
 

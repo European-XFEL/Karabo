@@ -48,7 +48,6 @@ class NavigationHierarchyModel(QAbstractItemModel):
                 # Get attributes
                 #serverAttributes = serverConfig.getAttributes(serverId)
                 host = serverConfig.getAttribute(serverId, "host")
-                status = serverConfig.getAttribute(serverId, "status")
                 #version = serverConfig.getAttribute(serverId, "version")
 
                 # Host item already exists?
@@ -59,14 +58,20 @@ class NavigationHierarchyModel(QAbstractItemModel):
 
                 serverItem = NavigationHierarchyNode(serverId, hostItem)
                 hostItem.appendChildItem(serverItem)
+                
+                if serverConfig.hasAttribute(serverId, "deviceClasses"):
+                    classes = serverConfig.getAttribute(serverId, "deviceClasses")
+                    for deviceClass in classes:
+                        classItem = NavigationHierarchyNode(deviceClass, serverItem)
+                        serverItem.appendChildItem(classItem)
 
                 # Get classes data
-                classesConfig = serverConfig.get(serverId + ".classes")
-                classes = list()
-                classesConfig.getKeys(classes)
-                for classId in classes:
-                    classItem = NavigationHierarchyNode(classId, serverItem)
-                    serverItem.appendChildItem(classItem)
+                #classesConfig = serverConfig.get(serverId + ".classes")
+                #classes = list()
+                #classesConfig.getKeys(classes)
+                #for classId in classes:
+                #    classItem = NavigationHierarchyNode(classId, serverItem)
+                #    serverItem.appendChildItem(classItem)
             
         # Get device data
         deviceKey = "device"
@@ -80,7 +85,7 @@ class NavigationHierarchyModel(QAbstractItemModel):
                 host = deviceConfig.getAttribute(deviceId, "host")
                 classId = deviceConfig.getAttribute(deviceId, "classId")
                 serverId = deviceConfig.getAttribute(deviceId, "serverId")
-                status = deviceConfig.getAttribute(deviceId, "status")
+                #status = deviceConfig.getAttribute(deviceId, "status")
 
                 # Host item already exists?
                 hostItem = self.__rootItem.getItem(host)

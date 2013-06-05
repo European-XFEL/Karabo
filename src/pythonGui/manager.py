@@ -31,6 +31,9 @@ from sqldatabase import SqlDatabase
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 
+import time
+
+
 class Notifier(QObject):
     """Class for signals which can not be integrated in Manager class"""
     # signals
@@ -70,6 +73,8 @@ class Notifier(QObject):
     signalWarningFound = pyqtSignal(str) # warningData
     
     signalCreateNewDeviceClassPlugin = pyqtSignal(str, str, str) # serverId, classId, newClassId
+    
+    signalGetClassSchema = pyqtSignal(str, str) # serverId, classId
 
 
     def __init__(self):
@@ -570,6 +575,7 @@ class Manager(Singleton):
 
 
     def onSchemaAvailable(self, itemInfo):
+        # TODO I do not see the need for the following three lines - BH
         key = itemInfo.get(QString('key'))
         if key is None:
             key = itemInfo.get('key')
@@ -645,52 +651,29 @@ class Manager(Singleton):
 
 
 ### New pythonGui2 stuff ###
-    def handleRuntimeSystemDescription(self, config):
+    def handleSystemTopology(self, config):
         
         # Merge new configuration data into central hash
         self._mergeIntoHash(config)
         # Send full internal hash to navigation
         self.__notifier.signalNavigationChanged.emit(self.__hash)
-        
-        return
-        
-        # Get server data
-        serverKey = "server"
-        serverConfig = config.get(serverKey)
-        serverIds = list()
-        serverConfig.getKeys(serverIds)
-        for serverId in serverIds:
-            print "ServerId:", serverId
-            # Get attributes
-            #serverAttributes = serverConfig.getAttributes(serverId)
-            host = serverConfig.getAttribute(serverId, "host")
-            status = serverConfig.getAttribute(serverId, "status")
-            #version = serverConfig.getAttribute(serverId, "version")
-            
-            #self.__notifier.signalNewNavigationItem.emit(dict(type="server", name=serverId, host=host, status=status))
-            
-            # Get classes data
-            classesConfig = serverConfig.get(serverId + ".classes")
-            classes = list()
-            classesConfig.getKeys(classes)
-            for classId in classes:
-                print "classId", classId
-                #self.__notifier.signalNewNavigationItem.emit(dict(type="class", name=classId))
-        
-        print ""
-        
-        # Get device data
-        deviceKey = "device"
-        deviceConfig = config.get(deviceKey)
-        deviceIds = list()
-        deviceConfig.getKeys(deviceIds)
-        for deviceId in deviceIds:
-            print "DeviceId:", deviceId
-            # Get attributes
-            #deviceAttributes = deviceConfig.getAttributes(deviceId)
-            host = deviceConfig.getAttribute(deviceId, "host")
-            status = deviceConfig.getAttribute(deviceId, "status")
-            serverId = deviceConfig.getAttribute(deviceId, "serverId")
-            
-            #self.__notifier.signalNewNavigationItem.emit(dict(type="device", name=deviceId, host=host, serverId=serverId, status=status))
+
+
+    def handleClassSchema(self, config):
+        print config
+        path = str(config.paths()[0])
+        print "path", path
+        schema = config.get(path)
+        # Merge new configuration data into central hash
+        self._mergeIntoHash(config)
+        self.onSchemaAvailable(dict(key=path, type=NavigationItemTypes.DEVICE_CLASS, schema=schema))
+
+
+    def getDescription(self, serverId, classId):
+        path = str("server." + serverId + ".classes." + classId + ".description")
+        if self.__hash.has(path):
+            return self.__hash.get(path)
+        # Send network request
+        self.__notifier.signalGetClassSchema.emit(serverId, classId)
+      
             
