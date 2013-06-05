@@ -20,7 +20,15 @@ using namespace std;
 
 void exportPyWebAuthenticator() {
 
-    bp::class_<karabo::util::Timestamp>("Timestamp", bp::init<>());
+    bp::class_<Timestamp> ts("Timestamp");
+    ts.def(bp::init<>());
+    ts.def(bp::init<string const &>(bp::arg("timeStr")));
+    ts.def("setMsSinceEpoch"
+           , (void (Timestamp::*)(unsigned long long const))(&Timestamp::setMsSinceEpoch)
+           , bp::arg("msSinceEpoch"));
+    ts.def("getMsSinceEpoch"
+           , (unsigned long long (Timestamp::*)() const)(&Timestamp::getMsSinceEpoch));
+    
 
     bp::class_<Authenticator> a("Authenticator", bp::init<string const &, string const &, string const &, string const &, string const &, string const &, string const & >((bp::arg("username"), bp::arg("password"), bp::arg("provider"), bp::arg("ipAddress"), bp::arg("hostname"), bp::arg("portNumber"), bp::arg("software"))));
     a.def("login"
