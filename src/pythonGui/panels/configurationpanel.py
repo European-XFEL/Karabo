@@ -743,8 +743,7 @@ class ConfigurationPanel(QWidget):
 
 
     def onNavigationChanged(self, config):
-        pass
-        #self.__twNavigation.updateView(config)
+        self.__twNavigation.updateView(config)
 
 
     # virtual function

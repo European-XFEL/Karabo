@@ -75,9 +75,8 @@ class NavigationTreeView(QTreeView):
             classId = index.data().toString()
             
             schema = Manager().getDescription(serverId, classId)
-            # Get schema from model
-            #schema = self.__model.getSchema(level, row)
-            #Manager().onSchemaAvailable(dict(key=key, type=type, schema=schema))
+            if schema:
+                Manager().onSchemaAvailable(dict(key=key, type=type, schema=schema))
         elif level == 3:
             type = NavigationItemTypes.DEVICE_INSTANCE
             parentIndex = index.parent()
