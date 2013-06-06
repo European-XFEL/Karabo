@@ -296,7 +296,7 @@ namespace karabo {
         void Schema::setAssignment(const std::string& path, const Schema::AssignmentType& value) {
 
 
-            m_hash.setAttribute(path, KARABO_SCHEMA_ASSIGNMENT, value);
+            m_hash.setAttribute<int>(path, KARABO_SCHEMA_ASSIGNMENT, value);
         }
 
 
