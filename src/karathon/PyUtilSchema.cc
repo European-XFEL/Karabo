@@ -910,6 +910,10 @@ namespace schemawrap {
         schema.help(classId);
     }
 
+    bp::object merge(Schema& schema, const Schema& schema2) {
+        schema.merge(schema2);
+        return bp::object(schema);
+    }
 }
 
 struct HashFilterWrap {
@@ -1045,12 +1049,18 @@ void exportPyUtilSchema() {
               , (bool (Schema::*)(string const &) const) (&Schema::has)
               , bp::arg("path"));
 
+        s.def("__contains__"
+              , (bool (Schema::*)(string const &) const) (&Schema::has)
+              , bp::arg("path"));
+
         s.def("empty"
               , (bool (Schema::*)()const) (&Schema::empty));
 
         s.def("merge"
               , (void (Schema::*)(Schema const &))(&Schema::merge)
               , bp::arg("schema"));
+
+        s.def("__iadd__", &schemawrap::merge, bp::arg("schema"));
 
         //********* 'get'-methods *********************
 
