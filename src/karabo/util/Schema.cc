@@ -489,7 +489,7 @@ namespace karabo {
         void Schema::setExpertLevel(const std::string& path, const Schema::ExpertLevelType& value) {
 
 
-            m_hash.setAttribute(path, KARABO_SCHEMA_EXPERT_LEVEL, value);
+            m_hash.setAttribute<int>(path, KARABO_SCHEMA_EXPERT_LEVEL, value);
         }
 
 
