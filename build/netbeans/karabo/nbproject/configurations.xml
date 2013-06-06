@@ -403,6 +403,7 @@
             <linkerLibLibItem>pthread</linkerLibLibItem>
             <linkerLibLibItem>rt</linkerLibLibItem>
             <linkerLibLibItem>ssl</linkerLibLibItem>
+            <linkerLibLibItem>crypto</linkerLibLibItem>
           </linkerLibItems>
         </linkerTool>
       </compileType>
@@ -1716,6 +1717,7 @@
             <linkerLibLibItem>pthread</linkerLibLibItem>
             <linkerLibLibItem>rt</linkerLibLibItem>
             <linkerLibLibItem>ssl</linkerLibLibItem>
+            <linkerLibLibItem>crypto</linkerLibLibItem>
           </linkerLibItems>
         </linkerTool>
       </compileType>
