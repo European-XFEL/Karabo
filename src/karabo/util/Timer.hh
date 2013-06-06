@@ -41,8 +41,8 @@ namespace karabo {
 
             struct {
 
-                uint64_t nsec;
-                uint64_t sec;
+                uint32_t nsec;
+                uint32_t sec;
             };
         } timestamp;
 
