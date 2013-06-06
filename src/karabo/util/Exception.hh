@@ -378,6 +378,23 @@ namespace karabo {
         };
         #define KARABO_IO_EXCEPTION(msg) karabo::util::IOException(msg, __FILE__, BOOST_CURRENT_FUNCTION, __LINE__)
 
+        /**
+         * The SystemException handles exceptions raised related to Input/Output routines
+         */
+        class SystemException : public Exception {
+
+        public:
+
+            SystemException(const std::string& message, const std::string& filename, const std::string& function, int lineNumber) :
+            Exception(message, "System Exception", filename, function, lineNumber) {
+            }
+
+            SystemException(const std::string& message, std::string type, const std::string& filename, const std::string& function, int lineNumber) :
+            Exception(message, type, filename, function, lineNumber) {
+            }
+        };
+        #define KARABO_SYSTEM_EXCEPTION(msg) karabo::util::SystemException(msg, __FILE__, BOOST_CURRENT_FUNCTION, __LINE__)
+
         class HdfIOException : public IOException {
 
         public:
