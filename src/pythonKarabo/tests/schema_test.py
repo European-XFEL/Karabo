@@ -59,6 +59,16 @@ class  Schema_TestCase(unittest.TestCase):
         except Exception,e:
             self.fail("test_getTags exception: " + str(e))
         
+    def test_setTags(self):
+        try:
+            schema = Configurator(SomeClass).getSchema("SomeClassId")
+            self.assertTrue(schema.hasTags('x'))
+            self.assertEqual(schema.getTags('x'), ['IK', 'BH'])
+            schema.setTags('x', 'CY,SE')
+            self.assertEqual(schema.getTags('x'), ['CY', 'SE'])
+        except Exception,e:
+            self.fail("test_setTags exception: " + str(e))
+            
     def test_getNodeType(self):
         try:
             nodeType = self.schema.getNodeType("exampleKey1")
@@ -122,7 +132,18 @@ class  Schema_TestCase(unittest.TestCase):
             self.assertEqual(self.schema.getAliasFromKey("testPath"), 5)
         except Exception,e:
             self.fail("test_getAliasFromKey exception: " + str(e))
-            
+       
+    def test_setAlias(self):
+        try:
+            schema = Configurator(SomeClass).getSchema("SomeClassId")
+            self.assertEqual(schema.getAliasFromKey("x"), 10)
+            schema.setAlias('x', 'abc')
+            self.assertEqual(schema.getAliasFromKey("x"), 'abc')
+            schema.setAlias('x', 99)
+            self.assertEqual(schema.getAliasFromKey("x"), 99)
+        except Exception,e:
+            self.fail("test_setAlias exception: " + str(e))
+        
     def test_getKeyFromAlias(self):
         try:
             self.assertEqual(self.schema.getKeyFromAlias(10), "exampleKey2")
@@ -163,6 +184,20 @@ class  Schema_TestCase(unittest.TestCase):
         except Exception,e:
             self.fail("test_getAssignment exception: " + str(e))
     
+    def test_setAssignment(self):
+        try:
+            schema = Configurator(SomeClass).getSchema("SomeClassId")
+            self.assertTrue(schema.hasAssignment('x'))
+            self.assertTrue(schema.isAssignmentOptional('x'))
+            self.assertFalse(schema.isAssignmentMandatory('x'))
+            self.assertEqual(schema.getAssignment('x'), AssignmentType.OPTIONAL)
+            schema.setAssignment('x', AssignmentType.MANDATORY)
+            self.assertFalse(schema.isAssignmentOptional('x'))
+            self.assertTrue(schema.isAssignmentMandatory('x'))
+            self.assertEqual(schema.getAssignment('x'), MANDATORY)
+        except Exception,e:
+            self.fail("test_setAssignment exception: " + str(e))
+    
     def test_getOptions(self):
         try:
             options = self.schema.getOptions("exampleKey1")
@@ -182,6 +217,23 @@ class  Schema_TestCase(unittest.TestCase):
             self.assertEqual(self.schema.getOptions("testPath")[1], "file2")
         except Exception,e:
             self.fail("test_getOptions exception: " + str(e))
+    
+    def test_setOptions(self):
+        try:
+            schema = Configurator(SomeClass).getSchema("SomeClassId")
+            
+            options = schema.getOptions("x")
+            self.assertEqual(options[0], "5")
+            self.assertEqual(options[1], "25")
+            self.assertEqual(options[2], "10")
+            self.assertEqual(schema.getOptions("x"), ["5", "25", "10"])
+            
+            schema.setOptions('x', '20, 5, 11, 13, 25')
+            options = schema.getOptions("x")
+            self.assertEqual(options, ['20', '5', '11', '13', '25'])
+        except Exception,e:
+            self.fail("test_setOptions exception: " + str(e))
+        
     
     def test_getDefaultValue(self):
         try:
@@ -209,6 +261,17 @@ class  Schema_TestCase(unittest.TestCase):
         except Exception,e:
             self.fail("test_getDefaultValue exception: " + str(e))
     
+    def test_setDefaultValue(self):
+        try:
+            schema = Configurator(SomeClass).getSchema("SomeClassId")
+            self.assertTrue(schema.isAssignmentOptional('x'))
+            self.assertTrue(schema.hasDefaultValue('x'))
+            self.assertEqual(schema.getDefaultValue("x"), 5)
+            schema.setDefaultValue("x", 10)
+            self.assertEqual(schema.getDefaultValue("x"), 10)
+        except Exception,e:
+            self.fail("test_setDefaultValue exception: " + str(e))
+    
     def test_getAllowedStates(self):
         try:
             allowedStates = self.schema.getAllowedStates("exampleKey3")
@@ -230,6 +293,18 @@ class  Schema_TestCase(unittest.TestCase):
         except Exception,e:
             self.fail("test_getUnit exception: " + str(e))
     
+    def test_setUnit(self):
+        try:
+            schema = Configurator(SomeClass).getSchema("SomeClassId")
+            self.assertEqual(schema.getUnit("x"), Unit.AMPERE)
+            schema.setUnit('x', METER)
+            self.assertEqual(schema.getUnit("x"), METER)
+            self.assertEqual(schema.getUnit("x"), Unit.METER)
+            self.assertEqual(schema.getUnitName("x"), "meter")
+            self.assertEqual(schema.getUnitSymbol("x"), "m")
+        except Exception,e:
+            self.fail("test_setUnit exception: " + str(e))
+        
     def test_getMetricPrefix(self):
         try:
             self.assertEqual(self.schema.getMetricPrefix("exampleKey2"), MetricPrefix.MILLI)
@@ -237,6 +312,17 @@ class  Schema_TestCase(unittest.TestCase):
             self.assertEqual(self.schema.getMetricPrefixSymbol("exampleKey2"), "m")
         except Exception,e:
             self.fail("test_getMetricPrefix exception: " + str(e))
+    
+    def test_setMetricPrefix(self):
+        try:
+            schema = Configurator(SomeClass).getSchema("SomeClassId")
+            self.assertEqual(schema.getMetricPrefix("x"), MetricPrefix.MILLI)
+            schema.setMetricPrefix("x", MetricPrefix.MICRO)
+            self.assertEqual(schema.getMetricPrefix("x"), MICRO)
+            self.assertEqual(schema.getMetricPrefixName("x"), "micro")
+            self.assertEqual(schema.getMetricPrefixSymbol("x"), "u")
+        except Exception,e:
+            self.fail("test_setMetricPrefix exception: " + str(e))
     
     def test_getMinIncMaxInc(self):
         try:
@@ -246,6 +332,22 @@ class  Schema_TestCase(unittest.TestCase):
             self.assertEqual(self.schema.getMaxIncAs("exampleKey2", Types.STRING), "25")
         except Exception,e:
             self.fail("test_getMinIncMaxInc exception: " + str(e))
+    
+    def test_setMinIncMaxInc(self):
+        try:
+            schema = Configurator(SomeClass).getSchema("SomeClassId")
+            self.assertEqual(schema.getMinInc("x"), 5)
+            self.assertEqual(schema.getMinIncAs("x", Types.STRING), "5")
+            self.assertEqual(schema.getMaxInc("x"), 25)
+            self.assertEqual(schema.getMaxIncAs("x", Types.STRING), "25")
+            schema.setMinInc('x', 3)
+            schema.setMaxInc('x', 30)
+            self.assertEqual(schema.getMinInc("x"), 3)
+            self.assertEqual(schema.getMinIncAs("x", Types.STRING), "3")
+            self.assertEqual(schema.getMaxInc("x"), 30)
+            self.assertEqual(schema.getMaxIncAs("x", Types.STRING), "30")
+        except Exception,e:
+            self.fail("test_setMinIncMaxInc exception: " + str(e))
     
     def test_getMinExcMaxExc(self):
         try:
@@ -272,6 +374,18 @@ class  Schema_TestCase(unittest.TestCase):
         except Exception,e:
             self.fail("test_getMinExcMaxExc exception in getMaxExcAs: " + str(e))
     
+    def test_setMinExcMaxExc(self):
+        try:
+            schema = Configurator(SomeClass).getSchema("SomeClassId")
+            self.assertEqual(schema.getMinExc("y"), 0)
+            self.assertEqual(schema.getMaxExc("y"), 29)
+            schema.setMinExc("y", 2)
+            schema.setMaxExc("y", 30)
+            self.assertEqual(schema.getMinExc("y"), 2)
+            self.assertEqual(schema.getMaxExc("y"), 30)
+        except Exception,e:
+            self.fail("test_setMinExcMaxExc exception in getMinExc: " + str(e))
+
     def test_getWarnAlarmLowHigh(self):
         try:
             self.assertEqual(self.schema.getWarnLow("exampleKey5"), -10)
@@ -388,6 +502,16 @@ class  Schema_TestCase(unittest.TestCase):
         except Exception,e:
             self.fail("test_getDisplayType exception: " + str(e))  
     
+    def test_setDisplayType(self):
+        try:
+            schema = Configurator(SomeClass).getSchema("SomeClassId")
+            self.assertFalse(schema.hasDisplayType('y'))
+            schema.setDisplayType('y', 'blabla')
+            self.assertTrue(schema.hasDisplayType('y'))
+            self.assertEqual(schema.getDisplayType("y"), "blabla")
+        except Exception,e:
+            self.fail("test_setDisplayType exception: " + str(e))  
+    
     def test_isCommand(self):
         try:  
             self.assertTrue(self.schema.isCommand("slotTest"))
@@ -454,6 +578,30 @@ class  Schema_TestCase(unittest.TestCase):
         except Exception,e:
             self.fail("test_perKeyFunctionality exception group 1: " + str(e))
     
+    def test_merge(self):
+        try:
+            schema = Configurator(Base).getSchema('P1')
+            self.assertTrue("a" in schema)
+            self.assertFalse("x" in schema)
+            self.assertFalse("y" in schema)
+            self.assertFalse("z" in schema)
+            
+            schema2 = Configurator(Base).getSchema('P2')
+            self.assertTrue("x" in schema2)
+            self.assertTrue("y" in schema2)
+            self.assertTrue("z" in schema2)
+            
+            schema += schema2
+            
+            self.assertTrue("a" in schema)
+            self.assertTrue("x" in schema)
+            self.assertTrue("y" in schema)
+            self.assertTrue("z" in schema)
+            
+        except Exception,e:
+            self.fail("test_merge exception: " + str(e))
+            
+        
     def test_logger(self): 
         s1 = Hash("Category.name", "s1", "Category.priority", "DEBUG")
         conf = Hash("categories[0]", s1, "appenders[0].Ostream.layout", "Pattern")
