@@ -69,6 +69,18 @@ class  Schema_TestCase(unittest.TestCase):
         except Exception,e:
             self.fail("test_setTags exception: " + str(e))
             
+    def test_getsetExpertLevel(self):
+        try:
+            schema = Configurator(SomeClass).getSchema("SomeClassId")
+            self.assertTrue(schema.isExpertLevelAdvanced('x'))
+            self.assertFalse(schema.hasExpertLevel('y'))
+            schema.setExpertLevel('x', ExpertLevelType.SIMPLE)
+            schema.setExpertLevel('y', ExpertLevelType.ADVANCED)
+            self.assertTrue(schema.isExpertLevelSimple('x'))
+            self.assertTrue(schema.isExpertLevelAdvanced('y'))
+        except Exception,e:
+            self.fail("test_setTags exception: " + str(e))
+            
     def test_getNodeType(self):
         try:
             nodeType = self.schema.getNodeType("exampleKey1")
