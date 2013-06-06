@@ -378,7 +378,7 @@ class SomeClass(object):
         e.options("5, 25, 10")
         e.minInc(5).maxInc(25).unit(AMPERE).metricPrefix(MILLI)
         e.assignmentOptional().defaultValue(5)
-        e.init().commit()
+        e.init().advanced().commit()
     
         e = INT32_ELEMENT(expected).key("y").alias('bla')
         e.tags("CY")
