@@ -43,16 +43,30 @@ void exportPyXmsSignalSlotable() {//exposing karabo::xms::SignalSlotable
             .def(bp::init<const std::string&>())
             .def(bp::init<const std::string&, const std::string&>())
             .def(bp::init<const std::string&, const std::string&, const karabo::util::Hash&>())
+            .def(bp::init<const std::string&, const std::string&, const karabo::util::Hash&, bool>())
 
             .def("create", &SignalSlotableWrap::create,
                  (bp::arg("instanceId") = "py/console/0",
                  bp::arg("connectionType") = "Jms",
-                 bp::arg("connectionParameters") = karabo::util::Hash()
+                 bp::arg("connectionParameters") = karabo::util::Hash(),
+                 bp::arg("autostart") = false
                  ),
-                 "\nUse this factory method to create SignalSlotable object with given 'instanceId', 'connectionType' and 'connectionParameters'.\n"
+                 "\nUse this factory method to create SignalSlotable object with given 'instanceId', 'connectionType', 'connectionParameters' and 'autostart' of event loop (by default, no start).\n"
                  "Example:\n\tss = SignalSlotable.create('a')\n"
                  ).staticmethod("create")
 
+            .def("start", &SignalSlotableWrap::startEventLoop, (bp::arg("info")),
+                 "\nUse this method if you have created a SignalSlotable instance with autostart = False and you need to provide info for event loop.\n"
+                 "Example:\n\tss = SignalSlotable.create('a')\n\tinfo = Hash('type','device')\n\tinfo['classId'] = myclassId\n\tinfo['serverId'] = myserverId\n\t"
+                 "info['visibility'] = ['']\n\tinfo['version'] = my_version\n\tinfo['host'] = host_name\n"
+                 )
+            
+            .def("stop", &SignalSlotableWrap::stopEventLoop,
+                 "\nUse this method if you want to stop Event Loop in thread started by 'start()' method.")
+            
+            .def("join", &SignalSlotableWrap::joinEventLoop,
+                 "\nUse this method if you want to join Event Loop thread started by 'start()' method.")
+            
             .def("connect",
                  (bool (SignalSlotable::*)(const string, const string&, const string, const string&, SignalSlotable::ConnectionType, const bool))(&SignalSlotable::connect),
                  (bp::arg("signalInstanceId"),
@@ -76,7 +90,7 @@ void exportPyXmsSignalSlotable() {//exposing karabo::xms::SignalSlotable
             .def("updateInstanceInfo",
                  (void (SignalSlotable::*)(const Hash&))(&SignalSlotable::updateInstanceInfo),
                  (bp::arg("updateHash")))
-            
+
             .def("getAvailableInstances", &SignalSlotableWrap::getAvailableInstancesPy)
             .def("getAvailableSignals", &SignalSlotableWrap::getAvailableSignalsPy, bp::arg("instanceId"))
             .def("getAvailableSlots", &SignalSlotableWrap::getAvailableSlotsPy, bp::arg("instanceId"))
