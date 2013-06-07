@@ -53,17 +53,8 @@ namespace karabo {
                 return boost::shared_ptr<SignalSlotableWrap>(new SignalSlotableWrap(instanceId, connectionType, connectionParameters, autostart));
             }
 
-            void startEventLoop(const karabo::util::Hash& info = karabo::util::Hash()) {
-                m_eventLoop = boost::thread(boost::bind(&karabo::xms::SignalSlotable::runEventLoop, this, true, info));
-            }
-
-            void stopEventLoop() {
-                this->stopEventLoop();
-            }
-            
-            void joinEventLoop() {
-                if (m_eventLoop.joinable())
-                    m_eventLoop.join();
+            void runEventLoop(const karabo::util::Hash& info = karabo::util::Hash()) {
+                karabo::xms::SignalSlotable::runEventLoop(true, info);
             }
 
             bp::object getAvailableInstancesPy() {

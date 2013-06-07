@@ -55,17 +55,11 @@ void exportPyXmsSignalSlotable() {//exposing karabo::xms::SignalSlotable
                  "Example:\n\tss = SignalSlotable.create('a')\n"
                  ).staticmethod("create")
 
-            .def("start", &SignalSlotableWrap::startEventLoop, (bp::arg("info")),
+            .def("run", &SignalSlotableWrap::runEventLoop, (bp::arg("info")),
                  "\nUse this method if you have created a SignalSlotable instance with autostart = False and you need to provide info for event loop.\n"
                  "Example:\n\tss = SignalSlotable.create('a')\n\tinfo = Hash('type','device')\n\tinfo['classId'] = myclassId\n\tinfo['serverId'] = myserverId\n\t"
                  "info['visibility'] = ['']\n\tinfo['version'] = my_version\n\tinfo['host'] = host_name\n"
                  )
-            
-            .def("stop", &SignalSlotableWrap::stopEventLoop,
-                 "\nUse this method if you want to stop Event Loop in thread started by 'start()' method.")
-            
-            .def("join", &SignalSlotableWrap::joinEventLoop,
-                 "\nUse this method if you want to join Event Loop thread started by 'start()' method.")
             
             .def("connect",
                  (bool (SignalSlotable::*)(const string, const string&, const string, const string&, SignalSlotable::ConnectionType, const bool))(&SignalSlotable::connect),
