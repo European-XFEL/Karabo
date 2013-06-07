@@ -22,6 +22,7 @@ using namespace karabo::pyexfel;
 
 typedef karabo::util::Element<std::string, karabo::util::OrderedMap<std::string, karabo::util::Element<std::string, bool> > > HashNode;
 
+
 void exportPyUtilHash() {
 
     bn::initialize();
@@ -144,8 +145,8 @@ void exportPyUtilHash() {
     a.def("getAs", &AttributesWrap().getAs, (bp::arg("key"), bp::arg("type")), "Get the value of the \"key\" attribute and convert it to type \"type\".");
     a.def("set", &AttributesWrap().set, (bp::arg("key"), bp::arg("value")), "Set the \"value\" for \"key\" attribute.");
     a.def("__setitem__", &AttributesWrap().set, (bp::arg("key"), bp::arg("value")), "Pythonic style for setting value of attribute: attrs['abc'] = 123");
-//    a.def("find", &AttributesWrap().find, (bp::arg("key")), "");
-//    a.def("getIt", &AttributesWrap().getIt, (bp::arg("it")));
+    //    a.def("find", &AttributesWrap().find, (bp::arg("key")), "");
+    //    a.def("getIt", &AttributesWrap().getIt, (bp::arg("it")));
     a.def("__iter__", bp::iterator<Hash::Attributes>());
 
     bp::class_<HashNode, boost::shared_ptr<HashNode> > n("HashNode", bp::init<>());
@@ -159,16 +160,21 @@ void exportPyUtilHash() {
     n.def("getAttribute", &NodeWrap().getAttribute, (bp::arg("key")), "Gets the value of \"key\" attribute  in current node.");
     n.def("getAttributeAs", &NodeWrap().getAttributeAs, (bp::arg("key"), bp::arg("type")), "Gets the value of \"key\" attribute converted to type \"type\".");
     n.def("hasAttribute", &NodeWrap().hasAttribute, (bp::arg("key")), "Check that current node has the \"key\" attribute.");
-    n.def("setAttributes", &NodeWrap().setAttributes, (bp::arg("attributes")),"Sets new set of attributes in current node.");
+    n.def("setAttributes", &NodeWrap().setAttributes, (bp::arg("attributes")), "Sets new set of attributes in current node.");
     n.def("getAttributes", &NodeWrap().getAttributes, bp::return_internal_reference<1> (), "Gets all attributes in current node as HashAttributes object. This object is internal reference not a copy.");
     n.def("copyAttributes", &NodeWrap().copyAttributes, "Gets a copy of all attributes in current node as HashAttributes object.");
     n.def("getType", &NodeWrap().getType, "Gets the value type as a reference type");
     n.def("setType", &NodeWrap().setType, (bp::arg("type")), "Sets the value type as a reference \"type\".");
 
 
+    bp::enum_<Hash::MergePolicy>("HashMergePlicy", "This enumeration defines possible options when merging 2 hashes.")
+            .value("MERGE_ATTRIBUTES", Hash::MERGE_ATTRIBUTES)
+            .value("REPLACE_ATTRIBUTES", Hash::REPLACE_ATTRIBUTES)
+            ;
+
     bp::class_<Hash, boost::shared_ptr<Hash> > h("Hash", "The Hash class can be regarded as a generic hash container, which associates a string key to a value of any type.\n"
-                        "Optionally attributes of any value-type can be associated to each hash-key.  The Hash preserves insertion order.  The Hash\n"
-                        "class is much like a XML-DOM container with the difference of allowing only unique keys on a given tree-level.");
+                                                 "Optionally attributes of any value-type can be associated to each hash-key.  The Hash preserves insertion order.  The Hash\n"
+                                                 "class is much like a XML-DOM container with the difference of allowing only unique keys on a given tree-level.");
     h.def(bp::init< std::string const & >());
     h.def(bp::init< Hash const & >());
     h.def(bp::init< std::string const &, bp::object const & >());
@@ -316,7 +322,7 @@ void exportPyUtilHash() {
           "these changes will be reflected in the current Hash object.\nExample:\n"
           "\th = Hash('a.b.c', 1, 'b.x', 2.22, 'b.y', 7.432, 'c', [1,2,3])\n\t"
           "n = h.getNode('b')\n\tg = Hash()\n\tg.setNode(n)\n\tprint g");
-    h.def("hasAttribute", &HashWrap().hasAttribute, (bp::arg("path"), bp::arg("attribute"), bp::arg("sep") = "."), 
+    h.def("hasAttribute", &HashWrap().hasAttribute, (bp::arg("path"), bp::arg("attribute"), bp::arg("sep") = "."),
           "Returns true if the questioned attribute exists, else returns false.");
     h.def("getAttribute", &HashWrap().getAttribute, (bp::arg("path"), bp::arg("attribute"), bp::arg("sep") = "."),
           "Get attribute value following given 'path' and 'attribute' name. Optionally use separator.\nExample:\n\t"
