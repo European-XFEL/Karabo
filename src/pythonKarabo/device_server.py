@@ -78,14 +78,11 @@ class DeviceServer(object):
         KARABO_FSM_EVENT0(self, 'NewPluginAvailableEvent', 'newPluginAvailable')
         KARABO_FSM_EVENT0(self, 'InbuildDevicesAvailableEvent', 'inbuildDevicesAvailable')
         KARABO_FSM_EVENT1(self, 'StartDeviceEvent', 'slotStartDevice')
-        KARABO_FSM_EVENT1(self, 'RegistrationOkEvent', 'slotRegistrationOk')
-        KARABO_FSM_EVENT1(self, 'RegistrationFailedEvent', 'slotRegistrationFailed')
 
         #**************************************************************
         #*                        States                              *
         #**************************************************************
 
-        KARABO_FSM_STATE_E('RegistrationState', self.registrationStateOnEntry)
         KARABO_FSM_STATE('ErrorState')
         KARABO_FSM_STATE_E('IdleState', self.idleStateOnEntry)
         KARABO_FSM_STATE('ServingState')
@@ -98,8 +95,6 @@ class DeviceServer(object):
         KARABO_FSM_ACTION0('EndErrorAction', self.endErrorAction)
         KARABO_FSM_ACTION0('NotifyNewDeviceAction', self.notifyNewDeviceAction)
         KARABO_FSM_ACTION1('StartDeviceAction', self.startDeviceAction, Hash)
-        KARABO_FSM_ACTION1('RegistrationFailedAction', self.registrationFailed, str)
-        KARABO_FSM_ACTION1('RegistrationOkAction', self.registrationOk, str)
         
         KARABO_FSM_NO_TRANSITION_ACTION(self.noStateTransition)
             
@@ -108,15 +103,13 @@ class DeviceServer(object):
         #**************************************************************
 
         AllOkSTT = [
-                    ('RegistrationState', 'RegistrationOkEvent',     'IdleState',  'RegistrationOkAction',     'none'),
-                    ('RegistrationState', 'RegistrationFailedEvent', 'ErrorState', 'RegistrationFailedAction', 'none'),
                     ('IdleState',         'NewPluginAvailableEvent', 'none',       'NotifyNewDeviceAction',    'none'),
                     ('IdleState',    'InbuildDevicesAvailableEvent', 'none',       'NotifyNewDeviceAction',    'none'),
                     ('IdleState',         'StartDeviceEvent',      'ServingState', 'StartDeviceAction',        'none'),
                     ('ServingState',      'StartDeviceEvent',        'none',       'StartDeviceAction',        'none')
                    ]
         
-        KARABO_FSM_STATE_MACHINE('AllOkState', AllOkSTT, 'RegistrationState')
+        KARABO_FSM_STATE_MACHINE('AllOkState', AllOkSTT, 'IdleState')
         
         DeviceServerMachineSTT=[
                                 ('AllOkState', 'ErrorFoundEvent', 'ErrorState', 'ErrorFoundAction', 'none'),
@@ -165,14 +158,11 @@ class DeviceServer(object):
         print "\n... DeviceServer object constructed.\n"
     
     def _registerAndConnectSignalsAndSlots(self):
-        cls = self.__class__
-        self.ss.registerSignal("signalNewDeviceClassAvailable", str, str, str) # DeviceServerInstanceId, classid, xsd
-        self.ss.registerSignal("signalNewDeviceInstanceAvailable", str, Hash)  # DeviceServerInstanceId, currentConfig
-        self.ss.registerSignal("signalDeviceServerInstanceGone", str)          # DeviceServerInstanceId
+        self.ss.registerSignal("signalNewDeviceClassAvailable", str, str, Schema) # serverid, classid, Schema
+        #self.ss.registerSignal("signalNewDeviceInstanceAvailable", str, Hash)  # DeviceServerInstanceId, currentConfig
+        #self.ss.registerSignal("signalDeviceServerInstanceGone", str)          # DeviceServerInstanceId
         self.ss.registerSlot(self.slotStartDevice)
-        self.ss.registerSlot(self.slotRegistrationOk)
-        self.ss.registerSlot(self.slotRegistrationFailed)
-        self.ss.registerSlot(self.slotKillDeviceServerInstance)
+        self.ss.registerSlot(self.slotKillServer)
         self.ss.registerSlot(self.slotKillDeviceInstance)
         self.ss.connect("", "signalNewDeviceClassAvailable", "*", "slotNewDeviceClassAvailable", ConnectionType.NO_TRACK, False)
         self.ss.connect("", "signalNewDeviceInstanceAvailable", "*", "slotNewDeviceInstanceAvailable", ConnectionType.NO_TRACK, False)
@@ -270,9 +260,6 @@ class DeviceServer(object):
     def updateCurrentState(self, currentState):
         self.ss.reply(currentState)
     
-    def registrationStateOnEntry(self):
-        self.ss.call("*", "slotNewDeviceServerAvailable", platform.node(), self.serverid)
-    
     def idleStateOnEntry(self):
         id = self.serverid
         OutputHash.create("TextFile", Hash("filename", "autoload.xml")).write(Hash("DeviceServer.serverId", id))
@@ -344,10 +331,10 @@ class DeviceServer(object):
             _id = _domain + "_" + devClassId + "_" + str(_index)
             return _id
      
-    def slotKillDeviceServerInstance(self):
+    def slotKillServer(self):
         self.log.INFO("Received kill signal")
         for deviceid in self.deviceInstanceMap.keys():
-            self.ss.call(deviceid, "slotKillDeviceInstance")
+            self.ss.call(deviceid, "slotKillDevice")
         self.selfDestroyFlag = True
         
     def slotKillDeviceInstance(self, id):
@@ -357,12 +344,6 @@ class DeviceServer(object):
             del self.deviceInstanceMap[id]
             self.log.DEBUG("Device {} was instructed to die".format(id))
 
-    def registrationFailed(self, a1):
-        self.log.WARN("{}".format(a1))
-    
-    def registrationOk(self, a1):
-        self.log.INFO("Master says: {}".format(a1))
-    
     def noStateTransition(self):
         self.log.DEBUG("No transition")
    
