@@ -75,19 +75,19 @@ class PythonDevice(BaseFsm):
         # Initialize _client to None (important!)
         self._client = None
         
+        # host & domain names
+        self.hostname, dotsep, self.domainname = socket.gethostname().partition('.')
+        
         # Setup the validation classes
+        self.validatorIntern   = Validator()
+        self.validatorExtern   = Validator()
         rules = ValidatorValidationRules()
         rules.allowAdditionalKeys = False
         rules.allowMissingKeys    = True
         rules.allowUnrootedConfiguration = True
         rules.injectDefaults = False
-        
-        self.validatorIntern   = Validator()
         rules.injectTimestamps = True
         self.validatorIntern.setValidationRules(rules)
-        
-        self.validatorExtern   = Validator()
-        rules.injectTimestamps = False
         self.validatorExtern.setValidationRules(rules)
         
         # Setup device logger
@@ -96,8 +96,21 @@ class PythonDevice(BaseFsm):
         Logger.configure(logging_config)
         self.log = Logger.getLogger(self.deviceid)
         
-        # Instantiate connection
-        self._ss = SignalSlotable.create(self.deviceid)    #, "Jms", self.parameters["connection.Jms"])
+        # Instantiate SignalSlotable object without starting event loop
+        self._ss = SignalSlotable.create(self.deviceid)    #, "Jms", self.parameters["connection.Jms"], autostart = False
+        
+        # Create 'info' hash
+        self.initClassId()
+        info = Hash("type", "device")
+        info["classId"] = self.classid
+        info["serverId"] = self.serverid
+        info["visibility"] = self["visibility"]
+        info["version"] = self.__class__.__version__
+        info["host"] = self.hostname
+        #... add here more info entries if needed
+        
+        # Start event loop ( in a thread ) with given info
+        self._ss.start(info)
         
         # Initialize FSM slots for user defined FSM (polymorphic call) 
         self.initFsmSlots(self._ss)
@@ -106,20 +119,16 @@ class PythonDevice(BaseFsm):
         self._initDeviceSlots()
         
     def run(self):
-        self.initClassId()
+        #self.initClassId()
         self.initSchema()
         self.startFsm()
-        
-        self._ss.registerSignal("signalNewDeviceInstanceAvailable", str, Hash)  # DeviceServerInstanceId, currentConfig
-        self._ss.connect("", "signalNewDeviceInstanceAvailable", "*", "slotNewDeviceInstanceAvailable", ConnectionType.NO_TRACK, False)
-        self._ss.emit("signalNewDeviceInstanceAvailable", self.serverid, Hash(self.classid, self.parameters))
-
-        self.running = True
-        while self.running:
-            time.sleep(1)
+        with self._stateChangeLock:
+            validated = self.validatorIntern.validate(self.fullSchema, self.parameters)
+            self.parameters.merge(validated, HashMergePolicy.REPLACE_ATTRIBUTES)
+        self._ss.join() # block while SignalSlotable event loop running 
             
     def stopEventLoop(self):
-        self.running = False
+        self._ss.stop()
     
     def __del__(self):
         ''' PythonDevice destructor '''
@@ -139,7 +148,7 @@ class PythonDevice(BaseFsm):
         If 1 or more than 3 arguments, it does nothing
         """
         pars = tuple(args)
-        with self._lock:
+        with self._stateChangeLock:
             # key, value args
             if len(pars) == 2:
                 key, value = pars
@@ -154,21 +163,22 @@ class PythonDevice(BaseFsm):
                     print "Validation Exception (Intern): " + str(e)
                     raise RuntimeError,"Validation Exception: " + str(e)
 
-                #if self.validatorIntern.hasParametersInWarnOrAlarm():
-                #    warnings = self.validatorIntern.getParametersInWarnOrAlarm()
-                #    for key in warnings:
-                #        self.log.WARN(warnings[key]["message"])
-                #        #TODO trigger warnOrAlarm
+                if self.validatorIntern.hasParametersInWarnOrAlarm():
+                    warnings = self.validatorIntern.getParametersInWarnOrAlarm()
+                    for key in warnings:
+                        desc = warnings[key]
+                        self.log.WARN(desc["message"])
+                        self._ss.emit("signalNotification", desc["type"], desc["message"], "", self.deviceid)
 
                 if not validated.empty():
-                    self.parameters += validated
-                    self._ss.emit("signalChanged", validated, self.getInstanceId(), self.classid)
+                    self.parameters.merge(validated, HashMergePolicy.REPLACE_ATTRIBUTES)
+                    self._ss.emit("signalChanged", validated, self.deviceid)
 
     def __setitem__(self, key, value):
         self.set(key, value)
         
     def get(self,key):
-        with self._lock:
+        with self._stateChangeLock:
             try:
                 return self.parameters[key]
             except RuntimeError,e:
@@ -181,12 +191,11 @@ class PythonDevice(BaseFsm):
         return self.fullSchema
         
     def updateSchema(self, schema):
-        print "Update Schema requested"
+        self.log.DEBUG("Update Schema requested")
         self._injectSchema(schema)
-        print "Injected..."
-        xsd = self.__class__.convertToXsd(self.getFullSchema())
-        print "Serialized..."
-        self._ss.emit("signalSchemaUpdated", xsd, self.deviceid, self.classid)
+        self.log.DEBUG("Injected...")
+        # notify the distributed system...
+        self._ss.emit("signalSchemaUpdated", self.fullSchema, self.deviceid)
         self.log.INFO("Schema updated")
     
     def setProgress(self, value, associatedText = ""):
@@ -205,17 +214,11 @@ class PythonDevice(BaseFsm):
         except RuntimeError,e:
             raise AttributeError,"Error while retrieving alias from parameter (" + key + "): " + str(e)
         
-    def key2alias(self, key, aliasReferenceType):
-        return self.getAliasFromKey(key, aliasReferenceType)
-    
     def getKeyFromAlias(self, alias):
         try:
             return self.fullSchema.getKeyFromAlias(alias)
         except RuntimeError,e:
             raise AttributeError,"Error while retrieving parameter from alias (" + str(alias) + "): " + str(e)
-    
-    def alias2key(self, alias):
-        return self.getKeyFromAlias(alias)
     
     def aliasHasKey(self, alias):
         return self.fullSchema.aliasHasKey(key)
@@ -226,8 +229,11 @@ class PythonDevice(BaseFsm):
     def getValueType(self, key):
         return self.fullSchema.getValueType(key)
     
-    def getCurrentConfiguration(self):
-        return self.parameters
+    def getCurrentConfiguration(self, tags = ""):
+        if tags == "":
+            return self.parameters
+        with self._stateChangeLock:
+            return HashFilter.byTag(self.fullSchema, self.parameters, tags)
     
     def getServerId(self):
         return self.serverid
@@ -238,7 +244,8 @@ class PythonDevice(BaseFsm):
     # In C++: the following functions are protected
     
     def errorFoundAction(self, shortMessage, detailedMessage):
-        print "Error Found Action: {} -- {}".format(shortMessage, detailedMessage)
+        self.log.ERROR("Error Found Action: {} -- {}".format(shortMessage, detailedMessage))
+        emit("signalNotification", "ERROR", shortMessage, detailedMessage, self.deviceid)
     
     def preReconfigure(self, incomingReconfiguration):
         pass
@@ -260,57 +267,44 @@ class PythonDevice(BaseFsm):
         
     def onStateUpdate(self, currentState):
         self.log.DEBUG("onStateUpdate: {}".format(currentState))
-        self.set("state", currentState)
-        self._ss.reply(currentState)
+        if self["state"] == currentState:
+            self["state"] = currentState
+        self._ss.reply(currentState)  # reply new state to interested event initiators
     
     def noStateTransition(self):
-        self._ss.emit("signalNoTransition", "No transition possible", self.deviceid)
+        self._ss.emit("signalNoTransition", "No state transition possible", self.deviceid)
         
     def _initDeviceSlots(self):
         #-------------------------------------------- register intrinsic signals
-        self._ss.registerSignal("signalChanged", Hash, str, str)                # changeHash, instanceId, classId
+        self._ss.registerSignal("signalChanged", Hash, str, str)                # changeHash, instanceId
         self._ss.connect("", "signalChanged", "*", "slotChanged", ConnectionType.NO_TRACK, False)
-        
-        self._ss.registerSignal("signalErrorFound", str, str, str, str)         # timeStamp, shortMsg, longMsg, instanceId
-        self._ss.connect("", "signalErrorFound", "*", "slotErrorFound", ConnectionType.NO_TRACK, False)
-        
-        self._ss.registerSignal("signalBadReconfiguration", str, str)           # shortMsg, instanceId
-        self._ss.connect("", "signalBadReconfiguration", "*", "slotBadReconfiguration", ConnectionType.NO_TRACK, False)        
         
         self._ss.registerSignal("signalNoTransition", str, str)                 # 
         self._ss.connect("", "signalNoTransition", "*", "slotNoTransition", ConnectionType.NO_TRACK, False)        
         
-        self._ss.registerSignal("signalWarningOrAlarm", str, str, str, str)     # timeStamp, warnMsg, instanceId, priority
-        self._ss.registerSignal("signalWarning", str, str, str, str)            # timeStamp, warnMsg, instanceId, priority
-        self._ss.connect("", "signalWarning", "*", "slotWarning", ConnectionType.NO_TRACK, False)
+        self._ss.registerSignal("signalNotification", str, str, str, str)     # type, shortMessage, detailedMessage, deviceId
+        self._ss.connect("", "signalNotification", "*", "slotNotification", ConnectionType.NO_TRACK, False)
         
-        self._ss.registerSignal("signalAlarm", str, str, str, str)              # timeStamp, alarmMsg, instanceId, priority
-        self._ss.connect("", "signalAlarm", "*", "slotAlarm", ConnectionType.NO_TRACK, False)
-        
-        self._ss.registerSignal("signalSchemaUpdated", str, str, str)           # schema, instanceId, classId
+        self._ss.registerSignal("signalSchemaUpdated", Schema, str)           # schema, deviceid
         self._ss.connect("", "signalSchemaUpdated", "*", "slotSchemaUpdated", ConnectionType.NO_TRACK, False)
-
-        # TODO Deprecate!
-        self._ss.registerSignal("signalDeviceInstanceGone", str, str)           # DeviceServerInstanceId, deviceInstanceId
-        self._ss.connect("", "signalDeviceInstanceGone", "*", "slotDeviceInstanceGone", ConnectionType.NO_TRACK, False)
         
-        self._ss.registerSignal("signalProgressUpdated", int, str, str)         # Progress value [0,100], label, deviceInstanceId
+        self._ss.registerSignal("signalProgressUpdated", int, str, str)         # Progress value [0,100], label, deviceid
         self._ss.connect("", "signalProgressUpdated", "*", "slotProgressUpdated", ConnectionType.NO_TRACK, False)
         
         #---------------------------------------------- register intrinsic slots
-        self._ss.registerSlot(self.slotReconfigure)
+        self._ss.registerSlot(self.slotReconfigure, Hash)
         self._ss.registerSlot(self.slotRefresh)
-        self._ss.registerSlot(self.slotGetSchema)
-        self._ss.registerSlot(self.slotKillDeviceInstance)
+        self._ss.registerSlot(self.slotGetConfiguration)
+        self._ss.registerSlot(self.slotGetSchema, bool)
+        self._ss.registerSlot(self.slotKillDevice)
         
     def slotRefresh(self):
-        self._ss.emit("signalChanged", self.parameters, self.deviceid, self.classid);
+        self._ss.emit("signalChanged", self.parameters, self.deviceid);
         self._ss.reply(self.parameters);
        
     def slotReconfigure(self, newConfiguration):
         if newConfiguration.empty():
             return
-        validated = Hash()
         result, error, validated = self._validate(newConfiguration)
         if result:
             try:
@@ -324,7 +318,7 @@ class PythonDevice(BaseFsm):
         self._ss.reply(result, error)
     
     def _validate(self, unvalidated):
-        currentState = self.get("state")
+        currentState = self["state"]
         whiteList = self._getStateDependentSchema(currentState)
         self.log.DEBUG("Incoming (un-validated) reconfiguration:\n{}".format(unvalidated))
         try:
@@ -339,22 +333,26 @@ class PythonDevice(BaseFsm):
         with self._stateChangeLock:
             self.parameters += reconfiguration
         self.log.DEBUG("After user interaction:\n{}".format(reconfiguration))
-        self._ss.emit("signalChanged", reconfiguration, self.deviceid, self.classid)
+        self._ss.emit("signalChanged", reconfiguration, self.deviceid)
         self.postReconfigure()
     
     def slotGetSchema(self, onlyCurrentState):
         if onlyCurrentState:
-            currentState = self.get("state")
+            currentState = self["state"]
             self._ss.reply(self._getStateDependentSchema(currentState))
         else:
             self._ss.reply(self.fullSchema)
    
-    def slotKillDeviceInstance(self):
-        self.log.INFO("Device is going down...")
-        self.preDestruction()
-        self._ss.emit("signalDeviceInstanceGone", self.serverid, self.deviceid)
-        self.stopEventLoop()
-        self.log.INFO("dead.")
+    def slotKillDevice(self):
+        senderid = getSenderInfo("slotKillDevice").getInstanceIdOfSender()
+        if senderid == self.serverid: 
+            self.log.INFO("Device is going down as instructed by server")
+            self.preDestruction()
+            self.stopEventLoop()
+        else:
+            self.log.INFO("Device is going down as instructed by \"{}\"".format(senderid))
+            self._ss.call(self.serverid, "slotDeviceGone", self.deviceid)
+            self.stopEventLoop()
    
     def _getStateDependentSchema(self, state):
         with self._stateDependentSchemaLock:
