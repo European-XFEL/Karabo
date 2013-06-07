@@ -99,8 +99,21 @@ class PythonDevice(BaseFsm):
         # Instantiate SignalSlotable object without starting event loop
         self._ss = SignalSlotable.create(self.deviceid)    #, "Jms", self.parameters["connection.Jms"], autostart = False
         
-        # Create 'info' hash
+        # Initialize FSM slots for user defined FSM (polymorphic call) 
+        self.initFsmSlots(self._ss)
+        
+        # Initialize Device slots
+        self._initDeviceSlots()
+        
+    def run(self):
         self.initClassId()
+        self.initSchema()
+        self.startFsm()
+        with self._stateChangeLock:
+            validated = self.validatorIntern.validate(self.fullSchema, self.parameters)
+            self.parameters.merge(validated, HashMergePolicy.REPLACE_ATTRIBUTES)
+            
+        # Create 'info' hash
         info = Hash("type", "device")
         info["classId"] = self.classid
         info["serverId"] = self.serverid
@@ -109,23 +122,8 @@ class PythonDevice(BaseFsm):
         info["host"] = self.hostname
         #... add here more info entries if needed
         
-        # Start event loop ( in a thread ) with given info
-        self._ss.start(info)
-        
-        # Initialize FSM slots for user defined FSM (polymorphic call) 
-        self.initFsmSlots(self._ss)
-        
-        # Initialize Device slots
-        self._initDeviceSlots()
-        
-    def run(self):
-        #self.initClassId()
-        self.initSchema()
-        self.startFsm()
-        with self._stateChangeLock:
-            validated = self.validatorIntern.validate(self.fullSchema, self.parameters)
-            self.parameters.merge(validated, HashMergePolicy.REPLACE_ATTRIBUTES)
-        self._ss.join() # block while SignalSlotable event loop running 
+        # Run event loop ( in a thread ) with given info
+        self._ss.run(info) # block while SignalSlotable event loop running 
             
     def stopEventLoop(self):
         self._ss.stop()
