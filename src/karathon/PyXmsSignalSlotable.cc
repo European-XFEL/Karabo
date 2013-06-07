@@ -55,7 +55,7 @@ void exportPyXmsSignalSlotable() {//exposing karabo::xms::SignalSlotable
                  "Example:\n\tss = SignalSlotable.create('a')\n"
                  ).staticmethod("create")
 
-            .def("run", &SignalSlotableWrap::runEventLoop, (bp::arg("info")),
+            .def("runEventLoop", &SignalSlotable::runEventLoop, (bp::arg("emitHeartbeat") = true, bp::arg("instanceInfo") = karabo::util::Hash()),
                  "\nUse this method if you have created a SignalSlotable instance with autostart = False and you need to provide info for event loop.\n"
                  "Example:\n\tss = SignalSlotable.create('a')\n\tinfo = Hash('type','device')\n\tinfo['classId'] = myclassId\n\tinfo['serverId'] = myserverId\n\t"
                  "info['visibility'] = ['']\n\tinfo['version'] = my_version\n\tinfo['host'] = host_name\n"
