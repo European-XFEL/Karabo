@@ -17,6 +17,7 @@
 #include "SlotWrap.hh"
 #include "MemberSlotWrap.hh"
 #include "RequestorWrap.hh"
+#include "ScopedGILRelease.hh"
 
 namespace bp = boost::python;
 
@@ -53,8 +54,9 @@ namespace karabo {
                 return boost::shared_ptr<SignalSlotableWrap>(new SignalSlotableWrap(instanceId, connectionType, connectionParameters, autostart));
             }
 
-            void runEventLoop(const karabo::util::Hash& info = karabo::util::Hash()) {
-                karabo::xms::SignalSlotable::runEventLoop(true, info);
+            void runEventLoop(bool emitHeartbeat = true, const karabo::util::Hash& info = karabo::util::Hash()) {
+                ScopedGILRelease nogil;
+                karabo::xms::SignalSlotable::runEventLoop(emitHeartbeat, info);
             }
 
             bp::object getAvailableInstancesPy() {
