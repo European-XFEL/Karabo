@@ -299,7 +299,10 @@ class PythonDevice(BaseFsm):
     def slotRefresh(self):
         self._ss.emit("signalChanged", self.parameters, self.deviceid);
         self._ss.reply(self.parameters);
-       
+    
+    def slotGetConfiguration(self):
+        self._ss.reply(self.parameters)
+        
     def slotReconfigure(self, newConfiguration):
         if newConfiguration.empty():
             return
