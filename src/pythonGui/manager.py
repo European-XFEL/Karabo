@@ -37,7 +37,7 @@ import time
 class Notifier(QObject):
     """Class for signals which can not be integrated in Manager class"""
     # signals
-    signalNavigationChanged = pyqtSignal(object)
+    signalSystemTopologyChanged = pyqtSignal(object)
     
     signalNewNavigationItem = pyqtSignal(dict) # id, name, type, (status), (refType), (refId), (schema)
     signalSelectNewNavigationItem = pyqtSignal(dict) # id, name, classId, schema
@@ -182,7 +182,6 @@ class Manager(Singleton):
 
 
     def registerEditableComponent(self, key, component):
-        print "registerEditableComponent", key
         key = str(key)
         dataNotifier = self._getDataNotifierEditableValue(key)
         if dataNotifier is None:
@@ -511,13 +510,13 @@ class Manager(Singleton):
 
 
     def onNewNode(self, itemInfo):
-        itemInfo['type'] = NavigationItemTypes.NODE
+        itemInfo['type'] = NavigationItemTypes.HOST
         self.__notifier.signalNewNavigationItem.emit(itemInfo)
 
 
     def onNewDeviceServerInstance(self, itemInfo):
-        itemInfo['type'] = NavigationItemTypes.DEVICE_SERVER_INSTANCE
-        itemInfo['refType'] = NavigationItemTypes.NODE
+        itemInfo['type'] = NavigationItemTypes.SERVER
+        itemInfo['refType'] = NavigationItemTypes.HOST
         self.__notifier.signalNewNavigationItem.emit(itemInfo)
 
 
@@ -534,14 +533,14 @@ class Manager(Singleton):
         # Remove device class data from internal hash
         self._setFromPath(devSerInsName + "+" + className, Hash())
         
-        itemInfo['type'] = NavigationItemTypes.DEVICE_CLASS
-        itemInfo['refType'] = NavigationItemTypes.DEVICE_SERVER_INSTANCE
+        itemInfo['type'] = NavigationItemTypes.CLASS
+        itemInfo['refType'] = NavigationItemTypes.SERVER
         self.__notifier.signalNewNavigationItem.emit(itemInfo)
 
 
     def onNewDeviceInstance(self, itemInfo):
-        itemInfo['type'] = NavigationItemTypes.DEVICE_INSTANCE
-        itemInfo['refType'] = NavigationItemTypes.DEVICE_CLASS
+        itemInfo['type'] = NavigationItemTypes.DEVICE
+        itemInfo['refType'] = NavigationItemTypes.CLASS
         self.__notifier.signalNewNavigationItem.emit(itemInfo)
 
 
@@ -575,11 +574,6 @@ class Manager(Singleton):
 
 
     def onSchemaAvailable(self, itemInfo):
-        # TODO I do not see the need for the following three lines - BH
-        key = itemInfo.get(QString('key'))
-        if key is None:
-            key = itemInfo.get('key')
-        
         # Notify ConfigurationPanel
         self.__notifier.signalSchemaAvailable.emit(itemInfo)
 
@@ -655,22 +649,24 @@ class Manager(Singleton):
         # Merge new configuration data into central hash
         self._mergeIntoHash(config)
         # Send full internal hash to navigation
-        self.__notifier.signalNavigationChanged.emit(self.__hash)
+        self.__notifier.signalSystemTopologyChanged.emit(self.__hash)
 
 
     def handleClassSchema(self, config):
         path = str(config.paths()[0])
-        print "path", path
         schema = config.get(path)
         # Merge new configuration data into central hash
         self._mergeIntoHash(config)
-        self.onSchemaAvailable(dict(key=path, type=NavigationItemTypes.DEVICE_CLASS, schema=schema))
+        
+        path = path.split('.description',1)[0]
+        self.onSchemaAvailable(dict(key=path, type=NavigationItemTypes.CLASS, schema=schema))
 
 
-    def getDescription(self, serverId, classId):
+    def getClassSchema(self, serverId, classId):
         path = str("server." + serverId + ".classes." + classId + ".description")
         if self.__hash.has(path):
             return self.__hash.get(path)
+
         # Send network request
         self.__notifier.signalGetClassSchema.emit(serverId, classId)
         return None

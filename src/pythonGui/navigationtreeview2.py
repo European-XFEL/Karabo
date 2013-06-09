@@ -29,14 +29,16 @@ class NavigationTreeView(QTreeView):
     def __init__(self, parent, model):
         super(NavigationTreeView, self).__init__(parent)
         
+        self.__prevModelIndex = None
         self.setModel(model)
         
-        #self.setSelectionMode(QAbstractItemView.SingleSelection)
+        self.setSelectionMode(QAbstractItemView.SingleSelection)
         #self.setSortingEnabled(True)
         #self.sortByColumn(0, Qt.AscendingOrder)
         
         #self._setupContextMenu()
         #self.customContextMenuRequested.connect(self.onCustomContextMenuRequested)
+
 
     def currentIndex(self):
         return self.selectionModel().currentIndex()
@@ -49,69 +51,64 @@ class NavigationTreeView(QTreeView):
 
     def itemClicked(self):
         index = self.currentIndex()
+        
         if not index.isValid():
             return NavigationItemTypes.UNDEFINED
         
+        if self.__prevModelIndex == index:
+            return
+        self.__prevModelIndex = index
+        
         level = self.model().getHierarchyLevel(index)
         row = index.row()
-        key = index.data().toString()
-        
-        print "level", level
-        print "row", row
-        print "key", key
-        
+
         classId = None
-        
-        # TODO: rename to HOST, ...
+        path = ""
         
         if level == 0:
-            type = NavigationItemTypes.NODE
+            type = NavigationItemTypes.HOST
         elif level == 1:
-            type = NavigationItemTypes.DEVICE_SERVER_INSTANCE
+            type = NavigationItemTypes.SERVER
+            path = "server." + index.data().toString()
         elif level == 2:
-            type = NavigationItemTypes.DEVICE_CLASS
+            type = NavigationItemTypes.CLASS
             parentIndex = index.parent()
             serverId = parentIndex.data().toString()
             classId = index.data().toString()
             
-            schema = Manager().getDescription(serverId, classId)
-            if schema:
-                Manager().onSchemaAvailable(dict(key=key, type=type, schema=schema))
+            schema = Manager().getClassSchema(serverId, classId)
+            path = str("server." + serverId + ".classes." + classId)
+            Manager().onSchemaAvailable(dict(key=path, type=type, schema=schema))
         elif level == 3:
-            type = NavigationItemTypes.DEVICE_INSTANCE
-            parentIndex = index.parent()
-            classId = parentIndex.data().toString()
+            type = NavigationItemTypes.DEVICE
+            deviceId = index.data().toString()
+            #parentIndex = index.parent()
+            #classId = parentIndex.data().toString()
+            
+            path = str("device." + deviceId)
             # Get schema from model
             #schema = self.__model.getSchema(level, row)
             #Manager().onSchemaAvailable(dict(classId=parentIndex.data().toString(), key=key, type=type, schema=schema))
         
-        itemInfo = dict(key=key, type=type, classId=classId, level=level, row=row, column=0)
+        itemInfo = dict(key=path, type=type, level=level, row=row)
         Manager().onNavigationItemChanged(itemInfo)
         
         return type # Needed in ConfigurationPanel
 
 
     def itemChanged(self, itemInfo):
-
         key = itemInfo.get(QString('key'))
         if key is None:
             key = itemInfo.get('key')
-            
-        #name = itemInfo.get(QString('name'))
-        #if name is None:
-        #    name = itemInfo.get('name')
-
-        #type = itemInfo.get(QString('type'))
-        #if type is None:
-        #    type = itemInfo.get('type')
-
-        level = itemInfo.get('level')
-        row = itemInfo.get('row')
-        column = itemInfo.get('column')
-        index = self.model().findIndex(level, row, column)
         
-        #if index.isValid():
-        #    self.setCurrentIndex(index)
-        #else:
-        #    self.clearSelection()
+        index = self.model().findIndex(key)
+        
+        if self.__prevModelIndex == index:
+            return
+        self.__prevModelIndex = index
+        
+        if index.isValid():
+            self.setCurrentIndex(index)
+        else:
+            self.clearSelection()
 

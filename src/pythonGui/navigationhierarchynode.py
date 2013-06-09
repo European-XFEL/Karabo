@@ -20,12 +20,18 @@ from PyQt4.QtGui import *
 class NavigationHierarchyNode(object):
 
 
-    def __init__(self, displayData, parentItem=None):
+    def __init__(self, displayData, path=str(), parentItem=None):
         super(NavigationHierarchyNode, self).__init__()
         
         self.__parentItem = parentItem
         self.__childItems = list()
         self.__displayData = displayData
+        self.__path = path
+
+
+    def _path(self):
+        return self.__path
+    path = property(fget=_path)
 
 
     def _parentItem(self):

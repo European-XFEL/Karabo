@@ -76,7 +76,7 @@ class NavigationTreeView(QTreeView):
         
         displayName = internalKey
         schema = None
-        if navigationItemType is NavigationItemTypes.DEVICE_CLASS:
+        if navigationItemType is NavigationItemTypes.CLASS:
             displayName = itemInfo.get(QString('classId'))
             if displayName is None:
                 displayName = itemInfo.get('classId')
@@ -192,11 +192,11 @@ class NavigationTreeView(QTreeView):
         classId = None
         
         if level == 0:
-            type = NavigationItemTypes.NODE
+            type = NavigationItemTypes.HOST
         elif level == 1:
-            type = NavigationItemTypes.DEVICE_SERVER_INSTANCE
+            type = NavigationItemTypes.SERVER
         elif level == 2:
-            type = NavigationItemTypes.DEVICE_CLASS
+            type = NavigationItemTypes.CLASS
             parentIndex = index.parent()
             key = parentIndex.data().toString() + "+" + index.data().toString()
             classId = index.data().toString()
@@ -204,7 +204,7 @@ class NavigationTreeView(QTreeView):
             schema = self.__model.getSchema(level, row)
             Manager().onSchemaAvailable(dict(key=key, type=type, schema=schema))
         elif level == 3:
-            type = NavigationItemTypes.DEVICE_INSTANCE
+            type = NavigationItemTypes.DEVICE
             parentIndex = index.parent()
             classId = parentIndex.data().toString()
             # Get schema from model
@@ -280,13 +280,13 @@ class NavigationTreeView(QTreeView):
         
         level = self.__model.levelOf(index)
         if level == 0:
-            return NavigationItemTypes.NODE
+            return NavigationItemTypes.HOST
         elif level == 1:
-            return NavigationItemTypes.DEVICE_SERVER_INSTANCE
+            return NavigationItemTypes.SERVER
         elif level == 2:
-            return NavigationItemTypes.DEVICE_CLASS
+            return NavigationItemTypes.CLASS
         elif level == 3:
-            return NavigationItemTypes.DEVICE_INSTANCE
+            return NavigationItemTypes.DEVICE
         
         return NavigationItemTypes.UNDEFINED
 
@@ -300,12 +300,12 @@ class NavigationTreeView(QTreeView):
         if level == 0:
             # NODE
             internalKey = index.data().toString()
-            return dict(internalKey=internalKey, type=NavigationItemTypes.NODE)
+            return dict(internalKey=internalKey, type=NavigationItemTypes.HOST)
         elif level == 1:
             # DEVICE_SERVER_INSTANCE
             serverId = index.data().toString()
             internalKey = serverId
-            return dict(serverId=serverId, internalKey=internalKey, type=NavigationItemTypes.DEVICE_SERVER_INSTANCE)
+            return dict(serverId=serverId, internalKey=internalKey, type=NavigationItemTypes.SERVER)
         elif level == 2:
             # DEVICE_CLASS
             parentIndex = index.parent()
@@ -316,7 +316,7 @@ class NavigationTreeView(QTreeView):
             level = self.__model.levelOf(index)
             row = self.__model.mappedRow(index)
             schema = self.__model.getSchema(level, row)
-            return dict(serverId=serverId, classId=classId, internalKey=internalKey, schema=schema, type=NavigationItemTypes.DEVICE_CLASS)
+            return dict(serverId=serverId, classId=classId, internalKey=internalKey, schema=schema, type=NavigationItemTypes.CLASS)
         elif level == 3:
             # DEVICE_INSTANCE
             parentIndex = index.parent()
@@ -327,7 +327,7 @@ class NavigationTreeView(QTreeView):
             level = self.__model.levelOf(index)
             row = self.__model.mappedRow(index)
             schema = self.__model.getSchema(level, row)
-            return dict(serverId=serverId, classId=classId, internalKey=internalKey, schema=schema, type=NavigationItemTypes.DEVICE_INSTANCE)
+            return dict(serverId=serverId, classId=classId, internalKey=internalKey, schema=schema, type=NavigationItemTypes.DEVICE)
 
 
     def currentInternalDeviceKey(self):
@@ -339,7 +339,7 @@ class NavigationTreeView(QTreeView):
         if not index.isValid():
             return str()
         
-        if type is NavigationItemTypes.DEVICE_CLASS:
+        if type is NavigationItemTypes.CLASS:
             parentIndex = index.parent()
             return parentIndex.data().toString() + "+" + index.data().toString()
         
@@ -352,7 +352,7 @@ class NavigationTreeView(QTreeView):
 
     def updateDeviceInstanceSchema(self, instanceId, schema):
         self.__model.updateDeviceInstanceSchema(instanceId, schema)
-        Manager().onSchemaAvailable(dict(key=instanceId, type=NavigationItemTypes.DEVICE_INSTANCE, schema=schema))
+        Manager().onSchemaAvailable(dict(key=instanceId, type=NavigationItemTypes.DEVICE, schema=schema))
 
 
 ### slots ###
@@ -392,12 +392,12 @@ class NavigationTreeView(QTreeView):
         configChangeType = None
         classId = str()
         instanceId = str()
-        if type is NavigationItemTypes.DEVICE_CLASS:
+        if type is NavigationItemTypes.CLASS:
             configChangeType = ConfigChangeTypes.DEVICE_CLASS_CONFIG_CHANGED
             classId = index.data().toString()
             parentIndex = index.parent()
             instanceId = parentIndex.data().toString()+"+"+classId
-        elif type is NavigationItemTypes.DEVICE_INSTANCE:
+        elif type is NavigationItemTypes.DEVICE:
             configChangeType = ConfigChangeTypes.DEVICE_INSTRANCE_CONFIG_CHANGED
             parentIndex = index.parent()
             classId = parentIndex.data().toString()
@@ -413,12 +413,12 @@ class NavigationTreeView(QTreeView):
     def onCustomContextMenuRequested(self, pos):
         type = self.currentIndexType()
         # Show context menu for DEVICE_CLASS and DEVICE_INSTANCE
-        if type is NavigationItemTypes.DEVICE_SERVER_INSTANCE:
+        if type is NavigationItemTypes.SERVER:
             self.__mDevSrvInsItem.exec_(QCursor.pos())
-        elif type is NavigationItemTypes.DEVICE_CLASS:
+        elif type is NavigationItemTypes.CLASS:
             self.__acKillDevIns.setVisible(False)
             self.__mDevClaInsItem.exec_(QCursor.pos())
-        elif type is NavigationItemTypes.DEVICE_INSTANCE:
+        elif type is NavigationItemTypes.DEVICE:
             self.__acKillDevIns.setVisible(True)
             self.__mDevClaInsItem.exec_(QCursor.pos())
         
