@@ -56,10 +56,11 @@ class NavigationTreeView(QTreeView):
             return NavigationItemTypes.UNDEFINED
         
         if self.__prevModelIndex == index:
-            return
+            return NavigationItemTypes.UNDEFINED
         self.__prevModelIndex = index
         
         level = self.model().getHierarchyLevel(index)
+        
         row = index.row()
 
         classId = None
