@@ -812,7 +812,7 @@ class GraphicsView(QGraphicsView):
                 schema = QString(mimeData.data("schema"))
 
                 showAdditionalInfo = False
-                if navigationItemType and (navigationItemType == NavigationItemTypes.DEVICE_CLASS):
+                if navigationItemType and (navigationItemType == NavigationItemTypes.CLASS):
                     showAdditionalInfo = True
                     if not ("-" in displayName):
                         # Get unique device class id for new plugin
@@ -837,7 +837,7 @@ class GraphicsView(QGraphicsView):
                 # Register as visible instance
                 Manager().newVisibleDeviceInstance(internalKey)
 
-                if navigationItemType and (navigationItemType == NavigationItemTypes.DEVICE_CLASS):
+                if navigationItemType and (navigationItemType == NavigationItemTypes.CLASS):
                     # Connect customItem signal to Manager, DEVICE_CLASS
                     customItem.signalValueChanged.connect(Manager().onDeviceClassValueChanged)
                     # Register for value changes of devInstId
@@ -913,9 +913,9 @@ class GraphicsView(QGraphicsView):
 
                 # Editable widget
                 if hasEditableComponent:
-                    if navigationItemType is NavigationItemTypes.DEVICE_CLASS:
+                    if navigationItemType is NavigationItemTypes.CLASS:
                         editableComponent = EditableNoApplyComponent(classAlias, key=internalKey)
-                    elif navigationItemType is NavigationItemTypes.DEVICE_INSTANCE:
+                    elif navigationItemType is NavigationItemTypes.DEVICE:
                         editableComponent = EditableApplyLaterComponent(classAlias, key=internalKey)
                         editableComponent.isEditableValueInit = False
 

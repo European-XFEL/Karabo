@@ -25,13 +25,13 @@ from PyQt4.QtGui import *
 class ParameterTreeWidget(QTreeWidget):
 
 
-    def __init__(self, configPanel, internalKey=str(), classId=None):
+    def __init__(self, configPanel, path=str()):
         # configPanel - save parent widget for toolbar buttons
-        # internalKey - full key of navigationItem (either DEVICE_CLASS or DEVICE_INSTANCE)
+        # path - full path of navigationItem
         super(ParameterTreeWidget, self).__init__()
         
-        self.__classId = classId # DeviceClass name stored for XML save
-        self.__instanceKey = internalKey
+        #self.__classId = classId # DeviceClass name stored for XML save
+        self.__instanceKey = path
         self.__configPanel = configPanel
 
         self.setWordWrap(True)
@@ -144,7 +144,6 @@ class ParameterTreeWidget(QTreeWidget):
 
 
     def _setupActions(self):
-        print "_setupActions"
         text = "Open configuration (*.xml)"
         self.__acFileOpen = QAction(QIcon(":open"), "&Open configuration", self)
         self.__acFileOpen.setStatusTip(text)
@@ -217,7 +216,7 @@ class ParameterTreeWidget(QTreeWidget):
         navigationItemType = self.__configPanel.getNavigationItemType()
         
         # Display component?
-        hasDisplayComponent = navigationItemType == NavigationItemTypes.DEVICE_INSTANCE
+        hasDisplayComponent = navigationItemType == NavigationItemTypes.DEVICE
         mimeData.setData("hasDisplayComponent", QString("%1").arg(hasDisplayComponent).toAscii())
         # Editable component?
         hasEditableComponent = item.editableComponent is not None
@@ -315,9 +314,9 @@ class ParameterTreeWidget(QTreeWidget):
     def onFileOpen(self):
         type = self.__configPanel.getNavigationItemType()
         configChangeType = None
-        if type is NavigationItemTypes.DEVICE_CLASS:
+        if type is NavigationItemTypes.CLASS:
             configChangeType = ConfigChangeTypes.DEVICE_CLASS_CONFIG_CHANGED
-        elif type is NavigationItemTypes.DEVICE_INSTANCE:
+        elif type is NavigationItemTypes.DEVICE:
             configChangeType = ConfigChangeTypes.DEVICE_INSTANCE_CONFIG_CHANGED
         
         if self.__classId is None:

@@ -50,7 +50,7 @@ class NavigationPanel(QWidget):
                     self.onNavigationItemClicked)
         
         # Make connects
-        Manager().notifier.signalNavigationChanged.connect(self.onNavigationChanged)
+        Manager().notifier.signalSystemTopologyChanged.connect(self.onSystemTopologyChanged)
         
         Manager().notifier.signalNewNavigationItem.connect(self.onNewNavigationItem)
         Manager().notifier.signalSelectNewNavigationItem.connect(self.onSelectNewNavigationItem)
@@ -118,7 +118,7 @@ class NavigationPanel(QWidget):
     #    model = self.__twNavigation.model()
     #    rootItem = model.invisibleRootItem()
     #    rootItem.fullKey = rootKey
-    #    itemInfo = dict(id=-1, name=rootKey, key=rootKey, schema=schema, type=NavigationItemTypes.DEVICE_CLASS)
+    #    itemInfo = dict(id=-1, name=rootKey, key=rootKey, schema=schema, type=NavigationItemTypes.CLASS)
     #    Manager().onNewNavigationItem(itemInfo)
 
 
@@ -150,7 +150,7 @@ class NavigationPanel(QWidget):
         self.__twNavigation.updateDeviceInstanceSchema(instanceId, schema)
 
 
-    def onNavigationChanged(self, config):
+    def onSystemTopologyChanged(self, config):
         self.__twNavigation.updateView(config)
 
 

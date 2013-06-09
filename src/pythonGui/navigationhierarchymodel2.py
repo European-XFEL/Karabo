@@ -24,24 +24,18 @@ class NavigationHierarchyModel(QAbstractItemModel):
         super(NavigationHierarchyModel, self).__init__(parent)
         
         self.__rootItem = NavigationHierarchyNode("Hierarchical view")
-        #deviceServer = NavigationHierarchyNode("DeviceServer", self.__rootItem)
-        #self.__rootItem.appendChildItem(deviceServer)
-        #deviceServer.appendChildItem(NavigationHierarchyNode("DeviceClass", deviceServer))
-        
-        self.__configData = None
 
 
     def updateData(self, config):
         
         self.__rootItem.clearChildItems()
-        self.__configData = config
         
         self.layoutAboutToBeChanged.emit()
         
         # Get server data
         serverKey = "server"
-        if self.__configData.has(serverKey):
-            serverConfig = self.__configData.get(serverKey)
+        if config.has(serverKey):
+            serverConfig = config.get(serverKey)
             serverIds = list()
             serverConfig.getKeys(serverIds)
             for serverId in serverIds:
@@ -53,16 +47,18 @@ class NavigationHierarchyModel(QAbstractItemModel):
                 # Host item already exists?
                 hostItem = self.__rootItem.getItem(host)
                 if not hostItem:
-                    hostItem = NavigationHierarchyNode(host, self.__rootItem)
+                    hostItem = NavigationHierarchyNode(host, host, self.__rootItem)
                     self.__rootItem.appendChildItem(hostItem)
 
-                serverItem = NavigationHierarchyNode(serverId, hostItem)
+                path = "server." + serverId
+                serverItem = NavigationHierarchyNode(serverId, path, hostItem)
                 hostItem.appendChildItem(serverItem)
                 
                 if serverConfig.hasAttribute(serverId, "deviceClasses"):
                     classes = serverConfig.getAttribute(serverId, "deviceClasses")
                     for deviceClass in classes:
-                        classItem = NavigationHierarchyNode(deviceClass, serverItem)
+                        path = "server." + serverId + ".classes." + deviceClass
+                        classItem = NavigationHierarchyNode(deviceClass, path, serverItem)
                         serverItem.appendChildItem(classItem)
 
                 # Get classes data
@@ -75,8 +71,8 @@ class NavigationHierarchyModel(QAbstractItemModel):
             
         # Get device data
         deviceKey = "device"
-        if self.__configData.has(deviceKey):
-            deviceConfig = self.__configData.get(deviceKey)
+        if config.has(deviceKey):
+            deviceConfig = config.get(deviceKey)
             deviceIds = list()
             deviceConfig.getKeys(deviceIds)
             for deviceId in deviceIds:
@@ -90,35 +86,28 @@ class NavigationHierarchyModel(QAbstractItemModel):
                 # Host item already exists?
                 hostItem = self.__rootItem.getItem(host)
                 if not hostItem:
-                    hostItem = NavigationHierarchyNode(host, self.__rootItem)
+                    hostItem = NavigationHierarchyNode(host, host, self.__rootItem)
                     self.__rootItem.appendChildItem(hostItem)
 
                 # Server item already exists?
                 serverItem = hostItem.getItem(serverId)
                 if not serverItem:
-                    serverItem = NavigationHierarchyNode(serverId, hostItem)
+                    path = "server." + serverId
+                    serverItem = NavigationHierarchyNode(serverId, path, hostItem)
                     hostItem.appendChildItem(serverItem)
 
                 # Class item already exists?
                 classItem = serverItem.getItem(classId)
                 if not classItem:
-                    classItem = NavigationHierarchyNode(classId, serverItem)
+                    path = "server." + serverId + ".classes." + deviceClass
+                    classItem = NavigationHierarchyNode(classId, path, serverItem)
                     serverItem.appendChildItem(classItem)
 
-                deviceItem = NavigationHierarchyNode(deviceId, classItem)
+                path = "device." + deviceId
+                deviceItem = NavigationHierarchyNode(deviceId, path, classItem)
                 classItem.appendChildItem(deviceItem)
-        
-        print ""
 
         self.layoutChanged.emit()
-
-
-    # Setter and getter functions for model data which is a Hash object
-    def _configData(self):
-        return self.__configData
-    def _setConfigData(self, config):
-        self.__configData = config
-    configData = property(fget=_configData, fset=_setConfigData)
 
 
     def getHierarchyLevel(self, index):
@@ -131,9 +120,20 @@ class NavigationHierarchyModel(QAbstractItemModel):
         return hierarchyLevel
 
 
-    def findIndex(self, row, column, value):
-        #TODO: better implementation
-        indexList = self.match(self.index(0, 0), Qt.DisplayRole, QVariant(value))
+    def findIndex(self, path):
+        # Recursive search
+        return self._rFindIndex(self.__rootItem, path)
+
+
+    def _rFindIndex(self, item, path):
+        for i in xrange(item.childCount()):
+            childItem = item.childItem(i)
+            resultItem = self._rFindIndex(childItem, path)
+            if resultItem:
+                return resultItem
+
+        if path == item.path:
+            return self.createIndex(item.row(), 0, item)
         return None
 
 
@@ -160,17 +160,15 @@ class NavigationHierarchyModel(QAbstractItemModel):
 
     def data(self, index, role=Qt.DisplayRole):
         
-        row = index.row()
-        col = index.column()
-        
-        # Find out the hierarchy level of the selected item
-        hierarchyLevel = self.getHierarchyLevel(index)
+        #row = index.row()
+        column = index.column()
 
         if role == Qt.DisplayRole:
             item = index.internalPointer()
-            return item.data(index.column())
-            #return QString("Row%1, Column%2").arg(index.row() + 1)
-        elif (role == Qt.DecorationRole) and (index.column() == 0):
+            return item.data(column)
+        elif (role == Qt.DecorationRole) and (column == 0):
+            # Find out the hierarchy level of the selected item
+            hierarchyLevel = self.getHierarchyLevel(index)
             if hierarchyLevel == 0:
                 return QIcon(":host")
             elif hierarchyLevel == 1:
@@ -189,10 +187,6 @@ class NavigationHierarchyModel(QAbstractItemModel):
                 return QIcon(":device-instance")
 
         return QVariant()
-
-
-    #def setData(self, index, value, role):
-    #    print "setData", role
 
 
     def flags(self, index):

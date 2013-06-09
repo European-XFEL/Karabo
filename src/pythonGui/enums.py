@@ -12,10 +12,10 @@ __all__ = ["NavigationItemTypes", "AccessTypes", "ConfigChangeTypes"]
 
 class NavigationItemTypes(object):
     UNDEFINED = -1
-    NODE = 0
-    DEVICE_SERVER_INSTANCE = 1
-    DEVICE_CLASS = 2
-    DEVICE_INSTANCE = 3
+    HOST = 0
+    SERVER = 1
+    CLASS = 2
+    DEVICE = 3
 
 
 class AccessTypes(object): # TODO use INTs?

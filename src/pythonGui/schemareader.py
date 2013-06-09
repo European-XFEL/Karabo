@@ -25,29 +25,32 @@ from PyQt4.QtGui import *
 
 class SchemaReader(object):
 
-    def __init__(self, treeWidget=None, schema=None):
+    def __init__(self):
         super(SchemaReader, self).__init__()
         
-        self.__deviceType = None
-        self.readSchema(schema, treeWidget)
+        self.__schema = None
+        self.__treeWidget = None # Treewidget displays schema
+        self.__deviceType = None # CLASS or DEVICE
+        self.__rootPath = None # full internal key (e.g. "server.serverId.classes.classId")
         
 
     def setDeviceType(self, deviceType):
         self.__deviceType = deviceType
 
 
-    def readSchema(self, schema, treeWidget):
+    def readSchema(self, path, schema, treeWidget):
         self.__schema = schema
         self.__treeWidget = treeWidget
         
         if self.__schema is None:
-            print "No schema valid schema was provided!"
+            #print "No schema valid schema was provided!"
             return
         
-        print schema
+        print ""
+        print "readSchema", treeWidget
         print ""
         
-        self.__classId = self.__schema.getRootName()
+        self.__rootPath = path
         
         keys = self.__schema.getKeys()
         for key in keys:
@@ -58,11 +61,11 @@ class SchemaReader(object):
 
     def r_readSchema(self, key, parentItem=None):
         
-        fullKey = self.__classId + "." + key
+        fullPath = self.__rootPath + "." + key
         if parentItem:
-            item = PropertyTreeWidgetItem(fullKey, self.__treeWidget, parentItem)
+            item = PropertyTreeWidgetItem(fullPath, self.__treeWidget, parentItem)
         else:
-            item = PropertyTreeWidgetItem(fullKey, self.__treeWidget)
+            item = PropertyTreeWidgetItem(fullPath, self.__treeWidget)
 
         if self.__schema.hasDisplayedName(key):
             item.displayText = self.__schema.getDisplayedName(key)
@@ -73,20 +76,18 @@ class SchemaReader(object):
         #    print "hasDisplayType", self._schema.getDisplayType(key)
 
         if self.__schema.isLeaf(key):
-            print "isLeaf", key
+            #print "isLeaf", key
             self._handleLeaf(key, item)
         elif self.__schema.isNode(key):
-            print "isNode", key
+            #print "isNode", key
             #print "isCommand", self.__schema.isCommand(key)
             self._handleNode(key, item)
         elif self.__schema.isChoiceOfNodes(key):
-            print "isChoiceOfNodes", key
+            #print "isChoiceOfNodes", key
             self._handleChoiceOfNodes(key, item)
         elif self.__schema.isListOfNodes(key):
-            print "isListOfNodes", key
+            #print "isListOfNodes", key
             self._handleListOfNodes(key, item)
-        elif self.__schema.isCommand(key):
-            print "isCommand"
 
 
     def _handleLeaf(self, key, item):
@@ -100,12 +101,9 @@ class SchemaReader(object):
         expertLevel = self._getExpertLevel(key, item)
         allowedStates = self._getAllowedStates(key, item)
         
-        print ""
-        print "displayType", self.__schema.hasDisplayType(key)
-        if self.__schema.hasDisplayType(key):
-            print "type", self.__schema.getDisplayType(key)
-        print ""
-        
+        #if self.__schema.hasDisplayType(key):
+        #    print "type", self.__schema.getDisplayType(key)
+
         minInc = self._getMinInc(key, item)
         maxInc = self._getMaxInc(key, item)
         minExc = self._getMinExc(key, item)
@@ -138,46 +136,46 @@ class SchemaReader(object):
         valueType = self.__schema.getValueType(key)
         
         if valueType == Types.STRING:
-            print "STRING"
+            #print "STRING"
             self._handleString(key, item, defaultValue, unitSymbol)
         elif valueType == Types.CHAR:
-            print "CHAR"
+            #print "CHAR"
             self._handleString(key, item, defaultValue, unitSymbol)
         elif valueType == Types.BOOL:
-            print "BOOL"
+            #print "BOOL"
             self._handleBool(key, item, defaultValue, unitSymbol)
         elif valueType == Types.FLOAT:
-            print "FLOAT"
+            #print "FLOAT"
             self._handleFloat(key, item, defaultValue, unitSymbol)
         elif valueType == Types.COMPLEX_FLOAT:
-            print "COMPLEX_FLOAT"
+            #print "COMPLEX_FLOAT"
             self._handleFloat(key, item, defaultValue, unitSymbol)
         elif valueType == Types.DOUBLE:
-            print "DOUBLE"
+            #print "DOUBLE"
             self._handleFloat(key, item, defaultValue, unitSymbol)
         elif valueType == Types.COMPLEX_DOUBLE:
-            print "COMPLEX_DOUBLE"
+            #print "COMPLEX_DOUBLE"
             self._handleFloat(key, item, defaultValue, unitSymbol)
         elif valueType == Types.UINT8:
-            print "UINT8"
+            #print "UINT8"
             self._handleInteger(key, item, defaultValue, unitSymbol)
         elif valueType == Types.INT16:
-            print "INT16"
+            #print "INT16"
             self._handleInteger(key, item, defaultValue, unitSymbol)
         elif valueType == Types.UINT16:
-            print "UINT16"
+            #print "UINT16"
             self._handleInteger(key, item, defaultValue, unitSymbol)
         elif valueType == Types.INT32:
-            print "INT32"
+            #print "INT32"
             self._handleInteger(key, item, defaultValue, unitSymbol)
         elif valueType == Types.UINT32:
-            print "UINT32"
+            #print "UINT32"
             self._handleInteger(key, item, defaultValue, unitSymbol)
         elif valueType == Types.INT64:
-            print "INT64"
+            #print "INT64"
             self._handleInteger(key, item, defaultValue, unitSymbol)
         elif valueType == Types.UINT64:
-            print "UINT64"
+            #print "UINT64"
             self._handleInteger(key, item, defaultValue, unitSymbol)
         elif valueType == Types.VECTOR_STRING:
             print "VECTOR_STRING"
@@ -250,8 +248,8 @@ class SchemaReader(object):
         else:
             parentItem.setToolTip(0, toolTip + "<br>" + text)
         
-        #fullKey = self.__classId + "." + key
-        #cItem = AttributeTreeWidgetItem(fullKey, self.__treeWidget, parentItem)
+        #fullPath = self.__rootPath + "." + key
+        #cItem = AttributeTreeWidgetItem(fullPath, self.__treeWidget, parentItem)
         #cItem.setText(0, "Description")
         #cItem.setText(2, description)
         
@@ -278,8 +276,8 @@ class SchemaReader(object):
         else:
             parentItem.setToolTip(0, toolTip + "<br>" + text)
         
-        #fullKey = self.__classId + "." + key
-        #cItem = AttributeTreeWidgetItem(fullKey, self.__treeWidget, parentItem)
+        #fullPath = self.__rootPath + "." + key
+        #cItem = AttributeTreeWidgetItem(fullPath, self.__treeWidget, parentItem)
         #cItem.setText(0, "Default value")
         #cItem.setText(2, str(defaultValue))
         
@@ -303,14 +301,15 @@ class SchemaReader(object):
             return
         
         if self.__schema.isAssignmentMandatory(key):
-            print "assignmentMandatory"
             f = item.font(0)
             f.setBold(True)
             item.setFont(0, f)
         elif self.__schema.isAssignmentInternal(key):
-            print "assignmentInternal"
+            #print "assignmentInternal"
+            pass
         elif self.__schema.isAssignmentOptional(key):
-            print "assignmentOptional"
+            #print "assignmentOptional"
+            pass
 
 
     def _getAccessMode(self, key, parentItem):
@@ -318,11 +317,13 @@ class SchemaReader(object):
             return
         
         if self.__schema.isAccessInitOnly(key):
-            print "isInitOnly"
+            #print "isInitOnly"
+            pass
         elif self.__schema.isAccessReconfigurable(key):
-            print "isReconfigurable"
+            #print "isReconfigurable"
+            pass
         elif self.__schema.isAccessReadOnly(key):
-            print "isReadOnly"
+            #print "isReadOnly"
             if self.__schema.hasWarnLow(key):
                 self._handleFloatAttribute(parentItem, key + ".warnLow",
                                            "Warn low", self.__schema.getWarnLow(key))
@@ -382,7 +383,7 @@ class SchemaReader(object):
 ### functions for setting editable components depending on value type ###
     def _handleBool(self, key, item, defaultValue, unitSymbol):
         item.classAlias = "Toggle Field"
-        if self.__deviceType is NavigationItemTypes.DEVICE_CLASS:
+        if self.__deviceType is NavigationItemTypes.CLASS:
             editableComponent = EditableNoApplyComponent(classAlias=item.classAlias, key=item.internalKey,
                                                          value=defaultValue, unitSymbol=unitSymbol)
             #, value=item.defaultValue, valueType=item.valueType, unitSymbol=unitSymbol)
@@ -408,7 +409,7 @@ class SchemaReader(object):
             item.setIcon(0, QIcon(":string"))
         
         # TODO: do not forget PATH_ELEMENT "File Path"
-        if self.__deviceType is NavigationItemTypes.DEVICE_CLASS:
+        if self.__deviceType is NavigationItemTypes.CLASS:
             editableComponent = EditableNoApplyComponent(classAlias=item.classAlias, key=item.internalKey,
                                                          value=defaultValue, enumeration=enumeration,
                                                          unitSymbol=unitSymbol)
@@ -434,7 +435,7 @@ class SchemaReader(object):
             enumeration = None
             item.setIcon(0, QIcon(":int"))
             
-        if self.__deviceType is NavigationItemTypes.DEVICE_CLASS:
+        if self.__deviceType is NavigationItemTypes.CLASS:
             editableComponent = EditableNoApplyComponent(classAlias=item.classAlias, key=item.internalKey,
                                                          value=defaultValue, enumeration=enumeration,
                                                          unitSymbol=unitSymbol)
@@ -463,7 +464,7 @@ class SchemaReader(object):
             enumeration = None
             item.setIcon(0, QIcon(":float"))
         
-        if self.__deviceType is NavigationItemTypes.DEVICE_CLASS:
+        if self.__deviceType is NavigationItemTypes.CLASS:
             editableComponent = EditableNoApplyComponent(classAlias=item.classAlias, key=item.internalKey,
                                                          value=defaultValue, enumeration=enumeration,
                                                          unitSymbol=unitSymbol)
@@ -483,16 +484,16 @@ class SchemaReader(object):
 
     def _handleFloatAttribute(self, parentItem, key, text, value):
         # TODO: needs to have unique key
-        fullKey = self.__classId + "." + key
-        item = AttributeTreeWidgetItem(fullKey, self.__treeWidget, parentItem)
+        fullPath = self.__rootPath + "." + key
+        item = AttributeTreeWidgetItem(fullPath, self.__treeWidget, parentItem)
         item.setText(0, text)
         
-        print "_handleFloatAttribute", key, text, value
+        #print "_handleFloatAttribute", key, text, value
         
         item.classAlias = "Float Field"
         item.setIcon(0, QIcon(":float"))
         
-        if self.__deviceType is NavigationItemTypes.DEVICE_CLASS:
+        if self.__deviceType is NavigationItemTypes.CLASS:
             editableComponent = EditableNoApplyComponent(classAlias=item.classAlias, key=item.internalKey, value=value)
             #value=attributeItem.defaultValue, valueType=attributeItem.valueType, unitSymbol=unitSymbol)
         else:
