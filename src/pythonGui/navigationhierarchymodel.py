@@ -144,7 +144,7 @@ class NavigationHierarchyModel(SqlTreeModel):
         if type is None:
             type = itemInfo.get('type')
         
-        if type is NavigationItemTypes.NODE:
+        if type is NavigationItemTypes.HOST:
             # NODE: insert parameter into database
             queryText = "INSERT INTO tNode (id, name) VALUES ('" + str(id) + "', '" + name + "');"
             success = QSqlQuery().exec_(queryText)
@@ -162,7 +162,7 @@ class NavigationHierarchyModel(SqlTreeModel):
             if refId is None:
                 refId = itemInfo.get('refId')
             
-            if type is NavigationItemTypes.DEVICE_SERVER_INSTANCE:
+            if type is NavigationItemTypes.SERVER:
                 status = itemInfo.get(QString('status'))
                 if status is None:
                     status = itemInfo.get('status')
@@ -175,7 +175,7 @@ class NavigationHierarchyModel(SqlTreeModel):
                     queryText = "REPLACE INTO tDeviceServerInstance (id, name, nodId, status) VALUES ('" + str(id) + "', '" + name + \
                                 "', '" + str(refId) + "', '" + status + "');"
                     QSqlQuery().exec_(queryText)
-            elif type is NavigationItemTypes.DEVICE_CLASS:
+            elif type is NavigationItemTypes.CLASS:
                 schema = itemInfo.get(QString('schema'))
                 if schema is None:
                     schema = itemInfo.get('schema')
@@ -188,7 +188,7 @@ class NavigationHierarchyModel(SqlTreeModel):
                     queryText = "REPLACE INTO tDeviceClass (id, name, serverId, schema) VALUES ('" + str(id) + "', '" + name + \
                                 "', '" + str(refId) + "', '" + schema + "');"
                     QSqlQuery().exec_(queryText)
-            elif type is NavigationItemTypes.DEVICE_INSTANCE:
+            elif type is NavigationItemTypes.DEVICE:
                 status = 'online'
                 
                 schema = itemInfo.get(QString('schema'))

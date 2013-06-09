@@ -33,14 +33,8 @@ from enums import NavigationItemTypes
 from manager import Manager
 from navigationtreeview2 import NavigationTreeView
 
-### Just for testing ###
-parseSchema = True
-if parseSchema:
-    from schemareader import SchemaReader
-    from schematest.sampleschema import SampleSchema
-else:
-    from xsdreader import XsdReader
-    
+from schemareader import SchemaReader
+from schematest.sampleschema import SampleSchema    
 
 from libkarathon import *
 from PyQt4.QtCore import *
@@ -58,13 +52,7 @@ class ConfigurationPanel(QWidget):
         # map = { deviceInternalKey, bool }
         self.__internalKeySchemaLoadedMap = dict()
         
-        # TODO: removed because is is not supported yet for SL6 (introduced with Qt 4.6)
-        #self.__xmlSchema = QXmlSchema()
-        if parseSchema:
-            ### Just for testing ###
-            self.__schemaReader = SchemaReader()
-        else:
-            self.__xsdReader = XsdReader()
+        self.__schemaReader = SchemaReader()
         
         title = "Configuration Editor"
         self.setWindowTitle(title)
@@ -94,7 +82,7 @@ class ConfigurationPanel(QWidget):
         splitTopPanes.setStretchFactor(0, 1)
         
         # Make connects
-        Manager().notifier.signalNavigationChanged.connect(self.onNavigationChanged)
+        Manager().notifier.signalSystemTopologyChanged.connect(self.onSystemTopologyChanged)
         
         Manager().notifier.signalNewNavigationItem.connect(self.onNewNavigationItem)
         Manager().notifier.signalSelectNewNavigationItem.connect(self.onSelectNewNavigationItem)
@@ -325,55 +313,45 @@ class ConfigurationPanel(QWidget):
 
 
     def _parseSchema(self, itemInfo, twParameterEditorPage):
-        if parseSchema:
-            #schema = Connection.getSchema("Tcp")
-            #sampleSchemaClass = SampleSchema.create("SampleSchema", Hash("targetSpeed", 0.3))
-            schema = itemInfo.get('schema')
-            #schema = Configurator("SampleSchema").getSchema("SampleSchema")
-
-            # Distinguish between DEVICE_CLASS and DEVICE_INSTANCE
-            deviceType = itemInfo.get(QString('type'))
-            if deviceType is None:
-                deviceType = itemInfo.get('type')
-            self.__schemaReader.setDeviceType(deviceType)
-            
-            if self.__schemaReader.readSchema(schema, twParameterEditorPage):
-                QMessageBox.critical(self, "Schema", "The given schema is invalid")
-                return
-        else:
-            if self.__xsdReader.parseContent(twParameterEditorPage, itemInfo) == False:
-                QMessageBox.critical(self, "XSD Schema", "The given XSD schema file is invalid")
-                return
-
-
-    def _createNewAttributePage(self, itemInfo):
-        classId = itemInfo.get(QString('classId'))
-        if classId is None:
-            classId = itemInfo.get('classId')
-        internalKey = itemInfo.get(QString('key'))
-        if internalKey is None:
-            internalKey = itemInfo.get('key')
-        type = itemInfo.get(QString('type'))
-        if type is None:
-            type = itemInfo.get('type')
+        path = itemInfo.get(QString('key'))
+        if path is None:
+            path = itemInfo.get('key')
+        
         schema = itemInfo.get(QString('schema'))
         if schema is None:
             schema = itemInfo.get('schema')
         
-        # TODO: removed because it is not supported yet for SL6 (introduced with Qt 4.6)
-        #self.__xmlSchema.load(schema.toLatin1())
-        #if self.__xmlSchema.isValid() == False :
-        #    QMessageBox.critical(None, "XML Schema", "The given XML schema file is invalid")
-        #    return
+        # Distinguish between DEVICE_CLASS and DEVICE_INSTANCE
+        deviceType = itemInfo.get(QString('type'))
+        if deviceType is None:
+            deviceType = itemInfo.get('type')
+        self.__schemaReader.setDeviceType(deviceType)
 
-        twParameterEditorPage = ParameterTreeWidget(self, internalKey, classId)
+        if self.__schemaReader.readSchema(path, schema, twParameterEditorPage):
+            QMessageBox.critical(self, "Schema", "The given schema is invalid")
+            return
+
+
+    def _createNewParameterPage(self, itemInfo):
+        #classId = itemInfo.get(QString('classId'))
+        #if classId is None:
+        #    classId = itemInfo.get('classId')
+        
+        path = itemInfo.get(QString('key'))
+        if path is None:
+            path = itemInfo.get('key')
+        type = itemInfo.get(QString('type'))
+        if type is None:
+            type = itemInfo.get('type')
+
+        twParameterEditorPage = ParameterTreeWidget(self, path)
         twParameterEditorPage.setHeaderLabels(QStringList() << "Parameter" << "Current value on device" << "Value")
         twParameterEditorPage.addConfigAction(self.__acKillInstance)
         twParameterEditorPage.addConfigAction(self.__acApplyAll)
         #twParameterEditorPage.addConfigMenu(self.__mApply)
         twParameterEditorPage.addConfigAction(self.__acResetAll)
         
-        if type is NavigationItemTypes.DEVICE_CLASS:
+        if type is NavigationItemTypes.CLASS:
             twParameterEditorPage.hideColumn(1)
         
         index = self.__swParameterEditor.addWidget(twParameterEditorPage)
@@ -524,30 +502,37 @@ class ConfigurationPanel(QWidget):
         if (key in self.__navItemInternalKeyIndexMap) and (key in self.__internalKeySchemaLoadedMap):
             index = self.__navItemInternalKeyIndexMap.get(key)
             if index is not None:
-                twAttributeEditorPage = self.__swParameterEditor.widget(index)
+                twParameterEditorPage = self.__swParameterEditor.widget(index)
                 
                 # Parsing of schema necessary?
                 schemaLoaded = self.__internalKeySchemaLoadedMap.get(key)
                 if not schemaLoaded:
                     # Unregister all widgets of TreeWidget from DataNotifier in Manager before clearing..
-                    self._r_unregisterEditableComponent(twAttributeEditorPage.invisibleRootItem())
-                    twAttributeEditorPage.clear()
+                    self._r_unregisterEditableComponent(twParameterEditorPage.invisibleRootItem())
+                    twParameterEditorPage.clear()
 
-                    self._parseSchema(itemInfo, twAttributeEditorPage)
+                    self._parseSchema(itemInfo, twParameterEditorPage)
                     self.__internalKeySchemaLoadedMap[key] = True
         else:
-            self.__navItemInternalKeyIndexMap[key] = self._createNewAttributePage(itemInfo)
-            self.__internalKeySchemaLoadedMap[key] = True
+            self.__navItemInternalKeyIndexMap[key] = self._createNewParameterPage(itemInfo)
+            # Schema might not be there yet...
+            schema = itemInfo.get(QString('schema'))
+            if schema is None:
+                schema = itemInfo.get('schema')
+            if schema:
+                self.__internalKeySchemaLoadedMap[key] = True
+            else:
+                self.__internalKeySchemaLoadedMap[key] = False
 
 
-    # signal from PanelManager NavigationTreeWidgetItem clicked (NavigationPanel)
+    # signal from Manager NavigationTreeWidgetItem clicked (NavigationPanel)
     def onNavigationItemClicked(self):
         #print "ConfigurationPanel.itemClicked"
         type = self.__twNavigation.itemClicked()
         if type is NavigationItemTypes.UNDEFINED:
             return
         
-        if type is NavigationItemTypes.DEVICE_CLASS:
+        if type is NavigationItemTypes.CLASS:
             self.updateButtonsVisibility = True
         else:
             self.updateButtonsVisibility = False
@@ -558,13 +543,14 @@ class ConfigurationPanel(QWidget):
         type = itemInfo.get(QString('type'))
         if type is None:
             type = itemInfo.get('type')
+        
         key = itemInfo.get(QString('key'))
         if key is None:
             key = itemInfo.get('key')
         
-        if type is NavigationItemTypes.DEVICE_CLASS:
+        if type is NavigationItemTypes.CLASS:
             self.updateButtonsVisibility = True
-        elif (type is NavigationItemTypes.DEVICE_SERVER_INSTANCE) or (type is NavigationItemTypes.DEVICE_INSTANCE):
+        elif (type is NavigationItemTypes.SERVER) or (type is NavigationItemTypes.DEVICE):
             self.updateButtonsVisibility = False
         
         # Hide apply button of current ParameterTreeWidget
@@ -572,19 +558,19 @@ class ConfigurationPanel(QWidget):
         if self.__prevDevInsKey != "":
             Manager().removeVisibleDeviceInstance(self.__prevDevInsKey)
             self.__prevDevInsKey = str()
-
+        
         self.__twNavigation.itemChanged(itemInfo)
         
         # Show correct parameters
-        index = self.__navItemInternalKeyIndexMap.get(QString(key))
-        if index is not None:
+        index = self.__navItemInternalKeyIndexMap.get(key)
+        if index:
             self.__swParameterEditor.blockSignals(True)
             self.__swParameterEditor.setCurrentIndex(index)
             # Show apply button of current ParameterTreeWidget
             self._getCurrentParameterEditor().setActionsVisible(True)
             self.__swParameterEditor.blockSignals(False)
             
-            if (type is NavigationItemTypes.DEVICE_INSTANCE) and (self.__prevDevInsKey != key):
+            if (type is NavigationItemTypes.DEVICE) and (self.__prevDevInsKey != key):
                 # visible DEVICE_INSTANCE has changed
                 Manager().newVisibleDeviceInstance(key)
                 self.__prevDevInsKey = key
@@ -601,6 +587,7 @@ class ConfigurationPanel(QWidget):
             self.__acKillInstance.setVisible(False)
             self.__acApplyAll.setVisible(False)
             self.__acResetAll.setVisible(False)
+
 
 
     def onUpdateDeviceServerInstance(self, itemInfo):
@@ -711,9 +698,9 @@ class ConfigurationPanel(QWidget):
         if internalKey is None:
             internalKey = itemInfo.get('internalKey')
         
-        if type is NavigationItemTypes.DEVICE_INSTANCE:
+        if type is NavigationItemTypes.DEVICE:
             Manager().killDeviceInstance(serverId, internalKey)
-        elif type is NavigationItemTypes.DEVICE_SERVER_INSTANCE:
+        elif type is NavigationItemTypes.SERVER:
             Manager().killDeviceServerInstance(internalKey)
 
 
@@ -742,8 +729,9 @@ class ConfigurationPanel(QWidget):
         self.__twNavigation.updateDeviceInstanceSchema(instanceId, schema)
 
 
-    def onNavigationChanged(self, config):
-        self.__twNavigation.updateView(config)
+    def onSystemTopologyChanged(self, config):
+        #self.__twNavigation.updateView(config)
+        pass
 
 
     # virtual function

@@ -146,13 +146,13 @@ class XsdReader(QXmlStreamReader):
                     restrictionBase, minInclusive, maxInclusive, enumeration = self.processSimpleTypeTag()
                 elif tagName == "complexType":
                     
-                    if (self.__type is NavigationItemTypes.DEVICE_CLASS) and (accessType == AccessTypes.READONLY):
+                    if (self.__type is NavigationItemTypes.CLASS) and (accessType == AccessTypes.READONLY):
                         complexItem = None
                     else:
                         # Some complex types need special treatment
                         if displayType == "Slot":
                             complexItem = SlotTreeWidgetItem(name, twAttributeEditorPage, parentItem)
-                            if self.__type is NavigationItemTypes.DEVICE_INSTANCE:
+                            if self.__type is NavigationItemTypes.DEVICE:
                                 complexItem.enabled = True
                             complexItem.classAlias = "Command"
                         elif displayType == "Image":
@@ -187,7 +187,7 @@ class XsdReader(QXmlStreamReader):
 
         # create simple element
         if complexItem is None:
-                if (self.__type is NavigationItemTypes.DEVICE_CLASS) and (accessType == AccessTypes.READONLY):
+                if (self.__type is NavigationItemTypes.CLASS) and (accessType == AccessTypes.READONLY):
                     return None
                 
                 if isSequenceElement == False :
@@ -213,7 +213,7 @@ class XsdReader(QXmlStreamReader):
                     self.setUpdateStatus(parentItem, attributeItem)
                     
                     createEditableComponent = True
-                    if self.__type is NavigationItemTypes.DEVICE_INSTANCE:
+                    if self.__type is NavigationItemTypes.DEVICE:
                         if (accessType == AccessTypes.READONLY) or (accessType == AccessTypes.INIT):
                             self.setItemIcon(attributeItem, type, restrictionBase)
                             createEditableComponent = False
@@ -227,7 +227,7 @@ class XsdReader(QXmlStreamReader):
                             
                             attributeItem.defaultValue = default
                             
-                            if self.__type is NavigationItemTypes.DEVICE_CLASS:
+                            if self.__type is NavigationItemTypes.CLASS:
                                 editableComponent = EditableNoApplyComponent(attributeItem.classAlias, key=attributeItem.internalKey, value=attributeItem.defaultValue, valueType=attributeItem.valueType, unitSymbol=unitSymbol)
                             else:
                                 editableComponent = EditableApplyLaterComponent(attributeItem.classAlias, key=attributeItem.internalKey, value=None, valueType=attributeItem.valueType, unitSymbol=unitSymbol)
@@ -243,7 +243,7 @@ class XsdReader(QXmlStreamReader):
                                 if createEditableComponent is False:
                                     return complexItem
                                 
-                                if self.__type is NavigationItemTypes.DEVICE_CLASS:
+                                if self.__type is NavigationItemTypes.CLASS:
                                     editableComponent = EditableNoApplyComponent(attributeItem.classAlias, key=attributeItem.internalKey, value=attributeItem.defaultValue, valueType=attributeItem.valueType, unitSymbol=unitSymbol)
                                 else:
                                     editableComponent = EditableApplyLaterComponent(attributeItem.classAlias, key=attributeItem.internalKey, value=None, valueType=attributeItem.valueType, unitSymbol=unitSymbol)
@@ -256,7 +256,7 @@ class XsdReader(QXmlStreamReader):
                                 if createEditableComponent is False:
                                     return complexItem
                                 
-                                if self.__type is NavigationItemTypes.DEVICE_CLASS:
+                                if self.__type is NavigationItemTypes.CLASS:
                                     editableComponent = EditableNoApplyComponent(attributeItem.classAlias, key=attributeItem.internalKey, value=attributeItem.defaultValue, valueType=attributeItem.valueType, unitSymbol=unitSymbol, enumeration=enumeration)
                                 else:
                                     editableComponent = EditableApplyLaterComponent(attributeItem.classAlias, key=attributeItem.internalKey, value=None, valueType=attributeItem.valueType, unitSymbol=unitSymbol, enumeration=enumeration)
@@ -277,7 +277,7 @@ class XsdReader(QXmlStreamReader):
                             if createEditableComponent is False:
                                 return complexItem
                             
-                            if self.__type is NavigationItemTypes.DEVICE_CLASS:
+                            if self.__type is NavigationItemTypes.CLASS:
                                 editableComponent = EditableNoApplyComponent(attributeItem.classAlias, key=attributeItem.internalKey, value=attributeItem.defaultValue, valueType=attributeItem.valueType, unitSymbol=unitSymbol)
                             else:
                                 editableComponent = EditableApplyLaterComponent(attributeItem.classAlias, key=attributeItem.internalKey, value=None, valueType=attributeItem.valueType, unitSymbol=unitSymbol)
@@ -294,7 +294,7 @@ class XsdReader(QXmlStreamReader):
                             if createEditableComponent is False:
                                 return complexItem
                             
-                            if self.__type is NavigationItemTypes.DEVICE_CLASS:
+                            if self.__type is NavigationItemTypes.CLASS:
                                 editableComponent = EditableNoApplyComponent(attributeItem.classAlias, key=attributeItem.internalKey, value=attributeItem.defaultValue, valueType=attributeItem.valueType, unitSymbol=unitSymbol, enumeration=enumeration)
                             else:
                                 editableComponent = EditableApplyLaterComponent(attributeItem.classAlias, key=attributeItem.internalKey, value=None, valueType=attributeItem.valueType, unitSymbol=unitSymbol, enumeration=enumeration)
@@ -312,7 +312,7 @@ class XsdReader(QXmlStreamReader):
                             if createEditableComponent is False:
                                 return complexItem
                             
-                            if self.__type is NavigationItemTypes.DEVICE_CLASS:
+                            if self.__type is NavigationItemTypes.CLASS:
                                 editableComponent = EditableNoApplyComponent(attributeItem.classAlias, key=attributeItem.internalKey, value=attributeItem.defaultValue, valueType=attributeItem.valueType, unitSymbol=unitSymbol)
                             else:
                                 editableComponent = EditableApplyLaterComponent(attributeItem.classAlias, key=attributeItem.internalKey, value=None, valueType=attributeItem.valueType, unitSymbol=unitSymbol)
@@ -329,7 +329,7 @@ class XsdReader(QXmlStreamReader):
                             if createEditableComponent is False:
                                 return complexItem
                             
-                            if self.__type is NavigationItemTypes.DEVICE_CLASS:
+                            if self.__type is NavigationItemTypes.CLASS:
                                 editableComponent = EditableNoApplyComponent(attributeItem.classAlias, key=attributeItem.internalKey, value=attributeItem.defaultValue, valueType=attributeItem.valueType, unitSymbol=unitSymbol, enumeration=enumeration)
                             else:
                                 editableComponent = EditableApplyLaterComponent(attributeItem.classAlias, key=attributeItem.internalKey, value=None, valueType=attributeItem.valueType, unitSymbol=unitSymbol, enumeration=enumeration)
@@ -347,7 +347,7 @@ class XsdReader(QXmlStreamReader):
                             if createEditableComponent is False:
                                 return complexItem
                             
-                            if self.__type is NavigationItemTypes.DEVICE_CLASS:
+                            if self.__type is NavigationItemTypes.CLASS:
                                 editableComponent = EditableNoApplyComponent(attributeItem.classAlias, key=attributeItem.internalKey, value=attributeItem.defaultValue, valueType=attributeItem.valueType, unitSymbol=unitSymbol)
                             else:
                                 editableComponent = EditableApplyLaterComponent(attributeItem.classAlias, key=attributeItem.internalKey, value=None, valueType=attributeItem.valueType, unitSymbol=unitSymbol)
@@ -364,7 +364,7 @@ class XsdReader(QXmlStreamReader):
                             if createEditableComponent is False:
                                 return complexItem
                             
-                            if self.__type is NavigationItemTypes.DEVICE_CLASS:
+                            if self.__type is NavigationItemTypes.CLASS:
                                 editableComponent = EditableNoApplyComponent(attributeItem.classAlias, key=attributeItem.internalKey, value=attributeItem.defaultValue, valueType=attributeItem.valueType, unitSymbol=unitSymbol, enumeration=enumeration)
                             else:
                                 editableComponent = EditableApplyLaterComponent(attributeItem.classAlias, key=attributeItem.internalKey, value=None, valueType=attributeItem.valueType, unitSymbol=unitSymbol, enumeration=enumeration)
@@ -379,7 +379,7 @@ class XsdReader(QXmlStreamReader):
                             return complexItem
                         attributeItem.defaultValue = default
                         
-                        if self.__type is NavigationItemTypes.DEVICE_CLASS:
+                        if self.__type is NavigationItemTypes.CLASS:
                             editableComponent = EditableNoApplyComponent(attributeItem.classAlias, key=attributeItem.internalKey, value=attributeItem.defaultValue, valueType=attributeItem.valueType, unitSymbol=unitSymbol)
                         else:
                             editableComponent = EditableApplyLaterComponent(attributeItem.classAlias, key=attributeItem.internalKey, value=None, valueType=attributeItem.valueType, unitSymbol=unitSymbol)
@@ -395,7 +395,7 @@ class XsdReader(QXmlStreamReader):
                             return complexItem
                         attributeItem.defaultValue = default
                         
-                        if self.__type is NavigationItemTypes.DEVICE_CLASS:
+                        if self.__type is NavigationItemTypes.CLASS:
                             editableComponent = EditableNoApplyComponent(attributeItem.classAlias, key=attributeItem.internalKey, value=attributeItem.defaultValue, valueType=attributeItem.valueType, unitSymbol=unitSymbol)
                         else:
                             editableComponent = EditableApplyLaterComponent(attributeItem.classAlias, key=attributeItem.internalKey, value=None, valueType=attributeItem.valueType, unitSymbol=unitSymbol)
@@ -411,7 +411,7 @@ class XsdReader(QXmlStreamReader):
                     parentItem.classAlias = "Histogram"
                     parentItem.setIcon(0, QIcon(":enum"))
                     
-                    if self.__type is NavigationItemTypes.DEVICE_INSTANCE:
+                    if self.__type is NavigationItemTypes.DEVICE:
                         if (parentItem.accessType == AccessTypes.READONLY) or (parentItem.accessType == AccessTypes.INIT):
                             return complexItem
                     
@@ -439,7 +439,7 @@ class XsdReader(QXmlStreamReader):
                     parentItem.defaultValue = default
                     parentItem.setIcon(0, QIcon(":enum"))
                     
-                    if self.__type is NavigationItemTypes.DEVICE_CLASS:
+                    if self.__type is NavigationItemTypes.CLASS:
                         parentItem.setEditableComponent(EditableNoApplyComponent(parentItem.classAlias, key=parentItem.internalKey, value=parentItem.defaultValue, valueType=parentItem.valueType, unitSymbol=unitSymbol))
                     else:
                         editableComponent = EditableApplyLaterComponent(parentItem.classAlias, key=parentItem.internalKey, value=None, valueType=parentItem.valueType, unitSymbol=unitSymbol)
@@ -558,7 +558,7 @@ class XsdReader(QXmlStreamReader):
             # Choiceelements can not have strings as arguments
             parentItem.defaultValue = Hash(str(parentItem.defaultValue))
             
-            if self.__type is NavigationItemTypes.DEVICE_CLASS:
+            if self.__type is NavigationItemTypes.CLASS:
                 choiceComponent = EditableNoApplyComponent(parentItem.classAlias, key=parentItem.internalKey, value=parentItem.defaultValue, valueType=parentItem.valueType)
             else:
                 if parentItem.accessType == AccessTypes.READONLY or parentItem.accessType == AccessTypes.INIT:
@@ -576,7 +576,7 @@ class XsdReader(QXmlStreamReader):
             parentItem.updatedNeeded = False
             parentItem.classAlias = "List Element Field"
             
-            if self.__type is NavigationItemTypes.DEVICE_CLASS:
+            if self.__type is NavigationItemTypes.CLASS:
                 choiceComponent = EditableNoApplyComponent(parentItem.classAlias, key=parentItem.internalKey, value=parentItem.defaultValue, valueType=parentItem.valueType, isDevIns=False)
             else:
                 if parentItem.accessType == AccessTypes.READONLY or parentItem.accessType == AccessTypes.INIT:
