@@ -126,7 +126,7 @@ class PythonDevice(BaseFsm):
         self._ss.runEventLoop(True, info) # block while SignalSlotable event loop running 
             
     def stopEventLoop(self):
-        self._ss.stop()
+        self._ss.stopEventLoop()
     
     def __del__(self):
         ''' PythonDevice destructor '''
