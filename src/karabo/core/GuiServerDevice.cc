@@ -123,6 +123,8 @@ namespace karabo {
                     onRemoveVisibleDevice(channel, header);
                 } else if (type == "getClassSchema") {
                     onGetClassSchema(channel, header, body);
+                } else if (type == "getDeviceSchema") {
+                    onGetDeviceSchema(channel, header, body);
                 }
             } else {
                 KARABO_LOG_WARN << "Ignoring request";
@@ -220,7 +222,7 @@ namespace karabo {
                 it->second.erase(deviceId);
             }
         }
-        
+
         void GuiServerDevice::onGetClassSchema(karabo::net::Channel::Pointer channel, const karabo::util::Hash& header, const std::string& body) {
             string serverId = header.get<string > ("serverId");
             string classId = header.get<string> ("classId");
@@ -230,6 +232,13 @@ namespace karabo {
             channel->write(h, b);
         }
 
+        void GuiServerDevice::onGetDeviceSchema(karabo::net::Channel::Pointer channel, const karabo::util::Hash& header, const std::string& body) {
+            string deviceId = header.get<string > ("deviceId");
+            boost::mutex::scoped_lock lock(m_channelMutex); 
+            Hash h("type", "deviceDescription");
+            Hash b("device." + deviceId + ".description", remote().getFullSchema(deviceId));
+            channel->write(h, b);
+        }
 
         void GuiServerDevice::instanceNewHandler(const karabo::util::Hash& topologyEntry) {
             KARABO_LOG_DEBUG << "Broadcasting availability of new instance";
