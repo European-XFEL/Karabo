@@ -152,7 +152,8 @@ class State(dict):
         if not gf(*ea[:len(ga)]):           # check guard
             return self
         
-        self.exit_action()                  # exit current state
+        if _target != "none":
+            self.exit_action()              # exit current state
         
         # unpack action
         af, aa = _action                    # action function and tuple of action arguments
@@ -167,11 +168,10 @@ class State(dict):
             _target_state = self
         else:
             _target_state = self.fsm.stt[_target]
-        
-        if _target_state.ismachine:
-            _target_state.start()           # enter target machine
-        else:
-            _target_state.entry_action()    # enter target state
+            if _target_state.ismachine:
+                _target_state.start()           # enter target machine
+            else:
+                _target_state.entry_action()    # enter target state
             
         if dict.__contains__(_target_state, 'none'):
             return _target_state[None]      # anonymous transition
