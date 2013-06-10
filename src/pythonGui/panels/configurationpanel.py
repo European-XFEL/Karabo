@@ -706,6 +706,7 @@ class ConfigurationPanel(QWidget):
 
     def onInitDevice(self):
         itemInfo = self.__twNavigation.currentIndexInfo()
+        print "onInitDevice", itemInfo
         if len(itemInfo) == 0:
             return
         
@@ -717,11 +718,11 @@ class ConfigurationPanel(QWidget):
         if classId is None:
             classId = itemInfo.get('classId')
         
-        internalKey = itemInfo.get(QString('internalKey'))
-        if internalKey is None:
-            internalKey = itemInfo.get('internalKey')
+        path = itemInfo.get(QString('key'))
+        if path is None:
+            path = itemInfo.get('key')
         
-        Manager().initDevice(str(serverId), str(classId), str(internalKey))
+        Manager().initDevice(str(serverId), str(classId), str(path))
 
 
     def onDeviceInstanceSchemaUpdated(self, instanceId, schema):
