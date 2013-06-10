@@ -176,7 +176,7 @@ class DeviceClient(object):
         
         Example:        
                       
-        def onDeviceChange(config, deviceId):
+        def onDeviceChange(deviceId, config):
             print deviceId, ":", config
             
         c = DeviceClient();
