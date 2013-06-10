@@ -15,6 +15,7 @@ using namespace karabo::util;
 namespace karabo {
     namespace io {
 
+        KARABO_REGISTER_FOR_CONFIGURATION(AbstractOutput, Output<Hash>, Hdf5FileOutput<Hash>)
         KARABO_REGISTER_FOR_CONFIGURATION(Output<Hash>, Hdf5FileOutput<Hash>)        
     }
 }
