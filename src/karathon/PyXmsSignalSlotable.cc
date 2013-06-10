@@ -61,6 +61,8 @@ void exportPyXmsSignalSlotable() {//exposing karabo::xms::SignalSlotable
                  "info['visibility'] = ['']\n\tinfo['version'] = my_version\n\tinfo['host'] = host_name\n\tss.runEventLoop(True, info)\n"
                  )
             
+            .def("stopEventLoop", &SignalSlotableWrap::stopEventLoop)
+            
             .def("connect",
                  (bool (SignalSlotable::*)(const string, const string&, const string, const string&, SignalSlotable::ConnectionType, const bool))(&SignalSlotable::connect),
                  (bp::arg("signalInstanceId"),

@@ -59,6 +59,11 @@ namespace karabo {
                 karabo::xms::SignalSlotable::runEventLoop(emitHeartbeat, info);
             }
 
+            void stopEventLoop() {
+                ScopedGILRelease nogil;
+                karabo::xms::SignalSlotable::stopEventLoop();
+            }
+            
             bp::object getAvailableInstancesPy() {
                 return Wrapper::fromStdVectorToPyList(this->getAvailableInstances());
             }
