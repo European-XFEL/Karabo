@@ -82,6 +82,7 @@ namespace karabo {
             
             void onGetClassSchema(karabo::net::Channel::Pointer channel, const karabo::util::Hash& header, const std::string& body);
 
+            void onGetDeviceSchema(karabo::net::Channel::Pointer channel, const karabo::util::Hash& header, const std::string& body);
 
 
             void sendSystemTopology(karabo::net::Channel::Pointer channel);
