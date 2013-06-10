@@ -115,13 +115,14 @@ class NavigationTreeView(QTreeView):
         elif level == 3:
             type = NavigationItemTypes.DEVICE
             deviceId = index.data().toString()
-            #parentIndex = index.parent()
-            #classId = parentIndex.data().toString()
+            #classIndex = index.parent()
+            #classId = classIndex.data().toString()
+            #serverIndex = classIndex.parent()
+            #serverId = serverIndex.data().toString()
             
+            schema = Manager().getDeviceSchema(deviceId)
             path = str("device." + deviceId)
-            # Get schema from model
-            #schema = self.__model.getSchema(level, row)
-            #Manager().onSchemaAvailable(dict(classId=parentIndex.data().toString(), key=key, type=type, schema=schema))
+            Manager().onSchemaAvailable(dict(key=path, type=type, schema=schema))
         
         itemInfo = dict(key=path, type=type, level=level, row=row)
         Manager().onNavigationItemChanged(itemInfo)
