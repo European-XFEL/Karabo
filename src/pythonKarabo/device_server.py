@@ -131,10 +131,8 @@ class DeviceServer(object):
         self.processEventLock = threading.RLock()
         self.fsm = self.setupFsm()
         self.ss = None
-        self.availableModules = dict()
         self.availableDevices = dict()
         self.deviceInstanceMap = dict()
-        self.selfDestroyFlag = False
         self.serverid = ""
         self.hostname, dotsep, self.domainname = socket.gethostname().partition('.')
         self.nameRequestTimeout = input['nameRequestTimeout']
@@ -216,18 +214,12 @@ class DeviceServer(object):
         self.ss.registerSlot(self.slotGetClassSchema)
         self.ss.connect("", "signalNewDeviceClassAvailable", "*", "slotNewDeviceClassAvailable", ConnectionType.NO_TRACK, False)
 
-    def stopDeviceServer(self):
-        self.ss.stopEventLoop()
-    
     def onStateUpdate(self, currentState):
         self.ss.reply(currentState)
         
     def idleStateOnEntry(self):
         saveToFile(Hash("DeviceServer.serverId", self.serverid), "autoload.xml")
         self.log.INFO("DeviceServer starts up with id: {}".format(self.serverid))
-        self.updateAvailableDevices()
-        if len(self.availableDevices) > 0:
-            self.inbuildDevicesAvailable()
         self.log.INFO("Keep watching directory: {} for Device plugins".format(self.pluginLoader.getPluginDirectory()))
         self.pluginThread = threading.Thread(target = self.scanPlugins)
         self.scanning = True
@@ -236,6 +228,7 @@ class DeviceServer(object):
         #self.isRegistered = True   # this is the last statement!
     
     def scanPlugins(self):
+        self.availableModules = dict()
         while self.scanning:
             modules = self.pluginLoader.update()   # just list of modules in plugins dir
             for name, path in modules:
@@ -275,22 +268,17 @@ class DeviceServer(object):
                 deviceClass = mostDerived(candidates)  # most derived class in hierarchy
                 try:
                     schema = deviceClass.getSchema(deviceClass.__classid__)
-                    config = Hash("indentation", -1)
-                    xsd = TextSerializerSchema.create('Xsd', config).save(schema)
                     self.availableModules[name] = deviceClass.__classid__
-                    self.availableDevices[deviceClass.__classid__] = {"mustNotify": True, "module": name, "xsd": xsd}
+                    self.availableDevices[deviceClass.__classid__] = {"mustNotify": True, "module": name, "xsd": schema}
                     self.newPluginAvailable()
                 except RuntimeError, e:
                     self.log.ERROR("Failure while building schema for class {}, base class {} and bases {} : {}".format(
                         deviceClass.__classid__, deviceClass.__base_classid__, deviceClass.__bases_classid__, e.message))
-            time.sleep(5)
+            time.sleep(3)
+        self.ss.stopEventLoop()
     
-    def processEvent(self, event):
-        with self.processEventLock:
-            self.fsm.process_event(event)
-        
-    def updateCurrentState(self, currentState):
-        self.ss.reply(currentState)
+    def stopDeviceServer(self):
+        self.scanning = False
     
     def errorFoundAction(self, m1, m2):
         self.log.ERROR("{} -- {}".format(m1,m2))
@@ -298,23 +286,13 @@ class DeviceServer(object):
     def endErrorAction(self):
         pass
 
-    def notifyNewDeviceAction(self):
-        deviceClasses = []
-        for (classid, d) in self.availableDevices.items():
-            deviceClasses.append(classid)
-            if d['mustNotify']:
-                d['mustNotify'] = False
-                self.log.DEBUG("Notifying about {}".format(d['module']))
-                self.ss.emit("signalNewDeviceClassAvailable", self.ss.getInstanceId(), classid, d["xsd"])
-        self.ss.updateInstanceInfo(Hash("deviceClasses", deviceClasses))
-
-    def startDeviceAction(self, conf):
-        modified = Hash(conf)
-        classid = iter(modified).next().getKey()
+    def startDeviceAction(self, config):
+        classid = iter(config).next().getKey()
         self.log.INFO("Trying to start {}...".format(classid))
-        self.log.DEBUG("with the following configuration:\n".format(conf))
+        self.log.DEBUG("with the following configuration:\n".format(config))
+        modified = Hash(config)
         modified[classid]["serverId"] = self.serverid
-        if classid + ".deviceId" in modified:
+        if "deviceId" in modified[claassid]:
             deviceid = modified[classid]["deviceId"]
         else:
             deviceid = self._generateDefaultDeviceInstanceId(classid)
@@ -339,6 +317,49 @@ class DeviceServer(object):
             self.log.WARN("Wrong input configuration for class '{}': {}".format(classid, e.message))
             return
         
+    def notifyNewDeviceAction(self):
+        deviceClasses = []
+        for (classid, d) in self.availableDevices.items():
+            deviceClasses.append(classid)
+            if d['mustNotify']:
+                d['mustNotify'] = False
+                #self.log.DEBUG("Notifying about {}".format(d['module']))
+                #self.ss.emit("signalNewDeviceClassAvailable", self.ss.getInstanceId(), classid, d["xsd"])
+        self.ss.updateInstanceInfo(Hash("deviceClasses", deviceClasses))
+
+    def noStateTransition(self):
+        self.log.DEBUG("No transition")
+   
+    def slotKillServer(self):
+        self.log.INFO("Received kill signal")
+        for deviceid  in self.deviceInstanceMap.keys():
+            self.ss.call(deviceid, "slotKillDevice")
+            launcherThread = self.deviceInstanceMap[deviceid]
+            launcherThread.join()
+        self.deviceInstanceMap = {}
+        self.ss.call("*", "slotDeviceServerInstanceGone", self.serverid)
+        self.stopDeviceServer()
+        
+    def slotDeviceGone(self, id):
+        self.log.WARN("Device \"{}\" notifies fulture death".format(id))
+        if id in self.deviceInstanceMap:
+            self.ss.call(id, "slotKillDeviceInstance")
+            launcherThread = self.deviceInstanceMap[id]
+            launcherThread.join()
+            del self.deviceInstanceMap[id]
+            self.log.INFO("Device \"{}\" removed from server.".format(id))
+
+    def slotGetClassSchema(self, classid):
+        schema = Configurator(PythonDevice).getSchema(classId)
+        self.ss.reply(schema)
+        
+    def processEvent(self, event):
+        with self.processEventLock:
+            self.fsm.process_event(event)
+        
+    def updateCurrentState(self, currentState):
+        self.ss.reply(currentState)
+    
 
     def _generateDefaultDeviceInstanceId(self, devClassId):
         cls = self.__class__
@@ -349,30 +370,12 @@ class DeviceServer(object):
             _index = cls.instanceCountPerDeviceServer[self.serverid]
             if self.serverid == "":
                 #myHostName, someList, myHostAddrList = socket.gethostbyaddr(socket.gethostname())
-                possiblyFullHostName = socket.gethostname()
-                myHostName, dotsep, domainName = possiblyFullHostName.partition('.')
-                return myHostName + "_" + devClassId + "_" + str(_index)
+                return self.hostname + "_" + devClassId + "_" + str(_index)
             tokens = self.serverid.split("_")
             _domain = tokens.pop(0) + "-" + tokens.pop()
             _id = _domain + "_" + devClassId + "_" + str(_index)
             return _id
      
-    def slotKillServer(self):
-        self.log.INFO("Received kill signal")
-        for deviceid in self.deviceInstanceMap.keys():
-            self.ss.call(deviceid, "slotKillDevice")
-        self.selfDestroyFlag = True
-        
-    def slotKillDeviceInstance(self, id):
-        self.log.INFO("Received kill signal for device {}".format(id))
-        if id in self.deviceInstanceMap:
-            self.ss.call(id, "slotKillDeviceInstance")
-            del self.deviceInstanceMap[id]
-            self.log.DEBUG("Device {} was instructed to die".format(id))
-
-    def noStateTransition(self):
-        self.log.DEBUG("No transition")
-   
 
         
 class Launcher(threading.Thread):
