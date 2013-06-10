@@ -75,6 +75,7 @@ class Notifier(QObject):
     signalCreateNewDeviceClassPlugin = pyqtSignal(str, str, str) # serverId, classId, newClassId
     
     signalGetClassSchema = pyqtSignal(str, str) # serverId, classId
+    signalGetDeviceSchema = pyqtSignal(str) # deviceId
 
 
     def __init__(self):
@@ -673,4 +674,25 @@ class Manager(Singleton):
         # Send network request
         self.__notifier.signalGetClassSchema.emit(serverId, classId)
         return None
+
+
+    def handleDeviceSchema(self, config):
+        path = str(config.paths()[0])
+        schema = config.get(path)
+        # Merge new configuration data into central hash
+        self._mergeIntoHash(config)
+        
+        path = path.split('.description',1)[0]
+        self.onSchemaAvailable(dict(key=path, type=NavigationItemTypes.DEVICE, schema=schema))
+
+
+    def getDeviceSchema(self, deviceId):
+        path = str("device." + deviceId + ".description")
+        if self.__hash.has(path):
+            return self.__hash.get(path)
+
+        # Send network request
+        self.__notifier.signalGetDeviceSchema.emit(deviceId)
+        return None
+        
 
