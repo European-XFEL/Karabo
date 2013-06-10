@@ -135,21 +135,13 @@ class DeviceServer(object):
         self.availableDevices = dict()
         self.deviceInstanceMap = dict()
         self.selfDestroyFlag = False
-        self.serverid = None
+        self.serverid = ""
+        self.hostname, dotsep, self.domainname = socket.gethostname().partition('.')
         self.nameRequestTimeout = input['nameRequestTimeout']
         if 'serverId' in input:
             self.serverid = input['serverId']
         self.running = True
         self.isRegistered = False
-        
-        print "Initialize SignalSlotable object...\n"
-        if self.serverid is None:
-            possiblyFullHostName = socket.gethostname()
-            myHostName, dotsep, domainName = possiblyFullHostName.partition('.')
-            self.s = SignalSlotable()
-            (self.serverid,) = self.s.request("*", "slotDeviceServerProvideName", myHostName).waitForReply(self.nameRequestTimeout)
-            print "Request for serverId returns: %r" % self.serverid
-        self.ss = SignalSlotable(self.serverid)
         
         self.loadLogger(input)
         self.loadPluginLoader(input)
@@ -157,16 +149,6 @@ class DeviceServer(object):
             self.autoStart = input["autoStart"]
         print "\n... DeviceServer object constructed.\n"
     
-    def _registerAndConnectSignalsAndSlots(self):
-        self.ss.registerSignal("signalNewDeviceClassAvailable", str, str, Schema) # serverid, classid, Schema
-        #self.ss.registerSignal("signalNewDeviceInstanceAvailable", str, Hash)  # DeviceServerInstanceId, currentConfig
-        #self.ss.registerSignal("signalDeviceServerInstanceGone", str)          # DeviceServerInstanceId
-        self.ss.registerSlot(self.slotStartDevice)
-        self.ss.registerSlot(self.slotKillServer)
-        self.ss.registerSlot(self.slotKillDeviceInstance)
-        self.ss.connect("", "signalNewDeviceClassAvailable", "*", "slotNewDeviceClassAvailable", ConnectionType.NO_TRACK, False)
-        self.ss.connect("", "signalNewDeviceInstanceAvailable", "*", "slotNewDeviceInstanceAvailable", ConnectionType.NO_TRACK, False)
-
     def loadLogger(self, input):
         if "Logger" in input:
             config = input["Logger"]
@@ -182,76 +164,126 @@ class DeviceServer(object):
         self.pluginLoader = PluginLoader.createNode("PluginLoader", "PythonPluginLoader", input)
         
     def run(self):
+        print "Initialize SignalSlotable object...\n"
+        s = SignalSlotable()
+        try:
+            isValid, self.serverid, answer = s.request("*", "slotValidateInstanceId", self.hostname, "server", self.serverid).waitForReply(self.nameRequestTimeout)
+        except RuntimeError, e:
+            print "Name request timed out, make sure a valid master server is running: " + str(e)
+            s.stopEventLoop()
+            return
+        s.stopEventLoop()
+        if not isValid:
+            print "Master says:",answer
+            return
+        else:
+            print "Master says:",answer
+        print "Request for serverId returns: %r" % self.serverid
+        self.ss = SignalSlotable.create(self.serverid)
+        
         self.log = Logger.getLogger(self.serverid)
+        self.log.INFO("Starting Karabo DeviceServer on host: {}".format(self.hostname))
         self._registerAndConnectSignalsAndSlots()
         self.fsm.start()
-        while self.running:
-            with DeviceServer.cLock:
-                # critical section
-                for c in DeviceServer.dead_threads:
-                    self.log.INFO("Join dead thread {}".format(c.getName()))
-                    c.join()
-                DeviceServer.dead_threads = []
-                # end of critical section
-            if self.isRegistered:
-                self.scanPlugins()
-            if self.selfDestroyFlag:
-                with DeviceServer.cLock:
-                    if len(DeviceServer.live_threads) == 0 and len(DeviceServer.dead_threads) == 0:
-                        self.ss.call("*", "slotDeviceServerInstanceGone", self.serverid)
-                        self.stopDeviceServer()
-            time.sleep(3)
+        info = Hash("type", "server")
+        info["serverId"] = self.serverid
+        info["version"] = self.__class__.__version__
+        info["host"] = self.hostname
+        self.ss.runEventLoop(True, info)  # block
+        
+        #while self.running:
+        #    with DeviceServer.cLock:
+        #        # critical section
+        #        for c in DeviceServer.dead_threads:
+        #            self.log.INFO("Join dead thread {}".format(c.getName()))
+        #            c.join()
+        #        DeviceServer.dead_threads = []
+        #        # end of critical section
+        #    if self.isRegistered:
+        #        self.scanPlugins()
+        #    if self.selfDestroyFlag:
+        #        with DeviceServer.cLock:
+        #            if len(DeviceServer.live_threads) == 0 and len(DeviceServer.dead_threads) == 0:
+        #                self.ss.call("*", "slotDeviceServerInstanceGone", self.serverid)
+        #                self.stopDeviceServer()
+        #    time.sleep(3)
     
+    def _registerAndConnectSignalsAndSlots(self):
+        self.ss.registerSignal("signalNewDeviceClassAvailable", str, str, Schema) # serverid, classid, Schema
+        self.ss.registerSlot(self.slotStartDevice)
+        self.ss.registerSlot(self.slotKillServer)
+        self.ss.registerSlot(self.slotDeviceGone)
+        self.ss.registerSlot(self.slotGetClassSchema)
+        self.ss.connect("", "signalNewDeviceClassAvailable", "*", "slotNewDeviceClassAvailable", ConnectionType.NO_TRACK, False)
+
     def stopDeviceServer(self):
-        self.running = False
+        self.ss.stopEventLoop()
+    
+    def onStateUpdate(self, currentState):
+        self.ss.reply(currentState)
+        
+    def idleStateOnEntry(self):
+        saveToFile(Hash("DeviceServer.serverId", self.serverid), "autoload.xml")
+        self.log.INFO("DeviceServer starts up with id: {}".format(self.serverid))
+        self.updateAvailableDevices()
+        if len(self.availableDevices) > 0:
+            self.inbuildDevicesAvailable()
+        self.log.INFO("Keep watching directory: {} for Device plugins".format(self.pluginLoader.getPluginDirectory()))
+        self.pluginThread = threading.Thread(target = self.scanPlugins)
+        self.scanning = True
+        self.pluginThread.start()
+        #TODO: check what we have to implement here
+        #self.isRegistered = True   # this is the last statement!
     
     def scanPlugins(self):
-        modules = self.pluginLoader.update()   # just list of modules in plugins dir
-        for name, path in modules:
-            if name in self.availableModules:
-                continue
-            try:
-                dname = os.path.dirname( os.path.realpath(path) )
-                if dname not in sys.path:
-                    sys.path.append(dname)
-                module = __import__(name)
-            except ImportError,e:
-                self.log.WARN("scanPlugins: Cannot import module {} -- {}".format(name,e))
-                continue
-            if "PythonDevice" not in dir(module):
-                raise IndexError,"Module '" + name + "' has no use of PythonDevice class"
-            candidates = [module.PythonDevice]
-            #
-            # IMPORTANT!
-            # We do an assumption that module contains only one user device
-            #
-            for item in dir(module):
-                obj = getattr(module, item)
-                if inspect.isclass(obj) and issubclass(obj, module.PythonDevice):
-                    candidates.append(obj)
-                    
-            def mostDerived(candidates):
-                tree = inspect.getclasstree(candidates)  # build inheritance tree
+        while self.scanning:
+            modules = self.pluginLoader.update()   # just list of modules in plugins dir
+            for name, path in modules:
+                if name in self.availableModules:
+                    continue
                 try:
-                    while True:
-                        c,b = tree[0]
-                        tree = tree[1]
-                except IndexError,e:
-                    pass
-                return c
-            
-            # get mostDerived from tree
-            deviceClass = mostDerived(candidates)  # most derived class in hierarchy
-            try:
-                schema = deviceClass.getSchema(deviceClass.__classid__)
-                config = Hash("indentation", -1)
-                xsd = TextSerializerSchema.create('Xsd', config).save(schema)
-                self.availableModules[name] = deviceClass.__classid__
-                self.availableDevices[deviceClass.__classid__] = {"mustNotify": True, "module": name, "xsd": xsd}
-                self.newPluginAvailable()
-            except RuntimeError, e:
-                self.log.ERROR("Failure while building schema for class {}, base class {} and bases {} : {}".format(
-                    deviceClass.__classid__, deviceClass.__base_classid__, deviceClass.__bases_classid__, e.message))
+                    dname = os.path.dirname( os.path.realpath(path) )
+                    if dname not in sys.path:
+                        sys.path.append(dname)
+                    module = __import__(name)
+                except ImportError,e:
+                    self.log.WARN("scanPlugins: Cannot import module {} -- {}".format(name,e))
+                    continue
+                if "PythonDevice" not in dir(module):
+                    raise IndexError,"Module '" + name + "' has no use of PythonDevice class"
+                candidates = [module.PythonDevice]
+                #
+                # IMPORTANT!
+                # We do an assumption that module contains only one user device
+                #
+                for item in dir(module):
+                    obj = getattr(module, item)
+                    if inspect.isclass(obj) and issubclass(obj, module.PythonDevice):
+                        candidates.append(obj)
+
+                def mostDerived(candidates):
+                    tree = inspect.getclasstree(candidates)  # build inheritance tree
+                    try:
+                        while True:
+                            c,b = tree[0]
+                            tree = tree[1]
+                    except IndexError,e:
+                        pass
+                    return c
+
+                # get mostDerived from tree
+                deviceClass = mostDerived(candidates)  # most derived class in hierarchy
+                try:
+                    schema = deviceClass.getSchema(deviceClass.__classid__)
+                    config = Hash("indentation", -1)
+                    xsd = TextSerializerSchema.create('Xsd', config).save(schema)
+                    self.availableModules[name] = deviceClass.__classid__
+                    self.availableDevices[deviceClass.__classid__] = {"mustNotify": True, "module": name, "xsd": xsd}
+                    self.newPluginAvailable()
+                except RuntimeError, e:
+                    self.log.ERROR("Failure while building schema for class {}, base class {} and bases {} : {}".format(
+                        deviceClass.__classid__, deviceClass.__base_classid__, deviceClass.__bases_classid__, e.message))
+            time.sleep(5)
     
     def processEvent(self, event):
         with self.processEventLock:
@@ -259,12 +291,6 @@ class DeviceServer(object):
         
     def updateCurrentState(self, currentState):
         self.ss.reply(currentState)
-    
-    def idleStateOnEntry(self):
-        id = self.serverid
-        OutputHash.create("TextFile", Hash("filename", "autoload.xml")).write(Hash("DeviceServer.serverId", id))
-        #TODO: check what we have to implement here
-        self.isRegistered = True   # this is the last statement!
     
     def errorFoundAction(self, m1, m2):
         self.log.ERROR("{} -- {}".format(m1,m2))
