@@ -163,14 +163,14 @@ class DeviceServer(object):
         
     def run(self):
         print "Initialize SignalSlotable object...\n"
-        s = SignalSlotable()
+        _ss = SignalSlotable()
         try:
-            isValid, self.serverid, answer = s.request("*", "slotValidateInstanceId", self.hostname, "server", self.serverid).waitForReply(self.nameRequestTimeout)
+            isValid, self.serverid, answer = _ss.request("*", "slotValidateInstanceId", self.hostname, "server", self.serverid).waitForReply(self.nameRequestTimeout)
         except RuntimeError, e:
             print "Name request timed out, make sure a valid master server is running: " + str(e)
-            s.stopEventLoop()
+            self._ss.stopEventLoop()
             return
-        s.stopEventLoop()
+        _ss.stopEventLoop()
         if not isValid:
             print "Master says:",answer
             return
@@ -224,8 +224,6 @@ class DeviceServer(object):
         self.pluginThread = threading.Thread(target = self.scanPlugins)
         self.scanning = True
         self.pluginThread.start()
-        #TODO: check what we have to implement here
-        #self.isRegistered = True   # this is the last statement!
     
     def scanPlugins(self):
         self.availableModules = dict()
