@@ -115,6 +115,27 @@ void FileInputOutput_Test::readTextFile() {
     CPPUNIT_ASSERT(h3a.get<string>("a.b.c") == "1");
 }
 
+void FileInputOutput_Test::writeSequenceToTextFile() {
+    
+    // Using the Factory interface
+    Output<Hash>::Pointer out = Output<Hash>::create("TextFile", Hash("filename", resourcePath("seqfile1.xml"), "enableAppendMode", true));
+    for (size_t i = 0; i < 10; ++i) {
+        out->write(m_rootedHash);
+    }
+    out->update(); // Necessary call to indicate completion of sequence writing
+}
+
+void FileInputOutput_Test::readSequenceFromTextFile() {
+    // Using the Factory interface
+    Input<Hash>::Pointer in = Input<Hash>::create("TextFile", Hash("filename", resourcePath("seqfile1.xml")));
+    Hash h1;
+    CPPUNIT_ASSERT(in->size() == 10);
+    for (size_t i = 0; i < in->size(); ++i) {
+        in->read(h1, i);
+        CPPUNIT_ASSERT(karabo::util::similar(h1, m_rootedHash));
+    }
+}
+
 
 void FileInputOutput_Test::writeBinaryFile() {
 

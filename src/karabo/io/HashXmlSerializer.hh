@@ -46,6 +46,10 @@ namespace karabo {
             void load(karabo::util::Hash& object, const std::string& archive);
             
             void load(karabo::util::Hash& object, const char* archive);
+            
+            void save(const std::vector<karabo::util::Hash>& objects, std::string& archive);
+            
+            void load(std::vector<karabo::util::Hash>& objects, const std::string& archive);
 
             virtual ~HashXmlSerializer() {
             };

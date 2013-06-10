@@ -39,7 +39,8 @@ namespace karabo {
             boost::filesystem::path m_filename;
             std::string m_writeMode;
             typename TextSerializer<T>::Pointer m_serializer;
-
+            std::vector<T> m_sequenceBuffer;
+            
         public:
             
             KARABO_CLASSINFO(TextFileOutput<T>, "TextFile", "1.0")
@@ -80,12 +81,24 @@ namespace karabo {
             }
 
             void write(const T& data) {
-                std::string buffer;
-                m_serializer->save(data, buffer);
-                writeFile(buffer);
+                if (this->m_appendModeEnabled) {
+                    m_sequenceBuffer.push_back(data);
+                } else {
+                    std::string archive;
+                    m_serializer->save(data, archive);
+                    writeFile(archive);
+                }
             }
 
         private:
+            
+            void update() {
+                if (this->m_appendModeEnabled) {
+                    std::string archive;
+                    m_serializer->save(m_sequenceBuffer, archive);
+                    writeFile(archive);
+                }
+            }
 
             void guessAndSetFormat() {
 
