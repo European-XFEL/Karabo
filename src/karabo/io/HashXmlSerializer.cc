@@ -301,5 +301,20 @@ namespace karabo {
                 
             }
         }
+        
+        void HashXmlSerializer::save(const std::vector<karabo::util::Hash>& objects, std::string& archive) {
+            Hash tmp(m_prefix + "Sequence", objects);
+            this->save(tmp, archive);
+        }
+        
+        void HashXmlSerializer::load(std::vector<karabo::util::Hash>& objects, const std::string& archive) {
+            vector<Hash> tmp(1);
+            this->load(tmp[0], archive);
+            if (tmp[0].begin()->getKey() == m_prefix + "Sequence") {
+                objects.swap(tmp[0].get<vector<Hash> >(m_prefix + "Sequence"));
+            } else {
+                objects.swap(tmp);
+            }
+        }
     }
 }

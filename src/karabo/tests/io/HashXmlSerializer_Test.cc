@@ -47,6 +47,10 @@ void HashXmlSerializer_Test::setUp() {
     unrooted.setAttribute("F.f.f", "attr1", true);
     unrooted.set("a1", string());
     m_unrootedHash = unrooted;
+    
+    for (size_t i = 0; i < 10; ++i) {
+        m_vectorOfHashes.push_back(m_rootedHash);
+    }
 }
 
 
@@ -61,9 +65,9 @@ void HashXmlSerializer_Test::testSerialization() {
     {
 
         Schema s = TextSerializer<Hash>::getSchema("Xml");
-        Hash fuckedUp("a1", 3.2, "a2", s);
+        Hash schemaIncluded("a1", 3.2, "a2", s);
         string garbage;
-        p->save(fuckedUp, garbage);
+        p->save(schemaIncluded, garbage);
         //cout << "GARBAGE: " << garbage << endl;
         Hash fresh;
         p->load(fresh, garbage);
@@ -126,5 +130,19 @@ void HashXmlSerializer_Test::testSerialization() {
         p->save(h, archive2);
         CPPUNIT_ASSERT(archive1 == archive2);
 
+    }
+    
+    {
+        std::string archive1;
+        std::string archive2;
+        p->save(m_vectorOfHashes, archive1);
+        vector<Hash> hs;
+        p->load(hs, archive1);
+        for (size_t i = 0; i < 10; ++i) {
+            CPPUNIT_ASSERT(karabo::util::similar(m_rootedHash, hs[i]) == true);
+        }
+        
+        p->save(hs, archive2);
+        CPPUNIT_ASSERT(archive1 == archive2);
     }
 }
