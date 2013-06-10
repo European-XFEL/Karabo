@@ -35,8 +35,11 @@ namespace karabo {
 
         template <class T>
         class TextFileInput : public Input<T> {
-            boost::filesystem::path m_filename;
+
             typename TextSerializer<T>::Pointer m_serializer;
+
+            boost::filesystem::path m_filename;
+            std::vector<T> m_sequenceBuffer;
 
         public:
 
@@ -67,16 +70,18 @@ namespace karabo {
                 } else {
                     guessAndSetFormat();
                 }
+                // Read file already here
+                std::stringstream archive;
+                readFile(archive);
+                m_serializer->load(m_sequenceBuffer, archive);
             }
 
             void read(T& data, size_t idx = 0) {
-                std::stringstream buffer;
-                readFile(buffer);
-                m_serializer->load(data, buffer);
+                data = m_sequenceBuffer[idx];
             }
 
             size_t size() const {
-                return 1;
+                return m_sequenceBuffer.size();
             }
 
         private:
@@ -105,20 +110,16 @@ namespace karabo {
 
                 using namespace std;
 
-                string line;
-                ifstream inputStream(m_filename.string().c_str());
-                if (inputStream.is_open()) {
-                    while (!inputStream.eof()) {
-                        getline(inputStream, line);
-                        buffer << line << endl;
-                    }
-                    inputStream.close();
+                ifstream file(m_filename.string().c_str());
+                if (file) {
+                    buffer << file.rdbuf();
+                    file.close();
                 } else {
                     throw KARABO_IO_EXCEPTION("Cannot open file: " + m_filename.string());
                 }
             }
         };
     }
-} 
+}
 
 #endif	

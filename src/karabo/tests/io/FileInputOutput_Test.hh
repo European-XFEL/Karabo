@@ -14,6 +14,8 @@ class FileInputOutput_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST_SUITE(FileInputOutput_Test);
     CPPUNIT_TEST(writeTextFile);
     CPPUNIT_TEST(readTextFile);
+    CPPUNIT_TEST(writeSequenceToTextFile);
+    CPPUNIT_TEST(readSequenceFromTextFile);
     CPPUNIT_TEST(writeBinaryFile);
     CPPUNIT_TEST(readBinaryFile);
     CPPUNIT_TEST(writeHdf5File);
@@ -34,6 +36,8 @@ private:
     
     void writeTextFile();
     void readTextFile();
+    void writeSequenceToTextFile();
+    void readSequenceFromTextFile();
     void writeBinaryFile();
     void readBinaryFile();
     void writeHdf5File();
