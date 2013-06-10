@@ -49,7 +49,7 @@ class Network(QObject):
         #Manager().notifier.signalRefreshInstance.connect(self.onRefreshInstance)
         #Manager().notifier.signalReconfigure.connect(self.onReconfigure)
         #Manager().notifier.signalReconfigureAsHash.connect(self.onReconfigureAsHash)
-        #Manager().notifier.signalInitDevice.connect(self.onInitDevice)
+        Manager().notifier.signalInitDevice.connect(self.onInitDevice)
         #Manager().notifier.signalSlotCommand.connect(self.onSlotCommand)
         
         #Manager().notifier.signalNewVisibleDeviceInstance.connect(self.onNewVisibleDeviceInstance)
@@ -258,10 +258,10 @@ class Network(QObject):
         self._tcpWriteHashHash(header, body)
 
 
-    def onInitDevice(self, instanceId, config):
+    def onInitDevice(self, serverId, config):
         header = Hash()
         header.set("type", "initDevice")
-        header.set("instanceId", str(instanceId))
+        header.set("serverId", str(serverId))
         self._tcpWriteHashHash(header, config)
 
 

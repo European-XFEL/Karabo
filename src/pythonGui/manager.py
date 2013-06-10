@@ -379,13 +379,13 @@ class Manager(Singleton):
         self.__notifier.signalConflictStateChanged.emit(hasConflict)
 
 
-    def initDevice(self, serverId, classId, internalKey):
+    def initDevice(self, serverId, classId, path):
         #print "initDevice", internalKey
         #print self.__hash
         
         h = Hash()
-        if self.__hash.has(internalKey):
-            h = self.__hash.get(internalKey)
+        if self.__hash.has(path):
+            h = self.__hash.get(path)
         
         # TODO: Remove dirty hack for scientific computing again!!!
         croppedDevClaId = classId.split("-")
@@ -646,6 +646,9 @@ class Manager(Singleton):
 
 ### New pythonGui2 stuff ###
     def handleSystemTopology(self, config):
+        #print "handleSystemTopology"
+        #print config
+        #print ""
         # Merge new configuration data into central hash
         self._mergeIntoHash(config)
         # Send full internal hash to navigation

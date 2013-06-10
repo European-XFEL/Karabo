@@ -42,6 +42,38 @@ class NavigationTreeView(QTreeView):
 
     def currentIndex(self):
         return self.selectionModel().currentIndex()
+    
+
+    def currentIndexInfo(self):
+        index = self.currentIndex()
+        if not index.isValid():
+            return dict()
+        
+        level = self.model().getHierarchyLevel(index)
+        
+        if level == 0:
+            type = NavigationItemTypes.HOST
+            
+            return dict()
+        elif level == 1:
+            type = NavigationItemTypes.SERVER
+            path = "server." + index.data().toString()
+            
+            return dict(key=path, type=type)
+        elif level == 2:
+            type = NavigationItemTypes.CLASS
+            parentIndex = index.parent()
+            serverId = parentIndex.data().toString()
+            classId = index.data().toString()
+            path = str("server." + serverId + ".classes." + classId + ".configuration")
+            
+            return dict(key=path, type=type, serverId=serverId, classId=classId)
+        elif level == 3:
+            type = NavigationItemTypes.DEVICE
+            deviceId = index.data().toString()
+            path = str("device." + deviceId)
+            
+            return dict(key=path, type=type)
 
 
     def updateView(self, config):

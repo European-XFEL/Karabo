@@ -27,10 +27,12 @@ class NavigationHierarchyModel(QAbstractItemModel):
 
 
     def updateData(self, config):
-        
-        self.__rootItem.clearChildItems()
+        #print "+++ NavigationHierarchyModel.updateData"
+        #print config
+        #print ""
         
         self.layoutAboutToBeChanged.emit()
+        self.__rootItem.clearChildItems()
         
         # Get server data
         serverKey = "server"
@@ -41,7 +43,8 @@ class NavigationHierarchyModel(QAbstractItemModel):
             for serverId in serverIds:
                 # Get attributes
                 #serverAttributes = serverConfig.getAttributes(serverId)
-                host = serverConfig.getAttribute(serverId, "host")
+                if serverConfig.hasAttribute(serverId, "host"):
+                    host = serverConfig.getAttribute(serverId, "host")
                 #version = serverConfig.getAttribute(serverId, "version")
 
                 # Host item already exists?
@@ -99,7 +102,7 @@ class NavigationHierarchyModel(QAbstractItemModel):
                 # Class item already exists?
                 classItem = serverItem.getItem(classId)
                 if not classItem:
-                    path = "server." + serverId + ".classes." + deviceClass
+                    path = "server." + serverId + ".classes." + classId
                     classItem = NavigationHierarchyNode(classId, path, serverItem)
                     serverItem.appendChildItem(classItem)
 
@@ -189,11 +192,11 @@ class NavigationHierarchyModel(QAbstractItemModel):
         return QVariant()
 
 
-    def flags(self, index):
-        if not index.isValid():
-            return None
+    #def flags(self, index):
+    #    if not index.isValid():
+    #        return None
 
-        return Qt.ItemIsEnabled | Qt.ItemIsSelectable
+    #    return Qt.ItemIsEnabled | Qt.ItemIsSelectable
 
 
     def headerData(self, section, orientation, role):
