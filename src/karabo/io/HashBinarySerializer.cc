@@ -312,5 +312,20 @@ namespace karabo {
         Types::ReferenceType HashBinarySerializer::readType(std::istream& is) {
             return Types::ReferenceType(readSize(is));
         }
+        
+         void HashBinarySerializer::save(const std::vector<karabo::util::Hash>& objects, std::vector<char>& archive) {
+            Hash tmp("KRB_Sequence", objects);
+            this->save(tmp, archive);
+        }
+        
+        void HashBinarySerializer::load(std::vector<karabo::util::Hash>& objects, const char* archive, const size_t nBytes) {
+            vector<Hash> tmp(1);
+            this->load(tmp[0], archive, nBytes);
+            if (tmp[0].begin()->getKey() == "KRB_Sequence") {
+                objects.swap(tmp[0].get<vector<Hash> >("KRB_Sequence"));
+            } else {
+                objects.swap(tmp);
+            }
+        }
     }
 }

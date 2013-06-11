@@ -39,6 +39,7 @@ namespace karabo {
 
             boost::filesystem::path m_filename;
             typename BinarySerializer<T>::Pointer m_serializer;
+            std::vector<T> m_sequenceBuffer;
 
         public:
 
@@ -69,16 +70,18 @@ namespace karabo {
                 } else {
                     guessAndSetFormat();
                 }
+                // Read file already here
+                std::vector<char> archive;
+                readFile(archive);
+                m_serializer->load(m_sequenceBuffer, archive);
             }
 
             void read(T& data, size_t idx = 0) {
-                std::vector<char> buffer;
-                readFile(buffer);
-                m_serializer->load(data, buffer);
+                data = m_sequenceBuffer[idx];
             }
 
             size_t size() const {
-                return 1;
+                return m_sequenceBuffer.size();
             }
 
         private:

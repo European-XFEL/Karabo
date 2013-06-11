@@ -31,7 +31,7 @@ namespace karabo {
             virtual void save(const T& object, std::string& archive) = 0;
             
             virtual void save(const std::vector<T>& objects, std::string& archive) {
-                throw KARABO_NOT_SUPPORTED_EXCEPTION("Loading vectors of objects is not supported by this serializer");
+                throw KARABO_NOT_SUPPORTED_EXCEPTION("Saving vectors of objects is not supported by this serializer");
             }
 
             virtual void load(T& object, const std::string& archive) = 0;
