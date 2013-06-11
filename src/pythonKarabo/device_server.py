@@ -144,7 +144,6 @@ class DeviceServer(object):
         self.loadPluginLoader(input)
         if "autoStart" in input:
             self.autoStart = input["autoStart"]
-        print "\n... DeviceServer object constructed.\n"
     
     def loadLogger(self, input):
         if "Logger" in input:
@@ -161,16 +160,10 @@ class DeviceServer(object):
         self.pluginLoader = PluginLoader.createNode("PluginLoader", "PythonPluginLoader", input)
         
     def run(self):
-        print "Initialize SignalSlotable object...\n"
         try:
-            #print "Temporary SignalSlotable with self.hostname:'{}', server: '{}', self.nameRequestTimeout: {}".format(self.hostname, self.serverid, self.nameRequestTimeout)
-            ss = SignalSlotable("temp_python_signal_slotable")
-            time.sleep(0.1)
-            print "DEBUG: Request 'slotValidateInstanceId'..."
+            ss = SignalSlotable("temp_python_signal_slotable", "Jms", Hash(), True, False)
             isValid, self.serverid, answer = ss.request("*", "slotValidateInstanceId", self.hostname, "server", self.serverid).waitForReply(self.nameRequestTimeout)
-            print "DEBUG: Delete 'temp_python_signal_slotable'. It takes 10 secs ..."
             del ss
-            print "DEBUG: ... deleted!"
         except ValueError,e:
             print "Name request timed out, make sure a valid master server is running."
             del e
@@ -181,7 +174,6 @@ class DeviceServer(object):
             return
         else:
             print "Master says:",answer
-        #print "Request for serverId returns: %r" % self.serverid
         self.ss = SignalSlotable.create(self.serverid)
         
         self.log = Logger.getLogger(self.serverid)
@@ -219,7 +211,6 @@ class DeviceServer(object):
             modules = self.pluginLoader.update()   # just list of modules in plugins dir
             for name, path in modules:
                 if name in self.availableModules:
-                    print "scanPlugins --> name:", name, " already known "
                     continue
                 try:
                     dname = os.path.dirname( os.path.realpath(path) )
@@ -294,11 +285,8 @@ class DeviceServer(object):
             schema = UserDevice.getSchema(classid)
             validator = Validator()
             validated = validator.validate(schema, configuration)
-            #print "classId = {}, modname = {}, pluginDir = {}".format(classid, modname, pluginDir)
-            #print "Validated configuration...\n", validated
             launcher = Launcher(pluginDir, modname, classid, modified).start()
             self.deviceInstanceMap[deviceid] = launcher
-            #self.ss.emit("signalNewDeviceInstanceAvailable", self.getInstanceId(), Hash(classid, validated))
             del validated
         except Exception, e:
             self.log.WARN("Wrong input configuration for class '{}': {}".format(classid, e.message))
@@ -307,14 +295,10 @@ class DeviceServer(object):
     def notifyNewDeviceAction(self):
         deviceClasses = []
         for (classid, d) in self.availableDevices.items():
-            print "notifyNewDeviceAction: classid: {}, d['mustNotify']: {}, d['module']: {}".format(classid, d['mustNotify'], d['module'])
             deviceClasses.append(classid)
             if d['mustNotify']:
                 d['mustNotify'] = False
-                #self.log.DEBUG("Notifying about {}".format(d['module']))
-                #self.ss.emit("signalNewDeviceClassAvailable", self.ss.getInstanceId(), classid, d["xsd"])
         self.ss.updateInstanceInfo(Hash("deviceClasses", deviceClasses))
-        print "notifyNewDeviceAction exit"
 
     def noStateTransition(self):
         self.log.DEBUG("No transition")
