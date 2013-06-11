@@ -706,7 +706,6 @@ class ConfigurationPanel(QWidget):
 
     def onInitDevice(self):
         itemInfo = self.__twNavigation.currentIndexInfo()
-        print "onInitDevice", itemInfo
         if len(itemInfo) == 0:
             return
         

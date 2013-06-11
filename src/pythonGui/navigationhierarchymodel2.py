@@ -45,26 +45,26 @@ class NavigationHierarchyModel(QAbstractItemModel):
                 #serverAttributes = serverConfig.getAttributes(serverId)
                 #version = serverConfig.getAttribute(serverId, "version")
                 
-                hostItem = None
+                host = str("UNKNOWN")
                 if serverConfig.hasAttribute(serverId, "host"):
                     host = serverConfig.getAttribute(serverId, "host")
 
-                    # Host item already exists?
-                    hostItem = self.__rootItem.getItem(host)
-                    if not hostItem:
-                        hostItem = NavigationHierarchyNode(host, host, self.__rootItem)
-                        self.__rootItem.appendChildItem(hostItem)
+                # Host item already exists?
+                hostItem = self.__rootItem.getItem(host)
+                if not hostItem:
+                    hostItem = NavigationHierarchyNode(host, host, self.__rootItem)
+                    self.__rootItem.appendChildItem(hostItem)
 
-                    path = "server." + serverId
-                    serverItem = NavigationHierarchyNode(serverId, path, hostItem)
-                    hostItem.appendChildItem(serverItem)
-                
-                    if serverConfig.hasAttribute(serverId, "deviceClasses"):
-                        classes = serverConfig.getAttribute(serverId, "deviceClasses")
-                        for deviceClass in classes:
-                            path = "server." + serverId + ".classes." + deviceClass
-                            classItem = NavigationHierarchyNode(deviceClass, path, serverItem)
-                            serverItem.appendChildItem(classItem)
+                path = "server." + serverId
+                serverItem = NavigationHierarchyNode(serverId, path, hostItem)
+                hostItem.appendChildItem(serverItem)
+
+                if serverConfig.hasAttribute(serverId, "deviceClasses"):
+                    classes = serverConfig.getAttribute(serverId, "deviceClasses")
+                    for deviceClass in classes:
+                        path = "server." + serverId + ".classes." + deviceClass
+                        classItem = NavigationHierarchyNode(deviceClass, path, serverItem)
+                        serverItem.appendChildItem(classItem)
             
         # Get device data
         deviceKey = "device"
