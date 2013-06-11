@@ -50,6 +50,10 @@ namespace karabo {
                 is.rdbuf()->pubsetbuf(const_cast<char*> (archive), nBytes);
                 this->serialize(object, is);
             }
+            
+            void save(const std::vector<karabo::util::Hash>& objects, std::vector<char>& archive);
+            
+            void load(std::vector<karabo::util::Hash>& objects, const char* archive, const size_t nBytes);
 
             /**
              * Destructor.
