@@ -44,6 +44,7 @@ void exportPyXmsSignalSlotable() {//exposing karabo::xms::SignalSlotable
             .def(bp::init<const std::string&, const std::string&>())
             .def(bp::init<const std::string&, const std::string&, const karabo::util::Hash&>())
             .def(bp::init<const std::string&, const std::string&, const karabo::util::Hash&, bool>())
+            .def(bp::init<const std::string&, const std::string&, const karabo::util::Hash&, bool, bool>())
 
             .def("create", &SignalSlotableWrap::create,
                  (bp::arg("instanceId") = "py/console/0",

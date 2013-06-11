@@ -167,7 +167,7 @@ void exportPyUtilHash() {
     n.def("setType", &NodeWrap().setType, (bp::arg("type")), "Sets the value type as a reference \"type\".");
 
 
-    bp::enum_<Hash::MergePolicy>("HashMergePlicy", "This enumeration defines possible options when merging 2 hashes.")
+    bp::enum_<Hash::MergePolicy>("HashMergePolicy", "This enumeration defines possible options when merging 2 hashes.")
             .value("MERGE_ATTRIBUTES", Hash::MERGE_ATTRIBUTES)
             .value("REPLACE_ATTRIBUTES", Hash::REPLACE_ATTRIBUTES)
             ;
