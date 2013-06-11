@@ -97,6 +97,7 @@ namespace karabo {
                     std::string archive;
                     m_serializer->save(m_sequenceBuffer, archive);
                     writeFile(archive);
+                    m_sequenceBuffer.clear();
                 }
             }
 

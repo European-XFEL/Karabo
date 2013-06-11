@@ -14,11 +14,14 @@ CPPUNIT_TEST_SUITE_REGISTRATION(HashBinarySerializer_Test);
 using namespace karabo::io;
 using namespace karabo::util;
 
+
 HashBinarySerializer_Test::HashBinarySerializer_Test() {
 }
 
+
 HashBinarySerializer_Test::~HashBinarySerializer_Test() {
 }
+
 
 void HashBinarySerializer_Test::setUp() {
 
@@ -43,10 +46,16 @@ void HashBinarySerializer_Test::setUp() {
     Hash unrooted("a.b.c", 1, "b.c", 2.0, "c", 3.f, "d.e", "4", "e.f.g.h", std::vector<unsigned long long > (5, 5), "F.f.f.f.f", Hash("x.y.z", 99));
     unrooted.setAttribute("F.f.f", "attr1", true);
     m_unrootedHash = unrooted;
+
+    for (size_t i = 0; i < 10; ++i) {
+        m_vectorOfHashes.push_back(m_rootedHash);
+    }
 }
+
 
 void HashBinarySerializer_Test::tearDown() {
 }
+
 
 void HashBinarySerializer_Test::testSerialization() {
 
@@ -70,7 +79,7 @@ void HashBinarySerializer_Test::testSerialization() {
 
         //cout << "\n\n" << archive2 << endl;
 
-       CPPUNIT_ASSERT(string(archive1[0], archive1.size()) == string(archive2[0], archive2.size()));
+        CPPUNIT_ASSERT(string(archive1[0], archive1.size()) == string(archive2[0], archive2.size()));
     }
 
     {
@@ -84,10 +93,10 @@ void HashBinarySerializer_Test::testSerialization() {
         Hash h;
         p->load(h, archive1);
 
-       CPPUNIT_ASSERT(karabo::util::similar(m_bigHash, h) == true);
+        CPPUNIT_ASSERT(karabo::util::similar(m_bigHash, h) == true);
 
         p->save(h, archive2);
-        
+
         CPPUNIT_ASSERT(string(archive1[0], archive1.size()) == string(archive2[0], archive2.size()));
 
     }
@@ -108,5 +117,19 @@ void HashBinarySerializer_Test::testSerialization() {
         p->save(h, archive2);
         CPPUNIT_ASSERT(string(archive1[0], archive1.size()) == string(archive2[0], archive2.size()));
 
+    }
+
+    {
+        vector<char> archive1;
+        vector<char> archive2;
+        p->save(m_vectorOfHashes, archive1);
+        vector<Hash> hs;
+        p->load(hs, archive1);
+        for (size_t i = 0; i < 10; ++i) {
+            CPPUNIT_ASSERT(karabo::util::similar(m_rootedHash, hs[i]) == true);
+        }
+
+        p->save(hs, archive2);
+        CPPUNIT_ASSERT(archive1 == archive2);
     }
 }
