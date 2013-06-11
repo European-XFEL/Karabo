@@ -168,7 +168,7 @@ namespace karabo {
 
             void serializeDataElement(hid_t dsId, const std::string& name, karabo::util::Hash& data);
 
-            void serializeAttributes(hid_t h5obj, karabo::util::Hash::Node& node);
+            void serializeAttributes(hid_t h5obj, karabo::util::Hash::Node& node, bool krb = false);
 
             template<class T>
             void readSingleAttribute(hid_t attrId, hid_t typeId, karabo::util::Hash::Node& node, const std::string& name) {
@@ -188,7 +188,7 @@ namespace karabo {
                 vec.resize(size, 0);
                 KARABO_CHECK_HDF5_STATUS(H5Aread(attrId, typeId, &vec[0]));
             }
-           
+
             template<class T>
             void readSingleValue(hid_t dsId, hid_t tid, const std::string& name, karabo::util::Hash& data) {
                 T& value = data.bindReference<T>(name);
@@ -197,8 +197,8 @@ namespace karabo {
 
             void readSingleString(hid_t dsId, hid_t tid, const std::string& name, karabo::util::Hash& data);
 
-            void readSingleBool(hid_t dsId, hid_t tid, const std::string& name, karabo::util::Hash& data);
-                        
+            void readSingleUnsignedChar(hid_t dsId, hid_t tid, const std::string& name, karabo::util::Hash& data);
+
             template<class T>
             void readSequenceValue(hid_t dsId, hid_t tid, const std::vector<hsize_t>& dims, const std::string& name, karabo::util::Hash& data) {
                 hsize_t size = dims[0];
@@ -210,7 +210,35 @@ namespace karabo {
                 KARABO_CHECK_HDF5_STATUS(H5Dread(dsId, tid, H5S_ALL, H5S_ALL, H5P_DEFAULT, &vec[0]));
             }
 
+            template<class T>
+            void readSequenceFloatingPoint(hid_t dsId, hid_t tid, const std::vector<hsize_t>& dims, const std::string& name, karabo::util::Hash& data) {
+                hsize_t size = dims[0];
+                if (dims.size() == 2) {
+                    //vector< complex<T> >
+                    std::vector<std::complex<T> >& vec = data.bindReference<std::vector<std::complex<T> > >(name);
+                    vec.resize(size, std::complex<T>(0, 0));
+                    KARABO_CHECK_HDF5_STATUS(H5Dread(dsId, tid, H5S_ALL, H5S_ALL, H5P_DEFAULT, &vec[0]));
+
+                } else {
+                    // vector<T> or complex<T> 
+                    htri_t exists = H5Aexists(dsId, "KRB_complex");
+                    KARABO_CHECK_HDF5_STATUS(exists);
+                    if (exists) {
+                        // complex<T>
+                        std::complex<T>& value = data.bindReference<std::complex<T> >(name);
+                        KARABO_CHECK_HDF5_STATUS(H5Dread(dsId, tid, H5S_ALL, H5S_ALL, H5P_DEFAULT, &value));
+                    } else {
+                        // vector<T>
+                        std::vector<T>& vec = data.bindReference<std::vector<T> >(name);
+                        vec.resize(size, static_cast<T>(0));
+                        KARABO_CHECK_HDF5_STATUS(H5Dread(dsId, tid, H5S_ALL, H5S_ALL, H5P_DEFAULT, &vec[0]));
+                    }
+                }
+            }
+
             void readSequenceString(hid_t dsId, hid_t tid, const std::vector<hsize_t>& dims, const std::string& name, karabo::util::Hash& data);
+
+            void readSequenceUnsignedChar(hid_t dsId, hid_t tid, const std::vector<hsize_t>& dims, const std::string& name, karabo::util::Hash& data);
 
             void readSequenceBytes(hid_t dsId, hid_t tid, const std::string& name, karabo::util::Hash& data);
 
@@ -241,8 +269,8 @@ namespace karabo {
             const std::string& key = node.getKey();
             try {
                 const std::complex<U>& value = node.getValue<std::complex<U> >();
-                hid_t stid = karabo::io::h5::ScalarTypes::getHdf5StandardType<float>();
-                hid_t ntid = karabo::io::h5::ScalarTypes::getHdf5NativeType<float>();
+                hid_t stid = karabo::io::h5::ScalarTypes::getHdf5StandardType<U>();
+                hid_t ntid = karabo::io::h5::ScalarTypes::getHdf5NativeType<U>();
                 hsize_t dims[] = {2};
                 hid_t spaceId = H5Screate_simple(1, dims, NULL);
                 hid_t dsId = H5Dcreate2(group, key.c_str(), stid, spaceId, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
@@ -252,6 +280,7 @@ namespace karabo {
                 KARABO_CHECK_HDF5_STATUS(H5Tclose(stid));
                 KARABO_CHECK_HDF5_STATUS(H5Sclose(spaceId));
                 serializeAttributes(node, dsId);
+                writeSingleAttribute(dsId, 1, "KRB_complex");
                 KARABO_CHECK_HDF5_STATUS(H5Dclose(dsId));
             } catch (...) {
                 KARABO_RETHROW_AS(KARABO_PROPAGATED_EXCEPTION("Cannot create dataset /" + key));
@@ -291,8 +320,8 @@ namespace karabo {
                 hsize_t dims[] = {len, 2};
                 hid_t spaceId = H5Screate_simple(2, dims, NULL);
                 KARABO_CHECK_HDF5_STATUS(spaceId);
-                hid_t stid = karabo::io::h5::ScalarTypes::getHdf5StandardType<float>();
-                hid_t ntid = karabo::io::h5::ScalarTypes::getHdf5NativeType<float>();
+                hid_t stid = karabo::io::h5::ScalarTypes::getHdf5StandardType<U>();
+                hid_t ntid = karabo::io::h5::ScalarTypes::getHdf5NativeType<U>();
                 hid_t dsId = H5Dcreate2(group, key.c_str(), stid, spaceId, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
                 KARABO_CHECK_HDF5_STATUS(dsId);
                 KARABO_CHECK_HDF5_STATUS(H5Dwrite(dsId, ntid, spaceId, spaceId, H5P_DEFAULT, &value[0]));
@@ -311,11 +340,11 @@ namespace karabo {
         // Attributes
 
         template<typename T>
-        inline void HashHdf5Serializer::writeSingleAttribute(hid_t group, const T& value, const std::string& key) {
+        inline void HashHdf5Serializer::writeSingleAttribute(hid_t h5obj, const T& value, const std::string& key) {
             try {
                 hid_t stid = karabo::io::h5::ScalarTypes::getHdf5StandardType<T>();
                 hid_t ntid = karabo::io::h5::ScalarTypes::getHdf5NativeType<T>();
-                hid_t dsId = H5Acreate2(group, key.c_str(), stid, m_spaceId, H5P_DEFAULT, H5P_DEFAULT);
+                hid_t dsId = H5Acreate2(h5obj, key.c_str(), stid, m_spaceId, H5P_DEFAULT, H5P_DEFAULT);
                 KARABO_CHECK_HDF5_STATUS(dsId);
                 KARABO_CHECK_HDF5_STATUS(H5Awrite(dsId, ntid, &value));
                 KARABO_CHECK_HDF5_STATUS(H5Tclose(ntid));
