@@ -157,10 +157,10 @@ class Manager(Singleton):
 
     
     def _mergeIntoHash(self, config):
-        self.__hash += config
-        #print "_mergeIntoHash"
-        #print self.__hash
+        #print config
         #print ""
+        self.__hash.merge(config, HashMergePolicy.MERGE_ATTRIBUTES) #REPLACE_ATTRIBUTES)
+        #print self.__hash
     
     
     def getFromPathAsHash(self, key):
