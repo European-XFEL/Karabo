@@ -32,13 +32,16 @@ namespace karabo {
             SignalSlotableWrap(const std::string& instanceId = "py/console/0",
                                const std::string& connectionType = "Jms",
                                const karabo::util::Hash& connectionParameters = karabo::util::Hash(),
-                               bool autostart = true) : SignalSlotable() {
+                               bool autostart = true,
+                               bool heartbeat = true) : SignalSlotable() {
                 if (!PyEval_ThreadsInitialized())
                     PyEval_InitThreads();
                 karabo::net::BrokerConnection::Pointer connection = karabo::net::BrokerConnection::create(connectionType, connectionParameters);
                 this->init(connection, instanceId);
-                if (autostart)
-                    m_eventLoop = boost::thread(boost::bind(&karabo::xms::SignalSlotable::runEventLoop, this, true, karabo::util::Hash())); // TODO put instance info here
+                if (autostart) {
+                    m_eventLoop = boost::thread(boost::bind(&karabo::xms::SignalSlotable::runEventLoop, this, heartbeat, karabo::util::Hash())); // TODO put instance info here
+                    boost::this_thread::sleep(boost::posix_time::milliseconds(50));  // give a chance above thread to start working before we return from constructor
+                }
             }
 
             virtual ~SignalSlotableWrap() {
