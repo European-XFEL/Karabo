@@ -283,10 +283,9 @@ namespace karabo {
                 KARABO_CHECK_HDF5_STATUS(H5Tclose(ntid));
                 KARABO_CHECK_HDF5_STATUS(H5Tclose(stid));
                 serializeAttributes(node, dsId);
+                writeSingleAttribute(dsId, 1, "KRB_bool");
                 KARABO_CHECK_HDF5_STATUS(H5Dclose(dsId));
             } catch (...) {
-
-
                 KARABO_RETHROW_AS(KARABO_PROPAGATED_EXCEPTION("Cannot create dataset /" + key));
             }
         }
@@ -375,6 +374,7 @@ namespace karabo {
                 KARABO_CHECK_HDF5_STATUS(H5Tclose(stid));
                 KARABO_CHECK_HDF5_STATUS(H5Sclose(spaceId));
                 serializeAttributes(node, dsId);
+                writeSingleAttribute(dsId, 1, "KRB_bool");
                 KARABO_CHECK_HDF5_STATUS(H5Dclose(dsId));
             } catch (...) {
 
@@ -651,7 +651,7 @@ namespace karabo {
             //                std::clog << "vec hashes" << std::endl;
             karabo::util::Hash a("a", 0);
             karabo::util::Hash::Node& aNode = a.getNode("a");
-            serializeAttributes(gid, aNode);
+            serializeAttributes(gid, aNode, true);
 
             std::string vecHashKey = name;
             karabo::util::getAndCropIndex(vecHashKey);
@@ -718,7 +718,9 @@ namespace karabo {
                         } else if (H5Tequal(tid, H5T_NATIVE_INT64)) {
                             readSingleValue<long long>(dsId, tid, name, data);
                         } else if (H5Tequal(tid, H5T_NATIVE_UINT8)) {
-                            readSingleValue<unsigned char>(dsId, tid, name, data);
+                            // this read unsigned char and boolean types
+                            // if KRB_bool attribute  exists unsigned char value is converted to bool
+                            readSingleUnsignedChar(dsId, tid, name, data);
                         } else if (H5Tequal(tid, H5T_NATIVE_UINT16)) {
                             readSingleValue<unsigned short>(dsId, tid, name, data);
                         } else if (H5Tequal(tid, H5T_NATIVE_UINT32)) {
@@ -751,7 +753,9 @@ namespace karabo {
                         } else if (H5Tequal(tid, H5T_NATIVE_INT64)) {
                             readSequenceValue<long long>(dsId, tid, dims, name, data);
                         } else if (H5Tequal(tid, H5T_NATIVE_UINT8)) {
-                            readSequenceValue<unsigned char>(dsId, tid, dims, name, data);
+                            // this read vectors of unsigned char and boolean types
+                            // if KRB_bool attribute  exists unsigned char values are converted to bool
+                            readSequenceUnsignedChar(dsId, tid, dims, name, data);
                         } else if (H5Tequal(tid, H5T_NATIVE_UINT16)) {
                             readSequenceValue<unsigned short>(dsId, tid, dims, name, data);
                         } else if (H5Tequal(tid, H5T_NATIVE_UINT32)) {
@@ -759,9 +763,9 @@ namespace karabo {
                         } else if (H5Tequal(tid, H5T_NATIVE_UINT64)) {
                             readSequenceValue<unsigned long long>(dsId, tid, dims, name, data);
                         } else if (H5Tequal(tid, H5T_NATIVE_FLOAT)) {
-                            readSequenceValue<float>(dsId, tid, dims, name, data);
+                            readSequenceFloatingPoint<float>(dsId, tid, dims, name, data);
                         } else if (H5Tequal(tid, H5T_NATIVE_DOUBLE)) {
-                            readSequenceValue<double>(dsId, tid, dims, name, data);
+                            readSequenceFloatingPoint<double>(dsId, tid, dims, name, data);
                         } else {
                             throw KARABO_HDF_IO_EXCEPTION("Sequence type not supported");
                         }
@@ -777,7 +781,7 @@ namespace karabo {
         }
 
 
-        void HashHdf5Serializer::serializeAttributes(hid_t h5obj, karabo::util::Hash::Node& node) {
+        void HashHdf5Serializer::serializeAttributes(hid_t h5obj, karabo::util::Hash::Node& node, bool krb) {
             H5O_info_t objInfo;
             KARABO_CHECK_HDF5_STATUS(H5Oget_info(h5obj, &objInfo));
             for (hsize_t i = 0; i < objInfo.num_attrs; ++i) {
@@ -787,6 +791,7 @@ namespace karabo {
                 std::vector<char> bufName(len, 0);
                 ssize_t size = H5Aget_name_by_idx(h5obj, ".", H5_INDEX_CRT_ORDER, H5_ITER_INC, i, &bufName[0], len, H5P_DEFAULT);
                 std::string name(&bufName[0]);
+                if (krb == false && name.substr(0, 4) == "KRB_") continue;
                 //                    std::clog << "attributes objname: len=" << len << " name=" << name << std::endl;
                 KARABO_CHECK_HDF5_STATUS(size);
                 hid_t attrId = H5Aopen_by_idx(h5obj, ".", H5_INDEX_CRT_ORDER, H5_ITER_INC, i, H5P_DEFAULT, H5P_DEFAULT);
@@ -872,7 +877,6 @@ namespace karabo {
             hid_t stringTypeId = H5Tcopy(H5T_C_S1);
             KARABO_CHECK_HDF5_STATUS(H5Tset_size(stringTypeId, len));
             if (H5Tequal(tid, stringTypeId)) {
-                std::clog << "C_S1" << std::endl;
                 std::vector<char> vec(len, 0);
                 //std::clog << "C_S1 1" << std::endl;
                 KARABO_CHECK_HDF5_STATUS(H5Dread(dsId, tid, H5S_ALL, H5S_ALL, H5P_DEFAULT, &vec[0]));
@@ -883,10 +887,21 @@ namespace karabo {
                 throw KARABO_HDF_IO_EXCEPTION("Type not supported");
             }
         }
+        
 
-        void HashHdf5Serializer::readSingleBool(hid_t dsId, hid_t tid, const std::string& name, karabo::util::Hash& data){
-            
+        void HashHdf5Serializer::readSingleUnsignedChar(hid_t dsId, hid_t tid, const std::string& name, karabo::util::Hash& data) {
+            unsigned char value;
+            KARABO_CHECK_HDF5_STATUS(H5Dread(dsId, tid, H5S_ALL, H5S_ALL, H5P_DEFAULT, &value));
+            htri_t exists = H5Aexists(dsId, "KRB_bool");
+            KARABO_CHECK_HDF5_STATUS(exists);
+            if (exists) {
+                bool bValue = boost::numeric_cast<bool>(value);
+                data.set(name, bValue);
+            } else {
+                data.set(name, value);
+            }
         }
+
 
         void HashHdf5Serializer::readSequenceString(hid_t dsId, hid_t tid, const std::vector<hsize_t>& dims, const std::string& name, karabo::util::Hash& data) {
             hsize_t size = dims[0];
@@ -900,6 +915,27 @@ namespace karabo {
             KARABO_CHECK_HDF5_STATUS(H5Dread(dsId, tid, H5S_ALL, H5S_ALL, H5P_DEFAULT, chPtr));
             for (size_t i = 0; i < size; ++i) {
                 vec[i] = std::string(ptr[i]);
+            }
+        }
+
+
+        void HashHdf5Serializer::readSequenceUnsignedChar(hid_t dsId, hid_t tid, const std::vector<hsize_t>& dims, const std::string& name, karabo::util::Hash& data) {
+            hsize_t size = dims[0];
+            for (size_t i = 1; i < dims.size(); ++i) {
+                size *= dims[i];
+            }
+            vector<unsigned char> vec(size, 0);
+            KARABO_CHECK_HDF5_STATUS(H5Dread(dsId, tid, H5S_ALL, H5S_ALL, H5P_DEFAULT, &vec[0]));
+            htri_t exists = H5Aexists(dsId, "KRB_bool");
+            KARABO_CHECK_HDF5_STATUS(exists);
+            if (exists) {
+                vector<bool>& bVec = data.bindReference < vector<bool> >(name);
+                bVec.resize(size, false);
+                for (size_t i = 0; i < size; ++i) {
+                    bVec[i] = boost::numeric_cast<bool>(vec[i]);
+                }
+            } else {
+                data.set(name, vec);
             }
         }
 
