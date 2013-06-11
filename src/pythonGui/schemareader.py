@@ -15,6 +15,8 @@ from editablenoapplycomponent import EditableNoApplyComponent
 from enums import NavigationItemTypes
 
 from treewidgetitems.attributetreewidgetitem import *
+from treewidgetitems.commandtreewidgetitem import *
+from treewidgetitems.imagetreewidgetitem import *
 from treewidgetitems.propertytreewidgetitem import *
 
 from libkarathon import *
@@ -47,7 +49,8 @@ class SchemaReader(object):
             return
         
         print ""
-        print "readSchema", treeWidget
+        print "readSchema"
+        print self.__schema
         print ""
         
         self.__rootPath = path
@@ -61,34 +64,59 @@ class SchemaReader(object):
 
     def r_readSchema(self, key, parentItem=None):
         
-        fullPath = self.__rootPath + "." + key
-        if parentItem:
-            item = PropertyTreeWidgetItem(fullPath, self.__treeWidget, parentItem)
-        else:
-            item = PropertyTreeWidgetItem(fullPath, self.__treeWidget)
-
-        if self.__schema.hasDisplayedName(key):
-            item.displayText = self.__schema.getDisplayedName(key)
-        else:
-            item.displayText = key
-
-        #if self._schema.hasDisplayType(key):
-        #    print "hasDisplayType", self._schema.getDisplayType(key)
-
         if self.__schema.isLeaf(key):
             #print "isLeaf", key
+            item = self._createPropertyItem(key, parentItem)
             self._handleLeaf(key, item)
+        elif self.__schema.isCommand(key):
+            #print "isCommand", key
+            item = self._createCommandItem(key, parentItem)
+            #self._handleCommand(key, item)
         elif self.__schema.isNode(key):
             #print "isNode", key
-            #print "isCommand", self.__schema.isCommand(key)
+            item = self._createPropertyItem(key, parentItem)
             self._handleNode(key, item)
         elif self.__schema.isChoiceOfNodes(key):
-            #print "isChoiceOfNodes", key
+            print "isChoiceOfNodes", key
+            item = self._createPropertyItem(key, parentItem)
             self._handleChoiceOfNodes(key, item)
         elif self.__schema.isListOfNodes(key):
-            #print "isListOfNodes", key
+            print "isListOfNodes", key
+            item = self._createPropertyItem(key, parentItem)
             self._handleListOfNodes(key, item)
 
+
+    def _createPropertyItem(self, key, parentItem):
+            fullPath = self.__rootPath + "." + key
+            if parentItem:
+                item = PropertyTreeWidgetItem(fullPath, self.__treeWidget, parentItem)
+            else:
+                item = PropertyTreeWidgetItem(fullPath, self.__treeWidget)
+
+            if self.__schema.hasDisplayedName(key):
+                item.displayText = self.__schema.getDisplayedName(key)
+            else:
+                item.displayText = key
+            
+            return item
+
+
+    def _createCommandItem(self, key, parentItem):
+            fullPath = self.__rootPath + "." + key
+            if parentItem:
+                item = CommandTreeWidgetItem(fullPath, self.__treeWidget, parentItem)
+            else:
+                item = CommandTreeWidgetItem(fullPath, self.__treeWidget)
+            
+            if self.__deviceType is NavigationItemTypes.DEVICE:
+                item.enabled = True
+            
+            if self.__schema.hasDisplayedName(key):
+                item.displayText = self.__schema.getDisplayedName(key)
+            else:
+                item.displayText = key
+            
+            return item
 
     def _handleLeaf(self, key, item):
         self._getAssignment(key, item)
@@ -179,6 +207,7 @@ class SchemaReader(object):
             self._handleInteger(key, item, defaultValue, unitSymbol)
         elif valueType == Types.VECTOR_STRING:
             print "VECTOR_STRING"
+            self._handleVectorString(key, item, defaultValue, unitSymbol)
         elif valueType == Types.VECTOR_CHAR:
             print "VECTOR_CHAR"
         elif valueType == Types.VECTOR_INT8:
@@ -502,4 +531,24 @@ class SchemaReader(object):
             editableComponent.signalApplyChanged.connect(self.__treeWidget.onApplyChanged)
 
         item.editableComponent = editableComponent
+
+
+    def _handleVectorString(self, key, item, defaultValue, unitSymbol):
+
+        item.classAlias = "Histogram"
+        item.setIcon(0, QIcon(":enum"))
+
+        defaultVec = []
+        if defaultValue:
+             defaultVec = str(defaultValue).split(',')
+        default = []
+        for index in defaultVec:
+            default.append(str(index))
+
+        if self.__deviceType is NavigationItemTypes.CLASS:
+            item.editableComponent = EditableNoApplyComponent(classAlias=item.classAlias, key=item.internalKey, value=default, unitSymbol=unitSymbol)
+        else:
+            editableComponent = EditableApplyLaterComponent(classAlias=item.classAlias, key=item.internalKey, value=None, unitSymbol=unitSymbol)
+            editableComponent.signalApplyChanged.connect(self.__treeWidget.onApplyChanged)
+            item.editableComponent = editableComponent
 

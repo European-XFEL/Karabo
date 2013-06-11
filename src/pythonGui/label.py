@@ -40,6 +40,7 @@ class Label(QLabel):
         
         self.setAcceptDrops(True)
 
+
     def _value(self):
         return self.__value
     def _setValue(self, value):
