@@ -18,6 +18,8 @@ from libkarathon import *
 from fsm import *
 from karabo_decorators import KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS
 from plugin_loader import PluginLoader
+from configurator import Configurator
+from python_device import PythonDevice
 from runner import Runner
 
 
@@ -39,9 +41,6 @@ class DeviceServer(object):
     separate process if user push "Initiate" button in GUI
     '''
 
-    live_threads = []
-    dead_threads = []
-    cLock = threading.Lock()
     instanceCountLock = threading.Lock()
     instanceCountPerDeviceServer = dict()
     
@@ -163,20 +162,26 @@ class DeviceServer(object):
         
     def run(self):
         print "Initialize SignalSlotable object...\n"
-        _ss = SignalSlotable()
         try:
-            isValid, self.serverid, answer = _ss.request("*", "slotValidateInstanceId", self.hostname, "server", self.serverid).waitForReply(self.nameRequestTimeout)
-        except RuntimeError, e:
-            print "Name request timed out, make sure a valid master server is running: " + str(e)
-            self._ss.stopEventLoop()
+            #print "Temporary SignalSlotable with self.hostname:'{}', server: '{}', self.nameRequestTimeout: {}".format(self.hostname, self.serverid, self.nameRequestTimeout)
+            ss = SignalSlotable("temp_python_signal_slotable")
+            time.sleep(0.1)
+            print "DEBUG: Request 'slotValidateInstanceId'..."
+            isValid, self.serverid, answer = ss.request("*", "slotValidateInstanceId", self.hostname, "server", self.serverid).waitForReply(self.nameRequestTimeout)
+            print "DEBUG: Delete 'temp_python_signal_slotable'. It takes 10 secs ..."
+            del ss
+            print "DEBUG: ... deleted!"
+        except ValueError,e:
+            print "Name request timed out, make sure a valid master server is running."
+            del e
+            del ss
             return
-        _ss.stopEventLoop()
         if not isValid:
             print "Master says:",answer
             return
         else:
             print "Master says:",answer
-        print "Request for serverId returns: %r" % self.serverid
+        #print "Request for serverId returns: %r" % self.serverid
         self.ss = SignalSlotable.create(self.serverid)
         
         self.log = Logger.getLogger(self.serverid)
@@ -188,23 +193,6 @@ class DeviceServer(object):
         info["version"] = self.__class__.__version__
         info["host"] = self.hostname
         self.ss.runEventLoop(True, info)  # block
-        
-        #while self.running:
-        #    with DeviceServer.cLock:
-        #        # critical section
-        #        for c in DeviceServer.dead_threads:
-        #            self.log.INFO("Join dead thread {}".format(c.getName()))
-        #            c.join()
-        #        DeviceServer.dead_threads = []
-        #        # end of critical section
-        #    if self.isRegistered:
-        #        self.scanPlugins()
-        #    if self.selfDestroyFlag:
-        #        with DeviceServer.cLock:
-        #            if len(DeviceServer.live_threads) == 0 and len(DeviceServer.dead_threads) == 0:
-        #                self.ss.call("*", "slotDeviceServerInstanceGone", self.serverid)
-        #                self.stopDeviceServer()
-        #    time.sleep(3)
     
     def _registerAndConnectSignalsAndSlots(self):
         self.ss.registerSignal("signalNewDeviceClassAvailable", str, str, Schema) # serverid, classid, Schema
@@ -231,6 +219,7 @@ class DeviceServer(object):
             modules = self.pluginLoader.update()   # just list of modules in plugins dir
             for name, path in modules:
                 if name in self.availableModules:
+                    print "scanPlugins --> name:", name, " already known "
                     continue
                 try:
                     dname = os.path.dirname( os.path.realpath(path) )
@@ -290,7 +279,7 @@ class DeviceServer(object):
         self.log.DEBUG("with the following configuration:\n".format(config))
         modified = Hash(config)
         modified[classid]["serverId"] = self.serverid
-        if "deviceId" in modified[claassid]:
+        if "deviceId" in modified[classid]:
             deviceid = modified[classid]["deviceId"]
         else:
             deviceid = self._generateDefaultDeviceInstanceId(classid)
@@ -318,23 +307,28 @@ class DeviceServer(object):
     def notifyNewDeviceAction(self):
         deviceClasses = []
         for (classid, d) in self.availableDevices.items():
+            print "notifyNewDeviceAction: classid: {}, d['mustNotify']: {}, d['module']: {}".format(classid, d['mustNotify'], d['module'])
             deviceClasses.append(classid)
             if d['mustNotify']:
                 d['mustNotify'] = False
                 #self.log.DEBUG("Notifying about {}".format(d['module']))
                 #self.ss.emit("signalNewDeviceClassAvailable", self.ss.getInstanceId(), classid, d["xsd"])
         self.ss.updateInstanceInfo(Hash("deviceClasses", deviceClasses))
+        print "notifyNewDeviceAction exit"
 
     def noStateTransition(self):
         self.log.DEBUG("No transition")
    
     def slotKillServer(self):
+        print "Received kill signal"
         self.log.INFO("Received kill signal")
         for deviceid  in self.deviceInstanceMap.keys():
+            print "slotKillServer:\tsend 'slotKillDevice' signal to '{}'".format(deviceid)
             self.ss.call(deviceid, "slotKillDevice")
             launcherThread = self.deviceInstanceMap[deviceid]
             launcherThread.join()
         self.deviceInstanceMap = {}
+        print "slotKillServer: send 'slotDeviceServerInstanceGone' to {}".format(self.serverid)
         self.ss.call("*", "slotDeviceServerInstanceGone", self.serverid)
         self.stopDeviceServer()
         
@@ -348,7 +342,7 @@ class DeviceServer(object):
             self.log.INFO("Device \"{}\" removed from server.".format(id))
 
     def slotGetClassSchema(self, classid):
-        schema = Configurator(PythonDevice).getSchema(classId)
+        schema = Configurator(PythonDevice).getSchema(classid)
         self.ss.reply(schema)
         
     def processEvent(self, event):
@@ -396,9 +390,6 @@ class Launcher(threading.Thread):
             raise RuntimeError,"Exception happened while writing 'config' object: " + str(e) 
 
     def run(self):
-        with DeviceServer.cLock:
-            DeviceServer.live_threads.append(self)
-
         self.pid = os.fork()
         if self.pid == 0:
             os.chmod(self.script, 0755)
@@ -407,10 +398,6 @@ class Launcher(threading.Thread):
             print "\nLaunch device", self.device
             id, status = os.waitpid(self.pid, 0)
             print "Device %r finally died" % (self.device)
-
-        with DeviceServer.cLock:
-            DeviceServer.dead_threads.append(self)
-            DeviceServer.live_threads.remove(self)
 
     
 def main(args):
