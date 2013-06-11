@@ -290,10 +290,10 @@ class PythonDevice(BaseFsm):
         self._ss.connect("", "signalProgressUpdated", "*", "slotProgressUpdated", ConnectionType.NO_TRACK, False)
         
         #---------------------------------------------- register intrinsic slots
-        self._ss.registerSlot(self.slotReconfigure, Hash)
+        self._ss.registerSlot(self.slotReconfigure)
         self._ss.registerSlot(self.slotRefresh)
         self._ss.registerSlot(self.slotGetConfiguration)
-        self._ss.registerSlot(self.slotGetSchema, bool)
+        self._ss.registerSlot(self.slotGetSchema)
         self._ss.registerSlot(self.slotKillDevice)
         
     def slotRefresh(self):
