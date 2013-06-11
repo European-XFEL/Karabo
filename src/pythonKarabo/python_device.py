@@ -130,7 +130,7 @@ class PythonDevice(BaseFsm):
     
     def __del__(self):
         ''' PythonDevice destructor '''
-        # Destroying device instance means finishing subprocess runnung a device instance.
+        # Destroying device instance means finishing subprocess runnung a device instancPythonConveyore.
         # Call exit for child processes (os._exit(...)) to shutdown properly a SignalSlotable object
         os._exit(0)   
 
@@ -161,12 +161,12 @@ class PythonDevice(BaseFsm):
                     print "Validation Exception (Intern): " + str(e)
                     raise RuntimeError,"Validation Exception: " + str(e)
 
-                if self.validatorIntern.hasParametersInWarnOrAlarm():
-                    warnings = self.validatorIntern.getParametersInWarnOrAlarm()
-                    for key in warnings:
-                        desc = warnings[key]
-                        self.log.WARN(desc["message"])
-                        self._ss.emit("signalNotification", desc["type"], desc["message"], "", self.deviceid)
+                #if self.validatorIntern.hasParametersInWarnOrAlarm():
+                #    warnings = self.validatorIntern.getParametersInWarnOrAlarm()
+                #    for key in warnings:
+                #        desc = warnings[key]
+                #        self.log.WARN(desc["message"])
+                #        self._ss.emit("signalNotification", desc["type"], desc["message"], "", self.deviceid)
 
                 if not validated.empty():
                     self.parameters.merge(validated, HashMergePolicy.REPLACE_ATTRIBUTES)
@@ -274,7 +274,7 @@ class PythonDevice(BaseFsm):
         
     def _initDeviceSlots(self):
         #-------------------------------------------- register intrinsic signals
-        self._ss.registerSignal("signalChanged", Hash, str, str)                # changeHash, instanceId
+        self._ss.registerSignal("signalChanged", Hash, str)                # changeHash, instanceId
         self._ss.connect("", "signalChanged", "*", "slotChanged", ConnectionType.NO_TRACK, False)
         
         self._ss.registerSignal("signalNoTransition", str, str)                 # 
@@ -345,7 +345,7 @@ class PythonDevice(BaseFsm):
             self._ss.reply(self.fullSchema)
    
     def slotKillDevice(self):
-        senderid = getSenderInfo("slotKillDevice").getInstanceIdOfSender()
+        senderid = self.serverid # getSenderInfo("slotKillDevice").getInstanceIdOfSender()
         if senderid == self.serverid: 
             self.log.INFO("Device is going down as instructed by server")
             self.preDestruction()
