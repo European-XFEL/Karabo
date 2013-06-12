@@ -395,7 +395,7 @@ namespace karabo {
                 KARABO_CHECK_HDF5_STATUS(H5Tclose(tid));
                 KARABO_CHECK_HDF5_STATUS(H5Aclose(attrId));
             } catch (...) {
-                KARABO_RETHROW_AS(KARABO_PROPAGATED_EXCEPTION("Cannot create dataset /" + key));
+                KARABO_RETHROW_AS(KARABO_PROPAGATED_EXCEPTION("Cannot serialize char attribute" + key));
             }
         }
 
@@ -413,24 +413,22 @@ namespace karabo {
                 KARABO_CHECK_HDF5_STATUS(H5Tclose(stid));
                 KARABO_CHECK_HDF5_STATUS(H5Aclose(attrId));
             } catch (...) {
-
-
-                KARABO_RETHROW_AS(KARABO_PROPAGATED_EXCEPTION("Cannot create dataset /" + key));
+                KARABO_RETHROW_AS(KARABO_PROPAGATED_EXCEPTION("Cannot serialize bool attribute: " + key));
             }
         }
 
 
-        void HashHdf5Serializer::writeSingleAttribute(hid_t group, const std::complex<float>& value, const std::string & key) {
+        void HashHdf5Serializer::writeSingleAttribute(hid_t h5obj, const std::complex<float>& value, const std::string & key) {
             try {
                 hid_t stid = karabo::io::h5::ScalarTypes::getHdf5StandardType<float>();
                 hid_t ntid = karabo::io::h5::ScalarTypes::getHdf5NativeType<float>();
                 hsize_t dims[] = {2};
                 hid_t spaceId = H5Screate_simple(1, dims, NULL);
-                hid_t dsId = H5Acreate2(group, key.c_str(), stid, spaceId, H5P_DEFAULT, H5P_DEFAULT);
+                hid_t dsId = H5Acreate2(h5obj, key.c_str(), stid, spaceId, H5P_DEFAULT, H5P_DEFAULT);
                 KARABO_CHECK_HDF5_STATUS(dsId);
                 KARABO_CHECK_HDF5_STATUS(H5Awrite(dsId, ntid, &value));
                 std::string krbAttributeName = "KRB_complex_" + key;
-                writeSingleAttribute(dsId, 1, krbAttributeName);
+                writeSingleAttribute(h5obj, 1, krbAttributeName);
                 KARABO_CHECK_HDF5_STATUS(H5Tclose(ntid));
                 KARABO_CHECK_HDF5_STATUS(H5Tclose(stid));
                 KARABO_CHECK_HDF5_STATUS(H5Sclose(spaceId));
@@ -438,29 +436,29 @@ namespace karabo {
             } catch (...) {
 
 
-                KARABO_RETHROW_AS(KARABO_PROPAGATED_EXCEPTION("Cannot create dataset /" + key));
+                KARABO_RETHROW_AS(KARABO_PROPAGATED_EXCEPTION("Cannot serialize complex<float> attribute: " + key));
             }
         }
 
 
-        void HashHdf5Serializer::writeSingleAttribute(hid_t group, const std::complex<double>& value, const std::string & key) {
+        void HashHdf5Serializer::writeSingleAttribute(hid_t h5obj, const std::complex<double>& value, const std::string & key) {
             try {
                 hid_t stid = karabo::io::h5::ScalarTypes::getHdf5StandardType<double>();
                 hid_t ntid = karabo::io::h5::ScalarTypes::getHdf5NativeType<double>();
                 hsize_t dims[] = {2};
                 hid_t spaceId = H5Screate_simple(1, dims, NULL);
-                hid_t dsId = H5Acreate2(group, key.c_str(), stid, spaceId, H5P_DEFAULT, H5P_DEFAULT);
+                hid_t dsId = H5Acreate2(h5obj, key.c_str(), stid, spaceId, H5P_DEFAULT, H5P_DEFAULT);
                 KARABO_CHECK_HDF5_STATUS(dsId);
                 KARABO_CHECK_HDF5_STATUS(H5Awrite(dsId, ntid, &value));
                 std::string krbAttributeName = "KRB_complex_" + key;
-                writeSingleAttribute(dsId, 1, krbAttributeName);
+                writeSingleAttribute(h5obj, 1, krbAttributeName);
 
                 KARABO_CHECK_HDF5_STATUS(H5Tclose(ntid));
                 KARABO_CHECK_HDF5_STATUS(H5Tclose(stid));
                 KARABO_CHECK_HDF5_STATUS(H5Sclose(spaceId));
                 KARABO_CHECK_HDF5_STATUS(H5Aclose(dsId));
             } catch (...) {
-                KARABO_RETHROW_AS(KARABO_PROPAGATED_EXCEPTION("Cannot create dataset /" + key));
+                KARABO_RETHROW_AS(KARABO_PROPAGATED_EXCEPTION("Cannot serialize complex<double> attribute: " + key));
             }
         }
 
@@ -476,12 +474,12 @@ namespace karabo {
                 KARABO_CHECK_HDF5_STATUS(H5Tclose(tid));
                 KARABO_CHECK_HDF5_STATUS(H5Aclose(attrId));
             } catch (...) {
-                KARABO_RETHROW_AS(KARABO_PROPAGATED_EXCEPTION("Cannot create dataset /" + key));
+                KARABO_RETHROW_AS(KARABO_PROPAGATED_EXCEPTION("Cannot serialize vector<char> attribute: " + key));
             }
         }
 
 
-        void HashHdf5Serializer::writeSequenceAttribute(hid_t group, const std::vector< std::complex<float> >& value, const std::string & key) {
+        void HashHdf5Serializer::writeSequenceAttribute(hid_t h5obj, const std::vector< std::complex<float> >& value, const std::string & key) {
             try {
                 hsize_t len = value.size();
                 hsize_t dims[] = {len, 2};
@@ -489,25 +487,25 @@ namespace karabo {
                 KARABO_CHECK_HDF5_STATUS(spaceId);
                 hid_t stid = karabo::io::h5::ScalarTypes::getHdf5StandardType<float>();
                 hid_t ntid = karabo::io::h5::ScalarTypes::getHdf5NativeType<float>();
-                hid_t dsId = H5Acreate2(group, key.c_str(), stid, spaceId, H5P_DEFAULT, H5P_DEFAULT);
-                KARABO_CHECK_HDF5_STATUS(dsId);
-                KARABO_CHECK_HDF5_STATUS(H5Awrite(dsId, ntid, &value[0]));
+                hid_t attrId = H5Acreate2(h5obj, key.c_str(), stid, spaceId, H5P_DEFAULT, H5P_DEFAULT);
+                KARABO_CHECK_HDF5_STATUS(attrId);
+                KARABO_CHECK_HDF5_STATUS(H5Awrite(attrId, ntid, &value[0]));
                 std::string krbAttributeName = "KRB_complex_" + key;
-                writeSingleAttribute(dsId, 1, krbAttributeName);
+                writeSingleAttribute(h5obj, 1, krbAttributeName);
                 KARABO_CHECK_HDF5_STATUS(H5Tclose(ntid));
                 KARABO_CHECK_HDF5_STATUS(H5Tclose(stid));
                 KARABO_CHECK_HDF5_STATUS(H5Sclose(spaceId));
-                KARABO_CHECK_HDF5_STATUS(H5Aclose(dsId));
+                KARABO_CHECK_HDF5_STATUS(H5Aclose(attrId));
             } catch (...) {
 
 
-                KARABO_RETHROW_AS(KARABO_PROPAGATED_EXCEPTION("Cannot create dataset /" + key));
+                KARABO_RETHROW_AS(KARABO_PROPAGATED_EXCEPTION("Cannot serialize vector<complex<float> > attribute: " + key));
             }
 
         }
 
 
-        void HashHdf5Serializer::writeSequenceAttribute(hid_t group, const std::vector< std::complex<double> >& value, const std::string & key) {
+        void HashHdf5Serializer::writeSequenceAttribute(hid_t h5obj, const std::vector< std::complex<double> >& value, const std::string & key) {
             try {
                 hsize_t len = value.size();
                 hsize_t dims[] = {len, 2};
@@ -515,17 +513,17 @@ namespace karabo {
                 KARABO_CHECK_HDF5_STATUS(spaceId);
                 hid_t stid = karabo::io::h5::ScalarTypes::getHdf5StandardType<double>();
                 hid_t ntid = karabo::io::h5::ScalarTypes::getHdf5NativeType<double>();
-                hid_t dsId = H5Acreate2(group, key.c_str(), stid, spaceId, H5P_DEFAULT, H5P_DEFAULT);
-                KARABO_CHECK_HDF5_STATUS(dsId);
-                KARABO_CHECK_HDF5_STATUS(H5Awrite(dsId, ntid, &value[0]));
+                hid_t attrId = H5Acreate2(h5obj, key.c_str(), stid, spaceId, H5P_DEFAULT, H5P_DEFAULT);
+                KARABO_CHECK_HDF5_STATUS(attrId);
+                KARABO_CHECK_HDF5_STATUS(H5Awrite(attrId, ntid, &value[0]));
                 std::string krbAttributeName = "KRB_complex_" + key;
-                writeSingleAttribute(dsId, 1, krbAttributeName);
+                writeSingleAttribute(h5obj, 1, krbAttributeName);
                 KARABO_CHECK_HDF5_STATUS(H5Tclose(ntid));
                 KARABO_CHECK_HDF5_STATUS(H5Tclose(stid));
                 KARABO_CHECK_HDF5_STATUS(H5Sclose(spaceId));
-                KARABO_CHECK_HDF5_STATUS(H5Aclose(dsId));
+                KARABO_CHECK_HDF5_STATUS(H5Aclose(attrId));
             } catch (...) {
-                KARABO_RETHROW_AS(KARABO_PROPAGATED_EXCEPTION("Cannot create dataset /" + key));
+                KARABO_RETHROW_AS(KARABO_PROPAGATED_EXCEPTION("Cannot serialize vector<complex<double> > attribute: " + key));
             }
 
         }
@@ -552,7 +550,7 @@ namespace karabo {
                 KARABO_CHECK_HDF5_STATUS(H5Sclose(spaceId));
                 KARABO_CHECK_HDF5_STATUS(H5Aclose(dsId));
             } catch (...) {
-                KARABO_RETHROW_AS(KARABO_PROPAGATED_EXCEPTION("Cannot create dataset /" + key));
+                KARABO_RETHROW_AS(KARABO_PROPAGATED_EXCEPTION("Cannot serialize vector<bool> attribute: " + key));
             }
 
         }
@@ -860,9 +858,9 @@ namespace karabo {
                         } else if (H5Tequal(tid, H5T_NATIVE_UINT64)) {
                             readSingleAttribute<unsigned long long>(attrId, tid, node, name);
                         } else if (H5Tequal(tid, H5T_NATIVE_FLOAT)) {
-                            readSequenceAttributeFloatingPoint<float>(h5obj, attrId, tid, dims, node, name);
+                            readSingleAttribute<float>(attrId, tid, node, name);
                         } else if (H5Tequal(tid, H5T_NATIVE_DOUBLE)) {
-                            readSequenceAttributeFloatingPoint<double>(h5obj, attrId, tid, dims, node, name);
+                            readSingleAttribute<double>(attrId, tid, node, name);
                         } else {
                             throw KARABO_HDF_IO_EXCEPTION("Scalar type not supported for attribute: " + name);
                         }
@@ -894,9 +892,9 @@ namespace karabo {
                         } else if (H5Tequal(tid, H5T_NATIVE_UINT64)) {
                             readSequenceAttribute<unsigned long long>(attrId, tid, dims, node, name);
                         } else if (H5Tequal(tid, H5T_NATIVE_FLOAT)) {
-                            readSequenceAttribute<float>(attrId, tid, dims, node, name);
+                            readSequenceAttributeFloatingPoint<float>(h5obj, attrId, tid, dims, node, name);
                         } else if (H5Tequal(tid, H5T_NATIVE_DOUBLE)) {
-                            readSequenceAttribute<double>(attrId, tid, dims, node, name);
+                            readSequenceAttributeFloatingPoint<double>(h5obj, attrId, tid, dims, node, name);
                         } else {
                             throw KARABO_HDF_IO_EXCEPTION("Sequence type not supported for attribute: " + name);
                         }
