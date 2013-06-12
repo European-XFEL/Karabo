@@ -389,14 +389,14 @@ namespace karabo {
             try {
                 hid_t stid = karabo::io::h5::ScalarTypes::getHdf5StandardType<T>();
                 hid_t ntid = karabo::io::h5::ScalarTypes::getHdf5NativeType<T>();
-                hid_t dsId = H5Acreate2(h5obj, key.c_str(), stid, m_spaceId, H5P_DEFAULT, H5P_DEFAULT);
-                KARABO_CHECK_HDF5_STATUS(dsId);
-                KARABO_CHECK_HDF5_STATUS(H5Awrite(dsId, ntid, &value));
+                hid_t attrId = H5Acreate2(h5obj, key.c_str(), stid, m_spaceId, H5P_DEFAULT, H5P_DEFAULT);
+                KARABO_CHECK_HDF5_STATUS(attrId);
+                KARABO_CHECK_HDF5_STATUS(H5Awrite(attrId, ntid, &value));
                 KARABO_CHECK_HDF5_STATUS(H5Tclose(ntid));
                 KARABO_CHECK_HDF5_STATUS(H5Tclose(stid));
-                KARABO_CHECK_HDF5_STATUS(H5Aclose(dsId));
+                KARABO_CHECK_HDF5_STATUS(H5Aclose(attrId));
             } catch (...) {
-                KARABO_RETHROW_AS(KARABO_PROPAGATED_EXCEPTION("Cannot create dataset /" + key));
+                KARABO_RETHROW_AS(KARABO_PROPAGATED_EXCEPTION("Cannot serialize attribute: " + key));
             }
         }
 
@@ -417,7 +417,7 @@ namespace karabo {
                 KARABO_CHECK_HDF5_STATUS(H5Sclose(spaceId));
                 KARABO_CHECK_HDF5_STATUS(H5Aclose(dsId));
             } catch (...) {
-                KARABO_RETHROW_AS(KARABO_PROPAGATED_EXCEPTION("Cannot create dataset /" + key));
+                KARABO_RETHROW_AS(KARABO_PROPAGATED_EXCEPTION("Cannot serialize sequence attribute" + key));
             }
         }
 
