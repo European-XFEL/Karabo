@@ -358,6 +358,10 @@ class Launcher(threading.Thread):
 
     def __init__(self, pluginDir, modname, classid, config):
         threading.Thread.__init__(self)
+        
+        # hide complaints from 'threading' module
+        threading._DummyThread._Thread__stop = lambda x: 42
+        
         if "deviceId" in config[classid]:
             self.device = config[classid]["deviceId"]
         else:
