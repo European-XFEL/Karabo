@@ -39,8 +39,9 @@ namespace karabo {
                 karabo::net::BrokerConnection::Pointer connection = karabo::net::BrokerConnection::create(connectionType, connectionParameters);
                 this->init(connection, instanceId);
                 if (autostart) {
-                    m_eventLoop = boost::thread(boost::bind(&karabo::xms::SignalSlotable::runEventLoop, this, heartbeat, karabo::util::Hash())); // TODO put instance info here
-                    boost::this_thread::sleep(boost::posix_time::milliseconds(50));  // give a chance above thread to start working before we return from constructor
+                    ScopedGILRelease nogil;
+                    m_eventLoop = boost::thread(boost::bind(&karabo::xms::SignalSlotable::runEventLoop, this, heartbeat, karabo::util::Hash()));
+                    boost::this_thread::sleep(boost::posix_time::milliseconds(10));  // give a chance above thread to start up before leaving this constructor
                 }
             }
 
