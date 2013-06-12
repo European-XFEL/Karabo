@@ -51,7 +51,7 @@ class PythonDevice(BaseFsm):
     def __init__(self, configuration):
         if configuration is None:
             raise ValueError,"Configuration must be Hash object, not None"
-        print "PythonDevice configuration\n", configuration
+        print "PythonDevice constructor: Input configuration after being validated is ...\n", configuration
         super(PythonDevice, self).__init__(configuration)
 
         self.parameters = configuration
@@ -398,7 +398,6 @@ class PythonDevice(BaseFsm):
         input = InputHash.create("TextFile", Hash("filename", xmlfile))
         hash = Hash()
         input.read(hash)
-        print "Device parseCommandLine hash\n",hash
         return hash
  
 def launchPythonDevice():
@@ -408,13 +407,11 @@ def launchPythonDevice():
         configuration = config[classid]
     else:
         configuration = Hash()
-    print "launchPythonDevice: configuration...\n", configuration
+    print "launchPythonDevice: input configuration before being validated is ...\n", configuration
     try:
         module = __import__(modname)
         device = PythonDevice.create(classid, configuration)
-        print "Device object created"
         device.run()
-        print "device.run() returns..."
     except Exception,e:
         print "Exception caught: " + str(e)
     

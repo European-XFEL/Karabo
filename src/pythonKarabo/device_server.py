@@ -379,9 +379,8 @@ class Launcher(threading.Thread):
             os.chmod(self.script, 0755)
             os.execvpe(self.script, self.args, os.environ)
         else:
-            print "\nLaunch device", self.device
             id, status = os.waitpid(self.pid, 0)
-            print "Device %r finally died" % (self.device)
+            print "Finally %r died" % (self.device)
 
     
 def main(args):
