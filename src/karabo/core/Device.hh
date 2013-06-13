@@ -66,8 +66,7 @@ namespace karabo {
 
             std::string m_classId;
             std::string m_serverId;
-            std::string m_deviceId;
-
+            
             std::map<std::string, karabo::util::Schema> m_stateDependendSchema;
             boost::mutex m_stateDependendSchemaMutex;
 
@@ -132,7 +131,7 @@ namespace karabo {
                         .init()
                         .commit();
 
-                STRING_ELEMENT(expected).key("deviceId")
+                STRING_ELEMENT(expected).key("instanceId")
                         .displayedName("DeviceID")
                         .description("The device instance ID uniquely identifies a device instance in the distributed system")
                         .assignmentOptional().noDefaultValue()
@@ -158,9 +157,9 @@ namespace karabo {
                 if (configuration.has("serverId")) configuration.get("serverId", m_serverId);
                 else m_serverId = KARABO_NO_SERVER;
 
-                // Set deviceId
-                if (configuration.has("deviceId")) configuration.get("deviceId", m_deviceId);
-                else m_deviceId = "__none__"; // TODO generate uuid
+                // Set instanceId
+                if (configuration.has("deviceId")) configuration.get("deviceId", m_instanceId);
+                else m_instanceId = "__none__"; // TODO generate uuid
 
                 // Setup the validation classes
                 karabo::util::Validator::ValidationRules rules;
@@ -173,13 +172,13 @@ namespace karabo {
                 m_validatorExtern.setValidationRules(rules);
 
                 // Setup device logger
-                m_log = &(karabo::log::Logger::getLogger(m_deviceId)); // TODO use later: "device." + deviceId
+                m_log = &(karabo::log::Logger::getLogger(m_instanceId)); // TODO use later: "device." + instanceId
 
                 // Instantiate connection
                 karabo::net::BrokerConnection::Pointer connection = karabo::net::BrokerConnection::createChoice("connection", configuration);
 
                 // Initialize the SignalSlotable instance
-                init(connection, m_deviceId);
+                init(connection, m_instanceId);
 
                 // Initialize FSM slots (the interface of this function must be inherited from the templated FSM)
                 this->initFsmSlots(); // requires template CONCEPT

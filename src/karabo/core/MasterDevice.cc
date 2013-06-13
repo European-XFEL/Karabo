@@ -58,6 +58,8 @@ namespace karabo {
                 }
             }
 
+            sanifyServerId(id);
+            
             string foreignHost;
             string welcomeMessage;
             Hash instanceInfo;
@@ -75,6 +77,13 @@ namespace karabo {
             welcomeMessage = "Another device-server with the same instance is already online (on host: " + foreignHost + ")";
             KARABO_LOG_DEBUG << "Shipping welcome message: " << welcomeMessage;
             reply(false, id, welcomeMessage); // Shit, instance exists already
+        }
+
+
+        void MasterDevice::sanifyServerId(std::string& serverId) const {
+            for (std::string::iterator it = serverId.begin(); it != serverId.end(); ++it) {
+                if ((*it) == '.') (*it) = '-';
+            }
         }
 
 
@@ -100,11 +109,11 @@ namespace karabo {
 
 
         void MasterDevice::slotInstanceNew(const std::string& instanceId, const karabo::util::Hash& instanceInfo) {
-            
+
             KARABO_LOG_DEBUG << "New instance \"" << instanceId << "\" got registered";
-            
+
             // Skip all Karabo-intern instances
-            if (instanceId.substr(0,6) == "Karabo") return;
+            if (instanceId.substr(0, 6) == "Karabo") return;
 
             onInstanceNewForSystemNow(instanceId, instanceInfo);
             onInstanceNewForSystemHistory(instanceId, instanceInfo);

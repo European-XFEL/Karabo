@@ -169,14 +169,14 @@ class DeviceClient(object):
 
 
     def getServers(self):
-        self.__client.getServers()
+        return self.__client.getServers()
 
         
     def getDevices(self, serverId = None):
-        if deviceId is None:
-            self.__client.getDevices()
+        if serverId is None:
+            return self.__client.getDevices()
         else:
-            self.__client.getDevices(serverId)
+            return self.__client.getDevices(serverId)
 
 
     def help(self, instanceId, parameter = None):

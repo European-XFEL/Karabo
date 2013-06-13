@@ -91,6 +91,7 @@ build: .build-post
 	@if test ! -d $(KARABO)/include/karabo/util;    then $(MKDIR) -p  $(KARABO)/include/karabo/util; fi
 	@if test ! -d $(KARABO)/include/karabo/log;     then $(MKDIR) -p  $(KARABO)/include/karabo/log; fi
 	@if test ! -d $(KARABO)/include/karabo/webAuth;     then $(MKDIR) -p  $(KARABO)/include/karabo/webAuth; fi
+	@if test ! -d $(KARABO)/include/karabo/pugiXml;     then $(MKDIR) -p  $(KARABO)/include/karabo/pugiXml; fi
 	@if test ! -d $(KARABO)/include/karabo/io/h5; then $(MKDIR) -p  $(KARABO)/include/karabo/io/h5; fi
 	@if test ! -d $(KARABO)/include/karabo/net;     then $(MKDIR) -p  $(KARABO)/include/karabo/net; fi
 	@if test ! -d $(KARABO)/include/karabo/xms;     then $(MKDIR) -p  $(KARABO)/include/karabo/xms; fi
@@ -99,6 +100,7 @@ build: .build-post
 	@$(CP) $(CND_BASEDIR)/../../../src/karabo/util/*.h* $(KARABO)/include/karabo/util
 	@$(CP) $(CND_BASEDIR)/../../../src/karabo/log/*.h* $(KARABO)/include/karabo/log
 	@$(CP) $(CND_BASEDIR)/../../../src/karabo/webAuth/*.h* $(KARABO)/include/karabo/webAuth
+	@$(CP) $(CND_BASEDIR)/../../../src/karabo/pugiXml/*.h* $(KARABO)/include/karabo/pugiXml
 	@$(CP) $(CND_BASEDIR)/../../../src/karabo/io/*.h* $(KARABO)/include/karabo/io
 	@$(CP) $(CND_BASEDIR)/../../../src/karabo/io/h5/*.h* $(KARABO)/include/karabo/io/h5
 	@$(CP) $(CND_BASEDIR)/../../../src/karabo/net/*.h* $(KARABO)/include/karabo/net
