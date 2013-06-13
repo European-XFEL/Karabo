@@ -32,8 +32,6 @@
       <toolsSet>
         <remote-sources-mode>LOCAL_SOURCES</remote-sources-mode>
         <compilerSet>default</compilerSet>
-        <dependencyChecking>true</dependencyChecking>
-        <rebuildPropChanged>false</rebuildPropChanged>
       </toolsSet>
       <compileType>
         <ccTool>
@@ -57,12 +55,12 @@
             <linkerLibProjectItem>
               <makeArtifact PL="../karabo"
                             CT="2"
-                            CN="Debug"
+                            CN="Debug-MacOSX"
                             AC="true"
                             BL="true"
                             WD="../karabo"
-                            BC="${MAKE} -f Makefile CONF=Debug"
-                            CC="${MAKE} -f Makefile CONF=Debug clean"
+                            BC="${MAKE} -j8 -f Makefile CONF=Debug-MacOSX"
+                            CC="${MAKE} -j8 -f Makefile CONF=Debug-MacOSX clean"
                             OP="${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/lib/libkarabo.${CND_DLIB_EXT}">
               </makeArtifact>
             </linkerLibProjectItem>
@@ -100,8 +98,6 @@
       <toolsSet>
         <remote-sources-mode>LOCAL_SOURCES</remote-sources-mode>
         <compilerSet>default</compilerSet>
-        <dependencyChecking>true</dependencyChecking>
-        <rebuildPropChanged>false</rebuildPropChanged>
       </toolsSet>
       <compileType>
         <cTool>
@@ -178,8 +174,6 @@
       <toolsSet>
         <remote-sources-mode>LOCAL_SOURCES</remote-sources-mode>
         <compilerSet>default</compilerSet>
-        <dependencyChecking>true</dependencyChecking>
-        <rebuildPropChanged>false</rebuildPropChanged>
       </toolsSet>
       <compileType>
         <ccTool>
