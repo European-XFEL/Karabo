@@ -131,7 +131,7 @@ namespace karabo {
                         .init()
                         .commit();
 
-                STRING_ELEMENT(expected).key("instanceId")
+                STRING_ELEMENT(expected).key("deviceId")
                         .displayedName("DeviceID")
                         .description("The device instance ID uniquely identifies a device instance in the distributed system")
                         .assignmentOptional().noDefaultValue()
