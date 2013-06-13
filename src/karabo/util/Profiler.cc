@@ -84,7 +84,7 @@ namespace karabo {
         // Return the global time for this profiler include idle time (ie. between periods)
 
 
-        timestamp Profiler::getGlobalTime() {
+        timestamp Profiler::getGlobalTime() const{
             timestamp result;
 
             if (m_openPeriodsCount > 0) {
@@ -106,7 +106,7 @@ namespace karabo {
         // This will sum up the all the sub-periods (ie, unnamed period) the come right after it.
 
 
-        timestamp Profiler::getTime(size_t position) {
+        timestamp Profiler::getTime(size_t position) const {
             if (position < profile.size()) {
                 timestamp result = profile[position].m_endTime - profile[position].m_startTime;
 
@@ -134,7 +134,7 @@ namespace karabo {
         // This will sum up the all the sub-periods (ie, unnamed period) the come right after it.
 
 
-        timestamp Profiler::getTime(std::string periodname) {
+        timestamp Profiler::getTime(std::string periodname) const {
             std::vector<timestamp> details = getTimeDetails(periodname);
 
             timestamp result;
@@ -154,8 +154,8 @@ namespace karabo {
         // Return the detailed time profile for the period called "periodname"
 
 
-        std::vector<timestamp> Profiler::getTimeDetails(std::string periodname) {
-            std::pair<std::multimap<std::string, size_t>::iterator, std::multimap<std::string, size_t>::iterator> ret;
+        std::vector<timestamp> Profiler::getTimeDetails(std::string periodname) const {
+            std::pair<std::multimap<std::string, size_t>::const_iterator, std::multimap<std::string, size_t>::const_iterator> ret;
 
             if (periodname.empty()) {
                 periodname = this->m_name;
@@ -171,7 +171,7 @@ namespace karabo {
                 return result;
             }
 
-            for (std::multimap<std::string, size_t>::iterator it = ret.first; it != ret.second; ++it) {
+            for (std::multimap<std::string, size_t>::const_iterator it = ret.first; it != ret.second; ++it) {
                 result.push_back(getTime(it->second));
             }
 
@@ -182,7 +182,7 @@ namespace karabo {
         // This function excludes idle time (ie. between periods)
 
 
-        timestamp Profiler::getEffectiveTime() {
+        timestamp Profiler::getEffectiveTime() const {
             timestamp result;
 
             if (m_openPeriodsCount > 0) {
