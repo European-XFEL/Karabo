@@ -17,8 +17,7 @@ from editablenoapplycomponent import EditableNoApplyComponent
 from imagetreewidgetitem import ImageTreeWidgetItem
 from libkarathon import *
 from slottreewidgetitem import SlotTreeWidgetItem
-from enums import AccessTypes
-from enums import NavigationItemTypes
+from enums import *
 
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
@@ -146,7 +145,7 @@ class XsdReader(QXmlStreamReader):
                     restrictionBase, minInclusive, maxInclusive, enumeration = self.processSimpleTypeTag()
                 elif tagName == "complexType":
                     
-                    if (self.__type is NavigationItemTypes.CLASS) and (accessType == AccessTypes.READONLY):
+                    if (self.__type is NavigationItemTypes.CLASS) and (accessType == AccessMode.READONLY):
                         complexItem = None
                     else:
                         # Some complex types need special treatment
@@ -187,7 +186,7 @@ class XsdReader(QXmlStreamReader):
 
         # create simple element
         if complexItem is None:
-                if (self.__type is NavigationItemTypes.CLASS) and (accessType == AccessTypes.READONLY):
+                if (self.__type is NavigationItemTypes.CLASS) and (accessType == AccessMode.READONLY):
                     return None
                 
                 if isSequenceElement == False :
@@ -214,7 +213,7 @@ class XsdReader(QXmlStreamReader):
                     
                     createEditableComponent = True
                     if self.__type is NavigationItemTypes.DEVICE:
-                        if (accessType == AccessTypes.READONLY) or (accessType == AccessTypes.INIT):
+                        if (accessType == AccessMode.READONLY) or (accessType == AccessMode.INIT):
                             self.setItemIcon(attributeItem, type, restrictionBase)
                             createEditableComponent = False
                     
@@ -412,7 +411,7 @@ class XsdReader(QXmlStreamReader):
                     parentItem.setIcon(0, QIcon(":enum"))
                     
                     if self.__type is NavigationItemTypes.DEVICE:
-                        if (parentItem.accessType == AccessTypes.READONLY) or (parentItem.accessType == AccessTypes.INIT):
+                        if (parentItem.accessType == AccessMode.READONLY) or (parentItem.accessType == AccessMode.INIT):
                             return complexItem
                     
                     default = parentItem.defaultValue
@@ -561,7 +560,7 @@ class XsdReader(QXmlStreamReader):
             if self.__type is NavigationItemTypes.CLASS:
                 choiceComponent = EditableNoApplyComponent(parentItem.classAlias, key=parentItem.internalKey, value=parentItem.defaultValue, valueType=parentItem.valueType)
             else:
-                if parentItem.accessType == AccessTypes.READONLY or parentItem.accessType == AccessTypes.INIT:
+                if parentItem.accessType == AccessMode.READONLY or parentItem.accessType == AccessMode.INIT:
                     choiceComponent = ChoiceComponent(parentItem.classAlias, key=parentItem.internalKey, value=None, valueType=parentItem.valueType)
                 else:
                     choiceComponent = EditableApplyLaterComponent(parentItem.classAlias, key=parentItem.internalKey, value=None, valueType=parentItem.valueType)
@@ -579,7 +578,7 @@ class XsdReader(QXmlStreamReader):
             if self.__type is NavigationItemTypes.CLASS:
                 choiceComponent = EditableNoApplyComponent(parentItem.classAlias, key=parentItem.internalKey, value=parentItem.defaultValue, valueType=parentItem.valueType, isDevIns=False)
             else:
-                if parentItem.accessType == AccessTypes.READONLY or parentItem.accessType == AccessTypes.INIT:
+                if parentItem.accessType == AccessMode.READONLY or parentItem.accessType == AccessMode.INIT:
                     choiceComponent = ChoiceComponent(parentItem.classAlias, key=parentItem.internalKey, value=None, valueType=parentItem.valueType, isDevIns=True)
                 else:
                     choiceComponent = EditableApplyLaterComponent(parentItem.classAlias, key=parentItem.internalKey, value=None, valueType=parentItem.valueType, isDevIns=True)

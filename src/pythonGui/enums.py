@@ -7,7 +7,7 @@
 
 """This module contains classes which define different enumerators."""
 
-__all__ = ["NavigationItemTypes", "AccessTypes", "ConfigChangeTypes"]
+__all__ = ["NavigationItemTypes", "AccessMode", "ConfigChangeTypes"]
 
 
 class NavigationItemTypes(object):
@@ -18,7 +18,7 @@ class NavigationItemTypes(object):
     DEVICE = 3
 
 
-class AccessTypes(object): # TODO use INTs?
+class AccessMode(object): # TODO use INTs?
     INIT = "1"
     READONLY = "2"
     RECONFIG = "4"

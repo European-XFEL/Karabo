@@ -273,12 +273,12 @@ class ParameterTreeWidget(QTreeWidget):
     def _r_applyButtonsEnabled(self, item):
         for i in range(item.childCount()):
             childItem = item.child(i)
-            if type(childItem) == attributetreewidgetitem.AttributeTreeWidgetItem:
+            if type(childItem) == treewidgetitems.attributetreewidgetitem.AttributeTreeWidgetItem:
                 result = self._r_applyButtonsEnabled(childItem)
                 if result[0] is True: # Bug: returns but
                     return result
 
-        if (type(item) != attributetreewidgetitem.AttributeTreeWidgetItem) or (item.editableComponent is None) or \
+        if (type(item) != treewidgetitems.attributetreewidgetitem.AttributeTreeWidgetItem) or (item.editableComponent is None) or \
            (not isinstance(item.editableComponent, EditableApplyLaterComponent)):
             return (False,False)
         return (item.editableComponent.applyEnabled, item.editableComponent.hasConflict)
