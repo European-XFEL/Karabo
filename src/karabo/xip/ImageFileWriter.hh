@@ -10,8 +10,12 @@
 #ifndef KARABO_XIP_ANYFORMATIMAGEWRITER_HH
 #define	KARABO_XIP_ANYFORMATIMAGEWRITER_HH
 
-#include <karabo/util/Factory.hh>
-#include <karabo/xms/Output.hh>
+#include <boost/filesystem.hpp>
+
+#include <karabo/util/Configurator.hh>
+#include <karabo/io/Output.hh>
+#include <karabo/util/PathElement.hh>
+#include <karabo/util/SimpleElement.hh>
 
 #include "CpuImage.hh"
 
@@ -26,17 +30,11 @@ namespace karabo {
     namespace xip {
 
         template <class TPix>
-        class ImageFileWriter : public karabo::xms::Output< CpuImage<TPix> > {
+        class ImageFileWriter : public karabo::io::Output< CpuImage<TPix> > {
 
         public:
 
             KARABO_CLASSINFO(ImageFileWriter, "File", "1.0")
-
-            ImageFileWriter() {
-            };
-
-            virtual ~ImageFileWriter() {
-            };
 
             /**
              * Necessary method as part of the factory/configuration system
@@ -45,11 +43,11 @@ namespace karabo {
             static void expectedParameters(karabo::util::Schema& expected) {
                 using namespace karabo::util;
 
-                STRING_ELEMENT(expected)
+                PATH_ELEMENT(expected)
                         .key("filename")
-                        .description("Name of the file to be read")
+                        .description("Name of the file to be written")
                         .displayedName("Filename")
-                        .displayType("Path")
+                        .isOutputFile()
                         .assignmentMandatory()
                         .commit();
 
@@ -60,18 +58,17 @@ namespace karabo {
                         .commit();
             }
 
-            /**
-             * If this object is constructed using the factory/configuration system this method is called
-             * @param input Validated (@see expectedParameters) and default-filled configuration
-             *              */
-            void configure(const karabo::util::Hash& input) {
-                m_input = input;
-                input.get("filename", m_filename);
+            ImageFileWriter(const karabo::util::Hash& config) : karabo::io::Output< CpuImage<TPix> >(config) {
+                m_input = config;
+                config.get("filename", m_filename);
                 m_number = -1;
-                if (input.get<bool>("addNumbers")) {
+                if (config.get<bool>("addNumbers")) {
                     m_number = 0;
                 }
             }
+            
+            virtual ~ImageFileWriter() {
+            };
 
             void write(const CpuImage<TPix>& image) {
                 try {
@@ -82,13 +79,13 @@ namespace karabo {
                     } catch (...) {
                         std::string extension = m_filename.extension().string().substr(1);
                         boost::to_lower(extension);
-                        std::vector<std::string> keys = karabo::util::Factory<karabo::xms::Output<CpuImage<TPix> > >::getRegisteredKeys();
+                        std::vector<std::string> keys = karabo::util::Configurator<karabo::io::Output<CpuImage<TPix> > >::getRegisteredClasses();
 
                         BOOST_FOREACH(std::string key, keys) {
                             std::string lKey(key);
                             boost::to_lower(lKey);
                             if (lKey == extension) {
-                                boost::shared_ptr<karabo::xms::Output<CpuImage<TPix> > > in = karabo::xms::Output<CpuImage<TPix> >::create(m_input);
+                                typename karabo::io::Output<CpuImage<TPix> >::Pointer in = karabo::io::Output<CpuImage<TPix> >::create(m_input);
                                 in->write(image);
                                 return;
                             }
@@ -110,4 +107,4 @@ namespace karabo {
     }
 }
 
-#endif	/* KARABO_XIP_ANYFORMATIMAGEWRITER_HH */
+#endif

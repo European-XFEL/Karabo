@@ -22,7 +22,7 @@ namespace karabo {
         public:
 
             KARABO_CLASSINFO(NoiseType, "NoiseType", "1.0")
-            KARABO_FACTORY_BASE_CLASS
+            KARABO_CONFIGURATION_BASE_CLASS
 
 
             virtual void processInPlace(TImage& image) = 0;
@@ -40,7 +40,7 @@ namespace karabo {
             static void expectedParameters(karabo::util::Schema& expected) {
             }
 
-            void configure(const karabo::util::Hash & input) {
+            PoissonNoise(const karabo::util::Hash & input) {
             }
 
             virtual void processInPlace(CpuImage<TPix>& image) {
@@ -79,11 +79,8 @@ namespace karabo {
                         .commit();
             }
 
-            /**
-             * If this object is constructed using the factory/configuration system this method is called
-             * @param input Validated (@see expectedParameters) and default-filled configuration
-             */
-            void configure(const karabo::util::Hash & input) {
+            
+            GaussianNoise(const karabo::util::Hash & input) {
                 input.get("sigma", m_sigma);
             }
 

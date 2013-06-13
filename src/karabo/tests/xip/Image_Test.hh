@@ -9,6 +9,7 @@
 #define	IMAGETEST_HH
 
 #include <cppunit/extensions/HelperMacros.h>
+#include "TestPathSetup.hh"
 
 class ImageTest : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST_SUITE(ImageTest);
@@ -46,8 +47,7 @@ private:
         }
 
         {
-            boost::filesystem::path resourceDir(std::string(TESTPATH) + std::string("xip/resources/in-3-3-3.asc"));
-            Image<T> img(CPU, resourceDir.normalize().string());
+            Image<T> img(CPU, resourcePath("in-3-3-3.asc"));
             CPPUNIT_ASSERT(img.dimensionality() == 3);
             CPPUNIT_ASSERT(img.dimX() == 3);
             CPPUNIT_ASSERT(img.dimY() == 3);

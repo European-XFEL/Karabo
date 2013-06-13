@@ -208,8 +208,8 @@ namespace karabo {
 
             const EnvironmentPointer& initCpu() {
                 if (!m_cpuEnvironment) {
-                    m_cpuEnvironment = Environment<TPix>::create("cpu");
-                    m_cpuEnvironment->printInfo();
+                    m_cpuEnvironment = karabo::util::Factory<Environment<TPix> >::create("cpu");
+                    //m_cpuEnvironment->printInfo();
                 }
                 return m_cpuEnvironment;
             }
@@ -217,8 +217,8 @@ namespace karabo {
             const EnvironmentPointer& initCuda() {
                 if (!m_cudaEnvironment) {
                     try {
-                        m_cudaEnvironment = Environment<TPix>::create("cuda");
-                        m_cudaEnvironment->printInfo();
+                        m_cudaEnvironment = karabo::util::Factory<Environment<TPix> >::create("cuda");
+                        //m_cudaEnvironment->printInfo();
                     } catch (karabo::util::Exception&) {
                         std::cout << "Falling back to CPU version" << std::endl;
                         m_cudaEnvironment = initCpu();
@@ -242,5 +242,5 @@ namespace karabo {
 
 
 
-#endif	/* EXFEL_PACKAGENAME_IMAGE_HPP */
+#endif
 

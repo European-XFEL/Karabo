@@ -553,6 +553,15 @@ void Hash_Test::testIteration() {
     }
 }
 
+void Hash_Test::testGetPaths() {
+    {
+        Hash h;
+        std::vector<std::string> paths;
+        h.getPaths(paths);
+        CPPUNIT_ASSERT(paths.size() == 0);
+    }
+}
+
 void Hash_Test::testMerge() {
 
     Hash h1("a", 1,

@@ -218,6 +218,9 @@ struct NoTransitionAction { \
     } \
 };
 
+#define KARABO_FSM_ON_NO_STATE_TRANSITION(action) \
+_KARABO_FSM_NO_TRANSITION_ACTION_IMPL(action);
+
 #define KARABO_FSM_NO_TRANSITION_V_ACTION(action) \
 _KARABO_FSM_NO_TRANSITION_ACTION_IMPL(action);\
 virtual void action(const std::string& typeId, int state);
