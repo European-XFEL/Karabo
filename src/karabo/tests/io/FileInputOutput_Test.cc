@@ -83,13 +83,6 @@ void FileInputOutput_Test::writeTextFile() {
 
 void FileInputOutput_Test::readTextFile() {
     
-    
-    // TEST
-    Hash h;
-    loadFromFile(h, resourcePath("tb_iibus_10_1_4.xml"), Hash("format.Xml.prefix", "II_"));
-    cout << endl << "PATRICK's FILE:" << endl;
-    cout << h << endl;
-
     // Using the Factory interface
     Input<Hash>::Pointer in = Input<Hash>::create("TextFile", Hash("filename", resourcePath("file1.xml")));
     Hash h1;
