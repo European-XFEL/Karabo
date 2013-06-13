@@ -93,7 +93,8 @@ class EditableChoiceElement(EditableWidget):
         item = params.get(QString('itemToBeAdded'))
         if item is None:
             item = params.get('itemToBeAdded')
-        if item is not None:
+        
+        if item:
             self.__comboBox.blockSignals(True)
             self.__comboBox.addItem(item.text(0))
             self.childItemList.append(item)

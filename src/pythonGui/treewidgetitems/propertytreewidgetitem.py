@@ -11,6 +11,7 @@
 
 __all__ = ["PropertyTreeWidgetItem"]
 
+import const
 
 from basetreewidgetitem import BaseTreeWidgetItem
 #import choicecomponent
@@ -59,6 +60,13 @@ class PropertyTreeWidgetItem(BaseTreeWidgetItem):
         self.setText(0, text)
         self.treeWidget().resizeColumnToContents(0)
     displayText = property(fset=_setText)
+
+
+    def _isChoiceElement(self):
+        return self.data(0, const.IS_CHOICE_ELEMENT).toPyObject()
+    def _setIsChoiceElement(self, isChoiceElemet):
+        self.setData(0, const.IS_CHOICE_ELEMENT, isChoiceElemet)
+    isChoiceElement = property(fget=_isChoiceElement, fset=_setIsChoiceElement)
 
 
 ### slots ###
