@@ -159,6 +159,9 @@ void Authenticate_Test::testIncorrectLogin() {
 
     // Class instance should be in the initial state
     testNotLoggedContext(a, username, password, provider, ipAddress, hostname, portNumber, software);
+    
+    // Unsuccessful logout
+    CPPUNIT_ASSERT(a.logout() == false);
 }
 
 
@@ -184,6 +187,9 @@ void Authenticate_Test::testIncorrectUsername() {
 
     // Class instance should be in the initial state
     testNotLoggedContext(a, username, password, provider, ipAddress, hostname, portNumber, software);
+    
+    // Unsuccessful logout
+    CPPUNIT_ASSERT(a.logout() == false);
 }
 
 
