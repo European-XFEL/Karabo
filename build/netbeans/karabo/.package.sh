@@ -1,4 +1,4 @@
-#!/bin/bash -x
+#!/bin/bash
 
 DISTDIR=$1
 CONF=$2
