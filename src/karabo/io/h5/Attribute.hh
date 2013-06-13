@@ -19,12 +19,8 @@
 #include <karabo/util/Configurator.hh>
 #include <karabo/util/Dims.hh>
 #include <karabo/log/Logger.hh>
-
 #include "ErrorHandler.hh"
-
 #include "TypeTraits.hh"
-//#include <boost/enable_shared_from_this.hpp>
-
 
 namespace karabo {
     namespace io {
@@ -60,8 +56,8 @@ namespace karabo {
                 void write(const karabo::util::Hash::Node& data);
 
                 void save(const karabo::util::Hash::Node& data, hid_t element);
+                
             protected:
-
                 
                 virtual void writeNodeAttribute(const karabo::util::Element<std::string>& node,
                                         hid_t attribute) = 0;
@@ -80,7 +76,7 @@ namespace karabo {
                 /**
                  * Create attribute                 
                  */
-                virtual void create(hid_t element); // = 0;
+                virtual void create(hid_t element); 
 
                 // to be removed from here
 
@@ -108,7 +104,7 @@ namespace karabo {
                 std::string m_key;
 
                 hid_t m_attribute;
-                hid_t m_element;
+                hid_t m_h5ElementObj;
 
                 void configureDataSpace();
                 

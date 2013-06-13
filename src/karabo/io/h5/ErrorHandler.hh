@@ -28,7 +28,7 @@ namespace karabo {
                 if(status < 0){\
                 karabo::util::HdfIOException ex("","","",0);\
                 hid_t errId = H5Eget_current_stack();\
-                H5Ewalk2(errId, H5E_WALK_DOWNWARD, karaboH5Errorhandler, &ex);\
+                H5Ewalk2(errId, H5E_WALK_DOWNWARD, karabo::io::h5::karaboH5Errorhandler, &ex);\
                 throw ex;\
             }
             

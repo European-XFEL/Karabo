@@ -69,6 +69,7 @@ namespace karabo {
                 KARABO_CHECK_HDF5_STATUS(group);
                 serializeHash(object, group);
                 KARABO_CHECK_HDF5_STATUS(H5Gclose(group));
+                KARABO_CHECK_HDF5_STATUS(H5Fflush(h5file, H5F_SCOPE_LOCAL));
             }
         private:
 

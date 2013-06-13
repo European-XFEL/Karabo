@@ -55,24 +55,14 @@ namespace karabo {
 
 
             void Attribute::configureDataDimensions(const karabo::util::Hash& input, const Dims& singleValueDims) {
-
-                vector<unsigned long long> dims;
+                
                 size_t singleValueRank = singleValueDims.rank();
                 if (input.has("dims")) {
-                    Hash::Node node = input.getNode("dims");
-                    if (node.is<string>()) {
-                        try {                            
-                            node.setType(Types::VECTOR_UINT64);
-                        } catch (Exception& ex) {
-                            KARABO_RETHROW(KARABO_PROPAGATED_EXCEPTION("Not valid dims description for attributes"));
-                        }
-                    }
-
-                    dims = node.getValue< vector<unsigned long long> >();
+                    vector<unsigned long long> dimsVec = input.getAs<unsigned long long ,vector>("dims");
                     for (size_t i = 0; i < singleValueRank; ++i) {
-                        dims.push_back(singleValueDims.extentIn(i));
+                        dimsVec.push_back(singleValueDims.extentIn(i));
                     }
-                    m_dims = Dims(dims);
+                    m_dims = Dims(dimsVec);
 
                 } else {
                     m_dims = singleValueDims;
@@ -89,15 +79,8 @@ namespace karabo {
 
 
             void Attribute::configureDataSpace() {
-
-                //                clog << "configure dataspace " << endl;
                 vector<unsigned long long> dimsVector = m_dims.toVector();
                 m_dataSpace = this->createDataspace(dimsVector, dimsVector);
-
-                //                m_dataSpace = H5Screate_simple(dimsVector.size(),
-                //                                               &dimsVector[0],
-                //                                               NULL);
-                //                KARABO_CHECK_HDF5_STATUS(m_dataSpace);
             }
 
 
@@ -156,7 +139,6 @@ namespace karabo {
                         KARABO_CHECK_HDF5_STATUS(m_attribute);
                         writeNodeAttribute(attrNode, m_attribute);
                         KARABO_CHECK_HDF5_STATUS(H5Aclose(m_attribute));
-
                     } else {
                         throw KARABO_HDF_IO_EXCEPTION("No " + m_key + " attribute");
                     }

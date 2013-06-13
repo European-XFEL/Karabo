@@ -56,17 +56,13 @@ namespace karabo {
                 bool isDataset() const {
                     return false;
                 }
-                
+
                 karabo::util::Types::ReferenceType getMemoryType() const {
                     if (m_isVectorHash) return karabo::util::Types::VECTOR_HASH;
                     return karabo::util::Types::HASH;
                 }
 
-
-                void create(hsize_t chunkSize);
-                
                 void create(hid_t tableGroup);
-                
 
                 void write(const karabo::util::Hash& data, hsize_t recordId) {
                 }
@@ -98,6 +94,23 @@ namespace karabo {
             protected:
 
                 hid_t openElement(hid_t group);
+
+            private:
+
+                void openH5(hid_t group) {
+                    if (!m_h5objOpen) {
+                        m_h5obj = H5Gopen2(group, m_h5PathName.c_str(), H5P_DEFAULT);
+                        m_h5objOpen = true;
+                        KARABO_CHECK_HDF5_STATUS(m_h5obj);
+                    }
+                }
+
+                void closeH5() {
+                    if (m_h5objOpen) {
+                        KARABO_CHECK_HDF5_STATUS(H5Gclose(m_h5obj));
+                        m_h5objOpen = false;
+                    }
+                }
 
 
                 bool m_isVectorHash;

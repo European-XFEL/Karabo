@@ -44,9 +44,9 @@ namespace karabo {
                     }
                     if (input.has("chunkSize")) {
                         m_chunkSize = input.getAs<unsigned long long>("chunkSize");
-                    }else{
+                    } else {
                         m_chunkSize = 1;
-                    }                    
+                    }
                     karabo::util::Dims singleValueDims = Derived::getSingleValueDimensions();
                     configureDataDimensions(input, singleValueDims);
                 }
@@ -55,17 +55,19 @@ namespace karabo {
                 }
 
 
+                virtual void write(const karabo::util::Hash& data, hsize_t recordId);
 
-                void write(const karabo::util::Hash& data, hsize_t recordId);
-
-                void write(const karabo::util::Hash& data, hsize_t recordId, hsize_t len);
+                virtual void write(const karabo::util::Hash& data, hsize_t recordId, hsize_t len);
 
             protected:
+
                 virtual void writeNode(const karabo::util::Hash::Node& data,
-                                       hid_t dataSet, hid_t fileDataSpace) = 0;
+                                       hid_t dataSet, hid_t fileDataSpace) {
+                }
 
                 virtual void writeNode(const karabo::util::Hash::Node& data, hsize_t len,
-                                       hid_t dataSet, hid_t fileDataSpace) = 0;
+                                       hid_t dataSet, hid_t fileDataSpace) {
+                }
 
             public:
 
@@ -96,16 +98,14 @@ namespace karabo {
 
 
                 static hid_t dataSpace(const karabo::util::Dims& dims);
+                static hid_t dataSpaceOneDim(hsize_t len);
 
-                static hid_t dataSpace1dim(hsize_t len);
-
-                virtual hid_t createDataspace(const std::vector<hsize_t>& ex, const std::vector<hsize_t>& maxEx) {                    
+                virtual hid_t createDataspace(const std::vector<hsize_t>& ex, const std::vector<hsize_t>& maxEx) {
                     return H5Screate_simple(ex.size(), &ex[0], &maxEx[0]);
                 }
 
-                virtual void create(hsize_t chunkSize);
 
-                void create(hid_t tableGroup);                 
+                virtual void create(hid_t tableGroup);
 
                 bool isDataset() const {
                     return true;
@@ -150,12 +150,13 @@ namespace karabo {
                 virtual hid_t openElement(hid_t group);
 
                 void close();
-                
 
 
 
 
-            private:
+
+                //private:
+            protected:
                 int m_compressionLevel;
                 hsize_t m_numberAllocatedRecords;
 
@@ -167,14 +168,29 @@ namespace karabo {
 
                 hsize_t m_chunkSize;
 
-
+            protected:
                 hid_t m_fileDataSpace;
 
-            private:
+                // private:
 
                 void configureDataDimensions(const karabo::util::Hash& input, const karabo::util::Dims& singleValueDims);
                 void configureFileDataSpace();
                 void createDataSetProperties();
+
+                void openH5(hid_t group) {
+                    if (!m_h5objOpen) {
+                        m_h5obj = H5Dopen2(group, m_h5PathName.c_str(), H5P_DEFAULT);
+                        m_h5objOpen = true;
+                        KARABO_CHECK_HDF5_STATUS(m_h5obj);
+                    }
+                }
+
+                void closeH5() {
+                    if(m_h5objOpen) {
+                        KARABO_CHECK_HDF5_STATUS(H5Dclose(m_h5obj));
+                        m_h5objOpen = false;
+                    }
+                }
 
 
                 static hid_t m_dataSetProperties;
