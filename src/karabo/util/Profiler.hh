@@ -79,22 +79,22 @@ namespace karabo {
             void reset();
 
             // Return the global time for this profiler include idle time (ie. between periods)
-            timestamp getGlobalTime();
+            timestamp getGlobalTime() const;
 
             // Return the total time of a period at "position"
             // This will sum up the all the sub-periods (ie, unnamed period) the come right after it.
-            timestamp getTime(size_t position);
+            timestamp getTime(size_t position) const;
 
             // Return the total time of the period called "periodname"
             // This will sum up the all the sub-periods (ie, unnamed period) the come right after it.
-            timestamp getTime(std::string periodname);
+            timestamp getTime(std::string periodname) const;
 
             // Return the detailed time profile for the period called "periodname"
-            std::vector<timestamp> getTimeDetails(std::string periodname);
+            std::vector<timestamp> getTimeDetails(std::string periodname) const;
 
             // Returns the effective time for this profiler.
             // This function excludes idle time (ie. between periods)
-            timestamp getEffectiveTime();
+            timestamp getEffectiveTime() const;
 
             // Serialize the profile into standard ostream
             std::string report(int level = 0xFFFF) const;
