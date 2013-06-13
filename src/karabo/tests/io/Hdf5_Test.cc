@@ -291,7 +291,7 @@ void Hdf5_Test::testManyDatasets() {
 
 
     string filename = "/dev/shm/pureManyDs.h5"; // in memory file
-    //filename = resourcePath("pureManyDs.h5"); // file on disk ($KARABO/src/karabo/tests/io/resources/pure.h5)
+    filename = resourcePath("pureManyDs.h5"); // file on disk ($KARABO/src/karabo/tests/io/resources/pure.h5)
 
     // end of configure
 
@@ -500,7 +500,7 @@ void Hdf5_Test::testManyDatasets1() {
 
 
     string filename = "/dev/shm/pureManyDs.h5"; // in memory file
-    //filename = resourcePath("pureManyDs.h5"); // file on disk ($KARABO/src/karabo/tests/io/resources/pure.h5)
+    filename = resourcePath("pureManyDs.h5"); // file on disk ($KARABO/src/karabo/tests/io/resources/pure.h5)
 
     // end of configure
 

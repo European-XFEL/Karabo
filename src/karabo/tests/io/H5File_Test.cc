@@ -1186,7 +1186,7 @@ void H5File_Test::testManyTables() {
         //
         //
         string filename = "/dev/shm/fileManyTables.h5";
-        //        filename = resourcePath("fileManyTables.h5");
+        filename = resourcePath("fileManyTables.h5");
         File file(filename);
         file.open(File::TRUNCATE);
 
@@ -1340,7 +1340,7 @@ void H5File_Test::testManyGroups() {
 
 
         string filename = "/dev/shm/fileManyGroups.h5";
-        //filename = resourcePath("fileManyGroups.h5");
+        filename = resourcePath("fileManyGroups.h5");
         File file(filename);
         file.open(File::TRUNCATE);
         KARABO_LOG_FRAMEWORK_TRACE_CF << "File is open";
