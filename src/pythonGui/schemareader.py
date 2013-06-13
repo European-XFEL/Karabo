@@ -12,7 +12,7 @@ __all__ = ["SchemaReader"]
 from editableapplylatercomponent import EditableApplyLaterComponent
 from editablenoapplycomponent import EditableNoApplyComponent
 
-from enums import NavigationItemTypes
+from enums import *
 
 from treewidgetitems.attributetreewidgetitem import *
 from treewidgetitems.commandtreewidgetitem import *
@@ -56,10 +56,10 @@ class SchemaReader(object):
         
         print ""
         print "readSchema"
-        print self.__schema
+        #print self.__schema
         print ""
         
-        self.__rootPath = path
+        self.__rootPath = path + ".configuration"
         
         keys = self.__schema.getKeys()
         for key in keys:
@@ -176,12 +176,14 @@ class SchemaReader(object):
         
         if self.__deviceType is NavigationItemTypes.CLASS:
             choiceComponent = EditableNoApplyComponent(parentItem.classAlias, key=key, value=defaultValue)
-        #else:
-            #if parentItem.accessType == AccessTypes.READONLY or parentItem.accessType == AccessTypes.INIT:
-            #    choiceComponent = ChoiceComponent(parentItem.classAlias, key=parentItem.key, value=None)
-            #else:
-            #    choiceComponent = EditableApplyLaterComponent(parentItem.classAlias, key=key, value=None)
-            #    choiceComponent.signalApplyChanged.connect(twAttributeEditorPage.onApplyChanged)
+        else:
+            if self.__schema.hasAccessMode(key):
+                accessMode = self.__schema.getAccessMode(key)
+                if (accessMode == AccessMode.READONLY) or (accessMode == AccessMode.INIT):
+                    choiceComponent = ChoiceComponent(parentItem.classAlias, key=key, value=None)
+                else:
+                    choiceComponent = EditableApplyLaterComponent(parentItem.classAlias, key=key, value=None)
+                    choiceComponent.signalApplyChanged.connect(self.__treeWidget.onApplyChanged)
 
         parentItem.editableComponent = choiceComponent        
 
@@ -190,7 +192,7 @@ class SchemaReader(object):
             childItem = self.r_readSchema(key + "." + cKey, parentItem)
             if cKey != defaultValue:
                 childItem.setHidden(True)
-            choiceComponent.addParameters(itemToBeAdded=childItem)
+            parentItem.editableComponent.addParameters(itemToBeAdded=childItem)
 
 
     def _handleListOfNodes(self, key, parentItem):

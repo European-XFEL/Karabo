@@ -120,8 +120,13 @@ class NavigationTreeView(QTreeView):
             #serverIndex = classIndex.parent()
             #serverId = serverIndex.data().toString()
             
-            schema = Manager().getDeviceSchema(deviceId)
             path = str("device." + deviceId)
+            deviceHash = Manager().getDeviceHash(deviceId)
+            schema = None
+            if deviceHash:
+                descriptionPath = path + ".description"
+                if deviceHash.has(descriptionPath):
+                    schema = deviceHash.get(descriptionPath)
             Manager().onSchemaAvailable(dict(key=path, type=type, schema=schema))
         
         itemInfo = dict(key=path, type=type, level=level, row=row)
