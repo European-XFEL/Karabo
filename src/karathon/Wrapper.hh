@@ -10,21 +10,22 @@
 
 #include <boost/python.hpp>
 #include <boost/any.hpp>
-#include <boost/numpy.hpp>
 #include <karabo/util/Hash.hh>
-
+#ifdef WITH_BOOST_NUMPY
+#include <boost/numpy.hpp>
 namespace bn = boost::numpy;
+#endif
 namespace bp = boost::python;
 
 namespace karabo {
     namespace pyexfel {
 
-
         class PyTypes {
+
         public:
 
-
             enum ReferenceType {
+
                 BOOL = karabo::util::Types::BOOL, // bool
                 VECTOR_BOOL = karabo::util::Types::VECTOR_BOOL, // std::vector<std::bool>
 
@@ -169,13 +170,13 @@ namespace karabo {
         };
 
         struct Wrapper {
-            
+
             static bool hasattr(bp::object obj, const std::string& attrName) {
                 // NOTE: There seems to be different implementations of the Python C-API around
                 // Some use a char* some other a const char* -> char* is the always compiling alternative
                 return PyObject_HasAttrString(obj.ptr(), const_cast<char*> (attrName.c_str()));
             }
-            
+
             template <class T, class U>
             static bp::tuple fromStdPairToPyTuple(const std::pair<T, U>& p) {
                 return bp::make_tuple(p.first, p.second);
@@ -184,10 +185,14 @@ namespace karabo {
             template<class ValueType>
             static bp::object fromStdVectorToPyArray(const std::vector<ValueType>& v, bool numpyFlag = false) {
                 if (numpyFlag) {
+                    #ifdef WITH_BOOST_NUMPY
                     Py_intptr_t shape[1] = {v.size()};
                     bn::ndarray result = bn::zeros(1, shape, bn::dtype::get_builtin<ValueType>());
                     std::copy(v.begin(), v.end(), reinterpret_cast<ValueType*> (result.get_data()));
                     return result;
+                    #else
+                    throw KARABO_NOT_SUPPORTED_EXCEPTION("NumPy bindings are currently not supported on this platform");
+                    #endif
                 }
                 return fromStdVectorToPyList(v);
             }
@@ -198,7 +203,7 @@ namespace karabo {
                 for (size_t i = 0; i < v.size(); i++) pylist.append(bp::object(v[i]));
                 return pylist;
             }
-            
+
             template <class T, class U>
             static bp::object fromStdVectorToPyList(const std::vector< std::pair<T, U> >& v) {
                 bp::list pylist;

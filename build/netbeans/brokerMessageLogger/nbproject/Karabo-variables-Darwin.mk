@@ -22,6 +22,14 @@ CND_ARTIFACT_PATH_Release=dist/Release/GNU-MacOSX/bin/karabo-brokermessagelogger
 CND_PACKAGE_DIR_Release=dist/Release/GNU-MacOSX/package
 CND_PACKAGE_NAME_Release=brokermessagelogger.tar
 CND_PACKAGE_PATH_Release=dist/Release/GNU-MacOSX/package/brokermessagelogger.tar
+# Debug-MacOSX configuration
+CND_PLATFORM_Debug-MacOSX=GNU-MacOSX
+CND_ARTIFACT_DIR_Debug-MacOSX=dist/Debug-MacOSX/GNU-MacOSX/bin
+CND_ARTIFACT_NAME_Debug-MacOSX=karabo-brokermessagelogger
+CND_ARTIFACT_PATH_Debug-MacOSX=dist/Debug-MacOSX/GNU-MacOSX/bin/karabo-brokermessagelogger
+CND_PACKAGE_DIR_Debug-MacOSX=dist/Debug-MacOSX/GNU-MacOSX/package
+CND_PACKAGE_NAME_Debug-MacOSX=brokermessagelogger.tar
+CND_PACKAGE_PATH_Debug-MacOSX=dist/Debug-MacOSX/GNU-MacOSX/package/brokermessagelogger.tar
 #
 # include compiler specific variables
 #

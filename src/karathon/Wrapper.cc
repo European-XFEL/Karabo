@@ -148,6 +148,7 @@ namespace karabo {
                 any = s;
                 return;
             }
+            #ifdef WITH_BOOST_NUMPY
             if (bp::extract<bn::ndarray>(obj).check()) {
                 const bn::ndarray& a = bp::extract<bn::ndarray>(obj);
                 int nd = a.get_nd();
@@ -209,6 +210,7 @@ namespace karabo {
                     return;
                 }
             }
+            #endif
 
             if (PyList_Check(obj.ptr())) {
                 bp::object list0 = obj[0];
