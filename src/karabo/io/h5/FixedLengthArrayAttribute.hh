@@ -58,20 +58,20 @@ namespace karabo {
                 }
 
                 karabo::util::Element<std::string>& bindAttribute(karabo::util::Hash::Node& node) {
-//                    if (!node.hasAttribute(m_key)) {
-//                        node.setAttribute(m_key, T());
-//                        karabo::util::Element<std::string>& attrNode = node.getAttributes().getNode(m_key);
-//                        T & value = attrNode.getValue<T >();
-//                        m_attributeData = &value;
-//                        return attrNode;
-//                    } else {                        
-//                        karabo::util::Element<std::string>& attrNode = node.getAttributes().getNode(m_key);
-//                        T & value = attrNode.getValue<T >();
-//                        m_attributeData = &value;
-//                        return attrNode;
-//                    }                    
+                    //                    if (!node.hasAttribute(m_key)) {
+                    //                        node.setAttribute(m_key, T());
+                    //                        karabo::util::Element<std::string>& attrNode = node.getAttributes().getNode(m_key);
+                    //                        T & value = attrNode.getValue<T >();
+                    //                        m_attributeData = &value;
+                    //                        return attrNode;
+                    //                    } else {                        
+                    //                        karabo::util::Element<std::string>& attrNode = node.getAttributes().getNode(m_key);
+                    //                        T & value = attrNode.getValue<T >();
+                    //                        m_attributeData = &value;
+                    //                        return attrNode;
+                    //                    }                    
                 }
-                
+
                 static void expectedParameters(karabo::util::Schema& expected) {
 
                 }
@@ -79,9 +79,13 @@ namespace karabo {
             protected:
 
                 void writeNodeAttribute(const karabo::util::Element<std::string>& node, hid_t attribute) {
-                    write<T>(node, attribute);
+                    try {
+                        write<T>(node, attribute);
+                    } catch (...) {
+                        KARABO_RETHROW_AS(KARABO_PROPAGATED_EXCEPTION("Cannot write attributes for node " + this->m_key + " to dataset /"));
+                    }
                 }
-                
+
                 void readNodeAttribute(karabo::util::Element<std::string>& attributeNode, hid_t attribute) {
                     KARABO_LOG_FRAMEWORK_TRACE_CF << "entering empty function";
                     //read<T>(attributeNode, attribute);
@@ -91,13 +95,13 @@ namespace karabo {
 
                 template<typename U>
                 inline void write(const karabo::util::Element<std::string>& node, hid_t attribute);
-    
+
             };
 
             template<class T>
             template<typename U>
             inline void FixedLengthArrayAttribute<T>::write(const karabo::util::Element<std::string>& node, hid_t attribute) {
-                
+
                 KARABO_CHECK_HDF5_STATUS(H5Awrite(m_attribute, getNativeTypeId(), &(node.getValue<std::vector<U> >())[0]));
             }
 
@@ -110,7 +114,7 @@ namespace karabo {
                 for (size_t i = 0; i < len; ++i) {
                     converted[i] = boost::numeric_cast<unsigned char>(vec[i]);
                 }
-                const unsigned char* ptr = &converted[0];                
+                const unsigned char* ptr = &converted[0];
                 KARABO_CHECK_HDF5_STATUS(H5Awrite(m_attribute, getNativeTypeId(), ptr));
             }
 

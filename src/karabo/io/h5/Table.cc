@@ -136,7 +136,7 @@ namespace karabo {
                     } catch (Exception& ex) {
                         //TODO think what to do here
                         ex.clearTrace();
-                        clog << "element " << i << " could not be written" << endl;
+                        //clog << "element " << i << " could not be written" << endl;
                     }
                 }
                 if (m_tableSize <= recordId) {
@@ -161,9 +161,9 @@ namespace karabo {
                     m_tableSize = possibleNewSize;
                     updateTableSizeAttribute();
                 }
+                
+                KARABO_CHECK_HDF5_STATUS(H5Fflush(m_h5file, H5F_SCOPE_LOCAL));
 
-                KARABO_CHECK_HDF5_STATUS(H5Fflush(m_h5file, H5F_SCOPE_GLOBAL));
-                updateTableSizeAttribute();
             }
 
 

@@ -22,6 +22,8 @@
     <logicalFolder name="f2" displayName="io" projectFiles="true">
       <logicalFolder name="f1" displayName="h5" projectFiles="true">
         <logicalFolder name="f2" displayName="AttributeImpl" projectFiles="true">
+          <itemPath>../../../src/karabo/io/h5/DatasetAttribute.cc</itemPath>
+          <itemPath>../../../src/karabo/io/h5/DatasetAttribute.hh</itemPath>
           <itemPath>../../../src/karabo/io/h5/FixedLengthArrayAttribute.cc</itemPath>
           <itemPath>../../../src/karabo/io/h5/FixedLengthArrayAttribute.hh</itemPath>
           <itemPath>../../../src/karabo/io/h5/ScalarAttribute.cc</itemPath>
@@ -91,8 +93,11 @@
         <itemPath>../../../src/karabo/io/BinarySerializer.hh</itemPath>
         <itemPath>../../../src/karabo/io/HashBinarySerializer.cc</itemPath>
         <itemPath>../../../src/karabo/io/HashBinarySerializer.hh</itemPath>
+        <itemPath>../../../src/karabo/io/HashHdf5Serializer.cc</itemPath>
+        <itemPath>../../../src/karabo/io/HashHdf5Serializer.hh</itemPath>
         <itemPath>../../../src/karabo/io/HashXmlSerializer.cc</itemPath>
         <itemPath>../../../src/karabo/io/HashXmlSerializer.hh</itemPath>
+        <itemPath>../../../src/karabo/io/Hdf5Serializer.hh</itemPath>
         <itemPath>../../../src/karabo/io/SchemaXmlSerializer.cc</itemPath>
         <itemPath>../../../src/karabo/io/SchemaXmlSerializer.hh</itemPath>
         <itemPath>../../../src/karabo/io/SchemaXsdSerializer.cc</itemPath>
@@ -558,6 +563,16 @@
             tool="3"
             flavor2="0">
       </item>
+      <item path="../../../src/karabo/io/HashHdf5Serializer.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/HashHdf5Serializer.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="../../../src/karabo/io/HashXmlSerializer.cc"
             ex="false"
             tool="1"
@@ -584,6 +599,11 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/io/Hdf5FileOutput.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/Hdf5Serializer.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -663,6 +683,16 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/io/h5/Dataset.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/h5/DatasetAttribute.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/h5/DatasetAttribute.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -1027,6 +1057,11 @@
             tool="3"
             flavor2="0">
       </item>
+      <item path="../../../src/karabo/tests/io/H5Format_Test.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
       <item path="../../../src/karabo/tests/io/H5Format_Test.hh"
             ex="false"
             tool="3"
@@ -1050,6 +1085,11 @@
       <item path="../../../src/karabo/tests/io/HashXmlSerializer_Test.hh"
             ex="false"
             tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/io/Hdf5_Test.cc"
+            ex="false"
+            tool="1"
             flavor2="0">
       </item>
       <item path="../../../src/karabo/tests/io/Hdf5_Test.hh"
@@ -1971,6 +2011,16 @@
             tool="3"
             flavor2="0">
       </item>
+      <item path="../../../src/karabo/io/HashHdf5Serializer.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/HashHdf5Serializer.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="../../../src/karabo/io/HashXmlSerializer.cc"
             ex="false"
             tool="1"
@@ -1997,6 +2047,11 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/io/Hdf5FileOutput.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/Hdf5Serializer.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -2076,6 +2131,16 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/io/h5/Dataset.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/h5/DatasetAttribute.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/h5/DatasetAttribute.hh"
             ex="false"
             tool="3"
             flavor2="0">

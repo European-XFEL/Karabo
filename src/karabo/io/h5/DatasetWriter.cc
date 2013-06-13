@@ -8,11 +8,11 @@
 
 
 #include "DatasetWriter.hh"
-using namespace karabo::io;
+using namespace karabo::io; 
 
-namespace karabo {
+namespace karabo { 
     namespace io {
-        namespace h5 {
+        namespace h5 {    
  
  
             KARABO_REGISTER_FOR_CONFIGURATION(DatasetWriter<char>, DatasetVectorWriter<char>)
