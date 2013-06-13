@@ -174,7 +174,7 @@ void H5File_Test::testWrite() {
             v1[i] = i * 1.0 + 0.1234;
         }
         data.set("vectors.double", v1).setAttribute("dims", Dims(3, 4).toVector());
-
+ 
         s = 10;
         vector<bool> v2(s, false);
         for (size_t i = 0; i < v2.size(); ++i) {
@@ -199,7 +199,7 @@ void H5File_Test::testWrite() {
                    "h5name", "test",
                    "key", "experimental.test",
                    "compressionLevel", 9
-                   );
+                   );   
 
         h5::Element::Pointer e1 = h5::Element::create("INT32", i32el);
 
@@ -207,7 +207,7 @@ void H5File_Test::testWrite() {
         dataFormat->addElement(e1);
 
 
-        data.set("abecadlo.wer", 1006u);
+        data.set("abecadlo.wer", 1006u); 
 
         Hash uel(
                  "h5path", "experimental",
@@ -403,7 +403,7 @@ void H5File_Test::testRead() {
 
         table->readAttributes(data);
         // read first record
-        table->read(0);
+        table->read(0); 
 
         KARABO_LOG_FRAMEWORK_TRACE_CF << "after reading: ";
 
@@ -1197,7 +1197,7 @@ void H5File_Test::testManyTables() {
 
         data.set("3", 234);
 
-//        clog << "File structure is created" << endl;
+        //        clog << "File structure is created" << endl;
         p.stop("create");
         //
         //        //        t->writeAttributes(data);
@@ -1214,7 +1214,7 @@ void H5File_Test::testManyTables() {
         unsigned char id3 = 0;
         id3 = id3 | 1; // rec 0 -> 2^0 = 1
         id3 = id3 | 8; // rec 3 -> 2^3 =   8
-//        clog << "id3: " << oct << (int) id3 << endl;
+        //        clog << "id3: " << oct << (int) id3 << endl;
         data.set("id3", id3);
         eid3->write(data, 0);
 
@@ -1271,24 +1271,36 @@ void H5File_Test::testManyGroups() {
 
         Hash d1, d2, d3, d4;
 
-        int n = 100;//0; //5000; //500;//5000;//20000;//25000;
-        size_t rec = 100;
+        int n = 100;//00; //10000; //0; //5000; //500;//5000;//20000;//25000;
+        size_t rec = 3;
+        int m = 1;
         float totalSize = rec * (4 + 4 + 8 + 2) * n / 1024;
-        bool attr = false;
-        for (int i = 0; i < n; ++i) {
+        size_t num_prop = n * 4;
+        size_t num_rec = 0;
+        bool attr = true;
+        for (int i = 0; i < n; ++i /*i+=2*/) {
+
             d1.set(toString(i), i);
+            //            d1.set(toString(i+1), static_cast<unsigned long long>(i));
+
             d2.set(toString(i), static_cast<float> (i));
+            //            d2.set(toString(i+1), static_cast<string>(toString(i)));
+
             d3.set(toString(i), static_cast<double> (i));
+            //            d3.set(toString(i+1), static_cast<unsigned int> (i));
+
             d4.set(toString(i), static_cast<unsigned short> (i));
+            //            d4.set(toString(i+1), static_cast<vector<unsigned short> > (1000000)).
+            //            setAttribute("dims", Dims(10,100,2000,5).toVector());
             if (attr) {
                 d1.setAttribute(toString(i), "unit", 2);
-                //d1.setAttribute(toString(i), "a", 234);
+                d1.setAttribute(toString(i), "a", 234);
                 d2.setAttribute(toString(i), "unit", 3);
-                //d2.setAttribute(toString(i), "a", 235);
+                d2.setAttribute(toString(i), "a", 235);
                 d3.setAttribute(toString(i), "unit", 4);
-                //d3.setAttribute(toString(i), "a", 236);
+                d3.setAttribute(toString(i), "a", 236);
                 d4.setAttribute(toString(i), "unit", 5);
-                //d4.setAttribute(toString(i), "a", 237);
+                d4.setAttribute(toString(i), "a", 237);
             }
         }
 
@@ -1296,20 +1308,39 @@ void H5File_Test::testManyGroups() {
         //        status.resize(n*200, 1);
         //        d1.setAttribute("status","dims",Dims(200,n).toVector());
 
-  
-        p.start("format"); 
- 
-        FormatDiscoveryPolicy::Pointer policy = FormatDiscoveryPolicy::create("Policy", Hash("chunkSize", static_cast<unsigned long long>(rec), "compressionLevel", 0));
+
+        p.start("format");
+
+        FormatDiscoveryPolicy::Pointer policy = FormatDiscoveryPolicy::create("Policy", Hash("chunkSize", static_cast<unsigned long long> (rec), "compressionLevel", 9));
         Format::Pointer dataFormat1 = Format::discover(d1, policy);
         Format::Pointer dataFormat2 = Format::discover(d2, policy);
         Format::Pointer dataFormat3 = Format::discover(d3, policy);
         Format::Pointer dataFormat4 = Format::discover(d4, policy);
 
+        {
+            Hash h(
+                   "h5path", "c5",
+                   "h5name", "test"
+                   );
+
+            h5::Element::Pointer e = h5::Element::create("INT32", h);
+            dataFormat1->addElement(e);
+        }
+        {
+            Hash h(
+                   "h5path", "c5",
+                   "h5name", "test"
+                   );
+
+            h5::Element::Pointer e = h5::Element::create("UINT64ATTR", h);
+            dataFormat1->addElement(e);
+        }
+
         p.stop("format");
 
 
         string filename = "/dev/shm/fileManyGroups.h5";
-        filename = resourcePath("fileManyGroups.h5");
+        //filename = resourcePath("fileManyGroups.h5");
         File file(filename);
         file.open(File::TRUNCATE);
         KARABO_LOG_FRAMEWORK_TRACE_CF << "File is open";
@@ -1317,42 +1348,55 @@ void H5File_Test::testManyGroups() {
 
         p.start("create");
         Table::Pointer t1 = file.createTable("/base/c1", dataFormat1);
+//        file.reportOpenObjects();
         Table::Pointer t2 = file.createTable("/base/c2", dataFormat2);
+//        file.reportOpenObjects();
         Table::Pointer t3 = file.createTable("/base/c3", dataFormat3);
+//        file.reportOpenObjects();
         Table::Pointer t4 = file.createTable("/base/c4", dataFormat4);
+//        file.reportOpenObjects();
         KARABO_LOG_FRAMEWORK_TRACE_CF << "File structure is created";
         p.stop("create");
- 
+
         p.start("attribute");
         if (attr) {
-            clog << "write attributes" << endl;
+//            clog << "write attributes" << endl;
+//            file.reportOpenObjects();
             p.start("attribute1");
             t1->writeAttributes(d1);
             p.stop("attribute1");
-            double attTime1 = HighResolutionTimer::time2double(p.getTime("attribute1"));
-            clog << "t1: " << attTime1 << endl;
+//            double attTime1 = HighResolutionTimer::time2double(p.getTime("attribute1"));
+//            clog << "t1: " << attTime1 << endl;
+//            file.reportOpenObjects();
             p.start("attribute2");
             t2->writeAttributes(d2);
             p.stop("attribute2");
-            double attTime2 = HighResolutionTimer::time2double(p.getTime("attribute2"));
-            clog << "t2: " << attTime2 << endl;
+//            double attTime2 = HighResolutionTimer::time2double(p.getTime("attribute2"));
+//            clog << "t2: " << attTime2 << endl;
+//            file.reportOpenObjects();
             p.start("attribute3");
             t3->writeAttributes(d3);
             p.stop("attribute3");
-            double attTime3 = HighResolutionTimer::time2double(p.getTime("attribute3"));
-            clog << "t3: " << attTime3 << endl;
+//            double attTime3 = HighResolutionTimer::time2double(p.getTime("attribute3"));
+//            clog << "t3: " << attTime3 << endl;
+//            file.reportOpenObjects();
             p.start("attribute4");
             t4->writeAttributes(d4);
             p.stop("attribute4");
-            double attTime4 = HighResolutionTimer::time2double(p.getTime("attribute4"));
-            clog << "t4: " << attTime4 << endl << "Attributes have been written" << endl;
+//            double attTime4 = HighResolutionTimer::time2double(p.getTime("attribute4"));
+//            clog << "t4: " << attTime4 << endl;
+//            file.reportOpenObjects();
+//            clog << "Attributes have been written" << endl;
         }
         p.stop("attribute");
-        #define AAA
-        #ifdef AAA
+        #define WRITE
+        #ifdef WRITE
         for (int i = 0; i < n; ++i) {
             vector<int>& v1 = d1.bindReference< vector<int> >(toString(i));
             v1.resize(rec, i);
+            for (size_t k = 0; k < v1.size(); ++k) {
+                v1[k] = k;
+            }
             vector<float>& v2 = d2.bindReference < vector<float> >(toString(i));
             v2.resize(rec, i);
             vector<double>& v3 = d3.bindReference < vector<double> >(toString(i));
@@ -1360,6 +1404,13 @@ void H5File_Test::testManyGroups() {
             vector<unsigned short>& v4 = d4.bindReference < vector<unsigned short> >(toString(i));
             v4.resize(rec, i);
         }
+
+        vector<int>& v5 = d1.bindReference< vector<int> >("c5.test");
+        v5.resize(rec, 8);
+        d1.getNode("c5.test").setAttribute("aa", vector<unsigned long long>());
+        vector<unsigned long long>& a5 = d1.getNode("c5.test").getAttribute< vector<unsigned long long> >("aa");
+        a5.resize(rec, 23);
+
         //            vector<unsigned char>& status1 = d1.bindReference<vector<unsigned char> >("status");
         //            status1.resize(200*n*rec, 1);
 
@@ -1376,8 +1427,16 @@ void H5File_Test::testManyGroups() {
         //            t4->write(d4, i);
         //        }
 
-        int m = 1;
+
+        num_rec = m*rec;
         for (int i = 0; i < m; ++i) {
+            for (size_t j = 0; j < static_cast<size_t>(n); ++j) {
+                vector<int>& v1 = d1.get< vector<int> >(toString(j));
+                for (size_t k = 0; k < v1.size(); ++k) {
+                    v1[k] = k + j;
+                }
+            }
+
             t1->write(d1, i*rec, rec);
             t2->write(d2, i*rec, rec);
             t3->write(d3, i*rec, rec);
@@ -1386,11 +1445,36 @@ void H5File_Test::testManyGroups() {
         totalSize *= m;
 
         p.stop("write");
+//        clog << "---report before closing--" << endl;
+//        file.reportOpenObjects();
+        p.start("close");
+        t1->close();
+        p.stop("close");
+//        clog << "-----" << endl;
+//        file.reportOpenObjects();
+        p.start("close");
+        t2->close();
+        p.stop("close");
+//        clog << "-----" << endl;
+//        file.reportOpenObjects();
+        p.start("close");
+        t3->close();
+        p.stop("close");
+//        clog << "-----" << endl;
+//        file.reportOpenObjects();
+        p.start("close");
+        t4->close();
+        p.stop("close");
+//        clog << "-----" << endl;
+//        file.reportOpenObjects();
         p.start("close");
         file.close();
         p.stop("close");
 
-        {  
+        #endif
+
+        #ifdef READ
+        {
             file.open(File::READONLY);
             //clog << "a" << endl;
             p.start("open");
@@ -1425,9 +1509,34 @@ void H5File_Test::testManyGroups() {
             t4->read(0, rec);
             p.stop("read");
 
+
+
+            clog << "---report before closing--" << endl;
+            file.reportOpenObjects();
+            p.start("close1");
+            t1->close();
+            p.stop("close1");
+            clog << "-----" << endl;
+            file.reportOpenObjects();
+            p.start("close1");
+            t2->close();
+            p.stop("close1");
+            clog << "-----" << endl;
+            file.reportOpenObjects();
+            p.start("close1");
+            t3->close();
+            p.stop("close1");
+            clog << "-----" << endl;
+            file.reportOpenObjects();
+            p.start("close1");
+            t4->close();
+            p.stop("close1");
+            clog << "-----" << endl;
+            file.reportOpenObjects();
             p.start("close1");
             file.close();
             p.stop("close1");
+
 
 
             for (int i = 0; i < n; ++i) {
@@ -1472,8 +1581,8 @@ void H5File_Test::testManyGroups() {
         if (false) {
             clog << endl;
             clog << "file: " << filename << endl;
-            clog << "num properties                   : " << (4 * n) << endl;
-            clog << "number of records                : " << rec << endl;
+            clog << "number of properties             : " << num_prop << endl;
+            clog << "number of records                : " << num_rec << endl;
             clog << "format                           : " << formatTime << " [s]" << endl;
             clog << "open/prepare file                : " << createTime << " [s]" << endl;
             clog << "write attributes                 : " << attributeTime << " [s]" << endl;
@@ -1492,7 +1601,7 @@ void H5File_Test::testManyGroups() {
             clog << "Total (open/bind/read/close) time: " << openTime + bindTime + readTime + close1Time << " [s]" << endl;
         }
 
-
+ 
     } catch (Exception& ex) {
         clog << ex << endl;
         CPPUNIT_FAIL("Error");
@@ -1515,10 +1624,7 @@ void H5File_Test::testVLWrite() {
                 "h5name", "test"
                 );
 
-        h5::Element::Pointer e1 = h5::Element::create("VLARRAY_INT32", h1);
-
-        vector<int> v(20, 2);
-        data.set("experimental.test", &v[0]).setAttribute("size", 20);
+        h5::Element::Pointer e1 = h5::Element::create("VLARRAY_FLOAT", h1);
         dataFormat->addElement(e1);
 
         string filename = "/dev/shm/fileVL.h5";
@@ -1537,22 +1643,57 @@ void H5File_Test::testVLWrite() {
         //        for (int i = 0; i < rec; ++i) {
 
         {
-            vector<int> v(20, 2);
-            data.set("experimental.test", &v[0]).setAttribute("size", 20);
-            t->write(data, 0);
-        }
-        {
-            vector<int> v(3, 8);
+            vector<float> v(20, 2);
+            for (size_t i = 0; i < 20; ++i) {
+                v[i] = i;
+            }
+            data.set("experimental.test", v).setAttribute("size", 20);
+            t->write(data, 0); 
+        }  
+        {   
+            vector<float> v(3, 8);
             data.set("experimental.test", &v[0]).setAttribute("size", 3);
             t->write(data, 1);
         }
         {
 
-            vector<int> v(9, 24);
-            data.set("experimental.test", &v[0]).setAttribute("size", 9);
-            t->write(data, 2);
+            vector<float> v(90, 24);
+            data.set("experimental.test", v).setAttribute("size", Dims(10, 30, 50).toVector());
+            t->write(data, 2, 3);
         }
-        //        }
+  
+        {
+            Hash rdata, rbdata;
+            vector<float>& r1 = rdata.bindReference<vector<float> >("experimental.test");
+
+            {
+                t->bind(rdata);
+
+                t->read(0);
+                vector<float>& a = rdata.get<vector<float> >("experimental.test");
+                clog << "size: " << a.size() << endl;
+                clog << "rdata:\n" << rdata << endl;
+
+                t->bind(rbdata, 2);
+                t->read(1, 2);
+                const vector<unsigned long long>& sizes = rbdata.getNode("experimental.test").getAttribute<vector<unsigned long long> >("size");
+                clog << "size (0): " << sizes[0] << endl;
+                clog << "size (1): " << sizes[1] << endl;
+
+                //vector<float>& a = rdata.get<vector<float> >("experimental.test");
+                clog << "rdata:\n" << rbdata << endl;
+
+                t->bind(rdata);
+                t->read(3);
+                clog << "size: " << r1.size() << endl;
+                clog << "rdata:\n" << rdata << endl;
+ 
+                t->read(4);
+                clog << "size: " << r1.size() << endl;
+                clog << "rdata:\n" << rdata << endl;
+
+            }
+        }
         p.stop("write");
 
         p.start("close");

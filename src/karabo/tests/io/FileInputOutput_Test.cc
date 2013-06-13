@@ -37,8 +37,15 @@ void FileInputOutput_Test::setUp() {
     rooted.setAttribute("a.b.c", "c2", vector<string > (3, "bla"));
     m_rootedHash = rooted;
 
-
+    Profiler p("a"); 
+    p.start("vec");
+//    Hash big("a.b", std::vector<double>(20*1024*1024, 1.0));
     Hash big("a.b", std::vector<double>(1000, 1.0));
+    p.stop("vec");
+    
+    double time = HighResolutionTimer::time2double(p.getTime("vec"));
+//    clog << "creating big Hash took " << time << " [s]" << endl; 
+    
     vector<Hash>& tmp = big.bindReference<vector<Hash> >("a.c");
     tmp.resize(10000);
     for (size_t i = 0; i < tmp.size(); ++i) {
@@ -59,13 +66,17 @@ void FileInputOutput_Test::tearDown() {
 
 
 void FileInputOutput_Test::writeTextFile() {
-
+    Profiler p("writeTextFile");
     // Using the Factory interface
     Output<Hash>::Pointer out = Output<Hash>::create("TextFile", Hash("filename", resourcePath("file1.xml")));
     out->write(m_rootedHash);
-
+    
+    p.start("bigHash");
     out = Output<Hash>::create("TextFile", Hash("filename", resourcePath("file2.xml"), "format.Xml.indentation", -1));
     out->write(m_bigHash);
+    p.stop("bigHash");
+    double time = HighResolutionTimer::time2double(p.getTime("bigHash"));
+//    clog << "writing big Hash (text) took " << time << " [s]" << endl; 
 
     out = Output<Hash>::create("TextFile", Hash("filename", resourcePath("file3.xml"), "format.Xml.indentation", 0, "format.Xml.writeDataTypes", false));
     out->write(m_unrootedHash);
@@ -236,14 +247,14 @@ void FileInputOutput_Test::writeHdf5File() {
 
         Hash big("a.b", std::vector<double>(1000, 1.0));
         vector<Hash>& tmp = big.bindReference<vector<Hash> >("a.c");
-        tmp.resize(10);
+        tmp.resize(1000);
         for (size_t i = 0; i < tmp.size(); ++i) {
             tmp[i] = m_rootedHash;
         }
 
         p.start("bigHash");
         out = Output<Hash>::create("Hdf5File", Hash("filename", resourcePath("fileS2.h5")));
-        out->write(big);
+        out->write(m_bigHash);
         p.stop("bigHash");
 //        double time = HighResolutionTimer::time2double(p.getTime("bigHash"));
 //        clog << "writing big Hash (Hdf5) took " << time << " [s]" << endl;
@@ -273,9 +284,9 @@ void FileInputOutput_Test::readHdf5File() {
         Input<Hash>::Pointer in = Input<Hash>::create("Hdf5File", Hash("filename", resourcePath("fileS1.h5")));
         in->read(h1);
 
-        //    in = Input<Hash>::create("Hdf5File", Hash("filename", resourcePath("fileS2.h5")));
-        //    Hash h2;
-        //    in->read(h2);
+            in = Input<Hash>::create("Hdf5File", Hash("filename", resourcePath("fileS2.h5")));
+            Hash h2;
+            in->read(h2);
 
         in = Input<Hash>::create("Hdf5File", Hash("filename", resourcePath("fileS3.h5")));
         in->read(h3);

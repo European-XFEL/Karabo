@@ -28,7 +28,7 @@ namespace karabo {
 
 
             template <> const hid_t ScalarTypes::getHdf5NativeType<signed char >() {
-                return H5Tcopy(H5T_NATIVE_CHAR);
+                return H5Tcopy(H5T_NATIVE_SCHAR);
             }
 
 
@@ -39,6 +39,7 @@ namespace karabo {
 
             template <> const hid_t ScalarTypes::getHdf5NativeType<int >() {
                 return H5Tcopy(H5T_NATIVE_INT);
+                //return H5T_NATIVE_INT;
             }
 
 

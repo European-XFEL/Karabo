@@ -111,7 +111,7 @@ namespace karabo {
 
             void File::close() {
                 if (m_accMode == TRUNCATE || m_accMode == EXCLUSIVE || m_accMode == APPEND) {
-                    KARABO_CHECK_HDF5_STATUS(H5Fflush(m_h5file, H5F_SCOPE_GLOBAL));
+                    KARABO_CHECK_HDF5_STATUS(H5Fflush(m_h5file, H5F_SCOPE_LOCAL));
                 }
                 KARABO_CHECK_HDF5_STATUS(H5Fclose(m_h5file));
             }

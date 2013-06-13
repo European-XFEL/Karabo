@@ -14,8 +14,8 @@ namespace karabo {
     namespace io {
         namespace h5 {
 
-
-
+ 
+ 
 
             KARABO_REGISTER_FOR_CONFIGURATION(DatasetReader<char>)
             KARABO_REGISTER_FOR_CONFIGURATION(DatasetReader<signed char>)

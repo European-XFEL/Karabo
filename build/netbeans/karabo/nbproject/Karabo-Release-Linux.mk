@@ -42,6 +42,7 @@ OBJECTFILES= \
 	${OBJECTDIR}/_ext/1072794519/BinaryFileInput.o \
 	${OBJECTDIR}/_ext/1072794519/BinaryFileOutput.o \
 	${OBJECTDIR}/_ext/1072794519/HashBinarySerializer.o \
+	${OBJECTDIR}/_ext/1072794519/HashHdf5Serializer.o \
 	${OBJECTDIR}/_ext/1072794519/HashXmlSerializer.o \
 	${OBJECTDIR}/_ext/1072794519/Hdf5FileInput.o \
 	${OBJECTDIR}/_ext/1072794519/Hdf5FileOutput.o \
@@ -52,6 +53,7 @@ OBJECTFILES= \
 	${OBJECTDIR}/_ext/769817549/Attribute.o \
 	${OBJECTDIR}/_ext/769817549/Complex.o \
 	${OBJECTDIR}/_ext/769817549/Dataset.o \
+	${OBJECTDIR}/_ext/769817549/DatasetAttribute.o \
 	${OBJECTDIR}/_ext/769817549/DatasetReader.o \
 	${OBJECTDIR}/_ext/769817549/DatasetWriter.o \
 	${OBJECTDIR}/_ext/769817549/Element.o \
@@ -192,6 +194,11 @@ ${OBJECTDIR}/_ext/1072794519/HashBinarySerializer.o: ../../../src/karabo/io/Hash
 	${RM} $@.d
 	$(COMPILE.cc) -O2 -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1072794519/HashBinarySerializer.o ../../../src/karabo/io/HashBinarySerializer.cc
 
+${OBJECTDIR}/_ext/1072794519/HashHdf5Serializer.o: ../../../src/karabo/io/HashHdf5Serializer.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1072794519
+	${RM} $@.d
+	$(COMPILE.cc) -O2 -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1072794519/HashHdf5Serializer.o ../../../src/karabo/io/HashHdf5Serializer.cc
+
 ${OBJECTDIR}/_ext/1072794519/HashXmlSerializer.o: ../../../src/karabo/io/HashXmlSerializer.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1072794519
 	${RM} $@.d
@@ -241,6 +248,11 @@ ${OBJECTDIR}/_ext/769817549/Dataset.o: ../../../src/karabo/io/h5/Dataset.cc
 	${MKDIR} -p ${OBJECTDIR}/_ext/769817549
 	${RM} $@.d
 	$(COMPILE.cc) -O2 -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/769817549/Dataset.o ../../../src/karabo/io/h5/Dataset.cc
+
+${OBJECTDIR}/_ext/769817549/DatasetAttribute.o: ../../../src/karabo/io/h5/DatasetAttribute.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/769817549
+	${RM} $@.d
+	$(COMPILE.cc) -O2 -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/769817549/DatasetAttribute.o ../../../src/karabo/io/h5/DatasetAttribute.cc
 
 ${OBJECTDIR}/_ext/769817549/DatasetReader.o: ../../../src/karabo/io/h5/DatasetReader.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/769817549
@@ -864,6 +876,19 @@ ${OBJECTDIR}/_ext/1072794519/HashBinarySerializer_nomain.o: ${OBJECTDIR}/_ext/10
 	    ${CP} ${OBJECTDIR}/_ext/1072794519/HashBinarySerializer.o ${OBJECTDIR}/_ext/1072794519/HashBinarySerializer_nomain.o;\
 	fi
 
+${OBJECTDIR}/_ext/1072794519/HashHdf5Serializer_nomain.o: ${OBJECTDIR}/_ext/1072794519/HashHdf5Serializer.o ../../../src/karabo/io/HashHdf5Serializer.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1072794519
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/1072794519/HashHdf5Serializer.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} $@.d;\
+	    $(COMPILE.cc) -O2 -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1072794519/HashHdf5Serializer_nomain.o ../../../src/karabo/io/HashHdf5Serializer.cc;\
+	else  \
+	    ${CP} ${OBJECTDIR}/_ext/1072794519/HashHdf5Serializer.o ${OBJECTDIR}/_ext/1072794519/HashHdf5Serializer_nomain.o;\
+	fi
+
 ${OBJECTDIR}/_ext/1072794519/HashXmlSerializer_nomain.o: ${OBJECTDIR}/_ext/1072794519/HashXmlSerializer.o ../../../src/karabo/io/HashXmlSerializer.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1072794519
 	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/1072794519/HashXmlSerializer.o`; \
@@ -992,6 +1017,19 @@ ${OBJECTDIR}/_ext/769817549/Dataset_nomain.o: ${OBJECTDIR}/_ext/769817549/Datase
 	    $(COMPILE.cc) -O2 -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/769817549/Dataset_nomain.o ../../../src/karabo/io/h5/Dataset.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/769817549/Dataset.o ${OBJECTDIR}/_ext/769817549/Dataset_nomain.o;\
+	fi
+
+${OBJECTDIR}/_ext/769817549/DatasetAttribute_nomain.o: ${OBJECTDIR}/_ext/769817549/DatasetAttribute.o ../../../src/karabo/io/h5/DatasetAttribute.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/769817549
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/769817549/DatasetAttribute.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} $@.d;\
+	    $(COMPILE.cc) -O2 -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/769817549/DatasetAttribute_nomain.o ../../../src/karabo/io/h5/DatasetAttribute.cc;\
+	else  \
+	    ${CP} ${OBJECTDIR}/_ext/769817549/DatasetAttribute.o ${OBJECTDIR}/_ext/769817549/DatasetAttribute_nomain.o;\
 	fi
 
 ${OBJECTDIR}/_ext/769817549/DatasetReader_nomain.o: ${OBJECTDIR}/_ext/769817549/DatasetReader.o ../../../src/karabo/io/h5/DatasetReader.cc 

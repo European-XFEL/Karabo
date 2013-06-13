@@ -67,10 +67,6 @@ namespace karabo {
                     return m_memoryType;
                 }
 
-                //                const std::string& getElementType() const {
-                //                    return getClassInfo().getClassId();
-                //                }
-
                 virtual ~FixedLengthArray() {
                 }
 

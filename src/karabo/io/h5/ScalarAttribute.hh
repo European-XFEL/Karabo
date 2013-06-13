@@ -86,7 +86,11 @@ namespace karabo {
             protected:
 
                 void writeNodeAttribute(const karabo::util::Element<std::string>& attributeNode, hid_t attribute) {
+                    try{
                     write<T>(attributeNode, attribute);
+                    } catch (...) {
+                        KARABO_RETHROW_AS(KARABO_PROPAGATED_EXCEPTION("Cannot write attributes for node " + this->m_key + " to dataset"));
+                    }
                 }
 
                 void readNodeAttribute(karabo::util::Element<std::string>& attributeNode, hid_t attribute) {

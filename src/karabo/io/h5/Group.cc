@@ -40,20 +40,7 @@ namespace karabo {
                         .assignmentOptional().noDefaultValue()
                         .commit();
             }
-
-
-            void Group::create(hsize_t chunkSize) {
-                hid_t lcpl = H5Pcreate(H5P_LINK_CREATE);
-                KARABO_CHECK_HDF5_STATUS(lcpl);
-                KARABO_CHECK_HDF5_STATUS(H5Pset_create_intermediate_group(lcpl, 1));
-                hid_t gcpl = H5Pcreate(H5P_GROUP_CREATE);
-                KARABO_CHECK_HDF5_STATUS(H5Pset_link_creation_order(gcpl, H5P_CRT_ORDER_TRACKED));
-                m_h5obj = H5Gcreate(m_parentGroup, m_h5name.c_str(), lcpl, gcpl, H5P_DEFAULT);
-                KARABO_CHECK_HDF5_STATUS(m_h5obj);
-                H5Gclose(m_h5obj); //???
-            }
-
-
+           
             void Group::create(hid_t tableGroup) {
                 hid_t lcpl = H5Pcreate(H5P_LINK_CREATE);
                 KARABO_CHECK_HDF5_STATUS(lcpl);

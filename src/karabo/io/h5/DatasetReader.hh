@@ -156,6 +156,7 @@ namespace karabo {
                 }
 
                 void bind(std::vector<std::string>& vec) {
+                    KARABO_LOG_FRAMEWORK_TRACE << " binding vector<string>";
                     m_readData = boost::shared_ptr<Mapping > (new Mapping(vec, vec.size()));
 
                 }
@@ -176,7 +177,7 @@ namespace karabo {
                     char** chPtr = &(m_readData->m_ch[0]);
 
                     KARABO_CHECK_HDF5_STATUS(
-                                             H5Dread(dataSet, ScalarTypes::getHdf5NativeType<std::string> (), 
+                                             H5Dread(dataSet, ScalarTypes::getHdf5NativeType<std::string> (),
                                                      m_memoryDataSpace, fileDataSpace, H5P_DEFAULT, chPtr)
                                              );
 
@@ -207,12 +208,13 @@ namespace karabo {
                     karabo::util::Dims memoryDims(vdims);
                     hid_t mds = Dataset::dataSpace(memoryDims);
 
-
+                    KARABO_LOG_FRAMEWORK_TRACE << "before H5Dread";
                     KARABO_CHECK_HDF5_STATUS(
                                              H5Dread(dataSet, ScalarTypes::getHdf5NativeType<std::string> (),
                                                      mds, fileDataSpace, H5P_DEFAULT, chPtr)
                                              );
 
+                    KARABO_LOG_FRAMEWORK_TRACE << "after H5Dread";
                     if (m_readData->m_useVector) {
                         for (size_t i = 0; i < m_readData->m_len; ++i) {
                             m_readData->m_vec[i] = m_readData->m_ch[i];

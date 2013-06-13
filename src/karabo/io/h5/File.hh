@@ -46,6 +46,7 @@ namespace karabo {
                 void configure(const karabo::util::Hash& input);
 
                 enum AccessMode {
+
                     TRUNCATE,
                     EXCLUSIVE,
                     APPEND,
@@ -112,6 +113,13 @@ namespace karabo {
                     return m_filename.string();
                 }
 
+                void reportOpenObjects() {
+                    std::clog << "Number of open datasets  : " << H5Fget_obj_count(m_h5file, H5F_OBJ_DATASET) << std::endl;
+                    std::clog << "Number of open groups    : " << H5Fget_obj_count(m_h5file, H5F_OBJ_GROUP) << std::endl;
+                    std::clog << "Number of open datatypes : " << H5Fget_obj_count(m_h5file, H5F_OBJ_DATATYPE) << std::endl;
+                    std::clog << "Number of open attributes: " << H5Fget_obj_count(m_h5file, H5F_OBJ_ATTR) << std::endl;
+
+                }
             private:
 
                 boost::filesystem::path m_filename;
@@ -121,8 +129,8 @@ namespace karabo {
                 AccessMode m_accMode;
 
                 boost::shared_ptr<Table> createReadOnlyTablePointer(const std::string& name);
-                
-                void updateTableIndex(const std::string& tablePath );
+
+                void updateTableIndex(const std::string& tablePath);
 
 
             };

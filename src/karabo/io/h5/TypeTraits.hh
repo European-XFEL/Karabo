@@ -67,6 +67,11 @@ namespace karabo {
             template<> const hid_t ScalarTypes::getHdf5StandardType< std::string >();
 
 
+            
+            struct Hdf5Types {
+                
+            };
+            
         }
     }
 }

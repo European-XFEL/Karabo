@@ -101,30 +101,12 @@ namespace karabo {
                 }
 
 
-                /**
-                 * Create UNLIMITED CHUNKED HDF5 dataset.
-                 * @param group Hdf5 group where the dataset belongs to.
-                 * @param chunkSize Chunk size as defined by hdf5
-                 */
-                virtual void create(hsize_t chunkSize) = 0;
-
                 virtual void create(hid_t tableGroup) = 0;
 
                 void createAttributes();
 
-                void saveAttributes(hid_t tableGroup, const karabo::util::Hash& data) {
-                    if (data.has(m_key, '/')) {
-                        const karabo::util::Hash::Node& node = data.getNode(m_key, '/');
-//                        m_h5obj = H5Dopen2(tableGroup, m_h5PathName.c_str(), H5P_DEFAULT);
-//                        KARABO_CHECK_HDF5_STATUS(m_h5obj);
-                        for (size_t i = 0; i < m_attributes.size(); ++i) {
-                            m_attributes[i]->save(node, m_h5obj);
-                        }
-//                        H5Dclose(m_h5obj);
-                    }
-                }
-
-
+                void saveAttributes(hid_t tableGroup, const karabo::util::Hash& data);
+                    
                 void openAttributes();
 
                 /**
@@ -137,7 +119,8 @@ namespace karabo {
 
             protected:
                 virtual hid_t openElement(hid_t group) = 0;
-
+                virtual void openH5(hid_t group) = 0;
+                virtual void closeH5() = 0;
 
 
             public:
@@ -215,7 +198,9 @@ namespace karabo {
                 std::string m_h5PathName;
                 std::string m_key; // key  (including path) to the data element in hash                
                 hid_t m_h5obj; // this dataset or group
+                bool m_h5objOpen;
                 hid_t m_parentGroup; // parent group of this element
+                hid_t m_tableGroup;
                 karabo::util::Hash m_config;
                 std::vector<Attribute::Pointer> m_attributes;
             };

@@ -62,7 +62,6 @@ namespace karabo {
                     return karabo::util::Dims(2);
                 }
 
-
                 karabo::util::Types::ReferenceType getMemoryType() const {
                     return karabo::util::FromType<karabo::util::FromTypeInfo>::from(typeid (std::vector< std::complex<T> >));
                 }
@@ -77,10 +76,9 @@ namespace karabo {
                             .key("type")
                             .displayedName("Type")
                             .description("Data Type in Hash")
-                            .assignmentOptional().noDefaultValue() //FixedLengthArrayComplex<T>::classInfo().getClassId())
+                            .assignmentOptional().noDefaultValue()
                             .reconfigurable()
                             .commit();
-
                 }
 
                 void close() {
@@ -170,15 +168,6 @@ namespace karabo {
                     }
 
                 }
-
-
-
-                //                void readSpecificAttributes(karabo::util::Hash& attributes) {
-                //                    attributes.setFromPath(m_key + ".rank", static_cast<int> (dims().size()));
-                //                    attributes.setFromPath(m_key + ".dims", dims());
-                //                    attributes.setFromPath(m_key + ".typeCategory", "FixedLengthArrayComplex");
-                //                }
-                //
 
 
             protected:

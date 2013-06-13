@@ -26,7 +26,6 @@ namespace karabo {
     namespace io {
         namespace h5 {
 
-            
 
             void Element::expectedParameters(Schema& expected) {
 
@@ -68,7 +67,7 @@ namespace karabo {
             }
 
 
-            Element::Element(const Hash& input) {
+            Element::Element(const Hash& input) : m_h5objOpen(false) {
                 try {
                     m_h5name = input.get<string > ("h5name");
                     m_h5path = "";
@@ -98,13 +97,14 @@ namespace karabo {
                 }
             }
 
-             void Element::createAttributes() {
+
+            void Element::createAttributes() {
                 for (size_t i = 0; i < m_attributes.size(); ++i) {
                     m_attributes[i]->create(m_h5obj);
                 }
             }
 
- 
+
             void Element::openAttributes() {
                 KARABO_LOG_FRAMEWORK_TRACE_CF << "opening attributes";
                 for (size_t i = 0; i < m_attributes.size(); ++i) {
@@ -134,11 +134,37 @@ namespace karabo {
 
 
             void Element::closeAttributes() {
-                KARABO_LOG_FRAMEWORK_TRACE_CF << "closing attributes";                
+                KARABO_LOG_FRAMEWORK_TRACE_CF << "closing attributes";
                 for (size_t i = 0; i < m_attributes.size(); ++i) {
                     m_attributes[i]->close();
                 }
 
+            }
+
+
+            void Element::saveAttributes(hid_t tableGroup, const karabo::util::Hash& data) {
+                try {
+                    // if the element is Hash within a vector it cannot have attributes
+                    // and we cannot use getNode
+                    //                    int len = m_key.length() - 1;
+                    //                    if (m_key[len] == ']') {
+                    //                        return;
+                    //                    }
+                    //
+                    size_t numAttributes = m_attributes.size();
+                    if (numAttributes == 0) return;
+                    if (data.has(m_key, '/')) {
+                        const karabo::util::Hash::Node& node = data.getNode(m_key, '/');
+                        openH5(tableGroup);
+                        for (size_t i = 0; i < numAttributes; ++i) {
+                            m_attributes[i]->save(node, m_h5obj);
+                        }
+                        closeH5();
+                    }
+
+                } catch (karabo::util::Exception& ex) {
+                    KARABO_RETHROW_AS(KARABO_PROPAGATED_EXCEPTION("Cannot save Hash attributes for element " + this->m_key + " to dataset /" + this->m_h5PathName));
+                }
             }
 
         }

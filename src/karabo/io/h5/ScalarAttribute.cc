@@ -5,7 +5,7 @@
  *
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
-
+ 
 
 #include "ScalarAttribute.hh"
 using namespace karabo::io::h5;

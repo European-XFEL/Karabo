@@ -51,9 +51,6 @@ namespace karabo {
                     //karabo::util::Dims dims = getSingleValueDimensions();
                     karabo::util::Hash config("dims", dims().toVector());
                     KARABO_LOG_FRAMEWORK_TRACE_CF << "classId " << Self::classInfo().getClassId();
-
-                    //                    std::string typeName = karabo::util::ToType<karabo::util::ToLiteral>::to(
-                    //                               karabo::util::FromType<karabo::util::FromTypeInfo>::from(typeid (T)));
                     m_datasetWriter = karabo::util::Configurator<DatasetWriter<std::complex<T> > >::create("DatasetWriter_" + Self::classInfo().getClassId(), config, false);
                     m_datasetReader = karabo::util::Configurator<DatasetReader<std::complex<T> > >::create("DatasetReader", config, false);
                 }
@@ -65,11 +62,7 @@ namespace karabo {
                 karabo::util::Types::ReferenceType getMemoryType() const {
                     return karabo::util::FromType<karabo::util::FromTypeInfo>::from(typeid (std::complex<T>));
                 }
-
-//                const std::string& getElementType() const{
-//                    return getClassInfo().getClassId();
-//                }
-                
+           
                 virtual ~Complex() {
                 }
 
