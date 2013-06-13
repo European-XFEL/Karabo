@@ -43,7 +43,11 @@ namespace karabo {
             boost::to_lower(extension);
             karabo::util::Hash h("filename", filepath.normalize().string());
             h.merge(config);
-            if (extension != "bin") {
+
+            if (extension == "h5") {
+                typename Output<T>::Pointer p = Output<T>::create("Hdf5File", h);
+                p->write(object);
+            } else if (extension != "bin") {
                 typename Output<T>::Pointer p = Output<T>::create("TextFile", h);
                 p->write(object);
             } else {
