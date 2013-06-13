@@ -188,7 +188,6 @@ namespace karabo {
             DeviceInstanceMap m_deviceInstanceMap;
             unsigned int m_deviceInstanceCount;
 
-            std::string m_serverId;
             karabo::net::BrokerConnection::Pointer m_connection;
 
             karabo::util::Hash m_connectionConfig;

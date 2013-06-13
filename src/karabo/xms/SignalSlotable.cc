@@ -93,7 +93,7 @@ namespace karabo {
              * @param slotInstanceId
              * @param slotFunction
              */
-            SIGNAL4("signalConnected", string, string, string, string)
+            //SIGNAL4("signalConnected", string, string, string, string)
 
             /**
              * Signals a successful disconnection
@@ -348,6 +348,7 @@ namespace karabo {
 
 
         void SignalSlotable::trackExistenceOfInstance(const std::string& instanceId) {
+            if (instanceId == m_instanceId) return;
             boost::mutex::scoped_lock lock(m_heartbeatMutex);
             if (!m_trackedComponents.has(instanceId)) {
                 addTrackedComponent(instanceId);
@@ -406,7 +407,7 @@ namespace karabo {
 
             bool connectionEstablished = false;
             if (signalExists && slotExists) {
-                if (slotInstanceId != "*") emit("signalConnected", signalInstanceId, signalFunction, slotInstanceId, slotFunction);
+                //if (slotInstanceId != "*") emit("signalConnected", signalInstanceId, signalFunction, slotInstanceId, slotFunction);
                 connectionEstablished = true;
                 if (isVerbose) cout << "INFO  : Connection successfully established." << endl;
             } else if (signalExists) {
