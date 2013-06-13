@@ -75,7 +75,7 @@ class Notifier(QObject):
     signalCreateNewDeviceClassPlugin = pyqtSignal(str, str, str) # serverId, classId, newClassId
     
     signalGetClassSchema = pyqtSignal(str, str) # serverId, classId
-    signalGetDeviceSchema = pyqtSignal(str) # deviceId
+    signalGetDeviceHash = pyqtSignal(str) # deviceId
 
 
     def __init__(self):
@@ -674,25 +674,34 @@ class Manager(Singleton):
         # Send network request
         self.__notifier.signalGetClassSchema.emit(serverId, classId)
         return None
-
-
-    def handleDeviceSchema(self, config):
-        path = str(config.paths()[0])
-        schema = config.get(path)
+    
+    
+    def handleDeviceHash(self, config):
         # Merge new configuration data into central hash
         self._mergeIntoHash(config)
         
-        path = path.split('.description',1)[0]
-        self.onSchemaAvailable(dict(key=path, type=NavigationItemTypes.DEVICE, schema=schema))
+        deviceHash = config.get("device")
+        for key in deviceHash.keys():
+            path = "device." + key
+            
+            descriptionPath = path + ".description"
+            self.onSchemaAvailable(dict(key=path, type=NavigationItemTypes.DEVICE, schema=config.get(descriptionPath)))
+            
+            configurationPath = path + ".configuration"
+            self._changeHash(configurationPath, config.get(configurationPath))
 
 
-    def getDeviceSchema(self, deviceId):
-        path = str("device." + deviceId + ".description")
-        if self.__hash.has(path):
+    def getDeviceHash(self, deviceId):
+        path = str("device." + deviceId)
+        hasDescription = self.__hash.has(path + ".description")
+        hasConfiguration = self.__hash.has(path + ".configuration")
+        hasActiveSchema = self.__hash.has(path + ".activeSchema")
+        
+        if hasDescription and hasConfiguration and hasActiveSchema:
             return self.__hash.get(path)
 
         # Send network request
-        self.__notifier.signalGetDeviceSchema.emit(deviceId)
+        self.__notifier.signalGetDeviceHash.emit(deviceId)
         return None
         
 
