@@ -221,7 +221,7 @@ namespace karabo {
         }
 
 
-        void SignalSlotable::slotPing(const std::string& instanceId, const bool& replyIfInstanceIdIsDuplicated) {
+        void SignalSlotable::slotPing(const std::string& instanceId, bool replyIfInstanceIdIsDuplicated) {
             if (replyIfInstanceIdIsDuplicated) {
                 if (instanceId == m_instanceId) {
                     reply(m_instanceInfo);
