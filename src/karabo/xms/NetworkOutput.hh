@@ -64,7 +64,7 @@ namespace karabo {
 
         public:
 
-            KARABO_CLASSINFO(NetworkOutput, "NetworkOutput-" + T::classInfo().getClassId(), "1.0")
+            KARABO_CLASSINFO(NetworkOutput, "Network-" + T::classInfo().getClassId(), "1.0")
 
             virtual ~NetworkOutput() {
                 if (m_dataThread.joinable()) {

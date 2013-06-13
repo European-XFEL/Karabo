@@ -70,6 +70,9 @@ namespace karabo {
             typedef std::map<std::string, karabo::io::AbstractInput::Pointer> InputChannels;
             typedef std::map<std::string, karabo::io::AbstractOutput::Pointer> OutputChannels;
 
+            typedef boost::function<void (const std::string&) > InstanceNotAvailableHandler;
+            typedef boost::function<void (const std::string&) > InstanceAvailableAgainHandler;
+
         protected: // Members
 
             std::string m_instanceId;
@@ -114,6 +117,10 @@ namespace karabo {
             // IO channel related
             InputChannels m_inputChannels;
             OutputChannels m_outputChannels;
+
+            // Handlers
+            InstanceNotAvailableHandler m_instanceNotAvailableHandler;
+            InstanceAvailableAgainHandler m_instanceAvailableAgainHandler;
 
         public:
 
@@ -197,16 +204,18 @@ namespace karabo {
             }
 
             void trackExistenceOfInstance(const std::string& instanceId);
+            
+            void stopTrackingExistenceOfInstance(const std::string& instanceId);
+
+            void registerInstanceNotAvailableHandler(const InstanceNotAvailableHandler& instanceNotAvailableCallback);
+
+            void registerInstanceAvailableAgainHandler(const InstanceAvailableAgainHandler& instanceAvailableAgainCallback);
 
             karabo::net::BrokerConnection::Pointer getConnection() const;
 
-            virtual void instanceNotAvailable(const std::string& instanceId) {
-                std::cout << "Instance is not available: " << instanceId << std::endl;
-            }
+            virtual void instanceNotAvailable(const std::string& instanceId);
 
-            virtual void instanceAvailableAgain(const std::string& instanceId) {
-                std::cout << "Instance is back: " << instanceId << std::endl;
-            }
+            virtual void instanceAvailableAgain(const std::string& instanceId);
 
             virtual void connectionNotAvailable(const std::string& instanceId, const std::vector<karabo::util::Hash>& connections);
 

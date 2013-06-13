@@ -25,18 +25,20 @@ namespace karabo {
             }
 
             virtual void errorFound(const std::string&, const std::string&) = 0;
+            
+            KARABO_FSM_ON_EXCEPTION(errorFound);
 
             virtual void errorFoundAction(const std::string&, const std::string&) = 0;
 
             virtual void onStateUpdate(const std::string& currentState) = 0;
+            
+            KARABO_FSM_ON_CURRENT_STATE_CHANGE(onStateUpdate);
+            
+            virtual void onNoStateTransition(const std::string& typeId, int state) = 0;
+            
+            KARABO_FSM_ON_NO_STATE_TRANSITION(onNoStateTransition);
 
             virtual void startFsm() = 0;
-
-            KARABO_FSM_ON_EXCEPTION(errorFound);
-
-            KARABO_FSM_NO_TRANSITION_PV_ACTION(noStateTransition);
-
-            KARABO_FSM_ON_CURRENT_STATE_CHANGE(onStateUpdate);
 
         };
     }

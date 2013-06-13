@@ -603,6 +603,7 @@ namespace karabo {
 
         template<template<class ValueType, class All = std::allocator<ValueType> > class container >
         void Hash::getPaths(container<std::string>& result, const char separator) const {
+            if (this->empty()) return;
             getPaths(*this, result, "", separator);
         }
 

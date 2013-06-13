@@ -29,8 +29,10 @@ void exportPyCoreDeviceClient() {
             .def(bp::init<const string&, const Hash&>())
             .def(bp::init<boost::shared_ptr<SignalSlotableWrap>& >())
             
-            .def("setDefaultTimeout", (void (DeviceClient::*)(const unsigned int))(&DeviceClient::setDefaultTimeout), bp::arg("defaultTimeout"))
-            .def("getDefaultTimeout", (int (DeviceClient::*)( ) const)(&DeviceClient::getDefaultTimeout))
+            .def("setInternalTimeout", (void (DeviceClient::*)(const unsigned int))(&DeviceClient::setInternalTimeout), bp::arg("internalTimeout"))
+            .def("getInternalTimeout", (int (DeviceClient::*)( ) const)(&DeviceClient::getInternalTimeout))
+            .def("enableAdvancedMode", &DeviceClient::enableAdvancedMode)
+            .def("disableAdvancedMode", &DeviceClient::disableAdvancedMode)
             .def("exists", &DeviceClientWrap::existsPy, (bp::arg("instanceId")))
             .def("getSystemInformation", (Hash (DeviceClient::*)())(&DeviceClient::getSystemInformation))
             .def("getSystemTopology", (Hash (DeviceClient::*)())(&DeviceClient::getSystemTopology))
@@ -40,6 +42,8 @@ void exportPyCoreDeviceClient() {
             .def("getFullSchema",(karabo::util::Schema (DeviceClient::*)(const string&))(&DeviceClient::getFullSchema), (bp::arg("instanceId")))
             .def("getActiveSchema",(Schema (DeviceClient::*)(const string&))(&DeviceClient::getActiveSchema), (bp::arg("instanceId")))
             .def("getClassSchema",(Schema (DeviceClient::*)(const string&, const string&))(&DeviceClient::getClassSchema), (bp::arg("serverId"), bp::arg("classId")))
+            .def("getProperties", &DeviceClientWrap::getPropertiesPy, (bp::arg("deviceId")))
+            .def("getClassProperties", &DeviceClientWrap::getClassPropertiesPy, (bp::arg("serverId"), bp::arg("classId")))
             .def("getCurrentlySettableProperties", &DeviceClientWrap::getCurrentlySettablePropertiesPy, (bp::arg("instanceId")))
             .def("getCurrentlyExecutableCommands", &DeviceClientWrap::getCurrentlyExecutableCommandsPy, (bp::arg("instanceId")))
             
@@ -47,7 +51,8 @@ void exportPyCoreDeviceClient() {
             .def("instantiateNoWait", (void (DeviceClient::*)(const string&, const Hash&))(&DeviceClient::instantiateNoWait), (bp::arg("serverInstanceId"), bp::arg("configuration")))
             //.def("instantiateWait", (std::pair<bool, std::string> (DeviceClient::*)(const string&, const string&, const Hash&, int))(&DeviceClient::instantiateWait), (bp::arg("serverInstanceId"), bp::arg("classId"), bp::arg("configuration") = karabo::util::Hash(), bp::arg("timeout") = -1))
             //.def("instantiateWait", (std::pair<bool, std::string> (DeviceClient::*)(const string&, const Hash&, int))(&DeviceClient::instantiateWait), (bp::arg("serverInstanceId"), bp::arg("configuration"), bp::arg("timeout") = -1))
-            .def("killDeviceNoWait", (void (DeviceClient::*)(const string&))(&DeviceClient::killDeviceNoWait), bp::arg("instanceId"))
+            .def("killDeviceNoWait", (void (DeviceClient::*)(const string&))(&DeviceClient::killDeviceNoWait), bp::arg("deviceId"))
+            .def("killServerNoWait", (void (DeviceClient::*)(const string&))(&DeviceClient::killServerNoWait), bp::arg("serverId"))
             
             .def("get", &DeviceClientWrap::getPy, (bp::arg("instanceId"), bp::arg("key"), bp::arg("keySep") = "."))
             .def("get", (Hash (DeviceClient::*)(const string&))(&DeviceClient::get), bp::arg("instanceId"))

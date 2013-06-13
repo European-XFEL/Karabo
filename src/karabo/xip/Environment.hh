@@ -25,22 +25,8 @@ namespace karabo {
         public:
 
             KARABO_CLASSINFO(Environment, "Environment", "1.0")
-            KARABO_FACTORY_BASE_CLASS
-
-            /**
-             * Necessary method as part of the factory/configuration system
-             * @param expected [out] Description of expected parameters for this object (Schema)
-             */
-            static void expectedParameters(karabo::util::Schema& expected) {
-            }
-
-            /**
-             * If this object is constructed using the factory/configuration system this method is called
-             * @param input Validated (@see expectedParameters) and default-filled configuration
-             */
-            void configure(const karabo::util::Hash& input) {
-            }
-
+            
+           
             virtual void printInfo() const = 0;
 
             /***************************************

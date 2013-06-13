@@ -34,6 +34,7 @@ namespace karabo {
 
 
         int getAndCropIndex(std::string& str) {
+            if (str.empty()) return -1;
             int len = str.length() - 1;
             if (str[len] == ']') {
                 str[len] = 0;
