@@ -19,6 +19,8 @@ from treewidgetitems.commandtreewidgetitem import *
 from treewidgetitems.imagetreewidgetitem import *
 from treewidgetitems.propertytreewidgetitem import *
 
+from schematest.sampleschema import SampleSchema 
+
 from libkarathon import *
 
 from PyQt4.QtCore import *
@@ -48,6 +50,10 @@ class SchemaReader(object):
             #print "No schema valid schema was provided!"
             return
         
+        # For testing (all elements)
+        #sampleSchemaClass = SampleSchema.create("SampleSchema", Hash())
+        #self.__schema = sampleSchemaClass.getSchema("SampleSchema")
+        
         print ""
         print "readSchema"
         print self.__schema
@@ -64,6 +70,8 @@ class SchemaReader(object):
 
     def r_readSchema(self, key, parentItem=None):
         
+        item = None
+        
         if self.__schema.isLeaf(key):
             #print "isLeaf", key
             item = self._createPropertyItem(key, parentItem)
@@ -77,13 +85,15 @@ class SchemaReader(object):
             item = self._createPropertyItem(key, parentItem)
             self._handleNode(key, item)
         elif self.__schema.isChoiceOfNodes(key):
-            print "isChoiceOfNodes", key
+            #print "isChoiceOfNodes", key
             item = self._createPropertyItem(key, parentItem)
             self._handleChoiceOfNodes(key, item)
         elif self.__schema.isListOfNodes(key):
             print "isListOfNodes", key
             item = self._createPropertyItem(key, parentItem)
             self._handleListOfNodes(key, item)
+        
+        return item
 
 
     def _createPropertyItem(self, key, parentItem):
@@ -96,7 +106,11 @@ class SchemaReader(object):
             if self.__schema.hasDisplayedName(key):
                 item.displayText = self.__schema.getDisplayedName(key)
             else:
-                item.displayText = key
+                displayName = key.split(".")
+                item.displayText = displayName[len(displayName)-1]
+            
+            if self.__schema.hasExpertLevel(key):
+                item.expertLevel = self.__schema.getExpertLevel(key)
             
             return item
 
@@ -114,9 +128,14 @@ class SchemaReader(object):
             if self.__schema.hasDisplayedName(key):
                 item.displayText = self.__schema.getDisplayedName(key)
             else:
-                item.displayText = key
+                displayName = key.split(".")
+                item.displayText = displayName[len(displayName)-1]
             
+            if self.__schema.hasExpertLevel(key):
+                item.expertLevel = self.__schema.getExpertLevel(key)
+                
             return item
+
 
     def _handleLeaf(self, key, item):
         self._getAssignment(key, item)
@@ -148,9 +167,30 @@ class SchemaReader(object):
 
 
     def _handleChoiceOfNodes(self, key, parentItem):
+        defaultValue = self._getDefaultValue(key, parentItem)
+        
+        parentItem.isChoiceElement = True
+        parentItem.classAlias = "Choice Element"
+        # Choiceelements can not have strings as arguments
+        #parentItem.defaultValue = Hash(str(parentItem.defaultValue))
+        
+        if self.__deviceType is NavigationItemTypes.CLASS:
+            choiceComponent = EditableNoApplyComponent(parentItem.classAlias, key=key, value=defaultValue)
+        #else:
+            #if parentItem.accessType == AccessTypes.READONLY or parentItem.accessType == AccessTypes.INIT:
+            #    choiceComponent = ChoiceComponent(parentItem.classAlias, key=parentItem.key, value=None)
+            #else:
+            #    choiceComponent = EditableApplyLaterComponent(parentItem.classAlias, key=key, value=None)
+            #    choiceComponent.signalApplyChanged.connect(twAttributeEditorPage.onApplyChanged)
+
+        parentItem.editableComponent = choiceComponent        
+
         choiceKeys = self.__schema.getKeys(key)
         for cKey in choiceKeys:
-            self.r_readSchema(key + "." + cKey, parentItem)
+            childItem = self.r_readSchema(key + "." + cKey, parentItem)
+            if cKey != defaultValue:
+                childItem.setHidden(True)
+            choiceComponent.addParameters(itemToBeAdded=childItem)
 
 
     def _handleListOfNodes(self, key, parentItem):
@@ -304,11 +344,6 @@ class SchemaReader(object):
             parentItem.setToolTip(0, text)
         else:
             parentItem.setToolTip(0, toolTip + "<br>" + text)
-        
-        #fullPath = self.__rootPath + "." + key
-        #cItem = AttributeTreeWidgetItem(fullPath, self.__treeWidget, parentItem)
-        #cItem.setText(0, "Default value")
-        #cItem.setText(2, str(defaultValue))
         
         return defaultValue
 
