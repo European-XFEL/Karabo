@@ -95,12 +95,29 @@ class BaseTreeWidgetItem(QTreeWidgetItem):
     updateNeeded = property(fget=_updateNeeded, fset=_setUpdateNeeded)
 
 
+    def _isChoiceElement(self):
+        return self.data(0, const.IS_CHOICE_ELEMENT).toPyObject()
+    def _setIsChoiceElement(self, isChoiceElemet):
+        self.setData(0, const.IS_CHOICE_ELEMENT, isChoiceElemet)
+    isChoiceElement = property(fget=_isChoiceElement, fset=_setIsChoiceElement)
+
+
     def _descriptionIndex(self):
         index = self.data(0, const.DESCRIPTION_INDEX).toPyObject()
         return index
     def _setDescriptionIndex(self, index):
         self.setData(0, const.DESCRIPTION_INDEX, index)
     descriptionIndex = property(fget=_descriptionIndex, fset=_setDescriptionIndex)
+
+
+    def _expertLevel(self):
+        level = self.data(0, const.EXPERT_LEVEL).toPyObject()
+        return level
+    def _setExpertLevel(self, expertLevel): # int value expected
+        self.setData(0, const.EXPERT_LEVEL, expertLevel)
+        if expertLevel > 0:
+            self.setHidden(True)
+    expertLevel = property(fget=_expertLevel, fset=_setExpertLevel)
 
 
 ### public functions ###

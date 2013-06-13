@@ -241,12 +241,12 @@ class ParameterTreeWidget(QTreeWidget):
 
 
     def _r_setItemVisibility(self, item, show):
-        if show == False :
+        if show == False:
             if item.expertLevel > 0 :
                 item.setHidden(True)
-            else :
+            else:
                 item.setHidden(False)
-        else :
+        else:
             item.setHidden(False)
 
         if (item.isChoiceElement == False) and (item.isListElement == False):

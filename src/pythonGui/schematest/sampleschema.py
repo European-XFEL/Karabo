@@ -21,14 +21,14 @@ class SampleSchema(object):
     @staticmethod
     def expectedParameters(expected):
         
-        e = DOUBLE_ELEMENT(expected)
-        e.key("targetSpeed").displayedName("Target Conveyor Speed").description("Configures the speed of the conveyor belt")
+        #e = DOUBLE_ELEMENT(expected)
+        #e.key("targetSpeed").displayedName("Target Conveyor Speed").description("Configures the speed of the conveyor belt")
         #e.unit(VELOCITY)
         #e.unitSymbol("")
         #e.assignmentOptional().defaultValue(0.8)
-        e.minInc(0.0).maxInc(10.0)
-        e.assignmentMandatory()
-        e.reconfigurable().commit()
+        #e.minInc(0.0).maxInc(10.0)
+        #e.assignmentMandatory()
+        #e.reconfigurable().commit()
 
         #e = DOUBLE_ELEMENT(expected)
         #e.key("currentSpeed").displayedName("Current Conveyor Speed").description("Shows the current speed of the conveyor")
@@ -44,7 +44,8 @@ class SampleSchema(object):
         e = PATH_ELEMENT(expected)
         e.key("filename").description("Name of the file to be read")
         e.displayedName("Filename")
-        e.assignmentMandatory()
+        #e.assignmentMandatory()
+        e.assignmentOptional()
         #e.isDirectory()
         e.isInputFile()
         #e.isOutputFile()
@@ -78,10 +79,10 @@ class SampleSchema(object):
         #e.reconfigurable()
         #e.commit()
         
-        #e = VECTOR_STRING_ELEMENT(expected).key("exampleKey14")
-        #e.assignmentOptional().defaultValue(["Hallo", "World", "Test"])
-        #e.reconfigurable()
-        #e.commit()
+        e = VECTOR_STRING_ELEMENT(expected).key("exampleKey14")
+        e.assignmentOptional().defaultValue(["Hallo", "World", "Test"])
+        e.reconfigurable()
+        e.commit()
 
         #e = VECTOR_INT32_ELEMENT(expected).key("vectorIntElement")
         #e.displayedName("V Element")

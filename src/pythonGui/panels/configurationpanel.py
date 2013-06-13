@@ -33,8 +33,7 @@ from enums import NavigationItemTypes
 from manager import Manager
 from navigationtreeview2 import NavigationTreeView
 
-from schemareader import SchemaReader
-from schematest.sampleschema import SampleSchema    
+from schemareader import SchemaReader 
 
 from libkarathon import *
 from PyQt4.QtCore import *
