@@ -285,7 +285,8 @@ class DeviceServer(object):
             schema = UserDevice.getSchema(classid)
             validator = Validator()
             validated = validator.validate(schema, configuration)
-            launcher = Launcher(pluginDir, modname, classid, modified).start()
+            launcher = Launcher(pluginDir, modname, classid, modified)
+            launcher.start()
             self.deviceInstanceMap[deviceid] = launcher
             del validated
         except Exception, e:
@@ -304,8 +305,8 @@ class DeviceServer(object):
         self.log.DEBUG("No transition")
    
     def slotKillServer(self):
-        print "Received kill signal"
         self.log.INFO("Received kill signal")
+        print "self.deviceInstanceMap.keys():", self.deviceInstanceMap.keys()
         for deviceid  in self.deviceInstanceMap.keys():
             print "slotKillServer:\tsend 'slotKillDevice' signal to '{}'".format(deviceid)
             self.ss.call(deviceid, "slotKillDevice")
