@@ -25,7 +25,9 @@ typedef karabo::util::Element<std::string, karabo::util::OrderedMap<std::string,
 
 void exportPyUtilHash() {
 
+    #ifdef WITH_BOOST_NUMPY
     bn::initialize();
+    #endif
 
     bp::docstring_options docs(true, true, false);
 
