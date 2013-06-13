@@ -160,8 +160,8 @@ void FileInputOutput_Test::writeBinaryFile() {
     out = Output<Hash>::create("BinaryFile", Hash("filename", resourcePath("file2.bin")));
     out->write(m_bigHash);
     p.stop("bigHash");
-//    double time = HighResolutionTimer::time2double(p.getTime("bigHash"));
-//    clog << "writing big Hash (binary) took " << time << " [s]" << endl;
+    double time = HighResolutionTimer::time2double(p.getTime("bigHash"));
+    clog << "writing big Hash (binary) took " << time << " [s]" << endl;
 
     out = Output<Hash>::create("BinaryFile", Hash("filename", resourcePath("file3.bin")));
     out->write(m_unrootedHash);
@@ -245,29 +245,22 @@ void FileInputOutput_Test::writeHdf5File() {
         out->write(m_rootedHash);
 
 
-        Hash big("a.b", std::vector<double>(1000, 1.0));
-        vector<Hash>& tmp = big.bindReference<vector<Hash> >("a.c");
-        tmp.resize(1000);
-        for (size_t i = 0; i < tmp.size(); ++i) {
-            tmp[i] = m_rootedHash;
-        }
-
         p.start("bigHash");
         out = Output<Hash>::create("Hdf5File", Hash("filename", resourcePath("fileS2.h5")));
         out->write(m_bigHash);
         p.stop("bigHash");
-//        double time = HighResolutionTimer::time2double(p.getTime("bigHash"));
-//        clog << "writing big Hash (Hdf5) took " << time << " [s]" << endl;
+        double time = HighResolutionTimer::time2double(p.getTime("bigHash"));
+        clog << "writing big Hash (Hdf5) took " << time << " [s]" << endl;
 
         out = Output<Hash>::create("Hdf5File", Hash("filename", resourcePath("fileS3.h5")));
         out->write(m_unrootedHash);
 
         // Using the FileTools interface
-        //        saveToFile(m_rootedHash, resourcePath("fileS1a.h5"));
-        //
-        //        saveToFile(m_bigHash, resourcePath("fileS2a.h5"));
-        //
-        //        saveToFile(m_unrootedHash, resourcePath("fileS3a.h5"));
+        saveToFile(m_rootedHash, resourcePath("fileS1a.h5"));
+//
+//        saveToFile(m_bigHash, resourcePath("fileS2a.h5"));
+//
+//        saveToFile(m_unrootedHash, resourcePath("fileS3a.h5"));
     } catch (Exception& ex) {
         clog << ex << endl;
         CPPUNIT_FAIL("Hdf5 test failed");
