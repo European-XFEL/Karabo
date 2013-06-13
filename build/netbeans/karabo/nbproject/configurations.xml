@@ -412,6 +412,7 @@
         <linkerTool>
           <output>${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/lib/libkarabo.${CND_DLIB_EXT}</output>
           <linkerAddLib>
+            <pElem>/usr/X11/lib</pElem>
             <pElem>/opt/local/lib/nss</pElem>
             <pElem>/opt/local/lib/nspr</pElem>
             <pElem>${KARABO}/extern/lib</pElem>
@@ -3246,6 +3247,1452 @@
         <ccTool>
           <preprocessorList>
             <Elem>LINUX</Elem>
+          </preprocessorList>
+        </ccTool>
+      </folder>
+    </conf>
+    <conf name="Debug-MacOSX" type="2">
+      <toolsSet>
+        <remote-sources-mode>LOCAL_SOURCES</remote-sources-mode>
+        <compilerSet>GNU|GNU</compilerSet>
+        <dependencyChecking>true</dependencyChecking>
+        <rebuildPropChanged>false</rebuildPropChanged>
+      </toolsSet>
+      <compileType>
+        <cTool>
+          <incDir>
+            <pElem>.</pElem>
+          </incDir>
+        </cTool>
+        <ccTool>
+          <commandlineTool>g++</commandlineTool>
+          <incDir>
+            <pElem>../../../src</pElem>
+            <pElem>${KARABO}/extern/include</pElem>
+            <pElem>${KARABO}/extern/include/hdf5</pElem>
+            <pElem>${KARABO}/extern/include/python2.7</pElem>
+          </incDir>
+        </ccTool>
+        <linkerTool>
+          <output>${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/lib/libkarabo.${CND_DLIB_EXT}</output>
+          <linkerAddLib>
+            <pElem>/usr/X11/lib</pElem>
+            <pElem>/opt/local/lib/nss</pElem>
+            <pElem>/opt/local/lib/nspr</pElem>
+            <pElem>${KARABO}/extern/lib</pElem>
+          </linkerAddLib>
+          <linkerDynSerch>
+            <pElem>\$$ORIGIN/../extern/lib</pElem>
+          </linkerDynSerch>
+          <linkerLibItems>
+            <linkerLibLibItem>boost_chrono</linkerLibLibItem>
+            <linkerLibLibItem>boost_date_time</linkerLibLibItem>
+            <linkerLibLibItem>boost_filesystem</linkerLibLibItem>
+            <linkerLibLibItem>boost_python</linkerLibLibItem>
+            <linkerLibLibItem>boost_regex</linkerLibLibItem>
+            <linkerLibLibItem>boost_signals</linkerLibLibItem>
+            <linkerLibLibItem>boost_system</linkerLibLibItem>
+            <linkerLibLibItem>boost_thread</linkerLibLibItem>
+            <linkerLibLibItem>hdf5</linkerLibLibItem>
+            <linkerLibLibItem>log4cpp</linkerLibLibItem>
+            <linkerLibLibItem>openmqc</linkerLibLibItem>
+            <linkerLibLibItem>python2.7</linkerLibLibItem>
+            <linkerLibLibItem>dl</linkerLibLibItem>
+            <linkerLibLibItem>pthread</linkerLibLibItem>
+            <linkerLibLibItem>ssl</linkerLibLibItem>
+            <linkerLibLibItem>crypto</linkerLibLibItem>
+            <linkerLibLibItem>X11</linkerLibLibItem>
+          </linkerLibItems>
+        </linkerTool>
+      </compileType>
+      <packaging>
+        <packType>Tar</packType>
+        <output>${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/package/karabo.tar.gz</output>
+        <additionalOptions>-zv</additionalOptions>
+        <packTopDir>karabo</packTopDir>
+        <packFileList>
+        </packFileList>
+      </packaging>
+      <item path="../../../src/karabo/core/Device.hh" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../../../src/karabo/core/DeviceClient.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/core/DeviceClient.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/core/DeviceServer.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/core/DeviceServer.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/core/FsmBase.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/core/FsmMacros.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/core/GuiServerDevice.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/core/GuiServerDevice.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/core/MasterDevice.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/core/MasterDevice.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/core/OkErrorFsm.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/core/Runner.hh" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../../../src/karabo/core/StartStopFsm.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/AbstractInput.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/AbstractOutput.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/BinaryFileInput.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/BinaryFileInput.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/BinaryFileOutput.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/BinaryFileOutput.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/BinarySerializer.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/FileTools.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/HashBinarySerializer.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/HashBinarySerializer.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/HashHdf5Serializer.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/HashHdf5Serializer.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/HashXmlSerializer.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/HashXmlSerializer.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/Hdf5FileInput.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/Hdf5FileInput.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/Hdf5FileOutput.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/Hdf5FileOutput.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/Hdf5Serializer.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/Input.hh" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/Output.hh" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/SchemaXmlSerializer.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/SchemaXmlSerializer.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/SchemaXsdSerializer.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/SchemaXsdSerializer.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/TextFileInput.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/TextFileInput.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/TextFileOutput.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/TextFileOutput.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/TextSerializer.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/h5/Attribute.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/h5/Attribute.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/h5/Complex.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/h5/Complex.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/h5/Dataset.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/h5/Dataset.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/h5/DatasetAttribute.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/h5/DatasetAttribute.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/h5/DatasetReader.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/h5/DatasetReader.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/h5/DatasetWriter.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/h5/DatasetWriter.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/h5/Element.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/h5/Element.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/h5/ErrorHandler.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/h5/ErrorHandler.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/h5/File.cc" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/h5/File.hh" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/h5/FixedLengthArray.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/h5/FixedLengthArray.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/h5/FixedLengthArrayAttribute.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/h5/FixedLengthArrayAttribute.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/h5/FixedLengthArrayComplex.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/h5/FixedLengthArrayComplex.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/h5/Format.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/h5/Format.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/h5/FormatDiscoveryPolicy.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/h5/FormatDiscoveryPolicy.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/h5/Group.cc" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/h5/Group.hh" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/h5/Scalar.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/h5/Scalar.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/h5/ScalarAttribute.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/h5/ScalarAttribute.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/h5/Table.cc" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/h5/Table.hh" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/h5/TypeTraits.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/h5/TypeTraits.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/h5/VLArray.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/h5/VLArray.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/h5/ioProfiler.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/log/AppenderConfigurator.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/log/AppenderConfigurator.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/log/CategoryConfigurator.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/log/CategoryConfigurator.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/log/FileAppenderConfigurator.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/log/FileAppenderConfigurator.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/log/Logger.cc" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="../../../src/karabo/log/Logger.hh" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../../../src/karabo/log/OstreamAppenderConfigurator.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/log/OstreamAppenderConfigurator.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/log/RollingFileAppenderConfigurator.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/log/RollingFileAppenderConfigurator.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/log/Tracer.hh" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../../../src/karabo/net/AbstractIOService.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/net/AsioIOService.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/net/AsioIOService.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/net/BrokerChannel.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/net/BrokerConnection.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/net/BrokerConnection.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/net/BrokerIOService.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/net/Channel.hh" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../../../src/karabo/net/Connection.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/net/Connection.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/net/IOService.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/net/JmsBrokerChannel.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/net/JmsBrokerChannel.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/net/JmsBrokerConnection.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/net/JmsBrokerConnection.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/net/JmsBrokerIOService.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/net/JmsBrokerIOService.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/net/NetworkAppender.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/net/NetworkAppender.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/net/NetworkAppenderConfigurator.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/net/NetworkAppenderConfigurator.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/net/TcpChannel.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/net/TcpChannel.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/net/TcpConnection.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/net/TcpConnection.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/pugiXml/pugiconfig.hpp"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/pugiXml/pugixml.cpp"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/pugiXml/pugixml.hpp"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/io/FileInputOutput_Test.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/io/FileInputOutput_Test.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/io/H5File_Test.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/io/H5File_Test.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/io/H5Format_Test.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/io/H5Format_Test.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/io/HashBinarySerializer_Test.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/io/HashBinarySerializer_Test.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/io/HashXmlSerializer_Test.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/io/HashXmlSerializer_Test.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/io/Hdf5_Test.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/io/Hdf5_Test.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/io/SchemaXsdSerializer_Test.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/io/SchemaXsdSerializer_Test.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/io/TestPathSetup.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/io/ioTestRunner.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/log/Logger_Test.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/log/Logger_Test.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/log/logTestRunner.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/net/JmsBroker_Test.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/net/JmsBroker_Test.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/net/netTestRunner.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/util/ConfigurationTestClasses.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/util/ConfigurationTestClasses.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/util/Dims_Test.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/util/Dims_Test.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/util/Factory_Test.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/util/Factory_Test.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/util/HashFilter_Test.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/util/HashFilter_Test.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/util/Hash_Test.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/util/Hash_Test.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/util/Schema_Test.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/util/Schema_Test.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/util/Timestamp_Test.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/util/Timestamp_Test.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/util/Types_Test.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/util/Types_Test.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/util/resources/utiltestdll.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/util/utilTestRunner.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/webAuth/Authenticate_Test.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+        <ccTool>
+          <additionalDep></additionalDep>
+        </ccTool>
+      </item>
+      <item path="../../../src/karabo/tests/webAuth/Authenticate_Test.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/webAuth/webAuthTestRunner.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/xip/Image_Test.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/xip/Image_Test.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/xip/TestPathSetup.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/xip/xipTestRunner.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/xms/SignalSlotable_Test.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/xms/SignalSlotable_Test.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/xms/xmsTestRunner.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/ArrayTools.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/Base64.cc" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/Base64.hh" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/ChoiceElement.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/ClassInfo.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/ClassInfo.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/Configurator.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/Dims.hh" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/Element.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/Exception.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/Exception.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/Factory.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/FromInt.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/FromInt.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/FromLiteral.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/FromLiteral.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/FromType.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/FromTypeInfo.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/FromTypeInfo.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/GenericElement.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/Hash.cc" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/Hash.hh" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/HashFilter.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/HashFilter.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/LeafElement.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/ListElement.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/NodeElement.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/OrderedMap.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/OverwriteElement.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/PathElement.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/PluginLoader.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/PluginLoader.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/Profiler.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/Profiler.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/Schema.cc" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/Schema.hh" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/SimpleElement.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/StringTools.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/StringTools.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/Time.cc" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/Time.hh" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/Timer.cc" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/Timer.hh" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/Timestamp.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/Timestamp.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/ToCppString.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/ToLiteral.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/ToType.hh" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/ToXsd.hh" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/Types.hh" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/Units.cc" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/Units.hh" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/Validator.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/Validator.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/VectorElement.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/karaboDll.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/webAuth/Authenticator.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/webAuth/Authenticator.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/webAuth/ClientAuthentication.h"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/webAuth/soapAuthenticationPortBindingProxy.cpp"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/webAuth/soapAuthenticationPortBindingProxy.h"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/webAuth/soapC.cpp"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/webAuth/soapH.h"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/webAuth/soapStub.h"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/webAuth/stdsoap2.cpp"
+            ex="false"
+            tool="1"
+            flavor2="0">
+        <ccTool>
+          <preprocessorList>
+            <Elem>WITH_NONAMESPACES</Elem>
+          </preprocessorList>
+        </ccTool>
+      </item>
+      <item path="../../../src/karabo/webAuth/stdsoap2.h"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/xip/AbstractImage.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/xip/CImg.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../../../src/karabo/xip/CpuEnvironment.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/xip/CpuEnvironment.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/xip/CpuImage.cpp"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/xip/CpuImage.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/xip/Environment.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/xip/Image.cc" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="../../../src/karabo/xip/Image.hh" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../../../src/karabo/xip/ImageFileReader.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/xip/ImageFileReader.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/xip/ImageFileWriter.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/xip/ImageFileWriter.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/xip/SingleProcessor.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/xip/Statistics.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/xms/Memory.cc" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="../../../src/karabo/xms/Memory.hh" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../../../src/karabo/xms/NetworkInput.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/xms/NetworkInput.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/xms/NetworkOutput.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/xms/NetworkOutput.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/xms/Output.hh" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../../../src/karabo/xms/Requestor.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/xms/Requestor.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/xms/Signal.cc" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="../../../src/karabo/xms/Signal.hh" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../../../src/karabo/xms/SignalSlotable.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/xms/SignalSlotable.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/xms/Slot.cc" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="../../../src/karabo/xms/Slot.hh" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../../../src/karabo/xms/SlotElement.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/xms/Statics.cc" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="../../../src/karabo/xms/Statics.hh" ex="false" tool="3" flavor2="0">
+      </item>
+      <folder path="TestFiles">
+        <ccTool>
+          <incDir>
+            <pElem>${KARABO}/extern/include/hdf5</pElem>
+          </incDir>
+          <preprocessorList>
+            <Elem>KARABO_TESTPATH="${CND_BASEDIR}/../../../src/karabo/tests/"</Elem>
+          </preprocessorList>
+        </ccTool>
+        <linkerTool>
+          <linkerAddLib>
+            <pElem>${KARABO}/extern/lib</pElem>
+          </linkerAddLib>
+          <linkerDynSerch>
+            <pElem>${KARABO}/lib</pElem>
+            <pElem>${KARABO}/extern/lib</pElem>
+          </linkerDynSerch>
+          <linkerLibItems>
+            <linkerLibLibItem>cppunit</linkerLibLibItem>
+          </linkerLibItems>
+        </linkerTool>
+      </folder>
+      <folder path="TestFiles/f1">
+        <linkerTool>
+          <output>${TESTDIR}/TestFiles/f1</output>
+        </linkerTool>
+      </folder>
+      <folder path="TestFiles/f2">
+        <cTool>
+          <incDir>
+            <pElem>.</pElem>
+          </incDir>
+        </cTool>
+        <ccTool>
+          <commandLine>-O2</commandLine>
+          <preprocessorList>
+            <Elem>KARABO_NO_ENABLE_TRACE_LOG</Elem>
+          </preprocessorList>
+        </ccTool>
+        <linkerTool>
+          <output>${TESTDIR}/TestFiles/f2</output>
+        </linkerTool>
+      </folder>
+      <folder path="TestFiles/f3">
+        <linkerTool>
+          <output>${TESTDIR}/TestFiles/f3</output>
+        </linkerTool>
+      </folder>
+      <folder path="TestFiles/f4">
+        <cTool>
+          <commandLine>`cppunit-config --cflags`</commandLine>
+        </cTool>
+        <ccTool>
+          <commandLine>`cppunit-config --cflags`</commandLine>
+        </ccTool>
+        <linkerTool>
+          <output>${TESTDIR}/TestFiles/f4</output>
+          <linkerLibItems>
+            <linkerOptionItem>`cppunit-config --libs`</linkerOptionItem>
+          </linkerLibItems>
+        </linkerTool>
+      </folder>
+      <folder path="TestFiles/f5">
+        <cTool>
+          <commandLine>`cppunit-config --cflags`</commandLine>
+        </cTool>
+        <ccTool>
+          <commandLine>`cppunit-config --cflags`</commandLine>
+        </ccTool>
+        <linkerTool>
+          <output>${TESTDIR}/TestFiles/f5</output>
+          <linkerLibItems>
+            <linkerOptionItem>`cppunit-config --libs`</linkerOptionItem>
+          </linkerLibItems>
+        </linkerTool>
+      </folder>
+      <folder path="TestFiles/f6">
+        <cTool>
+          <commandLine>`cppunit-config --cflags`</commandLine>
+        </cTool>
+        <ccTool>
+          <preprocessorList>
+            <Elem>WITH_NONAMESPACES</Elem>
+            <Elem>WITH_OPENSSL</Elem>
+          </preprocessorList>
+        </ccTool>
+        <linkerTool>
+          <output>${TESTDIR}/TestFiles/f6</output>
+        </linkerTool>
+      </folder>
+      <folder path="TestFiles/f7">
+        <cTool>
+          <incDir>
+            <pElem>.</pElem>
+          </incDir>
+        </cTool>
+        <ccTool>
+          <incDir>
+            <pElem>.</pElem>
+          </incDir>
+        </ccTool>
+        <linkerTool>
+          <output>${TESTDIR}/TestFiles/f7</output>
+        </linkerTool>
+      </folder>
+      <folder path="f2/f1">
+        <ccTool>
+          <preprocessorList>
+            <Elem>KARABO_NO_ENABLE_TRACE_LOG</Elem>
+          </preprocessorList>
+        </ccTool>
+      </folder>
+      <folder path="f5">
+        <ccTool>
+          <preprocessorList>
+            <Elem>LINUX</Elem>
+          </preprocessorList>
+        </ccTool>
+      </folder>
+      <folder path="f8">
+        <ccTool>
+          <preprocessorList>
+            <Elem>WITH_OPENSSL</Elem>
           </preprocessorList>
         </ccTool>
       </folder>
