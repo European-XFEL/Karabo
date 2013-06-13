@@ -6,23 +6,21 @@
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
 
-
-
 #ifndef KARABO_XIP_SINGLEPROCESSOR_HH
 #define	KARABO_XIP_SINGLEPROCESSOR_HH
 
-#include <karabo/util/Factory.hh>
+#include <karabo/util/Configurator.hh>
 
 namespace karabo {
     namespace xip {
 
-        template <class TImage>
+        template <class T>
         class SingleProcessor {
 
         public:
 
             KARABO_CLASSINFO(SingleProcessor, "SingleProcessor", "1.0")
-            KARABO_FACTORY_BASE_CLASS
+            KARABO_CONFIGURATION_BASE_CLASS
 
             /**
              * Necessary method as part of the factory/configuration system
@@ -31,21 +29,14 @@ namespace karabo {
             static void expectedParameters(karabo::util::Schema& expected) {
             }
 
-            /**
-             * If this object is constructed using the factory/configuration system this method is called
-             * @param input Validated (@see expectedParameters) and default-filled configuration
-             */
-            void configure(const karabo::util::Hash& input) {
+            SingleProcessor(const karabo::util::Hash& input) {
             }
 
-            virtual void processInPlace(TImage& image) = 0;
+            virtual void processInPlace(T& object) = 0;
 
-            virtual TImage process(const TImage& image) = 0;
+            virtual T process(const T& object) = 0;
 
         };
-
-
-
     }
 }
 

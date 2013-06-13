@@ -10,8 +10,11 @@
 #ifndef KARABO_XIP_IMAGEFILEREADER_HH
 #define	KARABO_XIP_IMAGEFILEREADER_HH
 
-#include <karabo/util/Factory.hh>
-#include <karabo/xms/Input.hh>
+#include <boost/filesystem.hpp>
+
+#include <karabo/util/Configurator.hh>
+#include <karabo/io/Input.hh>
+#include <karabo/util/PathElement.hh>
 
 #include "CpuImage.hh"
 
@@ -26,17 +29,14 @@ namespace karabo {
     namespace xip {
 
         template <class TPix>
-        class ImageFileReader : public karabo::xms::Input< CpuImage<TPix> > {
+        class ImageFileReader : public karabo::io::Input< CpuImage<TPix> > {
 
         public:
 
             KARABO_CLASSINFO(ImageFileReader, "File", "1.0")
 
-            ImageFileReader() {
-            };
-
-            virtual ~ImageFileReader() {
-            };
+          
+           
 
             /**
              * Necessary method as part of the factory/configuration system
@@ -45,41 +45,40 @@ namespace karabo {
             static void expectedParameters(karabo::util::Schema& expected) {
                 using namespace karabo::util;
 
-                STRING_ELEMENT(expected)
+                PATH_ELEMENT(expected)
                         .key("filename")
                         .description("Name of the file to be read")
                         .displayedName("Filename")
-                        .displayType("Path")
+                        .isInputFile()
                         .assignmentMandatory()
                         .commit();
             }
 
-            /**
-             * If this object is constructed using the factory/configuration system this method is called
-             * @param input Validated (@see expectedParameters) and default-filled configuration
-             *              */
-            void configure(const karabo::util::Hash& input) {
-                m_filename = input.get<std::string>("filename");
-                m_input = input;
+            ImageFileReader(const karabo::util::Hash& config) : karabo::io::Input< CpuImage<TPix> >(config) {
+                m_filename = config.get<std::string>("filename");
+                m_input = config;
             }
+            
+            virtual ~ImageFileReader() {
+            };
 
             void read(CpuImage<TPix>& image, size_t idx = 0) {
                 try {
                     CpuImage<TPix> tmp;
                     try {
-                        tmp.getCImg().load(m_filename.string().c_str());
+                        tmp.getCImg().load(m_filename.c_str());
                         image.swap(tmp);
                         return;
                     } catch (...) {
-                        std::string extension = m_filename.extension().string().substr(1);
+                        std::string extension = boost::filesystem::path(m_filename).extension().string().substr(1);
                         boost::to_lower(extension);
-                        std::vector<std::string> keys = karabo::util::Factory<karabo::xms::Input<CpuImage<TPix> > >::getRegisteredKeys();
+                        std::vector<std::string> keys = karabo::util::Configurator<karabo::io::Input<CpuImage<TPix> > >::getRegisteredClasses();
 
                         BOOST_FOREACH(std::string key, keys) {
                             std::string lKey(key);
                             boost::to_lower(lKey);
                             if (lKey == extension) {
-                                boost::shared_ptr<karabo::xms::Input<CpuImage<TPix> > > in = karabo::xms::Input<CpuImage<TPix> >::create(m_input);
+                                typename karabo::io::Input<CpuImage<TPix> >::Pointer in = karabo::io::Input<CpuImage<TPix> >::create(m_input);
                                 in->read(tmp);
                                 image.swap(tmp);
                                 return;
@@ -88,12 +87,12 @@ namespace karabo {
                         throw KARABO_IMAGE_TYPE_EXCEPTION("Can not read image of type \"" + extension + "\"");
                     }
                 } catch (...) {
-                    KARABO_RETHROW_AS(KARABO_IO_EXCEPTION("Problems reading image " + m_filename.string()));
+                    KARABO_RETHROW_AS(KARABO_IO_EXCEPTION("Problems reading image " + m_filename));
                 }
             }
 
             bool canCompute() const {
-                return boost::filesystem::exists(m_filename);
+                return boost::filesystem::exists(boost::filesystem::path(m_filename));
             }
 
             size_t size() const {
@@ -103,7 +102,7 @@ namespace karabo {
 
         private:
 
-            boost::filesystem::path m_filename;
+            std::string m_filename;
             karabo::util::Hash m_input;
         };
 

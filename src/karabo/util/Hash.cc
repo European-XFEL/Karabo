@@ -143,6 +143,7 @@ namespace karabo {
 
 
         const Hash& Hash::getLastHash(const std::string& path, std::string& lastKey, const char separator) const {
+            if (path.empty()) throw KARABO_PARAMETER_EXCEPTION("Illegal call to get with empty path");
             std::vector<std::string> tokens;
             karabo::util::tokenize(path, tokens, separator);
 
@@ -228,6 +229,7 @@ namespace karabo {
 
 
         void Hash::getPaths(std::set<std::string>& result, const char separator) const {
+            if (this->empty()) return;
             vector<std::string> vect;
             Hash::getPaths(*this, vect, "", separator);
 

@@ -378,8 +378,6 @@ namespace karabo {
 
             bool isExpertLevelAdvanced(const std::string& path) const;
 
-            bool isExpertLevelMedium(const std::string& path) const;
-
             bool isExpertLevelSimple(const std::string& path) const;
 
             const int getExpertLevel(const std::string& path) const;

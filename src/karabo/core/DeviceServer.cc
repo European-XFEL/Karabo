@@ -101,7 +101,7 @@ namespace karabo {
                 input.get("serverId", m_serverId);
             } else {
                 if (m_isMaster) {
-                    m_serverId = "MasterServer1";
+                    m_serverId = "Karabo_DeviceServer_0";
                 } else {
                     m_serverId = "";
                 }
@@ -206,8 +206,8 @@ namespace karabo {
             KARABO_LOG_INFO << "DeviceServer starts up with id: " << m_serverId;
 
             if (m_isMaster) {
-                slotStartDevice(Hash("MasterDevice.deviceId", "MasterDevice", "MasterDevice.connection", m_connectionConfig));
-                slotStartDevice(Hash("GuiServerDevice.deviceId", "GuiServerDevice", "GuiServerDevice.connection", m_connectionConfig, "GuiServerDevice.loggerConnection", m_connectionConfig));
+                slotStartDevice(Hash("MasterDevice.deviceId", "Karabo_Master_0", "MasterDevice.connection", m_connectionConfig));
+                slotStartDevice(Hash("GuiServerDevice.deviceId", "Karabo_GuiServer_0", "GuiServerDevice.connection", m_connectionConfig, "GuiServerDevice.loggerConnection", m_connectionConfig));
             } else {
                 // Check whether we have installed devices available
                 updateAvailableDevices();
@@ -293,7 +293,7 @@ namespace karabo {
                     std::string deviceId = this->generateDefaultDeviceInstanceId(classId);
                     tmp.set("deviceId", deviceId);
                 }
-                BaseDevice::Pointer device = BaseDevice::create(modifiedConfig);
+                BaseDevice::Pointer device = BaseDevice::create(modifiedConfig); // TODO If constructor blocks, we are lost here!!
                 boost::thread* t = m_deviceThreads.create_thread(boost::bind(&karabo::core::BaseDevice::run, device));
 
                 // Associate deviceInstance with its thread

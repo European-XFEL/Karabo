@@ -11,7 +11,10 @@
 #ifndef KARABO_XIP_ABSTRACTIMAGE_HH
 #define KARABO_XIP_ABSTRACTIMAGE_HH
 
-#include <karabo/util/Factory.hh>
+#include <karabo/util/Configurator.hh>
+#include <karabo/util/Types.hh>
+#include <karabo/util/FromTypeInfo.hh>
+#include <karabo/util/ToLiteral.hh>
 
 #include "Statistics.hh"
 
@@ -20,10 +23,11 @@ namespace karabo {
     namespace xip {
 
         struct AbstractImageType {
-
+            
             template <class T>
             static std::string classId() {
-                return "AbstractImage" + karabo::util::Types::getTypeAsString<T, karabo::util::Types::FORMAT_INTERN > ();
+                using namespace karabo::util;
+                return "AbstractImage" + Types::convert<FromTypeInfo, ToLiteral > (typeid (T));
             }
         };
 

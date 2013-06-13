@@ -60,8 +60,9 @@ namespace karabo {
 
             string foreignHost;
             string welcomeMessage;
+            Hash instanceInfo;
             try {
-                request("*", "slotPing", id, true).timeout(100).receive(foreignHost);
+                request("*", "slotPing", id, true).timeout(100).receive(instanceInfo);
             } catch (const karabo::util::TimeoutException&) {
                 Exception::clearTrace();
                 if (m_systemNow.has("server." + id)) welcomeMessage = "Welcome back!";
@@ -70,6 +71,7 @@ namespace karabo {
                 reply(true, id, welcomeMessage); // Ok, instance does not exist
                 return;
             }
+            if (instanceInfo.has("host")) instanceInfo.get("host", foreignHost);
             welcomeMessage = "Another device-server with the same instance is already online (on host: " + foreignHost + ")";
             KARABO_LOG_DEBUG << "Shipping welcome message: " << welcomeMessage;
             reply(false, id, welcomeMessage); // Shit, instance exists already
@@ -101,7 +103,8 @@ namespace karabo {
             
             KARABO_LOG_DEBUG << "New instance \"" << instanceId << "\" got registered";
             
-            if (instanceId == "MasterDevice1" || instanceId == "MasterDevice2" || instanceId == "GuiServerDevice1") return; // TODO Check names
+            // Skip all Karabo-intern instances
+            if (instanceId.substr(0,6) == "Karabo") return;
 
             onInstanceNewForSystemNow(instanceId, instanceInfo);
             onInstanceNewForSystemHistory(instanceId, instanceInfo);

@@ -106,6 +106,11 @@ OBJECTFILES= \
 	${OBJECTDIR}/_ext/1760428615/soapAuthenticationPortBindingProxy.o \
 	${OBJECTDIR}/_ext/1760428615/soapC.o \
 	${OBJECTDIR}/_ext/1760428615/stdsoap2.o \
+	${OBJECTDIR}/_ext/1103122620/CpuEnvironment.o \
+	${OBJECTDIR}/_ext/1103122620/CpuImage.o \
+	${OBJECTDIR}/_ext/1103122620/Image.o \
+	${OBJECTDIR}/_ext/1103122620/ImageFileReader.o \
+	${OBJECTDIR}/_ext/1103122620/ImageFileWriter.o \
 	${OBJECTDIR}/_ext/1103122747/Memory.o \
 	${OBJECTDIR}/_ext/1103122747/NetworkInput.o \
 	${OBJECTDIR}/_ext/1103122747/NetworkOutput.o \
@@ -125,6 +130,7 @@ TESTFILES= \
 	${TESTDIR}/TestFiles/f4 \
 	${TESTDIR}/TestFiles/f1 \
 	${TESTDIR}/TestFiles/f6 \
+	${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libkarabo.${CND_DLIB_EXT} \
 	${TESTDIR}/TestFiles/f5
 
 # C Compiler Flags
@@ -141,7 +147,7 @@ FFLAGS=
 ASFLAGS=
 
 # Link Libraries and Options
-LDLIBSOPTIONS=-L/opt/local/lib/nss -L/opt/local/lib/nspr -L${KARABO}/extern/lib -Wl,-rpath,\$$ORIGIN/../extern/lib -lboost_chrono -lboost_date_time -lboost_filesystem -lboost_python -lboost_regex -lboost_signals -lboost_system -lboost_thread -lhdf5 -llog4cpp -lopenmqc -lpython2.7 -ldl -lpthread -lrt -lssl -lcrypto
+LDLIBSOPTIONS=-L/opt/local/lib/nss -L/opt/local/lib/nspr -L${KARABO}/extern/lib -Wl,-rpath,\$$ORIGIN/../extern/lib -lboost_chrono -lboost_date_time -lboost_filesystem -lboost_python -lboost_regex -lboost_signals -lboost_system -lboost_thread -lhdf5 -llog4cpp -lopenmqc -lpython2.7 -ldl -lpthread -lrt -lssl -lcrypto -lX11
 
 # Build Targets
 .build-conf: ${BUILD_SUBPROJECTS}
@@ -506,6 +512,31 @@ ${OBJECTDIR}/_ext/1760428615/stdsoap2.o: ../../../src/karabo/webAuth/stdsoap2.cp
 	${RM} $@.d
 	$(COMPILE.cc) -O2 -Wall -DWITH_NONAMESPACES -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -DWITH_OPENSSL -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1760428615/stdsoap2.o ../../../src/karabo/webAuth/stdsoap2.cpp
 
+${OBJECTDIR}/_ext/1103122620/CpuEnvironment.o: ../../../src/karabo/xip/CpuEnvironment.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1103122620
+	${RM} $@.d
+	$(COMPILE.cc) -O2 -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1103122620/CpuEnvironment.o ../../../src/karabo/xip/CpuEnvironment.cc
+
+${OBJECTDIR}/_ext/1103122620/CpuImage.o: ../../../src/karabo/xip/CpuImage.cpp 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1103122620
+	${RM} $@.d
+	$(COMPILE.cc) -O2 -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1103122620/CpuImage.o ../../../src/karabo/xip/CpuImage.cpp
+
+${OBJECTDIR}/_ext/1103122620/Image.o: ../../../src/karabo/xip/Image.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1103122620
+	${RM} $@.d
+	$(COMPILE.cc) -O2 -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1103122620/Image.o ../../../src/karabo/xip/Image.cc
+
+${OBJECTDIR}/_ext/1103122620/ImageFileReader.o: ../../../src/karabo/xip/ImageFileReader.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1103122620
+	${RM} $@.d
+	$(COMPILE.cc) -O2 -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1103122620/ImageFileReader.o ../../../src/karabo/xip/ImageFileReader.cc
+
+${OBJECTDIR}/_ext/1103122620/ImageFileWriter.o: ../../../src/karabo/xip/ImageFileWriter.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1103122620
+	${RM} $@.d
+	$(COMPILE.cc) -O2 -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1103122620/ImageFileWriter.o ../../../src/karabo/xip/ImageFileWriter.cc
+
 ${OBJECTDIR}/_ext/1103122747/Memory.o: ../../../src/karabo/xms/Memory.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1103122747
 	${RM} $@.d
@@ -570,6 +601,10 @@ ${TESTDIR}/TestFiles/f1: ${TESTDIR}/_ext/1033104525/ConfigurationTestClasses.o $
 ${TESTDIR}/TestFiles/f6: ${TESTDIR}/_ext/1856679435/Authenticate_Test.o ${TESTDIR}/_ext/1856679435/webAuthTestRunner.o ${OBJECTFILES:%.o=%_nomain.o}
 	${MKDIR} -p ${TESTDIR}/TestFiles
 	${LINK.cc}   -o ${TESTDIR}/TestFiles/f6 $^ ${LDLIBSOPTIONS} -Wl,-rpath,${KARABO}/lib -Wl,-rpath,${KARABO}/extern/lib -lcppunit `cppunit-config --libs`   
+
+${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libkarabo.${CND_DLIB_EXT}: ${TESTDIR}/_ext/936507918/Image_Test.o ${TESTDIR}/_ext/936507918/xipTestRunner.o ${OBJECTFILES:%.o=%_nomain.o}
+	${MKDIR} -p ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}
+	${LINK.cc}   -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libkarabo.${CND_DLIB_EXT} $^ ${LDLIBSOPTIONS} -Wl,-rpath,${KARABO}/lib -Wl,-rpath,${KARABO}/extern/lib -lcppunit 
 
 ${TESTDIR}/TestFiles/f5: ${TESTDIR}/_ext/936508045/SignalSlotable_Test.o ${TESTDIR}/_ext/936508045/xmsTestRunner.o ${OBJECTFILES:%.o=%_nomain.o}
 	${MKDIR} -p ${TESTDIR}/TestFiles
@@ -712,6 +747,18 @@ ${TESTDIR}/_ext/1856679435/webAuthTestRunner.o: ../../../src/karabo/tests/webAut
 	${MKDIR} -p ${TESTDIR}/_ext/1856679435
 	${RM} $@.d
 	$(COMPILE.cc) -O2 -Wall -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/include/hdf5 `cppunit-config --cflags` -MMD -MP -MF $@.d -o ${TESTDIR}/_ext/1856679435/webAuthTestRunner.o ../../../src/karabo/tests/webAuth/webAuthTestRunner.cc
+
+
+${TESTDIR}/_ext/936507918/Image_Test.o: ../../../src/karabo/tests/xip/Image_Test.cc 
+	${MKDIR} -p ${TESTDIR}/_ext/936507918
+	${RM} $@.d
+	$(COMPILE.cc) -O2 -Wall -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/include/hdf5 -MMD -MP -MF $@.d -o ${TESTDIR}/_ext/936507918/Image_Test.o ../../../src/karabo/tests/xip/Image_Test.cc
+
+
+${TESTDIR}/_ext/936507918/xipTestRunner.o: ../../../src/karabo/tests/xip/xipTestRunner.cc 
+	${MKDIR} -p ${TESTDIR}/_ext/936507918
+	${RM} $@.d
+	$(COMPILE.cc) -O2 -Wall -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/include/hdf5 -MMD -MP -MF $@.d -o ${TESTDIR}/_ext/936507918/xipTestRunner.o ../../../src/karabo/tests/xip/xipTestRunner.cc
 
 
 ${TESTDIR}/_ext/936508045/SignalSlotable_Test.o: ../../../src/karabo/tests/xms/SignalSlotable_Test.cc 
@@ -1649,6 +1696,71 @@ ${OBJECTDIR}/_ext/1760428615/stdsoap2_nomain.o: ${OBJECTDIR}/_ext/1760428615/std
 	    ${CP} ${OBJECTDIR}/_ext/1760428615/stdsoap2.o ${OBJECTDIR}/_ext/1760428615/stdsoap2_nomain.o;\
 	fi
 
+${OBJECTDIR}/_ext/1103122620/CpuEnvironment_nomain.o: ${OBJECTDIR}/_ext/1103122620/CpuEnvironment.o ../../../src/karabo/xip/CpuEnvironment.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1103122620
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/1103122620/CpuEnvironment.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} $@.d;\
+	    $(COMPILE.cc) -O2 -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1103122620/CpuEnvironment_nomain.o ../../../src/karabo/xip/CpuEnvironment.cc;\
+	else  \
+	    ${CP} ${OBJECTDIR}/_ext/1103122620/CpuEnvironment.o ${OBJECTDIR}/_ext/1103122620/CpuEnvironment_nomain.o;\
+	fi
+
+${OBJECTDIR}/_ext/1103122620/CpuImage_nomain.o: ${OBJECTDIR}/_ext/1103122620/CpuImage.o ../../../src/karabo/xip/CpuImage.cpp 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1103122620
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/1103122620/CpuImage.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} $@.d;\
+	    $(COMPILE.cc) -O2 -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1103122620/CpuImage_nomain.o ../../../src/karabo/xip/CpuImage.cpp;\
+	else  \
+	    ${CP} ${OBJECTDIR}/_ext/1103122620/CpuImage.o ${OBJECTDIR}/_ext/1103122620/CpuImage_nomain.o;\
+	fi
+
+${OBJECTDIR}/_ext/1103122620/Image_nomain.o: ${OBJECTDIR}/_ext/1103122620/Image.o ../../../src/karabo/xip/Image.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1103122620
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/1103122620/Image.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} $@.d;\
+	    $(COMPILE.cc) -O2 -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1103122620/Image_nomain.o ../../../src/karabo/xip/Image.cc;\
+	else  \
+	    ${CP} ${OBJECTDIR}/_ext/1103122620/Image.o ${OBJECTDIR}/_ext/1103122620/Image_nomain.o;\
+	fi
+
+${OBJECTDIR}/_ext/1103122620/ImageFileReader_nomain.o: ${OBJECTDIR}/_ext/1103122620/ImageFileReader.o ../../../src/karabo/xip/ImageFileReader.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1103122620
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/1103122620/ImageFileReader.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} $@.d;\
+	    $(COMPILE.cc) -O2 -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1103122620/ImageFileReader_nomain.o ../../../src/karabo/xip/ImageFileReader.cc;\
+	else  \
+	    ${CP} ${OBJECTDIR}/_ext/1103122620/ImageFileReader.o ${OBJECTDIR}/_ext/1103122620/ImageFileReader_nomain.o;\
+	fi
+
+${OBJECTDIR}/_ext/1103122620/ImageFileWriter_nomain.o: ${OBJECTDIR}/_ext/1103122620/ImageFileWriter.o ../../../src/karabo/xip/ImageFileWriter.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1103122620
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/1103122620/ImageFileWriter.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} $@.d;\
+	    $(COMPILE.cc) -O2 -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1103122620/ImageFileWriter_nomain.o ../../../src/karabo/xip/ImageFileWriter.cc;\
+	else  \
+	    ${CP} ${OBJECTDIR}/_ext/1103122620/ImageFileWriter.o ${OBJECTDIR}/_ext/1103122620/ImageFileWriter_nomain.o;\
+	fi
+
 ${OBJECTDIR}/_ext/1103122747/Memory_nomain.o: ${OBJECTDIR}/_ext/1103122747/Memory.o ../../../src/karabo/xms/Memory.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1103122747
 	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/1103122747/Memory.o`; \
@@ -1762,6 +1874,7 @@ ${OBJECTDIR}/_ext/1103122747/Statics_nomain.o: ${OBJECTDIR}/_ext/1103122747/Stat
 	    ${TESTDIR}/TestFiles/f4 || true; \
 	    ${TESTDIR}/TestFiles/f1 || true; \
 	    ${TESTDIR}/TestFiles/f6 || true; \
+	    ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libkarabo.${CND_DLIB_EXT} || true; \
 	    ${TESTDIR}/TestFiles/f5 || true; \
 	else  \
 	    ./${TEST} || true; \

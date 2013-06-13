@@ -63,6 +63,15 @@ void Schema_Test::testPaths() {
     CPPUNIT_ASSERT(paths[9] == "shapes.Rectangle.b");
 }
 
+void Schema_Test::testExpertLevel() {
+    Schema schema = GraphicsRenderer::getSchema("GraphicsRenderer");
+    CPPUNIT_ASSERT(schema.isExpertLevelAdvanced("shapes.Circle.shadowEnabled") == true);
+    CPPUNIT_ASSERT(schema.isExpertLevelAdvanced("shapes.Circle") == true);
+    CPPUNIT_ASSERT(schema.isExpertLevelAdvanced("shapes") == true);
+    CPPUNIT_ASSERT(schema.isExpertLevelAdvanced("antiAlias") == true);
+    CPPUNIT_ASSERT(schema.isExpertLevelSimple("antiAlias") == false);
+    CPPUNIT_ASSERT(schema.isExpertLevelSimple("color") == true);
+}
 
 void Schema_Test::setUp() {
     try {

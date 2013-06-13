@@ -1249,7 +1249,6 @@ void exportPyUtilSchema() {
         s.def("isAssignmentOptional", &Schema::isAssignmentOptional);
 
         s.def("isExpertLevelAdvanced", &Schema::isExpertLevelAdvanced);
-        s.def("isExpertLevelMedium", &Schema::isExpertLevelMedium);
         s.def("isExpertLevelSimple", &Schema::isExpertLevelSimple);
 
         s.def("isChoiceOfNodes", &Schema::isChoiceOfNodes);

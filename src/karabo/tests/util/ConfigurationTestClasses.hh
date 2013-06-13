@@ -197,6 +197,7 @@ namespace configurationTest {
                     .displayedName("Shapes")
                     .appendNodesOfConfigurationBase<Shape > ()
                     .assignmentOptional().defaultValue("Rectangle")
+                    .advanced()
                     .commit();
 
             STRING_ELEMENT(expected).key("version")

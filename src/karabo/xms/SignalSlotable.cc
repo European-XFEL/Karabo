@@ -17,6 +17,7 @@
 #include <sys/types.h>
 
 #include "SignalSlotable.hh"
+#include "karabo/tests/xms/SignalSlotable_Test.hh"
 
 
 namespace karabo {
@@ -223,7 +224,7 @@ namespace karabo {
         void SignalSlotable::slotPing(const std::string& instanceId, const bool& replyIfInstanceIdIsDuplicated) {
             if (replyIfInstanceIdIsDuplicated) {
                 if (instanceId == m_instanceId) {
-                    reply(boost::asio::ip::host_name());
+                    reply(m_instanceInfo);
                 }
             } else {
                 call(instanceId, "slotPingAnswer", m_instanceId, m_instanceInfo);
@@ -353,6 +354,45 @@ namespace karabo {
             }
             m_trackedComponents.set(instanceId + ".isExplicitlyTracked", true);
             connect(instanceId, "signalHeartbeat", "", "slotHeartbeat", NO_TRACK, false);
+        }
+
+
+        void SignalSlotable::stopTrackingExistenceOfInstance(const std::string& instanceId) {
+            boost::mutex::scoped_lock lock(m_heartbeatMutex);
+            if (m_trackedComponents.has(instanceId)) {
+                if (m_trackedComponents.get<std::vector<Hash> >(instanceId + ".connections").empty()) {
+                    m_trackedComponents.erase(instanceId);
+                    disconnect(instanceId, "signalHeartbeat", "", "slotHeartbeat", false);
+                } else {
+                    m_trackedComponents.set(instanceId + ".isExplicitlyTracked", false);
+                }
+            }
+        }
+
+
+        void SignalSlotable::registerInstanceNotAvailableHandler(const InstanceNotAvailableHandler& instanceNotAvailableCallback) {
+            m_instanceNotAvailableHandler = instanceNotAvailableCallback;
+        }
+
+
+        void SignalSlotable::registerInstanceAvailableAgainHandler(const InstanceAvailableAgainHandler& instanceAvailableAgainCallback) {
+            m_instanceAvailableAgainHandler = instanceAvailableAgainCallback;
+        }
+
+
+        void SignalSlotable::instanceNotAvailable(const std::string& instanceId) {
+            KARABO_LOG_FRAMEWORK_DEBUG << "Instance \"" << instanceId << "\" not available anymore";
+            if (m_instanceNotAvailableHandler) {
+                m_instanceNotAvailableHandler(instanceId);
+            }
+        }
+
+
+        void SignalSlotable::instanceAvailableAgain(const std::string& instanceId) {
+            KARABO_LOG_FRAMEWORK_DEBUG << "Instance \"" << instanceId << "\" available again";
+            if (m_instanceAvailableAgainHandler) {
+                m_instanceAvailableAgainHandler(instanceId);
+            }
         }
 
 
@@ -742,7 +782,7 @@ namespace karabo {
                             }
                         }
                     }
-                    connectionAvailableAgain(instanceId, connections);
+                    if (!connections.empty()) connectionAvailableAgain(instanceId, connections);
                 }
                 oldCountDown = countDown;
             } else {
@@ -777,6 +817,11 @@ namespace karabo {
                                     m_heartbeatMutex.lock();
                                     break;
                                 }
+                            }
+                            if (entry.get<bool>("isExplicitlyTracked") == true) {
+                                m_heartbeatMutex.unlock();
+                                connect(it->getKey(), "signalHeartbeat", "", "slotHeartbeat", NO_TRACK, false);
+                                m_heartbeatMutex.lock();
                             }
                         }
                     }

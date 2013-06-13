@@ -11,9 +11,12 @@
 #ifndef KARABO_XIP_CPUIMAGE_HH
 #define KARABO_XIP_CPUIMAGE_HH
 
-#include <karabo/util/Factory.hh>
-#include <karabo/xms/Input.hh>
-#include <karabo/xms/Output.hh>
+#include <karabo/util/Configurator.hh>
+#include <karabo/io/Input.hh>
+#include <karabo/io/Output.hh>
+#include <karabo/util/Types.hh>
+#include <karabo/util/FromTypeInfo.hh>
+#include <karabo/util/ToLiteral.hh>
 
 #include "AbstractImage.hh"
 #include "CImg.h"
@@ -35,7 +38,8 @@ namespace karabo {
 
             template <class T>
             static std::string classId() {
-                return "Image" + karabo::util::Types::getTypeAsString<T, karabo::util::Types::FORMAT_INTERN>();
+                using namespace karabo::util;
+                return "Image" +  Types::convert<FromTypeInfo, ToLiteral > (typeid (T));
             }
         };
 
@@ -66,7 +70,7 @@ namespace karabo {
 
             explicit CpuImage(const std::string& filename) : m_cimg() {
                 karabo::util::Hash h("File.filename", filename);
-                boost::shared_ptr<karabo::xms::Input<CpuImage<TPix> > > in = karabo::xms::Input<CpuImage<TPix> >::create(h);
+                typename karabo::io::Input<CpuImage<TPix> >::Pointer in = karabo::io::Input<CpuImage<TPix> >::create(h);
                 in->read(*this);
             }
 
@@ -210,7 +214,7 @@ namespace karabo {
              ***************************************/
 
             void swap(CpuImage& image) {
-                m_header.swap(image.m_header);
+                std::swap(m_header, image.m_header);
                 m_cimg.swap(image.getCImg());
             }
 
@@ -245,7 +249,7 @@ namespace karabo {
 
             const CpuImage& write(const std::string& filename, const int number = -1) const {
                 karabo::util::Hash h("File.filename", filename, "File.number", number);
-                boost::shared_ptr<karabo::xms::Output<CpuImage<TPix> > > out = karabo::xms::Output<CpuImage<TPix> >::create(h);
+                typename karabo::io::Output<CpuImage<TPix> >::Pointer out = karabo::io::Output<CpuImage<TPix> >::create(h);
                 out->write(*this);
                 return *this;
             }
@@ -302,7 +306,8 @@ namespace karabo {
             }
 
             inline std::string pixelType() const {
-                return karabo::util::Types::getTypeAsString<TPix, karabo::util::Types::FORMAT_INTERN > ();
+                using namespace karabo::util;
+                return Types::convert<FromTypeInfo, ToLiteral > (typeid (TPix));
             }
 
             Statistics getStatistics() const {
@@ -852,13 +857,14 @@ namespace karabo {
              */
             const CpuImage& print(const std::string& title = "", const bool displayPixels = true, int maxDimX = 28, int maxDimY = 28, int maxDimZ = 8) const {
                 using namespace std;
+                using namespace karabo::util;
                 const size_t siz = m_cimg.size();
                 size_t msiz = siz * sizeof (TPix);
                 size_t mdisp = msiz < 8 * 1024 ? 0 : (msiz < 8 * 1024 * 1024 ? 1 : 2);
                 mdisp == 0 ? msiz = msiz : (mdisp == 1 ? (msiz = msiz >> 10) : (msiz = msiz >> 20));
                 std::string unit;
                 mdisp == 0 ? unit = "b " : (mdisp == 1 ? unit = "Kb" : unit = "Mb");
-                string type = "type = Image<" + karabo::util::Types::getTypeAsString<TPix, karabo::util::Types::FORMAT_CPP > () + ">";
+                string type = "type = Image<" + Types::convert<FromTypeInfo, ToLiteral > (typeid (TPix)); + ">";
                 if (!title.empty()) cout << title << ": ";
                 cout << type << ", size = (" << m_cimg.width() << ", " << m_cimg.height() << ", " << m_cimg.depth() << "), data = " << msiz << " " << unit << endl;
                 cout << "Header:\n" << getHeader();
@@ -900,7 +906,8 @@ namespace karabo {
                                     int idx = x;
                                     if (x >= printX) idx = dimX - (maxX - x);
                                     if (x == printX) cout << "... ";
-                                    cout << karabo::util::String::toString(m_cimg(idx, idy, idz), nDigits) << " ";
+                                    //cout << karabo::util::toString(m_cimg(idx, idy, idz), nDigits) << " ";
+                                    cout << karabo::util::toString(m_cimg(idx, idy, idz)) << " ";
                                 }
                                 cout << endl;
                             }
@@ -1021,11 +1028,11 @@ namespace karabo {
         typedef CpuImage<float> CpuImgF;
         typedef CpuImage<double> CpuImgD;
 
-        typedef karabo::xms::Input<CpuImgD> InputCpuImgD;
-        typedef karabo::xms::Output<CpuImgD> OutputCpuImgD;
+        typedef karabo::io::Input<CpuImgD> InputCpuImgD;
+        typedef karabo::io::Output<CpuImgD> OutputCpuImgD;
 
-        typedef karabo::xms::Input<CpuImgI> InputCpuImgI;
-        typedef karabo::xms::Output<CpuImgI> OutputCpuImgI;
+        typedef karabo::io::Input<CpuImgI> InputCpuImgI;
+        typedef karabo::io::Output<CpuImgI> OutputCpuImgI;
 
         typedef karabo::util::Hash Config;
 

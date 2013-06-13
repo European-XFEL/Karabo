@@ -36862,7 +36862,6 @@ namespace cimg_library {
                                             cimg_instance);
 
             const char *const ext = cimg::split_filename(filename);
-            std::cout << "CIMG: File-extension: " << std::string(ext) << std::endl;
             const unsigned int omode = cimg::exception_mode();
             cimg::exception_mode() = 0;
             try {
