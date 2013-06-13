@@ -715,7 +715,7 @@ namespace karabo {
             /**
              * The slotPing is a default global slot which emits the signalGotPinged signal
              */
-            void slotPing(const std::string& instanceId, const bool& replyIfInstanceIdIsDuplicated);
+            void slotPing(const std::string& instanceId, bool replyIfInstanceIdIsDuplicated);
 
             void slotPingAnswer(const std::string& instanceId, const karabo::util::Hash& hash);
 
