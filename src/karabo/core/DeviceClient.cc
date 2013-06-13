@@ -230,7 +230,7 @@ namespace karabo {
             string hostname;
             Hash instanceInfo;
             try {
-                m_signalSlotable->request("*", "slotPing", instanceId, true).timeout(m_internalTimeout).receive(instanceInfo);
+                m_signalSlotable->request(instanceId, "slotPing", instanceId, true).timeout(m_internalTimeout).receive(instanceInfo);
             } catch (karabo::util::TimeoutException) {
                 return std::make_pair(false, hostname);
             }

@@ -66,6 +66,7 @@ namespace karabo {
 
             std::string m_classId;
             std::string m_serverId;
+            std::string m_deviceId;
             
             std::map<std::string, karabo::util::Schema> m_stateDependendSchema;
             boost::mutex m_stateDependendSchemaMutex;
@@ -158,8 +159,8 @@ namespace karabo {
                 else m_serverId = KARABO_NO_SERVER;
 
                 // Set instanceId
-                if (configuration.has("deviceId")) configuration.get("deviceId", m_instanceId);
-                else m_instanceId = "__none__"; // TODO generate uuid
+                if (configuration.has("deviceId")) configuration.get("deviceId", m_deviceId);
+                else m_deviceId = "__none__"; // TODO generate uuid
 
                 // Setup the validation classes
                 karabo::util::Validator::ValidationRules rules;
@@ -172,13 +173,13 @@ namespace karabo {
                 m_validatorExtern.setValidationRules(rules);
 
                 // Setup device logger
-                m_log = &(karabo::log::Logger::getLogger(m_instanceId)); // TODO use later: "device." + instanceId
+                m_log = &(karabo::log::Logger::getLogger(m_deviceId)); // TODO use later: "device." + instanceId
 
                 // Instantiate connection
                 karabo::net::BrokerConnection::Pointer connection = karabo::net::BrokerConnection::createChoice("connection", configuration);
 
                 // Initialize the SignalSlotable instance
-                init(connection, m_instanceId);
+                init(connection, m_deviceId);
 
                 // Initialize FSM slots (the interface of this function must be inherited from the templated FSM)
                 this->initFsmSlots(); // requires template CONCEPT
@@ -238,7 +239,7 @@ namespace karabo {
                     for (Hash::const_iterator it = h.begin(); it != h.end(); ++it) {
                         const Hash& desc = it->getValue<Hash>();
                         KARABO_LOG_WARN << desc.get<string>("message");
-                        emit("signalNotification", desc.get<string>("type"), desc.get<string>("message"), string(), m_instanceId);
+                        emit("signalNotification", desc.get<string>("type"), desc.get<string>("message"), string(), m_deviceId);
                     }
                 }
 
@@ -325,7 +326,7 @@ namespace karabo {
                 injectSchema(schema);
                 KARABO_LOG_DEBUG << "Injected...";
                 // Notify the distributed system
-                emit("signalSchemaUpdated", m_fullSchema, m_instanceId);
+                emit("signalSchemaUpdated", m_fullSchema, m_deviceId);
                 KARABO_LOG_INFO << "Schema updated";
             }
 
@@ -455,7 +456,7 @@ namespace karabo {
             // This function will polymorphically be called by the FSM template
             virtual void errorFoundAction(const std::string& shortMessage, const std::string& detailedMessage) {
                 KARABO_LOG_ERROR << shortMessage;
-                emit("signalNotification", std::string("ERROR"), shortMessage, detailedMessage, m_instanceId);
+                emit("signalNotification", std::string("ERROR"), shortMessage, detailedMessage, m_deviceId);
             }
 
             virtual void preReconfigure(karabo::util::Hash& incomingReconfiguration) {
@@ -542,7 +543,7 @@ namespace karabo {
             }
 
             void slotRefresh() {
-                emit("signalChanged", m_parameters, m_instanceId);
+                emit("signalChanged", m_parameters, m_deviceId);
                 reply(m_parameters);
             }
 
@@ -611,7 +612,7 @@ namespace karabo {
 
                 } else { // Someone else wants to see us dead, we should inform our server
                     KARABO_LOG_INFO << "Device is going down as instructed by \"" << senderId << "\"";
-                    call(m_serverId, "slotDeviceGone", m_instanceId);
+                    call(m_serverId, "slotDeviceGone", m_deviceId);
                     stopEventLoop();
                 }
             }

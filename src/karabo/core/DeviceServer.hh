@@ -191,6 +191,7 @@ namespace karabo {
             karabo::net::BrokerConnection::Pointer m_connection;
 
             karabo::util::Hash m_connectionConfig;
+            std::string m_serverId;
 
 
         };

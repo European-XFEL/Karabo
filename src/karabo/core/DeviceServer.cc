@@ -98,12 +98,12 @@ namespace karabo {
             
             // Set device server instance 
             if (input.has("serverId")) {
-                input.get("serverId", m_instanceId);
+                input.get("serverId", m_serverId);
             } else {
                 if (m_isMaster) {
-                    m_instanceId = "Karabo_DeviceServer_0";
+                    m_serverId = "Karabo_DeviceServer_0";
                 } else {
-                    m_instanceId = "";
+                    m_serverId = "";
                 }
             }
 
@@ -146,7 +146,7 @@ namespace karabo {
                 bool isValid;
                 string answer;
                 try {
-                    Requestor(m_connection->createChannel(), m_instanceId).call("*", "slotValidateInstanceId", boost::asio::ip::host_name(), std::string("server"), m_instanceId).timeout(m_nameRequestTimeout).receive(isValid, m_instanceId, answer);
+                    Requestor(m_connection->createChannel(), m_serverId).call("*", "slotValidateInstanceId", boost::asio::ip::host_name(), std::string("server"), m_serverId).timeout(m_nameRequestTimeout).receive(isValid, m_serverId, answer);
                 } catch (TimeoutException&) {
                     KARABO_LOG_FRAMEWORK_ERROR << "Name request timed out, make sure a valid master server is running";
                     Exception::clearTrace();
@@ -161,16 +161,16 @@ namespace karabo {
             }
                       
             // Initialize category
-            m_log = &(karabo::log::Logger::getLogger(m_instanceId));
+            m_log = &(karabo::log::Logger::getLogger(m_serverId));
 
             KARABO_LOG_INFO << "Starting Karabo DeviceServer on host: " << boost::asio::ip::host_name();
 
             // Initialize SignalSlotable instance
-            init(m_connection, m_instanceId);
+            init(m_connection, m_serverId);
 
             registerAndConnectSignalsAndSlots();
 
-            karabo::util::Hash info("type", "server", "serverId", m_instanceId, "version", DeviceServer::classInfo().getVersion(), "host", boost::asio::ip::host_name());
+            karabo::util::Hash info("type", "server", "serverId", m_serverId, "version", DeviceServer::classInfo().getVersion(), "host", boost::asio::ip::host_name());
             boost::thread t(boost::bind(&karabo::core::DeviceServer::runEventLoop, this, hasHearbeat, info));
             this->startFsm();
             t.join();
@@ -202,8 +202,8 @@ namespace karabo {
 
         void DeviceServer::idleStateOnEntry() {
             // Write name to file
-            karabo::io::saveToFile(Hash("DeviceServer.serverId", m_instanceId), "autoload.xml");
-            KARABO_LOG_INFO << "DeviceServer starts up with id: " << m_instanceId;
+            karabo::io::saveToFile(Hash("DeviceServer.serverId", m_serverId), "autoload.xml");
+            KARABO_LOG_INFO << "DeviceServer starts up with id: " << m_serverId;
 
             if (m_isMaster) {
                 slotStartDevice(Hash("MasterDevice.deviceId", "Karabo_Master_0", "MasterDevice.connection", m_connectionConfig));
@@ -287,7 +287,7 @@ namespace karabo {
                 // Inject device-server information
                 Hash modifiedConfig(config);
                 Hash& tmp = modifiedConfig.begin()->getValue<Hash>();
-                tmp.set("serverId", m_instanceId);
+                tmp.set("serverId", m_serverId);
                 // Apply sensible default in case no device instance id is supplied
                 if (!tmp.has("deviceId")) {
                     std::string deviceId = this->generateDefaultDeviceInstanceId(classId);
@@ -352,7 +352,7 @@ namespace karabo {
             m_deviceThreads.join_all();
 
             // Signal about future death
-            call("*", "slotDeviceServerInstanceGone", m_instanceId);
+            call("*", "slotDeviceServerInstanceGone", m_serverId);
 
             // Stop device server
             stopDeviceServer();
@@ -383,7 +383,7 @@ namespace karabo {
             string index = karabo::util::toString(++m_deviceInstanceCount);
             // Prepare shortened Device-Server name
             vector<string> tokens;
-            boost::split(tokens, m_instanceId, boost::is_any_of("_"));
+            boost::split(tokens, m_serverId, boost::is_any_of("_"));
             string domain(tokens.front() + tokens.back());
             return domain + "_" + classId + "_" + index;
         }
