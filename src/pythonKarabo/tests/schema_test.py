@@ -537,7 +537,36 @@ class  Schema_TestCase(unittest.TestCase):
             
         except Exception,e:
             self.fail("test_isProperty exception: " + str(e))
-            
+
+     
+    def test_hasArchivePolicy(self):
+        try:  
+            self.assertTrue(self.schema.hasArchivePolicy("exampleKey5"))
+            self.assertTrue(self.schema.hasArchivePolicy("exampleKey6"))
+            self.assertTrue(self.schema.hasArchivePolicy("exampleKey7"))
+            self.assertTrue(self.schema.hasArchivePolicy("exampleKey8"))
+        except Exception,e:
+            self.fail("test_hasArchivePolicy exception: " + str(e))
+   
+   def test_getArchivePolicy(self):
+        try:  
+            self.assertEqual(self.schema.getArchivePolicy("exampleKey5"), ArchivePolicy.EVERY_EVENT)
+            self.assertEqual(self.schema.getArchivePolicy("exampleKey6"), ArchivePolicy.EVERY_100MS)
+            self.assertEqual(self.schema.getArchivePolicy("exampleKey7"), ArchivePolicy.EVERY_15S)
+            self.assertEqual(self.schema.getArchivePolicy("exampleKey8"), ArchivePolicy.NO_ARCHIVING)
+        except Exception,e:
+            self.fail("test_getArchivePolicy exception: " + str(e))
+   
+   def test_setArchivePolicy(self):
+        try:
+            sch = Configurator(SomeClass).getSchema("SomeClassId")
+            self.assertEqual(self.sch.getArchivePolicy("a"), ArchivePolicy.EVERY_100MS)
+            sch.setArchivePolicy('a', ArchivePolicy.EVERY_10MIN)
+            self.assertEqual(self.sch.getArchivePolicy("a"), ArchivePolicy.EVERY_10MIN)
+        except Exception,e:
+            self.fail("test_setArchivePolicy exception: " + str(e))
+     
+        
     def test_perKeyFunctionality(self):
         try:
             keys = self.schema.getKeys()
