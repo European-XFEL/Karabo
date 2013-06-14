@@ -277,6 +277,11 @@ namespace karabo {
                 m_genericElement->getNode().setAttribute(KARABO_SCHEMA_ALARM_HIGH, value);
                 return *this;
             }
+            
+            ReadOnlySpecific& archivePolicy(const Schema::ArchivePolicy& value) {
+                m_genericElement->getNode().template setAttribute<int>(KARABO_SCHEMA_ARCHIVE_POLICY, value);
+                return *this;
+            }
 
             void commit() {
                 m_genericElement->commit();
