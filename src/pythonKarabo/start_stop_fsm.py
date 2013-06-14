@@ -93,3 +93,45 @@ class StartStopFsm(base_fsm.BaseFsm):
         sigslot.registerSlot(self.start)
         sigslot.registerSlot(self.stop)
         sigslot.registerSlot(self.reset)
+
+    def initializationStateOnEntry(self):
+        '''Actions executed on entry to 'Initialization' state
+        '''
+        
+    def initializationStateOnExit(self):
+        '''Actions executed on exit from 'Initialization' state
+        '''
+        
+    def errorStateOnEntry(self):
+        '''Actions executed on entry to 'Error' state
+        '''
+        
+    def errorStateOnExit(self):
+        '''Actions executed on exit from 'Error' state
+        '''
+        
+    def startedStateOnEntry(self):
+        '''Actions executed on entry to 'Started' state
+        '''
+        
+    def startedStateOnExit(self):
+        '''Actions executed on exit from 'Started' state
+        '''
+        
+    def stoppedStateOnEntry(self):
+        '''Actions executed on entry to 'Stopped' state
+        '''
+        
+    def stoppedStateOnExit(self):
+        '''Actions executed on exit from 'Stopped' state
+        '''
+        
+    def startAction(self):
+        '''Actions executed at 'start' event'''
+        
+    def stopAction(self):
+        '''Actions executed at 'stop' event'''
+        
+    def resetAction(self):
+        print "Reset action executed"
+        
