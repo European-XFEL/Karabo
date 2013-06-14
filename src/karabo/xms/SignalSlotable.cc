@@ -161,6 +161,7 @@ namespace karabo {
                 boost::thread heartbeatThread(boost::bind(&karabo::xms::SignalSlotable::emitHeartbeat, this));
                 m_ioService->work(); // blocks
                 m_sendHeartbeats = false;
+                heartbeatThread.interrupt(); // interrupt sleeping in heartbeatThread
                 heartbeatThread.join();
             } else {
                 m_ioService->work(); // blocks
@@ -204,9 +205,19 @@ namespace karabo {
 
 
         void SignalSlotable::emitHeartbeat() {
+            //----------------- make this thread sensible to external interrupts
+            boost::this_thread::interruption_enabled();   // enable interruption +
+            boost::this_thread::interruption_requested(); // request interruption = we need both!
             while (m_sendHeartbeats) {
-                emit("signalHeartbeat", getInstanceId(), m_timeToLive);
-                boost::this_thread::sleep(boost::posix_time::seconds(m_timeToLive));
+                {
+                    boost::this_thread::disable_interruption di; // disable interruption in this block
+                    emit("signalHeartbeat", getInstanceId(), m_timeToLive);
+                }
+                // here the interruption enabled again
+                try {
+                    boost::this_thread::sleep(boost::posix_time::seconds(m_timeToLive));
+                } catch (const boost::thread_interrupted&) {
+                }
             }
         }
 
