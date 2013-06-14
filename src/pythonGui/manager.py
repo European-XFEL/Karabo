@@ -44,8 +44,8 @@ class Notifier(QObject):
     signalSchemaAvailable = pyqtSignal(dict) # key, schema
     signalNavigationItemChanged = pyqtSignal(dict) # type, key
     signalDeviceInstanceChanged = pyqtSignal(dict, str)
-    signalKillDeviceInstance = pyqtSignal(str, str) # serverId, deviceId
-    signalKillDeviceServerInstance = pyqtSignal(str) # serverId
+    signalKillDevice = pyqtSignal(str) # deviceId
+    signalKillServer = pyqtSignal(str) # serverId
     signalDeviceInstanceSchemaUpdated = pyqtSignal(str, str) # deviceId, schema
     
     signalRefreshInstance = pyqtSignal(str) # deviceId
@@ -157,6 +157,7 @@ class Manager(Singleton):
 
     
     def _mergeIntoHash(self, config):
+        #print ""
         #print config
         #print ""
         self.__hash.merge(config, HashMergePolicy.MERGE_ATTRIBUTES) #REPLACE_ATTRIBUTES)
@@ -177,9 +178,9 @@ class Manager(Singleton):
         # Merge with central hash
         self.__hash.set(key, value)
         
-        print ""
-        print self.__hash
-        print ""
+        #print ""
+        #print self.__hash
+        #print ""
 
 
     def registerEditableComponent(self, key, component):
@@ -302,6 +303,7 @@ class Manager(Singleton):
         if value == "Changing...":
             self.__notifier.signalChangingState.emit(True)
         else:
+            print "change", address, instanceId, value
             if ("Error" in value) or ("error" in value):
                 self.__notifier.signalErrorState.emit(instanceId, True)
             else:
@@ -398,7 +400,7 @@ class Manager(Singleton):
         self.__isInitDeviceCurrentlyProcessed = True
 
 
-    def killDeviceInstance(self, serverId, deviceId):
+    def killDevice(self, deviceId):
         reply = QMessageBox.question(None, 'Message',
             "Do you really want to kill this instance?", QMessageBox.Yes |
             QMessageBox.No, QMessageBox.No)
@@ -407,11 +409,11 @@ class Manager(Singleton):
             return
 
         # Remove device instance data from internal hash
-        self._setFromPath(devInsId, Hash())
-        self.__notifier.signalKillDeviceInstance.emit(serverId, deviceId)
+        self._setFromPath(deviceId, Hash())
+        self.__notifier.signalKillDevice.emit(deviceId)
 
 
-    def killDeviceServerInstance(self, serverId):
+    def killServer(self, serverId):
         reply = QMessageBox.question(None, 'Message',
             "Do you really want to kill this instance?", QMessageBox.Yes |
             QMessageBox.No, QMessageBox.No)
@@ -419,7 +421,7 @@ class Manager(Singleton):
         if reply == QMessageBox.No:
             return
         
-        self.__notifier.signalKillDeviceServerInstance.emit(serverId)
+        self.__notifier.signalKillServer.emit(serverId)
 
 
 ### TODO: Temporary functions for scientific computing START ###
@@ -652,6 +654,15 @@ class Manager(Singleton):
         #print ""
         # Merge new configuration data into central hash
         self._mergeIntoHash(config)
+        # Send full internal hash to navigation
+        self.__notifier.signalSystemTopologyChanged.emit(self.__hash)
+
+
+    def handleInstanceGone(self, instanceId):
+        # Remove instanceId from central hash and update
+        path = "device." + instanceId
+        if self.__hash.has(path):
+            self.__hash.erase("device." + instanceId)
         # Send full internal hash to navigation
         self.__notifier.signalSystemTopologyChanged.emit(self.__hash)
 

@@ -65,7 +65,7 @@ class NavigationHierarchyModel(QAbstractItemModel):
                         path = "server." + serverId + ".classes." + deviceClass
                         classItem = NavigationHierarchyNode(deviceClass, path, serverItem)
                         serverItem.appendChildItem(classItem)
-            
+        
         # Get device data
         deviceKey = "device"
         if config.has(deviceKey):
@@ -227,7 +227,7 @@ class NavigationHierarchyModel(QAbstractItemModel):
             return QModelIndex();
 
         childItem = index.internalPointer()
-        if not childItem:
+        if (not childItem) or (not isinstance(childItem, NavigationHierarchyNode)):
             return QModelIndex()
         
         parentItem = childItem.parentItem
