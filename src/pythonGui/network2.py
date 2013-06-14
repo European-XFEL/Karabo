@@ -44,8 +44,8 @@ class Network(QObject):
         self.__tcpSocket.readyRead.connect(self.onReadServerData)
         self.__tcpSocket.error.connect(self.onDisplayServerError)
         
-        #Manager().notifier.signalKillDeviceInstance.connect(self.onKillDeviceInstance)
-        #Manager().notifier.signalKillDeviceServerInstance.connect(self.onKillDeviceServerInstance)
+        Manager().notifier.signalKillDevice.connect(self.onKillDevice)
+        Manager().notifier.signalKillServer.connect(self.onKillServer)
         #Manager().notifier.signalRefreshInstance.connect(self.onRefreshInstance)
         #Manager().notifier.signalReconfigure.connect(self.onReconfigure)
         #Manager().notifier.signalReconfigureAsHash.connect(self.onReconfigureAsHash)
@@ -188,8 +188,7 @@ class Network(QObject):
                 bodyHash = self.__textSerializer.load(self.__bodyBytes)
                 Manager().handleSystemTopology(bodyHash)
             elif type == "instanceGone":
-                bodyHash = self.__textSerializer.load(self.__bodyBytes)
-                Manager().handleSystemTopology(bodyHash)
+                Manager().handleInstanceGone(str(self.__bodyBytes))
             elif type == "classDescription":
                 bodyHash = self.__textSerializer.load(self.__bodyBytes)
                 Manager().handleClassSchema(bodyHash)
@@ -224,18 +223,17 @@ class Network(QObject):
         pass
 
 
-    def onKillDeviceInstance(self, devSrvInsId, devInsId):
+    def onKillDevice(self, deviceId):
         header = Hash()
-        header.set("type", "killDeviceInstance")
-        header.set("devSrvInsId", str(devSrvInsId))
-        header.set("devInsId", str(devInsId));
+        header.set("type", "killDevice")
+        header.set("deviceId", str(deviceId));
         self._tcpWriteHashHash(header, Hash())
 
 
-    def onKillDeviceServerInstance(self, devSrvInsId):
+    def onKillServer(self, serverId):
         header = Hash()
-        header.set("type", "killDeviceServerInstance")
-        header.set("instanceId", str(devSrvInsId))
+        header.set("type", "killServer")
+        header.set("serverId", str(serverId))
         self._tcpWriteHashHash(header, Hash())
 
 

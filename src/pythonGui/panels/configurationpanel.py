@@ -578,6 +578,9 @@ class ConfigurationPanel(QWidget):
             self.__swParameterEditor.setCurrentIndex(0)
             self.__swParameterEditor.blockSignals(False)
             
+            if type is NavigationItemTypes.SERVER:
+                return
+            
             # Hide buttons and actions
             self.__pbInitDevice.setVisible(False)
             self.__pbKillInstance.setVisible(False)
@@ -689,18 +692,16 @@ class ConfigurationPanel(QWidget):
         if type is None:
             type = itemInfo.get('type')
         
-        serverId = itemInfo.get(QString('serverId'))
-        if serverId is None:
-            serverId = itemInfo.get('serverId')
-        
-        internalKey = itemInfo.get(QString('internalKey'))
-        if internalKey is None:
-            internalKey = itemInfo.get('internalKey')
-        
         if type is NavigationItemTypes.DEVICE:
-            Manager().killDeviceInstance(serverId, internalKey)
+            deviceId = itemInfo.get(QString('deviceId'))
+            if deviceId is None:
+                deviceId = itemInfo.get('deviceId')
+            Manager().killDevice(deviceId)
         elif type is NavigationItemTypes.SERVER:
-            Manager().killDeviceServerInstance(internalKey)
+            serverId = itemInfo.get(QString('serverId'))
+            if serverId is None:
+                serverId = itemInfo.get('serverId')
+            Manager().killServer(serverId)
 
 
     def onInitDevice(self):
