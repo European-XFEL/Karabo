@@ -198,6 +198,9 @@ bp::class_< ReadOnlySpec, boost::noncopyable >( "ReadOnlySpecific"#e, bp::no_ini
 .def("initialValue"\
 , (ReadOnlySpec & (ReadOnlySpec::*)(EType const &))( &ReadOnlySpec::initialValue)\
 , bp::return_internal_reference<> () )\
+.def("archivePolicy"\
+, (ReadOnlySpec & (ReadOnlySpec::*)(karabo::util::Schema::ArchivePolicy const &))( &ReadOnlySpec::archivePolicy)\
+, bp::return_internal_reference<> () )\
 .def("commit", (void (ReadOnlySpec::*)())(&ReadOnlySpec::commit))\
 ;\
 }
@@ -232,6 +235,9 @@ bp::class_< ReadOnlySpecVec, boost::noncopyable > ("ReadOnlySpecificVector"#e, b
 , bp::return_internal_reference<> () )\
 .def("initialValueFromString"\
 , (ReadOnlySpecVec & (ReadOnlySpecVec::*)(std::string const &))( &ReadOnlySpecVec::initialValueFromString)\
+, bp::return_internal_reference<> () )\
+.def("archivePolicy"\
+, (ReadOnlySpecVec & (ReadOnlySpecVec::*)(karabo::util::Schema::ArchivePolicy const &))( &ReadOnlySpecVec::archivePolicy)\
 , bp::return_internal_reference<> () )\
 .def("commit", (void (ReadOnlySpecVec::*)())(&ReadOnlySpecVec::commit))\
 ;\
