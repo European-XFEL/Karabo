@@ -71,7 +71,6 @@ ${OBJECTDIR}/_ext/147234221/deviceServer.o: ../../../src/deviceServer/deviceServ
 
 # Subprojects
 .build-subprojects:
-	cd ../karabo && ${MAKE} -j8 -f Makefile CONF=Debug-MacOSX
 
 # Clean Targets
 .clean-conf: ${CLEAN_SUBPROJECTS}
@@ -80,7 +79,6 @@ ${OBJECTDIR}/_ext/147234221/deviceServer.o: ../../../src/deviceServer/deviceServ
 
 # Subprojects
 .clean-subprojects:
-	cd ../karabo && ${MAKE} -j8 -f Makefile CONF=Debug-MacOSX clean
 
 # Enable dependency checking
 .dep.inc: .depcheck-impl

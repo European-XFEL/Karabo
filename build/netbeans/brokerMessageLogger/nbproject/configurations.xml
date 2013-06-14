@@ -55,12 +55,12 @@
             <linkerLibProjectItem>
               <makeArtifact PL="../karabo"
                             CT="2"
-                            CN="Debug-MacOSX"
-                            AC="true"
+                            CN="Debug"
+                            AC="false"
                             BL="true"
                             WD="../karabo"
-                            BC="${MAKE} -j8 -f Makefile CONF=Debug-MacOSX"
-                            CC="${MAKE} -j8 -f Makefile CONF=Debug-MacOSX clean"
+                            BC="${MAKE} -j8 -f Makefile CONF=Debug"
+                            CC="${MAKE} -j8 -f Makefile CONF=Debug clean"
                             OP="${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/lib/libkarabo.${CND_DLIB_EXT}">
               </makeArtifact>
             </linkerLibProjectItem>
@@ -197,12 +197,12 @@
             <linkerLibProjectItem>
               <makeArtifact PL="../karabo"
                             CT="2"
-                            CN="Debug"
+                            CN="Debug-MacOSX"
                             AC="true"
-                            BL="true"
+                            BL="false"
                             WD="../karabo"
-                            BC="${MAKE} -f Makefile CONF=Debug"
-                            CC="${MAKE} -f Makefile CONF=Debug clean"
+                            BC="${MAKE} -j8 -f Makefile CONF=Debug-MacOSX"
+                            CC="${MAKE} -j8 -f Makefile CONF=Debug-MacOSX clean"
                             OP="${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/lib/libkarabo.${CND_DLIB_EXT}">
               </makeArtifact>
             </linkerLibProjectItem>
