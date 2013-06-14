@@ -4,26 +4,27 @@
 import unittest
 import threading
 import time
+import socket
 from libkarathon import *
 
 class RemoteClient(threading.Thread):
     def __init__(self, instanceId):
         threading.Thread.__init__(self)
         self.instanceId = instanceId
+        hostname, dotsep, domain = socket.gethostname().partition('.')
         self.ss = SignalSlotable.create(self.instanceId)
         self.ss.registerSlot(self.onHashRequest)
-        self.running = True
+        self.info = Hash("type", "server", "serverId", "UnitTestRemoteClient", "version", "777.777", "host", hostname)
         
     def onHashRequest(self, hash):
         hash["remote_client"] = "APPROVED!"
         self.ss.reply(hash)
         
     def stop(self):
-        self.running = False
+        self.ss.stopEventLoop()
         
     def run(self):
-        while self.running:
-            time.sleep(1)
+        self.ss.runEventLoop(False, self.info)
     
 
 class  Xms_TestCase(unittest.TestCase):
@@ -37,10 +38,10 @@ class  Xms_TestCase(unittest.TestCase):
 
     def test_xms_signal_slotable(self):
         try:
-            ss = SignalSlotable("b")
+            ss = SignalSlotable("just_unit_test", "Jms", Hash(), True, False)
             h = Hash('a.b.c', 1, 'x.y.z', [1,2,3,4,5,6,7])
             (h,) = ss.request("a", "onHashRequest", h).waitForReply(100)
-
+            del ss
             self.assertEqual(h['a.b.c'], 1)
             self.assertEqual(h['x.y.z'], [1,2,3,4,5,6,7])
             self.assertEqual(h['remote_client'], 'APPROVED!')
