@@ -143,7 +143,7 @@ namespace karabo {
             void callRegisteredSlotFunctions(karabo::net::BrokerChannel::Pointer /*channel*/, const karabo::util::Hash& body, const karabo::util::Hash& header) {
                 try {
                     extractSenderInformation(header);
-                    const A1& a1 = getAndCast<A1>("a1", body);
+                    const A1& a1 = body.get<A1>("a1");
                     for (size_t i = 0; i < m_slotHandlers.size(); ++i) {
                         m_slotHandlers[i](a1);
                         handlePossibleReply(header);
@@ -185,8 +185,8 @@ namespace karabo {
             void callRegisteredSlotFunctions(karabo::net::BrokerChannel::Pointer /*channel*/, const karabo::util::Hash& body, const karabo::util::Hash& header) {
                 try {
                     extractSenderInformation(header);
-                    const A1& a1 = getAndCast<A1>("a1", body);
-                    const A2& a2 = getAndCast<A2>("a2", body);
+                    const A1& a1 = body.get<A1>("a1");
+                    const A2& a2 = body.get<A2>("a2");
                     for (size_t i = 0; i < m_slotHandlers.size(); ++i) {
                         m_slotHandlers[i](a1, a2);
                         handlePossibleReply(header);
@@ -228,9 +228,9 @@ namespace karabo {
             void callRegisteredSlotFunctions(karabo::net::BrokerChannel::Pointer /*channel*/, const karabo::util::Hash& body, const karabo::util::Hash& header) {
                 try {
                     extractSenderInformation(header);
-                    const A1& a1 = getAndCast<A1 > ("a1", body);
-                    const A2& a2 = getAndCast<A2 > ("a2", body);
-                    const A3& a3 = getAndCast<A3 > ("a3", body);
+                    const A1& a1 = body.get<A1 > ("a1");
+                    const A2& a2 = body.get<A2 > ("a2");
+                    const A3& a3 = body.get<A3 > ("a3");
                     for (size_t i = 0; i < m_slotHandlers.size(); ++i) {
                         m_slotHandlers[i](a1, a2, a3);
                         handlePossibleReply(header);
@@ -272,10 +272,10 @@ namespace karabo {
             void callRegisteredSlotFunctions(karabo::net::BrokerChannel::Pointer /*channel*/, const karabo::util::Hash& body, const karabo::util::Hash& header) {
                 try {
                     extractSenderInformation(header);
-                    const A1& a1 = getAndCast<A1 > ("a1", body);
-                    const A2& a2 = getAndCast<A2 > ("a2", body);
-                    const A3& a3 = getAndCast<A3 > ("a3", body);
-                    const A4& a4 = getAndCast<A4 > ("a4", body);
+                    const A1& a1 = body.get<A1 > ("a1");
+                    const A2& a2 = body.get<A2 > ("a2");
+                    const A3& a3 = body.get<A3 > ("a3");
+                    const A4& a4 = body.get<A4 > ("a4");
                     for (size_t i = 0; i < m_slotHandlers.size(); ++i) {
                         m_slotHandlers[i](a1, a2, a3, a4);
                         handlePossibleReply(header);
