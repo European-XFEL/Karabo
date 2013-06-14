@@ -277,23 +277,23 @@ class TestStruct1(object):
         e.tags("h/w; d.m.y", ";")
         e.displayedName("Example key 5")
         e.description("Example key 5 description")
-        e.readOnly().initialValue(1442244).warnLow(-10).warnHigh(10).alarmLow(-20).alarmHigh(20)
+        e.readOnly().initialValue(1442244).warnLow(-10).warnHigh(10).alarmLow(-20).alarmHigh(20).archivePolicy(EVERY_EVENT)
         e.commit()
                     
         e = DOUBLE_ELEMENT(expected).key("exampleKey6")
         e.displayedName("Example key 6")
         e.description("Example key 6 description")
-        e.readOnly().initialValue(1.11).alarmLow(-22.1).alarmHigh(22.777).warnLow(-5.5).warnHigh(5.5)
+        e.readOnly().initialValue(1.11).alarmLow(-22.1).alarmHigh(22.777).warnLow(-5.5).warnHigh(5.5).archivePolicy(EVERY_100MS)
         e.commit()
         
         e = VECTOR_INT32_ELEMENT(expected).key("exampleKey7")
         e.displayedName("Example key 7")
         e.allowedStates("Started, AllOk")
-        e.readOnly().initialValue([1,2,3]).alarmLow([-1,-1,-1]).alarmHigh([-2,2,-2]).warnLow([0,0,0]).warnHigh([10,20,30])
+        e.readOnly().initialValue([1,2,3]).alarmLow([-1,-1,-1]).alarmHigh([-2,2,-2]).warnLow([0,0,0]).warnHigh([10,20,30]).archivePolicy(EVERY_15S)
         e.commit()
         
         e = VECTOR_DOUBLE_ELEMENT(expected).key("exampleKey8")
-        e.readOnly().initialValue([1.1, 2.2, 3.3]).alarmLow([-1.1,-2.2,-3.3]).warnHigh([5.5, 7.7, 9.9]).commit()
+        e.readOnly().initialValue([1.1, 2.2, 3.3]).alarmLow([-1.1,-2.2,-3.3]).warnHigh([5.5, 7.7, 9.9]).archivePolicy(NO_ARCHIVING).commit()
         
         e = VECTOR_STRING_ELEMENT(expected).key("exampleKey9")
         e.readOnly().initialValue(["Hallo", "World"]).alarmLow(["a","b"]).warnHigh(["c", "d"])
@@ -387,8 +387,11 @@ class SomeClass(object):
         e.minExc(0).maxExc(29).unit(METER).metricPrefix(CENTI)
         e.assignmentOptional().defaultValue(10)
         e.init().commit()
-    
         
+        e = DOUBLE_ELEMENT(expected).key("a")
+        e.readOnly().initialValue(1.11).alarmLow(-22.1).alarmHigh(22.777).warnLow(-5.5).warnHigh(5.5).archivePolicy(EVERY_100MS)
+        e.commit()
+    
 @KARABO_CONFIGURATION_BASE_CLASS
 @KARABO_CLASSINFO("Base", "1.0")
 class Base(object):
@@ -470,7 +473,7 @@ class P2(Base):
         e.minInc(5).maxInc(25).unit(AMPERE).metricPrefix(MILLI)
         e.assignmentOptional().defaultValue(10)
         e.init().commit()
-
+        
         
 @KARABO_CLASSINFO("P3", "1.0")
 class P3(Base):
