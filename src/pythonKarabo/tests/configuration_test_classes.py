@@ -227,6 +227,7 @@ class GraphicsRenderer1(object):
         e.commit()
 
 
+@KARABO_CONFIGURATION_BASE_CLASS
 @KARABO_CLASSINFO("TestStruct1", "1.0")    
 class TestStruct1(object):
     
@@ -289,7 +290,7 @@ class TestStruct1(object):
         e = VECTOR_INT32_ELEMENT(expected).key("exampleKey7")
         e.displayedName("Example key 7")
         e.allowedStates("Started, AllOk")
-        e.readOnly().initialValue([1,2,3]).alarmLow([-1,-1,-1]).alarmHigh([-2,2,-2]).warnLow([0,0,0]).warnHigh([10,20,30]).archivePolicy(EVERY_15S)
+        e.readOnly().initialValue([1,2,3]).alarmLow([-1,-1,-1]).alarmHigh([-2,2,-2]).warnLow([0,0,0]).warnHigh([10,20,30]).archivePolicy(EVERY_1S)
         e.commit()
         
         e = VECTOR_DOUBLE_ELEMENT(expected).key("exampleKey8")
