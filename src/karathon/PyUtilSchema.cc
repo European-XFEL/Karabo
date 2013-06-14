@@ -1016,6 +1016,7 @@ void exportPyUtilSchema() {
                 .value("INTERNAL", Schema::INTERNAL_PARAM)
                 .export_values()
                 ;
+        
         bp::enum_< Schema::ExpertLevelType > ("ExpertLevelType")
                 .value("SIMPLE", Schema::SIMPLE)
                 .value("MEDIUM", Schema::MEDIUM)
@@ -1028,6 +1029,7 @@ void exportPyUtilSchema() {
                 .value("COMMAND", karabo::util::Schema::COMMAND)
                 .export_values()
                 ;
+        
         bp::enum_< Schema::NodeType>("NodeType")
                 .value("LEAF", Schema::LEAF)
                 .value("NODE", Schema::NODE)
@@ -1035,6 +1037,18 @@ void exportPyUtilSchema() {
                 .value("LIST_OF_NODES", Schema::LIST_OF_NODES)
                 .export_values()
                 ;
+        bp::enum_< Schema::ArchivePolicy > ("ArchivePolicy")
+                .value("EVERY_EVENT", Schema::EVERY_EVENT)
+                .value("EVERY_100MS", Schema::EVERY_100MS)
+                .value("EVERY_1S", Schema::EVERY_1S)
+                .value("EVERY_5S", Schema::EVERY_5S)
+                .value("EVERY_10S", Schema::EVERY_10S)
+                .value("EVERY_1MIN", Schema::EVERY_1MIN)
+                .value("EVERY_10MIN", Schema::EVERY_10MIN)
+                .value("NO_ARCHIVING", Schema::NO_ARCHIVING)
+                .export_values()
+                ;
+        
         bp::class_< Schema::AssemblyRules >("AssemblyRules", bp::init< bp::optional< AccessType const &, std::string const &, std::string const & > >((bp::arg("accessMode") = operator|(INIT, WRITE), bp::arg("state") = "", bp::arg("accessRole") = "")))
                 .def_readwrite("m_accessMode", &Schema::AssemblyRules::m_accessMode)
                 .def_readwrite("m_accessRole", &Schema::AssemblyRules::m_accessRole)
@@ -1161,6 +1175,9 @@ void exportPyUtilSchema() {
               , bp::return_value_policy< bp::copy_const_reference >());
 
         s.def("getExpertLevel", &Schema::getExpertLevel);
+        
+        s.def("getArchivePolicy", &Schema::getArchivePolicy
+              , bp::return_value_policy< bp::copy_const_reference >());
 
         s.def("getWarnLow", &schemawrap::getWarnLow);
 
@@ -1221,6 +1238,8 @@ void exportPyUtilSchema() {
         s.def("hasAlarmLow", &Schema::hasAlarmLow);
 
         s.def("hasAlarmHigh", &Schema::hasAlarmHigh);
+        
+        s.def("hasArchivePolicy", &Schema::hasArchivePolicy);
 
         s.def("hasDisplayedName", &Schema::hasDisplayedName);
 
@@ -1293,6 +1312,7 @@ void exportPyUtilSchema() {
         s.def("setWarnHigh", &schemawrap::setWarnHigh, (bp::arg("path"), bp::arg("value")));
         s.def("setAlarmLow", &schemawrap::setAlarmLow, (bp::arg("path"), bp::arg("value")));
         s.def("setAlarmHigh", &schemawrap::setAlarmHigh, (bp::arg("path"), bp::arg("value")));
+        s.def("setArchivePolicy", &Schema::setArchivePolicy, (bp::arg("path"), bp::arg("value")));
         s.def("setMin", &Schema::setMin, (bp::arg("path"), bp::arg("value")));
         s.def("setMax", &Schema::setMax, (bp::arg("path"), bp::arg("value")));
         //s.def("", &Schema::, ());     // overwrite<>(default) not implemented
