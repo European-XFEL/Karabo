@@ -615,6 +615,22 @@ namespace karabo {
             return m_hash.hasAttribute(path, KARABO_SCHEMA_ALARM_HIGH);
         }
 
+         //**********************************************
+         //               archivePolicy                 *
+         //**********************************************
+            
+        void Schema::setArchivePolicy(const std::string& path, const ArchivePolicy& value){
+            m_hash.setAttribute<int>(path, KARABO_SCHEMA_ARCHIVE_POLICY, value);
+        }
+
+        bool Schema::hasArchivePolicy(const std::string& path) const {
+            return m_hash.hasAttribute(path, KARABO_SCHEMA_ARCHIVE_POLICY);
+        }
+            
+        const int& Schema::getArchivePolicy(const std::string& path) const {
+            return m_hash.getAttribute<int> (path, KARABO_SCHEMA_ARCHIVE_POLICY);
+        }
+        
         //******************************************************
         //      min/max for number of nodes in ListElement     *                     *  
         //******************************************************
