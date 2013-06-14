@@ -4,6 +4,9 @@
 #
 # Author: <burkhard.heisen@xfel.eu>
 #
+# This script is typically automatically called during the karabo build.
+# There should be no need to call it manually...(also it works as reported)
+#
 
 # Help function for checking successful execution of commands
 safeRunCommand() {
@@ -19,10 +22,32 @@ safeRunCommand() {
     fi
 }
 
-
 CWD=$(pwd)
-DIR=$(dirname $0)
-cd $DIR
+
+# Make sure the script runs in the correct directory
+scriptDir=$(dirname `[[ $0 = /* ]] && echo "$0" || echo "$PWD/${0#./}"`)
+cd ${scriptDir}
+if [ $? -ne 0 ]; then
+    echo " Could not change directory to ${scriptDir}"
+    exit 1;
+fi
+
+# Parse command line
+if [[ -z "$1" ||  $1 = "help" || $1 = "-h" ||  $1 = "-help" || $1 = "--help" ]]; then
+    AVAILABLE=$(ls resources)
+    cat <<End-of-help
+Usage: $0 RESOURCE_NAME [INSTALL_PREFIX]
+
+RESOURCE_NAME  - The resource to be installed out of those possible:
+
+$AVAILABLE
+
+INSTALL_PREFIX - The install location of the selected resource
+
+End-of-help
+
+    exit 0
+fi
 
 # $1 RESOURCE_NAME   -> Name of the installed dependency
 # $2 INSTALL_PREFIX  -> Installation prefix
