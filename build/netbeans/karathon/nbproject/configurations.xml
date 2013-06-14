@@ -92,6 +92,8 @@
       <toolsSet>
         <remote-sources-mode>LOCAL_SOURCES</remote-sources-mode>
         <compilerSet>default</compilerSet>
+        <dependencyChecking>true</dependencyChecking>
+        <rebuildPropChanged>false</rebuildPropChanged>
       </toolsSet>
       <compileType>
         <ccTool>
@@ -107,9 +109,8 @@
           </preprocessorList>
         </ccTool>
         <linkerTool>
+          <output>${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/lib/libkarathon.${CND_DLIB_EXT}</output>
           <linkerAddLib>
-            <pElem>/opt/local/nss</pElem>
-            <pElem>/opt/local/nspr</pElem>
             <pElem>${KARABO}/lib</pElem>
             <pElem>${KARABO}/extern/lib</pElem>
           </linkerAddLib>
@@ -120,7 +121,18 @@
             <pElem>${KARABO}/lib</pElem>
           </linkerDynSerch>
           <linkerLibItems>
-            <linkerLibLibItem>karabo</linkerLibLibItem>
+            <linkerLibProjectItem>
+              <makeArtifact PL="../karabo"
+                            CT="2"
+                            CN="Debug"
+                            AC="true"
+                            BL="false"
+                            WD="../karabo"
+                            BC="${MAKE} -j10 -f Makefile CONF=Debug"
+                            CC="${MAKE} -j10 -f Makefile CONF=Debug clean"
+                            OP="${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/lib/libkarabo.${CND_DLIB_EXT}">
+              </makeArtifact>
+            </linkerLibProjectItem>
             <linkerLibLibItem>boost_chrono</linkerLibLibItem>
             <linkerLibLibItem>boost_date_time</linkerLibLibItem>
             <linkerLibLibItem>boost_filesystem</linkerLibLibItem>
@@ -326,6 +338,8 @@
       <toolsSet>
         <remote-sources-mode>LOCAL_SOURCES</remote-sources-mode>
         <compilerSet>default</compilerSet>
+        <dependencyChecking>true</dependencyChecking>
+        <rebuildPropChanged>false</rebuildPropChanged>
       </toolsSet>
       <compileType>
         <cTool>
@@ -351,9 +365,8 @@
           <developmentMode>5</developmentMode>
         </asmTool>
         <linkerTool>
+          <output>${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/lib/libkarathon.${CND_DLIB_EXT}</output>
           <linkerAddLib>
-            <pElem>/opt/local/nss</pElem>
-            <pElem>/opt/local/nspr</pElem>
             <pElem>${KARABO}/lib</pElem>
             <pElem>${KARABO}/extern/lib</pElem>
           </linkerAddLib>
@@ -364,7 +377,18 @@
             <pElem>${KARABO}/lib</pElem>
           </linkerDynSerch>
           <linkerLibItems>
-            <linkerLibLibItem>karabo</linkerLibLibItem>
+            <linkerLibProjectItem>
+              <makeArtifact PL="../karabo"
+                            CT="2"
+                            CN="Release"
+                            AC="false"
+                            BL="false"
+                            WD="../karabo"
+                            BC="${MAKE} -j10 -f Makefile CONF=Release"
+                            CC="${MAKE} -j10 -f Makefile CONF=Release clean"
+                            OP="${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/lib/libkarabo.${CND_DLIB_EXT}">
+              </makeArtifact>
+            </linkerLibProjectItem>
             <linkerLibLibItem>boost_chrono</linkerLibLibItem>
             <linkerLibLibItem>boost_date_time</linkerLibLibItem>
             <linkerLibLibItem>boost_filesystem</linkerLibLibItem>
@@ -375,9 +399,6 @@
             <linkerLibLibItem>boost_system</linkerLibLibItem>
             <linkerLibLibItem>boost_thread</linkerLibLibItem>
             <linkerLibLibItem>hdf5</linkerLibLibItem>
-            <linkerLibLibItem>hdf5_cpp</linkerLibLibItem>
-            <linkerLibLibItem>hdf5_hl</linkerLibLibItem>
-            <linkerLibLibItem>hdf5_hl_cpp</linkerLibLibItem>
             <linkerLibLibItem>log4cpp</linkerLibLibItem>
             <linkerLibLibItem>openmqc</linkerLibLibItem>
             <linkerLibLibItem>python2.7</linkerLibLibItem>
@@ -570,6 +591,8 @@
       <toolsSet>
         <remote-sources-mode>LOCAL_SOURCES</remote-sources-mode>
         <compilerSet>default</compilerSet>
+        <dependencyChecking>true</dependencyChecking>
+        <rebuildPropChanged>false</rebuildPropChanged>
       </toolsSet>
       <compileType>
         <ccTool>
@@ -582,6 +605,7 @@
           </incDir>
         </ccTool>
         <linkerTool>
+          <output>${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/lib/libkarathon.${CND_DLIB_EXT}</output>
           <linkerAddLib>
             <pElem>/opt/local/lib/nss</pElem>
             <pElem>/opt/local/lib/nspr</pElem>
@@ -595,7 +619,18 @@
             <pElem>${KARABO}/lib</pElem>
           </linkerDynSerch>
           <linkerLibItems>
-            <linkerLibLibItem>karabo</linkerLibLibItem>
+            <linkerLibProjectItem>
+              <makeArtifact PL="../karabo"
+                            CT="2"
+                            CN="Debug-MacOSX"
+                            AC="false"
+                            BL="false"
+                            WD="../karabo"
+                            BC="${MAKE} -j10 -f Makefile CONF=Debug-MacOSX"
+                            CC="${MAKE} -j10 -f Makefile CONF=Debug-MacOSX clean"
+                            OP="${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/lib/libkarabo.${CND_DLIB_EXT}">
+              </makeArtifact>
+            </linkerLibProjectItem>
             <linkerLibLibItem>boost_chrono</linkerLibLibItem>
             <linkerLibLibItem>boost_date_time</linkerLibLibItem>
             <linkerLibLibItem>boost_filesystem</linkerLibLibItem>
