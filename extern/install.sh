@@ -1,5 +1,11 @@
 #!/bin/bash
 
+# Script for automated building of external dependencies
+#
+# Author: <burkhard.heisen@xfel.eu>
+#
+
+# Help function for checking successful execution of commands
 safeRunCommand() {
     typeset cmnd="$*"
     typeset ret_code
