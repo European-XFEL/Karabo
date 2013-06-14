@@ -346,7 +346,7 @@ class DeviceServer(object):
                 #myHostName, someList, myHostAddrList = socket.gethostbyaddr(socket.gethostname())
                 return self.hostname + "_" + devClassId + "_" + str(_index)
             tokens = self.serverid.split("_")
-            _domain = tokens.pop(0) + "-" + tokens.pop()
+            _domain = tokens.pop(0) + tokens.pop()
             _id = _domain + "_" + devClassId + "_" + str(_index)
             return _id
      
