@@ -73,15 +73,17 @@ FFLAGS=
 ASFLAGS=
 
 # Link Libraries and Options
-LDLIBSOPTIONS=-L/opt/local/nss -L/opt/local/nspr -L${KARABO}/lib -L${KARABO}/extern/lib -Wl,-rpath,\$$ORIGIN -Wl,-rpath,\$$ORIGIN/../extern/lib -Wl,-rpath,${KARABO}/extern/lib -Wl,-rpath,${KARABO}/lib -lkarabo -lboost_chrono -lboost_date_time -lboost_filesystem -lboost_numpy -lboost_python -lboost_regex -lboost_signals -lboost_system -lboost_thread -lhdf5 -llog4cpp -lopenmqc -lpython2.7
+LDLIBSOPTIONS=-L${KARABO}/lib -L${KARABO}/extern/lib -Wl,-rpath,\$$ORIGIN -Wl,-rpath,\$$ORIGIN/../extern/lib -Wl,-rpath,${KARABO}/extern/lib -Wl,-rpath,${KARABO}/lib -Wl,-rpath,../karabo/dist/Debug/GNU-Linux-x86/lib -L../karabo/dist/Debug/GNU-Linux-x86/lib -lkarabo -lboost_chrono -lboost_date_time -lboost_filesystem -lboost_numpy -lboost_python -lboost_regex -lboost_signals -lboost_system -lboost_thread -lhdf5 -llog4cpp -lopenmqc -lpython2.7
 
 # Build Targets
 .build-conf: ${BUILD_SUBPROJECTS}
-	"${MAKE}"  -f nbproject/Makefile-${CND_CONF}.mk ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libkarathon.${CND_DLIB_EXT}
+	"${MAKE}"  -f nbproject/Makefile-${CND_CONF}.mk ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/lib/libkarathon.${CND_DLIB_EXT}
 
-${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libkarathon.${CND_DLIB_EXT}: ${OBJECTFILES}
-	${MKDIR} -p ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}
-	${LINK.cc} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libkarathon.${CND_DLIB_EXT} ${OBJECTFILES} ${LDLIBSOPTIONS} -shared -fPIC
+${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/lib/libkarathon.${CND_DLIB_EXT}: ../karabo/dist/Debug/GNU-Linux-x86/lib/libkarabo.so
+
+${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/lib/libkarathon.${CND_DLIB_EXT}: ${OBJECTFILES}
+	${MKDIR} -p ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/lib
+	${LINK.cc} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/lib/libkarathon.${CND_DLIB_EXT} ${OBJECTFILES} ${LDLIBSOPTIONS} -shared -fPIC
 
 ${OBJECTDIR}/_ext/381567218/ChannelWrap.o: ../../../src/karathon/ChannelWrap.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/381567218
@@ -405,7 +407,7 @@ ${OBJECTDIR}/_ext/381567218/p2pbinding_nomain.o: ${OBJECTDIR}/_ext/381567218/p2p
 # Clean Targets
 .clean-conf: ${CLEAN_SUBPROJECTS}
 	${RM} -r ${CND_BUILDDIR}/${CND_CONF}
-	${RM} ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libkarathon.${CND_DLIB_EXT}
+	${RM} ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/lib/libkarathon.${CND_DLIB_EXT}
 
 # Subprojects
 .clean-subprojects:
