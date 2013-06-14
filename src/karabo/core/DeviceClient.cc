@@ -648,9 +648,12 @@ namespace karabo {
             m_signalSlotable->call(instanceId, "slotReconfigure", values);
         }
 
-
+        
         std::string DeviceClient::generateOwnInstanceId() {
-            return std::string(boost::asio::ip::host_name() + "_DeviceClient_" + karabo::util::toString(getpid()));
+            std::string hostname(boost::asio::ip::host_name());
+            std::vector<std::string> tokens;
+            boost::split(tokens, hostname, boost::is_any_of("."));
+            return std::string(tokens[0] + "_DeviceClient_" + karabo::util::toString(getpid()));
         }
 
 
