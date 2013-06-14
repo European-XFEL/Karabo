@@ -57,9 +57,10 @@ class NavigationTreeView(QTreeView):
             return dict()
         elif level == 1:
             type = NavigationItemTypes.SERVER
-            path = "server." + index.data().toString()
+            serverId = index.data().toString()
+            path = "server." + serverId
             
-            return dict(key=path, type=type)
+            return dict(key=path, type=type, serverId=serverId)
         elif level == 2:
             type = NavigationItemTypes.CLASS
             parentIndex = index.parent()
@@ -73,7 +74,7 @@ class NavigationTreeView(QTreeView):
             deviceId = index.data().toString()
             path = str("device." + deviceId)
             
-            return dict(key=path, type=type)
+            return dict(key=path, type=type, deviceId=deviceId)
 
 
     def updateView(self, config):
@@ -139,6 +140,9 @@ class NavigationTreeView(QTreeView):
         key = itemInfo.get(QString('key'))
         if key is None:
             key = itemInfo.get('key')
+        
+        if len(key) == 0:
+            return
         
         index = self.model().findIndex(key)
         

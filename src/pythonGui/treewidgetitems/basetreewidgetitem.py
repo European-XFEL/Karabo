@@ -32,7 +32,7 @@ class BaseTreeWidgetItem(QTreeWidgetItem):
             super(BaseTreeWidgetItem, self).__init__(parent)
         
         self.internalKey = key
-
+        
         # The components can be defined in Subclasses
         self.__displayComponent = None
         self.__editableComponent = None
