@@ -224,7 +224,7 @@
                             CT="2"
                             CN="Debug-MacOSX"
                             AC="true"
-                            BL="true"
+                            BL="false"
                             WD="../karabo"
                             BC="${MAKE} -j8 -f Makefile CONF=Debug-MacOSX"
                             CC="${MAKE} -j8 -f Makefile CONF=Debug-MacOSX clean"
