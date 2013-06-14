@@ -33,7 +33,7 @@ if [[ -z "$1" ||  $1 = "help" || $1 = "-h" ||  $1 = "-help" || $1 = "--help" ]];
 Usage: $0 Debug|Release [flags]
 
 Available flags:
-  --skip    - Skips automatic installation of system dependencies
+  --auto      - Tries to automatically install needed system packages (sudo rights required!)
 
 End-of-help
 
@@ -50,10 +50,10 @@ else
     exit 1
 fi
 # Check whether to skip sys deps
-if [[ $2 = "--skip" ]]; then
-    SKIP="y"
-else 
+if [[ $2 = "--auto" ]]; then
     SKIP="n"
+else 
+    SKIP="y"
 fi
 
 # Get some information about our system
@@ -104,7 +104,8 @@ sleep 2
 
 safeRunCommand "cd build/netbeans/karabo"
 safeRunCommand "make CONF=$CONF -j$NUM_CORES"
-safeRunCommand "make CONF=$CONF package"
+safeRunCommand "make CONF=$CONF bundle-package"
 
-echo "### Successfully finished building and packaging of karaboFramework. ###"
+echo "### Successfully finished building and packaging of karaboFramework ###"
+echo
 exit 0
