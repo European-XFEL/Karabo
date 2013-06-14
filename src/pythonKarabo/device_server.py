@@ -306,14 +306,11 @@ class DeviceServer(object):
    
     def slotKillServer(self):
         self.log.INFO("Received kill signal")
-        print "self.deviceInstanceMap.keys():", self.deviceInstanceMap.keys()
         for deviceid  in self.deviceInstanceMap.keys():
-            print "slotKillServer:\tsend 'slotKillDevice' signal to '{}'".format(deviceid)
             self.ss.call(deviceid, "slotKillDevice")
             launcherThread = self.deviceInstanceMap[deviceid]
             launcherThread.join()
         self.deviceInstanceMap = {}
-        print "slotKillServer: send 'slotDeviceServerInstanceGone' to {}".format(self.serverid)
         self.ss.call("*", "slotDeviceServerInstanceGone", self.serverid)
         self.stopDeviceServer()
         
