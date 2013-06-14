@@ -29,11 +29,15 @@ if [ "$OS" = "Linux" ]; then
     DISTRO_ID=( $(lsb_release -is) )
     DISTRO_RELEASE=$(lsb_release -rs)
     NUM_CORES=`grep "processor" /proc/cpuinfo | wc -l`
-    if [ "$NUM_CORES" -gt "8" ]; then NUM_CORES=8; fi
 elif [ "$OS" = "Darwin" ]; then
     DISTRO_ID=MacOSX
     DISTRO_RELEASE=$(uname -r)
+    NUM_CORES=`sysctl hw.ncpu | awk '{print $2}'`
 fi
+
+# Cut the total number to ensure memory fitness
+if [ "$NUM_CORES" -gt "8" ]; then NUM_CORES=8; fi
+
 EXTRACT_SCRIPT=$(pwd)/.extract.sh
 PACKAGEDIR=$(pwd)/../../../package/$CONF/$DISTRO_ID/$DISTRO_RELEASE/$MACHINE/$PACKAGENAME
 #INSTALLSCRIPT=karabo-${VERSION}-${CONF}-${DISTRO_ID}-${DISTRO_RELEASE}-${MACHINE}.sh
