@@ -123,8 +123,8 @@ namespace karabo {
                     onRemoveVisibleDevice(channel, header);
                 } else if (type == "getClassSchema") {
                     onGetClassSchema(channel, header, body);
-                } else if (type == "getDeviceSchema") {
-                    onGetDeviceSchema(channel, header, body);
+                } else if (type == "getDeviceHash") {
+                    onGetDeviceHash(channel, header, body);
                 }
             } else {
                 KARABO_LOG_WARN << "Ignoring request";
@@ -232,11 +232,13 @@ namespace karabo {
             channel->write(h, b);
         }
 
-        void GuiServerDevice::onGetDeviceSchema(karabo::net::Channel::Pointer channel, const karabo::util::Hash& header, const std::string& body) {
+        void GuiServerDevice::onGetDeviceHash(karabo::net::Channel::Pointer channel, const karabo::util::Hash& header, const std::string& body) {
             string deviceId = header.get<string > ("deviceId");
             boost::mutex::scoped_lock lock(m_channelMutex); 
-            Hash h("type", "deviceDescription");
+            Hash h("type", "deviceHash");
             Hash b("device." + deviceId + ".description", remote().getFullSchema(deviceId));
+            b.set("device." + deviceId + ".configuration", remote().get(deviceId));
+            b.set("device." + deviceId + ".activeSchema", remote().getActiveSchema(deviceId));
             channel->write(h, b);
         }
 
