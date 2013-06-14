@@ -24,4 +24,14 @@ else
     echo
 fi
 
+if [ $(which pdflatex) ]; then
+
+    cd latex
+    pdflatex refman.tex
+    # Do it again, honey
+    pdflatex refman.tex
+    cp refman.pdf ../karaboApi.pdf
+
+fi
+
 exit
