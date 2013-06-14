@@ -5,6 +5,20 @@
 # Author: <burkhard.heisen@xfel.eu>
 #
 
+# Help function for checking successful execution of commands
+safeRunCommand() {
+    typeset cmnd="$*"
+    typeset ret_code
+
+    echo cmnd=$cmnd
+    eval $cmnd
+    ret_code=$?
+    if [ $ret_code != 0 ]; then
+	printf "Error : [%d] when executing command: '$cmnd'" $ret_code
+	exit $ret_code
+    fi
+}
+
 # Make sure the script runs in the correct directory
 scriptDir=$(dirname `[[ $0 = /* ]] && echo "$0" || echo "$PWD/${0#./}"`)
 cd ${scriptDir}
@@ -13,17 +27,33 @@ if [ $? -ne 0 ]; then
     exit 1;
 fi
 
+# Parse command line
+if [[ -z "$1" ||  $1 = "help" || $1 = "-h" ||  $1 = "-help" || $1 = "--help" ]]; then
+    cat <<End-of-help
+Usage: $0 Debug|Release [flags]
+
+Available flags:
+  --skip    - Skips automatic installation of system dependencies
+
+End-of-help
+
+    exit 0
+fi
+
 # Fetch configuration type (Release or Debug)
-if [ $# -gt 1 ]; then
-    if [ $1 = "Release" -o $1 = "Debug" ]
+if [[ $1 = "Release" || $1 = "Debug" ]]; then
 	CONF=$1
-    else
-	echo
-	echo "Invalid option supplied. Allowed options: [Release|Debug]"
-	echo
-    fi
 else
-CONF="Debug" # default
+	echo
+	echo "Invalid option supplied. Allowed options: Release|Debug"
+	echo
+    exit 1
+fi
+# Check whether to skip sys deps
+if [ $2 = "--skip" ]; then
+    SKIP="y"
+else 
+    SKIP="n"
 fi
 
 # Get some information about our system
@@ -40,17 +70,27 @@ elif [ "$OS" = "Darwin" ]; then
     CONF=${CONF}-MacOSX
 fi
 
-echo 
-echo "### Fetching dependencies from ${DISTRO_ID}'s package management system. ###"
-echo
-
-sleep 2
-
-# Platform specific sections here
-if [ "$DISTRO_ID" == "Ubuntu" ]; then
-    sudo apt-get install subversion build-essential doxygen libqt4-dev libnss3-dev libnspr4-dev libreadline-dev libsqlite3-dev libX11-dev zlib1g-dev libXext-dev gfortran liblapack-dev
-elif [ "$DISTRO_ID" == "Scientific" ]; then
-    echo "### install necessary devel packages: ###\n yum install sqlite-devel sqlite \n yum --enablerepo=epel install qtwebkit-devel"
+if [ "$SKIP" = "n" ]; then
+    echo 
+    echo "### Fetching dependencies from ${DISTRO_ID}'s package management system. ###"
+    echo
+    
+    sleep 2
+    
+    # Platform specific sections here
+    if [ "$DISTRO_ID" == "Ubuntu" ]; then
+        safeRunCommand "sudo apt-get install subversion build-essential doxygen libqt4-dev libnss3-dev libnspr4-dev libreadline-dev libsqlite3-dev libqt4-sql-sqlite libX11-dev zlib1g-dev gfortran liblapack-dev m4 libssl-dev"
+        if [ "$DISTRO_RELEASE" = "10.04" ]; then
+            safeRunCommand "sudo apt-get install libxext-dev"
+        fi
+        safeRunCommand "sudo apt-get install krb5-user"
+    elif [ "$DISTRO_ID" == "Scientific" ]; then
+        safeRunCommand "yum install redhat-lsb"
+        safeRunCommand "yum install make gcc gcc-c++ gcc-gfortran subversion doxygen nspr-devel nss-devel zlib-devel libX11-devel readline-devel qt-devel lapack-devel sqlite-devel openssl-devel"
+        safeRunCommand "yum install epel-release
+    yum --enablerepo=epel install qtwebkit-devel"
+        safeRunCommand "yum install krb5-workstation"
+    fi
 fi
 
 echo
@@ -59,9 +99,9 @@ echo
 
 sleep 2
 
-cd build/netbeans/karabo
-make CONF=$CONF -j$NUM_CORES 
-make CONF=$CONF package 
+safeRunCommand "cd build/netbeans/karabo"
+safeRunCommand "make CONF=$CONF -j$NUM_CORES"
+safeRunCommand "make CONF=$CONF package"
 
 echo "### Successfully finished building and packaging of karaboFramework. ###"
-
+exit 0

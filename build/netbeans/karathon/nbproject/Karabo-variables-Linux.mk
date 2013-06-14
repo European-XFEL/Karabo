@@ -22,6 +22,14 @@ CND_ARTIFACT_PATH_Release=dist/Release/GNU-Linux-x86/libkarathon.so
 CND_PACKAGE_DIR_Release=dist/Release/GNU-Linux-x86/package
 CND_PACKAGE_NAME_Release=libkarathon.so.tar
 CND_PACKAGE_PATH_Release=dist/Release/GNU-Linux-x86/package/libkarathon.so.tar
+# Debug-MacOSX configuration
+CND_PLATFORM_Debug-MacOSX=GNU-Linux-x86
+CND_ARTIFACT_DIR_Debug-MacOSX=dist/Debug-MacOSX/GNU-Linux-x86
+CND_ARTIFACT_NAME_Debug-MacOSX=libkarathon.so
+CND_ARTIFACT_PATH_Debug-MacOSX=dist/Debug-MacOSX/GNU-Linux-x86/libkarathon.so
+CND_PACKAGE_DIR_Debug-MacOSX=dist/Debug-MacOSX/GNU-Linux-x86/package
+CND_PACKAGE_NAME_Debug-MacOSX=libkarathon.so.tar
+CND_PACKAGE_PATH_Debug-MacOSX=dist/Debug-MacOSX/GNU-Linux-x86/package/libkarathon.so.tar
 #
 # include compiler specific variables
 #
