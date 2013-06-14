@@ -118,7 +118,9 @@ namespace karabo {
 
             #define KARABO_SCHEMA_ALARM_LOW "alarmLow"
             #define KARABO_SCHEMA_ALARM_HIGH "alarmHigh"
-
+            
+            #define KARABO_SCHEMA_ARCHIVE_POLICY "archivePolicy"
+            
             #define KARABO_SCHEMA_MIN "min"
             #define KARABO_SCHEMA_MAX "max"
 
@@ -189,6 +191,18 @@ namespace karabo {
                 OPTIONAL_PARAM,
                 MANDATORY_PARAM,
                 INTERNAL_PARAM
+            };
+            
+            enum ArchivePolicy {
+
+                EVERY_EVENT,
+                EVERY_100MS,
+                EVERY_1S,
+                EVERY_5S,
+                EVERY_10S,
+                EVERY_1MIN,
+                EVERY_10MIN,
+                NO_ARCHIVING
             };
 
         public:
@@ -337,7 +351,7 @@ namespace karabo {
             bool isAssignmentInternal(const std::string& path) const;
 
             const int getAssignment(const std::string& path) const;
-
+            
             //**********************************************
             //                  Options                    *
             //**********************************************
@@ -657,6 +671,16 @@ namespace karabo {
 
             bool hasAlarmHigh(const std::string& path) const;
 
+            //**********************************************
+            //               archivePolicy                 *
+            //**********************************************
+            
+            void setArchivePolicy(const std::string& path, const ArchivePolicy& value);
+
+            bool hasArchivePolicy(const std::string& path) const;
+            
+            const int& getArchivePolicy(const std::string& path) const;
+            
             //******************************************************
             //      min/max for number of nodes in ListElement     *                       
             //******************************************************

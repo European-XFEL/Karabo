@@ -330,6 +330,19 @@ void Schema_Test::testHasAlarmWarn() {
     CPPUNIT_ASSERT(m_schema.hasAlarmHigh("exampleKey5") == true);
 }
 
+void Schema_Test::testArchivePolicy() {
+    Schema sch("OtherSchemaElements", Schema::AssemblyRules(READ | WRITE | INIT));
+    OtherSchemaElements::expectedParameters(sch);
+
+    CPPUNIT_ASSERT(sch.hasArchivePolicy("testfile") == true);
+    CPPUNIT_ASSERT(sch.hasArchivePolicy("vecInt") == true);
+    CPPUNIT_ASSERT(sch.hasArchivePolicy("vecDouble") == true);
+    
+    CPPUNIT_ASSERT(sch.getArchivePolicy("testfile") == Schema::EVERY_10MIN);
+    CPPUNIT_ASSERT(sch.getArchivePolicy("vecInt") == Schema::EVERY_EVENT);
+    CPPUNIT_ASSERT(sch.getArchivePolicy("vecDouble") == Schema::NO_ARCHIVING);
+   
+}
 
 void Schema_Test::testPerKeyFunctionality() {
 

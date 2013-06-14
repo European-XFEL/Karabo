@@ -398,6 +398,7 @@ namespace configurationTest {
                     .readOnly().initialValue("initFile")
                     .alarmHigh("a").alarmLow("b")
                     .warnHigh("c").warnLow("d")
+                    .archivePolicy(Schema::EVERY_10MIN)
                     .commit();
 
             vector<int> vecInit;
@@ -414,6 +415,7 @@ namespace configurationTest {
                     .initialValue(vecInit)
                     .warnLow(vecWarnL)
                     .warnHigh(vecWarnH)
+                    .archivePolicy(Schema::EVERY_EVENT)
                     .commit();
 
             vector<double> vecAlarmL(3, -5.5);
@@ -423,6 +425,7 @@ namespace configurationTest {
                     .readOnly()
                     .alarmLow(vecAlarmL)
                     .alarmHigh(vecAlarmH)
+                    .archivePolicy(Schema::NO_ARCHIVING)
                     .commit();
 
             VECTOR_INT32_ELEMENT(expected)

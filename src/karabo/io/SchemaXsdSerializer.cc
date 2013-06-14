@@ -416,6 +416,13 @@ namespace karabo {
                   pugi::xml_node alarmHighElem = documentationNode.append_child("a:alarmHigh");
                   alarmHighElem.append_child(pugi::node_pcdata).set_value(alarmHigh.c_str());   
               }
+              
+              if (schema.hasArchivePolicy(key)){
+                  int archivePolicy = schema.getArchivePolicy(key);
+                  pugi::xml_node archivePolicyElem = documentationNode.append_child("a:archivePolicy");
+                  archivePolicyElem.append_child(pugi::node_pcdata).set_value(toString(archivePolicy).c_str());
+              } 
+                  
             }
             
             if (isVector) {
