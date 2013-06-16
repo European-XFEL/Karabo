@@ -485,6 +485,8 @@ namespace karabo {
             
             void checkMaster();
             
+            std::string getInstanceType(const karabo::util::Hash& instanceInfo) const;
+            
         };
 
     }
