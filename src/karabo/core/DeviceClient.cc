@@ -74,7 +74,12 @@ namespace karabo {
                 if (instanceId.substr(0,6) == "Karabo") continue;
                 
                 // Track the instance if we are running without master
-                if (!m_systemHasMaster) m_signalSlotable->trackExistenceOfInstance(instanceId);
+                if (!m_systemHasMaster) {
+                    string type(getInstanceType(instanceInfo));
+                    if (type == "server" || type == "device") {
+                        m_signalSlotable->trackExistenceOfInstance(instanceId);
+                    }
+                }
                 
                 m_runtimeSystemDescription.merge(prepareTopologyEntry(instanceId, instanceInfo));
             }
@@ -99,6 +104,13 @@ namespace karabo {
             if (node) type = node->getValue<string>();
             return string(type + "." + instanceId);
         }
+        
+        std::string DeviceClient::getInstanceType(const karabo::util::Hash& instanceInfo) const {
+            boost::optional<const Hash::Node&> node = instanceInfo.find("type");
+            string type("unknown");
+            if (node) type = node->getValue<string>();
+            return type;
+         }
 
 
         void DeviceClient::onInstanceNotAvailable(const std::string& instanceId) {
@@ -124,7 +136,7 @@ namespace karabo {
         void DeviceClient::onInstanceAvailableAgain(const std::string& instanceId) {
             Hash instanceInfo;
             try {
-                m_signalSlotable->request("*", "slotPing", instanceId, true).timeout(m_internalTimeout).receive(instanceInfo);
+                m_signalSlotable->request(instanceId, "slotPing", instanceId, true).timeout(m_internalTimeout).receive(instanceInfo);
             } catch (karabo::util::TimeoutException) {
                 KARABO_RETHROW_AS(KARABO_LOGIC_EXCEPTION("Bad timeout exception on instance that pretended to just being available again (consult BH if you see this)"));
             }
