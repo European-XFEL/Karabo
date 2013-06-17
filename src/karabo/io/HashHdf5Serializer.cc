@@ -25,6 +25,46 @@ namespace karabo {
 
         ////////////////////////////////////
 
+        HashHdf5Serializer::HashHdf5Serializer(const karabo::util::Hash& input) : Hdf5Serializer(input) {
+            m_stringStid = karabo::io::h5::ScalarTypes::getHdf5StandardType<std::string>();
+            m_stringNtid = karabo::io::h5::ScalarTypes::getHdf5NativeType<std::string>();
+            m_spaceId = H5Screate(H5S_SCALAR);
+
+            m_gcpl = H5Pcreate(H5P_GROUP_CREATE);
+            KARABO_CHECK_HDF5_STATUS(m_gcpl);
+            KARABO_CHECK_HDF5_STATUS(H5Pset_link_creation_order(m_gcpl, H5P_CRT_ORDER_TRACKED | H5P_CRT_ORDER_INDEXED));
+
+            m_dcpl = H5Pcreate(H5P_DATASET_CREATE);
+            KARABO_CHECK_HDF5_STATUS(m_dcpl);
+            KARABO_CHECK_HDF5_STATUS(H5Pset_attr_creation_order(m_dcpl, H5P_CRT_ORDER_TRACKED | H5P_CRT_ORDER_INDEXED));
+        };
+
+
+        HashHdf5Serializer::~HashHdf5Serializer() {
+            KARABO_CHECK_HDF5_STATUS(H5Pclose(m_gcpl));
+            KARABO_CHECK_HDF5_STATUS(H5Pclose(m_dcpl));
+            KARABO_CHECK_HDF5_STATUS(H5Sclose(m_spaceId));
+            KARABO_CHECK_HDF5_STATUS(H5Tclose(m_stringNtid));
+            KARABO_CHECK_HDF5_STATUS(H5Tclose(m_stringStid));
+        }
+
+
+        void HashHdf5Serializer::save(const karabo::util::Hash& object, hid_t h5file, const std::string& groupName) {
+            hid_t group = H5Gcreate(h5file, groupName.c_str(), H5P_DEFAULT, m_gcpl, H5P_DEFAULT);
+            KARABO_CHECK_HDF5_STATUS(group);
+            serializeHash(object, group);
+            KARABO_CHECK_HDF5_STATUS(H5Gclose(group));
+            KARABO_CHECK_HDF5_STATUS(H5Fflush(h5file, H5F_SCOPE_LOCAL));
+        }
+
+
+        void HashHdf5Serializer::load(karabo::util::Hash& object, hid_t h5file, const std::string& groupName) {
+            hid_t group = H5Gopen2(h5file, groupName.c_str(), H5P_DEFAULT);
+            KARABO_CHECK_HDF5_STATUS(group);
+            serializeHash(group, object);
+            KARABO_CHECK_HDF5_STATUS(H5Gclose(group));
+        }
+
 
         void HashHdf5Serializer::serializeHash(const karabo::util::Hash& data, hid_t group) {
 
@@ -76,11 +116,9 @@ namespace karabo {
             const std::string& key = el.getKey();
             hid_t newGroup = H5Gcreate(group, key.c_str(), H5P_DEFAULT, m_gcpl, H5P_DEFAULT);
             KARABO_CHECK_HDF5_STATUS(newGroup);
-            Hash tmp;
-            tmp.set("a", 0);
-            karabo::util::Hash::Node& krbNode = tmp.getNode("a");
-            //            krbNode.setAttribute("KRB_type", "VECTOR_HASH");
-            krbNode.setAttribute("KRB_size", static_cast<unsigned long long> (vec.size()));
+            if (!el.getAttributes().empty()) {
+                serializeAttributes(el, newGroup);
+            }
 
             for (size_t i = 0; i < vec.size(); ++i) {
                 std::ostringstream oss1;
@@ -89,6 +127,11 @@ namespace karabo {
                 hid_t h5obj = H5Gcreate(group, newKey.c_str(), H5P_DEFAULT, m_gcpl, H5P_DEFAULT);
                 KARABO_CHECK_HDF5_STATUS(h5obj);
                 if (i == 0) {
+                    Hash tmp;
+                    tmp.set("a", 0);
+                    karabo::util::Hash::Node& krbNode = tmp.getNode("a");
+                    //            krbNode.setAttribute("KRB_type", "VECTOR_HASH");
+                    krbNode.setAttribute("KRB_size", static_cast<unsigned long long> (vec.size()));
                     serializeAttributes(krbNode, h5obj);
                 }
                 serializeHash(vec[i], h5obj);
@@ -400,15 +443,15 @@ namespace karabo {
         }
 
 
-        void HashHdf5Serializer::writeSingleAttribute(hid_t group, const bool& value, const std::string & key) {
+        void HashHdf5Serializer::writeSingleAttribute(hid_t h5obj, const bool& value, const std::string & key) {
             try {
                 unsigned char converted = boost::numeric_cast<unsigned char>(value);
                 hid_t stid = karabo::io::h5::ScalarTypes::getHdf5StandardType<bool>();
                 hid_t ntid = karabo::io::h5::ScalarTypes::getHdf5NativeType<bool>();
-                hid_t attrId = H5Acreate2(group, key.c_str(), stid, m_spaceId, H5P_DEFAULT, H5P_DEFAULT);
+                hid_t attrId = H5Acreate2(h5obj, key.c_str(), stid, m_spaceId, H5P_DEFAULT, H5P_DEFAULT);
                 KARABO_CHECK_HDF5_STATUS(attrId);
                 KARABO_CHECK_HDF5_STATUS(H5Awrite(attrId, ntid, &converted));
-                writeSingleAttribute(group, 1, "KRB_bool_" + key);
+                writeSingleAttribute(h5obj, 1, "KRB_bool_" + key);
                 KARABO_CHECK_HDF5_STATUS(H5Tclose(ntid));
                 KARABO_CHECK_HDF5_STATUS(H5Tclose(stid));
                 KARABO_CHECK_HDF5_STATUS(H5Aclose(attrId));
@@ -545,6 +588,7 @@ namespace karabo {
                 hid_t dsId = H5Acreate2(group, key.c_str(), stid, spaceId, H5P_DEFAULT, H5P_DEFAULT);
                 KARABO_CHECK_HDF5_STATUS(dsId);
                 KARABO_CHECK_HDF5_STATUS(H5Awrite(dsId, ntid, ptr));
+                writeSingleAttribute(group, 1, "KRB_bool_" + key);
                 KARABO_CHECK_HDF5_STATUS(H5Tclose(ntid));
                 KARABO_CHECK_HDF5_STATUS(H5Tclose(stid));
                 KARABO_CHECK_HDF5_STATUS(H5Sclose(spaceId));
@@ -579,6 +623,7 @@ namespace karabo {
                                 serializeVectorOfHashesElement(gid, name, data, i, group);
                             } else {
                                 serializeHashElement(gid, name, data);
+                                serializeAttributes(gid, data.getNode(name));
                             }
 
                             KARABO_CHECK_HDF5_STATUS(H5Gclose(gid));
