@@ -172,11 +172,10 @@ class DeviceServer(object):
         if not isValid:
             print "Master says:",answer
             return
-        else:
-            print "Master says:",answer
+
         self.ss = SignalSlotable.create(self.serverid)
-        
         self.log = Logger.getLogger(self.serverid)
+        self.log.INFO("Master says: {}".format(answer))
         self.log.INFO("Starting Karabo DeviceServer on host: {}".format(self.hostname))
         self._registerAndConnectSignalsAndSlots()
         self.fsm.start()
@@ -200,7 +199,7 @@ class DeviceServer(object):
     def idleStateOnEntry(self):
         saveToFile(Hash("DeviceServer.serverId", self.serverid), "autoload.xml")
         self.log.INFO("DeviceServer starts up with id: {}".format(self.serverid))
-        self.log.INFO("Keep watching directory: {} for Device plugins".format(self.pluginLoader.getPluginDirectory()))
+        self.log.INFO("Keep watching directory: \"{}\" for Device plugins".format(self.pluginLoader.getPluginDirectory()))
         self.pluginThread = threading.Thread(target = self.scanPlugins)
         self.scanning = True
         self.pluginThread.start()
@@ -249,6 +248,7 @@ class DeviceServer(object):
                     self.availableModules[name] = deviceClass.__classid__
                     self.availableDevices[deviceClass.__classid__] = {"mustNotify": True, "module": name, "xsd": schema}
                     self.newPluginAvailable()
+                    print "Successfully loaded plugin: \"{}.py\"".format(name)
                 except RuntimeError, e:
                     self.log.ERROR("Failure while building schema for class {}, base class {} and bases {} : {}".format(
                         deviceClass.__classid__, deviceClass.__base_classid__, deviceClass.__bases_classid__, e.message))
