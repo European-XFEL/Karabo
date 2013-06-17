@@ -37,15 +37,15 @@ void FileInputOutput_Test::setUp() {
     rooted.setAttribute("a.b.c", "c2", vector<string > (3, "bla"));
     m_rootedHash = rooted;
 
-    Profiler p("a"); 
+    Profiler p("a");
     p.start("vec");
-//    Hash big("a.b", std::vector<double>(20*1024*1024, 1.0));
+    //    Hash big("a.b", std::vector<double>(20*1024*1024, 1.0));
     Hash big("a.b", std::vector<double>(1000, 1.0));
     p.stop("vec");
-    
+
     double time = HighResolutionTimer::time2double(p.getTime("vec"));
-//    clog << "creating big Hash took " << time << " [s]" << endl; 
-    
+    //    clog << "creating big Hash took " << time << " [s]" << endl; 
+
     vector<Hash>& tmp = big.bindReference<vector<Hash> >("a.c");
     tmp.resize(10000);
     for (size_t i = 0; i < tmp.size(); ++i) {
@@ -70,13 +70,13 @@ void FileInputOutput_Test::writeTextFile() {
     // Using the Factory interface
     Output<Hash>::Pointer out = Output<Hash>::create("TextFile", Hash("filename", resourcePath("file1.xml")));
     out->write(m_rootedHash);
-    
+
     p.start("bigHash");
     out = Output<Hash>::create("TextFile", Hash("filename", resourcePath("file2.xml"), "format.Xml.indentation", -1));
     out->write(m_bigHash);
     p.stop("bigHash");
     double time = HighResolutionTimer::time2double(p.getTime("bigHash"));
-//    clog << "writing big Hash (text) took " << time << " [s]" << endl; 
+    //    clog << "writing big Hash (text) took " << time << " [s]" << endl; 
 
     out = Output<Hash>::create("TextFile", Hash("filename", resourcePath("file3.xml"), "format.Xml.indentation", 0, "format.Xml.writeDataTypes", false));
     out->write(m_unrootedHash);
@@ -93,7 +93,7 @@ void FileInputOutput_Test::writeTextFile() {
 
 
 void FileInputOutput_Test::readTextFile() {
-    
+
     // Using the Factory interface
     Input<Hash>::Pointer in = Input<Hash>::create("TextFile", Hash("filename", resourcePath("file1.xml")));
     Hash h1;
@@ -126,8 +126,9 @@ void FileInputOutput_Test::readTextFile() {
     CPPUNIT_ASSERT(h3a.get<string>("a.b.c") == "1");
 }
 
+
 void FileInputOutput_Test::writeSequenceToTextFile() {
-    
+
     // Using the Factory interface
     Output<Hash>::Pointer out = Output<Hash>::create("TextFile", Hash("filename", resourcePath("seqfile1.xml"), "enableAppendMode", true));
     for (size_t i = 0; i < 10; ++i) {
@@ -135,6 +136,7 @@ void FileInputOutput_Test::writeSequenceToTextFile() {
     }
     out->update(); // Necessary call to indicate completion of sequence writing
 }
+
 
 void FileInputOutput_Test::readSequenceFromTextFile() {
     // Using the Factory interface
@@ -187,7 +189,7 @@ void FileInputOutput_Test::readBinaryFile() {
     in = Input<Hash>::create("BinaryFile", Hash("filename", resourcePath("file2.bin"), "format", "Bin"));
     Hash h2;
     in->read(h2);
-//    cout << h2 << endl;
+    //    cout << h2 << endl;
 
     in = Input<Hash>::create("BinaryFile", Hash("filename", resourcePath("file3.bin")));
     Hash h3;
@@ -212,8 +214,9 @@ void FileInputOutput_Test::readBinaryFile() {
     CPPUNIT_ASSERT(h3a.get<int>("a.b.c") == 1);
 }
 
+
 void FileInputOutput_Test::writeSequenceToBinaryFile() {
-    
+
     // Using the Factory interface
     Output<Hash>::Pointer out = Output<Hash>::create("BinaryFile", Hash("filename", resourcePath("seqfile1.bin"), "enableAppendMode", true));
     for (size_t i = 0; i < 10; ++i) {
@@ -221,6 +224,7 @@ void FileInputOutput_Test::writeSequenceToBinaryFile() {
     }
     out->update(); // Necessary call to indicate completion of sequence writing
 }
+
 
 void FileInputOutput_Test::readSequenceFromBinaryFile() {
     // Using the Factory interface
@@ -232,7 +236,6 @@ void FileInputOutput_Test::readSequenceFromBinaryFile() {
         CPPUNIT_ASSERT(karabo::util::similar(h1, m_rootedHash));
     }
 }
-
 
 
 void FileInputOutput_Test::writeHdf5File() {
@@ -257,10 +260,10 @@ void FileInputOutput_Test::writeHdf5File() {
 
         // Using the FileTools interface
         saveToFile(m_rootedHash, resourcePath("fileS1a.h5"));
-//
-//        saveToFile(m_bigHash, resourcePath("fileS2a.h5"));
-//
-//        saveToFile(m_unrootedHash, resourcePath("fileS3a.h5"));
+
+        saveToFile(m_bigHash, resourcePath("fileS2a.h5"));
+
+        saveToFile(m_unrootedHash, resourcePath("fileS3a.h5"));
     } catch (Exception& ex) {
         clog << ex << endl;
         CPPUNIT_FAIL("Hdf5 test failed");
@@ -277,9 +280,9 @@ void FileInputOutput_Test::readHdf5File() {
         Input<Hash>::Pointer in = Input<Hash>::create("Hdf5File", Hash("filename", resourcePath("fileS1.h5")));
         in->read(h1);
 
-            in = Input<Hash>::create("Hdf5File", Hash("filename", resourcePath("fileS2.h5")));
-            Hash h2;
-            in->read(h2);
+        in = Input<Hash>::create("Hdf5File", Hash("filename", resourcePath("fileS2.h5")));
+        Hash h2;
+        in->read(h2);
 
         in = Input<Hash>::create("Hdf5File", Hash("filename", resourcePath("fileS3.h5")));
         in->read(h3);
@@ -302,9 +305,9 @@ void FileInputOutput_Test::readHdf5File() {
     //    clog << "h1\n" << h1 << endl;
     //    clog << "ref\n" << m_rootedHash << endl;
     CPPUNIT_ASSERT(karabo::util::similar(h1, m_rootedHash));
-    CPPUNIT_ASSERT(karabo::util::similar(h1, h1a));
+//    CPPUNIT_ASSERT(karabo::util::similar(h1, h1a));
     CPPUNIT_ASSERT(karabo::util::similar(h2, m_bigHash));
-    CPPUNIT_ASSERT(karabo::util::similar(h2, h2a));
+    //CPPUNIT_ASSERT(karabo::util::similar(h2, h2a));
 
     CPPUNIT_ASSERT(h3.get<int>("a.b.c") == 1);
     //    CPPUNIT_ASSERT(h3a.get<int>("a.b.c") == 1);
