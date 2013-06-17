@@ -285,14 +285,14 @@ void FileInputOutput_Test::readHdf5File() {
         in->read(h3);
 
         // Using the FileTools interface
-        //    Hash h1a;
-        //    loadFromFile(h1a, resourcePath("fileS1a.h5"));
+        Hash h1a;
+        loadFromFile(h1a, resourcePath("fileS1a.h5"));
+
+        Hash h2a;
+        loadFromFile(h2a, resourcePath("fileS2a.h5"));
         //
-        //    Hash h2a;
-        //    loadFromFile(h2a, resourcePath("fileS2a.h5"));
-        //        //
-        //    Hash h3a;
-        //    loadFromFile(h3a, resourcePath("fileS3a.h5"));
+        Hash h3a;
+        loadFromFile(h3a, resourcePath("fileS3a.h5"));
 
     } catch (Exception& ex) {
         clog << ex << endl;
@@ -302,9 +302,9 @@ void FileInputOutput_Test::readHdf5File() {
     //    clog << "h1\n" << h1 << endl;
     //    clog << "ref\n" << m_rootedHash << endl;
     CPPUNIT_ASSERT(karabo::util::similar(h1, m_rootedHash));
-    //    CPPUNIT_ASSERT(karabo::util::similar(h1, h1a));
-    //    CPPUNIT_ASSERT(karabo::util::similar(h2, m_bigHash));
-    //    CPPUNIT_ASSERT(karabo::util::similar(h2, h2a));
+    CPPUNIT_ASSERT(karabo::util::similar(h1, h1a));
+    CPPUNIT_ASSERT(karabo::util::similar(h2, m_bigHash));
+    CPPUNIT_ASSERT(karabo::util::similar(h2, h2a));
 
     CPPUNIT_ASSERT(h3.get<int>("a.b.c") == 1);
     //    CPPUNIT_ASSERT(h3a.get<int>("a.b.c") == 1);
