@@ -1,5 +1,5 @@
 /*
- * $Id: Format.hh 9794 2013-05-23 12:41:42Z wrona $
+ * $Id$
  *
  * Author: <krzysztof.wrona@xfel.eu>
  *
@@ -38,39 +38,14 @@ namespace karabo {
 
             KARABO_CLASSINFO(HashHdf5Serializer, "h5", "1.0")
 
+            HashHdf5Serializer(const karabo::util::Hash& input);
 
-            HashHdf5Serializer(const karabo::util::Hash& input) : Hdf5Serializer(input) {
-                m_stringStid = karabo::io::h5::ScalarTypes::getHdf5StandardType<std::string>();
-                m_stringNtid = karabo::io::h5::ScalarTypes::getHdf5NativeType<std::string>();
-                m_spaceId = H5Screate(H5S_SCALAR);
+            ~HashHdf5Serializer();
 
-                m_gcpl = H5Pcreate(H5P_GROUP_CREATE);
-                KARABO_CHECK_HDF5_STATUS(m_gcpl);
-                KARABO_CHECK_HDF5_STATUS(H5Pset_link_creation_order(m_gcpl, H5P_CRT_ORDER_TRACKED | H5P_CRT_ORDER_INDEXED));
+            void save(const karabo::util::Hash& object, hid_t h5file, const std::string& groupName);
 
-                m_dcpl = H5Pcreate(H5P_DATASET_CREATE);
-                KARABO_CHECK_HDF5_STATUS(m_dcpl);
-                KARABO_CHECK_HDF5_STATUS(H5Pset_attr_creation_order(m_dcpl, H5P_CRT_ORDER_TRACKED | H5P_CRT_ORDER_INDEXED));
-            };
+            void load(karabo::util::Hash& object, hid_t h5file, const std::string& groupName);
 
-            virtual ~HashHdf5Serializer() {
-                KARABO_CHECK_HDF5_STATUS(H5Pclose(m_gcpl));
-                KARABO_CHECK_HDF5_STATUS(H5Pclose(m_dcpl));
-                KARABO_CHECK_HDF5_STATUS(H5Sclose(m_spaceId));
-                KARABO_CHECK_HDF5_STATUS(H5Tclose(m_stringNtid));
-                KARABO_CHECK_HDF5_STATUS(H5Tclose(m_stringStid));
-
-            }
-
-        private:
-
-            virtual void save(const karabo::util::Hash& object, hid_t h5file, const std::string& groupName) {
-                hid_t group = H5Gcreate(h5file, groupName.c_str(), H5P_DEFAULT, m_gcpl, H5P_DEFAULT);
-                KARABO_CHECK_HDF5_STATUS(group);
-                serializeHash(object, group);
-                KARABO_CHECK_HDF5_STATUS(H5Gclose(group));
-                KARABO_CHECK_HDF5_STATUS(H5Fflush(h5file, H5F_SCOPE_LOCAL));
-            }
         private:
 
             // members
@@ -83,6 +58,8 @@ namespace karabo {
             hid_t m_dcpl;
 
             // functions
+
+            // implementation of save
 
             void serializeHash(const karabo::util::Hash& data, hid_t group);
 
@@ -116,7 +93,7 @@ namespace karabo {
 
             void serializeNodeSequenceByte(const karabo::util::Hash::Node& node, hid_t group);
 
-            // Attributes
+            // implementation of save,  Attributes
 
             template<typename T>
             void writeSingleAttribute(hid_t group, const T& value, const std::string& key);
@@ -143,32 +120,7 @@ namespace karabo {
             void writeSequenceAttribute(hid_t group, const std::vector<bool>& value, const std::string& key);
 
 
-
-        public:
-
-            void load(karabo::util::Hash& object, hid_t h5file, const std::string& groupName) {
-
-                hid_t group = H5Gopen2(h5file, groupName.c_str(), H5P_DEFAULT);
-                KARABO_CHECK_HDF5_STATUS(group);
-                serializeHash(group, object);
-                KARABO_CHECK_HDF5_STATUS(H5Gclose(group));
-
-
-
-            }
-
-            void load(karabo::util::Hash& object, const std::string& filename) {
-                //                std::clog << "load 1" << std::endl;
-                hid_t h5file = H5Fopen(filename.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
-                KARABO_CHECK_HDF5_STATUS(h5file);
-                hid_t group = H5Gopen2(h5file, "0", H5P_DEFAULT);
-                KARABO_CHECK_HDF5_STATUS(group);
-                serializeHash(group, object);
-                KARABO_CHECK_HDF5_STATUS(H5Gclose(group));
-                KARABO_CHECK_HDF5_STATUS(H5Fclose(h5file));
-            }
-
-        private:
+            // implementation of load
 
             void serializeHash(hid_t group, karabo::util::Hash& data);
 
@@ -178,28 +130,36 @@ namespace karabo {
 
             void serializeDataElement(hid_t dsId, const std::string& name, karabo::util::Hash& data);
 
+            template<class T>
+            void readSingleValue(hid_t dsId, hid_t tid, const std::string& name, karabo::util::Hash& data);
+
+            void readSingleString(hid_t dsId, hid_t tid, const std::string& name, karabo::util::Hash& data);
+
+            void readSingleUnsignedChar(hid_t dsId, hid_t tid, const std::string& name, karabo::util::Hash& data);
+
+            template<class T>
+            void readSequenceValue(hid_t dsId, hid_t tid, const std::vector<hsize_t>& dims, const std::string& name, karabo::util::Hash& data);
+
+            template<class T>
+            void readSequenceFloatingPoint(hid_t dsId, hid_t tid, const std::vector<hsize_t>& dims, const std::string& name, karabo::util::Hash& data);
+
+            void readSequenceString(hid_t dsId, hid_t tid, const std::vector<hsize_t>& dims, const std::string& name, karabo::util::Hash& data);
+
+            void readSequenceUnsignedChar(hid_t dsId, hid_t tid, const std::vector<hsize_t>& dims, const std::string& name, karabo::util::Hash& data);
+
+            void readSequenceBytes(hid_t dsId, hid_t tid, const std::string& name, karabo::util::Hash& data);
+
             void serializeAttributes(hid_t h5obj, karabo::util::Hash::Node& node, bool krb = false);
 
             template<class T>
-            void readSingleAttribute(hid_t attrId, hid_t typeId, karabo::util::Hash::Node& node, const std::string& name) {
-                T value;
-                KARABO_CHECK_HDF5_STATUS(H5Aread(attrId, typeId, &value));
-                node.setAttribute(name, value);
-            }
+            void readSingleAttribute(hid_t attrId, hid_t typeId, karabo::util::Hash::Node& node, const std::string& name);
 
             void readSingleAttributeString(hid_t attrId, hid_t typeId, karabo::util::Hash::Node& node, const std::string& name);
 
             void readSingleAttributeUnsignedChar(hid_t dsId, hid_t attrId, hid_t typeId, karabo::util::Hash::Node& node, const std::string& name);
 
             template<class T>
-            void readSequenceAttribute(hid_t attrId, hid_t typeId, const std::vector<hsize_t>& dims, karabo::util::Hash::Node& node, const std::string& name) {
-                hsize_t size = dims[0];
-                node.setAttribute(name, std::vector<T>(0, 0));
-                std::vector<T>& vec = node.getAttribute<std::vector<T> >(name);
-                vec.resize(size, 0);
-                KARABO_CHECK_HDF5_STATUS(H5Aread(attrId, typeId, &vec[0]));
-            }
-
+            void readSequenceAttribute(hid_t attrId, hid_t typeId, const std::vector<hsize_t>& dims, karabo::util::Hash::Node& node, const std::string& name);
 
             void readSequenceAttributeBytes(hid_t attrId, hid_t typeId, const std::vector<hsize_t>& dims, karabo::util::Hash::Node& node, const std::string& name);
 
@@ -208,85 +168,7 @@ namespace karabo {
             void readSequenceAttributeString(hid_t attrId, hid_t typeId, const std::vector<hsize_t>& dims, karabo::util::Hash::Node& node, const std::string& name);
 
             template<class T>
-            void readSequenceAttributeFloatingPoint(hid_t h5obj, hid_t attrId, hid_t tid, const std::vector<hsize_t>& dims,  karabo::util::Hash::Node& node, const std::string& name) {
-                hsize_t size = dims[0];
-                if (dims.size() == 2) {
-                    //vector< complex<T> >
-                    std::vector<std::complex<T> > vec(size, std::complex<T>(0, 0));
-                    KARABO_CHECK_HDF5_STATUS(H5Aread(attrId, tid, &vec[0]));
-                    node.setAttribute(name, vec);
-
-                } else {
-                    // vector<T> or complex<T> 
-                    std::string krbAttributeName = "KRB_complex_" + name;
-                    htri_t exists = H5Aexists(h5obj, krbAttributeName.c_str());
-                    KARABO_CHECK_HDF5_STATUS(exists);
-                    if (exists) {
-                        // complex<T>
-                        std::complex<T> value ;
-                        KARABO_CHECK_HDF5_STATUS(H5Aread(attrId, tid, &value));
-                        node.setAttribute(name, value);
-                    } else {
-                        // vector<T>
-                        std::vector<T> vec(size, static_cast<T> (0));
-                        KARABO_CHECK_HDF5_STATUS(H5Aread(attrId, tid, &vec[0]));
-                        node.setAttribute(name, vec);
-                    }
-                }
-            }
-
-           template<class T>
-            void readSingleValue(hid_t dsId, hid_t tid, const std::string& name, karabo::util::Hash& data) {
-                T& value = data.bindReference<T>(name);
-                KARABO_CHECK_HDF5_STATUS(H5Dread(dsId, tid, H5S_ALL, H5S_ALL, H5P_DEFAULT, &value));
-            }
-
-            void readSingleString(hid_t dsId, hid_t tid, const std::string& name, karabo::util::Hash& data);
-
-            void readSingleUnsignedChar(hid_t dsId, hid_t tid, const std::string& name, karabo::util::Hash& data);
-
-            template<class T>
-            void readSequenceValue(hid_t dsId, hid_t tid, const std::vector<hsize_t>& dims, const std::string& name, karabo::util::Hash& data) {
-                hsize_t size = dims[0];
-                for (size_t i = 1; i < dims.size(); ++i) {
-                    size *= dims[i];
-                }
-                std::vector<T>& vec = data.bindReference<std::vector<T> >(name);
-                vec.resize(size, 0);
-                KARABO_CHECK_HDF5_STATUS(H5Dread(dsId, tid, H5S_ALL, H5S_ALL, H5P_DEFAULT, &vec[0]));
-            }
-
-            template<class T>
-            void readSequenceFloatingPoint(hid_t dsId, hid_t tid, const std::vector<hsize_t>& dims, const std::string& name, karabo::util::Hash& data) {
-                hsize_t size = dims[0];
-                if (dims.size() == 2) {
-                    //vector< complex<T> >
-                    std::vector<std::complex<T> >& vec = data.bindReference<std::vector<std::complex<T> > >(name);
-                    vec.resize(size, std::complex<T>(0, 0));
-                    KARABO_CHECK_HDF5_STATUS(H5Dread(dsId, tid, H5S_ALL, H5S_ALL, H5P_DEFAULT, &vec[0]));
-
-                } else {
-                    // vector<T> or complex<T> 
-                    htri_t exists = H5Aexists(dsId, "KRB_complex");
-                    KARABO_CHECK_HDF5_STATUS(exists);
-                    if (exists) {
-                        // complex<T>
-                        std::complex<T>& value = data.bindReference<std::complex<T> >(name);
-                        KARABO_CHECK_HDF5_STATUS(H5Dread(dsId, tid, H5S_ALL, H5S_ALL, H5P_DEFAULT, &value));
-                    } else {
-                        // vector<T>
-                        std::vector<T>& vec = data.bindReference<std::vector<T> >(name);
-                        vec.resize(size, static_cast<T> (0));
-                        KARABO_CHECK_HDF5_STATUS(H5Dread(dsId, tid, H5S_ALL, H5S_ALL, H5P_DEFAULT, &vec[0]));
-                    }
-                }
-            }
-
-            void readSequenceString(hid_t dsId, hid_t tid, const std::vector<hsize_t>& dims, const std::string& name, karabo::util::Hash& data);
-
-            void readSequenceUnsignedChar(hid_t dsId, hid_t tid, const std::vector<hsize_t>& dims, const std::string& name, karabo::util::Hash& data);
-
-            void readSequenceBytes(hid_t dsId, hid_t tid, const std::string& name, karabo::util::Hash& data);
+            void readSequenceAttributeFloatingPoint(hid_t h5obj, hid_t attrId, hid_t tid, const std::vector<hsize_t>& dims, karabo::util::Hash::Node& node, const std::string& name);
 
         };
 
@@ -419,6 +301,96 @@ namespace karabo {
                 KARABO_CHECK_HDF5_STATUS(H5Aclose(dsId));
             } catch (...) {
                 KARABO_RETHROW_AS(KARABO_PROPAGATED_EXCEPTION("Cannot serialize sequence attribute" + key));
+            }
+        }
+
+
+        //
+
+        template<class T>
+        inline void HashHdf5Serializer::readSingleValue(hid_t dsId, hid_t tid, const std::string& name, karabo::util::Hash& data) {
+            T& value = data.bindReference<T>(name);
+            KARABO_CHECK_HDF5_STATUS(H5Dread(dsId, tid, H5S_ALL, H5S_ALL, H5P_DEFAULT, &value));
+        }
+
+        template<class T>
+        inline void HashHdf5Serializer::readSequenceValue(hid_t dsId, hid_t tid, const std::vector<hsize_t>& dims, const std::string& name, karabo::util::Hash& data) {
+            hsize_t size = dims[0];
+            for (size_t i = 1; i < dims.size(); ++i) {
+                size *= dims[i];
+            }
+            std::vector<T>& vec = data.bindReference<std::vector<T> >(name);
+            vec.resize(size, 0);
+            KARABO_CHECK_HDF5_STATUS(H5Dread(dsId, tid, H5S_ALL, H5S_ALL, H5P_DEFAULT, &vec[0]));
+        }
+
+        template<class T>
+        inline void HashHdf5Serializer::readSequenceFloatingPoint(hid_t dsId, hid_t tid, const std::vector<hsize_t>& dims, const std::string& name, karabo::util::Hash& data) {
+            hsize_t size = dims[0];
+            if (dims.size() == 2) {
+                //vector< complex<T> >
+                std::vector<std::complex<T> >& vec = data.bindReference<std::vector<std::complex<T> > >(name);
+                vec.resize(size, std::complex<T>(0, 0));
+                KARABO_CHECK_HDF5_STATUS(H5Dread(dsId, tid, H5S_ALL, H5S_ALL, H5P_DEFAULT, &vec[0]));
+
+            } else {
+                // vector<T> or complex<T> 
+                htri_t exists = H5Aexists(dsId, "KRB_complex");
+                KARABO_CHECK_HDF5_STATUS(exists);
+                if (exists) {
+                    // complex<T>
+                    std::complex<T>& value = data.bindReference<std::complex<T> >(name);
+                    KARABO_CHECK_HDF5_STATUS(H5Dread(dsId, tid, H5S_ALL, H5S_ALL, H5P_DEFAULT, &value));
+                } else {
+                    // vector<T>
+                    std::vector<T>& vec = data.bindReference<std::vector<T> >(name);
+                    vec.resize(size, static_cast<T> (0));
+                    KARABO_CHECK_HDF5_STATUS(H5Dread(dsId, tid, H5S_ALL, H5S_ALL, H5P_DEFAULT, &vec[0]));
+                }
+            }
+        }
+
+        template<class T>
+        inline void HashHdf5Serializer::readSingleAttribute(hid_t attrId, hid_t typeId, karabo::util::Hash::Node& node, const std::string& name) {
+            T value;
+            KARABO_CHECK_HDF5_STATUS(H5Aread(attrId, typeId, &value));
+            node.setAttribute(name, value);
+        }
+
+        template<class T>
+        inline void HashHdf5Serializer::readSequenceAttribute(hid_t attrId, hid_t typeId, const std::vector<hsize_t>& dims, karabo::util::Hash::Node& node, const std::string& name) {
+            hsize_t size = dims[0];
+            node.setAttribute(name, std::vector<T>(0, 0));
+            std::vector<T>& vec = node.getAttribute<std::vector<T> >(name);
+            vec.resize(size, 0);
+            KARABO_CHECK_HDF5_STATUS(H5Aread(attrId, typeId, &vec[0]));
+        }
+
+        template<class T>
+        inline void HashHdf5Serializer::readSequenceAttributeFloatingPoint(hid_t h5obj, hid_t attrId, hid_t tid, const std::vector<hsize_t>& dims, karabo::util::Hash::Node& node, const std::string& name) {
+            hsize_t size = dims[0];
+            if (dims.size() == 2) {
+                //vector< complex<T> >
+                std::vector<std::complex<T> > vec(size, std::complex<T>(0, 0));
+                KARABO_CHECK_HDF5_STATUS(H5Aread(attrId, tid, &vec[0]));
+                node.setAttribute(name, vec);
+
+            } else {
+                // vector<T> or complex<T> 
+                std::string krbAttributeName = "KRB_complex_" + name;
+                htri_t exists = H5Aexists(h5obj, krbAttributeName.c_str());
+                KARABO_CHECK_HDF5_STATUS(exists);
+                if (exists) {
+                    // complex<T>
+                    std::complex<T> value;
+                    KARABO_CHECK_HDF5_STATUS(H5Aread(attrId, tid, &value));
+                    node.setAttribute(name, value);
+                } else {
+                    // vector<T>
+                    std::vector<T> vec(size, static_cast<T> (0));
+                    KARABO_CHECK_HDF5_STATUS(H5Aread(attrId, tid, &vec[0]));
+                    node.setAttribute(name, vec);
+                }
             }
         }
 

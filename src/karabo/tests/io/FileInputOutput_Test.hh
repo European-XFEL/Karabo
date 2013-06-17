@@ -11,6 +11,7 @@
 #include <cppunit/extensions/HelperMacros.h>
 
 class FileInputOutput_Test : public CPPUNIT_NS::TestFixture {
+
     CPPUNIT_TEST_SUITE(FileInputOutput_Test);
     CPPUNIT_TEST(writeTextFile);
     CPPUNIT_TEST(readTextFile);
@@ -21,8 +22,11 @@ class FileInputOutput_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST(writeSequenceToBinaryFile);
     CPPUNIT_TEST(readSequenceFromBinaryFile);
     CPPUNIT_TEST(writeHdf5File);
-//    CPPUNIT_TEST(readHdf5File);
+    CPPUNIT_TEST(readHdf5File);
+    CPPUNIT_TEST(writeSequenceToHdf5File);
+    CPPUNIT_TEST(readSequenceFromHdf5File);    
     CPPUNIT_TEST_SUITE_END();
+    
 
 public:
     FileInputOutput_Test();
@@ -31,11 +35,11 @@ public:
     void tearDown();
 
 private:
-    
+
     karabo::util::Hash m_rootedHash;
     karabo::util::Hash m_bigHash;
     karabo::util::Hash m_unrootedHash;
-    
+
     void writeTextFile();
     void readTextFile();
     void writeSequenceToTextFile();
@@ -46,6 +50,9 @@ private:
     void readSequenceFromBinaryFile();
     void writeHdf5File();
     void readHdf5File();
+    void writeSequenceToHdf5File();
+    void readSequenceFromHdf5File();
+
 };
 
 #endif	/* FILEINPUTOUTPUT_TEST_HH */
