@@ -41,7 +41,6 @@ namespace karabo {
 
 
         void DeviceClient::setupSlots() {
-            //karabo::log::Logger::configure(Hash("priority", "DEBUG")); // TODO REMOVE LATER
             m_signalSlotable->registerSlot<Hash, string > (boost::bind(&karabo::core::DeviceClient::slotChanged, this, _1, _2), "slotChanged");
             m_signalSlotable->registerSlot<Schema, string > (boost::bind(&karabo::core::DeviceClient::slotSchemaUpdated, this, _1, _2), "slotSchemaUpdated");
             m_signalSlotable->registerSlot<string, Hash > (boost::bind(&karabo::core::DeviceClient::slotInstanceNew, this, _1, _2), "slotInstanceNew", SignalSlotable::GLOBAL);
