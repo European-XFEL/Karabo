@@ -99,12 +99,10 @@ namespace karabo {
             // Set device server instance 
             if (input.has("serverId")) {
                 input.get("serverId", m_serverId);
+                // Automatically load this configuration on next startup
+                karabo::io::saveToFile(Hash("DeviceServer.serverId", m_serverId), "autoload.xml");
             } else {
-                if (m_isMaster) {
-                    m_serverId = "Karabo_DeviceServer_0";
-                } else {
-                    m_serverId = "";
-                }
+                m_serverId = generateDefaultServerId();
             }
 
             m_connectionConfig = input.get<Hash>("connection");
@@ -113,7 +111,10 @@ namespace karabo {
             loadPluginLoader(input);
             input.get("nameRequestTimeout", m_nameRequestTimeout);
         }
-
+        
+       std::string DeviceServer::generateDefaultServerId() const {
+            return string(boost::asio::ip::host_name() + "_Server_" + karabo::util::toString(getpid()));
+        }
 
         DeviceServer::~DeviceServer() {
         }
@@ -140,24 +141,6 @@ namespace karabo {
 
             if (m_isMaster) {
                 hasHearbeat = false;
-            } else {
-                m_connection->start(); // This is needed to activate JMS, not so nice -> maybe cleaned
-                // Validate instanceId
-                bool isValid;
-                string answer;
-                try {
-                    Requestor(m_connection->createChannel(), m_serverId).call("*", "slotValidateInstanceId", boost::asio::ip::host_name(), std::string("server"), m_serverId).timeout(m_nameRequestTimeout).receive(isValid, m_serverId, answer);
-                } catch (TimeoutException&) {
-                    KARABO_LOG_FRAMEWORK_ERROR << "Name request timed out, make sure a valid master server is running";
-                    Exception::clearTrace();
-                    return;
-                }
-                if (!isValid) {
-                    KARABO_LOG_FRAMEWORK_ERROR << "Master says: " << answer;
-                    return;
-                } else {
-                    KARABO_LOG_FRAMEWORK_INFO << "Master says: " << answer;
-                }
             }
                       
             // Initialize category
@@ -179,13 +162,12 @@ namespace karabo {
 
 
         void DeviceServer::registerAndConnectSignalsAndSlots() {
-            SIGNAL3("signalNewDeviceClassAvailable", string, string, Schema) /* serverId, classId, Schema */
-            SLOT1(slotStartDevice, Hash)
+            SIGNAL3("signalNewDeviceClassAvailable", string /*serverId*/, string /*classId*/, Schema /*classSchema*/) 
+            SLOT1(slotStartDevice, Hash /*configuration*/)
             SLOT0(slotKillServer)
-            SLOT1(slotDeviceGone, string)
-            SLOT1(slotGetClassSchema, string)
-                    
-
+            SLOT1(slotDeviceGone, string /*deviceId*/)
+            SLOT1(slotGetClassSchema, string /*classId*/)
+             
             // Connect to global slot
             connectN("", "signalNewDeviceClassAvailable", "*", "slotNewDeviceClassAvailable");
         }
@@ -201,8 +183,7 @@ namespace karabo {
         }
 
         void DeviceServer::idleStateOnEntry() {
-            // Write name to file
-            karabo::io::saveToFile(Hash("DeviceServer.serverId", m_serverId), "autoload.xml");
+
             KARABO_LOG_INFO << "DeviceServer starts up with id: " << m_serverId;
 
             if (m_isMaster) {
@@ -290,7 +271,7 @@ namespace karabo {
                 tmp.set("serverId", m_serverId);
                 // Apply sensible default in case no device instance id is supplied
                 if (!tmp.has("deviceId")) {
-                    std::string deviceId = this->generateDefaultDeviceInstanceId(classId);
+                    std::string deviceId = this->generateDefaultDeviceId(classId);
                     tmp.set("deviceId", deviceId);
                 }
                 BaseDevice::Pointer device = BaseDevice::create(modifiedConfig); // TODO If constructor blocks, we are lost here!!
@@ -300,7 +281,6 @@ namespace karabo {
                 string deviceInstanceId = device->getInstanceId();
                 m_deviceInstanceMap[deviceInstanceId] = t;
 
-                //emit("signalNewDeviceInstanceAvailable", getInstanceId(), Hash(classId, device->getCurrentConfiguration()));
             } catch (const Exception& e) {
                 KARABO_LOG_ERROR << "Device could not be started because: " << e.userFriendlyMsg();
                 return;
@@ -316,8 +296,6 @@ namespace karabo {
                 Hash& tmp = it->getValue<Hash>();
                 if (tmp.get<bool>("mustNotify") == true) {
                     tmp.set("mustNotify", false);
-                    //KARABO_LOG_DEBUG << "Notifying about " << it->getKey();
-                    //emit("signalNewDeviceClassAvailable", getInstanceId(), it->getKey(), tmp.get<Schema > ("xsd"));
                 }
             }
             KARABO_LOG_DEBUG << "Sending instance update as new device plugins are available: " << karabo::util::toString(deviceClasses);
@@ -379,7 +357,7 @@ namespace karabo {
         }
 
 
-        std::string DeviceServer::generateDefaultDeviceInstanceId(const std::string& classId) {
+        std::string DeviceServer::generateDefaultDeviceId(const std::string& classId) {
             string index = karabo::util::toString(++m_deviceInstanceCount);
             // Prepare shortened Device-Server name
             vector<string> tokens;

@@ -222,7 +222,7 @@ namespace karabo {
             virtual void connectionAvailableAgain(const std::string& instanceId, const std::vector<karabo::util::Hash>& connections);
 
             const std::vector<std::pair<std::string, karabo::util::Hash> >& getAvailableInstances();
-
+            
             std::vector<std::string> getAvailableSignals(const std::string& instanceId);
 
             std::vector<std::string> getAvailableSlots(const std::string& instanceId);
@@ -712,9 +712,10 @@ namespace karabo {
 
         private: // Functions
 
-            /**
-             * The slotPing is a default global slot which emits the signalGotPinged signal
-             */
+            void sanifyInstanceId(std::string& instanceId) const;
+            
+            std::pair<bool, std::string> isValidInstanceId(const std::string& instanceId);
+            
             void slotPing(const std::string& instanceId, bool replyIfInstanceIdIsDuplicated);
 
             void slotPingAnswer(const std::string& instanceId, const karabo::util::Hash& hash);

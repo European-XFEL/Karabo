@@ -32,21 +32,25 @@ if [ $BUNDLE_ACTION = "clean" ]; then
     # karabo
     make clobber
     rm -rf $DISTDIR
+    rm -rf nbproject/Makefile*
 
     # karathon
     cd ../karathon
     make clobber
     rm -rf $DISTDIR
+    rm -rf nbproject/Makefile*
 
     # deviceServer
     cd ../deviceServer
     make clobber
     rm -rf $DISTDIR
+    rm -rf nbproject/Makefile*
 
     # brokerMessageLogger
     cd ../brokerMessageLogger
     make clobber
     rm -rf $DISTDIR
+    rm -rf nbproject/Makefile*
 
     if [ -d $(pwd)/../../../package/$CONF ]; then
         rm -rf $(pwd)/../../../package/$CONF
