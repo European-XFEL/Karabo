@@ -64,7 +64,7 @@ namespace karabo {
             string welcomeMessage;
             Hash instanceInfo;
             try {
-                request("*", "slotPing", id, true).timeout(100).receive(instanceInfo);
+                request(id, "slotPing", id, true).timeout(100).receive(instanceInfo);
             } catch (const karabo::util::TimeoutException&) {
                 Exception::clearTrace();
                 if (m_systemNow.has("server." + id)) welcomeMessage = "Welcome back!";
@@ -119,7 +119,7 @@ namespace karabo {
             onInstanceNewForSystemHistory(instanceId, instanceInfo);
 
             // Start tracking
-            trackExistenceOfInstance(instanceId);
+            //trackExistenceOfInstance(instanceId);
 
             // Connect to changes
             connectN(instanceId, "signalChanged", "", "slotChanged");

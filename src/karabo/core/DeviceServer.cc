@@ -60,7 +60,6 @@ namespace karabo {
                     .init()
                     .commit();
 
-
             BOOL_ELEMENT(expected).key("isMaster")
                     .displayedName("Is Master Server?")
                     .description("Decides whether this device-server runs as a master or gets dynamically configured "
@@ -68,34 +67,44 @@ namespace karabo {
                     .assignmentOptional().defaultValue(false)
                     .commit();
 
-
             UINT32_ELEMENT(expected).key("nameRequestTimeout")
                     .displayedName("Name Request Timeout")
                     .description("Time to wait for name resolution (via name-server) until timeout [ms]")
                     .advanced()
                     .assignmentOptional().defaultValue(5000)
                     .commit();
-
+            
+            NODE_ELEMENT(expected).key("PluginLoader")
+                    .displayedName("Plugin Loader")
+                    .description("Plugin Loader sub-configuration")
+                    .appendParametersOfConfigurableClass<PluginLoader>("PluginLoader")
+                    .commit();
 
             NODE_ELEMENT(expected).key("Logger")
                     .description("Logging settings")
                     .displayedName("Logger")
                     .appendParametersOfConfigurableClass<Logger>("Logger")
                     .commit();
-
-
-            NODE_ELEMENT(expected).key("PluginLoader")
-                    .displayedName("Plugin Loader")
-                    .description("Plugin Loader sub-configuration")
-                    .appendParametersOfConfigurableClass<PluginLoader>("PluginLoader")
+            
+            OVERWRITE_ELEMENT(expected).key("Logger.appenders")
+                    .setNewDefaultValue("Ostream")
                     .commit();
+
+            OVERWRITE_ELEMENT(expected).key("Logger.appenders.Ostream.layout")
+                    .setNewDefaultValue("Pattern")
+                    .commit();
+
+            OVERWRITE_ELEMENT(expected).key("Logger.appenders.Ostream.layout.Pattern.format")
+                    //.setNewDefaultValue("%d{%F %H:%M:%S} | %p | %c | %m")
+                    .setNewDefaultValue("%p  %c  : %m%n")
+                    .commit();                     
         }
 
 
         DeviceServer::DeviceServer(const karabo::util::Hash& input) : m_log(0), m_deviceInstanceCount(0) {
 
             input.get("isMaster", m_isMaster);
-            
+
             // Set device server instance 
             if (input.has("serverId")) {
                 input.get("serverId", m_serverId);
@@ -111,10 +120,12 @@ namespace karabo {
             loadPluginLoader(input);
             input.get("nameRequestTimeout", m_nameRequestTimeout);
         }
-        
-       std::string DeviceServer::generateDefaultServerId() const {
+
+
+        std::string DeviceServer::generateDefaultServerId() const {
             return string(boost::asio::ip::host_name() + "_Server_" + karabo::util::toString(getpid()));
         }
+
 
         DeviceServer::~DeviceServer() {
         }
@@ -122,11 +133,11 @@ namespace karabo {
 
         void DeviceServer::loadLogger(const Hash& input) {
             Hash config = input.get<Hash>("Logger");
-            vector<Hash>& appenders = config.get<vector<Hash> >("appenders");
-            Hash appenderConfig;
-            appenderConfig.set("Network.layout.Pattern.format", "%d{%F %H:%M:%S} | %p | %c | %m");
-            appenderConfig.set("Network.connection", m_connectionConfig);
-            appenders.push_back(appenderConfig);
+            config.set("categories[0].Category.name", "karabo");
+            config.set("categories[0].Category.appenders[0].Ostream.layout.Pattern.format", "%p  %c  : %m%n");
+            config.set("categories[0].Category.additivity", false);
+            config.set("appenders[1].Network.layout.Pattern.format", "%d{%F %H:%M:%S} | %p | %c | %m");
+            config.set("appenders[1].Network.connection", m_connectionConfig);
             Logger::configure(config);
         }
 
@@ -142,7 +153,7 @@ namespace karabo {
             if (m_isMaster) {
                 hasHearbeat = false;
             }
-                      
+
             // Initialize category
             m_log = &(karabo::log::Logger::getLogger(m_serverId));
 
@@ -162,12 +173,12 @@ namespace karabo {
 
 
         void DeviceServer::registerAndConnectSignalsAndSlots() {
-            SIGNAL3("signalNewDeviceClassAvailable", string /*serverId*/, string /*classId*/, Schema /*classSchema*/) 
+            SIGNAL3("signalNewDeviceClassAvailable", string /*serverId*/, string /*classId*/, Schema /*classSchema*/)
             SLOT1(slotStartDevice, Hash /*configuration*/)
             SLOT0(slotKillServer)
             SLOT1(slotDeviceGone, string /*deviceId*/)
             SLOT1(slotGetClassSchema, string /*classId*/)
-             
+
             // Connect to global slot
             connectN("", "signalNewDeviceClassAvailable", "*", "slotNewDeviceClassAvailable");
         }
@@ -182,13 +193,14 @@ namespace karabo {
             reply(currentState);
         }
 
+
         void DeviceServer::idleStateOnEntry() {
 
             KARABO_LOG_INFO << "DeviceServer starts up with id: " << m_serverId;
 
             if (m_isMaster) {
                 slotStartDevice(Hash("MasterDevice.deviceId", "Karabo_Master_0", "MasterDevice.connection", m_connectionConfig));
-                slotStartDevice(Hash("GuiServerDevice.deviceId", "Karabo_GuiServer_0", "GuiServerDevice.connection", m_connectionConfig, "GuiServerDevice.loggerConnection", m_connectionConfig));
+                //slotStartDevice(Hash("GuiServerDevice.deviceId", "Karabo_GuiServer_0", "GuiServerDevice.connection", m_connectionConfig, "GuiServerDevice.loggerConnection", m_connectionConfig));
             } else {
                 // Check whether we have installed devices available
                 updateAvailableDevices();
@@ -203,12 +215,12 @@ namespace karabo {
 
         void DeviceServer::updateAvailableDevices() {
             vector<string> devices = Configurator<BaseDevice>::getRegisteredClasses();
-            KARABO_LOG_DEBUG << "Devices available: " << karabo::util::toString(devices);
 
 
             BOOST_FOREACH(string device, devices) {
                 if (device == "MasterDevice" || device == "GuiServerDevice") continue;
                 if (!m_availableDevices.has(device)) {
+                    KARABO_LOG_INFO << "Updated list of devices available: " << karabo::util::toString(devices);
                     Schema schema = BaseDevice::getSchema(device, Schema::AssemblyRules(karabo::util::READ | karabo::util::WRITE | karabo::util::INIT));
                     m_availableDevices.set(device, Hash("mustNotify", true, "xsd", schema));
                 }
@@ -248,8 +260,8 @@ namespace karabo {
 
 
         void DeviceServer::errorFoundAction(const std::string& user, const std::string & detail) {
-             KARABO_LOG_ERROR << "[short] " << user;
-             KARABO_LOG_ERROR << "[detailed] " << detail;
+            KARABO_LOG_ERROR << "[short] " << user;
+            KARABO_LOG_ERROR << "[detailed] " << detail;
         }
 
 
@@ -350,7 +362,8 @@ namespace karabo {
                 KARABO_LOG_INFO << "Device: \"" << instanceId << "\" removed from server.";
             }
         }
-        
+
+
         void DeviceServer::slotGetClassSchema(const std::string& classId) {
             Schema schema = BaseDevice::getSchema(classId);
             reply(schema);
@@ -362,7 +375,7 @@ namespace karabo {
             // Prepare shortened Device-Server name
             vector<string> tokens;
             boost::split(tokens, m_serverId, boost::is_any_of("_"));
-            string domain(tokens.front() + tokens.back());
+            string domain(tokens.front() + "-" + tokens.back());
             return domain + "_" + classId + "_" + index;
         }
     }
