@@ -167,7 +167,9 @@ namespace karabo {
             
             void slotGetClassSchema(const std::string& classId);
 
-            std::string generateDefaultDeviceInstanceId(const std::string& classId);
+            std::string generateDefaultServerId() const;
+            
+            std::string generateDefaultDeviceId(const std::string& classId);            
 
         private: // Member variables
 

@@ -51,6 +51,9 @@ namespace karabo {
             m_instanceId = instanceId;
             m_timeToLive = heartbeatRate;
 
+            // Sanify instanceId (e.g. dots are bad)
+            sanifyInstanceId(m_instanceId);
+
             // Create the managing ioService object
             m_ioService = m_connection->getIOService();
             // Start connection (and take the default channel for signals)
@@ -58,9 +61,38 @@ namespace karabo {
             // Create request channel
             m_requestChannel = m_connection->createChannel();
 
-            initReconnectIntervals();
-            registerDefaultSignalsAndSlots();
-            startTrackingSystem();
+            // Check, whether we are unique in the distributed system
+            std::pair<bool, std::string> result = isValidInstanceId(instanceId);
+            if (result.first) {
+                initReconnectIntervals();
+                registerDefaultSignalsAndSlots();
+                startTrackingSystem();
+            } else {
+                throw KARABO_SIGNALSLOT_EXCEPTION(result.second);
+            }
+        }
+
+
+        void SignalSlotable::sanifyInstanceId(std::string& instanceId) const {
+            for (std::string::iterator it = instanceId.begin(); it != instanceId.end(); ++it) {
+                if ((*it) == '.') (*it) = '-';
+            }
+        }
+
+
+        std::pair<bool, std::string> SignalSlotable::isValidInstanceId(const std::string& instanceId) {
+
+            Hash instanceInfo;
+            try {
+                Requestor(m_requestChannel, m_instanceId).call("*", "slotPing", instanceId, true).timeout(100).receive(instanceInfo);
+            } catch (const karabo::util::TimeoutException&) {
+                Exception::clearTrace();
+                return std::make_pair(true, "");
+            }
+            string foreignHost("unknown");
+            if (instanceInfo.has("host")) instanceInfo.get("host", foreignHost);
+            string msg("Another instance with the same ID is already online (on host: " + foreignHost + ")");
+            return std::make_pair(false, msg);
         }
 
 
@@ -76,76 +108,46 @@ namespace karabo {
 
         void SignalSlotable::registerDefaultSignalsAndSlots() {
 
-            // TODO See whether we can do this later
-            //m_signalChannel = m_connection->start();
+            // Emits a "still-alive" signal
+            SIGNAL2("signalHeartbeat", string /*instanceId*/, int /*timeToLiveInSec*/)
 
-            /**
-             * Emits a "still-alive" signal
-             * @param networkId
-             * @param timeToLive
-             */
-            SIGNAL2("signalHeartbeat", string, int)
+            // Signals a successful connection
+            //SIGNAL4("signalConnected", string /*signalInstanceId*/, string /*signalFunction*/, string /*slotInstanceId*/, string /*slotFunction*/)
 
-            /**
-             * Signals a successful connection
-             * @param signalInstanceId
-             * @param signalFunction
-             * @param slotInstanceId
-             * @param slotFunction
-             */
-            //SIGNAL4("signalConnected", string, string, string, string)
+            // Signals a successful disconnection
+            SIGNAL4("signalDisconnected", string /*signalInstanceId*/, string /*signalFunction*/, string /*slotInstanceId*/, string /*slotFunction*/)
 
-            /**
-             * Signals a successful disconnection
-             * @param signalInstanceId
-             * @param signalFunction
-             * @param slotInstanceId
-             * @param slotFunction
-             */
-            SIGNAL4("signalDisconnected", string, string, string, string)
+            // Emits as answer to a ping request
+            SIGNAL1("signalGotPinged", string /*instanceId*/)
 
-            /**
-             * Emits as answer to a ping request
-             * @param networkId
-             */
-            SIGNAL1("signalGotPinged", string)
+            // Listener for heartbeats
+            SLOT2(slotHeartbeat, string /*instanceId*/, int /*timeToLive*/)
 
-            /**
-             * Listener for heartbeats
-             * @param networkId
-             * @param timeToLive
-             */
-            SLOT2(slotHeartbeat, string, int)
+            // Global ping listener
+            GLOBAL_SLOT2(slotPing, string /*callersInstanceId*/, bool /*replyIfSame*/)
 
-            // Register networkId invariant ping slot
-            GLOBAL_SLOT2(slotPing, string, bool) // instanceId of caller, only reply if same instance id
+            // Listener for ping answers
+            SLOT2(slotPingAnswer, string /*instanceId*/, Hash /*instanceInfo*/)
 
-            SLOT2(slotPingAnswer, string, Hash) // instanceId, instanceInfo
+            // Connects signal to slot
+            SLOT4(slotConnect, string /*signalFunction*/, string /*slotInstanceId*/, string /*slotFunction*/, int /*connectionType*/)
 
-            /**
-             * Connects signal to slot
-             * @param signalFunction
-             * @param slotInstanceId
-             * @param slotFunction
-             */
-            SLOT4(slotConnect, string, string, string, int) // slotInstanceId, slotFunction, signalFunction, connectionType
+            // Replies whether slot exists on this instance
+            SLOT4(slotHasSlot, string /*signalInstanceId*/, string /*signalFunction*/, string /*slotFunction*/, int /*connectionType*/)
 
-            SLOT4(slotHasSlot, string, string, string, int) // signalInstanceId, signalFunction, slotFunction, connectionType
+            // Disconnects signal from slot
+            SLOT3(slotDisconnect, string /*signalFunction*/, string /*slotInstanceId*/, string /*slotFunction*/)
 
-            /**
-             * Disconnects signal from slot
-             * @param signalFunction
-             * @param slotInstanceId
-             * @param slotFunction
-             */
-            SLOT3(slotDisconnect, string, string, string)
+            // Globally gives up tracking of this connection
+            GLOBAL_SLOT1(slotStopTrackingExistenceOfConnection, string /*connectionId*/)
 
-            GLOBAL_SLOT1(slotStopTrackingExistenceOfConnection, string)
-
-            SLOT1(slotGetAvailableFunctions, string) // what type of function
+            // Function request
+            SLOT1(slotGetAvailableFunctions, string /*functionType*/)
 
             //GLOBAL_SLOT0(slotTryReconnectNow)
-            SLOT2(slotGetOutputChannelInformation, string, int)
+
+            // Provides information about p2p connectivity
+            SLOT2(slotGetOutputChannelInformation, string /*ioChannelId*/, int /*pid*/)
 
         }
 
@@ -154,6 +156,8 @@ namespace karabo {
 
             m_instanceInfo = instanceInfo;
             call("*", "slotInstanceNew", m_instanceId, m_instanceInfo);
+
+            KARABO_LOG_FRAMEWORK_INFO << "Instance starts up with id: " << m_instanceId;
 
             if (emitHeartbeat) {
                 m_sendHeartbeats = true;
@@ -230,14 +234,17 @@ namespace karabo {
             boost::this_thread::sleep(boost::posix_time::milliseconds(1000));
             return m_availableInstances;
         }
-
-
+        
+        
         void SignalSlotable::slotPing(const std::string& instanceId, bool replyIfInstanceIdIsDuplicated) {
+
             if (replyIfInstanceIdIsDuplicated) {
+                cout << "Got asked whether I am called " << instanceId << endl;
                 if (instanceId == m_instanceId) {
                     reply(m_instanceInfo);
                 }
             } else {
+                cout << "Got pinged from " << instanceId << endl;
                 call(instanceId, "slotPingAnswer", m_instanceId, m_instanceInfo);
             }
         }
