@@ -72,7 +72,7 @@ class DisplayCommand(DisplayWidget):
             self.valueChanged(self.__key, value)
         
         # TODO: better solution
-        Manager().notifier.signalDeviceInstanceStateChanged.connect(self.onDeviceInstanceStateChanged)
+        Manager().notifier.signalDeviceStateChanged.connect(self.onDeviceStateChanged)
 
 
     def _getCategory(self):
@@ -117,7 +117,7 @@ class DisplayCommand(DisplayWidget):
 
 
 ### slots ###
-    def onDeviceInstanceStateChanged(self, internalKey, state):
+    def onDeviceStateChanged(self, internalKey, state):
         if len(self.__allowedStates) < 1:
             return
         

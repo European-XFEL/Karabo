@@ -522,7 +522,7 @@ class GraphicsView(QGraphicsView):
                     keys = proxyItem.keys
                     if keys:
                         for key in keys:
-                            Manager().removeVisibleDeviceInstance(key)
+                            Manager().removeVisibleDevice(key)
                     # Destroy and unregister
                     proxyItem.destroy()
                     if proxyItem in items:
@@ -534,7 +534,7 @@ class GraphicsView(QGraphicsView):
                 keys = item.keys
                 if keys:
                     for key in keys:
-                        Manager().removeVisibleDeviceInstance(key)
+                        Manager().removeVisibleDevice(key)
                 # Destroy and unregister
                 item.destroy()
             elif isinstance(item, GraphicsCustomItem):
@@ -548,7 +548,7 @@ class GraphicsView(QGraphicsView):
                         # Remove item from list - prevent double deletion
                         items.remove(outputItem)
                     self.__scene.removeItem(outputItem)
-                Manager().removeVisibleDeviceInstance(item.internalKey())
+                Manager().removeVisibleDevice(item.internalKey())
                 Manager().unregisterEditableComponent(item.devInstIdKey, item)
 
             self.__scene.removeItem(item)
@@ -834,8 +834,8 @@ class GraphicsView(QGraphicsView):
                 # Add created item to scene
                 self._addItem(customItem)
 
-                # Register as visible instance
-                Manager().newVisibleDeviceInstance(internalKey)
+                # Register as visible device
+                Manager().newVisibleDevice(internalKey)
 
                 if navigationItemType and (navigationItemType == NavigationItemTypes.CLASS):
                     # Connect customItem signal to Manager, DEVICE_CLASS
@@ -908,8 +908,8 @@ class GraphicsView(QGraphicsView):
                     # Add item to itemlist
                     items.append(displayProxyWidget)
 
-                    # Register as visible instance
-                    Manager().newVisibleDeviceInstance(internalKey)
+                    # Register as visible device
+                    Manager().newVisibleDevice(internalKey)
 
                 # Editable widget
                 if hasEditableComponent:
@@ -927,8 +927,8 @@ class GraphicsView(QGraphicsView):
                     # Add item to itemlist
                     items.append(editableProxyWidget)
 
-                    # Register as visible instance
-                    Manager().newVisibleDeviceInstance(internalKey)
+                    # Register as visible device
+                    Manager().newVisibleDevice(internalKey)
 
                 customTuple = self.createGraphicsItemContainer(Qt.Horizontal, items)
                 customItem = customTuple[0]

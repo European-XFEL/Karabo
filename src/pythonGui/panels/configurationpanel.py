@@ -92,12 +92,12 @@ class ConfigurationPanel(QWidget):
 
         Manager().notifier.signalUpdateDeviceServerInstance.connect(self.onUpdateDeviceServerInstance)
         Manager().notifier.signalUpdateDeviceInstance.connect(self.onUpdateDeviceInstance)
-        Manager().notifier.signalDeviceInstanceStateChanged.connect(self.onDeviceInstanceStateChanged)
+        Manager().notifier.signalDeviceStateChanged.connect(self.onDeviceStateChanged)
         Manager().notifier.signalConflictStateChanged.connect(self.onConflictStateChanged)
         Manager().notifier.signalChangingState.connect(self.onChangingState)
         Manager().notifier.signalErrorState.connect(self.onErrorState)
 
-        self.__prevDevInsKey = str() # previous selected DEVICE_INSTANCE internalKey
+        self.__prevDevicePath = str() # previous selected DEVICE_INSTANCE internalKey
         self.__swParameterEditor = QStackedWidget(splitTopPanes)
         # Initial page
         twInitalParameterEditorPage = ParameterTreeWidget(self)
@@ -543,9 +543,9 @@ class ConfigurationPanel(QWidget):
         if type is None:
             type = itemInfo.get('type')
         
-        key = itemInfo.get(QString('key'))
-        if key is None:
-            key = itemInfo.get('key')
+        path = itemInfo.get(QString('key'))
+        if path is None:
+            path = itemInfo.get('key')
         
         if type is NavigationItemTypes.CLASS:
             self.updateButtonsVisibility = True
@@ -554,14 +554,14 @@ class ConfigurationPanel(QWidget):
         
         # Hide apply button of current ParameterTreeWidget
         self._getCurrentParameterEditor().setActionsVisible(False)
-        if self.__prevDevInsKey != "":
-            Manager().removeVisibleDeviceInstance(self.__prevDevInsKey)
-            self.__prevDevInsKey = str()
+        if self.__prevDevicePath != "":
+            Manager().removeVisibleDevice(self.__prevDevicePath)
+            self.__prevDevicePath = str()
         
         self.__twNavigation.itemChanged(itemInfo)
         
         # Show correct parameters
-        index = self.__navItemInternalKeyIndexMap.get(key)
+        index = self.__navItemInternalKeyIndexMap.get(path)
         if index:
             self.__swParameterEditor.blockSignals(True)
             self.__swParameterEditor.setCurrentIndex(index)
@@ -569,10 +569,10 @@ class ConfigurationPanel(QWidget):
             self._getCurrentParameterEditor().setActionsVisible(True)
             self.__swParameterEditor.blockSignals(False)
             
-            if (type is NavigationItemTypes.DEVICE) and (self.__prevDevInsKey != key):
-                # visible DEVICE_INSTANCE has changed
-                Manager().newVisibleDeviceInstance(key)
-                self.__prevDevInsKey = key
+            if (type is NavigationItemTypes.DEVICE) and (self.__prevDevicePath != path):
+                # Visible deviceId has changed
+                Manager().newVisibleDevice(path)
+                self.__prevDevicePath = path
         else:
             self.__swParameterEditor.blockSignals(True)
             self.__swParameterEditor.setCurrentIndex(0)
@@ -589,7 +589,6 @@ class ConfigurationPanel(QWidget):
             self.__acKillInstance.setVisible(False)
             self.__acApplyAll.setVisible(False)
             self.__acResetAll.setVisible(False)
-
 
 
     def onUpdateDeviceServerInstance(self, itemInfo):
@@ -616,13 +615,13 @@ class ConfigurationPanel(QWidget):
         self._setApplyAllEnabled(False)
 
 
-    def onDeviceInstanceStateChanged(self, internalKey, state):
+    def onDeviceStateChanged(self, internalKey, state):
         index = self.__navItemInternalKeyIndexMap.get(internalKey)
         if index is None:
             index = self.__navItemInternalKeyIndexMap.get(str(internalKey))
-        if index is not None:
-            twAttributeEditor = self.__swParameterEditor.widget(index)
-            twAttributeEditor.stateUpdated(state)
+        if index:
+            twParameterEditorPage = self.__swParameterEditor.widget(index)
+            twParameterEditorPage.stateUpdated(state)
 
 
     def onConflictStateChanged(self, hasConflict):
