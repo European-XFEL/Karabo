@@ -143,7 +143,6 @@ class NavigationPanel(QWidget):
 
 
     def onErrorState(self, instanceId, hasError):
-        print "onErrorState", instanceId, hasError
         self.__twNavigation.setErrorState(instanceId, hasError)
 
 

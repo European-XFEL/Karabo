@@ -46,19 +46,19 @@ class Network(QObject):
         
         Manager().notifier.signalKillDevice.connect(self.onKillDevice)
         Manager().notifier.signalKillServer.connect(self.onKillServer)
-        #Manager().notifier.signalRefreshInstance.connect(self.onRefreshInstance)
-        #Manager().notifier.signalReconfigure.connect(self.onReconfigure)
-        #Manager().notifier.signalReconfigureAsHash.connect(self.onReconfigureAsHash)
+        Manager().notifier.signalRefreshInstance.connect(self.onRefreshInstance)
+        Manager().notifier.signalReconfigure.connect(self.onReconfigure)
+        Manager().notifier.signalReconfigureAsHash.connect(self.onReconfigureAsHash)
         Manager().notifier.signalInitDevice.connect(self.onInitDevice)
-        #Manager().notifier.signalSlotCommand.connect(self.onSlotCommand)
+        Manager().notifier.signalSlotCommand.connect(self.onSlotCommand)
         
-        #Manager().notifier.signalNewVisibleDeviceInstance.connect(self.onNewVisibleDeviceInstance)
-        #Manager().notifier.signalRemoveVisibleDeviceInstance.connect(self.onRemoveVisibleDeviceInstance)
+        Manager().notifier.signalNewVisibleDevice.connect(self.onNewVisibleDevice)
+        Manager().notifier.signalRemoveVisibleDevice.connect(self.onRemoveVisibleDevice)
         
-        #Manager().notifier.signalCreateNewDeviceClassPlugin.connect(self.onCreateNewDeviceClassPlugin)
+        Manager().notifier.signalCreateNewDeviceClassPlugin.connect(self.onCreateNewDeviceClassPlugin)
         
         Manager().notifier.signalGetClassSchema.connect(self.onGetClassSchema)
-        Manager().notifier.signalGetDeviceHash.connect(self.onGetDeviceHash)
+        Manager().notifier.signalGetDeviceSchema.connect(self.onGetDeviceSchema)
         
         self.__headerSize = 0
         self.__bodySize = 0
@@ -192,11 +192,12 @@ class Network(QObject):
             elif type == "classDescription":
                 bodyHash = self.__textSerializer.load(self.__bodyBytes)
                 Manager().handleClassSchema(bodyHash)
-            elif type == "deviceHash":
+            elif type == "deviceSchema":
                 bodyHash = self.__textSerializer.load(self.__bodyBytes)
-                Manager().handleDeviceHash(bodyHash)
+                self._handleDeviceSchema(headerHash, bodyHash)
             elif type == "configurationChanged":
-                print "configurationChanged"
+                bodyHash = self.__textSerializer.load(self.__bodyBytes)
+                self._handleConfigurationChanged(headerHash, bodyHash)
             elif type == "log":
                 self._handleLog(str(self.__bodyBytes))
             elif type == "notify":
@@ -244,12 +245,12 @@ class Network(QObject):
         self._tcpWriteHashHash(header, Hash())
         
         
-    def onReconfigure(self, instanceId, attributeId, attributeValue):
+    def onReconfigure(self, deviceId, parameterId, value):
         header = Hash()
         header.set("type", "reconfigure")
-        header.set("instanceId", str(instanceId))
+        header.set("deviceId", str(deviceId))
         body = Hash()
-        body.set(str(attributeId), attributeValue)
+        body.set(str(parameterId), value)
         self._tcpWriteHashHash(header, body)
 
 
@@ -299,17 +300,17 @@ class Network(QObject):
         self._tcpWriteHashHash(header, body)
 
 
-    def onNewVisibleDeviceInstance(self, instanceId):
+    def onNewVisibleDevice(self, deviceId):
         header = Hash()
-        header.set("type", "newVisibleDeviceInstance")
-        header.set("instanceId", str(instanceId))
+        header.set("type", "newVisibleDevice")
+        header.set("deviceId", str(deviceId))
         self._tcpWriteHashHash(header, Hash())
 
 
-    def onRemoveVisibleDeviceInstance(self, instanceId):
+    def onRemoveVisibleDevice(self, deviceId):
         header = Hash()
-        header.set("type", "removeVisibleDeviceInstance")
-        header.set("instanceId", str(instanceId))
+        header.set("type", "removeVisibleDevice")
+        header.set("deviceId", str(deviceId))
         self._tcpWriteHashHash(header, Hash())
 
 
@@ -320,8 +321,8 @@ class Network(QObject):
         self._tcpWriteHashHash(header, Hash())
 
 
-    def onGetDeviceHash(self, deviceId):
-        header = Hash("type", "getDeviceHash")
+    def onGetDeviceSchema(self, deviceId):
+        header = Hash("type", "getDeviceSchema")
         header.set("deviceId", str(deviceId))
         self._tcpWriteHashHash(header, Hash())
 
@@ -368,4 +369,14 @@ class Network(QObject):
 
     def _handleLog(self, logMessage):
         Manager().onLogDataAvailable(logMessage)
+
+
+    def _handleDeviceSchema(self, headerHash, bodyHash):
+        deviceId = headerHash.get("deviceId")
+        Manager().handleDeviceSchema(deviceId, bodyHash)
+
+
+    def _handleConfigurationChanged(self, headerHash, bodyHash):
+        deviceId = headerHash.get("deviceId")
+        Manager().handleConfigurationChanged(deviceId, bodyHash)
 

@@ -109,8 +109,8 @@ class SchemaReader(object):
                 displayName = key.split(".")
                 item.displayText = displayName[len(displayName)-1]
             
-            if self.__schema.hasExpertLevel(key):
-                item.expertLevel = self.__schema.getExpertLevel(key)
+            self._setExpertLevel(key, item)
+            self._setAllowedStates(key, item)
             
             return item
 
@@ -131,8 +131,8 @@ class SchemaReader(object):
                 displayName = key.split(".")
                 item.displayText = displayName[len(displayName)-1]
             
-            if self.__schema.hasExpertLevel(key):
-                item.expertLevel = self.__schema.getExpertLevel(key)
+            self._setExpertLevel(key, item)
+            self._setAllowedStates(key, item)
                 
             return item
 
@@ -141,15 +141,9 @@ class SchemaReader(object):
         self._getAssignment(key, item)
         self._getAccessMode(key, item)
         
-        description = self._getDescription(key, item)
+        self._setDescription(key, item)
         defaultValue = self._getDefaultValue(key, item)
         unitSymbol = self._getUnit(key, item)
-        
-        expertLevel = self._getExpertLevel(key, item)
-        allowedStates = self._getAllowedStates(key, item)
-        
-        #if self.__schema.hasDisplayType(key):
-        #    print "type", self.__schema.getDisplayType(key)
 
         minInc = self._getMinInc(key, item)
         maxInc = self._getMaxInc(key, item)
@@ -160,7 +154,7 @@ class SchemaReader(object):
 
 
     def _handleNode(self, key, parentItem):
-        self._getDescription(key, parentItem)
+        self._setDescription(key, parentItem)
         nodeKeys = self.__schema.getKeys(key)
         for nKey in nodeKeys:
             self.r_readSchema(key + "." + nKey, parentItem)
@@ -306,9 +300,9 @@ class SchemaReader(object):
             print "NDARRAY_COMPLEX_DOUBLE"
 
 
-    def _getDescription(self, key, parentItem):
+    def _setDescription(self, key, parentItem):
         if not self.__schema.hasDescription(key):
-            return None
+            return
         
         description = self.__schema.getDescription(key)
         
@@ -323,8 +317,6 @@ class SchemaReader(object):
         #cItem = AttributeTreeWidgetItem(fullPath, self.__treeWidget, parentItem)
         #cItem.setText(0, "Description")
         #cItem.setText(2, description)
-        
-        return None
 
 
     def _getDefaultValue(self, key, parentItem):
@@ -404,18 +396,18 @@ class SchemaReader(object):
                                            "Alarm high", self.__schema.getAlarmHigh(key))
         
 
-    def _getExpertLevel(self, key, item):
+    def _setExpertLevel(self, key, item):
         if not self.__schema.hasExpertLevel(key):
-            return None
+            return
         
-        return self.__schema.getExpertLevel(key)
+        item.expertLevel = self.__schema.getExpertLevel(key)
 
 
-    def _getAllowedStates(self, key, item):
+    def _setAllowedStates(self, key, item):
         if not self.__schema.hasAllowedStates(key):
-            return None
+            return
         
-        return self.__schema.getAllowedStates(key)
+        item.allowedStates = self.__schema.getAllowedStates(key)
 
 
     def _getMinInc(self, key, item):

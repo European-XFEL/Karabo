@@ -95,6 +95,13 @@ class BaseTreeWidgetItem(QTreeWidgetItem):
     updateNeeded = property(fget=_updateNeeded, fset=_setUpdateNeeded)
 
 
+    def _allowedStates(self):
+        return self.data(0, const.ALLOWED_STATE).toPyObject()
+    def _setAllowedStates(self, state):
+        self.setData(0, const.ALLOWED_STATE, state)
+    allowedStates = property(fget=_allowedStates, fset=_setAllowedStates)
+
+
     def _isChoiceElement(self):
         return self.data(0, const.IS_CHOICE_ELEMENT).toPyObject()
     def _setIsChoiceElement(self, isChoiceElemet):
