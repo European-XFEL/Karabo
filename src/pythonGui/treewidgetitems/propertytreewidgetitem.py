@@ -69,6 +69,12 @@ class PropertyTreeWidgetItem(BaseTreeWidgetItem):
     isChoiceElement = property(fget=_isChoiceElement, fset=_setIsChoiceElement)
 
 
+    def _setEnabled(self, enable):
+        if self.editableComponent is not None:
+            self.editableComponent.setEnabled(enable)
+    enabled = property(fset=_setEnabled)
+
+
 ### slots ###
     def onSetToDefault(self):
         return # needs to be correctly implemented

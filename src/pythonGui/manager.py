@@ -54,7 +54,7 @@ class Notifier(QObject):
     
     signalReconfigure = pyqtSignal(str, str, object) # deviceId, attributeId, attributeValue
     signalReconfigureAsHash = pyqtSignal(str, object) # hash/dict
-    signalDeviceInstanceStateChanged = pyqtSignal(str, str) # fullDeviceKey, state
+    signalDeviceStateChanged = pyqtSignal(str, str) # fullDeviceKey, state
     signalConflictStateChanged = pyqtSignal(bool) # isBusy
     signalChangingState = pyqtSignal(bool) # isChanging
     signalErrorState = pyqtSignal(str, bool) # deviceId, isError
@@ -64,8 +64,8 @@ class Notifier(QObject):
     signalUpdateDeviceInstance = pyqtSignal(dict)
     signalUpdateDeviceInstanceFinished = pyqtSignal(dict)
     
-    signalNewVisibleDeviceInstance = pyqtSignal(str) # deviceId
-    signalRemoveVisibleDeviceInstance = pyqtSignal(str) # deviceId
+    signalNewVisibleDevice = pyqtSignal(str) # deviceId
+    signalRemoveVisibleDevice = pyqtSignal(str) # deviceId
 
     signalLogDataAvailable = pyqtSignal(str) # logData
     signalErrorFound = pyqtSignal(str) # errorData
@@ -75,7 +75,7 @@ class Notifier(QObject):
     signalCreateNewDeviceClassPlugin = pyqtSignal(str, str, str) # serverId, classId, newClassId
     
     signalGetClassSchema = pyqtSignal(str, str) # serverId, classId
-    signalGetDeviceHash = pyqtSignal(str) # deviceId
+    signalGetDeviceSchema = pyqtSignal(str) # deviceId
 
 
     def __init__(self):
@@ -170,7 +170,7 @@ class Manager(Singleton):
 
     def _setFromPath(self, key, value):
         # pass key and value as list (immutable, important for ungoing procedures)
-        print "key:", key, "value:", value
+        #print "key:", key, "value:", value
         key = str(key)
         # Safety conversion before hashing
         if isinstance(value, QString):
@@ -215,35 +215,35 @@ class Manager(Singleton):
             dataNotifier.removeComponent(key, component)
         
 
-    def newVisibleDeviceInstance(self, internalKey):
-        keys = str(internalKey).split('.', 1)
-        devInsId = keys[0]
-        devInsCount = self.__visibleDevInsKeys.get(devInsId)
-        if devInsCount:
-            self.__visibleDevInsKeys[devInsId] += 1
+    def newVisibleDevice(self, path):
+        keys = str(path).split('.', 1)
+        deviceId = keys[1]
+        deviceIdCount = self.__visibleDevInsKeys.get(deviceId)
+        if deviceIdCount:
+            self.__visibleDevInsKeys[deviceId] += 1
         else:
-            self.__visibleDevInsKeys[devInsId] = 1
-        if self.__visibleDevInsKeys[devInsId] == 1:
-            self.__notifier.signalNewVisibleDeviceInstance.emit(devInsId)
+            self.__visibleDevInsKeys[deviceId] = 1
+        if self.__visibleDevInsKeys[deviceId] == 1:
+            self.__notifier.signalNewVisibleDevice.emit(deviceId)
 
 
-    def removeVisibleDeviceInstance(self, internalKey):
-        keys = str(internalKey).split('.', 1)
-        devInsId = keys[0]
-        devInsCount = self.__visibleDevInsKeys.get(devInsId)
-        if devInsCount:
-            self.__visibleDevInsKeys[devInsId] -= 1
-            if self.__visibleDevInsKeys[devInsId] == 0:
-                self.__notifier.signalRemoveVisibleDeviceInstance.emit(devInsId)
+    def removeVisibleDevice(self, path):
+        keys = str(path).split('.', 1)
+        deviceId = keys[1]
+        deviceIdCount = self.__visibleDevInsKeys.get(deviceId)
+        if deviceIdCount:
+            self.__visibleDevInsKeys[deviceId] -= 1
+            if self.__visibleDevInsKeys[deviceId] == 0:
+                self.__notifier.signalRemoveVisibleDevice.emit(deviceId)
 
 
-    def _changeHash(self, instanceId, config, configChangeType=ConfigChangeTypes.DEVICE_INSTANCE_CURRENT_VALUES_CHANGED):
-        address = instanceId
+    def _changeHash(self, devicePath, config, configChangeType=ConfigChangeTypes.DEVICE_INSTANCE_CURRENT_VALUES_CHANGED):
+        address = devicePath
         # Go recursively through Hash
-        self._r_checkHash(address, instanceId, config, configChangeType)
+        self._r_checkHash(address, devicePath, config, configChangeType)
 
 
-    def _r_checkHash(self, address, instanceId, config, configChangeType):
+    def _r_checkHash(self, address, devicePath, config, configChangeType):
         topLevelKeys = config.keys()
         for key in topLevelKeys:
             value = config.get(key)
@@ -253,7 +253,7 @@ class Manager(Singleton):
             else:
                 internalKey = address + "." + key
             
-            self._setFromPath(internalKey, value)
+            #self._setFromPath(internalKey, value)
             
             # Check if DataNotifier for key available
             if configChangeType is ConfigChangeTypes.DEVICE_CLASS_CONFIG_CHANGED:
@@ -278,10 +278,10 @@ class Manager(Singleton):
                 # Check state
                 if key == "state":
                     # Store latest state as tuple
-                    self.__lastState = (address, instanceId, value)
+                    self.__lastState = (address, devicePath, value)
                     if self.__stateUpdateTime.elapsed() > 250:
                         # Update state when last state change happened before 250ms
-                        self._triggerStateChange(address, instanceId, value)
+                        self._triggerStateChange(address, devicePath, value)
                     else:
                         # Start timer for possible state update
                         self.__stateUpdateTimer.start(300)
@@ -290,7 +290,7 @@ class Manager(Singleton):
                         
             # More recursion in case of Hash type
             if isinstance(value, Hash):
-                self._r_checkHash(internalKey, instanceId, value, configChangeType)
+                self._r_checkHash(internalKey, devicePath, value, configChangeType)
             elif isinstance(value, list):
                 # TODO: needs to be implemented
                 for i in xrange(len(value)):
@@ -298,18 +298,18 @@ class Manager(Singleton):
                     hashValue = value[i]
 
 
-    def _triggerStateChange(self, address, instanceId, value):
+    def _triggerStateChange(self, address, devicePath, value):
+        devicePath = devicePath.split('.configuration',1)[0]
         # Update GUI due to state changes
         if value == "Changing...":
             self.__notifier.signalChangingState.emit(True)
         else:
-            print "change", address, instanceId, value
             if ("Error" in value) or ("error" in value):
-                self.__notifier.signalErrorState.emit(instanceId, True)
+                self.__notifier.signalErrorState.emit(devicePath, True)
             else:
-                self.__notifier.signalErrorState.emit(instanceId, False)
+                self.__notifier.signalErrorState.emit(devicePath, False)
             self.__notifier.signalChangingState.emit(False)
-            self.__notifier.signalDeviceInstanceStateChanged.emit(address, value)
+            self.__notifier.signalDeviceStateChanged.emit(devicePath, value)
 
 
 ### Slots ###
@@ -323,12 +323,6 @@ class Manager(Singleton):
                 self._triggerStateChange(address, instanceId, value)
         self.__stateUpdateTimer.stop()
         
-
-    # TODO: This function must be thread-safe!!    
-    def onConfigChanged(self, instanceId, config):
-        # This function is called from the network
-        self._changeHash(instanceId, config)
-
 
     def onDeviceClassValueChanged(self, key, value):
         #print "onDeviceClassValueChanged", key, value
@@ -351,12 +345,12 @@ class Manager(Singleton):
         if dataNotifier is not None:
             dataNotifier.signalUpdateComponent.emit(key, value)
         
-        keys = str(key).split('.', 1)
-        instanceId = keys[0]
-        attributeKey = keys[1]
+        keys = str(key).split('.')
+        deviceId = keys[1]
+        parameterKey = keys[3]
 
         # Informs network
-        self.__notifier.signalReconfigure.emit(instanceId, attributeKey, value)
+        self.__notifier.signalReconfigure.emit(deviceId, parameterKey, value)
 
 
     def onDeviceInstanceChangedAsHash(self, instanceKey, config):
@@ -687,32 +681,27 @@ class Manager(Singleton):
         return None
     
     
-    def handleDeviceHash(self, config):
+    def handleDeviceSchema(self, deviceId, config):
         # Merge new configuration data into central hash
         self._mergeIntoHash(config)
         
-        deviceHash = config.get("device")
-        for key in deviceHash.keys():
-            path = "device." + key
-            
-            descriptionPath = path + ".description"
-            self.onSchemaAvailable(dict(key=path, type=NavigationItemTypes.DEVICE, schema=config.get(descriptionPath)))
-            
-            configurationPath = path + ".configuration"
-            self._changeHash(configurationPath, config.get(configurationPath))
+        path = "device." + deviceId
+        descriptionPath = path + ".description"
+        self.onSchemaAvailable(dict(key=path, type=NavigationItemTypes.DEVICE, schema=config.get(descriptionPath)))
 
 
-    def getDeviceHash(self, deviceId):
-        path = str("device." + deviceId)
-        hasDescription = self.__hash.has(path + ".description")
-        hasConfiguration = self.__hash.has(path + ".configuration")
-        hasActiveSchema = self.__hash.has(path + ".activeSchema")
-        
-        if hasDescription and hasConfiguration and hasActiveSchema:
+    def getDeviceSchema(self, deviceId):
+        path = str("device." + deviceId + ".description")
+        if self.__hash.has(path):
             return self.__hash.get(path)
 
         # Send network request
-        self.__notifier.signalGetDeviceHash.emit(deviceId)
+        self.__notifier.signalGetDeviceSchema.emit(deviceId)
         return None
         
+
+    # TODO: This function must be thread-safe!!
+    def handleConfigurationChanged(self, deviceId, config):
+        configurationPath = "device." + deviceId + ".configuration"
+        self._changeHash(configurationPath, config.get(configurationPath))
 

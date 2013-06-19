@@ -341,8 +341,8 @@ class CustomXmlReader(QXmlStreamReader):
         if internalKey:
             # Simulated NavigationItem click event to load schema
             Manager().selectNavigationItemByInternalKey(internalKey)
-            # Register as visible instance
-            Manager().newVisibleDeviceInstance(internalKey)
+            # Register as visible device
+            Manager().newVisibleDevice(internalKey)
             # Refresh over network needed
             Manager().onRefreshInstance(internalKey)
         
@@ -384,8 +384,8 @@ class CustomXmlReader(QXmlStreamReader):
         # Fill list with tuple
         self.__internalKeyTextTuples.append((internalKey, text))
         
-        # Register as visible instance
-        Manager().newVisibleDeviceInstance(internalKey)
+        # Register as visible device
+        Manager().newVisibleDevice(internalKey)
         # Simulated NavigationItem click event to load schema
         Manager().selectNavigationItemByInternalKey(internalKey)
         # Get schema

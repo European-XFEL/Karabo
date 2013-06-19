@@ -76,7 +76,7 @@ class ParameterTreeWidget(QTreeWidget):
 
 
     def stateUpdated(self, state):
-        self._r_updateAttributes(self.invisibleRootItem(), state)
+        self._r_updateParameters(self.invisibleRootItem(), state)
 
 
     def setActionsVisible(self, visible):
@@ -233,11 +233,11 @@ class ParameterTreeWidget(QTreeWidget):
             pass
 
 
-    def _r_updateAttributes(self, parentItem, state):
+    def _r_updateParameters(self, parentItem, state):
         for i in range(parentItem.childCount()):
             childItem = parentItem.child(i)
             childItem.updateState(state)
-            self._r_updateAttributes(childItem, state)
+            self._r_updateParameters(childItem, state)
 
 
     def _r_setItemVisibility(self, item, show):

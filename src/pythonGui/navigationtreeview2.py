@@ -122,12 +122,7 @@ class NavigationTreeView(QTreeView):
             #serverId = serverIndex.data().toString()
             
             path = str("device." + deviceId)
-            deviceHash = Manager().getDeviceHash(deviceId)
-            schema = None
-            if deviceHash:
-                descriptionPath = path + ".description"
-                if deviceHash.has(descriptionPath):
-                    schema = deviceHash.get(descriptionPath)
+            schema = Manager().getDeviceSchema(deviceId)
             Manager().onSchemaAvailable(dict(key=path, type=type, schema=schema))
         
         itemInfo = dict(key=path, type=type, level=level, row=row)
@@ -154,4 +149,10 @@ class NavigationTreeView(QTreeView):
             self.setCurrentIndex(index)
         else:
             self.clearSelection()
+
+
+    def setErrorState(self, instanceId, hasError):
+        if hasError:
+            print "setErrorState", instanceId, hasError
+        #self.__model.updateErrorState(instanceId, hasError)
 
