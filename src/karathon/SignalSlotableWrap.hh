@@ -68,8 +68,8 @@ namespace karabo {
                 karabo::xms::SignalSlotable::stopEventLoop();
             }
             
-            bp::object getAvailableInstancesPy() {
-                return Wrapper::fromStdVectorToPyList(this->getAvailableInstances());
+            bp::object getAvailableInstancesPy(bool activateTracking) {
+                return Wrapper::fromStdVectorToPyList(this->getAvailableInstances(activateTracking));
             }
 
             bp::object getAvailableSignalsPy(const std::string& instanceId) {
