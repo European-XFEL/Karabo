@@ -79,10 +79,6 @@ namespace karabo {
 
         private: // Functions
 
-            void slotValidateInstanceId(const std::string& hostname, const std::string& instanceType, const std::string& instanceId);
-            
-            void sanifyServerId(std::string& serverId) const;
-            
             size_t getNumberOfServersOnHost(const std::string& hostname);
             
             void okStateOnEntry();

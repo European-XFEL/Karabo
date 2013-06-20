@@ -221,7 +221,7 @@ namespace karabo {
 
             virtual void connectionAvailableAgain(const std::string& instanceId, const std::vector<karabo::util::Hash>& connections);
 
-            const std::vector<std::pair<std::string, karabo::util::Hash> >& getAvailableInstances();
+            const std::vector<std::pair<std::string, karabo::util::Hash> >& getAvailableInstances(const bool activateTracking = false);
             
             std::vector<std::string> getAvailableSignals(const std::string& instanceId);
 
@@ -663,6 +663,8 @@ namespace karabo {
 
             void connectInputChannels();
 
+            std::pair<bool, std::string> exists(const std::string& instanceId); 
+
         protected: // Functions
 
             /**
@@ -716,7 +718,7 @@ namespace karabo {
             
             std::pair<bool, std::string> isValidInstanceId(const std::string& instanceId);
             
-            void slotPing(const std::string& instanceId, bool replyIfInstanceIdIsDuplicated);
+            void slotPing(const std::string& instanceId, bool replyIfInstanceIdIsDuplicated, bool trackPingedInstance);
 
             void slotPingAnswer(const std::string& instanceId, const karabo::util::Hash& hash);
 
