@@ -199,8 +199,8 @@ namespace karabo {
             KARABO_LOG_INFO << "DeviceServer starts up with id: " << m_serverId;
 
             if (m_isMaster) {
-                slotStartDevice(Hash("MasterDevice.deviceId", "Karabo_Master_0", "MasterDevice.connection", m_connectionConfig));
-                //slotStartDevice(Hash("GuiServerDevice.deviceId", "Karabo_GuiServer_0", "GuiServerDevice.connection", m_connectionConfig, "GuiServerDevice.loggerConnection", m_connectionConfig));
+                //slotStartDevice(Hash("MasterDevice.deviceId", "Karabo_Master_0", "MasterDevice.connection", m_connectionConfig));
+                slotStartDevice(Hash("GuiServerDevice.deviceId", "Karabo_GuiServer_0", "GuiServerDevice.connection", m_connectionConfig, "GuiServerDevice.loggerConnection", m_connectionConfig));
             } else {
                 // Check whether we have installed devices available
                 updateAvailableDevices();
