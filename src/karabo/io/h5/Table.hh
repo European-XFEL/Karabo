@@ -15,7 +15,6 @@
 #include <boost/filesystem.hpp>
 #include <boost/shared_ptr.hpp>
 #include <hdf5/hdf5.h>
-#include <karabo/util/Time.hh>
 #include "ioProfiler.hh"
 
 
