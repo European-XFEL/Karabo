@@ -66,6 +66,7 @@ namespace karabo {
                     KARABO_LOG_FRAMEWORK_DEBUG << "No master instance found. Running in stand-alone mode";
                     m_masterMode = NO_MASTER;
                 }
+                return;
             }
             KARABO_LOG_FRAMEWORK_DEBUG << "Master instance found (\"" << m_masterDeviceId << "\")";
             m_masterMode = HAS_MASTER;
@@ -89,8 +90,7 @@ namespace karabo {
                 
                 m_runtimeSystemDescription.merge(prepareTopologyEntry(instanceId, instanceInfo));
             }
-            KARABO_LOG_FRAMEWORK_DEBUG << "cacheAvailableInstances() was called, runtimeSystemDescription looks like:";
-            KARABO_LOG_FRAMEWORK_DEBUG << m_runtimeSystemDescription;
+            KARABO_LOG_FRAMEWORK_DEBUG << "cacheAvailableInstances() was called";
         }
 
 
@@ -123,6 +123,7 @@ namespace karabo {
             KARABO_LOG_FRAMEWORK_DEBUG << "Instance \"" << instanceId << "\" silently disappeared";
             removeFromSystemTopology(instanceId);
             if (m_masterMode == IS_MASTER) m_signalSlotable->call("*", "slotInstanceGone", instanceId);
+            else if (m_masterMode == NO_MASTER) slotInstanceGone(instanceId);
             if (m_instanceGoneHandler) m_instanceGoneHandler(instanceId);
         }
 
@@ -156,6 +157,7 @@ namespace karabo {
             if (!hasInstance) {
                 KARABO_LOG_FRAMEWORK_INFO << "Previously lost instance \"" << instanceId << "\" silently came back";
                 if (m_masterMode == IS_MASTER) m_signalSlotable->call("*", "slotInstanceNew", instanceId, instanceInfo);
+                else if (m_masterMode == NO_MASTER) slotInstanceNew(instanceId, instanceInfo);
             } else {
                 KARABO_LOG_FRAMEWORK_WARN << "Detected dirty shutdown for (again available) instance \"" << instanceId << "\", adapting...";
             }
