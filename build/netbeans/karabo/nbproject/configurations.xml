@@ -1327,6 +1327,16 @@
             tool="3"
             flavor2="0">
       </item>
+      <item path="../../../src/karabo/util/Epochstamp.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/Epochstamp.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="../../../src/karabo/util/Exception.cc"
             ex="false"
             tool="1"
@@ -1465,10 +1475,6 @@
             tool="3"
             flavor2="0">
       </item>
-      <item path="../../../src/karabo/util/Time.cc" ex="false" tool="1" flavor2="0">
-      </item>
-      <item path="../../../src/karabo/util/Time.hh" ex="false" tool="3" flavor2="0">
-      </item>
       <item path="../../../src/karabo/util/Timer.cc" ex="false" tool="1" flavor2="0">
       </item>
       <item path="../../../src/karabo/util/Timer.hh" ex="false" tool="3" flavor2="0">
@@ -1479,6 +1485,16 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/util/Timestamp.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/Timestamp2.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/Timestamp2.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -1496,6 +1512,16 @@
       <item path="../../../src/karabo/util/ToType.hh" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../../../src/karabo/util/ToXsd.hh" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/Trainstamp.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/Trainstamp.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
       </item>
       <item path="../../../src/karabo/util/Types.hh" ex="false" tool="3" flavor2="0">
       </item>
@@ -2772,6 +2798,16 @@
             tool="3"
             flavor2="0">
       </item>
+      <item path="../../../src/karabo/util/Epochstamp.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/Epochstamp.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="../../../src/karabo/util/Exception.cc"
             ex="false"
             tool="1"
@@ -2910,10 +2946,6 @@
             tool="3"
             flavor2="0">
       </item>
-      <item path="../../../src/karabo/util/Time.cc" ex="false" tool="1" flavor2="0">
-      </item>
-      <item path="../../../src/karabo/util/Time.hh" ex="false" tool="3" flavor2="0">
-      </item>
       <item path="../../../src/karabo/util/Timer.cc" ex="false" tool="1" flavor2="0">
       </item>
       <item path="../../../src/karabo/util/Timer.hh" ex="false" tool="3" flavor2="0">
@@ -2924,6 +2956,16 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/util/Timestamp.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/Timestamp2.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/Timestamp2.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -2941,6 +2983,16 @@
       <item path="../../../src/karabo/util/ToType.hh" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../../../src/karabo/util/ToXsd.hh" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/Trainstamp.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/Trainstamp.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
       </item>
       <item path="../../../src/karabo/util/Types.hh" ex="false" tool="3" flavor2="0">
       </item>
@@ -4190,6 +4242,16 @@
             tool="3"
             flavor2="0">
       </item>
+      <item path="../../../src/karabo/util/Epochstamp.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/Epochstamp.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="../../../src/karabo/util/Exception.cc"
             ex="false"
             tool="1"
@@ -4328,10 +4390,6 @@
             tool="3"
             flavor2="0">
       </item>
-      <item path="../../../src/karabo/util/Time.cc" ex="false" tool="1" flavor2="0">
-      </item>
-      <item path="../../../src/karabo/util/Time.hh" ex="false" tool="3" flavor2="0">
-      </item>
       <item path="../../../src/karabo/util/Timer.cc" ex="false" tool="1" flavor2="0">
       </item>
       <item path="../../../src/karabo/util/Timer.hh" ex="false" tool="3" flavor2="0">
@@ -4342,6 +4400,16 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/util/Timestamp.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/Timestamp2.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/Timestamp2.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -4359,6 +4427,16 @@
       <item path="../../../src/karabo/util/ToType.hh" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../../../src/karabo/util/ToXsd.hh" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/Trainstamp.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/Trainstamp.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
       </item>
       <item path="../../../src/karabo/util/Types.hh" ex="false" tool="3" flavor2="0">
       </item>

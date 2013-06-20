@@ -9,8 +9,6 @@
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
 
-#include <karabo/util/Time.hh>
-
 #include "JmsBrokerConnection.hh"
 #include "JmsBrokerChannel.hh"
 #include "JmsBrokerIOService.hh"
@@ -469,7 +467,7 @@ namespace karabo {
 
                 // Add some default properties
                 Hash properties(header);
-                properties.set<long long>("__timestamp", karabo::util::Time::getMsSinceEpoch());
+                //properties.set<long long>("__timestamp", karabo::util::Time::getMsSinceEpoch());
                 setProperties(properties, propertiesHandle);
 
                 MQ_SAFE_CALL(MQSetMessageProperties(messageHandle, propertiesHandle))
@@ -507,7 +505,7 @@ namespace karabo {
 
                 // Add some default properties
                 Hash properties(header);
-                properties.set<long long>("__timestamp", karabo::util::Time::getMsSinceEpoch());
+                //properties.set<long long>("__timestamp", karabo::util::Time::getMsSinceEpoch());
                 setProperties(properties, propertiesHandle);
 
                 MQ_SAFE_CALL(MQSetMessageProperties(messageHandle, propertiesHandle))

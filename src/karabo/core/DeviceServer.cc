@@ -101,7 +101,7 @@ namespace karabo {
         }
 
 
-        DeviceServer::DeviceServer(const karabo::util::Hash& input) : m_log(0), m_deviceInstanceCount(0) {
+        DeviceServer::DeviceServer(const karabo::util::Hash& input) : m_log(0) {
 
             input.get("isMaster", m_isMaster);
 
@@ -371,7 +371,7 @@ namespace karabo {
 
 
         std::string DeviceServer::generateDefaultDeviceId(const std::string& classId) {
-            string index = karabo::util::toString(++m_deviceInstanceCount);
+            string index = karabo::util::toString(++m_deviceInstanceCount[classId]);
             // Prepare shortened Device-Server name
             vector<string> tokens;
             boost::split(tokens, m_serverId, boost::is_any_of("_"));

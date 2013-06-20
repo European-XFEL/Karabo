@@ -13,7 +13,6 @@
 
 #include <boost/asio.hpp>
 #include <karabo/util/Factory.hh>
-#include <karabo/util/Time.hh>
 #include <karabo/net/BrokerChannel.hh>
 
 /**

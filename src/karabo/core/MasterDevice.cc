@@ -42,50 +42,10 @@ namespace karabo {
 
 
         void MasterDevice::setupSlots() {
-            GLOBAL_SLOT3(slotValidateInstanceId, string /*hostname*/, string /*instanceType*/, string /*instanceId*/);
             GLOBAL_SLOT2(slotInstanceNew, string /*instanceId*/, Hash /*instanceInfo*/);
             GLOBAL_SLOT2(slotInstanceGone, string /*instanceId*/, Hash /*instanceInfo*/);
             SLOT2(slotChanged, Hash /*changedConfig*/, string /*deviceId*/);
         }
-
-
-        void MasterDevice::slotValidateInstanceId(const std::string& hostname, const std::string& instanceType, const std::string& instanceId) {
-            KARABO_LOG_INFO << "Device-server from host \"" << hostname << "\" requests device-server instanceId";
-            string id = instanceId;
-            if (id.empty()) { // Generate
-                if (instanceType == "server") {
-                    id = hostname + "_DeviceServer_" + karabo::util::toString(getNumberOfServersOnHost(hostname));
-                }
-            }
-
-            sanifyServerId(id);
-            
-            string foreignHost;
-            string welcomeMessage;
-            Hash instanceInfo;
-            try {
-                request(id, "slotPing", id, true).timeout(100).receive(instanceInfo);
-            } catch (const karabo::util::TimeoutException&) {
-                Exception::clearTrace();
-                if (m_systemNow.has("server." + id)) welcomeMessage = "Welcome back!";
-                else welcomeMessage = "Your name got accepted, welcome in the team!";
-                KARABO_LOG_DEBUG << "Shipping welcome message: " << welcomeMessage;
-                reply(true, id, welcomeMessage); // Ok, instance does not exist
-                return;
-            }
-            if (instanceInfo.has("host")) instanceInfo.get("host", foreignHost);
-            welcomeMessage = "Another device-server with the same instance is already online (on host: " + foreignHost + ")";
-            KARABO_LOG_DEBUG << "Shipping welcome message: " << welcomeMessage;
-            reply(false, id, welcomeMessage); // Shit, instance exists already
-        }
-
-
-        void MasterDevice::sanifyServerId(std::string& serverId) const {
-            for (std::string::iterator it = serverId.begin(); it != serverId.end(); ++it) {
-                if ((*it) == '.') (*it) = '-';
-            }
-        }
-
 
         size_t MasterDevice::getNumberOfServersOnHost(const std::string& hostname) {
             boost::mutex::scoped_lock lock(m_systemNowMutex);

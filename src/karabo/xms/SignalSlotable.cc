@@ -84,7 +84,7 @@ namespace karabo {
 
             Hash instanceInfo;
             try {
-                Requestor(m_requestChannel, m_instanceId).call("*", "slotPing", instanceId, true).timeout(100).receive(instanceInfo);
+                Requestor(m_requestChannel, m_instanceId).call(instanceId, "slotPing", instanceId, true, false).timeout(100).receive(instanceInfo);
             } catch (const karabo::util::TimeoutException&) {
                 Exception::clearTrace();
                 return std::make_pair(true, "");
@@ -124,7 +124,7 @@ namespace karabo {
             SLOT2(slotHeartbeat, string /*instanceId*/, int /*timeToLive*/)
 
             // Global ping listener
-            GLOBAL_SLOT2(slotPing, string /*callersInstanceId*/, bool /*replyIfSame*/)
+            GLOBAL_SLOT3(slotPing, string /*callersInstanceId*/, bool /*replyIfSame*/, bool /*trackPingedInstance*/)
 
             // Listener for ping answers
             SLOT2(slotPingAnswer, string /*instanceId*/, Hash /*instanceInfo*/)
@@ -226,26 +226,52 @@ namespace karabo {
         }
 
 
-        const std::vector<std::pair<std::string, karabo::util::Hash> >& SignalSlotable::getAvailableInstances() {
+        const std::vector<std::pair<std::string, karabo::util::Hash> >& SignalSlotable::getAvailableInstances(bool activateTracking) {
             m_availableInstances.clear();
-            call("*", "slotPing", m_instanceId, false);
+            call("*", "slotPing", m_instanceId, false, activateTracking);
             // The function slotPingAnswer will be called by all instances available now
             // Lets wait a fair amount of time - huaaah this is bad isn't it :-(
             boost::this_thread::sleep(boost::posix_time::milliseconds(1000));
+            if (activateTracking) {
+                boost::mutex::scoped_lock lock(m_heartbeatMutex);
+                for (size_t i = 0; i < m_availableInstances.size(); ++i) {
+                    const string& instanceId = m_availableInstances[i].first;
+                    if (instanceId == m_instanceId) continue;
+                    if (!m_trackedComponents.has(instanceId)) addTrackedComponent(instanceId);
+                    m_trackedComponents.set(instanceId + ".isExplicitlyTracked", true);
+                }
+            }
             return m_availableInstances;
         }
         
+        std::pair<bool, std::string> SignalSlotable::exists(const std::string& instanceId) {
+            string hostname;
+            Hash instanceInfo;
+            try {
+                this->request(instanceId, "slotPing", instanceId, true, false).timeout(300).receive(instanceInfo);
+            } catch (karabo::util::TimeoutException) {
+                return std::make_pair(false, hostname);
+            }
+            if (instanceInfo.has("host")) instanceInfo.get("host", hostname);
+            return std::make_pair(true, hostname);
+        }
         
-        void SignalSlotable::slotPing(const std::string& instanceId, bool replyIfInstanceIdIsDuplicated) {
+
+        void SignalSlotable::slotPing(const std::string& instanceId, bool replyIfInstanceIdIsDuplicated, bool trackPingedInstance) {
 
             if (replyIfInstanceIdIsDuplicated) {
-                cout << "Got asked whether I am called " << instanceId << endl;
+                //cout << "Got asked whether I am called " << instanceId << endl;
                 if (instanceId == m_instanceId) {
                     reply(m_instanceInfo);
                 }
             } else {
-                cout << "Got pinged from " << instanceId << endl;
+                //cout << "Got pinged from " << instanceId << endl;
                 call(instanceId, "slotPingAnswer", m_instanceId, m_instanceInfo);
+            }
+            
+            if (trackPingedInstance) {
+                boost::mutex::scoped_lock lock(m_heartbeatMutex);
+                m_signalInstances["signalHeartbeat"]->registerSlot(instanceId, "slotHeartbeat");
             }
         }
 
@@ -825,6 +851,7 @@ namespace karabo {
                         if (entry.get<vector<Hash> >("connections").size() > 0) connectionLost(it->getKey(), entry.get<vector<Hash> >("connections"));
                     } else {
                         countDown--;
+                        // TODO Implement removal of tracked component if no RECONNECT is activated
                         // Here we can try to reconnect
                         if (m_reconnectIntervals.find(countDown) != m_reconnectIntervals.end()) {
                             const vector<Hash >& connections = entry.get<vector<Hash> > ("connections");
