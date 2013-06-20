@@ -51,6 +51,12 @@ namespace karabo {
             typedef boost::function<void (const karabo::util::Schema& /*description*/, const std::string& /*deviceId*/) > SchemaUpdatedHandler;
 
         protected: // members
+            
+            enum MasterMode {
+                IS_MASTER,
+                HAS_MASTER,
+                NO_MASTER
+            };
 
             /**
              * server +
@@ -96,9 +102,11 @@ namespace karabo {
 
             int m_internalTimeout;
 
-            bool m_systemHasMaster;
+            std::string m_masterDeviceId;
 
             bool m_isAdvancedMode;
+            
+            MasterMode m_masterMode;
 
             InstanceNewHandler m_instanceNewHandler;
             InstanceUpdatedHandler m_instanceUpdatedHandler;
@@ -455,6 +463,8 @@ namespace karabo {
 
             virtual void slotSchemaUpdated(const karabo::util::Schema& schema, const std::string& deviceId);
             
+           
+            
             void onInstanceNotAvailable(const std::string& instanceId);
             
             void onInstanceAvailableAgain(const std::string& instanceId);
@@ -487,6 +497,9 @@ namespace karabo {
             
             std::string getInstanceType(const karabo::util::Hash& instanceInfo) const;
             
+            virtual void slotMasterPing();
+            
+            virtual void slotProvideSystemTopology();
         };
 
     }
