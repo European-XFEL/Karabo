@@ -150,10 +150,6 @@ namespace karabo {
         void DeviceServer::run() {
             bool hasHearbeat = true;
 
-            if (m_isMaster) {
-                hasHearbeat = false;
-            }
-
             // Initialize category
             m_log = &(karabo::log::Logger::getLogger(m_serverId));
 

@@ -188,7 +188,7 @@ namespace karabo {
             if (m_instanceNewHandler) m_instanceNewHandler(entry);
             
             // Track the instance if we are running without master
-            if (m_masterMode != HAS_MASTER) m_signalSlotable->trackExistenceOfInstance(instanceId);
+            //if (m_masterMode != HAS_MASTER) m_signalSlotable->trackExistenceOfInstance(instanceId);
 
             KARABO_LOG_FRAMEWORK_DEBUG << "slotInstanceNew was called";
         }
@@ -605,6 +605,10 @@ namespace karabo {
             m_instanceNewHandler = callBackFunction;
         }
 
+        
+        void DeviceClient::registerInstanceUpdatedMonitor(const InstanceUpdatedHandler& callBackFunction) {
+            m_instanceUpdatedHandler = callBackFunction;
+        }
 
         void DeviceClient::registerInstanceGoneMonitor(const InstanceGoneHandler& callBackFunction) {
             m_instanceGoneHandler = callBackFunction;
