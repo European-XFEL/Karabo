@@ -55,15 +55,24 @@ class DeviceServer(object):
         e.description("Time to wait for name resolution (via name-server) until timeout [ms]")
         e.advanced().assignmentOptional().defaultValue(5000).commit()
         
-        e = NODE_ELEMENT(expected).key("Logger").displayedName("Logger")
-        e.description("Logging settings")
-        e.appendParametersOfConfigurableClass(Logger, "Logger").commit()
-        
         e = NODE_ELEMENT(expected).key("PluginLoader")
         e.displayedName("Plugin Loader").description("Plugin Loader sub-configuration")
         e.appendParametersOfConfigurableClass(PluginLoader, "PythonPluginLoader")
         e.commit()
         
+        e = NODE_ELEMENT(expected).key("Logger").displayedName("Logger")
+        e.description("Logging settings")
+        e.appendParametersOfConfigurableClass(Logger, "Logger").commit()
+    
+        e = OVERWRITE_ELEMENT(expected).key("Logger.appenders")
+        e.setNewDefaultValue("Ostream").commit()
+        
+        e = OVERWRITE_ELEMENT(expected).key("Logger.appenders.Ostream.layout")
+        e.setNewDefaultValue("Pattern").commit()
+        
+        e = OVERWRITE_ELEMENT(expected).key("Logger.appenders.Ostream.layout.Pattern.format")
+        e.setNewDefaultValue("%p  %c  : %m%n").commit()
+
     def setupFsm(self):
         '''
         Description of DeviceServer state machine
@@ -129,54 +138,42 @@ class DeviceServer(object):
         # describe FSM
         self.processEventLock = threading.RLock()
         self.fsm = self.setupFsm()
+
         self.ss = None
         self.availableDevices = dict()
         self.deviceInstanceMap = dict()
-        self.serverid = ""
         self.hostname, dotsep, self.domainname = socket.gethostname().partition('.')
-        self.nameRequestTimeout = input['nameRequestTimeout']
+        
         if 'serverId' in input:
             self.serverid = input['serverId']
-        self.running = True
-        self.isRegistered = False
+            saveToFile(Hash("DeviceServer.serverId", self.serverid), "autoload.xml")
+        else:
+            self.serverid = self._generateDefaultServerId()
         
         self.loadLogger(input)
         self.loadPluginLoader(input)
-        if "autoStart" in input:
-            self.autoStart = input["autoStart"]
+        self.nameRequestTimeout = input['nameRequestTimeout']
+    
+    def _generateDefaultServerId(self):
+        return self.hostname + "_Server_" + os.getpid()
     
     def loadLogger(self, input):
-        if "Logger" in input:
-            config = input["Logger"]
-        appenders = config["appenders"]
-        appenderConfig = Hash()
-        appenderConfig["Network.layout.Pattern.format"] = "%d{%F %H:%M:%S} | %p | %c | %m"
+        config = input["Logger"]
+        config["categories[0].Category.name"] = "karabo"
+        config["categories[0].Category.appenders[0].Ostream.layout.Pattern.format"] = "%p  %c  : %m%n"
+        config["categories[0].Category.additivity"] = False
+        config["appenders[1].Network.layout.Pattern.format"] = "%d{%F %H:%M:%S} | %p | %c | %m"
         if "connection" in input:
-            appenderConfig["Network.connection"] = input["connection"]
-        appenders.append(appenderConfig)
+            config["appenders[1].Network.connection"] = input["connection"]
         Logger.configure(config)
     
     def loadPluginLoader(self, input):
         self.pluginLoader = PluginLoader.createNode("PluginLoader", "PythonPluginLoader", input)
         
     def run(self):
-        try:
-            ss = SignalSlotable("temp_python_signal_slotable", "Jms", Hash(), True, False)
-            isValid, self.serverid, answer = ss.request("*", "slotValidateInstanceId", self.hostname, "server", self.serverid).waitForReply(self.nameRequestTimeout)
-            del ss
-        except ValueError,e:
-            print "Name request timed out, make sure a valid master server is running."
-            del e
-            del ss
-            return
-        if not isValid:
-            print "Master says:",answer
-            return
-
-        self.ss = SignalSlotable.create(self.serverid)
         self.log = Logger.getLogger(self.serverid)
-        self.log.INFO("Master says: {}".format(answer))
         self.log.INFO("Starting Karabo DeviceServer on host: {}".format(self.hostname))
+        self.ss = SignalSlotable.create(self.serverid)
         self._registerAndConnectSignalsAndSlots()
         self.fsm.start()
         info = Hash("type", "server")
@@ -197,7 +194,6 @@ class DeviceServer(object):
         self.ss.reply(currentState)
         
     def idleStateOnEntry(self):
-        saveToFile(Hash("DeviceServer.serverId", self.serverid), "autoload.xml")
         self.log.INFO("DeviceServer starts up with id: {}".format(self.serverid))
         self.log.INFO("Keep watching directory: \"{}\" for Device plugins".format(self.pluginLoader.getPluginDirectory()))
         self.pluginThread = threading.Thread(target = self.scanPlugins)
@@ -267,7 +263,7 @@ class DeviceServer(object):
     def startDeviceAction(self, config):
         classid = iter(config).next().getKey()
         self.log.INFO("Trying to start {}...".format(classid))
-        self.log.DEBUG("with the following configuration:\n".format(config))
+        self.log.DEBUG("with the following configuration:\n{}".format(config))
         modified = Hash(config)
         modified[classid]["serverId"] = self.serverid
         if "deviceId" in modified[classid]:
@@ -299,17 +295,20 @@ class DeviceServer(object):
             deviceClasses.append(classid)
             if d['mustNotify']:
                 d['mustNotify'] = False
+        self.log.DEBUG("Sending instance update as new device plugins are available: {}".format(deviceClasses))
         self.ss.updateInstanceInfo(Hash("deviceClasses", deviceClasses))
 
     def noStateTransition(self):
-        self.log.DEBUG("No transition")
+        self.log.DEBUG("DeviceServer \"{}\" does not allow the transition for this event".format(self.serverid))
    
     def slotKillServer(self):
         self.log.INFO("Received kill signal")
+        threads = []
         for deviceid  in self.deviceInstanceMap.keys():
             self.ss.call(deviceid, "slotKillDevice")
-            launcherThread = self.deviceInstanceMap[deviceid]
-            launcherThread.join()
+            threads.append(self.deviceInstanceMap[deviceid])
+        for t  in threads:
+            if t: t.join()
         self.deviceInstanceMap = {}
         self.ss.call("*", "slotDeviceServerInstanceGone", self.serverid)
         self.stopDeviceServer()
@@ -318,8 +317,8 @@ class DeviceServer(object):
         self.log.WARN("Device \"{}\" notifies fulture death".format(id))
         if id in self.deviceInstanceMap:
             self.ss.call(id, "slotKillDeviceInstance")
-            launcherThread = self.deviceInstanceMap[id]
-            launcherThread.join()
+            t = self.deviceInstanceMap[id]
+            if t: t.join()
             del self.deviceInstanceMap[id]
             self.log.INFO("Device \"{}\" removed from server.".format(id))
 
@@ -331,10 +330,9 @@ class DeviceServer(object):
         with self.processEventLock:
             self.fsm.process_event(event)
         
-    def updateCurrentState(self, currentState):
-        self.ss.reply(currentState)
+#    def updateCurrentState(self, currentState):
+#        self.ss.reply(currentState)
     
-
     def _generateDefaultDeviceInstanceId(self, devClassId):
         cls = self.__class__
         with cls.instanceCountLock:
@@ -342,11 +340,8 @@ class DeviceServer(object):
                 cls.instanceCountPerDeviceServer[self.serverid] = 0
             cls.instanceCountPerDeviceServer[self.serverid] += 1
             _index = cls.instanceCountPerDeviceServer[self.serverid]
-            if self.serverid == "":
-                #myHostName, someList, myHostAddrList = socket.gethostbyaddr(socket.gethostname())
-                return self.hostname + "_" + devClassId + "_" + str(_index)
             tokens = self.serverid.split("_")
-            _domain = tokens.pop(0) + tokens.pop()
+            _domain = tokens.pop(0) + "-" + tokens.pop()
             _id = _domain + "_" + devClassId + "_" + str(_index)
             return _id
      
