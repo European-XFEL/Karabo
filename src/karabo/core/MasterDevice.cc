@@ -272,14 +272,14 @@ namespace karabo {
                 for (Hash::iterator it = tmp.begin(); it != tmp.end(); ++it) { // Loops deviceIds
                     const string& deviceId = it->getKey();
                     if (!it->getValue<Hash>().get<Hash>("configuration").empty()) {
-                        boost::filesystem::path filePath("karaboHistory/" + deviceId + ".xml");
+                        boost::filesystem::path filePath("karaboHistory/" + deviceId + ".h5");
                         if (boost::filesystem::exists(filePath)) {
                             // Read - Merge - Write
                             Hash& current = it->getValue<Hash>();
                             Hash hist;
                             loadFromFile(hist, filePath.string());
                             hist.merge(current, karabo::util::Hash::MERGE_ATTRIBUTES);
-                            saveToFile(hist, filePath.string(), Hash("format.Xml.indentation", 1));
+                            saveToFile(hist, filePath.string()/*, Hash("format.Xml.indentation", 1)*/);
                         } else {
                             // Write
                             saveToFile(it->getValue<Hash>(), filePath.string());
