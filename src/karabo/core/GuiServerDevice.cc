@@ -68,7 +68,7 @@ namespace karabo {
         void GuiServerDevice::okStateOnEntry() {
             // Register handlers
             remote().registerInstanceNewMonitor(boost::bind(&karabo::core::GuiServerDevice::instanceNewHandler, this, _1));
-            remote().registerInstanceNewMonitor(boost::bind(&karabo::core::GuiServerDevice::instanceUpdatedHandler, this, _1));
+            remote().registerInstanceUpdatedMonitor(boost::bind(&karabo::core::GuiServerDevice::instanceUpdatedHandler, this, _1));
             remote().registerInstanceGoneMonitor(boost::bind(&karabo::core::GuiServerDevice::instanceGoneHandler, this, _1));
                     
             m_dataConnection->startAsync(boost::bind(&karabo::core::GuiServerDevice::onConnect, this, _1));
@@ -407,7 +407,7 @@ namespace karabo {
 
 
         void GuiServerDevice::slotNotification(const std::string& type, const std::string& shortMessage, const std::string& detailedMessage, const std::string& deviceId) {
-            KARABO_LOG_DEBUG << "Broadcasting ERROR in system";
+            KARABO_LOG_DEBUG << "Broadcasting notification in system";
             Hash header("type", "notification", "deviceId", deviceId);
             Hash body("type", type, "shortMsg", shortMessage, "detailedMsg", detailedMessage);
             boost::mutex::scoped_lock lock(m_channelMutex); 

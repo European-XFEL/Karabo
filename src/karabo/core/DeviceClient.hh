@@ -265,7 +265,7 @@ namespace karabo {
 
             void registerInstanceNewMonitor(const InstanceNewHandler& callBackFunction);
 
-            void registerInstanceUpdatedMonitor(const InstanceNewHandler& callBackFunction);
+            void registerInstanceUpdatedMonitor(const InstanceUpdatedHandler& callBackFunction);
 
             void registerInstanceGoneMonitor(const InstanceGoneHandler& callBackFunction);
 
