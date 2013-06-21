@@ -269,7 +269,7 @@ namespace karabo {
                 call(instanceId, "slotPingAnswer", m_instanceId, m_instanceInfo);
             }
             
-            if (trackPingedInstance) {
+            if (trackPingedInstance && instanceId != m_instanceId) {
                 boost::mutex::scoped_lock lock(m_heartbeatMutex);
                 m_signalInstances["signalHeartbeat"]->registerSlot(instanceId, "slotHeartbeat");
             }
@@ -393,24 +393,32 @@ namespace karabo {
 
         void SignalSlotable::trackExistenceOfInstance(const std::string& instanceId) {
             if (instanceId == m_instanceId) return;
-            boost::mutex::scoped_lock lock(m_heartbeatMutex);
-            if (!m_trackedComponents.has(instanceId)) {
-                addTrackedComponent(instanceId);
+            {
+                boost::mutex::scoped_lock lock(m_heartbeatMutex);
+                if (!m_trackedComponents.has(instanceId)) {
+                    addTrackedComponent(instanceId);
+                } else {
+                    m_trackedComponents.set(instanceId + ".countDown", m_timeToLive);
+                }
+                m_trackedComponents.set(instanceId + ".isExplicitlyTracked", true);
             }
-            m_trackedComponents.set(instanceId + ".isExplicitlyTracked", true);
             connect(instanceId, "signalHeartbeat", "", "slotHeartbeat", NO_TRACK, false);
         }
 
 
         void SignalSlotable::stopTrackingExistenceOfInstance(const std::string& instanceId) {
-            boost::mutex::scoped_lock lock(m_heartbeatMutex);
+            m_heartbeatMutex.lock();
             if (m_trackedComponents.has(instanceId)) {
                 if (m_trackedComponents.get<std::vector<Hash> >(instanceId + ".connections").empty()) {
                     m_trackedComponents.erase(instanceId);
+                    m_heartbeatMutex.unlock();
                     disconnect(instanceId, "signalHeartbeat", "", "slotHeartbeat", false);
                 } else {
                     m_trackedComponents.set(instanceId + ".isExplicitlyTracked", false);
+                    m_heartbeatMutex.unlock();
                 }
+            } else {
+                m_heartbeatMutex.unlock();
             }
         }
 
@@ -803,7 +811,11 @@ namespace karabo {
                 Hash& entry = m_trackedComponents.get<Hash > (instanceId);
                 int& oldCountDown = entry.get<int >("countDown");
                 if (oldCountDown <= 0) {
-                    if (entry.get<bool>("isExplicitlyTracked") == true) instanceAvailableAgain(instanceId);
+                    if (entry.get<bool>("isExplicitlyTracked") == true) {
+                        m_heartbeatMutex.unlock();
+                        instanceAvailableAgain(instanceId);
+                        m_heartbeatMutex.lock();
+                    }
                     const vector<Hash >& connections = entry.get<vector<Hash> > ("connections");
                     for (size_t i = 0; i < connections.size(); ++i) {
                         const Hash& connection = connections[i];
@@ -829,6 +841,7 @@ namespace karabo {
                     }
                     if (!connections.empty()) connectionAvailableAgain(instanceId, connections);
                 }
+                //cout << "Assigning new countDown: old = " << oldCountDown << "new = " << countDown << endl;
                 oldCountDown = countDown;
             } else {
                 //cout << "LOW-LEVEL-DEBUG: Got refresh request for unregistered heartbeat of " << networkId << endl;
