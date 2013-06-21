@@ -155,7 +155,7 @@ class DeviceServer(object):
         self.nameRequestTimeout = input['nameRequestTimeout']
     
     def _generateDefaultServerId(self):
-        return self.hostname + "_Server_" + os.getpid()
+        return self.hostname + "_Server_" + str(os.getpid())
     
     def loadLogger(self, input):
         config = input["Logger"]
