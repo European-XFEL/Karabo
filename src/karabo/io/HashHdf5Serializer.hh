@@ -92,6 +92,8 @@ namespace karabo {
             void serializeNodeSequenceComplex(const karabo::util::Hash::Node& node, hid_t group);
 
             void serializeNodeSequenceByte(const karabo::util::Hash::Node& node, hid_t group);
+            
+            void serializeNodeSchema(const karabo::util::Hash::Node& node, hid_t group);
 
             // implementation of save,  Attributes
 
