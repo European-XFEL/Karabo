@@ -207,8 +207,6 @@ class NavigationHierarchyModel(QAbstractItemModel):
         if not self.hasIndex(row, column, parent):
             return QModelIndex()
 
-        #TreeItem *parentItem;
-
         if not parent.isValid():
             parentItem = self.__rootItem
         else:
@@ -222,16 +220,14 @@ class NavigationHierarchyModel(QAbstractItemModel):
 
 
     def parent(self, index):
-        
         if not index.isValid():
-            return QModelIndex();
-
+            return QModelIndex()
+        
         childItem = index.internalPointer()
         if (not childItem) or (not isinstance(childItem, NavigationHierarchyNode)):
             return QModelIndex()
         
         parentItem = childItem.parentItem
-
         if parentItem == self.__rootItem:
             return QModelIndex()
 

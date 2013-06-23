@@ -38,6 +38,11 @@ class Network(QObject):
         self.__textSerializer = TextSerializerHash.create("Xml")
         self.__binarySerializer = BinarySerializerHash.create("Bin")
         
+        self.__username = str()
+        self.__password = str()
+        self.__domain = str()
+        self.__sessionToken = str()
+        
         self.__tcpSocket = QTcpSocket(self)
         self.__tcpSocket.connected.connect(self.onConnected)
         self.__tcpSocket.disconnected.connect(self.onDisconnected)
@@ -50,7 +55,7 @@ class Network(QObject):
         Manager().notifier.signalReconfigure.connect(self.onReconfigure)
         Manager().notifier.signalReconfigureAsHash.connect(self.onReconfigureAsHash)
         Manager().notifier.signalInitDevice.connect(self.onInitDevice)
-        Manager().notifier.signalSlotCommand.connect(self.onSlotCommand)
+        Manager().notifier.signalExecute.connect(self.onExecute)
         
         Manager().notifier.signalNewVisibleDevice.connect(self.onNewVisibleDevice)
         Manager().notifier.signalRemoveVisibleDevice.connect(self.onRemoveVisibleDevice)
@@ -107,7 +112,12 @@ class Network(QObject):
                 self.__bodySize = 0
                 self.__tcpSocket.abort()
                 self.__tcpSocket.connectToHost(dialog.hostname, dialog.port)
-                self._sendLoginInformation(dialog.username, dialog.password, dialog.domain, str(auth.getSessionToken()))
+                
+                self.__username = dialog.username
+                self.__password = dialog.password
+                self.__domain = dialog.domain
+                self.__sessionToken = str(auth.getSessionToken())
+                #self._sendLoginInformation(dialog.username, dialog.password, dialog.domain, str(auth.getSessionToken()))
             #else:
             #    print "LMAIA: Login error!!!"
 
@@ -216,7 +226,7 @@ class Network(QObject):
 
     def onConnected(self):
         print "Connected to server"
-        pass
+        self._sendLoginInformation(self.__username, self.__password, self.__domain, self.__sessionToken)
         
         
     def onDisconnected(self):
@@ -277,19 +287,18 @@ class Network(QObject):
         self._tcpWriteHashHash(header, body)
 
 
-    def onSlotCommand(self, instanceId, info):
+    def onExecute(self, deviceId, info):
         header = Hash()
-        header.set("type", "slotCommand")
-        header.set("instanceId", str(instanceId))
+        header.set("type", "execute")
+        header.set("deviceId", str(deviceId))
         
-        body = Hash()
-        name = info.get(QString('name'))
-        if name is None:
-            name = info.get('name')
-        body.set("name", str(name))
+        command = info.get(QString('command'))
+        if command is None:
+            command = info.get('command')
+        body = Hash("command", str(command))
         
         args = info.get(QString('args'))
-        if name is None:
+        if args is None:
             args = info.get('args')
         if args:
             i = 0
@@ -328,7 +337,7 @@ class Network(QObject):
 
 
 ### private functions ###
-    def _sendLoginInformation(self, username, password, domain, sessionToken): #, password):
+    def _sendLoginInformation(self, username, password, domain, sessionToken):
         header = Hash("type", "login")
         body = Hash()
         body.set("username", str(username))

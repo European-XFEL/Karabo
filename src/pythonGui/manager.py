@@ -50,7 +50,7 @@ class Notifier(QObject):
     
     signalRefreshInstance = pyqtSignal(str) # deviceId
     signalInitDevice = pyqtSignal(str, object) # deviceId, hash
-    signalSlotCommand = pyqtSignal(str, dict) # deviceId, slotName/arguments
+    signalExecute = pyqtSignal(str, dict) # deviceId, slotName/arguments
     
     signalReconfigure = pyqtSignal(str, str, object) # deviceId, attributeId, attributeValue
     signalReconfigureAsHash = pyqtSignal(str, object) # hash/dict
@@ -458,23 +458,23 @@ class Manager(Singleton):
 ### TODO: Temporary functions for scientific computing END ###
 
 
-    def slotCommand(self, itemInfo):
+    def executeCommand(self, itemInfo):
         # instanceId, name, arguments
-        internalKey = itemInfo.get(QString('internalKey'))
-        if internalKey is None:
-            internalKey = itemInfo.get('internalKey')
-        keys = str(internalKey).rsplit('.', 3)
-        instanceId = keys[0]
+        path = itemInfo.get(QString('path'))
+        if path is None:
+            path = itemInfo.get('path')
+        keys = str(path).split('.')
+        deviceId = keys[1]
         
-        name = itemInfo.get(QString('name'))
-        if name is None:
-            name = itemInfo.get('name')
+        command = itemInfo.get(QString('command'))
+        if command is None:
+            command = itemInfo.get('command')
         
         args = itemInfo.get(QString('args'))
         if args is None:
             args = itemInfo.get('args')
         
-        self.__notifier.signalSlotCommand.emit(instanceId, dict(name=str(name), args=args))
+        self.__notifier.signalExecute.emit(deviceId, dict(command=str(command), args=args))
 
 
     def onLogDataAvailable(self, logData):
@@ -704,4 +704,7 @@ class Manager(Singleton):
     def handleConfigurationChanged(self, deviceId, config):
         configurationPath = "device." + deviceId + ".configuration"
         self._changeHash(configurationPath, config.get(configurationPath))
+        
+        # Merge new configuration data into central hash
+        self._mergeIntoHash(config)
 
