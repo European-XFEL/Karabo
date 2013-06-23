@@ -322,7 +322,7 @@ class CustomXmlReader(QXmlStreamReader):
             proxyItem = GraphicsProxyWidget(self.__view.isDesignMode, label)
             proxyItem.setTransformOriginPoint(proxyItem.boundingRect().center())
         elif componentType == "DisplayComponent":
-            displayComponent = DisplayComponent(classAlias, key=internalKey, widgetFactory=widgetFactory)
+            displayComponent = DisplayComponent(classAlias, path=internalKey, widgetFactory=widgetFactory)
             displayComponent.widget.setAttribute(Qt.WA_NoSystemBackground, True)
             proxyItem = GraphicsProxyWidget(self.__view.isDesignMode, displayComponent.widget, displayComponent, isStateToDisplay)
             proxyItem.setTransformOriginPoint(proxyItem.boundingRect().center())

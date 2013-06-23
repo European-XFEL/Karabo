@@ -24,14 +24,14 @@ from PyQt4.QtGui import *
 
 class BaseTreeWidgetItem(QTreeWidgetItem):
     
-    def __init__(self, key, parent, parentItem=None):
+    def __init__(self, path, parent, parentItem=None):
         
         if parentItem:
             super(BaseTreeWidgetItem, self).__init__(parentItem)
         else:
             super(BaseTreeWidgetItem, self).__init__(parent)
         
-        self.internalKey = key
+        self.internalKey = path
         
         # The components can be defined in Subclasses
         self.__displayComponent = None
@@ -73,6 +73,9 @@ class BaseTreeWidgetItem(QTreeWidgetItem):
     def _editableComponent(self):
         return self.__editableComponent
     def _setEditableComponent(self, component):
+        if not component:
+            return
+        
         self.__editableComponent = component
         
         self.setupContextMenu()

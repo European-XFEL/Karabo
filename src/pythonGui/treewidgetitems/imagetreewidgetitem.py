@@ -21,13 +21,13 @@ from PyQt4.QtGui import *
 
 class ImageTreeWidgetItem(BaseTreeWidgetItem):
     
-    def __init__(self, key, parent, parentItem=None):
+    def __init__(self, path, parent, parentItem=None):
         
-        super(ImageTreeWidgetItem, self).__init__(key, parent, parentItem)
+        super(ImageTreeWidgetItem, self).__init__(path, parent, parentItem)
         
         self.setIcon(0, QIcon(":image"))
         
-        self.displayComponent = DisplayComponent("Image Element", key=self.internalKey)
+        self.displayComponent = DisplayComponent("Image Element", path=path)
         self.treeWidget().setItemWidget(self, 1, self.displayComponent.widget)
         self.treeWidget().resizeColumnToContents(1)
         

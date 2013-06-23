@@ -20,18 +20,18 @@ from PyQt4.QtGui import *
 
 class CommandTreeWidgetItem(BaseTreeWidgetItem):
     
-    def __init__(self, key, parent, parentItem=None):
+    def __init__(self, command, key, parent, parentItem=None):
         super(CommandTreeWidgetItem, self).__init__(key, parent, parentItem)
         
         self.setIcon(0, QIcon(":slot"))
         
         # Create empty label for 2nd column (current value on device)
-        self.displayComponent = DisplayComponent("Value Field", key=self.internalKey)
+        self.displayComponent = DisplayComponent("Value Field", path=self.internalKey)
         self.treeWidget().setItemWidget(self, 1, self.displayComponent.widget)
         self.treeWidget().resizeColumnToContents(1)
 
         # Name of command
-        self.__command = key
+        self.__command = command
         
         self.__isCommandEnabled = False
         self.__pbCommand = QPushButton()
@@ -74,4 +74,4 @@ class CommandTreeWidgetItem(BaseTreeWidgetItem):
 ### slots ###
     def onCommandClicked(self):
         args = [] # TODO slot arguments
-        Manager().slotCommand(dict(internalKey=self.internalKey, name=self.__command, args=args))
+        Manager().executeCommand(dict(path=self.internalKey, command=self.__command, args=args))

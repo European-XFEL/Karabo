@@ -19,9 +19,10 @@ class NavigationItemTypes(object):
 
 
 class AccessMode(object): # TODO use INTs?
-    INIT = "1"
+    UNDEFINED = "-1"
+    INITONLY = "1"
     READONLY = "2"
-    RECONFIG = "4"
+    RECONFIGURABLE = "4"
 
 
 class ConfigChangeTypes(object):

@@ -21,13 +21,13 @@ from PyQt4.QtGui import *
 class AttributeTreeWidgetItem(BaseTreeWidgetItem):
 
 
-    def __init__(self, key, parent, parentItem=None):
+    def __init__(self, path, parent, parentItem=None):
         
-        super(AttributeTreeWidgetItem, self).__init__(key, parent, parentItem)
+        super(AttributeTreeWidgetItem, self).__init__(path, parent, parentItem)
         
         self.setIcon(0, QIcon(":signal"))
         
-        self.displayComponent = DisplayComponent("Value Field", key=self.internalKey)
+        self.displayComponent = DisplayComponent("Value Field", path=self.internalKey)
         self.treeWidget().setItemWidget(self, 1, self.displayComponent.widget)
         self.treeWidget().resizeColumnToContents(1)
 

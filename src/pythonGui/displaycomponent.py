@@ -44,11 +44,11 @@ class DisplayComponent(BaseComponent):
         
         hLayout.addWidget(self.__displayWidget.widget)
         
-        # Use key to register component to manager
-        key = params.get(QString('key'))
-        if key is None:
-            key = params.get('key')
-        Manager().registerDisplayComponent(key, self)
+        # Use path to register component to manager
+        path = params.get(QString('path'))
+        if path is None:
+            path = params.get('path')
+        Manager().registerDisplayComponent(path, self)
 
 
 ### getter and setter functions ###

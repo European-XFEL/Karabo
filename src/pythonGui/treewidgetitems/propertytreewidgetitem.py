@@ -24,13 +24,13 @@ from PyQt4.QtGui import *
 class PropertyTreeWidgetItem(BaseTreeWidgetItem):
 
 
-    def __init__(self, key, parent, parentItem=None):
-        super(PropertyTreeWidgetItem, self).__init__(key, parent, parentItem)
+    def __init__(self, path, parent, parentItem=None):
+        super(PropertyTreeWidgetItem, self).__init__(path, parent, parentItem)
         
         self.setData(0, Qt.SizeHintRole, QSize(200, 32))
         self.setIcon(0, QIcon(":folder"))
 
-        self.displayComponent = DisplayComponent("Value Field", key=self.internalKey)
+        self.displayComponent = DisplayComponent("Value Field", path=path)
         self.treeWidget().setItemWidget(self, 1, self.displayComponent.widget)
         self.treeWidget().resizeColumnToContents(1)
 

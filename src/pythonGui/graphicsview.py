@@ -893,13 +893,13 @@ class GraphicsView(QGraphicsView):
                             displayText = attributeTreeWidgetItem.displayText
                             commandEnabled = attributeTreeWidgetItem.enabled
                             command = attributeTreeWidgetItem.command
-                        displayComponent = DisplayComponent(classAlias, key=internalKey, \
+                        displayComponent = DisplayComponent(classAlias, path=internalKey, \
                                                             allowedStates=allowedStates, \
                                                             commandText=displayText, \
                                                             commandEnabled=commandEnabled, \
                                                             command=command)
                     else:
-                        displayComponent = DisplayComponent(classAlias, key=internalKey)
+                        displayComponent = DisplayComponent(classAlias, path=internalKey)
                     displayComponent.widget.setAttribute(Qt.WA_NoSystemBackground, True)
                     displayProxyWidget = GraphicsProxyWidget(self.__isDesignMode, displayComponent.widget, displayComponent, isStateToDisplay)
                     displayProxyWidget.setTransformOriginPoint(displayProxyWidget.boundingRect().center())
