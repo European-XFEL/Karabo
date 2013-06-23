@@ -10,6 +10,7 @@
 #include "HashHdf5Serializer.hh" 
 #include <karabo/log/Logger.hh>
 #include <karabo/util/SimpleElement.hh>
+#include <karabo/io/HashXmlSerializer.hh>
 
 
 using namespace std;
@@ -207,6 +208,8 @@ namespace karabo {
                     break;
                 case karabo::util::Types::VECTOR_COMPLEX_DOUBLE: serializeNodeSequenceComplex<double>(el, group);
                     break;
+                case karabo::util::Types::SCHEMA: serializeNodeSchema(el, group);
+                    break;
 
                 default:
                     throw KARABO_NOT_SUPPORTED_EXCEPTION("Type not supported for key " + key);
@@ -401,9 +404,31 @@ namespace karabo {
                 writeSingleAttribute(dsId, 1, "KRB_bool");
                 KARABO_CHECK_HDF5_STATUS(H5Dclose(dsId));
             } catch (...) {
-
-
                 KARABO_RETHROW_AS(KARABO_PROPAGATED_EXCEPTION("Cannot create dataset /" + key));
+            }
+        }
+
+
+        void HashHdf5Serializer::serializeNodeSchema(const karabo::util::Hash::Node& node, hid_t group) {
+            const std::string& key = node.getKey();
+            try {
+                Hash c("Xml.indentation", 1);
+                TextSerializer<Schema>::Pointer serializer = TextSerializer<Schema>::create(c);
+                string schemaXml;
+                serializer->save(node.getValue<Schema>(), schemaXml);
+                const char* ptr = schemaXml.c_str();
+                hsize_t size = schemaXml.length();
+                hid_t stype = H5Tcopy(H5T_C_S1);
+                KARABO_CHECK_HDF5_STATUS(H5Tset_size(stype, size + 1));
+                hid_t dsId = H5Dcreate2(group, key.c_str(), stype, m_spaceId, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+                KARABO_CHECK_HDF5_STATUS(dsId);
+                KARABO_CHECK_HDF5_STATUS(H5Dwrite(dsId, stype, m_spaceId, m_spaceId, H5P_DEFAULT, ptr));
+                KARABO_CHECK_HDF5_STATUS(H5Tclose(stype));
+                serializeAttributes(node, dsId);
+                writeSingleAttribute(dsId, 1, "KRB_schema");
+                KARABO_CHECK_HDF5_STATUS(H5Dclose(dsId));
+            } catch (Exception& ex) {
+                KARABO_RETHROW_AS(KARABO_PROPAGATED_EXCEPTION("Cannot serialize Schema" + key));
             }
         }
 
@@ -737,6 +762,7 @@ namespace karabo {
                     KARABO_RETHROW_AS(KARABO_PROPAGATED_EXCEPTION("Cannot serialize Vector of Hashes"));
                 }
             }
+            idx--;
         }
 
 
@@ -802,6 +828,7 @@ namespace karabo {
                     H5T_class_t dtClass = H5Tget_class(tid);
                     // vector<char> is handled with ndims=0 as this is OPAQUE datatype with H5S_SCALAR space                        
                     if (dtClass == H5T_STRING) {
+                        clog << "dtClass==H5T_STRING  sequence" << name << endl;
                         readSequenceString(dsId, tid, dims, name, data);
                     } else {
                         if (H5Tequal(tid, H5T_NATIVE_INT8)) {
@@ -1039,7 +1066,16 @@ namespace karabo {
             if (H5Tequal(tid, stringTypeId)) {
                 std::vector<char> vec(len, 0);
                 KARABO_CHECK_HDF5_STATUS(H5Dread(dsId, tid, H5S_ALL, H5S_ALL, H5P_DEFAULT, &vec[0]));
-                data.set(name, std::string(&vec[0]));
+                htri_t exists = H5Aexists(dsId, "KRB_schema");
+                KARABO_CHECK_HDF5_STATUS(exists);
+                if (exists) {
+                    TextSerializer<Schema>::Pointer serializer = TextSerializer<Schema>::create("Xml");
+                    string schemaXml(&vec[0]);
+                    Schema& schema = data.bindReference<Schema>(name);
+                    serializer->load(schema, schemaXml);
+                } else {
+                    data.set(name, std::string(&vec[0]));
+                }
             } else {
                 throw KARABO_HDF_IO_EXCEPTION("Type not supported");
             }
