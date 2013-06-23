@@ -9,6 +9,7 @@
 
 __all__ = ["SchemaReader"]
 
+from choicecomponent import ChoiceComponent
 from editableapplylatercomponent import EditableApplyLaterComponent
 from editablenoapplycomponent import EditableNoApplyComponent
 
@@ -56,7 +57,7 @@ class SchemaReader(object):
         
         print ""
         print "readSchema"
-        #print self.__schema
+        print self.__schema
         print ""
         
         self.__rootPath = path + ".configuration"
@@ -79,7 +80,6 @@ class SchemaReader(object):
         elif self.__schema.isCommand(key):
             #print "isCommand", key
             item = self._createCommandItem(key, parentItem)
-            #self._handleCommand(key, item)
         elif self.__schema.isNode(key):
             #print "isNode", key
             item = self._createPropertyItem(key, parentItem)
@@ -118,9 +118,9 @@ class SchemaReader(object):
     def _createCommandItem(self, key, parentItem):
             fullPath = self.__rootPath + "." + key
             if parentItem:
-                item = CommandTreeWidgetItem(fullPath, self.__treeWidget, parentItem)
+                item = CommandTreeWidgetItem(key, fullPath, self.__treeWidget, parentItem)
             else:
-                item = CommandTreeWidgetItem(fullPath, self.__treeWidget)
+                item = CommandTreeWidgetItem(key, fullPath, self.__treeWidget)
             
             if self.__deviceType is NavigationItemTypes.DEVICE:
                 item.enabled = True
@@ -139,7 +139,7 @@ class SchemaReader(object):
 
     def _handleLeaf(self, key, item):
         self._getAssignment(key, item)
-        self._getAccessMode(key, item)
+        accessMode = self._getAccessMode(key, item)
         
         self._setDescription(key, item)
         defaultValue = self._getDefaultValue(key, item)
@@ -168,16 +168,18 @@ class SchemaReader(object):
         # Choiceelements can not have strings as arguments
         #parentItem.defaultValue = Hash(str(parentItem.defaultValue))
         
+        accessMode = self._getAccessMode(key, parentItem)
+        choiceComponent = None
+        
         if self.__deviceType is NavigationItemTypes.CLASS:
-            choiceComponent = EditableNoApplyComponent(parentItem.classAlias, key=key, value=defaultValue)
+            if (accessMode is AccessMode.INITONLY) or (accessMode is AccessMode.RECONFIGURABLE):
+                choiceComponent = EditableNoApplyComponent(parentItem.classAlias, key=key, value=defaultValue)
         else:
-            if self.__schema.hasAccessMode(key):
-                accessMode = self.__schema.getAccessMode(key)
-                if (accessMode == AccessMode.READONLY) or (accessMode == AccessMode.INIT):
-                    choiceComponent = ChoiceComponent(parentItem.classAlias, key=key, value=None)
-                else:
-                    choiceComponent = EditableApplyLaterComponent(parentItem.classAlias, key=key, value=None)
-                    choiceComponent.signalApplyChanged.connect(self.__treeWidget.onApplyChanged)
+            if accessMode is AccessMode.RECONFIGURABLE:
+                choiceComponent = EditableApplyLaterComponent(parentItem.classAlias, key=key, value=None)
+                choiceComponent.signalApplyChanged.connect(self.__treeWidget.onApplyChanged)
+            else:
+                choiceComponent = ChoiceComponent(parentItem.classAlias, key=key, value=None)
 
         parentItem.editableComponent = choiceComponent        
 
@@ -372,16 +374,17 @@ class SchemaReader(object):
 
     def _getAccessMode(self, key, parentItem):
         if not self.__schema.hasAccessMode(key):
-            return
+            print "AccessMode.UNDEFINED"
+            return AccessMode.UNDEFINED
         
         if self.__schema.isAccessInitOnly(key):
-            #print "isInitOnly"
-            pass
+            #print "AccessMode.INITONLY"
+            return AccessMode.INITONLY
         elif self.__schema.isAccessReconfigurable(key):
-            #print "isReconfigurable"
-            pass
+            #print "AccessMode.RECONFIGURABLE"
+            return AccessMode.RECONFIGURABLE
         elif self.__schema.isAccessReadOnly(key):
-            #print "isReadOnly"
+            #print "AccessMode.READONLY"
             if self.__schema.hasWarnLow(key):
                 self._handleFloatAttribute(parentItem, key + ".warnLow",
                                            "Warn low", self.__schema.getWarnLow(key))
@@ -394,6 +397,7 @@ class SchemaReader(object):
             if self.__schema.hasAlarmHigh(key):
                 self._handleFloatAttribute(parentItem, key + ".alarmHigh",
                                            "Alarm high", self.__schema.getAlarmHigh(key))
+            return AccessMode.READONLY
         
 
     def _setExpertLevel(self, key, item):
@@ -441,17 +445,23 @@ class SchemaReader(object):
 ### functions for setting editable components depending on value type ###
     def _handleBool(self, key, item, defaultValue, unitSymbol):
         item.classAlias = "Toggle Field"
-        if self.__deviceType is NavigationItemTypes.CLASS:
-            editableComponent = EditableNoApplyComponent(classAlias=item.classAlias, key=item.internalKey,
-                                                         value=defaultValue, unitSymbol=unitSymbol)
-            #, value=item.defaultValue, valueType=item.valueType, unitSymbol=unitSymbol)
-        else:
-            editableComponent = EditableApplyLaterComponent(classAlias=item.classAlias, key=item.internalKey,
-                                                            unitSymbol=unitSymbol)
-            #, value=None, valueType=item.valueType, unitSymbol=unitSymbol)
-            editableComponent.signalApplyChanged.connect(self.__treeWidget.onApplyChanged)
-
         item.setIcon(0, QIcon(":boolean"))
+        
+        accessMode = self._getAccessMode(key, item)
+        editableComponent = None
+        
+        if self.__deviceType is NavigationItemTypes.CLASS:
+            if (accessMode is AccessMode.INITONLY) or (accessMode is AccessMode.RECONFIGURABLE):
+                editableComponent = EditableNoApplyComponent(classAlias=item.classAlias, key=item.internalKey,
+                                                             value=defaultValue, unitSymbol=unitSymbol)
+                #, value=item.defaultValue, valueType=item.valueType, unitSymbol=unitSymbol)
+        else:
+            if accessMode is AccessMode.RECONFIGURABLE:
+                editableComponent = EditableApplyLaterComponent(classAlias=item.classAlias, key=item.internalKey,
+                                                                unitSymbol=unitSymbol)
+                #, value=None, valueType=item.valueType, unitSymbol=unitSymbol)
+                editableComponent.signalApplyChanged.connect(self.__treeWidget.onApplyChanged)
+
         item.editableComponent = editableComponent
 
 
@@ -466,17 +476,22 @@ class SchemaReader(object):
             enumeration = None
             item.setIcon(0, QIcon(":string"))
         
+        accessMode = self._getAccessMode(key, item)
+        editableComponent = None
+        
         # TODO: do not forget PATH_ELEMENT "File Path"
         if self.__deviceType is NavigationItemTypes.CLASS:
-            editableComponent = EditableNoApplyComponent(classAlias=item.classAlias, key=item.internalKey,
-                                                         value=defaultValue, enumeration=enumeration,
-                                                         unitSymbol=unitSymbol)
-            #value=item.defaultValue, valueType=item.valueType, unitSymbol=unitSymbol)
+            if (accessMode is AccessMode.INITONLY) or (accessMode is AccessMode.RECONFIGURABLE):
+                editableComponent = EditableNoApplyComponent(classAlias=item.classAlias, key=item.internalKey,
+                                                             value=defaultValue, enumeration=enumeration,
+                                                             unitSymbol=unitSymbol)
+                #value=item.defaultValue, valueType=item.valueType, unitSymbol=unitSymbol)
         else:
-            editableComponent = EditableApplyLaterComponent(classAlias=item.classAlias, key=item.internalKey,
-                                                            enumeration=enumeration, unitSymbol=unitSymbol)
-            #value=None, valueType=item.valueType, unitSymbol=unitSymbol)
-            editableComponent.signalApplyChanged.connect(self.__treeWidget.onApplyChanged)
+            if accessMode is AccessMode.RECONFIGURABLE:
+                editableComponent = EditableApplyLaterComponent(classAlias=item.classAlias, key=item.internalKey,
+                                                                enumeration=enumeration, unitSymbol=unitSymbol)
+                #value=None, valueType=item.valueType, unitSymbol=unitSymbol)
+                editableComponent.signalApplyChanged.connect(self.__treeWidget.onApplyChanged)
 
         #item.setIcon(0, QIcon(":path"))
         item.editableComponent = editableComponent
@@ -492,17 +507,22 @@ class SchemaReader(object):
             item.classAlias = "Integer Field"
             enumeration = None
             item.setIcon(0, QIcon(":int"))
-            
+        
+        accessMode = self._getAccessMode(key, item)
+        editableComponent = None
+        
         if self.__deviceType is NavigationItemTypes.CLASS:
-            editableComponent = EditableNoApplyComponent(classAlias=item.classAlias, key=item.internalKey,
-                                                         value=defaultValue, enumeration=enumeration,
-                                                         unitSymbol=unitSymbol)
-            #, value=item.defaultValue, valueType=item.valueType, unitSymbol=unitSymbol)
+            if (accessMode is AccessMode.INITONLY) or (accessMode is AccessMode.RECONFIGURABLE):
+                editableComponent = EditableNoApplyComponent(classAlias=item.classAlias, key=item.internalKey,
+                                                             value=defaultValue, enumeration=enumeration,
+                                                             unitSymbol=unitSymbol)
+                #, value=item.defaultValue, valueType=item.valueType, unitSymbol=unitSymbol)
         else:
-            editableComponent = EditableApplyLaterComponent(classAlias=item.classAlias, key=item.internalKey,
-                                                            enumeration=enumeration, unitSymbol=unitSymbol)
-            #, value=None, valueType=item.valueType, unitSymbol=unitSymbol)
-            editableComponent.signalApplyChanged.connect(self.__treeWidget.onApplyChanged)
+            if accessMode is AccessMode.RECONFIGURABLE:
+                editableComponent = EditableApplyLaterComponent(classAlias=item.classAlias, key=item.internalKey,
+                                                                enumeration=enumeration, unitSymbol=unitSymbol)
+                #, value=None, valueType=item.valueType, unitSymbol=unitSymbol)
+                editableComponent.signalApplyChanged.connect(self.__treeWidget.onApplyChanged)
 
         #if minInclusive and len(minInclusive) > 0:
         #    editableComponent.addParameters(minimum=int(minInclusive))
@@ -521,17 +541,22 @@ class SchemaReader(object):
             item.classAlias = "Float Field"
             enumeration = None
             item.setIcon(0, QIcon(":float"))
+
+        accessMode = self._getAccessMode(key, item)
+        editableComponent = None
         
         if self.__deviceType is NavigationItemTypes.CLASS:
-            editableComponent = EditableNoApplyComponent(classAlias=item.classAlias, key=item.internalKey,
-                                                         value=defaultValue, enumeration=enumeration,
-                                                         unitSymbol=unitSymbol)
-            #value=attributeItem.defaultValue, valueType=attributeItem.valueType, unitSymbol=unitSymbol)
+            if (accessMode is AccessMode.INITONLY) or (accessMode is AccessMode.RECONFIGURABLE):
+                editableComponent = EditableNoApplyComponent(classAlias=item.classAlias, key=item.internalKey,
+                                                             value=defaultValue, enumeration=enumeration,
+                                                             unitSymbol=unitSymbol)
+                #value=attributeItem.defaultValue, valueType=attributeItem.valueType, unitSymbol=unitSymbol)
         else:
-            editableComponent = EditableApplyLaterComponent(classAlias=item.classAlias, key=item.internalKey,
-                                                            enumeration=enumeration, unitSymbol=unitSymbol)
-            #value=None, valueType=attributeItem.valueType, unitSymbol=unitSymbol)
-            editableComponent.signalApplyChanged.connect(self.__treeWidget.onApplyChanged)
+            if accessMode is AccessMode.RECONFIGURABLE:
+                editableComponent = EditableApplyLaterComponent(classAlias=item.classAlias, key=item.internalKey,
+                                                                enumeration=enumeration, unitSymbol=unitSymbol)
+                #value=None, valueType=attributeItem.valueType, unitSymbol=unitSymbol)
+                editableComponent.signalApplyChanged.connect(self.__treeWidget.onApplyChanged)
 
         #if minInclusive and len(minInclusive) > 0:
         #    editableComponent.addParameters(minimum=float(minInclusive))
@@ -551,13 +576,18 @@ class SchemaReader(object):
         item.classAlias = "Float Field"
         item.setIcon(0, QIcon(":float"))
         
+        accessMode = self._getAccessMode(key, parentItem)
+        editableComponent = None
+        
         if self.__deviceType is NavigationItemTypes.CLASS:
-            editableComponent = EditableNoApplyComponent(classAlias=item.classAlias, key=item.internalKey, value=value)
-            #value=attributeItem.defaultValue, valueType=attributeItem.valueType, unitSymbol=unitSymbol)
+            if (accessMode is AccessMode.INITONLY) or (accessMode is AccessMode.RECONFIGURABLE):
+                editableComponent = EditableNoApplyComponent(classAlias=item.classAlias, key=item.internalKey, value=value)
+                #value=attributeItem.defaultValue, valueType=attributeItem.valueType, unitSymbol=unitSymbol)
         else:
-            editableComponent = EditableApplyLaterComponent(classAlias=item.classAlias, key=item.internalKey, value=value)
-            #value=None, valueType=attributeItem.valueType, unitSymbol=unitSymbol)
-            editableComponent.signalApplyChanged.connect(self.__treeWidget.onApplyChanged)
+            if accessMode is AccessMode.RECONFIGURABLE:
+                editableComponent = EditableApplyLaterComponent(classAlias=item.classAlias, key=item.internalKey, value=value)
+                #value=None, valueType=attributeItem.valueType, unitSymbol=unitSymbol)
+                editableComponent.signalApplyChanged.connect(self.__treeWidget.onApplyChanged)
 
         item.editableComponent = editableComponent
 
@@ -574,10 +604,16 @@ class SchemaReader(object):
         for index in defaultVec:
             default.append(str(index))
 
+        accessMode = self._getAccessMode(key, item)
+        editableComponent = None
+        
         if self.__deviceType is NavigationItemTypes.CLASS:
-            item.editableComponent = EditableNoApplyComponent(classAlias=item.classAlias, key=item.internalKey, value=default, unitSymbol=unitSymbol)
+            if (accessMode is AccessMode.INITONLY) or (accessMode is AccessMode.RECONFIGURABLE):
+                editableComponent = EditableNoApplyComponent(classAlias=item.classAlias, key=item.internalKey, value=default, unitSymbol=unitSymbol)
         else:
-            editableComponent = EditableApplyLaterComponent(classAlias=item.classAlias, key=item.internalKey, value=None, unitSymbol=unitSymbol)
-            editableComponent.signalApplyChanged.connect(self.__treeWidget.onApplyChanged)
-            item.editableComponent = editableComponent
+            if accessMode is AccessMode.RECONFIGURABLE:
+                editableComponent = EditableApplyLaterComponent(classAlias=item.classAlias, key=item.internalKey, value=None, unitSymbol=unitSymbol)
+                editableComponent.signalApplyChanged.connect(self.__treeWidget.onApplyChanged)
+        
+        item.editableComponent = editableComponent
 

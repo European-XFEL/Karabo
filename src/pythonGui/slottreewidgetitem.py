@@ -28,7 +28,7 @@ class SlotTreeWidgetItem(BaseTreeWidgetItem):
         self.setIcon(0, QIcon(":slot"))
         
         # Create empty label for 2nd column (current value on device)
-        self.displayComponent = DisplayComponent("Value Field", key=self.internalKey)
+        self.displayComponent = DisplayComponent("Value Field", path=self.internalKey)
         self.treeWidget().setItemWidget(self, 1, self.displayComponent.widget)
         self.treeWidget().resizeColumnToContents(1)
 

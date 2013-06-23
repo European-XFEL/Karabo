@@ -213,7 +213,7 @@ class XsdReader(QXmlStreamReader):
                     
                     createEditableComponent = True
                     if self.__type is NavigationItemTypes.DEVICE:
-                        if (accessType == AccessMode.READONLY) or (accessType == AccessMode.INIT):
+                        if (accessType == AccessMode.READONLY) or (accessType == AccessMode.INITONLY):
                             self.setItemIcon(attributeItem, type, restrictionBase)
                             createEditableComponent = False
                     
@@ -411,7 +411,7 @@ class XsdReader(QXmlStreamReader):
                     parentItem.setIcon(0, QIcon(":enum"))
                     
                     if self.__type is NavigationItemTypes.DEVICE:
-                        if (parentItem.accessType == AccessMode.READONLY) or (parentItem.accessType == AccessMode.INIT):
+                        if (parentItem.accessType == AccessMode.READONLY) or (parentItem.accessType == AccessMode.INITONLY):
                             return complexItem
                     
                     default = parentItem.defaultValue
@@ -560,7 +560,7 @@ class XsdReader(QXmlStreamReader):
             if self.__type is NavigationItemTypes.CLASS:
                 choiceComponent = EditableNoApplyComponent(parentItem.classAlias, key=parentItem.internalKey, value=parentItem.defaultValue, valueType=parentItem.valueType)
             else:
-                if parentItem.accessType == AccessMode.READONLY or parentItem.accessType == AccessMode.INIT:
+                if parentItem.accessType == AccessMode.READONLY or parentItem.accessType == AccessMode.INITONLY:
                     choiceComponent = ChoiceComponent(parentItem.classAlias, key=parentItem.internalKey, value=None, valueType=parentItem.valueType)
                 else:
                     choiceComponent = EditableApplyLaterComponent(parentItem.classAlias, key=parentItem.internalKey, value=None, valueType=parentItem.valueType)
@@ -578,7 +578,7 @@ class XsdReader(QXmlStreamReader):
             if self.__type is NavigationItemTypes.CLASS:
                 choiceComponent = EditableNoApplyComponent(parentItem.classAlias, key=parentItem.internalKey, value=parentItem.defaultValue, valueType=parentItem.valueType, isDevIns=False)
             else:
-                if parentItem.accessType == AccessMode.READONLY or parentItem.accessType == AccessMode.INIT:
+                if parentItem.accessType == AccessMode.READONLY or parentItem.accessType == AccessMode.INITONLY:
                     choiceComponent = ChoiceComponent(parentItem.classAlias, key=parentItem.internalKey, value=None, valueType=parentItem.valueType, isDevIns=True)
                 else:
                     choiceComponent = EditableApplyLaterComponent(parentItem.classAlias, key=parentItem.internalKey, value=None, valueType=parentItem.valueType, isDevIns=True)

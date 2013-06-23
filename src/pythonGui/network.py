@@ -48,7 +48,7 @@ class Network(QObject):
         Manager().notifier.signalReconfigure.connect(self.onReconfigure)
         Manager().notifier.signalReconfigureAsHash.connect(self.onReconfigureAsHash)
         Manager().notifier.signalInitDevice.connect(self.onInitDevice)
-        Manager().notifier.signalSlotCommand.connect(self.onSlotCommand)
+        Manager().notifier.signalExecute.connect(self.onSlotCommand)
         
         Manager().notifier.signalNewVisibleDeviceInstance.connect(self.onNewVisibleDeviceInstance)
         Manager().notifier.signalRemoveVisibleDeviceInstance.connect(self.onRemoveVisibleDeviceInstance)
