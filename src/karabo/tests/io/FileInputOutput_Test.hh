@@ -39,6 +39,7 @@ private:
     karabo::util::Hash m_rootedHash;
     karabo::util::Hash m_bigHash;
     karabo::util::Hash m_unrootedHash;
+    karabo::util::Hash m_withSchemaHash;
 
     void writeTextFile();
     void readTextFile();
