@@ -151,8 +151,11 @@ class NavigationTreeView(QTreeView):
             self.clearSelection()
 
 
-    def setErrorState(self, instanceId, hasError):
-        if hasError:
-            print "setErrorState", instanceId, hasError
-        #self.__model.updateErrorState(instanceId, hasError)
+    def selectItem(self, path):
+        index = self.model().findIndex(path)
+        
+        if index.isValid():
+            self.setCurrentIndex(index)
+        else:
+            self.clearSelection()
 

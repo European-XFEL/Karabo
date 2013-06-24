@@ -40,7 +40,7 @@ class Notifier(QObject):
     signalSystemTopologyChanged = pyqtSignal(object)
     
     signalNewNavigationItem = pyqtSignal(dict) # id, name, type, (status), (refType), (refId), (schema)
-    signalSelectNewNavigationItem = pyqtSignal(dict) # id, name, classId, schema
+    signalSelectNewNavigationItem = pyqtSignal(str) # deviceId
     signalSchemaAvailable = pyqtSignal(dict) # key, schema
     signalNavigationItemChanged = pyqtSignal(dict) # type, key
     signalDeviceInstanceChanged = pyqtSignal(dict, str)
@@ -57,7 +57,6 @@ class Notifier(QObject):
     signalDeviceStateChanged = pyqtSignal(str, str) # fullDeviceKey, state
     signalConflictStateChanged = pyqtSignal(bool) # isBusy
     signalChangingState = pyqtSignal(bool) # isChanging
-    signalErrorState = pyqtSignal(str, bool) # deviceId, isError
     
     signalUpdateDeviceServerInstance = pyqtSignal(dict)
     signalUpdateDeviceServerInstanceFinished = pyqtSignal(dict)
@@ -304,10 +303,6 @@ class Manager(Singleton):
         if value == "Changing...":
             self.__notifier.signalChangingState.emit(True)
         else:
-            if ("Error" in value) or ("error" in value):
-                self.__notifier.signalErrorState.emit(devicePath, True)
-            else:
-                self.__notifier.signalErrorState.emit(devicePath, False)
             self.__notifier.signalChangingState.emit(False)
             self.__notifier.signalDeviceStateChanged.emit(devicePath, value)
 
@@ -541,9 +536,9 @@ class Manager(Singleton):
         self.__notifier.signalNewNavigationItem.emit(itemInfo)
 
 
-    def onSelectNewDeviceInstance(self, itemInfo):
+    def onSelectNewDevice(self, deviceId):
         if self.__isInitDeviceCurrentlyProcessed is True:
-            self.__notifier.signalSelectNewNavigationItem.emit(itemInfo)
+            self.__notifier.signalSelectNewNavigationItem.emit(deviceId)
             self.__isInitDeviceCurrentlyProcessed = False
 
 

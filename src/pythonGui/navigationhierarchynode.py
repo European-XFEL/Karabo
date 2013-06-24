@@ -48,6 +48,10 @@ class NavigationHierarchyNode(object):
         self.__childItems.append(childItem)
 
 
+    def removeChildItem(self, childItem):
+        self.__childItems.remove(childItem)
+
+
     def indexOfChildItem(self, childItem):
         return self.__childItems.index(childItem)
 
@@ -92,7 +96,7 @@ class NavigationHierarchyNode(object):
 
 
     def clearChildItems(self):
-        for childItem in self.__childItems:
+        while len(self.__childItems) > 0:
+            childItem = self.__childItems.pop()
             childItem.clearChildItems()
-        self.__childItems = []
 
