@@ -346,10 +346,6 @@ class NavigationTreeView(QTreeView):
         return index.data().toString()
 
 
-    def setErrorState(self, instanceId, hasError):
-        self.__model.updateErrorState(instanceId, hasError)
-
-
     def updateDeviceInstanceSchema(self, instanceId, schema):
         self.__model.updateDeviceInstanceSchema(instanceId, schema)
         Manager().onSchemaAvailable(dict(key=instanceId, type=NavigationItemTypes.DEVICE, schema=schema))

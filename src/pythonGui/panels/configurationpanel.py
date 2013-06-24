@@ -95,7 +95,6 @@ class ConfigurationPanel(QWidget):
         Manager().notifier.signalDeviceStateChanged.connect(self.onDeviceStateChanged)
         Manager().notifier.signalConflictStateChanged.connect(self.onConflictStateChanged)
         Manager().notifier.signalChangingState.connect(self.onChangingState)
-        Manager().notifier.signalErrorState.connect(self.onErrorState)
 
         self.__prevDevicePath = str() # previous selected DEVICE_INSTANCE internalKey
         self.__swParameterEditor = QStackedWidget(splitTopPanes)
@@ -488,8 +487,8 @@ class ConfigurationPanel(QWidget):
         self.__twNavigation.createNewItem(itemInfo)
 
 
-    def onSelectNewNavigationItem(self, itemInfo):
-        self.__twNavigation.selectItem(itemInfo)
+    def onSelectNewNavigationItem(self, devicePath):
+        self.__twNavigation.selectItem(devicePath)
 
 
     def onSchemaAvailable(self, itemInfo):
@@ -637,11 +636,6 @@ class ConfigurationPanel(QWidget):
         else:
             self.__changingStateTimer.stop()
             self._getCurrentParameterEditor().setReadOnly(False)
- 
- 
-    def onErrorState(self, instanceId, hasError):
-        self._getCurrentParameterEditor().setErrorState(hasError)
-        self.__twNavigation.setErrorState(instanceId, hasError)
  
 
     def onTimeOut(self):

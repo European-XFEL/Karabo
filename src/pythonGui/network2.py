@@ -194,6 +194,14 @@ class Network(QObject):
             elif type == "instanceNew":
                 bodyHash = self.__textSerializer.load(self.__bodyBytes)
                 Manager().handleSystemTopology(bodyHash)
+                
+                deviceKey = "device"
+                if bodyHash.has(deviceKey):
+                    deviceConfig = bodyHash.get(deviceKey)
+                    deviceIds = list()
+                    deviceConfig.getKeys(deviceIds)
+                    for deviceId in deviceIds:
+                        Manager().onSelectNewDevice(deviceKey + "." + deviceId)
             elif type == "instanceUpdated":
                 bodyHash = self.__textSerializer.load(self.__bodyBytes)
                 Manager().handleSystemTopology(bodyHash)

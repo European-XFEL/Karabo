@@ -501,7 +501,7 @@ class LogTableView(QTableView):
         index = self.model().index(self.currentIndex().row(), 3)
         value = index.data().toString()
         # Emit signal with instanceId to select device instance
-        Manager().notifier.signalSelectNewNavigationItem.emit(dict(instanceId=value))
+        Manager().notifier.signalSelectNewNavigationItem.emit(value)
         QTableView.mouseDoubleClickEvent(self, event)
 
 

@@ -58,7 +58,7 @@ class NavigationHierarchyModel(QAbstractItemModel):
                 path = "server." + serverId
                 serverItem = NavigationHierarchyNode(serverId, path, hostItem)
                 hostItem.appendChildItem(serverItem)
-
+            
                 if serverConfig.hasAttribute(serverId, "deviceClasses"):
                     classes = serverConfig.getAttribute(serverId, "deviceClasses")
                     for deviceClass in classes:
@@ -85,7 +85,7 @@ class NavigationHierarchyModel(QAbstractItemModel):
                 if not hostItem:
                     hostItem = NavigationHierarchyNode(host, host, self.__rootItem)
                     self.__rootItem.appendChildItem(hostItem)
-
+                
                 # Server item already exists?
                 serverItem = hostItem.getItem(serverId)
                 if not serverItem:

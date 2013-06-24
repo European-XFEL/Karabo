@@ -449,7 +449,7 @@ class Network(QObject):
     def _handleNewDeviceInstanceOnRunning(self, row):
         info = self._collectDeviceInstanceInformation(row)
         Manager().onNewDeviceInstance(info)
-        Manager().onSelectNewDeviceInstance(info)
+        Manager().onSelectNewDevice(info)
 
 
     def _handleUpdateDeviceServerInstance(self, row):
