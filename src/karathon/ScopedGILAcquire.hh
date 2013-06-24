@@ -10,24 +10,22 @@
 
 #include <boost/python.hpp>
 
-namespace karabo {
-    namespace pyexfel {
+namespace karathon {
 
-        class ScopedGILAcquire {
-        public:
+    class ScopedGILAcquire {
 
-            inline ScopedGILAcquire() : m_gstate(PyGILState_Ensure()) {
-            }
+    public:
 
-            inline ~ScopedGILAcquire() {
-                PyGILState_Release(m_gstate);
-            }
+        inline ScopedGILAcquire() : m_gstate(PyGILState_Ensure()) {
+        }
 
-        private:
-            PyGILState_STATE m_gstate;
-        };
+        inline ~ScopedGILAcquire() {
+            PyGILState_Release(m_gstate);
+        }
 
-    }
+    private:
+        PyGILState_STATE m_gstate;
+    };
 }
 
 

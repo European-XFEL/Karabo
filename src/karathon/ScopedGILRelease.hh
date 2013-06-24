@@ -10,26 +10,24 @@
 
 #include <boost/python.hpp>
 
-namespace karabo {
-    namespace pyexfel {
+namespace karathon {
 
-        class ScopedGILRelease {
-        public:
+    class ScopedGILRelease {
 
-            inline ScopedGILRelease() {
-                m_threadState = PyEval_SaveThread();
-            }
+    public:
 
-            inline ~ScopedGILRelease() {
-                PyEval_RestoreThread(m_threadState);
-                m_threadState = 0;
-            }
+        inline ScopedGILRelease() {
+            m_threadState = PyEval_SaveThread();
+        }
 
-        private:
-            PyThreadState* m_threadState;
-        };
+        inline ~ScopedGILRelease() {
+            PyEval_RestoreThread(m_threadState);
+            m_threadState = 0;
+        }
 
-    }
+    private:
+        PyThreadState* m_threadState;
+    };
 }
 
 #endif	/* SCOPEDGILRELEASE_HH */

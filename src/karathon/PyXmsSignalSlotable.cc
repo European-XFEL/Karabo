@@ -14,7 +14,7 @@
 
 using namespace karabo::xms;
 using namespace karabo::util;
-using namespace karabo::pyexfel;
+using namespace karathon;
 using namespace std;
 namespace bp = boost::python;
 
