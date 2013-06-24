@@ -35,6 +35,7 @@ OBJECTDIR=${CND_BUILDDIR}/${CND_CONF}/${CND_PLATFORM}
 
 # Object Files
 OBJECTFILES= \
+	${OBJECTDIR}/_ext/163556830/DataLoggerDevice.o \
 	${OBJECTDIR}/_ext/163556830/DeviceClient.o \
 	${OBJECTDIR}/_ext/163556830/DeviceServer.o \
 	${OBJECTDIR}/_ext/163556830/GuiServerDevice.o \
@@ -157,6 +158,11 @@ LDLIBSOPTIONS=-L/usr/X11/lib -L/opt/local/lib/nss -L/opt/local/lib/nspr -L${KARA
 ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/lib/libkarabo.${CND_DLIB_EXT}: ${OBJECTFILES}
 	${MKDIR} -p ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/lib
 	${LINK.cc} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/lib/libkarabo.${CND_DLIB_EXT} ${OBJECTFILES} ${LDLIBSOPTIONS} -shared -fPIC
+
+${OBJECTDIR}/_ext/163556830/DataLoggerDevice.o: ../../../src/karabo/core/DataLoggerDevice.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/163556830
+	${RM} $@.d
+	$(COMPILE.cc) -g -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163556830/DataLoggerDevice.o ../../../src/karabo/core/DataLoggerDevice.cc
 
 ${OBJECTDIR}/_ext/163556830/DeviceClient.o: ../../../src/karabo/core/DeviceClient.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/163556830
@@ -778,6 +784,19 @@ ${TESTDIR}/_ext/936508045/xmsTestRunner.o: ../../../src/karabo/tests/xms/xmsTest
 	${RM} $@.d
 	$(COMPILE.cc) -g -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/include/hdf5 `cppunit-config --cflags` -MMD -MP -MF $@.d -o ${TESTDIR}/_ext/936508045/xmsTestRunner.o ../../../src/karabo/tests/xms/xmsTestRunner.cc
 
+
+${OBJECTDIR}/_ext/163556830/DataLoggerDevice_nomain.o: ${OBJECTDIR}/_ext/163556830/DataLoggerDevice.o ../../../src/karabo/core/DataLoggerDevice.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/163556830
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/163556830/DataLoggerDevice.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} $@.d;\
+	    $(COMPILE.cc) -g -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163556830/DataLoggerDevice_nomain.o ../../../src/karabo/core/DataLoggerDevice.cc;\
+	else  \
+	    ${CP} ${OBJECTDIR}/_ext/163556830/DataLoggerDevice.o ${OBJECTDIR}/_ext/163556830/DataLoggerDevice_nomain.o;\
+	fi
 
 ${OBJECTDIR}/_ext/163556830/DeviceClient_nomain.o: ${OBJECTDIR}/_ext/163556830/DeviceClient.o ../../../src/karabo/core/DeviceClient.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/163556830
