@@ -601,7 +601,11 @@ namespace karabo {
 
             template <class A1, class A2>
             void registerSlot(const boost::function<void (const A1&, const A2&) >& slot, const std::string& funcName, const SlotType& slotType = SPECIFIC) {
-                if (m_slotInstances.find(funcName) != m_slotInstances.end()) return;
+                SlotInstances::const_iterator it = m_slotInstances.find(funcName);
+                if (it != m_slotInstances.end()) {
+                    (boost::static_pointer_cast<karabo::xms::Slot2<A1, A2> >(it->second))->registerSlotFunction(slot);
+                    return;
+                }                
                 karabo::net::BrokerChannel::Pointer channel = m_connection->createChannel();
                 std::string instanceId = prepareInstanceId(slotType);
                 boost::shared_ptr<karabo::xms::Slot2<A1, A2> > s(new karabo::xms::Slot2<A1, A2 > (this, channel, instanceId, funcName));
