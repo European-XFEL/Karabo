@@ -100,7 +100,7 @@ namespace karabo {
             void preprocessImageData(karabo::util::Hash& modified);
 
             void slotChanged(const karabo::util::Hash& what, const std::string& instanceId);
-
+            
             void slotSchemaUpdated(const karabo::util::Schema& description, const std::string& deviceId);
 
             void logHandler(karabo::net::BrokerChannel::Pointer channel, const std::string& logMessage, const karabo::util::Hash& header);

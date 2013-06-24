@@ -195,7 +195,7 @@ namespace karabo {
             KARABO_LOG_INFO << "DeviceServer starts up with id: " << m_serverId;
 
             if (m_isMaster) {
-                //slotStartDevice(Hash("MasterDevice.deviceId", "Karabo_Master_0", "MasterDevice.connection", m_connectionConfig));
+                slotStartDevice(Hash("DataLoggerDevice.deviceId", "Karabo_DataLogger_0", "DataLoggerDevice.connection", m_connectionConfig));
                 slotStartDevice(Hash("GuiServerDevice.deviceId", "Karabo_GuiServer_0", "GuiServerDevice.connection", m_connectionConfig, "GuiServerDevice.loggerConnection", m_connectionConfig));
             } else {
                 // Check whether we have installed devices available
@@ -370,8 +370,11 @@ namespace karabo {
             string index = karabo::util::toString(++m_deviceInstanceCount[classId]);
             // Prepare shortened Device-Server name
             vector<string> tokens;
+            string domain = m_serverId;
             boost::split(tokens, m_serverId, boost::is_any_of("_"));
-            string domain(tokens.front() + "-" + tokens.back());
+            if (tokens.back() == karabo::util::toString(getpid())) {
+                domain = tokens.front() + "-" + tokens.back();
+            }                 
             return domain + "_" + classId + "_" + index;
         }
     }
