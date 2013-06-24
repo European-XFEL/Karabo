@@ -18,7 +18,7 @@
 namespace bp = boost::python;
 using namespace karabo::util;
 using namespace std;
-using namespace karabo::pyexfel;
+using namespace karathon;
 
 typedef karabo::util::Element<std::string, karabo::util::OrderedMap<std::string, karabo::util::Element<std::string, bool> > > HashNode;
 
@@ -89,7 +89,7 @@ void exportPyUtilHash() {
 
 
     //    using boost::python::iterator;
-    //    bp::def("range", &karabo::pyexfel::range);
+    //    bp::def("range", &karathon::range);
 
     //    bp::class_<Hash::Attributes::map_iterator>("HashAttributesMapIterator", bp::no_init);
     //

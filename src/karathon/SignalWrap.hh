@@ -17,54 +17,57 @@
 namespace bp = boost::python;
 
 namespace karabo {
-    
+
     namespace xms {
         // Forward SignalSlotable
         class SignalSlotable;
     }
-    
-    namespace pyexfel {
-        
-        class SignalWrap : public karabo::xms::Signal {
-        public:
-            SignalWrap(const karabo::xms::SignalSlotable* signalSlotable, const karabo::net::BrokerChannel::Pointer& channel, const std::string& instanceId, const std::string& signalId) : 
-            karabo::xms::Signal(signalSlotable, channel, instanceId, signalId ){}
-                       
-            void emitPy1(const bp::object& a1) {
-               karabo::util::Hash message;
-               karabo::pyexfel::HashWrap::set(message, "a1", a1);
-               ScopedGILRelease nogil;
-               send(message);
-            }
+}
 
-            void emitPy2(const bp::object& a1, const bp::object& a2) {
-              karabo::util::Hash message;      
-              karabo::pyexfel::HashWrap::set(message, "a1", a1);
-              karabo::pyexfel::HashWrap::set(message, "a2", a2);
-              ScopedGILRelease nogil;
-              send(message);
-            }
+namespace karathon {
 
-            void emitPy3(const bp::object& a1, const bp::object& a2, const bp::object& a3) {
-               karabo::util::Hash message;      
-               karabo::pyexfel::HashWrap::set(message, "a1", a1);
-               karabo::pyexfel::HashWrap::set(message, "a2", a2);
-               karabo::pyexfel::HashWrap::set(message, "a3", a3);
-               ScopedGILRelease nogil;
-               send(message);
-            }
+    class SignalWrap : public karabo::xms::Signal {
 
-            void emitPy4(const bp::object& a1, const bp::object& a2, const bp::object& a3, const bp::object& a4) {
-               karabo::util::Hash message;      
-               karabo::pyexfel::HashWrap::set(message, "a1", a1);
-               karabo::pyexfel::HashWrap::set(message, "a2", a2);
-               karabo::pyexfel::HashWrap::set(message, "a3", a3);
-               karabo::pyexfel::HashWrap::set(message, "a4", a4);
-               ScopedGILRelease nogil;
-               send(message);
-            }
-        };
-    }
+    public:
+
+        SignalWrap(const karabo::xms::SignalSlotable* signalSlotable, const karabo::net::BrokerChannel::Pointer& channel, const std::string& instanceId, const std::string& signalId) :
+        karabo::xms::Signal(signalSlotable, channel, instanceId, signalId) {
+        }
+
+        void emitPy1(const bp::object& a1) {
+            karabo::util::Hash message;
+            karathon::HashWrap::set(message, "a1", a1);
+            ScopedGILRelease nogil;
+            send(message);
+        }
+
+        void emitPy2(const bp::object& a1, const bp::object& a2) {
+            karabo::util::Hash message;
+            karathon::HashWrap::set(message, "a1", a1);
+            karathon::HashWrap::set(message, "a2", a2);
+            ScopedGILRelease nogil;
+            send(message);
+        }
+
+        void emitPy3(const bp::object& a1, const bp::object& a2, const bp::object& a3) {
+            karabo::util::Hash message;
+            karathon::HashWrap::set(message, "a1", a1);
+            karathon::HashWrap::set(message, "a2", a2);
+            karathon::HashWrap::set(message, "a3", a3);
+            ScopedGILRelease nogil;
+            send(message);
+        }
+
+        void emitPy4(const bp::object& a1, const bp::object& a2, const bp::object& a3, const bp::object& a4) {
+            karabo::util::Hash message;
+            karathon::HashWrap::set(message, "a1", a1);
+            karathon::HashWrap::set(message, "a2", a2);
+            karathon::HashWrap::set(message, "a3", a3);
+            karathon::HashWrap::set(message, "a4", a4);
+            ScopedGILRelease nogil;
+            send(message);
+        }
+    };
 }
 
 #endif	/* KARABO_PYKARABO_SIGNALWRAP_HH */

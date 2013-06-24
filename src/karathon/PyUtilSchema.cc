@@ -178,7 +178,7 @@ struct ChoiceElementWrap {
 
         bp::object nodeNameList = classobj.attr("getRegisteredClasses")();
         boost::any any;
-        karabo::pyexfel::Wrapper::toAny(nodeNameList, any);
+        karathon::Wrapper::toAny(nodeNameList, any);
 
         if (any.type() != typeid (std::vector<std::string>))
             throw KARABO_PYTHON_EXCEPTION("getRegisteredClass() doesn't return vector<string>!");
@@ -220,7 +220,7 @@ struct ListElementWrap {
 
         bp::object nodeNameList = classobj.attr("getRegisteredClasses")();
         boost::any any;
-        karabo::pyexfel::Wrapper::toAny(nodeNameList, any);
+        karathon::Wrapper::toAny(nodeNameList, any);
 
         if (any.type() != typeid (vector<string>))
             throw KARABO_PYTHON_EXCEPTION("getRegisteredClass() doesn't return vector<string>!");
@@ -263,21 +263,21 @@ struct OverwriteElementWrap {
 
     static karabo::util::OverwriteElement & setNewAlias(karabo::util::OverwriteElement& self, const bp::object& alias) {
         boost::any any;
-        karabo::pyexfel::Wrapper::toAny(alias, any);
+        karathon::Wrapper::toAny(alias, any);
         return self.setNewAlias(any);
     }
 
 
     static karabo::util::OverwriteElement & setNewTag(karabo::util::OverwriteElement& self, const bp::object& tag) {
         boost::any any;
-        karabo::pyexfel::Wrapper::toAny(tag, any);
+        karathon::Wrapper::toAny(tag, any);
         return self.setNewTag(any);
     }
 
 
     static karabo::util::OverwriteElement & setNewDefaultValue(karabo::util::OverwriteElement& self, const bp::object& value) {
         boost::any any;
-        karabo::pyexfel::Wrapper::toAny(value, any);
+        karathon::Wrapper::toAny(value, any);
         return self.setNewDefaultValue(any);
     }
 };
@@ -311,11 +311,11 @@ namespace schemawrap {
     }
 
 
-    karabo::pyexfel::PyTypes::ReferenceType getValueType(const Schema& schema, const bp::object& obj) {
+    karathon::PyTypes::ReferenceType getValueType(const Schema& schema, const bp::object& obj) {
         if (PyString_Check(obj.ptr())) {
             string path = bp::extract<string>(obj);
             Types::ReferenceType t = schema.getValueType(path);
-            return karabo::pyexfel::PyTypes::from(t);
+            return karathon::PyTypes::from(t);
         }
         throw KARABO_PYTHON_EXCEPTION("Python argument in 'getValueType' must be a string");
     }
@@ -329,7 +329,7 @@ namespace schemawrap {
         if (PyString_Check(obj.ptr())) {
             string path = bp::extract<string>(obj);
             boost::any any;
-            karabo::pyexfel::Wrapper::toAny(value, any);
+            karathon::Wrapper::toAny(value, any);
             self.setMinInc(path, any);
         } else
             throw KARABO_PYTHON_EXCEPTION("Python argument in 'setMinInc' must be a string");
@@ -340,7 +340,7 @@ namespace schemawrap {
         if (PyString_Check(obj.ptr())) {
             string path = bp::extract<string>(obj);
             const Hash& h = schema.getParameterHash();
-            return karabo::pyexfel::Wrapper::toObject(h.getAttributeAsAny(path, KARABO_SCHEMA_MIN_INC), false);
+            return karathon::Wrapper::toObject(h.getAttributeAsAny(path, KARABO_SCHEMA_MIN_INC), false);
         }
         throw KARABO_PYTHON_EXCEPTION("Python argument in 'getMinInc' must be a string");
     }
@@ -350,7 +350,7 @@ namespace schemawrap {
         if (PyString_Check(obj.ptr())) {
             string path = bp::extract<string>(obj);
             boost::any any;
-            karabo::pyexfel::Wrapper::toAny(value, any);
+            karathon::Wrapper::toAny(value, any);
             self.setMaxInc(path, any);
         } else
             throw KARABO_PYTHON_EXCEPTION("Python argument in 'setMinInc' must be a string");
@@ -361,7 +361,7 @@ namespace schemawrap {
         if (PyString_Check(obj.ptr())) {
             string path = bp::extract<string>(obj);
             const Hash& h = schema.getParameterHash();
-            return karabo::pyexfel::Wrapper::toObject(h.getAttributeAsAny(path, KARABO_SCHEMA_MAX_INC), false);
+            return karathon::Wrapper::toObject(h.getAttributeAsAny(path, KARABO_SCHEMA_MAX_INC), false);
         }
         throw KARABO_PYTHON_EXCEPTION("Python argument in 'getMaxInc' must be a string");
     }
@@ -371,7 +371,7 @@ namespace schemawrap {
         if (PyString_Check(obj.ptr())) {
             string path = bp::extract<string>(obj);
             boost::any any;
-            karabo::pyexfel::Wrapper::toAny(value, any);
+            karathon::Wrapper::toAny(value, any);
             self.setMinExc(path, any);
         } else
             throw KARABO_PYTHON_EXCEPTION("Python argument in 'setMinInc' must be a string");
@@ -382,7 +382,7 @@ namespace schemawrap {
         if (PyString_Check(obj.ptr())) {
             string path = bp::extract<string>(obj);
             const Hash& h = schema.getParameterHash();
-            return karabo::pyexfel::Wrapper::toObject(h.getAttributeAsAny(path, KARABO_SCHEMA_MIN_EXC), false);
+            return karathon::Wrapper::toObject(h.getAttributeAsAny(path, KARABO_SCHEMA_MIN_EXC), false);
         }
         throw KARABO_PYTHON_EXCEPTION("Python argument in 'getMinExc' must be a string");
     }
@@ -392,7 +392,7 @@ namespace schemawrap {
         if (PyString_Check(obj.ptr())) {
             string path = bp::extract<string>(obj);
             boost::any any;
-            karabo::pyexfel::Wrapper::toAny(value, any);
+            karathon::Wrapper::toAny(value, any);
             self.setMaxExc(path, any);
         } else
             throw KARABO_PYTHON_EXCEPTION("Python argument in 'setMinInc' must be a string");
@@ -403,7 +403,7 @@ namespace schemawrap {
         if (PyString_Check(obj.ptr())) {
             string path = bp::extract<string>(obj);
             const Hash& h = schema.getParameterHash();
-            return karabo::pyexfel::Wrapper::toObject(h.getAttributeAsAny(path, KARABO_SCHEMA_MAX_EXC), false);
+            return karathon::Wrapper::toObject(h.getAttributeAsAny(path, KARABO_SCHEMA_MAX_EXC), false);
         }
         throw KARABO_PYTHON_EXCEPTION("Python argument in 'getMaxExc' must be a string");
     }
@@ -413,23 +413,23 @@ namespace schemawrap {
     //*****************************************************************************
 
 
-    bp::object getMinIncAs(const Schema& schema, const bp::object& obj, const karabo::pyexfel::PyTypes::ReferenceType& pytype) {
+    bp::object getMinIncAs(const Schema& schema, const bp::object& obj, const karathon::PyTypes::ReferenceType& pytype) {
         if (PyString_Check(obj.ptr())) {
             string path = bp::extract<string>(obj);
             switch (pytype) {
-                case karabo::pyexfel::PyTypes::INT32:
+                case karathon::PyTypes::INT32:
                     return bp::object(schema.getMinIncAs<int>(path));
-                case karabo::pyexfel::PyTypes::UINT32:
+                case karathon::PyTypes::UINT32:
                     return bp::object(schema.getMinIncAs<unsigned int>(path));
-                case karabo::pyexfel::PyTypes::INT64:
+                case karathon::PyTypes::INT64:
                     return bp::object(schema.getMinIncAs<long long>(path));
-                case karabo::pyexfel::PyTypes::UINT64:
+                case karathon::PyTypes::UINT64:
                     return bp::object(schema.getMinIncAs<unsigned long long>(path));
-                case karabo::pyexfel::PyTypes::STRING:
+                case karathon::PyTypes::STRING:
                     return bp::object(schema.getMinIncAs<string>(path));
-                case karabo::pyexfel::PyTypes::FLOAT:
+                case karathon::PyTypes::FLOAT:
                     return bp::object(schema.getMinIncAs<float>(path));
-                case karabo::pyexfel::PyTypes::DOUBLE:
+                case karathon::PyTypes::DOUBLE:
                     return bp::object(schema.getMinIncAs<double>(path));
                 default:
                     break;
@@ -440,23 +440,23 @@ namespace schemawrap {
     }
 
 
-    bp::object getMaxIncAs(const Schema& schema, const bp::object& obj, const karabo::pyexfel::PyTypes::ReferenceType& pytype) {
+    bp::object getMaxIncAs(const Schema& schema, const bp::object& obj, const karathon::PyTypes::ReferenceType& pytype) {
         if (PyString_Check(obj.ptr())) {
             string path = bp::extract<string>(obj);
             switch (pytype) {
-                case karabo::pyexfel::PyTypes::INT32:
+                case karathon::PyTypes::INT32:
                     return bp::object(schema.getMaxIncAs<int>(path));
-                case karabo::pyexfel::PyTypes::UINT32:
+                case karathon::PyTypes::UINT32:
                     return bp::object(schema.getMaxIncAs<unsigned int>(path));
-                case karabo::pyexfel::PyTypes::INT64:
+                case karathon::PyTypes::INT64:
                     return bp::object(schema.getMaxIncAs<long long>(path));
-                case karabo::pyexfel::PyTypes::UINT64:
+                case karathon::PyTypes::UINT64:
                     return bp::object(schema.getMaxIncAs<unsigned long long>(path));
-                case karabo::pyexfel::PyTypes::STRING:
+                case karathon::PyTypes::STRING:
                     return bp::object(schema.getMaxIncAs<string>(path));
-                case karabo::pyexfel::PyTypes::FLOAT:
+                case karathon::PyTypes::FLOAT:
                     return bp::object(schema.getMaxIncAs<float>(path));
-                case karabo::pyexfel::PyTypes::DOUBLE:
+                case karathon::PyTypes::DOUBLE:
                     return bp::object(schema.getMaxIncAs<double>(path));
                 default:
                     break;
@@ -467,23 +467,23 @@ namespace schemawrap {
     }
 
 
-    bp::object getMinExcAs(const Schema& schema, const bp::object& obj, const karabo::pyexfel::PyTypes::ReferenceType& pytype) {
+    bp::object getMinExcAs(const Schema& schema, const bp::object& obj, const karathon::PyTypes::ReferenceType& pytype) {
         if (PyString_Check(obj.ptr())) {
             string path = bp::extract<string>(obj);
             switch (pytype) {
-                case karabo::pyexfel::PyTypes::INT32:
+                case karathon::PyTypes::INT32:
                     return bp::object(schema.getMinExcAs<int>(path));
-                case karabo::pyexfel::PyTypes::UINT32:
+                case karathon::PyTypes::UINT32:
                     return bp::object(schema.getMinExcAs<unsigned int>(path));
-                case karabo::pyexfel::PyTypes::INT64:
+                case karathon::PyTypes::INT64:
                     return bp::object(schema.getMinExcAs<long long>(path));
-                case karabo::pyexfel::PyTypes::UINT64:
+                case karathon::PyTypes::UINT64:
                     return bp::object(schema.getMinExcAs<unsigned long long>(path));
-                case karabo::pyexfel::PyTypes::STRING:
+                case karathon::PyTypes::STRING:
                     return bp::object(schema.getMinExcAs<string>(path));
-                case karabo::pyexfel::PyTypes::FLOAT:
+                case karathon::PyTypes::FLOAT:
                     return bp::object(schema.getMinExcAs<float>(path));
-                case karabo::pyexfel::PyTypes::DOUBLE:
+                case karathon::PyTypes::DOUBLE:
                     return bp::object(schema.getMinExcAs<double>(path));
                 default:
                     break;
@@ -494,23 +494,23 @@ namespace schemawrap {
     }
 
 
-    bp::object getMaxExcAs(const Schema& schema, const bp::object& obj, const karabo::pyexfel::PyTypes::ReferenceType& pytype) {
+    bp::object getMaxExcAs(const Schema& schema, const bp::object& obj, const karathon::PyTypes::ReferenceType& pytype) {
         if (PyString_Check(obj.ptr())) {
             string path = bp::extract<string>(obj);
             switch (pytype) {
-                case karabo::pyexfel::PyTypes::INT32:
+                case karathon::PyTypes::INT32:
                     return bp::object(schema.getMaxExcAs<int>(path));
-                case karabo::pyexfel::PyTypes::UINT32:
+                case karathon::PyTypes::UINT32:
                     return bp::object(schema.getMaxExcAs<unsigned int>(path));
-                case karabo::pyexfel::PyTypes::INT64:
+                case karathon::PyTypes::INT64:
                     return bp::object(schema.getMaxExcAs<long long>(path));
-                case karabo::pyexfel::PyTypes::UINT64:
+                case karathon::PyTypes::UINT64:
                     return bp::object(schema.getMaxExcAs<unsigned long long>(path));
-                case karabo::pyexfel::PyTypes::STRING:
+                case karathon::PyTypes::STRING:
                     return bp::object(schema.getMaxExcAs<string>(path));
-                case karabo::pyexfel::PyTypes::FLOAT:
+                case karathon::PyTypes::FLOAT:
                     return bp::object(schema.getMaxExcAs<float>(path));
-                case karabo::pyexfel::PyTypes::DOUBLE:
+                case karathon::PyTypes::DOUBLE:
                     return bp::object(schema.getMaxExcAs<double>(path));
                 default:
                     break;
@@ -530,7 +530,7 @@ namespace schemawrap {
         if (PyString_Check(obj.ptr())) {
             string path = bp::extract<string>(obj);
             boost::any any;
-            karabo::pyexfel::Wrapper::toAny(value, any);
+            karathon::Wrapper::toAny(value, any);
             self.setWarnLow(path, any);
         } else
             throw KARABO_PYTHON_EXCEPTION("Python argument in 'setMinInc' must be a string");
@@ -541,7 +541,7 @@ namespace schemawrap {
         if (PyString_Check(obj.ptr())) {
             string path = bp::extract<string>(obj);
             const Hash& h = schema.getParameterHash();
-            return karabo::pyexfel::Wrapper::toObject(h.getAttributeAsAny(path, KARABO_SCHEMA_WARN_LOW), false);
+            return karathon::Wrapper::toObject(h.getAttributeAsAny(path, KARABO_SCHEMA_WARN_LOW), false);
         }
         throw KARABO_PYTHON_EXCEPTION("Python argument in 'getWarnLow' must be a string");
     }
@@ -551,7 +551,7 @@ namespace schemawrap {
         if (PyString_Check(obj.ptr())) {
             string path = bp::extract<string>(obj);
             boost::any any;
-            karabo::pyexfel::Wrapper::toAny(value, any);
+            karathon::Wrapper::toAny(value, any);
             self.setWarnHigh(path, any);
         } else
             throw KARABO_PYTHON_EXCEPTION("Python argument in 'setMinInc' must be a string");
@@ -562,7 +562,7 @@ namespace schemawrap {
         if (PyString_Check(obj.ptr())) {
             string path = bp::extract<string>(obj);
             const Hash& h = schema.getParameterHash();
-            return karabo::pyexfel::Wrapper::toObject(h.getAttributeAsAny(path, KARABO_SCHEMA_WARN_HIGH), false);
+            return karathon::Wrapper::toObject(h.getAttributeAsAny(path, KARABO_SCHEMA_WARN_HIGH), false);
         }
         throw KARABO_PYTHON_EXCEPTION("Python argument in 'getWarnHigh' must be a string");
     }
@@ -572,7 +572,7 @@ namespace schemawrap {
         if (PyString_Check(obj.ptr())) {
             string path = bp::extract<string>(obj);
             boost::any any;
-            karabo::pyexfel::Wrapper::toAny(value, any);
+            karathon::Wrapper::toAny(value, any);
             self.setAlarmLow(path, any);
         } else
             throw KARABO_PYTHON_EXCEPTION("Python argument in 'setMinInc' must be a string");
@@ -583,7 +583,7 @@ namespace schemawrap {
         if (PyString_Check(obj.ptr())) {
             string path = bp::extract<string>(obj);
             const Hash& h = schema.getParameterHash();
-            return karabo::pyexfel::Wrapper::toObject(h.getAttributeAsAny(path, KARABO_SCHEMA_ALARM_LOW), false);
+            return karathon::Wrapper::toObject(h.getAttributeAsAny(path, KARABO_SCHEMA_ALARM_LOW), false);
         }
         throw KARABO_PYTHON_EXCEPTION("Python argument in 'getAlarmLow' must be a string");
     }
@@ -593,7 +593,7 @@ namespace schemawrap {
         if (PyString_Check(obj.ptr())) {
             string path = bp::extract<string>(obj);
             boost::any any;
-            karabo::pyexfel::Wrapper::toAny(value, any);
+            karathon::Wrapper::toAny(value, any);
             self.setAlarmHigh(path, any);
         } else
             throw KARABO_PYTHON_EXCEPTION("Python argument in 'setMinInc' must be a string");
@@ -604,7 +604,7 @@ namespace schemawrap {
         if (PyString_Check(obj.ptr())) {
             string path = bp::extract<string>(obj);
             const Hash& h = schema.getParameterHash();
-            return karabo::pyexfel::Wrapper::toObject(h.getAttributeAsAny(path, KARABO_SCHEMA_ALARM_HIGH), false);
+            return karathon::Wrapper::toObject(h.getAttributeAsAny(path, KARABO_SCHEMA_ALARM_HIGH), false);
         }
         throw KARABO_PYTHON_EXCEPTION("Python argument in 'getAlarmHigh' must be a string");
     }
@@ -615,23 +615,23 @@ namespace schemawrap {
     //*************************************************************************************
 
 
-    bp::object getWarnLowAs(const Schema& schema, const bp::object& obj, const karabo::pyexfel::PyTypes::ReferenceType& pytype) {
+    bp::object getWarnLowAs(const Schema& schema, const bp::object& obj, const karathon::PyTypes::ReferenceType& pytype) {
         if (PyString_Check(obj.ptr())) {
             string path = bp::extract<string>(obj);
             switch (pytype) {
-                case karabo::pyexfel::PyTypes::INT32:
+                case karathon::PyTypes::INT32:
                     return bp::object(schema.getWarnLowAs<int>(path));
-                case karabo::pyexfel::PyTypes::UINT32:
+                case karathon::PyTypes::UINT32:
                     return bp::object(schema.getWarnLowAs<unsigned int>(path));
-                case karabo::pyexfel::PyTypes::INT64:
+                case karathon::PyTypes::INT64:
                     return bp::object(schema.getWarnLowAs<long long>(path));
-                case karabo::pyexfel::PyTypes::UINT64:
+                case karathon::PyTypes::UINT64:
                     return bp::object(schema.getWarnLowAs<unsigned long long>(path));
-                case karabo::pyexfel::PyTypes::STRING:
+                case karathon::PyTypes::STRING:
                     return bp::object(schema.getWarnLowAs<string>(path));
-                case karabo::pyexfel::PyTypes::FLOAT:
+                case karathon::PyTypes::FLOAT:
                     return bp::object(schema.getWarnLowAs<float>(path));
-                case karabo::pyexfel::PyTypes::DOUBLE:
+                case karathon::PyTypes::DOUBLE:
                     return bp::object(schema.getWarnLowAs<double>(path));
                 default:
                     break;
@@ -642,23 +642,23 @@ namespace schemawrap {
     }
 
 
-    bp::object getWarnHighAs(const Schema& schema, const bp::object& obj, const karabo::pyexfel::PyTypes::ReferenceType& pytype) {
+    bp::object getWarnHighAs(const Schema& schema, const bp::object& obj, const karathon::PyTypes::ReferenceType& pytype) {
         if (PyString_Check(obj.ptr())) {
             string path = bp::extract<string>(obj);
             switch (pytype) {
-                case karabo::pyexfel::PyTypes::INT32:
+                case karathon::PyTypes::INT32:
                     return bp::object(schema.getWarnHighAs<int>(path));
-                case karabo::pyexfel::PyTypes::UINT32:
+                case karathon::PyTypes::UINT32:
                     return bp::object(schema.getWarnHighAs<unsigned int>(path));
-                case karabo::pyexfel::PyTypes::INT64:
+                case karathon::PyTypes::INT64:
                     return bp::object(schema.getWarnHighAs<long long>(path));
-                case karabo::pyexfel::PyTypes::UINT64:
+                case karathon::PyTypes::UINT64:
                     return bp::object(schema.getWarnHighAs<unsigned long long>(path));
-                case karabo::pyexfel::PyTypes::STRING:
+                case karathon::PyTypes::STRING:
                     return bp::object(schema.getWarnHighAs<string>(path));
-                case karabo::pyexfel::PyTypes::FLOAT:
+                case karathon::PyTypes::FLOAT:
                     return bp::object(schema.getWarnHighAs<float>(path));
-                case karabo::pyexfel::PyTypes::DOUBLE:
+                case karathon::PyTypes::DOUBLE:
                     return bp::object(schema.getWarnHighAs<double>(path));
                 default:
                     break;
@@ -669,23 +669,23 @@ namespace schemawrap {
     }
 
 
-    bp::object getAlarmLowAs(const Schema& schema, const bp::object& obj, const karabo::pyexfel::PyTypes::ReferenceType& pytype) {
+    bp::object getAlarmLowAs(const Schema& schema, const bp::object& obj, const karathon::PyTypes::ReferenceType& pytype) {
         if (PyString_Check(obj.ptr())) {
             string path = bp::extract<string>(obj);
             switch (pytype) {
-                case karabo::pyexfel::PyTypes::INT32:
+                case karathon::PyTypes::INT32:
                     return bp::object(schema.getAlarmLowAs<int>(path));
-                case karabo::pyexfel::PyTypes::UINT32:
+                case karathon::PyTypes::UINT32:
                     return bp::object(schema.getAlarmLowAs<unsigned int>(path));
-                case karabo::pyexfel::PyTypes::INT64:
+                case karathon::PyTypes::INT64:
                     return bp::object(schema.getAlarmLowAs<long long>(path));
-                case karabo::pyexfel::PyTypes::UINT64:
+                case karathon::PyTypes::UINT64:
                     return bp::object(schema.getAlarmLowAs<unsigned long long>(path));
-                case karabo::pyexfel::PyTypes::STRING:
+                case karathon::PyTypes::STRING:
                     return bp::object(schema.getAlarmLowAs<string>(path));
-                case karabo::pyexfel::PyTypes::FLOAT:
+                case karathon::PyTypes::FLOAT:
                     return bp::object(schema.getAlarmLowAs<float>(path));
-                case karabo::pyexfel::PyTypes::DOUBLE:
+                case karathon::PyTypes::DOUBLE:
                     return bp::object(schema.getAlarmLowAs<double>(path));
                 default:
                     break;
@@ -696,23 +696,23 @@ namespace schemawrap {
     }
 
 
-    bp::object getAlarmHighAs(const Schema& schema, const bp::object& obj, const karabo::pyexfel::PyTypes::ReferenceType& pytype) {
+    bp::object getAlarmHighAs(const Schema& schema, const bp::object& obj, const karathon::PyTypes::ReferenceType& pytype) {
         if (PyString_Check(obj.ptr())) {
             string path = bp::extract<string>(obj);
             switch (pytype) {
-                case karabo::pyexfel::PyTypes::INT32:
+                case karathon::PyTypes::INT32:
                     return bp::object(schema.getAlarmHighAs<int>(path));
-                case karabo::pyexfel::PyTypes::UINT32:
+                case karathon::PyTypes::UINT32:
                     return bp::object(schema.getAlarmHighAs<unsigned int>(path));
-                case karabo::pyexfel::PyTypes::INT64:
+                case karathon::PyTypes::INT64:
                     return bp::object(schema.getAlarmHighAs<long long>(path));
-                case karabo::pyexfel::PyTypes::UINT64:
+                case karathon::PyTypes::UINT64:
                     return bp::object(schema.getAlarmHighAs<unsigned long long>(path));
-                case karabo::pyexfel::PyTypes::STRING:
+                case karathon::PyTypes::STRING:
                     return bp::object(schema.getAlarmHighAs<string>(path));
-                case karabo::pyexfel::PyTypes::FLOAT:
+                case karathon::PyTypes::FLOAT:
                     return bp::object(schema.getAlarmHighAs<float>(path));
-                case karabo::pyexfel::PyTypes::DOUBLE:
+                case karathon::PyTypes::DOUBLE:
                     return bp::object(schema.getAlarmHighAs<double>(path));
                 default:
                     break;
@@ -752,7 +752,7 @@ namespace schemawrap {
         if (PyString_Check(obj.ptr())) {
             string path = bp::extract<string>(obj);
             const std::vector<std::string>& v = schema.getTags(path);
-            return karabo::pyexfel::Wrapper::fromStdVectorToPyArray<string>(v);
+            return karathon::Wrapper::fromStdVectorToPyArray<string>(v);
         }
         throw KARABO_PYTHON_EXCEPTION("Python argument in 'getTags' should be a string");
     }
@@ -762,7 +762,7 @@ namespace schemawrap {
         if (PyString_Check(obj.ptr())) {
             string path = bp::extract<string>(obj);
             const vector<string>& v = schema.getOptions(path);
-            return karabo::pyexfel::Wrapper::fromStdVectorToPyArray<string>(v);
+            return karathon::Wrapper::fromStdVectorToPyArray<string>(v);
         }
         throw KARABO_PYTHON_EXCEPTION("Python argument in 'getOptions' should be a string");
     }
@@ -772,7 +772,7 @@ namespace schemawrap {
         if (PyString_Check(obj.ptr())) {
             string path = bp::extract<string>(obj);
             const vector<string>& v = schema.getAllowedStates(path);
-            return karabo::pyexfel::Wrapper::fromStdVectorToPyArray<string>(v);
+            return karathon::Wrapper::fromStdVectorToPyArray<string>(v);
         }
         throw KARABO_PYTHON_EXCEPTION("Python argument in 'getAllowedStates' should be a string");
     }
@@ -782,7 +782,7 @@ namespace schemawrap {
         if (PyString_Check(obj.ptr())) {
             string path = bp::extract<string>(obj);
             const vector<string>& v = schema.getAllowedRoles(path);
-            return karabo::pyexfel::Wrapper::fromStdVectorToPyArray<string>(v);
+            return karathon::Wrapper::fromStdVectorToPyArray<string>(v);
         }
         throw KARABO_PYTHON_EXCEPTION("Python argument in 'getAllowedRoles' should be a string");
     }
@@ -796,7 +796,7 @@ namespace schemawrap {
         if (PyString_Check(obj.ptr())) {
             string path = bp::extract<string>(obj);
             boost::any any;
-            karabo::pyexfel::Wrapper::toAny(value, any);
+            karathon::Wrapper::toAny(value, any);
             self.setDefaultValue(path, any);
         } else
             throw KARABO_PYTHON_EXCEPTION("Python argument defining the key name in 'setDefaultValue' should be a string");
@@ -807,49 +807,49 @@ namespace schemawrap {
         if (PyString_Check(obj.ptr())) {
             string path = bp::extract<string>(obj);
             const Hash& h = schema.getParameterHash();
-            return karabo::pyexfel::Wrapper::toObject(h.getAttributeAsAny(path, KARABO_SCHEMA_DEFAULT_VALUE), false);
+            return karathon::Wrapper::toObject(h.getAttributeAsAny(path, KARABO_SCHEMA_DEFAULT_VALUE), false);
         }
         throw KARABO_PYTHON_EXCEPTION("Python argument defining the key name in 'getDefaultValue' should be a string");
     }
 
 
-    bp::object getDefaultValueAs(const Schema& schema, const bp::object& obj, const karabo::pyexfel::PyTypes::ReferenceType& pytype) {
+    bp::object getDefaultValueAs(const Schema& schema, const bp::object& obj, const karathon::PyTypes::ReferenceType& pytype) {
         if (PyString_Check(obj.ptr())) {
             string path = bp::extract<string>(obj);
 
             switch (pytype) {
-                case karabo::pyexfel::PyTypes::BOOL:
+                case karathon::PyTypes::BOOL:
                     return bp::object(schema.getDefaultValueAs<bool>(path));
-                case karabo::pyexfel::PyTypes::INT32:
+                case karathon::PyTypes::INT32:
                     return bp::object(schema.getDefaultValueAs<int>(path));
-                case karabo::pyexfel::PyTypes::UINT32:
+                case karathon::PyTypes::UINT32:
                     return bp::object(schema.getDefaultValueAs<unsigned int>(path));
-                case karabo::pyexfel::PyTypes::INT64:
+                case karathon::PyTypes::INT64:
                     return bp::object(schema.getDefaultValueAs<long long>(path));
-                case karabo::pyexfel::PyTypes::UINT64:
+                case karathon::PyTypes::UINT64:
                     return bp::object(schema.getDefaultValueAs<unsigned long long>(path));
-                case karabo::pyexfel::PyTypes::STRING:
+                case karathon::PyTypes::STRING:
                     return bp::object(schema.getDefaultValueAs<string>(path));
-                case karabo::pyexfel::PyTypes::FLOAT:
+                case karathon::PyTypes::FLOAT:
                     return bp::object(schema.getDefaultValueAs<float>(path));
-                case karabo::pyexfel::PyTypes::DOUBLE:
+                case karathon::PyTypes::DOUBLE:
                     return bp::object(schema.getDefaultValueAs<double>(path));
                 case Types::VECTOR_BOOL:
-                    return karabo::pyexfel::Wrapper::fromStdVectorToPyArray(schema.getDefaultValueAs<bool, vector > (path));
+                    return karathon::Wrapper::fromStdVectorToPyArray(schema.getDefaultValueAs<bool, vector > (path));
                 case Types::VECTOR_INT32:
-                    return karabo::pyexfel::Wrapper::fromStdVectorToPyArray(schema.getDefaultValueAs<int, vector >(path));
+                    return karathon::Wrapper::fromStdVectorToPyArray(schema.getDefaultValueAs<int, vector >(path));
                 case Types::VECTOR_UINT32:
-                    return karabo::pyexfel::Wrapper::fromStdVectorToPyArray(schema.getDefaultValueAs<unsigned int, vector >(path));
+                    return karathon::Wrapper::fromStdVectorToPyArray(schema.getDefaultValueAs<unsigned int, vector >(path));
                 case Types::VECTOR_INT64:
-                    return karabo::pyexfel::Wrapper::fromStdVectorToPyArray(schema.getDefaultValueAs<long long, vector >(path));
+                    return karathon::Wrapper::fromStdVectorToPyArray(schema.getDefaultValueAs<long long, vector >(path));
                 case Types::VECTOR_UINT64:
-                    return karabo::pyexfel::Wrapper::fromStdVectorToPyArray(schema.getDefaultValueAs<unsigned long long, vector >(path));
+                    return karathon::Wrapper::fromStdVectorToPyArray(schema.getDefaultValueAs<unsigned long long, vector >(path));
                 case Types::VECTOR_STRING:
-                    return karabo::pyexfel::Wrapper::fromStdVectorToPyArray(schema.getDefaultValueAs<string, vector >(path));
+                    return karathon::Wrapper::fromStdVectorToPyArray(schema.getDefaultValueAs<string, vector >(path));
                 case Types::VECTOR_FLOAT:
-                    return karabo::pyexfel::Wrapper::fromStdVectorToPyArray(schema.getDefaultValueAs<float, vector >(path));
+                    return karathon::Wrapper::fromStdVectorToPyArray(schema.getDefaultValueAs<float, vector >(path));
                 case Types::VECTOR_DOUBLE:
-                    return karabo::pyexfel::Wrapper::fromStdVectorToPyArray(schema.getDefaultValueAs<double, vector >(path));
+                    return karathon::Wrapper::fromStdVectorToPyArray(schema.getDefaultValueAs<double, vector >(path));
                 default:
                     break;
             }
@@ -883,7 +883,7 @@ namespace schemawrap {
         if (PyString_Check(obj.ptr())) {
             string path = bp::extract<string>(obj);
             const Hash& h = schema.getParameterHash();
-            return karabo::pyexfel::Wrapper::toObject(h.getAttributeAsAny(path, KARABO_SCHEMA_ALIAS), false);
+            return karathon::Wrapper::toObject(h.getAttributeAsAny(path, KARABO_SCHEMA_ALIAS), false);
         } else {
             throw KARABO_PYTHON_EXCEPTION("Python argument in 'getAliasFromKey' should be a string");
         }
