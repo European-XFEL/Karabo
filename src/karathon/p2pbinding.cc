@@ -17,7 +17,7 @@ namespace bp = boost::python;
 
 using namespace std;
 using namespace karabo::net;
-using namespace karabo::pyexfel;
+using namespace karathon;
 
 
 void exportp2p() {
