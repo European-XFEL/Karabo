@@ -60,7 +60,6 @@ class NavigationPanel(QWidget):
         
         Manager().notifier.signalUpdateDeviceServerInstance.connect(self.onUpdateDeviceServerInstance)
         Manager().notifier.signalUpdateDeviceInstance.connect(self.onUpdateDeviceInstance)
-        Manager().notifier.signalErrorState.connect(self.onErrorState)
         
         mainLayout = QVBoxLayout(self)
         mainLayout.setContentsMargins(5,5,5,5)
@@ -97,8 +96,8 @@ class NavigationPanel(QWidget):
         self.__twNavigation.createNewItem(itemInfo, True)
 
 
-    def onSelectNewNavigationItem(self, itemInfo):
-        self.__twNavigation.selectItem(itemInfo)
+    def onSelectNewNavigationItem(self, devicePath):
+        self.__twNavigation.selectItem(devicePath)
 
 
     # TODO: this is not working anymore due to change of Model-View-Controller
@@ -140,10 +139,6 @@ class NavigationPanel(QWidget):
 
     def onUpdateDeviceInstance(self, itemInfo):
         self.__twNavigation.updateDeviceInstance(itemInfo)
-
-
-    def onErrorState(self, instanceId, hasError):
-        self.__twNavigation.setErrorState(instanceId, hasError)
 
 
     def onDeviceInstanceSchemaUpdated(self, instanceId, schema):
