@@ -48,7 +48,7 @@ namespace karabo {
             typedef boost::function<void (const karabo::util::Hash& /*topologyEntry*/) > InstanceNewHandler;
             typedef boost::function<void (const karabo::util::Hash& /*topologyEntry*/) > InstanceUpdatedHandler;
             typedef boost::function<void (const std::string& /*instanceId*/) > InstanceGoneHandler;
-            typedef boost::function<void (const karabo::util::Schema& /*description*/, const std::string& /*deviceId*/) > SchemaUpdatedHandler;
+            typedef boost::function<void (const karabo::util::Schema& /*schema*/, const std::string& /*deviceId*/) > SchemaUpdatedHandler;
 
         protected: // members
             

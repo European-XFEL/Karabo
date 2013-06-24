@@ -51,11 +51,11 @@ namespace karabo {
              *   <deviceId> +
              *     description t0 = <timestamp> @
              *       [0]
-             *         val t="<timestamp>" => SCHEMA
+             *         v t="<timestamp>" => SCHEMA
              *     configuration t0 = <timestamp> +
              *       <key> @
              *         [0]
-             *           val t="<timestamp>" [isLast] => VALUE
+             *           v t="<timestamp>" [isLast] => VALUE
              *          
              */
             karabo::util::Hash m_systemHistory;

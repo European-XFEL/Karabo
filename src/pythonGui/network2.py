@@ -183,9 +183,9 @@ class Network(QObject):
             # "instanceNew" (instanceId, instanceInfo)
             # "instanceUpdated" (instanceId, instanceInfo)
             # "instanceGone" (instanceId)
-            # "configurationChange" (config, instanceId)
+            # "configurationChanged" (config, instanceId)
             # "log" (logMessage)
-            # "notify" (instanceId, type, text)
+            # "notification" (type, shortMsg, detailedMsg, instanceId)
             # "invalidateCache" (instanceId)
             
             if type == "systemTopology":
@@ -210,11 +210,12 @@ class Network(QObject):
                 self._handleConfigurationChanged(headerHash, bodyHash)
             elif type == "log":
                 self._handleLog(str(self.__bodyBytes))
-            elif type == "notify":
-                print "notify"
+            elif type == "notification":
+                print "notification"
             elif type == "invalidateCache":
                 print "invalidateCache"
-        
+            else :
+                print "WARN : Got unknown communication token \"", type, "\" from server"
             # Invalidate variables            
             self.__bodySize = self.__headerSize = 0
             self.__headerBytes = self.__bodyBytes = bytearray()

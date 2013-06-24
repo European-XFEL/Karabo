@@ -47,8 +47,6 @@ namespace karabo {
 
             GLOBAL_SLOT2(slotChanged, Hash /*configuration*/, string /*deviceId*/)
             GLOBAL_SLOT2(slotSchemaUpdated, Schema /*description*/, string /*deviceId*/)
-
-
             GLOBAL_SLOT4(slotNotification, string /*type*/, string /*shortMsg*/, string /*detailedMsg*/, string /*deviceId*/)
 
             Hash config;
@@ -70,7 +68,8 @@ namespace karabo {
             remote().registerInstanceNewMonitor(boost::bind(&karabo::core::GuiServerDevice::instanceNewHandler, this, _1));
             remote().registerInstanceUpdatedMonitor(boost::bind(&karabo::core::GuiServerDevice::instanceUpdatedHandler, this, _1));
             remote().registerInstanceGoneMonitor(boost::bind(&karabo::core::GuiServerDevice::instanceGoneHandler, this, _1));
-                    
+            //remote().registerDeviceMonitor("*", boost::bind(&karabo::core::GuiServerDevice::deviceConfigurationChangedHandler, this, _1, _2));
+
             m_dataConnection->startAsync(boost::bind(&karabo::core::GuiServerDevice::onConnect, this, _1));
             // Use one thread currently (you may start this multiple time for having more threads doing the work)
             boost::thread(boost::bind(&karabo::net::IOService::run, m_ioService));
@@ -84,7 +83,7 @@ namespace karabo {
 
 
         void GuiServerDevice::onConnect(karabo::net::Channel::Pointer channel) {
-            KARABO_LOG_DEBUG << "Incoming connection";
+            KARABO_LOG_FRAMEWORK_DEBUG << "Incoming connection";
             channel->readAsyncHashString(boost::bind(&karabo::core::GuiServerDevice::onRead, this, _1, _2, _3));
             channel->setErrorHandler(boost::bind(&karabo::core::GuiServerDevice::onError, this, _1, _2));
             // Re-register acceptor socket (allows handling multiple clients)
@@ -100,7 +99,8 @@ namespace karabo {
 
 
         void GuiServerDevice::onRead(karabo::net::Channel::Pointer channel, const karabo::util::Hash& header, const std::string& body) {
-            // GUI communication scenarios could go here 
+
+            // GUI communication scenarios
             if (header.has("type")) {
                 string type = header.get<string > ("type");
                 if (type == "login") {
@@ -134,6 +134,7 @@ namespace karabo {
 
 
         void GuiServerDevice::onLogin(karabo::net::Channel::Pointer channel, const std::string& body) {
+            KARABO_LOG_FRAMEWORK_DEBUG << "onLogin";
             Hash bodyHash;
             m_textSerializer->load(bodyHash, body);
             // Check valid login
@@ -145,16 +146,13 @@ namespace karabo {
 
 
         void GuiServerDevice::sendSystemTopology(karabo::net::Channel::Pointer channel) {
-
-            KARABO_LOG_DEBUG << "Providing instance information...";
-
-            m_channelMutex.lock();
+            KARABO_LOG_FRAMEWORK_DEBUG << "sendSystemTopology";
             channel->write(Hash("type", "systemTopology"), remote().getSystemTopology());
-            m_channelMutex.unlock();
         }
 
 
         void GuiServerDevice::onReconfigure(const karabo::util::Hash& header, const std::string& body) {
+            KARABO_LOG_FRAMEWORK_DEBUG << "onReconfigure";
             Hash bodyHash;
             m_textSerializer->load(bodyHash, body);
             string deviceId = header.get<string > ("deviceId");
@@ -164,6 +162,7 @@ namespace karabo {
 
 
         void GuiServerDevice::onExecute(const karabo::util::Hash& header, const std::string& body) {
+            KARABO_LOG_FRAMEWORK_DEBUG << "";
             Hash config;
             m_textSerializer->load(config, body);
             string deviceId = header.get<string > ("deviceId");
@@ -174,6 +173,7 @@ namespace karabo {
 
 
         void GuiServerDevice::onInitDevice(const karabo::util::Hash& header, const std::string& body) {
+             KARABO_LOG_FRAMEWORK_DEBUG << "";
             Hash config;
             m_textSerializer->load(config, body);
             string serverId = header.get<string > ("serverId");
@@ -183,6 +183,7 @@ namespace karabo {
 
 
         void GuiServerDevice::onRefreshInstance(karabo::net::Channel::Pointer channel, const karabo::util::Hash& header) {
+             KARABO_LOG_FRAMEWORK_DEBUG << "";
             string deviceId = header.get<string > ("deviceId");
             Hash h("type", "configurationChanged", "deviceId", deviceId);
             Hash b("device." + deviceId + ".configuration", remote().get(deviceId));
@@ -191,6 +192,7 @@ namespace karabo {
 
 
         void GuiServerDevice::onKillServer(const karabo::util::Hash& header, const std::string& body) {
+             KARABO_LOG_FRAMEWORK_DEBUG << "";
             string serverId = header.get<string > ("serverId");
             // TODO Supply user specific context
             call(serverId, "slotKillServer");
@@ -198,12 +200,14 @@ namespace karabo {
 
 
         void GuiServerDevice::onKillDevice(const karabo::util::Hash& header, const std::string& body) {
+             KARABO_LOG_FRAMEWORK_DEBUG << "";
             string deviceId = header.get<string > ("deviceId");
             call(deviceId, "slotKillDevice");
         }
 
 
         void GuiServerDevice::onNewVisibleDevice(karabo::net::Channel::Pointer channel, const karabo::util::Hash& header) {
+             KARABO_LOG_FRAMEWORK_DEBUG << "";
             string deviceId = header.get<string > ("deviceId");
             boost::mutex::scoped_lock lock(m_channelMutex);
             std::map<karabo::net::Channel::Pointer, std::set<std::string> >::iterator it = m_channels.find(channel);
@@ -217,6 +221,7 @@ namespace karabo {
 
 
         void GuiServerDevice::onRemoveVisibleDevice(karabo::net::Channel::Pointer channel, const karabo::util::Hash& header) {
+             KARABO_LOG_FRAMEWORK_DEBUG << "";
             string deviceId = header.get<string > ("deviceId");
             boost::mutex::scoped_lock lock(m_channelMutex);
             std::map<karabo::net::Channel::Pointer, std::set<std::string> >::iterator it = m_channels.find(channel);
@@ -225,25 +230,30 @@ namespace karabo {
             }
         }
 
+
         void GuiServerDevice::onGetClassSchema(karabo::net::Channel::Pointer channel, const karabo::util::Hash& header, const std::string& body) {
+             KARABO_LOG_FRAMEWORK_DEBUG << "";
             string serverId = header.get<string > ("serverId");
             string classId = header.get<string> ("classId");
-            boost::mutex::scoped_lock lock(m_channelMutex); 
+            boost::mutex::scoped_lock lock(m_channelMutex);
             Hash h("type", "classDescription");
             Hash b("server." + serverId + ".classes." + classId + ".description", remote().getClassSchema(serverId, classId));
             channel->write(h, b);
         }
 
+
         void GuiServerDevice::onGetDeviceSchema(karabo::net::Channel::Pointer channel, const karabo::util::Hash& header, const std::string& body) {
+             KARABO_LOG_FRAMEWORK_DEBUG << "";
             string deviceId = header.get<string > ("deviceId");
-            boost::mutex::scoped_lock lock(m_channelMutex); 
+            boost::mutex::scoped_lock lock(m_channelMutex);
             Hash h("type", "deviceSchema", "deviceId", deviceId);
             Hash b("device." + deviceId + ".description", remote().getFullSchema(deviceId));
             channel->write(h, b);
         }
 
+
         void GuiServerDevice::instanceNewHandler(const karabo::util::Hash& topologyEntry) {
-            KARABO_LOG_DEBUG << "Broadcasting availability of new instance";
+            KARABO_LOG_FRAMEWORK_DEBUG << "Broadcasting availability of new instance";
             Hash header("type", "instanceNew");
             boost::mutex::scoped_lock lock(m_channelMutex);
             // Broadcast to all GUIs
@@ -252,9 +262,10 @@ namespace karabo {
                 it->first->write(header, topologyEntry);
             }
         }
-        
+
+
         void GuiServerDevice::instanceUpdatedHandler(const karabo::util::Hash& topologyEntry) {
-            KARABO_LOG_DEBUG << "Broadcasting instance updated";
+            KARABO_LOG_FRAMEWORK_DEBUG << "Broadcasting instance updated";
             Hash header("type", "instanceUpdated");
             boost::mutex::scoped_lock lock(m_channelMutex);
             // Broadcast to all GUIs
@@ -263,9 +274,10 @@ namespace karabo {
                 it->first->write(header, topologyEntry);
             }
         }
-        
+
+
         void GuiServerDevice::instanceGoneHandler(const std::string& instanceId) {
-            KARABO_LOG_DEBUG << "Broadcasting instance gone";
+            KARABO_LOG_FRAMEWORK_DEBUG << "Broadcasting instance gone";
             Hash header("type", "instanceGone");
             boost::mutex::scoped_lock lock(m_channelMutex);
             // Broadcast to all GUIs
@@ -274,6 +286,7 @@ namespace karabo {
                 it->first->write(header, instanceId);
             }
         }
+
 
         void GuiServerDevice::preprocessImageData(karabo::util::Hash& modified) {
             boost::smatch sm;
@@ -368,7 +381,7 @@ namespace karabo {
 
             Hash header("type", "configurationChanged", "deviceId", deviceId);
             Hash body("device." + deviceId + ".configuration", modified);
-            
+
             boost::mutex::scoped_lock lock(m_channelMutex);
             // Broadcast to all GUIs
             typedef std::map< karabo::net::Channel::Pointer, std::set<std::string> >::const_iterator channelIterator;
@@ -381,11 +394,25 @@ namespace karabo {
                 }
             }
         }
-        
+
+
         void GuiServerDevice::slotSchemaUpdated(const karabo::util::Schema& description, const std::string& deviceId) {
-            KARABO_LOG_DEBUG << "Broadcasting schema updated";
+            KARABO_LOG_FRAMEWORK_DEBUG << "Broadcasting schema updated";
             Hash header("type", "schemaUpdated", "deviceId", deviceId);
             Hash body("device." + deviceId + ".description", description);
+            boost::mutex::scoped_lock lock(m_channelMutex);
+            // Broadcast to all GUIs
+            typedef std::map< karabo::net::Channel::Pointer, std::set<std::string> >::const_iterator channelIterator;
+            for (channelIterator it = m_channels.begin(); it != m_channels.end(); ++it) {
+                it->first->write(header, body);
+            }
+        }
+
+
+        void GuiServerDevice::slotNotification(const std::string& type, const std::string& shortMessage, const std::string& detailedMessage, const std::string& deviceId) {
+            KARABO_LOG_FRAMEWORK_DEBUG << "Broadcasting notification";
+            Hash header("type", "notification", "deviceId", deviceId);
+            Hash body("type", type, "shortMsg", shortMessage, "detailedMsg", detailedMessage);
             boost::mutex::scoped_lock lock(m_channelMutex);
             // Broadcast to all GUIs
             typedef std::map< karabo::net::Channel::Pointer, std::set<std::string> >::const_iterator channelIterator;
@@ -402,19 +429,6 @@ namespace karabo {
             typedef std::map< karabo::net::Channel::Pointer, std::set<std::string> >::const_iterator channelIterator;
             for (channelIterator it = m_channels.begin(); it != m_channels.end(); ++it) {
                 it->first->write(h, logMessage);
-            }
-        }
-
-
-        void GuiServerDevice::slotNotification(const std::string& type, const std::string& shortMessage, const std::string& detailedMessage, const std::string& deviceId) {
-            KARABO_LOG_DEBUG << "Broadcasting notification in system";
-            Hash header("type", "notification", "deviceId", deviceId);
-            Hash body("type", type, "shortMsg", shortMessage, "detailedMsg", detailedMessage);
-            boost::mutex::scoped_lock lock(m_channelMutex); 
-            // Broadcast to all GUIs
-            typedef std::map< karabo::net::Channel::Pointer, std::set<std::string> >::const_iterator channelIterator;
-            for (channelIterator it = m_channels.begin(); it != m_channels.end(); ++it) {
-                it->first->write(header, body);
             }
         }
 

@@ -2,21 +2,25 @@
 <configurationDescriptor version="88">
   <logicalFolder name="root" displayName="root" projectFiles="true" kind="ROOT">
     <logicalFolder name="f7" displayName="core" projectFiles="true">
+      <logicalFolder name="f2" displayName="Devices" projectFiles="true">
+        <itemPath>../../../src/karabo/core/DataLoggerDevice.cc</itemPath>
+        <itemPath>../../../src/karabo/core/DataLoggerDevice.hh</itemPath>
+        <itemPath>../../../src/karabo/core/Device.hh</itemPath>
+        <itemPath>../../../src/karabo/core/GuiServerDevice.cc</itemPath>
+        <itemPath>../../../src/karabo/core/GuiServerDevice.hh</itemPath>
+        <itemPath>../../../src/karabo/core/MasterDevice.cc</itemPath>
+        <itemPath>../../../src/karabo/core/MasterDevice.hh</itemPath>
+      </logicalFolder>
       <logicalFolder name="f1" displayName="State Machines" projectFiles="true">
         <itemPath>../../../src/karabo/core/FsmBase.hh</itemPath>
         <itemPath>../../../src/karabo/core/FsmMacros.hh</itemPath>
         <itemPath>../../../src/karabo/core/OkErrorFsm.hh</itemPath>
         <itemPath>../../../src/karabo/core/StartStopFsm.hh</itemPath>
       </logicalFolder>
-      <itemPath>../../../src/karabo/core/Device.hh</itemPath>
       <itemPath>../../../src/karabo/core/DeviceClient.cc</itemPath>
       <itemPath>../../../src/karabo/core/DeviceClient.hh</itemPath>
       <itemPath>../../../src/karabo/core/DeviceServer.cc</itemPath>
       <itemPath>../../../src/karabo/core/DeviceServer.hh</itemPath>
-      <itemPath>../../../src/karabo/core/GuiServerDevice.cc</itemPath>
-      <itemPath>../../../src/karabo/core/GuiServerDevice.hh</itemPath>
-      <itemPath>../../../src/karabo/core/MasterDevice.cc</itemPath>
-      <itemPath>../../../src/karabo/core/MasterDevice.hh</itemPath>
       <itemPath>../../../src/karabo/core/Runner.hh</itemPath>
     </logicalFolder>
     <logicalFolder name="f2" displayName="io" projectFiles="true">
@@ -450,6 +454,16 @@
         <packFileList>
         </packFileList>
       </packaging>
+      <item path="../../../src/karabo/core/DataLoggerDevice.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/core/DataLoggerDevice.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="../../../src/karabo/core/Device.hh" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../../../src/karabo/core/DeviceClient.cc"
@@ -1327,16 +1341,6 @@
             tool="3"
             flavor2="0">
       </item>
-      <item path="../../../src/karabo/util/Epochstamp.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/util/Epochstamp.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
       <item path="../../../src/karabo/util/Exception.cc"
             ex="false"
             tool="1"
@@ -1489,16 +1493,6 @@
             tool="3"
             flavor2="0">
       </item>
-      <item path="../../../src/karabo/util/Timestamp2.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/util/Timestamp2.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
       <item path="../../../src/karabo/util/ToCppString.hh"
             ex="false"
             tool="3"
@@ -1512,16 +1506,6 @@
       <item path="../../../src/karabo/util/ToType.hh" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../../../src/karabo/util/ToXsd.hh" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="../../../src/karabo/util/Trainstamp.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/util/Trainstamp.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
       </item>
       <item path="../../../src/karabo/util/Types.hh" ex="false" tool="3" flavor2="0">
       </item>
@@ -1924,6 +1908,16 @@
         <packFileList>
         </packFileList>
       </packaging>
+      <item path="../../../src/karabo/core/DataLoggerDevice.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/core/DataLoggerDevice.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="../../../src/karabo/core/Device.hh" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../../../src/karabo/core/DeviceClient.cc"
@@ -2798,16 +2792,6 @@
             tool="3"
             flavor2="0">
       </item>
-      <item path="../../../src/karabo/util/Epochstamp.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/util/Epochstamp.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
       <item path="../../../src/karabo/util/Exception.cc"
             ex="false"
             tool="1"
@@ -2960,16 +2944,6 @@
             tool="3"
             flavor2="0">
       </item>
-      <item path="../../../src/karabo/util/Timestamp2.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/util/Timestamp2.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
       <item path="../../../src/karabo/util/ToCppString.hh"
             ex="false"
             tool="3"
@@ -2983,16 +2957,6 @@
       <item path="../../../src/karabo/util/ToType.hh" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../../../src/karabo/util/ToXsd.hh" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="../../../src/karabo/util/Trainstamp.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/util/Trainstamp.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
       </item>
       <item path="../../../src/karabo/util/Types.hh" ex="false" tool="3" flavor2="0">
       </item>
@@ -3365,6 +3329,16 @@
         <packFileList>
         </packFileList>
       </packaging>
+      <item path="../../../src/karabo/core/DataLoggerDevice.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/core/DataLoggerDevice.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="../../../src/karabo/core/Device.hh" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../../../src/karabo/core/DeviceClient.cc"
@@ -4242,16 +4216,6 @@
             tool="3"
             flavor2="0">
       </item>
-      <item path="../../../src/karabo/util/Epochstamp.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/util/Epochstamp.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
       <item path="../../../src/karabo/util/Exception.cc"
             ex="false"
             tool="1"
@@ -4404,16 +4368,6 @@
             tool="3"
             flavor2="0">
       </item>
-      <item path="../../../src/karabo/util/Timestamp2.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/util/Timestamp2.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
       <item path="../../../src/karabo/util/ToCppString.hh"
             ex="false"
             tool="3"
@@ -4427,16 +4381,6 @@
       <item path="../../../src/karabo/util/ToType.hh" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../../../src/karabo/util/ToXsd.hh" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="../../../src/karabo/util/Trainstamp.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/util/Trainstamp.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
       </item>
       <item path="../../../src/karabo/util/Types.hh" ex="false" tool="3" flavor2="0">
       </item>

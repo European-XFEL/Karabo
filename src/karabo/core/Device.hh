@@ -216,7 +216,7 @@ namespace karabo {
                 karabo::util::Hash h(key, value);
                 this->set(h, timestamp);
             }
-
+            
             /**
              * Updates the state of the device with all key/value pairs given in the hash
              * NOTE: This function will automatically and efficiently (only one message) inform

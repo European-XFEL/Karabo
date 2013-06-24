@@ -702,8 +702,7 @@ namespace karabo {
         void DeviceClient::stayConnected(const std::string & instanceId) {
             boost::mutex::scoped_lock lock(m_instanceUsageMutex);
             if (m_instanceUsage.find(instanceId) == m_instanceUsage.end()) { // Not there yet
-                // TODO Check whether connectT should be used to clean signal from this slot, once we died
-                m_signalSlotable->connectN(instanceId, "signalChanged", "", "slotChanged");
+                m_signalSlotable->connectT(instanceId, "signalChanged", "", "slotChanged");
             }
             m_instanceUsage[instanceId] = 0;
         }

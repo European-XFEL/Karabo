@@ -35,6 +35,7 @@ namespace karabo {
                     m_registeredSlotInstanceIdsString += it->first + "|";
                 }
             }
+            //std::cout << "#### CONNECTED SLOTS on " << m_signalInstanceId << " " << m_signalFunction << ": " << m_registeredSlotInstanceIdsString << std::endl;
         }
 
 
