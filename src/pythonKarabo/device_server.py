@@ -341,7 +341,8 @@ class DeviceServer(object):
             cls.instanceCountPerDeviceServer[self.serverid] += 1
             _index = cls.instanceCountPerDeviceServer[self.serverid]
             tokens = self.serverid.split("_")
-            _domain = tokens.pop(0) + "-" + tokens.pop()
+            if tokens.pop() == str(os.getpid()):
+                _domain = tokens.pop(0) + "-" + tokens.pop()
             _id = _domain + "_" + devClassId + "_" + str(_index)
             return _id
      
