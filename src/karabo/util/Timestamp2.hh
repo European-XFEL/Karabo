@@ -25,16 +25,18 @@ namespace karabo {
 
         public:
 
-            /**
-             * The default constructor will use the current time
-             */
+            
+            Timestamp2();
+                
             Timestamp2(const Epochstamp& e, const Trainstamp& t);
             
             inline const unsigned long long& getSeconds() const;
             
-            inline const unsigned long long& getFraction() const;
+            inline const unsigned long long& getFractionalSeconds() const;
             
             inline const unsigned long long& getTrainId() const;
+            
+            static bool hashAttributesContainTimeInformation(const Hash::Attributes attributes);
            
             /**
              * Creates an Timestamp2 from three Hash attributes

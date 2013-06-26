@@ -11,26 +11,36 @@ namespace karabo {
     namespace util {
 
 
+        Timestamp2::Timestamp2() : m_epochstamp(Epochstamp()), m_trainstamp(Trainstamp()) {
+        }
+
+
         Timestamp2::Timestamp2(const Epochstamp& e, const Trainstamp& t) : m_epochstamp(e), m_trainstamp(t) {
         }
-        
-        
+
+
         Timestamp2::~Timestamp2() {
         }
+
 
         const unsigned long long& Timestamp2::getSeconds() const {
             return m_epochstamp.getSeconds();
         }
-        
-        const unsigned long long& Timestamp2::getFraction() const {
-            return m_epochstamp.getFraction();
+
+
+        const unsigned long long& Timestamp2::getFractionalSeconds() const {
+            return m_epochstamp.getFractionalSeconds();
         }
-        
+
+
         const unsigned long long& Timestamp2::getTrainId() const {
             return m_trainstamp.getTrainId();
         }
 
-        
+        bool Timestamp2::hashAttributesContainTimeInformation(const Hash::Attributes attributes) {
+            return (Epochstamp::hashAttributesContainTimeInformation(attributes) && Trainstamp::hashAttributesContainTimeInformation(attributes));
+        }
+
         Timestamp2 Timestamp2::fromHashAttributes(const Hash::Attributes attributes) {
             return Timestamp2(Epochstamp::fromHashAttributes(attributes), Trainstamp::fromHashAttributes(attributes));
         }
@@ -45,7 +55,8 @@ namespace karabo {
             m_epochstamp.toHashAttributes(attributes);
             m_trainstamp.toHashAttributes(attributes);
         }
-        
+
+
         std::string Timestamp2::toFormattedString(const std::string& format) const {
             return m_epochstamp.toFormattedString(format);
         }

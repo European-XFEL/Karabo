@@ -40,6 +40,8 @@ namespace karabo {
             inline const unsigned long long& getTrainId() const {
                 return m_trainId;
             }
+            
+            static bool hashAttributesContainTimeInformation(const Hash::Attributes attributes);
 
 
             /**
@@ -48,7 +50,7 @@ namespace karabo {
              * @param attributes Hash attributes
              * @return TrainStamp object
              */
-            static Trainstamp fromHashAttributes(const Hash::Attributes attributes);
+            static Trainstamp fromHashAttributes(const Hash::Attributes& attributes);
 
             /**
              * Formats as Hash attributes
