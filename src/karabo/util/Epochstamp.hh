@@ -9,7 +9,7 @@
 #define	KARABO_UTIL_EPOCHSTAMP_HH
 
 #include "Hash.hh"
-
+#include <boost/date_time.hpp>
 
 namespace karabo {
     namespace util {
@@ -29,8 +29,10 @@ namespace karabo {
             // Placeholder for the time until DB has integrated his clock 
             static boost::posix_time::ptime m_epoch;
             
+            // Number of seconds since 1st of January of 1970
             unsigned long long m_seconds;
 
+            // An attosecond is an SI unit of time equal to 10−18 of a second.
             unsigned long long m_fractionalSeconds;
 
         public:
@@ -64,10 +66,11 @@ namespace karabo {
             static Epochstamp fromIso8601(const std::string& timePoint);
             
             /**
-             * Formats into ISO 8601
+             * Generates a sting (respecting ISO-8601) for a Timestamp ("ISO 8601"  => "%Y-%m-%dT%H:%M:%S.%f%q")
              * @return ISO 8601 formatted string
              */
             std::string toIso8601() const;
+            
             
             static bool hashAttributesContainTimeInformation(const Hash::Attributes attributes);
 
@@ -97,6 +100,12 @@ namespace karabo {
 
 
         private:
+            
+            /**
+             * Converts fractionalSeconds (attoseconds) into another unit measure
+             * @return long long with the desire converted value
+             */
+            unsigned long long convertFractionalSeconds(std::string destinyUnitMeasure) const;
             
         };
     }

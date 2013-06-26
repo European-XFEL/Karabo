@@ -39,7 +39,28 @@ namespace karabo {
 
 
         std::string Epochstamp::toIso8601() const {
-            throw KARABO_NOT_IMPLEMENTED_EXCEPTION("To be done by LM");
+            using namespace boost::posix_time;
+            boost::posix_time::ptime epoch(boost::gregorian::date(1970,1,1));
+            
+            // The boost minimum unit is nanosecond:
+            // A nanosecond (ns) is one billionth of a second (10−9 or 1/1,000,000,000 s).
+            boost::posix_time::ptime myTimePoint = epoch + seconds(this->m_seconds) + microseconds(this->convertFractionalSeconds("microseconds"));
+            return to_iso_string(myTimePoint);
+        }
+        
+        unsigned long long Epochstamp::convertFractionalSeconds(std::string destinyUnitMeasure) const{
+            
+            // A nanosecond (ns) is one billionth of a second (10−9 or 1/1,000,000,000 s).
+            if (destinyUnitMeasure == "nanoseconds") {
+                throw KARABO_NOT_IMPLEMENTED_EXCEPTION("To be done");
+            } 
+            
+            // A microsecond is an SI unit of time equal to one millionth (10−6 or 1/1,000,000) of a second.
+            else if (destinyUnitMeasure == "microseconds") {
+                throw KARABO_NOT_IMPLEMENTED_EXCEPTION("To be done");
+            }
+            
+            // ...
         }
         
         bool Epochstamp::hashAttributesContainTimeInformation(const Hash::Attributes attributes) {
