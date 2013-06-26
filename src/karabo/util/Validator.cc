@@ -8,6 +8,7 @@
 #include "Validator.hh"  
 #include "Schema.hh"
 #include "FromLiteral.hh"
+#include "Epochstamp.hh"
 
 namespace karabo {
     namespace util {
@@ -43,7 +44,7 @@ namespace karabo {
         }
 
 
-        std::pair<bool, std::string> Validator::validate(const Schema& schema, const Hash& unvalidatedInput, Hash& validatedOutput, const Timestamp& timestamp) {
+        std::pair<bool, std::string> Validator::validate(const Schema& schema, const Hash& unvalidatedInput, Hash& validatedOutput, const Timestamp2& timestamp) {
 
             // Clear all previous warnings and alarms
             m_parametersInWarnOrAlarm.clear();
@@ -323,10 +324,8 @@ namespace karabo {
         void Validator::validateLeaf(const Hash::Node& masterNode, Hash::Node& workNode, std::ostringstream& report, std::string scope) {
 
 
-            if (m_injectTimestamps) {
-                if (!workNode.hasAttribute("t")) workNode.setAttribute("t", m_timestamp.getMsSinceEpoch());
-            }
-            
+            if (m_injectTimestamps) attachTimestampIfNotAlreadyThere(workNode);
+                        
             Types::ReferenceType referenceType = Types::from<FromLiteral>(masterNode.getAttribute<string>(KARABO_SCHEMA_VALUE_TYPE));
             Types::ReferenceType referenceCategory = Types::category(referenceType);
             Types::ReferenceType givenType = workNode.getType();
@@ -392,8 +391,7 @@ namespace karabo {
                     if (value < threshold) {
                         string msg("Value " + workNode.getValueAs<string>() + " of parameter \"" + scope + "\" went below warn level of " + karabo::util::toString(threshold));
                         Hash::Node& tmp = m_parametersInWarnOrAlarm.set(scope, Hash("type", "WARN_LOW", "message", msg), '\0');
-                        if (workNode.hasAttribute("t")) tmp.setAttribute("t", workNode.getAttributeAsAny("t"));
-                       
+                        attachTimestampIfNotAlreadyThere(workNode);
                     }
                 }
 
@@ -403,7 +401,7 @@ namespace karabo {
                     if (value > threshold) {
                         string msg("Value " + workNode.getValueAs<string>() + " of parameter \"" + scope + "\" went above warn level of " + karabo::util::toString(threshold));
                         Hash::Node& tmp = m_parametersInWarnOrAlarm.set(scope, Hash("type", "WARN_HIGH", "message", msg), '\0');
-                        if (workNode.hasAttribute("t")) tmp.setAttribute("t", workNode.getAttributeAsAny("t"));
+                        attachTimestampIfNotAlreadyThere(workNode);
                     }
                 }
 
@@ -413,7 +411,7 @@ namespace karabo {
                     if (value < threshold) {
                         string msg("Value " + workNode.getValueAs<string>() + " of parameter \"" + scope + "\" went below alarm level of " + karabo::util::toString(threshold));
                         Hash::Node& tmp = m_parametersInWarnOrAlarm.set(scope, Hash("type", "ALARM_LOW", "message", msg), '\0');
-                        if (workNode.hasAttribute("t")) tmp.setAttribute("t", workNode.getAttributeAsAny("t"));
+                        attachTimestampIfNotAlreadyThere(workNode);
                     }
                 }
 
@@ -423,7 +421,7 @@ namespace karabo {
                     if (value > threshold) {
                         string msg("Value " + workNode.getValueAs<string>() + " of parameter \"" + scope + "\" went above alarm level of " + karabo::util::toString(threshold));
                         Hash::Node& tmp = m_parametersInWarnOrAlarm.set(scope, Hash("type", "ALARM_HIGH", "message", msg), '\0');
-                        if (workNode.hasAttribute("t")) tmp.setAttribute("t", workNode.getAttributeAsAny("t"));
+                        attachTimestampIfNotAlreadyThere(workNode);
                     }
                 }
 
@@ -445,6 +443,15 @@ namespace karabo {
                     if (currentSize > maxSize) {
                         report << "Number of elements (" << currentSize << " for (vector-)parameter \"" << scope << "\" is greater than upper bound (" << maxSize << ")" << endl;
                     }
+                }
+            }
+        }
+        
+        void Validator::attachTimestampIfNotAlreadyThere(Hash::Node& node) {
+            if (m_injectTimestamps) {
+                Hash::Attributes& attributes = node.getAttributes();
+                if (!Timestamp2::hashAttributesContainTimeInformation(attributes)) {
+                    Timestamp2().toHashAttributes(attributes);
                 }
             }
         }

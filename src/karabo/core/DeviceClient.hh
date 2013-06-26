@@ -6,6 +6,7 @@
  * Copyright (c) 2010-2012 European XFEL GmbH Hamburg. All rights reserved.
  */
 #include <karabo/xms/SignalSlotable.hh>
+#include <karabo/util/Timestamp.hh>
 
 #ifndef KARABO_CORE_DEVICE_CLIENT_HH
 #define	KARABO_CORE_DEVICE_CLIENT_HH

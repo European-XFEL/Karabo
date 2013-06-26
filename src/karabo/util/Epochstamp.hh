@@ -25,10 +25,13 @@ namespace karabo {
          * 
          */
         class Epochstamp {
-
+            
+            // Placeholder for the time until DB has integrated his clock 
+            static boost::posix_time::ptime m_epoch;
+            
             unsigned long long m_seconds;
 
-            unsigned long long m_fraction;
+            unsigned long long m_fractionalSeconds;
 
         public:
 
@@ -37,12 +40,20 @@ namespace karabo {
              */
             Epochstamp();
             
+            /**
+             * Constructor from seconds and fraction
+             * @param seconds seconds past since the unix epoch
+             * @param fraction attoSeconds past since the second under consideration
+             */
+            Epochstamp(const unsigned long long& seconds, const unsigned long long& fraction);
+            
+            
             inline const unsigned long long& getSeconds() const {
                 return m_seconds;
             }
             
-            inline const unsigned long long& getFraction() const {
-                return m_fraction;
+            inline const unsigned long long& getFractionalSeconds() const {
+                return m_fractionalSeconds;
             }
 
             /**
@@ -51,6 +62,14 @@ namespace karabo {
              * @return EpochStamp object
              */
             static Epochstamp fromIso8601(const std::string& timePoint);
+            
+            /**
+             * Formats into ISO 8601
+             * @return ISO 8601 formatted string
+             */
+            std::string toIso8601() const;
+            
+            static bool hashAttributesContainTimeInformation(const Hash::Attributes attributes);
 
             /**
              * Creates an EpochStamp from two Hash attributes
@@ -59,13 +78,7 @@ namespace karabo {
              * @return EpochStamp object
              */
             static Epochstamp fromHashAttributes(const Hash::Attributes attributes);
-
-            /**
-             * Formats into ISO 8601
-             * @return ISO 8601 formatted string
-             */
-            std::string toIso8601() const;
-
+            
             /**
              * Formats as Hash attributes
              * @param attributes container to which the time point information is added
