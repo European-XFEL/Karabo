@@ -18,7 +18,7 @@
 #include "Units.hh"
 
 #include "karaboDll.hh"
-#include "Timestamp.hh"
+#include "Timestamp2.hh"
 
 namespace karabo {
     namespace util {
@@ -33,7 +33,7 @@ namespace karabo {
             bool m_injectTimestamps;
             
             karabo::util::Hash m_parametersInWarnOrAlarm;
-            karabo::util::Timestamp m_timestamp;
+            karabo::util::Timestamp2 m_timestamp;
             
         public:
             
@@ -61,7 +61,7 @@ namespace karabo {
 
             Validator::ValidationRules getValidationRules() const;
 
-            std::pair<bool, std::string> validate(const Schema& schema, const Hash& unvalidatedInput, Hash& validatedOutput, const Timestamp& timestamp = Timestamp());
+            std::pair<bool, std::string> validate(const Schema& schema, const Hash& unvalidatedInput, Hash& validatedOutput, const Timestamp2& timestamp = Timestamp2());
             
             bool hasParametersInWarnOrAlarm() const;
             
@@ -72,6 +72,8 @@ namespace karabo {
             void r_validate(const Hash& master, const Hash& user, Hash& working, std::ostringstream& report, std::string scope = "");
 
             void validateLeaf(const Hash::Node& masterNode, Hash::Node& workNode, std::ostringstream& report, std::string scope);
+            
+            void attachTimestampIfNotAlreadyThere(Hash::Node& node);
 
         };
     }
