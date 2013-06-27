@@ -36,6 +36,11 @@ bp::class_<Timestamp2> ts("Timestamp2", bp::init<Epochstamp const &, Trainstamp 
            , bp::arg("attributes") );
     ts.staticmethod("fromHashAttributes");
     
+    ts.def("hashAttributesContainTimeInformation"
+           , &Timestamp2::hashAttributesContainTimeInformation
+           , bp::arg("attributes") );
+    ts.staticmethod("hashAttributesContainTimeInformation");
+    
     ts.def("toIso8601"
            , (string (Timestamp2::*)() const)(&Timestamp2::toIso8601));
     
