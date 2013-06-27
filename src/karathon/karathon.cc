@@ -19,6 +19,9 @@ namespace bp = boost::python;
 void exportPyUtilHash();
 void exportPyUtilSchema();
 void exportPyUtilClassInfo();
+void exportPyUtilTrainstamp();
+void exportPyUtilEpochstamp();
+void exportPyUtilTimestamp2();
 
 // io
 void exportPyIoFileTools();
@@ -50,6 +53,9 @@ BOOST_PYTHON_MODULE(libkarathon) {
     exportPyUtilHash();
     exportPyUtilSchema();
     exportPyUtilClassInfo();
+    exportPyUtilTrainstamp();
+    exportPyUtilEpochstamp();
+    exportPyUtilTimestamp2();
     
     // io
     exportPyIoFileTools();
