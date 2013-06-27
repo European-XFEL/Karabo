@@ -30,11 +30,17 @@ namespace karabo {
                 
             Timestamp2(const Epochstamp& e, const Trainstamp& t);
             
-            inline const unsigned long long& getSeconds() const;
+            inline const unsigned long long& getSeconds() const {
+                return m_epochstamp.getSeconds();
+            }
             
-            inline const unsigned long long& getFractionalSeconds() const;
+            inline const unsigned long long& getFractionalSeconds() const {
+                 return m_epochstamp.getFractionalSeconds();
+            }
             
-            inline const unsigned long long& getTrainId() const;
+            inline const unsigned long long& getTrainId() const {
+                return m_trainstamp.getTrainId();
+            }
             
             static bool hashAttributesContainTimeInformation(const Hash::Attributes attributes);
            

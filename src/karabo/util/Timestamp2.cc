@@ -23,23 +23,10 @@ namespace karabo {
         }
 
 
-        const unsigned long long& Timestamp2::getSeconds() const {
-            return m_epochstamp.getSeconds();
-        }
-
-
-        const unsigned long long& Timestamp2::getFractionalSeconds() const {
-            return m_epochstamp.getFractionalSeconds();
-        }
-
-
-        const unsigned long long& Timestamp2::getTrainId() const {
-            return m_trainstamp.getTrainId();
-        }
-
         bool Timestamp2::hashAttributesContainTimeInformation(const Hash::Attributes attributes) {
             return (Epochstamp::hashAttributesContainTimeInformation(attributes) && Trainstamp::hashAttributesContainTimeInformation(attributes));
         }
+
 
         Timestamp2 Timestamp2::fromHashAttributes(const Hash::Attributes attributes) {
             return Timestamp2(Epochstamp::fromHashAttributes(attributes), Trainstamp::fromHashAttributes(attributes));
