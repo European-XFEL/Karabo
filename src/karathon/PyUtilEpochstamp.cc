@@ -34,6 +34,11 @@ void exportPyUtilEpochstamp() {
            , bp::arg("attributes") );
     e.staticmethod("fromHashAttributes");
     
+    e.def("hashAttributesContainTimeInformation"
+           , (bool (*)(Hash::Attributes const) )(&Epochstamp::hashAttributesContainTimeInformation)
+           , bp::arg("attributes") );
+    e.staticmethod("hashAttributesContainTimeInformation");
+    
     e.def("toIso8601"
           , (string(Epochstamp::*)() const) (&Epochstamp::toIso8601));
 
