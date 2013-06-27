@@ -146,7 +146,7 @@ namespace karabo {
                     const A1& a1 = body.get<A1>("a1");
                     for (size_t i = 0; i < m_slotHandlers.size(); ++i) {
                         m_slotHandlers[i](a1);
-                        handlePossibleReply(header);
+                        handlePossibleReply(header); // TODO This is a bug for multiple handlers -> move of for and test!
                     }
                     invalidateSenderInformation();
                 } catch (const karabo::util::CastException& e) {

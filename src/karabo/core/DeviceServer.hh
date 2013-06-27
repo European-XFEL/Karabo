@@ -179,7 +179,7 @@ namespace karabo {
 
             karabo::util::PluginLoader::Pointer m_pluginLoader;
             boost::thread m_pluginThread;
-            bool m_deviceServerStopped;
+            bool m_serverIsRunning;
 
             bool m_isMaster;
             unsigned int m_nameRequestTimeout;

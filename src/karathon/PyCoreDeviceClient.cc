@@ -47,33 +47,27 @@ void exportPyCoreDeviceClient() {
             .def("getClassProperties", &DeviceClientWrap::getClassPropertiesPy, (bp::arg("serverId"), bp::arg("classId")))
             .def("getCurrentlySettableProperties", &DeviceClientWrap::getCurrentlySettablePropertiesPy, (bp::arg("instanceId")))
             .def("getCurrentlyExecutableCommands", &DeviceClientWrap::getCurrentlyExecutableCommandsPy, (bp::arg("instanceId")))
-
-            .def("instantiateNoWait", (void (DeviceClient::*)(const string&, const string&, const Hash&))(&DeviceClient::instantiateNoWait), (bp::arg("serverInstanceId"), bp::arg("classId"), bp::arg("configuration") = karabo::util::Hash()))
-            .def("instantiateNoWait", (void (DeviceClient::*)(const string&, const Hash&))(&DeviceClient::instantiateNoWait), (bp::arg("serverInstanceId"), bp::arg("configuration")))
-            //.def("instantiateWait", (std::pair<bool, std::string> (DeviceClient::*)(const string&, const string&, const Hash&, int))(&DeviceClient::instantiateWait), (bp::arg("serverInstanceId"), bp::arg("classId"), bp::arg("configuration") = karabo::util::Hash(), bp::arg("timeout") = -1))
-            //.def("instantiateWait", (std::pair<bool, std::string> (DeviceClient::*)(const string&, const Hash&, int))(&DeviceClient::instantiateWait), (bp::arg("serverInstanceId"), bp::arg("configuration"), bp::arg("timeout") = -1))
+            .def("instantiate", (bp::tuple (DeviceClientWrap::*)(const string&, const string&, const Hash&, int))(&DeviceClientWrap::instantiatePy), (bp::arg("serverId"), bp::arg("classId"), bp::arg("configuration") = karabo::util::Hash(), bp::arg("timeoutInSeconds") = -1))
+            .def("instantiate", (bp::tuple (DeviceClientWrap::*)(const string&, const Hash&, int))(&DeviceClientWrap::instantiatePy), (bp::arg("serverId"), bp::arg("configuration"), bp::arg("timeoutInSeconds") = -1))            
+            .def("instantiateNoWait", (void (DeviceClient::*)(const string&, const string&, const Hash&))(&DeviceClient::instantiateNoWait), (bp::arg("serverId"), bp::arg("classId"), bp::arg("configuration") = karabo::util::Hash()))
+            .def("instantiateNoWait", (void (DeviceClient::*)(const string&, const Hash&))(&DeviceClient::instantiateNoWait), (bp::arg("serverId"), bp::arg("configuration")))
+            .def("killDevice", (bp::tuple (DeviceClientWrap::*)(const std::string&, int))(&DeviceClientWrap::killDevicePy), (bp::arg("deviceId"), bp::arg("timeoutInSeconds") = -1))
             .def("killDeviceNoWait", (void (DeviceClient::*)(const string&))(&DeviceClient::killDeviceNoWait), bp::arg("deviceId"))
+            .def("killServer", (bp::tuple (DeviceClientWrap::*)(const std::string&, int))(&DeviceClientWrap::killServerPy), (bp::arg("serverId"), bp::arg("timeoutInSeconds") = -1))
             .def("killServerNoWait", (void (DeviceClient::*)(const string&))(&DeviceClient::killServerNoWait), bp::arg("serverId"))
-
             .def("get", &DeviceClientWrap::getPy, (bp::arg("instanceId"), bp::arg("key"), bp::arg("keySep") = "."))
             .def("get", (Hash(DeviceClient::*)(const string&))(&DeviceClient::get), bp::arg("instanceId"))
-
             .def("registerPropertyMonitor", (bool (DeviceClientWrap::*)(const string&, const string&, const bp::object&, const bp::object&))(&DeviceClientWrap::registerPropertyMonitor), (bp::arg("instanceId"), bp::arg("key"), bp::arg("callbackFunction"), bp::arg("userData") = bp::object()))
             .def("registerDeviceMonitor", (void (DeviceClientWrap::*)(const string&, const bp::object&, const bp::object&))(&DeviceClientWrap::registerDeviceMonitor), (bp::arg("instanceId"), bp::arg("callbackFunction"), bp::arg("userData") = bp::object()))
-
             .def("unregisterPropertyMonitor", (void (DeviceClient::*)(const string&, const string&))(&DeviceClient::unregisterPropertyMonitor), (bp::arg("instanceId"), bp::arg("key")))
             .def("unregisterDeviceMonitor", (void (DeviceClient::*)(const string&))(&DeviceClient::unregisterDeviceMonitor), bp::arg("instanceId"))
-
-
-            .def("set", &DeviceClientWrap::setPy, (bp::arg("instanceId"), bp::arg("key"), bp::arg("value"), bp::arg("keySep") = ".", bp::arg("timeout") = -1))
+            .def("set", &DeviceClientWrap::setPy, (bp::arg("instanceId"), bp::arg("key"), bp::arg("value"), bp::arg("keySep") = ".", bp::arg("timeoutInSeconds") = -1))
             .def("setNoWait", &DeviceClientWrap::setNoWaitPy, (bp::arg("instanceId"), bp::arg("key"), bp::arg("value"), bp::arg("keySep") = "."))
-
-            .def("execute", &DeviceClientWrap::executePy0, (bp::arg("instanceId"), bp::arg("functionName"), bp::arg("timeout") = -1))
-            .def("execute", &DeviceClientWrap::executePy1, (bp::arg("instanceId"), bp::arg("functionName"), bp::arg("a1"), bp::arg("timeout") = -1))
-            .def("execute", &DeviceClientWrap::executePy2, (bp::arg("instanceId"), bp::arg("functionName"), bp::arg("a1"), bp::arg("a2"), bp::arg("timeout") = -1))
-            .def("execute", &DeviceClientWrap::executePy3, (bp::arg("instanceId"), bp::arg("functionName"), bp::arg("a1"), bp::arg("a2"), bp::arg("a3"), bp::arg("timeout") = -1))
-            .def("execute", &DeviceClientWrap::executePy4, (bp::arg("instanceId"), bp::arg("functionName"), bp::arg("a1"), bp::arg("a2"), bp::arg("a3"), bp::arg("a4"), bp::arg("timeout") = -1))
-
+            .def("execute", &DeviceClientWrap::executePy0, (bp::arg("instanceId"), bp::arg("functionName"), bp::arg("timeoutInSeconds") = -1))
+            .def("execute", &DeviceClientWrap::executePy1, (bp::arg("instanceId"), bp::arg("functionName"), bp::arg("a1"), bp::arg("timeoutInSeconds") = -1))
+            .def("execute", &DeviceClientWrap::executePy2, (bp::arg("instanceId"), bp::arg("functionName"), bp::arg("a1"), bp::arg("a2"), bp::arg("timeoutInSeconds") = -1))
+            .def("execute", &DeviceClientWrap::executePy3, (bp::arg("instanceId"), bp::arg("functionName"), bp::arg("a1"), bp::arg("a2"), bp::arg("a3"), bp::arg("timeoutInSeconds") = -1))
+            .def("execute", &DeviceClientWrap::executePy4, (bp::arg("instanceId"), bp::arg("functionName"), bp::arg("a1"), bp::arg("a2"), bp::arg("a3"), bp::arg("a4"), bp::arg("timeoutInSeconds") = -1))
             .def("executeNoWait", &DeviceClientWrap::executeNoWaitPy0, (bp::arg("instanceId"), bp::arg("functionName")))
             .def("executeNoWait", &DeviceClientWrap::executeNoWaitPy1, (bp::arg("instanceId"), bp::arg("functionName"), bp::arg("a1")))
             .def("executeNoWait", &DeviceClientWrap::executeNoWaitPy2, (bp::arg("instanceId"), bp::arg("functionName"), bp::arg("a1"), bp::arg("a2")))

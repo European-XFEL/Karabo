@@ -157,11 +157,29 @@ class DeviceClient(object):
                       
         
     def instantiate(self, deviceServerInstanceId, classId, initialConfiguration = Hash()):
+        return self.__client.instantiate(deviceServerInstanceId, classId, initialConfiguration)
+        
+        
+    def instantiateNoWait(self, deviceServerInstanceId, classId, initialConfiguration = Hash()):
         self.__client.instantiateNoWait(deviceServerInstanceId, classId, initialConfiguration)
+        
+        
+    def killDevice(self, deviceId, timeoutInSeconds = None):
+        if timeoutInSeconds is None:
+            return self.__client.killDevice(deviceId)
+        else:
+            return self.__client.killDevice(deviceId, timeoutInSeconds)
         
         
     def killDeviceNoWait(self, deviceId):
         self.__client.killDeviceNoWait(deviceId)
+        
+        
+    def killServer(self, serverId, timeoutInSeconds = None):
+        if timeoutInSeconds is None:
+            return self.__client.killServer(serverId)
+        else:
+            return self.__client.killServer(serverId, timeoutInSeconds)
         
         
     def killServerNoWait(self, serverId):
