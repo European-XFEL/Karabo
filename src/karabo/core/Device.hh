@@ -542,6 +542,7 @@ namespace karabo {
 
             }
 
+            // TODO deprecate
             void slotRefresh() {
                 emit("signalChanged", m_parameters, m_deviceId);
                 reply(m_parameters);
@@ -613,6 +614,7 @@ namespace karabo {
                 } else { // Someone else wants to see us dead, we should inform our server
                     KARABO_LOG_INFO << "Device is going down as instructed by \"" << senderId << "\"";
                     call(m_serverId, "slotDeviceGone", m_deviceId);
+                    preDestruction(); // Give devices a chance to react
                     stopEventLoop();
                 }
             }

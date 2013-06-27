@@ -40,6 +40,26 @@ namespace karathon {
         ~DeviceClientWrap() {
         }
 
+        bp::tuple instantiatePy(const std::string& serverId, const karabo::util::Hash& configuration, int timeoutInSeconds = -1) {
+            ScopedGILRelease nogil;
+            return Wrapper::fromStdPairToPyTuple(this->instantiate(serverId, configuration, timeoutInSeconds));
+        }
+
+        bp::tuple instantiatePy(const std::string& serverId, const std::string& classId, const karabo::util::Hash& configuration, int timeoutInSeconds = -1) {
+            ScopedGILRelease nogil;
+            return Wrapper::fromStdPairToPyTuple(this->instantiate(serverId, classId, configuration, timeoutInSeconds));
+        }
+        
+        bp::tuple killDevicePy(const std::string& deviceId, int timeoutInSeconds = -1) {
+             ScopedGILRelease nogil;
+             return Wrapper::fromStdPairToPyTuple(this->killDevice(deviceId, timeoutInSeconds));
+        }
+        
+        bp::tuple killServerPy(const std::string& serverId, int timeoutInSeconds = -1) {
+            ScopedGILRelease nogil;
+            return Wrapper::fromStdPairToPyTuple(this->killServer(serverId, timeoutInSeconds));
+        }
+
         bp::tuple existsPy(const std::string& instanceId) {
             return Wrapper::fromStdPairToPyTuple(this->exists(instanceId));
         }

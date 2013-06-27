@@ -96,16 +96,6 @@ namespace karathon {
             }
         }
 
-        //            void registerMemberSlotPy(const bp::object& slotFunction, const bp::object& selfObject, const SlotType& slotType = SPECIFIC) {
-        //                std::string functionName = bp::extract<std::string>((slotFunction.attr("func_name")));
-        //                if (m_slotInstances.find(functionName) != m_slotInstances.end()) return; // Already registered
-        //                karabo::net::BrokerChannel::Pointer channel = m_connection->createChannel(); // New Channel
-        //                std::string instanceId = prepareInstanceId(slotType);
-        //                boost::shared_ptr<MemberSlotWrap> s(new MemberSlotWrap(this, channel, instanceId, functionName)); // New specific slot
-        //                s->registerSlotFunction(functionName, selfObject.ptr()); // Bind user's slot-function to Slot
-        //                storeSlot(functionName, s, channel); // Keep slot and his channel alive
-        //            }
-
         void registerSignalPy0(const std::string& funcName) {
             this->registerSignal(funcName);
         }
