@@ -240,6 +240,7 @@ namespace karabo {
                             tmp.push_back(h);
                             itemNode = itemNode.next_sibling();
                         }
+                        hash.setAttributes(nodeName, attrs);
                     } else { // Regular Hash
                         hash.set(nodeName, Hash());
                         hash.setAttributes(nodeName, attrs);
