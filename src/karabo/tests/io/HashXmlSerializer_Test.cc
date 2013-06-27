@@ -80,16 +80,18 @@ void HashXmlSerializer_Test::testSerialization() {
         std::string archive2;
 
         p->save(m_rootedHash, archive1);
-
+        
+        //cout << "\n\n  archive1: \n" << archive1 << endl;
+        
         Hash h;
         p->load(h, archive1);
-        //cout << endl << h << endl;
+        //cout << "\n\n  h: \n" << h << endl;
         
         CPPUNIT_ASSERT(karabo::util::similar(m_rootedHash, h) == true);
 
         p->save(h, archive2);
 
-        //cout << "\n\n" << archive2 << endl;
+        //cout << "\n\n archive2: \n" << archive2 << endl;
 
         CPPUNIT_ASSERT(archive1 == archive2);
 
