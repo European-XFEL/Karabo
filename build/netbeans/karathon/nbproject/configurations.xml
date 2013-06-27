@@ -63,6 +63,11 @@
                    projectFiles="true">
       <itemPath>../../../src/karathon/karathon.cc</itemPath>
     </logicalFolder>
+    <logicalFolder name="f10" displayName="Util Tools" projectFiles="true">
+      <itemPath>../../../src/karathon/PyUtilEpochstamp.cc</itemPath>
+      <itemPath>../../../src/karathon/PyUtilTimestamp2.cc</itemPath>
+      <itemPath>../../../src/karathon/PyUtilTrainstamp.cc</itemPath>
+    </logicalFolder>
     <logicalFolder name="TestFiles"
                    displayName="Test Files"
                    projectFiles="false"
@@ -220,12 +225,27 @@
             tool="1"
             flavor2="0">
       </item>
+      <item path="../../../src/karathon/PyUtilEpochstamp.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
       <item path="../../../src/karathon/PyUtilHash.cc"
             ex="false"
             tool="1"
             flavor2="0">
       </item>
       <item path="../../../src/karathon/PyUtilSchema.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karathon/PyUtilTimestamp2.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karathon/PyUtilTrainstamp.cc"
             ex="false"
             tool="1"
             flavor2="0">
@@ -476,12 +496,27 @@
             tool="1"
             flavor2="0">
       </item>
+      <item path="../../../src/karathon/PyUtilEpochstamp.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
       <item path="../../../src/karathon/PyUtilHash.cc"
             ex="false"
             tool="1"
             flavor2="0">
       </item>
       <item path="../../../src/karathon/PyUtilSchema.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karathon/PyUtilTimestamp2.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karathon/PyUtilTrainstamp.cc"
             ex="false"
             tool="1"
             flavor2="0">
@@ -717,12 +752,27 @@
             tool="1"
             flavor2="0">
       </item>
+      <item path="../../../src/karathon/PyUtilEpochstamp.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
       <item path="../../../src/karathon/PyUtilHash.cc"
             ex="false"
             tool="1"
             flavor2="0">
       </item>
       <item path="../../../src/karathon/PyUtilSchema.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karathon/PyUtilTimestamp2.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karathon/PyUtilTrainstamp.cc"
             ex="false"
             tool="1"
             flavor2="0">
