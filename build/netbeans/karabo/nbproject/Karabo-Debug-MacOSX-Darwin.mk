@@ -35,6 +35,7 @@ OBJECTDIR=${CND_BUILDDIR}/${CND_CONF}/${CND_PLATFORM}
 
 # Object Files
 OBJECTFILES= \
+	${OBJECTDIR}/_ext/163556830/DataLoggerDevice.o \
 	${OBJECTDIR}/_ext/163556830/DeviceClient.o \
 	${OBJECTDIR}/_ext/163556830/DeviceServer.o \
 	${OBJECTDIR}/_ext/163556830/GuiServerDevice.o \
@@ -89,6 +90,7 @@ OBJECTFILES= \
 	${OBJECTDIR}/_ext/1080827789/pugixml.o \
 	${OBJECTDIR}/_ext/163016059/Base64.o \
 	${OBJECTDIR}/_ext/163016059/ClassInfo.o \
+	${OBJECTDIR}/_ext/163016059/Epochstamp.o \
 	${OBJECTDIR}/_ext/163016059/Exception.o \
 	${OBJECTDIR}/_ext/163016059/FromInt.o \
 	${OBJECTDIR}/_ext/163016059/FromLiteral.o \
@@ -99,9 +101,10 @@ OBJECTFILES= \
 	${OBJECTDIR}/_ext/163016059/Profiler.o \
 	${OBJECTDIR}/_ext/163016059/Schema.o \
 	${OBJECTDIR}/_ext/163016059/StringTools.o \
-	${OBJECTDIR}/_ext/163016059/Time.o \
 	${OBJECTDIR}/_ext/163016059/Timer.o \
 	${OBJECTDIR}/_ext/163016059/Timestamp.o \
+	${OBJECTDIR}/_ext/163016059/Timestamp2.o \
+	${OBJECTDIR}/_ext/163016059/Trainstamp.o \
 	${OBJECTDIR}/_ext/163016059/Units.o \
 	${OBJECTDIR}/_ext/163016059/Validator.o \
 	${OBJECTDIR}/_ext/1760428615/Authenticator.o \
@@ -158,6 +161,11 @@ LDLIBSOPTIONS=-L/usr/X11/lib -L/opt/local/lib/nss -L/opt/local/lib/nspr -L${KARA
 ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/lib/libkarabo.${CND_DLIB_EXT}: ${OBJECTFILES}
 	${MKDIR} -p ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/lib
 	${LINK.cc} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/lib/libkarabo.${CND_DLIB_EXT} ${OBJECTFILES} ${LDLIBSOPTIONS} -dynamiclib -install_name libkarabo.${CND_DLIB_EXT} -fPIC
+
+${OBJECTDIR}/_ext/163556830/DataLoggerDevice.o: ../../../src/karabo/core/DataLoggerDevice.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/163556830
+	${RM} $@.d
+	$(COMPILE.cc) -g -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163556830/DataLoggerDevice.o ../../../src/karabo/core/DataLoggerDevice.cc
 
 ${OBJECTDIR}/_ext/163556830/DeviceClient.o: ../../../src/karabo/core/DeviceClient.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/163556830
@@ -429,6 +437,11 @@ ${OBJECTDIR}/_ext/163016059/ClassInfo.o: ../../../src/karabo/util/ClassInfo.cc
 	${RM} $@.d
 	$(COMPILE.cc) -g -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163016059/ClassInfo.o ../../../src/karabo/util/ClassInfo.cc
 
+${OBJECTDIR}/_ext/163016059/Epochstamp.o: ../../../src/karabo/util/Epochstamp.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
+	${RM} $@.d
+	$(COMPILE.cc) -g -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163016059/Epochstamp.o ../../../src/karabo/util/Epochstamp.cc
+
 ${OBJECTDIR}/_ext/163016059/Exception.o: ../../../src/karabo/util/Exception.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
 	${RM} $@.d
@@ -479,11 +492,6 @@ ${OBJECTDIR}/_ext/163016059/StringTools.o: ../../../src/karabo/util/StringTools.
 	${RM} $@.d
 	$(COMPILE.cc) -g -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163016059/StringTools.o ../../../src/karabo/util/StringTools.cc
 
-${OBJECTDIR}/_ext/163016059/Time.o: ../../../src/karabo/util/Time.cc 
-	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
-	${RM} $@.d
-	$(COMPILE.cc) -g -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163016059/Time.o ../../../src/karabo/util/Time.cc
-
 ${OBJECTDIR}/_ext/163016059/Timer.o: ../../../src/karabo/util/Timer.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
 	${RM} $@.d
@@ -493,6 +501,16 @@ ${OBJECTDIR}/_ext/163016059/Timestamp.o: ../../../src/karabo/util/Timestamp.cc
 	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
 	${RM} $@.d
 	$(COMPILE.cc) -g -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163016059/Timestamp.o ../../../src/karabo/util/Timestamp.cc
+
+${OBJECTDIR}/_ext/163016059/Timestamp2.o: ../../../src/karabo/util/Timestamp2.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
+	${RM} $@.d
+	$(COMPILE.cc) -g -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163016059/Timestamp2.o ../../../src/karabo/util/Timestamp2.cc
+
+${OBJECTDIR}/_ext/163016059/Trainstamp.o: ../../../src/karabo/util/Trainstamp.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
+	${RM} $@.d
+	$(COMPILE.cc) -g -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163016059/Trainstamp.o ../../../src/karabo/util/Trainstamp.cc
 
 ${OBJECTDIR}/_ext/163016059/Units.o: ../../../src/karabo/util/Units.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
@@ -784,6 +802,19 @@ ${TESTDIR}/_ext/936508045/xmsTestRunner.o: ../../../src/karabo/tests/xms/xmsTest
 	${RM} $@.d
 	$(COMPILE.cc) -g -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/include/hdf5 `cppunit-config --cflags` -MMD -MP -MF $@.d -o ${TESTDIR}/_ext/936508045/xmsTestRunner.o ../../../src/karabo/tests/xms/xmsTestRunner.cc
 
+
+${OBJECTDIR}/_ext/163556830/DataLoggerDevice_nomain.o: ${OBJECTDIR}/_ext/163556830/DataLoggerDevice.o ../../../src/karabo/core/DataLoggerDevice.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/163556830
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/163556830/DataLoggerDevice.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} $@.d;\
+	    $(COMPILE.cc) -g -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163556830/DataLoggerDevice_nomain.o ../../../src/karabo/core/DataLoggerDevice.cc;\
+	else  \
+	    ${CP} ${OBJECTDIR}/_ext/163556830/DataLoggerDevice.o ${OBJECTDIR}/_ext/163556830/DataLoggerDevice_nomain.o;\
+	fi
 
 ${OBJECTDIR}/_ext/163556830/DeviceClient_nomain.o: ${OBJECTDIR}/_ext/163556830/DeviceClient.o ../../../src/karabo/core/DeviceClient.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/163556830
@@ -1487,6 +1518,19 @@ ${OBJECTDIR}/_ext/163016059/ClassInfo_nomain.o: ${OBJECTDIR}/_ext/163016059/Clas
 	    ${CP} ${OBJECTDIR}/_ext/163016059/ClassInfo.o ${OBJECTDIR}/_ext/163016059/ClassInfo_nomain.o;\
 	fi
 
+${OBJECTDIR}/_ext/163016059/Epochstamp_nomain.o: ${OBJECTDIR}/_ext/163016059/Epochstamp.o ../../../src/karabo/util/Epochstamp.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/163016059/Epochstamp.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} $@.d;\
+	    $(COMPILE.cc) -g -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163016059/Epochstamp_nomain.o ../../../src/karabo/util/Epochstamp.cc;\
+	else  \
+	    ${CP} ${OBJECTDIR}/_ext/163016059/Epochstamp.o ${OBJECTDIR}/_ext/163016059/Epochstamp_nomain.o;\
+	fi
+
 ${OBJECTDIR}/_ext/163016059/Exception_nomain.o: ${OBJECTDIR}/_ext/163016059/Exception.o ../../../src/karabo/util/Exception.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
 	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/163016059/Exception.o`; \
@@ -1617,19 +1661,6 @@ ${OBJECTDIR}/_ext/163016059/StringTools_nomain.o: ${OBJECTDIR}/_ext/163016059/St
 	    ${CP} ${OBJECTDIR}/_ext/163016059/StringTools.o ${OBJECTDIR}/_ext/163016059/StringTools_nomain.o;\
 	fi
 
-${OBJECTDIR}/_ext/163016059/Time_nomain.o: ${OBJECTDIR}/_ext/163016059/Time.o ../../../src/karabo/util/Time.cc 
-	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
-	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/163016059/Time.o`; \
-	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
-	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
-	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
-	then  \
-	    ${RM} $@.d;\
-	    $(COMPILE.cc) -g -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163016059/Time_nomain.o ../../../src/karabo/util/Time.cc;\
-	else  \
-	    ${CP} ${OBJECTDIR}/_ext/163016059/Time.o ${OBJECTDIR}/_ext/163016059/Time_nomain.o;\
-	fi
-
 ${OBJECTDIR}/_ext/163016059/Timer_nomain.o: ${OBJECTDIR}/_ext/163016059/Timer.o ../../../src/karabo/util/Timer.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
 	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/163016059/Timer.o`; \
@@ -1654,6 +1685,32 @@ ${OBJECTDIR}/_ext/163016059/Timestamp_nomain.o: ${OBJECTDIR}/_ext/163016059/Time
 	    $(COMPILE.cc) -g -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163016059/Timestamp_nomain.o ../../../src/karabo/util/Timestamp.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/163016059/Timestamp.o ${OBJECTDIR}/_ext/163016059/Timestamp_nomain.o;\
+	fi
+
+${OBJECTDIR}/_ext/163016059/Timestamp2_nomain.o: ${OBJECTDIR}/_ext/163016059/Timestamp2.o ../../../src/karabo/util/Timestamp2.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/163016059/Timestamp2.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} $@.d;\
+	    $(COMPILE.cc) -g -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163016059/Timestamp2_nomain.o ../../../src/karabo/util/Timestamp2.cc;\
+	else  \
+	    ${CP} ${OBJECTDIR}/_ext/163016059/Timestamp2.o ${OBJECTDIR}/_ext/163016059/Timestamp2_nomain.o;\
+	fi
+
+${OBJECTDIR}/_ext/163016059/Trainstamp_nomain.o: ${OBJECTDIR}/_ext/163016059/Trainstamp.o ../../../src/karabo/util/Trainstamp.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/163016059/Trainstamp.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} $@.d;\
+	    $(COMPILE.cc) -g -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163016059/Trainstamp_nomain.o ../../../src/karabo/util/Trainstamp.cc;\
+	else  \
+	    ${CP} ${OBJECTDIR}/_ext/163016059/Trainstamp.o ${OBJECTDIR}/_ext/163016059/Trainstamp_nomain.o;\
 	fi
 
 ${OBJECTDIR}/_ext/163016059/Units_nomain.o: ${OBJECTDIR}/_ext/163016059/Units.o ../../../src/karabo/util/Units.cc 

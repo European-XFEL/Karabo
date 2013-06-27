@@ -253,7 +253,6 @@
             <linkerLibLibItem>openmqc</linkerLibLibItem>
             <linkerLibLibItem>python2.7</linkerLibLibItem>
           </linkerLibItems>
-          <commandLine>-Wl,-rpath,../lib -Wl,-rpath,../extern/lib</commandLine>
         </linkerTool>
       </compileType>
       <packaging>
