@@ -31,8 +31,9 @@ void HashXmlSerializer_Test::setUp() {
     rooted.setAttribute("a.b", "b1", "3");
     rooted.setAttribute("a.b.c", "c1", 2);
     rooted.setAttribute("a.b.c", "c2", vector<string > (3, "bla"));
+    rooted.setAttribute("a.b.e", "myAttr", "Hallo");
+    rooted.setAttribute("a.b.e", "eAttr", vector<string > (2, "abc"));
     m_rootedHash = rooted;
-
 
     Hash big("a.b", std::vector<double>(10000, 1.0));
     vector<Hash>& tmp = big.bindReference<vector<Hash> >("a.c");
@@ -41,7 +42,6 @@ void HashXmlSerializer_Test::setUp() {
         tmp[i] = m_rootedHash;
     }
     m_bigHash = big;
-
 
     Hash unrooted("a.b.c", 1, "b.c", 2.0, "c", 3.f, "d.e", "4", "e.f.g.h", std::vector<unsigned long long > (5, 5), "F.f.f.f.f", Hash("x.y.z", 99));
     unrooted.setAttribute("F.f.f", "attr1", true);
@@ -81,12 +81,10 @@ void HashXmlSerializer_Test::testSerialization() {
 
         p->save(m_rootedHash, archive1);
 
-        //cout << "\n\n" << archive1 << endl;
-
         Hash h;
         p->load(h, archive1);
         //cout << endl << h << endl;
-
+        
         CPPUNIT_ASSERT(karabo::util::similar(m_rootedHash, h) == true);
 
         p->save(h, archive2);
