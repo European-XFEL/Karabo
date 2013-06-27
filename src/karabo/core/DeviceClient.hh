@@ -52,8 +52,9 @@ namespace karabo {
             typedef boost::function<void (const karabo::util::Schema& /*schema*/, const std::string& /*deviceId*/) > SchemaUpdatedHandler;
 
         protected: // members
-            
+
             enum MasterMode {
+
                 IS_MASTER,
                 HAS_MASTER,
                 NO_MASTER
@@ -106,7 +107,7 @@ namespace karabo {
             std::string m_masterDeviceId;
 
             bool m_isAdvancedMode;
-            
+
             MasterMode m_masterMode;
 
             InstanceNewHandler m_instanceNewHandler;
@@ -226,20 +227,24 @@ namespace karabo {
             karabo::util::Hash loadConfigurationFromFile(const std::string& filename);
 
             std::pair<bool, std::string> instantiate(const std::string& serverInstanceId, const std::string& classId,
-                                                     const karabo::util::Hash& configuration = karabo::util::Hash(), int timeout = -1);
+                                                     const karabo::util::Hash& configuration = karabo::util::Hash(),
+                                                     int timeoutInSeconds = -1);
 
-            std::pair<bool, std::string> instantiate(const std::string& serverInstanceId, const karabo::util::Hash& configuration, int timeout = -1);
+            std::pair<bool, std::string> instantiate(const std::string& serverInstanceId,
+                                                     const karabo::util::Hash& configuration,
+                                                     int timeoutInSeconds = -1);
 
-            void instantiateNoWait(const std::string& serverInstanceId, const std::string& classId, const karabo::util::Hash& configuration = karabo::util::Hash());
+            void instantiateNoWait(const std::string& serverInstanceId, const std::string& classId,
+                                   const karabo::util::Hash& configuration = karabo::util::Hash());
 
             void instantiateNoWait(const std::string& serverInstanceId, const karabo::util::Hash& configuration);
 
-            std::pair<bool, std::string> killDevice(const std::string& deviceId);
+            std::pair<bool, std::string> killDevice(const std::string& deviceId, int timeoutInSeconds = -1);
 
             void killDeviceNoWait(const std::string& deviceId);
-            
-            std::pair<bool, std::string> killServer(const std::string& serverId);
-            
+
+            std::pair<bool, std::string> killServer(const std::string& serverId, int timeoutInSeconds = -1);
+
             void killServerNoWait(const std::string& serverId);
 
             karabo::util::Hash get(const std::string& instanceId);
@@ -445,11 +450,11 @@ namespace karabo {
         protected: // functions
 
             void cacheAvailableInstances();
-            
+
             karabo::util::Hash prepareTopologyEntry(const std::string& instanceId, const karabo::util::Hash& instanceInfo);
-            
+
             std::string prepareTopologyPath(const std::string& instanceId, const karabo::util::Hash& instanceInfo);
-            
+
             void removeFromSystemTopology(const std::string& instanceId);
 
             virtual void setupSlots();
@@ -463,11 +468,11 @@ namespace karabo {
             virtual void slotInstanceGone(const std::string& instanceId);
 
             virtual void slotSchemaUpdated(const karabo::util::Schema& schema, const std::string& deviceId);
-            
-           
-            
+
+
+
             void onInstanceNotAvailable(const std::string& instanceId);
-            
+
             void onInstanceAvailableAgain(const std::string& instanceId);
 
             static std::string generateOwnInstanceId();
@@ -493,13 +498,13 @@ namespace karabo {
             void extractCommands(const karabo::util::Schema& schema, const std::string& parentKey, std::vector<std::string>& commands);
 
             std::vector<std::string> filterProperties(const karabo::util::Schema& schema);
-            
+
             void checkMaster();
-            
+
             std::string getInstanceType(const karabo::util::Hash& instanceInfo) const;
-            
+
             virtual void slotMasterPing();
-            
+
             virtual void slotProvideSystemTopology();
         };
 

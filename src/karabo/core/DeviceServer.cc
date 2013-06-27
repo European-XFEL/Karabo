@@ -186,7 +186,6 @@ namespace karabo {
 
 
         void DeviceServer::onStateUpdate(const std::string& currentState) {
-            reply(currentState);
         }
 
 
@@ -226,8 +225,8 @@ namespace karabo {
 
         void DeviceServer::scanPlugins() {
             bool inError = false;
-            m_deviceServerStopped = true;
-            while (m_deviceServerStopped) {
+            m_serverIsRunning = true;
+            while (m_serverIsRunning) {
                 try {
                     bool hasNewPlugins = m_pluginLoader->update();
                     if (hasNewPlugins) {
@@ -251,7 +250,7 @@ namespace karabo {
 
 
         void DeviceServer::stopDeviceServer() {
-            m_deviceServerStopped = false;
+            m_serverIsRunning = false;
         }
 
 
@@ -288,11 +287,16 @@ namespace karabo {
                 // Associate deviceInstance with its thread
                 string deviceInstanceId = device->getInstanceId();
                 m_deviceInstanceMap[deviceInstanceId] = t;
+                
+                // Answer initiation of device
+                reply(true, deviceInstanceId); // TODO think about
 
             } catch (const Exception& e) {
                 KARABO_LOG_ERROR << "Device could not be started because: " << e.userFriendlyMsg();
+                reply(false, "Device could not be started because: " + e.userFriendlyMsg());
                 return;
             }
+            
         }
 
 
@@ -339,6 +343,9 @@ namespace karabo {
 
             // Signal about future death
             call("*", "slotDeviceServerInstanceGone", m_serverId);
+            
+            // Reply the same
+            reply(m_serverId);
 
             // Stop device server
             stopDeviceServer();
