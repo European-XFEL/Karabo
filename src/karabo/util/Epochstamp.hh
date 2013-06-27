@@ -49,6 +49,8 @@ namespace karabo {
              */
             Epochstamp(const unsigned long long& seconds, const unsigned long long& fraction);
             
+            virtual ~Epochstamp();
+            
             
             inline const unsigned long long& getSeconds() const {
                 return m_seconds;
@@ -94,10 +96,6 @@ namespace karabo {
              * @return formated string
              */
             std::string toFormattedString(const std::string& format = "%Y-%b-%d %H:%M:%S") const;
-
-
-            virtual ~Epochstamp();
-
 
         private:
             
