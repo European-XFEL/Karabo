@@ -16,6 +16,7 @@ using namespace std;
 void exportPyUtilEpochstamp() {
 
     bp::class_<Epochstamp> e("Epochstamp", bp::init<>());
+    e.def(bp::init<const unsigned long long&, const unsigned long long&>((bp::arg("seconds"), bp::arg("fraction"))));
 
     e.def("getSeconds"
           , (unsigned long long const & (Epochstamp::*)() const)(&Epochstamp::getSeconds)
@@ -26,16 +27,17 @@ void exportPyUtilEpochstamp() {
           , bp::return_value_policy< bp::copy_const_reference >());
 
     e.def("fromIso8601"
-          , (string(Epochstamp::*)() const) (&Epochstamp::toIso8601));
+          , &Epochstamp::toIso8601
+          , bp::arg("timePoint"));
     e.staticmethod("fromIso8601");
     
     e.def("fromHashAttributes"
-           , (Epochstamp (*)(Hash::Attributes const) )(&Epochstamp::fromHashAttributes)
+           , &Epochstamp::fromHashAttributes
            , bp::arg("attributes") );
     e.staticmethod("fromHashAttributes");
     
     e.def("hashAttributesContainTimeInformation"
-           , (bool (*)(Hash::Attributes const) )(&Epochstamp::hashAttributesContainTimeInformation)
+           , &Epochstamp::hashAttributesContainTimeInformation
            , bp::arg("attributes") );
     e.staticmethod("hashAttributesContainTimeInformation");
     
