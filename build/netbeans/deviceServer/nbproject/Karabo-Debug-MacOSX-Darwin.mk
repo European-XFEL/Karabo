@@ -62,7 +62,7 @@ ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/bin/karabo-deviceserver: ../karabo/di
 
 ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/bin/karabo-deviceserver: ${OBJECTFILES}
 	${MKDIR} -p ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/bin
-	${LINK.cc} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/bin/karabo-deviceserver ${OBJECTFILES} ${LDLIBSOPTIONS} -Wl,-rpath,../lib -Wl,-rpath,../extern/lib
+	${LINK.cc} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/bin/karabo-deviceserver ${OBJECTFILES} ${LDLIBSOPTIONS}
 
 ${OBJECTDIR}/_ext/147234221/deviceServer.o: ../../../src/deviceServer/deviceServer.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/147234221
