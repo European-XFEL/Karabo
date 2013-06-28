@@ -138,7 +138,7 @@ namespace karabo {
             // Get the nonce that must be used in Authentication method
             nsUserNonceResp = getUserNonce();
             if (*(nsUserNonceResp.return_->operationSuccess) == 0) {
-                KARABO_LOG_FRAMEWORK_DEBUG << "Error: " << string(nsLoginResp.return_->operationResultMsg->c_str());
+                KARABO_LOG_FRAMEWORK_DEBUG << "Error: " << string(nsUserNonceResp.return_->operationResultMsg->c_str());
                 return false;
             }
 
