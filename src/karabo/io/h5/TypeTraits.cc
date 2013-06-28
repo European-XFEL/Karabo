@@ -161,13 +161,16 @@ namespace karabo {
                 return H5Tcopy(H5T_IEEE_F32LE);
             }
 
+
             template <> const hid_t ScalarTypes::getHdf5StandardType<std::complex<float> >() {
                 return H5Tcopy(H5T_IEEE_F32LE);
             }
 
+
             template <> const hid_t ScalarTypes::getHdf5StandardType<double>() {
                 return H5Tcopy(H5T_IEEE_F64LE);
             }
+
 
             template <> const hid_t ScalarTypes::getHdf5StandardType<std::complex<double> >() {
                 return H5Tcopy(H5T_IEEE_F64LE);
