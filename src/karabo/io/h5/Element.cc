@@ -6,6 +6,7 @@
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
 
+#define KARABO_ENABLE_TRACE_LOG
 
 #include "Element.hh"
 #include "Dataset.hh"
@@ -152,6 +153,7 @@ namespace karabo {
                     //                    }
                     //
                     size_t numAttributes = m_attributes.size();
+                    KARABO_LOG_FRAMEWORK_TRACE_CF << "saving " << numAttributes << " attributes for key: " << m_key ;
                     if (numAttributes == 0) return;
                     if (data.has(m_key, '/')) {
                         const karabo::util::Hash::Node& node = data.getNode(m_key, '/');
