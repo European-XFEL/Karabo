@@ -74,6 +74,7 @@ namespace karabo {
             unsigned char i0, i1, i2, i3; // Bytes from input string
             unsigned char o0, o1, o2; // Bytes to output string
             unsigned short pad; // Number of padding chars
+            size_t t0, t1, t2, t3;
             std::string out = ""; // Output string
 
             // Empty input string => Empty output string
@@ -94,23 +95,23 @@ namespace karabo {
 
                 // Read 4 bytes from input string
                 // and decode them
-                i0 = b64_char.find(bytes_to_decode[i]);
+                i0 = t0 = b64_char.find(bytes_to_decode[i]);
                 if (pad < 3)
-                    i1 = b64_char.find(bytes_to_decode[i + 1]);
+                    i1 = t1 = b64_char.find(bytes_to_decode[i + 1]);
                 else
-                    i1 = 0;
+                    i1 = t1 = 0;
                 if (pad < 2)
-                    i2 = b64_char.find(bytes_to_decode[i + 2]);
+                    i2 = t2 = b64_char.find(bytes_to_decode[i + 2]);
                 else
-                    i2 = 0;
+                    i2 = t2 = 0;
                 if (pad < 1)
-                    i3 = b64_char.find(bytes_to_decode[i + 3]);
+                    i3 = t3 = b64_char.find(bytes_to_decode[i + 3]);
                 else
-                    i3 = 0;
+                    i3 = t3 = 0;
 
                 // Check that all input bytes are base64
-                if (i0 == std::string::npos || i1 == std::string::npos ||
-                        i2 == std::string::npos || i3 == std::string::npos) {
+                if (t0 == std::string::npos || t1 == std::string::npos ||
+                        t2 == std::string::npos || t3 == std::string::npos) {
                     throw (std::string)"base64_decode: Non-base64 found in the string to be decoded";
                 }
 
