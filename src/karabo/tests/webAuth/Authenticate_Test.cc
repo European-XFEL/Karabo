@@ -99,7 +99,7 @@ void Authenticate_Test::testCorrectLogin() {
     const long long int expectedRoleId = 3;
 
 
-    Authenticator a = Authenticator(username, password, provider, ipAddress, hostname, portNumber, software);
+    Authenticator a(username, password, provider, ipAddress, hostname, portNumber, software);
 
     // Class instance should be in the initial state
     testNotLoggedContext(a, username, password, provider, ipAddress, hostname, portNumber, software);
@@ -141,6 +141,14 @@ void Authenticate_Test::testIncorrectLogin() {
     // Class instance should be in the initial state
     testNotLoggedContext(a, username, password, provider, ipAddress, hostname, portNumber, software);
 
+    // Test wrong password
+    CPPUNIT_ASSERT(a.login(time) == false);
+    
+    // Test wrong password (case unsuccess in the getUserNonce function)
+    username = "heisenb";
+    password = "guest";
+    a = Authenticator(username, password, provider, ipAddress, hostname, portNumber, software);
+    
     // Test wrong password
     CPPUNIT_ASSERT(a.login(time) == false);
 
