@@ -101,7 +101,7 @@ class EditableFilePath(EditableWidget):
 
     def valueChanged(self, key, value, timestamp=None, forceRefresh=False):
         if value is None:
-            return
+            value = str()
         
         self.__leFilePath.blockSignals(True)
         self.__leFilePath.setText(value)

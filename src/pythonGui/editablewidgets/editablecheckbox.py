@@ -99,7 +99,7 @@ class EditableCheckBox(EditableWidget):
 
     def valueChanged(self, key, value, timestamp=None, forceRefresh=False):
         if value is None:
-            return
+            value = False
         
         checkState = Qt.Checked
         if (value is True) or (value == "true") or (value == 1):

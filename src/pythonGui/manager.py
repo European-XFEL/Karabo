@@ -53,7 +53,7 @@ class Notifier(QObject):
     signalExecute = pyqtSignal(str, dict) # deviceId, slotName/arguments
     
     signalReconfigure = pyqtSignal(str, str, object) # deviceId, attributeId, attributeValue
-    signalReconfigureAsHash = pyqtSignal(str, object) # hash/dict
+    signalReconfigureAsHash = pyqtSignal(str, object) # deviceId, hash
     signalDeviceStateChanged = pyqtSignal(str, str) # fullDeviceKey, state
     signalConflictStateChanged = pyqtSignal(bool) # isBusy
     signalChangingState = pyqtSignal(bool) # isChanging
@@ -161,10 +161,6 @@ class Manager(Singleton):
         #print ""
         self.__hash.merge(config, HashMergePolicy.MERGE_ATTRIBUTES) #REPLACE_ATTRIBUTES)
         #print self.__hash
-    
-    
-    def getFromPathAsHash(self, key):
-        return self.__hash.get(str(key))
 
 
     def _setFromPath(self, key, value):
@@ -320,7 +316,7 @@ class Manager(Singleton):
         
 
     def onDeviceClassValueChanged(self, key, value):
-        #print "onDeviceClassValueChanged", key, value
+        print "onDeviceClassValueChanged", key, value
         self._setFromPath(key, value)
         
         dataNotifier = self._getDataNotifierEditableValue(key)
@@ -348,23 +344,18 @@ class Manager(Singleton):
         self.__notifier.signalReconfigure.emit(deviceId, parameterKey, value)
 
 
-    def onDeviceInstanceChangedAsHash(self, instanceKey, config):
-        leaves = config.getLeaves() # list with full key names
-        for leaf in leaves :
-            if len(leaf) < 1: continue
-            
-            key = instanceKey + "." + leaf
-            value = config.get(leaf)
-            self._setFromPath(key, value)
-
-            dataNotifier = self._getDataNotifierEditableValue(key)
+    def onDeviceChangedAsHash(self, instanceKey, config):
+        paths = config.paths()
+        for path in paths:
+            dataNotifier = self._getDataNotifierEditableValue(path)
             if dataNotifier is not None:
-                dataNotifier.signalUpdateComponent.emit(key, value)
+                dataNotifier.signalUpdateComponent.emit(path, config.get(path))
         
-        keys = str(instanceKey).split('.', 1)
-        instanceId = keys[0]
-        #classId = keys[1]
-        self.__notifier.signalReconfigureAsHash.emit(instanceId, config)
+        self._mergeIntoHash(config)
+
+        keys = str(instanceKey).split('.')
+        instanceId = keys[1]
+        self.__notifier.signalReconfigureAsHash.emit(instanceId, config.get(instanceKey + ".configuration"))
 
 
     def onConflictStateChanged(self, hasConflict):
@@ -592,8 +583,11 @@ class Manager(Singleton):
         
         # Remove old data from internal hash
         self._setFromPath(internalKey, Hash())
+        
         # Update internal hash with new data for internalKey
-        self._changeHash(internalKey, config, configChangeType)
+        path = internalKey + ".configuration"
+        self._changeHash(path, config, configChangeType)
+        self._mergeIntoHash(Hash(path, config))
 
 
     def onFileOpen(self, configChangeType, internalKey, classId=str()):
@@ -609,12 +603,13 @@ class Manager(Singleton):
 
 
     def saveAsXml(self, filename, classId, internalKey):
-        saveToFile(Hash(classId, self.getFromPathAsHash(internalKey)), filename)
+        config = Hash(classId, self.__hash.get(str(internalKey + ".configuration")))
+        saveToFile(config, filename)
 
     
     def onSaveAsXml(self, classId, internalKey):
         filename = QFileDialog.getSaveFileName(None, "Save file as", QDir.tempPath(), "XML (*.xml)")
-        if filename.isEmpty() :
+        if filename.isEmpty():
             return
         
         fi = QFileInfo(filename)
@@ -662,8 +657,9 @@ class Manager(Singleton):
         # Merge new configuration data into central hash
         self._mergeIntoHash(config)
         
-        path = path.split('.description',1)[0]
-        self.onSchemaAvailable(dict(key=path, type=NavigationItemTypes.CLASS, schema=schema))
+        path = path.split('.description', 1)[0]
+        classId = path.split('.')[3]
+        self.onSchemaAvailable(dict(key=path, classId=classId, type=NavigationItemTypes.CLASS, schema=schema))
 
 
     def getClassSchema(self, serverId, classId):

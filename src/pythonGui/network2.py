@@ -273,10 +273,10 @@ class Network(QObject):
         self._tcpWriteHashHash(header, body)
 
 
-    def onReconfigureAsHash(self, instanceId, body):
+    def onReconfigureAsHash(self, deviceId, body):
         header = Hash()
         header.set("type", "reconfigure")
-        header.set("instanceId", str(instanceId))
+        header.set("deviceId", str(deviceId))
         self._tcpWriteHashHash(header, body)
 
 

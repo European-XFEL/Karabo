@@ -180,7 +180,7 @@ class EditableDoubleSpinBox(EditableWidget):
 
     def valueChanged(self, key, value, timestamp=None, forceRefresh=False):
         if value is None:
-            return
+            value = 0.0
         
         # Show either normal or scientific view
         self._setWidgetVisibility(value)

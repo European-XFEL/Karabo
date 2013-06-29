@@ -225,7 +225,7 @@ class ConfigurationPanel(QWidget):
         
 
     def applyAllAsHash(self, key, config):
-        Manager().onDeviceInstanceChangedAsHash(key, config)
+        Manager().onDeviceChangedAsHash(key, config)
 
 
     def getParameterTreeWidgetItemByKey(self, key):
@@ -331,9 +331,10 @@ class ConfigurationPanel(QWidget):
 
 
     def _createNewParameterPage(self, itemInfo):
-        #classId = itemInfo.get(QString('classId'))
-        #if classId is None:
-        #    classId = itemInfo.get('classId')
+        print "create", itemInfo
+        classId = itemInfo.get(QString('classId'))
+        if classId is None:
+            classId = itemInfo.get('classId')
         
         path = itemInfo.get(QString('key'))
         if path is None:
@@ -342,7 +343,7 @@ class ConfigurationPanel(QWidget):
         if type is None:
             type = itemInfo.get('type')
 
-        twParameterEditorPage = ParameterTreeWidget(self, path)
+        twParameterEditorPage = ParameterTreeWidget(self, path, classId)
         twParameterEditorPage.setHeaderLabels(QStringList() << "Parameter" << "Current value on device" << "Value")
         twParameterEditorPage.addConfigAction(self.__acKillInstance)
         twParameterEditorPage.addConfigAction(self.__acApplyAll)
