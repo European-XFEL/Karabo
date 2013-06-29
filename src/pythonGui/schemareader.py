@@ -143,6 +143,7 @@ class SchemaReader(object):
         
         self._setDescription(key, item)
         defaultValue = self._getDefaultValue(key, item)
+        item.defaultValue = defaultValue
         unitSymbol = self._getUnit(key, item)
 
         minInc = self._getMinInc(key, item)
@@ -166,7 +167,7 @@ class SchemaReader(object):
         parentItem.isChoiceElement = True
         parentItem.classAlias = "Choice Element"
         # Choiceelements can not have strings as arguments
-        #parentItem.defaultValue = Hash(str(parentItem.defaultValue))
+        parentItem.defaultValue = Hash(str(parentItem.defaultValue))
         
         accessMode = self._getAccessMode(key, parentItem)
         choiceComponent = None
