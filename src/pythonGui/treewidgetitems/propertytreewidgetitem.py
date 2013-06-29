@@ -14,7 +14,7 @@ __all__ = ["PropertyTreeWidgetItem"]
 import const
 
 from basetreewidgetitem import BaseTreeWidgetItem
-#import choicecomponent
+import choicecomponent
 from displaycomponent import DisplayComponent
 #from manager import Manager
 
@@ -29,6 +29,8 @@ class PropertyTreeWidgetItem(BaseTreeWidgetItem):
         
         self.setData(0, Qt.SizeHintRole, QSize(200, 32))
         self.setIcon(0, QIcon(":folder"))
+
+        self.defaultValue = None
 
         self.displayComponent = DisplayComponent("Value Field", path=path)
         self.treeWidget().setItemWidget(self, 1, self.displayComponent.widget)
@@ -62,6 +64,13 @@ class PropertyTreeWidgetItem(BaseTreeWidgetItem):
     displayText = property(fset=_setText)
 
 
+    def _defaultValue(self):
+        return self.data(0, const.DEFAULT_VALUE).toPyObject()
+    def _setDefaultValue(self, default):
+        self.setData(0, const.DEFAULT_VALUE, default)
+    defaultValue = property(fget=_defaultValue, fset=_setDefaultValue)
+
+
     def _isChoiceElement(self):
         return self.data(0, const.IS_CHOICE_ELEMENT).toPyObject()
     def _setIsChoiceElement(self, isChoiceElemet):
@@ -77,10 +86,9 @@ class PropertyTreeWidgetItem(BaseTreeWidgetItem):
 
 ### slots ###
     def onSetToDefault(self):
-        return # needs to be correctly implemented
-        #if (self.editableComponent is not None) and (self.defaultValue is not None):
+        if self.editableComponent:
             #self.editableComponent.value = self.defaultValue
-        #    self.editableComponent.onValueChanged(self.internalKey, self.defaultValue)
-        #    if type(self.editableComponent) is not choicecomponent.ChoiceComponent:
-        #        self.editableComponent.onEditingFinished(self.internalKey, self.defaultValue)
+            self.editableComponent.onValueChanged(self.internalKey, self.defaultValue)
+            if type(self.editableComponent) is not choicecomponent.ChoiceComponent:
+                self.editableComponent.onEditingFinished(self.internalKey, self.defaultValue)
 

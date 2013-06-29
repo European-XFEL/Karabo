@@ -42,7 +42,28 @@ class NavigationTreeView(QTreeView):
 
     def currentIndex(self):
         return self.selectionModel().currentIndex()
-    
+
+
+    def currentIndexType(self):
+        """Returns the type of the current index (NODE, DEVICE_SERVER_INSTANCE,
+           DEVICE_CLASS, DEVICE_INSTANCE"""
+
+        index = self.currentIndex()
+        if not index.isValid():
+            return NavigationItemTypes.UNDEFINED
+        
+        level = self.model().getHierarchyLevel(index)
+        if level == 0:
+            return NavigationItemTypes.HOST
+        elif level == 1:
+            return NavigationItemTypes.SERVER
+        elif level == 2:
+            return NavigationItemTypes.CLASS
+        elif level == 3:
+            return NavigationItemTypes.DEVICE
+        
+        return NavigationItemTypes.UNDEFINED
+
 
     def currentIndexInfo(self):
         index = self.currentIndex()
@@ -112,18 +133,18 @@ class NavigationTreeView(QTreeView):
             
             schema = Manager().getClassSchema(serverId, classId)
             path = str("server." + serverId + ".classes." + classId)
-            Manager().onSchemaAvailable(dict(key=path, type=type, schema=schema))
+            Manager().onSchemaAvailable(dict(key=path, classId=classId, type=type, schema=schema))
         elif level == 3:
             type = NavigationItemTypes.DEVICE
             deviceId = index.data().toString()
-            #classIndex = index.parent()
-            #classId = classIndex.data().toString()
+            classIndex = index.parent()
+            classId = classIndex.data().toString()
             #serverIndex = classIndex.parent()
             #serverId = serverIndex.data().toString()
             
             path = str("device." + deviceId)
             schema = Manager().getDeviceSchema(deviceId)
-            Manager().onSchemaAvailable(dict(key=path, type=type, schema=schema))
+            Manager().onSchemaAvailable(dict(key=path, classId=classId, type=type, schema=schema))
         
         itemInfo = dict(key=path, type=type, level=level, row=row)
         Manager().onNavigationItemChanged(itemInfo)

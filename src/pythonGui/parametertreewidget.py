@@ -12,7 +12,7 @@
 __all__ = ["ParameterTreeWidget"]
 
 
-import treewidgetitems.attributetreewidgetitem
+import treewidgetitems.propertytreewidgetitem
 from editableapplylatercomponent import EditableApplyLaterComponent
 from enums import *
 from libkarathon import *
@@ -25,12 +25,12 @@ from PyQt4.QtGui import *
 class ParameterTreeWidget(QTreeWidget):
 
 
-    def __init__(self, configPanel, path=str()):
+    def __init__(self, configPanel, path=str(), classId=str()):
         # configPanel - save parent widget for toolbar buttons
         # path - full path of navigationItem
         super(ParameterTreeWidget, self).__init__()
         
-        #self.__classId = classId # DeviceClass name stored for XML save
+        self.__classId = classId # DeviceClass name stored for XML save
         self.__instanceKey = path
         self.__configPanel = configPanel
 
@@ -92,9 +92,7 @@ class ParameterTreeWidget(QTreeWidget):
             return
         
         if (editableComponent is not None) and (editableComponent.applyEnabled is True):
-            keys = str(item.internalKey).split('.', 1)
-            attributeKey = keys[1]
-            config.set(str(attributeKey), editableComponent.value)
+            config.set(str(item.internalKey), editableComponent.value)
             editableComponent.changeApplyToBusy(True)
 
 
@@ -194,7 +192,7 @@ class ParameterTreeWidget(QTreeWidget):
             return
         
         # Attributes can not be dropped
-        if isinstance(item, treewidgetitems.attributetreewidgetitem.AttributeTreeWidgetItem):
+        if isinstance(item, treewidgetitems.propertytreewidgetitem.PropertyTreeWidgetItem):
             return
         
         mimeData = QMimeData()        
@@ -273,12 +271,12 @@ class ParameterTreeWidget(QTreeWidget):
     def _r_applyButtonsEnabled(self, item):
         for i in range(item.childCount()):
             childItem = item.child(i)
-            if type(childItem) == treewidgetitems.attributetreewidgetitem.AttributeTreeWidgetItem:
+            if type(childItem) == treewidgetitems.propertytreewidgetitem.PropertyTreeWidgetItem:
                 result = self._r_applyButtonsEnabled(childItem)
                 if result[0] is True: # Bug: returns but
                     return result
 
-        if (type(item) != treewidgetitems.attributetreewidgetitem.AttributeTreeWidgetItem) or (item.editableComponent is None) or \
+        if (type(item) != treewidgetitems.propertytreewidgetitem.PropertyTreeWidgetItem) or (item.editableComponent is None) or \
            (not isinstance(item.editableComponent, EditableApplyLaterComponent)):
             return (False,False)
         return (item.editableComponent.applyEnabled, item.editableComponent.hasConflict)
