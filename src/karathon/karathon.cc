@@ -47,6 +47,10 @@ void exportPyLogLogger();
 // net
 void exportp2p();
 
+// xip
+void exportPyXipImageType();
+template <class T> void exportPyXipImage();
+
 BOOST_PYTHON_MODULE(libkarathon) {
     
     // util
@@ -88,4 +92,9 @@ BOOST_PYTHON_MODULE(libkarathon) {
     
     // net
     exportp2p();
+    
+    // xip
+    exportPyXipImageType();
+    exportPyXipImage<float>();
+    exportPyXipImage<double>();
 }
