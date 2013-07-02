@@ -68,6 +68,12 @@
       <itemPath>../../../src/karathon/PyUtilTimestamp2.cc</itemPath>
       <itemPath>../../../src/karathon/PyUtilTrainstamp.cc</itemPath>
     </logicalFolder>
+    <logicalFolder name="f11"
+                   displayName="Xip Binding"
+                   projectFiles="true"
+                   kind="ROOT">
+      <itemPath>../../../src/karathon/PyXipImage.cc</itemPath>
+    </logicalFolder>
     <logicalFolder name="TestFiles"
                    displayName="Test Files"
                    projectFiles="false"
@@ -97,6 +103,8 @@
       <toolsSet>
         <remote-sources-mode>LOCAL_SOURCES</remote-sources-mode>
         <compilerSet>default</compilerSet>
+        <dependencyChecking>true</dependencyChecking>
+        <rebuildPropChanged>false</rebuildPropChanged>
       </toolsSet>
       <compileType>
         <ccTool>
@@ -253,6 +261,11 @@
             tool="1"
             flavor2="0">
       </item>
+      <item path="../../../src/karathon/PyXipImage.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
       <item path="../../../src/karathon/PyXmsRequestor.cc"
             ex="false"
             tool="1"
@@ -356,6 +369,8 @@
       <toolsSet>
         <remote-sources-mode>LOCAL_SOURCES</remote-sources-mode>
         <compilerSet>default</compilerSet>
+        <dependencyChecking>true</dependencyChecking>
+        <rebuildPropChanged>false</rebuildPropChanged>
       </toolsSet>
       <compileType>
         <cTool>
@@ -522,6 +537,11 @@
             tool="1"
             flavor2="0">
       </item>
+      <item path="../../../src/karathon/PyXipImage.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
       <item path="../../../src/karathon/PyXmsRequestor.cc"
             ex="false"
             tool="1"
@@ -622,6 +642,8 @@
       <toolsSet>
         <remote-sources-mode>LOCAL_SOURCES</remote-sources-mode>
         <compilerSet>default</compilerSet>
+        <dependencyChecking>true</dependencyChecking>
+        <rebuildPropChanged>false</rebuildPropChanged>
       </toolsSet>
       <compileType>
         <ccTool>
@@ -771,6 +793,11 @@
             flavor2="0">
       </item>
       <item path="../../../src/karathon/PyWebAuthenticator.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karathon/PyXipImage.cc"
             ex="false"
             tool="1"
             flavor2="0">
