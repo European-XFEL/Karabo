@@ -136,7 +136,7 @@ class PythonDevice(BaseFsm):
 
     def remote(self):
         if self._client is None:
-            self._client = DeviceClient()  # connectionType="Jms" config=Hash()
+            self._client = DeviceClient(self._ss)  # SignalSlotable object for reuse
         return self._client
     
     def set(self, *args):
