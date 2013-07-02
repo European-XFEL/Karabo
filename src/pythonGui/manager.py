@@ -58,10 +58,7 @@ class Notifier(QObject):
     signalConflictStateChanged = pyqtSignal(bool) # isBusy
     signalChangingState = pyqtSignal(bool) # isChanging
     
-    signalUpdateDeviceServerInstance = pyqtSignal(dict)
-    signalUpdateDeviceServerInstanceFinished = pyqtSignal(dict)
-    signalUpdateDeviceInstance = pyqtSignal(dict)
-    signalUpdateDeviceInstanceFinished = pyqtSignal(dict)
+    signalInstanceGone = pyqtSignal(str, str) # path, parentPath
     
     signalNewVisibleDevice = pyqtSignal(str) # deviceId
     signalRemoveVisibleDevice = pyqtSignal(str) # deviceId
@@ -116,9 +113,6 @@ class Manager(Singleton):
         # Initiate database connection
         self.__sqlDatabase = SqlDatabase()
         self.__treemodel = NavigationHierarchyModel()
-        # Connect signals to treemodel for later updates which just need to be done once
-        #self.__notifier.signalUpdateDeviceServerInstanceFinished.connect(self.__treemodel.onUpdateDeviceServerInstance)
-        #self.__notifier.signalUpdateDeviceInstanceFinished.connect(self.__treemodel.onUpdateDeviceInstance)
 
 
     def _hash(self):
@@ -211,6 +205,7 @@ class Manager(Singleton):
         
 
     def newVisibleDevice(self, path):
+        print "newVisibleDevice", path
         keys = str(path).split('.', 1)
         deviceId = keys[1]
         deviceIdCount = self.__visibleDevInsKeys.get(deviceId)
@@ -316,7 +311,6 @@ class Manager(Singleton):
         
 
     def onDeviceClassValueChanged(self, key, value):
-        print "onDeviceClassValueChanged", key, value
         self._setFromPath(key, value)
         
         dataNotifier = self._getDataNotifierEditableValue(key)
@@ -389,7 +383,7 @@ class Manager(Singleton):
             return
 
         # Remove device instance data from internal hash
-        self._setFromPath(deviceId, Hash())
+        self._setFromPath("device." + deviceId, Hash())
         self.__notifier.signalKillDevice.emit(deviceId)
 
 
@@ -401,6 +395,8 @@ class Manager(Singleton):
         if reply == QMessageBox.No:
             return
         
+        # Remove device instance data from internal hash
+        self._setFromPath("server." + serverId, Hash())
         self.__notifier.signalKillServer.emit(serverId)
 
 
@@ -603,7 +599,11 @@ class Manager(Singleton):
 
 
     def saveAsXml(self, filename, classId, internalKey):
-        config = Hash(classId, self.__hash.get(str(internalKey + ".configuration")))
+        path = str(internalKey + ".configuration")
+        if self.__hash.has(path):
+            config = Hash(classId, self.__hash.get(path))
+        else:
+            config = Hash()
         saveToFile(config, filename)
 
     
@@ -644,11 +644,28 @@ class Manager(Singleton):
 
     def handleInstanceGone(self, instanceId):
         # Remove instanceId from central hash and update
-        path = "device." + instanceId
-        if self.__hash.has(path):
-            self.__hash.erase("device." + instanceId)
+        # TODO: serverId or deviceId - how to distinguish?
+        serverConfig = self.__hash.get("server")
+        deviceConfig = self.__hash.get("device")
+        
+        if deviceConfig.has(instanceId):
+            path = "device." + instanceId
+            if self.__hash.hasAttribute(path, "serverId"):
+                parentPath = "server." + self.__hash.getAttribute(path, "serverId")
+            if self.__hash.hasAttribute(path, "classId"):
+                parentPath += ".classes." + self.__hash.getAttribute(path, "classId")
+        elif serverConfig.has(instanceId):
+            path = "server." + instanceId
+            if self.__hash.hasAttribute(path, "host"):
+                parentPath = self.__hash.getAttribute(path, "host")
+        
+        # Remove instance from central hash
+        self.__hash.erase(path)
+        
         # Send full internal hash to navigation
         self.__notifier.signalSystemTopologyChanged.emit(self.__hash)
+        # Update navigation treeviews
+        self.__notifier.signalInstanceGone.emit(path, parentPath)
 
 
     def handleClassSchema(self, config):

@@ -49,14 +49,14 @@ class SchemaReader(object):
         
         if self.__schema is None:
             #print "No schema valid schema was provided!"
-            return
+            return False
         
         # For testing (all elements)
         #sampleSchemaClass = SampleSchema.create("SampleSchema", Hash())
         #self.__schema = sampleSchemaClass.getSchema("SampleSchema")
         
         print ""
-        print "readSchema"
+        print "++++ readSchema ++++"
         print self.__schema
         print ""
         
@@ -67,6 +67,7 @@ class SchemaReader(object):
             self.r_readSchema(key)
         
         self.__treeWidget.resizeColumnToContents(0)
+        return True
 
 
     def r_readSchema(self, key, parentItem=None):
@@ -174,13 +175,13 @@ class SchemaReader(object):
         
         if self.__deviceType is NavigationItemTypes.CLASS:
             if (accessMode is AccessMode.INITONLY) or (accessMode is AccessMode.RECONFIGURABLE):
-                choiceComponent = EditableNoApplyComponent(parentItem.classAlias, key=key, value=defaultValue)
+                choiceComponent = EditableNoApplyComponent(parentItem.classAlias, key=parentItem.internalKey, value=defaultValue)
         else:
             if accessMode is AccessMode.RECONFIGURABLE:
-                choiceComponent = EditableApplyLaterComponent(parentItem.classAlias, key=key, value=None)
+                choiceComponent = EditableApplyLaterComponent(parentItem.classAlias, key=parentItem.internalKey, value=None)
                 choiceComponent.signalApplyChanged.connect(self.__treeWidget.onApplyChanged)
             else:
-                choiceComponent = ChoiceComponent(parentItem.classAlias, key=key, value=None)
+                choiceComponent = ChoiceComponent(parentItem.classAlias, key=parentItem.internalKey, value=None)
 
         parentItem.editableComponent = choiceComponent        
 

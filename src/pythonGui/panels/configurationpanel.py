@@ -90,8 +90,8 @@ class ConfigurationPanel(QWidget):
         
         Manager().notifier.signalNavigationItemChanged.connect(self.onNavigationItemChanged)
 
-        Manager().notifier.signalUpdateDeviceServerInstance.connect(self.onUpdateDeviceServerInstance)
-        Manager().notifier.signalUpdateDeviceInstance.connect(self.onUpdateDeviceInstance)
+        Manager().notifier.signalInstanceGone.connect(self.onInstanceGone)
+        
         Manager().notifier.signalDeviceStateChanged.connect(self.onDeviceStateChanged)
         Manager().notifier.signalConflictStateChanged.connect(self.onConflictStateChanged)
         Manager().notifier.signalChangingState.connect(self.onChangingState)
@@ -325,13 +325,13 @@ class ConfigurationPanel(QWidget):
             deviceType = itemInfo.get('type')
         self.__schemaReader.setDeviceType(deviceType)
 
-        if self.__schemaReader.readSchema(path, schema, twParameterEditorPage):
-            QMessageBox.critical(self, "Schema", "The given schema is invalid")
-            return
+        if not self.__schemaReader.readSchema(path, schema, twParameterEditorPage):
+            return False
+        
+        return True
 
 
     def _createNewParameterPage(self, itemInfo):
-        print "create", itemInfo
         classId = itemInfo.get(QString('classId'))
         if classId is None:
             classId = itemInfo.get('classId')
@@ -502,7 +502,6 @@ class ConfigurationPanel(QWidget):
             index = self.__navItemInternalKeyIndexMap.get(key)
             if index is not None:
                 twParameterEditorPage = self.__swParameterEditor.widget(index)
-                
                 # Parsing of schema necessary?
                 schemaLoaded = self.__internalKeySchemaLoadedMap.get(key)
                 if not schemaLoaded:
@@ -510,8 +509,8 @@ class ConfigurationPanel(QWidget):
                     self._r_unregisterEditableComponent(twParameterEditorPage.invisibleRootItem())
                     twParameterEditorPage.clear()
 
-                    self._parseSchema(itemInfo, twParameterEditorPage)
-                    self.__internalKeySchemaLoadedMap[key] = True
+                    if self._parseSchema(itemInfo, twParameterEditorPage):
+                        self.__internalKeySchemaLoadedMap[key] = True
         else:
             self.__navItemInternalKeyIndexMap[key] = self._createNewParameterPage(itemInfo)
             # Schema might not be there yet...
@@ -591,28 +590,15 @@ class ConfigurationPanel(QWidget):
             self.__acResetAll.setVisible(False)
 
 
-    def onUpdateDeviceServerInstance(self, itemInfo):
-        # New schema can be in plugins of device server instance
-        name = itemInfo.get(QString('name'))
-        if name is None:
-            name = itemInfo.get('name')
+    def onInstanceGone(self, path, parentPath):
+        path = str(path)
+        # New schema can be in plugins of instance
         keys = self.__internalKeySchemaLoadedMap.keys()
         for key in keys:
-            if name in key:
+            if path in key:
                 self.__internalKeySchemaLoadedMap[key] = False
-        self.__twNavigation.updateDeviceServerInstance(itemInfo)
-
-
-    def onUpdateDeviceInstance(self, itemInfo):
-        name = itemInfo.get(QString('name'))
-        if name is None:
-            name = itemInfo.get('name')
-        keys = self.__internalKeySchemaLoadedMap.keys()
-        for key in keys:
-            if name in key:
-                self.__internalKeySchemaLoadedMap[key] = False
-        self.__twNavigation.updateDeviceInstance(itemInfo)
-        self._setApplyAllEnabled(False)
+        
+        self.__twNavigation.selectItem(str(parentPath))
 
 
     def onDeviceStateChanged(self, internalKey, state):

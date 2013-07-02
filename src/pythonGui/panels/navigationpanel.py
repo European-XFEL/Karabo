@@ -58,8 +58,7 @@ class NavigationPanel(QWidget):
         
         Manager().notifier.signalDeviceInstanceSchemaUpdated.connect(self.onDeviceInstanceSchemaUpdated)
         
-        Manager().notifier.signalUpdateDeviceServerInstance.connect(self.onUpdateDeviceServerInstance)
-        Manager().notifier.signalUpdateDeviceInstance.connect(self.onUpdateDeviceInstance)
+        Manager().notifier.signalInstanceGone.connect(self.onInstanceGone)
         
         mainLayout = QVBoxLayout(self)
         mainLayout.setContentsMargins(5,5,5,5)
@@ -133,12 +132,8 @@ class NavigationPanel(QWidget):
         self.__twNavigation.itemChanged(itemInfo)
 
 
-    def onUpdateDeviceServerInstance(self, itemInfo):
-        self.__twNavigation.updateDeviceServerInstance(itemInfo)
-
-
-    def onUpdateDeviceInstance(self, itemInfo):
-        self.__twNavigation.updateDeviceInstance(itemInfo)
+    def onInstanceGone(self, path, parentPath):
+        self.__twNavigation.selectItem(str(parentPath))
 
 
     def onDeviceInstanceSchemaUpdated(self, instanceId, schema):

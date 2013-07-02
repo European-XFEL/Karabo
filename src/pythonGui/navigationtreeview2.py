@@ -36,8 +36,113 @@ class NavigationTreeView(QTreeView):
         #self.setSortingEnabled(True)
         #self.sortByColumn(0, Qt.AscendingOrder)
         
-        #self._setupContextMenu()
-        #self.customContextMenuRequested.connect(self.onCustomContextMenuRequested)
+        self._setupContextMenu()
+        self.customContextMenuRequested.connect(self.onCustomContextMenuRequested)
+
+
+### protected ###
+    def mousePressEvent(self, event):
+        QTreeView.mousePressEvent(self, event)
+        
+        if event.buttons() != Qt.LeftButton:
+            return
+        
+        self._performDrag()
+        
+
+### private ###
+    def _performDrag(self):
+        itemInfo = self.currentIndexInfo()
+        if len(itemInfo) == 0:
+            return
+        
+        serverId  = itemInfo.get(QString('serverId'))
+        if serverId is None:
+            serverId = itemInfo.get('serverId')
+        
+        navigationItemType = itemInfo.get(QString('type'))
+        if navigationItemType is None:
+            navigationItemType = itemInfo.get('type')
+        
+        internalKey = itemInfo.get(QString('internalKey'))
+        if internalKey is None:
+            internalKey = itemInfo.get('internalKey')
+        
+        displayName = internalKey
+        schema = None
+        if navigationItemType is NavigationItemTypes.CLASS:
+            displayName = itemInfo.get(QString('classId'))
+            if displayName is None:
+                displayName = itemInfo.get('classId')
+        
+        schema = itemInfo.get(QString('schema'))
+        if schema is None:
+            schema = itemInfo.get('schema')
+
+        mimeData = QMimeData()
+
+        # Put necessary data in MimeData:
+        # Source type
+        mimeData.setData("sourceType", "NavigationTreeView")
+        if navigationItemType:
+            # Item type
+            mimeData.setData("navigationItemType", QByteArray.number(navigationItemType))
+        if serverId:
+            # Device server instance id
+            mimeData.setData("serverId", QString(serverId).toAscii())
+        if internalKey:
+            # Internal key
+            mimeData.setData("internalKey", QString(internalKey).toAscii())
+        if displayName:
+            # Display name
+            mimeData.setData("displayName", QString(displayName).toAscii())
+        if schema:
+            # Display name
+            mimeData.setData("schema", QString(schema).toAscii())
+
+        drag = QDrag(self)
+        drag.setMimeData(mimeData)
+        if drag.exec_(Qt.MoveAction) == Qt.MoveAction:
+            pass
+
+
+    def _setupContextMenu(self):
+        self.setContextMenuPolicy(Qt.CustomContextMenu)
+        # Device server instance menu
+        self.__mServerItem = QMenu(self)
+        
+        text = "Kill instance"
+        self.__acKillServer = QAction(QIcon(":delete"), text, self)
+        self.__acKillServer.setStatusTip(text)
+        self.__acKillServer.setToolTip(text)
+        self.__acKillServer.triggered.connect(self.onKillServer)
+        self.__mServerItem.addAction(self.__acKillServer)
+        
+        # Device class/instance menu
+        self.__mClassItem = QMenu(self)
+        
+        text = "Open configuration (*.xml)"
+        self.__acFileOpen = QAction(QIcon(":open"), "Open configuration", self)
+        self.__acFileOpen.setStatusTip(text)
+        self.__acFileOpen.setToolTip(text)
+        self.__acFileOpen.triggered.connect(self.onFileOpen)
+        self.__mClassItem.addAction(self.__acFileOpen)
+        
+        text = "Save configuration as (*.xml)"
+        self.__acFileSaveAs = QAction(QIcon(":save-as"), "Save configuration as", self)
+        self.__acFileSaveAs.setStatusTip(text)
+        self.__acFileSaveAs.setToolTip(text)
+        self.__acFileSaveAs.triggered.connect(self.onFileSaveAs)
+        self.__mClassItem.addAction(self.__acFileSaveAs)
+
+        text = "Kill instance"
+        self.__acKillDevice = QAction(QIcon(":delete"), text, self)
+        self.__acKillDevice.setStatusTip(text)
+        self.__acKillDevice.setToolTip(text)
+        self.__acKillDevice.triggered.connect(self.onKillDevice)
+        self.__mClassItem.addAction(self.__acKillDevice)
+
+        self.__mClassItem.addSeparator()
 
 
     def currentIndex(self):
@@ -179,4 +284,76 @@ class NavigationTreeView(QTreeView):
             self.setCurrentIndex(index)
         else:
             self.clearSelection()
+
+
+    def onKillServer(self):
+        itemInfo = self.currentIndexInfo()
+
+        serverId = itemInfo.get(QString('serverId'))
+        if serverId is None:
+            serverId = itemInfo.get('serverId')
+        
+        Manager().killServer(serverId)
+
+
+    def onKillDevice(self):
+        itemInfo = self.currentIndexInfo()
+
+        deviceId = itemInfo.get(QString('deviceId'))
+        if deviceId is None:
+            deviceId = itemInfo.get('deviceId')
+        
+        Manager().killDevice(deviceId)
+
+
+    def onFileSaveAs(self):
+        itemInfo = self.currentIndexInfo()
+        
+        classId = itemInfo.get(QString('classId'))
+        if classId is None:
+            classId = itemInfo.get('classId')
+        
+        path = itemInfo.get(QString('key'))
+        if path is None:
+            path = itemInfo.get('key')
+        
+        Manager().onSaveAsXml(str(classId), str(path))
+
+
+    def onFileOpen(self): # TODO
+        type = self.currentIndexType()
+        index = self.currentIndex()
+        
+        configChangeType = None
+        classId = str()
+        instanceId = str()
+        if type is NavigationItemTypes.CLASS:
+            configChangeType = ConfigChangeTypes.DEVICE_CLASS_CONFIG_CHANGED
+            classId = index.data().toString()
+            parentIndex = index.parent()
+            instanceId = parentIndex.data().toString()+"+"+classId
+        elif type is NavigationItemTypes.DEVICE:
+            configChangeType = ConfigChangeTypes.DEVICE_INSTANCE_CONFIG_CHANGED
+            parentIndex = index.parent()
+            classId = parentIndex.data().toString()
+            instanceId = index.data().toString()
+        
+        # TODO: Remove dirty hack for scientific computing again!!!
+        croppedClassId = classId.split("-")
+        classId = croppedClassId[0]
+        
+        Manager().onFileOpen(configChangeType, str(instanceId), str(classId))
+
+
+    def onCustomContextMenuRequested(self, pos):
+        type = self.currentIndexType()
+        # Show context menu for DEVICE_CLASS and DEVICE_INSTANCE
+        if type is NavigationItemTypes.SERVER:
+            self.__mServerItem.exec_(QCursor.pos())
+        elif type is NavigationItemTypes.CLASS:
+            self.__acKillDevice.setVisible(False)
+            self.__mClassItem.exec_(QCursor.pos())
+        elif type is NavigationItemTypes.DEVICE:
+            self.__acKillDevice.setVisible(True)
+            self.__mClassItem.exec_(QCursor.pos())
 
