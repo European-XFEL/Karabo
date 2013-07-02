@@ -222,7 +222,7 @@ class Network(QObject):
                 print "notification"
             elif type == "invalidateCache":
                 print "invalidateCache"
-            else :
+            else:
                 print "WARN : Got unknown communication token \"", type, "\" from server"
             # Invalidate variables            
             self.__bodySize = self.__headerSize = 0
