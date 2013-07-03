@@ -99,4 +99,10 @@ class NavigationHierarchyNode(object):
         while len(self.__childItems) > 0:
             childItem = self.__childItems.pop()
             childItem.clearChildItems()
+            
+    def printTree(self, indent=-2):
+        indent = indent + 2;
+        for childItem in self.__childItems:
+            print " " * indent, childItem.data(0)
+            childItem.printTree(indent)
 

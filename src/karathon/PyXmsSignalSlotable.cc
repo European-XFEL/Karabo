@@ -34,36 +34,37 @@ void exportPyXmsSignalSlotable() {//exposing karabo::xms::SignalSlotable
             ;
 
     bp::class_<SignalSlotable, boost::noncopyable > ("SignalSlotableIntern")
-            .def(bp::init<const karabo::net::BrokerConnection::Pointer&, const std::string&, int>())
-            .def(bp::init<const karabo::net::BrokerConnection::Pointer&, const std::string&>())
-            ;
+            .def(bp::init<const std::string&, const karabo::net::BrokerConnection::Pointer&>())
+    ;
+
 
     bp::class_<SignalSlotableWrap, boost::shared_ptr<SignalSlotableWrap>, bp::bases< SignalSlotable>, boost::noncopyable > ("SignalSlotable")
-
+            .def(bp::init<>())
             .def(bp::init<const std::string&>())
             .def(bp::init<const std::string&, const std::string&>())
             .def(bp::init<const std::string&, const std::string&, const karabo::util::Hash&>())
-            .def(bp::init<const std::string&, const std::string&, const karabo::util::Hash&, bool>())
-            .def(bp::init<const std::string&, const std::string&, const karabo::util::Hash&, bool, bool>())
+            .def(bp::init<const std::string&, const std::string&, const karabo::util::Hash&, const bool >())
+            .def(bp::init<const std::string&, const std::string&, const karabo::util::Hash&, const bool, const int >())
 
             .def("create", &SignalSlotableWrap::create,
-                 (bp::arg("instanceId") = "py/console/0",
+                 (bp::arg("instanceId"),
                  bp::arg("connectionType") = "Jms",
                  bp::arg("connectionParameters") = karabo::util::Hash(),
-                 bp::arg("autostart") = false
+                 bp::arg("autostart") = false,
+                 bp::arg("heartbeatInterval") = 10
                  ),
                  "\nUse this factory method to create SignalSlotable object with given 'instanceId', 'connectionType', 'connectionParameters' and 'autostart' of event loop (by default, no start).\n"
                  "Example:\n\tss = SignalSlotable.create('a')\n"
                  ).staticmethod("create")
 
-            .def("runEventLoop", &SignalSlotableWrap::runEventLoop, (bp::arg("emitHeartbeat") = true, bp::arg("instanceInfo") = karabo::util::Hash()),
+            .def("runEventLoop", &SignalSlotableWrap::runEventLoop, (bp::arg("heartbeatInterval") = 10, bp::arg("instanceInfo") = karabo::util::Hash()),
                  "\nUse this method if you have created a SignalSlotable instance with autostart = False and you need to provide info for event loop.\n"
                  "Example:\n\tss = SignalSlotable.create('a')\n\tinfo = Hash('type','device')\n\tinfo['classId'] = myclassId\n\tinfo['serverId'] = myserverId\n\t"
-                 "info['visibility'] = ['']\n\tinfo['version'] = my_version\n\tinfo['host'] = host_name\n\tss.runEventLoop(True, info)\n"
+                 "info['visibility'] = ['']\n\tinfo['version'] = my_version\n\tinfo['host'] = host_name\n\tss.runEventLoop(10, info)\n"
                  )
-            
+
             .def("stopEventLoop", &SignalSlotableWrap::stopEventLoop)
-            
+
             .def("connect",
                  (bool (SignalSlotable::*)(const string, const string&, const string, const string&, SignalSlotable::ConnectionType, const bool))(&SignalSlotable::connect),
                  (bp::arg("signalInstanceId"),

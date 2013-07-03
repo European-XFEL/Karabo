@@ -58,7 +58,7 @@ namespace karabo {
          */
         template <class FSM = BaseFsm>
         class Device : public BaseDevice, public FSM {
-
+            
             karabo::util::Validator m_validatorIntern;
             karabo::util::Validator m_validatorExtern;
 
@@ -108,10 +108,10 @@ namespace karabo {
                         .init()
                         .commit();
 
-                VECTOR_STRING_ELEMENT(expected).key("visibility")
+                INT32_ELEMENT(expected).key("visibility")
                         .displayedName("Visibility")
                         .description("Configures who is allowed to see this device at all")
-                        .assignmentOptional().defaultValueFromString("")
+                        .assignmentOptional().defaultValue(karabo::util::Schema::OBSERVER)
                         .advanced()
                         .reconfigurable()
                         .commit();
@@ -179,7 +179,7 @@ namespace karabo {
                 karabo::net::BrokerConnection::Pointer connection = karabo::net::BrokerConnection::createChoice("connection", configuration);
 
                 // Initialize the SignalSlotable instance
-                init(connection, m_deviceId);
+                init(m_deviceId, connection);
 
                 // Initialize FSM slots (the interface of this function must be inherited from the templated FSM)
                 this->initFsmSlots(); // requires template CONCEPT
@@ -482,8 +482,9 @@ namespace karabo {
 
                 // Prepare some info further describing this particular instance
                 // status, visibility, owner, lang 
-                karabo::util::Hash info("type", "device", "classId", m_classId, "serverId", m_serverId, "visibility", this->get<std::vector<std::string> >("visibility"), "version", Device::classInfo().getVersion(), "host", boost::asio::ip::host_name());
-                boost::thread t(boost::bind(&karabo::core::Device<FSM>::runEventLoop, this, true, info));
+                karabo::util::Hash info("type", "device", "classId", m_classId, "serverId", m_serverId, "visibility", this->get<int >("visibility"), "version", Device::classInfo().getVersion(), "host", boost::asio::ip::host_name());
+                // TODO Make heartbeat configurable
+                boost::thread t(boost::bind(&karabo::core::Device<FSM>::runEventLoop, this, 10, info));
                 this->startFsm();
                 KARABO_LOG_INFO << m_classId << " with deviceId: \"" << this->getInstanceId() << "\" got started";
 

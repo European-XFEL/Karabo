@@ -27,18 +27,20 @@ namespace karathon {
 
     public:
 
-        SignalSlotableWrap(const std::string& instanceId = "py/console/0",
+        SignalSlotableWrap(const std::string& instanceId = generateInstanceId<SignalSlotable>(),
                            const std::string& connectionType = "Jms",
                            const karabo::util::Hash& connectionParameters = karabo::util::Hash(),
-                           bool autostart = true,
-                           bool heartbeat = true) : SignalSlotable() {
-            if (!PyEval_ThreadsInitialized())
-                PyEval_InitThreads();
+                           const bool autostartEventLoop = true,
+                           int heartbeatInterval = 10) : SignalSlotable() {
+
+            if (!PyEval_ThreadsInitialized()) PyEval_InitThreads();
+
             karabo::net::BrokerConnection::Pointer connection = karabo::net::BrokerConnection::create(connectionType, connectionParameters);
-            this->init(connection, instanceId);
-            if (autostart) {
+            this->init(instanceId, connection);
+
+            if (autostartEventLoop) {
                 ScopedGILRelease nogil;
-                m_eventLoop = boost::thread(boost::bind(&karabo::xms::SignalSlotable::runEventLoop, this, heartbeat, karabo::util::Hash()));
+                m_eventLoop = boost::thread(boost::bind(&karabo::xms::SignalSlotable::runEventLoop, this, heartbeatInterval, karabo::util::Hash()));
                 boost::this_thread::sleep(boost::posix_time::milliseconds(10)); // give a chance above thread to start up before leaving this constructor
             }
         }
@@ -49,14 +51,15 @@ namespace karathon {
                 m_eventLoop.join();
         }
 
-        static boost::shared_ptr<SignalSlotableWrap> create(const std::string& instanceId = "py/console/0",
+        static boost::shared_ptr<SignalSlotableWrap> create(const std::string& instanceId = generateInstanceId<SignalSlotable>(),
                                                             const std::string& connectionType = "Jms",
                                                             const karabo::util::Hash& connectionParameters = karabo::util::Hash(),
-                                                            bool autostart = false) {
-            return boost::shared_ptr<SignalSlotableWrap>(new SignalSlotableWrap(instanceId, connectionType, connectionParameters, autostart));
+                                                            bool autostart = false,
+                                                            int heartbeatInterval = 10) {
+            return boost::shared_ptr<SignalSlotableWrap>(new SignalSlotableWrap(instanceId, connectionType, connectionParameters, autostart, heartbeatInterval));
         }
 
-        void runEventLoop(bool emitHeartbeat = true, const karabo::util::Hash& info = karabo::util::Hash()) {
+        void runEventLoop(int emitHeartbeat = 10, const karabo::util::Hash& info = karabo::util::Hash()) {
             ScopedGILRelease nogil;
             karabo::xms::SignalSlotable::runEventLoop(emitHeartbeat, info);
         }

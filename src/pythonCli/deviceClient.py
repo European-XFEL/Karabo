@@ -6,11 +6,17 @@
 from libkarathon import DeviceClient as CppDeviceClient
 from libkarathon import Hash
 from libkarathon import Schema
+from libkarathon import Authenticator
 
 import IPython.core.ipapi
-ip = IPython.core.ipapi.get()
 import re
 import time
+import getpass
+import socket
+
+
+ip = IPython.core.ipapi.get()
+
 
 # Create one instance (global singleton) of a DeviceClient
 cpp_client = None
@@ -200,9 +206,9 @@ class DeviceClient(object):
     def help(self, instanceId, parameter = None):
         """This function provides help on a full instance or a specific parameter of an instance"""
         if parameter is None:
-            self.__client.getFullSchema(instanceId).help()
+            self.__client.getDeviceSchema(instanceId).help()
         else:
-            self.__client.getFullSchema(instanceId).help(parameter)
+            self.__client.getDeviceSchema(instanceId).help(parameter)
     
 
     def get(self, instanceId, propertyName = None):
@@ -228,7 +234,11 @@ class DeviceClient(object):
     
     
     def getClassSchema(self, serverId, classId):
-        return self.__client.getClassSchema(serverId, classId);
+        return self.__client.getClassSchema(serverId, classId)
+    
+    
+    def getDeviceSchema(self, deviceId):
+        return self.__client.getDeviceSchema(deviceId)
     
         
     def registerDeviceMonitor(self, instanceId, callbackFunction, userData = None):
@@ -288,9 +298,12 @@ class DeviceClient(object):
         return self.__client.set(instanceId, propertyName, propertyValue, ".", timeout)
     
         
-    def execute(self, instanceId, command):
+    def execute(self, instanceId, command, a1 = None):
         """Executes a command"""
-        self.__client.execute(instanceId, command)
+        if a1 is None:
+            self.__client.execute(instanceId, command)
+        else:
+            self.__client.execute(instanceId, command, a1)
         
         
     def executeNoWait(self, deviceId, command):

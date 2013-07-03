@@ -180,7 +180,8 @@ class DeviceServer(object):
         info["serverId"] = self.serverid
         info["version"] = self.__class__.__version__
         info["host"] = self.hostname
-        self.ss.runEventLoop(True, info)  # block
+        # TODO
+        self.ss.runEventLoop(10, info)  # block
     
     def _registerAndConnectSignalsAndSlots(self):
         self.ss.registerSignal("signalNewDeviceClassAvailable", str, str, Schema) # serverid, classid, Schema

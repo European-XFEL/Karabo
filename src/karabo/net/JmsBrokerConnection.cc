@@ -251,6 +251,18 @@ namespace karabo {
                 KARABO_RETHROW
             }
         }
+        
+        const std::string& JmsBrokerConnection::getBrokerHostname() const {
+            return m_hostname;
+        }
+        
+        unsigned int JmsBrokerConnection::getBrokerPort() const {
+            return m_port;
+        }
+        
+        const std::string& JmsBrokerConnection::getBrokerTopic() const {
+            return m_destinationName;
+        }
 
 
         BrokerChannel::Pointer JmsBrokerConnection::createChannel() {

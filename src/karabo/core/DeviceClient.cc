@@ -8,23 +8,26 @@
 
 #include <karabo/log/Logger.hh>
 #include <karabo/io/FileTools.hh>
+#include <karabo/webAuth/Authenticator.hh>
 
 #include "DeviceClient.hh"
 
 using namespace std;
 using namespace karabo::util;
 using namespace karabo::xms;
+using namespace karabo::webAuth;
 
 
 namespace karabo {
     namespace core {
 
 
-        DeviceClient::DeviceClient(const std::string& connectionType, const karabo::util::Hash& connectionParameters) : m_isShared(false), m_internalTimeout(600), m_isAdvancedMode(false) {
-            karabo::net::BrokerConnection::Pointer connection = karabo::net::BrokerConnection::create(connectionType, connectionParameters);
+        DeviceClient::DeviceClient(const std::string& brokerType, const karabo::util::Hash& brokerConfiguration) :
+        m_isShared(false), m_internalTimeout(600), m_isAdvancedMode(false) {
+
             std::string ownInstanceId = generateOwnInstanceId();
-            m_signalSlotable = boost::shared_ptr<SignalSlotable > (new SignalSlotable(connection, ownInstanceId));
-            m_eventThread = boost::thread(boost::bind(&karabo::xms::SignalSlotable::runEventLoop, m_signalSlotable, true, Hash()));
+            m_signalSlotable = boost::shared_ptr<SignalSlotable > (new SignalSlotable(ownInstanceId, brokerType, brokerConfiguration));
+            m_eventThread = boost::thread(boost::bind(&karabo::xms::SignalSlotable::runEventLoop, m_signalSlotable, 20, Hash()));
 
             this->setupSlots();
             this->checkMaster();
@@ -33,7 +36,9 @@ namespace karabo {
         }
 
 
-        DeviceClient::DeviceClient(const boost::shared_ptr<SignalSlotable>& signalSlotable) : m_signalSlotable(signalSlotable), m_isShared(true), m_internalTimeout(600), m_isAdvancedMode(false) {
+        DeviceClient::DeviceClient(const boost::shared_ptr<SignalSlotable>& signalSlotable) :
+        m_signalSlotable(signalSlotable), m_isShared(true), m_internalTimeout(600), m_isAdvancedMode(false) {
+            
             this->setupSlots();
             this->checkMaster();
             this->cacheAvailableInstances();
@@ -110,6 +115,10 @@ namespace karabo {
             string type = "unknown";
             if (node) type = node->getValue<string>();
             return string(type + "." + instanceId);
+        }
+        
+        bool DeviceClient::login(const std::string& username, const std::string& password, const std::string& provider) {
+            return m_signalSlotable->login(username, password, provider);
         }
 
 
@@ -336,7 +345,7 @@ namespace karabo {
                     if (it->hasAttribute("visibility")) {
                         const vector<string>& roles = it->getAttribute<vector<string> >("visibility");
                         if (!roles.empty()) {
-                            if (std::find(roles.begin(), roles.end(), m_role) == roles.end()) continue;
+                            //if (std::find(roles.begin(), roles.end(), m_role) == roles.end()) continue;
                         }
                     }
                     devices.push_back(it->getKey());
@@ -359,7 +368,7 @@ namespace karabo {
                         if (it->hasAttribute("visibility")) {
                             const vector<string>& roles = it->getAttribute<vector<string> >("visibility");
                             if (!roles.empty()) {
-                                if (std::find(roles.begin(), roles.end(), m_role) == roles.end()) continue;
+                                //if (std::find(roles.begin(), roles.end(), m_role) == roles.end()) continue;
                             }
                         }
                         devices.push_back(it->getKey());
@@ -370,12 +379,12 @@ namespace karabo {
         }
 
 
-        karabo::util::Schema DeviceClient::getFullSchema(const std::string& instanceId) {
-            return cacheAndGetFullSchema(instanceId);
+        karabo::util::Schema DeviceClient::getDeviceSchema(const std::string& instanceId) {
+            return cacheAndGetDeviceSchema(instanceId);
         }
 
 
-        karabo::util::Schema DeviceClient::cacheAndGetFullSchema(const std::string & instanceId) {
+        karabo::util::Schema DeviceClient::cacheAndGetDeviceSchema(const std::string & instanceId) {
             boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
             std::string path("device." + instanceId + ".fullSchema");
             boost::optional<Hash::Node&> node = m_runtimeSystemDescription.find(path);
@@ -478,7 +487,7 @@ namespace karabo {
 
 
         std::vector<std::string> DeviceClient::getProperties(const std::string& deviceId) {
-            Schema schema = cacheAndGetFullSchema(deviceId);
+            Schema schema = cacheAndGetDeviceSchema(deviceId);
             return filterProperties(schema);
         }
 

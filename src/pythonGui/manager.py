@@ -645,6 +645,7 @@ class Manager(Singleton):
     def handleInstanceGone(self, instanceId):
         # Remove instanceId from central hash and update
         # TODO: serverId or deviceId - how to distinguish?
+        #if self.__hash.get("server." + instanceId)
         serverConfig = self.__hash.get("server")
         deviceConfig = self.__hash.get("device")
         

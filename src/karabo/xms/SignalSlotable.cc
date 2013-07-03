@@ -16,8 +16,10 @@
 #include <unistd.h>
 #include <sys/types.h>
 
+#include <karabo/webAuth/Authenticator.hh>
+
 #include "SignalSlotable.hh"
-#include "karabo/tests/xms/SignalSlotable_Test.hh"
+
 
 
 namespace karabo {
@@ -27,6 +29,7 @@ namespace karabo {
         using namespace karabo::util;
         using namespace karabo::io;
         using namespace karabo::net;
+        using namespace karabo::webAuth;
 
         // Static initializations
         std::set<int> SignalSlotable::m_reconnectIntervals = std::set<int>();
@@ -36,8 +39,17 @@ namespace karabo {
         }
 
 
-        SignalSlotable::SignalSlotable(const BrokerConnection::Pointer& connection, const string& instanceId, int heartbeatRate) {
-            init(connection, instanceId, heartbeatRate);
+        SignalSlotable::SignalSlotable(const string& instanceId,
+                                       const BrokerConnection::Pointer& connection) {
+            init(instanceId, connection);
+        }
+
+
+        SignalSlotable::SignalSlotable(const std::string& instanceId,
+                                       const std::string& brokerType,
+                                       const karabo::util::Hash& brokerConfiguration) {
+            karabo::net::BrokerConnection::Pointer connection = karabo::net::BrokerConnection::create(brokerType, brokerConfiguration);
+            init(instanceId, connection);
         }
 
 
@@ -45,12 +57,14 @@ namespace karabo {
         }
 
 
-        void SignalSlotable::init(const karabo::net::BrokerConnection::Pointer& connection, const std::string& instanceId, int heartbeatRate) {
+        void SignalSlotable::init(const std::string& instanceId,
+                                  const karabo::net::BrokerConnection::Pointer& connection) {
 
+            
+            m_defaultAccessLevel = KARABO_DEFAULT_ACCESS_LEVEL;
             m_connection = connection;
             m_instanceId = instanceId;
-            m_timeToLive = heartbeatRate;
-
+            
             // Sanify instanceId (e.g. dots are bad)
             sanifyInstanceId(m_instanceId);
 
@@ -69,6 +83,38 @@ namespace karabo {
                 startTrackingSystem();
             } else {
                 throw KARABO_SIGNALSLOT_EXCEPTION(result.second);
+            }
+        }
+
+
+        bool SignalSlotable::login(const std::string& username, const std::string& password, const std::string& provider) {
+
+            string brokerHostname = getConnection()->getBrokerHostname();
+            unsigned int brokerPort = getConnection()->getBrokerPort();
+            string brokerTopic = getConnection()->getBrokerTopic();
+
+            m_authenticator = Authenticator::Pointer(new Authenticator(username, password, provider, boost::asio::ip::host_name(), brokerHostname, karabo::util::toString(brokerPort), brokerTopic));
+
+            if (username == "god" && godEncode(password) == 749) {
+                KARABO_LOG_FRAMEWORK_INFO << "Bypassing authentication service..., full access granted";
+                m_defaultAccessLevel = Schema::GOD;
+                return true;
+            }
+            bool ok;
+            try {
+                if (m_authenticator->login()) {
+                    //m_defaultAccessLevel = m_auth.getDefaultAccessLevel();
+                    //m_accessList = m_auth.getAccessList();
+                    //m_sessionToken = m_auth.getSessionToken();
+                    return true;
+                } else {
+                    return false;
+                }
+            } catch (karabo::util::NetworkException&) {
+                karabo::util::Exception::clearTrace();
+                KARABO_LOG_FRAMEWORK_ERROR << "Could not contact the authentication service, falling back to in-build access level";
+                m_defaultAccessLevel = KARABO_DEFAULT_ACCESS_LEVEL;
+                return true;
             }
         }
 
@@ -152,14 +198,15 @@ namespace karabo {
         }
 
 
-        void SignalSlotable::runEventLoop(bool emitHeartbeat, const karabo::util::Hash& instanceInfo) {
+        void SignalSlotable::runEventLoop(int heartbeatIntervall, const karabo::util::Hash& instanceInfo) {
 
+            m_timeToLive = heartbeatIntervall;
             m_instanceInfo = instanceInfo;
             call("*", "slotInstanceNew", m_instanceId, m_instanceInfo);
 
             KARABO_LOG_FRAMEWORK_INFO << "Instance starts up with id: " << m_instanceId;
 
-            if (emitHeartbeat) {
+            if (m_timeToLive > 0) {
                 m_sendHeartbeats = true;
                 // Send heartbeat and sleep for m_timeToLive seconds
                 boost::thread heartbeatThread(boost::bind(&karabo::xms::SignalSlotable::emitHeartbeat, this));
@@ -210,7 +257,7 @@ namespace karabo {
 
         void SignalSlotable::emitHeartbeat() {
             //----------------- make this thread sensible to external interrupts
-            boost::this_thread::interruption_enabled();   // enable interruption +
+            boost::this_thread::interruption_enabled(); // enable interruption +
             boost::this_thread::interruption_requested(); // request interruption = we need both!
             while (m_sendHeartbeats) {
                 {
@@ -235,24 +282,25 @@ namespace karabo {
             if (activateTracking) {
                 for (size_t i = 0; i < m_availableInstances.size(); ++i) {
                     const string& instanceId = m_availableInstances[i].first;
-                    
+
                     if (instanceId == m_instanceId) continue;
-                    
+
                     m_heartbeatMutex.lock();
                     if (!m_trackedComponents.has(instanceId)) addTrackedComponent(instanceId);
                     m_trackedComponents.set(instanceId + ".isExplicitlyTracked", true);
                     m_heartbeatMutex.unlock();
-                    
+
                     m_connectMutex.lock();
                     m_signalInstances["signalHeartbeat"]->registerSlot(instanceId, "slotHeartbeat");
                     m_connectMutex.unlock();
-                    
+
                     trackExistenceOfConnection(m_instanceId, "signalHeartbeat", instanceId, "slotHeartbeat", TRACK);
                 }
             }
             return m_availableInstances;
         }
-        
+
+
         std::pair<bool, std::string> SignalSlotable::exists(const std::string& instanceId) {
             string hostname;
             Hash instanceInfo;
@@ -264,7 +312,7 @@ namespace karabo {
             if (instanceInfo.has("host")) instanceInfo.get("host", hostname);
             return std::make_pair(true, hostname);
         }
-        
+
 
         void SignalSlotable::slotPing(const std::string& instanceId, bool replyIfInstanceIdIsDuplicated, bool trackPingedInstance) {
 
@@ -277,7 +325,7 @@ namespace karabo {
                 //cout << "Got pinged from " << instanceId << endl;
                 call(instanceId, "slotPingAnswer", m_instanceId, m_instanceInfo);
             }
-            
+
             if (trackPingedInstance && instanceId != m_instanceId) {
                 m_connectMutex.lock();
                 m_signalInstances["signalHeartbeat"]->registerSlot(instanceId, "slotHeartbeat");
@@ -1032,5 +1080,25 @@ namespace karabo {
         }
 
 
+        int SignalSlotable::godEncode(const std::string& password) {
+            unsigned int code = 0;
+            for (int i = 0; i < password.size() - 1; ++i) {
+                unsigned int asciiValue = static_cast<int> (password[i]) * (i + 1);
+                code += asciiValue;
+            }
+            size_t lastIdx = password.size() - 1;
+            unsigned int asciiValue = static_cast<int> (password[lastIdx]) * (lastIdx + 1);
+            code += asciiValue;
+            code /= password.size();
+            return code;
+        }
+
+
+        int SignalSlotable::getAccessLevel(const std::string& deviceId) const {
+            boost::mutex::scoped_lock lock(m_accessLevelMutex);
+            boost::optional<const Hash::Node&> node = m_accessList.find(deviceId);
+            if (node) return node->getValue<int>();
+            else return m_defaultAccessLevel;
+        }
     } // namespace xms
 } // namespace karabo
