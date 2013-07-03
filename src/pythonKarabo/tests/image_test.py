@@ -41,9 +41,9 @@ class  Image_TestCase(unittest.TestCase):
             self.assertEqual(img.dimX(), 4)
             self.assertEqual(img.dimY(), 1)
             self.assertEqual(img.dimZ(), 1)
-            #n = img.dimX()
-            #for i in range(0,n):
-            #    self.assertEqual(img[i], i)
+            n = img.dimX()
+            for i in range(0,n):
+                self.assertEqual(img[i], float(i))
         except Exception,e:
             self.fail("test_image_double exception group 4: " + str(e))    
         
@@ -82,9 +82,9 @@ class  Image_TestCase(unittest.TestCase):
             self.assertEqual(img.dimX(), 4)
             self.assertEqual(img.dimY(), 1)
             self.assertEqual(img.dimZ(), 1)
-            #n = img.dimX()
-            #for i in range(0,n):
-            #    self.assertEqual(img[i], i)
+            n = img.dimX()
+            for i in range(0,n):
+                self.assertEqual(img[i], float(i))
         except Exception,e:
             self.fail("test_image_float exception group 4: " + str(e))    
     
