@@ -5,7 +5,9 @@ import unittest
 from libkarathon import *
 
 class  Image_TestCase(unittest.TestCase):
-
+    def setUp(self):
+        self.resourcesdir = "../../../src/pythonKarabo/tests/resources/"
+    
     def test_image_double(self):
         try:
             img = ImageDOUBLE(CPU)
@@ -13,6 +15,17 @@ class  Image_TestCase(unittest.TestCase):
             self.assertEqual(img.byteSize(), 0)
         except Exception,e:
             self.fail("test_image_double exception group 1: " + str(e))
+        
+        try:
+            img = ImageDOUBLE(CPU, self.resourcesdir+"in-3-3-3.asc")
+            self.assertEqual(img.dimensionality(), 3)
+            self.assertEqual(img.dimX(), 3)
+            self.assertEqual(img.dimY(), 3)
+            self.assertEqual(img.dimZ(), 3)
+            self.assertEqual(img(2, 2, 2), 222)
+            self.assertEqual(img(1, 0, 2), 102)
+        except Exception,e:
+            self.fail("test_image_double exception group 2: " + str(e))    
             
         try:
             img = ImageDOUBLE(CPU, 1024, 1024)
@@ -21,7 +34,7 @@ class  Image_TestCase(unittest.TestCase):
             self.assertEqual(img.dimY(), 1024)
             self.assertEqual(img.dimZ(), 1)
         except Exception,e:
-            self.fail("test_image_double exception group 2: " + str(e))
+            self.fail("test_image_double exception group 3: " + str(e))
             
         try:
             img = ImageDOUBLE(CPU, 10, 1, 1, 5.5)
@@ -33,7 +46,7 @@ class  Image_TestCase(unittest.TestCase):
             for i in range(0,n):
                 self.assertEqual(img[i], 5.5)          
         except Exception,e:
-            self.fail("test_image_double exception group 3: " + str(e))    
+            self.fail("test_image_double exception group 4: " + str(e))    
         
         try:
             img = ImageDOUBLE(CPU, 4, 1, 1, "0,1,2,3", True)
@@ -45,8 +58,9 @@ class  Image_TestCase(unittest.TestCase):
             for i in range(0,n):
                 self.assertEqual(img[i], float(i))
         except Exception,e:
-            self.fail("test_image_double exception group 4: " + str(e))    
+            self.fail("test_image_double exception group 5: " + str(e))    
         
+
     def test_image_float(self):
         try:
             img = ImageFLOAT(CPU)
@@ -54,7 +68,18 @@ class  Image_TestCase(unittest.TestCase):
             self.assertEqual(img.byteSize(), 0)
         except Exception,e:
             self.fail("test_image_float exception group 1: " + str(e))
-            
+        
+        try:
+            img = ImageFLOAT(CPU, self.resourcesdir+"in-3-3-3.asc")
+            self.assertEqual(img.dimensionality(), 3)
+            self.assertEqual(img.dimX(), 3)
+            self.assertEqual(img.dimY(), 3)
+            self.assertEqual(img.dimZ(), 3)
+            self.assertEqual(img(2, 2, 2), 222)
+            self.assertEqual(img(1, 0, 2), 102)
+        except Exception,e:
+            self.fail("test_image_float exception group 2: " + str(e))       
+        
         try:
             img = ImageFLOAT(CPU, 1024, 1024)
             self.assertEqual(img.dimensionality(), 2)
@@ -62,7 +87,7 @@ class  Image_TestCase(unittest.TestCase):
             self.assertEqual(img.dimY(), 1024)
             self.assertEqual(img.dimZ(), 1)
         except Exception,e:
-            self.fail("test_image_float exception group 2: " + str(e))
+            self.fail("test_image_float exception group 3: " + str(e))
             
         try:
             img = ImageFLOAT(CPU, 10, 1, 1, 5.5)
@@ -74,7 +99,7 @@ class  Image_TestCase(unittest.TestCase):
             for i in range(0,n):
                 self.assertEqual(img[i], 5.5)          
         except Exception,e:
-            self.fail("test_image_float exception group 3: " + str(e))    
+            self.fail("test_image_float exception group 4: " + str(e))    
         
         try:
             img = ImageFLOAT(CPU, 4, 1, 1, "0,1,2,3", True)
@@ -86,7 +111,7 @@ class  Image_TestCase(unittest.TestCase):
             for i in range(0,n):
                 self.assertEqual(img[i], float(i))
         except Exception,e:
-            self.fail("test_image_float exception group 4: " + str(e))    
+            self.fail("test_image_float exception group 5: " + str(e))    
     
 if __name__ == '__main__':
     unittest.main()
