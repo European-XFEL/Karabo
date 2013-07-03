@@ -80,6 +80,25 @@ namespace karabo {
              * Closes the connection
              */
             virtual void close() = 0;
+            
+            /**
+             * Returns the broker hostname
+             * @return hostname
+             */
+            virtual const std::string& getBrokerHostname() const = 0;
+            
+            /**
+             * Returns the broker port
+             * @return port
+             */
+            virtual unsigned int getBrokerPort() const = 0;
+            
+            /**
+             * Returns the broker topic
+             * @return topic
+             */
+            virtual const std::string& getBrokerTopic() const = 0;
+                            
 
             /**
              * This function creates a "channel" for the given connection.

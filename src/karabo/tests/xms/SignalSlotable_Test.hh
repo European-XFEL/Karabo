@@ -20,8 +20,8 @@ public:
 
     KARABO_CLASSINFO(SignalSlotDemo, "SignalSlotDemo", "1.0")
 
-    SignalSlotDemo(const karabo::net::BrokerConnection::Pointer connection, const std::string& instanceId) : 
-    karabo::xms::SignalSlotable(connection, instanceId), m_messageCount(0), m_allOk(true) {
+    SignalSlotDemo(const std::string& instanceId, const karabo::net::BrokerConnection::Pointer connection) : 
+    karabo::xms::SignalSlotable(instanceId, connection), m_messageCount(0), m_allOk(true) {
 
         SIGNAL1("signalA", std::string);
 

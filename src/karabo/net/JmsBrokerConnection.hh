@@ -24,66 +24,75 @@
  */
 namespace karabo {
 
-  /**
-   * Namespace for package msg
-   */
-  namespace net {
-
     /**
-     * The Connection class.
+     * Namespace for package msg
      */
-    class JmsBrokerConnection : public BrokerConnection {
-    public:
+    namespace net {
 
-      KARABO_CLASSINFO(JmsBrokerConnection, "Jms", "1.0")
-      
-      friend class JmsBrokerChannel;
+        /**
+         * The Connection class.
+         */
+        class JmsBrokerConnection : public BrokerConnection {
 
-      virtual ~JmsBrokerConnection();
+        public:
 
-      static void expectedParameters(karabo::util::Schema& expected);
+            KARABO_CLASSINFO(JmsBrokerConnection, "Jms", "1.0")
 
-      JmsBrokerConnection(const karabo::util::Hash& input);
+            friend class JmsBrokerChannel;
 
-      BrokerChannel::Pointer start();
+            virtual ~JmsBrokerConnection();
 
-      void stop();
+            static void expectedParameters(karabo::util::Schema& expected);
 
-      void close();
+            JmsBrokerConnection(const karabo::util::Hash& input);
 
-      BrokerChannel::Pointer createChannel();
-      
-      bool getDeliveryInhibition() const { return m_deliveryInhibition; }
+            BrokerChannel::Pointer start();
 
-    private:
+            void stop();
 
-      std::string m_hostname;
-      unsigned int m_port;
-      std::string m_destinationName;
-      MQDestinationType m_destinationType;
-      std::string m_username;
-      std::string m_password;
-      std::string m_protocol;
-      unsigned int m_ping;
-      bool m_trustBroker;
-      bool m_acknowledgeSent;
-      bool m_deliveryInhibition;
-      unsigned int m_acknowledgeTimeout;
-      MQAckMode m_acknowledgeMode;
-      int m_messageTimeToLive;
+            void close();
 
-      MQConnectionHandle m_connectionHandle;
+            const std::string& getBrokerHostname() const;
 
-      void setConnectionProperties(const MQPropertiesHandle& propertiesHandle);
+            unsigned int getBrokerPort() const;
 
-      static void onException(const MQConnectionHandle connectionHandle, MQStatus status, void* callbackData);
+            const std::string& getBrokerTopic() const;
 
-    };
+            BrokerChannel::Pointer createChannel();
+
+            bool getDeliveryInhibition() const {
+                return m_deliveryInhibition;
+            }
+
+        private:
+
+            std::string m_hostname;
+            unsigned int m_port;
+            std::string m_destinationName;
+            MQDestinationType m_destinationType;
+            std::string m_username;
+            std::string m_password;
+            std::string m_protocol;
+            unsigned int m_ping;
+            bool m_trustBroker;
+            bool m_acknowledgeSent;
+            bool m_deliveryInhibition;
+            unsigned int m_acknowledgeTimeout;
+            MQAckMode m_acknowledgeMode;
+            int m_messageTimeToLive;
+
+            MQConnectionHandle m_connectionHandle;
+
+            void setConnectionProperties(const MQPropertiesHandle& propertiesHandle);
+
+            static void onException(const MQConnectionHandle connectionHandle, MQStatus status, void* callbackData);
+
+        };
 
 
 
 
-  } // namespace net
+    } // namespace net
 } // namespace karabo
 
 #endif	/* KARABO_NET_AJMSCONNECTION_HH */

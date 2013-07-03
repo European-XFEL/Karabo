@@ -109,7 +109,8 @@ namespace karabo {
             Row< IdleState, NewPluginAvailableEvent, none, NotifyNewDeviceAction, none >,
             Row< IdleState, InbuildDevicesAvailableEvent, none, NotifyNewDeviceAction, none >,
             Row< IdleState, StartDeviceEvent, ServingState, StartDeviceAction, none >,
-            Row< ServingState, StartDeviceEvent, none, StartDeviceAction, none>
+            Row< ServingState, StartDeviceEvent, none, StartDeviceAction, none>,
+            Row< ServingState, NewPluginAvailableEvent, none, NotifyNewDeviceAction, none >
             KARABO_FSM_TABLE_END
 
             //                       Name          Transition-Table     Initial-State  Context

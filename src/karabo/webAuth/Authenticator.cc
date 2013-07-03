@@ -25,7 +25,7 @@ namespace karabo {
                                      const std::string& software)
         : m_username(username), m_password(password), m_provider(provider), m_ipAddress(ipAddress), m_hostname(hostname), m_portNumber(portNumber), m_software(software), m_service(new AuthenticationPortBindingProxy),
         // Variables initialized with defaults (otherwise primitive types get whatever arbitrary junk happened to be at that memory location previously)
-        m_userId(-100), m_softwareId(-100), m_roleId(-100), m_nonce(""), m_sessionToken(""), m_welcomeMessage(""), m_roleDesc("") {
+        m_userId(-100), m_softwareId(-100), m_roleId(-100), m_nonce(""), m_sessionToken(""), m_welcomeMessage(""), m_roleDesc(""), m_defaultAccessLevel(KARABO_DEFAULT_ACCESS_LEVEL) {
         }
 
 
@@ -91,6 +91,10 @@ namespace karabo {
 
         long long int Authenticator::getUserId() const {
             return m_userId;
+        }
+        
+        const karabo::util::Hash& Authenticator::getAccessList() const {
+            return m_accessList;
         }
 
 
