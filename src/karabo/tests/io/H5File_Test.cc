@@ -4,6 +4,8 @@
  * Created on February 20, 2013, 2:33 PM
  */
 
+//#define KARABO_ENABLE_TRACE_LOG 
+
 #include "H5File_Test.hh"
 #include "karabo/util/ArrayTools.hh"
 #include "TestPathSetup.hh"
@@ -13,6 +15,7 @@
 #include "karabo/io/h5/Group.hh"
 #include "karabo/io/h5/FixedLengthArray.hh"
 #include "Hdf5_Test.hh"
+#include "karabo/tests/util/Dims_Test.hh"
 #include <karabo/util/Hash.hh>
 
 #include <karabo/io/h5/File.hh>
@@ -21,6 +24,9 @@
 #include <karabo/util/Profiler.hh>
 
 #include <karabo/log/Tracer.hh>
+
+// for memcopy
+#include <cstring>
 
 using namespace karabo::util;
 using namespace karabo::io::h5;
@@ -40,11 +46,12 @@ H5File_Test::H5File_Test() : m_maxRec(100), m_testBufferWriteSuccess(false) {
     //    tr.enable("karabo.io.h5.Table.saveTableFormatAsAttribute");
     //    tr.enable("karabo.io.h5.Table.openNew");
     //    tr.enable("karabo.io.h5.Table.openReadOnly");
-    tr.enable("H5File_Test.testReadTable");
-    tr.enable("H5File_Test.testBufferWrite");
-    tr.enable("H5File_Test.testBufferRead");
-    tr.enable("H5File_Test.testRead");
-    tr.enable("H5File_Test.testWrite");
+    //    tr.enable("H5File_Test.testReadTable");
+    //    tr.enable("H5File_Test.testBufferWrite");
+    //    tr.enable("H5File_Test.testBufferRead");
+    //    tr.enable("H5File_Test.testRead");
+    //    tr.enable("H5File_Test.testWrite");
+    tr.enable("H5File_Test");
     tr.reconfigure();
 
 
@@ -174,7 +181,7 @@ void H5File_Test::testWrite() {
             v1[i] = i * 1.0 + 0.1234;
         }
         data.set("vectors.double", v1).setAttribute("dims", Dims(3, 4).toVector());
- 
+
         s = 10;
         vector<bool> v2(s, false);
         for (size_t i = 0; i < v2.size(); ++i) {
@@ -199,7 +206,7 @@ void H5File_Test::testWrite() {
                    "h5name", "test",
                    "key", "experimental.test",
                    "compressionLevel", 9
-                   );   
+                   );
 
         h5::Element::Pointer e1 = h5::Element::create("INT32", i32el);
 
@@ -207,7 +214,7 @@ void H5File_Test::testWrite() {
         dataFormat->addElement(e1);
 
 
-        data.set("abecadlo.wer", 1006u); 
+        data.set("abecadlo.wer", 1006u);
 
         Hash uel(
                  "h5path", "experimental",
@@ -403,7 +410,7 @@ void H5File_Test::testRead() {
 
         table->readAttributes(data);
         // read first record
-        table->read(0); 
+        table->read(0);
 
         KARABO_LOG_FRAMEWORK_TRACE_CF << "after reading: ";
 
@@ -1155,9 +1162,9 @@ void H5File_Test::testManyTables() {
 
 
         int n = 5;
-        int rec = 100;
+        //        int rec = 100;
 
-        float totalSize = rec * (4 + 4 + 8 + 2) * n / 1024;
+        //        float totalSize = rec * (4 + 4 + 8 + 2) * n / 1024;
         for (int i = 0; i < n; ++i) {
             data.set(toString(i), i);
             data.set("id" + toString(i), (unsigned char) 0);
@@ -1271,7 +1278,7 @@ void H5File_Test::testManyGroups() {
 
         Hash d1, d2, d3, d4;
 
-        int n = 100;//00; //10000; //0; //5000; //500;//5000;//20000;//25000;
+        int n = 100; //00; //10000; //0; //5000; //500;//5000;//20000;//25000;
         size_t rec = 3;
         int m = 1;
         float totalSize = rec * (4 + 4 + 8 + 2) * n / 1024;
@@ -1348,45 +1355,45 @@ void H5File_Test::testManyGroups() {
 
         p.start("create");
         Table::Pointer t1 = file.createTable("/base/c1", dataFormat1);
-//        file.reportOpenObjects();
+        //        file.reportOpenObjects();
         Table::Pointer t2 = file.createTable("/base/c2", dataFormat2);
-//        file.reportOpenObjects();
+        //        file.reportOpenObjects();
         Table::Pointer t3 = file.createTable("/base/c3", dataFormat3);
-//        file.reportOpenObjects();
+        //        file.reportOpenObjects();
         Table::Pointer t4 = file.createTable("/base/c4", dataFormat4);
-//        file.reportOpenObjects();
+        //        file.reportOpenObjects();
         KARABO_LOG_FRAMEWORK_TRACE_CF << "File structure is created";
         p.stop("create");
 
         p.start("attribute");
         if (attr) {
-//            clog << "write attributes" << endl;
-//            file.reportOpenObjects();
+            //            clog << "write attributes" << endl;
+            //            file.reportOpenObjects();
             p.start("attribute1");
             t1->writeAttributes(d1);
             p.stop("attribute1");
-//            double attTime1 = HighResolutionTimer::time2double(p.getTime("attribute1"));
-//            clog << "t1: " << attTime1 << endl;
-//            file.reportOpenObjects();
+            //            double attTime1 = HighResolutionTimer::time2double(p.getTime("attribute1"));
+            //            clog << "t1: " << attTime1 << endl;
+            //            file.reportOpenObjects();
             p.start("attribute2");
             t2->writeAttributes(d2);
             p.stop("attribute2");
-//            double attTime2 = HighResolutionTimer::time2double(p.getTime("attribute2"));
-//            clog << "t2: " << attTime2 << endl;
-//            file.reportOpenObjects();
+            //            double attTime2 = HighResolutionTimer::time2double(p.getTime("attribute2"));
+            //            clog << "t2: " << attTime2 << endl;
+            //            file.reportOpenObjects();
             p.start("attribute3");
             t3->writeAttributes(d3);
             p.stop("attribute3");
-//            double attTime3 = HighResolutionTimer::time2double(p.getTime("attribute3"));
-//            clog << "t3: " << attTime3 << endl;
-//            file.reportOpenObjects();
+            //            double attTime3 = HighResolutionTimer::time2double(p.getTime("attribute3"));
+            //            clog << "t3: " << attTime3 << endl;
+            //            file.reportOpenObjects();
             p.start("attribute4");
             t4->writeAttributes(d4);
             p.stop("attribute4");
-//            double attTime4 = HighResolutionTimer::time2double(p.getTime("attribute4"));
-//            clog << "t4: " << attTime4 << endl;
-//            file.reportOpenObjects();
-//            clog << "Attributes have been written" << endl;
+            //            double attTime4 = HighResolutionTimer::time2double(p.getTime("attribute4"));
+            //            clog << "t4: " << attTime4 << endl;
+            //            file.reportOpenObjects();
+            //            clog << "Attributes have been written" << endl;
         }
         p.stop("attribute");
         #define WRITE
@@ -1430,7 +1437,7 @@ void H5File_Test::testManyGroups() {
 
         num_rec = m*rec;
         for (int i = 0; i < m; ++i) {
-            for (size_t j = 0; j < static_cast<size_t>(n); ++j) {
+            for (size_t j = 0; j < static_cast<size_t> (n); ++j) {
                 vector<int>& v1 = d1.get< vector<int> >(toString(j));
                 for (size_t k = 0; k < v1.size(); ++k) {
                     v1[k] = k + j;
@@ -1445,28 +1452,28 @@ void H5File_Test::testManyGroups() {
         totalSize *= m;
 
         p.stop("write");
-//        clog << "---report before closing--" << endl;
-//        file.reportOpenObjects();
+        //        clog << "---report before closing--" << endl;
+        //        file.reportOpenObjects();
         p.start("close");
         t1->close();
         p.stop("close");
-//        clog << "-----" << endl;
-//        file.reportOpenObjects();
+        //        clog << "-----" << endl;
+        //        file.reportOpenObjects();
         p.start("close");
         t2->close();
         p.stop("close");
-//        clog << "-----" << endl;
-//        file.reportOpenObjects();
+        //        clog << "-----" << endl;
+        //        file.reportOpenObjects();
         p.start("close");
         t3->close();
         p.stop("close");
-//        clog << "-----" << endl;
-//        file.reportOpenObjects();
+        //        clog << "-----" << endl;
+        //        file.reportOpenObjects();
         p.start("close");
         t4->close();
         p.stop("close");
-//        clog << "-----" << endl;
-//        file.reportOpenObjects();
+        //        clog << "-----" << endl;
+        //        file.reportOpenObjects();
         p.start("close");
         file.close();
         p.stop("close");
@@ -1601,7 +1608,7 @@ void H5File_Test::testManyGroups() {
             clog << "Total (open/bind/read/close) time: " << openTime + bindTime + readTime + close1Time << " [s]" << endl;
         }
 
- 
+
     } catch (Exception& ex) {
         clog << ex << endl;
         CPPUNIT_FAIL("Error");
@@ -1648,9 +1655,9 @@ void H5File_Test::testVLWrite() {
                 v[i] = i;
             }
             data.set("experimental.test", v).setAttribute("size", 20);
-            t->write(data, 0); 
-        }  
-        {   
+            t->write(data, 0);
+        }
+        {
             vector<float> v(3, 8);
             data.set("experimental.test", &v[0]).setAttribute("size", 3);
             t->write(data, 1);
@@ -1661,7 +1668,7 @@ void H5File_Test::testVLWrite() {
             data.set("experimental.test", v).setAttribute("size", Dims(10, 30, 50).toVector());
             t->write(data, 2, 3);
         }
-  
+
         {
             Hash rdata, rbdata;
             vector<float>& r1 = rdata.bindReference<vector<float> >("experimental.test");
@@ -1687,7 +1694,7 @@ void H5File_Test::testVLWrite() {
                 t->read(3);
                 clog << "size: " << r1.size() << endl;
                 clog << "rdata:\n" << rdata << endl;
- 
+
                 t->read(4);
                 clog << "size: " << r1.size() << endl;
                 clog << "rdata:\n" << rdata << endl;
@@ -1705,4 +1712,439 @@ void H5File_Test::testVLWrite() {
         CPPUNIT_FAIL("Error");
     }
 
+}
+
+
+void H5File_Test::testTrainFormat() {
+
+    try {
+        size_t bufLen = 1024 * 1024 * 1024;
+        vector<char> buffer(bufLen, 0);
+
+
+        Hash dataset;
+
+        // dataset
+        dataset.set("majorTrainFormatVersion", static_cast<unsigned char> (1));
+        dataset.set("minorTrainFormatVersion", static_cast<unsigned char> (0));
+        dataset.set("moduleWidth", static_cast<unsigned short> (512));
+        dataset.set("moduleHeight", static_cast<unsigned short> (128));
+        dataset.set("numModules", static_cast<unsigned short> (16));
+        dataset.set("checksumType", static_cast<unsigned char> (0));
+        dataset.set("checksumSize", static_cast<unsigned char> (4));
+        dataset.set("encoding", static_cast<unsigned char> (1));
+        dataset.set("detectorDataSize", static_cast<unsigned short> (4 * 1024));
+
+
+
+        unsigned short numModules = dataset.get<unsigned short>("numModules");
+        unsigned short moduleWidth = dataset.get<unsigned short>("moduleWidth");
+        unsigned short moduleHeight = dataset.get<unsigned short>("moduleHeight");
+        unsigned char checksumSize = dataset.get<unsigned char>("checksumSize");        
+        unsigned short detectorDataSize = dataset.get<unsigned short>("detectorDataSize");
+
+
+        string filename = "/dev/shm/train.h5";
+        filename = resourcePath("train.h5");
+        File file(filename);
+        file.open(File::TRUNCATE);
+        KARABO_LOG_FRAMEWORK_TRACE_CF << "File " << filename << " is open";
+
+
+        h5::Format::Pointer formatConfiguration = h5::Format::discover(dataset);
+        formatConfiguration->removeElement("checksumType");
+        formatConfiguration->removeElement("checksumSize");
+        
+        Table::Pointer lpdTableConfiguration = file.createTable("/instrument/LPD1/configuration", formatConfiguration);
+        lpdTableConfiguration->write(dataset,0);
+        
+        h5::Format::Pointer formatTrainData = trainFormatTrainData(detectorDataSize);
+        Table::Pointer lpdTableTrainData = file.createTable("/instrument/LPD1/train", formatTrainData);
+
+        h5::Format::Pointer formatImages = trainFormatImages(dataset);
+        Table::Pointer lpdTableImages = file.createTable("/instrument/LPD1/images", formatImages);
+
+        h5::Format::Pointer formatDescriptors = trainFormatDescriptors();
+        Table::Pointer lpdTableDescriptors = file.createTable("/instrument/LPD1/descriptors", formatDescriptors);
+
+
+        size_t idx = 0;
+        for (int i = 0; i < 1; ++i) {
+
+            uint64_t trainLength = fillTrainBuffer(buffer, bufLen, dataset, i, i * 2 + 4);
+
+
+            char* ptr = &buffer[0];
+
+
+            Hash trainData;
+
+            Hash& header = trainData.bindReference<Hash>("header");
+            header.set("trainId", *reinterpret_cast<unsigned long long*> (ptr));
+            header.set("dataId", *reinterpret_cast<unsigned long long*> (ptr + 8));
+            header.set("linkId", *reinterpret_cast<unsigned long long*> (ptr + 16));
+            header.set("imageCount", *reinterpret_cast<unsigned short*> (ptr + 24));
+
+
+            uint64_t imageCount = trainData.get<unsigned short>("header.imageCount");
+            unsigned long long offsetDescriptors = trainLength - (8 + checksumSize) - detectorDataSize - (imageCount * 16);
+            unsigned long long offsetTrailer = trainLength - (8 + checksumSize);
+            unsigned long long offsetDetectorDataBlock = offsetTrailer - detectorDataSize;
+
+            Hash& images = trainData.bindReference<Hash>("images");
+            images.set("image", reinterpret_cast<unsigned short*> (ptr + 26));
+            vector<unsigned long long>& imageTrainIds = images.bindReference<vector<unsigned long long> >("trainId");
+            imageTrainIds.resize(imageCount, header.get<unsigned long long>("trainId"));
+            images.set("bunchNumber", reinterpret_cast<unsigned long long*> (ptr + offsetDescriptors + imageCount * sizeof (uint16_t)));
+
+            Hash& descriptors = trainData.bindReference<Hash>("descriptors");
+            vector<unsigned long long>& trainIds = descriptors.bindReference<vector<unsigned long long> >("trainId");
+            trainIds.resize(imageCount, header.get<unsigned long long>("trainId"));
+
+            descriptors.set("storageCellNumber", reinterpret_cast<unsigned short*> (ptr + offsetDescriptors));
+            descriptors.set("bunchNumber", reinterpret_cast<unsigned long long*> (ptr + offsetDescriptors + imageCount * sizeof (uint16_t)));
+            descriptors.set("status", reinterpret_cast<unsigned short*> (ptr + offsetDescriptors + imageCount * sizeof (uint16_t)
+                            + imageCount * sizeof (uint64_t)));
+            descriptors.set("length", reinterpret_cast<unsigned int*> (ptr + offsetDescriptors + imageCount * sizeof (uint16_t)
+                            + imageCount * sizeof (uint64_t) + imageCount * sizeof (uint16_t)));
+
+
+            trainData.set("detectorDataBlock", reinterpret_cast<char*> (ptr + offsetDetectorDataBlock));
+
+            Hash& trailer = trainData.bindReference<Hash>("trailer");
+            trailer.set("checksum", *reinterpret_cast<uint32_t*> (ptr + offsetTrailer));
+            trailer.set("status", *reinterpret_cast<unsigned long long*> (ptr + offsetTrailer + checksumSize));
+
+            KARABO_LOG_FRAMEWORK_TRACE_CF << "trainData:" << endl << trainData;
+
+
+            if (i == 0) {
+                Hash attr;
+                attr.set("header.trainId", static_cast<unsigned long long> (0));
+                attr.setAttribute("header.trainId", "description", "Unique train number within the facility");
+                attr.set("header.dataId", static_cast<unsigned long long> (0));
+                attr.setAttribute("header.dataId", "description", "FPGA train data processing level");
+                attr.set("header.linkId", static_cast<unsigned long long> (0));
+                attr.setAttribute("header.linkId", "description", "Identifies the FEM module name");
+                attr.set("header.imageCount", static_cast<unsigned short> (0));
+                attr.setAttribute("header.imageCount", "description", "Number of images collected for the train and sent out from the detector");
+                attr.set("images.image", static_cast<unsigned short*> (0));
+                attr.setAttribute("images.image", "dims", Dims(moduleWidth, moduleHeight, numModules).toVector());
+
+                lpdTableTrainData->writeAttributes(attr);
+                lpdTableImages->writeAttributes(attr);
+            }
+
+            lpdTableTrainData->write(trainData, i);
+            lpdTableImages->write(trainData, idx, imageCount);
+            lpdTableDescriptors->write(trainData.get<Hash>("descriptors"), idx, imageCount);
+
+            idx += imageCount;
+        }
+
+        file.close();
+
+    } catch (Exception& ex) {
+        clog << ex << endl;
+        CPPUNIT_FAIL("Error");
+    }
+
+}
+
+
+uint64_t H5File_Test::fillTrainBuffer(std::vector<char>& buffer, size_t bufLen, const Hash& dataset,
+                                      unsigned long long trainId, unsigned short imageCount) {
+
+    unsigned short numModules = dataset.get<unsigned short>("numModules");
+    unsigned short moduleWidth = dataset.get<unsigned short>("moduleWidth");
+    unsigned short moduleHeight = dataset.get<unsigned short>("moduleHeight");
+//    unsigned char checksumType = dataset.get<unsigned char>("checksumType");
+    unsigned char checksumSize = dataset.get<unsigned char>("checksumSize");
+//    unsigned char encoding = dataset.get<unsigned char>("encoding");
+    unsigned short detectorDataSize = dataset.get<unsigned short>("detectorDataSize");
+
+
+
+
+    // the rest of header  parameters fixed in this example
+    unsigned long long dataId = 1;
+    unsigned long long linkId = 1;
+
+
+
+    typedef unsigned short Pixel;
+    // single image
+    size_t imageSize = numModules * moduleHeight * moduleWidth;
+    KARABO_LOG_FRAMEWORK_TRACE_CF << "imageSize: " << imageSize;
+    vector<Pixel> image(imageSize, 0);
+    for (size_t i = 0; i < image.size(); ++i) {
+        image[i] = (i % moduleWidth) + 100 * (i / (moduleHeight * moduleWidth));
+        if (i < 200) {
+            KARABO_LOG_FRAMEWORK_TRACE_CF << "[" << i << "]: " << image[i] << " i%W: " << i % moduleWidth << " i/H*W: " << (i / (moduleHeight * moduleWidth));
+        }
+    }
+
+
+
+
+
+    // descriptors        
+    vector<unsigned short> storageCellNumber(imageCount, 0);
+    vector<unsigned long long> bunchNumber(imageCount, 0);
+    vector<unsigned short> status(imageCount, 0);
+    vector<unsigned int> length(imageCount, 0);
+
+    unsigned long long imageBlockSize = 0;
+    for (size_t j = 0; j < imageCount; ++j) {
+        storageCellNumber[j] = j;
+        bunchNumber[j] = j;
+        status[j] = 0;
+        length[j] = moduleWidth * moduleHeight * numModules * sizeof (Pixel);
+        imageBlockSize += length[j];
+    }
+
+    vector<char> detectorData(detectorDataSize, 'A');
+
+    unsigned int checksum = 0;
+
+    unsigned long long trainStatus = 0;
+
+    /////////////////////////////////////////////////////////
+
+
+
+    unsigned long long trainLength = 0; // trainLength in bytes - it is known from the receiver.
+    // here we need to calculate it according to the train format definition (see document: Train Builder Data Format)
+    trainLength = 26 /*header size*/ + imageBlockSize /*image block size*/ + imageCount * 16 /*descriptor block size*/
+            + detectorDataSize /*detector specific*/ + 8 + checksumSize /*trailer*/;
+
+
+
+
+    char *ptr = &buffer[0];
+
+    //header
+    memcpy(ptr, (char*) &trainId, sizeof (trainId));
+    memcpy(ptr + 8, (char*) &dataId, sizeof (dataId));
+    memcpy(ptr + 16, (char*) &linkId, sizeof (linkId));
+    memcpy(ptr + 24, (char*) &imageCount, sizeof (imageCount));
+
+    // images
+    for (size_t j = 0; j < imageCount; ++j) {
+        //        for (int k = 0; k < 10; ++k) {
+        //            image[k] = j;
+        //        }
+        KARABO_LOG_FRAMEWORK_TRACE_CF << "pos = ptr + " << (j * image.size() * sizeof (uint16_t));
+        memcpy(ptr + 26 + (j * image.size() * sizeof (uint16_t)), (char*) &image[0], imageSize * sizeof (uint16_t));
+    }
+
+    //descriptors
+
+    unsigned long long offsetDescriptors = trainLength - (8 + checksumSize) - detectorDataSize - (imageCount * 16);
+
+    size_t lenStorageCellNumber = imageCount * sizeof (storageCellNumber[0]);
+    size_t lenBunchNumber = imageCount * sizeof (bunchNumber[0]);
+    size_t lenStatus = imageCount * sizeof (status[0]);
+    size_t lenLength = imageCount * sizeof (length[0]);
+
+    KARABO_LOG_FRAMEWORK_TRACE_CF << "sizeof storageCellNumber[]: " << lenStorageCellNumber;
+    KARABO_LOG_FRAMEWORK_TRACE_CF << "sizeof bunchNumber[]: " << lenBunchNumber;
+    KARABO_LOG_FRAMEWORK_TRACE_CF << "sizeof lenStatus[]: " << lenStatus;
+    KARABO_LOG_FRAMEWORK_TRACE_CF << "sizeof length[]: " << lenLength;
+
+    memcpy(ptr + offsetDescriptors,
+           (char*) &storageCellNumber[0], lenStorageCellNumber);
+    memcpy(ptr + offsetDescriptors + lenStorageCellNumber,
+           (char*) &bunchNumber[0], lenBunchNumber);
+    memcpy(ptr + offsetDescriptors + lenStorageCellNumber + lenBunchNumber,
+           (char*) &status[0], lenStatus);
+    memcpy(ptr + offsetDescriptors + lenStorageCellNumber + lenBunchNumber + lenStatus,
+           (char*) &length[0], lenLength);
+
+
+    //detector specific block
+    unsigned long long offsetTrailer = trainLength - (8 + checksumSize);
+    unsigned long long offsetDetectorDataBlock = offsetTrailer - detectorDataSize;
+
+    memcpy(ptr + offsetDetectorDataBlock, &detectorData[0], detectorDataSize);
+
+
+    memcpy(ptr + offsetTrailer, (char*) &checksum, checksumSize);
+    memcpy(ptr + offsetTrailer + checksumSize, (char*) &trainStatus, 8);
+
+
+    return trainLength;
+}
+
+
+karabo::io::h5::Format::Pointer H5File_Test::trainFormatTrainData(unsigned short detectorDataBlockSize) {
+
+    Format::Pointer format = Format::createEmptyFormat();
+    {
+        Hash c(
+               "h5path", "",
+               "h5name", "trainId",
+               "key", "header.trainId"
+               );
+        c.set("attributes[0].STRING.h5name", "description");
+        h5::Element::Pointer e = h5::Element::create("UINT64", c);
+        format->addElement(e);
+    }
+
+    {
+        Hash c(
+               "h5path", "",
+               "h5name", "dataId",
+               "key", "header.dataId"
+               );
+        c.set("attributes[0].STRING.h5name", "description");
+        h5::Element::Pointer e = h5::Element::create("UINT64", c);
+        format->addElement(e);
+    }
+
+    {
+        Hash c(
+               "h5path", "",
+               "h5name", "linkId",
+               "key", "header.linkId"
+               );
+        c.set("attributes[0].STRING.h5name", "description");
+        h5::Element::Pointer e = h5::Element::create("UINT64", c);
+        format->addElement(e);
+    }
+
+    {
+        Hash c(
+               "h5path", "",
+               "h5name", "imageCount",
+               "key", "header.imageCount"
+               );
+        c.set("attributes[0].STRING.h5name", "description");
+        h5::Element::Pointer e = h5::Element::create("UINT16", c);
+        format->addElement(e);
+    }
+
+    {
+        Hash c(
+               "h5path", "",
+               "h5name", "status",
+               "key", "trailer.status"
+               );
+        h5::Element::Pointer e = h5::Element::create("UINT64", c);
+        format->addElement(e);
+    }
+
+    {
+        Hash c(
+               "h5path", "",
+               "h5name", "detectorDataBlock",
+               "key", "detectorDataBlock",
+               "dims", Dims(detectorDataBlockSize).toVector(),
+               "type", "PTR_CHAR"
+               );
+        h5::Element::Pointer e = h5::Element::create("VECTOR_CHAR", c);
+        format->addElement(e);
+    }
+
+    return format;
+}
+
+
+karabo::io::h5::Format::Pointer H5File_Test::trainFormatDescriptors() {
+
+    Format::Pointer format = Format::createEmptyFormat();
+
+    {
+        Hash c(
+               "h5path", "",
+               "h5name", "storageCellNumber"
+               );
+        h5::Element::Pointer e = h5::Element::create("UINT16", c);
+        format->addElement(e);
+    }
+
+    {
+        Hash c(
+               "h5path", "",
+               "h5name", "trainId"
+               );
+        h5::Element::Pointer e = h5::Element::create("UINT64", c);
+        format->addElement(e);
+    }
+
+    {
+        Hash c(
+               "h5path", "",
+               "h5name", "bunchNumber"
+               );
+        h5::Element::Pointer e = h5::Element::create("UINT64", c);
+        format->addElement(e);
+    }
+    {
+        Hash c(
+               "h5path", "",
+               "h5name", "status"
+               );
+        h5::Element::Pointer e = h5::Element::create("UINT16", c);
+        format->addElement(e);
+    }
+    {
+        Hash c(
+               "h5path", "",
+               "h5name", "length"
+               );
+        h5::Element::Pointer e = h5::Element::create("UINT32", c);
+        format->addElement(e);
+    }
+
+    return format;
+}
+
+
+karabo::io::h5::Format::Pointer H5File_Test::trainFormatImages(const Hash& dataset) {
+
+    Format::Pointer format = Format::createEmptyFormat();
+
+    {
+
+
+        Hash c(
+               "h5path", "",
+               "h5name", "image",
+               "dims", Dims(dataset.get<unsigned short>("moduleWidth"), dataset.get<unsigned short>("moduleHeight"),
+                            dataset.get<unsigned short>("numModules")).toVector(),
+               "type", "PTR_UINT16",
+               "key", "images.image"
+               );
+
+        // define "dims" attribute for the image as a vector of 3 elements: "module width", "module height", "number of modules"
+        c.set("attributes[0].VECTOR_UINT64.h5name", "dims");
+        c.set("attributes[0].VECTOR_UINT64.dims", "3");
+
+        h5::Element::Pointer e = h5::Element::create("VECTOR_UINT16", c);
+        format->addElement(e);
+    }
+
+    {
+        Hash c(
+               "h5path", "",
+               "h5name", "trainId",
+               "key", "images.trainId"
+
+               );
+        h5::Element::Pointer e = h5::Element::create("UINT64", c);
+        format->addElement(e);
+    }
+
+    {
+        Hash c(
+               "h5path", "",
+               "h5name", "bunchNumber",
+               "key", "images.bunchNumber"
+               );
+        h5::Element::Pointer e = h5::Element::create("UINT64", c);
+        format->addElement(e);
+    }
+
+    return format;
 }
