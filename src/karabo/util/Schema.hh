@@ -88,8 +88,8 @@ namespace karabo {
 
             #define KARABO_SCHEMA_ACCESS_MODE "accessMode"
             #define KARABO_SCHEMA_ALIAS "alias"
-            #define KARABO_SCHEMA_ADVANCED "advanced"
             #define KARABO_SCHEMA_ALLOWED_STATES "allowedStates"
+            #define KARABO_SCHEMA_ACCESS_LEVEL "accessLevel"
             #define KARABO_SCHEMA_ALLOWED_ROLES "allowedRoles"
             #define KARABO_SCHEMA_ASSIGNMENT "assignment"
             #define KARABO_SCHEMA_TAGS "tags"
@@ -118,9 +118,9 @@ namespace karabo {
 
             #define KARABO_SCHEMA_ALARM_LOW "alarmLow"
             #define KARABO_SCHEMA_ALARM_HIGH "alarmHigh"
-            
+
             #define KARABO_SCHEMA_ARCHIVE_POLICY "archivePolicy"
-            
+
             #define KARABO_SCHEMA_MIN "min"
             #define KARABO_SCHEMA_MAX "max"
 
@@ -142,7 +142,7 @@ namespace karabo {
             // Filter
             AccessType m_currentAccessMode;
             std::string m_currentState;
-            std::string m_currentAccessRole;
+            int m_currentAccessLevel;
 
             // Root name
             std::string m_rootName;
@@ -158,10 +158,10 @@ namespace karabo {
 
                 AccessType m_accessMode;
                 std::string m_state;
-                std::string m_accessRole;
+                int m_accessLevel;
 
-                AssemblyRules(const AccessType& accessMode = INIT | WRITE, const std::string& state = "", const std::string& accessRole = "") :
-                m_accessMode(accessMode), m_state(state), m_accessRole(accessRole) {
+                AssemblyRules(const AccessType& accessMode = INIT | WRITE, const std::string& state = "", const int accessLevel = -1) :
+                m_accessMode(accessMode), m_state(state), m_accessLevel(accessLevel) {
                 }
             };
 
@@ -192,7 +192,7 @@ namespace karabo {
                 MANDATORY_PARAM,
                 INTERNAL_PARAM
             };
-            
+
             enum ArchivePolicy {
 
                 EVERY_EVENT,
@@ -203,6 +203,15 @@ namespace karabo {
                 EVERY_1MIN,
                 EVERY_10MIN,
                 NO_ARCHIVING
+            };
+
+            enum AccessLevel {
+
+                OBSERVER = 0,
+                USER,
+                OPERATOR,
+                EXPERT,
+                GOD
             };
 
         public:
@@ -351,7 +360,7 @@ namespace karabo {
             bool isAssignmentInternal(const std::string& path) const;
 
             const int getAssignment(const std::string& path) const;
-            
+
             //**********************************************
             //                  Options                    *
             //**********************************************
@@ -674,13 +683,13 @@ namespace karabo {
             //**********************************************
             //               archivePolicy                 *
             //**********************************************
-            
+
             void setArchivePolicy(const std::string& path, const ArchivePolicy& value);
 
             bool hasArchivePolicy(const std::string& path) const;
-            
+
             const int& getArchivePolicy(const std::string& path) const;
-            
+
             //******************************************************
             //      min/max for number of nodes in ListElement     *                       
             //******************************************************
@@ -756,7 +765,7 @@ namespace karabo {
 
             bool isAllowedInCurrentAccessMode(const Hash::Node& node) const;
 
-            bool isAllowedInCurrentAccessRole(const Hash::Node& node) const;
+            bool isAllowedInCurrentAccessLevel(const Hash::Node& node) const;
 
             bool isAllowedInCurrentState(const Hash::Node& node) const;
 

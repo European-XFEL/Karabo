@@ -29,10 +29,7 @@ namespace karabo {
 
 
         Schema::Schema(const std::string& classId, const Schema::AssemblyRules& rules) :
-        m_currentAccessMode(rules.m_accessMode), m_currentState(rules.m_state), m_currentAccessRole(rules.m_accessRole), m_rootName(classId) {
-
-            //this->setRoot(classId);
-
+        m_currentAccessMode(rules.m_accessMode), m_currentState(rules.m_state), m_currentAccessLevel(rules.m_accessLevel), m_rootName(classId) {
         }
 
 
@@ -82,14 +79,14 @@ namespace karabo {
         void Schema::setAssemblyRules(const Schema::AssemblyRules& rules) {
             m_currentAccessMode = rules.m_accessMode;
             m_currentState = rules.m_state;
-            m_currentAccessRole = rules.m_accessRole;
+            m_currentAccessLevel = rules.m_accessLevel;
         }
 
 
         Schema::AssemblyRules Schema::getAssemblyRules() const {
             Schema::AssemblyRules rules;
             rules.m_accessMode = m_currentAccessMode;
-            rules.m_accessRole = m_currentAccessRole;
+            rules.m_accessLevel = m_currentAccessLevel;
             rules.m_state = m_currentState;
             return rules;
         }
@@ -427,6 +424,8 @@ namespace karabo {
             boost::split(tokens, path, boost::is_any_of("."));
 
             std::string partialPath;
+
+
             BOOST_FOREACH(std::string token, tokens) {
                 if (partialPath.empty()) partialPath = token;
                 else partialPath += "." + token;
@@ -615,22 +614,25 @@ namespace karabo {
             return m_hash.hasAttribute(path, KARABO_SCHEMA_ALARM_HIGH);
         }
 
-         //**********************************************
-         //               archivePolicy                 *
-         //**********************************************
-            
-        void Schema::setArchivePolicy(const std::string& path, const ArchivePolicy& value){
+        //**********************************************
+        //               archivePolicy                 *
+        //**********************************************
+
+
+        void Schema::setArchivePolicy(const std::string& path, const ArchivePolicy& value) {
             m_hash.setAttribute<int>(path, KARABO_SCHEMA_ARCHIVE_POLICY, value);
         }
+
 
         bool Schema::hasArchivePolicy(const std::string& path) const {
             return m_hash.hasAttribute(path, KARABO_SCHEMA_ARCHIVE_POLICY);
         }
-            
+
+
         const int& Schema::getArchivePolicy(const std::string& path) const {
             return m_hash.getAttribute<int> (path, KARABO_SCHEMA_ARCHIVE_POLICY);
         }
-        
+
         //******************************************************
         //      min/max for number of nodes in ListElement     *                     *  
         //******************************************************
@@ -667,7 +669,7 @@ namespace karabo {
 
 
         void Schema::addElement(Hash::Node& node) {
-            
+
             if (node.hasAttribute(KARABO_SCHEMA_OVERWRITE)) {
                 this->overwriteAttributes(node);
                 return;
@@ -678,7 +680,7 @@ namespace karabo {
 
             // Check whether node is allowed to be added
             bool accessModeOk = isAllowedInCurrentAccessMode(node);
-            bool accessRoleOk = isAllowedInCurrentAccessRole(node);
+            bool accessRoleOk = isAllowedInCurrentAccessLevel(node);
             bool stateOk = isAllowedInCurrentState(node);
 
 
@@ -723,19 +725,16 @@ namespace karabo {
 
 
         bool Schema::isAllowedInCurrentAccessMode(const Hash::Node& node) const {
-
-
             return (m_currentAccessMode & node.getAttribute<int>(KARABO_SCHEMA_ACCESS_MODE));
         }
 
 
-        bool Schema::isAllowedInCurrentAccessRole(const Hash::Node& node) const {
-            if (node.hasAttribute(KARABO_SCHEMA_ALLOWED_ROLES) && !m_currentAccessRole.empty()) {
-                const vector<string>& allowedRoles = node.getAttribute<vector<string> >(KARABO_SCHEMA_ALLOWED_ROLES);
-                return (std::find(allowedRoles.begin(), allowedRoles.end(), m_currentAccessRole) != allowedRoles.end());
+        bool Schema::isAllowedInCurrentAccessLevel(const Hash::Node& node) const {
+            if (node.hasAttribute(KARABO_SCHEMA_ACCESS_LEVEL) && (m_currentAccessLevel != -1)) {
+                return m_currentAccessLevel >= node.getAttribute<int>(KARABO_SCHEMA_ACCESS_LEVEL);
+                //const vector<string>& allowedRoles = node.getAttribute<vector<string> >(KARABO_SCHEMA_ALLOWED_ROLES);
+                //return (std::find(allowedRoles.begin(), allowedRoles.end(), m_currentAccessLevel) != allowedRoles.end());
             } else { // If no roles are assigned, access/visibility is always possible
-
-
                 return true;
             }
         }
@@ -746,8 +745,6 @@ namespace karabo {
                 const vector<string>& allowedStates = node.getAttribute<vector<string> >(KARABO_SCHEMA_ALLOWED_STATES);
                 return (std::find(allowedStates.begin(), allowedStates.end(), m_currentState) != allowedStates.end());
             } else { // If no states are assigned, access/visibility is always possible
-
-
                 return true;
             }
         }
@@ -756,8 +753,6 @@ namespace karabo {
         ostream& operator<<(ostream& os, const Schema& schema) {
             os << "Schema for: " << schema.getRootName() << endl;
             os << schema.m_hash;
-
-
             return os;
         }
 

@@ -23,8 +23,8 @@ namespace karabo {
         }
 
 
-        const std::string& Slot::getRoleIdOfSender() const {
-            return m_roleOfSender;
+        const std::string& Slot::getAccessLevelOfSender() const {
+            return m_accessLevelOfSender;
         }
 
 
@@ -52,8 +52,8 @@ namespace karabo {
         void Slot::extractSenderInformation(const karabo::util::Hash& header) {
             boost::optional<const Hash::Node&> node = header.find("userId");
             if (node) m_userIdOfSender = node->getValue<string>();
-            node = header.find("role");
-            if (node) m_roleOfSender = node->getValue<string>();
+            node = header.find("accessLevel");
+            if (node) m_accessLevelOfSender = node->getValue<string>();
             node = header.find("signalInstanceId");
             if (node) m_instanceIdOfSender = node->getValue<string>();
             node = header.find("sessionToken");
@@ -63,7 +63,7 @@ namespace karabo {
 
         void Slot::invalidateSenderInformation() {
             m_userIdOfSender = "";
-            m_roleOfSender = "";
+            m_accessLevelOfSender = "";
             m_instanceIdOfSender = "";
             m_sessionTokenOfSender = "";
         }

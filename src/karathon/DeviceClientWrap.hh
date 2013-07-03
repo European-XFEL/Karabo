@@ -49,12 +49,12 @@ namespace karathon {
             ScopedGILRelease nogil;
             return Wrapper::fromStdPairToPyTuple(this->instantiate(serverId, classId, configuration, timeoutInSeconds));
         }
-        
+
         bp::tuple killDevicePy(const std::string& deviceId, int timeoutInSeconds = -1) {
-             ScopedGILRelease nogil;
-             return Wrapper::fromStdPairToPyTuple(this->killDevice(deviceId, timeoutInSeconds));
+            ScopedGILRelease nogil;
+            return Wrapper::fromStdPairToPyTuple(this->killDevice(deviceId, timeoutInSeconds));
         }
-        
+
         bp::tuple killServerPy(const std::string& serverId, int timeoutInSeconds = -1) {
             ScopedGILRelease nogil;
             return Wrapper::fromStdPairToPyTuple(this->killServer(serverId, timeoutInSeconds));
@@ -124,7 +124,7 @@ namespace karathon {
         }
 
         bool registerPropertyMonitor(const std::string& instanceId, const std::string& key, const bp::object& callbackFunction, const bp::object& userData = bp::object()) {
-            karabo::util::Schema schema = this->getFullSchema(instanceId);
+            karabo::util::Schema schema = this->getDeviceSchema(instanceId);
             if (schema.has(key)) {
                 boost::mutex::scoped_lock lock(m_propertyChangedHandlersMutex);
                 this->cacheAndGetConfiguration(instanceId);

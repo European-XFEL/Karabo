@@ -1049,9 +1049,9 @@ void exportPyUtilSchema() {
                 .export_values()
                 ;
         
-        bp::class_< Schema::AssemblyRules >("AssemblyRules", bp::init< bp::optional< AccessType const &, std::string const &, std::string const & > >((bp::arg("accessMode") = operator|(INIT, WRITE), bp::arg("state") = "", bp::arg("accessRole") = "")))
+        bp::class_< Schema::AssemblyRules >("AssemblyRules", bp::init< bp::optional< AccessType const &, std::string const &, const int > >((bp::arg("accessMode") = operator|(INIT, WRITE), bp::arg("state") = "", bp::arg("accessLevel") = -1)))
                 .def_readwrite("m_accessMode", &Schema::AssemblyRules::m_accessMode)
-                .def_readwrite("m_accessRole", &Schema::AssemblyRules::m_accessRole)
+                .def_readwrite("m_accessLevel", &Schema::AssemblyRules::m_accessLevel)
                 .def_readwrite("m_state", &Schema::AssemblyRules::m_state);
 
         s.def(bp::self_ns::str(bp::self));

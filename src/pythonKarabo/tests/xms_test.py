@@ -24,7 +24,7 @@ class RemoteClient(threading.Thread):
         self.ss.stopEventLoop()
         
     def run(self):
-        self.ss.runEventLoop(False, self.info)
+        self.ss.runEventLoop(0, self.info)
     
 
 class  Xms_TestCase(unittest.TestCase):

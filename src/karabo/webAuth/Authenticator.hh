@@ -15,6 +15,10 @@
 #include <karabo/util/Timestamp.hh>
 #include "soapStub.h"
 
+#ifndef KARABO_DEFAULT_ACCESS_LEVEL
+#define KARABO_DEFAULT_ACCESS_LEVEL 4
+#endif
+
 // Forward
 class AuthenticationPortBindingProxy;
 
@@ -36,16 +40,20 @@ namespace karabo {
             // Information returned when login is made
             long long int m_userId;
             long long int m_softwareId;
-            long long int m_roleId;
+            long long int m_roleId; // deprecate
             std::string m_nonce;
             std::string m_sessionToken;
             std::string m_welcomeMessage;
-            std::string m_roleDesc;
-
+            std::string m_roleDesc; // deprecate
+            
+            int m_defaultAccessLevel;
+            karabo::util::Hash m_accessList;
 
         public:
 
             KARABO_CLASSINFO(Authenticator, "Authenticator", "1.0");
+            
+            Authenticator() {}
 
             Authenticator(const std::string& username, const std::string& password, const std::string& provider,
                           const std::string& ipAddress, const std::string& hostname, const std::string& portNumber,
@@ -71,9 +79,10 @@ namespace karabo {
             std::string getRoleDesc() const;
             std::string getWelcomeMessage() const;
 
-            long long int getRoleId() const;
+            long long int getRoleId() const; // BH: This should be long long only
             long long int getSoftwareId() const;
             long long int getUserId() const;
+            const karabo::util::Hash& getAccessList() const;
 
         private:
 

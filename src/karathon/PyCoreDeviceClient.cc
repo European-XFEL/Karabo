@@ -40,7 +40,7 @@ void exportPyCoreDeviceClient() {
             .def("getServers", &DeviceClientWrap::getServersPy)
             .def("getClasses", &DeviceClientWrap::getClassesPy, (bp::arg("instanceId")))
             .def("getDevices", &DeviceClientWrap::getDevicesPy)
-            .def("getFullSchema", (karabo::util::Schema(DeviceClient::*)(const string&))(&DeviceClient::getFullSchema), (bp::arg("instanceId")))
+            .def("getDeviceSchema", (karabo::util::Schema(DeviceClient::*)(const string&))(&DeviceClient::getDeviceSchema), (bp::arg("instanceId")))
             .def("getActiveSchema", (Schema(DeviceClient::*)(const string&))(&DeviceClient::getActiveSchema), (bp::arg("instanceId")))
             .def("getClassSchema", (Schema(DeviceClient::*)(const string&, const string&))(&DeviceClient::getClassSchema), (bp::arg("serverId"), bp::arg("classId")))
             .def("getProperties", &DeviceClientWrap::getPropertiesPy, (bp::arg("deviceId")))

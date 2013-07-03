@@ -156,12 +156,12 @@ namespace karabo {
             KARABO_LOG_INFO << "Starting Karabo DeviceServer on host: " << boost::asio::ip::host_name();
 
             // Initialize SignalSlotable instance
-            init(m_connection, m_serverId);
+            init(m_serverId, m_connection);
 
             registerAndConnectSignalsAndSlots();
 
             karabo::util::Hash info("type", "server", "serverId", m_serverId, "version", DeviceServer::classInfo().getVersion(), "host", boost::asio::ip::host_name());
-            boost::thread t(boost::bind(&karabo::core::DeviceServer::runEventLoop, this, hasHearbeat, info));
+            boost::thread t(boost::bind(&karabo::core::DeviceServer::runEventLoop, this, 10, info));
             this->startFsm();
             t.join();
             m_pluginThread.join();
@@ -278,8 +278,9 @@ namespace karabo {
                 tmp.set("serverId", m_serverId);
                 // Apply sensible default in case no device instance id is supplied
                 if (!tmp.has("deviceId")) {
-                    std::string deviceId = this->generateDefaultDeviceId(classId);
-                    tmp.set("deviceId", deviceId);
+                    tmp.set("deviceId", this->generateDefaultDeviceId(classId));
+                } else if (tmp.get<string>("deviceId").empty()) {
+                    tmp.set("deviceId", this->generateDefaultDeviceId(classId));
                 }
                 BaseDevice::Pointer device = BaseDevice::create(modifiedConfig); // TODO If constructor blocks, we are lost here!!
                 boost::thread* t = m_deviceThreads.create_thread(boost::bind(&karabo::core::BaseDevice::run, device));

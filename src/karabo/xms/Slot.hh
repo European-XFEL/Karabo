@@ -32,7 +32,7 @@ namespace karabo {
 
             std::string m_instanceIdOfSender;
             std::string m_userIdOfSender;
-            std::string m_roleOfSender;
+            std::string m_accessLevelOfSender;
             std::string m_sessionTokenOfSender;
 
         public:
@@ -41,7 +41,7 @@ namespace karabo {
 
             const std::string& getUserIdOfSender() const;
 
-            const std::string& getRoleIdOfSender() const;
+            const std::string& getAccessLevelOfSender() const;
 
             const std::string& getSessionTokenOfSender() const;
 

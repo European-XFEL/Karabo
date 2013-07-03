@@ -123,7 +123,8 @@ class PythonDevice(BaseFsm):
         #... add here more info entries if needed
         
         # Run event loop ( in a thread ) with given info
-        self._ss.runEventLoop(True, info) # block while SignalSlotable event loop running 
+        # TODO Make configurable
+        self._ss.runEventLoop(10, info) # block while SignalSlotable event loop running 
             
     def stopEventLoop(self):
         self._ss.stopEventLoop()

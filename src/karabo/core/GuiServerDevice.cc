@@ -246,7 +246,7 @@ namespace karabo {
             string deviceId = header.get<string > ("deviceId");
             boost::mutex::scoped_lock lock(m_channelMutex);
             Hash h("type", "deviceSchema", "deviceId", deviceId);
-            Hash b("device." + deviceId + ".description", remote().getFullSchema(deviceId));
+            Hash b("device." + deviceId + ".description", remote().getDeviceSchema(deviceId));
             channel->write(h, b);
         }
 

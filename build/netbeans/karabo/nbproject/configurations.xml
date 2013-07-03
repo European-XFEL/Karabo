@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<configurationDescriptor version="84">
+<configurationDescriptor version="88">
   <logicalFolder name="root" displayName="root" projectFiles="true" kind="ROOT">
     <logicalFolder name="f7" displayName="core" projectFiles="true">
       <logicalFolder name="f2" displayName="Devices" projectFiles="true">
@@ -215,26 +215,28 @@
         <itemPath>../../../src/karabo/util/VectorElement.hh</itemPath>
       </logicalFolder>
       <logicalFolder name="f6" displayName="Tools" projectFiles="true">
+        <logicalFolder name="f1" displayName="Time stuff" projectFiles="true">
+          <itemPath>../../../src/karabo/util/Epochstamp.cc</itemPath>
+          <itemPath>../../../src/karabo/util/Epochstamp.hh</itemPath>
+          <itemPath>../../../src/karabo/util/Timer.cc</itemPath>
+          <itemPath>../../../src/karabo/util/Timer.hh</itemPath>
+          <itemPath>../../../src/karabo/util/Timestamp.cc</itemPath>
+          <itemPath>../../../src/karabo/util/Timestamp.hh</itemPath>
+          <itemPath>../../../src/karabo/util/Timestamp2.cc</itemPath>
+          <itemPath>../../../src/karabo/util/Timestamp2.hh</itemPath>
+          <itemPath>../../../src/karabo/util/Trainstamp.cc</itemPath>
+          <itemPath>../../../src/karabo/util/Trainstamp.hh</itemPath>
+        </logicalFolder>
         <itemPath>../../../src/karabo/util/ArrayTools.hh</itemPath>
         <itemPath>../../../src/karabo/util/Base64.cc</itemPath>
         <itemPath>../../../src/karabo/util/Base64.hh</itemPath>
         <itemPath>../../../src/karabo/util/Dims.hh</itemPath>
-        <itemPath>../../../src/karabo/util/Epochstamp.cc</itemPath>
-        <itemPath>../../../src/karabo/util/Epochstamp.hh</itemPath>
         <itemPath>../../../src/karabo/util/PluginLoader.cc</itemPath>
         <itemPath>../../../src/karabo/util/PluginLoader.hh</itemPath>
         <itemPath>../../../src/karabo/util/Profiler.cc</itemPath>
         <itemPath>../../../src/karabo/util/Profiler.hh</itemPath>
         <itemPath>../../../src/karabo/util/StringTools.cc</itemPath>
         <itemPath>../../../src/karabo/util/StringTools.hh</itemPath>
-        <itemPath>../../../src/karabo/util/Timer.cc</itemPath>
-        <itemPath>../../../src/karabo/util/Timer.hh</itemPath>
-        <itemPath>../../../src/karabo/util/Timestamp.cc</itemPath>
-        <itemPath>../../../src/karabo/util/Timestamp.hh</itemPath>
-        <itemPath>../../../src/karabo/util/Timestamp2.cc</itemPath>
-        <itemPath>../../../src/karabo/util/Timestamp2.hh</itemPath>
-        <itemPath>../../../src/karabo/util/Trainstamp.cc</itemPath>
-        <itemPath>../../../src/karabo/util/Trainstamp.hh</itemPath>
         <itemPath>../../../src/karabo/util/Units.cc</itemPath>
         <itemPath>../../../src/karabo/util/Units.hh</itemPath>
       </logicalFolder>

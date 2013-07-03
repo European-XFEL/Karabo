@@ -14,7 +14,14 @@
 namespace karabo {
 
     namespace core {
-
+        
+        // Forward
+        template <class T>
+        class Device;
+        
+        
+        
+      
         /**
          * The Karabo Device Client
          * This class can be used to (remotely) control devices of the distributed system
@@ -44,13 +51,17 @@ namespace karabo {
          * 
          */
         class DeviceClient {
-
+            
+            template<class T>
+            friend class Device;
+            
             typedef std::map<std::string, unsigned int> InstanceUsage;
             typedef boost::function<void (const karabo::util::Hash& /*topologyEntry*/) > InstanceNewHandler;
             typedef boost::function<void (const karabo::util::Hash& /*topologyEntry*/) > InstanceUpdatedHandler;
             typedef boost::function<void (const std::string& /*instanceId*/) > InstanceGoneHandler;
             typedef boost::function<void (const karabo::util::Schema& /*schema*/, const std::string& /*deviceId*/) > SchemaUpdatedHandler;
 
+           
         protected: // members
 
             enum MasterMode {
@@ -81,8 +92,6 @@ namespace karabo {
             karabo::util::Hash m_runtimeSystemDescription;
 
             boost::mutex m_runtimeSystemDescriptionMutex;
-
-            std::string m_role;
 
             boost::shared_ptr<karabo::xms::SignalSlotable> m_signalSlotable;
 
@@ -121,6 +130,7 @@ namespace karabo {
 
             /**
              * Constructor which establishes an own connection to the communication system (default JMS - OpenMQ)
+             * This constructor is intended for stand-alone C++ device clients (and thus needs authentication)
              * @param connectionType The communication system transport layer implementation
              * @param connectionParameters Additional connection configuration
              */
@@ -132,8 +142,14 @@ namespace karabo {
              * @param signalSlotable An instance of the SignalSlotable lass
              */
             DeviceClient(const boost::shared_ptr<karabo::xms::SignalSlotable>& signalSlotable);
-
+            
+            /**
+             * Destructor joins the underlying event thread,
+             * i.e. execution takes some time (1-2 seconds).
+             */
             virtual ~DeviceClient();
+            
+            bool login(const std::string& username, const std::string& password, const std::string& provider = "LOCAL");
 
             /**
              * Sets the internal timeout for any request/response like communications
@@ -194,7 +210,7 @@ namespace karabo {
              * @param instanceId Device's instance ID
              * @return full Schema
              */
-            karabo::util::Schema getFullSchema(const std::string& instanceId);
+            karabo::util::Schema getDeviceSchema(const std::string& instanceId);
 
             /**
              * Retrieves the currently active Schema (filtered by allowed states and allowed roles)
@@ -256,6 +272,7 @@ namespace karabo {
                 try {
                     return cacheAndGetConfiguration(instanceId).get<T > (key, keySep);
                 } catch (const karabo::util::Exception& e) {
+
                     throw KARABO_PARAMETER_EXCEPTION("Could not fetch parameter \"" + key + "\" from device \"" + instanceId + "\"");
                 }
             }
@@ -265,6 +282,7 @@ namespace karabo {
                 try {
                     return cacheAndGetConfiguration(instanceId).get(key, value, keySep);
                 } catch (const karabo::util::Exception& e) {
+
                     throw KARABO_PARAMETER_EXCEPTION("Could not fetch parameter \"" + key + "\" from device \"" + instanceId + "\"");
                 }
             }
@@ -280,7 +298,7 @@ namespace karabo {
             template <class ValueType>
             bool registerPropertyMonitor(const std::string& instanceId, const std::string& key,
                                          const boost::function<void (const std::string& /*deviceId*/, const std::string& /*key*/, const ValueType& /*value*/, const karabo::util::Timestamp& /*timestamp*/) >& callbackFunction) {
-                karabo::util::Schema schema = this->getFullSchema(instanceId);
+                karabo::util::Schema schema = this->getDeviceSchema(instanceId);
                 if (schema.has(key)) {
                     boost::mutex::scoped_lock lock(m_propertyChangedHandlersMutex);
                     this->cacheAndGetConfiguration(instanceId);
@@ -296,7 +314,7 @@ namespace karabo {
             template <class ValueType, class UserDataType>
             bool registerPropertyMonitor(const std::string& instanceId, const std::string& key, const boost::function<void ( const std::string& /*deviceId*/, const std::string& /*key*/,
                                          const ValueType& /*value*/, const karabo::util::Timestamp& /*timestamp*/, const boost::any& /*userData*/) >& callbackFunction, const UserDataType& userData) {
-                karabo::util::Schema schema = this->getFullSchema(instanceId);
+                karabo::util::Schema schema = this->getDeviceSchema(instanceId);
                 if (schema.has(key)) {
                     boost::mutex::scoped_lock lock(m_propertyChangedHandlersMutex);
                     this->cacheAndGetConfiguration(instanceId);
@@ -315,6 +333,7 @@ namespace karabo {
             template <class UserDataType>
             void registerDeviceMonitor(const std::string& instanceId, const boost::function<void (const std::string&, const karabo::util::Hash&, const boost::any&)>& callbackFunction,
                                        const UserDataType& userData) {
+
                 boost::mutex::scoped_lock lock(m_deviceChangedHandlersMutex);
                 // Make sure we are caching this instanceId
                 this->cacheAndGetConfiguration(instanceId);
@@ -326,6 +345,7 @@ namespace karabo {
 
             template <class T>
             std::pair<bool, std::string> set(const std::string& instanceId, const std::string& key, const T& value, int timeoutInSeconds = -1, const char keySep = '.') {
+
                 karabo::util::Hash tmp;
                 tmp.set(key, value, keySep);
                 return set(instanceId, tmp, timeoutInSeconds);
@@ -333,6 +353,7 @@ namespace karabo {
 
             template <class T>
             void setNoWait(const std::string& instanceId, const std::string& key, const T& value, const char keySep = '.') {
+
                 karabo::util::Hash tmp;
                 tmp.set(key, value, keySep);
                 setNoWait(instanceId, tmp);
@@ -343,26 +364,31 @@ namespace karabo {
             void setNoWait(const std::string& instanceId, const karabo::util::Hash& values);
 
             void executeNoWait(const std::string& instanceId, const std::string& command) {
+
                 m_signalSlotable->call(instanceId, command);
             }
 
             template <class A1>
             void executeNoWait(const std::string& instanceId, const std::string& command, const A1& a1) {
+
                 m_signalSlotable->call(instanceId, command, a1);
             }
 
             template <class A1, class A2>
             void executeNoWait(const std::string& instanceId, const std::string& command, const A1& a1, const A2& a2) {
+
                 m_signalSlotable->call(instanceId, command, a1, a2);
             }
 
             template <class A1, class A2, class A3>
             void executeNoWait(const std::string& instanceId, const std::string& command, const A1& a1, const A2& a2, const A3& a3) {
+
                 m_signalSlotable->call(instanceId, command, a1, a2, a3);
             }
 
             template <class A1, class A2, class A3, class A4>
             void executeNoWait(const std::string& instanceId, const std::string& command, const A1& a1, const A2& a2, const A3& a3, const A4& a4) {
+
                 m_signalSlotable->call(instanceId, command, a1, a2, a3, a4);
             }
 
@@ -375,6 +401,7 @@ namespace karabo {
                 try {
                     m_signalSlotable->request(instanceId, command).timeout(timeoutInSeconds * 1000).receive(text);
                 } catch (const karabo::util::Exception& e) {
+
                     text = e.userFriendlyMsg();
                     ok = false;
                 }
@@ -391,6 +418,7 @@ namespace karabo {
                 try {
                     m_signalSlotable->request(instanceId, command, a1).timeout(timeoutInSeconds * 1000).receive(text);
                 } catch (const karabo::util::Exception& e) {
+
                     text = e.userFriendlyMsg();
                     ok = false;
                 }
@@ -407,6 +435,7 @@ namespace karabo {
                 try {
                     m_signalSlotable->request(instanceId, command, a1, a2).timeout(timeoutInSeconds * 1000).receive(text);
                 } catch (const karabo::util::Exception& e) {
+
                     text = e.userFriendlyMsg();
                     ok = false;
                 }
@@ -424,6 +453,7 @@ namespace karabo {
                 try {
                     m_signalSlotable->request(instanceId, command, a1, a2, a3).timeout(timeoutInSeconds * 1000).receive(text);
                 } catch (const karabo::util::Exception& e) {
+
                     text = e.userFriendlyMsg();
                     ok = false;
                 }
@@ -479,7 +509,7 @@ namespace karabo {
 
             karabo::util::Schema cacheAndGetClassSchema(const std::string& serverId, const std::string& classId);
 
-            karabo::util::Schema cacheAndGetFullSchema(const std::string& instanceId);
+            karabo::util::Schema cacheAndGetDeviceSchema(const std::string& instanceId);
 
             karabo::util::Schema cacheAndGetActiveSchema(const std::string& instanceId);
 
@@ -506,8 +536,8 @@ namespace karabo {
             virtual void slotMasterPing();
 
             virtual void slotProvideSystemTopology();
-        };
 
+        };
     }
 }
 

@@ -23,10 +23,16 @@
 
 
 
+
 /**
  * The main European XFEL namespace
  */
 namespace karabo {
+
+    // Forward
+    namespace webAuth {
+        class Authenticator;
+    }
 
     namespace xms {
 
@@ -92,9 +98,6 @@ namespace karabo {
             Replies m_replies;
             boost::mutex m_replyMutex;
 
-            //boost::mutex m_isProcessingSlotMutex;
-            //bool m_isProcessingSlot;
-
             karabo::util::Hash m_emitFunctions;
             std::vector<boost::any> m_slots;
 
@@ -114,6 +117,11 @@ namespace karabo {
 
             std::vector<std::pair<std::string, karabo::util::Hash> > m_availableInstances;
 
+            boost::shared_ptr<karabo::webAuth::Authenticator> m_authenticator;
+            int m_defaultAccessLevel;
+            karabo::util::Hash m_accessList;
+            mutable boost::mutex m_accessLevelMutex;
+
             // IO channel related
             InputChannels m_inputChannels;
             OutputChannels m_outputChannels;
@@ -121,6 +129,9 @@ namespace karabo {
             // Handlers
             InstanceNotAvailableHandler m_instanceNotAvailableHandler;
             InstanceAvailableAgainHandler m_instanceAvailableAgainHandler;
+
+            boost::thread m_eventLoopThread;
+            bool hasEventLoopThread;
 
         public:
 
@@ -165,16 +176,26 @@ namespace karabo {
 
             SignalSlotable();
 
-            SignalSlotable(const karabo::net::BrokerConnection::Pointer& connection, const std::string& instanceId, int heartbeatRate = 10);
+            SignalSlotable(const std::string& instanceId,
+                           const karabo::net::BrokerConnection::Pointer& connection);
+
+            SignalSlotable(const std::string& instanceId,
+                           const std::string& brokerType = "Jms",
+                           const karabo::util::Hash& brokerConfiguration = karabo::util::Hash());
 
             virtual ~SignalSlotable();
 
-            void init(const karabo::net::BrokerConnection::Pointer& connection, const std::string& instanceId, int heartbeatRate = 10);
+
+
+            void init(const std::string& instanceId,
+                      const karabo::net::BrokerConnection::Pointer& connection);
+
+            bool login(const std::string& username, const std::string& password, const std::string& provider);
 
             /**
              * This function will block the main-thread.
              */
-            void runEventLoop(bool emitHeartbeat = true, const karabo::util::Hash& instanceInfo = karabo::util::Hash());
+            void runEventLoop(int heartbeatIntervall = 10, const karabo::util::Hash& instanceInfo = karabo::util::Hash());
 
             /**
              * This function will stop all consumers and un-block the runEventLoop() function
@@ -687,6 +708,16 @@ namespace karabo {
 
             std::pair<bool, std::string> exists(const std::string& instanceId);
 
+            int getAccessLevel(const std::string& instanceId) const;
+
+            template <class T>
+            static std::string generateInstanceId() {
+                std::string hostname(boost::asio::ip::host_name());
+                std::vector<std::string> tokens;
+                boost::split(tokens, hostname, boost::is_any_of("."));
+                return std::string(tokens[0] + "_" + T::classInfo().getClassId() + "_" + karabo::util::toString(getpid()));
+            }
+
         protected: // Functions
 
             /**
@@ -733,8 +764,9 @@ namespace karabo {
         protected: // Member variables
 
 
-
         private: // Functions
+
+
 
             void sanifyInstanceId(std::string& instanceId) const;
 
@@ -797,16 +829,11 @@ namespace karabo {
 
             // IO channel related
 
-
-
             void slotGetOutputChannelInformation(const std::string& ioChannelId, const int& processId);
 
-
-
-
+            static int godEncode(const std::string& password);
 
         };
-
     } // namespace xms
 } // namespace karabo
 
