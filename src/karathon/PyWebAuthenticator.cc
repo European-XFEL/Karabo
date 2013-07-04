@@ -97,5 +97,8 @@ void exportPyWebAuthenticator() {
 
     a.def("getUserId"
           , (long long (Authenticator::*)() const) (&Authenticator::getUserId));
+    
+    a.def("getAccessHash"
+          , (Hash (Authenticator::*)() const) (&Authenticator::getAccessHash));
 
 }
