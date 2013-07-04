@@ -34,12 +34,12 @@ void exportPyWebAuthenticator() {
            , (void (Timestamp::*)(std::string const &))(&Timestamp::setTime)
            , bp::arg("timePoint"));
     ts.def("getMsSinceEpoch"
-           , (unsigned long long (Timestamp::*)() const)(&Timestamp::getMsSinceEpoch));
+           , (unsigned long long (Timestamp::*)() const) (&Timestamp::getMsSinceEpoch));
     ts.def("getTime"
-           , (boost::posix_time::ptime (Timestamp::*)() const)(&Timestamp::getTime));
+           , (boost::posix_time::ptime(Timestamp::*)() const) (&Timestamp::getTime));
 
-    
-    bp::class_<Authenticator> a("Authenticator", bp::init<string const &, string const &, string const &, string const &, string const &, string const &, string const & >((bp::arg("username"), bp::arg("password"), bp::arg("provider"), bp::arg("ipAddress"), bp::arg("hostname"), bp::arg("portNumber"), bp::arg("software"))));
+
+    bp::class_<Authenticator> a("Authenticator", bp::init<string const &, string const &, string const &, string const &, string const &, string const &, string const & >((bp::arg("username"), bp::arg("password"), bp::arg("provider"), bp::arg("ipAddress"), bp::arg("brokerHostname"), bp::arg("brokerPortNumber"), bp::arg("brokerTopic"))));
     a.def("login"
           , (bool (Authenticator::*)(Timestamp const &))(&Authenticator::login)
           , bp::arg("timestamp") = Timestamp());
@@ -56,11 +56,14 @@ void exportPyWebAuthenticator() {
     a.def("getSoftware"
           , (string(Authenticator::*)() const) (&Authenticator::getSoftware));
 
-    a.def("getPortNumber"
-          , (string(Authenticator::*)() const) (&Authenticator::getPortNumber));
+    a.def("getBrokerPortNumber"
+          , (string(Authenticator::*)() const) (&Authenticator::getBrokerPortNumber));
 
-    a.def("getHostname"
-          , (string(Authenticator::*)() const) (&Authenticator::getHostname));
+    a.def("getBrokerHostname"
+          , (string(Authenticator::*)() const) (&Authenticator::getBrokerHostname));
+
+    a.def("getBrokerTopic"
+          , (string(Authenticator::*)() const) (&Authenticator::getBrokerTopic));
 
     a.def("getIpAddress"
           , (string(Authenticator::*)() const) (&Authenticator::getIpAddress));
@@ -74,14 +77,20 @@ void exportPyWebAuthenticator() {
     a.def("getUsername"
           , (string(Authenticator::*)() const) (&Authenticator::getUsername));
 
-    a.def("getRoleDesc"
-          , (string(Authenticator::*)() const) (&Authenticator::getRoleDesc));
+    a.def("getFirstName"
+          , (string(Authenticator::*)() const) (&Authenticator::getFirstName));
+
+    a.def("getFamilyName"
+          , (string(Authenticator::*)() const) (&Authenticator::getFamilyName));
 
     a.def("getWelcomeMessage"
           , (string(Authenticator::*)() const) (&Authenticator::getWelcomeMessage));
 
-    a.def("getRoleId"
-          , (long long (Authenticator::*)() const) (&Authenticator::getRoleId));
+    a.def("getDefaultAccessLevelId"
+          , (long long (Authenticator::*)() const) (&Authenticator::getDefaultAccessLevelId));
+
+    a.def("getDefaultAccessLevelDesc"
+          , (string(Authenticator::*)() const) (&Authenticator::getDefaultAccessLevelDesc));
 
     a.def("getSoftwareId"
           , (long long (Authenticator::*)() const) (&Authenticator::getSoftwareId));
