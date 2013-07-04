@@ -31,12 +31,14 @@ public:
     void tearDown();
 
 private:
-    void testNotLoggedContext(karabo::webAuth::Authenticator a, const std::string& username, const std::string& password, const std::string& provider,
-                              const std::string& ipAddress, const std::string& hostname, const std::string& portNumber,
-                              const std::string& software);
-    void testSuccessfulLoggedContext(karabo::webAuth::Authenticator a, const std::string& username, const std::string& password, const std::string& provider,
-                                     const std::string& ipAddress, const std::string& hostname, const std::string& portNumber, const std::string& software,
-                                     const long long int expectedSoftwareId, const long long int expectedUserId, const long long int expectedRoleId);
+    void testNotLoggedContext(karabo::webAuth::Authenticator a, const std::string& username, const std::string& password,
+                              const std::string& provider, const std::string& ipAddress, const std::string& brokerHostname,
+                              const std::string& brokerPortNumber, const std::string& brokerTopic);
+    //
+    void testSuccessfulLoggedContext(karabo::webAuth::Authenticator a, const std::string& username, const std::string& password,
+                                     const std::string& provider, const std::string& ipAddress, const std::string& brokerHostname,
+                                     const std::string& brokerPortNumber, const std::string& brokerTopic, const long long expectedSoftwareId,
+                                     const long long expectedUserId, const int expectedRoleId);
     //
     void testCorrectLogin();
     void testIncorrectLogin();
