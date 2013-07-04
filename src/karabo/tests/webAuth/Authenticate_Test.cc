@@ -33,85 +33,88 @@ void Authenticate_Test::tearDown() {
 }
 
 
-void Authenticate_Test::testNotLoggedContext(karabo::webAuth::Authenticator a, const std::string& username, const std::string& password, const std::string& provider,
-                                             const std::string& ipAddress, const std::string& hostname, const std::string& portNumber,
-                                             const std::string& software) {
+void Authenticate_Test::testNotLoggedContext(karabo::webAuth::Authenticator a, const std::string& username, const std::string& password,
+                                             const std::string& provider, const std::string& ipAddress, const std::string& brokerHostname,
+                                             const std::string& brokerPortNumber, const std::string& brokerTopic) {
 
     // Variables that should be correctly assigned
     CPPUNIT_ASSERT(a.getUsername() == username);
     CPPUNIT_ASSERT(a.getPassword() == password);
     CPPUNIT_ASSERT(a.getProvider() == provider);
     CPPUNIT_ASSERT(a.getIpAddress() == ipAddress);
-    CPPUNIT_ASSERT(a.getHostname() == hostname);
-    CPPUNIT_ASSERT(a.getPortNumber() == portNumber);
-    CPPUNIT_ASSERT(a.getSoftware() == software);
+    CPPUNIT_ASSERT(a.getBrokerHostname() == brokerHostname);
+    CPPUNIT_ASSERT(a.getBrokerPortNumber() == brokerPortNumber);
+    CPPUNIT_ASSERT(a.getBrokerTopic() == brokerTopic);
+    CPPUNIT_ASSERT(a.getSoftware() == KARABO_SOFTWARE_DESC);
 
     // Validate the following parameters are empty before login
-    CPPUNIT_ASSERT(a.getRoleDesc().empty() == true);
+    CPPUNIT_ASSERT(a.getSoftwareDesc().empty() == true);
+    CPPUNIT_ASSERT(a.getDefaultAccessLevelDesc().empty() == true);
     CPPUNIT_ASSERT(a.getWelcomeMessage().empty() == true);
     CPPUNIT_ASSERT(a.getSessionToken().empty() == true);
     //
-    CPPUNIT_ASSERT(a.getSoftwareId() == -100);
-    CPPUNIT_ASSERT(a.getUserId() == -100);
-    CPPUNIT_ASSERT(a.getRoleId() == -100);
+    CPPUNIT_ASSERT(a.getSoftwareId() == KARABO_INVALID_ID);
+    CPPUNIT_ASSERT(a.getUserId() == KARABO_INVALID_ID);
+    CPPUNIT_ASSERT(a.getDefaultAccessLevelId() == KARABO_INVALID_ID);
 }
 
 
-void Authenticate_Test::testSuccessfulLoggedContext(karabo::webAuth::Authenticator a, const std::string& username, const std::string& password, const std::string& provider,
-                                                    const std::string& ipAddress, const std::string& hostname, const std::string& portNumber, const std::string& software,
-                                                    const long long int expectedSoftwareId, const long long int expectedUserId, const long long int expectedRoleId) {
+void Authenticate_Test::testSuccessfulLoggedContext(karabo::webAuth::Authenticator a, const std::string& username, const std::string& password,
+                                                    const std::string& provider, const std::string& ipAddress, const std::string& brokerHostname,
+                                                    const std::string& brokerPortNumber, const std::string& brokerTopic, const long long expectedSoftwareId,
+                                                    const long long expectedUserId, const int expectedDefaultAccessLevelId) {
 
     // Variables that should be correctly assigned
     CPPUNIT_ASSERT(a.getUsername() == username);
     CPPUNIT_ASSERT(a.getPassword() == password);
     CPPUNIT_ASSERT(a.getProvider() == provider);
     CPPUNIT_ASSERT(a.getIpAddress() == ipAddress);
-    CPPUNIT_ASSERT(a.getHostname() == hostname);
-    CPPUNIT_ASSERT(a.getPortNumber() == portNumber);
-    CPPUNIT_ASSERT(a.getSoftware() == software);
+    CPPUNIT_ASSERT(a.getBrokerHostname() == brokerHostname);
+    CPPUNIT_ASSERT(a.getBrokerPortNumber() == brokerPortNumber);
+    CPPUNIT_ASSERT(a.getBrokerTopic() == brokerTopic);
+    CPPUNIT_ASSERT(a.getSoftware() == KARABO_SOFTWARE_DESC);
 
     // Validate the following parameters were populated after login
-    CPPUNIT_ASSERT(a.getRoleDesc().empty() == false);
+    CPPUNIT_ASSERT(a.getSoftwareDesc().empty() == false);
+    CPPUNIT_ASSERT(a.getDefaultAccessLevelDesc().empty() == false);
     CPPUNIT_ASSERT(a.getWelcomeMessage().empty() == false);
     CPPUNIT_ASSERT(a.getSessionToken().empty() == false);
     //
     CPPUNIT_ASSERT(a.getSoftwareId() == expectedSoftwareId);
     CPPUNIT_ASSERT(a.getUserId() == expectedUserId);
-    CPPUNIT_ASSERT(a.getRoleId() == expectedRoleId);
+    CPPUNIT_ASSERT(a.getDefaultAccessLevelId() == expectedDefaultAccessLevelId);
 }
 
 
 void Authenticate_Test::testCorrectLogin() {
-    string username = "guest";
-    string password = "guest";
+    string username = "unitaryTests";
+    string password = "karaboUnitaryTestsPass";
     string provider = "LOCAL";
     string ipAddress = "c++UnitTestsIpAddress";
-    string hostname = "127.0.0.1";
-    string portNumber = "44444";
-    string software = "Karabo";
-    //
-    string timeStr = "20130120T122059.259188123";
-    karabo::util::Timestamp time = karabo::util::Timestamp(timeStr);
+    string brokerHostname = "127.0.0.1";
+    string brokerPortNumber = "4444";
+    string brokerTopic = "topic";
+
 
     // Expected result values
-    const long long int expectedSoftwareId = 1;
-    const long long int expectedUserId = -1;
-    const long long int expectedRoleId = 3;
+    const long long expectedSoftwareId = 1;
+    const long long expectedUserId = -99;
+    const long long expectedDefaultAccessLevelId = 1;
 
 
-    Authenticator a(username, password, provider, ipAddress, hostname, portNumber, software);
+    Authenticator a(username, password, provider, ipAddress, brokerHostname, brokerPortNumber, brokerTopic);
 
     // Class instance should be in the initial state
-    testNotLoggedContext(a, username, password, provider, ipAddress, hostname, portNumber, software);
+    testNotLoggedContext(a, username, password, provider, ipAddress, brokerHostname, brokerPortNumber, brokerTopic);
 
     /************************
      * LOGIN
      ************************/
     // Successful login
-    CPPUNIT_ASSERT(a.login(time) == true);
+    CPPUNIT_ASSERT(a.login() == true);
 
     // Class instance should be with in new information
-    testSuccessfulLoggedContext(a, username, password, provider, ipAddress, hostname, portNumber, software, expectedSoftwareId, expectedUserId, expectedRoleId);
+    testSuccessfulLoggedContext(a, username, password, provider, ipAddress, brokerHostname, brokerPortNumber, brokerTopic, expectedSoftwareId, expectedUserId, expectedDefaultAccessLevelId);
 
     /************************
      * LOGOUT
@@ -120,105 +123,98 @@ void Authenticate_Test::testCorrectLogin() {
     CPPUNIT_ASSERT(a.logout() == true);
 
     // Class instance should be in the initial state
-    testNotLoggedContext(a, username, password, provider, ipAddress, hostname, portNumber, software);
+    testNotLoggedContext(a, username, password, provider, ipAddress, brokerHostname, brokerPortNumber, brokerTopic);
 }
 
 
 void Authenticate_Test::testIncorrectLogin() {
-    string username = "guest";
-    string password = "guest2";
+    string username = "unitaryTests";
+    string password = "karaboUnitaryTestsPass222";
     string provider = "LOCAL";
     string ipAddress = "c++UnitTestsIpAddress";
-    string hostname = "127.0.0.1";
-    string portNumber = "4444";
-    string software = "Karabo";
-    //
-    string timeStr = "20130120T122059.259188";
-    karabo::util::Timestamp time = karabo::util::Timestamp(timeStr);
+    string brokerHostname = "127.0.0.1";
+    string brokerPortNumber = "4444";
+    string brokerTopic = "topic";
 
-    Authenticator a = Authenticator(username, password, provider, ipAddress, hostname, portNumber, software);
+
+    Authenticator a = Authenticator(username, password, provider, ipAddress, brokerHostname, brokerPortNumber, brokerTopic);
 
     // Class instance should be in the initial state
-    testNotLoggedContext(a, username, password, provider, ipAddress, hostname, portNumber, software);
+    testNotLoggedContext(a, username, password, provider, ipAddress, brokerHostname, brokerPortNumber, brokerTopic);
 
     // Test wrong password
-    CPPUNIT_ASSERT(a.login(time) == false);
-    
+    CPPUNIT_ASSERT(a.login() == false);
+
     // Test wrong password (case unsuccess in the getUserNonce function)
     username = "heisenb";
-    password = "guest";
-    a = Authenticator(username, password, provider, ipAddress, hostname, portNumber, software);
-    
+    password = "karaboUnitaryTestsPass";
+    a = Authenticator(username, password, provider, ipAddress, brokerHostname, brokerPortNumber, brokerTopic);
+
     // Test wrong password
-    CPPUNIT_ASSERT(a.login(time) == false);
+    CPPUNIT_ASSERT(a.login() == false);
 
     // Class instance should be in the initial state
-    testNotLoggedContext(a, username, password, provider, ipAddress, hostname, portNumber, software);
+    testNotLoggedContext(a, username, password, provider, ipAddress, brokerHostname, brokerPortNumber, brokerTopic);
 
     // Test wrong username
-    username = "guest2";
-    password = "guest";
-    a = Authenticator(username, password, provider, ipAddress, hostname, portNumber, software);
+    username = "unitaryTests2";
+    password = "karaboUnitaryTestsPass";
+    a = Authenticator(username, password, provider, ipAddress, brokerHostname, brokerPortNumber, brokerTopic);
 
     // Class instance should be in the initial state
-    testNotLoggedContext(a, username, password, provider, ipAddress, hostname, portNumber, software);
+    testNotLoggedContext(a, username, password, provider, ipAddress, brokerHostname, brokerPortNumber, brokerTopic);
 
-    CPPUNIT_ASSERT(a.login(time) == false);
+    CPPUNIT_ASSERT(a.login() == false);
 
     // Class instance should be in the initial state
-    testNotLoggedContext(a, username, password, provider, ipAddress, hostname, portNumber, software);
-    
+    testNotLoggedContext(a, username, password, provider, ipAddress, brokerHostname, brokerPortNumber, brokerTopic);
+
     // Unsuccessful logout
     CPPUNIT_ASSERT(a.logout() == false);
 }
 
 
 void Authenticate_Test::testIncorrectUsername() {
-    string username = "guest2";
-    string password = "guest";
+    string username = "unitaryTests2";
+    string password = "karaboUnitaryTestsPass";
     string provider = "LOCAL";
     string ipAddress = "c++UnitTestsIpAddress";
-    string hostname = "127.0.0.1";
-    string portNumber = "4444";
-    string software = "Karabo";
-    //
-    string timeStr = "20130120T122059.259188";
-    karabo::util::Timestamp time = karabo::util::Timestamp(timeStr);
+    string brokerHostname = "127.0.0.1";
+    string brokerPortNumber = "4444";
+    string brokerTopic = "topic";
 
-    Authenticator a = Authenticator(username, password, provider, ipAddress, hostname, portNumber, software);
+
+    Authenticator a = Authenticator(username, password, provider, ipAddress, brokerHostname, brokerPortNumber, brokerTopic);
 
     // Class instance should be in the initial state
-    testNotLoggedContext(a, username, password, provider, ipAddress, hostname, portNumber, software);
+    testNotLoggedContext(a, username, password, provider, ipAddress, brokerHostname, brokerPortNumber, brokerTopic);
 
     // Test wrong password
-    CPPUNIT_ASSERT(a.login(time) == false);
+    CPPUNIT_ASSERT(a.login() == false);
 
     // Class instance should be in the initial state
-    testNotLoggedContext(a, username, password, provider, ipAddress, hostname, portNumber, software);
-    
+    testNotLoggedContext(a, username, password, provider, ipAddress, brokerHostname, brokerPortNumber, brokerTopic);
+
     // Unsuccessful logout
     CPPUNIT_ASSERT(a.logout() == false);
 }
 
 
 void Authenticate_Test::testSingleSignOn() {
-    string username = "guest";
-    string password = "guest";
+    string username = "unitaryTests";
+    string password = "karaboUnitaryTestsPass";
     string provider = "LOCAL";
     string ipAddress = "c++UnitTestsIpAddress";
     string hostname = "127.0.0.1";
     string portNumber = "4444";
-    string software = "Karabo";
-    //
-    string timeStr = "20130120T122059.259188";
-    karabo::util::Timestamp time = karabo::util::Timestamp(timeStr);
-
+    string brokerTopic = "topic";
     std::string sessionToken, sessionTokenOrig;
 
-    Authenticator a = Authenticator(username, password, provider, ipAddress, hostname, portNumber, software);
+
+    Authenticator a = Authenticator(username, password, provider, ipAddress, hostname, portNumber, brokerTopic);
 
     // Successful login
-    CPPUNIT_ASSERT(a.login(time) == true);
+    CPPUNIT_ASSERT(a.login() == true);
 
     // Validate session with current machine name => Should be OK
     sessionTokenOrig = a.getSingleSignOn("c++UnitTestsIpAddress");

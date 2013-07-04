@@ -71,14 +71,6 @@ void AuthenticationPortBindingProxy::AuthenticationPortBindingProxy_init(soap_mo
         {"xsi", "http://www.w3.org/2001/XMLSchema-instance", "http://www.w3.org/*/XMLSchema-instance", NULL},
         {"xsd", "http://www.w3.org/2001/XMLSchema", "http://www.w3.org/*/XMLSchema", NULL},
         {"ns1", "http://server.xfelauthwebservice.xfel.eu/", NULL, NULL},
-        {"c14n", "http://www.w3.org/2001/10/xml-exc-c14n#", NULL, NULL},
-        {"wsu", "http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd", NULL, NULL},
-        {"xenc", "http://www.w3.org/2001/04/xmlenc#", NULL, NULL},
-        {"wsc", "http://schemas.xmlsoap.org/ws/2005/02/sc", NULL, NULL},
-        {"ds", "http://www.w3.org/2000/09/xmldsig#", NULL, NULL},
-        {"wsse", "http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd", "http://docs.oasis-open.org/wss/oasis-wss-wssecurity-secext-1.1.xsd", NULL},
-        {"chan", "http://schemas.microsoft.com/ws/2005/02/duplex", NULL, NULL},
-        {"wsa5", "http://www.w3.org/2005/08/addressing", "http://schemas.xmlsoap.org/ws/2004/08/addressing", NULL},
         {NULL, NULL, NULL, NULL}
     };
     soap_set_namespaces(this->soap, namespaces);
@@ -101,20 +93,6 @@ void AuthenticationPortBindingProxy::reset() {
 
 void AuthenticationPortBindingProxy::soap_noheader() {
     this->soap->header = NULL;
-}
-
-
-void AuthenticationPortBindingProxy::soap_header(struct _wsse__Security *wsse__Security, char *wsa5__MessageID, struct wsa5__RelatesToType *wsa5__RelatesTo, struct wsa5__EndpointReferenceType *wsa5__From, struct wsa5__EndpointReferenceType *wsa5__ReplyTo, struct wsa5__EndpointReferenceType *wsa5__FaultTo, char *wsa5__To, char *wsa5__Action, struct chan__ChannelInstanceType *chan__ChannelInstance) {
-    ::soap_header(this->soap);
-    this->soap->header->wsse__Security = wsse__Security;
-    this->soap->header->wsa5__MessageID = wsa5__MessageID;
-    this->soap->header->wsa5__RelatesTo = wsa5__RelatesTo;
-    this->soap->header->wsa5__From = wsa5__From;
-    this->soap->header->wsa5__ReplyTo = wsa5__ReplyTo;
-    this->soap->header->wsa5__FaultTo = wsa5__FaultTo;
-    this->soap->header->wsa5__To = wsa5__To;
-    this->soap->header->wsa5__Action = wsa5__Action;
-    this->soap->header->chan__ChannelInstance = chan__ChannelInstance;
 }
 
 
@@ -174,7 +152,7 @@ int AuthenticationPortBindingProxy::login(const char *endpoint, const char *soap
     if (endpoint)
         soap_endpoint = endpoint;
     if (soap_endpoint == NULL)
-        soap_endpoint = "http://exflpcx18262:8080/XFELAuthWebService/Authentication";
+        soap_endpoint = "http://exfl-tb04:8080/XFELWebAuth/Authentication";
     if (soap_action == NULL)
         soap_action = "http://server.xfelauthwebservice.xfel.eu/Authentication/loginRequest";
     soap->encodingStyle = NULL;
@@ -229,7 +207,7 @@ int AuthenticationPortBindingProxy::logout(const char *endpoint, const char *soa
     if (endpoint)
         soap_endpoint = endpoint;
     if (soap_endpoint == NULL)
-        soap_endpoint = "http://exflpcx18262:8080/XFELAuthWebService/Authentication";
+        soap_endpoint = "http://exfl-tb04:8080/XFELWebAuth/Authentication";
     if (soap_action == NULL)
         soap_action = "http://server.xfelauthwebservice.xfel.eu/Authentication/logoutRequest";
     soap->encodingStyle = NULL;
@@ -278,13 +256,68 @@ int AuthenticationPortBindingProxy::logout(const char *endpoint, const char *soa
 }
 
 
+int AuthenticationPortBindingProxy::getUserNonce(const char *endpoint, const char *soap_action, ns1__getUserNonce *ns1__getUserNonce_, ns1__getUserNonceResponse *ns1__getUserNonceResponse_) {
+    struct soap *soap = this->soap;
+    struct __ns1__getUserNonce soap_tmp___ns1__getUserNonce;
+    if (endpoint)
+        soap_endpoint = endpoint;
+    if (soap_endpoint == NULL)
+        soap_endpoint = "http://exfl-tb04:8080/XFELWebAuth/Authentication";
+    if (soap_action == NULL)
+        soap_action = "http://server.xfelauthwebservice.xfel.eu/Authentication/getUserNonceRequest";
+    soap->encodingStyle = NULL;
+    soap_tmp___ns1__getUserNonce.ns1__getUserNonce_ = ns1__getUserNonce_;
+    soap_begin(soap);
+    soap_serializeheader(soap);
+    soap_serialize___ns1__getUserNonce(soap, &soap_tmp___ns1__getUserNonce);
+    if (soap_begin_count(soap))
+        return soap->error;
+    if (soap->mode & SOAP_IO_LENGTH) {
+        if (soap_envelope_begin_out(soap)
+                || soap_putheader(soap)
+                || soap_body_begin_out(soap)
+                || soap_put___ns1__getUserNonce(soap, &soap_tmp___ns1__getUserNonce, "-ns1:getUserNonce", NULL)
+                || soap_body_end_out(soap)
+                || soap_envelope_end_out(soap))
+            return soap->error;
+    }
+    if (soap_end_count(soap))
+        return soap->error;
+    if (soap_connect(soap, soap_endpoint, soap_action)
+            || soap_envelope_begin_out(soap)
+            || soap_putheader(soap)
+            || soap_body_begin_out(soap)
+            || soap_put___ns1__getUserNonce(soap, &soap_tmp___ns1__getUserNonce, "-ns1:getUserNonce", NULL)
+            || soap_body_end_out(soap)
+            || soap_envelope_end_out(soap)
+            || soap_end_send(soap))
+        return soap_closesock(soap);
+    if (!ns1__getUserNonceResponse_)
+        return soap_closesock(soap);
+    ns1__getUserNonceResponse_->soap_default(soap);
+    if (soap_begin_recv(soap)
+            || soap_envelope_begin_in(soap)
+            || soap_recv_header(soap)
+            || soap_body_begin_in(soap))
+        return soap_closesock(soap);
+    ns1__getUserNonceResponse_->soap_get(soap, "ns1:getUserNonceResponse", "ns1:getUserNonceResponse");
+    if (soap->error)
+        return soap_recv_fault(soap, 0);
+    if (soap_body_end_in(soap)
+            || soap_envelope_end_in(soap)
+            || soap_end_recv(soap))
+        return soap_closesock(soap);
+    return soap_closesock(soap);
+}
+
+
 int AuthenticationPortBindingProxy::singleSignOn(const char *endpoint, const char *soap_action, ns1__singleSignOn *ns1__singleSignOn_, ns1__singleSignOnResponse *ns1__singleSignOnResponse_) {
     struct soap *soap = this->soap;
     struct __ns1__singleSignOn soap_tmp___ns1__singleSignOn;
     if (endpoint)
         soap_endpoint = endpoint;
     if (soap_endpoint == NULL)
-        soap_endpoint = "http://exflpcx18262:8080/XFELAuthWebService/Authentication";
+        soap_endpoint = "http://exfl-tb04:8080/XFELWebAuth/Authentication";
     if (soap_action == NULL)
         soap_action = "http://server.xfelauthwebservice.xfel.eu/Authentication/singleSignOnRequest";
     soap->encodingStyle = NULL;
@@ -339,7 +372,7 @@ int AuthenticationPortBindingProxy::sessionsByIp(const char *endpoint, const cha
     if (endpoint)
         soap_endpoint = endpoint;
     if (soap_endpoint == NULL)
-        soap_endpoint = "http://exflpcx18262:8080/XFELAuthWebService/Authentication";
+        soap_endpoint = "http://exfl-tb04:8080/XFELWebAuth/Authentication";
     if (soap_action == NULL)
         soap_action = "http://server.xfelauthwebservice.xfel.eu/Authentication/sessionsByIpRequest";
     soap->encodingStyle = NULL;
@@ -394,7 +427,7 @@ int AuthenticationPortBindingProxy::hasActiveSession(const char *endpoint, const
     if (endpoint)
         soap_endpoint = endpoint;
     if (soap_endpoint == NULL)
-        soap_endpoint = "http://exflpcx18262:8080/XFELAuthWebService/Authentication";
+        soap_endpoint = "http://exfl-tb04:8080/XFELWebAuth/Authentication";
     if (soap_action == NULL)
         soap_action = "http://server.xfelauthwebservice.xfel.eu/Authentication/hasActiveSessionRequest";
     soap->encodingStyle = NULL;
@@ -433,61 +466,6 @@ int AuthenticationPortBindingProxy::hasActiveSession(const char *endpoint, const
             || soap_body_begin_in(soap))
         return soap_closesock(soap);
     ns1__hasActiveSessionResponse_->soap_get(soap, "ns1:hasActiveSessionResponse", "ns1:hasActiveSessionResponse");
-    if (soap->error)
-        return soap_recv_fault(soap, 0);
-    if (soap_body_end_in(soap)
-            || soap_envelope_end_in(soap)
-            || soap_end_recv(soap))
-        return soap_closesock(soap);
-    return soap_closesock(soap);
-}
-
-
-int AuthenticationPortBindingProxy::getUserNonce(const char *endpoint, const char *soap_action, ns1__getUserNonce *ns1__getUserNonce_, ns1__getUserNonceResponse *ns1__getUserNonceResponse_) {
-    struct soap *soap = this->soap;
-    struct __ns1__getUserNonce soap_tmp___ns1__getUserNonce;
-    if (endpoint)
-        soap_endpoint = endpoint;
-    if (soap_endpoint == NULL)
-        soap_endpoint = "http://exflpcx18262:8080/XFELAuthWebService/Authentication";
-    if (soap_action == NULL)
-        soap_action = "http://server.xfelauthwebservice.xfel.eu/Authentication/getUserNonceRequest";
-    soap->encodingStyle = NULL;
-    soap_tmp___ns1__getUserNonce.ns1__getUserNonce_ = ns1__getUserNonce_;
-    soap_begin(soap);
-    soap_serializeheader(soap);
-    soap_serialize___ns1__getUserNonce(soap, &soap_tmp___ns1__getUserNonce);
-    if (soap_begin_count(soap))
-        return soap->error;
-    if (soap->mode & SOAP_IO_LENGTH) {
-        if (soap_envelope_begin_out(soap)
-                || soap_putheader(soap)
-                || soap_body_begin_out(soap)
-                || soap_put___ns1__getUserNonce(soap, &soap_tmp___ns1__getUserNonce, "-ns1:getUserNonce", NULL)
-                || soap_body_end_out(soap)
-                || soap_envelope_end_out(soap))
-            return soap->error;
-    }
-    if (soap_end_count(soap))
-        return soap->error;
-    if (soap_connect(soap, soap_endpoint, soap_action)
-            || soap_envelope_begin_out(soap)
-            || soap_putheader(soap)
-            || soap_body_begin_out(soap)
-            || soap_put___ns1__getUserNonce(soap, &soap_tmp___ns1__getUserNonce, "-ns1:getUserNonce", NULL)
-            || soap_body_end_out(soap)
-            || soap_envelope_end_out(soap)
-            || soap_end_send(soap))
-        return soap_closesock(soap);
-    if (!ns1__getUserNonceResponse_)
-        return soap_closesock(soap);
-    ns1__getUserNonceResponse_->soap_default(soap);
-    if (soap_begin_recv(soap)
-            || soap_envelope_begin_in(soap)
-            || soap_recv_header(soap)
-            || soap_body_begin_in(soap))
-        return soap_closesock(soap);
-    ns1__getUserNonceResponse_->soap_get(soap, "ns1:getUserNonceResponse", "ns1:getUserNonceResponse");
     if (soap->error)
         return soap_recv_fault(soap, 0);
     if (soap_body_end_in(soap)

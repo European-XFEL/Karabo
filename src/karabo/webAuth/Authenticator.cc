@@ -21,120 +21,39 @@ namespace karabo {
 
 
         Authenticator::Authenticator(const std::string& username, const std::string& password, const std::string& provider,
-                                     const std::string& ipAddress, const std::string& hostname, const std::string& portNumber,
-                                     const std::string& software)
-        : m_username(username), m_password(password), m_provider(provider), m_ipAddress(ipAddress), m_hostname(hostname), m_portNumber(portNumber), m_software(software), m_service(new AuthenticationPortBindingProxy),
+                                     const std::string& ipAddress, const std::string& brokerHostname, const std::string& brokerPortNumber,
+                                     const std::string& brokerTopic)
+        : m_username(username),
+        m_password(password),
+        m_provider(provider),
+        m_ipAddress(ipAddress),
+        m_brokerHostname(brokerHostname),
+        m_brokerPortNumber(brokerPortNumber),
+        m_brokerTopic(brokerTopic),
+        m_software(KARABO_SOFTWARE_DESC),
+        m_service(new AuthenticationPortBindingProxy),
         // Variables initialized with defaults (otherwise primitive types get whatever arbitrary junk happened to be at that memory location previously)
-        m_userId(-100), m_softwareId(-100), m_roleId(-100), m_nonce(""), m_sessionToken(""), m_welcomeMessage(""), m_roleDesc(""), m_defaultAccessLevel(KARABO_DEFAULT_ACCESS_LEVEL) {
-        }
-
-
-        std::string Authenticator::getSessionToken() const {
-            return m_sessionToken;
-        }
-
-
-        std::string Authenticator::getSoftware() const {
-            return m_software;
-        }
-
-
-        std::string Authenticator::getPortNumber() const {
-            return m_portNumber;
-        }
-
-
-        std::string Authenticator::getHostname() const {
-            return m_hostname;
-        }
-
-
-        std::string Authenticator::getIpAddress() const {
-            return m_ipAddress;
-        }
-
-
-        std::string Authenticator::getProvider() const {
-            return m_provider;
-        }
-
-
-        std::string Authenticator::getPassword() const {
-            return m_password;
-        }
-
-
-        std::string Authenticator::getUsername() const {
-            return m_username;
-        }
-
-
-        std::string Authenticator::getRoleDesc() const {
-            return m_roleDesc;
-        }
-
-
-        std::string Authenticator::getWelcomeMessage() const {
-            return m_welcomeMessage;
-        }
-
-
-        long long int Authenticator::getRoleId() const {
-            return m_roleId;
-        }
-
-
-        long long int Authenticator::getSoftwareId() const {
-            return m_softwareId;
-        }
-
-
-        long long int Authenticator::getUserId() const {
-            return m_userId;
-        }
-        
-        const karabo::util::Hash& Authenticator::getAccessList() const {
-            return m_accessList;
-        }
-
-
-        /*
-         * Setters
-         */
-        void Authenticator::setSessionToken(const std::string& newSessionToken) {
-            this->m_sessionToken = newSessionToken;
-        }
-
-
-        void Authenticator::setRoleDesc(const std::string& roleDesc) {
-            this->m_roleDesc = roleDesc;
-        }
-
-
-        void Authenticator::setWelcomeMessage(const std::string& welcomeMessage) {
-            this->m_welcomeMessage = welcomeMessage;
-        }
-
-
-        void Authenticator::setRoleId(const long long int roleId) {
-            this->m_roleId = roleId;
-        }
-
-
-        void Authenticator::setSoftwareId(const long long int softwareId) {
-            this->m_softwareId = softwareId;
-        }
-
-
-        void Authenticator::setUserId(const long long int userId) {
-            this->m_userId = userId;
+        m_nonce(""),
+        m_firstName(""),
+        m_familyName(""),
+        m_userId(KARABO_INVALID_ID),
+        m_softwareId(KARABO_INVALID_ID),
+        m_softwareDesc(""),
+        m_defaultAccessLevelId(KARABO_INVALID_ID),
+        m_defaultAccessLevelDesc(""),
+        m_accessList(""),
+        m_sessionToken(""),
+        m_welcomeMessage("") {
+            // TODO: Transform the String List into a karabo Hash
+            karabo::util::Hash a;
+            m_accessHash = a;
         }
 
 
         /*
          * Specific logical functions
          */
-        bool Authenticator::login(const karabo::util::Timestamp& timestamp) {
+        bool Authenticator::login() {
 
             ns1__getUserNonceResponse nsUserNonceResp;
             ns1__loginResponse nsLoginResp;
@@ -146,26 +65,38 @@ namespace karabo {
                 return false;
             }
 
-            // Store nonce generated to this user/domain/ipAddress
-            m_nonce = nsUserNonceResp.return_->sessionToken->c_str();
+            // Store nonce generated to this user/provider/ipAddress
+            setNonce(nsUserNonceResp.return_->sessionToken);
 
             // Try authenticate the user
-            nsLoginResp = authenticate(timestamp);
+            nsLoginResp = authenticate();
             if (*(nsLoginResp.return_->operationSuccess) == 0) {
                 KARABO_LOG_FRAMEWORK_DEBUG << "Error: " << string(nsLoginResp.return_->operationResultMsg->c_str());
                 return false;
             } else {
                 KARABO_LOG_FRAMEWORK_DEBUG << "Debug: The sessionToken is " << string(nsLoginResp.return_->sessionToken->c_str());
                 // Populate object with session related information
-                setSessionToken(*(nsLoginResp.return_->sessionToken));
-                setWelcomeMessage(*(nsLoginResp.return_->welcomeMessage));
-                setRoleDesc(*(nsLoginResp.return_->roleDesc));
-                // Saved ID's
-                setRoleId(*(nsLoginResp.return_->roleId));
-                setUserId(*(nsLoginResp.return_->userId));
-                setSoftwareId(*(nsLoginResp.return_->softwareId));
+                setFirstName(nsLoginResp.return_->firstName);
+                setFamilyName(nsLoginResp.return_->familyName);
+                //
+                setSoftwareDesc(nsLoginResp.return_->softwareDesc);
+                //
+                setDefaultAccessLevelDesc(nsLoginResp.return_->defaultAccessLevelDesc);
+                setAccessList(nsLoginResp.return_->accessList);
+                //
+                setSessionToken(nsLoginResp.return_->sessionToken);
+                setWelcomeMessage(nsLoginResp.return_->welcomeMessage);
+
+                // Validated that the pointer content exists (is not NULL)
+                if (nsLoginResp.return_->userId) setUserId(*(nsLoginResp.return_->userId));
+                if (nsLoginResp.return_->softwareId) setSoftwareId(*(nsLoginResp.return_->softwareId));
+                if (nsLoginResp.return_->defaultAccessLevelId) setDefaultAccessLevelId(*(nsLoginResp.return_->defaultAccessLevelId));
+                //setDefaultAccessLevelId(nsLoginResp.return_->defaultAccessLevelId);
+
+
                 // Clear m_nonce value
-                m_nonce = "";
+                setNonce(NULL);
+
                 return true;
             }
         }
@@ -176,8 +107,8 @@ namespace karabo {
             ns1__logout nsLogout;
             ns1__logoutResponse nsLogoutResp;
 
-//            const char end_point[] = "https://exflpcx18262:8181/XFELAuthWebService/Authentication_soap";
-//            const char soap_action[] = "#logout";
+            //            const char end_point[] = "https://exflpcx18262:8181/XFELAuthWebService/Authentication_soap";
+            //            const char soap_action[] = "#logout";
 
             nsLogout.username = &m_username;
             nsLogout.provider = &m_provider;
@@ -192,13 +123,19 @@ namespace karabo {
                 } else {
                     KARABO_LOG_FRAMEWORK_DEBUG << "Debug: Logout did succeed";
                     // Clean from object session related information
-                    setSessionToken("");
-                    setWelcomeMessage("");
-                    setRoleDesc("");
+                    setFirstName(NULL);
+                    setFamilyName(NULL);
+                    setUserId(KARABO_INVALID_ID);
                     //
-                    setRoleId(-100);
-                    setUserId(-100);
-                    setSoftwareId(-100);
+                    setSoftwareId(KARABO_INVALID_ID);
+                    setSoftwareDesc(NULL);
+                    //
+                    setDefaultAccessLevelId(KARABO_INVALID_ID);
+                    setDefaultAccessLevelDesc(NULL);
+                    setAccessList(NULL);
+                    //
+                    setSessionToken(NULL);
+                    setWelcomeMessage(NULL);
                 }
             } else {
                 throw KARABO_NETWORK_EXCEPTION("Error: Problem with SOAP message: " + soapMessageNotOk(m_service->soap));
@@ -243,7 +180,7 @@ namespace karabo {
         }
 
 
-        ns1__loginResponse Authenticator::authenticate(const karabo::util::Timestamp& timestamp) {
+        ns1__loginResponse Authenticator::authenticate() {
             ns1__login nsLogin;
             ns1__loginResponse nsLoginResp;
 
@@ -262,15 +199,17 @@ namespace karabo {
             nsLogin.password = &m_password;
             nsLogin.provider = &m_provider;
             nsLogin.ipAddress = &m_ipAddress;
-            nsLogin.hostname = &m_hostname;
-            nsLogin.portNumber = &m_portNumber;
+            nsLogin.brokerHostname = &m_brokerHostname;
+            nsLogin.brokerPortNumber = &m_brokerPortNumber;
+            nsLogin.brokerTopic = &m_brokerTopic;
             nsLogin.nonce = &m_nonce;
             nsLogin.software = &m_software;
 
             // Convert received date to String to send to the WebServer
-            karabo::util::Timestamp contextTime = karabo::util::Timestamp(timestamp);
-            string contextTimeStr = contextTime.toFormattedString("%Y-%m-%d %H:%M:%S.%f");
-            nsLogin.time = &contextTimeStr;
+            //const karabo::util::Timestamp& timestamp
+            //karabo::util::Timestamp contextTime = karabo::util::Timestamp(timestamp);
+            //string contextTimeStr = contextTime.toFormattedString("%Y-%m-%d %H:%M:%S.%f");
+            //nsLogin.time = &contextTimeStr;
 
             // If obtain successfully answer from Web Service it print message returned!
             if (m_service->login(&nsLogin, &nsLoginResp) == SOAP_OK) {
@@ -324,7 +263,8 @@ namespace karabo {
             KARABO_LOG_FRAMEWORK_DEBUG << "familyName: " << string(nsLoginResp.return_->familyName->c_str()) << "\n";
             KARABO_LOG_FRAMEWORK_DEBUG << "username: " << string(nsLoginResp.return_->username->c_str()) << "\n";
             KARABO_LOG_FRAMEWORK_DEBUG << "provider: " << string(nsLoginResp.return_->provider->c_str()) << "\n";
-            KARABO_LOG_FRAMEWORK_DEBUG << "roleDesc: " << string(nsLoginResp.return_->roleDesc->c_str()) << "\n";
+            KARABO_LOG_FRAMEWORK_DEBUG << "defaultAccessLevelDesc: " << string(nsLoginResp.return_->defaultAccessLevelDesc->c_str()) << "\n";
+            KARABO_LOG_FRAMEWORK_DEBUG << "accessList: " << string(nsLoginResp.return_->accessList->c_str()) << "\n";
             KARABO_LOG_FRAMEWORK_DEBUG << "softwareDesc: " << string(nsLoginResp.return_->softwareDesc->c_str()) << "\n";
             KARABO_LOG_FRAMEWORK_DEBUG << "sessionToken: " << string(nsLoginResp.return_->sessionToken->c_str()) << "\n";
             KARABO_LOG_FRAMEWORK_DEBUG << "welcomeMessage: " << string(nsLoginResp.return_->welcomeMessage->c_str()) << "\n";
@@ -364,6 +304,205 @@ namespace karabo {
                 errorMsg = errorMsg + "\n";
             }
             return errorMsg;
+        }
+
+
+        /*
+         * Getters
+         */
+        const karabo::util::Hash& Authenticator::getAccessHash() const {
+            return m_accessHash;
+        }
+
+
+        const std::string& Authenticator::getAccessList() const {
+            return m_accessList;
+        }
+
+
+        const std::string& Authenticator::getBrokerHostname() const {
+            return m_brokerHostname;
+        }
+
+
+        const std::string& Authenticator::getBrokerPortNumber() const {
+            return m_brokerPortNumber;
+        }
+
+
+        const std::string& Authenticator::getBrokerTopic() const {
+            return m_brokerTopic;
+        }
+
+
+        const std::string& Authenticator::getDefaultAccessLevelDesc() const {
+            return m_defaultAccessLevelDesc;
+        }
+
+
+        const int Authenticator::getDefaultAccessLevelId() const {
+            return m_defaultAccessLevelId;
+        }
+
+
+        const std::string& Authenticator::getFamilyName() const {
+            return m_familyName;
+        }
+
+
+        const std::string& Authenticator::getFirstName() const {
+            return m_firstName;
+        }
+
+
+        const std::string& Authenticator::getIpAddress() const {
+            return m_ipAddress;
+        }
+
+
+        const std::string& Authenticator::getNonce() const {
+            return m_nonce;
+        }
+
+
+        const std::string& Authenticator::getPassword() const {
+            return m_password;
+        }
+
+
+        const std::string& Authenticator::getProvider() const {
+            return m_provider;
+        }
+
+
+        const boost::shared_ptr<AuthenticationPortBindingProxy> Authenticator::getService() const {
+            return m_service;
+        }
+
+
+        const std::string& Authenticator::getSessionToken() const {
+            return m_sessionToken;
+        }
+
+
+        const std::string& Authenticator::getSoftware() const {
+            return m_software;
+        }
+
+
+        const std::string& Authenticator::getSoftwareDesc() const {
+            return m_softwareDesc;
+        }
+
+
+        const long long Authenticator::getSoftwareId() const {
+            return m_softwareId;
+        }
+
+
+        const long long Authenticator::getUserId() const {
+            return m_userId;
+        }
+
+
+        const std::string& Authenticator::getUsername() const {
+            return m_username;
+        }
+
+
+        const std::string& Authenticator::getWelcomeMessage() const {
+            return m_welcomeMessage;
+        }
+
+
+        /*
+         * Setters
+         */
+        void Authenticator::setAccessList(const std::string* accessList) {
+            if (accessList)
+                m_accessList = *accessList;
+            else
+                m_accessList = "";
+        }
+
+
+        void Authenticator::setDefaultAccessLevelDesc(const std::string* defaultAccessLevelDesc) {
+            if (defaultAccessLevelDesc)
+                m_defaultAccessLevelDesc = *defaultAccessLevelDesc;
+            else
+                m_defaultAccessLevelDesc = "";
+        }
+
+
+        void Authenticator::setDefaultAccessLevelId(const int defaultAccessLevelId) {
+            if (defaultAccessLevelId)
+                m_defaultAccessLevelId = defaultAccessLevelId;
+            else
+                m_defaultAccessLevelId = KARABO_INVALID_ID;
+        }
+
+
+        void Authenticator::setFamilyName(const std::string* familyName) {
+            if (familyName)
+                m_familyName = *familyName;
+            else
+                m_familyName = "";
+        }
+
+
+        void Authenticator::setFirstName(const std::string* firstName) {
+            if (firstName)
+                m_firstName = *firstName;
+            else
+                m_firstName = "";
+        }
+
+
+        void Authenticator::setNonce(const std::string* nonce) {
+            if (nonce)
+                m_nonce = *nonce;
+            else
+                m_nonce = "";
+        }
+
+
+        void Authenticator::setSessionToken(const std::string* sessionToken) {
+            if (sessionToken)
+                m_sessionToken = *sessionToken;
+            else
+                m_sessionToken = "";
+        }
+
+
+        void Authenticator::setSoftwareDesc(const std::string* softwareDesc) {
+            if (softwareDesc)
+                m_softwareDesc = *softwareDesc;
+            else
+                m_softwareDesc = "";
+        }
+
+
+        void Authenticator::setSoftwareId(const long long softwareId) {
+            if (softwareId)
+                m_softwareId = softwareId;
+            else
+                m_softwareId = KARABO_INVALID_ID;
+        }
+
+
+        void Authenticator::setUserId(const long long userId) {
+            if (userId)
+                m_userId = userId;
+            else
+                m_userId = KARABO_INVALID_ID;
+        }
+
+
+        void Authenticator::setWelcomeMessage(const std::string* welcomeMessage) {
+            if (welcomeMessage)
+                m_welcomeMessage = *welcomeMessage;
+            else
+                m_welcomeMessage = "";
         }
 
 
