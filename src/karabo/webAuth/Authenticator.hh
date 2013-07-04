@@ -117,7 +117,6 @@ namespace karabo {
             /*
              * Getters
              */
-            const std::string& getAccessList() const;
             const std::string& getBrokerHostname() const;
             const std::string& getBrokerPortNumber() const;
             const std::string& getBrokerTopic() const;
@@ -172,6 +171,10 @@ namespace karabo {
              */
             std::string soapMessageNotOk(struct soap *soap);
 
+            /*
+             * Getters
+             */
+            const std::string& getAccessList() const;
 
             /*
              * Setters
