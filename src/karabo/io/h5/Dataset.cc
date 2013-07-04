@@ -30,7 +30,7 @@ namespace karabo {
                 karabo::util::VECTOR_UINT64_ELEMENT(expected)
                         .key("dims")
                         .displayedName("Dimensions")
-                        .description("Array dimensions.")
+                        .description("Array dimensions (x1,x2,x3,...). For example, for a simple image it is (width, height) ")
                         .tags("persistent")
                         .assignmentOptional().noDefaultValue()
                         .init()
