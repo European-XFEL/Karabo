@@ -85,6 +85,7 @@ echo
 echo -n "Running post install script..."
 mkdir -p $HOME/.karabo
 echo $installDir/karabo-$VERSION > $HOME/.karabo/karaboFramework
+echo "https://svnsrv.desy.de/desy/EuXFEL/WP76/karabo" > $HOME/.karabo/karaboSvnPath
 echo " done."
 echo
 echo
