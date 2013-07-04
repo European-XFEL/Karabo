@@ -63,6 +63,9 @@ namespace karabo {
 
                 if (input.has("dims")) {
                     vector<unsigned long long> dimsVec = input.getAs<unsigned long long, vector>("dims");
+                    // reverse order as we need to store in hdf5
+                    std::reverse(dimsVec.begin(), dimsVec.end());
+
                     for (size_t i = 0; i < singleValueRank; ++i) {
                         dimsVec.push_back(singleValueDims.extentIn(i));
                     }
@@ -273,11 +276,11 @@ namespace karabo {
 
             void Dataset::selectFileRecords(hsize_t recordId, hsize_t len) {
 
-//     std::vector<hsize_t> count(ndims, 1);
-//                count[0] = 1;
-//                
-//                std::vector<hsize_t> block = m_dataSetExtent;
-//                block[0] = len;
+                //     std::vector<hsize_t> count(ndims, 1);
+                //                count[0] = 1;
+                //                
+                //                std::vector<hsize_t> block = m_dataSetExtent;
+                //                block[0] = len;
                 int ndims = m_dataSetExtent.size();
                 std::vector<hsize_t> start(ndims, 0);
                 start[0] = recordId;
@@ -290,16 +293,16 @@ namespace karabo {
                                                              NULL,
                                                              &count[0],
                                                              NULL));
-                
-//                                                             &block[0]));
-//                hssize_t numBlocks = H5Sget_select_hyper_nblocks(m_fileDataSpace);
-//                KARABO_LOG_FRAMEWORK_TRACE_C("karabo.io.h5.Dataset") << "num blocks" << numBlocks <<
-//                        " recId: " << recordId << " len: " << len;
-//                std::vector<hsize_t> buf(256);
-//                H5Sget_select_hyper_blocklist(m_fileDataSpace, 0, numBlocks, &buf[0]);
-//                for (size_t j = 0; j < (numBlocks * 2); j += 2) {
-//                    KARABO_LOG_FRAMEWORK_TRACE_C("karabo.io.h5.Dataset") << "size: " << buf[j] << " " << buf[j + 1];
-//                }
+
+                //                                                             &block[0]));
+                //                hssize_t numBlocks = H5Sget_select_hyper_nblocks(m_fileDataSpace);
+                //                KARABO_LOG_FRAMEWORK_TRACE_C("karabo.io.h5.Dataset") << "num blocks" << numBlocks <<
+                //                        " recId: " << recordId << " len: " << len;
+                //                std::vector<hsize_t> buf(256);
+                //                H5Sget_select_hyper_blocklist(m_fileDataSpace, 0, numBlocks, &buf[0]);
+                //                for (size_t j = 0; j < (numBlocks * 2); j += 2) {
+                //                    KARABO_LOG_FRAMEWORK_TRACE_C("karabo.io.h5.Dataset") << "size: " << buf[j] << " " << buf[j + 1];
+                //                }
             }
 
 
