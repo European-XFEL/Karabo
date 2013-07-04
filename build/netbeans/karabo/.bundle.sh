@@ -11,6 +11,19 @@
 # DISTDIR (e.g. "dist"), CONF (e.g. "Debug"), PLATFORM (e.g. "GNU-Linux-x86"), BUNDLE_ACTION(package|install|clean), BUNDLE_OPTION(Gui|NoGui)
 #
 
+safeRunCommand() {
+    typeset cmnd="$*"
+    typeset ret_code
+
+    echo cmnd=$cmnd
+    eval $cmnd
+    ret_code=$?
+    if [ $ret_code != 0 ]; then
+        printf "Error : [%d] when executing command: '$cmnd'" $ret_code
+        exit $ret_code
+    fi
+}
+
 #### Parameter setup
 DISTDIR=$1
 CONF=$2
@@ -106,7 +119,7 @@ mkdir -p $PACKAGEDIR
 #### Building
 
 # karabo
-make -j$NUM_CORES CONF=$CONF
+safeRunCommand "make -j$NUM_CORES CONF=$CONF"
 cp -rf $DISTDIR/$CONF/$PLATFORM/lib $PACKAGEDIR/
 cp -rf $DISTDIR/$CONF/$PLATFORM/include $PACKAGEDIR/
 cp -rf ../../../extern/$PLATFORM $PACKAGEDIR/extern
@@ -119,23 +132,23 @@ fi
 
 # karathon
 cd ../karathon
-make -j$NUM_CORES CONF=$CONF
+safeRunCommand "make -j$NUM_CORES CONF=$CONF"
 cp -rf $DISTDIR/$CONF/$PLATFORM/lib $PACKAGEDIR/
 cp -rf $DISTDIR/$CONF/$PLATFORM/include $PACKAGEDIR/
 
 # deviceServer
 cd ../deviceServer
-make -j$NUM_CORES CONF=$CONF
+safeRunCommand "make -j$NUM_CORES CONF=$CONF"
 cp -rf $DISTDIR/$CONF/$PLATFORM/bin $PACKAGEDIR/
 
 # brokerMessageLogger
-cd ../brokerMessageLogger
+safeRunCommand "cd ../brokerMessageLogger"
 make -j$NUM_CORES CONF=$CONF
 cp -rf $DISTDIR/$CONF/$PLATFORM/bin $PACKAGEDIR/
 
 # pythonKarabo
 cd ../pythonKarabo
-./build.sh
+safeRunCommand "./build.sh"
 cp -rf $DISTDIR/$OS/bin $PACKAGEDIR/
 cp -rf $DISTDIR/$OS/lib $PACKAGEDIR/
 
@@ -145,14 +158,14 @@ if [ $BUNDLE_OPTION = "NoGui" ]; then
    echo
 elif [ $BUNDLE_OPTION = "Gui" ]; then
    cd ../pythonGui
-   ./build.sh
+   safeRunCommand "./build.sh"
    cp -rf $DISTDIR/$OS/bin $PACKAGEDIR/
    cp -rf $DISTDIR/$OS/lib $PACKAGEDIR/
 fi
 
 # pythonCli
 cd ../pythonCli
-./build.sh
+safeRunCommand "./build.sh"
 cp -rf $DISTDIR/$OS/bin $PACKAGEDIR/
 cp -rf $DISTDIR/$OS/lib $PACKAGEDIR/
 
@@ -163,7 +176,7 @@ fi
 if [ "$BUNDLE_ACTION" = "package" ]; then
     # Tar it
     cd $PACKAGEDIR/../
-    tar -zcf ${PACKAGENAME}.tar.gz $PACKAGENAME
+    safeRunCommand "tar -zcf ${PACKAGENAME}.tar.gz $PACKAGENAME"
     
     # Create installation script
     echo -e '#!/bin/bash\n'"VERSION=$VERSION" | cat - $EXTRACT_SCRIPT ${PACKAGENAME}.tar.gz > $INSTALLSCRIPT
