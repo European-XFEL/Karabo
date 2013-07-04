@@ -41,7 +41,7 @@ void exportPyWebAuthenticator() {
 
     bp::class_<Authenticator> a("Authenticator", bp::init<string const &, string const &, string const &, string const &, string const &, string const &, string const & >((bp::arg("username"), bp::arg("password"), bp::arg("provider"), bp::arg("ipAddress"), bp::arg("brokerHostname"), bp::arg("brokerPortNumber"), bp::arg("brokerTopic"))));
     a.def("login"
-          , (bool (Authenticator::*)(Timestamp const &))(&Authenticator::login)
+          , (bool (Authenticator::*)())(&Authenticator::login)
           , bp::arg("timestamp") = Timestamp());
     a.def("logout"
           , (bool (Authenticator::*)())(&Authenticator::logout));
