@@ -39,10 +39,11 @@ void exportPyWebAuthenticator() {
            , (boost::posix_time::ptime(Timestamp::*)() const) (&Timestamp::getTime));
 
 
+
     bp::class_<Authenticator> a("Authenticator", bp::init<string const &, string const &, string const &, string const &, string const &, string const &, string const & >((bp::arg("username"), bp::arg("password"), bp::arg("provider"), bp::arg("ipAddress"), bp::arg("brokerHostname"), bp::arg("brokerPortNumber"), bp::arg("brokerTopic"))));
+
     a.def("login"
-          , (bool (Authenticator::*)())(&Authenticator::login)
-          , bp::arg("timestamp") = Timestamp());
+          , (bool (Authenticator::*)())(&Authenticator::login));
     a.def("logout"
           , (bool (Authenticator::*)())(&Authenticator::logout));
 
@@ -51,46 +52,59 @@ void exportPyWebAuthenticator() {
           , bp::arg("ipAddress"));
 
     a.def("getSessionToken"
-          , (string(Authenticator::*)() const) (&Authenticator::getSessionToken));
+          , (string const & (Authenticator::*)() const) (&Authenticator::getSessionToken)
+          , bp::return_value_policy<bp::copy_const_reference > ());
 
     a.def("getSoftware"
-          , (string(Authenticator::*)() const) (&Authenticator::getSoftware));
+          , (string const & (Authenticator::*)() const) (&Authenticator::getSoftware)
+          , bp::return_value_policy<bp::copy_const_reference > ());
 
     a.def("getBrokerPortNumber"
-          , (string(Authenticator::*)() const) (&Authenticator::getBrokerPortNumber));
+          , (string const & (Authenticator::*)() const) (&Authenticator::getBrokerPortNumber)
+          , bp::return_value_policy<bp::copy_const_reference > ());
 
     a.def("getBrokerHostname"
-          , (string(Authenticator::*)() const) (&Authenticator::getBrokerHostname));
+          , (string const & (Authenticator::*)() const) (&Authenticator::getBrokerHostname)
+          , bp::return_value_policy<bp::copy_const_reference > ());
 
     a.def("getBrokerTopic"
-          , (string(Authenticator::*)() const) (&Authenticator::getBrokerTopic));
+          , (string const & (Authenticator::*)() const) (&Authenticator::getBrokerTopic)
+          , bp::return_value_policy<bp::copy_const_reference > ());
 
     a.def("getIpAddress"
-          , (string(Authenticator::*)() const) (&Authenticator::getIpAddress));
+          , (string const & (Authenticator::*)() const) (&Authenticator::getIpAddress)
+          , bp::return_value_policy<bp::copy_const_reference > ());
 
     a.def("getProvider"
-          , (string(Authenticator::*)() const) (&Authenticator::getProvider));
+          , (string const & (Authenticator::*)() const) (&Authenticator::getProvider)
+          , bp::return_value_policy<bp::copy_const_reference > ());
 
     a.def("getPassword"
-          , (string(Authenticator::*)() const) (&Authenticator::getPassword));
+          , (string const & (Authenticator::*)() const) (&Authenticator::getPassword)
+          , bp::return_value_policy<bp::copy_const_reference > ());
 
     a.def("getUsername"
-          , (string(Authenticator::*)() const) (&Authenticator::getUsername));
+          , (string const & (Authenticator::*)() const) (&Authenticator::getUsername)
+          , bp::return_value_policy<bp::copy_const_reference > ());
 
     a.def("getFirstName"
-          , (string(Authenticator::*)() const) (&Authenticator::getFirstName));
+          , (string const & (Authenticator::*)() const) (&Authenticator::getFirstName)
+          , bp::return_value_policy<bp::copy_const_reference > ());
 
     a.def("getFamilyName"
-          , (string(Authenticator::*)() const) (&Authenticator::getFamilyName));
+          , (string const & (Authenticator::*)() const) (&Authenticator::getFamilyName)
+          , bp::return_value_policy<bp::copy_const_reference > ());
 
     a.def("getWelcomeMessage"
-          , (string(Authenticator::*)() const) (&Authenticator::getWelcomeMessage));
+          , (string const & (Authenticator::*)() const) (&Authenticator::getWelcomeMessage)
+          , bp::return_value_policy<bp::copy_const_reference > ());
 
     a.def("getDefaultAccessLevelId"
-          , (long long (Authenticator::*)() const) (&Authenticator::getDefaultAccessLevelId));
+          , (int (Authenticator::*)() const) (&Authenticator::getDefaultAccessLevelId));
 
     a.def("getDefaultAccessLevelDesc"
-          , (string(Authenticator::*)() const) (&Authenticator::getDefaultAccessLevelDesc));
+          , (string const & (Authenticator::*)() const) (&Authenticator::getDefaultAccessLevelDesc)
+          , bp::return_value_policy<bp::copy_const_reference > ());
 
     a.def("getSoftwareId"
           , (long long (Authenticator::*)() const) (&Authenticator::getSoftwareId));
