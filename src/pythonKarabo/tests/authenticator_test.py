@@ -3,7 +3,7 @@
 
 import unittest
 from libkarathon import *
-import time
+
 
 class  Authenticator_TestCase(unittest.TestCase):
     #def setUp(self):
@@ -182,20 +182,19 @@ class  Authenticator_TestCase(unittest.TestCase):
         provider = "LOCAL";
         ipAddress = "PythonUnitTestsIpAddress";
         ipAddressWrong = "PythonUnitTestsIpAddressXXXXXXXXXXX";
-        hostname = "127.0.0.1";
-        portNumber = "4444";
-        software = "Karabo";
+        brokerHostname = "127.0.0.1";
+        brokerPortNumber = "4444";
+        brokerTopic = "topic";
         #
         #timeStr = "20130120T122059.259188123";
         #karabo::util::Timestamp time = karabo::util::Timestamp(timeStr);        
         
         # Helper variables
-        emptyString = ""
         functionName = "test_authenticator_single_sign_on"
         
         # Check properties of empty Authenticator (already validated in previous functions)
         try:
-            a = Authenticator(username, password, provider, ipAddress, hostname, portNumber, brokerTopic)
+            a = Authenticator(username, password, provider, ipAddress, brokerHostname, brokerPortNumber, brokerTopic)
         except Exception, e:
             self.fail(functionName + " creation exception before LOGIN: " + str(e))
         
