@@ -108,7 +108,7 @@ class Network(QObject):
         
         dialog = LoginDialog()
         if dialog.exec_() == QDialog.Accepted :
-            if self.login(str(dialog.username), str(dialog.password), str(dialog.provider), brokerHostname, brokerPortNumber, brokerTopic):
+            #if self.login(str(dialog.username), str(dialog.password), str(dialog.provider), brokerHostname, brokerPortNumber, brokerTopic):
                 # test request to server
                 self.__bodySize = 0
                 self.__tcpSocket.abort()
@@ -119,8 +119,8 @@ class Network(QObject):
                 self.__provider = dialog.provider
                 self.__sessionToken = str(auth.getSessionToken())
                 #self._sendLoginInformation(dialog.username, dialog.password, dialog.provider, str(auth.getSessionToken()))
-            else:
-                print "LMAIA: Login error!!!"
+            #else:
+            #    print "LMAIA: Login error!!!"
         
     
     def onEndConnection(self):
