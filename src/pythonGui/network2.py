@@ -40,7 +40,7 @@ class Network(QObject):
         
         self.__username = str()
         self.__password = str()
-        self.__domain = str()
+        self.__provider = str()
         self.__sessionToken = str()
         
         self.__tcpSocket = QTcpSocket(self)
@@ -71,19 +71,16 @@ class Network(QObject):
         self.__bodyBytes = bytearray()
 
 
-    def _login(self, username, password, domain, hostname, portNumber):
+    def login(self, username, password, provider, brokerHostname, brokerPortNumber, brokerTopic):
         global auth
         
         # System variables definition
         #ipAddress = socket.gethostbyname(socket.gethostname()); #IP
         ipAddress = socket.gethostname(); #Machine Name
-        software = "Karabo";
-        timeStr = "20130120T122059.259188123";
-        #karabo::util::Timestamp time = karabo::util::Timestamp(timeStr);
         
         # Construct Authenticator class
         try:
-            auth = Authenticator(username, password, domain, ipAddress, hostname, portNumber, software)
+            auth = Authenticator(username, password, provider, ipAddress, brokerHostname, brokerPortNumber, brokerTopic)
         except Exception, e:
             print "Authenticator exception " + str(e)
             
@@ -104,10 +101,14 @@ class Network(QObject):
 
 ### Slots ###
     def onStartConnection(self):
+        # TODO: Populate this values automatically
+        brokerHostname = "127.0.0.1";
+        brokerPortNumber = "4444";
+        brokerTopic = "Topic_01";
+        
         dialog = LoginDialog()
-        if dialog.exec_() == QDialog.Accepted:
-            #if self._login(str(dialog.username), str(dialog.password), str(dialog.domain), str(dialog.hostname), str(dialog.port)):
-            #    print "LMAIA: Login successfull!!!"
+        if dialog.exec_() == QDialog.Accepted :
+            if self.login(str(dialog.username), str(dialog.password), str(dialog.provider), brokerHostname, brokerPortNumber, brokerTopic):
                 # test request to server
                 self.__bodySize = 0
                 self.__tcpSocket.abort()
@@ -115,12 +116,12 @@ class Network(QObject):
                 
                 self.__username = dialog.username
                 self.__password = dialog.password
-                self.__domain = dialog.domain
+                self.__provider = dialog.provider
                 self.__sessionToken = str(auth.getSessionToken())
-                #self._sendLoginInformation(dialog.username, dialog.password, dialog.domain, str(auth.getSessionToken()))
-            #else:
-            #    print "LMAIA: Login error!!!"
-
+                #self._sendLoginInformation(dialog.username, dialog.password, dialog.provider, str(auth.getSessionToken()))
+            else:
+                print "LMAIA: Login error!!!"
+        
     
     def onEndConnection(self):
         if self._logout():
@@ -238,7 +239,7 @@ class Network(QObject):
 
     def onConnected(self):
         print "Connected to server"
-        self._sendLoginInformation(self.__username, self.__password, self.__domain, self.__sessionToken)
+        self._sendLoginInformation(self.__username, self.__password, self.__provider, self.__sessionToken)
         
         
     def onDisconnected(self):
@@ -349,12 +350,12 @@ class Network(QObject):
 
 
 ### private functions ###
-    def _sendLoginInformation(self, username, password, domain, sessionToken):
+    def _sendLoginInformation(self, username, password, provider, sessionToken):
         header = Hash("type", "login")
         body = Hash()
         body.set("username", str(username))
         body.set("password", str(password))
-        body.set("domain", str(domain))
+        body.set("provider", str(provider))
         body.set("sessionToken", str(sessionToken))
         
         self._tcpWriteHashHash(header, body)

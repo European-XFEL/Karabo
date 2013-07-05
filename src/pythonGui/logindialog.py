@@ -54,12 +54,12 @@ class LoginDialog(QDialog):
         # I solve it as documented here: http://code.google.com/p/clementine-player/issues/detail?id=1706
         # Current open bug: https://bugs.launchpad.net/ubuntu/+source/qtcreator/+bug/959722
         # Running "sudo apt-get remove qt-at-spi"
-        self.__leDomain = QComboBox()
-        self.__leDomain.setEditable(False)
-        domain_list = ["KERBEROS", "LOCAL"]
-        self.__leDomain.addItems(domain_list)
-        formLayout.addRow("Domain:", self.__leDomain)
-        self.__leDomain.currentIndexChanged['QString'].connect(self.onSelectConnectionChanged)
+        self.__leProvider = QComboBox()
+        self.__leProvider.setEditable(False)
+        provider_list = ["KERBEROS", "LOCAL"]
+        self.__leProvider.addItems(provider_list)
+        formLayout.addRow("Provider:", self.__leProvider)
+        self.__leProvider.currentIndexChanged['QString'].connect(self.onSelectConnectionChanged)
         
         self.__leHostname = QLineEdit("localhost")#("131.169.212.42")
         formLayout.addRow("Hostname:", self.__leHostname)
@@ -94,9 +94,9 @@ class LoginDialog(QDialog):
     password = property(fget=_getPassword)
 
     
-    def _getDomain(self):
-        return self.__leDomain.currentText()
-    domain = property(fget=_getDomain)
+    def _getProvider(self):
+        return self.__leProvider.currentText()
+    provider = property(fget=_getProvider)
 
     
     def _getHostname(self):
@@ -129,7 +129,7 @@ class LoginDialog(QDialog):
         print "onSelectConnectionChanged", value
     
     
-    def onSelectDomainChanged(self, value):
-        print "onSelectDomainChanged", value
+    def onSelectProviderChanged(self, value):
+        print "onSelectProviderChanged", value
     
     
