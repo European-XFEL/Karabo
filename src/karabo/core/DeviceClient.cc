@@ -343,10 +343,10 @@ namespace karabo {
                 devices.reserve(tmp.size());
                 for (Hash::const_iterator it = tmp.begin(); it != tmp.end(); ++it) {
                     if (it->hasAttribute("visibility")) {
-                        const vector<string>& roles = it->getAttribute<vector<string> >("visibility");
-                        if (!roles.empty()) {
+                        //const vector<string>& roles = it->getAttribute<vector<string> >("visibility");
+                        //if (!roles.empty()) {
                             //if (std::find(roles.begin(), roles.end(), m_role) == roles.end()) continue;
-                        }
+                        //}
                     }
                     devices.push_back(it->getKey());
                 }
@@ -366,10 +366,10 @@ namespace karabo {
                 for (Hash::const_iterator it = tmp.begin(); it != tmp.end(); ++it) {
                     if (it->getAttribute<string>("serverId") == deviceServer) {
                         if (it->hasAttribute("visibility")) {
-                            const vector<string>& roles = it->getAttribute<vector<string> >("visibility");
-                            if (!roles.empty()) {
+                            //const vector<string>& roles = it->getAttribute<vector<string> >("visibility");
+                            //if (!roles.empty()) {
                                 //if (std::find(roles.begin(), roles.end(), m_role) == roles.end()) continue;
-                            }
+                            //}
                         }
                         devices.push_back(it->getKey());
                     }
@@ -553,12 +553,17 @@ namespace karabo {
             }
             if (ok) {
                 // Wait until this device says hello
+                bool isThere;
                 int nTrials = 0;
-                while (m_runtimeSystemDescription.has("device." + reply) || (nTrials == 9)) {
-                    boost::this_thread::sleep(boost::posix_time::milliseconds(500));
+                do {
+                    boost::this_thread::sleep(boost::posix_time::milliseconds(100));
                     nTrials++;
-                }
-                if (nTrials == 9) {
+                    m_runtimeSystemDescriptionMutex.lock();
+                    isThere = m_runtimeSystemDescription.has("device." + reply);
+                    m_runtimeSystemDescriptionMutex.unlock();
+                } while (!isThere && (nTrials < 20));
+                
+                if (nTrials == 20) {
                     string errorText("Device \"" + reply + "\" got started but is not accessible anymore... ZOMBIE TIME !!!!");
                     return std::make_pair(false, errorText);
                 }
@@ -577,12 +582,17 @@ namespace karabo {
             if (timeoutInSeconds == -1) timeoutInSeconds = 30;
             // Give it a kill signal
             m_signalSlotable->call(deviceId, "slotKillDevice");
-            // Wait until this device says hello
+            // Wait until this device is gone
+            bool isThere;
             int nTrials = 0;
-            while (!m_runtimeSystemDescription.has("device." + deviceId) || (nTrials == timeoutInSeconds)) {
+            do {
                 boost::this_thread::sleep(boost::posix_time::seconds(1));
                 nTrials++;
-            }
+                m_runtimeSystemDescriptionMutex.lock();
+                isThere = m_runtimeSystemDescription.has("device." + deviceId);
+                m_runtimeSystemDescriptionMutex.unlock();
+            } while (isThere && (nTrials < timeoutInSeconds));
+            
             if (nTrials == timeoutInSeconds) {
                 string errorText("Device \"" + deviceId + "\" does not want to die in time. Try to kill it with a knife.");
                 return std::make_pair(false, errorText);
@@ -602,6 +612,21 @@ namespace karabo {
             } catch (const karabo::util::Exception& e) {
                 reply = e.userFriendlyMsg();
                 ok = false;
+            }
+            // Wait until this server is gone
+            bool isThere;
+            int nTrials = 0;
+            do {
+                boost::this_thread::sleep(boost::posix_time::seconds(1));
+                nTrials++;
+                m_runtimeSystemDescriptionMutex.lock();
+                isThere = m_runtimeSystemDescription.has("server." + serverId);
+                m_runtimeSystemDescriptionMutex.unlock();
+            } while (isThere && (nTrials < timeoutInSeconds));
+            
+            if (nTrials == timeoutInSeconds) {
+                string errorText("Server \"" + serverId + "\" does not want to die in time. Try to kill it with a knife.");
+                return std::make_pair(false, errorText);
             }
             return std::make_pair(ok, reply);
         }
