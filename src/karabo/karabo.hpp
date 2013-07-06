@@ -14,6 +14,7 @@
 #include "karabo/io.hpp"
 #include "karabo/net.hpp"
 #include "karabo/xms.hpp"
+#include "karabo/xip.hpp"
 #include "karabo/core.hpp"
 
 #endif

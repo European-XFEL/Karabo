@@ -12,6 +12,7 @@
 namespace karabo {
     namespace xip {
 
+        KARABO_REGISTER_IN_FACTORY(Environment<char>, CpuEnvironment<char>)
         KARABO_REGISTER_IN_FACTORY(Environment<float>, CpuEnvironment<float>)
         KARABO_REGISTER_IN_FACTORY(Environment<double>, CpuEnvironment<double>)
 

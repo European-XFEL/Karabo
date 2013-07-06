@@ -34,8 +34,8 @@ namespace karabo {
             static EnvironmentPointer m_cpuEnvironment;
             static EnvironmentPointer m_cudaEnvironment;
             AbstractImagePointer m_img;
-
-        public:
+            
+            public:
 
             /***************************************
              *            Constructors             *
@@ -112,10 +112,24 @@ namespace karabo {
             /***************************************
              *         Special functions           *
              ***************************************/
+            
+            //inline void setImageType();
 
             /***************************************
              *      Instance Characteristics       *
              ***************************************/
+            
+            inline void setEncoding(const EncodingType& encoding) {
+                m_img->setEncoding(encoding);
+            }
+            
+            inline void setChannelSpace(const ChannelSpaceType& channelSpace) {
+                m_img->setChannelSpace(channelSpace);
+            }
+            
+            inline void setEndian(const EndianType& endian) {
+                m_img->setEndian(endian);
+            }
 
             inline const int dimensionality() const {
                 return m_img->dimensionality();
@@ -143,6 +157,26 @@ namespace karabo {
 
             void setHeader(const karabo::util::Hash& header) {
                 m_img->setHeader(header);
+            }
+            
+            void setHeaderParam(const std::string& key, const char* const& value) {
+                m_img->setHeaderParam(key, std::string(value));
+            }
+            
+            void setHeaderParam(const std::string& key, const std::string& value) {
+                m_img->setHeaderParam(key, value);
+            }
+            
+            void setHeaderParam(const std::string& key, const bool value) {
+                m_img->setHeaderParam(key, value);
+            }
+            
+            void setHeaderParam(const std::string& key, const int value) {
+                m_img->setHeaderParam(key, value);
+            }
+            
+            void setHeaderParam(const std::string& key, const double value) {
+                m_img->setHeaderParam(key, value);
             }
 
             inline size_t size() const {

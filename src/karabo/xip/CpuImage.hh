@@ -35,7 +35,7 @@ namespace karabo {
         template <class TPix> class ImageFileWriter;
 
         struct CpuImageType {
-
+            
             template <class T>
             static std::string classId() {
                 using namespace karabo::util;
@@ -56,6 +56,17 @@ namespace karabo {
             template <class UPix> friend class ImageFileWriter;
 
             typedef boost::shared_ptr<ci::CImgDisplay> CImgDisplayPointer;
+            
+            // std::vector<karabo::util::Hash> m_headerArchive;  // TODO Implement in Karabo-1.1
+            karabo::util::Hash m_header;
+            ci::CImg<TPix> m_cimg;
+            
+            int m_encoding;
+            int m_channelSpace;
+            int m_endian;
+            
+
+            static std::vector<boost::shared_ptr<ci::CImgDisplay> > m_displays;
 
         public:
 
@@ -68,7 +79,7 @@ namespace karabo {
             CpuImage() : m_cimg(ci::CImg<TPix>()) {
             }
 
-            explicit CpuImage(const std::string& filename) : m_cimg() {
+            explicit CpuImage(const std::string& filename) : m_cimg(), m_encoding(Encoding::UNDEFINED), m_channelSpace(ChannelSpace::UNDEFINED), m_endian(Endian::UNDEFINED) {
                 karabo::util::Hash h("File.filename", filename);
                 typename karabo::io::Input<CpuImage<TPix> >::Pointer in = karabo::io::Input<CpuImage<TPix> >::create(h);
                 in->read(*this);
@@ -80,7 +91,7 @@ namespace karabo {
              * @param dy image height
              * @param dz image depth
              */
-            explicit CpuImage(const size_t dx, const size_t dy = 1, const size_t dz = 1) : m_cimg(ci::CImg<TPix>(dx, dy, dz)) {
+            explicit CpuImage(const size_t dx, const size_t dy = 1, const size_t dz = 1) : m_cimg(ci::CImg<TPix>(dx, dy, dz)), m_encoding(Encoding::UNDEFINED), m_channelSpace(ChannelSpace::UNDEFINED), m_endian(Endian::UNDEFINED) {
             }
 
             /** 
@@ -90,23 +101,23 @@ namespace karabo {
              * @param dz image depth
              * @param value default value to fill the image
              */
-            CpuImage(const size_t dx, const size_t dy, const size_t dz, const TPix& value) : m_cimg(ci::CImg<TPix>(dx, dy, dz, 1, value)) {
+            CpuImage(const size_t dx, const size_t dy, const size_t dz, const TPix& value) : m_cimg(ci::CImg<TPix>(dx, dy, dz, 1, value)), m_encoding(Encoding::UNDEFINED), m_channelSpace(ChannelSpace::UNDEFINED), m_endian(Endian::UNDEFINED){
             }
 
-            CpuImage(const size_t dx, const size_t dy, const size_t dz, const std::string& values, const bool repeatValues) : m_cimg(ci::CImg<TPix>(dx, dy, dz, 1, values.c_str(), repeatValues)) {
+            CpuImage(const size_t dx, const size_t dy, const size_t dz, const std::string& values, const bool repeatValues) : m_cimg(ci::CImg<TPix>(dx, dy, dz, 1, values.c_str(), repeatValues)), m_encoding(Encoding::UNDEFINED), m_channelSpace(ChannelSpace::UNDEFINED), m_endian(Endian::UNDEFINED) {
             }
 
-            CpuImage(const TPix * const dataBuffer, const size_t dx, const size_t dy, const size_t dz) : m_cimg(ci::CImg<TPix>(dataBuffer, dx, dy, dz)) {
+            CpuImage(const TPix * const dataBuffer, const size_t dx, const size_t dy, const size_t dz) : m_cimg(ci::CImg<TPix>(dataBuffer, dx, dy, dz)), m_encoding(Encoding::UNDEFINED), m_channelSpace(ChannelSpace::UNDEFINED), m_endian(Endian::UNDEFINED) {
             }
 
-            CpuImage(const std::vector<TPix>& dataBuffer, const size_t dx, const size_t dy, const size_t dz) : m_cimg(ci::CImg<TPix>(&dataBuffer[0], dx, dy, dz)) {
+            CpuImage(const std::vector<TPix>& dataBuffer, const size_t dx, const size_t dy, const size_t dz) : m_cimg(ci::CImg<TPix>(&dataBuffer[0], dx, dy, dz)), m_encoding(Encoding::UNDEFINED), m_channelSpace(ChannelSpace::UNDEFINED), m_endian(Endian::UNDEFINED) {
             }
 
-            CpuImage(const karabo::util::Hash& header) : m_cimg(ci::CImg<TPix>(header.get<int>("dimX"), header.get<int>("dimY"), header.get<int>("dimZ"))) {
+            CpuImage(const karabo::util::Hash& header) : m_cimg(ci::CImg<TPix>(header.get<int>("dimX"), header.get<int>("dimY"), header.get<int>("dimZ"))), m_encoding(Encoding::UNDEFINED), m_channelSpace(ChannelSpace::UNDEFINED), m_endian(Endian::UNDEFINED) {
                 m_header = header;
             }
 
-            CpuImage(const karabo::util::Hash& header, const TPix& value) : m_cimg(ci::CImg<TPix>(header.get<int>("dimX"), header.get<int>("dimY"), header.get<int>("dimZ"), value)) {
+            CpuImage(const karabo::util::Hash& header, const TPix& value) : m_cimg(ci::CImg<TPix>(header.get<int>("dimX"), header.get<int>("dimY"), header.get<int>("dimZ"), value)), m_encoding(Encoding::UNDEFINED), m_channelSpace(ChannelSpace::UNDEFINED), m_endian(Endian::UNDEFINED) {
                 m_header = header;
             }
 
@@ -114,21 +125,23 @@ namespace karabo {
              *          Copy-Constructors          *
              ***************************************/
 
-            /**
-             * Copying from foreign pixelType
-             * @param image
-             * @param isShared
-             */
-            template <class U>
-            CpuImage(const CpuImage<U>& image, bool isShared = false) {
-                m_header = image.m_header;
-                m_cimg.assign(image.getCImg(), isShared);
-            }
-
-            CpuImage(const CpuImage& image, bool isShared = false) {
-                m_header = image.m_header;
-                m_cimg.assign(image.getCImg(), isShared);
-            }
+            // TODO Check whether really needed
+            
+//            /**
+//             * Copying from foreign pixelType
+//             * @param image
+//             * @param isShared
+//             */
+//            template <class U>
+//            CpuImage(const CpuImage<U>& image, bool isShared = false) {
+//                m_header = image.m_header;
+//                m_cimg.assign(image.getCImg(), isShared);
+//            }
+//
+//            CpuImage(const CpuImage& image, bool isShared = false) {
+//                m_header = image.m_header;
+//                m_cimg.assign(image.getCImg(), isShared);
+//            }
 
             template <class TImage>
             TImage to() {
@@ -261,6 +274,18 @@ namespace karabo {
             /***************************************
              *      Instance Characteristics       *
              ***************************************/
+            
+            void setEncoding(const EncodingType& encoding) {
+                m_encoding = encoding;
+            }
+            
+            void setChannelSpace(const ChannelSpaceType& channelSpace) {
+                m_channelSpace = channelSpace;
+            }
+            
+            void setEndian(const EndianType& endian) {
+                m_endian = endian;
+            }
 
             inline const int dimensionality() const {
                 // zero image
@@ -296,7 +321,28 @@ namespace karabo {
             void setHeader(const karabo::util::Hash& header) {
                 m_header = header;
             }
-
+            
+            void setHeaderParam(const std::string& key, const char* const& value) {
+                m_header.set(key, value);
+            }
+            
+            void setHeaderParam(const std::string& key, const std::string& value) {
+                m_header.set(key, value);
+            }
+            
+            void setHeaderParam(const std::string& key, const bool value) {
+                m_header.set(key, value);
+            }
+            
+            void setHeaderParam(const std::string& key, const int value) {
+                m_header.set(key, value);
+            }
+            
+            void setHeaderParam(const std::string& key, const double value) {
+                m_header.set(key, value);
+            }
+            
+            
             inline size_t size() const {
                 return m_cimg.size();
             }
@@ -1006,18 +1052,13 @@ namespace karabo {
 
             void updateHeader(const CpuImage& image) const {
                 CpuImage& tmp = const_cast<CpuImage&> (image);
-                tmp.m_header.set("dimX", tmp.m_cimg.width());
-                tmp.m_header.set("dimY", tmp.m_cimg.height());
-                tmp.m_header.set("dimZ", tmp.m_cimg.depth());
+                tmp.m_header.set("__dimX", tmp.m_cimg.width());
+                tmp.m_header.set("__dimY", tmp.m_cimg.height());
+                tmp.m_header.set("__dimZ", tmp.m_cimg.depth());
+                tmp.m_header.set("__enc", tmp.m_encoding);
+                tmp.m_header.set("__cha", tmp.m_channelSpace);
+                tmp.m_header.set("__end", tmp.m_endian);
             }
-
-        private: // members
-
-            karabo::util::Hash m_header;
-            ci::CImg<TPix> m_cimg;
-
-            static std::vector<boost::shared_ptr<ci::CImgDisplay> > m_displays;
-
         };
 
         template <class T>
