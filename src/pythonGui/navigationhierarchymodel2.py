@@ -31,8 +31,8 @@ class NavigationHierarchyModel(QAbstractItemModel):
         #print config
         #print ""
         
-        print ""
-        print "TREE-Before"
+        #print ""
+        #print "TREE-Before"
         self.__rootItem.printTree()
         
         self.beginResetModel()
@@ -111,8 +111,8 @@ class NavigationHierarchyModel(QAbstractItemModel):
                 classItem.appendChildItem(deviceItem)
 
         self.endResetModel()
-        print ""
-        print "TREE-After"
+        #print ""
+        #print "TREE-After"
         self.__rootItem.printTree()
 
 
@@ -232,9 +232,9 @@ class NavigationHierarchyModel(QAbstractItemModel):
         if not index.isValid():
             return QModelIndex()
         
-        print "parent"
+        #print "parent"
         childItem = index.internalPointer()
-        print "childItem", childItem
+        #print "childItem", childItem
         if (not childItem): # or (not isinstance(childItem, NavigationHierarchyNode)):
             return QModelIndex()
         

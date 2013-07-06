@@ -31,16 +31,7 @@ namespace karabo {
 
         public:
 
-            KARABO_CLASSINFO(CpuImageBinarySerializer<TPix>, "Default", "1.0")
-
-
-            /**
-             * Default constructor.
-             */
-            CpuImageBinarySerializer() {
-                m_hashSerializer = HashSerializer::create("Default");
-
-            };
+            KARABO_CLASSINFO(CpuImageBinarySerializer<TPix>, "Bin", "1.0")
 
             /**
              * Necessary method as part of the factory/configuration system
@@ -49,11 +40,8 @@ namespace karabo {
             static void expectedParameters(karabo::util::Schema& expected) {
             }
 
-            /**
-             * If this object is constructed using the factory/configuration system this method is called
-             * @param input Validated (@see expectedParameters) and default-filled configuration
-             */
-            void configure(const karabo::util::Hash & input) {
+            CpuImageBinarySerializer(const karabo::util::Hash& input) {
+                m_hashSerializer = HashSerializer::create("Bin");
             }
 
             void save(const CpuImage<TPix>& image, std::vector<char>& archive) {
