@@ -22,8 +22,68 @@ namespace karabo {
 
     namespace xip {
 
-        struct AbstractImageType {
+        namespace Encoding {
+
+            enum EncodingType {
+
+                UNDEFINED = -1,
+                GRAY,
+                RGB,
+                RGBA,
+                BGR,
+                BGRA,
+                CMYK,
+                YUV,
+                BAYER,
+                JPEG,
+                PNG,
+            };
+        }
+        
+        typedef Encoding::EncodingType EncodingType;
+        
+        namespace ChannelSpace {
             
+            enum ChannelSpaceType {
+
+                UNDEFINED = -1,
+                u_8_1,
+                s_8_2,
+                u_10_2,
+                s_10_2,
+                u_12_2,
+                s_12_2,
+                u_12_1_5,
+                s_12_1p5,
+                u_16_2,
+                s_16_2,
+                f_16_2,
+                u_32_4,
+                s_32_4,
+                f_32_4,
+                u_64_8,
+                s_64_8,
+                f_64_8,
+            };
+        }
+        
+        typedef ChannelSpace::ChannelSpaceType ChannelSpaceType;
+        
+        namespace Endian {
+
+            enum EndianType {
+
+                UNDEFINED = -1,
+                LSB,
+                MSB
+            };
+        }
+        
+        typedef Endian::EndianType EndianType;
+        
+
+        struct AbstractImageType {
+
             template <class T>
             static std::string classId() {
                 using namespace karabo::util;
@@ -124,6 +184,15 @@ namespace karabo {
              *      Instance Characteristics       *
              ***************************************/
 
+            virtual void setEncoding(const EncodingType& encoding) {
+            }
+
+            virtual void setChannelSpace(const ChannelSpaceType& channelSpace) {
+            }
+
+            virtual void setEndian(const EndianType& endian) {
+            }
+
             virtual const int dimensionality() const {
             }
 
@@ -143,6 +212,20 @@ namespace karabo {
             }
 
             virtual void setHeader(const karabo::util::Hash& header) {
+            }
+            
+            // This is a case where C++ should allow templated virtual functions!
+            // I think not supporting this is a shortcoming in the language!
+            virtual void setHeaderParam(const std::string& key, const std::string& value) {
+            }
+                      
+            virtual void setHeaderParam(const std::string& key, const bool value) {
+            }
+            
+            virtual void setHeaderParam(const std::string& key, const int value) {
+            }
+            
+            virtual void setHeaderParam(const std::string& key, const double value) {
             }
 
             virtual size_t size() const {

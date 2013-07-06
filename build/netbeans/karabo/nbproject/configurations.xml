@@ -202,6 +202,7 @@
         <itemPath>../../../src/karabo/util/GenericElement.hh</itemPath>
         <itemPath>../../../src/karabo/util/HashFilter.cc</itemPath>
         <itemPath>../../../src/karabo/util/HashFilter.hh</itemPath>
+        <itemPath>../../../src/karabo/util/ImageElement.hh</itemPath>
         <itemPath>../../../src/karabo/util/LeafElement.hh</itemPath>
         <itemPath>../../../src/karabo/util/ListElement.hh</itemPath>
         <itemPath>../../../src/karabo/util/NodeElement.hh</itemPath>
@@ -281,13 +282,19 @@
         <itemPath>../../../src/karabo/xip/CpuEnvironment.hh</itemPath>
         <itemPath>../../../src/karabo/xip/CpuImage.cpp</itemPath>
         <itemPath>../../../src/karabo/xip/CpuImage.hh</itemPath>
+        <itemPath>../../../src/karabo/xip/CpuImageBinarySerializer.cc</itemPath>
+        <itemPath>../../../src/karabo/xip/CpuImageBinarySerializer.hh</itemPath>
         <itemPath>../../../src/karabo/xip/Environment.hh</itemPath>
         <itemPath>../../../src/karabo/xip/Image.cc</itemPath>
         <itemPath>../../../src/karabo/xip/Image.hh</itemPath>
+        <itemPath>../../../src/karabo/xip/ImageTypes.hh</itemPath>
         <itemPath>../../../src/karabo/xip/Statistics.hh</itemPath>
       </logicalFolder>
       <logicalFolder name="f2" displayName="Processor" projectFiles="true">
+        <itemPath>../../../src/karabo/xip/BinaryProcessor.hh</itemPath>
         <itemPath>../../../src/karabo/xip/SingleProcessor.hh</itemPath>
+        <itemPath>../../../src/karabo/xip/ToQtImageFormatter.cc</itemPath>
+        <itemPath>../../../src/karabo/xip/ToQtImageFormatter.hh</itemPath>
       </logicalFolder>
     </logicalFolder>
     <logicalFolder name="f6" displayName="xms" projectFiles="true">
@@ -1426,6 +1433,11 @@
             tool="3"
             flavor2="0">
       </item>
+      <item path="../../../src/karabo/util/ImageElement.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="../../../src/karabo/util/LeafElement.hh"
             ex="false"
             tool="3"
@@ -1629,6 +1641,11 @@
             tool="3"
             flavor2="0">
       </item>
+      <item path="../../../src/karabo/xip/BinaryProcessor.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="../../../src/karabo/xip/CImg.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../../../src/karabo/xip/CpuEnvironment.cc"
@@ -1647,6 +1664,16 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/xip/CpuImage.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/xip/CpuImageBinarySerializer.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/xip/CpuImageBinarySerializer.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -1676,6 +1703,11 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/xip/ImageFileWriter.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/xip/ImageTypes.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -2907,6 +2939,11 @@
             tool="3"
             flavor2="0">
       </item>
+      <item path="../../../src/karabo/util/ImageElement.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="../../../src/karabo/util/LeafElement.hh"
             ex="false"
             tool="3"
@@ -3111,6 +3148,11 @@
             tool="3"
             flavor2="0">
       </item>
+      <item path="../../../src/karabo/xip/BinaryProcessor.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="../../../src/karabo/xip/CImg.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../../../src/karabo/xip/CpuEnvironment.cc"
@@ -3129,6 +3171,16 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/xip/CpuImage.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/xip/CpuImageBinarySerializer.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/xip/CpuImageBinarySerializer.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -3162,12 +3214,27 @@
             tool="3"
             flavor2="0">
       </item>
+      <item path="../../../src/karabo/xip/ImageTypes.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="../../../src/karabo/xip/SingleProcessor.hh"
             ex="false"
             tool="3"
             flavor2="0">
       </item>
       <item path="../../../src/karabo/xip/Statistics.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/xip/ToQtImageFormatter.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/xip/ToQtImageFormatter.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -4361,6 +4428,11 @@
             tool="3"
             flavor2="0">
       </item>
+      <item path="../../../src/karabo/util/ImageElement.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="../../../src/karabo/util/LeafElement.hh"
             ex="false"
             tool="3"
@@ -4564,6 +4636,11 @@
             tool="3"
             flavor2="0">
       </item>
+      <item path="../../../src/karabo/xip/BinaryProcessor.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="../../../src/karabo/xip/CImg.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../../../src/karabo/xip/CpuEnvironment.cc"
@@ -4582,6 +4659,16 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/xip/CpuImage.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/xip/CpuImageBinarySerializer.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/xip/CpuImageBinarySerializer.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -4615,12 +4702,27 @@
             tool="3"
             flavor2="0">
       </item>
+      <item path="../../../src/karabo/xip/ImageTypes.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="../../../src/karabo/xip/SingleProcessor.hh"
             ex="false"
             tool="3"
             flavor2="0">
       </item>
       <item path="../../../src/karabo/xip/Statistics.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/xip/ToQtImageFormatter.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/xip/ToQtImageFormatter.hh"
             ex="false"
             tool="3"
             flavor2="0">

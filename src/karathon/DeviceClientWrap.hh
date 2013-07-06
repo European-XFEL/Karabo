@@ -79,6 +79,10 @@ namespace karathon {
         bp::object getDevicesPy() {
             return Wrapper::fromStdVectorToPyList(this->getDevices());
         }
+        
+        bp::object getDevicesPy(const std::string& serverId) {
+            return Wrapper::fromStdVectorToPyList(this->getDevices(serverId));
+        }
 
         bp::object getPropertiesPy(const std::string& deviceId) {
             ScopedGILRelease nogil;

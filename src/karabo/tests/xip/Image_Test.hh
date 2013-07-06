@@ -12,11 +12,13 @@
 #include "TestPathSetup.hh"
 
 class ImageTest : public CPPUNIT_NS::TestFixture {
+
     CPPUNIT_TEST_SUITE(ImageTest);
 
     CPPUNIT_TEST(testConstructorsFloat);
     CPPUNIT_TEST(testConstructorsDouble);
-
+    CPPUNIT_TEST(testConstructorsChar);
+    CPPUNIT_TEST(testImageHeader);
     CPPUNIT_TEST_SUITE_END();
 
 public:
@@ -26,20 +28,24 @@ public:
     void tearDown();
 
 private:
-    
+
     void testConstructorsDouble() {
         this->testConstructors<double>();
     }
-    
+
     void testConstructorsFloat() {
         this->testConstructors<float>();
     }
 
+    void testConstructorsChar();
+    
+    void testImageHeader();
+
     template <class T>
     void testConstructors() {
-        
+
         using namespace karabo::xip;
-        
+
         {
             Image<T> img(CPU);
             CPPUNIT_ASSERT(img.isEmpty() == true);
