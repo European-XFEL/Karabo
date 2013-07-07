@@ -18,9 +18,7 @@ namespace karabo {
     namespace core {
 
         class CameraFsm : public BaseFsm {
-            
-            KARABO_FSM_DECLARE_MACHINE(StateMachine, m_fsm);
-
+                       
         public:
 
             KARABO_CLASSINFO(CameraFsm, "CameraFsm", "1.0")
@@ -139,6 +137,11 @@ namespace karabo {
                 KARABO_FSM_SET_CONTEXT_SUB(this, m_fsm, AllOk)
                 KARABO_FSM_START_MACHINE(m_fsm)
             }
+            
+        private:
+            
+            KARABO_FSM_DECLARE_MACHINE(StateMachine, m_fsm);
+            
         };
     }
 }
