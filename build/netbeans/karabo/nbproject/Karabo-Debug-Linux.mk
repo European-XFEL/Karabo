@@ -105,7 +105,6 @@ OBJECTFILES= \
 	${OBJECTDIR}/_ext/163016059/Timestamp.o \
 	${OBJECTDIR}/_ext/163016059/Timestamp2.o \
 	${OBJECTDIR}/_ext/163016059/Trainstamp.o \
-	${OBJECTDIR}/_ext/163016059/Units.o \
 	${OBJECTDIR}/_ext/163016059/Validator.o \
 	${OBJECTDIR}/_ext/1760428615/Authenticator.o \
 	${OBJECTDIR}/_ext/1760428615/soapAuthenticationPortBindingProxy.o \
@@ -512,11 +511,6 @@ ${OBJECTDIR}/_ext/163016059/Trainstamp.o: ../../../src/karabo/util/Trainstamp.cc
 	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
 	${RM} $@.d
 	$(COMPILE.cc) -g -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163016059/Trainstamp.o ../../../src/karabo/util/Trainstamp.cc
-
-${OBJECTDIR}/_ext/163016059/Units.o: ../../../src/karabo/util/Units.cc 
-	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
-	${RM} $@.d
-	$(COMPILE.cc) -g -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163016059/Units.o ../../../src/karabo/util/Units.cc
 
 ${OBJECTDIR}/_ext/163016059/Validator.o: ../../../src/karabo/util/Validator.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
@@ -1717,19 +1711,6 @@ ${OBJECTDIR}/_ext/163016059/Trainstamp_nomain.o: ${OBJECTDIR}/_ext/163016059/Tra
 	    $(COMPILE.cc) -g -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163016059/Trainstamp_nomain.o ../../../src/karabo/util/Trainstamp.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/163016059/Trainstamp.o ${OBJECTDIR}/_ext/163016059/Trainstamp_nomain.o;\
-	fi
-
-${OBJECTDIR}/_ext/163016059/Units_nomain.o: ${OBJECTDIR}/_ext/163016059/Units.o ../../../src/karabo/util/Units.cc 
-	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
-	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/163016059/Units.o`; \
-	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
-	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
-	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
-	then  \
-	    ${RM} $@.d;\
-	    $(COMPILE.cc) -g -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163016059/Units_nomain.o ../../../src/karabo/util/Units.cc;\
-	else  \
-	    ${CP} ${OBJECTDIR}/_ext/163016059/Units.o ${OBJECTDIR}/_ext/163016059/Units_nomain.o;\
 	fi
 
 ${OBJECTDIR}/_ext/163016059/Validator_nomain.o: ${OBJECTDIR}/_ext/163016059/Validator.o ../../../src/karabo/util/Validator.cc 

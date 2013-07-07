@@ -910,7 +910,7 @@ namespace karabo {
                 mdisp == 0 ? msiz = msiz : (mdisp == 1 ? (msiz = msiz >> 10) : (msiz = msiz >> 20));
                 std::string unit;
                 mdisp == 0 ? unit = "b " : (mdisp == 1 ? unit = "Kb" : unit = "Mb");
-                string type = "type = Image<" + Types::convert<FromTypeInfo, ToLiteral > (typeid (TPix)); + ">";
+                string type = "type = Image<" + Types::convert<FromTypeInfo, ToLiteral > (typeid (TPix)) + ">";
                 if (!title.empty()) cout << title << ": ";
                 cout << type << ", size = (" << m_cimg.width() << ", " << m_cimg.height() << ", " << m_cimg.depth() << "), data = " << msiz << " " << unit << endl;
                 cout << "Header:\n" << getHeader();

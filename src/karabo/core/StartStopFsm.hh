@@ -18,6 +18,8 @@ namespace karabo {
     namespace core {
 
         class StartStopFsm : public BaseFsm {
+            
+            KARABO_FSM_DECLARE_MACHINE(StateMachine, m_fsm);
 
         public:
 
@@ -97,7 +99,7 @@ namespace karabo {
             /**************************************************************/
 
             KARABO_FSM_TABLE_BEGIN(OkStateTransitionTable)
-            //  Source-State      Event    Target-State    Action     Guard
+            // Source-State, Event, Target-State, Action, Guard
             Row< Stopped, StartEvent, Started, StartAction, none >,
             Row< Started, StopEvent, Stopped, StopAction, none >
             KARABO_FSM_TABLE_END
@@ -109,31 +111,25 @@ namespace karabo {
             /*                      Top Machine                         */
             /**************************************************************/
 
-            //  Source-State    Event        Target-State    Action         Guard
-            KARABO_FSM_TABLE_BEGIN(StartStopMachineTransitionTable)
+            // Source-State, Event, Target-State, Action, Guard
+            KARABO_FSM_TABLE_BEGIN(TransitionTable)
             Row< Initialization, none, Ok, none, none >,
             Row< Ok, ErrorFoundEvent, Error, ErrorFoundAction, none >,
             Row< Error, ResetEvent, Ok, none, none >
             KARABO_FSM_TABLE_END
 
 
-            //                                 Name                   Transition-Table       Initial-State Context
-            KARABO_FSM_STATE_MACHINE(StartStopMachine, StartStopMachineTransitionTable, Initialization, Self)
+            // Name, Transition-Table, Initial-State, Context
+            KARABO_FSM_STATE_MACHINE(StateMachine, TransitionTable, Initialization, Self)
 
             void startFsm() {
 
-                KARABO_FSM_CREATE_MACHINE(StartStopMachine, m_fsm);
+                KARABO_FSM_CREATE_MACHINE(StateMachine, m_fsm);
                 KARABO_FSM_SET_CONTEXT_TOP(this, m_fsm)
                 KARABO_FSM_SET_CONTEXT_SUB(this, m_fsm, Ok)
                 KARABO_FSM_START_MACHINE(m_fsm)
             }
-
-        private: // members
-
-            KARABO_FSM_DECLARE_MACHINE(StartStopMachine, m_fsm);
-
         };
-
     }
 }
 

@@ -28,7 +28,7 @@ namespace karabo {
             INT32_ELEMENT(expected).key("flushInterval")
                     .displayedName("Flush interval")
                     .description("The interval after which the memory accumulated data is made persistant")
-                    .unit(Units::SECOND)
+                    .unit(Unit::SECOND)
                     .assignmentOptional().defaultValue(20)
                     .reconfigurable()
                     .commit();
