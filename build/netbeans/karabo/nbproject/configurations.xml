@@ -3136,7 +3136,6 @@
             tool="1"
             flavor2="0">
         <ccTool>
-          <commandLine>-DWITH_OPENSSL</commandLine>
           <preprocessorList>
             <Elem>WITH_NONAMESPACES</Elem>
           </preprocessorList>
@@ -3390,6 +3389,13 @@
         <ccTool>
           <preprocessorList>
             <Elem>LINUX</Elem>
+          </preprocessorList>
+        </ccTool>
+      </folder>
+      <folder path="f8">
+        <ccTool>
+          <preprocessorList>
+            <Elem>WITH_OPENSSL</Elem>
           </preprocessorList>
         </ccTool>
       </folder>
