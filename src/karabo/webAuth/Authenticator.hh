@@ -40,6 +40,7 @@ namespace karabo {
             std::string m_software;
             //
             boost::shared_ptr<AuthenticationPortBindingProxy> m_service;
+            boost::shared_ptr<soap> m_soap;
 
             // Information returned when login is made
             std::string m_nonce;
@@ -111,6 +112,7 @@ namespace karabo {
              * Class destructor
              */
             virtual ~Authenticator() {
+                cleanup();
             }
 
 
@@ -140,6 +142,16 @@ namespace karabo {
             const karabo::util::Hash& getAccessHash() const;
 
         private:
+
+            /**
+             * Function to be call when destroying the object to clean Threads
+             */
+            void cleanup();
+
+            /**
+             * Create and configure soap "variable" taking into consideration SSL parameters
+             */
+            void setSslService();
 
             /**
              * Get a NONCE for the current user (username, provider) and IP Address to allow him to authenticate in the WebAuth Service
