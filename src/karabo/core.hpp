@@ -15,6 +15,7 @@
 #include "core/DeviceClient.hh"
 #include "core/OkErrorFsm.hh"
 #include "core/StartStopFsm.hh"
+#include "core/CameraFsm.hh"
 
 #endif
 
