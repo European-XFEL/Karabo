@@ -264,7 +264,7 @@ void Schema_Test::testGetAllowedRoles() {
 
 void Schema_Test::testGetUnit() {
     int units = m_schema.getUnit("exampleKey2");
-    CPPUNIT_ASSERT(units == Units::METER);
+    CPPUNIT_ASSERT(units == Unit::METER);
 
     string unitName = m_schema.getUnitName("exampleKey2");
     CPPUNIT_ASSERT(unitName == "meter");
@@ -275,7 +275,7 @@ void Schema_Test::testGetUnit() {
 
 
 void Schema_Test::testGetMetricPrefix() {
-    CPPUNIT_ASSERT(m_schema.getMetricPrefix("exampleKey2") == Units::MILLI);
+    CPPUNIT_ASSERT(m_schema.getMetricPrefix("exampleKey2") == MetricPrefix::MILLI);
     CPPUNIT_ASSERT(m_schema.getMetricPrefixName("exampleKey2") == "milli");
     CPPUNIT_ASSERT(m_schema.getMetricPrefixSymbol("exampleKey2") == "m");
 }

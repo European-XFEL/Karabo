@@ -148,8 +148,7 @@ namespace karabo {
 
 
         void DeviceServer::run() {
-            bool hasHearbeat = true;
-
+            
             // Initialize category
             m_log = &(karabo::log::Logger::getLogger(m_serverId));
 

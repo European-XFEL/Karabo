@@ -39,11 +39,11 @@ namespace karabo {
                 PNG,
             };
         }
-        
+
         typedef Encoding::EncodingType EncodingType;
-        
+
         namespace ChannelSpace {
-            
+
             enum ChannelSpaceType {
 
                 UNDEFINED = -1,
@@ -66,9 +66,9 @@ namespace karabo {
                 f_64_8,
             };
         }
-        
+
         typedef ChannelSpace::ChannelSpaceType ChannelSpaceType;
-        
+
         namespace Endian {
 
             enum EndianType {
@@ -78,9 +78,8 @@ namespace karabo {
                 MSB
             };
         }
-        
+
         typedef Endian::EndianType EndianType;
-        
 
         struct AbstractImageType {
 
@@ -106,21 +105,33 @@ namespace karabo {
              ***************************************/
 
             virtual AbstractImage& assign() {
+                KARABO_NOT_SUPPORTED_EXCEPTION("Function call not supported by the underlying image implementation");
+                return *this;
             }
 
             virtual AbstractImage& assign(const size_t dx, const size_t dy = 1, const size_t dz = 1) {
+                KARABO_NOT_SUPPORTED_EXCEPTION("Function call not supported by the underlying image implementation");
+                return *this;
             }
 
             virtual AbstractImage& assign(const int dx, const int dy, const int dz, const TPix& value) {
+                KARABO_NOT_SUPPORTED_EXCEPTION("Function call not supported by the underlying image implementation");
+                return *this;
             }
 
             virtual AbstractImage& assign(const int dx, const int dy, const int dz, const std::string& values, const bool repeatValues) {
+                KARABO_NOT_SUPPORTED_EXCEPTION("Function call not supported by the underlying image implementation");
+                return *this;
             }
 
             virtual AbstractImage& assign(const TPix * const dataBuffer, const int dx, const int dy, const int dz) {
+                KARABO_NOT_SUPPORTED_EXCEPTION("Function call not supported by the underlying image implementation");
+                return *this;
             }
 
             virtual AbstractImage& assign(const std::vector<TPix>& dataBuffer, const int dx, const int dy, const int dz) {
+                KARABO_NOT_SUPPORTED_EXCEPTION("Function call not supported by the underlying image implementation");
+                return *this;
             }
 
             /***************************************
@@ -135,9 +146,13 @@ namespace karabo {
              */
             template <class UPix>
             inline AbstractImage& assign(const AbstractImage<UPix>& image) {
+                KARABO_NOT_SUPPORTED_EXCEPTION("Function call not supported by the underlying image implementation");
+                return *this;
             }
 
             virtual AbstractImage& assign(const AbstractImage& image) {
+                KARABO_NOT_SUPPORTED_EXCEPTION("Function call not supported by the underlying image implementation");
+                return *this;
             }
 
             /***************************************
@@ -152,9 +167,11 @@ namespace karabo {
              ***************************************/
 
             virtual void swap(AbstractImage& image) {
+                KARABO_NOT_SUPPORTED_EXCEPTION("Function call not supported by the underlying image implementation");
             }
 
             virtual void swap(const AbstractImage& image) {
+                KARABO_NOT_SUPPORTED_EXCEPTION("Function call not supported by the underlying image implementation");
             }
 
             /**
@@ -166,18 +183,28 @@ namespace karabo {
              * @return The new image
              */
             virtual AbstractImage& moveTo(AbstractImage& image) {
+                KARABO_NOT_SUPPORTED_EXCEPTION("Function call not supported by the underlying image implementation");
+                return *this;
             }
 
             virtual inline AbstractImage& clear() {
+                KARABO_NOT_SUPPORTED_EXCEPTION("Function call not supported by the underlying image implementation");
+                return *this;
             }
 
             virtual AbstractImage& read(const std::string& filename) {
+                KARABO_NOT_SUPPORTED_EXCEPTION("Function call not supported by the underlying image implementation");
+                return *this;
             }
 
             virtual const AbstractImage& write(const std::string& filename, const int number = -1) const {
+                KARABO_NOT_SUPPORTED_EXCEPTION("Function call not supported by the underlying image implementation");
+                return *this;
             }
 
             virtual size_t offset(const size_t x, const size_t y = 0, const size_t z = 0) {
+                KARABO_NOT_SUPPORTED_EXCEPTION("Function call not supported by the underlying image implementation");
+                return 0;
             }
 
             /***************************************
@@ -185,59 +212,97 @@ namespace karabo {
              ***************************************/
 
             virtual void setEncoding(const EncodingType& encoding) {
+                KARABO_NOT_SUPPORTED_EXCEPTION("Function call not supported by the underlying image implementation");
+
             }
 
             virtual void setChannelSpace(const ChannelSpaceType& channelSpace) {
+                KARABO_NOT_SUPPORTED_EXCEPTION("Function call not supported by the underlying image implementation");
+
             }
 
             virtual void setEndian(const EndianType& endian) {
+                KARABO_NOT_SUPPORTED_EXCEPTION("Function call not supported by the underlying image implementation");
+
             }
 
             virtual const int dimensionality() const {
+                KARABO_NOT_SUPPORTED_EXCEPTION("Function call not supported by the underlying image implementation");
+                return 0;
             }
 
             virtual bool isEmpty() const {
+                KARABO_NOT_SUPPORTED_EXCEPTION("Function call not supported by the underlying image implementation");
+                return 0;
             }
 
             virtual size_t dimX() const {
+                KARABO_NOT_SUPPORTED_EXCEPTION("Function call not supported by the underlying image implementation");
+                return 0;
             }
 
             virtual size_t dimY() const {
+                KARABO_NOT_SUPPORTED_EXCEPTION("Function call not supported by the underlying image implementation");
+                return 0;
             }
 
             virtual size_t dimZ() const {
+                KARABO_NOT_SUPPORTED_EXCEPTION("Function call not supported by the underlying image implementation");
+                return 0;
             }
 
             virtual const karabo::util::Hash& getHeader() const {
+                KARABO_NOT_SUPPORTED_EXCEPTION("Function call not supported by the underlying image implementation");
+                static karabo::util::Hash h;
+                return h;
             }
 
             virtual void setHeader(const karabo::util::Hash& header) {
+                KARABO_NOT_SUPPORTED_EXCEPTION("Function call not supported by the underlying image implementation");
+
             }
-            
+
             // This is a case where C++ should allow templated virtual functions!
             // I think not supporting this is a shortcoming in the language!
+
             virtual void setHeaderParam(const std::string& key, const std::string& value) {
+                KARABO_NOT_SUPPORTED_EXCEPTION("Function call not supported by the underlying image implementation");
+
             }
-                      
+
             virtual void setHeaderParam(const std::string& key, const bool value) {
+                KARABO_NOT_SUPPORTED_EXCEPTION("Function call not supported by the underlying image implementation");
+
             }
-            
+
             virtual void setHeaderParam(const std::string& key, const int value) {
+                KARABO_NOT_SUPPORTED_EXCEPTION("Function call not supported by the underlying image implementation");
+
             }
-            
+
             virtual void setHeaderParam(const std::string& key, const double value) {
+                KARABO_NOT_SUPPORTED_EXCEPTION("Function call not supported by the underlying image implementation");
+
             }
 
             virtual size_t size() const {
+                KARABO_NOT_SUPPORTED_EXCEPTION("Function call not supported by the underlying image implementation");
+                return 0;
             }
 
             virtual size_t byteSize() const {
+                KARABO_NOT_SUPPORTED_EXCEPTION("Function call not supported by the underlying image implementation");
+                return 0;
             }
 
             virtual std::string pixelType() const {
+                KARABO_NOT_SUPPORTED_EXCEPTION("Function call not supported by the underlying image implementation");
+                return 0;
             }
 
             virtual Statistics getStatistics() const {
+                KARABO_NOT_SUPPORTED_EXCEPTION("Function call not supported by the underlying image implementation");
+                return Statistics();
             }
 
             /***************************************
@@ -245,15 +310,27 @@ namespace karabo {
              ***************************************/
 
             virtual const TPix& operator()(const size_t x, const size_t y = 0, const size_t z = 0) const {
+                KARABO_NOT_SUPPORTED_EXCEPTION("Function call not supported by the underlying image implementation");
+                static TPix t;
+                return t;
             }
 
             virtual TPix& operator()(const size_t x, const size_t y = 0, const size_t z = 0) {
+                KARABO_NOT_SUPPORTED_EXCEPTION("Function call not supported by the underlying image implementation");
+                static TPix t;
+                return t;
             }
 
             virtual const TPix& operator[](const size_t offset) const {
+                KARABO_NOT_SUPPORTED_EXCEPTION("Function call not supported by the underlying image implementation");
+                static TPix t;
+                return t;
             }
 
             virtual TPix& operator[](const size_t offset) {
+                KARABO_NOT_SUPPORTED_EXCEPTION("Function call not supported by the underlying image implementation");
+                static TPix t;
+                return t;
             }
 
             /**
@@ -261,6 +338,8 @@ namespace karabo {
              * @return Address of pixel buffer
              */
             virtual operator const TPix*() const {
+                KARABO_NOT_SUPPORTED_EXCEPTION("Function call not supported by the underlying image implementation");
+                return 0;
             }
 
             /**
@@ -268,6 +347,8 @@ namespace karabo {
              * @return Address of pixel buffer
              */
             virtual operator TPix*() {
+                KARABO_NOT_SUPPORTED_EXCEPTION("Function call not supported by the underlying image implementation");
+                return 0;
             }
 
             /**
@@ -278,6 +359,8 @@ namespace karabo {
              * @return Image
              */
             virtual AbstractImage& operator=(const TPix& val) {
+                KARABO_NOT_SUPPORTED_EXCEPTION("Function call not supported by the underlying image implementation");
+                return *this;
             }
 
             /**
@@ -290,6 +373,8 @@ namespace karabo {
              * @return Image
              */
             virtual AbstractImage& operator=(const std::string& expression) {
+                KARABO_NOT_SUPPORTED_EXCEPTION("Function call not supported by the underlying image implementation");
+                return *this;
             }
 
             /**
@@ -301,6 +386,8 @@ namespace karabo {
              * @return Image 
              */
             virtual AbstractImage& operator=(const AbstractImage& image) {
+                KARABO_NOT_SUPPORTED_EXCEPTION("Function call not supported by the underlying image implementation");
+                return *this;
             }
 
             /**************************
@@ -308,24 +395,36 @@ namespace karabo {
              **************************/
 
             virtual AbstractImage& operator+=(const TPix& value) {
+                KARABO_NOT_SUPPORTED_EXCEPTION("Function call not supported by the underlying image implementation");
+                return *this;
             }
 
             virtual AbstractImage& operator+=(const std::string& expression) {
+                KARABO_NOT_SUPPORTED_EXCEPTION("Function call not supported by the underlying image implementation");
+                return *this;
             }
 
             virtual AbstractImage& operator+=(const AbstractImage& image) {
+                KARABO_NOT_SUPPORTED_EXCEPTION("Function call not supported by the underlying image implementation");
+                return *this;
             }
 
             //virtual AbstractImage& operator++() {
             //}
 
-            virtual AbstractImage& operator+(const TPix& value) const {
+            virtual AbstractImage& operator+(const TPix& value) {
+                KARABO_NOT_SUPPORTED_EXCEPTION("Function call not supported by the underlying image implementation");
+                return *this;
             }
 
             virtual AbstractImage& operator+(const std::string& expression) {
+                KARABO_NOT_SUPPORTED_EXCEPTION("Function call not supported by the underlying image implementation");
+                return *this;
             }
 
             virtual AbstractImage& operator+(const AbstractImage& image) {
+                KARABO_NOT_SUPPORTED_EXCEPTION("Function call not supported by the underlying image implementation");
+                return *this;
             }
 
             /**************************
@@ -333,21 +432,33 @@ namespace karabo {
              **************************/
 
             virtual AbstractImage& operator-=(const TPix& value) {
+                KARABO_NOT_SUPPORTED_EXCEPTION("Function call not supported by the underlying image implementation");
+                return *this;
             }
 
             virtual AbstractImage& operator-=(const std::string& expression) {
+                KARABO_NOT_SUPPORTED_EXCEPTION("Function call not supported by the underlying image implementation");
+                return *this;
             }
 
             virtual AbstractImage& operator-=(const AbstractImage& image) {
+                KARABO_NOT_SUPPORTED_EXCEPTION("Function call not supported by the underlying image implementation");
+                return *this;
             }
 
-            virtual AbstractImage& operator-(const TPix& value) const {
+            virtual AbstractImage& operator-(const TPix& value) {
+                KARABO_NOT_SUPPORTED_EXCEPTION("Function call not supported by the underlying image implementation");
+                return *this;
             }
 
             virtual AbstractImage& operator-(const std::string& expression) {
+                KARABO_NOT_SUPPORTED_EXCEPTION("Function call not supported by the underlying image implementation");
+                return *this;
             }
 
             virtual AbstractImage& operator-(const AbstractImage& image) {
+                KARABO_NOT_SUPPORTED_EXCEPTION("Function call not supported by the underlying image implementation");
+                return *this;
             }
 
             /***************************************
@@ -355,9 +466,13 @@ namespace karabo {
              ***************************************/
 
             virtual const TPix* pixelPointer() const {
+                KARABO_NOT_SUPPORTED_EXCEPTION("Function call not supported by the underlying image implementation");
+                return 0;
             }
 
             virtual TPix* pixelPointer() {
+                KARABO_NOT_SUPPORTED_EXCEPTION("Function call not supported by the underlying image implementation");
+                return 0;
             }
 
             /**
@@ -366,109 +481,159 @@ namespace karabo {
              * @return 
              */
             virtual TPix& at(const int offset, const TPix beyondBorderValue) {
+                KARABO_NOT_SUPPORTED_EXCEPTION("Function call not supported by the underlying image implementation");
+                static TPix t;
+                return t;
             }
 
             virtual TPix at(const int offset, const TPix beyondBorderValue) const {
+                KARABO_NOT_SUPPORTED_EXCEPTION("Function call not supported by the underlying image implementation");
+                return 0;
             }
 
             //! Read a pixel value with Neumann boundary conditions.
 
             virtual TPix& at(const int offset) {
+                KARABO_NOT_SUPPORTED_EXCEPTION("Function call not supported by the underlying image implementation");
+                static TPix t;
+                return t;
             }
 
             virtual TPix at(const int offset) const {
+                KARABO_NOT_SUPPORTED_EXCEPTION("Function call not supported by the underlying image implementation");
+                return 0;
             }
 
             //! Read a pixel value with Dirichlet boundary conditions for the first coordinates (\c x).
 
             virtual TPix& atX(const int x, const int y, const int z, const TPix beyondBoundaryValue) {
+                KARABO_NOT_SUPPORTED_EXCEPTION("Function call not supported by the underlying image implementation");
+                static TPix t;
+                return t;
             }
 
             virtual TPix atX(const int x, const int y, const int z, const TPix beyondBoundaryValue) const {
+                KARABO_NOT_SUPPORTED_EXCEPTION("Function call not supported by the underlying image implementation");
+                return 0;
             }
 
             //! Read a pixel value with Neumann boundary conditions for the first coordinates (\c x).
 
             virtual TPix& atX(const int x, const int y = 0, const int z = 0) {
+                KARABO_NOT_SUPPORTED_EXCEPTION("Function call not supported by the underlying image implementation");
+                static TPix t;
+                return t;
             }
 
             virtual TPix atX(const int x, const int y = 0, const int z = 0) const {
+                KARABO_NOT_SUPPORTED_EXCEPTION("Function call not supported by the underlying image implementation");
+                return 0;
             }
 
             virtual TPix& atXY(const int x, const int y, const int z, const TPix beyondBoundaryValue) {
+                KARABO_NOT_SUPPORTED_EXCEPTION("Function call not supported by the underlying image implementation");
+                static TPix t;
+                return t;
             }
 
             virtual TPix atXY(const int x, const int y, const int z, const TPix beyondBoundaryValue) const {
+                KARABO_NOT_SUPPORTED_EXCEPTION("Function call not supported by the underlying image implementation");
+                return 0;
             }
 
             virtual TPix& atXY(const int x, const int y = 0, const int z = 0) {
+                KARABO_NOT_SUPPORTED_EXCEPTION("Function call not supported by the underlying image implementation");
+                static TPix t;
+                return t;
             }
 
             virtual TPix atXY(const int x, const int y = 0, const int z = 0) const {
+                KARABO_NOT_SUPPORTED_EXCEPTION("Function call not supported by the underlying image implementation");
+                return 0;
             }
 
             virtual TPix& atXYZ(const int x, const int y, const int z, const TPix beyondBoundaryValue) {
+                KARABO_NOT_SUPPORTED_EXCEPTION("Function call not supported by the underlying image implementation");
+                static TPix t;
+                return t;
             }
 
             virtual TPix atXYZ(const int x, const int y, const int z, const TPix beyondBoundaryValue) const {
+                KARABO_NOT_SUPPORTED_EXCEPTION("Function call not supported by the underlying image implementation");
+                return 0;
             }
 
             //! Read a pixel value with Neumann boundary conditions for the first coordinates (\c x).
 
             virtual TPix& atXYZ(const int x, const int y = 0, const int z = 0) {
-
+                KARABO_NOT_SUPPORTED_EXCEPTION("Function call not supported by the underlying image implementation");
+                static TPix t;
+                return t;
             }
 
             virtual TPix atXYZ(const int x, const int y = 0, const int z = 0) const {
-
+                KARABO_NOT_SUPPORTED_EXCEPTION("Function call not supported by the underlying image implementation");
+                return 0;
             }
 
             virtual double linearAtX(const float fx, const int y, const int z, const double beyondBoundaryValue) const {
-
+                KARABO_NOT_SUPPORTED_EXCEPTION("Function call not supported by the underlying image implementation");
+                return 0;
             }
 
             virtual double linearAtX(const float fx, const int y = 0, const int z = 0) const {
-
+                KARABO_NOT_SUPPORTED_EXCEPTION("Function call not supported by the underlying image implementation");
+                return 0;
             }
 
             virtual double linearAtXY(const float fx, const float y, const int z, const double beyondBoundaryValue) const {
-
+                KARABO_NOT_SUPPORTED_EXCEPTION("Function call not supported by the underlying image implementation");
+                return 0;
             }
 
             virtual double linearAtXY(const float fx, const float y = 0, const int z = 0) const {
-
+                KARABO_NOT_SUPPORTED_EXCEPTION("Function call not supported by the underlying image implementation");
+                return 0;
             }
 
             virtual double linearAtXYZ(const float fx, const float y, const float z, const double beyondBoundaryValue) const {
-
+                KARABO_NOT_SUPPORTED_EXCEPTION("Function call not supported by the underlying image implementation");
+                return 0;
             }
 
             virtual double linearAtXYZ(const float fx, const float y = 0, const float z = 0) const {
-
+                KARABO_NOT_SUPPORTED_EXCEPTION("Function call not supported by the underlying image implementation");
+                return 0;
             }
 
             virtual double cubicAtX(const float fx, const int y, const int z, const double beyondBoundaryValue) const {
-
+                KARABO_NOT_SUPPORTED_EXCEPTION("Function call not supported by the underlying image implementation");
+                return 0;
             }
 
             virtual double cubicAtX(const float fx, const int y = 0, const int z = 0) const {
-
+                KARABO_NOT_SUPPORTED_EXCEPTION("Function call not supported by the underlying image implementation");
+                return 0;
             }
 
             virtual double cubicAtXY(const float fx, const float y, const int z, const double beyondBoundaryValue) const {
-
+                KARABO_NOT_SUPPORTED_EXCEPTION("Function call not supported by the underlying image implementation");
+                return 0;
             }
 
             virtual double cubicAtXY(const float fx, const float y = 0, const int z = 0) const {
-
+                KARABO_NOT_SUPPORTED_EXCEPTION("Function call not supported by the underlying image implementation");
+                return 0;
             }
 
             virtual double cubicAtXYZ(const float fx, const float y, const float z, const double beyondBoundaryValue) const {
-
+                KARABO_NOT_SUPPORTED_EXCEPTION("Function call not supported by the underlying image implementation");
+                return 0;
             }
 
             virtual double cubicAtXYZ(const float fx, const float y = 0, const float z = 0) const {
-
+                KARABO_NOT_SUPPORTED_EXCEPTION("Function call not supported by the underlying image implementation");
+                return 0;
             }
 
             /***************************************
@@ -480,9 +645,13 @@ namespace karabo {
              * @return total sum of all pixels
              */
             virtual double getSum() const {
+                KARABO_NOT_SUPPORTED_EXCEPTION("Function call not supported by the underlying image implementation");
+                return 0;
             }
 
             virtual double getMean() const {
+                KARABO_NOT_SUPPORTED_EXCEPTION("Function call not supported by the underlying image implementation");
+                return 0;
             }
 
 
