@@ -11,10 +11,20 @@
 #include <karabo/log/Logger.hh>
 #include "Authenticator.hh"
 #include "soapAuthenticationPortBindingProxy.h"
+#include "soapH.h"
 #include "AuthenticationPortBinding.nsmap"
 #include <signal.h>		/* defines SIGPIPE */
 
+#include <unistd.h>		/* defines _POSIX_THREADS if pthreads are available */
+#if defined(_POSIX_THREADS) || defined(_SC_THREADS)
+#include <pthread.h>
+#endif
+
 using namespace std;
+
+int CRYPTO_thread_setup();
+void CRYPTO_thread_cleanup();
+void sigpipe_handle(int);
 
 namespace karabo {
     namespace webAuth {
@@ -31,7 +41,7 @@ namespace karabo {
         m_brokerPortNumber(brokerPortNumber),
         m_brokerTopic(brokerTopic),
         m_software(KARABO_SOFTWARE_DESC),
-        m_service(new AuthenticationPortBindingProxy),
+        //m_service(new AuthenticationPortBindingProxy),
         // Variables initialized with defaults (otherwise primitive types get whatever arbitrary junk happened to be at that memory location previously)
         m_nonce(""),
         m_firstName(""),
@@ -44,9 +54,51 @@ namespace karabo {
         m_accessList(""),
         m_sessionToken(""),
         m_welcomeMessage("") {
+
             // TODO: Transform the String List into a karabo Hash
             karabo::util::Hash a;
             m_accessHash = a;
+
+            // Function that CREATE the SSL connections and variables with the server!
+            setSslService();
+        }
+
+
+        void Authenticator::cleanup() {
+            CRYPTO_thread_cleanup();
+        }
+
+
+        void Authenticator::setSslService() {
+            m_soap = boost::shared_ptr<soap>(new soap());
+            soap_ssl_init();
+            if (CRYPTO_thread_setup()) {
+                fprintf(stderr, "Cannot setup thread mutex for OpenSSL\n");
+                exit(1);
+            }
+
+            // Init gSOAP context
+            soap_init(m_soap.get());
+
+            if (soap_ssl_client_context(m_soap.get(),
+                                        /* SOAP_SSL_NO_AUTHENTICATION, */ /* for encryption w/o authentication */
+                                        /* SOAP_SSL_DEFAULT | SOAP_SSL_SKIP_HOST_CHECK, */ /* if we don't want the host name checks since these will change from machine to machine */
+                                        SOAP_SSL_NO_AUTHENTICATION, /* use SOAP_SSL_DEFAULT in production code */
+                                        NULL, /* keyfile (cert+key): required only when client must authenticate to server (see SSL docs to create this file) */
+                                        NULL, /* password to read the keyfile */
+                                        NULL, /* optional cacert file to store trusted certificates, use cacerts.pem for all public certificates issued by common CAs */
+                                        NULL, /* optional capath to directory with trusted certificates */
+                                        NULL /* if randfile!=NULL: use a file with random data to seed randomness */
+                                        )) {
+                soap_print_fault(m_soap.get(), stderr);
+                exit(1);
+            }
+
+            m_soap.get()->connect_timeout = 60; /* try to connect for 1 minute */
+            m_soap.get()->send_timeout = m_soap.get()->recv_timeout = 30; /* if I/O stalls, then timeout after 30 seconds */
+
+            // Create SSL Service from the parameters changed in the previous lines of code
+            m_service = boost::shared_ptr<AuthenticationPortBindingProxy> (new AuthenticationPortBindingProxy(m_soap.get()));
         }
 
 
@@ -93,7 +145,6 @@ namespace karabo {
                 if (nsLoginResp.return_->defaultAccessLevelId) setDefaultAccessLevelId(*(nsLoginResp.return_->defaultAccessLevelId));
                 //setDefaultAccessLevelId(nsLoginResp.return_->defaultAccessLevelId);
 
-
                 // Clear m_nonce value
                 setNonce(NULL);
 
@@ -107,15 +158,12 @@ namespace karabo {
             ns1__logout nsLogout;
             ns1__logoutResponse nsLogoutResp;
 
-            //            const char end_point[] = "https://exflpcx18262:8181/XFELAuthWebService/Authentication_soap";
-            //            const char soap_action[] = "#logout";
-
             nsLogout.username = &m_username;
             nsLogout.provider = &m_provider;
             nsLogout.sessionToken = &m_sessionToken;
 
             // If obtain successfully answer from Web Service the logic proceeds!
-            if (m_service->logout(/*end_point, NULL,*/ &nsLogout, &nsLogoutResp) == SOAP_OK) {
+            if (m_service->logout(&nsLogout, &nsLogoutResp) == SOAP_OK) {
                 KARABO_LOG_FRAMEWORK_DEBUG << "Debug: SOAP message is OK";
                 if (*(nsLogoutResp.return_) == 0) {
                     KARABO_LOG_FRAMEWORK_DEBUG << "Error: Logout didn't succeed";
@@ -149,17 +197,6 @@ namespace karabo {
             ns1__getUserNonce nsUserNonce;
             ns1__getUserNonceResponse nsUserNonceResp;
 
-            //const char end_point[] = "https://exflpcx18262:8181/XFELAuthWebService/Authentication";
-            //const char soap_action[] = "http://server.xfelauthwebservice.xfel.eu/Authentication/loginRequest";
-
-            //            soap_init(m_service->soap);
-            //            if (soap_ssl_client_context(m_service->soap,
-            //                                        SOAP_SSL_NO_AUTHENTICATION, NULL, NULL, NULL,
-            //                                        NULL, NULL)) {
-            //                soap_print_fault(m_service->soap, stderr);
-            //                exit(1);
-            //            }
-
             nsUserNonce.username = &m_username;
             nsUserNonce.provider = &m_provider;
             nsUserNonce.ipAddress = &m_ipAddress;
@@ -184,17 +221,6 @@ namespace karabo {
             ns1__login nsLogin;
             ns1__loginResponse nsLoginResp;
 
-            //const char end_point[] = "https://exflpcx18262:8181/XFELAuthWebService/Authentication";
-            //const char soap_action[] = "http://server.xfelauthwebservice.xfel.eu/Authentication/loginRequest";
-
-            //            soap_init(m_service->soap);
-            //            if (soap_ssl_client_context(m_service->soap,
-            //                                        SOAP_SSL_NO_AUTHENTICATION, NULL, NULL, NULL,
-            //                                        NULL, NULL)) {
-            //                soap_print_fault(m_service->soap, stderr);
-            //                exit(1);
-            //            }
-
             nsLogin.username = &m_username;
             nsLogin.password = &m_password;
             nsLogin.provider = &m_provider;
@@ -204,12 +230,6 @@ namespace karabo {
             nsLogin.brokerTopic = &m_brokerTopic;
             nsLogin.nonce = &m_nonce;
             nsLogin.software = &m_software;
-
-            // Convert received date to String to send to the WebServer
-            //const karabo::util::Timestamp& timestamp
-            //karabo::util::Timestamp contextTime = karabo::util::Timestamp(timestamp);
-            //string contextTimeStr = contextTime.toFormattedString("%Y-%m-%d %H:%M:%S.%f");
-            //nsLogin.time = &contextTimeStr;
 
             // If obtain successfully answer from Web Service it print message returned!
             if (m_service->login(&nsLogin, &nsLoginResp) == SOAP_OK) {
@@ -228,6 +248,7 @@ namespace karabo {
 
 
         std::string Authenticator::getSingleSignOn(const std::string ipAddress) {
+
             ns1__singleSignOn nsSingleSignOn;
             ns1__singleSignOnResponse nsSingleSignOnResp;
 
@@ -255,7 +276,7 @@ namespace karabo {
 
 
         /*
-         * Auxiliar functions
+         * Auxiliary functions
          */
         void Authenticator::printObject(ns1__loginResponse nsLoginResp) {
             KARABO_LOG_FRAMEWORK_DEBUG << "Information received: \n";
@@ -505,15 +526,133 @@ namespace karabo {
                 m_welcomeMessage = "";
         }
 
-
-        /******************************************************************************\
-         *
-         *	SIGPIPE
-         *
-        \******************************************************************************/
-
-        void sigpipe_handle(int x) {
-        }
-
     } // namespace packageName
 } // namespace karabo
+
+
+
+/******************************************************************************\
+ *
+ *	OpenSSL
+ *
+\******************************************************************************/
+#ifdef WITH_OPENSSL
+
+#if defined(WIN32)
+#define MUTEX_TYPE		HANDLE
+#define MUTEX_SETUP(x)		(x) = CreateMutex(NULL, FALSE, NULL)
+#define MUTEX_CLEANUP(x)	CloseHandle(x)
+#define MUTEX_LOCK(x)		WaitForSingleObject((x), INFINITE)
+#define MUTEX_UNLOCK(x)	ReleaseMutex(x)
+#define THREAD_ID		GetCurrentThreadId()
+#elif defined(_POSIX_THREADS) || defined(_SC_THREADS)
+#define MUTEX_TYPE		pthread_mutex_t
+#define MUTEX_SETUP(x)		pthread_mutex_init(&(x), NULL)
+#define MUTEX_CLEANUP(x)	pthread_mutex_destroy(&(x))
+#define MUTEX_LOCK(x)		pthread_mutex_lock(&(x))
+#define MUTEX_UNLOCK(x)	pthread_mutex_unlock(&(x))
+#define THREAD_ID		pthread_self()
+#else
+#error "You must define mutex operations appropriate for your platform"
+#error	"See OpenSSL /threads/th-lock.c on how to implement mutex on your platform"
+#endif
+
+struct CRYPTO_dynlock_value {
+
+    MUTEX_TYPE mutex;
+};
+
+static MUTEX_TYPE *mutex_buf;
+
+
+static struct CRYPTO_dynlock_value *dyn_create_function(const char *file, int line) {
+    struct CRYPTO_dynlock_value *value;
+    value = (struct CRYPTO_dynlock_value*) malloc(sizeof (struct CRYPTO_dynlock_value));
+    if (value)
+        MUTEX_SETUP(value->mutex);
+    return value;
+}
+
+
+static void dyn_lock_function(int mode, struct CRYPTO_dynlock_value *l, const char *file, int line) {
+    if (mode & CRYPTO_LOCK)
+        MUTEX_LOCK(l->mutex);
+    else
+        MUTEX_UNLOCK(l->mutex);
+}
+
+
+static void dyn_destroy_function(struct CRYPTO_dynlock_value *l, const char *file, int line) {
+    MUTEX_CLEANUP(l->mutex);
+    free(l);
+}
+
+
+void locking_function(int mode, int n, const char *file, int line) {
+    if (mode & CRYPTO_LOCK)
+        MUTEX_LOCK(mutex_buf[n]);
+    else
+        MUTEX_UNLOCK(mutex_buf[n]);
+}
+
+
+unsigned long id_function() {
+    return (unsigned long) THREAD_ID;
+}
+
+
+int CRYPTO_thread_setup() {
+    int i;
+    mutex_buf = (MUTEX_TYPE*) malloc(CRYPTO_num_locks() * sizeof (pthread_mutex_t));
+    if (!mutex_buf)
+        return SOAP_EOM;
+    for (i = 0; i < CRYPTO_num_locks(); i++)
+        MUTEX_SETUP(mutex_buf[i]);
+    CRYPTO_set_id_callback(id_function);
+    CRYPTO_set_locking_callback(locking_function);
+    CRYPTO_set_dynlock_create_callback(dyn_create_function);
+    CRYPTO_set_dynlock_lock_callback(dyn_lock_function);
+    CRYPTO_set_dynlock_destroy_callback(dyn_destroy_function);
+    return SOAP_OK;
+}
+
+
+void CRYPTO_thread_cleanup() {
+    int i;
+    if (!mutex_buf)
+        return;
+    CRYPTO_set_id_callback(NULL);
+    CRYPTO_set_locking_callback(NULL);
+    CRYPTO_set_dynlock_create_callback(NULL);
+    CRYPTO_set_dynlock_lock_callback(NULL);
+    CRYPTO_set_dynlock_destroy_callback(NULL);
+    for (i = 0; i < CRYPTO_num_locks(); i++)
+        MUTEX_CLEANUP(mutex_buf[i]);
+    free(mutex_buf);
+    mutex_buf = NULL;
+}
+
+#else
+
+
+/* OpenSSL not used, e.g. GNUTLS is used */
+
+int CRYPTO_thread_setup() {
+    return SOAP_OK;
+}
+
+
+void CRYPTO_thread_cleanup() {
+}
+
+#endif
+
+
+/******************************************************************************\
+ *
+ *	SIGPIPE
+ *
+\******************************************************************************/
+void sigpipe_handle(int x) {
+}
+
