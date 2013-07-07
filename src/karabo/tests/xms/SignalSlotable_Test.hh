@@ -15,6 +15,7 @@ class SignalSlotDemo : public karabo::xms::SignalSlotable {
     
     int m_messageCount;
     bool m_allOk;
+    boost::mutex m_mutex;
 
 public:
 
@@ -34,6 +35,7 @@ public:
     }
 
     void slotA(const std::string& msg) {
+        boost::mutex::scoped_lock lock(m_mutex);
         // Assertions
         m_messageCount++;
         if (msg != "Hello World!") m_allOk = false;
@@ -46,14 +48,15 @@ public:
     }
 
     void slotB(int someInteger, const karabo::util::Hash& someConfig) {
+        boost::mutex::scoped_lock lock(m_mutex);
         // Assertions
         m_messageCount++;
         if (someInteger != 42) m_allOk = false;
         if (someConfig.get<std::string>("Was.soll.das.bedeuten") != "nix") m_allOk = false;
-        
     }
     
     void slotC(int number) {
+        boost::mutex::scoped_lock lock(m_mutex);
         // Assertions
         m_messageCount++;
         if (number != 1) m_allOk = false;
