@@ -464,7 +464,7 @@ namespace karabo {
             //                  Unit                       *
             //**********************************************
 
-            void setUnit(const std::string& path, const Units::Unit& value);
+            void setUnit(const std::string& path, const UnitType& value);
 
             bool hasUnit(const std::string& path) const;
 
@@ -478,7 +478,7 @@ namespace karabo {
             //                  UnitMetricPrefix           *
             //**********************************************
 
-            void setMetricPrefix(const std::string& path, const Units::MetricPrefix& value);
+            void setMetricPrefix(const std::string& path, const MetricPrefixType& value);
 
             bool hasMetricPrefix(const std::string& path) const;
 

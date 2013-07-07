@@ -17,24 +17,50 @@
 namespace karabo {
     namespace core {
 
-        class CameraFsm : public karabo::core::Device {
+        class CameraFsm : public BaseFsm {
+            
+            KARABO_FSM_DECLARE_MACHINE(StateMachine, m_fsm);
 
         public:
 
             KARABO_CLASSINFO(CameraFsm, "CameraFsm", "1.0")
 
-            template <class Derived>
-            CameraFsm(Derived* derived) : Device(derived) {
+            static void expectedParameters(karabo::util::Schema& expected) {
+                using namespace karabo::xms;
+
+
+                SLOT_ELEMENT(expected).key("acquire")
+                        .displayedName("Acquire")
+                        .description("Instructs camera to go into acquisition state")
+                        .allowedStates("Ok.Ready")
+                        .commit();
+
+                SLOT_ELEMENT(expected).key("trigger")
+                        .displayedName("Trigger")
+                        .description("Sends a software trigger to the camera")
+                        .allowedStates("Ok.Acquisition")
+                        .commit();
+
+                SLOT_ELEMENT(expected).key("stop")
+                        .displayedName("Stop")
+                        .description("Instructs camera to stop current acquisition")
+                        .allowedStates("Ok.Acquisition")
+                        .commit();
+
+                SLOT_ELEMENT(expected).key("reset")
+                        .displayedName("Reset")
+                        .description("Resets the camera in case of an error")
+                        .allowedStates("Error")
+                        .commit();
             }
 
-            virtual ~CameraFsm() {
+            void initFsmSlots() {
+                SLOT0(acquire);
+                SLOT0(trigger);
+                SLOT0(stop);
+                SLOT0(reset);
             }
 
-            static void expectedParameters(karabo::util::Schema& expected);
-
-            void configure(const karabo::util::Hash& input);
-
-            virtual void run();
 
         public:
 
@@ -42,113 +68,78 @@ namespace karabo {
             /*                        Events                              */
             /**************************************************************/
 
-            // Standard events
+            KARABO_FSM_EVENT2(m_fsm, ErrorFoundEvent, erroFound, std::string, std::string)
 
-            KARABO_FSM_EVENT2(m_fsm, ErrorFoundEvent, onException, std::string, std::string)
+            KARABO_FSM_EVENT0(m_fsm, ResetEvent, reset)
 
-            KARABO_FSM_EVENT0(m_fsm, EndErrorEvent, slotEndError)
+            KARABO_FSM_EVENT0(m_fsm, AcquireEvent, acquire)
 
-            KARABO_FSM_EVENT0(m_fsm, AcquireEvent, slotAcquire)
+            KARABO_FSM_EVENT0(m_fsm, StopEvent, stop)
 
-            KARABO_FSM_EVENT0(m_fsm, StopEvent, slotStop)
-
-            KARABO_FSM_EVENT0(m_fsm, TriggerEvent, slotTrigger)
+            KARABO_FSM_EVENT0(m_fsm, TriggerEvent, trigger)
 
             /**************************************************************/
             /*                        States                              */
             /**************************************************************/
 
-            KARABO_FSM_STATE_V_EE(Error, errorStateOnEntry, errorStateOnExit)
+            KARABO_FSM_STATE_VE_EE(Error, errorStateOnEntry, errorStateOnExit)
 
-            KARABO_FSM_STATE_V_EE(HardwareSetup, hardwareSetupStateOnEntry, hardwareSetupStateOnExit)
+            KARABO_FSM_STATE_VE_EE(Initialization, initializationStateOnEntry, initializationStateOnExit)
 
-            KARABO_FSM_STATE_V_EE(Acquisition, acquisitionStateOnEntry, acquisitionStateOnExit)
+            KARABO_FSM_STATE_VE_EE(Acquisition, acquisitionStateOnEntry, acquisitionStateOnExit)
 
-            KARABO_FSM_STATE_V_EE(Ready, readyStateOnEntry, readyStateOnExit)
+            KARABO_FSM_STATE_VE_EE(Ready, readyStateOnEntry, readyStateOnExit)
 
             /**************************************************************/
             /*                    Transition Actions                      */
             /**************************************************************/
+            
+            KARABO_FSM_VE_ACTION2(ErrorFoundAction, errorFoundAction, std::string, std::string);
 
-            KARABO_FSM_V_ACTION0(AcquireAction, acquireAction)
+            KARABO_FSM_VE_ACTION0(AcquireAction, acquireAction)
 
-            KARABO_FSM_V_ACTION0(StopAction, stopAction)
+            KARABO_FSM_VE_ACTION0(StopAction, stopAction)
 
-            KARABO_FSM_V_ACTION0(TriggerAction, triggerAction)
+            KARABO_FSM_VE_ACTION0(TriggerAction, triggerAction)
 
             /**************************************************************/
             /*                      AllOkState Machine                    */
             /**************************************************************/
 
             KARABO_FSM_TABLE_BEGIN(AllOkStateTransitionTable)
-            //  Source-State      Event    Target-State    Action     Guard
+            // Source-State, Event, Target-State, Action, Guard
             Row< Ready, AcquireEvent, Acquisition, AcquireAction, none >,
             Row< Acquisition, StopEvent, Ready, StopAction, none >,
             Row< Acquisition, TriggerEvent, none, TriggerAction, none >
             KARABO_FSM_TABLE_END
 
-            //                       Name      Transition-Table           Initial-State  Context
+            // Name, Transition-Table, Initial-State, Context
             KARABO_FSM_STATE_MACHINE(AllOk, AllOkStateTransitionTable, Ready, Self)
 
             /**************************************************************/
             /*                      Top Machine                         */
             /**************************************************************/
 
-            //  Source-State    Event        Target-State    Action         Guard
-            KARABO_FSM_TABLE_BEGIN(CameraMachineTransitionTable)
-            Row< HardwareSetup, none, AllOk, none, none >,
+            // Source-State, Event, Target-State, Action, Guard
+            KARABO_FSM_TABLE_BEGIN(TransitionTable)
+            Row< Initialization, none, AllOk, none, none >,
             Row< AllOk, ErrorFoundEvent, Error, ErrorFoundAction, none >,
-            Row< Error, EndErrorEvent, AllOk, none, none >
+            Row< Error, ResetEvent, AllOk, none, none >
             KARABO_FSM_TABLE_END
 
 
-            //                                 Name                   Transition-Table       Initial-State Context
-            KARABO_FSM_STATE_MACHINE(CameraMachine, CameraMachineTransitionTable, HardwareSetup, Self)
+            // Name, Transition-Table, Initial-State, Context
+            KARABO_FSM_STATE_MACHINE(StateMachine, TransitionTable, Initialization, Self)
 
 
-            void startStateMachine() {
+            void startFsm() {
 
-                KARABO_FSM_CREATE_MACHINE(CameraMachine, m_fsm);
+                KARABO_FSM_CREATE_MACHINE(StateMachine, m_fsm);
                 KARABO_FSM_SET_CONTEXT_TOP(this, m_fsm)
                 KARABO_FSM_SET_CONTEXT_SUB(this, m_fsm, AllOk)
                 KARABO_FSM_START_MACHINE(m_fsm)
             }
-
-
-            // Override this function if you need to handle the reconfigured data (e.g. send to a hardware)
-
-            virtual void onReconfigure(karabo::util::Hash& incomingReconfiguration) {
-            }
-
-        protected: // Functions and Classes
-
-            template <class T>
-            bool ensureSoftwareHardwareConsistency(const std::string key, const T& targetValue, const T& actualValue, karabo::util::Hash& configuration) {
-                // TODO One should maybe think of a more sophisticated method than converting to string and compare those...
-                if (karabo::util::String::toString(targetValue) != karabo::util::String::toString(actualValue)) {
-
-                    std::ostringstream msg;
-                    msg << "Hardware rejected to accept (re-)configuration for key \"" << key << "\" to target \""
-                            << karabo::util::String::toString(targetValue) << "\". Actual value is \"" << karabo::util::String::toString(actualValue) << "\"";
-                    log() << log4cpp::Priority::WARN << msg.str();
-                    emit("signalBadReconfiguration", msg.str(), getInstanceId());
-                    configuration.set(key, actualValue);
-                    return false;
-                } else return true;
-            }
-
-        protected: // Members
-
-
-        private: // functions
-
-
-        private: // members
-
-            KARABO_FSM_DECLARE_MACHINE(CameraMachine, m_fsm);
-
         };
-
     }
 }
 

@@ -71,8 +71,8 @@ namespace configurationTest {
                     .displayedName("Radius")
                     .minExc(0)
                     .maxExc(100)
-                    .unit(Units::METER)
-                    .metricPrefix(Units::MILLI)
+                    .unit(Unit::METER)
+                    .metricPrefix(MetricPrefix::MILLI)
                     .assignmentOptional().defaultValue(10)
                     .init()
                     .commit();
@@ -130,8 +130,8 @@ namespace configurationTest {
                     .displayedName("A")
                     .minExc(0)
                     .maxExc(100)
-                    .unit(Units::METER)
-                    .metricPrefix(Units::MILLI)
+                    .unit(Unit::METER)
+                    .metricPrefix(MetricPrefix::MILLI)
                     .assignmentOptional().defaultValue(10)
                     .init()
                     .commit();
@@ -141,8 +141,8 @@ namespace configurationTest {
                     .displayedName("B")
                     .minExc(0)
                     .maxExc(100)
-                    .unit(Units::METER)
-                    .metricPrefix(Units::MILLI)
+                    .unit(Unit::METER)
+                    .metricPrefix(MetricPrefix::MILLI)
                     .assignmentOptional().defaultValue(10)
                     .init()
                     .commit();
@@ -316,8 +316,8 @@ namespace configurationTest {
                     .options("5, 25, 10")
                     .minInc(5)
                     .maxInc(25)
-                    .unit(Units::METER)
-                    .metricPrefix(Units::MILLI)
+                    .unit(Unit::METER)
+                    .metricPrefix(MetricPrefix::MILLI)
                     .assignmentOptional().defaultValue(10)
                     .init()
                     .commit();
