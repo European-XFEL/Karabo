@@ -58,7 +58,11 @@ void SignalSlotable_Test::testMethod() {
         ssDemo.emit("signalA", "Hello World!");
 
         int reply;
-        ssDemo.request("SignalSlotDemo", "slotC", 1).timeout(100).receive(reply);
+        try {
+            ssDemo.request("SignalSlotDemo", "slotC", 1).timeout(500).receive(reply);
+        } catch (karabo::util::TimeoutException&) {
+            CPPUNIT_ASSERT(false == true);
+        }
         CPPUNIT_ASSERT(reply == 2);
         
         ssDemo.call("SignalSlotDemo", "slotC", 1);
