@@ -14,3 +14,10 @@ $> soapcpp2 -j -I/usr/share/gsoap/import ClientAuthentication.h
 --> Add libraries gsoap++ / gsoapck++ / gsoapssl
 --> Add "-DWITH_NONAMESPACES" to stdsoap2.cpp
 
+
+P.S. - For more information consult gsoap README.txt
+######################################################################################
+
+
+
+
