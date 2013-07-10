@@ -31,8 +31,7 @@ template <class T>
 void exportPyXipImage() {
     //exposing karabo::xip::Image<T>, where T : float or double
     typedef karabo::xip::Image<T> ImageT;
-    bp::class_< ImageT, boost::noncopyable> img(string("Image" + karabo::util::ToType<karabo::util::ToLiteral>::to(karabo::util::FromType<karabo::util::FromTypeInfo>::from(typeid (T)))).c_str(), bp::init<int>((bp::arg("imageType"))));
-    
+    bp::class_< ImageT, boost::noncopyable> img(string("Image" + karabo::util::Types::convert<FromTypeInfo, ToLiteral > (typeid (T))).c_str(), bp::init<int>((bp::arg("imageType"))));
     bp::implicitly_convertible< int const, karabo::xip::Image<T> >();
     
     img.def(bp::init< int, string const & >((bp::arg("imageType"), bp::arg("filename"))));
