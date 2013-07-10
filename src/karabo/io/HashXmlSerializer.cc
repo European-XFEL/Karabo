@@ -174,8 +174,12 @@ namespace karabo {
 
         void HashXmlSerializer::load(karabo::util::Hash& object, const char* archive) {
             pugi::xml_document doc;
-            doc.load(archive);
+            pugi::xml_parse_result result = doc.load(archive);
+            if (!result) throw KARABO_IO_EXCEPTION(std::string("Error parsing XML document: ") + result.description());
+            object.clear();
+            if (!doc) return;
             pugi::xml_node node = doc.first_child();
+            if (!node) return;
             if (std::string(node.first_attribute().name()) == m_artificialRootFlag) { // ignore
                 this->createHash(object, node.first_child());
             } else {
@@ -296,25 +300,31 @@ namespace karabo {
                     }
                     hash.setAttributes(nodeName, attrs);
                 }
-                
+
                 // Go to next sibling
                 node = node.next_sibling();
-                
+
             }
         }
-        
+
+
         void HashXmlSerializer::save(const std::vector<karabo::util::Hash>& objects, std::string& archive) {
             Hash tmp(m_prefix + "Sequence", objects);
             this->save(tmp, archive);
         }
-        
+
+
         void HashXmlSerializer::load(std::vector<karabo::util::Hash>& objects, const std::string& archive) {
             vector<Hash> tmp(1);
             this->load(tmp[0], archive);
-            if (tmp[0].begin()->getKey() == m_prefix + "Sequence") {
-                objects.swap(tmp[0].get<vector<Hash> >(m_prefix + "Sequence"));
-            } else {
+            if (tmp[0].empty()) {
                 objects.swap(tmp);
+            } else {
+                if (tmp[0].begin()->getKey() == m_prefix + "Sequence") {
+                    objects.swap(tmp[0].get<vector<Hash> >(m_prefix + "Sequence"));
+                } else {
+                    objects.swap(tmp);
+                }
             }
         }
     }
