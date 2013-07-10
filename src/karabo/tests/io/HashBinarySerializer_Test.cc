@@ -8,6 +8,7 @@
 #include <karabo/io/HashBinarySerializer.hh>
 #include "HashBinarySerializer_Test.hh"
 #include "karabo/io/BinarySerializer.hh"
+#include "karabo/util/Profiler.hh"
 
 CPPUNIT_TEST_SUITE_REGISTRATION(HashBinarySerializer_Test);
 
@@ -33,10 +34,24 @@ void HashBinarySerializer_Test::setUp() {
     rooted.setAttribute("a.b.c", "c2", vector<string > (3, "bla"));
     m_rootedHash = rooted;
 
+    Profiler p("binary");
+    p.start("create");
+    Hash big("a.b", std::vector<double>(20 * 1024 * 1024, 1.0));
+    p.stop("create");
+    cout << "\nCreation time: " << std::fixed << karabo::util::HighResolutionTimer::time2double(p.getTime("create")) << endl;
 
-    Hash big("a.b", std::vector<double>(10000000, 1.0));
+    p.start("ref");
+    const vector<double>& vect = big.get<vector<double> >("a.b");
+    p.stop("ref");
+    cout << "\nReference time: " << std::fixed << karabo::util::HighResolutionTimer::time2double(p.getTime("ref")) << endl;
+
+    p.start("copy");
+    vector<double> vect1 = vect;
+    p.stop("copy");
+    cout << "\nCopy time: " << std::fixed << karabo::util::HighResolutionTimer::time2double(p.getTime("copy")) << endl;
+
     vector<Hash>& tmp = big.bindReference<vector<Hash> >("a.c");
-    tmp.resize(1000);
+    tmp.resize(1);
     for (size_t i = 0; i < tmp.size(); ++i) {
         tmp[i] = m_rootedHash;
     }
@@ -86,7 +101,14 @@ void HashBinarySerializer_Test::testSerialization() {
         vector<char> archive1;
         vector<char> archive2;
 
+        cout << "\nSerialize start ----------------------------\n";
+        Profiler pr("binary");
+        pr.start("serialize");
+
         p->save(m_bigHash, archive1);
+        pr.stop("serialize");
+
+        cout << "\nSerialize time: " << std::fixed << karabo::util::HighResolutionTimer::time2double(pr.getTime("serialize")) << endl;
 
         //cout << "\n\n Archive size: " << archive1.size() << " bytes" << endl;
 
