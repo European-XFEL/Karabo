@@ -51,8 +51,9 @@ namespace karabo {
 
             typedef OrderedMap<std::string, Element<std::string> > Attributes;
             typedef Element<std::string, Attributes > Node;
-            
+
             enum MergePolicy {
+
                 MERGE_ATTRIBUTES,
                 REPLACE_ATTRIBUTES
             };
@@ -380,14 +381,14 @@ namespace karabo {
 
             template <typename T>
             T getAttributeAs(const std::string& path, const std::string& attribute, const char separator = '.') const;
-            
+
             template<typename T, template <typename Elem, typename = std::allocator<Elem> > class Cont >
             Cont<T> getAttributeAs(const std::string& path, const std::string& attribute, const char separator = '.') const;
 
-            boost::any& getAttributeAsAny(const std::string& path,  const std::string& attribute, const char separator = '.');
-            
-            const boost::any& getAttributeAsAny(const std::string& path,  const std::string& attribute, const char separator = '.') const;
-            
+            boost::any& getAttributeAsAny(const std::string& path, const std::string& attribute, const char separator = '.');
+
+            const boost::any& getAttributeAsAny(const std::string& path, const std::string& attribute, const char separator = '.') const;
+
             const Attributes& getAttributes(const std::string& path, const char separator = '.') const;
             Attributes& getAttributes(const std::string& path, const char separator = '.');
 
@@ -399,10 +400,28 @@ namespace karabo {
 
             friend std::ostream& operator<<(std::ostream& os, const Hash& hash);
 
+
+            template<class Visitor>
+            bool visit(Visitor& visitor);
+
+            template<class Visitor>
+            bool visit2(Visitor& visitor);
         private:
-            
+            template<class Visitor>
+            static bool visit(karabo::util::Hash& hash, Visitor& visitor);
+
+            template<class Visitor>
+            static bool visit(karabo::util::Hash::Node& node, Visitor& visitor);
+
+            template<class Visitor>
+            static bool visit2(karabo::util::Hash& hash, Visitor& visitor);
+
+            template<class Visitor>
+            static bool visit2(karabo::util::Hash::Node& node, Visitor& visitor);
+        private:
+
             void mergeAndMergeAttributes(const Hash& other);
-            
+
             void mergeAndReplaceAttributes(const Hash& other);
 
             Hash* setNodesAsNeeded(const std::vector<std::string>& tokens, char seperator);
@@ -630,7 +649,7 @@ namespace karabo {
         Cont<T> Hash::getAttributeAs(const std::string& path, const std::string& attribute, const char separator) const {
             return getNode(path, separator).getAttributeAs<T, Cont>(attribute);
         }
-        
+
         template <typename ValueType>
         void Hash::setAttribute(const std::string& path, const std::string& attribute, const ValueType& value, const char separator) {
             getNode(path, separator).setAttribute(attribute, value);
@@ -686,6 +705,78 @@ namespace karabo {
                 }
             }
             return partial_count;
+        }
+
+        template<class Visitor>
+        bool karabo::util::Hash::visit(Visitor& visitor) {
+            return karabo::util::Hash::visit(*this, visitor);
+        }
+
+        template<class Visitor>
+        bool karabo::util::Hash::visit(karabo::util::Hash& hash, Visitor& visitor) {
+            for (Hash::iterator it = hash.begin(), end = hash.end(); it != end; ++it) {
+                if (!visit(*it, visitor)) return false;
+            }
+            return true;
+        }
+
+        template<class Visitor>
+        bool karabo::util::Hash::visit(karabo::util::Hash::Node& node, Visitor& visitor) {
+            if (!visitor(node)) return false;
+
+            switch (node.getType()) {
+                case Types::HASH:
+                    return node.getValue<Hash > ().visit(visitor);
+                    break;
+                case Types::VECTOR_HASH:
+                {
+                    std::vector<karabo::util::Hash>& vect = node.getValue<std::vector<Hash> >();
+                    for (size_t i = 0, size = vect.size(); i < size; ++i) {
+                        if (!vect[i].visit(visitor)) return false;
+                    }
+                }
+                    break;
+            }
+
+            return true;
+        }
+
+        template<class Visitor>
+        bool karabo::util::Hash::visit2(Visitor& visitor) {
+            return karabo::util::Hash::visit2(*this, visitor);
+        }
+
+        template<class Visitor>
+        bool karabo::util::Hash::visit2(karabo::util::Hash& hash, Visitor& visitor) {
+            for (Hash::iterator it = hash.begin(), end = hash.end(); it != end; ++it) {
+                if (!visit2(*it, visitor)) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        template<class Visitor>
+        bool karabo::util::Hash::visit2(karabo::util::Hash::Node& node, Visitor& visitor) {
+            visitor.pre(node);
+            bool res = visitor(node);
+
+            switch (node.getType()) {
+                case Types::HASH:
+                    res = node.getValue<Hash > ().visit2(visitor);
+                    break;
+                case Types::VECTOR_HASH:
+                {
+                    std::vector<karabo::util::Hash>& vect = node.getValue<std::vector<Hash> >();
+                    for (size_t i = 0, size = vect.size(); i < size; ++i) {
+                        if (!(res = vect[i].visit2(visitor))) break;
+                    }
+                }
+                    break;
+            }
+
+            visitor.post(node);
+            return res;
         }
     }
 }
