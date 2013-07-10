@@ -21,11 +21,11 @@ namespace karabo {
 
     namespace io {
 
-
         /**
          * The HashBinarySerializer class.
          */
         class HashBinarySerializer : public BinarySerializer<karabo::util::Hash> {
+
         public:
 
             KARABO_CLASSINFO(HashBinarySerializer, "Bin", "1.0")
@@ -39,7 +39,7 @@ namespace karabo {
             virtual void save(const karabo::util::Hash& object, std::vector<char>& archive) {
                 // TODO We will introduce a copy here, which could be avoided with some effort
                 std::stringstream os;
-                this->serialize(object, os);
+                this->write(object, os);
                 os.seekg(0);
                 archive.resize(os.rdbuf()->in_avail());
                 os.read(&archive[0], archive.size());
@@ -48,11 +48,11 @@ namespace karabo {
             virtual void load(karabo::util::Hash& object, const char* archive, const size_t nBytes) {
                 std::stringstream is;
                 is.rdbuf()->pubsetbuf(const_cast<char*> (archive), nBytes);
-                this->serialize(object, is);
+                this->read(object, is);
             }
-            
+
             void save(const std::vector<karabo::util::Hash>& objects, std::vector<char>& archive);
-            
+
             void load(std::vector<karabo::util::Hash>& objects, const char* archive, const size_t nBytes);
 
             /**
@@ -67,27 +67,23 @@ namespace karabo {
 
         private: // functions
 
-            void serialize(const karabo::util::Hash& hash, std::ostream& os);
+            void write(const karabo::util::Hash& hash, std::ostream& os);
+            void write(const karabo::util::Hash::Node& element, std::ostream& os);
+            void write(const karabo::util::Hash::Attributes& attributes, std::ostream& os);
+            void write(const boost::any& value, const karabo::util::Types::ReferenceType type, std::ostream& os);
 
-            void serialize(karabo::util::Hash& hash, std::istream& is);
-
-            void serialize(const karabo::util::Hash::Node& element, std::ostream& os);
-
-            void serialize(karabo::util::Hash::Node& element, std::istream& is);
-
-            void serialize(const karabo::util::Hash::Attributes& attributes, std::ostream& os);
-
-            void serialize(karabo::util::Hash::Attributes& attributes, std::istream& is);
-
-            void serialize(const boost::any& value, const karabo::util::Types::ReferenceType type, std::ostream& os);
-
-            void serialize(boost::any& value, const karabo::util::Types::ReferenceType type, std::istream& is);
+            void read(karabo::util::Hash& hash, std::istream& is);
+            void read(karabo::util::Hash::Node& element, std::istream& is);
+            void read(karabo::util::Hash::Attributes& attributes, std::istream& is);
+            void read(boost::any& value, const karabo::util::Types::ReferenceType type, std::istream& is);
 
             template<typename T>
-            T readSingleValue(std::istream& is) {
+            inline T readSingleValue(std::istream& is) {
+
                 union {
+
                     char buffer[32];
-                    T tbuffer[32/sizeof(T)];
+                    T tbuffer[32 / sizeof (T)];
                 } all;
                 memset(all.buffer, 0, 32);
                 is.read(all.buffer, sizeof (T));
@@ -95,58 +91,63 @@ namespace karabo {
             }
 
             template<typename T>
-            std::complex<T> readComplexValue(std::istream& is) {
+            inline std::complex<T> readComplexValue(std::istream& is) {
                 return std::complex<T > (readSingleValue<T > (is), readSingleValue<T > (is));
             }
 
             template<typename T>
-            void readSequence(std::istream& is, boost::any& value, size_t size) {
+            inline void readSequence(std::istream& is, boost::any& value, unsigned size) {
                 value = std::vector<T > (size);
                 std::vector<T>& result = boost::any_cast<std::vector<T>& >(value);
-                for (size_t i = 0; i < size; ++i) {
+                for (unsigned i = 0; i < size; ++i) {
                     result[i] = readSingleValue<T > (is);
                 }
             }
 
-            boost::any readSingleValue(std::istream& is, const karabo::util::Types::ReferenceType type);
+            inline boost::any readSingleValue(std::istream& is, const karabo::util::Types::ReferenceType type);
 
-            void readSequence(std::istream& is, boost::any&, const karabo::util::Types::ReferenceType type);
+            inline void readSequence(std::istream& is, boost::any&, const karabo::util::Types::ReferenceType type);
 
             template<typename T>
-            void writeSingleValue(std::ostream& os, const T& value) {
+            inline void writeSingleValue(std::ostream& os, const T& value) {
                 os.write((char*) &value, sizeof (T));
             }
 
             template<typename T>
-            void writeComplexValue(std::ostream& os, const std::complex<T>& value) {
+            inline void writeComplexValue(std::ostream& os, const std::complex<T>& value) {
                 writeSingleValue(os, value.imag());
                 writeSingleValue(os, value.real());
             }
 
             template<typename T>
-            void writeSequence(std::ostream& os, const std::vector<T>& vect) {
+            inline void writeSequenceBulk(std::ostream& os, const std::vector<T>& vect) {
                 writeSize(os, vect.size());
-                for (size_t i = 0; i < vect.size(); ++i) {
+                os.write((char*) &(vect[0]), vect.size() * sizeof (T));
+            }
+
+            template<typename T>
+            inline void writeSequence(std::ostream& os, const std::vector<T>& vect) {
+                writeSize(os, vect.size());
+                for (unsigned i = 0; i < vect.size(); ++i) {
                     writeSingleValue(os, vect[i]);
                 }
             }
 
-            void writeSingleValue(std::ostream& os, const boost::any&, const karabo::util::Types::ReferenceType type);
+            inline void writeSingleValue(std::ostream& os, const boost::any&, const karabo::util::Types::ReferenceType type);
 
-            void writeSequence(std::ostream& os, const boost::any&, const karabo::util::Types::ReferenceType type);
+            inline void writeSequence(std::ostream& os, const boost::any&, const karabo::util::Types::ReferenceType type);
 
-            void writeSize(std::ostream& os, const size_t size);
+            static inline void writeSize(std::ostream& os, const unsigned size);
 
-            size_t readSize(std::istream& is);
+            static inline unsigned readSize(std::istream& is);
 
-            void writeKey(std::ostream& os, const std::string& str);
+            static inline void writeKey(std::ostream& os, const std::string& str);
 
-            std::string readKey(std::istream& is);
+            static inline std::string readKey(std::istream& is);
 
-            void writeType(std::ostream& os, const karabo::util::Types::ReferenceType type);
+            inline void writeType(std::ostream& os, const karabo::util::Types::ReferenceType type);
 
-            karabo::util::Types::ReferenceType readType(std::istream& is);
-
+            inline karabo::util::Types::ReferenceType readType(std::istream& is);
         };
 
         template<>
