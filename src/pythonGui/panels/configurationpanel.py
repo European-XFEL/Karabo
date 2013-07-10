@@ -89,6 +89,7 @@ class ConfigurationPanel(QWidget):
         Manager().notifier.signalDeviceInstanceSchemaUpdated.connect(self.onDeviceInstanceSchemaUpdated)
         
         Manager().notifier.signalNavigationItemChanged.connect(self.onNavigationItemChanged)
+        Manager().notifier.signalNavigationItemSelectionChanged.connect(self.onNavigationItemSelectionChanged)
 
         Manager().notifier.signalInstanceGone.connect(self.onInstanceGone)
         
@@ -588,6 +589,10 @@ class ConfigurationPanel(QWidget):
             self.__acKillInstance.setVisible(False)
             self.__acApplyAll.setVisible(False)
             self.__acResetAll.setVisible(False)
+
+
+    def onNavigationItemSelectionChanged(self, path):
+        self.__twNavigation.selectItem(path)
 
 
     def onInstanceGone(self, path, parentPath):

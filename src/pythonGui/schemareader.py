@@ -57,7 +57,7 @@ class SchemaReader(object):
         
         print ""
         print "++++ readSchema ++++"
-        print self.__schema
+        #print self.__schema
         print ""
         
         self.__rootPath = path + ".configuration"

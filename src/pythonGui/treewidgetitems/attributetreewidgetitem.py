@@ -27,7 +27,7 @@ class AttributeTreeWidgetItem(BaseTreeWidgetItem):
         
         self.setIcon(0, QIcon(":signal"))
         
-        self.displayComponent = DisplayComponent("Value Field", path=self.internalKey)
+        self.displayComponent = DisplayComponent("Value Field", key=self.internalKey)
         self.treeWidget().setItemWidget(self, 1, self.displayComponent.widget)
         self.treeWidget().resizeColumnToContents(1)
 

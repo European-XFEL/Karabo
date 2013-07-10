@@ -55,6 +55,7 @@ class NavigationPanel(QWidget):
         Manager().notifier.signalNewNavigationItem.connect(self.onNewNavigationItem)
         Manager().notifier.signalSelectNewNavigationItem.connect(self.onSelectNewNavigationItem)
         Manager().notifier.signalNavigationItemChanged.connect(self.onNavigationItemChanged)
+        Manager().notifier.signalNavigationItemSelectionChanged.connect(self.onNavigationItemSelectionChanged)
         
         Manager().notifier.signalDeviceInstanceSchemaUpdated.connect(self.onDeviceInstanceSchemaUpdated)
         
@@ -130,6 +131,10 @@ class NavigationPanel(QWidget):
     def onNavigationItemChanged(self, itemInfo):
         #print "NavigationPanel.itemChanged"
         self.__twNavigation.itemChanged(itemInfo)
+
+
+    def onNavigationItemSelectionChanged(self, path):
+        self.__twNavigation.selectItem(path)
 
 
     def onInstanceGone(self, path, parentPath):

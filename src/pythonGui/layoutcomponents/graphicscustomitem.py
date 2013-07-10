@@ -83,13 +83,13 @@ class GraphicsCustomItem(NodeBase, QGraphicsObject):
         self._updateChannelItems()
         
         # Send changing signal to Manager (connected only for DEVICE_CLASS)
-        self.signalValueChanged.emit(self.devInstIdKey, self.__devInsId)
+        self.signalValueChanged.emit(self.deviceId, self.__devInsId)
     value = property(fget=_getValue, fset=_setValue)
 
 
-    def _getDevInstIdKey(self):
-        return self.__internalKey + ".devInstId"
-    devInstIdKey = property(fget=_getDevInstIdKey)
+    def _getDeviceId(self):
+        return self.__internalKey + ".deviceId"
+    deviceId = property(fget=_getDeviceId)
 
 
     def text(self):
@@ -232,7 +232,7 @@ class GraphicsCustomItem(NodeBase, QGraphicsObject):
 ### slots ###
     # Triggered by DataNotifier signalUpdateComponent
     def onValueChanged(self, key, value):
-        if self.devInstIdKey == key:
+        if self.deviceId == key:
             self.value = value
 
 

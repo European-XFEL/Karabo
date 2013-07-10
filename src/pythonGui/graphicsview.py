@@ -549,7 +549,7 @@ class GraphicsView(QGraphicsView):
                         items.remove(outputItem)
                     self.__scene.removeItem(outputItem)
                 Manager().removeVisibleDevice(item.internalKey())
-                Manager().unregisterEditableComponent(item.devInstIdKey, item)
+                Manager().unregisterEditableComponent(item.deviceId, item)
 
             self.__scene.removeItem(item)
             del item
@@ -797,13 +797,13 @@ class GraphicsView(QGraphicsView):
             # Drop from NavigationTreeView or ParameterTreeWidget?
             if sourceType == "NavigationTreeView":
                 # Navigation item type
-                navigationItemType = mimeData.data("navigationItemType").toInt()
-                if navigationItemType[1]:
-                    navigationItemType = navigationItemType[0]
+                navItemType = mimeData.data("navigationItemType").toInt()
+                if navItemType[1]:
+                    navItemType = navItemType[0]
                 else:
-                    navigationItemType = None
+                    navItemType = None
                 # Device server instance id
-                devSrvInsId = QString(mimeData.data("serverId"))
+                serverId = QString(mimeData.data("serverId"))
                 # Internal key
                 internalKey = QString(mimeData.data("internalKey"))
                 # Display name
@@ -812,7 +812,7 @@ class GraphicsView(QGraphicsView):
                 schema = QString(mimeData.data("schema"))
 
                 showAdditionalInfo = False
-                if navigationItemType and (navigationItemType == NavigationItemTypes.CLASS):
+                if navItemType and (navItemType == NavigationItemTypes.CLASS):
                     showAdditionalInfo = True
                     if not ("-" in displayName):
                         # Get unique device class id for new plugin
@@ -823,7 +823,7 @@ class GraphicsView(QGraphicsView):
                             internalKey = str(keys[0]) + "+" + newClassId
 
                         # Create new device class plugin if Device Class is dropped
-                        Manager().createNewDeviceClassPlugin(devSrvInsId, displayName, newClassId)
+                        Manager().createNewDeviceClassPlugin(serverId, displayName, newClassId)
                         displayName = newClassId
 
                 # Create graphical item
@@ -837,11 +837,11 @@ class GraphicsView(QGraphicsView):
                 # Register as visible device
                 Manager().newVisibleDevice(internalKey)
 
-                if navigationItemType and (navigationItemType == NavigationItemTypes.CLASS):
+                if navItemType and (navItemType == NavigationItemTypes.CLASS):
                     # Connect customItem signal to Manager, DEVICE_CLASS
                     customItem.signalValueChanged.connect(Manager().onDeviceClassValueChanged)
                     # Register for value changes of devInstId
-                    Manager().registerEditableComponent(customItem.devInstIdKey, customItem)
+                    Manager().registerEditableComponent(customItem.deviceId, customItem)
 
             elif sourceType == "ParameterTreeWidget":
                 # Internal key
@@ -857,9 +857,9 @@ class GraphicsView(QGraphicsView):
                 if hasEditableComponent[1]:
                     hasEditableComponent = hasEditableComponent[0]
                 # Navigation item type
-                navigationItemType = mimeData.data("navigationItemType").toInt()
-                if navigationItemType[1]:
-                    navigationItemType = navigationItemType[0]
+                navItemType = mimeData.data("navigationItemType").toInt()
+                if navItemType[1]:
+                    navItemType = navItemType[0]
                 # Class alias
                 classAlias = QString(mimeData.data("classAlias"))
 
@@ -876,7 +876,7 @@ class GraphicsView(QGraphicsView):
                     items.append(labelProxyWidget)
 
                 # Does key concern state of device?
-                keys = str(internalKey).split('.', 1)
+                keys = str(internalKey).split('.configuration.')
                 isStateToDisplay = keys[1] == "state"
 
                 # Display widget
@@ -887,19 +887,20 @@ class GraphicsView(QGraphicsView):
                         displayText = str()
                         commandEnabled = False
                         command = str()
-                        attributeTreeWidgetItem = source.getParameterTreeWidgetItemByKey(internalKey)
-                        if attributeTreeWidgetItem:
-                            allowedStates = attributeTreeWidgetItem.allowedStates
-                            displayText = attributeTreeWidgetItem.displayText
-                            commandEnabled = attributeTreeWidgetItem.enabled
-                            command = attributeTreeWidgetItem.command
-                        displayComponent = DisplayComponent(classAlias, path=internalKey, \
+                        parameterItem = source.getParameterTreeWidgetItemByKey(internalKey)
+                        if parameterItem:
+                            allowedStates = parameterItem.allowedStates
+                            displayText = parameterItem.displayText
+                            commandEnabled = parameterItem.enabled
+                            command = parameterItem.command
+                        displayComponent = DisplayComponent(classAlias, key=internalKey, \
                                                             allowedStates=allowedStates, \
                                                             commandText=displayText, \
                                                             commandEnabled=commandEnabled, \
                                                             command=command)
                     else:
-                        displayComponent = DisplayComponent(classAlias, path=internalKey)
+                        displayComponent = DisplayComponent(classAlias, key=internalKey)
+                    
                     displayComponent.widget.setAttribute(Qt.WA_NoSystemBackground, True)
                     displayProxyWidget = GraphicsProxyWidget(self.__isDesignMode, displayComponent.widget, displayComponent, isStateToDisplay)
                     displayProxyWidget.setTransformOriginPoint(displayProxyWidget.boundingRect().center())
@@ -913,9 +914,9 @@ class GraphicsView(QGraphicsView):
 
                 # Editable widget
                 if hasEditableComponent:
-                    if navigationItemType is NavigationItemTypes.CLASS:
+                    if navItemType is NavigationItemTypes.CLASS:
                         editableComponent = EditableNoApplyComponent(classAlias, key=internalKey)
-                    elif navigationItemType is NavigationItemTypes.DEVICE:
+                    elif navItemType is NavigationItemTypes.DEVICE:
                         editableComponent = EditableApplyLaterComponent(classAlias, key=internalKey)
                         editableComponent.isEditableValueInit = False
 
@@ -939,7 +940,6 @@ class GraphicsView(QGraphicsView):
             pos = event.pos()
             scenePos = self.mapToScene(pos)
             scenePos = scenePos-offset
-
             customItem.setPos(scenePos)
 
         event.accept()
@@ -969,12 +969,12 @@ class GraphicsView(QGraphicsView):
         if (len(self.__scene.selectedItems()) == 1):
             selectedItem = self.__scene.selectedItems()[0]
             if isinstance(selectedItem, GraphicsCustomItem):
-                Manager().selectNavigationItemByInternalKey(selectedItem.internalKey())
+                Manager().selectNavigationItemByKey(selectedItem.internalKey())
             elif isinstance(selectedItem, GraphicsProxyWidget):
                 keys = selectedItem.keys
                 if keys:
                     for key in keys:
-                        Manager().selectNavigationItemByInternalKey(key)
+                        Manager().selectNavigationItemByKey(key)
             elif isinstance(selectedItem, GraphicsProxyWidgetContainer):
                 layout = selectedItem.layout()
                 for i in xrange(layout.count()):
@@ -982,5 +982,5 @@ class GraphicsView(QGraphicsView):
                     keys = proxyItem.keys
                     if keys:
                         for key in keys:
-                            Manager().selectNavigationItemByInternalKey(key)
+                            Manager().selectNavigationItemByKey(key)
 
