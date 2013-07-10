@@ -322,7 +322,7 @@ class CustomXmlReader(QXmlStreamReader):
             proxyItem = GraphicsProxyWidget(self.__view.isDesignMode, label)
             proxyItem.setTransformOriginPoint(proxyItem.boundingRect().center())
         elif componentType == "DisplayComponent":
-            displayComponent = DisplayComponent(classAlias, path=internalKey, widgetFactory=widgetFactory)
+            displayComponent = DisplayComponent(classAlias, key=internalKey, widgetFactory=widgetFactory)
             displayComponent.widget.setAttribute(Qt.WA_NoSystemBackground, True)
             proxyItem = GraphicsProxyWidget(self.__view.isDesignMode, displayComponent.widget, displayComponent, isStateToDisplay)
             proxyItem.setTransformOriginPoint(proxyItem.boundingRect().center())
@@ -340,7 +340,7 @@ class CustomXmlReader(QXmlStreamReader):
         
         if internalKey:
             # Simulated NavigationItem click event to load schema
-            Manager().selectNavigationItemByInternalKey(internalKey)
+            Manager().selectNavigationItemByKey(internalKey)
             # Register as visible device
             Manager().newVisibleDevice(internalKey)
             # Refresh over network needed
@@ -387,7 +387,7 @@ class CustomXmlReader(QXmlStreamReader):
         # Register as visible device
         Manager().newVisibleDevice(internalKey)
         # Simulated NavigationItem click event to load schema
-        Manager().selectNavigationItemByInternalKey(internalKey)
+        Manager().selectNavigationItemByKey(internalKey)
         # Get schema
         schema = Manager().getSchemaByInternalKey(internalKey)
         
@@ -417,7 +417,7 @@ class CustomXmlReader(QXmlStreamReader):
         # Connect customItem signal to Manager, DEVICE_CLASS
         customItem.signalValueChanged.connect(Manager().onDeviceClassValueChanged)
         # Register for value changes of devInstId
-        Manager().registerEditableComponent(customItem.devInstIdKey, customItem)
+        Manager().registerEditableComponent(customItem.deviceId, customItem)
         
         # Important: set devInstId after connecting necessary signals/slots
         customItem.value = devInstId

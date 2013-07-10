@@ -32,7 +32,7 @@ class PropertyTreeWidgetItem(BaseTreeWidgetItem):
 
         self.defaultValue = None
 
-        self.displayComponent = DisplayComponent("Value Field", path=path)
+        self.displayComponent = DisplayComponent("Value Field", key=self.internalKey)
         self.treeWidget().setItemWidget(self, 1, self.displayComponent.widget)
         self.treeWidget().resizeColumnToContents(1)
 
