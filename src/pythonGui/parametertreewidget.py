@@ -12,7 +12,7 @@
 __all__ = ["ParameterTreeWidget"]
 
 
-import treewidgetitems.propertytreewidgetitem
+import treewidgetitems.attributetreewidgetitem
 from editableapplylatercomponent import EditableApplyLaterComponent
 from enums import *
 from libkarathon import *
@@ -55,6 +55,51 @@ class ParameterTreeWidget(QTreeWidget):
             return
         
         self._performDrag()
+
+
+    def _performDrag(self):
+        item = self.currentItem()
+        if item is None:
+            return
+        
+        # Attributes can not be dropped
+        if isinstance(item, treewidgetitems.attributetreewidgetitem.AttributeTreeWidgetItem):
+            return
+        
+        mimeData = QMimeData()        
+
+        # Put necessary data in MimeData:
+        # Source type
+        mimeData.setData("sourceType", "ParameterTreeWidget")
+        # Internal key
+        mimeData.setData("internalKey", QString(item.internalKey).toAscii())
+        # Display name
+        displayName = item.text(0)
+        # Use DeviceClass/DeviceInstance-Key if no displayName is set
+        if len(item.text(0)) == 0:
+            keys = item.internalKey.split('.', 1)
+            displayName = keys[0]
+        mimeData.setData("displayName", displayName.toAscii())
+        
+        # Get NavigationItemType
+        navigationItemType = self.__configPanel.getNavigationItemType()
+        
+        # Display component?
+        hasDisplayComponent = navigationItemType == NavigationItemTypes.DEVICE
+        mimeData.setData("hasDisplayComponent", QString("%1").arg(hasDisplayComponent).toAscii())
+        # Editable component?
+        hasEditableComponent = item.editableComponent is not None
+        mimeData.setData("hasEditableComponent", QString("%1").arg(hasEditableComponent).toAscii())
+        # Navigation item type
+        mimeData.setData("navigationItemType", QString("%1").arg(navigationItemType).toAscii())
+        # Class alias
+        if item.classAlias is not None:
+            mimeData.setData("classAlias", QString("%1").arg(item.classAlias).toAscii())
+
+        drag = QDrag(self)
+        drag.setMimeData(mimeData)
+        if drag.exec_(Qt.MoveAction) == Qt.MoveAction:
+            pass
 
 
 ### getter & setter functions ###
@@ -184,51 +229,6 @@ class ParameterTreeWidget(QTreeWidget):
 
     def addConfigMenu(self, menu):
         self.__mFile.addMenu(menu)
-
-
-    def _performDrag(self):
-        item = self.currentItem()
-        if item is None:
-            return
-        
-        # Attributes can not be dropped
-        if isinstance(item, treewidgetitems.propertytreewidgetitem.PropertyTreeWidgetItem):
-            return
-        
-        mimeData = QMimeData()        
-
-        # Put necessary data in MimeData:
-        # Source type
-        mimeData.setData("sourceType", "ParameterTreeWidget")
-        # Internal key
-        mimeData.setData("internalKey", QString(item.internalKey).toAscii())
-        # Display name
-        displayName = item.text(0)
-        # Use DeviceClass/DeviceInstance-Key if no displayName is set
-        if len(item.text(0)) == 0:
-            keys = item.internalKey.split('.', 1)
-            displayName = keys[0]
-        mimeData.setData("displayName", displayName.toAscii())
-        
-        # Get NavigationItemType
-        navigationItemType = self.__configPanel.getNavigationItemType()
-        
-        # Display component?
-        hasDisplayComponent = navigationItemType == NavigationItemTypes.DEVICE
-        mimeData.setData("hasDisplayComponent", QString("%1").arg(hasDisplayComponent).toAscii())
-        # Editable component?
-        hasEditableComponent = item.editableComponent is not None
-        mimeData.setData("hasEditableComponent", QString("%1").arg(hasEditableComponent).toAscii())
-        # Navigation item type
-        mimeData.setData("navigationItemType", QString("%1").arg(navigationItemType).toAscii())
-        # Class alias
-        if item.classAlias is not None:
-            mimeData.setData("classAlias", QString("%1").arg(item.classAlias).toAscii())
-
-        drag = QDrag(self)
-        drag.setMimeData(mimeData)
-        if drag.exec_(Qt.MoveAction) == Qt.MoveAction:
-            pass
 
 
     def _r_updateParameters(self, parentItem, state):

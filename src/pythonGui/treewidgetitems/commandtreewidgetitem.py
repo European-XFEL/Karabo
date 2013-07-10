@@ -20,13 +20,13 @@ from PyQt4.QtGui import *
 
 class CommandTreeWidgetItem(BaseTreeWidgetItem):
     
-    def __init__(self, command, key, parent, parentItem=None):
-        super(CommandTreeWidgetItem, self).__init__(key, parent, parentItem)
+    def __init__(self, command, path, parent, parentItem=None):
+        super(CommandTreeWidgetItem, self).__init__(path, parent, parentItem)
         
         self.setIcon(0, QIcon(":slot"))
         
         # Create empty label for 2nd column (current value on device)
-        self.displayComponent = DisplayComponent("Value Field", path=self.internalKey)
+        self.displayComponent = DisplayComponent("Value Field", key=self.internalKey)
         self.treeWidget().setItemWidget(self, 1, self.displayComponent.widget)
         self.treeWidget().resizeColumnToContents(1)
 

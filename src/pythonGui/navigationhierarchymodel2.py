@@ -31,14 +31,8 @@ class NavigationHierarchyModel(QAbstractItemModel):
         #print config
         #print ""
         
-        #print ""
-        #print "TREE-Before"
-        self.__rootItem.printTree()
-        
         self.beginResetModel()
         self.__rootItem.clearChildItems()
-        
-        
         
         # Get server data
         serverKey = "server"
@@ -111,9 +105,6 @@ class NavigationHierarchyModel(QAbstractItemModel):
                 classItem.appendChildItem(deviceItem)
 
         self.endResetModel()
-        #print ""
-        #print "TREE-After"
-        self.__rootItem.printTree()
 
 
     def getHierarchyLevel(self, index):
@@ -211,8 +202,6 @@ class NavigationHierarchyModel(QAbstractItemModel):
 
 
     def index(self, row, column, parent=QModelIndex()):
-        #print "index"
-        
         if not self.hasIndex(row, column, parent):
             return QModelIndex()
 
@@ -232,14 +221,12 @@ class NavigationHierarchyModel(QAbstractItemModel):
         if not index.isValid():
             return QModelIndex()
         
-        #print "parent"
         childItem = index.internalPointer()
-        #print "childItem", childItem
-        if (not childItem): # or (not isinstance(childItem, NavigationHierarchyNode)):
+        if not childItem:
             return QModelIndex()
         
         parentItem = childItem.parentItem
-        if (not parentItem):
+        if not parentItem:
             return QModelIndex()
         
         if parentItem == self.__rootItem:

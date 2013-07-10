@@ -47,7 +47,8 @@ class NavigationTreeView(QTreeView):
         if event.buttons() != Qt.LeftButton:
             return
         
-        self._performDrag()
+        # Disabled for now
+        #self._performDrag()
         
 
 ### private ###
@@ -271,7 +272,7 @@ class NavigationTreeView(QTreeView):
             return
         self.__prevModelIndex = index
         
-        if index.isValid():
+        if index and index.isValid():
             self.setCurrentIndex(index)
         else:
             self.clearSelection()
@@ -279,6 +280,9 @@ class NavigationTreeView(QTreeView):
 
     def selectItem(self, path):
         index = self.model().findIndex(path)
+        
+        if not index:
+            return
         
         if index.isValid():
             self.setCurrentIndex(index)

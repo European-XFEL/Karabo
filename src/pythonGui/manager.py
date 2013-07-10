@@ -43,6 +43,7 @@ class Notifier(QObject):
     signalSelectNewNavigationItem = pyqtSignal(str) # deviceId
     signalSchemaAvailable = pyqtSignal(dict) # key, schema
     signalNavigationItemChanged = pyqtSignal(dict) # type, key
+    signalNavigationItemSelectionChanged = pyqtSignal(str) # key
     signalDeviceInstanceChanged = pyqtSignal(dict, str)
     signalKillDevice = pyqtSignal(str) # deviceId
     signalKillServer = pyqtSignal(str) # serverId
@@ -204,10 +205,25 @@ class Manager(Singleton):
             dataNotifier.removeComponent(key, component)
         
 
+    def _getDeviceIdFromPath(self, path):
+        splittedPath = str(path).split('device.')
+        if len(splittedPath) < 2:
+            # no device selected
+            return None
+        
+        # Get deviceId
+        deviceParameter = splittedPath[1].split('.configuration.')
+        if len(deviceParameter) < 1:
+            return None
+        
+        return deviceParameter[0]
+
+
     def newVisibleDevice(self, path):
-        print "newVisibleDevice", path
-        keys = str(path).split('.', 1)
-        deviceId = keys[1]
+        deviceId = self._getDeviceIdFromPath(path)
+        if not deviceId:
+            return
+        
         deviceIdCount = self.__visibleDevInsKeys.get(deviceId)
         if deviceIdCount:
             self.__visibleDevInsKeys[deviceId] += 1
@@ -218,8 +234,10 @@ class Manager(Singleton):
 
 
     def removeVisibleDevice(self, path):
-        keys = str(path).split('.', 1)
-        deviceId = keys[1]
+        deviceId = self._getDeviceIdFromPath(path)
+        if not deviceId:
+            return
+        
         deviceIdCount = self.__visibleDevInsKeys.get(deviceId)
         if deviceIdCount:
             self.__visibleDevInsKeys[deviceId] -= 1
@@ -311,6 +329,7 @@ class Manager(Singleton):
         
 
     def onDeviceClassValueChanged(self, key, value):
+        print "onDeviceClassValueChanged", key, value
         self._setFromPath(key, value)
         
         dataNotifier = self._getDataNotifierEditableValue(key)
@@ -319,7 +338,7 @@ class Manager(Singleton):
 
 
     def onDeviceInstanceValueChanged(self, key, value):
-        #print "onDeviceInstanceValueChanged", key, value
+        print "onDeviceInstanceValueChanged", key, value
         # Safety conversion before hashing
         if isinstance(value, QString):
             value = str(value)
@@ -339,6 +358,7 @@ class Manager(Singleton):
 
 
     def onDeviceChangedAsHash(self, instanceKey, config):
+        print "onDeviceChangedAsHash", instanceKey
         paths = config.paths()
         for path in paths:
             dataNotifier = self._getDataNotifierEditableValue(path)
@@ -418,26 +438,11 @@ class Manager(Singleton):
         rowId = self.__treemodel.mappedRow(index)
         
         return self.__treemodel.getSchema(level, rowId)
-
-
-    def selectNavigationItemByInternalKey(self, internalKey):
-        levelIdTuple = self.__sqlDatabase.getLevelAndIdByInternalKey(internalKey)
-        level = levelIdTuple[0]
-        id = levelIdTuple[1]
-        
-        name = None
-        keys = internalKey.split('+', 1)
-        if len(keys) == 2:
-            # Internal key for device class
-            name = keys[1]
-        else:
-            # Internal key for device instance
-            keys = internalKey.split('.', 1)
-            internalKey = keys[0]
-            name = internalKey
-
-        self.onNavigationItemChanged(dict(key=internalKey, name=name, level=level, rowId=id, column=1))
 ### TODO: Temporary functions for scientific computing END ###
+
+
+    def selectNavigationItemByKey(self, path):
+        self.__notifier.signalNavigationItemSelectionChanged.emit(path)
 
 
     def executeCommand(self, itemInfo):
