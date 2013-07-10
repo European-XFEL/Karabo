@@ -57,11 +57,10 @@ namespace karabo {
                 return m_seconds;
             }
 
-            inline const unsigned long long& getFractions() const {
+            inline const unsigned long long& getFractionalSeconds() const {
                 return m_fractionalSeconds;
             }
 
-            Epochstamp& operator =(const Epochstamp& other);
             Epochstamp& operator =(const time_t& tm);
             Epochstamp& operator =(const timeval& tv);
             Epochstamp& operator =(const timespec& ts);
