@@ -33,6 +33,7 @@ namespace karabo {
 
     namespace io {
         class SchemaXmlSerializer;
+        class SchemaBinarySerializer;
     }
 
     /**
@@ -135,6 +136,7 @@ namespace karabo {
             friend class ListElement;
             friend class NodeElement;
             friend class karabo::io::SchemaXmlSerializer;
+            friend class karabo::io::SchemaBinarySerializer;
 
             // Container
             Hash m_hash;
