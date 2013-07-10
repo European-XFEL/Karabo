@@ -12,7 +12,6 @@
 #define	_KARABO_WEBAUTH_AUTHENTICATOR_HH
 
 #include <karabo/util/Configurator.hh>
-#include <karabo/util/Timestamp.hh>
 #include "soapStub.h"
 
 #ifndef KARABO_DEFAULT_ACCESS_LEVEL
@@ -91,7 +90,7 @@ namespace karabo {
              *  
              * @return True or False depending on the success/unsuccess of the authentication
              */
-            bool login(); //bool login(const karabo::util::Timestamp& timestamp = karabo::util::Timestamp());
+            bool login();
 
             /**
              * Taking into consideration the Class parameters, logout the user in the WebAuth service
