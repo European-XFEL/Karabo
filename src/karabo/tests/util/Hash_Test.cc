@@ -6,6 +6,8 @@
  */
 
 #include <karabo/util/Hash.hh>
+#include <karabo/util/Schema.hh>
+#include <stack>
 #include "Hash_Test.hh"
 #include "karabo/util/ToLiteral.hh"
 
@@ -14,17 +16,22 @@ CPPUNIT_TEST_SUITE_REGISTRATION(Hash_Test);
 using namespace karabo::util;
 using namespace std;
 
+
 Hash_Test::Hash_Test() {
 }
+
 
 Hash_Test::~Hash_Test() {
 }
 
+
 void Hash_Test::setUp() {
 }
 
+
 void Hash_Test::tearDown() {
 }
+
 
 void Hash_Test::testConstructors() {
 
@@ -108,19 +115,19 @@ void Hash_Test::testConstructors() {
         // Check 'flatten'
         Hash flat;
         Hash::flatten(h, flat);
-        
+
         CPPUNIT_ASSERT(flat.empty() == false);
         CPPUNIT_ASSERT(flat.size() == 6);
-        CPPUNIT_ASSERT(flat.get<int>("a.b.c",0) == 1);
-        CPPUNIT_ASSERT(flat.get<double>("b.c",0) == 2.0);
-        CPPUNIT_ASSERT(flat.get<float>("c",0) == 3.0);
-        CPPUNIT_ASSERT(flat.get<string > ("d.e",0) == "4");
-        CPPUNIT_ASSERT(flat.get<std::vector<unsigned long long> >("e.f.g.h",0)[0] == 5);
-        CPPUNIT_ASSERT(flat.get<int>("F.f.f.f.f.x.y.z",0) == 99);
-        
+        CPPUNIT_ASSERT(flat.get<int>("a.b.c", 0) == 1);
+        CPPUNIT_ASSERT(flat.get<double>("b.c", 0) == 2.0);
+        CPPUNIT_ASSERT(flat.get<float>("c", 0) == 3.0);
+        CPPUNIT_ASSERT(flat.get<string > ("d.e", 0) == "4");
+        CPPUNIT_ASSERT(flat.get<std::vector<unsigned long long> >("e.f.g.h", 0)[0] == 5);
+        CPPUNIT_ASSERT(flat.get<int>("F.f.f.f.f.x.y.z", 0) == 99);
+
         Hash tree;
         flat.unflatten(tree);
-        
+
         CPPUNIT_ASSERT(tree.empty() == false);
         CPPUNIT_ASSERT(tree.size() == 6);
         CPPUNIT_ASSERT(tree.get<int>("a.b.c") == 1);
@@ -130,7 +137,7 @@ void Hash_Test::testConstructors() {
         CPPUNIT_ASSERT(tree.get<std::vector<unsigned long long> >("e.f.g.h")[0] == 5);
         CPPUNIT_ASSERT(tree.get<Hash > ("F.f.f.f.f").get<int>("x.y.z") == 99);
         CPPUNIT_ASSERT(tree.get<int>("F.f.f.f.f.x.y.z") == 99);
-        
+
     }
 
 }
@@ -245,6 +252,7 @@ void Hash_Test::testGetSet() {
 
 }
 
+
 void Hash_Test::testGetAs() {
 
     {
@@ -354,6 +362,7 @@ void Hash_Test::testGetAs() {
     }
 }
 
+
 void Hash_Test::testFind() {
 
     {
@@ -375,6 +384,7 @@ void Hash_Test::testFind() {
         if (node) CPPUNIT_ASSERT(false);
     }
 }
+
 
 void Hash_Test::testAttributes() {
 
@@ -410,6 +420,7 @@ void Hash_Test::testAttributes() {
     }
 
 }
+
 
 void Hash_Test::testIteration() {
 
@@ -553,6 +564,7 @@ void Hash_Test::testIteration() {
     }
 }
 
+
 void Hash_Test::testGetPaths() {
     {
         Hash h;
@@ -561,6 +573,7 @@ void Hash_Test::testGetPaths() {
         CPPUNIT_ASSERT(paths.size() == 0);
     }
 }
+
 
 void Hash_Test::testMerge() {
 
@@ -599,7 +612,495 @@ void Hash_Test::testMerge() {
     CPPUNIT_ASSERT(similar(h1, h3));
 }
 
+namespace helper {
+
+    class Helper {
+
+    public:
 
 
+        Helper() {
+        };
+
+
+        virtual ~Helper() {
+        };
+
+
+        bool operator()(const karabo::util::Hash::Node& node) {
+            return eval(node);
+        }
+
+        virtual bool eval(const karabo::util::Hash::Node& node) = 0;
+    };
+
+    bool dfs(const karabo::util::Hash& hash, Helper& helper);
+    bool dfs(const std::vector<karabo::util::Hash>& hash, Helper& helper);
+    bool dfs(const karabo::util::Hash::Node& node, Helper& helper);
+
+
+    bool dfs(const karabo::util::Hash& hash, Helper& helper) {
+        if (hash.empty())
+            return false;
+
+        for (Hash::const_iterator it = hash.begin(); it != hash.end(); ++it) {
+            if (!dfs(*it, helper)) return false;
+        }
+        return true;
+    }
+
+
+    bool dfs(const std::vector<karabo::util::Hash>& hash, Helper& helper) {
+        if (hash.empty())
+            return false;
+
+        for (size_t i = 0; i < hash.size(); ++i) {
+            if (!dfs(hash[i], helper)) return false;
+        }
+        return true;
+    }
+
+
+    bool dfs(const karabo::util::Hash::Node& node, Helper& helper) {
+        helper(node);
+
+        if (node.getType() == Types::HASH) {
+            return dfs(node.getValue<Hash > (), helper);
+        }
+        if (node.getType() == Types::VECTOR_HASH) {
+            return dfs(node.getValue<std::vector<Hash> >(), helper);
+        }
+        return true;
+    }
+
+    template<class V, class E>
+    class Visitor {
+
+    public:
+
+
+        Visitor() {
+        };
+
+
+        ~Visitor() {
+        };
+
+
+        E operator()(V& visitable) {
+            E evaluator;
+            visitable.visit(evaluator);
+            return evaluator;
+        }
+
+
+        bool operator()(V& visitable, E& evaluator) {
+            return visitable.visit(evaluator);
+        }
+
+
+        template<class Helper>
+        static bool visit__(const karabo::util::Hash& hash, Helper& helper) {
+            if (hash.empty())
+                return false;
+
+            for (Hash::const_iterator it = hash.begin(); it != hash.end(); ++it) {
+                if (!visit__(*it, helper)) return false;
+            }
+            return true;
+        }
+
+
+        template<class Helper>
+        static bool visit__(const std::vector<karabo::util::Hash>& hash, Helper& helper) {
+            if (hash.empty())
+                return false;
+
+            for (size_t i = 0; i < hash.size(); ++i) {
+                if (!visit__(hash[i], helper)) return false;
+            }
+            return true;
+        }
+
+
+        template<class Helper>
+        static bool visit__(const karabo::util::Hash::Node& node, Helper& helper) {
+            helper(node);
+
+            if (node.getType() == Types::HASH) {
+                return visit__(node.getValue<Hash > (), helper);
+            }
+            if (node.getType() == Types::VECTOR_HASH) {
+                return visit__(node.getValue<std::vector<Hash> >(), helper);
+            }
+            return true;
+        }
+    };
+
+
+}
+
+class Counter : public helper::Helper {
+
+public:
+
+
+    Counter() : m_counter(0) {
+
+    }
+
+
+    bool eval(const karabo::util::Hash::Node& node) {
+        if (node.getType() == Types::VECTOR_HASH) {
+            m_counter += node.getValue<std::vector<Hash> >().size();
+        } else {
+            ++m_counter;
+        }
+        return true;
+    }
+
+
+    size_t getResult() {
+        return m_counter;
+    }
+private:
+    size_t m_counter;
+};
+
+class Concat : public helper::Helper {
+
+public:
+
+
+    Concat() : m_concat("") {
+
+    }
+
+
+    bool eval(const karabo::util::Hash::Node& node) {
+        m_concat += node.getKey();
+        return true;
+    }
+
+
+    std::string getResult() {
+        return m_concat;
+    }
+private:
+    std::string m_concat;
+};
+
+class Serializer : public helper::Helper {
+
+public:
+
+
+    Serializer() : indent(0) {
+        memset(fill, ' ', 256);
+        fill[indent] = 0;
+        indices.push(-1);
+    }
+
+
+    void pre(const karabo::util::Hash::Node& node) {
+        int& top = indices.top();
+        if (top >= 0) {
+            fill[indent - 2] = 0;
+            m_stream << fill << '[' << top++ << ']' << '\n';
+            fill[indent - 2] = ' ';
+        }
+        m_stream << fill << node.getKey();
+
+        const Hash::Attributes& attrs = node.getAttributes();
+        if (attrs.size() > 0) {
+            for (Hash::Attributes::const_iterator ait = attrs.begin(); ait != attrs.end(); ++ait) {
+                m_stream << " " << ait->getKey() << "=\"" << ait->getValueAs<string>() /*<< " " << Types::to<ToLiteral>(ait->getType())*/ << "\"";
+            }
+        }
+
+        switch (node.getType()) {
+            case Types::HASH:
+            case Types::VECTOR_HASH:
+                fill[indent] = ' ';
+                indent += 2;
+                fill[indent] = 0;
+                break;
+        };
+    }
+
+
+    bool eval(const karabo::util::Hash::Node& node) {
+        Types::ReferenceType type = node.getType();
+        switch (type) {
+            case Types::HASH: m_stream << " +";
+                indices.push(-1);
+                break;
+            case Types::VECTOR_HASH: m_stream << " @";
+                indices.push(0);
+                break;
+            case Types::SCHEMA: m_stream << " => " << node.getValue<karabo::util::Schema>();
+                break;
+            default:
+                if (Types::isPointer(type)) {// TODO Add pointer types
+                    m_stream << " => xxx " << Types::to<ToLiteral>(type);
+                } else {
+                    m_stream << " => " << node.getValueAs<string>() << " " << Types::to<ToLiteral>(type);
+                }
+        }
+        m_stream << '\n';
+        return true;
+    }
+
+
+    void post(const karabo::util::Hash::Node & node) {
+        switch (node.getType()) {
+            case Types::HASH:
+            case Types::VECTOR_HASH:
+                fill[indent] = ' ';
+                indent -= 2;
+                fill[indent] = 0;
+                indices.pop();
+                break;
+        };
+    }
+
+
+    const std::ostringstream & getResult() {
+        return m_stream;
+    }
+private:
+    std::ostringstream m_stream;
+    char fill[256];
+    int indent;
+    std::stack<int> indices;
+};
+
+class Flatten : public helper::Helper {
+
+public:
+
+
+    Flatten(const char sep = '/') : separator(sep) {
+        prefix.push("");
+        indices.push(-1);
+    };
+
+
+    ~Flatten() {
+    };
+
+
+    void pre(const karabo::util::Hash::Node& node) {
+        ostringstream oss;
+        if (prefix.top().empty()) oss << node.getKey();
+        else {
+            oss << prefix.top();
+            int& top = indices.top();
+            if (top >= 0) {
+                oss << '[' << top++ << ']';
+            }
+            oss << separator << node.getKey();
+        }
+
+        switch (node.getType()) {
+            case Types::HASH:
+            case Types::VECTOR_HASH:
+                prefix.push(oss.str());
+                break;
+            default:
+                flat.set(oss.str(), node.getValueAsAny(), 0);
+                flat.setAttributes(oss.str(), node.getAttributes(), 0);
+        };
+    }
+
+
+    bool eval(const karabo::util::Hash::Node& node) {
+        Types::ReferenceType type = node.getType();
+        switch (type) {
+            case Types::HASH:
+                indices.push(-1);
+                break;
+            case Types::VECTOR_HASH:
+                indices.push(0);
+                break;
+        }
+        return true;
+    }
+
+
+    void post(const karabo::util::Hash::Node & node) {
+        switch (node.getType()) {
+            case Types::HASH:
+            case Types::VECTOR_HASH:
+                prefix.pop();
+                indices.pop();
+                break;
+        };
+    }
+
+
+    const Hash& getResult() {
+        return flat;
+    }
+
+private:
+    Hash flat;
+    char separator;
+    std::stack<string> prefix;
+    std::stack<int> indices;
+};
+
+class Paths : public helper::Helper {
+
+public:
+
+
+    Paths(const char sep = '/') : separator(sep) {
+        prefix.push("");
+        indices.push(-1);
+    };
+
+
+    ~Paths() {
+    };
+
+
+    void pre(const karabo::util::Hash::Node& node) {
+        ostringstream oss;
+        if (prefix.top().empty()) oss << node.getKey();
+        else {
+            oss << prefix.top();
+            int& top = indices.top();
+            if (top >= 0) {
+                oss << '[' << top++ << ']';
+            }
+            oss << separator << node.getKey();
+        }
+
+        switch (node.getType()) {
+            case Types::HASH:
+            case Types::VECTOR_HASH:
+                prefix.push(oss.str());
+                break;
+            default:
+                paths.push_back(oss.str());
+        };
+    }
+
+
+    bool eval(const karabo::util::Hash::Node& node) {
+        Types::ReferenceType type = node.getType();
+        switch (type) {
+            case Types::HASH:
+                indices.push(-1);
+                break;
+            case Types::VECTOR_HASH:
+                indices.push(0);
+                break;
+        }
+        return true;
+    }
+
+
+    void post(const karabo::util::Hash::Node & node) {
+        switch (node.getType()) {
+            case Types::HASH:
+            case Types::VECTOR_HASH:
+                prefix.pop();
+                indices.pop();
+                break;
+        };
+    }
+
+
+    const std::vector<std::string> & getResult() {
+        return paths;
+    }
+
+private:
+    std::vector<std::string> paths;
+    char separator;
+    std::stack<string> prefix;
+    std::stack<int> indices;
+};
+
+
+void Hash_Test::testHelper() {
+    {
+        Hash h3("a", 21,
+                "b.c", 22,
+                "c.b[0]", Hash("key", "value"),
+                "c.b[1].d", 24,
+                "e", 23
+                );
+        h3.setAttribute("a", "at0", "value0");
+
+        Hash h2("a", 21,
+                "b.c", 22,
+                "c.b[0]", Hash("key", "value"),
+                "c.b[1].d", h3,
+                "e", 27
+                );
+        h2.setAttribute("a", "at1", "value1");
+
+        Hash h1("a", 1,
+                "b", 2,
+                "c.b[0].g", h2,
+                "c.c[0].d", h2,
+                "c.c[1]", Hash("a.b.c", h2),
+                "d.e", 7
+                );
+
+        h1.setAttribute("a", "at2", "value2");
+
+        Counter counter;
+        helper::dfs(h1, counter);
+
+        Concat concat;
+        helper::dfs(h1, concat);
+
+        Serializer serializer;
+        helper::dfs(h1, serializer);
+
+        //std::clog << "Count    1: " << counter.getResult() << std::endl;
+        //std::clog << "Concate  1: " << concat.getResult() << std::endl;
+        //std::clog << "Serialize1: " << serializer.getResult().str() << std::endl;
+
+        Counter counter2;
+        Concat concat2;
+        Serializer serializer2;
+        Flatten flatten;
+        Paths paths;
+
+        h1.visit(counter2);
+        h1.visit(concat2);
+        h1.visit2(serializer2);
+        h1.visit2(flatten);
+        h1.visit2(paths);
+
+        // std::clog << "Count    2: " << counter2.getResult() << std::endl;
+        // std::clog << "Concate  2: " << concat2.getResult() << std::endl;
+        // std::clog << "SerializeH: \n" << h1 << std::endl;
+        // std::clog << "Serialize2: \n" << serializer2.getResult().str() << std::endl;
+
+        std::clog << "Hash : " << h1 << std::endl;
+        std::clog << "FlatV: " << flatten.getResult() << std::endl;
+
+        Hash flat;
+        Hash::flatten(h1, flat, "", '/');
+        std::clog << "FlatH: " << flat << std::endl;
+
+        std::clog << "Paths : " << std::endl;
+        for (int i = 0; i < paths.getResult().size(); ++i) {
+            std::clog << "\t" << paths.getResult()[i] << std::endl;
+        }
+
+        //helper::Visitor<Hash, Counter> count;
+        //std::clog << "Count 2 : " << count(h1).getResult() << std::endl;
+        //std::clog << "Count 3 : " << helper::Visitor<Hash, Counter>()(h1).getResult() << std::endl;
+        //std::clog << "Count H : " << karabo::util::counter(h1) << std::endl;
+        //std::clog << "Count V : " << c2.getResult() << std::endl;
+    }
+}
 
 
