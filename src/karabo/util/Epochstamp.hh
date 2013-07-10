@@ -8,8 +8,9 @@
 #ifndef KARABO_UTIL_EPOCHSTAMP_HH
 #define	KARABO_UTIL_EPOCHSTAMP_HH
 
-#include "Hash.hh"
 #include <boost/date_time.hpp>
+#include "Hash.hh"
+#include "TimeDuration.hh"
 
 namespace karabo {
     namespace util {
@@ -25,10 +26,7 @@ namespace karabo {
          * 
          */
         class Epochstamp {
-            
-            // Placeholder for the time until DB has integrated his clock 
-            static boost::posix_time::ptime m_epoch;
-            
+
             // Number of seconds since 1st of January of 1970
             unsigned long long m_seconds;
 
@@ -41,24 +39,58 @@ namespace karabo {
              * The default constructor will use the current time
              */
             Epochstamp();
-            
+
             /**
              * Constructor from seconds and fraction
              * @param seconds seconds past since the unix epoch
              * @param fraction attoSeconds past since the second under consideration
              */
-            Epochstamp(const unsigned long long& seconds, const unsigned long long& fraction);
-            
+            Epochstamp(const unsigned long long& seconds, const unsigned long long& fractions);
+
+            explicit Epochstamp(const time_t& tm);
+            explicit Epochstamp(const timeval& tv);
+            explicit Epochstamp(const timespec& ts);
+
             virtual ~Epochstamp();
-            
-            
+
             inline const unsigned long long& getSeconds() const {
                 return m_seconds;
             }
-            
-            inline const unsigned long long& getFractionalSeconds() const {
+
+            inline const unsigned long long& getFractions() const {
                 return m_fractionalSeconds;
             }
+
+            Epochstamp& operator =(const Epochstamp& other);
+            Epochstamp& operator =(const time_t& tm);
+            Epochstamp& operator =(const timeval& tv);
+            Epochstamp& operator =(const timespec& ts);
+
+            bool operator ==(const Epochstamp& other) const;
+            bool operator !=(const Epochstamp& other) const;
+            bool operator>(const Epochstamp& other) const;
+            bool operator >=(const Epochstamp& other) const;
+            bool operator<(const Epochstamp& other) const;
+            bool operator <=(const Epochstamp& other) const;
+
+            Epochstamp operator +(const TimeDuration& period) const;
+            Epochstamp operator -(const TimeDuration& period) const;
+            Epochstamp& operator +=(const TimeDuration& period);
+            Epochstamp& operator -=(const TimeDuration& period);
+
+            TimeDuration operator -(const Epochstamp& other) const;
+
+            Epochstamp operator ++(int);
+            Epochstamp operator --(int);
+            Epochstamp& operator ++();
+            Epochstamp& operator --();
+
+            time_t getTime() const; // Unix time_t, Resolution = seconds
+            timeval getTimeOfDay() const; // Resolution u-sec
+            timespec getClockTime() const; // Resolution nano-sec
+
+            void now();
+            TimeDuration elpased(const Epochstamp& other = Epochstamp()) const;
 
             /**
              * Creates an EpochStamp from an ISO 8601 formatted string
@@ -66,14 +98,14 @@ namespace karabo {
              * @return EpochStamp object
              */
             static Epochstamp fromIso8601(const std::string& timePoint);
-            
+
             /**
              * Generates a sting (respecting ISO-8601) for a Timestamp ("ISO 8601"  => "%Y-%m-%dT%H:%M:%S.%f%q")
              * @return ISO 8601 formatted string
              */
             std::string toIso8601() const;
-            
-            
+
+
             static bool hashAttributesContainTimeInformation(const Hash::Attributes attributes);
 
             /**
@@ -83,13 +115,13 @@ namespace karabo {
              * @return EpochStamp object
              */
             static Epochstamp fromHashAttributes(const Hash::Attributes attributes);
-            
+
             /**
              * Formats as Hash attributes
              * @param attributes container to which the time point information is added
              */
             void toHashAttributes(Hash::Attributes& attributes) const;
-            
+
             /**
              * Formats to specified format
              * @param format The format of the time point
@@ -98,14 +130,130 @@ namespace karabo {
             std::string toFormattedString(const std::string& format = "%Y-%b-%d %H:%M:%S") const;
 
         private:
-            
+
             /**
              * Converts fractionalSeconds (attoseconds) into another unit measure
              * @return long long with the desire converted value
              */
             unsigned long long convertFractionalSeconds(std::string destinyUnitMeasure) const;
-            
+
         };
+    }
+}
+
+
+
+namespace karabo {
+    namespace util {
+
+        //
+        // inlines
+        //
+
+        inline Epochstamp& Epochstamp::operator =(const time_t& tm) {
+            m_seconds = static_cast<uint64_t> (tm);
+            m_fractionalSeconds = 0ULL;
+            return *this;
+        }
+
+        inline Epochstamp& Epochstamp::operator =(const timeval& tv) {
+            m_seconds = tv.tv_sec;
+            m_fractionalSeconds = tv.tv_usec * MICROSEC;
+            return *this;
+        }
+
+        inline Epochstamp& Epochstamp::operator =(const timespec& ts) {
+            m_seconds = ts.tv_sec;
+            m_fractionalSeconds = ts.tv_nsec * NANOSEC;
+            return *this;
+        }
+
+        inline bool Epochstamp::operator ==(const Epochstamp& other) const {
+            return (this->m_fractionalSeconds == other.m_fractionalSeconds) && (this->m_seconds == other.m_seconds);
+        }
+
+        inline bool Epochstamp::operator !=(const Epochstamp& other) const {
+            return !(*this == other);
+        }
+
+        inline bool Epochstamp::operator>(const Epochstamp& other) const {
+            return (this->m_seconds > other.m_seconds) || ((this->m_seconds == other.m_seconds) && (this->m_fractionalSeconds > other.m_fractionalSeconds));
+        }
+
+        inline bool Epochstamp::operator >=(const Epochstamp& other) const {
+            return (*this == other) || (*this > other);
+        }
+
+        inline bool Epochstamp::operator<(const Epochstamp& other) const {
+            return !(*this >= other);
+        }
+
+        inline bool Epochstamp::operator <=(const Epochstamp& other) const {
+            return !(*this > other);
+        }
+
+        inline TimeDuration Epochstamp::operator -(const Epochstamp& other) const {
+            TimeDuration td;
+            if (m_fractionalSeconds < other.m_fractionalSeconds) {
+                return TimeDuration(m_seconds - other.m_seconds - 1ULL, (ONESECOND - other.m_fractionalSeconds) + m_fractionalSeconds);
+            } else {
+                return TimeDuration(m_seconds - other.m_seconds, m_fractionalSeconds - other.m_fractionalSeconds);
+            }
+        }
+
+        inline Epochstamp Epochstamp::operator +(const TimeDuration& period) const {
+            Epochstamp result(*this);
+            result += period;
+            return result;
+        }
+
+        inline Epochstamp Epochstamp::operator -(const TimeDuration& period) const {
+            Epochstamp result(*this);
+            result -= period;
+            return result;
+        }
+
+        inline Epochstamp& Epochstamp::operator +=(const TimeDuration& period) {
+            this->m_seconds += period.getTotalSeconds();
+            if ((this->m_fractionalSeconds += period.getFractions()) > ONESECOND) {
+                this->m_fractionalSeconds -= ONESECOND;
+                ++this->m_seconds;
+            };
+            return *this;
+        }
+
+        inline Epochstamp& Epochstamp::operator -=(const TimeDuration& period) {
+            this->m_seconds -= period.getTotalSeconds();
+            if (this->m_fractionalSeconds < period.getFractions()) {
+                this->m_fractionalSeconds = (ONESECOND - period.getFractions()) + m_fractionalSeconds;
+                --this->m_seconds;
+            };
+            return *this;
+        }
+
+        inline Epochstamp Epochstamp::operator ++(int) {
+            Epochstamp result(*this);
+            ++ * this;
+            return result;
+        }
+
+        inline Epochstamp Epochstamp::operator --(int) {
+            Epochstamp result(*this);
+            -- * this;
+            return result;
+        }
+
+        inline Epochstamp& Epochstamp::operator ++() {
+            ++ * this;
+            return *this;
+        }
+
+        inline Epochstamp& Epochstamp::operator --() {
+            -- * this;
+            return *this;
+        }
+
+
     }
 }
 
