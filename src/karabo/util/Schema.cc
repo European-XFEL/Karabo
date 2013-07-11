@@ -24,8 +24,8 @@ namespace karabo {
         using namespace std;
 
 
-        Schema::Schema() : m_rootName("") {
-        };
+//        Schema::Schema() : m_rootName("") {
+//        };
 
 
         Schema::Schema(const std::string& classId, const Schema::AssemblyRules& rules) :

@@ -11,7 +11,6 @@
 #include "MasterDevice.hh"
 #include "DeviceServer.hh"
 #include "karabo/io/FileTools.hh"
-#include "karabo/tests/util/Timestamp_Test.hh"
 
 namespace karabo {
     namespace core {

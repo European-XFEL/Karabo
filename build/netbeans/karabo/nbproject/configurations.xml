@@ -8,8 +8,6 @@
         <itemPath>../../../src/karabo/core/Device.hh</itemPath>
         <itemPath>../../../src/karabo/core/GuiServerDevice.cc</itemPath>
         <itemPath>../../../src/karabo/core/GuiServerDevice.hh</itemPath>
-        <itemPath>../../../src/karabo/core/MasterDevice.cc</itemPath>
-        <itemPath>../../../src/karabo/core/MasterDevice.hh</itemPath>
       </logicalFolder>
       <logicalFolder name="f1" displayName="State Machines" projectFiles="true">
         <itemPath>../../../src/karabo/core/CameraFsm.hh</itemPath>
@@ -220,6 +218,12 @@
         <logicalFolder name="f1" displayName="Time stuff" projectFiles="true">
           <itemPath>../../../src/karabo/util/Epochstamp.cc</itemPath>
           <itemPath>../../../src/karabo/util/Epochstamp.hh</itemPath>
+          <itemPath>../../../src/karabo/util/TimeDuration.cc</itemPath>
+          <itemPath>../../../src/karabo/util/TimeDuration.hh</itemPath>
+          <itemPath>../../../src/karabo/util/TimePeriod.cc</itemPath>
+          <itemPath>../../../src/karabo/util/TimePeriod.hh</itemPath>
+          <itemPath>../../../src/karabo/util/TimeProfiler.cc</itemPath>
+          <itemPath>../../../src/karabo/util/TimeProfiler.hh</itemPath>
           <itemPath>../../../src/karabo/util/Timer.cc</itemPath>
           <itemPath>../../../src/karabo/util/Timer.hh</itemPath>
           <itemPath>../../../src/karabo/util/Timestamp.cc</itemPath>
@@ -285,9 +289,9 @@
         <itemPath>../../../src/karabo/xip/CpuImageBinarySerializer.cc</itemPath>
         <itemPath>../../../src/karabo/xip/CpuImageBinarySerializer.hh</itemPath>
         <itemPath>../../../src/karabo/xip/Environment.hh</itemPath>
-        <itemPath>../../../src/karabo/xip/Image.cc</itemPath>
         <itemPath>../../../src/karabo/xip/Image.hh</itemPath>
-        <itemPath>../../../src/karabo/xip/ImageTypes.hh</itemPath>
+        <itemPath>../../../src/karabo/xip/RawImageData.cc</itemPath>
+        <itemPath>../../../src/karabo/xip/RawImageData.hh</itemPath>
         <itemPath>../../../src/karabo/xip/Statistics.hh</itemPath>
       </logicalFolder>
       <logicalFolder name="f2" displayName="Processor" projectFiles="true">
@@ -423,6 +427,7 @@
             <pElem>${KARABO}/extern/include/hdf5</pElem>
             <pElem>${KARABO}/extern/include/python2.7</pElem>
           </incDir>
+          <warningLevel>0</warningLevel>
         </ccTool>
         <linkerTool>
           <output>${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/lib/libkarabo.${CND_DLIB_EXT}</output>
@@ -518,16 +523,6 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/core/GuiServerDevice.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/core/MasterDevice.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/core/MasterDevice.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -1510,6 +1505,36 @@
             tool="3"
             flavor2="0">
       </item>
+      <item path="../../../src/karabo/util/TimeDuration.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/TimeDuration.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/TimePeriod.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/TimePeriod.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/TimeProfiler.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/TimeProfiler.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="../../../src/karabo/util/Timer.cc" ex="false" tool="1" flavor2="0">
       </item>
       <item path="../../../src/karabo/util/Timer.hh" ex="false" tool="3" flavor2="0">
@@ -1684,8 +1709,6 @@
             tool="3"
             flavor2="0">
       </item>
-      <item path="../../../src/karabo/xip/Image.cc" ex="false" tool="1" flavor2="0">
-      </item>
       <item path="../../../src/karabo/xip/Image.hh" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../../../src/karabo/xip/ImageFileReader.cc"
@@ -1708,7 +1731,12 @@
             tool="3"
             flavor2="0">
       </item>
-      <item path="../../../src/karabo/xip/ImageTypes.hh"
+      <item path="../../../src/karabo/xip/RawImageData.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/xip/RawImageData.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -2034,16 +2062,6 @@
             tool="3"
             flavor2="0">
       </item>
-      <item path="../../../src/karabo/core/MasterDevice.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/core/MasterDevice.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
       <item path="../../../src/karabo/core/OkErrorFsm.hh"
             ex="false"
             tool="3"
@@ -3019,6 +3037,36 @@
             tool="3"
             flavor2="0">
       </item>
+      <item path="../../../src/karabo/util/TimeDuration.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/TimeDuration.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/TimePeriod.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/TimePeriod.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/TimeProfiler.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/TimeProfiler.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="../../../src/karabo/util/Timer.cc" ex="false" tool="1" flavor2="0">
       </item>
       <item path="../../../src/karabo/util/Timer.hh" ex="false" tool="3" flavor2="0">
@@ -3193,8 +3241,6 @@
             tool="3"
             flavor2="0">
       </item>
-      <item path="../../../src/karabo/xip/Image.cc" ex="false" tool="1" flavor2="0">
-      </item>
       <item path="../../../src/karabo/xip/Image.hh" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../../../src/karabo/xip/ImageFileReader.cc"
@@ -3217,7 +3263,12 @@
             tool="3"
             flavor2="0">
       </item>
-      <item path="../../../src/karabo/xip/ImageTypes.hh"
+      <item path="../../../src/karabo/xip/RawImageData.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/xip/RawImageData.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -3515,16 +3566,6 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/core/GuiServerDevice.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/core/MasterDevice.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/core/MasterDevice.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -4507,6 +4548,36 @@
             tool="3"
             flavor2="0">
       </item>
+      <item path="../../../src/karabo/util/TimeDuration.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/TimeDuration.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/TimePeriod.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/TimePeriod.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/TimeProfiler.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/TimeProfiler.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="../../../src/karabo/util/Timer.cc" ex="false" tool="1" flavor2="0">
       </item>
       <item path="../../../src/karabo/util/Timer.hh" ex="false" tool="3" flavor2="0">
@@ -4681,8 +4752,6 @@
             tool="3"
             flavor2="0">
       </item>
-      <item path="../../../src/karabo/xip/Image.cc" ex="false" tool="1" flavor2="0">
-      </item>
       <item path="../../../src/karabo/xip/Image.hh" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../../../src/karabo/xip/ImageFileReader.cc"
@@ -4705,7 +4774,12 @@
             tool="3"
             flavor2="0">
       </item>
-      <item path="../../../src/karabo/xip/ImageTypes.hh"
+      <item path="../../../src/karabo/xip/RawImageData.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/xip/RawImageData.hh"
             ex="false"
             tool="3"
             flavor2="0">

@@ -15,6 +15,7 @@
 #include <karabo/util/VectorElement.hh>
 #include <karabo/util/PathElement.hh>
 #include <karabo/xms/SlotElement.hh>
+#include <karabo/util/ImageElement.hh>
 
 #include <karabo/util/Configurator.hh>
 
@@ -454,6 +455,10 @@ namespace configurationTest {
                     .minSize(2)
                     .maxSize(7)
                     .assignmentMandatory()
+                    .commit();
+            
+            IMAGE_ELEMENT(expected)
+                    .key("image")
                     .commit();
 
         }

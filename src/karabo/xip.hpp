@@ -12,6 +12,7 @@
 #define	KARABO_XIP_HPP
 
 #include "xip/Image.hh"
+#include "xip/CpuImage.hh"
 
 
 #endif

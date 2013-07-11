@@ -48,12 +48,12 @@ namespace karabo {
 
                 UNDEFINED = -1,
                 u_8_1,
-                s_8_2,
+                s_8_1,
                 u_10_2,
                 s_10_2,
                 u_12_2,
                 s_12_2,
-                u_12_1_5,
+                u_12_1p5,
                 s_12_1p5,
                 u_16_2,
                 s_16_2,
@@ -69,9 +69,9 @@ namespace karabo {
 
         typedef ChannelSpace::ChannelSpaceType ChannelSpaceType;
 
-        namespace Endian {
+        namespace Endianness {
 
-            enum EndianType {
+            enum EndiannessType {
 
                 UNDEFINED = -1,
                 LSB,
@@ -79,7 +79,7 @@ namespace karabo {
             };
         }
 
-        typedef Endian::EndianType EndianType;
+        typedef Endianness::EndiannessType EndiannessType;
 
         struct AbstractImageType {
 
@@ -221,7 +221,7 @@ namespace karabo {
 
             }
 
-            virtual void setEndian(const EndianType& endian) {
+            virtual void setEndian(const EndiannessType& endian) {
                 KARABO_NOT_SUPPORTED_EXCEPTION("Function call not supported by the underlying image implementation");
 
             }

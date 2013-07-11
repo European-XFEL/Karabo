@@ -96,7 +96,7 @@ namespace karabo {
         inline std::string toString(const std::wstring& value) {
             return toString(value.c_str());
         }
-        
+
         template <typename T>
         inline std::string toString(const std::vector<T>& value) {
             if (value.empty()) return "";
@@ -207,11 +207,11 @@ namespace karabo {
                 }
                 boost::split(elements, tmp, boost::is_any_of(separator), boost::token_compress_on);
                 CONT<T> resultArray;
-                for (typename CONT<T>::iterator it=elements.begin(); it!=elements.end(); ++it){
+                for (typename CONT<T>::iterator it = elements.begin(); it != elements.end(); ++it) {
                     std::string element(*it);
                     boost::trim(element);
                     resultArray.insert(util::fromString<T > (element));
-                }                
+                }
                 return resultArray;
             } catch (...) {
                 KARABO_RETHROW;
@@ -337,6 +337,19 @@ namespace karabo {
         inline void tokenize(const std::string& inputString, container& tokens, const char delimiter) {
             const char delims[] = {delimiter, 0};
             tokenize(inputString, tokens, delims);
+        }
+
+
+        // TODO Move to other file
+
+        inline bool isBigEndian() {
+
+            union {
+
+                uint32_t i;
+                char c[4];
+            } bint = {0x01020304};
+            return bint.c[0] == 1;
         }
     }
 }

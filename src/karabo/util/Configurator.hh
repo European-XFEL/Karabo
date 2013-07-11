@@ -383,20 +383,20 @@ namespace karabo {
         #endif
 
         #define KARABO_CONFIGURATION_BASE_CLASS \
-                static boost::shared_ptr<Self> create(const karabo::util::Hash& configuration) { \
-                return karabo::util::Configurator<Self>::create(configuration); } \
+                static boost::shared_ptr<Self> create(const karabo::util::Hash& configuration, const bool validate = true) { \
+                return karabo::util::Configurator<Self>::create(configuration, validate); } \
                 \
-                static boost::shared_ptr<Self> create(const std::string& classId, const karabo::util::Hash& configuration = karabo::util::Hash()) { \
-                return karabo::util::Configurator<Self>::create(classId, configuration); } \
+                static boost::shared_ptr<Self> create(const std::string& classId, const karabo::util::Hash& configuration = karabo::util::Hash(), const bool validate = true) { \
+                return karabo::util::Configurator<Self>::create(classId, configuration, validate); } \
                 \
-                static boost::shared_ptr<Self> createNode(const std::string& nodeName, const std::string& classId, const karabo::util::Hash& input) { \
-                return karabo::util::Configurator<Self>::createNode(nodeName, classId, input); } \
+                static boost::shared_ptr<Self> createNode(const std::string& nodeName, const std::string& classId, const karabo::util::Hash& input, const bool validate = true) { \
+                return karabo::util::Configurator<Self>::createNode(nodeName, classId, input, validate); } \
                 \
-                static boost::shared_ptr<Self> createChoice(const std::string& choiceName, const karabo::util::Hash& input) { \
-                return karabo::util::Configurator<Self>::createChoice(choiceName, input); } \
+                static boost::shared_ptr<Self> createChoice(const std::string& choiceName, const karabo::util::Hash& input, const bool validate = true) { \
+                return karabo::util::Configurator<Self>::createChoice(choiceName, input, validate); } \
                 \
-                static std::vector<boost::shared_ptr<Self> > createList(const std::string& listName, const karabo::util::Hash& input) { \
-                return karabo::util::Configurator<Self>::createList(listName, input); } \
+                static std::vector<boost::shared_ptr<Self> > createList(const std::string& listName, const karabo::util::Hash& input, const bool validate = true) { \
+                return karabo::util::Configurator<Self>::createList(listName, input, validate); } \
                 \
                 static karabo::util::Schema getSchema(const std::string& classId, const karabo::util::Schema::AssemblyRules& rules = karabo::util::Schema::AssemblyRules()) { \
                 return karabo::util::Configurator<Self>::getSchema(classId, rules); } \

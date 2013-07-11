@@ -37,7 +37,7 @@ class ImageTreeWidgetItem(BaseTreeWidgetItem):
         self.__imgData.set("dimY", 0)
         self.__imgData.set("dimZ", 0)
         self.__imgData.set("dimC", 0)
-        self.__imgData.set("pixelArray", [])
+        self.__imgData.set("data", [])
 
 
 ### getter & setter functions ###
@@ -79,11 +79,11 @@ class ImageTreeWidgetItem(BaseTreeWidgetItem):
     dimC = property(fget=_getDimC, fset=_setDimC)
 
 
-    def _getPixelArray(self):
-        return self.__imgData.get('pixelArray')
-    def _setPixelArray(self, pixelArray):
-        self.__imgData.set('pixelArray', pixelArray)
-    pixelArray = property(fget=_setPixelArray, fset=_setPixelArray)
+    def _getdata(self):
+        return self.__imgData.get('data')
+    def _setdata(self, data):
+        self.__imgData.set('data', data)
+    data = property(fget=_setdata, fset=_setdata)
 
 
     def _getImageData(self):

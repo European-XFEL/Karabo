@@ -16,6 +16,7 @@ using namespace karabo::util;
 using namespace karabo::core;
 using namespace karabo::net;
 using namespace karabo::io;
+using namespace karabo::xip;
 
 namespace karabo {
     namespace core {
@@ -288,158 +289,141 @@ namespace karabo {
 
 
         void GuiServerDevice::preprocessImageData(karabo::util::Hash& modified) {
-            boost::smatch sm;
-            boost::regex re(".*(image).*", boost::regbase::icase);
             for (Hash::iterator it = modified.begin(); it != modified.end(); it++) {
-                if (!boost::regex_search(it->getKey(), sm, re))
-                    continue; // this is not an image:  failed to follow naming convention
-                if (!it->is<Hash>())
-                    continue; // this is not an image:  no Hash containing image structure
-                Hash& input = it->getValue<Hash>();
-                if (!input.has("dims"))
-                    continue; // this is not an image:  no 'dims' key
-                if (!input.has("pixelArray"))
-                    continue; // this is not an image:  no 'pixelArray' key
+                if (it->hasAttribute("image")) {
+                    karabo::xip::RawImageData img(modified); // Will share (act as view)
+                    if (img.getByteSize() == 0) continue; // empty image?
 
-                vector<unsigned int>& dims = input.get<vector<unsigned int> >("dims");
-                if (dims.size() < 2)
-                    continue; // empty image?
-
-                //                unsigned int& dimX = dims[0];
-                //                unsigned int& dimY = dims[1];
-
-                vector<unsigned char>& vdata = input.get<vector<unsigned char> >("pixelArray");
-
-                string& fmt = input.get<string > ("format");
-                //cout << "slotChanged: pixelArray: len = " << vdata.size() << ", dimX = " << dimX << ", dimY = " << dimY << " -- " << fmt << endl;
-
-                vector<string> vhdr;
-                boost::split(vhdr, fmt, boost::is_any_of("-"));
-                string& imgType = vhdr[0];
-                unsigned int bytesPerPixel = boost::lexical_cast<unsigned int>(vhdr[1]);
-                //                unsigned int bitsPerPixel = boost::lexical_cast<unsigned int>(vhdr[2]);
-                bool msbFlag = vhdr[3] == "MSB" ? true : false;
-
-                vector<unsigned char> dataImage;
-
-                // support for grayscale images
-                if (imgType == "GRAY") {
-                    if (bytesPerPixel == 1) {
-                        size_t size = vdata.size();
-                        unsigned pmax = 0, pmin = 255;
-                        for (size_t i = 0; i < size; i++) {
-                            unsigned pix = vdata[i];
-                            if (pmax < pix) pmax = pix;
-                            if (pmin > pix) pmin = pix;
-                        }
-                        for (size_t i = 0; i < size; i++) {
-                            unsigned char pix = vdata[i];
-                            pix = int((unsigned(pix) - pmin) * 255 / (pmax - pmin)); // normalization
-                            dataImage.push_back(pix);
-                            dataImage.push_back(pix);
-                            dataImage.push_back(pix);
-                            dataImage.push_back(0xFF);
-                        }
-                    } else if (bytesPerPixel == 2) {
-                        size_t size = vdata.size() / 2;
-                        unsigned short* sdata = reinterpret_cast<unsigned short*> (&vdata[0]);
-                        unsigned pmax = 0, pmin = 65535;
-                        if (msbFlag) {
+                    // Support for grayscale images
+                    if (img.encoding() == Encoding::GRAY ) {
+                        size_t size = img.size();
+                        vector<unsigned char> qtImage(size * 4); // Have to blow up for RGBA
+                        
+                        if (img.channelSpace() == ChannelSpace::u_8_1) {
+                            unsigned char* data = img.dataPointer<unsigned char>();
+                            unsigned char pmax = 0, pmin = 255;
                             for (size_t i = 0; i < size; i++) {
-                                sdata[i] = sdata[i] << 8 | sdata[i] >> 8; // swap bytes
-                                if (pmax < sdata[i]) pmax = sdata[i];
-                                if (pmin > sdata[i]) pmin = sdata[i];
+                                unsigned char pix = data[i];
+                                if (pmax < pix) pmax = pix;
+                                if (pmin > pix) pmin = pix;
+                            }
+                            size_t index = 0;
+                            for (size_t i = 0; i < size; i++) {
+                                unsigned char pix = data[i];
+                                if (pmax != pmin) pix = int((unsigned(pix) - pmin) * 255 / (pmax - pmin)); // normalization
+                                qtImage[index++] = pix;
+                                qtImage[index++] = pix;
+                                qtImage[index++] = pix;
+                                qtImage[index++] = 0xFF;
+                            }
+                            
+                           
+                            
+                        } else if (img.channelSpace() == ChannelSpace::u_16_2) {
+                            unsigned short* data = img.dataPointer<unsigned short>();
+                            unsigned short pmax = 0, pmin = 65535;
+                            if (img.endianness() == Endianness::MSB) {
+                                for (size_t i = 0; i < size; i++) {
+                                    data[i] = data[i] << 8 | data[i] >> 8; // swap bytes
+                                    if (pmax < data[i]) pmax = data[i];
+                                    if (pmin > data[i]) pmin = data[i];
+                                }
+                            } else {
+                                for (size_t i = 0; i < size; i++) {
+                                    if (pmax < data[i]) pmax = data[i];
+                                    if (pmin > data[i]) pmin = data[i];
+                                }
+                            }
+                            size_t index = 0;
+                            for (size_t i = 0; i < size; i++) {
+                                unsigned short pix = data[i];
+                                if (pmax != pmin) pix = int((data[i] - pmin) * 255 / (pmax - pmin)); // normalization
+                                qtImage[index++] = pix;
+                                qtImage[index++] = pix;
+                                qtImage[index++] = pix;
+                                qtImage[index++] = 0xFF;
                             }
                         } else {
-                            for (size_t i = 0; i < size; i++) {
-                                if (pmax < sdata[i]) pmax = sdata[i];
-                                if (pmin > sdata[i]) pmin = sdata[i];
-                            }
+                            return;
                         }
-
-                        for (size_t i = 0; i < size; i++) {
-                            unsigned char pix = int((sdata[i] - pmin) * 255 / (pmax - pmin)); // normalization
-                            dataImage.push_back(pix);
-                            dataImage.push_back(pix);
-                            dataImage.push_back(pix);
-                            dataImage.push_back(0xFF);
-                        }
-                    } else
-                        return;
-                    // update pixelArray in the hash
-                    input.set("pixelArray", dataImage);
+                        
+                        // update data in the hash
+                        img.setData(qtImage); // Update data
+                        img.encoding() = Encoding::RGBA; // Update encoding
+                    }
+                    // TODO: At the moment we don't touch color images!!!
+                    // TODO: Color image's support
                 }
-                // At the moment we don't touch color images!!!
-                // TODO:  color image's support
             }
         }
-        
-        void GuiServerDevice::slotChanged(const karabo::util::Hash& what, const std::string& deviceId) {
-            Hash modified(what);
-            preprocessImageData(modified);
 
-            Hash header("type", "configurationChanged", "deviceId", deviceId);
-            Hash body("device." + deviceId + ".configuration", modified);
 
-            boost::mutex::scoped_lock lock(m_channelMutex);
-            // Broadcast to all GUIs
-            typedef std::map< karabo::net::Channel::Pointer, std::set<std::string> >::const_iterator channelIterator;
-            for (channelIterator it = m_channels.begin(); it != m_channels.end(); ++it) {
-                // Optimization: broadcast only to visible DeviceInstances
-                //std::string body;
-                if (it->second.find(deviceId) != it->second.end()) {
-                    //m_textSerializer->save(modified, body);
+            void GuiServerDevice::slotChanged(const karabo::util::Hash& what, const std::string & deviceId) {
+                Hash modified(what);
+                preprocessImageData(modified);
+
+                Hash header("type", "configurationChanged", "deviceId", deviceId);
+                Hash body("device." + deviceId + ".configuration", modified);
+
+                boost::mutex::scoped_lock lock(m_channelMutex);
+                // Broadcast to all GUIs
+                typedef std::map< karabo::net::Channel::Pointer, std::set<std::string> >::const_iterator channelIterator;
+                for (channelIterator it = m_channels.begin(); it != m_channels.end(); ++it) {
+                    // Optimization: broadcast only to visible DeviceInstances
+                    //std::string body;
+                    if (it->second.find(deviceId) != it->second.end()) {
+                        //m_textSerializer->save(modified, body);
+                        it->first->write(header, body);
+                    }
+                }
+            }
+
+
+            void GuiServerDevice::slotSchemaUpdated(const karabo::util::Schema& description, const std::string & deviceId) {
+                KARABO_LOG_FRAMEWORK_DEBUG << "Broadcasting schema updated";
+                Hash header("type", "schemaUpdated", "deviceId", deviceId);
+                Hash body("device." + deviceId + ".description", description);
+                boost::mutex::scoped_lock lock(m_channelMutex);
+                // Broadcast to all GUIs
+                typedef std::map< karabo::net::Channel::Pointer, std::set<std::string> >::const_iterator channelIterator;
+                for (channelIterator it = m_channels.begin(); it != m_channels.end(); ++it) {
                     it->first->write(header, body);
                 }
             }
-        }
 
 
-        void GuiServerDevice::slotSchemaUpdated(const karabo::util::Schema& description, const std::string& deviceId) {
-            KARABO_LOG_FRAMEWORK_DEBUG << "Broadcasting schema updated";
-            Hash header("type", "schemaUpdated", "deviceId", deviceId);
-            Hash body("device." + deviceId + ".description", description);
-            boost::mutex::scoped_lock lock(m_channelMutex);
-            // Broadcast to all GUIs
-            typedef std::map< karabo::net::Channel::Pointer, std::set<std::string> >::const_iterator channelIterator;
-            for (channelIterator it = m_channels.begin(); it != m_channels.end(); ++it) {
-                it->first->write(header, body);
+            void GuiServerDevice::slotNotification(const std::string& type, const std::string& shortMessage, const std::string& detailedMessage, const std::string & deviceId) {
+                KARABO_LOG_FRAMEWORK_DEBUG << "Broadcasting notification";
+                Hash header("type", "notification", "deviceId", deviceId);
+                Hash body("type", type, "shortMsg", shortMessage, "detailedMsg", detailedMessage);
+                boost::mutex::scoped_lock lock(m_channelMutex);
+                // Broadcast to all GUIs
+                typedef std::map< karabo::net::Channel::Pointer, std::set<std::string> >::const_iterator channelIterator;
+                for (channelIterator it = m_channels.begin(); it != m_channels.end(); ++it) {
+                    it->first->write(header, body);
+                }
             }
-        }
 
 
-        void GuiServerDevice::slotNotification(const std::string& type, const std::string& shortMessage, const std::string& detailedMessage, const std::string& deviceId) {
-            KARABO_LOG_FRAMEWORK_DEBUG << "Broadcasting notification";
-            Hash header("type", "notification", "deviceId", deviceId);
-            Hash body("type", type, "shortMsg", shortMessage, "detailedMsg", detailedMessage);
-            boost::mutex::scoped_lock lock(m_channelMutex);
-            // Broadcast to all GUIs
-            typedef std::map< karabo::net::Channel::Pointer, std::set<std::string> >::const_iterator channelIterator;
-            for (channelIterator it = m_channels.begin(); it != m_channels.end(); ++it) {
-                it->first->write(header, body);
+            void GuiServerDevice::logHandler(karabo::net::BrokerChannel::Pointer channel, const std::string& logMessage, const karabo::util::Hash & header) {
+                Hash h("type", "log");
+                boost::mutex::scoped_lock lock(m_channelMutex);
+                // Broadcast to all GUIs
+                typedef std::map< karabo::net::Channel::Pointer, std::set<std::string> >::const_iterator channelIterator;
+                for (channelIterator it = m_channels.begin(); it != m_channels.end(); ++it) {
+                    it->first->write(h, logMessage);
+                }
             }
-        }
 
 
-        void GuiServerDevice::logHandler(karabo::net::BrokerChannel::Pointer channel, const std::string& logMessage, const karabo::util::Hash& header) {
-            Hash h("type", "log");
-            boost::mutex::scoped_lock lock(m_channelMutex);
-            // Broadcast to all GUIs
-            typedef std::map< karabo::net::Channel::Pointer, std::set<std::string> >::const_iterator channelIterator;
-            for (channelIterator it = m_channels.begin(); it != m_channels.end(); ++it) {
-                it->first->write(h, logMessage);
-            }
-        }
-
-
-        void GuiServerDevice::onError(karabo::net::Channel::Pointer channel, const karabo::net::ErrorCode& errorCode) {
-            boost::mutex::scoped_lock lock(m_channelMutex);
-            // TODO Fork on error message
-            std::map<karabo::net::Channel::Pointer, std::set<std::string> >::iterator it = m_channels.find(channel);
-            if (it != m_channels.end()) {
-                it->first->close(); // This closes socket and unregisters channel from connection
-                m_channels.erase(it);
+            void GuiServerDevice::onError(karabo::net::Channel::Pointer channel, const karabo::net::ErrorCode & errorCode) {
+                boost::mutex::scoped_lock lock(m_channelMutex);
+                // TODO Fork on error message
+                std::map<karabo::net::Channel::Pointer, std::set<std::string> >::iterator it = m_channels.find(channel);
+                if (it != m_channels.end()) {
+                    it->first->close(); // This closes socket and unregisters channel from connection
+                    m_channels.erase(it);
+                }
             }
         }
     }
-}

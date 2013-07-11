@@ -66,7 +66,7 @@ namespace karabo {
             /*                        Events                              */
             /**************************************************************/
 
-            KARABO_FSM_EVENT2(m_fsm, ErrorFoundEvent, erroFound, std::string, std::string)
+            KARABO_FSM_EVENT2(m_fsm, ErrorFoundEvent, errorFound, std::string, std::string)
 
             KARABO_FSM_EVENT0(m_fsm, ResetEvent, reset)
 

@@ -79,7 +79,7 @@ namespace karathon {
         bp::object getDevicesPy() {
             return Wrapper::fromStdVectorToPyList(this->getDevices());
         }
-        
+
         bp::object getDevicesPy(const std::string& serverId) {
             return Wrapper::fromStdVectorToPyList(this->getDevices(serverId));
         }
@@ -296,9 +296,11 @@ namespace karathon {
                 std::string currentPath = it->getKey();
                 if (!path.empty()) currentPath = path + "." + it->getKey();
                 if (registered.has(currentPath + "._function")) {
-                    karabo::util::Timestamp t;
-                    if (it->hasAttribute("t")) {
-                        t.setMsSinceEpoch(it->getAttribute<unsigned long long>("t"));
+                    karabo::util::Timestamp2 t;
+                    try {
+                        t =  karabo::util::Timestamp2::fromHashAttributes(it->getAttributes());
+                    } catch (...) {
+                        KARABO_LOG_FRAMEWORK_WARN << "No timestamp information given on \"" << it->getKey() << "/";
                     }
                     const karabo::util::Hash& entry = registered.get<karabo::util::Hash > (currentPath);
                     boost::optional<const karabo::util::Hash::Node&> nodeFunc = entry.find("_function");

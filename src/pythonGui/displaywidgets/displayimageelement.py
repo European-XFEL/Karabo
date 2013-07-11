@@ -112,23 +112,23 @@ class DisplayImageElement(DisplayWidget):
             # Store original value with type
             self.__value = value
             
-            # Value as Hash (dimX=<dimX>, dimY=<dimY>, dimZ=<dimZ>, dimC=<dimC>, pixelArray=<pixelArray>)
+            # Value as Hash (dimX=<dimX>, dimY=<dimY>, dimZ=<dimZ>, dimC=<dimC>, data=<data>)
             dims = value.get('dims')
             if len(dims) < 2:
                 return;
             dimX = dims[0]
             dimY = dims[1]
             #dimZ = dims[2]
-            pixelArray = value.get('pixelArray')
+            data = value.get('data')
             pixelFormat = value.get('format')
             
-            if not dimX and not dimY and not pixelArray:
+            if not dimX and not dimY and not data:
                 return
             
-            if (dimX < 1) or (dimY < 1) or (len(pixelArray) < (dimX*dimY)):
+            if (dimX < 1) or (dimY < 1) or (len(data) < (dimX*dimY)):
                 return
 
-            image = QImage(pixelArray, dimX, dimY, QImage.Format_ARGB32_Premultiplied)
+            image = QImage(data, dimX, dimY, QImage.Format_ARGB32_Premultiplied)
             
             pixmap = QPixmap.fromImage(image)
             # Scale pixmap

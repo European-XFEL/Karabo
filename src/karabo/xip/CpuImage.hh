@@ -79,7 +79,7 @@ namespace karabo {
             CpuImage() : m_cimg(ci::CImg<TPix>()) {
             }
 
-            explicit CpuImage(const std::string& filename) : m_cimg(), m_encoding(Encoding::UNDEFINED), m_channelSpace(ChannelSpace::UNDEFINED), m_endian(Endian::UNDEFINED) {
+            explicit CpuImage(const std::string& filename) : m_cimg(), m_encoding(Encoding::UNDEFINED), m_channelSpace(ChannelSpace::UNDEFINED), m_endian(Endianness::UNDEFINED) {
                 karabo::util::Hash h("File.filename", filename);
                 typename karabo::io::Input<CpuImage<TPix> >::Pointer in = karabo::io::Input<CpuImage<TPix> >::create(h);
                 in->read(*this);
@@ -91,7 +91,7 @@ namespace karabo {
              * @param dy image height
              * @param dz image depth
              */
-            explicit CpuImage(const size_t dx, const size_t dy = 1, const size_t dz = 1) : m_cimg(ci::CImg<TPix>(dx, dy, dz)), m_encoding(Encoding::UNDEFINED), m_channelSpace(ChannelSpace::UNDEFINED), m_endian(Endian::UNDEFINED) {
+            explicit CpuImage(const size_t dx, const size_t dy = 1, const size_t dz = 1) : m_cimg(ci::CImg<TPix>(dx, dy, dz)), m_encoding(Encoding::UNDEFINED), m_channelSpace(ChannelSpace::UNDEFINED), m_endian(Endianness::UNDEFINED) {
             }
 
             /** 
@@ -101,23 +101,23 @@ namespace karabo {
              * @param dz image depth
              * @param value default value to fill the image
              */
-            CpuImage(const size_t dx, const size_t dy, const size_t dz, const TPix& value) : m_cimg(ci::CImg<TPix>(dx, dy, dz, 1, value)), m_encoding(Encoding::UNDEFINED), m_channelSpace(ChannelSpace::UNDEFINED), m_endian(Endian::UNDEFINED){
+            CpuImage(const size_t dx, const size_t dy, const size_t dz, const TPix& value) : m_cimg(ci::CImg<TPix>(dx, dy, dz, 1, value)), m_encoding(Encoding::UNDEFINED), m_channelSpace(ChannelSpace::UNDEFINED), m_endian(Endianness::UNDEFINED){
             }
 
-            CpuImage(const size_t dx, const size_t dy, const size_t dz, const std::string& values, const bool repeatValues) : m_cimg(ci::CImg<TPix>(dx, dy, dz, 1, values.c_str(), repeatValues)), m_encoding(Encoding::UNDEFINED), m_channelSpace(ChannelSpace::UNDEFINED), m_endian(Endian::UNDEFINED) {
+            CpuImage(const size_t dx, const size_t dy, const size_t dz, const std::string& values, const bool repeatValues) : m_cimg(ci::CImg<TPix>(dx, dy, dz, 1, values.c_str(), repeatValues)), m_encoding(Encoding::UNDEFINED), m_channelSpace(ChannelSpace::UNDEFINED), m_endian(Endianness::UNDEFINED) {
             }
 
-            CpuImage(const TPix * const dataBuffer, const size_t dx, const size_t dy, const size_t dz) : m_cimg(ci::CImg<TPix>(dataBuffer, dx, dy, dz)), m_encoding(Encoding::UNDEFINED), m_channelSpace(ChannelSpace::UNDEFINED), m_endian(Endian::UNDEFINED) {
+            CpuImage(const TPix * const dataBuffer, const size_t dx, const size_t dy, const size_t dz) : m_cimg(ci::CImg<TPix>(dataBuffer, dx, dy, dz)), m_encoding(Encoding::UNDEFINED), m_channelSpace(ChannelSpace::UNDEFINED), m_endian(Endianness::UNDEFINED) {
             }
 
-            CpuImage(const std::vector<TPix>& dataBuffer, const size_t dx, const size_t dy, const size_t dz) : m_cimg(ci::CImg<TPix>(&dataBuffer[0], dx, dy, dz)), m_encoding(Encoding::UNDEFINED), m_channelSpace(ChannelSpace::UNDEFINED), m_endian(Endian::UNDEFINED) {
+            CpuImage(const std::vector<TPix>& dataBuffer, const size_t dx, const size_t dy, const size_t dz) : m_cimg(ci::CImg<TPix>(&dataBuffer[0], dx, dy, dz)), m_encoding(Encoding::UNDEFINED), m_channelSpace(ChannelSpace::UNDEFINED), m_endian(Endianness::UNDEFINED) {
             }
 
-            CpuImage(const karabo::util::Hash& header) : m_cimg(ci::CImg<TPix>(header.get<int>("dimX"), header.get<int>("dimY"), header.get<int>("dimZ"))), m_encoding(Encoding::UNDEFINED), m_channelSpace(ChannelSpace::UNDEFINED), m_endian(Endian::UNDEFINED) {
+            CpuImage(const karabo::util::Hash& header) : m_cimg(ci::CImg<TPix>(header.get<int>("dimX"), header.get<int>("dimY"), header.get<int>("dimZ"))), m_encoding(Encoding::UNDEFINED), m_channelSpace(ChannelSpace::UNDEFINED), m_endian(Endianness::UNDEFINED) {
                 m_header = header;
             }
 
-            CpuImage(const karabo::util::Hash& header, const TPix& value) : m_cimg(ci::CImg<TPix>(header.get<int>("dimX"), header.get<int>("dimY"), header.get<int>("dimZ"), value)), m_encoding(Encoding::UNDEFINED), m_channelSpace(ChannelSpace::UNDEFINED), m_endian(Endian::UNDEFINED) {
+            CpuImage(const karabo::util::Hash& header, const TPix& value) : m_cimg(ci::CImg<TPix>(header.get<int>("dimX"), header.get<int>("dimY"), header.get<int>("dimZ"), value)), m_encoding(Encoding::UNDEFINED), m_channelSpace(ChannelSpace::UNDEFINED), m_endian(Endianness::UNDEFINED) {
                 m_header = header;
             }
 
@@ -283,7 +283,7 @@ namespace karabo {
                 m_channelSpace = channelSpace;
             }
             
-            void setEndian(const EndianType& endian) {
+            void setEndian(const EndiannessType& endian) {
                 m_endian = endian;
             }
 
@@ -295,6 +295,28 @@ namespace karabo {
                 // two dimensional image
                 if (((dimX() > 2) && (dimY() > 1)) || ((dimX() > 1) && (dimZ() > 1)) || ((dimY() > 1) && (dimZ() > 1))) return 2;
                 return 1;
+            }
+            
+            inline std::vector<unsigned int> dims() const {
+                int nDims = dimensionality();
+                if (nDims == 1) {
+                    std::vector<unsigned int> v(1);
+                    v[0] = dimX();
+                    return v;
+                } 
+                if (nDims == 2) {
+                    std::vector<unsigned int> v(2);
+                    v[0] = dimX();
+                    v[1] = dimY();
+                    return v;
+                }
+                 if (nDims == 3) {
+                    std::vector<unsigned int> v(3);
+                    v[0] = dimX();
+                    v[1] = dimY();
+                    v[2] = dimZ();
+                    return v;
+                }
             }
 
             bool isEmpty() const {
@@ -1064,6 +1086,7 @@ namespace karabo {
         template <class T>
         std::vector<boost::shared_ptr<cimg_library::CImgDisplay> > CpuImage<T>::m_displays;
 
+        typedef CpuImage<char> CpuImgC;
         typedef CpuImage<short> CpuImgS;
         typedef CpuImage<int> CpuImgI;
         typedef CpuImage<float> CpuImgF;

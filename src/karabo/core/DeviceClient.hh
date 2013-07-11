@@ -6,7 +6,7 @@
  * Copyright (c) 2010-2012 European XFEL GmbH Hamburg. All rights reserved.
  */
 #include <karabo/xms/SignalSlotable.hh>
-#include <karabo/util/Timestamp.hh>
+#include <karabo/util/Timestamp2.hh>
 
 #ifndef KARABO_CORE_DEVICE_CLIENT_HH
 #define	KARABO_CORE_DEVICE_CLIENT_HH
@@ -297,7 +297,7 @@ namespace karabo {
 
             template <class ValueType>
             bool registerPropertyMonitor(const std::string& instanceId, const std::string& key,
-                                         const boost::function<void (const std::string& /*deviceId*/, const std::string& /*key*/, const ValueType& /*value*/, const karabo::util::Timestamp& /*timestamp*/) >& callbackFunction) {
+                                         const boost::function<void (const std::string& /*deviceId*/, const std::string& /*key*/, const ValueType& /*value*/, const karabo::util::Timestamp2& /*timestamp*/) >& callbackFunction) {
                 karabo::util::Schema schema = this->getDeviceSchema(instanceId);
                 if (schema.has(key)) {
                     boost::mutex::scoped_lock lock(m_propertyChangedHandlersMutex);
@@ -313,7 +313,7 @@ namespace karabo {
 
             template <class ValueType, class UserDataType>
             bool registerPropertyMonitor(const std::string& instanceId, const std::string& key, const boost::function<void ( const std::string& /*deviceId*/, const std::string& /*key*/,
-                                         const ValueType& /*value*/, const karabo::util::Timestamp& /*timestamp*/, const boost::any& /*userData*/) >& callbackFunction, const UserDataType& userData) {
+                                         const ValueType& /*value*/, const karabo::util::Timestamp2& /*timestamp*/, const boost::any& /*userData*/) >& callbackFunction, const UserDataType& userData) {
                 karabo::util::Schema schema = this->getDeviceSchema(instanceId);
                 if (schema.has(key)) {
                     boost::mutex::scoped_lock lock(m_propertyChangedHandlersMutex);

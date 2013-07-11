@@ -10,7 +10,6 @@
 #include <karabo/io/Input.hh>
 #include "DataLoggerDevice.hh"
 #include "karabo/io/FileTools.hh"
-#include "karabo/tests/util/Timestamp_Test.hh"
 
 namespace karabo {
     namespace core {
@@ -115,9 +114,8 @@ namespace karabo {
                 configuration.set<vector<Hash> >(it->getKey(), vector<Hash>(1, val));
             }
             Hash tmp("schema", vector<Hash>(1, Hash("v", schema)), "configuration", configuration);
-            // TODO Adapt to new timestamp interface
-            tmp.setAttribute("schema", "t", karabo::util::Timestamp().getMsSinceEpoch());
-            tmp.setAttribute("configuration", "t", karabo::util::Timestamp().getMsSinceEpoch());
+            Timestamp2().toHashAttributes(tmp.getAttributes("schema"));
+            Timestamp2().toHashAttributes(tmp.getAttributes("configuration"));
             m_systemHistory.set("device." + deviceId, tmp);
         }
 
@@ -171,7 +169,7 @@ namespace karabo {
             for (Hash::iterator it = tmp.begin(); it != tmp.end(); ++it) {
                 vector<Hash>& keyHistory = it->getValue<vector<Hash> >();
                 Hash lastEntry = keyHistory.back();
-                lastEntry.setAttribute("v", "t", karabo::util::Timestamp().getMsSinceEpoch());
+                karabo::util::Timestamp2().toHashAttributes(lastEntry.getAttributes("v"));
                 lastEntry.setAttribute("v", "isLast", true);
                 keyHistory.push_back(lastEntry);
             }
