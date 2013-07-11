@@ -65,30 +65,38 @@ namespace karabo {
 
 
         void GuiServerDevice::okStateOnEntry() {
-            // Register handlers
-            remote().registerInstanceNewMonitor(boost::bind(&karabo::core::GuiServerDevice::instanceNewHandler, this, _1));
-            remote().registerInstanceUpdatedMonitor(boost::bind(&karabo::core::GuiServerDevice::instanceUpdatedHandler, this, _1));
-            remote().registerInstanceGoneMonitor(boost::bind(&karabo::core::GuiServerDevice::instanceGoneHandler, this, _1));
+            try {
+                // Register handlers
+                remote().registerInstanceNewMonitor(boost::bind(&karabo::core::GuiServerDevice::instanceNewHandler, this, _1));
+                remote().registerInstanceUpdatedMonitor(boost::bind(&karabo::core::GuiServerDevice::instanceUpdatedHandler, this, _1));
+                remote().registerInstanceGoneMonitor(boost::bind(&karabo::core::GuiServerDevice::instanceGoneHandler, this, _1));
 
-            m_dataConnection->startAsync(boost::bind(&karabo::core::GuiServerDevice::onConnect, this, _1));
-            // Use one thread currently (you may start this multiple time for having more threads doing the work)
-            boost::thread(boost::bind(&karabo::net::IOService::run, m_ioService));
+                m_dataConnection->startAsync(boost::bind(&karabo::core::GuiServerDevice::onConnect, this, _1));
+                // Use one thread currently (you may start this multiple time for having more threads doing the work)
+                boost::thread(boost::bind(&karabo::net::IOService::run, m_ioService));
 
-            // Start the logging thread
-            m_loggerChannel = m_loggerConnection->start();
-            m_loggerChannel->setFilter("target = 'log'");
-            m_loggerChannel->readAsyncStringHash(boost::bind(&karabo::core::GuiServerDevice::logHandler, this, _1, _2, _3));
-            boost::thread(boost::bind(&karabo::net::BrokerIOService::work, m_loggerIoService));
+                // Start the logging thread
+                m_loggerChannel = m_loggerConnection->start();
+                m_loggerChannel->setFilter("target = 'log'");
+                m_loggerChannel->readAsyncStringHash(boost::bind(&karabo::core::GuiServerDevice::logHandler, this, _1, _2, _3));
+                boost::thread(boost::bind(&karabo::net::BrokerIOService::work, m_loggerIoService));
+            } catch (const Exception& e) {
+                KARABO_LOG_ERROR << "Problem in okStateOnEntry(): " << e.userFriendlyMsg();
+            }
         }
 
 
         void GuiServerDevice::onConnect(karabo::net::Channel::Pointer channel) {
-            KARABO_LOG_FRAMEWORK_DEBUG << "Incoming connection";
-            channel->readAsyncHashString(boost::bind(&karabo::core::GuiServerDevice::onRead, this, _1, _2, _3));
-            channel->setErrorHandler(boost::bind(&karabo::core::GuiServerDevice::onError, this, _1, _2));
-            // Re-register acceptor socket (allows handling multiple clients)
-            m_dataConnection->startAsync(boost::bind(&karabo::core::GuiServerDevice::onConnect, this, _1));
-            registerConnect(channel);
+            try {
+                KARABO_LOG_FRAMEWORK_DEBUG << "Incoming connection";
+                channel->readAsyncHashString(boost::bind(&karabo::core::GuiServerDevice::onRead, this, _1, _2, _3));
+                channel->setErrorHandler(boost::bind(&karabo::core::GuiServerDevice::onError, this, _1, _2));
+                // Re-register acceptor socket (allows handling multiple clients)
+                m_dataConnection->startAsync(boost::bind(&karabo::core::GuiServerDevice::onConnect, this, _1));
+                registerConnect(channel);
+            } catch (const Exception& e) {
+                KARABO_LOG_ERROR << "Problem in onConnect(): " << e.userFriendlyMsg();
+            }
         }
 
 
@@ -99,266 +107,335 @@ namespace karabo {
 
 
         void GuiServerDevice::onRead(karabo::net::Channel::Pointer channel, const karabo::util::Hash& header, const std::string& body) {
-
-            // GUI communication scenarios
-            if (header.has("type")) {
-                string type = header.get<string > ("type");
-                if (type == "login") {
-                    onLogin(channel, body);
-                } else if (type == "reconfigure") {
-                    onReconfigure(header, body);
-                } else if (type == "execute") {
-                    onExecute(header, body);
-                } else if (type == "initDevice") {
-                    onInitDevice(header, body);
-                } else if (type == "refreshInstance") {
-                    onRefreshInstance(channel, header);
-                } else if (type == "killServer") {
-                    onKillServer(header, body);
-                } else if (type == "killDevice") {
-                    onKillDevice(header, body);
-                } else if (type == "newVisibleDevice") {
-                    onNewVisibleDevice(channel, header);
-                } else if (type == "removeVisibleDevice") {
-                    onRemoveVisibleDevice(channel, header);
-                } else if (type == "getClassSchema") {
-                    onGetClassSchema(channel, header, body);
-                } else if (type == "getDeviceSchema") {
-                    onGetDeviceSchema(channel, header, body);
+            try {
+                // GUI communication scenarios
+                if (header.has("type")) {
+                    string type = header.get<string > ("type");
+                    if (type == "login") {
+                        onLogin(channel, body);
+                    } else if (type == "reconfigure") {
+                        onReconfigure(header, body);
+                    } else if (type == "execute") {
+                        onExecute(header, body);
+                    } else if (type == "initDevice") {
+                        onInitDevice(header, body);
+                    } else if (type == "refreshInstance") {
+                        onRefreshInstance(channel, header);
+                    } else if (type == "killServer") {
+                        onKillServer(header, body);
+                    } else if (type == "killDevice") {
+                        onKillDevice(header, body);
+                    } else if (type == "newVisibleDevice") {
+                        onNewVisibleDevice(channel, header);
+                    } else if (type == "removeVisibleDevice") {
+                        onRemoveVisibleDevice(channel, header);
+                    } else if (type == "getClassSchema") {
+                        onGetClassSchema(channel, header, body);
+                    } else if (type == "getDeviceSchema") {
+                        onGetDeviceSchema(channel, header, body);
+                    }
+                } else {
+                    KARABO_LOG_WARN << "Ignoring request";
                 }
-            } else {
-                KARABO_LOG_WARN << "Ignoring request";
+                channel->readAsyncHashString(boost::bind(&karabo::core::GuiServerDevice::onRead, this, _1, _2, _3));
+            } catch (const Exception& e) {
+                KARABO_LOG_ERROR << "Problem in onRead(): " << e.userFriendlyMsg();
             }
-            channel->readAsyncHashString(boost::bind(&karabo::core::GuiServerDevice::onRead, this, _1, _2, _3));
         }
 
 
         void GuiServerDevice::onLogin(karabo::net::Channel::Pointer channel, const std::string& body) {
-            KARABO_LOG_FRAMEWORK_DEBUG << "onLogin";
-            Hash bodyHash;
-            m_textSerializer->load(bodyHash, body);
-            // Check valid login
-            KARABO_LOG_INFO << "Login request of user: " << bodyHash.get<string > ("username");
-            // if ok
-            sendSystemTopology(channel);
-            // else sendBadLogin
+            try {
+                KARABO_LOG_FRAMEWORK_DEBUG << "onLogin";
+                Hash bodyHash;
+                m_textSerializer->load(bodyHash, body);
+                // Check valid login
+                KARABO_LOG_INFO << "Login request of user: " << bodyHash.get<string > ("username");
+                // if ok
+                sendSystemTopology(channel);
+                // else sendBadLogin
+            } catch (const Exception& e) {
+                KARABO_LOG_ERROR << "Problem in onLogin(): " << e.userFriendlyMsg();
+            }
         }
 
 
         void GuiServerDevice::sendSystemTopology(karabo::net::Channel::Pointer channel) {
-            KARABO_LOG_FRAMEWORK_DEBUG << "sendSystemTopology";
-            channel->write(Hash("type", "systemTopology"), remote().getSystemTopology());
+            try {
+                KARABO_LOG_FRAMEWORK_DEBUG << "sendSystemTopology";
+                channel->write(Hash("type", "systemTopology"), remote().getSystemTopology());
+            } catch (const Exception& e) {
+                KARABO_LOG_ERROR << "Problem in sendSystemTopology(): " << e.userFriendlyMsg();
+            }
         }
 
 
         void GuiServerDevice::onReconfigure(const karabo::util::Hash& header, const std::string& body) {
-            KARABO_LOG_FRAMEWORK_DEBUG << "onReconfigure";
-            Hash bodyHash;
-            m_textSerializer->load(bodyHash, body);
-            string deviceId = header.get<string > ("deviceId");
-            // TODO Supply user specific context
-            call(deviceId, "slotReconfigure", bodyHash);
+            try {
+                KARABO_LOG_FRAMEWORK_DEBUG << "onReconfigure";
+                Hash bodyHash;
+                m_textSerializer->load(bodyHash, body);
+                string deviceId = header.get<string > ("deviceId");
+                // TODO Supply user specific context
+                call(deviceId, "slotReconfigure", bodyHash);
+            } catch (const Exception& e) {
+                KARABO_LOG_ERROR << "Problem in onReconfigure(): " << e.userFriendlyMsg();
+            }
         }
 
 
         void GuiServerDevice::onExecute(const karabo::util::Hash& header, const std::string& body) {
-            KARABO_LOG_FRAMEWORK_DEBUG << "";
-            Hash config;
-            m_textSerializer->load(config, body);
-            string deviceId = header.get<string > ("deviceId");
-            string command = config.get<string > ("command");
-            // TODO Supply user specific context
-            call(deviceId, command, config);
+            try {
+                KARABO_LOG_FRAMEWORK_DEBUG << "";
+                Hash config;
+                m_textSerializer->load(config, body);
+                string deviceId = header.get<string > ("deviceId");
+                string command = config.get<string > ("command");
+                // TODO Supply user specific context
+                call(deviceId, command, config);
+            } catch (const Exception& e) {
+                KARABO_LOG_ERROR << "Problem in onExecute(): " << e.userFriendlyMsg();
+            }
         }
 
 
         void GuiServerDevice::onInitDevice(const karabo::util::Hash& header, const std::string& body) {
-            KARABO_LOG_FRAMEWORK_DEBUG << "";
-            Hash config;
-            m_textSerializer->load(config, body);
-            string serverId = header.get<string > ("serverId");
-            KARABO_LOG_INFO << "Incoming request to start device instance on server " << serverId;
-            call(serverId, "slotStartDevice", config);
+            try {
+                KARABO_LOG_FRAMEWORK_DEBUG << "";
+                Hash config;
+                m_textSerializer->load(config, body);
+                string serverId = header.get<string > ("serverId");
+                KARABO_LOG_INFO << "Incoming request to start device instance on server " << serverId;
+                call(serverId, "slotStartDevice", config);
+            } catch (const Exception& e) {
+                KARABO_LOG_ERROR << "Problem in onInitDevice(): " << e.userFriendlyMsg();
+            }
         }
 
 
         void GuiServerDevice::onRefreshInstance(karabo::net::Channel::Pointer channel, const karabo::util::Hash& header) {
-            KARABO_LOG_FRAMEWORK_DEBUG << "";
-            string deviceId = header.get<string > ("deviceId");
-            Hash h("type", "configurationChanged", "deviceId", deviceId);
-            Hash b("device." + deviceId + ".configuration", remote().get(deviceId));
-            channel->write(h, b);
+            try {
+                KARABO_LOG_FRAMEWORK_DEBUG << "";
+                string deviceId = header.get<string > ("deviceId");
+                Hash h("type", "configurationChanged", "deviceId", deviceId);
+                Hash b("device." + deviceId + ".configuration", remote().get(deviceId));
+                channel->write(h, b);
+            } catch (const Exception& e) {
+                KARABO_LOG_ERROR << "Problem in onRefreshInstance(): " << e.userFriendlyMsg();
+            }
         }
 
 
         void GuiServerDevice::onKillServer(const karabo::util::Hash& header, const std::string& body) {
-            KARABO_LOG_FRAMEWORK_DEBUG << "";
-            string serverId = header.get<string > ("serverId");
-            // TODO Supply user specific context
-            call(serverId, "slotKillServer");
+            try {
+                KARABO_LOG_FRAMEWORK_DEBUG << "";
+                string serverId = header.get<string > ("serverId");
+                // TODO Supply user specific context
+                call(serverId, "slotKillServer");
+            } catch (const Exception& e) {
+                KARABO_LOG_ERROR << "Problem in onKillServer(): " << e.userFriendlyMsg();
+            }
         }
 
 
         void GuiServerDevice::onKillDevice(const karabo::util::Hash& header, const std::string& body) {
-            KARABO_LOG_FRAMEWORK_DEBUG << "";
-            string deviceId = header.get<string > ("deviceId");
-            call(deviceId, "slotKillDevice");
+            try {
+                KARABO_LOG_FRAMEWORK_DEBUG << "";
+                string deviceId = header.get<string > ("deviceId");
+                call(deviceId, "slotKillDevice");
+            } catch (const Exception& e) {
+                KARABO_LOG_ERROR << "Problem in onKillDevice(): " << e.userFriendlyMsg();
+            }
         }
 
 
         void GuiServerDevice::onNewVisibleDevice(karabo::net::Channel::Pointer channel, const karabo::util::Hash& header) {
-            KARABO_LOG_FRAMEWORK_DEBUG << "";
-            string deviceId = header.get<string > ("deviceId");
-            boost::mutex::scoped_lock lock(m_channelMutex);
-            std::map<karabo::net::Channel::Pointer, std::set<std::string> >::iterator it = m_channels.find(channel);
-            if (it != m_channels.end()) {
-                it->second.insert(deviceId);
+            try {
+                KARABO_LOG_FRAMEWORK_DEBUG << "";
+                string deviceId = header.get<string > ("deviceId");
+                boost::mutex::scoped_lock lock(m_channelMutex);
+                std::map<karabo::net::Channel::Pointer, std::set<std::string> >::iterator it = m_channels.find(channel);
+                if (it != m_channels.end()) {
+                    it->second.insert(deviceId);
+                }
+                Hash h("type", "configurationChanged", "deviceId", deviceId);
+                Hash b("device." + deviceId + ".configuration", remote().get(deviceId));
+                channel->write(h, b);
+            } catch (const Exception& e) {
+                KARABO_LOG_ERROR << "Problem in onVisibleDevice(): " << e.userFriendlyMsg();
             }
-            Hash h("type", "configurationChanged", "deviceId", deviceId);
-            Hash b("device." + deviceId + ".configuration", remote().get(deviceId));
-            channel->write(h, b);
         }
 
 
         void GuiServerDevice::onRemoveVisibleDevice(karabo::net::Channel::Pointer channel, const karabo::util::Hash& header) {
-            KARABO_LOG_FRAMEWORK_DEBUG << "";
-            string deviceId = header.get<string > ("deviceId");
-            boost::mutex::scoped_lock lock(m_channelMutex);
-            std::map<karabo::net::Channel::Pointer, std::set<std::string> >::iterator it = m_channels.find(channel);
-            if (it != m_channels.end()) {
-                it->second.erase(deviceId);
+            try {
+                KARABO_LOG_FRAMEWORK_DEBUG << "";
+                string deviceId = header.get<string > ("deviceId");
+                boost::mutex::scoped_lock lock(m_channelMutex);
+                std::map<karabo::net::Channel::Pointer, std::set<std::string> >::iterator it = m_channels.find(channel);
+                if (it != m_channels.end()) it->second.erase(deviceId);
+            } catch (const Exception& e) {
+                KARABO_LOG_ERROR << "Problem in onRemoveVisibleDevice(): " << e.userFriendlyMsg();
             }
         }
 
 
         void GuiServerDevice::onGetClassSchema(karabo::net::Channel::Pointer channel, const karabo::util::Hash& header, const std::string& body) {
-            KARABO_LOG_FRAMEWORK_DEBUG << "";
-            string serverId = header.get<string > ("serverId");
-            string classId = header.get<string> ("classId");
-            boost::mutex::scoped_lock lock(m_channelMutex);
-            Hash h("type", "classDescription");
-            Hash b("server." + serverId + ".classes." + classId + ".description", remote().getClassSchema(serverId, classId));
-            channel->write(h, b);
+            try {
+                KARABO_LOG_FRAMEWORK_DEBUG << "";
+                string serverId = header.get<string > ("serverId");
+                string classId = header.get<string> ("classId");
+                boost::mutex::scoped_lock lock(m_channelMutex);
+                Hash h("type", "classDescription");
+                Hash b("server." + serverId + ".classes." + classId + ".description", remote().getClassSchema(serverId, classId));
+                channel->write(h, b);
+            } catch (const Exception& e) {
+                KARABO_LOG_ERROR << "Problem in onGetClassSchema(): " << e.userFriendlyMsg();
+            }
         }
 
 
         void GuiServerDevice::onGetDeviceSchema(karabo::net::Channel::Pointer channel, const karabo::util::Hash& header, const std::string& body) {
-            KARABO_LOG_FRAMEWORK_DEBUG << "";
-            string deviceId = header.get<string > ("deviceId");
-            boost::mutex::scoped_lock lock(m_channelMutex);
-            Hash h("type", "deviceSchema", "deviceId", deviceId);
-            Hash b("device." + deviceId + ".description", remote().getDeviceSchema(deviceId));
-            channel->write(h, b);
+            try {
+                KARABO_LOG_FRAMEWORK_DEBUG << "";
+                string deviceId = header.get<string > ("deviceId");
+                boost::mutex::scoped_lock lock(m_channelMutex);
+                Hash h("type", "deviceSchema", "deviceId", deviceId);
+                Hash b("device." + deviceId + ".description", remote().getDeviceSchema(deviceId));
+                channel->write(h, b);
+            } catch (const Exception& e) {
+                KARABO_LOG_ERROR << "Problem in onGetDeviceSchema(): " << e.userFriendlyMsg();
+            }
         }
 
 
         void GuiServerDevice::instanceNewHandler(const karabo::util::Hash& topologyEntry) {
-            KARABO_LOG_FRAMEWORK_DEBUG << "Broadcasting availability of new instance";
-            Hash header("type", "instanceNew");
-            boost::mutex::scoped_lock lock(m_channelMutex);
-            // Broadcast to all GUIs
-            typedef std::map< karabo::net::Channel::Pointer, std::set<std::string> >::const_iterator channelIterator;
-            for (channelIterator it = m_channels.begin(); it != m_channels.end(); ++it) {
-                it->first->write(header, topologyEntry);
+            try {
+                KARABO_LOG_FRAMEWORK_DEBUG << "Broadcasting availability of new instance";
+                Hash header("type", "instanceNew");
+                boost::mutex::scoped_lock lock(m_channelMutex);
+                // Broadcast to all GUIs
+                typedef std::map< karabo::net::Channel::Pointer, std::set<std::string> >::const_iterator channelIterator;
+                for (channelIterator it = m_channels.begin(); it != m_channels.end(); ++it) {
+                    it->first->write(header, topologyEntry);
+                }
+            } catch (const Exception& e) {
+                KARABO_LOG_ERROR << "Problem in instanceNewHandler(): " << e.userFriendlyMsg();
             }
         }
 
 
         void GuiServerDevice::instanceUpdatedHandler(const karabo::util::Hash& topologyEntry) {
-            KARABO_LOG_FRAMEWORK_DEBUG << "Broadcasting instance updated";
-            Hash header("type", "instanceUpdated");
-            boost::mutex::scoped_lock lock(m_channelMutex);
-            // Broadcast to all GUIs
-            typedef std::map< karabo::net::Channel::Pointer, std::set<std::string> >::const_iterator channelIterator;
-            for (channelIterator it = m_channels.begin(); it != m_channels.end(); ++it) {
-                it->first->write(header, topologyEntry);
+            try {
+                KARABO_LOG_FRAMEWORK_DEBUG << "Broadcasting instance updated";
+                Hash header("type", "instanceUpdated");
+                boost::mutex::scoped_lock lock(m_channelMutex);
+                // Broadcast to all GUIs
+                typedef std::map< karabo::net::Channel::Pointer, std::set<std::string> >::const_iterator channelIterator;
+                for (channelIterator it = m_channels.begin(); it != m_channels.end(); ++it) {
+                    it->first->write(header, topologyEntry);
+                }
+            } catch (const Exception& e) {
+                KARABO_LOG_ERROR << "Problem in instanceUpdatedHandler(): " << e.userFriendlyMsg();
             }
         }
 
 
         void GuiServerDevice::instanceGoneHandler(const std::string& instanceId) {
-            KARABO_LOG_FRAMEWORK_DEBUG << "Broadcasting instance gone";
-            Hash header("type", "instanceGone");
-            boost::mutex::scoped_lock lock(m_channelMutex);
-            // Broadcast to all GUIs
-            typedef std::map< karabo::net::Channel::Pointer, std::set<std::string> >::const_iterator channelIterator;
-            for (channelIterator it = m_channels.begin(); it != m_channels.end(); ++it) {
-                it->first->write(header, instanceId);
+            try {
+                KARABO_LOG_FRAMEWORK_DEBUG << "Broadcasting instance gone";
+                Hash header("type", "instanceGone");
+                boost::mutex::scoped_lock lock(m_channelMutex);
+                // Broadcast to all GUIs
+                typedef std::map< karabo::net::Channel::Pointer, std::set<std::string> >::const_iterator channelIterator;
+                for (channelIterator it = m_channels.begin(); it != m_channels.end(); ++it) {
+                    it->first->write(header, instanceId);
+                }
+            } catch (const Exception& e) {
+                KARABO_LOG_ERROR << "Problem in instanceUpdatedHandler(): " << e.userFriendlyMsg();
             }
         }
 
 
         void GuiServerDevice::preprocessImageData(karabo::util::Hash& modified) {
-            for (Hash::iterator it = modified.begin(); it != modified.end(); it++) {
-                if (it->hasAttribute("image")) {
-                    karabo::xip::RawImageData img(modified); // Will share (act as view)
-                    if (img.getByteSize() == 0) continue; // empty image?
+            try {
+                for (Hash::iterator it = modified.begin(); it != modified.end(); it++) {
+                    if (it->hasAttribute("image")) {
 
-                    // Support for grayscale images
-                    if (img.encoding() == Encoding::GRAY ) {
-                        size_t size = img.size();
-                        vector<unsigned char> qtImage(size * 4); // Have to blow up for RGBA
-                        
-                        if (img.channelSpace() == ChannelSpace::u_8_1) {
-                            unsigned char* data = img.dataPointer<unsigned char>();
-                            unsigned char pmax = 0, pmin = 255;
-                            for (size_t i = 0; i < size; i++) {
-                                unsigned char pix = data[i];
-                                if (pmax < pix) pmax = pix;
-                                if (pmin > pix) pmin = pix;
-                            }
-                            size_t index = 0;
-                            for (size_t i = 0; i < size; i++) {
-                                unsigned char pix = data[i];
-                                if (pmax != pmin) pix = int((unsigned(pix) - pmin) * 255 / (pmax - pmin)); // normalization
-                                qtImage[index++] = pix;
-                                qtImage[index++] = pix;
-                                qtImage[index++] = pix;
-                                qtImage[index++] = 0xFF;
-                            }
-                            
-                           
-                            
-                        } else if (img.channelSpace() == ChannelSpace::u_16_2) {
-                            unsigned short* data = img.dataPointer<unsigned short>();
-                            unsigned short pmax = 0, pmin = 65535;
-                            if (img.endianness() == Endianness::MSB) {
+                        // Create a RawImageData object which shares the data of the hash
+                        karabo::xip::RawImageData img(modified);
+
+                        if (img.getDimensions().rank() < 2) continue;
+
+                        // Support for grayscale images
+                        if (img.encoding() == Encoding::GRAY) {
+                            size_t size = img.size();
+                            vector<unsigned char> qtImage(size * 4); // Have to blow up for RGBA
+
+                            if (img.channelSpace() == ChannelSpace::u_8_1) {
+                                unsigned char* data = img.dataPointer<unsigned char>();
+                                unsigned char pmax = 0, pmin = 255;
                                 for (size_t i = 0; i < size; i++) {
-                                    data[i] = data[i] << 8 | data[i] >> 8; // swap bytes
-                                    if (pmax < data[i]) pmax = data[i];
-                                    if (pmin > data[i]) pmin = data[i];
+                                    unsigned char pix = data[i];
+                                    if (pmax < pix) pmax = pix;
+                                    if (pmin > pix) pmin = pix;
+                                }
+                                size_t index = 0;
+                                for (size_t i = 0; i < size; i++) {
+                                    unsigned char pix = data[i];
+                                    if (pmax != pmin) pix = int((unsigned(pix) - pmin) * 255 / (pmax - pmin)); // normalization
+                                    qtImage[index++] = pix;
+                                    qtImage[index++] = pix;
+                                    qtImage[index++] = pix;
+                                    qtImage[index++] = 0xFF;
+                                }
+
+
+
+                            } else if (img.channelSpace() == ChannelSpace::u_16_2) {
+                                unsigned short* data = img.dataPointer<unsigned short>();
+                                unsigned short pmax = 0, pmin = 65535;
+                                if (img.endianness() == Endianness::MSB) {
+                                    for (size_t i = 0; i < size; i++) {
+                                        data[i] = data[i] << 8 | data[i] >> 8; // swap bytes
+                                        if (pmax < data[i]) pmax = data[i];
+                                        if (pmin > data[i]) pmin = data[i];
+                                    }
+                                } else {
+                                    for (size_t i = 0; i < size; i++) {
+                                        if (pmax < data[i]) pmax = data[i];
+                                        if (pmin > data[i]) pmin = data[i];
+                                    }
+                                }
+                                size_t index = 0;
+                                for (size_t i = 0; i < size; i++) {
+                                    unsigned short pix = data[i];
+                                    if (pmax != pmin) pix = int((data[i] - pmin) * 255 / (pmax - pmin)); // normalization
+                                    qtImage[index++] = pix;
+                                    qtImage[index++] = pix;
+                                    qtImage[index++] = pix;
+                                    qtImage[index++] = 0xFF;
                                 }
                             } else {
-                                for (size_t i = 0; i < size; i++) {
-                                    if (pmax < data[i]) pmax = data[i];
-                                    if (pmin > data[i]) pmin = data[i];
-                                }
+                                return;
                             }
-                            size_t index = 0;
-                            for (size_t i = 0; i < size; i++) {
-                                unsigned short pix = data[i];
-                                if (pmax != pmin) pix = int((data[i] - pmin) * 255 / (pmax - pmin)); // normalization
-                                qtImage[index++] = pix;
-                                qtImage[index++] = pix;
-                                qtImage[index++] = pix;
-                                qtImage[index++] = 0xFF;
-                            }
-                        } else {
-                            return;
+
+                            // update data in the hash
+                            img.setData(qtImage); // Update data
+                            img.encoding() = Encoding::RGBA; // Update encoding
                         }
-                        
-                        // update data in the hash
-                        img.setData(qtImage); // Update data
-                        img.encoding() = Encoding::RGBA; // Update encoding
+                        // TODO: At the moment we don't touch color images!!!
+                        // TODO: Color image's support
                     }
-                    // TODO: At the moment we don't touch color images!!!
-                    // TODO: Color image's support
                 }
+            } catch (const Exception& e) {
+                KARABO_LOG_ERROR << "Problem in preprocessImageData(): " << e.userFriendlyMsg();
             }
         }
 
 
-            void GuiServerDevice::slotChanged(const karabo::util::Hash& what, const std::string & deviceId) {
+        void GuiServerDevice::slotChanged(const karabo::util::Hash& what, const std::string & deviceId) {
+            try {
                 Hash modified(what);
                 preprocessImageData(modified);
 
@@ -376,10 +453,14 @@ namespace karabo {
                         it->first->write(header, body);
                     }
                 }
+            } catch (const Exception& e) {
+                KARABO_LOG_ERROR << "Problem in slotChanged(): " << e.userFriendlyMsg();
             }
+        }
 
 
-            void GuiServerDevice::slotSchemaUpdated(const karabo::util::Schema& description, const std::string & deviceId) {
+        void GuiServerDevice::slotSchemaUpdated(const karabo::util::Schema& description, const std::string & deviceId) {
+            try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "Broadcasting schema updated";
                 Hash header("type", "schemaUpdated", "deviceId", deviceId);
                 Hash body("device." + deviceId + ".description", description);
@@ -389,10 +470,14 @@ namespace karabo {
                 for (channelIterator it = m_channels.begin(); it != m_channels.end(); ++it) {
                     it->first->write(header, body);
                 }
+            } catch (const Exception& e) {
+                KARABO_LOG_ERROR << "Problem in slotSchemaUpdated(): " << e.userFriendlyMsg();
             }
+        }
 
 
-            void GuiServerDevice::slotNotification(const std::string& type, const std::string& shortMessage, const std::string& detailedMessage, const std::string & deviceId) {
+        void GuiServerDevice::slotNotification(const std::string& type, const std::string& shortMessage, const std::string& detailedMessage, const std::string & deviceId) {
+            try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "Broadcasting notification";
                 Hash header("type", "notification", "deviceId", deviceId);
                 Hash body("type", type, "shortMsg", shortMessage, "detailedMsg", detailedMessage);
@@ -402,10 +487,14 @@ namespace karabo {
                 for (channelIterator it = m_channels.begin(); it != m_channels.end(); ++it) {
                     it->first->write(header, body);
                 }
+            } catch (const Exception& e) {
+                KARABO_LOG_ERROR << "Problem in slotNotification(): " << e.userFriendlyMsg();
             }
+        }
 
 
-            void GuiServerDevice::logHandler(karabo::net::BrokerChannel::Pointer channel, const std::string& logMessage, const karabo::util::Hash & header) {
+        void GuiServerDevice::logHandler(karabo::net::BrokerChannel::Pointer channel, const std::string& logMessage, const karabo::util::Hash & header) {
+            try {
                 Hash h("type", "log");
                 boost::mutex::scoped_lock lock(m_channelMutex);
                 // Broadcast to all GUIs
@@ -413,17 +502,21 @@ namespace karabo {
                 for (channelIterator it = m_channels.begin(); it != m_channels.end(); ++it) {
                     it->first->write(h, logMessage);
                 }
+            } catch (const Exception& e) {
+                KARABO_LOG_ERROR << "Problem in logHandler(): " << e.userFriendlyMsg();
             }
+        }
 
 
-            void GuiServerDevice::onError(karabo::net::Channel::Pointer channel, const karabo::net::ErrorCode & errorCode) {
-                boost::mutex::scoped_lock lock(m_channelMutex);
-                // TODO Fork on error message
-                std::map<karabo::net::Channel::Pointer, std::set<std::string> >::iterator it = m_channels.find(channel);
-                if (it != m_channels.end()) {
-                    it->first->close(); // This closes socket and unregisters channel from connection
-                    m_channels.erase(it);
-                }
+        void GuiServerDevice::onError(karabo::net::Channel::Pointer channel, const karabo::net::ErrorCode & errorCode) {
+            boost::mutex::scoped_lock lock(m_channelMutex);
+            KARABO_LOG_INFO << "Network notification: " << errorCode.message();
+            // TODO Fork on error message
+            std::map<karabo::net::Channel::Pointer, std::set<std::string> >::iterator it = m_channels.find(channel);
+            if (it != m_channels.end()) {
+                it->first->close(); // This closes socket and unregisters channel from connection
+                m_channels.erase(it);
             }
         }
     }
+}

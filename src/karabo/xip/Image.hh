@@ -122,18 +122,6 @@ namespace karabo {
              *      Instance Characteristics       *
              ***************************************/
 
-            inline void setEncoding(const EncodingType& encoding) {
-                m_img->setEncoding(encoding);
-            }
-
-            inline void setChannelSpace(const ChannelSpaceType& channelSpace) {
-                m_img->setChannelSpace(channelSpace);
-            }
-
-            inline void setEndian(const EndiannessType& endian) {
-                m_img->setEndian(endian);
-            }
-
             inline const int dimensionality() const {
                 return m_img->dimensionality();
             }
