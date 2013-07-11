@@ -127,7 +127,7 @@ class MainWindow(QMainWindow):
         leftArea = QSplitter(Qt.Vertical, mainSplitter)
         self.__navigationTab = DockTabWindow("Navigation", leftArea)
         self.__navigationTab.addDockableTab(navigationPanel, "Navigation")
-        leftArea.setStretchFactor(0,1)
+        leftArea.setStretchFactor(0,2)
 
         projectPanel = ProjectPanel()
         self.__projectTab = DockTabWindow("Projects", leftArea)
