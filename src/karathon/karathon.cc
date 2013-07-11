@@ -21,7 +21,7 @@ void exportPyUtilSchema();
 void exportPyUtilClassInfo();
 void exportPyUtilTrainstamp();
 void exportPyUtilEpochstamp();
-void exportPyUtilTimestamp2();
+void exportPyUtilTimestamp();
 
 // io
 void exportPyIoFileTools();
@@ -59,7 +59,7 @@ BOOST_PYTHON_MODULE(libkarathon) {
     exportPyUtilClassInfo();
     exportPyUtilTrainstamp();
     exportPyUtilEpochstamp();
-    exportPyUtilTimestamp2();
+    exportPyUtilTimestamp();
     
     // io
     exportPyIoFileTools();
