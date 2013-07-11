@@ -479,7 +479,7 @@ namespace karabo {
 
         void TcpChannel::prepareHashFromHeader(karabo::util::Hash& hash) const {
             if (m_textSerializer) {
-                m_textSerializer->load(hash, &m_inboundHeader[0]);
+                m_textSerializer->load(hash, &m_inboundHeader[0], m_inboundHeader.size());
             } else {
                 m_binarySerializer->load(hash, m_inboundHeader);
             }
@@ -499,7 +499,7 @@ namespace karabo {
 
         void TcpChannel::prepareHashFromData(karabo::util::Hash& hash) const {
             if (m_textSerializer) {
-                m_textSerializer->load(hash, &m_inboundData[0]);
+                m_textSerializer->load(hash, &m_inboundData[0], m_inboundData.size());
             } else {
                 m_binarySerializer->load(hash, m_inboundData);
             }
