@@ -7,47 +7,47 @@
  */
 #include <boost/python.hpp>
 
-#include <karabo/util/Timestamp2.hh>
+#include <karabo/util/Timestamp.hh>
 
 namespace bp = boost::python;
 using namespace karabo::util;
 using namespace std;
 
-void exportPyUtilTimestamp2() {
+void exportPyUtilTimestamp() {
        
-bp::class_<Timestamp2> ts("Timestamp2", bp::init<>());
+bp::class_<Timestamp> ts("Timestamp", bp::init<>());
     ts.def(bp::init<Epochstamp const &, Trainstamp const &>((bp::arg("e"), bp::arg("t"))));
     
     ts.def("getSeconds"
-           , (unsigned long long const & (Timestamp2::*)() const)(&Timestamp2::getSeconds)
+           , (unsigned long long const & (Timestamp::*)() const)(&Timestamp::getSeconds)
            , bp::return_value_policy< bp::copy_const_reference >() );
     
     ts.def("getFractionalSeconds"
-           , (unsigned long long const & (Timestamp2::*)() const)(&Timestamp2::getFractionalSeconds)
+           , (unsigned long long const & (Timestamp::*)() const)(&Timestamp::getFractionalSeconds)
            , bp::return_value_policy< bp::copy_const_reference >() );
     
     ts.def("getTrainId"
-           , (unsigned long long const & (Timestamp2::*)() const)(&Timestamp2::getTrainId)
+           , (unsigned long long const & (Timestamp::*)() const)(&Timestamp::getTrainId)
            , bp::return_value_policy< bp::copy_const_reference >() );
     
     ts.def("fromHashAttributes"
-           , &Timestamp2::fromHashAttributes
+           , &Timestamp::fromHashAttributes
            , bp::arg("attributes") );
     ts.staticmethod("fromHashAttributes");
     
     ts.def("hashAttributesContainTimeInformation"
-           , &Timestamp2::hashAttributesContainTimeInformation
+           , &Timestamp::hashAttributesContainTimeInformation
            , bp::arg("attributes") );
     ts.staticmethod("hashAttributesContainTimeInformation");
     
     ts.def("toIso8601"
-           , (string (Timestamp2::*)() const)(&Timestamp2::toIso8601));
+           , (string (Timestamp::*)() const)(&Timestamp::toIso8601));
     
     ts.def("toHashAttributes"
-           , (void (Timestamp2::*)(Hash::Attributes &) const)(&Timestamp2::toHashAttributes)
+           , (void (Timestamp::*)(Hash::Attributes &) const)(&Timestamp::toHashAttributes)
            , bp::arg("attributes") );
     
     ts.def("toFormattedString"
-           , (string (Timestamp2::*)(const string &) const)(&Timestamp2::toFormattedString)
+           , (string (Timestamp::*)(const string &) const)(&Timestamp::toFormattedString)
            , bp::arg("format") );
 }
