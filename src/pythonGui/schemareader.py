@@ -139,8 +139,8 @@ class SchemaReader(object):
 
 
     def _handleLeaf(self, key, item):
+        #print "_handleLeaf"
         self._getAssignment(key, item)
-        accessMode = self._getAccessMode(key, item)
         
         self._setDescription(key, item)
         defaultValue = self._getDefaultValue(key, item)
@@ -163,6 +163,7 @@ class SchemaReader(object):
 
 
     def _handleChoiceOfNodes(self, key, parentItem):
+        #print "_handleChoiceOfNodes"
         defaultValue = self._getDefaultValue(key, parentItem)
         
         parentItem.isChoiceElement = True
@@ -376,31 +377,39 @@ class SchemaReader(object):
 
     def _getAccessMode(self, key, parentItem):
         if not self.__schema.hasAccessMode(key):
-            print "AccessMode.UNDEFINED"
+            #print "AccessMode.UNDEFINED"
             return AccessMode.UNDEFINED
         
         if self.__schema.isAccessInitOnly(key):
             #print "AccessMode.INITONLY"
+            self._checkForAttributes(key, parentItem, AccessMode.INITONLY)
             return AccessMode.INITONLY
         elif self.__schema.isAccessReconfigurable(key):
             #print "AccessMode.RECONFIGURABLE"
+            self._checkForAttributes(key, parentItem, AccessMode.RECONFIGURABLE)
             return AccessMode.RECONFIGURABLE
         elif self.__schema.isAccessReadOnly(key):
             #print "AccessMode.READONLY"
-            if self.__schema.hasWarnLow(key):
-                self._handleFloatAttribute(parentItem, key + ".warnLow",
-                                           "Warn low", self.__schema.getWarnLow(key))
-            if self.__schema.hasWarnHigh(key):
-                self._handleFloatAttribute(parentItem, key + ".warnHigh",
-                                           "Warn high", self.__schema.getWarnHigh(key))
-            if self.__schema.hasAlarmLow(key):
-                self._handleFloatAttribute(parentItem, key + ".alarmLow",
-                                           "Alarm low", self.__schema.getAlarmLow(key))
-            if self.__schema.hasAlarmHigh(key):
-                self._handleFloatAttribute(parentItem, key + ".alarmHigh",
-                                           "Alarm high", self.__schema.getAlarmHigh(key))
+            self._checkForAttributes(key, parentItem, AccessMode.READONLY)
             return AccessMode.READONLY
         
+        return AccessMode.UNDEFINED
+
+
+    def _checkForAttributes(self, key, parentItem, accessMode):
+        if self.__schema.hasWarnLow(key):
+            self._handleFloatAttribute(parentItem, key + "@warnLow",
+                                       "Warn low", self.__schema.getWarnLow(key), accessMode)
+        if self.__schema.hasWarnHigh(key):
+            self._handleFloatAttribute(parentItem, key + "@warnHigh",
+                                       "Warn high", self.__schema.getWarnHigh(key), accessMode)
+        if self.__schema.hasAlarmLow(key):
+            self._handleFloatAttribute(parentItem, key + "@alarmLow",
+                                       "Alarm low", self.__schema.getAlarmLow(key), accessMode)
+        if self.__schema.hasAlarmHigh(key):
+            self._handleFloatAttribute(parentItem, key + "@alarmHigh",
+                                       "Alarm high", self.__schema.getAlarmHigh(key), accessMode)
+
 
     def _setExpertLevel(self, key, item):
         if not self.__schema.hasExpertLevel(key):
@@ -446,6 +455,7 @@ class SchemaReader(object):
 
 ### functions for setting editable components depending on value type ###
     def _handleBool(self, key, item, defaultValue, unitSymbol):
+        #print "_handleBool"
         item.classAlias = "Toggle Field"
         item.setIcon(0, QIcon(":boolean"))
         
@@ -468,6 +478,7 @@ class SchemaReader(object):
 
 
     def _handleString(self, key, item, defaultValue, unitSymbol):
+        #print "_handleString"
         hasOptions = self.__schema.hasOptions(key)
         if hasOptions:
             item.classAlias = "Selection Field"
@@ -500,6 +511,7 @@ class SchemaReader(object):
 
 
     def _handleInteger(self, key, item, defaultValue, unitSymbol):
+        #print "_handleInteger"
         hasOptions = self.__schema.hasOptions(key)
         if hasOptions:
             item.classAlias = "Selection Field"
@@ -534,6 +546,7 @@ class SchemaReader(object):
 
 
     def _handleFloat(self, key, item, defaultValue, unitSymbol):
+        #print "_handleFloat"
         hasOptions = self.__schema.hasOptions(key)
         if hasOptions:
             item.classAlias = "Selection Field"
@@ -567,34 +580,36 @@ class SchemaReader(object):
         item.editableComponent = editableComponent
 
 
-    def _handleFloatAttribute(self, parentItem, key, text, value):
+    def _handleFloatAttribute(self, parentItem, key, text, value, accessMode):
         # TODO: needs to have unique key
         fullPath = self.__rootPath + "." + key
         item = AttributeTreeWidgetItem(fullPath, self.__treeWidget, parentItem)
         item.setText(0, text)
         
-        #print "_handleFloatAttribute", key, text, value
+        print "_handleFloatAttribute", key, text, value, accessMode
         
         item.classAlias = "Float Field"
         item.setIcon(0, QIcon(":float"))
         
-        accessMode = self._getAccessMode(key, parentItem)
         editableComponent = None
-        
-        if self.__deviceType is NavigationItemTypes.CLASS:
-            if (accessMode is AccessMode.INITONLY) or (accessMode is AccessMode.RECONFIGURABLE):
-                editableComponent = EditableNoApplyComponent(classAlias=item.classAlias, key=item.internalKey, value=value)
-                #value=attributeItem.defaultValue, valueType=attributeItem.valueType, unitSymbol=unitSymbol)
+        if accessMode is AccessMode.READONLY:
+            item.displayComponent.onValueChanged(key, value)
         else:
-            if accessMode is AccessMode.RECONFIGURABLE:
-                editableComponent = EditableApplyLaterComponent(classAlias=item.classAlias, key=item.internalKey, value=value)
-                #value=None, valueType=attributeItem.valueType, unitSymbol=unitSymbol)
-                editableComponent.signalApplyChanged.connect(self.__treeWidget.onApplyChanged)
+            if self.__deviceType is NavigationItemTypes.CLASS:
+                if (accessMode is AccessMode.INITONLY) or (accessMode is AccessMode.RECONFIGURABLE):
+                    editableComponent = EditableNoApplyComponent(classAlias=item.classAlias, key=item.internalKey, value=value)
+                    #value=attributeItem.defaultValue, valueType=attributeItem.valueType, unitSymbol=unitSymbol)
+            else:
+                if accessMode is AccessMode.RECONFIGURABLE:
+                    editableComponent = EditableApplyLaterComponent(classAlias=item.classAlias, key=item.internalKey, value=value)
+                    #value=None, valueType=attributeItem.valueType, unitSymbol=unitSymbol)
+                    editableComponent.signalApplyChanged.connect(self.__treeWidget.onApplyChanged)
 
         item.editableComponent = editableComponent
 
 
     def _handleVectorString(self, key, item, defaultValue, unitSymbol):
+        #print "_handleVectorString"
 
         item.classAlias = "Histogram"
         item.setIcon(0, QIcon(":enum"))
