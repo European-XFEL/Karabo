@@ -39,7 +39,6 @@ OBJECTFILES= \
 	${OBJECTDIR}/_ext/163556830/DeviceClient.o \
 	${OBJECTDIR}/_ext/163556830/DeviceServer.o \
 	${OBJECTDIR}/_ext/163556830/GuiServerDevice.o \
-	${OBJECTDIR}/_ext/163556830/MasterDevice.o \
 	${OBJECTDIR}/_ext/1072794519/BinaryFileInput.o \
 	${OBJECTDIR}/_ext/1072794519/BinaryFileOutput.o \
 	${OBJECTDIR}/_ext/1072794519/HashBinarySerializer.o \
@@ -101,6 +100,9 @@ OBJECTFILES= \
 	${OBJECTDIR}/_ext/163016059/Profiler.o \
 	${OBJECTDIR}/_ext/163016059/Schema.o \
 	${OBJECTDIR}/_ext/163016059/StringTools.o \
+	${OBJECTDIR}/_ext/163016059/TimeDuration.o \
+	${OBJECTDIR}/_ext/163016059/TimePeriod.o \
+	${OBJECTDIR}/_ext/163016059/TimeProfiler.o \
 	${OBJECTDIR}/_ext/163016059/Timer.o \
 	${OBJECTDIR}/_ext/163016059/Timestamp.o \
 	${OBJECTDIR}/_ext/163016059/Timestamp2.o \
@@ -113,9 +115,9 @@ OBJECTFILES= \
 	${OBJECTDIR}/_ext/1103122620/CpuEnvironment.o \
 	${OBJECTDIR}/_ext/1103122620/CpuImage.o \
 	${OBJECTDIR}/_ext/1103122620/CpuImageBinarySerializer.o \
-	${OBJECTDIR}/_ext/1103122620/Image.o \
 	${OBJECTDIR}/_ext/1103122620/ImageFileReader.o \
 	${OBJECTDIR}/_ext/1103122620/ImageFileWriter.o \
+	${OBJECTDIR}/_ext/1103122620/RawImageData.o \
 	${OBJECTDIR}/_ext/1103122747/Memory.o \
 	${OBJECTDIR}/_ext/1103122747/NetworkInput.o \
 	${OBJECTDIR}/_ext/1103122747/NetworkOutput.o \
@@ -181,11 +183,6 @@ ${OBJECTDIR}/_ext/163556830/GuiServerDevice.o: ../../../src/karabo/core/GuiServe
 	${MKDIR} -p ${OBJECTDIR}/_ext/163556830
 	${RM} $@.d
 	$(COMPILE.cc) -O2 -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163556830/GuiServerDevice.o ../../../src/karabo/core/GuiServerDevice.cc
-
-${OBJECTDIR}/_ext/163556830/MasterDevice.o: ../../../src/karabo/core/MasterDevice.cc 
-	${MKDIR} -p ${OBJECTDIR}/_ext/163556830
-	${RM} $@.d
-	$(COMPILE.cc) -O2 -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163556830/MasterDevice.o ../../../src/karabo/core/MasterDevice.cc
 
 ${OBJECTDIR}/_ext/1072794519/BinaryFileInput.o: ../../../src/karabo/io/BinaryFileInput.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1072794519
@@ -492,6 +489,21 @@ ${OBJECTDIR}/_ext/163016059/StringTools.o: ../../../src/karabo/util/StringTools.
 	${RM} $@.d
 	$(COMPILE.cc) -O2 -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163016059/StringTools.o ../../../src/karabo/util/StringTools.cc
 
+${OBJECTDIR}/_ext/163016059/TimeDuration.o: ../../../src/karabo/util/TimeDuration.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
+	${RM} $@.d
+	$(COMPILE.cc) -O2 -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163016059/TimeDuration.o ../../../src/karabo/util/TimeDuration.cc
+
+${OBJECTDIR}/_ext/163016059/TimePeriod.o: ../../../src/karabo/util/TimePeriod.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
+	${RM} $@.d
+	$(COMPILE.cc) -O2 -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163016059/TimePeriod.o ../../../src/karabo/util/TimePeriod.cc
+
+${OBJECTDIR}/_ext/163016059/TimeProfiler.o: ../../../src/karabo/util/TimeProfiler.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
+	${RM} $@.d
+	$(COMPILE.cc) -O2 -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163016059/TimeProfiler.o ../../../src/karabo/util/TimeProfiler.cc
+
 ${OBJECTDIR}/_ext/163016059/Timer.o: ../../../src/karabo/util/Timer.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
 	${RM} $@.d
@@ -552,11 +564,6 @@ ${OBJECTDIR}/_ext/1103122620/CpuImageBinarySerializer.o: ../../../src/karabo/xip
 	${RM} $@.d
 	$(COMPILE.cc) -O2 -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1103122620/CpuImageBinarySerializer.o ../../../src/karabo/xip/CpuImageBinarySerializer.cc
 
-${OBJECTDIR}/_ext/1103122620/Image.o: ../../../src/karabo/xip/Image.cc 
-	${MKDIR} -p ${OBJECTDIR}/_ext/1103122620
-	${RM} $@.d
-	$(COMPILE.cc) -O2 -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1103122620/Image.o ../../../src/karabo/xip/Image.cc
-
 ${OBJECTDIR}/_ext/1103122620/ImageFileReader.o: ../../../src/karabo/xip/ImageFileReader.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1103122620
 	${RM} $@.d
@@ -566,6 +573,11 @@ ${OBJECTDIR}/_ext/1103122620/ImageFileWriter.o: ../../../src/karabo/xip/ImageFil
 	${MKDIR} -p ${OBJECTDIR}/_ext/1103122620
 	${RM} $@.d
 	$(COMPILE.cc) -O2 -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1103122620/ImageFileWriter.o ../../../src/karabo/xip/ImageFileWriter.cc
+
+${OBJECTDIR}/_ext/1103122620/RawImageData.o: ../../../src/karabo/xip/RawImageData.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1103122620
+	${RM} $@.d
+	$(COMPILE.cc) -O2 -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1103122620/RawImageData.o ../../../src/karabo/xip/RawImageData.cc
 
 ${OBJECTDIR}/_ext/1103122747/Memory.o: ../../../src/karabo/xms/Memory.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1103122747
@@ -853,19 +865,6 @@ ${OBJECTDIR}/_ext/163556830/GuiServerDevice_nomain.o: ${OBJECTDIR}/_ext/16355683
 	    $(COMPILE.cc) -O2 -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163556830/GuiServerDevice_nomain.o ../../../src/karabo/core/GuiServerDevice.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/163556830/GuiServerDevice.o ${OBJECTDIR}/_ext/163556830/GuiServerDevice_nomain.o;\
-	fi
-
-${OBJECTDIR}/_ext/163556830/MasterDevice_nomain.o: ${OBJECTDIR}/_ext/163556830/MasterDevice.o ../../../src/karabo/core/MasterDevice.cc 
-	${MKDIR} -p ${OBJECTDIR}/_ext/163556830
-	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/163556830/MasterDevice.o`; \
-	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
-	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
-	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
-	then  \
-	    ${RM} $@.d;\
-	    $(COMPILE.cc) -O2 -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163556830/MasterDevice_nomain.o ../../../src/karabo/core/MasterDevice.cc;\
-	else  \
-	    ${CP} ${OBJECTDIR}/_ext/163556830/MasterDevice.o ${OBJECTDIR}/_ext/163556830/MasterDevice_nomain.o;\
 	fi
 
 ${OBJECTDIR}/_ext/1072794519/BinaryFileInput_nomain.o: ${OBJECTDIR}/_ext/1072794519/BinaryFileInput.o ../../../src/karabo/io/BinaryFileInput.cc 
@@ -1661,6 +1660,45 @@ ${OBJECTDIR}/_ext/163016059/StringTools_nomain.o: ${OBJECTDIR}/_ext/163016059/St
 	    ${CP} ${OBJECTDIR}/_ext/163016059/StringTools.o ${OBJECTDIR}/_ext/163016059/StringTools_nomain.o;\
 	fi
 
+${OBJECTDIR}/_ext/163016059/TimeDuration_nomain.o: ${OBJECTDIR}/_ext/163016059/TimeDuration.o ../../../src/karabo/util/TimeDuration.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/163016059/TimeDuration.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} $@.d;\
+	    $(COMPILE.cc) -O2 -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163016059/TimeDuration_nomain.o ../../../src/karabo/util/TimeDuration.cc;\
+	else  \
+	    ${CP} ${OBJECTDIR}/_ext/163016059/TimeDuration.o ${OBJECTDIR}/_ext/163016059/TimeDuration_nomain.o;\
+	fi
+
+${OBJECTDIR}/_ext/163016059/TimePeriod_nomain.o: ${OBJECTDIR}/_ext/163016059/TimePeriod.o ../../../src/karabo/util/TimePeriod.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/163016059/TimePeriod.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} $@.d;\
+	    $(COMPILE.cc) -O2 -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163016059/TimePeriod_nomain.o ../../../src/karabo/util/TimePeriod.cc;\
+	else  \
+	    ${CP} ${OBJECTDIR}/_ext/163016059/TimePeriod.o ${OBJECTDIR}/_ext/163016059/TimePeriod_nomain.o;\
+	fi
+
+${OBJECTDIR}/_ext/163016059/TimeProfiler_nomain.o: ${OBJECTDIR}/_ext/163016059/TimeProfiler.o ../../../src/karabo/util/TimeProfiler.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/163016059/TimeProfiler.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} $@.d;\
+	    $(COMPILE.cc) -O2 -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163016059/TimeProfiler_nomain.o ../../../src/karabo/util/TimeProfiler.cc;\
+	else  \
+	    ${CP} ${OBJECTDIR}/_ext/163016059/TimeProfiler.o ${OBJECTDIR}/_ext/163016059/TimeProfiler_nomain.o;\
+	fi
+
 ${OBJECTDIR}/_ext/163016059/Timer_nomain.o: ${OBJECTDIR}/_ext/163016059/Timer.o ../../../src/karabo/util/Timer.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
 	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/163016059/Timer.o`; \
@@ -1817,19 +1855,6 @@ ${OBJECTDIR}/_ext/1103122620/CpuImageBinarySerializer_nomain.o: ${OBJECTDIR}/_ex
 	    ${CP} ${OBJECTDIR}/_ext/1103122620/CpuImageBinarySerializer.o ${OBJECTDIR}/_ext/1103122620/CpuImageBinarySerializer_nomain.o;\
 	fi
 
-${OBJECTDIR}/_ext/1103122620/Image_nomain.o: ${OBJECTDIR}/_ext/1103122620/Image.o ../../../src/karabo/xip/Image.cc 
-	${MKDIR} -p ${OBJECTDIR}/_ext/1103122620
-	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/1103122620/Image.o`; \
-	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
-	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
-	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
-	then  \
-	    ${RM} $@.d;\
-	    $(COMPILE.cc) -O2 -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1103122620/Image_nomain.o ../../../src/karabo/xip/Image.cc;\
-	else  \
-	    ${CP} ${OBJECTDIR}/_ext/1103122620/Image.o ${OBJECTDIR}/_ext/1103122620/Image_nomain.o;\
-	fi
-
 ${OBJECTDIR}/_ext/1103122620/ImageFileReader_nomain.o: ${OBJECTDIR}/_ext/1103122620/ImageFileReader.o ../../../src/karabo/xip/ImageFileReader.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1103122620
 	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/1103122620/ImageFileReader.o`; \
@@ -1854,6 +1879,19 @@ ${OBJECTDIR}/_ext/1103122620/ImageFileWriter_nomain.o: ${OBJECTDIR}/_ext/1103122
 	    $(COMPILE.cc) -O2 -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1103122620/ImageFileWriter_nomain.o ../../../src/karabo/xip/ImageFileWriter.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/1103122620/ImageFileWriter.o ${OBJECTDIR}/_ext/1103122620/ImageFileWriter_nomain.o;\
+	fi
+
+${OBJECTDIR}/_ext/1103122620/RawImageData_nomain.o: ${OBJECTDIR}/_ext/1103122620/RawImageData.o ../../../src/karabo/xip/RawImageData.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1103122620
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/1103122620/RawImageData.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} $@.d;\
+	    $(COMPILE.cc) -O2 -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1103122620/RawImageData_nomain.o ../../../src/karabo/xip/RawImageData.cc;\
+	else  \
+	    ${CP} ${OBJECTDIR}/_ext/1103122620/RawImageData.o ${OBJECTDIR}/_ext/1103122620/RawImageData_nomain.o;\
 	fi
 
 ${OBJECTDIR}/_ext/1103122747/Memory_nomain.o: ${OBJECTDIR}/_ext/1103122747/Memory.o ../../../src/karabo/xms/Memory.cc 

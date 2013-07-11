@@ -162,7 +162,7 @@ namespace karabo {
                 std::string m_state;
                 int m_accessLevel;
 
-                AssemblyRules(const AccessType& accessMode = INIT | WRITE, const std::string& state = "", const int accessLevel = -1) :
+                AssemblyRules(const AccessType& accessMode = INIT | WRITE | READ, const std::string& state = "", const int accessLevel = -1) :
                 m_accessMode(accessMode), m_state(state), m_accessLevel(accessLevel) {
                 }
             };
@@ -219,10 +219,10 @@ namespace karabo {
         public:
 
             // Constructs empty anonymous schema
-            Schema();
+            //Schema();
 
             // Constructs empty schema for given classId
-            Schema(const std::string& classId, const Schema::AssemblyRules& rules = Schema::AssemblyRules());
+            Schema(const std::string& classId = "", const Schema::AssemblyRules& rules = Schema::AssemblyRules());
 
             void setAssemblyRules(const Schema::AssemblyRules& rules);
 

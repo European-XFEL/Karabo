@@ -542,7 +542,7 @@
                   <xs:attribute name="dataType" type="xs:string" />
                 </xs:complexType>
               </xs:element>
-              <xs:element name="pixelArray" minOccurs="0" maxOccurs="1">
+              <xs:element name="data" minOccurs="0" maxOccurs="1">
                 <xs:annotation>
                   <xs:documentation>
                     <a:description>Linear representation (row-wise) of the image pixels</a:description>

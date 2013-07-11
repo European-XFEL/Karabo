@@ -92,13 +92,13 @@ void ImageTest::testImageHeader() {
         assert(header.get<int>("__dimZ") == 2);
         assert(header.get<int>("__enc") == Encoding::UNDEFINED);
         assert(header.get<int>("__cha") == ChannelSpace::UNDEFINED);
-        assert(header.get<int>("__end") == Endian::UNDEFINED);
+        assert(header.get<int>("__end") == Endianness::UNDEFINED);
     }
     {
         Image<char> img(CPU, 4, 4);
         img.setEncoding(Encoding::GRAY);
         img.setChannelSpace(ChannelSpace::u_10_2);
-        img.setEndian(Endian::LSB);
+        img.setEndian(Endianness::LSB);
         //img.setHeader(Hash("p1", "Just for fun", "p2", 9.87654321));
         img.setHeaderParam("p1", "Just for fun");
         img.setHeaderParam("p2", 9.87654321);
@@ -111,7 +111,7 @@ void ImageTest::testImageHeader() {
         assert(header.get<int>("__dimZ") == 1);
         assert(header.get<int>("__enc") == Encoding::GRAY);
         assert(header.get<int>("__cha") == ChannelSpace::u_10_2);
-        assert(header.get<int>("__end") == Endian::LSB);
+        assert(header.get<int>("__end") == Endianness::LSB);
     }
     
 

@@ -145,6 +145,12 @@ namespace karabo {
 
         void DeviceClient::slotChanged(const karabo::util::Hash& hash, const std::string & instanceId) {
             KARABO_LOG_FRAMEWORK_DEBUG << "slotChanged was called with:\n" << hash;
+            for (Hash::const_iterator it = hash.begin(); it != hash.end(); ++it) {
+                if (it->getType() == Types::VECTOR_CHAR && it->hasAttribute("archive")) {
+                    //if
+                }
+            }
+            
             boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
             Hash& tmp = m_runtimeSystemDescription.get<Hash>("device." + instanceId + ".configuration");
             tmp.merge(hash);
@@ -791,19 +797,22 @@ namespace karabo {
 
             #define KARABO_REGISTER_CALLBACK(valueType) \
 if (nodeData) {\
-    boost::any_cast < boost::function<void (const std::string&, const std::string&, const valueType&, const karabo::util::Timestamp&, const boost::any&) > >(nodeFunc->getValueAsAny())(instanceId, currentPath, it->getValue<valueType >(), t, nodeData->getValueAsAny());\
+    boost::any_cast < boost::function<void (const std::string&, const std::string&, const valueType&, const karabo::util::Timestamp2&, const boost::any&) > >(nodeFunc->getValueAsAny())(instanceId, currentPath, it->getValue<valueType >(), t, nodeData->getValueAsAny());\
 } else {\
-    boost::any_cast < boost::function<void (const std::string&, const std::string&, const valueType&, const karabo::util::Timestamp&) > >(nodeFunc->getValueAsAny())(instanceId, currentPath, it->getValue<valueType >(), t);\
+    boost::any_cast < boost::function<void (const std::string&, const std::string&, const valueType&, const karabo::util::Timestamp2&) > >(nodeFunc->getValueAsAny())(instanceId, currentPath, it->getValue<valueType >(), t);\
 }
 
             for (karabo::util::Hash::const_iterator it = current.begin(); it != current.end(); ++it) {
                 std::string currentPath = it->getKey();
                 if (!path.empty()) currentPath = path + "." + it->getKey();
                 if (registered.has(currentPath)) {
-                    Timestamp t;
-                    if (it->hasAttribute("t")) {
-                        t.setMsSinceEpoch(it->getAttribute<unsigned long long>("t"));
+                    Timestamp2 t;
+                    try {
+                        t = Timestamp2::fromHashAttributes(it->getAttributes());
+                    } catch (...) {
+                        KARABO_LOG_FRAMEWORK_WARN << "No timestamp information given on \"" << it->getKey() << "/";
                     }
+                    
                     const Hash& entry = registered.get<Hash > (currentPath);
                     boost::optional<const Hash::Node&> nodeFunc = entry.find("_function");
                     boost::optional<const Hash::Node&> nodeData = entry.find("_userData");

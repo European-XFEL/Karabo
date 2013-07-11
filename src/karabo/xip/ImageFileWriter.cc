@@ -11,7 +11,7 @@
 
 namespace karabo {
     namespace xip {
-
+        
         KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::AbstractOutput, karabo::io::Output<CpuImage<char> >, ImageFileWriter<char>)
         KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::Output<CpuImage<char> >, ImageFileWriter<char>)
 
