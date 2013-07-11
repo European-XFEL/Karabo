@@ -205,9 +205,6 @@ class Network(QObject):
                         Manager().onSelectNewDevice(deviceKey + "." + deviceId)
             elif type == "instanceUpdated":
                 bodyHash = self.__textSerializer.load(self.__bodyBytes)
-                print "INCOMING UPDATE "
-                print bodyHash
-                print ""
                 Manager().handleSystemTopology(bodyHash)
             elif type == "instanceGone":
                 Manager().handleInstanceGone(str(self.__bodyBytes))

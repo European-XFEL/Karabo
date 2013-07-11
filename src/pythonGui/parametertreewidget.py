@@ -318,9 +318,10 @@ class ParameterTreeWidget(QTreeWidget):
             configChangeType = ConfigChangeTypes.DEVICE_INSTANCE_CONFIG_CHANGED
         
         if self.__classId is None:
-            keys = self.instanceKey.split('+', 1)
-            if len(keys) is 2:
-                self.__classId = str(keys[1])
+            print "onFileOpen classId not set"
+            #keys = self.instanceKey.split('+', 1)
+            #if len(keys) is 2:
+            #    self.__classId = str(keys[1])
         
         # TODO: Remove dirty hack for scientific computing again!!!
         croppedClassId = self.__classId.split("-")
