@@ -16,6 +16,65 @@
 namespace karabo {
     namespace xip {
 
+        namespace Encoding {
+
+            enum EncodingType {
+
+                UNDEFINED = -1,
+                GRAY,
+                RGB,
+                RGBA,
+                BGR,
+                BGRA,
+                CMYK,
+                YUV,
+                BAYER,
+                JPEG,
+                PNG,
+            };
+        }
+
+        typedef Encoding::EncodingType EncodingType;
+
+        namespace ChannelSpace {
+
+            enum ChannelSpaceType {
+
+                UNDEFINED = -1,
+                u_8_1,
+                s_8_1,
+                u_10_2,
+                s_10_2,
+                u_12_2,
+                s_12_2,
+                u_12_1p5,
+                s_12_1p5,
+                u_16_2,
+                s_16_2,
+                f_16_2,
+                u_32_4,
+                s_32_4,
+                f_32_4,
+                u_64_8,
+                s_64_8,
+                f_64_8,
+            };
+        }
+
+        typedef ChannelSpace::ChannelSpaceType ChannelSpaceType;
+
+        namespace Endianness {
+
+            enum EndiannessType {
+
+                UNDEFINED = -1,
+                LSB,
+                MSB
+            };
+        }
+        
+        typedef Endianness::EndiannessType EndiannessType;
+
         class RawImageData {
 
             karabo::util::Hash* m_hash;
@@ -42,7 +101,7 @@ namespace karabo {
                          const ChannelSpaceType channelSpace,
                          const EndiannessType endianness,
                          const karabo::util::Hash& header) : m_isShared(false) {
-                             
+
                 m_hash = new karabo::util::Hash();
 
                 std::vector<unsigned char>& buffer = m_hash->bindReference<std::vector<unsigned char> >("data");

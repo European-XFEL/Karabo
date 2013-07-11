@@ -244,7 +244,7 @@ namespace karabo {
                     channelSpace = karabo::xip::ChannelSpace::UNDEFINED;
                 }
                 
-                karabo::xip::RawImageData raw(karabo::util::Dims(image.dims()), karabo::xip::Encoding::GRAY, channelSpace);
+                karabo::xip::RawImageData raw(image.byteSize(), karabo::util::Dims(image.dims()), karabo::xip::Encoding::GRAY, channelSpace);
                 std::memcpy(raw.dataPointer<unsigned char>(), image.pixelPointer(), image.byteSize());
                
                 h.setAttribute(key, "image", 1);
