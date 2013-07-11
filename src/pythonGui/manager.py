@@ -329,7 +329,7 @@ class Manager(Singleton):
         
 
     def onDeviceClassValueChanged(self, key, value):
-        print "onDeviceClassValueChanged", key, value
+        #print "onDeviceClassValueChanged", key, value
         self._setFromPath(key, value)
         
         dataNotifier = self._getDataNotifierEditableValue(key)
@@ -338,7 +338,7 @@ class Manager(Singleton):
 
 
     def onDeviceInstanceValueChanged(self, key, value):
-        print "onDeviceInstanceValueChanged", key, value
+        #print "onDeviceInstanceValueChanged", key, value
         # Safety conversion before hashing
         if isinstance(value, QString):
             value = str(value)
@@ -358,7 +358,6 @@ class Manager(Singleton):
 
 
     def onDeviceChangedAsHash(self, instanceKey, config):
-        print "onDeviceChangedAsHash", instanceKey
         paths = config.paths()
         for path in paths:
             dataNotifier = self._getDataNotifierEditableValue(path)
@@ -484,9 +483,11 @@ class Manager(Singleton):
         self.__notifier.signalAlarmFound.emit(alarmData)
 
 
-    def onRefreshInstance(self, internalKey):
-        instanceId = str(internalKey).rsplit('.', 1)[0]
-        self.__notifier.signalRefreshInstance.emit(instanceId)
+    def onRefreshInstance(self, path):
+        deviceId = self._getDeviceIdFromPath(path)
+        if not deviceId:
+            return
+        self.__notifier.signalRefreshInstance.emit(deviceId)
 
    
     def onNewNavigationItem(self, itemInfo):
@@ -649,21 +650,21 @@ class Manager(Singleton):
 
     def handleInstanceGone(self, instanceId):
         # Remove instanceId from central hash and update
-        # TODO: serverId or deviceId - how to distinguish?
-        #if self.__hash.get("server." + instanceId)
-        serverConfig = self.__hash.get("server")
-        deviceConfig = self.__hash.get("device")
         
-        if deviceConfig.has(instanceId):
+        path = None
+        if self.__hash.get("server." + instanceId):
+            path = "server." + instanceId
+            if self.__hash.hasAttribute(path, "host"):
+                parentPath = self.__hash.getAttribute(path, "host")
+        elif self.__hash.has("device." + instanceId):
             path = "device." + instanceId
             if self.__hash.hasAttribute(path, "serverId"):
                 parentPath = "server." + self.__hash.getAttribute(path, "serverId")
             if self.__hash.hasAttribute(path, "classId"):
                 parentPath += ".classes." + self.__hash.getAttribute(path, "classId")
-        elif serverConfig.has(instanceId):
-            path = "server." + instanceId
-            if self.__hash.hasAttribute(path, "host"):
-                parentPath = self.__hash.getAttribute(path, "host")
+        
+        if not path:
+            return
         
         # Remove instance from central hash
         self.__hash.erase(path)

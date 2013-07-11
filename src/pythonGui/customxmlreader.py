@@ -303,14 +303,14 @@ class CustomXmlReader(QXmlStreamReader):
         
         internalKey = None
         isStateToDisplay = False
-        if internalKeys is not None:
+        if internalKeys:
             internalKey = str(internalKeys).split(',')
             
             if len(internalKey) == 1:
                 internalKey = internalKey[0]
 
             # Does key concern state of device?
-            keys = str(internalKey).split('.', 1)
+            keys = str(internalKey).split('.configuration.')
             isStateToDisplay = (keys[1] == "state")
         
         proxyItem = None
