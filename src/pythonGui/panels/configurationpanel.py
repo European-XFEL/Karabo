@@ -518,6 +518,7 @@ class ConfigurationPanel(QWidget):
             schema = itemInfo.get(QString('schema'))
             if schema is None:
                 schema = itemInfo.get('schema')
+            
             if schema:
                 self.__internalKeySchemaLoadedMap[key] = True
             else:
