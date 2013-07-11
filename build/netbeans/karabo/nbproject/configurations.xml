@@ -228,8 +228,6 @@
           <itemPath>../../../src/karabo/util/Timer.hh</itemPath>
           <itemPath>../../../src/karabo/util/Timestamp.cc</itemPath>
           <itemPath>../../../src/karabo/util/Timestamp.hh</itemPath>
-          <itemPath>../../../src/karabo/util/Timestamp2.cc</itemPath>
-          <itemPath>../../../src/karabo/util/Timestamp2.hh</itemPath>
           <itemPath>../../../src/karabo/util/Trainstamp.cc</itemPath>
           <itemPath>../../../src/karabo/util/Trainstamp.hh</itemPath>
         </logicalFolder>
@@ -367,8 +365,8 @@
         <itemPath>../../../src/karabo/tests/util/Hash_Test.hh</itemPath>
         <itemPath>../../../src/karabo/tests/util/Schema_Test.cc</itemPath>
         <itemPath>../../../src/karabo/tests/util/Schema_Test.hh</itemPath>
-        <itemPath>../../../src/karabo/tests/util/Timestamp_Test.cc</itemPath>
-        <itemPath>../../../src/karabo/tests/util/Timestamp_Test.hh</itemPath>
+        <itemPath>../../../src/karabo/tests/util/TimeClasses_Test.cc</itemPath>
+        <itemPath>../../../src/karabo/tests/util/TimeClasses_Test.hh</itemPath>
         <itemPath>../../../src/karabo/tests/util/Types_Test.cc</itemPath>
         <itemPath>../../../src/karabo/tests/util/Types_Test.hh</itemPath>
         <itemPath>../../../src/karabo/tests/util/utilTestRunner.cc</itemPath>
@@ -1233,12 +1231,12 @@
             tool="3"
             flavor2="0">
       </item>
-      <item path="../../../src/karabo/tests/util/Timestamp_Test.cc"
+      <item path="../../../src/karabo/tests/util/TimeClasses_Test.cc"
             ex="false"
             tool="1"
             flavor2="0">
       </item>
-      <item path="../../../src/karabo/tests/util/Timestamp_Test.hh"
+      <item path="../../../src/karabo/tests/util/TimeClasses_Test.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -1545,16 +1543,6 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/util/Timestamp.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/util/Timestamp2.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/util/Timestamp2.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -2768,12 +2756,12 @@
             tool="3"
             flavor2="0">
       </item>
-      <item path="../../../src/karabo/tests/util/Timestamp_Test.cc"
+      <item path="../../../src/karabo/tests/util/TimeClasses_Test.cc"
             ex="false"
             tool="1"
             flavor2="0">
       </item>
-      <item path="../../../src/karabo/tests/util/Timestamp_Test.hh"
+      <item path="../../../src/karabo/tests/util/TimeClasses_Test.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -3077,16 +3065,6 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/util/Timestamp.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/util/Timestamp2.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/util/Timestamp2.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -4276,12 +4254,12 @@
             tool="3"
             flavor2="0">
       </item>
-      <item path="../../../src/karabo/tests/util/Timestamp_Test.cc"
+      <item path="../../../src/karabo/tests/util/TimeClasses_Test.cc"
             ex="false"
             tool="1"
             flavor2="0">
       </item>
-      <item path="../../../src/karabo/tests/util/Timestamp_Test.hh"
+      <item path="../../../src/karabo/tests/util/TimeClasses_Test.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -4588,16 +4566,6 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/util/Timestamp.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/util/Timestamp2.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/util/Timestamp2.hh"
             ex="false"
             tool="3"
             flavor2="0">
