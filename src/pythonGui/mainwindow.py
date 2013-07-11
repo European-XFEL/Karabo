@@ -23,6 +23,7 @@ from panels.custommiddlepanel import CustomMiddlePanel
 from panels.loggingpanel import LoggingPanel
 from panels.navigationpanel import NavigationPanel
 from panels.notificationpanel import NotificationPanel
+from panels.projectpanel import ProjectPanel
 from panels.scriptingpanel import ScriptingPanel
 
 from PyQt4.QtCore import *
@@ -126,12 +127,17 @@ class MainWindow(QMainWindow):
         leftArea = QSplitter(Qt.Vertical, mainSplitter)
         self.__navigationTab = DockTabWindow("Navigation", leftArea)
         self.__navigationTab.addDockableTab(navigationPanel, "Navigation")
-        leftArea.setStretchFactor(0, 3)
+        leftArea.setStretchFactor(0,1)
+
+        projectPanel = ProjectPanel()
+        self.__projectTab = DockTabWindow("Projects", leftArea)
+        self.__projectTab.addDockableTab(projectPanel, "Projects")
+        leftArea.setStretchFactor(1,1)
 
         notificationPanel = NotificationPanel()
         self.__monitorTab = DockTabWindow("Notifications", leftArea)
         self.__monitorTab.addDockableTab(notificationPanel, "Notifications")
-        leftArea.setStretchFactor(1, 1)
+        leftArea.setStretchFactor(2, 1)
 
         middleArea = QSplitter(Qt.Vertical, mainSplitter)
         customViewPanel = CustomMiddlePanel()
