@@ -46,6 +46,7 @@ class Schema_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST(testSlotElement);
     CPPUNIT_TEST(testVectorElements);
     CPPUNIT_TEST(testPathElement);
+    CPPUNIT_TEST(testImageElement);
     CPPUNIT_TEST(testArchivePolicy);
     
     CPPUNIT_TEST_SUITE_END();
@@ -93,6 +94,7 @@ private: //functions
     void testSlotElement();
     void testVectorElements();
     void testPathElement();
+    void testImageElement();
     void testArchivePolicy();
 
 };

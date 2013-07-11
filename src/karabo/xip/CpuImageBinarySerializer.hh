@@ -41,7 +41,7 @@ namespace karabo {
             }
 
             CpuImageBinarySerializer(const karabo::util::Hash& input) {
-                m_hashSerializer = HashSerializer::create("Bin");
+                m_hashSerializer = HashSerializer::create("Bin", karabo::util::Hash(), false); // No validation for speed
             }
 
             void save(const CpuImage<TPix>& image, std::vector<char>& archive) {

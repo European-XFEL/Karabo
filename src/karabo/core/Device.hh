@@ -17,6 +17,8 @@
 #include <karabo/util.hpp>
 #include <karabo/xms/SignalSlotable.hh>
 #include <karabo/log/Logger.hh>
+#include <karabo/xip/CpuImage.hh>
+#include <karabo/xip/RawImageData.hh>
 #include "coredll.hh"
 
 #include "FsmMacros.hh"
@@ -83,7 +85,7 @@ namespace karabo {
             karabo::util::Schema m_staticSchema;
             karabo::util::Schema m_injectedSchema;
             karabo::util::Schema m_fullSchema;
-
+            
         public:
 
             KARABO_CLASSINFO(Device, "Device", "1.0")
@@ -171,7 +173,7 @@ namespace karabo {
                 rules.injectTimestamps = true;
                 m_validatorIntern.setValidationRules(rules);
                 m_validatorExtern.setValidationRules(rules);
-
+                
                 // Setup device logger
                 m_log = &(karabo::log::Logger::getLogger(m_deviceId)); // TODO use later: "device." + instanceId
 
@@ -215,6 +217,38 @@ namespace karabo {
             void set(const std::string& key, const ValueType& value, const karabo::util::Timestamp2& timestamp = karabo::util::Timestamp2()) {
                 karabo::util::Hash h(key, value);
                 this->set(h, timestamp);
+            }
+            
+            template <class PixelType>
+            void set(const std::string& key, const karabo::xip::CpuImage<PixelType>& image, const karabo::util::Timestamp2& timestamp = karabo::util::Timestamp2()) {
+                using namespace karabo::util;
+                using namespace karabo::io;
+                using namespace karabo::xip;
+                
+                // TODO outsource
+                Hash h;
+                Hash& inner = h.bindReference<Hash>(key);
+                
+                // retrieve channel space
+                karabo::xip::ChannelSpaceType channelSpace;
+                Types::ReferenceType type = Types::from<PixelType>();
+                if (type == Types::UINT8) {
+                    channelSpace = karabo::xip::ChannelSpace::u_8_1;
+                } else if (type == Types::CHAR) {
+                    channelSpace = karabo::xip::ChannelSpace::s_8_1;
+                } else if (type == Types::FLOAT) {
+                    channelSpace = karabo::xip::ChannelSpace::f_32_4;
+                } else if (type == Types::DOUBLE) {
+                    channelSpace = karabo::xip::ChannelSpace::f_64_8;
+                } else {
+                    channelSpace = karabo::xip::ChannelSpace::UNDEFINED;
+                }
+                
+                karabo::xip::RawImageData raw(karabo::util::Dims(image.dims()), karabo::xip::Encoding::GRAY, channelSpace);
+                std::memcpy(raw.dataPointer<unsigned char>(), image.pixelPointer(), image.byteSize());
+               
+                h.setAttribute(key, "image", 1);
+                emit("signalChanged", h, getInstanceId());
             }
             
             /**

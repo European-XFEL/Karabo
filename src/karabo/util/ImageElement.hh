@@ -14,30 +14,57 @@
 #define	KARABO_UTIL_IMAGEELEMENT_HH
 
 #include "GenericElement.hh"
+#include "VectorElement.hh"
 
 namespace karabo {
     namespace util {
-        
+
         class ImageElement : public GenericElement<ImageElement> {
+
+        protected:
+
+            karabo::util::Hash m_child;
 
         public:
 
             ImageElement(Schema& expected) : GenericElement<ImageElement>(expected) {
+                this->m_node->setAttribute<int>(KARABO_SCHEMA_ACCESS_MODE, karabo::util::READ);
+                this->m_node->setAttribute<int>(KARABO_SCHEMA_NODE_TYPE, karabo::util::Schema::NODE);
+                this->m_node->setAttribute(KARABO_SCHEMA_DISPLAY_TYPE, "Image"); // Reserved displayType for commands
+                
+                Schema inner;
+                VECTOR_CHAR_ELEMENT(inner).key("data")
+                        .description("Pixel array")
+                        .readOnly()
+                        .commit();
+                VECTOR_UINT32_ELEMENT(inner).key("dims")
+                        .displayedName("Dimensions")
+                        .description("The length of the array reflects total dimensionality and each element the extension in this dimension")
+                        .readOnly()
+                        .commit();
+                INT32_ELEMENT(inner).key("encoding")
+                        .displayedName("Encoding")
+                        .description("Describes the color space of pixel encoding of the data (e.g. GRAY, RGB, JPG, PNG etc.")
+                        .readOnly()
+                        .commit();
+                INT32_ELEMENT(inner).key("channelSpace")
+                        .displayedName("Channel space")
+                        .description("Describes the channel encoding, i.e. signed/unsigned/floating point, bits per channel and bytes per pixel")
+                        .readOnly()
+                        .commit();
+                INT32_ELEMENT(inner).key("endianness")
+                        .displayedName("Endianness")
+                        .description("Describes the endianness")
+                        .readOnly()
+                        .commit();
+                
+                m_child = inner.getParameterHash1();
             }
-            
+
         protected:
 
             void beforeAddition() {
-
-                this->m_node->template setAttribute<int>(KARABO_SCHEMA_NODE_TYPE, Schema::LEAF);
-                this->m_node->template setAttribute<int>(KARABO_SCHEMA_LEAF_TYPE, karabo::util::Schema::PROPERTY);
-                this->m_node->setAttribute(KARABO_SCHEMA_VALUE_TYPE, "VECTOR_CHAR");
-                this->m_node->template setAttribute<int>(KARABO_SCHEMA_ACCESS_MODE, READ);
-                // Set the assignment and defaults here, as the API would look strange to assign something to a read-only
-                this->m_node->template setAttribute<int>(KARABO_SCHEMA_ASSIGNMENT, Schema::OPTIONAL_PARAM);
-                this->m_node->setAttribute(KARABO_SCHEMA_DEFAULT_VALUE, "0");
-                this->m_node->setAttribute(KARABO_SCHEMA_DISPLAY_TYPE, "image");
-
+                this->m_node->setValue(this->m_child);
             }
         };
 

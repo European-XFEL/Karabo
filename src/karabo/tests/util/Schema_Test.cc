@@ -536,6 +536,13 @@ void Schema_Test::testPathElement() {
     CPPUNIT_ASSERT(sch.isProperty("testfile") == true);
 }
 
+void Schema_Test::testImageElement() {
+    Schema sch("OtherSchemaElements", Schema::AssemblyRules(READ | WRITE | INIT));
+    OtherSchemaElements::expectedParameters(sch);
+    CPPUNIT_ASSERT(sch.isNode("image") == true);
+    CPPUNIT_ASSERT(sch.has("image.data") == true);
+}
+
 
 void Schema_Test::testHelpFunction() {
 
