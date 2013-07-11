@@ -65,13 +65,10 @@
     </logicalFolder>
     <logicalFolder name="f10" displayName="Util Tools" projectFiles="true">
       <itemPath>../../../src/karathon/PyUtilEpochstamp.cc</itemPath>
-      <itemPath>../../../src/karathon/PyUtilTimestamp2.cc</itemPath>
+      <itemPath>../../../src/karathon/PyUtilTimestamp.cc</itemPath>
       <itemPath>../../../src/karathon/PyUtilTrainstamp.cc</itemPath>
     </logicalFolder>
-    <logicalFolder name="f11"
-                   displayName="Xip Binding"
-                   projectFiles="true"
-                   kind="ROOT">
+    <logicalFolder name="f11" displayName="Xip Binding" projectFiles="true">
       <itemPath>../../../src/karathon/PyXipImage.cc</itemPath>
     </logicalFolder>
     <logicalFolder name="TestFiles"
@@ -246,7 +243,7 @@
             tool="1"
             flavor2="0">
       </item>
-      <item path="../../../src/karathon/PyUtilTimestamp2.cc"
+      <item path="../../../src/karathon/PyUtilTimestamp.cc"
             ex="false"
             tool="1"
             flavor2="0">
@@ -522,7 +519,7 @@
             tool="1"
             flavor2="0">
       </item>
-      <item path="../../../src/karathon/PyUtilTimestamp2.cc"
+      <item path="../../../src/karathon/PyUtilTimestamp.cc"
             ex="false"
             tool="1"
             flavor2="0">
@@ -782,7 +779,7 @@
             tool="1"
             flavor2="0">
       </item>
-      <item path="../../../src/karathon/PyUtilTimestamp2.cc"
+      <item path="../../../src/karathon/PyUtilTimestamp.cc"
             ex="false"
             tool="1"
             flavor2="0">
