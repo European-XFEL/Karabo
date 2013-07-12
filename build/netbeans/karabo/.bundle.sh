@@ -130,15 +130,36 @@ if [ $OS = "Darwin" ]; then
     cd -
 fi
 
+# Use karabo embedded python interpretor
+PYTHON_INTERPRETOR=$PACKAGEDIR/extern/bin/python
+
+# Copying 'extern' has resulted in changing python interpreter path for scripts in 'bin' directory
+ 
+[ -f $PACKAGEDIR/extern/bin/ipython ]           && sed -i '1 s%^.*$%#!'${PYTHON_INTERPRETOR}'%g' $PACKAGEDIR/extern/bin/ipython  # <-- replace 1st line by proper interpreter path
+[ -f $PACKAGEDIR/extern/bin/ipython2.7-config ] && sed -i '1 s%^.*$%#!'${PYTHON_INTERPRETOR}'%g' $PACKAGEDIR/extern/bin/ipython2.7-config
+[ -f $PACKAGEDIR/extern/bin/2to3 ]              && sed -i '1 s%^.*$%#!'${PYTHON_INTERPRETOR}'%g' $PACKAGEDIR/extern/bin/2to3
+[ -f $PACKAGEDIR/extern/bin/cygdb ]             && sed -i '1 s%^.*$%#!'${PYTHON_INTERPRETOR}'%g' $PACKAGEDIR/extern/bin/cygdb
+[ -f $PACKAGEDIR/extern/bin/cython ]            && sed -i '1 s%^.*$%#!'${PYTHON_INTERPRETOR}'%g' $PACKAGEDIR/extern/bin/cython
+[ -f $PACKAGEDIR/extern/bin/guidata-tests ]     && sed -i '1 s%^.*$%#!'${PYTHON_INTERPRETOR}'%g' $PACKAGEDIR/extern/bin/guidata-tests
+[ -f $PACKAGEDIR/extern/bin/guiqwt-tests ]      && sed -i '1 s%^.*$%#!'${PYTHON_INTERPRETOR}'%g' $PACKAGEDIR/extern/bin/guiqwt-tests
+[ -f $PACKAGEDIR/extern/bin/idle ]              && sed -i '1 s%^.*$%#!'${PYTHON_INTERPRETOR}'%g' $PACKAGEDIR/extern/bin/idle
+[ -f $PACKAGEDIR/extern/bin/ipcluster ]         && sed -i '1 s%^.*$%#!'${PYTHON_INTERPRETOR}'%g' $PACKAGEDIR/extern/bin/ipcluster
+[ -f $PACKAGEDIR/extern/bin/ipcontroller ]      && sed -i '1 s%^.*$%#!'${PYTHON_INTERPRETOR}'%g' $PACKAGEDIR/extern/bin/ipcontroller
+[ -f $PACKAGEDIR/extern/bin/ipengine ]          && sed -i '1 s%^.*$%#!'${PYTHON_INTERPRETOR}'%g' $PACKAGEDIR/extern/bin/ipengine
+[ -f $PACKAGEDIR/extern/bin/iplogger ]          && sed -i '1 s%^.*$%#!'${PYTHON_INTERPRETOR}'%g' $PACKAGEDIR/extern/bin/iplogger
+[ -f $PACKAGEDIR/extern/bin/iptest ]            && sed -i '1 s%^.*$%#!'${PYTHON_INTERPRETOR}'%g' $PACKAGEDIR/extern/bin/iptest
+[ -f $PACKAGEDIR/extern/bin/ipython.py ]        && sed -i '1 s%^.*$%#!'${PYTHON_INTERPRETOR}'%g' $PACKAGEDIR/extern/bin/ipython.py
+[ -f $PACKAGEDIR/extern/bin/irunner ]           && sed -i '1 s%^.*$%#!'${PYTHON_INTERPRETOR}'%g' $PACKAGEDIR/extern/bin/irunner
+[ -f $PACKAGEDIR/extern/bin/pycolor ]           && sed -i '1 s%^.*$%#!'${PYTHON_INTERPRETOR}'%g' $PACKAGEDIR/extern/bin/pycolor
+[ -f $PACKAGEDIR/extern/bin/pydoc ]             && sed -i '1 s%^.*$%#!'${PYTHON_INTERPRETOR}'%g' $PACKAGEDIR/extern/bin/pydoc
+[ -f $PACKAGEDIR/extern/bin/sift ]              && sed -i '1 s%^.*$%#!'${PYTHON_INTERPRETOR}'%g' $PACKAGEDIR/extern/bin/sift
+[ -f $PACKAGEDIR/extern/bin/smtpd.py ]          && sed -i '1 s%^.*$%#!'${PYTHON_INTERPRETOR}'%g' $PACKAGEDIR/extern/bin/smtpd.py
+
+# TODO: Some files from 'bin' are still not converted: pyuic4
+
+
 # karathon python extension module (karathon.so) and pythonKarabo (pure python package)
 # should go to python site-packages folder, namely, site-packages/karabo
-# Use karabo embedded python interpretor
-
-PYTHON_INTERPRETOR=$PACKAGEDIR/extern/bin/python
-# By the way, change in ipython the path to the python!
-IPYTHON_PATH=$PACKAGEDIR/extern/bin/ipython
-sed -i '1 s%^.*$%#!'${PYTHON_INTERPRETOR}'%g' ${IPYTHON_PATH}  # <-- replace 1st line by proper interpreter path
-
 cat << EOF > sitepackages.py
 import sys,re
 p=re.compile(".*/site-packages")
@@ -192,7 +213,7 @@ fi
 cd ../pythonCli
 safeRunCommand "./build.sh"
 cp -rf $DISTDIR/$OS/bin $PACKAGEDIR/
-cp -rf $DISTDIR/$OS/lib $PACKAGEDIR/
+cp -rf $DISTDIR/$OS/lib/pythonCli/. $PYKARABO/
 
 if [ "$OS" = "Linux" ]; then
 	PACKAGEDIR=$(readlink -f $PACKAGEDIR)
