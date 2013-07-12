@@ -8,8 +8,8 @@ import datetime
 import sys
 import socket
 from abc import ABCMeta, abstractmethod
-from libkarathon import *
-from karabo_decorators import KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS
+from karathon import *
+from decorators import KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS
 from base_fsm import BaseFsm
 
 

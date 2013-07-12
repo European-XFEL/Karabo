@@ -6,7 +6,7 @@ Created on Oct 17, 2012
 
 import unittest
 import numpy as np
-from libkarathon import *
+from karabo.karathon import *
 
 class  Hash_TestCase(unittest.TestCase):
 

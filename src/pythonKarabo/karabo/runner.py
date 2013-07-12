@@ -5,8 +5,8 @@ import os
 import sys
 import traceback
 from configurator import Configurator
-from libkarathon import Hash, loadFromFile, saveToFile
-from karabo_decorators import KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS
+from karathon import Hash, loadFromFile, saveToFile
+from decorators import KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS
 
 @KARABO_CONFIGURATION_BASE_CLASS
 @KARABO_CLASSINFO("Runner", "1.0")

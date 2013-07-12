@@ -4,9 +4,9 @@
 __author__="Sergey Esenov <serguei.essenov at xfel.eu>"
 __date__ ="$May 10, 2013 2:35:08 PM$"
 
-from karabo_decorators import KARABO_CLASSINFO
+from decorators import KARABO_CLASSINFO
 import base_fsm
-from libkarathon import SLOT_ELEMENT
+from karathon import SLOT_ELEMENT
 from fsm import *
 
 @KARABO_CLASSINFO("StartStopFsm", "1.0")
