@@ -296,9 +296,9 @@ namespace karathon {
                 std::string currentPath = it->getKey();
                 if (!path.empty()) currentPath = path + "." + it->getKey();
                 if (registered.has(currentPath + "._function")) {
-                    karabo::util::Timestamp2 t;
+                    karabo::util::Timestamp t;
                     try {
-                        t =  karabo::util::Timestamp2::fromHashAttributes(it->getAttributes());
+                        t =  karabo::util::Timestamp::fromHashAttributes(it->getAttributes());
                     } catch (...) {
                         KARABO_LOG_FRAMEWORK_WARN << "No timestamp information given on \"" << it->getKey() << "/";
                     }
