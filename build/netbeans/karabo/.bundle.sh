@@ -171,7 +171,7 @@ for path in sys.path:
 EOF
 PYKARABO=`${PYTHON_INTERPRETOR} sitepackages.py`/karabo
 rm sitepackages.py
-echo "PYKARABO = $PYKARABO"    
+#echo "PYKARABO = $PYKARABO"    
 [ -e $PYKARABO ] && [ ! -d $PYKARABO ] && echo "Cannot create $PYKARABO directory"
 [ -d $PYKARABO ] && rm -rf $PYKARABO/*				# <-- clean 
 [ ! -d $PYKARABO ] && mkdir $PYKARABO            		# <-- create PYKARABO if needed
