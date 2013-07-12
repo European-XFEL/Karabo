@@ -114,7 +114,7 @@ public:
 template <class T>
 void exportPyIoTextSerializer() {
 
-    {//exposing karabo::io::Input<karabo::util::Hash>
+    {//exposing karabo::io::TextSerializer<T>, where T :  karabo::util::Hash or karabo::util::Schema
         typedef karabo::io::TextSerializer<T> SpecificSerializer;
         bp::class_<SpecificSerializer, boost::noncopyable >(string("TextSerializer" + T::classInfo().getClassName()).c_str(), bp::no_init)
                 .def("save"
