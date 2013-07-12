@@ -6,7 +6,7 @@ __date__ ="$May 10, 2013 2:17:13 PM$"
 
 import threading
 from abc import ABCMeta, abstractmethod
-from karabo_decorators import KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS
+from decorators import KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS
 
 @KARABO_CONFIGURATION_BASE_CLASS
 @KARABO_CLASSINFO("BaseFsm", "1.0")

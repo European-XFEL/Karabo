@@ -4,7 +4,7 @@
 import unittest
 import threading
 import time
-from libkarathon import *
+from karabo.karathon import *
 
 
 class Server(threading.Thread):

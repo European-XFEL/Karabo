@@ -2,7 +2,7 @@ __author__="Irina Kozlova <irina.kozlova at xfel.eu>"
 __date__ ="$Jul 2, 2013$"
 
 import unittest
-from libkarathon import *
+from karabo.karathon import *
 
 class  Image_TestCase(unittest.TestCase):
     def setUp(self):

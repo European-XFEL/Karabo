@@ -1,8 +1,8 @@
 # To change this template, choose Tools | Templates
 # and open the template in the editor.
 
-from karabo_decorators import *
-from libkarathon import *
+from karabo.decorators import *
+from karabo.karathon import *
 import unittest
 
 @KARABO_CONFIGURATION_BASE_CLASS

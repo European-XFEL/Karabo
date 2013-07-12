@@ -4,7 +4,7 @@
 __author__="Sergey Esenov <serguei.essenov at xfel.eu>"
 __date__ ="$May 12, 2013 5:09:05 PM$"
 
-from karabo_decorators import KARABO_CLASSINFO
+from decorators import KARABO_CLASSINFO
 import base_fsm
 from fsm import *
 

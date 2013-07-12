@@ -1,5 +1,5 @@
 import unittest
-from libkarathon import *
+from karabo.karathon import *
 from configuration_test_classes import *
 
 
