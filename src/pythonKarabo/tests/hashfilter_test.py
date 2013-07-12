@@ -3,9 +3,9 @@
 
 import unittest
 
-from libkarathon import *
-from karabo_decorators import KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS
-from configurator import Configurator
+from karabo.karathon import *
+from karabo.decorators import KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS
+from karabo.configurator import Configurator
 from configuration_test_classes import Base, P1, P2, P3, GraphicsRenderer2
 
         

@@ -16,7 +16,7 @@ import time
 import inspect
 from libkarathon import *
 from fsm import *
-from karabo_decorators import KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS
+from decorators import KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS
 from plugin_loader import PluginLoader
 from configurator import Configurator
 from python_device import PythonDevice

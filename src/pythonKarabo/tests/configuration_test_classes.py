@@ -2,8 +2,8 @@ __author__="Sergey Esenov <serguei.essenov at xfel.eu>"
 __date__ ="$Apr 14, 2013 12:07:53 PM$"
 
 import unittest
-from libkarathon import *
-from karabo_decorators import *
+from karabo.karathon import *
+from karabo.decorators import *
 
 @KARABO_CONFIGURATION_BASE_CLASS
 @KARABO_CLASSINFO("Shape", "1.0")

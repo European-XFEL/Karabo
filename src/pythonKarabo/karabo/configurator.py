@@ -4,8 +4,7 @@
 __author__="Sergey Esenov <serguei.essenov at xfel.eu>"
 __date__ ="$Apr 11, 2013 4:20:13 PM$"
 
-import libkarathon as karabo
-from libkarathon import Hash, Schema
+from karathon import Hash, Schema, AssemblyRules, AccessType, READ, WRITE, INIT, Validator
 
 class Configurator(object):
     '''
@@ -51,7 +50,7 @@ class Configurator(object):
         self.baseRegistry[derived.__classid__] = derived
         return self
         
-    def getSchema(self, classid, rules = karabo.AssemblyRules(karabo.AccessType(karabo.READ | karabo.WRITE | karabo.INIT))):
+    def getSchema(self, classid, rules = AssemblyRules(AccessType(READ | WRITE | INIT))):
         '''
         Get schema for class with "classid" derived from base class given to constructor using assembly "rules"
         Example:
@@ -134,7 +133,7 @@ class Configurator(object):
         if not validation:
             return Derived(configuration)
         validated = Hash()
-        validator = karabo.Validator()
+        validator = Validator()
         try:
             validated = validator.validate(schema, configuration)
         except RuntimeError,e:
