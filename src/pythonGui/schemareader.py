@@ -589,7 +589,7 @@ class SchemaReader(object):
         print "_handleFloatAttribute", key, text, value, accessMode
         
         item.classAlias = "Float Field"
-        item.setIcon(0, QIcon(":float"))
+        item.setIcon(0, QIcon(":float-attribute"))
         
         editableComponent = None
         if accessMode is AccessMode.READONLY:
