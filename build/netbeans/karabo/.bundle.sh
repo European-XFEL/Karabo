@@ -130,10 +130,35 @@ if [ $OS = "Darwin" ]; then
     cd -
 fi
 
+# karathon python extension module (karathon.so) and pythonKarabo (pure python package)
+# should go to python site-packages folder, namely, site-packages/karabo
+# Use karabo embedded python interpretor
+
+PYTHON_INTERPRETOR=$PACKAGEDIR/extern/bin/python
+# By the way, change in ipython the path to the python!
+IPYTHON_PATH=$PACKAGEDIR/extern/bin/ipython
+sed -i '1 s%^.*$%#!'${PYTHON_INTERPRETOR}'%g' ${IPYTHON_PATH}  # <-- replace 1st line by proper interpreter path
+
+cat << EOF > sitepackages.py
+import sys,re
+p=re.compile(".*/site-packages")
+for path in sys.path:
+    m=p.search(path)
+    if m:
+        print m.group()
+        break
+EOF
+PYKARABO=`${PYTHON_INTERPRETOR} sitepackages.py`/karabo
+rm sitepackages.py
+echo "PYKARABO = $PYKARABO"    
+[ -e $PYKARABO ] && [ ! -d $PYKARABO ] && echo "Cannot create $PYKARABO directory"
+[ -d $PYKARABO ] && rm -rf $PYKARABO/*				# <-- clean 
+[ ! -d $PYKARABO ] && mkdir $PYKARABO            		# <-- create PYKARABO if needed
+
 # karathon
 cd ../karathon
 safeRunCommand "make -j$NUM_CORES CONF=$CONF"
-cp -rf $DISTDIR/$CONF/$PLATFORM/lib $PACKAGEDIR/
+cp -rf $DISTDIR/$CONF/$PLATFORM/lib/. $PYKARABO/        	# <-- karathon.so 
 cp -rf $DISTDIR/$CONF/$PLATFORM/include $PACKAGEDIR/
 
 # deviceServer
@@ -150,7 +175,7 @@ cp -rf $DISTDIR/$CONF/$PLATFORM/bin $PACKAGEDIR/
 cd ../pythonKarabo
 safeRunCommand "./build.sh"
 cp -rf $DISTDIR/$OS/bin $PACKAGEDIR/
-cp -rf $DISTDIR/$OS/lib $PACKAGEDIR/
+cp -rf $DISTDIR/$OS/lib/pythonKarabo/karabo/. $PYKARABO/  	# <-- 'karabo' package: __init__.py, ...                      
 
 
 # pythonGui
