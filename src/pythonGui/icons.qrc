@@ -28,6 +28,15 @@
     <file alias="signal">icons/type-schema.png</file>
     <file alias="slot">icons/type-pair.png</file>
     <file alias="undefined">icons/type-undefined.png</file>
+    <file alias="boolean-attribute">icons/type-boolean-attribute.png</file>
+    <file alias="string-attribute">icons/type-string-attribute.png</file>
+    <file alias="path-attribute">icons/type-string-attribute.png</file>
+    <file alias="int-attribute">icons/type-integer-attribute.png</file>
+    <file alias="float-attribute">icons/type-float-attribute.png</file>
+    <file alias="enum-attribute">icons/type-list-attribute.png</file>
+    <file alias="signal-attribute">icons/type-schema-attribute.png</file>
+    <file alias="slot-attribute">icons/type-pair-attribute.png</file>
+    <file alias="undefined-attribute">icons/type-undefined-attribute.png</file>
     <file alias="start">icons/run.png</file>
     <file alias="stop">icons/stop.png</file>
     <file alias="remote">icons/remote.png</file>
