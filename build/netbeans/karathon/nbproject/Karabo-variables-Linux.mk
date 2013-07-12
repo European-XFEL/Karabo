@@ -9,24 +9,24 @@ CND_DISTDIR=dist
 # Debug configuration
 CND_PLATFORM_Debug=GNU-Linux-x86
 CND_ARTIFACT_DIR_Debug=dist/Debug/GNU-Linux-x86/lib
-CND_ARTIFACT_NAME_Debug=libkarathon.so
-CND_ARTIFACT_PATH_Debug=dist/Debug/GNU-Linux-x86/lib/libkarathon.so
+CND_ARTIFACT_NAME_Debug=karathon.so
+CND_ARTIFACT_PATH_Debug=dist/Debug/GNU-Linux-x86/lib/karathon.so
 CND_PACKAGE_DIR_Debug=dist/Debug/GNU-Linux-x86/package
 CND_PACKAGE_NAME_Debug=libkarathon.so.tar
 CND_PACKAGE_PATH_Debug=dist/Debug/GNU-Linux-x86/package/libkarathon.so.tar
 # Release configuration
 CND_PLATFORM_Release=GNU-Linux-x86
 CND_ARTIFACT_DIR_Release=dist/Release/GNU-Linux-x86/lib
-CND_ARTIFACT_NAME_Release=libkarathon.so
-CND_ARTIFACT_PATH_Release=dist/Release/GNU-Linux-x86/lib/libkarathon.so
+CND_ARTIFACT_NAME_Release=karathon.so
+CND_ARTIFACT_PATH_Release=dist/Release/GNU-Linux-x86/lib/karathon.so
 CND_PACKAGE_DIR_Release=dist/Release/GNU-Linux-x86/package
 CND_PACKAGE_NAME_Release=libkarathon.so.tar
 CND_PACKAGE_PATH_Release=dist/Release/GNU-Linux-x86/package/libkarathon.so.tar
 # Debug-MacOSX configuration
 CND_PLATFORM_Debug-MacOSX=GNU-Linux-x86
 CND_ARTIFACT_DIR_Debug-MacOSX=dist/Debug-MacOSX/GNU-Linux-x86/lib
-CND_ARTIFACT_NAME_Debug-MacOSX=libkarathon.so
-CND_ARTIFACT_PATH_Debug-MacOSX=dist/Debug-MacOSX/GNU-Linux-x86/lib/libkarathon.so
+CND_ARTIFACT_NAME_Debug-MacOSX=karathon.so
+CND_ARTIFACT_PATH_Debug-MacOSX=dist/Debug-MacOSX/GNU-Linux-x86/lib/karathon.so
 CND_PACKAGE_DIR_Debug-MacOSX=dist/Debug-MacOSX/GNU-Linux-x86/package
 CND_PACKAGE_NAME_Debug-MacOSX=libkarathon.so.tar
 CND_PACKAGE_PATH_Debug-MacOSX=dist/Debug-MacOSX/GNU-Linux-x86/package/libkarathon.so.tar
