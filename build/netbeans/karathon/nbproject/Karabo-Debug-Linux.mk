@@ -45,7 +45,7 @@ OBJECTFILES= \
 	${OBJECTDIR}/_ext/381567218/PyUtilEpochstamp.o \
 	${OBJECTDIR}/_ext/381567218/PyUtilHash.o \
 	${OBJECTDIR}/_ext/381567218/PyUtilSchema.o \
-	${OBJECTDIR}/_ext/381567218/PyUtilTimestamp2.o \
+	${OBJECTDIR}/_ext/381567218/PyUtilTimestamp.o \
 	${OBJECTDIR}/_ext/381567218/PyUtilTrainstamp.o \
 	${OBJECTDIR}/_ext/381567218/PyWebAuthenticator.o \
 	${OBJECTDIR}/_ext/381567218/PyXipImage.o \
@@ -139,10 +139,10 @@ ${OBJECTDIR}/_ext/381567218/PyUtilSchema.o: ../../../src/karathon/PyUtilSchema.c
 	${RM} $@.d
 	$(COMPILE.cc) -g -DWITH_BOOST_NUMPY -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/include -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/381567218/PyUtilSchema.o ../../../src/karathon/PyUtilSchema.cc
 
-${OBJECTDIR}/_ext/381567218/PyUtilTimestamp2.o: ../../../src/karathon/PyUtilTimestamp2.cc 
+${OBJECTDIR}/_ext/381567218/PyUtilTimestamp.o: ../../../src/karathon/PyUtilTimestamp.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/381567218
 	${RM} $@.d
-	$(COMPILE.cc) -g -DWITH_BOOST_NUMPY -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/include -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/381567218/PyUtilTimestamp2.o ../../../src/karathon/PyUtilTimestamp2.cc
+	$(COMPILE.cc) -g -DWITH_BOOST_NUMPY -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/include -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/381567218/PyUtilTimestamp.o ../../../src/karathon/PyUtilTimestamp.cc
 
 ${OBJECTDIR}/_ext/381567218/PyUtilTrainstamp.o: ../../../src/karathon/PyUtilTrainstamp.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/381567218
@@ -341,17 +341,17 @@ ${OBJECTDIR}/_ext/381567218/PyUtilSchema_nomain.o: ${OBJECTDIR}/_ext/381567218/P
 	    ${CP} ${OBJECTDIR}/_ext/381567218/PyUtilSchema.o ${OBJECTDIR}/_ext/381567218/PyUtilSchema_nomain.o;\
 	fi
 
-${OBJECTDIR}/_ext/381567218/PyUtilTimestamp2_nomain.o: ${OBJECTDIR}/_ext/381567218/PyUtilTimestamp2.o ../../../src/karathon/PyUtilTimestamp2.cc 
+${OBJECTDIR}/_ext/381567218/PyUtilTimestamp_nomain.o: ${OBJECTDIR}/_ext/381567218/PyUtilTimestamp.o ../../../src/karathon/PyUtilTimestamp.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/381567218
-	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/381567218/PyUtilTimestamp2.o`; \
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/381567218/PyUtilTimestamp.o`; \
 	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
 	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
 	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
 	then  \
 	    ${RM} $@.d;\
-	    $(COMPILE.cc) -g -DWITH_BOOST_NUMPY -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/include -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/381567218/PyUtilTimestamp2_nomain.o ../../../src/karathon/PyUtilTimestamp2.cc;\
+	    $(COMPILE.cc) -g -DWITH_BOOST_NUMPY -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/include -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/381567218/PyUtilTimestamp_nomain.o ../../../src/karathon/PyUtilTimestamp.cc;\
 	else  \
-	    ${CP} ${OBJECTDIR}/_ext/381567218/PyUtilTimestamp2.o ${OBJECTDIR}/_ext/381567218/PyUtilTimestamp2_nomain.o;\
+	    ${CP} ${OBJECTDIR}/_ext/381567218/PyUtilTimestamp.o ${OBJECTDIR}/_ext/381567218/PyUtilTimestamp_nomain.o;\
 	fi
 
 ${OBJECTDIR}/_ext/381567218/PyUtilTrainstamp_nomain.o: ${OBJECTDIR}/_ext/381567218/PyUtilTrainstamp.o ../../../src/karathon/PyUtilTrainstamp.cc 
