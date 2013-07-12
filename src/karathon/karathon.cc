@@ -51,7 +51,7 @@ void exportp2p();
 void exportPyXipImageType();
 template <class T> void exportPyXipImage();
 
-BOOST_PYTHON_MODULE(libkarathon) {
+BOOST_PYTHON_MODULE(karathon) {
     
     // util
     exportPyUtilHash();
