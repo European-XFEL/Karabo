@@ -131,7 +131,7 @@ if [ $OS = "Darwin" ]; then
 fi
 
 # Use karabo embedded python interpretor
-PYTHON_INTERPRETOR=$PACKAGEDIR/extern/bin/python
+PYTHON_INTERPRETOR=`$PACKAGEDIR/extern/bin/python -c "import os,sys;print os.path.realpath(sys.argv[1])" $PACKAGEDIR/extern/bin/python` 
 
 # Copying 'extern' has resulted in changing python interpreter path for scripts in 'bin' directory
  
