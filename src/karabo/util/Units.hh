@@ -153,7 +153,8 @@ namespace karabo {
                 BAR,
                 PIXEL,
                 BYTE,
-                BIT
+                BIT,
+                METER_PER_SECOND
             };
         }
         
@@ -205,7 +206,8 @@ namespace karabo {
         _KARABO_HELPER_MACRO(PIXEL, "px")
         _KARABO_HELPER_MACRO(BYTE, "B")
         _KARABO_HELPER_MACRO(BIT, "B")
-
+        _KARABO_HELPER_MACRO(METER_PER_SECOND, "m/s")
+        
         #undef _KARABO_HELPER_MACRO
                 
         // Runtime conversion
@@ -248,7 +250,8 @@ namespace karabo {
                     _KARABO_HELPER_MACRO(BAR)        
                     _KARABO_HELPER_MACRO(PIXEL)        
                     _KARABO_HELPER_MACRO(BYTE)        
-                    _KARABO_HELPER_MACRO(BIT)      
+                    _KARABO_HELPER_MACRO(BIT)
+                    _KARABO_HELPER_MACRO(METER_PER_SECOND)
                 default:
                     throw KARABO_PARAMETER_EXCEPTION("No string translation registered for given unit");
             }
