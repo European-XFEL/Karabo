@@ -114,8 +114,8 @@ namespace karabo {
                 configuration.set<vector<Hash> >(it->getKey(), vector<Hash>(1, val));
             }
             Hash tmp("schema", vector<Hash>(1, Hash("v", schema)), "configuration", configuration);
-            Timestamp2().toHashAttributes(tmp.getAttributes("schema"));
-            Timestamp2().toHashAttributes(tmp.getAttributes("configuration"));
+            Timestamp().toHashAttributes(tmp.getAttributes("schema"));
+            Timestamp().toHashAttributes(tmp.getAttributes("configuration"));
             m_systemHistory.set("device." + deviceId, tmp);
         }
 
@@ -169,7 +169,7 @@ namespace karabo {
             for (Hash::iterator it = tmp.begin(); it != tmp.end(); ++it) {
                 vector<Hash>& keyHistory = it->getValue<vector<Hash> >();
                 Hash lastEntry = keyHistory.back();
-                karabo::util::Timestamp2().toHashAttributes(lastEntry.getAttributes("v"));
+                karabo::util::Timestamp().toHashAttributes(lastEntry.getAttributes("v"));
                 lastEntry.setAttribute("v", "isLast", true);
                 keyHistory.push_back(lastEntry);
             }

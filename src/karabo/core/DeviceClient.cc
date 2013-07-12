@@ -797,18 +797,18 @@ namespace karabo {
 
             #define KARABO_REGISTER_CALLBACK(valueType) \
 if (nodeData) {\
-    boost::any_cast < boost::function<void (const std::string&, const std::string&, const valueType&, const karabo::util::Timestamp2&, const boost::any&) > >(nodeFunc->getValueAsAny())(instanceId, currentPath, it->getValue<valueType >(), t, nodeData->getValueAsAny());\
+    boost::any_cast < boost::function<void (const std::string&, const std::string&, const valueType&, const karabo::util::Timestamp&, const boost::any&) > >(nodeFunc->getValueAsAny())(instanceId, currentPath, it->getValue<valueType >(), t, nodeData->getValueAsAny());\
 } else {\
-    boost::any_cast < boost::function<void (const std::string&, const std::string&, const valueType&, const karabo::util::Timestamp2&) > >(nodeFunc->getValueAsAny())(instanceId, currentPath, it->getValue<valueType >(), t);\
+    boost::any_cast < boost::function<void (const std::string&, const std::string&, const valueType&, const karabo::util::Timestamp&) > >(nodeFunc->getValueAsAny())(instanceId, currentPath, it->getValue<valueType >(), t);\
 }
 
             for (karabo::util::Hash::const_iterator it = current.begin(); it != current.end(); ++it) {
                 std::string currentPath = it->getKey();
                 if (!path.empty()) currentPath = path + "." + it->getKey();
                 if (registered.has(currentPath)) {
-                    Timestamp2 t;
+                    Timestamp t;
                     try {
-                        t = Timestamp2::fromHashAttributes(it->getAttributes());
+                        t = Timestamp::fromHashAttributes(it->getAttributes());
                     } catch (...) {
                         KARABO_LOG_FRAMEWORK_WARN << "No timestamp information given on \"" << it->getKey() << "/";
                     }
