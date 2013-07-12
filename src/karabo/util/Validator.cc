@@ -44,7 +44,7 @@ namespace karabo {
         }
 
 
-        std::pair<bool, std::string> Validator::validate(const Schema& schema, const Hash& unvalidatedInput, Hash& validatedOutput, const Timestamp2& timestamp) {
+        std::pair<bool, std::string> Validator::validate(const Schema& schema, const Hash& unvalidatedInput, Hash& validatedOutput, const Timestamp& timestamp) {
 
             // Clear all previous warnings and alarms
             m_parametersInWarnOrAlarm.clear();
@@ -450,8 +450,8 @@ namespace karabo {
         void Validator::attachTimestampIfNotAlreadyThere(Hash::Node& node) {
             if (m_injectTimestamps) {
                 Hash::Attributes& attributes = node.getAttributes();
-                if (!Timestamp2::hashAttributesContainTimeInformation(attributes)) {
-                    Timestamp2().toHashAttributes(attributes);
+                if (!Timestamp::hashAttributesContainTimeInformation(attributes)) {
+                    Timestamp().toHashAttributes(attributes);
                 }
             }
         }
