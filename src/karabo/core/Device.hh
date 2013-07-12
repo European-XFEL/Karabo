@@ -214,13 +214,13 @@ namespace karabo {
              * @param value The corresponding value (of corresponding data-type)
              */
             template <class ValueType>
-            void set(const std::string& key, const ValueType& value, const karabo::util::Timestamp2& timestamp = karabo::util::Timestamp2()) {
+            void set(const std::string& key, const ValueType& value, const karabo::util::Timestamp& timestamp = karabo::util::Timestamp()) {
                 karabo::util::Hash h(key, value);
                 this->set(h, timestamp);
             }
             
             template <class PixelType>
-            void set(const std::string& key, const karabo::xip::CpuImage<PixelType>& image, const karabo::util::Timestamp2& timestamp = karabo::util::Timestamp2()) {
+            void set(const std::string& key, const karabo::xip::CpuImage<PixelType>& image, const karabo::util::Timestamp& timestamp = karabo::util::Timestamp()) {
                 using namespace karabo::util;
                 using namespace karabo::io;
                 using namespace karabo::xip;
@@ -257,7 +257,7 @@ namespace karabo {
              * any observers.
              * @param config Hash of updated internal parameters (must be declared in the expectedParameters function)
              */
-            void set(const karabo::util::Hash& hash, const karabo::util::Timestamp2& timestamp = karabo::util::Timestamp2()) {
+            void set(const karabo::util::Hash& hash, const karabo::util::Timestamp& timestamp = karabo::util::Timestamp()) {
                 using namespace karabo::util;
                 boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
 
@@ -530,7 +530,7 @@ namespace karabo {
                 
                 // The following lines of code are needed to initially inject timestamps to the parameters
                 karabo::util::Hash validated;
-                std::pair<bool, std::string> result = m_validatorIntern.validate(m_fullSchema, m_parameters, validated, karabo::util::Timestamp2());
+                std::pair<bool, std::string> result = m_validatorIntern.validate(m_fullSchema, m_parameters, validated, karabo::util::Timestamp());
                 if (result.first == false) KARABO_LOG_WARN << "Bad parameter setting attempted, validation reports: " << result.second;
                 m_parameters.merge(validated, karabo::util::Hash::REPLACE_ATTRIBUTES);
                 m_objectStateChangeMutex.unlock();
