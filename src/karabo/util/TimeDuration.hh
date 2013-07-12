@@ -120,22 +120,22 @@ namespace karabo {
 
         inline bool TimeDuration::operator>(const TimeDuration& other) const {
             return (m_Seconds > other.m_Seconds) ||
-                    (m_Seconds == other.m_Seconds) && (m_Fractions > other.m_Fractions);
+                    ((m_Seconds == other.m_Seconds) && (m_Fractions > other.m_Fractions));
         }
 
         inline bool TimeDuration::operator >=(const TimeDuration& other) const {
             return (m_Seconds >= other.m_Seconds) ||
-                    (m_Seconds == other.m_Seconds) && (m_Fractions >= other.m_Fractions);
+                    ((m_Seconds == other.m_Seconds) && (m_Fractions >= other.m_Fractions));
         }
 
         inline bool TimeDuration::operator<(const TimeDuration& other) const {
             return (m_Seconds < other.m_Seconds) ||
-                    (m_Seconds == other.m_Seconds) && (m_Fractions < other.m_Fractions);
+                    ((m_Seconds == other.m_Seconds) && (m_Fractions < other.m_Fractions));
         }
 
         inline bool TimeDuration::operator <=(const TimeDuration& other) const {
             return (m_Seconds <= other.m_Seconds) ||
-                    (m_Seconds == other.m_Seconds) && (m_Fractions <= other.m_Fractions);
+                    ((m_Seconds == other.m_Seconds) && (m_Fractions <= other.m_Fractions));
         }
 
         inline TimeDuration TimeDuration::operator +(const TimeDuration& period) const {
