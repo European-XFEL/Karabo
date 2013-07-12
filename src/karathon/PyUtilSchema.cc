@@ -999,6 +999,7 @@ void exportPyUtilSchema() {
                 .value("PIXEL", Unit::PIXEL)
                 .value("BYTE", Unit::BYTE)
                 .value("BIT", Unit::BIT)
+                .value("METER_PER_SECOND", Unit::METER_PER_SECOND)
                 .export_values()
                 ;
     }
