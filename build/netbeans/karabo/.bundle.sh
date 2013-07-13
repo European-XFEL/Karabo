@@ -150,6 +150,7 @@ PYTHON_INTERPRETOR=`$PACKAGEDIR/extern/bin/python -c "import os,sys;print os.pat
 [ -f $PACKAGEDIR/extern/bin/iptest ]            && sed -i '1 s%^.*$%#!'${PYTHON_INTERPRETOR}'%g' $PACKAGEDIR/extern/bin/iptest
 [ -f $PACKAGEDIR/extern/bin/ipython.py ]        && sed -i '1 s%^.*$%#!'${PYTHON_INTERPRETOR}'%g' $PACKAGEDIR/extern/bin/ipython.py
 [ -f $PACKAGEDIR/extern/bin/irunner ]           && sed -i '1 s%^.*$%#!'${PYTHON_INTERPRETOR}'%g' $PACKAGEDIR/extern/bin/irunner
+[ -f $PACKAGEDIR/extern/bin/nosetests ]         && sed -i '1 s%^.*$%#!'${PYTHON_INTERPRETOR}'%g' $PACKAGEDIR/extern/bin/nosetests
 [ -f $PACKAGEDIR/extern/bin/pycolor ]           && sed -i '1 s%^.*$%#!'${PYTHON_INTERPRETOR}'%g' $PACKAGEDIR/extern/bin/pycolor
 [ -f $PACKAGEDIR/extern/bin/pydoc ]             && sed -i '1 s%^.*$%#!'${PYTHON_INTERPRETOR}'%g' $PACKAGEDIR/extern/bin/pydoc
 [ -f $PACKAGEDIR/extern/bin/sift ]              && sed -i '1 s%^.*$%#!'${PYTHON_INTERPRETOR}'%g' $PACKAGEDIR/extern/bin/sift
@@ -196,7 +197,7 @@ cp -rf $DISTDIR/$CONF/$PLATFORM/bin $PACKAGEDIR/
 cd ../pythonKarabo
 safeRunCommand "./build.sh"
 cp -rf $DISTDIR/$OS/bin $PACKAGEDIR/
-cp -rf $DISTDIR/$OS/lib/pythonKarabo/karabo/. $PYKARABO/  	# <-- 'karabo' package: __init__.py, ...                      
+cp -rf $DISTDIR/$OS/lib/pythonKarabo/karabo_package/. $PYKARABO/  	# <-- 'karabo' package: __init__.py, ...                      
 
 
 # pythonGui
