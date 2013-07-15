@@ -1016,20 +1016,17 @@ void exportPyUtilSchema() {
                 .value("INTERNAL", Schema::INTERNAL_PARAM)
                 .export_values()
                 ;
-        
         bp::enum_< Schema::ExpertLevelType > ("ExpertLevelType")
                 .value("SIMPLE", Schema::SIMPLE)
                 .value("MEDIUM", Schema::MEDIUM)
                 .value("ADVANCED", Schema::ADVANCED)
                 .export_values()
                 ;
-
         bp::enum_< Schema::LeafType>("LeafType")
                 .value("PROPERTY", karabo::util::Schema::PROPERTY)
                 .value("COMMAND", karabo::util::Schema::COMMAND)
                 .export_values()
                 ;
-        
         bp::enum_< Schema::NodeType>("NodeType")
                 .value("LEAF", Schema::LEAF)
                 .value("NODE", Schema::NODE)
@@ -1046,6 +1043,14 @@ void exportPyUtilSchema() {
                 .value("EVERY_1MIN", Schema::EVERY_1MIN)
                 .value("EVERY_10MIN", Schema::EVERY_10MIN)
                 .value("NO_ARCHIVING", Schema::NO_ARCHIVING)
+                .export_values()
+                ;
+        bp::enum_< Schema::AccessLevel > ("AccessLevel")
+                .value("OBSERVER", Schema::OBSERVER)
+                .value("USER", Schema::USER)
+                .value("OPERATOR", Schema::OPERATOR)
+                .value("EXPERT", Schema::EXPERT)
+                .value("GOD", Schema::GOD)
                 .export_values()
                 ;
         
