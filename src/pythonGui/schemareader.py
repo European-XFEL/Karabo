@@ -22,7 +22,7 @@ from treewidgetitems.propertytreewidgetitem import *
 
 from schematest.sampleschema import SampleSchema 
 
-from libkarathon import *
+from karabo.karathon import *
 
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
@@ -83,8 +83,14 @@ class SchemaReader(object):
             item = self._createCommandItem(key, parentItem)
         elif self.__schema.isNode(key):
             #print "isNode", key
-            item = self._createPropertyItem(key, parentItem)
-            self._handleNode(key, item)
+            if (self.__schema.hasDisplayType(key) and (self.__schema.getDisplayType(key) == "Image")):
+                print "detected Image"
+                #item = self._createImageItem(key, parentItem)
+                item = self._createPropertyItem(key, parentItem)
+                self._handleNode(key, item)
+            else:
+                item = self._createPropertyItem(key, parentItem)
+                self._handleNode(key, item)
         elif self.__schema.isChoiceOfNodes(key):
             #print "isChoiceOfNodes", key
             item = self._createPropertyItem(key, parentItem)
@@ -136,6 +142,14 @@ class SchemaReader(object):
             self._setAllowedStates(key, item)
                 
             return item
+        
+    def _createImageItem(self, key, parentItem):
+        fullPath = self.__rootPath + "." + key
+        if parentItem:
+            item = ImageTreeWidgetItem(key, fullPath, self.__treeWidget, parentItem)
+        else:
+            item = ImageTreeWidgetItem(key, fullPath, self.__treeWidget)
+        
 
 
     def _handleLeaf(self, key, item):

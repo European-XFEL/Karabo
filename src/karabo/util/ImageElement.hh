@@ -52,9 +52,9 @@ namespace karabo {
                         .description("Describes the channel encoding, i.e. signed/unsigned/floating point, bits per channel and bytes per pixel")
                         .readOnly()
                         .commit();
-                INT32_ELEMENT(inner).key("endianness")
-                        .displayedName("Endianness")
-                        .description("Describes the endianness")
+                BOOL_ELEMENT(inner).key("isBigEndian")
+                        .displayedName("Is big endian")
+                        .description("Flags whether the raw data are in big or little endian")
                         .readOnly()
                         .commit();
                 

@@ -368,12 +368,12 @@ namespace karabo {
                         if (img.getDimensions().rank() < 2) continue;
 
                         // Support for grayscale images
-                        if (img.encoding() == Encoding::GRAY) {
+                        if (img.getEncoding() == Encoding::GRAY) {
                             size_t size = img.size();
                             vector<unsigned char> qtImage(size * 4); // Have to blow up for RGBA
 
-                            if (img.channelSpace() == ChannelSpace::u_8_1) {
-                                unsigned char* data = img.dataPointer<unsigned char>();
+                            if (img.getChannelSpace() == ChannelSpace::u_8_1) {
+                                unsigned char* data = img.dataPointer();
                                 unsigned char pmax = 0, pmin = 255;
                                 for (size_t i = 0; i < size; i++) {
                                     unsigned char pix = data[i];
@@ -392,10 +392,10 @@ namespace karabo {
 
 
 
-                            } else if (img.channelSpace() == ChannelSpace::u_16_2) {
-                                unsigned short* data = img.dataPointer<unsigned short>();
+                            } else if (img.getChannelSpace() == ChannelSpace::u_16_2) {
+                                unsigned short* data = reinterpret_cast<unsigned short*>(img.dataPointer());
                                 unsigned short pmax = 0, pmin = 65535;
-                                if (img.endianness() == Endianness::MSB) {
+                                if (img.isBigEndian()) {
                                     for (size_t i = 0; i < size; i++) {
                                         data[i] = data[i] << 8 | data[i] >> 8; // swap bytes
                                         if (pmax < data[i]) pmax = data[i];
@@ -422,7 +422,7 @@ namespace karabo {
 
                             // update data in the hash
                             img.setData(qtImage); // Update data
-                            img.encoding() = Encoding::RGBA; // Update encoding
+                            img.setEncoding(Encoding::RGBA); // Update encoding
                         }
                         // TODO: At the moment we don't touch color images!!!
                         // TODO: Color image's support

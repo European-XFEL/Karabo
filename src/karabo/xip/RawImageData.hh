@@ -76,9 +76,11 @@ namespace karabo {
         typedef Endianness::EndiannessType EndiannessType;
 
         class RawImageData {
+            
+            typedef karabo::io::TextSerializer<karabo::util::Hash> Serializer;
 
             karabo::util::Hash* m_hash;
-            karabo::io::TextSerializer<karabo::util::Hash>::Pointer m_serializer;
+            Serializer::Pointer m_serializer;
             bool m_isShared;
 
         public:
@@ -90,7 +92,7 @@ namespace karabo {
              * @param dimensions
              * @param encoding
              * @param channelSpace
-             * @param endianness
+             * @param isBigEndian
              * @param header
              */
             template <class T>
@@ -99,8 +101,10 @@ namespace karabo {
                          const karabo::util::Dims& dimensions,
                          const EncodingType encoding,
                          const ChannelSpaceType channelSpace,
-                         const EndiannessType endianness,
-                         const karabo::util::Hash& header) : m_isShared(false) {
+                         const bool isBigEndian = karabo::util::isBigEndian(),
+                         const karabo::util::Hash& header = karabo::util::Hash()) : m_serializer(Serializer::create("Xml")), m_isShared(false) {
+                             
+                             
 
                 m_hash = new karabo::util::Hash();
 
@@ -111,30 +115,18 @@ namespace karabo {
                 m_hash->set("dims", dimensions.toVector());
                 m_hash->set<int>("encoding", encoding);
                 m_hash->set<int>("channelSpace", channelSpace);
-                if (endianness == Endianness::UNDEFINED) {
-                    if (karabo::util::isBigEndian()) {
-                        m_hash->set<int>("endianness", Endianness::MSB);
-                    } else {
-                        m_hash->set<int>("endianness", Endianness::LSB);
-                    }
-                } else {
-                    m_hash->set<int>("endianness", endianness);
-                }
+                m_hash->set<bool>("isBigEndian", isBigEndian);
                 m_hash->set<std::string>("header", m_serializer->save(header));
             }
 
             /**
-             * Constructor which only allocates memory. Data can be directly written using the getDataPointer function
-             * @param encoding
-             * @param channelSpace
-             * @param type
-             * @param header
+             * Constructor which only allocates memory. Data can be directly written using the dataPointer function
              */
             RawImageData(const size_t byteSize,
                          const karabo::util::Dims& dimensions,
                          const EncodingType encoding,
                          const ChannelSpaceType channelSpace,
-                         const EndiannessType endianness = Endianness::UNDEFINED,
+                         const bool isBigEndian = karabo::util::isBigEndian(),
                          const karabo::util::Hash& header = karabo::util::Hash());
 
             /**
@@ -146,14 +138,12 @@ namespace karabo {
 
             virtual ~RawImageData();
 
-            template <class T>
-            inline T* dataPointer() {
-                return reinterpret_cast<T*> (&(m_hash->get<std::vector< unsigned char> >("data")[0]));
+            inline unsigned char* dataPointer() {
+                return &(m_hash->get<std::vector< unsigned char> >("data")[0]);
             }
 
-            template <class T>
-            inline const T* dataPointer() const {
-                return reinterpret_cast<const T*> (&(m_hash->get<std::vector< unsigned char> >("data")[0]));
+            inline unsigned char* dataPointer() const {
+                return &(m_hash->get<std::vector< unsigned char> >("data")[0]);
             }
 
             inline const std::vector<unsigned char>& getData() const {
@@ -182,41 +172,50 @@ namespace karabo {
             size_t getByteSize() const {
                 return getData().size();
             }
+            
+            void setByteSize(const size_t& byteSize) {
+                if (m_hash->has("data")) {
+                    m_hash->get<std::vector<unsigned char> >("data").resize(byteSize);
+                } else {
+                    m_hash->bindReference<std::vector<unsigned char> >("data").resize(byteSize);
+                }
+            }
 
             inline karabo::util::Dims getDimensions() const {
                 return karabo::util::Dims(m_hash->get<std::vector<unsigned long long> >("dims"));
             }
 
-            inline void reshape(const karabo::util::Dims& dimensions) {
-                throw KARABO_NOT_IMPLEMENTED_EXCEPTION("Lazyness won");
+            inline void setDimensions(const karabo::util::Dims& dimensions) {
+                m_hash->set<std::vector<unsigned long long> >("dims", dimensions.toVector());
             }
 
-            inline const int& encoding() const {
+            inline int getEncoding() const {
                 return m_hash->get<int>("encoding");
             }
 
-            inline int& encoding() {
-                return m_hash->get<int>("encoding");
+            inline void setEncoding(const EncodingType encoding) {
+                m_hash->set<int>("encoding", encoding);
             }
 
-            inline const int& channelSpace() const {
+            inline int getChannelSpace() const {
                 return m_hash->get<int>("channelSpace");
             }
 
-            inline int& channelSpace() {
-                return m_hash->get<int>("channelSpace");
+            inline void setChannelSpace(const ChannelSpaceType channelSpace) {
+                m_hash->set<int>("channelSpace", channelSpace);
             }
 
-            inline const int& endianness() const {
-                return m_hash->get<int>("endianness");
+            inline void setIsBigEndian(const bool isBigEndian) {
+                m_hash->set<bool>("isBigEndian", isBigEndian);
             }
 
-            inline int& endianness() {
-                return m_hash->get<int>("endianness");
+            inline bool isBigEndian() const {
+                return m_hash->get<bool>("isBigEndian");
             }
 
             karabo::util::Hash getHeader() const;
-
+            
+            void setHeader(const karabo::util::Hash& header) const;
         };
     }
 }

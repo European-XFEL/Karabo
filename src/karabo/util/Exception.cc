@@ -173,8 +173,12 @@ namespace karabo {
 
 
         const char* Exception::what() const throw () {
-            string& err = const_cast<string&> (m_exceptionText);
-            err.clear();
+            return detailedMsg().c_str();
+        }
+
+
+        string Exception::userFriendlyMsg() const {
+            string err = "An error has occured: ";
             if (!m_exceptionInfo.message.empty() && m_exceptionInfo.message != "Propagation") {
                 string s = m_exceptionInfo.message + "\n";
                 err += s;
@@ -188,14 +192,6 @@ namespace karabo {
                     }
                 }
             }
-            // TODO See whether we should clear the trace here!!
-            return err.c_str();
-        }
-
-
-        string Exception::userFriendlyMsg() const {
-            string err = "An error has occured: ";
-            err += what();
             return err;
         }
 
