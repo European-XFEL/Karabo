@@ -241,12 +241,14 @@ class DeviceServer(object):
                 # get mostDerived from tree
                 deviceClass = mostDerived(candidates)  # most derived class in hierarchy
                 try:
+                    # For some reason deviceClass is not registered! How can it be!? __import__ does not work anymore?
+                    Configurator(PythonDevice).registerClass(deviceClass)       # <-- register by hands!
                     schema = deviceClass.getSchema(deviceClass.__classid__)
                     self.availableModules[name] = deviceClass.__classid__
                     self.availableDevices[deviceClass.__classid__] = {"mustNotify": True, "module": name, "xsd": schema}
                     self.newPluginAvailable()
                     print "Successfully loaded plugin: \"{}.py\"".format(name)
-                except RuntimeError, e:
+                except (RuntimeError, AttributeError), e:
                     self.log.ERROR("Failure while building schema for class {}, base class {} and bases {} : {}".format(
                         deviceClass.__classid__, deviceClass.__base_classid__, deviceClass.__bases_classid__, e.message))
             time.sleep(3)
