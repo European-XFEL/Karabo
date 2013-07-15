@@ -117,18 +117,15 @@ class DisplayImage(DisplayWidget):
             
             # Value as Hash (dimX=<dimX>, dimY=<dimY>, dimZ=<dimZ>, dimC=<dimC>, data=<data>)
             dims = value.get('dims')
-            if len(dims) < 2:
-                return;
+            if len(dims) != 2: return
             dimX = dims[0]
             dimY = dims[1]
             #dimZ = dims[2]
             data = value.get('data')
-            pixelFormat = value.get('format')
+            encoding = value.get('encoding')
             
-            if not dimX and not dimY and not data:
-                return
-            if (dimX < 1) or (dimY < 1) or (len(data) < (dimX*dimY)):
-                return
+            if not dimX and not dimY and not data: return
+            if (dimX < 1) or (dimY < 1) or (len(data) < (dimX*dimY)): return
 
             image = QImage(data, dimX, dimY, QImage.Format_ARGB32_Premultiplied).rgbSwapped()
             

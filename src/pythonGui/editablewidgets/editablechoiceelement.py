@@ -22,7 +22,7 @@ __all__ = ["EditableChoiceElement"]
 
 
 from editablewidget import EditableWidget
-from libkarathon import *
+from karabo.karathon import *
 
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *

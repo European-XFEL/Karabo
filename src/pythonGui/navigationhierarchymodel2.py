@@ -11,7 +11,7 @@
 __all__ = ["NavigationHierarchyModel"]
 
 from navigationhierarchynode import *
-from libkarathon import *
+from karabo.karathon import *
 
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *

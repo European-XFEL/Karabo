@@ -15,7 +15,7 @@ from choicecomponent import ChoiceComponent
 from editableapplylatercomponent import EditableApplyLaterComponent
 from editablenoapplycomponent import EditableNoApplyComponent
 from imagetreewidgetitem import ImageTreeWidgetItem
-from libkarathon import *
+from karabo.karathon import *
 from slottreewidgetitem import SlotTreeWidgetItem
 from enums import *
 

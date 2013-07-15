@@ -17,9 +17,9 @@ if [ -z \$KARABO ]; then
       exit 1
     fi
 fi
-export PYTHONPATH=\$KARABO/lib
 export PATH=\$KARABO/extern/bin:\$PATH
-\$KARABO/extern/bin/ipython.py -i \$KARABO/lib/pythonCli/deviceClient.py \$@
+pythonLibPath=\$(python -c "from distutils.sysconfig import get_python_lib; print(get_python_lib())")
+ipython -i \$pythonLibPath/karabo/deviceClient.py \$@
 End-of-file
 chmod u+x karabo-cli
 cd ../lib
