@@ -23,7 +23,7 @@ __all__ = ["Notifier", "Manager"]
 from datanotifier import DataNotifier
 from enums import NavigationItemTypes
 from enums import ConfigChangeTypes
-from libkarathon import *
+from karabo.karathon import *
 from navigationhierarchymodel2 import NavigationHierarchyModel
 from singleton import Singleton
 from sqldatabase import SqlDatabase
@@ -652,7 +652,7 @@ class Manager(Singleton):
         # Remove instanceId from central hash and update
         
         path = None
-        if self.__hash.get("server." + instanceId):
+        if self.__hash.has("server." + instanceId):
             path = "server." + instanceId
             if self.__hash.hasAttribute(path, "host"):
                 parentPath = self.__hash.getAttribute(path, "host")
@@ -662,8 +662,9 @@ class Manager(Singleton):
                 parentPath = "server." + self.__hash.getAttribute(path, "serverId")
             if self.__hash.hasAttribute(path, "classId"):
                 parentPath += ".classes." + self.__hash.getAttribute(path, "classId")
-        
-        if not path:
+                
+        if path is None:
+            print "Unknown instance \"" + instanceId + "\" gone."
             return
         
         # Remove instance from central hash

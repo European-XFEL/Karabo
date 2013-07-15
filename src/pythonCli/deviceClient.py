@@ -3,10 +3,10 @@
 # Author: <burkhard.heisen@xfel.eu>
 #
 
-from karathon import DeviceClient as CppDeviceClient
-from karathon import Hash
-from karathon import Schema
-from karathon import Authenticator
+from karabo.karathon import DeviceClient as CppDeviceClient
+from karabo.karathon import Hash
+from karabo.karathon import Schema
+from karabo.karathon import Authenticator
 
 import IPython.core.ipapi
 import re

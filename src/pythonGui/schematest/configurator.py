@@ -4,7 +4,7 @@
 __author__="Sergey Esenov <serguei.essenov at xfel.eu>"
 __date__ ="$Apr 11, 2013 4:20:13 PM$"
 
-from libkarathon import *
+from karabo.karathon import *
 
 class Configurator(object):
     '''

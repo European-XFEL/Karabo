@@ -15,7 +15,7 @@ __all__ = ["ParameterTreeWidget"]
 import treewidgetitems.attributetreewidgetitem
 from editableapplylatercomponent import EditableApplyLaterComponent
 from enums import *
-from libkarathon import *
+from karabo.karathon import *
 from manager import Manager
 
 from PyQt4.QtCore import *

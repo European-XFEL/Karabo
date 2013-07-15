@@ -13,6 +13,9 @@
 #ifndef KARABO_UTIL_STRING_HH
 #define	KARABO_UTIL_STRING_HH
 
+#include "Base64.hh"
+
+
 #include <string>
 #include <vector>
 #include <deque>
@@ -110,7 +113,7 @@ namespace karabo {
             return s.str();
         }
 
-        inline std::string toString(const std::vector<std::string> value) {
+        inline std::string toString(const std::vector<std::string>& value) {
             if (value.empty()) return "";
             std::ostringstream s;
             std::vector<std::string>::const_iterator it = value.begin();
@@ -121,6 +124,10 @@ namespace karabo {
                 s << "," << *it;
             }
             return s.str();
+        }
+        
+        inline std::string toString(const std::vector<unsigned char>& value) {
+            return karabo::util::base64Encode(&value[0], value.size());
         }
 
         template <typename T>
@@ -193,6 +200,13 @@ namespace karabo {
                 return CONT<T>(); // Make the compiler happy
             }
         }
+        
+        template <> 
+        inline std::vector<unsigned char> fromString(const std::string& value, const std::string&) {
+            std::vector<unsigned char> tmp;
+            karabo::util::base64Decode(value, tmp);
+            return tmp;
+        }
 
         template<typename T,
         template <typename ELEM, typename = std::less<ELEM>, typename = std::allocator<ELEM> > class CONT>
@@ -219,8 +233,8 @@ namespace karabo {
             }
         }
 
-        template<> inline char fromString<char>(const std::string& value) {
-            return boost::numeric_cast<char>(boost::lexical_cast<int>(value));
+        template<> inline unsigned char fromString<unsigned char>(const std::string& value) {
+            return boost::numeric_cast<unsigned char>(boost::lexical_cast<int>(value));
         }
 
         template<> inline signed char fromString<signed char>(const std::string& value) {

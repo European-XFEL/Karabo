@@ -99,7 +99,7 @@ class PythonConsole(QTextEdit):
         self.initInterpreter(locals())
         
         # Import stuff from pyexfel
-        self.interpreter.runIt("from libkarathon import *")
+        self.interpreter.runIt("from karabo.karathon import *")
 
 
     def printBanner(self):

@@ -101,10 +101,10 @@ namespace karabo {
             KARABO_FSM_VE_ACTION0(TriggerAction, triggerAction)
 
             /**************************************************************/
-            /*                      AllOkState Machine                    */
+            /*                      OkState Machine                    */
             /**************************************************************/
 
-            KARABO_FSM_TABLE_BEGIN(AllOkStateTransitionTable)
+            KARABO_FSM_TABLE_BEGIN(OkStateTransitionTable)
             // Source-State, Event, Target-State, Action, Guard
             Row< Ready, AcquireEvent, Acquisition, AcquireAction, none >,
             Row< Acquisition, StopEvent, Ready, StopAction, none >,
@@ -112,7 +112,7 @@ namespace karabo {
             KARABO_FSM_TABLE_END
 
             // Name, Transition-Table, Initial-State, Context
-            KARABO_FSM_STATE_MACHINE(AllOk, AllOkStateTransitionTable, Ready, Self)
+            KARABO_FSM_STATE_MACHINE(Ok, OkStateTransitionTable, Ready, Self)
 
             /**************************************************************/
             /*                      Top Machine                         */
@@ -120,9 +120,9 @@ namespace karabo {
 
             // Source-State, Event, Target-State, Action, Guard
             KARABO_FSM_TABLE_BEGIN(TransitionTable)
-            Row< Initialization, none, AllOk, none, none >,
-            Row< AllOk, ErrorFoundEvent, Error, ErrorFoundAction, none >,
-            Row< Error, ResetEvent, AllOk, none, none >
+            Row< Initialization, none, Ok, none, none >,
+            Row< Ok, ErrorFoundEvent, Error, ErrorFoundAction, none >,
+            Row< Error, ResetEvent, Ok, none, none >
             KARABO_FSM_TABLE_END
 
 
@@ -134,7 +134,7 @@ namespace karabo {
 
                 KARABO_FSM_CREATE_MACHINE(StateMachine, m_fsm);
                 KARABO_FSM_SET_CONTEXT_TOP(this, m_fsm)
-                KARABO_FSM_SET_CONTEXT_SUB(this, m_fsm, AllOk)
+                KARABO_FSM_SET_CONTEXT_SUB(this, m_fsm, Ok)
                 KARABO_FSM_START_MACHINE(m_fsm)
             }
             

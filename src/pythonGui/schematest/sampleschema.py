@@ -6,7 +6,7 @@
 
 
 from karabo_decorators import *
-from libkarathon import *
+from karabo.karathon import *
 
 
 @KARABO_CONFIGURATION_BASE_CLASS

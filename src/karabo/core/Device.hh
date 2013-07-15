@@ -225,11 +225,22 @@ namespace karabo {
                 using namespace karabo::io;
                 using namespace karabo::xip;
                 
-                // TODO outsource
-                Hash h;
-                Hash& inner = h.bindReference<Hash>(key);
+                Hash hash;
+                Hash& value = hash.bindReference<Hash>(key);
                 
-                // retrieve channel space
+                karabo::xip::RawImageData raw(value); // Shares value
+                
+                // Fill data
+                raw.setByteSize(image.byteSize());
+                std::memcpy(raw.dataPointer(), image.pixelPointer(), image.byteSize());
+                
+                // Set dims
+                raw.setDimensions(image.dims());
+                
+                // Set encoding
+                raw.setEncoding(karabo::xip::Encoding::GRAY);
+                
+                // Set channel space
                 karabo::xip::ChannelSpaceType channelSpace;
                 Types::ReferenceType type = Types::from<PixelType>();
                 if (type == Types::UINT8) {
@@ -243,12 +254,13 @@ namespace karabo {
                 } else {
                     channelSpace = karabo::xip::ChannelSpace::UNDEFINED;
                 }
+                raw.setChannelSpace(channelSpace);
                 
-                karabo::xip::RawImageData raw(image.byteSize(), karabo::util::Dims(image.dims()), karabo::xip::Encoding::GRAY, channelSpace);
-                std::memcpy(raw.dataPointer<unsigned char>(), image.pixelPointer(), image.byteSize());
-               
-                h.setAttribute(key, "image", 1);
-                emit("signalChanged", h, getInstanceId());
+                // Set header
+                raw.setHeader(image.getHeader());
+                
+                hash.setAttribute(key, "image", 1);
+                emit("signalChanged", hash, getInstanceId());
             }
             
             /**

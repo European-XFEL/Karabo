@@ -35,7 +35,7 @@ from navigationtreeview2 import NavigationTreeView
 
 from schemareader import SchemaReader 
 
-from libkarathon import *
+from karabo.karathon import *
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 from PyQt4.QtXmlPatterns import *

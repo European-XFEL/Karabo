@@ -14,7 +14,7 @@ __all__ = ["ImageTreeWidgetItem"]
 
 from basetreewidgetitem import BaseTreeWidgetItem
 from displaycomponent import DisplayComponent
-from libkarathon import *
+from karabo.karathon import *
 
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *

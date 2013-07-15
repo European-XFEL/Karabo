@@ -6,6 +6,8 @@
  * Copyright (c) 2010-2012 European XFEL GmbH Hamburg. All rights reserved.
  */
 
+#include <vector>
+
 #include "Base64.hh"
 
 namespace karabo {
@@ -16,7 +18,7 @@ namespace karabo {
         const std::string b64_char = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
 
-        std::string base64_encode(char const* bytes_to_encode, size_t len) {
+        std::string base64Encode(const unsigned char* bytes_to_encode, const size_t len) {
             unsigned char i0, i1, i2; // Bytes from input string
             unsigned char o0, o1, o2, o3; // Bytes to output string
             unsigned short pad; // Number of padding chars
@@ -70,42 +72,43 @@ namespace karabo {
         }
 
 
-        std::string base64_decode(char const* bytes_to_decode, size_t len) {
+        void base64Decode(const std::string& in, std::vector<unsigned char>& out) {
             unsigned char i0, i1, i2, i3; // Bytes from input string
             unsigned char o0, o1, o2; // Bytes to output string
             unsigned short pad; // Number of padding chars
             size_t t0, t1, t2, t3;
-            std::string out = ""; // Output string
-
+            size_t len = in.size();
+            
             // Empty input string => Empty output string
-            if (len == 0) return "";
+            if (len == 0) return;
+            else out.reserve(len);
 
             // Loop over input string
             for (size_t i = 0; i < len; i += 4) {
 
                 // Find out how many padding chars are there
-                if (i + 1 == len || bytes_to_decode[i + 1] == '=')
+                if (i + 1 == len || in[i + 1] == '=')
                     pad = 3;
-                else if (i + 2 == len || bytes_to_decode[i + 2] == '=')
+                else if (i + 2 == len || in[i + 2] == '=')
                     pad = 2;
-                else if (i + 3 == len || bytes_to_decode[i + 3] == '=')
+                else if (i + 3 == len || in[i + 3] == '=')
                     pad = 1;
                 else
                     pad = 0;
 
                 // Read 4 bytes from input string
                 // and decode them
-                i0 = t0 = b64_char.find(bytes_to_decode[i]);
+                i0 = t0 = b64_char.find(in[i]);
                 if (pad < 3)
-                    i1 = t1 = b64_char.find(bytes_to_decode[i + 1]);
+                    i1 = t1 = b64_char.find(in[i + 1]);
                 else
                     i1 = t1 = 0;
                 if (pad < 2)
-                    i2 = t2 = b64_char.find(bytes_to_decode[i + 2]);
+                    i2 = t2 = b64_char.find(in[i + 2]);
                 else
                     i2 = t2 = 0;
                 if (pad < 1)
-                    i3 = t3 = b64_char.find(bytes_to_decode[i + 3]);
+                    i3 = t3 = b64_char.find(in[i + 3]);
                 else
                     i3 = t3 = 0;
 
@@ -121,16 +124,12 @@ namespace karabo {
                 o2 = ((i2 & 0x0F) << 6) + (i3);
 
                 // Write decoded bytes to output
-                out += o0;
+                 out.push_back(o0);
                 if (pad < 2)
-                    out += o1;
+                     out.push_back(o1);
                 if (pad < 1)
-                    out += o2;
+                     out.push_back(o2);
             }
-
-
-            return out;
         }
-
     }
 }

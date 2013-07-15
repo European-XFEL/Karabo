@@ -17,29 +17,21 @@ namespace karabo {
                                    const karabo::util::Dims& dimensions,
                                    const EncodingType encoding,
                                    const ChannelSpaceType channelSpace,
-                                   const EndiannessType endianness,
-                                   const karabo::util::Hash& header) : m_isShared(false) {
+                                   const bool isBigEndian,
+                                   const karabo::util::Hash& header) : m_serializer(Serializer::create("Xml")), m_isShared(false) {
             m_hash = new Hash();
 
-            std::vector<char>& buffer = m_hash->bindReference<std::vector<char> >("data");
+            std::vector<unsigned char>& buffer = m_hash->bindReference<std::vector<unsigned char> >("data");
             buffer.resize(byteSize);
             m_hash->set("dims", dimensions.toVector());
             m_hash->set<int>("encoding", encoding);
             m_hash->set<int>("channelSpace", channelSpace);
-            if (endianness == Endianness::UNDEFINED) {
-                if (karabo::util::isBigEndian()) {
-                    m_hash->set<int>("endianness", Endianness::MSB);
-                } else {
-                    m_hash->set<int>("endianness", Endianness::LSB);
-                }
-            } else {
-                m_hash->set<int>("endianness", endianness);
-            }
+            m_hash->set<bool>("isBigEndian", isBigEndian);
             m_hash->set<std::string>("header", m_serializer->save(header));
         }
 
 
-        RawImageData::RawImageData(karabo::util::Hash& imageHash, bool sharesData) : m_isShared(sharesData) {
+        RawImageData::RawImageData(karabo::util::Hash& imageHash, bool sharesData) : m_serializer(Serializer::create("Xml")), m_isShared(sharesData) {
             if (m_isShared) {
                 m_hash = &imageHash;
             } else {
@@ -59,6 +51,11 @@ namespace karabo {
                 return m_serializer->load(m_hash->get<string>("header"));
             }
             return Hash();
+        }
+        
+        void RawImageData::setHeader(const karabo::util::Hash& header) const {
+            string& archive = m_hash->bindReference<string>("header");
+            m_serializer->save(header, archive);
         }
     }
 }

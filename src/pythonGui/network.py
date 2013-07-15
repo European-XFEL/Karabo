@@ -12,7 +12,7 @@
 __all__ = ["Network"]
 
 import socket
-from libkarathon import *
+from karabo.karathon import *
 from logindialog import LoginDialog
 from manager import Manager
 from struct import *
