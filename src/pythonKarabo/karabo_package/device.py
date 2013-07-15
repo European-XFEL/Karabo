@@ -27,9 +27,9 @@ class PythonDevice(BaseFsm):
         e.displayedName("Version").description("The version of this device class")
         e.advanced().readOnly().initialValue(PythonDevice.__version__).commit()
         
-        e = VECTOR_STRING_ELEMENT(expected).key("visibility")
+        e = INT32_ELEMENT(expected).key("visibility")
         e.displayedName("Visibility").description("Configures who is allowed to see this device at all")
-        e.assignmentOptional().defaultValueFromString("")
+        e.assignmentOptional().defaultValue(AccessLevel(OBSERVER))
         e.advanced().reconfigurable().commit()
         
         e = STRING_ELEMENT(expected).key("classId")
@@ -266,7 +266,7 @@ class PythonDevice(BaseFsm):
         
     def onStateUpdate(self, currentState):
         self.log.DEBUG("onStateUpdate: {}".format(currentState))
-        if self["state"] == currentState:
+        if self["state"] != currentState:
             self["state"] = currentState
         self._ss.reply(currentState)  # reply new state to interested event initiators
     
