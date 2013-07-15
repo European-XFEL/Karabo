@@ -15,12 +15,12 @@ import threading
 import time
 import inspect
 from karabo.karathon import *
-from fsm import *
-from decorators import KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS
-from plugin_loader import PluginLoader
-from configurator import Configurator
-from device import PythonDevice
-from runner import Runner
+from karabo.fsm import *
+from karabo.decorators import KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS
+from karabo.plugin_loader import PluginLoader
+from karabo.configurator import Configurator
+from karabo.device import PythonDevice
+from karabo.runner import Runner
 
 
 # Forward declaration of python class
@@ -241,9 +241,7 @@ class DeviceServer(object):
                 # get mostDerived from tree
                 deviceClass = mostDerived(candidates)  # most derived class in hierarchy
                 try:
-                    # For some reason deviceClass is not registered! How can it be!? __import__ does not work anymore?
-                    Configurator(PythonDevice).registerClass(deviceClass)       # <-- register by hands!
-                    schema = deviceClass.getSchema(deviceClass.__classid__)
+                    schema = Configurator(PythonDevice).getSchema(deviceClass.__classid__)
                     self.availableModules[name] = deviceClass.__classid__
                     self.availableDevices[deviceClass.__classid__] = {"mustNotify": True, "module": name, "xsd": schema}
                     self.newPluginAvailable()

@@ -7,7 +7,7 @@ __date__ ="$May 8, 2013 12:55:50 PM$"
 import os
 import sys
 import re
-from decorators import KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS
+from karabo.decorators import KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS
 from karabo.karathon import PATH_ELEMENT
 
 
