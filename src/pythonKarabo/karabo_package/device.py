@@ -9,8 +9,8 @@ import sys
 import socket
 from abc import ABCMeta, abstractmethod
 from karabo.karathon import *
-from decorators import KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS
-from base_fsm import BaseFsm
+from karabo.decorators import KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS
+from karabo.base_fsm import BaseFsm
 
 
 @KARABO_CONFIGURATION_BASE_CLASS

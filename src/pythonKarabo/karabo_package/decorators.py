@@ -5,7 +5,7 @@ __author__="Sergey Esenov <serguei.essenov at xfel.eu>"
 __date__ ="$Aug 2, 2012 10:39:43 AM$"
 
 from karabo.karathon import AssemblyRules, AccessType, READ, WRITE, INIT
-from configurator import Configurator
+from karabo.configurator import Configurator
 
 def KARABO_CLASSINFO(classid, version):
     '''
