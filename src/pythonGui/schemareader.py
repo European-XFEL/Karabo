@@ -84,10 +84,7 @@ class SchemaReader(object):
         elif self.__schema.isNode(key):
             #print "isNode", key
             if (self.__schema.hasDisplayType(key) and (self.__schema.getDisplayType(key) == "Image")):
-                print "detected Image"
-                #item = self._createImageItem(key, parentItem)
-                item = self._createPropertyItem(key, parentItem)
-                self._handleNode(key, item)
+                item = self._createImageItem(key, parentItem)              
             else:
                 item = self._createPropertyItem(key, parentItem)
                 self._handleNode(key, item)
@@ -146,9 +143,18 @@ class SchemaReader(object):
     def _createImageItem(self, key, parentItem):
         fullPath = self.__rootPath + "." + key
         if parentItem:
-            item = ImageTreeWidgetItem(key, fullPath, self.__treeWidget, parentItem)
+            item = ImageTreeWidgetItem(fullPath, self.__treeWidget, parentItem)
         else:
-            item = ImageTreeWidgetItem(key, fullPath, self.__treeWidget)
+            item = ImageTreeWidgetItem(fullPath, self.__treeWidget)
+            
+        if self.__deviceType is NavigationItemTypes.DEVICE:
+                item.enabled = True
+                
+        if self.__schema.hasDisplayedName(key):
+                item.displayText = self.__schema.getDisplayedName(key)
+                
+        self._setExpertLevel(key, item)
+        self._setAllowedStates(key, item)
         
 
 

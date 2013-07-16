@@ -48,6 +48,8 @@ class DisplayComponent(BaseComponent):
         key = params.get(QString('key'))
         if key is None:
             key = params.get('key')
+            
+        print "### Registering key: ", key
         Manager().registerDisplayComponent(key, self)
 
 
