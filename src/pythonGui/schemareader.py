@@ -432,7 +432,7 @@ class SchemaReader(object):
         else:
             accessMode = AccessMode.RECONFIGURABLE
         
-        # INITONLY + RECONFIGURABLE for warnLow/High, alarmLow/High
+        # INITONLY + RECONFIGURABLE for warnLow/High, alarmLow/High, requiredAccessLevel
         if self.__schema.hasWarnLow(key):
             fullPath = key + "@warnLow"
             displayName = "Warn low"
@@ -489,7 +489,11 @@ class SchemaReader(object):
                                            displayName, value,
                                            accessMode)
 
-        # INITONLY for min/maxInc and min/maxExc
+        # TODO: requiredAccesLevel INIT/RECONFIGURABLE
+        #if self.__schema.hasRequiredAccessLevel(key):
+        #    value = self.__schema.getRequiredAccessLevel(key)
+
+        # INITONLY for min/maxInc and min/maxExc and archivePolicy
         if accessMode is AccessMode.INITONLY:
             if self.__schema.hasMinInc(key):
                 fullPath = key + "@minInc"
@@ -547,9 +551,30 @@ class SchemaReader(object):
                                                displayName, value,
                                                accessMode)
 
-        # TODO:
-        # RECONFIGURABLE for epsilon, forcedValue, isForced
-        # archivePolicy-INITONLY, requiredAccessLevel-INITONLY/RECONFIGURABLE
+            if self.__schema.hasArchivePolicy(key):
+                value = self.__schema.getArchivePolicy(key)
+                print "ArchivePolicy", value
+                #EVERY_EVENT,
+                #EVERY_100MS,
+                #EVERY_1S,
+                #EVERY_5S,
+                #EVERY_10S,
+                #EVERY_1MIN,
+                #EVERY_10MIN,
+                #NO_ARCHIVING
+
+        else: # AccessMode.RECONFIGURABLE
+            # TODO:
+            # RECONFIGURABLE for epsilon, forcedValue, isForced
+            pass
+            #if self.__schema.hasEpsilon(key):
+            #    value = self.__schema.getEpsilon(key)
+            
+            #if self.__schema.hasForcedValue(key):
+            #    value = self.__schema.getForcedValue(key)
+            
+            #if self.__schema.hasIsForced(key):
+            #    value = self.__schema.getIsForced(key)
 
 
 
