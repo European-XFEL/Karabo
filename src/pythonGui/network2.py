@@ -140,7 +140,7 @@ class Network(QObject):
         input = QDataStream(self.__tcpSocket)
         input.setByteOrder(QDataStream.LittleEndian)
 
-        print self.__tcpSocket.bytesAvailable(), " bytes are coming in"
+        #print self.__tcpSocket.bytesAvailable(), " bytes are coming in"
         while True:
 
             if self.__headerSize == 0:
@@ -179,7 +179,7 @@ class Network(QObject):
             #bodyHash = self.__textSerializer.load(self.__bodyBytes)
             
             type = headerHash.get("type")
-            print "Request: ", type
+            #print "Request: ", type
             
             # "instanceNew" (instanceId, instanceInfo)
             # "instanceUpdated" (instanceId, instanceInfo)
