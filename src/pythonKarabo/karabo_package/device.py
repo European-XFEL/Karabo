@@ -48,6 +48,19 @@ class PythonDevice(BaseFsm):
         e.displayedName("State").description("The current state the device is in")
         e.assignmentOptional().defaultValue("uninitialized").readOnly().commit()
         
+        e = NODE_ELEMENT(expected).key("Logger").displayedName("Logger")
+        e.description("Logging settings").advanced()
+        e.appendParametersOfConfigurableClass(Logger, "Logger").commit()
+    
+        e = OVERWRITE_ELEMENT(expected).key("Logger.appenders")
+        e.setNewDefaultValue("Ostream").advanced().commit()
+        
+        e = OVERWRITE_ELEMENT(expected).key("Logger.appenders.Ostream.layout")
+        e.setNewDefaultValue("Pattern").advanced().commit()
+        
+        e = OVERWRITE_ELEMENT(expected).key("Logger.appenders.Ostream.layout.Pattern.format")
+        e.setNewDefaultValue("%p  %c  : %m%n").advanced().commit()
+        
     def __init__(self, configuration):
         if configuration is None:
             raise ValueError,"Configuration must be Hash object, not None"
@@ -90,14 +103,22 @@ class PythonDevice(BaseFsm):
         self.validatorIntern.setValidationRules(rules)
         self.validatorExtern.setValidationRules(rules)
         
-        # Setup device logger
-        logging_config = Hash("categories[0]", Hash("Category.name", self.deviceid, "Category.priority", "DEBUG"),
-                    "appenders[0].Ostream.layout", "Pattern")
-        Logger.configure(logging_config)
-        self.log = Logger.getLogger(self.deviceid)
-        
         # Instantiate SignalSlotable object without starting event loop
         self._ss = SignalSlotable.create(self.deviceid)    #, "Jms", self.parameters["connection.Jms"], autostart = False
+        
+        # Setup device logger
+        #logcfg = Hash("categories[0]", Hash("Category.name", self.deviceid, "Category.priority", "DEBUG"),
+        #            "appenders[0].Ostream.layout", "Pattern")
+        logcfg = configuration["Logger"]
+        logcfg["categories[0].Category.name"] = self.deviceid
+        logcfg["categories[0].Category.appenders[0].Ostream.layout.Pattern.format"] = "%p  %c  : %m%n"
+        logcfg["categories[0].Category.additivity"] = False
+        logcfg["categories[0].Category.appenders[1].Network.layout.Pattern.format"] = "%d{%F %H:%M:%S} | %p | %c | %m"
+        if "connection" in configuration:
+            logcfg["categories[0].Category.appenders[1].Network.connection"] = configuration["connection"]
+        logcfg["priority"] = "DEBUG"
+        Logger.configure(logcfg)
+        self.log = Logger.getLogger(self.deviceid)
         
         # Initialize FSM slots for user defined FSM (polymorphic call) 
         self.initFsmSlots(self._ss)
