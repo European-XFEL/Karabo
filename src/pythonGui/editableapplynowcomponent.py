@@ -29,18 +29,21 @@ class EditableApplyNowComponent(BaseComponent):
         self.__initParams = params
 
         self.__compositeWidget = QWidget()
-        self.__layout = QHBoxLayout(self.__compositeWidget)
-        self.__layout.setContentsMargins(0,0,0,0)
+        hLayout = QHBoxLayout(self.__compositeWidget)
+        hlayout.setContentsMargins(0,0,0,0)
 
         self.__editableWidget = EditableWidget.create(classAlias, **params)
         self.__editableWidget.signalEditingFinished.connect(self.onEditingFinished)
-        self.__layout.addWidget(self.__editableWidget.widget)
+        hlayout.addWidget(self.__editableWidget.widget)
         
-        unitSymbol = params.get(QString('unitSymbol'))
-        if unitSymbol is None:
-            unitSymbol = params.get('unitSymbol')
-        if unitSymbol is not None and len(unitSymbol) > 0:
-            self.__layout.addWidget(QLabel(unitSymbol))
+        # Append unit label, if available
+        unitLabel = str()
+        if metricPrefixSymbol:
+            unitLabel += metricPrefixSymbol
+        if unitSymbol:
+            unitLabel += unitSymbol
+        if len(unitLabel) > 0:
+            hlayout.addWidget(QLabel(unitLabel))
         
         self.signalValueChanged.connect(Manager().onDeviceInstanceValueChanged)
 

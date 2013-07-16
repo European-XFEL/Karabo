@@ -89,20 +89,20 @@ class EditableSpinBox(EditableWidget):
 
 
     def addParameters(self, **params):
-        min = params.get(QString('minimum'))
-        if min is None:
-            min = params.get('minimum')
-        if min is not None:
+        minInc = params.get(QString('minInc'))
+        if minInc is None:
+            minInc = params.get('minInc')
+        if minInc:
             self.__spinBox.blockSignals(True)
-            self.__spinBox.setMinimum(min)
+            self.__spinBox.setMinimum(minInc)
             self.__spinBox.blockSignals(False)
 
-        max = params.get(QString('maximum'))
-        if max is None:
-            max = params.get('maximum')
-        if max is not None:
+        maxInc = params.get(QString('maxInc'))
+        if maxInc is None:
+            maxInc = params.get('maxInc')
+        if maxInc:
             self.__spinBox.blockSignals(True)
-            self.__spinBox.setMaximum(max)
+            self.__spinBox.setMaximum(maxInc)
             self.__spinBox.blockSignals(False)
 
 

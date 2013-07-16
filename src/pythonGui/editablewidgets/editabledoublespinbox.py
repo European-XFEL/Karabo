@@ -114,17 +114,17 @@ class EditableDoubleSpinBox(EditableWidget):
 
 
     def addParameters(self, **params):
-        min = params.get(QString('minimum'))
-        if min is None:
-            min = params.get('minimum')
-        if min is not None:
-            self.minimum = min
+        minInc = params.get(QString('minInc'))
+        if minInc is None:
+            minInc = params.get('minInc')
+        if minInc:
+            self.minInclude = minInc
 
-        max = params.get(QString('maximum'))
-        if max is None:
-            max = params.get('maximum')
-        if max is not None:
-            self.maximum = max
+        maxInc = params.get(QString('maxInc'))
+        if maxInc is None:
+            maxInc = params.get('maxInc')
+        if maxInc:
+            self.maxInclude = maxInc
 
 
     def _value(self):
