@@ -56,6 +56,10 @@ class BaseFsm(object):
             fsm = self.getFsm()
             if fsm is not None:
                 self.onStateUpdate("Changing...")
-                fsm.process_event(event)
+                try:
+                    fsm.process_event(event)
+                except Exception, e:
+                    self.errorFound("Exception while processing event '{}'".format(event.__class__.__name__), str(e))
+                    return
                 self.onStateUpdate(fsm.get_state())
     

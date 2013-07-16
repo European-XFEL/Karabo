@@ -247,7 +247,7 @@ class PythonDevice(BaseFsm):
     
     def errorFoundAction(self, shortMessage, detailedMessage):
         self.log.ERROR("Error Found Action: {} -- {}".format(shortMessage, detailedMessage))
-        emit("signalNotification", "ERROR", shortMessage, detailedMessage, self.deviceid)
+        self._ss.emit("signalNotification", "ERROR", shortMessage, detailedMessage, self.deviceid)
     
     def preReconfigure(self, incomingReconfiguration):
         pass
