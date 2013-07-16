@@ -234,6 +234,9 @@ class PythonDevice(BaseFsm):
         with self._stateChangeLock:
             return HashFilter.byTag(self.fullSchema, self.parameters, tags)
     
+    def filterByTags(self, configuration, tags):
+        return HashFilter.byTag(self.fullSchema, configuration, tags)
+    
     def getServerId(self):
         return self.serverid
     
