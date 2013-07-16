@@ -48,7 +48,7 @@ namespace karabo {
         protected:
 
             Slot(SignalSlotable* signalSlotable, const karabo::net::BrokerChannel::Pointer& channel, const std::string& slotInstanceId, const std::string& slotFunction)
-            : m_signalSlotable(signalSlotable), m_channel(channel), m_slotInstanceId(slotInstanceId + "|"), m_slotFunction(slotFunction + "|") {
+            : m_signalSlotable(signalSlotable), m_channel(channel), m_slotInstanceId("|" + slotInstanceId + "|"), m_slotFunction("|" + slotFunction + "|") {
                 std::string filterCondition;
                 filterCondition = "slotInstanceId LIKE '%" + m_slotInstanceId + "%' AND slotFunction LIKE '%" + m_slotFunction + "%'";
                 m_channel->setFilter(filterCondition);

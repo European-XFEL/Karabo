@@ -29,10 +29,10 @@ namespace karabo {
                 m_registeredSlotInstanceIdsString = "__none__";
             } else {
                 for (std::map<std::string, size_t>::const_iterator it = m_registeredSlotFunctions.begin(); it != m_registeredSlotFunctions.end(); ++it) {
-                    m_registeredSlotFunctionsString += it->first + "|";
+                    m_registeredSlotFunctionsString += "|" + it->first + "|";
                 }
                 for (std::map<std::string, size_t>::const_iterator it = m_registeredSlotInstanceIds.begin(); it != m_registeredSlotInstanceIds.end(); ++it) {
-                    m_registeredSlotInstanceIdsString += it->first + "|";
+                    m_registeredSlotInstanceIdsString += "|" + it->first + "|";
                 }
             }
         }

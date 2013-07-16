@@ -210,8 +210,8 @@ namespace karabo {
 
             void prepareHeaderAndFilter(const std::string& slotInstanceId, const std::string& slotFunction) {
                 m_header.set("signalInstanceId", m_requestInstanceId);
-                m_header.set("slotInstanceId", slotInstanceId + "|");
-                m_header.set("slotFunction", slotFunction + "|");
+                m_header.set("slotInstanceId", "|" + slotInstanceId + "|");
+                m_header.set("slotFunction", "|" + slotFunction + "|");
                 m_header.set("hostName", boost::asio::ip::host_name());
                 m_header.set("replyTo", m_replyId);
                 m_header.set("classId", "Requestor");
