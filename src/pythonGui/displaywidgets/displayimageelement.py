@@ -44,7 +44,9 @@ class DisplayImageElement(DisplayWidget):
         self.__image = QLabel()
         self.__image.setAutoFillBackground(True)
         self.__image.setAlignment(Qt.AlignCenter)
-        self.__image.setMinimumHeight(32)
+        self.__image.setMinimumHeight(125)
+        self.__image.setMaximumHeight(125)
+        self.__image.setMinimumWidth(125)
         self.__image.setWordWrap(True)
         self.setErrorState(False)
         
@@ -105,8 +107,8 @@ class DisplayImageElement(DisplayWidget):
 
 
     def valueChanged(self, key, value, timestamp=None):
-        if value is None:
-            return
+        
+        if value is None: return
 
         if value != self.__value:
             # Store original value with type
@@ -114,28 +116,24 @@ class DisplayImageElement(DisplayWidget):
             
             # Value as Hash (dimX=<dimX>, dimY=<dimY>, dimZ=<dimZ>, dimC=<dimC>, data=<data>)
             dims = value.get('dims')
-            if len(dims) < 2:
-                return;
+            if len(dims) < 2: return;
             dimX = dims[0]
             dimY = dims[1]
             #dimZ = dims[2]
             data = value.get('data')
-            pixelFormat = value.get('format')
             
-            if not dimX and not dimY and not data:
-                return
-            
-            if (dimX < 1) or (dimY < 1) or (len(data) < (dimX*dimY)):
-                return
+            if not dimX and not dimY and not data: return
+            if (dimX < 1) or (dimY < 1) or (len(data) < (dimX*dimY)): return
 
-            image = QImage(data, dimX, dimY, QImage.Format_ARGB32_Premultiplied)
-            
+            image = QImage(data, dimX, dimY, QImage.Format_ARGB32_Premultiplied)            
             pixmap = QPixmap.fromImage(image)
+            
             # Scale pixmap
-            #pixmap = pixmap.scaledToHeight(32)
+            if pixmap.height() > 125:
+                pixmap = pixmap.scaledToHeight(125)
+                
             self.__image.setPixmap(pixmap)
-
-
+            
     class Maker:
         def make(self, **params):
             return DisplayImageElement(**params)

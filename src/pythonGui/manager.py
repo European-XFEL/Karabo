@@ -717,6 +717,7 @@ class Manager(Singleton):
         
 
     # TODO: This function must be thread-safe!!
+    # Called by network class
     def handleConfigurationChanged(self, deviceId, config):
         configurationPath = "device." + deviceId + ".configuration"
         self._changeHash(configurationPath, config.get(configurationPath))

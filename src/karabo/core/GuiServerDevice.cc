@@ -218,7 +218,10 @@ namespace karabo {
                 KARABO_LOG_FRAMEWORK_DEBUG << "";
                 string deviceId = header.get<string > ("deviceId");
                 Hash h("type", "configurationChanged", "deviceId", deviceId);
-                Hash b("device." + deviceId + ".configuration", remote().get(deviceId));
+                Hash b;
+                Hash& tmp = b.bindReference<Hash>("device." + deviceId + ".configuration");
+                tmp = remote().get(deviceId);
+                preprocessImageData(tmp);
                 channel->write(h, b);
             } catch (const Exception& e) {
                 KARABO_LOG_ERROR << "Problem in onRefreshInstance(): " << e.userFriendlyMsg();
@@ -259,10 +262,13 @@ namespace karabo {
                     it->second.insert(deviceId);
                 }
                 Hash h("type", "configurationChanged", "deviceId", deviceId);
-                Hash b("device." + deviceId + ".configuration", remote().get(deviceId));
+                Hash b;
+                Hash& tmp = b.bindReference<Hash>("device." + deviceId + ".configuration");
+                tmp = remote().get(deviceId);
+                preprocessImageData(tmp);
                 channel->write(h, b);
             } catch (const Exception& e) {
-                KARABO_LOG_ERROR << "Problem in onVisibleDevice(): " << e.userFriendlyMsg();
+                KARABO_LOG_ERROR << "Problem in onNewVisibleDevice(): " << e.userFriendlyMsg();
             }
         }
 
@@ -361,14 +367,17 @@ namespace karabo {
             try {
                 for (Hash::iterator it = modified.begin(); it != modified.end(); it++) {
                     if (it->hasAttribute("image")) {
-
+                        
                         // Create a RawImageData object which shares the data of the hash
-                        karabo::xip::RawImageData img(modified);
+                        karabo::xip::RawImageData img(it->getValue<Hash>());
 
                         if (img.getDimensions().rank() < 2) continue;
 
                         // Support for grayscale images
                         if (img.getEncoding() == Encoding::GRAY) {
+                            
+                            KARABO_LOG_DEBUG << "Preprocessing image";
+                            
                             size_t size = img.size();
                             vector<unsigned char> qtImage(size * 4); // Have to blow up for RGBA
 
