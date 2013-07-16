@@ -53,13 +53,13 @@ class PythonDevice(BaseFsm):
         e.appendParametersOfConfigurableClass(Logger, "Logger").commit()
     
         e = OVERWRITE_ELEMENT(expected).key("Logger.appenders")
-        e.setNewDefaultValue("Ostream").advanced().commit()
+        e.setNewDefaultValue("Ostream").commit()
         
         e = OVERWRITE_ELEMENT(expected).key("Logger.appenders.Ostream.layout")
-        e.setNewDefaultValue("Pattern").advanced().commit()
+        e.setNewDefaultValue("Pattern").commit()
         
         e = OVERWRITE_ELEMENT(expected).key("Logger.appenders.Ostream.layout.Pattern.format")
-        e.setNewDefaultValue("%p  %c  : %m%n").advanced().commit()
+        e.setNewDefaultValue("%p  %c  : %m%n").commit()
         
     def __init__(self, configuration):
         if configuration is None:

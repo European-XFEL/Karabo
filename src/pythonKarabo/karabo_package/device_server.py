@@ -344,7 +344,9 @@ class DeviceServer(object):
             tokens = self.serverid.split("_")
             if tokens.pop() == str(os.getpid()):
                 _domain = tokens.pop(0) + "-" + tokens.pop()
-            _id = _domain + "_" + devClassId + "_" + str(_index)
+                _id = _domain + "_" + devClassId + "_" + str(_index)
+            else:
+                _id = self.serverid + "_" + devClassId + "_" + str(_index)
             return _id
      
 
