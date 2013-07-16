@@ -43,6 +43,13 @@ class EditableApplyLaterComponent(BaseComponent):
         self.__editableWidget.signalEditingFinished.connect(self.onEditingFinished)
         hLayout.addWidget(self.__editableWidget.widget)
         
+        metricPrefixSymbol = params.get(QString('metricPrefixSymbol'))
+        if metricPrefixSymbol is None:
+            metricPrefixSymbol = params.get('metricPrefixSymbol')
+        unitSymbol = params.get(QString('unitSymbol'))
+        if unitSymbol is None:
+            unitSymbol = params.get('unitSymbol')
+        
         # Append unit label, if available
         unitLabel = str()
         if metricPrefixSymbol:
