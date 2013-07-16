@@ -13,6 +13,7 @@ cat > karabo-pythondeviceserver <<End-of-file
 
 karabo=\$(dirname \$0)/..
 export PATH=\$karabo/extern/bin
+export PYTHONPATH=\$karabo/extern/lib/karabo_python
 pythonLibPath=\$(python -c "from distutils.sysconfig import get_python_lib; print(get_python_lib())")
 python \$pythonLibPath/karabo/device_server.py \$*
 
