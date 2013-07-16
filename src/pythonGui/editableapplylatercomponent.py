@@ -43,11 +43,14 @@ class EditableApplyLaterComponent(BaseComponent):
         self.__editableWidget.signalEditingFinished.connect(self.onEditingFinished)
         hLayout.addWidget(self.__editableWidget.widget)
         
-        unitSymbol = params.get(QString('unitSymbol'))
-        if unitSymbol is None:
-            unitSymbol = params.get('unitSymbol')
-        if unitSymbol is not None and len(unitSymbol) > 0:
-            hLayout.addWidget(QLabel(unitSymbol))
+        # Append unit label, if available
+        unitLabel = str()
+        if metricPrefixSymbol:
+            unitLabel += metricPrefixSymbol
+        if unitSymbol:
+            unitLabel += unitSymbol
+        if len(unitLabel) > 0:
+            hLayout.addWidget(QLabel(unitLabel))
 
         self.__hasConflict = False
 

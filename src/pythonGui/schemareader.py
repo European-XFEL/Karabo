@@ -57,7 +57,7 @@ class SchemaReader(object):
         
         print ""
         print "++++ readSchema ++++"
-        #print self.__schema
+        print self.__schema
         print ""
         
         self.__rootPath = path + ".configuration"
@@ -137,9 +137,10 @@ class SchemaReader(object):
             
             self._setExpertLevel(key, item)
             self._setAllowedStates(key, item)
-                
+            
             return item
-        
+
+
     def _createImageItem(self, key, parentItem):
         fullPath = self.__rootPath + "." + key
         if parentItem:
@@ -155,28 +156,27 @@ class SchemaReader(object):
                 
         self._setExpertLevel(key, item)
         self._setAllowedStates(key, item)
-        
 
 
     def _handleLeaf(self, key, item):
         #print "_handleLeaf"
-        self._getAssignment(key, item)
+        self._setAssignment(key, item)
         
         self._setDescription(key, item)
+        
         defaultValue = self._getDefaultValue(key, item)
         item.defaultValue = defaultValue
-        unitSymbol = self._getUnit(key, item)
-
-        minInc = self._getMinInc(key, item)
-        maxInc = self._getMaxInc(key, item)
-        minExc = self._getMinExc(key, item)
-        maxExc = self._getMaxExc(key, item)
         
-        self._getValueType(key, item, defaultValue, unitSymbol)
+        metricPrefixSymbol = self._getMetricPrefixSymbol(key, item)
+        unitSymbol = self._getUnitSymbol(key, item)
+        
+        self._handleValueType(key, item, defaultValue, metricPrefixSymbol, unitSymbol)
+        self._checkForFurtherAttributes(key, item)
 
 
     def _handleNode(self, key, parentItem):
         self._setDescription(key, parentItem)
+        
         nodeKeys = self.__schema.getKeys(key)
         for nKey in nodeKeys:
             self.r_readSchema(key + "." + nKey, parentItem)
@@ -221,54 +221,54 @@ class SchemaReader(object):
 
 
 ### Schema getter functions ###
-    def _getValueType(self, key, item, defaultValue, unitSymbol):
+    def _handleValueType(self, key, item, defaultValue, metricPrefixSymbol, unitSymbol):
         valueType = self.__schema.getValueType(key)
         
         if valueType == Types.STRING:
             #print "STRING"
-            self._handleString(key, item, defaultValue, unitSymbol)
+            self._handleString(key, item, defaultValue, metricPrefixSymbol, unitSymbol)
         elif valueType == Types.CHAR:
             #print "CHAR"
-            self._handleString(key, item, defaultValue, unitSymbol)
+            self._handleString(key, item, defaultValue, metricPrefixSymbol, unitSymbol)
         elif valueType == Types.BOOL:
             #print "BOOL"
-            self._handleBool(key, item, defaultValue, unitSymbol)
+            self._handleBool(key, item, defaultValue, metricPrefixSymbol, unitSymbol)
         elif valueType == Types.FLOAT:
             #print "FLOAT"
-            self._handleFloat(key, item, defaultValue, unitSymbol)
+            self._handleFloat(key, item, defaultValue, metricPrefixSymbol, unitSymbol)
         elif valueType == Types.COMPLEX_FLOAT:
             #print "COMPLEX_FLOAT"
-            self._handleFloat(key, item, defaultValue, unitSymbol)
+            self._handleFloat(key, item, defaultValue, metricPrefixSymbol, unitSymbol)
         elif valueType == Types.DOUBLE:
             #print "DOUBLE"
-            self._handleFloat(key, item, defaultValue, unitSymbol)
+            self._handleFloat(key, item, defaultValue, metricPrefixSymbol, unitSymbol)
         elif valueType == Types.COMPLEX_DOUBLE:
             #print "COMPLEX_DOUBLE"
-            self._handleFloat(key, item, defaultValue, unitSymbol)
+            self._handleFloat(key, item, defaultValue, metricPrefixSymbol, unitSymbol)
         elif valueType == Types.UINT8:
             #print "UINT8"
-            self._handleInteger(key, item, defaultValue, unitSymbol)
+            self._handleInteger(key, item, defaultValue, metricPrefixSymbol, unitSymbol)
         elif valueType == Types.INT16:
             #print "INT16"
-            self._handleInteger(key, item, defaultValue, unitSymbol)
+            self._handleInteger(key, item, defaultValue, metricPrefixSymbol, unitSymbol)
         elif valueType == Types.UINT16:
             #print "UINT16"
-            self._handleInteger(key, item, defaultValue, unitSymbol)
+            self._handleInteger(key, item, defaultValue, metricPrefixSymbol, unitSymbol)
         elif valueType == Types.INT32:
             #print "INT32"
-            self._handleInteger(key, item, defaultValue, unitSymbol)
+            self._handleInteger(key, item, defaultValue, metricPrefixSymbol, unitSymbol)
         elif valueType == Types.UINT32:
             #print "UINT32"
-            self._handleInteger(key, item, defaultValue, unitSymbol)
+            self._handleInteger(key, item, defaultValue, metricPrefixSymbol, unitSymbol)
         elif valueType == Types.INT64:
             #print "INT64"
-            self._handleInteger(key, item, defaultValue, unitSymbol)
+            self._handleInteger(key, item, defaultValue, metricPrefixSymbol, unitSymbol)
         elif valueType == Types.UINT64:
             #print "UINT64"
-            self._handleInteger(key, item, defaultValue, unitSymbol)
+            self._handleInteger(key, item, defaultValue, metricPrefixSymbol, unitSymbol)
         elif valueType == Types.VECTOR_STRING:
             print "VECTOR_STRING"
-            self._handleVectorString(key, item, defaultValue, unitSymbol)
+            self._handleVectorString(key, item, defaultValue, metricPrefixSymbol, unitSymbol)
         elif valueType == Types.VECTOR_CHAR:
             print "VECTOR_CHAR"
         elif valueType == Types.VECTOR_INT8:
@@ -358,6 +358,7 @@ class SchemaReader(object):
         else:
             text = QString("<b>Default value: </b>%1").arg(defaultValue)
         
+        # TODO: better tooltip dialog on mouse hover
         toolTip = parentItem.toolTip(0)
         if toolTip.isEmpty():
             parentItem.setToolTip(0, text)
@@ -367,19 +368,30 @@ class SchemaReader(object):
         return defaultValue
 
 
-    def _getUnit(self, key, item):
+    def _getMetricPrefixSymbol(self, key, item):
+        if not self.__schema.hasMetricPrefix(key):
+            return None
+        
+        #metricPrefix = self.__schema.getMetricPrefix(key)
+        #metricPrefixName = self.__schema.getMetricPrefixName(key)
+        metricPrefixSymbol = self.__schema.getMetricPrefixSymbol(key)
+        
+        return metricPrefixSymbol
+
+
+    def _getUnitSymbol(self, key, item):
         if not self.__schema.hasUnit(key):
             return None
         
-        unit = self.__schema.getUnit(key)
-        unitName = self.__schema.getUnitName(key)
+        #unit = self.__schema.getUnit(key)
+        #unitName = self.__schema.getUnitName(key)
         unitSymbol = self.__schema.getUnitSymbol(key)
         
         #item.setText(2, unitSymbol)
         return unitSymbol
 
 
-    def _getAssignment(self, key, item):
+    def _setAssignment(self, key, item):
         if not self.__schema.hasAssignment(key):
             return
         
@@ -397,38 +409,148 @@ class SchemaReader(object):
 
     def _getAccessMode(self, key, parentItem):
         if not self.__schema.hasAccessMode(key):
-            #print "AccessMode.UNDEFINED"
+            #print "AccessMode.UNDEFINEhasWarnLowD"
             return AccessMode.UNDEFINED
         
         if self.__schema.isAccessInitOnly(key):
             #print "AccessMode.INITONLY"
-            self._checkForAttributes(key, parentItem, AccessMode.INITONLY)
             return AccessMode.INITONLY
         elif self.__schema.isAccessReconfigurable(key):
             #print "AccessMode.RECONFIGURABLE"
-            self._checkForAttributes(key, parentItem, AccessMode.RECONFIGURABLE)
             return AccessMode.RECONFIGURABLE
         elif self.__schema.isAccessReadOnly(key):
             #print "AccessMode.READONLY"
-            self._checkForAttributes(key, parentItem, AccessMode.READONLY)
             return AccessMode.READONLY
         
         return AccessMode.UNDEFINED
 
 
-    def _checkForAttributes(self, key, parentItem, accessMode):
+    def _checkForFurtherAttributes(self, key, parentItem):
+        
+        if self.__deviceType is NavigationItemTypes.CLASS:
+            accessMode = AccessMode.INITONLY
+        else:
+            accessMode = AccessMode.RECONFIGURABLE
+        
+        # INITONLY + RECONFIGURABLE for warnLow/High, alarmLow/High
         if self.__schema.hasWarnLow(key):
-            self._handleFloatAttribute(parentItem, key + "@warnLow",
-                                       "Warn low", self.__schema.getWarnLow(key), accessMode)
+            fullPath = key + "@warnLow"
+            displayName = "Warn low"
+            value = self.__schema.getWarnLow(key)
+            
+            if parentItem.classAlias == "Integer Field":
+                self._handleIntegerAttribute(parentItem, fullPath,
+                                             displayName, value,
+                                             accessMode)
+            else:
+                self._handleFloatAttribute(parentItem, fullPath,
+                                           displayName, value,
+                                           accessMode)
+        
         if self.__schema.hasWarnHigh(key):
-            self._handleFloatAttribute(parentItem, key + "@warnHigh",
-                                       "Warn high", self.__schema.getWarnHigh(key), accessMode)
+            fullPath = key + "@warnHigh"
+            displayName = "Warn high"
+            value = self.__schema.getWarnHigh(key)
+            
+            if parentItem.classAlias == "Integer Field":
+                self._handleIntegerAttribute(parentItem, fullPath,
+                                             displayName, value,
+                                             accessMode)
+            else:
+                self._handleFloatAttribute(parentItem, fullPath,
+                                           displayName, value,
+                                           accessMode)
+        
         if self.__schema.hasAlarmLow(key):
-            self._handleFloatAttribute(parentItem, key + "@alarmLow",
-                                       "Alarm low", self.__schema.getAlarmLow(key), accessMode)
+            fullPath = key + "@alarmLow"
+            displayName = "Alarm low"
+            value = self.__schema.getAlarmLow(key)
+            
+            if parentItem.classAlias == "Integer Field":
+                self._handleIntegerAttribute(parentItem, fullPath,
+                                             displayName, value,
+                                             accessMode)
+            else:
+                self._handleFloatAttribute(parentItem, fullPath,
+                                           displayName, value,
+                                           accessMode)
+        
         if self.__schema.hasAlarmHigh(key):
-            self._handleFloatAttribute(parentItem, key + "@alarmHigh",
-                                       "Alarm high", self.__schema.getAlarmHigh(key), accessMode)
+            fullPath = key + "@alarmHigh"
+            displayName = "Alarm high"
+            value = self.__schema.getAlarmHigh(key)
+            
+            if parentItem.classAlias == "Integer Field":
+                self._handleIntegerAttribute(parentItem, fullPath,
+                                             displayName, value,
+                                             accessMode)
+            else:
+                self._handleFloatAttribute(parentItem, fullPath,
+                                           displayName, value,
+                                           accessMode)
+
+        # INITONLY for min/maxInc and min/maxExc
+        if accessMode is AccessMode.INITONLY:
+            if self.__schema.hasMinInc(key):
+                fullPath = key + "@minInc"
+                displayName = "Minimum include"
+                value = self.__schema.getMinInc(key)
+
+                if parentItem.classAlias == "Integer Field":
+                    self._handleIntegerAttribute(parentItem, fullPath,
+                                                 displayName, value,
+                                                 accessMode)
+                else:
+                    self._handleFloatAttribute(parentItem, fullPath,
+                                               displayName, value,
+                                               accessMode)
+
+            if self.__schema.hasMaxInc(key):
+                fullPath = key + "@maxInc"
+                displayName = "Maximum include"
+                value = self.__schema.getMaxInc(key)
+
+                if parentItem.classAlias == "Integer Field":
+                    self._handleIntegerAttribute(parentItem, fullPath,
+                                                 displayName, value,
+                                                 accessMode)
+                else:
+                    self._handleFloatAttribute(parentItem, fullPath,
+                                               displayName, value,
+                                               accessMode)
+
+            if self.__schema.hasMinExc(key):
+                fullPath = key + "@minExc"
+                displayName = "Minimum exclude"
+                value = self.__schema.getMinExc(key)
+
+                if parentItem.classAlias == "Integer Field":
+                    self._handleIntegerAttribute(parentItem, fullPath,
+                                                 displayName, value,
+                                                 accessMode)
+                else:
+                    self._handleFloatAttribute(parentItem, fullPath,
+                                               displayName, value,
+                                               accessMode)
+
+            if self.__schema.hasMaxExc(key):
+                fullPath = key + "@maxExc"
+                displayName = "Maximum exclude"
+                value = self.__schema.getMaxExc(key)
+
+                if parentItem.classAlias == "Integer Field":
+                    self._handleIntegerAttribute(parentItem, fullPath,
+                                                 displayName, value,
+                                                 accessMode)
+                else:
+                    self._handleFloatAttribute(parentItem, fullPath,
+                                               displayName, value,
+                                               accessMode)
+
+        # TODO:
+        # RECONFIGURABLE for epsilon, forcedValue, isForced
+        # archivePolicy-INITONLY, requiredAccessLevel-INITONLY/RECONFIGURABLE
+
 
 
     def _setExpertLevel(self, key, item):
@@ -445,36 +567,59 @@ class SchemaReader(object):
         item.allowedStates = self.__schema.getAllowedStates(key)
 
 
-    def _getMinInc(self, key, item):
+    def _getMinInc(self, key):
         if not self.__schema.hasMinInc(key):
             return None
         
         return self.__schema.getMinInc(key)
         
 
-    def _getMaxInc(self, key, item):
+    def _getMaxInc(self, key):
         if not self.__schema.hasMaxInc(key):
             return None
         
         return self.__schema.getMaxInc(key)
         
 
-    def _getMinExc(self, key, item):
+    def _getMinExc(self, key):
         if not self.__schema.hasMinExc(key):
             return None
         
         return self.__schema.getMinExc(key)
         
 
-    def _getMaxExc(self, key, item):
+    def _getMaxExc(self, key):
         if not self.__schema.hasMaxExc(key):
             return None
         
         return self.__schema.getMaxExc(key)
 
 
+    def _setMinMaxIncAndExc(self, key, editableComponent):
+        if not editableComponent:
+            return
+        
+        # Check minimum and maximum includes/excludes
+        minInc = self._getMinInc(key)
+        maxInc = self._getMaxInc(key)
+        minExc = self._getMinExc(key)
+        maxExc = self._getMaxExc(key)
+        
+        params = dict()
+        if minInc:
+            params['minInc'] =minInc
+        if maxInc:
+            params['maxInc'] = maxInc
+        if minExc:
+            params['minExc'] = minExc
+        if maxExc:
+            params['maxExc'] = maxExc
+        
+        editableComponent.addParameters(**params)
+
+
 ### functions for setting editable components depending on value type ###
-    def _handleBool(self, key, item, defaultValue, unitSymbol):
+    def _handleBool(self, key, item, defaultValue, metricPrefixSymbol, unitSymbol):
         #print "_handleBool"
         item.classAlias = "Toggle Field"
         item.setIcon(0, QIcon(":boolean"))
@@ -484,20 +629,23 @@ class SchemaReader(object):
         
         if self.__deviceType is NavigationItemTypes.CLASS:
             if (accessMode is AccessMode.INITONLY) or (accessMode is AccessMode.RECONFIGURABLE):
-                editableComponent = EditableNoApplyComponent(classAlias=item.classAlias, key=item.internalKey,
-                                                             value=defaultValue, unitSymbol=unitSymbol)
-                #, value=item.defaultValue, valueType=item.valueType, unitSymbol=unitSymbol)
+                editableComponent = EditableNoApplyComponent(classAlias=item.classAlias,
+                                                             key=item.internalKey,
+                                                             value=defaultValue, 
+                                                             metricPrefixSymbol=metricPrefixSymbol,
+                                                             unitSymbol=unitSymbol)
         else:
             if accessMode is AccessMode.RECONFIGURABLE:
-                editableComponent = EditableApplyLaterComponent(classAlias=item.classAlias, key=item.internalKey,
+                editableComponent = EditableApplyLaterComponent(classAlias=item.classAlias,
+                                                                key=item.internalKey,
+                                                                metricPrefixSymbol=metricPrefixSymbol,
                                                                 unitSymbol=unitSymbol)
-                #, value=None, valueType=item.valueType, unitSymbol=unitSymbol)
                 editableComponent.signalApplyChanged.connect(self.__treeWidget.onApplyChanged)
 
         item.editableComponent = editableComponent
 
 
-    def _handleString(self, key, item, defaultValue, unitSymbol):
+    def _handleString(self, key, item, defaultValue, metricPrefixSymbol, unitSymbol):
         #print "_handleString"
         hasOptions = self.__schema.hasOptions(key)
         if hasOptions:
@@ -515,22 +663,26 @@ class SchemaReader(object):
         # TODO: do not forget PATH_ELEMENT "File Path"
         if self.__deviceType is NavigationItemTypes.CLASS:
             if (accessMode is AccessMode.INITONLY) or (accessMode is AccessMode.RECONFIGURABLE):
-                editableComponent = EditableNoApplyComponent(classAlias=item.classAlias, key=item.internalKey,
-                                                             value=defaultValue, enumeration=enumeration,
+                editableComponent = EditableNoApplyComponent(classAlias=item.classAlias,
+                                                             key=item.internalKey,
+                                                             value=defaultValue,
+                                                             enumeration=enumeration,
+                                                             metricPrefixSymbol=metricPrefixSymbol,
                                                              unitSymbol=unitSymbol)
-                #value=item.defaultValue, valueType=item.valueType, unitSymbol=unitSymbol)
         else:
             if accessMode is AccessMode.RECONFIGURABLE:
-                editableComponent = EditableApplyLaterComponent(classAlias=item.classAlias, key=item.internalKey,
-                                                                enumeration=enumeration, unitSymbol=unitSymbol)
-                #value=None, valueType=item.valueType, unitSymbol=unitSymbol)
+                editableComponent = EditableApplyLaterComponent(classAlias=item.classAlias,
+                                                                key=item.internalKey,
+                                                                enumeration=enumeration, 
+                                                                metricPrefixSymbol=metricPrefixSymbol,
+                                                                unitSymbol=unitSymbol)
                 editableComponent.signalApplyChanged.connect(self.__treeWidget.onApplyChanged)
 
         #item.setIcon(0, QIcon(":path"))
         item.editableComponent = editableComponent
 
 
-    def _handleInteger(self, key, item, defaultValue, unitSymbol):
+    def _handleInteger(self, key, item, defaultValue, metricPrefixSymbol, unitSymbol):
         #print "_handleInteger"
         hasOptions = self.__schema.hasOptions(key)
         if hasOptions:
@@ -547,25 +699,27 @@ class SchemaReader(object):
         
         if self.__deviceType is NavigationItemTypes.CLASS:
             if (accessMode is AccessMode.INITONLY) or (accessMode is AccessMode.RECONFIGURABLE):
-                editableComponent = EditableNoApplyComponent(classAlias=item.classAlias, key=item.internalKey,
-                                                             value=defaultValue, enumeration=enumeration,
+                editableComponent = EditableNoApplyComponent(classAlias=item.classAlias,
+                                                             key=item.internalKey,
+                                                             value=defaultValue,
+                                                             enumeration=enumeration,
+                                                             metricPrefixSymbol=metricPrefixSymbol,
                                                              unitSymbol=unitSymbol)
-                #, value=item.defaultValue, valueType=item.valueType, unitSymbol=unitSymbol)
         else:
             if accessMode is AccessMode.RECONFIGURABLE:
-                editableComponent = EditableApplyLaterComponent(classAlias=item.classAlias, key=item.internalKey,
-                                                                enumeration=enumeration, unitSymbol=unitSymbol)
-                #, value=None, valueType=item.valueType, unitSymbol=unitSymbol)
+                editableComponent = EditableApplyLaterComponent(classAlias=item.classAlias,
+                                                                key=item.internalKey,
+                                                                enumeration=enumeration,
+                                                                metricPrefixSymbol=metricPrefixSymbol,
+                                                                unitSymbol=unitSymbol)
                 editableComponent.signalApplyChanged.connect(self.__treeWidget.onApplyChanged)
-
-        #if minInclusive and len(minInclusive) > 0:
-        #    editableComponent.addParameters(minimum=int(minInclusive))
-        #if maxInclusive and len(maxInclusive) > 0:
-        #    editableComponent.addParameters(maximum=int(maxInclusive))
+        
+        # Check minimum and maximum includes/excludes
+        self._setMinMaxIncAndExc(key, editableComponent)
         item.editableComponent = editableComponent
 
 
-    def _handleFloat(self, key, item, defaultValue, unitSymbol):
+    def _handleFloat(self, key, item, defaultValue, metricPrefixSymbol, unitSymbol):
         #print "_handleFloat"
         hasOptions = self.__schema.hasOptions(key)
         if hasOptions:
@@ -582,53 +736,27 @@ class SchemaReader(object):
         
         if self.__deviceType is NavigationItemTypes.CLASS:
             if (accessMode is AccessMode.INITONLY) or (accessMode is AccessMode.RECONFIGURABLE):
-                editableComponent = EditableNoApplyComponent(classAlias=item.classAlias, key=item.internalKey,
-                                                             value=defaultValue, enumeration=enumeration,
+                editableComponent = EditableNoApplyComponent(classAlias=item.classAlias,
+                                                             key=item.internalKey,
+                                                             value=defaultValue,
+                                                             enumeration=enumeration,
+                                                             metricPrefixSymbol=metricPrefixSymbol,
                                                              unitSymbol=unitSymbol)
-                #value=attributeItem.defaultValue, valueType=attributeItem.valueType, unitSymbol=unitSymbol)
         else:
             if accessMode is AccessMode.RECONFIGURABLE:
-                editableComponent = EditableApplyLaterComponent(classAlias=item.classAlias, key=item.internalKey,
-                                                                enumeration=enumeration, unitSymbol=unitSymbol)
-                #value=None, valueType=attributeItem.valueType, unitSymbol=unitSymbol)
+                editableComponent = EditableApplyLaterComponent(classAlias=item.classAlias,
+                                                                key=item.internalKey,
+                                                                enumeration=enumeration, 
+                                                                metricPrefixSymbol=metricPrefixSymbol,
+                                                                unitSymbol=unitSymbol)
                 editableComponent.signalApplyChanged.connect(self.__treeWidget.onApplyChanged)
-
-        #if minInclusive and len(minInclusive) > 0:
-        #    editableComponent.addParameters(minimum=float(minInclusive))
-        #if maxInclusive and len(maxInclusive) > 0:
-        #    editableComponent.addParameters(maximum=float(maxInclusive))
+        
+        # Check minimum and maximum includes/excludes
+        self._setMinMaxIncAndExc(key, editableComponent)
         item.editableComponent = editableComponent
 
 
-    def _handleFloatAttribute(self, parentItem, key, text, value, accessMode):
-        # TODO: needs to have unique key
-        fullPath = self.__rootPath + "." + key
-        item = AttributeTreeWidgetItem(fullPath, self.__treeWidget, parentItem)
-        item.setText(0, text)
-        
-        print "_handleFloatAttribute", key, text, value, accessMode
-        
-        item.classAlias = "Float Field"
-        item.setIcon(0, QIcon(":float-attribute"))
-        
-        editableComponent = None
-        if accessMode is AccessMode.READONLY:
-            item.displayComponent.onValueChanged(key, value)
-        else:
-            if self.__deviceType is NavigationItemTypes.CLASS:
-                if (accessMode is AccessMode.INITONLY) or (accessMode is AccessMode.RECONFIGURABLE):
-                    editableComponent = EditableNoApplyComponent(classAlias=item.classAlias, key=item.internalKey, value=value)
-                    #value=attributeItem.defaultValue, valueType=attributeItem.valueType, unitSymbol=unitSymbol)
-            else:
-                if accessMode is AccessMode.RECONFIGURABLE:
-                    editableComponent = EditableApplyLaterComponent(classAlias=item.classAlias, key=item.internalKey, value=value)
-                    #value=None, valueType=attributeItem.valueType, unitSymbol=unitSymbol)
-                    editableComponent.signalApplyChanged.connect(self.__treeWidget.onApplyChanged)
-
-        item.editableComponent = editableComponent
-
-
-    def _handleVectorString(self, key, item, defaultValue, unitSymbol):
+    def _handleVectorString(self, key, item, defaultValue, metricPrefixSymbol, unitSymbol):
         #print "_handleVectorString"
 
         item.classAlias = "Histogram"
@@ -646,11 +774,77 @@ class SchemaReader(object):
         
         if self.__deviceType is NavigationItemTypes.CLASS:
             if (accessMode is AccessMode.INITONLY) or (accessMode is AccessMode.RECONFIGURABLE):
-                editableComponent = EditableNoApplyComponent(classAlias=item.classAlias, key=item.internalKey, value=default, unitSymbol=unitSymbol)
+                editableComponent = EditableNoApplyComponent(classAlias=item.classAlias,
+                                                             key=item.internalKey,
+                                                             value=default,
+                                                             metricPrefixSymbol=metricPrefixSymbol,
+                                                             unitSymbol=unitSymbol)
         else:
             if accessMode is AccessMode.RECONFIGURABLE:
-                editableComponent = EditableApplyLaterComponent(classAlias=item.classAlias, key=item.internalKey, value=None, unitSymbol=unitSymbol)
+                editableComponent = EditableApplyLaterComponent(classAlias=item.classAlias,
+                                                                key=item.internalKey,
+                                                                value=None,
+                                                                metricPrefixSymbol=metricPrefixSymbol,
+                                                                unitSymbol=unitSymbol)
                 editableComponent.signalApplyChanged.connect(self.__treeWidget.onApplyChanged)
         
+        item.editableComponent = editableComponent
+
+
+    def _handleFloatAttribute(self, parentItem, key, text, value, accessMode):
+        
+        fullPath = self.__rootPath + "." + key
+        item = AttributeTreeWidgetItem(fullPath, self.__treeWidget, parentItem)
+        item.setText(0, text)
+        
+        item.classAlias = "Float Field"
+        item.setIcon(0, QIcon(":float-attribute"))
+        
+        editableComponent = None
+
+        if self.__deviceType is NavigationItemTypes.CLASS:
+            if (accessMode is AccessMode.INITONLY) or (accessMode is AccessMode.RECONFIGURABLE):
+                editableComponent = EditableNoApplyComponent(classAlias=item.classAlias,
+                                                             key=item.internalKey,
+                                                             value=value)
+        else:
+            # Notify displayComponent
+            item.displayComponent.onValueChanged(key, value)
+            
+            if accessMode is AccessMode.RECONFIGURABLE:
+                editableComponent = EditableApplyLaterComponent(classAlias=item.classAlias,
+                                                                key=item.internalKey,
+                                                                value=value)
+                editableComponent.signalApplyChanged.connect(self.__treeWidget.onApplyChanged)
+
+        item.editableComponent = editableComponent
+
+
+    def _handleIntegerAttribute(self, parentItem, key, text, value, accessMode):
+        
+        fullPath = self.__rootPath + "." + key
+        item = AttributeTreeWidgetItem(fullPath, self.__treeWidget, parentItem)
+        item.setText(0, text)
+        
+        item.classAlias = "Integer Field"
+        item.setIcon(0, QIcon(":int-attribute"))
+        
+        editableComponent = None
+
+        if self.__deviceType is NavigationItemTypes.CLASS:
+            if (accessMode is AccessMode.INITONLY) or (accessMode is AccessMode.RECONFIGURABLE):
+                editableComponent = EditableNoApplyComponent(classAlias=item.classAlias,
+                                                             key=item.internalKey,
+                                                             value=value)
+        else:
+            # Notify displayComponent
+            item.displayComponent.onValueChanged(key, value)
+            
+            if accessMode is AccessMode.RECONFIGURABLE:
+                editableComponent = EditableApplyLaterComponent(classAlias=item.classAlias,
+                                                                key=item.internalKey,
+                                                                value=value)
+                editableComponent.signalApplyChanged.connect(self.__treeWidget.onApplyChanged)
+
         item.editableComponent = editableComponent
 
