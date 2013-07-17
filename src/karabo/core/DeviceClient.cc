@@ -547,7 +547,7 @@ namespace karabo {
 
 
         std::pair<bool, std::string > DeviceClient::instantiate(const std::string& serverInstanceId, const karabo::util::Hash& configuration, int timeoutInSeconds) {
-            if (timeoutInSeconds == -1) timeoutInSeconds = 3;
+            if (timeoutInSeconds == -1) timeoutInSeconds = 5;
             bool ok = true;
             std::string reply = "";
             try {
