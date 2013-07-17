@@ -123,10 +123,8 @@
             <pElem>${KARABO}/extern/lib</pElem>
           </linkerAddLib>
           <linkerDynSerch>
-            <pElem>\$$ORIGIN</pElem>
-            <pElem>\$$ORIGIN/../extern/lib</pElem>
-            <pElem>${KARABO}/extern/lib</pElem>
-            <pElem>${KARABO}/lib</pElem>
+            <pElem>\$$ORIGIN/../../../../../lib</pElem>
+            <pElem>\$$ORIGIN/../../..</pElem>
           </linkerDynSerch>
           <linkerLibItems>
             <linkerLibProjectItem>
@@ -399,10 +397,8 @@
             <pElem>${KARABO}/extern/lib</pElem>
           </linkerAddLib>
           <linkerDynSerch>
-            <pElem>\$$ORIGIN</pElem>
-            <pElem>\$$ORIGIN/../extern/lib</pElem>
-            <pElem>${KARABO}/extern/lib</pElem>
-            <pElem>${KARABO}/lib</pElem>
+            <pElem>\$$ORIGIN/../../../../../lib</pElem>
+            <pElem>\$$ORIGIN/../../..</pElem>
           </linkerDynSerch>
           <linkerLibItems>
             <linkerLibProjectItem>
