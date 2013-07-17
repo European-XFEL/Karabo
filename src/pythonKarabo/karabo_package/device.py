@@ -64,7 +64,7 @@ class PythonDevice(BaseFsm):
     def __init__(self, configuration):
         if configuration is None:
             raise ValueError,"Configuration must be Hash object, not None"
-        print "PythonDevice constructor: Input configuration after being validated is ...\n", configuration
+        #print "PythonDevice constructor: Input configuration after being validated is ...\n", configuration
         super(PythonDevice, self).__init__(configuration)
 
         self.parameters = configuration
