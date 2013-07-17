@@ -64,7 +64,7 @@ class PythonDevice(BaseFsm):
     def __init__(self, configuration):
         if configuration is None:
             raise ValueError,"Configuration must be Hash object, not None"
-        #print "PythonDevice constructor: Input configuration after being validated is ...\n", configuration
+        print "PythonDevice constructor: Input configuration after being validated is ...\n", configuration
         super(PythonDevice, self).__init__(configuration)
 
         self.parameters = configuration
@@ -116,7 +116,7 @@ class PythonDevice(BaseFsm):
         logcfg["categories[0].Category.appenders[1].Network.layout.Pattern.format"] = "%d{%F %H:%M:%S} | %p | %c | %m"
         if "connection" in configuration:
             logcfg["categories[0].Category.appenders[1].Network.connection"] = configuration["connection"]
-        logcfg["priority"] = "DEBUG"
+        #logcfg["priority"] = "DEBUG"
         Logger.configure(logcfg)
         self.log = Logger.getLogger(self.deviceid)
         
