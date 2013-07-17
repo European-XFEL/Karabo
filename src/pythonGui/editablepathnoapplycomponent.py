@@ -1,6 +1,6 @@
 #############################################################################
 # Author: <kerstin.weger@xfel.eu>
-# Created on July 27, 2012
+# Created on July 17, 2013
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 
@@ -9,7 +9,7 @@
    and will edit values.
 """
 
-__all__ = ["EditableNoApplyComponent"]
+__all__ = ["EditablePathNoApplyComponent"]
 
 
 from basecomponent import BaseComponent
@@ -20,11 +20,11 @@ from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 
 
-class EditableNoApplyComponent(BaseComponent):
+class EditablePathNoApplyComponent(BaseComponent):
 
 
     def __init__(self, classAlias, **params):
-        super(EditableNoApplyComponent, self).__init__(classAlias)
+        super(EditablePathNoApplyComponent, self).__init__(classAlias)
         
         self.__initParams = params
         
@@ -51,6 +51,36 @@ class EditableNoApplyComponent(BaseComponent):
             unitLabel += unitSymbol
         if len(unitLabel) > 0:
             hLayout.addWidget(QLabel(unitLabel))
+        
+        pathType = params.get(QString('pathType'))
+        if pathType is None:
+            pathType = params.get('pathType')
+        
+        # Check for path type
+        if pathType == "directory":
+            text = "Select directory"
+            self.__tbPath = QToolButton()
+            self.__tbPath.setStatusTip(text)
+            self.__tbPath.setToolTip(text)
+            self.__tbPath.setIcon(QIcon(":open"))
+            self.__tbPath.clicked.connect(self.onDirectoryClicked)
+            hLayout.addWidget(self.__tbPath)
+        elif pathType == "fileIn":
+            text = "Select input file"
+            self.__tbPath = QToolButton()
+            self.__tbPath.setStatusTip(text)
+            self.__tbPath.setToolTip(text)
+            self.__tbPath.setIcon(QIcon(":filein"))
+            self.__tbPath.clicked.connect(self.onFileInClicked)
+            hLayout.addWidget(self.__tbPath)
+        elif pathType == "fileOut":
+            text = "Select output file"
+            self.__tbPath = QToolButton()
+            self.__tbPath.setStatusTip(text)
+            self.__tbPath.setToolTip(text)
+            self.__tbPath.setIcon(QIcon(":fileout"))
+            self.__tbPath.clicked.connect(self.onFileOutClicked)
+            hLayout.addWidget(self.__tbPath)
         
         # In case of attributes (Hash-V2) connect another function here
         self.signalValueChanged.connect(Manager().onDeviceClassValueChanged)
@@ -147,4 +177,25 @@ class EditableNoApplyComponent(BaseComponent):
     # Triggered from self.__editableWidget when value was edited
     def onEditingFinished(self, key, value):
         self.signalValueChanged.emit(key, value)
+
+
+    def onDirectoryClicked(self):
+        directory = QFileDialog.getExistingDirectory(None, "Select directory")
+        if len(directory) > 0:
+            for key in self.__editableWidget.keys:
+                self.onValueChanged(key, directory)
+
+
+    def onFileInClicked(self):
+        fileIn = QFileDialog.getOpenFileName(None, "Select input file")
+        if len(fileIn) > 0:
+            for key in self.__editableWidget.keys:
+                self.onValueChanged(key, fileIn)
+
+
+    def onFileOutClicked(self):
+        fileOut = QFileDialog.getSaveFileName(None, "Select output file")
+        if len(fileOut) > 0:
+            for key in self.__editableWidget.keys:
+                self.onValueChanged(key, fileOut)
 
