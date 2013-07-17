@@ -157,7 +157,15 @@ namespace karathon {
             }
             return bp::make_tuple(result.first, result.second);
         }
+        
+        
+        bp::tuple setPy(const std::string& instanceId, const karabo::util::Hash& value, int timeout = -1) {
+            ScopedGILRelease nogil;
+            std::pair<bool, std::string> result = this->set(instanceId, value, timeout);
+            return bp::make_tuple(result.first, result.second);
+        }
 
+        
         void setNoWaitPy(const std::string& instanceId, const std::string& key, const bp::object& value, const std::string& keySep = ".") {
             karabo::util::Hash tmp;
             HashWrap::set(tmp, key, value, keySep);

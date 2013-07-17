@@ -77,7 +77,7 @@ FFLAGS=
 ASFLAGS=
 
 # Link Libraries and Options
-LDLIBSOPTIONS=-L${KARABO}/lib -L${KARABO}/extern/lib -Wl,-rpath,\$$ORIGIN/../../../../../lib -Wl,-rpath,\$$ORIGIN/../../.. -Wl,-rpath,../karabo/dist/Debug/GNU-Linux-x86/lib -L../karabo/dist/Debug/GNU-Linux-x86/lib -lkarabo -lboost_chrono -lboost_date_time -lboost_filesystem -lboost_numpy -lboost_python -lboost_regex -lboost_signals -lboost_system -lboost_thread -lhdf5 -llog4cpp -lopenmqc -lpython2.7
+LDLIBSOPTIONS=-L${KARABO}/lib -L${KARABO}/extern/lib -Wl,-rpath,\$$ORIGIN -Wl,-rpath,\$$ORIGIN/../extern/lib -Wl,-rpath,${KARABO}/extern/lib -Wl,-rpath,${KARABO}/lib -Wl,-rpath,../karabo/dist/Debug/GNU-Linux-x86/lib -L../karabo/dist/Debug/GNU-Linux-x86/lib -lkarabo -lboost_chrono -lboost_date_time -lboost_filesystem -lboost_numpy -lboost_python -lboost_regex -lboost_signals -lboost_system -lboost_thread -lhdf5 -llog4cpp -lopenmqc -lpython2.7
 
 # Build Targets
 .build-conf: ${BUILD_SUBPROJECTS}
