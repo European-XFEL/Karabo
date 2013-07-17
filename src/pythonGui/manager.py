@@ -165,8 +165,18 @@ class Manager(Singleton):
         # Safety conversion before hashing
         if isinstance(value, QString):
             value = str(value)
-        # Merge with central hash
-        self.__hash.set(key, value)
+        
+        if "@" in key:
+            # Merge attribute value in central hash
+            keys = key.split("@")
+            paramKey = keys[0]
+            attribute = keys[1]
+            if not self.__hash.has(paramKey):
+                self.__hash.set(paramKey, Hash())
+            self.__hash.setAttribute(paramKey, attribute, value)
+        else:
+            # Merge parameter value in central hash
+            self.__hash.set(key, value)
         
         #print ""
         #print self.__hash
@@ -329,16 +339,16 @@ class Manager(Singleton):
         
 
     def onDeviceClassValueChanged(self, key, value):
-        #print "onDeviceClassValueChanged", key, value
+        print "onDeviceClassValueChanged", key, value
         self._setFromPath(key, value)
-        
+
         dataNotifier = self._getDataNotifierEditableValue(key)
         if dataNotifier is not None:
             dataNotifier.signalUpdateComponent.emit(key, value)
 
 
     def onDeviceInstanceValueChanged(self, key, value):
-        #print "onDeviceInstanceValueChanged", key, value
+        print "onDeviceInstanceValueChanged", key, value
         # Safety conversion before hashing
         if isinstance(value, QString):
             value = str(value)

@@ -9,6 +9,8 @@
     <file alias="edit-cut">icons/edit-cut-32x32.png</file>
     <file alias="edit-paste">icons/edit-paste-32x32.png</file>
     <file alias="edit-remove">icons/edit-remove-32x32.png</file>
+    <file alias="filein">icons/filein-32x32.png</file>
+    <file alias="fileout">icons/fileout-32x32.png</file>
     <file alias="transform-rotate">icons/transform-rotate-32x32.png</file>
     <file alias="transform-scale">icons/transform-scale-32x32.png</file>
     <file alias="group">icons/group-32x32.png</file>
