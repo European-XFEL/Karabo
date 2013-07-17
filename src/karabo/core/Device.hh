@@ -260,6 +260,7 @@ namespace karabo {
                 raw.setHeader(image.getHeader());
                 
                 hash.setAttribute(key, "image", 1);
+                m_parameters.merge(hash, karabo::util::Hash::REPLACE_ATTRIBUTES);
                 emit("signalChanged", hash, getInstanceId());
             }
             

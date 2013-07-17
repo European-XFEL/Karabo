@@ -14,12 +14,24 @@ import time
 import getpass
 import socket
 
+import numpy as np
+import guidata
+import guidata.dataset.datatypes as dt
+import guidata.dataset.dataitems as di
+from guiqwt.plot import CurveDialog
+from guiqwt.plot import ImageDialog
+from guiqwt.builder import make
+
+
 
 ip = IPython.core.ipapi.get()
 
 
 # Create one instance (global singleton) of a DeviceClient
 cpp_client = None
+
+# Create one instance (global singleton) of a qapplication
+qapplication = guidata.qapplication()
 
 # The global autocompleter
 def auto_complete_full(self, event):
@@ -145,6 +157,7 @@ ip.set_hook('complete_command', auto_complete_full, re_key = '.*registerProperty
 ip.set_hook('complete_command', auto_complete_full, re_key = '.*registerDeviceMonitor')
 ip.set_hook('complete_command', auto_complete_full, re_key = '.*help')
 ip.set_hook('complete_command', auto_complete_full, re_key = '.*killDevice')
+ip.set_hook('complete_command', auto_complete_full, re_key = '.*show')
 
 
 ip.set_hook('complete_command', auto_complete_set, re_key = '.*set')
@@ -160,10 +173,18 @@ class DeviceClient(object):
         if cpp_client is None:
             cpp_client = CppDeviceClient(connectionType, config)
         self.__client = cpp_client
+
+        # Dict of image dialogs
+        self.__imageDialogs = dict()
+        
+        # Dict of imagesItems
+        self.__imageItems = dict()
                       
         
-    def instantiate(self, deviceServerInstanceId, classId, initialConfiguration = Hash()):
-        return self.__client.instantiate(deviceServerInstanceId, classId, initialConfiguration)
+    def instantiate(self, deviceServerInstanceId, classId, initialConfiguration = Hash(), timeoutInSeconds = None):
+        if timeoutInSeconds is None:
+            return self.__client.instantiate(deviceServerInstanceId, classId, initialConfiguration)
+        return self.__client.instantiate(deviceServerInstanceId, classId, initialConfiguration, timeoutInSeconds)
         
         
     def instantiateNoWait(self, deviceServerInstanceId, classId, initialConfiguration = Hash()):
@@ -173,8 +194,7 @@ class DeviceClient(object):
     def killDevice(self, deviceId, timeoutInSeconds = None):
         if timeoutInSeconds is None:
             return self.__client.killDevice(deviceId)
-        else:
-            return self.__client.killDevice(deviceId, timeoutInSeconds)
+        return self.__client.killDevice(deviceId, timeoutInSeconds)
         
         
     def killDeviceNoWait(self, deviceId):
@@ -184,8 +204,7 @@ class DeviceClient(object):
     def killServer(self, serverId, timeoutInSeconds = None):
         if timeoutInSeconds is None:
             return self.__client.killServer(serverId)
-        else:
-            return self.__client.killServer(serverId, timeoutInSeconds)
+        return self.__client.killServer(serverId, timeoutInSeconds)
         
         
     def killServerNoWait(self, serverId):
@@ -199,8 +218,7 @@ class DeviceClient(object):
     def getDevices(self, serverId = None):
         if serverId is None:
             return self.__client.getDevices()
-        else:
-            return self.__client.getDevices(serverId)
+        return self.__client.getDevices(serverId)
 
 
     def help(self, instanceId, parameter = None):
@@ -214,8 +232,7 @@ class DeviceClient(object):
     def get(self, instanceId, propertyName = None):
         if propertyName is None: 
             return self.__client.get(instanceId)
-        else: 
-            return self.__client.get(instanceId, propertyName)
+        return self.__client.get(instanceId, propertyName)
         
     def enableAdvancedMode(self):
         self.__client.enableAdvancedMode()
@@ -259,8 +276,7 @@ class DeviceClient(object):
         '''
         if userData is None:
             return self.__client.registerDeviceMonitor(instanceId, callbackFunction)
-        else :
-            return self.__client.registerDeviceMonitor(instanceId, callbackFunction, userData)
+        return self.__client.registerDeviceMonitor(instanceId, callbackFunction, userData)
         
         
     def unregisterDeviceMonitor(self, instanceId):
@@ -294,8 +310,16 @@ class DeviceClient(object):
         self.__client.unregisterPropertyMonitor(instanceId, propertyName)
             
        
-    def set(self, instanceId, propertyName, propertyValue, timeout = -1):
-        return self.__client.set(instanceId, propertyName, propertyValue, ".", timeout)
+    def set(self, instanceId, propertyName, propertyValue, timeoutInSeconds = -1, keySep = "."):
+        return self.__client.set(instanceId, propertyName, propertyValue, keySep, timeoutInSeconds)
+    
+    
+    def setHash(self, instanceId, hash, timeoutInSeconds = -1):
+        return self.__client.set(instanceId, hash, timeoutInSeconds)
+    
+    
+    def setNoWait(self, instanceId, propertyName, propertyValue):
+         return self.__client.setNoWait(instanceId, propertyName, propertyValue)
     
         
     def execute(self, instanceId, command, a1 = None):
@@ -314,3 +338,45 @@ class DeviceClient(object):
     def sleep(self, secs):
         time.sleep(secs)
 
+
+    def show(self, deviceId, key, monitor = True, dialogName = None, widgetType = None, x = 600, y = 600):
+        schema = self.__client.getDeviceSchema(deviceId)
+        imageId = deviceId + ":" + key
+        
+        if dialogName is None: dialogName = imageId
+            
+        if (schema.getDisplayType(key) == "Image"):
+            image = self.__client.get(deviceId, key)
+            if (len(image.get("data")) > 0):
+                dialog = ImageDialog(toolbar=True, wintitle=dialogName, options=dict(show_contrast=True))
+                dialog.resize(x, y)
+                imageItem = self._hashImageToGuiqwtImage(image)
+                plot = dialog.get_plot()
+                plot.add_item(imageItem)
+                dialog.show()
+                if monitor:
+                    self.__imageItems[imageId] = imageItem
+                    self.__imageDialogs[imageId] = dialog
+                    self.__client.registerPropertyMonitor(deviceId, key, self._onImageUpdate)             
+            else:
+                print "WARN: Empty image"
+            
+                       
+    def _hashImageToNumpyImage(self, hashImage):
+        return np.frombuffer(hashImage.get("data"), dtype=np.uint8).reshape(hashImage.get("dims"))
+            
+            
+    def _hashImageToGuiqwtImage(self, hashImage):
+        # TODO encoding stuff and color images
+        data = self._hashImageToNumpyImage(hashImage)
+        return make.image(data, title="Image", colormap='gray') 
+        
+    
+    def _onImageUpdate(self, deviceId, key, image, timestamp):
+        imageId = deviceId + ":" + key
+        if (len(image.get("data")) > 0):
+            if self.__imageItems.has_key(imageId):
+                imageItem = self.__imageItems[imageId]
+                imageItem.set_data(self._hashImageToNumpyImage(image))
+                
+            
