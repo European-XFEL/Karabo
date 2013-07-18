@@ -62,6 +62,7 @@ endif
 KARABO = $(CND_BASEDIR)/$(CND_DISTDIR)/$(CONF)/$(CND_PLATFORM_$(CONF))
 EXTERN_DIR ?= $(CND_BASEDIR)/../../../extern
 EXTERN_DISTDIR = $(EXTERN_DIR)/$(CND_PLATFORM_$(CONF))
+export PKG_CONFIG_PATH=.
 
 # build
 build: .build-post

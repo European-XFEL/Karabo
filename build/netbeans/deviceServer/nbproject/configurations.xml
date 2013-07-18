@@ -24,6 +24,8 @@
       <toolsSet>
         <remote-sources-mode>LOCAL_SOURCES</remote-sources-mode>
         <compilerSet>default</compilerSet>
+        <dependencyChecking>true</dependencyChecking>
+        <rebuildPropChanged>false</rebuildPropChanged>
       </toolsSet>
       <compileType>
         <cTool>
@@ -55,34 +57,14 @@
                             CT="2"
                             CN="Debug"
                             AC="true"
-                            BL="true"
+                            BL="false"
                             WD="../karabo"
                             BC="${MAKE} -f Makefile CONF=Debug"
                             CC="${MAKE} -f Makefile CONF=Debug clean"
                             OP="${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/lib/libkarabo.${CND_DLIB_EXT}">
               </makeArtifact>
             </linkerLibProjectItem>
-            <linkerLibLibItem>boost_chrono</linkerLibLibItem>
-            <linkerLibLibItem>boost_date_time</linkerLibLibItem>
-            <linkerLibLibItem>boost_filesystem</linkerLibLibItem>
-            <linkerLibLibItem>boost_python</linkerLibLibItem>
-            <linkerLibLibItem>boost_regex</linkerLibLibItem>
-            <linkerLibLibItem>boost_signals</linkerLibLibItem>
-            <linkerLibLibItem>boost_system</linkerLibLibItem>
-            <linkerLibLibItem>boost_thread</linkerLibLibItem>
-            <linkerLibLibItem>cppunit</linkerLibLibItem>
-            <linkerLibLibItem>hdf5</linkerLibLibItem>
-            <linkerLibLibItem>hdf5_cpp</linkerLibLibItem>
-            <linkerLibLibItem>hdf5_hl</linkerLibLibItem>
-            <linkerLibLibItem>hdf5_hl_cpp</linkerLibLibItem>
-            <linkerLibLibItem>log4cpp</linkerLibLibItem>
-            <linkerLibLibItem>netsnmp</linkerLibLibItem>
-            <linkerLibLibItem>netsnmpagent</linkerLibLibItem>
-            <linkerLibLibItem>netsnmphelpers</linkerLibLibItem>
-            <linkerLibLibItem>netsnmpmibs</linkerLibLibItem>
-            <linkerLibLibItem>netsnmptrapd</linkerLibLibItem>
-            <linkerLibLibItem>openmqc</linkerLibLibItem>
-            <linkerLibLibItem>python2.7</linkerLibLibItem>
+            <linkerOptionItem>`pkg-config --libs karaboDependencies-${CND_PLATFORM}`</linkerOptionItem>
           </linkerLibItems>
         </linkerTool>
       </compileType>
@@ -113,6 +95,8 @@
       <toolsSet>
         <remote-sources-mode>LOCAL_SOURCES</remote-sources-mode>
         <compilerSet>default</compilerSet>
+        <dependencyChecking>true</dependencyChecking>
+        <rebuildPropChanged>false</rebuildPropChanged>
       </toolsSet>
       <compileType>
         <cTool>
@@ -151,35 +135,15 @@
               <makeArtifact PL="../karabo"
                             CT="2"
                             CN="Release"
-                            AC="true"
-                            BL="true"
+                            AC="false"
+                            BL="false"
                             WD="../karabo"
-                            BC="${MAKE} -f Makefile CONF=Release"
-                            CC="${MAKE} -f Makefile CONF=Release clean"
+                            BC="${MAKE} -j10 -f Makefile CONF=Release"
+                            CC="${MAKE} -j10 -f Makefile CONF=Release clean"
                             OP="${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/lib/libkarabo.${CND_DLIB_EXT}">
               </makeArtifact>
             </linkerLibProjectItem>
-            <linkerLibLibItem>boost_chrono</linkerLibLibItem>
-            <linkerLibLibItem>boost_date_time</linkerLibLibItem>
-            <linkerLibLibItem>boost_filesystem</linkerLibLibItem>
-            <linkerLibLibItem>boost_python</linkerLibLibItem>
-            <linkerLibLibItem>boost_regex</linkerLibLibItem>
-            <linkerLibLibItem>boost_signals</linkerLibLibItem>
-            <linkerLibLibItem>boost_system</linkerLibLibItem>
-            <linkerLibLibItem>boost_thread</linkerLibLibItem>
-            <linkerLibLibItem>cppunit</linkerLibLibItem>
-            <linkerLibLibItem>hdf5</linkerLibLibItem>
-            <linkerLibLibItem>hdf5_cpp</linkerLibLibItem>
-            <linkerLibLibItem>hdf5_hl</linkerLibLibItem>
-            <linkerLibLibItem>hdf5_hl_cpp</linkerLibLibItem>
-            <linkerLibLibItem>log4cpp</linkerLibLibItem>
-            <linkerLibLibItem>netsnmp</linkerLibLibItem>
-            <linkerLibLibItem>netsnmpagent</linkerLibLibItem>
-            <linkerLibLibItem>netsnmphelpers</linkerLibLibItem>
-            <linkerLibLibItem>netsnmpmibs</linkerLibLibItem>
-            <linkerLibLibItem>netsnmptrapd</linkerLibLibItem>
-            <linkerLibLibItem>openmqc</linkerLibLibItem>
-            <linkerLibLibItem>python2.7</linkerLibLibItem>
+            <linkerOptionItem>`pkg-config --libs karaboDependencies-${CND_PLATFORM}`</linkerOptionItem>
           </linkerLibItems>
         </linkerTool>
       </compileType>
@@ -193,6 +157,8 @@
       <toolsSet>
         <remote-sources-mode>LOCAL_SOURCES</remote-sources-mode>
         <compilerSet>default</compilerSet>
+        <dependencyChecking>true</dependencyChecking>
+        <rebuildPropChanged>false</rebuildPropChanged>
       </toolsSet>
       <compileType>
         <cTool>
@@ -222,36 +188,16 @@
             <linkerLibProjectItem>
               <makeArtifact PL="../karabo"
                             CT="2"
-                            CN="Debug-MacOSX"
+                            CN="Debug"
                             AC="true"
                             BL="false"
                             WD="../karabo"
-                            BC="${MAKE} -j8 -f Makefile CONF=Debug-MacOSX"
-                            CC="${MAKE} -j8 -f Makefile CONF=Debug-MacOSX clean"
+                            BC="${MAKE} -f Makefile CONF=Debug"
+                            CC="${MAKE} -f Makefile CONF=Debug clean"
                             OP="${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/lib/libkarabo.${CND_DLIB_EXT}">
               </makeArtifact>
             </linkerLibProjectItem>
-            <linkerLibLibItem>boost_chrono</linkerLibLibItem>
-            <linkerLibLibItem>boost_date_time</linkerLibLibItem>
-            <linkerLibLibItem>boost_filesystem</linkerLibLibItem>
-            <linkerLibLibItem>boost_python</linkerLibLibItem>
-            <linkerLibLibItem>boost_regex</linkerLibLibItem>
-            <linkerLibLibItem>boost_signals</linkerLibLibItem>
-            <linkerLibLibItem>boost_system</linkerLibLibItem>
-            <linkerLibLibItem>boost_thread</linkerLibLibItem>
-            <linkerLibLibItem>cppunit</linkerLibLibItem>
-            <linkerLibLibItem>hdf5</linkerLibLibItem>
-            <linkerLibLibItem>hdf5_cpp</linkerLibLibItem>
-            <linkerLibLibItem>hdf5_hl</linkerLibLibItem>
-            <linkerLibLibItem>hdf5_hl_cpp</linkerLibLibItem>
-            <linkerLibLibItem>log4cpp</linkerLibLibItem>
-            <linkerLibLibItem>netsnmp</linkerLibLibItem>
-            <linkerLibLibItem>netsnmpagent</linkerLibLibItem>
-            <linkerLibLibItem>netsnmphelpers</linkerLibLibItem>
-            <linkerLibLibItem>netsnmpmibs</linkerLibLibItem>
-            <linkerLibLibItem>netsnmptrapd</linkerLibLibItem>
-            <linkerLibLibItem>openmqc</linkerLibLibItem>
-            <linkerLibLibItem>python2.7</linkerLibLibItem>
+            <linkerOptionItem>`pkg-config --libs karaboDependencies-${CND_PLATFORM}`</linkerOptionItem>
           </linkerLibItems>
         </linkerTool>
       </compileType>
