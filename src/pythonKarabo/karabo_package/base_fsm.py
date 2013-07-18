@@ -47,7 +47,11 @@ class BaseFsm(object):
         """Start state machine"""
         fsm = self.getFsm()
         if fsm is not None:
-            fsm.start()
+            try:
+                fsm.start()
+            except Exception, e:
+                self.errorFound("Exception while processing event '{}'".format("Start state machine"), str(e))
+                return
             self.onStateUpdate(fsm.get_state())
     
     def processEvent(self, event):
