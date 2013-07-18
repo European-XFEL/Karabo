@@ -60,6 +60,8 @@ endif
 
 KARABO = $(CND_BASEDIR)/../karabo/$(CND_DISTDIR)/$(CONF)/$(CND_PLATFORM_$(CONF))
 
+export PKG_CONFIG_PATH=../karabo
+
 # build
 build: .build-post
 

@@ -66,6 +66,8 @@ export PYTHONPATH
 
 KARATHON = $(CND_BASEDIR)/$(CND_DISTDIR)/$(CONF)/$(CND_PLATFORM_$(CONF))
 	
+export PKG_CONFIG_PATH=.
+
 # build
 build: .build-post
 
