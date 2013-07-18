@@ -89,7 +89,7 @@ void exportPyXmsSignalSlotable() {//exposing karabo::xms::SignalSlotable
                  (void (SignalSlotable::*)(const Hash&))(&SignalSlotable::updateInstanceInfo),
                  (bp::arg("updateHash")))
 
-            .def("getAvailableInstances", &SignalSlotableWrap::getAvailableInstancesPy, bp::arg("activateTracking"))
+            .def("getAvailableInstances", &SignalSlotableWrap::getAvailableInstancesPy, (bp::arg("activateTracking") = false))
             .def("getAvailableSignals", &SignalSlotableWrap::getAvailableSignalsPy, bp::arg("instanceId"))
             .def("getAvailableSlots", &SignalSlotableWrap::getAvailableSlotsPy, bp::arg("instanceId"))
 
