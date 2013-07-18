@@ -333,8 +333,12 @@ namespace karabo {
             if (!m_runtimeSystemDescription.has("server." + deviceServer)) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Requested device server \"" << deviceServer << "\" does not exist.";
                 return vector<string>();
-            } else {
-                return m_runtimeSystemDescription.getAttribute<vector<string> >("server." + deviceServer, "deviceClasses");
+            } else {           
+                if (m_runtimeSystemDescription.hasAttribute("server." + deviceServer, "deviceClasses")){
+                    return m_runtimeSystemDescription.getAttribute<vector<string> >("server." + deviceServer, "deviceClasses");
+                } else {
+                    return vector<string>();
+                }
             }
         }
 
