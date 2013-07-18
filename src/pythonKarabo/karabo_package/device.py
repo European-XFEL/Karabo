@@ -322,8 +322,22 @@ class PythonDevice(BaseFsm):
         self._ss.registerSlot(self.slotKillDevice)
         self._ss.registerSlot(self.errorFound)
 
-    def reportError(self, s, d):
+    def triggerError(self, s, d):
         self._ss.call("", "errorFound", s, d)
+        
+    def execute(self, command, *args):
+        if len(args) == 0:
+            self._ss.call("", command)
+        elif len(args) == 1:
+            self._ss.call("", command, args[0])
+        elif len(args) == 2:
+            self._ss.call("", command, args[0], args[1])
+        elif len(args) == 3:
+            self._ss.call("", command, args[0], args[1], args[2])
+        elif len(args) == 4:
+            self._ss.call("", command, args[0], args[1], args[2], args[3])
+        else:
+            raise AttributeError,"Number of command parameters should not exceed 4"
         
     def slotRefresh(self):
         self._ss.emit("signalChanged", self.parameters, self.deviceid);
