@@ -498,6 +498,34 @@ namespace karabo {
                 emit("signalNoTransition", msg.str(), getInstanceId());
             }
 
+            virtual void triggerError(const std::string& shortMessage, const std::string& detailedMessage) const {
+                call("", "errorFound", shortMessage, detailedMessage);
+            }
+             
+            void execute(const std::string& command) const {
+                call("", command);
+            }
+            
+            template <class A1>
+            void execute(const std::string& command, const A1& a1) const {
+                call("", command, a1);
+            }
+            
+            template <class A1, class A2>
+            void execute(const std::string& command, const A1& a1, const A2& a2) const {
+                call("", command, a1, a2);
+            }
+            
+            template <class A1, class A2, class A3>
+            void execute(const std::string& command, const A1& a1, const A2& a2, const A3& a3) const {
+                call("", command, a1, a2, a3);
+            }
+            
+            template <class A1, class A2, class A3, class A4>
+            void execute(const std::string& command, const A1& a1, const A2& a2, const A3& a3, const A4& a4) const {
+                call("", command, a1, a2, a3, a4);
+            }
+            
         protected: // Functions and Classes
 
             // This function will polymorphically be called by the FSM template
@@ -587,7 +615,7 @@ namespace karabo {
                 SLOT0(slotGetConfiguration)
                 SLOT1(slotGetSchema, bool /*onlyCurrentState*/);
                 SLOT0(slotKillDevice)
-
+                SLOT2(errorFound, std::string, std::string);
             }
 
             // TODO deprecate
