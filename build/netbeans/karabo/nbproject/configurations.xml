@@ -408,6 +408,8 @@
       <toolsSet>
         <remote-sources-mode>LOCAL_SOURCES</remote-sources-mode>
         <compilerSet>GNU|GNU</compilerSet>
+        <dependencyChecking>true</dependencyChecking>
+        <rebuildPropChanged>false</rebuildPropChanged>
       </toolsSet>
       <compileType>
         <cTool>
@@ -428,33 +430,13 @@
         <linkerTool>
           <output>${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/lib/libkarabo.${CND_DLIB_EXT}</output>
           <linkerAddLib>
-            <pElem>/usr/X11/lib</pElem>
-            <pElem>/opt/local/lib/nss</pElem>
-            <pElem>/opt/local/lib/nspr</pElem>
             <pElem>${KARABO}/extern/lib</pElem>
           </linkerAddLib>
           <linkerDynSerch>
             <pElem>\$$ORIGIN/../extern/lib</pElem>
           </linkerDynSerch>
           <linkerLibItems>
-            <linkerLibLibItem>boost_chrono</linkerLibLibItem>
-            <linkerLibLibItem>boost_date_time</linkerLibLibItem>
-            <linkerLibLibItem>boost_filesystem</linkerLibLibItem>
-            <linkerLibLibItem>boost_python</linkerLibLibItem>
-            <linkerLibLibItem>boost_regex</linkerLibLibItem>
-            <linkerLibLibItem>boost_signals</linkerLibLibItem>
-            <linkerLibLibItem>boost_system</linkerLibLibItem>
-            <linkerLibLibItem>boost_thread</linkerLibLibItem>
-            <linkerLibLibItem>hdf5</linkerLibLibItem>
-            <linkerLibLibItem>log4cpp</linkerLibLibItem>
-            <linkerLibLibItem>openmqc</linkerLibLibItem>
-            <linkerLibLibItem>python2.7</linkerLibLibItem>
-            <linkerLibLibItem>dl</linkerLibLibItem>
-            <linkerLibLibItem>pthread</linkerLibLibItem>
-            <linkerLibLibItem>rt</linkerLibLibItem>
-            <linkerLibLibItem>ssl</linkerLibLibItem>
-            <linkerLibLibItem>crypto</linkerLibLibItem>
-            <linkerLibLibItem>X11</linkerLibLibItem>
+            <linkerOptionItem>`pkg-config --libs karaboDependencies-${CND_PLATFORM}`</linkerOptionItem>
           </linkerLibItems>
         </linkerTool>
       </compileType>
@@ -1931,6 +1913,8 @@
       <toolsSet>
         <remote-sources-mode>LOCAL_SOURCES</remote-sources-mode>
         <compilerSet>default</compilerSet>
+        <dependencyChecking>true</dependencyChecking>
+        <rebuildPropChanged>false</rebuildPropChanged>
       </toolsSet>
       <compileType>
         <cTool>
@@ -1955,32 +1939,13 @@
         <linkerTool>
           <output>${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/lib/libkarabo.${CND_DLIB_EXT}</output>
           <linkerAddLib>
-            <pElem>/opt/local/lib/nss</pElem>
-            <pElem>/opt/local/lib/nspr</pElem>
             <pElem>${KARABO}/extern/lib</pElem>
           </linkerAddLib>
           <linkerDynSerch>
             <pElem>\$$ORIGIN/../extern/lib</pElem>
           </linkerDynSerch>
           <linkerLibItems>
-            <linkerLibLibItem>boost_chrono</linkerLibLibItem>
-            <linkerLibLibItem>boost_date_time</linkerLibLibItem>
-            <linkerLibLibItem>boost_filesystem</linkerLibLibItem>
-            <linkerLibLibItem>boost_python</linkerLibLibItem>
-            <linkerLibLibItem>boost_regex</linkerLibLibItem>
-            <linkerLibLibItem>boost_signals</linkerLibLibItem>
-            <linkerLibLibItem>boost_system</linkerLibLibItem>
-            <linkerLibLibItem>boost_thread</linkerLibLibItem>
-            <linkerLibLibItem>hdf5</linkerLibLibItem>
-            <linkerLibLibItem>log4cpp</linkerLibLibItem>
-            <linkerLibLibItem>openmqc</linkerLibLibItem>
-            <linkerLibLibItem>python2.7</linkerLibLibItem>
-            <linkerLibLibItem>dl</linkerLibLibItem>
-            <linkerLibLibItem>pthread</linkerLibLibItem>
-            <linkerLibLibItem>rt</linkerLibLibItem>
-            <linkerLibLibItem>ssl</linkerLibLibItem>
-            <linkerLibLibItem>crypto</linkerLibLibItem>
-            <linkerLibLibItem>X11</linkerLibLibItem>
+            <linkerOptionItem>`pkg-config --libs karaboDependencies-${CND_PLATFORM}`</linkerOptionItem>
           </linkerLibItems>
         </linkerTool>
       </compileType>
@@ -3429,6 +3394,8 @@
       <toolsSet>
         <remote-sources-mode>LOCAL_SOURCES</remote-sources-mode>
         <compilerSet>GNU|GNU</compilerSet>
+        <dependencyChecking>true</dependencyChecking>
+        <rebuildPropChanged>false</rebuildPropChanged>
       </toolsSet>
       <compileType>
         <cTool>
@@ -3448,32 +3415,13 @@
         <linkerTool>
           <output>${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/lib/libkarabo.${CND_DLIB_EXT}</output>
           <linkerAddLib>
-            <pElem>/usr/X11/lib</pElem>
-            <pElem>/opt/local/lib/nss</pElem>
-            <pElem>/opt/local/lib/nspr</pElem>
             <pElem>${KARABO}/extern/lib</pElem>
           </linkerAddLib>
           <linkerDynSerch>
             <pElem>\$$ORIGIN/../extern/lib</pElem>
           </linkerDynSerch>
           <linkerLibItems>
-            <linkerLibLibItem>boost_chrono</linkerLibLibItem>
-            <linkerLibLibItem>boost_date_time</linkerLibLibItem>
-            <linkerLibLibItem>boost_filesystem</linkerLibLibItem>
-            <linkerLibLibItem>boost_python</linkerLibLibItem>
-            <linkerLibLibItem>boost_regex</linkerLibLibItem>
-            <linkerLibLibItem>boost_signals</linkerLibLibItem>
-            <linkerLibLibItem>boost_system</linkerLibLibItem>
-            <linkerLibLibItem>boost_thread</linkerLibLibItem>
-            <linkerLibLibItem>hdf5</linkerLibLibItem>
-            <linkerLibLibItem>log4cpp</linkerLibLibItem>
-            <linkerLibLibItem>openmqc</linkerLibLibItem>
-            <linkerLibLibItem>python2.7</linkerLibLibItem>
-            <linkerLibLibItem>dl</linkerLibLibItem>
-            <linkerLibLibItem>pthread</linkerLibLibItem>
-            <linkerLibLibItem>ssl</linkerLibLibItem>
-            <linkerLibLibItem>crypto</linkerLibLibItem>
-            <linkerLibLibItem>X11</linkerLibLibItem>
+            <linkerOptionItem>`pkg-config --libs karaboDependencies-${CND_PLATFORM}`</linkerOptionItem>
           </linkerLibItems>
         </linkerTool>
       </compileType>

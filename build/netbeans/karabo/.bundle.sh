@@ -123,6 +123,8 @@ safeRunCommand "make -j$NUM_CORES CONF=$CONF"
 cp -rf $DISTDIR/$CONF/$PLATFORM/lib $PACKAGEDIR/
 cp -rf $DISTDIR/$CONF/$PLATFORM/include $PACKAGEDIR/
 cp -rf ../../../extern/$PLATFORM $PACKAGEDIR/extern
+cp karaboDependencies-${PLATFORM}.pc $PACKAGEDIR/lib/karaboDependencies.pc
+echo "Version: $VERSION" >> $PACKAGEDIR/lib/karabo.pc
 if [ $OS = "Darwin" ]; then
     cd $PACKAGEDIR/lib
     # Python needs to see bindings as .so, even on MacOSX
