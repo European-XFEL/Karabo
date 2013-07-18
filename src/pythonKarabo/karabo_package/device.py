@@ -320,6 +320,10 @@ class PythonDevice(BaseFsm):
         self._ss.registerSlot(self.slotGetConfiguration)
         self._ss.registerSlot(self.slotGetSchema)
         self._ss.registerSlot(self.slotKillDevice)
+        self._ss.registerSlot(self.errorFound)
+
+    def reportError(self, s, d):
+        self._ss.call("", "errorFound", s, d)
         
     def slotRefresh(self):
         self._ss.emit("signalChanged", self.parameters, self.deviceid);
