@@ -61,3 +61,26 @@ class OkErrorFsm(base.BaseFsm):
     
     def initFsmSlots(self, sigslot):
         sigslot.registerSlot(self.reset)
+        
+    def errorStateOnEntry(self):
+        '''Actions executed on entry to 'Error' state
+        '''
+        
+    def errorStateOnExit(self):
+        '''Actions executed on exit from 'Error' state
+        '''
+    
+    def errorFoundAction(self, m1, m2):
+        print "***", m1, m2
+        
+    def okStateOnEntry(self):
+        '''Actions executed on entry to 'Ok' state
+        '''
+        
+    def okStateOnExit(self):
+        '''Actions executed on exit from 'Ok' state
+        '''
+
+    def resetAction(self):
+        '''Reset action on the way to 'Ok' dtate
+        '''
