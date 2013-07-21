@@ -4,7 +4,7 @@ CWD=$(pwd)
 
 DEPENDENCIES_Linux=( python2.7 lapack numpy scipy nose libpng freetype matplotlib sip pyqt4 pyqwt5 ipython qt4 guiqwt guidata boost openmqc hdf5 log4cpp cppunit openmq )
 DEPENDENCIES_Linux_NoGui=( python2.7 lapack numpy scipy nose libpng freetype matplotlib ipython boost openmqc hdf5 log4cpp cppunit )
-DEPENDENCIES_Darwin=( boost-MacOSX openmqc hdf5 log4cpp cppunit )
+DEPENDENCIES_Darwin=( boost openmqc hdf5 log4cpp cppunit )
 
 #################################################################################################
 
