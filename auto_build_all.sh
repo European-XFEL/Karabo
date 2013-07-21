@@ -66,7 +66,6 @@ if [ "$OS" = "Linux" ]; then
 elif [ "$OS" = "Darwin" ]; then
     DISTRO_ID=MacOSX
     DISTRO_RELEASE=$(uname -r)
-    CONF=${CONF}-MacOSX
     NUM_CORES=`sysctl hw.ncpu | awk '{print $2}'`
 fi
 
@@ -93,6 +92,11 @@ if [ "$SKIP" = "n" ]; then
         safeRunCommand "yum install epel-release
     yum --enablerepo=epel install qtwebkit-devel"
         safeRunCommand "yum install krb5-workstation"
+    
+    elif [ "$DISTRO_ID" == "MacOSX" ]; then
+	safeRunCommand "cd build/netbeans/karabo"
+	safeRunCommand "make extern WHAT=bundleMacOSX"
+	safeRunCommand "cd $scriptDir"
     fi
 fi
 

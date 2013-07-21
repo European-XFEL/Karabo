@@ -87,7 +87,6 @@ namespace karabo {
 
 
         void Epochstamp::now() {
-            assert();
             clock_serv_t cclock;
             host_get_clock_service(mach_host_self(), CALENDAR_CLOCK, &cclock); //REALTIME_CLOCKSYSTEM_CLOCK
 
@@ -95,7 +94,8 @@ namespace karabo {
             clock_get_time(cclock, &mts);
             mach_port_deallocate(mach_task_self(), cclock);
 
-            m_TimeValue = mts.tv_sec * resolution + (mts.tv_nsec * resolution) / NANOSEC;
+            m_seconds = mts.tv_sec;
+            m_fractionalSeconds = mts.tv_nsec *1000000000ull;
         }
 
         #else
