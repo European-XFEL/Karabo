@@ -22,14 +22,6 @@ CND_ARTIFACT_PATH_Release=dist/Release/GNU-Linux-x86/lib/libkarabo.so
 CND_PACKAGE_DIR_Release=dist/Release/GNU-Linux-x86/package
 CND_PACKAGE_NAME_Release=libkarabo.so.tar
 CND_PACKAGE_PATH_Release=dist/Release/GNU-Linux-x86/package/libkarabo.so.tar
-# Debug-MacOSX configuration
-CND_PLATFORM_Debug-MacOSX=GNU-Linux-x86
-CND_ARTIFACT_DIR_Debug-MacOSX=dist/Debug-MacOSX/GNU-Linux-x86/lib
-CND_ARTIFACT_NAME_Debug-MacOSX=libkarabo.so
-CND_ARTIFACT_PATH_Debug-MacOSX=dist/Debug-MacOSX/GNU-Linux-x86/lib/libkarabo.so
-CND_PACKAGE_DIR_Debug-MacOSX=dist/Debug-MacOSX/GNU-Linux-x86/package
-CND_PACKAGE_NAME_Debug-MacOSX=karabo.tar.gz
-CND_PACKAGE_PATH_Debug-MacOSX=dist/Debug-MacOSX/GNU-Linux-x86/package/karabo.tar.gz
 #
 # include compiler specific variables
 #
