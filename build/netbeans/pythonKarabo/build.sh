@@ -5,18 +5,25 @@ mkdir -p $DIST/lib
 mkdir -p $DIST/bin
 cd $DIST/bin
 cat > karabo-pythondeviceserver <<End-of-file
+#!/bin/bash
 #
 # This file was automatically generated. Do not edit.
 #
-# Author: <burkhard.heisen@xfel.eu>
-#
+SCRIPT_DIR=\$(dirname \`[[ \$0 = /* ]] && echo "\$0" || echo "\$PWD/\${0#./}"\`)
+KARABO=\$SCRIPT_DIR/..
+OS=\$(uname -s)
+PATH=\$KARABO/extern/bin:\$PATH
+PYTHONPATH=\$KARABO/extern/lib/karabo_python
+if [ "\$OS" = "Darwin" ]; then
+    PYTHONPATH=\$KARABO/lib:\$PYTHONPATH
+    DYLD_LIBRARY_PATH=\$KARABO/lib:\$KARABO/extern/lib:\$DYLD_LIBRARY_PATH
+    PYKARABO=\$KARABO/lib
+else
+    # Is a site-package in the shipped bundled python environment
+    PYKARABO=\$(python -c "from distutils.sysconfig import get_python_lib; print(get_python_lib())")
+fi
 
-karabo=\$(dirname \$0)/..
-export PATH=\$karabo/extern/bin
-export PYTHONPATH=\$karabo/extern/lib/karabo_python:\$karabo/lib
-pythonLibPath=\$(python -c "from distutils.sysconfig import get_python_lib; print(get_python_lib())")
-python \$pythonLibPath/karabo/device_server.py \$*
-
+python \$PYKARABO/karabo/device_server.py "\$@"
 End-of-file
 chmod u+x karabo-pythondeviceserver
 cd ../lib

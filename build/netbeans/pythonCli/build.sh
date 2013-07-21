@@ -9,17 +9,21 @@ cat > karabo-cli <<End-of-file
 #
 # This file was automatically generated. Do not edit.
 #
-if [ -z \$KARABO ]; then
-    if [ -e \$HOME/.karabo/karaboFramework ]; then
-        KARABO=\$(cat \$HOME/.karabo/karaboFramework)
-    else
-      echo "ERROR Could not find karaboFramework. Make sure you have installed the karaboFramework."
-      exit 1
-    fi
+SCRIPT_DIR=\$(dirname \`[[ \$0 = /* ]] && echo "\$0" || echo "\$PWD/\${0#./}"\`)
+KARABO=\$SCRIPT_DIR/..
+OS=\$(uname -s)
+PATH=\$KARABO/extern/bin:\$PATH
+PYTHONPATH=\$KARABO/extern/lib/karabo_python
+if [ "\$OS" = "Darwin" ]; then
+    PYTHONPATH=\$KARABO/lib:\$PYTHONPATH
+    DYLD_LIBRARY_PATH=\$KARABO/lib:\$KARABO/extern/lib:\$DYLD_LIBRARY_PATH
+    PYKARABO=\$KARABO/lib
+else
+    # Is a site-package in the shipped bundled python environment
+    PYKARABO=\$(python -c "from distutils.sysconfig import get_python_lib; print(get_python_lib())")
 fi
-export PATH=\$KARABO/extern/bin:\$PATH
-pythonLibPath=\$(python -c "from distutils.sysconfig import get_python_lib; print(get_python_lib())")
-ipython -i \$pythonLibPath/karabo/deviceClient.py \$@
+
+ipython -i \$PYKARABO/karabo/deviceClient.py "\$@"
 End-of-file
 chmod u+x karabo-cli
 cd ../lib

@@ -15,13 +15,22 @@ import getpass
 import socket
 
 import numpy as np
-import guidata
-import guidata.dataset.datatypes as dt
-import guidata.dataset.dataitems as di
-from guiqwt.plot import CurveDialog
-from guiqwt.plot import ImageDialog
-from guiqwt.builder import make
 
+# Not yet supported on MacOSX
+HAS_GUIDATA=True
+try:
+
+    import guidata
+    import guidata.dataset.datatypes as dt
+    import guidata.dataset.dataitems as di
+    from guiqwt.plot import CurveDialog
+    from guiqwt.plot import ImageDialog
+    from guiqwt.builder import make
+
+except ImportError:
+    print "Missing module (guidata): Interactive image visualization disabled (feature will be enabled later on MacOSX)"
+    HAS_GUIDATA=False
+    
 
 
 ip = IPython.core.ipapi.get()
@@ -31,7 +40,7 @@ ip = IPython.core.ipapi.get()
 cpp_client = None
 
 # Create one instance (global singleton) of a qapplication
-qapplication = guidata.qapplication()
+if HAS_GUIDATA: qapplication = guidata.qapplication()
 
 # The global autocompleter
 def auto_complete_full(self, event):
@@ -340,6 +349,7 @@ class DeviceClient(object):
 
 
     def show(self, deviceId, key, monitor = True, dialogName = None, widgetType = None, x = 600, y = 600):
+        if not HAS_GUIDATA: return 
         schema = self.__client.getDeviceSchema(deviceId)
         imageId = deviceId + ":" + key
         

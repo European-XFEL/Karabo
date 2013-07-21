@@ -116,22 +116,35 @@ extern:
 	@mkdir -p $(KARABO)
 	@./.installExtern.sh $(EXTERN_DIR) $(EXTERN_DISTDIR) $(GUIOPT) $(WHAT)
 
+bundle: build
+	cd ../karathon
+	make CONF=$(CONF)
+	cd ../deviceServer
+	make CONF=$(CONF)
+	cd ../brokerMessageLogger
+	make CONF=$(CONF)
+
 # DEPRECATE!
-package:
+package: bundle
 	@./.bundle.sh $(CND_DISTDIR) $(CONF) $(CND_PLATFORM_$(CONF)) package $(GUIOPT)
 
 # DEPRECATE!
-install:
+install: bundle
 	@./.bundle.sh $(CND_DISTDIR) $(CONF) $(CND_PLATFORM_$(CONF)) install $(GUIOPT)
 
-bundle-package:
+bundle-package: bundle
 	@./.bundle.sh $(CND_DISTDIR) $(CONF) $(CND_PLATFORM_$(CONF)) package $(GUIOPT)
 
-bundle-install:
+bundle-install: bundle
 	@./.bundle.sh $(CND_DISTDIR) $(CONF) $(CND_PLATFORM_$(CONF)) install $(GUIOPT)
 
-bundle-clean:
-	@./.bundle.sh $(CND_DISTDIR) $(CONF) $(CND_PLATFORM_$(CONF)) clean $(GUIOPT)
+bundle-clean: clobber
+	cd ../karathon
+	make clobber
+	cd ../deviceServer
+	make clobber
+	cd ../brokerMessageLogger
+	make clobber
 
 # clean
 clean: .clean-post

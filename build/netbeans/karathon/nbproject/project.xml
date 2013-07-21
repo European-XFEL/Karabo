@@ -23,10 +23,6 @@
                     <name>Release</name>
                     <type>2</type>
                 </confElem>
-                <confElem>
-                    <name>Debug-MacOSX</name>
-                    <type>2</type>
-                </confElem>
             </confList>
         </data>
     </configuration>

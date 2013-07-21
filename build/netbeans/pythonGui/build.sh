@@ -5,20 +5,23 @@ mkdir -p $DIST/lib
 mkdir -p $DIST/bin
 cd $DIST/bin
 cat > karabo-gui <<End-of-file
+#!/bin/bash
 #
 # This file was automatically generated. Do not edit.
 #
-# Author: <burkhard.heisen@xfel.eu>
-#
-CWD=\$(pwd)
-cd \$(dirname \$0)/../lib/pythonGui
-export PYTHONPATH=../
-export LD_LIBRARY_PATH=../../extern/lib
-export DYLD_LIBRARY_PATH=../../extern/lib
-export PATH=../../extern/bin
-python karabo-gui.py
-cd \$CWD
+SCRIPT_DIR=\$(dirname \`[[ \$0 = /* ]] && echo "\$0" || echo "\$PWD/\${0#./}"\`)
+KARABO=\$SCRIPT_DIR/..
+OS=\$(uname -s)
+PATH=\$KARABO/extern/bin:\$PATH
+PYTHONPATH=\$KARABO/extern/lib/karabo_python
+if [ "\$OS" = "Darwin" ]; then
+    PYTHONPATH=\$KARABO/lib:\$PYTHONPATH
+    DYLD_LIBRARY_PATH=\$KARABO/lib:\$KARABO/extern/lib:\$DYLD_LIBRARY_PATH
+fi
 
+cd \$KARABO/lib/pythonGui  
+python karabo-gui.py "\$@"
+cd -
 End-of-file
 chmod u+x karabo-gui
 cd ../lib
