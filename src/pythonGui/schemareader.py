@@ -197,7 +197,7 @@ class SchemaReader(object):
         choiceComponent = None
         
         if self.__deviceType is NavigationItemTypes.CLASS:
-            if (accessMode is AccessMode.INITONLY) or (accessMode is AccessMode.RECONFIGURABLE):
+            if (accessMode is AccessMode.INITONLY) or (accessMode is AccessMode.RECONFIGURABLE) or (accessMode is AccessMode.UNDEFINED):
                 choiceComponent = EditableNoApplyComponent(parentItem.classAlias, key=parentItem.internalKey, value=defaultValue)
         else:
             if accessMode is AccessMode.RECONFIGURABLE:
@@ -213,7 +213,8 @@ class SchemaReader(object):
             childItem = self.r_readSchema(key + "." + cKey, parentItem)
             if cKey != defaultValue:
                 childItem.setHidden(True)
-            parentItem.editableComponent.addParameters(itemToBeAdded=childItem)
+            if choiceComponent:
+                choiceComponent.addParameters(itemToBeAdded=childItem)
 
 
     def _handleListOfNodes(self, key, parentItem):
