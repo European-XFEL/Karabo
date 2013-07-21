@@ -80,23 +80,45 @@ if [ "$SKIP" = "n" ]; then
     sleep 2
     
     # Platform specific sections here
+
+	######################################
+        #              Ubuntu                #
+        ######################################
+
+
     if [ "$DISTRO_ID" == "Ubuntu" ]; then
         safeRunCommand "sudo apt-get install subversion build-essential doxygen libqt4-dev libnss3-dev libnspr4-dev libreadline-dev libsqlite3-dev libqt4-sql-sqlite libX11-dev zlib1g-dev gfortran liblapack-dev m4 libssl-dev"
         if [ "$DISTRO_RELEASE" = "10.04" ]; then
             safeRunCommand "sudo apt-get install libxext-dev"
         fi
         safeRunCommand "sudo apt-get install krb5-user"
+
+	######################################
+        #    Scientific Linux or CentOS      #
+        ######################################
+
     elif [ "$DISTRO_ID" == "Scientific" ]; then
         safeRunCommand "yum install redhat-lsb"
         safeRunCommand "yum install make gcc gcc-c++ gcc-gfortran subversion doxygen nspr-devel nss-devel zlib-devel libX11-devel readline-devel qt-devel lapack-devel sqlite-devel openssl-devel"
         safeRunCommand "yum install epel-release
     yum --enablerepo=epel install qtwebkit-devel"
         safeRunCommand "yum install krb5-workstation"
-    
-    elif [ "$DISTRO_ID" == "MacOSX" ]; then
-	safeRunCommand "cd build/netbeans/karabo"
-	safeRunCommand "make extern WHAT=bundleMacOSX"
-	safeRunCommand "cd $scriptDir"
+
+
+	######################################
+        #              MacOSX                #
+        ######################################
+
+    elif [ "$DISTRO_ID" == "MacOSX" ]; then	
+	echo "### This can take a while. Better prepare yourself a coffee..."
+	safeRunCommand "sudo port install nspr nss pkgconfig sqlite3 python27 py27-numpy py27-scipy py27-matplotlib py27-pyqt4 py27-pyqwt py27-ipython"
+	safeRunCommand "sudo easy_install readline"
+        # Patch reported macports bug (#37201)
+	safeRunCommand "sudo cp -rf extern/resources/bundleMacOSX/sqldrivers /opt/local/share/qt4/plugins"
+        # Patch NetBeans bug regarding Makefile pathes
+	safeRunCommand "cd /usr/bin"
+	safeRunCommand "sudo ln -sf /opt/local/bin/pkg-config pkg-config"
+	safeRunCommand "cd -"
     fi
 fi
 
