@@ -22,14 +22,6 @@ CND_ARTIFACT_PATH_Release=dist/Release/GNU-MacOSX/bin/karabo-deviceserver
 CND_PACKAGE_DIR_Release=dist/Release/GNU-MacOSX/package
 CND_PACKAGE_NAME_Release=deviceserver.tar
 CND_PACKAGE_PATH_Release=dist/Release/GNU-MacOSX/package/deviceserver.tar
-# Debug-MacOSX configuration
-CND_PLATFORM_Debug-MacOSX=GNU-MacOSX
-CND_ARTIFACT_DIR_Debug-MacOSX=dist/Debug-MacOSX/GNU-MacOSX/bin
-CND_ARTIFACT_NAME_Debug-MacOSX=karabo-deviceserver
-CND_ARTIFACT_PATH_Debug-MacOSX=dist/Debug-MacOSX/GNU-MacOSX/bin/karabo-deviceserver
-CND_PACKAGE_DIR_Debug-MacOSX=dist/Debug-MacOSX/GNU-MacOSX/package
-CND_PACKAGE_NAME_Debug-MacOSX=deviceserver.tar
-CND_PACKAGE_PATH_Debug-MacOSX=dist/Debug-MacOSX/GNU-MacOSX/package/deviceserver.tar
 #
 # include compiler specific variables
 #
