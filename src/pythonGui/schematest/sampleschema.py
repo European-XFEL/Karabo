@@ -114,23 +114,24 @@ class SampleSchema(object):
         e.allowedStates("Error")
         e.commit()
 
-        #e = CHOICE_ELEMENT(expected).key("shapes")
-        #e.displayedName("Shape")
-        #e.assignmentOptional().defaultValue("circle")
-        #e.commit()
+        e = CHOICE_ELEMENT(expected).key("shapes")
+        e.displayedName("Shape")
+        e.assignmentOptional().defaultValue("circle")
+        e.commit()
 
-        #e = NODE_ELEMENT(expected).key("shapes.circle")
-        #e.tags("shape")
-        #e.displayedName("Circle")
-        #e.description("A circle")
-        #e.appendParametersOf(Circle)
-        #e.commit()
+        e = NODE_ELEMENT(expected).key("shapes.circle")
+        e.tags("shape")
+        e.displayedName("Circle")
+        e.description("A circle")
+        e.appendParametersOf(Circle)
+        e.commit()
 
-        #e = NODE_ELEMENT(expected).key("shapes.rectangle")
-        #e.tags("shape")
-        #e.displayedName("Rectangle")
-        #e.description("A rectangle")
-        #e.commit()
+        e = NODE_ELEMENT(expected).key("shapes.rectangle")
+        e.tags("shape")
+        e.displayedName("Rectangle")
+        e.description("A rectangle")
+        e.appendParametersOf(Rectangle)
+        e.commit()
 
         e = INT32_ELEMENT(expected)
         e.key("port").displayedName("Port").description("Input for port")
@@ -248,4 +249,38 @@ class Circle(Shape):
 
     def draw(self):
         return self.__class__.__name__
+
+
+@KARABO_CLASSINFO("Rectangle", "1.0")    
+class Rectangle(Shape):
+    
+    def __init__(self, configuration):
+        super(Rectangle, self).__init__(configuration)
+        #print "Rectangle.__init__"
+    
+    @staticmethod
+    def expectedParameters(expected):
+        
+        e = DOUBLE_ELEMENT(expected).key("a").alias(1)
+        e.description("Length of a")
+        e.displayedName("A")
+        e.minExc(0).maxExc(100)
+        e.unit(Unit.METER)
+        e.metricPrefix(MetricPrefix.MILLI)
+        e.assignmentOptional().defaultValue(10)
+        e.init()
+        e.commit()
+
+        e = DOUBLE_ELEMENT(expected).key("b").alias(1)
+        e.description("Length of b")
+        e.displayedName("B")
+        e.minExc(0).maxExc(100)
+        e.unit(Unit.METER)
+        e.metricPrefix(MetricPrefix.MILLI)
+        e.assignmentOptional().defaultValue(10)
+        e.init()
+        e.commit()
+
+    def draw(self):
+        return self.__class__.__name
 
