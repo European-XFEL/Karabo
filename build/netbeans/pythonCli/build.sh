@@ -12,11 +12,12 @@ cat > karabo-cli <<End-of-file
 SCRIPT_DIR=\$(dirname \`[[ \$0 = /* ]] && echo "\$0" || echo "\$PWD/\${0#./}"\`)
 KARABO=\$SCRIPT_DIR/..
 OS=\$(uname -s)
-PATH=\$KARABO/extern/bin:\$PATH
-PYTHONPATH=\$KARABO/extern/lib/karabo_python
+export PATH=\$KARABO/extern/bin:\$PATH
+export PYTHONPATH=\$KARABO/extern/lib/karabo_python
 if [ "\$OS" = "Darwin" ]; then
-    PYTHONPATH=\$KARABO/lib:\$PYTHONPATH
-    DYLD_LIBRARY_PATH=\$KARABO/lib:\$KARABO/extern/lib:\$DYLD_LIBRARY_PATH
+    export PATH=/opt/local/bin:\$PATH
+    export PYTHONPATH=\$KARABO/lib:\$PYTHONPATH
+    export DYLD_LIBRARY_PATH=\$KARABO/lib:\$KARABO/extern/lib:\$DYLD_LIBRARY_PATH
     PYKARABO=\$KARABO/lib
 else
     # Is a site-package in the shipped bundled python environment

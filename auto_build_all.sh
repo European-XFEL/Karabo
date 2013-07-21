@@ -112,6 +112,8 @@ if [ "$SKIP" = "n" ]; then
     elif [ "$DISTRO_ID" == "MacOSX" ]; then	
 	echo "### This can take a while. Better prepare yourself a coffee..."
 	safeRunCommand "sudo port install nspr nss pkgconfig sqlite3 python27 py27-numpy py27-scipy py27-matplotlib py27-pyqt4 py27-pyqwt py27-ipython"
+	safeRunCommand "sudo port select --set python python27"
+	safeRunCommand "sudo port select --set ipython ipython27" 
 	safeRunCommand "sudo easy_install readline"
         # Patch reported macports bug (#37201)
 	safeRunCommand "sudo cp -rf extern/resources/bundleMacOSX/sqldrivers /opt/local/share/qt4/plugins"
@@ -128,7 +130,7 @@ echo
 
 sleep 2
 
-safeRunCommand "cd build/netbeans/karabo"
+safeRunCommand "cd $scriptDir/build/netbeans/karabo"
 safeRunCommand "make CONF=$CONF -j$NUM_CORES"
 safeRunCommand "make CONF=$CONF bundle-package"
 
