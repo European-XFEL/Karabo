@@ -145,7 +145,7 @@ cd ../deviceServer
 cp -rf $DISTDIR/$CONF/$PLATFORM/bin $PACKAGEDIR/
 
 # brokerMessageLogger
-safeRunCommand "cd ../brokerMessageLogger"
+cd ../brokerMessageLogger
 cp -rf $DISTDIR/$CONF/$PLATFORM/bin $PACKAGEDIR/
 
 # pythonKarabo

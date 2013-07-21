@@ -117,12 +117,9 @@ extern:
 	@./.installExtern.sh $(EXTERN_DIR) $(EXTERN_DISTDIR) $(GUIOPT) $(WHAT)
 
 bundle: build
-	cd ../karathon
-	make CONF=$(CONF)
-	cd ../deviceServer
-	make CONF=$(CONF)
-	cd ../brokerMessageLogger
-	make CONF=$(CONF)
+	cd ../karathon; make CONF=$(CONF)
+	cd ../deviceServer; make CONF=$(CONF)
+	cd ../brokerMessageLogger; make CONF=$(CONF)
 
 # DEPRECATE!
 package: bundle
@@ -139,12 +136,9 @@ bundle-install: bundle
 	@./.bundle.sh $(CND_DISTDIR) $(CONF) $(CND_PLATFORM_$(CONF)) install $(GUIOPT)
 
 bundle-clean: clobber
-	cd ../karathon
-	make clobber
-	cd ../deviceServer
-	make clobber
-	cd ../brokerMessageLogger
-	make clobber
+	cd ../karathon; make clobber
+	cd ../deviceServer; make clobber
+	cd ../brokerMessageLogger; make clobber
 
 # clean
 clean: .clean-post
