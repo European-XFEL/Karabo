@@ -98,7 +98,7 @@ if [ "$OS" = "Darwin" ]; then
 
     cd $DISTDIR/$CONF/$PLATFORM/lib
     # Python needs to see bindings as .so, even on MacOSX
-    ln -sf karathon.so karathon.dylib
+    ln -sf karathon.dylib karathon.so
     #install_name_tool -add_rpath "$PACKAGEDIR/lib" karathon.so
     #install_name_tool -add_rpath "$PACKAGEDIR/extern/lib" karathon.so
     cd -
