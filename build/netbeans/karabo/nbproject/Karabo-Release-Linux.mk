@@ -153,7 +153,7 @@ FFLAGS=
 ASFLAGS=
 
 # Link Libraries and Options
-LDLIBSOPTIONS=-L/opt/local/lib/nss -L/opt/local/lib/nspr -L${KARABO}/extern/lib -Wl,-rpath,\$$ORIGIN/../extern/lib `pkg-config --libs karaboDependencies-${CND_PLATFORM}`  
+LDLIBSOPTIONS=-L${KARABO}/extern/lib -Wl,-rpath,\$$ORIGIN/../extern/lib `pkg-config --libs karaboDependencies-${CND_PLATFORM}`  
 
 # Build Targets
 .build-conf: ${BUILD_SUBPROJECTS}
