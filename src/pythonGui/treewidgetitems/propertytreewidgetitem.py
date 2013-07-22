@@ -13,10 +13,11 @@ __all__ = ["PropertyTreeWidgetItem"]
 
 import const
 
+from collections import OrderedDict
 from basetreewidgetitem import BaseTreeWidgetItem
 import choicecomponent
 from displaycomponent import DisplayComponent
-#from manager import Manager
+from popupwidget import PopupWidget
 
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
@@ -27,10 +28,11 @@ class PropertyTreeWidgetItem(BaseTreeWidgetItem):
     def __init__(self, path, parent, parentItem=None):
         super(PropertyTreeWidgetItem, self).__init__(path, parent, parentItem)
         
+        # Popup widget for tooltip info
+        self.__popupWidget = None
+        
         self.setData(0, Qt.SizeHintRole, QSize(200, 32))
         self.setIcon(0, QIcon(":folder"))
-
-        self.defaultValue = None
 
         self.displayComponent = DisplayComponent("Value Field", key=self.internalKey)
         self.treeWidget().setItemWidget(self, 1, self.displayComponent.widget)
@@ -82,6 +84,47 @@ class PropertyTreeWidgetItem(BaseTreeWidgetItem):
         if self.editableComponent is not None:
             self.editableComponent.setEnabled(enable)
     enabled = property(fset=_setEnabled)
+
+
+    def setToolTipDialogVisible(self, show):
+        if not self.__popupWidget:
+            self.__popupWidget = PopupWidget()
+        
+        if show:
+            info = OrderedDict()
+            info["Property"] = self.text(0)
+            if self.valueType:
+                info["Value type"] = self.valueType
+            if self.description:
+                info["Description"] = self.description
+            if self.defaultValue:
+                info["Default Value"] = self.defaultValue
+            if self.alias:
+                info["Alias"] = self.alias
+            if self.tags:
+                info["Tags"] = self.tags
+            if self.timestamp:
+                info["Timestamp"] = self.timestamp
+            
+            self.__popupWidget.setInfo(info)
+            
+            pos = QCursor.pos()
+            pos.setX(pos.x() + 10)
+            self.__popupWidget.move(pos)
+            self.__popupWidget.show()
+            
+            #pos = QCursor.pos()
+            #width = self.__popupWidget.width()
+            #height = self.__popupWidget.height()
+            
+            #animation = QPropertyAnimation(self.__popupWidget, "geometry")
+            #animation.setDuration(500)
+            #animation.setDirection(QAbstractAnimation.Forward)
+            #animation.setStartValue(QRect(pos.x(), pos.y(), width, height))
+            #animation.setEndValue(QRect(pos.x(), pos.y(), width, height))
+            #animation.start()
+        else:
+            self.__popupWidget.hide()
 
 
 ### slots ###
