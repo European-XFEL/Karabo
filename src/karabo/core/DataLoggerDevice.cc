@@ -180,12 +180,16 @@ namespace karabo {
             boost::mutex::scoped_lock lock(m_systemHistoryMutex);
             string path("device." + deviceId + ".configuration");
             if (m_systemHistory.has(path)) {
+                
+                // Get schema for this device
+                Schema schema = remote().getDeviceSchema(deviceId);
                 Hash& tmp = m_systemHistory.get<Hash>(path);
                 for (Hash::const_iterator it = changedConfig.begin(); it != changedConfig.end(); ++it) {
+                    if (schema.hasArchivePolicy(it->getKey()) && (schema.getArchivePolicy(it->getKey()) == Schema::NO_ARCHIVING)) continue;
                     Hash val("v", it->getValueAsAny());
                     val.setAttributes("v", it->getAttributes());
                     boost::optional<Hash::Node&> node = tmp.find(it->getKey());
-                    cout << val << endl;
+                    KARABO_LOG_FRAMEWORK_DEBUG << val;
                     if (node) node->getValue<vector<Hash> >().push_back(val);
                     else tmp.set(it->getKey(), std::vector<Hash>(1, val));
                 }
@@ -211,7 +215,7 @@ namespace karabo {
                             Hash hist;
                             loadFromFile(hist, filePath.string());
                             hist.merge(current, karabo::util::Hash::MERGE_ATTRIBUTES);
-                            saveToFile(hist, filePath.string(), Hash("format.Xml.indentation", 2));
+                            saveToFile(hist, filePath.string(), Hash("format.Xml.indentation", -1));
                         } else {
                             // Write
                             saveToFile(it->getValue<Hash>(), filePath.string());

@@ -1016,10 +1016,12 @@ void exportPyUtilSchema() {
                 .value("INTERNAL", Schema::INTERNAL_PARAM)
                 .export_values()
                 ;
-        bp::enum_< Schema::ExpertLevelType > ("ExpertLevelType")
-                .value("SIMPLE", Schema::SIMPLE)
-                .value("MEDIUM", Schema::MEDIUM)
-                .value("ADVANCED", Schema::ADVANCED)
+        bp::enum_< Schema::AccessLevel > ("AccessLevel")
+                .value("OBSERVER", Schema::OBSERVER)
+                .value("USER", Schema::USER)
+                .value("OPERATOR", Schema::OPERATOR)
+                .value("EXPERT", Schema::EXPERT)
+                .value("ADMIN", Schema::ADMIN)
                 .export_values()
                 ;
         bp::enum_< Schema::LeafType>("LeafType")
@@ -1044,16 +1046,7 @@ void exportPyUtilSchema() {
                 .value("EVERY_10MIN", Schema::EVERY_10MIN)
                 .value("NO_ARCHIVING", Schema::NO_ARCHIVING)
                 .export_values()
-                ;
-        bp::enum_< Schema::AccessLevel > ("AccessLevel")
-                .value("OBSERVER", Schema::OBSERVER)
-                .value("USER", Schema::USER)
-                .value("OPERATOR", Schema::OPERATOR)
-                .value("EXPERT", Schema::EXPERT)
-                .value("GOD", Schema::GOD)
-                .export_values()
-                ;
-        
+                ;       
         bp::class_< Schema::AssemblyRules >("AssemblyRules", bp::init< bp::optional< AccessType const &, std::string const &, const int > >((bp::arg("accessMode") = operator|(INIT, WRITE), bp::arg("state") = "", bp::arg("accessLevel") = -1)))
                 .def_readwrite("m_accessMode", &Schema::AssemblyRules::m_accessMode)
                 .def_readwrite("m_accessLevel", &Schema::AssemblyRules::m_accessLevel)
@@ -1179,8 +1172,6 @@ void exportPyUtilSchema() {
               , (const unsigned int& (Schema::*)(const string &) const) (&Schema::getMaxSize)
               , bp::return_value_policy< bp::copy_const_reference >());
 
-        s.def("getExpertLevel", &Schema::getExpertLevel);
-        
         s.def("getArchivePolicy", &Schema::getArchivePolicy
               , bp::return_value_policy< bp::copy_const_reference >());
 
@@ -1252,8 +1243,6 @@ void exportPyUtilSchema() {
 
         s.def("hasDescription", &Schema::hasDescription);
 
-        s.def("hasExpertLevel", &Schema::hasExpertLevel);
-
         s.def("hasMin", &Schema::hasMin);
 
         s.def("hasMax", &Schema::hasMax);
@@ -1271,9 +1260,6 @@ void exportPyUtilSchema() {
         s.def("isAssignmentInternal", &Schema::isAssignmentInternal);
         s.def("isAssignmentMandatory", &Schema::isAssignmentMandatory);
         s.def("isAssignmentOptional", &Schema::isAssignmentOptional);
-
-        s.def("isExpertLevelAdvanced", &Schema::isExpertLevelAdvanced);
-        s.def("isExpertLevelSimple", &Schema::isExpertLevelSimple);
 
         s.def("isChoiceOfNodes", &Schema::isChoiceOfNodes);
         s.def("isListOfNodes", &Schema::isListOfNodes);
@@ -1302,7 +1288,6 @@ void exportPyUtilSchema() {
         s.def("setOptions", &Schema::setOptions, (bp::arg("path"), bp::arg("value"), bp::arg("sep") = ",;"));
         s.def("setAllowedStates", &Schema::setAllowedStates, (bp::arg("path"), bp::arg("value"), bp::arg("sep") = ",;"));
         s.def("setAllowedRoles", &Schema::setAllowedRoles, (bp::arg("path"), bp::arg("value"), bp::arg("sep") = ",;"));
-        s.def("setExpertLevel", &Schema::setExpertLevel, (bp::arg("path"), bp::arg("value")));
         s.def("setDefaultValue", &schemawrap::setDefaultValue, (bp::arg("path"), bp::arg("value")));
         s.def("setAlias", &schemawrap::setAlias, (bp::arg("path"), bp::arg("value"))); // setAlias<type>
         s.def("setUnit", &Schema::setUnit, (bp::arg("path"), bp::arg("value")));

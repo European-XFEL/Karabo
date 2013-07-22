@@ -13,6 +13,9 @@
 #ifndef KARABO_UTIL_IMAGEELEMENT_HH
 #define	KARABO_UTIL_IMAGEELEMENT_HH
 
+#include "Schema.hh"
+
+
 #include "GenericElement.hh"
 #include "VectorElement.hh"
 
@@ -68,6 +71,9 @@ namespace karabo {
 
             void beforeAddition() {
                 this->m_node->setValue(this->m_child);
+                if (!this->m_node->hasAttribute(KARABO_SCHEMA_ARCHIVE_POLICY)) {
+                    this->m_node->setAttribute<int>(KARABO_SCHEMA_ARCHIVE_POLICY, Schema::NO_ARCHIVING);
+                }
             }
         };
 

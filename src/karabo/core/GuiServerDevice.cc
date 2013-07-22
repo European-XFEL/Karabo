@@ -186,7 +186,7 @@ namespace karabo {
 
         void GuiServerDevice::onExecute(const karabo::util::Hash& header, const std::string& body) {
             try {
-                KARABO_LOG_FRAMEWORK_DEBUG << "";
+                KARABO_LOG_FRAMEWORK_DEBUG << "onExecute";
                 Hash config;
                 m_textSerializer->load(config, body);
                 string deviceId = header.get<string > ("deviceId");
@@ -201,7 +201,7 @@ namespace karabo {
 
         void GuiServerDevice::onInitDevice(const karabo::util::Hash& header, const std::string& body) {
             try {
-                KARABO_LOG_FRAMEWORK_DEBUG << "";
+                KARABO_LOG_FRAMEWORK_DEBUG << "onInitDevice";
                 Hash config;
                 m_textSerializer->load(config, body);
                 string serverId = header.get<string > ("serverId");
@@ -215,7 +215,7 @@ namespace karabo {
 
         void GuiServerDevice::onRefreshInstance(karabo::net::Channel::Pointer channel, const karabo::util::Hash& header) {
             try {
-                KARABO_LOG_FRAMEWORK_DEBUG << "";
+                KARABO_LOG_FRAMEWORK_DEBUG << "onRefreshInstance";
                 string deviceId = header.get<string > ("deviceId");
                 Hash h("type", "configurationChanged", "deviceId", deviceId);
                 Hash b;
@@ -231,7 +231,7 @@ namespace karabo {
 
         void GuiServerDevice::onKillServer(const karabo::util::Hash& header, const std::string& body) {
             try {
-                KARABO_LOG_FRAMEWORK_DEBUG << "";
+                KARABO_LOG_FRAMEWORK_DEBUG << "onKillServer";
                 string serverId = header.get<string > ("serverId");
                 // TODO Supply user specific context
                 call(serverId, "slotKillServer");
@@ -243,7 +243,7 @@ namespace karabo {
 
         void GuiServerDevice::onKillDevice(const karabo::util::Hash& header, const std::string& body) {
             try {
-                KARABO_LOG_FRAMEWORK_DEBUG << "";
+                KARABO_LOG_FRAMEWORK_DEBUG << "onKillDevice";
                 string deviceId = header.get<string > ("deviceId");
                 call(deviceId, "slotKillDevice");
             } catch (const Exception& e) {
@@ -254,7 +254,7 @@ namespace karabo {
 
         void GuiServerDevice::onNewVisibleDevice(karabo::net::Channel::Pointer channel, const karabo::util::Hash& header) {
             try {
-                KARABO_LOG_FRAMEWORK_DEBUG << "";
+                KARABO_LOG_FRAMEWORK_DEBUG << "onNewVisibleDevice";
                 string deviceId = header.get<string > ("deviceId");
                 boost::mutex::scoped_lock lock(m_channelMutex);
                 std::map<karabo::net::Channel::Pointer, std::set<std::string> >::iterator it = m_channels.find(channel);
@@ -275,7 +275,7 @@ namespace karabo {
 
         void GuiServerDevice::onRemoveVisibleDevice(karabo::net::Channel::Pointer channel, const karabo::util::Hash& header) {
             try {
-                KARABO_LOG_FRAMEWORK_DEBUG << "";
+                KARABO_LOG_FRAMEWORK_DEBUG << "onRemoveVisibleDevice";
                 string deviceId = header.get<string > ("deviceId");
                 boost::mutex::scoped_lock lock(m_channelMutex);
                 std::map<karabo::net::Channel::Pointer, std::set<std::string> >::iterator it = m_channels.find(channel);
@@ -288,7 +288,7 @@ namespace karabo {
 
         void GuiServerDevice::onGetClassSchema(karabo::net::Channel::Pointer channel, const karabo::util::Hash& header, const std::string& body) {
             try {
-                KARABO_LOG_FRAMEWORK_DEBUG << "";
+                KARABO_LOG_FRAMEWORK_DEBUG << "onGetClassSchema";
                 string serverId = header.get<string > ("serverId");
                 string classId = header.get<string> ("classId");
                 boost::mutex::scoped_lock lock(m_channelMutex);
@@ -303,7 +303,7 @@ namespace karabo {
 
         void GuiServerDevice::onGetDeviceSchema(karabo::net::Channel::Pointer channel, const karabo::util::Hash& header, const std::string& body) {
             try {
-                KARABO_LOG_FRAMEWORK_DEBUG << "";
+                KARABO_LOG_FRAMEWORK_DEBUG << "onGetDeviceSchema";
                 string deviceId = header.get<string > ("deviceId");
                 boost::mutex::scoped_lock lock(m_channelMutex);
                 Hash h("type", "deviceSchema", "deviceId", deviceId);
