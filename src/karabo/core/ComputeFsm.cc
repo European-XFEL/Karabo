@@ -53,21 +53,6 @@ namespace karabo {
         }
 
 
-        void ComputeFsm::configure(const karabo::util::Hash& input) {
-
-            SLOT0(slotStartRun);
-            SLOT0(slotCompute);
-            SLOT0(slotAbort);
-            SLOT0(slotReset);
-        }
-
-
-        void ComputeFsm::run() {
-            startStateMachine();
-            runEventLoop();
-        }
-
-
         void ComputeFsm::slotAbort() {
             m_isAborted = true;
         }

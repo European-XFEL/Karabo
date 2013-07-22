@@ -73,13 +73,13 @@ namespace karabo {
             typedef std::set<AssocEntry> AssocType;
             typedef AssocType::const_iterator AssocTypeConstIterator;
 
-            typedef std::map<std::string, karabo::io::AbstractInput::Pointer> InputChannels;
-            typedef std::map<std::string, karabo::io::AbstractOutput::Pointer> OutputChannels;
-
             typedef boost::function<void (const std::string&) > InstanceNotAvailableHandler;
             typedef boost::function<void (const std::string&) > InstanceAvailableAgainHandler;
 
         protected: // Members
+            
+            typedef std::map<std::string, karabo::io::AbstractInput::Pointer> InputChannels;
+            typedef std::map<std::string, karabo::io::AbstractOutput::Pointer> OutputChannels;
 
             std::string m_instanceId;
             karabo::util::Hash m_instanceInfo;
