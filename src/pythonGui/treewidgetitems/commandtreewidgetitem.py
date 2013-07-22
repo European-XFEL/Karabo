@@ -71,6 +71,10 @@ class CommandTreeWidgetItem(BaseTreeWidgetItem):
         BaseTreeWidgetItem.setReadOnly(self, readOnly)
 
 
+    def setToolTipDialogVisible(self, show):
+        pass
+
+
 ### slots ###
     def onCommandClicked(self):
         args = [] # TODO slot arguments

@@ -41,11 +41,13 @@ class ImageTreeWidgetItem(BaseTreeWidgetItem):
     def _setText(self, text):
         self.setText(0, text)
     displayText = property(fset=_setText)
-    
-
 
 
 ### public functions ###
     def setReadOnly(self, readOnly):
         BaseTreeWidgetItem.setReadOnly(self, readOnly)
+
+
+    def setToolTipDialogVisible(self, show):
+        pass
 

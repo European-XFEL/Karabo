@@ -39,6 +39,10 @@ class AttributeTreeWidgetItem(BaseTreeWidgetItem):
             return
 
 
+    def setToolTipDialogVisible(self, show):
+        pass
+
+
 ### getter and setter functions ###
     def _setText(self, text):
         self.setText(0, text)

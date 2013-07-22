@@ -37,8 +37,6 @@ class BaseTreeWidgetItem(QTreeWidgetItem):
         self.__displayComponent = None
         self.__editableComponent = None
         
-        self.classAlias = None
-        
         self.mItem = None
 
 
@@ -105,26 +103,45 @@ class BaseTreeWidgetItem(QTreeWidgetItem):
     allowedStates = property(fget=_allowedStates, fset=_setAllowedStates)
 
 
-    def _isChoiceElement(self):
-        return self.data(0, const.IS_CHOICE_ELEMENT).toPyObject()
-    def _setIsChoiceElement(self, isChoiceElemet):
-        self.setData(0, const.IS_CHOICE_ELEMENT, isChoiceElemet)
-    isChoiceElement = property(fget=_isChoiceElement, fset=_setIsChoiceElement)
+    def _alias(self):
+        return self.data(0, const.ALIAS).toPyObject()
+    def _setAlias(self, index):
+        self.setData(0, const.ALIAS, index)
+    alias = property(fget=_alias, fset=_setAlias)
 
 
-    def _descriptionIndex(self):
-        index = self.data(0, const.DESCRIPTION_INDEX).toPyObject()
-        return index
-    def _setDescriptionIndex(self, index):
-        self.setData(0, const.DESCRIPTION_INDEX, index)
-    descriptionIndex = property(fget=_descriptionIndex, fset=_setDescriptionIndex)
+    def _tags(self):
+        return self.data(0, const.TAGS).toPyObject()
+    def _setTags(self, index):
+        self.setData(0, const.TAGS, index)
+    tags = property(fget=_tags, fset=_setTags)
+
+
+    def _description(self):
+        return self.data(0, const.DESCRIPTION).toPyObject()
+    def _setDescription(self, index):
+        self.setData(0, const.DESCRIPTION, index)
+    description = property(fget=_description, fset=_setDescription)
+
+
+    def _valueType(self):
+        return self.data(0, const.VALUE_TYPE).toPyObject()
+    def _setValueType(self, index):
+        self.setData(0, const.VALUE_TYPE, index)
+    valueType = property(fget=_valueType, fset=_setValueType)
+
+
+    def _timestamp(self):
+        return self.data(0, const.TIMESTAMP).toPyObject()
+    def _setTimestamp(self, index):
+        self.setData(0, const.TIMESTAMP, index)
+    timestamp = property(fget=_timestamp, fset=_setTimestamp)
 
 
     def _requiredAccessLevel(self):
-        level = self.data(0, const.EXPERT_LEVEL).toPyObject()
-        return level
+        return self.data(0, const.REQUIRED_ACCESS_LEVEL).toPyObject()
     def _setRequiredAccessLevel(self, requiredAccessLevel): # int value expected
-        self.setData(0, const.EXPERT_LEVEL, requiredAccessLevel)
+        self.setData(0, const.REQUIRED_ACCESS_LEVEL, requiredAccessLevel)
         if requiredAccessLevel > 2:
             self.setHidden(True)
     requiredAccessLevel = property(fget=_requiredAccessLevel, fset=_setRequiredAccessLevel)
@@ -168,4 +185,8 @@ class BaseTreeWidgetItem(QTreeWidgetItem):
             self.setFlags(self.flags() & ~Qt.ItemIsEnabled)
         else:
             self.setFlags(self.flags() | Qt.ItemIsEnabled)
+
+
+    def setToolTipDialogVisible(self, show):
+        raise NotImplementedError, "BaseTreeWidget.setToolTipDialogVisible"
 
