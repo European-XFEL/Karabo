@@ -125,7 +125,7 @@ class BaseTreeWidgetItem(QTreeWidgetItem):
         return level
     def _setRequiredAccessLevel(self, requiredAccessLevel): # int value expected
         self.setData(0, const.EXPERT_LEVEL, requiredAccessLevel)
-        if requiredAccessLevel > 0:
+        if requiredAccessLevel > 2:
             self.setHidden(True)
     requiredAccessLevel = property(fget=_requiredAccessLevel, fset=_setRequiredAccessLevel)
 
