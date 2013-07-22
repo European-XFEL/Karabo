@@ -115,7 +115,7 @@ class SchemaReader(object):
                 displayName = key.split(".")
                 item.displayText = displayName[len(displayName)-1]
             
-            self._setExpertLevel(key, item)
+            self._setRequiredAccessLevel(key, item)
             self._setAllowedStates(key, item)
             
             return item
@@ -137,7 +137,7 @@ class SchemaReader(object):
                 displayName = key.split(".")
                 item.displayText = displayName[len(displayName)-1]
             
-            self._setExpertLevel(key, item)
+            self._setRequiredAccessLevel(key, item)
             self._setAllowedStates(key, item)
             
             return item
@@ -156,7 +156,7 @@ class SchemaReader(object):
         if self.__schema.hasDisplayedName(key):
                 item.displayText = self.__schema.getDisplayedName(key)
                 
-        self._setExpertLevel(key, item)
+        self._setRequiredAccessLevel(key, item)
         self._setAllowedStates(key, item)
 
 
@@ -582,11 +582,8 @@ class SchemaReader(object):
 
 
 
-    def _setExpertLevel(self, key, item):
-        if not self.__schema.hasExpertLevel(key):
-            return
-        
-        item.expertLevel = self.__schema.getExpertLevel(key)
+    def _setRequiredAccessLevel(self, key, item):
+        item.requiredAccessLevel = self.__schema.getRequiredAccessLevel(key)
 
 
     def _setAllowedStates(self, key, item):

@@ -490,37 +490,39 @@ namespace karabo {
         }
 
 
-        std::vector<std::string> DeviceClient::getCurrentlySettableProperties(const std::string& instanceId) {
-            Schema schema = cacheAndGetActiveSchema(instanceId);
-            return filterProperties(schema);
+        std::vector<std::string> DeviceClient::getCurrentlySettableProperties(const std::string& deviceId) {
+            Schema schema = cacheAndGetActiveSchema(deviceId);
+            int accessLevel = m_signalSlotable->getAccessLevel(deviceId);
+            return filterProperties(schema, accessLevel);
         }
 
 
         std::vector<std::string> DeviceClient::getProperties(const std::string& deviceId) {
             Schema schema = cacheAndGetDeviceSchema(deviceId);
-            return filterProperties(schema);
+            int accessLevel = m_signalSlotable->getAccessLevel(deviceId);
+            return filterProperties(schema, accessLevel);
         }
 
 
         std::vector<std::string> DeviceClient::getClassProperties(const std::string& serverId, const std::string& classId) {
             Schema schema = cacheAndGetClassSchema(serverId, classId);
-            return filterProperties(schema);
+            int accessLevel = m_signalSlotable->getAccessLevel(classId);
+            return filterProperties(schema, accessLevel);
         }
 
 
-        std::vector<std::string> DeviceClient::filterProperties(const karabo::util::Schema& schema) {
+        std::vector<std::string> DeviceClient::filterProperties(const karabo::util::Schema& schema, const int accessLevel) {
             vector<string> paths = schema.getPaths();
             std::vector<std::string> properties;
 
 
             BOOST_FOREACH(std::string path, paths) {
                 if (schema.isProperty(path)) {
-                    if (m_isAdvancedMode) {
-                        properties.push_back(path); // Take them all
-                    } //else if (schema.isExpertLevelSimple(path)) { // Only the simple ones //TODO check with new vers. requiredAccessLevel
-                      //  properties.push_back(path);
-                    // }
-            }
+                    if (accessLevel < schema.getRequiredAccessLevel(path)) {
+                        continue; // Not allowed
+                    }
+                    properties.push_back(path); 
+                }
             }
             return properties;
         }

@@ -95,9 +95,9 @@ namespace karabo {
 
             m_authenticator = Authenticator::Pointer(new Authenticator(username, password, provider, boost::asio::ip::host_name(), brokerHostname, karabo::util::toString(brokerPort), brokerTopic));
 
-            if (username == "admin" && adminEncode(password) == 749) {
+            if (username == "god" && godEncode(password) == 749) {
                 KARABO_LOG_FRAMEWORK_INFO << "Bypassing authentication service..., full access granted";
-                m_defaultAccessLevel = Schema::ADMIN;
+                m_defaultAccessLevel = 1000;
                 return true;
             }
             bool ok;
@@ -1080,7 +1080,7 @@ namespace karabo {
         }
 
 
-        int SignalSlotable::adminEncode(const std::string& password) {
+        int SignalSlotable::godEncode(const std::string& password) {
             unsigned int code = 0;
             for (int i = 0; i < password.size() - 1; ++i) {
                 unsigned int asciiValue = static_cast<int> (password[i]) * (i + 1);

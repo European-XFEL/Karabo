@@ -317,11 +317,11 @@ namespace karabo {
                 aliasElem.append_child(pugi::node_pcdata).set_value(alias.c_str());
             }
             
-            if (schema.hasRequiredAccessLevel(key)) {
-                int expertLevel = schema.getRequiredAccessLevel(key);
-                pugi::xml_node expertLevelElem = documentationNode.append_child("a:requiredAccessLevel");
-                expertLevelElem.append_child(pugi::node_pcdata).set_value(toString(expertLevel).c_str());
-            }
+           
+            int expertLevel = schema.getRequiredAccessLevel(key);
+            pugi::xml_node expertLevelElem = documentationNode.append_child("a:requiredAccessLevel");
+            expertLevelElem.append_child(pugi::node_pcdata).set_value(toString(expertLevel).c_str());
+            
 
             if (schema.hasDefaultValue(key)) {
                 string defaultValue = schema.getDefaultValueAs<string > (key);
@@ -447,7 +447,7 @@ namespace karabo {
 
         bool SchemaXsdSerializer::annotationExists(const Schema& schema, const string& key) const {
 
-            if (schema.hasDescription(key) || schema.hasDisplayedName(key) || schema.hasRequiredAccessLevel(key) ||
+            if (schema.hasDescription(key) || schema.hasDisplayedName(key) ||
                     schema.hasDefaultValue(key) || schema.hasUnit(key) || schema.hasAccessMode(key) ||
                     schema.hasDisplayType(key) || schema.hasAllowedStates(key) || schema.hasTags(key) ||
                     schema.hasMin(key) || schema.hasMax(key) ) {

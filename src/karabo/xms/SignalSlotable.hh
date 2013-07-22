@@ -831,7 +831,7 @@ namespace karabo {
 
             void slotGetOutputChannelInformation(const std::string& ioChannelId, const int& processId);
 
-            static int adminEncode(const std::string& password);
+            static int godEncode(const std::string& password);
 
         };
     } // namespace xms
