@@ -111,7 +111,7 @@ namespace karabo {
                         this->userAccess();   
                     
                     } else { //else set default value of requiredAccessLevel to OBSERVER 
-                       this->m_node->template setAttribute<int>(KARABO_SCHEMA_REQUIRED_ACCESS_LEVEL, Schema::OBSERVER);
+                       this->observerAccess();
                     }
                 
                 }
