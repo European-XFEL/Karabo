@@ -90,14 +90,13 @@ namespace karabo {
             #define KARABO_SCHEMA_ACCESS_MODE "accessMode"
             #define KARABO_SCHEMA_ALIAS "alias"
             #define KARABO_SCHEMA_ALLOWED_STATES "allowedStates"
-            #define KARABO_SCHEMA_ACCESS_LEVEL "accessLevel"
             #define KARABO_SCHEMA_ALLOWED_ROLES "allowedRoles"
             #define KARABO_SCHEMA_ASSIGNMENT "assignment"
             #define KARABO_SCHEMA_TAGS "tags"
 
             #define KARABO_SCHEMA_OPTIONS "options"
-            #define KARABO_SCHEMA_EXPERT_LEVEL "expertLevel"
-
+            #define KARABO_SCHEMA_REQUIRED_ACCESS_LEVEL "requiredAccessLevel"
+            
             #define KARABO_SCHEMA_UNIT_ENUM "unitEnum"
             #define KARABO_SCHEMA_UNIT_NAME "unitName"
             #define KARABO_SCHEMA_UNIT_SYMBOL "unitSymbol"
@@ -116,7 +115,7 @@ namespace karabo {
 
             #define KARABO_SCHEMA_WARN_LOW "warnLow"
             #define KARABO_SCHEMA_WARN_HIGH "warnHigh"
-
+            
             #define KARABO_SCHEMA_ALARM_LOW "alarmLow"
             #define KARABO_SCHEMA_ALARM_HIGH "alarmHigh"
 
@@ -167,13 +166,7 @@ namespace karabo {
                 }
             };
 
-            enum ExpertLevelType {
-
-                SIMPLE,
-                MEDIUM,
-                ADVANCED
-            };
-
+            
             enum NodeType {
 
                 LEAF,
@@ -213,7 +206,7 @@ namespace karabo {
                 USER,
                 OPERATOR,
                 EXPERT,
-                GOD
+                ADMIN
             };
 
         public:
@@ -392,20 +385,27 @@ namespace karabo {
             bool hasAllowedRoles(const std::string& path) const;
 
             const std::vector<std::string>& getAllowedRoles(const std::string& path) const;
-
+            
+            
             //**********************************************
-            //                  ExpertLevel                *
+            //                  RequiredAccessLevel                *
             //**********************************************
 
-            void setExpertLevel(const std::string& path, const ExpertLevelType& value);
+            void setRequiredAccessLevel(const std::string& path, const AccessLevel& value);
 
-            bool hasExpertLevel(const std::string& path) const;
+            bool hasRequiredAccessLevel(const std::string& path) const;
 
-            bool isExpertLevelAdvanced(const std::string& path) const;
+            bool isRequiredAccessLevelObserver(const std::string& path) const;
 
-            bool isExpertLevelSimple(const std::string& path) const;
-
-            const int getExpertLevel(const std::string& path) const;
+            bool isRequiredAccessLevelUser(const std::string& path) const;
+            
+            bool isRequiredAccessLevelOperator(const std::string& path) const;
+            
+            bool isRequiredAccessLevelExpert(const std::string& path) const;
+            
+            bool isRequiredAccessLevelAdmin(const std::string& path) const;
+            
+            const int getRequiredAccessLevel(const std::string& path) const;
 
             //**********************************************
             //                DefaultValue                 *
@@ -782,6 +782,8 @@ namespace karabo {
             void processingStandardAttributes(const std::string& key, ostringstream & stream);
 
             std::string extractKey(const std::string& key);
+            
+            bool checkRequiredAccessLevel(const std::string& path, const Schema::AccessLevel& accessLevel) const;
 
         };
 

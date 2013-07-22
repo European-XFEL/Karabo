@@ -56,7 +56,7 @@ namespace karabo {
                     .description("The connection to the communication layer of the distributed system")
                     .appendNodesOfConfigurationBase<BrokerConnection>()
                     .assignmentOptional().defaultValue("Jms")
-                    .advanced()
+                    .expertAccess()
                     .init()
                     .commit();
 
@@ -70,7 +70,7 @@ namespace karabo {
             UINT32_ELEMENT(expected).key("nameRequestTimeout")
                     .displayedName("Name Request Timeout")
                     .description("Time to wait for name resolution (via name-server) until timeout [ms]")
-                    .advanced()
+                    .expertAccess()
                     .assignmentOptional().defaultValue(5000)
                     .commit();
             

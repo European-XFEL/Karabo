@@ -72,7 +72,9 @@ namespace karabo {
                 this->m_node->setAttribute<int>(KARABO_SCHEMA_LEAF_TYPE, karabo::util::Schema::PROPERTY);
                 this->m_node->setAttribute(KARABO_SCHEMA_VALUE_TYPE, ToLiteral::to<Types::STRING>());
                 if (!this->m_node->hasAttribute(KARABO_SCHEMA_ACCESS_MODE)) this->init(); // This is the default
-                
+                if (!this->m_node->hasAttribute(KARABO_SCHEMA_REQUIRED_ACCESS_LEVEL)) {
+                   this->m_node->setAttribute<int>(KARABO_SCHEMA_REQUIRED_ACCESS_LEVEL, Schema::OBSERVER);
+                }
             }
         };
         typedef PathElement PATH_ELEMENT;

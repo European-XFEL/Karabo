@@ -173,7 +173,7 @@ namespace configurationTest {
                     .description("You may switch of for speed")
                     .assignmentOptional().defaultValue(true)
                     .init()
-                    .advanced()
+                    .expertAccess()
                     .commit();
 
             STRING_ELEMENT(expected).key("color")
@@ -198,7 +198,7 @@ namespace configurationTest {
                     .displayedName("Shapes")
                     .appendNodesOfConfigurationBase<Shape > ()
                     .assignmentOptional().defaultValue("Rectangle")
-                    .advanced()
+                    .expertAccess()
                     .commit();
 
             STRING_ELEMENT(expected).key("version")
@@ -235,7 +235,7 @@ namespace configurationTest {
                     .description("You may switch of for speed")
                     .assignmentOptional().defaultValue(true)
                     .init()
-                    .advanced()
+                    .expertAccess()
                     .commit();
 
             STRING_ELEMENT(expected).key("color")

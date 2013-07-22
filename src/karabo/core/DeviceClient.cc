@@ -517,10 +517,10 @@ namespace karabo {
                 if (schema.isProperty(path)) {
                     if (m_isAdvancedMode) {
                         properties.push_back(path); // Take them all
-                    } else if (schema.isExpertLevelSimple(path)) { // Only the simple ones
-                        properties.push_back(path);
-                    }
-                }
+                    } //else if (schema.isExpertLevelSimple(path)) { // Only the simple ones //TODO check with new vers. requiredAccessLevel
+                      //  properties.push_back(path);
+                    // }
+            }
             }
             return properties;
         }

@@ -123,14 +123,41 @@ namespace karabo {
             }
 
             /**
-             * The <b>advanced</b> method serves for setting up the <i>expert level</i> attribute to be advanced.
+             * The <b>userAccess</b> method serves for setting up the <i>access level</i> attribute to be USER.
              * @return reference to the Element (to allow method's chaining)
              */
-            Derived& advanced() {
-                m_node->setAttribute<int>(KARABO_SCHEMA_EXPERT_LEVEL, Schema::ADVANCED);
+            Derived& userAccess() {
+                m_node->setAttribute<int>(KARABO_SCHEMA_REQUIRED_ACCESS_LEVEL, Schema::USER);
                 return *(static_cast<Derived*> (this));
             }
-
+            
+            /**
+             * The <b>operatorAccess</b> method serves for setting up the <i>access level</i> attribute to be OPERATOR.
+             * @return reference to the Element (to allow method's chaining)
+             */
+            Derived& operatorAccess() {
+                m_node->setAttribute<int>(KARABO_SCHEMA_REQUIRED_ACCESS_LEVEL, Schema::OPERATOR);
+                return *(static_cast<Derived*> (this));
+            }
+            
+            /**
+             * The <b>expertAccess</b> method serves for setting up the <i>access level</i> attribute to be EXPERT.
+             * @return reference to the Element (to allow method's chaining)
+             */
+            Derived& expertAccess() {
+                m_node->setAttribute<int>(KARABO_SCHEMA_REQUIRED_ACCESS_LEVEL, Schema::EXPERT);
+                return *(static_cast<Derived*> (this));
+            }
+            
+            /**
+             * The <b>adminAccess</b> method serves for setting up the <i>access level</i> attribute to be ADMIN.
+             * @return reference to the Element (to allow method's chaining)
+             */
+            Derived& adminAccess() {
+                m_node->setAttribute<int>(KARABO_SCHEMA_REQUIRED_ACCESS_LEVEL, Schema::ADMIN);
+                return *(static_cast<Derived*> (this));
+            }
+            
             /**
              * The <b>commit</b> method injects the element to the expected parameters list. If not called
              * the element is not usable. This must be called after the element is fully defined.

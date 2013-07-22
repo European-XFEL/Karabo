@@ -96,7 +96,7 @@ namespace karabo {
                 STRING_ELEMENT(expected).key("version")
                         .displayedName("Version")
                         .description("The version of this device class")
-                        .advanced()
+                        .expertAccess()
                         .readOnly()
                         .initialValue(Device::classInfo().getVersion())
                         .commit();
@@ -106,7 +106,7 @@ namespace karabo {
                         .description("The connection to the communication layer of the distributed system")
                         .appendNodesOfConfigurationBase<karabo::net::BrokerConnection>()
                         .assignmentOptional().defaultValue("Jms")
-                        .advanced()
+                        .expertAccess()
                         .init()
                         .commit();
 
@@ -114,14 +114,14 @@ namespace karabo {
                         .displayedName("Visibility")
                         .description("Configures who is allowed to see this device at all")
                         .assignmentOptional().defaultValue(karabo::util::Schema::OBSERVER)
-                        .advanced()
+                        .expertAccess()
                         .reconfigurable()
                         .commit();
 
                 STRING_ELEMENT(expected).key("classId")
                         .displayedName("ClassID")
                         .description("The (factory)-name of the class of this device")
-                        .advanced()
+                        .expertAccess()
                         .readOnly()
                         .initialValue(Device::classInfo().getClassId())
                         .commit();
@@ -129,7 +129,7 @@ namespace karabo {
                 STRING_ELEMENT(expected).key("serverId")
                         .displayedName("ServerID")
                         .description("The device-server on which this device is running on")
-                        .advanced()
+                        .expertAccess()
                         .assignmentOptional().noDefaultValue()
                         .init()
                         .commit();

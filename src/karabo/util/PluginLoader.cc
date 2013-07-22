@@ -38,7 +38,7 @@ namespace karabo {
                     .description("Directory to search for plugins")
                     .assignmentOptional().defaultValue("plugins")
                     .isDirectory()
-                    .advanced()
+                    .expertAccess()
                     .commit();
 
         }
