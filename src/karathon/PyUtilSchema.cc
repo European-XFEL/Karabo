@@ -910,6 +910,7 @@ namespace schemawrap {
         schema.help(classId);
     }
 
+
     bp::object merge(Schema& schema, const Schema& schema2) {
         schema.merge(schema2);
         return bp::object(schema);
@@ -1046,7 +1047,7 @@ void exportPyUtilSchema() {
                 .value("EVERY_10MIN", Schema::EVERY_10MIN)
                 .value("NO_ARCHIVING", Schema::NO_ARCHIVING)
                 .export_values()
-                ;       
+                ;
         bp::class_< Schema::AssemblyRules >("AssemblyRules", bp::init< bp::optional< AccessType const &, std::string const &, const int > >((bp::arg("accessMode") = operator|(INIT, WRITE), bp::arg("state") = "", bp::arg("accessLevel") = -1)))
                 .def_readwrite("m_accessMode", &Schema::AssemblyRules::m_accessMode)
                 .def_readwrite("m_accessLevel", &Schema::AssemblyRules::m_accessLevel)
@@ -1234,7 +1235,7 @@ void exportPyUtilSchema() {
         s.def("hasAlarmLow", &Schema::hasAlarmLow);
 
         s.def("hasAlarmHigh", &Schema::hasAlarmHigh);
-        
+
         s.def("hasArchivePolicy", &Schema::hasArchivePolicy);
 
         s.def("hasDisplayedName", &Schema::hasDisplayedName);
@@ -1567,6 +1568,10 @@ void exportPyUtilSchema() {
                      , bp::return_internal_reference<> ())
                 .def("setNewDefaultValue"
                      , &OverwriteElementWrap().setNewDefaultValue
+                     , (bp::arg("value"))
+                     , bp::return_internal_reference<> ())
+                .def("setNewMetricPrefix"
+                     , (OverwriteElement & (OverwriteElement::*)(const MetricPrefixType&))(&OverwriteElement::setNewMetricPrefix)
                      , (bp::arg("value"))
                      , bp::return_internal_reference<> ())
                 .def("commit"
