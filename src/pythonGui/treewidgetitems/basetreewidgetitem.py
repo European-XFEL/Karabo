@@ -120,14 +120,14 @@ class BaseTreeWidgetItem(QTreeWidgetItem):
     descriptionIndex = property(fget=_descriptionIndex, fset=_setDescriptionIndex)
 
 
-    def _expertLevel(self):
+    def _requiredAccessLevel(self):
         level = self.data(0, const.EXPERT_LEVEL).toPyObject()
         return level
-    def _setExpertLevel(self, expertLevel): # int value expected
-        self.setData(0, const.EXPERT_LEVEL, expertLevel)
-        if expertLevel > 0:
+    def _setRequiredAccessLevel(self, requiredAccessLevel): # int value expected
+        self.setData(0, const.EXPERT_LEVEL, requiredAccessLevel)
+        if requiredAccessLevel > 0:
             self.setHidden(True)
-    expertLevel = property(fget=_expertLevel, fset=_setExpertLevel)
+    requiredAccessLevel = property(fget=_requiredAccessLevel, fset=_setRequiredAccessLevel)
 
 
 ### public functions ###
