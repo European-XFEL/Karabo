@@ -405,47 +405,66 @@ namespace karabo {
 
 
         //**********************************************
-        //                  ExpertLevel                *
+        //                  RequiredAccessLevel                *
         //**********************************************
 
 
-        void Schema::setExpertLevel(const std::string& path, const Schema::ExpertLevelType& value) {
-            m_hash.setAttribute<int>(path, KARABO_SCHEMA_EXPERT_LEVEL, value);
+        void Schema::setRequiredAccessLevel(const std::string& path, const Schema::AccessLevel& value) {
+            m_hash.setAttribute<int>(path, KARABO_SCHEMA_REQUIRED_ACCESS_LEVEL, value);
         }
 
 
-        bool Schema::hasExpertLevel(const std::string& path) const {
-            return m_hash.hasAttribute(path, KARABO_SCHEMA_EXPERT_LEVEL);
+        bool Schema::hasRequiredAccessLevel(const std::string& path) const {
+            return m_hash.hasAttribute(path, KARABO_SCHEMA_REQUIRED_ACCESS_LEVEL);
         }
 
 
-        bool Schema::isExpertLevelAdvanced(const std::string& path) const {
+        bool Schema::isRequiredAccessLevelObserver(const std::string& path) const {
+             return checkRequiredAccessLevel(path, Schema::OBSERVER);
+        }
+
+        
+        bool Schema::isRequiredAccessLevelUser(const std::string& path) const {
+             return checkRequiredAccessLevel(path, Schema::USER);
+        }
+        
+        
+        bool Schema::isRequiredAccessLevelOperator(const std::string& path) const {
+             return checkRequiredAccessLevel(path, Schema::OPERATOR);
+        }
+        
+        
+        bool Schema::isRequiredAccessLevelExpert(const std::string& path) const {
+            return checkRequiredAccessLevel(path, Schema::EXPERT);
+        }
+        
+        
+        bool Schema::isRequiredAccessLevelAdmin(const std::string& path) const {
+            return checkRequiredAccessLevel(path, Schema::ADMIN);
+        }
+        
+        
+        bool Schema::checkRequiredAccessLevel(const std::string& path, const Schema::AccessLevel& accessLevel) const {
             std::vector<std::string> tokens;
             boost::split(tokens, path, boost::is_any_of("."));
 
             std::string partialPath;
 
-
             BOOST_FOREACH(std::string token, tokens) {
                 if (partialPath.empty()) partialPath = token;
                 else partialPath += "." + token;
-                if (m_hash.hasAttribute(partialPath, KARABO_SCHEMA_EXPERT_LEVEL)) {
-                    if (m_hash.getAttribute<int>(partialPath, KARABO_SCHEMA_EXPERT_LEVEL) == Schema::ADVANCED) return true;
+                if (m_hash.hasAttribute(partialPath, KARABO_SCHEMA_REQUIRED_ACCESS_LEVEL)) {
+                    if (m_hash.getAttribute<int>(partialPath, KARABO_SCHEMA_REQUIRED_ACCESS_LEVEL) == accessLevel) return true;
                 }
             }
             return false;
         }
-
-
-        bool Schema::isExpertLevelSimple(const std::string& path) const {
-            return !isExpertLevelAdvanced(path);
+    
+        const int Schema::getRequiredAccessLevel(const std::string& path) const {
+            return m_hash.getAttribute<int> (path, KARABO_SCHEMA_REQUIRED_ACCESS_LEVEL);
         }
 
-
-        const int Schema::getExpertLevel(const std::string& path) const {
-            return m_hash.getAttribute<int> (path, KARABO_SCHEMA_EXPERT_LEVEL);
-        }
-
+        
         //**********************************************
         //                  Unit                       *
         //**********************************************
@@ -730,8 +749,8 @@ namespace karabo {
 
 
         bool Schema::isAllowedInCurrentAccessLevel(const Hash::Node& node) const {
-            if (node.hasAttribute(KARABO_SCHEMA_ACCESS_LEVEL) && (m_currentAccessLevel != -1)) {
-                return m_currentAccessLevel >= node.getAttribute<int>(KARABO_SCHEMA_ACCESS_LEVEL);
+            if (node.hasAttribute(KARABO_SCHEMA_REQUIRED_ACCESS_LEVEL) && (m_currentAccessLevel != -1)) {
+                return m_currentAccessLevel >= node.getAttribute<int>(KARABO_SCHEMA_REQUIRED_ACCESS_LEVEL);
                 //const vector<string>& allowedRoles = node.getAttribute<vector<string> >(KARABO_SCHEMA_ALLOWED_ROLES);
                 //return (std::find(allowedRoles.begin(), allowedRoles.end(), m_currentAccessLevel) != allowedRoles.end());
             } else { // If no roles are assigned, access/visibility is always possible

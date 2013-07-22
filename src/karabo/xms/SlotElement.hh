@@ -32,11 +32,14 @@ namespace karabo {
                 this->m_node->template setAttribute<int>(KARABO_SCHEMA_ACCESS_MODE, karabo::util::READ | karabo::util::WRITE | karabo::util::INIT);
                 this->m_node->template setAttribute<int>(KARABO_SCHEMA_NODE_TYPE, karabo::util::Schema::NODE);
                 this->m_node->setAttribute(KARABO_SCHEMA_DISPLAY_TYPE, "Slot"); // Reserved displayType for commands
+                
+                //default value of requiredAccessLevel for Slot element: USER
+                this->m_node->template setAttribute<int>(KARABO_SCHEMA_REQUIRED_ACCESS_LEVEL, karabo::util::Schema::USER);
 
                 m_child.set("connectedSignals", 0);
                 m_child.setAttribute("connectedSignals", KARABO_SCHEMA_DISPLAYED_NAME, "Connected Signals");
                 m_child.setAttribute("connectedSignals", KARABO_SCHEMA_DESCRIPTION, "Signals already connected to this slot");
-                m_child.setAttribute<int>("connectedSignals", KARABO_SCHEMA_EXPERT_LEVEL, karabo::util::Schema::ADVANCED);
+                m_child.setAttribute<int>("connectedSignals", KARABO_SCHEMA_REQUIRED_ACCESS_LEVEL, karabo::util::Schema::EXPERT);
                 m_child.setAttribute<int>("connectedSignals", KARABO_SCHEMA_ASSIGNMENT, karabo::util::Schema::OPTIONAL_PARAM);
                 m_child.setAttribute<int>("connectedSignals", KARABO_SCHEMA_NODE_TYPE, karabo::util::Schema::LEAF);
                 m_child.setAttribute<int>("connectedSignals", KARABO_SCHEMA_LEAF_TYPE, karabo::util::Schema::COMMAND);

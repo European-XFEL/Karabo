@@ -32,7 +32,7 @@ namespace karabo {
                     .displayedName("Indentation")
                     .options("-1 0 1 2 3 4")
                     .assignmentOptional().defaultValue(2)
-                    .advanced()
+                    .expertAccess()
                     .commit();
 
             STRING_ELEMENT(expected)
@@ -40,7 +40,7 @@ namespace karabo {
                     .description("Sets the default XML namespace")
                     .displayedName("XML Namespace")
                     .assignmentOptional().defaultValue("http://www.w3.org/2001/XMLSchema")
-                    .advanced()
+                    .expertAccess()
                     .commit();
 
             STRING_ELEMENT(expected)
@@ -48,7 +48,7 @@ namespace karabo {
                     .description("Sets the annotation namespace")
                     .displayedName("Annotation Namespace")
                     .assignmentOptional().defaultValue("http://www.karabo.eu")
-                    .advanced()
+                    .expertAccess()
                     .commit();
         }
 
@@ -317,9 +317,9 @@ namespace karabo {
                 aliasElem.append_child(pugi::node_pcdata).set_value(alias.c_str());
             }
             
-            if (schema.hasExpertLevel(key)) {
-                int expertLevel = schema.getExpertLevel(key);
-                pugi::xml_node expertLevelElem = documentationNode.append_child("a:expertLevel");
+            if (schema.hasRequiredAccessLevel(key)) {
+                int expertLevel = schema.getRequiredAccessLevel(key);
+                pugi::xml_node expertLevelElem = documentationNode.append_child("a:requiredAccessLevel");
                 expertLevelElem.append_child(pugi::node_pcdata).set_value(toString(expertLevel).c_str());
             }
 
@@ -447,7 +447,7 @@ namespace karabo {
 
         bool SchemaXsdSerializer::annotationExists(const Schema& schema, const string& key) const {
 
-            if (schema.hasDescription(key) || schema.hasDisplayedName(key) || schema.hasExpertLevel(key) ||
+            if (schema.hasDescription(key) || schema.hasDisplayedName(key) || schema.hasRequiredAccessLevel(key) ||
                     schema.hasDefaultValue(key) || schema.hasUnit(key) || schema.hasAccessMode(key) ||
                     schema.hasDisplayType(key) || schema.hasAllowedStates(key) || schema.hasTags(key) ||
                     schema.hasMin(key) || schema.hasMax(key) ) {

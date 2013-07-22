@@ -31,7 +31,7 @@ namespace karabo {
                     .displayedName("Indentation")
                     .options("-1 0 1 2 3 4")
                     .assignmentOptional().defaultValue(2)
-                    .advanced()
+                    .expertAccess()
                     .commit();
 
             BOOL_ELEMENT(expected)
@@ -39,7 +39,7 @@ namespace karabo {
                     .description("This flag controls whether to add data-type information to the generated XML string")
                     .displayedName("Write data types")
                     .assignmentOptional().defaultValue(true)
-                    .advanced()
+                    .expertAccess()
                     .commit();
 
             BOOL_ELEMENT(expected)
@@ -47,7 +47,7 @@ namespace karabo {
                     .description("This flag controls whether to use any potentially existing data type information to do automatic casting into the described types")
                     .displayedName("Read data types")
                     .assignmentOptional().defaultValue(true)
-                    .advanced()
+                    .expertAccess()
                     .commit();
 
             BOOL_ELEMENT(expected)
@@ -55,7 +55,7 @@ namespace karabo {
                     .displayedName("Insert XML Namespace")
                     .description("Flag toggling whether to insert or not an xmlns attribute")
                     .assignmentOptional().defaultValue(false)
-                    .advanced()
+                    .expertAccess()
                     .commit();
 
             STRING_ELEMENT(expected)
@@ -63,7 +63,7 @@ namespace karabo {
                     .description("Sets the default XML namespace")
                     .displayedName("XML Namespace")
                     .assignmentOptional().defaultValue("http://xfel.eu/config")
-                    .advanced()
+                    .expertAccess()
                     .commit();
 
             STRING_ELEMENT(expected)
@@ -71,7 +71,7 @@ namespace karabo {
                     .displayedName("Prefix")
                     .description("Prefix flagging auxiliary constructs needed for serialization")
                     .assignmentOptional().defaultValue("KRB_")
-                    .advanced()
+                    .expertAccess()
                     .commit();
         }
 

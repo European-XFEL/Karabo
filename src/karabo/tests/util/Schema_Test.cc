@@ -65,12 +65,12 @@ void Schema_Test::testPaths() {
 
 void Schema_Test::testExpertLevel() {
     Schema schema = GraphicsRenderer::getSchema("GraphicsRenderer");
-    CPPUNIT_ASSERT(schema.isExpertLevelAdvanced("shapes.Circle.shadowEnabled") == true);
-    CPPUNIT_ASSERT(schema.isExpertLevelAdvanced("shapes.Circle") == true);
-    CPPUNIT_ASSERT(schema.isExpertLevelAdvanced("shapes") == true);
-    CPPUNIT_ASSERT(schema.isExpertLevelAdvanced("antiAlias") == true);
-    CPPUNIT_ASSERT(schema.isExpertLevelSimple("antiAlias") == false);
-    CPPUNIT_ASSERT(schema.isExpertLevelSimple("color") == true);
+    CPPUNIT_ASSERT(schema.isRequiredAccessLevelExpert("shapes.Circle.shadowEnabled") == true);
+    CPPUNIT_ASSERT(schema.isRequiredAccessLevelExpert("shapes.Circle") == true);
+    CPPUNIT_ASSERT(schema.isRequiredAccessLevelExpert("shapes") == true);
+    CPPUNIT_ASSERT(schema.isRequiredAccessLevelExpert("antiAlias") == true);
+    //CPPUNIT_ASSERT(schema.isExpertLevelSimple("antiAlias") == false);
+    //CPPUNIT_ASSERT(schema.isExpertLevelSimple("color") == true);
 }
 
 void Schema_Test::setUp() {
