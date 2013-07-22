@@ -36,7 +36,7 @@ namespace karabo {
                 this->m_node->setAttribute(KARABO_SCHEMA_DISPLAY_TYPE, "Image"); // Reserved displayType for commands
                 
                 //default value of requiredAccessLevel for Image element: OBSERVER
-                this->m_node->setAttribute<int>(KARABO_SCHEMA_REQUIRED_ACCESS_LEVEL, karabo::util::Schema::OBSERVER);
+                this->observerAccess();
                 
                 Schema inner;
                 VECTOR_CHAR_ELEMENT(inner).key("data")
