@@ -1076,7 +1076,8 @@ void exportPyUtilSchema() {
         s.def("__iadd__", &schemawrap::merge, bp::arg("schema"));
 
         //********* 'get'-methods *********************
-
+        s.def("getRequiredAccessLevel", &Schema::getRequiredAccessLevel);
+        
         s.def("getParameterHash", &schemawrap::getParameterHash);
 
         s.def("getAccessMode", &Schema::getAccessMode);

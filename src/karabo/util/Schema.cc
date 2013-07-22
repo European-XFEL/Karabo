@@ -17,6 +17,7 @@
 #include "Schema.hh"
 #include "Hash.hh"
 #include "FromLiteral.hh"
+#include "karabo/webAuth/Authenticator.hh"
 
 namespace karabo {
     namespace util {
@@ -412,56 +413,24 @@ namespace karabo {
         void Schema::setRequiredAccessLevel(const std::string& path, const Schema::AccessLevel& value) {
             m_hash.setAttribute<int>(path, KARABO_SCHEMA_REQUIRED_ACCESS_LEVEL, value);
         }
-
-
-        bool Schema::hasRequiredAccessLevel(const std::string& path) const {
-            return m_hash.hasAttribute(path, KARABO_SCHEMA_REQUIRED_ACCESS_LEVEL);
-        }
-
-
-        bool Schema::isRequiredAccessLevelObserver(const std::string& path) const {
-             return checkRequiredAccessLevel(path, Schema::OBSERVER);
-        }
-
         
-        bool Schema::isRequiredAccessLevelUser(const std::string& path) const {
-             return checkRequiredAccessLevel(path, Schema::USER);
-        }
-        
-        
-        bool Schema::isRequiredAccessLevelOperator(const std::string& path) const {
-             return checkRequiredAccessLevel(path, Schema::OPERATOR);
-        }
-        
-        
-        bool Schema::isRequiredAccessLevelExpert(const std::string& path) const {
-            return checkRequiredAccessLevel(path, Schema::EXPERT);
-        }
-        
-        
-        bool Schema::isRequiredAccessLevelAdmin(const std::string& path) const {
-            return checkRequiredAccessLevel(path, Schema::ADMIN);
-        }
-        
-        
-        bool Schema::checkRequiredAccessLevel(const std::string& path, const Schema::AccessLevel& accessLevel) const {
-            std::vector<std::string> tokens;
+    
+        const int Schema::getRequiredAccessLevel(const std::string& path) const {
+            std::vector<std::string> tokens;   
             boost::split(tokens, path, boost::is_any_of("."));
 
             std::string partialPath;
+            int highestLevel = Schema::OBSERVER;
 
             BOOST_FOREACH(std::string token, tokens) {
                 if (partialPath.empty()) partialPath = token;
                 else partialPath += "." + token;
                 if (m_hash.hasAttribute(partialPath, KARABO_SCHEMA_REQUIRED_ACCESS_LEVEL)) {
-                    if (m_hash.getAttribute<int>(partialPath, KARABO_SCHEMA_REQUIRED_ACCESS_LEVEL) == accessLevel) return true;
+                    int currentLevel = m_hash.getAttribute<int>(partialPath, KARABO_SCHEMA_REQUIRED_ACCESS_LEVEL);
+                    if (currentLevel > highestLevel) highestLevel = currentLevel;     
                 }
             }
-            return false;
-        }
-    
-        const int Schema::getRequiredAccessLevel(const std::string& path) const {
-            return m_hash.getAttribute<int> (path, KARABO_SCHEMA_REQUIRED_ACCESS_LEVEL);
+            return highestLevel;
         }
 
         
@@ -531,7 +500,7 @@ namespace karabo {
         }
 
         //**********************************************
-        //    Minimum Inclusive value                  *                   *
+        //    Minimum Inclusive value                  *
         //**********************************************
 
 
