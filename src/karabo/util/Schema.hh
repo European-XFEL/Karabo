@@ -393,18 +393,6 @@ namespace karabo {
 
             void setRequiredAccessLevel(const std::string& path, const AccessLevel& value);
 
-            bool hasRequiredAccessLevel(const std::string& path) const;
-
-            bool isRequiredAccessLevelObserver(const std::string& path) const;
-
-            bool isRequiredAccessLevelUser(const std::string& path) const;
-            
-            bool isRequiredAccessLevelOperator(const std::string& path) const;
-            
-            bool isRequiredAccessLevelExpert(const std::string& path) const;
-            
-            bool isRequiredAccessLevelAdmin(const std::string& path) const;
-            
             const int getRequiredAccessLevel(const std::string& path) const;
 
             //**********************************************
