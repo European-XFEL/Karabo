@@ -21,7 +21,7 @@ namespace karabo {
                        
         public:
 
-            KARABO_CLASSINFO(StartStopFsm, "StartStopFsm", "0.1")
+            KARABO_CLASSINFO(StartStopFsm, "StartStopFsm", "1.0")
 
 
             static void expectedParameters(karabo::util::Schema& expected) {

@@ -9,71 +9,103 @@
  */
 
 
-#ifndef KARABO_CORE_COMPUTEFSM_HH
-#define	KARABO_CORE_COMPUTEFSM_HH
+#ifndef KARABO_CORE_COMPUTE_FSM_HH
+#define	KARABO_CORE_COMPUTE_FSM_HH
 
 #include "Device.hh"
 
 namespace karabo {
     namespace core {
 
-        class ComputeFsm : public karabo::core::Device {
+        class ComputeFsm : public BaseFsm {
+            
+            bool m_isAborted;
 
         public:
 
             KARABO_CLASSINFO(ComputeFsm, "ComputeFsm", "1.0")
 
-            template <class Derived>
-            ComputeFsm(Derived* derived) : Device(derived), m_isAborted(false) {
+
+            static void expectedParameters(karabo::util::Schema& expected) {
+                using namespace karabo::xms;
+
+                SLOT_ELEMENT(expected).key("startRun")
+                        .displayedName("Start Run")
+                        .description("Starts a new pipeline run")
+                        .allowedStates("Ok.Idle")
+                        .commit();
+
+                SLOT_ELEMENT(expected).key("startComputing")
+                        .displayedName("Start Computing")
+                        .description("Do a single computation")
+                        .allowedStates("Ok.Ready")
+                        .commit();
+
+                SLOT_ELEMENT(expected).key("abort")
+                        .displayedName("Abort")
+                        .description("Abort contribution to this run, fully disconnect")
+                        .commit();
+
+                SLOT_ELEMENT(expected).key("reset")
+                        .displayedName("Reset")
+                        .description("Completely reset this device")
+                        .allowedStates("Error.WaitingIO")
+                        .commit();
+
+                BOOL_ELEMENT(expected).key("autoCompute")
+                        .displayedName("Auto Compute")
+                        .description("Trigger computation automatically once data is available")
+                        .reconfigurable()
+                        .allowedStates("Ok.Ready,Ok.WaitingIO,Ok.Idle")
+                        .assignmentOptional().defaultValue(true)
+                        .commit();
             }
-
-            virtual ~ComputeFsm() {
+            
+            ComputeFsm() : m_isAborted(false) {}
+            
+            void initFsmSlots() {
+                SLOT0(startRun);
+                SLOT0(startComputing);
+                SLOT0(abort);
+                SLOT0(reset);
             }
-
-            static void expectedParameters(karabo::util::Schema& expected);
-
-
-            void configure(const karabo::util::Hash& input);
-
 
         public:
 
             /**************************************************************/
             /*                        Events                              */
-
             /**************************************************************/
+            
+            KARABO_FSM_EVENT2(m_fsm, ErrorFoundEvent, errorFound, std::string, std::string)
+            
+            KARABO_FSM_EVENT0(m_fsm, ResetEvent, reset)
 
-            KARABO_FSM_EVENT2(m_fsm, ErrorFoundEvent, onException, std::string, std::string)
+            KARABO_FSM_EVENT0(m_fsm, ComputeEvent, startComputing)
 
-            KARABO_FSM_EVENT0(m_fsm, EndErrorEvent, slotEndError)
+            KARABO_FSM_EVENT0(m_fsm, StartRunEvent, startRun)
 
-            KARABO_FSM_EVENT0(m_fsm, ComputeEvent, slotCompute)
+            KARABO_FSM_EVENT0(m_fsm, EndOfStreamEvent, endOfStream)
 
-            KARABO_FSM_EVENT0(m_fsm, StartRunEvent, slotStartRun)
-
-            KARABO_FSM_EVENT0(m_fsm, EndOfStreamEvent, slotEndOfStream)
-
-            KARABO_FSM_EVENT0(m_fsm, PauseEvent, slotPause)
+            KARABO_FSM_EVENT0(m_fsm, PauseEvent, pause)
 
             KARABO_FSM_EVENT0(m_fsm, AbortEvent, abort)
 
             KARABO_FSM_EVENT0(m_fsm, ComputeFinishedEvent, computeFinished)
 
-            KARABO_FSM_EVENT0(m_fsm, ResetEvent, slotReset)
-
+            
             /**************************************************************/
             /*                        States                              */
             /**************************************************************/
 
             KARABO_FSM_STATE(Idle)
 
-            KARABO_FSM_STATE_V_EE(ConnectingIO, connectingIOOnEntry, connectingIOOnExit)
+            KARABO_FSM_STATE_VE_EE(ConnectingIO, connectingIOOnEntry, connectingIOOnExit)
 
-            KARABO_FSM_STATE_V_E(Ready, readyStateOnEntry)
+            KARABO_FSM_STATE_VE_E(Ready, readyStateOnEntry)
 
-            KARABO_FSM_STATE_V_EE(Computing, computingStateOnEntry, computingStateOnExit)
+            KARABO_FSM_STATE_VE_EE(Computing, computingStateOnEntry, computingStateOnExit)
 
-            KARABO_FSM_STATE_V_EE(WaitingIO, waitingIOOnEntry, waitingIOOnExit)
+            KARABO_FSM_STATE_VE_EE(WaitingIO, waitingIOOnEntry, waitingIOOnExit)
 
             KARABO_FSM_STATE(Paused)
 
@@ -89,7 +121,9 @@ namespace karabo {
             /*                    Transition Actions                      */
             /**************************************************************/
 
-            KARABO_FSM_V_ACTION0(StartRunAction, onStartRun)
+            KARABO_FSM_VE_ACTION2(ErrorFoundAction, errorFoundAction, std::string, std::string);
+            
+            KARABO_FSM_VE_ACTION0(StartRunAction, onStartRun)
 
             /**************************************************************/
             /*                           Guards                           */
@@ -120,21 +154,14 @@ namespace karabo {
             //                         Name       Transition-Table      Initial-State         Context
             KARABO_FSM_STATE_MACHINE(StateMachine, TransitionTable, KARABO_FSM_REGION(Ok, Idle), Self)
 
-            void startStateMachine() {
+            void startStateFsm() {
 
                 KARABO_FSM_CREATE_MACHINE(StateMachine, m_fsm);
                 KARABO_FSM_SET_CONTEXT_TOP(this, m_fsm)
                 KARABO_FSM_START_MACHINE(m_fsm)
             }
-
-
-            // Override this function if you need to handle the reconfigured data (e.g. send to a hardware)
-
-            virtual void onReconfigure(karabo::util::Hash& incomingReconfiguration) {
-            }
-
-            void run();
-
+            
+            // Main function to implement
             virtual void compute() = 0;
 
             bool isAborted();
@@ -144,21 +171,80 @@ namespace karabo {
             void onOutputPossible(const karabo::xms::AbstractOutput::Pointer&);
 
         private: // functions
+            
+            void slotAbort() {
+                m_isAborted = true;
+            }
+
+            bool isAborted() {
+                return m_isAborted;
+            }
+            
+             bool canCompute() const {
+                 return (this->canReadFromAllInputChannels() && this->canWriteToAllOutputChannels());
+             }
+            
+             bool canReadFromAllInputChannels() const {
+                 using namespace karabo::xms;
+                 const InputChannels& inputChannels = this->getInputChannels();
+                 for (InputChannels::const_iterator it = inputChannels.begin(); it != inputChannels.end(); ++it) {
+                     if (!it->second->canCompute()) return false;
+                 }
+                 return true;
+             }
 
 
-            void slotAbort();
+             bool canWriteToAllOutputChannels() const {
+                 const OutputChannels& outputChannels = this->getOutputChannels();
+                 for (OutputChannels::const_iterator it = outputChannels.begin(); it != outputChannels.end(); ++it) {
+                     if (!it->second->canCompute()) return false;
+                 }
+                 return true;
+             }
+             
+             
+             void connectingIOOnEntry() {
+                 const InputChannels& inputChannels = this->getInputChannels();
+                 for (InputChannels::const_iterator it = inputChannels.begin(); it != inputChannels.end(); ++it) {
+                     const Hash& tmp = this->get<Hash > (it->first);
+                     const Hash& config = tmp.get<Hash > (tmp.begin());
+                     std::cout << "Starting run and trying to reconfigure: " << config << std::endl;
+                     it->second->reconfigure(config);
+                 }
+                 this->connectInputChannels();
+             }
+             
+             void readyStateOnEntry() {
+                 if (this->get<bool>("autoCompute")) this->startComputing();
+             }
+             
+             void computingStateOnEntry() {
+                 this->compute();
+                 if (!isAborted()) computeFinished();
+             }
+             
+             void waitingIOOnEntry() {
+                 this->updateChannels();
+             }
+             
+              void updateChannels() {
 
-            bool canReadFromAllInputChannels() const;
-
-            bool canWriteToAllOutputChannels() const;
+                  const InputChannels& inputChannels = this->getInputChannels();
+                  const OutputChannels& outputChannels = this->getOutputChannels();
+                  
+                  for (OutputChannels::const_iterator it = outputChannels.begin(); it != outputChannels.end(); ++it) {
+                      it->second->update();
+                  }
+                  for (InputChannels::const_iterator it = inputChannels.begin(); it != inputChannels.end(); ++it) {
+                      it->second->update();
+                  }
+              }
 
             void doCompute();
 
             void updateChannels();
 
         private: // members
-
-
 
             KARABO_FSM_DECLARE_MACHINE(StateMachine, m_fsm);
 
