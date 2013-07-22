@@ -210,7 +210,7 @@ namespace hashfilter {
                     .description("You may switch of for speed")
                     .assignmentOptional().defaultValue(true)
                     .init()
-                    .advanced()
+                    .expertAccess()
                     .commit();
 
             STRING_ELEMENT(expected).key("color")

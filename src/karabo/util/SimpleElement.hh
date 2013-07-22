@@ -101,6 +101,21 @@ namespace karabo {
 
                 if (!this->m_node->hasAttribute(KARABO_SCHEMA_ACCESS_MODE)) this->init(); // This is the default
 
+                if (!this->m_node->hasAttribute(KARABO_SCHEMA_REQUIRED_ACCESS_LEVEL)) { 
+                    
+                    //for init, reconfigurable elements - set default value of requiredAccessLevel to USER
+                    if (!this->m_node->hasAttribute(KARABO_SCHEMA_ACCESS_MODE) ||
+                         this->m_node->template getAttribute<int>(KARABO_SCHEMA_ACCESS_MODE) == INIT ||
+                         this->m_node->template getAttribute<int>(KARABO_SCHEMA_ACCESS_MODE) == WRITE ) {         
+                        
+                        this->userAccess();   
+                    
+                    } else { //else set default value of requiredAccessLevel to OBSERVER 
+                       this->m_node->template setAttribute<int>(KARABO_SCHEMA_REQUIRED_ACCESS_LEVEL, Schema::OBSERVER);
+                    }
+                
+                }
+                
                 checkMinExcMaxExc();
                 checkMinIncMaxInc();
 
