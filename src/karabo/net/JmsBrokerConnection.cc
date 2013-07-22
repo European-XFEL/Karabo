@@ -92,7 +92,7 @@ namespace karabo {
                     .description("Underlying transport protocol for jms based messages")
                     .assignmentOptional().defaultValue("TCP")
                     .options("TCP,SSL")
-                    .advanced()
+                    .expertAccess()
                     .commit();
 
             UINT32_ELEMENT(expected)
@@ -101,7 +101,7 @@ namespace karabo {
                     .description("Client ping interval to test whether the connection to the broker is still alive [seconds]")
                     .assignmentOptional().defaultValue(20)
                     .minInc(1)
-                    .advanced()
+                    .expertAccess()
                     .commit();
 
             BOOL_ELEMENT(expected)
@@ -109,7 +109,7 @@ namespace karabo {
                     .displayedName("Trust Broker")
                     .description("Should the broker certificate be trusted?")
                     .assignmentOptional().defaultValue(true)
-                    .advanced()
+                    .expertAccess()
                     .commit();
 
             BOOL_ELEMENT(expected)
@@ -117,7 +117,7 @@ namespace karabo {
                     .displayedName("Acknowledge Message Sent")
                     .description("Should senders be blocked until the broker acknowledges message receipt?")
                     .assignmentOptional().defaultValue(true)
-                    .advanced()
+                    .expertAccess()
                     .commit();
 
             BOOL_ELEMENT(expected)
@@ -125,7 +125,7 @@ namespace karabo {
                     .displayedName("Message Self Delivery Inhibition")
                     .description("Should be inhibited delivery of messages published on the topic by this consumer own connection?")
                     .assignmentOptional().defaultValue(false)
-                    .advanced()
+                    .expertAccess()
                     .commit();
 
             UINT32_ELEMENT(expected)
@@ -133,7 +133,7 @@ namespace karabo {
                     .displayedName("Acknowledge Timeout")
                     .description("Maximum waiting time for any broker acknowledge")
                     .assignmentOptional().defaultValue(0)
-                    .advanced()
+                    .expertAccess()
                     .commit();
 
             STRING_ELEMENT(expected)
@@ -142,7 +142,7 @@ namespace karabo {
                     .description("General Acknowledge Mode")
                     .assignmentOptional().defaultValue("explicit")
                     .options("auto,explicit,transacted")
-                    .advanced()
+                    .expertAccess()
                     .commit();
 
             INT32_ELEMENT(expected)
@@ -151,7 +151,7 @@ namespace karabo {
                     .description("Time to live for an individual message send by a producer (0 = unlimited) [ms]")
                     .assignmentOptional().defaultValue(10000)
                     .minInc(0)
-                    .advanced()
+                    .expertAccess()
                     .commit();
 
             // TODO See whether to include also flow control parameters
