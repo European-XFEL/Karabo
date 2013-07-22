@@ -33,6 +33,7 @@ class ParameterTreeWidget(QTreeWidget):
         self.__classId = classId # DeviceClass name stored for XML save
         self.__instanceKey = path
         self.__configPanel = configPanel
+        self.__currentItem = None
 
         self.setWordWrap(True)
         self.setSelectionBehavior(QAbstractItemView.SelectRows)
@@ -43,7 +44,8 @@ class ParameterTreeWidget(QTreeWidget):
         self._setupActions()
         self._setupContextMenu()
         
-        self.itemSelectionChanged.connect(self.onItemChanged)
+        self.setMouseTracking(True)
+        self.itemEntered.connect(self.onItemEntered)
         self.customContextMenuRequested.connect(self.onCustomContextMenuRequested)
 
 
@@ -240,7 +242,7 @@ class ParameterTreeWidget(QTreeWidget):
 
     def _r_setItemVisibility(self, item, show):
         if show == False:
-            if item.requiredAccessLevel > 0 :
+            if item.requiredAccessLevel > 2:
                 item.setHidden(True)
             else:
                 item.setHidden(False)
@@ -283,14 +285,12 @@ class ParameterTreeWidget(QTreeWidget):
 
 
 ### slots ###
-    def onItemChanged(self):
-        # Update apply menu
-        #self.__configPanel.updateButtonActions()
+    def onItemEntered(self, item, column):
         
-        item = None
-        nbItems = len(self.selectedItems())
-        if nbItems > 0:
-            item = self.selectedItems()[nbItems-1]
+        if self.__currentItem and  (self.__currentItem != item):
+            self.__currentItem.setToolTipDialogVisible(False)
+        self.__currentItem = item
+        self.__currentItem.setToolTipDialogVisible(True)
 
 
     def onApplyChanged(self, enable):

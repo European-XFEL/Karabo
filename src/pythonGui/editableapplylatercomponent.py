@@ -308,7 +308,7 @@ class EditableApplyLaterComponent(BaseComponent):
 
 
     def onValueChanged(self, key, value, timestamp=None):
-        print "onValueChanged ", key, value
+        #print "onValueChanged ", key, value
         self.__editableWidget.valueChanged(key, value, timestamp, True)
 
 
