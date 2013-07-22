@@ -89,6 +89,14 @@ namespace karabo {
                 m_node->setAttribute(KARABO_SCHEMA_DEFAULT_VALUE, value);
                 return *this;
             }
+
+            OverwriteElement& setNewMetricPrefix(const MetricPrefixType& metricPrefix) {
+                m_node->setAttribute<int>(KARABO_SCHEMA_METRIC_PREFIX_ENUM, metricPrefix);
+                std::pair<std::string, std::string> names = karabo::util::getMetricPrefix(metricPrefix);
+                m_node->setAttribute(KARABO_SCHEMA_METRIC_PREFIX_NAME, names.first);
+                m_node->setAttribute(KARABO_SCHEMA_METRIC_PREFIX_SYMBOL, names.second);
+                return *this;
+            }
             
             /**
              * The <b>commit</b> method injects the element to the expected parameters list. If not called
