@@ -104,7 +104,7 @@ class EditableApplyLaterComponent(BaseComponent):
         self.__acApplyChanges.triggered.connect(self.onApplyClicked)
         self.__mApply.addAction(self.__acApplyChanges)
 
-        text = "Accept remote changes"
+        text = "Accept current value on device"
         self.__acApplyRemoteChanges = QAction(text, self)
         self.__acApplyRemoteChanges.setStatusTip(text)
         self.__acApplyRemoteChanges.setToolTip(text)
@@ -308,6 +308,7 @@ class EditableApplyLaterComponent(BaseComponent):
 
 
     def onValueChanged(self, key, value, timestamp=None):
+        print "onValueChanged ", key, value
         self.__editableWidget.valueChanged(key, value, timestamp, True)
 
 
@@ -323,7 +324,7 @@ class EditableApplyLaterComponent(BaseComponent):
             diff = abs(value - self.__editableWidget.value)
             isEqualEditable = diff < EPSILON
         else:
-            isEqualEditable = str(value) == str(self.__editableWidget.value) # string comparison, problems with float values...
+            isEqualEditable = (str(value) == str(self.__editableWidget.value)) # string comparison, problems with float values...
         
         if isEqualEditable is False:
             self.changeApplyToBusy(True, False)

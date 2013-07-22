@@ -38,8 +38,9 @@ class EditableSpinBox(EditableWidget):
         super(EditableSpinBox, self).__init__(**params)
 
         self.__spinBox = QSpinBox()
-        intMax = sys.maxint
-        self.__spinBox.setRange(-intMax, intMax)
+        #intMax = sys.maxint <--- This produces a bug in 64bit systems
+        # TODO Define proper max interval
+        self.__spinBox.setRange(-100000, 100000)
         
         self.__spinBox.installEventFilter(self)
         self.__spinBox.valueChanged.connect(self.onEditingFinished)
@@ -136,7 +137,7 @@ class EditableSpinBox(EditableWidget):
 
     def valueChanged(self, key, value, timestamp=None, forceRefresh=False):
         if value is None:
-            value = 0.0
+            value = 0
         
         self.__spinBox.blockSignals(True)
         self.__spinBox.setValue(value)

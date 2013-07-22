@@ -166,6 +166,7 @@ class SchemaReader(object):
         
         self._setDescription(key, item)
         
+        # TODO BH: The code could be more symmetric here
         defaultValue = self._getDefaultValue(key, item)
         item.defaultValue = defaultValue
         
@@ -769,6 +770,7 @@ class SchemaReader(object):
             if accessMode is AccessMode.RECONFIGURABLE:
                 editableComponent = EditableApplyLaterComponent(classAlias=item.classAlias,
                                                                 key=item.internalKey,
+                                                                value=defaultValue,
                                                                 enumeration=enumeration,
                                                                 metricPrefixSymbol=metricPrefixSymbol,
                                                                 unitSymbol=unitSymbol)
@@ -777,6 +779,7 @@ class SchemaReader(object):
         # Check minimum and maximum includes/excludes
         self._setMinMaxIncAndExc(key, editableComponent)
         item.editableComponent = editableComponent
+        item.applyEnabled = True
 
 
     def _handleFloat(self, key, item, defaultValue, metricPrefixSymbol, unitSymbol):
