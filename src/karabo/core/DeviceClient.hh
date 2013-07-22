@@ -527,7 +527,7 @@ namespace karabo {
 
             void extractCommands(const karabo::util::Schema& schema, const std::string& parentKey, std::vector<std::string>& commands);
 
-            std::vector<std::string> filterProperties(const karabo::util::Schema& schema);
+            std::vector<std::string> filterProperties(const karabo::util::Schema& schema, const int accessLevel);
 
             void checkMaster();
 
