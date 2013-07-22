@@ -122,6 +122,16 @@ namespace karabo {
                 return *(static_cast<Derived*> (this));
             }
 
+            
+            /**
+             * The <b>observerAccess</b> method serves for setting up the <i>access level</i> attribute to be OBSERVER.
+             * @return reference to the Element (to allow method's chaining)
+             */
+            Derived& observerAccess() {
+                m_node->setAttribute<int>(KARABO_SCHEMA_REQUIRED_ACCESS_LEVEL, Schema::OBSERVER);
+                return *(static_cast<Derived*> (this));
+            }
+            
             /**
              * The <b>userAccess</b> method serves for setting up the <i>access level</i> attribute to be USER.
              * @return reference to the Element (to allow method's chaining)
