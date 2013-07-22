@@ -72,8 +72,19 @@ namespace karabo {
                 this->m_node->setAttribute<int>(KARABO_SCHEMA_LEAF_TYPE, karabo::util::Schema::PROPERTY);
                 this->m_node->setAttribute(KARABO_SCHEMA_VALUE_TYPE, ToLiteral::to<Types::STRING>());
                 if (!this->m_node->hasAttribute(KARABO_SCHEMA_ACCESS_MODE)) this->init(); // This is the default
-                if (!this->m_node->hasAttribute(KARABO_SCHEMA_REQUIRED_ACCESS_LEVEL)) {
-                   this->m_node->setAttribute<int>(KARABO_SCHEMA_REQUIRED_ACCESS_LEVEL, Schema::USER);
+                
+                if (!this->m_node->hasAttribute(KARABO_SCHEMA_REQUIRED_ACCESS_LEVEL)) { 
+                    
+                    //for init, reconfigurable elements - set default value of requiredAccessLevel to USER
+                    if (!this->m_node->hasAttribute(KARABO_SCHEMA_ACCESS_MODE) ||
+                         this->m_node->getAttribute<int>(KARABO_SCHEMA_ACCESS_MODE) == INIT ||
+                         this->m_node->getAttribute<int>(KARABO_SCHEMA_ACCESS_MODE) == WRITE ) {         
+                        
+                        this->userAccess();   
+                    
+                    } else { //else set default value of requiredAccessLevel to OBSERVER 
+                       this->m_node->setAttribute<int>(KARABO_SCHEMA_REQUIRED_ACCESS_LEVEL, Schema::OBSERVER);
+                    } 
                 }
             }
         };
