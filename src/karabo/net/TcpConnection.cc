@@ -56,7 +56,7 @@ namespace karabo {
                     .description("The size of messageLength field in communication protocol")
                     .assignmentOptional().defaultValue(4)
                     .init()
-                    .advanced()
+                    .expertAccess()
                     .commit();
 
             BOOL_ELEMENT(expected)
@@ -65,7 +65,7 @@ namespace karabo {
                     .description("The length field in communication protocol is considered as text string")
                     .assignmentOptional().defaultValue(false)
                     .init()
-                    .advanced()
+                    .expertAccess()
                     .commit();
 
             BOOL_ELEMENT(expected)
@@ -75,7 +75,7 @@ namespace karabo {
                     "have to make sure that the to-be-written data has a long-enough life time.")
                     .assignmentOptional().defaultValue(true)
                     .init()
-                    .advanced()
+                    .expertAccess()
                     .commit();
         }
 
