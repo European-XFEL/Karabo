@@ -49,7 +49,7 @@ class DisplayComponent(BaseComponent):
         if key is None:
             key = params.get('key')
             
-        print "### Registering key: ", key
+        #print "### Registering key: ", key
         Manager().registerDisplayComponent(key, self)
 
 

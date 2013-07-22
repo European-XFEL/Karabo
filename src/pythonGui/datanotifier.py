@@ -51,6 +51,7 @@ class DataNotifier(QObject):
 
 
     def updateDisplayValue(self, key, value):
+        #print "updateDisplayValue", key, value
         for component in self.__components:
             component.onDisplayValueChanged(key, value)
 

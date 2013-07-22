@@ -134,7 +134,7 @@ class EditablePathApplyLaterComponent(BaseComponent):
         self.__acApplyChanges.triggered.connect(self.onApplyClicked)
         self.__mApply.addAction(self.__acApplyChanges)
 
-        text = "Accept remote changes"
+        text = "Accept current value on device"
         self.__acApplyRemoteChanges = QAction(text, self)
         self.__acApplyRemoteChanges.setStatusTip(text)
         self.__acApplyRemoteChanges.setToolTip(text)
