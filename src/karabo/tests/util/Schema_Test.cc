@@ -72,6 +72,9 @@ void Schema_Test::testGetRequiredAccessLevel() {
     CPPUNIT_ASSERT(schema.getRequiredAccessLevel("shapes.Circle.shadowEnabled") == Schema::EXPERT);
     CPPUNIT_ASSERT(schema.getRequiredAccessLevel("shapes.Circle") == Schema::EXPERT);
     CPPUNIT_ASSERT(schema.getRequiredAccessLevel("shapes.Rectangle.b") == Schema::EXPERT);
+    
+    //but sub-element 'shapes.Rectangle.a' with higher level will keep its ADMIN level
+    CPPUNIT_ASSERT(schema.getRequiredAccessLevel("shapes.Rectangle.a") == Schema::ADMIN);
    
     CPPUNIT_ASSERT(schema.getRequiredAccessLevel("antiAlias") == Schema::EXPERT);
     CPPUNIT_ASSERT(schema.getRequiredAccessLevel("color") == Schema::USER);
@@ -90,7 +93,7 @@ void Schema_Test::testGetRequiredAccessLevel() {
     
     Schema ose("OtherSchemaElements", Schema::AssemblyRules(READ | WRITE | INIT));
     OtherSchemaElements::expectedParameters(ose);
-    cout << "/n schema ose:/n " << ose <<endl;
+    
     //check default requiredAccessLevel by elements : slot, path, vector, image
     CPPUNIT_ASSERT(ose.getRequiredAccessLevel("slotTest") == Schema::USER); //SLOT
     CPPUNIT_ASSERT(ose.getRequiredAccessLevel("filename") == Schema::USER); //reconfigurable PATH
@@ -99,7 +102,34 @@ void Schema_Test::testGetRequiredAccessLevel() {
     CPPUNIT_ASSERT(ose.getRequiredAccessLevel("vecInt") == Schema::OBSERVER); //readOnly VECTOR_INT32
     CPPUNIT_ASSERT(ose.getRequiredAccessLevel("vecBool") == Schema::USER); //init VECTOR_BOOL
     CPPUNIT_ASSERT(ose.getRequiredAccessLevel("image") == Schema::OBSERVER); //IMAGE
+}
 
+void Schema_Test::testSetRequiredAccessLevel() {
+    Schema sch("OtherSchemaElements", Schema::AssemblyRules(READ | WRITE | INIT));
+    OtherSchemaElements::expectedParameters(sch);
+    
+    CPPUNIT_ASSERT(sch.getRequiredAccessLevel("image") == Schema::OBSERVER); //IMAGE (default level OBSERVER)
+    sch.setRequiredAccessLevel("image", Schema::ADMIN);
+    CPPUNIT_ASSERT(sch.getRequiredAccessLevel("image") == Schema::ADMIN); //IMAGE (changed by 'set' to ADMIN)
+    
+    Schema schema = GraphicsRenderer::getSchema("GraphicsRenderer");
+    CPPUNIT_ASSERT(schema.getRequiredAccessLevel("shapes") == Schema::EXPERT);
+    //all sub-elements of Node-element 'shapes' will have EXPERT level: 
+    CPPUNIT_ASSERT(schema.getRequiredAccessLevel("shapes.Circle.shadowEnabled") == Schema::EXPERT);
+    CPPUNIT_ASSERT(schema.getRequiredAccessLevel("shapes.Circle") == Schema::EXPERT);
+    CPPUNIT_ASSERT(schema.getRequiredAccessLevel("shapes.Rectangle.a") == Schema::ADMIN);
+    CPPUNIT_ASSERT(schema.getRequiredAccessLevel("shapes.Rectangle.b") == Schema::EXPERT);
+    
+    
+    //set top-Node to lower level 'Observer' and check that sub-elements keep previous higher level
+    schema.setRequiredAccessLevel("shapes", Schema::OBSERVER);
+    CPPUNIT_ASSERT(schema.getRequiredAccessLevel("shapes") == Schema::OBSERVER);
+    CPPUNIT_ASSERT(schema.getRequiredAccessLevel("shapes.Circle.shadowEnabled") == Schema::USER);//default level for init-elem is 'user'
+    CPPUNIT_ASSERT(schema.getRequiredAccessLevel("shapes.Circle") == Schema::OBSERVER);
+    CPPUNIT_ASSERT(schema.getRequiredAccessLevel("shapes.Rectangle.a") == Schema::ADMIN);
+    CPPUNIT_ASSERT(schema.getRequiredAccessLevel("shapes.Rectangle.b") == Schema::USER);//default level for init-elem is 'user'
+    
+    
 }
 
 

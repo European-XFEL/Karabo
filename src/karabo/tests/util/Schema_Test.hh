@@ -40,6 +40,7 @@ class Schema_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST(testHelpFunction);
     CPPUNIT_TEST(testPaths);
     CPPUNIT_TEST(testGetRequiredAccessLevel);
+    CPPUNIT_TEST(testSetRequiredAccessLevel);
     CPPUNIT_TEST(testGetAlarmLowAlarmHigh);
     CPPUNIT_TEST(testGetWarnLowWarnHigh);
     CPPUNIT_TEST(testHasAlarmWarn);
@@ -87,7 +88,8 @@ private: //functions
     void testPerKeyFunctionality();
     void testHelpFunction();
     void testPaths();
-    void testGetRequiredAccessLevel(); 
+    void testGetRequiredAccessLevel();
+    void testSetRequiredAccessLevel();
     void testGetAlarmLowAlarmHigh();
     void testGetWarnLowWarnHigh();
     void testHasAlarmWarn();
