@@ -95,7 +95,7 @@ class ParameterTreeWidget(QTreeWidget):
         # Navigation item type
         mimeData.setData("navigationItemType", QString("%1").arg(navigationItemType).toAscii())
         # Class alias
-        if item.classAlias is not None:
+        if item.classAlias:
             mimeData.setData("classAlias", QString("%1").arg(item.classAlias).toAscii())
 
         drag = QDrag(self)
