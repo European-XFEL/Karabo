@@ -15,6 +15,7 @@ __all__ = ["MainWindow"]
 import qrc_icons
 
 from docktabwindow import DockTabWindow
+import globals
 from manager import Manager
 from network import Network
 
@@ -51,6 +52,51 @@ class MainWindow(QMainWindow):
 ### initializations ###
 
     def _setupActions(self):
+        text = "Change access level"
+        self.__tbAccessLevel = QToolButton(self)
+        self.__tbAccessLevel.setIcon(QIcon(":user"))
+        self.__tbAccessLevel.setToolTip(text)
+        self.__tbAccessLevel.setStatusTip(text)
+        self.__tbAccessLevel.setPopupMode(QToolButton.InstantPopup)
+        
+        text = "Observer"
+        self.__acObserver = QAction(text, self)
+        self.__acObserver.setStatusTip(text)
+        self.__acObserver.setToolTip(text)
+        self.__acObserver.setCheckable(True)
+        
+        text = "User"
+        self.__acUser = QAction(text, self)
+        self.__acUser.setStatusTip(text)
+        self.__acUser.setToolTip(text)
+        self.__acUser.setCheckable(True)
+
+        text = "Expert"
+        self.__acExpert = QAction(text, self)
+        self.__acExpert.setStatusTip(text)
+        self.__acExpert.setToolTip(text)
+        self.__acExpert.setCheckable(True)
+        self.__acExpert.setChecked(True)
+        
+        text = "Admin"
+        self.__acAdmin = QAction(text, self)
+        self.__acAdmin.setStatusTip(text)
+        self.__acAdmin.setToolTip(text)
+        self.__acAdmin.setCheckable(True)
+        
+        self.__agAccessLevel = QActionGroup(self)
+        self.__agAccessLevel.addAction(self.__acObserver)
+        self.__agAccessLevel.addAction(self.__acUser)
+        self.__agAccessLevel.addAction(self.__acExpert)
+        self.__agAccessLevel.addAction(self.__acAdmin)
+        self.__agAccessLevel.triggered.connect(self.onChangeAccessLevel)
+        
+        self.__mAccessLevel = QMenu()
+        self.__mAccessLevel.addAction(self.__acObserver)
+        self.__mAccessLevel.addAction(self.__acUser)
+        self.__mAccessLevel.addAction(self.__acExpert)
+        self.__mAccessLevel.addAction(self.__acAdmin)
+        self.__tbAccessLevel.setMenu(self.__mAccessLevel)
         
         text = "Connect to server"
         self.__acRemote = QAction(QIcon(":remote"), "&Connect to server", self)
@@ -111,6 +157,8 @@ class MainWindow(QMainWindow):
 
         toolbar.addSeparator()
         toolbar.addAction(self.__acRemote)
+        
+        toolbar.addWidget(self.__tbAccessLevel)
 
 
     def _setupStatusBar(self):
@@ -203,4 +251,19 @@ class MainWindow(QMainWindow):
         customViewPanel = CustomMiddlePanel()
         self.__customTab.addDockableTab(customViewPanel, "Custom view")
         self.__customTab.updateTabsClosable()
+
+
+    def onChangeAccessLevel(self, action):
+        if action is self.__acObserver:
+            print "observer"
+            globals.GLOBAL_ACCESS_LEVEL = 0
+        elif action is self.__acUser:
+            print "user"
+            globals.GLOBAL_ACCESS_LEVEL = 1
+        elif action is self.__acExpert:
+            print "expert"
+            globals.GLOBAL_ACCESS_LEVEL = 2
+        elif action is self.__acAdmin:
+            print "admin"
+            globals.GLOBAL_ACCESS_LEVEL = 3
 

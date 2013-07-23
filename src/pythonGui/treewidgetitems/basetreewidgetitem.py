@@ -15,6 +15,7 @@ __all__ = ["BaseTreeWidgetItem"]
 
 
 import const
+import globals
 
 from manager import Manager
 
@@ -149,7 +150,7 @@ class BaseTreeWidgetItem(QTreeWidgetItem):
         return self.data(0, const.REQUIRED_ACCESS_LEVEL).toPyObject()
     def _setRequiredAccessLevel(self, requiredAccessLevel): # int value expected
         self.setData(0, const.REQUIRED_ACCESS_LEVEL, requiredAccessLevel)
-        if requiredAccessLevel > 2:
+        if requiredAccessLevel > globals.GLOBAL_ACCESS_LEVEL:
             self.setHidden(True)
     requiredAccessLevel = property(fget=_requiredAccessLevel, fset=_setRequiredAccessLevel)
 
