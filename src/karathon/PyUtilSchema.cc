@@ -1364,6 +1364,7 @@ void exportPyUtilSchema() {
         s.def("setArchivePolicy", &Schema::setArchivePolicy, (bp::arg("path"), bp::arg("value")));
         s.def("setMin", &Schema::setMin, (bp::arg("path"), bp::arg("value")));
         s.def("setMax", &Schema::setMax, (bp::arg("path"), bp::arg("value")));
+        s.def("setRequiredAccessLevel", &Schema::setRequiredAccessLevel, (bp::arg("path"), bp::arg("value")));
         //s.def("", &Schema::, ());     // overwrite<>(default) not implemented
     }// end Schema
 
