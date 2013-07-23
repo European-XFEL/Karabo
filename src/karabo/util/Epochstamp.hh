@@ -102,7 +102,7 @@ namespace karabo {
              * Generates a sting (respecting ISO-8601) for a Timestamp ("ISO 8601"  => "%Y-%m-%dT%H:%M:%S.%f%q")
              * @return ISO 8601 formatted string
              */
-            std::string toIso8601() const;
+            std::string toIso8601(TIME_UNITS precision = MICROSEC, bool extended = false) const;
 
 
             static bool hashAttributesContainTimeInformation(const Hash::Attributes attributes);

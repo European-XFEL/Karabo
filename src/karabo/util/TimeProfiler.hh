@@ -46,10 +46,16 @@ namespace karabo {
             void stopPeriod(const std::string& periodname);
 
             // Return the time period period "periodname" as Hash
-            const karabo::util::Hash& getPeriod(const std::string& periodname) const;
+            const TimePeriod getPeriod(const std::string& periodname) const;
 
             // Returns the overall profiler period.
-            const karabo::util::Hash& getPeriod() const;
+            const TimePeriod getPeriod() const;
+
+            // Return the time period period "periodname" as Hash
+            const karabo::util::Hash& getPeriodAsHash(const std::string& periodname) const;
+
+            // Returns the overall profiler period.
+            const karabo::util::Hash& getPeriodAsHash() const;
 
             operator karabo::util::Hash();
             // Serialize the profiler into string using specific time format
