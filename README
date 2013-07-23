@@ -98,15 +98,26 @@ Other distributions like Fedora or Suse may still work.
 
                 for debug or release configuration, respectively.
                 HINT: Append the "-j" option to either build command for high-speed parallel build
-                NOTE: Under MacOSX use the variables Debug-MacOSX or Release-MacOSX, respectively
 
                 The (central) karabo makefile supports some extra targets to trigger creation of a software bundle,
-                which is the way we distribute Karabo.A self-extracting install-script for Karabo can for example be created by:
+                which is the way we distribute Karabo. A self-extracting install-script for Karabo can for example be created by:
 
                     make CONF=Debug bundle-package
                 or 
                     make CONF=Release bundle-package
 
+
+		If you are going to work at the same time on the Karabo framework and some packages (plugins) for Karabo you should
+		finalize your framework codings with a:
+		
+		    make bundle-install
+
+	        Which creates a ready to use bundle under 
+		
+		    package/<Configuration>/<OS>/<Version>/<Arch>/karabo
+		    
+		and also updates the $HOME/.karabo/karaboFramework file pointing to this "local" bundle.
+		
 
         visualStudio/
             
