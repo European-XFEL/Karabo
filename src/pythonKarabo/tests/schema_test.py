@@ -86,7 +86,19 @@ class  Schema_TestCase(unittest.TestCase):
             self.assertEqual(schema.getRequiredAccessLevel('x'), AccessLevel.ADMIN)
             self.assertEqual(schema.getRequiredAccessLevel('y'), AccessLevel.OPERATOR)
         except Exception,e:
-            self.fail("test_setTags exception: " + str(e))
+            self.fail("test_setTags exception group 1: " + str(e))
+            
+        try:
+            schema = Configurator(TestStruct1).getSchema("TestStruct1")
+            self.assertEqual(schema.getRequiredAccessLevel('exampleKey1'), AccessLevel.USER)
+            self.assertEqual(schema.getRequiredAccessLevel('exampleKey2'), AccessLevel.OPERATOR)
+            self.assertEqual(schema.getRequiredAccessLevel('exampleKey3'), AccessLevel.EXPERT)
+            self.assertEqual(schema.getRequiredAccessLevel('exampleKey4'), AccessLevel.ADMIN)
+            self.assertEqual(schema.getRequiredAccessLevel('exampleKey5'), AccessLevel.OBSERVER) #default for readOnly
+            self.assertEqual(schema.getRequiredAccessLevel('exampleKey10'), AccessLevel.USER) #default for reconfigurable
+            self.assertEqual(schema.getRequiredAccessLevel('exampleKey11'), AccessLevel.OBSERVER) #observerAccess in reconfigurable
+        except Exception,e:
+            self.fail("test_setTags exception group 2: " + str(e))
             
     def test_getNodeType(self):
         try:
