@@ -128,6 +128,8 @@ class SchemaReader(object):
             else:
                 item = CommandTreeWidgetItem(key, fullPath, self.__treeWidget)
             
+            item.classAlias = "Command"
+        
             if self.__deviceType is NavigationItemTypes.DEVICE:
                 item.enabled = True
             
@@ -149,7 +151,9 @@ class SchemaReader(object):
             item = ImageTreeWidgetItem(fullPath, self.__treeWidget, parentItem)
         else:
             item = ImageTreeWidgetItem(fullPath, self.__treeWidget)
-            
+        
+        item.classAlias = "Image View"
+        
         if self.__deviceType is NavigationItemTypes.DEVICE:
                 item.enabled = True
                 
@@ -231,148 +235,107 @@ class SchemaReader(object):
 ### Schema getter functions ###
     def _handleValueType(self, key, item, defaultValue, metricPrefixSymbol, unitSymbol):
         valueType = self.__schema.getValueType(key)
+        item.valueType = valueType
         
         if valueType == Types.STRING:
             #print "STRING"
-            item.valueType = "STRING"
             self._handleString(key, item, defaultValue, metricPrefixSymbol, unitSymbol)
         elif valueType == Types.CHAR:
             #print "CHAR"
-            item.valueType = "CHAR"
             self._handleString(key, item, defaultValue, metricPrefixSymbol, unitSymbol)
         elif valueType == Types.BOOL:
             #print "BOOL"
-            item.valueType = "BOOL"
             self._handleBool(key, item, defaultValue, metricPrefixSymbol, unitSymbol)
         elif valueType == Types.FLOAT:
             #print "FLOAT"
-            item.valueType = "FLOAT"
             self._handleFloat(key, item, defaultValue, metricPrefixSymbol, unitSymbol)
         elif valueType == Types.COMPLEX_FLOAT:
             #print "COMPLEX_FLOAT"
-            item.valueType = "COMPLEX_FLOAT"
             self._handleFloat(key, item, defaultValue, metricPrefixSymbol, unitSymbol)
         elif valueType == Types.DOUBLE:
             #print "DOUBLE"
-            item.valueType = "DOUBLE"
             self._handleFloat(key, item, defaultValue, metricPrefixSymbol, unitSymbol)
         elif valueType == Types.COMPLEX_DOUBLE:
             #print "COMPLEX_DOUBLE"
-            item.valueType = "COMPLEX_DOUBLE"
             self._handleFloat(key, item, defaultValue, metricPrefixSymbol, unitSymbol)
         elif valueType == Types.UINT8:
             #print "UINT8"
-            item.valueType = "UINT8"
             self._handleInteger(key, item, defaultValue, metricPrefixSymbol, unitSymbol)
         elif valueType == Types.INT16:
             #print "INT16"
-            item.valueType = "INT16"
             self._handleInteger(key, item, defaultValue, metricPrefixSymbol, unitSymbol)
         elif valueType == Types.UINT16:
             #print "UINT16"
-            item.valueType = "UINT16"
             self._handleInteger(key, item, defaultValue, metricPrefixSymbol, unitSymbol)
         elif valueType == Types.INT32:
             #print "INT32"
-            item.valueType = "INT32"
             self._handleInteger(key, item, defaultValue, metricPrefixSymbol, unitSymbol)
         elif valueType == Types.UINT32:
             #print "UINT32"
-            item.valueType = "UINT32"
             self._handleInteger(key, item, defaultValue, metricPrefixSymbol, unitSymbol)
         elif valueType == Types.INT64:
             #print "INT64"
-            item.valueType = "UINT64"
             self._handleInteger(key, item, defaultValue, metricPrefixSymbol, unitSymbol)
         elif valueType == Types.UINT64:
             #print "UINT64"
-            item.valueType = "UINT64"
             self._handleInteger(key, item, defaultValue, metricPrefixSymbol, unitSymbol)
         elif valueType == Types.VECTOR_STRING:
             print "VECTOR_STRING"
-            item.valueType = "VECTOR_STRING"
             self._handleVectorString(key, item, defaultValue, metricPrefixSymbol, unitSymbol)
         elif valueType == Types.VECTOR_CHAR:
             print "VECTOR_CHAR"
-            item.valueType = "VECTOR_CHAR"
         elif valueType == Types.VECTOR_INT8:
             print "VECTOR_INT8"
-            item.valueType = "VECTOR_INT8"
         elif valueType == Types.VECTOR_UINT8:
             print "VECTOR_UINT8"
-            item.valueType = "VECTOR_UINT8"
         elif valueType == Types.VECTOR_INT16:
             print "VECTOR_INT16"
-            item.valueType = "VECTOR_INT16"
         elif valueType == Types.VECTOR_UINT16:
             print "VECTOR_UINT16"
-            item.valueType = "VECTOR_UINT16"
         elif valueType == Types.VECTOR_INT32:
             print "VECTOR_INT32"
-            item.valueType = "VECTOR_INT32"
         elif valueType == Types.VECTOR_UINT32:
             print "VECTOR_UINT32"
-            item.valueType = "VECTOR_UINT32"
         elif valueType == Types.VECTOR_INT64:
             print "VECTOR_INT64"
-            item.valueType = "VECTOR_INT64"
         elif valueType == Types.VECTOR_UINT64:
             print "VECTOR_UINT64"
-            item.valueType = "VECTOR_UINT64"
         elif valueType == Types.VECTOR_FLOAT:
             print "VECTOR_FLOAT"
-            item.valueType = "VECTOR_FLOAT"
         elif valueType == Types.VECTOR_DOUBLE:
             print "VECTOR_DOUBLE"
-            item.valueType = "VECTOR_DOUBLE"
         elif valueType == Types.VECTOR_COMPLEX_FLOAT:
             print "VECTOR_COMPLEX_FLOAT"
-            item.valueType = "VECTOR_COMPLEX_FLOAT"
         elif valueType == Types.VECTOR_COMPLEX_DOUBLE:
             print "VECTOR_COMPLEX_DOUBLE"
-            item.valueType = "VECTOR_COMPLEX_DOUBLE"
         elif valueType == Types.VECTOR_BOOL:
             print "VECTOR_BOOL"
-            item.valueType = "VECTOR_BOOL"
         elif valueType == Types.VECTOR_HASH:
             print "VECTOR_HASH"
-            item.valueType = "VECTOR_HASH"
         elif valueType == Types.HASH:
             print "HASH"
-            item.valueType = "HASH"
         elif valueType == Types.NDARRAY_BOOL:
             print "NDARRAY_BOOL"
-            item.valueType = "NDARRAY_BOOL"
         elif valueType == Types.NDARRAY_INT16:
             print "NDARRAY_INT16"
-            item.valueType = "NDARRAY_INT16"
         elif valueType == Types.NDARRAY_UINT16:
             print "NDARRAY_UINT16"
-            item.valueType = "NDARRAY_UINT16"
         elif valueType == Types.NDARRAY_INT32:
             print "NDARRAY_INT32"
-            item.valueType = "NDARRAY_INT32"
         elif valueType == Types.NDARRAY_UINT32:
             print "NDARRAY_UINT32"
-            item.valueType = "NDARRAY_UINT32"
         elif valueType == Types.NDARRAY_INT64:
             print "NDARRAY_INT64"
-            item.valueType = "NDARRAY_INT64"
         elif valueType == Types.NDARRAY_UINT64:
             print "NDARRAY_UINT64"
-            item.valueType = "NDARRAY_UINT64"
         elif valueType == Types.NDARRAY_FLOAT:
             print "NDARRAY_FLOAT"
-            item.valueType = "NDARRAY_FLOAT"
         elif valueType == Types.NDARRAY_DOUBLE:
             print "NDARRAY_DOUBLE"
-            item.valueType = "NDARRAY_DOUBLE"
         elif valueType == Types.NDARRAY_COMPLEX_FLOAT:
             print "NDARRAY_COMPLEX_FLOAT"
-            item.valueType = "NDARRAY_COMPLEX_FLOAT"
         elif valueType == Types.NDARRAY_COMPLEX_DOUBLE:
             print "NDARRAY_COMPLEX_DOUBLE"
-            item.valueType = "NDARRAY_COMPLEX_DOUBLE"
 
 
     def _setAlias(self, key, parentItem):

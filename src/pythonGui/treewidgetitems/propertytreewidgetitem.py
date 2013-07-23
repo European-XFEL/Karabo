@@ -73,13 +73,6 @@ class PropertyTreeWidgetItem(BaseTreeWidgetItem):
     defaultValue = property(fget=_defaultValue, fset=_setDefaultValue)
 
 
-    def _isChoiceElement(self):
-        return self.data(0, const.IS_CHOICE_ELEMENT).toPyObject()
-    def _setIsChoiceElement(self, isChoiceElemet):
-        self.setData(0, const.IS_CHOICE_ELEMENT, isChoiceElemet)
-    isChoiceElement = property(fget=_isChoiceElement, fset=_setIsChoiceElement)
-
-
     def _setEnabled(self, enable):
         if self.editableComponent is not None:
             self.editableComponent.setEnabled(enable)
@@ -102,7 +95,13 @@ class PropertyTreeWidgetItem(BaseTreeWidgetItem):
             if self.alias:
                 info["Alias"] = self.alias
             if self.tags:
-                info["Tags"] = self.tags
+                tagString = str()
+                nbTags = len(self.tags)
+                for i in xrange(nbTags):
+                    tagString += self.tags[i]
+                    if i < (nbTags-1):
+                        tagString += ", "
+                info["Tags"] = tagString
             if self.timestamp:
                 info["Timestamp"] = self.timestamp
             
