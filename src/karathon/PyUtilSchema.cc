@@ -195,6 +195,34 @@ struct ChoiceElementWrap {
         }
         return self;
     }
+
+
+    static karabo::util::ChoiceElement & appendAsNode(karabo::util::ChoiceElement& self, const bp::object& classobj, const std::string& nodeNameObj) {
+        if (!PyType_Check(classobj.ptr())) {
+            throw KARABO_PYTHON_EXCEPTION("Argument 'classobj' given in 'appendAsNode(classobj, nodeName)' of LIST_ELEMENT must be a class in Python");
+        }
+        if (!PyObject_HasAttrString(classobj.ptr(), "getSchema")) {
+            throw KARABO_PYTHON_EXCEPTION("Class given in 'appendAsNode(classobj, nodeName)' of LIST_ELEMENT has no 'getSchema' method");
+        }
+        std::string classid;
+        if (PyObject_HasAttrString(classobj.ptr(), "__karabo_cpp_classid__")) {
+            classid = bp::extract<std::string>(classobj.attr("__karabo_cpp_classid__"));
+        } else {
+            classid = bp::extract<std::string>(classobj.attr("__classid__"));
+        }
+        if (self.getNode().getType() != Types::HASH) self.getNode().setValue(Hash());
+        Hash& choiceOfNodes = self.getNode().getValue<Hash>();
+        string nodeName = nodeNameObj;
+        if (nodeNameObj == "") nodeName = classid;
+        bp::object schemaObj = classobj.attr("getSchema")(nodeName);
+        const Schema& schema = bp::extract<const karabo::util::Schema&>(schemaObj);
+        Hash::Node& node = choiceOfNodes.set<Hash>(nodeName, schema.getParameterHash());
+        node.setAttribute(KARABO_SCHEMA_CLASS_ID, nodeName);
+        node.setAttribute(KARABO_SCHEMA_DISPLAY_TYPE, nodeName);
+        node.setAttribute<int>(KARABO_SCHEMA_NODE_TYPE, Schema::NODE);
+        node.setAttribute<int>(KARABO_SCHEMA_ACCESS_MODE, READ | WRITE | INIT);
+        return self;
+    }
 };
 
 struct ListElementWrap {
@@ -235,6 +263,34 @@ struct ListElementWrap {
             node.setAttribute<int>(KARABO_SCHEMA_NODE_TYPE, Schema::NODE);
             node.setAttribute<int>(KARABO_SCHEMA_ACCESS_MODE, READ | WRITE | INIT);
         }
+        return self;
+    }
+
+
+    static karabo::util::ListElement & appendAsNode(karabo::util::ListElement& self, const bp::object& classobj, const std::string& name) {
+        if (!PyType_Check(classobj.ptr())) {
+            throw KARABO_PYTHON_EXCEPTION("Argument 'classobj' given in 'appendAsNode(classobj, nodeName)' of LIST_ELEMENT must be a class in Python");
+        }
+        if (!PyObject_HasAttrString(classobj.ptr(), "getSchema")) {
+            throw KARABO_PYTHON_EXCEPTION("Class given in 'appendAsNode(classobj, nodeName)' of LIST_ELEMENT has no 'getSchema' method");
+        }
+        std::string classid;
+        if (PyObject_HasAttrString(classobj.ptr(), "__karabo_cpp_classid__")) {
+            classid = bp::extract<std::string>(classobj.attr("__karabo_cpp_classid__"));
+        } else {
+            classid = bp::extract<std::string>(classobj.attr("__classid__"));
+        }
+        if (self.getNode().getType() != Types::HASH) self.getNode().setValue(Hash());
+        Hash& choiceOfNodes = self.getNode().getValue<Hash>();
+        string nodeName = name;
+        if (nodeName == "") nodeName = classid;
+        bp::object schemaObj = classobj.attr("getSchema")(nodeName);
+        const Schema& schema = bp::extract<const karabo::util::Schema&>(schemaObj);
+        Hash::Node& node = choiceOfNodes.set<Hash>(nodeName, schema.getParameterHash());
+        node.setAttribute(KARABO_SCHEMA_CLASS_ID, nodeName);
+        node.setAttribute(KARABO_SCHEMA_DISPLAY_TYPE, nodeName);
+        node.setAttribute<int>(KARABO_SCHEMA_NODE_TYPE, Schema::NODE);
+        node.setAttribute<int>(KARABO_SCHEMA_ACCESS_MODE, READ | WRITE | INIT);
         return self;
     }
 
@@ -1078,7 +1134,7 @@ void exportPyUtilSchema() {
 
         //********* 'get'-methods *********************
         s.def("getRequiredAccessLevel", &Schema::getRequiredAccessLevel);
-        
+
         s.def("getParameterHash", &schemawrap::getParameterHash);
 
         s.def("getAccessMode", &Schema::getAccessMode);
@@ -1456,6 +1512,9 @@ void exportPyUtilSchema() {
                      , bp::return_internal_reference<> ())
                 .def("appendNodesOfConfigurationBase"
                      , &ListElementWrap::appendNodesOfConfigurationBase, (bp::arg("python_base_class"))
+                     , bp::return_internal_reference<> ())
+                .def("appendAsNode"
+                     , &ListElementWrap::appendAsNode, (bp::arg("python_class"), bp::arg("nodeName") = "")
                      , bp::return_internal_reference<> ())
                 ;
     }
