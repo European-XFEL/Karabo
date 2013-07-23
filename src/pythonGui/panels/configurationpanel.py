@@ -31,7 +31,7 @@ from docktabwindow import DockTabWindow
 from documentationpanel import DocumentationPanel
 from enums import NavigationItemTypes
 from manager import Manager
-from navigationtreeview2 import NavigationTreeView
+from navigationtreeview import NavigationTreeView
 
 from schemareader import SchemaReader 
 

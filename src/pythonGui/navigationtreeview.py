@@ -1,6 +1,6 @@
 #############################################################################
 # Author: <kerstin.weger@xfel.eu>
-# Created on February 29, 2012
+# Created on May 31, 2013
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 
@@ -16,18 +16,12 @@ __all__ = ["NavigationTreeView"]
 import const
 import qrc_icons
 
-from enums import ConfigChangeTypes
-from enums import NavigationItemTypes
+from enums import *
 from manager import Manager
-#from navigationhierarchymodel import NavigationHierarchyModel
 
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 
-try:
-    from PyQt4.QtSql import QSqlQuery
-except:
-    print "*ERROR* The PyQt4 sql module is not installed"
 
 class NavigationTreeView(QTreeView):
 
@@ -35,12 +29,12 @@ class NavigationTreeView(QTreeView):
     def __init__(self, parent, model):
         super(NavigationTreeView, self).__init__(parent)
         
-        self.__model = model
-        self.setModel(self.__model)
+        self.__prevModelIndex = None
+        self.setModel(model)
         
         self.setSelectionMode(QAbstractItemView.SingleSelection)
-        self.setSortingEnabled(True)
-        self.sortByColumn(0, Qt.AscendingOrder)
+        #self.setSortingEnabled(True)
+        #self.sortByColumn(0, Qt.AscendingOrder)
         
         self._setupContextMenu()
         self.customContextMenuRequested.connect(self.onCustomContextMenuRequested)
@@ -53,7 +47,8 @@ class NavigationTreeView(QTreeView):
         if event.buttons() != Qt.LeftButton:
             return
         
-        self._performDrag()
+        # Disabled for now
+        #self._performDrag()
         
 
 ### private ###
@@ -115,159 +110,44 @@ class NavigationTreeView(QTreeView):
     def _setupContextMenu(self):
         self.setContextMenuPolicy(Qt.CustomContextMenu)
         # Device server instance menu
-        self.__mDevSrvInsItem = QMenu(self)
+        self.__mServerItem = QMenu(self)
         
         text = "Kill instance"
-        self.__acKillDevSrvIns = QAction(QIcon(":delete"), text, self)
-        self.__acKillDevSrvIns.setStatusTip(text)
-        self.__acKillDevSrvIns.setToolTip(text)
-        self.__acKillDevSrvIns.triggered.connect(self.onKillDeviceServerInstance)
-        self.__mDevSrvInsItem.addAction(self.__acKillDevSrvIns)
+        self.__acKillServer = QAction(QIcon(":delete"), text, self)
+        self.__acKillServer.setStatusTip(text)
+        self.__acKillServer.setToolTip(text)
+        self.__acKillServer.triggered.connect(self.onKillServer)
+        self.__mServerItem.addAction(self.__acKillServer)
         
         # Device class/instance menu
-        self.__mDevClaInsItem = QMenu(self)
+        self.__mClassItem = QMenu(self)
         
         text = "Open configuration (*.xml)"
         self.__acFileOpen = QAction(QIcon(":open"), "Open configuration", self)
         self.__acFileOpen.setStatusTip(text)
         self.__acFileOpen.setToolTip(text)
         self.__acFileOpen.triggered.connect(self.onFileOpen)
-        self.__mDevClaInsItem.addAction(self.__acFileOpen)
+        self.__mClassItem.addAction(self.__acFileOpen)
         
         text = "Save configuration as (*.xml)"
         self.__acFileSaveAs = QAction(QIcon(":save-as"), "Save configuration as", self)
         self.__acFileSaveAs.setStatusTip(text)
         self.__acFileSaveAs.setToolTip(text)
         self.__acFileSaveAs.triggered.connect(self.onFileSaveAs)
-        self.__mDevClaInsItem.addAction(self.__acFileSaveAs)
+        self.__mClassItem.addAction(self.__acFileSaveAs)
 
         text = "Kill instance"
-        self.__acKillDevIns = QAction(QIcon(":delete"), text, self)
-        self.__acKillDevIns.setStatusTip(text)
-        self.__acKillDevIns.setToolTip(text)
-        self.__acKillDevIns.triggered.connect(self.onKillDeviceInstance)
-        self.__mDevClaInsItem.addAction(self.__acKillDevIns)
+        self.__acKillDevice = QAction(QIcon(":delete"), text, self)
+        self.__acKillDevice.setStatusTip(text)
+        self.__acKillDevice.setToolTip(text)
+        self.__acKillDevice.triggered.connect(self.onKillDevice)
+        self.__mClassItem.addAction(self.__acKillDevice)
 
-        self.__mDevClaInsItem.addSeparator()
-
-
-### public ###
-    def createNewItem(self, itemInfo, insertIntoDb=False):
-        if insertIntoDb:
-            # Only insert data once
-            self.__model.insertInto(itemInfo)
-        # Update view with model...
-        self.__model.updateQueries()
-        # TODO: can be very expensive when model is huge...
-        self.expandAll()
-
-
-    def selectItem(self, itemInfo):
-        #print "selectItem", itemInfo
-        id = itemInfo.get(QString('id'))
-        if id is None:
-            id = itemInfo.get('id')
-        
-        level = itemInfo.get(QString('level'))
-        if level is None:
-            level = itemInfo.get('level')
-        if level is None:
-            # Was just not set, select DEVICE_INSTANCE
-            level = 3
-        
-        index = self.__model.findIndex(level=level, id=id, column=1)
-        self.setCurrentIndex(index)
-
-
-    def itemClicked(self):
-        index = self.currentIndex()
-        if not index.isValid():
-            return NavigationItemTypes.UNDEFINED
-        
-        level = self.__model.levelOf(index)
-        row = self.__model.mappedRow(index)
-        rowId = self.__model.rowId(index)
-        key = index.data().toString()
-        
-        classId = None
-        
-        if level == 0:
-            type = NavigationItemTypes.HOST
-        elif level == 1:
-            type = NavigationItemTypes.SERVER
-        elif level == 2:
-            type = NavigationItemTypes.CLASS
-            parentIndex = index.parent()
-            key = parentIndex.data().toString() + "+" + index.data().toString()
-            classId = index.data().toString()
-            # Get schema from model
-            schema = self.__model.getSchema(level, row)
-            Manager().onSchemaAvailable(dict(key=key, type=type, schema=schema))
-        elif level == 3:
-            type = NavigationItemTypes.DEVICE
-            parentIndex = index.parent()
-            classId = parentIndex.data().toString()
-            # Get schema from model
-            schema = self.__model.getSchema(level, row)
-            Manager().onSchemaAvailable(dict(classId=parentIndex.data().toString(), key=key, type=type, schema=schema))
-        
-        itemInfo = dict(key=key, type=type, classId=classId, level=level, rowId=rowId, column=1)
-        Manager().onNavigationItemChanged(itemInfo)
-        
-        return type # Needed in ConfigurationPanel
-
-
-    def itemChanged(self, itemInfo):
-
-        #key = itemInfo.get(QString('key'))
-        #if key is None:
-        #    key = itemInfo.get('key')
-            
-        #name = itemInfo.get(QString('name'))
-        #if name is None:
-        #    name = itemInfo.get('name')
-
-        #type = itemInfo.get(QString('type'))
-        #if type is None:
-        #    type = itemInfo.get('type')
-
-        level = itemInfo.get('level')
-        rowId = itemInfo.get('rowId')
-        column = itemInfo.get('column')
-        index = self.__model.findIndex(level, rowId, column)
-        
-        if index.isValid():
-            self.setCurrentIndex(index)
-        else:
-            self.clearSelection()
-
-
-    def updateDeviceServerInstance(self, itemInfo):
-        id = itemInfo.get(QString('id'))
-        if id is None:
-            id = itemInfo.get('id')
-        # Select DEVICE_SERVER_INSTANCE
-        self.selectItem(dict(id=id, level=1))
-
-
-    def updateDeviceInstance(self, itemInfo):
-        id = itemInfo.get(QString('id'))
-        if id is None:
-            id = itemInfo.get('id')
-        
-        index = self.__model.findIndex(level=3, id=id, column=1)
-        parentId = self.__model.rowParentId(index)
-        # Select DEVICE_CLASS parent index
-        self.selectItem(dict(id=parentId, level=2))
+        self.__mClassItem.addSeparator()
 
 
     def currentIndex(self):
-        """Returns the current index of the treeview"""
-        selection = self.selectedIndexes()
-        if len(selection) == 0:
-            return QModelIndex()
-
-        return selection[0]
+        return self.selectionModel().currentIndex()
 
 
     def currentIndexType(self):
@@ -278,7 +158,7 @@ class NavigationTreeView(QTreeView):
         if not index.isValid():
             return NavigationItemTypes.UNDEFINED
         
-        level = self.__model.levelOf(index)
+        level = self.model().getHierarchyLevel(index)
         if level == 0:
             return NavigationItemTypes.HOST
         elif level == 1:
@@ -296,92 +176,155 @@ class NavigationTreeView(QTreeView):
         if not index.isValid():
             return dict()
         
-        level = self.__model.levelOf(index)
+        level = self.model().getHierarchyLevel(index)
+        
         if level == 0:
-            # NODE
-            internalKey = index.data().toString()
-            return dict(internalKey=internalKey, type=NavigationItemTypes.HOST)
+            type = NavigationItemTypes.HOST
+            
+            return dict()
         elif level == 1:
-            # DEVICE_SERVER_INSTANCE
+            type = NavigationItemTypes.SERVER
             serverId = index.data().toString()
-            internalKey = serverId
-            return dict(serverId=serverId, internalKey=internalKey, type=NavigationItemTypes.SERVER)
+            path = "server." + serverId
+            
+            return dict(key=path, type=type, serverId=serverId)
         elif level == 2:
-            # DEVICE_CLASS
+            type = NavigationItemTypes.CLASS
             parentIndex = index.parent()
             serverId = parentIndex.data().toString()
             classId = index.data().toString()
-            internalKey = serverId+"+"+classId
-            # Get schema
-            level = self.__model.levelOf(index)
-            row = self.__model.mappedRow(index)
-            schema = self.__model.getSchema(level, row)
-            return dict(serverId=serverId, classId=classId, internalKey=internalKey, schema=schema, type=NavigationItemTypes.CLASS)
+            path = str("server." + serverId + ".classes." + classId + ".configuration")
+            
+            return dict(key=path, type=type, serverId=serverId, classId=classId)
         elif level == 3:
-            # DEVICE_INSTANCE
-            parentIndex = index.parent()
-            classId = parentIndex.data().toString()
-            serverId = parentIndex.parent().data().toString()
-            internalKey = index.data().toString()
-            # Get schema
-            level = self.__model.levelOf(index)
-            row = self.__model.mappedRow(index)
-            schema = self.__model.getSchema(level, row)
-            return dict(serverId=serverId, classId=classId, internalKey=internalKey, schema=schema, type=NavigationItemTypes.DEVICE)
+            type = NavigationItemTypes.DEVICE
+            deviceId = index.data().toString()
+            path = str("device." + deviceId)
+            
+            return dict(key=path, type=type, deviceId=deviceId)
 
 
-    def currentInternalDeviceKey(self):
-        type = self.currentIndexType()
-        if type is NavigationItemTypes.UNDEFINED:
-            return str()
-        
+    def updateView(self, config):
+        self.model().updateData(config)
+        self.expandAll()
+
+
+    def itemClicked(self):
         index = self.currentIndex()
+        
         if not index.isValid():
-            return str()
+            return NavigationItemTypes.UNDEFINED
         
-        if type is NavigationItemTypes.CLASS:
+        if self.__prevModelIndex == index:
+            return NavigationItemTypes.UNDEFINED
+        self.__prevModelIndex = index
+        
+        level = self.model().getHierarchyLevel(index)
+        
+        row = index.row()
+
+        classId = None
+        path = ""
+        
+        if level == 0:
+            type = NavigationItemTypes.HOST
+        elif level == 1:
+            type = NavigationItemTypes.SERVER
+            path = "server." + index.data().toString()
+        elif level == 2:
+            type = NavigationItemTypes.CLASS
             parentIndex = index.parent()
-            return parentIndex.data().toString() + "+" + index.data().toString()
+            serverId = parentIndex.data().toString()
+            classId = index.data().toString()
+            
+            schema = Manager().getClassSchema(serverId, classId)
+            path = str("server." + serverId + ".classes." + classId)
+            Manager().onSchemaAvailable(dict(key=path, classId=classId, type=type, schema=schema))
+        elif level == 3:
+            type = NavigationItemTypes.DEVICE
+            deviceId = index.data().toString()
+            classIndex = index.parent()
+            classId = classIndex.data().toString()
+            #serverIndex = classIndex.parent()
+            #serverId = serverIndex.data().toString()
+            
+            path = str("device." + deviceId)
+            schema = Manager().getDeviceSchema(deviceId)
+            Manager().onSchemaAvailable(dict(key=path, classId=classId, type=type, schema=schema))
         
-        return index.data().toString()
+        itemInfo = dict(key=path, type=type, level=level, row=row)
+        Manager().onNavigationItemChanged(itemInfo)
+        
+        return type # Needed in ConfigurationPanel
 
 
-    def updateDeviceInstanceSchema(self, instanceId, schema):
-        self.__model.updateDeviceInstanceSchema(instanceId, schema)
-        Manager().onSchemaAvailable(dict(key=instanceId, type=NavigationItemTypes.DEVICE, schema=schema))
+    def itemChanged(self, itemInfo):
+        key = itemInfo.get(QString('key'))
+        if key is None:
+            key = itemInfo.get('key')
+        
+        if len(key) == 0:
+            return
+        
+        index = self.model().findIndex(key)
+        
+        if self.__prevModelIndex == index:
+            return
+        self.__prevModelIndex = index
+        
+        if index and index.isValid():
+            self.setCurrentIndex(index)
+        else:
+            self.clearSelection()
 
 
-### slots ###
-    def onKillDeviceInstance(self):
+    def selectItem(self, path):
+        index = self.model().findIndex(path)
+        
+        if not index:
+            return
+        
+        if index.isValid():
+            self.setCurrentIndex(index)
+        else:
+            self.clearSelection()
+
+
+    def onKillServer(self):
         itemInfo = self.currentIndexInfo()
+
         serverId = itemInfo.get(QString('serverId'))
         if serverId is None:
             serverId = itemInfo.get('serverId')
         
-        internalKey = itemInfo.get(QString('internalKey'))
-        if internalKey is None:
-            internalKey = itemInfo.get('internalKey')
-        Manager().killDeviceInstance(serverId, internalKey)
+        Manager().killServer(serverId)
 
 
-    def onKillDeviceServerInstance(self):
-        Manager().killDeviceServerInstance(self.currentInternalDeviceKey())
+    def onKillDevice(self):
+        itemInfo = self.currentIndexInfo()
+
+        deviceId = itemInfo.get(QString('deviceId'))
+        if deviceId is None:
+            deviceId = itemInfo.get('deviceId')
+        
+        Manager().killDevice(deviceId)
 
 
     def onFileSaveAs(self):
         itemInfo = self.currentIndexInfo()
+        
         classId = itemInfo.get(QString('classId'))
         if classId is None:
             classId = itemInfo.get('classId')
         
-        internalKey = itemInfo.get(QString('internalKey'))
-        if internalKey is None:
-            internalKey = itemInfo.get('internalKey')
+        path = itemInfo.get(QString('key'))
+        if path is None:
+            path = itemInfo.get('key')
         
-        Manager().onSaveAsXml(str(classId), str(internalKey))
+        Manager().onSaveAsXml(str(classId), str(path))
 
 
-    def onFileOpen(self):
+    def onFileOpen(self): # TODO
         type = self.currentIndexType()
         index = self.currentIndex()
         
@@ -394,7 +337,7 @@ class NavigationTreeView(QTreeView):
             parentIndex = index.parent()
             instanceId = parentIndex.data().toString()+"+"+classId
         elif type is NavigationItemTypes.DEVICE:
-            configChangeType = ConfigChangeTypes.DEVICE_INSTRANCE_CONFIG_CHANGED
+            configChangeType = ConfigChangeTypes.DEVICE_INSTANCE_CONFIG_CHANGED
             parentIndex = index.parent()
             classId = parentIndex.data().toString()
             instanceId = index.data().toString()
@@ -410,12 +353,11 @@ class NavigationTreeView(QTreeView):
         type = self.currentIndexType()
         # Show context menu for DEVICE_CLASS and DEVICE_INSTANCE
         if type is NavigationItemTypes.SERVER:
-            self.__mDevSrvInsItem.exec_(QCursor.pos())
+            self.__mServerItem.exec_(QCursor.pos())
         elif type is NavigationItemTypes.CLASS:
-            self.__acKillDevIns.setVisible(False)
-            self.__mDevClaInsItem.exec_(QCursor.pos())
+            self.__acKillDevice.setVisible(False)
+            self.__mClassItem.exec_(QCursor.pos())
         elif type is NavigationItemTypes.DEVICE:
-            self.__acKillDevIns.setVisible(True)
-            self.__mDevClaInsItem.exec_(QCursor.pos())
-        
+            self.__acKillDevice.setVisible(True)
+            self.__mClassItem.exec_(QCursor.pos())
 
