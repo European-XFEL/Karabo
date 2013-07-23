@@ -270,6 +270,16 @@ KARABO_PYTHON_NUMERIC_ATTRIBUTES(T) \
 #define KARABO_PYTHON_COMMON_ATTRIBUTES(T)\
 .def("advanced", &T::advanced\
 , bp::return_internal_reference<> () )\
+.def("observerAccess", &T::observerAccess\
+, bp::return_internal_reference<> () )\
+.def("userAccess", &T::userAccess\
+, bp::return_internal_reference<> () )\
+.def("operatorAccess", &T::operatorAccess\
+, bp::return_internal_reference<> () )\
+.def("expertAccess", &T::expertAccess\
+, bp::return_internal_reference<> () )\
+.def("adminAccess", &T::adminAccess\
+, bp::return_internal_reference<> () )\
 .def("allowedStates", &T::allowedStates\
 , ( bp::arg("states"), bp::arg("sep")=" ,;" )\
 , bp::return_internal_reference<> ())\
@@ -374,6 +384,16 @@ KARABO_PYTHON_COMMON_ATTRIBUTES(T) \
 #define KARABO_PYTHON_NODE_CHOICE_LIST(NameElem)\
 .def("advanced", &NameElem::advanced\
 , bp::return_internal_reference<> ())\
+.def("observerAccess", &NameElem::observerAccess\
+, bp::return_internal_reference<> () )\
+.def("userAccess", &NameElem::userAccess\
+, bp::return_internal_reference<> () )\
+.def("operatorAccess", &NameElem::operatorAccess\
+, bp::return_internal_reference<> () )\
+.def("expertAccess", &NameElem::expertAccess\
+, bp::return_internal_reference<> () )\
+.def("adminAccess", &NameElem::adminAccess\
+, bp::return_internal_reference<> () )\
 .def("key", &NameElem::key\
 , bp::return_internal_reference<> ())\
 .def("description", &NameElem::description\
@@ -454,6 +474,18 @@ bp::class_<U>("IMAGE_ELEMENT", bp::init<Schema &>(bp::arg("expected")))\
 .def("alias"\
 , (U & (U::*)(int const &))(&U::alias)\
 , bp::return_internal_reference<> ())\
+.def("advanced", &U::advanced\
+, bp::return_internal_reference<> ())\
+.def("observerAccess", &U::observerAccess\
+, bp::return_internal_reference<> () )\
+.def("userAccess", &U::userAccess\
+, bp::return_internal_reference<> () )\
+.def("operatorAccess", &U::operatorAccess\
+, bp::return_internal_reference<> () )\
+.def("expertAccess", &U::expertAccess\
+, bp::return_internal_reference<> () )\
+.def("adminAccess", &U::adminAccess\
+, bp::return_internal_reference<> () )\
 .def("commit", (void (U::*)())(&U::commit))\
 ;\
 }
