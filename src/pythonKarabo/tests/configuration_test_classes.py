@@ -241,6 +241,7 @@ class TestStruct1(object):
         e.options("Radio,Air Condition,Navigation", ",")
         e.assignmentOptional().defaultValue("Navigation")
         e.reconfigurable()
+        e.userAccess()
         e.commit()
 
         e = INT32_ELEMENT(expected).key("exampleKey2").alias(10)
@@ -253,6 +254,7 @@ class TestStruct1(object):
         e.metricPrefix(MILLI)
         e.assignmentOptional().defaultValue(10)
         e.init()
+        e.operatorAccess()
         e.commit()
 
         e = UINT32_ELEMENT(expected).key("exampleKey3").alias(5.5)
@@ -262,6 +264,7 @@ class TestStruct1(object):
         e.allowedStates("AllOk.Started, AllOk.Stopped, AllOk.Run.On, NewState")
         e.minExc(10).maxExc(20)
         e.assignmentMandatory()
+        e.expertAccess()
         e.reconfigurable()
         e.commit()
 
@@ -272,6 +275,7 @@ class TestStruct1(object):
         e.options("1.11     -2.22 5.55")
         e.minExc(-2.22).maxExc(5.55)
         e.assignmentInternal().noDefaultValue()
+        e.adminAccess()
         e.commit()
 
         e = INT64_ELEMENT(expected).key("exampleKey5").alias("exampleAlias5")
@@ -315,6 +319,7 @@ class TestStruct1(object):
         e = VECTOR_INT32_ELEMENT(expected).key("exampleKey11")
         e.displayedName("Example key 11")
         e.assignmentOptional().defaultValue([10,20,30])
+        e.observerAccess()
         e.reconfigurable()
         e.commit()
         
