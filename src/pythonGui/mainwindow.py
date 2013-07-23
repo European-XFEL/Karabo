@@ -129,15 +129,15 @@ class MainWindow(QMainWindow):
         self.__navigationTab.addDockableTab(navigationPanel, "Navigation")
         leftArea.setStretchFactor(0,2)
 
-        projectPanel = ProjectPanel()
-        self.__projectTab = DockTabWindow("Projects", leftArea)
-        self.__projectTab.addDockableTab(projectPanel, "Projects")
-        leftArea.setStretchFactor(1,1)
+        #projectPanel = ProjectPanel()
+        #self.__projectTab = DockTabWindow("Projects", leftArea)
+        #self.__projectTab.addDockableTab(projectPanel, "Projects")
+        #leftArea.setStretchFactor(1,1)
 
         notificationPanel = NotificationPanel()
         self.__monitorTab = DockTabWindow("Notifications", leftArea)
         self.__monitorTab.addDockableTab(notificationPanel, "Notifications")
-        leftArea.setStretchFactor(2, 1)
+        leftArea.setStretchFactor(1,1)
 
         middleArea = QSplitter(Qt.Vertical, mainSplitter)
         customViewPanel = CustomMiddlePanel()
@@ -158,7 +158,7 @@ class MainWindow(QMainWindow):
         self.__outputTab = DockTabWindow("Update", middleArea)
         self.__outputTab.addDockableTab(loggingPanel, "Log")
         self.__outputTab.addDockableTab(scriptingPanel, "Console")
-        middleArea.setStretchFactor(1, 1)
+        middleArea.setStretchFactor(1,1)
 
         configurationPanel = ConfigurationPanel(Manager().treemodel)
         rightArea = QSplitter(Qt.Vertical, mainSplitter)
