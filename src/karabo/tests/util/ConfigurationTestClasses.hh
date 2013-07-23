@@ -134,6 +134,7 @@ namespace configurationTest {
                     .unit(Unit::METER)
                     .metricPrefix(MetricPrefix::MILLI)
                     .assignmentOptional().defaultValue(10)
+                    .adminAccess()
                     .init()
                     .commit();
 
