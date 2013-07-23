@@ -28,7 +28,7 @@ import const
 
 from enums import NavigationItemTypes
 from manager import Manager
-from navigationtreeview2 import NavigationTreeView
+from navigationtreeview import NavigationTreeView
 
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *

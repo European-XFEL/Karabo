@@ -117,7 +117,16 @@ class DisplayCommand(DisplayWidget):
 
 
 ### slots ###
-    def onDeviceStateChanged(self, internalKey, state):
+    def onDeviceStateChanged(self, internalDeviceId, state):
+        isFound = False
+        for key in self.keys:
+            deviceId = key.split(".configuration")[0]
+            if deviceId == internalDeviceId:
+                isFound = True
+        
+        if not isFound:
+            return
+        
         if len(self.__allowedStates) < 1:
             return
         
@@ -130,8 +139,7 @@ class DisplayCommand(DisplayWidget):
     def onCommandClicked(self):
         args = [] # TODO slot arguments
         for key in self.keys:
-            print "key", key, self.__command
-            Manager().slotCommand(dict(internalKey=key, name=self.__command, args=args))
+            Manager().executeCommand(dict(path=key, command=self.__command, args=args))
 
 
     class Maker:

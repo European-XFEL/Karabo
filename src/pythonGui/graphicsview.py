@@ -819,7 +819,6 @@ class GraphicsView(QGraphicsView):
                         newClassId = Manager().createNewDeviceClassId(displayName)
 
                         keys = internalKey.split('+', 1)
-                        print "dropEvent", keys
                         if len(keys) is 2:
                             internalKey = str(keys[0]) + "+" + newClassId
 

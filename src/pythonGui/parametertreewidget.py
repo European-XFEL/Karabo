@@ -79,8 +79,8 @@ class ParameterTreeWidget(QTreeWidget):
         displayName = item.text(0)
         # Use DeviceClass/DeviceInstance-Key if no displayName is set
         if len(item.text(0)) == 0:
-            keys = item.internalKey.split('.', 1)
-            displayName = keys[0]
+            keys = item.internalKey.split('.')
+            displayName = keys[1]
         mimeData.setData("displayName", displayName.toAscii())
         
         # Get NavigationItemType

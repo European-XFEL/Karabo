@@ -1,287 +1,236 @@
 #############################################################################
 # Author: <kerstin.weger@xfel.eu>
-# Created on July 10, 2012
+# Created on June 1, 2013
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 
 
-"""This module contains a class which represents a QAbstractItemModel for a
-   hierarchical navigation treeview which is based on a database.
-"""
+"""This module contains a class which represents a model to display a hierarchical
+   navigation in a treeview."""
 
 __all__ = ["NavigationHierarchyModel"]
 
-
-from enums import NavigationItemTypes
-from sqltreemodel import SqlTreeModel
+from navigationhierarchynode import *
+from karabo.karathon import *
 
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 
-try:
-    from PyQt4.QtSql import QSqlQueryModel, QSqlQuery
-except:
-    print "*ERROR* The PyQt4 sql module is not installed"
+
+class NavigationHierarchyModel(QAbstractItemModel):
 
 
-class NavigationHierarchyModel(SqlTreeModel):
-    
     def __init__(self, parent=None):
         super(NavigationHierarchyModel, self).__init__(parent)
         
-        self.__nodeOrder = str()
-        self.__devSerInsOrder = str()
-        self.__devClaOrder = str()
-        self.__devInsOrder = str()
-
-        for i in xrange(4):
-            self.appendModel(QSqlQueryModel(self))
-
-        #self.setColumnMapping(0, [1])
-        self.setHeaderData(0, Qt.Horizontal, "Hierarchical view", Qt.DisplayRole)
-        self.setSort(0, Qt.AscendingOrder)
-
-        #self.updateQueries()
+        self.__rootItem = NavigationHierarchyNode("Hierarchical view")
 
 
-### public ###
-    def getSchema(self, level, row):
-        schema = self.rawData(level, row, 3).toString()
-        return schema
+    def updateData(self, config):
+        #print "+++ NavigationHierarchyModel.updateData"
+        #print config
+        #print ""
+        
+        self.beginResetModel()
+        self.__rootItem.clearChildItems()
+        
+        # Get server data
+        serverKey = "server"
+        if config.has(serverKey):
+            serverConfig = config.get(serverKey)
+            serverIds = list()
+            serverConfig.getKeys(serverIds)
+            for serverId in serverIds:
+                # Get attributes
+                #serverAttributes = serverConfig.getAttributes(serverId)
+                #version = serverConfig.getAttribute(serverId, "version")
+                
+                host = str("UNKNOWN")
+                if serverConfig.hasAttribute(serverId, "host"):
+                    host = serverConfig.getAttribute(serverId, "host")
+
+                # Host item already exists?
+                hostItem = self.__rootItem.getItem(host)
+                if not hostItem:
+                    hostItem = NavigationHierarchyNode(host, host, self.__rootItem)
+                    self.__rootItem.appendChildItem(hostItem)
+
+                path = "server." + serverId
+                serverItem = NavigationHierarchyNode(serverId, path, hostItem)
+                hostItem.appendChildItem(serverItem)
+            
+                if serverConfig.hasAttribute(serverId, "deviceClasses"):
+                    classes = serverConfig.getAttribute(serverId, "deviceClasses")
+                    for deviceClass in classes:
+                        path = "server." + serverId + ".classes." + deviceClass
+                        classItem = NavigationHierarchyNode(deviceClass, path, serverItem)
+                        serverItem.appendChildItem(classItem)
+        
+        # Get device data
+        deviceKey = "device"
+        if config.has(deviceKey):
+            deviceConfig = config.get(deviceKey)
+            deviceIds = list()
+            deviceConfig.getKeys(deviceIds)
+            for deviceId in deviceIds:
+                # Get attributes
+                #deviceAttributes = deviceConfig.getAttributes(deviceId)
+                host = deviceConfig.getAttribute(deviceId, "host")
+                classId = deviceConfig.getAttribute(deviceId, "classId")
+                serverId = deviceConfig.getAttribute(deviceId, "serverId")
+                #status = deviceConfig.getAttribute(deviceId, "status")
+
+                # Host item already exists?
+                hostItem = self.__rootItem.getItem(host)
+                if not hostItem:
+                    hostItem = NavigationHierarchyNode(host, host, self.__rootItem)
+                    self.__rootItem.appendChildItem(hostItem)
+                
+                # Server item already exists?
+                serverItem = hostItem.getItem(serverId)
+                if not serverItem:
+                    path = "server." + serverId
+                    serverItem = NavigationHierarchyNode(serverId, path, hostItem)
+                    hostItem.appendChildItem(serverItem)
+
+                # Class item already exists?
+                classItem = serverItem.getItem(classId)
+                if not classItem:
+                    path = "server." + serverId + ".classes." + classId
+                    classItem = NavigationHierarchyNode(classId, path, serverItem)
+                    serverItem.appendChildItem(classItem)
+
+                path = "device." + deviceId
+                deviceItem = NavigationHierarchyNode(deviceId, path, classItem)
+                classItem.appendChildItem(deviceItem)
+
+        self.endResetModel()
 
 
-### public overrides ###
+    def getHierarchyLevel(self, index):
+        # Find out the hierarchy level of the selected item
+        hierarchyLevel = 0
+        seekRoot = index
+        while seekRoot.parent() != QModelIndex():
+            seekRoot = seekRoot.parent()
+            hierarchyLevel += 1
+        return hierarchyLevel
+
+
+    def findIndex(self, path):
+        # Recursive search
+        return self._rFindIndex(self.__rootItem, path)
+
+
+    def _rFindIndex(self, item, path):
+        for i in xrange(item.childCount()):
+            childItem = item.childItem(i)
+            resultItem = self._rFindIndex(childItem, path)
+            if resultItem:
+                return resultItem
+
+        if path == item.path:
+            return self.createIndex(item.row(), 0, item)
+        return None
+
+
+    def rowCount(self, parent=QModelIndex()):
+        
+        if parent.column() > 0:
+            #print "rowCount 1"
+            return None
+
+        if not parent.isValid():
+            #print "root"
+            parentItem = self.__rootItem
+        else:
+            #print "parent"
+            parentItem = parent.internalPointer()
+
+        #print "rowCount", parentItem.childCount()
+        return parentItem.childCount()
+
+
+    def columnCount(self, parentIndex=QModelIndex()):
+        return 1
+
+
     def data(self, index, role=Qt.DisplayRole):
-        level = self.levelOf(index)
-        row = self.mappedRow(index)
+        
+        #row = index.row()
+        column = index.column()
 
         if role == Qt.DisplayRole:
-            value = self.rawData(level, row, self.mappedColumn(index), role)
-            return value
-
-        if role == Qt.DecorationRole and index.column() == 0:
-            if level == 0:
+            item = index.internalPointer()
+            return item.data(column)
+        elif (role == Qt.DecorationRole) and (column == 0):
+            # Find out the hierarchy level of the selected item
+            hierarchyLevel = self.getHierarchyLevel(index)
+            if hierarchyLevel == 0:
                 return QIcon(":host")
-            elif level == 1:
-                status = self.rawData(level, row, 3).toString()
-                if status == "offline":
-                    return QIcon(":no")
-                elif status == "starting" or status == "online":
-                    return QIcon(":yes")
-            elif level == 2:
+            elif hierarchyLevel == 1:
+                #status = self.rawData(level, row, 3).toString()
+                #if status == "offline":
+                #    return QIcon(":no")
+                #elif status == "starting" or status == "online":
+                return QIcon(":yes")
+            elif hierarchyLevel == 2:
                 return QIcon(":device-class")
-            elif level == 3:
-                status = self.rawData(level, row, 4).toString()
-                if status == "error":
-                    return QIcon(":device-instance-error")
-                else:
-                    return QIcon(":device-instance")
+            elif hierarchyLevel == 3:
+                #status = self.rawData(level, row, 4).toString()
+                #if status == "error":
+                #    return QIcon(":device-instance-error")
+                #else:
+                return QIcon(":device-instance")
 
         return QVariant()
 
 
-### protected overrides ###
-    def updateQueries(self):
-        #print "updateQueries..."
+    #def flags(self, index):
+    #    if not index.isValid():
+    #        return None
+
+    #    return Qt.ItemIsEnabled | Qt.ItemIsSelectable
+
+
+    def headerData(self, section, orientation, role):
         
-        if self.sortOrder() == Qt.AscendingOrder:
-            order = "ASC"
+        if role == Qt.DisplayRole:
+            if (orientation == Qt.Horizontal) and (section == 0):
+                    return QString("Hierarchical view")
+        return QVariant()
+
+
+    def index(self, row, column, parent=QModelIndex()):
+        if not self.hasIndex(row, column, parent):
+            return QModelIndex()
+
+        if not parent.isValid():
+            parentItem = self.__rootItem
         else:
-            order = "DESC"
+            parentItem = parent.internalPointer()
 
-        if self.sortColumn() == 0:
-            self.__nodeOrder = QString("name %1").arg(order)
-            self.__devSerInsOrder = QString("d.name %1").arg(order)
-            self.__devClaOrder = QString("dc.name %1").arg(order)
-            self.__devInsOrder = QString("di.name %1").arg(order)
-
-        self._refresh()
-
-
-### private ###
-    def _refresh(self):
-        #print "refresh..."
-        
-        nodeQuery = "SELECT id, name FROM tNode"
-        devSerInsQuery = "SELECT d.id, d.nodId, d.name, d.status FROM tDeviceServerInstance AS d" \
-                         " JOIN tNode AS n ON n.id = d.nodId"
-        devClaQuery = "SELECT dc.id, dc.serverId, dc.name, dc.schema FROM tDeviceClass AS dc" \
-                      " JOIN tDeviceServerInstance AS d ON d.id = dc.serverId AND d.status IS NOT 'offline'"
-        devInsQuery = "SELECT di.id, di.classId, di.name, di.schema, di.status FROM tDeviceInstance AS di" \
-                      " JOIN tDeviceClass AS dc ON dc.id = di.classId AND di.status IS NOT 'offline'"
-        
-        #sqlQuery = QSqlQuery()
-        #sqlQuery.prepare(QString("%1 ORDER BY %2").arg(nodeQuery, self.__nodeOrder))
-        #sqlQuery.exec_()
-        
-        # Without sorting...
-        #self.modelAt(0).setQuery(nodeQuery)
-        #self.modelAt(1).setQuery(devSerInsQuery)
-        #self.modelAt(2).setQuery(devClaQuery)
-        #self.modelAt(3).setQuery(devInsQuery)
-        
-        # Use sorting
-        self.modelAt(0).setQuery(QString("%1 ORDER BY %2").arg(nodeQuery, self.__nodeOrder))
-        self.modelAt(1).setQuery(QString("%1 ORDER BY %2").arg(devSerInsQuery, self.__devSerInsOrder))
-        self.modelAt(2).setQuery(QString("%1 ORDER BY %2").arg(devClaQuery, self.__devClaOrder))
-        self.modelAt(3).setQuery(QString("%1 ORDER BY %2").arg(devInsQuery, self.__devInsOrder))
-        
-        self.updateData()
-
-
-    def insertInto(self, itemInfo):
-        #print "insertInto DB", itemInfo
-        
-        id = itemInfo.get(QString('id'))
-        if id is None:
-            id = itemInfo.get('id')
-        
-        name = itemInfo.get(QString('name'))
-        if name is None:
-            name = itemInfo.get('name')
-        
-        type = itemInfo.get(QString('type'))
-        if type is None:
-            type = itemInfo.get('type')
-        
-        if type is NavigationItemTypes.HOST:
-            # NODE: insert parameter into database
-            queryText = "INSERT INTO tNode (id, name) VALUES ('" + str(id) + "', '" + name + "');"
-            success = QSqlQuery().exec_(queryText)
-            if not success:
-                # Table row already exists
-                queryText = "REPLACE INTO tNode (id, name) VALUES ('" + str(id) + "', '" + name + "');"
-                QSqlQuery().exec_(queryText)
+        childItem = parentItem.childItem(row)
+        if childItem:
+            return self.createIndex(row, column, childItem)
         else:
-            # DEVICE_SERVER_INSTANCE, DEVICE_CLASS or DEVICE_INSTANCE
-            refType = itemInfo.get(QString('refType'))
-            if refType is None:
-                refType = itemInfo.get('refType')
-
-            refId = itemInfo.get(QString('refId'))
-            if refId is None:
-                refId = itemInfo.get('refId')
-            
-            if type is NavigationItemTypes.SERVER:
-                status = itemInfo.get(QString('status'))
-                if status is None:
-                    status = itemInfo.get('status')
-                
-                queryText = "INSERT INTO tDeviceServerInstance (id, name, nodId, status) VALUES ('" + str(id) + "', '" + name + \
-                            "', '" + str(refId) + "', '" + status + "');"
-                success = QSqlQuery().exec_(queryText)
-                if not success:
-                    # Table row already exists
-                    queryText = "REPLACE INTO tDeviceServerInstance (id, name, nodId, status) VALUES ('" + str(id) + "', '" + name + \
-                                "', '" + str(refId) + "', '" + status + "');"
-                    QSqlQuery().exec_(queryText)
-            elif type is NavigationItemTypes.CLASS:
-                schema = itemInfo.get(QString('schema'))
-                if schema is None:
-                    schema = itemInfo.get('schema')
-                
-                queryText = "INSERT INTO tDeviceClass (id, name, serverId, schema) VALUES ('" + str(id) + "', '" + name + \
-                            "', '" + str(refId) + "', '" + schema + "');"
-                success = QSqlQuery().exec_(queryText)
-                if not success:
-                    # Table row already exists
-                    queryText = "REPLACE INTO tDeviceClass (id, name, serverId, schema) VALUES ('" + str(id) + "', '" + name + \
-                                "', '" + str(refId) + "', '" + schema + "');"
-                    QSqlQuery().exec_(queryText)
-            elif type is NavigationItemTypes.DEVICE:
-                status = 'online'
-                
-                schema = itemInfo.get(QString('schema'))
-                if schema is None:
-                    schema = itemInfo.get('schema')
-                
-                queryText = "INSERT INTO tDeviceInstance (id, name, classId, status, schema) VALUES ('" + str(id) + "', '" + name + \
-                            "', '" + str(refId) + "', '" + status + "', '" + schema + "');"
-                success = QSqlQuery().exec_(queryText)
-                if not success:
-                    # Table row already exists
-                    queryText = "REPLACE INTO tDeviceInstance (id, name, classId, status, schema) VALUES ('" + str(id) + "', '" + name + \
-                                "', '" + str(refId) + "', '" + status + "', '" + schema + "');"  
-                    QSqlQuery().exec_(queryText)
+            return QModelIndex()
 
 
-    # Triggered not per panel but once from Manager when update needed
-    def onUpdateDeviceServerInstance(self, itemInfo):
-        #print "updateDeviceServerInstance", itemInfo
+    def parent(self, index):
+        if not index.isValid():
+            return QModelIndex()
         
-        id = itemInfo.get(QString('id'))
-        if id is None:
-            id = itemInfo.get('id')
-
-        status = itemInfo.get(QString('status'))
-        if status is None:
-            status = itemInfo.get('status')
-
-        sqlQuery = QSqlQuery()
-        queryText = "UPDATE tDeviceServerInstance SET status='" + status + "' WHERE id=" + str(id) + ";"
-        sqlQuery.exec_(queryText)
+        childItem = index.internalPointer()
+        if not childItem:
+            return QModelIndex()
         
-        if status == 'offline':
-            # Update DEVICE_INSTANCE
-            queryText = "SELECT id FROM tDeviceClass WHERE serverId="+ str(id) +";"
-            sqlQuery.exec_(queryText)
-            while sqlQuery.next():
-                classId = sqlQuery.value(0).toString()
-                sqlQueryUpdate = QSqlQuery()
-                queryText = "UPDATE tDeviceInstance SET status='" + status + "' WHERE classId=" + str(classId) + ";"
-                sqlQueryUpdate.exec_(queryText)
+        parentItem = childItem.parentItem
+        if not parentItem:
+            return QModelIndex()
         
-        # Update view with model...
-        self.updateQueries()
+        if parentItem == self.__rootItem:
+            return QModelIndex()
 
-
-    # Triggered not per panel but once from Manager when update needed
-    def onUpdateDeviceInstance(self, itemInfo):
-        #print "updateDeviceInstance", itemInfo
-        id = itemInfo.get(QString('id'))
-        if id is None:
-            id = itemInfo.get('id')
-        
-        name = itemInfo.get(QString('name'))
-        if name is None:
-            name = itemInfo.get('name')
-        
-        #status = 'offline'
-        #sqlQuery = QSqlQuery()
-        #queryText = "UPDATE tDeviceInstance SET status='" + status + "' WHERE id=" + str(id) + ";"
-        #sqlQuery.exec_(queryText)
-        
-        # Remove completely from database
-        sqlQuery = QSqlQuery()
-        queryText = "DELETE from tDeviceInstance WHERE id=" + str(id) + ";"
-        sqlQuery.exec_(queryText)
-
-        # Update view with model...
-        self.updateQueries()
-
-
-    def updateDeviceInstanceSchema(self, instanceId, schema):
-        #print "updateDeviceInstanceSchema", instanceId
-        sqlQuery = QSqlQuery()
-        queryText = "UPDATE tDeviceInstance SET schema='" + schema + "' WHERE name='" + str(instanceId) + "';"
-        sqlQuery.exec_(queryText)
-
-        # Update view with model...
-        self.updateQueries()
-
-
-    def updateErrorState(self, instanceId, hasError):
-        #print "updateErrorState", instanceId, hasError
-        if hasError:
-            status = 'error'
-        else:
-            status = 'online'
-        
-        sqlQuery = QSqlQuery()
-        queryText = "UPDATE tDeviceInstance SET status='" + status + "' WHERE name='" + str(instanceId) + "';"
-
-        sqlQuery.exec_(queryText)
-
-        # Update view with model...
-        self.updateQueries()
+        return self.createIndex(parentItem.row(), 0, parentItem)
 
