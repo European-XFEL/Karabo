@@ -117,14 +117,32 @@ namespace karabo {
         }
 
 
-        std::string Epochstamp::toIso8601() const {
-            using namespace boost::posix_time;
-            boost::posix_time::ptime epoch(boost::gregorian::date(1970, 1, 1));
+        std::string Epochstamp::toIso8601(TIME_UNITS precision, bool extended) const {
+            static boost::posix_time::ptime epoch(boost::gregorian::date(1970, 1, 1));
+                using namespace boost::posix_time;
+            if (0) {
 
-            // The boost minimum unit is nanosecond:
-            // A nanosecond (ns) is one billionth of a second (10−9 or 1/1,000,000,000 s).
-            boost::posix_time::ptime myTimePoint = epoch + seconds(this->m_seconds) + microseconds(this->convertFractionalSeconds("microseconds"));
-            return to_iso_string(myTimePoint);
+                // The boost minimum unit is nanosecond:
+                // A nanosecond (ns) is one billionth of a second (10−9 or 1/1,000,000,000 s).
+                boost::posix_time::ptime time_point = epoch + seconds(m_seconds);
+                #if defined(BOOST_DATE_TIME_HAS_NANOSECONDS)
+                time_point += nanoseconds(m_fractionalSeconds / NANOSEC);
+                #else
+                time_point += microseconds(m_fractionalSeconds / MICROSEC);
+                #endif
+                return extended ? to_iso_extended_string(time_point) : to_iso_string(time_point);
+            }
+            // Another solution is to print out the time in seconds 
+            // and then print the fractional part with the desired precision. 
+            // Could be microseconds, nanoseconds, or any thing else we want.
+            {
+                boost::posix_time::ptime time_point = epoch + seconds(m_seconds);
+
+                ostringstream oss;
+                oss << (extended ? to_iso_extended_string(time_point) : to_iso_string(time_point)) 
+                        << '.' << setw(18-std::log10((long double)precision)) << setfill('0') << m_fractionalSeconds / precision;
+                return oss.str();
+            }
         }
 
 
@@ -133,8 +151,7 @@ namespace karabo {
             // A nanosecond (ns) is one billionth of a second (10−9 or 1/1,000,000,000 s).
             if (destinyUnitMeasure == "nanoseconds") {
                 throw KARABO_NOT_IMPLEMENTED_EXCEPTION("To be done");
-            }
-                // A microsecond is an SI unit of time equal to one millionth (10−6 or 1/1,000,000) of a second.
+            }// A microsecond is an SI unit of time equal to one millionth (10−6 or 1/1,000,000) of a second.
             else if (destinyUnitMeasure == "microseconds") {
                 throw KARABO_NOT_IMPLEMENTED_EXCEPTION("To be done");
             }
@@ -167,6 +184,7 @@ namespace karabo {
 
 
         std::string Epochstamp::toFormattedString(const std::string& format) const {
+
             throw KARABO_NOT_IMPLEMENTED_EXCEPTION("To be done");
         }
     }

@@ -162,13 +162,22 @@ namespace karabo {
             TimePeriod(period).getDuration().toHash(period.bindReference<Hash>("KRB_duration"));
         }
 
+        const TimePeriod TimeProfiler::getPeriod(const std::string& periodname) const {
+            return TimePeriod(m_periods.get<Hash>(periodname));
+        }
 
-        const Hash& TimeProfiler::getPeriod(const std::string& periodname) const {
+
+        const TimePeriod TimeProfiler::getPeriod() const {
+            return TimePeriod(m_periods);
+        }
+
+
+        const Hash& TimeProfiler::getPeriodAsHash(const std::string& periodname) const {
             return m_periods.get<Hash>(periodname);
         }
 
 
-        const Hash& TimeProfiler::getPeriod() const {
+        const Hash& TimeProfiler::getPeriodAsHash() const {
             return m_periods;
         }
 
@@ -189,7 +198,7 @@ namespace karabo {
 
 
         void TimeProfiler::serialize(std::ostream& os, int level) const {
-            os << getPeriod() << std::endl;
+            os << getPeriodAsHash() << std::endl;
         }
 
         static int key = 0;
