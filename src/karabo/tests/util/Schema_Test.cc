@@ -63,15 +63,45 @@ void Schema_Test::testPaths() {
     CPPUNIT_ASSERT(paths[9] == "shapes.Rectangle.b");
 }
 
-void Schema_Test::testExpertLevel() {
+
+void Schema_Test::testGetRequiredAccessLevel() {
+
     Schema schema = GraphicsRenderer::getSchema("GraphicsRenderer");
-//    CPPUNIT_ASSERT(schema.isRequiredAccessLevelExpert("shapes.Circle.shadowEnabled") == true);
-//    CPPUNIT_ASSERT(schema.isRequiredAccessLevelExpert("shapes.Circle") == true);
-//    CPPUNIT_ASSERT(schema.isRequiredAccessLevelExpert("shapes") == true);
-//    CPPUNIT_ASSERT(schema.isRequiredAccessLevelExpert("antiAlias") == true);
-    //CPPUNIT_ASSERT(schema.isExpertLevelSimple("antiAlias") == false);
-    //CPPUNIT_ASSERT(schema.isExpertLevelSimple("color") == true);
+    CPPUNIT_ASSERT(schema.getRequiredAccessLevel("shapes") == Schema::EXPERT);
+    //all sub-elements of Node-element 'shapes' will have EXPERT level: 
+    CPPUNIT_ASSERT(schema.getRequiredAccessLevel("shapes.Circle.shadowEnabled") == Schema::EXPERT);
+    CPPUNIT_ASSERT(schema.getRequiredAccessLevel("shapes.Circle") == Schema::EXPERT);
+    CPPUNIT_ASSERT(schema.getRequiredAccessLevel("shapes.Rectangle.b") == Schema::EXPERT);
+   
+    CPPUNIT_ASSERT(schema.getRequiredAccessLevel("antiAlias") == Schema::EXPERT);
+    CPPUNIT_ASSERT(schema.getRequiredAccessLevel("color") == Schema::USER);
+    
+    //check requiredAccesLevel set on leaves-elements in expectedParameters
+    CPPUNIT_ASSERT(m_schema.getRequiredAccessLevel("exampleKey1") == Schema::USER);
+    CPPUNIT_ASSERT(m_schema.getRequiredAccessLevel("exampleKey2") == Schema::OPERATOR);
+    CPPUNIT_ASSERT(m_schema.getRequiredAccessLevel("exampleKey3") == Schema::EXPERT);
+    CPPUNIT_ASSERT(m_schema.getRequiredAccessLevel("exampleKey4") == Schema::ADMIN);
+    
+    //default for readOnly element - OBSERVER
+    CPPUNIT_ASSERT(m_schema.getRequiredAccessLevel("exampleKey5") == Schema::OBSERVER);
+    
+    //default for reconfigurable element - USER
+    CPPUNIT_ASSERT(m_schema.getRequiredAccessLevel("sampleKey") == Schema::USER);
+    
+    Schema ose("OtherSchemaElements", Schema::AssemblyRules(READ | WRITE | INIT));
+    OtherSchemaElements::expectedParameters(ose);
+    cout << "/n schema ose:/n " << ose <<endl;
+    //check default requiredAccessLevel by elements : slot, path, vector, image
+    CPPUNIT_ASSERT(ose.getRequiredAccessLevel("slotTest") == Schema::USER); //SLOT
+    CPPUNIT_ASSERT(ose.getRequiredAccessLevel("filename") == Schema::USER); //reconfigurable PATH
+    CPPUNIT_ASSERT(ose.getRequiredAccessLevel("testfile") == Schema::OBSERVER); //readOnly PATH
+    CPPUNIT_ASSERT(ose.getRequiredAccessLevel("vecIntReconfig") == Schema::USER); //reconfigurable VECTOR_INT32
+    CPPUNIT_ASSERT(ose.getRequiredAccessLevel("vecInt") == Schema::OBSERVER); //readOnly VECTOR_INT32
+    CPPUNIT_ASSERT(ose.getRequiredAccessLevel("vecBool") == Schema::USER); //init VECTOR_BOOL
+    CPPUNIT_ASSERT(ose.getRequiredAccessLevel("image") == Schema::OBSERVER); //IMAGE
+
 }
+
 
 void Schema_Test::setUp() {
     try {
@@ -234,7 +264,7 @@ void Schema_Test::testGetDefaultValue() {
     CPPUNIT_ASSERT(defaultValueAsString5 == "1442244");
 
     CPPUNIT_ASSERT(m_schema.getDefaultValue<int>("sampleKey") == 10); // Was set from string, but maintains correct data typing
-    
+
     CPPUNIT_ASSERT(m_schema.getDefaultValueAs<string>("sampleKey") == "10");
     CPPUNIT_ASSERT(m_schema.getDefaultValueAs<int>("sampleKey") == 10);
 
@@ -330,6 +360,7 @@ void Schema_Test::testHasAlarmWarn() {
     CPPUNIT_ASSERT(m_schema.hasAlarmHigh("exampleKey5") == true);
 }
 
+
 void Schema_Test::testArchivePolicy() {
     Schema sch("OtherSchemaElements", Schema::AssemblyRules(READ | WRITE | INIT));
     OtherSchemaElements::expectedParameters(sch);
@@ -337,12 +368,13 @@ void Schema_Test::testArchivePolicy() {
     CPPUNIT_ASSERT(sch.hasArchivePolicy("testfile") == true);
     CPPUNIT_ASSERT(sch.hasArchivePolicy("vecInt") == true);
     CPPUNIT_ASSERT(sch.hasArchivePolicy("vecDouble") == true);
-    
+
     CPPUNIT_ASSERT(sch.getArchivePolicy("testfile") == Schema::EVERY_10MIN);
     CPPUNIT_ASSERT(sch.getArchivePolicy("vecInt") == Schema::EVERY_EVENT);
     CPPUNIT_ASSERT(sch.getArchivePolicy("vecDouble") == Schema::NO_ARCHIVING);
-   
+
 }
+
 
 void Schema_Test::testPerKeyFunctionality() {
 
@@ -436,6 +468,7 @@ void Schema_Test::testSlotElement() {
     CPPUNIT_ASSERT(sch.isProperty("slotTest") == false);
 }
 
+
 void Schema_Test::testVectorElements() {
     Schema sch("OtherSchemaElements", Schema::AssemblyRules(READ | WRITE | INIT));
     OtherSchemaElements::expectedParameters(sch);
@@ -473,23 +506,23 @@ void Schema_Test::testVectorElements() {
     CPPUNIT_ASSERT(sch.getDefaultValue<vector<int> >("vecIntReconfig") == vecDef);
 
     CPPUNIT_ASSERT(sch.hasDefaultValue("vecIntReconfigStr") == true);
-    
+
     vector<int> compare;
     compare.push_back(11);
     compare.push_back(22);
     compare.push_back(33);
-    
-    vector<int> defVecNew = sch.getDefaultValue<vector<int> >("vecIntReconfigStr");    
+
+    vector<int> defVecNew = sch.getDefaultValue<vector<int> >("vecIntReconfigStr");
     CPPUNIT_ASSERT(defVecNew == compare);
-  
+
     vector<double> comp;
     comp.push_back(1.1);
     comp.push_back(2.2);
     comp.push_back(3.3);
-    
+
     vector<double> defDVecNew = sch.getDefaultValue<vector<double> >("vecDoubleReconfigStr");
     CPPUNIT_ASSERT(defDVecNew == comp);
-    
+
     CPPUNIT_ASSERT(sch.isAccessInitOnly("vecBool") == true);
     CPPUNIT_ASSERT(sch.isAssignmentOptional("vecBool") == false);
     CPPUNIT_ASSERT(sch.isAssignmentMandatory("vecBool") == true);
@@ -532,9 +565,10 @@ void Schema_Test::testPathElement() {
     CPPUNIT_ASSERT(sch.getDefaultValue<string>("testfile") == "initFile");
     CPPUNIT_ASSERT(sch.hasAlarmHigh("testfile") == true);
     CPPUNIT_ASSERT(sch.getAlarmLow<string>("testfile") == "b");
-    
+
     CPPUNIT_ASSERT(sch.isProperty("testfile") == true);
 }
+
 
 void Schema_Test::testImageElement() {
     Schema sch("OtherSchemaElements", Schema::AssemblyRules(READ | WRITE | INIT));
