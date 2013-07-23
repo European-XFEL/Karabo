@@ -8,6 +8,7 @@ __author__="kerstin weger"
 
 # export PYTHONPATH= <pathToExfelSuite>/lib/debug
 
+import globals
 import sys
 
 from displaywidget import DisplayWidget
@@ -46,6 +47,7 @@ if __name__ == '__main__':
 #        "}")
     
     scanWidgetPlugins()
+    globals.init()
         
     window = MainWindow()
     sys.exit(app.exec_())
