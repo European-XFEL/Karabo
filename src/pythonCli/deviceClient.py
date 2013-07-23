@@ -230,6 +230,10 @@ class DeviceClient(object):
         return self.__client.getDevices(serverId)
 
 
+    def getClasses(self, serverId):
+        return self.__client.getClasses(serverId)
+
+
     def help(self, instanceId, parameter = None):
         """This function provides help on a full instance or a specific parameter of an instance"""
         if parameter is None:
@@ -334,9 +338,9 @@ class DeviceClient(object):
     def execute(self, instanceId, command, a1 = None):
         """Executes a command"""
         if a1 is None:
-            self.__client.execute(instanceId, command)
+            return self.__client.execute(instanceId, command)
         else:
-            self.__client.execute(instanceId, command, a1)
+            return self.__client.execute(instanceId, command, a1)
         
         
     def executeNoWait(self, deviceId, command):
