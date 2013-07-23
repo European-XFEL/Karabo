@@ -50,18 +50,20 @@ class DisplayImage(DisplayWidget):
         
         self.__value = None
         
-        if useGuiQwt:
-            # Use guiqwt ImageDialog
-            self.__image = ImageDialog(edit=False, toolbar=True, wintitle="")
-                                       #options=dict(show_contrast=True))
-                                       #options=dict(xlabel='Concentration', xunit='ppm'))
-        else:
-            self.__image = QLabel()
-
         self.__key = params.get(QString('key'))
         if self.__key is None:
             self.__key = params.get('key')
+            
+        if useGuiQwt:
+            
+            self.__dialog = ImageDialog(edit=False, toolbar=False, wintitle=self.__key)
+            self.__image = None
+            
+                                       
+        else:
+            self.__image = QLabel()
 
+        
         # Set value
         value = params.get(QString('value'))
         if value is None:
@@ -78,7 +80,7 @@ class DisplayImage(DisplayWidget):
 
     # Returns the actual widget which is part of the composition
     def _getWidget(self):
-        return self.__image
+        return self.__dialog
     widget = property(fget=_getWidget)
 
 
@@ -133,12 +135,17 @@ class DisplayImage(DisplayWidget):
                 data = image.bits().asstring(image.numBytes())
                 npy = np.frombuffer(data, np.uint8)
                 npy.shape = image.height(), image.bytesPerLine()/4, 4
-                imgItem = make.image(npy)
-                plot = self.__image.get_plot()
-                plot.add_item(imgItem)
+                if self.__image is None:
+                    self.__image = make.image(npy)
+                    self.__dialog.get_plot().add_item(self.__image)                    
+                else:                    
+                    self.__image.set_data(npy)
+                    self.__image.plot().replot()
+                
             else:
                 pixmap = QPixmap.fromImage(image)
                 self.__image.setPixmap(pixmap)
+                
 
 
     class Maker:
