@@ -11,7 +11,7 @@
 
 __all__ = ["Network"]
 
-import socket
+
 from karabo.karathon import *
 from logindialog import LoginDialog
 from manager import Manager
@@ -21,12 +21,14 @@ from PyQt4.QtNetwork import *
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 
+import socket
 
 BYTES_TOTAL_SIZE_TAG = 4
 BYTES_HEADER_SIZE_TAG = 4
 BYTES_MESSAGE_SIZE_TAG = 4
 
 auth = Authenticator("", "", "", "", "", "", "")
+
 
 class Network(QObject):
            
@@ -36,32 +38,39 @@ class Network(QObject):
         self.__textSerializer = TextSerializerHash.create("Xml")
         self.__binarySerializer = BinarySerializerHash.create("Bin")
         
+        self.__username = str()
+        self.__password = str()
+        self.__provider = str()
+        self.__sessionToken = str()
+        
         self.__tcpSocket = QTcpSocket(self)
         self.__tcpSocket.connected.connect(self.onConnected)
         self.__tcpSocket.disconnected.connect(self.onDisconnected)
         self.__tcpSocket.readyRead.connect(self.onReadServerData)
         self.__tcpSocket.error.connect(self.onDisplayServerError)
         
-        Manager().notifier.signalKillDeviceInstance.connect(self.onKillDeviceInstance)
-        Manager().notifier.signalKillDeviceServerInstance.connect(self.onKillDeviceServerInstance)
+        Manager().notifier.signalKillDevice.connect(self.onKillDevice)
+        Manager().notifier.signalKillServer.connect(self.onKillServer)
         Manager().notifier.signalRefreshInstance.connect(self.onRefreshInstance)
         Manager().notifier.signalReconfigure.connect(self.onReconfigure)
         Manager().notifier.signalReconfigureAsHash.connect(self.onReconfigureAsHash)
         Manager().notifier.signalInitDevice.connect(self.onInitDevice)
-        Manager().notifier.signalExecute.connect(self.onSlotCommand)
+        Manager().notifier.signalExecute.connect(self.onExecute)
         
-        Manager().notifier.signalNewVisibleDeviceInstance.connect(self.onNewVisibleDeviceInstance)
-        Manager().notifier.signalRemoveVisibleDeviceInstance.connect(self.onRemoveVisibleDeviceInstance)
+        Manager().notifier.signalNewVisibleDevice.connect(self.onNewVisibleDevice)
+        Manager().notifier.signalRemoveVisibleDevice.connect(self.onRemoveVisibleDevice)
         
         Manager().notifier.signalCreateNewDeviceClassPlugin.connect(self.onCreateNewDeviceClassPlugin)
+        
+        Manager().notifier.signalGetClassSchema.connect(self.onGetClassSchema)
+        Manager().notifier.signalGetDeviceSchema.connect(self.onGetDeviceSchema)
         
         self.__headerSize = 0
         self.__bodySize = 0
         self.__headerBytes = bytearray()
         self.__bodyBytes = bytearray()
-    
-    
-    
+
+
     def login(self, username, password, provider, brokerHostname, brokerPortNumber, brokerTopic):
         global auth
         
@@ -82,36 +91,40 @@ class Network(QObject):
             print "Login exception. Please verify if Service is running!!!" + str(e)
             
     
-    def logout(self):
+    def _logout(self):
         # Execute Logout
         try:
             return auth.logout()
         except Exception, e:
             print "Logout exception. Please verify if Service is running!!!" + str(e)
-    
-    
+
+
+### Slots ###
     def onStartConnection(self):
-        
         # TODO: Populate this values automatically
         brokerHostname = "127.0.0.1";
         brokerPortNumber = "4444";
-        brokerTopic = "Topic_01"; 
+        brokerTopic = "Topic_01";
         
         dialog = LoginDialog()
         if dialog.exec_() == QDialog.Accepted :
-            if self.login(str(dialog.username), str(dialog.password), str(dialog.provider), brokerHostname, brokerPortNumber, brokerTopic):
-                print "LMAIA: Login successfull!!!"
+            #if self.login(str(dialog.username), str(dialog.password), str(dialog.provider), brokerHostname, brokerPortNumber, brokerTopic):
                 # test request to server
                 self.__bodySize = 0
                 self.__tcpSocket.abort()
                 self.__tcpSocket.connectToHost(dialog.hostname, dialog.port)
-                self._sendLoginInformation(dialog.username, dialog.password, dialog.provider, str(AUTH.getSessionToken()))
-            else:
-                print "LMAIA: Login error!!!"
-            
+                
+                self.__username = dialog.username
+                self.__password = dialog.password
+                self.__provider = dialog.provider
+                self.__sessionToken = str(auth.getSessionToken())
+                #self._sendLoginInformation(dialog.username, dialog.password, dialog.provider, str(auth.getSessionToken()))
+            #else:
+            #    print "LMAIA: Login error!!!"
+        
     
     def onEndConnection(self):
-        if self.logout():
+        if self._logout():
             print "LMAIA: Logout successfull!!!"
             Manager().closeDatabaseConnection()
             self.__tcpSocket.disconnectFromHost()
@@ -122,143 +135,12 @@ class Network(QObject):
         else:
             print "LMAIA: Logout error!!!"
 
-
-### Slots ###
-    def onKillDeviceInstance(self, devSrvInsId, devInsId):
-        header = Hash()
-        header.set("type", "killDeviceInstance")
-        header.set("devSrvInsId", str(devSrvInsId))
-        header.set("devInsId", str(devInsId));
-        self._tcpWriteHashHash(header, Hash())
-
-
-    def onKillDeviceServerInstance(self, devSrvInsId):
-        header = Hash()
-        header.set("type", "killDeviceServerInstance")
-        header.set("instanceId", str(devSrvInsId))
-        self._tcpWriteHashHash(header, Hash())
-
-
-    def onRefreshInstance(self, instanceId):
-        header = Hash()
-        header.set("type", "refreshInstance")
-        header.set("instanceId", str(instanceId))
-        self._tcpWriteHashHash(header, Hash())
-        
-        
-    def onReconfigure(self, instanceId, attributeId, attributeValue):
-        header = Hash()
-        header.set("type", "reconfigure")
-        header.set("instanceId", str(instanceId))
-        body = Hash()
-        body.set(str(attributeId), attributeValue)
-        self._tcpWriteHashHash(header, body)
-
-
-    def onReconfigureAsHash(self, instanceId, body):
-        header = Hash()
-        header.set("type", "reconfigure")
-        header.set("instanceId", str(instanceId))
-        self._tcpWriteHashHash(header, body)
-
-
-    def _sendLoginInformation(self, username, password, provider, sessionToken): #, password):
-        header = Hash("type", "login")
-        body = Hash()
-        body.set("username", str(username))
-        body.set("password", str(password))
-        body.set("provider", str(provider))
-        body.set("sessionToken", str(sessionToken))
-        
-        self._tcpWriteHashHash(header, body)
-        
-        
-    def onInitDevice(self, instanceId, config):
-        header = Hash()
-        header.set("type", "initDevice")
-        header.set("instanceId", str(instanceId))
-        self._tcpWriteHashHash(header, config)
-
-
-    def onCreateNewDeviceClassPlugin(self, devSrvInsId, classId, newClassId):
-        header = Hash("type", "createNewDeviceClassPlugin")
-        body = Hash()
-        body.set("devSrvInsId", str(devSrvInsId))
-        body.set("classId", str(classId))
-        body.set("newClassId", str(newClassId))
-        self._tcpWriteHashHash(header, body)
-
-
-    def onSlotCommand(self, instanceId, info):
-        header = Hash()
-        header.set("type", "slotCommand")
-        header.set("instanceId", str(instanceId))
-        
-        body = Hash()
-        name = info.get(QString('name'))
-        if name is None:
-            name = info.get('name')
-        body.set("name", str(name))
-        
-        args = info.get(QString('args'))
-        if name is None:
-            args = info.get('args')
-        if args:
-            i = 0
-            for arg in args:
-                i = i+1
-                argName = str("a%s" % i)
-                body.set(argName, str(arg))
-        self._tcpWriteHashHash(header, body)
-
-
-    def onNewVisibleDeviceInstance(self, instanceId):
-        header = Hash()
-        header.set("type", "newVisibleDeviceInstance")
-        header.set("instanceId", str(instanceId))
-        self._tcpWriteHashHash(header, Hash())
-
-
-    def onRemoveVisibleDeviceInstance(self, instanceId):
-        header = Hash()
-        header.set("type", "removeVisibleDeviceInstance")
-        header.set("instanceId", str(instanceId))
-        self._tcpWriteHashHash(header, Hash())
-
-
-    def _tcpWriteHashHash(self, headerHash, bodyHash):
-        stream = QByteArray()
-        headerString = QByteArray(self.__textSerializer.save(headerHash))
-        bodyString = QByteArray(self.__textSerializer.save(bodyHash))
-        nBytesHeader = headerString.size()
-        nBytesBody = bodyString.size()
-                
-        stream.push_back(QByteArray(pack('I', nBytesHeader)))
-        stream.push_back(headerString)
-        stream.push_back(QByteArray(pack('I', nBytesBody)))
-        stream.push_back(bodyString)
-        self.__tcpSocket.write(stream)
-        
-        
-    def _tcpWriteHashString(self, headerHash, body):
-        stream = QByteArray()
-        headerString = QByteArray(self.__textSerializer.save(headerHash))
-        bodyString = QByteArray(str(body))
-        nBytesHeader = headerString.size()
-        nBytesBody = bodyString.size()
-                
-        stream.push_back(QByteArray(pack('I', nBytesHeader)))
-        stream.push_back(headerString)
-        stream.push_back(QByteArray(pack('I', nBytesBody)))
-        stream.push_back(bodyString)
-        self.__tcpSocket.write(stream)
-        
                 
     def onReadServerData(self):
         input = QDataStream(self.__tcpSocket)
         input.setByteOrder(QDataStream.LittleEndian)
 
-        print self.__tcpSocket.bytesAvailable(), " bytes are coming in"
+        #print self.__tcpSocket.bytesAvailable(), " bytes are coming in"
         while True:
 
             if self.__headerSize == 0:
@@ -297,67 +179,52 @@ class Network(QObject):
             #bodyHash = self.__textSerializer.load(self.__bodyBytes)
             
             type = headerHash.get("type")
-            print "Request: ", type
+            #print "Request: ", type
             
             # "instanceNew" (instanceId, instanceInfo)
             # "instanceUpdated" (instanceId, instanceInfo)
             # "instanceGone" (instanceId)
-            # "configurationChange" (config, instanceId)
+            # "configurationChanged" (config, instanceId)
             # "log" (logMessage)
-            # "notify" (instanceId, type, text)
+            # "notification" (type, shortMsg, detailedMsg, instanceId)
             # "invalidateCache" (instanceId)
             
-            if type == "instanceNew":
-                print "instanceNew"
+            if type == "systemTopology":
+                bodyHash = self.__textSerializer.load(self.__bodyBytes)
+                Manager().handleSystemTopology(bodyHash)
+            elif type == "instanceNew":
+                bodyHash = self.__textSerializer.load(self.__bodyBytes)
+                Manager().handleSystemTopology(bodyHash)
+                
+                deviceKey = "device"
+                if bodyHash.has(deviceKey):
+                    deviceConfig = bodyHash.get(deviceKey)
+                    deviceIds = list()
+                    deviceConfig.getKeys(deviceIds)
+                    for deviceId in deviceIds:
+                        Manager().onSelectNewDevice(deviceKey + "." + deviceId)
             elif type == "instanceUpdated":
-                print "instanceUpdated"
+                bodyHash = self.__textSerializer.load(self.__bodyBytes)
+                Manager().handleSystemTopology(bodyHash)
             elif type == "instanceGone":
-                print "instanceGone"
+                Manager().handleInstanceGone(str(self.__bodyBytes))
+            elif type == "classDescription":
+                bodyHash = self.__textSerializer.load(self.__bodyBytes)
+                Manager().handleClassSchema(bodyHash)
+            elif type == "deviceSchema":
+                bodyHash = self.__textSerializer.load(self.__bodyBytes)
+                self._handleDeviceSchema(headerHash, bodyHash)
             elif type == "configurationChanged":
-                print "configurationChanged"
+                bodyHash = self.__textSerializer.load(self.__bodyBytes)
+                self._handleConfigurationChanged(headerHash, bodyHash)
             elif type == "log":
-                print "log"
-            elif type == "notify":
-                print "notify"
+                self._handleLog(str(self.__bodyBytes))
+            elif type == "notification":
+                print "notification"
             elif type == "invalidateCache":
                 print "invalidateCache"
-            
-            if type == "change": 
-                bodyHash = self.__textSerializer.load(self.__bodyBytes)
-                self._handleChange(headerHash, bodyHash)
-            elif type == "log": 
-                self._handleLog(str(self.__bodyBytes))
-            elif type == "error":
-                self._handleError(str(self.__bodyBytes))
-            elif type == "warning":
-                self._handleWarning(str(self.__bodyBytes))
-            elif type == "alarm":
-                self._handleAlarm(str(self.__bodyBytes))
-            elif type == "currentInstances":
-                bodyHash = self.__textSerializer.load(self.__bodyBytes)
-                self._handleInstanceIds(bodyHash)
-                #self._tcpWrite(headerHash, bodyHash)
-            elif type == "newNode":
-                bodyHash = self.__textSerializer.load(self.__bodyBytes)
-                self._handleNewNode(bodyHash)
-            elif type == "newDeviceServerInstance":
-                bodyHash = self.__textSerializer.load(self.__bodyBytes)
-                self._handleNewDeviceServerInstance(bodyHash)
-            elif type == "newDeviceClass":
-                bodyHash = self.__textSerializer.load(self.__bodyBytes)
-                self._handleNewDeviceClass(bodyHash)
-            elif type == "newDeviceInstance":
-                bodyHash = self.__textSerializer.load(self.__bodyBytes)
-                self._handleNewDeviceInstanceOnRunning(bodyHash)
-            elif type == "updateDeviceServerInstance":
-                bodyHash = self.__textSerializer.load(self.__bodyBytes)
-                self._handleUpdateDeviceServerInstance(bodyHash)
-            elif type == "updateDeviceInstance":
-                bodyHash = self.__textSerializer.load(self.__bodyBytes)
-                self._handleUpdateDeviceInstance(bodyHash)
-            elif type == "schemaUpdated":
-                self._handleSchemaUpdated(headerHash, str(self.__bodyBytes))
-        
+            else:
+                print "WARN : Got unknown communication token \"", type, "\" from server"
             # Invalidate variables            
             self.__bodySize = self.__headerSize = 0
             self.__headerBytes = self.__bodyBytes = bytearray()
@@ -369,7 +236,7 @@ class Network(QObject):
 
     def onConnected(self):
         print "Connected to server"
-        pass
+        self._sendLoginInformation(self.__username, self.__password, self.__provider, self.__sessionToken)
         
         
     def onDisconnected(self):
@@ -377,126 +244,158 @@ class Network(QObject):
         pass
 
 
-    def _sendRefreshRequest(self, instanceId):
+    def onKillDevice(self, deviceId):
+        header = Hash()
+        header.set("type", "killDevice")
+        header.set("deviceId", str(deviceId));
+        self._tcpWriteHashHash(header, Hash())
+
+
+    def onKillServer(self, serverId):
+        header = Hash()
+        header.set("type", "killServer")
+        header.set("serverId", str(serverId))
+        self._tcpWriteHashHash(header, Hash())
+
+
+    def onRefreshInstance(self, instanceId):
         header = Hash()
         header.set("type", "refreshInstance")
         header.set("instanceId", str(instanceId))
-        self._tcpWriteHashString(header, Hash())
+        self._tcpWriteHashHash(header, Hash())
+        
+        
+    def onReconfigure(self, deviceId, parameterId, value):
+        header = Hash()
+        header.set("type", "reconfigure")
+        header.set("deviceId", str(deviceId))
+        body = Hash()
+        body.set(str(parameterId), value)
+        self._tcpWriteHashHash(header, body)
 
 
-    def _handleChange(self, headerHash, bodyHash):
-        instanceId = headerHash.get("instanceId")
-        #classId = headerHash.get("classId")
-        Manager().onConfigChanged(instanceId, bodyHash)
+    def onReconfigureAsHash(self, deviceId, body):
+        header = Hash()
+        header.set("type", "reconfigure")
+        header.set("deviceId", str(deviceId))
+        self._tcpWriteHashHash(header, body)
+
+
+    def onInitDevice(self, serverId, config):
+        header = Hash()
+        header.set("type", "initDevice")
+        header.set("serverId", str(serverId))
+        self._tcpWriteHashHash(header, config)
+
+
+    def onCreateNewDeviceClassPlugin(self, devSrvInsId, classId, newClassId):
+        header = Hash("type", "createNewDeviceClassPlugin")
+        body = Hash()
+        body.set("devSrvInsId", str(devSrvInsId))
+        body.set("classId", str(classId))
+        body.set("newClassId", str(newClassId))
+        self._tcpWriteHashHash(header, body)
+
+
+    def onExecute(self, deviceId, info):
+        header = Hash()
+        header.set("type", "execute")
+        header.set("deviceId", str(deviceId))
+        
+        command = info.get(QString('command'))
+        if command is None:
+            command = info.get('command')
+        body = Hash("command", str(command))
+        
+        args = info.get(QString('args'))
+        if args is None:
+            args = info.get('args')
+        if args:
+            i = 0
+            for arg in args:
+                i = i+1
+                argName = str("a%s" % i)
+                body.set(argName, str(arg))
+        self._tcpWriteHashHash(header, body)
+
+
+    def onNewVisibleDevice(self, deviceId):
+        header = Hash()
+        header.set("type", "newVisibleDevice")
+        header.set("deviceId", str(deviceId))
+        self._tcpWriteHashHash(header, Hash())
+
+
+    def onRemoveVisibleDevice(self, deviceId):
+        header = Hash()
+        header.set("type", "removeVisibleDevice")
+        header.set("deviceId", str(deviceId))
+        self._tcpWriteHashHash(header, Hash())
+
+
+    def onGetClassSchema(self, serverId, classId):
+        header = Hash("type", "getClassSchema")
+        header.set("serverId", str(serverId))
+        header.set("classId", str(classId))
+        self._tcpWriteHashHash(header, Hash())
+
+
+    def onGetDeviceSchema(self, deviceId):
+        header = Hash("type", "getDeviceSchema")
+        header.set("deviceId", str(deviceId))
+        self._tcpWriteHashHash(header, Hash())
+
+
+### private functions ###
+    def _sendLoginInformation(self, username, password, provider, sessionToken):
+        header = Hash("type", "login")
+        body = Hash()
+        body.set("username", str(username))
+        body.set("password", str(password))
+        body.set("provider", str(provider))
+        body.set("sessionToken", str(sessionToken))
+        
+        self._tcpWriteHashHash(header, body)
+
+
+    def _tcpWriteHashHash(self, headerHash, bodyHash):
+        stream = QByteArray()
+        headerString = QByteArray(self.__textSerializer.save(headerHash))
+        bodyString = QByteArray(self.__textSerializer.save(bodyHash))
+        nBytesHeader = headerString.size()
+        nBytesBody = bodyString.size()
+                
+        stream.push_back(QByteArray(pack('I', nBytesHeader)))
+        stream.push_back(headerString)
+        stream.push_back(QByteArray(pack('I', nBytesBody)))
+        stream.push_back(bodyString)
+        self.__tcpSocket.write(stream)
+        
+        
+    def _tcpWriteHashString(self, headerHash, body):
+        stream = QByteArray()
+        headerString = QByteArray(self.__textSerializer.save(headerHash))
+        bodyString = QByteArray(str(body))
+        nBytesHeader = headerString.size()
+        nBytesBody = bodyString.size()
+                
+        stream.push_back(QByteArray(pack('I', nBytesHeader)))
+        stream.push_back(headerString)
+        stream.push_back(QByteArray(pack('I', nBytesBody)))
+        stream.push_back(bodyString)
+        self.__tcpSocket.write(stream)
 
 
     def _handleLog(self, logMessage):
         Manager().onLogDataAvailable(logMessage)
 
 
-    def _handleError(self, errorMessage):
-        Manager().onErrorDataAvailable(errorMessage)
+    def _handleDeviceSchema(self, headerHash, bodyHash):
+        deviceId = headerHash.get("deviceId")
+        Manager().handleDeviceSchema(deviceId, bodyHash)
 
 
-    def _handleWarning(self, warningMessage):
-        Manager().onWarningDataAvailable(warningMessage)
-        
-        
-    def _handleAlarm(self, alarmMessage):
-        Manager().onAlarmDataAvailable(alarmMessage)
-
-
-    def _handleInstanceIds(self, body):
-        root = body.get("Root")
-        node = root.get("Node") # This reflects the "Node" DB-Table
-        # Inform about new nodes
-        for row in node: # Loop over all rows in the table
-            self._handleNewNode(row)
-
-        # Inform about new deviceServerInstances
-        deviceServerInstance = root.get("DeviceServerInstance")
-        for row in deviceServerInstance:
-            self._handleNewDeviceServerInstance(row)
-                    
-        # Inform about new deviceClasses
-        deviceClass = root.get("DeviceClass")
-        for row in deviceClass:
-            self._handleNewDeviceClass(row)
-        
-        # Inform about new deviceInstances
-        deviceInstance = root.get("DeviceInstance")
-        for row in deviceInstance:
-            self._handleNewDeviceInstanceOnStartUp(row)
-            
-    
-    def _handleNewNode(self, row):
-        info = self._collectNodeInformation(row)
-        Manager().onNewNode(info)
-        
-                    
-    def _handleNewDeviceServerInstance(self, row):
-         info = self._collectDeviceServerInstanceInformation(row)
-         Manager().onNewDeviceServerInstance(info)
-                 
-        
-    def _handleNewDeviceClass(self, row):
-        info = self._collectDeviceClassInformation(row)
-        Manager().onNewDeviceClass(info)
-                        
-        
-    def _handleNewDeviceInstanceOnStartUp(self, row):
-        info = self._collectDeviceInstanceInformation(row)
-        Manager().onNewDeviceInstance(info)
-
-
-    def _handleNewDeviceInstanceOnRunning(self, row):
-        info = self._collectDeviceInstanceInformation(row)
-        Manager().onNewDeviceInstance(info)
-        Manager().onSelectNewDevice(info)
-
-
-    def _handleUpdateDeviceServerInstance(self, row):
-        info = self._collectDeviceServerInstanceInformation(row)
-        Manager().onUpdateDeviceServerInstance(info)
-
-
-    def _handleUpdateDeviceInstance(self, row):
-        info = self._collectDeviceInstanceInformation(row)
-        Manager().onUpdateDeviceInstance(info)
-
-
-    def _handleSchemaUpdated(self, headerHash, schema):
-        instanceId = headerHash.get("instanceId")
-        #classId = headerHash.get("classId")
-        Manager().onSchemaUpdated(instanceId, schema)
-
-
-    def _collectNodeInformation(self, row):
-        id = row.get("id")
-        name = row.get("name")
-        return dict(id=id, name=name)
-    
-    
-    def _collectDeviceServerInstanceInformation(self, row):
-        id = row.get("id")
-        name = row.get("instanceId")
-        status = row.get("status")
-        nodId = row.get("nodId")
-        return dict(id=id, name=name, status=status, refId=nodId)
-    
-        
-    def _collectDeviceClassInformation(self, row):
-        id = row.get("id")
-        name = row.get("name")
-        schema = row.get("schema")
-        serverId = row.get("devSerInsId") #row.get("serverId")
-        return dict(id=id, name=name, schema=schema, refId=serverId)
-    
-    
-    def _collectDeviceInstanceInformation(self, row):
-        id = row.get("id")
-        name = row.get("instanceId")
-        classId = row.get("devClaId") #row.get("classId")
-        schema = row.get("schema")
-        return dict(id=id, name=name, refId=classId, schema=schema)
+    def _handleConfigurationChanged(self, headerHash, bodyHash):
+        deviceId = headerHash.get("deviceId")
+        Manager().handleConfigurationChanged(deviceId, bodyHash)
 

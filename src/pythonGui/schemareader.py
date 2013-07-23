@@ -339,13 +339,11 @@ class SchemaReader(object):
 
 
     def _setAlias(self, key, parentItem):
-        pass
-        # TODO: not binded yet..
-        #if not self.__schema.hasAlias(key):
-        #    return
+        if not self.__schema.keyHasAlias(key):
+            return
         
-        #alias = self.__schema.getAliasFromKey(key)
-        #parentItem.alias = alias
+        alias = self.__schema.getAliasFromKey(key)
+        parentItem.alias = alias
 
 
     def _setTags(self, key, parentItem):
