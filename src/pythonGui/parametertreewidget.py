@@ -15,6 +15,7 @@ __all__ = ["ParameterTreeWidget"]
 import treewidgetitems.attributetreewidgetitem
 from editableapplylatercomponent import EditableApplyLaterComponent
 from enums import *
+import globals
 from karabo.karathon import *
 from manager import Manager
 
@@ -242,7 +243,7 @@ class ParameterTreeWidget(QTreeWidget):
 
     def _r_setItemVisibility(self, item, show):
         if show == False:
-            if item.requiredAccessLevel > 2:
+            if item.requiredAccessLevel > globals.GLOBAL_ACCESS_LEVEL:
                 item.setHidden(True)
             else:
                 item.setHidden(False)
