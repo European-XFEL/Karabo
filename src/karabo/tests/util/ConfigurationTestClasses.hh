@@ -307,6 +307,7 @@ namespace configurationTest {
                     .description("Example key 1 description")
                     .options("Radio,Air Condition,Navigation", ",")
                     .assignmentOptional().defaultValue("Navigation")
+                    .userAccess()
                     .reconfigurable()
                     .commit();
 
@@ -320,6 +321,7 @@ namespace configurationTest {
                     .unit(Unit::METER)
                     .metricPrefix(MetricPrefix::MILLI)
                     .assignmentOptional().defaultValue(10)
+                    .operatorAccess()
                     .init()
                     .commit();
 
@@ -331,6 +333,7 @@ namespace configurationTest {
                     .minExc(10)
                     .maxExc(20)
                     .assignmentMandatory()
+                    .expertAccess()
                     .reconfigurable()
                     .commit();
 
@@ -340,6 +343,7 @@ namespace configurationTest {
                     .description("Example key 4 description")
                     .allowedRoles("Admin, User, OtherRole")
                     .options("1.11     -2.22 5.55")
+                    .adminAccess()
                     .assignmentInternal().noDefaultValue()
                     .commit();
 
