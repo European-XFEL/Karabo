@@ -8,7 +8,7 @@
             <xs:documentation>
               <a:description>Example key 1 description</a:description>
               <a:displayedName>Example key 1</a:displayedName>
-              <a:expertLevel>2</a:expertLevel>
+              <a:requiredAccessLevel>3</a:requiredAccessLevel>
               <a:default>Navigation</a:default>
               <a:accessType>1</a:accessType>
               <a:tags>hardware,poll</a:tags>
@@ -27,6 +27,7 @@
             <xs:documentation>
               <a:description>Description of my node elem</a:description>
               <a:displayedName>MyNodeElem</a:displayedName>
+              <a:requiredAccessLevel>0</a:requiredAccessLevel>
               <a:accessType>7</a:accessType>
               <a:tags>myNode</a:tags>
             </xs:documentation>
@@ -38,6 +39,7 @@
                   <xs:documentation>
                     <a:description>Description of my node elem A</a:description>
                     <a:displayedName>MyNodeElem_A</a:displayedName>
+                    <a:requiredAccessLevel>1</a:requiredAccessLevel>
                     <a:accessType>1</a:accessType>
                     <a:tags>myNode</a:tags>
                   </xs:documentation>
@@ -48,6 +50,7 @@
                   <xs:documentation>
                     <a:description>Description of my node elem B</a:description>
                     <a:displayedName>MyNodeElem_B</a:displayedName>
+                    <a:requiredAccessLevel>1</a:requiredAccessLevel>
                     <a:accessType>1</a:accessType>
                     <a:tags>myNode</a:tags>
                   </xs:documentation>
@@ -62,6 +65,7 @@
               <a:description>Example key 5 description</a:description>
               <a:displayedName>Example key 5</a:displayedName>
               <a:alias>exampleAlias5</a:alias>
+              <a:requiredAccessLevel>0</a:requiredAccessLevel>
               <a:default>1442244</a:default>
               <a:accessType>2</a:accessType>
               <a:tags>h/w,d.m.y</a:tags>
@@ -73,6 +77,7 @@
             <xs:documentation>
               <a:description>Description of Choice-element shapes</a:description>
               <a:displayedName>shapesAsChoice</a:displayedName>
+              <a:requiredAccessLevel>0</a:requiredAccessLevel>
               <a:default>circle</a:default>
               <a:accessType>7</a:accessType>
             </xs:documentation>
@@ -84,6 +89,7 @@
                   <xs:documentation>
                     <a:description>Description of circle</a:description>
                     <a:displayedName>Circle</a:displayedName>
+                    <a:requiredAccessLevel>0</a:requiredAccessLevel>
                     <a:accessType>7</a:accessType>
                     <a:tags>shape</a:tags>
                   </xs:documentation>
@@ -95,6 +101,7 @@
                         <xs:documentation>
                           <a:description>Radius of circle</a:description>
                           <a:displayedName>radius</a:displayedName>
+                          <a:requiredAccessLevel>1</a:requiredAccessLevel>
                           <a:default>5</a:default>
                           <a:accessType>1</a:accessType>
                           <a:tags>shape</a:tags>
@@ -112,6 +119,7 @@
                         <xs:documentation>
                           <a:description>Color of circle</a:description>
                           <a:displayedName>color</a:displayedName>
+                          <a:requiredAccessLevel>1</a:requiredAccessLevel>
                           <a:default>5</a:default>
                           <a:accessType>1</a:accessType>
                           <a:tags>shape</a:tags>
@@ -129,6 +137,7 @@
                         <xs:documentation>
                           <a:description>Description of NEW NODE of circle</a:description>
                           <a:displayedName>NewNodeOfCircle</a:displayedName>
+                          <a:requiredAccessLevel>0</a:requiredAccessLevel>
                           <a:accessType>7</a:accessType>
                           <a:tags>shape</a:tags>
                         </xs:documentation>
@@ -140,6 +149,7 @@
                               <xs:documentation>
                                 <a:description>Descr of shapes circle newnode MyNewInt</a:description>
                                 <a:displayedName>MyNewInt</a:displayedName>
+                                <a:requiredAccessLevel>1</a:requiredAccessLevel>
                                 <a:default>555</a:default>
                                 <a:accessType>1</a:accessType>
                                 <a:tags>shape</a:tags>
@@ -157,6 +167,7 @@
                   <xs:documentation>
                     <a:description>Description of rectangle</a:description>
                     <a:displayedName>rectangle</a:displayedName>
+                    <a:requiredAccessLevel>0</a:requiredAccessLevel>
                     <a:accessType>7</a:accessType>
                     <a:tags>shape</a:tags>
                   </xs:documentation>
@@ -168,6 +179,7 @@
                         <xs:documentation>
                           <a:description>Description of square of rectangle</a:description>
                           <a:displayedName>square</a:displayedName>
+                          <a:requiredAccessLevel>1</a:requiredAccessLevel>
                           <a:accessType>1</a:accessType>
                           <a:tags>shape</a:tags>
                         </xs:documentation>
@@ -183,6 +195,7 @@
           <xs:annotation>
             <xs:documentation>
               <a:displayedName>myVectorString</a:displayedName>
+              <a:requiredAccessLevel>1</a:requiredAccessLevel>
               <a:default>first line,second line</a:default>
               <a:accessType>4</a:accessType>
               <a:displayType>VECTOR_STRING</a:displayType>
@@ -193,6 +206,7 @@
           <xs:annotation>
             <xs:documentation>
               <a:displayedName>MyVectorInt</a:displayedName>
+              <a:requiredAccessLevel>1</a:requiredAccessLevel>
               <a:default>5,15</a:default>
               <a:accessType>4</a:accessType>
               <a:displayType>VECTOR_INT32</a:displayType>
@@ -206,6 +220,7 @@
             <xs:documentation>
               <a:description>Description of SimpleElem</a:description>
               <a:displayedName>SimpleElem</a:displayedName>
+              <a:requiredAccessLevel>0</a:requiredAccessLevel>
               <a:default>0</a:default>
               <a:accessType>2</a:accessType>
               <a:unitName>meter</a:unitName>
