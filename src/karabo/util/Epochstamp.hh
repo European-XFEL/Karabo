@@ -214,7 +214,7 @@ namespace karabo {
 
         inline Epochstamp& Epochstamp::operator +=(const TimeDuration& period) {
             this->m_seconds += period.getTotalSeconds();
-            if ((this->m_fractionalSeconds += period.getFractions()) > ONESECOND) {
+            if ((this->m_fractionalSeconds += period.getFractions(ATTOSEC)) > ONESECOND) {
                 this->m_fractionalSeconds -= ONESECOND;
                 ++this->m_seconds;
             };
@@ -224,7 +224,7 @@ namespace karabo {
         inline Epochstamp& Epochstamp::operator -=(const TimeDuration& period) {
             this->m_seconds -= period.getTotalSeconds();
             if (this->m_fractionalSeconds < period.getFractions()) {
-                this->m_fractionalSeconds = (ONESECOND - period.getFractions()) + m_fractionalSeconds;
+                this->m_fractionalSeconds = (ONESECOND - period.getFractions(ATTOSEC)) + m_fractionalSeconds;
                 --this->m_seconds;
             };
             return *this;
