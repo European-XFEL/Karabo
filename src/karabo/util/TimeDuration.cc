@@ -10,7 +10,7 @@
 namespace karabo {
     namespace util {
 
-        std::string TimeDuration::DEFAULT_FORMAT("%s.%U");
+        std::string TimeDuration::DEFAULT_FORMAT("%s.%N");
 
 
         TimeDuration::TimeDuration() :
@@ -172,8 +172,8 @@ namespace karabo {
 
 
         void TimeDuration::toHash(karabo::util::Hash& hash) {
-            hash.set("seconds", static_cast<unsigned long long> (getSeconds()));
-            hash.set("fractions", static_cast<unsigned long long> (getFractions()));
+            hash.set<unsigned long long>("seconds", getSeconds());
+            hash.set<unsigned long long>("fractions", getFractions(ATTOSEC));
         }
     }
 }

@@ -95,7 +95,7 @@ namespace karabo {
             mach_port_deallocate(mach_task_self(), cclock);
 
             m_seconds = mts.tv_sec;
-            m_fractionalSeconds = mts.tv_nsec *1000000000ull;
+            m_fractionalSeconds = mts.tv_nsec * 1000000000ull;
         }
 
         #else
@@ -119,7 +119,7 @@ namespace karabo {
 
         std::string Epochstamp::toIso8601(TIME_UNITS precision, bool extended) const {
             static boost::posix_time::ptime epoch(boost::gregorian::date(1970, 1, 1));
-                using namespace boost::posix_time;
+            using namespace boost::posix_time;
             if (0) {
 
                 // The boost minimum unit is nanosecond:
@@ -139,8 +139,8 @@ namespace karabo {
                 boost::posix_time::ptime time_point = epoch + seconds(m_seconds);
 
                 ostringstream oss;
-                oss << (extended ? to_iso_extended_string(time_point) : to_iso_string(time_point)) 
-                        << '.' << setw(18-std::log10((long double)precision)) << setfill('0') << m_fractionalSeconds / precision;
+                oss << (extended ? to_iso_extended_string(time_point) : to_iso_string(time_point))
+                        << '.' << setw(18 - std::log10((long double) precision)) << setfill('0') << m_fractionalSeconds / precision;
                 return oss.str();
             }
         }

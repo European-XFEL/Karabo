@@ -49,11 +49,14 @@ namespace karabo {
             while (!m_stack.empty()) {
                 Hash* current = m_stack.top();
                 vector<Hash>& details = current->get<vector<Hash> >("KRB_details");
-                details.back().set("KRB_stop", "");
-                details.back().setAttributes("KRB_stop", now);
-
-                current->set("KRB_stop", "");
-                current->setAttributes("KRB_stop", now);
+                if (!details.back().has("KRB_stop")) {
+                    details.back().set("KRB_stop", "");
+                    details.back().setAttributes("KRB_stop", now);
+                }
+                if (!current->has("KRB_stop")) {
+                    current->set("KRB_stop", "");
+                    current->setAttributes("KRB_stop", now);
+                }
                 m_stack.pop();
             }
             m_periods.set("KRB_stop", "");
@@ -161,6 +164,7 @@ namespace karabo {
             }
             TimePeriod(period).getDuration().toHash(period.bindReference<Hash>("KRB_duration"));
         }
+
 
         const TimePeriod TimeProfiler::getPeriod(const std::string& periodname) const {
             return TimePeriod(m_periods.get<Hash>(periodname));
