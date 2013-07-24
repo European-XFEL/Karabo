@@ -52,6 +52,8 @@ class NavigationPanel(QWidget):
         # Make connects
         Manager().notifier.signalSystemTopologyChanged.connect(self.onSystemTopologyChanged)
         
+        Manager().notifier.signalGlobalAccessLevelChanged.connect(self.onGlobalAccessLevelChanged)
+        
         Manager().notifier.signalNewNavigationItem.connect(self.onNewNavigationItem)
         Manager().notifier.signalSelectNewNavigationItem.connect(self.onSelectNewNavigationItem)
         Manager().notifier.signalNavigationItemChanged.connect(self.onNavigationItemChanged)
@@ -147,6 +149,10 @@ class NavigationPanel(QWidget):
 
     def onSystemTopologyChanged(self, config):
         self.__twNavigation.updateView(config)
+
+
+    def onGlobalAccessLevelChanged(self):
+        self.__twNavigation.updateView(Manager().treemodel.currentConfig)
 
 
     # virtual function

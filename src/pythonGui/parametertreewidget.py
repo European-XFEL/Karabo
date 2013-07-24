@@ -131,7 +131,6 @@ class ParameterTreeWidget(QTreeWidget):
         # Called when NavigationItem changed
         self.__acFileOpen.setVisible(visible)
         self.__acFileSaveAs.setVisible(visible)
-        self.__acItemsVisibility.setVisible(visible)
 
 
     def addItemDataToHash(self, item, config):
@@ -203,15 +202,6 @@ class ParameterTreeWidget(QTreeWidget):
         self.__acFileSaveAs.setToolTip(text)
         self.__acFileSaveAs.triggered.connect(self.onFileSaveAs)
         self.__configPanel.addActionToToolBar(self.__acFileSaveAs)
-
-        text = "Show expert values"
-        self.__acItemsVisibility = QAction(QIcon(":enum"), text, self)
-        self.__acItemsVisibility.setToolTip(text)
-        self.__acItemsVisibility.setStatusTip(text)
-        self.__acItemsVisibility.setCheckable(True)
-        self.__acItemsVisibility.setChecked(False)
-        self.__acItemsVisibility.toggled.connect(self.onAllItemsVisibility)
-        self.__configPanel.addActionToToolBar(self.__acItemsVisibility)
         
 
     def _setupContextMenu(self):
@@ -221,7 +211,6 @@ class ParameterTreeWidget(QTreeWidget):
         self.__mFile = QMenu(self)
         self.__mFile.addAction(self.__acFileOpen)
         self.__mFile.addAction(self.__acFileSaveAs)
-        self.__mFile.addAction(self.__acItemsVisibility)
         self.__mFile.addSeparator()
         # other action from configurationPanel gets added via addConfigAction
 
@@ -241,18 +230,21 @@ class ParameterTreeWidget(QTreeWidget):
             self._r_updateParameters(childItem, state)
 
 
-    def _r_setItemVisibility(self, item, show):
-        if show == False:
-            if item.requiredAccessLevel > globals.GLOBAL_ACCESS_LEVEL:
-                item.setHidden(True)
-            else:
-                item.setHidden(False)
+    def globalAccessLevelChanged(self):
+        rootItem = self.invisibleRootItem()
+        for i in range(rootItem.childCount()):
+            self._r_globalAccessLevelChanged(rootItem.child(i))
+
+
+    def _r_globalAccessLevelChanged(self, item):
+        if item.requiredAccessLevel > globals.GLOBAL_ACCESS_LEVEL:
+            item.setHidden(True)
         else:
             item.setHidden(False)
 
         if (item.isChoiceElement == False) and (item.isListElement == False):
             for i in range(item.childCount()):
-                self._r_setItemVisibility(item.child(i), show)
+                self._r_globalAccessLevelChanged(item.child(i))
 
 
     def _r_applyAll(self, item, config):
@@ -333,21 +325,6 @@ class ParameterTreeWidget(QTreeWidget):
 
     def onFileSaveAs(self):
         Manager().onSaveAsXml(str(self.__classId), self.instanceKey)
-
-
-    def onAllItemsVisibility(self, show):
-        if show == True :
-            text = "Hide expert values"
-            self.__acItemsVisibility.setToolTip(text)
-            self.__acItemsVisibility.setStatusTip(text)
-        else :
-            text = "Show expert values"
-            self.__acItemsVisibility.setToolTip(text)
-            self.__acItemsVisibility.setStatusTip(text)
-
-        rootItem = self.invisibleRootItem()
-        for i in range(rootItem.childCount()):
-            self._r_setItemVisibility(rootItem.child(i), show)
 
 
     def onCustomContextMenuRequested(self, pos):

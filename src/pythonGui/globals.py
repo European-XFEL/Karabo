@@ -7,7 +7,7 @@
 
 def init():
     global GLOBAL_ACCESS_LEVEL
-    GLOBAL_ACCESS_LEVEL = 2 # EXPERT
+    GLOBAL_ACCESS_LEVEL = 2 # OPERATOR
     
     # OBSERVER = 0
     # USER = 1
