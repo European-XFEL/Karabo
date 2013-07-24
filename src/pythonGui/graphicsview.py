@@ -8,7 +8,7 @@
 """This module contains a class which represents a QGraphicsView."""
 
 __all__ = ["GraphicsView"]
-
+    
 from customxmlreader import CustomXmlReader
 from customxmlwriter import CustomXmlWriter
 
@@ -908,7 +908,7 @@ class GraphicsView(QGraphicsView):
                     displayProxyWidget.setToolTip(tooltipText)
                     # Add item to itemlist
                     items.append(displayProxyWidget)
-
+                    
                     # Register as visible device
                     Manager().newVisibleDevice(internalKey)
 
