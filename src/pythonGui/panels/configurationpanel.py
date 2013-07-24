@@ -83,6 +83,8 @@ class ConfigurationPanel(QWidget):
         # Make connects
         Manager().notifier.signalSystemTopologyChanged.connect(self.onSystemTopologyChanged)
         
+        Manager().notifier.signalGlobalAccessLevelChanged.connect(self.onGlobalAccessLevelChanged)
+        
         Manager().notifier.signalNewNavigationItem.connect(self.onNewNavigationItem)
         Manager().notifier.signalSelectNewNavigationItem.connect(self.onSelectNewNavigationItem)
         Manager().notifier.signalSchemaAvailable.connect(self.onSchemaAvailable)
@@ -718,6 +720,12 @@ class ConfigurationPanel(QWidget):
     def onSystemTopologyChanged(self, config):
         #self.__twNavigation.updateView(config)
         pass
+
+
+    def onGlobalAccessLevelChanged(self):
+        for index in xrange(self.__swParameterEditor.count()):
+            twParameterEditorPage = self.__swParameterEditor.widget(index)
+            twParameterEditorPage.globalAccessLevelChanged()
 
 
     # virtual function

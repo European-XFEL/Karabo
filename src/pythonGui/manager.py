@@ -39,6 +39,8 @@ class Notifier(QObject):
     # signals
     signalSystemTopologyChanged = pyqtSignal(object)
     
+    signalGlobalAccessLevelChanged = pyqtSignal()
+    
     signalNewNavigationItem = pyqtSignal(dict) # id, name, type, (status), (refType), (refId), (schema)
     signalSelectNewNavigationItem = pyqtSignal(str) # deviceId
     signalSchemaAvailable = pyqtSignal(dict) # key, schema

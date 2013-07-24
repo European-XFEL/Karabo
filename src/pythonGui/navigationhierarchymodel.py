@@ -10,6 +10,7 @@
 
 __all__ = ["NavigationHierarchyModel"]
 
+import globals
 from navigationhierarchynode import *
 from karabo.karathon import *
 
@@ -24,12 +25,22 @@ class NavigationHierarchyModel(QAbstractItemModel):
         super(NavigationHierarchyModel, self).__init__(parent)
         
         self.__rootItem = NavigationHierarchyNode("Hierarchical view")
+        self.__currentConfig = None
+
+
+    def _currentConfig(self):
+        return self.__currentConfig
+    currentConfig = property(fget=_currentConfig)
 
 
     def updateData(self, config):
         #print "+++ NavigationHierarchyModel.updateData"
         #print config
         #print ""
+        
+        # Needed for GLOBAL_ACCESS_LEVEL changes
+        if self.__currentConfig != config:
+            self.__currentConfig = config
         
         self.beginResetModel()
         self.__rootItem.clearChildItems()
@@ -55,6 +66,11 @@ class NavigationHierarchyModel(QAbstractItemModel):
                     hostItem = NavigationHierarchyNode(host, host, self.__rootItem)
                     self.__rootItem.appendChildItem(hostItem)
 
+                if serverConfig.hasAttribute(serverId, "visibility"):
+                    visibility = serverConfig.getAttribute(serverId, "visibility")
+                    if visibility > globals.GLOBAL_ACCESS_LEVEL:
+                        continue
+                
                 path = "server." + serverId
                 serverItem = NavigationHierarchyNode(serverId, path, hostItem)
                 hostItem.appendChildItem(serverItem)
@@ -74,31 +90,40 @@ class NavigationHierarchyModel(QAbstractItemModel):
             deviceConfig.getKeys(deviceIds)
             for deviceId in deviceIds:
                 # Get attributes
+                if deviceConfig.hasAttribute(deviceId, "visibility"):
+                    visibility = deviceConfig.getAttribute(deviceId, "visibility")
+                    if visibility > globals.GLOBAL_ACCESS_LEVEL:
+                        continue
+                
                 #deviceAttributes = deviceConfig.getAttributes(deviceId)
                 host = deviceConfig.getAttribute(deviceId, "host")
                 classId = deviceConfig.getAttribute(deviceId, "classId")
                 serverId = deviceConfig.getAttribute(deviceId, "serverId")
+                #version = deviceConfig.getAttribute(deviceId, "version")
                 #status = deviceConfig.getAttribute(deviceId, "status")
 
                 # Host item already exists?
                 hostItem = self.__rootItem.getItem(host)
                 if not hostItem:
-                    hostItem = NavigationHierarchyNode(host, host, self.__rootItem)
-                    self.__rootItem.appendChildItem(hostItem)
+                    continue
+                    #hostItem = NavigationHierarchyNode(host, host, self.__rootItem)
+                    #self.__rootItem.appendChildItem(hostItem)
                 
                 # Server item already exists?
                 serverItem = hostItem.getItem(serverId)
                 if not serverItem:
-                    path = "server." + serverId
-                    serverItem = NavigationHierarchyNode(serverId, path, hostItem)
-                    hostItem.appendChildItem(serverItem)
+                    continue
+                    #path = "server." + serverId
+                    #serverItem = NavigationHierarchyNode(serverId, path, hostItem)
+                    #hostItem.appendChildItem(serverItem)
 
                 # Class item already exists?
                 classItem = serverItem.getItem(classId)
                 if not classItem:
-                    path = "server." + serverId + ".classes." + classId
-                    classItem = NavigationHierarchyNode(classId, path, serverItem)
-                    serverItem.appendChildItem(classItem)
+                    continue
+                    #path = "server." + serverId + ".classes." + classId
+                    #classItem = NavigationHierarchyNode(classId, path, serverItem)
+                    #serverItem.appendChildItem(classItem)
 
                 path = "device." + deviceId
                 deviceItem = NavigationHierarchyNode(deviceId, path, classItem)
