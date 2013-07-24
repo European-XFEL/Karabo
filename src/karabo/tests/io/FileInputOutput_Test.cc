@@ -33,7 +33,7 @@ struct MySchema {
                 .description("Example key 1 description")
                 .options("Radio,Air Condition,Navigation", ",")
                 .assignmentOptional().defaultValue("Navigation")
-                .advanced()
+                .expertAccess()
                 .commit();
 
         NODE_ELEMENT(expected).key("MyNodeElement")
