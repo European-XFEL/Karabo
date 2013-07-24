@@ -119,6 +119,9 @@ class PythonDevice(BaseFsm):
         #logcfg["priority"] = "DEBUG"
         Logger.configure(logcfg)
         self.log = Logger.getLogger(self.deviceid)
+
+        self.initClassId()
+        self.initSchema()
         
         # Initialize FSM slots for user defined FSM (polymorphic call) 
         self.initFsmSlots(self._ss)
@@ -127,8 +130,6 @@ class PythonDevice(BaseFsm):
         self._initDeviceSlots()
         
     def run(self):
-        self.initClassId()
-        self.initSchema()
         self.startFsm()
         with self._stateChangeLock:
             validated = self.validatorIntern.validate(self.fullSchema, self.parameters)
