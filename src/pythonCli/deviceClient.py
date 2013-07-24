@@ -194,8 +194,7 @@ class DeviceClient(object):
         if timeoutInSeconds is None:
             return self.__client.instantiate(deviceServerInstanceId, classId, initialConfiguration)
         return self.__client.instantiate(deviceServerInstanceId, classId, initialConfiguration, timeoutInSeconds)
-        
-        
+    
     def instantiateNoWait(self, deviceServerInstanceId, classId, initialConfiguration = Hash()):
         self.__client.instantiateNoWait(deviceServerInstanceId, classId, initialConfiguration)
         
@@ -246,7 +245,7 @@ class DeviceClient(object):
         if propertyName is None: 
             return self.__client.get(instanceId)
         return self.__client.get(instanceId, propertyName)
-        
+    
     def enableAdvancedMode(self):
         self.__client.enableAdvancedMode()
         
@@ -392,5 +391,8 @@ class DeviceClient(object):
             if self.__imageItems.has_key(imageId):
                 imageItem = self.__imageItems[imageId]
                 imageItem.set_data(self._hashImageToNumpyImage(image))
+    
+    
+        
                 
             

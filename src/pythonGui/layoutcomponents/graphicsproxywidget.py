@@ -127,7 +127,7 @@ class GraphicsProxyWidget(NodeBase, QGraphicsProxyWidget):
             rect = self.boundingRect()
             painter.drawRect(rect)
         QGraphicsProxyWidget.paint(self, painter, option, widget)
-
+   
 
     def mouseMoveEvent(self, event):
         #print "QGraphicsProxyWidget.mouseMoveEvent", self.isDesignMode
@@ -173,11 +173,14 @@ class GraphicsProxyWidget(NodeBase, QGraphicsProxyWidget):
     def contextMenuEvent(self, event):
         if self.__contextMenu is None:
             return
-        
-        self.scene().clearSelection()
-        self.setSelected(True)
-        
-        self.__contextMenu.exec_(event.screenPos())
+        if self.isDesignMode == False:
+            QGraphicsProxyWidget.contextMenuEvent(self, event)
+        else:
+  
+            self.scene().clearSelection()
+            self.setSelected(True)
+
+            self.__contextMenu.exec_(event.screenPos())
 
 
 ### Slots ###

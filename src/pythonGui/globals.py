@@ -11,6 +11,7 @@ def init():
     
     # OBSERVER = 0
     # USER = 1
-    # EXPERT = 2
-    # ADMIN = 3
+    # OPERATOR = 2
+    # EXPERT = 3
+    # ADMIN = 4
 

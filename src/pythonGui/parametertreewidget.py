@@ -45,8 +45,8 @@ class ParameterTreeWidget(QTreeWidget):
         self._setupActions()
         self._setupContextMenu()
         
-        self.setMouseTracking(True)
-        self.itemEntered.connect(self.onItemEntered)
+        #self.setMouseTracking(True)
+        #self.itemEntered.connect(self.onItemEntered)
         self.customContextMenuRequested.connect(self.onCustomContextMenuRequested)
 
 

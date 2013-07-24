@@ -84,7 +84,7 @@ class GraphicsProxyWidgetContainer(NodeBase, QGraphicsWidget):
             rect = self.boundingRect()
             painter.drawRect(rect)
         QGraphicsWidget.paint(self, painter, option, widget)
-
+   
 
     def mouseMoveEvent(self, event):
         #print "QGraphicsWidget.mouseMoveEvent", self.isDesignMode
@@ -93,7 +93,7 @@ class GraphicsProxyWidgetContainer(NodeBase, QGraphicsWidget):
         else:
             QGraphicsItem.mouseMoveEvent(self, event)
 
-
+   
     def mousePressEvent(self, event):
         #print "QGraphicsWidget.mousePressEvent", self.isDesignMode
         if self.isDesignMode == False:
@@ -110,7 +110,7 @@ class GraphicsProxyWidgetContainer(NodeBase, QGraphicsWidget):
             QGraphicsWidget.mouseReleaseEvent(self, event)
         else:
             QGraphicsItem.mouseReleaseEvent(self, event)
-
+    
 
     def contextMenuEvent(self, event):
         self._showContextMenu(event.screenPos())
