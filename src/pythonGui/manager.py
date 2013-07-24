@@ -172,7 +172,7 @@ class Manager(Singleton):
             paramKey = keys[0]
             attribute = keys[1]
             if not self.__hash.has(paramKey):
-                self.__hash.set(paramKey, Hash())
+                self.__hash.set(paramKey, 0)
             self.__hash.setAttribute(paramKey, attribute, value)
         else:
             # Merge parameter value in central hash
