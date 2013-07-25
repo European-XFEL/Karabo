@@ -171,43 +171,40 @@ class SchemaReader(object):
         self._setAlias(key, item)
         self._setTags(key, item)
         self._setDescription(key, item)
+        self._setDefaultValue(key, item)
         
-        # TODO BH: The code could be more symmetric here
-        defaultValue = self._getDefaultValue(key, item)
-        item.defaultValue = defaultValue
+        metricPrefixSymbol = self._getMetricPrefixSymbol(key)
+        unitSymbol = self._getUnitSymbol(key)
         
-        metricPrefixSymbol = self._getMetricPrefixSymbol(key, item)
-        unitSymbol = self._getUnitSymbol(key, item)
-        
-        self._handleValueType(key, item, defaultValue, metricPrefixSymbol, unitSymbol)
+        self._handleValueType(key, item, item.defaultValue, metricPrefixSymbol, unitSymbol)
         self._checkForFurtherAttributes(key, item)
 
 
-    def _handleNode(self, key, parentItem):
-        self._setAlias(key, parentItem)
-        self._setTags(key, parentItem)
-        self._setDescription(key, parentItem)
+    def _handleNode(self, key, item):
+        self._setAlias(key, item)
+        self._setTags(key, item)
+        self._setDescription(key, item)
         
         nodeKeys = self.__schema.getKeys(key)
         for nKey in nodeKeys:
-            self.r_readSchema(key + "." + nKey, parentItem)
+            self.r_readSchema(key + "." + nKey, item)
 
 
     def _handleChoiceOfNodes(self, key, parentItem):
         #print "_handleChoiceOfNodes"
-        defaultValue = self._getDefaultValue(key, parentItem)
+        self._setDefaultValue(key, parentItem)
         
         parentItem.isChoiceElement = True
         parentItem.classAlias = "Choice Element"
         # Choiceelements can not have strings as arguments
         parentItem.defaultValue = Hash(str(parentItem.defaultValue))
         
-        accessMode = self._getAccessMode(key, parentItem)
+        accessMode = self._getAccessMode(key)
         choiceComponent = None
         
         if self.__deviceType is NavigationItemTypes.CLASS:
             if (accessMode is AccessMode.INITONLY) or (accessMode is AccessMode.RECONFIGURABLE) or (accessMode is AccessMode.UNDEFINED):
-                choiceComponent = EditableNoApplyComponent(parentItem.classAlias, key=parentItem.internalKey, value=defaultValue)
+                choiceComponent = EditableNoApplyComponent(parentItem.classAlias, key=parentItem.internalKey, value=parentItem.defaultValue)
         else:
             if accessMode is AccessMode.RECONFIGURABLE:
                 choiceComponent = EditableApplyLaterComponent(parentItem.classAlias, key=parentItem.internalKey, value=None)
@@ -220,16 +217,16 @@ class SchemaReader(object):
         choiceKeys = self.__schema.getKeys(key)
         for cKey in choiceKeys:
             childItem = self.r_readSchema(key + "." + cKey, parentItem)
-            if cKey != defaultValue:
+            if cKey != parentItem.defaultValue:
                 childItem.setHidden(True)
             if choiceComponent:
                 choiceComponent.addParameters(itemToBeAdded=childItem)
 
 
-    def _handleListOfNodes(self, key, parentItem):
+    def _handleListOfNodes(self, key, item):
         listKeys = self.__schema.getKeys(key)
         for lKey in listKeys:
-            self.r_readSchema(key + "." + lKey, parentItem)
+            self.r_readSchema(key + "." + lKey, item)
 
 
 ### Schema getter functions ###
@@ -338,56 +335,42 @@ class SchemaReader(object):
             print "NDARRAY_COMPLEX_DOUBLE"
 
 
-    def _setAlias(self, key, parentItem):
+    def _setAlias(self, key, item):
         if not self.__schema.keyHasAlias(key):
             return
         
-        alias = self.__schema.getAliasFromKey(key)
-        parentItem.alias = alias
+        item.alias = self.__schema.getAliasFromKey(key)
 
 
-    def _setTags(self, key, parentItem):
+    def _setTags(self, key, item):
         if not self.__schema.hasTags(key):
             return
         
-        tags = self.__schema.getTags(key)
-        parentItem.tags = tags
+        item.tags = self.__schema.getTags(key)
 
 
-    def _setDescription(self, key, parentItem):
+    def _setDescription(self, key, item):
         if not self.__schema.hasDescription(key):
             return
         
-        description = self.__schema.getDescription(key)
-        parentItem.description = description
+        item.description = self.__schema.getDescription(key)
 
 
-    def _getDefaultValue(self, key, parentItem):
+    def _setDefaultValue(self, key, item):
         if not self.__schema.hasDefaultValue(key):
             return None
 
-        defaultValue = self.__schema.getDefaultValue(key)
-        
-        if isinstance(defaultValue, list):
-            defaultValueStr = str()
-            for value in defaultValue:
-                defaultValueStr += value + ","
-            text = QString("<b>Default value: </b>%1").arg(defaultValueStr)
-        else:
-            text = QString("<b>Default value: </b>%1").arg(defaultValue)
-        
-        return defaultValue
+        item.defaultValue = self.__schema.getDefaultValue(key)
 
 
-    #def _setTimestamp(self, key, parentItem):
+    #def _setTimestamp(self, key, item):
     #    if not self.__schema.hasTimestamp(key):
     #        return
         
-    #    timestamp = self.__schema.getTimestamp(key)
-    #    parentItem.timestamp = timestamp
+    #    item.timestamp = self.__schema.getTimestamp(key)
 
 
-    def _getMetricPrefixSymbol(self, key, item):
+    def _getMetricPrefixSymbol(self, key):
         if not self.__schema.hasMetricPrefix(key):
             return None
         
@@ -398,7 +381,7 @@ class SchemaReader(object):
         return metricPrefixSymbol
 
 
-    def _getUnitSymbol(self, key, item):
+    def _getUnitSymbol(self, key):
         if not self.__schema.hasUnit(key):
             return None
         
@@ -426,7 +409,7 @@ class SchemaReader(object):
             pass
 
 
-    def _getAccessMode(self, key, parentItem):
+    def _getAccessMode(self, key):
         if not self.__schema.hasAccessMode(key):
             #print "AccessMode.UNDEFINEhasWarnLowD"
             return AccessMode.UNDEFINED
@@ -516,7 +499,7 @@ class SchemaReader(object):
         if accessMode is AccessMode.INITONLY:
             if self.__schema.hasMinInc(key):
                 fullPath = key + "@minInc"
-                displayName = "Minimum include"
+                displayName = "Minimum inclusive"
                 value = self.__schema.getMinInc(key)
 
                 if parentItem.classAlias == "Integer Field":
@@ -530,7 +513,7 @@ class SchemaReader(object):
 
             if self.__schema.hasMaxInc(key):
                 fullPath = key + "@maxInc"
-                displayName = "Maximum include"
+                displayName = "Maximum inclusive"
                 value = self.__schema.getMaxInc(key)
 
                 if parentItem.classAlias == "Integer Field":
@@ -544,7 +527,7 @@ class SchemaReader(object):
 
             if self.__schema.hasMinExc(key):
                 fullPath = key + "@minExc"
-                displayName = "Minimum exclude"
+                displayName = "Minimum exclusive"
                 value = self.__schema.getMinExc(key)
 
                 if parentItem.classAlias == "Integer Field":
@@ -558,7 +541,7 @@ class SchemaReader(object):
 
             if self.__schema.hasMaxExc(key):
                 fullPath = key + "@maxExc"
-                displayName = "Maximum exclude"
+                displayName = "Maximum exclusive"
                 value = self.__schema.getMaxExc(key)
 
                 if parentItem.classAlias == "Integer Field":
@@ -639,7 +622,7 @@ class SchemaReader(object):
         if not editableComponent:
             return
         
-        # Check minimum and maximum includes/excludes
+        # Check minimum and maximum inclusives/exclusives
         minInc = self._getMinInc(key)
         maxInc = self._getMaxInc(key)
         minExc = self._getMinExc(key)
@@ -664,7 +647,7 @@ class SchemaReader(object):
         item.classAlias = "Toggle Field"
         item.setIcon(0, QIcon(":boolean"))
         
-        accessMode = self._getAccessMode(key, item)
+        accessMode = self._getAccessMode(key)
         editableComponent = None
         
         if self.__deviceType is NavigationItemTypes.CLASS:
@@ -698,7 +681,7 @@ class SchemaReader(object):
             enumeration = None
             item.setIcon(0, QIcon(":string"))
         
-        accessMode = self._getAccessMode(key, item)
+        accessMode = self._getAccessMode(key)
         editableComponent = None
         
         # PATH_ELEMENT
@@ -768,7 +751,7 @@ class SchemaReader(object):
             enumeration = None
             item.setIcon(0, QIcon(":int"))
         
-        accessMode = self._getAccessMode(key, item)
+        accessMode = self._getAccessMode(key)
         editableComponent = None
         
         if self.__deviceType is NavigationItemTypes.CLASS:
@@ -789,7 +772,7 @@ class SchemaReader(object):
                                                                 unitSymbol=unitSymbol)
                 editableComponent.signalApplyChanged.connect(self.__treeWidget.onApplyChanged)
         
-        # Check minimum and maximum includes/excludes
+        # Check minimum and maximum inclusives/exclusives
         self._setMinMaxIncAndExc(key, editableComponent)
         item.editableComponent = editableComponent
         item.applyEnabled = True
@@ -807,7 +790,7 @@ class SchemaReader(object):
             enumeration = None
             item.setIcon(0, QIcon(":float"))
 
-        accessMode = self._getAccessMode(key, item)
+        accessMode = self._getAccessMode(key)
         editableComponent = None
         
         if self.__deviceType is NavigationItemTypes.CLASS:
@@ -828,7 +811,7 @@ class SchemaReader(object):
                                                                 unitSymbol=unitSymbol)
                 editableComponent.signalApplyChanged.connect(self.__treeWidget.onApplyChanged)
         
-        # Check minimum and maximum includes/excludes
+        # Check minimum and maximum inclusives/exclusives
         self._setMinMaxIncAndExc(key, editableComponent)
         item.editableComponent = editableComponent
 
@@ -846,7 +829,7 @@ class SchemaReader(object):
         for index in defaultVec:
             default.append(str(index))
 
-        accessMode = self._getAccessMode(key, item)
+        accessMode = self._getAccessMode(key)
         editableComponent = None
         
         if self.__deviceType is NavigationItemTypes.CLASS:

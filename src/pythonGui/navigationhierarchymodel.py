@@ -105,25 +105,28 @@ class NavigationHierarchyModel(QAbstractItemModel):
                 # Host item already exists?
                 hostItem = self.__rootItem.getItem(host)
                 if not hostItem:
-                    continue
-                    #hostItem = NavigationHierarchyNode(host, host, self.__rootItem)
-                    #self.__rootItem.appendChildItem(hostItem)
+                    hostItem = NavigationHierarchyNode(host, host, self.__rootItem)
+                    self.__rootItem.appendChildItem(hostItem)
                 
                 # Server item already exists?
                 serverItem = hostItem.getItem(serverId)
                 if not serverItem:
-                    continue
-                    #path = "server." + serverId
-                    #serverItem = NavigationHierarchyNode(serverId, path, hostItem)
-                    #hostItem.appendChildItem(serverItem)
+                    if serverId == "__none__":
+                        path = "server." + serverId
+                        serverItem = NavigationHierarchyNode(serverId, path, hostItem)
+                        hostItem.appendChildItem(serverItem)
+                    else:
+                        continue
 
                 # Class item already exists?
                 classItem = serverItem.getItem(classId)
                 if not classItem:
-                    continue
-                    #path = "server." + serverId + ".classes." + classId
-                    #classItem = NavigationHierarchyNode(classId, path, serverItem)
-                    #serverItem.appendChildItem(classItem)
+                    if serverId == "__none__":
+                        path = "server." + serverId + ".classes." + classId
+                        classItem = NavigationHierarchyNode(classId, path, serverItem)
+                        serverItem.appendChildItem(classItem)
+                    else:
+                        continue
 
                 path = "device." + deviceId
                 deviceItem = NavigationHierarchyNode(deviceId, path, classItem)

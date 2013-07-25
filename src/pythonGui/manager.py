@@ -49,7 +49,7 @@ class Notifier(QObject):
     signalDeviceInstanceChanged = pyqtSignal(dict, str)
     signalKillDevice = pyqtSignal(str) # deviceId
     signalKillServer = pyqtSignal(str) # serverId
-    signalDeviceInstanceSchemaUpdated = pyqtSignal(str, str) # deviceId, schema
+    signalDeviceSchemaUpdated = pyqtSignal(str) # deviceId
     
     signalRefreshInstance = pyqtSignal(str) # deviceId
     signalInitDevice = pyqtSignal(str, object) # deviceId, hash
@@ -727,6 +727,12 @@ class Manager(Singleton):
         self.__notifier.signalGetDeviceSchema.emit(deviceId)
         return None
         
+
+    def handleDeviceSchemaUpdated(self, deviceId, config):
+        path = "device." + deviceId
+        self.__notifier.signalDeviceSchemaUpdated.emit(path)
+        self.handleDeviceSchema(deviceId, config)
+
 
     # TODO: This function must be thread-safe!!
     # Called by network class

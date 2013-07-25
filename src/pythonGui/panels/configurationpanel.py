@@ -88,7 +88,7 @@ class ConfigurationPanel(QWidget):
         Manager().notifier.signalNewNavigationItem.connect(self.onNewNavigationItem)
         Manager().notifier.signalSelectNewNavigationItem.connect(self.onSelectNewNavigationItem)
         Manager().notifier.signalSchemaAvailable.connect(self.onSchemaAvailable)
-        Manager().notifier.signalDeviceInstanceSchemaUpdated.connect(self.onDeviceInstanceSchemaUpdated)
+        Manager().notifier.signalDeviceSchemaUpdated.connect(self.onDeviceSchemaUpdated)
         
         Manager().notifier.signalNavigationItemChanged.connect(self.onNavigationItemChanged)
         Manager().notifier.signalNavigationItemSelectionChanged.connect(self.onNavigationItemSelectionChanged)
@@ -503,7 +503,7 @@ class ConfigurationPanel(QWidget):
         
         if (key in self.__navItemInternalKeyIndexMap) and (key in self.__internalKeySchemaLoadedMap):
             index = self.__navItemInternalKeyIndexMap.get(key)
-            if index is not None:
+            if index:
                 twParameterEditorPage = self.__swParameterEditor.widget(index)
                 # Parsing of schema necessary?
                 schemaLoaded = self.__internalKeySchemaLoadedMap.get(key)
@@ -712,9 +712,9 @@ class ConfigurationPanel(QWidget):
         Manager().initDevice(str(serverId), str(classId), str(path))
 
 
-    def onDeviceInstanceSchemaUpdated(self, instanceId, schema):
-        self.__internalKeySchemaLoadedMap[instanceId] = False
-        self.__twNavigation.updateDeviceInstanceSchema(instanceId, schema)
+    def onDeviceSchemaUpdated(self, key):
+        key = str(key)
+        self.__internalKeySchemaLoadedMap[key] = False
 
 
     def onSystemTopologyChanged(self, config):
