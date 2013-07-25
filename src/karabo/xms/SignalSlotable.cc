@@ -19,6 +19,7 @@
 #include <karabo/webAuth/Authenticator.hh>
 
 #include "SignalSlotable.hh"
+#include "karabo/tests/xms/SignalSlotable_Test.hh"
 
 
 
@@ -130,7 +131,7 @@ namespace karabo {
 
             Hash instanceInfo;
             try {
-                Requestor(m_requestChannel, m_instanceId).call(instanceId, "slotPing", instanceId, true, false).timeout(100).receive(instanceInfo);
+                Requestor(m_requestChannel, m_instanceId).call("*", "slotPing", instanceId, true, false).timeout(100).receive(instanceInfo);
             } catch (const karabo::util::TimeoutException&) {
                 Exception::clearTrace();
                 return std::make_pair(true, "");
@@ -305,8 +306,8 @@ namespace karabo {
             string hostname;
             Hash instanceInfo;
             try {
-                this->request(instanceId, "slotPing", instanceId, true, false).timeout(300).receive(instanceInfo);
-            } catch (karabo::util::TimeoutException) {
+                this->request("*", "slotPing", instanceId, true, false).timeout(300).receive(instanceInfo);
+            } catch (const karabo::util::TimeoutException&) {
                 return std::make_pair(false, hostname);
             }
             if (instanceInfo.has("host")) instanceInfo.get("host", hostname);
@@ -412,6 +413,10 @@ namespace karabo {
         void SignalSlotable::updateInstanceInfo(const karabo::util::Hash& update) {
             m_instanceInfo.merge(update);
             call("*", "slotInstanceUpdated", m_instanceId, m_instanceInfo);
+        }
+        
+        const karabo::util::Hash& SignalSlotable::getInstanceInfo() const {
+            return m_instanceInfo;
         }
 
 

@@ -278,15 +278,7 @@ namespace karabo {
 
 
         std::pair<bool, std::string> DeviceClient::exists(const std::string& instanceId) {
-            string hostname;
-            Hash instanceInfo;
-            try {
-                m_signalSlotable->request(instanceId, "slotPing", instanceId, true, false).timeout(m_internalTimeout).receive(instanceInfo);
-            } catch (karabo::util::TimeoutException) {
-                return std::make_pair(false, hostname);
-            }
-            if (instanceInfo.has("host")) instanceInfo.get("host", hostname);
-            return std::make_pair(true, hostname);
+            return m_signalSlotable->exists(instanceId);
         }
 
 

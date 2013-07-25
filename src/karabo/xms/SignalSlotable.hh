@@ -213,6 +213,8 @@ namespace karabo {
             virtual const std::string& getInstanceId() const;
 
             void updateInstanceInfo(const karabo::util::Hash& update);
+            
+            const karabo::util::Hash& getInstanceInfo() const;
 
             /**
              * TO BE DEPRECATED - DO NOT USE!
