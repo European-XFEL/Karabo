@@ -204,7 +204,7 @@ class Network(QObject):
             #bodyHash = self.__textSerializer.load(self.__bodyBytes)
             
             type = headerHash.get("type")
-            #print "Request: ", type
+            print "Request: ", type
             
             # "instanceNew" (instanceId, instanceInfo)
             # "instanceUpdated" (instanceId, instanceInfo)
@@ -430,5 +430,5 @@ class Network(QObject):
         
     def _handleSchemaUpdated(self, headerHash, bodyHash):
         deviceId = headerHash.get("deviceId")
-        Manager().handleDeviceSchema(deviceId, bodyHash)
+        Manager().handleDeviceSchemaUpdated(deviceId, bodyHash)
 
