@@ -229,6 +229,8 @@ class PythonDevice(BaseFsm):
             self.fullSchema = self.staticSchema
             self.fullSchema += self._injectedSchema
             self.parameters.merge(validated, HashMergePolicy.REPLACE_ATTRIBUTES)
+            validated = self.validatorIntern.validate(self.fullSchema, self.parameters)
+            self.parameters.merge(validated, HashMergePolicy.REPLACE_ATTRIBUTES)
         # notify the distributed system...
         self._ss.emit("signalSchemaUpdated", self.fullSchema, self.deviceid)
         self.log.INFO("Schema updated")
