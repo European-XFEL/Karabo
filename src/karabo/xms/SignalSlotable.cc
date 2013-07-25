@@ -91,22 +91,22 @@ namespace karabo {
         bool SignalSlotable::login(const std::string& username, const std::string& password, const std::string& provider) {
 
             string brokerHostname = getConnection()->getBrokerHostname();
-            unsigned int brokerPort = getConnection()->getBrokerPort();
+            string brokerPort = karabo::util::toString(getConnection()->getBrokerPort());
             string brokerTopic = getConnection()->getBrokerTopic();
-
-            m_authenticator = Authenticator::Pointer(new Authenticator(username, password, provider, boost::asio::ip::host_name(), brokerHostname, karabo::util::toString(brokerPort), brokerTopic));
+            
+            m_authenticator = Authenticator::Pointer(new Authenticator(username, password, provider, boost::asio::ip::host_name(), brokerHostname, brokerPort, brokerTopic));
 
             if (username == "god" && godEncode(password) == 749) {
-                KARABO_LOG_FRAMEWORK_INFO << "Bypassing authentication service..., full access granted";
+                std::cout << "Bypassing authentication service and entering god mode..., full access granted" << std::endl;
                 m_defaultAccessLevel = 1000;
                 return true;
             }
             bool ok;
             try {
                 if (m_authenticator->login()) {
-                    //m_defaultAccessLevel = m_auth.getDefaultAccessLevel();
-                    //m_accessList = m_auth.getAccessList();
-                    //m_sessionToken = m_auth.getSessionToken();
+                    m_defaultAccessLevel = m_authenticator->getDefaultAccessLevelId();
+                    //m_accessList = m_authenticator->getAccessList();
+                    //m_sessionToken = m_authenticator->getSessionToken();
                     return true;
                 } else {
                     return false;

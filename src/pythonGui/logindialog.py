@@ -41,11 +41,11 @@ class LoginDialog(QDialog):
         self.__hLine.setFrameShadow(QFrame.Sunken)
         
         formLayout = QFormLayout()
-        self.__leUsername = QLineEdit("guest") #("username")
+        self.__leUsername = QLineEdit("operator") #("username")
         formLayout.addRow("Username:", self.__leUsername)
         self.__leUsername.textChanged.connect(self.onUsernameChanged)
         
-        self.__lePassword = QLineEdit("guest") #("default")
+        self.__lePassword = QLineEdit("karabo") #("default")
         self.__lePassword.setEchoMode(QLineEdit.Password)
         formLayout.addRow("Password:", self.__lePassword)
         
