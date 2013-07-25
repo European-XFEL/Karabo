@@ -834,15 +834,6 @@ namespace schemawrap {
     }
 
 
-    bp::object getAllowedRoles(const Schema& schema, const bp::object& obj) {
-        if (PyString_Check(obj.ptr())) {
-            string path = bp::extract<string>(obj);
-            const vector<string>& v = schema.getAllowedRoles(path);
-            return karathon::Wrapper::fromStdVectorToPyArray<string>(v);
-        }
-        throw KARABO_PYTHON_EXCEPTION("Python argument in 'getAllowedRoles' should be a string");
-    }
-
     //*************************************************************
     // Wrapper functions for : setDefaultValue, getDefaultValue, getDefaultValueAs *
     //*************************************************************
@@ -1211,8 +1202,6 @@ void exportPyUtilSchema() {
 
         s.def("getAllowedStates", &schemawrap::getAllowedStates);
 
-        s.def("getAllowedRoles", &schemawrap::getAllowedRoles);
-
         s.def("getDefaultValue", &schemawrap::getDefaultValue);
 
         s.def("getDefaultValueAs", &schemawrap::getDefaultValueAs);
@@ -1265,8 +1254,6 @@ void exportPyUtilSchema() {
         s.def("hasAssignment", &Schema::hasAssignment);
 
         s.def("hasAllowedStates", &Schema::hasAllowedStates);
-
-        s.def("hasAllowedRoles", &Schema::hasAllowedRoles);
 
         s.def("hasDefaultValue", &Schema::hasDefaultValue);
 
@@ -1346,7 +1333,6 @@ void exportPyUtilSchema() {
         s.def("setAssignment", &Schema::setAssignment, (bp::arg("path"), bp::arg("value")));
         s.def("setOptions", &Schema::setOptions, (bp::arg("path"), bp::arg("value"), bp::arg("sep") = ",;"));
         s.def("setAllowedStates", &Schema::setAllowedStates, (bp::arg("path"), bp::arg("value"), bp::arg("sep") = ",;"));
-        s.def("setAllowedRoles", &Schema::setAllowedRoles, (bp::arg("path"), bp::arg("value"), bp::arg("sep") = ",;"));
         s.def("setDefaultValue", &schemawrap::setDefaultValue, (bp::arg("path"), bp::arg("value")));
         s.def("setAlias", &schemawrap::setAlias, (bp::arg("path"), bp::arg("value"))); // setAlias<type>
         s.def("setUnit", &Schema::setUnit, (bp::arg("path"), bp::arg("value")));
