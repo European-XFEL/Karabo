@@ -54,7 +54,7 @@ class MainWindow(QMainWindow):
     def _setupActions(self):
         text = "Change access level"
         self.__tbAccessLevel = QToolButton(self)
-        self.__tbAccessLevel.setIcon(QIcon(":user"))
+        self.__tbAccessLevel.setIcon(QIcon(":lock"))
         self.__tbAccessLevel.setToolTip(text)
         self.__tbAccessLevel.setStatusTip(text)
         self.__tbAccessLevel.setPopupMode(QToolButton.InstantPopup)
