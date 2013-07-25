@@ -241,7 +241,6 @@ namespace karabo {
 
         void DeviceClient::slotSchemaUpdated(const karabo::util::Schema& schema, const std::string& deviceId) {
             boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
-            cout << "Schema updated!" << endl;
             string path("device." + deviceId + ".fullSchema");
             boost::optional<Hash::Node&> node = m_runtimeSystemDescription.find(path);
             if (node) node->setValue(schema);

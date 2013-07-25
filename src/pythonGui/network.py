@@ -219,6 +219,9 @@ class Network(QObject):
                 self._handleConfigurationChanged(headerHash, bodyHash)
             elif type == "log":
                 self._handleLog(str(self.__bodyBytes))
+            elif type == "schemaUpdated":
+                bodyHash = self.__textSerializer.load(self.__bodyBytes)
+                self._handleSchemaUpdated(headerHash, bodyHash)
             elif type == "notification":
                 print "notification"
             elif type == "invalidateCache":
@@ -398,4 +401,9 @@ class Network(QObject):
     def _handleConfigurationChanged(self, headerHash, bodyHash):
         deviceId = headerHash.get("deviceId")
         Manager().handleConfigurationChanged(deviceId, bodyHash)
+        
+        
+    def _handleSchemaUpdated(self, headerHash, bodyHash):
+        deviceId = headerHash.get("deviceId")
+        Manager().handleDeviceSchema(deviceId, bodyHash)
 
