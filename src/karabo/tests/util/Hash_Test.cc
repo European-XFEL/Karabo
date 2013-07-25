@@ -260,7 +260,7 @@ void Hash_Test::testGetAs() {
         CPPUNIT_ASSERT(h.getAs<string > ("a") == "1");
         CPPUNIT_ASSERT(h.getAs<int > ("a") == 1);
         CPPUNIT_ASSERT_DOUBLES_EQUAL(1.0, h.getAs<double > ("a"), 0.00001);
-        CPPUNIT_ASSERT(static_cast<unsigned int> (h.getAs<char > ("a")) == 1);
+        CPPUNIT_ASSERT(h.getAs<char > ("a") == '1');
     }
 
     {
@@ -269,7 +269,7 @@ void Hash_Test::testGetAs() {
         CPPUNIT_ASSERT(h.getAttributeAs<string > ("a", "a") == "1");
         CPPUNIT_ASSERT(h.getAttributeAs<int > ("a", "a") == 1);
         CPPUNIT_ASSERT_DOUBLES_EQUAL(1.0, h.getAttributeAs<double > ("a", "a"), 0.00001);
-        CPPUNIT_ASSERT(static_cast<unsigned int> (h.getAttributeAs<char > ("a", "a")) == 1);
+        CPPUNIT_ASSERT(h.getAttributeAs<char > ("a", "a") == '1');
         boost::any& any = h.getAttributeAsAny("a", "a");
         CPPUNIT_ASSERT(boost::any_cast<bool>(any) == true);
         h.setAttribute("a", "b", 12);
@@ -299,10 +299,6 @@ void Hash_Test::testGetAs() {
     {
         Hash h("a", static_cast<unsigned char> ('R'));
         CPPUNIT_ASSERT(h.getAs<string > ("a") == "82");
-    }
-    {
-        Hash h("a", std::vector<unsigned char>(4, '2'));
-        CPPUNIT_ASSERT(h.getAs<string > ("a") == "50,50,50,50");
     }
     {
         Hash h("a", static_cast<signed char> ('R'));
