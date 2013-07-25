@@ -32,6 +32,8 @@ auth = Authenticator("", "", "", "", "", "", "")
 
 
 class Network(QObject):
+    # signals
+    signalUserChanged = pyqtSignal()
            
     def __init__(self):
         super(Network, self).__init__()
@@ -137,8 +139,9 @@ class Network(QObject):
                             globals.GLOBAL_ACCESS_LEVEL = 4
                 else:
                     globals.GLOBAL_ACCESS_LEVEL = 0
-                    
-                ### TODO Inform the mainwindow to change correspondingly the allowed level-downgrade
+                
+                # Inform the mainwindow to change correspondingly the allowed level-downgrade
+                self.signalUserChanged.emit()
             
                 self.__password = dialog.password
                 self.__provider = dialog.provider
