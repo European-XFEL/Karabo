@@ -59,17 +59,6 @@ namespace karabo {
                 return *(static_cast<Derived*> (this));
             }
 
-            /**
-             * The <b>allowedRoles</b> method serves for setting up allowed states for the element
-             * @param states A string describing list of possible states.
-             * @param sep A separator symbol used for parsing previous argument for list of states
-             * @return reference to the Element (to allow method's chaining)
-             */
-            Derived& allowedRoles(const std::string& roles, const std::string& sep = " ,;") {
-                this->m_node->setAttribute(KARABO_SCHEMA_ALLOWED_ROLES, karabo::util::fromString<std::string, std::vector>(roles, sep));
-                return *(static_cast<Derived*> (this));
-            }
-
             Derived& connectionAssignmentIsMandatory() {
                 m_child.setAttribute<int>("connectedSignals", KARABO_SCHEMA_ASSIGNMENT, karabo::util::Schema::MANDATORY_PARAM);
                 return *(static_cast<Derived*> (this));

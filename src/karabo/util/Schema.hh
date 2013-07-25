@@ -90,7 +90,6 @@ namespace karabo {
             #define KARABO_SCHEMA_ACCESS_MODE "accessMode"
             #define KARABO_SCHEMA_ALIAS "alias"
             #define KARABO_SCHEMA_ALLOWED_STATES "allowedStates"
-            #define KARABO_SCHEMA_ALLOWED_ROLES "allowedRoles"
             #define KARABO_SCHEMA_ASSIGNMENT "assignment"
             #define KARABO_SCHEMA_TAGS "tags"
 
@@ -375,16 +374,6 @@ namespace karabo {
             bool hasAllowedStates(const std::string& path) const;
 
             const std::vector<std::string>& getAllowedStates(const std::string& path) const;
-
-            //*********************************************
-            //                AllowedRoles                *
-            //*********************************************
-
-            void setAllowedRoles(const std::string& path, const std::string& value, const std::string& sep);
-
-            bool hasAllowedRoles(const std::string& path) const;
-
-            const std::vector<std::string>& getAllowedRoles(const std::string& path) const;
             
             
             //**********************************************
