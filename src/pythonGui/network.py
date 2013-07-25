@@ -21,6 +21,7 @@ from PyQt4.QtNetwork import *
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 
+import globals
 import socket
 
 BYTES_TOTAL_SIZE_TAG = 4
@@ -114,7 +115,31 @@ class Network(QObject):
                 self.__tcpSocket.abort()
                 self.__tcpSocket.connectToHost(dialog.hostname, dialog.port)
                 
+                ### Dark hack for the time being               
                 self.__username = dialog.username
+                
+                if self.__username == "observer":
+                    globals.GLOBAL_ACCESS_LEVEL = 0
+                elif self.__username == "user":
+                    globals.GLOBAL_ACCESS_LEVEL = 1
+                elif self.__username == "operator":
+                    globals.GLOBAL_ACCESS_LEVEL = 2
+                elif self.__username == "expert":
+                    globals.GLOBAL_ACCESS_LEVEL = 3
+                elif self.__username == "admin":
+                    globals.GLOBAL_ACCESS_LEVEL = 4
+                elif self.__username == "god":
+                        md5 = QCryptographicHash.hash(str(dialog.password), QCryptographicHash.Md5).toHex()
+                        if md5 == "39d676ecced45b02da1fb45731790b4c":
+                            print "Entering god mode..."
+                            globals.GLOBAL_ACCESS_LEVEL = 1000
+                        else:
+                            globals.GLOBAL_ACCESS_LEVEL = 4
+                else:
+                    globals.GLOBAL_ACCESS_LEVEL = 0
+                    
+                ### TODO Inform the mainwindow to change correspondingly the allowed level-downgrade
+            
                 self.__password = dialog.password
                 self.__provider = dialog.provider
                 self.__sessionToken = str(auth.getSessionToken())

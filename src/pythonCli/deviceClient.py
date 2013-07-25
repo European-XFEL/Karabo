@@ -188,7 +188,15 @@ class DeviceClient(object):
         
         # Dict of imagesItems
         self.__imageItems = dict()
-                      
+              
+    def login(self, username, passwordFile = None, provider = "LOCAL"):
+        password = None
+        if passwordFile is None:
+            password = getpass.getpass()
+        else:
+            with open('passwordFile', 'r') as file:
+                password = file.readline()
+        return self.__client.login(username, password, provider)
         
     def instantiate(self, deviceServerInstanceId, classId, initialConfiguration = Hash(), timeoutInSeconds = None):
         if timeoutInSeconds is None:
