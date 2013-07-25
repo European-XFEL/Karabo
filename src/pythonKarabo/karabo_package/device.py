@@ -120,9 +120,6 @@ class PythonDevice(BaseFsm):
         Logger.configure(logcfg)
         self.log = Logger.getLogger(self.deviceid)
 
-        self.initClassId()
-        self.initSchema()
-        
         # Initialize FSM slots for user defined FSM (polymorphic call) 
         self.initFsmSlots(self._ss)
         
@@ -130,6 +127,9 @@ class PythonDevice(BaseFsm):
         self._initDeviceSlots()
         
     def run(self):
+        self.initClassId()
+        self.initSchema()
+        
         self.startFsm()
         with self._stateChangeLock:
             validated = self.validatorIntern.validate(self.fullSchema, self.parameters)
@@ -219,6 +219,14 @@ class PythonDevice(BaseFsm):
         self._ss.emit("signalSchemaUpdated", self.fullSchema, self.deviceid)
         self.log.INFO("Schema updated")
     
+    def updateSchemaAndAdjustConfiguration(self, schema):
+        self.updateSchema(schema)
+        # adjust configuration to schema
+        filtered = HashFilter.byTag(self.fullSchema, self.parameters, "")
+        with self._stateChangeLock:
+            validated = self.validatorIntern.validate(self.fullSchema, filtered)
+            self.parameters.merge(validated, HashMergePolicy.REPLACE_ATTRIBUTES)
+        
     def setProgress(self, value, associatedText = ""):
         v = self.progressMin + value / (self.progressMax - self.progressMin)
         self._ss.emit("signalProgressUpdated", v, associatedText, self.deviceid)
@@ -288,6 +296,15 @@ class PythonDevice(BaseFsm):
     def initSchema(self):
         self.staticSchema = PythonDevice.getSchema(self.classid)
         self.fullSchema = self.staticSchema
+        
+    def initSchemaAndAdjustConfiguration(self):
+        self.initSchema()
+        # adjust configuration to schema
+        filtered = HashFilter.byTag(self.fullSchema, self.parameters, "")
+        with self._stateChangeLock:
+            validated = self.validatorIntern.validate(self.fullSchema, filtered)
+            self.parameters.merge(validated, HashMergePolicy.REPLACE_ATTRIBUTES)
+        
         
     def onStateUpdate(self, currentState):
         self.log.DEBUG("onStateUpdate: {}".format(currentState))
