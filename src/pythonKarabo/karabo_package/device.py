@@ -212,7 +212,6 @@ class PythonDevice(BaseFsm):
         return self.fullSchema
         
     def updateSchema(self, schema):
-        print "*** updateSchema ***"
         rules = ValidatorValidationRules()
         rules.allowAdditionalKeys        = True
         rules.allowMissingKeys           = True
@@ -222,7 +221,6 @@ class PythonDevice(BaseFsm):
         validator = Validator()
         validator.setValidationRules(rules)
         validated = validator.validate(schema, self.parameters)
-        #print "\tupdateSchema: validated...\n", validated
         with self._stateChangeLock:
             for key in self._injectedSchema.getKeys():
                 self.parameters.erase(key)
@@ -236,7 +234,6 @@ class PythonDevice(BaseFsm):
         self.log.INFO("Schema updated")
     
     def appendSchema(self, schema):
-        print "*** updateSchema ***"
         rules = ValidatorValidationRules()
         rules.allowAdditionalKeys        = True
         rules.allowMissingKeys           = True
@@ -246,7 +243,6 @@ class PythonDevice(BaseFsm):
         validator = Validator()
         validator.setValidationRules(rules)
         validated = validator.validate(schema, self.parameters)
-        #print "\tappendSchema: validated...\n", validated
         with self._stateChangeLock:
             for key in self._injectedSchema.getKeys():
                 self.parameters.erase(key)
