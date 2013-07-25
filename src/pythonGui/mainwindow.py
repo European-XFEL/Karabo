@@ -76,7 +76,6 @@ class MainWindow(QMainWindow):
         self.__acOperator.setStatusTip(text)
         self.__acOperator.setToolTip(text)
         self.__acOperator.setCheckable(True)
-        self.__acOperator.setChecked(True)
 
         text = "User"
         self.__acUser = QAction(text, self)
@@ -99,11 +98,7 @@ class MainWindow(QMainWindow):
         self.__agAccessLevel.triggered.connect(self.onChangeAccessLevel)
         
         self.__mAccessLevel = QMenu()
-        if globals.GLOBAL_ACCESS_LEVEL > 3: self.__mAccessLevel.addAction(self.__acAdmin)
-        if globals.GLOBAL_ACCESS_LEVEL > 2: self.__mAccessLevel.addAction(self.__acExpert)
-        if globals.GLOBAL_ACCESS_LEVEL > 1: self.__mAccessLevel.addAction(self.__acOperator)
-        if globals.GLOBAL_ACCESS_LEVEL > 0: self.__mAccessLevel.addAction(self.__acUser)
-        self.__mAccessLevel.addAction(self.__acObserver)
+        self.onUpdateAccessLevel()
         self.__tbAccessLevel.setMenu(self.__mAccessLevel)
         
         text = "Connect to server"
@@ -230,6 +225,7 @@ class MainWindow(QMainWindow):
 
     def _setupNetwork(self):
         self.__network = Network()
+        self.__network.signalUserChanged.connect(self.onUpdateAccessLevel)
 
 
 ### virtual functions ###
@@ -263,21 +259,40 @@ class MainWindow(QMainWindow):
 
     def onChangeAccessLevel(self, action):
         if action is self.__acObserver:
-            print "observer"
             globals.GLOBAL_ACCESS_LEVEL = 0
         elif action is self.__acUser:
-            print "user"
             globals.GLOBAL_ACCESS_LEVEL = 1
         elif action is self.__acOperator:
-            print "operator"
             globals.GLOBAL_ACCESS_LEVEL = 2
         elif action is self.__acExpert:
-            print "expert"
             globals.GLOBAL_ACCESS_LEVEL = 3
         elif action is self.__acAdmin:
-            print "admin"
             globals.GLOBAL_ACCESS_LEVEL = 4
         
         # Emit signal that globals.GLOBAL_ACCESS_LEVEL has changed
         Manager().notifier.signalGlobalAccessLevelChanged.emit()
+
+
+    def onUpdateAccessLevel(self):
+        self.__mAccessLevel.clear()
+        if globals.GLOBAL_ACCESS_LEVEL > 3:
+            self.__mAccessLevel.addAction(self.__acAdmin)
+        if globals.GLOBAL_ACCESS_LEVEL > 2:
+            self.__mAccessLevel.addAction(self.__acExpert)
+        if globals.GLOBAL_ACCESS_LEVEL > 1:
+            self.__mAccessLevel.addAction(self.__acOperator)
+        if globals.GLOBAL_ACCESS_LEVEL > 0:
+            self.__mAccessLevel.addAction(self.__acUser)
+        self.__mAccessLevel.addAction(self.__acObserver)
+        
+        if globals.GLOBAL_ACCESS_LEVEL == 4:
+            self.__acAdmin.setChecked(True)
+        elif globals.GLOBAL_ACCESS_LEVEL == 3:
+            self.__acExpert.setChecked(True)
+        elif globals.GLOBAL_ACCESS_LEVEL == 2:
+            self.__acOperator.setChecked(True)
+        elif globals.GLOBAL_ACCESS_LEVEL == 1:
+            self.__acUser.setChecked(True)
+        elif globals.GLOBAL_ACCESS_LEVEL == 0:
+            self.__acObserver.setChecked(True)
 
