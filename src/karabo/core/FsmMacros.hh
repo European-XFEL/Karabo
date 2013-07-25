@@ -506,7 +506,6 @@ struct name : public boost::msm::front::state<karabo::core::FsmBaseState> { \
         try { \
              this->setFsmName(f.getFsmName()); \
              this->setContained(f.is_contained()); \
-             _updateCurrentState(f); \
             KARABO_LOG_FRAMEWORK_DEBUG << #name << ": entry"; \
             f.getContext()->entryFunc(); \
         } catch(karabo::util::Exception const& e) { \
@@ -638,7 +637,6 @@ struct name : public boost::msm::front::state<karabo::core::FsmBaseState> { \
     template <class Event, class Fsm> void on_entry(Event const&, Fsm & f) { \
         try { \
              this->setFsmName(f.getFsmName()); \
-             _updateCurrentState(f); \
             KARABO_LOG_FRAMEWORK_DEBUG << #name << ": entry"; \
             f.getContext()->entryFunc(); \
         } catch(karabo::util::Exception const& e) { \
