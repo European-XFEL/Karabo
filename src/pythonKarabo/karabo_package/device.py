@@ -299,6 +299,7 @@ class PythonDevice(BaseFsm):
         
     def initSchemaAndAdjustConfiguration(self):
         self.initSchema()
+        self._ss.emit("signalSchemaUpdated", self.fullSchema, self.deviceid)
         # adjust configuration to schema
         filtered = HashFilter.byTag(self.fullSchema, self.parameters, "")
         with self._stateChangeLock:
