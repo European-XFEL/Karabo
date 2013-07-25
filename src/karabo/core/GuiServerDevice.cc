@@ -468,11 +468,11 @@ namespace karabo {
         }
 
 
-        void GuiServerDevice::slotSchemaUpdated(const karabo::util::Schema& description, const std::string & deviceId) {
+        void GuiServerDevice::slotSchemaUpdated(const karabo::util::Schema& schema, const std::string & deviceId) {
             try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "Broadcasting schema updated";
                 Hash header("type", "schemaUpdated", "deviceId", deviceId);
-                Hash body("device." + deviceId + ".description", description);
+                Hash body("device." + deviceId + ".description", schema);
                 boost::mutex::scoped_lock lock(m_channelMutex);
                 // Broadcast to all GUIs
                 typedef std::map< karabo::net::Channel::Pointer, std::set<std::string> >::const_iterator channelIterator;
