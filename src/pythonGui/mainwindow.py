@@ -99,10 +99,10 @@ class MainWindow(QMainWindow):
         self.__agAccessLevel.triggered.connect(self.onChangeAccessLevel)
         
         self.__mAccessLevel = QMenu()
-        self.__mAccessLevel.addAction(self.__acAdmin)
-        self.__mAccessLevel.addAction(self.__acExpert)
-        self.__mAccessLevel.addAction(self.__acOperator)
-        self.__mAccessLevel.addAction(self.__acUser)
+        if globals.GLOBAL_ACCESS_LEVEL > 3: self.__mAccessLevel.addAction(self.__acAdmin)
+        if globals.GLOBAL_ACCESS_LEVEL > 2: self.__mAccessLevel.addAction(self.__acExpert)
+        if globals.GLOBAL_ACCESS_LEVEL > 1: self.__mAccessLevel.addAction(self.__acOperator)
+        if globals.GLOBAL_ACCESS_LEVEL > 0: self.__mAccessLevel.addAction(self.__acUser)
         self.__mAccessLevel.addAction(self.__acObserver)
         self.__tbAccessLevel.setMenu(self.__mAccessLevel)
         
