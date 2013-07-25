@@ -202,10 +202,13 @@ class DeviceServer(object):
         self.pluginThread.start()
     
     def scanPlugins(self):
+        self.blacklist = []
         self.availableModules = dict()
         while self.scanning:
             modules = self.pluginLoader.update()   # just list of modules in plugins dir
             for name, path in modules:
+                if name in self.blacklist:
+                    continue
                 if name in self.availableModules:
                     continue
                 try:
@@ -217,7 +220,9 @@ class DeviceServer(object):
                     self.log.WARN("scanPlugins: Cannot import module {} -- {}".format(name,e))
                     continue
                 if "PythonDevice" not in dir(module):
-                    raise IndexError,"Module '" + name + "' has no use of PythonDevice class"
+                    if name not in self.blacklist:
+                        self.blacklist.append(name)
+                    continue
                 candidates = [module.PythonDevice]
                 #
                 # IMPORTANT!
