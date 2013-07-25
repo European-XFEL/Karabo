@@ -212,21 +212,53 @@ class PythonDevice(BaseFsm):
         return self.fullSchema
         
     def updateSchema(self, schema):
-        self.log.DEBUG("Update Schema requested")
-        self._injectSchema(schema)
-        self.log.DEBUG("Injected...")
+        print "*** updateSchema ***"
+        rules = ValidatorValidationRules()
+        rules.allowAdditionalKeys        = True
+        rules.allowMissingKeys           = True
+        rules.allowUnrootedConfiguration = True
+        rules.injectDefaults             = True
+        rules.injectTimestamps           = True
+        validator = Validator()
+        validator.setValidationRules(rules)
+        validated = validator.validate(schema, self.parameters)
+        #print "\tupdateSchema: validated...\n", validated
+        with self._stateChangeLock:
+            for key in self._injectedSchema.getKeys():
+                self.parameters.erase(key)
+            self._stateDependentSchema = {}
+            self._injectedSchema = schema
+            self.fullSchema = self.staticSchema
+            self.fullSchema += self._injectedSchema
+            self.parameters.merge(validated, HashMergePolicy.REPLACE_ATTRIBUTES)
         # notify the distributed system...
         self._ss.emit("signalSchemaUpdated", self.fullSchema, self.deviceid)
         self.log.INFO("Schema updated")
     
-    def updateSchemaAndAdjustConfiguration(self, schema):
-        self.updateSchema(schema)
-        # adjust configuration to schema
-        filtered = HashFilter.byTag(self.fullSchema, self.parameters, "")
+    def appendSchema(self, schema):
+        print "*** updateSchema ***"
+        rules = ValidatorValidationRules()
+        rules.allowAdditionalKeys        = True
+        rules.allowMissingKeys           = True
+        rules.allowUnrootedConfiguration = True
+        rules.injectDefaults             = True
+        rules.injectTimestamps           = True
+        validator = Validator()
+        validator.setValidationRules(rules)
+        validated = validator.validate(schema, self.parameters)
+        #print "\tappendSchema: validated...\n", validated
         with self._stateChangeLock:
-            validated = self.validatorIntern.validate(self.fullSchema, filtered)
+            for key in self._injectedSchema.getKeys():
+                self.parameters.erase(key)
+            self._stateDependentSchema = {}
+            self._injectedSchema += schema
+            self.fullSchema = self.staticSchema
+            self.fullSchema += self._injectedSchema
             self.parameters.merge(validated, HashMergePolicy.REPLACE_ATTRIBUTES)
-        
+        # notify the distributed system...
+        self._ss.emit("signalSchemaUpdated", self.fullSchema, self.deviceid)
+        self.log.INFO("Schema appended")
+    
     def setProgress(self, value, associatedText = ""):
         v = self.progressMin + value / (self.progressMax - self.progressMin)
         self._ss.emit("signalProgressUpdated", v, associatedText, self.deviceid)
@@ -296,16 +328,6 @@ class PythonDevice(BaseFsm):
     def initSchema(self):
         self.staticSchema = PythonDevice.getSchema(self.classid)
         self.fullSchema = self.staticSchema
-        
-    def initSchemaAndAdjustConfiguration(self):
-        self.initSchema()
-        self._ss.emit("signalSchemaUpdated", self.fullSchema, self.deviceid)
-        # adjust configuration to schema
-        filtered = HashFilter.byTag(self.fullSchema, self.parameters, "")
-        with self._stateChangeLock:
-            validated = self.validatorIntern.validate(self.fullSchema, filtered)
-            self.parameters.merge(validated, HashMergePolicy.REPLACE_ATTRIBUTES)
-        
         
     def onStateUpdate(self, currentState):
         self.log.DEBUG("onStateUpdate: {}".format(currentState))
@@ -426,12 +448,6 @@ class PythonDevice(BaseFsm):
                 self._stateDependentSchema[state] += self._injectedSchema
             return self._stateDependentSchema[state]
     
-    def _injectSchema(self, schema):
-        with self._stateChangeLock:
-            self._stateDependentSchema = {}
-            self._injectedSchema = schema
-            self.fullSchema += self._injectedSchema
-            
     def getInstanceId(self):
         return self._ss.getInstanceId()
    
