@@ -61,8 +61,6 @@ namespace karabo {
             /*                    Transition Actions                      */
             /**************************************************************/
 
-            KARABO_FSM_VE_ACTION2(ErrorFoundAction, errorFoundAction, std::string, std::string);
-
             KARABO_FSM_VE_ACTION0(ResetAction, resetAction);
 
             /**************************************************************/

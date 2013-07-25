@@ -47,7 +47,7 @@ namespace karabo {
 
         void DeviceClient::setupSlots() {
             m_signalSlotable->registerSlot<Hash, string > (boost::bind(&karabo::core::DeviceClient::slotChanged, this, _1, _2), "slotChanged");
-            m_signalSlotable->registerSlot<Schema, string > (boost::bind(&karabo::core::DeviceClient::slotSchemaUpdated, this, _1, _2), "slotSchemaUpdated");
+            m_signalSlotable->registerSlot<Schema, string > (boost::bind(&karabo::core::DeviceClient::slotSchemaUpdated, this, _1, _2), "slotSchemaUpdated", SignalSlotable::GLOBAL);
             m_signalSlotable->registerSlot<string, Hash > (boost::bind(&karabo::core::DeviceClient::slotInstanceNew, this, _1, _2), "slotInstanceNew", SignalSlotable::GLOBAL);
             m_signalSlotable->registerSlot<string, Hash > (boost::bind(&karabo::core::DeviceClient::slotInstanceUpdated, this, _1, _2), "slotInstanceUpdated", SignalSlotable::GLOBAL);
             m_signalSlotable->registerSlot<string > (boost::bind(&karabo::core::DeviceClient::slotInstanceGone, this, _1), "slotInstanceGone", SignalSlotable::GLOBAL);
@@ -241,10 +241,14 @@ namespace karabo {
 
         void DeviceClient::slotSchemaUpdated(const karabo::util::Schema& schema, const std::string& deviceId) {
             boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
-            string path("device." + deviceId + ".description");
-            Hash entry(path, schema);
+            cout << "Schema updated!" << endl;
+            string path("device." + deviceId + ".fullSchema");
             boost::optional<Hash::Node&> node = m_runtimeSystemDescription.find(path);
             if (node) node->setValue(schema);
+            
+            path = "device." + deviceId + ".activeSchema";
+            if (m_runtimeSystemDescription.has(path)) m_runtimeSystemDescription.erase(path);
+            
             if (m_schemaUpdatedHandler) m_schemaUpdatedHandler(schema, deviceId);
         }
 
@@ -344,6 +348,7 @@ namespace karabo {
                 vector<string> devices;
                 devices.reserve(tmp.size());
                 for (Hash::const_iterator it = tmp.begin(); it != tmp.end(); ++it) {
+                    // TODO
                     if (it->hasAttribute("visibility")) {
                         //const vector<string>& roles = it->getAttribute<vector<string> >("visibility");
                         //if (!roles.empty()) {

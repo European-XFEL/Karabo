@@ -104,10 +104,11 @@ namespace karabo {
 
 
         // TODO Implement it such that the current assembly rules are respected
-
-
         void Schema::merge(const Schema& schema) {
-            m_hash.merge(schema.m_hash);
+            Hash tmp = schema.getParameterHash();
+            for (Hash::iterator it = tmp.begin(); it != tmp.end(); ++it) {
+                this->addElement(*it);
+            }
         }
 
 

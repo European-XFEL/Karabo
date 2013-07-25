@@ -83,7 +83,7 @@ namespace karabo {
              *     
              * device +
              *   <deviceId> type host version status classId serverId +
-             *      description => SCHEMA
+             *      fullSchema => SCHEMA
              *      configuration => HASH
              *      activeSchema +
              *         <stateName> => SCHEMA
