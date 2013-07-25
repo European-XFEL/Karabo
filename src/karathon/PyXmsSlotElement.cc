@@ -76,11 +76,6 @@ void exportPyXmsSlotElement() {
            , (bp::arg("states"), bp::arg("sep") = " ,;")
            , bp::return_internal_reference<> ());
 
-    sl.def("allowedRoles"
-           , (SLOT_ELEMENT & (SlotElementBase<SLOT_ELEMENT>::*)(string const &, string const &))(&SlotElementBase<SLOT_ELEMENT >::allowedRoles)
-           , (bp::arg("states"), bp::arg("sep") = " ,;")
-           , bp::return_internal_reference<> ());
-
     sl.def("commit"
            , bp::pure_virtual((void (SlotElementBase<SLOT_ELEMENT>::*)())(&SlotElementBase< SLOT_ELEMENT >::commit))
            , bp::return_internal_reference<> ());
