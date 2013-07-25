@@ -27,8 +27,8 @@ namespace karabo {
             virtual void errorFound(const std::string&, const std::string&) = 0;
             
             KARABO_FSM_ON_EXCEPTION(errorFound);
-
-            virtual void errorFoundAction(const std::string&, const std::string&) = 0;
+            
+            KARABO_FSM_PV_ACTION2(ErrorFoundAction, errorFoundAction, std::string, std::string);
 
             virtual void onStateUpdate(const std::string& currentState) = 0;
             

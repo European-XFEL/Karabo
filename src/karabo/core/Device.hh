@@ -37,7 +37,7 @@ namespace karabo {
         #define KARABO_LOG_INFO  log() << log4cpp::Priority::INFO 
         #define KARABO_LOG_WARN  log() << log4cpp::Priority::WARN 
         #define KARABO_LOG_ERROR log() << log4cpp::Priority::ERROR 
-        
+
         #define KARABO_NO_SERVER "__none__"
 
         class BaseDevice : public virtual karabo::xms::SignalSlotable {
@@ -60,7 +60,7 @@ namespace karabo {
          */
         template <class FSM = BaseFsm>
         class Device : public BaseDevice, public FSM {
-            
+
             karabo::util::Validator m_validatorIntern;
             karabo::util::Validator m_validatorExtern;
 
@@ -69,7 +69,7 @@ namespace karabo {
             std::string m_classId;
             std::string m_serverId;
             std::string m_deviceId;
-            
+
             std::map<std::string, karabo::util::Schema> m_stateDependendSchema;
             boost::mutex m_stateDependendSchemaMutex;
 
@@ -85,7 +85,7 @@ namespace karabo {
             karabo::util::Schema m_staticSchema;
             karabo::util::Schema m_injectedSchema;
             karabo::util::Schema m_fullSchema;
-            
+
         public:
 
             KARABO_CLASSINFO(Device, "Device", "1.0")
@@ -173,7 +173,7 @@ namespace karabo {
                 rules.injectTimestamps = true;
                 m_validatorIntern.setValidationRules(rules);
                 m_validatorExtern.setValidationRules(rules);
-                
+
                 // Setup device logger
                 m_log = &(karabo::log::Logger::getLogger(m_deviceId)); // TODO use later: "device." + instanceId
 
@@ -218,28 +218,28 @@ namespace karabo {
                 karabo::util::Hash h(key, value);
                 this->set(h, timestamp);
             }
-            
+
             template <class PixelType>
             void set(const std::string& key, const karabo::xip::CpuImage<PixelType>& image, const karabo::util::Timestamp& timestamp = karabo::util::Timestamp()) {
                 using namespace karabo::util;
                 using namespace karabo::io;
                 using namespace karabo::xip;
-                
+
                 Hash hash;
                 Hash& value = hash.bindReference<Hash>(key);
-                
+
                 karabo::xip::RawImageData raw(value); // Shares value
-                
+
                 // Fill data
                 raw.setByteSize(image.byteSize());
                 std::memcpy(raw.dataPointer(), image.pixelPointer(), image.byteSize());
-                
+
                 // Set dims
                 raw.setDimensions(image.dims());
-                
+
                 // Set encoding
                 raw.setEncoding(karabo::xip::Encoding::GRAY);
-                
+
                 // Set channel space
                 karabo::xip::ChannelSpaceType channelSpace;
                 Types::ReferenceType type = Types::from<PixelType>();
@@ -255,15 +255,15 @@ namespace karabo {
                     channelSpace = karabo::xip::ChannelSpace::UNDEFINED;
                 }
                 raw.setChannelSpace(channelSpace);
-                
+
                 // Set header
                 raw.setHeader(image.getHeader());
-                
+
                 hash.setAttribute(key, "image", 1);
                 m_parameters.merge(hash, karabo::util::Hash::REPLACE_ATTRIBUTES);
                 emit("signalChanged", hash, getInstanceId());
             }
-            
+
             /**
              * Updates the state of the device with all key/value pairs given in the hash
              * NOTE: This function will automatically and efficiently (only one message) inform
@@ -368,13 +368,43 @@ namespace karabo {
              * @param schema
              */
             void updateSchema(const karabo::util::Schema& schema) {
-
+                
                 KARABO_LOG_DEBUG << "Update Schema requested";
-                injectSchema(schema);
-                KARABO_LOG_DEBUG << "Injected...";
-                // Notify the distributed system
-                emit("signalSchemaUpdated", m_fullSchema, m_deviceId);
-                KARABO_LOG_INFO << "Schema updated";
+                karabo::util::Hash validated;
+                karabo::util::Validator::ValidationRules rules;
+                rules.allowAdditionalKeys = true;
+                rules.allowMissingKeys = true;
+                rules.allowUnrootedConfiguration = true;
+                rules.injectDefaults = true;
+                rules.injectTimestamps = true;
+                karabo::util::Validator v(rules);
+                v.validate(schema, m_parameters, validated, karabo::util::Timestamp());
+                {
+                    boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
+                    // Clear previously injected parameters
+                    std::vector<std::string> keys = m_injectedSchema.getKeys();
+                    
+                    BOOST_FOREACH(std::string key, keys) {
+                        if (m_parameters.has(key)) m_parameters.erase(key);
+                    }
+
+                    // Clear cache
+                    m_stateDependendSchema.clear();
+
+                    // Reset fullSchema
+                    m_fullSchema = m_staticSchema;
+                    
+                    // Save injected
+                    m_injectedSchema = schema;
+
+                    // Merge to full schema
+                    m_fullSchema.merge(m_injectedSchema);
+                
+                    KARABO_LOG_INFO << "Schema updated";
+                    // Notify the distributed system
+                    emit("signalSchemaUpdated", m_fullSchema, m_deviceId);
+                }   
+                set(validated);
             }
 
             void setProgress(const int value, const std::string& associatedText = "") {
@@ -462,7 +492,7 @@ namespace karabo {
                 karabo::util::HashFilter::byTag(m_fullSchema, m_parameters, filtered, tags);
                 return filtered;
             }
-            
+
             karabo::util::Hash filterByTags(const karabo::util::Hash& hash, const std::string& tags) const {
                 karabo::util::Hash filtered;
                 karabo::util::HashFilter::byTag(m_fullSchema, hash, filtered, tags);
@@ -474,16 +504,27 @@ namespace karabo {
             }
 
             // This function will polymorphically be called by the FSM template
+
             virtual void onStateUpdate(const std::string& currentState) { // private
                 KARABO_LOG_FRAMEWORK_DEBUG << "onStateUpdate: " << currentState;
                 if (get<std::string>("state") != currentState) {
                     set("state", currentState);
+                    static const boost::regex e("error", boost::regex::icase);
+                    if (boost::regex_match(currentState, e)) {
+                        updateInstanceInfo(karabo::util::Hash("status", "error"));
+                    } else {
+                        // Reset the error status
+                        if (getInstanceInfo().get<std::string>("status") == "error") {
+                            updateInstanceInfo(karabo::util::Hash("status", "ok"));
+                        }
+                    }
                 }
                 // Reply new state to interested event initiators
                 reply(currentState);
             }
 
             // This function will polymorphically be called by the FSM template
+
             virtual void onNoStateTransition(const std::string& typeId, int state) {
                 std::string eventName(typeId);
                 boost::regex re(".*\\d+(.+Event).*");
@@ -501,38 +542,39 @@ namespace karabo {
             virtual void triggerError(const std::string& shortMessage, const std::string& detailedMessage) const {
                 call("", "errorFound", shortMessage, detailedMessage);
             }
-             
+
             void execute(const std::string& command) const {
                 call("", command);
             }
-            
+
             template <class A1>
             void execute(const std::string& command, const A1& a1) const {
                 call("", command, a1);
             }
-            
+
             template <class A1, class A2>
             void execute(const std::string& command, const A1& a1, const A2& a2) const {
                 call("", command, a1, a2);
             }
-            
+
             template <class A1, class A2, class A3>
             void execute(const std::string& command, const A1& a1, const A2& a2, const A3& a3) const {
                 call("", command, a1, a2, a3);
             }
-            
+
             template <class A1, class A2, class A3, class A4>
             void execute(const std::string& command, const A1& a1, const A2& a2, const A3& a3, const A4& a4) const {
                 call("", command, a1, a2, a3, a4);
             }
-            
-        protected: // Functions and Classes
 
-            // This function will polymorphically be called by the FSM template
+            // This function will polymorphically be called by the FSM template            
             virtual void errorFoundAction(const std::string& shortMessage, const std::string& detailedMessage) {
+                std::cout << "errorFoundAction" << std::endl;
                 KARABO_LOG_ERROR << shortMessage;
                 emit("signalNotification", std::string("ERROR"), shortMessage, detailedMessage, m_deviceId);
             }
+
+        protected: // Functions and Classes
 
             virtual void preReconfigure(karabo::util::Hash& incomingReconfiguration) {
             }
@@ -557,7 +599,15 @@ namespace karabo {
 
                 // Prepare some info further describing this particular instance
                 // status, visibility, owner, lang 
-                karabo::util::Hash info("type", "device", "classId", m_classId, "serverId", m_serverId, "visibility", this->get<int >("visibility"), "version", Device::classInfo().getVersion(), "host", boost::asio::ip::host_name());
+                karabo::util::Hash info;
+                info.set("type", "device");
+                info.set("classId", m_classId);
+                info.set("serverId", m_serverId);
+                info.set("visibility", this->get<int >("visibility"));
+                info.set("version", Device::classInfo().getVersion());
+                info.set("host", boost::asio::ip::host_name());
+                info.set("status", "ok");
+
                 // TODO Make heartbeat configurable
                 boost::thread t(boost::bind(&karabo::core::Device<FSM>::runEventLoop, this, 10, info));
                 this->startFsm();
@@ -568,7 +618,7 @@ namespace karabo {
 
                 // Validate first time to assign timestamps
                 m_objectStateChangeMutex.lock();
-                
+
                 // The following lines of code are needed to initially inject timestamps to the parameters
                 karabo::util::Hash validated;
                 std::pair<bool, std::string> result = m_validatorIntern.validate(m_fullSchema, m_parameters, validated, karabo::util::Timestamp());
@@ -619,6 +669,7 @@ namespace karabo {
             }
 
             // TODO deprecate
+
             void slotRefresh() {
                 emit("signalChanged", m_parameters, m_deviceId);
                 reply(m_parameters);
@@ -706,18 +757,6 @@ namespace karabo {
                     if (!m_injectedSchema.empty()) it->second.merge(m_injectedSchema);
                 }
                 return it->second;
-            }
-
-            /**
-             * Replace existing schema descriptions by static (hard coded in expectedParameters) part and
-             * add additional (dynamic) descriptions
-             * @param schema
-             */
-            void injectSchema(const karabo::util::Schema& schema) {
-                boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
-                m_stateDependendSchema.clear();
-                m_injectedSchema = schema;
-                m_fullSchema.merge(m_injectedSchema);
             }
         };
     }

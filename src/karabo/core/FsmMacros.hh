@@ -245,6 +245,9 @@ struct name { \
         }\
     } \
 };
+#define KARABO_FSM_ACTION0(name, func) \
+_KARABO_FSM_ACTION_IMPL0(name, func) \
+void func();
 #define KARABO_FSM_V_ACTION0(name, func) \
 _KARABO_FSM_ACTION_IMPL0(name, func) \
 virtual void func();
