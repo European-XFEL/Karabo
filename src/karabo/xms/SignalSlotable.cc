@@ -61,11 +61,11 @@ namespace karabo {
         void SignalSlotable::init(const std::string& instanceId,
                                   const karabo::net::BrokerConnection::Pointer& connection) {
 
-            
+
             m_defaultAccessLevel = KARABO_DEFAULT_ACCESS_LEVEL;
             m_connection = connection;
             m_instanceId = instanceId;
-            
+
             // Sanify instanceId (e.g. dots are bad)
             sanifyInstanceId(m_instanceId);
 
@@ -93,7 +93,7 @@ namespace karabo {
             string brokerHostname = getConnection()->getBrokerHostname();
             string brokerPort = karabo::util::toString(getConnection()->getBrokerPort());
             string brokerTopic = getConnection()->getBrokerTopic();
-            
+
             m_authenticator = Authenticator::Pointer(new Authenticator(username, password, provider, boost::asio::ip::host_name(), brokerHostname, brokerPort, brokerTopic));
 
             if (username == "god" && godEncode(password) == 749) {
@@ -117,6 +117,11 @@ namespace karabo {
                 m_defaultAccessLevel = KARABO_DEFAULT_ACCESS_LEVEL;
                 return true;
             }
+        }
+
+
+        bool SignalSlotable::logout() {
+            return m_authenticator->logout();
         }
 
 
@@ -414,7 +419,8 @@ namespace karabo {
             m_instanceInfo.merge(update);
             call("*", "slotInstanceUpdated", m_instanceId, m_instanceInfo);
         }
-        
+
+
         const karabo::util::Hash& SignalSlotable::getInstanceInfo() const {
             return m_instanceInfo;
         }
