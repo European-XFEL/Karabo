@@ -12,7 +12,8 @@
     <file alias="filein">icons/filein-32x32.png</file>
     <file alias="fileout">icons/fileout-32x32.png</file>
     <file alias="transform-rotate">icons/transform-rotate-32x32.png</file>
-    <file alias="transform-scale">icons/transform-scale-32x32.png</file>
+    <file alias="transform-scale-up">icons/transform-scale-up-32x32.png</file>
+    <file alias="transform-scale-down">icons/transform-scale-down-32x32.png</file>
     <file alias="group">icons/group-32x32.png</file>
     <file alias="ungroup">icons/ungroup-32x32.png</file>
     <file alias="bringtofront">icons/bring-to-front1-32x32.png</file>

@@ -199,11 +199,16 @@ class CustomMiddlePanel(QWidget):
         self.__acRotate.setStatusTip(text)
         self.__acRotate.setToolTip(text)
         self.__acRotate.triggered.connect(self.onRotate)
-        text = "Scale"
-        self.__acScale = QAction(QIcon(":transform-scale"), text, self)
-        self.__acScale.setStatusTip(text)
-        self.__acScale.setToolTip(text)
-        self.__acScale.triggered.connect(self.onScale)
+        text = "Scale up"
+        self.__acScaleUp = QAction(QIcon(":transform-scale-up"), text, self)
+        self.__acScaleUp.setStatusTip(text)
+        self.__acScaleUp.setToolTip(text)
+        self.__acScaleUp.triggered.connect(self.onScaleUp)
+        text = "Scale down"
+        self.__acScaleDown = QAction(QIcon(":transform-scale-down"), text, self)
+        self.__acScaleDown.setStatusTip(text)
+        self.__acScaleDown.setToolTip(text)
+        self.__acScaleDown.triggered.connect(self.onScaleDown)
         
         text = "Group"
         self.__tbGroup = QToolButton(self)
@@ -291,7 +296,8 @@ class CustomMiddlePanel(QWidget):
         
         toolBar.addSeparator()
         toolBar.addAction(self.__acRotate)
-        toolBar.addAction(self.__acScale)
+        toolBar.addAction(self.__acScaleUp)
+        toolBar.addAction(self.__acScaleDown)
         
         toolBar.addSeparator()
         toolBar.addWidget(self.__tbGroup)
@@ -316,7 +322,8 @@ class CustomMiddlePanel(QWidget):
             self.__acCopy.setDisabled(isLink)
 
             self.__acRotate.setDisabled(isLink)
-            self.__acScale.setDisabled(isLink)
+            self.__acScaleUp.setDisabled(isLink)
+            self.__acScaleDown.setDisabled(isLink)
 
             self.__acBringToFront.setDisabled(isLink)
             self.__acSendToBack.setDisabled(isLink)
@@ -328,7 +335,8 @@ class CustomMiddlePanel(QWidget):
             self.__acCopy.setDisabled(True)
 
             self.__acRotate.setDisabled(True)
-            self.__acScale.setDisabled(True)
+            self.__acScaleUp.setDisabled(True)
+            self.__acScaleDown.setDisabled(True)
 
             self.__acBringToFront.setDisabled(True)
             self.__acSendToBack.setDisabled(True)
@@ -340,6 +348,28 @@ class CustomMiddlePanel(QWidget):
         self.__acGroupItems.setDisabled(isItemGroup)
         self.__mGroupInLayout.setDisabled(isItemGroup)
         self.__acUnGroupItems.setDisabled(not isItemGroup)
+
+
+    def enableActions(self, enable):
+        self.__acAddText.setEnabled(enable)
+        self.__acAddLine.setEnabled(enable)
+        self.__acAddRect.setEnabled(enable)
+
+        self.__acAddLink.setEnabled(enable)
+
+        self.__acCut.setEnabled(enable)
+        self.__acCopy.setEnabled(enable)
+        self.__acPaste.setEnabled(enable)
+        self.__acRemove.setEnabled(enable)
+
+        self.__acRotate.setEnabled(enable)
+        self.__acScaleUp.setEnabled(enable)
+        self.__acScaleDown.setEnabled(enable)
+
+        self.__tbGroup.setEnabled(enable)
+
+        self.__acBringToFront.setEnabled(enable)
+        self.__acSendToBack.setEnabled(enable)
 
 
     def onLineInserted(self):
@@ -354,9 +384,13 @@ class CustomMiddlePanel(QWidget):
     def onDesignModeChanged(self, isChecked):
         if isChecked:
             text = "Change to control mode"
+            # Enable/update actions
+            self.updateActions()
         else:
             text = "Change to design mode"
-        
+            # Disable actions
+            self.enableActions(False)
+
         self.__acDesignMode.setToolTip(text)
         self.__acDesignMode.setStatusTip(text)
         self.__customWidget.setDesignMode(isChecked)
@@ -428,8 +462,12 @@ class CustomMiddlePanel(QWidget):
         self.__customWidget.rotate()
 
 
-    def onScale(self):
-        self.__customWidget.scale()
+    def onScaleUp(self):
+        self.__customWidget.scaleUp()
+
+
+    def onScaleDown(self):
+        self.__customWidget.scaleDown()
 
 
     def onGroupItems(self):
