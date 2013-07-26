@@ -228,8 +228,7 @@ class PythonDevice(BaseFsm):
                     self.parameters.erase(path)
             self._stateDependentSchema = {}
             self._injectedSchema = schema
-            self.fullSchema = Schema(self.classid)
-            self.fullSchema += self.staticSchema
+            self.fullSchema.copy(self.staticSchema)
             self.fullSchema += self._injectedSchema
             #self.parameters.merge(validated, HashMergePolicy.REPLACE_ATTRIBUTES)
             #validated = self.validatorIntern.validate(self.fullSchema, self.parameters)
@@ -254,8 +253,7 @@ class PythonDevice(BaseFsm):
                 self.parameters.erase(key)
             self._stateDependentSchema = {}
             self._injectedSchema += schema
-            self.fullSchema = Schema(self.classid)
-            self.fullSchema += self.staticSchema
+            self.fullSchema.copy(self.staticSchema)
             self.fullSchema += self._injectedSchema
             self.parameters.merge(validated, HashMergePolicy.REPLACE_ATTRIBUTES)
         # notify the distributed system...
@@ -331,7 +329,7 @@ class PythonDevice(BaseFsm):
     def initSchema(self):
         self.staticSchema = PythonDevice.getSchema(self.classid)
         self.fullSchema = Schema(self.classid)
-        self.fullSchema += self.staticSchema
+        self.fullSchema.copy(self.staticSchema)
         
     def onStateUpdate(self, currentState):
         self.log.DEBUG("onStateUpdate: {}".format(currentState))
