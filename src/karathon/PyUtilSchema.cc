@@ -962,6 +962,11 @@ namespace schemawrap {
         schema.merge(schema2);
         return bp::object(schema);
     }
+    
+    bp::object copy(Schema& schema, const Schema& schema2) {
+        schema = schema2;
+        return bp::object(schema);
+    }
 }
 
 struct HashFilterWrap {
@@ -1123,6 +1128,8 @@ void exportPyUtilSchema() {
 
         s.def("__iadd__", &schemawrap::merge, bp::arg("schema"));
 
+        s.def("copy", &schemawrap::copy, bp::arg("schema"));
+        
         //********* 'get'-methods *********************
         s.def("getRequiredAccessLevel", &Schema::getRequiredAccessLevel);
 
