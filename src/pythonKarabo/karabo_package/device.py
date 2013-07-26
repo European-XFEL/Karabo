@@ -10,6 +10,7 @@ import socket
 from abc import ABCMeta, abstractmethod
 from karabo.karathon import *
 from karabo.decorators import KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS
+from karabo.configurator import Configurator
 from karabo.base_fsm import BaseFsm
 
 
@@ -483,10 +484,8 @@ def launchPythonDevice():
         configuration = config[classid]
     else:
         configuration = Hash()
-    #print "launchPythonDevice: input configuration before being validated is ...\n", configuration
     try:
-        module = __import__(modname)
-        device = PythonDevice.create(classid, configuration)
+        device = Configurator(PythonDevice).create(classid, configuration)
         device.run()
     except Exception,e:
         print "Exception caught: " + str(e)

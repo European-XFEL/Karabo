@@ -383,7 +383,7 @@ class Launcher(threading.Thread):
         self.pid = os.fork()
         if self.pid == 0:
             os.chmod(self.script, 0755)
-            os.execvpe(self.script, self.args, os.environ)
+            os.execvp(self.script, self.args)
         else:
             id, status = os.waitpid(self.pid, 0)
             print "Finally %r died" % (self.device)
