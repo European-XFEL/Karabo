@@ -16,6 +16,17 @@ class Configurator(object):
     
     @staticmethod
     def registerAsBaseClass(theClass):
+        '''
+        if hasattr(theClass, "__classid__"):
+            print "registerAsBaseClass: class '{}' has __classid__ = {}".format(theClass.__name__, theClass.__classid__)
+        else:
+            print "registerAsBaseClass: class '{}' has no __classid__ attribute".format(theClass.__name__)
+        if hasattr(theClass, "__base_classid__"):
+            print "registerAsBaseClass: class '{}' has __base_classid__ = {}".format(theClass.__name__, theClass.__base_classid__)
+        else:
+            print "registerAsBaseClass: class '{}' has no __base_classid__ attribute".format(theClass.__name__)
+        print "Class '{}.__classid__' found in registry: {}".format(theClass.__name__, theClass.__classid__ in Configurator.registry)
+        '''
         if theClass.__classid__ not in Configurator.registry:
             theClass.__base_classid__ = theClass.__classid__
             theClass.__bases_classid__ = (theClass.__classid__,)
@@ -25,7 +36,7 @@ class Configurator(object):
     
     def __init__(self, classid):
         '''
-        The argument to constructor may be the classid of a configurable class or configurable class itself:
+        The argument to the constructor may be the classid of a configurable class or configurable class itself:
         Example:
                 c = Configurator(ConfigurableClass)
         or

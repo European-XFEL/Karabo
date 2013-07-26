@@ -34,7 +34,7 @@ def KARABO_CLASSINFO(classid, version):
 
 def KARABO_CONFIGURATION_BASE_CLASS(theClass):
     '''
-    This decorator should be place before "KARABO_CLASSINFO" decoratoro.  It registers the class as the base configurable class and adds the following classmethods:
+    This decorator should be placed just before "KARABO_CLASSINFO" decorator.  It registers the class as the base configurable class and adds the following classmethods:
     "create", "createNode", "createChoice", "createList", "getSchema" and "getRegisteredClasses". It has no parameters.
     Example:
             @KARABO_CONFIGURATION_BASE_CLASS
