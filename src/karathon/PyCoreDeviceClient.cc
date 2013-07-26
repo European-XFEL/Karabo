@@ -31,6 +31,7 @@ void exportPyCoreDeviceClient() {
             .def(bp::init<boost::shared_ptr<SignalSlotableWrap>& >())
 
             .def("login", &DeviceClient::login)
+            .def("logout", &DeviceClient::logout)
             .def("setInternalTimeout", (void (DeviceClient::*)(const unsigned int))(&DeviceClient::setInternalTimeout), bp::arg("internalTimeout"))
             .def("getInternalTimeout", (int (DeviceClient::*)() const) (&DeviceClient::getInternalTimeout))
             .def("enableAdvancedMode", &DeviceClient::enableAdvancedMode)

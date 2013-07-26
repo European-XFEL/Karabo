@@ -38,7 +38,7 @@ namespace karabo {
 
         DeviceClient::DeviceClient(const boost::shared_ptr<SignalSlotable>& signalSlotable) :
         m_signalSlotable(signalSlotable), m_isShared(true), m_internalTimeout(600), m_isAdvancedMode(false) {
-            
+
             this->setupSlots();
             this->checkMaster();
             this->cacheAvailableInstances();
@@ -116,9 +116,15 @@ namespace karabo {
             if (node) type = node->getValue<string>();
             return string(type + "." + instanceId);
         }
-        
+
+
         bool DeviceClient::login(const std::string& username, const std::string& password, const std::string& provider) {
             return m_signalSlotable->login(username, password, provider);
+        }
+
+
+        bool DeviceClient::logout() {
+            return m_signalSlotable->logout();
         }
 
 
@@ -150,7 +156,7 @@ namespace karabo {
                     //if
                 }
             }
-            
+
             boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
             Hash& tmp = m_runtimeSystemDescription.get<Hash>("device." + instanceId + ".configuration");
             tmp.merge(hash);
@@ -244,10 +250,10 @@ namespace karabo {
             string path("device." + deviceId + ".fullSchema");
             boost::optional<Hash::Node&> node = m_runtimeSystemDescription.find(path);
             if (node) node->setValue(schema);
-            
+
             path = "device." + deviceId + ".activeSchema";
             if (m_runtimeSystemDescription.has(path)) m_runtimeSystemDescription.erase(path);
-            
+
             if (m_schemaUpdatedHandler) m_schemaUpdatedHandler(schema, deviceId);
         }
 
@@ -328,8 +334,8 @@ namespace karabo {
             if (!m_runtimeSystemDescription.has("server." + deviceServer)) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Requested device server \"" << deviceServer << "\" does not exist.";
                 return vector<string>();
-            } else {           
-                if (m_runtimeSystemDescription.hasAttribute("server." + deviceServer, "deviceClasses")){
+            } else {
+                if (m_runtimeSystemDescription.hasAttribute("server." + deviceServer, "deviceClasses")) {
                     return m_runtimeSystemDescription.getAttribute<vector<string> >("server." + deviceServer, "deviceClasses");
                 } else {
                     return vector<string>();
@@ -347,12 +353,8 @@ namespace karabo {
                 vector<string> devices;
                 devices.reserve(tmp.size());
                 for (Hash::const_iterator it = tmp.begin(); it != tmp.end(); ++it) {
-                    // TODO
                     if (it->hasAttribute("visibility")) {
-                        //const vector<string>& roles = it->getAttribute<vector<string> >("visibility");
-                        //if (!roles.empty()) {
-                            //if (std::find(roles.begin(), roles.end(), m_role) == roles.end()) continue;
-                        //}
+                        if (m_signalSlotable->getAccessLevel(it->getKey()) < it->getAttribute<int>("visibility")) continue;
                     }
                     devices.push_back(it->getKey());
                 }
@@ -372,10 +374,7 @@ namespace karabo {
                 for (Hash::const_iterator it = tmp.begin(); it != tmp.end(); ++it) {
                     if (it->getAttribute<string>("serverId") == deviceServer) {
                         if (it->hasAttribute("visibility")) {
-                            //const vector<string>& roles = it->getAttribute<vector<string> >("visibility");
-                            //if (!roles.empty()) {
-                                //if (std::find(roles.begin(), roles.end(), m_role) == roles.end()) continue;
-                            //}
+                            if (m_signalSlotable->getAccessLevel(it->getKey()) < it->getAttribute<int>("visibility")) continue;
                         }
                         devices.push_back(it->getKey());
                     }
@@ -517,7 +516,7 @@ namespace karabo {
                     if (accessLevel < schema.getRequiredAccessLevel(path)) {
                         continue; // Not allowed
                     }
-                    properties.push_back(path); 
+                    properties.push_back(path);
                 }
             }
             return properties;
@@ -570,7 +569,7 @@ namespace karabo {
                     isThere = m_runtimeSystemDescription.has("device." + reply);
                     m_runtimeSystemDescriptionMutex.unlock();
                 } while (!isThere && (nTrials < 20));
-                
+
                 if (nTrials == 20) {
                     string errorText("Device \"" + reply + "\" got started but is not accessible anymore... ZOMBIE TIME !!!!");
                     return std::make_pair(false, errorText);
@@ -600,7 +599,7 @@ namespace karabo {
                 isThere = m_runtimeSystemDescription.has("device." + deviceId);
                 m_runtimeSystemDescriptionMutex.unlock();
             } while (isThere && (nTrials < timeoutInSeconds));
-            
+
             if (nTrials == timeoutInSeconds) {
                 string errorText("Device \"" + deviceId + "\" does not want to die in time. Try to kill it with a knife.");
                 return std::make_pair(false, errorText);
@@ -631,7 +630,7 @@ namespace karabo {
                 isThere = m_runtimeSystemDescription.has("server." + serverId);
                 m_runtimeSystemDescriptionMutex.unlock();
             } while (isThere && (nTrials < timeoutInSeconds));
-            
+
             if (nTrials == timeoutInSeconds) {
                 string errorText("Server \"" + serverId + "\" does not want to die in time. Try to kill it with a knife.");
                 return std::make_pair(false, errorText);
@@ -814,7 +813,7 @@ if (nodeData) {\
                     } catch (...) {
                         KARABO_LOG_FRAMEWORK_WARN << "No timestamp information given on \"" << it->getKey() << "/";
                     }
-                    
+
                     const Hash& entry = registered.get<Hash > (currentPath);
                     boost::optional<const Hash::Node&> nodeFunc = entry.find("_function");
                     boost::optional<const Hash::Node&> nodeData = entry.find("_userData");

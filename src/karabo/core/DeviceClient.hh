@@ -150,6 +150,8 @@ namespace karabo {
             virtual ~DeviceClient();
             
             bool login(const std::string& username, const std::string& password, const std::string& provider = "LOCAL");
+            
+            bool logout();
 
             /**
              * Sets the internal timeout for any request/response like communications

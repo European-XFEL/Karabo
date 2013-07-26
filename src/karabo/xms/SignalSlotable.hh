@@ -191,6 +191,8 @@ namespace karabo {
                       const karabo::net::BrokerConnection::Pointer& connection);
 
             bool login(const std::string& username, const std::string& password, const std::string& provider);
+            
+            bool logout();
 
             /**
              * This function will block the main-thread.
