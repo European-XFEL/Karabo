@@ -31,6 +31,10 @@ namespace karabo {
                     .assignmentOptional().defaultValue(20)
                     .reconfigurable()
                     .commit();
+            
+            OVERWRITE_ELEMENT(expected).key("visibility")
+                    .setNewDefaultValue(5)
+                    .commit();
         }
 
 

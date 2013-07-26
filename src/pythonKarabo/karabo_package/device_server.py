@@ -51,9 +51,15 @@ class DeviceServer(object):
         e.description("The device-server instance id uniquely identifies a device-server instance in the distributed system")
         e.assignmentOptional().noDefaultValue().commit()
         
+        e = INT32_ELEMENT(expected).key("visibility").displayedName("Visibility")
+        e.description("Configures who is allowed to see this server at all")
+        e.assignmentOptional().defaultValue(Schema.OBSERVER).options("0 1 2 3 4")
+        e.adminAccess().reconfigurable()
+        e.commit()
+        
         e = UINT32_ELEMENT(expected).key("nameRequestTimeout").displayedName("Name Request Timeout")
         e.description("Time to wait for name resolution (via name-server) until timeout [ms]")
-        e.advanced().assignmentOptional().defaultValue(5000).commit()
+        e.expertAccess().assignmentOptional().defaultValue(5000).commit()
         
         e = NODE_ELEMENT(expected).key("PluginLoader")
         e.displayedName("Plugin Loader").description("Plugin Loader sub-configuration")
@@ -143,6 +149,7 @@ class DeviceServer(object):
         self.availableDevices = dict()
         self.deviceInstanceMap = dict()
         self.hostname, dotsep, self.domainname = socket.gethostname().partition('.')
+        self.visibility = input.get("visibility")
         
         if 'serverId' in input:
             self.serverid = input['serverId']
@@ -180,6 +187,7 @@ class DeviceServer(object):
         info["serverId"] = self.serverid
         info["version"] = self.__class__.__version__
         info["host"] = self.hostname
+        info["visibility"] = self.visibility
         # TODO
         self.ss.runEventLoop(10, info)  # block
     
@@ -297,12 +305,14 @@ class DeviceServer(object):
         
     def notifyNewDeviceAction(self):
         deviceClasses = []
+        visibilities = []
         for (classid, d) in self.availableDevices.items():
             deviceClasses.append(classid)
             if d['mustNotify']:
                 d['mustNotify'] = False
+            visibilities.append(d['xsd'].get("visibility"))
         self.log.DEBUG("Sending instance update as new device plugins are available: {}".format(deviceClasses))
-        self.ss.updateInstanceInfo(Hash("deviceClasses", deviceClasses))
+        self.ss.updateInstanceInfo(Hash("deviceClasses", deviceClasses, "visibilities", visibilities))
 
     def noStateTransition(self):
         self.log.DEBUG("DeviceServer \"{}\" does not allow the transition for this event".format(self.serverid))

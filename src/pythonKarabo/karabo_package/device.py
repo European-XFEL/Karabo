@@ -26,20 +26,20 @@ class PythonDevice(BaseFsm):
 
         e = STRING_ELEMENT(expected).key("version")
         e.displayedName("Version").description("The version of this device class")
-        e.advanced().readOnly().initialValue(PythonDevice.__version__).commit()
+        e.expertAccess().readOnly().initialValue(PythonDevice.__version__).commit()
         
         e = INT32_ELEMENT(expected).key("visibility")
         e.displayedName("Visibility").description("Configures who is allowed to see this device at all")
         e.assignmentOptional().defaultValue(AccessLevel(OBSERVER))
-        e.advanced().reconfigurable().commit()
+        e.expertAccess().reconfigurable().commit()
         
         e = STRING_ELEMENT(expected).key("classId")
         e.displayedName("ClassID").description("The (factory)-name of the class of this device")
-        e.advanced().readOnly().initialValue(PythonDevice.__classid__).commit()
+        e.expertAccess().readOnly().initialValue(PythonDevice.__classid__).commit()
         
         e = STRING_ELEMENT(expected).key("serverId")
         e.displayedName("ServerID").description("The device-server on which this device is running on")
-        e.advanced().assignmentInternal().noDefaultValue().init().commit()
+        e.expertAccess().assignmentInternal().noDefaultValue().init().commit()
 
         e = STRING_ELEMENT(expected).key("deviceId")
         e.displayedName("DeviceID").description("The device instance ID uniquely identifies a device instance in the distributed system")
@@ -50,7 +50,7 @@ class PythonDevice(BaseFsm):
         e.assignmentOptional().defaultValue("uninitialized").readOnly().commit()
         
         e = NODE_ELEMENT(expected).key("Logger").displayedName("Logger")
-        e.description("Logging settings").advanced()
+        e.description("Logging settings").expertAccess()
         e.appendParametersOfConfigurableClass(Logger, "Logger").commit()
     
         e = OVERWRITE_ELEMENT(expected).key("Logger.appenders")
@@ -67,7 +67,7 @@ class PythonDevice(BaseFsm):
             raise ValueError,"Configuration must be Hash object, not None"
         #print "PythonDevice constructor: Input configuration after being validated is ...\n", configuration
         super(PythonDevice, self).__init__(configuration)
-
+        
         self.parameters = configuration
         if "serverId" in self.parameters:
             self.serverid = self.parameters["serverId"]
@@ -221,19 +221,21 @@ class PythonDevice(BaseFsm):
         rules.injectTimestamps           = True
         validator = Validator()
         validator.setValidationRules(rules)
-        validated = validator.validate(schema, self.parameters)
+        validated = validator.validate(schema, Hash())
         with self._stateChangeLock:
-            for key in self._injectedSchema.getKeys():
-                self.parameters.erase(key)
+            for path in self._injectedSchema.getPaths():
+                if self.parameters.has(path) and not self.staticSchema.has(path): 
+                    self.parameters.erase(path)
             self._stateDependentSchema = {}
             self._injectedSchema = schema
             self.fullSchema = self.staticSchema
             self.fullSchema += self._injectedSchema
-            self.parameters.merge(validated, HashMergePolicy.REPLACE_ATTRIBUTES)
-            validated = self.validatorIntern.validate(self.fullSchema, self.parameters)
-            self.parameters.merge(validated, HashMergePolicy.REPLACE_ATTRIBUTES)
+            #self.parameters.merge(validated, HashMergePolicy.REPLACE_ATTRIBUTES)
+            #validated = self.validatorIntern.validate(self.fullSchema, self.parameters)
+            #self.parameters.merge(validated, HashMergePolicy.REPLACE_ATTRIBUTES)
         # notify the distributed system...
         self._ss.emit("signalSchemaUpdated", self.fullSchema, self.deviceid)
+        self.set(validated)
         self.log.INFO("Schema updated")
     
     def appendSchema(self, schema):

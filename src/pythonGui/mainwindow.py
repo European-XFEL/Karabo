@@ -295,4 +295,9 @@ class MainWindow(QMainWindow):
             self.__acUser.setChecked(True)
         elif globals.GLOBAL_ACCESS_LEVEL == 0:
             self.__acObserver.setChecked(True)
-
+        else:
+            self.__acAdmin.setChecked(False)
+            self.__acExpert.setChecked(False)
+            self.__acOperator.setChecked(False)
+            self.__acUser.setChecked(False)
+            self.__acObserver.setChecked(False)

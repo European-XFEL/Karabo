@@ -51,6 +51,15 @@ namespace karabo {
                     .assignmentOptional().noDefaultValue()
                     .commit();
 
+            INT32_ELEMENT(expected).key("visibility")
+                    .displayedName("Visibility")
+                    .description("Configures who is allowed to see this server at all")
+                    .assignmentOptional().defaultValue(karabo::util::Schema::OBSERVER)
+                    .options("0 1 2 3 4")
+                    .adminAccess()
+                    .reconfigurable()
+                    .commit();
+
             CHOICE_ELEMENT(expected).key("connection")
                     .displayedName("Connection")
                     .description("The connection to the communication layer of the distributed system")
@@ -62,8 +71,7 @@ namespace karabo {
 
             BOOL_ELEMENT(expected).key("isMaster")
                     .displayedName("Is Master Server?")
-                    .description("Decides whether this device-server runs as a master or gets dynamically configured "
-                                 " through an existing master (DHCP-like)")
+                    .description("Decides whether this device-server runs as a master")
                     .assignmentOptional().defaultValue(false)
                     .commit();
 
@@ -73,7 +81,7 @@ namespace karabo {
                     .expertAccess()
                     .assignmentOptional().defaultValue(5000)
                     .commit();
-            
+
             NODE_ELEMENT(expected).key("PluginLoader")
                     .displayedName("Plugin Loader")
                     .description("Plugin Loader sub-configuration")
@@ -85,7 +93,7 @@ namespace karabo {
                     .displayedName("Logger")
                     .appendParametersOfConfigurableClass<Logger>("Logger")
                     .commit();
-            
+
             OVERWRITE_ELEMENT(expected).key("Logger.appenders")
                     .setNewDefaultValue("Ostream")
                     .commit();
@@ -95,9 +103,8 @@ namespace karabo {
                     .commit();
 
             OVERWRITE_ELEMENT(expected).key("Logger.appenders.Ostream.layout.Pattern.format")
-                    //.setNewDefaultValue("%d{%F %H:%M:%S} | %p | %c | %m")
                     .setNewDefaultValue("%p  %c  : %m%n")
-                    .commit();                     
+                    .commit();
         }
 
 
@@ -113,6 +120,9 @@ namespace karabo {
             } else {
                 m_serverId = generateDefaultServerId();
             }
+
+            if (m_isMaster) m_visibility = 5;
+            else input.get("visibility", m_visibility);
 
             m_connectionConfig = input.get<Hash>("connection");
             m_connection = BrokerConnection::createChoice("connection", input);
@@ -148,7 +158,7 @@ namespace karabo {
 
 
         void DeviceServer::run() {
-            
+
             // Initialize category
             m_log = &(karabo::log::Logger::getLogger(m_serverId));
 
@@ -159,7 +169,12 @@ namespace karabo {
 
             registerAndConnectSignalsAndSlots();
 
-            karabo::util::Hash info("type", "server", "serverId", m_serverId, "version", DeviceServer::classInfo().getVersion(), "host", boost::asio::ip::host_name());
+            karabo::util::Hash info;
+            info.set("type", "server");
+            info.set("serverId", m_serverId);
+            info.set("version", DeviceServer::classInfo().getVersion());
+            info.set("host", boost::asio::ip::host_name());
+            info.set("visibility", m_visibility);
             boost::thread t(boost::bind(&karabo::core::DeviceServer::runEventLoop, this, 10, info));
             this->startFsm();
             t.join();
@@ -192,15 +207,16 @@ namespace karabo {
 
             KARABO_LOG_INFO << "DeviceServer starts up with id: " << m_serverId;
 
+            // Check whether we have installed devices available
+            updateAvailableDevices();
+            if (!m_availableDevices.empty()) {
+                inbuildDevicesAvailable();
+            }
+
             if (m_isMaster) {
                 slotStartDevice(Hash("DataLoggerDevice.deviceId", "Karabo_DataLogger_0", "DataLoggerDevice.connection", m_connectionConfig));
                 slotStartDevice(Hash("GuiServerDevice.deviceId", "Karabo_GuiServer_0", "GuiServerDevice.connection", m_connectionConfig, "GuiServerDevice.loggerConnection", m_connectionConfig));
             } else {
-                // Check whether we have installed devices available
-                updateAvailableDevices();
-                if (!m_availableDevices.empty()) {
-                    inbuildDevicesAvailable();
-                }
                 KARABO_LOG_INFO << "Keep watching directory: " << m_pluginLoader->getPluginDirectory() << " for Device plugins";
                 m_pluginThread = boost::thread(boost::bind(&karabo::core::DeviceServer::scanPlugins, this));
             }
@@ -212,7 +228,6 @@ namespace karabo {
 
 
             BOOST_FOREACH(string device, devices) {
-                if (device == "MasterDevice" || device == "GuiServerDevice") continue;
                 if (!m_availableDevices.has(device)) {
                     KARABO_LOG_INFO << "Updated list of devices available: " << karabo::util::toString(devices);
                     Schema schema = BaseDevice::getSchema(device, Schema::AssemblyRules(karabo::util::READ | karabo::util::WRITE | karabo::util::INIT));
@@ -287,7 +302,7 @@ namespace karabo {
                 // Associate deviceInstance with its thread
                 string deviceInstanceId = device->getInstanceId();
                 m_deviceInstanceMap[deviceInstanceId] = t;
-                
+
                 // Answer initiation of device
                 reply(true, deviceInstanceId); // TODO think about
 
@@ -296,22 +311,26 @@ namespace karabo {
                 reply(false, "Device could not be started because: " + e.userFriendlyMsg());
                 return;
             }
-            
+
         }
 
 
         void DeviceServer::notifyNewDeviceAction() {
             vector<string> deviceClasses;
+            vector<int> visibilities;
             deviceClasses.reserve(m_availableDevices.size());
+
             for (Hash::iterator it = m_availableDevices.begin(); it != m_availableDevices.end(); ++it) {
                 deviceClasses.push_back(it->getKey());
+
                 Hash& tmp = it->getValue<Hash>();
                 if (tmp.get<bool>("mustNotify") == true) {
                     tmp.set("mustNotify", false);
                 }
+                visibilities.push_back(tmp.get<Schema>("xsd").getDefaultValue<int>("visibility"));
             }
             KARABO_LOG_DEBUG << "Sending instance update as new device plugins are available: " << karabo::util::toString(deviceClasses);
-            this->updateInstanceInfo(Hash("deviceClasses", deviceClasses));
+            this->updateInstanceInfo(Hash("deviceClasses", deviceClasses, "visibilities", visibilities));
         }
 
 
@@ -343,7 +362,7 @@ namespace karabo {
 
             // Signal about future death
             call("*", "slotDeviceServerInstanceGone", m_serverId);
-            
+
             // Reply the same
             reply(m_serverId);
 
@@ -381,7 +400,7 @@ namespace karabo {
             boost::split(tokens, m_serverId, boost::is_any_of("_"));
             if (tokens.back() == karabo::util::toString(getpid())) {
                 domain = tokens.front() + "-" + tokens.back();
-            }                 
+            }
             return domain + "_" + classId + "_" + index;
         }
     }

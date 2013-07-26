@@ -131,7 +131,7 @@ class GraphicsRenderer(object):
         e.description("You may switch of for speed")
         e.assignmentOptional().defaultValue(True)
         e.init()
-        e.advanced()
+        e.expertAccess()
         e.commit()
 
         e = STRING_ELEMENT(expected).key("color")
@@ -171,7 +171,7 @@ class GraphicsRenderer1(object):
         e.description("You may switch of for speed")
         e.assignmentOptional().defaultValue(True)
         e.init()
-        e.advanced()
+        e.expertAccess()
         e.commit()
 
         e = STRING_ELEMENT(expected).key("color")
@@ -394,7 +394,7 @@ class SomeClass(object):
         e.options("5, 25, 10")
         e.minInc(5).maxInc(25).unit(AMPERE).metricPrefix(MILLI)
         e.assignmentOptional().defaultValue(5)
-        e.init().advanced().commit()
+        e.init().expertAccess().commit()
     
         e = INT32_ELEMENT(expected).key("y").alias('bla')
         e.tags("CY")
@@ -533,7 +533,7 @@ class GraphicsRenderer2(object):
         e.tags("NC")
         e.displayedName("Use Anti-Aliasing").description("You may switch of for speed")
         e.assignmentOptional().defaultValue(True)
-        e.init().advanced().commit()
+        e.init().expertAccess().commit()
 
         e = STRING_ELEMENT(expected).key("color")
         e.tags("KW")

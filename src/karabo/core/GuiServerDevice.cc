@@ -40,6 +40,10 @@ namespace karabo {
                     .appendNodesOfConfigurationBase<BrokerConnection>()
                     .assignmentOptional().defaultValue("Jms")
                     .commit();
+            
+            OVERWRITE_ELEMENT(expected).key("visibility")
+                    .setNewDefaultValue(5)
+                    .commit();
 
         }
 
