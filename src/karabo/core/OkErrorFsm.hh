@@ -13,7 +13,7 @@
 #include <karabo/xms/SlotElement.hh>
 #include <karabo/util/karaboDll.hh>
 
-#include "FsmBase.hh"
+#include "BaseFsm.hh"
 
 namespace karabo {
     namespace core {

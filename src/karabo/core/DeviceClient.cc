@@ -91,7 +91,7 @@ namespace karabo {
                 const Hash& instanceInfo = instances[i].second;
 
                 // Skip all Karabo-intern instances
-                if (instanceId.substr(0, 6) == "Karabo") continue;
+                //if (instanceId.substr(0, 6) == "Karabo") continue;
 
                 m_runtimeSystemDescription.merge(prepareTopologyEntry(instanceId, instanceInfo));
             }

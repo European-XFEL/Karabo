@@ -190,6 +190,7 @@ namespace karabo {
             boost::thread_group m_deviceThreads;
             DeviceInstanceMap m_deviceInstanceMap;
             std::map<std::string, unsigned int> m_deviceInstanceCount;
+            int m_visibility;
 
             karabo::net::BrokerConnection::Pointer m_connection;
 

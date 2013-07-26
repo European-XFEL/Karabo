@@ -21,7 +21,7 @@ class PluginLoader(object):
         e = PATH_ELEMENT(expected).key("pluginDirectory")
         e.displayedName("Plugin Directory").description("Directory to search for plugins")
         e.assignmentOptional().defaultValue("plugins")
-        e.isDirectory().advanced().commit()
+        e.isDirectory().expertAccess().commit()
         
     def __init__(self, input):
         if "pluginDirectory" in input:
