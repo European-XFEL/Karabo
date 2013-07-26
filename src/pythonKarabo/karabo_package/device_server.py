@@ -310,7 +310,7 @@ class DeviceServer(object):
             deviceClasses.append(classid)
             if d['mustNotify']:
                 d['mustNotify'] = False
-            visibilities.append(d['xsd'].get("visibility"))
+            visibilities.append(d['xsd'].getDefaultValue("visibility"))
         self.log.DEBUG("Sending instance update as new device plugins are available: {}".format(deviceClasses))
         self.ss.updateInstanceInfo(Hash("deviceClasses", deviceClasses, "visibilities", visibilities))
 
