@@ -53,7 +53,7 @@ class DeviceServer(object):
         
         e = INT32_ELEMENT(expected).key("visibility").displayedName("Visibility")
         e.description("Configures who is allowed to see this server at all")
-        e.assignmentOptional().defaultValue(Schema.OBSERVER).options("0 1 2 3 4")
+        e.assignmentOptional().defaultValue(AccessLevel.OBSERVER).options("0 1 2 3 4")
         e.adminAccess().reconfigurable()
         e.commit()
         
