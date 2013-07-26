@@ -564,9 +564,14 @@ class GraphicsView(QGraphicsView):
 
 
     # Scales all selected items up (so far) : TODO use value
-    def scaleSelectedItems(self): # value
+    def scaleSelectedItemsUp(self): # value
         for item in self.selectedItems():
             item.scale(1.5, 1.5)
+
+
+    def scaleSelectedItemsDown(self): # value
+        for item in self.selectedItems():
+            item.scale(0.75, 0.75)
 
 
     def groupItems(self):

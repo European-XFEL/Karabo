@@ -119,7 +119,7 @@ class GraphicsProxyWidget(NodeBase, QGraphicsProxyWidget):
 ### protected ###
     def paint(self, painter, option, widget):
         # Hack: self.parentItem() can only be a QGraphicsItemGroup
-        if self.isSelected() and (self.parentItem() is None):
+        if self.isDesignMode and self.isSelected() and (self.parentItem() is None):
             pen = painter.pen()
             pen.setStyle(Qt.DashLine)
             painter.setPen(pen)

@@ -76,7 +76,7 @@ class GraphicsProxyWidgetContainer(NodeBase, QGraphicsWidget):
 
 ### protected ###
     def paint(self, painter, option, widget):
-        if self.isSelected():
+        if self.isDesignMode and self.isSelected():
             pen = painter.pen()
             pen.setStyle(Qt.DashLine)
             painter.setPen(pen)
