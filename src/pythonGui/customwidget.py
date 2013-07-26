@@ -181,8 +181,12 @@ class CustomWidget(QWidget):
 
 
     # Scales all selected items up (so far) : TODO use value
-    def scale(self): # value
-        self.__view.scaleSelectedItems()
+    def scaleUp(self): # value
+        self.__view.scaleSelectedItemsUp()
+
+
+    def scaleDown(self): # value
+        self.__view.scaleSelectedItemsDown()
 
 
     def groupItems(self):
