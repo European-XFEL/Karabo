@@ -77,10 +77,14 @@ class NavigationHierarchyModel(QAbstractItemModel):
             
                 if serverConfig.hasAttribute(serverId, "deviceClasses"):
                     classes = serverConfig.getAttribute(serverId, "deviceClasses")
+                    visibilities = serverConfig.getAttribute(serverId, "visibilities")
+                    i = 0
                     for deviceClass in classes:
-                        path = "server." + serverId + ".classes." + deviceClass
-                        classItem = NavigationHierarchyNode(deviceClass, path, serverItem)
-                        serverItem.appendChildItem(classItem)
+                        if visibilities[i] <= globals.GLOBAL_ACCESS_LEVEL:
+                            path = "server." + serverId + ".classes." + deviceClass
+                            classItem = NavigationHierarchyNode(deviceClass, path, serverItem)
+                            serverItem.appendChildItem(classItem)
+                        i = i + 1
         
         # Get device data
         deviceKey = "device"

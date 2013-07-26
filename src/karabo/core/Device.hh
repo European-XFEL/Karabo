@@ -22,7 +22,7 @@
 #include "coredll.hh"
 
 #include "FsmMacros.hh"
-#include "FsmBase.hh"
+#include "BaseFsm.hh"
 #include "DeviceClient.hh"
 
 /**
@@ -351,16 +351,36 @@ namespace karabo {
                 return m_fullSchema;
             }
 
-            //            /**
-            //             * Add external schema descriptions to current schema containers
-            //             * @param schema
-            //             */
-            //            void appendSchema(const karabo::util::Schema& schema) {
-            //
-            //                boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
-            //                m_stateDependendSchema.clear();
-            //                m_injectedSchema.merge(schema);
-            //            }
+            
+            void appendSchema(const karabo::util::Schema& schema) {
+                KARABO_LOG_DEBUG << "Append Schema requested";
+                karabo::util::Hash validated;
+                karabo::util::Validator::ValidationRules rules;
+                rules.allowAdditionalKeys = true;
+                rules.allowMissingKeys = true;
+                rules.allowUnrootedConfiguration = true;
+                rules.injectDefaults = true;
+                rules.injectTimestamps = true;
+                karabo::util::Validator v(rules);
+                v.validate(schema, karabo::util::Hash(), validated, karabo::util::Timestamp());
+                {
+                    boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
+                    
+                    // Clear cache
+                    m_stateDependendSchema.clear();
+
+                    // Save injected
+                    m_injectedSchema.merge(schema);
+
+                    // Merge to full schema
+                    m_fullSchema.merge(m_injectedSchema);
+                
+                    KARABO_LOG_INFO << "Schema updated";
+                    // Notify the distributed system
+                    emit("signalSchemaUpdated", m_fullSchema, m_deviceId);
+                }   
+                set(validated);
+            }
 
             /**
              * Replace existing schema descriptions by static (hard coded in expectedParameters) part and
@@ -378,7 +398,7 @@ namespace karabo {
                 rules.injectDefaults = true;
                 rules.injectTimestamps = true;
                 karabo::util::Validator v(rules);
-                v.validate(schema, m_parameters, validated, karabo::util::Timestamp());
+                v.validate(schema, karabo::util::Hash(), validated, karabo::util::Timestamp());
                 {
                     boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
                     // Clear previously injected parameters

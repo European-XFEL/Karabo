@@ -98,7 +98,7 @@ namespace karabo {
                             configuration.merge(tmp);
                         }
 
-                        karabo::io::saveToFile<Hash>(configuration, "lastConfiguration.xml");
+                        //karabo::io::saveToFile<Hash>(configuration, "lastConfiguration.xml");
                         return configuration;
                     }
                 } catch (const Exception& e) {
