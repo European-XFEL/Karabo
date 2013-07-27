@@ -42,6 +42,16 @@ namespace karabo {
                 return *this;
             }
 
+            OverwriteElement& setNewDisplayedName(const std::string& name) {
+                m_node->setAttribute(KARABO_SCHEMA_DISPLAYED_NAME, name);
+                return *this;
+            }
+
+            OverwriteElement& setNewDescription(const std::string& description) {
+                m_node->setAttribute(KARABO_SCHEMA_DESCRIPTION, description);
+                return *this;
+            }
+
             template <class AliasType>
             OverwriteElement& setNewAlias(const AliasType& alias) {
                 m_node->setAttribute<AliasType > (KARABO_SCHEMA_ALIAS, alias);
@@ -87,6 +97,48 @@ namespace karabo {
             template <class ValueType>
             OverwriteElement& setNewDefaultValue(const ValueType& value) {
                 m_node->setAttribute(KARABO_SCHEMA_DEFAULT_VALUE, value);
+                return *this;
+            }
+
+            template <class ValueType>
+            OverwriteElement& setNewMinInc(const ValueType& value) {
+                m_node->setAttribute(KARABO_SCHEMA_MIN_INC, value);
+                return *this;
+            }
+
+            template <class ValueType>
+            OverwriteElement& setNewMaxInc(const ValueType& value) {
+                m_node->setAttribute(KARABO_SCHEMA_MAX_INC, value);
+                return *this;
+            }
+
+            template <class ValueType>
+            OverwriteElement& setNewMinExc(const ValueType& value) {
+                m_node->setAttribute(KARABO_SCHEMA_MIN_EXC, value);
+                return *this;
+            }
+
+            template <class ValueType>
+            OverwriteElement& setNewMaxExc(const ValueType& value) {
+                m_node->setAttribute(KARABO_SCHEMA_MAX_EXC, value);
+                return *this;
+            }
+
+            OverwriteElement& setNewOptions(const std::string& opts, const std::string& sep = " ,;") {
+                m_node->setAttribute(KARABO_SCHEMA_OPTIONS, karabo::util::fromString<std::string, std::vector > (opts, sep));
+                return *this;
+            }
+
+            OverwriteElement& setNewOptions(const std::vector<std::string>& opts) {
+                m_node->setAttribute(KARABO_SCHEMA_OPTIONS, opts);
+                return *this;
+            }
+
+            OverwriteElement& setNewUnit(const UnitType& unit) {
+                m_node->setAttribute<int>(KARABO_SCHEMA_UNIT_ENUM, unit);
+                std::pair<std::string, std::string> names = karabo::util::getUnit(unit);
+                m_node->setAttribute(KARABO_SCHEMA_UNIT_NAME, names.first);
+                m_node->setAttribute(KARABO_SCHEMA_UNIT_SYMBOL, names.second);
                 return *this;
             }
 
