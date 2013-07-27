@@ -336,6 +336,35 @@ struct OverwriteElementWrap {
         karathon::Wrapper::toAny(value, any);
         return self.setNewDefaultValue(any);
     }
+
+
+    static karabo::util::OverwriteElement & setNewMinInc(karabo::util::OverwriteElement& self, const bp::object& value) {
+        boost::any any;
+        karathon::Wrapper::toAny(value, any);
+        return self.setNewMinInc(any);
+    }
+
+
+    static karabo::util::OverwriteElement & setNewMaxInc(karabo::util::OverwriteElement& self, const bp::object& value) {
+        boost::any any;
+        karathon::Wrapper::toAny(value, any);
+        return self.setNewMaxInc(any);
+    }
+
+
+    static karabo::util::OverwriteElement & setNewMinExc(karabo::util::OverwriteElement& self, const bp::object& value) {
+        boost::any any;
+        karathon::Wrapper::toAny(value, any);
+        return self.setNewMinExc(any);
+    }
+
+
+    static karabo::util::OverwriteElement & setNewMaxExc(karabo::util::OverwriteElement& self, const bp::object& value) {
+        boost::any any;
+        karathon::Wrapper::toAny(value, any);
+        return self.setNewMaxExc(any);
+    }
+    
 };
 
 
@@ -1595,6 +1624,14 @@ void exportPyUtilSchema() {
                      , (OverwriteElement & (OverwriteElement::*)(string const &))(&OverwriteElement::key)
                      , (bp::arg("key"))
                      , bp::return_internal_reference<> ())
+                .def("setNewDisplayedName"
+                     , (OverwriteElement & (OverwriteElement::*)(string const &))(&OverwriteElement::setNewDisplayedName)
+                     , (bp::arg("name"))
+                     , bp::return_internal_reference<> ())
+                .def("setNewDescription"
+                     , (OverwriteElement & (OverwriteElement::*)(string const &))(&OverwriteElement::setNewDescription)
+                     , (bp::arg("description"))
+                     , bp::return_internal_reference<> ())
                 .def("setNewAlias"
                      , &OverwriteElementWrap().setNewAlias
                      , (bp::arg("alias"))
@@ -1623,6 +1660,30 @@ void exportPyUtilSchema() {
                      , bp::return_internal_reference<> ())
                 .def("setNewDefaultValue"
                      , &OverwriteElementWrap().setNewDefaultValue
+                     , (bp::arg("value"))
+                     , bp::return_internal_reference<> ())
+                .def("setNewMinInc"
+                     , &OverwriteElementWrap().setNewMinInc
+                     , (bp::arg("value"))
+                     , bp::return_internal_reference<> ())
+                .def("setNewMaxInc"
+                     , &OverwriteElementWrap().setNewMaxInc
+                     , (bp::arg("value"))
+                     , bp::return_internal_reference<> ())
+                .def("setNewMinExc"
+                     , &OverwriteElementWrap().setNewMinExc
+                     , (bp::arg("value"))
+                     , bp::return_internal_reference<> ())
+                .def("setNewMaxExc"
+                     , &OverwriteElementWrap().setNewMaxExc
+                     , (bp::arg("value"))
+                     , bp::return_internal_reference<> ())
+                .def("setNewOptions"
+                     , (OverwriteElement& (OverwriteElement::*)(const std::string&, const std::string&))(&OverwriteElement::setNewOptions)
+                     , (bp::arg("value"), bp::arg("sep")=",;")
+                     , bp::return_internal_reference<> ())
+                .def("setNewUnit"
+                     , (OverwriteElement & (OverwriteElement::*)(const UnitType&))(&OverwriteElement::setNewUnit)
                      , (bp::arg("value"))
                      , bp::return_internal_reference<> ())
                 .def("setNewMetricPrefix"
