@@ -15,6 +15,8 @@ safeRunCommand() {
     ret_code=$?
     if [ $ret_code != 0 ]; then
 	printf "Error : [%d] when executing command: '$cmnd'" $ret_code
+    echo
+    echo
 	exit $ret_code
     fi
 }
@@ -30,7 +32,7 @@ fi
 # Parse command line
 if [[ -z "$1" ||  $1 = "help" || $1 = "-h" ||  $1 = "-help" || $1 = "--help" ]]; then
     cat <<End-of-help
-Usage: $0 Debug|Release [flags]
+Usage: $0 Debug|Release|Clean [flags]
 
 Available flags:
   --auto      - Tries to automatically install needed system packages (sudo rights required!)
@@ -43,13 +45,29 @@ fi
 # Fetch configuration type (Release or Debug)
 if [[ $1 = "Release" || $1 = "Debug" ]]; then
 	CONF=$1
+elif [[ $1 = "Clean" ]]; then
+    safeRunCommand "cd $scriptDir/build/netbeans/karabo"
+    safeRunCommand "make bundle-clean CONF=Debug"
+    safeRunCommand "make bundle-clean CONF=Release"
+    safeRunCommand "cd $scriptDir/build/netbeans/karabo"
+    rm -rf dist build nbproject/Makefile* nbproject/Package* nbproject/private
+    safeRunCommand "cd $scriptDir/build/netbeans/karathon/nbproject"
+    rm -rf dist build nbproject/Makefile* nbproject/Package* nbproject/private
+    safeRunCommand "cd $scriptDir/build/netbeans/deviceServer/nbproject"
+    rm -rf dist build nbproject/Makefile* nbproject/Package* nbproject/private
+    safeRunCommand "cd $scriptDir/build/netbeans/brokerMessageLogger/nbproject"
+    rm -rf dist build nbproject/Makefile* nbproject/Package* nbproject/private
+    safeRunCommand "cd $scriptDir"
+    rm -rf package
+    exit 1
 else
 	echo
-	echo "Invalid option supplied. Allowed options: Release|Debug"
+	echo "Invalid option supplied. Allowed options: Release|Debug|Clean"
 	echo
     exit 1
 fi
-# Check whether to skip sys deps
+
+# Check whether to build system dependencies
 if [[ $2 = "--auto" ]]; then
     SKIP="n"
 else 
@@ -70,7 +88,7 @@ elif [ "$OS" = "Darwin" ]; then
 fi
 
 # Cut the total number to ensure memory fitness
-if [ "$NUM_CORES" -gt "8" ]; then NUM_CORES=8; fi
+if [ "$NUM_CORES" -gt "10" ]; then NUM_CORES=10; fi
 
 if [ "$SKIP" = "n" ]; then
     echo 
