@@ -115,6 +115,10 @@ class GraphicsProxyWidgetContainer(NodeBase, QGraphicsWidget):
     def contextMenuEvent(self, event):
         self._showContextMenu(event.screenPos())
         QGraphicsWidget.contextMenuEvent(self, event)
+        
+        
+    def resizeEvent(self, event):
+        self.adjustSize()
 
 
 ### Slots ###
