@@ -13,7 +13,6 @@ __all__ = ["Network"]
 
 
 from karabo.karathon import *
-from logindialog import LoginDialog
 from manager import Manager
 from struct import *
 
@@ -82,6 +81,14 @@ class Network(QObject):
         
         print "Trying to login now..."
         
+        ### HACK remove again ###
+        # Inform the mainwindow to change correspondingly the allowed level-downgrade
+        #globals.GLOBAL_ACCESS_LEVEL = AccessLevel.ADMIN
+        #self.signalUserChanged.emit()
+        #self._sendLoginInformation(self.__username, self.__password, self.__provider, self.__sessionToken)
+        #return
+        ### HACK remove again ###
+        
         # Easteregg
         if self.__username == "god":
             md5 = QCryptographicHash.hash(str(dialog.password), QCryptographicHash.Md5).toHex()
@@ -100,12 +107,19 @@ class Network(QObject):
                 print "Authenticator exception " + str(e)
 
             # Execute Login
+            ok = False
             try:
                 ok = self.__auth.login()
             except Exception, e:
                 # TODO Fall back to inbuild access level
                 globals.GLOBAL_ACCESS_LEVEL = globals.KARABO_DEFAULT_ACCESS_LEVEL
                 print "Login exception. Please verify if Service is running!!!" + str(e)
+                
+                # Inform the mainwindow to change correspondingly the allowed level-downgrade
+                self.signalUserChanged.emit()
+                self._sendLoginInformation(self.__username, self.__password, self.__provider, self.__sessionToken)
+                return
+            
             if ok:
                 print "Login successfull"
                 globals.GLOBAL_ACCESS_LEVEL = self.__auth.getDefaultAccessLevelId()
@@ -115,7 +129,6 @@ class Network(QObject):
 
         # Inform the mainwindow to change correspondingly the allowed level-downgrade
         self.signalUserChanged.emit()
-        
         self._sendLoginInformation(self.__username, self.__password, self.__provider, self.__sessionToken)
             
     
@@ -128,18 +141,17 @@ class Network(QObject):
 
 
 ### Slots ###
-    def onStartConnection(self):
+    def onStartConnection(self, username, password, provider, hostname, port):
         
-        dialog = LoginDialog()
-        if dialog.exec_() == QDialog.Accepted :
-                self.__username = str(dialog.username)
-                self.__password = str(dialog.password)
-                self.__provider = str(dialog.provider)
-                self.__headerSize = 0
-                self.__bodySize = 0
-                self.__tcpSocket.abort()
-                self.__tcpSocket.connectToHost(dialog.hostname, dialog.port)           
-    
+        self.__username = username
+        self.__password = password
+        self.__provider = provider
+        self.__headerSize = 0
+        self.__bodySize = 0
+        self.__tcpSocket.abort()
+        self.__tcpSocket.connectToHost(hostname, port)
+
+
     def onEndConnection(self):
         if self._logout():
             print "LMAIA: Logout successfull!!!"
