@@ -7,6 +7,7 @@ __date__ ="$May 10, 2013 2:17:13 PM$"
 import threading
 from abc import ABCMeta, abstractmethod
 from karabo.decorators import KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS
+from karabo.fsm import KARABO_FSM_NO_TRANSITION_ACTION
 
 @KARABO_CONFIGURATION_BASE_CLASS
 @KARABO_CLASSINFO("BaseFsm", "1.0")
@@ -20,6 +21,7 @@ class BaseFsm(object):
         super(BaseFsm, self).__init__()
         self.fsm = None
         self.processEventLock = threading.RLock()
+        KARABO_FSM_NO_TRANSITION_ACTION(self.noStateTransition)
     
     def getFsm(self):
         return self.fsm
@@ -39,9 +41,8 @@ class BaseFsm(object):
     def onStateUpdate(self, currentState):
         pass
     
-    @abstractmethod
     def noStateTransition(self):
-        pass
+        print "*** No transition exists for the last event ***"
     
     def startFsm(self):
         """Start state machine"""
