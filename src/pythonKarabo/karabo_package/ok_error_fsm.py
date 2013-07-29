@@ -38,7 +38,7 @@ class OkErrorFsm(base.BaseFsm):
         #**************************************************************
         #*                    Transition Actions                      *
         #**************************************************************
-        KARABO_FSM_NO_TRANSITION_ACTION(self.noStateTransition)
+        #KARABO_FSM_NO_TRANSITION_ACTION(self.noStateTransition)    # <-- this is defined in BaseFsm
         KARABO_FSM_ACTION2('ErrorFoundAction', self.errorFoundAction, str, str)
         KARABO_FSM_ACTION0('ResetAction', self.resetAction)
 
