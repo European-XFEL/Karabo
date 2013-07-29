@@ -49,6 +49,12 @@ class DataNotifier(QObject):
         # Disconnect signals
         self.signalUpdateComponent.disconnect(component.onValueChanged)
 
+    
+    def removeComponents(self, key):
+        print "removeComponents", key
+        for component in self.__components:
+            self.removeComponent(key, component)
+
 
     def updateDisplayValue(self, key, value):
         #print "updateDisplayValue", key, value

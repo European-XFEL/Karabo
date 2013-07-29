@@ -16,7 +16,8 @@ import qrc_icons
 
 from docktabwindow import DockTabWindow
 import globals
-from karabo.karathon import AccessLevel
+from logindialog import LoginDialog
+from karabo.karathon import *
 from manager import Manager
 from network import Network
 
@@ -25,7 +26,7 @@ from panels.custommiddlepanel import CustomMiddlePanel
 from panels.loggingpanel import LoggingPanel
 from panels.navigationpanel import NavigationPanel
 from panels.notificationpanel import NotificationPanel
-from panels.projectpanel import ProjectPanel
+#from panels.projectpanel import ProjectPanel
 from panels.scriptingpanel import ScriptingPanel
 
 from PyQt4.QtCore import *
@@ -60,6 +61,7 @@ class MainWindow(QMainWindow):
         self.__tbAccessLevel.setToolTip(text)
         self.__tbAccessLevel.setStatusTip(text)
         self.__tbAccessLevel.setPopupMode(QToolButton.InstantPopup)
+        self.__tbAccessLevel.setEnabled(False)
         
         text = "Admin"
         self.__acAdmin = QAction(text, self)
@@ -107,7 +109,8 @@ class MainWindow(QMainWindow):
         self.__acRemote = QAction(QIcon(":remote"), "&Connect to server", self)
         self.__acRemote.setStatusTip(text)
         self.__acRemote.setToolTip(text)
-        self.__acRemote.triggered.connect(self.__network.onStartConnection)
+        self.__acRemote.setCheckable(True)
+        self.__acRemote.triggered.connect(self.onConnectionChanged)
 
         text = "Exit application"
         self.__acExit = QAction(QIcon(':exit'), '&Exit', self)
@@ -176,20 +179,20 @@ class MainWindow(QMainWindow):
         mainSplitter = QSplitter(Qt.Horizontal)
         mainSplitter.setContentsMargins(5,5,5,5)
         
-        navigationPanel = NavigationPanel(Manager().treemodel)
+        self.__navigationPanel = NavigationPanel(Manager().treemodel)
         leftArea = QSplitter(Qt.Vertical, mainSplitter)
         self.__navigationTab = DockTabWindow("Navigation", leftArea)
-        self.__navigationTab.addDockableTab(navigationPanel, "Navigation")
+        self.__navigationTab.addDockableTab(self.__navigationPanel, "Navigation")
         leftArea.setStretchFactor(0,2)
 
-        #projectPanel = ProjectPanel()
+        #self.__projectPanel = ProjectPanel()
         #self.__projectTab = DockTabWindow("Projects", leftArea)
-        #self.__projectTab.addDockableTab(projectPanel, "Projects")
+        #self.__projectTab.addDockableTab(self.__projectPanel, "Projects")
         #leftArea.setStretchFactor(1,1)
 
-        notificationPanel = NotificationPanel()
+        self.__notificationPanel = NotificationPanel()
         self.__monitorTab = DockTabWindow("Notifications", leftArea)
-        self.__monitorTab.addDockableTab(notificationPanel, "Notifications")
+        self.__monitorTab.addDockableTab(self.__notificationPanel, "Notifications")
         leftArea.setStretchFactor(1,1)
 
         middleArea = QSplitter(Qt.Vertical, mainSplitter)
@@ -206,17 +209,17 @@ class MainWindow(QMainWindow):
         tbNewTab.clicked.connect(self.onOpenNewCustomViewTab)
         middleArea.setStretchFactor(0, 10)
 
-        loggingPanel = LoggingPanel()
-        scriptingPanel = ScriptingPanel()
+        self.__loggingPanel = LoggingPanel()
+        self.__scriptingPanel = ScriptingPanel()
         self.__outputTab = DockTabWindow("Update", middleArea)
-        self.__outputTab.addDockableTab(loggingPanel, "Log")
-        self.__outputTab.addDockableTab(scriptingPanel, "Console")
+        self.__outputTab.addDockableTab(self.__loggingPanel, "Log")
+        self.__outputTab.addDockableTab(self.__scriptingPanel, "Console")
         middleArea.setStretchFactor(1,1)
 
-        configurationPanel = ConfigurationPanel(Manager().treemodel)
+        self.__configurationPanel = ConfigurationPanel(Manager().treemodel)
         rightArea = QSplitter(Qt.Vertical, mainSplitter)
         self.__configurationTab = DockTabWindow("Configurator", rightArea)
-        self.__configurationTab.addDockableTab(configurationPanel, "Configurator")
+        self.__configurationTab.addDockableTab(self.__configurationPanel, "Configurator")
 
         mainSplitter.setStretchFactor(0,1)
         mainSplitter.setStretchFactor(1,3)
@@ -244,6 +247,27 @@ class MainWindow(QMainWindow):
 
 
 ### slots ###
+    def onConnectionChanged(self, checked):
+        if checked:
+            dialog = LoginDialog()
+            if dialog.exec_() == QDialog.Accepted:
+                self.__network.onStartConnection(str(dialog.username), str(dialog.password),
+                                                 str(dialog.provider), dialog.hostname, dialog.port)
+            else:
+                checked = False
+                self.__acRemote.setChecked(False)
+        else:
+            self.__network.onEndConnection()
+            self.__configurationPanel.clearParameterEditorContent()
+            # Reset manager settings to start configuration
+            Manager().reset()
+            Manager().handleSystemTopology(Hash())
+        
+        self.__tbAccessLevel.setEnabled(checked)
+        
+        
+
+
     def onExit(self):
         self.__network.onEndConnection()
         qApp.quit()
@@ -303,3 +327,4 @@ class MainWindow(QMainWindow):
             self.__acOperator.setChecked(False)
             self.__acUser.setChecked(False)
             self.__acObserver.setChecked(False)
+
