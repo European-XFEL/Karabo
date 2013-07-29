@@ -16,6 +16,7 @@ import qrc_icons
 
 from docktabwindow import DockTabWindow
 import globals
+from karabo.karathon import AccessLevel
 from manager import Manager
 from network import Network
 
@@ -29,6 +30,7 @@ from panels.scriptingpanel import ScriptingPanel
 
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
+
 
 
 class MainWindow(QMainWindow):
@@ -259,15 +261,15 @@ class MainWindow(QMainWindow):
 
     def onChangeAccessLevel(self, action):
         if action is self.__acObserver:
-            globals.GLOBAL_ACCESS_LEVEL = 0
+            globals.GLOBAL_ACCESS_LEVEL = AccessLevel.OBSERVER
         elif action is self.__acUser:
-            globals.GLOBAL_ACCESS_LEVEL = 1
+            globals.GLOBAL_ACCESS_LEVEL = AccessLevel.USER
         elif action is self.__acOperator:
-            globals.GLOBAL_ACCESS_LEVEL = 2
+            globals.GLOBAL_ACCESS_LEVEL = AccessLevel.OPERATOR
         elif action is self.__acExpert:
-            globals.GLOBAL_ACCESS_LEVEL = 3
+            globals.GLOBAL_ACCESS_LEVEL = AccessLevel.EXPERT
         elif action is self.__acAdmin:
-            globals.GLOBAL_ACCESS_LEVEL = 4
+            globals.GLOBAL_ACCESS_LEVEL = AccessLevel.ADMIN
         
         # Emit signal that globals.GLOBAL_ACCESS_LEVEL has changed
         Manager().notifier.signalGlobalAccessLevelChanged.emit()
@@ -275,25 +277,25 @@ class MainWindow(QMainWindow):
 
     def onUpdateAccessLevel(self):
         self.__mAccessLevel.clear()
-        if globals.GLOBAL_ACCESS_LEVEL > 3:
+        if globals.GLOBAL_ACCESS_LEVEL > AccessLevel.EXPERT:
             self.__mAccessLevel.addAction(self.__acAdmin)
-        if globals.GLOBAL_ACCESS_LEVEL > 2:
+        if globals.GLOBAL_ACCESS_LEVEL > AccessLevel.OPERATOR:
             self.__mAccessLevel.addAction(self.__acExpert)
-        if globals.GLOBAL_ACCESS_LEVEL > 1:
+        if globals.GLOBAL_ACCESS_LEVEL > AccessLevel.USER:
             self.__mAccessLevel.addAction(self.__acOperator)
-        if globals.GLOBAL_ACCESS_LEVEL > 0:
+        if globals.GLOBAL_ACCESS_LEVEL > AccessLevel.OBSERVER:
             self.__mAccessLevel.addAction(self.__acUser)
         self.__mAccessLevel.addAction(self.__acObserver)
         
-        if globals.GLOBAL_ACCESS_LEVEL == 4:
+        if globals.GLOBAL_ACCESS_LEVEL == AccessLevel.ADMIN:
             self.__acAdmin.setChecked(True)
-        elif globals.GLOBAL_ACCESS_LEVEL == 3:
+        elif globals.GLOBAL_ACCESS_LEVEL == AccessLevel.EXPERT:
             self.__acExpert.setChecked(True)
-        elif globals.GLOBAL_ACCESS_LEVEL == 2:
+        elif globals.GLOBAL_ACCESS_LEVEL == AccessLevel.OPERATOR:
             self.__acOperator.setChecked(True)
-        elif globals.GLOBAL_ACCESS_LEVEL == 1:
+        elif globals.GLOBAL_ACCESS_LEVEL == AccessLevel.USER:
             self.__acUser.setChecked(True)
-        elif globals.GLOBAL_ACCESS_LEVEL == 0:
+        elif globals.GLOBAL_ACCESS_LEVEL == AccessLevel.OBSERVER:
             self.__acObserver.setChecked(True)
         else:
             self.__acAdmin.setChecked(False)

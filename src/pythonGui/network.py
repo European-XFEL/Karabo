@@ -28,9 +28,6 @@ BYTES_TOTAL_SIZE_TAG = 4
 BYTES_HEADER_SIZE_TAG = 4
 BYTES_MESSAGE_SIZE_TAG = 4
 
-auth = Authenticator("", "", "", "", "", "", "")
-
-
 class Network(QObject):
     # signals
     signalUserChanged = pyqtSignal()
@@ -38,13 +35,16 @@ class Network(QObject):
     def __init__(self):
         super(Network, self).__init__()
         
-        self.__textSerializer = TextSerializerHash.create("Xml")
-        self.__binarySerializer = BinarySerializerHash.create("Bin")
-        
+        self.__serializer = TextSerializerHash.create("Xml")
+                
+        self.__auth = None
         self.__username = str()
         self.__password = str()
         self.__provider = str()
         self.__sessionToken = str()
+        self.__brokerHost = str()
+        self.__brokerPort = str()
+        self.__brokerTopic = str()
         
         self.__tcpSocket = QTcpSocket(self)
         self.__tcpSocket.connected.connect(self.onConnected)
@@ -74,82 +74,71 @@ class Network(QObject):
         self.__bodyBytes = bytearray()
 
 
-    def login(self, username, password, provider, brokerHostname, brokerPortNumber, brokerTopic):
-        global auth
-        
+    def login(self):
+       
         # System variables definition
         #ipAddress = socket.gethostbyname(socket.gethostname()); #IP
         ipAddress = socket.gethostname(); #Machine Name
         
-        # Construct Authenticator class
-        try:
-            auth = Authenticator(username, password, provider, ipAddress, brokerHostname, brokerPortNumber, brokerTopic)
-        except Exception, e:
-            print "Authenticator exception " + str(e)
-            
-        # Execute Login
-        try:
-            return auth.login()
-        except Exception, e:
-            print "Login exception. Please verify if Service is running!!!" + str(e)
+        print "Trying to login now..."
+        
+        # Easteregg
+        if self.__username == "god":
+            md5 = QCryptographicHash.hash(str(dialog.password), QCryptographicHash.Md5).toHex()
+            if md5 == "39d676ecced45b02da1fb45731790b4c":
+                print "Entering god mode..."
+                globals.GLOBAL_ACCESS_LEVEL = 1000
+            else:
+                globals.GLOBAL_ACCESS_LEVEL = AccessLevel.OBSERVER
+                
+        else:
+        
+            # Construct Authenticator class
+            try:
+                self.__auth = Authenticator(self.__username, self.__password, self.__provider, ipAddress, self.__brokerHost, self.__brokerPort, self.__brokerTopic)
+            except Exception, e:
+                print "Authenticator exception " + str(e)
+
+            # Execute Login
+            try:
+                ok = self.__auth.login()
+            except Exception, e:
+                # TODO Fall back to inbuild access level
+                globals.GLOBAL_ACCESS_LEVEL = globals.KARABO_DEFAULT_ACCESS_LEVEL
+                print "Login exception. Please verify if Service is running!!!" + str(e)
+            if ok:
+                print "Login successfull"
+                globals.GLOBAL_ACCESS_LEVEL = self.__auth.getDefaultAccessLevelId()
+            else:
+                print "Login failed"
+                globals.GLOBAL_ACCESS_LEVEL = AccessLevel.OBSERVER
+
+        # Inform the mainwindow to change correspondingly the allowed level-downgrade
+        self.signalUserChanged.emit()
+        
+        self._sendLoginInformation(self.__username, self.__password, self.__provider, self.__sessionToken)
             
     
     def _logout(self):
         # Execute Logout
         try:
-            return auth.logout()
+            return self.__auth.logout()
         except Exception, e:
             print "Logout exception. Please verify if Service is running!!!" + str(e)
 
 
 ### Slots ###
     def onStartConnection(self):
-        # TODO: Populate this values automatically
-        brokerHostname = "127.0.0.1";
-        brokerPortNumber = "4444";
-        brokerTopic = "Topic_01";
         
         dialog = LoginDialog()
         if dialog.exec_() == QDialog.Accepted :
-            #if self.login(str(dialog.username), str(dialog.password), str(dialog.provider), brokerHostname, brokerPortNumber, brokerTopic):
-                # test request to server
+                self.__username = str(dialog.username)
+                self.__password = str(dialog.password)
+                self.__provider = str(dialog.provider)
+                self.__headerSize = 0
                 self.__bodySize = 0
                 self.__tcpSocket.abort()
-                self.__tcpSocket.connectToHost(dialog.hostname, dialog.port)
-                
-                ### Dark hack for the time being               
-                self.__username = dialog.username
-                
-                if self.__username == "observer":
-                    globals.GLOBAL_ACCESS_LEVEL = 0
-                elif self.__username == "user":
-                    globals.GLOBAL_ACCESS_LEVEL = 1
-                elif self.__username == "operator":
-                    globals.GLOBAL_ACCESS_LEVEL = 2
-                elif self.__username == "expert":
-                    globals.GLOBAL_ACCESS_LEVEL = 3
-                elif self.__username == "admin":
-                    globals.GLOBAL_ACCESS_LEVEL = 4
-                elif self.__username == "god":
-                        md5 = QCryptographicHash.hash(str(dialog.password), QCryptographicHash.Md5).toHex()
-                        if md5 == "39d676ecced45b02da1fb45731790b4c":
-                            print "Entering god mode..."
-                            globals.GLOBAL_ACCESS_LEVEL = 1000
-                        else:
-                            globals.GLOBAL_ACCESS_LEVEL = 4
-                else:
-                    globals.GLOBAL_ACCESS_LEVEL = 0
-                
-                # Inform the mainwindow to change correspondingly the allowed level-downgrade
-                self.signalUserChanged.emit()
-            
-                self.__password = dialog.password
-                self.__provider = dialog.provider
-                self.__sessionToken = str(auth.getSessionToken())
-                #self._sendLoginInformation(dialog.username, dialog.password, dialog.provider, str(auth.getSessionToken()))
-            #else:
-            #    print "LMAIA: Login error!!!"
-        
+                self.__tcpSocket.connectToHost(dialog.hostname, dialog.port)           
     
     def onEndConnection(self):
         if self._logout():
@@ -203,8 +192,8 @@ class Network(QObject):
                 
                     
             # Fork on responseType
-            headerHash = self.__textSerializer.load(self.__headerBytes)
-            #bodyHash = self.__textSerializer.load(self.__bodyBytes)
+            headerHash = self.__serializer.load(self.__headerBytes)
+            #bodyHash = self.__serializer.load(self.__bodyBytes)
             
             type = headerHash.get("type")
             print "Request: ", type
@@ -218,10 +207,10 @@ class Network(QObject):
             # "invalidateCache" (instanceId)
             
             if type == "systemTopology":
-                bodyHash = self.__textSerializer.load(self.__bodyBytes)
+                bodyHash = self.__serializer.load(self.__bodyBytes)
                 Manager().handleSystemTopology(bodyHash)
             elif type == "instanceNew":
-                bodyHash = self.__textSerializer.load(self.__bodyBytes)
+                bodyHash = self.__serializer.load(self.__bodyBytes)
                 Manager().handleSystemTopology(bodyHash)
                 
                 deviceKey = "device"
@@ -232,24 +221,27 @@ class Network(QObject):
                     for deviceId in deviceIds:
                         Manager().onSelectNewDevice(deviceKey + "." + deviceId)
             elif type == "instanceUpdated":
-                bodyHash = self.__textSerializer.load(self.__bodyBytes)
+                bodyHash = self.__serializer.load(self.__bodyBytes)
                 Manager().handleSystemTopology(bodyHash)
             elif type == "instanceGone":
                 Manager().handleInstanceGone(str(self.__bodyBytes))
             elif type == "classDescription":
-                bodyHash = self.__textSerializer.load(self.__bodyBytes)
+                bodyHash = self.__serializer.load(self.__bodyBytes)
                 Manager().handleClassSchema(bodyHash)
             elif type == "deviceSchema":
-                bodyHash = self.__textSerializer.load(self.__bodyBytes)
+                bodyHash = self.__serializer.load(self.__bodyBytes)
                 self._handleDeviceSchema(headerHash, bodyHash)
             elif type == "configurationChanged":
-                bodyHash = self.__textSerializer.load(self.__bodyBytes)
+                bodyHash = self.__serializer.load(self.__bodyBytes)
                 self._handleConfigurationChanged(headerHash, bodyHash)
             elif type == "log":
                 self._handleLog(str(self.__bodyBytes))
             elif type == "schemaUpdated":
-                bodyHash = self.__textSerializer.load(self.__bodyBytes)
+                bodyHash = self.__serializer.load(self.__bodyBytes)
                 self._handleSchemaUpdated(headerHash, bodyHash)
+            elif type == "brokerInformation":
+                bodyHash = self.__serializer.load(self.__bodyBytes)
+                self._handleBrokerInformation(headerHash, bodyHash)
             elif type == "notification":
                 print "notification"
             elif type == "invalidateCache":
@@ -267,7 +259,7 @@ class Network(QObject):
 
     def onConnected(self):
         print "Connected to server"
-        self._sendLoginInformation(self.__username, self.__password, self.__provider, self.__sessionToken)
+        #self._sendLoginInformation(self.__username, self.__password, self.__provider, self.__sessionToken)
         
         
     def onDisconnected(self):
@@ -391,8 +383,8 @@ class Network(QObject):
 
     def _tcpWriteHashHash(self, headerHash, bodyHash):
         stream = QByteArray()
-        headerString = QByteArray(self.__textSerializer.save(headerHash))
-        bodyString = QByteArray(self.__textSerializer.save(bodyHash))
+        headerString = QByteArray(self.__serializer.save(headerHash))
+        bodyString = QByteArray(self.__serializer.save(bodyHash))
         nBytesHeader = headerString.size()
         nBytesBody = bodyString.size()
                 
@@ -405,7 +397,7 @@ class Network(QObject):
         
     def _tcpWriteHashString(self, headerHash, body):
         stream = QByteArray()
-        headerString = QByteArray(self.__textSerializer.save(headerHash))
+        headerString = QByteArray(self.__serializer.save(headerHash))
         bodyString = QByteArray(str(body))
         nBytesHeader = headerString.size()
         nBytesBody = bodyString.size()
@@ -434,4 +426,11 @@ class Network(QObject):
     def _handleSchemaUpdated(self, headerHash, bodyHash):
         deviceId = headerHash.get("deviceId")
         Manager().handleDeviceSchemaUpdated(deviceId, bodyHash)
+        
+    def _handleBrokerInformation(self, headerHash, bodyHash):
+        print "Provided broker information", bodyHash
+        self.__brokerHost = bodyHash.get("host")
+        self.__brokerPort = str(bodyHash.get("port"))
+        self.__brokerTopic = bodyHash.get("topic")
+        self.login()
 
