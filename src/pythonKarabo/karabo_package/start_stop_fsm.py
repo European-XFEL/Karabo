@@ -52,7 +52,7 @@ class StartStopFsm(base.BaseFsm):
         #**************************************************************
         #*                    Transition Actions                      *
         #**************************************************************
-        KARABO_FSM_NO_TRANSITION_ACTION(self.noStateTransition)
+        #KARABO_FSM_NO_TRANSITION_ACTION(self.noStateTransition)
         KARABO_FSM_ACTION2('ErrorFoundAction', self.errorFoundAction, str, str)
         KARABO_FSM_ACTION0('ResetAction', self.resetAction)
         KARABO_FSM_ACTION0('StartAction', self.startAction)
