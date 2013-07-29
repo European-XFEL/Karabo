@@ -98,6 +98,14 @@ namespace karabo {
                 // Re-register acceptor socket (allows handling multiple clients)
                 m_dataConnection->startAsync(boost::bind(&karabo::core::GuiServerDevice::onConnect, this, _1));
                 registerConnect(channel);
+                
+                Hash header("type", "brokerInformation");
+                Hash body;
+                body.set("host", this->getConnection()->getBrokerHostname());
+                body.set("port", this->getConnection()->getBrokerPort());
+                body.set("topic", this->getConnection()->getBrokerTopic());
+                channel->write(header, body);
+                
             } catch (const Exception& e) {
                 KARABO_LOG_ERROR << "Problem in onConnect(): " << e.userFriendlyMsg();
             }
