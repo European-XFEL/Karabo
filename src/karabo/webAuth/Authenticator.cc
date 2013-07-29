@@ -94,8 +94,8 @@ namespace karabo {
                 exit(1);
             }
 
-            m_soap.get()->connect_timeout = 60; /* try to connect for 1 minute */
-            m_soap.get()->send_timeout = m_soap.get()->recv_timeout = 30; /* if I/O stalls, then timeout after 30 seconds */
+            m_soap.get()->connect_timeout = 5; /* try to connect for 5 seconds */
+            m_soap.get()->send_timeout = m_soap.get()->recv_timeout = 10; /* if I/O stalls, then timeout after 10 seconds */
 
             // Create SSL Service from the parameters changed in the previous lines of code
             m_service = boost::shared_ptr<AuthenticationPortBindingProxy> (new AuthenticationPortBindingProxy(m_soap.get()));
