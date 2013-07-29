@@ -12,10 +12,9 @@ from karabo.karathon import AccessLevel
 def init():
     
     global GLOBAL_ACCESS_LEVEL
-    
     GLOBAL_ACCESS_LEVEL = AccessLevel.OBSERVER
     
+    global KARABO_DEFAULT_ACCESS_LEVEL
     KARABO_DEFAULT_ACCESS_LEVEL = AccessLevel.OBSERVER  # Inside XFEL
-        
     #KARABO_DEFAULT_ACCESS_LEVEL = AccessLevel.ADMIN  # Outside XFEL
     

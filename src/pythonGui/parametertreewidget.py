@@ -173,6 +173,11 @@ class ParameterTreeWidget(QTreeWidget):
         self._r_setReadOnlyItem(self.invisibleRootItem(), readOnly)
 
 
+    def removeActions(self):
+        self.__configPanel.removeActionFromToolBar(self.__acFileOpen)
+        self.__configPanel.removeActionFromToolBar(self.__acFileSaveAs)
+
+
 ### private functions ###
     def _r_setErrorStateItem(self, item, isError):
         for i in range(item.childCount()):

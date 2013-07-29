@@ -313,6 +313,23 @@ class ConfigurationPanel(QWidget):
         self.__acResetAll.setToolTip(text)
 
 
+    def clearParameterEditorContent(self):
+        self.__swParameterEditor.setCurrentIndex(0)
+        # Reset map
+        self.__navItemInternalKeyIndexMap = dict()
+        
+        while self.__swParameterEditor.count() > 1:
+            twParameterEditorPage = self.__swParameterEditor.widget(self.__swParameterEditor.count()-1)
+            # Unregister all widgets of TreeWidget from DataNotifier in Manager before clearing..
+            self._r_unregisterEditableComponent(twParameterEditorPage.invisibleRootItem())
+            twParameterEditorPage.clear()
+            twParameterEditorPage.removeActions()
+            
+            # Remove widget completely
+            self.__swParameterEditor.removeWidget(twParameterEditorPage)
+            del twParameterEditorPage
+
+
     def _parseSchema(self, itemInfo, twParameterEditorPage):
         path = itemInfo.get(QString('key'))
         if path is None:

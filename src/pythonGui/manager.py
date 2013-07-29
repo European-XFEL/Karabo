@@ -98,24 +98,55 @@ class Manager(Singleton):
         self.__stateUpdateTimer = QTimer()
         self.__stateUpdateTimer.timeout.connect(self.onLastStateUpdateTimeOut)
         
-        # Central hash
-        self.__hash = Hash()
+        # Timer for state update, if last incoming state is a while ago
+        self.__stateUpdateTimer = QTimer()
+        self.__stateUpdateTimer.timeout.connect(self.onLastStateUpdateTimeOut)
+        
+        self.__notifier = Notifier()
         
         # Map stores all keys and DataNofiers for editable widgets
         self.__keyNotifierMapEditableValue = dict()
         # Map stores all keys and DataNofiers for display widgets
         self.__keyNotifierMapDisplayValue = dict()
-        self.__notifier = Notifier()
+        
+        # Initiate database connection
+        self.__sqlDatabase = SqlDatabase()
+        self.__treemodel = NavigationHierarchyModel()
+        
+        # Sets all parameters to start configuration
+        self.reset()
+
+
+    # Sets all parameters to start configuration
+    def reset(self):
+        
+        # Tuple stores last state
+        self.__lastState = None
+        
+        # Central hash
+        self.__hash = Hash()
+        
+        # Unregister all editable DataNotifiers, if available
+        #for key in self.__keyNotifierMapEditableValue:
+        #    dataNotifier = self.__keyNotifierMapEditableValue.get(key)
+        #    if dataNotifier:
+        #        dataNotifier.removeComponents(key)
+        # Map stores all keys and DataNofiers for editable widgets
+        self.__keyNotifierMapEditableValue = dict()
+        
+        # Unregister all display DataNotifiers, if available
+        #for key in self.__keyNotifierMapDisplayValue:
+        #    dataNotifier = self.__keyNotifierMapDisplayValue.get(key)
+        #    if dataNotifier:
+        #        dataNotifier.removeComponents(key)
+        # Map stores all keys and DataNofiers for display widgets
+        self.__keyNotifierMapDisplayValue = dict()
         
         # Dictionary to store instanceId of visible DEVICE_INSTANCEs with counter
         self.__visibleDevInsKeys = dict()
         
         # State, if initiate device is currently processed
         self.__isInitDeviceCurrentlyProcessed = False
-        
-        # Initiate database connection
-        self.__sqlDatabase = SqlDatabase()
-        self.__treemodel = NavigationHierarchyModel()
 
 
     def _hash(self):
@@ -506,68 +537,10 @@ class Manager(Singleton):
         self.__notifier.signalNewNavigationItem.emit(itemInfo)
 
 
-    def onNewNode(self, itemInfo):
-        itemInfo['type'] = NavigationItemTypes.HOST
-        self.__notifier.signalNewNavigationItem.emit(itemInfo)
-
-
-    def onNewDeviceServerInstance(self, itemInfo):
-        itemInfo['type'] = NavigationItemTypes.SERVER
-        itemInfo['refType'] = NavigationItemTypes.HOST
-        self.__notifier.signalNewNavigationItem.emit(itemInfo)
-
-
-    def onNewDeviceClass(self, itemInfo):
-        className = itemInfo.get(QString('name'))
-        if className is None:
-            className = itemInfo.get('name')
-        
-        devSerInsId = itemInfo.get(QString('refId'))
-        if devSerInsId is None:
-            devSerInsId = itemInfo.get('refId')
-        devSerInsName = self.__sqlDatabase.getDeviceServerInstanceById(devSerInsId)
-        
-        # Remove device class data from internal hash
-        self._setFromPath(devSerInsName + "+" + className, Hash())
-        
-        itemInfo['type'] = NavigationItemTypes.CLASS
-        itemInfo['refType'] = NavigationItemTypes.SERVER
-        self.__notifier.signalNewNavigationItem.emit(itemInfo)
-
-
-    def onNewDeviceInstance(self, itemInfo):
-        itemInfo['type'] = NavigationItemTypes.DEVICE
-        itemInfo['refType'] = NavigationItemTypes.CLASS
-        self.__notifier.signalNewNavigationItem.emit(itemInfo)
-
-
     def onSelectNewDevice(self, deviceId):
         if self.__isInitDeviceCurrentlyProcessed is True:
             self.__notifier.signalSelectNewNavigationItem.emit(deviceId)
             self.__isInitDeviceCurrentlyProcessed = False
-
-
-    def onUpdateDeviceServerInstance(self, itemInfo):
-        # Remove old configurations of hash...
-        name = itemInfo.get(QString('name'))
-        if name is None:
-            name = itemInfo.get('name')
-        
-        # Remove device server data from internal hash
-        self._setFromPath(name, Hash())
-        self.__notifier.signalUpdateDeviceServerInstance.emit(itemInfo)
-        self.__notifier.signalUpdateDeviceServerInstanceFinished.emit(itemInfo)
-
-
-    def onUpdateDeviceInstance(self, itemInfo):
-        self.__notifier.signalUpdateDeviceInstance.emit(itemInfo)
-        self.__notifier.signalUpdateDeviceInstanceFinished.emit(itemInfo)
-
-
-    def onSchemaUpdated(self, instanceId, schema):
-        self.__notifier.signalDeviceInstanceSchemaUpdated.emit(instanceId, schema)
-        # Refresh needed
-        self.onRefreshInstance(instanceId)
 
 
     def onSchemaAvailable(self, itemInfo):
@@ -656,6 +629,7 @@ class Manager(Singleton):
         #print ""
         # Merge new configuration data into central hash
         self._mergeIntoHash(config)
+        
         # Send full internal hash to navigation
         self.__notifier.signalSystemTopologyChanged.emit(self.__hash)
 
@@ -732,6 +706,8 @@ class Manager(Singleton):
         path = "device." + deviceId
         self.__notifier.signalDeviceSchemaUpdated.emit(path)
         self.handleDeviceSchema(deviceId, config)
+        # Refresh needed
+        self.onRefreshInstance(path)
 
 
     # TODO: This function must be thread-safe!!

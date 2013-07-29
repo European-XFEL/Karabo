@@ -34,9 +34,9 @@ class NavigationHierarchyModel(QAbstractItemModel):
 
 
     def updateData(self, config):
-        #print "+++ NavigationHierarchyModel.updateData"
-        #print config
-        #print ""
+        print "+++ NavigationHierarchyModel.updateData"
+        print config
+        print ""
         
         # Needed for GLOBAL_ACCESS_LEVEL changes
         if self.__currentConfig != config:
@@ -60,16 +60,16 @@ class NavigationHierarchyModel(QAbstractItemModel):
                 if serverConfig.hasAttribute(serverId, "host"):
                     host = serverConfig.getAttribute(serverId, "host")
 
+                if serverConfig.hasAttribute(serverId, "visibility"):
+                    visibility = serverConfig.getAttribute(serverId, "visibility")
+                    if visibility > globals.GLOBAL_ACCESS_LEVEL:
+                        continue
+                
                 # Host item already exists?
                 hostItem = self.__rootItem.getItem(host)
                 if not hostItem:
                     hostItem = NavigationHierarchyNode(host, host, self.__rootItem)
                     self.__rootItem.appendChildItem(hostItem)
-
-                if serverConfig.hasAttribute(serverId, "visibility"):
-                    visibility = serverConfig.getAttribute(serverId, "visibility")
-                    if visibility > globals.GLOBAL_ACCESS_LEVEL:
-                        continue
                 
                 path = "server." + serverId
                 serverItem = NavigationHierarchyNode(serverId, path, hostItem)
