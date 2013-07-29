@@ -150,7 +150,7 @@ sleep 2
 
 safeRunCommand "cd $scriptDir/build/netbeans/karabo"
 safeRunCommand "make CONF=$CONF -j$NUM_CORES"
-safeRunCommand "make CONF=$CONF bundle-package"
+safeRunCommand "make CONF=$CONF -j$NUM_CORES bundle-package"
 
 echo "### Successfully finished building and packaging of karaboFramework ###"
 echo
