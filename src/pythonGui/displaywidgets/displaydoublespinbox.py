@@ -23,7 +23,6 @@ __all__ = ["DisplayDoubleSpinBox"]
 #import sys
 
 from displaywidget import DisplayWidget
-from scientificdoublespinbox import ScientificDoubleSpinBox
 
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
@@ -41,15 +40,10 @@ class DisplayDoubleSpinBox(DisplayWidget):
         # Minimum and maximum number of associated keys, 1 by default for each
         self.__minMaxAssociatedKeys = (1,1) # tuple<min,max>
         
-        # Using new scientific doublespinbox
-        self.__doubleSpinBox = ScientificDoubleSpinBox()
-        #self.__doubleSpinBox = QDoubleSpinBox()
-	# Set Range to maximum possible values
-	#doubleMax = sys.float_info.max
-	#self.__doubleSpinBox.setRange(-doubleMax, doubleMax)
-        #self.__doubleSpinBox.setDecimals(6)
-        #self.__doubleSpinBox.setSingleStep(0.000001)
-        #self.__doubleSpinBox.setEnabled(False)
+        self.__leDblValue = QLineEdit()
+        self.__validator = QDoubleValidator(self.__leDblValue)
+        self.__leDblValue.setValidator(self.__validator)
+        self.__leDblValue.setEnabled(False)
         
         self.__key = params.get(QString('key'))
         if self.__key is None:
@@ -71,7 +65,7 @@ class DisplayDoubleSpinBox(DisplayWidget):
 
     # Returns the actual widget which is part of the composition
     def _getWidget(self):
-        return self.__doubleSpinBox
+        return self.__leDblValue
     widget = property(fget=_getWidget)
 
 
@@ -87,22 +81,11 @@ class DisplayDoubleSpinBox(DisplayWidget):
 
 
     def _value(self):
-        return self.__doubleSpinBox.value()
+        value, ok = self.__leDblValue.text().toDouble()
+        if ok:
+            return value
+        return  0.0
     value = property(fget=_value)
-
-
-    def _setMinimum(self, min):
-        self.__doubleSpinBox.blockSignals(True)
-        self.__doubleSpinBox.setMinimum(min)
-        self.__doubleSpinBox.blockSignals(False)
-    minimum = property(fset=_setMinimum)
-
-
-    def _setMaximum(self, max):
-        self.__doubleSpinBox.blockSignals(True)
-        self.__doubleSpinBox.setMaximum(max)
-        self.__doubleSpinBox.blockSignals(False)
-    maximum = property(fset=_setMaximum)
 
 
     def addKeyValue(self, key, value):
@@ -119,9 +102,9 @@ class DisplayDoubleSpinBox(DisplayWidget):
             return
         
         if value != self.value:
-            self.__doubleSpinBox.blockSignals(True)
-            self.__doubleSpinBox.setValue(value)
-            self.__doubleSpinBox.blockSignals(False)
+            self.__leDblValue.blockSignals(True)
+            self.__leDblValue.setText(QString("%1").arg(value))
+            self.__leDblValue.blockSignals(False)
 
 
     class Maker:

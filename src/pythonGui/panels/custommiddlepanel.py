@@ -507,3 +507,20 @@ class CustomMiddlePanel(QWidget):
     def onDock(self):
         pass
 
+
+    def keyPressEvent(self, event):
+        if event.matches(QKeySequence.Cut):
+            print "cut"
+            self.onCut()
+        if event.matches(QKeySequence.Copy):
+            print "copy"
+            self.onCopy()
+        if event.matches(QKeySequence.Paste):
+            print "paste"
+            self.onPaste()
+        if event.matches(QKeySequence.Delete):
+            print "remove"
+            self.onRemove()
+
+        QWidget.keyPressEvent(self, event)
+
