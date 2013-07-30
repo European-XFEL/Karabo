@@ -19,12 +19,6 @@ namespace karabo {
         enum TIME_UNITS {
 
             // Fractions
-            //            MILLISEC = 1000ULL * SECOND,
-            //            MICROSEC = 1000ULL * MILLISEC,
-            //            NANOSEC = 1000ULL * MICROSEC,
-            //            PICOSEC = 1000ULL * NANOSEC,
-            //            FEMTOSEC = 1000ULL * PICOSEC,
-            //            ATTOSEC = 1000ULL * FEMTOSEC
             ATTOSEC = 1ULL, // Atto-second is the smallest time unit = highest resolution for time values.
             FEMTOSEC = 1000ULL * ATTOSEC,
             PICOSEC = 1000ULL * FEMTOSEC,
@@ -42,14 +36,59 @@ namespace karabo {
 
         typedef unsigned long long TimeValue;
 
+        /**
+         * This class represents the time duration (length) between two time points
+         * The value is hold in form of two unsigned 64bit values. The first expresses
+         * the total number of seconds, and the seconds the fractional of a second.
+         * 
+         * The default constructor create a time duration of length zero, i.e. empty.
+         */
+
         class TimeDuration {
 
         public:
+            
+            /**
+             * Default constructor creates an empty time duration
+             */
+
             TimeDuration();
+
+            /**
+             * Constructs a time duration from Hash. Seconds and fractions are stored as 
+             * unsigned integer 64bits under the keys "seconds" and "fractions", respectively.
+             * @param hash Hash object ("seconds", unsigned int 64bits, "fractions", unsigned int 64bits)
+             */
+
             TimeDuration(const karabo::util::Hash& hash);
+            
+            /**
+             * Construct a time duration from separate seconds and fractions of seconds. 
+             * @param seconds
+             * @param fractions in Atto seconds
+             */
             TimeDuration(const TimeValue seconds, const TimeValue fractions);
+            
+            /**
+             * Construct a time duration that expand over days, hours, ...
+             * @param days
+             * @param hours
+             * @param minutes
+             * @param seconds
+             * @param fractions
+             */
             TimeDuration(const int days, const int hours, const int minutes, const TimeValue seconds, const TimeValue fractions);
+
             virtual ~TimeDuration();
+
+            /**
+             * Set new length of, expand, or shrink a time duration
+             * @param days
+             * @param hours
+             * @param minutes
+             * @param seconds
+             * @param fractions
+             */
 
             TimeDuration& set(const TimeValue seconds, const TimeValue fractions);
             TimeDuration& set(const int days, const int hours, const int minutes, const TimeValue seconds, const TimeValue fractions);
@@ -60,6 +99,11 @@ namespace karabo {
             TimeDuration& sub(const TimeValue seconds, const TimeValue fractions);
             TimeDuration& sub(const int days, const int hours, const int minutes, const TimeValue seconds, const TimeValue fractions);
 
+            /**
+             * Relational operations between time duration objects
+             * @param other TimeDuration
+             * @return bool
+             */
             bool operator ==(const TimeDuration& other) const;
             bool operator !=(const TimeDuration& other) const;
             bool operator>(const TimeDuration& other) const;
@@ -67,29 +111,74 @@ namespace karabo {
             bool operator<(const TimeDuration& other) const;
             bool operator <=(const TimeDuration& other) const;
 
-            TimeDuration operator +(const TimeDuration& period) const;
-            TimeDuration operator -(const TimeDuration& period) const;
-            TimeDuration& operator +=(const TimeDuration& period);
-            TimeDuration& operator -=(const TimeDuration& period);
+            /**
+             * Arithmetic operations over time durations
+             * @param other TimeDuration
+             * @return TimeDuration
+             */
+            TimeDuration operator +(const TimeDuration& other) const;
+            TimeDuration operator -(const TimeDuration& other) const;
+            TimeDuration& operator +=(const TimeDuration& other);
+            TimeDuration& operator -=(const TimeDuration& other);
 
+            /**
+             * Division, i.e. how many time one time duration is bigger/smaller than another one
+             * @param other TimeDuration
+             * @return long double
+             */
+            long double operator /(const TimeDuration& other) const;
+
+            /**
+             * Check if the time duration is empty, i.e. of zero length. 
+             * @return bool
+             */
+
+            bool isNull() const;
+
+            /**
+             * In the standard mixed format DD::HH::MM::SS::FF,
+             * How many days, hours, minutes, and seconds are in the time duration.
+             * @return unsigned int 64bits
+             */
             uint64_t getDays() const;
-
             uint64_t getHours() const;
-            TimeValue getTotalHours() const;
-
             uint64_t getMinutes() const;
-            TimeValue getTotalMinutes() const;
-
             TimeValue getSeconds() const;
+
+            /**
+             * Express the total length of a time duration in hours, minutes, or seconds. 
+             * @return unsigned int 64bits
+             */
+            TimeValue getTotalHours() const;
+            TimeValue getTotalMinutes() const;
             TimeValue getTotalSeconds() const;
 
+            /**
+             * Number of fractions of a second, default resolution is Nano seconds
+             * @return unsigned int 64bits
+             */
             TimeValue getFractions(const TIME_UNITS unit = NANOSEC) const;
 
+            /**
+             * Serialize time duration to string/std::ostream
+             * @param format
+             * @return string/ostream object holding the string representation of the time period
+             */
             std::string format(const std::string& fmt) const;
             friend std::ostream& operator <<(std::ostream& os, const TimeDuration& dr);
 
+            /**
+             * Set the output format. This parameter is class variable, 
+             * thus, having a global effect on future output.
+             * The default format is seconds[dot]fractions, with nanoseconds resolution.
+             * @param format string object
+             */
             static void setDefaultFormat(const std::string& fmt);
 
+            /**
+             * Serialize time duration to and from Hash
+             * @param Hash
+             */
             void fromHash(const karabo::util::Hash& hash);
             void toHash(karabo::util::Hash& hash);
 
@@ -138,21 +227,30 @@ namespace karabo {
                     ((m_Seconds == other.m_Seconds) && (m_Fractions <= other.m_Fractions));
         }
 
-        inline TimeDuration TimeDuration::operator +(const TimeDuration& period) const {
+        inline TimeDuration TimeDuration::operator +(const TimeDuration& other) const {
             TimeDuration result(*this);
-            result += period;
+            result += other;
             return result;
         }
 
-        inline TimeDuration TimeDuration::operator -(const TimeDuration& period) const {
+        inline TimeDuration TimeDuration::operator -(const TimeDuration& other) const {
             TimeDuration result(*this);
-            result -= period;
+            result -= other;
             return result;
         }
 
-        inline TimeDuration& TimeDuration::operator +=(const TimeDuration& period) {
-            m_Seconds += period.m_Seconds;
-            m_Fractions += period.m_Fractions;
+        inline long double TimeDuration::operator /(const TimeDuration& other) const {
+            if (other.isNull()) return std::numeric_limits<long double>::quiet_NaN();
+
+            long double len_this = m_Seconds + m_Fractions * 1e-18L;
+            long double len_other = other.m_Seconds + other.m_Fractions * 1e-18L;
+
+            return len_this / len_other;
+        }
+
+        inline TimeDuration& TimeDuration::operator +=(const TimeDuration& other) {
+            m_Seconds += other.m_Seconds;
+            m_Fractions += other.m_Fractions;
 
             if (m_Fractions > ATTOSEC) {
                 ++m_Seconds;
@@ -165,14 +263,14 @@ namespace karabo {
             return *this;
         }
 
-        inline TimeDuration& TimeDuration::operator -=(const TimeDuration& period) {
-            m_Seconds -= period.m_Seconds;
+        inline TimeDuration& TimeDuration::operator -=(const TimeDuration& other) {
+            m_Seconds -= other.m_Seconds;
 
-            if (m_Fractions < period.m_Fractions) {
-                m_Fractions = (ATTOSEC + m_Fractions) - period.m_Fractions;
+            if (m_Fractions < other.m_Fractions) {
+                m_Fractions = (ATTOSEC + m_Fractions) - other.m_Fractions;
                 --m_Seconds;
             } else {
-                m_Fractions -= period.m_Fractions;
+                m_Fractions -= other.m_Fractions;
             }
 
             //m_Seconds += m_Fractions / ATTOSEC;
@@ -185,8 +283,8 @@ namespace karabo {
             DEFAULT_FORMAT = fmt;
         }
 
-        inline std::ostream& operator <<(std::ostream& os, const TimeDuration& dr) {
-            return os << dr.format(TimeDuration::DEFAULT_FORMAT);
+        inline std::ostream& operator <<(std::ostream& os, const TimeDuration& duration) {
+            return os << duration.format(TimeDuration::DEFAULT_FORMAT);
         }
 
 

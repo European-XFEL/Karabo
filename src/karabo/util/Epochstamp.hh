@@ -16,43 +16,53 @@ namespace karabo {
     namespace util {
 
         /**
-         * This class expresses a time point and holds it in form of two unsigned 64bit values.
-         * The first expressing the elapsed seconds since unix epoch and the second expressing
-         * the elapsed atto-seconds since the current second.
+         * This class expresses a point in time and holds its value in the form of two unsigned 64bit.
+         * The first expresses the total number of seconds elapsed since Unix epoch, i.e. 1970-01-01 00:00:00.00.
+         * The second expresses the number fractional of a seconds, in atto seconds, since the last time unit (in seconds).
          * 
-         * The default constructor will initialize this object with the current time.
+         * The default constructor initializes a Epochstamp object with the current system time.
          * To initialize using an arbitrary point in time the static from functions must be used (e.g. fromIso8601)
          * 
          * 
          */
         class Epochstamp {
 
-            // Number of seconds since 1st of January of 1970
+            // Number of seconds since hour 00:00 of the 1st of January, 1970
             unsigned long long m_seconds;
 
-            // An attosecond is an SI unit of time equal to 10−18 of a second.
+            // An attosecond is an SI unit of time equal to 10^−18 of a second.
             unsigned long long m_fractionalSeconds;
 
         public:
 
             /**
-             * The default constructor will use the current time
+             * The default constructor creates a timestamps using the current time
              */
             Epochstamp();
 
             /**
              * Constructor from seconds and fraction
-             * @param seconds seconds past since the unix epoch
+             * @param seconds seconds past since the Unix epoch
              * @param fraction attoSeconds past since the second under consideration
              */
             Epochstamp(const unsigned long long& seconds, const unsigned long long& fractions);
 
+            /**
+             * Constructor from implicit conversion from other system time structures, 
+             * @param time_t
+             * @param timeval
+             * @param timespec
+             */
             explicit Epochstamp(const time_t& tm);
             explicit Epochstamp(const timeval& tv);
             explicit Epochstamp(const timespec& ts);
 
             virtual ~Epochstamp();
 
+            /**
+             * Get the second (resp. fractional of a second) part, 
+             * @return unsigned int 64bits
+             */
             inline const unsigned long long& getSeconds() const {
                 return m_seconds;
             }
@@ -61,10 +71,21 @@ namespace karabo {
                 return m_fractionalSeconds;
             }
 
+            /**
+             * Portability operators to convert other system time structures to Epochstamp
+             * @param tm time_t value
+             * @param tv timeval struct
+             * @param ts timespec struct
+             */
             Epochstamp& operator =(const time_t& tm);
             Epochstamp& operator =(const timeval& tv);
             Epochstamp& operator =(const timespec& ts);
 
+            /**
+             * Relational operations between timestamps
+             * @param other Epochstamp object
+             * @return bool
+             */
             bool operator ==(const Epochstamp& other) const;
             bool operator !=(const Epochstamp& other) const;
             bool operator>(const Epochstamp& other) const;
@@ -72,24 +93,53 @@ namespace karabo {
             bool operator<(const Epochstamp& other) const;
             bool operator <=(const Epochstamp& other) const;
 
-            Epochstamp operator +(const TimeDuration& period) const;
-            Epochstamp operator -(const TimeDuration& period) const;
-            Epochstamp& operator +=(const TimeDuration& period);
-            Epochstamp& operator -=(const TimeDuration& period);
+            /**
+             * Move a timestamp forward/backward with given time distance, 
+             * expressed in terms of time duration
+             * @param duration TimeDuration object
+             * @return Epochstamp object
+             */
+            Epochstamp operator +(const TimeDuration& duration) const;
+            Epochstamp operator -(const TimeDuration& duration) const;
+            Epochstamp& operator +=(const TimeDuration& duration);
+            Epochstamp& operator -=(const TimeDuration& duration);
 
+            /**
+             * Time duration is the difference between two timestamps
+             * @param other Epochstamp object
+             * @return TimeDuration object
+             */
             TimeDuration operator -(const Epochstamp& other) const;
 
+            /**
+             * Auto increment/decrement operators
+             */
             Epochstamp operator ++(int);
             Epochstamp operator --(int);
             Epochstamp& operator ++();
             Epochstamp& operator --();
 
+            /**
+             * Portability functions to convert Epochstamp to other system time structures
+             * @return time_t value
+             * @return timeval struct
+             * @return timespec struct
+             */
             time_t getTime() const; // Unix time_t, Resolution = seconds
             timeval getTimeOfDay() const; // Resolution u-sec
             timespec getClockTime() const; // Resolution nano-sec
 
+            /**
+             * Retrieve current time for the system. Highest resolution is Nano-seconds
+             */
             void now();
-            TimeDuration elpased(const Epochstamp& other = Epochstamp()) const;
+            
+            /**
+             * Calculate elapsed time duration between two timestamps
+             * @param other Epochstamp object (by default, current time point)
+             * @return TimeDuration object
+             */
+            TimeDuration elapsed(const Epochstamp& other = Epochstamp()) const;
 
             /**
              * Creates an EpochStamp from an ISO 8601 formatted string
@@ -200,31 +250,31 @@ namespace karabo {
             }
         }
 
-        inline Epochstamp Epochstamp::operator +(const TimeDuration& period) const {
+        inline Epochstamp Epochstamp::operator +(const TimeDuration& duration) const {
             Epochstamp result(*this);
-            result += period;
+            result += duration;
             return result;
         }
 
-        inline Epochstamp Epochstamp::operator -(const TimeDuration& period) const {
+        inline Epochstamp Epochstamp::operator -(const TimeDuration& duration) const {
             Epochstamp result(*this);
-            result -= period;
+            result -= duration;
             return result;
         }
 
-        inline Epochstamp& Epochstamp::operator +=(const TimeDuration& period) {
-            this->m_seconds += period.getTotalSeconds();
-            if ((this->m_fractionalSeconds += period.getFractions(ATTOSEC)) > ONESECOND) {
+        inline Epochstamp& Epochstamp::operator +=(const TimeDuration& duration) {
+            this->m_seconds += duration.getTotalSeconds();
+            if ((this->m_fractionalSeconds += duration.getFractions(ATTOSEC)) > ONESECOND) {
                 this->m_fractionalSeconds -= ONESECOND;
                 ++this->m_seconds;
             };
             return *this;
         }
 
-        inline Epochstamp& Epochstamp::operator -=(const TimeDuration& period) {
-            this->m_seconds -= period.getTotalSeconds();
-            if (this->m_fractionalSeconds < period.getFractions()) {
-                this->m_fractionalSeconds = (ONESECOND - period.getFractions(ATTOSEC)) + m_fractionalSeconds;
+        inline Epochstamp& Epochstamp::operator -=(const TimeDuration& duration) {
+            this->m_seconds -= duration.getTotalSeconds();
+            if (this->m_fractionalSeconds < duration.getFractions()) {
+                this->m_fractionalSeconds = (ONESECOND - duration.getFractions(ATTOSEC)) + m_fractionalSeconds;
                 --this->m_seconds;
             };
             return *this;

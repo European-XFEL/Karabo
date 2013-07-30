@@ -36,13 +36,30 @@ namespace karabo {
     namespace util {
 
         /**
-         * Heterogeneous generic key/value container.
-         * The Hash class can be regarded as a generic hash container,
-         * which associates a string key to a value of any type. Optionally attributes of any value-type can be 
-         * associated to each hash-key. The Hash preserves insertion order.
-         * The Hash class is much like a XML-DOM container with the difference of 
-         * allowing only unique keys on a given tree-level.
+         * Hash container:
+         * - The Hash is a heterogeneous generic key/value container that associates a string key to a value of any type.<br>
+         * - The Hash is a core data structure in Karabo software framework, and is widly used in the karabo system.<br>
+         * - For instance, exchanging data and configurations between two or more entities (devices, GUI), 
+         * database interface (store and retrival ), meta-data handling, etc.<br>
+         * - The Hash class is much like a XML-DOM container with the difference of 
+         * allowing only unique keys on a given tree-level.<br>
+         * - Like and XML DOM object, the Hash provides a multi-level (recursive) key-value associative container, 
+         * where keys are strings and values can be of any C++ type.<br>
+         * 
+         * Concept:
+         * - Provide recursive key-value associative container (keys are strings and unique, values can be of any type)<br>
+         * - Preserve insertion order, while optimized for random key-based lookup. Different iterators are available for each use case.<br>
+         * - Like in XML, each hash key can have a list of (key-value) attributes (attribute keys are strings and unique, attribute values can be of any type).<br>
+         * - Seamless serialization to/from XML, Binary, HDF5, etc.<br>
+         * - Usage: configuration, device-state cache, database interface (result-set), message protocol, meta-data handling, etc.<br>
+         * - Templated set, get for retrieving values from keys. Assumes recursursion on "." characters in key by default. 
+         *   Seperator can be specified per function call. <br>
+         * - Exposed iterators will a sequential iterator (insertion order) and a alpha-numeric order iterator.<br>
+         * - Each iterator provides access to its key, value, and attributes in form of a Hash::Node and can thus be used for recursive traversal.<br>
+         * - Insertion of a non-existing key leads to new entry whilst insertion of an existing key will only update (merge) the corresponding value/attributes.<br>
+         * - Additional functionality include: list of paths, clear/erase, find, merge, comparison, etc.
          */
+
         class KARABO_DECLSPEC Hash {
 
         public:
@@ -71,18 +88,32 @@ namespace karabo {
             typedef Container::map_iterator map_iterator;
             typedef Container::const_map_iterator const_map_iterator;
 
+            /**
+             * Insertion order iterator (i.e. list iterator)
+             */
             const_iterator begin() const;
             iterator begin();
 
             const_iterator end() const;
             iterator end();
 
+            /**
+             * Alpha-numeric order iterator (i.e. map iterator)
+             */
             const_map_iterator mbegin() const;
             map_iterator mbegin();
 
             const_map_iterator mend() const;
             map_iterator mend();
 
+            /**
+             * Lookup for the hash element identified by "path". If the node exists, 
+             * it returns a reference to it wrapped in boost::optional object.
+             * Otherwise, uninitialized boost::optional object is returned.
+             * @param path sequence of keys to the searched for element
+             * @param separator key separation char
+             * @return Hash::Node wrapped in boost::optional
+             */
             boost::optional<const Hash::Node&> find(const std::string& path, const char separator = '.') const;
             boost::optional<Hash::Node&> find(const std::string& path, const char separator = '.');
 
@@ -157,13 +188,21 @@ namespace karabo {
                  const std::string& path3, const V3& value3, const std::string& path4, const V4& value4,
                  const std::string& path5, const V5& value5, const std::string& path6, const V6& value6);
 
-            // Destructor
+            /**
+             * Destructor
+             */
             virtual ~Hash();
 
-            // Merge operator
+            /**
+             * Merge the current hash with another one
+             * @param other Hash object
+             */
             Hash& operator+=(const Hash& other);
 
-            // Merge operator
+            /**
+             * Merge two Hases and assign the result to a third one.
+             * @param other Hash object
+             */
             friend
             Hash& operator+(const Hash& hash1, const Hash& hash2);
 
@@ -250,6 +289,10 @@ namespace karabo {
             template<typename ValueType>
             inline Node& set(const std::string& path, const ValueType& value, const char separator = '.'); /**/
 
+            /**
+             * Clone the content (key, value, attributes) of another elements.
+             * This function use the source element's key, NOT his full path.
+             */
             Node& setNode(const Node& srcElement);
 
             Node& setNode(const_iterator srcIterator);
@@ -310,12 +353,26 @@ namespace karabo {
             template <typename ValueType>
             inline void get(const std::string& path, ValueType & value, const char separator = '.') const;
 
+            /**
+             * Casts the the value of element identified by "path" from its original type 
+             * to another different target type.
+             * Throws CastException if casting fails, i.e. not posible or unsafe
+             * @param path
+             * @param separator
+             * @return value
+             */
             template <typename ValueType>
             inline ValueType getAs(const std::string& path, const char separator = '.') const;
 
             template<typename T, template <typename Elem, typename = std::allocator<Elem> > class Cont >
             inline Cont<T> getAs(const std::string& key, const char separator = '.') const;
 
+            /**
+             * Return the internal Hash node element designated by "path"
+             * @param path
+             * @param separator
+             * @return Hash::Node element
+             */
             const Node& getNode(const std::string& path, const char separator = '.') const;
 
             Node& getNode(const std::string& path, const char separator = '.');
@@ -371,36 +428,94 @@ namespace karabo {
              * Attributes manipulation
              *******************************************************************/
 
+            /**
+             * Check if the element identified by "path" has an attribute called "attribute"
+             * @param path
+             * @param attribute
+             * @param separator
+             * @return bool
+             */
             bool hasAttribute(const std::string& path, const std::string& attribute, const char separator = '.') const;
 
+            /**
+             * Return the value of the attribute called "attribute" of the element identified by "path"
+             * @param path
+             * @param attribute
+             * @param separator
+             * @return bool
+             */
             template <typename ValueType>
             const ValueType& getAttribute(const std::string& path, const std::string& attribute, const char separator = '.') const;
 
             template <typename ValueType>
             ValueType& getAttribute(const std::string& path, const std::string& attribute, const char separator = '.');
 
+            /**
+             * Casts the value of the attribute called "attribute" of the element identified 
+             * by "path" from its original type to another different target type.
+             * Throws CastException if casting fails, i.e. not posible or unsafe
+             * @param path
+             * @param attribute
+             * @param separator
+             * @return value
+             */
             template <typename T>
             T getAttributeAs(const std::string& path, const std::string& attribute, const char separator = '.') const;
 
             template<typename T, template <typename Elem, typename = std::allocator<Elem> > class Cont >
             Cont<T> getAttributeAs(const std::string& path, const std::string& attribute, const char separator = '.') const;
 
+            /**
+             * Return the value of the attribute called "attribute" of the element identified as boost::any.
+             * @param path
+             * @param attribute
+             * @param separator
+             * @return boost::any
+             */
             boost::any& getAttributeAsAny(const std::string& path, const std::string& attribute, const char separator = '.');
 
             const boost::any& getAttributeAsAny(const std::string& path, const std::string& attribute, const char separator = '.') const;
 
+            /**
+             * Return the list of attributes of the element identified by "path"
+             * @param path
+             * @param separator
+             * @return Hash::Attributes
+             */
             const Attributes& getAttributes(const std::string& path, const char separator = '.') const;
             Attributes& getAttributes(const std::string& path, const char separator = '.');
 
+            /**
+             * Set the value of an attribute called "attribute" of the element identified by "path"
+             * @param path
+             * @param attribute
+             * @param value
+             * @param separator
+             */
             template <typename ValueType>
             void setAttribute(const std::string& path, const std::string& attribute, const ValueType& value, const char separator = '.');
             void setAttribute(const std::string& path, const std::string& attribute, const char* value, const char separator = '.');
 
+            /**
+             * Assign of list of attributes (i.e. Hash::Attributes container) to the element identified by "path"
+             * @param path
+             * @param attribute
+             * @param value
+             * @param separator
+             */
             void setAttributes(const std::string& path, const Attributes& attributes, const char separator = '.');
 
+            /**
+             * Serialize a hash to standard std::ostream object
+             * @param visitor
+             */
             friend std::ostream& operator<<(std::ostream& os, const Hash& hash);
 
-
+            /**
+             * Implement the visitor pattern
+             * @param visitor
+             * @return bool
+             */
             template<class Visitor>
             bool visit(Visitor& visitor);
 
