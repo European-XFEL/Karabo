@@ -75,6 +75,19 @@ void HashBinarySerializer_Test::tearDown() {
 void HashBinarySerializer_Test::testSerialization() {
 
     BinarySerializer<Hash>::Pointer p = BinarySerializer<Hash>::create("Bin");
+    
+    
+//     {
+//
+//        Schema s = BinarySerializer<Hash>::getSchema("Bin");
+//        Hash schemaIncluded("a1", 3.2, "a2", s);
+//        vector<char> archive;
+//        p->save(schemaIncluded, archive);
+//        //cout << "GARBAGE: " << garbage << endl;
+//        Hash fresh;
+//        p->load(fresh, archive);
+//        cout << "HASH: " << fresh.get<Schema>("a2") << endl;
+//    }
 
     {
         vector<char> archive1;

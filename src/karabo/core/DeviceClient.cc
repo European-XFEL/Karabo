@@ -23,7 +23,7 @@ namespace karabo {
 
 
         DeviceClient::DeviceClient(const std::string& brokerType, const karabo::util::Hash& brokerConfiguration) :
-        m_isShared(false), m_internalTimeout(600), m_isAdvancedMode(false) {
+        m_isShared(false), m_internalTimeout(1000), m_isAdvancedMode(false) {
 
             std::string ownInstanceId = generateOwnInstanceId();
             m_signalSlotable = boost::shared_ptr<SignalSlotable > (new SignalSlotable(ownInstanceId, brokerType, brokerConfiguration));
@@ -37,7 +37,7 @@ namespace karabo {
 
 
         DeviceClient::DeviceClient(const boost::shared_ptr<SignalSlotable>& signalSlotable) :
-        m_signalSlotable(signalSlotable), m_isShared(true), m_internalTimeout(600), m_isAdvancedMode(false) {
+        m_signalSlotable(signalSlotable), m_isShared(true), m_internalTimeout(1000), m_isAdvancedMode(false) {
 
             this->setupSlots();
             this->checkMaster();
@@ -320,6 +320,9 @@ namespace karabo {
                 vector<string> deviceServers;
                 deviceServers.reserve(tmp.size());
                 for (Hash::const_iterator it = tmp.begin(); it != tmp.end(); ++it) {
+                    if (it->hasAttribute("visibility")) {
+                        if (m_signalSlotable->getAccessLevel(it->getKey()) < it->getAttribute<int>("visibility")) continue;
+                    }
                     deviceServers.push_back(it->getKey());
                 }
                 return deviceServers;

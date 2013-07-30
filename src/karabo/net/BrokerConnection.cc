@@ -26,7 +26,7 @@ namespace karabo {
                     .displayedName("Serialization Type")
                     .description("Decides whether the serialization type for objects will be binary or text")
                     .options("text binary")
-                    .assignmentOptional().defaultValue("text")
+                    .assignmentOptional().defaultValue("binary")
                     .init()
                     .commit();
         }
