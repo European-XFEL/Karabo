@@ -34,7 +34,10 @@ class ParameterTreeWidget(QTreeWidget):
         self.__classId = classId # DeviceClass name stored for XML save
         self.__instanceKey = path
         self.__configPanel = configPanel
+        
         self.__currentItem = None
+        self.__popupTimer = QTimer(self)
+        self.__popupTimer.timeout.connect(self.onPopupTimeOut)
 
         self.setWordWrap(True)
         self.setSelectionBehavior(QAbstractItemView.SelectRows)
@@ -45,14 +48,13 @@ class ParameterTreeWidget(QTreeWidget):
         self._setupActions()
         self._setupContextMenu()
         
-        #self.setMouseTracking(True)
-        #self.itemEntered.connect(self.onItemEntered)
+        self.itemClicked.connect(self.onItemClicked)
         self.customContextMenuRequested.connect(self.onCustomContextMenuRequested)
 
 
 ### protected ###
-    def mousePressEvent(self, event):
-        QTreeWidget.mousePressEvent(self, event)
+    def mouseMoveEvent(self, event):
+        QTreeWidget.mouseMoveEvent(self, event)
         
         if event.buttons() != Qt.LeftButton:
             return
@@ -283,12 +285,20 @@ class ParameterTreeWidget(QTreeWidget):
 
 
 ### slots ###
-    def onItemEntered(self, item, column):
-        
+    def onItemClicked(self, item, column):
         if self.__currentItem and  (self.__currentItem != item):
             self.__currentItem.setToolTipDialogVisible(False)
+            self.__popupTimer.stop()
+        
         self.__currentItem = item
         self.__currentItem.setToolTipDialogVisible(True)
+        self.__popupTimer.start(4000)
+
+
+    def onPopupTimeOut(self):
+        if not self.__currentItem:
+            return
+        self.__currentItem.setToolTipDialogVisible(False)
 
 
     def onApplyChanged(self, enable):
