@@ -34,9 +34,9 @@ class NavigationHierarchyModel(QAbstractItemModel):
 
 
     def updateData(self, config):
-        print "+++ NavigationHierarchyModel.updateData"
-        print config
-        print ""
+        #print "+++ NavigationHierarchyModel.updateData"
+        #print config
+        #print ""
         
         # Needed for GLOBAL_ACCESS_LEVEL changes
         if self.__currentConfig != config:
@@ -60,10 +60,9 @@ class NavigationHierarchyModel(QAbstractItemModel):
                 if serverConfig.hasAttribute(serverId, "host"):
                     host = serverConfig.getAttribute(serverId, "host")
 
-                if serverConfig.hasAttribute(serverId, "visibility"):
-                    visibility = serverConfig.getAttribute(serverId, "visibility")
-                    if visibility > globals.GLOBAL_ACCESS_LEVEL:
-                        continue
+                visibility = serverConfig.getAttribute(serverId, "visibility")
+                if visibility > globals.GLOBAL_ACCESS_LEVEL:
+                    continue
                 
                 # Host item already exists?
                 hostItem = self.__rootItem.getItem(host)
@@ -94,17 +93,15 @@ class NavigationHierarchyModel(QAbstractItemModel):
             deviceConfig.getKeys(deviceIds)
             for deviceId in deviceIds:
                 # Get attributes
-                if deviceConfig.hasAttribute(deviceId, "visibility"):
-                    visibility = deviceConfig.getAttribute(deviceId, "visibility")
-                    if visibility > globals.GLOBAL_ACCESS_LEVEL:
-                        continue
+                visibility = deviceConfig.getAttribute(deviceId, "visibility")
+                if visibility > globals.GLOBAL_ACCESS_LEVEL:
+                    continue
                 
-                #deviceAttributes = deviceConfig.getAttributes(deviceId)
                 host = deviceConfig.getAttribute(deviceId, "host")
                 classId = deviceConfig.getAttribute(deviceId, "classId")
                 serverId = deviceConfig.getAttribute(deviceId, "serverId")
                 #version = deviceConfig.getAttribute(deviceId, "version")
-                #status = deviceConfig.getAttribute(deviceId, "status")
+                status = deviceConfig.getAttribute(deviceId, "status")
 
                 # Host item already exists?
                 hostItem = self.__rootItem.getItem(host)
@@ -134,6 +131,7 @@ class NavigationHierarchyModel(QAbstractItemModel):
 
                 path = "device." + deviceId
                 deviceItem = NavigationHierarchyNode(deviceId, path, classItem)
+                deviceItem.status = status
                 classItem.appendChildItem(deviceItem)
 
         self.endResetModel()
@@ -209,11 +207,11 @@ class NavigationHierarchyModel(QAbstractItemModel):
             elif hierarchyLevel == 2:
                 return QIcon(":device-class")
             elif hierarchyLevel == 3:
-                #status = self.rawData(level, row, 4).toString()
-                #if status == "error":
-                #    return QIcon(":device-instance-error")
-                #else:
-                return QIcon(":device-instance")
+                item = index.internalPointer()
+                if item.status == "error":
+                    return QIcon(":device-instance-error")
+                else:
+                    return QIcon(":device-instance")
 
         return QVariant()
 
