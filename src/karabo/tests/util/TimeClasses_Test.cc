@@ -54,11 +54,11 @@ void TimeClasses_Test::testEpochstamp() {
     clog << "Duration: " << t4 - t3 << endl;
 
     clog << "Duration: " << t4 - t1 << endl;
-    clog << "Duration: " << t4.elpased(t1) << endl;
+    clog << "Duration: " << t4.elapsed(t1) << endl;
 
     t4 -= TimeDuration(0ULL, 2000000000000000ULL);
 
-    clog << "Duration: " << t4.elpased(t1) << endl;
+    clog << "Duration: " << t4.elapsed(t1) << endl;
 
     CPPUNIT_ASSERT(true);
 }
@@ -147,13 +147,13 @@ void TimeClasses_Test::testTimeProfiler() {
 
     //clog << "Profiler:\n" << profiler.sql() << endl;
     
-    clog << "Profiler: " << TimePeriod(profiler.getPeriod()).getDuration() << endl;
+    clog << "Profiler: " << profiler.getPeriod().getDuration() << endl;
 
-    clog << "Profiler write: " << TimePeriod(profiler.getPeriod("write")).getDuration() << endl;
+    clog << "Profiler write: " << profiler.getPeriod("write").getDuration() << endl;
 
-    clog << "Profiler write.format: " << TimePeriod(profiler.getPeriod("write.format")).getDuration() << endl;
+    clog << "Profiler write.format: " << profiler.getPeriod("write.format").getDuration() << endl;
 
-    clog << "Profiler write.format.open: " << TimePeriod(profiler.getPeriod("write.format.open")).getDuration() << endl;
+    clog << "Profiler write.format.open: " << profiler.getPeriod("write.format.open").getDuration() << endl;
 
     CPPUNIT_ASSERT(true);
 }
