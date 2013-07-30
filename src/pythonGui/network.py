@@ -83,10 +83,10 @@ class Network(QObject):
         
         ### HACK remove again ###
         # Inform the mainwindow to change correspondingly the allowed level-downgrade
-        globals.GLOBAL_ACCESS_LEVEL = AccessLevel.ADMIN
-        self.signalUserChanged.emit()
-        self._sendLoginInformation(self.__username, self.__password, self.__provider, self.__sessionToken)
-        return
+        #globals.GLOBAL_ACCESS_LEVEL = AccessLevel.ADMIN
+        #self.signalUserChanged.emit()
+        #self._sendLoginInformation(self.__username, self.__password, self.__provider, self.__sessionToken)
+        #return
         ### HACK remove again ###
         
         # Easteregg
