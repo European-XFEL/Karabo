@@ -208,7 +208,7 @@ class Network(QObject):
             #bodyHash = self.__serializer.load(self.__bodyBytes)
             
             type = headerHash.get("type")
-            print "Request: ", type
+            #print "Request: ", type
             
             # "instanceNew" (instanceId, instanceInfo)
             # "instanceUpdated" (instanceId, instanceInfo)

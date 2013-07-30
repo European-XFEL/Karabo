@@ -134,7 +134,8 @@ class DisplayLabel(DisplayWidget):
                 index = value[i]
                 valueType = type(index)
                 if valueType is float:
-                    index = str("%.6f" %index) # TODO configurable precision
+                    index = self.floatToScientificNotation(index)
+                    #index = str("%.6f" %index) # TODO configurable precision
                 valueAsString += str(index)
 
                 if i != (listLen-1):
@@ -143,9 +144,17 @@ class DisplayLabel(DisplayWidget):
             valueAsString += "]"
             value = valueAsString
         elif isinstance(value, float):
-            value = str("%.6f" %value) # TODO configurable precision
+            value = self.floatToScientificNotation(value)
         
         self.__label.setText(str(value))
+
+
+    def floatToScientificNotation(self, value):
+        locale = self.__label.locale()
+        valueString = locale.toString(value, 'e', 0)
+        if abs(value) >= 1000.0:
+            valueString.remove(locale.groupSeparator())
+        return valueString
 
 
     class Maker:
