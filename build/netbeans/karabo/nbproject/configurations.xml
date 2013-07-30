@@ -101,6 +101,8 @@
         <itemPath>../../../src/karabo/io/HashXmlSerializer.cc</itemPath>
         <itemPath>../../../src/karabo/io/HashXmlSerializer.hh</itemPath>
         <itemPath>../../../src/karabo/io/Hdf5Serializer.hh</itemPath>
+        <itemPath>../../../src/karabo/io/SchemaBinarySerializer.cc</itemPath>
+        <itemPath>../../../src/karabo/io/SchemaBinarySerializer.hh</itemPath>
         <itemPath>../../../src/karabo/io/SchemaXmlSerializer.cc</itemPath>
         <itemPath>../../../src/karabo/io/SchemaXmlSerializer.hh</itemPath>
         <itemPath>../../../src/karabo/io/SchemaXsdSerializer.cc</itemPath>
@@ -334,6 +336,8 @@
         <itemPath>../../../src/karabo/tests/io/HashXmlSerializer_Test.hh</itemPath>
         <itemPath>../../../src/karabo/tests/io/Hdf5_Test.cc</itemPath>
         <itemPath>../../../src/karabo/tests/io/Hdf5_Test.hh</itemPath>
+        <itemPath>../../../src/karabo/tests/io/SchemaSerializer_Test.cc</itemPath>
+        <itemPath>../../../src/karabo/tests/io/SchemaSerializer_Test.hh</itemPath>
         <itemPath>../../../src/karabo/tests/io/SchemaXsdSerializer_Test.cc</itemPath>
         <itemPath>../../../src/karabo/tests/io/SchemaXsdSerializer_Test.hh</itemPath>
         <itemPath>../../../src/karabo/tests/io/TestPathSetup.hh</itemPath>
@@ -615,6 +619,16 @@
       <item path="../../../src/karabo/io/Input.hh" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../../../src/karabo/io/Output.hh" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/SchemaBinarySerializer.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/SchemaBinarySerializer.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
       </item>
       <item path="../../../src/karabo/io/SchemaXmlSerializer.cc"
             ex="false"
@@ -1097,6 +1111,16 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/tests/io/Hdf5_Test.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/io/SchemaSerializer_Test.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/io/SchemaSerializer_Test.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -2122,6 +2146,16 @@
       </item>
       <item path="../../../src/karabo/io/Output.hh" ex="false" tool="3" flavor2="0">
       </item>
+      <item path="../../../src/karabo/io/SchemaBinarySerializer.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/SchemaBinarySerializer.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="../../../src/karabo/io/SchemaXmlSerializer.cc"
             ex="false"
             tool="1"
@@ -2603,6 +2637,16 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/tests/io/Hdf5_Test.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/io/SchemaSerializer_Test.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/io/SchemaSerializer_Test.hh"
             ex="false"
             tool="3"
             flavor2="0">
