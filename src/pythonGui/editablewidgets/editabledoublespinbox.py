@@ -103,7 +103,7 @@ class EditableDoubleSpinBox(EditableWidget):
         value, ok = self.__leDblValue.text().toDouble()
         if ok:
             return value
-        return  0.0 #self.__normalSpinBox.value()
+        return  0.0
     value = property(fget=_value)
 
 

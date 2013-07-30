@@ -47,15 +47,6 @@ class CustomWidget(QWidget):
         vLayout.addLayout(hZoomLayout)
 
 
-### protected ###
-    def keyPressEvent(self, event):
-        if event.key() == Qt.Key_Delete:
-            self.remove()
-        else:
-            event.ignore()
-        QWidget.keyPressEvent(self, event)
-
-
 ### public functions ###
     def setDesignMode(self, isDesignMode):
         self.__view.setDesignMode(isDesignMode)

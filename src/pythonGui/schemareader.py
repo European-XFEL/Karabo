@@ -775,7 +775,6 @@ class SchemaReader(object):
         # Check minimum and maximum inclusives/exclusives
         self._setMinMaxIncAndExc(key, editableComponent)
         item.editableComponent = editableComponent
-        item.applyEnabled = True
 
 
     def _handleFloat(self, key, item, defaultValue, metricPrefixSymbol, unitSymbol):
