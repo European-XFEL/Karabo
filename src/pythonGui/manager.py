@@ -613,9 +613,9 @@ class Manager(Singleton):
 
 ### New pythonGui2 stuff ###
     def handleSystemTopology(self, config):
-        print "handleSystemTopology"
-        print config
-        print ""
+        #print "handleSystemTopology"
+        #print config
+        #print ""
         # Merge new configuration data into central hash
         self._mergeIntoHash(config)
         
