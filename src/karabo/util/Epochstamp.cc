@@ -49,8 +49,9 @@ namespace karabo {
         }
 
 
-        TimeDuration Epochstamp::elpased(const Epochstamp& other) const {
-            return *this -other;
+        TimeDuration Epochstamp::elapsed(const Epochstamp& other) const {
+            if (*this < other) return other - * this;
+            else return *this -other;
         }
 
 

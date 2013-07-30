@@ -52,6 +52,11 @@ namespace karabo {
         }
 
 
+        bool TimeDuration::isNull() const {
+            return (m_Seconds == 0ull) && (m_Fractions == 0ull);
+        }
+
+
         uint64_t TimeDuration::getDays() const {
             return m_Seconds / DAY;
         }
