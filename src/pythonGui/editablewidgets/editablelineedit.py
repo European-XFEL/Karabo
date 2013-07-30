@@ -39,6 +39,9 @@ class EditableLineEdit(EditableWidget):
         self.__lineEdit = QLineEdit()
         self.__lineEdit.textChanged.connect(self.onEditingFinished)
         
+        # Needed for updates during input, otherwise cursor jumps to end of input
+        self.__lastCursorPos = 0
+        
         # Minimum and maximum number of associated keys, 1 by default for each
         self.__minMaxAssociatedKeys = (1,1) # tuple<min,max>
         
@@ -102,6 +105,8 @@ class EditableLineEdit(EditableWidget):
         self.__lineEdit.setText(value)
         self.__lineEdit.blockSignals(False)
         
+        self.__lineEdit.setCursorPosition(self.__lastCursorPos)
+        
         if forceRefresh:
             # Needs to be called to update possible apply buttons
             self.onEditingFinished(value)
@@ -113,7 +118,7 @@ class EditableLineEdit(EditableWidget):
          #   QMessageBox.critical(None, "Invalid input", "Your input contains '.' characters.<br>Please choose something else.")
          #   self.__lineEdit.setText("")
          #   return
-            
+        self.__lastCursorPos = self.__lineEdit.cursorPosition()
         self.valueEditingFinished(self.__key, value)
 
 

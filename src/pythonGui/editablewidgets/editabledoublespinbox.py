@@ -23,7 +23,6 @@ __all__ = ["EditableDoubleSpinBox"]
 import sys
 
 from editablewidget import EditableWidget
-from scientificdoublespinbox import ScientificDoubleSpinBox
 
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
@@ -34,35 +33,18 @@ def getCategoryAliasClassName():
 
 
 class EditableDoubleSpinBox(EditableWidget):
-    
-    DECIMALS_LEFT = 5
-    DECIMALS_RIGHT = 4
+
     
     def __init__(self, **params):
         super(EditableDoubleSpinBox, self).__init__(**params)
 
-        # Using new scientific doublespinbox
-        self.__scientificSpinBox = ScientificDoubleSpinBox()
-        self.__scientificSpinBox.setVisible(False)
+        self.__leDblValue = QLineEdit()
+        self.__validator = QDoubleValidator(self.__leDblValue)
+        self.__leDblValue.setValidator(self.__validator)
+        self.__leDblValue.textChanged.connect(self.onEditingFinished)
         
-        self.__scientificSpinBox.installEventFilter(self)
-        self.__scientificSpinBox.valueChanged.connect(self.onEditingFinished)
-        
-        # Using normal doublespinbox
-        self.__normalSpinBox = QDoubleSpinBox()
-	# Set Range to maximum possible values
-	doubleMax = sys.float_info.max
-	self.__normalSpinBox.setRange(-doubleMax, doubleMax)
-        self.__normalSpinBox.setDecimals(6)
-        self.__normalSpinBox.setSingleStep(0.000001)
-        
-        self.__normalSpinBox.installEventFilter(self)
-        self.__normalSpinBox.valueChanged.connect(self.onEditingFinished)
-        
-        self.__spinBoxWidget = QWidget()
-        layout = QHBoxLayout(self.__spinBoxWidget)
-        layout.addWidget(self.__scientificSpinBox)
-        layout.addWidget(self.__normalSpinBox)
+        # Needed for updates during input, otherwise cursor jumps to end of input
+        self.__lastCursorPos = 0
         
         # Minimum and maximum number of associated keys, 1 by default for each
         self.__minMaxAssociatedKeys = (1,1) # tuple<min,max>
@@ -78,18 +60,6 @@ class EditableDoubleSpinBox(EditableWidget):
         self.valueChanged(self.__key, value)
 
 
-    def eventFilter(self, object, event):
-        # Block wheel event on QDoubleSpinBox
-        if self.__scientificSpinBox.isVisible():
-            doubleSpinBox = self.__scientificSpinBox
-        else:
-            doubleSpinBox = self.__normalSpinBox
-        
-        if (event.type() == QEvent.Wheel) and (object == doubleSpinBox):
-            return True
-        return False
-
-
     def _getCategory(self):
         category, alias, className = getCategoryAliasClassName()
         return category
@@ -98,7 +68,7 @@ class EditableDoubleSpinBox(EditableWidget):
 
     # Returns the actual widget which is part of the composition
     def _getWidget(self):
-        return self.__spinBoxWidget
+        return self.__leDblValue
     widget = property(fget=_getWidget)
 
 
@@ -117,18 +87,23 @@ class EditableDoubleSpinBox(EditableWidget):
         minInc = params.get(QString('minInc'))
         if minInc is None:
             minInc = params.get('minInc')
+        
         if minInc:
-            self.minInclude = minInc
+            self.__validator.setBottom(minInc)
 
         maxInc = params.get(QString('maxInc'))
         if maxInc is None:
             maxInc = params.get('maxInc')
+        
         if maxInc:
-            self.maxInclude = maxInc
+            self.__validator.setTop(maxInc)
 
 
     def _value(self):
-        return self.__normalSpinBox.value()
+        value, ok = self.__leDblValue.text().toDouble()
+        if ok:
+            return value
+        return  0.0 #self.__normalSpinBox.value()
     value = property(fget=_value)
 
 
@@ -141,57 +116,15 @@ class EditableDoubleSpinBox(EditableWidget):
         self.__key = None
 
 
-    def _setMinimum(self, min):
-        self.__scientificSpinBox.blockSignals(True)
-        self.__scientificSpinBox.setMinimum(min)
-        self.__scientificSpinBox.blockSignals(False)
-
-        self.__normalSpinBox.blockSignals(True)
-        self.__normalSpinBox.setMinimum(min)
-        self.__normalSpinBox.blockSignals(False)
-    minimum = property(fset=_setMinimum)
-
-
-    def _setMaximum(self, max):
-        self.__scientificSpinBox.blockSignals(True)
-        self.__scientificSpinBox.setMaximum(max)
-        self.__scientificSpinBox.blockSignals(False)
-        
-        self.__normalSpinBox.blockSignals(True)
-        self.__normalSpinBox.setMaximum(max)
-        self.__normalSpinBox.blockSignals(False)
-    maximum = property(fset=_setMaximum)
-
-
-    def _setWidgetVisibility(self, value):
-        # Check number of decimal places
-        splittedValue = str(value).split(".")
-        if len(splittedValue) != 2:
-            return
-        
-        if ((len(splittedValue[0]) > EditableDoubleSpinBox.DECIMALS_LEFT)
-         or (len(splittedValue[1]) > EditableDoubleSpinBox.DECIMALS_RIGHT)):
-            self.__scientificSpinBox.setVisible(True)
-            self.__normalSpinBox.setVisible(False)
-        else:
-            self.__scientificSpinBox.setVisible(False)
-            self.__normalSpinBox.setVisible(True)
-
-
     def valueChanged(self, key, value, timestamp=None, forceRefresh=False):
         if value is None:
             value = 0.0
         
-        # Show either normal or scientific view
-        self._setWidgetVisibility(value)
-
-        self.__scientificSpinBox.blockSignals(True)
-        self.__scientificSpinBox.setValue(value)
-        self.__scientificSpinBox.blockSignals(False)  
+        self.__leDblValue.blockSignals(True)
+        self.__leDblValue.setText(QString("%1").arg(value))
+        self.__leDblValue.blockSignals(False)   
         
-        self.__normalSpinBox.blockSignals(True)
-        self.__normalSpinBox.setValue(value)
-        self.__normalSpinBox.blockSignals(False)      
+        self.__leDblValue.setCursorPosition(self.__lastCursorPos)
         
         if forceRefresh:
             # Needs to be called to update possible apply buttons
@@ -200,9 +133,7 @@ class EditableDoubleSpinBox(EditableWidget):
 
 ### slots ###
     def onEditingFinished(self, value):
-        # Show either normal or scientific view
-        self._setWidgetVisibility(value)
-        
+        self.__lastCursorPos = self.__leDblValue.cursorPosition()
         self.valueEditingFinished(self.__key, value)
 
 
