@@ -138,6 +138,7 @@ namespace karabo {
 
         void DeviceClient::removeFromSystemTopology(const std::string& instanceId) {
             boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
+            disconnect(instanceId);
             for (Hash::iterator it = m_runtimeSystemDescription.begin(); it != m_runtimeSystemDescription.end(); ++it) {
                 Hash& tmp = it->getValue<Hash>();
                 boost::optional<Hash::Node&> node = tmp.find(instanceId);
@@ -767,6 +768,12 @@ namespace karabo {
                 m_signalSlotable->connectT(instanceId, "signalChanged", "", "slotChanged");
             }
             m_instanceUsage[instanceId] = 0;
+        }
+        
+        void DeviceClient::disconnect(const std::string& instanceId) {
+            boost::mutex::scoped_lock lock(m_instanceUsageMutex);
+            m_signalSlotable->disconnect(instanceId, "signalChanged", "", "slotChanged", false);
+            m_instanceUsage.erase(instanceId);
         }
 
 
