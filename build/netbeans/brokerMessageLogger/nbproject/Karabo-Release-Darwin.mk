@@ -23,7 +23,7 @@ AS=as
 # Macros
 CND_PLATFORM=GNU-MacOSX
 CND_DLIB_EXT=dylib
-CND_CONF=Debug-MacOSX
+CND_CONF=Release
 CND_DISTDIR=dist
 CND_BUILDDIR=build
 
@@ -52,13 +52,13 @@ FFLAGS=
 ASFLAGS=
 
 # Link Libraries and Options
-LDLIBSOPTIONS=-L${KARABO}/extern/lib -L../karabo/dist/Debug-MacOSX/GNU-MacOSX/lib -lkarabo -lboost_chrono -lboost_date_time -lboost_filesystem -lboost_python -lboost_regex -lboost_signals -lboost_system -lboost_thread -lcppunit -lhdf5 -lhdf5_cpp -lhdf5_hl -lhdf5_hl_cpp -llog4cpp -lnetsnmp -lnetsnmpagent -lnetsnmphelpers -lnetsnmpmibs -lnetsnmptrapd -lopenmqc -lpython2.7
+LDLIBSOPTIONS=-L${KARABO}/extern/lib -L../karabo/dist/Release/GNU-MacOSX/lib -lkarabo `pkg-config --libs karaboDependencies-${CND_PLATFORM}`  
 
 # Build Targets
 .build-conf: ${BUILD_SUBPROJECTS}
 	"${MAKE}"  -f nbproject/Makefile-${CND_CONF}.mk ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/bin/karabo-brokermessagelogger
 
-${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/bin/karabo-brokermessagelogger: ../karabo/dist/Debug-MacOSX/GNU-MacOSX/lib/libkarabo.dylib
+${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/bin/karabo-brokermessagelogger: ../karabo/dist/Release/GNU-MacOSX/lib/libkarabo.dylib
 
 ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/bin/karabo-brokermessagelogger: ${OBJECTFILES}
 	${MKDIR} -p ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/bin
@@ -67,7 +67,7 @@ ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/bin/karabo-brokermessagelogger: ${OBJ
 ${OBJECTDIR}/_ext/496226620/brokerMessageLogger.o: ../../../src/brokerMessageLogger/brokerMessageLogger.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/496226620
 	${RM} $@.d
-	$(COMPILE.cc) -g -I../../../src -I${KARABO}/include -I${KARABO}/extern/include -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/496226620/brokerMessageLogger.o ../../../src/brokerMessageLogger/brokerMessageLogger.cc
+	$(COMPILE.cc) -O2 -I../../../src -I${KARABO}/include -I${KARABO}/extern/include `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/496226620/brokerMessageLogger.o ../../../src/brokerMessageLogger/brokerMessageLogger.cc
 
 # Subprojects
 .build-subprojects:

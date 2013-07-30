@@ -122,11 +122,11 @@ bundle: build
 	cd ../brokerMessageLogger; $(MAKE) CONF=$(CONF)
 
 # DEPRECATE!
-package: bundle
+package: bundle-package
 	@./.bundle.sh $(CND_DISTDIR) $(CONF) $(CND_PLATFORM_$(CONF)) package $(GUIOPT)
 
 # DEPRECATE!
-install: bundle
+install: bundle-install
 	@./.bundle.sh $(CND_DISTDIR) $(CONF) $(CND_PLATFORM_$(CONF)) install $(GUIOPT)
 
 bundle-package: bundle
