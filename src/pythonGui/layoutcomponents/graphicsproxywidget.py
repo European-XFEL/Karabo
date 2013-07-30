@@ -192,7 +192,7 @@ class GraphicsProxyWidget(NodeBase, QGraphicsProxyWidget):
         # Change display or editable widget
         self.__component.changeWidget(action.text())
         self.adjustSize()
-        
+                
         parentWidget = self.parentWidget()
         if parentWidget:
             parentWidget.adjustSize()

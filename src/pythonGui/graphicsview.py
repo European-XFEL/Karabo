@@ -913,7 +913,7 @@ class GraphicsView(QGraphicsView):
                     displayProxyWidget.setToolTip(tooltipText)
                     # Add item to itemlist
                     items.append(displayProxyWidget)
-                    
+
                     # Register as visible device
                     Manager().newVisibleDevice(internalKey)
 

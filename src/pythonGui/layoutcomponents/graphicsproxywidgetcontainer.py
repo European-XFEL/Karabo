@@ -113,10 +113,28 @@ class GraphicsProxyWidgetContainer(NodeBase, QGraphicsWidget):
     
 
     def contextMenuEvent(self, event):
-        self._showContextMenu(event.screenPos())
-        QGraphicsWidget.contextMenuEvent(self, event)
+        if not self.isDesignMode:
+            QGraphicsWidget.contextMenuEvent(self, event)
+        else:
+            self._showContextMenu(event.screenPos())
+            QGraphicsWidget.contextMenuEvent(self, event)
         
-        
+    
+    def mouseDoubleClickEvent(self, event):
+        if not self.isDesignMode:
+            QGraphicsWidget.mouseDoubleClickEvent(self, event)
+            
+            
+    def focusInEvent(self, event):
+        if not self.isDesignMode:
+            QGraphicsWidget.focusInEvent(self, event)
+            
+            
+    def focusOutEvent(self, event):
+        if not self.isDesignMode:
+            QGraphicsWidget.focusOutEvent(self, event)
+    
+    
     def resizeEvent(self, event):
         self.adjustSize()
 

@@ -419,12 +419,15 @@ namespace karabo {
 
                     // Merge to full schema
                     m_fullSchema.merge(m_injectedSchema);
+                }
                 
-                    KARABO_LOG_INFO << "Schema updated";
-                    // Notify the distributed system
-                    emit("signalSchemaUpdated", m_fullSchema, m_deviceId);
-                }   
+                // Merge all parameters
                 set(validated);
+                
+                KARABO_LOG_INFO << "Schema updated";
+                
+                // Notify the distributed system
+                emit("signalSchemaUpdated", m_fullSchema, m_deviceId);
             }
 
             void setProgress(const int value, const std::string& associatedText = "") {

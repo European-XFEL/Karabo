@@ -58,7 +58,7 @@ class DisplayImage(DisplayWidget):
             
             self.__dialog = ImageDialog(edit=False, toolbar=False, wintitle=self.__key)
             self.__image = None
-            
+            self.__plot = self.__dialog.get_plot()
                                        
         else:
             self.__image = QLabel()
@@ -80,7 +80,7 @@ class DisplayImage(DisplayWidget):
 
     # Returns the actual widget which is part of the composition
     def _getWidget(self):
-        return self.__dialog
+        return self.__plot
     widget = property(fget=_getWidget)
 
 
@@ -137,10 +137,10 @@ class DisplayImage(DisplayWidget):
                 npy.shape = image.height(), image.bytesPerLine()/4, 4
                 if self.__image is None:
                     self.__image = make.image(npy)
-                    self.__dialog.get_plot().add_item(self.__image)                    
+                    self.__plot.add_item(self.__image)                    
                 else:                    
                     self.__image.set_data(npy)
-                    self.__image.plot().replot()
+                    self.__plot.replot()
                 
             else:
                 pixmap = QPixmap.fromImage(image)

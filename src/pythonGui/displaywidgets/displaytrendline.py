@@ -30,55 +30,88 @@ from randomcolor import RandomColor
 
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
+from PyQt4 import Qwt5
 
-try:
-    from guiqwt.baseplot import BasePlot
-    from guiqwt.plot import CurveDialog
-    from guiqwt.builder import make
-    useGuiQwt = True
-except:
-    from PyQt4.Qwt5 import *
-    useGuiQwt = False
+from guiqwt.plot import CurveDialog, CurvePlot, PlotManager
+from guiqwt.tools import SelectPointTool
+from guiqwt.builder import make    
+
+from karabo.karathon import Timestamp
 
 
 def getCategoryAliasClassName():
     return ["Digit","Trendline","DisplayTrendline"]
 
 
+class DateTimeScaleDraw( Qwt5.Qwt.QwtScaleDraw ):
+        '''Class used to draw a datetime axis on our plot.
+        '''
+        def __init__( self, *args ):
+            Qwt5.Qwt.QwtScaleDraw.__init__( self, *args )
+
+
+        def label( self, value ):
+            '''Function used to create the text of each label
+            used to draw the axis.
+            '''
+            try:
+                dt = datetime.datetime.fromtimestamp( value )
+            except:
+                dt = datetime.datetime.fromtimestamp( 0 )
+            #return Qwt5.Qwt.QwtText( '%s' % dt.strftime( '%d/%m%Y %H:%M:%S' ) )
+            return Qwt5.Qwt.QwtText( '%s' % dt.strftime( '%H:%M:%S' ) )
+        
+
 class DisplayTrendline(DisplayWidget):
     
     def __init__(self, **params):
         super(DisplayTrendline, self).__init__(**params)
         
-        # Minimum and maximum number of associated keys, 1 by default for each
-        self.__minMaxAssociatedKeys = (1,10) # tuple<min,max>
+        self.__data = []
         
-        if useGuiQwt:
-            self.__plot = CurveDialog(edit=True, toolbar=True)
-        else:        
-            self.__plot = QwtPlot()
-            self.__plot.setMinimumSize(QSize(200,200))
+        self.__dialog = CurveDialog(edit=False, toolbar=True)
+        self.__dialog.resize(400, 600)
+        
+        self.__plot = self.__dialog.get_plot()
+        self.__plot.set_antialiasing( True )
+        
+         # Set axis's labels
+        self.__plot.setAxisTitle( Qwt5.Qwt.QwtPlot.xBottom, 'Time' )
+        self.__plot.setAxisTitle( Qwt5.Qwt.QwtPlot.yLeft, 'Value' )
+        
+          # Create the curves
+        self.__curve = make.curve( [ ], [ ], 'Random values', QColor( 255, 0, 0 ) )
+        self.__plot.add_item( self.__curve )
 
-            # Attach grid to plot
-            grid = QwtPlotGrid()
-            grid.enableXMin(True)
-            grid.enableYMin(True)
-            grid.setMajPen(QPen(Qt.black, 0, Qt.DotLine))
-            grid.setMinPen(QPen(Qt.gray, 0, Qt.DotLine))
-            grid.attach(self.__plot)
-            
-        key = params.get(QString('key'))
-        if key is None:
-            key = params.get('key')
-        # Stores key and list of x/y valuePairs in dictionary
-        self.__keys = {str(key):[]}
+        # Crate the PlotManager
+        self.__manager = PlotManager( self )
+        self.__manager.add_plot( self.__plot )
+
+        # Create Toolbar
+        #toolbar = self.addToolBar( 'tools' )
+        #self.__manager.add_toolbar( toolbar, id( toolbar ) )
+
+        # Register the ToolBar's type
+        self.__manager.register_all_curve_tools( )
+        self.__manager.register_other_tools()
+
+        # Register a custom tool
+        self.__manager.add_tool( SelectPointTool, title = 'Test', on_active_item = True, mode = 'create' )
+        
+        # Create the Legend
+        legend = make.legend( 'TL' )
+        #self.__plot.add_item( legend )
+
+        # Setup the plot's scale
+        self.__plot.setAxisScaleDraw( Qwt5.Qwt.QwtPlot.xBottom, DateTimeScaleDraw() )
+        self.__plot.setAxisAutoScale( Qwt5.Qwt.QwtPlot.yLeft )
         
         # Set value
-        value = params.get(QString('value'))
-        if value is None:
-            value = params.get('value')
-        if value is not None:
-            self.valueChanged(key, value)
+#        value = params.get(QString('value'))
+#        if value is None:
+#            value = params.get('value')
+#        if value is not None:
+#            self.valueChanged(key, value)
 
 
     def _getCategory(self):
@@ -125,87 +158,22 @@ class DisplayTrendline(DisplayWidget):
         
         if timestamp is None:
             # Generate timestamp here...
-            timestamp = time.mktime(datetime.datetime.now().timetuple())
+            timestamp = Timestamp()
+            
+        self.__data.append( (value, timestamp.getSeconds()) )
 
         key = str(key)
-        nbValues = 10
-        # Store value in list associated with key
-        if key in self.__keys:
-            valuePair = self.__keys[key]
-            if valuePair:
-                if len(valuePair) is nbValues:
-                    # Only show 10 values at once
-                    valuePair.remove(valuePair[0])
-                    if useGuiQwt:
-                        plot = self.__plot.get_plot()
-                        plot.del_all_items()
-                    else:
-                        self.__plot.clear()
-                valuePair.append((timestamp,value))
-                self.__keys[key] = valuePair
-            else:
-                self.__keys[key] = [(timestamp,value)]
-        else:
-            self.__keys[key] = [(timestamp,value)]
         
-        xMinValue = float(sys.maxint)
-        xMaxValue = float(-sys.maxint)
-        yMinValue = float(sys.maxint)
-        yMaxValue = float(-sys.maxint)
-        
-        for k in self.__keys.keys():
-            valuePair = self.__keys[k]
-            if valuePair is None: continue
+         # Set x-axis's label rotation
+        self.__plot.setAxisLabelRotation( Qwt5.Qwt.QwtPlot.xBottom, -45.0 )
+        self.__plot.setAxisLabelAlignment( Qwt5.Qwt.QwtPlot.xBottom, Qt.AlignLeft | Qt.AlignBottom )
+                
+        # Set the data to the curve and update the plot
+        self.__curve.set_data( map( lambda x: x[ 1 ], self.__data ), map( lambda x: x[ 0 ], self.__data ) )
+        self.__plot.replot()        
 
-            xValues = []
-            yValues = []
-            for i in xrange(len(valuePair)):
-                xValue = valuePair[i][0]
-                yValue = valuePair[i][1]
-                
-                xValues.append(xValue)
-                yValues.append(yValue)
-            
-                if xMinValue > xValue:
-                    xMinValue = xValue
-                if xMaxValue < xValue:
-                    xMaxValue = xValue
-                if yMinValue > yValue:
-                    yMinValue = yValue
-                if yMaxValue < yValue:
-                    yMaxValue = yValue
-            
-            if useGuiQwt:
-                plot = self.__plot.get_plot()
-                #plot.del_all_items()
-                
-                # Remove only legend item
-                #plot.del_items(legendItem)
-                
-                curve = make.curve(xValues, yValues, title="Curve", color="g") # TODO: associate curve data with one color
-                #legend = make.legend("TR")
 
-                plot.add_item(curve)
-                #plot.add_item(legend)
-                
-                # TODO: add legend
-                
-                plot.set_axis_limits(BasePlot.Y_LEFT, yMinValue, yMaxValue)
-                plot.set_axis_limits(BasePlot.X_BOTTOM, xMinValue, xMaxValue)
-                plot.replot()
-            else:
-                curve = QwtPlotCurve() # TODO: name of attribute
-                curve.setPen(QPen(RandomColor())) # TODO: associate curve data with one color
-                curve.setData(xValues, yValues)
-                curve.attach(self.__plot)
-                
-                # TODO: add legend
-                #self.__plot.insertLegend(legend)
-                
-                self.__plot.setAxisScale(QwtPlot.yLeft, yMinValue, yMaxValue)
-                self.__plot.setAxisScale(QwtPlot.xBottom, xMinValue, xMaxValue)
-                self.__plot.replot()
-
+    
 
     class Maker:
         def make(self, **params):
