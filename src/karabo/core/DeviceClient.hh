@@ -518,6 +518,8 @@ namespace karabo {
             karabo::util::Hash cacheAndGetConfiguration(const std::string& instanceId);
 
             void stayConnected(const std::string& instanceId);
+            
+            void disconnect(const std::string& instanceId);
 
             virtual void notifyDeviceChangedMonitors(const karabo::util::Hash& hash, const std::string& instanceId);
 
