@@ -27,11 +27,19 @@ class NavigationHierarchyNode(object):
         self.__childItems = list()
         self.__displayData = displayData
         self.__path = path
+        self.__status = "ok"
 
 
     def _path(self):
         return self.__path
     path = property(fget=_path)
+
+
+    def _status(self):
+        return self.__status
+    def _setStatus(self, status):
+        self.__status = status
+    status = property(fget=_status, fset=_setStatus)
 
 
     def _parentItem(self):

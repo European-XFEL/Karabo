@@ -165,8 +165,8 @@ class ParameterTreeWidget(QTreeWidget):
         return counter
 
 
-    def setErrorState(self, isError):
-        self._r_setErrorStateItem(self.invisibleRootItem(), isError)
+    def setErrorState(self, inErrorState):
+        self._r_setErrorStateItem(self.invisibleRootItem(), inErrorState)
 
 
     def setReadOnly(self, readOnly):
@@ -179,11 +179,11 @@ class ParameterTreeWidget(QTreeWidget):
 
 
 ### private functions ###
-    def _r_setErrorStateItem(self, item, isError):
+    def _r_setErrorStateItem(self, item, inErrorState):
         for i in range(item.childCount()):
             childItem = item.child(i)
-            childItem.setErrorState(isError)
-            self._r_setErrorStateItem(childItem, isError)
+            childItem.setErrorState(inErrorState)
+            self._r_setErrorStateItem(childItem, inErrorState)
 
 
     def _r_setReadOnlyItem(self, item, readOnly):

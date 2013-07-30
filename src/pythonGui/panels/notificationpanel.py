@@ -54,8 +54,7 @@ class NotificationPanel(QWidget):
         mainLayout.setContentsMargins(5,5,5,5)
         mainLayout.addWidget(self.__logWidget)
         
-        Manager().notifier.signalWarningFound.connect(self.onWarningFound)
-        Manager().notifier.signalAlarmFound.connect(self.onAlarmFound)
+        Manager().notifier.signalNotificationAvailable.connect(self.onNotificationAvailable)
 
 
     def setupActions(self):
@@ -65,12 +64,10 @@ class NotificationPanel(QWidget):
         pass
 
 
-    def onAlarmFound(self, alarmData):
-        self.__logWidget.addAlarmMessage(alarmData)
-
-
-    def onWarningFound(self, warningData):
-        self.__logWidget.addWarningMessage(warningData)
+    def onNotificationAvailable(self, timestamp, type, shortMessage, detailedMessage, deviceId):
+        # Change notification string to logwidget style string
+        data = timestamp + " | " + type + " | " + deviceId + " | " + shortMessage + detailedMessage + "#"
+        self.__logWidget.addNotificationMessage(data)
 
 
     # virtual function

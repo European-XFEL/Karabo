@@ -307,32 +307,23 @@ class LogWidget(QWidget):
         self.__twLogTable.setModel(self.__sqlQueryModel)
         self.onFilterChanged()
         self.__twLogTable.horizontalHeader().restoreState(self.__viewState);
-      
+
+
     def onViewNeedsSortUpdate(self, queryText):
-        print "onViewNeedsSortUpdate"
         self.__viewState = self.__twLogTable.horizontalHeader().saveState();
         with QMutexLocker(self.__modelMutex):
             self.__sqlQueryModel.setLogQuery(queryText)
         self.__twLogTable.horizontalHeader().restoreState(self.__viewState);
-        
+
+
     def addLogMessage(self, logData):
         with QMutexLocker(self.__logDataMutex):
             self.__logDataQueue.put(logData)
 
 
-    def addErrorMessage(self, errorData):
+    def addNotificationMessage(self, notificationData):
         with QMutexLocker(self.__logDataMutex):
-            self.__logDataQueue.put(errorData)
-
-
-    def addAlarmMessage(self, alarmData):
-        with QMutexLocker(self.__logDataMutex):
-            self.__logDataQueue.put(alarmData)
-
-
-    def addWarningMessage(self, warningData):
-        with QMutexLocker(self.__logDataMutex):
-            self.__logDataQueue.put(warningData)
+            self.__logDataQueue.put(notificationData)
 
 
     def onFilterOptionVisible(self, checked):
@@ -378,12 +369,12 @@ class LogWidget(QWidget):
             if self.__pbFilterAlarm.isChecked():
                 if filterApplied:
                     msgTypeFilter += " OR "
-                msgTypeFilter += "messageType='ALARM'"
+                msgTypeFilter += "messageType='ALARM_LOW' OR messageType='ALARM_HIGH'"
                 filterApplied = True
             if self.__pbFilterWarning.isChecked():
                 if filterApplied:
                     msgTypeFilter += " OR "
-                msgTypeFilter += "messageType='WARNING'"
+                msgTypeFilter += "messageType='WARN_LOW' OR messageType='WARN_HIGH'"
                 filterApplied = True
 
         if len(msgTypeFilter) > 0:
@@ -391,7 +382,8 @@ class LogWidget(QWidget):
         else:
             filterQuery += "NOT EXISTS (messageType='DEBUG' AND messageType='INFO' " \
                                    "AND messageType='WARN' AND messageType='ERROR' " \
-                                   "AND messageType='ALARM' AND messageType='WARNING')"
+                                   "AND messageType='ALARM_LOW' AND messageType='ALARM_HIGH' " \
+                                   "AND messageType='WARN_LOW' AND messageType='WARN_HIGH')"
             filterApplied = True
 
         if self.__gbDate.isChecked():
@@ -579,11 +571,11 @@ class LogSqlQueryModel(QSqlQueryModel):
             return QIcon(':log-debug')
         elif value == 'INFO':
             return QIcon(':log-info')
-        elif value == 'WARN' or value == 'WARNING':
+        elif (value == 'WARN') or (value == 'WARN_LOW') or (value == 'WARN_HIGH'):
             return QIcon(':log-warning')
         elif value == 'ERROR':
             return QIcon(':log-error')
-        elif value == 'ALARM':
+        elif (value == 'ALARM_LOW') or (value == 'ALARM_HIGH'):
             return QIcon(':log-alarm')
         return None
     
@@ -593,9 +585,9 @@ class LogSqlQueryModel(QSqlQueryModel):
             return QColor(0,128,0)
         elif value == 'INFO':
             return QColor(0,0,128)
-        elif value == 'WARN' or value == 'WARNING':
+        elif (value == 'WARN') or (value == 'WARN_LOW') or (value == 'WARN_HIGH'):
             return QColor(255,102,0)
-        elif value == 'ALARM':
+        elif (value == 'ALARM_LOW') or (value == 'ALARM_HIGH'):
             return QColor(255,204,102)
         elif value == 'ERROR':
             return QColor(128,0,0)

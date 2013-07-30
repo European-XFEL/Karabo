@@ -60,6 +60,7 @@ class Notifier(QObject):
     signalDeviceStateChanged = pyqtSignal(str, str) # fullDeviceKey, state
     signalConflictStateChanged = pyqtSignal(bool) # isBusy
     signalChangingState = pyqtSignal(bool) # isChanging
+    signalErrorState = pyqtSignal(bool) # inErrorState
     
     signalInstanceGone = pyqtSignal(str, str) # path, parentPath
     
@@ -67,9 +68,7 @@ class Notifier(QObject):
     signalRemoveVisibleDevice = pyqtSignal(str) # deviceId
 
     signalLogDataAvailable = pyqtSignal(str) # logData
-    signalErrorFound = pyqtSignal(str) # errorData
-    signalAlarmFound = pyqtSignal(str) # alarmData
-    signalWarningFound = pyqtSignal(str) # warningData
+    signalNotificationAvailable = pyqtSignal(str, str, str, str, str) # timestam, type, shortMessage, detailedMessage, deviceId
     
     signalCreateNewDeviceClassPlugin = pyqtSignal(str, str, str) # serverId, classId, newClassId
     
@@ -355,6 +354,11 @@ class Manager(Singleton):
         if value == "Changing...":
             self.__notifier.signalChangingState.emit(True)
         else:
+            if ("Error" in value) or ("error" in value):
+                self.__notifier.signalErrorState.emit(True)
+            else:
+                self.__notifier.signalErrorState.emit(False)
+            
             self.__notifier.signalChangingState.emit(False)
             self.__notifier.signalDeviceStateChanged.emit(devicePath, value)
 
@@ -511,21 +515,6 @@ class Manager(Singleton):
         self.__notifier.signalLogDataAvailable.emit(logData)
 
 
-    def onErrorDataAvailable(self, errorData):
-        # Send message to notification panel
-        self.__notifier.signalErrorFound.emit(errorData)
-
-
-    def onWarningDataAvailable(self, warningData):
-        # Send message to notification panel
-        self.__notifier.signalWarningFound.emit(warningData)
-
-
-    def onAlarmDataAvailable(self, alarmData):
-        # Send message to notification panel
-        self.__notifier.signalAlarmFound.emit(alarmData)
-
-
     def onRefreshInstance(self, path):
         deviceId = self._getDeviceIdFromPath(path)
         if not deviceId:
@@ -624,9 +613,9 @@ class Manager(Singleton):
 
 ### New pythonGui2 stuff ###
     def handleSystemTopology(self, config):
-        #print "handleSystemTopology"
-        #print config
-        #print ""
+        print "handleSystemTopology"
+        print config
+        print ""
         # Merge new configuration data into central hash
         self._mergeIntoHash(config)
         
@@ -718,4 +707,8 @@ class Manager(Singleton):
         
         # Merge new configuration data into central hash
         self._mergeIntoHash(config)
+
+
+    def handleNotification(self, timestamp, type, shortMessage, detailedMessage, deviceId):
+        self.__notifier.signalNotificationAvailable.emit(timestamp, type, shortMessage, detailedMessage, deviceId)
 
