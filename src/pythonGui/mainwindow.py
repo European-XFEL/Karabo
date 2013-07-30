@@ -264,8 +264,6 @@ class MainWindow(QMainWindow):
             Manager().handleSystemTopology(Hash())
         
         self.__tbAccessLevel.setEnabled(checked)
-        
-        
 
 
     def onExit(self):

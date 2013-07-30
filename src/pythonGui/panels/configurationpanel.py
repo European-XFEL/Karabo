@@ -98,6 +98,7 @@ class ConfigurationPanel(QWidget):
         Manager().notifier.signalDeviceStateChanged.connect(self.onDeviceStateChanged)
         Manager().notifier.signalConflictStateChanged.connect(self.onConflictStateChanged)
         Manager().notifier.signalChangingState.connect(self.onChangingState)
+        Manager().notifier.signalErrorState.connect(self.onErrorState)
 
         self.__prevDevicePath = str() # previous selected DEVICE_INSTANCE internalKey
         self.__swParameterEditor = QStackedWidget(splitTopPanes)
@@ -649,6 +650,10 @@ class ConfigurationPanel(QWidget):
             self.__changingStateTimer.stop()
             self._getCurrentParameterEditor().setReadOnly(False)
  
+ 
+    def onErrorState(self, inErrorState):
+        self._getCurrentParameterEditor().setErrorState(inErrorState)
+
 
     def onTimeOut(self):
         self.__changingStateTimer.stop()

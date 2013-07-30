@@ -255,7 +255,8 @@ class Network(QObject):
                 bodyHash = self.__serializer.load(self.__bodyBytes)
                 self._handleBrokerInformation(headerHash, bodyHash)
             elif type == "notification":
-                print "notification"
+                bodyHash = self.__serializer.load(self.__bodyBytes)
+                self._handleNotification(headerHash, bodyHash)
             elif type == "invalidateCache":
                 print "invalidateCache"
             else:
@@ -438,11 +439,24 @@ class Network(QObject):
     def _handleSchemaUpdated(self, headerHash, bodyHash):
         deviceId = headerHash.get("deviceId")
         Manager().handleDeviceSchemaUpdated(deviceId, bodyHash)
-        
+
+
     def _handleBrokerInformation(self, headerHash, bodyHash):
         print "Provided broker information", bodyHash
         self.__brokerHost = bodyHash.get("host")
         self.__brokerPort = str(bodyHash.get("port"))
         self.__brokerTopic = bodyHash.get("topic")
         self.login()
+
+
+    def _handleNotification(self, headerHash, bodyHash):
+        deviceId = headerHash.get("deviceId")
+        timestamp = Timestamp()
+        # TODO: better format for timestamp
+        timestamp = timestamp.toIso8601()
+        timestamp = "2013-07-29 19:14:47"
+        type = bodyHash.get("type")
+        shortMessage = bodyHash.get("shortMsg")
+        detailedMessage = bodyHash.get("detailedMsg")
+        Manager().handleNotification(timestamp, type, shortMessage, detailedMessage, deviceId)
 

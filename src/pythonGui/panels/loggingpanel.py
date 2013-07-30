@@ -42,7 +42,6 @@ class LoggingPanel(QWidget):
         mainLayout.setContentsMargins(5,5,5,5)
         mainLayout.addWidget(self.__logWidget)
         
-        Manager().notifier.signalErrorFound.connect(self.onErrorFound)
         Manager().notifier.signalLogDataAvailable.connect(self.onLogDataAvailable)
         
         self.setupActions()
@@ -62,10 +61,6 @@ class LoggingPanel(QWidget):
 
     def onLogDataAvailable(self, logData):
         self.__logWidget.addLogMessage(logData)
-
-
-    def onErrorFound(self, errorData):
-        self.__logWidget.addErrorMessage(errorData)
 
     
     def onSaveLogDataToFile(self):
