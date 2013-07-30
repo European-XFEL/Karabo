@@ -130,11 +130,6 @@ class PythonDevice(BaseFsm):
     def run(self):
         self.initClassId()
         self.initSchema()
-        
-        self.startFsm()
-        with self._stateChangeLock:
-            validated = self.validatorIntern.validate(self.fullSchema, self.parameters)
-            self.parameters.merge(validated, HashMergePolicy.REPLACE_ATTRIBUTES)
             
         # Create 'info' hash
         info = Hash("type", "device")
@@ -143,11 +138,18 @@ class PythonDevice(BaseFsm):
         info["visibility"] = self["visibility"]
         info["version"] = self.__class__.__version__
         info["host"] = self.hostname
+        info["status"] = "ok"
         #... add here more info entries if needed
         
         # Run event loop ( in a thread ) with given info
         # TODO Make configurable
-        self._ss.runEventLoop(10, info) # block while SignalSlotable event loop running 
+        t = threading.Thread(target = self._ss.runEventLoop, args = (10, info))
+        t.start()
+        self.startFsm()
+        with self._stateChangeLock:
+            validated = self.validatorIntern.validate(self.fullSchema, self.parameters)
+            self.parameters.merge(validated, HashMergePolicy.REPLACE_ATTRIBUTES)
+        t.join()
             
     def stopEventLoop(self):
         self._ss.stopEventLoop()
@@ -227,7 +229,7 @@ class PythonDevice(BaseFsm):
                 if self.parameters.has(path) and not self.staticSchema.has(path): 
                     self.parameters.erase(path)
             self._stateDependentSchema = {}
-            self._injectedSchema = schema
+            self._injectedSchema.copy(schema)
             self.fullSchema.copy(self.staticSchema)
             self.fullSchema += self._injectedSchema
             #self.parameters.merge(validated, HashMergePolicy.REPLACE_ATTRIBUTES)

@@ -182,14 +182,17 @@ class DeviceServer(object):
         self.log.INFO("Starting Karabo DeviceServer on host: {}".format(self.hostname))
         self.ss = SignalSlotable.create(self.serverid)
         self._registerAndConnectSignalsAndSlots()
-        self.fsm.start()
         info = Hash("type", "server")
         info["serverId"] = self.serverid
         info["version"] = self.__class__.__version__
         info["host"] = self.hostname
         info["visibility"] = self.visibility
         # TODO
-        self.ss.runEventLoop(10, info)  # block
+        t = threading.Thread(target=self.ss.runEventLoop, args = (10, info))
+        t.start()
+        self.fsm.start()
+        t.join()
+        self.pluginThread.join()
     
     def _registerAndConnectSignalsAndSlots(self):
         self.ss.registerSignal("signalNewDeviceClassAvailable", str, str, Schema) # serverid, classid, Schema
