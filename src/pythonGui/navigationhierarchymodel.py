@@ -101,7 +101,9 @@ class NavigationHierarchyModel(QAbstractItemModel):
                 classId = deviceConfig.getAttribute(deviceId, "classId")
                 serverId = deviceConfig.getAttribute(deviceId, "serverId")
                 #version = deviceConfig.getAttribute(deviceId, "version")
-                status = deviceConfig.getAttribute(deviceId, "status")
+                status = "ok"
+                if deviceConfig.hasAttribute(deviceId, "status"):
+                    status = deviceConfig.getAttribute(deviceId, "status")
 
                 # Host item already exists?
                 hostItem = self.__rootItem.getItem(host)

@@ -396,9 +396,9 @@ class Manager(Singleton):
         if dataNotifier is not None:
             dataNotifier.signalUpdateComponent.emit(key, value)
         
-        keys = str(key).split('.')
-        deviceId = keys[1]
-        parameterKey = keys[3]
+        keys = str(key).split('.configuration.')
+        deviceId = keys[0].split('.')[1]
+        parameterKey = keys[1]
 
         # Informs network
         self.__notifier.signalReconfigure.emit(deviceId, parameterKey, value)
