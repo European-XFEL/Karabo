@@ -175,6 +175,7 @@ ip.set_hook('complete_command', auto_complete_execute, re_key = '.*execute')
 ip.set_hook('complete_command', auto_complete_instantiate, re_key = '.*instantiate')
 ip.set_hook('complete_command', auto_complete_instantiate, re_key = '.*getClassSchema')
 ip.set_hook('complete_command', auto_complete_instantiate, re_key = '.*killServer')
+ip.set_hook('complete_command', auto_complete_instantiate, re_key = '.*getClasses')
 
 
 class DeviceClient(object):
