@@ -10,6 +10,7 @@
 #include <boost/python.hpp>
 #include <string>
 #include <karabo/util/Hash.hh>
+#include <karabo/util/Exception.hh>
 #include "HashWrap.hh"
 #include "NodeWrap.hh"
 #include "AttributesWrap.hh"
@@ -22,6 +23,10 @@ using namespace karathon;
 
 typedef karabo::util::Element<std::string, karabo::util::OrderedMap<std::string, karabo::util::Element<std::string, bool> > > HashNode;
 
+// Translate C++ karabo::util::Exception into python RuntimeError exception
+void translator(const karabo::util::Exception& e) {
+    PyErr_SetString(PyExc_RuntimeError, (e.userFriendlyMsg() + " -- " + e.detailedMsg()).c_str());
+}
 
 void exportPyUtilHash() {
 
@@ -30,6 +35,9 @@ void exportPyUtilHash() {
     #endif
 
     bp::docstring_options docs(true, true, false);
+    
+    // register a translator
+    bp::register_exception_translator<karabo::util::Exception>(translator);
 
     // Types
     bp::enum_<PyTypes::ReferenceType>("Types", "This enumeration describes reference types supported in configuration system.")

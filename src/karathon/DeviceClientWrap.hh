@@ -61,14 +61,17 @@ namespace karathon {
         }
 
         bp::tuple existsPy(const std::string& instanceId) {
+            ScopedGILRelease nogil;
             return Wrapper::fromStdPairToPyTuple(this->exists(instanceId));
         }
 
         bp::object getServersPy() {
+            ScopedGILRelease nogil;
             return Wrapper::fromStdVectorToPyList(this->getServers());
         }
 
         bp::object getClassesPy(const std::string& deviceServer) {
+            ScopedGILRelease nogil;
             return Wrapper::fromStdVectorToPyList(this->getClasses(deviceServer));
         }
 
@@ -77,10 +80,12 @@ namespace karathon {
         //            }
 
         bp::object getDevicesPy() {
+            ScopedGILRelease nogil;
             return Wrapper::fromStdVectorToPyList(this->getDevices());
         }
 
         bp::object getDevicesPy(const std::string& serverId) {
+            ScopedGILRelease nogil;
             return Wrapper::fromStdVectorToPyList(this->getDevices(serverId));
         }
 
@@ -106,6 +111,7 @@ namespace karathon {
 
         bp::object getPy(const std::string& instanceId, const std::string& key, const std::string& keySep = ".") {
             try {
+                ScopedGILRelease nogil;
                 return HashWrap::get(this->cacheAndGetConfiguration(instanceId), key, keySep);
             } catch (const karabo::util::Exception& e) {
                 throw KARABO_PARAMETER_EXCEPTION("Could not fetch parameter \"" + key + "\" from device \"" + instanceId + "\"");
@@ -157,15 +163,13 @@ namespace karathon {
             }
             return bp::make_tuple(result.first, result.second);
         }
-        
-        
+
         bp::tuple setPy(const std::string& instanceId, const karabo::util::Hash& value, int timeout = -1) {
             ScopedGILRelease nogil;
             std::pair<bool, std::string> result = this->set(instanceId, value, timeout);
             return bp::make_tuple(result.first, result.second);
         }
 
-        
         void setNoWaitPy(const std::string& instanceId, const std::string& key, const bp::object& value, const std::string& keySep = ".") {
             karabo::util::Hash tmp;
             HashWrap::set(tmp, key, value, keySep);
@@ -184,14 +188,17 @@ namespace karathon {
         }
 
         void executeNoWaitPy2(std::string instanceId, const std::string& functionName, const bp::object& a1, const bp::object& a2) const {
+            ScopedGILRelease nogil;
             m_signalSlotableWrap->callPy2(instanceId, functionName, a1, a2);
         }
 
         void executeNoWaitPy3(std::string instanceId, const std::string& functionName, const bp::object& a1, const bp::object& a2, const bp::object& a3) const {
+            ScopedGILRelease nogil;
             m_signalSlotableWrap->callPy3(instanceId, functionName, a1, a2, a3);
         }
 
         void executeNoWaitPy4(std::string instanceId, const std::string& functionName, const bp::object& a1, const bp::object& a2, const bp::object& a3, const bp::object& a4) const {
+            ScopedGILRelease nogil;
             m_signalSlotableWrap->callPy4(instanceId, functionName, a1, a2, a3, a4);
         }
 
@@ -306,7 +313,7 @@ namespace karathon {
                 if (registered.has(currentPath + "._function")) {
                     karabo::util::Timestamp t;
                     try {
-                        t =  karabo::util::Timestamp::fromHashAttributes(it->getAttributes());
+                        t = karabo::util::Timestamp::fromHashAttributes(it->getAttributes());
                     } catch (...) {
                         KARABO_LOG_FRAMEWORK_WARN << "No timestamp information given on \"" << it->getKey() << "/";
                     }
