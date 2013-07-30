@@ -519,6 +519,8 @@ class GraphicsView(QGraphicsView):
                 layout = item.layout()
                 for i in xrange(layout.count()):
                     proxyItem = layout.itemAt(i)
+                    if not proxyItem:
+                        continue
                     keys = proxyItem.keys
                     if keys:
                         for key in keys:
