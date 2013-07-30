@@ -19,7 +19,7 @@ from PyQt4.QtGui import *
 class PopupWidget(QWidget):
     
     def __init__(self, parent=None):
-        super(PopupWidget, self).__init__(parent, Qt.Popup | Qt.Window)
+        super(PopupWidget, self).__init__(parent, Qt.Drawer)
         
         self.__teInfo = TextEdit(self)
         self.__teInfo.setReadOnly(True)
@@ -27,6 +27,8 @@ class PopupWidget(QWidget):
         layout = QHBoxLayout(self)
         layout.setContentsMargins(0,0,0,0)
         layout.addWidget(self.__teInfo)
+        
+        self.setWindowTitle(QString(" "))
 
 
     def setInfo(self, info):

@@ -41,8 +41,8 @@ class NavigationTreeView(QTreeView):
 
 
 ### protected ###
-    def mousePressEvent(self, event):
-        QTreeView.mousePressEvent(self, event)
+    def mouseMoveEvent(self, event):
+        QTreeView.mouseMoveEvent(self, event)
         
         if event.buttons() != Qt.LeftButton:
             return

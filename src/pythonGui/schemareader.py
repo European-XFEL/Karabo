@@ -57,10 +57,10 @@ class SchemaReader(object):
         #sampleSchemaClass = SampleSchema.create("SampleSchema", Hash())
         #self.__schema = sampleSchemaClass.getSchema("SampleSchema")
         
-        print ""
-        print "++++ readSchema ++++"
+        #print ""
+        #print "++++ readSchema ++++"
         #print self.__schema
-        print ""
+        #print ""
         
         self.__rootPath = path + ".configuration"
         

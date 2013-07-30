@@ -86,6 +86,8 @@ class PropertyTreeWidgetItem(BaseTreeWidgetItem):
         if show:
             info = OrderedDict()
             info["Property"] = self.text(0)
+            paramKey = str(self.internalKey).split(".configuration.")
+            info["Parameter key"] = paramKey[1]
             if self.valueType:
                 info["Value type"] = self.valueType
             if self.description:
