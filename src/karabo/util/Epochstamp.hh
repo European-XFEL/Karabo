@@ -211,7 +211,7 @@ namespace karabo {
              * @param pt specific boost ptime
              * @return number of seconds since epoch
              */
-            static const unsigned long long pt_to_secondsSinceEpoch(boost::posix_time::ptime& pt);
+            static const unsigned long long ptToSecondsSinceEpoch(boost::posix_time::ptime& pt);
 
             /**
              * Returns timestamp string in "ANY SPECIFIED" format
