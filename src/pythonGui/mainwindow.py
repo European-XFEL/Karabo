@@ -222,8 +222,8 @@ class MainWindow(QMainWindow):
         self.__configurationTab.addDockableTab(self.__configurationPanel, "Configurator")
 
         mainSplitter.setStretchFactor(0,1)
-        mainSplitter.setStretchFactor(1,3)
-        mainSplitter.setStretchFactor(2,1)
+        mainSplitter.setStretchFactor(1,2)
+        mainSplitter.setStretchFactor(2,3)
 
         self.setCentralWidget(mainSplitter)
 
