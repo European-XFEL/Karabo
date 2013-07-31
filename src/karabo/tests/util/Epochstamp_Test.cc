@@ -211,29 +211,29 @@ void Epochstamp_Test::testStrToEpochstamp() {
 
     CPPUNIT_ASSERT(true);
 
-    //    // Validate the ISO8601 "string" constructor
-    //    const std::string pTimeStr01 = "20121225T132536.789333123456789123";
-    //    karabo::util::Epochstamp t01 = karabo::util::Epochstamp(pTimeStr01);
-    //    karabo::util::Epochstamp t02 = karabo::util::Epochstamp::fromIso8601(pTimeStr01);
-    //
-    //    CPPUNIT_ASSERT(t01.getSeconds() == t02.getSeconds());
-    //    CPPUNIT_ASSERT(t01.getFractionalSeconds() == t02.getFractionalSeconds());
-    //
-    //    // Validate other "string" constructor
-    //    std::string pTimeStr02 = "2012-12-25T13:25:36.123456789123456789";
-    //    karabo::util::Epochstamp t03 = karabo::util::Epochstamp(pTimeStr02);
-    //    const karabo::util::Epochstamp t04 = karabo::util::Epochstamp::fromIso8601(pTimeStr02);
-    //
-    //    CPPUNIT_ASSERT(t03.getSeconds() == t04.getSeconds());
-    //    CPPUNIT_ASSERT(t03.getFractionalSeconds() == t04.getFractionalSeconds());
-    //
-    //
-    //    // Validate other "string" constructor
-    //    std::string pTimeStr03 = "2012-12-25 13:25:36.123456789123456789";
-    //    karabo::util::Epochstamp t05 = karabo::util::Epochstamp(pTimeStr03);
-    //    const karabo::util::Epochstamp t06 = karabo::util::Epochstamp::fromIso8601(pTimeStr03);
-    //
-    //    CPPUNIT_ASSERT(t05.getSeconds() == t06.getSeconds());
-    //    CPPUNIT_ASSERT(t05.getFractionalSeconds() == t06.getFractionalSeconds());
+    // Validate the ISO8601 "string" constructor
+    const std::string pTimeStr01 = "20121225T132536.789333123456789123";
+    karabo::util::Epochstamp t01 = karabo::util::Epochstamp(pTimeStr01);
+    karabo::util::Epochstamp t02 = karabo::util::Epochstamp::fromIso8601(pTimeStr01);
+
+    CPPUNIT_ASSERT(t01.getSeconds() == t02.getSeconds());
+    CPPUNIT_ASSERT(t01.getFractionalSeconds() == t02.getFractionalSeconds());
+
+    // Validate other "string" constructor
+    std::string pTimeStr02 = "2012-12-25T13:25:36.123456789123456789";
+    karabo::util::Epochstamp t03 = karabo::util::Epochstamp(pTimeStr02);
+    const karabo::util::Epochstamp t04 = karabo::util::Epochstamp::fromIso8601(pTimeStr02);
+
+    CPPUNIT_ASSERT(t03.getSeconds() == t04.getSeconds());
+    CPPUNIT_ASSERT(t03.getFractionalSeconds() == t04.getFractionalSeconds());
+
+
+    // Validate other "string" constructor
+    std::string pTimeStr03 = "2012-12-25 13:25:36.123456789123456789";
+    karabo::util::Epochstamp t05 = karabo::util::Epochstamp(pTimeStr03);
+    const karabo::util::Epochstamp t06 = karabo::util::Epochstamp::fromIso8601(pTimeStr03);
+
+    CPPUNIT_ASSERT(t05.getSeconds() == t06.getSeconds());
+    CPPUNIT_ASSERT(t05.getFractionalSeconds() == t06.getFractionalSeconds());
 }
 
