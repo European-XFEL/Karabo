@@ -56,6 +56,7 @@ namespace karabo {
             explicit Epochstamp(const time_t& tm);
             explicit Epochstamp(const timeval& tv);
             explicit Epochstamp(const timespec& ts);
+            explicit Epochstamp(const std::string& pTimeStr);
 
             virtual ~Epochstamp();
 
@@ -133,7 +134,7 @@ namespace karabo {
              * Retrieve current time for the system. Highest resolution is Nano-seconds
              */
             void now();
-            
+
             /**
              * Calculate elapsed time duration between two timestamps
              * @param other Epochstamp object (by default, current time point)
@@ -141,18 +142,40 @@ namespace karabo {
              */
             TimeDuration elapsed(const Epochstamp& other = Epochstamp()) const;
 
-            /**
-             * Creates an EpochStamp from an ISO 8601 formatted string
-             * @param timePoint ISO 8601 formatted string
-             * @return EpochStamp object
-             */
-            static Epochstamp fromIso8601(const std::string& timePoint);
 
             /**
-             * Generates a sting (respecting ISO-8601) for a Timestamp ("ISO 8601"  => "%Y-%m-%dT%H:%M:%S.%f%q")
-             * @return ISO 8601 formatted string
+             * Creates an EpochStamp from an ISO 8601 formatted string (or other set of predefined formats)
+             * 
+             * @param timePoint ISO 8601 formatted string (see formats locale to more information)
+             * @return EpochStamp object
+             */
+            static const Epochstamp fromIso8601(const std::string& timePoint);
+
+            /**
+             * Generates a sting (respecting ISO-8601) for object time for INTERNAL usage ("%Y%m%dT%H%M%S%f" => "20121225T132536.789333[123456789123]")
+             * 
+             * @param precision - Indicates the precision of the fractional seconds (e.g. MILLISEC, MICROSEC, NANOSEC, PICOSEC, FEMTOSEC, ATTOSEC)
+             * @param extended - "Yes" returns ISO8601 extended string; "No" returns ISO8601 compact string
+             * @return ISO 8601 formatted string (extended or compact)
              */
             std::string toIso8601(TIME_UNITS precision = MICROSEC, bool extended = false) const;
+
+            /**
+             * Generates a sting (respecting ISO-8601) for object time for EXTERNAL usage ("%Y%m%dT%H%M%S%f%z" => "20121225T132536.789333[123456789123]Z")
+             * 
+             * @param precision - Indicates the precision of the fractional seconds (e.g. MILLISEC, MICROSEC, NANOSEC, PICOSEC, FEMTOSEC, ATTOSEC)
+             * @param extended - "Yes" returns ISO8601 extended string; "No" returns ISO8601 compact string
+             * @return ISO 8601 formatted string with "Z" in the string end ("Z" means the date time zone is using Coordinated Universal Time - UTC)
+             */
+            std::string toIso8601Ext(TIME_UNITS precision = MICROSEC, bool extended = false) const;
+
+            /**
+             * Formats to specified format time stored in the object
+             * 
+             * @param format The format of the time point (visit strftime for more info: http://www.cplusplus.com/reference/ctime/strftime/)
+             * @return formated string
+             */
+            std::string toFormattedString(const std::string& format = "%Y-%b-%d %H:%M:%S") const;
 
 
             static bool hashAttributesContainTimeInformation(const Hash::Attributes attributes);
@@ -171,20 +194,24 @@ namespace karabo {
              */
             void toHashAttributes(Hash::Attributes& attributes) const;
 
-            /**
-             * Formats to specified format
-             * @param format The format of the time point
-             * @return formated string
-             */
-            std::string toFormattedString(const std::string& format = "%Y-%b-%d %H:%M:%S") const;
-
         private:
 
             /**
-             * Converts fractionalSeconds (attoseconds) into another unit measure
-             * @return long long with the desire converted value
+             * Convert a specific boost ptime to the number of seconds since epoch (1970-Jan-1 00:00:00)
+             * 
+             * @param pt specific boost ptime
+             * @return number of seconds since epoch
              */
-            unsigned long long convertFractionalSeconds(std::string destinyUnitMeasure) const;
+            static const unsigned long long pt_to_secondsSinceEpoch(boost::posix_time::ptime& pt);
+
+            /**
+             * Returns timestamp string in "ANY SPECIFIED" format
+             * 
+             * @param pt Boost ptime of a specific moment in time
+             * @param facet Boost time_facet to be applied
+             * @return The specified date/time formatted according to the specified time_facet
+             */
+            static std::string getPTime2String(const boost::posix_time::ptime pt, const boost::posix_time::time_facet* facet);
 
         };
     }
