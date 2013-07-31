@@ -70,6 +70,11 @@ class DisplayComponent(BaseComponent):
     widget = property(fget=_getWidget)
 
 
+    def _getDisplayWidget(self):
+        return self.__displayWidget
+    displayWidget = property(fget=_getDisplayWidget)
+
+
     def _getKeys(self):
         return self.__displayWidget.keys
     keys = property(fget=_getKeys)

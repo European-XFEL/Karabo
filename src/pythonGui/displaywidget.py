@@ -100,6 +100,7 @@ class DisplayWidget(QObject):
 
     def __init__(self, **params):
         super(DisplayWidget, self).__init__()
+        self.__valueType = None
 
 
     def _getCategory(self):
@@ -128,6 +129,13 @@ class DisplayWidget(QObject):
     def _setValue(self, value):
         raise NotImplementedError, "DisplayWidget._setValue"
     value = property(fget=_getValue, fset=_setValue)
+
+
+    def _getValueType(self):
+        return self.__valueType
+    def _setValueType(self, valueType):
+        self.__valueType = valueType
+    valueType = property(fget=_getValueType, fset=_setValueType)
 
 
     def setErrorState(self, isError):
