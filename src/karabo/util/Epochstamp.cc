@@ -20,6 +20,66 @@ namespace karabo {
     namespace util {
 
 
+        const std::locale formats[] = {
+            //std::locale(std::locale::classic(), new boost::posix_time::time_input_facet("%Y%m%dT%H%M%S%f%z")), //19951231T235959.9942Z
+            std::locale(std::locale::classic(), new boost::posix_time::time_input_facet("%Y%m%dT%H%M%S%f")), //19951231T235959.789333123456789123
+            std::locale(std::locale::classic(), new boost::posix_time::time_input_facet("%Y-%m-%dT%H:%M:%S")), //2012-12-25T13:25:36.123456789123456789
+            std::locale(std::locale::classic(), new boost::posix_time::time_input_facet("%Y-%m-%d %H:%M:%S")), //2012-12-25 13:25:36.123456789123456789
+            std::locale(std::locale::classic(), new boost::posix_time::time_input_facet("%Y/%m/%d %H:%M:%S")),
+            std::locale(std::locale::classic(), new boost::posix_time::time_input_facet("%d.%m.%Y %H:%M:%S"))
+        };
+        const size_t formats_n = sizeof (formats) / sizeof (formats[0]);
+
+
+        static const unsigned long long pt_to_secondsSinceEpoch(boost::posix_time::ptime& pt) {
+            static boost::posix_time::ptime timet_start(boost::gregorian::date(1970, 1, 1));
+            boost::posix_time::time_duration diff = pt - timet_start;
+            //return diff.ticks() / boost::posix_time::time_duration::rep_type::ticks_per_second;
+            return diff.total_seconds();
+        }
+
+
+        static const Epochstamp fromIso8601(const std::string& timePoint) {
+
+            std::vector<std::string> timeParts = karabo::util::fromString<std::string, std::vector > (timePoint, ".");
+
+            std::string secondsStr = timeParts[0];
+            std::string fractionalSecondsStr = timeParts[1];
+
+            // Try to convert String to PTIME taking into consideration the date formats defined above
+            boost::posix_time::ptime pt;
+            for (size_t i = 0; i < formats_n; ++i) {
+                std::istringstream is(secondsStr);
+                is.imbue(formats[i]);
+                is >> pt;
+                if (pt != boost::posix_time::ptime()) break;
+            }
+
+            const unsigned long long& secs = karabo::util::pt_to_secondsSinceEpoch(pt);
+            const unsigned long long fraqs = boost::lexical_cast<unsigned long long>(fractionalSecondsStr);
+
+            // Create Epochstamp to be returned
+            Epochstamp epochStampTime(secs, fraqs);
+
+            return epochStampTime;
+        }
+
+
+        static std::string getPTime2String(const boost::posix_time::ptime pt, const boost::posix_time::time_facet* facet) {
+            std::ostringstream datetime_ss;
+
+            // special_locale takes ownership of the p_time_output facet
+            std::locale special_locale(std::locale(""), facet);
+
+            datetime_ss.imbue(special_locale);
+
+            datetime_ss << pt;
+
+            // return timestamp as string
+            return datetime_ss.str();
+        }
+
+
         Epochstamp::Epochstamp() {
             now();
         }
@@ -46,6 +106,11 @@ namespace karabo {
 
         Epochstamp::Epochstamp(const timespec& ts) {
             *this = ts;
+        }
+
+
+        Epochstamp::Epochstamp(const std::string& pTimeStr) {
+            *this = karabo::util::fromIso8601(pTimeStr);
         }
 
 
@@ -113,11 +178,6 @@ namespace karabo {
         #endif
 
 
-        Epochstamp Epochstamp::fromIso8601(const std::string& timePoint) {
-            throw KARABO_NOT_IMPLEMENTED_EXCEPTION("To be done by LM");
-        }
-
-
         std::string Epochstamp::toIso8601(TIME_UNITS precision, bool extended) const {
             static boost::posix_time::ptime epoch(boost::gregorian::date(1970, 1, 1));
             using namespace boost::posix_time;
@@ -147,17 +207,19 @@ namespace karabo {
         }
 
 
-        unsigned long long Epochstamp::convertFractionalSeconds(std::string destinyUnitMeasure) const {
+        std::string Epochstamp::toIso8601Ext(TIME_UNITS precision, bool extended) const {
+            return this->toIso8601(precision, extended) + "Z";
+        }
 
-            // A nanosecond (ns) is one billionth of a second (10−9 or 1/1,000,000,000 s).
-            if (destinyUnitMeasure == "nanoseconds") {
-                throw KARABO_NOT_IMPLEMENTED_EXCEPTION("To be done");
-            }// A microsecond is an SI unit of time equal to one millionth (10−6 or 1/1,000,000) of a second.
-            else if (destinyUnitMeasure == "microseconds") {
-                throw KARABO_NOT_IMPLEMENTED_EXCEPTION("To be done");
-            }
 
-            // ...
+        std::string Epochstamp::toFormattedString(const std::string& format) const {
+
+            const boost::posix_time::time_facet* facet = new boost::posix_time::time_facet(format.c_str());
+
+            std::string pTime = this->toIso8601(SECOND, false);
+            const boost::posix_time::ptime pt = boost::posix_time::from_iso_string(pTime);
+
+            return karabo::util::getPTime2String(pt, facet);
         }
 
 
@@ -183,10 +245,5 @@ namespace karabo {
             attributes.set("frac", m_fractionalSeconds);
         }
 
-
-        std::string Epochstamp::toFormattedString(const std::string& format) const {
-
-            throw KARABO_NOT_IMPLEMENTED_EXCEPTION("To be done");
-        }
     }
 }
