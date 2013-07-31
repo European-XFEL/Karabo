@@ -31,20 +31,28 @@ void exportPyUtilEpochstamp() {
           , bp::arg("timePoint"));
     e.staticmethod("fromIso8601");
     
+    e.def("fromIso8601Ext"
+          , &Epochstamp::toIso8601Ext
+          , bp::arg("timePoint"));
+    e.staticmethod("fromIso8601Ext");
+    
     e.def("fromHashAttributes"
            , &Epochstamp::fromHashAttributes
            , bp::arg("attributes") );
     e.staticmethod("fromHashAttributes");
+    
+    e.def("toHashAttributes"
+           , &Epochstamp::toHashAttributes
+           , bp::arg("attributes") );
     
     e.def("hashAttributesContainTimeInformation"
            , &Epochstamp::hashAttributesContainTimeInformation
            , bp::arg("attributes") );
     e.staticmethod("hashAttributesContainTimeInformation");
     
-    e.def("toIso8601"
-          , (string(Epochstamp::*)() const) (&Epochstamp::toIso8601));
+    e.def("toIso8601", &Epochstamp::toIso8601);
 
-
+    e.def("toIso8601Ext", &Epochstamp::toIso8601Ext);
 }
 
 
