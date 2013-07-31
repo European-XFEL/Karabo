@@ -309,6 +309,10 @@ class CustomMiddlePanel(QWidget):
 
     # Depending on the (non-)selected items the actions are enabled/disabled
     def updateActions(self):
+        self.__acAddText.setEnabled(True)
+        self.__acAddLine.setEnabled(True)
+        self.__acAddRect.setEnabled(True)
+        
         hasSelection = len(self.__customWidget.selectedItems()) > 0
         isLink = self.__customWidget.selectedLinks() is not None
         isItemPair = self.__customWidget.selectedItemPair() is not None
@@ -509,17 +513,16 @@ class CustomMiddlePanel(QWidget):
 
 
     def keyPressEvent(self, event):
-        if event.matches(QKeySequence.Cut):
-            print "cut"
-            self.onCut()
-        if event.matches(QKeySequence.Copy):
-            print "copy"
-            self.onCopy()
+        # TODO: cut and copy short cuts won't work, not quiet clear, why
+        #if event.matches(QKeySequence.Cut):
+        #    print "cut"
+        #    self.onCut()
+        #if event.matches(QKeySequence.Copy):
+        #    print "copy"
+        #    self.onCopy()
         if event.matches(QKeySequence.Paste):
-            print "paste"
             self.onPaste()
         if event.matches(QKeySequence.Delete):
-            print "remove"
             self.onRemove()
 
         QWidget.keyPressEvent(self, event)

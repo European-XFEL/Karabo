@@ -42,12 +42,6 @@ const.ACCESS_TYPE            = Qt.UserRole + 13
 const.CLASS_ALIAS            = Qt.UserRole + 14
 const.ALLOWED_STATE          = Qt.UserRole + 15
 const.UNIT_SYMBOL            = Qt.UserRole + 16
-# Navigation item properties
-const.DB_ID         = Qt.UserRole + 17
-const.DB_REF_ID     = Qt.UserRole + 18
-const.TYPE          = Qt.UserRole + 19
-const.REF_TYPE      = Qt.UserRole + 20
-const.SCHEMA        = Qt.UserRole + 21
-const.SCHEMA_LOADED = Qt.UserRole + 22
-const.STATUS        = Qt.UserRole + 23
+const.METRIC_PREFIX_SYMBOL   = Qt.UserRole + 17
+const.ENUMERATION            = Qt.UserRole + 18
 

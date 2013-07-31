@@ -40,31 +40,18 @@ class DocumentationPanel(QWidget):
         
         self.__loadedUrl = str()
         
-        self.__postMessage = QByteArray("<form id=\"loginform\" accept-charset=\"UTF-8\" method=\"post\" action=\"https://docs.xfel.eu/share/page/dologin\"><fieldset><input type=\"text\" id=\"username\" name=\"username\" value=\"wiki\" /><input type=\"password\" id=\"password\" name=\"password\" value=\"karabo\"/><input type=\"hidden\" id=\"success\" name=\"success\" value=\"https://docs.xfel.eu/share/page/site/karabo/device-page?title=Conveyor\"/><input type=\"hidden\" name=\"failure\" value=\"https://docs.xfel.eu/share/page/site/karabo/device-page?title=Conveyor&guest=true\"/></fieldset></form>")
-                                    
-        print "Message: ", self.__postMessage
+        postParams = QUrl()
+        postParams.addQueryItem('username', unicode('wiki'))
+        postParams.addQueryItem('password', unicode('karabo'))
         
+        request = QNetworkRequest(QUrl("https://docs.xfel.eu/share/page/dologin"))
+        request.setRawHeader('Content-Type', QByteArray('application/x-www-form-urlencoded'))
         
-        
-        # String for wiki ticket
-        #self.__wikiTicket = str()
-        # Hidden view to fetch ticket
-        #self.__hiddenWikiTicketView = QWebView(self)
-        
-        #url = "https://docs.xfel.eu/alfresco/service/api/login?u=wiki&pw=$w1k1!"
-        #self.__hiddenWikiTicketView.load(QUrl(url))
-        #self.__hiddenWikiTicketView.setVisible(False)
-        
-        self.__request = QNetworkRequest(QUrl("https://docs.xfel.eu/share/page/dologin/"))
-        self.__request.setRawHeader('Content-Type', QByteArray('application/x-www-form-urlencoded'))
-        
-        self.__wikiView = QWebView()
-        self.__wikiView.loadFinished.connect(self.onLoadFinishedWikiTicket)
-        self.__wikiView.load(self.__request, QNetworkAccessManager.PostOperation, self.__postMessage)
+        self.__wikiView = QWebView(self)
+        self.__wikiView.loadFinished.connect(self.onLoadFinishedWiki)
+        self.__wikiView.load(request, QNetworkAccessManager.PostOperation, postParams.encodedQuery())
         self.__wikiView.show()
-        
-        #self._loadWikiUrl("https://docs.xfel.eu/share/")
-        
+
         self.__reportView = QWebView()
         self.__reportView.load(QUrl("http://www-exfel-wp76.desy.de/static/mantisbt/login_select_proj_page.php?ref=bug_report_page.php"))
         
@@ -159,19 +146,18 @@ class DocumentationPanel(QWidget):
             self._loadWikiUrl("https://docs.xfel.eu/share/")
             return
         
-        url = "https://docs.xfel.eu/share/page/site/karabo/device-page?title="+classId+"&action=view&parentNodeRef=workspace/SpacesStore/18cffe24-4ce3-4d26-b3c1-fdc953edff59&alf_ticket=" + self.__wikiTicket
-        self._loadWikiUrl(url)
-    
-    
-    def onLoadFinishedWikiTicket(self, state):
-        print "STATE: ", state
-        return
-        if len(self.__wikiTicket) > 0:
-            return
+        postParams = QUrl()
+        postParams.addQueryItem('title', unicode(classId))
         
-        self.__wikiTicket = self.__hiddenWikiTicketView.page().currentFrame().toPlainText()
-        # Disconnect slot after fetching ticket for Wiki
-        self.__hiddenWikiTicketView.loadFinished.disconnect(self.onLoadFinishedWikiTicket)
+        request = QNetworkRequest(QUrl("https://docs.xfel.eu/share/page/site/karabo/device-page"))
+        request.setRawHeader('Content-Type', QByteArray('application/x-www-form-urlencoded'))
+        
+        self.__wikiView.load(request, QNetworkAccessManager.PostOperation, postParams.encodedQuery())
+        self.__wikiView.show()
+
+
+    def onLoadFinishedWiki(self, state):
+        print "onLoadFinishedWiki", state
 
 
     # virtual function

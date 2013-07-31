@@ -95,6 +95,25 @@ class ParameterTreeWidget(QTreeWidget):
         # Editable component?
         hasEditableComponent = item.editableComponent is not None
         mimeData.setData("hasEditableComponent", QString("%1").arg(hasEditableComponent).toAscii())
+        
+        # TODO: HACK to get apply button disabled
+        if hasEditableComponent:
+            mimeData.setData("currentValue", QString("%1").arg(item.editableComponent.value).toAscii())
+        
+        if item.unitSymbol:
+            mimeData.setData("unitSymbol", QString("%1").arg(item.unitSymbol).toAscii())
+        if item.metricPrefixSymbol:
+            mimeData.setData("metricPrefixSymbol", QString("%1").arg(item.metricPrefixSymbol).toAscii())
+
+        if item.enumeration:
+            enumerationString = str()
+            nbEnums = len(item.enumeration)
+            for i in xrange(nbEnums):
+                enumerationString += item.enumeration[i]
+                if i != (nbEnums-1):
+                    enumerationString += ","
+            mimeData.setData("enumeration", enumerationString.toAscii())
+            
         # Navigation item type
         mimeData.setData("navigationItemType", QString("%1").arg(navigationItemType).toAscii())
         # Class alias

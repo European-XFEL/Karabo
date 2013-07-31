@@ -33,7 +33,11 @@ class EditableApplyLaterComponent(BaseComponent):
         self.__initParams = params
 
         self.__isEditableValueInit = True
+        
         self.__currentDisplayValue = str()
+        self.__currentDisplayValue = params.get(QString('currentValue'))
+        if self.__currentDisplayValue is None:
+            self.__currentDisplayValue = params.get('currentValue')
 
         self.__compositeWidget = QWidget()
         hLayout = QHBoxLayout(self.__compositeWidget)
@@ -308,7 +312,7 @@ class EditableApplyLaterComponent(BaseComponent):
 
 
     def onValueChanged(self, key, value, timestamp=None):
-        print "onValueChanged ", key, value
+        #print "onValueChanged ", key, value
         self.__editableWidget.valueChanged(key, value, timestamp, True)
 
 
@@ -335,6 +339,11 @@ class EditableApplyLaterComponent(BaseComponent):
     # Triggered from self.__editableWidget when value was edited
     def onEditingFinished(self, key, value):
         # Update apply and reset buttons...
+        
+        # TODO: HACK to get apply button disabled
+        if isinstance(self.__currentDisplayValue, str):
+            value = str(value)
+        
         if value == self.__currentDisplayValue:
             self.applyEnabled = False
         else:

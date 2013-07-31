@@ -863,6 +863,18 @@ class GraphicsView(QGraphicsView):
                 hasEditableComponent = mimeData.data("hasEditableComponent").toInt()
                 if hasEditableComponent[1]:
                     hasEditableComponent = hasEditableComponent[0]
+                
+                # TODO: HACK to get apply button disabled
+                currentValue = None
+                if hasEditableComponent:
+                    currentValue = str(mimeData.data("currentValue"))
+                
+                metricPrefixSymbol = QString(mimeData.data("metricPrefixSymbol"))
+                unitSymbol = QString(mimeData.data("unitSymbol"))
+                
+                enumeration = QString(mimeData.data("enumeration"))
+                if enumeration:
+                    enumeration = enumeration.split(",")
                 # Navigation item type
                 navItemType = mimeData.data("navigationItemType").toInt()
                 if navItemType[1]:
@@ -906,7 +918,10 @@ class GraphicsView(QGraphicsView):
                                                             commandEnabled=commandEnabled, \
                                                             command=command)
                     else:
-                        displayComponent = DisplayComponent(classAlias, key=internalKey)
+                        displayComponent = DisplayComponent(classAlias, key=internalKey, \
+                                                            enumeration = enumeration, \
+                                                            metricPrefixSymbol=metricPrefixSymbol, \
+                                                            unitSymbol=unitSymbol)
                     
                     displayComponent.widget.setAttribute(Qt.WA_NoSystemBackground, True)
                     displayProxyWidget = GraphicsProxyWidget(self.__isDesignMode, displayComponent.widget, displayComponent, isStateToDisplay)
@@ -922,9 +937,17 @@ class GraphicsView(QGraphicsView):
                 # Editable widget
                 if hasEditableComponent:
                     if navItemType is NavigationItemTypes.CLASS:
-                        editableComponent = EditableNoApplyComponent(classAlias, key=internalKey)
+                        editableComponent = EditableNoApplyComponent(classAlias, key=internalKey, \
+                                                                     currentValue=currentValue, \
+                                                                     enumeration = enumeration, \
+                                                                     metricPrefixSymbol=metricPrefixSymbol, \
+                                                                     unitSymbol=unitSymbol)
                     elif navItemType is NavigationItemTypes.DEVICE:
-                        editableComponent = EditableApplyLaterComponent(classAlias, key=internalKey)
+                        editableComponent = EditableApplyLaterComponent(classAlias, key=internalKey, \
+                                                                        currentValue=currentValue, \
+                                                                        enumeration = enumeration, \
+                                                                        metricPrefixSymbol=metricPrefixSymbol, \
+                                                                        unitSymbol=unitSymbol)
                         editableComponent.isEditableValueInit = False
 
                     editableComponent.widget.setAttribute(Qt.WA_NoSystemBackground, True)

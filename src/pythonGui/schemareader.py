@@ -172,11 +172,10 @@ class SchemaReader(object):
         self._setTags(key, item)
         self._setDescription(key, item)
         self._setDefaultValue(key, item)
+        self._setMetricPrefixSymbol(key, item)
+        self._setUnitSymbol(key, item)
         
-        metricPrefixSymbol = self._getMetricPrefixSymbol(key)
-        unitSymbol = self._getUnitSymbol(key)
-        
-        self._handleValueType(key, item, item.defaultValue, metricPrefixSymbol, unitSymbol)
+        self._handleValueType(key, item)
         self._checkForFurtherAttributes(key, item)
 
 
@@ -230,55 +229,55 @@ class SchemaReader(object):
 
 
 ### Schema getter functions ###
-    def _handleValueType(self, key, item, defaultValue, metricPrefixSymbol, unitSymbol):
+    def _handleValueType(self, key, item):
         valueType = self.__schema.getValueType(key)
         item.valueType = valueType
         
         if valueType == Types.STRING:
             #print "STRING"
-            self._handleString(key, item, defaultValue, metricPrefixSymbol, unitSymbol)
+            self._handleString(key, item)
         elif valueType == Types.CHAR:
             #print "CHAR"
-            self._handleString(key, item, defaultValue, metricPrefixSymbol, unitSymbol)
+            self._handleString(key, item)
         elif valueType == Types.BOOL:
             #print "BOOL"
-            self._handleBool(key, item, defaultValue, metricPrefixSymbol, unitSymbol)
+            self._handleBool(key, item)
         elif valueType == Types.FLOAT:
             #print "FLOAT"
-            self._handleFloat(key, item, defaultValue, metricPrefixSymbol, unitSymbol)
+            self._handleFloat(key, item)
         elif valueType == Types.COMPLEX_FLOAT:
             #print "COMPLEX_FLOAT"
-            self._handleFloat(key, item, defaultValue, metricPrefixSymbol, unitSymbol)
+            self._handleFloat(key, item)
         elif valueType == Types.DOUBLE:
             #print "DOUBLE"
-            self._handleFloat(key, item, defaultValue, metricPrefixSymbol, unitSymbol)
+            self._handleFloat(key, item)
         elif valueType == Types.COMPLEX_DOUBLE:
             #print "COMPLEX_DOUBLE"
-            self._handleFloat(key, item, defaultValue, metricPrefixSymbol, unitSymbol)
+            self._handleFloat(key, item)
         elif valueType == Types.UINT8:
             #print "UINT8"
-            self._handleInteger(key, item, defaultValue, metricPrefixSymbol, unitSymbol)
+            self._handleInteger(key, item)
         elif valueType == Types.INT16:
             #print "INT16"
-            self._handleInteger(key, item, defaultValue, metricPrefixSymbol, unitSymbol)
+            self._handleInteger(key, item)
         elif valueType == Types.UINT16:
             #print "UINT16"
-            self._handleInteger(key, item, defaultValue, metricPrefixSymbol, unitSymbol)
+            self._handleInteger(key, item)
         elif valueType == Types.INT32:
             #print "INT32"
-            self._handleInteger(key, item, defaultValue, metricPrefixSymbol, unitSymbol)
+            self._handleInteger(key, item)
         elif valueType == Types.UINT32:
             #print "UINT32"
-            self._handleInteger(key, item, defaultValue, metricPrefixSymbol, unitSymbol)
+            self._handleInteger(key, item)
         elif valueType == Types.INT64:
             #print "INT64"
-            self._handleInteger(key, item, defaultValue, metricPrefixSymbol, unitSymbol)
+            self._handleInteger(key, item)
         elif valueType == Types.UINT64:
             #print "UINT64"
-            self._handleInteger(key, item, defaultValue, metricPrefixSymbol, unitSymbol)
+            self._handleInteger(key, item)
         elif valueType == Types.VECTOR_STRING:
             print "VECTOR_STRING"
-            self._handleVectorString(key, item, defaultValue, metricPrefixSymbol, unitSymbol)
+            self._handleVectorString(key, item)
         elif valueType == Types.VECTOR_CHAR:
             print "VECTOR_CHAR"
         elif valueType == Types.VECTOR_INT8:
@@ -370,27 +369,22 @@ class SchemaReader(object):
     #    item.timestamp = self.__schema.getTimestamp(key)
 
 
-    def _getMetricPrefixSymbol(self, key):
+    def _setMetricPrefixSymbol(self, key, item):
         if not self.__schema.hasMetricPrefix(key):
             return None
         
         #metricPrefix = self.__schema.getMetricPrefix(key)
         #metricPrefixName = self.__schema.getMetricPrefixName(key)
-        metricPrefixSymbol = self.__schema.getMetricPrefixSymbol(key)
-        
-        return metricPrefixSymbol
+        item.metricPrefixSymbol = self.__schema.getMetricPrefixSymbol(key)
 
 
-    def _getUnitSymbol(self, key):
+    def _setUnitSymbol(self, key, item):
         if not self.__schema.hasUnit(key):
             return None
         
         #unit = self.__schema.getUnit(key)
         #unitName = self.__schema.getUnitName(key)
-        unitSymbol = self.__schema.getUnitSymbol(key)
-        
-        #item.setText(2, unitSymbol)
-        return unitSymbol
+        item.unitSymbol = self.__schema.getUnitSymbol(key)
 
 
     def _setAssignment(self, key, item):
@@ -642,7 +636,7 @@ class SchemaReader(object):
 
 
 ### functions for setting editable components depending on value type ###
-    def _handleBool(self, key, item, defaultValue, metricPrefixSymbol, unitSymbol):
+    def _handleBool(self, key, item):
         #print "_handleBool"
         item.classAlias = "Toggle Field"
         item.setIcon(0, QIcon(":boolean"))
@@ -654,31 +648,31 @@ class SchemaReader(object):
             if (accessMode is AccessMode.INITONLY) or (accessMode is AccessMode.RECONFIGURABLE):
                 editableComponent = EditableNoApplyComponent(classAlias=item.classAlias,
                                                              key=item.internalKey,
-                                                             value=defaultValue, 
-                                                             metricPrefixSymbol=metricPrefixSymbol,
-                                                             unitSymbol=unitSymbol)
+                                                             value=item.defaultValue, 
+                                                             metricPrefixSymbol=item.metricPrefixSymbol,
+                                                             unitSymbol=item.unitSymbol)
         else:
             if accessMode is AccessMode.RECONFIGURABLE:
                 editableComponent = EditableApplyLaterComponent(classAlias=item.classAlias,
                                                                 key=item.internalKey,
-                                                                value=defaultValue,
-                                                                metricPrefixSymbol=metricPrefixSymbol,
-                                                                unitSymbol=unitSymbol)
+                                                                value=item.defaultValue,
+                                                                metricPrefixSymbol=item.metricPrefixSymbol,
+                                                                unitSymbol=item.unitSymbol)
                 editableComponent.signalApplyChanged.connect(self.__treeWidget.onApplyChanged)
 
         item.editableComponent = editableComponent
 
 
-    def _handleString(self, key, item, defaultValue, metricPrefixSymbol, unitSymbol):
+    def _handleString(self, key, item):
         #print "_handleString"
         hasOptions = self.__schema.hasOptions(key)
         if hasOptions:
             item.classAlias = "Selection Field"
-            enumeration = self.__schema.getOptions(key)
+            item.enumeration = self.__schema.getOptions(key)
             item.setIcon(0, QIcon(":enum"))
         else:
             item.classAlias = "Text Field"
-            enumeration = None
+            item.enumeration = None
             item.setIcon(0, QIcon(":string"))
         
         accessMode = self._getAccessMode(key)
@@ -701,18 +695,18 @@ class SchemaReader(object):
                     if (accessMode is AccessMode.INITONLY) or (accessMode is AccessMode.RECONFIGURABLE):
                         editableComponent = EditablePathNoApplyComponent(classAlias=item.classAlias,
                                                                             key=item.internalKey,
-                                                                            value=defaultValue,
-                                                                            enumeration=enumeration,
-                                                                            metricPrefixSymbol=metricPrefixSymbol,
-                                                                            unitSymbol=unitSymbol,
+                                                                            value=item.defaultValue,
+                                                                            enumeration=item.enumeration,
+                                                                            metricPrefixSymbol=item.metricPrefixSymbol,
+                                                                            unitSymbol=item.unitSymbol,
                                                                             pathType=pathType)
                 else:
                     if accessMode is AccessMode.RECONFIGURABLE:
                         editableComponent = EditablePathApplyLaterComponent(classAlias=item.classAlias,
                                                                                key=item.internalKey,
-                                                                               enumeration=enumeration, 
-                                                                               metricPrefixSymbol=metricPrefixSymbol,
-                                                                               unitSymbol=unitSymbol,
+                                                                               enumeration=item.enumeration, 
+                                                                               metricPrefixSymbol=item.metricPrefixSymbol,
+                                                                               unitSymbol=item.unitSymbol,
                                                                                pathType=pathType)
                         editableComponent.signalApplyChanged.connect(self.__treeWidget.onApplyChanged)
         
@@ -722,33 +716,33 @@ class SchemaReader(object):
                 if (accessMode is AccessMode.INITONLY) or (accessMode is AccessMode.RECONFIGURABLE):
                     editableComponent = EditableNoApplyComponent(classAlias=item.classAlias,
                                                                  key=item.internalKey,
-                                                                 value=defaultValue,
-                                                                 enumeration=enumeration,
-                                                                 metricPrefixSymbol=metricPrefixSymbol,
-                                                                 unitSymbol=unitSymbol)
+                                                                 value=item.defaultValue,
+                                                                 enumeration=item.enumeration,
+                                                                 metricPrefixSymbol=item.metricPrefixSymbol,
+                                                                 unitSymbol=item.unitSymbol)
             else:
                 if accessMode is AccessMode.RECONFIGURABLE:
                     editableComponent = EditableApplyLaterComponent(classAlias=item.classAlias,
                                                                     key=item.internalKey,
-                                                                    value=defaultValue,
-                                                                    enumeration=enumeration, 
-                                                                    metricPrefixSymbol=metricPrefixSymbol,
-                                                                    unitSymbol=unitSymbol)
+                                                                    value=item.defaultValue,
+                                                                    enumeration=item.enumeration, 
+                                                                    metricPrefixSymbol=item.metricPrefixSymbol,
+                                                                    unitSymbol=item.unitSymbol)
                     editableComponent.signalApplyChanged.connect(self.__treeWidget.onApplyChanged)
 
         item.editableComponent = editableComponent
 
 
-    def _handleInteger(self, key, item, defaultValue, metricPrefixSymbol, unitSymbol):
+    def _handleInteger(self, key, item):
         #print "_handleInteger"
         hasOptions = self.__schema.hasOptions(key)
         if hasOptions:
             item.classAlias = "Selection Field"
-            enumeration = self.__schema.getOptions(key)
+            item.enumeration = self.__schema.getOptions(key)
             item.setIcon(0, QIcon(":enum"))
         else:
             item.classAlias = "Integer Field"
-            enumeration = None
+            item.enumeration = None
             item.setIcon(0, QIcon(":int"))
         
         accessMode = self._getAccessMode(key)
@@ -758,18 +752,18 @@ class SchemaReader(object):
             if (accessMode is AccessMode.INITONLY) or (accessMode is AccessMode.RECONFIGURABLE):
                 editableComponent = EditableNoApplyComponent(classAlias=item.classAlias,
                                                              key=item.internalKey,
-                                                             value=defaultValue,
-                                                             enumeration=enumeration,
-                                                             metricPrefixSymbol=metricPrefixSymbol,
-                                                             unitSymbol=unitSymbol)
+                                                             value=item.defaultValue,
+                                                             enumeration=item.enumeration,
+                                                             metricPrefixSymbol=item.metricPrefixSymbol,
+                                                             unitSymbol=item.unitSymbol)
         else:
             if accessMode is AccessMode.RECONFIGURABLE:
                 editableComponent = EditableApplyLaterComponent(classAlias=item.classAlias,
                                                                 key=item.internalKey,
-                                                                value=defaultValue,
-                                                                enumeration=enumeration,
-                                                                metricPrefixSymbol=metricPrefixSymbol,
-                                                                unitSymbol=unitSymbol)
+                                                                value=item.defaultValue,
+                                                                enumeration=item.enumeration,
+                                                                metricPrefixSymbol=item.metricPrefixSymbol,
+                                                                unitSymbol=item.unitSymbol)
                 editableComponent.signalApplyChanged.connect(self.__treeWidget.onApplyChanged)
         
         # Check minimum and maximum inclusives/exclusives
@@ -777,16 +771,16 @@ class SchemaReader(object):
         item.editableComponent = editableComponent
 
 
-    def _handleFloat(self, key, item, defaultValue, metricPrefixSymbol, unitSymbol):
+    def _handleFloat(self, key, item):
         #print "_handleFloat"
         hasOptions = self.__schema.hasOptions(key)
         if hasOptions:
             item.classAlias = "Selection Field"
-            enumeration = self.__schema.getOptions(key)
+            item.enumeration = self.__schema.getOptions(key)
             item.setIcon(0, QIcon(":enum"))
         else:
             item.classAlias = "Float Field"
-            enumeration = None
+            item.enumeration = None
             item.setIcon(0, QIcon(":float"))
 
         accessMode = self._getAccessMode(key)
@@ -796,18 +790,18 @@ class SchemaReader(object):
             if (accessMode is AccessMode.INITONLY) or (accessMode is AccessMode.RECONFIGURABLE):
                 editableComponent = EditableNoApplyComponent(classAlias=item.classAlias,
                                                              key=item.internalKey,
-                                                             value=defaultValue,
-                                                             enumeration=enumeration,
-                                                             metricPrefixSymbol=metricPrefixSymbol,
-                                                             unitSymbol=unitSymbol)
+                                                             value=item.defaultValue,
+                                                             enumeration=item.enumeration,
+                                                             metricPrefixSymbol=item.metricPrefixSymbol,
+                                                             unitSymbol=item.unitSymbol)
         else:
             if accessMode is AccessMode.RECONFIGURABLE:
                 editableComponent = EditableApplyLaterComponent(classAlias=item.classAlias,
                                                                 key=item.internalKey,
-                                                                value=defaultValue,
-                                                                enumeration=enumeration, 
-                                                                metricPrefixSymbol=metricPrefixSymbol,
-                                                                unitSymbol=unitSymbol)
+                                                                value=item.defaultValue,
+                                                                enumeration=item.enumeration, 
+                                                                metricPrefixSymbol=item.metricPrefixSymbol,
+                                                                unitSymbol=item.unitSymbol)
                 editableComponent.signalApplyChanged.connect(self.__treeWidget.onApplyChanged)
         
         # Check minimum and maximum inclusives/exclusives
@@ -815,15 +809,15 @@ class SchemaReader(object):
         item.editableComponent = editableComponent
 
 
-    def _handleVectorString(self, key, item, defaultValue, metricPrefixSymbol, unitSymbol):
+    def _handleVectorString(self, key, item):
         #print "_handleVectorString"
 
         item.classAlias = "Histogram"
         item.setIcon(0, QIcon(":enum"))
 
         defaultVec = []
-        if defaultValue:
-             defaultVec = str(defaultValue).split(',')
+        if item.defaultValue:
+             defaultVec = str(item.defaultValue).split(',')
         default = []
         for index in defaultVec:
             default.append(str(index))
@@ -836,15 +830,15 @@ class SchemaReader(object):
                 editableComponent = EditableNoApplyComponent(classAlias=item.classAlias,
                                                              key=item.internalKey,
                                                              value=default,
-                                                             metricPrefixSymbol=metricPrefixSymbol,
-                                                             unitSymbol=unitSymbol)
+                                                             metricPrefixSymbol=item.metricPrefixSymbol,
+                                                             unitSymbol=item.unitSymbol)
         else:
             if accessMode is AccessMode.RECONFIGURABLE:
                 editableComponent = EditableApplyLaterComponent(classAlias=item.classAlias,
                                                                 key=item.internalKey,
                                                                 value=None,
-                                                                metricPrefixSymbol=metricPrefixSymbol,
-                                                                unitSymbol=unitSymbol)
+                                                                metricPrefixSymbol=item.metricPrefixSymbol,
+                                                                unitSymbol=item.unitSymbol)
                 editableComponent.signalApplyChanged.connect(self.__treeWidget.onApplyChanged)
         
         item.editableComponent = editableComponent

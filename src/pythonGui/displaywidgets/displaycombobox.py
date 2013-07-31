@@ -46,6 +46,11 @@ class DisplayComboBox(DisplayWidget):
         self.__key = params.get(QString('key'))
         if self.__key is None:
             self.__key = params.get('key')
+
+        enumeration = params.get(QString('enumeration'))
+        if enumeration is None:
+            enumeration = params.get('enumeration')
+        self.addItems(enumeration)
         
         # Set value
         value = params.get(QString('value'))
@@ -90,6 +95,12 @@ class DisplayComboBox(DisplayWidget):
 
     def removeKey(self, key):
         self.__key = None
+
+
+    def addItems(self, texts):
+        self.__comboBox.blockSignals(True)
+        self.__comboBox.addItems(texts)
+        self.__comboBox.blockSignals(False)
 
 
     def valueChanged(self, key, value, timestamp=None):

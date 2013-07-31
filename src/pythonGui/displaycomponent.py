@@ -43,6 +43,22 @@ class DisplayComponent(BaseComponent):
             self.__displayWidget = VacuumWidget.create(classAlias, **params)
         
         hLayout.addWidget(self.__displayWidget.widget)
+
+        metricPrefixSymbol = params.get(QString('metricPrefixSymbol'))
+        if metricPrefixSymbol is None:
+            metricPrefixSymbol = params.get('metricPrefixSymbol')
+        unitSymbol = params.get(QString('unitSymbol'))
+        if unitSymbol is None:
+            unitSymbol = params.get('unitSymbol')
+        
+        # Append unit label, if available
+        unitLabel = str()
+        if metricPrefixSymbol:
+            unitLabel += metricPrefixSymbol
+        if unitSymbol:
+            unitLabel += unitSymbol
+        if len(unitLabel) > 0:
+            hLayout.addWidget(QLabel(unitLabel))
         
         # Use path to register component to manager
         key = params.get(QString('key'))

@@ -155,6 +155,27 @@ class BaseTreeWidgetItem(QTreeWidgetItem):
     requiredAccessLevel = property(fget=_requiredAccessLevel, fset=_setRequiredAccessLevel)
 
 
+    def _metricPrefixSymobl(self):
+        return self.data(0, const.METRIC_PREFIX_SYMBOL).toPyObject()
+    def _setMetricPrefixSymbol(self, metricPrefixSymbol):
+        self.setData(0, const.METRIC_PREFIX_SYMBOL, metricPrefixSymbol)
+    metricPrefixSymbol = property(fget=_metricPrefixSymobl, fset=_setMetricPrefixSymbol)
+
+
+    def _unitSymbol(self):
+        return self.data(0, const.UNIT_SYMBOL).toPyObject()
+    def _setUnitSymbol(self, unitSymbol):
+        self.setData(0, const.UNIT_SYMBOL, unitSymbol)
+    unitSymbol = property(fget=_unitSymbol, fset=_setUnitSymbol)
+
+
+    def _enumeration(self):
+        return self.data(0, const.ENUMERATION).toPyObject()
+    def _setEnumeration(self, enumeration):
+        self.setData(0, const.ENUMERATION, enumeration)
+    enumeration = property(fget=_enumeration, fset=_setEnumeration)
+
+
 ### public functions ###
     def unregisterEditableComponent(self):
         if self.editableComponent:

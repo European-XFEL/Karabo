@@ -210,10 +210,10 @@ class ConfigurationPanel(QWidget):
         
         mainLayout.addWidget(mainSplitter)
 
-        mainSplitter.setSizes([1,1])
+        #mainSplitter.setSizes([1,1])
 
-        mainSplitter.setStretchFactor(0, 1)
-        mainSplitter.setStretchFactor(1, 0)
+        mainSplitter.setStretchFactor(0, 6)
+        mainSplitter.setStretchFactor(1, 1)
 
         self.setupActions()
         self.setLayout(mainLayout)
