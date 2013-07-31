@@ -23,6 +23,7 @@ __all__ = ["DisplayLabel"]
 
 from displaywidget import DisplayWidget
 from karabo.karathon import *
+import decimal
 
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
@@ -123,7 +124,7 @@ class DisplayLabel(DisplayWidget):
         
         if isinstance(value, list):    
             listLen = len(value)
-            maxLen = 10
+            maxLen = 4
             valueAsString = "["
             
             for i in range(listLen):
@@ -131,11 +132,11 @@ class DisplayLabel(DisplayWidget):
                     valueAsString += ".."
                     break
 
-                index = value[i]
-                valueType = type(index)
-                if valueType is float:
-                    index = self.floatToScientificNotation(index)
-                    #index = str("%.6f" %index) # TODO configurable precision
+                index = value[i]                
+                if self.valueType is Types.VECTOR_FLOAT:
+                    index = decimal.Decimal(str(index)).quantize(decimal.Decimal('.000000'), rounding=decimal.ROUND_UP)
+                elif self.valueType is Types.VECTOR_DOUBLE:
+                    index = decimal.Decimal(str(index))
                 valueAsString += str(index)
 
                 if i != (listLen-1):
@@ -143,19 +144,14 @@ class DisplayLabel(DisplayWidget):
                 maxLen -= 1
             valueAsString += "]"
             value = valueAsString
-        elif isinstance(value, float):
-            value = self.floatToScientificNotation(value)
+        elif self.valueType is Types.FLOAT:
+            value = decimal.Decimal(str(value)).quantize(decimal.Decimal('.000000'))            
+        elif self.valueType is Types.DOUBLE:
+            value = decimal.Decimal(str(value))
+                    
         
         self.__label.setText(str(value))
-
-
-    def floatToScientificNotation(self, value):
-        locale = self.__label.locale()
-        valueString = locale.toString(value, 'e', 0)
-        if abs(value) >= 1000.0:
-            valueString.remove(locale.groupSeparator())
-        return valueString
-
+        
 
     class Maker:
         def make(self, **params):
