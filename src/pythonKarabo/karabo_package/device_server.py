@@ -190,6 +190,7 @@ class DeviceServer(object):
         # TODO
         t = threading.Thread(target=self.ss.runEventLoop, args = (10, info))
         t.start()
+        time.sleep(0.01)  # for rescheduling, some garantie that runEventLoop will start before FSM
         self.fsm.start()
         t.join()
         self.pluginThread.join()
