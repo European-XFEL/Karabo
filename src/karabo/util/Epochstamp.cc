@@ -21,7 +21,7 @@ namespace karabo {
 
 
         const std::locale formats[] = {
-            //std::locale(std::locale::classic(), new boost::posix_time::time_input_facet("%Y%m%dT%H%M%S%f%z")), //19951231T235959.9942Z
+            //std::locale(std::locale::classic(), new boost::posix_time::time_input_facet("%Y%m%dT%H%M%S%f%z")), //19951231T235959.9942
             std::locale(std::locale::classic(), new boost::posix_time::time_input_facet("%Y%m%dT%H%M%S%f")), //19951231T235959.789333123456789123
             std::locale(std::locale::classic(), new boost::posix_time::time_input_facet("%Y-%m-%dT%H:%M:%S")), //2012-12-25T13:25:36.123456789123456789
             std::locale(std::locale::classic(), new boost::posix_time::time_input_facet("%Y-%m-%d %H:%M:%S")), //2012-12-25 13:25:36.123456789123456789
@@ -31,18 +31,20 @@ namespace karabo {
         const size_t formats_n = sizeof (formats) / sizeof (formats[0]);
 
 
-        static const unsigned long long pt_to_secondsSinceEpoch(boost::posix_time::ptime& pt) {
+        const unsigned long long Epochstamp::pt_to_secondsSinceEpoch(boost::posix_time::ptime& pt) {
             static boost::posix_time::ptime timet_start(boost::gregorian::date(1970, 1, 1));
             boost::posix_time::time_duration diff = pt - timet_start;
-            //return diff.ticks() / boost::posix_time::time_duration::rep_type::ticks_per_second;
             return diff.total_seconds();
         }
 
 
-        static const Epochstamp fromIso8601(const std::string& timePoint) {
+        const Epochstamp Epochstamp::fromIso8601(const std::string& timePoint) {
 
             std::vector<std::string> timeParts = karabo::util::fromString<std::string, std::vector > (timePoint, ".");
 
+            if (timeParts.size() != 2) {
+                throw KARABO_PARAMETER_EXCEPTION("Illegal time string sent by user (missing '.' character or/and seconds or/and fractional seconds)");
+            }
             std::string secondsStr = timeParts[0];
             std::string fractionalSecondsStr = timeParts[1];
 
@@ -55,17 +57,26 @@ namespace karabo {
                 if (pt != boost::posix_time::ptime()) break;
             }
 
-            const unsigned long long& secs = karabo::util::pt_to_secondsSinceEpoch(pt);
+            const unsigned long long& secs = pt_to_secondsSinceEpoch(pt);
             const unsigned long long fraqs = boost::lexical_cast<unsigned long long>(fractionalSecondsStr);
 
             // Create Epochstamp to be returned
-            Epochstamp epochStampTime(secs, fraqs);
-
-            return epochStampTime;
+            return Epochstamp(secs, fraqs);
         }
 
 
-        static std::string getPTime2String(const boost::posix_time::ptime pt, const boost::posix_time::time_facet* facet) {
+        const Epochstamp Epochstamp::fromIso8601Ext(const std::string& timePoint) {
+
+            std::string lastChar = timePoint.substr(timePoint.size() - 1, timePoint.size());
+            if (lastChar != "Z") {
+                throw KARABO_PARAMETER_EXCEPTION("Illegal time string sent by user (missing ending 'Z' character)");
+            }
+
+            return fromIso8601(timePoint.substr(0, timePoint.size() - 1));
+        }
+
+
+        std::string Epochstamp::getPTime2String(const boost::posix_time::ptime pt, const boost::posix_time::time_facet* facet) {
             std::ostringstream datetime_ss;
 
             // special_locale takes ownership of the p_time_output facet
@@ -110,7 +121,7 @@ namespace karabo {
 
 
         Epochstamp::Epochstamp(const std::string& pTimeStr) {
-            *this = karabo::util::fromIso8601(pTimeStr);
+            *this = fromIso8601(pTimeStr);
         }
 
 
@@ -219,7 +230,7 @@ namespace karabo {
             std::string pTime = this->toIso8601(SECOND, false);
             const boost::posix_time::ptime pt = boost::posix_time::from_iso_string(pTime);
 
-            return karabo::util::getPTime2String(pt, facet);
+            return getPTime2String(pt, facet);
         }
 
 
