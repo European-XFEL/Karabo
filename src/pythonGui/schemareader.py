@@ -277,35 +277,49 @@ class SchemaReader(object):
             self._handleInteger(key, item)
         elif valueType == Types.VECTOR_STRING:
             print "VECTOR_STRING"
-            self._handleVectorString(key, item)
+            self._handleVector(key, item)
         elif valueType == Types.VECTOR_CHAR:
             print "VECTOR_CHAR"
+            self._handleVector(key, item)
         elif valueType == Types.VECTOR_INT8:
             print "VECTOR_INT8"
+            self._handleVector(key, item)
         elif valueType == Types.VECTOR_UINT8:
             print "VECTOR_UINT8"
+            self._handleVector(key, item)
         elif valueType == Types.VECTOR_INT16:
             print "VECTOR_INT16"
+            self._handleVector(key, item)
         elif valueType == Types.VECTOR_UINT16:
             print "VECTOR_UINT16"
+            self._handleVector(key, item)
         elif valueType == Types.VECTOR_INT32:
             print "VECTOR_INT32"
+            self._handleVector(key, item)
         elif valueType == Types.VECTOR_UINT32:
             print "VECTOR_UINT32"
+            self._handleVector(key, item)
         elif valueType == Types.VECTOR_INT64:
             print "VECTOR_INT64"
+            self._handleVector(key, item)
         elif valueType == Types.VECTOR_UINT64:
             print "VECTOR_UINT64"
+            self._handleVector(key, item)
         elif valueType == Types.VECTOR_FLOAT:
             print "VECTOR_FLOAT"
+            self._handleVector(key, item)
         elif valueType == Types.VECTOR_DOUBLE:
             print "VECTOR_DOUBLE"
+            self._handleVector(key, item)
         elif valueType == Types.VECTOR_COMPLEX_FLOAT:
             print "VECTOR_COMPLEX_FLOAT"
+            self._handleVector(key, item)
         elif valueType == Types.VECTOR_COMPLEX_DOUBLE:
             print "VECTOR_COMPLEX_DOUBLE"
+            self._handleVector(key, item)
         elif valueType == Types.VECTOR_BOOL:
             print "VECTOR_BOOL"
+            self._handleVector(key, item)
         elif valueType == Types.VECTOR_HASH:
             print "VECTOR_HASH"
         elif valueType == Types.HASH:
@@ -809,18 +823,10 @@ class SchemaReader(object):
         item.editableComponent = editableComponent
 
 
-    def _handleVectorString(self, key, item):
-        #print "_handleVectorString"
+    def _handleVector(self, key, item):
+        #print "_handleVector"
 
         item.classAlias = "Histogram"
-        item.setIcon(0, QIcon(":enum"))
-
-        defaultVec = []
-        if item.defaultValue:
-             defaultVec = str(item.defaultValue).split(',')
-        default = []
-        for index in defaultVec:
-            default.append(str(index))
 
         accessMode = self._getAccessMode(key)
         editableComponent = None
@@ -829,7 +835,7 @@ class SchemaReader(object):
             if (accessMode is AccessMode.INITONLY) or (accessMode is AccessMode.RECONFIGURABLE):
                 editableComponent = EditableNoApplyComponent(classAlias=item.classAlias,
                                                              key=item.internalKey,
-                                                             value=default,
+                                                             value=item.defaultValue,
                                                              metricPrefixSymbol=item.metricPrefixSymbol,
                                                              unitSymbol=item.unitSymbol)
         else:
