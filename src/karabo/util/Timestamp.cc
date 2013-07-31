@@ -33,8 +33,28 @@ namespace karabo {
         }
 
 
-        std::string Timestamp::toIso8601() const {
-            return m_epochstamp.toIso8601();
+        const Epochstamp Timestamp::fromIso8601(const std::string& timePoint) {
+            return karabo::util::Epochstamp::fromIso8601(timePoint);
+        }
+
+
+        const Epochstamp Timestamp::fromIso8601Ext(const std::string& timePoint) {
+            return karabo::util::Epochstamp::fromIso8601Ext(timePoint);
+        }
+
+
+        std::string Timestamp::toIso8601(TIME_UNITS precision, bool extended) const {
+            return m_epochstamp.toIso8601(precision, extended);
+        }
+
+
+        std::string Timestamp::toIso8601Ext(TIME_UNITS precision, bool extended) const {
+            return m_epochstamp.toIso8601Ext(precision, extended);
+        }
+
+
+        std::string Timestamp::toFormattedString(const std::string& format) const {
+            return m_epochstamp.toFormattedString(format);
         }
 
 
@@ -42,10 +62,6 @@ namespace karabo {
             m_epochstamp.toHashAttributes(attributes);
             m_trainstamp.toHashAttributes(attributes);
         }
-
-
-        std::string Timestamp::toFormattedString(const std::string& format) const {
-            return m_epochstamp.toFormattedString(format);
-        }
     }
 }
+
