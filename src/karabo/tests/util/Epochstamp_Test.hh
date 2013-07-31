@@ -24,6 +24,7 @@ class Epochstamp_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST(testToFormattedString);
     //
     CPPUNIT_TEST(testStrToEpochstamp);
+    CPPUNIT_TEST(testStrToEpochstampExternal);
 
     CPPUNIT_TEST_SUITE_END();
 
@@ -41,6 +42,7 @@ private:
     void testToFormattedString();
     //
     void testStrToEpochstamp();
+    void testStrToEpochstampExternal();
 
 };
 
