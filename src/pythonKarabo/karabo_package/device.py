@@ -145,6 +145,7 @@ class PythonDevice(BaseFsm):
         # TODO Make configurable
         t = threading.Thread(target = self._ss.runEventLoop, args = (10, info))
         t.start()
+        time.sleep(0.01) # for rescheduling, some garantie that runEventLoop will start before FSM
         self.startFsm()
         with self._stateChangeLock:
             validated = self.validatorIntern.validate(self.fullSchema, self.parameters)
