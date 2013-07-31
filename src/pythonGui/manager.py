@@ -554,10 +554,31 @@ class Manager(Singleton):
         serializer = TextSerializerHash.create("Xml")
         config = serializer.load(xmlContent).get(classId)
 
+        # TODO: not working correctly yet
         # Validate against fullSchema
-        #rules = AssemblyRules(accessMode, state, globals.GLOBAL_ACCESS_LEVEL)
+        #fullSchema = Schema()
+        #rules = None
+        
+        # Get full schema of device class
+        #path = internalKey + ".description"
+        #if self.__hash.has(path):
+        #    fullSchema = self.__hash.get(path)
+            
+            # Get current state
+        #    state = None
+        #    statePath = internalKey + ".configuration.state"
+        #    if self.__hash.has(statePath):
+        #        state = self.__hash.get(statePath)
+            
+        #    splitPath = path.split(".")
+        #    if splitPath[0] == "device":
+        #        print "device"
+        #        rules = AssemblyRules(AccessType.WRITE, state)#accessMode, state, globals.GLOBAL_ACCESS_LEVEL)
+        #    else:
+        #        print "class"
+        #        rules = AssemblyRules(AccessType.INIT)#accessMode, state, globals.GLOBAL_ACCESS_LEVEL)
+
         #schema = Schema(classId, rules)
-        #fullSchema = getFullSchema(classId)
         #schema.merge(fullSchema)
         
         #validationRules = ValidatorValidationRules()
