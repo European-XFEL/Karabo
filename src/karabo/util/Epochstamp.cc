@@ -31,7 +31,7 @@ namespace karabo {
         const size_t formats_n = sizeof (formats) / sizeof (formats[0]);
 
 
-        const unsigned long long Epochstamp::pt_to_secondsSinceEpoch(boost::posix_time::ptime& pt) {
+        const unsigned long long Epochstamp::ptToSecondsSinceEpoch(boost::posix_time::ptime& pt) {
             static boost::posix_time::ptime timet_start(boost::gregorian::date(1970, 1, 1));
             boost::posix_time::time_duration diff = pt - timet_start;
             return diff.total_seconds();
@@ -57,7 +57,7 @@ namespace karabo {
                 if (pt != boost::posix_time::ptime()) break;
             }
 
-            const unsigned long long& secs = pt_to_secondsSinceEpoch(pt);
+            const unsigned long long& secs = ptToSecondsSinceEpoch(pt);
             const unsigned long long fraqs = boost::lexical_cast<unsigned long long>(fractionalSecondsStr);
 
             // Create Epochstamp to be returned
