@@ -6,7 +6,7 @@
  */
 
 #include <karabo/util/Configurator.hh>
-#include "HashBinarySerializer.hh"
+//#include "HashBinarySerializer.hh"
 #include "SchemaBinarySerializer.hh"
 
 using namespace std;
@@ -28,7 +28,7 @@ namespace karabo {
 
 
         void SchemaBinarySerializer::expectedParameters(karabo::util::Schema& expected) {
-            HashBinarySerializer::expectedParameters(expected);
+           
         }
 
         void SchemaBinarySerializer::save(const karabo::util::Schema& object, std::vector<char>& archive) try {
