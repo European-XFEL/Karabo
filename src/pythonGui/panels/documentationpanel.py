@@ -157,7 +157,8 @@ class DocumentationPanel(QWidget):
 
 
     def onLoadFinishedWiki(self, state):
-        print "onLoadFinishedWiki", state
+        #print "onLoadFinishedWiki", state
+        pass
 
 
     # virtual function
