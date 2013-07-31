@@ -11,6 +11,7 @@
 #include <boost/shared_array.hpp>
 
 #include "HashBinarySerializer.hh"
+#include "SchemaBinarySerializer.hh"
 
 using namespace karabo::util;
 using namespace std;
@@ -89,7 +90,8 @@ namespace karabo {
 
         void HashBinarySerializer::write(const boost::any& value, const Types::ReferenceType type, std::ostream& os) {
             switch (Types::category(type)) {
-                case Types::HASH:
+                case Types::HASH: // BH: Can this ever happen, I think not!
+                case Types::SCHEMA:
                 case Types::SIMPLE: return writeSingleValue(os, value, type);
                 case Types::VECTOR_HASH:
                 case Types::SEQUENCE: return writeSequence(os, value, type);
@@ -101,7 +103,7 @@ namespace karabo {
 
         void HashBinarySerializer::read(boost::any& value, const Types::ReferenceType type, std::istream& is) {
             switch (Types::category(type)) {
-                    // case Types::HASH:
+                case Types::SCHEMA:
                 case Types::SIMPLE: value = readSingleValue(is, type);
                     return;
                 case Types::SEQUENCE: readSequence(is, value, type);
@@ -132,6 +134,19 @@ namespace karabo {
             buffer[size] = 0;
             is.read(buffer.get(), size);
             return std::string(buffer.get());
+        }
+
+        template<>
+        Schema HashBinarySerializer::readSingleValue(std::istream& is) {
+            Hash hash;
+            SchemaBinarySerializer serializer /*= SchemaBinarySerializer*/(hash);
+            // TODO Optimize this by reading directly from istream
+            unsigned size = readSize(is);
+            Schema schema;
+             boost::shared_array<char> buffer(new char[size]);
+             is.read(buffer.get(), size);
+             serializer.load(schema, buffer.get(), size);
+             return schema;
         }
 
 
@@ -173,6 +188,7 @@ namespace karabo {
                 case Types::COMPLEX_DOUBLE: return boost::any(readSingleValue<std::complex<double> >(is));
                 case Types::STRING: return boost::any(readSingleValue<std::string > (is));
                 case Types::HASH: return boost::any(readSingleValue<Hash > (is));
+                case Types::SCHEMA: return boost::any(readSingleValue<Schema >(is));
                 default:
                     throw KARABO_IO_EXCEPTION("Encountered unknown data type whilst reading from binary archive");
             }
@@ -229,6 +245,17 @@ namespace karabo {
             write(hash, os);
         }
 
+        template<>
+        void HashBinarySerializer::writeSingleValue(std::ostream& os, const Schema& schema) {
+            Hash hash;
+            SchemaBinarySerializer serializer/* = SchemaBinarySerializer*/(hash);
+            std::vector<char> archive;
+            serializer.save(schema, archive);
+            unsigned size = archive.size();
+            writeSize(os, size);
+            os.write(&archive[0], size);
+        }
+
 
         void HashBinarySerializer::writeSingleValue(std::ostream& os, const boost::any& value, const Types::ReferenceType type) {
             switch (type) {
@@ -247,7 +274,8 @@ namespace karabo {
                 case Types::COMPLEX_FLOAT: return writeSingleValue(os, boost::any_cast<const std::complex<float>& >(value));
                 case Types::COMPLEX_DOUBLE: return writeSingleValue(os, boost::any_cast<const std::complex<double>& >(value));
                 case Types::STRING: return writeSingleValue(os, boost::any_cast<const std::string& > (value)); //
-                case Types::HASH: return writeSingleValue(os, boost::any_cast<const Hash& > (value)); //
+                case Types::HASH: return writeSingleValue(os, boost::any_cast<const Hash& > (value)); // BH: Can this ever happen, I think not!
+                case Types::SCHEMA: return writeSingleValue(os, boost::any_cast<const Schema& >(value));
                 default:
                     throw KARABO_IO_EXCEPTION("Encountered unknown data type whilst writing to binary archive");
             }

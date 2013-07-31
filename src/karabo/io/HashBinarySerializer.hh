@@ -26,6 +26,8 @@ namespace karabo {
          */
         class HashBinarySerializer : public BinarySerializer<karabo::util::Hash> {
 
+            
+
         public:
 
             KARABO_CLASSINFO(HashBinarySerializer, "Bin", "1.0")
@@ -163,6 +165,9 @@ namespace karabo {
         karabo::util::Hash HashBinarySerializer::readSingleValue(std::istream& is);
 
         template<>
+        karabo::util::Schema HashBinarySerializer::readSingleValue(std::istream& is);
+
+        template<>
         void HashBinarySerializer::writeSingleValue(std::ostream& os, const std::string&);
 
         template<>
@@ -173,6 +178,9 @@ namespace karabo {
 
         template<>
         void HashBinarySerializer::writeSingleValue(std::ostream& os, const std::complex<double>&);
+
+        template<>
+        void HashBinarySerializer::writeSingleValue(std::ostream& os, const karabo::util::Schema&);
 
     }
 }
