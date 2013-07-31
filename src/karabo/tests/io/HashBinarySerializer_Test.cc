@@ -82,10 +82,9 @@ void HashBinarySerializer_Test::testSerialization() {
         Hash schemaIncluded("a1", 3.2, "a2", s);
         vector<char> archive;
         p->save(schemaIncluded, archive);
-        //cout << "GARBAGE: " << garbage << endl;
         Hash fresh;
         p->load(fresh, archive);
-        cout << "HASH: " << fresh.get<Schema>("a2") << endl;
+        //cout << "HASH: " << fresh.get<Schema>("a2") << endl;
     }
 
     {
