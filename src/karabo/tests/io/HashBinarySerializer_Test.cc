@@ -8,6 +8,7 @@
 #include <karabo/io/HashBinarySerializer.hh>
 #include "HashBinarySerializer_Test.hh"
 #include "karabo/io/BinarySerializer.hh"
+#include "karabo/io/TextSerializer.hh"
 #include "karabo/util/Profiler.hh"
 
 CPPUNIT_TEST_SUITE_REGISTRATION(HashBinarySerializer_Test);
@@ -76,18 +77,16 @@ void HashBinarySerializer_Test::testSerialization() {
 
     BinarySerializer<Hash>::Pointer p = BinarySerializer<Hash>::create("Bin");
     
-    
-//     {
-//
-//        Schema s = BinarySerializer<Hash>::getSchema("Bin");
-//        Hash schemaIncluded("a1", 3.2, "a2", s);
-//        vector<char> archive;
-//        p->save(schemaIncluded, archive);
-//        //cout << "GARBAGE: " << garbage << endl;
-//        Hash fresh;
-//        p->load(fresh, archive);
-//        cout << "HASH: " << fresh.get<Schema>("a2") << endl;
-//    }
+    {
+        Schema s = TextSerializer<Hash>::getSchema("Xml");
+        Hash schemaIncluded("a1", 3.2, "a2", s);
+        vector<char> archive;
+        p->save(schemaIncluded, archive);
+        //cout << "GARBAGE: " << garbage << endl;
+        Hash fresh;
+        p->load(fresh, archive);
+        cout << "HASH: " << fresh.get<Schema>("a2") << endl;
+    }
 
     {
         vector<char> archive1;
