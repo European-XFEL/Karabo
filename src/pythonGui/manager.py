@@ -376,7 +376,7 @@ class Manager(Singleton):
         
 
     def onDeviceClassValueChanged(self, key, value):
-        print "onDeviceClassValueChanged", key, value
+        #print "onDeviceClassValueChanged", key, value
         self._setFromPath(key, value)
 
         dataNotifier = self._getDataNotifierEditableValue(key)
@@ -385,7 +385,7 @@ class Manager(Singleton):
 
 
     def onDeviceInstanceValueChanged(self, key, value):
-        print "onDeviceInstanceValueChanged", key, value
+        #print "onDeviceInstanceValueChanged", key, value
         # Safety conversion before hashing
         if isinstance(value, QString):
             value = str(value)
@@ -553,6 +553,23 @@ class Manager(Singleton):
         # TODO: serializer needed?
         serializer = TextSerializerHash.create("Xml")
         config = serializer.load(xmlContent).get(classId)
+
+        # Validate against fullSchema
+        #rules = AssemblyRules(accessMode, state, globals.GLOBAL_ACCESS_LEVEL)
+        #schema = Schema(classId, rules)
+        #fullSchema = getFullSchema(classId)
+        #schema.merge(fullSchema)
+        
+        #validationRules = ValidatorValidationRules()
+        #validationRules.allowAdditionalKeys        = True
+        #validationRules.allowMissingKeys           = True
+        #validationRules.allowUnrootedConfiguration = True
+        #validationRules.injectDefaults             = False
+        #validationRules.injectTimestamps           = False
+        #validator = Validator()
+        #validator.setValidationRules(validationRules)
+        # Get validated config
+        #config = validator.validate(schema, config)
 
         # TODO: Reload XSD in configuration panel
         # ...

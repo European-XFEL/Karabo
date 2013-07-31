@@ -83,10 +83,10 @@ class Network(QObject):
         
         ### HACK remove again ###
         # Inform the mainwindow to change correspondingly the allowed level-downgrade
-        #globals.GLOBAL_ACCESS_LEVEL = AccessLevel.ADMIN
-        #self.signalUserChanged.emit()
-        #self._sendLoginInformation(self.__username, self.__password, self.__provider, self.__sessionToken)
-        #return
+        globals.GLOBAL_ACCESS_LEVEL = AccessLevel.ADMIN
+        self.signalUserChanged.emit()
+        self._sendLoginInformation(self.__username, self.__password, self.__provider, self.__sessionToken)
+        return
         ### HACK remove again ###
         
         # Easteregg
@@ -454,7 +454,7 @@ class Network(QObject):
         timestamp = Timestamp()
         # TODO: better format for timestamp
         timestamp = timestamp.toIso8601()
-        timestamp = "2013-07-29 19:14:47"
+        #timestamp = "2013-07-29 19:14:47"
         type = bodyHash.get("type")
         shortMessage = bodyHash.get("shortMsg")
         detailedMessage = bodyHash.get("detailedMsg")

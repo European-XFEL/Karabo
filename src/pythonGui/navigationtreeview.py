@@ -252,7 +252,7 @@ class NavigationTreeView(QTreeView):
             schema = Manager().getDeviceSchema(deviceId)
             Manager().onSchemaAvailable(dict(key=path, classId=classId, type=type, schema=schema))
         
-        itemInfo = dict(key=path, type=type, level=level, row=row)
+        itemInfo = dict(key=path, classId=classId, type=type, level=level, row=row)
         Manager().onNavigationItemChanged(itemInfo)
         
         return type # Needed in ConfigurationPanel
