@@ -517,7 +517,8 @@ class Manager(Singleton):
 
     def onRefreshInstance(self, path):
         deviceId = self._getDeviceIdFromPath(path)
-        if not deviceId:
+        print "Refresh request on ", path
+        if not deviceId or not self.__hash.has(path):
             return
         self.__notifier.signalRefreshInstance.emit(deviceId)
 
