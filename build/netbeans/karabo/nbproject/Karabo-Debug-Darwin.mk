@@ -46,6 +46,7 @@ OBJECTFILES= \
 	${OBJECTDIR}/_ext/1072794519/HashXmlSerializer.o \
 	${OBJECTDIR}/_ext/1072794519/Hdf5FileInput.o \
 	${OBJECTDIR}/_ext/1072794519/Hdf5FileOutput.o \
+	${OBJECTDIR}/_ext/1072794519/SchemaBinarySerializer.o \
 	${OBJECTDIR}/_ext/1072794519/SchemaXmlSerializer.o \
 	${OBJECTDIR}/_ext/1072794519/SchemaXsdSerializer.o \
 	${OBJECTDIR}/_ext/1072794519/TextFileInput.o \
@@ -217,6 +218,11 @@ ${OBJECTDIR}/_ext/1072794519/Hdf5FileOutput.o: ../../../src/karabo/io/Hdf5FileOu
 	${MKDIR} -p ${OBJECTDIR}/_ext/1072794519
 	${RM} $@.d
 	$(COMPILE.cc) -g -w -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1072794519/Hdf5FileOutput.o ../../../src/karabo/io/Hdf5FileOutput.cc
+
+${OBJECTDIR}/_ext/1072794519/SchemaBinarySerializer.o: ../../../src/karabo/io/SchemaBinarySerializer.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1072794519
+	${RM} $@.d
+	$(COMPILE.cc) -g -w -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1072794519/SchemaBinarySerializer.o ../../../src/karabo/io/SchemaBinarySerializer.cc
 
 ${OBJECTDIR}/_ext/1072794519/SchemaXmlSerializer.o: ../../../src/karabo/io/SchemaXmlSerializer.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1072794519
@@ -618,7 +624,7 @@ ${OBJECTDIR}/_ext/1103122747/Statics.o: ../../../src/karabo/xms/Statics.cc
 
 # Build Test Targets
 .build-tests-conf: .build-conf ${TESTFILES}
-${TESTDIR}/TestFiles/f2: ${TESTDIR}/_ext/861493463/FileInputOutput_Test.o ${TESTDIR}/_ext/861493463/H5File_Test.o ${TESTDIR}/_ext/861493463/H5Format_Test.o ${TESTDIR}/_ext/861493463/HashBinarySerializer_Test.o ${TESTDIR}/_ext/861493463/HashXmlSerializer_Test.o ${TESTDIR}/_ext/861493463/Hdf5_Test.o ${TESTDIR}/_ext/861493463/SchemaXsdSerializer_Test.o ${TESTDIR}/_ext/861493463/ioTestRunner.o ${OBJECTFILES:%.o=%_nomain.o}
+${TESTDIR}/TestFiles/f2: ${TESTDIR}/_ext/861493463/FileInputOutput_Test.o ${TESTDIR}/_ext/861493463/H5File_Test.o ${TESTDIR}/_ext/861493463/H5Format_Test.o ${TESTDIR}/_ext/861493463/HashBinarySerializer_Test.o ${TESTDIR}/_ext/861493463/HashXmlSerializer_Test.o ${TESTDIR}/_ext/861493463/Hdf5_Test.o ${TESTDIR}/_ext/861493463/SchemaSerializer_Test.o ${TESTDIR}/_ext/861493463/SchemaXsdSerializer_Test.o ${TESTDIR}/_ext/861493463/ioTestRunner.o ${OBJECTFILES:%.o=%_nomain.o}
 	${MKDIR} -p ${TESTDIR}/TestFiles
 	${LINK.cc}   -o ${TESTDIR}/TestFiles/f2 $^ ${LDLIBSOPTIONS} -L${KARABO}/extern/lib -lcppunit 
 
@@ -630,7 +636,7 @@ ${TESTDIR}/TestFiles/f4: ${TESTDIR}/_ext/936498188/JmsBroker_Test.o ${TESTDIR}/_
 	${MKDIR} -p ${TESTDIR}/TestFiles
 	${LINK.cc}   -o ${TESTDIR}/TestFiles/f4 $^ ${LDLIBSOPTIONS} -L${KARABO}/extern/lib -lcppunit `cppunit-config --libs`   
 
-${TESTDIR}/TestFiles/f1: ${TESTDIR}/_ext/1033104525/ConfigurationTestClasses.o ${TESTDIR}/_ext/1033104525/Dims_Test.o ${TESTDIR}/_ext/1033104525/Factory_Test.o ${TESTDIR}/_ext/1033104525/HashFilter_Test.o ${TESTDIR}/_ext/1033104525/Hash_Test.o ${TESTDIR}/_ext/1033104525/Schema_Test.o ${TESTDIR}/_ext/1033104525/TimeClasses_Test.o ${TESTDIR}/_ext/1033104525/Types_Test.o ${TESTDIR}/_ext/1033104525/utilTestRunner.o ${OBJECTFILES:%.o=%_nomain.o}
+${TESTDIR}/TestFiles/f1: ${TESTDIR}/_ext/1033104525/ConfigurationTestClasses.o ${TESTDIR}/_ext/1033104525/Dims_Test.o ${TESTDIR}/_ext/1033104525/Epochstamp_Test.o ${TESTDIR}/_ext/1033104525/Factory_Test.o ${TESTDIR}/_ext/1033104525/HashFilter_Test.o ${TESTDIR}/_ext/1033104525/Hash_Test.o ${TESTDIR}/_ext/1033104525/Schema_Test.o ${TESTDIR}/_ext/1033104525/TimeClasses_Test.o ${TESTDIR}/_ext/1033104525/Types_Test.o ${TESTDIR}/_ext/1033104525/utilTestRunner.o ${OBJECTFILES:%.o=%_nomain.o}
 	${MKDIR} -p ${TESTDIR}/TestFiles
 	${LINK.cc}   -o ${TESTDIR}/TestFiles/f1 $^ ${LDLIBSOPTIONS} -L${KARABO}/extern/lib -lcppunit 
 
@@ -683,6 +689,12 @@ ${TESTDIR}/_ext/861493463/Hdf5_Test.o: ../../../src/karabo/tests/io/Hdf5_Test.cc
 	$(COMPILE.cc) -g -w -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -DKARABO_NO_ENABLE_TRACE_LOG -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`  -O2 -MMD -MP -MF $@.d -o ${TESTDIR}/_ext/861493463/Hdf5_Test.o ../../../src/karabo/tests/io/Hdf5_Test.cc
 
 
+${TESTDIR}/_ext/861493463/SchemaSerializer_Test.o: ../../../src/karabo/tests/io/SchemaSerializer_Test.cc 
+	${MKDIR} -p ${TESTDIR}/_ext/861493463
+	${RM} $@.d
+	$(COMPILE.cc) -g -w -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -DKARABO_NO_ENABLE_TRACE_LOG -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`  -O2 -MMD -MP -MF $@.d -o ${TESTDIR}/_ext/861493463/SchemaSerializer_Test.o ../../../src/karabo/tests/io/SchemaSerializer_Test.cc
+
+
 ${TESTDIR}/_ext/861493463/SchemaXsdSerializer_Test.o: ../../../src/karabo/tests/io/SchemaXsdSerializer_Test.cc 
 	${MKDIR} -p ${TESTDIR}/_ext/861493463
 	${RM} $@.d
@@ -729,6 +741,12 @@ ${TESTDIR}/_ext/1033104525/Dims_Test.o: ../../../src/karabo/tests/util/Dims_Test
 	${MKDIR} -p ${TESTDIR}/_ext/1033104525
 	${RM} $@.d
 	$(COMPILE.cc) -g -w -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -MMD -MP -MF $@.d -o ${TESTDIR}/_ext/1033104525/Dims_Test.o ../../../src/karabo/tests/util/Dims_Test.cc
+
+
+${TESTDIR}/_ext/1033104525/Epochstamp_Test.o: ../../../src/karabo/tests/util/Epochstamp_Test.cc 
+	${MKDIR} -p ${TESTDIR}/_ext/1033104525
+	${RM} $@.d
+	$(COMPILE.cc) -g -w -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -MMD -MP -MF $@.d -o ${TESTDIR}/_ext/1033104525/Epochstamp_Test.o ../../../src/karabo/tests/util/Epochstamp_Test.cc
 
 
 ${TESTDIR}/_ext/1033104525/Factory_Test.o: ../../../src/karabo/tests/util/Factory_Test.cc 
@@ -950,6 +968,19 @@ ${OBJECTDIR}/_ext/1072794519/Hdf5FileOutput_nomain.o: ${OBJECTDIR}/_ext/10727945
 	    $(COMPILE.cc) -g -w -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1072794519/Hdf5FileOutput_nomain.o ../../../src/karabo/io/Hdf5FileOutput.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/1072794519/Hdf5FileOutput.o ${OBJECTDIR}/_ext/1072794519/Hdf5FileOutput_nomain.o;\
+	fi
+
+${OBJECTDIR}/_ext/1072794519/SchemaBinarySerializer_nomain.o: ${OBJECTDIR}/_ext/1072794519/SchemaBinarySerializer.o ../../../src/karabo/io/SchemaBinarySerializer.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1072794519
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/1072794519/SchemaBinarySerializer.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} $@.d;\
+	    $(COMPILE.cc) -g -w -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1072794519/SchemaBinarySerializer_nomain.o ../../../src/karabo/io/SchemaBinarySerializer.cc;\
+	else  \
+	    ${CP} ${OBJECTDIR}/_ext/1072794519/SchemaBinarySerializer.o ${OBJECTDIR}/_ext/1072794519/SchemaBinarySerializer_nomain.o;\
 	fi
 
 ${OBJECTDIR}/_ext/1072794519/SchemaXmlSerializer_nomain.o: ${OBJECTDIR}/_ext/1072794519/SchemaXmlSerializer.o ../../../src/karabo/io/SchemaXmlSerializer.cc 

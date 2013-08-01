@@ -30,11 +30,16 @@ from randomcolor import RandomColor
 
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
-from PyQt4 import Qwt5
 
-from guiqwt.plot import CurveDialog, CurvePlot, PlotManager
-from guiqwt.tools import SelectPointTool
-from guiqwt.builder import make    
+useGuiQwt = True
+try:
+    from PyQt4 import Qwt5
+    from guiqwt.plot import CurveDialog, CurvePlot, PlotManager
+    from guiqwt.tools import SelectPointTool
+    from guiqwt.builder import make    
+except:
+    print "Missing package guiqwt (this is normal under MacOSX and will come later)"
+    useGuiQwt = False
 
 from karabo.karathon import Timestamp
 
@@ -67,6 +72,10 @@ class DisplayTrendline(DisplayWidget):
     def __init__(self, **params):
         super(DisplayTrendline, self).__init__(**params)
         
+        if useGuiQwt == False:
+            self.__plot = None
+            return
+
         self.__data = []
         
         self.__dialog = CurveDialog(edit=False, toolbar=True)
@@ -153,7 +162,7 @@ class DisplayTrendline(DisplayWidget):
 
 
     def valueChanged(self, key, value, timestamp=None):
-        if value is None:
+        if value is None or useGuiQwt is False:
             return
         
         if timestamp is None:
