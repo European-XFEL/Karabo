@@ -246,7 +246,7 @@ class DeviceServer(object):
                         candidates.append(obj)
 
                 def mostDerived(candidates):
-                    tree = inspect.getclasstree(candidates)  # build inheritance tree
+                    tree = inspect.getclasstree(candidates, 1)  # build inheritance tree
                     try:
                         while True:
                             c,b = tree[0]
