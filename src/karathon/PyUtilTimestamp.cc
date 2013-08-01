@@ -40,14 +40,32 @@ bp::class_<Timestamp> ts("Timestamp", bp::init<>());
            , bp::arg("attributes") );
     ts.staticmethod("hashAttributesContainTimeInformation");
     
+    ts.def("fromIso8601"
+          , &Timestamp::toIso8601
+          , bp::arg("timePoint"));
+    ts.staticmethod("fromIso8601");
+    
+    ts.def("fromIso8601Ext"
+          , &Timestamp::toIso8601Ext
+          , bp::arg("timePoint"));
+    ts.staticmethod("fromIso8601Ext");
+    
     ts.def("toIso8601"
-           , (string (Timestamp::*)() const)(&Timestamp::toIso8601));
+           , (string (Timestamp::*)() const)(&Timestamp::toIso8601)
+           , bp::arg("precision")
+           , bp::arg("extended"));
+    
+    ts.def("toIso8601Ext"
+           , (string (Timestamp::*)() const)(&Timestamp::toIso8601Ext)
+           , bp::arg("precision")
+           , bp::arg("extended"));
+    
+    ts.def("toFormattedString"
+           , (string (Timestamp::*)(const string &) const)(&Timestamp::toFormattedString)
+           , bp::arg("format") );
     
     ts.def("toHashAttributes"
            , (void (Timestamp::*)(Hash::Attributes &) const)(&Timestamp::toHashAttributes)
            , bp::arg("attributes") );
     
-    ts.def("toFormattedString"
-           , (string (Timestamp::*)(const string &) const)(&Timestamp::toFormattedString)
-           , bp::arg("format") );
 }

@@ -50,9 +50,19 @@ void exportPyUtilEpochstamp() {
            , bp::arg("attributes") );
     e.staticmethod("hashAttributesContainTimeInformation");
     
-    e.def("toIso8601", &Epochstamp::toIso8601);
-
-    e.def("toIso8601Ext", &Epochstamp::toIso8601Ext);
+    e.def("toIso8601"
+           , (string (Epochstamp::*)() const)(&Epochstamp::toIso8601)
+           , bp::arg("precision")
+           , bp::arg("extended"));
+    
+    e.def("toIso8601Ext"
+           , (string (Epochstamp::*)() const)(&Epochstamp::toIso8601Ext)
+           , bp::arg("precision")
+           , bp::arg("extended"));
+    
+    e.def("toFormattedString"
+           , (string (Epochstamp::*)(const string &) const)(&Epochstamp::toFormattedString)
+           , bp::arg("format") );
 }
 
 
