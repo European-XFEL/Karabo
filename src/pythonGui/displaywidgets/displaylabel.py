@@ -24,6 +24,7 @@ __all__ = ["DisplayLabel"]
 from displaywidget import DisplayWidget
 from karabo.karathon import *
 import decimal
+import re
 
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
@@ -134,9 +135,9 @@ class DisplayLabel(DisplayWidget):
 
                 index = value[i]                
                 if self.valueType is Types.VECTOR_FLOAT:
-                    index = decimal.Decimal(str(index)).quantize(decimal.Decimal('.000000'), rounding=decimal.ROUND_UP)
+                    index = float(decimal.Decimal(str(index)).quantize(decimal.Decimal('.0000000')))
                 elif self.valueType is Types.VECTOR_DOUBLE:
-                    index = decimal.Decimal(str(index))
+                    index = float(decimal.Decimal(str(index)))
                 valueAsString += str(index)
 
                 if i != (listLen-1):
@@ -145,13 +146,25 @@ class DisplayLabel(DisplayWidget):
             valueAsString += "]"
             value = valueAsString
         elif self.valueType is Types.FLOAT:
-            value = decimal.Decimal(str(value)).quantize(decimal.Decimal('.000000'))            
+            value = float(decimal.Decimal(str(value)).quantize(decimal.Decimal('.0000000')))
+            value = self.toScientificNotation(value)
+            
         elif self.valueType is Types.DOUBLE:
-            value = decimal.Decimal(str(value))
+            value = float(decimal.Decimal(str(value)))
+            
                     
         
         self.__label.setText(str(value))
         
+    def toScientificNotation(self, value):
+        strvalue = str(value)
+        if re.match('^[^\.]*?\d{6,}\.0+$', strvalue):
+            locale = self.__label.locale()
+            strvalue = locale.toString(value, 'e', 6)
+            if abs(value) >= 1000.0:
+                strvalue.remove(locale.groupSeparator())
+            return strvalue
+        else: return strvalue
 
     class Maker:
         def make(self, **params):
