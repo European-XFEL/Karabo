@@ -303,8 +303,8 @@ class  Hash_TestCase(unittest.TestCase):
             self.fail("test_getAs exception group 11: " + str(e))
             
         try:
-            h = Hash("a", 1234567890123456789L)
-            self.assertEqual(h.getAs("a", Types.STRING), "1234567890123456789", 'Should return "1234567890123456789" str')
+            h = Hash("a", 1234567890L)
+            self.assertEqual(h.getAs("a", Types.STRING), "1234567890", 'Should return "1234567890" str')
             self.assertEqual(h.getType("a"), Types.INT64)
             self.assertEqual(str(h.getType("a")), "INT64")
         except Exception,e:
