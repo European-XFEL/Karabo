@@ -60,8 +60,8 @@ class  Timestamp_TestCase(unittest.TestCase):
             ts01 = Timestamp(es01, Trainstamp())
             
             # Validate that "UNIVERSAL" format is corrected generated
-            pTimeConvertedStr01 = ts01.toFormattedString("%Y%m%dT%H%M%S");
-            self.assertEqual(pTimeConvertedStr01, "20121225T132536789333", "These strings must be equal");
+            pTimeConvertedStr01 = ts01.toFormattedString("%Y%m%dT%H%M%S.%f");
+            self.assertEqual(pTimeConvertedStr01, "20121225T132536.789333", "These strings must be equal");
             
             # Validate that default "user-friendly" format is corrected generated
             pTimeConvertedStr02 = ts01.toFormattedString();
