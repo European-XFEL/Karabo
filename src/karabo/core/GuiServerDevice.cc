@@ -273,12 +273,12 @@ namespace karabo {
                 if (it != m_channels.end()) {
                     it->second.insert(deviceId);
                 }
-                Hash h("type", "configurationChanged", "deviceId", deviceId);
-                Hash b;
-                Hash& tmp = b.bindReference<Hash>("device." + deviceId + ".configuration");
-                tmp = remote().get(deviceId);
-                preprocessImageData(tmp);
-                channel->write(h, b);
+//                Hash h("type", "configurationChanged", "deviceId", deviceId);
+//                Hash b;
+//                Hash& tmp = b.bindReference<Hash>("device." + deviceId + ".configuration");
+//                tmp = remote().get(deviceId);
+//                preprocessImageData(tmp);
+//                channel->write(h, b);
             } catch (const Exception& e) {
                 KARABO_LOG_ERROR << "Problem in onNewVisibleDevice(): " << e.userFriendlyMsg();
             }

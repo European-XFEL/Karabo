@@ -23,7 +23,7 @@ namespace karabo {
 
 
         DeviceClient::DeviceClient(const std::string& brokerType, const karabo::util::Hash& brokerConfiguration) :
-        m_isShared(false), m_internalTimeout(1000), m_isAdvancedMode(false) {
+        m_isShared(false), m_internalTimeout(2000), m_isAdvancedMode(false) {
 
             std::string ownInstanceId = generateOwnInstanceId();
             m_signalSlotable = boost::shared_ptr<SignalSlotable > (new SignalSlotable(ownInstanceId, brokerType, brokerConfiguration));
@@ -37,7 +37,7 @@ namespace karabo {
 
 
         DeviceClient::DeviceClient(const boost::shared_ptr<SignalSlotable>& signalSlotable) :
-        m_signalSlotable(signalSlotable), m_isShared(true), m_internalTimeout(1000), m_isAdvancedMode(false) {
+        m_signalSlotable(signalSlotable), m_isShared(true), m_internalTimeout(2000), m_isAdvancedMode(false) {
 
             this->setupSlots();
             this->checkMaster();
@@ -605,7 +605,7 @@ namespace karabo {
             } while (isThere && (nTrials < timeoutInSeconds));
 
             if (nTrials == timeoutInSeconds) {
-                string errorText("Device \"" + deviceId + "\" does not want to die in time. Try to kill it with a knife.");
+                string errorText("Device \"" + deviceId + "\" does not want to die in time. Try to kill it with a hammer.");
                 return std::make_pair(false, errorText);
             }
             return std::make_pair(true, deviceId);
@@ -636,7 +636,7 @@ namespace karabo {
             } while (isThere && (nTrials < timeoutInSeconds));
 
             if (nTrials == timeoutInSeconds) {
-                string errorText("Server \"" + serverId + "\" does not want to die in time. Try to kill it with a knife.");
+                string errorText("Server \"" + serverId + "\" does not want to die in time. Try to kill it with a hammer.");
                 return std::make_pair(false, errorText);
             }
             return std::make_pair(ok, reply);
