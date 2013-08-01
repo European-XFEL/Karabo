@@ -9,6 +9,9 @@
 #ifndef KARABO_UTIL_FROMLITERAL_HH
 #define	KARABO_UTIL_FROMLITERAL_HH
 
+#include <map>
+#include "Exception.hh"
+
 #include "FromType.hh"
 
 namespace karabo {
