@@ -81,7 +81,7 @@ mkdir -p $PACKAGEDIR
 cp -rf $DISTDIR/$CONF/$PLATFORM/lib $PACKAGEDIR/
 cp -rf $DISTDIR/$CONF/$PLATFORM/include $PACKAGEDIR/
 cp -rf ../../../extern/$PLATFORM $PACKAGEDIR/extern
-cp karaboDependencies-${PLATFORM}.pc $PACKAGEDIR/lib/karaboDependencies.pc
+cp karaboPackageDependencies-${PLATFORM}.pc $PACKAGEDIR/lib/karaboDependencies.pc
 
 # karathon
 cd ../karathon
