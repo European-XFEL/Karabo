@@ -195,8 +195,6 @@ namespace karabo {
                             KARABO_LOG_FRAMEWORK_DEBUG << "Registering copy-input channel of instance: " << instanceId;
                             m_copiedInputs.set(instanceId, info);
                         }
-                        KARABO_LOG_FRAMEWORK_DEBUG << "With meta-data: " << info;
-
                         onInputAvailable(instanceId); // Immediately register for reading
                     }
                 } else if (reason == "update") {
@@ -374,6 +372,7 @@ namespace karabo {
                 const TcpChannelPointer& tcpChannel = channelInfo.get<TcpChannelPointer > ("tcpChannel");
 
                 // Synchronous write as it takes no time here
+                KARABO_LOG_FRAMEWORK_DEBUG << "OUTPUT: Now writing out (local memory)";
                 tcpChannel->write(karabo::util::Hash("channelId", m_channelId, "chunkId", chunkId), std::vector<char>());
             }
 
