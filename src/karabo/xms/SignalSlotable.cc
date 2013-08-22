@@ -19,9 +19,6 @@
 #include <karabo/webAuth/Authenticator.hh>
 
 #include "SignalSlotable.hh"
-#include "karabo/tests/xms/SignalSlotable_Test.hh"
-
-
 
 namespace karabo {
     namespace xms {
