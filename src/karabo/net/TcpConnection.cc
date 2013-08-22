@@ -82,19 +82,23 @@ namespace karabo {
 
         TcpConnection::TcpConnection(const karabo::util::Hash& input) : Connection(input) {
 
-            this->setIOServiceType("Asio");
-
-            // Get the specific boost::asio::io_service object
-            m_boostIoServicePointer = getIOService()->castTo<AsioIOService > ()->getBoostIOService();
-
             input.get("hostname", m_hostname);
             input.get("port", m_port);
             input.get("type", m_connectionType);
             input.get("sizeofLength", m_sizeofLength);
             input.get("messageTagIsText", m_lengthIsTextFlag);
             input.get("manageAsyncData", m_manageAsyncData);
+        }
 
 
+        Channel::Pointer TcpConnection::start() {
+            
+            this->setIOServiceType("Asio");
+            // Get the specific boost::asio::io_service object
+            m_boostIoServicePointer = getIOService()->castTo<AsioIOService > ()->getBoostIOService();
+            
+            m_isAsyncConnect = false;
+            
             if (m_connectionType == "server") {
                 BoostTcpAcceptor acceptor(new ip::tcp::acceptor(*m_boostIoServicePointer));
                 m_acceptor = acceptor;
@@ -103,18 +107,12 @@ namespace karabo {
                 m_acceptor->set_option(ip::tcp::acceptor::reuse_address(true));
                 m_acceptor->bind(endpoint);
                 m_acceptor->listen();
+                return startServer();
             } else {
                 BoostTcpResolver resolv(new ip::tcp::resolver(*m_boostIoServicePointer));
                 m_resolver = resolv;
+                return startClient();
             }
-        }
-
-
-        Channel::Pointer TcpConnection::start() {
-            m_isAsyncConnect = false;
-            if (m_connectionType == "server")
-                return startServer();
-            return startClient();
         }
 
 
@@ -149,11 +147,28 @@ namespace karabo {
 
 
         void TcpConnection::startAsync(const ConnectionHandler& handler) {
+            
+            this->setIOServiceType("Asio");
+            // Get the specific boost::asio::io_service object
+            m_boostIoServicePointer = getIOService()->castTo<AsioIOService > ()->getBoostIOService();
+            
+            
             m_isAsyncConnect = true;
-            if (m_connectionType == "server")
+            if (m_connectionType == "server") {
+                BoostTcpAcceptor acceptor(new ip::tcp::acceptor(*m_boostIoServicePointer));
+                m_acceptor = acceptor;
+                ip::tcp::endpoint endpoint(ip::tcp::v4(), m_port);
+                m_acceptor->open(endpoint.protocol());
+                m_acceptor->set_option(ip::tcp::acceptor::reuse_address(true));
+                m_acceptor->bind(endpoint);
+                m_acceptor->listen();
                 startServer(handler);
-            else if (m_connectionType == "client")
+            }
+            else if (m_connectionType == "client") {
+                BoostTcpResolver resolv(new ip::tcp::resolver(*m_boostIoServicePointer));
+                m_resolver = resolv;
                 startClient(handler);
+            }
         }
 
 
