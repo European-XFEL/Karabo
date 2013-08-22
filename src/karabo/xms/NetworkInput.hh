@@ -165,13 +165,16 @@ namespace karabo {
                     // Prepare connection configuration given output channel information
                     karabo::util::Hash config = prepareConnectionConfiguration(outputChannelInfo);
                     karabo::net::Connection::Pointer tcpConnection = karabo::net::Connection::create(config); // Instantiate
-                    startConnection(tcpConnection, memoryLocation);
-
+                    
                     if (!m_tcpIoService) {
-                        m_tcpIoService = tcpConnection->getIOService(); // Save IO service for later sharing
-                        m_tcpIoServiceThread = boost::thread(boost::bind(&karabo::net::IOService::run, m_tcpIoService));
+                        // Get IO service and save for later sharing
+                        m_tcpIoService = tcpConnection->getIOService();
+                        // Establish connection (and define sub-type of server)
+                        startConnection(tcpConnection, memoryLocation);
+                        m_tcpIoServiceThread = boost::thread(boost::bind(&karabo::net::IOService::run, m_tcpIoService));    
                     } else {
                         tcpConnection->setIOService(m_tcpIoService);
+                        startConnection(tcpConnection, memoryLocation);
                     }
                 }
             }
@@ -215,27 +218,35 @@ namespace karabo {
             }
 
             void onTcpChannelRead(karabo::net::Channel::Pointer channel, const karabo::util::Hash& header, const std::vector<char>& data) {
-                boost::mutex::scoped_lock lock(m_mutex);
                 std::cout << "INPUT: Receiving " << data.size() << " bytes of data" << std::endl;
                 if (data.size() == 0 && header.has("channelId") && header.has("chunkId")) { // Local memory
-                    std::cout << "INPUT: reading from local memory" << std::endl;
+                    boost::mutex::scoped_lock lock(m_mutex);
+                    KARABO_LOG_FRAMEWORK_DEBUG << "INPUT: reading from local memory";
                     unsigned int channelId = header.get<unsigned int>("channelId");
                     unsigned int chunkId = header.get<unsigned int>("chunkId");
                     Memory<T>::writeChunk(Memory<T>::readChunk(channelId, chunkId), m_channelId, m_inactiveChunk);
-                } else {
-                    std::cout << "INPUT: reading from remote memory (over tcp)" << std::endl;
+                } else { // TCP data
+                    boost::mutex::scoped_lock lock(m_mutex);
+                    KARABO_LOG_FRAMEWORK_DEBUG << "INPUT: reading from remote memory (over tcp)";
                     Memory<T>::writeAsContiguosBlock(data, header, m_channelId, m_inactiveChunk);
                 }
-                if (Memory<T>::size(m_channelId, m_inactiveChunk) < this->getMinimumNumberOfData()) {
-                    std::cout << "INPUT: can read more data" << std::endl;
+                
+                m_mutex.lock();
+                size_t nInactiveData = Memory<T>::size(m_channelId, m_inactiveChunk);
+                size_t nActiveData = Memory<T>::size(m_channelId, m_activeChunk);
+                m_mutex.unlock();
+                
+                if (nInactiveData < this->getMinimumNumberOfData()) { // Not enough data, yet
+                    KARABO_LOG_FRAMEWORK_DEBUG << "INPUT: can read more data";
                     notifyOutputChannelForPossibleRead(channel);
-                } else if (Memory<T>::size(m_channelId, m_activeChunk) == 0) {
+                } else if (nActiveData == 0) { // Data complete, second pot still empty
                     this->swapBuffers();
-                    std::cout << "INPUT: swapped buffers, can read more" << std::endl;
+                    KARABO_LOG_FRAMEWORK_DEBUG << "INPUT: swapped buffers, can read more";
                     notifyOutputChannelForPossibleRead(channel);
-                    this->template triggerIOEvent< karabo::io::Input<T> >();
-                } else {
+                    this->template triggerIOEvent< karabo::io::Input<T> >(); // TODO, run this as thread !!!
+                } else { // Data complete on second pot, first one not needed anymore
                     if (m_updateOnNewInput) {
+                        boost::mutex::scoped_lock lock(m_mutex);
                         Memory<T>::clearChunk(m_channelId, m_activeChunk);
                         this->swapBuffers();
                     }
@@ -262,20 +273,24 @@ namespace karabo {
                 m_mutex.lock();
                 // Clear active chunk
                 Memory<T>::clearChunk(m_channelId, m_activeChunk);
+                // Swap buffers
                 std::swap(m_activeChunk, m_inactiveChunk);
-
+                // Fetch number of data pieces
+                size_t nActiveData = Memory<T>::size(m_channelId, m_activeChunk);
+                m_mutex.unlock();
+                
                 // Notify all connected output channels for another read
-                if (Memory<T>::size(m_channelId, m_activeChunk) >= this->getMinimumNumberOfData()) {
-                    m_mutex.unlock();
+                if (nActiveData >= this->getMinimumNumberOfData()) {
                     notifyOutputChannelsForPossibleRead();
-                } else {
-                    m_mutex.unlock();
-                    std::cout << "INPUT: Waiting for input to be available" << std::endl;
-                    while (Memory<T>::size(m_channelId, m_activeChunk) < this->getMinimumNumberOfData()) {
-                        boost::this_thread::sleep(boost::posix_time::millisec(500));
-                    }
-                    std::cout << "INPUT: Found input, continuing..." << std::endl;
                 }
+//                } else {
+//                    m_mutex.unlock();
+//                    std::cout << "INPUT: Waiting for input to be available" << std::endl;
+//                    while (Memory<T>::size(m_channelId, m_activeChunk) < this->getMinimumNumberOfData()) {
+//                        boost::this_thread::sleep(boost::posix_time::millisec(500));
+//                    }
+//                    std::cout << "INPUT: Found input, continuing..." << std::endl;
+//                }
             }
 
             void notifyOutputChannelsForPossibleRead() {

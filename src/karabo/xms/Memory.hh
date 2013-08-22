@@ -145,7 +145,7 @@ namespace karabo {
             }
 
             static void readAsContiguosBlock(std::vector<char>& buffer, karabo::util::Hash& header, const size_t channelIdx, const size_t chunkIdx) {
-                if (!m_serializer) m_serializer = karabo::io::BinarySerializer<DataType>::create("Default");
+                if (!m_serializer) m_serializer = karabo::io::BinarySerializer<DataType>::create("Bin");
                 const Data& data = m_cache[channelIdx][chunkIdx];
                 std::vector<char> serializedDataElement;
                 std::vector<unsigned int> byteSizes(data.size());
@@ -178,7 +178,7 @@ namespace karabo {
 
             static void writeAsContiguosBlock(const std::vector<char>& buffer, const karabo::util::Hash& header, const size_t channelIdx, const size_t chunkIdx) {
                 unsigned int nData = header.get<unsigned int>("nData");
-                if (!m_serializer) m_serializer = karabo::io::BinarySerializer<DataType>::create("Default");
+                if (!m_serializer) m_serializer = karabo::io::BinarySerializer<DataType>::create("Bin");
                 const std::vector<unsigned int>& byteSizes = header.get<std::vector<unsigned int> >("byteSizes");
                 Data& chunkData = m_cache[channelIdx][chunkIdx];
                 size_t chunkDataIdx = chunkData.size();
