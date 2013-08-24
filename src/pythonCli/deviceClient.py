@@ -8,6 +8,7 @@ from karabo.karathon import Hash
 from karabo.karathon import Schema
 from karabo.karathon import Authenticator
 from karabo.karathon import Timestamp
+import karabo.karathon as krb
 
 import IPython.core.ipapi
 import re
@@ -210,7 +211,27 @@ class DeviceClient(object):
         if timeoutInSeconds is None:
             return self.__client.instantiate(deviceServerInstanceId, classId, initialConfiguration)
         return self.__client.instantiate(deviceServerInstanceId, classId, initialConfiguration, timeoutInSeconds)
+
     
+    def instantiateProject(self, projectFile):
+        project = Hash()
+        krb.loadFromFile(project, projectFile)
+        devices = project.get("devices")
+        servers = self.getServers()
+        if len(servers) == 0:
+            print "No servers available to start any devices on..."
+            return
+        for device in devices:
+            if device.__iter__().next().getValue().get("serverId"):
+                server = device.__iter__().next().getValue().get("serverId")
+                if server in servers:
+                    self.__client.instantiate(server, device)
+                else:
+                    print "Skipping instantiation, server not found"
+            else:
+                print "Using default server to instantiate"
+                self.__client.instantiate(servers[0], device)
+            
     
     def instantiateNoWait(self, deviceServerInstanceId, classId, initialConfiguration = Hash()):
         self.__client.instantiateNoWait(deviceServerInstanceId, classId, initialConfiguration)
