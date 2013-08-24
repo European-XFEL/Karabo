@@ -39,27 +39,55 @@ namespace karabo {
             /*
              * InputChannelInfo (karabo::util::Hash)
              * 
+             *     instanceId (std::string)
              *     memoryLocation (std::string) [local/remote]
-             *     dataDistribution (std::string) [distribute/copy]
              *     tcpChannel (TcpChannelPointer)
+             *     onSlowness (std::string) [queue/drop/wait/throw]
+             *     queuedChunks (std::deque<int>)
              *
              */
             typedef karabo::util::Hash InputChannelInfo;
 
-            /*
-             * InputChannels (karabo::util::Hash)
-             * 
-             * instanceId (karabo::util::Hash)
-             *     InputChannelInfo (s.a.)
-             *
-             */
-            typedef karabo::util::Hash InputChannels;
+            typedef std::vector<InputChannelInfo> InputChannels;
 
-            typedef std::deque< InputChannelInfo > InputChannelQueue;
+            typedef std::deque< std::string > InputChannelQueue;
 
             typedef std::map<unsigned int, int> CurrentWritersCount;
 
             typedef std::map<TcpChannelPointer, unsigned int> TcpChannelPointer2ChunkId;
+
+            // Server related
+            unsigned int m_ownPort;
+
+            karabo::net::Connection::Pointer m_dataConnection;
+            //TcpChannelPointer m_dataChannel;
+            karabo::net::IOService::Pointer m_dataIOService;
+            boost::thread m_dataThread;
+
+            std::string m_onNoSharedInputChannelAvailable;
+            std::string m_distributionMode;
+
+            InputChannels m_registeredSharedInputs;
+            InputChannels m_registeredCopyInputs;
+
+            unsigned int m_sharedInputIndex;
+
+            InputChannelQueue m_shareNext;
+            InputChannelQueue m_copyNext;
+
+            boost::mutex m_nextInputMutex;
+            boost::mutex m_chunkIdsMutex;
+            boost::mutex m_currentWritersCountMutex;
+            boost::mutex m_onTcpReadMutex;
+            boost::mutex m_updateMutex;
+
+            // Async out
+            CurrentWritersCount m_currentWritersCount;
+            std::map<TcpChannelPointer, unsigned int> m_channel2ChunkId;
+            
+            unsigned int m_channelId;
+            unsigned int m_chunkId;
+          
 
 
         public:
@@ -81,18 +109,19 @@ namespace karabo {
             static void expectedParameters(karabo::util::Schema& expected) {
                 using namespace karabo::util;
 
+
+                STRING_ELEMENT(expected).key("distributionMode")
+                        .displayedName("Distribution Mode")
+                        .description("Describes the policy of how to fan-out data to multiple (shared) input channels")
+                        .options("load-balanced,round-robin")
+                        .assignmentOptional().defaultValue("load-balanced")
+                        .init()
+                        .commit();
+
                 STRING_ELEMENT(expected).key("noInputShared")
                         .displayedName("No Input (Shared)")
                         .description("What to do if currently no share-input channel is available for writing to")
                         .options("drop,queue,throw,wait")
-                        .assignmentOptional().defaultValue("wait")
-                        .init()
-                        .commit();
-
-                STRING_ELEMENT(expected).key("noInputCopy")
-                        .displayedName("No Input (Copy)")
-                        .description("What to do if one (or more) copy-input channel(s) are missing")
-                        .options("drop,throw,wait")
                         .assignmentOptional().defaultValue("wait")
                         .init()
                         .commit();
@@ -102,14 +131,13 @@ namespace karabo {
              * If this object is constructed using the factory/configuration system this method is called
              * @param input Validated (@see expectedParameters) and default-filled configuration
              */
-            NetworkOutput(const karabo::util::Hash& config) : karabo::io::Output<T>(config) {
+            NetworkOutput(const karabo::util::Hash& config) : karabo::io::Output<T>(config), m_sharedInputIndex(0) {
 
+                config.get("distributionMode", m_distributionMode);
                 config.get("noInputShared", m_onNoSharedInputChannelAvailable);
-                config.get("noInputCopy", m_onNoCopiedInputChannelAvailable);
 
-                std::cout << "NoInputShared: " << m_onNoSharedInputChannelAvailable << std::endl;
-                std::cout << "NoInputCopy: " << m_onNoCopiedInputChannelAvailable << std::endl;
-
+                KARABO_LOG_FRAMEWORK_DEBUG << "NoInputShared: " << m_onNoSharedInputChannelAvailable;
+               
                 // Memory related
                 m_channelId = Memory<T>::registerChannel();
                 m_chunkId = Memory<T>::registerChunk(m_channelId);
@@ -177,26 +205,34 @@ namespace karabo {
 
                 if (reason == "hello") {
 
-                    // Associate instanceId with channel
-                    if (message.has("instanceId") && message.has("memoryLocation") && message.has("dataDistribution")) {
+                    /* The hello message is expected to have:
+                     *     instanceId (std::string)
+                     *     memoryLocation (std::string) [local/remote]
+                     *     dataDistribution (std::string) [distribute/copy]
+                     *     onSlowness (std::string) [queue/drop/wait/error]
+                     */
 
-                        std::string instanceId = message.get<std::string > ("instanceId");
-                        std::string dataDistribution = message.get<std::string > ("dataDistribution");
-                        std::string memoryLocation = message.get<std::string > ("memoryLocation");
+                    std::string instanceId = message.get<std::string > ("instanceId");
+                    std::string memoryLocation = message.get<std::string > ("memoryLocation");
+                    std::string dataDistribution = message.get<std::string > ("dataDistribution");
+                    std::string onSlowness = message.get<std::string > ("onSlowness");
 
-                        karabo::util::Hash info;
-                        info.set("memoryLocation", memoryLocation);
-                        info.set("tcpChannel", channel);
+                    karabo::util::Hash info;
+                    info.set("instanceId", instanceId);
+                    info.set("memoryLocation", memoryLocation);
+                    info.set("tcpChannel", channel);
+                    info.set("onSlowness", onSlowness);
+                    info.set("queuedChunks", std::deque<int>());
 
-                        if (dataDistribution == "shared") {
-                            KARABO_LOG_FRAMEWORK_DEBUG << "Registering shared-input channel of instance: " << instanceId;
-                            m_sharedInputs.set(instanceId, info);
-                        } else {
-                            KARABO_LOG_FRAMEWORK_DEBUG << "Registering copy-input channel of instance: " << instanceId;
-                            m_copiedInputs.set(instanceId, info);
-                        }
-                        onInputAvailable(instanceId); // Immediately register for reading
+                    if (dataDistribution == "shared") {
+                        KARABO_LOG_FRAMEWORK_DEBUG << "Registering shared-input channel of instance: " << instanceId;
+                        m_registeredSharedInputs.push_back(info);
+                    } else {
+                        KARABO_LOG_FRAMEWORK_DEBUG << "Registering copy-input channel of instance: " << instanceId;
+                        m_registeredCopyInputs.push_back(info);
                     }
+                    onInputAvailable(instanceId); // Immediately register for reading
+
                 } else if (reason == "update") {
 
                     if (message.has("instanceId")) {
@@ -211,44 +247,97 @@ namespace karabo {
 
             void onInputAvailable(const std::string& instanceId) {
 
-                if (m_sharedInputs.has(instanceId)) {
-                    InputChannelInfo channelInfo = m_sharedInputs.get<karabo::util::Hash > (instanceId);
-                    pushShareNext(channelInfo);
-                    KARABO_LOG_FRAMEWORK_DEBUG << "OUTPUT: New (shared) input on instance " << instanceId << " available for writing ";
-                    if (m_finishedSharedChunkIds.size() > 0) {
-                        //this->autoDistributeQueue();
+                for (size_t i = 0; i < m_registeredSharedInputs.size(); ++i) {
+                    karabo::util::Hash& channelInfo = m_registeredSharedInputs[i];
+                    if (channelInfo.get<std::string>("instanceId") == instanceId) {
+                        if (!channelInfo.get<std::deque<int> >("queuedChunks").empty()) {
+                            KARABO_LOG_FRAMEWORK_DEBUG << "OUTPUT Writing queued (shared) data to instance " << instanceId;
+                            distributeQueue(channelInfo);
+                            return;
+                        }
+                        pushShareNext(instanceId);
+                        KARABO_LOG_FRAMEWORK_DEBUG << "OUTPUT New (shared) input on instance " << instanceId << " available for writing ";
+                        this->template triggerIOEvent<karabo::io::Output<T> >();
                         return;
                     }
-                } else if (m_copiedInputs.has(instanceId)) {
-                    InputChannelInfo channelInfo = m_copiedInputs.get<karabo::util::Hash > (instanceId);
-                    pushCopyNext(channelInfo);
-                    KARABO_LOG_FRAMEWORK_DEBUG << "OUTPUT: New (copied) input on instance " << instanceId << " available for writing ";
-                } else {
-                    KARABO_LOG_FRAMEWORK_DEBUG << "OUTPUT: LOW-LEVEL-DEBUG An input channel wants to connect, that was not registered before.";
                 }
-                this->template triggerIOEvent<karabo::io::Output<T> >();
+                for (size_t i = 0; i < m_registeredCopyInputs.size(); ++i) {
+                    karabo::util::Hash& channelInfo = m_registeredCopyInputs[i];
+                    if (channelInfo.get<std::string>("instanceId") == instanceId) {
+                        if (!channelInfo.get<std::deque<int> >("queuedChunks").empty()) {
+                            KARABO_LOG_FRAMEWORK_DEBUG << "OUTPUT Writing queued (copied) data to instance " << instanceId;
+                            copyQueue(channelInfo);
+                            return;
+                        }
+                        pushCopyNext(instanceId);
+                        KARABO_LOG_FRAMEWORK_DEBUG << "OUTPUT New (copied) input on instance " << instanceId << " available for writing ";
+                        this->template triggerIOEvent<karabo::io::Output<T> >();
+                        return;
+                    }
+                }
+                KARABO_LOG_FRAMEWORK_WARN << "OUTPUT An input channel wants to connect (" << instanceId << ") that was not registered before.";
+            }
+            
+            void distributeQueue(karabo::util::Hash& channelInfo) {
+                std::deque<int>& chunkIds = channelInfo.get<std::deque<int> >("queuedChunks");
+                int chunkId = chunkIds.front();
+                chunkIds.pop_front();
+                if (channelInfo.get<std::string > ("memoryLocation") == "local") distributeLocal(chunkId, channelInfo);
+                else distributeRemote(chunkId, channelInfo);
+            }
+            
+            void copyQueue(karabo::util::Hash& channelInfo) {
+                std::deque<int>& chunkIds = channelInfo.get<std::deque<int> >("queuedChunks");
+                int chunkId = chunkIds.front();
+                chunkIds.pop_front();
+                if (channelInfo.get<std::string > ("memoryLocation") == "local") copyLocal(chunkId, channelInfo);
+                else copyRemote(chunkId, channelInfo);
             }
 
-            void pushShareNext(const InputChannelInfo& info) {
+            void pushShareNext(const std::string& instanceId) {
                 boost::mutex::scoped_lock lock(m_nextInputMutex);
-                m_shareNext.push_back(info);
+                m_shareNext.push_back(instanceId);
             }
 
-            InputChannelInfo popShareNext() {
-                InputChannelInfo info = m_shareNext.front();
+            std::string popShareNext() {
+                boost::mutex::scoped_lock lock(m_nextInputMutex);
+                std::string info = m_shareNext.front();
                 m_shareNext.pop_front();
                 return info;
             }
 
-            void pushCopyNext(const InputChannelInfo& info) {
+            bool hasSharedInput(const std::string& instanceId) {
+                boost::mutex::scoped_lock lock(m_nextInputMutex);
+                return (std::find(m_shareNext.begin(), m_shareNext.end(), instanceId) != m_shareNext.end());
+            }
+
+            void eraseSharedInput(const std::string& instanceId) {
+                boost::mutex::scoped_lock lock(m_nextInputMutex);
+                InputChannelQueue::iterator it = std::find(m_shareNext.begin(), m_shareNext.end(), instanceId);
+                if (it != m_shareNext.end()) m_shareNext.erase(it);
+            }
+
+            void pushCopyNext(const std::string& info) {
                 boost::mutex::scoped_lock lock(m_nextInputMutex);
                 m_copyNext.push_back(info);
             }
 
-            InputChannelInfo popCopyNext() {
+            std::string popCopyNext() {
+                boost::mutex::scoped_lock lock(m_nextInputMutex);
                 InputChannelInfo info = m_copyNext.front();
                 m_copyNext.pop_front();
                 return info;
+            }
+
+            bool hasCopyInput(const std::string& instanceId) {
+                boost::mutex::scoped_lock lock(m_nextInputMutex);
+                return std::find(m_copyNext.begin(), m_copyNext.end(), instanceId) != m_copyNext.end();
+            }
+
+            void eraseCopyInput(const std::string& instanceId) {
+                boost::mutex::scoped_lock lock(m_nextInputMutex);
+                InputChannelQueue::iterator it = std::find(m_copyNext.begin(), m_copyNext.end(), instanceId);
+                if (it != m_copyNext.end()) m_copyNext.erase(it);
             }
 
             bool canCompute() const {
@@ -265,21 +354,13 @@ namespace karabo {
                 //                return true;
             }
 
-            void autoDistributeQueue() {
-                boost::mutex::scoped_lock lock(m_nextInputMutex);
-                KARABO_LOG_FRAMEWORK_DEBUG << "OUTPUT: Auto-distributing queued data";
-                unsigned int chunkId = popSharedChunkId();
-                InputChannelInfo channelInfo = popShareNext();
-                if (channelInfo.get<std::string > ("memoryLocation") == "local") {
-                    distributeLocal(chunkId, channelInfo);
-                } else {
-                    distributeRemote(chunkId, channelInfo);
-                }
-            }
-
             void update() {
 
-                KARABO_LOG_FRAMEWORK_DEBUG << "OUTPUT: update";
+                KARABO_LOG_FRAMEWORK_DEBUG << "OUTPUT update()";
+                
+                // Register new mutex
+                
+                registerWritersOnChunk(m_chunkId);
 
                 // Distribute chunk(s)
                 distribute();
@@ -289,101 +370,121 @@ namespace karabo {
 
                 m_chunkId = Memory<T>::registerChunk(m_channelId);
             }
+            
+            void registerWritersOnChunk(int chunkId) {
+                
+            }
 
             void distribute() {
 
-                bool goOn = checkAndHandleSharedInputs();
+                // If no shared input channels are registered at all, we do not go on
+                if (m_registeredSharedInputs.empty()) return;
 
-                if (goOn) {
-                    boost::mutex::scoped_lock lock(m_nextInputMutex);
+                // Next input
+                m_sharedInputIndex = (++m_sharedInputIndex) % m_registeredSharedInputs.size();
 
-                    KARABO_LOG_FRAMEWORK_DEBUG << "OUTPUT: finishedChunks " << m_finishedSharedChunkIds.size() << " shareNext " << m_shareNext.size();
-                    while (!m_finishedSharedChunkIds.empty() && !m_shareNext.empty()) {
+                if (m_distributionMode == "round-robin") {
 
-                        unsigned int chunkId = popSharedChunkId();
-                        InputChannelInfo channelInfo = popShareNext();
+                    karabo::util::Hash channelInfo = m_registeredSharedInputs[m_sharedInputIndex];
+                    std::string instanceId = channelInfo.get<std::string>("instanceId");
 
+                    if (hasSharedInput(instanceId)) { // Found
+                        eraseSharedInput(instanceId);
                         if (channelInfo.get<std::string > ("memoryLocation") == "local") {
-                            distributeLocal(chunkId, channelInfo);
+                            distributeLocal(m_chunkId, channelInfo);
                         } else {
-                            distributeRemote(chunkId, channelInfo);
+                            distributeRemote(m_chunkId, channelInfo);
+                        }
+                    } else { // Not found
+                        if (m_onNoSharedInputChannelAvailable == "drop") {
+                            std::cout << "OUTPUT Dropping (shared) data package with chunkId: " << m_chunkId << std::endl;
+
+                        } else if (m_onNoSharedInputChannelAvailable == "throw") {
+                            throw KARABO_IO_EXCEPTION("Can not write data because no (shared) input is available");
+
+                        } else if (m_onNoSharedInputChannelAvailable == "queue") {
+                            std::cout << "OUTPUT Queuing (shared) data package with chunkId: " << m_chunkId << std::endl;
+                            // TODO Mutex !!!
+                            m_registeredSharedInputs[m_sharedInputIndex].get<std::deque<int> >("queuedChunks").push_back(m_chunkId);
+
+                        } else if (m_onNoSharedInputChannelAvailable == "wait") {
+                            std::cout << "OUTPUT Waiting for available (shared) input channel..." << std::endl;
+                            while (!hasSharedInput(instanceId)) {
+                                boost::this_thread::sleep(boost::posix_time::millisec(500));
+                            }
+                            std::cout << "OUTPUT found (shared) input channel after waiting, distributing now" << std::endl;
+
+                        } else {
+                            // We should never be here!!
+                            throw KARABO_LOGIC_EXCEPTION("Output channel case internally misconfigured, ask BH");
+                        }
+                    }
+                } else if (m_distributionMode == "load-balanced") {
+                    if (!m_shareNext.empty()) { // Found
+                        std::string instanceId = popShareNext();
+                        for (size_t i = 0; i < m_registeredSharedInputs.size(); ++i) {
+                            const karabo::util::Hash& channelInfo = m_registeredSharedInputs[i];
+                            if (instanceId == channelInfo.get<std::string>("instanceId")) {
+                                if (channelInfo.get<std::string > ("memoryLocation") == "local") {
+                                    distributeLocal(m_chunkId, channelInfo);
+                                } else {
+                                    distributeRemote(m_chunkId, channelInfo);
+                                }
+                                break;
+                            }
+                        }
+                    } else { // Not found
+                        if (m_onNoSharedInputChannelAvailable == "drop") {
+                            std::cout << "OUTPUT Dropping (shared) data package with chunkId: " << m_chunkId << std::endl;
+                        } else if (m_onNoSharedInputChannelAvailable == "throw") {
+                            throw KARABO_IO_EXCEPTION("Can not write data because no (shared) input is available");
+                        } else if (m_onNoSharedInputChannelAvailable == "queue") {
+                            std::cout << "OUTPUT Queuing (shared) data package with chunkId: " << m_chunkId << std::endl;
+                             // TODO Mutex !!!
+                            m_registeredSharedInputs[m_sharedInputIndex].get<std::deque<int> >("queuedChunks").push_back(m_chunkId);
+                        } else if (m_onNoSharedInputChannelAvailable == "wait") {
+                            std::cout << "OUTPUT Waiting for available (shared) input channel..." << std::endl;
+                            while (m_shareNext.empty()) {
+                                boost::this_thread::sleep(boost::posix_time::millisec(500));
+                            }
+                            std::cout << "OUTPUT found (shared) input channel after waiting, distributing now" << std::endl;
+                            std::string instanceId = popShareNext();
+                            for (size_t i = 0; i < m_registeredSharedInputs.size(); ++i) {
+                                const karabo::util::Hash& channelInfo = m_registeredSharedInputs[i];
+                                if (instanceId == channelInfo.get<std::string>("instanceId")) {
+                                    if (channelInfo.get<std::string > ("memoryLocation") == "local") {
+                                        distributeLocal(m_chunkId, channelInfo);
+                                    } else {
+                                        distributeRemote(m_chunkId, channelInfo);
+                                    }
+                                    break;
+                                }
+                            }
+                        } else {
+                            // We should never be here!!
+                            throw KARABO_LOGIC_EXCEPTION("Output channel case internally misconfigured, ask BH");
                         }
                     }
                 }
             }
 
-            bool checkAndHandleSharedInputs() {
-
-                // If no shared input channels are registered at all, we do not go on
-                if (m_sharedInputs.empty()) return false;
-
-                // If shared inputs channels are available for distribution go on
-                if (!m_shareNext.empty()) {
-                    pushSharedChunkId(m_chunkId);
-                    return true;
-                }
-
-                // There are shared inputs registered but currently not available -> react as configured
-                if (m_onNoSharedInputChannelAvailable == "drop") {
-                    std::cout << "OUTPUT: Dropping (shared) data package with chunkId: " << m_chunkId << std::endl;
-                    return false;
-                }
-
-                if (m_onNoSharedInputChannelAvailable == "throw") {
-                    throw KARABO_IO_EXCEPTION("Can not write accumulated data because no (shared) input is available");
-                    return false;
-                }
-
-                if (m_onNoSharedInputChannelAvailable == "queue") {
-                    std::cout << "OUTPUT: Queuing (shared) data package with chunkId: " << m_chunkId << std::endl;
-                    pushSharedChunkId(m_chunkId);
-                    return false;
-                }
-
-                if (m_onNoSharedInputChannelAvailable == "wait") {
-                    std::cout << "OUTPUT: Waiting for available (shared) input channel..." << std::endl;
-                    pushSharedChunkId(m_chunkId);
-                    while (m_shareNext.empty()) {
-                        boost::this_thread::sleep(boost::posix_time::millisec(500));
-                    }
-                    std::cout << "OUTPUT: found (shared) input channel after waiting, distributing now" << std::endl;
-                    return true;
-                }
-
-                // We should never be here!!
-                throw KARABO_LOGIC_EXCEPTION("Output channel case internally misconfigured, ask BH");
-                return false;
-            }
-
-            void pushSharedChunkId(const unsigned int& chunkId) {
-                boost::mutex::scoped_lock lock(m_chunkIdsMutex);
-                m_finishedSharedChunkIds.push_back(chunkId);
-            }
-
-            unsigned int popSharedChunkId() {
-                boost::mutex::scoped_lock lock(m_chunkIdsMutex);
-                unsigned int chunkId = m_finishedSharedChunkIds.front();
-                m_finishedSharedChunkIds.pop_front();
-                return chunkId;
-            }
-
-            void distributeLocal(const unsigned int& chunkId, const InputChannelInfo& channelInfo) {
+            void distributeLocal(const unsigned int& chunkId, const InputChannelInfo & channelInfo) {
 
                 const TcpChannelPointer& tcpChannel = channelInfo.get<TcpChannelPointer > ("tcpChannel");
 
                 // Synchronous write as it takes no time here
-                KARABO_LOG_FRAMEWORK_DEBUG << "OUTPUT: Now writing out (local memory)";
+                KARABO_LOG_FRAMEWORK_DEBUG << "OUTPUT Now writing out (local memory)";
                 tcpChannel->write(karabo::util::Hash("channelId", m_channelId, "chunkId", chunkId), std::vector<char>());
             }
 
-            void distributeRemote(const unsigned int& chunkId, const InputChannelInfo& channelInfo) {
+            void distributeRemote(const unsigned int& chunkId, const InputChannelInfo & channelInfo) {
 
                 const TcpChannelPointer& tcpChannel = channelInfo.get<TcpChannelPointer > ("tcpChannel");
 
                 registerAsyncWrite(tcpChannel, chunkId);
                 const std::pair< std::vector<char>, karabo::util::Hash>& entry = getAsyncWriteData(chunkId);
-                KARABO_LOG_FRAMEWORK_DEBUG << "OUTPUT: Going to distribute " << entry.first.size() << " bytes of data";
-                KARABO_LOG_FRAMEWORK_DEBUG << "OUTPUT: With header: " << entry.second;
+                KARABO_LOG_FRAMEWORK_DEBUG << "OUTPUT Going to distribute " << entry.first.size() << " bytes of data";
+                KARABO_LOG_FRAMEWORK_DEBUG << "OUTPUT With header: " << entry.second;
                 tcpChannel->writeAsyncHashVector(entry.second, entry.first, boost::bind(&karabo::xms::NetworkOutput<T>::onWriteCompleted, this, _1));
                 //m_activeTcpChannel->write(entry.first, entry.second);
 
@@ -421,7 +522,7 @@ namespace karabo {
                     if (m_currentWritersCount[chunkId] == 0) {
                         Memory<T>::clearContiguousBlockCache(m_channelId, chunkId);
                         m_currentWritersCount.erase(chunkId);
-                        std::cout << "OUTPUT: Cleared asynchronous write cache" << std::endl;
+                        std::cout << "OUTPUT Cleared asynchronous write cache" << std::endl;
                         // TODO Delete memory resident data
                         //Memory<T>::clearChunk(m_channelId, chunkId);
                     }
@@ -432,75 +533,44 @@ namespace karabo {
 
             void copy() {
 
-                bool goOn = checkAndHandleCopiedInputs();
+                // If no copied input channels are registered at all, we do not go on
+                if (m_registeredCopyInputs.empty()) return;
 
-                if (goOn) {
-                    boost::mutex::scoped_lock lock(m_nextInputMutex);
+                for (size_t i = 0; i < m_registeredCopyInputs.size(); ++i) {
 
-                    unsigned int chunkId = popCopiedChunkId();
+                    karabo::util::Hash channelInfo = m_registeredCopyInputs[i];
+                    std::string instanceId = channelInfo.get<std::string>("instanceId");
+                    std::string onSlowness = channelInfo.get<std::string>("onSlowness");
 
-                    while (!m_copyNext.empty()) {
-                        InputChannelInfo channelInfo = popCopyNext();
+                    if (hasCopyInput(instanceId)) {
+                        eraseCopyInput(instanceId);
                         if (channelInfo.get<std::string > ("memoryLocation") == "local") {
-                            copyLocal(chunkId, channelInfo);
+                            copyLocal(m_chunkId, channelInfo);
                         } else {
-                            copyRemote(chunkId, channelInfo);
+                            copyRemote(m_chunkId, channelInfo);
+                        }
+                    } else if (onSlowness == "drop") {
+                        KARABO_LOG_FRAMEWORK_DEBUG << "OUTPUT Dropping (copied) data package for " << instanceId;
+                    } else if (onSlowness == "throw") {
+                        throw KARABO_IO_EXCEPTION("Can not write (copied) data because input channel of " + instanceId + " was too late");
+                    } else if (onSlowness == "queue") {
+                        KARABO_LOG_FRAMEWORK_DEBUG << "OUTPUT Queuing (copied) data package for " << instanceId;
+                        m_registeredCopyInputs[i].get<std::deque<int> >("queuedChunks").push_back(m_chunkId);
+                    } else if (onSlowness == "wait") {
+                        KARABO_LOG_FRAMEWORK_DEBUG << "Data (copied) is waiting for input channel of " << instanceId << " to be available";
+                        while (!hasCopyInput(instanceId)) boost::this_thread::sleep(boost::posix_time::millisec(500));
+                        KARABO_LOG_FRAMEWORK_DEBUG << "Found channel, copying now";
+                        eraseCopyInput(instanceId);
+                        if (channelInfo.get<std::string > ("memoryLocation") == "local") {
+                            copyLocal(m_chunkId, channelInfo);
+                        } else {
+                            copyRemote(m_chunkId, channelInfo);
                         }
                     }
                 }
             }
 
-            bool checkAndHandleCopiedInputs() {
-
-                // If no copied input channels are registered at all, we do not go on
-                if (m_copiedInputs.empty()) return false;
-
-                // If all copied inputs channels are available for distribution go on
-                if (m_copyNext.size() == m_copiedInputs.size()) {
-                    pushCopiedChunkId(m_chunkId);
-                    return true;
-                }
-
-                // React as configured
-                if (m_onNoCopiedInputChannelAvailable == "drop") {
-                    std::cout << "Dropping (copied) data package for " << m_copiedInputs.size() - m_copyNext.size() << " connected inputs" << std::endl;
-                    pushCopiedChunkId(m_chunkId);
-                    return true;
-                }
-                if (m_onNoCopiedInputChannelAvailable == "throw") {
-                    throw KARABO_IO_EXCEPTION("Can not write accumulated data because not all (shared) inputs are available");
-                    return false;
-                }
-                //                    if (m_onNoCopiedInputChannelAvailable == "queue") {
-                //                        std::cout << "Queuing (copied) data package with chunkId: " << m_chunkId << std::endl;
-                //                        return false;
-                //                    }
-                if (m_onNoCopiedInputChannelAvailable == "wait") {
-                    std::cout << "Waiting for all copy input channels to be available... " << std::flush;
-                    pushCopiedChunkId(m_chunkId);
-                    while (m_copyNext.size() != m_copiedInputs.size()) {
-                        boost::this_thread::sleep(boost::posix_time::millisec(500));
-                    }
-                    std::cout << "found all, copying now" << std::endl;
-                    return true;
-                }
-                return false;
-
-            }
-
-            void pushCopiedChunkId(const unsigned int& chunkId) {
-                boost::mutex::scoped_lock lock(m_chunkIdsMutex);
-                m_finishedCopiedChunkIds.push_back(chunkId);
-            }
-
-            unsigned int popCopiedChunkId() {
-                boost::mutex::scoped_lock lock(m_chunkIdsMutex);
-                unsigned int chunkId = m_finishedCopiedChunkIds.front();
-                m_finishedCopiedChunkIds.pop_front();
-                return chunkId;
-            }
-
-            void copyLocal(const unsigned int& chunkId, const InputChannelInfo& channelInfo) {
+            void copyLocal(const unsigned int& chunkId, const InputChannelInfo & channelInfo) {
                 const TcpChannelPointer& tcpChannel = channelInfo.get<TcpChannelPointer > ("tcpChannel");
 
                 // Synchronous write as it takes no time here
@@ -508,58 +578,16 @@ namespace karabo {
                 tcpChannel->write(karabo::util::Hash("channelId", m_channelId, "chunkId", chunkId), std::vector<char>());
             }
 
-            void copyRemote(const unsigned int& chunkId, const InputChannelInfo& channelInfo) {
+            void copyRemote(const unsigned int& chunkId, const InputChannelInfo & channelInfo) {
 
                 const TcpChannelPointer& tcpChannel = channelInfo.get<TcpChannelPointer > ("tcpChannel");
 
                 registerAsyncWrite(tcpChannel, chunkId);
                 const std::pair< std::vector<char>, karabo::util::Hash>& entry = getAsyncWriteData(chunkId);
-                std::cout << "OUTPUT: Going to copy " << entry.first.size() << " bytes of data" << std::endl;
-                std::cout << "OUTPUT: With header: " << entry.second << std::endl;
+                std::cout << "OUTPUT Going to copy " << entry.first.size() << " bytes of data" << std::endl;
+                std::cout << "OUTPUT With header: " << entry.second << std::endl;
                 tcpChannel->writeAsyncHashVector(entry.second, entry.first, boost::bind(&karabo::xms::NetworkOutput<T>::onWriteCompleted, this, _1));
             }
-
-
-        private: // members
-
-            // Server related
-            unsigned int m_ownPort;
-
-            karabo::net::Connection::Pointer m_dataConnection;
-            //TcpChannelPointer m_dataChannel;
-            karabo::net::IOService::Pointer m_dataIOService;
-            boost::thread m_dataThread;
-
-            std::string m_onNoSharedInputChannelAvailable;
-            std::string m_onNoCopiedInputChannelAvailable;
-
-            InputChannels m_sharedInputs;
-            InputChannels m_copiedInputs;
-
-            InputChannelQueue m_shareNext;
-            InputChannelQueue m_copyNext;
-
-            boost::mutex m_nextInputMutex;
-            boost::mutex m_chunkIdsMutex;
-            boost::mutex m_currentWritersCountMutex;
-            boost::mutex m_onTcpReadMutex;
-            boost::mutex m_updateMutex;
-
-            // Async out
-            CurrentWritersCount m_currentWritersCount;
-            std::map<TcpChannelPointer, unsigned int> m_channel2ChunkId;
-
-
-            // Copy out
-            std::vector<char> m_buffer;
-            karabo::util::Hash m_header;
-            int m_count;
-
-            unsigned int m_channelId;
-            unsigned int m_chunkId;
-            std::deque<unsigned int> m_finishedSharedChunkIds;
-            std::deque<unsigned int> m_finishedCopiedChunkIds;
-
         };
 
     }

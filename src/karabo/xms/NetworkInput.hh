@@ -77,6 +77,14 @@ namespace karabo {
                         .assignmentOptional().defaultValue("copy")
                         .reconfigurable()
                         .commit();
+                
+                STRING_ELEMENT(expected).key("onSlowness")
+                        .displayedName("On Slowness")
+                        .description("Policy for what to do if this input is too slow for the fed data rate (only used in copy mode)")
+                        .options("drop,throw,wait,queue")
+                        .assignmentOptional().defaultValue("wait")
+                        .reconfigurable()
+                        .commit();
 
                 UINT32_ELEMENT(expected).key("minData")
                         .displayedName("Minimum number input packets")
@@ -113,6 +121,7 @@ namespace karabo {
                 config.get("dataDistribution", m_dataDistribution);
                 config.get("minData", m_minData);
                 config.get("updateOnNewInput", m_updateOnNewInput);
+                config.get("onSlowness", m_onSlowness);
 
                 m_channelId = Memory<T>::registerChannel();
                 m_activeChunk = Memory<T>::registerChunk(m_channelId);
@@ -202,7 +211,7 @@ namespace karabo {
                     connected = true;
                 }
                 channel->setErrorHandler(boost::bind(&karabo::xms::NetworkInput<T>::onTcpChannelError, this, _1, _2));
-                channel->write(karabo::util::Hash("reason", "hello", "instanceId", this->getInstanceId(), "memoryLocation", memoryLocation, "dataDistribution", m_dataDistribution)); // Say hello!
+                channel->write(karabo::util::Hash("reason", "hello", "instanceId", this->getInstanceId(), "memoryLocation", memoryLocation, "dataDistribution", m_dataDistribution, "onSlowness", m_onSlowness)); // Say hello!
                 channel->readAsyncHashVector(boost::bind(&karabo::xms::NetworkInput<T>::onTcpChannelRead, this, _1, _2, _3));
 
                 m_tcpConnections.insert(connection); // TODO check whether really needed
@@ -310,6 +319,7 @@ namespace karabo {
             std::string m_dataDistribution;
             unsigned int m_minData;
             bool m_updateOnNewInput;
+            std::string m_onSlowness;
 
             unsigned int m_channelId;
 
