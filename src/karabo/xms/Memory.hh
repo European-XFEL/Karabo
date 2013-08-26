@@ -198,6 +198,7 @@ namespace karabo {
             }
 
             static void clearChannel(const size_t channelIdx) {
+                boost::mutex::scoped_lock lock(m_accessMutex);
                 m_cache[channelIdx].clear();
                 m_channelStatus[channelIdx] = EMPTY;
                 for (size_t i = 0; i < m_chunkStatus[channelIdx].size(); ++i) {
@@ -206,8 +207,9 @@ namespace karabo {
             }
 
             static void clearChunk(const size_t channelIdx, const size_t chunkIdx) {
+                boost::mutex::scoped_lock lock(m_accessMutex);
                 m_cache[channelIdx][chunkIdx].clear();
-                m_chunkStatus[chunkIdx][chunkIdx] = EMPTY;
+                m_chunkStatus[channelIdx][chunkIdx] = EMPTY;
             }
 
             static size_t size(const size_t channelIdx, const size_t chunkIdx) {
@@ -376,6 +378,7 @@ namespace karabo {
             }
 
             static void clearChannel(const size_t channelIdx) {
+                boost::mutex::scoped_lock lock(m_accessMutex);
                 m_cache[channelIdx].clear();
                 m_channelStatus[channelIdx] = EMPTY;
                 for (size_t i = 0; i < m_chunkStatus[channelIdx].size(); ++i) {
@@ -384,8 +387,9 @@ namespace karabo {
             }
 
             static void clearChunk(const size_t channelIdx, const size_t chunkIdx) {
+                boost::mutex::scoped_lock lock(m_accessMutex);
                 m_cache[channelIdx][chunkIdx].clear();
-                m_chunkStatus[chunkIdx][chunkIdx] = EMPTY;
+                m_chunkStatus[channelIdx][chunkIdx] = EMPTY;
             }
 
             static size_t size(const size_t channelIdx, const size_t chunkIdx) {
