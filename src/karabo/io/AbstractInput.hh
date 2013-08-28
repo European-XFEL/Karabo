@@ -48,6 +48,10 @@ namespace karabo {
             void registerIOEventHandler(const boost::function<void (const boost::shared_ptr<InputType>&) >& ioEventHandler) {
                 m_ioEventHandler = ioEventHandler;
             }
+            
+            void registerEndOfStreamEventHandler(const boost::function<void ()>& endOfStreamEventHandler) {
+                m_endOfStreamEventHandler = endOfStreamEventHandler;
+            }
 
             virtual bool needsDeviceConnection() const { // TODO Check if we can get rid of this
                 return false;
@@ -55,6 +59,7 @@ namespace karabo {
 
             virtual std::vector<karabo::util::Hash> getConnectedOutputChannels() {
                 return std::vector<karabo::util::Hash > ();
+                std::vector<int> v;
             }
 
             virtual void connectNow(const karabo::util::Hash& outputChannelInfo) {
@@ -76,11 +81,16 @@ namespace karabo {
             void triggerIOEvent() {
                 if (!m_ioEventHandler.empty()) (boost::any_cast < boost::function<void (const boost::shared_ptr<InputType>&) > >(m_ioEventHandler))(boost::static_pointer_cast< InputType >(shared_from_this()));
             }
+            
+            void triggerEndOfStreamEvent() {
+                if (!m_endOfStreamEventHandler.empty()) m_endOfStreamEventHandler();
+            }
 
         private:
 
             std::string m_instanceId;
             boost::any m_ioEventHandler;
+            boost::function<void ()> m_endOfStreamEventHandler;
 
         };
     }

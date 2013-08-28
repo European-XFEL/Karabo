@@ -228,6 +228,12 @@ namespace karabo {
 
             void onTcpChannelRead(karabo::net::Channel::Pointer channel, const karabo::util::Hash& header, const std::vector<char>& data) {
                 std::cout << "INPUT: Receiving " << data.size() << " bytes of data" << std::endl;
+                if (header.has("endOfStream")) {
+                    if (this->getMinimumNumberOfData() == 0) this->template triggerIOEvent< karabo::io::Input<T> >();
+                    this->triggerEndOfStreamEvent();
+                    channel->readAsyncHashVector(boost::bind(&karabo::xms::NetworkInput<T>::onTcpChannelRead, this, _1, _2, _3));
+                    return;
+                }
                 if (data.size() == 0 && header.has("channelId") && header.has("chunkId")) { // Local memory
                     boost::mutex::scoped_lock lock(m_mutex);
                     KARABO_LOG_FRAMEWORK_DEBUG << "INPUT: reading from local memory";
