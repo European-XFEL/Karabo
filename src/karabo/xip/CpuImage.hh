@@ -414,20 +414,6 @@ namespace karabo {
             }
 
             /**
-             * Assignment operator.
-             * If \p expression is a formula or a list of values, the image pixels are filled
-             * according to the expression and the image size is not modified.
-             * If \p expression is a filename, the image is replaced by the input file data
-             * (so image size is modified).
-             * @param expression
-             * @return Image
-             */
-            CpuImage& operator=(const std::string& expression) {
-                m_cimg.operator=(expression.c_str());
-                return *this;
-            }
-
-            /**
              * Operator=().
              * Assignment operator.
              * If instance image is non-shared, replace the instance image by a copy of the argument image.
@@ -454,11 +440,6 @@ namespace karabo {
             template <typename U>
             CpuImage<TPix>& operator+=(const U& val) {
                 m_cimg.operator+=(val);
-                return *this;
-            }
-
-            CpuImage& operator+=(const std::string& expression) {
-                m_cimg.operator+=(expression.c_str());
                 return *this;
             }
 
@@ -489,11 +470,6 @@ namespace karabo {
                 return *this;
             }
 
-            CpuImage& operator*=(const std::string& expression) {
-                m_cimg.operator*=(expression.c_str());
-                return *this;
-            }
-
             template <class UPix>
             CpuImage& operator*=(const CpuImage<UPix>& image) {
                 return ((*this) * image).moveTo(*this);
@@ -502,11 +478,7 @@ namespace karabo {
             template<class UPix>
             CpuImage<typename ci::cimg::superset<TPix, UPix>::type> operator*(const UPix value) {
                 return CpuImage<typename ci::cimg::superset<TPix, UPix>::type > (*this) *= value;
-            }
-
-            CpuImage<double> operator*(const std::string& expression) {
-                return CpuImage<double>(*this) *= expression;
-            }
+            }          
 
             template <class UPix>
             CpuImage<typename ci::cimg::superset<TPix, UPix>::type> operator*(const CpuImage<UPix>& image) const {
@@ -517,12 +489,7 @@ namespace karabo {
             CpuImage& operator/=(const UPix value) {
                 m_cimg.operator/=(value);
                 return *this;
-            }
-
-            CpuImage& operator/=(const std::string& expression) {
-                m_cimg.operator/=(expression.c_str());
-                return *this;
-            }
+            }           
 
             template <class UPix>
             CpuImage& operator/=(const CpuImage<UPix>& image) {
@@ -533,11 +500,7 @@ namespace karabo {
             CpuImage<typename ci::cimg::superset<TPix, UPix>::type> operator/(const UPix value) {
                 return CpuImage<typename ci::cimg::superset<TPix, UPix>::type > (*this) /= value;
             }
-
-            CpuImage<double> operator/(const std::string& expression) {
-                return CpuImage<double>(*this) /= expression;
-            }
-
+          
             template <class UPix>
             CpuImage<typename ci::cimg::superset<TPix, UPix>::type> operator/(const CpuImage<UPix>& image) const {
                 return CpuImage<typename ci::cimg::superset<TPix, UPix>::type > (m_cimg.operator/(image.getCImg()));

@@ -290,20 +290,6 @@ namespace karabo {
             }
 
             /**
-             * Assignment operator.
-             * If \p expression is a formula or a list of values, the image pixels are filled
-             * according to the expression and the image size is not modified.
-             * If \p expression is a filename, the image is replaced by the input file data
-             * (so image size is modified).
-             * @param expression
-             * @return Image
-             */
-            virtual AbstractImage& operator=(const std::string& expression) {
-                KARABO_NOT_SUPPORTED_EXCEPTION("Function call not supported by the underlying image implementation");
-                return *this;
-            }
-
-            /**
              * Operator=().
              * Assignment operator.
              * Replace the image content by the content of the argument image.
@@ -323,12 +309,7 @@ namespace karabo {
             virtual AbstractImage& operator+=(const TPix& value) {
                 KARABO_NOT_SUPPORTED_EXCEPTION("Function call not supported by the underlying image implementation");
                 return *this;
-            }
-
-            virtual AbstractImage& operator+=(const std::string& expression) {
-                KARABO_NOT_SUPPORTED_EXCEPTION("Function call not supported by the underlying image implementation");
-                return *this;
-            }
+            }         
 
             virtual AbstractImage& operator+=(const AbstractImage& image) {
                 KARABO_NOT_SUPPORTED_EXCEPTION("Function call not supported by the underlying image implementation");
@@ -339,11 +320,6 @@ namespace karabo {
             //}
 
             virtual AbstractImage& operator+(const TPix& value) {
-                KARABO_NOT_SUPPORTED_EXCEPTION("Function call not supported by the underlying image implementation");
-                return *this;
-            }
-
-            virtual AbstractImage& operator+(const std::string& expression) {
                 KARABO_NOT_SUPPORTED_EXCEPTION("Function call not supported by the underlying image implementation");
                 return *this;
             }
@@ -362,11 +338,6 @@ namespace karabo {
                 return *this;
             }
 
-            virtual AbstractImage& operator-=(const std::string& expression) {
-                KARABO_NOT_SUPPORTED_EXCEPTION("Function call not supported by the underlying image implementation");
-                return *this;
-            }
-
             virtual AbstractImage& operator-=(const AbstractImage& image) {
                 KARABO_NOT_SUPPORTED_EXCEPTION("Function call not supported by the underlying image implementation");
                 return *this;
@@ -376,12 +347,7 @@ namespace karabo {
                 KARABO_NOT_SUPPORTED_EXCEPTION("Function call not supported by the underlying image implementation");
                 return *this;
             }
-
-            virtual AbstractImage& operator-(const std::string& expression) {
-                KARABO_NOT_SUPPORTED_EXCEPTION("Function call not supported by the underlying image implementation");
-                return *this;
-            }
-
+         
             virtual AbstractImage& operator-(const AbstractImage& image) {
                 KARABO_NOT_SUPPORTED_EXCEPTION("Function call not supported by the underlying image implementation");
                 return *this;
