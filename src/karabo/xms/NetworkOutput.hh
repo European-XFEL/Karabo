@@ -344,21 +344,17 @@ namespace karabo {
 
             bool canCompute() const {
                 return true;
-                //                //boost::mutex::scoped_lock lock(m_nextInputMutex);
-                //                return !m_shareNext.empty();
-                //                        }
-                //                } else 
-                //                if (m_copiedInputs.size() > 0 && m_copyNext.size() != m_copiedInputs.size()) {
-                //                    if (m_onNoCopiedInputChannelAvailable != "drop") {
-                //                        return false;
-                //                    }
-                //                }
-                //                return true;
             }
 
             void update() {
 
                 KARABO_LOG_FRAMEWORK_DEBUG << "OUTPUT update()";
+                
+                // Update on empty data indicates end-of-stream
+                if (Memory<T>::size(m_channelId, m_chunkId) == 0 ) {
+                    signalEndOfStream();
+                    return;
+                }
                 
                 registerWritersOnChunk();
                 
@@ -369,6 +365,19 @@ namespace karabo {
                 copy();
 
                 m_chunkId = Memory<T>::registerChunk(m_channelId);
+            }
+            
+            void signalEndOfStream() {
+                for (size_t i = 0; i < m_registeredSharedInputs.size(); ++i) {
+                    const karabo::util::Hash& channelInfo = m_registeredSharedInputs[i];
+                    const TcpChannelPointer& tcpChannel = channelInfo.get<TcpChannelPointer > ("tcpChannel");
+                    tcpChannel->write(karabo::util::Hash("endOfStream", true), std::vector<char>());
+                }
+                for (size_t i = 0; i < m_registeredCopyInputs.size(); ++i) {
+                    const karabo::util::Hash& channelInfo = m_registeredCopyInputs[i];
+                    const TcpChannelPointer& tcpChannel = channelInfo.get<TcpChannelPointer > ("tcpChannel");
+                    tcpChannel->write(karabo::util::Hash("endOfStream", true), std::vector<char>());
+                }
             }
             
             void registerWritersOnChunk() {
