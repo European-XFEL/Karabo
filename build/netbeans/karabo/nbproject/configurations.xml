@@ -12,6 +12,7 @@
       <logicalFolder name="f1" displayName="State Machines" projectFiles="true">
         <itemPath>../../../src/karabo/core/BaseFsm.hh</itemPath>
         <itemPath>../../../src/karabo/core/CameraFsm.hh</itemPath>
+        <itemPath>../../../src/karabo/core/ComputeFsm.hh</itemPath>
         <itemPath>../../../src/karabo/core/FsmMacros.hh</itemPath>
         <itemPath>../../../src/karabo/core/OkErrorFsm.hh</itemPath>
         <itemPath>../../../src/karabo/core/StartStopFsm.hh</itemPath>
@@ -460,6 +461,11 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/core/CameraFsm.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/core/ComputeFsm.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -1996,6 +2002,11 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/core/CameraFsm.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/core/ComputeFsm.hh"
             ex="false"
             tool="3"
             flavor2="0">
