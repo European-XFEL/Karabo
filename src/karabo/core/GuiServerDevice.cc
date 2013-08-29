@@ -395,7 +395,7 @@ namespace karabo {
 
                             if (img.getChannelSpace() == ChannelSpace::u_8_1) {
                                 unsigned char* data = img.dataPointer();
-                                unsigned char pmax = 0, pmin = 255;
+                                unsigned char pmax = 0, pmin = 0xFF;
                                 for (size_t i = 0; i < size; i++) {
                                     unsigned char pix = data[i];
                                     if (pmax < pix) pmax = pix;
@@ -403,8 +403,12 @@ namespace karabo {
                                 }
                                 size_t index = 0;
                                 for (size_t i = 0; i < size; i++) {
-                                    unsigned char pix = data[i];
-                                    if (pmax != pmin) pix = int((unsigned(pix) - pmin) * 255 / (pmax - pmin)); // normalization
+                                    unsigned char pix;
+                                    if (pmax != pmin) // normalization
+                                        pix = int((pix - pmin) * 0xFF / (pmax - pmin));
+                                    else
+                                        pix = data[i];
+
                                     qtImage[index++] = pix;
                                     qtImage[index++] = pix;
                                     qtImage[index++] = pix;
@@ -412,10 +416,9 @@ namespace karabo {
                                 }
 
 
-
                             } else if (img.getChannelSpace() == ChannelSpace::u_16_2) {
                                 unsigned short* data = reinterpret_cast<unsigned short*>(img.dataPointer());
-                                unsigned short pmax = 0, pmin = 65535;
+                                unsigned short pmax = 0, pmin = 0xFFFF;
                                 if (img.isBigEndian()) {
                                     for (size_t i = 0; i < size; i++) {
                                         data[i] = data[i] << 8 | data[i] >> 8; // swap bytes
@@ -430,13 +433,171 @@ namespace karabo {
                                 }
                                 size_t index = 0;
                                 for (size_t i = 0; i < size; i++) {
-                                    unsigned short pix = data[i];
-                                    if (pmax != pmin) pix = int((data[i] - pmin) * 255 / (pmax - pmin)); // normalization
+                                    unsigned char pix;
+                                    if (pmax != pmin) // normalization
+                                        pix = int((data[i] - pmin) * 0xFF / (pmax - pmin));
+                                    else
+                                        pix = int(data[i] / 0x101); // ie data[i]*0xFF/0xFFFF
+
                                     qtImage[index++] = pix;
                                     qtImage[index++] = pix;
                                     qtImage[index++] = pix;
                                     qtImage[index++] = 0xFF;
                                 }
+
+
+                            } else if (img.getChannelSpace() == ChannelSpace::u_32_4) {
+                                unsigned int* data = reinterpret_cast<unsigned int*>(img.dataPointer());
+                                unsigned int pmax = 0, pmin = 0xFFFFFFFF;
+                                if (img.isBigEndian()) {
+                                    for (size_t i = 0; i < size; i++) {
+                                        data[i] = (data[i]<<24)&0xFF000000
+                                                + (data[i]<< 8)&0x00FF0000
+                                                + (data[i]>> 8)&0x0000FF00
+                                                + (data[i]>>24)&0x000000FF;  // swap bytes
+                                        if (pmax < data[i]) pmax = data[i];
+                                        if (pmin > data[i]) pmin = data[i];
+                                    }
+                                } else {
+                                    for (size_t i = 0; i < size; i++) {
+                                        if (pmax < data[i]) pmax = data[i];
+                                        if (pmin > data[i]) pmin = data[i];
+                                    }
+                                }
+                                size_t index = 0;
+                                for (size_t i = 0; i < size; i++) {
+                                    unsigned char pix;
+                                    if (pmax != pmin) // normalization
+                                        pix = int((data[i] - pmin) * 0xFF / (pmax - pmin));
+                                    else
+                                        pix = int(data[i] / 0x1010101); // ie data[i]*0xFF/0xFFFFFFFF
+
+                                    qtImage[index++] = pix;
+                                    qtImage[index++] = pix;
+                                    qtImage[index++] = pix;
+                                    qtImage[index++] = 0xFF;
+                                }
+
+
+                           } else if (img.getChannelSpace() == ChannelSpace::u_64_8) {
+                                unsigned long* data = reinterpret_cast<unsigned long*>(img.dataPointer());
+                                unsigned long pmax = 0, pmin = 0xFFFFFFFFFFFFFFFF;
+                                if (img.isBigEndian()) {
+                                    for (size_t i = 0; i < size; i++) {
+                                        data[i] = (data[i]<<56)&0xFF00000000000000
+                                                + (data[i]<<40)&0x00FF000000000000
+                                                + (data[i]<<24)&0x0000FF0000000000
+                                                + (data[i]<< 8)&0x000000FF00000000
+                                                + (data[i]>> 8)&0x00000000FF000000
+                                                + (data[i]>>24)&0x0000000000FF0000
+                                                + (data[i]>>40)&0x000000000000FF00
+                                                + (data[i]>>56)&0x00000000000000FF;  // swap bytes
+                                        if (pmax < data[i]) pmax = data[i];
+                                        if (pmin > data[i]) pmin = data[i];
+                                    }
+                                } else {
+                                    for (size_t i = 0; i < size; i++) {
+                                        if (pmax < data[i]) pmax = data[i];
+                                        if (pmin > data[i]) pmin = data[i];
+                                    }
+                                }
+                                size_t index = 0;
+                                for (size_t i = 0; i < size; i++) {
+                                    unsigned char pix;
+                                    if (pmax != pmin) // normalization
+                                        pix = int((data[i] - pmin) * 0xFF / (pmax - pmin));
+                                    else
+                                        pix = int(data[i] / 0x101010101010101); // ie data[i]*0xFF/0xFFFFFFFFFFFFFFFF
+
+                                    qtImage[index++] = pix;
+                                    qtImage[index++] = pix;
+                                    qtImage[index++] = pix;
+                                    qtImage[index++] = 0xFF;
+                                }
+
+
+                            } else if (img.getChannelSpace() == ChannelSpace::f_32_4) {
+                                float* data = reinterpret_cast<float*>(img.dataPointer());
+                                float pmax = 0., pmin = 1.;
+
+                                for (size_t i = 0; i < size; i++) {
+                                    if (pmax < data[i]) pmax = data[i];
+                                    if (pmin > data[i]) pmin = data[i];
+                                }
+
+                                // TODO: can float images be big endian?
+                                // if (img.isBigEndian()) {
+                                //     for (size_t i = 0; i < size; i++) {
+                                //         unsigned int* data_i = (unsigned int*)(data+i);
+                                //         *data_i = (*data_i<<24)&0xFF000000
+                                //                 + (*data_i<< 8)&0x00FF0000
+                                //                 + (*data_i>> 8)&0x0000FF00
+                                //                 + (*data_i>>24)&0x000000FF;  // swap bytes
+                                //         if (pmax < data[i]) pmax = data[i];
+                                //         if (pmin > data[i]) pmin = data[i];
+                                //     }
+                                // } else {
+                                //     for (size_t i = 0; i < size; i++) {
+                                //         if (pmax < data[i]) pmax = data[i];
+                                //         if (pmin > data[i]) pmin = data[i];
+                                //     }
+                                // }
+
+                                size_t index = 0;
+                                for (size_t i = 0; i < size; i++) {
+                                    unsigned char pix = int(data[i] * 0xFF);
+                                    if (pmax != pmin) pix = int((data[i] - pmin) * 0xFF / (pmax - pmin)); // normalization
+
+                                    qtImage[index++] = pix;
+                                    qtImage[index++] = pix;
+                                    qtImage[index++] = pix;
+                                    qtImage[index++] = 0xFF;
+                                }
+
+
+                           } else if (img.getChannelSpace() == ChannelSpace::f_64_8) {
+                                double* data = reinterpret_cast<double*>(img.dataPointer());
+                                double pmax = 0., pmin = 1.;
+
+                                for (size_t i = 0; i < size; i++) {
+                                    if (pmax < data[i]) pmax = data[i];
+                                    if (pmin > data[i]) pmin = data[i];
+                                }
+
+                                // TODO: can float images be big endian?
+                                // if (img.isBigEndian()) {
+                                //     for (size_t i = 0; i < size; i++) {
+                                //         unsigned long* data_i = (unsigned long*)(data+i);
+                                //         *data_i = (*data_i<<56)&0xFF00000000000000
+                                //                 + (*data_i<<40)&0x00FF000000000000
+                                //                 + (*data_i<<24)&0x0000FF0000000000
+                                //                 + (*data_i<< 8)&0x000000FF00000000
+                                //                 + (*data_i>> 8)&0x00000000FF000000
+                                //                 + (*data_i>>24)&0x0000000000FF0000
+                                //                 + (*data_i>>40)&0x000000000000FF00
+                                //                 + (*data_i>>56)&0x00000000000000FF;  // swap bytes
+                                //         if (pmax < data[i]) pmax = data[i];
+                                //         if (pmin > data[i]) pmin = data[i];
+                                //     }
+                                // } else {
+                                //     for (size_t i = 0; i < size; i++) {
+                                //         if (pmax < data[i]) pmax = data[i];
+                                //         if (pmin > data[i]) pmin = data[i];
+                                //     }
+                                // }
+
+                                size_t index = 0;
+                                for (size_t i = 0; i < size; i++) {
+                                    unsigned char pix = int(data[i] * 0xFF);
+                                    if (pmax != pmin) pix = int((data[i] - pmin) * 0xFF / (pmax - pmin)); // normalization
+
+                                    qtImage[index++] = pix;
+                                    qtImage[index++] = pix;
+                                    qtImage[index++] = pix;
+                                    qtImage[index++] = 0xFF;
+                                }
+
+
                             } else {
                                 return;
                             }

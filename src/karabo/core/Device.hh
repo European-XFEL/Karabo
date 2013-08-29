@@ -245,8 +245,22 @@ namespace karabo {
                 Types::ReferenceType type = Types::from<PixelType>();
                 if (type == Types::UINT8) {
                     channelSpace = karabo::xip::ChannelSpace::u_8_1;
+                } else if (type == Types::INT8) {
+                    channelSpace = karabo::xip::ChannelSpace::s_8_1;
                 } else if (type == Types::CHAR) {
                     channelSpace = karabo::xip::ChannelSpace::s_8_1;
+		} else if (type == Types::UINT16) {
+		    channelSpace = karabo::xip::ChannelSpace::u_16_2;
+		} else if (type == Types::INT16) {
+		    channelSpace = karabo::xip::ChannelSpace::s_16_2;
+		} else if (type == Types::UINT32) {
+		    channelSpace = karabo::xip::ChannelSpace::u_32_4;
+		} else if (type == Types::INT32) {
+		    channelSpace = karabo::xip::ChannelSpace::s_32_4;
+		} else if (type == Types::UINT64) {
+		    channelSpace = karabo::xip::ChannelSpace::u_64_8;
+		} else if (type == Types::INT64) {
+		    channelSpace = karabo::xip::ChannelSpace::s_64_8;
                 } else if (type == Types::FLOAT) {
                     channelSpace = karabo::xip::ChannelSpace::f_32_4;
                 } else if (type == Types::DOUBLE) {
