@@ -126,6 +126,7 @@ namespace karabo {
                 CANDELA,
                 HERTZ,
                 RADIAN,
+		DEGREE,
                 STERADIAN,
                 NEWTON,
                 PASCAL,
@@ -179,6 +180,7 @@ namespace karabo {
         _KARABO_HELPER_MACRO(CANDELA, "cd")
         _KARABO_HELPER_MACRO(HERTZ, "Hz")
         _KARABO_HELPER_MACRO(RADIAN, "rad")
+        _KARABO_HELPER_MACRO(DEGREE, "°")
         _KARABO_HELPER_MACRO(STERADIAN, "sr")
         _KARABO_HELPER_MACRO(NEWTON, "N")
         _KARABO_HELPER_MACRO(PASCAL, "Pa")
@@ -224,7 +226,8 @@ namespace karabo {
                     _KARABO_HELPER_MACRO(MOLE)
                     _KARABO_HELPER_MACRO(CANDELA)                            
                     _KARABO_HELPER_MACRO(HERTZ)
-                    _KARABO_HELPER_MACRO(RADIAN)                           
+                    _KARABO_HELPER_MACRO(RADIAN)
+                    _KARABO_HELPER_MACRO(DEGREE)
                     _KARABO_HELPER_MACRO(STERADIAN)
                     _KARABO_HELPER_MACRO(NEWTON)
                     _KARABO_HELPER_MACRO(PASCAL)

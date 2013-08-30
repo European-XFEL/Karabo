@@ -1053,6 +1053,7 @@ void exportPyUtilSchema() {
                 .value("CANDELA", Unit::CANDELA)
                 .value("HERTZ", Unit::HERTZ)
                 .value("RADIAN", Unit::RADIAN)
+                .value("DEGREE", Unit::DEGREE)
                 .value("STERADIAN", Unit::STERADIAN)
                 .value("NEWTON", Unit::NEWTON)
                 .value("PASCAL", Unit::PASCAL)
