@@ -56,7 +56,7 @@ namespace karabo {
 
             static boost::shared_ptr<karabo::io::BinarySerializer<DataType> > m_serializer;
 
-            static const int MAX_N_CHANNELS = 512;
+            static const int MAX_N_CHANNELS = 64;
             static const int MAX_N_CHUNKS = 512;
 
             Memory() {

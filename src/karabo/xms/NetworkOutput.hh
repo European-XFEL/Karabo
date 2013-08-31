@@ -171,7 +171,7 @@ namespace karabo {
                         }
                     }
                     tryAgain = 0;
-                    std::cout << "Started DeviceOutput-Server listening on port: " << m_ownPort << std::endl;
+                    KARABO_LOG_FRAMEWORK_DEBUG << "Started DeviceOutput-Server listening on port: " << m_ownPort;
                 }
 
 
@@ -616,8 +616,8 @@ namespace karabo {
 
                 registerAsyncWrite(tcpChannel, chunkId);
                 const std::pair< std::vector<char>, karabo::util::Hash>& entry = getAsyncWriteData(chunkId);
-                std::cout << "OUTPUT Going to copy " << entry.first.size() << " bytes of data" << std::endl;
-                std::cout << "OUTPUT With header: " << entry.second << std::endl;
+                //std::cout << "OUTPUT Going to copy " << entry.first.size() << " bytes of data" << std::endl;
+                //std::cout << "OUTPUT With header: " << entry.second << std::endl;
                 tcpChannel->writeAsyncHashVector(entry.second, entry.first, boost::bind(&karabo::xms::NetworkOutput<T>::onWriteCompleted, this, _1));
             }
         };
