@@ -203,7 +203,7 @@ namespace karabo {
                     try {
                         channel = connection->start();
                     } catch (karabo::util::NetworkException& e) {
-                        std::cout << "Could not connect to desired output channel, retrying in " << sleep << " s.";
+                        KARABO_LOG_FRAMEWORK_INFO << "Could not connect to desired output channel, retrying in " << sleep << " s.";
                         boost::this_thread::sleep(boost::posix_time::seconds(sleep));
                         sleep += 2;
                         continue;
@@ -227,7 +227,7 @@ namespace karabo {
             }
 
             void onTcpChannelRead(karabo::net::Channel::Pointer channel, const karabo::util::Hash& header, const std::vector<char>& data) {
-                std::cout << "INPUT: Receiving " << data.size() << " bytes of data" << std::endl;
+                //std::cout << "INPUT: Receiving " << data.size() << " bytes of data" << std::endl;
                 if (header.has("endOfStream")) {
                     if (this->getMinimumNumberOfData() == 0) this->template triggerIOEvent< karabo::io::Input<T> >();
                     this->triggerEndOfStreamEvent();
@@ -259,7 +259,7 @@ namespace karabo {
                     KARABO_LOG_FRAMEWORK_DEBUG << "INPUT: swapped buffers, can read more";
                     notifyOutputChannelForPossibleRead(channel);
                     this->template triggerIOEvent< karabo::io::Input<T> >(); // TODO, run this as thread !!!
-                } else { // Data complete on second pot, first one not needed anymore
+                } else { // Data complete on both pots now
                     if (m_updateOnNewInput) {
                         boost::mutex::scoped_lock lock(m_mutex);
                         Memory<T>::clearChunk(m_channelId, m_activeChunk);
@@ -277,7 +277,7 @@ namespace karabo {
 
             bool canCompute() const {
                 //boost::mutex::scoped_lock lock(m_mutex);
-                std::cout << "INPUT: Current size of async read data cache: " << Memory<T>::size(m_channelId, m_activeChunk) << std::endl;
+                //std::cout << "INPUT: Current size of async read data cache: " << Memory<T>::size(m_channelId, m_activeChunk) << std::endl;
                 return Memory<T>::size(m_channelId, m_activeChunk) >= this->getMinimumNumberOfData();
             }
 
@@ -297,15 +297,7 @@ namespace karabo {
                 // Notify all connected output channels for another read
                 if (nActiveData >= this->getMinimumNumberOfData()) {
                     notifyOutputChannelsForPossibleRead();
-                }
-//                } else {
-//                    m_mutex.unlock();
-//                    std::cout << "INPUT: Waiting for input to be available" << std::endl;
-//                    while (Memory<T>::size(m_channelId, m_activeChunk) < this->getMinimumNumberOfData()) {
-//                        boost::this_thread::sleep(boost::posix_time::millisec(500));
-//                    }
-//                    std::cout << "INPUT: Found input, continuing..." << std::endl;
-//                }
+                }           
             }
 
             void notifyOutputChannelsForPossibleRead() {
