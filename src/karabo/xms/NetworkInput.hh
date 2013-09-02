@@ -8,8 +8,8 @@
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
 
-#ifndef KARABO_XMS_DEVICEINPUT_HH
-#define	KARABO_XMS_DEVICEINPUT_HH
+#ifndef KARABO_XMS_NETWORKINPUT_HH
+#define	KARABO_XMS_NETWORKINPUT_HH
 
 #include <karabo/net.hpp>
 #include <karabo/io.hpp>
@@ -32,6 +32,7 @@ namespace karabo {
 
             typedef std::set<karabo::net::Connection::Pointer> TcpConnections;
             typedef std::set<karabo::net::Channel::Pointer> TcpChannels;
+            typedef Memory<T> MemoryType;
 
 
         public:
@@ -107,17 +108,7 @@ namespace karabo {
              * @param input Validated (@see expectedParameters) and default-filled configuration
              */
             NetworkInput(const karabo::util::Hash& config) : karabo::io::Input<T>(config) {
-
-                if (config.has("connectedOutputChannels")) {
-                    std::vector<std::string> connectedOutputChannels;
-                    config.get("connectedOutputChannels", connectedOutputChannels);
-                    for (size_t i = 0; i < connectedOutputChannels.size(); ++i) {
-                        std::vector<std::string> tmp;
-                        boost::split(tmp, connectedOutputChannels[i], boost::is_any_of("@"));
-                        m_connectedOutputChannels.push_back(karabo::util::Hash("instanceId", tmp[0], "channelId", tmp[1]));
-                    }
-                }
-
+                parseOutputChannelConfiguration(config);
                 config.get("dataDistribution", m_dataDistribution);
                 config.get("minData", m_minData);
                 config.get("updateOnNewInput", m_updateOnNewInput);
@@ -127,23 +118,25 @@ namespace karabo {
                 m_activeChunk = Memory<T>::registerChunk(m_channelId);
                 m_inactiveChunk = Memory<T>::registerChunk(m_channelId);
             }
-
-            void reconfigure(const karabo::util::Hash& input) {
-
-                if (input.has("connectedOutputChannels")) {
-                    m_connectedOutputChannels.clear();
+            
+            void parseOutputChannelConfiguration(const karabo::util::Hash& config) {
+                if (config.has("connectedOutputChannels")) {
                     std::vector<std::string> connectedOutputChannels;
-                    input.get("connectedOutputChannels", connectedOutputChannels);
+                    config.get("connectedOutputChannels", connectedOutputChannels);
                     for (size_t i = 0; i < connectedOutputChannels.size(); ++i) {
                         std::vector<std::string> tmp;
                         boost::split(tmp, connectedOutputChannels[i], boost::is_any_of("@"));
                         m_connectedOutputChannels.push_back(karabo::util::Hash("instanceId", tmp[0], "channelId", tmp[1]));
                     }
                 }
+            }
 
-                if (input.has("dataDistribution")) input.get("dataDistribution", m_dataDistribution);
-                if (input.has("minData")) input.get("minData", m_minData);
-                if (input.has("updateOnNewInput")) input.get("updateOnNewInput", m_updateOnNewInput);
+            void reconfigure(const karabo::util::Hash& config) {
+                parseOutputChannelConfiguration(config);
+                if (config.has("dataDistribution")) config.get("dataDistribution", m_dataDistribution);
+                if (config.has("minData")) config.get("minData", m_minData);
+                if (config.has("updateOnNewInput")) config.get("updateOnNewInput", m_updateOnNewInput);
+                if (config.has("onSlowness")) config.get("onSlowness", m_onSlowness);
             }
 
             std::vector<karabo::util::Hash> getConnectedOutputChannels() {

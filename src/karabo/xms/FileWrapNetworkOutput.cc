@@ -10,13 +10,14 @@
 
 #include "FileWrapNetworkOutput.hh"
 
+using namespace karabo::util;
+using namespace karabo::io;
+
 namespace karabo {
     namespace xms {
 
-        KARABO_REGISTER_FACTORY_2_CC(AbstractOutput, Output<std::string >, FileWrapNetworkOutput)
-        KARABO_REGISTER_FACTORY_CC(Output<std::string >, FileWrapNetworkOutput)
-
-
+        KARABO_REGISTER_FOR_CONFIGURATION(AbstractOutput, Output<std::string >, FileWrapNetworkOutput)
+        KARABO_REGISTER_FOR_CONFIGURATION(Output<std::string >, FileWrapNetworkOutput)
 
     }
 }

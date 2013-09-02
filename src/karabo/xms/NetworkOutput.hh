@@ -55,6 +55,8 @@ namespace karabo {
             typedef std::map<unsigned int, int> CurrentWritersCount;
 
             typedef std::map<TcpChannelPointer, unsigned int> TcpChannelPointer2ChunkId;
+            
+            typedef Memory<T> MemoryType;
 
             // Server related
             unsigned int m_ownPort;
@@ -141,8 +143,8 @@ namespace karabo {
                 KARABO_LOG_FRAMEWORK_DEBUG << "NoInputShared: " << m_onNoSharedInputChannelAvailable;
                
                 // Memory related
-                m_channelId = Memory<T>::registerChannel();
-                m_chunkId = Memory<T>::registerChunk(m_channelId);
+                m_channelId = MemoryType::registerChannel();
+                m_chunkId = MemoryType::registerChunk(m_channelId);
 
                 // Data networking
                 int tryAgain = 5; // Try maximum 5 times to start a server
@@ -182,7 +184,7 @@ namespace karabo {
             }
 
             void write(const T& data) {
-                Memory<T>::write(data, m_channelId, m_chunkId);
+                MemoryType::write(data, m_channelId, m_chunkId);
             }
 
             void onTcpConnect(TcpChannelPointer channel) {
@@ -326,7 +328,7 @@ namespace karabo {
 
             std::string popCopyNext() {
                 boost::mutex::scoped_lock lock(m_nextInputMutex);
-                InputChannelInfo info = m_copyNext.front();
+                std::string info = m_copyNext.front();
                 m_copyNext.pop_front();
                 return info;
             }
@@ -351,7 +353,7 @@ namespace karabo {
                 KARABO_LOG_FRAMEWORK_DEBUG << "OUTPUT update()";
                 
                 // Update on empty data indicates end-of-stream
-                if (Memory<T>::size(m_channelId, m_chunkId) == 0 ) {
+                if (MemoryType::size(m_channelId, m_chunkId) == 0 ) {
                     signalEndOfStream();
                     return;
                 }
@@ -364,7 +366,7 @@ namespace karabo {
                 // Copy chunk(s)
                 copy();
 
-                m_chunkId = Memory<T>::registerChunk(m_channelId);
+                m_chunkId = MemoryType::registerChunk(m_channelId);
             }
             
             void signalEndOfStream() {
@@ -393,7 +395,7 @@ namespace karabo {
                 KARABO_LOG_FRAMEWORK_DEBUG << "OUTPUT " <<  m_writersOnChunk[chunkId] << " Writers  left for chunkId " << chunkId;
                 if (m_writersOnChunk[chunkId] == 0) {
                     KARABO_LOG_FRAMEWORK_DEBUG << "OUTPUT Releasing memory for chunk " << chunkId;
-                    Memory<T>::clearChunk(m_channelId, chunkId);
+                    MemoryType::clearChunk(m_channelId, chunkId);
                 }
             }
 
@@ -530,7 +532,7 @@ namespace karabo {
                 CurrentWritersCount::iterator it = m_currentWritersCount.find(chunkId);
                 if (it == m_currentWritersCount.end()) { // No one tried to write this chunk, yet
                     m_currentWritersCountMutex.unlock();
-                    Memory<T>::cacheAsContiguousBlock(m_channelId, chunkId);
+                    MemoryType::cacheAsContiguousBlock(m_channelId, chunkId);
                     m_currentWritersCountMutex.lock();
                 }
                 m_currentWritersCount[chunkId]++;
@@ -539,7 +541,7 @@ namespace karabo {
             }
 
             const std::pair<std::vector<char>, karabo::util::Hash>& getAsyncWriteData(const unsigned int& chunkId) {
-                return Memory<T>::readContiguousBlockCache(m_channelId, chunkId);
+                return MemoryType::readContiguousBlockCache(m_channelId, chunkId);
             }
 
             void onWriteCompleted(TcpChannelPointer channel) {
@@ -552,7 +554,7 @@ namespace karabo {
                     m_currentWritersCount[chunkId]--;
 
                     if (m_currentWritersCount[chunkId] == 0) {
-                        Memory<T>::clearContiguousBlockCache(m_channelId, chunkId);
+                        MemoryType::clearContiguousBlockCache(m_channelId, chunkId);
                         m_currentWritersCount.erase(chunkId);
                         KARABO_LOG_FRAMEWORK_DEBUG << "OUTPUT Cleared asynchronous write cache";
                         unregisterWriterFromChunk(chunkId);                       
