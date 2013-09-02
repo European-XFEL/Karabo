@@ -6,6 +6,7 @@
  */
 
 #include <boost/filesystem.hpp>
+#include <ostream>
 
 #include "Input.hh"
 #include "Output.hh"
@@ -58,6 +59,30 @@ namespace karabo {
                 p->write(object);
             }
         }
+        
+        inline void saveToFile(const std::vector<char>& buffer, const std::string& filename) {
+            std::ofstream file(filename.c_str(), std::ios::binary);
+            file.write(const_cast<const char*> (&buffer[0]), buffer.size());
+            file.close();
+        }
+        
+        inline void loadFromFile(std::vector<char>& buffer, const std::string& filename) {
+            std::ifstream file(filename.c_str(), std::ios::binary);
+            //fileContents.reserve(10000);
+            buffer.assign(std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>());
+        }
+        
+        template <class T> 
+        inline std::string getIODataType() {
+            using namespace karabo::util;
+            return T::classInfo().getClassId();
+        }
+        
+        template<>
+        inline std::string getIODataType<std::vector<char> >() {
+            return "Raw";
+        }
+        
     }
 }
 #endif
