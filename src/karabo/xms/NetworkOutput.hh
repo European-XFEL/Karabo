@@ -27,7 +27,7 @@
 namespace karabo {
 
     namespace xms {
-
+        
         /**
          * The DeviceOutput class.
          */
@@ -96,7 +96,7 @@ namespace karabo {
 
         public:
 
-            KARABO_CLASSINFO(NetworkOutput, "Network-" + T::classInfo().getClassId(), "1.0")
+            KARABO_CLASSINFO(NetworkOutput, "Network-" + karabo::io::getIODataType<T>(), "1.0")
 
             virtual ~NetworkOutput() {
                 if (m_dataThread.joinable()) {
@@ -623,7 +623,7 @@ namespace karabo {
                 tcpChannel->writeAsyncHashVector(entry.second, entry.first, boost::bind(&karabo::xms::NetworkOutput<T>::onWriteCompleted, this, _1));
             }
         };
-
+        
     }
 }
 

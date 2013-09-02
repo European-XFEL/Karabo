@@ -37,7 +37,7 @@ namespace karabo {
 
         public:
 
-            KARABO_CLASSINFO(NetworkInput, "Network-" + T::classInfo().getClassId(), "1.0")
+            KARABO_CLASSINFO(NetworkInput, "Network-" + karabo::io::getIODataType<T>(), "1.0")
 
             /**
              * Default constructor.

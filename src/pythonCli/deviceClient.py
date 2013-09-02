@@ -216,7 +216,7 @@ class DeviceClient(object):
     def instantiateProject(self, projectFile):
         project = Hash()
         krb.loadFromFile(project, projectFile)
-        devices = project.get("devices")
+        devices = project.get("project.devices")
         servers = self.getServers()
         if len(servers) == 0:
             print "No servers available to start any devices on..."

@@ -9,20 +9,18 @@
  */
 
 #include "CpuImage.hh"
+#include <karabo/xms/NetworkInput.hh>
+#include <karabo/xms/NetworkOutput.hh>
+
 
 namespace exfel {
     namespace xip {
 
-        //EXFEL_REGISTER_FACTORY_2_CC(AbstractInput, Input<CpuImage<float> >, ImageFileReader<float>)
-
-        //EXFEL_REGISTER_FACTORY_2_CC(AbstractInput, Input<CpuImage<float> >, DeviceInput<CpuImage<float> >)
-
-        //EXFEL_REGISTER_FACTORY_2_CC(AbstractOutput, Output<CpuImage<float> >, ImageFileWriter<CpuImage<float> >)
-
-        //EXFEL_REGISTER_FACTORY_2_CC(AbstractOutput, Output<CpuImage<float> >, DeviceOutput<CpuImage<float> >)
-
-
-
+        KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::AbstractOutput, karabo::io::Output<karabo::xip::CpuImage<float> >, karabo::xms::NetworkOutput<karabo::xip::CpuImage<float> >)
+        KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::Output<karabo::xip::CpuImage<float> >, karabo::xms::NetworkOutput<karabo::xip::CpuImage<float> >)
+                
+        KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::AbstractOutput, karabo::io::Output<karabo::xip::CpuImage<double> >, karabo::xms::NetworkOutput<karabo::xip::CpuImage<double> >)
+        KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::Output<karabo::xip::CpuImage<double> >, karabo::xms::NetworkOutput<karabo::xip::CpuImage<double> >)
 
     }
 }

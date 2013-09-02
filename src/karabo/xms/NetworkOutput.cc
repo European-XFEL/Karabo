@@ -18,6 +18,9 @@ namespace karabo {
 
         KARABO_REGISTER_FOR_CONFIGURATION(AbstractOutput, Output<Hash >, NetworkOutput<Hash>)
         KARABO_REGISTER_FOR_CONFIGURATION(Output<Hash >, NetworkOutput<Hash>)
+                
+        KARABO_REGISTER_FOR_CONFIGURATION(AbstractOutput, Output<std::vector<char> >, NetworkOutput<std::vector<char> >)
+        KARABO_REGISTER_FOR_CONFIGURATION(Output<std::vector<char> >, NetworkOutput<std::vector<char> >)
 
     }
 }
