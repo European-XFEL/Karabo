@@ -118,6 +118,8 @@ OBJECTFILES= \
 	${OBJECTDIR}/_ext/1103122620/ImageFileReader.o \
 	${OBJECTDIR}/_ext/1103122620/ImageFileWriter.o \
 	${OBJECTDIR}/_ext/1103122620/RawImageData.o \
+	${OBJECTDIR}/_ext/1103122747/FileWrapNetworkInput.o \
+	${OBJECTDIR}/_ext/1103122747/FileWrapNetworkOutput.o \
 	${OBJECTDIR}/_ext/1103122747/Memory.o \
 	${OBJECTDIR}/_ext/1103122747/NetworkInput.o \
 	${OBJECTDIR}/_ext/1103122747/NetworkOutput.o \
@@ -578,6 +580,16 @@ ${OBJECTDIR}/_ext/1103122620/RawImageData.o: ../../../src/karabo/xip/RawImageDat
 	${MKDIR} -p ${OBJECTDIR}/_ext/1103122620
 	${RM} $@.d
 	$(COMPILE.cc) -g -w -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1103122620/RawImageData.o ../../../src/karabo/xip/RawImageData.cc
+
+${OBJECTDIR}/_ext/1103122747/FileWrapNetworkInput.o: ../../../src/karabo/xms/FileWrapNetworkInput.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1103122747
+	${RM} $@.d
+	$(COMPILE.cc) -g -w -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1103122747/FileWrapNetworkInput.o ../../../src/karabo/xms/FileWrapNetworkInput.cc
+
+${OBJECTDIR}/_ext/1103122747/FileWrapNetworkOutput.o: ../../../src/karabo/xms/FileWrapNetworkOutput.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1103122747
+	${RM} $@.d
+	$(COMPILE.cc) -g -w -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1103122747/FileWrapNetworkOutput.o ../../../src/karabo/xms/FileWrapNetworkOutput.cc
 
 ${OBJECTDIR}/_ext/1103122747/Memory.o: ../../../src/karabo/xms/Memory.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1103122747
@@ -1904,6 +1916,32 @@ ${OBJECTDIR}/_ext/1103122620/RawImageData_nomain.o: ${OBJECTDIR}/_ext/1103122620
 	    $(COMPILE.cc) -g -w -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1103122620/RawImageData_nomain.o ../../../src/karabo/xip/RawImageData.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/1103122620/RawImageData.o ${OBJECTDIR}/_ext/1103122620/RawImageData_nomain.o;\
+	fi
+
+${OBJECTDIR}/_ext/1103122747/FileWrapNetworkInput_nomain.o: ${OBJECTDIR}/_ext/1103122747/FileWrapNetworkInput.o ../../../src/karabo/xms/FileWrapNetworkInput.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1103122747
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/1103122747/FileWrapNetworkInput.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} $@.d;\
+	    $(COMPILE.cc) -g -w -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1103122747/FileWrapNetworkInput_nomain.o ../../../src/karabo/xms/FileWrapNetworkInput.cc;\
+	else  \
+	    ${CP} ${OBJECTDIR}/_ext/1103122747/FileWrapNetworkInput.o ${OBJECTDIR}/_ext/1103122747/FileWrapNetworkInput_nomain.o;\
+	fi
+
+${OBJECTDIR}/_ext/1103122747/FileWrapNetworkOutput_nomain.o: ${OBJECTDIR}/_ext/1103122747/FileWrapNetworkOutput.o ../../../src/karabo/xms/FileWrapNetworkOutput.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1103122747
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/1103122747/FileWrapNetworkOutput.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} $@.d;\
+	    $(COMPILE.cc) -g -w -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1103122747/FileWrapNetworkOutput_nomain.o ../../../src/karabo/xms/FileWrapNetworkOutput.cc;\
+	else  \
+	    ${CP} ${OBJECTDIR}/_ext/1103122747/FileWrapNetworkOutput.o ${OBJECTDIR}/_ext/1103122747/FileWrapNetworkOutput_nomain.o;\
 	fi
 
 ${OBJECTDIR}/_ext/1103122747/Memory_nomain.o: ${OBJECTDIR}/_ext/1103122747/Memory.o ../../../src/karabo/xms/Memory.cc 

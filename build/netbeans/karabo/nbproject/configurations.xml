@@ -301,6 +301,10 @@
       </logicalFolder>
     </logicalFolder>
     <logicalFolder name="f6" displayName="xms" projectFiles="true">
+      <itemPath>../../../src/karabo/xms/FileWrapNetworkInput.cc</itemPath>
+      <itemPath>../../../src/karabo/xms/FileWrapNetworkInput.hh</itemPath>
+      <itemPath>../../../src/karabo/xms/FileWrapNetworkOutput.cc</itemPath>
+      <itemPath>../../../src/karabo/xms/FileWrapNetworkOutput.hh</itemPath>
       <itemPath>../../../src/karabo/xms/Memory.cc</itemPath>
       <itemPath>../../../src/karabo/xms/Memory.hh</itemPath>
       <itemPath>../../../src/karabo/xms/NetworkInput.cc</itemPath>
@@ -1757,6 +1761,26 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/xip/Statistics.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/xms/FileWrapNetworkInput.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/xms/FileWrapNetworkInput.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/xms/FileWrapNetworkOutput.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/xms/FileWrapNetworkOutput.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -3295,6 +3319,26 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/xip/Statistics.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/xms/FileWrapNetworkInput.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/xms/FileWrapNetworkInput.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/xms/FileWrapNetworkOutput.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/xms/FileWrapNetworkOutput.hh"
             ex="false"
             tool="3"
             flavor2="0">
