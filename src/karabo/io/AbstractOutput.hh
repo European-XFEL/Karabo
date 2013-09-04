@@ -61,14 +61,17 @@ namespace karabo {
                 m_ioEventHandler = ioEventHandler;
             }
 
-            virtual void onInputAvailable(const std::string& instanceId) {
-            }
+            //virtual void onInputAvailable(const std::string& instanceId) {
+            //}
 
             virtual karabo::util::Hash getInformation() const {
                 return karabo::util::Hash();
             }
 
             virtual void update() {
+            }
+            
+            virtual void signalEndOfStream() {
             }
 
             virtual bool canCompute() const {

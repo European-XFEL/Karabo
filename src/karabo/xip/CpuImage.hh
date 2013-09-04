@@ -39,7 +39,7 @@ namespace karabo {
             template <class T>
             static std::string classId() {
                 using namespace karabo::util;
-                return "Image" +  Types::convert<FromTypeInfo, ToLiteral > (typeid (T));
+                return "Image-" +  Types::convert<FromTypeInfo, ToLiteral > (typeid (T));
             }
         };
 

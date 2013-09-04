@@ -90,12 +90,12 @@ namespace karabo {
         }
 
 
-        void ComputeDevice::onInputAvailable(const karabo::io::AbstractInput::Pointer&) {
+        void ComputeDevice::_onInputAvailable(const karabo::io::AbstractInput::Pointer&) {
             this->start();
         }
 
 
-        void ComputeDevice::onEndOfStream() {
+        void ComputeDevice::_onEndOfStream() {
             m_nEndOfStreams++;
             if (m_nEndOfStreams >= this->getInputChannels().size()) {
                 m_nEndOfStreams = 0;
@@ -106,13 +106,10 @@ namespace karabo {
 
 
         void ComputeDevice::endOfStreamAction() {
-            try {
-                const OutputChannels& outputChannels = this->getOutputChannels();
-                for (OutputChannels::const_iterator it = outputChannels.begin(); it != outputChannels.end(); ++it)
-                    it->second->update();
-            } catch (const Exception& e) {
-                this->errorFound(e.userFriendlyMsg(), e.detailedMsg());
-            }
+            this->onEndOfStream();
+            const OutputChannels& outputChannels = this->getOutputChannels();
+            for (OutputChannels::const_iterator it = outputChannels.begin(); it != outputChannels.end(); ++it)
+                it->second->signalEndOfStream();
         }
 
 
