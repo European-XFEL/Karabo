@@ -33,8 +33,9 @@ namespace karabo {
 
             KARABO_CLASSINFO(ComputeDevice, "ComputeDevice", "1.0")
             
-            #define KARABO_INPUT_CHANNEL(type, name, configuration) this->createInputChannel<type>(name, configuration, boost::bind(&karabo::core::ComputeDevice::onInputAvailable, this, _1), boost::bind(&karabo::core::ComputeDevice::onEndOfStream, this) );
-
+            #define KARABO_INPUT_CHANNEL(type, name, configuration) this->createInputChannel<type>(name, configuration, boost::bind(&karabo::core::ComputeDevice::_onInputAvailable, this, _1), boost::bind(&karabo::core::ComputeDevice::_onEndOfStream, this) );
+            #define KARABO_OUTPUT_CHANNEL(type, name, configuration) this->createOutputChannel<type>(name, configuration);
+            
             static void expectedParameters(karabo::util::Schema& expected);
 
             ComputeDevice(const karabo::util::Hash& input);
@@ -44,9 +45,12 @@ namespace karabo {
             // Main function to implement
             virtual void compute() = 0;
             
-            void onInputAvailable(const karabo::io::AbstractInput::Pointer&);
+            virtual void onEndOfStream() {
+            }
             
-            void onEndOfStream();
+            void _onInputAvailable(const karabo::io::AbstractInput::Pointer&);
+            
+            void _onEndOfStream();
                 
             bool isAborted() const;
 

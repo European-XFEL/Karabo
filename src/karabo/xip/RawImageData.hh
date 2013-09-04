@@ -41,13 +41,13 @@ namespace karabo {
             enum ChannelSpaceType {
 
                 UNDEFINED = -1,
-                u_8_1,
+                u_8_1, // unsigned, 8 bits per color-channel, 1 byte per pixel
                 s_8_1,
                 u_10_2,
-                s_10_2,
+                s_10_2, // signed, 10 bits per color-channel, 2 bytes per pixel
                 u_12_2,
                 s_12_2,
-                u_12_1p5,
+                u_12_1p5, // unsigned, 12 bits per color-channel, 1.5 bytes per pixel (i.e. 3 bytes encode 2 pixels, 2 x 12 bits must be read)
                 s_12_1p5,
                 u_16_2,
                 s_16_2,
