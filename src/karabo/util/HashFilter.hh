@@ -36,7 +36,6 @@ namespace karabo {
 
             static void r_byTag(const Hash& master, const Hash::Node& input, Hash& result, const std::string& path, const std::set<std::string>& tags);
             static bool processNode(const Hash& master, const Hash::Node& input, Hash& result, const std::string& path, const std::set<std::string>& tags);
-//            static void r_byTag(const Schema& master, const Hash& input, std::string& path, const std::set<std::string>& tags, Hash& result);
             
                         
         };

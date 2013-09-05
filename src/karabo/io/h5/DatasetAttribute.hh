@@ -42,7 +42,6 @@ namespace karabo {
                 virtual ~DatasetAttribute() {
                 }
 
-                
                 void create(hid_t tableGroup) {
 
                     //OPT1
@@ -51,19 +50,25 @@ namespace karabo {
                     KARABO_LOG_FRAMEWORK_TRACE_C("karabo.io.h5.Dataset") << "Create dataset " << m_h5PathName
                             << " with chunk size = " << m_chunkSize;
                     try {
-                        configureFileDataSpace();
-                        createDataSetProperties();
+                        hid_t fileDataSpace = configureFileDataSpace();
+                        hid_t dataSetProperties = createDataSetProperties();
                         hid_t tid = this->getDatasetTypeId();
-                        m_h5obj = H5Dcreate2(tableGroup, (m_h5PathName + "aa").c_str() , tid,
-                                             m_fileDataSpace, m_linkCreateProperties, m_dataSetProperties, H5P_DEFAULT);
+                        m_h5obj = H5Dcreate2(tableGroup, (m_h5PathName + "aa").c_str(), tid,
+                                             fileDataSpace, m_linkCreateProperties, dataSetProperties, H5P_DEFAULT);
                         KARABO_CHECK_HDF5_STATUS(m_h5obj);
+                        KARABO_CHECK_HDF5_STATUS(H5Tclose(tid));
+                        KARABO_CHECK_HDF5_STATUS(H5Pclose(dataSetProperties));
+                        closeDataspace(fileDataSpace);
+                        m_fileDataSpace = H5Dget_space(m_h5obj);
+                        KARABO_CHECK_HDF5_STATUS(m_fileDataSpace);
+
                         // createAttributes(m_h5obj);
 
                         //// OPT1
                         H5Dclose(m_h5obj);
                         m_h5objOpen = false;
                         ////
- 
+
                     } catch (...) {
 
 
@@ -80,11 +85,11 @@ namespace karabo {
             protected:
 
                 virtual void writeNode(const karabo::util::Element<std::string>& data,
-                               hid_t dataSet, hid_t fileDataSpace) {
+                                       hid_t dataSet, hid_t fileDataSpace) {
                 }
 
                 virtual void writeNode(const karabo::util::Element<std::string>& data, hsize_t len,
-                               hid_t dataSet, hid_t fileDataSpace) {
+                                       hid_t dataSet, hid_t fileDataSpace) {
                 }
 
             };

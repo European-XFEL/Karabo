@@ -67,7 +67,7 @@ namespace karabo {
                     return m_memoryType;
                 }
 
-                virtual ~FixedLengthArray() {
+                virtual ~FixedLengthArray() {                    
                 }
 
                 static void expectedParameters(karabo::util::Schema& expected) {

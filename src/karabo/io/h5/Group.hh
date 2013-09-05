@@ -63,6 +63,8 @@ namespace karabo {
                 }
 
                 void create(hid_t tableGroup);
+                
+                hid_t open(hid_t group);
 
                 void write(const karabo::util::Hash& data, hsize_t recordId) {
                 }
@@ -90,10 +92,6 @@ namespace karabo {
                 karabo::util::Dims getDims() const {
                     return karabo::util::Dims(m_vectorSize);
                 }
-
-            protected:
-
-                hid_t openElement(hid_t group);
 
             private:
 

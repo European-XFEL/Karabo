@@ -55,6 +55,8 @@ namespace karabo {
                 }
 
 
+                virtual hid_t open(hid_t group);
+
                 virtual void write(const karabo::util::Hash& data, hsize_t recordId);
 
                 virtual void write(const karabo::util::Hash& data, hsize_t recordId, hsize_t len);
@@ -101,7 +103,9 @@ namespace karabo {
                 static hid_t dataSpaceOneDim(hsize_t len);
 
                 virtual hid_t createDataspace(const std::vector<hsize_t>& ex, const std::vector<hsize_t>& maxEx) {
-                    return H5Screate_simple(ex.size(), &ex[0], &maxEx[0]);
+                    hid_t dataSpace = H5Screate_simple(ex.size(), &ex[0], &maxEx[0]);
+                    KARABO_CHECK_HDF5_STATUS(dataSpace);
+                    return dataSpace;
                 }
 
 
@@ -146,10 +150,11 @@ namespace karabo {
 
                 static hid_t extend(hid_t dataSet, hid_t dataSpace, hsize_t len);
 
-
-                virtual hid_t openElement(hid_t group);
-
                 void close();
+
+                virtual void closeDataspace(hid_t dataSpace) {
+                    KARABO_CHECK_HDF5_STATUS(H5Sclose(dataSpace));
+                }
 
 
 
@@ -174,8 +179,8 @@ namespace karabo {
                 // private:
 
                 void configureDataDimensions(const karabo::util::Hash& input, const karabo::util::Dims& singleValueDims);
-                void configureFileDataSpace();
-                void createDataSetProperties();
+                hid_t configureFileDataSpace();
+                hid_t createDataSetProperties();
 
                 void openH5(hid_t group) {
                     if (!m_h5objOpen) {
@@ -186,7 +191,7 @@ namespace karabo {
                 }
 
                 void closeH5() {
-                    if(m_h5objOpen) {
+                    if (m_h5objOpen) {
                         KARABO_CHECK_HDF5_STATUS(H5Dclose(m_h5obj));
                         m_h5objOpen = false;
                     }
@@ -197,7 +202,7 @@ namespace karabo {
                 static hid_t m_linkCreateProperties;
 
                 static hid_t initDataSetProperties() {
-                    return H5Pcreate(H5P_DATASET_CREATE);
+                    return 0; //H5Pcreate(H5P_DATASET_CREATE);
                 }
 
                 static hid_t initLinkCreateProperties() {

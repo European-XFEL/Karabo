@@ -479,8 +479,10 @@ void FileInputOutput_Test::writeHdf5File() {
         double time = HighResolutionTimer::time2double(p.getTime("bigHash"));
         if (false) clog << "writing big Hash (Hdf5) took " << time << " [s]" << endl;
 
-        out = Output<Hash>::create("Hdf5File", Hash("filename", resourcePath("fileS3.h5")));
-        out->write(m_unrootedHash);
+        for (unsigned long long i = 0; i < 1L; ++i) {
+            out = Output<Hash>::create("Hdf5File", Hash("filename", resourcePath("fileS3.h5")));
+            out->write(m_unrootedHash);
+        }
 
         out = Output<Hash>::create("Hdf5File", Hash("filename", resourcePath("fileS4.h5")));
         out->write(m_withSchemaHash);
@@ -510,15 +512,19 @@ void FileInputOutput_Test::readHdf5File() {
         // Using the Factory interface
         Input<Hash>::Pointer in = Input<Hash>::create("Hdf5File", Hash("filename", resourcePath("fileS1.h5")));
         in->read(h1);
+        in->update();
 
         in = Input<Hash>::create("Hdf5File", Hash("filename", resourcePath("fileS2.h5")));
         in->read(h2);
+        in->update();
 
         in = Input<Hash>::create("Hdf5File", Hash("filename", resourcePath("fileS3.h5")));
         in->read(h3);
+        in->update();
 
         in = Input<Hash>::create("Hdf5File", Hash("filename", resourcePath("fileS4.h5")));
         in->read(h4);
+        in->update();
 
         // Using the FileTools interface
         loadFromFile(h1a, resourcePath("fileS1a.h5"));

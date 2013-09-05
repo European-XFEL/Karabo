@@ -83,6 +83,10 @@ namespace karabo {
 
             }
 
+            ~Hdf5FileOutput() {
+                closeFile();
+            }
+
             void configureWriteMode(const karabo::util::Hash& config) {
                 std::string writeModeString;
                 config.get("writeMode", writeModeString);
@@ -141,8 +145,10 @@ namespace karabo {
             }
 
             void closeFile() {
-                
-                KARABO_CHECK_HDF5_STATUS(H5Fclose(m_h5file));
+                if (m_h5file >= 0) {
+                    KARABO_CHECK_HDF5_STATUS(H5Fclose(m_h5file));
+                    m_h5file = -1;
+                }
             }
 
         };
