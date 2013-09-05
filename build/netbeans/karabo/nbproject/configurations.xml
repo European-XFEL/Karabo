@@ -2635,6 +2635,11 @@
             tool="3"
             flavor2="0">
       </item>
+      <item path="../../../src/karabo/tests/io/H5File_Test.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
       <item path="../../../src/karabo/tests/io/H5File_Test.hh"
             ex="false"
             tool="3"
