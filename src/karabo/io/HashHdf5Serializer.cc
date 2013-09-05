@@ -716,6 +716,7 @@ namespace karabo {
                         {
                             //                            std::clog << "dataset: " << name << std::endl;
                             hid_t dsId = H5Dopen2(group, name.c_str(), H5P_DEFAULT);
+                            KARABO_CHECK_HDF5_STATUS(dsId);
                             serializeDataElement(dsId, name, newData);
                             KARABO_CHECK_HDF5_STATUS(H5Dclose(dsId));
 
@@ -827,8 +828,7 @@ namespace karabo {
                 } else {
                     H5T_class_t dtClass = H5Tget_class(tid);
                     // vector<char> is handled with ndims=0 as this is OPAQUE datatype with H5S_SCALAR space                        
-                    if (dtClass == H5T_STRING) {
-                        clog << "dtClass==H5T_STRING  sequence" << name << endl;
+                    if (dtClass == H5T_STRING) {                        
                         readSequenceString(dsId, tid, dims, name, data);
                     } else {
                         if (H5Tequal(tid, H5T_NATIVE_INT8)) {
@@ -862,6 +862,8 @@ namespace karabo {
 
                 karabo::util::Hash::Node& node = data.getNode(name);
                 serializeAttributes(dsId, node);
+                KARABO_CHECK_HDF5_STATUS(H5Tclose(tid));
+                KARABO_CHECK_HDF5_STATUS(H5Sclose(spaceId));
             } catch (karabo::util::Exception& ex) {
                 KARABO_RETHROW_AS(KARABO_PROPAGATED_EXCEPTION("Cannot read data"));
             }
@@ -972,6 +974,8 @@ namespace karabo {
                         }
                     }
                 }
+                KARABO_CHECK_HDF5_STATUS(H5Tclose(tid));
+                KARABO_CHECK_HDF5_STATUS(H5Sclose(spaceId));
                 KARABO_CHECK_HDF5_STATUS(H5Aclose(attrId));
             }
 
@@ -992,6 +996,7 @@ namespace karabo {
             } else {
                 throw KARABO_HDF_IO_EXCEPTION("Type not supported");
             }
+            KARABO_CHECK_HDF5_STATUS(H5Tclose(stringTypeId));
         }
 
 
@@ -1079,6 +1084,7 @@ namespace karabo {
             } else {
                 throw KARABO_HDF_IO_EXCEPTION("Type not supported");
             }
+            KARABO_CHECK_HDF5_STATUS(H5Tclose(stringTypeId));
         }
 
 

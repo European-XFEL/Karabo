@@ -77,6 +77,7 @@ namespace karabo {
                 }
 
                 virtual ~DatasetWriter() {
+                    KARABO_CHECK_HDF5_STATUS(H5Sclose(m_memoryDataSpace))
                 }
                 virtual void write(const karabo::util::Hash::Node& node, hid_t dataSet, hid_t fileDataSpace) = 0;
 
@@ -161,6 +162,7 @@ namespace karabo {
 
                     herr_t status = H5Dwrite(dataSet, tid, mds, fileDataSpace, H5P_DEFAULT, ptr);
                     KARABO_CHECK_HDF5_STATUS(status);
+                    KARABO_CHECK_HDF5_STATUS(H5Sclose(mds));
                     KARABO_CHECK_HDF5_STATUS(H5Tclose(tid));
                 }
 
@@ -245,7 +247,7 @@ namespace karabo {
                     herr_t status = H5Dwrite(dataSet, tid, mds, fileDataSpace, H5P_DEFAULT, ptr);
                     KARABO_CHECK_HDF5_STATUS(status)
                     KARABO_CHECK_HDF5_STATUS(H5Tclose(tid));
-
+                    KARABO_CHECK_HDF5_STATUS(H5Sclose(mds));
                 }
 
             };
@@ -308,6 +310,7 @@ namespace karabo {
                     herr_t status = H5Dwrite(dataSet, tid, mds, fileDataSpace, H5P_DEFAULT, ptr);
                     KARABO_CHECK_HDF5_STATUS(status)
                     KARABO_CHECK_HDF5_STATUS(H5Tclose(tid));
+                    KARABO_CHECK_HDF5_STATUS(H5Sclose(mds));
                 }
 
 
@@ -384,6 +387,7 @@ namespace karabo {
                     herr_t status = H5Dwrite(dataSet, tid, memoryDataSpace, fileDataSpace, H5P_DEFAULT, &converted[0]);
                     KARABO_CHECK_HDF5_STATUS(status);
                     KARABO_CHECK_HDF5_STATUS(H5Tclose(tid));
+                    KARABO_CHECK_HDF5_STATUS(H5Sclose(memoryDataSpace));
                 }
 
             };
@@ -462,6 +466,7 @@ namespace karabo {
 
                     KARABO_CHECK_HDF5_STATUS(status)
                     KARABO_CHECK_HDF5_STATUS(H5Tclose(tid));
+                    KARABO_CHECK_HDF5_STATUS(H5Sclose(mds));
 
                 }
 
@@ -537,6 +542,7 @@ namespace karabo {
                     herr_t status = H5Dwrite(dataSet, tid, mds, fileDataSpace, H5P_DEFAULT, &converted[0]);
                     KARABO_CHECK_HDF5_STATUS(status);
                     KARABO_CHECK_HDF5_STATUS(H5Tclose(tid));
+                    KARABO_CHECK_HDF5_STATUS(H5Sclose(mds));
 
                 }
 

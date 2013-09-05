@@ -40,7 +40,8 @@ namespace karabo {
                         .assignmentOptional().noDefaultValue()
                         .commit();
             }
-           
+
+
             void Group::create(hid_t tableGroup) {
                 hid_t lcpl = H5Pcreate(H5P_LINK_CREATE);
                 KARABO_CHECK_HDF5_STATUS(lcpl);
@@ -49,12 +50,13 @@ namespace karabo {
                 KARABO_CHECK_HDF5_STATUS(H5Pset_link_creation_order(gcpl, H5P_CRT_ORDER_TRACKED));
                 m_h5obj = H5Gcreate(tableGroup, m_h5PathName.c_str(), lcpl, gcpl, H5P_DEFAULT);
                 KARABO_CHECK_HDF5_STATUS(m_h5obj);
-                H5Gclose(m_h5obj); 
+                KARABO_CHECK_HDF5_STATUS(H5Pclose(gcpl));
+                KARABO_CHECK_HDF5_STATUS(H5Pclose(lcpl));
+                KARABO_CHECK_HDF5_STATUS(H5Gclose(m_h5obj));
             }
-           
 
 
-            hid_t Group::openElement(hid_t group) {
+            hid_t Group::open(hid_t group) {
                 m_h5obj = H5Gopen(group, m_h5PathName.c_str(), H5P_DEFAULT);
                 KARABO_CHECK_HDF5_STATUS(m_h5obj);
                 return m_h5obj;

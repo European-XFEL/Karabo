@@ -39,17 +39,17 @@ void HashBinarySerializer_Test::setUp() {
     p.start("create");
     Hash big("a.b", std::vector<double>(20 * 1024 * 1024, 1.0));
     p.stop("create");
-    cout << "\nCreation time: " << std::fixed << karabo::util::HighResolutionTimer::time2double(p.getTime("create")) << endl;
+//    cout << "\nCreation time: " << std::fixed << karabo::util::HighResolutionTimer::time2double(p.getTime("create")) << endl;
 
     p.start("ref");
     const vector<double>& vect = big.get<vector<double> >("a.b");
     p.stop("ref");
-    cout << "\nReference time: " << std::fixed << karabo::util::HighResolutionTimer::time2double(p.getTime("ref")) << endl;
+//    cout << "\nReference time: " << std::fixed << karabo::util::HighResolutionTimer::time2double(p.getTime("ref")) << endl;
 
     p.start("copy");
     vector<double> vect1 = vect;
     p.stop("copy");
-    cout << "\nCopy time: " << std::fixed << karabo::util::HighResolutionTimer::time2double(p.getTime("copy")) << endl;
+//    cout << "\nCopy time: " << std::fixed << karabo::util::HighResolutionTimer::time2double(p.getTime("copy")) << endl;
 
     vector<Hash>& tmp = big.bindReference<vector<Hash> >("a.c");
     tmp.resize(1);
@@ -112,14 +112,14 @@ void HashBinarySerializer_Test::testSerialization() {
         vector<char> archive1;
         vector<char> archive2;
 
-        cout << "\nSerialize start ----------------------------\n";
+        //cout << "\nSerialize start ----------------------------\n";
         Profiler pr("binary");
         pr.start("serialize");
 
         p->save(m_bigHash, archive1);
         pr.stop("serialize");
 
-        cout << "\nSerialize time: " << std::fixed << karabo::util::HighResolutionTimer::time2double(pr.getTime("serialize")) << endl;
+//        cout << "\nSerialize time: " << std::fixed << karabo::util::HighResolutionTimer::time2double(pr.getTime("serialize")) << endl;
 
         //cout << "\n\n Archive size: " << archive1.size() << " bytes" << endl;
 
