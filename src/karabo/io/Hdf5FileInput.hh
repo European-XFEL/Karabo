@@ -56,10 +56,13 @@ namespace karabo {
                 H5Pset_libver_bounds(fapl, H5F_LIBVER_LATEST, H5F_LIBVER_LATEST);
                 m_h5file = H5Fopen(m_filename.string().c_str(), H5F_ACC_RDONLY, fapl);
                 KARABO_CHECK_HDF5_STATUS(m_h5file);
+                KARABO_CHECK_HDF5_STATUS(H5Pclose(fapl));
             }
 
-            virtual ~Hdf5FileInput() {
-
+            virtual ~Hdf5FileInput() {                
+                if (m_h5file >= 0) {
+                    KARABO_CHECK_HDF5_STATUS(H5Fclose(m_h5file));
+                }
             }
 
             void read(T& data, size_t idx = 0) {
@@ -76,6 +79,11 @@ namespace karabo {
                 KARABO_CHECK_HDF5_STATUS(H5Gget_info(m_h5file, &ginfo));
                 //std::clog << "nobj=" << ginfo.nlinks << std::endl;
                 return ginfo.nlinks;
+            }
+
+            virtual void update() {
+                KARABO_CHECK_HDF5_STATUS(H5Fclose(m_h5file));
+                m_h5file = -1;
             }
 
         private:

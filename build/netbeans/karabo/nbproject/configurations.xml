@@ -12,7 +12,6 @@
         <itemPath>../../../src/karabo/core/GuiServerDevice.hh</itemPath>
       </logicalFolder>
       <logicalFolder name="f1" displayName="State Machines" projectFiles="true">
-        <itemPath>../../../src/karabo/core/BaseFsm.hh</itemPath>
         <itemPath>../../../src/karabo/core/CameraFsm.hh</itemPath>
         <itemPath>../../../src/karabo/core/FsmMacros.hh</itemPath>
         <itemPath>../../../src/karabo/core/OkErrorFsm.hh</itemPath>
@@ -459,11 +458,6 @@
         <packFileList>
         </packFileList>
       </packaging>
-      <item path="../../../src/karabo/core/BaseFsm.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
       <item path="../../../src/karabo/core/CameraFsm.hh"
             ex="false"
             tool="3"
@@ -2023,11 +2017,6 @@
         <packFileList>
         </packFileList>
       </packaging>
-      <item path="../../../src/karabo/core/BaseFsm.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
       <item path="../../../src/karabo/core/CameraFsm.hh"
             ex="false"
             tool="3"
@@ -2644,11 +2633,6 @@
       <item path="../../../src/karabo/tests/io/FileInputOutput_Test.hh"
             ex="false"
             tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/tests/io/H5File_Test.cc"
-            ex="false"
-            tool="1"
             flavor2="0">
       </item>
       <item path="../../../src/karabo/tests/io/H5File_Test.hh"

@@ -38,7 +38,7 @@ namespace karabo {
     namespace io {
         namespace h5 {
 
-            class Element : public boost::enable_shared_from_this<Element> {
+            class Element /*: public boost::enable_shared_from_this<Element>*/ {
 
             public:
                 KARABO_CLASSINFO(Element, "Element", "1.0");
@@ -103,22 +103,17 @@ namespace karabo {
 
                 virtual void create(hid_t tableGroup) = 0;
 
+                virtual hid_t open(hid_t group) = 0;
+
                 void createAttributes();
 
                 void saveAttributes(hid_t tableGroup, const karabo::util::Hash& data);
-                    
+
                 void openAttributes();
 
-                /**
-                 * Open existing HDF5 dataset and attributes.
-                 * @param group Hdf5 group where the dataset belongs to.
-                 */
-                void open(hid_t group) {
-                    openElement(group);
-                }
 
             protected:
-                virtual hid_t openElement(hid_t group) = 0;
+
                 virtual void openH5(hid_t group) = 0;
                 virtual void closeH5() = 0;
 

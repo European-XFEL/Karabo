@@ -73,17 +73,16 @@ namespace karabo {
                     return H5Screate_simple(1, ex, maxEx);
                 }
 
-                hid_t createDataspace(const std::vector<hsize_t>& ex, const std::vector<hsize_t>& maxEx) {
-                    //std::clog << "createDataspace: " << m_dspace << std::endl;
+                hid_t createDataspace(const std::vector<hsize_t>& ex, const std::vector<hsize_t>& maxEx) {                    
                     return this->m_dspace;
                 }
 
                 virtual ~Scalar() {
                 }
 
-                void close() {
-                    Dataset::close();
+                void closeDataspace(hid_t dataSpace) { 
                 }
+                
 
                 hid_t getDatasetTypeId() {
                     return ScalarTypes::getHdf5StandardType<T > ();
@@ -175,11 +174,6 @@ namespace karabo {
             private:
                 typename karabo::io::h5::DatasetWriter<T>::Pointer m_datasetWriter;
                 typename karabo::io::h5::DatasetReader<T>::Pointer m_datasetReader;
-
-            public:
-
-
-
 
             };
 

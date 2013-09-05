@@ -30,8 +30,9 @@ class H5File_Test : public CPPUNIT_NS::TestFixture {
 
     CPPUNIT_TEST(testManyGroups);
     CPPUNIT_TEST(testManyTables);
-//    CPPUNIT_TEST(testVLWrite);
+//        CPPUNIT_TEST(testVLWrite);
     CPPUNIT_TEST(testTrainFormat);
+    CPPUNIT_TEST(testClose);
 
     CPPUNIT_TEST_SUITE_END();
 
@@ -93,12 +94,13 @@ private:
     void testRead();
     void testReadTable();
 
+    void testClose();
     void testVectorOfHashes();
 
     void testTrainFormat();
     uint64_t fillTrainBuffer(std::vector<char>& buffer, size_t bufferLen, const karabo::util::Hash& dataset,
                              unsigned long long trainId, unsigned short imageCount);
-    
+
     karabo::io::h5::Format::Pointer trainFormatImages(const karabo::util::Hash& dataset);
     karabo::io::h5::Format::Pointer trainFormatDescriptors();
     karabo::io::h5::Format::Pointer trainFormatTrainData(unsigned short detectorDataBlockSize);

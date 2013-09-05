@@ -21,6 +21,8 @@
 
 
 #include "ioProfiler.hh"
+#include <karabo/util/TimeProfiler.hh>
+
 
 
 using namespace std;
@@ -38,19 +40,36 @@ namespace karabo {
             Table::~Table() {
             }
 
- 
+
             void Table::openNew(const Format::Pointer dataFormat) {
 
+//                                Profiler p("hdf5");                
                 KARABO_LOG_FRAMEWORK_TRACE_CF << "Open new file: " << m_name;
+//                                p.start("createEmptyTable");
                 createEmptyTable(m_h5file, m_name);
+//                                p.stop("createEmptyTable");
+//                                p.start("createSchemaVersionAttribute");
                 createSchemaVersionAttribute();
+//                                p.stop("createSchemaVersionAttribute");
+//                                p.start("createNumberOfRecordsAttribute");
                 createInitialNumberOfRecordsAttribute();
+//                                p.stop("createNumberOfRecordsAttribute");
+//                                p.start("saveTableFormat");
                 saveTableFormatAsAttribute(dataFormat);
                 m_dataFormat = dataFormat;
+//                                p.stop("saveTableFormat");
+//                                p.start("create");
                 const vector<Element::Pointer>& elements = m_dataFormat->getElements();
                 for (size_t i = 0; i < elements.size(); ++i) {
-                    elements[i]->create(m_group);                    
+                    elements[i]->create(m_group);
                 }
+//                                p.stop("create");
+//          
+//                                clog << "createEmptyTable: " << HighResolutionTimer::time2double(p.getTime("createEmptyTable")) << endl;
+//                                clog << "createSchemaVersionAttribute: " << HighResolutionTimer::time2double(p.getTime("createSchemaVersionAttribute")) << endl;
+//                                clog << "createNumberOfRecordsAttribute " << HighResolutionTimer::time2double(p.getTime("createNumberOfRecordsAttribute")) << endl;
+//                                clog << "saveTableFormat " << HighResolutionTimer::time2double(p.getTime("saveTableFormat")) << endl;
+//                                clog << "create:   " << HighResolutionTimer::time2double(p.getTime("create")) << endl;
 
             }
 
@@ -97,7 +116,7 @@ namespace karabo {
                     if (hasAttribute(m_group, "table")) {
                         Hash readDataFormatConfig;
                         //clog << m_name << " before read   " << HighResolutionTimer::now().sec << endl;
-                        readTableFormatFromAttribute(readDataFormatConfig);                        
+                        readTableFormatFromAttribute(readDataFormatConfig);
                         //clog << m_name << " before format " << HighResolutionTimer::now().sec << endl;
                         KARABO_LOG_FRAMEWORK_TRACE_CF << "read format: \n" << readDataFormatConfig;
                         m_dataFormat = Format::createFormat(readDataFormatConfig);
@@ -125,7 +144,7 @@ namespace karabo {
             void Table::append(const karabo::util::Hash& data) {
                 write(data, m_tableSize);
             }
-
+ 
 
             void Table::write(const karabo::util::Hash& data, size_t recordId) {
 
@@ -161,7 +180,7 @@ namespace karabo {
                     m_tableSize = possibleNewSize;
                     updateTableSizeAttribute();
                 }
-                
+
                 KARABO_CHECK_HDF5_STATUS(H5Fflush(m_h5file, H5F_SCOPE_LOCAL));
 
             }
@@ -169,11 +188,11 @@ namespace karabo {
 
             void Table::writeAttributes(const karabo::util::Hash& data) {
                 const vector<Element::Pointer>& elements = m_dataFormat->getElements();
-                for (size_t i = 0; i < elements.size(); ++i) {                    
+                for (size_t i = 0; i < elements.size(); ++i) {
                     //elements[i]->open(m_group);
-                    elements[i]->saveAttributes(m_group, data);  
+                    elements[i]->saveAttributes(m_group, data);
                     //elements[i]->close();
-                    
+
                 }
             }
 
@@ -241,8 +260,9 @@ namespace karabo {
                 for (size_t i = 0; i < elements.size(); ++i) {
                     elements[i]->close();
                 }
-                KARABO_CHECK_HDF5_STATUS(H5Gclose(m_group));
-                KARABO_CHECK_HDF5_STATUS(H5Aclose(m_numberOfRecordsAttribute));
+                if (m_group >= 0) KARABO_CHECK_HDF5_STATUS(H5Gclose(m_group));
+                if (m_numberOfRecordsAttribute >= 0) KARABO_CHECK_HDF5_STATUS(H5Aclose(m_numberOfRecordsAttribute));
+
             }
 
 
@@ -257,8 +277,9 @@ namespace karabo {
                 try {
                     string path = boost::replace_all_copy(fullPath.string(), "//", "/");
                     // open  root group
-                    hid_t group = H5Gopen(h5file, "/", H5P_DEFAULT);
-                    KARABO_CHECK_HDF5_STATUS(group);
+
+                    //                    hid_t group = H5Gopen(h5file, "/", H5P_DEFAULT);
+                    //                    KARABO_CHECK_HDF5_STATUS(group);
 
                     hid_t lcpl = H5Pcreate(H5P_LINK_CREATE);
                     KARABO_CHECK_HDF5_STATUS(lcpl);
@@ -266,11 +287,14 @@ namespace karabo {
                     hid_t gcpl = H5Pcreate(H5P_GROUP_CREATE);
                     // The order tracking influences the performance - do not use it unless really needed
                     // KARABO_CHECK_HDF5_STATUS(H5Pset_link_creation_order(gcpl, H5P_CRT_ORDER_TRACKED));
-                    
+
                     //create table group
-                    m_group = H5Gcreate(group, path.c_str(), lcpl, gcpl, H5P_DEFAULT);
+                    m_group = H5Gcreate(h5file, path.c_str(), lcpl, gcpl, H5P_DEFAULT);
                     KARABO_CHECK_HDF5_STATUS(m_group);
                     KARABO_LOG_FRAMEWORK_TRACE_CF << "Table: " << fullPath.string() << " created. group id = " << m_group;
+                    //KARABO_CHECK_HDF5_STATUS(H5Gclose(group));
+                    KARABO_CHECK_HDF5_STATUS(H5Pclose(lcpl))
+                    KARABO_CHECK_HDF5_STATUS(H5Pclose(gcpl))
                 } catch (...) {
                     KARABO_RETHROW
                 }
@@ -296,6 +320,8 @@ namespace karabo {
                 status = H5Awrite(schemaVersion, stringType, &versionPtr);
                 KARABO_CHECK_HDF5_STATUS(status);
                 KARABO_CHECK_HDF5_STATUS(H5Aclose(schemaVersion));
+                KARABO_CHECK_HDF5_STATUS(H5Tclose(stringType))
+                KARABO_CHECK_HDF5_STATUS(H5Sclose(dataSpace))
 
             }
 
@@ -305,6 +331,7 @@ namespace karabo {
                 hid_t dataSpace = H5Screate(H5S_SCALAR);
                 m_numberOfRecordsAttribute = H5Acreate(m_group, TABLE_SIZE, H5T_STD_U64LE, dataSpace, H5P_DEFAULT, H5P_DEFAULT);
                 KARABO_CHECK_HDF5_STATUS(m_numberOfRecordsAttribute);
+                KARABO_CHECK_HDF5_STATUS(H5Sclose(dataSpace))
                 updateTableSizeAttribute();
             }
 
@@ -315,6 +342,7 @@ namespace karabo {
                 if (status < 0) {
                     throw KARABO_HDF_IO_EXCEPTION("Could not write numberOfRecords attribute");
                 }
+                KARABO_CHECK_HDF5_STATUS(H5Tclose(type))
             }
 
 
@@ -350,10 +378,16 @@ namespace karabo {
 
                     KARABO_LOG_FRAMEWORK_TRACE_CF << "Description of format to be written to hdf5 file as group attribute:\n " << dataFormatConfigXml;
                     hid_t dataSpace = H5Screate(H5S_SCALAR);
-                    hid_t tableAttribute = H5Acreate(m_group, "table", ScalarTypes::getHdf5StandardType<string>(), dataSpace, H5P_DEFAULT, H5P_DEFAULT);
+                    hid_t type = ScalarTypes::getHdf5StandardType<string>();
+                    hid_t tableAttribute = H5Acreate(m_group, "table", type, dataSpace, H5P_DEFAULT, H5P_DEFAULT);
+                    KARABO_CHECK_HDF5_STATUS(H5Tclose(type))
                     KARABO_CHECK_HDF5_STATUS(tableAttribute);
                     const char* ptr = dataFormatConfigXml.c_str();
-                    KARABO_CHECK_HDF5_STATUS(H5Awrite(tableAttribute, ScalarTypes::getHdf5NativeType<string>(), &ptr));
+                    type = ScalarTypes::getHdf5NativeType<string>();
+                    KARABO_CHECK_HDF5_STATUS(H5Awrite(tableAttribute, type, &ptr));
+                    KARABO_CHECK_HDF5_STATUS(H5Aclose(tableAttribute));
+                    KARABO_CHECK_HDF5_STATUS(H5Sclose(dataSpace))
+                    KARABO_CHECK_HDF5_STATUS(H5Tclose(type))
                 } catch (...) {
                     KARABO_RETHROW
                 }
@@ -368,15 +402,34 @@ namespace karabo {
                     hid_t tableAttribute = H5Aopen(m_group, "table", H5P_DEFAULT);
                     KARABO_CHECK_HDF5_STATUS(tableAttribute);
 
-                    char* ptr[1];
+                    hid_t space = H5Aget_space(tableAttribute);
+                    KARABO_CHECK_HDF5_STATUS(space);
+//                    hsize_t dims[1] = {1};
+//                    int ndims = H5Sget_simple_extent_dims(space, dims, NULL);
+//                    KARABO_CHECK_HDF5_STATUS(ndims);
 
-                    KARABO_CHECK_HDF5_STATUS(H5Aread(tableAttribute, ScalarTypes::getHdf5NativeType<string>(), &ptr));
-                    string dataFormatConfigXml = ptr[0];
+                    //char** rdata = (char **) malloc(dims[0] * sizeof (char *));
+                    char* rdata[1];
+                    hid_t memtype = H5Tcopy(H5T_C_S1);
+                    KARABO_CHECK_HDF5_STATUS(memtype)
+                    KARABO_CHECK_HDF5_STATUS(H5Tset_size(memtype, H5T_VARIABLE));
 
+                    KARABO_CHECK_HDF5_STATUS(H5Aread(tableAttribute, memtype, &rdata));
+
+                    string dataFormatConfigXml = rdata[0];
                     KARABO_LOG_FRAMEWORK_TRACE_CF << "Read format:\n " << dataFormatConfigXml;
 
                     TextSerializer<Hash>::Pointer serializer = TextSerializer<Hash>::create("Xml");
                     serializer->load(dataFormatConfig, dataFormatConfigXml);
+
+                    KARABO_CHECK_HDF5_STATUS(H5Dvlen_reclaim(memtype, space, H5P_DEFAULT, &rdata));
+                    //free(rdata);
+                    KARABO_CHECK_HDF5_STATUS(H5Tclose(memtype));
+                    KARABO_CHECK_HDF5_STATUS(H5Sclose(space));
+                    
+                    //KARABO_CHECK_HDF5_STATUS(H5Tclose(tid))
+                    KARABO_CHECK_HDF5_STATUS(H5Aclose(tableAttribute));
+
 
                 } catch (...) {
                     KARABO_RETHROW

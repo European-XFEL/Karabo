@@ -226,9 +226,9 @@ void SchemaSerializer_Test::testBinarySerializer() {
     
     //std::clog << "Xml:\n" << archive4 << std::endl;
 
-    std::clog << "Binary: " << archive2.size()   << " bytes" << std::endl;
-    std::clog << "Xml   : " << archive4.length() << " bytes" << std::endl;
-    std::clog << "Xsd   : " << archive3.length() << " bytes" << std::endl;
+//    std::clog << "Binary: " << archive2.size()   << " bytes" << std::endl;
+//    std::clog << "Xml   : " << archive4.length() << " bytes" << std::endl;
+//    std::clog << "Xsd   : " << archive3.length() << " bytes" << std::endl;
 }
 
 void SchemaSerializer_Test::testXmlSerializer() {

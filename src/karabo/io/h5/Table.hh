@@ -38,10 +38,7 @@ namespace karabo {
                 KARABO_CLASSINFO(Table, "Table", "1.0")
                
                 Table(hid_t h5file, boost::filesystem::path name)
-                : m_h5file(h5file), m_name(name), m_tableSize(0)
-                #ifdef KARABO_USE_PROFILER_TABLE1
-                , table1("table1")
-                #endif
+                : m_h5file(h5file), m_name(name), m_group(-1), m_tableSize(0),  m_numberOfRecordsAttribute(-1)                
                 {
                 }
 
@@ -146,9 +143,6 @@ namespace karabo {
                 
                 hsize_t m_tableSize;
                 hid_t m_numberOfRecordsAttribute;
-                #ifdef KARABO_USE_PROFILER_TABLE1
-                karabo::util::Profiler table1;
-                #endif
 
             private:
                 static const char* TABLE_SIZE;

@@ -15,6 +15,7 @@
 #include <karabo/util/SimpleElement.hh>
 
 #include "Element.hh"
+#include "karabo/util/Profiler.hh"
 #include <karabo/util/HashFilter.hh>
 
 
@@ -30,9 +31,11 @@ namespace karabo {
 
             KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::h5::Format)
 
+            karabo::util::Schema Format::m_schema = Schema();
+            bool Format::m_schemaExists = false;
 
             void Format::expectedParameters(Schema& expected) {
-
+                               
                 LIST_ELEMENT(expected)
                         .key("elements")
                         .displayedName("Elements")
@@ -56,8 +59,15 @@ namespace karabo {
 
 
             Format::Format(const karabo::util::Hash& input) {
-                m_elements = Configurator<Element>::createList("elements", input, false);
-                m_config = Hash("Format", input);
+
+                if (!m_schemaExists){
+                    // we do it here as we cannot run it in static initialization function, because not all pluggable 
+                    // element classes may be initialized yet.
+                    m_schema = Format::getSchema("Format");    
+                    m_schemaExists = true;
+                }              
+                m_elements = Configurator<Element>::createList("elements", input, false);             
+                m_config = Hash("Format", input);              
                 mapElementsToKeys();
             }
 
@@ -78,9 +88,8 @@ namespace karabo {
 
 
             void Format::getPersistentConfig(karabo::util::Hash& config) const {
-                Schema schema = Format::getSchema("Format");
                 Hash& elements = config.bindReference<Hash>("Format");
-                HashFilter::byTag(schema, m_config.get<Hash>("Format"), elements, "persistent");
+                HashFilter::byTag(m_schema, m_config.get<Hash>("Format"), elements, "persistent");
             }
 
 

@@ -45,22 +45,24 @@ namespace karabo {
                     }
                     karabo::util::Dims singleValueDims = Derived::getSingleValueDimensions();
                     configureDataDimensions(input, singleValueDims);
-                    m_nativeTypeId = Derived::getNativeTypeId() ;
+                    m_nativeTypeId = Derived::getNativeTypeId();
                     m_standardTypeId = Derived::getStandardTypeId();
                 }
 
                 virtual ~Attribute() {
+                    KARABO_CHECK_HDF5_STATUS(H5Tclose(m_nativeTypeId))
+                    KARABO_CHECK_HDF5_STATUS(H5Tclose(m_standardTypeId))
                 }
 
 
                 void write(const karabo::util::Hash::Node& data);
 
                 void save(const karabo::util::Hash::Node& data, hid_t element);
-                
+
             protected:
-                
+
                 virtual void writeNodeAttribute(const karabo::util::Element<std::string>& node,
-                                        hid_t attribute) = 0;
+                                                hid_t attribute) = 0;
 
             public:
 
@@ -69,14 +71,14 @@ namespace karabo {
             protected:
 
                 virtual void readNodeAttribute(karabo::util::Element<std::string>& attrNode,
-                                        hid_t attribute) = 0;
+                                               hid_t attribute) = 0;
 
             public:
 
                 /**
                  * Create attribute                 
                  */
-                virtual void create(hid_t element); 
+                virtual void create(hid_t element);
 
                 // to be removed from here
 
@@ -106,23 +108,25 @@ namespace karabo {
                 hid_t m_attribute;
                 hid_t m_h5ElementObj;
 
-                void configureDataSpace();
-                
-                virtual hid_t createDataspace(const std::vector<hsize_t>& ex, const std::vector<hsize_t>& maxEx) {      
-//                    std::clog << "original" << std::endl;
+                hid_t configureDataSpace();
+
+                virtual hid_t createDataspace(const std::vector<hsize_t>& ex, const std::vector<hsize_t>& maxEx) {
                     return H5Screate_simple(ex.size(), &ex[0], &maxEx[0]);
                 }
                 
+                virtual void closeDataspace(hid_t dataSpace){
+                    KARABO_CHECK_HDF5_STATUS(H5Sclose(dataSpace));
+                }
+
             private:
                 karabo::util::Dims m_dims; // dimension of written/read objects 
                 hid_t m_dataSetProperties;
-                hid_t m_dataSpace;
 
                 hid_t m_nativeTypeId;
                 hid_t m_standardTypeId;
 
                 void configureDataDimensions(const karabo::util::Hash& input, const karabo::util::Dims& singleValueDims);
-                
+
 
             };
 
