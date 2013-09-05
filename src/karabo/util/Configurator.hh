@@ -333,6 +333,29 @@ namespace karabo {
 
             static const ConfiguratorMember4<Base, Sub1, Sub2, Sub3> registerMe;
         };
+        
+        template <class Base, class Sub1, class Sub2, class Sub3, class Sub4>
+        struct ConfiguratorMember5 {
+
+            ConfiguratorMember5(int) {
+                std::string classId(Sub4::classInfo().getClassId());
+                Configurator<Base>::template registerClass<Sub4 > (classId);
+                Configurator<Base>::template registerSchemaFunction<Base > (classId);
+                Configurator<Base>::template registerSchemaFunction<Sub1 > (classId);
+                Configurator<Base>::template registerSchemaFunction<Sub2 > (classId);
+                Configurator<Base>::template registerSchemaFunction<Sub3 > (classId);
+                Configurator<Base>::template registerSchemaFunction<Sub4 > (classId);
+            }
+
+            virtual ~ConfiguratorMember5() {
+            }
+        };
+
+        template <class Base, class Sub1, class Sub2, class Sub3, class Sub4>
+        struct RegisterConfigurator5 {
+
+            static const ConfiguratorMember5<Base, Sub1, Sub2, Sub3, Sub4> registerMe;
+        };
 
         
         #define _KARABO_REGISTER_FOR_CONFIGURATION_1(base) \
