@@ -43,12 +43,14 @@ namespace karabo {
         TimeDuration& TimeDuration::set(const TimeValue seconds, const TimeValue fractions) {
             m_Seconds = seconds;
             m_Fractions = fractions;
+            return *this;
         }
 
 
         TimeDuration & TimeDuration::set(const int days, const int hours, const int minutes, const TimeValue seconds, const TimeValue fractions) {
             m_Seconds = days * DAY + hours * HOUR + minutes * MINUTE + seconds;
             m_Fractions = fractions;
+            return *this;
         }
 
 

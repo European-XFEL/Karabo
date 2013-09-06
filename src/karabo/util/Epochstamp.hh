@@ -308,11 +308,14 @@ namespace karabo {
         }
 
         inline Epochstamp& Epochstamp::operator -=(const TimeDuration& duration) {
+            // TODO: Sergey--> Fix the case attosecond
             this->m_seconds -= duration.getTotalSeconds();
             if (this->m_fractionalSeconds < duration.getFractions()) {
-                this->m_fractionalSeconds = (ONESECOND - duration.getFractions(ATTOSEC)) + m_fractionalSeconds;
+                this->m_fractionalSeconds = (ONESECOND - duration.getFractions(ATTOSEC)) + this->m_fractionalSeconds;
                 --this->m_seconds;
-            };
+            } else {
+                this->m_fractionalSeconds -= duration.getFractions();
+            }
             return *this;
         }
 
