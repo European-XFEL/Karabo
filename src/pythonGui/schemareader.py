@@ -191,12 +191,13 @@ class SchemaReader(object):
 
     def _handleChoiceOfNodes(self, key, parentItem):
         #print "_handleChoiceOfNodes"
+        self._setAssignment(key, parentItem)
         self._setDefaultValue(key, parentItem)
         
         parentItem.isChoiceElement = True
         parentItem.classAlias = "Choice Element"
         # Choiceelements can not have strings as arguments
-        parentItem.defaultValue = Hash(str(parentItem.defaultValue))
+        #parentItem.defaultValue = Hash(str(parentItem.defaultValue))
         
         accessMode = self._getAccessMode(key)
         choiceComponent = None
@@ -214,13 +215,23 @@ class SchemaReader(object):
         parentItem.editableComponent = choiceComponent        
 
         choiceKeys = self.__schema.getKeys(key)
-        for cKey in choiceKeys:
+        #for cKey in choiceKeys:
+        for i in xrange(len(choiceKeys)):
+            cKey = choiceKeys[i]
             childItem = self.r_readSchema(key + "." + cKey, parentItem)
-            if cKey != parentItem.defaultValue:
-                childItem.setHidden(True)
+            
+            if parentItem.defaultValue:
+                if cKey != str(parentItem.defaultValue):
+                    childItem.setHidden(True)
+            else:
+                if i > 0:
+                    childItem.setHidden(True)
+                
             if choiceComponent:
                 choiceComponent.addParameters(itemToBeAdded=childItem)
-
+        
+        parentItem.onSetToDefault()
+        
 
     def _handleListOfNodes(self, key, item):
         listKeys = self.__schema.getKeys(key)
