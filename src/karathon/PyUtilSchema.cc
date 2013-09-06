@@ -1044,6 +1044,8 @@ void exportPyUtilSchema() {
                 .export_values()
                 ;
         bp::enum_<UnitType>("Unit")
+                .value("METER", Unit::NUMBER)
+                .value("METER", Unit::COUNTER)
                 .value("METER", Unit::METER)
                 .value("GRAM", Unit::GRAM)
                 .value("SECOND", Unit::SECOND)
@@ -1058,6 +1060,7 @@ void exportPyUtilSchema() {
                 .value("NEWTON", Unit::NEWTON)
                 .value("PASCAL", Unit::PASCAL)
                 .value("JOULE", Unit::JOULE)
+                .value("ELECTRONVOLT", Unit::ELECTRONVOLT)
                 .value("WATT", Unit::WATT)
                 .value("COULOMB", Unit::COULOMB)
                 .value("VOLT", Unit::VOLT)

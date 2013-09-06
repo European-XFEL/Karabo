@@ -117,6 +117,8 @@ namespace karabo {
             
             enum UnitType {
 
+                NUMBER,
+                COUNTER,
                 METER,
                 GRAM,
                 SECOND,
@@ -131,6 +133,7 @@ namespace karabo {
                 NEWTON,
                 PASCAL,
                 JOULE,
+                ELECTRONVOLT,
                 WATT,
                 COULOMB,
                 VOLT,
@@ -171,6 +174,8 @@ namespace karabo {
         #define _KARABO_HELPER_MACRO(unitEnum, symbol) \
          template <> inline std::pair<std::string, std::string> getUnit<Unit::unitEnum>() { std::string name(#unitEnum); boost::to_lower(name); return std::make_pair(name, symbol); }
 
+        _KARABO_HELPER_MACRO(NUMBER, "#")
+        _KARABO_HELPER_MACRO(COUNTER, "#")
         _KARABO_HELPER_MACRO(METER, "m")
         _KARABO_HELPER_MACRO(GRAM, "g")
         _KARABO_HELPER_MACRO(SECOND, "s")
@@ -185,6 +190,7 @@ namespace karabo {
         _KARABO_HELPER_MACRO(NEWTON, "N")
         _KARABO_HELPER_MACRO(PASCAL, "Pa")
         _KARABO_HELPER_MACRO(JOULE, "J")
+        _KARABO_HELPER_MACRO(ELECTRONVOLT, "eV")
         _KARABO_HELPER_MACRO(WATT, "W")
         _KARABO_HELPER_MACRO(COULOMB, "C")
         _KARABO_HELPER_MACRO(VOLT, "V")
@@ -218,13 +224,15 @@ namespace karabo {
         inline std::pair<std::string, std::string> getUnit(const UnitType unit) {
             #define _KARABO_HELPER_MACRO(UnitEnum) case Unit::UnitEnum: return getUnit<Unit::UnitEnum>();
             switch (unit) {
+                    _KARABO_HELPER_MACRO(NUMBER)
+                    _KARABO_HELPER_MACRO(COUNTER)
                     _KARABO_HELPER_MACRO(METER)
                     _KARABO_HELPER_MACRO(GRAM)
-                    _KARABO_HELPER_MACRO(SECOND)     
+                    _KARABO_HELPER_MACRO(SECOND)
                     _KARABO_HELPER_MACRO(AMPERE)
-                    _KARABO_HELPER_MACRO(KELVIN)                            
+                    _KARABO_HELPER_MACRO(KELVIN)
                     _KARABO_HELPER_MACRO(MOLE)
-                    _KARABO_HELPER_MACRO(CANDELA)                            
+                    _KARABO_HELPER_MACRO(CANDELA)
                     _KARABO_HELPER_MACRO(HERTZ)
                     _KARABO_HELPER_MACRO(RADIAN)
                     _KARABO_HELPER_MACRO(DEGREE)
@@ -232,6 +240,7 @@ namespace karabo {
                     _KARABO_HELPER_MACRO(NEWTON)
                     _KARABO_HELPER_MACRO(PASCAL)
                     _KARABO_HELPER_MACRO(JOULE)
+                    _KARABO_HELPER_MACRO(ELECTRONVOLT)
                     _KARABO_HELPER_MACRO(WATT)
                     _KARABO_HELPER_MACRO(COULOMB)
                     _KARABO_HELPER_MACRO(VOLT)
@@ -251,10 +260,10 @@ namespace karabo {
                     _KARABO_HELPER_MACRO(MINUTE)
                     _KARABO_HELPER_MACRO(HOUR)
                     _KARABO_HELPER_MACRO(DAY)
-                    _KARABO_HELPER_MACRO(YEAR)       
-                    _KARABO_HELPER_MACRO(BAR)        
-                    _KARABO_HELPER_MACRO(PIXEL)        
-                    _KARABO_HELPER_MACRO(BYTE)        
+                    _KARABO_HELPER_MACRO(YEAR)
+                    _KARABO_HELPER_MACRO(BAR)
+                    _KARABO_HELPER_MACRO(PIXEL)
+                    _KARABO_HELPER_MACRO(BYTE)
                     _KARABO_HELPER_MACRO(BIT)
                     _KARABO_HELPER_MACRO(METER_PER_SECOND)
                     _KARABO_HELPER_MACRO(VOLT_PER_SECOND)
