@@ -118,7 +118,7 @@ namespace karabo {
             enum UnitType {
 
                 NUMBER,
-                COUNTER,
+                COUNT,
                 METER,
                 GRAM,
                 SECOND,
@@ -175,7 +175,7 @@ namespace karabo {
          template <> inline std::pair<std::string, std::string> getUnit<Unit::unitEnum>() { std::string name(#unitEnum); boost::to_lower(name); return std::make_pair(name, symbol); }
 
         _KARABO_HELPER_MACRO(NUMBER, "#")
-        _KARABO_HELPER_MACRO(COUNTER, "#")
+        _KARABO_HELPER_MACRO(COUNT, "#")
         _KARABO_HELPER_MACRO(METER, "m")
         _KARABO_HELPER_MACRO(GRAM, "g")
         _KARABO_HELPER_MACRO(SECOND, "s")
@@ -225,7 +225,7 @@ namespace karabo {
             #define _KARABO_HELPER_MACRO(UnitEnum) case Unit::UnitEnum: return getUnit<Unit::UnitEnum>();
             switch (unit) {
                     _KARABO_HELPER_MACRO(NUMBER)
-                    _KARABO_HELPER_MACRO(COUNTER)
+                    _KARABO_HELPER_MACRO(COUNT)
                     _KARABO_HELPER_MACRO(METER)
                     _KARABO_HELPER_MACRO(GRAM)
                     _KARABO_HELPER_MACRO(SECOND)
