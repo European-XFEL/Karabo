@@ -123,17 +123,6 @@ class PropertyTreeWidgetItem(BaseTreeWidgetItem):
             pos.setY(pos.y() + 10)
             self.__popupWidget.move(pos)
             self.__popupWidget.show()
-            
-            #pos = QCursor.pos()
-            #width = self.__popupWidget.width()
-            #height = self.__popupWidget.height()
-            
-            #animation = QPropertyAnimation(self.__popupWidget, "geometry")
-            #animation.setDuration(500)
-            #animation.setDirection(QAbstractAnimation.Forward)
-            #animation.setStartValue(QRect(pos.x(), pos.y(), width, height))
-            #animation.setEndValue(QRect(pos.x(), pos.y(), width, height))
-            #animation.start()
         else:
             self.__popupWidget.hide()
 

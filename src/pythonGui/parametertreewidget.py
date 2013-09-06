@@ -36,8 +36,6 @@ class ParameterTreeWidget(QTreeWidget):
         self.__configPanel = configPanel
         
         self.__currentItem = None
-        self.__popupTimer = QTimer(self)
-        self.__popupTimer.timeout.connect(self.onPopupTimeOut)
 
         self.setWordWrap(True)
         self.setSelectionBehavior(QAbstractItemView.SelectRows)
@@ -307,17 +305,9 @@ class ParameterTreeWidget(QTreeWidget):
     def onItemClicked(self, item, column):
         if self.__currentItem and  (self.__currentItem != item):
             self.__currentItem.setToolTipDialogVisible(False)
-            self.__popupTimer.stop()
         
         self.__currentItem = item
         self.__currentItem.setToolTipDialogVisible(True)
-        self.__popupTimer.start(4000)
-
-
-    def onPopupTimeOut(self):
-        if not self.__currentItem:
-            return
-        self.__currentItem.setToolTipDialogVisible(False)
 
 
     def onApplyChanged(self, enable):
