@@ -140,6 +140,13 @@ namespace karabo {
                         .assignmentOptional().noDefaultValue()
                         .init()
                         .commit();
+                
+                INT32_ELEMENT(expected).key("progress")
+                        .displayedName("Progress")
+                        .description("The progress of the current action")
+                        .readOnly()
+                        .initialValue(0)
+                        .commit();
 
                 STRING_ELEMENT(expected).key("state")
                         .displayedName("State")
@@ -228,7 +235,7 @@ namespace karabo {
                 Hash hash;
                 Hash& value = hash.bindReference<Hash>(key);
 
-                karabo::xip::RawImageData raw(value); // Shares value
+                karabo::xip::RawImageData raw(value, true); // Shares data
 
                 // Fill data
                 raw.setByteSize(image.byteSize());
@@ -249,18 +256,18 @@ namespace karabo {
                     channelSpace = karabo::xip::ChannelSpace::s_8_1;
                 } else if (type == Types::CHAR) {
                     channelSpace = karabo::xip::ChannelSpace::s_8_1;
-		} else if (type == Types::UINT16) {
-		    channelSpace = karabo::xip::ChannelSpace::u_16_2;
-		} else if (type == Types::INT16) {
-		    channelSpace = karabo::xip::ChannelSpace::s_16_2;
-		} else if (type == Types::UINT32) {
-		    channelSpace = karabo::xip::ChannelSpace::u_32_4;
-		} else if (type == Types::INT32) {
-		    channelSpace = karabo::xip::ChannelSpace::s_32_4;
-		} else if (type == Types::UINT64) {
-		    channelSpace = karabo::xip::ChannelSpace::u_64_8;
-		} else if (type == Types::INT64) {
-		    channelSpace = karabo::xip::ChannelSpace::s_64_8;
+                } else if (type == Types::UINT16) {
+                    channelSpace = karabo::xip::ChannelSpace::u_16_2;
+                } else if (type == Types::INT16) {
+                    channelSpace = karabo::xip::ChannelSpace::s_16_2;
+                } else if (type == Types::UINT32) {
+                    channelSpace = karabo::xip::ChannelSpace::u_32_4;
+                } else if (type == Types::INT32) {
+                    channelSpace = karabo::xip::ChannelSpace::s_32_4;
+                } else if (type == Types::UINT64) {
+                    channelSpace = karabo::xip::ChannelSpace::u_64_8;
+                } else if (type == Types::INT64) {
+                    channelSpace = karabo::xip::ChannelSpace::s_64_8;
                 } else if (type == Types::FLOAT) {
                     channelSpace = karabo::xip::ChannelSpace::f_32_4;
                 } else if (type == Types::DOUBLE) {
@@ -365,7 +372,6 @@ namespace karabo {
                 return m_fullSchema;
             }
 
-            
             void appendSchema(const karabo::util::Schema& schema) {
                 KARABO_LOG_DEBUG << "Append Schema requested";
                 karabo::util::Hash validated;
@@ -379,7 +385,7 @@ namespace karabo {
                 v.validate(schema, karabo::util::Hash(), validated, karabo::util::Timestamp());
                 {
                     boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
-                    
+
                     // Clear cache
                     m_stateDependendSchema.clear();
 
@@ -388,11 +394,11 @@ namespace karabo {
 
                     // Merge to full schema
                     m_fullSchema.merge(m_injectedSchema);
-                
+
                     KARABO_LOG_INFO << "Schema updated";
                     // Notify the distributed system
                     emit("signalSchemaUpdated", m_fullSchema, m_deviceId);
-                }   
+                }
                 set(validated);
             }
 
@@ -402,7 +408,7 @@ namespace karabo {
              * @param schema
              */
             void updateSchema(const karabo::util::Schema& schema) {
-                
+
                 KARABO_LOG_DEBUG << "Update Schema requested";
                 karabo::util::Hash validated;
                 karabo::util::Validator::ValidationRules rules;
@@ -417,7 +423,7 @@ namespace karabo {
                     boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
                     // Clear previously injected parameters
                     std::vector<std::string> keys = m_injectedSchema.getKeys();
-                    
+
                     BOOST_FOREACH(std::string key, keys) {
                         if (m_parameters.has(key)) m_parameters.erase(key);
                     }
@@ -427,30 +433,30 @@ namespace karabo {
 
                     // Reset fullSchema
                     m_fullSchema = m_staticSchema;
-                    
+
                     // Save injected
                     m_injectedSchema = schema;
 
                     // Merge to full schema
                     m_fullSchema.merge(m_injectedSchema);
                 }
-                
+
                 // Merge all parameters
                 set(validated);
-                
+
                 KARABO_LOG_INFO << "Schema updated";
-                
+
                 // Notify the distributed system
                 emit("signalSchemaUpdated", m_fullSchema, m_deviceId);
             }
 
             void setProgress(const int value, const std::string& associatedText = "") {
-                int v = m_progressMin + value / (m_progressMax - m_progressMin);
-                emit("signalProgressUpdated", v, associatedText, getInstanceId());
+                int v = (m_progressMin + value / float(m_progressMax - m_progressMin)) * 100;
+                set("progress", v);
             }
 
             void resetProgress() {
-                emit("signalProgressUpdated", m_progressMin, "");
+                set("progress", m_progressMin);
             }
 
             void setProgressRange(const int minimum, const int maximum) {
@@ -605,6 +611,7 @@ namespace karabo {
             }
 
             // This function will polymorphically be called by the FSM template            
+
             virtual void errorFoundAction(const std::string& shortMessage, const std::string& detailedMessage) {
                 std::cout << "errorFoundAction" << std::endl;
                 KARABO_LOG_ERROR << shortMessage;
@@ -693,10 +700,6 @@ namespace karabo {
                 SIGNAL2("signalSchemaUpdated", karabo::util::Schema, string); // schema, deviceId
                 connectN("", "signalSchemaUpdated", "*", "slotSchemaUpdated");
 
-                SIGNAL3("signalProgressUpdated", int, string, string); // Progress value [0,100], label, deviceId
-                connectN("", "progressUpdate", "*", "slotProgressUpdated");
-
-
                 SLOT1(slotReconfigure, karabo::util::Hash /*reconfiguration*/)
                 SLOT0(slotRefresh) // Deprecate
                 SLOT0(slotGetConfiguration)
@@ -718,21 +721,24 @@ namespace karabo {
 
             void slotReconfigure(const karabo::util::Hash& newConfiguration) {
                 if (newConfiguration.empty()) return;
-                karabo::util::Hash validated;
-                std::pair<bool, std::string> result = validate(newConfiguration, validated);
+                std::pair<bool, std::string > result;
+                try {
+                    karabo::util::Hash validated;
 
-                if (result.first == true) { // is a valid reconfiguration
-                    // Give device-implementer a chance to specifically react on reconfiguration event by polymorphically calling back
-                    try {
+                    result = validate(newConfiguration, validated);
+
+                    if (result.first == true) { // is a valid reconfiguration
+
+                        // Give device-implementer a chance to specifically react on reconfiguration event by polymorphically calling back
                         preReconfigure(validated);
-                    } catch (const karabo::util::Exception& e) {
-                        this->errorFound(e.userFriendlyMsg(), e.detailedMsg());
-                        reply(false, e.userFriendlyMsg());
-                        return;
-                    }
 
-                    // Merge reconfiguration with current state
-                    applyReconfiguration(validated);
+                        // Merge reconfiguration with current state
+                        applyReconfiguration(validated);
+                    }
+                } catch (const karabo::util::Exception& e) {
+                    this->errorFound(e.userFriendlyMsg(), e.detailedMsg());
+                    reply(false, e.userFriendlyMsg());
+                    return;
                 }
                 reply(result.first, result.second);
             }
@@ -784,7 +790,7 @@ namespace karabo {
             }
 
             karabo::util::Schema& getStateDependentSchema(const std::string& currentState) {
-                KARABO_LOG_DEBUG << "call: getStateDependentSchema()";
+                KARABO_LOG_DEBUG << "call: getStateDependentSchema() for state: " << currentState;
                 boost::mutex::scoped_lock lock(m_stateDependendSchemaMutex);
                 // Check cache, whether a special set of state-dependent expected parameters was created before
                 std::map<std::string, karabo::util::Schema>::iterator it = m_stateDependendSchema.find(currentState);
@@ -792,6 +798,8 @@ namespace karabo {
                     it = m_stateDependendSchema.insert(make_pair(currentState, Device::getSchema(m_classId, karabo::util::Schema::AssemblyRules(karabo::util::WRITE, currentState)))).first; // New one
                     KARABO_LOG_DEBUG << "Providing freshly cached state-dependent schema:\n" << it->second;
                     if (!m_injectedSchema.empty()) it->second.merge(m_injectedSchema);
+                } else {
+                    KARABO_LOG_DEBUG << "Schema was already cached";
                 }
                 return it->second;
             }

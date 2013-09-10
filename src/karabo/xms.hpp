@@ -12,6 +12,8 @@
 #define	KARABO_XMS_HPP
 
 #include "xms/SignalSlotable.hh"
+#include "xms/NetworkInput.hh"
+#include "xms/NetworkOutput.hh"
 
 #endif
 

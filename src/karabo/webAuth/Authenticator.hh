@@ -15,7 +15,8 @@
 #include "soapStub.h"
 
 #ifndef KARABO_DEFAULT_ACCESS_LEVEL
-#define KARABO_DEFAULT_ACCESS_LEVEL karabo::util::Schema::OBSERVER
+//#define KARABO_DEFAULT_ACCESS_LEVEL karabo::util::Schema::OBSERVER // Inside XFEL
+#define KARABO_DEFAULT_ACCESS_LEVEL karabo::util::Schema::ADMIN // Outside XFEL
 #endif
 
 #define KARABO_SOFTWARE_DESC "Karabo"

@@ -38,7 +38,7 @@ namespace karabo {
                 using namespace karabo::util;
 
                 BOOL_ELEMENT(expected).key("enableAppendMode")
-                        .description("If set to true a different internal structure is used, which buffers consecutive "
+                        .description("NOTE: Has no effect on Output-Network. If set to true a different internal structure is used, which buffers consecutive "
                                      "calls to write(). The update() function must then be called to trigger final outputting "
                                      "of the accumulated sequence of data.")
                         .displayedName("Enable append mode")

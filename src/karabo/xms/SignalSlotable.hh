@@ -681,7 +681,7 @@ namespace karabo {
             const boost::function<void (const boost::shared_ptr<InputType>&) >& onInputAvailableHandler = boost::function<void (const boost::shared_ptr<InputType>&) >(), 
             const boost::function<void ()>& onEndOfStreamEventHandler = boost::function<void ()>()) {
                 using namespace karabo::util;
-                karabo::io::AbstractInput::Pointer channel = karabo::io::AbstractInput::createChoice(name, input);
+                karabo::io::AbstractInput::Pointer channel = InputType::createChoice(name, input);
                 channel->setInstanceId(m_instanceId);
                 if (!onInputAvailableHandler.empty()) {
                     channel->registerIOEventHandler(onInputAvailableHandler);
@@ -696,7 +696,7 @@ namespace karabo {
             template <class OutputType>
             boost::shared_ptr<OutputType > createOutputChannel(const std::string& name, const karabo::util::Hash& input, const boost::function<void (const boost::shared_ptr<OutputType>&) >& onOutputPossibleHandler = boost::function<void (const boost::shared_ptr<OutputType>&) >()) {
                 using namespace karabo::util;
-                karabo::io::AbstractOutput::Pointer channel = karabo::io::AbstractOutput::createChoice(name, input);
+                karabo::io::AbstractOutput::Pointer channel = OutputType::createChoice(name, input);
                 channel->setInstanceId(m_instanceId);
                 if (!onOutputPossibleHandler.empty()) {
                     channel->registerIOEventHandler(onOutputPossibleHandler);
