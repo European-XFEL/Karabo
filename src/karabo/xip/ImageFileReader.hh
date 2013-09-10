@@ -33,10 +33,7 @@ namespace karabo {
 
         public:
 
-            KARABO_CLASSINFO(ImageFileReader, "File", "1.0")
-
-          
-           
+            KARABO_CLASSINFO(ImageFileReader, "ImageFile", "1.0")
 
             /**
              * Necessary method as part of the factory/configuration system

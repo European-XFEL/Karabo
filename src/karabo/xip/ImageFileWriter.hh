@@ -32,9 +32,13 @@ namespace karabo {
         template <class TPix>
         class ImageFileWriter : public karabo::io::Output< CpuImage<TPix> > {
 
+            karabo::util::Hash m_input;
+            boost::filesystem::path m_filename;
+            int m_number;
+            
         public:
 
-            KARABO_CLASSINFO(ImageFileWriter, "File", "1.0")
+            KARABO_CLASSINFO(ImageFileWriter, "ImageFile", "1.0")
 
             /**
              * Necessary method as part of the factory/configuration system
@@ -50,23 +54,17 @@ namespace karabo {
                         .isOutputFile()
                         .assignmentMandatory()
                         .commit();
-
-                BOOL_ELEMENT(expected).key("addNumbers")
-                        .description("If true, several calls to write will result in filenames that have a six-digit number appended to the filename, otherwise the file will be overwritten each time")
-                        .displayedName("Add Numbers")
-                        .assignmentOptional().defaultValue(false)
-                        .commit();
             }
 
             ImageFileWriter(const karabo::util::Hash& config) : karabo::io::Output< CpuImage<TPix> >(config) {
                 m_input = config;
                 config.get("filename", m_filename);
                 m_number = -1;
-                if (config.get<bool>("addNumbers")) {
+                if (this->m_appendModeEnabled) {
                     m_number = 0;
                 }
             }
-            
+
             virtual ~ImageFileWriter() {
             };
 
@@ -96,14 +94,7 @@ namespace karabo {
                     KARABO_RETHROW_AS(KARABO_IO_EXCEPTION("Problems reading image " + m_filename.string()));
                 }
             }
-
-        private:
-
-            karabo::util::Hash m_input;
-            boost::filesystem::path m_filename;
-            int m_number;
         };
-
     }
 }
 

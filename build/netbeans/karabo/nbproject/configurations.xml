@@ -12,6 +12,7 @@
         <itemPath>../../../src/karabo/core/GuiServerDevice.hh</itemPath>
       </logicalFolder>
       <logicalFolder name="f1" displayName="State Machines" projectFiles="true">
+        <itemPath>../../../src/karabo/core/BaseFsm.hh</itemPath>
         <itemPath>../../../src/karabo/core/CameraFsm.hh</itemPath>
         <itemPath>../../../src/karabo/core/FsmMacros.hh</itemPath>
         <itemPath>../../../src/karabo/core/OkErrorFsm.hh</itemPath>
@@ -205,9 +206,11 @@
         <itemPath>../../../src/karabo/util/HashFilter.cc</itemPath>
         <itemPath>../../../src/karabo/util/HashFilter.hh</itemPath>
         <itemPath>../../../src/karabo/util/ImageElement.hh</itemPath>
+        <itemPath>../../../src/karabo/util/InputElement.hh</itemPath>
         <itemPath>../../../src/karabo/util/LeafElement.hh</itemPath>
         <itemPath>../../../src/karabo/util/ListElement.hh</itemPath>
         <itemPath>../../../src/karabo/util/NodeElement.hh</itemPath>
+        <itemPath>../../../src/karabo/util/OutputElement.hh</itemPath>
         <itemPath>../../../src/karabo/util/OverwriteElement.hh</itemPath>
         <itemPath>../../../src/karabo/util/PathElement.hh</itemPath>
         <itemPath>../../../src/karabo/util/Schema.cc</itemPath>
@@ -285,7 +288,6 @@
         <itemPath>../../../src/karabo/xip/CImg.h</itemPath>
         <itemPath>../../../src/karabo/xip/CpuEnvironment.cc</itemPath>
         <itemPath>../../../src/karabo/xip/CpuEnvironment.hh</itemPath>
-        <itemPath>../../../src/karabo/xip/CpuImage.cpp</itemPath>
         <itemPath>../../../src/karabo/xip/CpuImage.hh</itemPath>
         <itemPath>../../../src/karabo/xip/CpuImageBinarySerializer.cc</itemPath>
         <itemPath>../../../src/karabo/xip/CpuImageBinarySerializer.hh</itemPath>
@@ -293,6 +295,8 @@
         <itemPath>../../../src/karabo/xip/Image.hh</itemPath>
         <itemPath>../../../src/karabo/xip/RawImageData.cc</itemPath>
         <itemPath>../../../src/karabo/xip/RawImageData.hh</itemPath>
+        <itemPath>../../../src/karabo/xip/RawImageDataBinarySerializer.cc</itemPath>
+        <itemPath>../../../src/karabo/xip/RawImageDataBinarySerializer.hh</itemPath>
         <itemPath>../../../src/karabo/xip/Statistics.hh</itemPath>
       </logicalFolder>
       <logicalFolder name="f2" displayName="Processor" projectFiles="true">
@@ -301,10 +305,6 @@
       </logicalFolder>
     </logicalFolder>
     <logicalFolder name="f6" displayName="xms" projectFiles="true">
-      <itemPath>../../../src/karabo/xms/FileWrapNetworkInput.cc</itemPath>
-      <itemPath>../../../src/karabo/xms/FileWrapNetworkInput.hh</itemPath>
-      <itemPath>../../../src/karabo/xms/FileWrapNetworkOutput.cc</itemPath>
-      <itemPath>../../../src/karabo/xms/FileWrapNetworkOutput.hh</itemPath>
       <itemPath>../../../src/karabo/xms/Memory.cc</itemPath>
       <itemPath>../../../src/karabo/xms/Memory.hh</itemPath>
       <itemPath>../../../src/karabo/xms/NetworkInput.cc</itemPath>
@@ -458,6 +458,11 @@
         <packFileList>
         </packFileList>
       </packaging>
+      <item path="../../../src/karabo/core/BaseFsm.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="../../../src/karabo/core/CameraFsm.hh"
             ex="false"
             tool="3"
@@ -1459,6 +1464,11 @@
             tool="3"
             flavor2="0">
       </item>
+      <item path="../../../src/karabo/util/InputElement.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="../../../src/karabo/util/LeafElement.hh"
             ex="false"
             tool="3"
@@ -1475,6 +1485,11 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/util/OrderedMap.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/OutputElement.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -1697,11 +1712,6 @@
             tool="3"
             flavor2="0">
       </item>
-      <item path="../../../src/karabo/xip/CpuImage.cpp"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
       <item path="../../../src/karabo/xip/CpuImage.hh"
             ex="false"
             tool="3"
@@ -1754,32 +1764,22 @@
             tool="3"
             flavor2="0">
       </item>
+      <item path="../../../src/karabo/xip/RawImageDataBinarySerializer.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/xip/RawImageDataBinarySerializer.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="../../../src/karabo/xip/SingleProcessor.hh"
             ex="false"
             tool="3"
             flavor2="0">
       </item>
       <item path="../../../src/karabo/xip/Statistics.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/xms/FileWrapNetworkInput.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/xms/FileWrapNetworkInput.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/xms/FileWrapNetworkOutput.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/xms/FileWrapNetworkOutput.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -2017,6 +2017,11 @@
         <packFileList>
         </packFileList>
       </packaging>
+      <item path="../../../src/karabo/core/BaseFsm.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="../../../src/karabo/core/CameraFsm.hh"
             ex="false"
             tool="3"
@@ -3015,6 +3020,11 @@
             tool="3"
             flavor2="0">
       </item>
+      <item path="../../../src/karabo/util/InputElement.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="../../../src/karabo/util/LeafElement.hh"
             ex="false"
             tool="3"
@@ -3031,6 +3041,11 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/util/OrderedMap.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/OutputElement.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -3253,11 +3268,6 @@
             tool="3"
             flavor2="0">
       </item>
-      <item path="../../../src/karabo/xip/CpuImage.cpp"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
       <item path="../../../src/karabo/xip/CpuImage.hh"
             ex="false"
             tool="3"
@@ -3310,32 +3320,22 @@
             tool="3"
             flavor2="0">
       </item>
+      <item path="../../../src/karabo/xip/RawImageDataBinarySerializer.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/xip/RawImageDataBinarySerializer.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="../../../src/karabo/xip/SingleProcessor.hh"
             ex="false"
             tool="3"
             flavor2="0">
       </item>
       <item path="../../../src/karabo/xip/Statistics.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/xms/FileWrapNetworkInput.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/xms/FileWrapNetworkInput.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/xms/FileWrapNetworkOutput.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/xms/FileWrapNetworkOutput.hh"
             ex="false"
             tool="3"
             flavor2="0">

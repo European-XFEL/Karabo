@@ -31,8 +31,7 @@ namespace karabo {
         /**
          * The BinaryFileOutput class.
          */
-        template <
-        class T>
+        template <class T>
         class BinaryFileOutput : public Output<T> {
 
             boost::filesystem::path m_filename;

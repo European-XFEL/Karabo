@@ -17,7 +17,6 @@ namespace karabo {
         // Base64 Index Table
         const std::string b64_char = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
-
         std::string base64Encode(const unsigned char* bytes_to_encode, const size_t len) {
             unsigned char i0, i1, i2; // Bytes from input string
             unsigned char o0, o1, o2, o3; // Bytes to output string
