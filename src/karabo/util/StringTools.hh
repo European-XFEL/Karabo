@@ -129,6 +129,10 @@ namespace karabo {
         inline std::string toString(const std::vector<unsigned char>& value) {
             return karabo::util::base64Encode(&value[0], value.size());
         }
+        
+         inline std::string toString(const std::vector<char>& value) {
+            return karabo::util::base64Encode(reinterpret_cast<const unsigned char*>(&value[0]), value.size());
+        }
 
         template <typename T>
         inline std::string toString(const std::set<T>& value) {
@@ -205,6 +209,14 @@ namespace karabo {
         inline std::vector<unsigned char> fromString(const std::string& value, const std::string&) {
             std::vector<unsigned char> tmp;
             karabo::util::base64Decode(value, tmp);
+            return tmp;
+        }
+        
+        template <> 
+        inline std::vector<char> fromString(const std::string& value, const std::string&) {
+            std::vector<char> tmp;
+            std::vector<unsigned char>* casted = reinterpret_cast<std::vector<unsigned char>* >(&tmp);
+            karabo::util::base64Decode(value, *casted);
             return tmp;
         }
 

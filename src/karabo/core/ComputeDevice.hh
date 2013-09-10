@@ -23,6 +23,7 @@ namespace karabo {
             bool m_isEndOfStream;
             bool m_deviceIsDead;
             int m_nEndOfStreams;
+            int m_iterationCount;
             
             boost::thread m_computeThread;
             boost::thread m_waitingIOThread;
@@ -42,11 +43,20 @@ namespace karabo {
 
             virtual ~ComputeDevice();
             
-            // Main function to implement
+            /**
+             * Put your specific algorithms here
+             */
             virtual void compute() = 0;
             
-            virtual void onEndOfStream() {
-            }
+            /**
+             * Override this function for specializing the update behaviors of your IO channels
+             */            
+            virtual void update();
+            
+            /**
+             * Override this function for specializing the endOfStream behavior
+             */
+            virtual void onEndOfStream();
             
             void _onInputAvailable(const karabo::io::AbstractInput::Pointer&);
             
@@ -92,7 +102,7 @@ namespace karabo {
 
             KARABO_FSM_STATE(Paused)
 
-            KARABO_FSM_STATE_V_E(Finished, finishedOnEntry)
+            KARABO_FSM_STATE_V_EE(Finished, finishedOnEntry, finishedOnExit)
 
             KARABO_FSM_STATE_V_E(Aborted, abortedOnEntry)
             
@@ -103,6 +113,8 @@ namespace karabo {
             KARABO_FSM_V_ACTION0(ConnectAction, connectAction)
             
             KARABO_FSM_V_ACTION0(EndOfStreamAction, endOfStreamAction)
+            
+            KARABO_FSM_VE_ACTION0(NextIterationAction, onNextIteration)
             
             /**************************************************************/
             /*                           Guards                           */
@@ -132,6 +144,7 @@ namespace karabo {
             Row< WaitingIO, UpdatedIOEvent, Ready, none, none >,
             Row< Aborted, ResetEvent, Ready, none, none >,
             Row< Finished, ResetEvent, Ready, none, none >,
+            Row< Finished, StartEvent, Computing, NextIterationAction, none>,
             Row< Ok, ErrorFoundEvent, Error, ErrorFoundAction, none >,
             Row< Error, ResetEvent, Ok, none, none >
             KARABO_FSM_TABLE_END
@@ -152,7 +165,6 @@ namespace karabo {
             
             void doCompute();
             void doWait();
-            void updateChannels();
         };
     }
 }

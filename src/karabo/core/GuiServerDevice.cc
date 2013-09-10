@@ -391,10 +391,10 @@ namespace karabo {
                             KARABO_LOG_DEBUG << "Preprocessing image";
                             
                             size_t size = img.size();
-                            vector<unsigned char> qtImage(size * 4); // Have to blow up for RGBA
+                            vector<char> qtImage(size * 4); // Have to blow up for RGBA
 
                             if (img.getChannelSpace() == ChannelSpace::u_8_1) {
-                                unsigned char* data = img.dataPointer();
+                                char* data = img.dataPointer();
                                 unsigned char pmax = 0, pmin = 0xFF;
                                 for (size_t i = 0; i < size; i++) {
                                     unsigned char pix = data[i];

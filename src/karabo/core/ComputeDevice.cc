@@ -61,10 +61,31 @@ namespace karabo {
                     .reconfigurable()
                     .assignmentOptional().defaultValue(true)
                     .commit();
+
+            BOOL_ELEMENT(expected).key("autoEndOfStream")
+                    .displayedName("Auto end-of-stream")
+                    .description("If true, automatically forwards the end-of-stream signal to all connected (downstream) devices")
+                    .reconfigurable()
+                    .assignmentOptional().defaultValue(true)
+                    .commit();
+            
+            BOOL_ELEMENT(expected).key("autoIterate")
+                    .displayedName("Auto iterate")
+                    .description("If true, automatically iterates cyclic workflows")
+                    .reconfigurable()
+                    .assignmentOptional().defaultValue(true)
+                    .commit();
+
+            INT32_ELEMENT(expected).key("iteration")
+                    .displayedName("Iteration")
+                    .description("The current iteration")
+                    .readOnly()
+                    .initialValue(0)
+                    .commit();
         }
 
 
-        ComputeDevice::ComputeDevice(const Hash& input) : Device<>(input), m_isAborted(false), m_isEndOfStream(false), m_deviceIsDead(false), m_nEndOfStreams(0) {
+        ComputeDevice::ComputeDevice(const Hash& input) : Device<>(input), m_isAborted(false), m_isEndOfStream(false), m_deviceIsDead(false), m_nEndOfStreams(0), m_iterationCount(0) {
 
             m_computeMutex.lock();
             m_computeThread = boost::thread(boost::bind(&karabo::core::ComputeDevice::doCompute, this));
@@ -91,7 +112,9 @@ namespace karabo {
 
 
         void ComputeDevice::_onInputAvailable(const karabo::io::AbstractInput::Pointer&) {
-            this->start();
+            if (get<string>("state") == "Ok.Finished" && !get<bool>("autoIterate")) {
+                // Do nothing
+            } else this->start();
         }
 
 
@@ -100,7 +123,7 @@ namespace karabo {
             if (m_nEndOfStreams >= this->getInputChannels().size()) {
                 m_nEndOfStreams = 0;
                 m_isEndOfStream = true;
-                this->endOfStream();
+                if (get<bool>("autoEndOfStream")) this->endOfStream();
             }
         }
 
@@ -113,7 +136,12 @@ namespace karabo {
         }
 
 
-        void ComputeDevice::updateChannels() {
+        void ComputeDevice::onEndOfStream() {
+
+        }
+
+
+        void ComputeDevice::update() {
             const InputChannels& inputChannels = this->getInputChannels();
             const OutputChannels& outputChannels = this->getOutputChannels();
             for (InputChannels::const_iterator it = inputChannels.begin(); it != inputChannels.end(); ++it)
@@ -134,7 +162,7 @@ namespace karabo {
 
 
         void ComputeDevice::readyStateOnEntry() {
-            if (m_isEndOfStream) this->endOfStream();
+            if (m_isEndOfStream && get<bool>("autoEndOfStream")) this->endOfStream();
             else if (m_isAborted) this->abort();
             else if (this->getInputChannels().size() > 0 && this->get<bool>("autoCompute")) this->start();
         }
@@ -191,7 +219,7 @@ namespace karabo {
                 m_waitingIOMutex.lock();
                 if (m_deviceIsDead) return;
                 try {
-                    updateChannels();
+                    update();
                 } catch (const Exception& e) {
                     m_waitingIOMutex.unlock();
                     this->errorFound(e.userFriendlyMsg(), e.detailedMsg());
@@ -206,11 +234,19 @@ namespace karabo {
         void ComputeDevice::waitingIOOnExit() {
             m_waitingIOMutex.lock();
         }
-        
+
+
         void ComputeDevice::finishedOnEntry() {
+            m_iterationCount++;
             m_isEndOfStream = false;
         }
-        
+
+
+        void ComputeDevice::finishedOnExit() {
+            set("iteration", m_iterationCount);
+        }
+
+
         void ComputeDevice::abortedOnEntry() {
             m_isAborted = false;
         }

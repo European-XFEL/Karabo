@@ -133,6 +133,8 @@ namespace karabo {
             friend class ChoiceElement;
             friend class ListElement;
             friend class NodeElement;
+            friend class InputElement;
+            friend class OutputElement;
             friend class karabo::io::SchemaXmlSerializer;
             friend class karabo::io::SchemaBinarySerializer;
 

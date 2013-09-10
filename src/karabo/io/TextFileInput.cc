@@ -16,7 +16,6 @@ namespace karabo {
     namespace io {
 
         KARABO_REGISTER_FOR_CONFIGURATION(Input<Hash>, TextFileInput<Hash> )
-        //KARABO_REGISTER_FOR_CONFIGURATION(Input<Schema>, TextFileReader<Schema> )
-   
+                
     } 
 } 

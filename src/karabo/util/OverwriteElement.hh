@@ -19,6 +19,7 @@ namespace karabo {
     namespace util {
 
         class OverwriteElement {
+
             Schema* m_schema;
             Hash::Node* m_node;
 
@@ -32,7 +33,7 @@ namespace karabo {
              * @param name unique key name
              * @return  reference to the Element
              */
-            OverwriteElement& key(std::string const& name) {                
+            OverwriteElement& key(std::string const& name) {
                 boost::optional<Hash::Node&> node = m_schema->getParameterHash().find(name);
                 if (node) { // exists
                     m_node = node.get_ptr();
@@ -78,17 +79,17 @@ namespace karabo {
                 m_node->setAttribute<int>(KARABO_SCHEMA_ASSIGNMENT, Schema::INTERNAL_PARAM);
                 return *this;
             }
-            
+
             OverwriteElement& setNowInit() {
                 m_node->setAttribute<int>(KARABO_SCHEMA_ACCESS_MODE, INIT);
                 return *this;
             }
-            
+
             OverwriteElement& setNowReconfigurable() {
                 m_node->setAttribute<int>(KARABO_SCHEMA_ACCESS_MODE, WRITE);
                 return *this;
             }
-            
+
             OverwriteElement& setNowReadOnly() {
                 m_node->setAttribute<int>(KARABO_SCHEMA_ACCESS_MODE, READ);
                 return *this;
@@ -134,6 +135,31 @@ namespace karabo {
                 return *this;
             }
 
+            OverwriteElement& setNowObserverAccess() {
+                m_node->setAttribute<int>(KARABO_SCHEMA_REQUIRED_ACCESS_LEVEL, Schema::OBSERVER);
+                return *this;
+            }
+
+            OverwriteElement& setNowUserAccess() {
+                m_node->setAttribute<int>(KARABO_SCHEMA_REQUIRED_ACCESS_LEVEL, Schema::USER);
+                return *this;
+            }
+
+            OverwriteElement& setNowOperatorAccess() {
+                m_node->setAttribute<int>(KARABO_SCHEMA_REQUIRED_ACCESS_LEVEL, Schema::OPERATOR);
+                return *this;
+            }
+
+            OverwriteElement& setNowExpertAccess() {
+                m_node->setAttribute<int>(KARABO_SCHEMA_REQUIRED_ACCESS_LEVEL, Schema::EXPERT);
+                return *this;
+            }
+
+            OverwriteElement& setNowAdminAccess() {
+                m_node->setAttribute<int>(KARABO_SCHEMA_REQUIRED_ACCESS_LEVEL, Schema::ADMIN);
+                return *this;
+            }
+
             OverwriteElement& setNewUnit(const UnitType& unit) {
                 m_node->setAttribute<int>(KARABO_SCHEMA_UNIT_ENUM, unit);
                 std::pair<std::string, std::string> names = karabo::util::getUnit(unit);
@@ -149,7 +175,7 @@ namespace karabo {
                 m_node->setAttribute(KARABO_SCHEMA_METRIC_PREFIX_SYMBOL, names.second);
                 return *this;
             }
-            
+
             /**
              * The <b>commit</b> method injects the element to the expected parameters list. If not called
              * the element is not usable. This must be called after the element is fully defined.
@@ -157,7 +183,7 @@ namespace karabo {
              */
             void commit() {
                 // Does nothing, changes happened on existing node
-                }
+            }
         };
         typedef OverwriteElement OVERWRITE_ELEMENT;
     }

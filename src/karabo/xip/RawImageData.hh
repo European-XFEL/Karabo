@@ -8,10 +8,8 @@
 #ifndef KARABO_XIP_RAWIMAGEDATA_HH
 #define	KARABO_XIP_RAWIMAGEDATA_HH
 
-#include "AbstractImage.hh"
-#include <karabo/io/TextSerializer.hh>
+#include <karabo/util/Hash.hh>
 #include <karabo/util/Dims.hh>
-
 
 namespace karabo {
     namespace xip {
@@ -72,18 +70,19 @@ namespace karabo {
                 MSB
             };
         }
-        
+
         typedef Endianness::EndiannessType EndiannessType;
 
         class RawImageData {
-            
-            typedef karabo::io::TextSerializer<karabo::util::Hash> Serializer;
 
             karabo::util::Hash* m_hash;
-            Serializer::Pointer m_serializer;
             bool m_isShared;
 
         public:
+            
+            KARABO_CLASSINFO(RawImageData, "RawImageData", "1.0")
+            
+            RawImageData();
 
             /**
              * Constructor from already existing memory (copies and owns data)
@@ -91,9 +90,9 @@ namespace karabo {
              * @param byteSize
              * @param dimensions
              * @param encoding
-             * @param channelSpace
-             * @param isBigEndian
+             * @param channelSpace             
              * @param header
+             * @param isBigEndian
              */
             template <class T>
             RawImageData(const T * const data,
@@ -101,121 +100,106 @@ namespace karabo {
                          const karabo::util::Dims& dimensions,
                          const EncodingType encoding,
                          const ChannelSpaceType channelSpace,
-                         const bool isBigEndian = karabo::util::isBigEndian(),
-                         const karabo::util::Hash& header = karabo::util::Hash()) : m_serializer(Serializer::create("Xml")), m_isShared(false) {
-                             
-                             
-
+                         const karabo::util::Hash& header = karabo::util::Hash(), 
+                         const bool isBigEndian = karabo::util::isBigEndian()) : m_hash(0), m_isShared(false) {
+                
                 m_hash = new karabo::util::Hash();
-
-                std::vector<unsigned char>& buffer = m_hash->bindReference<std::vector<unsigned char> >("data");
-                buffer.resize(byteSize);
-                std::memcpy(&buffer[0], reinterpret_cast<const unsigned char*> (data), byteSize);
-                // TODO split the following part into an function (e.g. assignMetaData)
-                m_hash->set("dims", dimensions.toVector());
-                m_hash->set<int>("encoding", encoding);
-                m_hash->set<int>("channelSpace", channelSpace);
-                m_hash->set<bool>("isBigEndian", isBigEndian);
-                m_hash->set<std::string>("header", m_serializer->save(header));
+                
+                setData(data, byteSize);
+                setDimensions(dimensions);
+                setEncoding(encoding);
+                setChannelSpace(channelSpace);
+                setIsBigEndian(isBigEndian);
+                setHeader(header);
             }
 
             /**
              * Constructor which only allocates memory. Data can be directly written using the dataPointer function
+             * @param byteSize
+             * @param dimensions
+             * @param encoding
+             * @param channelSpace             
+             * @param header
+             * @param isBigEndian
              */
             RawImageData(const size_t byteSize,
                          const karabo::util::Dims& dimensions,
                          const EncodingType encoding,
                          const ChannelSpaceType channelSpace,
-                         const bool isBigEndian = karabo::util::isBigEndian(),
-                         const karabo::util::Hash& header = karabo::util::Hash());
+                         const karabo::util::Hash& header = karabo::util::Hash(),
+                         const bool isBigEndian = karabo::util::isBigEndian());
 
             /**
              * Constructs from a hash that has to follow the correct format
              * @param imageHash
              * @param shareData
              */
-            RawImageData(karabo::util::Hash& imageHash, bool sharesData = true);
+            RawImageData(karabo::util::Hash& imageHash, bool sharesData = false);
+            
+            RawImageData(const RawImageData& image);
 
             virtual ~RawImageData();
 
-            inline unsigned char* dataPointer() {
-                return &(m_hash->get<std::vector< unsigned char> >("data")[0]);
-            }
-
-            inline unsigned char* dataPointer() const {
-                return &(m_hash->get<std::vector< unsigned char> >("data")[0]);
-            }
-
-            inline const std::vector<unsigned char>& getData() const {
-                return m_hash->get<std::vector<unsigned char> >("data");
-            }
-
+            char* dataPointer();
+            
+            char* dataPointer() const;
+                
+            const std::vector<char>& getData() const;
+            
             template <class T>
             inline void setData(const std::vector<T>& data) {
                 unsigned long long byteSize = data.size() * sizeof (T);
                 boost::optional<karabo::util::Hash::Node&> node = m_hash->find("data");
                 if (node) {
-                    std::vector<unsigned char>& buffer = node->getValue<std::vector<unsigned char> >();
+                    std::vector<char>& buffer = node->getValue<std::vector<char> >();
                     buffer.resize(byteSize);
-                    std::memcpy(&buffer[0], reinterpret_cast<const unsigned char*> (&data[0]), byteSize);
+                    std::memcpy(&buffer[0], reinterpret_cast<const char*> (&data[0]), byteSize);
                 } else {
-                    std::vector<unsigned char>& buffer = m_hash->bindReference<std::vector<unsigned char> >("data");
+                    std::vector<char>& buffer = m_hash->bindReference<std::vector<char> >("data");
                     buffer.resize(byteSize);
-                    std::memcpy(&buffer[0], reinterpret_cast<const unsigned char*> (&data[0]), byteSize);
+                    std::memcpy(&buffer[0], reinterpret_cast<const char*> (&data[0]), byteSize);
                 }
             }
-
-            size_t size() const {
-                return getDimensions().size();
-            }
-
-            size_t getByteSize() const {
-                return getData().size();
+            
+            template <class T>
+            inline void setData(const T* data, const size_t byteSize) {
+                std::vector<char>& buffer = m_hash->bindReference<std::vector<char> >("data");
+                buffer.resize(byteSize);
+                std::memcpy(&buffer[0], reinterpret_cast<const char*> (data), byteSize);
             }
             
-            void setByteSize(const size_t& byteSize) {
-                if (m_hash->has("data")) {
-                    m_hash->get<std::vector<unsigned char> >("data").resize(byteSize);
-                } else {
-                    m_hash->bindReference<std::vector<unsigned char> >("data").resize(byteSize);
-                }
-            }
-
-            inline karabo::util::Dims getDimensions() const {
-                return karabo::util::Dims(m_hash->get<std::vector<unsigned long long> >("dims"));
-            }
-
-            inline void setDimensions(const karabo::util::Dims& dimensions) {
-                m_hash->set<std::vector<unsigned long long> >("dims", dimensions.toVector());
-            }
-
-            inline int getEncoding() const {
-                return m_hash->get<int>("encoding");
-            }
-
-            inline void setEncoding(const EncodingType encoding) {
-                m_hash->set<int>("encoding", encoding);
-            }
-
-            inline int getChannelSpace() const {
-                return m_hash->get<int>("channelSpace");
-            }
-
-            inline void setChannelSpace(const ChannelSpaceType channelSpace) {
-                m_hash->set<int>("channelSpace", channelSpace);
-            }
-
-            inline void setIsBigEndian(const bool isBigEndian) {
-                m_hash->set<bool>("isBigEndian", isBigEndian);
-            }
-
-            inline bool isBigEndian() const {
-                return m_hash->get<bool>("isBigEndian");
-            }
-
-            karabo::util::Hash getHeader() const;
+            void allocateData(const size_t byteSize);
             
+            size_t size() const;
+                
+            size_t getByteSize() const;
+            
+            void setByteSize(const size_t& byteSize);
+            
+            karabo::util::Dims getDimensions() const;
+            
+             void setDimensions(const karabo::util::Dims& dimensions);
+            
+             int getEncoding() const;
+            
+             void setEncoding(const EncodingType encoding);
+            
+             int getChannelSpace() const;
+            
+             void setChannelSpace(const ChannelSpaceType channelSpace);
+                
+             void setIsBigEndian(const bool isBigEndian);
+            
+             bool isBigEndian() const;
+                
+            const karabo::util::Hash& getHeader() const;
+
             void setHeader(const karabo::util::Hash& header) const;
+
+            const karabo::util::Hash& toHash() const;
+            
+            void swap(RawImageData& image);
+            
         };
     }
 }
