@@ -232,7 +232,68 @@ namespace karathon {
             registerReply(reply);
         }
 
+        bp::object createInputChannel(const bp::object& inputType, const std::string& name, const karabo::util::Hash& input,
+                                      const bp::object& onInputAvailableHandler, const bp::object& onEndOfStreamEventHandler) {
+            using namespace karabo::util;
+            if (!PyType_Check(inputType.ptr())) {
+                throw KARABO_PYTHON_EXCEPTION("Argument 'inputType' given in 'createInputChannel(inputType, ...)' must be a class in Python");
+            }
+            if (!PyObject_HasAttrString(inputType.ptr(), "createChoice")) {
+                throw KARABO_PYTHON_EXCEPTION("Class given in 'createInputChannel(inputType, ...)' has no 'createChoice' method");
+            }
 
+            bp::object channel = inputType.attr("createChoice")(name, input);
+
+            if (!PyObject_HasAttrString(channel.ptr(), "setInstanceId")) {
+                throw KARABO_PYTHON_EXCEPTION("createInputChannel(inputType, ...): Instance gotten by 'createChoice' call doesn't have 'setInstanceId' method");
+            }
+            channel.attr("setInstanceId")(m_instanceId);
+
+            if (!PyObject_HasAttrString(channel.ptr(), "registerIOEventHandler")) {
+                throw KARABO_PYTHON_EXCEPTION("createInputChannel(inputType, ...): Instance gotten by 'createChoice' call doesn't have 'registerIOEventHandler' method");
+            }
+            if (!PyObject_HasAttrString(channel.ptr(), "registerEndOfStreamEventHandler")) {
+                throw KARABO_PYTHON_EXCEPTION("createInputChannel(inputType, ...): Instance gotten by 'createChoice' call doesn't have 'registerEndOfStreamEventHandler' method");
+            }
+
+            if (onInputAvailableHandler != bp::object()) {
+                channel.attr("registerIOEventHandler")(onInputAvailableHandler);
+            }
+            if (onEndOfStreamEventHandler != bp::object()) {
+                channel.attr("registerEndOfStreamEventHandler")(onEndOfStreamEventHandler);
+            }
+            m_inputChannels[name] = channel;
+            return channel;
+        }
+
+        bp::object createOutputChannel(const bp::object outputType, const std::string& name,
+                                       const karabo::util::Hash& input, const bp::object& onOutputPossibleHandler) {
+            using namespace karabo::util;
+            if (!PyType_Check(outputType.ptr())) {
+                throw KARABO_PYTHON_EXCEPTION("Argument 'outputType' given in 'createOutputChannel(outputType, ...)' must be a class in Python");
+            }
+            if (!PyObject_HasAttrString(outputType.ptr(), "createChoice")) {
+                throw KARABO_PYTHON_EXCEPTION("Class given in 'createOutputChannel(outputType, ...)' has no 'createChoice' method");
+            }
+
+            bp::object channel = outputType.attr("createChoice")(name, input);
+            
+            if (!PyObject_HasAttrString(channel.ptr(), "setInstanceId")) {
+                throw KARABO_PYTHON_EXCEPTION("createOutputChannel(outputType, ...): Instance gotten by 'createChoice' call doesn't have 'setInstanceId' method");
+            }
+            channel.attr("setInstanceId")(m_instanceId);
+            
+            if (!PyObject_HasAttrString(channel.ptr(), "registerIOEventHandler")) {
+                throw KARABO_PYTHON_EXCEPTION("createOutputChannel(outputType, ...): Instance gotten by 'createChoice' call doesn't have 'registerIOEventHandler' method");
+            }
+            if (onOutputPossibleHandler != bp::object()) {
+                channel.attr("registerIOEventHandler")(onOutputPossibleHandler);
+            }
+            m_outputChannels[name] = channel;
+            return channel;
+        }
+
+        
     private: // members
         boost::thread m_eventLoop;
 
