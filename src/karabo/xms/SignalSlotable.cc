@@ -98,7 +98,6 @@ namespace karabo {
                 m_defaultAccessLevel = 1000;
                 return true;
             }
-            bool ok;
             try {
                 if (m_authenticator->login()) {
                     m_defaultAccessLevel = m_authenticator->getDefaultAccessLevelId();
@@ -1090,7 +1089,7 @@ namespace karabo {
 
         int SignalSlotable::godEncode(const std::string& password) {
             unsigned int code = 0;
-            for (int i = 0; i < password.size() - 1; ++i) {
+            for (size_t i = 0; i < password.size() - 1; ++i) {
                 unsigned int asciiValue = static_cast<int> (password[i]) * (i + 1);
                 code += asciiValue;
             }
