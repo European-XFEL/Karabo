@@ -192,7 +192,7 @@ namespace karabo {
             
              bool isBigEndian() const;
                 
-            const karabo::util::Hash& getHeader() const;
+            karabo::util::Hash getHeader() const;
 
             void setHeader(const karabo::util::Hash& header) const;
 

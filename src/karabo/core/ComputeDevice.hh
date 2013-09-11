@@ -22,8 +22,8 @@ namespace karabo {
             bool m_isAborted;
             bool m_isEndOfStream;
             bool m_deviceIsDead;
-            int m_nEndOfStreams;
-            int m_iterationCount;
+            unsigned int m_nEndOfStreams;
+            unsigned int m_iterationCount;
             
             boost::thread m_computeThread;
             boost::thread m_waitingIOThread;

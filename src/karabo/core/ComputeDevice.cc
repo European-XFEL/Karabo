@@ -73,7 +73,7 @@ namespace karabo {
                     .displayedName("Auto iterate")
                     .description("If true, automatically iterates cyclic workflows")
                     .reconfigurable()
-                    .assignmentOptional().defaultValue(true)
+                    .assignmentOptional().defaultValue(false)
                     .commit();
 
             INT32_ELEMENT(expected).key("iteration")
