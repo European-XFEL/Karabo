@@ -13,6 +13,8 @@
 #include <karabo/util/ChoiceElement.hh>
 #include <karabo/util/OverwriteElement.hh>
 #include <karabo/util/PathElement.hh>
+#include <karabo/util/InputElement.hh>
+#include <karabo/util/OutputElement.hh>
 #include <karabo/util/Validator.hh>
 #include <karabo/util/HashFilter.hh>
 
@@ -159,7 +161,6 @@ struct ChoiceElementWrap {
 
 
     static karabo::util::ChoiceElement & appendNodesOfConfigurationBase(karabo::util::ChoiceElement& self, const bp::object& classobj) {
-        using namespace karabo::util;
         if (!PyType_Check(classobj.ptr())) {
             throw KARABO_PYTHON_EXCEPTION("Argument 'arg' given in 'appendNodesOfConfigurationBase(arg)' of CHOICE_ELEMENT must be a class in Python");
         }
@@ -181,7 +182,7 @@ struct ChoiceElementWrap {
         karathon::Wrapper::toAny(nodeNameList, any);
 
         if (any.type() != typeid (std::vector<std::string>))
-            throw KARABO_PYTHON_EXCEPTION("getRegisteredClass() doesn't return vector<string>!");
+            throw KARABO_PYTHON_EXCEPTION("getRegisteredClasses() doesn't return vector<string>!");
         const vector<string>& nodeNames = boost::any_cast<vector<string> >(any);
         for (size_t i = 0; i < nodeNames.size(); i++) {
             std::string nodeName = nodeNames[i];
@@ -229,7 +230,6 @@ struct ListElementWrap {
 
 
     static karabo::util::ListElement & appendNodesOfConfigurationBase(karabo::util::ListElement& self, const bp::object& classobj) {
-        using namespace karabo::util;
         if (!PyType_Check(classobj.ptr())) {
             throw KARABO_PYTHON_EXCEPTION("Argument 'arg' given in 'appendNodesOfConfigurationBase(arg)' of LIST_ELEMENT must be a class in Python");
         }
@@ -251,7 +251,7 @@ struct ListElementWrap {
         karathon::Wrapper::toAny(nodeNameList, any);
 
         if (any.type() != typeid (vector<string>))
-            throw KARABO_PYTHON_EXCEPTION("getRegisteredClass() doesn't return vector<string>!");
+            throw KARABO_PYTHON_EXCEPTION("getRegisteredClasses() doesn't return vector<string>!");
         const vector<string>& nodeNames = boost::any_cast<vector<string> >(any);
         for (size_t i = 0; i < nodeNames.size(); i++) {
             std::string nodeName = nodeNames[i];
@@ -314,6 +314,89 @@ struct ListElementWrap {
 
 };
 
+struct InputElementWrap {
+
+
+    static karabo::util::InputElement & setInputType(karabo::util::InputElement& self, const bp::object& classobj) {
+
+        if (!PyType_Check(classobj.ptr())) {
+            throw KARABO_PYTHON_EXCEPTION("Argument 'classobj' given in 'setInputType(classobj)' of INPUT_ELEMENT must be a class in Python");
+        }
+        if (!PyObject_HasAttrString(classobj.ptr(), "getSchema")) {
+            throw KARABO_PYTHON_EXCEPTION("Class given in 'setInputType(classobj)' of INPUT_ELEMENT has no 'getSchema' method");
+        }
+        std::string classid;
+        if (PyObject_HasAttrString(classobj.ptr(), "__karabo_cpp_classid__")) {
+            classid = bp::extract<std::string>(classobj.attr("__karabo_cpp_classid__"));
+        } else {
+            classid = bp::extract<std::string>(classobj.attr("__classid__"));
+        }
+        if (self.getNode().getType() != Types::HASH) self.getNode().setValue(Hash());
+        Hash& choiceOfNodes = self.getNode().getValue<Hash>();
+
+        bp::object nodeNameList = classobj.attr("getRegisteredClasses")();
+        boost::any any;
+        karathon::Wrapper::toAny(nodeNameList, any);
+
+        if (any.type() != typeid (vector<string>))
+            throw KARABO_PYTHON_EXCEPTION("getRegisteredClasses() doesn't return vector<string>!");
+        const vector<string>& nodeNames = boost::any_cast<vector<string> >(any);
+        for (size_t i = 0; i < nodeNames.size(); i++) {
+            std::string nodeName = nodeNames[i];
+            bp::object schemaObj = classobj.attr("getSchema")(nodeName);
+            const Schema& schema = bp::extract<const karabo::util::Schema&>(schemaObj);
+            Hash::Node& node = choiceOfNodes.set<Hash>(nodeName, schema.getParameterHash());
+            node.setAttribute(KARABO_SCHEMA_CLASS_ID, nodeName);
+            node.setAttribute(KARABO_SCHEMA_DISPLAY_TYPE, "Input-" + nodeName);
+            node.setAttribute<int>(KARABO_SCHEMA_NODE_TYPE, Schema::NODE);
+            node.setAttribute<int>(KARABO_SCHEMA_ACCESS_MODE, READ | WRITE | INIT);
+        }
+        return self;
+    }
+};
+
+struct OutputElementWrap {
+
+
+    static karabo::util::OutputElement & setOutputType(karabo::util::OutputElement& self, const bp::object& classobj) {
+
+        if (!PyType_Check(classobj.ptr())) {
+            throw KARABO_PYTHON_EXCEPTION("Argument 'classobj' given in 'setOutputType(classobj)' of OUTPUT_ELEMENT must be a class in Python");
+        }
+        if (!PyObject_HasAttrString(classobj.ptr(), "getSchema")) {
+            throw KARABO_PYTHON_EXCEPTION("Class given in 'setOutputType(classobj)' of OUTPUT_ELEMENT has no 'getSchema' method");
+        }
+        std::string classid;
+        if (PyObject_HasAttrString(classobj.ptr(), "__karabo_cpp_classid__")) {
+            classid = bp::extract<std::string>(classobj.attr("__karabo_cpp_classid__"));
+        } else {
+            classid = bp::extract<std::string>(classobj.attr("__classid__"));
+        }
+        if (self.getNode().getType() != Types::HASH) self.getNode().setValue(Hash());
+        // Retrieve reference for filling
+        Hash& choiceOfNodes = self.getNode().getValue<Hash>();
+
+        bp::object nodeNameList = classobj.attr("getRegisteredClasses")();
+        boost::any any;
+        karathon::Wrapper::toAny(nodeNameList, any);
+
+        if (any.type() != typeid (vector<string>))
+            throw KARABO_PYTHON_EXCEPTION("getRegisteredClasses() doesn't return vector<string>!");
+        const vector<string>& nodeNames = boost::any_cast<vector<string> >(any);
+        for (size_t i = 0; i < nodeNames.size(); i++) {
+            std::string nodeName = nodeNames[i];
+            bp::object schemaObj = classobj.attr("getSchema")(nodeName);
+            const Schema& schema = bp::extract<const karabo::util::Schema&>(schemaObj);
+            Hash::Node& node = choiceOfNodes.set<Hash>(nodeName, schema.getParameterHash());
+            node.setAttribute(KARABO_SCHEMA_CLASS_ID, nodeName);
+            node.setAttribute(KARABO_SCHEMA_DISPLAY_TYPE, "Output-" + nodeName);
+            node.setAttribute<int>(KARABO_SCHEMA_NODE_TYPE, Schema::NODE);
+            node.setAttribute<int>(KARABO_SCHEMA_ACCESS_MODE, READ | WRITE | INIT);
+        }
+        return self;
+    }
+};
+
 struct OverwriteElementWrap {
 
 
@@ -364,7 +447,7 @@ struct OverwriteElementWrap {
         karathon::Wrapper::toAny(value, any);
         return self.setNewMaxExc(any);
     }
-    
+
 };
 
 
@@ -991,7 +1074,8 @@ namespace schemawrap {
         schema.merge(schema2);
         return bp::object(schema);
     }
-    
+
+
     bp::object copy(Schema& schema, const Schema& schema2) {
         schema = schema2;
         return bp::object(schema);
@@ -1162,7 +1246,7 @@ void exportPyUtilSchema() {
         s.def("__iadd__", &schemawrap::merge, bp::arg("schema"));
 
         s.def("copy", &schemawrap::copy, bp::arg("schema"));
-        
+
         //********* 'get'-methods *********************
         s.def("getRequiredAccessLevel", &Schema::getRequiredAccessLevel);
 
@@ -1565,6 +1649,32 @@ void exportPyUtilSchema() {
                 ;
     }
 
+    //////////////////////////////////////////////////////////////////////
+    // Binding karabo::util::InputElement       
+    // In Python : INPUT_ELEMENT
+    {
+        bp::implicitly_convertible< Schema &, InputElement >();
+        bp::class_<InputElement> ("INPUT_ELEMENT", bp::init<Schema & >((bp::arg("expected"))))
+                KARABO_PYTHON_NODE_CHOICE_LIST(InputElement)
+                .def("setInputType"
+                     , &InputElementWrap::setInputType, (bp::arg("python_base_class"))
+                     , bp::return_internal_reference<> ())
+                ;
+    }
+
+    //////////////////////////////////////////////////////////////////////
+    // Binding karabo::util::OutputElement       
+    // In Python : OUTPUT_ELEMENT
+    {
+        bp::implicitly_convertible< Schema &, OutputElement >();
+        bp::class_<OutputElement> ("OUTPUT_ELEMENT", bp::init<Schema & >((bp::arg("expected"))))
+                KARABO_PYTHON_NODE_CHOICE_LIST(OutputElement)
+                .def("setOutputType"
+                     , &OutputElementWrap::setOutputType, (bp::arg("python_base_class"))
+                     , bp::return_internal_reference<> ())
+                ;
+    }
+
     ///////////////////////////////////////////////////////////////////////////
     //  karabo::util::DefaultValue<ChoiceElement> 
     {
@@ -1683,8 +1793,8 @@ void exportPyUtilSchema() {
                      , (bp::arg("value"))
                      , bp::return_internal_reference<> ())
                 .def("setNewOptions"
-                     , (OverwriteElement& (OverwriteElement::*)(const std::string&, const std::string&))(&OverwriteElement::setNewOptions)
-                     , (bp::arg("value"), bp::arg("sep")=",;")
+                     , (OverwriteElement & (OverwriteElement::*)(const std::string&, const std::string&))(&OverwriteElement::setNewOptions)
+                     , (bp::arg("value"), bp::arg("sep") = ",;")
                      , bp::return_internal_reference<> ())
                 .def("setNewUnit"
                      , (OverwriteElement & (OverwriteElement::*)(const UnitType&))(&OverwriteElement::setNewUnit)
