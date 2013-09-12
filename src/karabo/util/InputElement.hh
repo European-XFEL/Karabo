@@ -46,7 +46,7 @@ namespace karabo {
                     Schema schema = Configurator<ConfigurationBase>::getSchema(nodeName, m_parentSchemaAssemblyRules);
                     Hash::Node& node = choiceOfNodes.template set<Hash > (nodeName, schema.getParameterHash());
                     node.setAttribute(KARABO_SCHEMA_CLASS_ID, nodeName);
-                    node.setAttribute(KARABO_SCHEMA_DISPLAY_TYPE, "Input-" + nodeName);
+                    node.setAttribute(KARABO_SCHEMA_DISPLAY_TYPE, nodeName);
                     node.setAttribute<int>(KARABO_SCHEMA_NODE_TYPE, Schema::NODE);
                     node.setAttribute<int>(KARABO_SCHEMA_ACCESS_MODE, READ | WRITE | INIT);
                 }
@@ -80,6 +80,7 @@ namespace karabo {
                 this->m_node->setAttribute<int>(KARABO_SCHEMA_ASSIGNMENT, Schema::MANDATORY_PARAM);
                 if (!this->m_node->hasAttribute(KARABO_SCHEMA_ACCESS_MODE)) this->m_node->setAttribute<int>(KARABO_SCHEMA_ACCESS_MODE, READ | WRITE | INIT);
                 this->m_node->setAttribute<int>(KARABO_SCHEMA_NODE_TYPE, Schema::CHOICE_OF_NODES);
+                this->m_node->setAttribute(KARABO_SCHEMA_DISPLAY_TYPE, "Input");
             }
 
 
