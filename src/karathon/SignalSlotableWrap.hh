@@ -262,7 +262,9 @@ namespace karathon {
             if (onEndOfStreamEventHandler != bp::object()) {
                 channel.attr("registerEndOfStreamEventHandler")(onEndOfStreamEventHandler);
             }
-            m_inputChannels[name] = channel;
+            if (bp::extract<karabo::io::AbstractInput::Pointer>(channel).check()) {
+                m_inputChannels[name] = bp::extract<karabo::io::AbstractInput::Pointer>(channel);
+            }
             return channel;
         }
 
@@ -289,7 +291,9 @@ namespace karathon {
             if (onOutputPossibleHandler != bp::object()) {
                 channel.attr("registerIOEventHandler")(onOutputPossibleHandler);
             }
-            m_outputChannels[name] = channel;
+            if (bp::extract<karabo::io::AbstractOutput::Pointer>(channel).check()) {
+//                m_outputChannels[name] = channel;
+            }
             return channel;
         }
 
