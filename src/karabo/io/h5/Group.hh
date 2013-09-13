@@ -38,7 +38,7 @@ namespace karabo {
                         if (input.get<std::string>("type") == "VECTOR_HASH") {
                             m_isVectorHash = true;
                             if (input.has("size")) {
-                                m_vectorSize = input.get<unsigned long long>("size");
+                                m_vectorSize = input.getAs<unsigned long long>("size");
                             } else {
                                 m_vectorSize = 0;
                             }
@@ -96,17 +96,18 @@ namespace karabo {
             private:
 
                 void openH5(hid_t group) {
-                    if (!m_h5objOpen) {
-                        m_h5obj = H5Gopen2(group, m_h5PathName.c_str(), H5P_DEFAULT);
-                        m_h5objOpen = true;
+                    KARABO_LOG_FRAMEWORK_TRACE_CF << "group m_h5obj = " << m_h5obj;
+                    KARABO_LOG_FRAMEWORK_TRACE_CF << "group m_h5PathName = " << m_h5PathName;
+                    if (m_h5obj < 0) {
+                        m_h5obj = H5Gopen2(group, m_h5PathName.c_str(), H5P_DEFAULT);                        
                         KARABO_CHECK_HDF5_STATUS(m_h5obj);
                     }
                 }
 
                 void closeH5() {
-                    if (m_h5objOpen) {
+                    if (m_h5obj > -1) {
                         KARABO_CHECK_HDF5_STATUS(H5Gclose(m_h5obj));
-                        m_h5objOpen = false;
+                        m_h5obj = -1;
                     }
                 }
 

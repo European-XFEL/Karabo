@@ -67,7 +67,7 @@ namespace karabo {
             }
 
 
-            Element::Element(const Hash& input) : m_h5objOpen(false) {
+            Element::Element(const Hash& input) : m_h5obj(-1) {
                 try {
                     m_h5name = input.get<string > ("h5name");
                     m_h5path = "";
@@ -106,7 +106,14 @@ namespace karabo {
 
 
             void Element::openAttributes() {
-                KARABO_LOG_FRAMEWORK_TRACE_CF << "opening attributes";
+                KARABO_LOG_FRAMEWORK_TRACE_CF << "opening attributes for element " << m_h5PathName;
+                // if the element is Hash within a vector it cannot have attributes
+                // and we cannot use getNode                    
+                int len = m_key.length() - 1;
+                if (m_key[len] == ']') {
+                    return;
+                }
+                openH5(m_tableGroup);
                 for (size_t i = 0; i < m_attributes.size(); ++i) {
                     m_attributes[i]->open(m_h5obj);
                 }
@@ -124,6 +131,10 @@ namespace karabo {
 
 
             void Element::readAttributes(karabo::util::Hash& data) {
+                int len = m_key.length() - 1;
+                if (m_key[len] == ']') {
+                    return;
+                }
                 KARABO_LOG_FRAMEWORK_TRACE_CF << "reading attributes";
                 Hash::Node& node = data.getNode(m_key, '/');
                 for (size_t i = 0; i < m_attributes.size(); ++i) {
@@ -135,6 +146,10 @@ namespace karabo {
 
             void Element::closeAttributes() {
                 KARABO_LOG_FRAMEWORK_TRACE_CF << "closing attributes";
+                int len = m_key.length() - 1;
+                if (m_key[len] == ']') {
+                    return;
+                }
                 for (size_t i = 0; i < m_attributes.size(); ++i) {
                     m_attributes[i]->close();
                 }
@@ -144,13 +159,14 @@ namespace karabo {
 
             void Element::saveAttributes(hid_t tableGroup, const karabo::util::Hash& data) {
                 try {
+
                     // if the element is Hash within a vector it cannot have attributes
-                    // and we cannot use getNode
-                    //                    int len = m_key.length() - 1;
-                    //                    if (m_key[len] == ']') {
-                    //                        return;
-                    //                    }
-                    //
+                    // and we cannot use getNode                    
+                    int len = m_key.length() - 1;
+                    if (m_key[len] == ']') {
+                        return;
+                    }
+
                     size_t numAttributes = m_attributes.size();
                     if (numAttributes == 0) return;
                     if (data.has(m_key, '/')) {

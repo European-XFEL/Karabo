@@ -76,15 +76,18 @@ namespace karabo {
 
                 void read(hid_t dataSet, hid_t fileDataSpace) {
 
-                    KARABO_LOG_FRAMEWORK_TRACE << "enter read T*";
+                    KARABO_LOG_FRAMEWORK_TRACE << "enter read T1*";
                     hid_t tid = ScalarTypes::getHdf5NativeType<T > ();
+                    std::ostringstream oss;
+                    Dataset::getDataSpaceInfo(fileDataSpace, oss);
+                    KARABO_LOG_FRAMEWORK_TRACE << oss.str();
                     KARABO_CHECK_HDF5_STATUS(H5Dread(dataSet, tid, m_memoryDataSpace, fileDataSpace, H5P_DEFAULT, m_readData));
                     KARABO_CHECK_HDF5_STATUS(H5Tclose(tid));
                 }
 
                 void read(hsize_t len, hid_t dataSet, hid_t fileDataSpace) {
 
-                    KARABO_LOG_FRAMEWORK_TRACE << "enter read T*";
+                    KARABO_LOG_FRAMEWORK_TRACE << "enter read T2*";
 
                     std::vector<hsize_t> vdims = this->m_dimsBuffer.toVector();
                     vdims[0] = len;

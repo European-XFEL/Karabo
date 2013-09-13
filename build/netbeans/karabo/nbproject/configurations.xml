@@ -1953,7 +1953,7 @@
       <folder path="f2/f1">
         <ccTool>
           <preprocessorList>
-            <Elem>KARABO_NO_ENABLE_TRACE_LOG</Elem>
+            <Elem>KARABO_NOT_ENABLE_TRACE_LOG</Elem>
           </preprocessorList>
         </ccTool>
       </folder>

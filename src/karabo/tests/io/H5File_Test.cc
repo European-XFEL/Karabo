@@ -457,6 +457,7 @@ void H5File_Test::testRead() {
         //read second record
         table->read(1);
 
+        file.close();
 
     } catch (Exception& ex) {
         clog << ex << endl;
@@ -1275,7 +1276,7 @@ void H5File_Test::testManyGroups() {
     Profiler p("ManyGroups");
 
     Format::createEmptyFormat();
-    
+
     KARABO_LOG_FRAMEWORK_TRACE_CF << "start ManyGroups";
     try {
 
@@ -1310,7 +1311,7 @@ void H5File_Test::testManyGroups() {
                 d3.setAttribute(toString(i), "unit", 4);
                 //d3.setAttribute(toString(i), "a", 236);
                 d4.setAttribute(toString(i), "unit", 5);
-               // d4.setAttribute(toString(i), "a", 237);
+                // d4.setAttribute(toString(i), "a", 237);
             }
         }
 
@@ -1321,7 +1322,7 @@ void H5File_Test::testManyGroups() {
 
         p.start("format");
 
-        FormatDiscoveryPolicy::Pointer policy = FormatDiscoveryPolicy::create("Policy", Hash("chunkSize", static_cast<unsigned long long> (rec), "compressionLevel", 9)); 
+        FormatDiscoveryPolicy::Pointer policy = FormatDiscoveryPolicy::create("Policy", Hash("chunkSize", static_cast<unsigned long long> (rec), "compressionLevel", 9));
         Format::Pointer dataFormat1 = Format::discover(d1, policy);
         Format::Pointer dataFormat2 = Format::discover(d2, policy);
         Format::Pointer dataFormat3 = Format::discover(d3, policy);
@@ -1458,22 +1459,22 @@ void H5File_Test::testManyGroups() {
         //        clog << "---report before closing--" << endl;
         //        file.reportOpenObjects();
         p.start("close");
-        t1->close();
+        file.closeTable(t1);
         p.stop("close");
         //        clog << "-----" << endl;
         //        file.reportOpenObjects();
         p.start("close");
-        t2->close();
+        file.closeTable(t2);
         p.stop("close");
         //        clog << "-----" << endl;
         //        file.reportOpenObjects();
         p.start("close");
-        t3->close();
+        file.closeTable(t3);
         p.stop("close");
         //        clog << "-----" << endl;
         //        file.reportOpenObjects();
         p.start("close");
-        t4->close();
+        file.closeTable(t4);
         p.stop("close");
         //        clog << "-----" << endl;
         //        file.reportOpenObjects();
@@ -1522,28 +1523,28 @@ void H5File_Test::testManyGroups() {
 
 
 
-//            clog << "---report before closing--" << endl;
-//            file.reportOpenObjects();
+            //            clog << "---report before closing--" << endl;
+            //            file.reportOpenObjects();
             p.start("close1");
-            t1->close();
+            file.closeTable(t1);
             p.stop("close1");
-//            clog << "-----" << endl;
-//            file.reportOpenObjects();
+            //            clog << "-----" << endl;
+            //            file.reportOpenObjects();
             p.start("close1");
-            t2->close();
+            file.closeTable(t2);
             p.stop("close1");
-//            clog << "-----" << endl;
-//            file.reportOpenObjects();
+            //            clog << "-----" << endl;
+            //            file.reportOpenObjects();
             p.start("close1");
-            t3->close();
+            file.closeTable(t3);
             p.stop("close1");
-//            clog << "-----" << endl;
-//            file.reportOpenObjects();
+            //            clog << "-----" << endl;
+            //            file.reportOpenObjects();
             p.start("close1");
-            t4->close();
+            file.closeTable(t4);
             p.stop("close1");
-//            clog << "-----" << endl;
-//            file.reportOpenObjects();
+            //            clog << "-----" << endl;
+            //            file.reportOpenObjects();
             p.start("close1");
             file.close();
             p.stop("close1");
@@ -1749,9 +1750,9 @@ void H5File_Test::testTrainFormat() {
         unsigned short detectorDataSize = dataset.get<unsigned short>("detectorDataSize");
 
         Profiler p("train");
-// 
+        // 
         string filename = "/dev/shm/train.h5";
-//        filename = resourcePath("train.h5");
+        //        filename = resourcePath("train.h5");
         File file(filename);
         file.open(File::TRUNCATE);
         KARABO_LOG_FRAMEWORK_TRACE_CF << "File " << filename << " is open";
@@ -1768,7 +1769,7 @@ void H5File_Test::testTrainFormat() {
         p.stop("discoverDataset");
 
         double discoverTime = HighResolutionTimer::time2double(p.getTime("discoverDataset"));
-        clog << "discoverDataset: " << discoverTime << endl;
+        //clog << "discoverDataset: " << discoverTime << endl;
         //p.startPeriod("createConfiguration");
 
         p.start("configuration");
@@ -1776,7 +1777,7 @@ void H5File_Test::testTrainFormat() {
         lpdTableConfiguration->write(dataset, 0);
         p.stop("configuration");
         double configurationTime = HighResolutionTimer::time2double(p.getTime("configuration"));
-        clog << "configuration: " << configurationTime << endl;
+        //clog << "configuration: " << configurationTime << endl;
         //clog << Epochstamp().elpased(t1) << endl;
         //t1.now();
 
@@ -1786,7 +1787,7 @@ void H5File_Test::testTrainFormat() {
         Table::Pointer lpdTableTrainData = file.createTable("/instrument/LPD1/train", formatTrainData);
         p.stop("trainData");
         double trainDataTime = HighResolutionTimer::time2double(p.getTime("trainData"));
-        clog << "trainData: " << trainDataTime << endl;
+        //clog << "trainData: " << trainDataTime << endl;
 
         //        clog << Epochstamp().elpased(t1) << endl;
 
@@ -1876,7 +1877,7 @@ void H5File_Test::testTrainFormat() {
 
         p.stop("writeData");
         double writeDataTime = HighResolutionTimer::time2double(p.getTime("writeData"));
-        clog << "writeData: " << writeDataTime << endl;
+        //clog << "writeData: " << writeDataTime << endl;
         file.close();
 
     } catch (Exception& ex) {
@@ -2186,57 +2187,113 @@ karabo::io::h5::Format::Pointer H5File_Test::trainFormatImages(const Hash& datas
 
 
 void H5File_Test::testClose() {
-    string filename = "/dev/shm/close.h5";
-    string filename1 = "/dev/shm/close1.h5";
-    //filename = resourcePath("close.h5");
 
-    //filename = "/tmp/close.h5";
-    Hash data("x", 123); //, "y", "abc", "z", 1001);
-    data.setAttribute("x", "a1", 987);
-    data.setAttribute("x", "a2", vector<int>(3, 45));
-    data.setAttribute("x", "a3", "textattr");
-    data.setAttribute("x", "a4", true);
-    std::vector<bool> vb(6, true);
-    vb[1] = false;
-    vb[2] = false;
-    data.setAttribute("x", "a5", vb);
-    vector<string> vs(4, "abcde");
-    vs[2] = "aabbccddeeffgghhiijj";
-    data.setAttribute("x", "a6", vs);
+    try {
+        string filename = "/dev/shm/close.h5";
+        string filename1 = "/dev/shm/close1.h5";
+        //filename = resourcePath("close.h5");
 
-    Format::Pointer dataFormat = Format::discover(data);
-    KARABO_LOG_FRAMEWORK_TRACE_CF << "File " << filename;
+        //filename = "/tmp/close.h5";
+        Hash data("x", 123, "y", "abc", "z", vector<signed char>(100, 48));
+        data.setAttribute("x", "a1", 987);
+        data.setAttribute("x", "a2", vector<int>(3, 45));
+        data.setAttribute("x", "a3", "textattr");
+        data.setAttribute("x", "a4", true);
+        std::vector<bool> vb(6, true);
+        vb[1] = false;
+        vb[2] = false;
+        data.setAttribute("x", "a5", vb);
+        vector<string> vs(4, "abcde");
+        vs[2] = "aabbccddeeffgghhiijj";
+        data.setAttribute("x", "a6", vs);
 
 
-    //    for (unsigned long long i = 0; i < 100000000L; ++i) {
-    for (unsigned long long i = 0; i < 1L; ++i) {
+        Format::Pointer dataFormat = Format::discover(data);
+        KARABO_LOG_FRAMEWORK_TRACE_CF << "File " << filename;
 
-        File file(filename);
-        file.open(File::TRUNCATE);
-        KARABO_LOG_FRAMEWORK_TRACE_CF << "File " << filename << " " << i << " is open";
-        Table::Pointer t = file.createTable("/a/b/c/d", dataFormat);
-        t->writeAttributes(data);
-        t->write(data, 0);
-        t->write(data, 1);
-        t->write(data, 2);
-        t->write(data, 3);
-        t->close();
-        file.close();
 
-        file.open(File::READONLY);
-        KARABO_LOG_FRAMEWORK_TRACE_CF << "File " << filename << " " << i << " is open for reading";
-        t = file.getTable("/a/b/c/d");
-        Hash rAttr;
-        t->readAttributes(rAttr);
-        clog << rAttr << endl;
-        clog << rAttr.getAttribute<bool>("x", "a4") << endl;
-        Hash rdata;
-        t->bind(rdata);
-        t->read(0);
-        t->read(1);
-        t->read(2);
-        t->read(3);
-        t->close();
-        file.close();
+        //        for (unsigned long long i = 0; i < 100000000L; ++i) {
+        for (unsigned long long i = 0; i < 1L; ++i) {
+
+            //            clog << i << endl;
+
+
+            File file(filename);
+            file.open(File::TRUNCATE);
+            KARABO_LOG_FRAMEWORK_TRACE_CF << "File " << filename << " " << i << " is open";
+            Table::Pointer t = file.createTable("/a/b/c/d", dataFormat);
+            t->writeAttributes(data);
+            t->write(data, 0);
+            t->write(data, 1);
+            t->write(data, 2);
+            t->write(data, 3);
+            //            clog << i << " after write" << endl;
+            //        file.closeTable(t);
+            //            clog << i << " after table close" << endl;
+            file.close();
+            //            clog << i << " after file close" << endl;
+
+            file.open(File::READONLY);
+            KARABO_LOG_FRAMEWORK_TRACE_CF << "File " << filename << " " << i << " is open for reading";
+            t = file.getTable("/a/b/c/d");
+            Table::Pointer t1 = file.getTable("/a/b/c/d");
+            Table::Pointer t2 = file.getTable("/a/b/c/d");
+            Hash rAttr;
+            t->readAttributes(rAttr);
+            //            clog << rAttr << endl;
+            //            clog << rAttr.getAttribute<bool>("x", "a4") << endl;
+            Hash rdata;
+            t->bind(rdata);
+            t->read(0);
+            t->read(1);
+            t->read(2);
+            t->read(3);
+
+            t1->read(1);
+
+            file.close();
+        }
+    } catch (Exception& ex) {
+        clog << ex << endl;
+        CPPUNIT_FAIL("Error");
     }
+}
+
+
+void H5File_Test::testExternalHdf5() {
+    try {
+
+        boost::filesystem::path filename1 = "/home/wrona/release/karaboPackageDevelopment/packages/testApplications/hdf5IO/hdf5images.h5";
+        File file1(filename1);
+        file1.open(File::READONLY);
+
+        Format::Pointer df = Format::createEmptyFormat();
+
+        Hash c(
+               "h5path", "",
+               "h5name", "Image24bitplane",
+               "dims", Dims(227, 149, 3).toVector()
+               );
+        //"dims", Dims(3, 149, 227).toVector()
+
+        h5::Element::Pointer e = h5::Element::create("VECTOR_UINT8", c);
+        df->addElement(e);
+        clog << c << endl;
+
+        Table::Pointer table = file1.getTable("/", df, 1);
+
+        Hash rdata;
+
+        table->bind(rdata);
+        table->read(0);
+
+        clog << "image:" << endl << rdata << endl;
+
+        file1.close(); 
+
+    } catch (Exception& ex) {
+        clog << ex << endl;
+        CPPUNIT_FAIL("Error");
+    }
+
 }
