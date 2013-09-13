@@ -148,7 +148,13 @@ class GraphicsInputChannelItem(QGraphicsObject):
     def paint(self, painter, option, widget=None):
         painter.setBrush(QBrush(Qt.white))
         painter.drawLine(self.inputPos, QPointF(40, 0))
-        if self.__connectionType == "NetworkInput-Hash":
+        if self.__connectionType == "Network-Hash":
+            painter.drawEllipse(self.inputPos, 5, 5)
+        elif self.__connectionType == "BinaryFile":
+            painter.drawEllipse(self.inputPos, 5, 5)
+        elif self.__connectionType == "Hdf5File":
+            painter.drawEllipse(self.inputPos, 5, 5)
+        elif self.__connectionType == "TextFile":
             painter.drawEllipse(self.inputPos, 5, 5)
 
 

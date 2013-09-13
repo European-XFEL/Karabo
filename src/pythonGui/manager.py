@@ -70,7 +70,7 @@ class Notifier(QObject):
     signalLogDataAvailable = pyqtSignal(str) # logData
     signalNotificationAvailable = pyqtSignal(str, str, str, str, str) # timestam, type, shortMessage, detailedMessage, deviceId
     
-    signalCreateNewDeviceClassPlugin = pyqtSignal(str, str, str) # serverId, classId, newClassId
+    signalCreateNewProjectConfig = pyqtSignal(object, str, str) # customItem, serverId, classId
     
     signalGetClassSchema = pyqtSignal(str, str) # serverId, classId
     signalGetDeviceSchema = pyqtSignal(str) # deviceId
@@ -467,23 +467,10 @@ class Manager(Singleton):
 
 
 ### TODO: Temporary functions for scientific computing START ###
-    def createNewDeviceClassId(self, classId):
-        return self.__sqlDatabase.createNewDeviceClassId(classId)
-
-
-    def createNewDeviceClassPlugin(self, serverId, classId, newDevClaId):
-        self.__notifier.signalCreateNewDeviceClassPlugin.emit(serverId, classId, newDevClaId)
-    
-    
-    def getSchemaByInternalKey(self, internalKey):
-        levelIdTuple = self.__sqlDatabase.getLevelAndIdByInternalKey(internalKey)
-        level = levelIdTuple[0]
-        id = levelIdTuple[1]
+    def createNewProjectConfig(self, customItem, serverId, classId):
+        self.__notifier.signalCreateNewProjectConfig.emit(customItem, serverId, classId)
         
-        index = self.__treemodel.findIndex(level, id, 0)
-        rowId = self.__treemodel.mappedRow(index)
         
-        return self.__treemodel.getSchema(level, rowId)
 ### TODO: Temporary functions for scientific computing END ###
 
 
@@ -518,7 +505,7 @@ class Manager(Singleton):
     def onRefreshInstance(self, path):
         deviceId = self._getDeviceIdFromPath(path)
         print "Refresh request on ", path
-        if not deviceId or not self.__hash.has(path):
+        if not deviceId or not self.__hash.has(str(path)):
             return
         self.__notifier.signalRefreshInstance.emit(deviceId)
 
