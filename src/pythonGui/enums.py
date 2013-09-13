@@ -30,3 +30,9 @@ class ConfigChangeTypes(object):
     DEVICE_INSTANCE_CONFIG_CHANGED = 1 # new configuration for DEVICE_INSTANCE
     DEVICE_INSTANCE_CURRENT_VALUES_CHANGED = 2 # current values for DEVICE_INSTANCE changed
 
+
+class CompositionMode(object):
+    UNDEFINED = -1
+    ONLINE = 0
+    OFFLINE = 1
+

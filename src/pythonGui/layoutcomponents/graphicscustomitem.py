@@ -8,7 +8,7 @@
 """This module contains a class which represents a class which is a customwidget
    component for the middle panel."""
 
-__all__ = ["GraphicsCustomItem", "PrivateXsdReader"]
+__all__ = ["GraphicsCustomItem", "PrivateSchemaReader"]
 
 
 from karabo.karathon import *
@@ -35,7 +35,7 @@ class GraphicsCustomItem(NodeBase, QGraphicsObject):
         
         self.__showAdditionalInfo = showAdditionalInfo
         
-        self.__devInsId = ""
+        self.__deviceId = ""
         
         self.__compositeText = None
         self._updateCompositeText()
@@ -49,10 +49,10 @@ class GraphicsCustomItem(NodeBase, QGraphicsObject):
         self.__outputChannelItems = [] # List contains GraphicsOutputChannelItem
         
         if schema:
-            xsdParser = PrivateXsdReader(schema)
+            schemaReader = PrivateSchemaReader(schema)
             # Get information to draw possible in/output channels
-            self.__inputChannelData = xsdParser.inputChannelData
-            self.__outputChannelData = xsdParser.outputChannelData
+            self.__inputChannelData = schemaReader.inputChannelData
+            self.__outputChannelData = schemaReader.outputChannelData
             # Update channel graphics representation
             self._updateChannelItems()
 
@@ -64,9 +64,9 @@ class GraphicsCustomItem(NodeBase, QGraphicsObject):
 
 
     def _getValue(self):
-        return self.__devInsId
+        return self.__deviceId
     def _setValue(self, value):
-        if self.__devInsId == value:
+        if self.__deviceId == value:
             return
         
         # Prepare item for change
@@ -74,7 +74,7 @@ class GraphicsCustomItem(NodeBase, QGraphicsObject):
         # Prepare channel item for change
         self._prepareGeometryChangeChannelItems()
         
-        self.__devInsId = value
+        self.__deviceId = value
         self._updateCompositeText()
         
         # Update item geometry
@@ -83,13 +83,13 @@ class GraphicsCustomItem(NodeBase, QGraphicsObject):
         self._updateChannelItems()
         
         # Send changing signal to Manager (connected only for DEVICE_CLASS)
-        self.signalValueChanged.emit(self.deviceId, self.__devInsId)
+        self.signalValueChanged.emit(self.deviceIdKey, self.__deviceId)
     value = property(fget=_getValue, fset=_setValue)
 
 
-    def _getDeviceId(self):
+    def _getDeviceIdKey(self):
         return self.__internalKey + ".deviceId"
-    deviceId = property(fget=_getDeviceId)
+    deviceIdKey = property(fget=_getDeviceIdKey)
 
 
     def text(self):
@@ -135,7 +135,7 @@ class GraphicsCustomItem(NodeBase, QGraphicsObject):
 ### private ###
     def _updateCompositeText(self):
         if self.__showAdditionalInfo:
-            self.__compositeText = str(self.__text + "\n<" + self.__devInsId + ">")
+            self.__compositeText = str(self.__text + "\n<" + self.__deviceId + ">")
         else:
             self.__compositeText = self.__text
 
@@ -167,7 +167,15 @@ class GraphicsCustomItem(NodeBase, QGraphicsObject):
                 y -= (yDelta/2)
             
             if nbInputChannelItems == 0:
-                inputChannelItem = GraphicsInputChannelItem(self, hash.get("key"), hash.get("type"))
+                if hash.has("key"):
+                    key = hash.get("key")
+                else:
+                    key = None
+                if hash.has("type"):
+                    type = hash.get("type")
+                else:
+                    type = None
+                inputChannelItem = GraphicsInputChannelItem(self, key, type)
                 self.__inputChannelItems.append(inputChannelItem)
             else:
                 inputChannelItem = self.__inputChannelItems[i]
@@ -185,16 +193,24 @@ class GraphicsCustomItem(NodeBase, QGraphicsObject):
                 y -= (yDelta/2)
             
             if nbOutputChannelItems == 0:
-                outputChannelItem = GraphicsOutputChannelItem(self, hash.get("key"), hash.get("type"))
+                if hash.has("key"):
+                    key = hash.get("key")
+                else:
+                    key = None
+                if hash.has("type"):
+                    type = hash.get("type")
+                else:
+                    type = None
+                outputChannelItem = GraphicsOutputChannelItem(self, key, type)
                 self.__outputChannelItems.append(outputChannelItem)
             else:
                 outputChannelItem = self.__outputChannelItems[i]
             outputChannelItem.setPos(QPointF(x, y))
-            outputChannelItem.predefinedDevInstId = self.__devInsId
+            outputChannelItem.predefinedDevInstId = self.__deviceId
 
 
     def _outlineRect(self):
-        padding = 4
+        padding = 10
         metrics = QFontMetricsF(self.__textFont) #qApp.fontMetrics())
         rect = metrics.boundingRect(self.__compositeText)
         rect.adjust(-padding, -padding, +padding, +padding)
@@ -211,7 +227,7 @@ class GraphicsCustomItem(NodeBase, QGraphicsObject):
     def mouseDoubleClickEvent(self, event):
         additionalText = QInputDialog.getText(event.widget(), "Edit device instance", \
                                               "Enter new device instance:", QLineEdit.Normal, \
-                                              self.__devInsId)
+                                              self.__deviceId)
         
         if len(additionalText[0]) > 0:
             self.value = additionalText[0]
@@ -232,35 +248,65 @@ class GraphicsCustomItem(NodeBase, QGraphicsObject):
 ### slots ###
     # Triggered by DataNotifier signalUpdateComponent
     def onValueChanged(self, key, value):
-        if self.deviceId == key:
+        if self.deviceIdKey == key:
             self.value = value
 
 
 ####################################################################################
-# This class represents a private and very specific XSD parser to get the in/output#
+# This class represents a private and very specific schema reader to get the in/output#
 # channels for the graphical representation                                        #
 ####################################################################################
-class PrivateXsdReader(QXmlStreamReader):
+class PrivateSchemaReader(object):
 
 
     def __init__(self, schema):
-        super(PrivateXsdReader, self).__init__()
+        super(PrivateSchemaReader, self).__init__()
         
         # Data structure for parsed information is list of Hashes
         self.__inputChannelData = []
         self.__outputChannelData = []
         
-        self.clear()
-        self.addData(schema)
+        #print ""
+        #print schema
+        #print ""
+        
+        self.__schema = schema
 
-        self.readNext() # StartDocument
-        self.readNext()
+        keys = self.__schema.getKeys()
+        for key in keys:
+            self.r_readSchema(key)
 
-        if self.name() != "schema":
-            print "Configurator was fed with illegal XSD"
-            return
 
-        self.processMainElementTag()
+    def r_readSchema(self, key):
+        if self.__schema.isChoiceOfNodes(key):
+            if self.__schema.hasDefaultValue(key):
+                defaultValue = self.__schema.getDefaultValue(key)
+            else:
+                defaultValue = None
+            
+            if not defaultValue:
+                # Default value not set - take first element
+                keys = self.__schema.getKeys(key)
+                if len(keys) > 0:
+                    cKey = key + "." + keys[0]
+                    if self.__schema.hasDisplayType(cKey):
+                        defaultValue = self.__schema.getDisplayType(cKey)
+            
+            # Process in/output channel data
+            if (self.__schema.hasDisplayType(key) and ("Input" in self.__schema.getDisplayType(key))):
+                inputChannelHash = Hash()
+                inputChannelHash.set("key", str(key))
+                inputChannelHash.set("type", str(defaultValue))
+                self.__inputChannelData.append(inputChannelHash)
+            if (self.__schema.hasDisplayType(key) and ("Output" in self.__schema.getDisplayType(key))):
+                outputChannelHash = Hash()
+                outputChannelHash.set("key", str(key))
+                outputChannelHash.set("type", str(defaultValue))
+                self.__outputChannelData.append(outputChannelHash)
+        else:
+            keys = self.__schema.getKeys(key)
+            for k in keys:
+                self.r_readSchema(key + "." + k)
 
 
     def _getInputChannelData(self):
@@ -271,307 +317,4 @@ class PrivateXsdReader(QXmlStreamReader):
     def _getOutputChannelData(self):
         return self.__outputChannelData
     outputChannelData = property(fget=_getOutputChannelData)
-
-
-    def processMainElementTag(self):
-    
-        while self.atEnd() == False:
-            tokenType = self.readNext()
-            tagName = self.name()
-
-            if tokenType == QXmlStreamReader.StartElement:
-                if tagName == "element":
-                    self.processSimpleElements()
-            elif tokenType == QXmlStreamReader.EndElement:
-                break
-
-
-    def processSimpleElements(self):
-
-        while self.atEnd() == False:
-            tokenType = self.readNext()
-            tagName = self.name()
-            
-            if tokenType == QXmlStreamReader.StartElement:
-                if tagName == "element":
-                    name, type, defaultValue, minOccurs, maxOccurs = self.processSimpleElementAttributes()
-                    # Following tags
-                    self.processFollowingElements(name, type, defaultValue, minOccurs, maxOccurs)
-            elif tokenType == QXmlStreamReader.EndElement:
-                break
-
-
-    def processSimpleElementAttributes(self):
-        
-        name = self.attributes().value("name").toString()
-
-        if self.attributes().hasAttribute("type"):
-            type = self.attributes().value("type").toString()
-        else:
-            type = None
-
-        if self.attributes().hasAttribute("default"):
-            defaultValue = self.attributes().value("default").toString()
-        else:
-            defaultValue = None
-
-        if self.attributes().hasAttribute("minOccurs"):
-            minOccurs = self.attributes().value("minOccurs").toString()
-        else:
-            minOccurs = None
-
-        if self.attributes().hasAttribute("maxOccurs"):
-            maxOccurs = self.attributes().value("maxOccurs").toString()
-        else:
-            maxOccurs = None
-
-        return [name, type, defaultValue, minOccurs, maxOccurs]
-
-
-    def processFollowingElements(self, name=None, type=None, defaultValue=None, minOccurs=None, maxOccurs=None):
-
-        description = None
-        displayedName = None
-        expertLevel = None
-        default = None
-        unitName = None
-        unitSymbol = None
-        accessType = None
-        displayType = None
-        allowedStates = None
-        
-        while self.atEnd() == False:
-            tokenType = self.readNext()
-            tagName = self.name()
-
-            if tokenType == QXmlStreamReader.StartElement:
-                if tagName == "annotation":
-                    description, displayedName, expertLevel, default, unitName, unitSymbol, accessType, displayType, allowedStates = self.processAnnotationTag()
-                    # Process in/output channel data
-                    if displayType == "Input":
-                        inputChannelHash = Hash()
-                        inputChannelHash.set("key", str(name))
-                        inputChannelHash.set("type", str(default))
-                        self.processChannelParameter()
-                        self.__inputChannelData.append(inputChannelHash)
-                    elif displayType == "Output":
-                        outputChannelHash = Hash()
-                        outputChannelHash.set("key", str(name))
-                        outputChannelHash.set("type", str(default))
-                        self.processChannelParameter()
-                        self.__outputChannelData.append(outputChannelHash)
-
-                elif tagName == "simpleType":
-                    restrictionBase, minInclusive, maxInclusive, enumeration = self.processSimpleTypeTag()
-                elif tagName == "complexType":
-                    self.processComplexTypeTag()
-            
-            elif tokenType == QXmlStreamReader.EndElement and tagName == "element":
-                break
-
-
-    def processAnnotationTag(self):
-
-        description = None
-        displayedName = None
-        expertLevel = None
-        default = None
-        unitName = None
-        unitSymbol = None
-        accessType = None
-        displayType = None
-        allowedStates = None
-
-        while self.atEnd() == False :
-            tokenType = self.readNext()
-            tagName = self.name()
-
-            if tokenType == QXmlStreamReader.StartElement:
-                if tagName == "description":
-                    self.readNext()
-                    description = self.text().toString()
-                elif tagName == "displayedName":
-                    self.readNext()
-                    displayedName = self.text().toString()
-                elif tagName == "expertLevel":
-                    self.readNext()
-                    expertLevel = self.text().toString()
-                elif tagName == "default":
-                    self.readNext()
-                    default = self.text().toString()
-                elif tagName == "unitName":
-                    self.readNext()
-                    unitName = self.text().toString()
-                elif tagName == "unitSymbol":
-                    self.readNext()
-                    unitSymbol = self.text().toString()
-                elif tagName == "accessType":
-                    self.readNext()
-                    accessType = self.text().toString()
-                elif tagName == "displayType":
-                    self.readNext()
-                    displayType = self.text().toString()
-                elif tagName == "allowedStates":
-                    self.readNext()
-                    allowedStates = list(self.text().toString().split(','))
-            elif tokenType == QXmlStreamReader.EndElement and tagName == "annotation":
-                break
-
-        return [description, displayedName, expertLevel, default, unitName, unitSymbol, accessType, displayType, allowedStates]
-
-
-    def processSimpleTypeTag(self):
-
-        restrictionBase = None
-        minInclusive = None
-        maxInclusive = None
-        enumeration = []
-
-        while self.atEnd() == False:
-            tokenType = self.readNext()
-            tagName = self.name()
-
-            if tokenType == QXmlStreamReader.StartElement:
-                if tagName == "restriction":
-                    restrictionBase = self.attributes().value("base").toString()
-                elif tagName == "minInclusive":
-                    minInclusive = self.attributes().value("value").toString()
-                elif tagName == "maxInclusive":
-                    maxInclusive = self.attributes().value("value").toString()
-                elif tagName == "enumeration":
-                    enumeration.append(self.attributes().value("value").toString())
-            elif tokenType == QXmlStreamReader.EndElement and tagName == "simpleType":
-                break
-
-        return [restrictionBase, minInclusive, maxInclusive, enumeration]
-
-
-    def processChannelParameter(self):
-
-        while self.atEnd() == False:
-            tokenType = self.readNext()
-            tagName = self.name()
-
-            if tokenType == QXmlStreamReader.StartElement:
-                if tagName == "choice":
-                    self.processChannelChoiceTag()
-                #elif tagName == "element":
-                #    name, type, defaultValue, minOccurs, maxOccurs = self.processSimpleElementAttributes()
-                    # process children
-                #    self.processFollowingElements(name, type, defaultValue, minOccurs, maxOccurs)
-                #elif tagName == "sequence":
-                #    self.processSequenceTag()
-                #elif tagName == "attribute":
-                #    name = self.attributes().value("name").toString()
-                #    type = self.attributes().value("type").toString()
-                #    default = self.attributes().value("default").toString()
-            elif tokenType == QXmlStreamReader.EndElement and tagName == "complexType":
-                break
-
-
-    def processChannelChoiceTag(self):
-        while self.atEnd() == False :
-            tokenType = self.readNext()
-            tagName = self.name()
-            
-            if tokenType == QXmlStreamReader.StartElement:
-                if tagName == "element":
-                    name, type, defaultValue, minOccurs, maxOccurs = self.processSimpleElementAttributes()
-                    self.processChannelFollowingElements(name, type, defaultValue, minOccurs, maxOccurs)
-
-            elif tokenType == QXmlStreamReader.EndElement and tagName == "choice":
-                break
-
-
-    def processChannelFollowingElements(self, name, type, defaultValue, minOccurs, maxOccurs):
-        
-        while self.atEnd() == False:
-            tokenType = self.readNext()
-            tagName = self.name()
-
-            if tokenType == QXmlStreamReader.StartElement:
-                if tagName == "simpleType":
-                    restrictionBase, minInclusive, maxInclusive, enumeration = self.processSimpleTypeTag()
-                elif tagName == "complexType":
-                    self.processChannelComplexTypeTag()
-            
-            elif tokenType == QXmlStreamReader.EndElement and tagName == "element":
-                break
-
-
-    def processChannelComplexTypeTag(self):
-        
-        while self.atEnd() == False:
-            tokenType = self.readNext()
-            tagName = self.name()
-            
-            if tokenType == QXmlStreamReader.StartElement:
-                if tagName == "choice":
-                    self.processChoiceTag(isSequenceElement)
-                elif tagName == "element":
-                    name, type, defaultValue, minOccurs, maxOccurs = self.processSimpleElementAttributes()
-                    # process children
-                    self.processChannelFollowingElements(name, type, defaultValue, minOccurs, maxOccurs)
-                elif tagName == "sequence":
-                    self.processSequenceTag()
-                elif tagName == "attribute":
-                    name = self.attributes().value("name").toString()
-                    type = self.attributes().value("type").toString()
-                    default = self.attributes().value("default").toString()
-            elif tokenType == QXmlStreamReader.EndElement and tagName == "complexType":
-                break
-
-
-    def processComplexTypeTag(self, isSequenceElement=False):
-
-        while self.atEnd() == False:
-            tokenType = self.readNext()
-            tagName = self.name()
-
-            if tokenType == QXmlStreamReader.StartElement:
-                if tagName == "choice":
-                    self.processChoiceTag(isSequenceElement)
-                elif tagName == "element":
-                    name, type, defaultValue, minOccurs, maxOccurs = self.processSimpleElementAttributes()
-                    # process children
-                    self.processFollowingElements(name, type, defaultValue, minOccurs, maxOccurs)
-                elif tagName == "sequence":
-                    self.processSequenceTag()
-                elif tagName == "attribute":
-                    name = self.attributes().value("name").toString()
-                    type = self.attributes().value("type").toString()
-                    default = self.attributes().value("default").toString()
-            elif tokenType == QXmlStreamReader.EndElement and tagName == "complexType":
-                break
-
-
-    def processChoiceTag(self, isSequenceElement=False):
-
-        while self.atEnd() == False :
-            tokenType = self.readNext()
-            tagName = self.name()
-            
-            if tokenType == QXmlStreamReader.StartElement:
-                if tagName == "element":
-                    name, type, defaultValue, minOccurs, maxOccurs = self.processSimpleElementAttributes()
-                    self.processFollowingElements(name, type, defaultValue, minOccurs, maxOccurs)
-
-            elif tokenType == QXmlStreamReader.EndElement and tagName == "choice":
-                break
-
-
-    def processSequenceTag(self):
-
-        while self.atEnd() == False:
-            tokenType = self.readNext()
-            tagName = self.name()
-
-            if tokenType == QXmlStreamReader.StartElement:
-                if tagName == "element":
-                    name, type, defaultValue, minOccurs, maxOccurs = self.processSimpleElementAttributes()
-
-                self.processFollowingElements(name, type, defaultValue, minOccurs, maxOccurs)
-
-            elif tokenType == QXmlStreamReader.EndElement and tagName == "sequence":
-                break
 

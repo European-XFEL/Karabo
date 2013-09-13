@@ -16,6 +16,7 @@ from displaycomponent import DisplayComponent
 
 from enums import NavigationItemTypes
 from enums import ConfigChangeTypes
+from enums import CompositionMode
 from graphicsscene import GraphicsScene
 
 from layoutcomponents.arrow import Arrow
@@ -53,8 +54,11 @@ class GraphicsView(QGraphicsView):
         self.__scene.selectionChanged.connect(self.onSceneSelectionChanged)
         self.setScene(self.__scene)
 
-        # Current mode of the view (move, insert
+        # Current mode of the view (move, insert)
         self.__mode = self.MoveItem
+        
+        # Composition mode is either ON/OFFLINE, once set not changeable
+        self.__compositionMode = CompositionMode.UNDEFINED
 
         self.__line = None
         self.__rect = None
@@ -551,7 +555,7 @@ class GraphicsView(QGraphicsView):
                         items.remove(outputItem)
                     self.__scene.removeItem(outputItem)
                 Manager().removeVisibleDevice(item.internalKey())
-                Manager().unregisterEditableComponent(item.deviceId, item)
+                Manager().unregisterEditableComponent(item.deviceIdKey, item)
 
             self.__scene.removeItem(item)
             del item
@@ -812,45 +816,36 @@ class GraphicsView(QGraphicsView):
                 # Device server instance id
                 serverId = QString(mimeData.data("serverId"))
                 # Internal key
-                internalKey = QString(mimeData.data("internalKey"))
+                key = QString(mimeData.data("key"))
                 # Display name
                 displayName = QString(mimeData.data("displayName"))
-                # Schema
-                schema = QString(mimeData.data("schema"))
-
-                showAdditionalInfo = False
-                if navItemType and (navItemType == NavigationItemTypes.CLASS):
-                    showAdditionalInfo = True
-                    if not ("-" in displayName):
-                        # Get unique device class id for new plugin
-                        newClassId = Manager().createNewDeviceClassId(displayName)
-
-                        keys = internalKey.split('+', 1)
-                        if len(keys) is 2:
-                            internalKey = str(keys[0]) + "+" + newClassId
-
-                        # Create new device class plugin if Device Class is dropped
-                        Manager().createNewDeviceClassPlugin(serverId, displayName, newClassId)
-                        displayName = newClassId
-
+                
+                # Get schema
+                schema = None
+                path = str("server." + serverId + ".classes." + displayName + ".description")
+                if Manager().hash.has(path):
+                    schema = Manager().hash.get(path)
+                
                 # Create graphical item
-                customItem = GraphicsCustomItem(internalKey, self.__isDesignMode, displayName, schema, showAdditionalInfo)
-                tooltipText = "<html><b>Associated key: </b>%s</html>" % internalKey
+                customItem = GraphicsCustomItem(key, self.__isDesignMode, displayName, schema, (navItemType == NavigationItemTypes.CLASS))
+                tooltipText = "<html><b>Associated key: </b>%s</html>" % key
                 customItem.setToolTip(tooltipText)
                 offset = QPointF()
                 # Add created item to scene
                 self._addItem(customItem)
 
                 # Register as visible device
-                Manager().newVisibleDevice(internalKey)
+                Manager().newVisibleDevice(key)
 
                 if navItemType and (navItemType == NavigationItemTypes.CLASS):
+                    Manager().createNewProjectConfig(customItem, serverId, displayName)
+
                     # Connect customItem signal to Manager, DEVICE_CLASS
                     customItem.signalValueChanged.connect(Manager().onDeviceClassValueChanged)
-                    # Register for value changes of devInstId
-                    Manager().registerEditableComponent(customItem.deviceId, customItem)
+                    # Register for value changes of deviceId
+                    Manager().registerEditableComponent(customItem.deviceIdKey, customItem)
 
-            elif sourceType == "ParameterTreeWidget":
+            elif sourceType == "ParameterTreeWidget":                
                 # Internal key
                 internalKey = QString(mimeData.data("internalKey"))
                 # Display name

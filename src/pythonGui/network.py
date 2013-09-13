@@ -62,8 +62,6 @@ class Network(QObject):
         Manager().notifier.signalNewVisibleDevice.connect(self.onNewVisibleDevice)
         Manager().notifier.signalRemoveVisibleDevice.connect(self.onRemoveVisibleDevice)
         
-        Manager().notifier.signalCreateNewDeviceClassPlugin.connect(self.onCreateNewDeviceClassPlugin)
-        
         Manager().notifier.signalGetClassSchema.connect(self.onGetClassSchema)
         Manager().notifier.signalGetDeviceSchema.connect(self.onGetDeviceSchema)
         

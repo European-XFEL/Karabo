@@ -62,7 +62,7 @@ class EditablePathApplyLaterComponent(BaseComponent):
         pathType = params.get(QString('pathType'))
         if pathType is None:
             pathType = params.get('pathType')
-        print "EditablePathApplyLaterComponent"
+        
         # Check for path type
         if pathType == "directory":
             text = "Select directory"
@@ -374,20 +374,20 @@ class EditablePathApplyLaterComponent(BaseComponent):
         directory = QFileDialog.getExistingDirectory(None, "Select directory")
         if len(directory) > 0:
             for key in self.__editableWidget.keys:
-                self.onValueChanged(key, directory)
+                self.onEditingFinished(key, directory)
 
 
     def onFileInClicked(self):
         fileIn = QFileDialog.getOpenFileName(None, "Select input file")
         if len(fileIn) > 0:
             for key in self.__editableWidget.keys:
-                self.onValueChanged(key, fileIn)
+                self.onEditingFinished(key, fileIn)
 
 
     def onFileOutClicked(self):
         fileOut = QFileDialog.getSaveFileName(None, "Select output file")
         if len(fileOut) > 0:
             for key in self.__editableWidget.keys:
-                self.onValueChanged(key, fileOut)
+                self.onEditingFinished(key, fileOut)
 
 
