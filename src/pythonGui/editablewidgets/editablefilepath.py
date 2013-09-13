@@ -36,11 +36,10 @@ class EditableFilePath(EditableWidget):
     def __init__(self, **params):
         super(EditableFilePath, self).__init__(**params)
 
-        self.__leFilePath = QLineEdit()
-
         self.__pbSelectPath = QPushButton("...")
         self.__pbSelectPath.setMaximumSize(32,32)
         
+        self.__leFilePath = QLineEdit()
         self.__leFilePath.textChanged.connect(self.onEditingFinished)
         self.__pbSelectPath.clicked.connect(self.onSelectFilePath)
         
