@@ -14,6 +14,7 @@
 #include "io/Output.hh"
 #include "io/FileTools.hh"
 
-// TODO important h5 headers
+#include "io/h5/File.hh"
+#include "io/h5/Table.hh"
 
 #endif

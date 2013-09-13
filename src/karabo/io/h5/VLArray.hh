@@ -203,7 +203,7 @@ namespace karabo {
                         KARABO_LOG_FRAMEWORK_TRACE_C("karabo.io.h5.VLArray") << "num blocks" << numBlocks;
                         std::vector<hsize_t> buf(2*numBlocks);
                         H5Sget_select_hyper_blocklist(fileDataSpace, 0, numBlocks, &buf[0]);
-                        for (size_t j = 0; j < numBlocks; j+=2) {
+                        for (ssize_t j = 0; j < numBlocks; j+=2) {
                             KARABO_LOG_FRAMEWORK_TRACE_C("karabo.io.h5.VLArray") << "size: " << buf[j] << " " << buf[j+1];
                         }
 

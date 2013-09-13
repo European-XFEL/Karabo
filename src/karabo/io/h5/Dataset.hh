@@ -36,7 +36,7 @@ namespace karabo {
                 static void expectedParameters(karabo::util::Schema& expected);
 
                 template <class Derived>
-                Dataset(const karabo::util::Hash& input, Derived* d) : Element(input), m_numberAllocatedRecords(0) {
+                Dataset(const karabo::util::Hash& input, Derived* d) : Element(input), m_numberAllocatedRecords(0), m_fileDataSpace(-1) {
                     if (input.has("compressionLevel")) {
                         m_compressionLevel = input.getAs<int>("compressionLevel");
                     } else {
@@ -85,21 +85,10 @@ namespace karabo {
 
             public:
 
-                static void getDataSpaceInfo(hid_t dataSpace, std::ostringstream& oss) {
-                    int ndims = H5Sget_simple_extent_ndims(dataSpace);
-                    KARABO_CHECK_HDF5_STATUS(ndims);
-                    std::vector<hsize_t> extent(ndims, 0);
-                    std::vector<hsize_t> maxExtent(ndims, 0);
-                    KARABO_CHECK_HDF5_STATUS(H5Sget_simple_extent_dims(dataSpace, &extent[0], &maxExtent[0]));
-                    for (int i = 0; i < ndims; ++i) {
-                        oss << "[0]={" << extent[i] << "," << maxExtent[i] << "}; ";
-                    }
-                }
-
-
-
+                static void getDataSpaceInfo(hid_t dataSpace, std::ostringstream& oss);
 
                 static hid_t dataSpace(const karabo::util::Dims& dims);
+
                 static hid_t dataSpaceOneDim(hsize_t len);
 
                 virtual hid_t createDataspace(const std::vector<hsize_t>& ex, const std::vector<hsize_t>& maxEx) {
@@ -183,17 +172,16 @@ namespace karabo {
                 hid_t createDataSetProperties();
 
                 void openH5(hid_t group) {
-                    if (!m_h5objOpen) {
+                    if (m_h5obj < 0) {
                         m_h5obj = H5Dopen2(group, m_h5PathName.c_str(), H5P_DEFAULT);
-                        m_h5objOpen = true;
                         KARABO_CHECK_HDF5_STATUS(m_h5obj);
                     }
                 }
 
                 void closeH5() {
-                    if (m_h5objOpen) {
+                    if (m_h5obj > -1) {
                         KARABO_CHECK_HDF5_STATUS(H5Dclose(m_h5obj));
-                        m_h5objOpen = false;
+                        m_h5obj = -1;
                     }
                 }
 

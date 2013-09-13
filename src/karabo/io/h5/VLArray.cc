@@ -13,7 +13,7 @@ using namespace karabo::io;
 namespace karabo {   
   namespace io {  
     namespace h5 {    
-                              
+                               
                  
     KARABO_REGISTER_FOR_CONFIGURATION(Element, Dataset, Int8VLArrayElement)
     KARABO_REGISTER_FOR_CONFIGURATION(Element, Dataset, Int16VLArrayElement)

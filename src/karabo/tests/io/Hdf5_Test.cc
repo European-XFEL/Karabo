@@ -247,7 +247,7 @@ void Hdf5_Test::testKaraboHdf5() {
 
 
     p.start("close");
-    t->close();
+    file.closeTable(t);
 
     // check if all objects are closed (apart from file) - requires making  m_h5file to be made temporary public in File.hh
     //    clog << "files    : " << H5Fget_obj_count(file.m_h5file, H5F_OBJ_FILE) << endl;

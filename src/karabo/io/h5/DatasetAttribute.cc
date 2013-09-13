@@ -45,9 +45,8 @@ namespace karabo {
                 try {
                     if (data.has(m_key, '/')) {
                         //OPT1
-                        if (!m_h5objOpen) {
-                            m_h5obj = H5Dopen2(m_tableGroup, m_h5PathName.c_str(), H5P_DEFAULT);
-                            m_h5objOpen = true;
+                        if (m_h5obj < 0) {
+                            m_h5obj = H5Dopen2(m_tableGroup, m_h5PathName.c_str(), H5P_DEFAULT);                            
                         }
                         //
                         extendFileDataspace(recordId, len);
