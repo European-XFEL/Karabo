@@ -32,21 +32,30 @@ namespace karabo {
              */
             class File {
 
+                static int m_init;
+                static int initErrorHandling();
+
             public:
 
                 KARABO_CLASSINFO(File, "Hdf5", "1.0")
                 KARABO_CONFIGURATION_BASE_CLASS
 
+            private:
+                typedef std::map<std::string, boost::shared_ptr<karabo::io::h5::Table> > TableMap;
+
+            public:
+                
                 File(const karabo::util::Hash& input);
+                
                 File(const boost::filesystem::path& filename);
+
                 virtual ~File();
 
 
                 static void expectedParameters(karabo::util::Schema& expected);
-                void configure(const karabo::util::Hash& input);
+                                
 
                 enum AccessMode {
-
                     TRUNCATE,
                     EXCLUSIVE,
                     APPEND,
@@ -58,7 +67,7 @@ namespace karabo {
                  *
                  * \li \c TRUNCATE Truncate file if exists.
                  * \li \c EXCLUSIVE Fails to open a file if already exists.
-                 * \li \c APPEND Appending records to file is possible, new table cannot be created.
+                 * \li \c APPEND Appending records to existing tables and creating new tables within the file is possible
                  * \li \c READONLY Readonly mode.
                  */
                 void open(File::AccessMode mode);
@@ -67,7 +76,6 @@ namespace karabo {
                  * Create new table in the file.
                  * @param name Table name. It can be a path with "/" as separator.
                  * @param dataFormat Object describing data format.
-                 * @param chunkSize Chunk size is the same for each dataset in the table.
                  * @return Pointer to Table. 
                  *
                  * @see DataFormat::expectedParameters.
@@ -80,9 +88,7 @@ namespace karabo {
                  *
                  * The following rules apply to data format:
                  * 
-                 * \li If the description is stored in the file as a group attribute it is taken from it.
-                 * \li If not (true for files written by different software) the best attempt to discover the data format is
-                 *  made.
+                 * \li If the description is stored in the file as a group attribute it is taken from it.                 
                  */
                 boost::shared_ptr<Table> getTable(const std::string& name);
 
@@ -97,9 +103,9 @@ namespace karabo {
                  * This can be useful if one wants to read only certain datasets.
                  * Client is fully responsible to make sure that the supplied format is compatible with stored data.
                  */
-                boost::shared_ptr<Table> getTable(const std::string& name, karabo::io::h5::Format::Pointer dataFormat);
+                boost::shared_ptr<Table> getTable(const std::string& name, karabo::io::h5::Format::Pointer dataFormat, size_t numberOfRecords = 0);
 
-
+                void closeTable(boost::shared_ptr<Table> table);
 
                 /**
                  * Close the file. When the file was opened in any mode which allowed modification all data are flushed.
@@ -113,13 +119,8 @@ namespace karabo {
                     return m_filename.string();
                 }
 
-                void reportOpenObjects() {
-                    std::clog << "Number of open datasets  : " << H5Fget_obj_count(m_h5file, H5F_OBJ_DATASET) << std::endl;
-                    std::clog << "Number of open groups    : " << H5Fget_obj_count(m_h5file, H5F_OBJ_GROUP) << std::endl;
-                    std::clog << "Number of open datatypes : " << H5Fget_obj_count(m_h5file, H5F_OBJ_DATATYPE) << std::endl;
-                    std::clog << "Number of open attributes: " << H5Fget_obj_count(m_h5file, H5F_OBJ_ATTR) << std::endl;
+                karabo::util::Hash& reportOpenObjects( karabo::util::Hash& hash);
 
-                }
             private:
 
                 boost::filesystem::path m_filename;
@@ -128,10 +129,13 @@ namespace karabo {
 
                 AccessMode m_accMode;
 
+                TableMap m_openTables;
+
                 boost::shared_ptr<Table> createReadOnlyTablePointer(const std::string& name);
 
                 void updateTableIndex(const std::string& tablePath);
 
+                void closeTable(const std::string& uniqueId);
 
             };
         }

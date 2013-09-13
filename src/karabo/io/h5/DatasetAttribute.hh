@@ -66,7 +66,8 @@ namespace karabo {
 
                         //// OPT1
                         H5Dclose(m_h5obj);
-                        m_h5objOpen = false;
+                        //m_h5objOpen = false;
+                        m_h5obj = -1;
                         ////
 
                     } catch (...) {

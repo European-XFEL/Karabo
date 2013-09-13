@@ -41,6 +41,7 @@
 #include "util/FromTypeInfo.hh"
 #include "util/HashFilter.hh"
 #include "util/Profiler.hh"
+#include "util/TimeProfiler.hh"
 #include "util/karaboDll.hh"
 
 #endif

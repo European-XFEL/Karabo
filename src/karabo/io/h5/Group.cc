@@ -43,6 +43,8 @@ namespace karabo {
 
 
             void Group::create(hid_t tableGroup) {
+                m_tableGroup = tableGroup;
+                
                 hid_t lcpl = H5Pcreate(H5P_LINK_CREATE);
                 KARABO_CHECK_HDF5_STATUS(lcpl);
                 KARABO_CHECK_HDF5_STATUS(H5Pset_create_intermediate_group(lcpl, 1));
@@ -53,10 +55,12 @@ namespace karabo {
                 KARABO_CHECK_HDF5_STATUS(H5Pclose(gcpl));
                 KARABO_CHECK_HDF5_STATUS(H5Pclose(lcpl));
                 KARABO_CHECK_HDF5_STATUS(H5Gclose(m_h5obj));
+                m_h5obj = -1;
             }
 
 
             hid_t Group::open(hid_t group) {
+                KARABO_LOG_FRAMEWORK_TRACE_CF << "opening group: " << m_h5PathName;
                 m_h5obj = H5Gopen(group, m_h5PathName.c_str(), H5P_DEFAULT);
                 KARABO_CHECK_HDF5_STATUS(m_h5obj);
                 return m_h5obj;
@@ -64,11 +68,15 @@ namespace karabo {
 
 
             void Group::close() {
-                KARABO_CHECK_HDF5_STATUS(H5Gclose(m_h5obj));
+                if (m_h5obj > -1) {
+                    KARABO_CHECK_HDF5_STATUS(H5Gclose(m_h5obj));
+                    m_h5obj = -1;
+                }
             }
 
 
             void Group::bind(karabo::util::Hash& data) {
+                KARABO_LOG_FRAMEWORK_TRACE_CF << "bind vector<Hash>: " << m_key;
                 if (!data.has(m_key, '/')) {
                     if (m_isVectorHash) {
                         vector<Hash>& vh = data.bindReference<vector<Hash> > (m_key, '/');

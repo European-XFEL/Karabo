@@ -34,7 +34,7 @@ namespace karabo {
                 static const std::string suffix(const DatasetAttribute*) {
                     return karabo::util::ToType<karabo::util::ToLiteral>::
                             to(
-                               karabo::util::FromType<karabo::util::FromTypeInfo>::from(typeid (T)))                                                   
+                               karabo::util::FromType<karabo::util::FromTypeInfo>::from(typeid (T)))
                             + "ATTR";
 
 
@@ -47,7 +47,7 @@ namespace karabo {
                 }
             public:
 
-                KARABO_CLASSINFO(Scalar, suffix(static_cast<U*>(0)), "1.0")
+                KARABO_CLASSINFO(Scalar, suffix(static_cast<U*> (0)), "1.0")
 
 
                 Scalar(const karabo::util::Hash& input) : U(input, this) {
@@ -73,25 +73,24 @@ namespace karabo {
                     return H5Screate_simple(1, ex, maxEx);
                 }
 
-                hid_t createDataspace(const std::vector<hsize_t>& ex, const std::vector<hsize_t>& maxEx) {                    
+                hid_t createDataspace(const std::vector<hsize_t>& ex, const std::vector<hsize_t>& maxEx) {
                     return this->m_dspace;
                 }
 
                 virtual ~Scalar() {
                 }
 
-                void closeDataspace(hid_t dataSpace) { 
+                void closeDataspace(hid_t dataSpace) {
                 }
-                
 
                 hid_t getDatasetTypeId() {
                     return ScalarTypes::getHdf5StandardType<T > ();
                 }
 
-                void writeNode(const karabo::util::Hash::Node& node, hid_t dataSet, hid_t fileDataSpace){
+                void writeNode(const karabo::util::Hash::Node& node, hid_t dataSet, hid_t fileDataSpace) {
                     writeNode1(node, dataSet, fileDataSpace);
                 }
-                
+
                 template<class HASH_ELEMENT>
                 void writeNode1(const HASH_ELEMENT& node, hid_t dataSet, hid_t fileDataSpace) {
                     KARABO_LOG_FRAMEWORK_TRACE_C("karabo.io.h5.Scalar") << "writing one record of " << this->m_key;
@@ -102,16 +101,15 @@ namespace karabo {
                     }
                 }
 
-                
-                void writeNode(const karabo::util::Hash::Node& node, hsize_t len, hid_t dataSet, hid_t fileDataSpace){
+                void writeNode(const karabo::util::Hash::Node& node, hsize_t len, hid_t dataSet, hid_t fileDataSpace) {
                     writeNode1(node, len, dataSet, fileDataSpace);
                 }
-                                
-                void writeNode(const karabo::util::Element<std::string>& node, hsize_t len, hid_t dataSet, hid_t fileDataSpace){
+
+                void writeNode(const karabo::util::Element<std::string>& node, hsize_t len, hid_t dataSet, hid_t fileDataSpace) {
                     KARABO_LOG_FRAMEWORK_TRACE_C("karabo.io.h5.Scalar") << "writing attr: " << len << " records of " << this->m_key;
-                    writeNode1(node,len,dataSet, fileDataSpace);
-                } 
-                
+                    writeNode1(node, len, dataSet, fileDataSpace);
+                }
+
                 template<class HASH_ELEMENT>
                 void writeNode1(const HASH_ELEMENT& node, hsize_t len, hid_t dataSet, hid_t fileDataSpace) {
                     KARABO_LOG_FRAMEWORK_TRACE_C("karabo.io.h5.Scalar") << "writing " << len << " records of " << this->m_key;
@@ -123,6 +121,7 @@ namespace karabo {
                 }
 
                 inline void bind(karabo::util::Hash & data) {
+                    KARABO_LOG_FRAMEWORK_TRACE_CF << "bind: " << this->m_key;
                     if (!data.has(this->m_key, '/')) {
                         T & value = data.bindReference<T > (this->m_key, '/');
                         m_datasetReader->bind(&value);
@@ -134,7 +133,7 @@ namespace karabo {
                 }
 
                 void bind(karabo::util::Hash & data, hsize_t bufferLen) {
-
+                    KARABO_LOG_FRAMEWORK_TRACE_CF << "bind: " << this->m_key << " bufferLen: " << bufferLen;
                     boost::optional<karabo::util::Hash::Node&> node = data.find(this->m_key, '/');
 
                     if (!node) {

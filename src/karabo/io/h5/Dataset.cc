@@ -103,7 +103,7 @@ namespace karabo {
                     m_dataSetMaxExtent[i] = dimsVector[i - 1];
                 }
 
-                hid_t fileDataSpace = this->createDataspace(m_dataSetExtent, m_dataSetMaxExtent);                
+                hid_t fileDataSpace = this->createDataspace(m_dataSetExtent, m_dataSetMaxExtent);
                 return fileDataSpace;
             }
 
@@ -130,7 +130,8 @@ namespace karabo {
                     // createAttributes(m_h5obj);
                     //// OPT1
                     KARABO_CHECK_HDF5_STATUS(H5Dclose(m_h5obj));
-                    m_h5objOpen = false;
+                    //m_h5objOpen = false;
+                    m_h5obj = -1;
                     ////
                 } catch (...) {
                     KARABO_RETHROW_AS(KARABO_PROPAGATED_EXCEPTION("Cannot create dataset /" + m_h5PathName));
@@ -160,7 +161,6 @@ namespace karabo {
 
                 KARABO_LOG_FRAMEWORK_TRACE_CF << "opening dataset: " << m_h5PathName;
                 m_h5obj = H5Dopen2(group, m_h5PathName.c_str(), H5P_DEFAULT);
-                m_h5objOpen = true;
                 KARABO_CHECK_HDF5_STATUS(m_h5obj);
                 m_fileDataSpace = H5Dget_space(m_h5obj);
                 KARABO_CHECK_HDF5_STATUS(m_fileDataSpace);
@@ -172,6 +172,7 @@ namespace karabo {
                                                                    &m_dataSetExtent[0],
                                                                    &m_dataSetMaxExtent[0])
                                          );
+                KARABO_LOG_FRAMEWORK_TRACE_CF << "m_h5obj=" << m_h5obj << " m_fileDataSpace=" << m_fileDataSpace;
                 return m_h5obj;
             }
 
@@ -183,10 +184,7 @@ namespace karabo {
                 try {
 
                     if (data.has(m_key, '/')) {
-                        if (!m_h5objOpen) {
-                            m_h5obj = H5Dopen2(m_tableGroup, m_h5PathName.c_str(), H5P_DEFAULT);
-                            m_h5objOpen = true;
-                        }
+                        openH5(m_tableGroup);
                         extendFileDataspace(recordId, 1);
                         selectFileRecords(recordId, 1);
                         const Hash::Node& node = data.getNode(m_key, '/');
@@ -206,12 +204,7 @@ namespace karabo {
 
                 try {
                     if (data.has(m_key, '/')) {
-                        //OPT1
-                        if (!m_h5objOpen) {
-                            m_h5obj = H5Dopen2(m_tableGroup, m_h5PathName.c_str(), H5P_DEFAULT);
-                            m_h5objOpen = true;
-                        }
-                        //
+                        openH5(m_tableGroup);
                         extendFileDataspace(recordId, len);
                         selectFileRecords(recordId, len);
                         const Hash::Node& node = data.getNode(m_key, '/');
@@ -227,7 +220,11 @@ namespace karabo {
 
             void Dataset::read(hsize_t recordId) {
                 try {
+                    //openH5(m_tableGroup);
+                    KARABO_LOG_FRAMEWORK_TRACE_CF << "m_h5obj=" << m_h5obj << " m_fileDataSpace=" << m_fileDataSpace;
+                    KARABO_LOG_FRAMEWORK_TRACE_CF << "select ";
                     selectFileRecords(recordId, 1);
+                    KARABO_LOG_FRAMEWORK_TRACE_CF << "read record";
                     readRecord(m_h5obj, m_fileDataSpace);
                 } catch (karabo::util::Exception& e) {
                     KARABO_RETHROW_AS(KARABO_PROPAGATED_EXCEPTION("Could not read " + m_h5PathName + " dataset"));
@@ -237,6 +234,7 @@ namespace karabo {
 
             void Dataset::read(hsize_t recordId, hsize_t len) {
                 try {
+                    //                    openH5(m_tableGroup);
                     selectFileRecords(recordId, len);
                     readRecords(len, m_h5obj, m_fileDataSpace);
                 } catch (karabo::util::Exception& e) {
@@ -246,11 +244,14 @@ namespace karabo {
 
 
             void Dataset::close() {
-                if (m_h5objOpen) {
+                if (m_h5obj > -1) {
                     KARABO_CHECK_HDF5_STATUS(H5Dclose(m_h5obj));
-                    m_h5objOpen = false;
+                    m_h5obj = -1;
                 }
-                KARABO_CHECK_HDF5_STATUS(H5Sclose(m_fileDataSpace));                
+                if (m_fileDataSpace > -1) {
+                    KARABO_CHECK_HDF5_STATUS(H5Sclose(m_fileDataSpace));
+                    m_fileDataSpace = -1;
+                }
 
             }
 
@@ -335,6 +336,17 @@ namespace karabo {
                 return ds;
             }
 
+
+            void Dataset::getDataSpaceInfo(hid_t dataSpace, std::ostringstream& oss) {
+                int ndims = H5Sget_simple_extent_ndims(dataSpace);
+                KARABO_CHECK_HDF5_STATUS(ndims);
+                std::vector<hsize_t> extent(ndims, 0);
+                std::vector<hsize_t> maxExtent(ndims, 0);
+                KARABO_CHECK_HDF5_STATUS(H5Sget_simple_extent_dims(dataSpace, &extent[0], &maxExtent[0]));
+                for (int i = 0; i < ndims; ++i) {
+                    oss << "[0]={" << extent[i] << "," << maxExtent[i] << "}; ";
+                }
+            }
         }
     }
 }

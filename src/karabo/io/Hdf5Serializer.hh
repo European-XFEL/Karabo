@@ -32,7 +32,6 @@ namespace karabo {
             }
 
             Hdf5Serializer(const karabo::util::Hash& input) {
-//                m_filename = boost::filesystem::path(input.get<std::string>("filename"));
             }
 
             virtual ~Hdf5Serializer() {
@@ -40,25 +39,7 @@ namespace karabo {
 
             virtual void save(const karabo::util::Hash& object, hid_t h5file, const std::string& groupName) = 0;
 
-            virtual void load(karabo::util::Hash& object, hid_t h5file, const std::string& groupName ) = 0;
-            //
-            //            void load(T& object, const std::vector<char>& archive) {
-            //                load(object, &archive[0], archive.size());
-            //            }
-            
-            //            T load(const char* archive, const size_t nBytes) {
-            //                T object;
-            //                this->load(object, archive, nBytes);
-            //                return object;
-            //            }
-            //            
-            //            T load(const std::vector<char>& archive) {
-            //                T object;
-            //                this->load(object, archive);
-            //                return object;
-            //            }
-            //            
-            //            
+            virtual void load(karabo::util::Hash& object, hid_t h5file, const std::string& groupName ) = 0;            
 
         private:
             boost::filesystem::path m_filename;

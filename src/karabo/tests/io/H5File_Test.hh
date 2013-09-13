@@ -34,6 +34,8 @@ class H5File_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST(testTrainFormat);
     CPPUNIT_TEST(testClose);
 
+//    CPPUNIT_TEST(testExternalHdf5);
+            
     CPPUNIT_TEST_SUITE_END();
 
 public:
@@ -97,6 +99,8 @@ private:
     void testClose();
     void testVectorOfHashes();
 
+    void testExternalHdf5();
+    
     void testTrainFormat();
     uint64_t fillTrainBuffer(std::vector<char>& buffer, size_t bufferLen, const karabo::util::Hash& dataset,
                              unsigned long long trainId, unsigned short imageCount);

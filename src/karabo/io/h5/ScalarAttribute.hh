@@ -238,7 +238,6 @@ namespace karabo {
 
                 void writeNodeAttribute(const karabo::util::Element<std::string>& attributeNode, hid_t attribute) {
                     try {
-                        std::clog << "writing bool attribute" << std::endl;
                         hid_t tid = getNativeTypeId();
                         bool value = attributeNode.getValue<bool>();
                         unsigned char converted = boost::numeric_cast<unsigned char>(value);
@@ -249,8 +248,7 @@ namespace karabo {
                     }
                 }
 
-                void readNodeAttribute(karabo::util::Element<std::string>& attributeNode, hid_t attribute) {
-                    std::clog << "reading bool attribute" << std::endl;
+                void readNodeAttribute(karabo::util::Element<std::string>& attributeNode, hid_t attribute) {                 
 
                     KARABO_LOG_FRAMEWORK_TRACE_CF << "reading - string attribute";
                     hid_t space = H5Aget_space(m_attribute);

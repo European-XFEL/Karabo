@@ -52,8 +52,6 @@ namespace karabo {
                 virtual ~Element() {
                 }
 
-                void getCreateParam(std::string& name, hid_t* dataset, hid_t& filespace, hid_t& typeId, hid_t& linkProp, hid_t& dsProp);
-
                 /**
                  * Get element name. Element can represent hdf5 group or dataset
                  * @return name element name
@@ -167,17 +165,6 @@ namespace karabo {
                  */
                 virtual void bind(karabo::util::Hash& buffer, hsize_t len) = 0;
 
-                //                /*
-                //                 * Read data from the dataset. Hash structure is filled with the key, value pair.
-                //                 * The key is the name of the dataset, value is read from file.
-                //                 * The data Hash structure must already contain corresponding key and value.
-                //                 * Therefore this function can be used with binding variables (references)
-                //                 * from client code.
-                //                 *
-                //                 * @param data Hash to be filled
-                //                 * @param recordId Record number (numbering starts from 0)
-                //                 */
-
 
                 virtual void read(hsize_t recordId) = 0;
 
@@ -189,14 +176,21 @@ namespace karabo {
             protected:
 
                 std::string m_h5name; // name of this element in hdf5 file               
+
                 std::string m_h5path; // path to the parent of this element from the root of the table (/ as separator)
+
                 std::string m_h5PathName;
+
                 std::string m_key; // key  (including path) to the data element in hash                
-                hid_t m_h5obj; // this dataset or group
-                bool m_h5objOpen;
+
+                hid_t m_h5obj; // this dataset or group               
+
                 hid_t m_parentGroup; // parent group of this element
-                hid_t m_tableGroup;
+
+                hid_t m_tableGroup;   //  hdf5 group of the table where this element belongs to
+
                 karabo::util::Hash m_config;
+
                 std::vector<Attribute::Pointer> m_attributes;
             };
 
