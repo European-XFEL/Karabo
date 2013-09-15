@@ -305,7 +305,7 @@ void Hash_Test::testGetAs() {
     {
         // Assumes vector to contain printable (ASCII) characters
         Hash h("a", std::vector<signed char>(3, '4'));
-        CPPUNIT_ASSERT(h.getAs<string > ("a") == "444");
+        CPPUNIT_ASSERT(h.getAs<string > ("a") == "52,52,52");
     }
     {
         Hash h("a", static_cast<unsigned char> ('R'));
