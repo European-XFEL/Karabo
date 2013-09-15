@@ -75,7 +75,7 @@ namespace karabo {
             }
 
             explicit CpuImage(const std::string& filename) : m_cimg() {
-                karabo::util::Hash h("File.filename", filename);
+                karabo::util::Hash h("ImageFile.filename", filename);
                 typename karabo::io::Input<CpuImage<TPix> >::Pointer in = karabo::io::Input<CpuImage<TPix> >::create(h);
                 in->read(*this);
             }
@@ -255,8 +255,8 @@ namespace karabo {
                 return *this;
             }
 
-            const CpuImage& write(const std::string& filename, const int number = -1) const {
-                karabo::util::Hash h("File.filename", filename, "File.number", number);
+            const CpuImage& write(const std::string& filename, const bool enableAppendMode = false) const {
+                karabo::util::Hash h("ImageFile.filename", filename, "ImageFile.enableAppendMode", enableAppendMode);
                 typename karabo::io::Output<CpuImage<TPix> >::Pointer out = karabo::io::Output<CpuImage<TPix> >::create(h);
                 out->write(*this);
                 return *this;
