@@ -403,7 +403,7 @@ namespace karabo {
                                 }
                                 size_t index = 0;
                                 for (size_t i = 0; i < size; i++) {
-                                    unsigned char pix;
+                                    unsigned char pix = 0; // Just to make gcc happy!
                                     if (pmax != pmin) // normalization
                                         pix = int((pix - pmin) * 0xFF / (pmax - pmin));
                                     else
@@ -518,7 +518,8 @@ namespace karabo {
 
                             } else if (img.getChannelSpace() == ChannelSpace::f_32_4) {
                                 float* data = reinterpret_cast<float*>(img.dataPointer());
-                                float pmax = 0., pmin = 1.;
+                                float pmax = -std::numeric_limits<float>::max();
+                                float pmin = std::numeric_limits<float>::max();
 
                                 for (size_t i = 0; i < size; i++) {
                                     if (pmax < data[i]) pmax = data[i];
@@ -545,8 +546,8 @@ namespace karabo {
 
                                 size_t index = 0;
                                 for (size_t i = 0; i < size; i++) {
-                                    unsigned char pix = int(data[i] * 0xFF);
-                                    if (pmax != pmin) pix = int((data[i] - pmin) * 0xFF / (pmax - pmin)); // normalization
+                                    unsigned char pix = 0;
+                                    if (pmax != pmin) pix = static_cast<unsigned char>((data[i] - pmin) * 0xFF / (pmax - pmin)); // normalization
 
                                     qtImage[index++] = pix;
                                     qtImage[index++] = pix;
