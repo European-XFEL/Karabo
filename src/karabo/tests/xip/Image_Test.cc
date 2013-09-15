@@ -33,13 +33,13 @@ void ImageTest::tearDown() {
 
 void ImageTest::testConstructorsChar() {
     {
-        Image<char> img(CPU);
+        Image<unsigned char> img(CPU);
         CPPUNIT_ASSERT(img.isEmpty() == true);
         CPPUNIT_ASSERT(img.byteSize() == 0);
     }
 
     {
-        Image<char> img(CPU, resourcePath("in-3-3-3.asc"));
+        Image<unsigned char> img(CPU, resourcePath("in-3-3-3.asc"));
         CPPUNIT_ASSERT(img.dimensionality() == 3);
         CPPUNIT_ASSERT(img.dimX() == 3);
         CPPUNIT_ASSERT(img.dimY() == 3);
@@ -49,7 +49,7 @@ void ImageTest::testConstructorsChar() {
     }
 
     {
-        Image<char> img(CPU, 1024, 1024);
+        Image<unsigned char> img(CPU, 1024, 1024);
         CPPUNIT_ASSERT(img.dimensionality() == 2);
         CPPUNIT_ASSERT(img.dimX() == 1024);
         CPPUNIT_ASSERT(img.dimY() == 1024);
@@ -58,7 +58,7 @@ void ImageTest::testConstructorsChar() {
     }
 
     {
-        Image<char> img(CPU, 10, 1, 1, 5);
+        Image<unsigned char> img(CPU, 10, 1, 1, 5);
         CPPUNIT_ASSERT(img.dimensionality() == 1);
         CPPUNIT_ASSERT(img.dimX() == 10);
         CPPUNIT_ASSERT(img.dimY() == 1);
@@ -69,7 +69,7 @@ void ImageTest::testConstructorsChar() {
     }
 
     {
-        Image<char> img(CPU, 4, 1, 1, "0,1,2,3", true);
+        Image<unsigned char> img(CPU, 4, 1, 1, "0,1,2,3", true);
         CPPUNIT_ASSERT(img.dimensionality() == 1);
         CPPUNIT_ASSERT(img.dimX() == 4);
         CPPUNIT_ASSERT(img.dimY() == 1);
@@ -84,7 +84,7 @@ void ImageTest::testConstructorsChar() {
 void ImageTest::testImageHeader() {
 
     {
-        Image<char> img(CPU, 128, 128, 2);
+        Image<unsigned char> img(CPU, 128, 128, 2);
 
         Hash header = img.getHeader();
         assert(header.get<int>("__dimX") == 128);
@@ -92,7 +92,7 @@ void ImageTest::testImageHeader() {
         assert(header.get<int>("__dimZ") == 2);
     }
     {
-        Image<char> img(CPU, 4, 4);
+        Image<unsigned char> img(CPU, 4, 4);
         //img.setHeader(Hash("p1", "Just for fun", "p2", 9.87654321));
         img.setHeaderParam("p1", "Just for fun");
         img.setHeaderParam("p2", 9.87654321);
