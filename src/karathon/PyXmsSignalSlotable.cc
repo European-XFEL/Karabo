@@ -35,7 +35,7 @@ void exportPyXmsSignalSlotable() {//exposing karabo::xms::SignalSlotable
 
     bp::class_<SignalSlotable, boost::noncopyable > ("SignalSlotableIntern")
             .def(bp::init<const std::string&, const karabo::net::BrokerConnection::Pointer&>())
-    ;
+            ;
 
 
     bp::class_<SignalSlotableWrap, boost::shared_ptr<SignalSlotableWrap>, bp::bases< SignalSlotable>, boost::noncopyable > ("SignalSlotable")
@@ -57,6 +57,11 @@ void exportPyXmsSignalSlotable() {//exposing karabo::xms::SignalSlotable
                  "Example:\n\tss = SignalSlotable.create('a')\n"
                  ).staticmethod("create")
 
+            .def("login"
+                 , (bool (SignalSlotable::*)(const std::string&, const std::string&, const std::string&)) (&SignalSlotable::login)
+                 , (bp::arg("username"), bp::arg("password"), bp::arg("provider")))
+            .def("logout", (bool (SignalSlotable::*)())(&SignalSlotable::logout))
+
             .def("runEventLoop", &SignalSlotableWrap::runEventLoop, (bp::arg("heartbeatInterval") = 10, bp::arg("instanceInfo") = karabo::util::Hash()),
                  "\nUse this method if you have created a SignalSlotable instance with autostart = False and you need to provide info for event loop.\n"
                  "Example:\n\tss = SignalSlotable.create('a')\n\tinfo = Hash('type','device')\n\tinfo['classId'] = myclassId\n\tinfo['serverId'] = myserverId\n\t"
@@ -64,6 +69,27 @@ void exportPyXmsSignalSlotable() {//exposing karabo::xms::SignalSlotable
                  )
 
             .def("stopEventLoop", &SignalSlotableWrap::stopEventLoop)
+
+            .def("setSenderInfo"
+                 , (void (SignalSlotable::*)(const karabo::util::Hash&))(&SignalSlotable::setSenderInfo)
+                 , (bp::arg("senderInfo")))
+            .def("getSenderInfo"
+                 , (const karabo::util::Hash & (SignalSlotable::*)() const) (&SignalSlotable::getSenderInfo)
+                 , bp::return_value_policy<bp::copy_const_reference>())
+            .def("getInstanceId"
+                 , (bp::object(SignalSlotableWrap::*)()) & SignalSlotableWrap::getInstanceId)
+            .def("updateInstanceInfo"
+                 , (void (SignalSlotable::*)(const karabo::util::Hash&))(&SignalSlotable::updateInstanceInfo)
+                 , (bp::arg("update")))
+            .def("getInstanceInfo"
+                 , (const karabo::util::Hash & (SignalSlotable::*)() const) (&SignalSlotable::getInstanceInfo)
+                 , bp::return_value_policy<bp::copy_const_reference>())
+            .def("trackExistenceOfInstance"
+                 , (void (SignalSlotable::*)(const std::string&))(&SignalSlotable::trackExistenceOfInstance)
+                 , (bp::arg("instanceId")))
+            .def("stopTrackingExistenceOfInstance"
+                 , (void (SignalSlotable::*)(const std::string&))(&SignalSlotable::stopTrackingExistenceOfInstance)
+                 , (bp::arg("instanceId")))
 
             .def("connect",
                  (bool (SignalSlotable::*)(const string, const string&, const string, const string&, SignalSlotable::ConnectionType, const bool))(&SignalSlotable::connect),
@@ -159,6 +185,28 @@ void exportPyXmsSignalSlotable() {//exposing karabo::xms::SignalSlotable
             .def("emit", &SignalSlotableWrap::emitPy2, (bp::arg("signalFunction"), bp::arg("a1"), bp::arg("a2")))
             .def("emit", &SignalSlotableWrap::emitPy3, (bp::arg("signalFunction"), bp::arg("a1"), bp::arg("a2"), bp::arg("a3")))
             .def("emit", &SignalSlotableWrap::emitPy4, (bp::arg("signalFunction"), bp::arg("a1"), bp::arg("a2"), bp::arg("a3"), bp::arg("a4")))
+
+            .def("createInputChannel"
+                 , (bp::object(SignalSlotableWrap::*)(const bp::object&, const std::string&, const Hash&, const bp::object&, const bp::object&)) & SignalSlotableWrap::createInputChannel
+                 , (bp::arg("inputType")
+                 , bp::arg("name")
+                 , bp::arg("configuration")
+                 , bp::arg("onInputAvailableHandler") = bp::object()
+                 , bp::arg("onEndOfStreamEventHandler") = bp::object()))
+            .def("createOutputChannel"
+                 , (bp::object(SignalSlotableWrap::*)(const bp::object&, const std::string&, const Hash&, const bp::object&))(&SignalSlotableWrap::createOutputChannel)
+                 , (bp::arg("outputType")
+                 , bp::arg("name")
+                 , bp::arg("configuration")
+                 , bp::arg("onOutputPossibleHandler") = bp::object()))
+            .def("getInputChannels", &SignalSlotableWrap::getInputChannels)
+            .def("getOutputChannels", &SignalSlotableWrap::getOutputChannels)
+            .def("exists"
+                 , (bp::tuple(SignalSlotableWrap::*)(const std::string&))(&SignalSlotableWrap::exists)
+                 , (bp::arg("instanceId")))
+            .def("getAccessLevel"
+                 , (int (SignalSlotable::*)(const std::string&) const) (&SignalSlotable::getAccessLevel)
+                 , (bp::arg("instanceId")))
             ;
 }
 

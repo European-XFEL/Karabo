@@ -52,7 +52,6 @@ void exportp2p() {
                 .def("setIOService", &ConnectionWrap().setIOService, (bp::arg("ioserv")), "Registers connection on IO service object created externally.")
                 .def("setErrorHandler", &ConnectionWrap().setErrorHandler, (bp::arg("handler")), "Sets a handler being called in case of error conditions")
                 KARABO_PYTHON_FACTORY_CONFIGURATOR(Connection)
-                .attr("__karabo_cpp_classid__") = Connection::classInfo().getClassId()
                 ;
     }
 
