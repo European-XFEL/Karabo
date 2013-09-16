@@ -286,9 +286,9 @@ class PythonComputeDevice(PythonDevice, ComputeFsm):
     def endOfStreamAction(self):
         self.onEndOfStream()
         outputChannels = self._ss.getOutputChannels()
-        for channel in outputChannels:
+        for c in outputChannels:
             #channel.signalEndOfStream()
-            outputChannels[channel].signalEndOfStream()
+            c.data().signalEndOfStream()
             
     
     def onEndOfStream(self):
@@ -299,9 +299,9 @@ class PythonComputeDevice(PythonDevice, ComputeFsm):
         inputChannels = self._ss.getInputChannels()
         outputChannels = self._ss.getOutputChannels()
         for c in inputChannels:
-            inputChannels[c].update()
+            c.data().update()
         for c in outputChannels:
-            outputChannels[c].update()
+            c.data().update()
         
     def isAborted(self):
         return self.isAborted;
@@ -320,7 +320,7 @@ class PythonComputeDevice(PythonDevice, ComputeFsm):
     def canCompute(self):
         inputChannels = self._ss.getInputChannels()
         for c in inputChannels:
-            if not inputChannels[c].canCompute():
+            if not c.data().canCompute():
                 return False
         return True
     
