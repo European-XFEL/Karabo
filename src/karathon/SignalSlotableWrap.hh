@@ -69,6 +69,15 @@ namespace karathon {
             karabo::xms::SignalSlotable::stopEventLoop();
         }
 
+        bp::object getInstanceId() {
+            return bp::object(SignalSlotable::getInstanceId());
+        }
+
+        bp::tuple exists(const std::string& instanceId) {
+            std::pair<bool, std::string> result = SignalSlotable::exists(instanceId);
+            return bp::make_tuple(result.first, bp::object(result.second));
+        }
+
         bp::object getAvailableInstancesPy(bool activateTracking) {
             return Wrapper::fromStdVectorToPyList(this->getAvailableInstances(activateTracking));
         }
@@ -262,9 +271,10 @@ namespace karathon {
             if (onEndOfStreamEventHandler != bp::object()) {
                 channel.attr("registerEndOfStreamEventHandler")(onEndOfStreamEventHandler);
             }
-            if (bp::extract<karabo::io::AbstractInput::Pointer>(channel).check()) {
-                m_inputChannels[name] = bp::extract<karabo::io::AbstractInput::Pointer>(channel);
-            }
+            if (!bp::extract<karabo::io::AbstractInput::Pointer>(channel).check())
+                throw KARABO_PYTHON_EXCEPTION("createInputChannel(inputType, ...): Instance gotten by 'createChoice' call cannot be converted to AbstractInput::Pointer");
+
+            m_inputChannels[name] = bp::extract<karabo::io::AbstractInput::Pointer>(channel);
             return channel;
         }
 
@@ -279,25 +289,33 @@ namespace karathon {
             }
 
             bp::object channel = outputType.attr("createChoice")(name, input);
-            
+
             if (!PyObject_HasAttrString(channel.ptr(), "setInstanceId")) {
                 throw KARABO_PYTHON_EXCEPTION("createOutputChannel(outputType, ...): Instance gotten by 'createChoice' call doesn't have 'setInstanceId' method");
             }
             channel.attr("setInstanceId")(m_instanceId);
-            
+
             if (!PyObject_HasAttrString(channel.ptr(), "registerIOEventHandler")) {
                 throw KARABO_PYTHON_EXCEPTION("createOutputChannel(outputType, ...): Instance gotten by 'createChoice' call doesn't have 'registerIOEventHandler' method");
             }
             if (onOutputPossibleHandler != bp::object()) {
                 channel.attr("registerIOEventHandler")(onOutputPossibleHandler);
             }
-            if (bp::extract<karabo::io::AbstractOutput::Pointer>(channel).check()) {
-//                m_outputChannels[name] = channel;
-            }
+            if (!bp::extract<karabo::io::AbstractOutput::Pointer>(channel).check())
+                throw KARABO_PYTHON_EXCEPTION("createOutputChannel(outputType, ...): Instance gotten by 'createChoice' call cannot be converted to AbstractOutput::Pointer");
+
+            m_outputChannels[name] = bp::extract<karabo::io::AbstractOutput::Pointer>(channel);
             return channel;
         }
 
-        
+        bp::object getInputChannels() {
+            return bp::object(karabo::xms::SignalSlotable::getInputChannels());
+        }
+
+        bp::object getOutputChannels() {
+            return bp::object(karabo::xms::SignalSlotable::getOutputChannels());
+        }
+
     private: // members
         boost::thread m_eventLoop;
 

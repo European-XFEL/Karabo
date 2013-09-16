@@ -24,6 +24,7 @@ void exportPyUtilEpochstamp();
 void exportPyUtilTimestamp();
 
 // io
+void exportPyIo();
 void exportPyIoFileTools();
 template <class T> void exportPyIoOutput();
 template <class T> void exportPyIoInput();
@@ -62,6 +63,7 @@ BOOST_PYTHON_MODULE(karathon) {
     exportPyUtilTimestamp();
     
     // io
+    exportPyIo();
     exportPyIoFileTools();
     
     exportPyIoOutput<karabo::util::Hash>();

@@ -58,7 +58,6 @@ void exportPyLogLogger() {
 
     {//karabo::log::Logger
         bp::class_< Logger >("Logger", bp::init<Hash const &>((bp::arg("input"))))
-                KARABO_PYTHON_FACTORY_CONFIGURATOR(Logger)
                 .def("configure"
                      , &Logger::configure
                      , (bp::arg("config") = Hash())).staticmethod("configure")
@@ -67,7 +66,7 @@ void exportPyLogLogger() {
                      , (log4cpp::Category & (*)(string const &))(&Logger::getLogger)
                      , (bp::arg("logCategorie"))
                      , bp::return_internal_reference<> ()).staticmethod("getLogger")
-                .attr("__karabo_cpp_classid__") = Logger::classInfo().getClassId()
+                KARABO_PYTHON_FACTORY_CONFIGURATOR(Logger)
                 ;
 
         bp::register_ptr_to_python< boost::shared_ptr< Logger > >();
