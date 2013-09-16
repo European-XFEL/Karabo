@@ -259,6 +259,12 @@ class PythonComputeDevice(PythonDevice, ComputeFsm):
                 ,
         )
         
+    def KARABO_INPUT_CHANNEL(self, type, name, configuration):
+        return self._ss.createInputChannel(type, name, configuration, self._onInputAvailable, self._onEndOfStream)
+    
+    def KARABO_OUTPUT_CHANNEL(self, type, name, configuration):
+        return self._ss.createOutputChannel(type, name, configuration)
+    
     @abstractmethod    
     def compute(self):
         ''' Put your specific algorithms here '''
@@ -281,7 +287,9 @@ class PythonComputeDevice(PythonDevice, ComputeFsm):
         self.onEndOfStream()
         outputChannels = self._ss.getOutputChannels()
         for channel in outputChannels:
-            pass  #TODO:  NOT IMPLEMENTED
+            #channel.signalEndOfStream()
+            outputChannels[channel].signalEndOfStream()
+            
     
     def onEndOfStream(self):
         ''' Override this function for specializing the endOfStream behavior '''
@@ -290,10 +298,10 @@ class PythonComputeDevice(PythonDevice, ComputeFsm):
         ''' Override this function for specializing the update behaviors of your IO channels '''
         inputChannels = self._ss.getInputChannels()
         outputChannels = self._ss.getOutputChannels()
-        for inputChannel in inputChannels:
-            pass  #TODO:  NOT IMPLEMENTED
-        for ooutputChannel in outputChannels:
-            pass  #TODO:  NOT IMPLEMENTED
+        for c in inputChannels:
+            inputChannels[c].update()
+        for c in outputChannels:
+            outputChannels[c].update()
         
     def isAborted(self):
         return self.isAborted;
@@ -311,8 +319,9 @@ class PythonComputeDevice(PythonDevice, ComputeFsm):
             
     def canCompute(self):
         inputChannels = self._ss.getInputChannels()
-        for inputChannel in inputChannels:
-            pass   #TODO:  NOT IMPLEMENTED
+        for c in inputChannels:
+            if not inputChannels[c].canCompute():
+                return False
         return True
     
     def computingStateOnEntry(self):
@@ -368,6 +377,3 @@ class PythonComputeDevice(PythonDevice, ComputeFsm):
     def abortedOnEntry(self):
         self.isAborted = False
         
-        
-if __name__ == "__main__":
-    print "Hello World"
