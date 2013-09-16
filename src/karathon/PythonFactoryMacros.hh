@@ -28,6 +28,24 @@ namespace bp = boost::python;
         "The factory method to create the instance of C++ class with \"classId\" derived from C++ base class \"" #baseClass "\" using \"input\" configuration.\n" \
         "The last argument is a flag to determine if the input configuration should be validated." \
         ).staticmethod("create")\
+.def("createNode"\
+        , (boost::shared_ptr< baseClass >(*)(const std::string&, std::string const &, karabo::util::Hash const &, bool const))( &karabo::util::Configurator< baseClass >::createNode) \
+        , (bp::arg("nodeName"), bp::arg("classId"), bp::arg("input")=karabo::util::Hash(), bp::arg("validate")=(bool const)(true) ),\
+        "The factory method to create the instance of C++ class with \"classId\" derived from C++ base class \"" #baseClass "\" using \"input\" configuration.\n" \
+        "The last argument is a flag to determine if the input configuration should be validated." \
+        ).staticmethod("createNode")\
+.def("createChoice"\
+        , (boost::shared_ptr< baseClass >(*)(std::string const &, karabo::util::Hash const &, bool const))( &karabo::util::Configurator< baseClass >::createChoice) \
+        , (bp::arg("choiceName"), bp::arg("input")=karabo::util::Hash(), bp::arg("validate")=(bool const)(true) ),\
+        "The factory method to create the instance of C++ class with \"classId\" derived from C++ base class \"" #baseClass "\" using \"input\" configuration.\n" \
+        "The last argument is a flag to determine if the input configuration should be validated." \
+        ).staticmethod("createChoice")\
+.def("createList"\
+        , (boost::shared_ptr< baseClass >(*)(std::string const &, karabo::util::Hash const &, bool const))( &karabo::util::Configurator< baseClass >::createList) \
+        , (bp::arg("listName"), bp::arg("input")=karabo::util::Hash(), bp::arg("validate")=(bool const)(true) ),\
+        "The factory method to create the instance of C++ class with \"classId\" derived from C++ base class \"" #baseClass "\" using \"input\" configuration.\n" \
+        "The last argument is a flag to determine if the input configuration should be validated." \
+        ).staticmethod("createList")\
 .def("getClassInfo"\
         , (karabo::util::ClassInfo(karabo::util::Configurator<baseClass>::* )() const)(&karabo::util::Configurator<baseClass>::getClassInfo))\
 .def("getRegisteredClasses"\
@@ -36,6 +54,7 @@ namespace bp = boost::python;
 .def("getSchema"\
         , (karabo::util::Schema (*)( std::string const &,karabo::util::Schema::AssemblyRules const & ))( &karabo::util::Configurator<baseClass>::getSchema)\
         , (bp::arg("classId"), bp::arg("rules")=karabo::util::Schema::AssemblyRules() ),\
-        "Get schema for C++ class with \"classId\" derived from C++ base class \"" #baseClass "\" using assembly \"rules\"" ).staticmethod( "getSchema" )
+        "Get schema for C++ class with \"classId\" derived from C++ base class \"" #baseClass "\" using assembly \"rules\"" ).staticmethod( "getSchema" )\
+.attr("__karabo_cpp_classid__") = baseClass::classInfo().getClassId()        
 
 #endif	/* PYTHONFACTORYMACROS_HH */
