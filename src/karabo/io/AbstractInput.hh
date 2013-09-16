@@ -16,16 +16,25 @@
 #include <boost/any.hpp>
 #include <karabo/util/Configurator.hh>
 
+namespace karathon {
+   class AbstractInputWrap; 
+}
+
 namespace karabo {
 
     namespace io {
 
         class AbstractInput : public boost::enable_shared_from_this<AbstractInput> {
 
+            friend class karathon::AbstractInputWrap;
+            
         public:
 
             KARABO_CLASSINFO(AbstractInput, "AbstractInput", "1.0")
             KARABO_CONFIGURATION_BASE_CLASS
+
+            AbstractInput() {
+            }
 
             AbstractInput(const karabo::util::Hash&) {
             }
@@ -83,14 +92,14 @@ namespace karabo {
             }
             
             void triggerEndOfStreamEvent() {
-                if (!m_endOfStreamEventHandler.empty()) m_endOfStreamEventHandler();
+                if (!m_endOfStreamEventHandler.empty()) (boost::any_cast < boost::function<void () > >(m_endOfStreamEventHandler))();
             }
 
         private:
 
             std::string m_instanceId;
             boost::any m_ioEventHandler;
-            boost::function<void ()> m_endOfStreamEventHandler;
+            boost::any m_endOfStreamEventHandler;
 
         };
     }

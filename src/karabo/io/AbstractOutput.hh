@@ -16,12 +16,19 @@
 #include <boost/function.hpp>
 #include <boost/any.hpp>
 #include <karabo/util/Configurator.hh>
+
+namespace karathon {
+    class AbstractOutputWrap;
+}
+
 namespace karabo {
 
     namespace io {
 
         class AbstractOutput : public boost::enable_shared_from_this<AbstractOutput> {
 
+            friend class karathon::AbstractOutputWrap;
+            
             boost::any m_ioEventHandler;
             std::string m_instanceId;
 
@@ -43,6 +50,9 @@ namespace karabo {
              * @param input Validated (@see expectedParameters) and default-filled configuration
              */
             AbstractOutput(const karabo::util::Hash& input) {
+            }
+
+            AbstractOutput() {
             }
 
             virtual ~AbstractOutput() {
