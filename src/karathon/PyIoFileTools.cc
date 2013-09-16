@@ -29,47 +29,72 @@ namespace karathon {
     struct AbstractInputWrap {
 
 
-        static bp::object getInstanceId(AbstractInput& self) {
-            return bp::object(self.getInstanceId());
+        static void reconfigure(AbstractInput::Pointer self, const karabo::util::Hash& configuration) {
+            self->reconfigure(configuration);
         }
 
-
-        static bp::object getConnectedOutputChannels(AbstractInput& self) {
-            return Wrapper::fromStdVectorToPyHashList(self.getConnectedOutputChannels());
+        static bp::object getInstanceId(AbstractInput::Pointer self) {
+            return bp::object(self->getInstanceId());
         }
 
+        static void setInstanceId(AbstractInput::Pointer self, const std::string& instanceId) {
+            self->setInstanceId(instanceId);
+        }
 
-        static void registerIOEventHandler(AbstractInput& self, const bp::object& handler) {
+        static bool needsDeviceConnection(AbstractInput::Pointer self) {
+            return self->needsDeviceConnection();
+        }
+        static bp::object getConnectedOutputChannels(AbstractInput::Pointer self) {
+            return Wrapper::fromStdVectorToPyHashList(self->getConnectedOutputChannels());
+        }
+
+        static void connectNow(AbstractInput::Pointer self, const karabo::util::Hash& config) {
+            self->connectNow(config);
+        }
+        
+        static bool canCompute(AbstractInput::Pointer self) {
+            return self->canCompute();
+        }
+        
+        static void update(AbstractInput::Pointer self) {
+            self->update();
+        }
+        
+        static void setEndOfStream(AbstractInput::Pointer self) {
+            self->setEndOfStream();
+        }
+        
+        static void registerIOEventHandler(AbstractInput::Pointer self, const bp::object& handler) {
             if (handler == bp::object()) {
-                self.m_ioEventHandler = bp::object();
+                self->m_ioEventHandler = bp::object();
                 return;
             }
             if (!Wrapper::hasattr(handler, "func_name")) {
                 throw KARABO_PYTHON_EXCEPTION("This python object is not a function.");
             }
-            self.m_ioEventHandler = handler;
+            self->m_ioEventHandler = handler;
         }
 
 
-        void registerEndOfStreamEventHandler(AbstractInput& self, const bp::object& handler) {
+        void registerEndOfStreamEventHandler(AbstractInput::Pointer self, const bp::object& handler) {
             if (handler == bp::object()) {
-                self.m_endOfStreamEventHandler = bp::object();
+                self->m_endOfStreamEventHandler = bp::object();
                 return;
             }
             if (!Wrapper::hasattr(handler, "func_name")) {
                 throw KARABO_PYTHON_EXCEPTION("This python object is not a function.");
             }
-            self.m_endOfStreamEventHandler = handler;
+            self->m_endOfStreamEventHandler = handler;
         }
 
 
-        static void triggerIOEvent(AbstractInput& self) {
+        static void triggerIOEvent(AbstractInput::Pointer self) {
             //this->template triggerIOEvent< karabo::io::Input<T> >();
-            if (self.m_ioEventHandler.type() != typeid(bp::object))
+            if (self->m_ioEventHandler.type() != typeid(bp::object))
                 throw KARABO_PYTHON_EXCEPTION("triggerIOEvent(): registered not a python object!");
             ScopedGILAcquire gil;
             try {
-                bp::object handler = boost::any_cast<bp::object>(self.m_ioEventHandler);
+                bp::object handler = boost::any_cast<bp::object>(self->m_ioEventHandler);
                 if (handler != bp::object())
                     handler(bp::object(self));
             } catch (const bp::error_already_set&) {
@@ -78,13 +103,13 @@ namespace karathon {
         }
 
 
-        virtual void triggerEndOfStreamEvent(AbstractInput& self) {
+        virtual void triggerEndOfStreamEvent(AbstractInput::Pointer self) {
             //this->triggerEndOfStreamEvent();
-            if (self.m_endOfStreamEventHandler.type() != typeid(bp::object))
+            if (self->m_endOfStreamEventHandler.type() != typeid(bp::object))
                 throw KARABO_PYTHON_EXCEPTION("triggerEndOfStreamEvent(): registered not a python object!");
             ScopedGILAcquire gil;
             try {
-                bp::object handler = boost::any_cast<bp::object>(self.m_endOfStreamEventHandler);
+                bp::object handler = boost::any_cast<bp::object>(self->m_endOfStreamEventHandler);
                 if (handler != bp::object())
                     handler();
             } catch (const bp::error_already_set&) {
@@ -96,34 +121,48 @@ namespace karathon {
 
     struct AbstractOutputWrap {
 
-
-        static bp::object getInstanceId(AbstractOutput& self) {
-            return bp::object(self.getInstanceId());
+        static bp::object getInstanceId(AbstractOutput::Pointer self) {
+            return bp::object(self->getInstanceId());
         }
 
-
-        static bp::object getInformation(AbstractOutput& self) {
-            return bp::object(self.getInformation());
+        static void setInstanceId(AbstractOutput::Pointer self, const std::string& instanceId) {
+            self->setInstanceId(instanceId);
         }
         
-        static void registerIOEventHandler(AbstractOutput& self, const bp::object& handler) {
+        static bp::object getInformation(AbstractOutput::Pointer self) {
+            return bp::object(self->getInformation());
+        }
+        
+        static bool canCompute(AbstractOutput::Pointer self) {
+            return self->canCompute();
+        }
+        
+        static void update(AbstractOutput::Pointer self) {
+            self->update();
+        }
+        
+        static void signalEndOfStream(AbstractOutput::Pointer self) {
+            self->signalEndOfStream();
+        }
+        
+        static void registerIOEventHandler(AbstractOutput::Pointer self, const bp::object& handler) {
             if (handler == bp::object()) {
-                self.m_ioEventHandler = bp::object();
+                self->m_ioEventHandler = bp::object();
                 return;
             }
             if (!Wrapper::hasattr(handler, "func_name")) {
                 throw KARABO_PYTHON_EXCEPTION("This python object is not a function.");
             }
-            self.m_ioEventHandler = handler;
+            self->m_ioEventHandler = handler;
         }
 
-        static void triggerIOEvent(AbstractOutput& self) {
+        static void triggerIOEvent(AbstractOutput::Pointer self) {
             //this->template triggerIOEvent< karabo::io::Output<T> >();.
-            if (self.m_ioEventHandler.type() != typeid(bp::object))
+            if (self->m_ioEventHandler.type() != typeid(bp::object))
                 throw KARABO_PYTHON_EXCEPTION("triggerIOEvent(): registered not a python object!");
             ScopedGILAcquire gil;
             try {
-                bp::object handler = boost::any_cast<bp::object>(self.m_ioEventHandler);
+                bp::object handler = boost::any_cast<bp::object>(self->m_ioEventHandler);
                 if (handler != bp::object())
                     handler(bp::object(self));
             } catch (const bp::error_already_set&) {
@@ -136,41 +175,39 @@ namespace karathon {
 
 void exportPyIo() {
     {
-        bp::class_<AbstractInput>("AbstractInput")
-                .def("reconfigure", (void (AbstractInput::*)(const karabo::util::Hash&)) & AbstractInput::reconfigure, (bp::arg("input")))
-                .def("setInstanceId", (void (AbstractInput::*)(const std::string&)) & AbstractInput::setInstanceId, (bp::arg("instanceId")))
+        bp::class_<AbstractInput, boost::shared_ptr<AbstractInput>, boost::noncopyable>("AbstractInput", bp::init<>())
+                .def("reconfigure",   &karathon::AbstractInputWrap::reconfigure, (bp::arg("input")))
+                .def("setInstanceId", &karathon::AbstractInputWrap::setInstanceId, (bp::arg("instanceId")))
                 .def("getInstanceId", &karathon::AbstractInputWrap::getInstanceId)
-                .def("needsDeviceConnection", (bool (AbstractInput::*)() const) &AbstractInput::needsDeviceConnection)
+                .def("needsDeviceConnection", &karathon::AbstractInputWrap::needsDeviceConnection)
                 .def("getConnectedOutputChannels", &karathon::AbstractInputWrap::getConnectedOutputChannels)
-                .def("connectNow", (void (AbstractInput::*)(const karabo::util::Hash&)) & AbstractInput::connectNow, (bp::arg("outputChannelInfo")))
-                .def("canCompute", (bool (AbstractInput::*)() const) &AbstractInput::canCompute)
-                .def("update", &AbstractInput::update)
-                .def("setEndOfStream", &AbstractInput::setEndOfStream)
+                .def("connectNow",  &karathon::AbstractInputWrap::connectNow, (bp::arg("outputChannelInfo")))
+                .def("canCompute",  &karathon::AbstractInputWrap::canCompute)
+                .def("update",      &karathon::AbstractInputWrap::update)
+                .def("setEndOfStream", &karathon::AbstractInputWrap::setEndOfStream)
                 .def("registerIOEventHandler", &karathon::AbstractInputWrap::registerIOEventHandler, (bp::arg("handler")))
                 .def("registerEndOfStreamEventHandler", &karathon::AbstractInputWrap::registerEndOfStreamEventHandler, (bp::arg("handler")))
                 .def("triggerIOEvent", &karathon::AbstractInputWrap::triggerIOEvent)
                 .def("triggerEndOfStreamEvent", &karathon::AbstractInputWrap::triggerEndOfStreamEvent)
                 KARABO_PYTHON_FACTORY_CONFIGURATOR(AbstractInput)
                 ;
-        bp::register_ptr_to_python< boost::shared_ptr<AbstractInput> >();
     }
     {
-        bp::class_<std::map<std::string, AbstractInput::Pointer> >("InputChannels")
-                .def(bp::map_indexing_suite<std::map<std::string, AbstractInput::Pointer> >());
+        bp::class_<std::map<std::string, boost::shared_ptr<AbstractInput> > >("InputChannels")
+                .def(bp::map_indexing_suite<std::map<std::string, boost::shared_ptr<AbstractInput> > >());
     }
     {
-        bp::class_<AbstractOutput>("AbstractOutput")
-                .def("setInstanceId", (void (AbstractOutput::*)(const std::string&)) & AbstractOutput::setInstanceId, (bp::arg("instanceId")))
-                .def("getInstanceId", &karathon::AbstractOutputWrap::getInstanceId)
+        bp::class_<AbstractOutput, boost::shared_ptr<AbstractOutput>, boost::noncopyable>("AbstractOutput", bp::no_init)
+                .def("setInstanceId",  &karathon::AbstractOutputWrap::setInstanceId, (bp::arg("instanceId")))
+                .def("getInstanceId",  &karathon::AbstractOutputWrap::getInstanceId)
                 .def("getInformation", &karathon::AbstractOutputWrap::getInformation)
-                .def("canCompute", (bool (AbstractOutput::*)() const) &AbstractOutput::canCompute)
-                .def("update", &AbstractOutput::update)
-                .def("signalEndOfStream", &AbstractOutput::signalEndOfStream)
+                .def("canCompute", &karathon::AbstractOutputWrap::canCompute)
+                .def("update",     &karathon::AbstractOutputWrap::update)
+                .def("signalEndOfStream", &karathon::AbstractOutputWrap::signalEndOfStream)
                 .def("registerIOEventHandler", &karathon::AbstractOutputWrap::registerIOEventHandler, (bp::arg("handler")))
                 .def("triggerIOEvent", &karathon::AbstractOutputWrap::triggerIOEvent)
                 KARABO_PYTHON_FACTORY_CONFIGURATOR(AbstractOutput)
                 ;
-        bp::register_ptr_to_python< boost::shared_ptr<AbstractOutput> >();
     }
     {
         bp::class_<std::map<std::string, AbstractOutput::Pointer> >("OutputChannels")
