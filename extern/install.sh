@@ -55,8 +55,8 @@ RESOURCE_NAME=$1
 INSTALL_PREFIX=$2
 
 if [ -z $INSTALL_PREFIX ]; then
-    echo "### WARNING  No install-prefix given (second argument), using default location: $DIR"
-    INSTALL_PREFIX=$DIR
+    echo "### WARNING  No install-prefix given (second argument), using default location: $scriptDir"
+    INSTALL_PREFIX=$scriptDir
 fi
 
 mkdir -p $INSTALL_PREFIX/include
@@ -100,7 +100,7 @@ if [ -d $RESOURCE_PATH ]; then
 	echo -e "\n### Installing $RESOURCE_NAME"
         safeRunCommand "$INSTALL_COMMAND"
     fi
-    cd $DIR
+    cd $scriptDir
 else
     echo
     echo "### ERROR  Resource $RESOURCE_NAME does not exist."
