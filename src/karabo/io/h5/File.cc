@@ -36,13 +36,18 @@ namespace karabo {
             }
 
 
-            File::File(const Hash& input) {
+            File::File(const Hash& input): m_h5file(-1) {
                 m_filename = boost::filesystem::path(input.get<std::string > ("filename"));
             }
 
 
             File::File(const boost::filesystem::path& filename)
-            : m_filename(filename) {
+            : m_filename(filename), m_h5file(-1) {
+            }
+
+
+            File::File(const std::string& filename)
+            : m_filename(filename), m_h5file(-1) {
             }
 
 
@@ -93,10 +98,13 @@ namespace karabo {
                 KARABO_CHECK_HDF5_STATUS(H5Pclose(fapl));
             }
 
-
+            bool File::isOpen(){
+              return (m_h5file > 0 ? true : false);
+            }
+                        
             Table::Pointer File::createTable(const string& name, const Format::Pointer dataFormat) {
 
-                
+
                 //                                Profiler p("createTable");               
                 if (m_accMode == READONLY) {
                     throw KARABO_IO_EXCEPTION("Cannot create table when file is opened in READONLY mode");
@@ -139,7 +147,7 @@ namespace karabo {
 
             Table::Pointer File::getTable(const std::string& name, const karabo::io::h5::Format::Pointer dataFormat, size_t numberOfRecords) {
                 //table name + format + number of records is unique
-                string uniqueId = Table::generateUniqueId(name, dataFormat, numberOfRecords);                
+                string uniqueId = Table::generateUniqueId(name, dataFormat, numberOfRecords);
                 TableMap::iterator it = m_openTables.find(uniqueId);
                 if (it != m_openTables.end()) {
                     return it->second;
@@ -153,12 +161,12 @@ namespace karabo {
 
 
             void File::close() {
-                KARABO_LOG_FRAMEWORK_TRACE_CF<< "start closing file " << m_filename.string() << " Num. open tables: " << m_openTables.size();
+                KARABO_LOG_FRAMEWORK_TRACE_CF << "start closing file " << m_filename.string() << " Num. open tables: " << m_openTables.size();
                 if (m_accMode == TRUNCATE || m_accMode == EXCLUSIVE || m_accMode == APPEND) {
                     KARABO_CHECK_HDF5_STATUS(H5Fflush(m_h5file, H5F_SCOPE_LOCAL));
                 }
                 TableMap::iterator it = m_openTables.begin();
-                while (it != m_openTables.end()) {                    
+                while (it != m_openTables.end()) {
                     it->second->close();
                     m_openTables.erase(it++);
 

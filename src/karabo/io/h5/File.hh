@@ -49,6 +49,8 @@ namespace karabo {
                 
                 File(const boost::filesystem::path& filename);
 
+                File(const std::string& filename);
+                
                 virtual ~File();
 
 
@@ -73,13 +75,19 @@ namespace karabo {
                 void open(File::AccessMode mode);
 
                 /**
+                 * Check if file is open
+                 * @return true if file is open, otherwise false
+                 */
+                bool isOpen();
+                
+                /**
                  * Create new table in the file.
                  * @param name Table name. It can be a path with "/" as separator.
                  * @param dataFormat Object describing data format.
                  * @return Pointer to Table. 
                  *
                  * @see DataFormat::expectedParameters.
-                 */
+                 */                
                 boost::shared_ptr<Table> createTable(const std::string& name, const Format::Pointer dataFormat);
 
                 /**
@@ -130,6 +138,8 @@ namespace karabo {
                 AccessMode m_accMode;
 
                 TableMap m_openTables;
+                
+                bool m_isOpen;
 
                 boost::shared_ptr<Table> createReadOnlyTablePointer(const std::string& name);
 

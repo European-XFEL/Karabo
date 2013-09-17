@@ -33,7 +33,7 @@ void exportPyUtilHash() {
     #ifdef WITH_BOOST_NUMPY
     bn::initialize();
     #endif
-
+ 
     bp::docstring_options docs(true, true, false);
     
     // register a translator

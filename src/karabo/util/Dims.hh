@@ -11,6 +11,7 @@
 #define	KARABO_UTIL_DIMS_HH
 
 #include <vector>
+#include <string>
 
 namespace karabo {
     namespace util {
@@ -64,7 +65,7 @@ namespace karabo {
             virtual ~Dims() {
             }
 
-            size_t rank() const {
+            std::size_t rank() const {
                 return m_rank;
             }
 

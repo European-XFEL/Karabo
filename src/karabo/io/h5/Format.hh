@@ -52,7 +52,7 @@ namespace karabo {
                 
                 static Format::Pointer createEmptyFormat();                              
 
-                static Format::Pointer discover(const karabo::util::Hash& data, FormatDiscoveryPolicy::ConstPointer);
+                static Format::Pointer discover(const karabo::util::Hash& data, FormatDiscoveryPolicy::Pointer);
 
                 static Format::Pointer discover(const karabo::util::Hash& data);
 
@@ -96,7 +96,7 @@ namespace karabo {
                 static void discoverVectorSize(karabo::util::Hash& h, const karabo::util::Hash::Node& el) {
                     std::vector<unsigned long long> dims;
                     if (el.hasAttribute("dims")) {
-                        dims = el.getAttribute<std::vector<unsigned long long> >("dims");
+                        dims = el.getAttributeAs<unsigned long long, std::vector >("dims");
                     } else {
                         const std::vector<T>& vec = el.getValue< std::vector<T> >();
                         dims.push_back(vec.size());
@@ -113,7 +113,7 @@ namespace karabo {
 
                 template< class T>
                 static void discoverPtrSize(karabo::util::Hash& h, const karabo::util::Hash::Node& el) {
-                    const std::vector<unsigned long long>& dims = el.getAttribute<std::vector<unsigned long long> >("dims");
+                    std::vector<unsigned long long> dims = el.getAttributeAs<unsigned long long, std::vector >("dims");
                     h.set("dims", dims);
                 }
 
