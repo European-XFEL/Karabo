@@ -70,7 +70,8 @@ class Notifier(QObject):
     signalLogDataAvailable = pyqtSignal(str) # logData
     signalNotificationAvailable = pyqtSignal(str, str, str, str, str) # timestam, type, shortMessage, detailedMessage, deviceId
     
-    signalCreateNewProjectConfig = pyqtSignal(object, str, str) # customItem, serverId, classId
+    signalCreateNewProjectConfig = pyqtSignal(object, str, str) # customItem, path, configName
+    signalProjectItemChanged = pyqtSignal(dict) # path
     
     signalGetClassSchema = pyqtSignal(str, str) # serverId, classId
     signalGetDeviceSchema = pyqtSignal(str) # deviceId
@@ -124,6 +125,10 @@ class Manager(Singleton):
         
         # Central hash
         self.__hash = Hash()
+        # Project hash
+        self.__projectHash = Hash("project", Hash(), "project.devices", Hash())
+        self.__projectHash.setAttribute("project", "name", "xfelTest")
+        self.__projectArrayIndices = []
         
         # Unregister all editable DataNotifiers, if available
         #for key in self.__keyNotifierMapEditableValue:
@@ -467,10 +472,37 @@ class Manager(Singleton):
 
 
 ### TODO: Temporary functions for scientific computing START ###
-    def createNewProjectConfig(self, customItem, serverId, classId):
-        self.__notifier.signalCreateNewProjectConfig.emit(customItem, serverId, classId)
+    def createNewProjectConfig(self, customItem, path, configCount, classId, schema):
         
+        configName = QString("%1-%2-<>").arg(configCount).arg(classId)
         
+        self.__notifier.signalCreateNewProjectConfig.emit(customItem, path, configName)
+        self.__notifier.signalSchemaAvailable.emit(dict(key=path, schema=schema, classId=classId, type=NavigationItemTypes.CLASS))
+        self.__notifier.signalProjectItemChanged.emit(dict(key=path))
+        
+        print self.__projectHash
+        print "-----"
+
+
+    def createNewConfigKeyAndCount(self, classId):
+        nbConfigs = len(self.__projectArrayIndices)
+        
+        path = "project.devices.[" + str(nbConfigs) + "]." + str(classId)
+        self.__projectHash.set(path, Hash())
+        
+        self.__projectArrayIndices.append(nbConfigs+1)
+        
+        return (path, nbConfigs)
+
+    # project hash:
+    # project name="test" +
+    #   devices +
+    #     0 +
+    #       classId1 +
+    #         deviceId = s1
+    #     1 +
+    #       classId2 +
+
 ### TODO: Temporary functions for scientific computing END ###
 
 

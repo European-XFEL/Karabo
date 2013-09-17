@@ -88,7 +88,7 @@ class GraphicsCustomItem(NodeBase, QGraphicsObject):
 
 
     def _getDeviceIdKey(self):
-        return self.__internalKey + ".deviceId"
+        return self.__internalKey + ".configuration.deviceId"
     deviceIdKey = property(fget=_getDeviceIdKey)
 
 

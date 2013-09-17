@@ -1,6 +1,6 @@
 #############################################################################
 # Author: <kerstin.weger@xfel.eu>
-# Created on FJuly 11, 2013
+# Created on July 11, 2013
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 
@@ -25,6 +25,7 @@ __all__ = ["ProjectPanel"]
 
 import const
 
+from enums import NavigationItemTypes
 from manager import Manager
 
 from PyQt4.QtCore import *
@@ -72,18 +73,17 @@ class ProjectPanel(QWidget):
 
 
     def projectItemSelectionChanged(self):
-        print "projectItemSelectionChanged"
+        item = self.__twProject.currentItem()
+        if not item: return
+        Manager().notifier.signalProjectItemChanged.emit(dict(type=NavigationItemTypes.CLASS, key=item.data(0, const.INTERNAL_KEY).toPyObject()))
 
 
-    def onCreateNewProjectConfig(self, customItem, serverId, classId):
+    def onCreateNewProjectConfig(self, customItem, path, configName):
         #print serverId, classId
         
-        nbItems = self.__twProject.topLevelItemCount()
-        
         item = QTreeWidgetItem(self.__twProject)
-        path = str("server." + serverId + ".classes." + classId + ".configuration.deviceId")
         item.setData(0, const.INTERNAL_KEY, path)
-        item.setText(0, QString("%1-%2-<>").arg(nbItems).arg(classId))
+        item.setText(0, configName)
         
         customItem.signalValueChanged.connect(self.onAdditionalInfoChanged)
         
@@ -95,12 +95,12 @@ class ProjectPanel(QWidget):
 
     def onAdditionalInfoChanged(self, key, deviceId):
         # When deviceId of customItem was changed
-        for item in self.__twProject.selectedItems():
-            if item.data(0, const.INTERNAL_KEY).toPyObject() == key:
+        for i in xrange(self.__twProject.topLevelItemCount()):
+            item = self.__twProject.topLevelItem(i)
+            if (item.data(0, const.INTERNAL_KEY).toPyObject() + ".configuration.deviceId") == key:
                 oldText = item.text(0)
                 splittedText = str(oldText).split("-<")
                 item.setText(0, QString("%1-<%2>").arg(splittedText[0]).arg(deviceId))
-                
 
 
     # virtual function
