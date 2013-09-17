@@ -36,7 +36,7 @@ namespace karabo {
             }
 
 
-            File::File(const Hash& input): m_h5file(-1) {
+            File::File(const Hash& input) : m_h5file(-1) {
                 m_filename = boost::filesystem::path(input.get<std::string > ("filename"));
             }
 
@@ -75,6 +75,12 @@ namespace karabo {
                 H5Pset_libver_bounds(fapl, H5F_LIBVER_LATEST, H5F_LIBVER_LATEST);
                 //                H5Pset_meta_block_size(fapl, 1024*1024);
 
+                if (isOpen()) {
+                    ostringstream os;
+                    os << "File " << m_filename << " is already open";
+                    throw KARABO_IO_EXCEPTION(os.str());
+                }
+
                 try {
                     if (mode == TRUNCATE) {
                         //                        hid_t fip = H5Pcreate(H5P_FILE_ACCESS );
@@ -88,26 +94,55 @@ namespace karabo {
                     } else if (mode == APPEND) {
                         m_h5file = H5Fopen(m_filename.c_str(), H5F_ACC_RDWR, fapl);
                     }
+                    KARABO_CHECK_HDF5_STATUS(m_h5file);
                 } catch (...) {
                     ostringstream os;
                     os << "Could not open file " << m_filename;
-                    string msg = os.str();
-                    throw KARABO_IO_EXCEPTION(msg);
+                    throw KARABO_IO_EXCEPTION(os.str());
                 }
                 m_accMode = mode;
                 KARABO_CHECK_HDF5_STATUS(H5Pclose(fapl));
             }
 
-            bool File::isOpen(){
-              return (m_h5file > 0 ? true : false);
+
+            bool File::isOpen() {
+                return (m_h5file > 0 ? true : false);
             }
-                        
+
+
+            bool File::hasTable(const std::string& path) const {
+                hid_t tables;
+                std::string tablePaths;
+
+                if (!H5Aexists(m_h5file, "tables")) {
+                    return false;
+                } else {
+                    tables = H5Aopen(m_h5file, "tables", H5P_DEFAULT);
+                    KARABO_CHECK_HDF5_STATUS(tables);
+                    char* ptr[1];
+
+                    hid_t tid = ScalarTypes::getHdf5NativeType<string>();
+                    KARABO_CHECK_HDF5_STATUS(H5Aread(tables, tid, &ptr));
+                    KARABO_CHECK_HDF5_STATUS(H5Tclose(tid));
+                    tablePaths = ptr[0];
+                    KARABO_CHECK_HDF5_STATUS(H5Aclose(tables));
+                }
+                vector<string> strs;
+                boost::split(strs, tablePaths, boost::is_any_of("\n"));
+
+                for (size_t i = 0; i < strs.size(); ++i) {
+                    if(strs[i] == path ) return true;
+                }
+                return false;
+            }
+
+
             Table::Pointer File::createTable(const string& name, const Format::Pointer dataFormat) {
 
 
                 //                                Profiler p("createTable");               
                 if (m_accMode == READONLY) {
-                    throw KARABO_IO_EXCEPTION("Cannot create table when file is opened in READONLY mode");
+                    throw KARABO_IO_EXCEPTION("Cannot create table when file is open in READONLY mode");
                 }
 
                 //                                p.start("1");
@@ -131,7 +166,7 @@ namespace karabo {
             }
 
 
-            Table::Pointer File::getTable(const std::string& name) {
+            Table::Pointer File::getTable(const std::string & name) {
                 string defaultId = Table::generateUniqueId(name);
                 TableMap::iterator it = m_openTables.find(defaultId);
                 if (it != m_openTables.end()) {
@@ -162,6 +197,7 @@ namespace karabo {
 
             void File::close() {
                 KARABO_LOG_FRAMEWORK_TRACE_CF << "start closing file " << m_filename.string() << " Num. open tables: " << m_openTables.size();
+                if (!isOpen()) return;
                 if (m_accMode == TRUNCATE || m_accMode == EXCLUSIVE || m_accMode == APPEND) {
                     KARABO_CHECK_HDF5_STATUS(H5Fflush(m_h5file, H5F_SCOPE_LOCAL));
                 }
@@ -182,7 +218,7 @@ namespace karabo {
             }
 
 
-            void File::closeTable(const std::string& name) {
+            void File::closeTable(const std::string & name) {
                 TableMap::iterator it = m_openTables.find(name);
                 if (it != m_openTables.end()) {
                     it->second->close();
@@ -191,12 +227,12 @@ namespace karabo {
             }
 
 
-            Table::Pointer File::createReadOnlyTablePointer(const std::string& name) {
+            Table::Pointer File::createReadOnlyTablePointer(const std::string & name) {
                 return Table::Pointer(new Table(m_h5file, name));
             }
 
 
-            void File::updateTableIndex(const std::string& path) {
+            void File::updateTableIndex(const std::string & path) {
 
                 hid_t tables;
                 std::string tablePaths;
@@ -234,7 +270,7 @@ namespace karabo {
             }
 
 
-            Hash& File::reportOpenObjects(karabo::util::Hash& hash) {
+            Hash & File::reportOpenObjects(karabo::util::Hash & hash) {
                 hash.set("Number of open datasets", H5Fget_obj_count(m_h5file, H5F_OBJ_DATASET));
                 hash.set("Number of open groups: ", H5Fget_obj_count(m_h5file, H5F_OBJ_GROUP));
                 hash.set("Number of open datatypes", H5Fget_obj_count(m_h5file, H5F_OBJ_DATATYPE));

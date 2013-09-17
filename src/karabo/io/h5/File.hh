@@ -44,20 +44,20 @@ namespace karabo {
                 typedef std::map<std::string, boost::shared_ptr<karabo::io::h5::Table> > TableMap;
 
             public:
-                
+
                 File(const karabo::util::Hash& input);
-                
+
                 File(const boost::filesystem::path& filename);
 
                 File(const std::string& filename);
-                
+
                 virtual ~File();
 
 
                 static void expectedParameters(karabo::util::Schema& expected);
-                                
 
                 enum AccessMode {
+
                     TRUNCATE,
                     EXCLUSIVE,
                     APPEND,
@@ -79,6 +79,12 @@ namespace karabo {
                  * @return true if file is open, otherwise false
                  */
                 bool isOpen();
+
+                /**
+                 * Check if the table exists in the file
+                 * @return True if the table exists, otherwise false
+                 */
+                bool hasTable(const std::string& name) const;
                 
                 /**
                  * Create new table in the file.
@@ -87,7 +93,7 @@ namespace karabo {
                  * @return Pointer to Table. 
                  *
                  * @see DataFormat::expectedParameters.
-                 */                
+                 */
                 boost::shared_ptr<Table> createTable(const std::string& name, const Format::Pointer dataFormat);
 
                 /**
@@ -127,7 +133,7 @@ namespace karabo {
                     return m_filename.string();
                 }
 
-                karabo::util::Hash& reportOpenObjects( karabo::util::Hash& hash);
+                karabo::util::Hash& reportOpenObjects(karabo::util::Hash& hash);
 
             private:
 
@@ -138,7 +144,7 @@ namespace karabo {
                 AccessMode m_accMode;
 
                 TableMap m_openTables;
-                
+
                 bool m_isOpen;
 
                 boost::shared_ptr<Table> createReadOnlyTablePointer(const std::string& name);
