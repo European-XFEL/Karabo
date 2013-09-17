@@ -244,6 +244,9 @@ void exportPyIoOutput() {
                 .def("write"
                      , (void (SpecificOutput::*)(T const &))(&SpecificOutput::write)
                      , (bp::arg("data")))
+                .def("update"
+                     , (void (SpecificOutput::*)()) (&SpecificOutput::update))
+
                 KARABO_PYTHON_FACTORY_CONFIGURATOR(SpecificOutput)
                 ;
         bp::register_ptr_to_python< boost::shared_ptr<SpecificOutput> >();
@@ -264,6 +267,9 @@ void exportPyIoInput() {
                      , (bp::arg("data"), bp::arg("idx") = 0))
                 .def("size"
                      , (size_t(SpecificInput::*)() const) (&SpecificInput::size))
+                .def("update"
+                     , (void (SpecificInput::*)()) (&SpecificInput::update))
+
                 KARABO_PYTHON_FACTORY_CONFIGURATOR(SpecificInput)
                 ;
         bp::register_ptr_to_python< boost::shared_ptr<SpecificInput> >();

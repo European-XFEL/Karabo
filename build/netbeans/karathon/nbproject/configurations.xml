@@ -25,6 +25,7 @@
       <itemPath>../../../src/karathon/PyUtilHash.cc</itemPath>
     </logicalFolder>
     <logicalFolder name="f4" displayName="IO Binding" projectFiles="true">
+      <itemPath>../../../src/karathon/PyH5Tools.cc</itemPath>
       <itemPath>../../../src/karathon/PyIoFileTools.cc</itemPath>
     </logicalFolder>
     <logicalFolder name="f9" displayName="Logger Binding" projectFiles="true">
@@ -64,6 +65,8 @@
       <itemPath>../../../src/karathon/karathon.cc</itemPath>
     </logicalFolder>
     <logicalFolder name="f10" displayName="Util Tools" projectFiles="true">
+      <itemPath>../../../src/karathon/DimsWrap.hh</itemPath>
+      <itemPath>../../../src/karathon/PyUtilDims.cc</itemPath>
       <itemPath>../../../src/karathon/PyUtilEpochstamp.cc</itemPath>
       <itemPath>../../../src/karathon/PyUtilTimestamp.cc</itemPath>
       <itemPath>../../../src/karathon/PyUtilTrainstamp.cc</itemPath>
@@ -175,6 +178,8 @@
             tool="3"
             flavor2="0">
       </item>
+      <item path="../../../src/karathon/DimsWrap.hh" ex="false" tool="3" flavor2="0">
+      </item>
       <item path="../../../src/karathon/HashWrap.cc" ex="false" tool="1" flavor2="0">
       </item>
       <item path="../../../src/karathon/HashWrap.hh" ex="false" tool="3" flavor2="0">
@@ -196,6 +201,8 @@
             tool="1"
             flavor2="0">
       </item>
+      <item path="../../../src/karathon/PyH5Tools.cc" ex="false" tool="1" flavor2="0">
+      </item>
       <item path="../../../src/karathon/PyIoFileTools.cc"
             ex="false"
             tool="1"
@@ -207,6 +214,11 @@
             flavor2="0">
       </item>
       <item path="../../../src/karathon/PyUtilClassInfo.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karathon/PyUtilDims.cc"
             ex="false"
             tool="1"
             flavor2="0">
@@ -434,6 +446,8 @@
             tool="3"
             flavor2="0">
       </item>
+      <item path="../../../src/karathon/DimsWrap.hh" ex="false" tool="3" flavor2="0">
+      </item>
       <item path="../../../src/karathon/HashWrap.cc" ex="false" tool="1" flavor2="0">
       </item>
       <item path="../../../src/karathon/HashWrap.hh" ex="false" tool="3" flavor2="0">
@@ -455,6 +469,8 @@
             tool="1"
             flavor2="0">
       </item>
+      <item path="../../../src/karathon/PyH5Tools.cc" ex="false" tool="1" flavor2="0">
+      </item>
       <item path="../../../src/karathon/PyIoFileTools.cc"
             ex="false"
             tool="1"
@@ -466,6 +482,11 @@
             flavor2="0">
       </item>
       <item path="../../../src/karathon/PyUtilClassInfo.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karathon/PyUtilDims.cc"
             ex="false"
             tool="1"
             flavor2="0">
