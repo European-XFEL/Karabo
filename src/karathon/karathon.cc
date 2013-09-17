@@ -22,6 +22,7 @@ void exportPyUtilClassInfo();
 void exportPyUtilTrainstamp();
 void exportPyUtilEpochstamp();
 void exportPyUtilTimestamp();
+void exportPyUtilDims();
 
 // io
 void exportPyIo();
@@ -30,6 +31,7 @@ template <class T> void exportPyIoOutput();
 template <class T> void exportPyIoInput();
 template <class T> void exportPyIoTextSerializer();
 template <class T> void exportPyIoBinarySerializer();
+void exportPyIoH5File();
 
 // webAuth
 void exportPyWebAuthenticator();
@@ -61,6 +63,7 @@ BOOST_PYTHON_MODULE(karathon) {
     exportPyUtilTrainstamp();
     exportPyUtilEpochstamp();
     exportPyUtilTimestamp();
+    exportPyUtilDims();
     
     // io
     exportPyIo();
@@ -77,6 +80,8 @@ BOOST_PYTHON_MODULE(karathon) {
     
     exportPyIoBinarySerializer<karabo::util::Hash>();
     exportPyIoBinarySerializer<karabo::util::Schema>();
+    
+    exportPyIoH5File();
     
     // webAuth
     exportPyWebAuthenticator();

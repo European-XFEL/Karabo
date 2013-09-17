@@ -39,9 +39,11 @@ OBJECTFILES= \
 	${OBJECTDIR}/_ext/381567218/ConnectionWrap.o \
 	${OBJECTDIR}/_ext/381567218/HashWrap.o \
 	${OBJECTDIR}/_ext/381567218/PyCoreDeviceClient.o \
+	${OBJECTDIR}/_ext/381567218/PyH5Tools.o \
 	${OBJECTDIR}/_ext/381567218/PyIoFileTools.o \
 	${OBJECTDIR}/_ext/381567218/PyLogLogger.o \
 	${OBJECTDIR}/_ext/381567218/PyUtilClassInfo.o \
+	${OBJECTDIR}/_ext/381567218/PyUtilDims.o \
 	${OBJECTDIR}/_ext/381567218/PyUtilEpochstamp.o \
 	${OBJECTDIR}/_ext/381567218/PyUtilHash.o \
 	${OBJECTDIR}/_ext/381567218/PyUtilSchema.o \
@@ -109,6 +111,11 @@ ${OBJECTDIR}/_ext/381567218/PyCoreDeviceClient.o: ../../../src/karathon/PyCoreDe
 	${RM} $@.d
 	$(COMPILE.cc) -g -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/include `pkg-config --cflags karathonDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/381567218/PyCoreDeviceClient.o ../../../src/karathon/PyCoreDeviceClient.cc
 
+${OBJECTDIR}/_ext/381567218/PyH5Tools.o: ../../../src/karathon/PyH5Tools.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/381567218
+	${RM} $@.d
+	$(COMPILE.cc) -g -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/include `pkg-config --cflags karathonDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/381567218/PyH5Tools.o ../../../src/karathon/PyH5Tools.cc
+
 ${OBJECTDIR}/_ext/381567218/PyIoFileTools.o: ../../../src/karathon/PyIoFileTools.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/381567218
 	${RM} $@.d
@@ -123,6 +130,11 @@ ${OBJECTDIR}/_ext/381567218/PyUtilClassInfo.o: ../../../src/karathon/PyUtilClass
 	${MKDIR} -p ${OBJECTDIR}/_ext/381567218
 	${RM} $@.d
 	$(COMPILE.cc) -g -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/include `pkg-config --cflags karathonDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/381567218/PyUtilClassInfo.o ../../../src/karathon/PyUtilClassInfo.cc
+
+${OBJECTDIR}/_ext/381567218/PyUtilDims.o: ../../../src/karathon/PyUtilDims.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/381567218
+	${RM} $@.d
+	$(COMPILE.cc) -g -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/include `pkg-config --cflags karathonDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/381567218/PyUtilDims.o ../../../src/karathon/PyUtilDims.cc
 
 ${OBJECTDIR}/_ext/381567218/PyUtilEpochstamp.o: ../../../src/karathon/PyUtilEpochstamp.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/381567218
@@ -263,6 +275,19 @@ ${OBJECTDIR}/_ext/381567218/PyCoreDeviceClient_nomain.o: ${OBJECTDIR}/_ext/38156
 	    ${CP} ${OBJECTDIR}/_ext/381567218/PyCoreDeviceClient.o ${OBJECTDIR}/_ext/381567218/PyCoreDeviceClient_nomain.o;\
 	fi
 
+${OBJECTDIR}/_ext/381567218/PyH5Tools_nomain.o: ${OBJECTDIR}/_ext/381567218/PyH5Tools.o ../../../src/karathon/PyH5Tools.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/381567218
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/381567218/PyH5Tools.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} $@.d;\
+	    $(COMPILE.cc) -g -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/include `pkg-config --cflags karathonDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/381567218/PyH5Tools_nomain.o ../../../src/karathon/PyH5Tools.cc;\
+	else  \
+	    ${CP} ${OBJECTDIR}/_ext/381567218/PyH5Tools.o ${OBJECTDIR}/_ext/381567218/PyH5Tools_nomain.o;\
+	fi
+
 ${OBJECTDIR}/_ext/381567218/PyIoFileTools_nomain.o: ${OBJECTDIR}/_ext/381567218/PyIoFileTools.o ../../../src/karathon/PyIoFileTools.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/381567218
 	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/381567218/PyIoFileTools.o`; \
@@ -300,6 +325,19 @@ ${OBJECTDIR}/_ext/381567218/PyUtilClassInfo_nomain.o: ${OBJECTDIR}/_ext/38156721
 	    $(COMPILE.cc) -g -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/include `pkg-config --cflags karathonDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/381567218/PyUtilClassInfo_nomain.o ../../../src/karathon/PyUtilClassInfo.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/381567218/PyUtilClassInfo.o ${OBJECTDIR}/_ext/381567218/PyUtilClassInfo_nomain.o;\
+	fi
+
+${OBJECTDIR}/_ext/381567218/PyUtilDims_nomain.o: ${OBJECTDIR}/_ext/381567218/PyUtilDims.o ../../../src/karathon/PyUtilDims.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/381567218
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/381567218/PyUtilDims.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} $@.d;\
+	    $(COMPILE.cc) -g -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/include `pkg-config --cflags karathonDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/381567218/PyUtilDims_nomain.o ../../../src/karathon/PyUtilDims.cc;\
+	else  \
+	    ${CP} ${OBJECTDIR}/_ext/381567218/PyUtilDims.o ${OBJECTDIR}/_ext/381567218/PyUtilDims_nomain.o;\
 	fi
 
 ${OBJECTDIR}/_ext/381567218/PyUtilEpochstamp_nomain.o: ${OBJECTDIR}/_ext/381567218/PyUtilEpochstamp.o ../../../src/karathon/PyUtilEpochstamp.cc 
