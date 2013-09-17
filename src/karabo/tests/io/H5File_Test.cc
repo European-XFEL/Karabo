@@ -710,6 +710,15 @@ void H5File_Test::testBufferWrite() {
 
         Table::Pointer t = file.createTable("/planets", format);
 
+        
+        
+        bool exists = file.hasTable("/planets");
+//        clog << "/planets" << exists << endl;
+        exists = file.hasTable("/planet");
+//        clog << "/planet" << exists << endl;
+        exists = file.hasTable("planets");
+//        clog << "planets" << exists << endl;
+        
         p.stop("create");
         p.start("write0");
 
