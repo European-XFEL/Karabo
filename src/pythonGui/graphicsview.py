@@ -816,7 +816,7 @@ class GraphicsView(QGraphicsView):
                 # Device server instance id
                 serverId = QString(mimeData.data("serverId"))
                 # Internal key
-                key = QString(mimeData.data("key"))
+                #key = QString(mimeData.data("key"))
                 # Display name
                 displayName = QString(mimeData.data("displayName"))
                 
@@ -826,19 +826,21 @@ class GraphicsView(QGraphicsView):
                 if Manager().hash.has(path):
                     schema = Manager().hash.get(path)
                 
+                configKey, configCount = Manager().createNewConfigKeyAndCount(displayName)
+                
                 # Create graphical item
-                customItem = GraphicsCustomItem(key, self.__isDesignMode, displayName, schema, (navItemType == NavigationItemTypes.CLASS))
-                tooltipText = "<html><b>Associated key: </b>%s</html>" % key
+                customItem = GraphicsCustomItem(configKey, self.__isDesignMode, displayName, schema, (navItemType == NavigationItemTypes.CLASS))
+                tooltipText = "<html><b>Associated key: </b>%s</html>" % configKey
                 customItem.setToolTip(tooltipText)
                 offset = QPointF()
                 # Add created item to scene
                 self._addItem(customItem)
 
-                # Register as visible device
-                Manager().newVisibleDevice(key)
+                # Register as visible device - TODO?
+                #Manager().newVisibleDevice(configKey)
 
                 if navItemType and (navItemType == NavigationItemTypes.CLASS):
-                    Manager().createNewProjectConfig(customItem, serverId, displayName)
+                    Manager().createNewProjectConfig(customItem, configKey, configCount, displayName, schema)
 
                     # Connect customItem signal to Manager, DEVICE_CLASS
                     customItem.signalValueChanged.connect(Manager().onDeviceClassValueChanged)

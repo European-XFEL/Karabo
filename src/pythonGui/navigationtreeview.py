@@ -65,21 +65,16 @@ class NavigationTreeView(QTreeView):
         if navigationItemType is None:
             navigationItemType = itemInfo.get('type')
         
-        key = itemInfo.get(QString('key'))
-        if key is None:
-            key = itemInfo.get('key')
+        #key = itemInfo.get(QString('key'))
+        #if key is None:
+        #    key = itemInfo.get('key')
         
-        displayName = key
-        #schema = None
+        displayName = str()
         if navigationItemType is NavigationItemTypes.CLASS:
             displayName = itemInfo.get(QString('classId'))
             if displayName is None:
                 displayName = itemInfo.get('classId')
         
-        #schema = itemInfo.get(QString('schema'))
-        #if schema is None:
-        #    schema = itemInfo.get('schema')
-
         mimeData = QMimeData()
 
         # Put necessary data in MimeData:
@@ -91,15 +86,12 @@ class NavigationTreeView(QTreeView):
         if serverId:
             # Device server instance id
             mimeData.setData("serverId", QString(serverId).toAscii())
-        if key:
+        #if key:
             # Internal key
-            mimeData.setData("key", QString(key).toAscii())
+        #    mimeData.setData("key", QString(key).toAscii())
         if displayName:
             # Display name
             mimeData.setData("displayName", QString(displayName).toAscii())
-        #if schema:
-            # Display name
-        #    mimeData.setData("schema", QString(schema).toAscii())
 
         drag = QDrag(self)
         drag.setMimeData(mimeData)

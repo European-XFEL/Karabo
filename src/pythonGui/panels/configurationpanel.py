@@ -93,6 +93,8 @@ class ConfigurationPanel(QWidget):
         Manager().notifier.signalNavigationItemChanged.connect(self.onNavigationItemChanged)
         Manager().notifier.signalNavigationItemSelectionChanged.connect(self.onNavigationItemSelectionChanged)
 
+        Manager().notifier.signalProjectItemChanged.connect(self.onProjectItemChanged)
+
         Manager().notifier.signalInstanceGone.connect(self.onInstanceGone)
         
         Manager().notifier.signalDeviceStateChanged.connect(self.onDeviceStateChanged)
@@ -573,13 +575,18 @@ class ConfigurationPanel(QWidget):
         elif (type is NavigationItemTypes.SERVER) or (type is NavigationItemTypes.DEVICE):
             self.updateButtonsVisibility = False
         
-        # Hide apply button of current ParameterTreeWidget
-        self._getCurrentParameterEditor().setActionsVisible(False)
         if self.__prevDevicePath != "":
             Manager().removeVisibleDevice(self.__prevDevicePath)
             self.__prevDevicePath = str()
         
         self.__twNavigation.itemChanged(itemInfo)
+        
+        self.showParameterPage(type, path)
+
+
+    def showParameterPage(self, type, path):
+        # Hide apply button of current ParameterTreeWidget
+        self._getCurrentParameterEditor().setActionsVisible(False)
         
         # Show correct parameters
         index = self.__navItemInternalKeyIndexMap.get(path)
@@ -616,6 +623,18 @@ class ConfigurationPanel(QWidget):
 
     def onNavigationItemSelectionChanged(self, path):
         self.__twNavigation.selectItem(path)
+
+
+    def onProjectItemChanged(self, itemInfo):
+        type = itemInfo.get(QString('type'))
+        if type is None:
+            type = itemInfo.get('type')
+        
+        path = itemInfo.get(QString('key'))
+        if path is None:
+            path = itemInfo.get('key')
+
+        self.showParameterPage(type, str(path))
 
 
     def onInstanceGone(self, path, parentPath):
