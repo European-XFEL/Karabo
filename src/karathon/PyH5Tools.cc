@@ -20,7 +20,7 @@ using namespace karabo::io;
 void exportPyIoH5File() {
 
     {
-        bp::enum_<h5::File::AccessMode>("AccessMode", "This enumeration define the access mode to file")
+        bp::enum_<h5::File::AccessMode>("H5accessMode", "This enumeration define the access mode to file")
                 .value("TRUNCATE", h5::File::TRUNCATE)
                 .value("READONLY", h5::File::READONLY)
                 .value("EXCLUSIVE", h5::File::EXCLUSIVE)
