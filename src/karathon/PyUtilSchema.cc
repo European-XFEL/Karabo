@@ -68,7 +68,7 @@ public:
         if (bp::extract<Schema>(schemaObj).check() && bp::extract<Hash>(confObj).check()) {
             const Schema& schema = bp::extract<Schema>(schemaObj);
             const Hash& configuration = bp::extract<Hash>(confObj);
-            pair<bool, string> result = Validator::validate(schema, configuration, validated);
+            pair<bool, string> result = Validator::validate(schema, configuration, validated);           
             if (result.first)
                 return bp::object(validated);
             throw KARABO_PYTHON_EXCEPTION(result.second);
@@ -200,10 +200,10 @@ struct ChoiceElementWrap {
 
     static karabo::util::ChoiceElement & appendAsNode(karabo::util::ChoiceElement& self, const bp::object& classobj, const std::string& nodeNameObj) {
         if (!PyType_Check(classobj.ptr())) {
-            throw KARABO_PYTHON_EXCEPTION("Argument 'classobj' given in 'appendAsNode(classobj, nodeName)' of LIST_ELEMENT must be a class in Python");
+            throw KARABO_PYTHON_EXCEPTION("Argument 'classobj' given in 'appendAsNode(classobj, nodeName)' of CHOICE_ELEMENT must be a class in Python");
         }
         if (!PyObject_HasAttrString(classobj.ptr(), "getSchema")) {
-            throw KARABO_PYTHON_EXCEPTION("Class given in 'appendAsNode(classobj, nodeName)' of LIST_ELEMENT has no 'getSchema' method");
+            throw KARABO_PYTHON_EXCEPTION("Class given in 'appendAsNode(classobj, nodeName)' of CHOICE_ELEMENT has no 'getSchema' method");
         }
         std::string classid;
         if (PyObject_HasAttrString(classobj.ptr(), "__karabo_cpp_classid__")) {
@@ -1645,6 +1645,9 @@ void exportPyUtilSchema() {
                      , bp::return_internal_reference<> ())
                 .def("appendNodesOfConfigurationBase"
                      , &ChoiceElementWrap::appendNodesOfConfigurationBase, (bp::arg("python_base_class"))
+                     , bp::return_internal_reference<> ())
+                .def("appendAsNode"
+                     , &ChoiceElementWrap::appendAsNode, (bp::arg("python_class"), bp::arg("nodeName") = "")
                      , bp::return_internal_reference<> ())
                 ;
     }
