@@ -8,7 +8,7 @@
 
 
 #include <karabo/io/Input.hh>
-#include "DataLoggerDevice.hh"
+#include "FileDataLogger.hh"
 #include "karabo/io/FileTools.hh"
 
 namespace karabo {
@@ -20,9 +20,9 @@ namespace karabo {
         using namespace karabo::io;
 
 
-        KARABO_REGISTER_FOR_CONFIGURATION(BaseDevice, Device<OkErrorFsm>, DataLoggerDevice)
+        KARABO_REGISTER_FOR_CONFIGURATION(BaseDevice, Device<OkErrorFsm>, FileDataLogger)
 
-        void DataLoggerDevice::expectedParameters(Schema& expected) {
+        void FileDataLogger::expectedParameters(Schema& expected) {
 
             INT32_ELEMENT(expected).key("flushInterval")
                     .displayedName("Flush interval")
@@ -31,36 +31,50 @@ namespace karabo {
                     .assignmentOptional().defaultValue(40)
                     .reconfigurable()
                     .commit();
-            
+
+            STRING_ELEMENT(expected).key("fileFormat")
+                    .displayedName("File format")
+                    .description("The file format to use for logging")
+                    .options("xml, bin, hdf5")
+                    .assignmentOptional().defaultValue("bin")
+                    .commit();
+
+            INT32_ELEMENT(expected).key("maximumFileSize")
+                    .displayedName("Maximum file size")
+                    .description("After any archived file has reached this size it will be time-stamped and not appended anymore")
+                    .unit(Unit::BYTE)
+                    .metricPrefix(MetricPrefix::MEGA)
+                    .reconfigurable()
+                    .assignmentOptional().defaultValue(80)
+                    .commit();
+
             OVERWRITE_ELEMENT(expected).key("visibility")
                     .setNewDefaultValue(5)
                     .commit();
         }
 
 
-        DataLoggerDevice::DataLoggerDevice(const Hash& input) : Device<OkErrorFsm>(input) {
-            setupSlots();
+        FileDataLogger::FileDataLogger(const Hash& input) : Device<OkErrorFsm>(input) {
+
+            SLOT2(slotChanged, Hash /*changedConfig*/, string /*deviceId*/);
+            SLOT4(slotGetFromPast, string /*deviceId*/, string /*key*/, string /*from*/, string /*to*/);
+
             // Initialize the memory data structure (currently only devices are supported)
             m_systemHistory.set("device", Hash());
         }
 
 
-        DataLoggerDevice::~DataLoggerDevice() {
+        FileDataLogger::~FileDataLogger() {
             m_persistData = false;
             m_persistDataThread.join();
         }
 
 
-        void DataLoggerDevice::setupSlots() {
-            SLOT2(slotChanged, Hash /*changedConfig*/, string /*deviceId*/);
-        }
-
-
-        void DataLoggerDevice::okStateOnEntry() {
+        void FileDataLogger::okStateOnEntry() {
             // Register handlers
-            remote().registerInstanceNewMonitor(boost::bind(&karabo::core::DataLoggerDevice::instanceNewHandler, this, _1));
-            //remote().registerInstanceUpdatedMonitor(boost::bind(&karabo::core::DataLoggerDevice::instanceUpdatedHandler, this, _1));
-            remote().registerInstanceGoneMonitor(boost::bind(&karabo::core::DataLoggerDevice::instanceGoneHandler, this, _1));
+            remote().registerInstanceNewMonitor(boost::bind(&karabo::core::FileDataLogger::instanceNewHandler, this, _1));
+            //remote().registerInstanceUpdatedMonitor(boost::bind(&karabo::core::FileDataLogger::instanceUpdatedHandler, this, _1));
+            remote().registerInstanceGoneMonitor(boost::bind(&karabo::core::FileDataLogger::instanceGoneHandler, this, _1));
             // Follow changes
             const Hash& systemTopology = remote().getSystemTopology(); // Get all current instances in the system
             boost::optional<const Hash::Node&> node = systemTopology.find("device");
@@ -80,19 +94,19 @@ namespace karabo {
             }
             // Start persisting
             m_persistData = true;
-            m_persistDataThread = boost::thread(boost::bind(&karabo::core::DataLoggerDevice::persistDataThread, this));
+            m_persistDataThread = boost::thread(boost::bind(&karabo::core::FileDataLogger::persistDataThread, this));
         }
 
 
-        void DataLoggerDevice::instanceNewHandler(const karabo::util::Hash& topologyEntry) {
+        void FileDataLogger::instanceNewHandler(const karabo::util::Hash& topologyEntry) {
             boost::mutex::scoped_lock lock(m_systemHistoryMutex);
-             KARABO_LOG_DEBUG << "instanceNewHandler";
+            KARABO_LOG_DEBUG << "instanceNewHandler";
             const std::string& type = topologyEntry.begin()->getKey();
             if (type == "device") {
                 const Hash& entry = topologyEntry.begin()->getValue<Hash>();
                 const string& deviceId = entry.begin()->getKey();
                 if (entry.hasAttribute(deviceId, "archive") && (entry.getAttribute<bool>(deviceId, "archive") == false)) return;
-                
+
                 if (m_systemHistory.has("device." + deviceId)) {
                     // Handle dirty shutdown -> flag last existing entry to be last
                     connectT(deviceId, "signalChanged", "", "slotChanged");
@@ -105,7 +119,7 @@ namespace karabo {
         }
 
 
-        void DataLoggerDevice::createDeviceEntry(const std::string& deviceId) {
+        void FileDataLogger::createDeviceEntry(const std::string& deviceId) {
             Schema schema;
             this->fetchSchema(deviceId, schema);
             Hash hash;
@@ -124,7 +138,7 @@ namespace karabo {
         }
 
 
-        void DataLoggerDevice::fetchConfiguration(const std::string& deviceId, karabo::util::Hash& configuration) const {
+        void FileDataLogger::fetchConfiguration(const std::string& deviceId, karabo::util::Hash& configuration) const {
             try {
                 request(deviceId, "slotGetConfiguration").timeout(2000).receive(configuration);
             } catch (const TimeoutException&) {
@@ -134,7 +148,7 @@ namespace karabo {
         }
 
 
-        void DataLoggerDevice::fetchSchema(const std::string& deviceId, karabo::util::Schema& schema) const {
+        void FileDataLogger::fetchSchema(const std::string& deviceId, karabo::util::Schema& schema) const {
             try {
                 request(deviceId, "slotGetSchema", false).timeout(2000).receive(schema); // Retrieves full schema
             } catch (const TimeoutException&) {
@@ -144,21 +158,21 @@ namespace karabo {
         }
 
 
-        void DataLoggerDevice::instanceGoneHandler(const std::string& instanceId) {
+        void FileDataLogger::instanceGoneHandler(const std::string& instanceId) {
             boost::mutex::scoped_lock lock(m_systemHistoryMutex);
             string path("device." + instanceId + ".configuration");
             if (m_systemHistory.has(path)) {
                 KARABO_LOG_DEBUG << "Tagging device \"" << instanceId << "\" for being discontinued...";
                 Hash& deviceEntry = m_systemHistory.get<Hash>(path);
                 if (deviceEntry.empty()) { // Need to fetch from file
-                    boost::filesystem::path filePath("karaboHistory/" + instanceId + ".xml");
+                    boost::filesystem::path filePath("karaboHistory/" + instanceId + "." + get<string>("fileFormat"));
                     if (boost::filesystem::exists(filePath)) {
                         KARABO_LOG_DEBUG << "Fetching back from file";
                         Hash deviceHistory;
                         loadFromFile(deviceHistory, filePath.string());
                         Hash& tmp = deviceHistory.get<Hash>("configuration");
                         createLastValidConfiguration(tmp);
-                        saveToFile(deviceHistory, filePath.string(), Hash("format.Xml.indentation", 1));
+                        saveToFile(deviceHistory, filePath.string());
                     }
                 } else { // Still in memory
                     KARABO_LOG_DEBUG << "Data still resides in memory";
@@ -169,7 +183,7 @@ namespace karabo {
         }
 
 
-        void DataLoggerDevice::createLastValidConfiguration(karabo::util::Hash& tmp) {
+        void FileDataLogger::createLastValidConfiguration(karabo::util::Hash& tmp) {
             for (Hash::iterator it = tmp.begin(); it != tmp.end(); ++it) {
                 vector<Hash>& keyHistory = it->getValue<vector<Hash> >();
                 Hash lastEntry = keyHistory.back();
@@ -180,11 +194,11 @@ namespace karabo {
         }
 
 
-        void DataLoggerDevice::slotChanged(const karabo::util::Hash& changedConfig, const std::string& deviceId) {
+        void FileDataLogger::slotChanged(const karabo::util::Hash& changedConfig, const std::string& deviceId) {
             boost::mutex::scoped_lock lock(m_systemHistoryMutex);
             string path("device." + deviceId + ".configuration");
             if (m_systemHistory.has(path)) {
-                
+
                 // Get schema for this device
                 Schema schema = remote().getDeviceSchema(deviceId);
                 Hash& tmp = m_systemHistory.get<Hash>(path);
@@ -193,7 +207,6 @@ namespace karabo {
                     Hash val("v", it->getValueAsAny());
                     val.setAttributes("v", it->getAttributes());
                     boost::optional<Hash::Node&> node = tmp.find(it->getKey());
-                    //KARABO_LOG_FRAMEWORK_DEBUG << val;
                     if (node) node->getValue<vector<Hash> >().push_back(val);
                     else tmp.set(it->getKey(), std::vector<Hash>(1, val));
                 }
@@ -203,7 +216,7 @@ namespace karabo {
         }
 
 
-        void DataLoggerDevice::persistDataThread() { //
+        void FileDataLogger::persistDataThread() { //
 
             while (m_persistData) {
 
@@ -212,14 +225,25 @@ namespace karabo {
                 for (Hash::iterator it = tmp.begin(); it != tmp.end(); ++it) { // Loops deviceIds
                     const string& deviceId = it->getKey();
                     if (!it->getValue<Hash>().get<Hash>("configuration").empty()) {
-                        boost::filesystem::path filePath("karaboHistory/" + deviceId + ".xml");
+                        boost::filesystem::path filePath("karaboHistory/" + deviceId + "." + get<string>("fileFormat"));
                         if (boost::filesystem::exists(filePath)) {
-                            // Read - Merge - Write
-                            Hash& current = it->getValue<Hash>();
-                            Hash hist;
-                            loadFromFile(hist, filePath.string());
-                            hist.merge(current, karabo::util::Hash::MERGE_ATTRIBUTES);
-                            saveToFile(hist, filePath.string(), Hash("format.Xml.indentation", -1));
+                            // Check file size
+                            if (boost::filesystem::file_size(filePath) > (get<int>("maximumFileSize") * 1E6)) {
+                                int i = 0;
+                                while (boost::filesystem::exists(boost::filesystem::path("karaboHistory/" + deviceId + "_" + karabo::util::toString(i) + "." + get<string>("fileFormat")))) {
+                                    i++;
+                                }
+                                boost::filesystem::path tmp("karaboHistory/" + deviceId + "_" + karabo::util::toString(i) + "." + get<string>("fileFormat"));
+                                boost::filesystem::rename(filePath, tmp);
+                                saveToFile(it->getValue<Hash>(), filePath.string());
+                            } else {
+                                // Read - Merge - Write
+                                Hash& current = it->getValue<Hash>();
+                                Hash hist;
+                                loadFromFile(hist, filePath.string());
+                                hist.merge(current, karabo::util::Hash::MERGE_ATTRIBUTES);
+                                saveToFile(hist, filePath.string());
+                            }
                         } else {
                             // Write
                             saveToFile(it->getValue<Hash>(), filePath.string());
@@ -231,6 +255,70 @@ namespace karabo {
                 m_systemHistoryMutex.unlock();
                 boost::this_thread::sleep(boost::posix_time::seconds(this->get<int>("flushInterval")));
             }
+        }
+
+
+        vector<Hash> FileDataLogger::slotGetFromPast(const std::string& deviceId, const std::string& key, const std::string& from, const std::string& to) {
+            KARABO_LOG_FRAMEWORK_DEBUG << "slotGetFromPast()";
+            vector<Hash> result;
+            try {
+                Epochstamp t0(from);
+                Epochstamp t1(to);
+                KARABO_LOG_FRAMEWORK_DEBUG << "From: " << from << " <-> " << t0.toFormattedString();
+                KARABO_LOG_FRAMEWORK_DEBUG << "To:   " << to << " <-> " << t1.toFormattedString();
+                boost::mutex::scoped_lock lock(m_systemHistoryMutex);
+
+                vector<Hash> tmp = getData(deviceId, key);
+                bool collect = false;
+                bool done = false;
+                bool isLastFlagIsUp = false; // TODO continue here
+                for (vector<Hash>::reverse_iterator rit = tmp.rbegin(); rit != tmp.rend(); ++rit) {
+                    //KARABO_LOG_FRAMEWORK_DEBUG << *rit;
+                    Epochstamp current;
+                    try {
+                       current = Epochstamp::fromHashAttributes(rit->getAttributes("v"));
+                    } catch (Exception& e) {
+                        // TODO Clean this
+                        continue;
+                    }
+                    KARABO_LOG_FRAMEWORK_DEBUG << "Current:   " << current.toFormattedString();
+                    if (t1 > current) collect = true;
+                    if (collect) result.push_back(*rit);
+                    if (t0 > current) {
+                        done = true;
+                        break;
+                    }
+                }
+                if (!done) { // Puuh! Go further back!
+                    // Not yet there!!
+                }
+                reply(result);    
+                return result;
+            } catch (Exception& e) {
+                KARABO_LOG_ERROR << e.userFriendlyMsg();
+            }
+        }
+
+
+        vector<Hash> FileDataLogger::getData(const std::string& deviceId, const std::string& key) {
+            vector<Hash> data;
+            string memoryPath("device." + deviceId + ".configuration." + key);
+            boost::filesystem::path filePath("karaboHistory/" + deviceId + "." + get<string>("fileFormat"));
+            
+            if (boost::filesystem::exists(filePath)) {
+                // Read file
+                Hash file;
+                loadFromFile(file, filePath.string());
+                if (file.has("configuration." + key)) {
+                    const vector<Hash>& tmp = file.get<vector<Hash> >("configuration." + key);
+                    data.insert(data.end(), tmp.begin(), tmp.end());
+                }
+            }
+            if (m_systemHistory.has(memoryPath)) {
+                const vector<Hash>& tmp = m_systemHistory.get<vector<Hash> >(memoryPath);
+                data.insert(data.end(), tmp.begin(), tmp.end());
+            }
+            return data;
         }
     }
 }

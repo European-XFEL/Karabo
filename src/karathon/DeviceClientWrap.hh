@@ -266,6 +266,11 @@ namespace karathon {
             }
             return bp::make_tuple(true, result[0]);
         }
+        
+        bp::object getFromPastPy(const std::string& deviceId, const std::string& key, const std::string& from, std::string to = "") {
+            if (to.empty()) to = karabo::util::Epochstamp().toIso8601();
+           return Wrapper::fromStdVectorToPyHashList(this->getFromPast(deviceId, key, from, to));
+        }
 
     private:
 
