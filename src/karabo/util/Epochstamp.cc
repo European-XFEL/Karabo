@@ -57,7 +57,7 @@ namespace karabo {
                 if (pt != boost::posix_time::ptime()) break;
             }
 
-            const unsigned long long& secs = ptToSecondsSinceEpoch(pt);
+            const unsigned long long secs = ptToSecondsSinceEpoch(pt);
             const unsigned long long fraqs = boost::lexical_cast<unsigned long long>(fractionalSecondsStr);
 
             // Create Epochstamp to be returned

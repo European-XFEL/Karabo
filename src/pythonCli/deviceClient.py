@@ -191,6 +191,18 @@ class DeviceClient(object):
         
         # Dict of imagesItems
         self.__imageItems = dict()
+        
+        # Dict of curve dialogs
+        self.__curveDialogs = dict()
+        
+        # Dict of curveItems
+        self.__curveItems = dict()
+        
+        # Default colors
+        self.__colors = ["red", "green", "blue", "gray", "yellow", "violet", "orange", "lightgreen", "black"]
+        
+        # Current color idx
+        self.__colorIdx = 0
     
               
     def login(self, username, passwordFile = None, provider = "LOCAL"):
@@ -283,6 +295,14 @@ class DeviceClient(object):
         if propertyName is None: 
             return self.__client.get(instanceId)
         return self.__client.get(instanceId, propertyName)
+    
+    
+    def getFromPast(self, deviceId, propertyName, t0, t1 = None):
+        if t1 is None:
+            return self.__client.getFromPast(deviceId, propertyName, t0)
+        else:
+            return self.__client.getFromPast(deviceId, propertyName, t0, t1)
+                
     
     def enableAdvancedMode(self):
         self.__client.enableAdvancedMode()
@@ -389,32 +409,55 @@ class DeviceClient(object):
         time.sleep(secs)
 
 
-    def show(self, deviceId, key, monitor = True, dialogName = None, widgetType = None, x = 600, y = 600):
+    def show(self, deviceId, key, monitor = True, dialog = None, dialogName = "Karabo Embedded Visualisation", x = 600, y = 600):
         if not HAS_GUIDATA: return 
         schema = self.__client.getDeviceSchema(deviceId)
-        imageId = deviceId + ":" + key
-        
-        if dialogName is None: dialogName = imageId
+        itemId = deviceId + ":" + key
             
         if (schema.getDisplayType(key) == "Image"):
             image = self.__client.get(deviceId, key)
             if (len(image.get("data")) > 0):
-                dialog = ImageDialog(toolbar=True, wintitle=dialogName, options=dict(show_contrast=True))
+                if (dialog is None): dialog = ImageDialog(toolbar=True, wintitle=dialogName, options=dict(show_contrast=True))
                 dialog.resize(x, y)
                 imageItem = self._hashImageToGuiqwtImage(image)
                 plot = dialog.get_plot()
                 plot.add_item(imageItem)
                 dialog.show()
                 if monitor:
-                    self.__imageItems[imageId] = imageItem
-                    self.__imageDialogs[imageId] = dialog
-                    self.__client.registerPropertyMonitor(deviceId, key, self._onImageUpdate)             
+                    self.__imageItems[itemId] = imageItem
+                    self.__imageDialogs[itemId] = dialog
+                    self.__client.registerPropertyMonitor(deviceId, key, self._onImageUpdate)
+                return dialog
             else:
                 print "WARN: Empty image"
+        elif (schema.getDisplayType(key) == "Curve"):
+            data = self.__client.get(deviceId, key)
+            if (len(data) > 0):
+                if (dialog is None): 
+                    dialog = CurveDialog(edit=False, toolbar=True, wintitle=dialogName)
+                    dialog.get_plot().add_item(make.legend("TR"))
+                    dialog.get_itemlist_panel().show()
+                dialog.resize(x, y)
+                curveItem = make.curve(range(0, len(data), 1), data, itemId, color=self.__colors[self.__colorIdx % len(self.__colors)])
+                self.__colorIdx += 1
+                plot = dialog.get_plot()
+                plot.add_item(curveItem)
+                dialog.show()
+                if monitor:
+                    self.__curveItems[itemId] = curveItem
+                    self.__curveDialogs[itemId] = dialog
+                    self.__client.registerPropertyMonitor(deviceId, key, self._onCurveUpdate)
+                return dialog
+                
             
                        
     def _hashImageToNumpyImage(self, hashImage):
-        return np.frombuffer(hashImage.get("data"), dtype=np.uint8).reshape(hashImage.get("dims"))
+        if (hashImage.get("channelSpace") == 16):
+            return np.frombuffer(hashImage.get("data"), dtype=np.double).reshape(hashImage.get("dims"))
+        if (hashImage.get("channelSpace") == 0):
+            return np.frombuffer(hashImage.get("data"), dtype=np.uint8).reshape(hashImage.get("dims"))
+        else:
+            return np.frombuffer(hashImage.get("data"), dtype=np.uint8).reshape(hashImage.get("dims"))
             
             
     def _hashImageToGuiqwtImage(self, hashImage):
@@ -424,13 +467,16 @@ class DeviceClient(object):
         
     
     def _onImageUpdate(self, deviceId, key, image, timestamp):
-        imageId = deviceId + ":" + key
+        itemId = deviceId + ":" + key
         if (len(image.get("data")) > 0):
-            if self.__imageItems.has_key(imageId):
-                imageItem = self.__imageItems[imageId]
+            if self.__imageItems.has_key(itemId):
+                imageItem = self.__imageItems[itemId]
                 imageItem.set_data(self._hashImageToNumpyImage(image))
-    
-    
-        
                 
-            
+                
+    def _onCurveUpdate(self, deviceId, key, data, timestamp):
+        itemId = deviceId + ":" + key
+        if (len(data) > 0):
+            if self.__curveItems.has_key(itemId):
+                curveItem = self.__curveItems[itemId]
+                curveItem.set_data(range(0, len(data), 1), data)            

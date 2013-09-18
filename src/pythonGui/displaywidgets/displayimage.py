@@ -129,7 +129,7 @@ class DisplayImage(DisplayWidget):
             if not dimX and not dimY and not data: return
             if (dimX < 1) or (dimY < 1) or (len(data) < (dimX*dimY)): return
 
-            image = QImage(data, dimX, dimY, QImage.Format_ARGB32_Premultiplied).rgbSwapped()
+            image = QImage(data, dimX, dimY, QImage.Format_ARGB32_Premultiplied)
             
             if useGuiQwt:
                 data = image.bits().asstring(image.numBytes())

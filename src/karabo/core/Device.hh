@@ -316,7 +316,20 @@ namespace karabo {
                     emit("signalChanged", validated, getInstanceId());
                 }
             }
-
+            
+            template <class ValueType>
+            void setNoValidate(const std::string& key, const ValueType& value, const karabo::util::Timestamp& timestamp = karabo::util::Timestamp()) {
+                karabo::util::Hash h(key, value);
+                this->setNoValidate(h, timestamp);
+            }
+            
+            void setNoValidate(const karabo::util::Hash& hash, const karabo::util::Timestamp& timestamp = karabo::util::Timestamp()) {
+                if (!hash.empty()) {
+                    m_parameters.merge(hash, karabo::util::Hash::REPLACE_ATTRIBUTES);
+                    emit("signalChanged", hash, getInstanceId());
+                }
+            }
+            
             /**
              * Retrieves the current value of any device parameter (that was defined in the expectedParameters function)
              * @param key A valid parameter of the device (must be defined in the expectedParameters function)
@@ -585,7 +598,7 @@ namespace karabo {
             virtual void triggerError(const std::string& shortMessage, const std::string& detailedMessage) const {
                 call("", "errorFound", shortMessage, detailedMessage);
             }
-
+            
             void execute(const std::string& command) const {
                 call("", command);
             }

@@ -151,12 +151,11 @@ namespace karabo {
 
 
         void DeviceClient::slotChanged(const karabo::util::Hash& hash, const std::string & instanceId) {
-            KARABO_LOG_FRAMEWORK_DEBUG << "slotChanged was called with:\n" << hash;
-            for (Hash::const_iterator it = hash.begin(); it != hash.end(); ++it) {
-                if (it->getType() == Types::VECTOR_CHAR && it->hasAttribute("archive")) {
-                    //if
-                }
-            }
+//            for (Hash::const_iterator it = hash.begin(); it != hash.end(); ++it) {
+//                if (it->getType() == Types::VECTOR_CHAR && it->hasAttribute("archive")) {
+//                    //if
+//                }
+//            }
 
             boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
             Hash& tmp = m_runtimeSystemDescription.get<Hash>("device." + instanceId + ".configuration");
@@ -677,6 +676,15 @@ namespace karabo {
 
         void DeviceClient::get(const std::string& instanceId, karabo::util::Hash& hash) {
             hash = cacheAndGetConfiguration(instanceId);
+        }
+        
+        
+        std::vector<karabo::util::Hash> DeviceClient::getFromPast(const std::string& deviceId, const std::string& key, const std::string& from, std::string to) {
+            if (to.empty()) to = karabo::util::Epochstamp().toIso8601();
+            vector<Hash> result;
+            // TODO Make this a global slot later
+            m_signalSlotable->request("Karabo_FileDataLogger_0", "slotGetFromPast", deviceId, key, from, to).timeout(10000).receive(result);
+            return result;
         }
 
 
