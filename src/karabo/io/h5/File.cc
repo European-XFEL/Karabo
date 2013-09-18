@@ -111,27 +111,8 @@ namespace karabo {
 
 
             bool File::hasTable(const std::string& path) const {
-                hid_t tables;
-                std::string tablePaths;
-
-                if (!H5Aexists(m_h5file, "tables")) {
-                    return false;
-                } else {
-                    tables = H5Aopen(m_h5file, "tables", H5P_DEFAULT);
-                    KARABO_CHECK_HDF5_STATUS(tables);
-                    char* ptr[1];
-
-                    hid_t tid = ScalarTypes::getHdf5NativeType<string>();
-                    KARABO_CHECK_HDF5_STATUS(H5Aread(tables, tid, &ptr));
-                    KARABO_CHECK_HDF5_STATUS(H5Tclose(tid));
-                    tablePaths = ptr[0];
-                    KARABO_CHECK_HDF5_STATUS(H5Aclose(tables));
-                }
-                vector<string> strs;
-                boost::split(strs, tablePaths, boost::is_any_of("\n"));
-
-                for (size_t i = 0; i < strs.size(); ++i) {
-                    if(strs[i] == path ) return true;
+                for (size_t i = 0; i < m_existingTables.size(); ++i) {
+                    if (m_existingTables[i] == path) return true;
                 }
                 return false;
             }
@@ -140,25 +121,22 @@ namespace karabo {
             Table::Pointer File::createTable(const string& name, const Format::Pointer dataFormat) {
 
 
-                //                                Profiler p("createTable");               
+                if( name[0] != '/'){
+                    throw KARABO_IO_EXCEPTION("Table name must start with /");
+                }
+                
                 if (m_accMode == READONLY) {
                     throw KARABO_IO_EXCEPTION("Cannot create table when file is open in READONLY mode");
                 }
 
-                //                                p.start("1");
+                if(hasTable(name)){
+                    throw KARABO_IO_EXCEPTION("Cannot create table " + name +" - already exists");
+                }
+
                 Table::Pointer table = Table::Pointer(new Table(m_h5file, name));
                 table->setUniqueId();
-
-                //                                p.stop("1");
-                //                                p.start("2");
                 table->openNew(dataFormat);
-                //                                p.stop("2");
-                //                                p.start("3");
                 updateTableIndex(name);
-                //                                p.stop("3");
-                //                                clog << "   new Table: " << HighResolutionTimer::time2double(p.getTime("1")) << endl;
-                //                                clog << "   openNew  : " << HighResolutionTimer::time2double(p.getTime("2")) << endl;
-                //                                clog << "   update index table: " << HighResolutionTimer::time2double(p.getTime("3")) << endl;
                 KARABO_LOG_FRAMEWORK_TRACE_CF << "register table " << table->getUniqueId();
                 m_openTables[table->getUniqueId()] = table;
                 return table;
@@ -250,6 +228,7 @@ namespace karabo {
                     KARABO_CHECK_HDF5_STATUS(tables);
                     KARABO_CHECK_HDF5_STATUS(H5Tclose(stringType));
                     KARABO_CHECK_HDF5_STATUS(H5Sclose(dataSpace));
+
                 } else {
                     tables = H5Aopen(m_h5file, "tables", H5P_DEFAULT);
                     KARABO_CHECK_HDF5_STATUS(tables);
@@ -267,6 +246,9 @@ namespace karabo {
                 KARABO_CHECK_HDF5_STATUS(H5Awrite(tables, tid, &ptr));
                 KARABO_CHECK_HDF5_STATUS(H5Tclose(tid));
                 KARABO_CHECK_HDF5_STATUS(H5Aclose(tables))
+                
+                boost::split(m_existingTables, tablePaths, boost::is_any_of("\n"));
+
             }
 
 
