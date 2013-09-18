@@ -257,6 +257,7 @@ namespace karathon {
                 throw KARABO_PYTHON_EXCEPTION("createInputChannel(inputType, ...): Instance gotten by 'createChoice' call doesn't have 'setInstanceId' method");
             }
             channel.attr("setInstanceId")(m_instanceId);
+            channel.attr("setInputHandlerType")("python");
 
             if (!PyObject_HasAttrString(channel.ptr(), "registerIOEventHandler")) {
                 throw KARABO_PYTHON_EXCEPTION("createInputChannel(inputType, ...): Instance gotten by 'createChoice' call doesn't have 'registerIOEventHandler' method");
@@ -294,6 +295,7 @@ namespace karathon {
                 throw KARABO_PYTHON_EXCEPTION("createOutputChannel(outputType, ...): Instance gotten by 'createChoice' call doesn't have 'setInstanceId' method");
             }
             channel.attr("setInstanceId")(m_instanceId);
+            channel.attr("setOutputHandlerType")("python");
 
             if (!PyObject_HasAttrString(channel.ptr(), "registerIOEventHandler")) {
                 throw KARABO_PYTHON_EXCEPTION("createOutputChannel(outputType, ...): Instance gotten by 'createChoice' call doesn't have 'registerIOEventHandler' method");

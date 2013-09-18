@@ -27,6 +27,10 @@
     <logicalFolder name="f4" displayName="IO Binding" projectFiles="true">
       <itemPath>../../../src/karathon/PyH5Tools.cc</itemPath>
       <itemPath>../../../src/karathon/PyIoFileTools.cc</itemPath>
+      <itemPath>../../../src/karathon/PythonInputHandler.cc</itemPath>
+      <itemPath>../../../src/karathon/PythonInputHandler.hh</itemPath>
+      <itemPath>../../../src/karathon/PythonOutputHandler.cc</itemPath>
+      <itemPath>../../../src/karathon/PythonOutputHandler.hh</itemPath>
     </logicalFolder>
     <logicalFolder name="f9" displayName="Logger Binding" projectFiles="true">
       <itemPath>../../../src/karathon/PyLogLogger.cc</itemPath>
@@ -290,7 +294,27 @@
             tool="3"
             flavor2="0">
       </item>
+      <item path="../../../src/karathon/PythonInputHandler.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karathon/PythonInputHandler.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="../../../src/karathon/PythonMacros.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karathon/PythonOutputHandler.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karathon/PythonOutputHandler.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -568,7 +592,27 @@
             tool="3"
             flavor2="0">
       </item>
+      <item path="../../../src/karathon/PythonInputHandler.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karathon/PythonInputHandler.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="../../../src/karathon/PythonMacros.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karathon/PythonOutputHandler.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karathon/PythonOutputHandler.hh"
             ex="false"
             tool="3"
             flavor2="0">

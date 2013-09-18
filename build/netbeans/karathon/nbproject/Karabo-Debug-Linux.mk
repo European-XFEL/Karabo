@@ -52,10 +52,11 @@ OBJECTFILES= \
 	${OBJECTDIR}/_ext/381567218/PyWebAuthenticator.o \
 	${OBJECTDIR}/_ext/381567218/PyXipCpuImage.o \
 	${OBJECTDIR}/_ext/381567218/PyXipImage.o \
-	${OBJECTDIR}/_ext/381567218/PyXipRawImageData.o \
 	${OBJECTDIR}/_ext/381567218/PyXmsRequestor.o \
 	${OBJECTDIR}/_ext/381567218/PyXmsSignalSlotable.o \
 	${OBJECTDIR}/_ext/381567218/PyXmsSlotElement.o \
+	${OBJECTDIR}/_ext/381567218/PythonInputHandler.o \
+	${OBJECTDIR}/_ext/381567218/PythonOutputHandler.o \
 	${OBJECTDIR}/_ext/381567218/Wrapper.o \
 	${OBJECTDIR}/_ext/381567218/karathon.o \
 	${OBJECTDIR}/_ext/381567218/p2pbinding.o
@@ -178,11 +179,6 @@ ${OBJECTDIR}/_ext/381567218/PyXipImage.o: ../../../src/karathon/PyXipImage.cc
 	${RM} $@.d
 	$(COMPILE.cc) -g -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/include `pkg-config --cflags karathonDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/381567218/PyXipImage.o ../../../src/karathon/PyXipImage.cc
 
-${OBJECTDIR}/_ext/381567218/PyXipRawImageData.o: ../../../src/karathon/PyXipRawImageData.cc 
-	${MKDIR} -p ${OBJECTDIR}/_ext/381567218
-	${RM} $@.d
-	$(COMPILE.cc) -g -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/include `pkg-config --cflags karathonDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/381567218/PyXipRawImageData.o ../../../src/karathon/PyXipRawImageData.cc
-
 ${OBJECTDIR}/_ext/381567218/PyXmsRequestor.o: ../../../src/karathon/PyXmsRequestor.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/381567218
 	${RM} $@.d
@@ -197,6 +193,16 @@ ${OBJECTDIR}/_ext/381567218/PyXmsSlotElement.o: ../../../src/karathon/PyXmsSlotE
 	${MKDIR} -p ${OBJECTDIR}/_ext/381567218
 	${RM} $@.d
 	$(COMPILE.cc) -g -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/include `pkg-config --cflags karathonDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/381567218/PyXmsSlotElement.o ../../../src/karathon/PyXmsSlotElement.cc
+
+${OBJECTDIR}/_ext/381567218/PythonInputHandler.o: ../../../src/karathon/PythonInputHandler.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/381567218
+	${RM} $@.d
+	$(COMPILE.cc) -g -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/include `pkg-config --cflags karathonDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/381567218/PythonInputHandler.o ../../../src/karathon/PythonInputHandler.cc
+
+${OBJECTDIR}/_ext/381567218/PythonOutputHandler.o: ../../../src/karathon/PythonOutputHandler.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/381567218
+	${RM} $@.d
+	$(COMPILE.cc) -g -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/include `pkg-config --cflags karathonDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/381567218/PythonOutputHandler.o ../../../src/karathon/PythonOutputHandler.cc
 
 ${OBJECTDIR}/_ext/381567218/Wrapper.o: ../../../src/karathon/Wrapper.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/381567218
@@ -456,19 +462,6 @@ ${OBJECTDIR}/_ext/381567218/PyXipImage_nomain.o: ${OBJECTDIR}/_ext/381567218/PyX
 	    ${CP} ${OBJECTDIR}/_ext/381567218/PyXipImage.o ${OBJECTDIR}/_ext/381567218/PyXipImage_nomain.o;\
 	fi
 
-${OBJECTDIR}/_ext/381567218/PyXipRawImageData_nomain.o: ${OBJECTDIR}/_ext/381567218/PyXipRawImageData.o ../../../src/karathon/PyXipRawImageData.cc 
-	${MKDIR} -p ${OBJECTDIR}/_ext/381567218
-	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/381567218/PyXipRawImageData.o`; \
-	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
-	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
-	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
-	then  \
-	    ${RM} $@.d;\
-	    $(COMPILE.cc) -g -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/include `pkg-config --cflags karathonDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/381567218/PyXipRawImageData_nomain.o ../../../src/karathon/PyXipRawImageData.cc;\
-	else  \
-	    ${CP} ${OBJECTDIR}/_ext/381567218/PyXipRawImageData.o ${OBJECTDIR}/_ext/381567218/PyXipRawImageData_nomain.o;\
-	fi
-
 ${OBJECTDIR}/_ext/381567218/PyXmsRequestor_nomain.o: ${OBJECTDIR}/_ext/381567218/PyXmsRequestor.o ../../../src/karathon/PyXmsRequestor.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/381567218
 	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/381567218/PyXmsRequestor.o`; \
@@ -506,6 +499,32 @@ ${OBJECTDIR}/_ext/381567218/PyXmsSlotElement_nomain.o: ${OBJECTDIR}/_ext/3815672
 	    $(COMPILE.cc) -g -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/include `pkg-config --cflags karathonDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/381567218/PyXmsSlotElement_nomain.o ../../../src/karathon/PyXmsSlotElement.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/381567218/PyXmsSlotElement.o ${OBJECTDIR}/_ext/381567218/PyXmsSlotElement_nomain.o;\
+	fi
+
+${OBJECTDIR}/_ext/381567218/PythonInputHandler_nomain.o: ${OBJECTDIR}/_ext/381567218/PythonInputHandler.o ../../../src/karathon/PythonInputHandler.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/381567218
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/381567218/PythonInputHandler.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} $@.d;\
+	    $(COMPILE.cc) -g -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/include `pkg-config --cflags karathonDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/381567218/PythonInputHandler_nomain.o ../../../src/karathon/PythonInputHandler.cc;\
+	else  \
+	    ${CP} ${OBJECTDIR}/_ext/381567218/PythonInputHandler.o ${OBJECTDIR}/_ext/381567218/PythonInputHandler_nomain.o;\
+	fi
+
+${OBJECTDIR}/_ext/381567218/PythonOutputHandler_nomain.o: ${OBJECTDIR}/_ext/381567218/PythonOutputHandler.o ../../../src/karathon/PythonOutputHandler.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/381567218
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/381567218/PythonOutputHandler.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} $@.d;\
+	    $(COMPILE.cc) -g -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/include `pkg-config --cflags karathonDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/381567218/PythonOutputHandler_nomain.o ../../../src/karathon/PythonOutputHandler.cc;\
+	else  \
+	    ${CP} ${OBJECTDIR}/_ext/381567218/PythonOutputHandler.o ${OBJECTDIR}/_ext/381567218/PythonOutputHandler_nomain.o;\
 	fi
 
 ${OBJECTDIR}/_ext/381567218/Wrapper_nomain.o: ${OBJECTDIR}/_ext/381567218/Wrapper.o ../../../src/karathon/Wrapper.cc 
