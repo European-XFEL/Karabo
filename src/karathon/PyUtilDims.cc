@@ -32,7 +32,7 @@ void exportPyUtilDims() {
         d.def(bp::init<unsigned long long, unsigned long long, unsigned long long>());        
         d.def(bp::init<unsigned long long, unsigned long long, unsigned long long, unsigned long long>());        
         d.def(bp::init<bp::list>());        
-        d.def("rank", ( size_t(DimsWrap::*)()) (&DimsWrap::rank) );
+        d.def("rank", ( size_t(DimsWrap::*)()) (&DimsWrap::rank), "" );
         d.def("size", ( unsigned long long(DimsWrap::*)()) (&DimsWrap::size) );
         d.def("extentIn", ( unsigned long long(DimsWrap::*)(size_t)) (&DimsWrap::extentIn) );        
         
