@@ -129,7 +129,7 @@ if [ "$SKIP" = "n" ]; then
 
     elif [ "$DISTRO_ID" == "MacOSX" ]; then	
 	echo "### This can take a while. Better prepare yourself a coffee..."
-	safeRunCommand "sudo port install nspr nss pkgconfig sqlite3 python27 py27-numpy py27-scipy py27-matplotlib py27-pyqt4 py27-pyqwt py27-ipython"
+	safeRunCommand "sudo port install nspr nss pkgconfig sqlite3 python27 py27-numpy py27-scipy py27-matplotlib py27-pyqt4 py27-pyqwt py27-zmq py27-tornado  py27-pygments py27-nose py27-ipython"
 	safeRunCommand "sudo port select --set python python27"
 	safeRunCommand "sudo port select --set ipython ipython27" 
 	safeRunCommand "sudo easy_install readline"

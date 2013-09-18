@@ -35,6 +35,7 @@ OBJECTDIR=${CND_BUILDDIR}/${CND_CONF}/${CND_PLATFORM}
 
 # Object Files
 OBJECTFILES= \
+	${OBJECTDIR}/_ext/163556830/ComputeDevice.o \
 	${OBJECTDIR}/_ext/163556830/DataLoggerDevice.o \
 	${OBJECTDIR}/_ext/163556830/DeviceClient.o \
 	${OBJECTDIR}/_ext/163556830/DeviceServer.o \
@@ -113,11 +114,11 @@ OBJECTFILES= \
 	${OBJECTDIR}/_ext/1760428615/soapC.o \
 	${OBJECTDIR}/_ext/1760428615/stdsoap2.o \
 	${OBJECTDIR}/_ext/1103122620/CpuEnvironment.o \
-	${OBJECTDIR}/_ext/1103122620/CpuImage.o \
 	${OBJECTDIR}/_ext/1103122620/CpuImageBinarySerializer.o \
 	${OBJECTDIR}/_ext/1103122620/ImageFileReader.o \
 	${OBJECTDIR}/_ext/1103122620/ImageFileWriter.o \
 	${OBJECTDIR}/_ext/1103122620/RawImageData.o \
+	${OBJECTDIR}/_ext/1103122620/RawImageDataBinarySerializer.o \
 	${OBJECTDIR}/_ext/1103122747/Memory.o \
 	${OBJECTDIR}/_ext/1103122747/NetworkInput.o \
 	${OBJECTDIR}/_ext/1103122747/NetworkOutput.o \
@@ -163,6 +164,11 @@ LDLIBSOPTIONS=-L${KARABO}/extern/lib `pkg-config --libs karaboDependencies-${CND
 ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/lib/libkarabo.${CND_DLIB_EXT}: ${OBJECTFILES}
 	${MKDIR} -p ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/lib
 	${LINK.cc} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/lib/libkarabo.${CND_DLIB_EXT} ${OBJECTFILES} ${LDLIBSOPTIONS} -dynamiclib -install_name libkarabo.${CND_DLIB_EXT} -fPIC
+
+${OBJECTDIR}/_ext/163556830/ComputeDevice.o: ../../../src/karabo/core/ComputeDevice.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/163556830
+	${RM} $@.d
+	$(COMPILE.cc) -O2 -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163556830/ComputeDevice.o ../../../src/karabo/core/ComputeDevice.cc
 
 ${OBJECTDIR}/_ext/163556830/DataLoggerDevice.o: ../../../src/karabo/core/DataLoggerDevice.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/163556830
@@ -554,11 +560,6 @@ ${OBJECTDIR}/_ext/1103122620/CpuEnvironment.o: ../../../src/karabo/xip/CpuEnviro
 	${RM} $@.d
 	$(COMPILE.cc) -O2 -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1103122620/CpuEnvironment.o ../../../src/karabo/xip/CpuEnvironment.cc
 
-${OBJECTDIR}/_ext/1103122620/CpuImage.o: ../../../src/karabo/xip/CpuImage.cpp 
-	${MKDIR} -p ${OBJECTDIR}/_ext/1103122620
-	${RM} $@.d
-	$(COMPILE.cc) -O2 -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1103122620/CpuImage.o ../../../src/karabo/xip/CpuImage.cpp
-
 ${OBJECTDIR}/_ext/1103122620/CpuImageBinarySerializer.o: ../../../src/karabo/xip/CpuImageBinarySerializer.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1103122620
 	${RM} $@.d
@@ -578,6 +579,11 @@ ${OBJECTDIR}/_ext/1103122620/RawImageData.o: ../../../src/karabo/xip/RawImageDat
 	${MKDIR} -p ${OBJECTDIR}/_ext/1103122620
 	${RM} $@.d
 	$(COMPILE.cc) -O2 -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1103122620/RawImageData.o ../../../src/karabo/xip/RawImageData.cc
+
+${OBJECTDIR}/_ext/1103122620/RawImageDataBinarySerializer.o: ../../../src/karabo/xip/RawImageDataBinarySerializer.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1103122620
+	${RM} $@.d
+	$(COMPILE.cc) -O2 -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1103122620/RawImageDataBinarySerializer.o ../../../src/karabo/xip/RawImageDataBinarySerializer.cc
 
 ${OBJECTDIR}/_ext/1103122747/Memory.o: ../../../src/karabo/xms/Memory.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1103122747
@@ -826,6 +832,19 @@ ${TESTDIR}/_ext/936508045/xmsTestRunner.o: ../../../src/karabo/tests/xms/xmsTest
 	${RM} $@.d
 	$(COMPILE.cc) -O2 -Wall -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`  `cppunit-config --cflags` -MMD -MP -MF $@.d -o ${TESTDIR}/_ext/936508045/xmsTestRunner.o ../../../src/karabo/tests/xms/xmsTestRunner.cc
 
+
+${OBJECTDIR}/_ext/163556830/ComputeDevice_nomain.o: ${OBJECTDIR}/_ext/163556830/ComputeDevice.o ../../../src/karabo/core/ComputeDevice.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/163556830
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/163556830/ComputeDevice.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} $@.d;\
+	    $(COMPILE.cc) -O2 -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163556830/ComputeDevice_nomain.o ../../../src/karabo/core/ComputeDevice.cc;\
+	else  \
+	    ${CP} ${OBJECTDIR}/_ext/163556830/ComputeDevice.o ${OBJECTDIR}/_ext/163556830/ComputeDevice_nomain.o;\
+	fi
 
 ${OBJECTDIR}/_ext/163556830/DataLoggerDevice_nomain.o: ${OBJECTDIR}/_ext/163556830/DataLoggerDevice.o ../../../src/karabo/core/DataLoggerDevice.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/163556830
@@ -1841,19 +1860,6 @@ ${OBJECTDIR}/_ext/1103122620/CpuEnvironment_nomain.o: ${OBJECTDIR}/_ext/11031226
 	    ${CP} ${OBJECTDIR}/_ext/1103122620/CpuEnvironment.o ${OBJECTDIR}/_ext/1103122620/CpuEnvironment_nomain.o;\
 	fi
 
-${OBJECTDIR}/_ext/1103122620/CpuImage_nomain.o: ${OBJECTDIR}/_ext/1103122620/CpuImage.o ../../../src/karabo/xip/CpuImage.cpp 
-	${MKDIR} -p ${OBJECTDIR}/_ext/1103122620
-	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/1103122620/CpuImage.o`; \
-	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
-	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
-	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
-	then  \
-	    ${RM} $@.d;\
-	    $(COMPILE.cc) -O2 -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1103122620/CpuImage_nomain.o ../../../src/karabo/xip/CpuImage.cpp;\
-	else  \
-	    ${CP} ${OBJECTDIR}/_ext/1103122620/CpuImage.o ${OBJECTDIR}/_ext/1103122620/CpuImage_nomain.o;\
-	fi
-
 ${OBJECTDIR}/_ext/1103122620/CpuImageBinarySerializer_nomain.o: ${OBJECTDIR}/_ext/1103122620/CpuImageBinarySerializer.o ../../../src/karabo/xip/CpuImageBinarySerializer.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1103122620
 	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/1103122620/CpuImageBinarySerializer.o`; \
@@ -1904,6 +1910,19 @@ ${OBJECTDIR}/_ext/1103122620/RawImageData_nomain.o: ${OBJECTDIR}/_ext/1103122620
 	    $(COMPILE.cc) -O2 -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1103122620/RawImageData_nomain.o ../../../src/karabo/xip/RawImageData.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/1103122620/RawImageData.o ${OBJECTDIR}/_ext/1103122620/RawImageData_nomain.o;\
+	fi
+
+${OBJECTDIR}/_ext/1103122620/RawImageDataBinarySerializer_nomain.o: ${OBJECTDIR}/_ext/1103122620/RawImageDataBinarySerializer.o ../../../src/karabo/xip/RawImageDataBinarySerializer.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1103122620
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/1103122620/RawImageDataBinarySerializer.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} $@.d;\
+	    $(COMPILE.cc) -O2 -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1103122620/RawImageDataBinarySerializer_nomain.o ../../../src/karabo/xip/RawImageDataBinarySerializer.cc;\
+	else  \
+	    ${CP} ${OBJECTDIR}/_ext/1103122620/RawImageDataBinarySerializer.o ${OBJECTDIR}/_ext/1103122620/RawImageDataBinarySerializer_nomain.o;\
 	fi
 
 ${OBJECTDIR}/_ext/1103122747/Memory_nomain.o: ${OBJECTDIR}/_ext/1103122747/Memory.o ../../../src/karabo/xms/Memory.cc 
