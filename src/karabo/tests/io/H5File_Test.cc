@@ -713,11 +713,11 @@ void H5File_Test::testBufferWrite() {
         
         
         bool exists = file.hasTable("/planets");
-//        clog << "/planets" << exists << endl;
+//        clog << "/planets " << exists << endl;
         exists = file.hasTable("/planet");
-//        clog << "/planet" << exists << endl;
+//        clog << "/planet " << exists << endl;
         exists = file.hasTable("planets");
-//        clog << "planets" << exists << endl;
+//        clog << "planets " << exists << endl;
         
         p.stop("create");
         p.start("write0");
