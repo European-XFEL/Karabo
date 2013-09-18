@@ -45,6 +45,10 @@ class PythonDevice(BaseFsm):
         e.displayedName("DeviceID").description("The device instance ID uniquely identifies a device instance in the distributed system")
         e.assignmentOptional().noDefaultValue().init().commit()
             
+        e = INT32_ELEMENT(expected).key("progress")
+        e.displayedName("Progress").description("The progress of the current action")
+        e.readOnly().initialValue(0).commit()
+            
         e = STRING_ELEMENT(expected).key("state")
         e.displayedName("State").description("The current state the device is in")
         e.assignmentOptional().defaultValue("uninitialized").readOnly().commit()
