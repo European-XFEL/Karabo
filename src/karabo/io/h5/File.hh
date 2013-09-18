@@ -144,12 +144,16 @@ namespace karabo {
                 AccessMode m_accMode;
 
                 TableMap m_openTables;
+                
+                std::vector<std::string> m_existingTables;
 
                 bool m_isOpen;
 
                 boost::shared_ptr<Table> createReadOnlyTablePointer(const std::string& name);
 
                 void updateTableIndex(const std::string& tablePath);
+                
+                
 
                 void closeTable(const std::string& uniqueId);
 
