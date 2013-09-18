@@ -16,21 +16,13 @@
 #include <boost/function.hpp>
 #include <boost/any.hpp>
 #include <karabo/util/Configurator.hh>
-
-namespace karathon {
-    class AbstractOutputWrap;
-}
+#include <karabo/util/SimpleElement.hh>
+#include "OutputHandler.hh"
 
 namespace karabo {
-
     namespace io {
 
         class AbstractOutput : public boost::enable_shared_from_this<AbstractOutput> {
-
-            friend class karathon::AbstractOutputWrap;
-            
-            boost::any m_ioEventHandler;
-            std::string m_instanceId;
 
         public:
 
@@ -42,14 +34,13 @@ namespace karabo {
              * @param expected [out] Description of expected parameters for this object (Schema)
              */
             static void expectedParameters(karabo::util::Schema& expected) {
-
             }
 
             /**
              * If this object is constructed using the factory/configuration system this method is called
              * @param input Validated (@see expectedParameters) and default-filled configuration
              */
-            AbstractOutput(const karabo::util::Hash& input) {
+            AbstractOutput(const karabo::util::Hash& configuration) {
             }
 
             AbstractOutput() {
@@ -66,9 +57,25 @@ namespace karabo {
                 return m_instanceId;
             }
 
-            template <class OutputType>
-            void registerIOEventHandler(const boost::function<void (const boost::shared_ptr<OutputType>&) >& ioEventHandler) {
-                m_ioEventHandler = ioEventHandler;
+            void setOutputHandlerType(const std::string& handlerType) {
+                std::cout << "setOutputHandlerType: " << handlerType << std::endl;
+                std::string capitalType = boost::algorithm::to_upper_copy(handlerType);
+                if (capitalType == "C++")
+                    m_handlers = karabo::util::Factory<OutputHandler>::create<AbstractOutput::Pointer>("CppOutputHandler", shared_from_this());
+                else if (capitalType == "PYTHON")
+                    m_handlers = karabo::util::Factory<OutputHandler>::create<AbstractOutput::Pointer>("PythonOutputHandler", shared_from_this());
+                else
+                    throw KARABO_PARAMETER_EXCEPTION("Handler type " + handlerType + " is not supported.  Supported types (case-insensitive) are C++, Python");
+            }
+
+            OutputHandler::Pointer getOutputHandler() {
+                return m_handlers;
+            }
+
+            void registerIOEventHandler(const boost::any& ioEventHandler) {
+                if (!m_handlers)
+                    throw KARABO_LOGIC_EXCEPTION("Handler storage not initialized: call 'setOutputHandler' first.");
+                m_handlers->registerIOEventHandler(ioEventHandler);
             }
 
             //virtual void onInputAvailable(const std::string& instanceId) {
@@ -80,7 +87,7 @@ namespace karabo {
 
             virtual void update() {
             }
-            
+
             virtual void signalEndOfStream() {
             }
 
@@ -89,11 +96,17 @@ namespace karabo {
             }
 
         protected:
-
-            template <class OutputType>
+            
             void triggerIOEvent() {
-                if (!m_ioEventHandler.empty()) (boost::any_cast < boost::function<void (const boost::shared_ptr<OutputType>&) > >(m_ioEventHandler))(boost::static_pointer_cast< OutputType > (shared_from_this()));
+                if (m_handlers) {
+                    m_handlers->triggerIOEvent();
+                }
             }
+                       
+        protected:
+
+            std::string m_instanceId;
+            OutputHandler::Pointer m_handlers;
         };
     }
 }

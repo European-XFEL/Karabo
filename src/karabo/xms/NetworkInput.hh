@@ -222,7 +222,8 @@ namespace karabo {
             void onTcpChannelRead(karabo::net::Channel::Pointer channel, const karabo::util::Hash& header, const std::vector<char>& data) {
                 //std::cout << "INPUT: Receiving " << data.size() << " bytes of data" << std::endl;
                 if (header.has("endOfStream")) {
-                    if (this->getMinimumNumberOfData() == 0) this->template triggerIOEvent< karabo::io::Input<T> >();
+                    //if (this->getMinimumNumberOfData() == 0) this->template triggerIOEvent< karabo::io::Input<T> >();
+                    if (this->getMinimumNumberOfData() == 0) this->triggerIOEvent();
                     this->triggerEndOfStreamEvent();
                     channel->readAsyncHashVector(boost::bind(&karabo::xms::NetworkInput<T>::onTcpChannelRead, this, _1, _2, _3));
                     return;
@@ -251,7 +252,8 @@ namespace karabo {
                     this->swapBuffers();
                     KARABO_LOG_FRAMEWORK_DEBUG << "INPUT: swapped buffers, can read more";
                     notifyOutputChannelForPossibleRead(channel);
-                    this->template triggerIOEvent< karabo::io::Input<T> >(); // TODO, run this as thread !!!
+                    //this->template triggerIOEvent< karabo::io::Input<T> >(); // TODO, run this as thread !!!
+                    this->triggerIOEvent(); // TODO, run this as thread !!!
                 } else { // Data complete on both pots now
                     if (m_updateOnNewInput) {
                         boost::mutex::scoped_lock lock(m_mutex);

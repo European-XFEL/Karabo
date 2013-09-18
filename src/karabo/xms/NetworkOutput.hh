@@ -263,7 +263,8 @@ namespace karabo {
                         }
                         pushShareNext(instanceId);
                         KARABO_LOG_FRAMEWORK_DEBUG << "OUTPUT New (shared) input on instance " << instanceId << " available for writing ";
-                        this->template triggerIOEvent<karabo::io::Output<T> >();
+                        //this->template triggerIOEvent<karabo::io::Output<T> >();
+                        this->triggerIOEvent();
                         return;
                     }
                 }
@@ -277,7 +278,8 @@ namespace karabo {
                         }
                         pushCopyNext(instanceId);
                         KARABO_LOG_FRAMEWORK_DEBUG << "OUTPUT New (copied) input on instance " << instanceId << " available for writing ";
-                        this->template triggerIOEvent<karabo::io::Output<T> >();
+                        //this->template triggerIOEvent<karabo::io::Output<T> >();
+                        this->triggerIOEvent();
                         return;
                     }
                 }
