@@ -74,6 +74,7 @@
     <logicalFolder name="f11" displayName="Xip Binding" projectFiles="true">
       <itemPath>../../../src/karathon/PyXipCpuImage.cc</itemPath>
       <itemPath>../../../src/karathon/PyXipImage.cc</itemPath>
+      <itemPath>../../../src/karathon/PyXipRawImageData.cc</itemPath>
     </logicalFolder>
     <logicalFolder name="TestFiles"
                    displayName="Test Files"
@@ -260,6 +261,11 @@
             flavor2="0">
       </item>
       <item path="../../../src/karathon/PyXipImage.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karathon/PyXipRawImageData.cc"
             ex="false"
             tool="1"
             flavor2="0">
@@ -533,6 +539,11 @@
             flavor2="0">
       </item>
       <item path="../../../src/karathon/PyXipImage.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karathon/PyXipRawImageData.cc"
             ex="false"
             tool="1"
             flavor2="0">
