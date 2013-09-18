@@ -214,7 +214,7 @@ namespace karabo {
             }
 
             if (m_isMaster) {
-                slotStartDevice(Hash("DataLoggerDevice.deviceId", "Karabo_DataLogger_0", "DataLoggerDevice.connection", m_connectionConfig));
+                slotStartDevice(Hash("FileDataLogger.deviceId", "Karabo_FileDataLogger_0", "FileDataLogger.connection", m_connectionConfig));
                 slotStartDevice(Hash("GuiServerDevice.deviceId", "Karabo_GuiServer_0", "GuiServerDevice.connection", m_connectionConfig, "GuiServerDevice.loggerConnection", m_connectionConfig));
             } else {
                 KARABO_LOG_INFO << "Keep watching directory: " << m_pluginLoader->getPluginDirectory() << " for Device plugins";

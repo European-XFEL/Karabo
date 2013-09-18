@@ -288,6 +288,8 @@ namespace karabo {
                     throw KARABO_PARAMETER_EXCEPTION("Could not fetch parameter \"" + key + "\" from device \"" + instanceId + "\"");
                 }
             }
+            
+            karabo::util::vector<karabo::util::Hash> getFromPast(const std::string& deviceId, const std::string& key, const std::string& from, std::string to = "");
 
             void registerInstanceNewMonitor(const InstanceNewHandler& callBackFunction);
 

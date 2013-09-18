@@ -79,17 +79,9 @@ class Network(QObject):
         
         print "Trying to login now..."
         
-        ### HACK remove again ###
-        # Inform the mainwindow to change correspondingly the allowed level-downgrade
-        #globals.GLOBAL_ACCESS_LEVEL = AccessLevel.ADMIN
-        #self.signalUserChanged.emit()
-        #self._sendLoginInformation(self.__username, self.__password, self.__provider, self.__sessionToken)
-        #return
-        ### HACK remove again ###
-        
         # Easteregg
         if self.__username == "god":
-            md5 = QCryptographicHash.hash(str(dialog.password), QCryptographicHash.Md5).toHex()
+            md5 = QCryptographicHash.hash(str(self.__password), QCryptographicHash.Md5).toHex()
             if md5 == "39d676ecced45b02da1fb45731790b4c":
                 print "Entering god mode..."
                 globals.GLOBAL_ACCESS_LEVEL = 1000
