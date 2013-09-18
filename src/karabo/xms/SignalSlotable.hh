@@ -678,11 +678,12 @@ namespace karabo {
 
             template <class InputType>
             boost::shared_ptr<InputType > createInputChannel(const std::string& name, const karabo::util::Hash input, 
-            const boost::function<void (const boost::shared_ptr<InputType>&) >& onInputAvailableHandler = boost::function<void (const boost::shared_ptr<InputType>&) >(), 
+            const boost::function<void (const karabo::io::AbstractInput::Pointer&) >& onInputAvailableHandler = boost::function<void (const karabo::io::AbstractInput::Pointer&) >(), 
             const boost::function<void ()>& onEndOfStreamEventHandler = boost::function<void ()>()) {
                 using namespace karabo::util;
                 karabo::io::AbstractInput::Pointer channel = InputType::createChoice(name, input);
                 channel->setInstanceId(m_instanceId);
+                channel->setInputHandlerType("c++");
                 if (!onInputAvailableHandler.empty()) {
                     channel->registerIOEventHandler(onInputAvailableHandler);
                 }
@@ -690,18 +691,21 @@ namespace karabo {
                     channel->registerEndOfStreamEventHandler(onEndOfStreamEventHandler);
                 }
                 m_inputChannels[name] = channel;
+                std::cout << "createInputChannel: channel for name = " << name << " and configuration: \n" << input << std::endl;
                 return boost::static_pointer_cast<InputType >(channel);
             }
-
+            
             template <class OutputType>
-            boost::shared_ptr<OutputType > createOutputChannel(const std::string& name, const karabo::util::Hash& input, const boost::function<void (const boost::shared_ptr<OutputType>&) >& onOutputPossibleHandler = boost::function<void (const boost::shared_ptr<OutputType>&) >()) {
+            boost::shared_ptr<OutputType > createOutputChannel(const std::string& name, const karabo::util::Hash& input, const boost::function<void (const karabo::io::AbstractOutput::Pointer&) >& onOutputPossibleHandler = boost::function<void (const karabo::io::AbstractOutput::Pointer&) >()) {
                 using namespace karabo::util;
                 karabo::io::AbstractOutput::Pointer channel = OutputType::createChoice(name, input);
                 channel->setInstanceId(m_instanceId);
+                channel->setOutputHandlerType("c++");
                 if (!onOutputPossibleHandler.empty()) {
                     channel->registerIOEventHandler(onOutputPossibleHandler);
                 }
                 m_outputChannels[name] = channel;
+                std::cout << "createOutputChannel: channel for name = " << name << " and configuration: \n" << input << std::endl;
                 return boost::static_pointer_cast<OutputType >(channel);
             }
 

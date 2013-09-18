@@ -15,28 +15,26 @@
 #include <boost/function.hpp>
 #include <boost/any.hpp>
 #include <karabo/util/Configurator.hh>
-
-namespace karathon {
-   class AbstractInputWrap; 
-}
+#include <karabo/util/SimpleElement.hh>
+#include <karabo/io/InputHandler.hh>
 
 namespace karabo {
-
     namespace io {
 
         class AbstractInput : public boost::enable_shared_from_this<AbstractInput> {
 
-            friend class karathon::AbstractInputWrap;
-            
         public:
 
             KARABO_CLASSINFO(AbstractInput, "AbstractInput", "1.0")
             KARABO_CONFIGURATION_BASE_CLASS
 
+            static void expectedParameters(karabo::util::Schema& expected) {
+            }
+
             AbstractInput() {
             }
 
-            AbstractInput(const karabo::util::Hash&) {
+            AbstractInput(const karabo::util::Hash& configuration) {
             }
 
             virtual ~AbstractInput() {
@@ -53,13 +51,31 @@ namespace karabo {
                 return m_instanceId;
             }
 
-            template <class InputType>
-            void registerIOEventHandler(const boost::function<void (const boost::shared_ptr<InputType>&) >& ioEventHandler) {
-                m_ioEventHandler = ioEventHandler;
+            void setInputHandlerType(const std::string& handlerType) {
+                std::cout << "setInputHandlerType: " << handlerType << std::endl;
+                std::string capitalType = boost::algorithm::to_upper_copy(handlerType);
+                if (capitalType == "C++")
+                    m_handlers = karabo::util::Factory<InputHandler>::create("CppInputHandler", shared_from_this());
+                else if (capitalType == "PYTHON")
+                    m_handlers = karabo::util::Factory<InputHandler>::create("PythonInputHandler", shared_from_this());
+                else
+                    throw KARABO_PARAMETER_EXCEPTION("Handler type " + handlerType + " is not supported.  Supported types (case-insensitive) are C++, Python");
             }
-            
-            void registerEndOfStreamEventHandler(const boost::function<void ()>& endOfStreamEventHandler) {
-                m_endOfStreamEventHandler = endOfStreamEventHandler;
+
+            InputHandler::Pointer getInputHandler() {
+                return m_handlers;
+            }
+
+            void registerIOEventHandler(const boost::any& ioEventHandler) {
+                if (!m_handlers)
+                    throw KARABO_LOGIC_EXCEPTION("Handler storage not initialized: call 'setInputHandlerType' first.");
+                m_handlers->registerIOEventHandler(ioEventHandler);
+            }
+
+            void registerEndOfStreamEventHandler(const boost::any& endOfStreamEventHandler) {
+                if (!m_handlers)
+                    throw KARABO_LOGIC_EXCEPTION("Handler storage not initialized: call 'setInputHandlerType' first.");
+                m_handlers->registerEndOfStreamEventHandler(endOfStreamEventHandler);
             }
 
             virtual bool needsDeviceConnection() const { // TODO Check if we can get rid of this
@@ -86,21 +102,21 @@ namespace karabo {
 
         protected:
 
-            template <class InputType>
             void triggerIOEvent() {
-                if (!m_ioEventHandler.empty()) (boost::any_cast < boost::function<void (const boost::shared_ptr<InputType>&) > >(m_ioEventHandler))(boost::static_pointer_cast< InputType >(shared_from_this()));
+                if (m_handlers) {
+                    m_handlers->triggerIOEvent();
+                }
             }
-            
+
             void triggerEndOfStreamEvent() {
-                if (!m_endOfStreamEventHandler.empty()) (boost::any_cast < boost::function<void () > >(m_endOfStreamEventHandler))();
+                if (m_handlers) {
+                    m_handlers->triggerEndOfStreamEvent();
+                }
             }
 
         private:
-
+            boost::shared_ptr<InputHandler> m_handlers;
             std::string m_instanceId;
-            boost::any m_ioEventHandler;
-            boost::any m_endOfStreamEventHandler;
-
         };
     }
 }
