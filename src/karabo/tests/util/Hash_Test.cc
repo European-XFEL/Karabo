@@ -1090,17 +1090,17 @@ void Hash_Test::testHelper() {
         // std::clog << "SerializeH: \n" << h1 << std::endl;
         // std::clog << "Serialize2: \n" << serializer2.getResult().str() << std::endl;
 
-        std::clog << "Hash : " << h1 << std::endl;
-        std::clog << "FlatV: " << flatten.getResult() << std::endl;
+//        std::clog << "Hash : " << h1 << std::endl;
+//        std::clog << "FlatV: " << flatten.getResult() << std::endl;
 
         Hash flat;
         Hash::flatten(h1, flat, "", '/');
-        std::clog << "FlatH: " << flat << std::endl;
+//        std::clog << "FlatH: " << flat << std::endl;
 
-        std::clog << "Paths : " << std::endl;
-        for (int i = 0; i < paths.getResult().size(); ++i) {
-            std::clog << "\t" << paths.getResult()[i] << std::endl;
-        }
+//        std::clog << "Paths : " << std::endl;
+//        for (int i = 0; i < paths.getResult().size(); ++i) {
+//            std::clog << "\t" << paths.getResult()[i] << std::endl;
+//        }
 
         //helper::Visitor<Hash, Counter> count;
         //std::clog << "Count 2 : " << count(h1).getResult() << std::endl;

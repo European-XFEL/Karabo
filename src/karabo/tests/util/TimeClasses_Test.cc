@@ -42,23 +42,23 @@ void TimeClasses_Test::testEpochstamp() {
     TimeDuration::setDefaultFormat("%s.%U");
     TimeDuration d = t2 - t1;
 
-    clog << "Duration: " << t2 - t1 << endl;
+//    clog << "Duration: " << t2 - t1 << endl;
 
     Epochstamp t3;
     t2 += TimeDuration(0ULL, 1000000000000000ULL);
 
-    clog << "Duration: " << t2 - t1 << endl;
+//    clog << "Duration: " << t2 - t1 << endl;
 
     Epochstamp t4 = t3 + d;
 
-    clog << "Duration: " << t4 - t3 << endl;
+//    clog << "Duration: " << t4 - t3 << endl;
 
-    clog << "Duration: " << t4 - t1 << endl;
-    clog << "Duration: " << t4.elapsed(t1) << endl;
+//    clog << "Duration: " << t4 - t1 << endl;
+//    clog << "Duration: " << t4.elapsed(t1) << endl;
 
     t4 -= TimeDuration(0ULL, 2000000000000000ULL);
 
-    clog << "Duration: " << t4.elapsed(t1) << endl;
+//    clog << "Duration: " << t4.elapsed(t1) << endl;
 
     CPPUNIT_ASSERT(true);
 }
@@ -76,8 +76,8 @@ void TimeClasses_Test::testTimePeriod() {
 
     TimePeriod p2(t1, t2);
 
-    clog << "Duration: " << p1.getDuration() << endl;
-    clog << "Duration: " << p2.getDuration() << endl;
+//    clog << "Duration: " << p1.getDuration() << endl;
+//    clog << "Duration: " << p2.getDuration() << endl;
 
     CPPUNIT_ASSERT(p1.after(t0));
     CPPUNIT_ASSERT(p1.contain(t1));
@@ -143,17 +143,17 @@ void TimeClasses_Test::testTimeProfiler() {
     
     profiler.close();
 
-    clog << "Profiler:\n" << profiler << endl;
+//    clog << "Profiler:\n" << profiler << endl;
 
     //clog << "Profiler:\n" << profiler.sql() << endl;
     
-    clog << "Profiler: " << profiler.getPeriod().getDuration() << endl;
-
-    clog << "Profiler write: " << profiler.getPeriod("write").getDuration() << endl;
-
-    clog << "Profiler write.format: " << profiler.getPeriod("write.format").getDuration() << endl;
-
-    clog << "Profiler write.format.open: " << profiler.getPeriod("write.format.open").getDuration() << endl;
+//    clog << "Profiler: " << profiler.getPeriod().getDuration() << endl;
+//
+//    clog << "Profiler write: " << profiler.getPeriod("write").getDuration() << endl;
+//
+//    clog << "Profiler write.format: " << profiler.getPeriod("write.format").getDuration() << endl;
+//
+//    clog << "Profiler write.format.open: " << profiler.getPeriod("write.format.open").getDuration() << endl;
 
     CPPUNIT_ASSERT(true);
 }
