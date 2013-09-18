@@ -98,7 +98,9 @@ void exportPyXipImage() {
     img.def("getSum", &ImageT::getSum);
     img.def("getMean", &ImageT::getMean);
 }
-template void exportPyXipImage<float>();
 template void exportPyXipImage<double>();
+template void exportPyXipImage<float>();
+
+
 
 

@@ -51,7 +51,7 @@ void exportPyLogLogger();
 void exportp2p();
 
 // xip
-template <class T> void exportPyXipCpuImage();
+template <class T> void exportPyXipImage();
 
 BOOST_PYTHON_MODULE(karathon) {
     
@@ -100,6 +100,6 @@ BOOST_PYTHON_MODULE(karathon) {
     exportp2p();
     
     // xip
-    exportPyXipCpuImage<int>();
-    exportPyXipCpuImage<double>();
+    exportPyXipImage<double>();
+    exportPyXipImage<float>();
 }
