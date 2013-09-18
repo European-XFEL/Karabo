@@ -50,6 +50,7 @@ OBJECTFILES= \
 	${OBJECTDIR}/_ext/381567218/PyUtilTimestamp.o \
 	${OBJECTDIR}/_ext/381567218/PyUtilTrainstamp.o \
 	${OBJECTDIR}/_ext/381567218/PyWebAuthenticator.o \
+	${OBJECTDIR}/_ext/381567218/PyXipCpuImage.o \
 	${OBJECTDIR}/_ext/381567218/PyXipImage.o \
 	${OBJECTDIR}/_ext/381567218/PyXmsRequestor.o \
 	${OBJECTDIR}/_ext/381567218/PyXmsSignalSlotable.o \
@@ -165,6 +166,11 @@ ${OBJECTDIR}/_ext/381567218/PyWebAuthenticator.o: ../../../src/karathon/PyWebAut
 	${MKDIR} -p ${OBJECTDIR}/_ext/381567218
 	${RM} $@.d
 	$(COMPILE.cc) -g -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/include `pkg-config --cflags karathonDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/381567218/PyWebAuthenticator.o ../../../src/karathon/PyWebAuthenticator.cc
+
+${OBJECTDIR}/_ext/381567218/PyXipCpuImage.o: ../../../src/karathon/PyXipCpuImage.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/381567218
+	${RM} $@.d
+	$(COMPILE.cc) -g -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/include `pkg-config --cflags karathonDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/381567218/PyXipCpuImage.o ../../../src/karathon/PyXipCpuImage.cc
 
 ${OBJECTDIR}/_ext/381567218/PyXipImage.o: ../../../src/karathon/PyXipImage.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/381567218
@@ -416,6 +422,19 @@ ${OBJECTDIR}/_ext/381567218/PyWebAuthenticator_nomain.o: ${OBJECTDIR}/_ext/38156
 	    $(COMPILE.cc) -g -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/include `pkg-config --cflags karathonDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/381567218/PyWebAuthenticator_nomain.o ../../../src/karathon/PyWebAuthenticator.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/381567218/PyWebAuthenticator.o ${OBJECTDIR}/_ext/381567218/PyWebAuthenticator_nomain.o;\
+	fi
+
+${OBJECTDIR}/_ext/381567218/PyXipCpuImage_nomain.o: ${OBJECTDIR}/_ext/381567218/PyXipCpuImage.o ../../../src/karathon/PyXipCpuImage.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/381567218
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/381567218/PyXipCpuImage.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} $@.d;\
+	    $(COMPILE.cc) -g -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/include `pkg-config --cflags karathonDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/381567218/PyXipCpuImage_nomain.o ../../../src/karathon/PyXipCpuImage.cc;\
+	else  \
+	    ${CP} ${OBJECTDIR}/_ext/381567218/PyXipCpuImage.o ${OBJECTDIR}/_ext/381567218/PyXipCpuImage_nomain.o;\
 	fi
 
 ${OBJECTDIR}/_ext/381567218/PyXipImage_nomain.o: ${OBJECTDIR}/_ext/381567218/PyXipImage.o ../../../src/karathon/PyXipImage.cc 
