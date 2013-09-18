@@ -43,24 +43,22 @@ void exportPyUtilTimestamp() {
     ts.staticmethod("hashAttributesContainTimeInformation");
 
     ts.def("fromIso8601"
-           , &Timestamp::toIso8601
+           , &Timestamp::fromIso8601
            , bp::arg("timePoint"));
     ts.staticmethod("fromIso8601");
 
     ts.def("fromIso8601Ext"
-           , &Timestamp::toIso8601Ext
+           , &Timestamp::fromIso8601Ext
            , bp::arg("timePoint"));
     ts.staticmethod("fromIso8601Ext");
 
     ts.def("toIso8601"
-           , (string(Timestamp::*)() const) (&Timestamp::toIso8601)
-           , bp::arg("precision")
-           , bp::arg("extended"));
+           , (string(Timestamp::*)(karabo::util::TIME_UNITS,bool) const) (&Timestamp::toIso8601)
+           , ( bp::arg("precision")=karabo::util::MICROSEC, bp::arg("extended")=(bool)(false) ) );
 
     ts.def("toIso8601Ext"
-           , (string(Timestamp::*)() const) (&Timestamp::toIso8601Ext)
-           , bp::arg("precision")
-           , bp::arg("extended"));
+           , (string(Timestamp::*)(karabo::util::TIME_UNITS,bool) const) (&Timestamp::toIso8601Ext)
+           , ( bp::arg("precision")=karabo::util::MICROSEC, bp::arg("extended")=(bool)(false) ) );
 
     ts.def("toFormattedString"
            , (string(Timestamp::*)(const string &) const) (&Timestamp::toFormattedString)
