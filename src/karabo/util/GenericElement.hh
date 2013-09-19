@@ -124,7 +124,7 @@ namespace karabo {
 
             
             /**
-             * The <b>observerAccess</b> method serves for setting up the <i>access level</i> attribute to be OBSERVER.
+             * The <b>observerAccess</b> method serves for setting up the <i>required access level</i> attribute to be OBSERVER.
              * @return reference to the Element (to allow method's chaining)
              */
             Derived& observerAccess() {
@@ -133,7 +133,7 @@ namespace karabo {
             }
             
             /**
-             * The <b>userAccess</b> method serves for setting up the <i>access level</i> attribute to be USER.
+             * The <b>userAccess</b> method serves for setting up the <i>required access level</i> attribute to be USER.
              * @return reference to the Element (to allow method's chaining)
              */
             Derived& userAccess() {
@@ -142,7 +142,7 @@ namespace karabo {
             }
             
             /**
-             * The <b>operatorAccess</b> method serves for setting up the <i>access level</i> attribute to be OPERATOR.
+             * The <b>operatorAccess</b> method serves for setting up the <i>required access level</i> attribute to be OPERATOR.
              * @return reference to the Element (to allow method's chaining)
              */
             Derived& operatorAccess() {
@@ -151,7 +151,7 @@ namespace karabo {
             }
             
             /**
-             * The <b>expertAccess</b> method serves for setting up the <i>access level</i> attribute to be EXPERT.
+             * The <b>expertAccess</b> method serves for setting up the <i>required access level</i> attribute to be EXPERT.
              * @return reference to the Element (to allow method's chaining)
              */
             Derived& expertAccess() {
@@ -170,7 +170,7 @@ namespace karabo {
             }
             
             /**
-             * The <b>adminAccess</b> method serves for setting up the <i>access level</i> attribute to be ADMIN.
+             * The <b>adminAccess</b> method serves for setting up the <i>required access level</i> attribute to be ADMIN.
              * @return reference to the Element (to allow method's chaining)
              */
             Derived& adminAccess() {

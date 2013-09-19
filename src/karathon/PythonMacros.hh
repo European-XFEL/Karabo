@@ -450,18 +450,10 @@ return boost::python::object(str);\
  *
  */
 
-#define KARABO_PYTHON_IMAGE_ELEMENT \
-{\
-typedef ImageElement<int> U;\
-bp::implicitly_convertible< Schema &, U>();\
-bp::class_<U>("IMAGE_ELEMENT", bp::init<Schema &>(bp::arg("expected")))\
+#define KARABO_PYTHON_IMAGE_ELEMENT(U)\
 .def("description"\
 , (U & (U::*)(string const &))(&U::description)\
 , bp::arg("desc")\
-, bp::return_internal_reference<> () )\
-.def("displayType"\
-, (U & (U::*)(string const &))(&U::displayType)\
-, bp::arg("type")\
 , bp::return_internal_reference<> () )\
 .def("displayedName"\
 , (U & (U::*)(string const &))(&U::displayedName)\
@@ -486,9 +478,7 @@ bp::class_<U>("IMAGE_ELEMENT", bp::init<Schema &>(bp::arg("expected")))\
 , bp::return_internal_reference<> () )\
 .def("adminAccess", &U::adminAccess\
 , bp::return_internal_reference<> () )\
-.def("commit", (void (U::*)())(&U::commit))\
-;\
-}
+.def("commit", (void (U::*)())(&U::commit))
 
 #endif	/* KARABO_PYKARABO_MACROSFORPYTHON_HH */
 
