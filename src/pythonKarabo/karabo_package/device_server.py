@@ -282,23 +282,30 @@ class DeviceServer(object):
         classid = iter(config).next().getKey()
         self.log.INFO("Trying to start {}...".format(classid))
         self.log.DEBUG("with the following configuration:\n{}".format(config))
-        modified = Hash(config)
-        modified[classid]["serverId"] = self.serverid
-        if "deviceId" in modified[classid]:
-            deviceid = modified[classid]["deviceId"]
+        modified = Hash()
+        modified += config 
+        configuration = modified[classid]
+        #TODO where does the wrong Logger configuration come from
+        # Temporary patch: clean up configuration from the "Logger" entry.
+        if "Logger" in configuration:
+            del configuration["Logger"]
+        configuration["serverId"] = self.serverid
+        if "deviceId" in configuration:
+            deviceid = configuration["deviceId"]
         else:
             deviceid = self._generateDefaultDeviceInstanceId(classid)
-            modified[classid]["deviceId"] = deviceid
+            configuration["deviceId"] = deviceid
         # create temporary instance to check the configuration parameters are valid
         try:
-            configuration = modified[classid]
             pluginDir = self.pluginLoader.getPluginDirectory()
             modname = self.availableDevices[classid]["module"]
             module = __import__(modname)
             UserDevice = getattr(module, classid)
             schema = UserDevice.getSchema(classid)
             validator = Validator()
+            self.log.DEBUG("Trying to validate  the configuration on device server")
             validated = validator.validate(schema, configuration)
+            self.log.DEBUG("Validated configuration is ...\n{}".format(validated))
             launcher = Launcher(pluginDir, modname, classid, modified)
             launcher.start()
             self.deviceInstanceMap[deviceid] = launcher
