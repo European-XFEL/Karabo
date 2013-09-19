@@ -1,6 +1,8 @@
 __author__="Irina Kozlova <irina.kozlova at xfel.eu>"
 __date__ ="$Jul 2, 2013$"
 
+''' @@@Test is commented for now as it is commented in karathon.cc
+    @@@(corresponds to test in karabo: xip_test/Image_Test.cc )
 import unittest
 from karabo.karathon import *
 
@@ -115,3 +117,4 @@ class  Image_TestCase(unittest.TestCase):
     
 if __name__ == '__main__':
     unittest.main()
+'''
