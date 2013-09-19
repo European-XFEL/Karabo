@@ -198,6 +198,7 @@
               <a:requiredAccessLevel>1</a:requiredAccessLevel>
               <a:default>first line,second line</a:default>
               <a:accessType>4</a:accessType>
+              <a:displayType>Curve</a:displayType>
               <a:displayType>VECTOR_STRING</a:displayType>
             </xs:documentation>
           </xs:annotation>
@@ -209,6 +210,7 @@
               <a:requiredAccessLevel>1</a:requiredAccessLevel>
               <a:default>5,15</a:default>
               <a:accessType>4</a:accessType>
+              <a:displayType>Curve</a:displayType>
               <a:displayType>VECTOR_INT32</a:displayType>
               <a:minSize>2</a:minSize>
               <a:maxSize>5</a:maxSize>
