@@ -256,9 +256,9 @@ namespace karabo {
                     this->triggerIOEvent(); // TODO, run this as thread !!!
                 } else { // Data complete on both pots now
                     if (m_updateOnNewInput) {
-                        boost::mutex::scoped_lock lock(m_mutex);
-                        Memory<T>::clearChunk(m_channelId, m_activeChunk);
-                        this->swapBuffers();
+                        m_updateOnNewInput = false;
+                        update();
+                        m_updateOnNewInput = true;
                     }
                 }
 
