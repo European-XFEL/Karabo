@@ -39,9 +39,12 @@ OBJECTFILES= \
 	${OBJECTDIR}/_ext/163556830/DataLoggerDevice.o \
 	${OBJECTDIR}/_ext/163556830/DeviceClient.o \
 	${OBJECTDIR}/_ext/163556830/DeviceServer.o \
+	${OBJECTDIR}/_ext/163556830/FileDataLogger.o \
 	${OBJECTDIR}/_ext/163556830/GuiServerDevice.o \
 	${OBJECTDIR}/_ext/1072794519/BinaryFileInput.o \
 	${OBJECTDIR}/_ext/1072794519/BinaryFileOutput.o \
+	${OBJECTDIR}/_ext/1072794519/CppInputHandler.o \
+	${OBJECTDIR}/_ext/1072794519/CppOutputHandler.o \
 	${OBJECTDIR}/_ext/1072794519/HashBinarySerializer.o \
 	${OBJECTDIR}/_ext/1072794519/HashHdf5Serializer.o \
 	${OBJECTDIR}/_ext/1072794519/HashXmlSerializer.o \
@@ -185,6 +188,11 @@ ${OBJECTDIR}/_ext/163556830/DeviceServer.o: ../../../src/karabo/core/DeviceServe
 	${RM} $@.d
 	$(COMPILE.cc) -O2 -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163556830/DeviceServer.o ../../../src/karabo/core/DeviceServer.cc
 
+${OBJECTDIR}/_ext/163556830/FileDataLogger.o: ../../../src/karabo/core/FileDataLogger.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/163556830
+	${RM} $@.d
+	$(COMPILE.cc) -O2 -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163556830/FileDataLogger.o ../../../src/karabo/core/FileDataLogger.cc
+
 ${OBJECTDIR}/_ext/163556830/GuiServerDevice.o: ../../../src/karabo/core/GuiServerDevice.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/163556830
 	${RM} $@.d
@@ -199,6 +207,16 @@ ${OBJECTDIR}/_ext/1072794519/BinaryFileOutput.o: ../../../src/karabo/io/BinaryFi
 	${MKDIR} -p ${OBJECTDIR}/_ext/1072794519
 	${RM} $@.d
 	$(COMPILE.cc) -O2 -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1072794519/BinaryFileOutput.o ../../../src/karabo/io/BinaryFileOutput.cc
+
+${OBJECTDIR}/_ext/1072794519/CppInputHandler.o: ../../../src/karabo/io/CppInputHandler.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1072794519
+	${RM} $@.d
+	$(COMPILE.cc) -O2 -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1072794519/CppInputHandler.o ../../../src/karabo/io/CppInputHandler.cc
+
+${OBJECTDIR}/_ext/1072794519/CppOutputHandler.o: ../../../src/karabo/io/CppOutputHandler.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1072794519
+	${RM} $@.d
+	$(COMPILE.cc) -O2 -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1072794519/CppOutputHandler.o ../../../src/karabo/io/CppOutputHandler.cc
 
 ${OBJECTDIR}/_ext/1072794519/HashBinarySerializer.o: ../../../src/karabo/io/HashBinarySerializer.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1072794519
@@ -885,6 +903,19 @@ ${OBJECTDIR}/_ext/163556830/DeviceServer_nomain.o: ${OBJECTDIR}/_ext/163556830/D
 	    ${CP} ${OBJECTDIR}/_ext/163556830/DeviceServer.o ${OBJECTDIR}/_ext/163556830/DeviceServer_nomain.o;\
 	fi
 
+${OBJECTDIR}/_ext/163556830/FileDataLogger_nomain.o: ${OBJECTDIR}/_ext/163556830/FileDataLogger.o ../../../src/karabo/core/FileDataLogger.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/163556830
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/163556830/FileDataLogger.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} $@.d;\
+	    $(COMPILE.cc) -O2 -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163556830/FileDataLogger_nomain.o ../../../src/karabo/core/FileDataLogger.cc;\
+	else  \
+	    ${CP} ${OBJECTDIR}/_ext/163556830/FileDataLogger.o ${OBJECTDIR}/_ext/163556830/FileDataLogger_nomain.o;\
+	fi
+
 ${OBJECTDIR}/_ext/163556830/GuiServerDevice_nomain.o: ${OBJECTDIR}/_ext/163556830/GuiServerDevice.o ../../../src/karabo/core/GuiServerDevice.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/163556830
 	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/163556830/GuiServerDevice.o`; \
@@ -922,6 +953,32 @@ ${OBJECTDIR}/_ext/1072794519/BinaryFileOutput_nomain.o: ${OBJECTDIR}/_ext/107279
 	    $(COMPILE.cc) -O2 -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1072794519/BinaryFileOutput_nomain.o ../../../src/karabo/io/BinaryFileOutput.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/1072794519/BinaryFileOutput.o ${OBJECTDIR}/_ext/1072794519/BinaryFileOutput_nomain.o;\
+	fi
+
+${OBJECTDIR}/_ext/1072794519/CppInputHandler_nomain.o: ${OBJECTDIR}/_ext/1072794519/CppInputHandler.o ../../../src/karabo/io/CppInputHandler.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1072794519
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/1072794519/CppInputHandler.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} $@.d;\
+	    $(COMPILE.cc) -O2 -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1072794519/CppInputHandler_nomain.o ../../../src/karabo/io/CppInputHandler.cc;\
+	else  \
+	    ${CP} ${OBJECTDIR}/_ext/1072794519/CppInputHandler.o ${OBJECTDIR}/_ext/1072794519/CppInputHandler_nomain.o;\
+	fi
+
+${OBJECTDIR}/_ext/1072794519/CppOutputHandler_nomain.o: ${OBJECTDIR}/_ext/1072794519/CppOutputHandler.o ../../../src/karabo/io/CppOutputHandler.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1072794519
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/1072794519/CppOutputHandler.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} $@.d;\
+	    $(COMPILE.cc) -O2 -Wall -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1072794519/CppOutputHandler_nomain.o ../../../src/karabo/io/CppOutputHandler.cc;\
+	else  \
+	    ${CP} ${OBJECTDIR}/_ext/1072794519/CppOutputHandler.o ${OBJECTDIR}/_ext/1072794519/CppOutputHandler_nomain.o;\
 	fi
 
 ${OBJECTDIR}/_ext/1072794519/HashBinarySerializer_nomain.o: ${OBJECTDIR}/_ext/1072794519/HashBinarySerializer.o ../../../src/karabo/io/HashBinarySerializer.cc 
