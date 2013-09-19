@@ -8,11 +8,22 @@
 #include <boost/python.hpp>
 
 #include <karabo/xip/RawImageData.hh>
+#include "boost/python/suite/indexing/vector_indexing_suite.hpp"
 
 namespace bp = boost::python;
 using namespace karabo::xip;
 using namespace karabo::util;
 using namespace std;
+
+namespace rawimagedatawrap {
+    
+    bp::object dataPointer(const RawImageData& data) {
+        char* str = data.dataPointer();
+        PyObject* arrObj = PyByteArray_FromStringAndSize(str, data.getByteSize());
+          
+        return bp::object(bp::handle<>(arrObj));
+    }
+}
 
 void exportPyXipRawImageData() {
     
@@ -59,12 +70,22 @@ void exportPyXipRawImageData() {
         .value("MSB", karabo::xip::Endianness::MSB)
         .export_values()
         ;
-
-    bp::class_< RawImageData > r( "RawImageData", bp::init< >() );  
+      
+    //std::vector< char >
+    bp::class_< std::vector< char > > v("vectorchar");
+         v.def( bp::vector_indexing_suite< std::vector< char >, true >() );
+        
+    bp::class_< RawImageData > r( "RawImageData", bp::init< >() );     
         r.def(bp::init< unsigned int, karabo::util::Dims const &, karabo::xip::Encoding::EncodingType, karabo::xip::ChannelSpace::ChannelSpaceType, bp::optional< karabo::util::Hash const &, bool > >(( bp::arg("byteSize"), bp::arg("dimensions"), bp::arg("encoding"), bp::arg("channelSpace"), bp::arg("header")=karabo::util::Hash(), bp::arg("isBigEndian")=(bool const)(karabo::util::isBigEndian()) )) );  
         r.def(bp::init< karabo::util::Hash &, bp::optional< bool > >(( bp::arg("imageHash"), bp::arg("sharesData")=(bool)(false) )) );    
         r.def(bp::init< karabo::xip::RawImageData const & >(( bp::arg("image") )) );   
-
+        
+        r.def("dataPointer", &rawimagedatawrap::dataPointer);
+        
+        //r.def("dataPointer"
+        //    , (char * (RawImageData::*)())(&RawImageData::dataPointer)
+        //    ,  bp::return_value_policy<bp::return_by_value>() ) ;
+        
         r.def("getData"
             , (std::vector< char > const & (RawImageData::* )() const)( &RawImageData::getData)
             , bp::return_value_policy< bp::copy_const_reference >() );
