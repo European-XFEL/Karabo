@@ -13,6 +13,7 @@
 #include <karabo/util/ChoiceElement.hh>
 #include <karabo/util/OverwriteElement.hh>
 #include <karabo/util/PathElement.hh>
+#include <karabo/util/ImageElement.hh>
 #include <karabo/util/InputElement.hh>
 #include <karabo/util/OutputElement.hh>
 #include <karabo/util/Validator.hh>
@@ -1652,6 +1653,17 @@ void exportPyUtilSchema() {
                 ;
     }
 
+    //////////////////////////////////////////////////////////////////////
+    // Binding karabo::util::ImageElement       
+    // In Python : IMAGE_ELEMENT
+
+    {
+        bp::implicitly_convertible< Schema &, ImageElement >();
+        bp::class_<ImageElement>("IMAGE_ELEMENT", bp::init<Schema &>((bp::arg("expected"))))
+            KARABO_PYTHON_IMAGE_ELEMENT(ImageElement)
+        ;
+     }
+    
     //////////////////////////////////////////////////////////////////////
     // Binding karabo::util::InputElement       
     // In Python : INPUT_ELEMENT
