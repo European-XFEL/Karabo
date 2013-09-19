@@ -200,10 +200,10 @@ void Epochstamp_Test::testToFormattedString() {
     std::string timestampReadableStr03 = t01.toFormattedString("%Y/%m/%d");
     CPPUNIT_ASSERT(pReadableTime03 == timestampReadableStr03);
 
-    // Validate "Human Readable" format "%c"
-    std::string pReadableTime04 = "Tue 25 Dec 2012 01:25:36 PM ";
-    std::string timestampReadableStr04 = t01.toFormattedString("%c");
-    CPPUNIT_ASSERT(pReadableTime04 == timestampReadableStr04);
+    // Validate "Human Readable" format "%c" - commented out as it depends on current locale settings
+//    std::string pReadableTime04 = "Tue 25 Dec 2012 01:25:36 PM ";
+//    std::string timestampReadableStr04 = t01.toFormattedString("%c");
+//    CPPUNIT_ASSERT(pReadableTime04 == timestampReadableStr04);
 }
 
 
