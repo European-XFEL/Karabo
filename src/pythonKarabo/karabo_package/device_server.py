@@ -285,10 +285,6 @@ class DeviceServer(object):
         modified = Hash()
         modified += config 
         configuration = modified[classid]
-        #TODO where does the wrong Logger configuration come from
-        # Temporary patch: clean up configuration from the "Logger" entry.
-        if "Logger" in configuration:
-            del configuration["Logger"]
         configuration["serverId"] = self.serverid
         if "deviceId" in configuration:
             deviceid = configuration["deviceId"]
