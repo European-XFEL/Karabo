@@ -230,7 +230,7 @@ class SchemaReader(object):
             if choiceComponent:
                 choiceComponent.addParameters(itemToBeAdded=childItem)
         
-        parentItem.onSetToDefault()
+        #parentItem.onSetToDefault()
         
 
     def _handleListOfNodes(self, key, item):
