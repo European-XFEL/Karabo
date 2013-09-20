@@ -380,7 +380,25 @@ namespace karabo {
 
                 // If there is still some data in the pipe, put it out
                 if (MemoryType::size(m_channelId, m_chunkId) > 0) update();
-
+                
+                // Update sets m_isEndOfStream to false -> we have to set it here, now
+                // It is also needed to switch to synchronous TCP write as we have to know wait until all left data
+                // was sent.
+                m_isEndOfStream = true;
+                
+                // Wait until all queued data is fetched
+                bool doWait = true;
+                while (doWait) {
+                    doWait = false;
+                    for (size_t i = 0; i < m_registeredSharedInputs.size(); ++i) {
+                        if (!m_registeredSharedInputs[i].get<std::deque<int> >("queuedChunks").empty()) {
+                            doWait = true;
+                        }
+                    }
+                    if (!doWait) break;
+                    boost::this_thread::sleep(boost::posix_time::milliseconds(100));
+                }
+                                                
                 for (size_t i = 0; i < m_registeredSharedInputs.size(); ++i) {
                     const karabo::util::Hash& channelInfo = m_registeredSharedInputs[i];
                     const TcpChannelPointer& tcpChannel = channelInfo.get<TcpChannelPointer > ("tcpChannel");
@@ -391,9 +409,7 @@ namespace karabo {
                     const TcpChannelPointer& tcpChannel = channelInfo.get<TcpChannelPointer > ("tcpChannel");
                     tcpChannel->write(karabo::util::Hash("endOfStream", true), std::vector<char>());
                 }
-
-                // End of stream was send
-                m_isEndOfStream = true;
+                
             }
 
             void registerWritersOnChunk() {
@@ -527,15 +543,22 @@ namespace karabo {
             void distributeRemote(const unsigned int& chunkId, const InputChannelInfo & channelInfo) {
 
                 const TcpChannelPointer& tcpChannel = channelInfo.get<TcpChannelPointer > ("tcpChannel");
+                
+                if (m_isEndOfStream) { // write synchronously
+                    karabo::util::Hash header;
+                    std::vector<char> data;
+                    MemoryType::readAsContiguosBlock(data, header, m_channelId, chunkId);
+                    tcpChannel->write(header, data);
+                } else {
 
-                registerAsyncWrite(tcpChannel, chunkId);
-                const std::pair< std::vector<char>, karabo::util::Hash>& entry = getAsyncWriteData(chunkId);
-                KARABO_LOG_FRAMEWORK_DEBUG << "OUTPUT Going to distribute " << entry.first.size() << " bytes of data";
-                KARABO_LOG_FRAMEWORK_DEBUG << "OUTPUT With header: " << entry.second;
-                tcpChannel->writeAsyncHashVector(entry.second, entry.first, boost::bind(&karabo::xms::NetworkOutput<T>::onWriteCompleted, this, _1));
-                //m_activeTcpChannel->write(entry.first, entry.second);
-                //unregisterWriterFromChunk(chunkId);
-
+                    registerAsyncWrite(tcpChannel, chunkId);
+                    const std::pair< std::vector<char>, karabo::util::Hash>& entry = getAsyncWriteData(chunkId);
+                    KARABO_LOG_FRAMEWORK_DEBUG << "OUTPUT Going to distribute " << entry.first.size() << " bytes of data";
+                    KARABO_LOG_FRAMEWORK_DEBUG << "OUTPUT With header: " << entry.second;
+                    tcpChannel->writeAsyncHashVector(entry.second, entry.first, boost::bind(&karabo::xms::NetworkOutput<T>::onWriteCompleted, this, _1));
+                    //m_activeTcpChannel->write(entry.first, entry.second);
+                    //unregisterWriterFromChunk(chunkId);
+                }
             }
 
             void registerAsyncWrite(const TcpChannelPointer& channel, const unsigned int& chunkId) {
@@ -629,12 +652,19 @@ namespace karabo {
             void copyRemote(const unsigned int& chunkId, const InputChannelInfo & channelInfo) {
 
                 const TcpChannelPointer& tcpChannel = channelInfo.get<TcpChannelPointer > ("tcpChannel");
-
-                registerAsyncWrite(tcpChannel, chunkId);
-                const std::pair< std::vector<char>, karabo::util::Hash>& entry = getAsyncWriteData(chunkId);
-                //std::cout << "OUTPUT Going to copy " << entry.first.size() << " bytes of data" << std::endl;
-                //std::cout << "OUTPUT With header: " << entry.second << std::endl;
-                tcpChannel->writeAsyncHashVector(entry.second, entry.first, boost::bind(&karabo::xms::NetworkOutput<T>::onWriteCompleted, this, _1));
+ 
+                if (m_isEndOfStream) { // write synchronously
+                    karabo::util::Hash header;
+                    std::vector<char> data;
+                    MemoryType::readAsContiguosBlock(data, header, m_channelId, chunkId);
+                    tcpChannel->write(header, data);
+                } else {
+                    registerAsyncWrite(tcpChannel, chunkId);
+                    const std::pair< std::vector<char>, karabo::util::Hash>& entry = getAsyncWriteData(chunkId);
+                    KARABO_LOG_FRAMEWORK_DEBUG << "OUTPUT Going to copy " << entry.first.size() << " bytes of data";
+                    KARABO_LOG_FRAMEWORK_DEBUG << "OUTPUT With header: " << entry.second;
+                    tcpChannel->writeAsyncHashVector(entry.second, entry.first, boost::bind(&karabo::xms::NetworkOutput<T>::onWriteCompleted, this, _1));
+                }
             }
         };
 
