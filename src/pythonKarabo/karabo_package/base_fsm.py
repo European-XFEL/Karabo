@@ -53,7 +53,11 @@ class BaseFsm(object):
             except Exception, e:
                 self.errorFound("Exception while processing event '{}'".format("Start state machine"), str(e))
                 return
-            self.onStateUpdate(fsm.get_state())
+            # this is for compatibility with GUI: strip square brackets from state name in case of state machine with regions
+            state = fsm.get_state()
+            if state[0] == '[' and state[len(state)-1] == ']':
+                state = state[1:len(state)-1]
+            self.onStateUpdate(state)
     
     def processEvent(self, event):
         """Process input event, i.e. drive state machine to the next state."""
@@ -66,5 +70,9 @@ class BaseFsm(object):
                 except Exception, e:
                     self.errorFound("Exception while processing event '{}'".format(event.__class__.__name__), str(e))
                     return
-                self.onStateUpdate(fsm.get_state())
+                state = fsm.get_state()
+                # this is for compatibility with GUI: strip square brackets from state name in case of state machine with regions
+                if state[0] == '[' and state[len(state)-1] == ']':
+                    state = state[1:len(state)-1]
+                self.onStateUpdate(state)
     
