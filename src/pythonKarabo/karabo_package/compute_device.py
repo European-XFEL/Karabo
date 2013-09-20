@@ -22,31 +22,31 @@ class ComputeFsm(base.BaseFsm):
         SLOT_ELEMENT(expected).key("start")
                 .displayedName("Compute")
                 .description("Starts computing if data is available")
-                .allowedStates("Ok.Ready")
+                .allowedStates("[Ok:Ready]")
                 .commit()
                 ,
         SLOT_ELEMENT(expected).key("pause")
                 .displayedName("Pause")
                 .description("Will finish current computation and pause")
-                .allowedStates("Ok.Ready")
+                .allowedStates("[Ok:Ready]")
                 .commit()
                 ,
         SLOT_ELEMENT(expected).key("abort")
                 .displayedName("Abort")
                 .description("Abort contribution to this run, fully disconnect")
-                .allowedStates("Ok.Ready Ok.Computing Ok.WaitingIO Ok.Paused")
+                .allowedStates("Ok:Ready Ok:Computing Ok:WaitingIO Ok:Paused")
                 .commit()
                 ,
         SLOT_ELEMENT(expected).key("endOfStream")
                 .displayedName("End-Of-Stream")
                 .description("Completely reset this device")
-                .allowedStates("Ok.Ready")
+                .allowedStates("Ok:Ready")
                 .commit()
                 ,
         SLOT_ELEMENT(expected).key("reset")
                 .displayedName("Reset")
                 .description("Completely reset this device")
-                .allowedStates("Error.Ready Error.Computing Error.WaitingIO Ok.Finished Ok.Aborted")
+                .allowedStates("Error:Ready Error:Computing Error:WaitingIO Ok:Finished Ok:Aborted")
                 .commit()
                 ,
         )
@@ -260,10 +260,12 @@ class PythonComputeDevice(PythonDevice, ComputeFsm):
         )
         
     def KARABO_INPUT_CHANNEL(self, type, name, configuration):
-        return self._ss.createInputChannel(type, name, configuration, self._onInputAvailable, self._onEndOfStream)
+        if type.__name__ == "InputHash":
+            return self._ss.createInputChannelHash(name, configuration, self._onInputAvailable, self._onEndOfStream)
     
     def KARABO_OUTPUT_CHANNEL(self, type, name, configuration):
-        return self._ss.createOutputChannel(type, name, configuration)
+        if type.__name__ == "OutputHash":
+            return self._ss.createOutputChannelHash(name, configuration)
     
     @abstractmethod    
     def compute(self):
@@ -273,11 +275,11 @@ class PythonComputeDevice(PythonDevice, ComputeFsm):
         if self.get("state") == "Ok.Finished" and  not self.get("autoIterate"):
             pass
         else:
-            self.start()
+            self.slotStart()
     
     def _onEndOfStream(self):
         self.nEndOfStreams = self.nEndOfStreams + 1
-        if self.nEndOfStreams >= self._ss.getInputChannels().size():
+        if self.nEndOfStreams >= len(self._ss.getInputChannels()):
             self.nEndOfStreams = 0
             self.isEndOfStream = True
             if self.get("autoEndOfStream"): 
@@ -314,8 +316,8 @@ class PythonComputeDevice(PythonDevice, ComputeFsm):
             self.slotEndOfStream()
         elif self.isAborted:
             self.slotAbort()
-        elif self._ss.getInputChannels().size() > 0 and self.get("autoCompute"):
-            self.start()
+        elif len(self._ss.getInputChannels()) > 0 and self.get("autoCompute"):
+            self.slotStart()
             
     def canCompute(self):
         inputChannels = self._ss.getInputChannels()
