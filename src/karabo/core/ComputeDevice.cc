@@ -68,7 +68,7 @@ namespace karabo {
                     .reconfigurable()
                     .assignmentOptional().defaultValue(true)
                     .commit();
-            
+
             BOOL_ELEMENT(expected).key("autoIterate")
                     .displayedName("Auto iterate")
                     .description("If true, automatically iterates cyclic workflows")
@@ -162,7 +162,9 @@ namespace karabo {
 
 
         void ComputeDevice::readyStateOnEntry() {
-            if (m_isEndOfStream && get<bool>("autoEndOfStream")) this->endOfStream();
+            KARABO_LOG_FRAMEWORK_DEBUG << "isEndOfStream: " << m_isEndOfStream;
+            KARABO_LOG_FRAMEWORK_DEBUG << "canCompute: " << canCompute();
+            if (m_isEndOfStream && get<bool>("autoEndOfStream") && !canCompute()) this->endOfStream();
             else if (m_isAborted) this->abort();
             else if (this->getInputChannels().size() > 0 && this->get<bool>("autoCompute")) this->start();
         }
