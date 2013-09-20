@@ -1,4 +1,3 @@
-
 /*
  * $Id$
  *
@@ -88,6 +87,23 @@ void exportPyXipCpuImage() {
 
     cpuimg.def("getSum", &CpuImageT::getSum);
     cpuimg.def("getMean", &CpuImageT::getMean);
+    
+    // In-Place Construction
+    
+    //CpuImage& assign(const TPix * const dataBuffer, const int dx, const int dy, const int dz)     
+    cpuimg.def("assign"
+                , (CpuImageT & (CpuImageT::*)(T const * const,int const,int const,int const))(&CpuImageT::assign)
+                , ( bp::arg("dataBuffer"), bp::arg("dx"), bp::arg("dy"), bp::arg("dz") )
+                , bp::return_internal_reference<> () );
+    
+    //karabo::xip::CpuImage< T >::read
+     cpuimg.def("read"
+                , (CpuImageT & (CpuImageT::*)(string const &))(&CpuImageT::read)
+                , ( bp::arg("filename") )
+                , bp::return_internal_reference<> () );
+    
 }
 template void exportPyXipCpuImage<int>();
 template void exportPyXipCpuImage<double>();
+template void exportPyXipCpuImage<char>();
+template void exportPyXipCpuImage<float>();
