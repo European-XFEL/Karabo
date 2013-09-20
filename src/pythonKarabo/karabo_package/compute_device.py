@@ -34,19 +34,19 @@ class ComputeFsm(base.BaseFsm):
         SLOT_ELEMENT(expected).key("abort")
                 .displayedName("Abort")
                 .description("Abort contribution to this run, fully disconnect")
-                .allowedStates("Ok:Ready Ok:Computing Ok:WaitingIO Ok:Paused")
+                .allowedStates("[Ok:Ready] [Ok:Computing] [Ok:WaitingIO] [Ok:Paused]")
                 .commit()
                 ,
         SLOT_ELEMENT(expected).key("endOfStream")
                 .displayedName("End-Of-Stream")
                 .description("Completely reset this device")
-                .allowedStates("Ok:Ready")
+                .allowedStates("[Ok:Ready]")
                 .commit()
                 ,
         SLOT_ELEMENT(expected).key("reset")
                 .displayedName("Reset")
                 .description("Completely reset this device")
-                .allowedStates("Error:Ready Error:Computing Error:WaitingIO Ok:Finished Ok:Aborted")
+                .allowedStates("[Error:Ready] [Error:Computing] [Error:WaitingIO] [Ok:Finished] [Ok:Aborted]")
                 .commit()
                 ,
         )
@@ -58,13 +58,13 @@ class ComputeFsm(base.BaseFsm):
         #*                        Events                              *
         #**************************************************************
         KARABO_FSM_EVENT2(self, 'ErrorFoundEvent',       'errorFound')
-        KARABO_FSM_EVENT0(self, 'ResetEvent',            'slotReset')
-        KARABO_FSM_EVENT0(self, "StartEvent",            'slotStart')
-        KARABO_FSM_EVENT0(self, "EndOfStreamEvent",      'slotEndOfStream')
-        KARABO_FSM_EVENT0(self, 'PauseEvent',            'slotPause')
-        KARABO_FSM_EVENT0(self, 'AbortEvent',            'slotAbort')
-        KARABO_FSM_EVENT0(self, 'ComputeFinishedEvent',  'slotComputeFinished')
-        KARABO_FSM_EVENT0(self, 'UpdatedIOEvent',        'slotUpdatedIO')
+        KARABO_FSM_EVENT0(self, 'ResetEvent',            'reset')
+        KARABO_FSM_EVENT0(self, "StartEvent",            'start')
+        KARABO_FSM_EVENT0(self, "EndOfStreamEvent",      'endOfStream')
+        KARABO_FSM_EVENT0(self, 'PauseEvent',            'pause')
+        KARABO_FSM_EVENT0(self, 'AbortEvent',            'abort')
+        KARABO_FSM_EVENT0(self, 'ComputeFinishedEvent',  'computeFinished')
+        KARABO_FSM_EVENT0(self, 'UpdatedIOEvent',        'updatedIO')
 
         #**************************************************************
         #*                        States                              *
@@ -126,13 +126,13 @@ class ComputeFsm(base.BaseFsm):
     
     def initFsmSlots(self, sigslot):
         sigslot.registerSlot(self.errorFound)
-        sigslot.registerSlot(self.slotReset)
-        sigslot.registerSlot(self.slotStart)
-        sigslot.registerSlot(self.slotEndOfStream)
-        sigslot.registerSlot(self.slotPause)
-        sigslot.registerSlot(self.slotAbort)
-        sigslot.registerSlot(self.slotComputeFinished)
-        sigslot.registerSlot(self.slotUpdatedIO)
+        sigslot.registerSlot(self.reset)
+        sigslot.registerSlot(self.start)
+        sigslot.registerSlot(self.endOfStream)
+        sigslot.registerSlot(self.pause)
+        sigslot.registerSlot(self.abort)
+        sigslot.registerSlot(self.computeFinished)
+        sigslot.registerSlot(self.updatedIO)
         
     ########################################################
     #  Guards, Transition Actions, State Machine hooks...  #
@@ -266,7 +266,7 @@ class PythonComputeDevice(PythonDevice, ComputeFsm):
     def KARABO_OUTPUT_CHANNEL(self, type, name, configuration):
         if type.__name__ == "OutputHash":
             return self._ss.createOutputChannelHash(name, configuration)
-    
+        
     @abstractmethod    
     def compute(self):
         ''' Put your specific algorithms here '''
@@ -275,7 +275,7 @@ class PythonComputeDevice(PythonDevice, ComputeFsm):
         if self.get("state") == "Ok.Finished" and  not self.get("autoIterate"):
             pass
         else:
-            self.slotStart()
+            self.start()
     
     def _onEndOfStream(self):
         self.nEndOfStreams = self.nEndOfStreams + 1
@@ -283,7 +283,7 @@ class PythonComputeDevice(PythonDevice, ComputeFsm):
             self.nEndOfStreams = 0
             self.isEndOfStream = True
             if self.get("autoEndOfStream"): 
-                self.slotEndOfStream();
+                self.endOfStream();
     
     def endOfStreamAction(self):
         self.onEndOfStream()
@@ -313,11 +313,11 @@ class PythonComputeDevice(PythonDevice, ComputeFsm):
     
     def readyStateOnEntry(self):
         if self.isEndOfStream and self.get("autoEndOfStream"):
-            self.slotEndOfStream()
+            self.endOfStream()
         elif self.isAborted:
-            self.slotAbort()
+            self.abort()
         elif len(self._ss.getInputChannels()) > 0 and self.get("autoCompute"):
-            self.slotStart()
+            self.start()
             
     def canCompute(self):
         inputChannels = self._ss.getInputChannels()
@@ -337,7 +337,7 @@ class PythonComputeDevice(PythonDevice, ComputeFsm):
             self.compute()
             self.computeLock.release()
             if not self.isAborted:
-                self.slotComputeFinished()
+                self.computeFinished()
         
     def computingStateOnExit(self):
         self.computeLock.acquire(True)
@@ -364,7 +364,7 @@ class PythonComputeDevice(PythonDevice, ComputeFsm):
                 self.errorFound("Exception caught", str(e))
                 return
             self.waitingIOLock.release()
-            self.slotUpdatedIO()
+            self.updatedIO()
             
     def waitingIOOnExit(self):
         self.waitingIOLock.acquire(True)
