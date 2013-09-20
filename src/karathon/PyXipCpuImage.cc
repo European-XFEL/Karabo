@@ -95,6 +95,12 @@ void exportPyXipCpuImage() {
                 , (CpuImageT & (CpuImageT::*)(T const * const,int const,int const,int const))(&CpuImageT::assign)
                 , ( bp::arg("dataBuffer"), bp::arg("dx"), bp::arg("dy"), bp::arg("dz") )
                 , bp::return_internal_reference<> () );
+   
+     //CpuImage& assign(const CpuImage& image, bool isShared = false)    
+     cpuimg.def("assign"
+                , (CpuImageT & (CpuImageT::*)(CpuImageT const &, bool ))(&CpuImageT::assign)
+                , ( bp::arg("image"), bp::arg("isShared")=(bool)(false) )
+                , bp::return_internal_reference<> ());
     
     //karabo::xip::CpuImage< T >::read
      cpuimg.def("read"
