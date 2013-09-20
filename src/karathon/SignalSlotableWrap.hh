@@ -241,73 +241,40 @@ namespace karathon {
             registerReply(reply);
         }
 
-        bp::object createInputChannel(const bp::object& inputType, const std::string& name, const karabo::util::Hash& input,
-                                      const bp::object& onInputAvailableHandler, const bp::object& onEndOfStreamEventHandler) {
+        template <class InputType>
+        boost::shared_ptr<InputType > createInputChannel(const std::string& name, const karabo::util::Hash& input,
+                                                         const bp::object& onInputAvailableHandler, const bp::object& onEndOfStreamEventHandler,
+                                                         const boost::shared_ptr<InputType >&) {
             using namespace karabo::util;
-            if (!PyType_Check(inputType.ptr())) {
-                throw KARABO_PYTHON_EXCEPTION("Argument 'inputType' given in 'createInputChannel(inputType, ...)' must be a class in Python");
-            }
-            if (!PyObject_HasAttrString(inputType.ptr(), "createChoice")) {
-                throw KARABO_PYTHON_EXCEPTION("Class given in 'createInputChannel(inputType, ...)' has no 'createChoice' method");
-            }
 
-            bp::object channel = inputType.attr("createChoice")(name, input);
+            karabo::io::AbstractInput::Pointer channel = InputType::createChoice(name, input);
 
-            if (!PyObject_HasAttrString(channel.ptr(), "setInstanceId")) {
-                throw KARABO_PYTHON_EXCEPTION("createInputChannel(inputType, ...): Instance gotten by 'createChoice' call doesn't have 'setInstanceId' method");
-            }
-            channel.attr("setInstanceId")(m_instanceId);
-            channel.attr("setInputHandlerType")("python");
-
-            if (!PyObject_HasAttrString(channel.ptr(), "registerIOEventHandler")) {
-                throw KARABO_PYTHON_EXCEPTION("createInputChannel(inputType, ...): Instance gotten by 'createChoice' call doesn't have 'registerIOEventHandler' method");
-            }
-            if (!PyObject_HasAttrString(channel.ptr(), "registerEndOfStreamEventHandler")) {
-                throw KARABO_PYTHON_EXCEPTION("createInputChannel(inputType, ...): Instance gotten by 'createChoice' call doesn't have 'registerEndOfStreamEventHandler' method");
-            }
-
+            channel->setInstanceId(m_instanceId);
+            channel->setInputHandlerType("python");
             if (onInputAvailableHandler != bp::object()) {
-                channel.attr("registerIOEventHandler")(onInputAvailableHandler);
+                channel->registerIOEventHandler(onInputAvailableHandler);
             }
-            if (onEndOfStreamEventHandler != bp::object()) {
-                channel.attr("registerEndOfStreamEventHandler")(onEndOfStreamEventHandler);
+            if (!onEndOfStreamEventHandler != bp::object()) {
+                channel->registerEndOfStreamEventHandler(onEndOfStreamEventHandler);
             }
-            if (!bp::extract<karabo::io::AbstractInput::Pointer>(channel).check())
-                throw KARABO_PYTHON_EXCEPTION("createInputChannel(inputType, ...): Instance gotten by 'createChoice' call cannot be converted to AbstractInput::Pointer");
-
-            m_inputChannels[name] = bp::extract<karabo::io::AbstractInput::Pointer>(channel);
-            return channel;
+            m_inputChannels[name] = channel;
+            return boost::static_pointer_cast<InputType >(channel);
         }
 
-        bp::object createOutputChannel(const bp::object outputType, const std::string& name,
-                                       const karabo::util::Hash& input, const bp::object& onOutputPossibleHandler) {
+        template <class OutputType>
+        boost::shared_ptr<OutputType > createOutputChannel(const std::string& name, const karabo::util::Hash& input,
+                                                           const bp::object& onOutputPossibleHandler, const boost::shared_ptr<OutputType>&) {
             using namespace karabo::util;
-            if (!PyType_Check(outputType.ptr())) {
-                throw KARABO_PYTHON_EXCEPTION("Argument 'outputType' given in 'createOutputChannel(outputType, ...)' must be a class in Python");
-            }
-            if (!PyObject_HasAttrString(outputType.ptr(), "createChoice")) {
-                throw KARABO_PYTHON_EXCEPTION("Class given in 'createOutputChannel(outputType, ...)' has no 'createChoice' method");
-            }
 
-            bp::object channel = outputType.attr("createChoice")(name, input);
+            karabo::io::AbstractOutput::Pointer channel = OutputType::createChoice(name, input);
 
-            if (!PyObject_HasAttrString(channel.ptr(), "setInstanceId")) {
-                throw KARABO_PYTHON_EXCEPTION("createOutputChannel(outputType, ...): Instance gotten by 'createChoice' call doesn't have 'setInstanceId' method");
+            channel->setInstanceId(m_instanceId);
+            channel->setOutputHandlerType("python");
+            if (!onOutputPossibleHandler != bp::object()) {
+                channel->registerIOEventHandler(onOutputPossibleHandler);
             }
-            channel.attr("setInstanceId")(m_instanceId);
-            channel.attr("setOutputHandlerType")("python");
-
-            if (!PyObject_HasAttrString(channel.ptr(), "registerIOEventHandler")) {
-                throw KARABO_PYTHON_EXCEPTION("createOutputChannel(outputType, ...): Instance gotten by 'createChoice' call doesn't have 'registerIOEventHandler' method");
-            }
-            if (onOutputPossibleHandler != bp::object()) {
-                channel.attr("registerIOEventHandler")(onOutputPossibleHandler);
-            }
-            if (!bp::extract<karabo::io::AbstractOutput::Pointer>(channel).check())
-                throw KARABO_PYTHON_EXCEPTION("createOutputChannel(outputType, ...): Instance gotten by 'createChoice' call cannot be converted to AbstractOutput::Pointer");
-
-            m_outputChannels[name] = bp::extract<karabo::io::AbstractOutput::Pointer>(channel);
-            return channel;
+            m_outputChannels[name] = channel;
+            return boost::static_pointer_cast<OutputType>(channel);
         }
 
         bp::object getInputChannels() {

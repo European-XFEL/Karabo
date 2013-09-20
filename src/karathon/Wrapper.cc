@@ -138,6 +138,11 @@ namespace karathon {
             any = b;
             return;
         }
+        if (bp::extract<std::vector<std::string> >(obj).check()) {
+            std::vector<std::string> const b = bp::extract<std::vector<std::string> >(obj);
+            any = b;
+            return;
+        }
         if (bp::extract<karabo::util::Hash>(obj).check()) {
             Hash h = bp::extract<Hash>(obj);
             any = h;
