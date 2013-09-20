@@ -42,8 +42,8 @@ namespace karabo {
             /**
              * Default constructor.
              */
-            NetworkInput() {
-            };
+//            NetworkInput() : m_isEndOfStream(false) {
+//            };
 
             virtual ~NetworkInput() {
                 // Close all connections
@@ -107,7 +107,7 @@ namespace karabo {
              * If this object is constructed using the factory/configuration system this method is called
              * @param input Validated (@see expectedParameters) and default-filled configuration
              */
-            NetworkInput(const karabo::util::Hash& config) : karabo::io::Input<T>(config) {
+            NetworkInput(const karabo::util::Hash& config) : karabo::io::Input<T>(config), m_isEndOfStream(false) {
                 parseOutputChannelConfiguration(config);
                 config.get("dataDistribution", m_dataDistribution);
                 config.get("minData", m_minData);
@@ -220,8 +220,10 @@ namespace karabo {
             }
 
             void onTcpChannelRead(karabo::net::Channel::Pointer channel, const karabo::util::Hash& header, const std::vector<char>& data) {
-                //std::cout << "INPUT: Receiving " << data.size() << " bytes of data" << std::endl;
+                 m_isEndOfStream = false;
+                std::cout << "INPUT: Receiving " << data.size() << " bytes of data" << std::endl;
                 if (header.has("endOfStream")) {
+                    m_isEndOfStream = true;
                     //if (this->getMinimumNumberOfData() == 0) this->template triggerIOEvent< karabo::io::Input<T> >();
                     if (this->getMinimumNumberOfData() == 0) this->triggerIOEvent();
                     this->triggerEndOfStreamEvent();
@@ -272,12 +274,19 @@ namespace karabo {
 
             bool canCompute() const {
                 //boost::mutex::scoped_lock lock(m_mutex);
-                //std::cout << "INPUT: Current size of async read data cache: " << Memory<T>::size(m_channelId, m_activeChunk) << std::endl;
+                KARABO_LOG_FRAMEWORK_DEBUG << "INPUT: Current size of async read data cache: " << Memory<T>::size(m_channelId, m_activeChunk);
+                KARABO_LOG_FRAMEWORK_DEBUG << "INPUT: Is end of stream? " << m_isEndOfStream;
+                KARABO_LOG_FRAMEWORK_DEBUG << "INPUT: MinData " << this->getMinimumNumberOfData();
+                
+                if (m_isEndOfStream && (Memory<T>::size(m_channelId, m_activeChunk) == 0)) {
+                    KARABO_LOG_FRAMEWORK_DEBUG << "NO COMPUTING ANYMORE!!!";
+                    return false;
+                }
                 return Memory<T>::size(m_channelId, m_activeChunk) >= this->getMinimumNumberOfData();
             }
 
             void update() {
-
+                
                 if (m_updateOnNewInput) return;
 
                 m_mutex.lock();
@@ -327,6 +336,8 @@ namespace karabo {
 
             TcpConnections m_tcpConnections;
             TcpChannels m_tcpChannels;
+            
+            bool m_isEndOfStream;
 
         private: // functions
 
