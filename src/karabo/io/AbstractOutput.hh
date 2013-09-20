@@ -58,7 +58,6 @@ namespace karabo {
             }
 
             void setOutputHandlerType(const std::string& handlerType) {
-                std::cout << "setOutputHandlerType: " << handlerType << std::endl;
                 std::string capitalType = boost::algorithm::to_upper_copy(handlerType);
                 if (capitalType == "C++")
                     m_handlers = karabo::util::Factory<OutputHandler>::create<AbstractOutput::Pointer>("CppOutputHandler", shared_from_this());

@@ -691,7 +691,6 @@ namespace karabo {
                     channel->registerEndOfStreamEventHandler(onEndOfStreamEventHandler);
                 }
                 m_inputChannels[name] = channel;
-                std::cout << "createInputChannel: channel for name = " << name << " and configuration: \n" << input << std::endl;
                 return boost::static_pointer_cast<InputType >(channel);
             }
             
@@ -705,7 +704,6 @@ namespace karabo {
                     channel->registerIOEventHandler(onOutputPossibleHandler);
                 }
                 m_outputChannels[name] = channel;
-                std::cout << "createOutputChannel: channel for name = " << name << " and configuration: \n" << input << std::endl;
                 return boost::static_pointer_cast<OutputType >(channel);
             }
 

@@ -52,7 +52,6 @@ namespace karabo {
             }
 
             void setInputHandlerType(const std::string& handlerType) {
-                std::cout << "setInputHandlerType: " << handlerType << std::endl;
                 std::string capitalType = boost::algorithm::to_upper_copy(handlerType);
                 if (capitalType == "C++")
                     m_handlers = karabo::util::Factory<InputHandler>::create("CppInputHandler", shared_from_this());
