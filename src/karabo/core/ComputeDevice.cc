@@ -252,5 +252,9 @@ namespace karabo {
         void ComputeDevice::abortedOnEntry() {
             m_isAborted = false;
         }
+        
+        int ComputeDevice::getCurrentIteration() const {
+            return get<int>("iteration");
+        }
     }
 }

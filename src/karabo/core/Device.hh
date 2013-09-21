@@ -51,7 +51,7 @@ namespace karabo {
 
             // TODO
             // Can be removed, if sending current configuration after instantiation by server is deprecated
-            virtual karabo::util::Hash getCurrentConfiguration(const std::string& tags = "") = 0;
+            virtual karabo::util::Hash getCurrentConfiguration(const std::string& tags = "") const = 0;
 
         };
 
@@ -71,9 +71,9 @@ namespace karabo {
             std::string m_deviceId;
 
             std::map<std::string, karabo::util::Schema> m_stateDependendSchema;
-            boost::mutex m_stateDependendSchemaMutex;
+            mutable boost::mutex m_stateDependendSchemaMutex;
 
-            boost::mutex m_objectStateChangeMutex;
+            mutable boost::mutex m_objectStateChangeMutex;
 
             // progressBar related
             int m_progressMin;
@@ -336,7 +336,7 @@ namespace karabo {
              * @return value of the requested parameter
              */
             template <class T>
-            const T& get(const std::string& key, const T& var = T()) {
+            const T& get(const std::string& key, const T& var = T()) const {
                 boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
                 try {
                     return m_parameters.get<T>(key);
@@ -354,7 +354,7 @@ namespace karabo {
              * @return value of the requested parameter
              */
             template <class T>
-            T getAs(const std::string& key) {
+            T getAs(const std::string& key) const {
                 boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
                 try {
                     return m_parameters.getAs<T>(key);
@@ -483,7 +483,7 @@ namespace karabo {
              * @return Aliased representation of the parameter
              */
             template <class AliasType>
-            const AliasType& getAliasFromKey(const std::string& key) {
+            const AliasType& getAliasFromKey(const std::string& key) const {
                 try {
                     return m_fullSchema.getAliasFromKey<AliasType>(key);
                 } catch (const karabo::util::Exception& e) {
@@ -497,7 +497,7 @@ namespace karabo {
              * @return The original name of the parameter
              */
             template <class AliasType>
-            const std::string& getKeyFromAlias(const AliasType& alias) {
+            const std::string& getKeyFromAlias(const AliasType& alias) const {
                 try {
                     return m_fullSchema.getKeyFromAlias(alias);
                 } catch (const karabo::util::Exception& e) {
@@ -512,7 +512,7 @@ namespace karabo {
              * "reconfigurable", "initial" or "monitored",  otherwise false
              */
             template <class T>
-            const bool aliasHasKey(const T& alias) {
+            const bool aliasHasKey(const T& alias) const {
                 return m_fullSchema.aliasHasKey(alias);
             }
 
@@ -521,7 +521,7 @@ namespace karabo {
              * @param key in expectedParameters mapping
              * @return true if the alias exists
              */
-            bool keyHasAlias(const std::string& key) {
+            bool keyHasAlias(const std::string& key) const {
                 return m_fullSchema.keyHasAlias(key);
             }
 
@@ -530,7 +530,7 @@ namespace karabo {
              * @param key A valid parameter of the device (must be defined in the expectedParameters function)
              * @return The enumerated internal reference type of the value
              */
-            karabo::util::Types::ReferenceType getValueType(const std::string& key) {
+            karabo::util::Types::ReferenceType getValueType(const std::string& key) const {
                 return m_fullSchema.getValueType(key);
             }
 
@@ -541,7 +541,7 @@ namespace karabo {
              * @param tags The tags the parameter must carry to be retrieved
              * @return A Hash containing the current value of the selected configuration
              */
-            karabo::util::Hash getCurrentConfiguration(const std::string& tags = "") {
+            karabo::util::Hash getCurrentConfiguration(const std::string& tags = "") const {
                 if (tags.empty()) return m_parameters;
                 boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
                 karabo::util::Hash filtered;

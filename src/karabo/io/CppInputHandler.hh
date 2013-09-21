@@ -38,7 +38,6 @@ namespace karabo {
             }
 
             void triggerIOEvent() {
-                std::cout << "CppInputHandler::triggerIOEvent coming" << std::endl;
                 if (!m_ioEventHandler.empty()) m_ioEventHandler(m_input);
             }
 

@@ -225,11 +225,10 @@ namespace karabo {
 
         void DeviceServer::updateAvailableDevices() {
             vector<string> devices = Configurator<BaseDevice>::getRegisteredClasses();
-
+            KARABO_LOG_INFO << "Updated list of devices available: " << karabo::util::toString(devices);
 
             BOOST_FOREACH(string device, devices) {
                 if (!m_availableDevices.has(device)) {
-                    KARABO_LOG_INFO << "Updated list of devices available: " << karabo::util::toString(devices);
                     Schema schema = BaseDevice::getSchema(device, Schema::AssemblyRules(karabo::util::READ | karabo::util::WRITE | karabo::util::INIT));
                     m_availableDevices.set(device, Hash("mustNotify", true, "xsd", schema));
                 }
