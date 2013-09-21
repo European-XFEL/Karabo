@@ -49,14 +49,21 @@ namespace karabo {
             virtual void compute() = 0;
             
             /**
-             * Override this function for specializing the update behaviors of your IO channels
-             */            
-            virtual void update();
-            
-            /**
              * Override this function for specializing the endOfStream behavior
              */
             virtual void onEndOfStream();
+            
+            /**
+             * Retrieves the current iteration count
+             */
+            int getCurrentIteration() const;
+            
+            /**
+             * Override this function for specializing the update behaviors of your IO channels
+             * Please now what are you doing!
+             */            
+            virtual void update();
+           
             
             void _onInputAvailable(const karabo::io::AbstractInput::Pointer&);
             
