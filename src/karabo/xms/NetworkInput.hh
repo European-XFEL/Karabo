@@ -94,8 +94,8 @@ namespace karabo {
                         .reconfigurable()
                         .commit();
 
-                BOOL_ELEMENT(expected).key("updateOnNewInput")
-                        .displayedName("Update on new input")
+                BOOL_ELEMENT(expected).key("keepDataUntilNew")
+                        .displayedName("Keep data until new")
                         .description("If true, keeps data until new data from an connected output is provided. "
                                      "If new data is available the previous chunk is automatically deleted and the new one is made available for reading")
                         .assignmentOptional().defaultValue(false)
@@ -111,7 +111,7 @@ namespace karabo {
                 parseOutputChannelConfiguration(config);
                 config.get("dataDistribution", m_dataDistribution);
                 config.get("minData", m_minData);
-                config.get("updateOnNewInput", m_updateOnNewInput);
+                config.get("keepDataUntilNew", m_keepDataUntilNew);
                 config.get("onSlowness", m_onSlowness);
 
                 m_channelId = Memory<T>::registerChannel();
@@ -135,7 +135,7 @@ namespace karabo {
                 parseOutputChannelConfiguration(config);
                 if (config.has("dataDistribution")) config.get("dataDistribution", m_dataDistribution);
                 if (config.has("minData")) config.get("minData", m_minData);
-                if (config.has("updateOnNewInput")) config.get("updateOnNewInput", m_updateOnNewInput);
+                if (config.has("keepDataUntilNew")) config.get("keepDataUntilNew", m_keepDataUntilNew);
                 if (config.has("onSlowness")) config.get("onSlowness", m_onSlowness);
             }
 
@@ -224,8 +224,10 @@ namespace karabo {
                 std::cout << "INPUT: Receiving " << data.size() << " bytes of data" << std::endl;
                 if (header.has("endOfStream")) {
                     m_isEndOfStream = true;
-                    //if (this->getMinimumNumberOfData() == 0) this->template triggerIOEvent< karabo::io::Input<T> >();
-                    if (this->getMinimumNumberOfData() == 0) this->triggerIOEvent();
+                    if (this->getMinimumNumberOfData() == 0) {
+                        this->swapBuffers();
+                        this->triggerIOEvent();
+                    }
                     this->triggerEndOfStreamEvent();
                     channel->readAsyncHashVector(boost::bind(&karabo::xms::NetworkInput<T>::onTcpChannelRead, this, _1, _2, _3));
                     return;
@@ -247,7 +249,7 @@ namespace karabo {
                 size_t nActiveData = Memory<T>::size(m_channelId, m_activeChunk);
                 m_mutex.unlock();
                 
-                if (nInactiveData < this->getMinimumNumberOfData()) { // Not enough data, yet
+                if (this->getMinimumNumberOfData() == 0 || (nInactiveData < this->getMinimumNumberOfData())) { // Not enough data, yet
                     KARABO_LOG_FRAMEWORK_DEBUG << "INPUT: can read more data";
                     notifyOutputChannelForPossibleRead(channel);
                 } else if (nActiveData == 0) { // Data complete, second pot still empty
@@ -257,10 +259,10 @@ namespace karabo {
                     //this->template triggerIOEvent< karabo::io::Input<T> >(); // TODO, run this as thread !!!
                     this->triggerIOEvent(); // TODO, run this as thread !!!
                 } else { // Data complete on both pots now
-                    if (m_updateOnNewInput) {
-                        m_updateOnNewInput = false;
+                    if (m_keepDataUntilNew) {
+                        m_keepDataUntilNew = false;
                         update();
-                        m_updateOnNewInput = true;
+                        m_keepDataUntilNew = true;
                     }
                 }
 
@@ -273,21 +275,20 @@ namespace karabo {
             }
 
             bool canCompute() const {
-                //boost::mutex::scoped_lock lock(m_mutex);
-                KARABO_LOG_FRAMEWORK_DEBUG << "INPUT: Current size of async read data cache: " << Memory<T>::size(m_channelId, m_activeChunk);
-                KARABO_LOG_FRAMEWORK_DEBUG << "INPUT: Is end of stream? " << m_isEndOfStream;
-                KARABO_LOG_FRAMEWORK_DEBUG << "INPUT: MinData " << this->getMinimumNumberOfData();
+                //KARABO_LOG_FRAMEWORK_DEBUG << "INPUT: Current size of async read data cache: " << Memory<T>::size(m_channelId, m_activeChunk);
+                //KARABO_LOG_FRAMEWORK_DEBUG << "INPUT: Is end of stream? " << m_isEndOfStream;
+                //KARABO_LOG_FRAMEWORK_DEBUG << "INPUT: MinData " << this->getMinimumNumberOfData();
                 
-                if (m_isEndOfStream && (Memory<T>::size(m_channelId, m_activeChunk) == 0)) {
-                    KARABO_LOG_FRAMEWORK_DEBUG << "NO COMPUTING ANYMORE!!!";
-                    return false;
-                }
+                if (m_isEndOfStream && (Memory<T>::size(m_channelId, m_activeChunk) == 0)) return false;
+                                
+                if (!m_isEndOfStream && (this->getMinimumNumberOfData() == 0)) return false;
+                
                 return Memory<T>::size(m_channelId, m_activeChunk) >= this->getMinimumNumberOfData();
             }
 
             void update() {
                 
-                if (m_updateOnNewInput) return;
+                if (m_keepDataUntilNew) return;
 
                 m_mutex.lock();
                 // Clear active chunk
@@ -320,7 +321,7 @@ namespace karabo {
             std::vector<karabo::util::Hash> m_connectedOutputChannels;
             std::string m_dataDistribution;
             unsigned int m_minData;
-            bool m_updateOnNewInput;
+            bool m_keepDataUntilNew;
             std::string m_onSlowness;
 
             unsigned int m_channelId;

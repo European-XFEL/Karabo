@@ -140,7 +140,7 @@ namespace karabo {
 
         void FileDataLogger::fetchConfiguration(const std::string& deviceId, karabo::util::Hash& configuration) const {
             try {
-                request(deviceId, "slotGetConfiguration").timeout(2000).receive(configuration);
+                request(deviceId, "slotGetConfiguration").timeout(5000).receive(configuration);
             } catch (const TimeoutException&) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Configuration request for device \"" << deviceId << "\" timed out";
                 Exception::clearTrace();
@@ -150,7 +150,7 @@ namespace karabo {
 
         void FileDataLogger::fetchSchema(const std::string& deviceId, karabo::util::Schema& schema) const {
             try {
-                request(deviceId, "slotGetSchema", false).timeout(2000).receive(schema); // Retrieves full schema
+                request(deviceId, "slotGetSchema", false).timeout(5000).receive(schema); // Retrieves full schema
             } catch (const TimeoutException&) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Schema request for device \"" << deviceId << "\" timed out";
                 Exception::clearTrace();
