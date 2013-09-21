@@ -162,8 +162,8 @@ namespace karabo {
 
 
         void ComputeDevice::readyStateOnEntry() {
-            KARABO_LOG_FRAMEWORK_DEBUG << "isEndOfStream: " << m_isEndOfStream;
-            KARABO_LOG_FRAMEWORK_DEBUG << "canCompute: " << canCompute();
+            //KARABO_LOG_FRAMEWORK_DEBUG << "isEndOfStream: " << m_isEndOfStream;
+            //KARABO_LOG_FRAMEWORK_DEBUG << "canCompute: " << canCompute();
             if (m_isEndOfStream && get<bool>("autoEndOfStream") && !canCompute()) this->endOfStream();
             else if (m_isAborted) this->abort();
             else if (this->getInputChannels().size() > 0 && this->get<bool>("autoCompute")) this->start();
