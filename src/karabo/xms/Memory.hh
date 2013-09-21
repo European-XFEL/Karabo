@@ -83,9 +83,9 @@ namespace karabo {
             }
 
             static size_t registerChannel(const std::string& name = "") {
+                boost::mutex::scoped_lock lock(m_accessMutex);
                 for (size_t i = 0; i < m_cache.size(); ++i) { // Find free slot
                     if (m_channelStatus[i] == EMPTY) { // Found a free channel
-                        boost::mutex::scoped_lock lock(m_accessMutex);
                         if (!name.empty()) m_name2Idx[name] = i;
                         m_channelStatus[i] = UNREAD;
                         return i;

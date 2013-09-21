@@ -106,6 +106,7 @@ namespace karabo {
                     m_dataIOService->stop();
                     m_dataThread.join();
                 }
+                MemoryType::clearChannel(m_channelId);
             }
 
             /**
@@ -537,7 +538,7 @@ namespace karabo {
                 // Synchronous write as it takes no time here
                 KARABO_LOG_FRAMEWORK_DEBUG << "OUTPUT Now writing out (local memory)";
                 tcpChannel->write(karabo::util::Hash("channelId", m_channelId, "chunkId", chunkId), std::vector<char>());
-                unregisterWriterFromChunk(chunkId);
+                //unregisterWriterFromChunk(chunkId);
             }
 
             void distributeRemote(const unsigned int& chunkId, const InputChannelInfo & channelInfo) {
@@ -550,14 +551,11 @@ namespace karabo {
                     MemoryType::readAsContiguosBlock(data, header, m_channelId, chunkId);
                     tcpChannel->write(header, data);
                 } else {
-
                     registerAsyncWrite(tcpChannel, chunkId);
                     const std::pair< std::vector<char>, karabo::util::Hash>& entry = getAsyncWriteData(chunkId);
                     KARABO_LOG_FRAMEWORK_DEBUG << "OUTPUT Going to distribute " << entry.first.size() << " bytes of data";
                     KARABO_LOG_FRAMEWORK_DEBUG << "OUTPUT With header: " << entry.second;
                     tcpChannel->writeAsyncHashVector(entry.second, entry.first, boost::bind(&karabo::xms::NetworkOutput<T>::onWriteCompleted, this, _1));
-                    //m_activeTcpChannel->write(entry.first, entry.second);
-                    //unregisterWriterFromChunk(chunkId);
                 }
             }
 
@@ -646,7 +644,6 @@ namespace karabo {
                 // Synchronous write as it takes no time here
                 // Writing no data signals input to read from memory
                 tcpChannel->write(karabo::util::Hash("channelId", m_channelId, "chunkId", chunkId), std::vector<char>());
-                unregisterWriterFromChunk(chunkId);
             }
 
             void copyRemote(const unsigned int& chunkId, const InputChannelInfo & channelInfo) {
