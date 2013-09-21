@@ -84,7 +84,7 @@ namespace karabo {
 
                 UINT32_ELEMENT(expected).key("minData")
                         .displayedName("Minimum number input packets")
-                        .description("The number of elements to be read before any computation is started (0 = all)")
+                        .description("The number of elements to be read before any computation is started (0 = all, -1 = none/any)")
                         .assignmentOptional().defaultValue(1)
                         .reconfigurable()
                         .commit();
@@ -218,7 +218,7 @@ namespace karabo {
                  m_isEndOfStream = false;
                  if (header.has("endOfStream")) {
                     m_isEndOfStream = true;
-                    if (this->getMinimumNumberOfData() == 0) {
+                    if (this->getMinimumNumberOfData() <= 0) {
                         this->swapBuffers();
                         this->triggerIOEvent();
                     }
@@ -243,7 +243,7 @@ namespace karabo {
                 size_t nActiveData = Memory<T>::size(m_channelId, m_activeChunk);
                 m_mutex.unlock();
                 
-                if (this->getMinimumNumberOfData() == 0 || (nInactiveData < this->getMinimumNumberOfData())) { // Not enough data, yet
+                if (this->getMinimumNumberOfData() <= 0 || (nInactiveData < this->getMinimumNumberOfData())) { // Not enough data, yet
                     KARABO_LOG_FRAMEWORK_DEBUG << "INPUT: can read more data";
                     notifyOutputChannelForPossibleRead(channel);
                 } else if (nActiveData == 0) { // Data complete, second pot still empty
@@ -272,10 +272,11 @@ namespace karabo {
                 //KARABO_LOG_FRAMEWORK_DEBUG << "INPUT: Current size of async read data cache: " << Memory<T>::size(m_channelId, m_activeChunk);
                 //KARABO_LOG_FRAMEWORK_DEBUG << "INPUT: Is end of stream? " << m_isEndOfStream;
                 //KARABO_LOG_FRAMEWORK_DEBUG << "INPUT: MinData " << this->getMinimumNumberOfData();
+                if((this->getMinimumNumberOfData() == -1) && !m_isEndOfStream) return true;
                 
                 if (m_isEndOfStream && (Memory<T>::size(m_channelId, m_activeChunk) == 0)) return false;
                                 
-                if (!m_isEndOfStream && (this->getMinimumNumberOfData() == 0)) return false;
+                if (!m_isEndOfStream && (this->getMinimumNumberOfData() <= 0)) return false;
                 
                 return Memory<T>::size(m_channelId, m_activeChunk) >= this->getMinimumNumberOfData();
             }
