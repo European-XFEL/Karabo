@@ -39,12 +39,6 @@ namespace karabo {
 
             KARABO_CLASSINFO(NetworkInput, "Network-" + karabo::io::getIODataType<T>(), "1.0")
 
-            /**
-             * Default constructor.
-             */
-//            NetworkInput() : m_isEndOfStream(false) {
-//            };
-
             virtual ~NetworkInput() {
                 // Close all connections
                 for (TcpConnections::iterator it = m_tcpConnections.begin(); it != m_tcpConnections.end(); ++it) {
@@ -54,6 +48,7 @@ namespace karabo {
                     m_tcpIoService->stop();
                     m_tcpIoServiceThread.join();
                 }
+                MemoryType::clearChannel(m_channelId);
             }
 
             /**
@@ -221,8 +216,7 @@ namespace karabo {
 
             void onTcpChannelRead(karabo::net::Channel::Pointer channel, const karabo::util::Hash& header, const std::vector<char>& data) {
                  m_isEndOfStream = false;
-                std::cout << "INPUT: Receiving " << data.size() << " bytes of data" << std::endl;
-                if (header.has("endOfStream")) {
+                 if (header.has("endOfStream")) {
                     m_isEndOfStream = true;
                     if (this->getMinimumNumberOfData() == 0) {
                         this->swapBuffers();
