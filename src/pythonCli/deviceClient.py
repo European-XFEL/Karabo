@@ -15,6 +15,8 @@ import re
 import time
 import getpass
 import socket
+import datetime
+from threading import Thread
 
 import numpy as np
 
@@ -28,6 +30,8 @@ try:
     from guiqwt.plot import CurveDialog
     from guiqwt.plot import ImageDialog
     from guiqwt.builder import make
+    from PyQt4 import Qwt5
+    from PyQt4 import QtCore
 
 except ImportError:
     print "Missing module (guidata): Interactive image visualization disabled (feature will be enabled later on MacOSX)"
@@ -179,6 +183,23 @@ ip.set_hook('complete_command', auto_complete_instantiate, re_key = '.*killServe
 ip.set_hook('complete_command', auto_complete_instantiate, re_key = '.*getClasses')
 
 
+class DateTimeScaleDraw( Qwt5.Qwt.QwtScaleDraw ):
+        '''Class used to draw a datetime axis on a plot.
+        '''
+        def __init__( self, *args ):
+            Qwt5.Qwt.QwtScaleDraw.__init__( self, *args )
+
+
+        def label( self, value ):
+            '''Function used to create the text of each label
+            used to draw the axis.
+            '''
+            try:
+                dt = datetime.datetime.fromtimestamp( value )
+            except:
+                dt = datetime.datetime.fromtimestamp( 0 )
+            return Qwt5.Qwt.QwtText( '%s' % dt.strftime( '%H:%M:%S' ) )
+
 class DeviceClient(object):
     def __init__(self, connectionType = "Jms", config = Hash()):
         global cpp_client
@@ -198,12 +219,24 @@ class DeviceClient(object):
         # Dict of curveItems
         self.__curveItems = dict()
         
+         # Dict of trendline dialogs
+        self.__trendlineDialogs = dict()
+        
+        # Dict of curveItems
+        self.__trendlineItems = dict()
+        
+        # Dict of trendline data
+        self.__trendlineData = dict()
+        
         # Default colors
         self.__colors = ["red", "green", "blue", "gray", "yellow", "violet", "orange", "lightgreen", "black"]
         
-        # Current color idx
-        self.__colorIdx = 0
-    
+        # Current curve color idx
+        self.__curveColorIdx = 0
+        
+        # Current trendline color idx
+        self.__trendlineColorIdx = 0
+         
               
     def login(self, username, passwordFile = None, provider = "LOCAL"):
         password = None
@@ -413,12 +446,15 @@ class DeviceClient(object):
         if not HAS_GUIDATA: return 
         schema = self.__client.getDeviceSchema(deviceId)
         itemId = deviceId + ":" + key
+        displayType = "Scalar"
+        if (schema.hasDisplayType(key)): displayType = schema.getDisplayType(key)
             
-        if (schema.getDisplayType(key) == "Image"):
+        if (displayType == "Image"):
             image = self.__client.get(deviceId, key)
             if (len(image.get("data")) > 0):
-                if (dialog is None): dialog = ImageDialog(toolbar=True, wintitle=dialogName, options=dict(show_contrast=True))
-                dialog.resize(x, y)
+                if (dialog is None): 
+                    dialog = ImageDialog(toolbar=True, wintitle=dialogName, options=dict(show_contrast=True))
+                    dialog.resize(x, y)
                 imageItem = self._hashImageToGuiqwtImage(image)
                 plot = dialog.get_plot()
                 plot.add_item(imageItem)
@@ -430,16 +466,16 @@ class DeviceClient(object):
                 return dialog
             else:
                 print "WARN: Empty image"
-        elif (schema.getDisplayType(key) == "Curve"):
+        elif (displayType == "Curve"):
             data = self.__client.get(deviceId, key)
             if (len(data) > 0):
                 if (dialog is None): 
                     dialog = CurveDialog(edit=False, toolbar=True, wintitle=dialogName)
                     dialog.get_plot().add_item(make.legend("TR"))
                     dialog.get_itemlist_panel().show()
-                dialog.resize(x, y)
-                curveItem = make.curve(range(0, len(data), 1), data, itemId, color=self.__colors[self.__colorIdx % len(self.__colors)])
-                self.__colorIdx += 1
+                    dialog.resize(x, y)
+                curveItem = make.curve(range(0, len(data), 1), data, itemId, color=self.__colors[self.__curveColorIdx % len(self.__colors)])
+                self.__curveColorIdx += 1
                 plot = dialog.get_plot()
                 plot.add_item(curveItem)
                 dialog.show()
@@ -448,18 +484,56 @@ class DeviceClient(object):
                     self.__curveDialogs[itemId] = dialog
                     self.__client.registerPropertyMonitor(deviceId, key, self._onCurveUpdate)
                 return dialog
-                
+        elif (displayType == "Scalar" and schema.getValueType(key) != krb.Types.STRING):
+            value = self.__client.get(deviceId, key)
+            self.__trendlineData[itemId] = []
+            self.__trendlineData[itemId].append((value, krb.Epochstamp().getSeconds()))
+            if (dialog is None): 
+                dialog = CurveDialog(edit=False, toolbar=True, wintitle=dialogName)
+                dialog.get_itemlist_panel().show()
+                dialog.resize(x, y)
+                plot = dialog.get_plot()
+                plot.add_item(make.legend("TR"))
+                plot.set_antialiasing( True )
+                plot.setAxisTitle(Qwt5.Qwt.QwtPlot.xBottom, "Time")
+                plot.setAxisTitle(Qwt5.Qwt.QwtPlot.yLeft, "Value")    
+                plot.setAxisScaleDraw(Qwt5.Qwt.QwtPlot.xBottom, DateTimeScaleDraw())
+                plot.setAxisAutoScale(Qwt5.Qwt.QwtPlot.yLeft)
+                plot.setAxisLabelRotation( Qwt5.Qwt.QwtPlot.xBottom, -45.0)
+                plot.setAxisLabelAlignment(Qwt5.Qwt.QwtPlot.xBottom, QtCore.Qt.AlignLeft | QtCore.Qt.AlignBottom)
+            trendlineItem = make.curve(map(lambda x: x[ 1 ], self.__trendlineData[itemId] ), map(lambda x: x[ 0 ], self.__trendlineData[itemId]), itemId, color=self.__colors[self.__trendlineColorIdx % len(self.__colors)])
+            self.__trendlineColorIdx += 1
+            plot = dialog.get_plot()
+            plot.add_item(trendlineItem)
+            dialog.show()
+            if monitor:
+                    self.__trendlineItems[itemId] = trendlineItem
+                    self.__trendlineDialogs[itemId] = dialog
+                    self.__client.registerPropertyMonitor(deviceId, key, self._onTrendlineUpdate)                    
+            return dialog
+                                  
             
-                       
     def _hashImageToNumpyImage(self, hashImage):
-        if (hashImage.get("channelSpace") == 16):
+        if (hashImage.get("channelSpace") == krb.f_64_8):
             return np.frombuffer(hashImage.get("data"), dtype=np.double).reshape(hashImage.get("dims"))
-        if (hashImage.get("channelSpace") == 0):
+        if (hashImage.get("channelSpace") == krb.f_32_4):
+            return np.frombuffer(hashImage.get("data"), dtype=np.float).reshape(hashImage.get("dims"))
+        if (hashImage.get("channelSpace") == krb.u_32_4):
+            return np.frombuffer(hashImage.get("data"), dtype=np.uint32).reshape(hashImage.get("dims"))
+        if (hashImage.get("channelSpace") == krb.s_32_4):
+            return np.frombuffer(hashImage.get("data"), dtype=np.int32).reshape(hashImage.get("dims"))
+        if (hashImage.get("channelSpace") == krb.u_16_2):
+            return np.frombuffer(hashImage.get("data"), dtype=np.uint16).reshape(hashImage.get("dims"))
+        if (hashImage.get("channelSpace") == krb.s_16_2):
+            return np.frombuffer(hashImage.get("data"), dtype=np.int16).reshape(hashImage.get("dims"))
+        if (hashImage.get("channelSpace") == krb.u_8_1):
             return np.frombuffer(hashImage.get("data"), dtype=np.uint8).reshape(hashImage.get("dims"))
+        if (hashImage.get("channelSpace") == krb.s_8_1):
+            return np.frombuffer(hashImage.get("data"), dtype=np.int8).reshape(hashImage.get("dims"))
         else:
-            return np.frombuffer(hashImage.get("data"), dtype=np.uint8).reshape(hashImage.get("dims"))
-            
-            
+            return np.frombuffer(hashImage.get("data"), dtype=np.uint8).reshape(hashImage.get("dims")) 
+        
+        
     def _hashImageToGuiqwtImage(self, hashImage):
         # TODO encoding stuff and color images
         data = self._hashImageToNumpyImage(hashImage)
@@ -479,4 +553,13 @@ class DeviceClient(object):
         if (len(data) > 0):
             if self.__curveItems.has_key(itemId):
                 curveItem = self.__curveItems[itemId]
-                curveItem.set_data(range(0, len(data), 1), data)            
+                curveItem.set_data(range(0, len(data), 1), data) 
+                
+                
+    def _onTrendlineUpdate(self, deviceId, key, value, timestamp):
+        itemId = deviceId + ":" + key
+        if self.__trendlineItems.has_key(itemId):
+            self.__trendlineData[itemId].append((value, timestamp.getSeconds()))
+            trendlineItem = self.__trendlineItems[itemId]            
+            trendlineItem.set_data( map( lambda x: x[ 1 ], self.__trendlineData[itemId] ), map( lambda x: x[ 0 ], self.__trendlineData[itemId]))
+            
