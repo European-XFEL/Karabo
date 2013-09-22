@@ -82,6 +82,13 @@ namespace karabo {
                     .readOnly()
                     .initialValue(0)
                     .commit();
+            
+            BOOL_ELEMENT(expected).key("singleEndOfStreamSuffice")
+                    .displayedName("Single EOS suffices")
+                    .description("If true, a single EOS on one input channel will signal EOS on all output channels")
+                    .reconfigurable()
+                    .assignmentOptional().defaultValue(false)
+                    .commit();
         }
 
 
@@ -120,7 +127,7 @@ namespace karabo {
 
         void ComputeDevice::_onEndOfStream() {
             m_nEndOfStreams++;
-            if (m_nEndOfStreams >= this->getInputChannels().size()) {
+            if (m_nEndOfStreams >= this->getInputChannels().size() || get<bool>("singleEndOfStreamSuffice")) {
                 m_nEndOfStreams = 0;
                 m_isEndOfStream = true;
                 if (get<bool>("autoEndOfStream")) this->endOfStream();

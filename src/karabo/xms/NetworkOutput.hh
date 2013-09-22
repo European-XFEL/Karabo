@@ -383,7 +383,7 @@ namespace karabo {
                 if (MemoryType::size(m_channelId, m_chunkId) > 0) update();
                 
                 // Update sets m_isEndOfStream to false -> we have to set it here, now
-                // It is also needed to switch to synchronous TCP write as we have to know wait until all left data
+                // It is also needed to switch to synchronous TCP write as we have to now wait until all left data
                 // was sent.
                 m_isEndOfStream = true;
                 

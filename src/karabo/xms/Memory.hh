@@ -241,8 +241,8 @@ namespace karabo {
             static boost::mutex m_accessMutex;
             static SerializedChannels m_serializedCache;
 
-            static const int MAX_N_CHANNELS = 2048;
-            static const int MAX_N_CHUNKS = 2048;
+            static const int MAX_N_CHANNELS = 64;
+            static const int MAX_N_CHUNKS = 512;
 
             Memory() {
             }
