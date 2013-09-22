@@ -108,11 +108,11 @@ namespace karabo {
             CpuImage(const std::vector<TPix>& dataBuffer, const size_t dx, const size_t dy, const size_t dz) : m_cimg(ci::CImg<TPix>(&dataBuffer[0], dx, dy, dz)) {
             }
 
-            CpuImage(const karabo::util::Hash& header) : m_cimg(ci::CImg<TPix>(header.get<int>("dimX"), header.get<int>("dimY"), header.get<int>("dimZ"))) {
+            CpuImage(const karabo::util::Hash& header) : m_cimg(ci::CImg<TPix>(header.get<int>("__dimX"), header.get<int>("__dimY"), header.get<int>("__dimZ"))) {
                 m_header = header;
             }
 
-            CpuImage(const karabo::util::Hash& header, const TPix& value) : m_cimg(ci::CImg<TPix>(header.get<int>("dimX"), header.get<int>("dimY"), header.get<int>("dimZ"), value)) {
+            CpuImage(const karabo::util::Hash& header, const TPix& value) : m_cimg(ci::CImg<TPix>(header.get<int>("__dimX"), header.get<int>("__dimY"), header.get<int>("__dimZ"), value)) {
                 m_header = header;
             }
 
