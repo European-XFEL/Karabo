@@ -16,6 +16,8 @@ import time
 import getpass
 import socket
 import datetime
+from dateutil import parser
+import pytz
 from threading import Thread
 
 import numpy as np
@@ -229,7 +231,7 @@ class DeviceClient(object):
         self.__trendlineData = dict()
         
         # Default colors
-        self.__colors = ["red", "green", "blue", "gray", "yellow", "violet", "orange", "lightgreen", "black"]
+        self.__colors = ["red", "green", "blue", "gray", "violet", "orange", "lightgreen", "black"]
         
         # Current curve color idx
         self.__curveColorIdx = 0
@@ -331,10 +333,12 @@ class DeviceClient(object):
     
     
     def getFromPast(self, deviceId, propertyName, t0, t1 = None):
-        if t1 is None:
-            return self.__client.getFromPast(deviceId, propertyName, t0)
+        utc_t0 = self._fromTimeStringToUtcString(t0)
+        if t1 is None:            
+            return self.__client.getFromPast(deviceId, propertyName, utc_t0)
         else:
-            return self.__client.getFromPast(deviceId, propertyName, t0, t1)
+            utc_t1 = self._fromTimeStringToUtcString(t1)
+            return self.__client.getFromPast(deviceId, propertyName, utc_t0, utc_t1)
                 
     
     def enableAdvancedMode(self):
@@ -442,7 +446,7 @@ class DeviceClient(object):
         time.sleep(secs)
 
 
-    def show(self, deviceId, key, monitor = True, dialog = None, dialogName = "Karabo Embedded Visualisation", x = 600, y = 600):
+    def show(self, deviceId, key, monitor = True, dialog = None, dialogName = "Karabo Embedded Visualisation", x = None, y = None, t0 = None, t1 = None):
         if not HAS_GUIDATA: return 
         schema = self.__client.getDeviceSchema(deviceId)
         itemId = deviceId + ":" + key
@@ -450,6 +454,8 @@ class DeviceClient(object):
         if (schema.hasDisplayType(key)): displayType = schema.getDisplayType(key)
             
         if (displayType == "Image"):
+            if x is None: x = 600
+            if y is None: y = 600
             image = self.__client.get(deviceId, key)
             if (len(image.get("data")) > 0):
                 if (dialog is None): 
@@ -467,6 +473,8 @@ class DeviceClient(object):
             else:
                 print "WARN: Empty image"
         elif (displayType == "Curve"):
+            if x is None: x = 800
+            if y is None: y = 500
             data = self.__client.get(deviceId, key)
             if (len(data) > 0):
                 if (dialog is None): 
@@ -485,9 +493,9 @@ class DeviceClient(object):
                     self.__client.registerPropertyMonitor(deviceId, key, self._onCurveUpdate)
                 return dialog
         elif (displayType == "Scalar" and schema.getValueType(key) != krb.Types.STRING):
-            value = self.__client.get(deviceId, key)
-            self.__trendlineData[itemId] = []
-            self.__trendlineData[itemId].append((value, krb.Epochstamp().getSeconds()))
+            if x is None: x = 800
+            if y is None: y = 500
+            self._prepareTrendlineData(deviceId, key, t0, t1)
             if (dialog is None): 
                 dialog = CurveDialog(edit=False, toolbar=True, wintitle=dialogName)
                 dialog.get_itemlist_panel().show()
@@ -501,18 +509,38 @@ class DeviceClient(object):
                 plot.setAxisAutoScale(Qwt5.Qwt.QwtPlot.yLeft)
                 plot.setAxisLabelRotation( Qwt5.Qwt.QwtPlot.xBottom, -45.0)
                 plot.setAxisLabelAlignment(Qwt5.Qwt.QwtPlot.xBottom, QtCore.Qt.AlignLeft | QtCore.Qt.AlignBottom)
+                # TODO Add unitSymbol here
             trendlineItem = make.curve(map(lambda x: x[ 1 ], self.__trendlineData[itemId] ), map(lambda x: x[ 0 ], self.__trendlineData[itemId]), itemId, color=self.__colors[self.__trendlineColorIdx % len(self.__colors)])
             self.__trendlineColorIdx += 1
             plot = dialog.get_plot()
             plot.add_item(trendlineItem)
             dialog.show()
-            if monitor:
+            if monitor and (t1 is None):
                     self.__trendlineItems[itemId] = trendlineItem
                     self.__trendlineDialogs[itemId] = dialog
                     self.__client.registerPropertyMonitor(deviceId, key, self._onTrendlineUpdate)                    
             return dialog
                                   
-            
+    
+    def _prepareTrendlineData(self, deviceId, key, t0, t1):        
+        itemId = deviceId + ":" + key
+        self.__trendlineData[itemId] = []
+        if t0 is not None:
+            data = []
+            if t1 is not None:
+                data = self.getFromPast(deviceId, key, t0, t1)
+            else:
+                data = self.getFromPast(deviceId, key, t0)
+            data.reverse()
+            for hash in data:
+                value = hash.get("v")
+                timestamp = krb.Epochstamp.fromHashAttributes(hash.getAttributes("v"))
+                self.__trendlineData[itemId].append((value, timestamp.getSeconds()))
+        else:
+            value = self.__client.get(deviceId, key)
+            self.__trendlineData[itemId].append((value, krb.Epochstamp().getSeconds()))
+                                    
+                        
     def _hashImageToNumpyImage(self, hashImage):
         if (hashImage.get("channelSpace") == krb.f_64_8):
             return np.frombuffer(hashImage.get("data"), dtype=np.double).reshape(hashImage.get("dims"))
@@ -562,4 +590,13 @@ class DeviceClient(object):
             self.__trendlineData[itemId].append((value, timestamp.getSeconds()))
             trendlineItem = self.__trendlineItems[itemId]            
             trendlineItem.set_data( map( lambda x: x[ 1 ], self.__trendlineData[itemId] ), map( lambda x: x[ 0 ], self.__trendlineData[itemId]))
-            
+    
+    
+    def _fromTimeStringToUtcString(self, timestamp):
+        date = parser.parse(timestamp)
+        try:
+            date = date.astimezone(pytz.utc)
+        except:
+            print "Assuming UTC time."
+        return date.isoformat() + ".0"
+        
