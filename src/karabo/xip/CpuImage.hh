@@ -453,15 +453,45 @@ namespace karabo {
                 m_cimg.operator+=(image.getCImg());
                 return *this;
             }
+            
+            /**
+             * Operator-=();
+             */
+            template <typename U>
+            CpuImage<TPix>& operator-=(const U& val) {
+                m_cimg.operator-=(val);
+                return *this;
+            }
+
+            /**
+             * Operator-=().
+             * @param image Another image
+             * @return Image
+             */
+            template <typename U>
+            CpuImage<TPix>& operator-=(const CpuImage<U>& image) {
+                m_cimg.operator-=(image.getCImg());
+                return *this;
+            }
 
             CpuImage& operator++() {
                 m_cimg.operator++();
+                return *this;
+            }
+            
+            CpuImage& operator--() {
+                m_cimg.operator--();
                 return *this;
             }
 
             template <typename U>
             CpuImage< typename ci::cimg::superset<TPix, U>::type > operator+(const U& val) const {
                 return CpuImage< typename ci::cimg::superset<TPix, U>::type > (*this, false) += val;
+            }
+            
+            template <typename U>
+            CpuImage< typename ci::cimg::superset<TPix, U>::type > operator-(const U& val) const {
+                return CpuImage< typename ci::cimg::superset<TPix, U>::type > (*this, false) -= val;
             }
 
             template <class UPix>
