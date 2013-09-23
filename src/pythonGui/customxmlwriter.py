@@ -225,6 +225,14 @@ class CustomXmlWriter(QXmlStreamWriter):
                     self.writeTextElement("widgetFactory", "EditableWidget")
 
             self.writeTextElement("classAlias", component.classAlias)
+            
+            if component.classAlias == "Command":
+                self.writeTextElement("commandText", widgetFactory.widget.text())
+                self.writeTextElement("commandEnabled", QString.number(widgetFactory.widget.isEnabled()))
+                self.writeTextElement("allowedStates", ",".join(widgetFactory.allowedStates))
+                self.writeTextElement("command", widgetFactory.command)
+                 
+            
             keyString = str()
             nbKeys = len(component.keys)
             for i in xrange(nbKeys):
