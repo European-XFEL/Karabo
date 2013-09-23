@@ -270,6 +270,10 @@ class CustomXmlReader(QXmlStreamReader):
         text = None
         classAlias = None
         internalKeys = None
+        allowedStatesS = None
+        commandEnabledS = None
+        command = None
+        commandText = None
         
         while self.atEnd() == False:
             tokenType = self.readNext()
@@ -293,6 +297,18 @@ class CustomXmlReader(QXmlStreamReader):
                 elif tagName == "internalKeys":
                     self.readNext()
                     internalKeys = self.text().toString()
+                elif tagName == "commandEnabled":
+                    self.readNext()
+                    commandEnabledS = self.text().toString()
+                elif tagName == "allowedStates":
+                    self.readNext()
+                    allowedStatesS = self.text().toString()
+                elif tagName == "command":
+                    self.readNext()
+                    command = self.text().toString()
+                elif tagName == "commandText":
+                    self.readNext()
+                    commandText = self.text().toString()
             
             elif tokenType == QXmlStreamReader.EndElement and tagName == "GraphicsItem":
                 break
@@ -310,8 +326,17 @@ class CustomXmlReader(QXmlStreamReader):
                 internalKey = internalKey[0]
 
             # Does key concern state of device?
+            print internalKey
             keys = str(internalKey).split('.configuration.')
+            print keys
             isStateToDisplay = (keys[1] == "state")
+        
+        allowedStates = []
+        if allowedStatesS is not None:
+            allowedStates = str(allowedStatesS).split(',')
+            
+        if commandEnabledS is not None:
+            commandEnabled = (str(commandEnabledS) == '1')
         
         proxyItem = None
         # Create GraphicsProxyWidget
@@ -322,7 +347,11 @@ class CustomXmlReader(QXmlStreamReader):
             proxyItem = GraphicsProxyWidget(self.__view.isDesignMode, label)
             proxyItem.setTransformOriginPoint(proxyItem.boundingRect().center())
         elif componentType == "DisplayComponent":
-            displayComponent = DisplayComponent(classAlias, key=internalKey, widgetFactory=widgetFactory)
+            displayComponent = None
+            if classAlias != "Command":
+                displayComponent = DisplayComponent(classAlias, key=internalKey, widgetFactory=widgetFactory)
+            else:
+                displayComponent = DisplayComponent(classAlias, key=internalKey, command=command, allowedStates=allowedStates, commandText=commandText, commandEnabled=commandEnabled, widgetFactory=widgetFactory)
             displayComponent.widget.setAttribute(Qt.WA_NoSystemBackground, True)
             proxyItem = GraphicsProxyWidget(self.__view.isDesignMode, displayComponent.widget, displayComponent, isStateToDisplay)
             proxyItem.setTransformOriginPoint(proxyItem.boundingRect().center())
