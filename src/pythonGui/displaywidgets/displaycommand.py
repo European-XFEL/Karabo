@@ -85,6 +85,18 @@ class DisplayCommand(DisplayWidget):
     def _getWidget(self):
         return self.__pbCommand
     widget = property(fget=_getWidget)
+    
+    
+    def _getAllowedStates(self):
+        als = []
+        for state in self.__allowedStates:
+            als.append(str(state))
+        return als
+    allowedStates = property(fget=_getAllowedStates)
+    
+    def _getCommand(self):
+        return self.__command
+    command = property(fget=_getCommand)
 
 
     # Returns a tuple of min and max number of associated keys with this component
@@ -113,6 +125,7 @@ class DisplayCommand(DisplayWidget):
 
 
     def valueChanged(self, key, value, timestamp=None):
+       
         pass
 
 
