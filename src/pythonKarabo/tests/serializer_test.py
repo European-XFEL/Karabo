@@ -75,8 +75,32 @@ class  Serializer_TestCase(unittest.TestCase):
             
         except Exception,e:
             self.fail("test_io_saveload_hash exception group 1: " + str(e))
+            
+    def test_io_savetofile_loadfromfile(self):
+        try:
+            h = Hash("a", 10, "b", "Hallo World")
+            saveToFile(h, "/tmp/MyFile.xml", Hash("format.Xml.indentation", 3))
+            
+            h2 = Hash()
+            loadFromFile(h2, "/tmp/MyFile.xml")
+            self.assertEqual(h2['a'], 10)
+            self.assertEqual(h2['b'], "Hallo World")
         
-       
+        except Exception,e:
+            self.fail("test_io_savetofile_loadfromfile exception group 1: " + str(e))   
+        
+        try:
+            h = Hash("a", 10, "b", "Hallo World")
+            saveToFile(h, "/tmp/MyFile.xml", Hash("format.Xml.indentation", 1))
+            
+            h2 = loadFromFile("/tmp/MyFile.xml")
+            self.assertEqual(h2['a'], 10)
+            self.assertEqual(h2['b'], "Hallo World")
+            
+        except Exception,e:
+            self.fail("test_io_savetofile_loadfromfile exception group 2: " + str(e))    
+        
+
 if __name__ == '__main__':
     unittest.main()
 
