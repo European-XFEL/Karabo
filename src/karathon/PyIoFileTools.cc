@@ -114,6 +114,21 @@ namespace karathon {
             self->registerIOEventHandler(handler);
         }
     };
+
+
+    struct loadFromFileWrap{
+        static bp::object loadWrap(const bp::object& fileNameObj, const bp::object& hashObj){
+            if (PyString_Check(fileNameObj.ptr())) {
+                string fileName = bp::extract<string>(fileNameObj);
+                Hash hash = bp::extract<Hash>(hashObj);
+                Hash h = Hash();
+                karabo::io::loadFromFile(h, fileName, hash);
+                return bp::object(h);
+           } else {
+            throw KARABO_PYTHON_EXCEPTION("Python first argument in 'loadFromFile' must be a string, second optional argument is a Hash");
+           }
+        }
+    };
 }
 
 void exportPyIo() {
@@ -168,11 +183,15 @@ void exportPyIoFileTools() {
             , (void (*) (Hash const &, string const &, Hash const &))(&karabo::io::saveToFile)
             , (bp::arg("object"), bp::arg("filename"), bp::arg("config") = karabo::util::Hash())
             );
-
+    
+    bp::def("loadFromFile", &karathon::loadFromFileWrap::loadWrap
+            , (bp::arg("filename"), bp::arg("config") = karabo::util::Hash())
+            );
+    
     bp::def("loadFromFile"
             , (void (*) (Hash &, string const &, Hash const &))(&karabo::io::loadFromFile)
             , (bp::arg("object"), bp::arg("filename"), bp::arg("config") = karabo::util::Hash())
-            );
+            );   
 }
 
 template <class T>
