@@ -150,7 +150,7 @@ namespace karabo {
                 m_chunkId = MemoryType::registerChunk(m_channelId);
 
                 // Data networking
-                int tryAgain = 50; // Try maximum 5 times to start a server
+                int tryAgain = 50; // Try maximum 50 times to start a server
                 while (tryAgain > 0) {
                     try {
                         m_ownPort = Statics::generateServerPort();

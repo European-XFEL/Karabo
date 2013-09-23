@@ -422,7 +422,7 @@ class Network(QObject):
 
 
     def _handleConfigurationChanged(self, headerHash, bodyHash):
-        deviceId = headerHash.get("deviceId")
+        deviceId = headerHash.get("deviceId")        
         Manager().handleConfigurationChanged(deviceId, bodyHash)
         
         

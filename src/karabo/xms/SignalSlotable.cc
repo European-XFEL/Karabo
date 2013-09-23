@@ -1049,11 +1049,7 @@ namespace karabo {
                         int trials = 8;
                         while ((trials--) > 0) {
                             try {
-                                
                                 this->request(instanceId, "slotGetOutputChannelInformation", channelId, static_cast<int> (getpid())).timeout(1000).receive(channelExists, reply);
-                                std::cout<<"INSTANCE ID: "<<instanceId<<std::endl;
-                                std::cout<<"CHANNEL ID: "<<channelId<<std::endl;
-                                std::cout<<reply;
                             } catch (karabo::util::TimeoutException&) {
                                 karabo::util::Exception::clearTrace();
                                 std::cout << "Could not find instanceId \"" + instanceId + "\" for IO connection" << std::endl;

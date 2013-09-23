@@ -381,7 +381,7 @@ namespace karabo {
                     if (it->hasAttribute("image")) {
                         
                         // Create a RawImageData object which shares the data of the hash
-                        karabo::xip::RawImageData img(it->getValue<Hash>());
+                        karabo::xip::RawImageData img(it->getValue<Hash>(), true); // Must share data
 
                         if (img.getDimensions().rank() < 2) continue;
 
@@ -394,6 +394,7 @@ namespace karabo {
                             vector<unsigned char> qtImage(size * 4); // Have to blow up for RGBA
 
                             if (img.getChannelSpace() == ChannelSpace::u_8_1) {
+                                KARABO_LOG_DEBUG << "u_8_1";
                                 unsigned char* data = reinterpret_cast<unsigned char*>(img.dataPointer());
                                 unsigned char pmax = 0, pmin = 0xFF;
                                 for (size_t i = 0; i < size; i++) {
