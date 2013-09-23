@@ -271,7 +271,7 @@ namespace karabo {
                 vector<Hash> tmp = getData(deviceId, key);
                 bool collect = false;
                 bool done = false;
-                bool isLastFlagIsUp = false; // TODO continue here
+                //bool isLastFlagIsUp = false; // TODO continue here
                 for (vector<Hash>::reverse_iterator rit = tmp.rbegin(); rit != tmp.rend(); ++rit) {
                     //KARABO_LOG_FRAMEWORK_DEBUG << *rit;
                     Epochstamp current;
@@ -297,6 +297,7 @@ namespace karabo {
             } catch (Exception& e) {
                 KARABO_LOG_ERROR << e.userFriendlyMsg();
             }
+            return vector<Hash>();
         }
 
 

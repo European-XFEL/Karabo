@@ -450,6 +450,10 @@ class DeviceClient(object):
         if not HAS_GUIDATA: return 
         schema = self.__client.getDeviceSchema(deviceId)
         itemId = deviceId + ":" + key
+        unit = str()
+        if (schema.hasMetricPrefix(key)): unit += schema.getMetricPrefixSymbol(key)
+        if (schema.hasUnit(key)): unit += schema.getUnitSymbol(key)
+        if (len(unit) > 0): unit = " [" + unit + "]"
         displayType = "Scalar"
         if (schema.hasDisplayType(key)): displayType = schema.getDisplayType(key)
             
@@ -482,7 +486,7 @@ class DeviceClient(object):
                     dialog.get_plot().add_item(make.legend("TR"))
                     dialog.get_itemlist_panel().show()
                     dialog.resize(x, y)
-                curveItem = make.curve(range(0, len(data), 1), data, itemId, color=self.__colors[self.__curveColorIdx % len(self.__colors)])
+                curveItem = make.curve(range(0, len(data), 1), data, itemId + unit, color=self.__colors[self.__curveColorIdx % len(self.__colors)])
                 self.__curveColorIdx += 1
                 plot = dialog.get_plot()
                 plot.add_item(curveItem)
@@ -508,9 +512,8 @@ class DeviceClient(object):
                 plot.setAxisScaleDraw(Qwt5.Qwt.QwtPlot.xBottom, DateTimeScaleDraw())
                 plot.setAxisAutoScale(Qwt5.Qwt.QwtPlot.yLeft)
                 plot.setAxisLabelRotation( Qwt5.Qwt.QwtPlot.xBottom, -45.0)
-                plot.setAxisLabelAlignment(Qwt5.Qwt.QwtPlot.xBottom, QtCore.Qt.AlignLeft | QtCore.Qt.AlignBottom)
-                # TODO Add unitSymbol here
-            trendlineItem = make.curve(map(lambda x: x[ 1 ], self.__trendlineData[itemId] ), map(lambda x: x[ 0 ], self.__trendlineData[itemId]), itemId, color=self.__colors[self.__trendlineColorIdx % len(self.__colors)])
+                plot.setAxisLabelAlignment(Qwt5.Qwt.QwtPlot.xBottom, QtCore.Qt.AlignLeft | QtCore.Qt.AlignBottom)                               
+            trendlineItem = make.curve(map(lambda x: x[ 1 ], self.__trendlineData[itemId] ), map(lambda x: x[ 0 ], self.__trendlineData[itemId]), itemId + unit, color=self.__colors[self.__trendlineColorIdx % len(self.__colors)])
             self.__trendlineColorIdx += 1
             plot = dialog.get_plot()
             plot.add_item(trendlineItem)
