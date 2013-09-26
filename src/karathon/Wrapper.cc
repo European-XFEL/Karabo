@@ -85,8 +85,8 @@ namespace karathon {
                 return fromStdVectorToPyList(boost::any_cast < std::vector<std::string> >(operand));
             } else if (operand.type() == typeid (std::vector<karabo::util::Hash>)) {
                 return fromStdVectorToPyHashList(boost::any_cast<std::vector<karabo::util::Hash> >(operand));
-            } else {
-                throw KARABO_PYTHON_EXCEPTION("Failed to convert inner Hash type of python object");
+            } else if (operand.type() == typeid (bp::object) ){
+                return boost::any_cast<bp::object >(operand);
             }
         } catch (const boost::bad_any_cast& e) {
             KARABO_RETHROW_AS(KARABO_CAST_EXCEPTION(e.what()));
@@ -277,7 +277,8 @@ namespace karathon {
                 return;
             }
         }
-        throw KARABO_PYTHON_EXCEPTION("Python type can not be mapped into Hash");
+        any = obj;
+//        throw KARABO_PYTHON_EXCEPTION("Python type can not be mapped into Hash");
     }
 }
 

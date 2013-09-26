@@ -20,36 +20,39 @@ namespace karathon {
 
     public:
 
-        static bp::object getConnection(karabo::net::Channel& channel) {
-            return bp::object(channel.getConnection());
+        static bp::object getConnection(karabo::net::Channel::Pointer channel) {
+            return bp::object(channel->getConnection());
         }
 
-        static size_t readSizeInBytes(karabo::net::Channel& channel) {
+        static size_t readSizeInBytes(karabo::net::Channel::Pointer channel) {
             ScopedGILRelease nogil;
-            return channel.readSizeInBytes();
+            return channel->readSizeInBytes();
         }
 
-        static void read(karabo::net::Channel& channel, bp::object& obj);
-        static void read2(karabo::net::Channel& channel, bp::object& header, bp::object& obj);
-        static void write(karabo::net::Channel& channel, const bp::object& obj);
-        static void write2(karabo::net::Channel& channel, const bp::object& header, const bp::object& obj);
-        static void readAsyncSizeInBytes(karabo::net::Channel& channel, const bp::object& handler);
-        static void readAsyncStr(karabo::net::Channel& channel, bp::object& obj, const bp::object& handler);
-        static void readAsyncHash(karabo::net::Channel& channel, const bp::object& handler);
-        static void readAsyncHashStr(karabo::net::Channel& channel, const bp::object& handler);
-        static void readAsyncHashHash(karabo::net::Channel& channel, const bp::object& handler);
-        static void writeAsyncStr(karabo::net::Channel& channel, const bp::object& data, const bp::object& handler);
-        static void writeAsyncHash(karabo::net::Channel& channel, const bp::object& data, const bp::object& handler);
-        static void writeAsyncHashStr(karabo::net::Channel& channel, const bp::object& hdr, const bp::object& data, const bp::object& handler);
-        static void writeAsyncHashHash(karabo::net::Channel& channel, const bp::object& hdr, const bp::object& data, const bp::object& handler);
-        static void waitAsync(karabo::net::Channel& channel, const bp::object& milliseconds, const bp::object& handler);
-        static void setErrorHandler(karabo::net::Channel& channel, const bp::object& handler);
+        static void read(karabo::net::Channel::Pointer channel, bp::object& obj);
+        static void read2(karabo::net::Channel::Pointer channel, bp::object& header, bp::object& obj);
+        static void write(karabo::net::Channel::Pointer channel, const bp::object& obj);
+        static void write2(karabo::net::Channel::Pointer channel, const bp::object& header, const bp::object& obj);
+        static void readAsyncSizeInBytes(karabo::net::Channel::Pointer channel, const bp::object& handler);
+        static void readAsyncStr(karabo::net::Channel::Pointer channel, bp::object& obj, const bp::object& handler);
+        static void readAsyncHash(karabo::net::Channel::Pointer channel, const bp::object& handler);
+        static void readAsyncHashStr(karabo::net::Channel::Pointer channel, const bp::object& handler);
+        static void readAsyncHashHash(karabo::net::Channel::Pointer channel, const bp::object& handler);
+        static void writeAsyncStr(karabo::net::Channel::Pointer channel, const bp::object& data, const bp::object& handler);
+        static void writeAsyncHash(karabo::net::Channel::Pointer channel, const bp::object& data, const bp::object& handler);
+        static void writeAsyncHashStr(karabo::net::Channel::Pointer channel, const bp::object& hdr, const bp::object& data, const bp::object& handler);
+        static void writeAsyncHashHash(karabo::net::Channel::Pointer channel, const bp::object& hdr, const bp::object& data, const bp::object& handler);
+        static void waitAsync(karabo::net::Channel::Pointer channel, const bp::object& milliseconds, const bp::object& handler);
+        static void setErrorHandler(karabo::net::Channel::Pointer channel, const bp::object& handler);
 
         static size_t id(karabo::net::Channel::Pointer channel) {
             return size_t(&(*channel));
         }
     private:
-        static void registerHandler(karabo::net::Channel& channel, const bp::object& handler);
+        static void registerWaitHandler (karabo::net::Channel::Pointer channel, const bp::object& handler);
+        static void registerReadHandler (karabo::net::Channel::Pointer channel, const bp::object& handler);
+        static void registerWriteHandler(karabo::net::Channel::Pointer channel, const bp::object& handler);
+        static void registerErrorHandler(karabo::net::Channel::Pointer channel, const bp::object& handler);
 
         static void proxyReadSizeInBytesHandler(karabo::net::Channel::Pointer channel, const size_t& size);
         static void proxyReadRawHandler(karabo::net::Channel::Pointer channel);
@@ -67,8 +70,17 @@ namespace karathon {
         }
 
     private:
-        static boost::mutex m_changedChannelHandlersMutex;
-        static std::map<karabo::net::Channel*, karabo::util::Hash> m_channelHandlers;
+//        static boost::mutex m_changedChannelHandlersMutex;
+//        static std::map<karabo::net::Channel*, karabo::util::Hash> m_channelHandlers;
+        
+        static boost::mutex m_changedChannelReadHandlersMutex;
+        static boost::mutex m_changedChannelWriteHandlersMutex;
+        static boost::mutex m_changedChannelErrorHandlersMutex;
+        static boost::mutex m_changedChannelWaitHandlersMutex;
+        static std::map<karabo::net::Channel*, karabo::util::Hash> m_channelReadHandlers;
+        static std::map<karabo::net::Channel*, karabo::util::Hash> m_channelWriteHandlers;
+        static std::map<karabo::net::Channel*, karabo::util::Hash> m_channelErrorHandlers;
+        static std::map<karabo::net::Channel*, karabo::util::Hash> m_channelWaitHandlers;
     };
 
 }
