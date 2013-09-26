@@ -31,6 +31,7 @@ class Server(threading.Thread):
         try:
             #register connect handler for incoming connections
             self.connection.startAsync(self.onConnect)
+            channel.setErrorHandler(self.onError)
             #register read Hash handler for this channel (client)
             channel.readAsyncHash(self.onReadHash)
         except RuntimeError,e:
@@ -65,8 +66,8 @@ class Server(threading.Thread):
 class  P2p_TestCase(unittest.TestCase):
     
     def setUp(self):
-        #start server listening on port 32323
-        self.server = Server(32323)
+        #start server listening on port 32723
+        self.server = Server(32723)
         self.server.start()
         time.sleep(1)
 
@@ -78,7 +79,7 @@ class  P2p_TestCase(unittest.TestCase):
         # Synchronous TCP client
         try:
             #create client connection object
-            connection = Connection.create("Tcp", Hash("type", "client", "hostname", "localhost", "port", 32323))    
+            connection = Connection.create("Tcp", Hash("type", "client", "hostname", "localhost", "port", 32723))    
             #connect to the server
             channel = connection.start()
             print "TCP Sync client open connection: id #", channel.__id__

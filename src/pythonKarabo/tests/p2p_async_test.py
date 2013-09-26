@@ -29,6 +29,7 @@ class Server(threading.Thread):
         try:
             #register connect handler for incoming connections
             self.connection.startAsync(self.onConnect)
+            channel.setErrorHandler(self.onError);
             #register read Hash handler for this channel (client)
             channel.readAsyncHash(self.onReadHash)
         except RuntimeError,e:
