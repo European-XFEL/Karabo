@@ -254,12 +254,11 @@ class  Hash_TestCase(unittest.TestCase):
             self.fail("test_getAs exception group 4: " + str(e))
 
         #TODO
-        #try:
-        #    h = Hash("a", bytearray(['1','2','3','4']))   # value is python bytearray -> std::vector<char>
-        #    self.assertEqual(h.getAs("a", Types.STRING), "1,2,3,4", 'Should return "1,2,3,4" as python string')
-        #    self.assertEqual(h.getAs("a", Types.VECTOR_INT32)[3], 4, "Should return 4")
-        #except Exception,e:
-        #    self.fail("test_getAs exception group 5: " + str(e))
+        try:
+            h = Hash("a", bytearray(['4','4','4']))   # value is python bytearray -> std::vector<char>
+            self.assertEqual(h.getAs("a", Types.STRING), "NDQ0", 'Should return "NDQO" as python string because it assumes vector to contain binary data and does a base64 encode')
+        except Exception,e:
+            self.fail("test_getAs exception group 5: " + str(e))
 
         try:
             h = Hash("a", ['1','2','3','4'])              # value is python list -> std::vector<char>
