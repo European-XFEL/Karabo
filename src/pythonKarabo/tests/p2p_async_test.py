@@ -22,7 +22,8 @@ class Server(threading.Thread):
         print "TCP Async server listening port",port
         
     def onError(self, channel, ec):
-        print "Error #%r => %r  -- close channel: id %r" % (ec.value(), ec.message(), id(channel))
+        if ec.value() != 2:
+            print "Error #%r => %r  -- close channel: id %r" % (ec.value(), ec.message(), id(channel))
         channel.close()
         
     def onConnect(self, channel):
