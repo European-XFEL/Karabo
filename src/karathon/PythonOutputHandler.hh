@@ -40,6 +40,7 @@ namespace karathon {
             }
 
             void triggerIOEvent() {
+                ScopedGILAcquire gil;
                 if (m_ioEventHandler != bp::object())
                     m_ioEventHandler(m_output);
             }
