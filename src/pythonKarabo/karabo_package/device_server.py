@@ -173,6 +173,8 @@ class DeviceServer(object):
         if "connection" in input:
             config["appenders[1].Network.connection"] = input["connection"]
         Logger.configure(config)
+        self.loggerConfiguration = Hash()
+        self.loggerConfiguration += config
     
     def loadPluginLoader(self, input):
         self.pluginLoader = PluginLoader.createNode("PluginLoader", "PythonPluginLoader", input)
@@ -291,6 +293,8 @@ class DeviceServer(object):
         else:
             deviceid = self._generateDefaultDeviceInstanceId(classid)
             configuration["deviceId"] = deviceid
+        # Add logger configuration from DeviceServer:
+        configuration["Logger.priority"] = self.loggerConfiguration["priority"]
         # create temporary instance to check the configuration parameters are valid
         try:
             pluginDir = self.pluginLoader.getPluginDirectory()
