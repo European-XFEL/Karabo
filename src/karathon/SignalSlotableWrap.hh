@@ -74,7 +74,11 @@ namespace karathon {
         }
 
         bp::tuple exists(const std::string& instanceId) {
-            std::pair<bool, std::string> result = SignalSlotable::exists(instanceId);
+            std::pair<bool, std::string> result;
+            {
+                ScopedGILRelease nogil;
+                result = SignalSlotable::exists(instanceId);
+            }
             return bp::make_tuple(result.first, bp::object(result.second));
         }
 
