@@ -19,6 +19,7 @@
 #include "PythonFactoryMacros.hh"
 #include "Wrapper.hh"
 #include "ScopedGILAcquire.hh"
+#include "ScopedGILRelease.hh"
 
 using namespace karabo::util;
 using namespace karabo::io;
@@ -44,7 +45,7 @@ namespace karathon {
         static void setInputHandlerType(AbstractInput::Pointer self, const std::string& type) {
             self->setInputHandlerType(type);
         }
-        
+
         static bool needsDeviceConnection(AbstractInput::Pointer self) {
             return self->needsDeviceConnection();
         }
@@ -54,6 +55,7 @@ namespace karathon {
         }
 
         static void connectNow(AbstractInput::Pointer self, const karabo::util::Hash& config) {
+            ScopedGILRelease nogil;
             self->connectNow(config);
         }
 
@@ -62,10 +64,12 @@ namespace karathon {
         }
 
         static void update(AbstractInput::Pointer self) {
+            ScopedGILRelease nogil;
             self->update();
         }
 
         static void setEndOfStream(AbstractInput::Pointer self) {
+            ScopedGILRelease nogil;
             self->setEndOfStream();
         }
 
@@ -107,6 +111,7 @@ namespace karathon {
         }
 
         static void signalEndOfStream(AbstractOutput::Pointer self) {
+            ScopedGILRelease nogil;
             self->signalEndOfStream();
         }
 
@@ -122,11 +127,14 @@ namespace karathon {
                 string fileName = bp::extract<string>(fileNameObj);
                 Hash hash = bp::extract<Hash>(hashObj);
                 Hash h = Hash();
-                karabo::io::loadFromFile(h, fileName, hash);
+                {
+                    ScopedGILRelease nogil;
+                    karabo::io::loadFromFile(h, fileName, hash);
+                }
                 return bp::object(h);
-           } else {
-            throw KARABO_PYTHON_EXCEPTION("Python first argument in 'loadFromFile' must be a string, second optional argument is a Hash");
-           }
+            } else {
+                throw KARABO_PYTHON_EXCEPTION("Python first argument in 'loadFromFile' must be a string, second optional argument is a Hash");
+            }
         }
     };
 }
@@ -163,7 +171,7 @@ void exportPyIo() {
                 .def("update", &karathon::AbstractOutputWrap::update)
                 .def("signalEndOfStream", &karathon::AbstractOutputWrap::signalEndOfStream)
                 .def("registerIOEventHandler", &karathon::AbstractOutputWrap::registerIOEventHandler, (bp::arg("handler")))
-                 KARABO_PYTHON_FACTORY_CONFIGURATOR(AbstractOutput)
+                KARABO_PYTHON_FACTORY_CONFIGURATOR(AbstractOutput)
                 ;
     }
     {
@@ -183,15 +191,15 @@ void exportPyIoFileTools() {
             , (void (*) (Hash const &, string const &, Hash const &))(&karabo::io::saveToFile)
             , (bp::arg("object"), bp::arg("filename"), bp::arg("config") = karabo::util::Hash())
             );
-    
+
     bp::def("loadFromFile", &karathon::loadFromFileWrap::loadWrap
             , (bp::arg("filename"), bp::arg("config") = karabo::util::Hash())
             );
-    
+
     bp::def("loadFromFile"
             , (void (*) (Hash &, string const &, Hash const &))(&karabo::io::loadFromFile)
             , (bp::arg("object"), bp::arg("filename"), bp::arg("config") = karabo::util::Hash())
-            );   
+            );
 }
 
 template <class T>
