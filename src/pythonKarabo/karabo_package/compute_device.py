@@ -225,6 +225,7 @@ class PythonComputeDevice(PythonDevice, ComputeFsm):
         self.computeThread.join()
         self.waitingIOLock.release()
         self.waitingIOThread.join()
+        super(PythonComputeDevice, self).__del__()
         
     @staticmethod
     def expectedParameters(expected):

@@ -497,6 +497,7 @@ def launchPythonDevice():
     try:
         device = Configurator(PythonDevice).create(classid, configuration)
         device.run()
+        device.__del__()
     except Exception,e:
         print "Exception caught: " + str(e)
     
