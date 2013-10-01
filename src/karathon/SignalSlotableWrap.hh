@@ -258,7 +258,7 @@ namespace karathon {
             if (onInputAvailableHandler != bp::object()) {
                 channel->registerIOEventHandler(onInputAvailableHandler);
             }
-            if (!onEndOfStreamEventHandler != bp::object()) {
+            if (onEndOfStreamEventHandler != bp::object()) {
                 channel->registerEndOfStreamEventHandler(onEndOfStreamEventHandler);
             }
             m_inputChannels[name] = channel;
@@ -274,7 +274,7 @@ namespace karathon {
 
             channel->setInstanceId(m_instanceId);
             channel->setOutputHandlerType("python");
-            if (!onOutputPossibleHandler != bp::object()) {
+            if (onOutputPossibleHandler != bp::object()) {
                 channel->registerIOEventHandler(onOutputPossibleHandler);
             }
             m_outputChannels[name] = channel;

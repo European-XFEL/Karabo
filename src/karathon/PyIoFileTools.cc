@@ -207,16 +207,16 @@ void exportPyIoOutput() {
 
     {//exposing karabo::io::Output<karabo::util::Hash>
         typedef karabo::io::Output<T> SpecificOutput;
-        bp::class_<SpecificOutput, boost::noncopyable >(string("Output" + T::classInfo().getClassName()).c_str(), bp::no_init)
+        bp::class_<SpecificOutput, boost::shared_ptr<SpecificOutput>, boost::noncopyable >(string("Output" + T::classInfo().getClassName()).c_str(), bp::no_init)
                 .def("write"
                      , (void (SpecificOutput::*)(T const &))(&SpecificOutput::write)
                      , (bp::arg("data")))
                 .def("update"
                      , (void (SpecificOutput::*)()) (&SpecificOutput::update))
+                .def("use_count", &boost::shared_ptr<SpecificOutput>::use_count)
 
                 KARABO_PYTHON_FACTORY_CONFIGURATOR(SpecificOutput)
                 ;
-        bp::register_ptr_to_python< boost::shared_ptr<SpecificOutput> >();
     }
 }
 template void exportPyIoOutput<karabo::util::Hash>();
@@ -227,7 +227,7 @@ void exportPyIoInput() {
 
     {//exposing karabo::io::Input<karabo::util::Hash>
         typedef karabo::io::Input<T> SpecificInput;
-        bp::class_<SpecificInput, boost::noncopyable >(string("Input" + T::classInfo().getClassName()).c_str(), bp::no_init)
+        bp::class_<SpecificInput, boost::shared_ptr<SpecificInput>, boost::noncopyable >(string("Input" + T::classInfo().getClassName()).c_str(), bp::no_init)
                 .def("read"
                      , (void (SpecificInput::*)(T &, size_t))(&SpecificInput::read)
                      , (bp::arg("data"), bp::arg("idx") = 0))
@@ -235,10 +235,10 @@ void exportPyIoInput() {
                      , (size_t(SpecificInput::*)() const) (&SpecificInput::size))
                 .def("update"
                      , (void (SpecificInput::*)()) (&SpecificInput::update))
+                .def("use_count", &boost::shared_ptr<SpecificInput>::use_count)
 
                 KARABO_PYTHON_FACTORY_CONFIGURATOR(SpecificInput)
                 ;
-        bp::register_ptr_to_python< boost::shared_ptr<SpecificInput> >();
     }
 }
 template void exportPyIoInput<karabo::util::Hash>();
