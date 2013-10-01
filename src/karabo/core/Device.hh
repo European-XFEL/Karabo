@@ -247,6 +247,9 @@ namespace karabo {
                 // Set encoding
                 raw.setEncoding(karabo::xip::Encoding::GRAY);
 
+                // Set endianness
+                raw.setIsBigEndian(false);
+
                 // Set channel space
                 karabo::xip::ChannelSpaceType channelSpace;
                 Types::ReferenceType type = Types::from<PixelType>();
