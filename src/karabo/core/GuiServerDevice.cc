@@ -376,6 +376,7 @@ namespace karabo {
 
 
         void GuiServerDevice::preprocessImageData(karabo::util::Hash& modified) {
+
             try {
                 for (Hash::iterator it = modified.begin(); it != modified.end(); it++) {
                     if (it->hasAttribute("image")) {
@@ -387,7 +388,6 @@ namespace karabo {
 
                         // Support for grayscale images
                         if (img.getEncoding() == Encoding::GRAY) {
-                            
                             KARABO_LOG_DEBUG << "Preprocessing image";
                             
                             size_t size = img.size();
@@ -405,11 +405,11 @@ namespace karabo {
 
                                 size_t index = 0;
                                 double norm = 1.0;
-                                if (pmax != pmin)
+                                if (pmax > pmin)
                                     norm = (double)0xFF / (pmax-pmin);
                                 for (size_t i = 0; i < size; i++) {
                                     unsigned char pix = 0x7F; // arbitrary
-                                    if (pmax != pmin) // normalization
+                                    if (pmax > pmin) // normalization
                                         pix = static_cast<unsigned char>(norm * (data[i] - pmin));
                                     
                                     qtImage[index++] = pix;
@@ -422,19 +422,20 @@ namespace karabo {
                                 char* data = img.dataPointer();
                                 unsigned char pmax = 0, pmin = 0xFF;
                                 for (size_t i = 0; i < size; i++) {
-                                    unsigned char pix = data[i]+0x80; // back to 0-0xFF range
+                                    unsigned char pix = data[i] + 0x80; // back to 0-0xFF range
                                     if (pmax < pix) pmax = pix;
                                     if (pmin > pix) pmin = pix;
                                 }
+
                                 size_t index = 0;
                                 double norm = 1.0;
-                                if (pmax != pmin)
+                                if (pmax > pmin)
                                     norm = (double)0xFF / (pmax-pmin);
                                 for (size_t i = 0; i < size; i++) {
                                     unsigned char pix = 0x7F; // arbitrary
-                                    if (pmax != pmin) // normalization
-                                        pix = static_cast<unsigned char>(norm * (data[i] - pmin));
-                                    
+                                    if (pmax > pmin) // normalization
+                                        pix = static_cast<unsigned char>(norm * (data[i] + 0x80 - pmin));
+
                                     qtImage[index++] = pix;
                                     qtImage[index++] = pix;
                                     qtImage[index++] = pix;
@@ -445,6 +446,7 @@ namespace karabo {
                             } else if (img.getChannelSpace() == ChannelSpace::u_16_2) {
                                 unsigned short* data = reinterpret_cast<unsigned short*>(img.dataPointer());
                                 unsigned short pmax = 0, pmin = 0xFFFF;
+
                                 if (img.isBigEndian()) {
                                     for (size_t i = 0; i < size; i++) {
                                         data[i] = data[i] << 8 | data[i] >> 8; // swap bytes
@@ -457,13 +459,14 @@ namespace karabo {
                                         if (pmin > data[i]) pmin = data[i];
                                     }
                                 }
+
                                 size_t index = 0;
                                 double norm = 1.0;
-                                if (pmax != pmin)
+                                if (pmax > pmin)
                                     norm = (double)0xFF / (pmax-pmin);
                                 for (size_t i = 0; i < size; i++) {
                                     unsigned char pix = 0x7F; // arbitrary
-                                    if (pmax != pmin) // normalization
+                                    if (pmax > pmin) // normalization
                                         pix = static_cast<unsigned char>(norm * (data[i] - pmin));
 
                                     qtImage[index++] = pix;
@@ -471,32 +474,33 @@ namespace karabo {
                                     qtImage[index++] = pix;
                                     qtImage[index++] = 0xFF;
                                 }
-
-
+				
                             } else if (img.getChannelSpace() == ChannelSpace::s_16_2) {
                                 short* data = reinterpret_cast<short*>(img.dataPointer());
                                 unsigned short pmax = 0, pmin = 0xFFFF;
+
                                 if (img.isBigEndian()) {
                                     for (size_t i = 0; i < size; i++) {
                                         data[i] = data[i] << 8 | data[i] >> 8; // swap bytes
                                         unsigned short pix = data[i] + 0x8000; // go back to 0-0xFFFF range
-                                        if (pmax < data[i]) pmax = pix;
-                                        if (pmin > data[i]) pmin = pix;
+                                        if (pmax < pix) pmax = pix;
+                                        if (pmin > pix) pmin = pix;
                                     }
                                 } else {
                                     for (size_t i = 0; i < size; i++) {
                                         unsigned short pix = data[i] + 0x8000; // go back to 0-0xFFFF range
-                                        if (pmax < data[i]) pmax = pix;
-                                        if (pmin > data[i]) pmin = pix;
+                                        if (pmax < pix) pmax = pix;
+                                        if (pmin > pix) pmin = pix;
                                     }
                                 }
+
                                 size_t index = 0;
                                 double norm = 1.0;
-                                if (pmax != pmin)
+                                if (pmax > pmin)
                                 norm = (double)0xFF / (pmax-pmin);
                                 for (size_t i = 0; i < size; i++) {
                                     unsigned char pix = 0x7F; // arbitrary
-                                    if (pmax != pmin) // normalization
+                                    if (pmax > pmin) // normalization
                                         pix = static_cast<unsigned char>(norm * (data[i] + 0x8000 - pmin));
 
                                     qtImage[index++] = pix;
@@ -509,6 +513,7 @@ namespace karabo {
                             } else if (img.getChannelSpace() == ChannelSpace::u_32_4) {
                                 unsigned int* data = reinterpret_cast<unsigned int*>(img.dataPointer());
                                 unsigned int pmax = 0, pmin = 0xFFFFFFFF;
+
                                 if (img.isBigEndian()) {
                                     for (size_t i = 0; i < size; i++) {
                                         data[i] = ((data[i]<<24)&0xFF000000)
@@ -524,13 +529,14 @@ namespace karabo {
                                         if (pmin > data[i]) pmin = data[i];
                                     }
                                 }
+
                                 size_t index = 0;
                                 double norm = 1.0;
-                                if (pmax != pmin)
+                                if (pmax > pmin)
                                     norm = (double)0xFF / (pmax-pmin);
                                 for (size_t i = 0; i < size; i++) {
                                     unsigned char pix = 0x7F; // arbitrary
-                                    if (pmax != pmin) // normalization
+                                    if (pmax > pmin) // normalization
                                         pix = static_cast<unsigned char>(norm * (data[i] - pmin));
 
                                     qtImage[index++] = pix;
@@ -543,6 +549,7 @@ namespace karabo {
                             } else if (img.getChannelSpace() == ChannelSpace::s_32_4) {
                                 int* data = reinterpret_cast<int*>(img.dataPointer());
                                 unsigned int pmax = 0, pmin = 0xFFFFFFFF;
+
                                 if (img.isBigEndian()) {
                                     for (size_t i = 0; i < size; i++) {
                                         data[i] = ((data[i]<<24)&0xFF000000)
@@ -560,13 +567,14 @@ namespace karabo {
                                         if (pmin > pix) pmin = pix;
                                     }
                                 }
+
                                 size_t index = 0;
                                 double norm = 1.0;
-                                if (pmax != pmin)
+                                if (pmax > pmin)
                                     norm = (double)0xFF / (pmax-pmin);
                                 for (size_t i = 0; i < size; i++) {
                                     unsigned char pix = 0x7F; // arbitrary
-                                    if (pmax != pmin) // normalization
+                                    if (pmax > pmin) // normalization
                                         pix = static_cast<unsigned char>(norm * (data[i] + 0x80000000 - pmin));
 
                                     qtImage[index++] = pix;
@@ -579,6 +587,7 @@ namespace karabo {
                            } else if (img.getChannelSpace() == ChannelSpace::u_64_8) {
                                 unsigned long* data = reinterpret_cast<unsigned long*>(img.dataPointer());
                                 unsigned long pmax = 0, pmin = 0xFFFFFFFFFFFFFFFF;
+
                                 if (img.isBigEndian()) {
                                     for (size_t i = 0; i < size; i++) {
                                         data[i] = ((data[i]<<56)&0xFF00000000000000)
@@ -598,13 +607,14 @@ namespace karabo {
                                         if (pmin > data[i]) pmin = data[i];
                                     }
                                 }
+
                                 size_t index = 0;
                                 double norm = 1.0;
-                                if (pmax != pmin)
+                                if (pmax > pmin)
                                     norm = (double)0xFF / (pmax-pmin);
                                 for (size_t i = 0; i < size; i++) {
                                     unsigned char pix = 0x7F; // arbitrary
-                                    if (pmax != pmin) // normalization
+                                    if (pmax > pmin) // normalization
                                         pix = static_cast<unsigned char>(norm * (data[i] - pmin));
 
                                     qtImage[index++] = pix;
@@ -617,6 +627,7 @@ namespace karabo {
                            } else if (img.getChannelSpace() == ChannelSpace::s_64_8) {
                                 long* data = reinterpret_cast<long*>(img.dataPointer());
                                 unsigned long pmax = 0, pmin = 0xFFFFFFFFFFFFFFFF;
+
                                 if (img.isBigEndian()) {
                                     for (size_t i = 0; i < size; i++) {
                                         data[i] = ((data[i]<<56)&0xFF00000000000000)
@@ -640,11 +651,11 @@ namespace karabo {
                                 }
                                 size_t index = 0;
                                 double norm = 1.0;
-                                if (pmax != pmin)
+                                if (pmax > pmin)
                                     norm = (double)0xFF / (pmax-pmin);
                                 for (size_t i = 0; i < size; i++) {
                                     unsigned char pix = 0x7F; // arbitrary
-                                    if (pmax != pmin) // normalization
+                                    if (pmax > pmin) // normalization
                                         pix = static_cast<unsigned char>(norm * (data[i] + 0x8000000000000000 - pmin));
 
                                     qtImage[index++] = pix;
@@ -664,31 +675,30 @@ namespace karabo {
                                     if (pmin > data[i]) pmin = data[i];
                                 }
 
-                                // TODO: can float images be big endian?
-                                // if (img.isBigEndian()) {
-                                //     for (size_t i = 0; i < size; i++) {
-                                //         unsigned int* data_i = (unsigned int*)(data+i);
-                                //         *data_i = (*data_i<<24)&0xFF000000
-                                //                 + (*data_i<< 8)&0x00FF0000
-                                //                 + (*data_i>> 8)&0x0000FF00
-                                //                 + (*data_i>>24)&0x000000FF;  // swap bytes
-                                //         if (pmax < data[i]) pmax = data[i];
-                                //         if (pmin > data[i]) pmin = data[i];
-                                //     }
-                                // } else {
-                                //     for (size_t i = 0; i < size; i++) {
-                                //         if (pmax < data[i]) pmax = data[i];
-                                //         if (pmin > data[i]) pmin = data[i];
-                                //     }
-                                // }
+                                if (img.isBigEndian()) {
+                                    for (size_t i = 0; i < size; i++) {
+                                        unsigned int* data_i = (unsigned int*)(data+i);
+                                        *data_i = (*data_i<<24)&0xFF000000
+                                                + (*data_i<< 8)&0x00FF0000
+                                                + (*data_i>> 8)&0x0000FF00
+                                                + (*data_i>>24)&0x000000FF;  // swap bytes
+                                        if (pmax < data[i]) pmax = data[i];
+                                        if (pmin > data[i]) pmin = data[i];
+                                    }
+                                } else {
+                                    for (size_t i = 0; i < size; i++) {
+                                        if (pmax < data[i]) pmax = data[i];
+                                        if (pmin > data[i]) pmin = data[i];
+                                    }
+                                }
 
                                 size_t index = 0;
                                 double norm = 1.0;
-                                if (pmax != pmin)
+                                if (pmax > pmin)
                                     norm = (double)0xFF / (pmax-pmin);
                                 for (size_t i = 0; i < size; i++) {
                                     unsigned char pix = 0x7F; // arbitrary
-                                    if (pmax != pmin)
+                                    if (pmax > pmin)
                                         pix = static_cast<unsigned char>(norm * (data[i] - pmin)); // normalization
 
                                     qtImage[index++] = pix;
@@ -708,35 +718,34 @@ namespace karabo {
                                     if (pmin > data[i]) pmin = data[i];
                                 }
 
-                                // TODO: can double images be big endian?
-                                // if (img.isBigEndian()) {
-                                //     for (size_t i = 0; i < size; i++) {
-                                //         unsigned long* data_i = (unsigned long*)(data+i);
-                                //         *data_i = (*data_i<<56)&0xFF00000000000000
-                                //                 + (*data_i<<40)&0x00FF000000000000
-                                //                 + (*data_i<<24)&0x0000FF0000000000
-                                //                 + (*data_i<< 8)&0x000000FF00000000
-                                //                 + (*data_i>> 8)&0x00000000FF000000
-                                //                 + (*data_i>>24)&0x0000000000FF0000
-                                //                 + (*data_i>>40)&0x000000000000FF00
-                                //                 + (*data_i>>56)&0x00000000000000FF;  // swap bytes
-                                //         if (pmax < data[i]) pmax = data[i];
-                                //         if (pmin > data[i]) pmin = data[i];
-                                //     }
-                                // } else {
-                                //     for (size_t i = 0; i < size; i++) {
-                                //         if (pmax < data[i]) pmax = data[i];
-                                //         if (pmin > data[i]) pmin = data[i];
-                                //     }
-                                // }
+                                if (img.isBigEndian()) {
+                                    for (size_t i = 0; i < size; i++) {
+                                        unsigned long* data_i = (unsigned long*)(data+i);
+                                        *data_i = (*data_i<<56)&0xFF00000000000000
+                                                + (*data_i<<40)&0x00FF000000000000
+                                                + (*data_i<<24)&0x0000FF0000000000
+                                                + (*data_i<< 8)&0x000000FF00000000
+                                                + (*data_i>> 8)&0x00000000FF000000
+                                                + (*data_i>>24)&0x0000000000FF0000
+                                                + (*data_i>>40)&0x000000000000FF00
+                                                + (*data_i>>56)&0x00000000000000FF;  // swap bytes
+                                        if (pmax < data[i]) pmax = data[i];
+                                        if (pmin > data[i]) pmin = data[i];
+                                    }
+                                } else {
+                                    for (size_t i = 0; i < size; i++) {
+                                        if (pmax < data[i]) pmax = data[i];
+                                        if (pmin > data[i]) pmin = data[i];
+                                    }
+                                }
 
                                 size_t index = 0;
                                 double norm = 1.0;
-                                if (pmax != pmin)
+                                if (pmax > pmin)
                                     norm = (double)0xFF / (pmax-pmin);
                                 for (size_t i = 0; i < size; i++) {
                                  unsigned char pix = 0x7F; // arbitrary
-                                    if (pmax != pmin) pix = static_cast<unsigned char>(norm * (data[i] - pmin)); // normalization
+                                    if (pmax > pmin) pix = static_cast<unsigned char>(norm * (data[i] - pmin)); // normalization
 
                                     qtImage[index++] = pix;
                                     qtImage[index++] = pix;
