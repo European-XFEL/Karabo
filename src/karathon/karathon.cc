@@ -52,6 +52,7 @@ void exportp2p();
 
 // xip
 //template <class T> void exportPyXipImage();
+void exportPyXipStatistics();
 template <class T> void exportPyXipCpuImage();
 void exportPyXipRawImageData();
 
@@ -104,12 +105,13 @@ BOOST_PYTHON_MODULE(karathon) {
     // xip
     //exportPyXipImage<double>();
     //exportPyXipImage<float>();
+    exportPyXipStatistics();
     exportPyXipCpuImage<int>();
     exportPyXipCpuImage<double>();
     exportPyXipCpuImage<char>();
     exportPyXipCpuImage<unsigned char>();
     exportPyXipCpuImage<float>();
     exportPyXipCpuImage<short>();
-    exportPyXipCpuImage<unsigned short>();
+    exportPyXipCpuImage<unsigned short>();   
     exportPyXipRawImageData();
 }
