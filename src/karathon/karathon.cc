@@ -60,12 +60,12 @@ BOOST_PYTHON_MODULE(karathon) {
     
     // util
     exportPyUtilHash();
-    exportPyUtilSchema();
     exportPyUtilClassInfo();
     exportPyUtilTrainstamp();
     exportPyUtilEpochstamp();
     exportPyUtilTimestamp();
     exportPyUtilDims();
+    exportPyUtilSchema();
     
     // io
     exportPyIo();
