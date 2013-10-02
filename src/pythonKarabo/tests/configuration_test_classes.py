@@ -376,6 +376,12 @@ class TestStruct1(object):
                 .allowedStates("Started, Stopped, Reset")
                 .commit()
                 ,
+        IMAGE_ELEMENT(expected).key("myImageElement")
+                .displayedName("myImage")
+                .description("Image Element")
+                .operatorAccess()
+                .commit()
+                ,
         )
         
 @KARABO_CONFIGURATION_BASE_CLASS
@@ -387,26 +393,29 @@ class SomeClass(object):
         
     @staticmethod
     def expectedParameters(expected):
-        
-        e = INT32_ELEMENT(expected).key("x").alias(10)
-        e.tags("IK,BH")
-        e.displayedName("Xkey").description("Example of X key description")
-        e.options("5, 25, 10")
-        e.minInc(5).maxInc(25).unit(AMPERE).metricPrefix(MILLI)
-        e.assignmentOptional().defaultValue(5)
-        e.init().expertAccess().commit()
-    
-        e = INT32_ELEMENT(expected).key("y").alias('bla')
-        e.tags("CY")
-        e.displayedName("Ykey").description("Example of Y key description")
-        e.options("5, 25, 10")
-        e.minExc(0).maxExc(29).unit(METER).metricPrefix(CENTI)
-        e.assignmentOptional().defaultValue(10)
-        e.init().commit()
-        
-        e = DOUBLE_ELEMENT(expected).key("a")
-        e.readOnly().initialValue(1.11).alarmLow(-22.1).alarmHigh(22.777).warnLow(-5.5).warnHigh(5.5).archivePolicy(EVERY_100MS)
-        e.commit()
+        (
+        INT32_ELEMENT(expected).key("x").alias(10)
+         .tags("IK,BH")
+         .displayedName("Xkey").description("Example of X key description")
+         .options("5, 25, 10")
+         .minInc(5).maxInc(25).unit(AMPERE).metricPrefix(MILLI)
+         .assignmentOptional().defaultValue(5)
+         .init().expertAccess().commit()
+         , 
+        INT32_ELEMENT(expected).key("y").alias('bla')
+         .tags("CY")
+         .displayedName("Ykey").description("Example of Y key description")
+         .options("5, 25, 10")
+         .minExc(0).maxExc(29).unit(METER).metricPrefix(CENTI)
+         .assignmentOptional().defaultValue(10)
+         .init().commit()
+         ,
+        DOUBLE_ELEMENT(expected).key("a")
+         .readOnly().initialValue(1.11).alarmLow(-22.1).alarmHigh(22.777).warnLow(-5.5).warnHigh(5.5).archivePolicy(EVERY_100MS)
+         .commit()
+         ,
+        )
+
     
 @KARABO_CONFIGURATION_BASE_CLASS
 @KARABO_CLASSINFO("Base", "1.0")
