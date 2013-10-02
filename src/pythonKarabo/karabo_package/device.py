@@ -500,4 +500,5 @@ def launchPythonDevice():
         device.__del__()
     except Exception,e:
         print "Exception caught: " + str(e)
+    os._exit(77)
     
