@@ -313,7 +313,7 @@ class  Schema_TestCase(unittest.TestCase):
             self.assertEqual(schema.getDefaultValue("x"), 10)
         except Exception,e:
             self.fail("test_setDefaultValue exception: " + str(e))
-    
+            
     def test_getAllowedStates(self):
         try:
             schema = TestStruct1.getSchema("TestStruct1")
@@ -711,6 +711,39 @@ class  Schema_TestCase(unittest.TestCase):
         #schema = TestStruct1.getSchema("TestStruct1")
         #schema.help()
 
+    def test_schemaImageElement(self):
+        try:
+            schema = Configurator(TestStruct1).getSchema("TestStruct1")
+            self.assertEqual(schema.getDisplayType("myImageElement"), "Image")
+            self.assertEqual(schema.getAccessMode("myImageElement"), AccessType.READ)
+            self.assertEqual(schema.getNodeType("myImageElement"), NodeType.NODE)
+            self.assertEqual(schema.getRequiredAccessLevel("myImageElement"), AccessLevel.OPERATOR) # .operatorAccess()
+            self.assertEqual(schema.getDisplayedName("myImageElement"), "myImage")
+            self.assertEqual(schema.getDescription("myImageElement"), "Image Element")    
+        except Exception,e:
+            self.fail("test_schemaImageElement group 1: " + str(e))
+            
+        try:
+            self.assertEqual(schema.getDescription("myImageElement.data"), "Pixel array")
+            self.assertEqual(schema.getValueType("myImageElement.data"), Types.VECTOR_CHAR)
+            
+            self.assertEqual(schema.getDisplayedName("myImageElement.dims"), "Dimensions")
+            self.assertEqual(schema.getValueType("myImageElement.dims"), Types.VECTOR_UINT32)
+            self.assertEqual(schema.getDisplayType("myImageElement.dims"), "Curve")
+            
+            self.assertEqual(schema.getDisplayedName("myImageElement.encoding"), "Encoding")
+            self.assertEqual(schema.getValueType("myImageElement.encoding"), Types.INT32)
+            
+            self.assertEqual(schema.getDisplayedName("myImageElement.channelSpace"), "Channel space")
+            self.assertEqual(schema.getValueType("myImageElement.channelSpace"), Types.INT32)
+            
+            self.assertEqual(schema.getDisplayedName("myImageElement.isBigEndian"), "Is big endian")
+            self.assertEqual(schema.getValueType("myImageElement.isBigEndian"), Types.BOOL)
+            self.assertEqual(schema.getDefaultValue("myImageElement.isBigEndian"), "0")
+            
+        except Exception,e:
+            self.fail("test_schemaImageElement group 2: " + str(e))
+            
 
 if __name__ == '__main__':
     unittest.main()
