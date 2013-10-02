@@ -178,16 +178,31 @@ class PythonDevice(BaseFsm):
         """
         pars = tuple(args)
         with self._stateChangeLock:
-            # key, value args
-            if len(pars) == 2:
-                key, value = pars
-                pars = (Hash(key, value),)
+            if len(pars) == 0 or len(pars) > 3:
+                raise SyntaxError, "Number of parameters is wrong: from 1 to 3 arguments are allowed."
             
+            # key, value, timestamp args
+            if len(pars) == 3:
+                key, value, stamp = pars
+                if type(stamp) is not Timestamp:
+                    raise TypeError,"The 3rd argument should be Timestamp"
+                pars = tuple([Hash(key, value), stamp])
+            
+            # hash args
             if len(pars) == 1:
-                # hash arg
-                hash = pars[0]
+                h = pars[0]
+                if type(h) is not Hash:
+                    raise TypeError,"The only argument should be a Hash"
+                pars = tuple([h, Timestamp()])   # add timestamp
+            
+            # key, value or hash, timestamp args
+            if len(pars) == 2:
+                if type(pars[0]) is not Hash:
+                    key, value = pars
+                    pars = tuple([Hash(key,value), Timestamp()])
+                hash, stamp = pars
                 try:
-                    validated = self.validatorIntern.validate(self.fullSchema, hash)
+                    validated = self.validatorIntern.validate(self.fullSchema, hash, stamp)
                 except RuntimeError,e:
                     print "Validation Exception (Intern): " + str(e)
                     raise RuntimeError,"Validation Exception: " + str(e)
@@ -204,7 +219,7 @@ class PythonDevice(BaseFsm):
                     self._ss.emit("signalChanged", validated, self.deviceid)
 
     def __setitem__(self, key, value):
-        self.set(key, value)
+        self.set(key, value, Timestamp())
         
     def get(self,key):
         with self._stateChangeLock:
