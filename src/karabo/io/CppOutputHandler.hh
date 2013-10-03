@@ -36,12 +36,13 @@ namespace karabo {
             }
 
             void triggerIOEvent() {
-                if (!m_ioEventHandler.empty())
-                    m_ioEventHandler(m_output);
+                if (!m_ioEventHandler.empty()) {
+                    if (AbstractOutput::Pointer out = m_output.lock()) m_ioEventHandler(out);
+                }
             }
             
         private:
-            AbstractOutput::Pointer m_output;
+            boost::weak_ptr<AbstractOutput> m_output;
             boost::function<void (const AbstractOutput::Pointer&) > m_ioEventHandler;
         };
     }

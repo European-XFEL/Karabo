@@ -38,16 +38,17 @@ namespace karabo {
             }
 
             void triggerIOEvent() {
-                if (!m_ioEventHandler.empty()) m_ioEventHandler(m_input);
+                if (!m_ioEventHandler.empty()) {
+                    if (AbstractInput::Pointer in = m_input.lock()) m_ioEventHandler(in);
+                }
             }
 
             void triggerEndOfStreamEvent() {
-                if (!m_endOfStreamEventHandler.empty())
-                    m_endOfStreamEventHandler();
+                if (!m_endOfStreamEventHandler.empty()) m_endOfStreamEventHandler();
             }
 
         private:
-            AbstractInput::Pointer m_input;
+            boost::weak_ptr<AbstractInput> m_input;
             boost::function<void (const AbstractInput::Pointer&) > m_ioEventHandler;
             boost::function<void() > m_endOfStreamEventHandler;
         };
