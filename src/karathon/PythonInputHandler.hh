@@ -62,8 +62,9 @@ namespace karathon {
 
         void triggerIOEvent() {
             ScopedGILAcquire gil;
-            if (m_ioEventHandler != bp::object())
-                m_ioEventHandler(bp::object(m_input));
+            if (m_ioEventHandler != bp::object()) {
+                if (karabo::io::AbstractInput::Pointer in = m_input.lock()) m_ioEventHandler(bp::object(in));
+            }
         }
 
         void triggerEndOfStreamEvent() {
@@ -73,7 +74,7 @@ namespace karathon {
         }
 
     private:
-        karabo::io::AbstractInput::Pointer m_input;
+        boost::weak_ptr<karabo::io::AbstractInput> m_input;
         bp::object m_ioEventHandler;
         bp::object m_endOfStreamEventHandler;
     };
