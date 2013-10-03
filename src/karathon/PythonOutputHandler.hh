@@ -41,12 +41,13 @@ namespace karathon {
 
             void triggerIOEvent() {
                 ScopedGILAcquire gil;
-                if (m_ioEventHandler != bp::object())
-                    m_ioEventHandler(m_output);
+                if (m_ioEventHandler != bp::object()) {
+                    if (karabo::io::AbstractOutput::Pointer out = m_output.lock()) m_ioEventHandler(out);
+                }
             }
             
         private:
-            karabo::io::AbstractOutput::Pointer m_output;
+            boost::weak_ptr<karabo::io::AbstractOutput> m_output;
             bp::object m_ioEventHandler;
         
     };
