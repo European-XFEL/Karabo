@@ -15,13 +15,14 @@ class Shape(object):
         
     @staticmethod
     def expectedParameters(expected):
-
-        e = BOOL_ELEMENT(expected).key("shadowEnabled")
-        e.description("Shadow enabled")
-        e.displayedName("Shadow")
-        e.assignmentOptional().defaultValue(False)
-        e.init()
-        e.commit()
+        (
+        BOOL_ELEMENT(expected).key("shadowEnabled")
+         .description("Shadow enabled")
+         .displayedName("Shadow")
+         .assignmentOptional().defaultValue(False)
+         .init()
+         .commit(),
+         )
         
     def getConfiguration(self):
         return self.configuration
@@ -39,16 +40,17 @@ class Circle(Shape):
         
     @staticmethod
     def expectedParameters(expected):
-        
-        e = DOUBLE_ELEMENT(expected).key("radius").alias(1)
-        e.description("The radius of the circle")
-        e.displayedName("Radius")
-        e.minExc(0).maxExc(100)
-        e.unit(METER)
-        e.metricPrefix(MILLI)
-        e.assignmentOptional().defaultValue(10)
-        e.init()
-        e.commit()
+        (
+        DOUBLE_ELEMENT(expected).key("radius").alias(1)
+         .description("The radius of the circle")
+         .displayedName("Radius")
+         .minExc(0).maxExc(100)
+         .unit(METER)
+         .metricPrefix(MILLI)
+         .assignmentOptional().defaultValue(10)
+         .init()
+         .commit(),
+        )
         
     def draw(self):
         return self.__class__.__name__
@@ -66,11 +68,12 @@ class EditableCircle(Circle):
         
     @staticmethod
     def expectedParameters(expected):
-        
-        e = OVERWRITE_ELEMENT(expected)
-        e.key("radius")
-        e.setNowReconfigurable()
-        e.commit()
+        (
+        OVERWRITE_ELEMENT(expected)
+         .key("radius")
+         .setNowReconfigurable()
+         .commit(),
+         )
         
     def draw(self):
         return self.__class__.__name__
@@ -87,26 +90,27 @@ class Rectangle(Shape):
     
     @staticmethod
     def expectedParameters(expected):
+        (
+        DOUBLE_ELEMENT(expected).key("a").alias(1)
+         .description("Length of a")
+         .displayedName("A")
+         .minExc(0).maxExc(100)
+         .unit(Unit.METER)
+         .metricPrefix(MetricPrefix.MILLI)
+         .assignmentOptional().defaultValue(10)
+         .init()
+         .commit(),
         
-        e = DOUBLE_ELEMENT(expected).key("a").alias(1)
-        e.description("Length of a")
-        e.displayedName("A")
-        e.minExc(0).maxExc(100)
-        e.unit(Unit.METER)
-        e.metricPrefix(MetricPrefix.MILLI)
-        e.assignmentOptional().defaultValue(10)
-        e.init()
-        e.commit()
-
-        e = DOUBLE_ELEMENT(expected).key("b").alias(1)
-        e.description("Length of b")
-        e.displayedName("B")
-        e.minExc(0).maxExc(100)
-        e.unit(Unit.METER)
-        e.metricPrefix(MetricPrefix.MILLI)
-        e.assignmentOptional().defaultValue(10)
-        e.init()
-        e.commit()
+        DOUBLE_ELEMENT(expected).key("b").alias(1)
+         .description("Length of b")
+         .displayedName("B")
+         .minExc(0).maxExc(100)
+         .unit(Unit.METER)
+         .metricPrefix(MetricPrefix.MILLI)
+         .assignmentOptional().defaultValue(10)
+         .init()
+         .commit(),
+        )
 
     def draw(self):
         return self.__class__.__name
@@ -124,39 +128,40 @@ class GraphicsRenderer(object):
         
     @staticmethod
     def expectedParameters(expected):
-        
-        e = BOOL_ELEMENT(expected).key("antiAlias")
-        e.tags("prop")
-        e.displayedName("Use Anti-Aliasing")
-        e.description("You may switch of for speed")
-        e.assignmentOptional().defaultValue(True)
-        e.init()
-        e.expertAccess()
-        e.commit()
+        (
+        BOOL_ELEMENT(expected).key("antiAlias")
+         .tags("prop")
+         .displayedName("Use Anti-Aliasing")
+         .description("You may switch of for speed")
+         .assignmentOptional().defaultValue(True)
+         .init()
+         .expertAccess()
+         .commit(),
 
-        e = STRING_ELEMENT(expected).key("color")
-        e.tags("prop")
-        e.displayedName("Color")
-        e.options("red,green,blue,orange,black")
-        e.description("The default color for any shape")
-        e.assignmentOptional().defaultValue("red")
-        e.reconfigurable
-        e.commit()
+        STRING_ELEMENT(expected).key("color")
+         .tags("prop")
+         .displayedName("Color")
+         .options("red,green,blue,orange,black")
+         .description("The default color for any shape")
+         .assignmentOptional().defaultValue("red")
+         .reconfigurable()
+         .commit(),
 
-        e = BOOL_ELEMENT(expected).key("bold")
-        e.tags("prop")
-        e.displayedName("Bold")
-        e.description("Toggles bold painting")
-        e.assignmentOptional().defaultValue(False)
-        e.reconfigurable()
-        e.commit()
+        BOOL_ELEMENT(expected).key("bold")
+         .tags("prop")
+         .displayedName("Bold")
+         .description("Toggles bold painting")
+         .assignmentOptional().defaultValue(False)
+         .reconfigurable()
+         .commit(),
 
-        e = CHOICE_ELEMENT(expected).key("shapes")
-        e.description("Some shapes")
-        e.displayedName("Shapes")
-        e.appendNodesOfConfigurationBase(Shape)
-        e.assignmentOptional().defaultValue("Rectangle")
-        e.commit()
+        CHOICE_ELEMENT(expected).key("shapes")
+         .description("Some shapes")
+         .displayedName("Shapes")
+         .appendNodesOfConfigurationBase(Shape)
+         .assignmentOptional().defaultValue("Rectangle")
+         .commit(),
+        )
         
         
 @KARABO_CLASSINFO("GraphicsRenderer1", "1.0")    
@@ -164,67 +169,68 @@ class GraphicsRenderer1(object):
     
     @staticmethod
     def expectedParameters(expected):
-        
-        e = BOOL_ELEMENT(expected).key("antiAlias")
-        e.tags("prop")
-        e.displayedName("Use Anti-Aliasing")
-        e.description("You may switch of for speed")
-        e.assignmentOptional().defaultValue(True)
-        e.init()
-        e.expertAccess()
-        e.commit()
+        (
+        BOOL_ELEMENT(expected).key("antiAlias")
+         .tags("prop")
+         .displayedName("Use Anti-Aliasing")
+         .description("You may switch of for speed")
+         .assignmentOptional().defaultValue(True)
+         .init()
+         .expertAccess()
+         .commit(),
 
-        e = STRING_ELEMENT(expected).key("color")
-        e.tags("prop")
-        e.displayedName("Color")
-        e.description("The default color for any shape")
-        e.assignmentOptional().defaultValue("red")
-        e.reconfigurable()
-        e.commit()
+        STRING_ELEMENT(expected).key("color")
+         .tags("prop")
+         .displayedName("Color")
+         .description("The default color for any shape")
+         .assignmentOptional().defaultValue("red")
+         .reconfigurable()
+         .commit(),
 
-        e = BOOL_ELEMENT(expected).key("bold")
-        e.tags("prop")
-        e.displayedName("Bold")
-        e.description("Toggles bold painting")
-        e.assignmentOptional().defaultValue(False)
-        e.reconfigurable()
-        e.commit()
+        BOOL_ELEMENT(expected).key("bold")
+         .tags("prop")
+         .displayedName("Bold")
+         .description("Toggles bold painting")
+         .assignmentOptional().defaultValue(False)
+         .reconfigurable()
+         .commit(),
 
-        e = CHOICE_ELEMENT(expected).key("shapes")
-        e.assignmentOptional().defaultValue("circle")
-        e.commit()
+        CHOICE_ELEMENT(expected).key("shapes")
+         .assignmentOptional().defaultValue("circle")
+         .commit(),
 
-        e = NODE_ELEMENT(expected).key("shapes.circle")
-        e.tags("shape")
-        e.displayedName("Circle")
-        e.description("A circle")
-        e.appendParametersOf(Circle)
-        e.commit()
+        NODE_ELEMENT(expected).key("shapes.circle")
+         .tags("shape")
+         .displayedName("Circle")
+         .description("A circle")
+         .appendParametersOf(Circle)
+         .commit(),
 
-        e = NODE_ELEMENT(expected).key("shapes.rectangle")
-        e.tags("shape")
-        e.displayedName("Rectangle")
-        e.description("A rectangle")
-        e.commit()
+        NODE_ELEMENT(expected).key("shapes.rectangle")
+         .tags("shape")
+         .displayedName("Rectangle")
+         .description("A rectangle")
+         .commit(),
 
-        e = DOUBLE_ELEMENT(expected).key("shapes.rectangle.b")
-        e.description("Rectangle side - b")
-        e.displayedName("Side B")
-        e.assignmentOptional().defaultValue(10)
-        e.init()
-        e.commit()
+        DOUBLE_ELEMENT(expected).key("shapes.rectangle.b")
+         .description("Rectangle side - b")
+         .displayedName("Side B")
+         .assignmentOptional().defaultValue(10)
+         .init()
+         .commit(),
 
-        e = DOUBLE_ELEMENT(expected).key("shapes.rectangle.c")
-        e.description("Rectangle side - c")
-        e.displayedName("Side C")
-        e.assignmentOptional().defaultValue(10)
-        e.init()
-        e.commit()
+        DOUBLE_ELEMENT(expected).key("shapes.rectangle.c")
+         .description("Rectangle side - c")
+         .displayedName("Side C")
+         .assignmentOptional().defaultValue(10)
+         .init()
+         .commit(),
 
-        e = NODE_ELEMENT(expected).key("triangle")
-        e.displayedName("triangle")
-        e.description("A triangle (Node element containing no other elements)")
-        e.commit()
+        NODE_ELEMENT(expected).key("triangle")
+         .displayedName("triangle")
+         .description("A triangle (Node element containing no other elements)")
+         .commit(),
+        )
 
 
 @KARABO_CONFIGURATION_BASE_CLASS
@@ -431,44 +437,45 @@ class P1(Base):
         
     @staticmethod
     def expectedParameters(expected):
-        
-        e = STRING_ELEMENT(expected).key("a")
-        e.description("a").displayedName("a")
-        e.assignmentOptional().defaultValue("a value")
-        e.tags("CY,CY,NC,JS,KW,NC").commit()
+        (
+        STRING_ELEMENT(expected).key("a")
+         .description("a").displayedName("a")
+         .assignmentOptional().defaultValue("a value")
+         .tags("CY,CY,NC,JS,KW,NC").commit(),
 
-        e = STRING_ELEMENT(expected).key("b")
-        e.tags("BH,CY")
-        e.displayedName("Example key 1").description("Example key 1 description")
-        e.options("Radio,Air Condition,Navigation", ",")
-        e.assignmentOptional().defaultValue("Air Condition")
-        e.reconfigurable().commit()
+        STRING_ELEMENT(expected).key("b")
+         .tags("BH,CY")
+         .displayedName("Example key 1").description("Example key 1 description")
+         .options("Radio,Air Condition,Navigation", ",")
+         .assignmentOptional().defaultValue("Air Condition")
+         .reconfigurable().commit(),
 
-        e = INT32_ELEMENT(expected).key("c").alias(10)
-        e.tags("BH")
-        e.displayedName("Example key 2").description("Example key 2 description")
-        e.options("5, 25, 10")
-        e.minInc(5).maxInc(25).unit(METER).metricPrefix(MILLI)
-        e.assignmentOptional().defaultValue(5)
-        e.init().commit()
+        INT32_ELEMENT(expected).key("c").alias(10)
+         .tags("BH")
+         .displayedName("Example key 2").description("Example key 2 description")
+         .options("5, 25, 10")
+         .minInc(5).maxInc(25).unit(METER).metricPrefix(MILLI)
+         .assignmentOptional().defaultValue(5)
+         .init().commit(),
 
-        e = UINT32_ELEMENT(expected).key("d").alias(5.5)
-        e.tags("CY,JS")
-        e.displayedName("Example key 3").description("Example key 3 description")
-        e.allowedStates("AllOk.Started, AllOk.Stopped, AllOk.Run.On, NewState") #TODO check
-        e.minExc(10).maxExc(20).assignmentOptional().defaultValue(11)
-        e.reconfigurable().commit()
+        UINT32_ELEMENT(expected).key("d").alias(5.5)
+         .tags("CY,JS")
+         .displayedName("Example key 3").description("Example key 3 description")
+         .allowedStates("AllOk.Started, AllOk.Stopped, AllOk.Run.On, NewState") #TODO check
+         .minExc(10).maxExc(20).assignmentOptional().defaultValue(11)
+         .reconfigurable().commit(),
 
-        e = FLOAT_ELEMENT(expected).key("e").alias("exampleAlias4")
-        e.tags("DB,NC,CY")
-        e.displayedName("Example key 4").description("Example key 4 description")
-        e.options("1.1100000   -2.22 5.55").assignmentOptional().defaultValue(1.11)
-        e.commit()
+        FLOAT_ELEMENT(expected).key("e").alias("exampleAlias4")
+         .tags("DB,NC,CY")
+         .displayedName("Example key 4").description("Example key 4 description")
+         .options("1.1100000   -2.22 5.55").assignmentOptional().defaultValue(1.11)
+         .commit(),
 
-        e = INT64_ELEMENT(expected).key("f").alias("exampleAlias5")
-        e.tags("LM,DB")
-        e.displayedName("Example key 5").description("Example key 5 description")
-        e.assignmentOptional().defaultValue(5).commit()
+        INT64_ELEMENT(expected).key("f").alias("exampleAlias5")
+         .tags("LM,DB")
+         .displayedName("Example key 5").description("Example key 5 description")
+         .assignmentOptional().defaultValue(5).commit(),
+        )
         
         
 @KARABO_CLASSINFO("P2", "1.0")
@@ -478,27 +485,27 @@ class P2(Base):
         
     @staticmethod
     def expectedParameters(expected):
-        
-        e = STRING_ELEMENT(expected).key("x")
-        e.description("x").displayedName("x")
-        e.assignmentOptional().defaultValue("a value")
-        e.tags("LM,BH").commit()
+        (
+        STRING_ELEMENT(expected).key("x")
+         .description("x").displayedName("x")
+         .assignmentOptional().defaultValue("a value")
+         .tags("LM,BH").commit(),
 
-        e = STRING_ELEMENT(expected).key("y")
-        e.tags("CY")
-        e.displayedName("Example key 1").description("Example key 1 description")
-        e.options("Radio,Air Condition,Navigation", ",")
-        e.assignmentOptional().defaultValue("Radio")
-        e.reconfigurable().commit()
+        STRING_ELEMENT(expected).key("y")
+         .tags("CY")
+         .displayedName("Example key 1").description("Example key 1 description")
+         .options("Radio,Air Condition,Navigation", ",")
+         .assignmentOptional().defaultValue("Radio")
+         .reconfigurable().commit(),
 
-        e = INT32_ELEMENT(expected).key("z").alias(10)
-        e.tags("CY,LM,KW")
-        e.displayedName("Example key 2").description("Example key 2 description")
-        e.options("5, 25, 10")
-        e.minInc(5).maxInc(25).unit(AMPERE).metricPrefix(MILLI)
-        e.assignmentOptional().defaultValue(10)
-        e.init().commit()
-        
+        INT32_ELEMENT(expected).key("z").alias(10)
+         .tags("CY,LM,KW")
+         .displayedName("Example key 2").description("Example key 2 description")
+         .options("5, 25, 10")
+         .minInc(5).maxInc(25).unit(AMPERE).metricPrefix(MILLI)
+         .assignmentOptional().defaultValue(10)
+         .init().commit(),
+        )
         
 @KARABO_CLASSINFO("P3", "1.0")
 class P3(Base):
@@ -507,27 +514,27 @@ class P3(Base):
         
     @staticmethod
     def expectedParameters(expected):
-        
-        e = STRING_ELEMENT(expected).key("k")
-        e.description("k").displayedName("k")
-        e.assignmentOptional().defaultValue("k value")
-        e.tags("LM").commit()
+        (
+        STRING_ELEMENT(expected).key("k")
+         .description("k").displayedName("k")
+         .assignmentOptional().defaultValue("k value")
+         .tags("LM").commit(),
 
-        e = STRING_ELEMENT(expected).key("l")
-        e.tags("CY")
-        e.displayedName("l").description("l")
-        e.options("Radio,Air Condition,Navigation", ",")
-        e.assignmentOptional().defaultValue("Navigation")
-        e.reconfigurable().commit()
+        STRING_ELEMENT(expected).key("l")
+         .tags("CY")
+         .displayedName("l").description("l")
+         .options("Radio,Air Condition,Navigation", ",")
+         .assignmentOptional().defaultValue("Navigation")
+         .reconfigurable().commit(),
 
-        e = INT32_ELEMENT(expected).key("m").alias(10)
-        e.tags("CY,DB,JE,BP,MK,PG,BF")
-        e.displayedName("Example key 2").description("Example key 2 description")
-        e.options("5, 25, 10")
-        e.minInc(5).maxInc(25).unit(METER).metricPrefix(MILLI)
-        e.assignmentOptional().defaultValue(25)
-        e.init().commit()
-        
+        INT32_ELEMENT(expected).key("m").alias(10)
+         .tags("CY,DB,JE,BP,MK,PG,BF")
+         .displayedName("Example key 2").description("Example key 2 description")
+         .options("5, 25, 10")
+         .minInc(5).maxInc(25).unit(METER).metricPrefix(MILLI)
+         .assignmentOptional().defaultValue(25)
+         .init().commit(),
+        )
         
 @KARABO_CONFIGURATION_BASE_CLASS
 @KARABO_CLASSINFO("GraphicsRenderer2", "1.0")
@@ -537,72 +544,73 @@ class GraphicsRenderer2(object):
         
     @staticmethod
     def expectedParameters(expected):
-        
-        e = BOOL_ELEMENT(expected).key("antiAlias")
-        e.tags("NC")
-        e.displayedName("Use Anti-Aliasing").description("You may switch of for speed")
-        e.assignmentOptional().defaultValue(True)
-        e.init().expertAccess().commit()
+        (
+        BOOL_ELEMENT(expected).key("antiAlias")
+         .tags("NC")
+         .displayedName("Use Anti-Aliasing").description("You may switch of for speed")
+         .assignmentOptional().defaultValue(True)
+         .init().expertAccess().commit(),
 
-        e = STRING_ELEMENT(expected).key("color")
-        e.tags("KW")
-        e.displayedName("Color").description("The default color for any shape")
-        e.assignmentOptional().defaultValue("red")
-        e.reconfigurable().commit()
+        STRING_ELEMENT(expected).key("color")
+         .tags("KW")
+         .displayedName("Color").description("The default color for any shape")
+         .assignmentOptional().defaultValue("red")
+         .reconfigurable().commit(),
 
-        e = BOOL_ELEMENT(expected).key("bold")
-        e.tags("LM")
-        e.displayedName("Bold").description("Toggles bold painting")
-        e.assignmentOptional().defaultValue(False)
-        e.reconfigurable().commit()
+        BOOL_ELEMENT(expected).key("bold")
+         .tags("LM")
+         .displayedName("Bold").description("Toggles bold painting")
+         .assignmentOptional().defaultValue(False)
+         .reconfigurable().commit(),
 
-        e = CHOICE_ELEMENT(expected).key("shapes")
-        e.tags("DB")
-        e.assignmentOptional().defaultValue("rectangle")
-        e.commit()
+        CHOICE_ELEMENT(expected).key("shapes")
+         .tags("DB")
+         .assignmentOptional().defaultValue("rectangle")
+         .commit(),
 
-        e = NODE_ELEMENT(expected).key("shapes.circle")
-        e.tags("JS")
-        e.displayedName("Circle").description("A circle")
-        e.commit()
+        NODE_ELEMENT(expected).key("shapes.circle")
+         .tags("JS")
+         .displayedName("Circle").description("A circle")
+         .commit(),
 
-        e = FLOAT_ELEMENT(expected).key("shapes.circle.radius")
-        e.description("The radius of the circle").displayedName("Radius")
-        e.tags("NC,KW")
-        e.minExc(0).maxExc(100).unit(METER).metricPrefix(MILLI)
-        e.assignmentOptional().defaultValue(10)
-        e.init().commit()
+        FLOAT_ELEMENT(expected).key("shapes.circle.radius")
+         .description("The radius of the circle").displayedName("Radius")
+         .tags("NC,KW")
+         .minExc(0).maxExc(100).unit(METER).metricPrefix(MILLI)
+         .assignmentOptional().defaultValue(10)
+         .init().commit(),
 
-        e = NODE_ELEMENT(expected).key("shapes.rectangle")
-        e.tags("BH, KW , CY")
-        e.displayedName("Rectangle").description("A rectangle")
-        e.commit()
+        NODE_ELEMENT(expected).key("shapes.rectangle")
+         .tags("BH, KW , CY")
+         .displayedName("Rectangle").description("A rectangle")
+         .commit(),
 
-        e = FLOAT_ELEMENT(expected).key("shapes.rectangle.b")
-        e.tags("JS")
-        e.description("Rectangle side - b").displayedName("Side B")
-        e.assignmentOptional().defaultValue(10)
-        e.init().commit()
+        FLOAT_ELEMENT(expected).key("shapes.rectangle.b")
+         .tags("JS")
+         .description("Rectangle side - b").displayedName("Side B")
+         .assignmentOptional().defaultValue(10)
+         .init().commit(),
 
-        e = FLOAT_ELEMENT(expected).key("shapes.rectangle.c")
-        e.tags("LM,JS")
-        e.description("Rectangle side - c").displayedName("Side C")
-        e.assignmentOptional().defaultValue(10)
-        e.init().commit()
+        FLOAT_ELEMENT(expected).key("shapes.rectangle.c")
+         .tags("LM,JS")
+         .description("Rectangle side - c").displayedName("Side C")
+         .assignmentOptional().defaultValue(10)
+         .init().commit(),
 
-        e = NODE_ELEMENT(expected).key("shapes.triangle")
-        e.displayedName("triangle").description("A triangle (Node element containing no other elements)")
-        e.commit()
+        NODE_ELEMENT(expected).key("shapes.triangle")
+         .displayedName("triangle").description("A triangle (Node element containing no other elements)")
+         .commit(),
 
-        e = NODE_ELEMENT(expected).key("letter")
-        e.displayedName("Letter").description("Letter")
-        e.appendParametersOf(P1)
-        e.commit()
+        NODE_ELEMENT(expected).key("letter")
+         .displayedName("Letter").description("Letter")
+         .appendParametersOf(P1)
+         .commit(),
 
-        e = LIST_ELEMENT(expected).key("chars")
-        e.displayedName("characters").description("Characters")
-        e.tags("LM")
-        e.appendNodesOfConfigurationBase(Base)
-        e.assignmentOptional().defaultValueFromString("P2,P3")
-        e.commit()
+        LIST_ELEMENT(expected).key("chars")
+         .displayedName("characters").description("Characters")
+         .tags("LM")
+         .appendNodesOfConfigurationBase(Base)
+         .assignmentOptional().defaultValueFromString("P2,P3")
+         .commit(),
+        )
 
