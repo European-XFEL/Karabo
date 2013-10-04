@@ -29,6 +29,7 @@
 #include "util/OutputElement.hh"
 #include "util/StringTools.hh"
 #include "util/Base64.hh"
+#include "util/ByteSwap.hh"
 #include "util/Dims.hh"
 #include "util/Units.hh"
 #include "util/Timer.hh"

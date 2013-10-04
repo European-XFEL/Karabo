@@ -93,6 +93,7 @@ OBJECTFILES= \
 	${OBJECTDIR}/_ext/1103112890/TcpConnection.o \
 	${OBJECTDIR}/_ext/1080827789/pugixml.o \
 	${OBJECTDIR}/_ext/163016059/Base64.o \
+	${OBJECTDIR}/_ext/163016059/ByteSwap.o \
 	${OBJECTDIR}/_ext/163016059/ClassInfo.o \
 	${OBJECTDIR}/_ext/163016059/Epochstamp.o \
 	${OBJECTDIR}/_ext/163016059/Exception.o \
@@ -458,6 +459,11 @@ ${OBJECTDIR}/_ext/163016059/Base64.o: ../../../src/karabo/util/Base64.cc
 	${RM} $@.d
 	$(COMPILE.cc) -g -w -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163016059/Base64.o ../../../src/karabo/util/Base64.cc
 
+${OBJECTDIR}/_ext/163016059/ByteSwap.o: ../../../src/karabo/util/ByteSwap.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
+	${RM} $@.d
+	$(COMPILE.cc) -g -w -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163016059/ByteSwap.o ../../../src/karabo/util/ByteSwap.cc
+
 ${OBJECTDIR}/_ext/163016059/ClassInfo.o: ../../../src/karabo/util/ClassInfo.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
 	${RM} $@.d
@@ -660,7 +666,7 @@ ${TESTDIR}/TestFiles/f4: ${TESTDIR}/_ext/936498188/JmsBroker_Test.o ${TESTDIR}/_
 	${MKDIR} -p ${TESTDIR}/TestFiles
 	${LINK.cc}   -o ${TESTDIR}/TestFiles/f4 $^ ${LDLIBSOPTIONS} -L${KARABO}/extern/lib -lcppunit `cppunit-config --libs`   
 
-${TESTDIR}/TestFiles/f1: ${TESTDIR}/_ext/1033104525/ConfigurationTestClasses.o ${TESTDIR}/_ext/1033104525/Dims_Test.o ${TESTDIR}/_ext/1033104525/Epochstamp_Test.o ${TESTDIR}/_ext/1033104525/Factory_Test.o ${TESTDIR}/_ext/1033104525/HashFilter_Test.o ${TESTDIR}/_ext/1033104525/Hash_Test.o ${TESTDIR}/_ext/1033104525/Schema_Test.o ${TESTDIR}/_ext/1033104525/TimeClasses_Test.o ${TESTDIR}/_ext/1033104525/Types_Test.o ${TESTDIR}/_ext/1033104525/utilTestRunner.o ${OBJECTFILES:%.o=%_nomain.o}
+${TESTDIR}/TestFiles/f1: ${TESTDIR}/_ext/1033104525/Base64_Test.o ${TESTDIR}/_ext/1033104525/ByteSwap_Test.o ${TESTDIR}/_ext/1033104525/ConfigurationTestClasses.o ${TESTDIR}/_ext/1033104525/Dims_Test.o ${TESTDIR}/_ext/1033104525/Epochstamp_Test.o ${TESTDIR}/_ext/1033104525/Factory_Test.o ${TESTDIR}/_ext/1033104525/HashFilter_Test.o ${TESTDIR}/_ext/1033104525/Hash_Test.o ${TESTDIR}/_ext/1033104525/Schema_Test.o ${TESTDIR}/_ext/1033104525/TimeClasses_Test.o ${TESTDIR}/_ext/1033104525/Types_Test.o ${TESTDIR}/_ext/1033104525/utilTestRunner.o ${OBJECTFILES:%.o=%_nomain.o}
 	${MKDIR} -p ${TESTDIR}/TestFiles
 	${LINK.cc}   -o ${TESTDIR}/TestFiles/f1 $^ ${LDLIBSOPTIONS} -L${KARABO}/extern/lib -lcppunit 
 
@@ -753,6 +759,18 @@ ${TESTDIR}/_ext/936498188/netTestRunner.o: ../../../src/karabo/tests/net/netTest
 	${MKDIR} -p ${TESTDIR}/_ext/936498188
 	${RM} $@.d
 	$(COMPILE.cc) -g -w -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`  `cppunit-config --cflags` -MMD -MP -MF $@.d -o ${TESTDIR}/_ext/936498188/netTestRunner.o ../../../src/karabo/tests/net/netTestRunner.cc
+
+
+${TESTDIR}/_ext/1033104525/Base64_Test.o: ../../../src/karabo/tests/util/Base64_Test.cc 
+	${MKDIR} -p ${TESTDIR}/_ext/1033104525
+	${RM} $@.d
+	$(COMPILE.cc) -g -w -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -MMD -MP -MF $@.d -o ${TESTDIR}/_ext/1033104525/Base64_Test.o ../../../src/karabo/tests/util/Base64_Test.cc
+
+
+${TESTDIR}/_ext/1033104525/ByteSwap_Test.o: ../../../src/karabo/tests/util/ByteSwap_Test.cc 
+	${MKDIR} -p ${TESTDIR}/_ext/1033104525
+	${RM} $@.d
+	$(COMPILE.cc) -g -w -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -MMD -MP -MF $@.d -o ${TESTDIR}/_ext/1033104525/ByteSwap_Test.o ../../../src/karabo/tests/util/ByteSwap_Test.cc
 
 
 ${TESTDIR}/_ext/1033104525/ConfigurationTestClasses.o: ../../../src/karabo/tests/util/ConfigurationTestClasses.cc 
@@ -1603,6 +1621,19 @@ ${OBJECTDIR}/_ext/163016059/Base64_nomain.o: ${OBJECTDIR}/_ext/163016059/Base64.
 	    $(COMPILE.cc) -g -w -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163016059/Base64_nomain.o ../../../src/karabo/util/Base64.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/163016059/Base64.o ${OBJECTDIR}/_ext/163016059/Base64_nomain.o;\
+	fi
+
+${OBJECTDIR}/_ext/163016059/ByteSwap_nomain.o: ${OBJECTDIR}/_ext/163016059/ByteSwap.o ../../../src/karabo/util/ByteSwap.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/163016059/ByteSwap.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} $@.d;\
+	    $(COMPILE.cc) -g -w -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163016059/ByteSwap_nomain.o ../../../src/karabo/util/ByteSwap.cc;\
+	else  \
+	    ${CP} ${OBJECTDIR}/_ext/163016059/ByteSwap.o ${OBJECTDIR}/_ext/163016059/ByteSwap_nomain.o;\
 	fi
 
 ${OBJECTDIR}/_ext/163016059/ClassInfo_nomain.o: ${OBJECTDIR}/_ext/163016059/ClassInfo.o ../../../src/karabo/util/ClassInfo.cc 
