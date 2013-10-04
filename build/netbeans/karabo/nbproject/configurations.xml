@@ -248,6 +248,8 @@
         <itemPath>../../../src/karabo/util/ArrayTools.hh</itemPath>
         <itemPath>../../../src/karabo/util/Base64.cc</itemPath>
         <itemPath>../../../src/karabo/util/Base64.hh</itemPath>
+        <itemPath>../../../src/karabo/util/ByteSwap.cc</itemPath>
+        <itemPath>../../../src/karabo/util/ByteSwap.hh</itemPath>
         <itemPath>../../../src/karabo/util/Dims.hh</itemPath>
         <itemPath>../../../src/karabo/util/PluginLoader.cc</itemPath>
         <itemPath>../../../src/karabo/util/PluginLoader.hh</itemPath>
@@ -369,6 +371,10 @@
                      displayName="util_test"
                      projectFiles="true"
                      kind="TEST">
+        <itemPath>../../../src/karabo/tests/util/Base64_Test.cc</itemPath>
+        <itemPath>../../../src/karabo/tests/util/Base64_Test.hh</itemPath>
+        <itemPath>../../../src/karabo/tests/util/ByteSwap_Test.cc</itemPath>
+        <itemPath>../../../src/karabo/tests/util/ByteSwap_Test.hh</itemPath>
         <itemPath>../../../src/karabo/tests/util/ConfigurationTestClasses.cc</itemPath>
         <itemPath>../../../src/karabo/tests/util/ConfigurationTestClasses.hh</itemPath>
         <itemPath>../../../src/karabo/tests/util/Dims_Test.cc</itemPath>
@@ -426,8 +432,6 @@
       <toolsSet>
         <remote-sources-mode>LOCAL_SOURCES</remote-sources-mode>
         <compilerSet>GNU|GNU</compilerSet>
-        <dependencyChecking>true</dependencyChecking>
-        <rebuildPropChanged>false</rebuildPropChanged>
       </toolsSet>
       <compileType>
         <cTool>
@@ -1239,6 +1243,26 @@
             tool="1"
             flavor2="0">
       </item>
+      <item path="../../../src/karabo/tests/util/Base64_Test.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/util/Base64_Test.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/util/ByteSwap_Test.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/util/ByteSwap_Test.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="../../../src/karabo/tests/util/ConfigurationTestClasses.cc"
             ex="false"
             tool="1"
@@ -1400,6 +1424,16 @@
       <item path="../../../src/karabo/util/Base64.cc" ex="false" tool="1" flavor2="0">
       </item>
       <item path="../../../src/karabo/util/Base64.hh" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/ByteSwap.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/ByteSwap.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
       </item>
       <item path="../../../src/karabo/util/ChoiceElement.hh"
             ex="false"
@@ -2024,8 +2058,6 @@
       <toolsSet>
         <remote-sources-mode>LOCAL_SOURCES</remote-sources-mode>
         <compilerSet>default</compilerSet>
-        <dependencyChecking>true</dependencyChecking>
-        <rebuildPropChanged>false</rebuildPropChanged>
       </toolsSet>
       <compileType>
         <cTool>
@@ -2838,6 +2870,26 @@
             tool="1"
             flavor2="0">
       </item>
+      <item path="../../../src/karabo/tests/util/Base64_Test.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/util/Base64_Test.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/util/ByteSwap_Test.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/util/ByteSwap_Test.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="../../../src/karabo/tests/util/ConfigurationTestClasses.cc"
             ex="false"
             tool="1"
@@ -2996,6 +3048,16 @@
       <item path="../../../src/karabo/util/Base64.cc" ex="false" tool="1" flavor2="0">
       </item>
       <item path="../../../src/karabo/util/Base64.hh" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/ByteSwap.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/ByteSwap.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
       </item>
       <item path="../../../src/karabo/util/ChoiceElement.hh"
             ex="false"
