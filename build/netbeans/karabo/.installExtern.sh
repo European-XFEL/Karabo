@@ -33,7 +33,7 @@ fi
 
 #check if .marker.txt exists or not => if it does then read contents.
 #Otherwise create the file and input names of packages one by one as they are installed.
-if [ ! -f ./.marker.txt ]; then echo "" > ./.marker.txt; fi
+if [ ! -f ./.marker.txt ]; then touch ./.marker.txt; fi
 
 IFS=$'\r\n' MARKER=($(cat ./.marker.txt))
 
@@ -54,7 +54,7 @@ do
     then
 	continue;
     fi
-    $EXTERN_DIR/install.sh $i $INSTALL_PREFIX
+    $EXTERN_DIR/install.sh $i $INSTALL_PREFIX    
     rv=$?
     if [ $rv -ne 0 ]; then 
         echo 
@@ -66,3 +66,5 @@ do
 done
 
 cd $CWD
+echo "### All Extern dependencies successfully installed/already present. ###";
+echo "### Now building karabo... ###";
