@@ -77,7 +77,7 @@ build: .build-post
 
 # Check whether external dependencies are installed, if not build them
 # Update: Check performed directly in file: .installExtern.sh 
-	./.installExtern.sh $(EXTERN_DIR) $(EXTERN_DISTDIR) $(GUIOPT);
+	@./.installExtern.sh $(EXTERN_DIR) $(EXTERN_DISTDIR) $(GUIOPT); || (echo "### Failed to build Extern dependencies... will exit now ###"; exit 1)
 	if [ ! -h ${KARABO}/extern ]; then cd $(KARABO); ln -sf ../../../../../../extern/$(CND_PLATFORM_$(CONF)) extern; cd -; fi
 
 .build-post: .build-impl
