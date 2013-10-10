@@ -36,12 +36,18 @@ fi
 #Otherwise create the file and input names of packages one by one as they are installed.
 if [ ! -f ./.marker.txt ]; then touch ./.marker.txt; fi
 
-IFS=$'\r\n' MARKER=($(cat ./.marker.txt))
+#save original IFS value
+oldIFS=$IFS;
+
+IFS=$'\r\n' MARKER=$(cat ./.marker.txt)
+
+#revert to original IFS value
+IFS=$oldIFS;
 
 #function to check existence of element in array
 elementIn() {
-    local e
-    for e in "${@:2}"; do [[ "$e" == "$1" ]] && return 0; done
+	local e
+    for e in ${@:2}; do	[[ "$e" == "$1" ]] && return 0; done
     return 1
 }
 
