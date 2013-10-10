@@ -2,7 +2,8 @@
 
 CWD=$(pwd)
 
-DEPENDENCIES_Linux=( python2.7 lapack numpy scipy nose libpng freetype matplotlib sip pyqt4 pyqwt5 pexpect tornado pyzmq pygments ipython qt4 guiqwt guidata boost openmqc hdf5 h5py log4cpp cppunit openmq )
+DEPENDENCIES_Linux=( python2.7 lapack numpy scipy nose libpng freetype qt4 sip pyqt4 matplotlib pyqwt5 guiqwt guidata pexpect tornado pyzmq pygments ipython boost openmqc hdf5 h5py log4cpp cppunit openmq )
+# NoGui should be obsoleted as qt4 and pyqt4 is needed for matplotlib backed as well as pyqwt5, guiqwt and guidata are used in CLI
 DEPENDENCIES_Linux_NoGui=( python2.7 lapack numpy scipy nose libpng freetype matplotlib pexpect tornado pyzmq pygments ipython boost openmqc hdf5 h5py log4cpp cppunit openmq )
 DEPENDENCIES_Darwin=( boost openmqc hdf5 log4cpp cppunit )
 
@@ -50,7 +51,7 @@ do
     :
     elementIn "$i" "${MARKER[@]}"
     vin=$?
-    if [ $vin -ne 1 ]
+    if [ $vin -eq 0 -a "$WHAT" = "" ]
     then
 	continue;
     fi
