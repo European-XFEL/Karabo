@@ -14,7 +14,7 @@
 #include <stdint.h>
 
 // gcc only
-#if defined __GNUC__ && __GNUC__ >= 2
+#if defined __GNUC__ && __GNUC__ >= 2 && ! __APPLE__
 #include <byteswap.h>
 #endif
 
