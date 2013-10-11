@@ -53,6 +53,7 @@ OBJECTFILES= \
 	${OBJECTDIR}/_ext/381567218/PyXipCpuImage.o \
 	${OBJECTDIR}/_ext/381567218/PyXipImage.o \
 	${OBJECTDIR}/_ext/381567218/PyXipRawImageData.o \
+	${OBJECTDIR}/_ext/381567218/PyXipStatistics.o \
 	${OBJECTDIR}/_ext/381567218/PyXmsRequestor.o \
 	${OBJECTDIR}/_ext/381567218/PyXmsSignalSlotable.o \
 	${OBJECTDIR}/_ext/381567218/PyXmsSlotElement.o \
@@ -184,6 +185,11 @@ ${OBJECTDIR}/_ext/381567218/PyXipRawImageData.o: ../../../src/karathon/PyXipRawI
 	${MKDIR} -p ${OBJECTDIR}/_ext/381567218
 	${RM} $@.d
 	$(COMPILE.cc) -O2 -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/include `pkg-config --cflags karathonDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/381567218/PyXipRawImageData.o ../../../src/karathon/PyXipRawImageData.cc
+
+${OBJECTDIR}/_ext/381567218/PyXipStatistics.o: ../../../src/karathon/PyXipStatistics.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/381567218
+	${RM} $@.d
+	$(COMPILE.cc) -O2 -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/include `pkg-config --cflags karathonDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/381567218/PyXipStatistics.o ../../../src/karathon/PyXipStatistics.cc
 
 ${OBJECTDIR}/_ext/381567218/PyXmsRequestor.o: ../../../src/karathon/PyXmsRequestor.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/381567218
@@ -479,6 +485,19 @@ ${OBJECTDIR}/_ext/381567218/PyXipRawImageData_nomain.o: ${OBJECTDIR}/_ext/381567
 	    $(COMPILE.cc) -O2 -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/include `pkg-config --cflags karathonDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/381567218/PyXipRawImageData_nomain.o ../../../src/karathon/PyXipRawImageData.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/381567218/PyXipRawImageData.o ${OBJECTDIR}/_ext/381567218/PyXipRawImageData_nomain.o;\
+	fi
+
+${OBJECTDIR}/_ext/381567218/PyXipStatistics_nomain.o: ${OBJECTDIR}/_ext/381567218/PyXipStatistics.o ../../../src/karathon/PyXipStatistics.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/381567218
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/381567218/PyXipStatistics.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} $@.d;\
+	    $(COMPILE.cc) -O2 -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/include `pkg-config --cflags karathonDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/381567218/PyXipStatistics_nomain.o ../../../src/karathon/PyXipStatistics.cc;\
+	else  \
+	    ${CP} ${OBJECTDIR}/_ext/381567218/PyXipStatistics.o ${OBJECTDIR}/_ext/381567218/PyXipStatistics_nomain.o;\
 	fi
 
 ${OBJECTDIR}/_ext/381567218/PyXmsRequestor_nomain.o: ${OBJECTDIR}/_ext/381567218/PyXmsRequestor.o ../../../src/karathon/PyXmsRequestor.cc 
