@@ -80,6 +80,7 @@
       <itemPath>../../../src/karathon/PyXipImage.cc</itemPath>
       <itemPath>../../../src/karathon/PyXipRawImageData.cc</itemPath>
       <itemPath>../../../src/karathon/PyXipStatistics.cc</itemPath>
+      <itemPath>../../../src/karathon/RawImageDataWrap.hh</itemPath>
     </logicalFolder>
     <logicalFolder name="TestFiles"
                    displayName="Test Files"
@@ -321,6 +322,11 @@
             flavor2="0">
       </item>
       <item path="../../../src/karathon/PythonOutputHandler.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karathon/RawImageDataWrap.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -624,6 +630,11 @@
             flavor2="0">
       </item>
       <item path="../../../src/karathon/PythonOutputHandler.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karathon/RawImageDataWrap.hh"
             ex="false"
             tool="3"
             flavor2="0">
