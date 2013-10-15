@@ -13,13 +13,14 @@ class  RawImageData_TestCase(unittest.TestCase):
     
     def test_rawimage_to_png(self):
         try:
-            imgArr = np.fromfile(self.resourcesdir+"image_0001.raw", dtype=np.uint32)
+            imgArr = np.fromfile(self.resourcesdir+"image_0001.raw", dtype=np.uint32)            
             self.assertEqual(imgArr.size, 1048576)
   
             imgArr.shape = (1024, 1024)
             
             plt.imshow(imgArr)
             plt.savefig(self.resourcesdir+"image_0001A.png")
+            #plt.show()
             
         except Exception,e:
             self.fail("test_rawimage_to_png exception group 1: " + str(e))
@@ -36,9 +37,40 @@ class  RawImageData_TestCase(unittest.TestCase):
             
             plt.imshow(imgArr)
             plt.savefig(self.resourcesdir+"image_0001B.png")
-        
+            #plt.show()
+            
         except Exception,e:
             self.fail("test_rawimage_to_png exception group 2: " + str(e))
+    
+
+    def test_rawimagedata(self):
+        
+        try:
+            d=Dims(1024, 1024, 1)
+            byteSize = 4194304
+            rdata = RawImageData(byteSize, d, EncodingType.BGR, ChannelSpaceType.u_32_4)  
+            self.assertEqual(rdata.size(), 1048576)
+            self.assertEqual(rdata.getByteSize(), 4194304)
+            self.assertEqual(rdata.getEncoding(), EncodingType.BGR)
+            self.assertEqual(rdata.getChannelSpace(), ChannelSpaceType.u_32_4)
+        
+            dims = rdata.getDimensions()
+            self.assertEqual(dims, [1024L, 1024L, 1L])
+            
+            imgArr = np.fromfile(self.resourcesdir+"image_0001.raw", dtype=np.uint32)            
+            self.assertEqual(imgArr.size, 1048576)
+            
+            imgArr2 = bytearray(imgArr)
+            self.assertEqual(len(imgArr2), 4194304)
+            
+            rdata.setData(imgArr2)
+            
+            getData = rdata.getData()
+            self.assertEqual(len(getData), 4194304)
+            
+        except Exception,e:
+            self.fail("test_rawimagedata exception: " + str(e))
+
 
 if __name__ == '__main__':
     unittest.main()   
