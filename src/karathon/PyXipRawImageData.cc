@@ -8,22 +8,15 @@
 #include <boost/python.hpp>
 
 #include <karabo/xip/RawImageData.hh>
-#include "boost/python/suite/indexing/vector_indexing_suite.hpp"
+#include "RawImageDataWrap.hh"
+#include "Wrapper.hh"
 
 namespace bp = boost::python;
+using namespace karathon;
 using namespace karabo::xip;
 using namespace karabo::util;
 using namespace std;
 
-namespace rawimagedatawrap {
-    
-    bp::object dataPointer(const RawImageData& data) {
-        char* str = data.dataPointer();
-        PyObject* arrObj = PyByteArray_FromStringAndSize(str, data.getByteSize());
-          
-        return bp::object(bp::handle<>(arrObj));
-    }
-}
 
 void exportPyXipRawImageData() {
     
@@ -71,24 +64,50 @@ void exportPyXipRawImageData() {
         .export_values()
         ;
       
-    //std::vector< char >
-    bp::class_< std::vector< char > > v("vectorchar");
-         v.def( bp::vector_indexing_suite< std::vector< char >, true >() );
+    
+    bp::class_<RawImageData> ("_RawImageData", bp::no_init);
+    
+    
+    bp::class_< RawImageDataWrap, bp::bases< RawImageData>, boost::noncopyable > r("RawImageData");
+
+        r.def(bp::init< >());     
+        r.def(bp::init< size_t const, 
+                        Dims const &, 
+                        karabo::xip::Encoding::EncodingType const, 
+                        karabo::xip::ChannelSpace::ChannelSpaceType const, 
+                        bp::optional< Hash const &, bool const> >(( bp::arg("byteSize"), 
+                        bp::arg("dimensions"), 
+                        bp::arg("encoding"),
+                        bp::arg("channelSpace"), 
+                        bp::arg("header")=karabo::util::Hash(),
+                        bp::arg("isBigEndian")=(bool const)(karabo::util::isBigEndian()) )) );  
         
-    bp::class_< RawImageData > r( "RawImageData", bp::init< >() );     
-        r.def(bp::init< unsigned int, karabo::util::Dims const &, karabo::xip::Encoding::EncodingType, karabo::xip::ChannelSpace::ChannelSpaceType, bp::optional< karabo::util::Hash const &, bool > >(( bp::arg("byteSize"), bp::arg("dimensions"), bp::arg("encoding"), bp::arg("channelSpace"), bp::arg("header")=karabo::util::Hash(), bp::arg("isBigEndian")=(bool const)(karabo::util::isBigEndian()) )) );  
-        r.def(bp::init< karabo::util::Hash &, bp::optional< bool > >(( bp::arg("imageHash"), bp::arg("sharesData")=(bool)(false) )) );    
-        r.def(bp::init< karabo::xip::RawImageData const & >(( bp::arg("image") )) );   
+        r.def(bp::init< Hash &, bp::optional< bool > >(( bp::arg("imageHash"), bp::arg("sharesData")=(bool)(false) )) );    
         
-        r.def("dataPointer", &rawimagedatawrap::dataPointer);
+        r.def(bp::init< RawImageData const & >(( bp::arg("image") )) );   
         
-        //r.def("dataPointer"
-        //    , (char * (RawImageData::*)())(&RawImageData::dataPointer)
-        //    ,  bp::return_value_policy<bp::return_by_value>() ) ;
+        r.def(bp::init< bp::object const &, 
+                        size_t const, 
+                        Dims const &, 
+                        karabo::xip::Encoding::EncodingType const, 
+                        karabo::xip::ChannelSpace::ChannelSpaceType const, 
+                        bp::optional< bp::object const &, bool const> >(( bp::arg("data"), 
+                        bp::arg("byteSize"), 
+                        bp::arg("dimensions"), 
+                        bp::arg("encoding"), 
+                        bp::arg("channelSpace"),
+                        bp::arg("header")=bp::object(karabo::util::Hash()), 
+                        bp::arg("isBigEndian")=(bool const)(karabo::util::isBigEndian()) )) );
         
-        r.def("getData"
-            , (std::vector< char > const & (RawImageData::* )() const)( &RawImageData::getData)
-            , bp::return_value_policy< bp::copy_const_reference >() );
+        r.def("setData"
+            , (void (*)(RawImageData&, const bp::object &))(&RawImageDataWrap::setData)
+            , bp::arg("data"));
+        
+        r.def("setData"
+            , (void (*)(RawImageData&, const bp::object &, const size_t))(&RawImageDataWrap::setData)
+            , (bp::arg("data"),  bp::arg("byteSize")));
+        
+        r.def("getData", &RawImageDataWrap::getData);
             
         r.def("allocateData"
             , (void (RawImageData::*)(size_t const) )(&RawImageData::allocateData)
@@ -103,31 +122,22 @@ void exportPyXipRawImageData() {
         r.def("setByteSize"
             , (void (RawImageData::*)(size_t const &))(&RawImageData::setByteSize)
             , bp::arg("byteSize") );
+
+        r.def("getDimensions", &RawImageDataWrap::getDimensions);
         
-        r.def("getDimensions"
-            , (karabo::util::Dims (RawImageData::*)() const)(&RawImageData::getDimensions));
-        
-        r.def("setDimensions"
-            , (void (RawImageData::*)(karabo::util::Dims const &))(&RawImageData::setDimensions)
-            , bp::arg("dimensions") );
+        r.def("setDimensions", &RawImageDataWrap::setDimensions);
         
         r.def("getEncoding"
             , (int (RawImageData::*)() const)(&RawImageData::getEncoding));
         
-        r.def("setEncoding"
-            , (void (RawImageData::*)(karabo::xip::EncodingType const))(&RawImageData::setEncoding)
-            , bp::arg("encoding") );
+        r.def("setEncoding", &RawImageDataWrap::setEncoding);
         
         r.def("getChannelSpace"
             , (int (RawImageData::*)() const)(&RawImageData::getChannelSpace));
         
-        r.def("setChannelSpace"
-            , (void (RawImageData::*)(karabo::xip::ChannelSpaceType const))(&RawImageData::setChannelSpace)
-            , bp::arg("channelSpace") );
+        r.def("setChannelSpace", &RawImageDataWrap::setChannelSpace);
         
-        r.def("setIsBigEndian"
-            , (void (RawImageData::*)(bool const))(&RawImageData::setIsBigEndian)
-            , bp::arg("isBigEndian") ); 
+        r.def("setIsBigEndian", &RawImageDataWrap::setIsBigEndian);
         
         r.def("isBigEndian"
             , (bool (RawImageData::*)() const)(&RawImageData::isBigEndian));
@@ -135,16 +145,14 @@ void exportPyXipRawImageData() {
         r.def("getHeader"
             , (Hash (RawImageData::*)() const)(&RawImageData::getHeader));
         
-        r.def("setHeader"
-            , (void (RawImageData::*)(Hash const &) const)(&RawImageData::setHeader)
-            , bp::arg("header") );    
+        r.def("setHeader",&RawImageDataWrap::setHeader);  
         
         r.def("toHash"
             , (Hash const & (RawImageData::*)() const)(&RawImageData::toHash)
             , bp::return_value_policy< bp::copy_const_reference >() );
         
         r.def("swap"
-            , (void ( ::karabo::xip::RawImageData::* )( ::karabo::xip::RawImageData & ) )( &::karabo::xip::RawImageData::swap )
+            , (void (RawImageData::*)(RawImageData &) )( &RawImageData::swap)
             , bp::arg("image") );
         
 }
