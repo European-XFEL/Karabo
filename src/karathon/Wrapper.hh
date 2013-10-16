@@ -246,7 +246,19 @@ namespace karathon {
         static bp::str fromStdVectorToPyStr(const std::vector<unsigned char>& v) {
             return bp::str(reinterpret_cast<const char*> (&v[0]), v.size());
         }
+        
+        template<class T>
+        static std::vector<T> fromPyListToStdVector(const bp::object & obj) {
+            const bp::list& l = bp::extract<bp::list > (obj);
+            bp::ssize_t size = bp::len(l);
 
+            std::vector<T> v(size);
+            for (bp::ssize_t i = 0; i < size; ++i) {
+                v[i] = bp::extract<T > (obj[i]);
+            }
+            return v;
+        }
+        
         static bp::object toObject(const boost::any& operand, bool numpyFlag = false);
         static void toAny(const bp::object& operand, boost::any& any);
     };
