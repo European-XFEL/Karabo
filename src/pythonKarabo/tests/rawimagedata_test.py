@@ -68,6 +68,21 @@ class  RawImageData_TestCase(unittest.TestCase):
             getData = rdata.getData()
             self.assertEqual(len(getData), 4194304)
             
+            h = rdata.toHash()
+            self.assertEqual(h.get("isBigEndian"), False)          
+            self.assertEqual(h.get("encoding"), 3)
+            self.assertEqual(h.get("channelSpace"), 11)
+            self.assertEqual(h.get("dims"), [1024L, 1024L, 1L] )
+            
+            #construct RawImageData from given Hash and check its properties
+            rdatanew = RawImageData(h)
+            self.assertEqual(rdatanew.size(), 1048576)
+            self.assertEqual(rdatanew.getByteSize(), 4194304)
+            self.assertEqual(rdatanew.getEncoding(), EncodingType.BGR)
+            self.assertEqual(rdatanew.getChannelSpace(), ChannelSpaceType.u_32_4)
+            getDataNew = rdatanew.getData()
+            self.assertEqual(len(getDataNew), 4194304)
+            
         except Exception,e:
             self.fail("test_rawimagedata exception: " + str(e))
 
