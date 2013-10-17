@@ -29,7 +29,7 @@ class PluginLoader(object):
         else:
             self.plugins = os.environ['PWD'] + "/plugins"
         sys.path.append(self.plugins)
-        self.pattern = re.compile(r'.py')
+        self.pattern = re.compile(r'\.py$')
 
     def getPluginDirectory(self):
         return self.plugins
