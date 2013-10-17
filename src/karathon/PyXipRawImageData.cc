@@ -69,8 +69,7 @@ void exportPyXipRawImageData() {
     
     
     bp::class_< RawImageDataWrap, bp::bases< RawImageData>, boost::noncopyable > r("RawImageData");
-
-        r.def(bp::init< >());     
+   
         r.def(bp::init< size_t const, 
                         Dims const &, 
                         karabo::xip::Encoding::EncodingType const, 
@@ -85,19 +84,6 @@ void exportPyXipRawImageData() {
         r.def(bp::init< Hash &, bp::optional< bool > >(( bp::arg("imageHash"), bp::arg("sharesData")=(bool)(false) )) );    
         
         r.def(bp::init< RawImageData const & >(( bp::arg("image") )) );   
-        
-        r.def(bp::init< bp::object const &, 
-                        size_t const, 
-                        Dims const &, 
-                        karabo::xip::Encoding::EncodingType const, 
-                        karabo::xip::ChannelSpace::ChannelSpaceType const, 
-                        bp::optional< bp::object const &, bool const> >(( bp::arg("data"), 
-                        bp::arg("byteSize"), 
-                        bp::arg("dimensions"), 
-                        bp::arg("encoding"), 
-                        bp::arg("channelSpace"),
-                        bp::arg("header")=bp::object(karabo::util::Hash()), 
-                        bp::arg("isBigEndian")=(bool const)(karabo::util::isBigEndian()) )) );
         
         r.def("setData"
             , (void (*)(RawImageData&, const bp::object &))(&RawImageDataWrap::setData)
