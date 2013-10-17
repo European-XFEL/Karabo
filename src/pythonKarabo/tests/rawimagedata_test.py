@@ -54,12 +54,31 @@ class  RawImageData_TestCase(unittest.TestCase):
             self.assertEqual(rdata.getByteSize(), 4194304)
             self.assertEqual(rdata.getEncoding(), EncodingType.BGR)
             self.assertEqual(rdata.getChannelSpace(), ChannelSpaceType.u_32_4)
-        
+            
             dims = rdata.getDimensions()
             self.assertEqual(dims, [1024L, 1024L, 1L])
-    
         except Exception,e:
-            self.fail("test_rawimagedata exception: " + str(e))
+            self.fail("test_rawimagedata exception group 1: " + str(e))
+        
+        try:    
+            h = Hash("a", 10, "b", "info")
+            
+            rdata = RawImageData(byteSize, d, EncodingType.BGR, ChannelSpaceType.u_32_4, h, True)  
+            self.assertEqual(rdata.size(), 1048576)
+            self.assertEqual(rdata.getByteSize(), 4194304)
+            self.assertEqual(rdata.getEncoding(), EncodingType.BGR)
+            self.assertEqual(rdata.getChannelSpace(), ChannelSpaceType.u_32_4)
+            
+            h2 = rdata.getHeader()
+            self.assertTrue(similar(h, h2))
+
+            self.assertEqual(rdata.isBigEndian(), True)
+           
+            dims = rdata.getDimensions()
+            self.assertEqual(dims, [1024L, 1024L, 1L])
+            
+        except Exception,e:
+            self.fail("test_rawimagedata exception group 2: " + str(e))
             
     def test_setData_bytearray(self):
         
