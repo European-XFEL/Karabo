@@ -19,7 +19,7 @@ using namespace std;
 
 
 void exportPyXipRawImageData() {
-    
+
         bp::enum_< karabo::xip::Encoding::EncodingType>("EncodingType")
         .value("UNDEFINED", karabo::xip::Encoding::UNDEFINED)
         .value("GRAY", karabo::xip::Encoding::GRAY)
@@ -65,10 +65,7 @@ void exportPyXipRawImageData() {
         ;
       
     
-    bp::class_<RawImageData> ("_RawImageData", bp::no_init);
-    
-    
-    bp::class_< RawImageDataWrap, bp::bases< RawImageData>, boost::noncopyable > r("RawImageData");
+    bp::class_< RawImageData, boost::shared_ptr<RawImageData> > r("RawImageData");
    
         r.def(bp::init< size_t const, 
                         Dims const &, 

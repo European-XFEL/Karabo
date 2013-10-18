@@ -23,30 +23,10 @@ namespace bp = boost::python;
 namespace karathon {
 
 
-    class RawImageDataWrap : public karabo::xip::RawImageData {
+    class RawImageDataWrap {
     
     public:
-
-        RawImageDataWrap() : karabo::xip::RawImageData() {
-        }
-
-        RawImageDataWrap(size_t const byteSize,
-                karabo::util::Dims const & dimensions,
-                karabo::xip::EncodingType const encoding,
-                karabo::xip::ChannelSpaceType const channelSpace,
-                karabo::util::Hash const & header = karabo::util::Hash(),
-                bool const isBigEndian = karabo::util::isBigEndian())
-        : karabo::xip::RawImageData(byteSize, boost::ref(dimensions), encoding, channelSpace, boost::ref(header), isBigEndian) {
-        }
-
-        RawImageDataWrap(karabo::util::Hash & imageHash, bool sharesData = false)
-        : karabo::xip::RawImageData(boost::ref(imageHash), sharesData) {
-        }
-
-        RawImageDataWrap(karabo::xip::RawImageData const & image)
-        : karabo::xip::RawImageData(boost::ref(image)) {
-        }
-
+        
         static void setData(karabo::xip::RawImageData& self, const bp::object & obj) {
 
             if (PyByteArray_Check(obj.ptr())) {
