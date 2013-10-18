@@ -86,10 +86,6 @@ void exportPyXipRawImageData() {
             , (void (*)(RawImageData&, const bp::object &))(&RawImageDataWrap::setData)
             , bp::arg("data"));
         
-        r.def("setData"
-            , (void (*)(RawImageData&, const bp::object &, const size_t))(&RawImageDataWrap::setData)
-            , (bp::arg("data"),  bp::arg("byteSize")));
-        
         r.def("getData", &RawImageDataWrap::getData);
             
         r.def("allocateData"
