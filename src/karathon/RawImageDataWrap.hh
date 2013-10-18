@@ -12,12 +12,10 @@
 #include <boost/python.hpp>
 #include <boost/function.hpp>
 #include <karabo/xip/RawImageData.hh>
-#include "Wrapper.hh"
-#ifdef WITH_BOOST_NUMPY
 #include <boost/numpy.hpp>
-namespace bn = boost::numpy;
-#endif
+#include "Wrapper.hh"
 
+namespace bn = boost::numpy;
 namespace bp = boost::python;
 
 namespace karathon {
@@ -59,7 +57,6 @@ namespace karathon {
                 return;
             }
 
-            #ifdef WITH_BOOST_NUMPY
             if (bp::extract<bn::ndarray>(obj).check()) {
                 const bn::ndarray& a = bp::extract<bn::ndarray>(obj);
                 int nd = a.get_nd();
@@ -116,20 +113,8 @@ namespace karathon {
                     return;
                 }
             }
-            #endif       
-
+      
             throw KARABO_PYTHON_EXCEPTION("Python type of the argument given in setData cannot be recognized");
-        }
-
-        static void setData(karabo::xip::RawImageData& self, const bp::object & obj, const size_t byteSize) {
-
-            if (PyByteArray_Check(obj.ptr())) {
-                char* data = PyByteArray_AsString(obj.ptr());
-                //size_t size = PyByteArray_Size(obj.ptr());
-                self.setData<char>(data, byteSize);
-                return;
-            }
-            throw KARABO_PYTHON_EXCEPTION("Python type of the argument in setData is byteArray");
         }
 
         static bp::object getData(karabo::xip::RawImageData& self) {
