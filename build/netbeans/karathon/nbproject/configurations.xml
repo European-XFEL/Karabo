@@ -122,9 +122,6 @@
             <pElem>${KARABO}/extern/include/python2.7</pElem>
             <pElem>${KARABO}/extern/include</pElem>
           </incDir>
-          <preprocessorList>
-            <Elem>WITH_BOOST_NUMPY</Elem>
-          </preprocessorList>
         </ccTool>
         <linkerTool>
           <output>${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/lib/karathon.${CND_DLIB_EXT}</output>
