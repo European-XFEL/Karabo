@@ -1070,8 +1070,8 @@ void exportPyUtilSchema() {
                 .export_values()
                 ;
         bp::enum_<UnitType>("Unit")
-                .value("METER", Unit::NUMBER)
-                .value("METER", Unit::COUNT)
+                .value("NUMBER", Unit::NUMBER)
+                .value("COUNT", Unit::COUNT)
                 .value("METER", Unit::METER)
                 .value("GRAM", Unit::GRAM)
                 .value("SECOND", Unit::SECOND)
