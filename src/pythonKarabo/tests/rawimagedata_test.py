@@ -46,104 +46,49 @@ class  RawImageData_TestCase(unittest.TestCase):
     def test_rawimagedata(self):
         
         try:
-            d=Dims(1024, 1024, 1)
-            byteSize = 4194304
-            rdata = RawImageData(byteSize, d, EncodingType.BGR, ChannelSpaceType.u_32_4)  
-            
-            self.assertEqual(rdata.size(), 1048576)
-            self.assertEqual(rdata.getByteSize(), 4194304)
-            self.assertEqual(rdata.getEncoding(), EncodingType.BGR)
-            self.assertEqual(rdata.getChannelSpace(), ChannelSpaceType.u_32_4)
-            
-            dims = rdata.getDimensions()
-            self.assertEqual(dims, [1024L, 1024L, 1L])
-        except Exception,e:
-            self.fail("test_rawimagedata exception group 1: " + str(e))
-        
-        try:    
-            h = Hash("a", 10, "b", "info")
-            
-            rdata = RawImageData(byteSize, d, EncodingType.BGR, ChannelSpaceType.u_32_4, h, True)  
-            self.assertEqual(rdata.size(), 1048576)
-            self.assertEqual(rdata.getByteSize(), 4194304)
-            self.assertEqual(rdata.getEncoding(), EncodingType.BGR)
-            self.assertEqual(rdata.getChannelSpace(), ChannelSpaceType.u_32_4)
-            
-            h2 = rdata.getHeader()
-            self.assertTrue(similar(h, h2))
-
-            self.assertEqual(rdata.isBigEndian(), True)
-           
-            dims = rdata.getDimensions()
-            self.assertEqual(dims, [1024L, 1024L, 1L])
-            
-        except Exception,e:
-            self.fail("test_rawimagedata exception group 2: " + str(e))
-            
-    def test_setData_bytearray(self):
-        
-        try:       
-            d=Dims(1024, 1024, 1)
-            byteSize = 4194304
-            rdata = RawImageData(byteSize, d, EncodingType.BGR, ChannelSpaceType.u_32_4)
-            
             imgArr = np.fromfile(self.resourcesdir+"image_0001.raw", dtype=np.uint32)            
             self.assertEqual(imgArr.size, 1048576)
+            image = imgArr.reshape(1024, 1024)
             
-            imgArr2 = bytearray(imgArr)
-            self.assertEqual(len(imgArr2), 4194304)
+            #               numpy array,    encoding,    optional header, optional endianess
+            rdata = RawImageData(image, EncodingType.BGR)
             
-            #setData : bytearray
-            rdata.setData(imgArr2)
-            
-            getData = rdata.getData()
-            self.assertEqual(len(getData), 4194304)
+            self.assertEqual(rdata.size(), 1048576)
+            self.assertEqual(rdata.getByteSize(), 4194304)
+            self.assertEqual(rdata.getEncoding(), EncodingType.BGR)
+            self.assertEqual(rdata.getChannelSpace(), ChannelSpaceType.u_32_4)
+            dims = rdata.getDimensions()
+            self.assertEqual(dims, [1024L, 1024L, 1L])
             
             h = rdata.toHash()
-            self.assertEqual(h.get("isBigEndian"), False)          
-            self.assertEqual(h.get("encoding"), 3)
-            self.assertEqual(h.get("channelSpace"), 11)
-            self.assertEqual(h.get("dims"), [1024L, 1024L, 1L] )
+            self.assertTrue(h["isBigEndian"])   # default setting     
+            self.assertEqual(h["encoding"], 3)
+            self.assertEqual(h["channelSpace"], 11)
+            self.assertEqual(h["dims"], [1024L, 1024L, 1L])
+            rdata.setIsBigEndian(False)
+            self.assertFalse(h["isBigEndian"])
+        except Exception,e:
+            self.fail("test_rawimagedata exception group 1: " + str(e))
             
-            #construct RawImageData from given Hash and check its properties
-            rdatanew = RawImageData(h)
-            self.assertEqual(rdatanew.size(), 1048576)
-            self.assertEqual(rdatanew.getByteSize(), 4194304)
-            self.assertEqual(rdatanew.getEncoding(), EncodingType.BGR)
-            self.assertEqual(rdatanew.getChannelSpace(), ChannelSpaceType.u_32_4)
+    def test_setData_bytearray(self):
+        try:       
+            imgNumpy = np.fromfile(self.resourcesdir+"image_0001.raw", dtype=np.uint32)
+            imgArray = bytearray(imgNumpy);
             
-            getDataNew = rdatanew.getData()
-            self.assertEqual(len(getDataNew), 4194304)
+            dimensions = Dims(1024, 1024, 1)
+            header = Hash('a', 10, 'info', 99);
+            rdata = RawImageData(imgArray, dimensions, EncodingType.BGR, ChannelSpaceType.u_32_4, header, False)
+            
+            data = rdata.getData()
+            self.assertEqual(len(data), 4194304)
+            h = rdata.toHash()
+
+            self.assertFalse(h['isBigEndian'])
+            self.assertEqual(h['header.info'], 99)
             
         except Exception,e:
             self.fail("test_setData_bytearray exception: " + str(e))
             
-    def test_setData_numpyarray(self):
-        try:
-            d=Dims(1024, 1024, 1)
-            byteSize = 4194304
-            rdata = RawImageData(byteSize, d, EncodingType.BGR, ChannelSpaceType.u_32_4)
-            
-            imgArr = np.fromfile(self.resourcesdir+"image_0001.raw", dtype=np.uint32) 
-            #check properties of imgArr <type 'numpy.ndarray'>
-            self.assertEqual(imgArr.size, 1048576)
-            self.assertEqual(imgArr.dtype, 'uint32')
-            self.assertEqual(imgArr.nbytes, 4194304)
-            self.assertEqual(imgArr.shape, (1048576,) )
-            
-            #setData : numpy array
-            rdata.setData(imgArr)
-            
-            self.assertEqual(rdata.size(), 1048576)
-            self.assertEqual(rdata.getByteSize(), 4194304)
-            self.assertEqual(rdata.getEncoding(), EncodingType.BGR)
-            self.assertEqual(rdata.getChannelSpace(), ChannelSpaceType.u_32_4)
-            
-            getData = rdata.getData()
-            self.assertEqual(len(getData), 4194304)
-        
-        except Exception,e:
-            self.fail("test_setData_numpyarray exception: " + str(e))
             
 if __name__ == '__main__':
     unittest.main()   
