@@ -65,6 +65,7 @@ void exportPyXipRawImageData() {
 
 
     bp::class_< RawImageDataWrap, boost::noncopyable >("RawImageData", bp::init<>())
+#ifdef WITH_BOOST_NUMPY
             .def(bp::init < bp::object const&,
                  karabo::xip::Encoding::EncodingType const,
                  karabo::util::Hash const &, bool const >((
@@ -72,6 +73,7 @@ void exportPyXipRawImageData() {
                  bp::arg("encoding"),
                  bp::arg("header") = bp::object(karabo::util::Hash()),
                  bp::arg("isBigEndian") = true)))
+#endif
             .def(bp::init < bp::object const&,
                  Dims const &,
                  karabo::xip::Encoding::EncodingType const,

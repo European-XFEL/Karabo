@@ -10,13 +10,13 @@
 #define	KARATHON_RAWIMAGEDATAWRAP_HH
 
 #include <boost/python.hpp>
-#include <boost/numpy.hpp>
 #include <boost/function.hpp>
 #include <karabo/xip/RawImageData.hh>
-#include <boost/numpy.hpp>
 #include "Wrapper.hh"
-
+#ifdef WITH_BOOST_NUMPY
+#include <boost/numpy.hpp>
 namespace bn = boost::numpy;
+#endif
 namespace bp = boost::python;
 namespace bn = boost::numpy;
 
@@ -47,6 +47,7 @@ namespace karathon {
                                                   boost::ref(header), isBigEndian));
         }
 
+#ifdef WITH_BOOST_NUMPY
         RawImageDataWrap(const bp::object& obj,
                          const karabo::xip::EncodingType encoding,
                          const karabo::util::Hash& header, const bool isBigEndian) {
@@ -191,7 +192,8 @@ namespace karathon {
                 throw KARABO_PYTHON_EXCEPTION("Unsupported numpy array type.");
             }
         }
-
+#endif
+        
         RawImageDataWrap(karabo::util::Hash & imageHash, bool sharesData = false)
         : m_raw(new karabo::xip::RawImageData(boost::ref(imageHash), sharesData)) {
         }
@@ -209,6 +211,7 @@ namespace karathon {
         }
 
         void setData(const bp::object & obj) {
+#ifdef WITH_BOOST_NUMPY
             if (bp::extract<bn::ndarray>(obj).check()) {
                 const bn::ndarray& a = bp::extract<bn::ndarray>(obj);
                 int nd = a.get_nd();
@@ -267,6 +270,7 @@ namespace karathon {
                 }
                 throw KARABO_PYTHON_EXCEPTION("This ndarray type is not supported");
             }
+#endif
             if (PyByteArray_Check(obj.ptr())) {
                 size_t size = PyByteArray_Size(obj.ptr());
                 char* data = PyByteArray_AsString(obj.ptr());
