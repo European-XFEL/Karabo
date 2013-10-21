@@ -88,17 +88,15 @@ namespace karathon {
                 return fromStdVectorToPyArray(boost::any_cast<std::vector<float> >(operand), numpyFlag);
             } else if (operand.type() == typeid (std::vector<double>)) {
                 return fromStdVectorToPyArray(boost::any_cast<std::vector<double> >(operand), numpyFlag);
-            } else if (operand.type() == typeid (std::vector<boost::any>) && boost::any_cast<std::vector<boost::any> >(operand).size() == 0) {
-                return bp::list();
+            } else if (operand.type() == typeid (std::vector<std::string>)) {
+                return fromStdVectorToPyList(boost::any_cast < std::vector<std::string> >(operand));
             } else if (operand.type() == typeid (karabo::util::Hash)) {
                 return bp::object(boost::any_cast<karabo::util::Hash>(operand));
             } else if (operand.type() == typeid (karabo::util::Schema)) {
                 return bp::object(boost::any_cast<karabo::util::Schema>(operand));
-            } else if (operand.type() == typeid (std::vector<std::string>)) {
-                return fromStdVectorToPyList(boost::any_cast < std::vector<std::string> >(operand));
             } else if (operand.type() == typeid (std::vector<karabo::util::Hash>)) {
                 return fromStdVectorToPyHashList(boost::any_cast<std::vector<karabo::util::Hash> >(operand));
-            } else if (operand.type() == typeid (bp::object) && hasattr(boost::any_cast<bp::object >(operand), "func_name")){
+            } else if (operand.type() == typeid (bp::object) && hasattr(boost::any_cast<bp::object >(operand), "func_name")) {
                 return boost::any_cast<bp::object >(operand);
             }
             throw KARABO_PYTHON_EXCEPTION("Failed to convert inner Hash type of python object");
@@ -106,7 +104,6 @@ namespace karathon {
             KARABO_RETHROW_AS(KARABO_CAST_EXCEPTION(e.what()));
         }
     }
-
 
     void Wrapper::toAny(const bp::object& obj, boost::any& any) {
         if (PyBool_Check(obj.ptr())) {
@@ -192,7 +189,7 @@ namespace karathon {
             any = img;
             return;
         }
-        
+
         #ifdef WITH_BOOST_NUMPY
         if (bp::extract<bn::ndarray>(obj).check()) {
             const bn::ndarray& a = bp::extract<bn::ndarray>(obj);
@@ -260,7 +257,7 @@ namespace karathon {
         if (PyList_Check(obj.ptr())) {
             bp::ssize_t size = bp::len(obj);
             if (size == 0) {
-                any = std::vector<boost::any>();
+                any = std::vector<std::string>();
                 return;
             }
             bp::object list0 = obj[0];
