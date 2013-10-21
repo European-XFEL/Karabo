@@ -88,6 +88,8 @@ namespace karathon {
                 return fromStdVectorToPyArray(boost::any_cast<std::vector<float> >(operand), numpyFlag);
             } else if (operand.type() == typeid (std::vector<double>)) {
                 return fromStdVectorToPyArray(boost::any_cast<std::vector<double> >(operand), numpyFlag);
+            } else if (operand.type() == typeid (std::vector<boost::any>) && boost::any_cast<std::vector<boost::any> >(operand).size() == 0) {
+                return bp::list();
             } else if (operand.type() == typeid (karabo::util::Hash)) {
                 return bp::object(boost::any_cast<karabo::util::Hash>(operand));
             } else if (operand.type() == typeid (karabo::util::Schema)) {
@@ -256,8 +258,12 @@ namespace karathon {
         #endif
 
         if (PyList_Check(obj.ptr())) {
-            bp::object list0 = obj[0];
             bp::ssize_t size = bp::len(obj);
+            if (size == 0) {
+                any = std::vector<boost::any>();
+                return;
+            }
+            bp::object list0 = obj[0];
             if (PyBool_Check(list0.ptr())) {
                 std::vector<bool> v(size); // Special case here
                 for (bp::ssize_t i = 0; i < size; ++i) {
