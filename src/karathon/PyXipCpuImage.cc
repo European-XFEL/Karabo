@@ -167,9 +167,12 @@ void exportPyXipCpuImage() {
     
 }
 template void exportPyXipCpuImage<int>();
+template void exportPyXipCpuImage<unsigned int>();
 template void exportPyXipCpuImage<double>();
+template void exportPyXipCpuImage<float>();
 template void exportPyXipCpuImage<char>();
 template void exportPyXipCpuImage<unsigned char>();
-template void exportPyXipCpuImage<float>();
+template void exportPyXipCpuImage<long long>();
+template void exportPyXipCpuImage<unsigned long long>();
 template void exportPyXipCpuImage<short>();
 template void exportPyXipCpuImage<unsigned short>();
