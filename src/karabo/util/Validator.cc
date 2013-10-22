@@ -13,16 +13,13 @@
 namespace karabo {
     namespace util {
 
-
         Validator::Validator() : m_injectDefaults(true), m_allowUnrootedConfiguration(true),
         m_allowAdditionalKeys(false), m_allowMissingKeys(false), m_injectTimestamps(false) {
         }
 
-
         Validator::Validator(const ValidationRules rules) {
             this->setValidationRules(rules);
         }
-
 
         void Validator::setValidationRules(const Validator::ValidationRules& rules) {
             m_injectDefaults = rules.injectDefaults;
@@ -31,7 +28,6 @@ namespace karabo {
             m_allowUnrootedConfiguration = rules.allowUnrootedConfiguration;
             m_injectTimestamps = rules.injectTimestamps;
         }
-
 
         Validator::ValidationRules Validator::getValidationRules() const {
             Validator::ValidationRules rules;
@@ -43,12 +39,11 @@ namespace karabo {
             return rules;
         }
 
-
         std::pair<bool, std::string> Validator::validate(const Schema& schema, const Hash& unvalidatedInput, Hash& validatedOutput, const Timestamp& timestamp) {
 
             // Clear all previous warnings and alarms
             m_parametersInWarnOrAlarm.clear();
-            
+
             // Prepare timestamp if needed
             if (m_injectTimestamps) {
                 m_timestamp = timestamp;
@@ -83,7 +78,6 @@ namespace karabo {
                 else return std::make_pair<bool, string > (false, validationFailedReport.str());
             }
         }
-
 
         void Validator::r_validate(const Hash& master, const Hash& user, Hash& working, std::ostringstream& report, std::string scope) {
             std::set<std::string> keys;
@@ -228,7 +222,6 @@ namespace karabo {
                             Hash::Node& workNode = working.set(key, std::vector<Hash>()); // TODO use bindReference here
                             vector<Hash>& workNodes = workNode.getValue<vector<Hash> >();
 
-
                             BOOST_FOREACH(string optionName, optionNames) {
                                 Hash tmp;
                                 r_validate(it->getValue<Hash > ().get<Hash > (optionName), Hash(), tmp, report, currentScope + "." + optionName);
@@ -255,7 +248,6 @@ namespace karabo {
                                 report << "Too many options given for (list-)parameter: \"" << key << "\". Expecting at most " << it->getAttribute<int>(KARABO_SCHEMA_MAX);
                                 return;
                             }
-
 
                             BOOST_FOREACH(string optionName, optionNames) {
                                 cout << "Silently converting from STRING" << endl;
@@ -310,7 +302,6 @@ namespace karabo {
 
             if (!m_allowAdditionalKeys && !keys.empty()) {
 
-
                 BOOST_FOREACH(string key, keys) {
                     string currentScope;
                     if (scope.empty()) currentScope = key;
@@ -320,26 +311,27 @@ namespace karabo {
             }
         }
 
-
         void Validator::validateLeaf(const Hash::Node& masterNode, Hash::Node& workNode, std::ostringstream& report, std::string scope) {
 
 
             if (m_injectTimestamps) attachTimestampIfNotAlreadyThere(workNode);
-                        
+
             Types::ReferenceType referenceType = Types::from<FromLiteral>(masterNode.getAttribute<string>(KARABO_SCHEMA_VALUE_TYPE));
             Types::ReferenceType referenceCategory = Types::category(referenceType);
             Types::ReferenceType givenType = workNode.getType();
 
             // Check data types
             if (givenType != referenceType) {
-                // Try casting this guy
-                try {
-                    workNode.setType(referenceType);
-                } catch (const CastException& e) {
-                    report << "Failed to cast the value of parameter \"" << scope << "\" from " << Types::to<ToLiteral>(givenType);
-                    report << " to " << Types::to<ToLiteral>(referenceType) << endl;
-                    Exception::clearTrace(); // Do not show all the bloody details
-                    return;
+                if (givenType != Types::VECTOR_STRING || workNode.getValue<vector<string> >().size() != 0) {
+                    // Try casting this guy
+                    try {
+                        workNode.setType(referenceType);
+                    } catch (const CastException& e) {
+                        report << "Failed to cast the value of parameter \"" << scope << "\" from " << Types::to<ToLiteral>(givenType);
+                        report << " to " << Types::to<ToLiteral>(referenceType) << endl;
+                        Exception::clearTrace(); // Do not show all the bloody details
+                        return;
+                    }
                 }
             }
 
@@ -446,7 +438,7 @@ namespace karabo {
                 }
             }
         }
-        
+
         void Validator::attachTimestampIfNotAlreadyThere(Hash::Node& node) {
             if (m_injectTimestamps) {
                 Hash::Attributes& attributes = node.getAttributes();
@@ -456,11 +448,9 @@ namespace karabo {
             }
         }
 
-
         bool Validator::hasParametersInWarnOrAlarm() const {
             return !m_parametersInWarnOrAlarm.empty();
         }
-
 
         const Hash& Validator::getParametersInWarnOrAlarm() const {
             return m_parametersInWarnOrAlarm;
