@@ -543,8 +543,23 @@ class  Schema_TestCase(unittest.TestCase):
             self.assertEqual(schema.getMinSize("exampleKey10"), 2)
             self.assertEqual(schema.getMaxSize("exampleKey10"), 7)
         except Exception,e:
-            self.fail("test_vectorElement exception: " + str(e))  
-        
+            self.fail("test_vectorElement exception: " + str(e))
+            
+        try:
+            schema = Configurator(SomeClass).getSchema("SomeClassId")
+            validator = Validator()
+            configuration = Hash('somelist', [])
+            #print "\nInput configuration is ...\n{}".format(configuration)
+            validated = validator.validate(schema, configuration)
+            #print "Validated configuration is ...\n{}".format(validated)
+            somelist = validated['somelist']
+            somelist.append(55)
+            somelist.append(99)
+            validated['somelist'] = somelist
+            #print "After adding to the list the configuration is ...\n{}".format(validated)
+        except Exception,e:
+            self.fail("test_vectorElement exception 2: " +str(e))
+            
     def test_getDisplayType(self):
         try:    
             schema = Configurator(TestStruct1).getSchema("TestStruct1")

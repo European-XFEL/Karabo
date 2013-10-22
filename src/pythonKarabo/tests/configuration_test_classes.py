@@ -420,6 +420,12 @@ class SomeClass(object):
          .readOnly().initialValue(1.11).alarmLow(-22.1).alarmHigh(22.777).warnLow(-5.5).warnHigh(5.5).archivePolicy(EVERY_100MS)
          .commit()
          ,
+        VECTOR_INT32_ELEMENT(expected).key("somelist")
+                 .displayedName("Ykey").description("Example of Y key description")
+                 .reconfigurable()
+                 .assignmentOptional().defaultValue([])
+                 .commit()
+                 ,
         )
 
     
