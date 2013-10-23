@@ -35,7 +35,7 @@ class Server(threading.Thread):
             channel.setErrorHandler(self.onError)
             #register read Hash handler for this channel (client)
             channel.readAsyncHash(self.onReadHash)
-        except RuntimeError,e:
+        except RuntimeError as e:
             print "TCP Async server onConnect:",str(e)
     
     def onReadHash(self, channel, hash):
@@ -43,20 +43,20 @@ class Server(threading.Thread):
             hash["server"] = "APPROVED!"
             self.store[channel.__id__] = hash
             channel.writeAsyncHash(self.store[channel.__id__], self.onWriteComplete)
-        except RuntimeError,e:
+        except RuntimeError as e:
             print "TCP Async server onReadHash:",str(e)
     
     def onWriteComplete(self, channel):
         try:
             del self.store[channel.__id__]
             channel.readAsyncHash(self.onReadHash)
-        except RuntimeError,e:
+        except RuntimeError as e:
             print "TCP Async server onReadHash:",str(e)
             
     def run(self):
         try:
             self.ioserv.run()
-        except RuntimeError,e:
+        except RuntimeError as e:
             print "TCP Async server run: " + str(e)
         
     # this method stops server
@@ -100,7 +100,7 @@ class  P2p_TestCase(unittest.TestCase):
             self.assertEqual(h['x.y.z'], [1,2,3,4,5])
             self.assertEqual(h['d.abc'], 'rabbish')
             
-        except Exception, e:
+        except Exception as e:
             self.fail("test_server exception group 1: " + str(e))
 
 

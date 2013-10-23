@@ -33,7 +33,7 @@ class Server(threading.Thread):
             channel.setErrorHandler(self.onError);
             #register read Hash handler for this channel (client)
             channel.readAsyncHash(self.onReadHash)
-        except RuntimeError,e:
+        except RuntimeError as e:
             print "TCP Async server onConnect:",str(e)
     
     def onReadHash(self, channel, hash):
@@ -42,20 +42,20 @@ class Server(threading.Thread):
             # Use id(channel) or channel.__id__.  Don't use channel directly -- this is local variable! It can be reused or garbage collected
             self.store[id(channel)] = hash
             channel.writeAsyncHash(self.store[id(channel)], self.onWriteComplete)
-        except RuntimeError,e:
+        except RuntimeError as e:
             print "TCP Async server onReadHash:",str(e)
     
     def onWriteComplete(self, channel):
         try:
             del self.store[id(channel)]
             channel.readAsyncHash(self.onReadHash)
-        except RuntimeError,e:
+        except RuntimeError as e:
             print "TCP Async server onReadHash:",str(e)
         
     def run(self):
         try:
             self.ioserv.run()
-        except Exception, e:
+        except Exception as e:
             print "TCP Async server run: " + str(e)
         
     # this method stops server
@@ -87,7 +87,7 @@ class  P2p_asyncTestCase(unittest.TestCase):
                 h = Hash("a.b.c", 1, "x.y.z", [1,2,3,4,5], "d", Hash("abc", 'rabbish'))
                 store[channel.__id__] = h  # keep object alive until write complete
                 channel.writeAsyncHash(store[channel.__id__], onWriteComplete)
-            except RuntimeError,e:
+            except RuntimeError as e:
                 print "ASync client onConnect:",str(e)
 
         def onWriteComplete(channel):
@@ -95,7 +95,7 @@ class  P2p_asyncTestCase(unittest.TestCase):
                 print "ASync client onWriteComplete: id is", channel.__id__
                 del store[channel.__id__]
                 channel.readAsyncHash(onReadHash)
-            except RuntimeError,e:
+            except RuntimeError as e:
                 print "ASync client onWriteComplete:",str(e)
             
         def onReadHash(channel, h):
@@ -107,7 +107,7 @@ class  P2p_asyncTestCase(unittest.TestCase):
                 self.assertEqual(h['x.y.z'], [1,2,3,4,5])
                 self.assertEqual(h['d.abc'], 'rabbish')
                 channel.waitAsync(100, onTimeout)
-            except Exception, e:
+            except Exception as e:
                 self.fail("test_asynchronous_client exception group 1: " + str(e))
 
         def onTimeout(channel):
@@ -123,7 +123,7 @@ class  P2p_asyncTestCase(unittest.TestCase):
             connection.startAsync(onConnect)
             ioservice = connection.getIOService()
             ioservice.run()
-        except Exception, e:
+        except Exception as e:
             self.fail("test_asynchronous_client exception group 2: " + str(e))
 
 

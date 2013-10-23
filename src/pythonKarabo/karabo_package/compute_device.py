@@ -360,7 +360,7 @@ class PythonComputeDevice(PythonDevice, ComputeFsm):
                 return
             try:
                 self.update()
-            except Exception, e:
+            except Exception as e:
                 self.waitingIOLock.release()
                 self.errorFound("Exception caught", str(e))
                 return

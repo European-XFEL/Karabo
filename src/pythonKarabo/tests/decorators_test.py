@@ -101,7 +101,7 @@ class  Decorators_TestCase(unittest.TestCase):
             self.assertEqual(schema.getValueType("port"),       Types.INT32)
             self.assertEqual(schema.getValueType("street"),     Types.STRING)
 
-        except Exception,e:
+        except Exception as e:
             self.fail("test_decorators group 1: " + str(e))
 
 if __name__ == '__main__':
