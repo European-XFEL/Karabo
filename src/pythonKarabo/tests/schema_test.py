@@ -553,9 +553,10 @@ class  Schema_TestCase(unittest.TestCase):
             validated = validator.validate(schema, configuration)
             #print "Validated configuration is ...\n{}".format(validated)
             somelist = validated['somelist']
-            somelist.append(55)
             somelist.append(99)
-            validated['somelist'] = somelist
+            somelist.append(55)
+            configuration['somelist'] = somelist
+            validated = validator.validate(schema, configuration)
             #print "After adding to the list the configuration is ...\n{}".format(validated)
         except Exception,e:
             self.fail("test_vectorElement exception 2: " +str(e))
