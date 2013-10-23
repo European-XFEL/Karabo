@@ -45,7 +45,7 @@ class  Xms_TestCase(unittest.TestCase):
             self.assertEqual(h['a.b.c'], 1)
             self.assertEqual(h['x.y.z'], [1,2,3,4,5,6,7])
             self.assertEqual(h['remote_client'], 'APPROVED!')
-        except Exception,e:
+        except Exception as e:
             self.fail("test_xms_signal_slotable exception group 1: " + str(e))
             
 

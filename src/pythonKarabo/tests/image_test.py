@@ -15,7 +15,7 @@ class  Image_TestCase(unittest.TestCase):
             img = ImageDOUBLE(CPU)
             self.assertTrue(img.isEmpty())
             self.assertEqual(img.byteSize(), 0)
-        except Exception,e:
+        except Exception as e:
             self.fail("test_image_double exception group 1: " + str(e))
         
         try:
@@ -26,7 +26,7 @@ class  Image_TestCase(unittest.TestCase):
             self.assertEqual(img.dimZ(), 3)
             self.assertEqual(img(2, 2, 2), 222)
             self.assertEqual(img(1, 0, 2), 102)
-        except Exception,e:
+        except Exception as e:
             self.fail("test_image_double exception group 2: " + str(e))    
             
         try:
@@ -35,7 +35,7 @@ class  Image_TestCase(unittest.TestCase):
             self.assertEqual(img.dimX(), 1024)
             self.assertEqual(img.dimY(), 1024)
             self.assertEqual(img.dimZ(), 1)
-        except Exception,e:
+        except Exception as e:
             self.fail("test_image_double exception group 3: " + str(e))
             
         try:
@@ -47,7 +47,7 @@ class  Image_TestCase(unittest.TestCase):
             n = img.dimX()
             for i in range(0,n):
                 self.assertEqual(img[i], 5.5)          
-        except Exception,e:
+        except Exception as e:
             self.fail("test_image_double exception group 4: " + str(e))    
         
         try:
@@ -59,7 +59,7 @@ class  Image_TestCase(unittest.TestCase):
             n = img.dimX()
             for i in range(0,n):
                 self.assertEqual(img[i], float(i))
-        except Exception,e:
+        except Exception as e:
             self.fail("test_image_double exception group 5: " + str(e))    
         
 
@@ -68,7 +68,7 @@ class  Image_TestCase(unittest.TestCase):
             img = ImageFLOAT(CPU)
             self.assertTrue(img.isEmpty())
             self.assertEqual(img.byteSize(), 0)
-        except Exception,e:
+        except Exception as e:
             self.fail("test_image_float exception group 1: " + str(e))
         
         try:
@@ -79,7 +79,7 @@ class  Image_TestCase(unittest.TestCase):
             self.assertEqual(img.dimZ(), 3)
             self.assertEqual(img(2, 2, 2), 222)
             self.assertEqual(img(1, 0, 2), 102)
-        except Exception,e:
+        except Exception as e:
             self.fail("test_image_float exception group 2: " + str(e))       
         
         try:
@@ -88,7 +88,7 @@ class  Image_TestCase(unittest.TestCase):
             self.assertEqual(img.dimX(), 1024)
             self.assertEqual(img.dimY(), 1024)
             self.assertEqual(img.dimZ(), 1)
-        except Exception,e:
+        except Exception as e:
             self.fail("test_image_float exception group 3: " + str(e))
             
         try:
@@ -100,7 +100,7 @@ class  Image_TestCase(unittest.TestCase):
             n = img.dimX()
             for i in range(0,n):
                 self.assertEqual(img[i], 5.5)          
-        except Exception,e:
+        except Exception as e:
             self.fail("test_image_float exception group 4: " + str(e))    
         
         try:
@@ -112,7 +112,7 @@ class  Image_TestCase(unittest.TestCase):
             n = img.dimX()
             for i in range(0,n):
                 self.assertEqual(img[i], float(i))
-        except Exception,e:
+        except Exception as e:
             self.fail("test_image_float exception group 5: " + str(e))    
     
 if __name__ == '__main__':

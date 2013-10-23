@@ -50,7 +50,7 @@ class BaseFsm(object):
         if fsm is not None:
             try:
                 fsm.start()
-            except Exception, e:
+            except Exception as e:
                 self.errorFound("Exception while processing event '{}'".format("Start state machine"), str(e))
                 return
             # this is for compatibility with GUI: strip square brackets from state name in case of state machine with regions
@@ -67,7 +67,7 @@ class BaseFsm(object):
                 self.onStateUpdate("Changing...")
                 try:
                     fsm.process_event(event)
-                except Exception, e:
+                except Exception as e:
                     self.errorFound("Exception while processing event '{}'".format(event.__class__.__name__), str(e))
                     return
                 state = fsm.get_state()

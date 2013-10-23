@@ -22,7 +22,7 @@ class  Serializer_TestCase(unittest.TestCase):
             hash2 = ser.load(archive)
             self.assertEqual(similar(hash, hash2), True)
             
-        except Exception,e:
+        except Exception as e:
             self.fail("test_textserializer_hash exception group 1: " + str(e))
         
     def test_textserializer_schema_xml(self):
@@ -34,7 +34,7 @@ class  Serializer_TestCase(unittest.TestCase):
             schema2 = ser.load(archive)
             self.assertEqual(similar(schema.getParameterHash(), schema2.getParameterHash()), True)
             
-        except Exception,e:
+        except Exception as e:
             self.fail("test_textserializer_schema_xml exception group 1: " + str(e))
 
     def test_textserializer_schema_xsd(self):
@@ -45,7 +45,7 @@ class  Serializer_TestCase(unittest.TestCase):
             archive = ser.save(schema)      # serialize schema
             self.assertEqual(archive,'<?xml version="1.0"?><xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:a="http://www.karabo.eu"><xs:element name="EditableCircle"><xs:complexType><xs:all><xs:element name="shadowEnabled" type="xs:boolean" default="0" minOccurs="0" maxOccurs="1"><xs:annotation><xs:documentation><a:description>Shadow enabled</a:description><a:displayedName>Shadow</a:displayedName><a:requiredAccessLevel>1</a:requiredAccessLevel><a:default>0</a:default><a:accessType>1</a:accessType></xs:documentation></xs:annotation></xs:element><xs:element name="radius" default="10.000000000000000" minOccurs="0" maxOccurs="1"><xs:annotation><xs:documentation><a:description>The radius of the circle</a:description><a:displayedName>Radius</a:displayedName><a:alias>1</a:alias><a:requiredAccessLevel>1</a:requiredAccessLevel><a:default>10.000000000000000</a:default><a:accessType>4</a:accessType><a:unitName>meter</a:unitName><a:unitSymbol>m</a:unitSymbol><a:metricPrefixName>milli</a:metricPrefixName><a:metricPrefixSymbol>m</a:metricPrefixSymbol></xs:documentation></xs:annotation><xs:simpleType><xs:restriction base="xs:double"><xs:minExclusive value="0.000000000000000" /><xs:maxExclusive value="100.000000000000000" /></xs:restriction></xs:simpleType></xs:element></xs:all></xs:complexType></xs:element></xs:schema>')
             
-        except Exception,e:
+        except Exception as e:
             self.fail("test_textserializer_schema_xsd exception group 1: " + str(e))
 
     def test_binaryserializer_hash(self):
@@ -57,7 +57,7 @@ class  Serializer_TestCase(unittest.TestCase):
             hash2 = ser.load(archive)
             self.assertTrue(similar(hash, hash2))
             
-        except Exception,e:
+        except Exception as e:
             self.fail("test_binaryserializer_hash exception group 1: " + str(e))
     
     def test_io_write_read_hash(self):
@@ -73,7 +73,7 @@ class  Serializer_TestCase(unittest.TestCase):
             input.read(hash2)
             self.assertTrue(similar(hash, hash2))
             
-        except Exception,e:
+        except Exception as e:
             self.fail("test_io_saveload_hash exception group 1: " + str(e))
             
     def test_io_savetofile_loadfromfile(self):
@@ -86,7 +86,7 @@ class  Serializer_TestCase(unittest.TestCase):
             self.assertEqual(h2['a'], 10)
             self.assertEqual(h2['b'], "Hallo World")
         
-        except Exception,e:
+        except Exception as e:
             self.fail("test_io_savetofile_loadfromfile exception group 1: " + str(e))   
         
         try:
@@ -97,7 +97,7 @@ class  Serializer_TestCase(unittest.TestCase):
             self.assertEqual(h2['a'], 10)
             self.assertEqual(h2['b'], "Hallo World")
             
-        except Exception,e:
+        except Exception as e:
             self.fail("test_io_savetofile_loadfromfile exception group 2: " + str(e))    
         
 

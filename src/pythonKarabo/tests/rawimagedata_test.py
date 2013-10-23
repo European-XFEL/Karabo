@@ -22,7 +22,7 @@ class  RawImageData_TestCase(unittest.TestCase):
             plt.savefig(self.resourcesdir+"image_0001A.png")
             #plt.show()
             
-        except Exception,e:
+        except Exception as e:
             self.fail("test_rawimage_to_png exception group 1: " + str(e))
 
         try:
@@ -39,7 +39,7 @@ class  RawImageData_TestCase(unittest.TestCase):
             plt.savefig(self.resourcesdir+"image_0001B.png")
             #plt.show()
             
-        except Exception,e:
+        except Exception as e:
             self.fail("test_rawimage_to_png exception group 2: " + str(e))
     
 
@@ -67,7 +67,7 @@ class  RawImageData_TestCase(unittest.TestCase):
             self.assertEqual(h["dims"], [1024L, 1024L, 1L])
             rdata.setIsBigEndian(False)
             self.assertFalse(h["isBigEndian"])
-        except Exception,e:
+        except Exception as e:
             self.fail("test_rawimagedata exception group 1: " + str(e))
             
     def test_setData_bytearray(self):
@@ -86,7 +86,7 @@ class  RawImageData_TestCase(unittest.TestCase):
             self.assertFalse(h['isBigEndian'])
             self.assertEqual(h['header.info'], 99)
             
-        except Exception,e:
+        except Exception as e:
             self.fail("test_setData_bytearray exception: " + str(e))
             
             

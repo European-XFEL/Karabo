@@ -44,7 +44,7 @@ class  HashfilterTestCase(unittest.TestCase):
             self.assertFalse("chars[1].P3.l" in result)
             self.assertFalse("chars[1].P3.m" in result)
             
-        except Exception, e:
+        except Exception as e:
             self.fail("test_hashfilter exception group 1: " + str(e))
 
         try:
@@ -76,7 +76,7 @@ class  HashfilterTestCase(unittest.TestCase):
             self.assertFalse("chars[1].P3.l" in result)
             self.assertFalse("chars[1].P3.m" in result)
             
-        except Exception, e:
+        except Exception as e:
             self.fail("test_hashfilter exception group 2: " + str(e))
 
         try:
@@ -108,7 +108,7 @@ class  HashfilterTestCase(unittest.TestCase):
             self.assertTrue("chars[1].P3.l" in result)
             self.assertTrue("chars[1].P3.m" in result)
             
-        except Exception, e:
+        except Exception as e:
             self.fail("test_hashfilter exception group 3: " + str(e))
 
         try:
@@ -140,7 +140,7 @@ class  HashfilterTestCase(unittest.TestCase):
             self.assertTrue("chars[1].P3.l" in result)
             self.assertTrue("chars[1].P3.m" in result)
             
-        except Exception, e:
+        except Exception as e:
             self.fail("test_hashfilter exception group 4: " + str(e))
         
         try:
@@ -172,7 +172,7 @@ class  HashfilterTestCase(unittest.TestCase):
             self.assertFalse("chars[1].P3.l" in result)
             self.assertTrue("chars[1].P3.m" in result)
             
-        except Exception, e:
+        except Exception as e:
             self.fail("test_hashfilter exception group 5: " + str(e))
         
         try:
@@ -204,7 +204,7 @@ class  HashfilterTestCase(unittest.TestCase):
             self.assertFalse("chars[1].P3.l" in result)
             self.assertFalse("chars[1].P3.m" in result)
             
-        except Exception, e:
+        except Exception as e:
             self.fail("test_hashfilter exception group 6: " + str(e))
         
             

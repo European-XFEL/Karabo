@@ -93,7 +93,7 @@ class Configurator(object):
             try:
                 if hasattr(theClass, "expectedParameters"):
                     theClass.expectedParameters(schema) # fill schema in order from base to derived
-            except AttributeError,e:
+            except AttributeError as e:
                 print "Exception while adding expected parameters for class %r: %r" % (theClass.__name__, e)
         return schema
     
@@ -147,7 +147,7 @@ class Configurator(object):
         validator = Validator()
         try:
             validated = validator.validate(schema, configuration)
-        except RuntimeError,e:
+        except RuntimeError as e:
             raise RuntimeError,"Validation Exception: " + str(e)
         return Derived(validated)
     

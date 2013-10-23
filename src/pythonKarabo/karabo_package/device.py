@@ -203,7 +203,7 @@ class PythonDevice(BaseFsm):
                 hash, stamp = pars
                 try:
                     validated = self.validatorIntern.validate(self.fullSchema, hash, stamp)
-                except RuntimeError,e:
+                except RuntimeError as e:
                     print "Validation Exception (Intern): " + str(e)
                     raise RuntimeError,"Validation Exception: " + str(e)
 
@@ -225,7 +225,7 @@ class PythonDevice(BaseFsm):
         with self._stateChangeLock:
             try:
                 return self.parameters[key]
-            except RuntimeError,e:
+            except RuntimeError as e:
                 raise AttributeError,"Error while retrieving '" + key + "' from device"
             
     def __getitem__(self, key):
@@ -295,13 +295,13 @@ class PythonDevice(BaseFsm):
     def getAliasFromKey(self, key, aliasReferenceType):
         try:
             return self.fullSchema.getAliasFromKey(key, aliasReferenceType)
-        except RuntimeError,e:
+        except RuntimeError as e:
             raise AttributeError,"Error while retrieving alias from parameter (" + key + "): " + str(e)
         
     def getKeyFromAlias(self, alias):
         try:
             return self.fullSchema.getKeyFromAlias(alias)
-        except RuntimeError,e:
+        except RuntimeError as e:
             raise AttributeError,"Error while retrieving parameter from alias (" + str(alias) + "): " + str(e)
     
     def aliasHasKey(self, alias):
@@ -418,7 +418,7 @@ class PythonDevice(BaseFsm):
         if result:
             try:
                 self.preReconfigure(validated)
-            except Exception,e:
+            except Exception as e:
                 print "PythonDevice.slotReconfigure Exception:", str(e)
                 self.errorFound("Python Exception happened", str(e))
                 self._ss.reply(False, str(e))
@@ -432,7 +432,7 @@ class PythonDevice(BaseFsm):
         self.log.DEBUG("Incoming (un-validated) reconfiguration:\n{}".format(unvalidated))
         try:
             validated = self.validatorExtern.validate(whiteList, unvalidated)
-        except RuntimeError,e:
+        except RuntimeError as e:
             errorText = str(e) + " in state: \"" + currentState + "\""
             return (False, errorText, unvalidated)
         self.log.DEBUG("Validated reconfiguration:\n{}".format(validated))
@@ -513,7 +513,7 @@ def launchPythonDevice():
         device = Configurator(PythonDevice).create(classid, configuration)
         device.run()
         device.__del__()
-    except Exception,e:
+    except Exception as e:
         print "Exception caught: " + str(e)
     os._exit(77)
     

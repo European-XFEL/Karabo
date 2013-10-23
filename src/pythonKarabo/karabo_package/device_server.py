@@ -230,7 +230,7 @@ class DeviceServer(object):
                     if dname not in sys.path:
                         sys.path.append(dname)
                     module = __import__(name)
-                except ImportError,e:
+                except ImportError as e:
                     self.log.WARN("scanPlugins: Cannot import module {} -- {}".format(name,e))
                     continue
                 if "PythonDevice" not in dir(module):
@@ -253,7 +253,7 @@ class DeviceServer(object):
                         while True:
                             c,b = tree[0]
                             tree = tree[1]
-                    except IndexError,e:
+                    except IndexError as e:
                         pass
                     return c
 
@@ -265,7 +265,7 @@ class DeviceServer(object):
                     self.availableDevices[deviceClass.__classid__] = {"mustNotify": True, "module": name, "xsd": schema}
                     self.newPluginAvailable()
                     print "Successfully loaded plugin: \"{}.py\"".format(name)
-                except (RuntimeError, AttributeError), e:
+                except (RuntimeError, AttributeError) as e:
                     self.log.ERROR("Failure while building schema for class {}, base class {} and bases {} : {}".format(
                         deviceClass.__classid__, deviceClass.__base_classid__, deviceClass.__bases_classid__, e.message))
             time.sleep(3)
@@ -310,7 +310,7 @@ class DeviceServer(object):
             launcher.start()
             self.deviceInstanceMap[deviceid] = launcher
             del validated
-        except Exception, e:
+        except Exception as e:
             self.log.WARN("Wrong input configuration for class '{}': {}".format(classid, e.message))
             return
         
@@ -397,7 +397,7 @@ class Launcher(threading.Thread):
             out = OutputHash.create("TextFile", cfg)
             out.write(config)
             self.args = [self.script, modname, classid, filename]
-        except Exception,e:
+        except Exception as e:
             raise RuntimeError,"Exception happened while writing 'config' object: " + str(e) 
 
     def run(self):
@@ -415,7 +415,7 @@ def main(args):
         server = Runner(DeviceServer).instantiate(args)
         if server:
             server.run()
-    except Exception,e:
+    except Exception as e:
         print "Exception caught: " + str(e)
     
     

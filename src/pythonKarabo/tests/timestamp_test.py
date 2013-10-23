@@ -21,14 +21,14 @@ class  Timestamp_TestCase(unittest.TestCase):
         
         try:
             ts01 = Timestamp()
-        except Exception, e:
+        except Exception as e:
             self.fail(functionName + " creating ts01 default constructor: " + str(e))
         
         time.sleep(sleepDelay)
         
         try:
             ts02 = Timestamp()
-        except Exception, e:
+        except Exception as e:
             self.fail(functionName + " creating ts02 default constructor: " + str(e))
         
         self.assertEqual(ts01.getSeconds() + sleepDelay, ts02.getSeconds(), "1st timestamp should have minus 'sleepDelay' second(s) than 2nd timestamp");
@@ -37,7 +37,7 @@ class  Timestamp_TestCase(unittest.TestCase):
         # TODO: This test can be added after create the proper Constructor to Timestamp class
         #try:
         #    ts03 = Timestamp(ts02.getSeconds(), ts02.getFractionalSeconds())
-        #except Exception, e:
+        #except Exception as e:
         #    self.fail(functionName + " creating ts03 with seconds and fractionalSeconds constructor: " + str(e))
         
         #self.assertEqual(ts02.getSeconds(), ts03.getSeconds(), "2st and 3rd timestamp should have the same number of seconds");
@@ -53,7 +53,7 @@ class  Timestamp_TestCase(unittest.TestCase):
         pTimeStr01 = "20121225T132536.789333123456789123";
         try:
             es01 = Epochstamp(1356441936, 789333123456789123) #(pTimeStr01)
-        except Exception, e:
+        except Exception as e:
             self.fail(functionName + " creating Epochstamp01 using the String constructor: " + str(e))
         
         try:
@@ -71,7 +71,7 @@ class  Timestamp_TestCase(unittest.TestCase):
             pTimeConvertedStr03 = ts01.toFormattedString("%Y/%m/%d %H:%M:%S");
             self.assertEqual(pTimeConvertedStr03, "2012/12/25 13:25:36", "These strings must be equal");
             
-        except Exception, e:
+        except Exception as e:
             self.fail(functionName + " creating Timestamp01 using the String constructor: " + str(e))
         
         # Validate time was correctly converted/stored with the correct information
