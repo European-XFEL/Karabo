@@ -57,7 +57,7 @@ class Runner(object):
                 configuration += tmp
             saveToFile(configuration, "lastConfiguration.xml")
             return configuration
-        except Exception, e:
+        except Exception as e:
             print str(e)
             return Hash()
         

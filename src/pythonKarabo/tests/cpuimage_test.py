@@ -14,7 +14,7 @@ class  CpuImage_TestCase(unittest.TestCase):
             img = CpuImageFLOAT()
             self.assertTrue(img.isEmpty())
             self.assertEqual(img.byteSize(), 0)
-        except Exception,e:
+        except Exception as e:
             self.fail("test_cpuimage_float exception group 1: " + str(e))
         
         try:
@@ -26,7 +26,7 @@ class  CpuImage_TestCase(unittest.TestCase):
             self.assertEqual(img.pixelType(), "FLOAT")
             self.assertEqual(img.getStatistics().getMin(), 37.0)
             self.assertEqual(img.getStatistics().getMax(), 255.0)
-        except Exception,e:
+        except Exception as e:
             self.fail("test_image_double exception group 2: " + str(e))    
  
         try:
@@ -35,7 +35,7 @@ class  CpuImage_TestCase(unittest.TestCase):
             self.assertEqual(img.dimX(), 1024)
             self.assertEqual(img.dimY(), 1024)
             self.assertEqual(img.dimZ(), 1)
-        except Exception,e:
+        except Exception as e:
             self.fail("test_image_double exception group 3: " + str(e))
 
         try:
@@ -47,7 +47,7 @@ class  CpuImage_TestCase(unittest.TestCase):
             n = img.dimX()
             for i in range(0,n):
                 self.assertEqual(img[i], float(i))
-        except Exception,e:
+        except Exception as e:
             self.fail("test_image_double exception group 5: " + str(e)) 
 
     def test_cpuimage_read(self):
@@ -61,7 +61,7 @@ class  CpuImage_TestCase(unittest.TestCase):
             self.assertEqual(img.pixelType(), "DOUBLE")
             self.assertEqual(img.getStatistics().getMin(), 37.0)
             self.assertEqual(img.getStatistics().getMax(), 255.0)
-        except Exception,e:
+        except Exception as e:
             self.fail("test_cpuimage_read exception: " + str(e))        
      
     def test_cpuimage_assign(self):
@@ -77,7 +77,7 @@ class  CpuImage_TestCase(unittest.TestCase):
             self.assertEqual(img2.pixelType(), "UINT8")
             self.assertEqual(img2.getStatistics().getMin(), 37.0)
             self.assertEqual(img2.getStatistics().getMax(), 255.0)
-        except Exception,e:
+        except Exception as e:
             self.fail("test_cpuimage_assign exception: " + str(e)) 
         
             
