@@ -200,6 +200,12 @@ namespace karabo {
             Hash& operator+=(const Hash& other);
 
             /**
+             * Subtract another hash from the current one
+             * @param other Hash object
+             */
+            Hash& operator-=(const Hash& other);
+
+            /**
              * Merge two Hases and assign the result to a third one.
              * @param other Hash object
              */
@@ -238,6 +244,17 @@ namespace karabo {
              */
             void erase(const std::string& path, const char separator = '.');
 
+            /**
+             * Remove the element identified by 'key' if it exists. 
+             * Otherwise, do nothing.
+             * If 'key' is a composite element, all its descendents are removed. 
+             * The path to 'key' is, however, not removed in this case.
+             * Example: erase ("a.b.c") will remove "c", but "a" and "b" should 
+             * not be removed even when "c" is the only child of "b".
+             * @return true if key exists, otherwise false
+             */
+            bool eraseFound(const std::string& path, const char separator = '.');
+            
             /**
              * Returns all the keys in the hash in the provided container (vector, list, set, ...)
              * Keys in inner-hashes are not included
@@ -408,6 +425,14 @@ namespace karabo {
              */
             void merge(const Hash& other, const MergePolicy policy = REPLACE_ATTRIBUTES);
 
+            /**
+             * Subtracts from current hash all nodes that can be found in other hash given as argument.
+             * @param other hash used for defining the candidates for subtraction
+             * @param separator.  The default separator is '.'
+             * @return the current hash is shrinked in place, the other hash is untouched
+             */
+            void subtract(const Hash& other, const char separator = '.');
+            
             /**
              * Flattens a hierarchical Hash into "one-level", <i>flat</i> Hash object 
              * @return A Hash having keys that are all leaves
