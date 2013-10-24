@@ -619,6 +619,48 @@ void Hash_Test::testMerge() {
     CPPUNIT_ASSERT(similar(h1, h3));
 }
 
+void Hash_Test::testSubtract() {
+    Hash h1("a", 1,
+            "b", 2,
+            "c.b[0].g", 3,
+            "c.c[0].d", 4,
+            "c.c[1]", Hash("a.b.c", 6),
+            "d.e", 7
+            );
+
+    Hash h2("a", 21,
+            "b.c", 22,
+            "c.b[0]", Hash("key", "value"),
+            "c.b[1].d", 24,
+            "e", 27
+            );
+    h1 += h2;
+    h1 -= h2;
+    CPPUNIT_ASSERT(h1.has("a") == false);
+    CPPUNIT_ASSERT(h1.get<Hash>("b").empty() == true);
+    CPPUNIT_ASSERT(h1.get<int>("c.b[0].g") == 3);
+    CPPUNIT_ASSERT(h1.get<string>("c.b[1].key") == "value");
+    CPPUNIT_ASSERT(h1.get<int>("c.b[2].d") == 24);
+    CPPUNIT_ASSERT(h1.get<int>("c.c[0].d") == 4);
+    CPPUNIT_ASSERT(h1.get<int>("c.c[1].a.b.c") == 6);
+    CPPUNIT_ASSERT(h1.get<int>("d.e") == 7);
+    
+    Hash h3("a.b.c", 1,
+            "a.b.d", 2,
+            "a.c.d", 22,
+            "b.c.d", 33,
+            "c.d.e", 44,
+            "c.e.f", 55
+           );
+    Hash h4("a.b", Hash(),
+            "c", Hash());
+    h3 -= h4;
+    CPPUNIT_ASSERT(h3.has("a.b") == false);
+    CPPUNIT_ASSERT(h3.has("c") == false);
+    CPPUNIT_ASSERT(h3.get<int>("a.c.d") == 22);
+    CPPUNIT_ASSERT(h3.get<int>("b.c.d") == 33);
+}
+
 namespace helper {
 
     class Helper {
