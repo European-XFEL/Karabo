@@ -266,6 +266,10 @@ void exportPyUtilHash() {
           "del h[path] <==> h.erase(path)\nExample:\n"
           "\th = Hash('a.b.c', 1, 'b.x', 2.22, 'b.y', 7.432, 'c', [1,2,3])\n\tprint h\n\t"
           "del b['b.x']\n\tprint h\n\th.erase('b.y')\n\tprint h\n\tdel h['b']");
+    h.def("eraseFound", &HashWrap().eraseFound, (bp::arg("path"), bp::arg("sep") = "."),
+          "h.eraseFound(path) -> remove item identified by 'path' from 'h' (in place) if it was found.\n"
+          "Returns True if path is found, otherwise False"
+          );
     h.def("__len__", &Hash::size,
           "h.__len__() -> number of (top level) items of Hash mapping <==> len(h) <==> len(h.keys())");
     h.def("bool", &Hash::size);
@@ -288,6 +292,12 @@ void exportPyUtilHash() {
     h.def("__iadd__", &Hash::operator+=, (bp::arg("hash")), bp::return_internal_reference<>(),
           "This form of merging is preferable.\nExample:\n"
           "\th = Hash('a.b1.c', 22)\n\th2 = Hash('a.b2.c', 33)\n\th += h2");
+    h.def("subtract", &Hash::subtract, (bp::arg("hash")),
+          "h.subtract(h2) <==> h -= h2  :  subtracting 'h2' from 'h'");
+    //    h.def("__add__", &Hash::operator+, (bp::arg("hash1"), bp::arg("hash2")), bp::return_value_policy<copy_non_const_reference>());
+    h.def("__isub__", &Hash::operator-=, (bp::arg("hash")), bp::return_internal_reference<>(),
+          "This form of subtracting is preferable.\nExample:\n"
+          "\th = Hash('a.b.c', 22, 'a.b.d', 33, 'a.c.d', 44)\n\th2 = Hash('a.b', Hash())\n\th -= h2");
 
     // Global free function to compare Hash, vector<Hash>, Hash::Node
     def("similar", &similarWrap, (bp::arg("left"), bp::arg("right")),

@@ -54,16 +54,16 @@ namespace karathon {
                 return bp::object(boost::any_cast<boost::filesystem::path>(operand).string());
             } else if (operand.type() == typeid (karabo::util::Hash)) {
                 return bp::object(boost::any_cast<karabo::util::Hash>(operand));
-            } else if (operand.type() == typeid (karabo::xip::CpuImage<double>)) {
-                return bp::object(boost::any_cast<karabo::xip::CpuImage<double> >(operand));
-            } else if (operand.type() == typeid (karabo::xip::CpuImage<float>)) {
-                return bp::object(boost::any_cast<karabo::xip::CpuImage<float> >(operand));
-            } else if (operand.type() == typeid (karabo::xip::CpuImage<int>)) {
-                return bp::object(boost::any_cast<karabo::xip::CpuImage<int> >(operand));
-            } else if (operand.type() == typeid (karabo::xip::CpuImage<short>)) {
-                return bp::object(boost::any_cast<karabo::xip::CpuImage<short> >(operand));
-            } else if (operand.type() == typeid (karabo::xip::CpuImage<char>)) {
-                return bp::object(boost::any_cast<karabo::xip::CpuImage<char> >(operand));
+//            } else if (operand.type() == typeid (karabo::xip::CpuImage<double>)) {
+//                return bp::object(boost::any_cast<karabo::xip::CpuImage<double> >(operand));
+//            } else if (operand.type() == typeid (karabo::xip::CpuImage<float>)) {
+//                return bp::object(boost::any_cast<karabo::xip::CpuImage<float> >(operand));
+//            } else if (operand.type() == typeid (karabo::xip::CpuImage<int>)) {
+//                return bp::object(boost::any_cast<karabo::xip::CpuImage<int> >(operand));
+//            } else if (operand.type() == typeid (karabo::xip::CpuImage<short>)) {
+//                return bp::object(boost::any_cast<karabo::xip::CpuImage<short> >(operand));
+//            } else if (operand.type() == typeid (karabo::xip::CpuImage<char>)) {
+//                return bp::object(boost::any_cast<karabo::xip::CpuImage<char> >(operand));
             } else if (operand.type() == typeid (std::vector<bool>)) {
                 return fromStdVectorToPyArray(boost::any_cast < std::vector<bool> >(operand), numpyFlag);
             } else if (operand.type() == typeid (std::vector<char>)) {
@@ -164,31 +164,31 @@ namespace karathon {
             any = s;
             return;
         }
-        if (bp::extract<karabo::xip::CpuImage<double> >(obj).check()) {
-            karabo::xip::CpuImage<double> img = bp::extract<karabo::xip::CpuImage<double> >(obj);
-            any = img;
-            return;
-        }
-        if (bp::extract<karabo::xip::CpuImage<float> >(obj).check()) {
-            karabo::xip::CpuImage<float> img = bp::extract<karabo::xip::CpuImage<float> >(obj);
-            any = img;
-            return;
-        }
-        if (bp::extract<karabo::xip::CpuImage<int> >(obj).check()) {
-            karabo::xip::CpuImage<int> img = bp::extract<karabo::xip::CpuImage<int> >(obj);
-            any = img;
-            return;
-        }
-        if (bp::extract<karabo::xip::CpuImage<short> >(obj).check()) {
-            karabo::xip::CpuImage<short> img = bp::extract<karabo::xip::CpuImage<short> >(obj);
-            any = img;
-            return;
-        }
-        if (bp::extract<karabo::xip::CpuImage<char> >(obj).check()) {
-            karabo::xip::CpuImage<char> img = bp::extract<karabo::xip::CpuImage<char> >(obj);
-            any = img;
-            return;
-        }
+//        if (bp::extract<karabo::xip::CpuImage<double> >(obj).check()) {
+//            karabo::xip::CpuImage<double> img = bp::extract<karabo::xip::CpuImage<double> >(obj);
+//            any = img;
+//            return;
+//        }
+//        if (bp::extract<karabo::xip::CpuImage<float> >(obj).check()) {
+//            karabo::xip::CpuImage<float> img = bp::extract<karabo::xip::CpuImage<float> >(obj);
+//            any = img;
+//            return;
+//        }
+//        if (bp::extract<karabo::xip::CpuImage<int> >(obj).check()) {
+//            karabo::xip::CpuImage<int> img = bp::extract<karabo::xip::CpuImage<int> >(obj);
+//            any = img;
+//            return;
+//        }
+//        if (bp::extract<karabo::xip::CpuImage<short> >(obj).check()) {
+//            karabo::xip::CpuImage<short> img = bp::extract<karabo::xip::CpuImage<short> >(obj);
+//            any = img;
+//            return;
+//        }
+//        if (bp::extract<karabo::xip::CpuImage<char> >(obj).check()) {
+//            karabo::xip::CpuImage<char> img = bp::extract<karabo::xip::CpuImage<char> >(obj);
+//            any = img;
+//            return;
+//        }
 
         #ifdef WITH_BOOST_NUMPY
         if (bp::extract<bn::ndarray>(obj).check()) {
