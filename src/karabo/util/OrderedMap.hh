@@ -117,6 +117,8 @@ namespace karabo {
 
             inline bool has(const KeyType& key) const;
 
+            inline bool eraseFound(const KeyType& key);
+            
             inline void erase(const KeyType& key);
 
             inline size_t size() const;
@@ -339,14 +341,20 @@ namespace karabo {
 
         template<class KeyType, class MappedType>
         inline void OrderedMap<KeyType, MappedType>::erase(const KeyType& key) {
+            if (!eraseFound(key))
+                throw KARABO_PARAMETER_EXCEPTION("Key '" + key + "' does not exist");
+        }
+
+        template<class KeyType, class MappedType>
+        inline bool OrderedMap<KeyType, MappedType>::eraseFound(const KeyType& key) {
             map_iterator it;
 
             if ((it = find(key)) != m_mapNodes.end()) {
                 m_listNodes.remove(&it->second);
                 m_mapNodes.erase(/*hash*/(key));
-            } else {
-                throw KARABO_PARAMETER_EXCEPTION("Key '" + key + "' does not exist");
+                return true;
             }
+            return false;
         }
 
         template<class KeyType, class MappedType>

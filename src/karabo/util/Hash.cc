@@ -142,6 +142,20 @@ namespace karabo {
         }
 
 
+        bool Hash::eraseFound(const std::string& path, const char separator) {
+            std::string key;
+            Hash& hash = getLastHash(path, key, separator);
+            int index = karabo::util::getAndCropIndex(key);
+            if (index == -1) {
+                return hash.m_container.eraseFound(key);
+            } else {
+                std::vector<Hash>& vect = hash.m_container.get<vector<Hash> >(key);
+                vect.erase(vect.begin() + index);
+                return true;
+            }
+        }
+
+
         const Hash& Hash::getLastHash(const std::string& path, std::string& lastKey, const char separator) const {
             if (path.empty()) throw KARABO_PARAMETER_EXCEPTION("Illegal call to get with empty path");
             std::vector<std::string> tokens;
@@ -395,6 +409,21 @@ namespace karabo {
         }
 
 
+        void Hash::subtract(const Hash& other, const char separator) {
+            if (this->empty() || other.empty()) return;
+            vector<string> candidates;
+            getPaths(other, candidates, "", separator);     // may be optimized to avoid list creation 
+            if (candidates.empty()) return;
+            for (vector<string>::const_iterator it = candidates.begin(); it != candidates.end(); ++it) {
+                    this->eraseFound(*it, separator);
+            }
+        }
+        
+        Hash& Hash::operator-=(const Hash& other) {
+            this->subtract(other);
+            return *this;
+        }
+        
         /*******************************************************************
          * Attributes manipulation
          *******************************************************************/
