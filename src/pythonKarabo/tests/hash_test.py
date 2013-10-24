@@ -635,6 +635,57 @@ class  Hash_TestCase(unittest.TestCase):
         except Exception as e:
             self.fail("test_iteration exception group 1: " + str(e))
             
+    def test_subtract(self):
+        try:
+            h1 = Hash("a", 1,
+                      "b", 2,
+                      "c.b[0].g", 3,
+                      "c.c[0].d", 4,
+                      "c.c[1]", Hash("a.b.c", 6),
+                      "d.e", 7
+                     )
+            
+            h2 = Hash("a", 21,
+                      "b.c", 22,
+                      "c.b[0]", Hash("key", "value"),
+                      "c.b[1].d", 24,
+                      "e", 27
+                     )
+            
+            h1 += h2
+            h1 -= h2
+            
+            self.assertFalse("a" in h1)
+            self.assertTrue(h1["b"].empty())
+            self.assertEqual(h1["c.b[0].g"], 3)
+            self.assertEqual(h1["c.b[1].key"], "value")
+            self.assertEqual(h1["c.b[2].d"], 24)
+            self.assertEqual(h1["c.c[0].d"], 4)
+            self.assertEqual(h1["c.c[1].a.b.c"], 6)
+            self.assertEqual(h1["d.e"], 7)
+            
+        except Exception as e:
+            self.fail("test_subtract exception group 1: " + str(e))
+            
+        try:
+            h3 = Hash("a.b.c", 1,
+                      "a.b.d", 2,
+                      "b.c.d", 22,
+                      "c.a.b", 77,
+                      "c.c", "blabla"
+                     )
+            h4 = Hash("a.b", Hash(), "c", Hash())
+            h3 -= h4
+            
+            self.assertFalse("a.b" in h3)
+            self.assertTrue(h3["a"].empty())
+            self.assertFalse("c" in h3)
+            self.assertTrue(h3["b.c.d"] == 22)
+            
+        except Exception as e:
+            self.fail("test_subtract exception group 2: " + str(e))
+            
+            
     def test_dict(self):
         try:
             h = Hash("a", {"b" : { "c" : {"d" : [1, 2, 3, 4, 5]}}})
