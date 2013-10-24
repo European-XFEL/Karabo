@@ -407,6 +407,21 @@ namespace karathon {
 
 
     bool
+    HashWrap::eraseFound(karabo::util::Hash& self,
+                    const bp::object & keyObj,
+                    const std::string& separator) {
+        const char sep = separator.at(0);
+        std::string key;
+        if (bp::extract<std::string > (keyObj).check()) {
+            key = bp::extract<std::string > (keyObj);
+        } else {
+            throw KARABO_PYTHON_EXCEPTION("Currently values can only be retrieved by string keys");
+        }
+        return self.eraseFound(key, sep);
+    }
+
+
+    bool
     HashWrap::has(karabo::util::Hash& self,
                   const std::string& key,
                   const std::string& separator) {

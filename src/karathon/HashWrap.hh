@@ -99,6 +99,11 @@ namespace karathon {
               const std::string& separator = ".");
 
         static bool
+        eraseFound(karabo::util::Hash& self,
+              const bp::object & keyObj,
+              const std::string& separator = ".");
+
+        static bool
         has(karabo::util::Hash& self,
             const std::string& key,
             const std::string& separator = ".");
