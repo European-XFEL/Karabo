@@ -40,12 +40,12 @@ namespace karathon {
         ~DeviceClientWrap() {
         }
 
-        bp::tuple instantiatePy(const std::string& serverId, const karabo::util::Hash& configuration, int timeoutInSeconds = -1) {
+        bp::tuple instantiatePy(const std::string& serverId, const karabo::util::Hash& configuration, int timeoutInSeconds) {
             ScopedGILRelease nogil;
             return Wrapper::fromStdPairToPyTuple(this->instantiate(serverId, configuration, timeoutInSeconds));
         }
 
-        bp::tuple instantiatePy(const std::string& serverId, const std::string& classId, const karabo::util::Hash& configuration, int timeoutInSeconds = -1) {
+        bp::tuple instantiatePy(const std::string& serverId, const std::string& classId, const karabo::util::Hash& configuration, int timeoutInSeconds) {
             ScopedGILRelease nogil;
             return Wrapper::fromStdPairToPyTuple(this->instantiate(serverId, classId, configuration, timeoutInSeconds));
         }
