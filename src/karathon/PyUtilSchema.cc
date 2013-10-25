@@ -1113,6 +1113,7 @@ void exportPyUtilSchema() {
                 .value("BIT", Unit::BIT)
                 .value("METER_PER_SECOND", Unit::METER_PER_SECOND)
                 .value("VOLT_PER_SECOND", Unit::VOLT_PER_SECOND)
+                .value("PERCENT", Unit::PERCENT)
                 .export_values()
                 ;
     }
