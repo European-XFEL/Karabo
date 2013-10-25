@@ -247,10 +247,10 @@ void exportPyUtilHash() {
     h.def("__setitem__", &HashWrap().set, (bp::arg("path"), bp::arg("value"), bp::arg("sep") = "."),
           "h[path] = value <==> h.set(path, value)\nUse this setting of the new path/value item if the default separator fits."
           "\nExample:\n\th = Hash()\n\th['a.b.c'] = 1\n\th.set('x/y/z', 2, \"/\")\n\th['u/v/w'] = 3\n\tprint h");
-    h.def("get", &HashWrap().get, (bp::arg("path"), bp::arg("sep") = "."),
+    h.def("get", &HashWrap().getRef, (bp::arg("path"), bp::arg("sep") = "."),
           "Get the 'value' by 'path'. Optionally, the separator can be defined as second argument.\n"
           "Example:\n\th = Hash('a.b.c', 1)\n\tprint h.get('a/b/c','/')");
-    h.def("__getitem__", &HashWrap().__getitem__, (bp::arg("iterator")),
+    h.def("__getitem__", &HashWrap().getRef, (bp::arg("iterator")),
           "Use this form of getting the 'value' using the 'path' if you need the default separator.\n"
           "Example:\n\th = Hash('a.b.c', 1)\n\tprint h['a.b.c']");
     h.def("has", &HashWrap().has, (bp::arg("path"), bp::arg("sep") = "."),
@@ -337,7 +337,7 @@ void exportPyUtilHash() {
           "Set \"node\" into current Hash object.  You cannot create node directly, you can extract the node from created Hash object.\nExample:\n"
           "\th = Hash('a.b.c', 1, 'b.x', 2.22, 'b.y', 7.432, 'c', [1,2,3])\n\t"
           "n = h.getNode('b')\n\tg = Hash()\n\tg.setNode(n)\n\tprint g");
-    h.def("getNode", &HashWrap().getNode, (bp::arg("path"), bp::arg("sep") = "."), bp::return_internal_reference<1> (),
+    h.def("getNode", &HashWrap().getNode, (bp::arg("path"), bp::arg("sep") = "."), //bp::return_internal_reference<1> (),
           "Returns a reference of found node (not a copy!), so if you do any changes via returned object,\n"
           "these changes will be reflected in the current Hash object.\nExample:\n"
           "\th = Hash('a.b.c', 1, 'b.x', 2.22, 'b.y', 7.432, 'c', [1,2,3])\n\t"

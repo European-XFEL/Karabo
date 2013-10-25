@@ -350,11 +350,14 @@ namespace karathon {
     }
 
 
-    const karabo::util::Hash::Node&
-    HashWrap::getNode(const karabo::util::Hash& self,
+    bp::object
+    HashWrap::getNode(karabo::util::Hash& self,
                       const std::string& path,
                       const std::string& separator) {
-        return static_cast<const karabo::util::Hash::Node&> (self.getNode(path, separator.at(0)));
+        using namespace karabo::util;
+        Hash::Node& nodeRef = self.getNode(path, separator.at(0));
+        boost::optional<Hash::Node&> node(nodeRef);
+        return bp::object(boost::shared_ptr<Hash::Node>(&(*node), null_deleter()));
     }
 
 
@@ -635,8 +638,8 @@ namespace karathon {
 
 
     bp::object
-    HashWrap::__getitem__(karabo::util::Hash& self,
-                          const bp::object& obj) {
+    HashWrap::getRef(karabo::util::Hash& self,
+                          const bp::object& obj, const std::string& sep) {
         if (bp::extract<karabo::util::Hash::Node&>(obj).check()) {
             karabo::util::Hash::Node& node = bp::extract<karabo::util::Hash::Node&>(obj);
             if (node.getType() == karabo::util::Types::HASH) {
@@ -645,7 +648,7 @@ namespace karathon {
             }
             return Wrapper::toObject(node.getValueAsAny(), HashWrap::try_to_use_numpy);
         } else if (bp::extract<std::string>(obj).check()) {
-            karabo::util::Hash::Node& node = self.getNode(bp::extract<std::string>(obj));
+            karabo::util::Hash::Node& node = self.getNode(bp::extract<std::string>(obj), sep.at(0));
             if (node.getType() == karabo::util::Types::HASH) {
                 boost::shared_ptr<karabo::util::Hash> hash = boost::shared_ptr<karabo::util::Hash>(&node.getValue<karabo::util::Hash>(), null_deleter());
                 return bp::object(hash);
