@@ -310,6 +310,7 @@ class DeviceServer(object):
             launcher.start()
             self.deviceInstanceMap[deviceid] = launcher
             del validated
+            self.ss.reply(True, deviceid)
         except Exception as e:
             self.log.WARN("Wrong input configuration for class '{}': {}".format(classid, e.message))
             return

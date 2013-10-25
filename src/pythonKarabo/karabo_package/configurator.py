@@ -47,7 +47,7 @@ class Configurator(object):
         if not isinstance(classid, str):
             raise TypeError, "The argument type '" + type(classid) + "' is not allowed. Must be a class or a str."
         if classid not in Configurator.registry:
-            raise AttributeError,"Argument is a classid of registered base class"
+            raise AttributeError,"Argument is not a class or classid of registered base class"
         self.baseRegistry = Configurator.registry[classid]
         assert classid in self.baseRegistry
 
