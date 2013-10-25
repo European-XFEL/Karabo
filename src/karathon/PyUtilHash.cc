@@ -250,7 +250,7 @@ void exportPyUtilHash() {
     h.def("get", &HashWrap().getRef, (bp::arg("path"), bp::arg("sep") = "."),
           "Get the 'value' by 'path'. Optionally, the separator can be defined as second argument.\n"
           "Example:\n\th = Hash('a.b.c', 1)\n\tprint h.get('a/b/c','/')");
-    h.def("__getitem__", &HashWrap().getRef, (bp::arg("iterator")),
+    h.def("__getitem__", &HashWrap().getRef, (bp::arg("iterator"), bp::arg("sep") = "."),
           "Use this form of getting the 'value' using the 'path' if you need the default separator.\n"
           "Example:\n\th = Hash('a.b.c', 1)\n\tprint h['a.b.c']");
     h.def("has", &HashWrap().has, (bp::arg("path"), bp::arg("sep") = "."),
