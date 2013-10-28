@@ -156,23 +156,23 @@ namespace karabo {
                 RECONNECT
             };
 
-            #define SIGNAL0(signalName) registerSignal(signalName);
-            #define SIGNAL1(signalName, a1) registerSignal<a1>(signalName);
-            #define SIGNAL2(signalName, a1, a2) registerSignal<a1,a2>(signalName);
-            #define SIGNAL3(signalName, a1, a2, a3) registerSignal<a1,a2,a3>(signalName);
-            #define SIGNAL4(signalName, a1, a2, a3, a4) registerSignal<a1,a2,a3,a4>(signalName);
+            #define SIGNAL0(signalName) this->registerSignal(signalName);
+            #define SIGNAL1(signalName, a1) this->registerSignal<a1>(signalName);
+            #define SIGNAL2(signalName, a1, a2) this->registerSignal<a1,a2>(signalName);
+            #define SIGNAL3(signalName, a1, a2, a3) this->registerSignal<a1,a2,a3>(signalName);
+            #define SIGNAL4(signalName, a1, a2, a3, a4) this->registerSignal<a1,a2,a3,a4>(signalName);
 
-            #define SLOT0(slotName) registerSlot(boost::bind(&Self::slotName,this),#slotName);
-            #define SLOT1(slotName, a1) registerSlot<a1>(boost::bind(&Self::slotName,this,_1),#slotName);
-            #define SLOT2(slotName, a1, a2) registerSlot<a1,a2>(boost::bind(&Self::slotName,this,_1,_2),#slotName);
-            #define SLOT3(slotName, a1, a2, a3) registerSlot<a1,a2,a3>(boost::bind(&Self::slotName,this,_1,_2,_3),#slotName);
-            #define SLOT4(slotName, a1, a2, a3, a4) registerSlot<a1,a2,a3,a4>(boost::bind(&Self::slotName,this,_1,_2,_3,_4),#slotName);
+            #define SLOT0(slotName) this->registerSlot(boost::bind(&Self::slotName,this),#slotName);
+            #define SLOT1(slotName, a1) this->registerSlot<a1>(boost::bind(&Self::slotName,this,_1),#slotName);
+            #define SLOT2(slotName, a1, a2) this->registerSlot<a1,a2>(boost::bind(&Self::slotName,this,_1,_2),#slotName);
+            #define SLOT3(slotName, a1, a2, a3) this->registerSlot<a1,a2,a3>(boost::bind(&Self::slotName,this,_1,_2,_3),#slotName);
+            #define SLOT4(slotName, a1, a2, a3, a4) this->registerSlot<a1,a2,a3,a4>(boost::bind(&Self::slotName,this,_1,_2,_3,_4),#slotName);
 
-            #define GLOBAL_SLOT0(slotName) registerSlot(boost::bind(&Self::slotName,this),#slotName, GLOBAL);
-            #define GLOBAL_SLOT1(slotName, a1) registerSlot<a1>(boost::bind(&Self::slotName,this,_1),#slotName, GLOBAL);
-            #define GLOBAL_SLOT2(slotName, a1, a2) registerSlot<a1,a2>(boost::bind(&Self::slotName,this,_1,_2),#slotName, GLOBAL);
-            #define GLOBAL_SLOT3(slotName, a1, a2, a3) registerSlot<a1,a2,a3>(boost::bind(&Self::slotName,this,_1,_2,_3),#slotName, GLOBAL);
-            #define GLOBAL_SLOT4(slotName, a1, a2, a3, a4) registerSlot<a1,a2,a3,a4>(boost::bind(&Self::slotName,this,_1,_2,_3,_4),#slotName, GLOBAL);
+            #define GLOBAL_SLOT0(slotName) this->registerSlot(boost::bind(&Self::slotName,this),#slotName, GLOBAL);
+            #define GLOBAL_SLOT1(slotName, a1) this->registerSlot<a1>(boost::bind(&Self::slotName,this,_1),#slotName, GLOBAL);
+            #define GLOBAL_SLOT2(slotName, a1, a2) this->registerSlot<a1,a2>(boost::bind(&Self::slotName,this,_1,_2),#slotName, GLOBAL);
+            #define GLOBAL_SLOT3(slotName, a1, a2, a3) this->registerSlot<a1,a2,a3>(boost::bind(&Self::slotName,this,_1,_2,_3),#slotName, GLOBAL);
+            #define GLOBAL_SLOT4(slotName, a1, a2, a3, a4) this->registerSlot<a1,a2,a3,a4>(boost::bind(&Self::slotName,this,_1,_2,_3,_4),#slotName, GLOBAL);
 
             SignalSlotable();
 

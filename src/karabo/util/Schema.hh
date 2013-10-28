@@ -274,6 +274,8 @@ namespace karabo {
             bool isChoiceOfNodes(const std::string& path) const;
 
             bool isListOfNodes(const std::string& path) const;
+            
+            bool hasNodeType(const std::string& path) const;
 
             int getNodeType(const std::string& path) const;
 
@@ -763,6 +765,10 @@ namespace karabo {
             std::string extractKey(const std::string& key);
             
             bool checkRequiredAccessLevel(const std::string& path, const Schema::AccessLevel& accessLevel) const;
+            
+            void updateAliasMap();
+            
+            void r_updateAliasMap(const std::vector<std::string> keys, const std::string oldPath = "");
 
         };
 
