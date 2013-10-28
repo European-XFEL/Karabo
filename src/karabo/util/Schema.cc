@@ -25,8 +25,8 @@ namespace karabo {
         using namespace std;
 
 
-//        Schema::Schema() : m_rootName("") {
-//        };
+        //        Schema::Schema() : m_rootName("") {
+        //        };
 
 
         Schema::Schema(const std::string& classId, const Schema::AssemblyRules& rules) :
@@ -104,6 +104,8 @@ namespace karabo {
 
 
         // TODO Implement it such that the current assembly rules are respected
+
+
         void Schema::merge(const Schema& schema) {
             Hash tmp = schema.getParameterHash();
             for (Hash::iterator it = tmp.begin(); it != tmp.end(); ++it) {
@@ -138,6 +140,11 @@ namespace karabo {
 
         bool Schema::isListOfNodes(const std::string& path) const {
             return m_hash.getAttribute<int>(path, KARABO_SCHEMA_NODE_TYPE) == LIST_OF_NODES;
+        }
+
+
+        bool Schema::hasNodeType(const std::string& path) const {
+            return m_hash.hasAttribute(path, KARABO_SCHEMA_NODE_TYPE);
         }
 
 
@@ -394,27 +401,28 @@ namespace karabo {
         void Schema::setRequiredAccessLevel(const std::string& path, const Schema::AccessLevel& value) {
             m_hash.setAttribute<int>(path, KARABO_SCHEMA_REQUIRED_ACCESS_LEVEL, value);
         }
-        
-    
+
+
         const int Schema::getRequiredAccessLevel(const std::string& path) const {
-            std::vector<std::string> tokens;   
+            std::vector<std::string> tokens;
             boost::split(tokens, path, boost::is_any_of("."));
 
             std::string partialPath;
             int highestLevel = Schema::OBSERVER;
+
 
             BOOST_FOREACH(std::string token, tokens) {
                 if (partialPath.empty()) partialPath = token;
                 else partialPath += "." + token;
                 if (m_hash.hasAttribute(partialPath, KARABO_SCHEMA_REQUIRED_ACCESS_LEVEL)) {
                     int currentLevel = m_hash.getAttribute<int>(partialPath, KARABO_SCHEMA_REQUIRED_ACCESS_LEVEL);
-                    if (currentLevel > highestLevel) highestLevel = currentLevel;     
+                    if (currentLevel > highestLevel) highestLevel = currentLevel;
                 }
             }
             return highestLevel;
         }
 
-        
+
         //**********************************************
         //                  Unit                       *
         //**********************************************
@@ -896,5 +904,28 @@ namespace karabo {
             }
             return newKey;
         }
+
+
+        void Schema::updateAliasMap() {
+            r_updateAliasMap(getKeys());
+        }
+
+
+        void Schema::r_updateAliasMap(const vector<string> keys, const std::string oldPath) {
+
+            BOOST_FOREACH(string key, keys) {
+                string newPath = key;
+                if (!oldPath.empty()) newPath = oldPath + "." + key;
+                if (keyHasAlias(newPath)) m_aliasToKey[getAliasAsString(newPath)] = newPath;
+                if (getNodeType(newPath) == Schema::NODE) {
+                    r_updateAliasMap(getKeys(newPath), newPath);
+                } else if (getNodeType(newPath) == Schema::CHOICE_OF_NODES) {
+                    r_updateAliasMap(getKeys(newPath), newPath);
+                } else if (getNodeType(newPath) == Schema::LIST_OF_NODES) {
+                    r_updateAliasMap(getKeys(newPath), newPath);
+                }
+               
+            }
+        }
     }
-} 
+}
