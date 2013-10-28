@@ -46,6 +46,7 @@ namespace karabo {
             m_serializer->load(hash, hashArchive);
             object.setRootName(rootName);
             object.setParameterHash(hash);
+            object.updateAliasMap();
         }
     }
 }

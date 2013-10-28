@@ -202,6 +202,13 @@ void SchemaSerializer_Test::testBinarySerializer() {
     Schema inputSchema;
 
     p->load(inputSchema, &archive1[0], archive1.size());
+    
+    // Check whether alias maps got re-established
+    CPPUNIT_ASSERT(inputSchema.keyHasAlias("exampleKey5") == true);
+    CPPUNIT_ASSERT(inputSchema.aliasHasKey("exampleAlias5") == true);
+    CPPUNIT_ASSERT(inputSchema.getKeyFromAlias("exampleAlias5") == "exampleKey5");
+    CPPUNIT_ASSERT(inputSchema.getAliasFromKey<string>("exampleKey5") == "exampleAlias5");
+            
 
     std::vector<char> archive2;
 

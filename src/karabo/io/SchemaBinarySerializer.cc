@@ -61,6 +61,7 @@ namespace karabo {
             Hash hash;
             m_serializer->load(hash, archive + sizeof (size) + size, nBytes - sizeof (size) - size);
             object.setParameterHash(hash);
+            object.updateAliasMap();
         }
     }
 }
