@@ -47,7 +47,7 @@ namespace karathon {
                 boost::shared_ptr<Hash> p(&hash, null_deleter());
                 return bp::object(p);
             }
-            return Wrapper::toObject(node->getValueAsAny());
+            return Wrapper::toObject(a);
         }
 
         static bp::object getValueAs(const Pointer& node, const std::string& type) {
