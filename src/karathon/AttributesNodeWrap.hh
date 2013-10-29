@@ -19,6 +19,11 @@ namespace karathon {
 
     class AttributesNodeWrap {
 
+        struct null_deleter {
+
+            void operator()(void const *) const {
+            }
+        };
     public:
 
         typedef boost::shared_ptr<karabo::util::Hash::Attributes::Node> Pointer;
@@ -34,6 +39,14 @@ namespace karathon {
         }
 
         static bp::object getValue(const Pointer& node) {
+            using namespace karabo::util;
+            boost::any& a = node->getValueAsAny();
+            // handle Hash differently returning reference to Hash
+            if (a.type() == typeid(Hash)) {
+                Hash& hash = boost::any_cast<Hash&>(a);
+                boost::shared_ptr<Hash> p(&hash, null_deleter());
+                return bp::object(p);
+            }
             return Wrapper::toObject(node->getValueAsAny());
         }
 
