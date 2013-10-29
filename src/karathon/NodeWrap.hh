@@ -51,57 +51,54 @@ namespace karathon {
             return Wrapper::toObject(node->getValueAsAny());
         }
 
-        static bp::object getValueAs(const Pointer& node, const std::string& type) {
+        static bp::object getValueAs(const Pointer& node, const PyTypes::ReferenceType& reftype) {
             using namespace karabo::util;
-            Types::ReferenceType reftype = Types::from<FromLiteral>(type);
             switch (reftype) {
-                case Types::ANY:
-                    return Wrapper::toObject(node->getValueAsAny());
-                case Types::BOOL:
+                case PyTypes::BOOL:
                     return bp::object(node->getValueAs<bool>());
-                case Types::CHAR:
+                case PyTypes::CHAR:
                     return bp::object(node->getValueAs<char>());
-                case Types::INT8:
+                case PyTypes::INT8:
                     return bp::object(node->getValueAs<signed char>());
-                case Types::UINT8:
+                case PyTypes::UINT8:
                     return bp::object(node->getValueAs<unsigned char>());
-                case Types::INT16:
+                case PyTypes::INT16:
                     return bp::object(node->getValueAs<short>());
-                case Types::UINT16:
+                case PyTypes::UINT16:
                     return bp::object(node->getValueAs<unsigned short>());
-                case Types::INT32:
+                case PyTypes::INT32:
                     return bp::object(node->getValueAs<int>());
-                case Types::UINT32:
+                case PyTypes::UINT32:
                     return bp::object(node->getValueAs<unsigned int>());
-                case Types::INT64:
+                case PyTypes::INT64:
                     return bp::object(node->getValueAs<long long>());
-                case Types::UINT64:
+                case PyTypes::UINT64:
                     return bp::object(node->getValueAs<unsigned long long>());
-                case Types::FLOAT:
+                case PyTypes::FLOAT:
                     return bp::object(node->getValueAs<float>());
-                case Types::DOUBLE:
+                case PyTypes::DOUBLE:
                     return bp::object(node->getValueAs<double>());
-                case Types::STRING:
+                case PyTypes::STRING:
                     return bp::object(node->getValueAs<std::string>());
-                case Types::VECTOR_BOOL:
+                case PyTypes::VECTOR_BOOL:
                     return Wrapper::fromStdVectorToPyArray(node->getValueAs<bool, std::vector > ());
-                case Types::VECTOR_CHAR:
+                case PyTypes::VECTOR_CHAR:
                     return Wrapper::fromStdVectorToPyByteArray(node->getValueAs<char, std::vector>());
-                case Types::VECTOR_INT8:
+                case PyTypes::VECTOR_INT8:
                     return Wrapper::fromStdVectorToPyByteArray(node->getValueAs<signed char, std::vector > ());
-                case Types::VECTOR_UINT8:
+                case PyTypes::VECTOR_UINT8:
                     return Wrapper::fromStdVectorToPyByteArray(node->getValueAs<unsigned char, std::vector>());
-                case Types::VECTOR_INT16:
+                case PyTypes::VECTOR_INT16:
                     return Wrapper::fromStdVectorToPyArray(node->getValueAs<short, std::vector>());
-                case Types::VECTOR_UINT16:
+                case PyTypes::VECTOR_UINT16:
                     return Wrapper::fromStdVectorToPyArray(node->getValueAs<unsigned short, std::vector>());
-                case Types::VECTOR_INT32:
+                case PyTypes::VECTOR_INT32:
                     return Wrapper::fromStdVectorToPyArray(node->getValueAs<int, std::vector>());
-                case Types::VECTOR_UINT32:
+                case PyTypes::VECTOR_UINT32:
                     return Wrapper::fromStdVectorToPyArray(node->getValueAs<unsigned int, std::vector>());
-                case Types::VECTOR_INT64:
+                case PyTypes::VECTOR_INT64:
                     return Wrapper::fromStdVectorToPyArray(node->getValueAs<long long, std::vector>());
-                case Types::VECTOR_UINT64:
+                case PyTypes::VECTOR_UINT64:
                     return Wrapper::fromStdVectorToPyArray(node->getValueAs<unsigned long long, std::vector>());
                     //                    case Types::HASH:
                     //                        return bp::object(node->getValueAs<karabo::util::Hash>());
