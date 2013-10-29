@@ -121,37 +121,34 @@ namespace karathon {
             return Wrapper::toObject(node->getAttributeAsAny(key));
         }
 
-        static bp::object getAttributeAs(const Pointer& node, const std::string& key, const std::string& type) {
+        static bp::object getAttributeAs(const Pointer& node, const std::string& key, const PyTypes::ReferenceType& reftype) {
             using namespace karabo::util;
-            Types::ReferenceType reftype = Types::from<FromLiteral>(type);
             switch (reftype) {
-                case Types::ANY:
-                    return Wrapper::toObject(node->getAttributeAsAny(key));
-                case Types::BOOL:
+                case PyTypes::BOOL:
                     return bp::object(node->getAttributeAs<bool>(key));
-                case Types::CHAR:
+                case PyTypes::CHAR:
                     return bp::object(node->getAttributeAs<char>(key));
-                case Types::INT8:
+                case PyTypes::INT8:
                     return bp::object(node->getAttributeAs<signed char>(key));
-                case Types::UINT8:
+                case PyTypes::UINT8:
                     return bp::object(node->getAttributeAs<unsigned char>(key));
-                case Types::INT16:
+                case PyTypes::INT16:
                     return bp::object(node->getAttributeAs<short>(key));
-                case Types::UINT16:
+                case PyTypes::UINT16:
                     return bp::object(node->getAttributeAs<unsigned short>(key));
-                case Types::INT32:
+                case PyTypes::INT32:
                     return bp::object(node->getAttributeAs<int>(key));
-                case Types::UINT32:
+                case PyTypes::UINT32:
                     return bp::object(node->getAttributeAs<unsigned int>(key));
-                case Types::INT64:
+                case PyTypes::INT64:
                     return bp::object(node->getAttributeAs<long long>(key));
-                case Types::UINT64:
+                case PyTypes::UINT64:
                     return bp::object(node->getAttributeAs<unsigned long long>(key));
-                case Types::FLOAT:
+                case PyTypes::FLOAT:
                     return bp::object(node->getAttributeAs<float>(key));
-                case Types::DOUBLE:
+                case PyTypes::DOUBLE:
                     return bp::object(node->getAttributeAs<double>(key));
-                case Types::STRING:
+                case PyTypes::STRING:
                     return bp::object(node->getAttributeAs<std::string>(key));
                     //                    case Types::VECTOR_BOOL:
                     //                        return Wrapper::fromStdVectorToPyArray(node->getAttributeAs<bool, std::vector>(key));
