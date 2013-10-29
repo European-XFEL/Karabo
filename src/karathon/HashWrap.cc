@@ -640,19 +640,27 @@ namespace karathon {
     bp::object
     HashWrap::getRef(karabo::util::Hash& self,
                           const bp::object& obj, const std::string& sep) {
-        if (bp::extract<karabo::util::Hash::Node&>(obj).check()) {
-            karabo::util::Hash::Node& node = bp::extract<karabo::util::Hash::Node&>(obj);
-            if (node.getType() == karabo::util::Types::HASH) {
-                boost::shared_ptr<karabo::util::Hash> hash = boost::shared_ptr<karabo::util::Hash>(&node.getValue<karabo::util::Hash>(), null_deleter());
+        using namespace karabo::util;
+        if (bp::extract<Hash::Node&>(obj).check()) {
+            Hash::Node& node = bp::extract<Hash::Node&>(obj);
+            if (node.getType() == Types::HASH) {
+                boost::shared_ptr<Hash> hash = boost::shared_ptr<Hash>(&node.getValue<Hash>(), null_deleter());
                 return bp::object(hash);
             }
             return Wrapper::toObject(node.getValueAsAny(), HashWrap::try_to_use_numpy);
         } else if (bp::extract<std::string>(obj).check()) {
-            karabo::util::Hash::Node& node = self.getNode(bp::extract<std::string>(obj), sep.at(0));
-            if (node.getType() == karabo::util::Types::HASH) {
-                boost::shared_ptr<karabo::util::Hash> hash = boost::shared_ptr<karabo::util::Hash>(&node.getValue<karabo::util::Hash>(), null_deleter());
+            std::string path = bp::extract<std::string>(obj);
+            if (self.getType(path, sep.at(0)) == karabo::util::Types::HASH) {
+                Hash* hp = &self.get<Hash>(path, sep.at(0));
+                boost::shared_ptr<Hash> hash = boost::shared_ptr<Hash>(hp, null_deleter());
                 return bp::object(hash);
             }
+            if (self.getType(path, sep.at(0)) == Types::VECTOR_HASH) {
+                std::vector<Hash>* vhp = &self.get<std::vector<Hash> >(path, sep.at(0));
+                boost::shared_ptr<std::vector<Hash> > vhash = boost::shared_ptr<std::vector<Hash> >(vhp, null_deleter());
+                return bp::object(vhash);
+            }
+            Hash::Node& node = self.getNode(path, sep.at(0));
             return Wrapper::toObject(node.getValueAsAny(), HashWrap::try_to_use_numpy);
         }
         throw KARABO_PYTHON_EXCEPTION("Invalid type for Hash index. The type should be 'Node' or 'str'!");

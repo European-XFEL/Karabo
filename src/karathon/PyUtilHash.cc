@@ -8,6 +8,7 @@
  */
 
 #include <boost/python.hpp>
+#include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 #include <string>
 #include <karabo/util/Hash.hh>
 #include <karabo/util/Exception.hh>
@@ -378,10 +379,15 @@ void exportPyUtilHash() {
           "h.setAttribute('a.b.c', 'attr1', [1.234,2.987,5.555])\n\th.setAttribute('a.b.c', 'attr2', 1)\n\t"
           "h.setAttribute('a.b.c', 'attr3', False)\n\ta = h.getAttributes('a.b.c')\n\t"
           "h.setAttributes('c', a)    # copy attributes under the different path");
+    h.def("__copy__", &HashWrap().copy);
+    h.def("__deepcopy__", &HashWrap().copy);
 
-    bp::class_<std::vector<Hash> > v("VectorHash");
-    v.def("__iter__", bp::iterator < std::vector<Hash> > ());
-    v.def("__len__", &std::vector<std::vector<Hash > >::size);
-    v.def("clear", &std::vector<std::vector<Hash > >::clear);
+//    bp::class_<std::vector<Hash> > v("VectorHash");
+//    v.def("__iter__", bp::iterator < std::vector<Hash> > ());
+//    v.def("__len__", &std::vector<Hash >::size);
+//    v.def("clear", &std::vector<Hash >::clear);
+    
+    bp::class_<std::vector<Hash>, boost::shared_ptr<std::vector<Hash> > >("VectorHash")
+        .def(bp::vector_indexing_suite<std::vector<Hash> >());
 }
 
