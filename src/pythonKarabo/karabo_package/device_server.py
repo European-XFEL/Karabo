@@ -1,11 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-'''
-Created on Jul 26, 2012
-
-@author: esenov
-'''
+__author__="Sergey Esenov <serguei.essenov at xfel.eu>"
+__date__ ="$Jul 26, 2012 10:06:25 AM$"
 
 import os
 import sys
