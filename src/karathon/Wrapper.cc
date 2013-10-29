@@ -95,7 +95,7 @@ namespace karathon {
             } else if (operand.type() == typeid (karabo::util::Schema)) {
                 return bp::object(boost::any_cast<karabo::util::Schema>(operand));
             } else if (operand.type() == typeid (std::vector<karabo::util::Hash>)) {
-                return fromStdVectorToPyHashList(boost::any_cast<std::vector<karabo::util::Hash> >(operand));
+                return bp::object(boost::any_cast<std::vector<karabo::util::Hash> >(operand));
             } else if (operand.type() == typeid (bp::object) && hasattr(boost::any_cast<bp::object >(operand), "func_name")) {
                 return boost::any_cast<bp::object >(operand);
             }
@@ -162,6 +162,11 @@ namespace karathon {
         if (bp::extract<karabo::util::Schema>(obj).check()) {
             Schema s = bp::extract<Schema>(obj);
             any = s;
+            return;
+        }
+        if (bp::extract<std::vector<karabo::util::Hash> >(obj).check()) {
+            std::vector<Hash> vhash = bp::extract<std::vector<Hash> >(obj);
+            any = vhash;
             return;
         }
 //        if (bp::extract<karabo::xip::CpuImage<double> >(obj).check()) {
