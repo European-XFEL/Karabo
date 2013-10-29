@@ -1,8 +1,5 @@
-'''
-Created on Jul 26, 2012
-
-@author: esenov
-'''
+__author__="Sergey Esenov <serguei.essenov at xfel.eu>"
+__date__ ="$Jul 26, 2012 16:17:33 PM$"
 
 import copy
 
