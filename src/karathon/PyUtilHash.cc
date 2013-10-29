@@ -381,6 +381,8 @@ void exportPyUtilHash() {
           "h.setAttributes('c', a)    # copy attributes under the different path");
     h.def("__copy__", &HashWrap().copy);
     h.def("__deepcopy__", &HashWrap().copy);
+    h.def(bp::self == bp::self);
+    h.def(bp::self != bp::self);
 
 //    bp::class_<std::vector<Hash> > v("VectorHash");
 //    v.def("__iter__", bp::iterator < std::vector<Hash> > ());
