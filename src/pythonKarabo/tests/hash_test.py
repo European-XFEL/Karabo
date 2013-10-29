@@ -7,6 +7,7 @@ Created on Oct 17, 2012
 import unittest
 import numpy as np
 from karabo.karathon import *
+import copy
 
 class  Hash_TestCase(unittest.TestCase):
 
@@ -208,7 +209,27 @@ class  Hash_TestCase(unittest.TestCase):
         except Exception as e:
             self.fail("test_getSet exception group 7: " + str(e))
             
+    def test_getSetVectorHash(self):
+        try:
+            h = Hash('a', VectorHash())
+            g = [Hash('b', 1), Hash('b',2)]      # python list of Hashes
+            vh = h['a']    # get the reference because value is VectorHash
+            vh.extend(g)
+            g1 = (Hash('c',10), Hash('c',20),)   # python tuple of Hashes
+            vh.extend(g1)  # "extend" lists, tuples, VectorHash objects
+            vh.append(Hash('d',100))  # "append" Hash object
+            self.assertEqual(len(vh), 5)
+            self.assertEqual(h['a[4].d'], 100)
+            h2 = copy.copy(h)
+            self.assertTrue(h == h2)
+            vh[4]['d'] = 999
+            self.assertEqual(h['a[4].d'], 999)
+            #self.assertFalse(h == h2)
             
+        except Exception as e:
+            self.fail("test_getSetVectorHash exception group 1: " + str(e))
+        
+        
     def test_getAs(self):
         
         try:
