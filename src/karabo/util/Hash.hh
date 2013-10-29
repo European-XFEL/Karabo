@@ -536,6 +536,9 @@ namespace karabo {
              */
             friend std::ostream& operator<<(std::ostream& os, const Hash& hash);
 
+            bool operator==(const Hash& other);
+            bool operator!=(const Hash& other);
+            
             /**
              * Implement the visitor pattern
              * @param visitor
