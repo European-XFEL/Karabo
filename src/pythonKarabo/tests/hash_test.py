@@ -699,7 +699,16 @@ class  Hash_TestCase(unittest.TestCase):
             
         except Exception as e:
             self.fail("test_dict exception group 1: " + str(e))
-            
+              
+    def test_node_getValueAs(self):     
+        try:
+            h = Hash("a.b.a.b", 42)
+            node = h.getNode("a.b.a.b")
+            self.assertEqual(node.getValue(), 42)
+            self.assertEqual(node.getValueAs(Types.STRING), '42')
+            self.assertEqual(node.getValueAs(Types.INT32), 42)
+        except Exception as e:
+            self.fail("test_node_getValueAs exception group 1: " + str(e))
             
 if __name__ == '__main__':
     unittest.main()
