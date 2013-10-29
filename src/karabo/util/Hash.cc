@@ -424,6 +424,14 @@ namespace karabo {
             return *this;
         }
         
+        bool Hash::operator==(const Hash& other) {
+            return similar(*this, other);
+        }
+        
+        bool Hash::operator!=(const Hash& other) {
+            return !similar(*this, other);
+        }
+        
         /*******************************************************************
          * Attributes manipulation
          *******************************************************************/
