@@ -249,8 +249,8 @@ void exportPyUtilHash() {
           "h[path] = value <==> h.set(path, value)\nUse this setting of the new path/value item if the default separator fits."
           "\nExample:\n\th = Hash()\n\th['a.b.c'] = 1\n\th.set('x/y/z', 2, \"/\")\n\th['u/v/w'] = 3\n\tprint h");
     h.def("setAs", &HashWrap().setAs, (bp::arg("path"), bp::arg("value"), bp::arg("type"), bp::arg("sep") = "."),
-          "h[path] = value <==> h.setAs(path, value, type)\nUse this setting of the new path/value item if the default separator fits."
-          "\nExample:\n\th = Hash()\n\th.set('a.b.c', 1, Types.UINT64)\n\tprint h");            
+          "h.setAs(path, value, type)\nUse this method if the C++ value type cannot be deduced properly of python value"
+          "\nExample:\n\th = Hash()\n\th.setAs('a.b.c', 1L, Types.UINT64)\n\tprint h");            
     h.def("get", &HashWrap().getRef, (bp::arg("path"), bp::arg("sep") = "."),
           "Get the 'value' by 'path'. Optionally, the separator can be defined as second argument.\n"
           "Example:\n\th = Hash('a.b.c', 1)\n\tprint h.get('a/b/c','/')");
