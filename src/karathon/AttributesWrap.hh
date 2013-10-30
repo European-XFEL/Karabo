@@ -60,9 +60,17 @@ namespace karathon {
             return Wrapper::toObject(self.getAny(key));
         }
 
-        static bp::object getAs(karabo::util::Hash::Attributes& self, const std::string& key, const std::string& type) {
+        static bp::object getAs(karabo::util::Hash::Attributes& self, const std::string& key, const bp::object& o_type) {
             using namespace karabo::util;
-            Types::ReferenceType reftype = Types::from<FromLiteral>(type);
+            Types::ReferenceType reftype;
+            if (bp::extract<std::string>(o_type).check()) {
+                std::string type = bp::extract<std::string>(o_type);
+                reftype = Types::from<FromLiteral>(type);
+            } else if (bp::extract<PyTypes::ReferenceType>(o_type).check()) {
+                PyTypes::ReferenceType type = bp::extract<PyTypes::ReferenceType>(o_type);
+                reftype = PyTypes::to(type);
+            }
+            
             switch (reftype) {
                 case Types::BOOL:
                     return bp::object(self.getAs<bool>(key));
