@@ -509,10 +509,10 @@ class  Hash_TestCase(unittest.TestCase):
             self.assertEqual(attrs["attr2"], 43)
             
             node = attrs.getNode("attr1")
-            self.assertEqual(node.getType(), "BOOL")
+            self.assertEqual(node.getType(), Types.BOOL)
 
             node = attrs.getNode("attr2")
-            self.assertEqual(node.getType(), "INT32")
+            self.assertEqual(node.getType(), Types.INT32)
 
         except Exception as e:
             self.fail("test_attributes exception group 2: " + str(e))
@@ -744,15 +744,15 @@ class  Hash_TestCase(unittest.TestCase):
         try:
             h = Hash("a.b.c", 15)
             node = h.getNode("a.b.c")
-            self.assertEqual(node.getType(), "INT32")
+            self.assertEqual(node.getType(), Types.INT32)
             self.assertEqual(node.getValue(), 15)
             
             node.setType(Types.STRING)
-            self.assertEqual(node.getType(), "STRING")
+            self.assertEqual(node.getType(), Types.STRING)
             self.assertEqual(node.getValue(), '15')
             
             node.setType("UINT32")
-            self.assertEqual(node.getType(), "UINT32")
+            self.assertEqual(node.getType(), Types.UINT32)
             self.assertEqual(node.getValue(), 15)
         except Exception as e:
             self.fail("test_node exception group 3: " + str(e))
@@ -765,21 +765,21 @@ class  Hash_TestCase(unittest.TestCase):
             attrs = h.getAttributes("a.b.c")
             
 	    node = attrs.getNode("attr1")
-            self.assertEqual(node.getType(), "INT32")
+            self.assertEqual(node.getType(), Types.INT32)
 	    self.assertEqual(node.getValue(), 10)
 	    self.assertEqual(node.getValueAs(Types.STRING), '10')
             
             node.setType(Types.STRING)
-            self.assertEqual(node.getType(), "STRING")
+            self.assertEqual(node.getType(), Types.STRING)
             self.assertEqual(node.getValue(), '10')
             self.assertEqual(node.getValueAs(Types.UINT32), 10)
             
             node.setType("UINT32")
-            self.assertEqual(node.getType(), "UINT32")
+            self.assertEqual(node.getType(), Types.UINT32)
             self.assertEqual(node.getValue(), 10)
             
 	    node = attrs.getNode("attr2")
-            self.assertEqual(node.getType(), "STRING")
+            self.assertEqual(node.getType(), Types.STRING)
             
         except Exception as e:
             self.fail("test_hashAttributesNode exception: " + str(e))             
