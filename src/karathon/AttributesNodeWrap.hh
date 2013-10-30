@@ -17,7 +17,9 @@ namespace bp = boost::python;
 
 namespace karathon {
 
+
     class AttributesNodeWrap {
+
 
         struct null_deleter {
 
@@ -42,7 +44,7 @@ namespace karathon {
             using namespace karabo::util;
             boost::any& a = node->getValueAsAny();
             // handle Hash differently returning reference to Hash
-            if (a.type() == typeid(Hash)) {
+            if (a.type() == typeid (Hash)) {
                 Hash& hash = boost::any_cast<Hash&>(a);
                 boost::shared_ptr<Hash> p(&hash, null_deleter());
                 return bp::object(p);
@@ -114,9 +116,15 @@ namespace karathon {
             return bp::str(Types::to<ToLiteral>(node->getType()));
         }
 
-        static void setType(const Pointer& node, const std::string& type) {
+        static void setType(const Pointer& node, const bp::object& o_type) {
             using namespace karabo::util;
-            node->setType(Types::from<FromLiteral>(type));
+            if (bp::extract<std::string>(o_type).check()) {
+                std::string type = bp::extract<std::string>(o_type);
+                node->setType(Types::from<FromLiteral>(type));
+            } else if (bp::extract<PyTypes::ReferenceType>(o_type).check()) {
+                PyTypes::ReferenceType type = bp::extract<PyTypes::ReferenceType>(o_type);
+                node->setType(PyTypes::to(type));
+            }
         }
     };
 }

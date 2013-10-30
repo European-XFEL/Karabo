@@ -759,24 +759,28 @@ class  Hash_TestCase(unittest.TestCase):
            
     def test_hashAttributesNode(self):     
         try:
-            h = Hash("a.b.c", 42)
-            h.setAttribute("a.b.c","attr1", 15)
+            h = Hash("a.b.c", "value")
+            h.setAttribute("a.b.c","attr1", 10)
 	    h.setAttribute("a.b.c","attr2", "test")
             attrs = h.getAttributes("a.b.c")
             
 	    node = attrs.getNode("attr1")
             self.assertEqual(node.getType(), "INT32")
-	    self.assertEqual(node.getValue(), 15)
-	    self.assertEqual(node.getValueAs(Types.STRING), '15')
+	    self.assertEqual(node.getValue(), 10)
+	    self.assertEqual(node.getValueAs(Types.STRING), '10')
             
-            node.setType("STRING")
+            node.setType(Types.STRING)
             self.assertEqual(node.getType(), "STRING")
-            self.assertEqual(node.getValue(), '15')
-            self.assertEqual(node.getValueAs(Types.UINT32), 15)
+            self.assertEqual(node.getValue(), '10')
+            self.assertEqual(node.getValueAs(Types.UINT32), 10)
+            
+            node.setType("UINT32")
+            self.assertEqual(node.getType(), "UINT32")
+            self.assertEqual(node.getValue(), 10)
             
 	    node = attrs.getNode("attr2")
             self.assertEqual(node.getType(), "STRING")
-	       
+            
         except Exception as e:
             self.fail("test_hashAttributesNode exception: " + str(e))             
            
