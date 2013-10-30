@@ -393,6 +393,25 @@ namespace karathon {
         self.set<boost::any>(key, any, separator.at(0));
     }
 
+    void
+    HashWrap::setAs(karabo::util::Hash& self,
+                    const std::string& key,
+                    const bp::object & value,
+                    const bp::object& o_type,
+                    const std::string& separator) {
+        using namespace karabo::util;
+        set(self, key, value, separator);
+        Hash::Node& node = self.getNode(key, separator.at(0));
+        Types::ReferenceType cppType;
+        if (bp::extract<std::string>(o_type).check()) {
+            std::string s_type = bp::extract<std::string>(o_type);
+            cppType = Types::from<FromLiteral>(s_type);
+        } else if (bp::extract<PyTypes::ReferenceType>(o_type).check()) {
+            PyTypes::ReferenceType type = bp::extract<PyTypes::ReferenceType>(o_type);
+            cppType = PyTypes::to(type);
+        }
+        node.setType(cppType);
+    }
 
     void
     HashWrap::erase(karabo::util::Hash& self,
@@ -411,8 +430,8 @@ namespace karathon {
 
     bool
     HashWrap::eraseFound(karabo::util::Hash& self,
-                    const bp::object & keyObj,
-                    const std::string& separator) {
+                         const bp::object & keyObj,
+                         const std::string& separator) {
         const char sep = separator.at(0);
         std::string key;
         if (bp::extract<std::string > (keyObj).check()) {
@@ -639,7 +658,7 @@ namespace karathon {
 
     bp::object
     HashWrap::getRef(karabo::util::Hash& self,
-                          const bp::object& obj, const std::string& sep) {
+                     const bp::object& obj, const std::string& sep) {
         using namespace karabo::util;
         if (bp::extract<Hash::Node&>(obj).check()) {
             Hash::Node& node = bp::extract<Hash::Node&>(obj);
