@@ -204,9 +204,15 @@ namespace karathon {
             return bp::str(Types::to<ToLiteral>(node->getType()));
         }
 
-        static void setType(const Pointer& node, const std::string& type) {
+        static void setType(const Pointer& node, const bp::object& o_type) {
             using namespace karabo::util;
-            node->setType(Types::from<FromLiteral>(type));
+            if (bp::extract<std::string>(o_type).check()) {
+                std::string type = bp::extract<std::string>(o_type);
+                node->setType(Types::from<FromLiteral>(type));
+            } else if (bp::extract<PyTypes::ReferenceType>(o_type).check()) {
+                PyTypes::ReferenceType type = bp::extract<PyTypes::ReferenceType>(o_type);
+                node->setType(PyTypes::to(type));
+            }
         }
     };
 }

@@ -163,7 +163,65 @@ namespace karathon {
                 case karabo::util::Types::SEQUENCE: return SEQUENCE;
                 case karabo::util::Types::POINTER: return POINTER;
                 default:
-                    throw KARABO_PYTHON_EXCEPTION("Unknown type encountered while converting via toPyTypes(...)");
+                    throw KARABO_PYTHON_EXCEPTION("Unknown type encountered while converting from Types to PyTypes.");
+            }
+        }
+        static const karabo::util::Types::ReferenceType to(const ReferenceType& input) {
+            switch (input) {
+                case BOOL: return karabo::util::Types::BOOL;
+                case CHAR: return karabo::util::Types::CHAR;
+                case VECTOR_CHAR: return karabo::util::Types::VECTOR_CHAR;
+                case INT8: return karabo::util::Types::INT8;
+                case VECTOR_INT8: return karabo::util::Types::VECTOR_INT8;
+                case UINT8: return karabo::util::Types::UINT8;
+                case VECTOR_UINT8: return karabo::util::Types::VECTOR_UINT8;
+                case INT16: return karabo::util::Types::INT16;
+                case VECTOR_INT16: return karabo::util::Types::VECTOR_INT16;
+                case UINT16: return karabo::util::Types::UINT16;
+                case VECTOR_UINT16: return karabo::util::Types::VECTOR_UINT16;
+                case INT32: return karabo::util::Types::INT32;
+                case VECTOR_INT32: return karabo::util::Types::VECTOR_INT32;
+                case UINT32: return karabo::util::Types::UINT32;
+                case VECTOR_UINT32: return karabo::util::Types::VECTOR_UINT32;
+                case INT64: return karabo::util::Types::INT64;
+                case VECTOR_INT64: return karabo::util::Types::VECTOR_INT64;
+                case UINT64: return karabo::util::Types::UINT64;
+                case VECTOR_UINT64: return karabo::util::Types::VECTOR_UINT64;
+                case FLOAT: return karabo::util::Types::FLOAT;
+                case VECTOR_FLOAT: return karabo::util::Types::VECTOR_FLOAT;
+                case DOUBLE: return karabo::util::Types::DOUBLE;
+                case VECTOR_DOUBLE: return karabo::util::Types::VECTOR_DOUBLE;
+                case COMPLEX_FLOAT: return karabo::util::Types::COMPLEX_FLOAT;
+                case VECTOR_COMPLEX_FLOAT: return karabo::util::Types::VECTOR_COMPLEX_FLOAT;
+                case COMPLEX_DOUBLE: return karabo::util::Types::COMPLEX_DOUBLE;
+                case VECTOR_COMPLEX_DOUBLE: return karabo::util::Types::VECTOR_COMPLEX_DOUBLE;
+                case STRING: return karabo::util::Types::STRING;
+                case VECTOR_STRING: return karabo::util::Types::VECTOR_STRING;
+                case HASH: return karabo::util::Types::HASH;
+                case VECTOR_HASH: return karabo::util::Types::VECTOR_HASH;
+                case PTR_BOOL: return karabo::util::Types::PTR_BOOL;
+                case PTR_CHAR: return karabo::util::Types::PTR_CHAR;
+                case PTR_INT8: return karabo::util::Types::PTR_INT8;
+                case PTR_UINT8: return karabo::util::Types::PTR_UINT8;
+                case PTR_INT16: return karabo::util::Types::PTR_INT16;
+                case PTR_UINT16: return karabo::util::Types::PTR_UINT16;
+                case PTR_INT32: return karabo::util::Types::PTR_INT32;
+                case PTR_UINT32: return karabo::util::Types::PTR_UINT32;
+                case PTR_INT64: return karabo::util::Types::PTR_INT64;
+                case PTR_UINT64: return karabo::util::Types::PTR_UINT64;
+                case PTR_FLOAT: return karabo::util::Types::PTR_FLOAT;
+                case PTR_DOUBLE: return karabo::util::Types::PTR_DOUBLE;
+                case PTR_COMPLEX_FLOAT: return karabo::util::Types::PTR_COMPLEX_FLOAT;
+                case PTR_COMPLEX_DOUBLE: return karabo::util::Types::PTR_COMPLEX_DOUBLE;
+                case PTR_STRING: return karabo::util::Types::PTR_STRING;
+                case SCHEMA: return karabo::util::Types::SCHEMA;
+                case ANY: return karabo::util::Types::ANY;
+                case UNKNOWN: return karabo::util::Types::UNKNOWN;
+                case SIMPLE: return karabo::util::Types::SIMPLE;
+                case SEQUENCE: return karabo::util::Types::SEQUENCE;
+                case POINTER: return karabo::util::Types::POINTER;
+                default:
+                    throw KARABO_PYTHON_EXCEPTION("Unknown type encountered while converting from PyTypes to Types.");
             }
         }
     };
