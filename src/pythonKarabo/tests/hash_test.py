@@ -721,7 +721,7 @@ class  Hash_TestCase(unittest.TestCase):
         except Exception as e:
             self.fail("test_dict exception group 1: " + str(e))
               
-    def test_node(self):     
+    def test_hashNode(self):     
         try:
             h = Hash("a.b.c", 42)
             node = h.getNode("a.b.c")
@@ -741,7 +741,45 @@ class  Hash_TestCase(unittest.TestCase):
         except Exception as e:
             self.fail("test_node exception group 2: " + str(e))
             
+        try:
+            h = Hash("a.b.c", 15)
+            node = h.getNode("a.b.c")
+            self.assertEqual(node.getType(), "INT32")
+            self.assertEqual(node.getValue(), 15)
             
+            node.setType(Types.STRING)
+            self.assertEqual(node.getType(), "STRING")
+            self.assertEqual(node.getValue(), '15')
+            
+            node.setType("UINT32")
+            self.assertEqual(node.getType(), "UINT32")
+            self.assertEqual(node.getValue(), 15)
+        except Exception as e:
+            self.fail("test_node exception group 3: " + str(e))
+           
+    def test_hashAttributesNode(self):     
+        try:
+            h = Hash("a.b.c", 42)
+            h.setAttribute("a.b.c","attr1", 15)
+	    h.setAttribute("a.b.c","attr2", "test")
+            attrs = h.getAttributes("a.b.c")
+            
+	    node = attrs.getNode("attr1")
+            self.assertEqual(node.getType(), "INT32")
+	    self.assertEqual(node.getValue(), 15)
+	    self.assertEqual(node.getValueAs(Types.STRING), '15')
+            
+            node.setType("STRING")
+            self.assertEqual(node.getType(), "STRING")
+            self.assertEqual(node.getValue(), '15')
+            self.assertEqual(node.getValueAs(Types.UINT32), 15)
+            
+	    node = attrs.getNode("attr2")
+            self.assertEqual(node.getType(), "STRING")
+	       
+        except Exception as e:
+            self.fail("test_hashAttributesNode exception: " + str(e))             
+           
 if __name__ == '__main__':
     unittest.main()
 
