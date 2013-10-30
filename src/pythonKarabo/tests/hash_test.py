@@ -726,8 +726,12 @@ class  Hash_TestCase(unittest.TestCase):
             h = Hash("a.b.c", 42)
             node = h.getNode("a.b.c")
             self.assertEqual(node.getValue(), 42)
+            
             self.assertEqual(node.getValueAs(Types.STRING), '42')
             self.assertEqual(node.getValueAs(Types.INT32), 42)
+            
+            self.assertEqual(node.getValueAs("STRING"), '42')
+            self.assertEqual(node.getValueAs("INT32"), 42)
         except Exception as e:
             self.fail("test_node exception group 1: " + str(e))
            
@@ -736,8 +740,12 @@ class  Hash_TestCase(unittest.TestCase):
             h.setAttribute("a.b.c","attr1", 15)
             node = h.getNode("a.b.c")
             self.assertEqual(node.getAttribute("attr1"), 15)
+            
             self.assertEqual(node.getAttributeAs("attr1", Types.STRING), '15')
             self.assertEqual(node.getAttributeAs("attr1", Types.INT32), 15)
+        
+            self.assertEqual(node.getAttributeAs("attr1", "STRING"), '15')
+            self.assertEqual(node.getAttributeAs("attr1", "INT32"), 15)
         except Exception as e:
             self.fail("test_node exception group 2: " + str(e))
             
@@ -768,11 +776,13 @@ class  Hash_TestCase(unittest.TestCase):
             self.assertEqual(node.getType(), Types.INT32)
 	    self.assertEqual(node.getValue(), 10)
 	    self.assertEqual(node.getValueAs(Types.STRING), '10')
+            self.assertEqual(node.getValueAs("STRING"), '10')
             
             node.setType(Types.STRING)
             self.assertEqual(node.getType(), Types.STRING)
             self.assertEqual(node.getValue(), '10')
             self.assertEqual(node.getValueAs(Types.UINT32), 10)
+            self.assertEqual(node.getValueAs("UINT32"), 10)
             
             node.setType("UINT32")
             self.assertEqual(node.getType(), Types.UINT32)
@@ -784,6 +794,26 @@ class  Hash_TestCase(unittest.TestCase):
         except Exception as e:
             self.fail("test_hashAttributesNode exception: " + str(e))             
            
+           
+    def test_hashAttributes(self):     
+        try:
+            h = Hash("a.b.c", "value")
+            h.setAttribute("a.b.c","attr1", 12)
+	    h.setAttribute("a.b.c","attr2", True)
+            
+            attrs = h.getAttributes("a.b.c")
+            
+            self.assertEqual(attrs.getAs("attr1", Types.UINT32), 12)
+            self.assertEqual(attrs.getAs("attr1", Types.STRING), '12')
+            self.assertEqual(attrs.getAs("attr2", Types.BOOL), True)
+            
+            self.assertEqual(attrs.getAs("attr1", "UINT32"), 12)     
+            self.assertEqual(attrs.getAs("attr1", "STRING"), '12')           
+            self.assertEqual(attrs.getAs("attr2", "BOOL"), True)
+               
+        except Exception as e:
+            self.fail("test_hashAttributes exception: " + str(e))
+
 if __name__ == '__main__':
     unittest.main()
 
