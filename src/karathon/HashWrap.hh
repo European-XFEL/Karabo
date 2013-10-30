@@ -98,6 +98,13 @@ namespace karathon {
             const std::string& separator = ".");
 
         static void
+        setAs(karabo::util::Hash& self,
+              const std::string& key,
+              const bp::object & obj,
+              const bp::object& type,
+              const std::string& separator = ".");
+        
+        static void
         erase(karabo::util::Hash& self,
               const bp::object & keyObj,
               const std::string& separator = ".");
