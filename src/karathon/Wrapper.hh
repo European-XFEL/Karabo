@@ -221,7 +221,7 @@ namespace karathon {
                 case SEQUENCE: return karabo::util::Types::SEQUENCE;
                 case POINTER: return karabo::util::Types::POINTER;
                 default:
-                    throw KARABO_PYTHON_EXCEPTION("Unknown type encountered while converting from PyTypes to Types.");
+                    throw KARABO_PYTHON_EXCEPTION("Unsupported type encountered while converting from PyTypes to Types.");
             }
         }
     };

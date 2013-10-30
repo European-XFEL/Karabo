@@ -248,6 +248,9 @@ void exportPyUtilHash() {
     h.def("__setitem__", &HashWrap().set, (bp::arg("path"), bp::arg("value"), bp::arg("sep") = "."),
           "h[path] = value <==> h.set(path, value)\nUse this setting of the new path/value item if the default separator fits."
           "\nExample:\n\th = Hash()\n\th['a.b.c'] = 1\n\th.set('x/y/z', 2, \"/\")\n\th['u/v/w'] = 3\n\tprint h");
+    h.def("setAs", &HashWrap().setAs, (bp::arg("path"), bp::arg("value"), bp::arg("type"), bp::arg("sep") = "."),
+          "h[path] = value <==> h.setAs(path, value, type)\nUse this setting of the new path/value item if the default separator fits."
+          "\nExample:\n\th = Hash()\n\th.set('a.b.c', 1, Types.UINT64)\n\tprint h");            
     h.def("get", &HashWrap().getRef, (bp::arg("path"), bp::arg("sep") = "."),
           "Get the 'value' by 'path'. Optionally, the separator can be defined as second argument.\n"
           "Example:\n\th = Hash('a.b.c', 1)\n\tprint h.get('a/b/c','/')");
@@ -384,11 +387,6 @@ void exportPyUtilHash() {
     h.def(bp::self == bp::self);
     h.def(bp::self != bp::self);
 
-//    bp::class_<std::vector<Hash> > v("VectorHash");
-//    v.def("__iter__", bp::iterator < std::vector<Hash> > ());
-//    v.def("__len__", &std::vector<Hash >::size);
-//    v.def("clear", &std::vector<Hash >::clear);
-    
     bp::class_<std::vector<Hash>, boost::shared_ptr<std::vector<Hash> > >("VectorHash")
         .def(bp::vector_indexing_suite<std::vector<Hash> >());
 }
