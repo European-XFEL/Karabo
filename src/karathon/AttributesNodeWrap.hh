@@ -113,7 +113,8 @@ namespace karathon {
 
         static bp::object getType(const Pointer& node) {
             using namespace karabo::util;
-            return bp::str(Types::to<ToLiteral>(node->getType()));
+            PyTypes::ReferenceType type = static_cast<PyTypes::ReferenceType>(node->getType());
+            return bp::object(type);
         }
 
         static void setType(const Pointer& node, const bp::object& o_type) {
