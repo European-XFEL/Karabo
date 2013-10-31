@@ -6,8 +6,8 @@
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
 
-#ifndef KARABO_PYKARABO_MACROSFORPYTHON_HH
-#define	KARABO_PYKARABO_MACROSFORPYTHON_HH
+#ifndef KARATHON_MACROSFORPYTHON_HH
+#define	KARATHON_MACROSFORPYTHON_HH
 
 #include <boost/python.hpp>
 #include <karabo/util/SimpleElement.hh>
@@ -480,5 +480,5 @@ return boost::python::object(str);\
 , bp::return_internal_reference<> () )\
 .def("commit", (void (U::*)())(&U::commit))
 
-#endif	/* KARABO_PYKARABO_MACROSFORPYTHON_HH */
+#endif	/* KARATHON_MACROSFORPYTHON_HH */
 
