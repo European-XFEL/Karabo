@@ -106,7 +106,7 @@ namespace karabo {
                         .description("The connection to the communication layer of the distributed system")
                         .appendNodesOfConfigurationBase<karabo::net::BrokerConnection>()
                         .assignmentOptional().defaultValue("Jms")
-                        .expertAccess()
+                        .adminAccess()
                         .init()
                         .commit();
 
@@ -114,7 +114,7 @@ namespace karabo {
                         .displayedName("Visibility")
                         .description("Configures who is allowed to see this device at all")
                         .assignmentOptional().defaultValue(karabo::util::Schema::OBSERVER)
-                        .expertAccess()
+                        .adminAccess()
                         .reconfigurable()
                         .commit();
 
@@ -670,6 +670,8 @@ namespace karabo {
 
                 // TODO Make heartbeat configurable
                 boost::thread t(boost::bind(&karabo::core::Device<FSM>::runEventLoop, this, 10, info));
+                // Give the broker communication some time
+                boost::this_thread::sleep(boost::posix_time::milliseconds(100));
                 this->startFsm();
                 KARABO_LOG_INFO << m_classId << " with deviceId: \"" << this->getInstanceId() << "\" got started";
 
