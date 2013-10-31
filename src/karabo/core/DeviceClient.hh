@@ -354,7 +354,7 @@ namespace karabo {
                 tmp.set(key, value, keySep);
                 return set(instanceId, tmp, timeoutInSeconds);
             }
-
+            
             template <class T>
             void setNoWait(const std::string& instanceId, const std::string& key, const T& value, const char keySep = '.') {
 

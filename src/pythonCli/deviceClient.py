@@ -238,8 +238,17 @@ class DeviceClient(object):
         
         # Current trendline color idx
         self.__trendlineColorIdx = 0
-         
-              
+        
+        # Spec like container holding counters and pseudo counters
+        self.monitor = Hash()
+        
+        try:
+            self.monitor = krb.loadFromFile("monitor.xml").get("monitor")
+        except:
+            pass
+        
+        self.values = dict()
+                      
     def login(self, username, passwordFile = None, provider = "LOCAL"):
         password = None
         if passwordFile is None:
@@ -446,6 +455,22 @@ class DeviceClient(object):
         time.sleep(secs)
 
 
+    def waitOnCondition(self, conditionString, timeoutInSeconds = -1):
+        try:
+            conditionOk = False
+            timeout = timeoutInSeconds * 1000
+            while (not conditionOk and timeout != 0):
+                conditionOk = eval(conditionString)
+                time.sleep(0.05)
+                timeout = timeout - 50
+            if (timeout == 0):
+                return False, "Condition evaluation timed out"
+            else:
+                return True, ""
+        except Exception, e:
+            return False, "Invalid condition string: " + str(e)
+        
+
     def show(self, deviceId, key, monitor = True, dialog = None, dialogName = "Karabo Embedded Visualisation", x = None, y = None, t0 = None, t1 = None):
         if not HAS_GUIDATA: return 
         schema = self.__client.getDeviceSchema(deviceId)
@@ -603,3 +628,59 @@ class DeviceClient(object):
             print "Assuming UTC time."
         return date.isoformat() + ".0"
         
+        
+    def getMonitorValues(self):
+        d = dict()
+        s = str()
+        t = krb.Epochstamp()
+        s += str(t.getSeconds()) + ' ' + str(t.getFractionalSeconds())
+        for node in self.monitor:
+            entry = node.getValue()
+            monitorName = node.getKey()
+            value = None
+            # Skip if disabled
+            if (entry.has("disabled") and entry.get("disabled")): continue            
+            
+            if entry.has("deviceId"):
+                deviceId = entry.get("deviceId")
+                propertyName = entry.get("property")
+                d[monitorName] = self.__client.get(deviceId, propertyName)        
+            if entry.has("eval"):
+                evalString = entry.get("eval")
+                evalString = re.sub(r'\$(\w+)', r'd["\1"]', evalString)
+                d[monitorName] = eval(evalString)
+            if entry.has("format"):
+                valueType = type(d[monitorName])
+                tmp = '{:' + entry.get("format") + '}'
+                formattedString = tmp.format(d[monitorName])
+                s += ' ' + formattedString
+                if valueType == float:
+                    d[monitorName] = float(formattedString)
+                elif valueType == int:
+                    d[monitorName] = int(formattedString)
+                elif valueType == long:
+                    d[monitorName] = long(formattedString)
+                elif valueType == complex:
+                    d[monitorName] = complex(formattedString)
+                else:
+                    d[monitorName] = formattedString
+            else:
+                s += ' ' + str(d[monitorName])
+        self.values = d    
+        return s
+    
+    
+    def getMonitorHeadline(self):
+        s = str()
+        s += '# epochSec[s] epochFrac[as]'
+        for node in self.monitor:
+            entry = node.getValue()
+            monitorName = node.getKey()
+            if entry.has("unit"):
+                monitorName += '[' + entry.get("unit") + ']'
+            s += ' ' + monitorName
+        return s
+    
+    
+    def reloadMonitorFile(self, filename = "monitor.xml"):
+        self.monitor = krb.loadFromFile(filename).get("monitor")
