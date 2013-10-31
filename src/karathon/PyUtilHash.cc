@@ -213,11 +213,15 @@ void exportPyUtilHash() {
           "h.clear() makes empty the content of current Hash object 'h' (in place).\n");
     h.def("empty", &HashWrap().empty,
           "h.empty() -> True if 'h' is empty otherwise False.\n");
-    h.def("getKeys", &HashWrap().getKeys, (bp::arg("target_container")),
+    h.def("getKeys", (void (*)(const karabo::util::Hash&, const bp::object&))&HashWrap().getKeys, (bp::arg("target_container")),
           "This function follows the API of C++ counterpart. Put into the target container all the keys visible\n"
           "on the top level of the tree hierarchy.\n"
           "\nExample:\n\th = Hash('a.b.c', 1, 'b.x', 2.22, 'b.y', 7.432, 'c', [1,2,3])\n"
           "\tmykeys = []\n\th.getKeys(mykeys)\nprint mykeys\n\n... returns:\n\t['a', 'b', 'c']\n");
+    h.def("getKeys", &HashWrap().keys,
+          "Returns list of all keys visible on the top level of the tree hierarchy.\n"
+          "\nExample:\n\th = Hash('a.b.c', 1, 'b.x', 2.22, 'b.y', 7.432, 'c', [1,2,3])\n"
+          "\tprint h.getKeys()\n\n... returns:\n\t['a', 'b', 'c']\n");
     h.def("keys", &HashWrap().keys,
           "Returns list of all keys visible on the top level of the tree hierarchy.\n"
           "\nExample:\n\th = Hash('a.b.c', 1, 'b.x', 2.22, 'b.y', 7.432, 'c', [1,2,3])\n"
