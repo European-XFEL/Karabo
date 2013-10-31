@@ -151,12 +151,6 @@ namespace karabo {
 
 
         void DeviceClient::slotChanged(const karabo::util::Hash& hash, const std::string & instanceId) {
-//            for (Hash::const_iterator it = hash.begin(); it != hash.end(); ++it) {
-//                if (it->getType() == Types::VECTOR_CHAR && it->hasAttribute("archive")) {
-//                    //if
-//                }
-//            }
-
             boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
             Hash& tmp = m_runtimeSystemDescription.get<Hash>("device." + instanceId + ".configuration");
             tmp.merge(hash);
