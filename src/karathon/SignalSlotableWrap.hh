@@ -6,8 +6,8 @@
  * Created on March 19, 2012, 11:22 AM
  */
 
-#ifndef KARABO_PYKARABO_SIGNALSLOTABLE_HH
-#define	KARABO_PYKARABO_SIGNALSLOTABLE_HH
+#ifndef KARATHON_SIGNALSLOTABLE_HH
+#define	KARATHON_SIGNALSLOTABLE_HH
 
 #include <boost/python.hpp>
 #include <boost/function.hpp>
@@ -295,5 +295,5 @@ namespace karathon {
     };
 }
 
-#endif
+#endif  /* KARATHON_SIGNALSLOTABLE_HH */
 

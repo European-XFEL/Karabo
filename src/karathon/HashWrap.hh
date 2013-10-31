@@ -5,8 +5,8 @@
  * Created on March 16, 2012, 12:43 PM
  */
 
-#ifndef KARABO_PYKARABO_HASHWRAP_HH
-#define	KARABO_PYKARABO_HASHWRAP_HH
+#ifndef KARATHON_HASHWRAP_HH
+#define	KARATHON_HASHWRAP_HH
 
 #include <boost/python.hpp>
 #include <karabo/util/Hash.hh>
@@ -242,5 +242,5 @@ namespace karabo {
     }
 }
 
-#endif
+#endif  /* KARATHON_HASHWRAP_HH */
 

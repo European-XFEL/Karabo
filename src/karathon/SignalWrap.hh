@@ -5,8 +5,8 @@
  * Created on March 19, 2012, 11:37 AM
  */
 
-#ifndef KARABO_PYKARABO_SIGNALWRAP_HH
-#define	KARABO_PYKARABO_SIGNALWRAP_HH
+#ifndef KARATHON_SIGNALWRAP_HH
+#define	KARATHON_SIGNALWRAP_HH
 
 #include <boost/python.hpp>
 #include <karabo/xms/Signal.hh>
@@ -70,5 +70,5 @@ namespace karathon {
     };
 }
 
-#endif	/* KARABO_PYKARABO_SIGNALWRAP_HH */
+#endif	/*  KARATHON_SIGNALWRAP_HH */
 

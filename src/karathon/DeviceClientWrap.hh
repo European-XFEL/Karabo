@@ -5,8 +5,8 @@
  * Created on July 11, 2012, 11:22 AM
  */
 
-#ifndef KARABO_PYKARABO_DEVCOM_HH
-#define	KARABO_PYKARABO_DEVCOM_HH
+#ifndef KARATHON_DEVCOM_HH
+#define	KARATHON_DEVCOM_HH
 
 #include <iostream>
 #include <boost/python.hpp>
@@ -361,5 +361,5 @@ namespace karathon {
     };
 }
 
-#endif
+#endif /* KARATHON_DEVCOM_HH */
 
