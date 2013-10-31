@@ -8,8 +8,8 @@
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
 
-#ifndef KARABO_PYKARABO_SLOTWRAP_HH
-#define	KARABO_PYKARABO_SLOTWRAP_HH
+#ifndef KARATHON_SLOTWRAP_HH
+#define	KARATHON_SLOTWRAP_HH
 
 #include <boost/python.hpp>
 #include <karabo/xms/Slot.hh>
@@ -166,5 +166,5 @@ namespace karathon {
 
 }
 
-#endif	/* KARABO_PYKARABO_SLOTWRAP_HH */
+#endif	/* KARATHON_SLOTWRAP_HH */
 

@@ -4,8 +4,8 @@
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
 
-#ifndef KARABO_PYKARABO_DIMSWRAP_HH
-#define	KARABO_PYKARABO_DIMSWRAP_HH
+#ifndef KARATHON_DIMSWRAP_HH
+#define	KARATHON_DIMSWRAP_HH
 
 #include <boost/python.hpp>
 
@@ -62,5 +62,5 @@ namespace karathon {
 } 
 
 
-#endif	/* DIMSWRAP_HH */
+#endif	/* KARATHON_DIMSWRAP_HH */
 
