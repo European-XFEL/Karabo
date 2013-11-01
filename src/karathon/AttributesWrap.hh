@@ -53,7 +53,10 @@ namespace karathon {
         }
 
         static bp::object getNode(karabo::util::Hash::Attributes& self, const std::string& key) {
-            return bp::object(self.getNode(key));
+            using namespace karabo::util;
+            Hash::Attributes::Node& nodeRef = self.getNode(key);
+            boost::optional<Hash::Attributes::Node&> node(nodeRef);
+            return bp::object(boost::shared_ptr<Hash::Attributes::Node>(&(*node), null_deleter()));
         }
 
         static bp::object get(karabo::util::Hash::Attributes& self, const std::string& key) {
