@@ -1,0 +1,10 @@
+--- wxPython-src-2.9.5.0/build/tools/build-wxwidgets.py	2013-05-18 20:37:54.000000000 +0200
++++ build-wxwidgets.py.fix	2013-11-04 10:21:38.356907975 +0100
+@@ -268,7 +268,6 @@
+                             "--with-opengl",
+                             "--enable-sound",
+                             "--enable-graphics_ctx",
+-                            "--enable-mediactrl",
+                             "--enable-display",
+                             "--enable-geometry",
+                             "--enable-debug_flag",
