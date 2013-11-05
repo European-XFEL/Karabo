@@ -475,6 +475,15 @@ class  Hash_TestCase(unittest.TestCase):
             self.assertEqual(str(i.next()), "abc.1")
         except Exception as e:
             self.fail("test_iteration exception group 9: " + str(e))
+            
+        try:
+            hash = Hash("a.b[0].c.d", "bla-la-la", "a.b[1].c.d", "bla-la-la")
+            vec = hash['a.b']
+            for h in vec:
+                self.assertEqual(h.__iter__().next().getValue()['d'], "bla-la-la")
+        except Exception as e:
+            self.fail("test_iteration exception group 10: " + str(e))
+
 
     def test_attributes(self):
         try:
