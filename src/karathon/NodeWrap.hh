@@ -43,12 +43,12 @@ namespace karathon {
             using namespace karabo::util;
             boost::any& a = node->getValueAsAny();
             // handle Hash differently returning reference to Hash
-            if (a.type() == typeid(Hash)) {
-                Hash& hash = boost::any_cast<Hash&>(a);
-                boost::shared_ptr<Hash> p(&hash, null_deleter());
-                return bp::object(p);
-            }
-            return Wrapper::toObject(node->getValueAsAny());
+//            if (a.type() == typeid(Hash)) {
+//                Hash& hash = boost::any_cast<Hash&>(a);
+//                boost::shared_ptr<Hash> p(&hash, null_deleter());
+//                return bp::object(p);
+//            }
+            return Wrapper::toObject(a);
         }
 
         static bp::object getValueAs(const Pointer& node, const bp::object& o_type) {
