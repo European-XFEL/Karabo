@@ -158,7 +158,7 @@ void exportPyUtilHash() {
     a.def("__setitem__", &AttributesWrap().set, (bp::arg("key"), bp::arg("value")), "Pythonic style for setting value of attribute: attrs['abc'] = 123");
     //    a.def("find", &AttributesWrap().find, (bp::arg("key")), "");
     //    a.def("getIt", &AttributesWrap().getIt, (bp::arg("it")));
-    a.def("__iter__", bp::iterator<Hash::Attributes>());
+    a.def("__iter__", bp::iterator<Hash::Attributes, bp::return_internal_reference<> >());
 
     bp::class_<HashNode, boost::shared_ptr<HashNode> > n("HashNode", bp::init<>());
     n.def("__repr__", &NodeWrap().getKey);
@@ -281,7 +281,7 @@ void exportPyUtilHash() {
     h.def("__len__", &Hash::size,
           "h.__len__() -> number of (top level) items of Hash mapping <==> len(h) <==> len(h.keys())");
     h.def("bool", &Hash::size);
-    h.def("__iter__", bp::iterator<Hash > (),
+    h.def("__iter__", bp::iterator<Hash, bp::return_internal_reference<> > (),
           "h.__iter__() <==> iter(h) : iterator of (top level) items of 'h' mapping.\nExample:\n\t"
           "h = Hash('a.b.c', 1, 'b.x', 2.22, 'b.y', 7.432, 'c', [1,2,3])\n\ti = iter(h)       # create iterator\n\t"
           "n = i.next()      # position to the 1st node\n\tprint n.getKey()\n\tprint n.getValue()\n\t"
