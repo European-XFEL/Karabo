@@ -1,0 +1,41 @@
+--- setup.py	2013-02-27 15:14:01.000000000 -0500
++++ setup.py.fix	2013-11-05 06:01:52.000000000 -0500
+@@ -611,22 +611,22 @@
+ wxpExtensions.append(ext)
+ 
+ 
+-swig_sources = run_swig(['html2.i'], 'src', GENDIR, PKGDIR,
+-                        USE_SWIG, swig_force, swig_args, swig_deps)
+-if not MONOLITHIC and findLib('webview', libdirs):
+-    webviewLib = makeLibName('webview')
+-else:
+-    webviewLib = []
+-ext = Extension('_html2', swig_sources,
+-                include_dirs =  includes,
+-                define_macros = defines,
+-                library_dirs = libdirs,
+-                libraries = libs + webviewLib,
+-                extra_compile_args = cflags,
+-                extra_link_args = lflags,
+-                **depends
+-                )
+-wxpExtensions.append(ext)
++#swig_sources = run_swig(['html2.i'], 'src', GENDIR, PKGDIR,
++#                        USE_SWIG, swig_force, swig_args, swig_deps)
++#if not MONOLITHIC and findLib('webview', libdirs):
++#    webviewLib = makeLibName('webview')
++#else:
++#    webviewLib = []
++#ext = Extension('_html2', swig_sources,
++#                include_dirs =  includes,
++#                define_macros = defines,
++#                library_dirs = libdirs,
++#                libraries = libs + webviewLib,
++#                extra_compile_args = cflags,
++#                extra_link_args = lflags,
++#                **depends
++#                )
++#wxpExtensions.append(ext)
+ 
+ 
+ 
