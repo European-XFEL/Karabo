@@ -164,7 +164,9 @@ void exportPyXipCpuImage() {
                 , (size_t (CpuImageT::*)(size_t const, size_t const, size_t const))(&CpuImageT::offset)
                 , ( bp::arg("x"), bp::arg("y")=(unsigned int const)(0), bp::arg("z")=(unsigned int const)(0) ) );
         
-    
+    cpuimg.def("copyTo"
+                , (void (CpuImageT::*)(karabo::util::Hash&) const)(&CpuImageT::copyTo)
+                , ( bp::arg("hash")));
 }
 template void exportPyXipCpuImage<int>();
 template void exportPyXipCpuImage<unsigned int>();
