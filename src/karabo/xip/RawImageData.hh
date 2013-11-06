@@ -178,19 +178,19 @@ namespace karabo {
             
             karabo::util::Dims getDimensions() const;
             
-             void setDimensions(const karabo::util::Dims& dimensions);
+            void setDimensions(const karabo::util::Dims& dimensions);
             
-             int getEncoding() const;
+            int getEncoding() const;
             
-             void setEncoding(const EncodingType encoding);
+            void setEncoding(const EncodingType encoding);
             
-             int getChannelSpace() const;
+            int getChannelSpace() const;
             
-             void setChannelSpace(const ChannelSpaceType channelSpace);
+            void setChannelSpace(const ChannelSpaceType channelSpace);
                 
-             void setIsBigEndian(const bool isBigEndian);
+            void setIsBigEndian(const bool isBigEndian);
             
-             bool isBigEndian() const;
+            bool isBigEndian() const;
                 
             karabo::util::Hash getHeader() const;
 
@@ -200,6 +200,7 @@ namespace karabo {
             
             void swap(RawImageData& image);
             
+            void toRGBAPremultiplied();
         };
     }
 }

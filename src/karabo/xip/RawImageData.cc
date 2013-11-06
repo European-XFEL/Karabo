@@ -6,6 +6,7 @@
  */
 
 #include "RawImageData.hh"
+#include <karabo/util/ByteSwap.hh>
 
 using namespace karabo::util;
 
@@ -155,5 +156,350 @@ namespace karabo {
             std::swap(m_hash, image.m_hash);
             std::swap(m_isShared, m_isShared);
         }
+
+        void RawImageData::toRGBAPremultiplied() {
+            size_t size = this->size();
+            int encoding = this->getEncoding();
+            bool isBigEndian = this->isBigEndian();
+            int channelSpace = this->getChannelSpace();
+
+            if (encoding == Encoding::GRAY) {
+	        vector<unsigned char> qtImage(size * 4); // Have to blow up for RGBA
+
+                if (channelSpace == ChannelSpace::u_8_1) {
+                    unsigned char* data = reinterpret_cast<unsigned char*>(this->dataPointer());
+                    unsigned char pmax = 0, pmin = 0xFF;
+                    for (size_t i = 0; i < size; i++) {
+                        unsigned char pix = data[i];
+                        if (pmax < pix) pmax = pix;
+                        if (pmin > pix) pmin = pix;
+                    }
+
+                    size_t index = 0;
+                    double norm = 1.0;
+                    if (pmax > pmin)
+                        norm = (double)0xFF / (pmax-pmin);
+                    for (size_t i = 0; i < size; i++) {
+                        unsigned char pix = 0x7F; // arbitrary
+                        if (pmax > pmin) // normalization
+                            pix = static_cast<unsigned char>(norm * (data[i] - pmin));
+                        
+                        qtImage[index++] = pix;
+                        qtImage[index++] = pix;
+                        qtImage[index++] = pix;
+                        qtImage[index++] = 0xFF;
+                    }
+
+		} else if (channelSpace == ChannelSpace::s_8_1) {
+                    char* data = this->dataPointer();
+                    unsigned char pmax = 0, pmin = 0xFF;
+                    for (size_t i = 0; i < size; i++) {
+                        unsigned char pix = data[i] + 0x80; // back to 0-0xFF range
+                        if (pmax < pix) pmax = pix;
+                        if (pmin > pix) pmin = pix;
+                    }
+
+                    size_t index = 0;
+                    double norm = 1.0;
+                    if (pmax > pmin)
+                        norm = (double)0xFF / (pmax-pmin);
+                    for (size_t i = 0; i < size; i++) {
+                        unsigned char pix = 0x7F; // arbitrary
+                        if (pmax > pmin) // normalization
+                            pix = static_cast<unsigned char>(norm * (data[i] + 0x80 - pmin));
+
+                        qtImage[index++] = pix;
+                        qtImage[index++] = pix;
+                        qtImage[index++] = pix;
+                        qtImage[index++] = 0xFF;
+                    }
+
+                } else if (channelSpace == ChannelSpace::u_16_2) {
+                    unsigned short* data = reinterpret_cast<unsigned short*>(this->dataPointer());
+                    unsigned short pmax = 0, pmin = 0xFFFF;
+
+                    if (isBigEndian) {
+                        for (size_t i = 0; i < size; i++) {
+       	                    data[i] = bswap16(data[i]); // swap bytes
+                            if (pmax < data[i]) pmax = data[i];
+                            if (pmin > data[i]) pmin = data[i];
+                        }
+                    } else {
+                        for (size_t i = 0; i < size; i++) {
+                            if (pmax < data[i]) pmax = data[i];
+                            if (pmin > data[i]) pmin = data[i];
+                         }
+                    }
+
+                    size_t index = 0;
+                    double norm = 1.0;
+                    if (pmax > pmin)
+                        norm = (double)0xFF / (pmax-pmin);
+                    for (size_t i = 0; i < size; i++) {
+                        unsigned char pix = 0x7F; // arbitrary
+                        if (pmax > pmin) // normalization
+                            pix = static_cast<unsigned char>(norm * (data[i] - pmin));
+
+                        qtImage[index++] = pix;
+                        qtImage[index++] = pix;
+                        qtImage[index++] = pix;
+                        qtImage[index++] = 0xFF;
+                    }
+
+                } else if (channelSpace == ChannelSpace::s_16_2) {
+                    short* data = reinterpret_cast<short*>(this->dataPointer());
+                    unsigned short pmax = 0, pmin = 0xFFFF;
+
+                    if (isBigEndian) {
+                        for (size_t i = 0; i < size; i++) {
+                            data[i] = bswap16(data[i]); // swap bytes
+                            unsigned short pix = data[i] + 0x8000; // go back to 0-0xFFFF range
+                            if (pmax < pix) pmax = pix;
+                            if (pmin > pix) pmin = pix;
+                        }
+                    } else {
+                        for (size_t i = 0; i < size; i++) {
+                            unsigned short pix = data[i] + 0x8000; // go back to 0-0xFFFF range
+                            if (pmax < pix) pmax = pix;
+                            if (pmin > pix) pmin = pix;
+                        }
+                    }
+
+                    size_t index = 0;
+                    double norm = 1.0;
+                    if (pmax > pmin)
+                        norm = (double)0xFF / (pmax-pmin);
+                    for (size_t i = 0; i < size; i++) {
+                        unsigned char pix = 0x7F; // arbitrary
+                        if (pmax > pmin) // normalization
+                            pix = static_cast<unsigned char>(norm * (data[i] + 0x8000 - pmin));
+
+                        qtImage[index++] = pix;
+                        qtImage[index++] = pix;
+                        qtImage[index++] = pix;
+                        qtImage[index++] = 0xFF;
+                    }
+
+
+                } else if (channelSpace == ChannelSpace::u_32_4) {
+                    unsigned int* data = reinterpret_cast<unsigned int*>(this->dataPointer());
+                    unsigned int pmax = 0, pmin = 0xFFFFFFFF;
+
+                    if (isBigEndian) {
+                        for (size_t i = 0; i < size; i++) {
+                            data[i] = bswap32(data[i]); // swap bytes
+                            if (pmax < data[i]) pmax = data[i];
+                            if (pmin > data[i]) pmin = data[i];
+                        }
+                    } else {
+                        for (size_t i = 0; i < size; i++) {
+                            if (pmax < data[i]) pmax = data[i];
+                            if (pmin > data[i]) pmin = data[i];
+                        }
+                    }
+
+                    size_t index = 0;
+                    double norm = 1.0;
+                    if (pmax > pmin)
+                        norm = (double)0xFF / (pmax-pmin);
+                    for (size_t i = 0; i < size; i++) {
+                        unsigned char pix = 0x7F; // arbitrary
+                        if (pmax > pmin) // normalization
+                            pix = static_cast<unsigned char>(norm * (data[i] - pmin));
+
+                        qtImage[index++] = pix;
+                        qtImage[index++] = pix;
+                        qtImage[index++] = pix;
+                        qtImage[index++] = 0xFF;
+                    }
+
+                } else if (channelSpace == ChannelSpace::s_32_4) {
+                    int* data = reinterpret_cast<int*>(this->dataPointer());
+                    unsigned int pmax = 0, pmin = 0xFFFFFFFF;
+
+                    if (isBigEndian) {
+                        for (size_t i = 0; i < size; i++) {
+                            data[i] = bswap32(data[i]); // swap bytes
+                            unsigned int pix = data[i] + 0x80000000; // go back to 0-0xFFFFFFFF range
+                            if (pmax < pix) pmax = pix;
+                            if (pmin > pix) pmin = pix;
+                        }
+                    } else {
+                        for (size_t i = 0; i < size; i++) {
+                            unsigned int pix = data[i] + 0x80000000; // go back to 0-0xFFFFFFFF range
+                            if (pmax < pix) pmax = pix;
+                            if (pmin > pix) pmin = pix;
+                        }
+                    }
+
+                    size_t index = 0;
+                    double norm = 1.0;
+                    if (pmax > pmin)
+                        norm = (double)0xFF / (pmax-pmin);
+                    for (size_t i = 0; i < size; i++) {
+                        unsigned char pix = 0x7F; // arbitrary
+                        if (pmax > pmin) // normalization
+                            pix = static_cast<unsigned char>(norm * (data[i] + 0x80000000 - pmin));
+
+                        qtImage[index++] = pix;
+                        qtImage[index++] = pix;
+                        qtImage[index++] = pix;
+                        qtImage[index++] = 0xFF;
+                    }
+
+                } else if (channelSpace == ChannelSpace::u_64_8) {
+                    unsigned long* data = reinterpret_cast<unsigned long*>(this->dataPointer());
+                    unsigned long pmax = 0, pmin = 0xFFFFFFFFFFFFFFFF;
+
+                    if (isBigEndian) {
+                        for (size_t i = 0; i < size; i++) {
+                            data[i] = bswap64(data[i]); // swap bytes
+                            if (pmax < data[i]) pmax = data[i];
+                            if (pmin > data[i]) pmin = data[i];
+                        }
+                    } else {
+                        for (size_t i = 0; i < size; i++) {
+                            if (pmax < data[i]) pmax = data[i];
+                            if (pmin > data[i]) pmin = data[i];
+                        }
+                    }
+
+                    size_t index = 0;
+                    double norm = 1.0;
+                    if (pmax > pmin)
+                        norm = (double)0xFF / (pmax-pmin);
+                    for (size_t i = 0; i < size; i++) {
+                        unsigned char pix = 0x7F; // arbitrary
+                        if (pmax > pmin) // normalization
+                            pix = static_cast<unsigned char>(norm * (data[i] - pmin));
+
+                        qtImage[index++] = pix;
+                        qtImage[index++] = pix;
+                        qtImage[index++] = pix;
+                        qtImage[index++] = 0xFF;
+                    }
+
+                } else if (channelSpace == ChannelSpace::s_64_8) {
+                    long* data = reinterpret_cast<long*>(this->dataPointer());
+                    unsigned long pmax = 0, pmin = 0xFFFFFFFFFFFFFFFF;
+
+                    if (isBigEndian) {
+                        for (size_t i = 0; i < size; i++) {
+                            data[i] = bswap64(data[i]); // swap bytes
+                            unsigned long pix = data[i] + 0x8000000000000000; // go back to 0-0xFFFFFFFFFFFFFFFF range
+                            if (pmax < pix) pmax = pix;
+                            if (pmin > pix) pmin = pix;
+                        }
+                    } else {
+                        for (size_t i = 0; i < size; i++) {
+                            unsigned long pix = data[i] + 0x8000000000000000; // go back to 0-0xFFFFFFFFFFFFFFFF range
+                            if (pmax < pix) pmax = pix;
+                            if (pmin > pix) pmin = pix;
+                        }
+                    }
+
+                    size_t index = 0;
+                    double norm = 1.0;
+                    if (pmax > pmin)
+                        norm = (double)0xFF / (pmax-pmin);
+                    for (size_t i = 0; i < size; i++) {
+                        unsigned char pix = 0x7F; // arbitrary
+                        if (pmax > pmin) // normalization
+                            pix = static_cast<unsigned char>(norm * (data[i] + 0x8000000000000000 - pmin));
+
+                        qtImage[index++] = pix;
+                        qtImage[index++] = pix;
+                        qtImage[index++] = pix;
+                        qtImage[index++] = 0xFF;
+                    }
+
+                } else if (channelSpace == ChannelSpace::f_32_4) {
+                    float* data = reinterpret_cast<float*>(this->dataPointer());
+                    float pmax = -std::numeric_limits<float>::max();
+                    float pmin = std::numeric_limits<float>::max();
+
+                    for (size_t i = 0; i < size; i++) {
+                        if (pmax < data[i]) pmax = data[i];
+                        if (pmin > data[i]) pmin = data[i];
+                    }
+
+                    if (isBigEndian) {
+                        for (size_t i = 0; i < size; i++) {
+                            unsigned int* data_i = (unsigned int*)(data+i);
+                            *data_i = bswap32(*data_i); // swap bytes
+                            if (pmax < data[i]) pmax = data[i];
+                            if (pmin > data[i]) pmin = data[i];
+                        }
+                    } else {
+                        for (size_t i = 0; i < size; i++) {
+                            if (pmax < data[i]) pmax = data[i];
+                            if (pmin > data[i]) pmin = data[i];
+                        }
+                    }
+
+                    size_t index = 0;
+                    double norm = 1.0;
+                    if (pmax > pmin)
+                        norm = (double)0xFF / (pmax-pmin);
+                    for (size_t i = 0; i < size; i++) {
+                        unsigned char pix = 0x7F; // arbitrary
+                        if (pmax > pmin)
+                            pix = static_cast<unsigned char>(norm * (data[i] - pmin)); // normalization
+
+                        qtImage[index++] = pix;
+                        qtImage[index++] = pix;
+                        qtImage[index++] = pix;
+                        qtImage[index++] = 0xFF;
+                    }
+
+                } else if (channelSpace == ChannelSpace::f_64_8) {
+                    double* data = reinterpret_cast<double*>(this->dataPointer());
+                    double pmax = -std::numeric_limits<double>::max();
+                    double pmin = std::numeric_limits<double>::max();
+
+                    for (size_t i = 0; i < size; i++) {
+                        if (pmax < data[i]) pmax = data[i];
+                        if (pmin > data[i]) pmin = data[i];
+                    }
+
+                    if (isBigEndian) {
+                        for (size_t i = 0; i < size; i++) {
+                            unsigned long* data_i = (unsigned long*)(data+i);
+                            *data_i = bswap64(*data_i);  // swap bytes
+                            if (pmax < data[i]) pmax = data[i];
+                            if (pmin > data[i]) pmin = data[i];
+                        }
+                    } else {
+                        for (size_t i = 0; i < size; i++) {
+                            if (pmax < data[i]) pmax = data[i];
+                            if (pmin > data[i]) pmin = data[i];
+                        }
+                    }
+
+                    size_t index = 0;
+                    double norm = 1.0;
+                    if (pmax > pmin)
+                        norm = (double)0xFF / (pmax-pmin);
+                    for (size_t i = 0; i < size; i++) {
+                        unsigned char pix = 0x7F; // arbitrary
+                        if (pmax > pmin)
+                            pix = static_cast<unsigned char>(norm * (data[i] - pmin)); // normalization
+
+                        qtImage[index++] = pix;
+                        qtImage[index++] = pix;
+                        qtImage[index++] = pix;
+                        qtImage[index++] = 0xFF;
+                    }
+
+                }
+
+                // update data in the hash
+                this->setData(qtImage); // Update data
+                this->setEncoding(Encoding::RGBA); // Update encoding
+                this->setIsBigEndian(false); // Update endianness
+            }
+
+        }
+
     }
 }
