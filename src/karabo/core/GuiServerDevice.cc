@@ -7,7 +7,7 @@
  */
 
 #include <boost/regex.hpp>
-#include <util/ByteSwap.hh>
+#include <karabo/util/ByteSwap.hh>
 
 #include "HashDatabase.hh"
 #include "GuiServerDevice.hh"
