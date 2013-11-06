@@ -350,6 +350,10 @@ namespace karathon {
             boost::shared_ptr<karabo::xip::RawImageData> p = image.getRawImageDataPointer();
             m_raw->swap(*p);
         }
+        
+        void toRGBAPremultiplied() {
+            m_raw->toRGBAPremultiplied();
+        }
     };
 }
 
