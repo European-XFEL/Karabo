@@ -104,5 +104,6 @@ void exportPyXipRawImageData() {
             .def("setHeader", &RawImageDataWrap::setHeader, bp::arg("header"))
             .def("toHash", &RawImageDataWrap::toHash, bp::return_internal_reference<> ()/*bp::return_value_policy< bp::copy_const_reference >()*/)
             .def("swap", &RawImageDataWrap::swap, bp::arg("image"))
+            .def("toRGBAPremultiplied", &RawImageDataWrap::toRGBAPremultiplied)
             ;
 }
