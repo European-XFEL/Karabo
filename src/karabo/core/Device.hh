@@ -229,59 +229,11 @@ namespace karabo {
             template <class PixelType>
             void set(const std::string& key, const karabo::xip::CpuImage<PixelType>& image, const karabo::util::Timestamp& timestamp = karabo::util::Timestamp()) {
                 using namespace karabo::util;
-                using namespace karabo::io;
-                using namespace karabo::xip;
 
                 Hash hash;
                 Hash& value = hash.bindReference<Hash>(key);
 
-                karabo::xip::RawImageData raw(value, true); // Shares data
-
-                // Fill data
-                raw.setByteSize(image.byteSize());
-                std::memcpy(raw.dataPointer(), image.pixelPointer(), image.byteSize());
-
-                // Set dims
-                raw.setDimensions(image.dims());
-
-                // Set encoding
-                raw.setEncoding(karabo::xip::Encoding::GRAY);
-
-                // Set endianness
-                raw.setIsBigEndian(false);
-
-                // Set channel space
-                karabo::xip::ChannelSpaceType channelSpace;
-                Types::ReferenceType type = Types::from<PixelType>();
-                if (type == Types::UINT8) {
-                    channelSpace = karabo::xip::ChannelSpace::u_8_1;
-                } else if (type == Types::INT8) {
-                    channelSpace = karabo::xip::ChannelSpace::s_8_1;
-                } else if (type == Types::CHAR) {
-                    channelSpace = karabo::xip::ChannelSpace::s_8_1;
-                } else if (type == Types::UINT16) {
-                    channelSpace = karabo::xip::ChannelSpace::u_16_2;
-                } else if (type == Types::INT16) {
-                    channelSpace = karabo::xip::ChannelSpace::s_16_2;
-                } else if (type == Types::UINT32) {
-                    channelSpace = karabo::xip::ChannelSpace::u_32_4;
-                } else if (type == Types::INT32) {
-                    channelSpace = karabo::xip::ChannelSpace::s_32_4;
-                } else if (type == Types::UINT64) {
-                    channelSpace = karabo::xip::ChannelSpace::u_64_8;
-                } else if (type == Types::INT64) {
-                    channelSpace = karabo::xip::ChannelSpace::s_64_8;
-                } else if (type == Types::FLOAT) {
-                    channelSpace = karabo::xip::ChannelSpace::f_32_4;
-                } else if (type == Types::DOUBLE) {
-                    channelSpace = karabo::xip::ChannelSpace::f_64_8;
-                } else {
-                    channelSpace = karabo::xip::ChannelSpace::UNDEFINED;
-                }
-                raw.setChannelSpace(channelSpace);
-
-                // Set header
-                raw.setHeader(image.getHeader());
+		image.copyTo(value);
 
                 hash.setAttribute(key, "image", 1);
                 m_parameters.merge(hash, karabo::util::Hash::REPLACE_ATTRIBUTES);
