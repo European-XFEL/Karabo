@@ -241,6 +241,10 @@ void exportPyUtilHash() {
           "Put into the target container the full paths of current Hash object.\n"
           "\nExample:\n\th = Hash('a.b.c', 1, 'b.x', 2.22, 'b.y', 7.432, 'c', [1,2,3])\n"
           "\tmypaths = []\n\th.getPaths(mypaths)\nprint mypaths\n\n... returns:\n\t['a.b.c', 'b.x', 'b.y', 'c']");
+    h.def("getPaths", &HashWrap().paths,
+          "Returns list of all the paths being in current Hash object.\n"
+          "\nExample:\n\th = Hash('a.b.c', 1, 'b.x', 2.22, 'b.y', 7.432, 'c', [1,2,3])\n"
+          "\tprint h.getPaths()\n\n... returns:\n\t['a.b.c', 'b.x', 'b.y', 'c']");
     h.def("paths", &HashWrap().paths,
           "Returns list of all the paths being in current Hash object.\n"
           "\nExample:\n\th = Hash('a.b.c', 1, 'b.x', 2.22, 'b.y', 7.432, 'c', [1,2,3])\n"
@@ -269,15 +273,19 @@ void exportPyUtilHash() {
     h.def("erase", &HashWrap().erase, (bp::arg("path"), bp::arg("sep") = "."),
           "h.erase(path) -> remove item identified by 'path' from 'h' (in place)\nExample:\n"
           "\th = Hash('a.b.c', 1, 'b.x', 2.22, 'b.y', 7.432, 'c', [1,2,3])\n\tprint h\n\t"
-          "del b['b.x']\n\tprint h\n\th.erase('b.y')\n\tprint h\n\tdel h['b']");
+          "del h['b.x']\n\tprint h\n\th.erase('b.y')\n\tprint h\n\tdel h['b']");
     h.def("__delitem__", &HashWrap().erase, (bp::arg("path"), bp::arg("sep") = "."),
           "del h[path] <==> h.erase(path)\nExample:\n"
           "\th = Hash('a.b.c', 1, 'b.x', 2.22, 'b.y', 7.432, 'c', [1,2,3])\n\tprint h\n\t"
-          "del b['b.x']\n\tprint h\n\th.erase('b.y')\n\tprint h\n\tdel h['b']");
+          "del h['b.x']\n\tprint h\n\th.erase('b.y')\n\tprint h\n\tdel h['b']");
     h.def("eraseFound", &HashWrap().eraseFound, (bp::arg("path"), bp::arg("sep") = "."),
           "h.eraseFound(path) -> remove item identified by 'path' from 'h' (in place) if it was found.\n"
           "Returns True if path is found, otherwise False"
           );
+    h.def("erasePath", &HashWrap().erasePath, (bp::arg("path"), bp::arg("sep") = "."),
+          "h.erase(path) -> remove item identified by 'path' from 'h' (in place)\nExample:\n"
+          "\th = Hash('a[0].b[0].c', 1, 'b[0].c.d', 2, 'c.d[0].e', 3, 'd.e', 4, 'e', 5, 'f.g.h.i.j.k', 6)\n\tprint h\n\t"
+          "h.erasePath['a[0].b[0].c']\n\tprint h\n\th.erasePath('b[0].c.d')\n\tprint h\n\th.erasePath['c.d[0].e']");
     h.def("__len__", &Hash::size,
           "h.__len__() -> number of (top level) items of Hash mapping <==> len(h) <==> len(h.keys())");
     h.def("bool", &Hash::size);
