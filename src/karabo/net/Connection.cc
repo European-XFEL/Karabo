@@ -10,6 +10,7 @@
  */
 
 #include "Connection.hh"
+#include "Channel.hh"
 #include <karabo/util/SimpleElement.hh>
 
 namespace karabo {
@@ -32,7 +33,7 @@ namespace karabo {
         Connection::Connection(const karabo::util::Hash& input) {
 
             input.get("serializationType", m_serializationType);
-           
+
             // Always create an IOService object
             m_service = IOService::Pointer(new IOService);
         }
@@ -48,6 +49,18 @@ namespace karabo {
         void Connection::setIOServiceType(const std::string& serviceType) {
             m_service->setService(serviceType);
         }
-    } 
+
+        void Connection::closeAllChannels() {
+            // create local copy on stack to avoid deadlock
+            std::vector<ChannelPointer> vec(m_channels.size());
+            {
+                boost::mutex::scoped_lock lock(m_channelMutex);
+                std::copy(m_channels.begin(), m_channels.end(), vec.begin());
+            }
+            // close all channels
+            for (std::vector<ChannelPointer>::iterator it = vec.begin(); it != vec.end(); ++it) (*it)->close();
+        }
+
+    }
 }
 

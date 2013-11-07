@@ -256,6 +256,19 @@ namespace karabo {
             bool eraseFound(const std::string& path, const char separator = '.');
             
             /**
+             * Remove the element identified by 'key' if it exists. 
+             * Otherwise, it return silently.
+             * If 'key' is a composite element, all its descendents are removed. 
+             * The path to 'key' is removed as well if parent containers are getting empty.
+             * Example: eraseKey ("a.b.c") will remove "c", but "a" and "b" should 
+             * be removed as well if "c" is the only child of "b" and this will recursively
+             * be continued to the root.  If "a.b.c" the only element in Hash then
+             * eraseKey("a.b.c") will result in empty hash.
+             * @return No
+             */
+            void erasePath(const std::string& path, const char separator = '.');
+
+            /**
              * Returns all the keys in the hash in the provided container (vector, list, set, ...)
              * Keys in inner-hashes are not included
              * @param container
