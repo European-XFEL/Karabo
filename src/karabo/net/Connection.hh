@@ -128,6 +128,8 @@ namespace karabo {
                 }
             }
 
+            void closeAllChannels();
+
         private: // members
 
             std::set<ChannelPointer> m_channels;

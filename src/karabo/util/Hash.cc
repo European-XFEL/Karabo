@@ -14,74 +14,59 @@ namespace karabo {
 
     namespace util {
 
-
         Hash::Hash() {
         }
-
 
         Hash::Hash(const std::string& path) {
             this->set(path, Hash());
         }
 
-
         Hash::~Hash() {
         }
-
 
         Hash::const_iterator Hash::begin() const {
             return m_container.begin();
         }
 
-
         Hash::iterator Hash::begin() {
             return m_container.begin();
         }
-
 
         Hash::const_iterator Hash::end() const {
             return m_container.end();
         }
 
-
         Hash::iterator Hash::end() {
             return m_container.end();
         }
-
 
         Hash::const_map_iterator Hash::mbegin() const {
             return m_container.mbegin();
         }
 
-
         Hash::map_iterator Hash::mbegin() {
             return m_container.mbegin();
         }
-
 
         Hash::const_map_iterator Hash::mend() const {
             return m_container.mend();
         }
 
-
         Hash::map_iterator Hash::mend() {
             return m_container.mend();
         }
-
 
         size_t Hash::size() const {
             return m_container.size();
         }
 
-
         bool Hash::empty() const {
             return m_container.empty();
         }
 
-
         void Hash::clear() {
             m_container.clear();
         }
-
 
         bool Hash::has(const std::string& path, const char separator) const {
             try {
@@ -98,20 +83,17 @@ namespace karabo {
             return false;
         }
 
-
         Hash::Node& Hash::setNode(const Hash::Node& srcElement) {
             Node& destElement = set(srcElement.getKey(), srcElement.getValueAsAny());
             destElement.setAttributes(srcElement.getAttributes());
             return destElement;
         }
 
-
         Hash::Node& Hash::setNode(Hash::const_iterator srcIterator) {
             Node& el = set(srcIterator->getKey(), srcIterator->getValueAsAny());
             el.setAttributes(srcIterator->getAttributes());
             return el;
         }
-
 
         bool Hash::is(const std::string& path, const Types::ReferenceType & type, const char separator) const {
             std::string key;
@@ -128,7 +110,6 @@ namespace karabo {
         //            return getNode(path, separator).getValueAsString();
         //        }
 
-
         void Hash::erase(const std::string& path, const char separator) {
             std::string key;
             Hash& hash = getLastHash(path, key, separator);
@@ -140,7 +121,6 @@ namespace karabo {
                 vect.erase(vect.begin() + index);
             }
         }
-
 
         bool Hash::eraseFound(const std::string& path, const char separator) {
             std::string key;
@@ -155,6 +135,51 @@ namespace karabo {
             }
         }
 
+        static std::string concat(const std::vector<string>& vec, size_t len, const std::string& sep) {
+            std::string result;
+            for (size_t i = 0; i < len; i++) {
+                result += vec[i];
+                if (i < (len - 1)) result += sep;
+            }
+            return result;
+        }
+
+        void Hash::erasePath(const std::string& path, const char separator) {
+            string sep(1, separator);
+            std::vector<std::string> tokens;
+            karabo::util::tokenize(path, tokens, separator);
+            size_t length = tokens.size();
+            string thePath = path;
+            try {
+                while (length > 0 && !thePath.empty()) {
+                    std::string key;
+                    Hash& hash = getLastHash(thePath, key, separator);
+                    int index = karabo::util::getAndCropIndex(key); // key cleared from possible []
+                    if (index == -1) {
+                        hash.m_container.erase(key);
+                        thePath = concat(tokens, --length, sep);
+                        if (thePath.empty())
+                            break;
+                    } else {
+                        std::vector<Hash>& vect = hash.m_container.get<vector<Hash> >(key);
+                        vect.erase(vect.begin() + index);
+                        if (!vect.empty()) break;
+                        thePath = concat(tokens, --length, sep);
+                        if (thePath.empty()) {
+                            erase(key, separator);
+                            break;
+                        } else {
+                            erase(thePath + sep + key, separator);
+                        }
+                    }
+                    if ((this->is<Hash>(thePath, separator) && !this->get<Hash>(thePath, separator).empty()) ||
+                            (this->is<vector<Hash> >(thePath, separator) && !this->get<vector<Hash> >(thePath, separator).empty()))
+                        break;
+                }
+            } catch (const karabo::util::Exception& e) {
+                KARABO_RETHROW_AS(KARABO_PARAMETER_EXCEPTION("Error whilst erasing path (" + path + ") from Hash"));
+            }
+        }
 
         const Hash& Hash::getLastHash(const std::string& path, std::string& lastKey, const char separator) const {
             if (path.empty()) throw KARABO_PARAMETER_EXCEPTION("Illegal call to get with empty path");
@@ -174,11 +199,9 @@ namespace karabo {
             return *tmp;
         }
 
-
         Hash & Hash::getLastHash(const std::string& path, std::string& last_key, const char separator) {
             return const_cast<Hash&> (thisAsConst().getLastHash(path, last_key, separator));
         }
-
 
         const Hash::Node& Hash::getNode(const std::string& path, const char separator) const {
             std::string key;
@@ -189,11 +212,9 @@ namespace karabo {
             throw KARABO_LOGIC_EXCEPTION("Array syntax on a leaf is not possible (would be a Hash and not a Node)");
         }
 
-
         Hash::Node& Hash::getNode(const std::string& path, const char separator) {
             return const_cast<Hash::Node&> (thisAsConst().getNode(path, separator));
         }
-
 
         boost::optional<const Hash::Node&> Hash::find(const std::string& path, const char separator) const {
             std::string key;
@@ -207,7 +228,6 @@ namespace karabo {
             }
         }
 
-
         boost::optional<Hash::Node&> Hash::find(const std::string& path, const char separator) {
             try {
                 return getNode(path, separator);
@@ -219,7 +239,6 @@ namespace karabo {
             return boost::optional<Hash::Node&>();
         }
 
-
         Types::ReferenceType Hash::getType(const std::string& path, const char separator) const {
             std::string tmp(path);
             int index = karabo::util::getAndCropIndex(tmp);
@@ -229,7 +248,6 @@ namespace karabo {
                 return Types::HASH;
             }
         }
-
 
         /*-------------------------------------------------------------------------
          * Some useful functions
@@ -241,7 +259,6 @@ namespace karabo {
             }
         }
 
-
         void Hash::getPaths(std::set<std::string>& result, const char separator) const {
             if (this->empty()) return;
             vector<std::string> vect;
@@ -251,7 +268,6 @@ namespace karabo {
                 result.insert(vect[i]);
             }
         }
-
 
         void Hash::getPaths(const Hash& hash, std::vector<std::string>& result, std::string prefix, const char separator) {
             if (hash.empty()) {
@@ -281,7 +297,6 @@ namespace karabo {
             }
         }
 
-
         void Hash::flatten(const Hash& hash, Hash& flat, std::string prefix, const char separator) {
             if (!hash.empty()) {
                 for (const_iterator it = hash.begin(); it != hash.end(); ++it) {
@@ -310,11 +325,9 @@ namespace karabo {
             }
         }
 
-
         void Hash::flatten(Hash& flat, const char separator) const {
             flatten(*this, flat, "", separator);
         }
-
 
         void Hash::unflatten(Hash& tree, const char separator) const {
             for (const_iterator it = begin(); it != end(); ++it) {
@@ -323,12 +336,10 @@ namespace karabo {
             }
         }
 
-
         void Hash::merge(const Hash& other, const Hash::MergePolicy policy) {
             if (policy == MERGE_ATTRIBUTES) mergeAndMergeAttributes(other);
             else if (policy == REPLACE_ATTRIBUTES) mergeAndReplaceAttributes(other);
         }
-
 
         void Hash::mergeAndMergeAttributes(const Hash& other) {
             if (this->empty() && !other.empty()) {
@@ -367,7 +378,6 @@ namespace karabo {
             }
         }
 
-
         void Hash::mergeAndReplaceAttributes(const Hash& other) {
             if (this->empty() && !other.empty()) {
                 *this = other;
@@ -402,36 +412,34 @@ namespace karabo {
             }
         }
 
-
         Hash& Hash::operator+=(const Hash& other) {
             this->merge(other);
             return *this;
         }
 
-
         void Hash::subtract(const Hash& other, const char separator) {
             if (this->empty() || other.empty()) return;
             vector<string> candidates;
-            getPaths(other, candidates, "", separator);     // may be optimized to avoid list creation 
+            getPaths(other, candidates, "", separator); // may be optimized to avoid list creation 
             if (candidates.empty()) return;
             for (vector<string>::const_iterator it = candidates.begin(); it != candidates.end(); ++it) {
-                    this->eraseFound(*it, separator);
+                this->eraseFound(*it, separator);
             }
         }
-        
+
         Hash& Hash::operator-=(const Hash& other) {
             this->subtract(other);
             return *this;
         }
-        
+
         bool Hash::operator==(const Hash& other) {
             return similar(*this, other);
         }
-        
+
         bool Hash::operator!=(const Hash& other) {
             return !similar(*this, other);
         }
-        
+
         /*******************************************************************
          * Attributes manipulation
          *******************************************************************/
@@ -439,8 +447,8 @@ namespace karabo {
         boost::any& Hash::getAttributeAsAny(const std::string& path, const std::string& attribute, const char separator) {
             return getNode(path, separator).getAttributeAsAny(attribute);
         }
-        
-         const boost::any& Hash::getAttributeAsAny(const std::string& path, const std::string& attribute, const char separator) const {
+
+        const boost::any& Hash::getAttributeAsAny(const std::string& path, const std::string& attribute, const char separator) const {
             return getNode(path, separator).getAttributeAsAny(attribute);
         }
 
@@ -448,26 +456,21 @@ namespace karabo {
             return getNode(path, separator).hasAttribute(attribute);
         }
 
-
         const Hash::Attributes & Hash::getAttributes(const std::string& path, const char separator) const {
             return getNode(path, separator).getAttributes();
         }
-
 
         Hash::Attributes & Hash::getAttributes(const std::string& path, const char separator) {
             return getNode(path, separator).getAttributes();
         }
 
-
         void Hash::setAttribute(const std::string& path, const std::string& attribute, const char* value, const char separator) {
             getNode(path, separator).setAttribute(attribute, value);
         }
 
-
         void Hash::setAttributes(const std::string& path, const Hash::Attributes& attributes, const char separator) {
             return getNode(path, separator).setAttributes(attributes);
         }
-
 
         Hash* Hash::setNodesAsNeeded(const std::vector<std::string>& tokens, char separator) {
             // Loop all but last token
@@ -504,7 +507,6 @@ namespace karabo {
             return tmp;
         }
 
-
         std::ostream& operator<<(std::ostream& os, const Hash& hash) {
             try {
                 hash.toStream(os, hash, 0);
@@ -513,7 +515,6 @@ namespace karabo {
             }
             return os;
         }
-
 
         void Hash::toStream(std::ostream& os, const Hash& hash, int depth) const {
 
@@ -550,7 +551,6 @@ namespace karabo {
             }
         }
 
-
         bool similar(const Hash& left, const Hash& right) {
             if (left.size() != right.size())
                 return false;
@@ -561,7 +561,6 @@ namespace karabo {
             return true;
         }
 
-
         bool similar(const std::vector<Hash>& left, const std::vector<Hash>& right) {
             if (left.size() != right.size())
                 return false;
@@ -571,7 +570,6 @@ namespace karabo {
             }
             return true;
         }
-
 
         bool similar(const Hash::Node& left, const Hash::Node& right) {
             if (left.getType() != right.getType())
@@ -585,7 +583,6 @@ namespace karabo {
             }
             return true;
         }
-
 
         size_t counter(const Hash& hash) {
             size_t partial_count = 0;
@@ -609,7 +606,6 @@ namespace karabo {
             }
             return partial_count;
         }
-
 
         size_t counter(const Hash& hash, Types::ReferenceType type) {
             size_t partial_count = 0;
@@ -639,7 +635,6 @@ namespace karabo {
         }
 
         #define COUNTER(ReferenceType, CppType) ReferenceType: return element.getValue < vector <CppType> >().size();
-
 
         size_t counter(const Hash::Node& element) {
             switch (element.getType()) {
