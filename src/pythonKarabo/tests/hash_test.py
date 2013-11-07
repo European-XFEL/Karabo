@@ -823,6 +823,47 @@ class  Hash_TestCase(unittest.TestCase):
         except Exception as e:
             self.fail("test_hashAttributes exception: " + str(e))
 
+
+    def test_erase(self):
+        try:
+            h = Hash('a[0].b[0].c', 1, 'b[0].c.d', 2, 'c.d[0].e', 3, 'd.e', 4, 'e', 5, 'f.g.h.i.j.k', 6)
+            self.assertTrue('a' in h)
+            self.assertTrue('f' in h)
+            self.assertTrue('b' in h)
+            self.assertTrue('c' in h)
+            self.assertTrue('d' in h)
+        except Exception as e:
+            self.fail("test_erase exception 1: " + str(e))
+            
+        try:
+            paths = h.getPaths()
+            for path in paths:
+                if len(path) == 11:
+                    h.erasePath(path)
+            self.assertFalse('a' in h)
+            self.assertFalse('f' in h)
+            self.assertTrue('b' in h)
+            self.assertTrue('c' in h)
+            self.assertTrue('d' in h)
+        except Exception as e:
+            self.fail("test_erase exception 2: " + str(e))
+            
+        try:
+            paths = h.getPaths()
+            for path in paths:
+                if len(path) == 8:
+                    h.erasePath(path)
+            self.assertFalse('a' in h)
+            self.assertFalse('f' in h)
+            self.assertFalse('b' in h)
+            self.assertFalse('c' in h)
+            self.assertEqual(len(h), 2)
+            self.assertEqual(h['d.e'], 4)
+            self.assertEqual(h['e'], 5)
+        except Exception as e:
+            self.fail("test_erase exception 3: " + str(e))
+        
+        
 if __name__ == '__main__':
     unittest.main()
 
