@@ -13,6 +13,11 @@ from karabo.decorators import KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS
 from karabo.configurator import Configurator
 from karabo.base_fsm import BaseFsm
 
+def isCpuImage(value):
+    return (type(value) is CpuImageCHAR or type(value) is CpuImageDOUBLE
+            or type(value) is CpuImageFLOAT or type(value) is CpuImageINT16
+            or type(value) is CpuImageINT32 or type(value) is CpuImageUINT16
+            or type(value) is CpuImageUINT8)
 
 @KARABO_CONFIGURATION_BASE_CLASS
 @KARABO_CLASSINFO("PythonDevice", "1.0")
@@ -170,6 +175,13 @@ class PythonDevice(BaseFsm):
             self._client = DeviceClient(self._ss)  # SignalSlotable object for reuse
         return self._client
     
+    def _setImage(self, key, image):
+        hash = Hash(key, Hash())
+        image.copyTo(hash[key])
+        hash.setAttribute(key, "image", 1)
+        self.parameters.merge(hash, HashMergePolicy.REPLACE_ATTRIBUTES)
+        self._ss.emit("signalChanged", hash, self.deviceid)
+    
     def set(self, *args):
         """
         Updates the state of the device. This function automatically notifies any observers.
@@ -186,6 +198,9 @@ class PythonDevice(BaseFsm):
                 key, value, stamp = pars
                 if type(stamp) is not Timestamp:
                     raise TypeError,"The 3rd argument should be Timestamp"
+                if isCpuImage(value):
+                    _setImage(key, value)
+                    return;
                 pars = tuple([Hash(key, value), stamp])
             
             # hash args
@@ -199,8 +214,19 @@ class PythonDevice(BaseFsm):
             if len(pars) == 2:
                 if type(pars[0]) is not Hash:
                     key, value = pars
+                    if isCpuImage(value):
+                        _setImage(key, value)
+                        return
                     pars = tuple([Hash(key,value), Timestamp()])
                 hash, stamp = pars
+                # Check that hash is image free
+                paths = hash.getPaths()
+                for key in paths:
+                    value = hash[key]
+                    if isCpuImage(value):
+                        _setImage(key, value)    # process images individually
+                        hash.erasePath(key)      # clear hash from images 
+        
                 try:
                     validated = self.validatorIntern.validate(self.fullSchema, hash, stamp)
                 except RuntimeError as e:
