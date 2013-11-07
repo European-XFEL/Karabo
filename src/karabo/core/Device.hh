@@ -240,6 +240,16 @@ namespace karabo {
                 emit("signalChanged", hash, getInstanceId());
             }
 
+            void set(const std::string& key, const karabo::xip::RawImageData& image, const karabo::util::Timestamp& timestamp = karabo::util::Timestamp()) {
+                using namespace karabo::util;
+
+                Hash hash(key, image.toHash());
+
+                hash.setAttribute(key, "image", 1);
+                m_parameters.merge(hash, karabo::util::Hash::REPLACE_ATTRIBUTES);
+                emit("signalChanged", hash, getInstanceId());
+            }
+
             /**
              * Updates the state of the device with all key/value pairs given in the hash
              * NOTE: This function will automatically and efficiently (only one message) inform
