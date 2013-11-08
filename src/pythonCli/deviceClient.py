@@ -10,7 +10,7 @@ from karabo.karathon import Authenticator
 from karabo.karathon import Timestamp
 import karabo.karathon as krb
 
-import IPython.core.ipapi
+import IPython
 import re
 import time
 import getpass
@@ -41,7 +41,8 @@ except ImportError:
     
 
 
-ip = IPython.core.ipapi.get()
+#ip = IPython.core.ipapi.get()
+ip = IPython.get_ipython()
 
 
 # Create one instance (global singleton) of a DeviceClient
