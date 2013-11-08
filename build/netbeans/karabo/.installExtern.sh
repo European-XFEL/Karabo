@@ -2,7 +2,7 @@
 
 CWD=$(pwd)
 
-DEPENDENCIES_Linux=( python2.7 lapack numpy scipy nose libpng freetype qt4 sip pyqt4 matplotlib pyqwt5 guiqwt guidata pexpect tornado pyzmq pygments ipython boost openmqc hdf5 h5py log4cpp cppunit openmq )
+DEPENDENCIES_Linux=( python2.7 lapack numpy scipy nose libpng freetype qt4 sip pyqt4 tornado pyparsing six setuptools dateutil pytz matplotlib pyqwt5 cython guidata guiqwt pexpect pyzmq pygments ipython boost hdf5 h5py log4cpp cppunit openmq openmqc )
 # NoGui should be obsoleted as qt4 and pyqt4 is needed for matplotlib backed as well as pyqwt5, guiqwt and guidata are used in CLI
 DEPENDENCIES_Linux_NoGui=( python2.7 lapack numpy scipy nose libpng freetype matplotlib pexpect tornado pyzmq pygments ipython boost openmqc hdf5 h5py log4cpp cppunit openmq )
 DEPENDENCIES_Darwin=( boost openmqc hdf5 log4cpp cppunit )
