@@ -182,6 +182,12 @@ class PythonDevice(BaseFsm):
         self.parameters.merge(hash, HashMergePolicy.REPLACE_ATTRIBUTES)
         self._ss.emit("signalChanged", hash, self.deviceid)
     
+    def _setRawImageData(self, key, image):
+        hash = Hash(key, image.toHash())
+        hash.setAttribute(key, "image", 1)
+        self.parameters.merge(hash, HashMergePolicy.REPLACE_ATTRIBUTES)
+        self._ss.emit("signalChanged", hash, self.deviceid)
+        
     def set(self, *args):
         """
         Updates the state of the device. This function automatically notifies any observers.
@@ -201,6 +207,9 @@ class PythonDevice(BaseFsm):
                 if isCpuImage(value):
                     _setImage(key, value)
                     return;
+                elif type(value) is RawImageData:
+                    _setRawImageData(key, value)
+                    return
                 pars = tuple([Hash(key, value), stamp])
             
             # hash args
@@ -217,15 +226,21 @@ class PythonDevice(BaseFsm):
                     if isCpuImage(value):
                         _setImage(key, value)
                         return
+                    elif type(value) is RawImageData:
+                        _setRawImageData(key, value)
+                        return
                     pars = tuple([Hash(key,value), Timestamp()])
                 hash, stamp = pars
-                # Check that hash is image free
+                # Check that hash is image's free
                 paths = hash.getPaths()
                 for key in paths:
                     value = hash[key]
                     if isCpuImage(value):
                         _setImage(key, value)    # process images individually
                         hash.erasePath(key)      # clear hash from images 
+                    elif type(value) is RawImageData:
+                        _setRawImageData(key, value)
+                        hash.erasePath(key)
         
                 try:
                     validated = self.validatorIntern.validate(self.fullSchema, hash, stamp)
