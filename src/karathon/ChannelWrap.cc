@@ -186,17 +186,24 @@ namespace karathon {
             if (PyByteArray_Check(obj.ptr())) {
                 PyObject* bytearray = PyByteArray_FromObject(obj.ptr());
                 size_t size = PyByteArray_Size(bytearray);
-                char* data = PyByteArray_AsString(bytearray);
+                //char* data = PyByteArray_AsString(bytearray);
+                vector<char> data(size);
                 ScopedGILRelease nogil;
-                channel->read(hdr, data, size);
+                channel->read(hdr, data);
+                PyObject* pyobj = PyByteArray_FromStringAndSize(&data[0], data.size());
+                obj = bp::object(bp::handle<>(pyobj));
                 return;
+            } else if (PyString_Check(obj.ptr())) {
+                ScopedGILRelease nogil;
+                string& data = bp::extract<string&>(obj);
+                channel->read(hdr, data);
+                return;                
             } else if (bp::extract<karabo::util::Hash&>(obj).check()) {
                 karabo::util::Hash& hash = bp::extract<karabo::util::Hash&>(obj);
                 ScopedGILRelease nogil;
                 channel->read(hdr, hash);
                 return;
             }
-
         }
         throw KARABO_PYTHON_EXCEPTION("Python types in parameters are not supported");
     }
@@ -227,6 +234,11 @@ namespace karathon {
                 char* data = PyByteArray_AsString(bytearray);
                 ScopedGILRelease nogil;
                 channel->write(hdr, data, size);
+                return;
+            } else if (PyString_Check(obj.ptr())) {
+                std::string data = bp::extract<std::string >(obj);
+                ScopedGILRelease nogil;
+                channel->write(hdr, data);
                 return;
             } else if (bp::extract<karabo::util::Hash&>(obj).check()) {
                 const karabo::util::Hash& hash = bp::extract<const karabo::util::Hash&>(obj);
