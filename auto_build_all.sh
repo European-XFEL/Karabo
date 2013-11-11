@@ -59,7 +59,7 @@ elif [[ $1 = "Clean" ]]; then
     rm -rf dist build nbproject/Makefile* nbproject/Package* nbproject/private
     safeRunCommand "cd $scriptDir"
     rm -rf package
-    exit 1
+    exit 0
 else
 	echo
 	echo "Invalid option supplied. Allowed options: Release|Debug|Clean"
