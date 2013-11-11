@@ -44,6 +44,7 @@ namespace karathon {
             if (bp::extract<IOService::Pointer>(obj).check()) {
                 const IOService::Pointer& io = bp::extract<IOService::Pointer>(obj);
                 connection.setIOService(io);
+                return;
             }
             throw KARABO_PYTHON_EXCEPTION("Python object in parameters is not IOService::Pointer");
         }
