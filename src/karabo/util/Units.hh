@@ -160,6 +160,7 @@ namespace karabo {
                 BIT,
                 METER_PER_SECOND,
                 VOLT_PER_SECOND,
+                AMPERE_PER_SECOND,
                 PERCENT
             };
         }
@@ -218,6 +219,7 @@ namespace karabo {
         _KARABO_HELPER_MACRO(BIT, "B")
         _KARABO_HELPER_MACRO(METER_PER_SECOND, "m/s")
         _KARABO_HELPER_MACRO(VOLT_PER_SECOND, "V/s")
+        _KARABO_HELPER_MACRO(AMPERE_PER_SECOND, "A/s")
         _KARABO_HELPER_MACRO(PERCENT, "%")
         
         #undef _KARABO_HELPER_MACRO
@@ -269,6 +271,7 @@ namespace karabo {
                     _KARABO_HELPER_MACRO(BIT)
                     _KARABO_HELPER_MACRO(METER_PER_SECOND)
                     _KARABO_HELPER_MACRO(VOLT_PER_SECOND)
+                    _KARABO_HELPER_MACRO(AMPERE_PER_SECOND)
                     _KARABO_HELPER_MACRO(PERCENT)
                 default:
                     throw KARABO_PARAMETER_EXCEPTION("No string translation registered for given unit");
