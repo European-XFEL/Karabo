@@ -72,7 +72,7 @@ void exportp2p() {
                 .def("read", &ChannelWrap().read2, (bp::arg("hdr"), bp::arg("body")),
                      "Read logical message that consists of two parts: header & body into objects represented in parameter list.\n"
                      "They can be 'bytearray' or 'Hash'. This function blocks until all parts are arrived.")
-                .def("readAsyncStr", &ChannelWrap().readAsyncStr, (bp::arg("bytearray"), bp::arg("handler")),
+                .def("readAsyncStr", &ChannelWrap().readAsyncStr, (bp::arg("handler")),
                      "Register handler that will be called when the message is arrived.  Never blocks. The message will be represented as bytearray.")
                 .def("readAsyncHash", &ChannelWrap().readAsyncHash, (bp::arg("handler")),
                      "Register handler that will be called when the message is arrived.  Never blocks. The message will be represented as Hash.")

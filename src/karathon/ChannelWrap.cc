@@ -221,6 +221,12 @@ namespace karathon {
             ScopedGILRelease nogil;
             channel->write(hash);
             return;
+        } else if (PyString_Check(obj.ptr())) {
+            size_t size = PyString_Size(obj.ptr());
+            const char* data = PyString_AsString(obj.ptr());
+            ScopedGILRelease nogil;
+            channel->write(data, size);
+            return;
         }
         throw KARABO_PYTHON_EXCEPTION("Python type in parameter is not supported");
     }
@@ -261,18 +267,13 @@ namespace karathon {
         CALL_PYTHON_HANDLER_WITH_1(bp::object(size));
     }
 
-    void ChannelWrap::readAsyncStr(karabo::net::Channel::Pointer channel, bp::object& obj, const bp::object& handler) {
+    void ChannelWrap::readAsyncStr(karabo::net::Channel::Pointer channel, const bp::object& handler) {
         registerReadHandler(channel, handler);
-        if (!PyByteArray_Check(obj.ptr()))
-            throw KARABO_PYTHON_EXCEPTION("Python type in parameter is not supported");
-        PyObject* bytearray = PyByteArray_FromObject(obj.ptr());
-        size_t size = PyByteArray_Size(bytearray);
-        char* data = PyByteArray_AsString(bytearray);
-        channel->readAsyncRaw(data, size, proxyReadRawHandler);
+        channel->readAsyncString(proxyReadStringHandler);
     }
 
-    void ChannelWrap::proxyReadRawHandler(karabo::net::Channel::Pointer channel) {
-        CALL_PYTHON_HANDLER_WITH_0();
+    void ChannelWrap::proxyReadStringHandler(karabo::net::Channel::Pointer channel, const std::string& s) {
+        CALL_PYTHON_HANDLER_WITH_1(bp::object(s));
     }
 
     void ChannelWrap::readAsyncHash(karabo::net::Channel::Pointer channel, const bp::object& handler) {
@@ -308,6 +309,12 @@ namespace karathon {
             PyObject* bytearray = PyByteArray_FromObject(obj.ptr());
             size_t size = PyByteArray_Size(bytearray);
             char* data = PyByteArray_AsString(bytearray);
+            registerWriteHandler(channel, handler);
+            channel->writeAsyncRaw(data, size, proxyWriteCompleteHandler);
+            return;
+        } else if (PyString_Check(obj.ptr())) {
+            size_t size = PyString_Size(obj.ptr());
+            const char* data = PyString_AsString(obj.ptr());
             registerWriteHandler(channel, handler);
             channel->writeAsyncRaw(data, size, proxyWriteCompleteHandler);
             return;
