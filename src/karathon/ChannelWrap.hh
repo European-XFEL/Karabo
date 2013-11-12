@@ -34,7 +34,7 @@ namespace karathon {
         static void write(karabo::net::Channel::Pointer channel, const bp::object& obj);
         static void write2(karabo::net::Channel::Pointer channel, const bp::object& header, const bp::object& obj);
         static void readAsyncSizeInBytes(karabo::net::Channel::Pointer channel, const bp::object& handler);
-        static void readAsyncStr(karabo::net::Channel::Pointer channel, bp::object& obj, const bp::object& handler);
+        static void readAsyncStr(karabo::net::Channel::Pointer channel, const bp::object& handler);
         static void readAsyncHash(karabo::net::Channel::Pointer channel, const bp::object& handler);
         static void readAsyncHashStr(karabo::net::Channel::Pointer channel, const bp::object& handler);
         static void readAsyncHashHash(karabo::net::Channel::Pointer channel, const bp::object& handler);
@@ -55,7 +55,7 @@ namespace karathon {
         static void registerErrorHandler(karabo::net::Channel::Pointer channel, const bp::object& handler);
 
         static void proxyReadSizeInBytesHandler(karabo::net::Channel::Pointer channel, const size_t& size);
-        static void proxyReadRawHandler(karabo::net::Channel::Pointer channel);
+        static void proxyReadStringHandler(karabo::net::Channel::Pointer channel, const std::string& s);
         static void proxyReadHashHandler(karabo::net::Channel::Pointer channel, const karabo::util::Hash& hash);
         static void proxyReadHashVectorHandler(karabo::net::Channel::Pointer channel, const karabo::util::Hash& hash, const std::vector<char>& v);
         static void proxyReadHashHashHandler(karabo::net::Channel::Pointer channel, const karabo::util::Hash& h, const karabo::util::Hash& b);
