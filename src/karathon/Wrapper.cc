@@ -122,7 +122,9 @@ namespace karathon {
             return;
         }
         if (PyString_Check(obj.ptr())) {
-            std::string b = bp::extract<std::string >(obj);
+            size_t size = PyString_Size(obj.ptr());
+            const char* data = PyString_AsString(obj.ptr());
+            string b(data,size);
             any = b;
             return;
         }
