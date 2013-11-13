@@ -66,12 +66,14 @@ void exportp2p() {
                      "Returns message length you can receive by 'read' call.  It blocks until message length is arrived.")
                 .def("readAsyncSizeInBytes", &ChannelWrap().readAsyncSizeInBytes, (bp::arg("handler")),
                      "Register a handler that will be called when message length is arrived.  Never blocks.")
-                .def("read", &ChannelWrap().read, (bp::arg("body")),
-                     "Read message into object given as argument.  The supported object types are 'bytearray' and 'Hash'.\n"
-                     "This function will block until message is arrived.")
-                .def("read", &ChannelWrap().read2, (bp::arg("hdr"), bp::arg("body")),
-                     "Read logical message that consists of two parts: header & body into objects represented in parameter list.\n"
-                     "They can be 'bytearray' or 'Hash'. This function blocks until all parts are arrived.")
+                .def("readStr", &ChannelWrap().readStr,
+                     "Read message and return it as a python string.  This function will block until message is arrived.")
+                .def("readHash", &ChannelWrap().readHash,
+                     "Read message and return it as a Hash.  This function will block until message is arrived.")
+                .def("readHashStr", &ChannelWrap().readHashStr,
+                     "Read logical message that consists of two parts: header (Hash) & body (str). This function blocks until all parts are arrived.")
+                .def("readHashHash", &ChannelWrap().readHashHash,
+                     "Read logical message that consists of two parts: header (Hash) & body (Hash).  This function blocks until all parts are arrived.")
                 .def("readAsyncStr", &ChannelWrap().readAsyncStr, (bp::arg("handler")),
                      "Register handler that will be called when the message is arrived.  Never blocks. The message will be represented as bytearray.")
                 .def("readAsyncHash", &ChannelWrap().readAsyncHash, (bp::arg("handler")),
