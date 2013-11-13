@@ -72,7 +72,7 @@ void exportPyXipRawImageData() {
                  bp::arg("ndarray"),
                  bp::arg("encoding"),
                  bp::arg("header") = bp::object(karabo::util::Hash()),
-                 bp::arg("isBigEndian") = true)))
+                 bp::arg("isBigEndian") = false)))
 #endif
             .def(bp::init < bp::object const&,
                  Dims const &,
@@ -83,7 +83,7 @@ void exportPyXipRawImageData() {
                  bp::arg("encoding"),
                  bp::arg("channelSpace"),
                  bp::arg("header") = karabo::util::Hash(),
-                 bp::arg("isBigEndian") = true)))
+                 bp::arg("isBigEndian") = false)))
             .def(bp::init < Hash &, bool >((bp::arg("imageHash"), bp::arg("sharesData") = false)))
 //            .def(bp::init< RawImageData const & >((bp::arg("image"))))
             .def("setData", &RawImageDataWrap::setData, bp::arg("data"))
