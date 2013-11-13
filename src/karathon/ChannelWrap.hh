@@ -29,8 +29,10 @@ namespace karathon {
             return channel->readSizeInBytes();
         }
 
-        static void read(karabo::net::Channel::Pointer channel, bp::object& obj);
-        static void read2(karabo::net::Channel::Pointer channel, bp::object& header, bp::object& obj);
+        static bp::object readStr(karabo::net::Channel::Pointer channel);
+        static bp::object readHash(karabo::net::Channel::Pointer channel);
+        static bp::tuple  readHashStr(karabo::net::Channel::Pointer channel);
+        static bp::tuple  readHashHash(karabo::net::Channel::Pointer channel);
         static void write(karabo::net::Channel::Pointer channel, const bp::object& obj);
         static void write2(karabo::net::Channel::Pointer channel, const bp::object& header, const bp::object& obj);
         static void readAsyncSizeInBytes(karabo::net::Channel::Pointer channel, const bp::object& handler);
