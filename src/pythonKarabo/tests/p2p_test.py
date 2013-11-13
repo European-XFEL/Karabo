@@ -88,9 +88,8 @@ class  P2p_TestCase(unittest.TestCase):
             h = Hash("a.b.c", 1, "x.y.z", [1,2,3,4,5], "d", Hash("abc", 'rabbish'))
             print "TCP Sync client send Hash"
             channel.write(h)
-            h = Hash()
             print "TCP Sync client read Hash back"
-            channel.read(h)
+            h = channel.readHash();
             print "TCP Sync client close connection."
             channel.close()
             
