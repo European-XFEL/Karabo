@@ -61,12 +61,12 @@ class  RawImageData_TestCase(unittest.TestCase):
             self.assertEqual(dims, [1024L, 1024L, 1L])
             
             h = rdata.toHash()
-            self.assertTrue(h["isBigEndian"])   # default setting     
+            self.assertFalse(h["isBigEndian"])   # default setting     
             self.assertEqual(h["encoding"], 3)
             self.assertEqual(h["channelSpace"], 11)
             self.assertEqual(h["dims"], [1024L, 1024L, 1L])
-            rdata.setIsBigEndian(False)
-            self.assertFalse(h["isBigEndian"])
+            rdata.setIsBigEndian(True)
+            self.assertTrue(h["isBigEndian"])
         except Exception as e:
             self.fail("test_rawimagedata exception group 1: " + str(e))
             
