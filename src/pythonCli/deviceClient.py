@@ -278,7 +278,7 @@ class DeviceClient(object):
             print "No servers available to start any devices on..."
             return
         for device in devices:
-            if device.__iter__().next().getValue().get("serverId"):
+            if device.__iter__().next().getValue().has("serverId"):
                 server = device.__iter__().next().getValue().get("serverId")
                 if server in servers:
                     self.__client.instantiate(server, device)
