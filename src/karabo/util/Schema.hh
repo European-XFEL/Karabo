@@ -25,12 +25,21 @@
 
 #include "karaboDll.hh"
 
+namespace karabo {
+    namespace util {
+        class Schema;
+    }
+}
+
+namespace schemawrap {
+    void updateAliasMap(karabo::util::Schema& schema);
+}
 
 /**
  * The main European XFEL namespace
  */
 namespace karabo {
-
+    
     namespace io {
         class SchemaXmlSerializer;
         class SchemaBinarySerializer;
@@ -137,6 +146,7 @@ namespace karabo {
             friend class OutputElement;
             friend class karabo::io::SchemaXmlSerializer;
             friend class karabo::io::SchemaBinarySerializer;
+            friend void schemawrap::updateAliasMap(Schema& schema);
 
             // Container
             Hash m_hash;
