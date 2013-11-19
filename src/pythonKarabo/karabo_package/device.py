@@ -296,6 +296,7 @@ class PythonDevice(BaseFsm):
             #self.parameters.merge(validated, HashMergePolicy.REPLACE_ATTRIBUTES)
             #validated = self.validatorIntern.validate(self.fullSchema, self.parameters)
             #self.parameters.merge(validated, HashMergePolicy.REPLACE_ATTRIBUTES)
+            self.fullSchema.updateAliasMap()
         # notify the distributed system...
         self._ss.emit("signalSchemaUpdated", self.fullSchema, self.deviceid)
         self.set(validated)
@@ -319,6 +320,7 @@ class PythonDevice(BaseFsm):
             self.fullSchema.copy(self.staticSchema)
             self.fullSchema += self._injectedSchema
             self.parameters.merge(validated, HashMergePolicy.REPLACE_ATTRIBUTES)
+            self.fullSchema.updateAliasMap()
         # notify the distributed system...
         self._ss.emit("signalSchemaUpdated", self.fullSchema, self.deviceid)
         self.log.INFO("Schema appended")
