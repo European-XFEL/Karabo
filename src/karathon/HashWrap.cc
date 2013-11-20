@@ -276,7 +276,21 @@ namespace karathon {
             case PyTypes::STRING:
                 return bp::object(self.getAs<std::string>(path, separator.at(0)));
             case PyTypes::VECTOR_BOOL:
-                return Wrapper::fromStdVectorToPyArray(self.getAs<bool, std::vector > (path, separator.at(0)));
+            {
+                switch (srcType) {
+                    case Types::STRING:
+                    {
+                        string s = self.get<string>(path, separator.at(0));
+                        vector<bool> vv;
+                        for (size_t i = 0; i < s.size(); i++) {
+                            for (size_t j = 0; j < 8; j++) vv.push_back(s[i] & (1 << (7-j))? true : false);
+                        }
+                        return Wrapper::fromStdVectorToPyArray(vv);
+                    }
+                    default:
+                        return Wrapper::fromStdVectorToPyArray(self.getAs<bool, std::vector > (path, separator.at(0)));
+                }
+            }
             case PyTypes::VECTOR_CHAR:
             {
                 switch (srcType) {
