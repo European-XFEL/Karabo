@@ -125,8 +125,28 @@ void exportPyXmsSlotElement() {
            , (bp::arg("tags"))
            , bp::return_internal_reference<> ());
 
+    sl.def("observerAccess"
+           , (SLOT_ELEMENT & (SlotElementBase<SLOT_ELEMENT>::*)())(&SlotElementBase<SLOT_ELEMENT >::observerAccess)
+           , bp::return_internal_reference<> ());
+    
+    sl.def("userAccess"
+           , (SLOT_ELEMENT & (SlotElementBase<SLOT_ELEMENT>::*)())(&SlotElementBase<SLOT_ELEMENT >::userAccess)
+           , bp::return_internal_reference<> ());
+    
+    sl.def("operatorAccess"
+           , (SLOT_ELEMENT & (SlotElementBase<SLOT_ELEMENT>::*)())(&SlotElementBase<SLOT_ELEMENT >::operatorAccess)
+           , bp::return_internal_reference<> ());
+    
     sl.def("advanced"
            , (SLOT_ELEMENT & (SlotElementBase<SLOT_ELEMENT>::*)())(&SlotElementBase<SLOT_ELEMENT >::advanced)
+           , bp::return_internal_reference<> ());
+    
+    sl.def("expertAccess"
+           , (SLOT_ELEMENT & (SlotElementBase<SLOT_ELEMENT>::*)())(&SlotElementBase<SLOT_ELEMENT >::expertAccess)
+           , bp::return_internal_reference<> ());
+    
+    sl.def("adminAccess"
+           , (SLOT_ELEMENT & (SlotElementBase<SLOT_ELEMENT>::*)())(&SlotElementBase<SLOT_ELEMENT >::adminAccess)
            , bp::return_internal_reference<> ());
 
     { //karabo::xms::SLOT_ELEMENT
