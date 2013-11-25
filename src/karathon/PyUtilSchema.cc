@@ -1117,6 +1117,7 @@ void exportPyUtilSchema() {
                 .value("BIT", Unit::BIT)
                 .value("METER_PER_SECOND", Unit::METER_PER_SECOND)
                 .value("VOLT_PER_SECOND", Unit::VOLT_PER_SECOND)
+                .value("AMPERE_PER_SECOND", Unit::AMPERE_PER_SECOND)
                 .value("PERCENT", Unit::PERCENT)
                 .value("NOT_ASSIGNED", Unit::NOT_ASSIGNED)
                 .export_values()
