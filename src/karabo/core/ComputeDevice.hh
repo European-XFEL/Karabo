@@ -29,6 +29,8 @@ namespace karabo {
             boost::thread m_waitingIOThread;
             boost::mutex m_computeMutex;
             boost::mutex m_waitingIOMutex;
+            
+           
 
         public:
 
