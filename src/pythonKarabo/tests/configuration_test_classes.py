@@ -426,6 +426,12 @@ class SomeClass(object):
                  .assignmentOptional().defaultValue([])
                  .commit()
                  ,
+        IMAGE_ELEMENT(expected).key("myImageElement")
+                .displayedName("myImage")
+                .description("Image Element")
+                .operatorAccess()
+                .commit()
+                ,        
         )
 
     
