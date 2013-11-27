@@ -4,6 +4,8 @@ __date__ ="$Sep 30, 2013$"
 
 import unittest
 from karabo.karathon import *
+from karabo.decorators import *
+from configuration_test_classes import SomeClass
 
 class  CpuImage_TestCase(unittest.TestCase):
     def setUp(self):
@@ -63,7 +65,30 @@ class  CpuImage_TestCase(unittest.TestCase):
             self.assertEqual(img.getStatistics().getMax(), 255.0)
         except Exception as e:
             self.fail("test_cpuimage_read exception: " + str(e))        
-     
+            
+    def test_cpuimage_imageElement(self):
+        try:
+            img = CpuImageDOUBLE()
+            img.read(self.resourcesdir+"european-xfel-logo-greyscales.tif")
+            schema = Configurator(SomeClass).getSchema("SomeClassId")
+
+            h=Hash()
+            img.copyTo(h)
+            
+            rules = ValidatorValidationRules()
+            rules.allowAdditionalKeys        = True
+            rules.allowMissingKeys           = True
+            rules.allowUnrootedConfiguration = True
+            validator = Validator()
+            validator.setValidationRules(rules)
+            
+            configuration = Hash('myImageElement', h)
+            
+            validated = validator.validate(schema, configuration)
+
+        except Exception,e:
+            self.fail("test_cpuimage_imageElement exception: " + str(e))
+            
     def test_cpuimage_assign(self):
         try:
             fileName = self.resourcesdir+"european-xfel-logo-greyscales.tif"
@@ -80,6 +105,19 @@ class  CpuImage_TestCase(unittest.TestCase):
         except Exception as e:
             self.fail("test_cpuimage_assign exception: " + str(e)) 
         
+    def test_cpuimage_png_read(self):
+        try:
+            img = CpuImageDOUBLE()
+            img.read(self.resourcesdir+"image_0001A.png")
+            self.assertEqual(img.dimensionality(), 2)
+            self.assertEqual(img.dimX(), 800)
+            self.assertEqual(img.dimY(), 600)
+            self.assertEqual(img.dimZ(), 1)
+            self.assertEqual(img.pixelType(), "DOUBLE")
+            self.assertEqual(img.getStatistics().getMin(), 0.0)
+            self.assertEqual(img.getStatistics().getMax(), 255.0)
+        except Exception,e:
+            self.fail("test_cpuimage_png_read exception: " + str(e))        
             
 if __name__ == '__main__':
     unittest.main()
