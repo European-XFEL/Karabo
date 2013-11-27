@@ -98,6 +98,10 @@ namespace karabo {
 
             virtual void setEndOfStream() const {
             }
+            
+            virtual bool respondsToEndOfStream() {
+                return true;
+            }
 
         protected:
 
