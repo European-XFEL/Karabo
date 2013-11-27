@@ -90,5 +90,21 @@ class  RawImageData_TestCase(unittest.TestCase):
             self.fail("test_setData_bytearray exception: " + str(e))
             
             
+    def test_constructor_bytearray(self):
+        
+        try:       
+            imgArr = np.fromfile(self.resourcesdir+"image_0001.raw", dtype=np.uint32)            
+            self.assertEqual(imgArr.size, 1048576)
+            
+            imgArr2 = bytearray(imgArr)
+            self.assertEqual(len(imgArr2), 4194304)
+            
+            d=Dims(1024, 1024, 1)
+            rdata = RawImageData(imgArr2, d, EncodingType.BGR, ChannelSpaceType.u_32_4)
+                
+        except Exception,e:
+            self.fail("test_constructor_bytearray exception: " + str(e))        
+                 
+            
 if __name__ == '__main__':
     unittest.main()   
