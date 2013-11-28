@@ -205,10 +205,10 @@ class PythonDevice(BaseFsm):
                 if type(stamp) is not Timestamp:
                     raise TypeError,"The 3rd argument should be Timestamp"
                 if isCpuImage(value):
-                    _setImage(key, value)
+                    self._setImage(key, value)
                     return;
                 elif type(value) is RawImageData:
-                    _setRawImageData(key, value)
+                    self._setRawImageData(key, value)
                     return
                 pars = tuple([Hash(key, value), stamp])
             
@@ -224,10 +224,10 @@ class PythonDevice(BaseFsm):
                 if type(pars[0]) is not Hash:
                     key, value = pars
                     if isCpuImage(value):
-                        _setImage(key, value)
+                        self._setImage(key, value)
                         return
                     elif type(value) is RawImageData:
-                        _setRawImageData(key, value)
+                        self._setRawImageData(key, value)
                         return
                     pars = tuple([Hash(key,value), Timestamp()])
                 hash, stamp = pars
@@ -236,10 +236,10 @@ class PythonDevice(BaseFsm):
                 for key in paths:
                     value = hash[key]
                     if isCpuImage(value):
-                        _setImage(key, value)    # process images individually
+                        self._setImage(key, value)    # process images individually
                         hash.erasePath(key)      # clear hash from images 
                     elif type(value) is RawImageData:
-                        _setRawImageData(key, value)
+                        self._setRawImageData(key, value)
                         hash.erasePath(key)
         
                 try:
@@ -258,7 +258,7 @@ class PythonDevice(BaseFsm):
                 if not validated.empty():
                     self.parameters.merge(validated, HashMergePolicy.REPLACE_ATTRIBUTES)
                     self._ss.emit("signalChanged", validated, self.deviceid)
-
+       
     def __setitem__(self, key, value):
         self.set(key, value, Timestamp())
         
@@ -296,6 +296,7 @@ class PythonDevice(BaseFsm):
             #self.parameters.merge(validated, HashMergePolicy.REPLACE_ATTRIBUTES)
             #validated = self.validatorIntern.validate(self.fullSchema, self.parameters)
             #self.parameters.merge(validated, HashMergePolicy.REPLACE_ATTRIBUTES)
+            self.fullSchema.updateAliasMap()
         # notify the distributed system...
         self._ss.emit("signalSchemaUpdated", self.fullSchema, self.deviceid)
         self.set(validated)
@@ -319,6 +320,7 @@ class PythonDevice(BaseFsm):
             self.fullSchema.copy(self.staticSchema)
             self.fullSchema += self._injectedSchema
             self.parameters.merge(validated, HashMergePolicy.REPLACE_ATTRIBUTES)
+            self.fullSchema.updateAliasMap()
         # notify the distributed system...
         self._ss.emit("signalSchemaUpdated", self.fullSchema, self.deviceid)
         self.log.INFO("Schema appended")

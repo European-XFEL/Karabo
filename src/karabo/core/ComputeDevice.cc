@@ -83,12 +83,15 @@ namespace karabo {
                     .initialValue(0)
                     .commit();
             
-            BOOL_ELEMENT(expected).key("singleEndOfStreamSuffice")
+            /*BOOL_ELEMENT(expected).key("singleEndOfStreamSuffice")
                     .displayedName("Single EOS suffices")
                     .description("If true, a single EOS on one input channel will signal EOS on all output channels")
                     .reconfigurable()
                     .assignmentOptional().defaultValue(false)
-                    .commit();
+                    .commit();*/
+            
+           
+            
         }
 
 
@@ -126,8 +129,16 @@ namespace karabo {
 
 
         void ComputeDevice::_onEndOfStream() {
+            
+            size_t m_expectedEndOfStreams = 0;
+            
+            const InputChannels& inputChannels = this->getInputChannels();
+            for(InputChannels::const_iterator it = inputChannels.begin(); it != inputChannels.end(); ++it){
+                if(it->second->respondsToEndOfStream()) m_expectedEndOfStreams++;
+            }
+            
             m_nEndOfStreams++;
-            if (m_nEndOfStreams >= this->getInputChannels().size() || get<bool>("singleEndOfStreamSuffice")) {
+            if (m_nEndOfStreams >= m_expectedEndOfStreams) { // || get<bool>("singleEndOfStreamSuffice")) {
                 m_nEndOfStreams = 0;
                 m_isEndOfStream = true;
                 if (get<bool>("autoEndOfStream")) this->endOfStream();
@@ -136,10 +147,12 @@ namespace karabo {
 
 
         void ComputeDevice::endOfStreamAction() {
+            
             this->onEndOfStream();
             const OutputChannels& outputChannels = this->getOutputChannels();
             for (OutputChannels::const_iterator it = outputChannels.begin(); it != outputChannels.end(); ++it)
                 it->second->signalEndOfStream();
+
         }
 
 
@@ -178,10 +191,21 @@ namespace karabo {
 
 
         bool ComputeDevice::canCompute() {
+            
+            size_t m_expectedEndOfStreams = 0;
+            
             const InputChannels& inputChannels = this->getInputChannels();
-            for (InputChannels::const_iterator it = inputChannels.begin(); it != inputChannels.end(); ++it) {
-                if (!it->second->canCompute()) return false;
+            for(InputChannels::const_iterator it = inputChannels.begin(); it != inputChannels.end(); ++it){
+                if(it->second->respondsToEndOfStream()) m_expectedEndOfStreams++;
             }
+            
+            
+            for (InputChannels::const_iterator it = inputChannels.begin(); it != inputChannels.end(); ++it) {
+                if (!it->second->canCompute() && (it->second->respondsToEndOfStream() || m_expectedEndOfStreams  == 0)) return false;
+            }
+            
+            
+            
             return true;
         }
 

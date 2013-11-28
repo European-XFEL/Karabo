@@ -111,6 +111,7 @@ namespace karathon {
         static const ReferenceType from(const karabo::util::Types::ReferenceType& input) {
             switch (input) {
                 case karabo::util::Types::BOOL: return BOOL;
+                case karabo::util::Types::VECTOR_BOOL: return VECTOR_BOOL;
                 case karabo::util::Types::CHAR: return CHAR;
                 case karabo::util::Types::VECTOR_CHAR: return VECTOR_CHAR;
                 case karabo::util::Types::INT8: return INT8;
@@ -169,6 +170,7 @@ namespace karathon {
         static const karabo::util::Types::ReferenceType to(const ReferenceType& input) {
             switch (input) {
                 case BOOL: return karabo::util::Types::BOOL;
+                case VECTOR_BOOL: return karabo::util::Types::VECTOR_BOOL;
                 case CHAR: return karabo::util::Types::CHAR;
                 case VECTOR_CHAR: return karabo::util::Types::VECTOR_CHAR;
                 case INT8: return karabo::util::Types::INT8;
