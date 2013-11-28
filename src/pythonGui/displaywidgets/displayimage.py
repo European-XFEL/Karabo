@@ -22,6 +22,7 @@ __all__ = ["DisplayImage"]
 
 
 from displaywidget import DisplayWidget
+import copy
 
 try:
     import numpy as np
@@ -62,16 +63,14 @@ class DisplayImage(DisplayWidget):
                                        
         else:
             self.__image = QLabel()
-
-        
+            
         # Set value
         value = params.get(QString('value'))
         if value is None:
             value = params.get('value')
         if value is not None:
             self.valueChanged(self.__key, value)
-
-
+    
     def _getCategory(self):
         category, alias, className = getCategoryAliasClassName()
         return category
@@ -110,21 +109,22 @@ class DisplayImage(DisplayWidget):
 
 
     def valueChanged(self, key, value, timestamp=None):
-        if value is None:
-            return
+        if value is None: return
 
-        if value != self.__value:
+        if self.__value is None or value != self.__value:
             # Store original value with type
-            self.__value = value
+            self.__value = copy.copy(value)
+            
+            if value.has('dims')==False: return
+            if value.has('data')==False: return
             
             # Value as Hash (dimX=<dimX>, dimY=<dimY>, dimZ=<dimZ>, dimC=<dimC>, data=<data>)
             dims = value.get('dims')
-            if len(dims) != 2: return
+            if len(dims) < 2: return
             dimX = dims[0]
             dimY = dims[1]
             #dimZ = dims[2]
             data = value.get('data')
-            encoding = value.get('encoding')
             
             if not dimX and not dimY and not data: return
             if (dimX < 1) or (dimY < 1) or (len(data) < (dimX*dimY)): return
