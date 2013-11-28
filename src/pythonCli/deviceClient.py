@@ -279,7 +279,7 @@ class DeviceClient(object):
             print "No servers available to start any devices on..."
             return
         for device in devices:
-            if device.__iter__().next().getValue().get("serverId"):
+            if device.__iter__().next().getValue().has("serverId"):
                 server = device.__iter__().next().getValue().get("serverId")
                 if server in servers:
                     self.__client.instantiate(server, device)
@@ -571,24 +571,25 @@ class DeviceClient(object):
                                     
                         
     def _hashImageToNumpyImage(self, hashImage):
+        dims = (hashImage.get("dims")[0], hashImage.get("dims")[1]) 
         if (hashImage.get("channelSpace") == krb.f_64_8):
-            return np.frombuffer(hashImage.get("data"), dtype=np.double).reshape(hashImage.get("dims"))
+            return np.frombuffer(hashImage.get("data"), dtype=np.double).reshape(dims)
         if (hashImage.get("channelSpace") == krb.f_32_4):
-            return np.frombuffer(hashImage.get("data"), dtype=np.float).reshape(hashImage.get("dims"))
+            return np.frombuffer(hashImage.get("data"), dtype=np.float).reshape(dims)
         if (hashImage.get("channelSpace") == krb.u_32_4):
-            return np.frombuffer(hashImage.get("data"), dtype=np.uint32).reshape(hashImage.get("dims"))
+            return np.frombuffer(hashImage.get("data"), dtype=np.uint32).reshape(dims).astype(np.float)
         if (hashImage.get("channelSpace") == krb.s_32_4):
-            return np.frombuffer(hashImage.get("data"), dtype=np.int32).reshape(hashImage.get("dims"))
+            return np.frombuffer(hashImage.get("data"), dtype=np.int32).reshape(dims).astype(np.float)
         if (hashImage.get("channelSpace") == krb.u_16_2):
-            return np.frombuffer(hashImage.get("data"), dtype=np.uint16).reshape(hashImage.get("dims"))
+            return np.frombuffer(hashImage.get("data"), dtype=np.uint16).reshape(dims).astype(np.float)
         if (hashImage.get("channelSpace") == krb.s_16_2):
-            return np.frombuffer(hashImage.get("data"), dtype=np.int16).reshape(hashImage.get("dims"))
+            return np.frombuffer(hashImage.get("data"), dtype=np.int16).reshape(dims).astype(np.float)
         if (hashImage.get("channelSpace") == krb.u_8_1):
-            return np.frombuffer(hashImage.get("data"), dtype=np.uint8).reshape(hashImage.get("dims"))
+            return np.frombuffer(hashImage.get("data"), dtype=np.uint8).reshape(dims).astype(np.float)
         if (hashImage.get("channelSpace") == krb.s_8_1):
-            return np.frombuffer(hashImage.get("data"), dtype=np.int8).reshape(hashImage.get("dims"))
+            return np.frombuffer(hashImage.get("data"), dtype=np.int8).reshape(dims).astype(np.float)
         else:
-            return np.frombuffer(hashImage.get("data"), dtype=np.uint8).reshape(hashImage.get("dims")) 
+            return np.frombuffer(hashImage.get("data"), dtype=np.uint8).reshape(dims).astype(np.float)
         
         
     def _hashImageToGuiqwtImage(self, hashImage):

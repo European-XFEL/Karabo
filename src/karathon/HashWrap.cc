@@ -28,12 +28,10 @@ namespace bp = boost::python;
 namespace karabo {
     namespace util {
 
-
         template<>
         karabo::util::Hash::Hash(const std::string& key, const bp::object& value) {
             karathon::HashWrap::set(*this, key, value);
         }
-
 
         template<>
         karabo::util::Hash::Hash(const std::string& key1, const bp::object& value1,
@@ -41,7 +39,6 @@ namespace karabo {
             karathon::HashWrap::set(*this, key1, value1);
             karathon::HashWrap::set(*this, key2, value2);
         }
-
 
         template<>
         karabo::util::Hash::Hash(const std::string& key1, const bp::object& value1,
@@ -51,7 +48,6 @@ namespace karabo {
             karathon::HashWrap::set(*this, key2, value2);
             karathon::HashWrap::set(*this, key3, value3);
         }
-
 
         template<>
         karabo::util::Hash::Hash(const std::string& key1, const bp::object& value1,
@@ -63,7 +59,6 @@ namespace karabo {
             karathon::HashWrap::set(*this, key3, value3);
             karathon::HashWrap::set(*this, key4, value4);
         }
-
 
         template<>
         karabo::util::Hash::Hash(const std::string& key1, const bp::object& value1,
@@ -77,7 +72,6 @@ namespace karabo {
             karathon::HashWrap::set(*this, key4, value4);
             karathon::HashWrap::set(*this, key5, value5);
         }
-
 
         template<>
         karabo::util::Hash::Hash(const std::string& key1, const bp::object& value1,
@@ -97,7 +91,6 @@ namespace karabo {
 }
 
 namespace karathon {
-
 
     void
     HashWrap::setPyListAsStdVector(karabo::util::Hash& self,
@@ -160,7 +153,6 @@ namespace karathon {
         }
     }
 
-
     void
     HashWrap::setPyStrAsStdVector(karabo::util::Hash& self,
                                   const std::string& key,
@@ -171,7 +163,6 @@ namespace karathon {
         const std::string& stdstr = bp::extract<std::string > (pystr);
         self.set(key, std::vector<unsigned char>(stdstr.begin(), stdstr.end()), sep);
     }
-
 
     const karabo::util::Hash&
     HashWrap::setPyDictAsHash(karabo::util::Hash& self,
@@ -192,12 +183,10 @@ namespace karathon {
         return self;
     }
 
-
     bp::object
     HashWrap::empty(const karabo::util::Hash & self) {
         return bp::object(self.empty() ? 1 : 0);
     }
-
 
     void
     HashWrap::getKeys(const karabo::util::Hash & self,
@@ -211,14 +200,12 @@ namespace karathon {
         throw KARABO_PYTHON_EXCEPTION("Python type should be 'list'");
     }
 
-
     bp::list
     HashWrap::keys(const karabo::util::Hash & self) {
         bp::list l;
         getKeys(self, l);
         return l;
     }
-
 
     void
     HashWrap::getPaths(const karabo::util::Hash & self,
@@ -232,14 +219,12 @@ namespace karathon {
         throw KARABO_PYTHON_EXCEPTION("Python type should be 'list'");
     }
 
-
     bp::list
     HashWrap::paths(const karabo::util::Hash & self) {
         bp::list l;
         getPaths(self, l);
         return l;
     }
-
 
     bp::object
     HashWrap::getValues(const karabo::util::Hash& self) {
@@ -249,7 +234,6 @@ namespace karathon {
         return t;
     }
 
-
     bp::object
     HashWrap::get(const karabo::util::Hash& self,
                   const std::string& path,
@@ -257,13 +241,13 @@ namespace karathon {
         return Wrapper::toObject(self.getNode(path, separator.at(0)).getValueAsAny(), HashWrap::try_to_use_numpy);
     }
 
-
     bp::object
     HashWrap::getAs(const karabo::util::Hash& self,
                     const std::string& path,
                     const PyTypes::ReferenceType& type,
                     const std::string& separator) {
         using namespace karabo::util;
+        Types::ReferenceType srcType = self.getType(path, separator.at(0));
         switch (type) {
             case PyTypes::BOOL:
                 return bp::object(self.getAs<bool>(path, separator.at(0)));
@@ -292,13 +276,60 @@ namespace karathon {
             case PyTypes::STRING:
                 return bp::object(self.getAs<std::string>(path, separator.at(0)));
             case PyTypes::VECTOR_BOOL:
-                return Wrapper::fromStdVectorToPyArray(self.getAs<bool, std::vector > (path, separator.at(0)));
+            {
+                switch (srcType) {
+                    case Types::STRING:
+                    {
+                        string s = self.get<string>(path, separator.at(0));
+                        vector<bool> vv;
+                        for (size_t i = 0; i < s.size(); i++) {
+                            for (size_t j = 0; j < 8; j++) vv.push_back(s[i] & (1 << (7-j))? true : false);
+                        }
+                        return Wrapper::fromStdVectorToPyArray(vv);
+                    }
+                    default:
+                        return Wrapper::fromStdVectorToPyArray(self.getAs<bool, std::vector > (path, separator.at(0)));
+                }
+            }
             case PyTypes::VECTOR_CHAR:
-                return Wrapper::fromStdVectorToPyByteArray(self.getAs<char, std::vector>(path, separator.at(0)));
+            {
+                switch (srcType) {
+                    case Types::STRING:
+                    {
+                        const string& s = self.get<string>(path, separator.at(0));
+                        vector<char> vec(s.begin(), s.end());
+                        return Wrapper::fromStdVectorToPyByteArray(vec);
+                    }
+                    default:
+                        return Wrapper::fromStdVectorToPyByteArray(self.getAs<char, std::vector>(path, separator.at(0)));
+                }
+            }
             case PyTypes::VECTOR_INT8:
-                return Wrapper::fromStdVectorToPyByteArray(self.getAs<signed char, std::vector > (path, separator.at(0)));
+            {
+                switch (srcType) {
+                    case Types::STRING:
+                    {
+                        const string& s = self.get<string>(path, separator.at(0));
+                        vector<signed char> vec(s.begin(), s.end());
+                        return Wrapper::fromStdVectorToPyByteArray(vec);
+                    }
+                    default:
+                        return Wrapper::fromStdVectorToPyByteArray(self.getAs<signed char, std::vector > (path, separator.at(0)));
+                }
+            }
             case PyTypes::VECTOR_UINT8:
-                return Wrapper::fromStdVectorToPyByteArray(self.getAs<unsigned char, std::vector>(path, separator.at(0)));
+            {
+                switch (srcType) {
+                    case Types::STRING:
+                    {
+                        const string& s = self.get<string>(path, separator.at(0));
+                        vector<unsigned char> vec(s.begin(), s.end());
+                        return Wrapper::fromStdVectorToPyByteArray(vec);
+                    }
+                    default:
+                        return Wrapper::fromStdVectorToPyByteArray(self.getAs<unsigned char, std::vector>(path, separator.at(0)));
+                }
+            }
             case PyTypes::VECTOR_INT16:
                 return Wrapper::fromStdVectorToPyArray(self.getAs<short, std::vector>(path, separator.at(0)));
             case PyTypes::VECTOR_UINT16:
@@ -349,33 +380,30 @@ namespace karathon {
         throw KARABO_NOT_SUPPORTED_EXCEPTION("Type is not yet supported");
     }
 
-
     bp::object
     HashWrap::getNode(karabo::util::Hash& self,
                       const std::string& path,
-                      const std::string& separator) {
+                      const std::string & separator) {
         using namespace karabo::util;
         Hash::Node& nodeRef = self.getNode(path, separator.at(0));
         boost::optional<Hash::Node&> node(nodeRef);
         return bp::object(boost::shared_ptr<Hash::Node>(&(*node), null_deleter()));
     }
 
-
     bp::object
     HashWrap::setNode(karabo::util::Hash& self,
-                      const bp::object& node) {
+                      const bp::object & node) {
         if (bp::extract<const karabo::util::Hash::Node&>(node).check()) {
             return bp::object(self.setNode(bp::extract<const karabo::util::Hash::Node&>(node)));
         }
         throw KARABO_PYTHON_EXCEPTION("Failed to extract C++ 'const Hash::Node&' from python object");
     }
 
-
     void
     HashWrap::set(karabo::util::Hash& self,
                   const std::string& key,
                   const bp::object & obj,
-                  const std::string& separator) {
+                  const std::string & separator) {
         using namespace karabo::util;
         if (bp::extract<Hash>(obj).check()) {
             const Hash& h = bp::extract<Hash>(obj);
@@ -398,7 +426,7 @@ namespace karathon {
                     const std::string& key,
                     const bp::object & value,
                     const bp::object& o_type,
-                    const std::string& separator) {
+                    const std::string & separator) {
         using namespace karabo::util;
         set(self, key, value, separator);
         Hash::Node& node = self.getNode(key, separator.at(0));
@@ -416,7 +444,7 @@ namespace karathon {
     void
     HashWrap::erase(karabo::util::Hash& self,
                     const bp::object & keyObj,
-                    const std::string& separator) {
+                    const std::string & separator) {
         const char sep = separator.at(0);
         std::string key;
         if (bp::extract<std::string > (keyObj).check()) {
@@ -427,11 +455,10 @@ namespace karathon {
         self.erase(key, sep);
     }
 
-
     bool
     HashWrap::eraseFound(karabo::util::Hash& self,
                          const bp::object & keyObj,
-                         const std::string& separator) {
+                         const std::string & separator) {
         const char sep = separator.at(0);
         std::string key;
         if (bp::extract<std::string > (keyObj).check()) {
@@ -442,11 +469,10 @@ namespace karathon {
         return self.eraseFound(key, sep);
     }
 
-
     void
     HashWrap::erasePath(karabo::util::Hash& self,
-                    const bp::object & keyObj,
-                    const std::string& separator) {
+                        const bp::object & keyObj,
+                        const std::string & separator) {
         const char sep = separator.at(0);
         std::string key;
         if (bp::extract<std::string > (keyObj).check()) {
@@ -457,76 +483,68 @@ namespace karathon {
         self.erasePath(key, sep);
     }
 
-
     bool
     HashWrap::has(karabo::util::Hash& self,
                   const std::string& key,
-                  const std::string& separator) {
+                  const std::string & separator) {
         return self.has(key, separator.at(0));
     }
-
 
     bool
     HashWrap::is(karabo::util::Hash& self,
                  const std::string& path,
                  const PyTypes::ReferenceType& type,
-                 const std::string& separator) {
+                 const std::string & separator) {
         if (type < PyTypes::LAST_CPP_TYPE)
             return type == PyTypes::from(self.getType(path, separator.at(0)));
         return false;
     }
 
-
     void
     HashWrap::flatten(const karabo::util::Hash& self,
                       karabo::util::Hash& flat,
-                      const std::string& separator) {
+                      const std::string & separator) {
         self.flatten(flat, separator.at(0));
     }
-
 
     void
     HashWrap::unflatten(const karabo::util::Hash& self,
                         karabo::util::Hash& tree,
-                        const std::string& separator) {
+                        const std::string & separator) {
         self.unflatten(tree, separator.at(0));
     }
-
 
     bp::object
     HashWrap::getType(const karabo::util::Hash& self,
                       const std::string& path,
-                      const std::string& separator) {
+                      const std::string & separator) {
         const char sep = separator.at(0);
         PyTypes::ReferenceType type = static_cast<PyTypes::ReferenceType> (self.getType(path, sep));
         return bp::object(type);
     }
 
-
     bool
     HashWrap::hasAttribute(karabo::util::Hash& self,
                            const std::string& path,
                            const std::string& attribute,
-                           const std::string& separator) {
+                           const std::string & separator) {
         return self.hasAttribute(path, attribute, separator.at(0));
     }
-
 
     bp::object
     HashWrap::getAttribute(karabo::util::Hash& self,
                            const std::string& path,
                            const std::string& attribute,
-                           const std::string& separator) {
+                           const std::string & separator) {
         return Wrapper::toObject(self.getAttributeAsAny(path, attribute, separator.at(0)), HashWrap::try_to_use_numpy);
     }
-
 
     bp::object
     HashWrap::getAttributeAs(karabo::util::Hash& self,
                              const std::string& path,
                              const std::string& attribute,
                              const PyTypes::ReferenceType& type,
-                             const std::string& separator) {
+                             const std::string & separator) {
         using namespace karabo::util;
         switch (type) {
 
@@ -612,43 +630,39 @@ namespace karathon {
         throw KARABO_NOT_SUPPORTED_EXCEPTION("Type is not yet supported");
     }
 
-
-    const karabo::util::Hash::Attributes&
+    const karabo::util::Hash::Attributes &
     HashWrap::getAttributes(karabo::util::Hash& self,
                             const std::string& path,
-                            const std::string& separator) {
+                            const std::string & separator) {
 
         return static_cast<const karabo::util::Hash::Attributes&> (self.getAttributes(path, separator.at(0)));
     }
 
-
     bp::object
     HashWrap::copyAttributes(karabo::util::Hash& self,
                              const std::string& path,
-                             const std::string& separator) {
+                             const std::string & separator) {
 
         return bp::object(self.getAttributes(path, separator.at(0)));
     }
-
 
     void
     HashWrap::setAttribute(karabo::util::Hash& self,
                            const std::string& path,
                            const std::string& attribute,
                            const bp::object& value,
-                           const std::string& separator) {
+                           const std::string & separator) {
 
         boost::any any;
         Wrapper::toAny(value, any);
         self.setAttribute(path, attribute, any, separator.at(0));
     }
 
-
     void
     HashWrap::setAttributes(karabo::util::Hash& self,
                             const std::string& path,
                             const bp::object& attributes,
-                            const std::string& separator) {
+                            const std::string & separator) {
         if (bp::extract<karabo::util::Hash::Attributes>(attributes).check()) {
 
             self.setAttributes(path, bp::extract<karabo::util::Hash::Attributes>(attributes), separator.at(0));
@@ -657,11 +671,10 @@ namespace karathon {
         throw KARABO_PYTHON_EXCEPTION("Python object contains not a C++ 'Hash::Attributes' type");
     }
 
-
     boost::shared_ptr<karabo::util::Hash::Node>
     HashWrap::find(karabo::util::Hash& self,
                    const std::string& path,
-                   const std::string& separator) {
+                   const std::string & separator) {
         boost::optional<karabo::util::Hash::Node&> node = self.find(path, separator.at(0));
 
         if (!node)
@@ -670,10 +683,9 @@ namespace karathon {
         return boost::shared_ptr<karabo::util::Hash::Node>(&node.get(), null_deleter());
     }
 
-
     bp::object
     HashWrap::getRef(karabo::util::Hash& self,
-                     const bp::object& obj, const std::string& sep) {
+                     const bp::object& obj, const std::string & sep) {
         using namespace karabo::util;
         if (bp::extract<Hash::Node&>(obj).check()) {
             Hash::Node& node = bp::extract<Hash::Node&>(obj);
@@ -700,9 +712,8 @@ namespace karathon {
         throw KARABO_PYTHON_EXCEPTION("Invalid type for Hash index. The type should be 'Node' or 'str'!");
     }
 
-
     bool
-    similarWrap(const bp::object& left, const bp::object& right) {
+    similarWrap(const bp::object& left, const bp::object & right) {
         if (bp::extract<karabo::util::Hash>(left).check() && bp::extract<karabo::util::Hash>(right).check()) {
             const karabo::util::Hash& lhash = bp::extract<karabo::util::Hash>(left);
             const karabo::util::Hash& rhash = bp::extract<karabo::util::Hash>(right);
@@ -737,9 +748,8 @@ namespace karathon {
         return false;
     }
 
-
     void
-    HashWrap::setDefault(const PyTypes::ReferenceType& type) {
+    HashWrap::setDefault(const PyTypes::ReferenceType & type) {
         if (type == PyTypes::PYTHON_DEFAULT)
             try_to_use_numpy = false;
         else if (type == PyTypes::NUMPY_DEFAULT)
@@ -748,9 +758,8 @@ namespace karathon {
             throw KARABO_PYTHON_EXCEPTION("Unsupported default type: use either Types.NUMPY or Types.PYTHON");
     }
 
-
     bool
-    HashWrap::isDefault(const PyTypes::ReferenceType& type) {
+    HashWrap::isDefault(const PyTypes::ReferenceType & type) {
         if (type == PyTypes::PYTHON_DEFAULT && !try_to_use_numpy)
             return true;
         else if (type == PyTypes::NUMPY_DEFAULT && try_to_use_numpy)

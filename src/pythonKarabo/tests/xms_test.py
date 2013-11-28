@@ -40,7 +40,7 @@ class  Xms_TestCase(unittest.TestCase):
         try:
             ss = SignalSlotable("just_unit_test", "Jms", Hash(), True, False)
             h = Hash('a.b.c', 1, 'x.y.z', [1,2,3,4,5,6,7])
-            (h,) = ss.request("a", "onHashRequest", h).waitForReply(100)
+            (h,) = ss.request("a", "onHashRequest", h).waitForReply(200)
             del ss
             self.assertEqual(h['a.b.c'], 1)
             self.assertEqual(h['x.y.z'], [1,2,3,4,5,6,7])

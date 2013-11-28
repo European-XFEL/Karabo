@@ -1023,6 +1023,10 @@ namespace schemawrap {
         schema = schema2;
         return bp::object(schema);
     }
+    
+    void updateAliasMap(Schema& schema) {
+        schema.updateAliasMap();
+    }
 }
 
 
@@ -1113,7 +1117,9 @@ void exportPyUtilSchema() {
                 .value("BIT", Unit::BIT)
                 .value("METER_PER_SECOND", Unit::METER_PER_SECOND)
                 .value("VOLT_PER_SECOND", Unit::VOLT_PER_SECOND)
+                .value("AMPERE_PER_SECOND", Unit::AMPERE_PER_SECOND)
                 .value("PERCENT", Unit::PERCENT)
+                .value("NOT_ASSIGNED", Unit::NOT_ASSIGNED)
                 .export_values()
                 ;
     }
@@ -1426,6 +1432,7 @@ void exportPyUtilSchema() {
         s.def("setMax", &Schema::setMax, (bp::arg("path"), bp::arg("value")));
         s.def("setRequiredAccessLevel", &Schema::setRequiredAccessLevel, (bp::arg("path"), bp::arg("value")));
         //s.def("", &Schema::, ());     // overwrite<>(default) not implemented
+        s.def("updateAliasMap", &schemawrap::updateAliasMap);
     }// end Schema
 
     /////////////////////////////////////////////////////////////
@@ -1470,6 +1477,7 @@ void exportPyUtilSchema() {
     KARABO_PYTHON_VECTOR_DEFAULT_VALUE(double, DOUBLE)
     KARABO_PYTHON_VECTOR_DEFAULT_VALUE(std::string, STRING)
     KARABO_PYTHON_VECTOR_DEFAULT_VALUE(bool, BOOL)
+    KARABO_PYTHON_VECTOR_DEFAULT_VALUE(char, CHAR)
 
     ///////////////////////////////////////////////////////////////
     //ReadOnlySpecific<VectorElement< EType >, EType >, where EType:
@@ -1483,6 +1491,7 @@ void exportPyUtilSchema() {
     KARABO_PYTHON_VECTOR_READONLYSPECIFIC(double, DOUBLE)
     KARABO_PYTHON_VECTOR_READONLYSPECIFIC(std::string, STRING)
     KARABO_PYTHON_VECTOR_READONLYSPECIFIC(bool, BOOL)
+    KARABO_PYTHON_VECTOR_READONLYSPECIFIC(char, CHAR)
 
     //////////////////////////////////////////////////////////////////////
     //Binding karabo::util::SimpleElement< EType >, where EType:
@@ -1523,7 +1532,7 @@ void exportPyUtilSchema() {
     // Binding karabo::util::VectorElement< EType, std::vector >
     // In Python : VECTOR_INT32_ELEMENT, VECTOR_UINT32_ELEMENT, 
     // VECTOR_INT64_ELEMENT, VECTOR_UINT64_ELEMENT, VECTOR_DOUBLE_ELEMENT,
-    // VECTOR_STRING_ELEMENT, VECTOR_BOOL_ELEMENT
+    // VECTOR_STRING_ELEMENT, VECTOR_BOOL_ELEMENT, VECTOR_CHAR_ELEMENT
 
     KARABO_PYTHON_VECTOR(int, INT32)
     KARABO_PYTHON_VECTOR(unsigned int, UINT32)
@@ -1533,6 +1542,7 @@ void exportPyUtilSchema() {
     KARABO_PYTHON_VECTOR(double, DOUBLE)
     KARABO_PYTHON_VECTOR(string, STRING)
     KARABO_PYTHON_VECTOR(bool, BOOL)
+    KARABO_PYTHON_VECTOR(char, CHAR)
 
             //////////////////////////////////////////////////////////////////////
             // Binding karabo::util::NodeElement       
