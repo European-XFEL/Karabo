@@ -170,20 +170,21 @@ def auto_complete_instantiate(self, event):
         print "Distributed auto-completion failed"
     
 # Register hooks
-ip.set_hook('complete_command', auto_complete_full, re_key = '.*get')
-ip.set_hook('complete_command', auto_complete_full, re_key = '.*registerPropertyMonitor')
-ip.set_hook('complete_command', auto_complete_full, re_key = '.*registerDeviceMonitor')
-ip.set_hook('complete_command', auto_complete_full, re_key = '.*help')
-ip.set_hook('complete_command', auto_complete_full, re_key = '.*killDevice')
-ip.set_hook('complete_command', auto_complete_full, re_key = '.*show')
+if (ip is not None):
+    ip.set_hook('complete_command', auto_complete_full, re_key = '.*get')
+    ip.set_hook('complete_command', auto_complete_full, re_key = '.*registerPropertyMonitor')
+    ip.set_hook('complete_command', auto_complete_full, re_key = '.*registerDeviceMonitor')
+    ip.set_hook('complete_command', auto_complete_full, re_key = '.*help')
+    ip.set_hook('complete_command', auto_complete_full, re_key = '.*killDevice')
+    ip.set_hook('complete_command', auto_complete_full, re_key = '.*show')
 
 
-ip.set_hook('complete_command', auto_complete_set, re_key = '.*set')
-ip.set_hook('complete_command', auto_complete_execute, re_key = '.*execute')
-ip.set_hook('complete_command', auto_complete_instantiate, re_key = '.*instantiate')
-ip.set_hook('complete_command', auto_complete_instantiate, re_key = '.*getClassSchema')
-ip.set_hook('complete_command', auto_complete_instantiate, re_key = '.*killServer')
-ip.set_hook('complete_command', auto_complete_instantiate, re_key = '.*getClasses')
+    ip.set_hook('complete_command', auto_complete_set, re_key = '.*set')
+    ip.set_hook('complete_command', auto_complete_execute, re_key = '.*execute')
+    ip.set_hook('complete_command', auto_complete_instantiate, re_key = '.*instantiate')
+    ip.set_hook('complete_command', auto_complete_instantiate, re_key = '.*getClassSchema')
+    ip.set_hook('complete_command', auto_complete_instantiate, re_key = '.*killServer')
+    ip.set_hook('complete_command', auto_complete_instantiate, re_key = '.*getClasses')
 
 
 class DateTimeScaleDraw( Qwt5.Qwt.QwtScaleDraw ):
