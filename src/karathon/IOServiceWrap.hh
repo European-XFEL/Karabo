@@ -20,19 +20,19 @@ namespace karathon {
 
     public:
 
-        static void run(karabo::net::IOService& ioserv) {
+        static void run(karabo::net::IOService::Pointer ioserv) {
             ScopedGILRelease nogil;
-            ioserv.run();
+            ioserv->run();
         }
 
-        static void work(karabo::net::IOService& ioserv) {
+        static void work(karabo::net::IOService::Pointer ioserv) {
             ScopedGILRelease nogil;
-            ioserv.work();
+            ioserv->work();
         }
 
-        static void stop(karabo::net::IOService& ioserv) {
+        static void stop(karabo::net::IOService::Pointer ioserv) {
             ScopedGILRelease nogil;
-            ioserv.stop();
+            ioserv->stop();
         }
     };
 }

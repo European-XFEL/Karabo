@@ -96,18 +96,31 @@ namespace karabo {
                         .assignmentOptional().defaultValue(false)
                         .reconfigurable()
                         .commit();
+                
+                
+                
+                BOOL_ELEMENT(expected).key("respondToEndOfStream")
+                        .displayedName("Respond to end-of-stream")
+                        .description("Determines whether this input should forward a end-of-stream event to its parent device.")
+                        .assignmentOptional().defaultValue(true)
+                        .reconfigurable()
+                        .commit();
+                
+                
+                
             }
 
             /**
              * If this object is constructed using the factory/configuration system this method is called
              * @param input Validated (@see expectedParameters) and default-filled configuration
              */
-            NetworkInput(const karabo::util::Hash& config) : karabo::io::Input<T>(config), m_isEndOfStream(false) {
+            NetworkInput(const karabo::util::Hash& config) : karabo::io::Input<T>(config), m_isEndOfStream(false), m_respondToEndOfStream(true) {
                 parseOutputChannelConfiguration(config);
                 config.get("dataDistribution", m_dataDistribution);
                 config.get("minData", m_minData);
                 config.get("keepDataUntilNew", m_keepDataUntilNew);
                 config.get("onSlowness", m_onSlowness);
+                config.get("respondToEndOfStream", m_respondToEndOfStream);
 
                 m_channelId = Memory<T>::registerChannel();
                 m_activeChunk = Memory<T>::registerChunk(m_channelId);
@@ -132,6 +145,7 @@ namespace karabo {
                 if (config.has("minData")) config.get("minData", m_minData);
                 if (config.has("keepDataUntilNew")) config.get("keepDataUntilNew", m_keepDataUntilNew);
                 if (config.has("onSlowness")) config.get("onSlowness", m_onSlowness);
+                if (config.has("m_respondToEndOfStream")) config.get("respondToEndOfStream", m_respondToEndOfStream);
             }
 
             std::vector<karabo::util::Hash> getConnectedOutputChannels() {
@@ -224,8 +238,10 @@ namespace karabo {
                         this->swapBuffers();
                         this->triggerIOEvent();
                     }
+
                     KARABO_LOG_FRAMEWORK_DEBUG << "INPUT: Triggering eos function";
-                    this->triggerEndOfStreamEvent();
+                    if(m_respondToEndOfStream) this->triggerEndOfStreamEvent();
+                   
                     channel->readAsyncHashVector(boost::bind(&karabo::xms::NetworkInput<T>::onTcpChannelRead, this, _1, _2, _3));
                     return;
                 }
@@ -312,6 +328,10 @@ namespace karabo {
             void notifyOutputChannelForPossibleRead(const karabo::net::Channel::Pointer& channel) {
                 channel->write(karabo::util::Hash("reason", "update", "instanceId", this->getInstanceId()));
             }
+            
+            bool respondsToEndOfStream() {
+                return m_respondToEndOfStream;
+            }
 
 
         private: // members
@@ -337,6 +357,8 @@ namespace karabo {
             TcpChannels m_tcpChannels;
 
             bool m_isEndOfStream;
+            bool m_respondToEndOfStream;
+           
 
         private: // functions
 
