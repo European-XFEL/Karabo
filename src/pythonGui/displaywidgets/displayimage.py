@@ -111,7 +111,7 @@ class DisplayImage(DisplayWidget):
     def valueChanged(self, key, value, timestamp=None):
         if value is None: return
 
-        if self.__value is None or value != self.__value:
+        if self.__value is None or value is not self.__value:
             # Store original value with type
             self.__value = copy.copy(value)
             
