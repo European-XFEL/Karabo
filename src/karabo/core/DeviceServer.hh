@@ -185,6 +185,7 @@ namespace karabo {
             bool m_isMaster;
             unsigned int m_nameRequestTimeout;
             bool m_gotName;
+            unsigned int m_guiServerPort;
 
             karabo::util::Hash m_availableDevices;
             boost::thread_group m_deviceThreads;
