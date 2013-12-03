@@ -64,7 +64,7 @@ void exportPyXipRawImageData() {
             ;
 
 
-    bp::class_< RawImageDataWrap, boost::noncopyable >("RawImageData", bp::init<>())
+    bp::class_< RawImageDataWrap, boost::shared_ptr<RawImageDataWrap>, boost::noncopyable >("RawImageData", bp::init<>())
 #ifdef WITH_BOOST_NUMPY
             .def(bp::init < bp::object const&,
                  karabo::xip::Encoding::EncodingType const,
@@ -103,7 +103,7 @@ void exportPyXipRawImageData() {
             .def("getHeader", &RawImageDataWrap::getHeader)
             .def("setHeader", &RawImageDataWrap::setHeader, bp::arg("header"))
             .def("toHash", &RawImageDataWrap::toHash, bp::return_internal_reference<> ()/*bp::return_value_policy< bp::copy_const_reference >()*/)
-            .def("swap", &RawImageDataWrap::swap, bp::arg("image"))
+//            .def("swap", &RawImageDataWrap::swap, bp::arg("image"))
             .def("toRGBAPremultiplied", &RawImageDataWrap::toRGBAPremultiplied)
             ;
 }
