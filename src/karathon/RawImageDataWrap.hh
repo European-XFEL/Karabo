@@ -31,6 +31,10 @@ namespace karathon {
         RawImageDataWrap() : m_raw(new karabo::xip::RawImageData()) {
         }
 
+        RawImageDataWrap(karabo::xip::RawImageData& other) : m_raw(new karabo::xip::RawImageData()) {
+            m_raw->swap(other);
+        }
+        
         RawImageDataWrap(const bp::object& obj,
                          const karabo::util::Dims& dimensions,
                          const karabo::xip::EncodingType encoding,
@@ -349,6 +353,10 @@ namespace karathon {
         void swap(RawImageDataWrap& image) {
             boost::shared_ptr<karabo::xip::RawImageData> p = image.getRawImageDataPointer();
             m_raw->swap(*p);
+        }
+        
+        void swap(karabo::xip::RawImageData& image) {
+            m_raw->swap(image);
         }
         
         void toRGBAPremultiplied() {
