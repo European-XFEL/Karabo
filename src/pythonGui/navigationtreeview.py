@@ -322,23 +322,23 @@ class NavigationTreeView(QTreeView):
         
         configChangeType = None
         classId = str()
-        instanceId = str()
+        path = str()
         if type is NavigationItemTypes.CLASS:
             configChangeType = ConfigChangeTypes.DEVICE_CLASS_CONFIG_CHANGED
             classId = index.data().toString()
             parentIndex = index.parent()
-            instanceId = parentIndex.data().toString()+"+"+classId
+            path = "server." + parentIndex.data().toString() + ".classes." + classId + ".configuration"
         elif type is NavigationItemTypes.DEVICE:
             configChangeType = ConfigChangeTypes.DEVICE_INSTANCE_CONFIG_CHANGED
             parentIndex = index.parent()
             classId = parentIndex.data().toString()
-            instanceId = index.data().toString()
+            path = "devices." + index.data().toString()
         
         # TODO: Remove dirty hack for scientific computing again!!!
         croppedClassId = classId.split("-")
         classId = croppedClassId[0]
         
-        Manager().onFileOpen(configChangeType, str(instanceId), str(classId))
+        Manager().onFileOpen(configChangeType, str(path), str(classId))
 
 
     def onCustomContextMenuRequested(self, pos):

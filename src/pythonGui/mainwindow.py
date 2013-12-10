@@ -193,7 +193,8 @@ class MainWindow(QMainWindow):
         self.__notificationPanel = NotificationPanel()
         self.__monitorTab = DockTabWindow("Notifications", leftArea)
         self.__monitorTab.addDockableTab(self.__notificationPanel, "Notifications")
-        leftArea.setStretchFactor(2,1)
+        #leftArea.setStretchFactor(2,1)
+        leftArea.setStretchFactor(1,1)
 
         middleArea = QSplitter(Qt.Vertical, mainSplitter)
         customViewPanel = CustomMiddlePanel()
@@ -220,7 +221,7 @@ class MainWindow(QMainWindow):
         rightArea = QSplitter(Qt.Vertical, mainSplitter)
         self.__configurationTab = DockTabWindow("Configurator", rightArea)
         self.__configurationTab.addDockableTab(self.__configurationPanel, "Configurator")
-
+        
         mainSplitter.setStretchFactor(0,1)
         mainSplitter.setStretchFactor(1,2)
         mainSplitter.setStretchFactor(2,3)
