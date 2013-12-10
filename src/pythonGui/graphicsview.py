@@ -17,7 +17,6 @@ from displaycomponent import DisplayComponent
 from enums import NavigationItemTypes
 from enums import ConfigChangeTypes
 from enums import CompositionMode
-from graphicsscene import GraphicsScene
 
 from layoutcomponents.arrow import Arrow
 from editableapplylatercomponent import EditableApplyLaterComponent
@@ -38,8 +37,49 @@ from manager import Manager
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 
+class FixedLayout(QLayout):
+    def __init__(self, parent):
+        QLayout.__init__(self, parent)
+        self.children = [ ]
+        self.geometries = { }
 
-class GraphicsView(QGraphicsView):
+    def addItem(self, item):
+        self.children.append(item)
+        self.geometries[item] = item.geometry()
+
+    def itemAt(self, index):
+        try:
+            return self.children[index]
+        except IndexError:
+            return
+
+    def takeAt(self, index):
+        try:
+            return self.children.pop(index)
+        except IndexError:
+            return
+        
+    def count(self):
+        return len(self.children)
+
+    def setGeometry(self, geometry):
+        for item in self.children:
+            item.setGeometry(self.geometries[item])
+
+    def setItemPosition(self, item, pos):
+        rect = QRect(pos, item.geometry().size())
+        self.geometries[item] = rect
+        item.setGeometry(rect)
+
+    def sizeHint(self):
+        return QSize(10, 10)
+
+    def itemAt(self, pos):
+        for item in self.children:
+            if item.geometry().contains(pos):
+                return item
+
+class GraphicsView(QWidget):
     # Enums
     MoveItem, InsertText, InsertLine, InsertRect = range(4)
     # Signals
@@ -49,10 +89,14 @@ class GraphicsView(QGraphicsView):
 
     def __init__(self):
         super(GraphicsView, self).__init__()
-
-        self.__scene = GraphicsScene(0, 0, 600, 500)
-        self.__scene.selectionChanged.connect(self.onSceneSelectionChanged)
-        self.setScene(self.__scene)
+        
+        self.inner = QWidget(self)
+        self.layout = FixedLayout(self.inner)
+        self.inner.setLayout(self.layout)
+        layout = QStackedLayout(self)
+        layout.addWidget(self.inner)
+        
+        self.moving_item = None
 
         # Current mode of the view (move, insert)
         self.__mode = self.MoveItem
@@ -75,9 +119,7 @@ class GraphicsView(QGraphicsView):
         self.__copiedItem = QByteArray()
 
         self.setAcceptDrops(True)
-        self.setDragMode(QGraphicsView.RubberBandDrag)
-        self.setRenderHints(QPainter.Antialiasing | QPainter.TextAntialiasing)
-
+        
 
     def _getMode(self):
         return self.__mode
@@ -94,13 +136,8 @@ class GraphicsView(QGraphicsView):
     # Sets all items in design or control mode
     def setDesignMode(self, isDesignMode):
         self.__isDesignMode = isDesignMode
-        if self.__isDesignMode:
-            self.scene().setBackgroundBrush(QBrush(QPixmap(':grid-edit')))
-        else:
-            self.scene().setBackgroundBrush(QBrush())
-        for item in self.items():
-            if isinstance(item, NodeBase):
-                item.isDesignMode = isDesignMode
+        self.inner.setAttribute(Qt.WA_TransparentForMouseEvents, 
+                                      isDesignMode)
 
 
     # Returns true, when items has been copied; otherwise false
@@ -110,7 +147,7 @@ class GraphicsView(QGraphicsView):
 
     # All selected items of the scene are returned
     def selectedItems(self):
-        return self.__scene.selectedItems()
+        return [ ]
 
 
     # If there are exactely 2 selected items (not of type Link) they are returned
@@ -511,7 +548,6 @@ class GraphicsView(QGraphicsView):
                     if link in items:
                         # Remove item from list - prevent double deletion
                         items.remove(link)
-                    self.__scene.removeItem(link)
             elif isinstance(item, Link) or isinstance(item, Arrow):
                 print "Link or Arrow removed"
             elif isinstance(item, Line):
@@ -672,47 +708,21 @@ class GraphicsView(QGraphicsView):
 
 
     # Creates and returns container item
-    def createGraphicsItemContainer(self, orientation, items):
+    def createGraphicsItemContainer(self, orientation, items, pos):
         # Initialize layout
-        layout = QGraphicsLinearLayout(orientation)
+        layout = QBoxLayout(QBoxLayout.LeftToRight if 
+                            orientation == Qt.Horizontal else 
+                            QBoxLayout.TopToBottom)
         layout.setContentsMargins(5,5,5,5)
 
-        width = 0
-        height = 0
         for item in items:
-            if isinstance(item, QGraphicsLayoutItem) is False:
-                continue
-
-            item.setFlag(QGraphicsItem.ItemIsMovable, False)
-            item.setFlag(QGraphicsItem.ItemIsSelectable, False)
-
-            layout.addItem(item)
-            layout.setAlignment(item, Qt.AlignCenter)
-
-            # Recalculate width and height of the whole item
-            itemGeometry = item.geometry()
-            width += itemGeometry.width()
-            if height < itemGeometry.height():
-                height = itemGeometry.height()
-
-        # Create container item for items in layout
-        containerItem = GraphicsProxyWidgetContainer(self.__isDesignMode)
-        containerItem.setLayout(layout)
-        # Set correct geometry for containerItem - important for positioning
-        containerItem.setGeometry(QRectF(0, 0, width, height))
-        # Add created item to scene
-        self._addItem(containerItem)
-
-        # Calculations to position item center-oriented
-        bRect = containerItem.boundingRect()
-        leftPos = bRect.topLeft()
-        leftPos = containerItem.mapToScene(leftPos)
-        centerPos = bRect.center()
-        centerPos = containerItem.mapToScene(centerPos)
-        offset = centerPos-leftPos
-        containerItem.setTransformOriginPoint(centerPos)
-
-        return (containerItem, offset)
+            layout.addWidget(item)
+            item.setParent(self.inner)
+            item.show()
+            
+        layout.setGeometry(QRect(pos, layout.sizeHint()))
+        self.layout.addItem(layout)
+        return layout
 
 
 ### protected ###
@@ -728,12 +738,13 @@ class GraphicsView(QGraphicsView):
 
 
     def mousePressEvent(self, event):
-        if (event.button() != Qt.LeftButton):
+        if event.button() != Qt.LeftButton or not self.isDesignMode:
             return
+        self.moving_item = self.layout.itemAt(event.pos())
+        self.moving_pos = event.pos() - self.moving_item.geometry().topLeft()
 
         # Items are created in origin and must then be moved to the position to
         # set their position correctly for later purposes!!!
-        pos = QPointF(self.mapToScene(event.pos()))
         if self.__mode == self.InsertLine:
             self.__line = Line(self.__isDesignMode)
             self._addItem(self.__line)
@@ -743,11 +754,14 @@ class GraphicsView(QGraphicsView):
             self._addItem(self.__rect)
             self.__rect.setPos(pos.x(), pos.y())
 
-        QGraphicsView.mousePressEvent(self, event)
+        QWidget.mousePressEvent(self, event)
 
 
     def mouseMoveEvent(self, event):
-        pos = self.mapToScene(event.pos())
+        if self.moving_item is not None:
+            self.layout.setItemPosition(self.moving_item, event.pos() - 
+                                        self.moving_pos)
+    
         if self.__mode == self.InsertLine and self.__line:
             linePos = self.__line.pos()
             pos = QPointF(pos.x()-linePos.x(), pos.y()-linePos.y())
@@ -759,10 +773,13 @@ class GraphicsView(QGraphicsView):
             newRect = QRectF(QPointF(), QPointF(pos))
             self.__rect.setRect(newRect)
         #elif self.__mode == self.MoveItem:
-        QGraphicsView.mouseMoveEvent(self, event)
+        self.update()
+        QWidget.mouseMoveEvent(self, event)
 
 
     def mouseReleaseEvent(self, event):
+        self.moving_item = None
+
         if self.__line and self.__mode == self.InsertLine:
             centerPos = self.__line.boundingRect().center()
             self.__line.setTransformOriginPoint(centerPos)
@@ -777,7 +794,7 @@ class GraphicsView(QGraphicsView):
 
         self.__line = None
         self.__rect = None
-        QGraphicsView.mouseReleaseEvent(self, event)
+        QWidget.mouseReleaseEvent(self, event)
 
 
 # Drag & Drop events
@@ -788,7 +805,7 @@ class GraphicsView(QGraphicsView):
         if (source is not None) and (source is not self):
             event.accept()
 
-        QGraphicsView.dragEnterEvent(self, event)
+        QWidget.dragEnterEvent(self, event)
 
 
     def dragMoveEvent(self, event):
@@ -909,13 +926,7 @@ class GraphicsView(QGraphicsView):
                                                             metricPrefixSymbol=metricPrefixSymbol, \
                                                             unitSymbol=unitSymbol)
                     
-                    displayComponent.widget.setAttribute(Qt.WA_NoSystemBackground, True)
-                    displayProxyWidget = GraphicsProxyWidget(self.__isDesignMode, displayComponent.widget, displayComponent, isStateToDisplay)
-                    displayProxyWidget.setTransformOriginPoint(displayProxyWidget.boundingRect().center())
-                    tooltipText = "<html><b>Associated key: </b>%s</html>" % internalKey
-                    displayProxyWidget.setToolTip(tooltipText)
-                    # Add item to itemlist
-                    items.append(displayProxyWidget)
+                    items.append(displayComponent.widget)
                     
                     # Add proxyWidget for unit label, if available
                     unitProxyWidget = self._createUnitProxyWidget(metricPrefixSymbol, unitSymbol)
@@ -938,32 +949,21 @@ class GraphicsView(QGraphicsView):
                                                                         metricPrefixSymbol=metricPrefixSymbol, \
                                                                         unitSymbol=unitSymbol)
                         editableComponent.isEditableValueInit = False
-                    
-                    editableComponent.widget.setAttribute(Qt.WA_NoSystemBackground, True)
-                    editableProxyWidget = GraphicsProxyWidget(self.__isDesignMode, editableComponent.widget, editableComponent, isStateToDisplay)
-                    editableProxyWidget.setTransformOriginPoint(editableProxyWidget.boundingRect().center())
-                    tooltipText = "<html><b>Associated key: </b>%s</html>" % internalKey
-                    editableProxyWidget.setToolTip(tooltipText)
-                    # Add item to itemlist
-                    items.append(editableProxyWidget)
-                    
+
+                    items.append(editableComponent.widget)
+
                     # Register as visible device
                     Manager().newVisibleDevice(internalKey)                   
 
-                customTuple = self.createGraphicsItemContainer(Qt.Horizontal, items)
-                customItem = customTuple[0]
-                offset = customTuple[1]
+                customItem = self.createGraphicsItemContainer(
+                    Qt.Horizontal, items, event.pos())
 
-            if customItem is None: return
-
-            pos = event.pos()
-            scenePos = self.mapToScene(pos)
-            scenePos = scenePos-offset
-            customItem.setPos(scenePos)
+            if customItem is None:
+                return
 
         event.accept()
 
-        QGraphicsView.dropEvent(self, event)
+        QWidget.dropEvent(self, event)
 
 
     def _getWidgetCenterPosition(self, pos, centerX, centerY):
@@ -978,11 +978,7 @@ class GraphicsView(QGraphicsView):
             return None
 
         # Label only, if there is something to show
-        label = QLabel(displayName)
-        label.setAttribute(Qt.WA_NoSystemBackground, True)
-        displayNameProxyWidget = GraphicsProxyWidget(self.__isDesignMode, label)
-        displayNameProxyWidget.setTransformOriginPoint(displayNameProxyWidget.boundingRect().center())
-        return displayNameProxyWidget
+        return QLabel(displayName)
 
 
     def _createUnitProxyWidget(self, metricPrefixSymbol, unitSymbol):
@@ -1033,3 +1029,8 @@ class GraphicsView(QGraphicsView):
                         for key in keys:
                             Manager().selectNavigationItemByKey(key)
 
+    def paintEvent(self, event):
+        painter = QPainter(self)
+        if self.isDesignMode:
+            for item in self.layout.children:
+                painter.drawRect(item.geometry())
