@@ -1,6 +1,6 @@
 #############################################################################
-# Author: <kerstin.weger@xfel.eu>
-# Created on March 2, 2012
+# Author: <steffen.hauf@xfel.eu>
+# Created on September 11, 2012
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 

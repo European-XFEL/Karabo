@@ -22,7 +22,7 @@ from treewidgetitems.commandtreewidgetitem import *
 from treewidgetitems.imagetreewidgetitem import *
 from treewidgetitems.propertytreewidgetitem import *
 
-from schematest.sampleschema import SampleSchema 
+#from schematest.sampleschema import SampleSchema 
 
 from karabo.karathon import *
 

@@ -344,11 +344,11 @@ class ParameterTreeWidget(QTreeWidget):
         croppedClassId = self.__classId.split("-")
         self.__classId = croppedClassId[0]
         
-        Manager().onFileOpen(configChangeType, str(self.instanceKey), str(self.__classId))
+        Manager().onFileOpen(configChangeType, str(self.instanceKey + ".configuration"), str(self.__classId))
 
 
     def onFileSaveAs(self):
-        Manager().onSaveAsXml(str(self.__classId), self.instanceKey)
+        Manager().onSaveAsXml(str(self.__classId), str(self.instanceKey + ".configuration"))
 
 
     def onCustomContextMenuRequested(self, pos):

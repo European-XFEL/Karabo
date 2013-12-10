@@ -59,7 +59,7 @@ class Notifier(QObject):
     signalReconfigureAsHash = pyqtSignal(str, object) # deviceId, hash
     signalDeviceStateChanged = pyqtSignal(str, str) # fullDeviceKey, state
     signalConflictStateChanged = pyqtSignal(bool) # isBusy
-    signalChangingState = pyqtSignal(bool) # isChanging
+    signalChangingState = pyqtSignal(str, bool) # deviceId, isChanging
     signalErrorState = pyqtSignal(bool) # inErrorState
     
     signalInstanceGone = pyqtSignal(str, str) # path, parentPath
@@ -293,50 +293,49 @@ class Manager(Singleton):
 
 
     def _changeHash(self, devicePath, config, configChangeType=ConfigChangeTypes.DEVICE_INSTANCE_CURRENT_VALUES_CHANGED):
-        address = devicePath
         # Go recursively through Hash
-        self._r_checkHash(address, devicePath, config, configChangeType)
+        self._r_checkHash(devicePath, devicePath, config, configChangeType)
 
 
-    def _r_checkHash(self, address, devicePath, config, configChangeType):
+    def _r_checkHash(self, path, devicePath, config, configChangeType):
         topLevelKeys = config.keys()
         for key in topLevelKeys:
             value = config.get(key)
 
-            if len(address) < 1:
-                internalKey = key
+            if len(path) < 1:
+                internalPath = key
             else:
-                internalKey = address + "." + key
+                internalPath = path + "." + key
             
-            #self._setFromPath(internalKey, value)
+            #self._setFromPath(internalPath, value)
             
             # Check if DataNotifier for key available
             if configChangeType is ConfigChangeTypes.DEVICE_CLASS_CONFIG_CHANGED:
-                dataNotifier = self._getDataNotifierEditableValue(internalKey)
+                dataNotifier = self._getDataNotifierEditableValue(internalPath)
                 if dataNotifier is not None:
-                    dataNotifier.signalUpdateComponent.emit(internalKey, value)
+                    dataNotifier.signalUpdateComponent.emit(internalPath, value)
             elif configChangeType is ConfigChangeTypes.DEVICE_INSTANCE_CONFIG_CHANGED:
-                dataNotifier = self._getDataNotifierEditableValue(internalKey)
+                dataNotifier = self._getDataNotifierEditableValue(internalPath)
                 if dataNotifier is not None:
-                    dataNotifier.signalUpdateComponent.emit(internalKey, value)
+                    dataNotifier.signalUpdateComponent.emit(internalPath, value)
             elif configChangeType is ConfigChangeTypes.DEVICE_INSTANCE_CURRENT_VALUES_CHANGED:
-                dataNotifier = self._getDataNotifierDisplayValue(internalKey)
+                dataNotifier = self._getDataNotifierDisplayValue(internalPath)
                 if dataNotifier is not None:
-                    dataNotifier.signalUpdateComponent.emit(internalKey, value)
+                    dataNotifier.signalUpdateComponent.emit(internalPath, value)
                 
                 # Notify editable widget of display value change
-                dataNotifier = self._getDataNotifierEditableValue(internalKey)
+                dataNotifier = self._getDataNotifierEditableValue(internalPath)
                 if dataNotifier is not None:
                     # Broadcast new displayValue to all editable widgets
-                    dataNotifier.updateDisplayValue(internalKey, value)
+                    dataNotifier.updateDisplayValue(internalPath, value)
                 
                 # Check state
                 if key == "state":
                     # Store latest state as tuple
-                    self.__lastState = (address, devicePath, value)
+                    self.__lastState = (path, devicePath, value)
                     if self.__stateUpdateTime.elapsed() > 250:
                         # Update state when last state change happened before 250ms
-                        self._triggerStateChange(address, devicePath, value)
+                        self._triggerStateChange(devicePath, value)
                     else:
                         # Start timer for possible state update
                         self.__stateUpdateTimer.start(300)
@@ -345,27 +344,27 @@ class Manager(Singleton):
                         
             # More recursion in case of Hash type
             if isinstance(value, Hash):
-                self._r_checkHash(internalKey, devicePath, value, configChangeType)
+                self._r_checkHash(internalPath, devicePath, value, configChangeType)
             elif isinstance(value, list):
                 # TODO: needs to be implemented
                 for i in xrange(len(value)):
-                    internalKey = internalKey + "[" + str(i) + "]"
+                    internalPath = internalPath + "[" + str(i) + "]"
                     hashValue = value[i]
 
 
-    def _triggerStateChange(self, address, devicePath, value):
-        devicePath = devicePath.split('.configuration',1)[0]
+    def _triggerStateChange(self, devicePath, value):
+        deviceId = devicePath.split('.configuration',1)[0]
         # Update GUI due to state changes
         if value == "Changing...":
-            self.__notifier.signalChangingState.emit(True)
+            self.__notifier.signalChangingState.emit(deviceId, True)
         else:
             if ("Error" in value) or ("error" in value):
                 self.__notifier.signalErrorState.emit(True)
             else:
                 self.__notifier.signalErrorState.emit(False)
             
-            self.__notifier.signalChangingState.emit(False)
-            self.__notifier.signalDeviceStateChanged.emit(devicePath, value)
+            self.__notifier.signalChangingState.emit(deviceId, False)
+            self.__notifier.signalDeviceStateChanged.emit(deviceId, value)
 
 
 ### Slots ###
@@ -374,9 +373,9 @@ class Manager(Singleton):
         if self.__stateUpdateTime.elapsed() > 250:
             if self.__lastState:
                 address = self.__lastState[0]
-                instanceId = self.__lastState[1]
+                deviceId = self.__lastState[1]
                 value = self.__lastState[2]
-                self._triggerStateChange(address, instanceId, value)
+                self._triggerStateChange(deviceId, value)
         self.__stateUpdateTimer.stop()
         
 
@@ -536,7 +535,6 @@ class Manager(Singleton):
 
     def onRefreshInstance(self, path):
         deviceId = self._getDeviceIdFromPath(path)
-        print "Refresh request on ", path
         if not deviceId or not self.__hash.has(str(path)):
             return
         self.__notifier.signalRefreshInstance.emit(deviceId)
@@ -561,21 +559,13 @@ class Manager(Singleton):
         self.__notifier.signalDeviceInstanceChanged.emit(itemInfo, xml)
 
 
-    def openAsXml(self, filename, internalKey, configChangeType, classId):
-        file = QFile(filename)
-        if file.open(QIODevice.ReadOnly | QIODevice.Text) == False:
-            return
+    def openAsXml(self, filename, path, configChangeType, classId):
+        config = loadFromFile(str(filename))
         
-        xmlContent = str()
-        while file.atEnd() == False:
-            xmlContent += str(file.readLine())
-
-        # TODO: serializer needed?
-        serializer = TextSerializerHash.create("Xml")
-        config = serializer.load(xmlContent).get(classId)
-
+        tmp = config.get(classId)
+        
         # TODO: not working correctly yet
-        # Validate against fullSchema
+        # Validate against fullSchema - state dependent configurations
         #fullSchema = Schema()
         #rules = None
         
@@ -616,15 +606,14 @@ class Manager(Singleton):
         # ...
         
         # Remove old data from internal hash
-        self._setFromPath(internalKey, Hash())
+        self._setFromPath(path, Hash())
         
-        # Update internal hash with new data for internalKey
-        path = internalKey + ".configuration"
-        self._changeHash(path, config, configChangeType)
-        self._mergeIntoHash(Hash(path, config))
+        # Update internal hash with new data for path
+        self._changeHash(path, tmp, configChangeType)
+        self._mergeIntoHash(Hash(path, tmp))
 
 
-    def onFileOpen(self, configChangeType, internalKey, classId=str()):
+    def onFileOpen(self, configChangeType, path, classId=str()):
         filename = QFileDialog.getOpenFileName(None, "Open saved configuration", QDir.tempPath(), "XML (*.xml)")
         if filename.isEmpty():
             return
@@ -633,19 +622,19 @@ class Manager(Singleton):
         if file.open(QIODevice.ReadOnly | QIODevice.Text) == False:
             return
         
-        self.openAsXml(filename, internalKey, configChangeType, classId)
+        self.openAsXml(filename, path, configChangeType, classId)
 
 
-    def saveAsXml(self, filename, classId, internalKey):
-        path = str(internalKey + ".configuration")
+    def saveAsXml(self, filename, classId, path):
         if self.__hash.has(path):
             config = Hash(classId, self.__hash.get(path))
         else:
             config = Hash()
+
         saveToFile(config, filename)
 
     
-    def onSaveAsXml(self, classId, internalKey):
+    def onSaveAsXml(self, classId, path):
         filename = QFileDialog.getSaveFileName(None, "Save file as", QDir.tempPath(), "XML (*.xml)")
         if filename.isEmpty():
             return
@@ -654,7 +643,7 @@ class Manager(Singleton):
         if fi.suffix().isEmpty():
             filename += ".xml"
 
-        self.saveAsXml(str(filename), classId, internalKey)
+        self.saveAsXml(str(filename), classId, path)
 
 
     def onNavigationItemChanged(self, itemInfo):
