@@ -56,8 +56,8 @@ class ConfigurationPanel(QWidget):
         title = "Configuration Editor"
         self.setWindowTitle(title)
         
-        self.__changingStateTimer = QTimer(self)
-        self.__changingStateTimer.timeout.connect(self.onTimeOut)
+        # map = { deviceId, timer }
+        self.__changingTimerDeviceIdMap = dict()
 
         mainLayout = QVBoxLayout(self)
         mainLayout.setContentsMargins(5,5,5,5)
@@ -663,22 +663,43 @@ class ConfigurationPanel(QWidget):
             self.hasConflicts = hasConflict
 
 
-    def onChangingState(self, isChanging):
-        if isChanging is True:
-            if self.__changingStateTimer.isActive() is False:
-                self.__changingStateTimer.start(200)
+    def onChangingState(self, deviceId, isChanging):
+        if deviceId in self.__changingTimerDeviceIdMap:
+            timer = self.__changingTimerDeviceIdMap[deviceId]
         else:
-            self.__changingStateTimer.stop()
-            self._getCurrentParameterEditor().setReadOnly(False)
- 
+            timer = QTimer(self)
+            timer.timeout.connect(self.onTimeOut)
+            self.__changingTimerDeviceIdMap[deviceId] = timer
+        
+        if isChanging is True:
+            if timer.isActive() is False:
+                timer.start(200)
+        else:
+            timer.stop()
+            
+            parameterWidget = self._getCurrentParameterEditor()
+            if deviceId == parameterWidget.instanceKey:
+                self._getCurrentParameterEditor().setReadOnly(False)
+
  
     def onErrorState(self, inErrorState):
         self._getCurrentParameterEditor().setErrorState(inErrorState)
 
 
     def onTimeOut(self):
-        self.__changingStateTimer.stop()
-        self._getCurrentParameterEditor().setReadOnly(True)
+        timer = self.sender()
+        timer.stop()
+        
+        # Check deviceId against deviceId of current parameter editor
+        mapValues = self.__changingTimerDeviceIdMap.values()
+        for i in xrange(len(mapValues)):
+            if timer == mapValues[i]:
+                deviceId = self.__changingTimerDeviceIdMap.keys()[i]
+                
+                parameterWidget = self._getCurrentParameterEditor()
+                if deviceId == parameterWidget.instanceKey:
+                    parameterWidget.setReadOnly(True)
+                break
 
 
     def onApplyChanged(self, enable, hasConflicts=False):
