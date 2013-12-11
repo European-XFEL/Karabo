@@ -196,6 +196,18 @@ class NavigationTreeView(QTreeView):
             return dict(key=path, type=type, deviceId=deviceId)
 
 
+    def findIndex(self, path):
+        # Find modelIndex via path
+        return self.model().findIndex(path)
+
+
+    def selectIndex(self, index):
+        if index and index.isValid():
+            self.setCurrentIndex(index)
+        else:
+            self.clearSelection()
+
+
     def updateView(self, config):
         self.model().updateData(config)
         self.expandAll()
@@ -251,35 +263,25 @@ class NavigationTreeView(QTreeView):
 
 
     def itemChanged(self, itemInfo):
-        key = itemInfo.get(QString('key'))
-        if key is None:
-            key = itemInfo.get('key')
+        path = itemInfo.get(QString('key'))
+        if path is None:
+            path = itemInfo.get('key')
         
-        if len(key) == 0:
+        if len(path) == 0:
             return
         
-        index = self.model().findIndex(key)
+        index = self.findIndex(path)
         
         if self.__prevModelIndex == index:
             return
         self.__prevModelIndex = index
         
-        if index and index.isValid():
-            self.setCurrentIndex(index)
-        else:
-            self.clearSelection()
+        self.selectIndex(index)
 
 
     def selectItem(self, path):
-        index = self.model().findIndex(path)
-        
-        if not index:
-            return
-        
-        if index.isValid():
-            self.setCurrentIndex(index)
-        else:
-            self.clearSelection()
+        index = self.findIndex(path)
+        self.selectIndex(index)
 
 
     def onKillServer(self):
