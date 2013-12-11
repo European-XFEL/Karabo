@@ -131,7 +131,7 @@ int AuthenticationPortBindingProxy::login(const char *endpoint, const char *soap
 	if (endpoint)
 		soap_endpoint = endpoint;
 	if (soap_endpoint == NULL)
-		soap_endpoint = "http://exfl-tb04:8080/XFELWebAuth/Authentication";
+		soap_endpoint = "https://exfl-tb04:8181/XFELWebAuth/Authentication";
 	if (soap_action == NULL)
 		soap_action = "http://server.xfelauthwebservice.xfel.eu/Authentication/loginRequest";
 	soap_begin(soap);
@@ -185,7 +185,7 @@ int AuthenticationPortBindingProxy::logout(const char *endpoint, const char *soa
 	if (endpoint)
 		soap_endpoint = endpoint;
 	if (soap_endpoint == NULL)
-		soap_endpoint = "http://exfl-tb04:8080/XFELWebAuth/Authentication";
+		soap_endpoint = "https://exfl-tb04:8181/XFELWebAuth/Authentication";
 	if (soap_action == NULL)
 		soap_action = "http://server.xfelauthwebservice.xfel.eu/Authentication/logoutRequest";
 	soap_begin(soap);
@@ -239,7 +239,7 @@ int AuthenticationPortBindingProxy::getUserNonce(const char *endpoint, const cha
 	if (endpoint)
 		soap_endpoint = endpoint;
 	if (soap_endpoint == NULL)
-		soap_endpoint = "http://exfl-tb04:8080/XFELWebAuth/Authentication";
+		soap_endpoint = "https://exfl-tb04:8181/XFELWebAuth/Authentication";
 	if (soap_action == NULL)
 		soap_action = "http://server.xfelauthwebservice.xfel.eu/Authentication/getUserNonceRequest";
 	soap_begin(soap);
@@ -293,7 +293,7 @@ int AuthenticationPortBindingProxy::singleSignOn(const char *endpoint, const cha
 	if (endpoint)
 		soap_endpoint = endpoint;
 	if (soap_endpoint == NULL)
-		soap_endpoint = "http://exfl-tb04:8080/XFELWebAuth/Authentication";
+		soap_endpoint = "https://exfl-tb04:8181/XFELWebAuth/Authentication";
 	if (soap_action == NULL)
 		soap_action = "http://server.xfelauthwebservice.xfel.eu/Authentication/singleSignOnRequest";
 	soap_begin(soap);
@@ -347,7 +347,7 @@ int AuthenticationPortBindingProxy::sessionsByIp(const char *endpoint, const cha
 	if (endpoint)
 		soap_endpoint = endpoint;
 	if (soap_endpoint == NULL)
-		soap_endpoint = "http://exfl-tb04:8080/XFELWebAuth/Authentication";
+		soap_endpoint = "https://exfl-tb04:8181/XFELWebAuth/Authentication";
 	if (soap_action == NULL)
 		soap_action = "http://server.xfelauthwebservice.xfel.eu/Authentication/sessionsByIpRequest";
 	soap_begin(soap);
@@ -401,7 +401,7 @@ int AuthenticationPortBindingProxy::hasActiveSession(const char *endpoint, const
 	if (endpoint)
 		soap_endpoint = endpoint;
 	if (soap_endpoint == NULL)
-		soap_endpoint = "http://exfl-tb04:8080/XFELWebAuth/Authentication";
+		soap_endpoint = "https://exfl-tb04:8181/XFELWebAuth/Authentication";
 	if (soap_action == NULL)
 		soap_action = "http://server.xfelauthwebservice.xfel.eu/Authentication/hasActiveSessionRequest";
 	soap_begin(soap);
