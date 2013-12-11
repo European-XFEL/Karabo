@@ -55,8 +55,8 @@ class SqlDatabase(object):
             #query.exec_("PRAGMA foreign_keys = ON;");
 
             tables = self.__database.tables()
-            if tables.isEmpty():
-                print "Creating database tables"
+            #if tables.isEmpty():
+            #    print "Creating database tables"
 
             if not tables.contains("tLog"):
                 #print "Creating tLog table..."

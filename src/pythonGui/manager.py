@@ -694,7 +694,7 @@ class Manager(Singleton):
         
         # Send full internal hash to navigation
         self.__notifier.signalSystemTopologyChanged.emit(self.__hash)
-        # Update navigation treeviews
+        # Update navigation and configuration panel
         self.__notifier.signalInstanceGone.emit(path, parentPath)
 
 

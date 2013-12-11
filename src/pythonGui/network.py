@@ -111,7 +111,7 @@ class Network(QObject):
                 return
             
             if ok:
-                print "Login successfull"
+                print "Login successful"
                 globals.GLOBAL_ACCESS_LEVEL = self.__auth.getDefaultAccessLevelId()
             else:
                 print "Login failed"
@@ -144,7 +144,7 @@ class Network(QObject):
 
     def onEndConnection(self):
         if self._logout():
-            print "LMAIA: Logout successfull!!!"
+            print "LMAIA: Logout successful!!!"
             Manager().closeDatabaseConnection()
             self.__tcpSocket.disconnectFromHost()
             if self.__tcpSocket.state() == QAbstractSocket.UnconnectedState or self.__tcpSocket.waitForDisconnected(1000):
@@ -432,7 +432,6 @@ class Network(QObject):
 
 
     def _handleBrokerInformation(self, headerHash, bodyHash):
-        print "Provided broker information", bodyHash
         self.__brokerHost = bodyHash.get("host")
         self.__brokerPort = str(bodyHash.get("port"))
         self.__brokerTopic = bodyHash.get("topic")
@@ -442,9 +441,8 @@ class Network(QObject):
     def _handleNotification(self, headerHash, bodyHash):
         deviceId = headerHash.get("deviceId")
         timestamp = Timestamp()
-        # TODO: better format for timestamp
-        timestamp = timestamp.toIso8601()
-        #timestamp = "2013-07-29 19:14:47"
+        # TODO: better format for timestamp and timestamp generation in karabo
+        timestamp = timestamp.toFormattedString("%Y-%m-%d %H:%M:%S")
         type = bodyHash.get("type")
         shortMessage = bodyHash.get("shortMsg")
         detailedMessage = bodyHash.get("detailedMsg")

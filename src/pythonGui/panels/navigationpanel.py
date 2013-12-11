@@ -139,8 +139,8 @@ class NavigationPanel(QWidget):
 
     def onInstanceGone(self, path, parentPath):
         self.__twNavigation.selectItem(str(parentPath))
-
-
+        
+        
     def onSystemTopologyChanged(self, config):
         self.__twNavigation.updateView(config)
 
