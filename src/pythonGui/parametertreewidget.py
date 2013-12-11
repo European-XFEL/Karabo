@@ -46,11 +46,45 @@ class ParameterTreeWidget(QTreeWidget):
         self._setupActions()
         self._setupContextMenu()
         
-        self.itemClicked.connect(self.onItemClicked)
         self.customContextMenuRequested.connect(self.onCustomContextMenuRequested)
 
 
 ### protected ###
+    def mousePressEvent(self, event):
+        item = self.itemAt(event.pos())
+        
+        # Make sure the event was on a valid item
+        if not item:
+           return
+
+        # Get the tree widget's x position
+        treeX = self.header().sectionViewportPosition(0)
+
+        # Get the x coordinate of the root item. It is required in order to calculate
+        # the identation of the item
+        rootX = self.visualItemRect(self.invisibleRootItem()).x()
+
+        # Get the rectangle of the viewport occupied by the pressed item
+        vRect = self.visualItemRect(item)
+
+        # Calculate the x coordinate of the item
+        itemX = treeX + vRect.x() - rootX
+
+        # Get the rect surrounding the icon
+        iconRect = QRect(itemX, vRect.y(), vRect.height(), vRect.height())      
+
+        if self.__currentItem and (self.__currentItem is not item):
+            # Hide tooltip of former item
+            self.__currentItem.setToolTipDialogVisible(False)
+        
+        # Now check where the press event took place and handle it correspondingly
+        if iconRect.contains(event.pos()):
+            self.__currentItem = item
+            self.__currentItem.setToolTipDialogVisible(True)
+            
+        QTreeWidget.mousePressEvent(self, event)
+
+
     def mouseMoveEvent(self, event):
         QTreeWidget.mouseMoveEvent(self, event)
         
@@ -302,14 +336,6 @@ class ParameterTreeWidget(QTreeWidget):
 
 
 ### slots ###
-    def onItemClicked(self, item, column):
-        if self.__currentItem and  (self.__currentItem != item):
-            self.__currentItem.setToolTipDialogVisible(False)
-        
-        self.__currentItem = item
-        self.__currentItem.setToolTipDialogVisible(True)
-
-
     def onApplyChanged(self, enable):
         # Called when apply button of editableComponent changed
         # Check if no apply button in tree is enabled/conflicted anymore

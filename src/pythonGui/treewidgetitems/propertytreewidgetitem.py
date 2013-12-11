@@ -90,7 +90,7 @@ class PropertyTreeWidgetItem(BaseTreeWidgetItem):
 
     def setToolTipDialogVisible(self, show):
         if not self.__popupWidget:
-            self.__popupWidget = PopupWidget()
+            self.__popupWidget = PopupWidget(self.treeWidget())
         
         if show:
             info = OrderedDict()
