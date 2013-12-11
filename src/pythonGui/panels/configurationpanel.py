@@ -317,7 +317,7 @@ class ConfigurationPanel(QWidget):
 
 
     def clearParameterEditorContent(self):
-        self.__swParameterEditor.setCurrentIndex(0)
+        self._setParameterEditorIndex(0)
         # Reset map
         self.__navItemInternalKeyIndexMap = dict()
         
@@ -440,6 +440,12 @@ class ConfigurationPanel(QWidget):
         self.updateResetAllActions()
 
 
+    def _setParameterEditorIndex(self, index):
+        self.__swParameterEditor.blockSignals(True)
+        self.__swParameterEditor.setCurrentIndex(index)
+        self.__swParameterEditor.blockSignals(False)
+
+
     def _getCurrentParameterEditor(self):
         return self.__swParameterEditor.currentWidget()
 
@@ -503,6 +509,39 @@ class ConfigurationPanel(QWidget):
             childItem.unregisterEditableComponent()
             childItem.unregisterDisplayComponent()
             self._r_unregisterEditableComponent(childItem)
+
+
+    def showParameterPage(self, type, path):
+        # Hide apply button of current ParameterTreeWidget
+        self._getCurrentParameterEditor().setActionsVisible(False)
+        
+        # Show correct parameters
+        index = self.__navItemInternalKeyIndexMap.get(path)
+        if index:
+            self._setParameterEditorIndex(index)
+            # Show apply button of current ParameterTreeWidget
+            self._getCurrentParameterEditor().setActionsVisible(True)
+            
+            if (type is NavigationItemTypes.DEVICE) and (self.__prevDevicePath != path):
+                # Visible deviceId has changed
+                Manager().newVisibleDevice(path)
+                # Refresh over network needed
+                Manager().onRefreshInstance(path)               
+                self.__prevDevicePath = path
+        else:
+            self._setParameterEditorIndex(0)
+            
+            if type is NavigationItemTypes.SERVER:
+                return
+            
+            # Hide buttons and actions
+            self.__pbInitDevice.setVisible(False)
+            self.__pbKillInstance.setVisible(False)
+            self.__pbApplyAll.setVisible(False)
+            self.__pbResetAll.setVisible(False)
+            self.__acKillInstance.setVisible(False)
+            self.__acApplyAll.setVisible(False)
+            self.__acResetAll.setVisible(False)
 
 
 ### slots ###
@@ -584,43 +623,6 @@ class ConfigurationPanel(QWidget):
         self.showParameterPage(type, path)
 
 
-    def showParameterPage(self, type, path):
-        # Hide apply button of current ParameterTreeWidget
-        self._getCurrentParameterEditor().setActionsVisible(False)
-        
-        # Show correct parameters
-        index = self.__navItemInternalKeyIndexMap.get(path)
-        if index:
-            self.__swParameterEditor.blockSignals(True)
-            self.__swParameterEditor.setCurrentIndex(index)
-            # Show apply button of current ParameterTreeWidget
-            self._getCurrentParameterEditor().setActionsVisible(True)
-            self.__swParameterEditor.blockSignals(False)
-            
-            if (type is NavigationItemTypes.DEVICE) and (self.__prevDevicePath != path):
-                # Visible deviceId has changed
-                Manager().newVisibleDevice(path)
-                # Refresh over network needed
-                Manager().onRefreshInstance(path)               
-                self.__prevDevicePath = path
-        else:
-            self.__swParameterEditor.blockSignals(True)
-            self.__swParameterEditor.setCurrentIndex(0)
-            self.__swParameterEditor.blockSignals(False)
-            
-            if type is NavigationItemTypes.SERVER:
-                return
-            
-            # Hide buttons and actions
-            self.__pbInitDevice.setVisible(False)
-            self.__pbKillInstance.setVisible(False)
-            self.__pbApplyAll.setVisible(False)
-            self.__pbResetAll.setVisible(False)
-            self.__acKillInstance.setVisible(False)
-            self.__acApplyAll.setVisible(False)
-            self.__acResetAll.setVisible(False)
-
-
     def onNavigationItemSelectionChanged(self, path):
         self.__twNavigation.selectItem(path)
 
@@ -644,7 +646,16 @@ class ConfigurationPanel(QWidget):
         for key in keys:
             if path in key:
                 self.__internalKeySchemaLoadedMap[key] = False
+
+        # Check whether indices of the gone instance were selected
+        currentIndex = self.__twNavigation.currentIndex()
+        currentIndexParent = currentIndex.parent()
+        newIndexParent = self.__twNavigation.findIndex(parentPath)
         
+        if currentIndexParent is not newIndexParent: # elif not newIndexParent:
+            self._setParameterEditorIndex(0)
+        #else: # TODO: keep selected index selected, if it does not belong to gone instance
+            #self.__twNavigation.selectItem(str(currentIndex.data().toString()))
         self.__twNavigation.selectItem(str(parentPath))
 
 

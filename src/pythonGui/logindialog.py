@@ -56,8 +56,7 @@ class LoginDialog(QDialog):
         # Running "sudo apt-get remove qt-at-spi"
         self.__leProvider = QComboBox()
         self.__leProvider.setEditable(False)
-        provider_list = ["LOCAL", "KERBEROS"]
-        self.__leProvider.addItems(provider_list)
+        self.__leProvider.addItems(["LOCAL", "KERBEROS"])
         formLayout.addRow("Provider:", self.__leProvider)
         self.__leProvider.currentIndexChanged['QString'].connect(self.onSelectConnectionChanged)
         
