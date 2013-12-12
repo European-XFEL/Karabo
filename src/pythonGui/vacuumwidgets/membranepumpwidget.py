@@ -118,6 +118,8 @@ class MembranePumpWidget(VacuumWidget):
             self._setPixmap(QPixmap(":membranepump-yellow"))
         elif ("Error" in value) or ("error" in value):
             self._setPixmap(QPixmap(":membranepump-red"))
+        else:
+            self._setPixmap(QPixmap(":membranepump"))
 
 
     class Maker:

@@ -118,6 +118,8 @@ class MaxiGaugeWidget(VacuumWidget):
             self._setPixmap(QPixmap(":maxigauge-yellow"))
         elif ("Error" in value) or ("error" in value):
             self._setPixmap(QPixmap(":maxigauge-red"))
+        else:
+            self._setPixmap(QPixmap(":maxigauge"))
 
 
     class Maker:

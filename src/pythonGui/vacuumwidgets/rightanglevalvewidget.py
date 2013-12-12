@@ -118,6 +118,8 @@ class RightAngleValveWidget(VacuumWidget):
             self._setPixmap(QPixmap(":rightanglevalve-yellow"))
         elif ("Error" in value) or ("error" in value):
             self._setPixmap(QPixmap(":rightanglevalve-red"))
+        else:
+            self._setPixmap(QPixmap(":rightanglevalve"))
 
 
     class Maker:

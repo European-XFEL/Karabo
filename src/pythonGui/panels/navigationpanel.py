@@ -138,11 +138,28 @@ class NavigationPanel(QWidget):
 
 
     def onInstanceGone(self, path, parentPath):
-        self.__twNavigation.selectItem(str(parentPath))
+        path = self.__twNavigation.lastSelectionPath
+        if len(path) < 1:
+            index = None
+        else:
+            index = self.__twNavigation.findIndex(path)
+        
+        if index and index.isValid():
+            self.__twNavigation.lastSelectionPath = str()
+            self.__twNavigation.selectItem(path)
+        else:
+            self.__twNavigation.selectItem(str(parentPath))
         
         
     def onSystemTopologyChanged(self, config):
-        self.__twNavigation.updateView(config)
+        self.__twNavigation.updateTreeModel(config)
+        self.__twNavigation.expandAll()
+        
+        path = self.__twNavigation.lastSelectionPath
+        if len(path) < 1:
+            return
+        self.__twNavigation.lastSelectionPath = str()
+        self.__twNavigation.selectItem(path)
 
 
     def onGlobalAccessLevelChanged(self):

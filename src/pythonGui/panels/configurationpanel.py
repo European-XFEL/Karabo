@@ -467,6 +467,18 @@ class ConfigurationPanel(QWidget):
         self.__acFileSaveAs.setVisible(show)
 
 
+    def _hideAllButtons(self):
+        # Hide buttons and actions
+        self.__pbInitDevice.setVisible(False)
+        
+        self.__pbKillInstance.setVisible(False)
+        self.__acKillInstance.setVisible(False)
+        self.__pbApplyAll.setVisible(False)
+        self.__acApplyAll.setVisible(False)
+        self.__pbResetAll.setVisible(False)
+        self.__acResetAll.setVisible(False)
+
+
     def _getCurrentParameterEditor(self):
         return self.__swParameterEditor.currentWidget()
 
@@ -551,13 +563,7 @@ class ConfigurationPanel(QWidget):
                 return
             
             # Hide buttons and actions
-            self.__pbInitDevice.setVisible(False)
-            self.__pbKillInstance.setVisible(False)
-            self.__pbApplyAll.setVisible(False)
-            self.__pbResetAll.setVisible(False)
-            self.__acKillInstance.setVisible(False)
-            self.__acApplyAll.setVisible(False)
-            self.__acResetAll.setVisible(False)
+            self._hideAllButtons()
 
 
 ### slots ###
@@ -663,16 +669,21 @@ class ConfigurationPanel(QWidget):
             if path in key:
                 self.__internalKeySchemaLoadedMap[key] = False
 
-        # Check whether indices of the gone instance were selected
-        currentIndex = self.__twNavigation.currentIndex()
-        currentIndexParent = currentIndex.parent()
-        newIndexParent = self.__twNavigation.findIndex(parentPath)
+        # Check whether path of the gone instance were selected
+        path = self.__twNavigation.lastSelectionPath
+        if len(path) < 1:
+            index = None
+        else:
+            index = self.__twNavigation.findIndex(path)
         
-        if currentIndexParent is not newIndexParent: # elif not newIndexParent:
+        if index and index.isValid():
+            self.__twNavigation.lastSelectionPath = str()
+            self.__twNavigation.selectItem(path)
+        else:
             self._setParameterEditorIndex(0)
-        #else: # TODO: keep selected index selected, if it does not belong to gone instance
-            #self.__twNavigation.selectItem(str(currentIndex.data().toString()))
-        self.__twNavigation.selectItem(str(parentPath))
+            self.__twNavigation.selectItem(str(parentPath))
+            # Hide buttons and actions
+            self._hideAllButtons()
 
 
     def onDeviceStateChanged(self, internalKey, state):
@@ -809,8 +820,15 @@ class ConfigurationPanel(QWidget):
 
 
     def onSystemTopologyChanged(self, config):
-        #self.__twNavigation.updateView(config)
-        pass
+        # Already done in NavigationPanel which uses the same model
+        #self.__twNavigation.updateTreeModel(config) 
+        self.__twNavigation.expandAll()
+        
+        path = self.__twNavigation.lastSelectionPath
+        if len(path) < 1:
+            return
+        self.__twNavigation.lastSelectionPath = str()
+        self.__twNavigation.selectItem(path)
 
 
     def onGlobalAccessLevelChanged(self):

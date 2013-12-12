@@ -118,6 +118,8 @@ class ShutOffValveWidget(VacuumWidget):
             self._setPixmap(QPixmap(":shutoffvalve-yellow"))
         elif ("Error" in value) or ("error" in value):
             self._setPixmap(QPixmap(":shutoffvalve-red"))
+        else:
+            self._setPixmap(QPixmap(":shutoffvalve"))
 
 
     class Maker:

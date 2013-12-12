@@ -118,6 +118,8 @@ class PressureSwitchWidget(VacuumWidget):
             self._setPixmap(QPixmap(":pressureswitch-yellow"))
         elif ("Error" in value) or ("error" in value):
             self._setPixmap(QPixmap(":pressureswitch-red"))
+        else:
+            self._setPixmap(QPixmap(":pressureswitch"))
 
 
     class Maker:

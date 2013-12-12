@@ -29,15 +29,24 @@ class NavigationTreeView(QTreeView):
     def __init__(self, parent, model):
         super(NavigationTreeView, self).__init__(parent)
         
-        self.__prevModelIndex = None
+        # Stores the last selected path of an tree row
+        self.__lastSelectionPath = str()
         self.setModel(model)
         
         self.setSelectionMode(QAbstractItemView.SingleSelection)
+        self.setSelectionBehavior(QAbstractItemView.SelectRows)
         #self.setSortingEnabled(True)
         #self.sortByColumn(0, Qt.AscendingOrder)
         
         self._setupContextMenu()
         self.customContextMenuRequested.connect(self.onCustomContextMenuRequested)
+
+
+    def _lastSelectionPath(self):
+        return self.__lastSelectionPath
+    def _setLastSelectionPath(self, lastSelectionPath):
+        self.__lastSelectionPath = lastSelectionPath
+    lastSelectionPath = property(fget=_lastSelectionPath, fset=_setLastSelectionPath)
 
 
 ### protected ###
@@ -197,15 +206,24 @@ class NavigationTreeView(QTreeView):
 
 
     def selectIndex(self, index):
-        if index and index.isValid():
+        if not index:
+            return
+        
+        path = index.internalPointer().path
+        if self.lastSelectionPath == path:
+            return
+        self.lastSelectionPath = path
+        
+        if index.isValid():
             self.setCurrentIndex(index)
+            #self.clearSelection()
+            #self.selectionModel().select(index, QItemSelectionModel.Select | QItemSelectionModel.Rows)
         else:
             self.clearSelection()
 
 
-    def updateView(self, config):
+    def updateTreeModel(self, config):
         self.model().updateData(config)
-        self.expandAll()
 
 
     def itemClicked(self):
@@ -213,13 +231,8 @@ class NavigationTreeView(QTreeView):
         
         if not index.isValid():
             return NavigationItemTypes.UNDEFINED
-        
-        if self.__prevModelIndex == index:
-            return NavigationItemTypes.UNDEFINED
-        self.__prevModelIndex = index
-        
+               
         level = self.model().getHierarchyLevel(index)
-        
         row = index.row()
 
         classId = None
@@ -266,11 +279,6 @@ class NavigationTreeView(QTreeView):
             return
         
         index = self.findIndex(path)
-        
-        if self.__prevModelIndex == index:
-            return
-        self.__prevModelIndex = index
-        
         self.selectIndex(index)
 
 

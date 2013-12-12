@@ -118,6 +118,8 @@ class PressureGaugeWidget(VacuumWidget):
             self._setPixmap(QPixmap(":pressuregauge-yellow"))
         elif ("Error" in value) or ("error" in value):
             self._setPixmap(QPixmap(":pressuregauge-red"))
+        else:
+            self._setPixmap(QPixmap(":pressuregauge"))
 
 
     class Maker:
