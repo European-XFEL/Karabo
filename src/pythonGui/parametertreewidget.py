@@ -43,9 +43,8 @@ class ParameterTreeWidget(QTreeWidget):
         #self.setSortingEnabled(True)
         self.sortByColumn(0, Qt.AscendingOrder)
         
-        self._setupActions()
-        self._setupContextMenu()
-        
+        self.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.__mContext = QMenu(self) # Actions from configurationPanel are added via addContextAction
         self.customContextMenuRequested.connect(self.onCustomContextMenuRequested)
 
 
@@ -180,12 +179,6 @@ class ParameterTreeWidget(QTreeWidget):
         self._r_updateParameters(self.invisibleRootItem(), state)
 
 
-    def setActionsVisible(self, visible):
-        # Called when NavigationItem changed
-        self.__acFileOpen.setVisible(visible)
-        self.__acFileSaveAs.setVisible(visible)
-
-
     def addItemDataToHash(self, item, config):
         editableComponent = item.editableComponent
         if not isinstance(editableComponent, EditableApplyLaterComponent):
@@ -226,11 +219,6 @@ class ParameterTreeWidget(QTreeWidget):
         self._r_setReadOnlyItem(self.invisibleRootItem(), readOnly)
 
 
-    def removeActions(self):
-        self.__configPanel.removeActionFromToolBar(self.__acFileOpen)
-        self.__configPanel.removeActionFromToolBar(self.__acFileSaveAs)
-
-
 ### private functions ###
     def _r_setErrorStateItem(self, item, inErrorState):
         for i in range(item.childCount()):
@@ -246,39 +234,16 @@ class ParameterTreeWidget(QTreeWidget):
             self._r_setReadOnlyItem(childItem, readOnly)
 
 
-    def _setupActions(self):
-        text = "Open configuration (*.xml)"
-        self.__acFileOpen = QAction(QIcon(":open"), "&Open configuration", self)
-        self.__acFileOpen.setStatusTip(text)
-        self.__acFileOpen.setToolTip(text)
-        self.__acFileOpen.triggered.connect(self.onFileOpen)
-        self.__configPanel.addActionToToolBar(self.__acFileOpen)
-
-        text = "Save configuration as (*.xml)"
-        self.__acFileSaveAs = QAction(QIcon(":save-as"), "Save &As...", self)
-        self.__acFileSaveAs.setStatusTip(text)
-        self.__acFileSaveAs.setToolTip(text)
-        self.__acFileSaveAs.triggered.connect(self.onFileSaveAs)
-        self.__configPanel.addActionToToolBar(self.__acFileSaveAs)
-        
-
-    def _setupContextMenu(self):
-        self.setContextMenuPolicy(Qt.CustomContextMenu)
-        
-        # add toolbar menu also in context menu
-        self.__mFile = QMenu(self)
-        self.__mFile.addAction(self.__acFileOpen)
-        self.__mFile.addAction(self.__acFileSaveAs)
-        self.__mFile.addSeparator()
-        # other action from configurationPanel gets added via addConfigAction
+    def addContextAction(self, action):
+        self.__mContext.addAction(action)
 
 
-    def addConfigAction(self, action):
-        self.__mFile.addAction(action)
+    def addContextMenu(self, menu):
+        self.__mContext.addMenu(menu)
 
 
-    def addConfigMenu(self, menu):
-        self.__mFile.addMenu(menu)
+    def addContextSeparator(self):
+        self.__mContext.addSeparator()
 
 
     def _r_updateParameters(self, parentItem, state):
@@ -381,7 +346,7 @@ class ParameterTreeWidget(QTreeWidget):
         item = self.itemAt(pos)
         if item is None:
             # Show standard context menu
-            self.__mFile.exec_(QCursor.pos())
+            self.__mContext.exec_(QCursor.pos())
             return
 
         item.showContextMenu()
