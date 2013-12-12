@@ -118,6 +118,8 @@ class HydraulicValveWidget(VacuumWidget):
             self._setPixmap(QPixmap(":hydraulicvalve-yellow"))
         elif ("Error" in value) or ("error" in value):
             self._setPixmap(QPixmap(":hydraulicvalve-red"))
+        else:
+            self._setPixmap(QPixmap(":hydraulicvalve"))
 
 
     class Maker:

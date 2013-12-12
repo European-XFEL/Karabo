@@ -118,6 +118,8 @@ class TurboPumpWidget(VacuumWidget):
             self._setPixmap(QPixmap(":turbopump-yellow"))
         elif ("Error" in value) or ("error" in value):
             self._setPixmap(QPixmap(":turbopump-red"))
+        else:
+            self._setPixmap(QPixmap(":turbopump"))
 
 
     class Maker:
