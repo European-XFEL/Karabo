@@ -118,6 +118,8 @@ class CryoCoolerWidget(VacuumWidget):
             self._setPixmap(QPixmap(":cryocooler-yellow"))
         elif ("Error" in value) or ("error" in value):
             self._setPixmap(QPixmap(":cryocooler-red"))
+        else:
+            self._setPixmap(QPixmap(":cryocooler"))
 
 
     class Maker:

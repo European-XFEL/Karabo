@@ -118,6 +118,8 @@ class TemperatureProbeWidget(VacuumWidget):
             self._setPixmap(QPixmap(":thermometer-yellow"))
         elif ("Error" in value) or ("error" in value):
             self._setPixmap(QPixmap(":thermometer-red"))
+        else:
+            self._setPixmap(QPixmap(":thermometer"))
 
 
     class Maker:
