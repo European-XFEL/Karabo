@@ -115,6 +115,12 @@ class DisplayTrendline(DisplayWidget):
         self.__plot.setAxisScaleDraw( Qwt5.Qwt.QwtPlot.xBottom, DateTimeScaleDraw() )
         self.__plot.setAxisAutoScale( Qwt5.Qwt.QwtPlot.yLeft )
         
+        key = params.get(QString('key'))
+        if key is None:
+            key = params.get('key')
+        # Stores key/value pair
+        self.__keys = {str(key):None}
+        
         # Set value
 #        value = params.get(QString('value'))
 #        if value is None:
