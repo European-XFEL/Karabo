@@ -56,6 +56,18 @@ class DisplayHistogram(DisplayWidget):
         else:        
             self.__plot = QwtPlot()
             self.__plot.setMinimumSize(QSize(200,200))
+            # Attach grid to plot
+            grid = QwtPlotGrid()
+            grid.enableXMin(True)
+            grid.enableYMin(True)
+            grid.setMajPen(QPen(Qt.black, 0, Qt.DotLine))
+            grid.setMinPen(QPen(Qt.gray, 0, Qt.DotLine))
+            grid.attach(self.__plot)
+            
+            self.__plotCurves = []
+            
+        # Default colors
+        self.__colorList = ["red", "green", "blue", "gray", "violet", "orange", "lightgreen", "black"]
             
         key = params.get(QString('key'))
         if key is None:
@@ -151,21 +163,17 @@ class DisplayHistogram(DisplayWidget):
                 #plot.add_item(histogram)
             plot.replot()
         else:
-            self.__plot.detachItems()
+            while len(self.__plotCurves) > 0:
+                self.__plotCurves.pop().detach()
             
-            # Attach grid to plot
-            grid = QwtPlotGrid()
-            grid.enableXMin(True)
-            grid.enableYMin(True)
-            grid.setMajPen(QPen(Qt.black, 0, Qt.DotLine))
-            grid.setMinPen(QPen(Qt.gray, 0, Qt.DotLine))
-            grid.attach(self.__plot)
-            
+            index = -1
             for key in self.__keys:
                 value = self.__keys.get(key)
                 if value is None:
                     continue
 
+                index += 1
+                
                 i = 0
                 width = 1
                 intervals = []
@@ -183,9 +191,11 @@ class DisplayHistogram(DisplayWidget):
                 
                 # Attach histogram item to plot
                 histogram = HistogramItem()
-                histogram.setColor(RandomColor())
+                histogram.setColor(QColor(self.__colorList[index]))
                 histogram.setData(QwtIntervalData(intervals, values))
                 histogram.attach(self.__plot)
+                
+                self.__plotCurves.append(histogram)
             
             self.__plot.replot()
 
@@ -248,10 +258,6 @@ class HistogramItem(QwtPlotItem):
             elif result.top() > self.baseline():
                 result.setTop(self.baseline())
         return result
-
-
-    #def rtti(self):
-    #    return QwtPlotItem.PlotHistogram
 
 
     def draw(self, painter, xMap, yMap, rect):
