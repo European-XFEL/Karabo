@@ -29,6 +29,7 @@ import const
 from parametertreewidget import ParameterTreeWidget
 from docktabwindow import DockTabWindow
 from documentationpanel import DocumentationPanel
+from enums import ConfigChangeTypes
 from enums import NavigationItemTypes
 from manager import Manager
 from navigationtreeview import NavigationTreeView
@@ -222,12 +223,26 @@ class ConfigurationPanel(QWidget):
 
 
     def setupActions(self):
-        pass
+        text = "Open configuration (*.xml)"
+        self.__acFileOpen = QAction(QIcon(":open"), "&Open configuration", self)
+        #self.__acFileOpen = QAction(QIcon(":filein"), "&Open configuration", self)
+        self.__acFileOpen.setStatusTip(text)
+        self.__acFileOpen.setToolTip(text)
+        self.__acFileOpen.setVisible(False)
+        self.__acFileOpen.triggered.connect(self.onFileOpen)
+
+        text = "Save configuration as (*.xml)"
+        self.__acFileSaveAs = QAction(QIcon(":save-as"), "Save &As...", self)
+        #self.__acFileSaveAs = QAction(QIcon(":fileout"), "Save &As...", self)
+        self.__acFileSaveAs.setStatusTip(text)
+        self.__acFileSaveAs.setToolTip(text)
+        self.__acFileSaveAs.setVisible(False)
+        self.__acFileSaveAs.triggered.connect(self.onFileSaveAs)
 
 
     def setupToolBar(self, toolBar):
-        # this is done per ParameterTreeWidget
-        self.__toolBar = toolBar
+        toolBar.addAction(self.__acFileOpen)
+        toolBar.addAction(self.__acFileSaveAs)
         
 
     def applyAllAsHash(self, key, config):
@@ -326,7 +341,6 @@ class ConfigurationPanel(QWidget):
             # Unregister all widgets of TreeWidget from DataNotifier in Manager before clearing..
             self._r_unregisterEditableComponent(twParameterEditorPage.invisibleRootItem())
             twParameterEditorPage.clear()
-            twParameterEditorPage.removeActions()
             
             # Remove widget completely
             self.__swParameterEditor.removeWidget(twParameterEditorPage)
@@ -368,10 +382,13 @@ class ConfigurationPanel(QWidget):
 
         twParameterEditorPage = ParameterTreeWidget(self, path, classId)
         twParameterEditorPage.setHeaderLabels(QStringList() << "Parameter" << "Current value on device" << "Value")
-        twParameterEditorPage.addConfigAction(self.__acKillInstance)
-        twParameterEditorPage.addConfigAction(self.__acApplyAll)
-        #twParameterEditorPage.addConfigMenu(self.__mApply)
-        twParameterEditorPage.addConfigAction(self.__acResetAll)
+        
+        twParameterEditorPage.addContextAction(self.__acFileOpen)
+        twParameterEditorPage.addContextAction(self.__acFileSaveAs)
+        twParameterEditorPage.addContextSeparator()
+        twParameterEditorPage.addContextAction(self.__acKillInstance)
+        twParameterEditorPage.addContextAction(self.__acApplyAll)
+        twParameterEditorPage.addContextAction(self.__acResetAll)
         
         if type is NavigationItemTypes.CLASS:
             twParameterEditorPage.hideColumn(1)
@@ -445,6 +462,10 @@ class ConfigurationPanel(QWidget):
         self.__swParameterEditor.setCurrentIndex(index)
         self.__swParameterEditor.blockSignals(False)
 
+        show = index != 0
+        self.__acFileOpen.setVisible(show)
+        self.__acFileSaveAs.setVisible(show)
+
 
     def _getCurrentParameterEditor(self):
         return self.__swParameterEditor.currentWidget()
@@ -512,15 +533,10 @@ class ConfigurationPanel(QWidget):
 
 
     def showParameterPage(self, type, path):
-        # Hide apply button of current ParameterTreeWidget
-        self._getCurrentParameterEditor().setActionsVisible(False)
-        
         # Show correct parameters
         index = self.__navItemInternalKeyIndexMap.get(path)
         if index:
             self._setParameterEditorIndex(index)
-            # Show apply button of current ParameterTreeWidget
-            self._getCurrentParameterEditor().setActionsVisible(True)
             
             if (type is NavigationItemTypes.DEVICE) and (self.__prevDevicePath != path):
                 # Visible deviceId has changed
@@ -801,6 +817,63 @@ class ConfigurationPanel(QWidget):
         for index in xrange(self.__swParameterEditor.count()):
             twParameterEditorPage = self.__swParameterEditor.widget(index)
             twParameterEditorPage.globalAccessLevelChanged()
+
+
+    def onFileOpen(self):
+        info = self.__twNavigation.currentIndexInfo()
+        
+        path = info.get(QString('key'))
+        if path is None:
+            path = info.get('key')
+
+        type = info.get(QString('type'))
+        if type is None:
+            type = info.get('type')
+        
+        classId = info.get(QString('classId'))
+        if classId is None:
+            classId = info.get('classId')
+        
+        deviceId = info.get(QString('deviceId'))
+        if deviceId is None:
+            deviceId = info.get('deviceId')  
+        
+        configChangeType = None
+        if type is NavigationItemTypes.CLASS:
+            configChangeType = ConfigChangeTypes.DEVICE_CLASS_CONFIG_CHANGED
+        elif type is NavigationItemTypes.DEVICE:
+            configChangeType = ConfigChangeTypes.DEVICE_INSTANCE_CONFIG_CHANGED
+        
+        if classId is None:
+            print "onFileOpen classId not set"
+        
+        # TODO: Remove dirty hack for scientific computing again!!!
+        croppedClassId = classId.split("-")
+        classId = croppedClassId[0]
+        
+        Manager().onFileOpen(configChangeType, str(path), str(classId))
+
+
+    def onFileSaveAs(self):
+        info = self.__twNavigation.currentIndexInfo()
+        
+        path = info.get(QString('key'))
+        if path is None:
+            path = info.get('key')
+
+        type = info.get(QString('type'))
+        if type is None:
+            type = info.get('type')
+        
+        classId = info.get(QString('classId'))
+        if classId is None:
+            classId = info.get('classId')
+        
+        deviceId = info.get(QString('deviceId'))
+        if deviceId is None:
+            deviceId = info.get('deviceId')        
+
+        Manager().onSaveAsXml(str(classId), str(path))
 
 
     # virtual function

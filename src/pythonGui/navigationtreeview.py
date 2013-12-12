@@ -65,10 +65,6 @@ class NavigationTreeView(QTreeView):
         if navigationItemType is None:
             navigationItemType = itemInfo.get('type')
         
-        #key = itemInfo.get(QString('key'))
-        #if key is None:
-        #    key = itemInfo.get('key')
-        
         displayName = str()
         if navigationItemType is NavigationItemTypes.CLASS:
             displayName = itemInfo.get(QString('classId'))
@@ -86,9 +82,6 @@ class NavigationTreeView(QTreeView):
         if serverId:
             # Device server instance id
             mimeData.setData("serverId", QString(serverId).toAscii())
-        #if key:
-            # Internal key
-        #    mimeData.setData("key", QString(key).toAscii())
         if displayName:
             # Display name
             mimeData.setData("displayName", QString(displayName).toAscii())
@@ -185,15 +178,17 @@ class NavigationTreeView(QTreeView):
             parentIndex = index.parent()
             serverId = parentIndex.data().toString()
             classId = index.data().toString()
-            path = str("server." + serverId + ".classes." + classId + ".configuration")
+            path = str("server." + serverId + ".classes." + classId)
             
-            return dict(key=path, type=type, serverId=serverId, classId=classId)
+            return dict(key=path + ".configuration", type=type, serverId=serverId, classId=classId)
         elif level == 3:
             type = NavigationItemTypes.DEVICE
+            parentIndex = index.parent()
+            classId = parentIndex.data().toString()
             deviceId = index.data().toString()
             path = str("device." + deviceId)
             
-            return dict(key=path, type=type, deviceId=deviceId)
+            return dict(key=path + ".configuration", type=type, classId=classId, deviceId=deviceId)
 
 
     def findIndex(self, path):
