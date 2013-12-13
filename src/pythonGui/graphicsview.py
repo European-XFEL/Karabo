@@ -74,11 +74,66 @@ class FixedLayout(QLayout):
     def sizeHint(self):
         return QSize(10, 10)
 
-    def itemAt(self, pos):
+    def itemAtPosition(self, pos):
         for item in self.children:
             if item.geometry().contains(pos):
                 return item
+            
+    def relayout(self, widget):
+        for c in self.children:
+            ll = [c]
+            ret = None
+            while ll:
+                l = ll.pop()
+                if isinstance(l, QLayout):
+                    for i in range(l.count()):
+                        ll.append(l.itemAt(i))
+                else:
+                    if l.widget() is widget:
+                        ret = l
+                        break
+            if ret is not None:
+                break
+        if ret is None:
+            return
+        print c.sizeHint()
+        g = QRect(self.geometries[c].topLeft(), c.sizeHint())
+        self.geometries[c] = g
+        c.setGeometry(g)
+        
 
+class ProxyWidget(QStackedWidget):
+    def __init__(self, parent):
+        QStackedWidget.__init__(self, parent)
+        #self.setContextMenuPolicy(Qt.ActionsContextMenu)
+        self.change_widget = QAction("Change widget", self)
+        self.addAction(self.change_widget)
+
+    def set_child(self, child, component):
+        if self.count() > 0:
+            self.removeWidget(self.widget(0))
+        self.addWidget(child)
+        self.component = component
+        if component is not None:
+            aliases = component.widgetFactory.getAliasesViaCategory(
+                            None, self.component.widgetCategory)
+            menu = QMenu(self)
+            for a in aliases:
+                menu.addAction(a).triggered.connect(self.on_changeWidget)
+            self.change_widget.setMenu(menu)
+
+    @pyqtSlot()
+    def on_changeWidget(self):
+        action = self.sender()
+        self.component.changeWidget(action.text())
+        self.adjustSize()
+        self.parent().layout().relayout(self)
+        
+    def contextMenuEvent(self, event):
+        if not self.parent().parent().isDesignMode:
+            return
+        QMenu.exec_(self.actions(), event.globalPos(), None, self)
+            
 class GraphicsView(QWidget):
     # Enums
     MoveItem, InsertText, InsertLine, InsertRect = range(4)
@@ -715,10 +770,11 @@ class GraphicsView(QWidget):
                             QBoxLayout.TopToBottom)
         layout.setContentsMargins(5,5,5,5)
 
-        for item in items:
-            layout.addWidget(item)
-            item.setParent(self.inner)
-            item.show()
+        for item, component in items:
+            proxy = ProxyWidget(self.inner)
+            proxy.set_child(item, component)
+            layout.addWidget(proxy)
+            proxy.show()
             
         layout.setGeometry(QRect(pos, layout.sizeHint()))
         self.layout.addItem(layout)
@@ -738,10 +794,18 @@ class GraphicsView(QWidget):
 
 
     def mousePressEvent(self, event):
-        if event.button() != Qt.LeftButton or not self.isDesignMode:
+        if not self.isDesignMode:
             return
-        self.moving_item = self.layout.itemAt(event.pos())
-        self.moving_pos = event.pos() - self.moving_item.geometry().topLeft()
+        if event.button() == Qt.LeftButton:
+            self.moving_item = self.layout.itemAtPosition(event.pos())
+            self.moving_pos = event.pos() - self.moving_item.geometry().topLeft()
+            event.accept()
+        else:
+            child = self.inner.childAt(event.pos())
+            if child is not None:
+                while not isinstance(child, ProxyWidget):
+                    child = child.parent()
+                child.mousePressEvent(event)
 
         # Items are created in origin and must then be moved to the position to
         # set their position correctly for later purposes!!!
@@ -756,11 +820,20 @@ class GraphicsView(QWidget):
 
         QWidget.mousePressEvent(self, event)
 
+    def contextMenuEvent(self, event):
+        if not self.isDesignMode:
+            return
+        child = self.inner.childAt(event.pos())
+        if child is not None:
+            while not isinstance(child, ProxyWidget):
+                child = child.parent()
+            child.event(event)
 
     def mouseMoveEvent(self, event):
         if self.moving_item is not None:
             self.layout.setItemPosition(self.moving_item, event.pos() - 
                                         self.moving_pos)
+            event.accept()
     
         if self.__mode == self.InsertLine and self.__line:
             linePos = self.__line.pos()
@@ -895,7 +968,7 @@ class GraphicsView(QWidget):
                 displayNameProxyWidget = self._createDisplayNameProxyWidget(displayName)
                 if displayNameProxyWidget:
                     # Add item to itemlist
-                    items.append(displayNameProxyWidget)
+                    items.append((displayNameProxyWidget, None))
 
                 # Does key concern state of device?
                 keys = str(internalKey).split('.configuration.')
@@ -926,12 +999,12 @@ class GraphicsView(QWidget):
                                                             metricPrefixSymbol=metricPrefixSymbol, \
                                                             unitSymbol=unitSymbol)
                     
-                    items.append(displayComponent.widget)
+                    items.append((displayComponent.widget, displayComponent))
                     
                     # Add proxyWidget for unit label, if available
                     unitProxyWidget = self._createUnitProxyWidget(metricPrefixSymbol, unitSymbol)
                     if unitProxyWidget:
-                        items.append(unitProxyWidget)
+                        items.append((unitProxyWidget, None))
 
                     # Register as visible device
                     Manager().newVisibleDevice(internalKey)
@@ -950,7 +1023,7 @@ class GraphicsView(QWidget):
                                                                         unitSymbol=unitSymbol)
                         editableComponent.isEditableValueInit = False
 
-                    items.append(editableComponent.widget)
+                    items.append((editableComponent.widget, editableComponent))
 
                     # Register as visible device
                     Manager().newVisibleDevice(internalKey)                   
@@ -993,8 +1066,7 @@ class GraphicsView(QWidget):
         
         if len(unitLabel) > 0:
             laUnit = QLabel(unitLabel)
-            laUnit.setAttribute(Qt.WA_NoSystemBackground, True)
-            return GraphicsProxyWidget(self.__isDesignMode, laUnit)
+            return laUnit
         
         return None
 
