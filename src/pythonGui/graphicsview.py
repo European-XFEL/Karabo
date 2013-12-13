@@ -152,6 +152,8 @@ class GraphicsView(QWidget):
         layout.addWidget(self.inner)
         
         self.moving_item = None
+        self.selection = [ ]
+        self.selection_start = None
 
         # Current mode of the view (move, insert)
         self.__mode = self.MoveItem
@@ -797,9 +799,20 @@ class GraphicsView(QWidget):
         if not self.isDesignMode:
             return
         if event.button() == Qt.LeftButton:
-            self.moving_item = self.layout.itemAtPosition(event.pos())
-            self.moving_pos = event.pos() - self.moving_item.geometry().topLeft()
-            event.accept()
+            item = self.layout.itemAtPosition(event.pos())
+            if item is None:
+                self.selection_stop = self.selection_start = event.pos()
+                self.update()
+            if item is not None:
+                self.moving_item = item
+                self.moving_pos = (
+                    event.pos() - self.moving_item.geometry().topLeft())
+                if event.modifiers() & Qt.ShiftModifier:
+                    self.selection.append(item)
+                else:
+                    self.selection = [item]
+                self.update()
+                event.accept()
         else:
             child = self.inner.childAt(event.pos())
             if child is not None:
@@ -834,6 +847,10 @@ class GraphicsView(QWidget):
             self.layout.setItemPosition(self.moving_item, event.pos() - 
                                         self.moving_pos)
             event.accept()
+        elif self.selection_start is not None:
+            self.selection_stop = event.pos()
+            event.accept()
+            self.update()
     
         if self.__mode == self.InsertLine and self.__line:
             linePos = self.__line.pos()
@@ -852,6 +869,19 @@ class GraphicsView(QWidget):
 
     def mouseReleaseEvent(self, event):
         self.moving_item = None
+        if self.selection_start is not None:
+            rect = QRect(self.selection_start, self.selection_stop)
+            if event.modifiers() & Qt.ShiftModifier:
+                sel = self.selection
+            else:
+                sel = [ ]
+            for c in self.layout.children:
+                if rect.contains(c.geometry()):
+                    sel.append(c)
+            self.selection = sel
+            self.selection_start = None
+            event.accept()
+            self.update()
 
         if self.__line and self.__mode == self.InsertLine:
             centerPos = self.__line.boundingRect().center()
@@ -1105,4 +1135,11 @@ class GraphicsView(QWidget):
         painter = QPainter(self)
         if self.isDesignMode:
             for item in self.layout.children:
+                if item in self.selection:
+                    painter.setPen(Qt.green)
+                else:
+                    painter.setPen(Qt.black)
                 painter.drawRect(item.geometry())
+        if self.selection_start is not None:
+            painter.setPen(Qt.black)
+            painter.drawRect(QRect(self.selection_start, self.selection_stop))
