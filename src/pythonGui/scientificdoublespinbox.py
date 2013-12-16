@@ -27,7 +27,7 @@ class ScientificDoubleSpinBox(QDoubleSpinBox):
         
         self.cachedText = ""
         self.cachedState = QValidator.State
-        self.cachedValue = QVariant()
+        self.cachedValue = None
         
         self.setDecimals(4)
         QDoubleSpinBox.setDecimals(self, 1000)
@@ -241,7 +241,7 @@ class ScientificDoubleSpinBox(QDoubleSpinBox):
         input = self.prefix() + copy + self.suffix()
         self.cachedText = input
         self.cachedState = state
-        self.cachedValue = QVariant(num)
+        self.cachedValue = num
         
-        return (state, QVariant(num))
+        return state, num
 
