@@ -28,7 +28,7 @@ class SqlTreeModelPrivate(object):
         
         self.__levelData = [] #QList<SqlTreeModelLevel>()
 
-        self.__headers = [] #QVector<QHash<int, QVariant>>()
+        self.__headers = []
         self.__root = SqlTreeModelNode()
 
 
@@ -98,8 +98,7 @@ class SqlTreeModelPrivate(object):
             d = self.__headers[index]
             value = d.get(role)
             if value is not None:
-                return QVariant(value)
-        return QVariant()
+                return value
 
 
     def _getHeaders(self):

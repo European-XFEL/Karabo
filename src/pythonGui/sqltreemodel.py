@@ -233,7 +233,7 @@ class SqlTreeModel(QAbstractItemModel):
            @return The data for the given cell and role."""
 
         if level < 0 or row < 0 or column < 0:
-            return QVariant()
+            return
 
         levelData = self.__privateModel.levelDataAt(level)
         model = levelData.model # QSqlQueryModel

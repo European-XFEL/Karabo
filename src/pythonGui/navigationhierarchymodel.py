@@ -215,8 +215,6 @@ class NavigationHierarchyModel(QAbstractItemModel):
                 else:
                     return QIcon(":device-instance")
 
-        return QVariant()
-
 
     #def flags(self, index):
     #    if not index.isValid():
@@ -230,7 +228,6 @@ class NavigationHierarchyModel(QAbstractItemModel):
         if role == Qt.DisplayRole:
             if (orientation == Qt.Horizontal) and (section == 0):
                     return "Hierarchical view"
-        return QVariant()
 
 
     def index(self, row, column, parent=QModelIndex()):

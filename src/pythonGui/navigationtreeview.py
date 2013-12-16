@@ -172,23 +172,23 @@ class NavigationTreeView(QTreeView):
             return dict()
         elif level == 1:
             type = NavigationItemTypes.SERVER
-            serverId = index.data().toString()
+            serverId = index.data()
             path = "server." + serverId
             
             return dict(key=path, type=type, serverId=serverId)
         elif level == 2:
             type = NavigationItemTypes.CLASS
             parentIndex = index.parent()
-            serverId = parentIndex.data().toString()
-            classId = index.data().toString()
+            serverId = parentIndex.data()
+            classId = index.data()
             path = str("server." + serverId + ".classes." + classId)
             
             return dict(key=path + ".configuration", type=type, serverId=serverId, classId=classId)
         elif level == 3:
             type = NavigationItemTypes.DEVICE
             parentIndex = index.parent()
-            classId = parentIndex.data().toString()
-            deviceId = index.data().toString()
+            classId = parentIndex.data()
+            deviceId = index.data()
             path = str("device." + deviceId)
             
             return dict(key=path + ".configuration", type=type, classId=classId, deviceId=deviceId)
@@ -236,23 +236,23 @@ class NavigationTreeView(QTreeView):
             type = NavigationItemTypes.HOST
         elif level == 1:
             type = NavigationItemTypes.SERVER
-            path = "server." + index.data().toString()
+            path = "server." + index.data()
         elif level == 2:
             type = NavigationItemTypes.CLASS
             parentIndex = index.parent()
-            serverId = parentIndex.data().toString()
-            classId = index.data().toString()
+            serverId = parentIndex.data()
+            classId = index.data()
             
             schema = Manager().getClassSchema(serverId, classId)
             path = str("server." + serverId + ".classes." + classId)
             Manager().onSchemaAvailable(dict(key=path, classId=classId, type=type, schema=schema))
         elif level == 3:
             type = NavigationItemTypes.DEVICE
-            deviceId = index.data().toString()
+            deviceId = index.data()
             classIndex = index.parent()
-            classId = classIndex.data().toString()
+            classId = classIndex.data()
             #serverIndex = classIndex.parent()
-            #serverId = serverIndex.data().toString()
+            #serverId = serverIndex.data()
             
             path = str("device." + deviceId)
             schema = Manager().getDeviceSchema(deviceId)
@@ -313,14 +313,14 @@ class NavigationTreeView(QTreeView):
         path = str()
         if type is NavigationItemTypes.CLASS:
             configChangeType = ConfigChangeTypes.DEVICE_CLASS_CONFIG_CHANGED
-            classId = index.data().toString()
+            classId = index.data()
             parentIndex = index.parent()
-            path = "server." + parentIndex.data().toString() + ".classes." + classId + ".configuration"
+            path = "server." + parentIndex.data() + ".classes." + classId + ".configuration"
         elif type is NavigationItemTypes.DEVICE:
             configChangeType = ConfigChangeTypes.DEVICE_INSTANCE_CONFIG_CHANGED
             parentIndex = index.parent()
-            classId = parentIndex.data().toString()
-            path = "devices." + index.data().toString()
+            classId = parentIndex.data()
+            path = "devices." + index.data()
         
         # TODO: Remove dirty hack for scientific computing again!!!
         croppedClassId = classId.split("-")

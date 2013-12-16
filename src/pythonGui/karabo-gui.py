@@ -10,6 +10,7 @@ __author__="kerstin weger"
 
 import sip
 sip.setapi("QString", 2)
+sip.setapi("QVariant", 2)
 
 # assure IPython does not try to reset the sip api.
 # to be removed once we have then new version of IPython running

@@ -601,14 +601,14 @@ class LogSqlQueryModel(QSqlQueryModel):
         if role == Qt.DecorationRole and index.column() == 2:
             # Get text for comparison to get correct icon
             modelIndex = QSqlQueryModel.index(self, index.row(), index.column())
-            return self.getIcon(modelIndex.data(Qt.DisplayRole).toString())
+            return self.getIcon(modelIndex.data(Qt.DisplayRole))
         elif role == Qt.TextColorRole and index.column() == 2:
             # Get text for comparison to get correct text color
             modelIndex = QSqlQueryModel.index(self, index.row(), index.column())
-            return self.getTextColor(modelIndex.data(Qt.DisplayRole).toString())
+            return self.getTextColor(modelIndex.data(Qt.DisplayRole))
         elif role == Qt.DisplayRole:
             value = QSqlQueryModel.data(self, index, role)
-            return value.toString()
+            return value
         elif role == Qt.ToolTipRole:
             modelIndex = QSqlQueryModel.index(self, index.row(), index.column())
             return modelIndex.data(Qt.DisplayRole).toString()
