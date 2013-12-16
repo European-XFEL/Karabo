@@ -200,9 +200,6 @@ class Manager(Singleton):
         #print "key:", key, "value:", value
         key = str(key)
         # Safety conversion before hashing
-        if isinstance(value, QString):
-            value = str(value)
-        
         if "@" in key:
             # Merge attribute value in central hash
             keys = key.split("@")
@@ -391,9 +388,6 @@ class Manager(Singleton):
     def onDeviceInstanceValueChanged(self, key, value):
         #print "onDeviceInstanceValueChanged", key, value
         # Safety conversion before hashing
-        if isinstance(value, QString):
-            value = str(value)
-        
         self._setFromPath(key, value)
 
         dataNotifier = self._getDataNotifierEditableValue(key)
@@ -473,7 +467,7 @@ class Manager(Singleton):
 ### TODO: Temporary functions for scientific computing START ###
     def createNewProjectConfig(self, customItem, path, configCount, classId, schema):
         
-        configName = QString("%1-%2-<>").arg(configCount).arg(classId)
+        configName = "{}-{}-<>".format(configCount, classId)
         
         self.__notifier.signalCreateNewProjectConfig.emit(customItem, path, configName)
         self.__notifier.signalSchemaAvailable.emit(dict(key=path, schema=schema, classId=classId, type=NavigationItemTypes.CLASS))
@@ -511,19 +505,12 @@ class Manager(Singleton):
 
     def executeCommand(self, itemInfo):
         # instanceId, name, arguments
-        path = itemInfo.get(QString('path'))
-        if path is None:
-            path = itemInfo.get('path')
+        path = itemInfo.get('path')
         keys = str(path).split('.')
         deviceId = keys[1]
         
-        command = itemInfo.get(QString('command'))
-        if command is None:
-            command = itemInfo.get('command')
-        
-        args = itemInfo.get(QString('args'))
-        if args is None:
-            args = itemInfo.get('args')
+        command = itemInfo.get('command')
+        args = itemInfo.get('args')
         
         self.__notifier.signalExecute.emit(deviceId, dict(command=str(command), args=args))
 

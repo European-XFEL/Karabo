@@ -58,7 +58,7 @@ class SqlDatabase(object):
             #if tables.isEmpty():
             #    print "Creating database tables"
 
-            if not tables.contains("tLog"):
+            if not "tLog" in tables:
                 #print "Creating tLog table..."
                 # Create table for event data
                 queryText = "CREATE TABLE tLog " \

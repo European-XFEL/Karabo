@@ -54,7 +54,7 @@ class ProjectPanel(QWidget):
         self.setWindowTitle(title)
         
         self.__twProject = QTreeWidget(self)
-        self.__twProject.setHeaderLabels(QStringList(""))
+        self.__twProject.setHeaderLabels([])
         self.__twProject.itemSelectionChanged.connect(self.projectItemSelectionChanged)
         
         mainLayout = QVBoxLayout(self)
@@ -100,7 +100,7 @@ class ProjectPanel(QWidget):
             if (item.data(0, const.INTERNAL_KEY).toPyObject() + ".configuration.deviceId") == key:
                 oldText = item.text(0)
                 splittedText = str(oldText).split("-<")
-                item.setText(0, QString("%1-<%2>").arg(splittedText[0]).arg(deviceId))
+                item.setText(0, "{}-<{}>").format(splittedText[0], deviceId)
 
 
     # virtual function

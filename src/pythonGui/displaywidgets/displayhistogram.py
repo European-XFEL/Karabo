@@ -69,16 +69,12 @@ class DisplayHistogram(DisplayWidget):
         # Default colors
         self.__colorList = ["red", "green", "blue", "gray", "violet", "orange", "lightgreen", "black"]
             
-        key = params.get(QString('key'))
-        if key is None:
-            key = params.get('key')
+        key = params.get('key')
         # Stores key/value pair
         self.__keys = {str(key):None}
         
         # Set value
-        value = params.get(QString('value'))
-        if value is None:
-            value = params.get('value')
+        value = params.get('value')
         if value is not None:
             self.valueChanged(key, value)
 
@@ -140,7 +136,7 @@ class DisplayHistogram(DisplayWidget):
                 values = QwtArrayDouble(len(value))
                 
                 for element in value:
-                    if isinstance(element, QString):
+                    if isinstance(element, str):
                         return # TODO: what happens if string in list?
                     xValue = i+width
                     intervals.append(QwtDoubleInterval(i, xValue))
@@ -180,7 +176,7 @@ class DisplayHistogram(DisplayWidget):
                 values = QwtArrayDouble(len(value))
                 
                 for element in value:
-                    if isinstance(element, QString):
+                    if isinstance(element, str):
                         return # TODO: what happens if string in list?
                     xValue = i+width
                     intervals.append(QwtDoubleInterval(i, xValue))

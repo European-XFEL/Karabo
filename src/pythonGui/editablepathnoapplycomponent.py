@@ -36,12 +36,8 @@ class EditablePathNoApplyComponent(BaseComponent):
         self.__editableWidget.signalEditingFinished.connect(self.onEditingFinished)
         hLayout.addWidget(self.__editableWidget.widget)
         
-        metricPrefixSymbol = params.get(QString('metricPrefixSymbol'))
-        if metricPrefixSymbol is None:
-            metricPrefixSymbol = params.get('metricPrefixSymbol')
-        unitSymbol = params.get(QString('unitSymbol'))
-        if unitSymbol is None:
-            unitSymbol = params.get('unitSymbol')
+        metricPrefixSymbol = params.get('metricPrefixSymbol')
+        unitSymbol = params.get('unitSymbol')
         
         # Append unit label, if available
         unitLabel = str()
@@ -52,9 +48,7 @@ class EditablePathNoApplyComponent(BaseComponent):
         if len(unitLabel) > 0:
             hLayout.addWidget(QLabel(unitLabel))
         
-        pathType = params.get(QString('pathType'))
-        if pathType is None:
-            pathType = params.get('pathType')
+        pathType = params.get('pathType')
         
         # Check for path type
         if pathType == "directory":
@@ -86,9 +80,7 @@ class EditablePathNoApplyComponent(BaseComponent):
         self.signalValueChanged.connect(Manager().onDeviceClassValueChanged)
         
         # Use key to register component to manager
-        key = params.get(QString('key'))
-        if key is None:
-            key = params.get('key')
+        key = params.get('key')
         Manager().registerEditableComponent(key, self)
 
 

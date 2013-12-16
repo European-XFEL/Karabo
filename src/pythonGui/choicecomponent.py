@@ -27,9 +27,7 @@ class ChoiceComponent(BaseComponent):
         super(ChoiceComponent, self).__init__(classAlias)
         
         # Use key to register component to manager
-        key = params.get(QString('key'))
-        if key is None:
-            key = params.get('key')
+        key = params.get('key')
         Manager().registerEditableComponent(key, self)
         
         self.__classAlias = classAlias

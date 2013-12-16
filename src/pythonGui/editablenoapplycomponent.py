@@ -36,12 +36,8 @@ class EditableNoApplyComponent(BaseComponent):
         self.__editableWidget.signalEditingFinished.connect(self.onEditingFinished)
         hLayout.addWidget(self.__editableWidget.widget)
         
-        metricPrefixSymbol = params.get(QString('metricPrefixSymbol'))
-        if metricPrefixSymbol is None:
-            metricPrefixSymbol = params.get('metricPrefixSymbol')
-        unitSymbol = params.get(QString('unitSymbol'))
-        if unitSymbol is None:
-            unitSymbol = params.get('unitSymbol')
+        metricPrefixSymbol = params.get('metricPrefixSymbol')
+        unitSymbol = params.get('unitSymbol')
         
         # Append unit label, if available
         unitLabel = str()
@@ -56,9 +52,7 @@ class EditableNoApplyComponent(BaseComponent):
         self.signalValueChanged.connect(Manager().onDeviceClassValueChanged)
         
         # Use key to register component to manager
-        key = params.get(QString('key'))
-        if key is None:
-            key = params.get('key')
+        key = params.get('key')
         Manager().registerEditableComponent(key, self)
 
 
