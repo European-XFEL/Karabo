@@ -45,15 +45,13 @@ class EditableListElement(EditableWidget):
         self.__pushButton.setStyleSheet("QPushButton { text-align: left; }")
         
         self.__choiceItemList = [] # list with hidden possible items of listelement
-        self.__choiceStringList = QStringList() # list with names of possible listelements
+        self.__choiceStringList = [] # list with names of possible listelements
         self.__selectedItemList = [] # list with already added items
         self.__selectedStringList = [] # list with selected listelements
         
         self.__isInit = False
         
-        isDeviceInstance = params.get(QString('isDevIns'))
-        if isDeviceInstance is None:
-            isDeviceInstance = params.get('isDevIns')
+        isDeviceInstance = params.get('isDevIns')
         if isDeviceInstance:
             self.signalValueChanged.connect(Manager().onDeviceInstanceValueChanged)
         else:
@@ -65,13 +63,9 @@ class EditableListElement(EditableWidget):
         self.__minMaxAssociatedKeys = (1,1) # tuple<min,max>
         
         # Set key
-        self.__key = params.get(QString('key'))
-        if self.__key is None:
-            self.__key = params.get('key')
+        self.__key = params.get('key')
         # Set value
-        value = params.get(QString('value'))
-        if value is None:
-            value = params.get('value')
+        value = params.get('value')
         self.valueChanged(self.__key, value)
 
 
@@ -99,9 +93,7 @@ class EditableListElement(EditableWidget):
 
 
     def addParameters(self, **params):
-        item = params.get(QString('itemToBeAdded'))
-        if item is None:
-            item = params.get('itemToBeAdded')
+        item = params.get('itemToBeAdded')
         if item is not None:
             item.needsUpdate = False
             self.__choiceItemList.append(item)
@@ -131,7 +123,7 @@ class EditableListElement(EditableWidget):
 
 
     def _addListItem(self, value, arrayIndex):
-            index = self.__choiceStringList.indexOf(value)
+            index = self.__choiceStringList.index(value)
             if index < 0:
                 return
 
@@ -140,7 +132,7 @@ class EditableListElement(EditableWidget):
 
             # Change full key name...
             newInternalKeyName = parentItem.internalKey
-            newInternalKeyName.append(QString("[%1]").arg(arrayIndex)) #[next]
+            newInternalKeyName.append("[{}]".format(arrayIndex)) #[next]
 
             copyItem = choiceItem.copy(parentItem, newInternalKeyName)
             parentItem.setExpanded(True)

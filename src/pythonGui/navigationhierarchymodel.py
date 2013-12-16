@@ -229,7 +229,7 @@ class NavigationHierarchyModel(QAbstractItemModel):
         
         if role == Qt.DisplayRole:
             if (orientation == Qt.Horizontal) and (section == 0):
-                    return QString("Hierarchical view")
+                    return "Hierarchical view"
         return QVariant()
 
 

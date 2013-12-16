@@ -143,13 +143,13 @@ class DisplayPyCodeHist(DisplayWidget):
         #json edit field
         #type new to create a new kernel or paste the location of the connection
         #json file of an existing kernel
-        self.__ipEditLabel = QLabel(QString('Kernel: "new" or connection JSON file'))
+        self.__ipEditLabel = QLabel('Kernel: "new" or connection JSON file')
         vCodeLayout.addWidget(self.__ipEditLabel)
         
         self.__ipEdit = QLineEdit()
         self.__ipEdit.setMinimumSize(160,20)
         self.__ipEdit.setEnabled(True)
-        self.__ipEdit.setText(QString('new'))
+        self.__ipEdit.setText('new')
         vCodeLayout.addWidget(self.__ipEdit)
         
         
@@ -161,13 +161,13 @@ class DisplayPyCodeHist(DisplayWidget):
         
         #sets the refresh rate for the plots
         #type no to no refresh at all
-        self.__refreshEditLabel = QLabel(QString('Refresh: rate (Hz) or "no"'))
+        self.__refreshEditLabel = QLabel('Refresh: rate (Hz) or "no"')
         vCodeLayout.addWidget(self.__refreshEditLabel)
         
         self.__refreshEdit = QLineEdit()
         self.__refreshEdit.setMinimumSize(160,20)
         self.__refreshEdit.setEnabled(True)
-        self.__refreshEdit.setText(QString('no'))
+        self.__refreshEdit.setText('no')
         hLayout.addWidget(self.__refreshEdit)
         self.__refresh_rate = 10 #Hz
         self.__should_refresh = False
@@ -220,7 +220,7 @@ class DisplayPyCodeHist(DisplayWidget):
         hcLayout.setContentsMargins(0,0,0,0)
         
         #checkbox for showing python output
-        self.__showPyOutLabel = QLabel(QString('Show PyOut:'))
+        self.__showPyOutLabel = QLabel('Show PyOut:')
         hcLayout.addWidget(self.__showPyOutLabel)
         
         #should the py output be shown
@@ -234,7 +234,7 @@ class DisplayPyCodeHist(DisplayWidget):
         hcLayout.addWidget(self.__tbPyOutCheck)
         
         #checkbox for showing python output
-        self.__showUpdateOnCodeLabel = QLabel(QString('Update on code:'))
+        self.__showUpdateOnCodeLabel = QLabel('Update on code:')
         hcLayout.addWidget(self.__showUpdateOnCodeLabel)
         
         #should the py output be shown
@@ -253,14 +253,10 @@ class DisplayPyCodeHist(DisplayWidget):
         
         vLayout.addWidget(self.__codeToolWidget);
         
-        self.__key = params.get(QString('key'))
-        if self.__key is None:
-            self.__key = params.get('key')
+        self.__key = params.get('key')
         
         # Set value
-        value = params.get(QString('value'))
-        if value is None:
-            value = params.get('value')
+        value = params.get('value')
         if value is not None:
             self.valueChanged(self.__key, value)
             
@@ -460,11 +456,11 @@ class DisplayPyCodeHist(DisplayWidget):
         data = content['data']
         if data.has_key('text/html'):
             html = data['text/html']
-            self.__response.setTextColor(QColor(QString("black")))
+            self.__response.setTextColor(QColor("black"))
             self.__response.setHtml(html)      
         elif data.has_key('text/plain'):
             text = data['text/plain']
-            self.__response.setTextColor(QColor(QString("black")))
+            self.__response.setTextColor(QColor("black"))
             self.__response.setPlainText(text)
         elif data.has_key('image/png'):
             self._append_png(decodestring(data['image/png'].encode('ascii')))
@@ -477,7 +473,7 @@ class DisplayPyCodeHist(DisplayWidget):
         content = msg['content']
         
         evalue = content['evalue']
-        self.__response.setTextColor(QColor(QString("red")))
+        self.__response.setTextColor(QColor("red"))
         self.__response.setPlainText(evalue)
         
     
@@ -485,7 +481,7 @@ class DisplayPyCodeHist(DisplayWidget):
     def _process_pystream_reply(self,msg):
         content = msg['content']
         data = content['data']
-        self.__response.setTextColor(QColor(QString("black")))
+        self.__response.setTextColor(QColor("black"))
         self.__response.setPlainText(data)
         
    
@@ -503,7 +499,7 @@ class DisplayPyCodeHist(DisplayWidget):
             self.__response_image.setPixmap(pixmap)
             
         except ValueError:
-            self.__response.setTextColor(QColor(QString("red")))
+            self.__response.setTextColor(QColor("red"))
             self.__response.setPlainText('Received invalid %s data.'%fmt)
             
         #else:

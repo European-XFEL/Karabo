@@ -33,9 +33,7 @@ class DisplayComponent(BaseComponent):
         hLayout = QHBoxLayout(self.__compositeWidget)
         hLayout.setContentsMargins(0,0,0,0)
 
-        widgetFactory = params.get(QString('widgetFactory'))
-        if widgetFactory is None:
-            widgetFactory = params.get('widgetFactory')
+        widgetFactory = params.get('widgetFactory')
         
         if widgetFactory is None or (widgetFactory == "DisplayWidget"):
             self.__displayWidget = DisplayWidget.create(classAlias, **params)
@@ -44,12 +42,8 @@ class DisplayComponent(BaseComponent):
         
         hLayout.addWidget(self.__displayWidget.widget)
 
-        metricPrefixSymbol = params.get(QString('metricPrefixSymbol'))
-        if metricPrefixSymbol is None:
-            metricPrefixSymbol = params.get('metricPrefixSymbol')
-        unitSymbol = params.get(QString('unitSymbol'))
-        if unitSymbol is None:
-            unitSymbol = params.get('unitSymbol')
+        metricPrefixSymbol = params.get('metricPrefixSymbol')
+        unitSymbol = params.get('unitSymbol')
         
         # Append unit label, if available
         unitLabel = str()
@@ -61,9 +55,7 @@ class DisplayComponent(BaseComponent):
             hLayout.addWidget(QLabel(unitLabel))
         
         # Use path to register component to manager
-        key = params.get(QString('key'))
-        if key is None:
-            key = params.get('key')
+        key = params.get('key')
             
         #print "### Registering key: ", key
         Manager().registerDisplayComponent(key, self)

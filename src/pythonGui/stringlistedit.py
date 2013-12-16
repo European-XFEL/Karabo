@@ -72,7 +72,7 @@ class StringListEdit(QDialog):
         self.setList(stringList)
 
 
-    def setTexts(self, addCaption, addLabel, editCaption, editLabel=QString()):
+    def setTexts(self, addCaption, addLabel, editCaption, editLabel=""):
         self.addCaption = addCaption
         self.addLabel = addLabel
         self.editCaption = editCaption
@@ -126,19 +126,19 @@ class StringListEdit(QDialog):
 
     def retrieveAnyString(self, caption, label):
         ok = False
-        currentText = QString()
+        currentText = ""
         if self.listWidget.currentItem() is not None :
             currentText = self.listWidget.currentItem().text()
         text, ok = QInputDialog.getText(self, caption, label, QLineEdit.Normal, currentText)
         if ok==True :
             return text
         else:
-            return QString()
+            return ""
 
 
     def retrieveChoice(self, caption, label):
         ok = False
-        currentText = QString()
+        currentText = ""
         if self.listWidget.currentItem() is not None :
             currentText = self.listWidget.currentItem().text()
 
@@ -152,7 +152,7 @@ class StringListEdit(QDialog):
         if ok==True :
             return text
         else :
-            return QString()
+            return ""
 
 
     def onAddString(self):
@@ -193,7 +193,7 @@ class StringListEdit(QDialog):
     def onRemoveString(self):
         original = self.listWidget.currentItem().text()
         if original.isEmpty()==True or (self.ask and QMessageBox.question(self, "Remove",
-                                                                                QString("Remove '%1'?").arg(original),
+                                                                                "Remove '{}'?".format(original),
                                                                                 QMessageBox.Yes | QMessageBox.Default,
                                                                                 QMessageBox.No | QMessageBox.Escape) ==
                                                                                 QMessageBox.No) :

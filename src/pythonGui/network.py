@@ -328,14 +328,10 @@ class Network(QObject):
         header.set("type", "execute")
         header.set("deviceId", str(deviceId))
         
-        command = info.get(QString('command'))
-        if command is None:
-            command = info.get('command')
+        command = info.get('command')
         body = Hash("command", str(command))
         
-        args = info.get(QString('args'))
-        if args is None:
-            args = info.get('args')
+        args = info.get('args')
         if args:
             i = 0
             for arg in args:

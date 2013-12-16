@@ -109,14 +109,14 @@ class SqlTreeModel(QAbstractItemModel):
 
             for row in xrange(count):
                 index = model.index(row, 0)
-                id = model.data(index).toInt()[0]
+                id = int(model.data(index))
                 levelData.setIdAt(row, id)
 
                 if level == 0:
                     node = self.__privateModel.root
                 else:
                     parentIndex = model.index(row, 1)
-                    parentId = model.data(parentIndex).toInt()[0]
+                    parentId = int(model.data(parentIndex))
                     levelData.setParentIdAt(row, parentId)
 
                     parentLevelData = self.__privateModel.levelDataAt(level-1)

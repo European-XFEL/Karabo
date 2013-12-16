@@ -45,14 +45,10 @@ class DisplayChoiceElement(DisplayWidget):
         
         self.childItemList = []
         
-        self.__key = params.get(QString('key'))
-        if self.__key is None:
-            self.__key = params.get('key')
+        self.__key = params.get('key')
         
         # Set value
-        value = params.get(QString('value'))
-        if value is None:
-            value = params.get('value')
+        value = params.get('value')
         if value is not None:
             self.valueChanged(self.__key, value)
 
@@ -81,9 +77,7 @@ class DisplayChoiceElement(DisplayWidget):
 
 
     def addParameters(self, **params):
-        item = params.get(QString('itemToBeAdded'))
-        if item is None:
-            item = params.get('itemToBeAdded')
+        item = params.get('itemToBeAdded')
         if item is not None:
             self.__comboBox.blockSignals(True)
             self.__comboBox.addItem(item.text(0))
@@ -126,7 +120,7 @@ class DisplayChoiceElement(DisplayWidget):
 
 
     def valueChanged(self, key, value, timestamp=None):
-        if not isinstance(value, QString):
+        if not isinstance(value, str):
             return
         
         index = self.__comboBox.findText(value)

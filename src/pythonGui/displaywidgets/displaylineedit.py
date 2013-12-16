@@ -43,14 +43,10 @@ class DisplayLineEdit(DisplayWidget):
         self.__lineEdit.setMinimumSize(160, 24)
         self.__lineEdit.setEnabled(False)
         
-        self.__key = params.get(QString('key'))
-        if self.__key is None:
-            self.__key = params.get('key')
+        self.__key = params.get('key')
         
         # Set value
-        value = params.get(QString('value'))
-        if value is None:
-            value = params.get('value')
+        value = params.get('value')
         if value is not None:
             self.valueChanged(self.__key, value)
 

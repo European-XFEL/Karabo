@@ -119,11 +119,11 @@ class CustomXmlReader(QXmlStreamReader):
     def _processItemAttributes(self):
         type = self.attributes().value("type").toString()
         
-        posX = self.attributes().value("posX").toString().toDouble()
-        posY = self.attributes().value("posY").toString().toDouble()
-        posZ = self.attributes().value("posZ").toString().toDouble()
+        posX = float(self.attributes().value("posX"))
+        posY = float(self.attributes().value("posY"))
+        posZ = float(self.attributes().value("posZ"))
         
-        return [type, posX[0], posY[0], posZ[0]]
+        return [type, posX, posY, posZ]
 
 
     def _processGraphicsItem(self, item):
@@ -184,9 +184,7 @@ class CustomXmlReader(QXmlStreamReader):
                             item.setWidthF(widthF[0])
                     elif tagName == "style":
                         self.readNext()
-                        style = self.text().toString().toInt()
-                        if style[1]:
-                            item.setStyle(style[0])
+                        style = int(self.text())
                     elif tagName == "color":
                         self.readNext()
                         item.setColor(QColor(self.text().toString()))
@@ -220,7 +218,7 @@ class CustomXmlReader(QXmlStreamReader):
                     transform = self._processSceneTransformation()
                 elif tagName == "layoutOrientation":
                     self.readNext()
-                    layoutOrientation = self.text().toString().toInt()
+                    layoutOrientation = int(self.text())
                     if layoutOrientation[1]:
                         layoutOrientation = layoutOrientation[0]
                 elif tagName == "GraphicsProxyItems":

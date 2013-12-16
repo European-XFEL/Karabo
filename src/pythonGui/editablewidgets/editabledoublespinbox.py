@@ -50,13 +50,9 @@ class EditableDoubleSpinBox(EditableWidget):
         self.__minMaxAssociatedKeys = (1,1) # tuple<min,max>
         
         # Set key
-        self.__key = params.get(QString('key'))
-        if self.__key is None:
-            self.__key = params.get('key')
+        self.__key = params.get('key')
         # Set value
-        value = params.get(QString('value'))
-        if value is None:
-            value = params.get('value')
+        value = params.get('value')
         self.valueChanged(self.__key, value)
 
 
@@ -84,26 +80,17 @@ class EditableDoubleSpinBox(EditableWidget):
 
 
     def addParameters(self, **params):
-        minInc = params.get(QString('minInc'))
-        if minInc is None:
-            minInc = params.get('minInc')
-        
+        minInc = params.get('minInc')
         if minInc:
             self.__validator.setBottom(minInc)
 
-        maxInc = params.get(QString('maxInc'))
-        if maxInc is None:
-            maxInc = params.get('maxInc')
-        
+        maxInc = params.get('maxInc')
         if maxInc:
             self.__validator.setTop(maxInc)
 
 
     def _value(self):
-        value, ok = self.__leDblValue.text().toDouble()
-        if ok:
-            return value
-        return  0.0
+        return float(self.__leDblValue.text())
     value = property(fget=_value)
 
 
@@ -121,7 +108,7 @@ class EditableDoubleSpinBox(EditableWidget):
             value = 0.0
         
         self.__leDblValue.blockSignals(True)
-        self.__leDblValue.setText(QString("%1").arg(value))
+        self.__leDblValue.setText("{}".format(value))
         self.__leDblValue.blockSignals(False)   
         
         self.__leDblValue.setCursorPosition(self.__lastCursorPos)

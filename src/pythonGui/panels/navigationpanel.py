@@ -108,7 +108,7 @@ class NavigationPanel(QWidget):
     #    if file.open(QIODevice.ReadOnly | QIODevice.Text) == False:
     #        return
 
-    #    schema = QString()
+    #    schema = ""
     #    while file.atEnd() == False:
     #        schema.append(file.readLine())
 
