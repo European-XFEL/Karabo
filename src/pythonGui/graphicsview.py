@@ -336,7 +336,6 @@ class GraphicsView(QGraphicsView):
         textItem.setBackgroundColor(textDialog.backgroundColor())
         textItem.setOutlineColor(textDialog.outlineColor())
 
-        #node.setText(QString("Node %1").arg(self.__seqNumber + 1))
         self._setupItem(textItem)
 
 
@@ -385,29 +384,31 @@ class GraphicsView(QGraphicsView):
         stream = QDataStream(self.__copiedItem, QIODevice.WriteOnly)
         for item in items:
             if isinstance(item, Text):
-                stream << QString("Text") << item.text() \
+                stream << "Text" << item.text() \
                                           << item.font().toString() \
                                           << item.textColor().name() \
                                           << item.outlineColor().name() \
                                           << item.backgroundColor().name() \
-                                          << QString("\n")
+                                          << "\n"
             elif isinstance(item, Link):
                 print "Link"
             elif isinstance(item, Arrow):
                 print "Arrow"
             elif isinstance(item, Line):
                 line = item.line()
-                stream << QString("Line") << QString("%1,%2,%3,%4").arg(line.x1()).arg(line.y1()).arg(line.x2()).arg(line.y2()) \
-                                          << QString.number(item.length()) \
-                                          << QString.number(item.widthF()) \
-                                          << QString.number(item.style()) \
-                                          << item.color().name() \
-                                          << QString("\n")
+                stream << "Line" << "{},{},{},{}".format(
+                        line.x1(), line.y1(), line.x2(), line.y2()) \
+                    << "{}".format(item.length()) \
+                    << "{}".format(item.widthF()) \
+                    << "{}".format(item.style()) \
+                    << item.color().name() \
+                    << "\n"
             elif isinstance(item, Rectangle):
                 rect = item.rect()
                 topLeft = rect.topLeft()
-                stream << QString("Rectangle") << QString("%1,%2,%3,%4").arg(topLeft.x()).arg(topLeft.y()).arg(rect.width()).arg(rect.height()) \
-                                               << QString("\n")
+                stream << "Rectangle" << "{},{},{},{}".format(
+                    topLeft.x(), topLeft.y(), rect.width(), rect.height()) \
+                    << "\n"
             elif isinstance(item, GraphicsProxyWidgetContainer):
                 print "GraphicsProxyWidgetContainer"
             elif isinstance(item, GraphicsProxyWidget):
@@ -424,15 +425,14 @@ class GraphicsView(QGraphicsView):
 
         stream = QDataStream(self.__copiedItem, QIODevice.ReadOnly)
 
-        itemData = QStringList()
+        itemData = [ ]
         while not stream.atEnd():
-            input = QString()
-            stream >> input
+            input = stream.readString()
 
             if input == "\n":
                 # Create item
-                type = itemData.first()
-                if type == "Text" and itemData.count() == 6:
+                type = itemData[0]
+                if type == "Text" and len(itemData) == 6:
                     textItem = Text(self.__isDesignMode)
                     textItem.setText(itemData[1])
                     font = QFont()
@@ -446,7 +446,7 @@ class GraphicsView(QGraphicsView):
                     print "Link"
                 elif type == "Arrow":
                     print "Arrow"
-                elif type == "Line" and itemData.count() == 6:
+                elif type == "Line" and len(itemData) == 6:
                     lineItem = Line(self.__isDesignMode)
                     # Get line coordinates
                     lineCoords = itemData[1].split(",")
@@ -455,23 +455,20 @@ class GraphicsView(QGraphicsView):
                                       lineCoords[2].toFloat()[0], lineCoords[3].toFloat()[0])
                         lineItem.setLine(line)
                     # Get line length
-                    length = itemData[2].toFloat()
-                    if length[1]:
-                        lineItem.setLength(length[0])
+                    length = float(itemData[2])
+                    lineItem.setLength(length[0])
                     # Get line width
-                    widthF = itemData[3].toFloat()
-                    if widthF[1]:
-                        lineItem.setWidthF(widthF[0])
+                    widthF = float(itemData[3])
+                    lineItem.setWidthF(widthF[0])
                     # Get line style
-                    style = itemData[4].toInt()
-                    if style[1]:
-                        lineItem.setStyle(style[0])
+                    style = int(itemData[4])
+                    lineItem.setStyle(style[0])
                     # Get line color
                     lineItem.setColor(QColor(itemData[5]))
 
                     self._setupItem(lineItem)
                     lineItem.setTransformOriginPoint(lineItem.boundingRect().center())
-                elif type == "Rectangle" and itemData.count() == 2:
+                elif type == "Rectangle" and len(itemData) == 2:
                     rectItem = Rectangle(self.__isDesignMode)
                     rectData = itemData[1].split(",")
                     if len(rectData) == 4:
@@ -485,7 +482,7 @@ class GraphicsView(QGraphicsView):
                 elif type == "GraphicsProxyWidget":
                     print "GraphicsProxyWidget"
 
-                itemData.clear()
+                itemData = [ ]
                 continue
 
             itemData.append(input)
@@ -808,17 +805,13 @@ class GraphicsView(QGraphicsView):
             # Drop from NavigationTreeView or ParameterTreeWidget?
             if sourceType == "NavigationTreeView":
                 # Navigation item type
-                navItemType = mimeData.data("navigationItemType").toInt()
-                if navItemType[1]:
-                    navItemType = navItemType[0]
-                else:
-                    navItemType = None
+                navItemType = int(mimeData.data("navigationItemType"))
                 # Device server instance id
-                serverId = QString(mimeData.data("serverId"))
+                serverId = mimeData.data("serverId").data()
                 # Internal key
-                #key = QString(mimeData.data("key"))
+                #key = mimeData.data("key").data()
                 # Display name
-                displayName = QString(mimeData.data("displayName"))
+                displayName = mimeData.data("displayName").data()
                 
                 # Get schema
                 schema = None
@@ -849,35 +842,31 @@ class GraphicsView(QGraphicsView):
 
             elif sourceType == "ParameterTreeWidget":                
                 # Internal key
-                internalKey = QString(mimeData.data("internalKey"))
+                internalKey = mimeData.data("internalKey").data()
                 # Display name
-                displayName = QString(mimeData.data("displayName"))
+                displayName = mimeData.data("displayName").data()
                 # Display component?
-                hasDisplayComponent = mimeData.data("hasDisplayComponent").toInt()
-                if hasDisplayComponent[1]:
-                    hasDisplayComponent = hasDisplayComponent[0]
+                hasDisplayComponent = mimeData.data(
+                    "hasDisplayComponent") == "True"
                 # Editable component?
-                hasEditableComponent = mimeData.data("hasEditableComponent").toInt()
-                if hasEditableComponent[1]:
-                    hasEditableComponent = hasEditableComponent[0]
+                hasEditableComponent = mimeData.data(
+                    "hasEditableComponent") == "True"
                 
                 # TODO: HACK to get apply button disabled
                 currentValue = None
                 if hasEditableComponent:
                     currentValue = str(mimeData.data("currentValue"))
                 
-                metricPrefixSymbol = QString(mimeData.data("metricPrefixSymbol"))
-                unitSymbol = QString(mimeData.data("unitSymbol"))
+                metricPrefixSymbol = mimeData.data("metricPrefixSymbol").data()
+                unitSymbol = mimeData.data("unitSymbol").data()
                 
-                enumeration = QString(mimeData.data("enumeration"))
+                enumeration = mimeData.data("enumeration").data()
                 if enumeration:
                     enumeration = enumeration.split(",")
                 # Navigation item type
-                navItemType = mimeData.data("navigationItemType").toInt()
-                if navItemType[1]:
-                    navItemType = navItemType[0]
+                navItemType = int(mimeData.data("navigationItemType"))
                 # Class alias
-                classAlias = QString(mimeData.data("classAlias"))
+                classAlias = mimeData.data("classAlias").data()
 
                 # List stored all items for layout
                 items = []

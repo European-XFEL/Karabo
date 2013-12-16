@@ -77,7 +77,7 @@ class ListEdit(QDialog):
         self.setList(list)
 
 
-    def setTexts(self, addCaption, addLabel, editCaption, editLabel=QString()):
+    def setTexts(self, addCaption, addLabel, editCaption, editLabel=""):
         self.addCaption = addCaption
         self.addLabel = addLabel
         self.editCaption = editCaption
@@ -96,7 +96,7 @@ class ListEdit(QDialog):
             # insert item
             self._addItem(index)
             
-            w = fm.width(QString(index))
+            w = fm.width(index)
             if w > width :
                 width = w
 
@@ -109,8 +109,6 @@ class ListEdit(QDialog):
 
     def _addItem(self, value):
         item = QListWidgetItem(str(value))
-        if isinstance(value, QString):
-            value = str(value)
         item.setData(const.CURRENT_EDITABLE_VALUE, value)
         self.__listWidget.addItem(item)
 
@@ -178,7 +176,7 @@ class ListEdit(QDialog):
         if ok==True :
             return text
         else :
-            return QString()
+            return ""
 
 
 ### slots ###
@@ -221,7 +219,7 @@ class ListEdit(QDialog):
     def onRemoveClicked(self):
         original = self.__listWidget.currentItem().text()
         if original.isEmpty()==True or (self.ask and QMessageBox.question(self, "Remove",
-                                                                                QString("Remove '%1'?").arg(original),
+                                                                                "Remove '{}'?".format(original),
                                                                                 QMessageBox.Yes | QMessageBox.Default,
                                                                                 QMessageBox.No | QMessageBox.Escape) ==
                                                                                 QMessageBox.No) :

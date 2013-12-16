@@ -108,33 +108,33 @@ class ParameterTreeWidget(QTreeWidget):
         # Source type
         mimeData.setData("sourceType", "ParameterTreeWidget")
         # Internal key
-        mimeData.setData("internalKey", QString(item.internalKey).toAscii())
+        mimeData.setData("internalKey", item.internalKey)
         # Display name
         displayName = item.text(0)
         # Use DeviceClass/DeviceInstance-Key if no displayName is set
         if len(item.text(0)) == 0:
             keys = item.internalKey.split('.')
             displayName = keys[1]
-        mimeData.setData("displayName", displayName.toAscii())
+        mimeData.setData("displayName", displayName)
         
         # Get NavigationItemType
         navigationItemType = self.__configPanel.getNavigationItemType()
         
         # Display component?
         hasDisplayComponent = navigationItemType == NavigationItemTypes.DEVICE
-        mimeData.setData("hasDisplayComponent", QString("%1").arg(hasDisplayComponent).toAscii())
+        mimeData.setData("hasDisplayComponent", "{}".format(hasDisplayComponent))
         # Editable component?
         hasEditableComponent = item.editableComponent is not None
-        mimeData.setData("hasEditableComponent", QString("%1").arg(hasEditableComponent).toAscii())
+        mimeData.setData("hasEditableComponent", "{}".format(hasEditableComponent))
         
         # TODO: HACK to get apply button disabled
         if hasEditableComponent:
-            mimeData.setData("currentValue", QString("%1").arg(item.editableComponent.value).toAscii())
+            mimeData.setData("currentValue", "{}".format(item.editableComponent.value))
         
         if item.unitSymbol:
-            mimeData.setData("unitSymbol", QString("%1").arg(item.unitSymbol).toAscii())
+            mimeData.setData("unitSymbol", "{}".format(item.unitSymbol))
         if item.metricPrefixSymbol:
-            mimeData.setData("metricPrefixSymbol", QString("%1").arg(item.metricPrefixSymbol).toAscii())
+            mimeData.setData("metricPrefixSymbol", "{}".format(item.metricPrefixSymbol))
 
         if item.enumeration:
             enumerationString = str()
@@ -143,13 +143,13 @@ class ParameterTreeWidget(QTreeWidget):
                 enumerationString += item.enumeration[i]
                 if i != (nbEnums-1):
                     enumerationString += ","
-            mimeData.setData("enumeration", enumerationString.toAscii())
+            mimeData.setData("enumeration", enumerationString)
             
         # Navigation item type
-        mimeData.setData("navigationItemType", QString("%1").arg(navigationItemType).toAscii())
+        mimeData.setData("navigationItemType", "{}".format(navigationItemType))
         # Class alias
         if item.classAlias:
-            mimeData.setData("classAlias", QString("%1").arg(item.classAlias).toAscii())
+            mimeData.setData("classAlias", "{}".format(item.classAlias))
 
         drag = QDrag(self)
         drag.setMimeData(mimeData)

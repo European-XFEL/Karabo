@@ -73,9 +73,11 @@ class LineDialog(QDialog):
 
 
     def updateLineColorButton(self):
-        self.__pbLineColor.setStyleSheet(QString("background-color : rgb(%1,%2,%3);").arg(self.__lineColor.red()) \
-                                                                                     .arg(self.__lineColor.green()) \
-                                                                                     .arg(self.__lineColor.blue()))
+        self.__pbLineColor.setStyleSheet(
+            "background-color : rgb({},{},{});".format(
+                self.__lineColor.red(),
+                self.__lineColor.green(),
+                self.__lineColor.blue()))
 
 
     def lineLength(self):
@@ -139,10 +141,7 @@ class PenStyleComboBox(QComboBox):
 
 
     def penStyle(self):
-        styleTuple = self.itemData(self.currentIndex()).toInt()
-        if styleTuple[1]:
-            return styleTuple[0]
-        return Qt.SolidLine
+        return int(self.itemData(self.currentIndex()))
 
 
     def setPenStyle(self, style):

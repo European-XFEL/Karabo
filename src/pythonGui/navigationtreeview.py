@@ -66,19 +66,13 @@ class NavigationTreeView(QTreeView):
         if len(itemInfo) == 0:
             return
         
-        serverId  = itemInfo.get(QString('serverId'))
-        if serverId is None:
-            serverId = itemInfo.get('serverId')
+        serverId  = itemInfo.get('serverId')
         
-        navigationItemType = itemInfo.get(QString('type'))
-        if navigationItemType is None:
-            navigationItemType = itemInfo.get('type')
+        navigationItemType = itemInfo.get('type')
         
         displayName = str()
         if navigationItemType is NavigationItemTypes.CLASS:
-            displayName = itemInfo.get(QString('classId'))
-            if displayName is None:
-                displayName = itemInfo.get('classId')
+            displayName = itemInfo.get('classId')
         
         mimeData = QMimeData()
 
@@ -90,10 +84,10 @@ class NavigationTreeView(QTreeView):
             mimeData.setData("navigationItemType", QByteArray.number(navigationItemType))
         if serverId:
             # Device server instance id
-            mimeData.setData("serverId", QString(serverId).toAscii())
+            mimeData.setData("serverId", serverId)
         if displayName:
             # Display name
-            mimeData.setData("displayName", QString(displayName).toAscii())
+            mimeData.setData("displayName", displayName)
 
         drag = QDrag(self)
         drag.setMimeData(mimeData)
@@ -271,9 +265,7 @@ class NavigationTreeView(QTreeView):
 
 
     def itemChanged(self, itemInfo):
-        path = itemInfo.get(QString('key'))
-        if path is None:
-            path = itemInfo.get('key')
+        path = itemInfo.get('key')
         
         if len(path) == 0:
             return
@@ -290,9 +282,7 @@ class NavigationTreeView(QTreeView):
     def onKillServer(self):
         itemInfo = self.currentIndexInfo()
 
-        serverId = itemInfo.get(QString('serverId'))
-        if serverId is None:
-            serverId = itemInfo.get('serverId')
+        serverId = itemInfo.get('serverId')
         
         Manager().killServer(serverId)
 
@@ -300,9 +290,7 @@ class NavigationTreeView(QTreeView):
     def onKillDevice(self):
         itemInfo = self.currentIndexInfo()
 
-        deviceId = itemInfo.get(QString('deviceId'))
-        if deviceId is None:
-            deviceId = itemInfo.get('deviceId')
+        deviceId = itemInfo.get('deviceId')
         
         Manager().killDevice(deviceId)
 
@@ -310,13 +298,8 @@ class NavigationTreeView(QTreeView):
     def onFileSaveAs(self):
         itemInfo = self.currentIndexInfo()
         
-        classId = itemInfo.get(QString('classId'))
-        if classId is None:
-            classId = itemInfo.get('classId')
-        
-        path = itemInfo.get(QString('key'))
-        if path is None:
-            path = itemInfo.get('key')
+        classId = itemInfo.get('classId')
+        path = itemInfo.get('key')
         
         Manager().onSaveAsXml(str(classId), str(path))
 

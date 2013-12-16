@@ -32,7 +32,8 @@ class LoginDialog(QDialog):
         self.__cbSelectConnection.addItem("Direct broker connection")
         hLayout.addWidget(self.__leSelectConnection)
         hLayout.addWidget(self.__cbSelectConnection)
-        self.connect(self.__cbSelectConnection, SIGNAL("currentIndexChanged(QString)"), self.onSelectConnectionChanged)
+        self.__cbSelectConnection.currentIndexChanged[str].connect(
+            self.onSelectConnectionChanged)
         
         self.__hLine = QFrame(self)
         #self.__hLine.setGeometry(QRect(320, 150, 118, 3))
@@ -58,7 +59,8 @@ class LoginDialog(QDialog):
         self.__leProvider.setEditable(False)
         self.__leProvider.addItems(["LOCAL", "KERBEROS"])
         formLayout.addRow("Provider:", self.__leProvider)
-        self.__leProvider.currentIndexChanged['QString'].connect(self.onSelectConnectionChanged)
+        self.__leProvider.currentIndexChanged[str].connect(
+            self.onSelectConnectionChanged)
         
         self.__leHostname = QLineEdit("localhost")#("131.169.212.42")
         formLayout.addRow("Hostname:", self.__leHostname)
@@ -104,7 +106,7 @@ class LoginDialog(QDialog):
 
 
     def _getPort(self):
-        return self.__lePort.text().toInt()[0]
+        return int(self.__lePort.text())
     port = property(fget=_getPort)
 
 

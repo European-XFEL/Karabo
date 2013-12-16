@@ -70,9 +70,9 @@ class CustomXmlWriter(QXmlStreamWriter):
 
                 if isinstance(item, Text):
                     self.writeAttribute("type", "Text")
-                    self.writeAttribute("posX", QString.number(item.x()))
-                    self.writeAttribute("posY", QString.number(item.y()))
-                    self.writeAttribute("posZ", QString.number(item.zValue()))
+                    self.writeAttribute("posX","{}".format(item.x()))
+                    self.writeAttribute("posY", "{}".format(item.y()))
+                    self.writeAttribute("posZ", "{}".format(item.zValue()))
 
                     # Write item's transformation matrix
                     self._writeItemTransformation(item)
@@ -86,44 +86,45 @@ class CustomXmlWriter(QXmlStreamWriter):
 
                 elif isinstance(item, Link):
                     self.writeAttribute("type", "Link")
-                    self.writeAttribute("posX", QString.number(item.x()))
-                    self.writeAttribute("posY", QString.number(item.y()))
-                    self.writeAttribute("posZ", QString.number(item.zValue()))
+                    self.writeAttribute("posX", "{}".format(item.x()))
+                    self.writeAttribute("posY", "{}".format(item.y()))
+                    self.writeAttribute("posZ", "{}".format(item.zValue()))
 
                     # Write item's transformation matrix
                     self._writeItemTransformation(item)
 
                 elif isinstance(item, Arrow):
                     self.writeAttribute("type", "Arrow")
-                    self.writeAttribute("posX", QString.number(item.x()))
-                    self.writeAttribute("posY", QString.number(item.y()))
-                    self.writeAttribute("posZ", QString.number(item.zValue()))
+                    self.writeAttribute("posX", "{}".format(item.x()))
+                    self.writeAttribute("posY", "{}".format(item.y()))
+                    self.writeAttribute("posZ", "{}".format(item.zValue()))
 
                     # Write item's transformation matrix
                     self._writeItemTransformation(item)
 
                 elif isinstance(item, Line):
                     self.writeAttribute("type", "Line")
-                    self.writeAttribute("posX", QString.number(item.x()))
-                    self.writeAttribute("posY", QString.number(item.y()))
-                    self.writeAttribute("posZ", QString.number(item.zValue()))
+                    self.writeAttribute("posX", "{}".format(item.x()))
+                    self.writeAttribute("posY", "{}".format(item.y()))
+                    self.writeAttribute("posZ", "{}".format(item.zValue()))
 
                     # Write item's transformation matrix
                     self._writeItemTransformation(item)
 
                     # Save additional line item data
                     line = item.line()
-                    self.writeTextElement("lineCoords", QString("%1,%2,%3,%4").arg(line.x1()).arg(line.y1()).arg(line.x2()).arg(line.y2()))
-                    self.writeTextElement("length", QString.number(item.length()))
-                    self.writeTextElement("width", QString.number(item.widthF()))
-                    self.writeTextElement("style", QString.number(item.style()))
+                    self.writeTextElement("lineCoords", "{},{},{},{}".format(
+                        line.x1(), line.y1(), line.x2(), line.y2()))
+                    self.writeTextElement("length", "{}".format(item.length()))
+                    self.writeTextElement("width", "{}".format(item.widthF()))
+                    self.writeTextElement("style", "{}".format(item.style()))
                     self.writeTextElement("color", item.color().name())
 
                 elif isinstance(item, Rectangle):
                     self.writeAttribute("type", "Rectangle")
-                    self.writeAttribute("posX", QString.number(item.x()))
-                    self.writeAttribute("posY", QString.number(item.y()))
-                    self.writeAttribute("posZ", QString.number(item.zValue()))
+                    self.writeAttribute("posX", "{}".format(item.x()))
+                    self.writeAttribute("posY", "{}".format(item.y()))
+                    self.writeAttribute("posZ", "{}".format(item.zValue()))
 
                     # Write item's transformation matrix
                     self._writeItemTransformation(item)
@@ -131,19 +132,21 @@ class CustomXmlWriter(QXmlStreamWriter):
                     # Save addition rectangle item data
                     rect = item.rect()
                     topLeft = rect.topLeft()
-                    self.writeTextElement("rectCoords", QString("%1,%2,%3,%4").arg(topLeft.x()).arg(topLeft.y()).arg(rect.width()).arg(rect.height()))
+                    self.writeTextElement("rectCoords", "{},{},{},{}".format(
+                        topLeft.x(), topLeft.y(), rect.width(), rect.height()))
 
                 elif isinstance(item, GraphicsProxyWidgetContainer):
                     self.writeAttribute("type", "GraphicsProxyWidgetContainer")
-                    self.writeAttribute("posX", QString.number(item.x()))
-                    self.writeAttribute("posY", QString.number(item.y()))
-                    self.writeAttribute("posZ", QString.number(item.zValue()))
+                    self.writeAttribute("posX", "{}".format(item.x()))
+                    self.writeAttribute("posY", "{}".format(item.y()))
+                    self.writeAttribute("posZ", "{}".format(item.zValue()))
 
                     # Write item's transformation matrix
                     self._writeItemTransformation(item)
 
                     layout = item.layout()
-                    self.writeTextElement("layoutOrientation", QString.number(layout.orientation()))
+                    self.writeTextElement("layoutOrientation", 
+                                          "{}".format(layout.orientation()))
 
                     nbItems =layout.count()
                     if nbItems > 0:
@@ -161,9 +164,9 @@ class CustomXmlWriter(QXmlStreamWriter):
                         self.writeEndElement() # End of GraphicsProxyItems
                 elif isinstance(item, GraphicsCustomItem):
                     self.writeAttribute("type", "GraphicsCustomItem")
-                    self.writeAttribute("posX", QString.number(item.x()))
-                    self.writeAttribute("posY", QString.number(item.y()))
-                    self.writeAttribute("posZ", QString.number(item.zValue()))
+                    self.writeAttribute("posX", "{}".format(item.x()))
+                    self.writeAttribute("posY", "{}".format(item.y()))
+                    self.writeAttribute("posZ", "{}".format(item.zValue()))
                     
                     # Write item's transformation matrix
                     self._writeItemTransformation(item)
@@ -187,9 +190,9 @@ class CustomXmlWriter(QXmlStreamWriter):
         embeddedWidget = proxyItem.widget()
 
         if component is None and isinstance(embeddedWidget, QLabel):
-            self.writeAttribute("posX", QString.number(proxyItem.x()))
-            self.writeAttribute("posY", QString.number(proxyItem.y()))
-            self.writeAttribute("posZ", QString.number(proxyItem.zValue()))
+            self.writeAttribute("posX", "{}".format(proxyItem.x()))
+            self.writeAttribute("posY", "{}".format(proxyItem.y()))
+            self.writeAttribute("posZ", "{}".format(proxyItem.zValue()))
 
             if writeTransform:
                 # Write item's transformation matrix
@@ -200,9 +203,9 @@ class CustomXmlWriter(QXmlStreamWriter):
 
             self.writeTextElement("Text", embeddedWidget.text())
         else:
-            self.writeAttribute("posX", QString.number(proxyItem.x()))
-            self.writeAttribute("posY", QString.number(proxyItem.y()))
-            self.writeAttribute("posZ", QString.number(proxyItem.zValue()))
+            self.writeAttribute("posX", "{}".format(proxyItem.x()))
+            self.writeAttribute("posY", "{}".format(proxyItem.y()))
+            self.writeAttribute("posZ", "{}".format(proxyItem.zValue()))
             
             if writeTransform:
                 # Write item's transformation matrix
@@ -228,7 +231,7 @@ class CustomXmlWriter(QXmlStreamWriter):
             
             if component.classAlias == "Command":
                 self.writeTextElement("commandText", widgetFactory.widget.text())
-                self.writeTextElement("commandEnabled", QString.number(widgetFactory.widget.isEnabled()))
+                self.writeTextElement("commandEnabled", "{}".format(widgetFactory.widget.isEnabled()))
                 self.writeTextElement("allowedStates", ",".join(widgetFactory.allowedStates))
                 self.writeTextElement("command", widgetFactory.command)
                  
@@ -247,17 +250,17 @@ class CustomXmlWriter(QXmlStreamWriter):
         
         # Save tranformation of item
         self.writeStartElement("sceneTransformation")
-        self.writeTextElement("m11", QString.number(transform.m11()))
-        self.writeTextElement("m12", QString.number(transform.m12()))
-        self.writeTextElement("m13", QString.number(transform.m13()))
+        self.writeTextElement("m11", "{}".format(transform.m11()))
+        self.writeTextElement("m12", "{}".format(transform.m12()))
+        self.writeTextElement("m13", "{}".format(transform.m13()))
 
-        self.writeTextElement("m21", QString.number(transform.m21()))
-        self.writeTextElement("m22", QString.number(transform.m22()))
-        self.writeTextElement("m23", QString.number(transform.m23()))
+        self.writeTextElement("m21", "{}".format(transform.m21()))
+        self.writeTextElement("m22", "{}".format(transform.m22()))
+        self.writeTextElement("m23", "{}".format(transform.m23()))
 
-        self.writeTextElement("m31", QString.number(transform.m31()))
-        self.writeTextElement("m32", QString.number(transform.m32()))
-        self.writeTextElement("m33", QString.number(transform.m33()))
+        self.writeTextElement("m31", "{}".format(transform.m31()))
+        self.writeTextElement("m32", "{}".format(transform.m32()))
+        self.writeTextElement("m33", "{}".format(transform.m33()))
 
         self.writeEndElement()  # End of TransformMatrix
 

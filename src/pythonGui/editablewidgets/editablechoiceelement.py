@@ -49,13 +49,9 @@ class EditableChoiceElement(EditableWidget):
         self.__minMaxAssociatedKeys = (1,1) # tuple<min,max>
         
         # Set key
-        self.__key = params.get(QString('key'))
-        if self.__key is None:
-            self.__key = params.get('key')
+        self.__key = params.get('key')
         # Set value
-        value = params.get(QString('value'))
-        if value is None:
-            value = params.get('value')
+        value = params.get('value')
         self.valueChanged(self.__key, value)
 
 
@@ -90,9 +86,7 @@ class EditableChoiceElement(EditableWidget):
 
 
     def addParameters(self, **params):
-        item = params.get(QString('itemToBeAdded'))
-        if item is None:
-            item = params.get('itemToBeAdded')
+        item = params.get('itemToBeAdded')
         
         if item:
             self.__comboBox.blockSignals(True)
