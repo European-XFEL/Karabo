@@ -137,7 +137,7 @@ class PenStyleComboBox(QComboBox):
         for s in styles:
             style = s[0]
             name = s[1]
-            self.addItem(self.iconForPen(style), name, QVariant(style))
+            self.addItem(self.iconForPen(style), name, style)
 
 
     def penStyle(self):
@@ -145,7 +145,7 @@ class PenStyleComboBox(QComboBox):
 
 
     def setPenStyle(self, style):
-        id = self.findData(QVariant(style))
+        id = self.findData(style)
         if id == -1:
             id = 0
         self.setCurrentIndex(id)

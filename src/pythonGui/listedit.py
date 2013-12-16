@@ -118,7 +118,7 @@ class ListEdit(QDialog):
 
 
     def getListElementAt(self, index):
-        return self.__listWidget.item(index).data(const.CURRENT_EDITABLE_VALUE).toPyObject()
+        return self.__listWidget.item(index).data(const.CURRENT_EDITABLE_VALUE)
 
 
     def setAllowedChoices(self, allowedChoices, parentItem=None, choiceItemList=[]):
@@ -133,7 +133,7 @@ class ListEdit(QDialog):
         if currentItem is None:
             currentValue = None
         else:
-            currentValue = currentItem.data(const.CURRENT_EDITABLE_VALUE).toPyObject()
+            currentValue = currentItem.data(const.CURRENT_EDITABLE_VALUE)
 
         if self.__valueType == "float":
             if currentValue is None:

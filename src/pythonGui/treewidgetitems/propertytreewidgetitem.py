@@ -76,7 +76,7 @@ class PropertyTreeWidgetItem(BaseTreeWidgetItem):
 
 
     def _defaultValue(self):
-        return self.data(0, const.DEFAULT_VALUE).toPyObject()
+        return self.data(0, const.DEFAULT_VALUE)
     def _setDefaultValue(self, default):
         self.setData(0, const.DEFAULT_VALUE, default)
     defaultValue = property(fget=_defaultValue, fset=_setDefaultValue)
