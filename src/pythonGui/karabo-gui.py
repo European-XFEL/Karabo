@@ -12,12 +12,6 @@ import sip
 sip.setapi("QString", 2)
 sip.setapi("QVariant", 2)
 
-# assure IPython does not try to reset the sip api.
-# to be removed once we have then new version of IPython running
-def noop(a, b):
-    return
-sip.setapi = noop
-
 import globals
 import sys
 
