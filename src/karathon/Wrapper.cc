@@ -132,6 +132,14 @@ namespace karathon {
             any = b;
             return;
         }
+	if (PyUnicode_Check(obj.ptr())) {
+	    bp::object str(bp::handle<>(PyUnicode_AsUTF8String(obj.ptr())));
+            size_t size = PyString_Size(str.ptr());
+            const char* data = PyString_AsString(str.ptr());
+            string b(data,size);
+            any = b;
+            return;
+	}
         if (PyLong_Check(obj.ptr())) {
             //return PyLong_AsLongLong(obj.ptr());
             long long b = bp::extract<long>(obj);
