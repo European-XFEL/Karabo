@@ -42,7 +42,7 @@ class LoginDialog(QDialog):
         self.__hLine.setFrameShadow(QFrame.Sunken)
         
         formLayout = QFormLayout()
-        self.__leUsername = QLineEdit("admin") #("username")
+        self.__leUsername = QLineEdit("operator") #("username")
         formLayout.addRow("Username:", self.__leUsername)
         self.__leUsername.textChanged.connect(self.onUsernameChanged)
         
