@@ -43,18 +43,9 @@ class DisplayDoubleSpinBox(DisplayWidget):
         self.__leDblValue = QLineEdit()
         self.__validator = QDoubleValidator(self.__leDblValue)
         self.__leDblValue.setValidator(self.__validator)
-        self.__leDblValue.setEnabled(False)
+        self.__leDblValue.setReadOnly(True)
         
-        self.__key = params.get(QString('key'))
-        if self.__key is None:
-            self.__key = params.get('key')
-        
-        # Set value
-        value = params.get(QString('value'))
-        if value is None:
-            value = params.get('value')
-        if value is not None:
-            self.valueChanged(self.__key, value)
+        self.__key = params.get('key')
 
 
     def _getCategory(self):
@@ -81,10 +72,10 @@ class DisplayDoubleSpinBox(DisplayWidget):
 
 
     def _value(self):
-        value, ok = self.__leDblValue.text().toDouble()
-        if ok:
-            return value
-        return  0.0
+        try:
+            return float(self.__leDblValue.text())
+        except ValueError:
+            return 0
     value = property(fget=_value)
 
 
@@ -103,7 +94,7 @@ class DisplayDoubleSpinBox(DisplayWidget):
         
         if value != self.value:
             self.__leDblValue.blockSignals(True)
-            self.__leDblValue.setText(QString("%1").arg(value))
+            self.__leDblValue.setText("{}".format(value))
             self.__leDblValue.blockSignals(False)
 
 

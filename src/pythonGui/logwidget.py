@@ -299,6 +299,7 @@ class LogWidget(QWidget):
         
         vLayout.addWidget(self.__twLogTable)
 
+
     def onViewNeedsUpdate(self, model):
         self.__viewState = self.__twLogTable.horizontalHeader().saveState();
         with QMutexLocker(self.__modelMutex):
@@ -446,11 +447,11 @@ class LogWidget(QWidget):
     def saveDatabaseContentToFile(self):
         # Write current database content to a file
         filename = QFileDialog.getSaveFileName(None, "Save file as", QDir.tempPath(), "LOG (*.log)")
-        if filename.isEmpty() :
+        if len(filename) < 1:
             return
         
         fi = QFileInfo(filename)
-        if fi.suffix().isEmpty() :
+        if len(fi.suffix()) < 1:
             filename += ".log"
 
         logFile = QFile(filename)
@@ -601,14 +602,14 @@ class LogSqlQueryModel(QSqlQueryModel):
         if role == Qt.DecorationRole and index.column() == 2:
             # Get text for comparison to get correct icon
             modelIndex = QSqlQueryModel.index(self, index.row(), index.column())
-            return self.getIcon(modelIndex.data(Qt.DisplayRole).toString())
+            return self.getIcon(modelIndex.data(Qt.DisplayRole))
         elif role == Qt.TextColorRole and index.column() == 2:
             # Get text for comparison to get correct text color
             modelIndex = QSqlQueryModel.index(self, index.row(), index.column())
-            return self.getTextColor(modelIndex.data(Qt.DisplayRole).toString())
+            return self.getTextColor(modelIndex.data(Qt.DisplayRole))
         elif role == Qt.DisplayRole:
             value = QSqlQueryModel.data(self, index, role)
-            return value.toString()
+            return value
         elif role == Qt.ToolTipRole:
             modelIndex = QSqlQueryModel.index(self, index.row(), index.column())
             return modelIndex.data(Qt.DisplayRole).toString()

@@ -138,10 +138,7 @@ class DocumentationPanel(QWidget):
 
 
     def onNavigationItemChanged(self, itemInfo):
-        classId = itemInfo.get(QString('classId'))
-        if classId is None:
-            classId = itemInfo.get('classId')
-        
+        classId = itemInfo.get('classId')
         if classId is None:
             self._loadWikiUrl("https://docs.xfel.eu/share/")
             return

@@ -75,6 +75,13 @@ namespace karabo {
                     .assignmentOptional().defaultValue(false)
                     .commit();
 
+            UINT32_ELEMENT(expected)
+                    .key("guiServerPort")
+                    .displayedName("GUI Server Hostport")
+                    .description("Local port for the GUI Server")
+                    .assignmentOptional().defaultValue(44444)
+                    .commit();
+
             UINT32_ELEMENT(expected).key("nameRequestTimeout")
                     .displayedName("Name Request Timeout")
                     .description("Time to wait for name resolution (via name-server) until timeout [ms]")
@@ -123,6 +130,7 @@ namespace karabo {
 
             if (m_isMaster) m_visibility = 5;
             else input.get("visibility", m_visibility);
+            m_guiServerPort = input.get<unsigned int>("guiServerPort");
 
             m_connectionConfig = input.get<Hash>("connection");
             m_connection = BrokerConnection::createChoice("connection", input);
@@ -215,7 +223,7 @@ namespace karabo {
 
             if (m_isMaster) {
                 slotStartDevice(Hash("FileDataLogger.deviceId", "Karabo_FileDataLogger_0", "FileDataLogger.connection", m_connectionConfig));
-                slotStartDevice(Hash("GuiServerDevice.deviceId", "Karabo_GuiServer_0", "GuiServerDevice.connection", m_connectionConfig, "GuiServerDevice.loggerConnection", m_connectionConfig));
+                slotStartDevice(Hash("GuiServerDevice.deviceId", "Karabo_GuiServer_0", "GuiServerDevice.connection", m_connectionConfig, "GuiServerDevice.loggerConnection", m_connectionConfig, "GuiServerDevice.port", m_guiServerPort));
             } else {
                 KARABO_LOG_INFO << "Keep watching directory: " << m_pluginLoader->getPluginDirectory() << " for Device plugins";
                 m_pluginThread = boost::thread(boost::bind(&karabo::core::DeviceServer::scanPlugins, this));

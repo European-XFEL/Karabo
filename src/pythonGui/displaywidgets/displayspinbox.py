@@ -20,7 +20,7 @@
 
 __all__ = ["DisplaySpinBox"]
 
-import sys
+import globals
 
 from displaywidget import DisplayWidget
 
@@ -41,20 +41,10 @@ class DisplaySpinBox(DisplayWidget):
         self.__minMaxAssociatedKeys = (1,1) # tuple<min,max>
 
         self.__spinBox = QSpinBox()
-        intMax = sys.maxint
-        self.__spinBox.setRange(-intMax, intMax)
-        self.__spinBox.setEnabled(False)
+        self.__spinBox.setRange(globals.MIN_INT32, globals.MAX_INT32)
+        self.__spinBox.setReadOnly(True)
         
-        self.__key = params.get(QString('key'))
-        if self.__key is None:
-            self.__key = params.get('key')
-        
-        # Set value
-        value = params.get(QString('value'))
-        if value is None:
-            value = params.get('value')
-        if value is not None:
-            self.valueChanged(self.__key, value)
+        self.__key = params.get('key')
 
 
     def _getCategory(self):
