@@ -39,29 +39,21 @@ class EditableComboBox(EditableWidget):
         self.__comboBox = QComboBox()
         self.__comboBox.setFrame(False)
         
-        enumeration = params.get(QString('enumeration'))
-        if enumeration is None:
-            enumeration = params.get('enumeration')
+        enumeration = params.get('enumeration')
         self.addItems(enumeration)
         
-        self.__valueType = params.get(QString('valueType'))
-        if self.__valueType is None:
-            self.__valueType = params.get('valueType')
+        self.__valueType = params.get('valueType')
         
         self.__comboBox.installEventFilter(self)
-        self.connect(self.__comboBox, SIGNAL("currentIndexChanged(QString)"), self.onEditingFinished)
+        self.__comboBox.currentIndexChanged[str].connect(self.onEditingFinished)
         
         # Minimum and maximum number of associated keys, 1 by default for each
         self.__minMaxAssociatedKeys = (1,1) # tuple<min,max>
         
         # Set key
-        self.__key = params.get(QString('key'))
-        if self.__key is None:
-            self.__key = params.get('key')
+        self.__key = params.get('key')
         # Set value
-        value = params.get(QString('value'))
-        if value is None:
-            value = params.get('value')
+        value = params.get('value')
         self.valueChanged(self.__key, value)
 
 

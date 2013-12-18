@@ -28,42 +28,16 @@ class DisplayComponent(BaseComponent):
         super(DisplayComponent, self).__init__(classAlias)
         
         self.__initParams = params
-        
-        self.__compositeWidget = QWidget()
-        hLayout = QHBoxLayout(self.__compositeWidget)
-        hLayout.setContentsMargins(0,0,0,0)
 
-        widgetFactory = params.get(QString('widgetFactory'))
-        if widgetFactory is None:
-            widgetFactory = params.get('widgetFactory')
+        widgetFactory = params.get('widgetFactory')
         
         if widgetFactory is None or (widgetFactory == "DisplayWidget"):
             self.__displayWidget = DisplayWidget.create(classAlias, **params)
         elif widgetFactory == "VacuumWidget":
             self.__displayWidget = VacuumWidget.create(classAlias, **params)
         
-        hLayout.addWidget(self.__displayWidget.widget)
-
-        metricPrefixSymbol = params.get(QString('metricPrefixSymbol'))
-        if metricPrefixSymbol is None:
-            metricPrefixSymbol = params.get('metricPrefixSymbol')
-        unitSymbol = params.get(QString('unitSymbol'))
-        if unitSymbol is None:
-            unitSymbol = params.get('unitSymbol')
-        
-        # Append unit label, if available
-        unitLabel = str()
-        if metricPrefixSymbol:
-            unitLabel += metricPrefixSymbol
-        if unitSymbol:
-            unitLabel += unitSymbol
-        if len(unitLabel) > 0:
-            hLayout.addWidget(QLabel(unitLabel))
-        
         # Use path to register component to manager
-        key = params.get(QString('key'))
-        if key is None:
-            key = params.get('key')
+        key = params.get('key')
             
         #print "### Registering key: ", key
         Manager().registerDisplayComponent(key, self)
@@ -82,7 +56,7 @@ class DisplayComponent(BaseComponent):
 
     # Returns the actual widget which is part of the composition
     def _getWidget(self):
-        return self.__compositeWidget
+        return self.__displayWidget.widget
     widget = property(fget=_getWidget)
 
 
@@ -126,18 +100,17 @@ class DisplayComponent(BaseComponent):
             self.removeKey(key)
 
 
-    def changeWidget(self, classAlias):
+    def changeWidget(self, proxyWidget, classAlias):
         self.classAlias = classAlias
         self.__initParams['value'] = self.value
         
-        layout = self.__compositeWidget.layout()
         oldWidget = self.__displayWidget.widget
         oldWidget.deleteLater()
-        layout.removeWidget(oldWidget)
-        
         self.__displayWidget = DisplayWidget.create(classAlias, **self.__initParams)
-        layout.addWidget(self.__displayWidget.widget)
-        self.__compositeWidget.adjustSize()
+        self.__displayWidget.widget.setWindowFlags(Qt.BypassGraphicsProxyWidget)
+        self.__displayWidget.widget.setAttribute(Qt.WA_NoSystemBackground, True)
+        proxyWidget.setWidget(self.__displayWidget.widget)
+        self.__displayWidget.widget.show()
         
         # Refresh new widget...
         for key in self.__displayWidget.keys:
@@ -148,14 +121,12 @@ class DisplayComponent(BaseComponent):
         self.classAlias = classAlias
         self.__initParams['value'] = self.value
         
-        layout = self.__compositeWidget.layout()
         oldWidget = self.__displayWidget.widget
         oldWidget.deleteLater()
-        layout.removeWidget(oldWidget)
-        
         self.__displayWidget = VacuumWidget.create(classAlias, **self.__initParams)
-        layout.addWidget(self.__displayWidget.widget)
-        self.__compositeWidget.adjustSize()
+        self.__displayWidget.widget.setWindowFlags(Qt.BypassGraphicsProxyWidget)
+        self.__displayWidget.widget.setAttribute(Qt.WA_NoSystemBackground, True)
+        proxyWidget.setWidget(self.__displayWidget.widget)
         
         # Refresh new widget...
         for key in self.__displayWidget.keys:

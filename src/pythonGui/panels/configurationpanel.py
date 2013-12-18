@@ -29,6 +29,7 @@ import const
 from parametertreewidget import ParameterTreeWidget
 from docktabwindow import DockTabWindow
 from documentationpanel import DocumentationPanel
+from enums import ConfigChangeTypes
 from enums import NavigationItemTypes
 from manager import Manager
 from navigationtreeview import NavigationTreeView
@@ -56,8 +57,8 @@ class ConfigurationPanel(QWidget):
         title = "Configuration Editor"
         self.setWindowTitle(title)
         
-        self.__changingStateTimer = QTimer(self)
-        self.__changingStateTimer.timeout.connect(self.onTimeOut)
+        # map = { deviceId, timer }
+        self.__changingTimerDeviceIdMap = dict()
 
         mainLayout = QVBoxLayout(self)
         mainLayout.setContentsMargins(5,5,5,5)
@@ -106,7 +107,7 @@ class ConfigurationPanel(QWidget):
         self.__swParameterEditor = QStackedWidget(splitTopPanes)
         # Initial page
         twInitalParameterEditorPage = ParameterTreeWidget(self)
-        twInitalParameterEditorPage.setHeaderLabels(QStringList() << "Parameter" << "Value")
+        twInitalParameterEditorPage.setHeaderLabels(["Parameter", "Value"])
         self.__swParameterEditor.addWidget(twInitalParameterEditorPage)
         splitTopPanes.setStretchFactor(1, 3)
 
@@ -222,12 +223,26 @@ class ConfigurationPanel(QWidget):
 
 
     def setupActions(self):
-        pass
+        text = "Open configuration (*.xml)"
+        self.__acFileOpen = QAction(QIcon(":open"), "&Open configuration", self)
+        #self.__acFileOpen = QAction(QIcon(":filein"), "&Open configuration", self)
+        self.__acFileOpen.setStatusTip(text)
+        self.__acFileOpen.setToolTip(text)
+        self.__acFileOpen.setVisible(False)
+        self.__acFileOpen.triggered.connect(self.onFileOpen)
+
+        text = "Save configuration as (*.xml)"
+        self.__acFileSaveAs = QAction(QIcon(":save-as"), "Save &As...", self)
+        #self.__acFileSaveAs = QAction(QIcon(":fileout"), "Save &As...", self)
+        self.__acFileSaveAs.setStatusTip(text)
+        self.__acFileSaveAs.setToolTip(text)
+        self.__acFileSaveAs.setVisible(False)
+        self.__acFileSaveAs.triggered.connect(self.onFileSaveAs)
 
 
     def setupToolBar(self, toolBar):
-        # this is done per ParameterTreeWidget
-        self.__toolBar = toolBar
+        toolBar.addAction(self.__acFileOpen)
+        toolBar.addAction(self.__acFileSaveAs)
         
 
     def applyAllAsHash(self, key, config):
@@ -263,7 +278,7 @@ class ConfigurationPanel(QWidget):
             if nbSelected == 1:
                 text = "Apply selected"
             else:
-                text = QString("Apply (%1) selected").arg(nbSelected)
+                text = "Apply ({}) selected".format(nbSelected)
             self.__acApplyLocalChanges.setVisible(False)
             self.__acApplyRemoteChanges.setVisible(False)
             self.__acApplySelectedChanges.setVisible(True)
@@ -303,7 +318,7 @@ class ConfigurationPanel(QWidget):
             if nbSelected == 1:
                 text = "Reset selected"
             else:
-                text = QString("Reset (%1) selected").arg(nbSelected)
+                text = "Reset ({}) selected".format(nbSelected)
         else:
             text = "Reset all"
         
@@ -317,7 +332,7 @@ class ConfigurationPanel(QWidget):
 
 
     def clearParameterEditorContent(self):
-        self.__swParameterEditor.setCurrentIndex(0)
+        self._setParameterEditorIndex(0)
         # Reset map
         self.__navItemInternalKeyIndexMap = dict()
         
@@ -326,7 +341,6 @@ class ConfigurationPanel(QWidget):
             # Unregister all widgets of TreeWidget from DataNotifier in Manager before clearing..
             self._r_unregisterEditableComponent(twParameterEditorPage.invisibleRootItem())
             twParameterEditorPage.clear()
-            twParameterEditorPage.removeActions()
             
             # Remove widget completely
             self.__swParameterEditor.removeWidget(twParameterEditorPage)
@@ -334,18 +348,11 @@ class ConfigurationPanel(QWidget):
 
 
     def _parseSchema(self, itemInfo, twParameterEditorPage):
-        path = itemInfo.get(QString('key'))
-        if path is None:
-            path = itemInfo.get('key')
-        
-        schema = itemInfo.get(QString('schema'))
-        if schema is None:
-            schema = itemInfo.get('schema')
+        path = itemInfo.get('key')
+        schema = itemInfo.get('schema')
         
         # Distinguish between DEVICE_CLASS and DEVICE_INSTANCE
-        deviceType = itemInfo.get(QString('type'))
-        if deviceType is None:
-            deviceType = itemInfo.get('type')
+        deviceType = itemInfo.get('type')
         self.__schemaReader.setDeviceType(deviceType)
 
         if not self.__schemaReader.readSchema(path, schema, twParameterEditorPage):
@@ -355,23 +362,21 @@ class ConfigurationPanel(QWidget):
 
 
     def _createNewParameterPage(self, itemInfo):
-        classId = itemInfo.get(QString('classId'))
-        if classId is None:
-            classId = itemInfo.get('classId')
+        classId = itemInfo.get('classId')
         
-        path = itemInfo.get(QString('key'))
-        if path is None:
-            path = itemInfo.get('key')
-        type = itemInfo.get(QString('type'))
-        if type is None:
-            type = itemInfo.get('type')
+        path = itemInfo.get('key')
+        type = itemInfo.get('type')
 
         twParameterEditorPage = ParameterTreeWidget(self, path, classId)
-        twParameterEditorPage.setHeaderLabels(QStringList() << "Parameter" << "Current value on device" << "Value")
-        twParameterEditorPage.addConfigAction(self.__acKillInstance)
-        twParameterEditorPage.addConfigAction(self.__acApplyAll)
-        #twParameterEditorPage.addConfigMenu(self.__mApply)
-        twParameterEditorPage.addConfigAction(self.__acResetAll)
+        twParameterEditorPage.setHeaderLabels([
+            "Parameter", "Current value on device", "Value"])
+        
+        twParameterEditorPage.addContextAction(self.__acFileOpen)
+        twParameterEditorPage.addContextAction(self.__acFileSaveAs)
+        twParameterEditorPage.addContextSeparator()
+        twParameterEditorPage.addContextAction(self.__acKillInstance)
+        twParameterEditorPage.addContextAction(self.__acApplyAll)
+        twParameterEditorPage.addContextAction(self.__acResetAll)
         
         if type is NavigationItemTypes.CLASS:
             twParameterEditorPage.hideColumn(1)
@@ -440,6 +445,28 @@ class ConfigurationPanel(QWidget):
         self.updateResetAllActions()
 
 
+    def _setParameterEditorIndex(self, index):
+        self.__swParameterEditor.blockSignals(True)
+        self.__swParameterEditor.setCurrentIndex(index)
+        self.__swParameterEditor.blockSignals(False)
+
+        show = index != 0
+        self.__acFileOpen.setVisible(show)
+        self.__acFileSaveAs.setVisible(show)
+
+
+    def _hideAllButtons(self):
+        # Hide buttons and actions
+        self.__pbInitDevice.setVisible(False)
+        
+        self.__pbKillInstance.setVisible(False)
+        self.__acKillInstance.setVisible(False)
+        self.__pbApplyAll.setVisible(False)
+        self.__acApplyAll.setVisible(False)
+        self.__pbResetAll.setVisible(False)
+        self.__acResetAll.setVisible(False)
+
+
     def _getCurrentParameterEditor(self):
         return self.__swParameterEditor.currentWidget()
 
@@ -505,6 +532,28 @@ class ConfigurationPanel(QWidget):
             self._r_unregisterEditableComponent(childItem)
 
 
+    def showParameterPage(self, type, path):
+        # Show correct parameters
+        index = self.__navItemInternalKeyIndexMap.get(path)
+        if index:
+            self._setParameterEditorIndex(index)
+            
+            if (type is NavigationItemTypes.DEVICE) and (self.__prevDevicePath != path):
+                # Visible deviceId has changed
+                Manager().newVisibleDevice(path)
+                # Refresh over network needed
+                Manager().onRefreshInstance(path)               
+                self.__prevDevicePath = path
+        else:
+            self._setParameterEditorIndex(0)
+            
+            if type is NavigationItemTypes.SERVER:
+                return
+            
+            # Hide buttons and actions
+            self._hideAllButtons()
+
+
 ### slots ###
     def onNewNavigationItem(self, itemInfo):
         # itemInfo: id, name, type, (status), (refType), (refId), (schema)
@@ -517,9 +566,7 @@ class ConfigurationPanel(QWidget):
 
     def onSchemaAvailable(self, itemInfo):
         # Update map deviceId = swIndex
-        key = itemInfo.get(QString('key'))
-        if key is None:
-            key = itemInfo.get('key')
+        key = itemInfo.get('key')
         
         if (key in self.__navItemInternalKeyIndexMap) and (key in self.__internalKeySchemaLoadedMap):
             index = self.__navItemInternalKeyIndexMap.get(key)
@@ -537,9 +584,7 @@ class ConfigurationPanel(QWidget):
         else:
             self.__navItemInternalKeyIndexMap[key] = self._createNewParameterPage(itemInfo)
             # Schema might not be there yet...
-            schema = itemInfo.get(QString('schema'))
-            if schema is None:
-                schema = itemInfo.get('schema')
+            schema = itemInfo.get('schema')
             
             if schema:
                 self.__internalKeySchemaLoadedMap[key] = True
@@ -562,13 +607,8 @@ class ConfigurationPanel(QWidget):
 
     def onNavigationItemChanged(self, itemInfo):
         #print "ConfigurationPanel.itemChanged", itemInfo
-        type = itemInfo.get(QString('type'))
-        if type is None:
-            type = itemInfo.get('type')
-        
-        path = itemInfo.get(QString('key'))
-        if path is None:
-            path = itemInfo.get('key')
+        type = itemInfo.get('type')
+        path = itemInfo.get('key')
         
         if type is NavigationItemTypes.CLASS:
             self.updateButtonsVisibility = True
@@ -584,55 +624,13 @@ class ConfigurationPanel(QWidget):
         self.showParameterPage(type, path)
 
 
-    def showParameterPage(self, type, path):
-        # Hide apply button of current ParameterTreeWidget
-        self._getCurrentParameterEditor().setActionsVisible(False)
-        
-        # Show correct parameters
-        index = self.__navItemInternalKeyIndexMap.get(path)
-        if index:
-            self.__swParameterEditor.blockSignals(True)
-            self.__swParameterEditor.setCurrentIndex(index)
-            # Show apply button of current ParameterTreeWidget
-            self._getCurrentParameterEditor().setActionsVisible(True)
-            self.__swParameterEditor.blockSignals(False)
-            
-            if (type is NavigationItemTypes.DEVICE) and (self.__prevDevicePath != path):
-                # Visible deviceId has changed
-                Manager().newVisibleDevice(path)
-                # Refresh over network needed
-                Manager().onRefreshInstance(path)               
-                self.__prevDevicePath = path
-        else:
-            self.__swParameterEditor.blockSignals(True)
-            self.__swParameterEditor.setCurrentIndex(0)
-            self.__swParameterEditor.blockSignals(False)
-            
-            if type is NavigationItemTypes.SERVER:
-                return
-            
-            # Hide buttons and actions
-            self.__pbInitDevice.setVisible(False)
-            self.__pbKillInstance.setVisible(False)
-            self.__pbApplyAll.setVisible(False)
-            self.__pbResetAll.setVisible(False)
-            self.__acKillInstance.setVisible(False)
-            self.__acApplyAll.setVisible(False)
-            self.__acResetAll.setVisible(False)
-
-
     def onNavigationItemSelectionChanged(self, path):
         self.__twNavigation.selectItem(path)
 
 
     def onProjectItemChanged(self, itemInfo):
-        type = itemInfo.get(QString('type'))
-        if type is None:
-            type = itemInfo.get('type')
-        
-        path = itemInfo.get(QString('key'))
-        if path is None:
-            path = itemInfo.get('key')
+        type = itemInfo.get('type')
+        path = itemInfo.get('key')
 
         self.showParameterPage(type, str(path))
 
@@ -644,8 +642,22 @@ class ConfigurationPanel(QWidget):
         for key in keys:
             if path in key:
                 self.__internalKeySchemaLoadedMap[key] = False
+
+        # Check whether path of the gone instance were selected
+        path = self.__twNavigation.lastSelectionPath
+        if len(path) < 1:
+            index = None
+        else:
+            index = self.__twNavigation.findIndex(path)
         
-        self.__twNavigation.selectItem(str(parentPath))
+        if index and index.isValid():
+            self.__twNavigation.lastSelectionPath = str()
+            self.__twNavigation.selectItem(path)
+        else:
+            self._setParameterEditorIndex(0)
+            self.__twNavigation.selectItem(str(parentPath))
+            # Hide buttons and actions
+            self._hideAllButtons()
 
 
     def onDeviceStateChanged(self, internalKey, state):
@@ -663,22 +675,43 @@ class ConfigurationPanel(QWidget):
             self.hasConflicts = hasConflict
 
 
-    def onChangingState(self, isChanging):
-        if isChanging is True:
-            if self.__changingStateTimer.isActive() is False:
-                self.__changingStateTimer.start(200)
+    def onChangingState(self, deviceId, isChanging):
+        if deviceId in self.__changingTimerDeviceIdMap:
+            timer = self.__changingTimerDeviceIdMap[deviceId]
         else:
-            self.__changingStateTimer.stop()
-            self._getCurrentParameterEditor().setReadOnly(False)
- 
+            timer = QTimer(self)
+            timer.timeout.connect(self.onTimeOut)
+            self.__changingTimerDeviceIdMap[deviceId] = timer
+        
+        if isChanging is True:
+            if timer.isActive() is False:
+                timer.start(200)
+        else:
+            timer.stop()
+            
+            parameterWidget = self._getCurrentParameterEditor()
+            if deviceId == parameterWidget.instanceKey:
+                self._getCurrentParameterEditor().setReadOnly(False)
+
  
     def onErrorState(self, inErrorState):
         self._getCurrentParameterEditor().setErrorState(inErrorState)
 
 
     def onTimeOut(self):
-        self.__changingStateTimer.stop()
-        self._getCurrentParameterEditor().setReadOnly(True)
+        timer = self.sender()
+        timer.stop()
+        
+        # Check deviceId against deviceId of current parameter editor
+        mapValues = self.__changingTimerDeviceIdMap.values()
+        for i in xrange(len(mapValues)):
+            if timer == mapValues[i]:
+                deviceId = self.__changingTimerDeviceIdMap.keys()[i]
+                
+                parameterWidget = self._getCurrentParameterEditor()
+                if deviceId == parameterWidget.instanceKey:
+                    parameterWidget.setReadOnly(True)
+                break
 
 
     def onApplyChanged(self, enable, hasConflicts=False):
@@ -719,19 +752,13 @@ class ConfigurationPanel(QWidget):
     def onKillInstance(self):
         itemInfo = self.__twNavigation.currentIndexInfo()
         
-        type = itemInfo.get(QString('type'))
-        if type is None:
-            type = itemInfo.get('type')
+        type = itemInfo.get('type')
         
         if type is NavigationItemTypes.DEVICE:
-            deviceId = itemInfo.get(QString('deviceId'))
-            if deviceId is None:
-                deviceId = itemInfo.get('deviceId')
+            deviceId = itemInfo.get('deviceId')
             Manager().killDevice(deviceId)
         elif type is NavigationItemTypes.SERVER:
-            serverId = itemInfo.get(QString('serverId'))
-            if serverId is None:
-                serverId = itemInfo.get('serverId')
+            serverId = itemInfo.get('serverId')
             Manager().killServer(serverId)
 
 
@@ -740,17 +767,9 @@ class ConfigurationPanel(QWidget):
         if len(itemInfo) == 0:
             return
         
-        serverId = itemInfo.get(QString('serverId'))
-        if serverId is None:
-            serverId = itemInfo.get('serverId')
-        
-        classId = itemInfo.get(QString('classId'))
-        if classId is None:
-            classId = itemInfo.get('classId')
-        
-        path = itemInfo.get(QString('key'))
-        if path is None:
-            path = itemInfo.get('key')
+        serverId = itemInfo.get('serverId')
+        classId = itemInfo.get('classId')
+        path = itemInfo.get('key')
         
         Manager().initDevice(str(serverId), str(classId), str(path))
 
@@ -761,14 +780,56 @@ class ConfigurationPanel(QWidget):
 
 
     def onSystemTopologyChanged(self, config):
-        #self.__twNavigation.updateView(config)
-        pass
+        # Already done in NavigationPanel which uses the same model
+        #self.__twNavigation.updateTreeModel(config) 
+        self.__twNavigation.expandAll()
+        
+        path = self.__twNavigation.lastSelectionPath
+        if len(path) < 1:
+            return
+        self.__twNavigation.lastSelectionPath = str()
+        self.__twNavigation.selectItem(path)
 
 
     def onGlobalAccessLevelChanged(self):
         for index in xrange(self.__swParameterEditor.count()):
             twParameterEditorPage = self.__swParameterEditor.widget(index)
             twParameterEditorPage.globalAccessLevelChanged()
+
+
+    def onFileOpen(self):
+        info = self.__twNavigation.currentIndexInfo()
+        
+        path = info.get('key')
+        type = info.get('type')
+        classId = info.get('classId')
+        deviceId = info.get('deviceId')
+        
+        configChangeType = None
+        if type is NavigationItemTypes.CLASS:
+            configChangeType = ConfigChangeTypes.DEVICE_CLASS_CONFIG_CHANGED
+        elif type is NavigationItemTypes.DEVICE:
+            configChangeType = ConfigChangeTypes.DEVICE_INSTANCE_CONFIG_CHANGED
+        
+        if classId is None:
+            print "onFileOpen classId not set"
+        
+        # TODO: Remove dirty hack for scientific computing again!!!
+        croppedClassId = classId.split("-")
+        classId = croppedClassId[0]
+        
+        Manager().onFileOpen(configChangeType, str(path), str(classId))
+
+
+    def onFileSaveAs(self):
+        info = self.__twNavigation.currentIndexInfo()
+        
+        path = info.get('key')
+        type = info.get('type')
+        classId = info.get('classId')
+        deviceId = info.get('deviceId')
+
+        Manager().onSaveAsXml(str(classId), str(path))
 
 
     # virtual function

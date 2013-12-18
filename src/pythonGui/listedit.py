@@ -77,11 +77,11 @@ class ListEdit(QDialog):
         self.setList(list)
 
 
-    def setTexts(self, addCaption, addLabel, editCaption, editLabel=QString()):
+    def setTexts(self, addCaption, addLabel, editCaption, editLabel=""):
         self.addCaption = addCaption
         self.addLabel = addLabel
         self.editCaption = editCaption
-        if editLabel.isEmpty() == True :
+        if len(editLabel) < 1:
             self.editLabel = addLabel
         else:
             self.editLabel = editLabel
@@ -96,7 +96,7 @@ class ListEdit(QDialog):
             # insert item
             self._addItem(index)
             
-            w = fm.width(QString(index))
+            w = fm.width(index)
             if w > width :
                 width = w
 
@@ -109,8 +109,6 @@ class ListEdit(QDialog):
 
     def _addItem(self, value):
         item = QListWidgetItem(str(value))
-        if isinstance(value, QString):
-            value = str(value)
         item.setData(const.CURRENT_EDITABLE_VALUE, value)
         self.__listWidget.addItem(item)
 
@@ -120,7 +118,7 @@ class ListEdit(QDialog):
 
 
     def getListElementAt(self, index):
-        return self.__listWidget.item(index).data(const.CURRENT_EDITABLE_VALUE).toPyObject()
+        return self.__listWidget.item(index).data(const.CURRENT_EDITABLE_VALUE)
 
 
     def setAllowedChoices(self, allowedChoices, parentItem=None, choiceItemList=[]):
@@ -135,7 +133,7 @@ class ListEdit(QDialog):
         if currentItem is None:
             currentValue = None
         else:
-            currentValue = currentItem.data(const.CURRENT_EDITABLE_VALUE).toPyObject()
+            currentValue = currentItem.data(const.CURRENT_EDITABLE_VALUE)
 
         if self.__valueType == "float":
             if currentValue is None:
@@ -178,7 +176,7 @@ class ListEdit(QDialog):
         if ok==True :
             return text
         else :
-            return QString()
+            return ""
 
 
 ### slots ###
@@ -220,11 +218,11 @@ class ListEdit(QDialog):
 
     def onRemoveClicked(self):
         original = self.__listWidget.currentItem().text()
-        if original.isEmpty()==True or (self.ask and QMessageBox.question(self, "Remove",
-                                                                                QString("Remove '%1'?").arg(original),
-                                                                                QMessageBox.Yes | QMessageBox.Default,
-                                                                                QMessageBox.No | QMessageBox.Escape) ==
-                                                                                QMessageBox.No) :
+        if (len(original) < 1) or (self.ask and QMessageBox.question(self, "Remove",
+                                                                    "Remove '{}'?".format(original),
+                                                                    QMessageBox.Yes | QMessageBox.Default,
+                                                                    QMessageBox.No | QMessageBox.Escape) ==
+                                                                    QMessageBox.No):
             return
         self.__listWidget.takeItem(self.__listWidget.currentRow())
         self.onUpdateButtons()

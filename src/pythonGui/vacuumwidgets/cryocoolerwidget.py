@@ -46,14 +46,10 @@ class CryoCoolerWidget(VacuumWidget):
         self._setPixmap(QPixmap(":cryocooler"))
         self.setErrorState(False)
         
-        self.__key = params.get(QString('key'))
-        if self.__key is None:
-            self.__key = params.get('key')
+        self.__key = params.get('key')
         
         # Set value
-        value = params.get(QString('value'))
-        if value is None:
-            value = params.get('value')
+        value = params.get('value')
         if value is not None:
             self.valueChanged(self.__key, value)
 
@@ -118,6 +114,8 @@ class CryoCoolerWidget(VacuumWidget):
             self._setPixmap(QPixmap(":cryocooler-yellow"))
         elif ("Error" in value) or ("error" in value):
             self._setPixmap(QPixmap(":cryocooler-red"))
+        else:
+            self._setPixmap(QPixmap(":cryocooler"))
 
 
     class Maker:

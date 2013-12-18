@@ -22,10 +22,10 @@ __all__ = ["DisplayImageElement"]
 
 
 from displaywidget import DisplayWidget
+import copy
 
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
-
 
 def getCategoryAliasClassName():
     return ["ImageElement","Image Element","DisplayImageElement"]
@@ -50,16 +50,7 @@ class DisplayImageElement(DisplayWidget):
         self.__image.setWordWrap(True)
         self.setErrorState(False)
         
-        self.__key = params.get(QString('key'))
-        if self.__key is None:
-            self.__key = params.get('key')
-        
-        # Set value
-        value = params.get(QString('value'))
-        if value is None:
-            value = params.get('value')
-        if value is not None:
-            self.valueChanged(self.__key, value)
+        self.__key = params.get('key')
 
 
     def _getCategory(self):
@@ -107,13 +98,15 @@ class DisplayImageElement(DisplayWidget):
 
 
     def valueChanged(self, key, value, timestamp=None):
-        
         if value is None: return
-
-        if value != self.__value:
+        
+        if self.__value is None or value is not self.__value:
             # Store original value with type
-            self.__value = value
+            self.__value = copy.copy(value)
             
+            if value.has('dims')==False: return
+            if value.has('data')==False: return
+
             # Value as Hash (dimX=<dimX>, dimY=<dimY>, dimZ=<dimZ>, dimC=<dimC>, data=<data>)
             dims = value.get('dims')
             if len(dims) < 2: return;

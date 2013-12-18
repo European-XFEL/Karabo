@@ -29,15 +29,24 @@ class NavigationTreeView(QTreeView):
     def __init__(self, parent, model):
         super(NavigationTreeView, self).__init__(parent)
         
-        self.__prevModelIndex = None
+        # Stores the last selected path of an tree row
+        self.__lastSelectionPath = str()
         self.setModel(model)
         
         self.setSelectionMode(QAbstractItemView.SingleSelection)
+        self.setSelectionBehavior(QAbstractItemView.SelectRows)
         #self.setSortingEnabled(True)
         #self.sortByColumn(0, Qt.AscendingOrder)
         
         self._setupContextMenu()
         self.customContextMenuRequested.connect(self.onCustomContextMenuRequested)
+
+
+    def _lastSelectionPath(self):
+        return self.__lastSelectionPath
+    def _setLastSelectionPath(self, lastSelectionPath):
+        self.__lastSelectionPath = lastSelectionPath
+    lastSelectionPath = property(fget=_lastSelectionPath, fset=_setLastSelectionPath)
 
 
 ### protected ###
@@ -57,23 +66,13 @@ class NavigationTreeView(QTreeView):
         if len(itemInfo) == 0:
             return
         
-        serverId  = itemInfo.get(QString('serverId'))
-        if serverId is None:
-            serverId = itemInfo.get('serverId')
+        serverId  = itemInfo.get('serverId')
         
-        navigationItemType = itemInfo.get(QString('type'))
-        if navigationItemType is None:
-            navigationItemType = itemInfo.get('type')
-        
-        #key = itemInfo.get(QString('key'))
-        #if key is None:
-        #    key = itemInfo.get('key')
+        navigationItemType = itemInfo.get('type')
         
         displayName = str()
         if navigationItemType is NavigationItemTypes.CLASS:
-            displayName = itemInfo.get(QString('classId'))
-            if displayName is None:
-                displayName = itemInfo.get('classId')
+            displayName = itemInfo.get('classId')
         
         mimeData = QMimeData()
 
@@ -85,13 +84,10 @@ class NavigationTreeView(QTreeView):
             mimeData.setData("navigationItemType", QByteArray.number(navigationItemType))
         if serverId:
             # Device server instance id
-            mimeData.setData("serverId", QString(serverId).toAscii())
-        #if key:
-            # Internal key
-        #    mimeData.setData("key", QString(key).toAscii())
+            mimeData.setData("serverId", serverId)
         if displayName:
             # Display name
-            mimeData.setData("displayName", QString(displayName).toAscii())
+            mimeData.setData("displayName", displayName)
 
         drag = QDrag(self)
         drag.setMimeData(mimeData)
@@ -176,29 +172,52 @@ class NavigationTreeView(QTreeView):
             return dict()
         elif level == 1:
             type = NavigationItemTypes.SERVER
-            serverId = index.data().toString()
+            serverId = index.data()
             path = "server." + serverId
             
             return dict(key=path, type=type, serverId=serverId)
         elif level == 2:
             type = NavigationItemTypes.CLASS
             parentIndex = index.parent()
-            serverId = parentIndex.data().toString()
-            classId = index.data().toString()
-            path = str("server." + serverId + ".classes." + classId + ".configuration")
+            serverId = parentIndex.data()
+            classId = index.data()
+            path = str("server." + serverId + ".classes." + classId)
             
-            return dict(key=path, type=type, serverId=serverId, classId=classId)
+            return dict(key=path + ".configuration", type=type, serverId=serverId, classId=classId)
         elif level == 3:
             type = NavigationItemTypes.DEVICE
-            deviceId = index.data().toString()
+            parentIndex = index.parent()
+            classId = parentIndex.data()
+            deviceId = index.data()
             path = str("device." + deviceId)
             
-            return dict(key=path, type=type, deviceId=deviceId)
+            return dict(key=path + ".configuration", type=type, classId=classId, deviceId=deviceId)
 
 
-    def updateView(self, config):
+    def findIndex(self, path):
+        # Find modelIndex via path
+        return self.model().findIndex(path)
+
+
+    def selectIndex(self, index):
+        if not index:
+            return
+        
+        path = index.internalPointer().path
+        if self.lastSelectionPath == path:
+            return
+        self.lastSelectionPath = path
+        
+        if index.isValid():
+            self.setCurrentIndex(index)
+            #self.clearSelection()
+            #self.selectionModel().select(index, QItemSelectionModel.Select | QItemSelectionModel.Rows)
+        else:
+            self.clearSelection()
+
+
+    def updateTreeModel(self, config):
         self.model().updateData(config)
-        self.expandAll()
 
 
     def itemClicked(self):
@@ -206,13 +225,8 @@ class NavigationTreeView(QTreeView):
         
         if not index.isValid():
             return NavigationItemTypes.UNDEFINED
-        
-        if self.__prevModelIndex == index:
-            return NavigationItemTypes.UNDEFINED
-        self.__prevModelIndex = index
-        
+               
         level = self.model().getHierarchyLevel(index)
-        
         row = index.row()
 
         classId = None
@@ -222,23 +236,23 @@ class NavigationTreeView(QTreeView):
             type = NavigationItemTypes.HOST
         elif level == 1:
             type = NavigationItemTypes.SERVER
-            path = "server." + index.data().toString()
+            path = "server." + index.data()
         elif level == 2:
             type = NavigationItemTypes.CLASS
             parentIndex = index.parent()
-            serverId = parentIndex.data().toString()
-            classId = index.data().toString()
+            serverId = parentIndex.data()
+            classId = index.data()
             
             schema = Manager().getClassSchema(serverId, classId)
             path = str("server." + serverId + ".classes." + classId)
             Manager().onSchemaAvailable(dict(key=path, classId=classId, type=type, schema=schema))
         elif level == 3:
             type = NavigationItemTypes.DEVICE
-            deviceId = index.data().toString()
+            deviceId = index.data()
             classIndex = index.parent()
-            classId = classIndex.data().toString()
+            classId = classIndex.data()
             #serverIndex = classIndex.parent()
-            #serverId = serverIndex.data().toString()
+            #serverId = serverIndex.data()
             
             path = str("device." + deviceId)
             schema = Manager().getDeviceSchema(deviceId)
@@ -251,43 +265,24 @@ class NavigationTreeView(QTreeView):
 
 
     def itemChanged(self, itemInfo):
-        key = itemInfo.get(QString('key'))
-        if key is None:
-            key = itemInfo.get('key')
+        path = itemInfo.get('key')
         
-        if len(key) == 0:
+        if len(path) == 0:
             return
         
-        index = self.model().findIndex(key)
-        
-        if self.__prevModelIndex == index:
-            return
-        self.__prevModelIndex = index
-        
-        if index and index.isValid():
-            self.setCurrentIndex(index)
-        else:
-            self.clearSelection()
+        index = self.findIndex(path)
+        self.selectIndex(index)
 
 
     def selectItem(self, path):
-        index = self.model().findIndex(path)
-        
-        if not index:
-            return
-        
-        if index.isValid():
-            self.setCurrentIndex(index)
-        else:
-            self.clearSelection()
+        index = self.findIndex(path)
+        self.selectIndex(index)
 
 
     def onKillServer(self):
         itemInfo = self.currentIndexInfo()
 
-        serverId = itemInfo.get(QString('serverId'))
-        if serverId is None:
-            serverId = itemInfo.get('serverId')
+        serverId = itemInfo.get('serverId')
         
         Manager().killServer(serverId)
 
@@ -295,9 +290,7 @@ class NavigationTreeView(QTreeView):
     def onKillDevice(self):
         itemInfo = self.currentIndexInfo()
 
-        deviceId = itemInfo.get(QString('deviceId'))
-        if deviceId is None:
-            deviceId = itemInfo.get('deviceId')
+        deviceId = itemInfo.get('deviceId')
         
         Manager().killDevice(deviceId)
 
@@ -305,13 +298,8 @@ class NavigationTreeView(QTreeView):
     def onFileSaveAs(self):
         itemInfo = self.currentIndexInfo()
         
-        classId = itemInfo.get(QString('classId'))
-        if classId is None:
-            classId = itemInfo.get('classId')
-        
-        path = itemInfo.get(QString('key'))
-        if path is None:
-            path = itemInfo.get('key')
+        classId = itemInfo.get('classId')
+        path = itemInfo.get('key')
         
         Manager().onSaveAsXml(str(classId), str(path))
 
@@ -322,23 +310,23 @@ class NavigationTreeView(QTreeView):
         
         configChangeType = None
         classId = str()
-        instanceId = str()
+        path = str()
         if type is NavigationItemTypes.CLASS:
             configChangeType = ConfigChangeTypes.DEVICE_CLASS_CONFIG_CHANGED
-            classId = index.data().toString()
+            classId = index.data()
             parentIndex = index.parent()
-            instanceId = parentIndex.data().toString()+"+"+classId
+            path = "server." + parentIndex.data() + ".classes." + classId + ".configuration"
         elif type is NavigationItemTypes.DEVICE:
             configChangeType = ConfigChangeTypes.DEVICE_INSTANCE_CONFIG_CHANGED
             parentIndex = index.parent()
-            classId = parentIndex.data().toString()
-            instanceId = index.data().toString()
+            classId = parentIndex.data()
+            path = "devices." + index.data()
         
         # TODO: Remove dirty hack for scientific computing again!!!
         croppedClassId = classId.split("-")
         classId = croppedClassId[0]
         
-        Manager().onFileOpen(configChangeType, str(instanceId), str(classId))
+        Manager().onFileOpen(configChangeType, str(path), str(classId))
 
 
     def onCustomContextMenuRequested(self, pos):

@@ -105,7 +105,7 @@ class GraphicsView(QGraphicsView):
 
     # Returns true, when items has been copied; otherwise false
     def hasCopy(self):
-        return not self.__copiedItem.isEmpty()
+        return (len(self.__copiedItem) > 0)
 
 
     # All selected items of the scene are returned
@@ -175,7 +175,7 @@ class GraphicsView(QGraphicsView):
     # Open saved view from file
     def openSceneLayoutFromFile(self):
         filename = QFileDialog.getOpenFileName(None, "Open saved view", QDir.tempPath(), "SCENE (*.scene)")
-        if filename.isEmpty():
+        if len(filename) < 1:
             return
 
         self.openScene(filename)
@@ -185,7 +185,7 @@ class GraphicsView(QGraphicsView):
         dirPath = QFileDialog.getExistingDirectory(self, "Select directory to open configuration files", QDir.tempPath(),
                                                    QFileDialog.ShowDirsOnly | QFileDialog.DontResolveSymlinks)
 
-        if dirPath.isEmpty():
+        if len(dirPath) < 1:
             return
 
         dir = QDir(dirPath)
@@ -198,7 +198,7 @@ class GraphicsView(QGraphicsView):
         dirPath = QFileDialog.getExistingDirectory(self, "Select directory to open configuration files", QDir.tempPath(),
                                                    QFileDialog.ShowDirsOnly | QFileDialog.DontResolveSymlinks)
 
-        if dirPath.isEmpty():
+        if len(dirPath) < 1:
             return
 
         dir = QDir(dirPath)
@@ -251,11 +251,11 @@ class GraphicsView(QGraphicsView):
     # Save active view to file
     def saveSceneLayoutToFile(self):
         filename = QFileDialog.getSaveFileName(None, "Save file as", QDir.tempPath(), "SCENE (*.scene)")
-        if filename.isEmpty():
+        if len(filename) < 1:
             return
 
         fi = QFileInfo(filename)
-        if fi.suffix().isEmpty():
+        if len(fi.suffix()) < 1:
             filename += ".scene"
 
         CustomXmlWriter(self.__scene).write(filename)
@@ -265,7 +265,7 @@ class GraphicsView(QGraphicsView):
         dirPath = QFileDialog.getExistingDirectory(self, "Select directory to save configuration files", QDir.tempPath(),
                                                    QFileDialog.ShowDirsOnly | QFileDialog.DontResolveSymlinks)
 
-        if dirPath.isEmpty():
+        if len(dirPath) < 1:
             return
 
         # Check, if directory is empty
@@ -280,7 +280,7 @@ class GraphicsView(QGraphicsView):
         dirPath = QFileDialog.getExistingDirectory(self, "Select directory to save layout and configuration files", QDir.tempPath(),
                                                    QFileDialog.ShowDirsOnly | QFileDialog.DontResolveSymlinks)
 
-        if dirPath.isEmpty():
+        if len(dirPath) < 1:
             return
 
         # Check, if directory is empty
@@ -336,7 +336,6 @@ class GraphicsView(QGraphicsView):
         textItem.setBackgroundColor(textDialog.backgroundColor())
         textItem.setOutlineColor(textDialog.outlineColor())
 
-        #node.setText(QString("Node %1").arg(self.__seqNumber + 1))
         self._setupItem(textItem)
 
 
@@ -385,29 +384,31 @@ class GraphicsView(QGraphicsView):
         stream = QDataStream(self.__copiedItem, QIODevice.WriteOnly)
         for item in items:
             if isinstance(item, Text):
-                stream << QString("Text") << item.text() \
+                stream << "Text" << item.text() \
                                           << item.font().toString() \
                                           << item.textColor().name() \
                                           << item.outlineColor().name() \
                                           << item.backgroundColor().name() \
-                                          << QString("\n")
+                                          << "\n"
             elif isinstance(item, Link):
                 print "Link"
             elif isinstance(item, Arrow):
                 print "Arrow"
             elif isinstance(item, Line):
                 line = item.line()
-                stream << QString("Line") << QString("%1,%2,%3,%4").arg(line.x1()).arg(line.y1()).arg(line.x2()).arg(line.y2()) \
-                                          << QString.number(item.length()) \
-                                          << QString.number(item.widthF()) \
-                                          << QString.number(item.style()) \
-                                          << item.color().name() \
-                                          << QString("\n")
+                stream << "Line" << "{},{},{},{}".format(
+                        line.x1(), line.y1(), line.x2(), line.y2()) \
+                    << "{}".format(item.length()) \
+                    << "{}".format(item.widthF()) \
+                    << "{}".format(item.style()) \
+                    << item.color().name() \
+                    << "\n"
             elif isinstance(item, Rectangle):
                 rect = item.rect()
                 topLeft = rect.topLeft()
-                stream << QString("Rectangle") << QString("%1,%2,%3,%4").arg(topLeft.x()).arg(topLeft.y()).arg(rect.width()).arg(rect.height()) \
-                                               << QString("\n")
+                stream << "Rectangle" << "{},{},{},{}".format(
+                    topLeft.x(), topLeft.y(), rect.width(), rect.height()) \
+                    << "\n"
             elif isinstance(item, GraphicsProxyWidgetContainer):
                 print "GraphicsProxyWidgetContainer"
             elif isinstance(item, GraphicsProxyWidget):
@@ -419,20 +420,19 @@ class GraphicsView(QGraphicsView):
     # The copied item data is extracted and the items are instantiated with the
     # refered binary data
     def paste(self):
-        if self.__copiedItem.isEmpty():
+        if len(self.__copiedItem) < 1:
             return
 
         stream = QDataStream(self.__copiedItem, QIODevice.ReadOnly)
 
-        itemData = QStringList()
+        itemData = [ ]
         while not stream.atEnd():
-            input = QString()
-            stream >> input
+            input = stream.readString()
 
             if input == "\n":
                 # Create item
-                type = itemData.first()
-                if type == "Text" and itemData.count() == 6:
+                type = itemData[0]
+                if type == "Text" and len(itemData) == 6:
                     textItem = Text(self.__isDesignMode)
                     textItem.setText(itemData[1])
                     font = QFont()
@@ -446,7 +446,7 @@ class GraphicsView(QGraphicsView):
                     print "Link"
                 elif type == "Arrow":
                     print "Arrow"
-                elif type == "Line" and itemData.count() == 6:
+                elif type == "Line" and len(itemData) == 6:
                     lineItem = Line(self.__isDesignMode)
                     # Get line coordinates
                     lineCoords = itemData[1].split(",")
@@ -455,23 +455,20 @@ class GraphicsView(QGraphicsView):
                                       lineCoords[2].toFloat()[0], lineCoords[3].toFloat()[0])
                         lineItem.setLine(line)
                     # Get line length
-                    length = itemData[2].toFloat()
-                    if length[1]:
-                        lineItem.setLength(length[0])
+                    length = float(itemData[2])
+                    lineItem.setLength(length[0])
                     # Get line width
-                    widthF = itemData[3].toFloat()
-                    if widthF[1]:
-                        lineItem.setWidthF(widthF[0])
+                    widthF = float(itemData[3])
+                    lineItem.setWidthF(widthF[0])
                     # Get line style
-                    style = itemData[4].toInt()
-                    if style[1]:
-                        lineItem.setStyle(style[0])
+                    style = int(itemData[4])
+                    lineItem.setStyle(style[0])
                     # Get line color
                     lineItem.setColor(QColor(itemData[5]))
 
                     self._setupItem(lineItem)
                     lineItem.setTransformOriginPoint(lineItem.boundingRect().center())
-                elif type == "Rectangle" and itemData.count() == 2:
+                elif type == "Rectangle" and len(itemData) == 2:
                     rectItem = Rectangle(self.__isDesignMode)
                     rectData = itemData[1].split(",")
                     if len(rectData) == 4:
@@ -485,7 +482,7 @@ class GraphicsView(QGraphicsView):
                 elif type == "GraphicsProxyWidget":
                     print "GraphicsProxyWidget"
 
-                itemData.clear()
+                itemData = [ ]
                 continue
 
             itemData.append(input)
@@ -521,10 +518,11 @@ class GraphicsView(QGraphicsView):
                 print "Line removed"
             elif isinstance(item, GraphicsProxyWidgetContainer):
                 layout = item.layout()
-                for i in xrange(layout.count()):
-                    proxyItem = layout.itemAt(i)
+                while layout.count() > 0:
+                    proxyItem = layout.itemAt(layout.count()-1)
                     if not proxyItem:
                         continue
+                    
                     keys = proxyItem.keys
                     if keys:
                         for key in keys:
@@ -534,7 +532,10 @@ class GraphicsView(QGraphicsView):
                     if proxyItem in items:
                         # Remove item from list - prevent double deletion
                         items.remove(proxyItem)
+                    
                     self.__scene.removeItem(proxyItem)
+                    layout.removeItem(proxyItem)
+                    
                 item.destroy()
             elif isinstance(item, GraphicsProxyWidget):
                 keys = item.keys
@@ -808,17 +809,13 @@ class GraphicsView(QGraphicsView):
             # Drop from NavigationTreeView or ParameterTreeWidget?
             if sourceType == "NavigationTreeView":
                 # Navigation item type
-                navItemType = mimeData.data("navigationItemType").toInt()
-                if navItemType[1]:
-                    navItemType = navItemType[0]
-                else:
-                    navItemType = None
+                navItemType = int(mimeData.data("navigationItemType"))
                 # Device server instance id
-                serverId = QString(mimeData.data("serverId"))
+                serverId = mimeData.data("serverId").data()
                 # Internal key
-                #key = QString(mimeData.data("key"))
+                #key = mimeData.data("key").data()
                 # Display name
-                displayName = QString(mimeData.data("displayName"))
+                displayName = mimeData.data("displayName").data()
                 
                 # Get schema
                 schema = None
@@ -849,47 +846,39 @@ class GraphicsView(QGraphicsView):
 
             elif sourceType == "ParameterTreeWidget":                
                 # Internal key
-                internalKey = QString(mimeData.data("internalKey"))
+                internalKey = mimeData.data("internalKey").data()
                 # Display name
-                displayName = QString(mimeData.data("displayName"))
+                displayName = mimeData.data("displayName").data()
                 # Display component?
-                hasDisplayComponent = mimeData.data("hasDisplayComponent").toInt()
-                if hasDisplayComponent[1]:
-                    hasDisplayComponent = hasDisplayComponent[0]
+                hasDisplayComponent = mimeData.data(
+                    "hasDisplayComponent") == "True"
                 # Editable component?
-                hasEditableComponent = mimeData.data("hasEditableComponent").toInt()
-                if hasEditableComponent[1]:
-                    hasEditableComponent = hasEditableComponent[0]
+                hasEditableComponent = mimeData.data(
+                    "hasEditableComponent") == "True"
                 
                 # TODO: HACK to get apply button disabled
                 currentValue = None
                 if hasEditableComponent:
                     currentValue = str(mimeData.data("currentValue"))
                 
-                metricPrefixSymbol = QString(mimeData.data("metricPrefixSymbol"))
-                unitSymbol = QString(mimeData.data("unitSymbol"))
+                metricPrefixSymbol = mimeData.data("metricPrefixSymbol").data()
+                unitSymbol = mimeData.data("unitSymbol").data()
                 
-                enumeration = QString(mimeData.data("enumeration"))
+                enumeration = mimeData.data("enumeration").data()
                 if enumeration:
                     enumeration = enumeration.split(",")
                 # Navigation item type
-                navItemType = mimeData.data("navigationItemType").toInt()
-                if navItemType[1]:
-                    navItemType = navItemType[0]
+                navItemType = int(mimeData.data("navigationItemType"))
                 # Class alias
-                classAlias = QString(mimeData.data("classAlias"))
+                classAlias = mimeData.data("classAlias").data()
 
                 # List stored all items for layout
                 items = []
 
-                if len(displayName) > 0:
-                    # Label only, if there is something to show
-                    label = QLabel(displayName)
-                    label.setAttribute(Qt.WA_NoSystemBackground, True)
-                    labelProxyWidget = GraphicsProxyWidget(self.__isDesignMode, label)
-                    labelProxyWidget.setTransformOriginPoint(labelProxyWidget.boundingRect().center())
+                displayNameProxyWidget = self._createDisplayNameProxyWidget(displayName)
+                if displayNameProxyWidget:
                     # Add item to itemlist
-                    items.append(labelProxyWidget)
+                    items.append(displayNameProxyWidget)
 
                 # Does key concern state of device?
                 keys = str(internalKey).split('.configuration.')
@@ -927,6 +916,11 @@ class GraphicsView(QGraphicsView):
                     displayProxyWidget.setToolTip(tooltipText)
                     # Add item to itemlist
                     items.append(displayProxyWidget)
+                    
+                    # Add proxyWidget for unit label, if available
+                    unitProxyWidget = self._createUnitProxyWidget(metricPrefixSymbol, unitSymbol)
+                    if unitProxyWidget:
+                        items.append(unitProxyWidget)
 
                     # Register as visible device
                     Manager().newVisibleDevice(internalKey)
@@ -935,18 +929,16 @@ class GraphicsView(QGraphicsView):
                 if hasEditableComponent:
                     if navItemType is NavigationItemTypes.CLASS:
                         editableComponent = EditableNoApplyComponent(classAlias, key=internalKey, \
-                                                                     currentValue=currentValue, \
                                                                      enumeration = enumeration, \
                                                                      metricPrefixSymbol=metricPrefixSymbol, \
                                                                      unitSymbol=unitSymbol)
                     elif navItemType is NavigationItemTypes.DEVICE:
                         editableComponent = EditableApplyLaterComponent(classAlias, key=internalKey, \
-                                                                        currentValue=currentValue, \
                                                                         enumeration = enumeration, \
                                                                         metricPrefixSymbol=metricPrefixSymbol, \
                                                                         unitSymbol=unitSymbol)
                         editableComponent.isEditableValueInit = False
-
+                    
                     editableComponent.widget.setAttribute(Qt.WA_NoSystemBackground, True)
                     editableProxyWidget = GraphicsProxyWidget(self.__isDesignMode, editableComponent.widget, editableComponent, isStateToDisplay)
                     editableProxyWidget.setTransformOriginPoint(editableProxyWidget.boundingRect().center())
@@ -954,9 +946,11 @@ class GraphicsView(QGraphicsView):
                     editableProxyWidget.setToolTip(tooltipText)
                     # Add item to itemlist
                     items.append(editableProxyWidget)
-
+                    
                     # Register as visible device
                     Manager().newVisibleDevice(internalKey)
+                    # Refresh to get current values on device
+                    Manager().onRefreshInstance(internalKey)
 
                 customTuple = self.createGraphicsItemContainer(Qt.Horizontal, items)
                 customItem = customTuple[0]
@@ -979,6 +973,36 @@ class GraphicsView(QGraphicsView):
         pos.setX(pos.x()-centerX)
         pos.setY(pos.y()-centerY)
         return pos
+
+
+    def _createDisplayNameProxyWidget(self, displayName):
+        if len(displayName) < 1:
+            return None
+
+        # Label only, if there is something to show
+        label = QLabel(displayName)
+        label.setAttribute(Qt.WA_NoSystemBackground, True)
+        displayNameProxyWidget = GraphicsProxyWidget(self.__isDesignMode, label)
+        displayNameProxyWidget.setTransformOriginPoint(displayNameProxyWidget.boundingRect().center())
+        return displayNameProxyWidget
+
+
+    def _createUnitProxyWidget(self, metricPrefixSymbol, unitSymbol):
+        # If metricPrefix &| unitSymbo are set a QLabel is returned,
+        # otherwise None
+        unitLabel = str()
+        
+        if len(metricPrefixSymbol) > 0:
+            unitLabel += metricPrefixSymbol
+        if len(unitSymbol) > 0:
+            unitLabel += unitSymbol
+        
+        if len(unitLabel) > 0:
+            laUnit = QLabel(unitLabel)
+            laUnit.setAttribute(Qt.WA_NoSystemBackground, True)
+            return GraphicsProxyWidget(self.__isDesignMode, laUnit)
+        
+        return None
 
 
 ### slots ###

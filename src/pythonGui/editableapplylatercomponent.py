@@ -34,11 +34,8 @@ class EditableApplyLaterComponent(BaseComponent):
 
         self.__isEditableValueInit = True
         
-        self.__currentDisplayValue = str()
-        self.__currentDisplayValue = params.get(QString('currentValue'))
-        if self.__currentDisplayValue is None:
-            self.__currentDisplayValue = params.get('currentValue')
-
+        self.__currentDisplayValue = None
+        
         self.__compositeWidget = QWidget()
         hLayout = QHBoxLayout(self.__compositeWidget)
         hLayout.setContentsMargins(0,0,0,0)
@@ -47,12 +44,8 @@ class EditableApplyLaterComponent(BaseComponent):
         self.__editableWidget.signalEditingFinished.connect(self.onEditingFinished)
         hLayout.addWidget(self.__editableWidget.widget)
         
-        metricPrefixSymbol = params.get(QString('metricPrefixSymbol'))
-        if metricPrefixSymbol is None:
-            metricPrefixSymbol = params.get('metricPrefixSymbol')
-        unitSymbol = params.get(QString('unitSymbol'))
-        if unitSymbol is None:
-            unitSymbol = params.get('unitSymbol')
+        metricPrefixSymbol = params.get('metricPrefixSymbol')
+        unitSymbol = params.get('unitSymbol')
         
         # Append unit label, if available
         unitLabel = str()
@@ -123,9 +116,7 @@ class EditableApplyLaterComponent(BaseComponent):
         self.signalConflictStateChanged.connect(Manager().onConflictStateChanged)
 
         # Use key to register component to manager
-        key = params.get(QString('key'))
-        if key is None:
-            key = params.get('key')
+        key = params.get('key')
         Manager().registerEditableComponent(key, self)
 
 
@@ -339,11 +330,6 @@ class EditableApplyLaterComponent(BaseComponent):
     # Triggered from self.__editableWidget when value was edited
     def onEditingFinished(self, key, value):
         # Update apply and reset buttons...
-        
-        # TODO: HACK to get apply button disabled
-        if isinstance(self.__currentDisplayValue, str):
-            value = str(value)
-        
         if value == self.__currentDisplayValue:
             self.applyEnabled = False
         else:

@@ -54,7 +54,7 @@ class ProjectPanel(QWidget):
         self.setWindowTitle(title)
         
         self.__twProject = QTreeWidget(self)
-        self.__twProject.setHeaderLabels(QStringList(""))
+        self.__twProject.setHeaderLabels([])
         self.__twProject.itemSelectionChanged.connect(self.projectItemSelectionChanged)
         
         mainLayout = QVBoxLayout(self)
@@ -75,7 +75,7 @@ class ProjectPanel(QWidget):
     def projectItemSelectionChanged(self):
         item = self.__twProject.currentItem()
         if not item: return
-        Manager().notifier.signalProjectItemChanged.emit(dict(type=NavigationItemTypes.CLASS, key=item.data(0, const.INTERNAL_KEY).toPyObject()))
+        Manager().notifier.signalProjectItemChanged.emit(dict(type=NavigationItemTypes.CLASS, key=item.data(0, const.INTERNAL_KEY)))
 
 
     def onCreateNewProjectConfig(self, customItem, path, configName):
@@ -97,10 +97,10 @@ class ProjectPanel(QWidget):
         # When deviceId of customItem was changed
         for i in xrange(self.__twProject.topLevelItemCount()):
             item = self.__twProject.topLevelItem(i)
-            if (item.data(0, const.INTERNAL_KEY).toPyObject() + ".configuration.deviceId") == key:
+            if (item.data(0, const.INTERNAL_KEY) + ".configuration.deviceId") == key:
                 oldText = item.text(0)
                 splittedText = str(oldText).split("-<")
-                item.setText(0, QString("%1-<%2>").arg(splittedText[0]).arg(deviceId))
+                item.setText(0, "{}-<{}>").format(splittedText[0], deviceId)
 
 
     # virtual function

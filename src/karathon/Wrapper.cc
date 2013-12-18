@@ -12,6 +12,7 @@
 #include <karabo/util/Hash.hh>
 #include <karabo/util/Schema.hh>
 #include <karabo/xip/CpuImage.hh>
+#include "RawImageDataWrap.hh"
 
 using namespace std;
 using namespace karabo::util;
@@ -90,6 +91,9 @@ namespace karathon {
                 return fromStdVectorToPyArray(boost::any_cast<std::vector<double> >(operand), numpyFlag);
             } else if (operand.type() == typeid (std::vector<std::string>)) {
                 return fromStdVectorToPyList(boost::any_cast < std::vector<std::string> >(operand));
+            } else if (operand.type() == typeid (karabo::xip::RawImageData)) {
+                karabo::xip::RawImageData raw = boost::any_cast<karabo::xip::RawImageData>(operand);
+                return bp::object(boost::shared_ptr<RawImageDataWrap>(new RawImageDataWrap(raw)));
             } else if (operand.type() == typeid (karabo::util::Hash)) {
                 return bp::object(boost::any_cast<karabo::util::Hash>(operand));
             } else if (operand.type() == typeid (karabo::util::Schema)) {
@@ -128,6 +132,14 @@ namespace karathon {
             any = b;
             return;
         }
+	if (PyUnicode_Check(obj.ptr())) {
+	    bp::object str(bp::handle<>(PyUnicode_AsUTF8String(obj.ptr())));
+            size_t size = PyString_Size(str.ptr());
+            const char* data = PyString_AsString(str.ptr());
+            string b(data,size);
+            any = b;
+            return;
+	}
         if (PyLong_Check(obj.ptr())) {
             //return PyLong_AsLongLong(obj.ptr());
             long long b = bp::extract<long>(obj);

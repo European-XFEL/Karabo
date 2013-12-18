@@ -59,13 +59,17 @@ class RectangleDialog(QDialog):
 
 
     def updateColorButtons(self):
-        self.__pbBackgroundColor.setStyleSheet(QString("background-color : rgb(%1,%2,%3);").arg(self.__textBackgroundColor.red()) \
-                                                                                           .arg(self.__textBackgroundColor.green()) \
-                                                                                           .arg(self.__textBackgroundColor.blue()))
+        self.__pbBackgroundColor.setStyleSheet(
+            "background-color : rgb({},{},{});".format(
+                self.__textBackgroundColor.red(), 
+                self.__textBackgroundColor.green(),
+                self.__textBackgroundColor.blue()))
 
-        self.__pbOutlineColor.setStyleSheet(QString("background-color : rgb(%1,%2,%3);").arg(self.__textOutlineColor.red()) \
-                                                                                        .arg(self.__textOutlineColor.green()) \
-                                                                                        .arg(self.__textOutlineColor.blue()))
+        self.__pbOutlineColor.setStyleSheet(
+            "background-color : rgb({},{},{});".format(
+                self.__textOutlineColor.red(),
+                self.__textOutlineColor.green(),
+                self.__textOutlineColor.blue()))
 
 
     def backgroundColor(self):

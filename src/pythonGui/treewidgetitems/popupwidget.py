@@ -28,15 +28,14 @@ class PopupWidget(QWidget):
         layout.setContentsMargins(0,0,0,0)
         layout.addWidget(self.__teInfo)
         
-        self.setWindowTitle(QString(" "))
+        self.setWindowTitle(" ")
 
 
     def setInfo(self, info):
         
-        htmlString = QString("<table>")
-        for pair in info.items():
-            htmlString.append("<tr><td><b>" + str(pair[0]) + "</b>:   </td>" + "<td>" + str(pair[1]) + "</td></tr>")
-        htmlString.append("</table")
+        htmlString = ("<table>" +
+                      "".join(["<tr><td><b>{}</b>:   </td><td>{}</td></tr>".
+                               format(*p) for p in info.items()]) + "</table>")
         self.__teInfo.setHtml(htmlString)
         
         self.__teInfo.fitHeightToContent(len(info))

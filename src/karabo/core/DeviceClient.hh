@@ -289,6 +289,16 @@ namespace karabo {
                 }
             }
             
+            template<class T>
+            T getAs(const std::string& instanceId, const std::string& key, const char keySep = '.') {
+                try {
+                    return cacheAndGetConfiguration(instanceId).getAs<T > (key, keySep);
+                } catch (const karabo::util::Exception& e) {
+
+                    throw KARABO_PARAMETER_EXCEPTION("Could not fetch parameter \"" + key + "\" from device \"" + instanceId + "\"");
+                }
+            }
+            
             karabo::util::vector<karabo::util::Hash> getFromPast(const std::string& deviceId, const std::string& key, const std::string& from, std::string to = "");
 
             void registerInstanceNewMonitor(const InstanceNewHandler& callBackFunction);

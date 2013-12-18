@@ -29,14 +29,14 @@ from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 
 import numpy as np
-#try:
-#    from guiqwt.plot import CurveDialog
-#    from guiqwt.builder import make
-#    from PyQt4.Qwt5 import *
-#    useGuiQwt = True
-#except:
-from PyQt4.Qwt5 import *
-useGuiQwt = False
+try:
+    from guiqwt.plot import CurveDialog
+    from guiqwt.builder import make
+    from PyQt4.Qwt5 import *
+    useGuiQwt = True
+except:
+    from PyQt4.Qwt5 import *
+    useGuiQwt = False
 
 
 def getCategoryAliasClassName():
@@ -52,23 +52,27 @@ class DisplayHistogram(DisplayWidget):
         self.__minMaxAssociatedKeys = (1,10) # tuple<min,max>
         
         if useGuiQwt:
-            self.__plot = CurveDialog(edit=False, toolbar=True, wintitle="Histogram")
+            self.__histogramWidget = CurveDialog(edit=False, toolbar=True, wintitle="Histogram")
+            self.__plot = self.__histogramWidget.get_plot()
         else:        
-            self.__plot = QwtPlot()
-            self.__plot.setMinimumSize(QSize(200,200))
+            self.__histogramWidget = QwtPlot()
+            self.__histogramWidget.setMinimumSize(QSize(200,200))
+            # Attach grid to plot
+            grid = QwtPlotGrid()
+            grid.enableXMin(True)
+            grid.enableYMin(True)
+            grid.setMajPen(QPen(Qt.black, 0, Qt.DotLine))
+            grid.setMinPen(QPen(Qt.gray, 0, Qt.DotLine))
+            grid.attach(self.__histogramWidget)
             
-        key = params.get(QString('key'))
-        if key is None:
-            key = params.get('key')
+        self.__plotCurves = []
+            
+        # Default colors
+        self.__colorList = ["red", "green", "blue", "gray", "violet", "orange", "lightgreen", "black"]
+            
+        key = params.get('key')
         # Stores key/value pair
         self.__keys = {str(key):None}
-        
-        # Set value
-        value = params.get(QString('value'))
-        if value is None:
-            value = params.get('value')
-        if value is not None:
-            self.valueChanged(key, value)
 
 
     def _getCategory(self):
@@ -79,7 +83,7 @@ class DisplayHistogram(DisplayWidget):
 
     # Returns the actual widget which is part of the composition
     def _getWidget(self):
-        return self.__plot
+        return self.__histogramWidget
     widget = property(fget=_getWidget)
 
 
@@ -114,65 +118,42 @@ class DisplayHistogram(DisplayWidget):
         
         # Update plot
         if useGuiQwt:
-            plot = self.__plot.get_plot()
-            plot.del_all_items()
+            while len(self.__plotCurves) > 0:
+                self.__plot.del_item(self.__plotCurves.pop())
 
+            index = -1
             for key in self.__keys:
                 value = self.__keys.get(key)
                 if value is None:
                     continue
-
-                i = 0
-                width = 1
-                intervals = []
-                values = QwtArrayDouble(len(value))
                 
-                for element in value:
-                    if isinstance(element, QString):
-                        return # TODO: what happens if string in list?
-                    xValue = i+width
-                    intervals.append(QwtDoubleInterval(i, xValue))
-                    yValue = float(element)
-                    values[i] = yValue
-                    
-                    i += width
+                index += 1
+                curveItem = make.curve(range(0, len(value), 1), value, self.__colorList[index])
                 
-                #from numpy.random import normal
-                #data = normal(0, 1, (1000, ))
-                #print type(data), len(data)
-                #for d in data:
-                #    print d, type(d)
-                #    print ""
-                #plot.add_item(make.histogram(data))
+                self.__plot.add_item(curveItem)
                 
-                #xValues = np.array(intervals)
-                #yValues = np.array(values)
-                #histogram = make.histogram(yValues)
-                #plot.add_item(histogram)
-            plot.replot()
+                self.__plotCurves.append(curveItem)
+            
+            self.__plot.replot()
         else:
-            self.__plot.detachItems()
-            
-            # Attach grid to plot
-            grid = QwtPlotGrid()
-            grid.enableXMin(True)
-            grid.enableYMin(True)
-            grid.setMajPen(QPen(Qt.black, 0, Qt.DotLine))
-            grid.setMinPen(QPen(Qt.gray, 0, Qt.DotLine))
-            grid.attach(self.__plot)
-            
+            while len(self.__plotCurves) > 0:
+                self.__plotCurves.pop().detach()
+
+            index = -1
             for key in self.__keys:
                 value = self.__keys.get(key)
                 if value is None:
                     continue
 
+                index += 1
+                
                 i = 0
                 width = 1
                 intervals = []
                 values = QwtArrayDouble(len(value))
                 
                 for element in value:
-                    if isinstance(element, QString):
+                    if isinstance(element, str):
                         return # TODO: what happens if string in list?
                     xValue = i+width
                     intervals.append(QwtDoubleInterval(i, xValue))
@@ -183,11 +164,13 @@ class DisplayHistogram(DisplayWidget):
                 
                 # Attach histogram item to plot
                 histogram = HistogramItem()
-                histogram.setColor(RandomColor())
+                histogram.setColor(QColor(self.__colorList[index]))
                 histogram.setData(QwtIntervalData(intervals, values))
-                histogram.attach(self.__plot)
+                histogram.attach(self.__histogramWidget)
+                
+                self.__plotCurves.append(histogram)
             
-            self.__plot.replot()
+            self.__histogramWidget.replot()
 
 
     class Maker:
@@ -248,10 +231,6 @@ class HistogramItem(QwtPlotItem):
             elif result.top() > self.baseline():
                 result.setTop(self.baseline())
         return result
-
-
-    #def rtti(self):
-    #    return QwtPlotItem.PlotHistogram
 
 
     def draw(self, painter, xMap, yMap, rect):

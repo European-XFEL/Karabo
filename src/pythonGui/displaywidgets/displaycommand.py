@@ -40,36 +40,15 @@ class DisplayCommand(DisplayWidget):
         # Minimum and maximum number of associated keys, 1 by default for each
         self.__minMaxAssociatedKeys = (1,1) # tuple<min,max>
         
-        self.__allowedStates = params.get(QString('allowedStates'))
-        if self.__allowedStates is None:
-            self.__allowedStates = params.get('allowedStates')
-                
-        commandText = params.get(QString('commandText'))
-        if commandText is None:
-            commandText = params.get('commandText')
-
-        commandEnabled = params.get(QString('commandEnabled'))
-        if commandEnabled is None:
-            commandEnabled = params.get('commandEnabled')
-
-        self.__command = params.get(QString('command'))
-        if self.__command is None:
-            self.__command = params.get('command')
+        self.__allowedStates = params.get('allowedStates')
+        commandText = params.get('commandText')
+        commandEnabled = params.get('commandEnabled')
+        self.__command = params.get('command')
             
         self.__pbCommand = QPushButton(commandText)
         self.__pbCommand.setEnabled(commandEnabled)
         self.__pbCommand.clicked.connect(self.onCommandClicked)
-        
-        self.__key = params.get(QString('key'))
-        if self.__key is None:
-            self.__key = params.get('key')
-        
-        # Set value
-        value = params.get(QString('value'))
-        if value is None:
-            value = params.get('value')
-        if value is not None:
-            self.valueChanged(self.__key, value)
+        self.__key = params.get('key')
         
         # TODO: better solution
         Manager().notifier.signalDeviceStateChanged.connect(self.onDeviceStateChanged)

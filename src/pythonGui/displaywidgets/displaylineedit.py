@@ -41,18 +41,9 @@ class DisplayLineEdit(DisplayWidget):
         
         self.__lineEdit = QLineEdit()
         self.__lineEdit.setMinimumSize(160, 24)
-        self.__lineEdit.setEnabled(False)
+        self.__lineEdit.setReadOnly(True)
         
-        self.__key = params.get(QString('key'))
-        if self.__key is None:
-            self.__key = params.get('key')
-        
-        # Set value
-        value = params.get(QString('value'))
-        if value is None:
-            value = params.get('value')
-        if value is not None:
-            self.valueChanged(self.__key, value)
+        self.__key = params.get('key')
 
 
     def _getCategory(self):

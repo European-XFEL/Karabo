@@ -25,9 +25,9 @@ class ScientificDoubleSpinBox(QDoubleSpinBox):
         self.displayDecimals = 0
         self.delimiter = QChar()
         
-        self.cachedText = QString()
+        self.cachedText = ""
         self.cachedState = QValidator.State
-        self.cachedValue = QVariant()
+        self.cachedValue = None
         
         self.setDecimals(4)
         QDoubleSpinBox.setDecimals(self, 1000)
@@ -83,13 +83,12 @@ class ScientificDoubleSpinBox(QDoubleSpinBox):
         pos = self.lineEdit().cursorPosition()
         state, value = self.validateAndInterpret(text, pos, state)
         
-        v, ok = value.toDouble()
-        return v
+        return float(value)
 
 
     # Function from QDoubleSpinBoxPrivate converted into Python
     def validateAndInterpret(self, input, pos, state):
-        if (self.cachedText == input) and (not input.isEmpty()):
+        if (self.cachedText == input) and (len(input) > 0):
             state = self.cachedState
             return (state, self.cachedValue)
         
@@ -155,8 +154,11 @@ class ScientificDoubleSpinBox(QDoubleSpinBox):
                     print "state is set to Invalid"
                     return self.checkValidated(min, max, state, copy, num)
 
-        ok = False
-        num, ok = self.locale().toDouble(copy)
+        ok = True
+        try:
+            num = float(self.locale())
+        except ValueError:
+            ok = False
 
         if not ok:
             if self.locale().groupSeparator().isPrint():
@@ -174,12 +176,11 @@ class ScientificDoubleSpinBox(QDoubleSpinBox):
 
                 copy2 = copy
                 copy2.remove(self.locale().groupSeparator())
-                num, ok = self.locale().toDouble(copy2)
-                print self.locale().groupSeparator(), num, copy2, ok
-
-                if not ok:
+                try:
+                    num = float(self.locale())
+                    ok = True
+                except ValueError:
                     state = QValidator.Invalid
-                    print "state is set to Invalid"
                     return self.checkValidated(min, max, state, copy, num)
 
         if not ok:
@@ -240,7 +241,7 @@ class ScientificDoubleSpinBox(QDoubleSpinBox):
         input = self.prefix() + copy + self.suffix()
         self.cachedText = input
         self.cachedState = state
-        self.cachedValue = QVariant(num)
+        self.cachedValue = num
         
-        return (state, QVariant(num))
+        return state, num
 

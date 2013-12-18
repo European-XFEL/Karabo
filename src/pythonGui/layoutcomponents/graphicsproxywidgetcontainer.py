@@ -87,42 +87,39 @@ class GraphicsProxyWidgetContainer(NodeBase, QGraphicsWidget):
    
 
     def mouseMoveEvent(self, event):
-        #print "QGraphicsWidget.mouseMoveEvent", self.isDesignMode
+        #print "+++ QGraphicsWidget.mouseMoveEvent", self.isDesignMode
         if self.isDesignMode == False:
             QGraphicsWidget.mouseMoveEvent(self, event)
+            event.accept()
         else:
             QGraphicsItem.mouseMoveEvent(self, event)
 
    
     def mousePressEvent(self, event):
-        #print "QGraphicsWidget.mousePressEvent", self.isDesignMode
+        #print "+++ QGraphicsWidget.mousePressEvent", self.isDesignMode
         if self.isDesignMode == False:
             self.setFlag(QGraphicsItem.ItemIsMovable, False)
             QGraphicsWidget.mousePressEvent(self, event)
+            event.accept()
         else:
             self.setFlag(QGraphicsItem.ItemIsMovable, True)
             QGraphicsItem.mousePressEvent(self, event)
 
 
     def mouseReleaseEvent(self, event):
-        #print "QGraphicsWidget.mouseReleaseEvent", self.isDesignMode
+        #print "+++ QGraphicsWidget.mouseReleaseEvent", self.isDesignMode
         if self.isDesignMode == False:
             QGraphicsWidget.mouseReleaseEvent(self, event)
+            event.accept()
         else:
             QGraphicsItem.mouseReleaseEvent(self, event)
     
 
     def contextMenuEvent(self, event):
-        if not self.isDesignMode:
-            QGraphicsWidget.contextMenuEvent(self, event)
-        else:
+        #print "+++ QGraphicsWidget.contextMenuEvent"
+        if self.isDesignMode:
             self._showContextMenu(event.screenPos())
-            QGraphicsWidget.contextMenuEvent(self, event)
-        
-    
-    def mouseDoubleClickEvent(self, event):
-        if not self.isDesignMode:
-            QGraphicsWidget.mouseDoubleClickEvent(self, event)
+        QGraphicsWidget.contextMenuEvent(self, event)
             
             
     def focusInEvent(self, event):

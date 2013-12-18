@@ -49,16 +49,19 @@ class SqlDatabase(object):
         self.__database = QSqlDatabase.addDatabase("QSQLITE")
         self.__database.setDatabaseName(self.__dbName)
 
+
+    def openConnection(self):
+        # Called from manager.reset() method
         if self.__database.open():
-            print self.__dbName, "opened"
+            #print self.__dbName, "connection established."
             query = QSqlQuery(self.__database)
             #query.exec_("PRAGMA foreign_keys = ON;");
 
             tables = self.__database.tables()
-            if tables.isEmpty():
-                print "Creating database tables"
+            #if len(tables) < 1:
+            #    print "Creating database tables"
 
-            if not tables.contains("tLog"):
+            if not "tLog" in tables:
                 #print "Creating tLog table..."
                 # Create table for event data
                 queryText = "CREATE TABLE tLog " \
@@ -74,7 +77,8 @@ class SqlDatabase(object):
 
 
     def closeConnection(self):
-        print "Close database connection"
+        # Called from network.onEndConnection method
+        #print self.__dbName, "connection closed."
         # Clear database
         #query = QSqlQuery(self.__database)
         #query.exec_("DELETE FROM tLog;")
