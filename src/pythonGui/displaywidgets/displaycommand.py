@@ -50,11 +50,6 @@ class DisplayCommand(DisplayWidget):
         self.__pbCommand.clicked.connect(self.onCommandClicked)
         self.__key = params.get('key')
         
-        # Set value
-        value = params.get('value')
-        if value is not None:
-            self.valueChanged(self.__key, value)
-        
         # TODO: better solution
         Manager().notifier.signalDeviceStateChanged.connect(self.onDeviceStateChanged)
 

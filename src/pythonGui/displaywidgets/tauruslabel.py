@@ -30,11 +30,7 @@ class TaurusLabelWrapper(DisplayWidget):
         self.__label = TaurusLabel()
         
         self.__key = params.get('key')
-        
-        # Set value
-        value = params.get('value')
-        if value is not None:
-            self.valueChanged(self.__key, value)
+
 
     def _getCategory(self):
         category, alias, className = getCategoryAliasClassName()

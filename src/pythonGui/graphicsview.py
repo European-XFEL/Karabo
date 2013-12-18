@@ -518,10 +518,11 @@ class GraphicsView(QGraphicsView):
                 print "Line removed"
             elif isinstance(item, GraphicsProxyWidgetContainer):
                 layout = item.layout()
-                for i in xrange(layout.count()):
-                    proxyItem = layout.itemAt(i)
+                while layout.count() > 0:
+                    proxyItem = layout.itemAt(layout.count()-1)
                     if not proxyItem:
                         continue
+                    
                     keys = proxyItem.keys
                     if keys:
                         for key in keys:
@@ -531,7 +532,10 @@ class GraphicsView(QGraphicsView):
                     if proxyItem in items:
                         # Remove item from list - prevent double deletion
                         items.remove(proxyItem)
+                    
                     self.__scene.removeItem(proxyItem)
+                    layout.removeItem(proxyItem)
+                    
                 item.destroy()
             elif isinstance(item, GraphicsProxyWidget):
                 keys = item.keys
@@ -871,14 +875,10 @@ class GraphicsView(QGraphicsView):
                 # List stored all items for layout
                 items = []
 
-                if len(displayName) > 0:
-                    # Label only, if there is something to show
-                    label = QLabel(displayName)
-                    label.setAttribute(Qt.WA_NoSystemBackground, True)
-                    labelProxyWidget = GraphicsProxyWidget(self.__isDesignMode, label)
-                    labelProxyWidget.setTransformOriginPoint(labelProxyWidget.boundingRect().center())
+                displayNameProxyWidget = self._createDisplayNameProxyWidget(displayName)
+                if displayNameProxyWidget:
                     # Add item to itemlist
-                    items.append(labelProxyWidget)
+                    items.append(displayNameProxyWidget)
 
                 # Does key concern state of device?
                 keys = str(internalKey).split('.configuration.')
@@ -916,6 +916,11 @@ class GraphicsView(QGraphicsView):
                     displayProxyWidget.setToolTip(tooltipText)
                     # Add item to itemlist
                     items.append(displayProxyWidget)
+                    
+                    # Add proxyWidget for unit label, if available
+                    unitProxyWidget = self._createUnitProxyWidget(metricPrefixSymbol, unitSymbol)
+                    if unitProxyWidget:
+                        items.append(unitProxyWidget)
 
                     # Register as visible device
                     Manager().newVisibleDevice(internalKey)
@@ -924,18 +929,16 @@ class GraphicsView(QGraphicsView):
                 if hasEditableComponent:
                     if navItemType is NavigationItemTypes.CLASS:
                         editableComponent = EditableNoApplyComponent(classAlias, key=internalKey, \
-                                                                     currentValue=currentValue, \
                                                                      enumeration = enumeration, \
                                                                      metricPrefixSymbol=metricPrefixSymbol, \
                                                                      unitSymbol=unitSymbol)
                     elif navItemType is NavigationItemTypes.DEVICE:
                         editableComponent = EditableApplyLaterComponent(classAlias, key=internalKey, \
-                                                                        currentValue=currentValue, \
                                                                         enumeration = enumeration, \
                                                                         metricPrefixSymbol=metricPrefixSymbol, \
                                                                         unitSymbol=unitSymbol)
                         editableComponent.isEditableValueInit = False
-
+                    
                     editableComponent.widget.setAttribute(Qt.WA_NoSystemBackground, True)
                     editableProxyWidget = GraphicsProxyWidget(self.__isDesignMode, editableComponent.widget, editableComponent, isStateToDisplay)
                     editableProxyWidget.setTransformOriginPoint(editableProxyWidget.boundingRect().center())
@@ -943,9 +946,11 @@ class GraphicsView(QGraphicsView):
                     editableProxyWidget.setToolTip(tooltipText)
                     # Add item to itemlist
                     items.append(editableProxyWidget)
-
+                    
                     # Register as visible device
                     Manager().newVisibleDevice(internalKey)
+                    # Refresh to get current values on device
+                    Manager().onRefreshInstance(internalKey)
 
                 customTuple = self.createGraphicsItemContainer(Qt.Horizontal, items)
                 customItem = customTuple[0]
@@ -968,6 +973,36 @@ class GraphicsView(QGraphicsView):
         pos.setX(pos.x()-centerX)
         pos.setY(pos.y()-centerY)
         return pos
+
+
+    def _createDisplayNameProxyWidget(self, displayName):
+        if len(displayName) < 1:
+            return None
+
+        # Label only, if there is something to show
+        label = QLabel(displayName)
+        label.setAttribute(Qt.WA_NoSystemBackground, True)
+        displayNameProxyWidget = GraphicsProxyWidget(self.__isDesignMode, label)
+        displayNameProxyWidget.setTransformOriginPoint(displayNameProxyWidget.boundingRect().center())
+        return displayNameProxyWidget
+
+
+    def _createUnitProxyWidget(self, metricPrefixSymbol, unitSymbol):
+        # If metricPrefix &| unitSymbo are set a QLabel is returned,
+        # otherwise None
+        unitLabel = str()
+        
+        if len(metricPrefixSymbol) > 0:
+            unitLabel += metricPrefixSymbol
+        if len(unitSymbol) > 0:
+            unitLabel += unitSymbol
+        
+        if len(unitLabel) > 0:
+            laUnit = QLabel(unitLabel)
+            laUnit.setAttribute(Qt.WA_NoSystemBackground, True)
+            return GraphicsProxyWidget(self.__isDesignMode, laUnit)
+        
+        return None
 
 
 ### slots ###

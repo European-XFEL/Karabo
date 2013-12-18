@@ -46,11 +46,6 @@ class DisplayComboBox(DisplayWidget):
         self.__key = params.get('key')
         enumeration = params.get('enumeration')
         self.addItems(enumeration)
-        
-        # Set value
-        value = params.get('value')
-        if value is not None:
-            self.valueChanged(self.__key, value)
 
 
     def _getCategory(self):

@@ -12,7 +12,6 @@ import sip
 sip.setapi("QString", 2)
 sip.setapi("QVariant", 2)
 
-import globals
 import sys
 
 from displaywidget import DisplayWidget
@@ -51,7 +50,6 @@ if __name__ == '__main__':
 #        "}")
     
     scanWidgetPlugins()
-    globals.init()
         
     window = MainWindow()
     sys.exit(app.exec_())
