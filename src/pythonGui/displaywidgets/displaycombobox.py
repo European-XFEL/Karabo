@@ -43,21 +43,9 @@ class DisplayComboBox(DisplayWidget):
         self.__comboBox.setFrame(False)
         self.__comboBox.setEnabled(False)
         
-        self.__key = params.get(QString('key'))
-        if self.__key is None:
-            self.__key = params.get('key')
-
-        enumeration = params.get(QString('enumeration'))
-        if enumeration is None:
-            enumeration = params.get('enumeration')
+        self.__key = params.get('key')
+        enumeration = params.get('enumeration')
         self.addItems(enumeration)
-        
-        # Set value
-        value = params.get(QString('value'))
-        if value is None:
-            value = params.get('value')
-        if value is not None:
-            self.valueChanged(self.__key, value)
 
 
     def _getCategory(self):

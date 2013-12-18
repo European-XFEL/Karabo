@@ -9,12 +9,10 @@ from karabo.karathon import AccessLevel
 # TODO Karabo will support an global access level and an excpetion list which is deviceId specific
 # This requires a function like in SignalSlotable: getAccessLevel(deviceId) in the end
 
-def init():
-    
-    global GLOBAL_ACCESS_LEVEL
-    GLOBAL_ACCESS_LEVEL = AccessLevel.OBSERVER
-    
-    global KARABO_DEFAULT_ACCESS_LEVEL
-    #KARABO_DEFAULT_ACCESS_LEVEL = AccessLevel.OBSERVER  # Inside XFEL
-    KARABO_DEFAULT_ACCESS_LEVEL = AccessLevel.ADMIN  # Outside XFEL
-    
+
+GLOBAL_ACCESS_LEVEL = AccessLevel.OBSERVER
+#KARABO_DEFAULT_ACCESS_LEVEL = AccessLevel.OBSERVER  # Inside XFEL
+KARABO_DEFAULT_ACCESS_LEVEL = AccessLevel.ADMIN  # Outside XFEL
+
+MAX_INT32 = (2**31)-1 # 0x7fffffff
+MIN_INT32 = -(2**31) # -0x80000000

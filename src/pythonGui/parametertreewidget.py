@@ -43,14 +43,47 @@ class ParameterTreeWidget(QTreeWidget):
         #self.setSortingEnabled(True)
         self.sortByColumn(0, Qt.AscendingOrder)
         
-        self._setupActions()
-        self._setupContextMenu()
-        
-        self.itemClicked.connect(self.onItemClicked)
+        self.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.__mContext = QMenu(self) # Actions from configurationPanel are added via addContextAction
         self.customContextMenuRequested.connect(self.onCustomContextMenuRequested)
 
 
 ### protected ###
+    def mousePressEvent(self, event):
+        item = self.itemAt(event.pos())
+        
+        # Make sure the event was on a valid item
+        if not item:
+           return
+
+        # Get the tree widget's x position
+        treeX = self.header().sectionViewportPosition(0)
+
+        # Get the x coordinate of the root item. It is required in order to calculate
+        # the identation of the item
+        rootX = self.visualItemRect(self.invisibleRootItem()).x()
+
+        # Get the rectangle of the viewport occupied by the pressed item
+        vRect = self.visualItemRect(item)
+
+        # Calculate the x coordinate of the item
+        itemX = treeX + vRect.x() - rootX
+
+        # Get the rect surrounding the icon
+        iconRect = QRect(itemX, vRect.y(), vRect.height(), vRect.height())      
+
+        if self.__currentItem and (self.__currentItem is not item):
+            # Hide tooltip of former item
+            self.__currentItem.setToolTipDialogVisible(False)
+        
+        # Now check where the press event took place and handle it correspondingly
+        if iconRect.contains(event.pos()):
+            self.__currentItem = item
+            self.__currentItem.setToolTipDialogVisible(True)
+            
+        QTreeWidget.mousePressEvent(self, event)
+
+
     def mouseMoveEvent(self, event):
         QTreeWidget.mouseMoveEvent(self, event)
         
@@ -75,33 +108,33 @@ class ParameterTreeWidget(QTreeWidget):
         # Source type
         mimeData.setData("sourceType", "ParameterTreeWidget")
         # Internal key
-        mimeData.setData("internalKey", QString(item.internalKey).toAscii())
+        mimeData.setData("internalKey", item.internalKey)
         # Display name
         displayName = item.text(0)
         # Use DeviceClass/DeviceInstance-Key if no displayName is set
         if len(item.text(0)) == 0:
             keys = item.internalKey.split('.')
             displayName = keys[1]
-        mimeData.setData("displayName", displayName.toAscii())
+        mimeData.setData("displayName", displayName)
         
         # Get NavigationItemType
         navigationItemType = self.__configPanel.getNavigationItemType()
         
         # Display component?
         hasDisplayComponent = navigationItemType == NavigationItemTypes.DEVICE
-        mimeData.setData("hasDisplayComponent", QString("%1").arg(hasDisplayComponent).toAscii())
+        mimeData.setData("hasDisplayComponent", "{}".format(hasDisplayComponent))
         # Editable component?
         hasEditableComponent = item.editableComponent is not None
-        mimeData.setData("hasEditableComponent", QString("%1").arg(hasEditableComponent).toAscii())
+        mimeData.setData("hasEditableComponent", "{}".format(hasEditableComponent))
         
         # TODO: HACK to get apply button disabled
         if hasEditableComponent:
-            mimeData.setData("currentValue", QString("%1").arg(item.editableComponent.value).toAscii())
+            mimeData.setData("currentValue", "{}".format(item.editableComponent.value))
         
         if item.unitSymbol:
-            mimeData.setData("unitSymbol", QString("%1").arg(item.unitSymbol).toAscii())
+            mimeData.setData("unitSymbol", "{}".format(item.unitSymbol))
         if item.metricPrefixSymbol:
-            mimeData.setData("metricPrefixSymbol", QString("%1").arg(item.metricPrefixSymbol).toAscii())
+            mimeData.setData("metricPrefixSymbol", "{}".format(item.metricPrefixSymbol))
 
         if item.enumeration:
             enumerationString = str()
@@ -110,13 +143,13 @@ class ParameterTreeWidget(QTreeWidget):
                 enumerationString += item.enumeration[i]
                 if i != (nbEnums-1):
                     enumerationString += ","
-            mimeData.setData("enumeration", enumerationString.toAscii())
+            mimeData.setData("enumeration", enumerationString)
             
         # Navigation item type
-        mimeData.setData("navigationItemType", QString("%1").arg(navigationItemType).toAscii())
+        mimeData.setData("navigationItemType", "{}".format(navigationItemType))
         # Class alias
         if item.classAlias:
-            mimeData.setData("classAlias", QString("%1").arg(item.classAlias).toAscii())
+            mimeData.setData("classAlias", "{}".format(item.classAlias))
 
         drag = QDrag(self)
         drag.setMimeData(mimeData)
@@ -144,12 +177,6 @@ class ParameterTreeWidget(QTreeWidget):
 
     def stateUpdated(self, state):
         self._r_updateParameters(self.invisibleRootItem(), state)
-
-
-    def setActionsVisible(self, visible):
-        # Called when NavigationItem changed
-        self.__acFileOpen.setVisible(visible)
-        self.__acFileSaveAs.setVisible(visible)
 
 
     def addItemDataToHash(self, item, config):
@@ -192,11 +219,6 @@ class ParameterTreeWidget(QTreeWidget):
         self._r_setReadOnlyItem(self.invisibleRootItem(), readOnly)
 
 
-    def removeActions(self):
-        self.__configPanel.removeActionFromToolBar(self.__acFileOpen)
-        self.__configPanel.removeActionFromToolBar(self.__acFileSaveAs)
-
-
 ### private functions ###
     def _r_setErrorStateItem(self, item, inErrorState):
         for i in range(item.childCount()):
@@ -212,39 +234,16 @@ class ParameterTreeWidget(QTreeWidget):
             self._r_setReadOnlyItem(childItem, readOnly)
 
 
-    def _setupActions(self):
-        text = "Open configuration (*.xml)"
-        self.__acFileOpen = QAction(QIcon(":open"), "&Open configuration", self)
-        self.__acFileOpen.setStatusTip(text)
-        self.__acFileOpen.setToolTip(text)
-        self.__acFileOpen.triggered.connect(self.onFileOpen)
-        self.__configPanel.addActionToToolBar(self.__acFileOpen)
-
-        text = "Save configuration as (*.xml)"
-        self.__acFileSaveAs = QAction(QIcon(":save-as"), "Save &As...", self)
-        self.__acFileSaveAs.setStatusTip(text)
-        self.__acFileSaveAs.setToolTip(text)
-        self.__acFileSaveAs.triggered.connect(self.onFileSaveAs)
-        self.__configPanel.addActionToToolBar(self.__acFileSaveAs)
-        
-
-    def _setupContextMenu(self):
-        self.setContextMenuPolicy(Qt.CustomContextMenu)
-        
-        # add toolbar menu also in context menu
-        self.__mFile = QMenu(self)
-        self.__mFile.addAction(self.__acFileOpen)
-        self.__mFile.addAction(self.__acFileSaveAs)
-        self.__mFile.addSeparator()
-        # other action from configurationPanel gets added via addConfigAction
+    def addContextAction(self, action):
+        self.__mContext.addAction(action)
 
 
-    def addConfigAction(self, action):
-        self.__mFile.addAction(action)
+    def addContextMenu(self, menu):
+        self.__mContext.addMenu(menu)
 
 
-    def addConfigMenu(self, menu):
-        self.__mFile.addMenu(menu)
+    def addContextSeparator(self):
+        self.__mContext.addSeparator()
 
 
     def _r_updateParameters(self, parentItem, state):
@@ -302,14 +301,6 @@ class ParameterTreeWidget(QTreeWidget):
 
 
 ### slots ###
-    def onItemClicked(self, item, column):
-        if self.__currentItem and  (self.__currentItem != item):
-            self.__currentItem.setToolTipDialogVisible(False)
-        
-        self.__currentItem = item
-        self.__currentItem.setToolTipDialogVisible(True)
-
-
     def onApplyChanged(self, enable):
         # Called when apply button of editableComponent changed
         # Check if no apply button in tree is enabled/conflicted anymore
@@ -344,18 +335,18 @@ class ParameterTreeWidget(QTreeWidget):
         croppedClassId = self.__classId.split("-")
         self.__classId = croppedClassId[0]
         
-        Manager().onFileOpen(configChangeType, str(self.instanceKey), str(self.__classId))
+        Manager().onFileOpen(configChangeType, str(self.instanceKey + ".configuration"), str(self.__classId))
 
 
     def onFileSaveAs(self):
-        Manager().onSaveAsXml(str(self.__classId), self.instanceKey)
+        Manager().onSaveAsXml(str(self.__classId), str(self.instanceKey + ".configuration"))
 
 
     def onCustomContextMenuRequested(self, pos):
         item = self.itemAt(pos)
         if item is None:
             # Show standard context menu
-            self.__mFile.exec_(QCursor.pos())
+            self.__mContext.exec_(QCursor.pos())
             return
 
         item.showContextMenu()

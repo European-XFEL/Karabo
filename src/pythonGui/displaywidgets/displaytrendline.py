@@ -26,7 +26,6 @@ import sys
 import time
 
 from displaywidget import DisplayWidget
-from randomcolor import RandomColor
 
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
@@ -36,7 +35,7 @@ try:
     from PyQt4 import Qwt5
     from guiqwt.plot import CurveDialog, CurvePlot, PlotManager
     from guiqwt.tools import SelectPointTool
-    from guiqwt.builder import make    
+    from guiqwt.builder import make
 except:
     print "Missing package guiqwt (this is normal under MacOSX and will come later)"
     useGuiQwt = False
@@ -73,26 +72,24 @@ class DisplayTrendline(DisplayWidget):
         super(DisplayTrendline, self).__init__(**params)
         
         if useGuiQwt == False:
-            self.__plot = None
+            self.__dialog = None
             return
 
         self.__data = []
         
-        self.__dialog = CurveDialog(edit=False, toolbar=True)
-        self.__dialog.resize(400, 600)
-        
+        self.__dialog = CurveDialog(edit=False, toolbar=True, wintitle="Trendline")
         self.__plot = self.__dialog.get_plot()
-        self.__plot.set_antialiasing( True )
+        self.__plot.set_antialiasing(True)
         
-         # Set axis's labels
+        # Set axis's labels
         self.__plot.setAxisTitle( Qwt5.Qwt.QwtPlot.xBottom, 'Time' )
         self.__plot.setAxisTitle( Qwt5.Qwt.QwtPlot.yLeft, 'Value' )
         
-          # Create the curves
+        # Create the curves
         self.__curve = make.curve( [ ], [ ], 'Random values', QColor( 255, 0, 0 ) )
         self.__plot.add_item( self.__curve )
 
-        # Crate the PlotManager
+        # Create the PlotManager
         self.__manager = PlotManager( self )
         self.__manager.add_plot( self.__plot )
 
@@ -115,12 +112,9 @@ class DisplayTrendline(DisplayWidget):
         self.__plot.setAxisScaleDraw( Qwt5.Qwt.QwtPlot.xBottom, DateTimeScaleDraw() )
         self.__plot.setAxisAutoScale( Qwt5.Qwt.QwtPlot.yLeft )
         
-        # Set value
-#        value = params.get(QString('value'))
-#        if value is None:
-#            value = params.get('value')
-#        if value is not None:
-#            self.valueChanged(key, value)
+        key = params.get('key')
+        # Stores key/value pair
+        self.__keys = {str(key):None}
 
 
     def _getCategory(self):
@@ -131,7 +125,7 @@ class DisplayTrendline(DisplayWidget):
 
     # Returns the actual widget which is part of the composition
     def _getWidget(self):
-        return self.__plot
+        return self.__dialog
     widget = property(fget=_getWidget)
 
 
@@ -147,7 +141,6 @@ class DisplayTrendline(DisplayWidget):
 
 
     def _value(self):
-        print "DisplayTrendline.value"
         return None
     value = property(fget=_value)
 

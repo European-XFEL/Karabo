@@ -28,15 +28,11 @@ class Label(QLabel):
     def __init__(self, **params):
         super(Label, self).__init__()
         
-        self.__value = params.get(QString('value'))
-        if self.__value is None:
-            self.__value = params.get('value')
+        self.__value = params.get('value')
         if self.__value is None:
             self.__value = []
         
-        self.__valueType = params.get(QString('valueType'))
-        if self.__valueType is None:
-            self.__valueType = params.get('valueType')
+        self.__valueType = params.get('valueType')
         
         self.setAcceptDrops(True)
 
@@ -68,7 +64,7 @@ class Label(QLabel):
             maxLen -= 1
         
         self.blockSignals(True)
-        self.setText(QString("[%1]").arg(valueAsString))
+        self.setText("[{}]".format(valueAsString))
         self.blockSignals(False)
         
     value = property(fget=_value, fset=_setValue)
@@ -87,9 +83,6 @@ class Label(QLabel):
             listCount = listEdit.getListCount()
             for i in range(listCount):
                 value = listEdit.getListElementAt(i)
-
-                if isinstance(value, QString):
-                    value = str(value)
                 values.append(value)
                 
                 # As string
@@ -140,8 +133,6 @@ class Label(QLabel):
     #            nbValues = len(values)
     #            for i in xrange(nbValues):
     #                value = values[i]
-                    # Prevent QString issue
-    #                values[i] = str(value)
                     # as string
     #                tmpList += str(value)
     #                if i < (nbValues-1):

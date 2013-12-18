@@ -20,7 +20,7 @@
 
 __all__ = ["EditableSpinBox"]
 
-import sys
+import globals
 
 from editablewidget import EditableWidget
 
@@ -39,10 +39,7 @@ class EditableSpinBox(EditableWidget):
 
         self.__spinBox = QSpinBox()
         #intMax = sys.maxint <--- This produces a bug in 64bit systems
-        maxInt = 2147483647
-        # TODO Define proper max interval
-        #self.__spinBox.setRange(-100000, 100000)
-        self.__spinBox.setRange(-maxInt, maxInt)
+        self.__spinBox.setRange(globals.MIN_INT32, globals.MAX_INT32)
         
         self.__spinBox.installEventFilter(self)
         self.__spinBox.valueChanged.connect(self.onEditingFinished)
@@ -51,13 +48,9 @@ class EditableSpinBox(EditableWidget):
         self.__minMaxAssociatedKeys = (1,1) # tuple<min,max>
         
         # Set key
-        self.__key = params.get(QString('key'))
-        if self.__key is None:
-            self.__key = params.get('key')
+        self.__key = params.get('key')
         # Set value
-        value = params.get(QString('value'))
-        if value is None:
-            value = params.get('value')
+        value = params.get('value')
         self.valueChanged(self.__key, value)
 
 
@@ -92,17 +85,13 @@ class EditableSpinBox(EditableWidget):
 
 
     def addParameters(self, **params):
-        minInc = params.get(QString('minInc'))
-        if minInc is None:
-            minInc = params.get('minInc')
+        minInc = params.get('minInc')
         if minInc:
             self.__spinBox.blockSignals(True)
             self.__spinBox.setMinimum(minInc)
             self.__spinBox.blockSignals(False)
 
-        maxInc = params.get(QString('maxInc'))
-        if maxInc is None:
-            maxInc = params.get('maxInc')
+        maxInc = params.get('maxInc')
         if maxInc:
             self.__spinBox.blockSignals(True)
             self.__spinBox.setMaximum(maxInc)

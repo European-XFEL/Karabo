@@ -113,21 +113,26 @@ class TextDialog(QDialog):
         font = self.__cbFont.currentFont()
         font.setPointSize(self.__sbFontSize.value())
         self.__teText.document().setDefaultFont(font)
-        self.__buttonBox.button(QDialogButtonBox.Ok).setEnabled(not self.__teText.toPlainText().isEmpty())
+        self.__buttonBox.button(QDialogButtonBox.Ok).setEnabled(len(self.__teText.toPlainText() > 0))
 
 
     def updateColorButtons(self):
-        self.__pbTextColor.setStyleSheet(QString("background-color : rgb(%1,%2,%3);").arg(self.__textColor.red()) \
-                                                                                     .arg(self.__textColor.green()) \
-                                                                                     .arg(self.__textColor.blue()))
+        self.__pbTextColor.setStyleSheet(
+            "background-color : rgb({},{},{});".format(
+                self.__textColor.red(), self.__textColor.green(), 
+                self.__textColor.blue()))
 
-        self.__pbBackgroundColor.setStyleSheet(QString("background-color : rgb(%1,%2,%3);").arg(self.__textBackgroundColor.red()) \
-                                                                                           .arg(self.__textBackgroundColor.green()) \
-                                                                                           .arg(self.__textBackgroundColor.blue()))
+        self.__pbBackgroundColor.setStyleSheet(
+            "background-color : rgb({},{},{});".format(
+                self.__textBackgroundColor.red(),
+                self.__textBackgroundColor.green(),
+                self.__textBackgroundColor.blue()))
 
-        self.__pbOutlineColor.setStyleSheet(QString("background-color : rgb(%1,%2,%3);").arg(self.__textOutlineColor.red()) \
-                                                                                        .arg(self.__textOutlineColor.green()) \
-                                                                                        .arg(self.__textOutlineColor.blue()))
+        self.__pbOutlineColor.setStyleSheet(
+            "background-color : rgb({},{},{});".format(
+                self.__textOutlineColor.red(),
+                self.__textOutlineColor.green(),
+                self.__textOutlineColor.blue()))
 
 
     def text(self):
