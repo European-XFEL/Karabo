@@ -111,7 +111,7 @@ class EditableFilePath(EditableWidget):
     def onSelectFilePath(self):
         filePath = QFileDialog.getExistingDirectory(None, "Set path", "", QFileDialog.ShowDirsOnly | QFileDialog.DontResolveSymlinks)
         
-        if filePath.isEmpty():
+        if len(filePath) < 1:
             return
         
         self._setValue(filePath)

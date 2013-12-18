@@ -105,7 +105,7 @@ class GraphicsView(QGraphicsView):
 
     # Returns true, when items has been copied; otherwise false
     def hasCopy(self):
-        return not self.__copiedItem.isEmpty()
+        return (len(self.__copiedItem) > 0)
 
 
     # All selected items of the scene are returned
@@ -175,7 +175,7 @@ class GraphicsView(QGraphicsView):
     # Open saved view from file
     def openSceneLayoutFromFile(self):
         filename = QFileDialog.getOpenFileName(None, "Open saved view", QDir.tempPath(), "SCENE (*.scene)")
-        if filename.isEmpty():
+        if len(filename) < 1:
             return
 
         self.openScene(filename)
@@ -185,7 +185,7 @@ class GraphicsView(QGraphicsView):
         dirPath = QFileDialog.getExistingDirectory(self, "Select directory to open configuration files", QDir.tempPath(),
                                                    QFileDialog.ShowDirsOnly | QFileDialog.DontResolveSymlinks)
 
-        if dirPath.isEmpty():
+        if len(dirPath) < 1:
             return
 
         dir = QDir(dirPath)
@@ -198,7 +198,7 @@ class GraphicsView(QGraphicsView):
         dirPath = QFileDialog.getExistingDirectory(self, "Select directory to open configuration files", QDir.tempPath(),
                                                    QFileDialog.ShowDirsOnly | QFileDialog.DontResolveSymlinks)
 
-        if dirPath.isEmpty():
+        if len(dirPath) < 1:
             return
 
         dir = QDir(dirPath)
@@ -251,11 +251,11 @@ class GraphicsView(QGraphicsView):
     # Save active view to file
     def saveSceneLayoutToFile(self):
         filename = QFileDialog.getSaveFileName(None, "Save file as", QDir.tempPath(), "SCENE (*.scene)")
-        if filename.isEmpty():
+        if len(filename) < 1:
             return
 
         fi = QFileInfo(filename)
-        if fi.suffix().isEmpty():
+        if len(fi.suffix()) < 1:
             filename += ".scene"
 
         CustomXmlWriter(self.__scene).write(filename)
@@ -265,7 +265,7 @@ class GraphicsView(QGraphicsView):
         dirPath = QFileDialog.getExistingDirectory(self, "Select directory to save configuration files", QDir.tempPath(),
                                                    QFileDialog.ShowDirsOnly | QFileDialog.DontResolveSymlinks)
 
-        if dirPath.isEmpty():
+        if len(dirPath) < 1:
             return
 
         # Check, if directory is empty
@@ -280,7 +280,7 @@ class GraphicsView(QGraphicsView):
         dirPath = QFileDialog.getExistingDirectory(self, "Select directory to save layout and configuration files", QDir.tempPath(),
                                                    QFileDialog.ShowDirsOnly | QFileDialog.DontResolveSymlinks)
 
-        if dirPath.isEmpty():
+        if len(dirPath) < 1:
             return
 
         # Check, if directory is empty
@@ -420,7 +420,7 @@ class GraphicsView(QGraphicsView):
     # The copied item data is extracted and the items are instantiated with the
     # refered binary data
     def paste(self):
-        if self.__copiedItem.isEmpty():
+        if len(self.__copiedItem) < 1:
             return
 
         stream = QDataStream(self.__copiedItem, QIODevice.ReadOnly)

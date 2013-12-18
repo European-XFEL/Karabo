@@ -447,11 +447,11 @@ class LogWidget(QWidget):
     def saveDatabaseContentToFile(self):
         # Write current database content to a file
         filename = QFileDialog.getSaveFileName(None, "Save file as", QDir.tempPath(), "LOG (*.log)")
-        if filename.isEmpty() :
+        if len(filename) < 1:
             return
         
         fi = QFileInfo(filename)
-        if fi.suffix().isEmpty() :
+        if len(fi.suffix()) < 1:
             filename += ".log"
 
         logFile = QFile(filename)

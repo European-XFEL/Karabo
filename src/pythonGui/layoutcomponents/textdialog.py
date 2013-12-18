@@ -113,7 +113,7 @@ class TextDialog(QDialog):
         font = self.__cbFont.currentFont()
         font.setPointSize(self.__sbFontSize.value())
         self.__teText.document().setDefaultFont(font)
-        self.__buttonBox.button(QDialogButtonBox.Ok).setEnabled(not self.__teText.toPlainText().isEmpty())
+        self.__buttonBox.button(QDialogButtonBox.Ok).setEnabled(len(self.__teText.toPlainText() > 0))
 
 
     def updateColorButtons(self):

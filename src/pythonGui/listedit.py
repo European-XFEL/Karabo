@@ -81,7 +81,7 @@ class ListEdit(QDialog):
         self.addCaption = addCaption
         self.addLabel = addLabel
         self.editCaption = editCaption
-        if editLabel.isEmpty() == True :
+        if len(editLabel) < 1:
             self.editLabel = addLabel
         else:
             self.editLabel = editLabel
@@ -218,11 +218,11 @@ class ListEdit(QDialog):
 
     def onRemoveClicked(self):
         original = self.__listWidget.currentItem().text()
-        if original.isEmpty()==True or (self.ask and QMessageBox.question(self, "Remove",
-                                                                                "Remove '{}'?".format(original),
-                                                                                QMessageBox.Yes | QMessageBox.Default,
-                                                                                QMessageBox.No | QMessageBox.Escape) ==
-                                                                                QMessageBox.No) :
+        if (len(original) < 1) or (self.ask and QMessageBox.question(self, "Remove",
+                                                                    "Remove '{}'?".format(original),
+                                                                    QMessageBox.Yes | QMessageBox.Default,
+                                                                    QMessageBox.No | QMessageBox.Escape) ==
+                                                                    QMessageBox.No):
             return
         self.__listWidget.takeItem(self.__listWidget.currentRow())
         self.onUpdateButtons()

@@ -76,7 +76,7 @@ class StringListEdit(QDialog):
         self.addCaption = addCaption
         self.addLabel = addLabel
         self.editCaption = editCaption
-        if editLabel.isEmpty() == True :
+        if len(editLabel) < 1:
             self.editLabel = addLabel
         else:
             self.editLabel = editLabel
@@ -162,7 +162,7 @@ class StringListEdit(QDialog):
         else :
             text = self.retrieveChoice(self.addCaption, self.addLabel);
 
-        if text.isEmpty() == False :
+        if len(text) > 0:
             if self.duplicatesOk==False and len(self.listWidget.findItems(text, Qt.MatchCaseSensitive)) > 0 :
                 return
 
@@ -183,7 +183,7 @@ class StringListEdit(QDialog):
             text = self.retrieveAnyString(self.editCaption, self.editLabel)
         else:
             text = self.retrieveChoice(self.editCaption, self.editLabel)
-        if text.isEmpty() == False :
+        if len(text) > 0:
             if self.duplicatesOk==False and self.listWidget.findItems(text, Qt.MatchCaseSensitive)!=[] :
                 return
             self.listWidget.currentItem().setText(text)
@@ -192,11 +192,11 @@ class StringListEdit(QDialog):
 
     def onRemoveString(self):
         original = self.listWidget.currentItem().text()
-        if original.isEmpty()==True or (self.ask and QMessageBox.question(self, "Remove",
-                                                                                "Remove '{}'?".format(original),
-                                                                                QMessageBox.Yes | QMessageBox.Default,
-                                                                                QMessageBox.No | QMessageBox.Escape) ==
-                                                                                QMessageBox.No) :
+        if (len(original) < 1) or (self.ask and QMessageBox.question(self, "Remove",
+                                                                    "Remove '{}'?".format(original),
+                                                                    QMessageBox.Yes | QMessageBox.Default,
+                                                                    QMessageBox.No | QMessageBox.Escape) ==
+                                                                    QMessageBox.No):
             return
         self.listWidget.takeItem(self.listWidget.currentRow())
         self.onUpdateButtons()
