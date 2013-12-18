@@ -99,7 +99,7 @@ class DisplayFilePath(DisplayWidget):
 ### slots ###
     def onSelectFilePath(self):
         filePath = QFileDialog.getExistingDirectory(None, "Set path", "", QFileDialog.ShowDirsOnly | QFileDialog.DontResolveSymlinks)
-        if filePath.isEmpty() == True:
+        if len(filePath) < 1:
             return
         self._setValue(filePath)
         self.onEditingFinished()

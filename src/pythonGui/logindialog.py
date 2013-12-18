@@ -86,7 +86,7 @@ class LoginDialog(QDialog):
 
 
     def _getUsername(self):
-        return self.__leUsername.text()
+        return self.__leUsername.text().lower()
     username = property(fget=_getUsername)
 
 
@@ -119,7 +119,7 @@ class LoginDialog(QDialog):
 ### slots ###
     def onUsernameChanged(self, text):
         # Here comes the easter egg...
-        text = text.toLower()
+        text = text.lower()
         if text == "admin":
             self._showEasterEgg(True)
         else:

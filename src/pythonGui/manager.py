@@ -604,7 +604,7 @@ class Manager(Singleton):
 
     def onFileOpen(self, configChangeType, path, classId=str()):
         filename = QFileDialog.getOpenFileName(None, "Open saved configuration", QDir.tempPath(), "XML (*.xml)")
-        if filename.isEmpty():
+        if len(filename) < 1:
             return
         
         file = QFile(filename)
@@ -625,11 +625,11 @@ class Manager(Singleton):
     
     def onSaveAsXml(self, classId, path):
         filename = QFileDialog.getSaveFileName(None, "Save file as", QDir.tempPath(), "XML (*.xml)")
-        if filename.isEmpty():
+        if len(filename) < 1:
             return
         
         fi = QFileInfo(filename)
-        if fi.suffix().isEmpty():
+        if len(fi.suffix()) < 1:
             filename += ".xml"
 
         self.saveAsXml(str(filename), classId, path)

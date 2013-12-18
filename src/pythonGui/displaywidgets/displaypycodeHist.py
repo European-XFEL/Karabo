@@ -27,8 +27,8 @@ from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 
 #iPython ZMQ Kernel manager utilities
-from IPython.frontend.qt.kernelmanager import QtKernelManager
-from IPython.frontend.qt.svg import svg_to_image
+#from IPython.frontend.qt.kernelmanager import QtKernelManager
+#from IPython.frontend.qt.svg import svg_to_image
 from base64 import decodestring
 
 import time
