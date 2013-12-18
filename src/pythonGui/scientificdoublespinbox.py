@@ -88,7 +88,7 @@ class ScientificDoubleSpinBox(QDoubleSpinBox):
 
     # Function from QDoubleSpinBoxPrivate converted into Python
     def validateAndInterpret(self, input, pos, state):
-        if (self.cachedText == input) and (not input.isEmpty()):
+        if (self.cachedText == input) and (len(input) > 0):
             state = self.cachedState
             return (state, self.cachedValue)
         
