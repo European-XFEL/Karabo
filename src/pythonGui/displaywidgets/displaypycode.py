@@ -210,11 +210,6 @@ class DisplayPyCode(DisplayWidget):
         vLayout.addWidget(self.__codeToolWidget);
         
         self.__key = params.get('key')
-        
-        # Set value
-        value = params.get('value')
-        if value is not None:
-            self.valueChanged(self.__key, value)
             
         #init kernel managment class
         self.__kernel_manager_class = QtKernelManager

@@ -151,6 +151,8 @@ class Manager(Singleton):
         
         # State, if initiate device is currently processed
         self.__isInitDeviceCurrentlyProcessed = False
+        
+        self.__sqlDatabase.openConnection()
 
 
     def _hash(self):

@@ -53,19 +53,13 @@ class DisplayImage(DisplayWidget):
         
         self.__key = params.get('key')
             
-        if useGuiQwt:
-            
-            self.__dialog = ImageDialog(edit=False, toolbar=False, wintitle=self.__key)
+        if useGuiQwt:           
+            self.__imageWidget = ImageDialog(edit=False, toolbar=True, wintitle=self.__key)
             self.__image = None
-            self.__plot = self.__dialog.get_plot()
-                                       
+            self.__plot = self.__imageWidget.get_plot()
         else:
-            self.__image = QLabel()
-            
-        # Set value
-        value = params.get('value')
-        if value is not None:
-            self.valueChanged(self.__key, value)
+            self.__imageWidget = QLabel()
+
     
     def _getCategory(self):
         category, alias, className = getCategoryAliasClassName()
@@ -75,7 +69,7 @@ class DisplayImage(DisplayWidget):
 
     # Returns the actual widget which is part of the composition
     def _getWidget(self):
-        return self.__plot
+        return self.__imageWidget
     widget = property(fget=_getWidget)
 
 
@@ -137,11 +131,10 @@ class DisplayImage(DisplayWidget):
                 else:                    
                     self.__image.set_data(npy)
                     self.__plot.replot()
-                
             else:
                 pixmap = QPixmap.fromImage(image)
-                self.__image.setPixmap(pixmap)
-                
+                self.__imageWidget.setPixmap(pixmap)
+
 
 
     class Maker:
