@@ -49,8 +49,11 @@ class SqlDatabase(object):
         self.__database = QSqlDatabase.addDatabase("QSQLITE")
         self.__database.setDatabaseName(self.__dbName)
 
+
+    def openConnection(self):
+        # Called from manager.reset() method
         if self.__database.open():
-            print self.__dbName, "opened"
+            #print self.__dbName, "connection established."
             query = QSqlQuery(self.__database)
             #query.exec_("PRAGMA foreign_keys = ON;");
 
@@ -74,7 +77,8 @@ class SqlDatabase(object):
 
 
     def closeConnection(self):
-        print "Close database connection"
+        # Called from network.onEndConnection method
+        #print self.__dbName, "connection closed."
         # Clear database
         #query = QSqlQuery(self.__database)
         #query.exec_("DELETE FROM tLog;")

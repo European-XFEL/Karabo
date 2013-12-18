@@ -719,20 +719,21 @@ class SchemaReader(object):
                 if self.__deviceType is NavigationItemTypes.CLASS:
                     if (accessMode is AccessMode.INITONLY) or (accessMode is AccessMode.RECONFIGURABLE):
                         editableComponent = EditablePathNoApplyComponent(classAlias=item.classAlias,
-                                                                            key=item.internalKey,
-                                                                            value=item.defaultValue,
-                                                                            enumeration=item.enumeration,
-                                                                            metricPrefixSymbol=item.metricPrefixSymbol,
-                                                                            unitSymbol=item.unitSymbol,
-                                                                            pathType=pathType)
+                                                                        key=item.internalKey,
+                                                                        value=item.defaultValue,
+                                                                        enumeration=item.enumeration,
+                                                                        metricPrefixSymbol=item.metricPrefixSymbol,
+                                                                        unitSymbol=item.unitSymbol,
+                                                                        pathType=pathType)
                 else:
                     if accessMode is AccessMode.RECONFIGURABLE:
                         editableComponent = EditablePathApplyLaterComponent(classAlias=item.classAlias,
-                                                                               key=item.internalKey,
-                                                                               enumeration=item.enumeration, 
-                                                                               metricPrefixSymbol=item.metricPrefixSymbol,
-                                                                               unitSymbol=item.unitSymbol,
-                                                                               pathType=pathType)
+                                                                            key=item.internalKey,
+                                                                            value=item.defaultValue,
+                                                                            enumeration=item.enumeration, 
+                                                                            metricPrefixSymbol=item.metricPrefixSymbol,
+                                                                            unitSymbol=item.unitSymbol,
+                                                                            pathType=pathType)
                         editableComponent.signalApplyChanged.connect(self.__treeWidget.onApplyChanged)
         
         if not editableComponent:

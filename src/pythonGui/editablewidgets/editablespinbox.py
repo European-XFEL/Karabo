@@ -20,7 +20,7 @@
 
 __all__ = ["EditableSpinBox"]
 
-import sys
+import globals
 
 from editablewidget import EditableWidget
 
@@ -39,10 +39,7 @@ class EditableSpinBox(EditableWidget):
 
         self.__spinBox = QSpinBox()
         #intMax = sys.maxint <--- This produces a bug in 64bit systems
-        maxInt = 2147483647
-        # TODO Define proper max interval
-        #self.__spinBox.setRange(-100000, 100000)
-        self.__spinBox.setRange(-maxInt, maxInt)
+        self.__spinBox.setRange(globals.MIN_INT32, globals.MAX_INT32)
         
         self.__spinBox.installEventFilter(self)
         self.__spinBox.valueChanged.connect(self.onEditingFinished)

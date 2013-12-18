@@ -43,14 +43,9 @@ class DisplayDoubleSpinBox(DisplayWidget):
         self.__leDblValue = QLineEdit()
         self.__validator = QDoubleValidator(self.__leDblValue)
         self.__leDblValue.setValidator(self.__validator)
-        self.__leDblValue.setEnabled(False)
+        self.__leDblValue.setReadOnly(True)
         
         self.__key = params.get('key')
-        
-        # Set value
-        value = params.get('value')
-        if value is not None:
-            self.valueChanged(self.__key, value)
 
 
     def _getCategory(self):

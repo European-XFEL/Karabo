@@ -40,18 +40,13 @@ class DisplayFilePath(DisplayWidget):
         self.__minMaxAssociatedKeys = (1,1) # tuple<min,max>
 
         self.__leFilePath = QLineEdit()
-        self.__leFilePath.setEnabled(False)
+        self.__leFilePath.setReadOnly(True)
 
         self.__pbSelectPath = QPushButton("...")
         self.__pbSelectPath.setMaximumSize(32,32)
-        self.__pbSelectPath.setEnabled(False)
+        self.__pbSelectPath.setReadOnly(True)
         
         self.__key = params.get('key')
-        
-        # Set value
-        value = params.get('value')
-        if value is not None:
-            self.valueChanged(self.__key, value)
 
 
     def _getCategory(self):

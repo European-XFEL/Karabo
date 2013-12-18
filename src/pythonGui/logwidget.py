@@ -299,6 +299,7 @@ class LogWidget(QWidget):
         
         vLayout.addWidget(self.__twLogTable)
 
+
     def onViewNeedsUpdate(self, model):
         self.__viewState = self.__twLogTable.horizontalHeader().saveState();
         with QMutexLocker(self.__modelMutex):

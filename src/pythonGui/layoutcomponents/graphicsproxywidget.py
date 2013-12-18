@@ -37,6 +37,8 @@ class GraphicsProxyWidget(NodeBase, QGraphicsProxyWidget):
         
         self.__component = component
         
+        # Necessary to have context menu of widget on toplevel (known bug of Qt)
+        widget.setWindowFlags(Qt.BypassGraphicsProxyWidget)
         self.setWidget(widget)
         self.setFlags(QGraphicsItem.ItemIsFocusable)
         
@@ -133,6 +135,7 @@ class GraphicsProxyWidget(NodeBase, QGraphicsProxyWidget):
         #print "QGraphicsProxyWidget.mouseMoveEvent", self.isDesignMode
         if self.isDesignMode == False:
             QGraphicsProxyWidget.mouseMoveEvent(self, event)
+            event.accept()
         else:
             QGraphicsItem.mouseMoveEvent(self, event)
 
@@ -142,6 +145,7 @@ class GraphicsProxyWidget(NodeBase, QGraphicsProxyWidget):
         if self.isDesignMode == False:
             self.setFlag(QGraphicsItem.ItemIsFocusable, True)
             QGraphicsProxyWidget.mousePressEvent(self, event)
+            event.accept()
         else:
             self.setFlag(QGraphicsItem.ItemIsFocusable, False)
             QGraphicsItem.mousePressEvent(self, event)
@@ -151,6 +155,7 @@ class GraphicsProxyWidget(NodeBase, QGraphicsProxyWidget):
         #print "QGraphicsProxyWidget.mouseReleaseEvent", self.isDesignMode
         if self.isDesignMode == False:
             QGraphicsProxyWidget.mouseReleaseEvent(self, event)
+            event.accept()
         else:
             QGraphicsItem.mouseReleaseEvent(self, event)
 
@@ -171,16 +176,16 @@ class GraphicsProxyWidget(NodeBase, QGraphicsProxyWidget):
 
 
     def contextMenuEvent(self, event):
-        if self.__contextMenu is None:
-            return
+        #print "GraphicsProxyWidget.contextMenuEvent", self.isDesignMode
         if self.isDesignMode == False:
             QGraphicsProxyWidget.contextMenuEvent(self, event)
+            event.accept()
         else:
-  
             self.scene().clearSelection()
             self.setSelected(True)
 
-            self.__contextMenu.exec_(event.screenPos())
+            if self.__contextMenu:
+                self.__contextMenu.exec_(event.screenPos())
 
 
 ### Slots ###
@@ -190,7 +195,7 @@ class GraphicsProxyWidget(NodeBase, QGraphicsProxyWidget):
         
         action = self.sender()
         # Change display or editable widget
-        self.__component.changeWidget(action.text())
+        self.__component.changeWidget(self, action.text())
         self.adjustSize()
                 
         parentWidget = self.parentWidget()
