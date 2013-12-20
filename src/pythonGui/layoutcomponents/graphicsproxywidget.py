@@ -15,8 +15,8 @@ import displaycomponent
 import displaywidget
 from displaywidget import DisplayWidget
 
-import editableapplylatercomponent
-import editablenoapplycomponent
+from editableapplylatercomponent import EditableApplyLaterComponent
+from editablenoapplycomponent import EditableNoApplyComponent
 from editablewidget import EditableWidget
 
 from layoutcomponents.nodebase import NodeBase
@@ -178,9 +178,11 @@ class GraphicsProxyWidget(NodeBase, QGraphicsProxyWidget):
     def contextMenuEvent(self, event):
         #print "GraphicsProxyWidget.contextMenuEvent", self.isDesignMode
         if self.isDesignMode == False:
+            self.setFlag(QGraphicsItem.ItemIsFocusable, True)
             QGraphicsProxyWidget.contextMenuEvent(self, event)
             event.accept()
         else:
+            self.setFlag(QGraphicsItem.ItemIsFocusable, False)
             self.scene().clearSelection()
             self.setSelected(True)
 
