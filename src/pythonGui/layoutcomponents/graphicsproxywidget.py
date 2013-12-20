@@ -211,7 +211,7 @@ class GraphicsProxyWidget(NodeBase, QGraphicsProxyWidget):
         
         action = self.sender()
         # Change vacuum widget
-        self.__component.changeToVacuumWidget(action.text())
+        self.__component.changeToVacuumWidget(self, action.text())
         self.adjustSize()
         
         parentWidget = self.parentWidget()
