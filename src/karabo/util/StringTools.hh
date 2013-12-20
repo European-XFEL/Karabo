@@ -343,7 +343,8 @@ namespace karabo {
             bool in_token = false;
             for (std::string::const_iterator it = inputString.begin(), end = inputString.end();
                     it != end; ++it) {
-                if (delims[*it]) {
+                int idx = int(*it) & 0xff;
+                if (delims[idx]) {
                     if (in_token) {
                         output.push_back(typename container::value_type(beg, it));
                         in_token = false;
