@@ -612,7 +612,7 @@ class LogSqlQueryModel(QSqlQueryModel):
             return value
         elif role == Qt.ToolTipRole:
             modelIndex = QSqlQueryModel.index(self, index.row(), index.column())
-            return modelIndex.data(Qt.DisplayRole).toString()
+            return modelIndex.data(Qt.DisplayRole)
         return None
 
 

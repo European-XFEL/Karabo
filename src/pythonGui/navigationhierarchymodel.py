@@ -201,7 +201,7 @@ class NavigationHierarchyModel(QAbstractItemModel):
             if hierarchyLevel == 0:
                 return QIcon(":host")
             elif hierarchyLevel == 1:
-                #status = self.rawData(level, row, 3).toString()
+                #status = self.rawData(level, row, 3)
                 #if status == "offline":
                 #    return QIcon(":no")
                 #elif status == "starting" or status == "online":

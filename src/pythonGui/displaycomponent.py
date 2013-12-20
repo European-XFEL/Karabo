@@ -117,7 +117,7 @@ class DisplayComponent(BaseComponent):
             Manager().onRefreshInstance(key)
 
 
-    def changeToVacuumWidget(self, classAlias):
+    def changeToVacuumWidget(self, proxyWidget, classAlias):
         self.classAlias = classAlias
         self.__initParams['value'] = self.value
         
