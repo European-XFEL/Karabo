@@ -149,9 +149,9 @@ class NavigationPanel(QWidget):
             self.__twNavigation.selectItem(path)
         else:
             self.__twNavigation.selectItem(str(parentPath))
-        
-        
-    def onSystemTopologyChanged(self, config):
+
+
+    def updateNavigationTreeView(self, config):
         self.__twNavigation.updateTreeModel(config)
         self.__twNavigation.expandAll()
         
@@ -161,9 +161,13 @@ class NavigationPanel(QWidget):
         self.__twNavigation.lastSelectionPath = str()
         self.__twNavigation.selectItem(path)
 
+        
+    def onSystemTopologyChanged(self, config):
+        self.updateNavigationTreeView(config)
+
 
     def onGlobalAccessLevelChanged(self):
-        self.__twNavigation.updateView(Manager().treemodel.currentConfig)
+        self.updateNavigationTreeView(Manager().treemodel.currentConfig)
 
 
     # virtual function

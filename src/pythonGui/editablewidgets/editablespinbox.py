@@ -53,6 +53,17 @@ class EditableSpinBox(EditableWidget):
         value = params.get('value')
         self.valueChanged(self.__key, value)
 
+        #metricPrefixSymbol = params.get('metricPrefixSymbol')
+        #unitSymbol = params.get('unitSymbol')
+        # Append unit label, if available
+        #unitLabel = str()
+        #if metricPrefixSymbol:
+        #    unitLabel += metricPrefixSymbol
+        #if unitSymbol:
+        #    unitLabel += unitSymbol
+        #if len(unitLabel) > 0:
+        #    self.__spinBox.setSuffix(" %s" %unitLabel)
+
 
     def eventFilter(self, object, event):
         # Block wheel event on QSpinBox

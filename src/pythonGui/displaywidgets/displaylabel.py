@@ -142,9 +142,7 @@ class DisplayLabel(DisplayWidget):
             
         elif self.valueType is Types.DOUBLE:
             value = float(decimal.Decimal(str(value)))
-            
-                    
-        
+
         self.__label.setText(str(value))
         
     def toScientificNotation(self, value):

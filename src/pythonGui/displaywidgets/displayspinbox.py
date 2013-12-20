@@ -45,6 +45,17 @@ class DisplaySpinBox(DisplayWidget):
         self.__spinBox.setReadOnly(True)
         
         self.__key = params.get('key')
+        
+        #metricPrefixSymbol = params.get('metricPrefixSymbol')
+        #unitSymbol = params.get('unitSymbol')
+        # Append unit label, if available
+        #unitLabel = str()
+        #if metricPrefixSymbol:
+        #    unitLabel += metricPrefixSymbol
+        #if unitSymbol:
+        #    unitLabel += unitSymbol
+        #if len(unitLabel) > 0:
+        #    self.__spinBox.setSuffix(" %s" %unitLabel)
 
 
     def _getCategory(self):
