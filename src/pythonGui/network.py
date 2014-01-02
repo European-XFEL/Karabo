@@ -11,8 +11,7 @@
 
 __all__ = ["Network"]
 
-from karabo.karathon import (AccessLevel, Authenticator, BinarySerializerHash,
-                             Hash)
+from karabo.karathon import (AccessLevel, Authenticator, Timestamp)
 from logindialog import LoginDialog
 from manager import Manager
 from struct import pack
@@ -21,6 +20,8 @@ from PyQt4.QtNetwork import QAbstractSocket, QTcpSocket
 from PyQt4.QtCore import (pyqtSignal, QByteArray, QCryptographicHash, QDataStream,
                           QObject)
 from PyQt4.QtGui import QDialog, QMessageBox
+from karabo.karathon import Authenticator
+from hash import Hash, parseXML, writeXML
 
 import datetime
 import globals
@@ -35,8 +36,6 @@ class Network(QObject):
 
     def __init__(self):
         super(Network, self).__init__()
-
-        self.__serializer = BinarySerializerHash.create("Bin")
 
         self.__auth = None
         self.__username = None
@@ -261,8 +260,7 @@ class Network(QObject):
 
 
             # Fork on responseType
-            headerHash = self.__serializer.load(self.__headerBytes)
-            #bodyHash = self.__serializer.load(self.__bodyBytes)
+            headerHash = parseXML(self.__headerBytes)
 
             type = headerHash.get("type")
             #print "Request: ", type
@@ -276,35 +274,35 @@ class Network(QObject):
             # "invalidateCache" (instanceId)
 
             if type == "systemTopology":
-                bodyHash = self.__serializer.load(self.__bodyBytes)
+                bodyHash = parseXML(self.__bodyBytes)
                 Manager().handleSystemTopology(bodyHash)
             elif type == "instanceNew":
-                bodyHash = self.__serializer.load(self.__bodyBytes)
+                bodyHash = parseXML(self.__bodyBytes)
                 Manager().handleInstanceNew(bodyHash)
             elif type == "instanceUpdated":
-                bodyHash = self.__serializer.load(self.__bodyBytes)
+                bodyHash = parseXML(self.__bodyBytes)
                 Manager().handleSystemTopology(bodyHash)
             elif type == "instanceGone":
                 Manager().handleInstanceGone(str(self.__bodyBytes))
             elif type == "classDescription":
-                bodyHash = self.__serializer.load(self.__bodyBytes)
+                bodyHash = parseXML(self.__bodyBytes)
                 Manager().handleClassSchema(bodyHash)
             elif type == "deviceSchema":
-                bodyHash = self.__serializer.load(self.__bodyBytes)
+                bodyHash = parseXML(self.__bodyBytes)
                 Manager().handleDeviceSchema(headerHash, bodyHash)
             elif type == "configurationChanged":
-                bodyHash = self.__serializer.load(self.__bodyBytes)
+                bodyHash = parseXML(self.__bodyBytes)
                 Manager().handleConfigurationChanged(headerHash, bodyHash)
             elif type == "log":
                 Manager().onLogDataAvailable(str(self.__bodyBytes))
             elif type == "schemaUpdated":
-                bodyHash = self.__serializer.load(self.__bodyBytes)
+                bodyHash = parseXML(self.__bodyBytes)
                 Manager().handleDeviceSchemaUpdated(headerHash, bodyHash)
             elif type == "brokerInformation":
-                bodyHash = self.__serializer.load(self.__bodyBytes)
+                bodyHash = parseXML(self.__bodyBytes)
                 self._handleBrokerInformation(headerHash, bodyHash)
             elif type == "notification":
-                bodyHash = self.__serializer.load(self.__bodyBytes)
+                bodyHash = parseXML(self.__bodyBytes)
                 self._handleNotification(headerHash, bodyHash)
             elif type == "historicData":
                 bodyHash = self.__serializer.load(self.__bodyBytes)
@@ -487,10 +485,10 @@ class Network(QObject):
 
     def _tcpWriteHashHash(self, headerHash, bodyHash):
         stream = QByteArray()
-        headerString = QByteArray(self.__serializer.save(headerHash))
-        bodyString = QByteArray(self.__serializer.save(bodyHash))
-        nBytesHeader = headerString.size()
-        nBytesBody = bodyString.size()
+        headerString = writeXML(headerHash)
+        bodyString = writeXML(bodyHash)
+        nBytesHeader = len(headerString)
+        nBytesBody = len(bodyString)
 
         stream.push_back(QByteArray(pack('I', nBytesHeader)))
         stream.push_back(headerString)
@@ -501,9 +499,9 @@ class Network(QObject):
 
     def _tcpWriteHashString(self, headerHash, body):
         stream = QByteArray()
-        headerString = QByteArray(self.__serializer.save(headerHash))
+        headerString = writeXML(headerHash)
         bodyString = QByteArray(str(body))
-        nBytesHeader = headerString.size()
+        nBytesHeader = len(headerString)
         nBytesBody = bodyString.size()
 
         stream.push_back(QByteArray(pack('I', nBytesHeader)))
