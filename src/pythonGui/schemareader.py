@@ -28,41 +28,22 @@ from PyQt4.QtGui import QIcon
 
 
 class SchemaReader(object):
-
-    def __init__(self):
-        super(SchemaReader, self).__init__()
-        
-        self.__schema = None
-        self.__treeWidget = None # Treewidget displays schema
-        self.__deviceType = None # CLASS or DEVICE
-        self.__rootPath = None # full internal key (e.g. "server.serverId.classes.classId")
-        
-
     def setDeviceType(self, deviceType):
         self.__deviceType = deviceType
 
 
     def readSchema(self, path, schema, treeWidget):
         self.__schema = schema
+        self.hash = schema.hash
         self.__treeWidget = treeWidget
         
         if self.__schema is None:
             #print "No schema valid schema was provided!"
             return False
         
-        # For testing (all elements)
-        #sampleSchemaClass = SampleSchema.create("SampleSchema", Hash())
-        #self.__schema = sampleSchemaClass.getSchema("SampleSchema")
-        
-        #print ""
-        #print "++++ readSchema ++++"
-        #print self.__schema
-        #print ""
-        
         self.__rootPath = path + ".configuration"
         
-        keys = self.__schema.getKeys()
-        for key in keys:
+        for key in self.hash:
             self.r_readSchema(key)
         
         self.__treeWidget.resizeColumnToContents(0)
@@ -72,7 +53,7 @@ class SchemaReader(object):
     def r_readSchema(self, key, parentItem=None):
         
         item = None
-        
+
         if self.__schema.isLeaf(key):
             item = self._createPropertyItem(key, parentItem)
             self._handleLeaf(key, item)
