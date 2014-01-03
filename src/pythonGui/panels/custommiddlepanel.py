@@ -12,7 +12,7 @@
 __all__ = ["CustomMiddlePanel"]
 
 
-from customwidget import CustomWidget
+from graphicsview import GraphicsView
 from toolbar import ToolBar
 
 from PyQt4.QtCore import Qt
@@ -39,14 +39,11 @@ class CustomMiddlePanel(QWidget):
     def __init__(self):
         super(CustomMiddlePanel, self).__init__()
 
-        self.__customWidget = CustomWidget(self)
-        self.__customWidget.lineInserted.connect(self.onLineInserted)
-        self.__customWidget.rectInserted.connect(self.onRectInserted)
-        self.__customWidget.sceneSelectionChanged.connect(self.updateActions)
+        self.graphicsview = GraphicsView(self)
         
         mainLayout = QVBoxLayout(self)
         mainLayout.setContentsMargins(3,3,3,3)
-        mainLayout.addWidget(self.__customWidget)
+        mainLayout.addWidget(self.graphicsview)
         
         self.setupActions()
         self.updateActions()
@@ -72,20 +69,23 @@ class CustomMiddlePanel(QWidget):
         self.__acOpenLayout = QAction(QIcon(":open"), text, self)
         self.__acOpenLayout.setStatusTip(text)
         self.__acOpenLayout.setToolTip(text)
-        self.__acOpenLayout.triggered.connect(self.onOpenLayout)
+        self.__acOpenLayout.triggered.connect(
+            self.graphicsview.openSceneLayoutFromFile)
         
         text = "Open configurations"
         self.__acOpenConfigurations = QAction(QIcon(":open"), text, self)
         self.__acOpenConfigurations.setStatusTip(text)
         self.__acOpenConfigurations.setToolTip(text)
         self.__acOpenConfigurations.setEnabled(False)
-        self.__acOpenConfigurations.triggered.connect(self.onOpenConfigurations)
+        self.__acOpenConfigurations.triggered.connect(
+            self.graphicsview.openSceneConfigurationsFromFile)
         
         text = "Open layout and configurations"
         self.__acOpenLayoutConfigurations = QAction(QIcon(":open"), text, self)
         self.__acOpenLayoutConfigurations.setStatusTip(text)
         self.__acOpenLayoutConfigurations.setToolTip(text)
-        self.__acOpenLayoutConfigurations.triggered.connect(self.onOpenLayoutConfigurations)
+        self.__acOpenLayoutConfigurations.triggered.connect(
+            self.graphicsview.openSceneLayoutConfigurationsFromFile)
         
         self.__mOpen = QMenu()
         self.__mOpen.addAction(self.__acOpenLayout)
@@ -104,19 +104,22 @@ class CustomMiddlePanel(QWidget):
         self.__acLayoutSaveAs = QAction(QIcon(":save-as"), text, self)
         self.__acLayoutSaveAs.setStatusTip(text)
         self.__acLayoutSaveAs.setToolTip(text)
-        self.__acLayoutSaveAs.triggered.connect(self.onSaveAsLayout)
+        self.__acLayoutSaveAs.triggered.connect(
+            self.graphicsview.saveSceneLayoutToFile)
         
         text = "Save configurations as"
         self.__acConfigurationsSaveAs = QAction(QIcon(":save-as"), text, self)
         self.__acConfigurationsSaveAs.setStatusTip(text)
         self.__acConfigurationsSaveAs.setToolTip(text)
-        self.__acConfigurationsSaveAs.triggered.connect(self.onSaveAsConfigurations)
+        self.__acConfigurationsSaveAs.triggered.connect(
+            self.graphicsview.saveSceneConfigurationsToFile)
         
         text = "Save layout and configurations as"
         self.__acLayoutConfigurationsSaveAs = QAction(QIcon(":save-as"), text, self)
         self.__acLayoutConfigurationsSaveAs.setStatusTip(text)
         self.__acLayoutConfigurationsSaveAs.setToolTip(text)
-        self.__acLayoutConfigurationsSaveAs.triggered.connect(self.onSaveAsLayoutConfigurations)
+        self.__acLayoutConfigurationsSaveAs.triggered.connect(
+            self.graphicsview.saveSceneLayoutConfigurationsToFile)
         
         self.__mSaveAs = QMenu()
         self.__mSaveAs.addAction(self.__acLayoutSaveAs)
@@ -137,7 +140,7 @@ class CustomMiddlePanel(QWidget):
         #self.__acAddText.setChecked(False)
         self.__acAddText.setStatusTip(text)
         self.__acAddText.setToolTip(text)
-        self.__acAddText.triggered.connect(self.onAddText)
+        #self.__acAddText.triggered.connect(self.onAddText)
         
         text = "Add line"
         self.__acAddLine = QAction(QIcon(":line"), text, self)
@@ -145,7 +148,7 @@ class CustomMiddlePanel(QWidget):
         self.__acAddLine.setChecked(False)
         self.__acAddLine.setStatusTip(text)
         self.__acAddLine.setToolTip(text)
-        self.__acAddLine.toggled.connect(self.onAddLine)
+        #self.__acAddLine.toggled.connect(self.onAddLine)
         
         text = "Add rectangle"
         self.__acAddRect = QAction(QIcon(":rect"), text, self)
@@ -153,7 +156,7 @@ class CustomMiddlePanel(QWidget):
         self.__acAddRect.setChecked(False)
         self.__acAddRect.setStatusTip(text)
         self.__acAddRect.setToolTip(text)
-        self.__acAddRect.toggled.connect(self.onAddRect)
+        #self.__acAddRect.toggled.connect(self.onAddRect)
         
         #self.__mAddShape = QMenu()
         #self.__mAddShape.addAction(self.__acAddText)
@@ -165,7 +168,7 @@ class CustomMiddlePanel(QWidget):
         self.__acAddLink = QAction(QIcon(":link"), text, self)
         self.__acAddLink.setStatusTip(text)
         self.__acAddLink.setToolTip(text)
-        self.__acAddLink.triggered.connect(self.onAddLink)
+        #self.__acAddLink.triggered.connect(self.onAddLink)
         
         # TODO: temporary removed, because works not properly..
         #text = "Add arrow link"
@@ -320,10 +323,10 @@ class CustomMiddlePanel(QWidget):
         self.__acAddLine.setEnabled(True)
         self.__acAddRect.setEnabled(True)
         
-        hasSelection = len(self.__customWidget.selectedItems()) > 0
-        isLink = self.__customWidget.selectedLinks() is not None
-        isItemPair = self.__customWidget.selectedItemPair() is not None
-        isItemGroup = self.__customWidget.selectedItemGroup() is not None
+        hasSelection = len(self.graphicsview.selectedItems()) > 0
+        isLink = self.graphicsview.selectedLinks() is not None
+        isItemPair = self.graphicsview.selectedItemPair() is not None
+        isItemGroup = self.graphicsview.selectedItemGroup() is not None
         
         if hasSelection:
             self.__acAddLink.setDisabled(not isItemPair)
@@ -352,10 +355,10 @@ class CustomMiddlePanel(QWidget):
             self.__acBringToFront.setDisabled(True)
             self.__acSendToBack.setDisabled(True)
         
-        self.__acPaste.setDisabled(not self.__customWidget.hasCopy())
+        self.__acPaste.setDisabled(not self.graphicsview.hasCopy())
         self.__acRemove.setDisabled(not hasSelection)
         
-        self.__tbGroup.setDisabled(not isItemGroup and len(self.__customWidget.selectedItems()) < 2)
+        self.__tbGroup.setDisabled(not isItemGroup and len(self.graphicsview.selectedItems()) < 2)
         self.__acGroupItems.setDisabled(isItemGroup)
         self.__mGroupInLayout.setDisabled(isItemGroup)
         self.__acUnGroupItems.setDisabled(not isItemGroup)
@@ -400,51 +403,7 @@ class CustomMiddlePanel(QWidget):
             text = "Change to design mode"
         self.__acDesignMode.setToolTip(text)
         self.__acDesignMode.setStatusTip(text)
-        self.__customWidget.setDesignMode(isChecked)
-
-
-    def onOpenLayout(self):
-        self.__customWidget.openSceneLayout()
-
-
-    def onOpenConfigurations(self):
-        self.__customWidget.openSceneConfigurations()
-
-
-    def onOpenLayoutConfigurations(self):
-        self.__customWidget.openSceneLayoutConfigurations()
-
-
-    def onSaveAsLayout(self):
-        self.__customWidget.saveSceneAsLayout()
-
-
-    def onSaveAsConfigurations(self):
-        self.__customWidget.saveSceneAsConfigurations()
-
-
-    def onSaveAsLayoutConfigurations(self):
-        self.__customWidget.saveSceneAsLayoutConfigurations()
-
-
-    def onAddText(self):
-        self.__customWidget.addText()
-
-
-    def onAddLine(self, checked):
-        self.__customWidget.aboutToInsertLine(checked)
-
-
-    def onAddRect(self, checked):
-        self.__customWidget.aboutToInsertRect(checked)
-
-
-    def onAddLink(self):
-        self.__customWidget.addLink()
-
-    
-    def onAddArrowLink(self):
-        self.__customWidget.addArrowLink()
+        self.graphicsview.setDesignMode(isChecked)
 
 
     def onCut(self):

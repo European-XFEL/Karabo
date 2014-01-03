@@ -250,8 +250,8 @@ class GraphicsView(QSvgWidget):
     rectInserted = pyqtSignal()
     sceneSelectionChanged = pyqtSignal()
 
-    def __init__(self):
-        super(GraphicsView, self).__init__()
+    def __init__(self, parent):
+        super(GraphicsView, self).__init__(parent)
         
         self.inner = QWidget(self)
         self.layout = FixedLayout(self.inner)
