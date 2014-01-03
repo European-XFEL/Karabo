@@ -36,16 +36,64 @@ from manager import Manager
 
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
+from PyQt4.QtSvg import QSvgWidget
 
-class FixedLayout(QLayout):
+from xml.etree import ElementTree
+
+ns_svg = "{http://www.w3.org/2000/svg}"
+ns_karabo = "{http://karabo.eu/scene}"
+ElementTree.register_namespace("svg", ns_svg[1:-1])
+ElementTree.register_namespace("krb", ns_karabo[1:-1])
+
+def _parse_rect(elem):
+    if elem.get(ns_karabo + "x") is not None:
+        ns = ns_karabo
+    else:
+        ns = ""
+    return QRect(float(elem.get(ns + "x")), float(elem.get(ns + "y")),
+                 float(elem.get(ns + "width")), float(elem.get(ns + "height")))
+
+class Label(object):
+    """ Fake class to make a QLabel loadable """
+    @staticmethod
+    def load(elem, parent):
+        label = QLabel(elem.get(ns_karabo + "text"), parent)
+        ret = ProxyWidget(parent)
+        ret.set_child(label, None)
+        ret.show()
+        return ret
+
+class Layout(object):
+    def element(self):
+        g = self.geometry()
+        d = { ns_karabo + "x": g.x(), ns_karabo + "y": g.y(),
+              ns_karabo + "width": g.width(), ns_karabo + "height": g.height(),
+              ns_karabo + "class": self.__class__.__name__ }
+        d.update(self.save())
+
+        e = ElementTree.Element(ns_svg + "g",
+                                {k: unicode(v) for k, v in d.iteritems()})
+        e.extend(l.widget().element() if isinstance(l, QWidgetItem) else
+                 l.element() for l in (self.itemAt(i)
+                                       for i in range(self.count())))
+        return e
+
+
+class FixedLayout(QLayout, Layout):
     def __init__(self, parent):
         QLayout.__init__(self, parent)
         self.children = [ ]
         self.geometries = { }
 
-    def addItem(self, item):
+    def addItem(self, item, geometry=None):
+        if geometry is None:
+            self._item = item
+        if isinstance(item, QWidget):
+            self.addWidget(item)
+            item = self._item
         self.children.append(item)
-        self.geometries[item] = item.geometry()
+        self.geometries[item] = geometry
+        self.update()
 
     def itemAt(self, index):
         try:
@@ -100,7 +148,29 @@ class FixedLayout(QLayout):
         g = QRect(self.geometries[c].topLeft(), c.sizeHint())
         self.geometries[c] = g
         c.setGeometry(g)
-        
+
+    def save(self):
+        return { }
+
+class BoxLayout(QBoxLayout, Layout):
+    def __init__(self, dir):
+        QBoxLayout.__init__(self, dir)
+        self.setContentsMargins(5, 5, 5, 5)
+
+    @staticmethod
+    def load(elem, parent):
+        ret = BoxLayout(int(elem.get(ns_karabo + "Direction")))
+        for i in range(len(elem)):
+            cls = elem[i].get(ns_karabo + "class")
+            item = globals()[cls].load(elem[i], parent)
+            if isinstance(item, QWidget):
+                ret.addWidget(item)
+            else:
+                ret.addLayout(item)
+        return ret
+
+    def save(self):
+        return {ns_karabo + "Direction": self.direction()}
 
 class ProxyWidget(QStackedWidget):
     def __init__(self, parent):
@@ -133,8 +203,46 @@ class ProxyWidget(QStackedWidget):
         if not self.parent().parent().isDesignMode:
             return
         QMenu.exec_(self.actions(), event.globalPos(), None, self)
+
+    def element(self):
+        g = self.geometry()
+        d = { "x": g.x(), "y": g.y(), "width": g.width(), "height": g.height() }
+        if self.component is None:
+            d[ns_karabo + "class"] = "Label"
+            d[ns_karabo + "text"] = self.widget(0).text()
+        else:
+            widgetFactory = self.component.widgetFactory
+            d[ns_karabo + "class"] = "ProxyWidget"
+            d[ns_karabo + "componentType"] = self.component.__class__.__name__
+            d[ns_karabo + "widgetFactory"] = "DisplayWidget"
+            d[ns_karabo + "classAlias"] = self.component.classAlias
+            if self.component.classAlias == "Command":
+                d[ns_karabo + "commandText"] = widgetFactory.widget.text()
+                d[ns_karabo + "commandEnabled"] = "{}".format(
+                    widgetFactory.widget.isEnabled())
+                d[ns_karabo + "allowedStates"] = ",".join(
+                    widgetFactory.allowedStates)
+                d[ns_karabo + "command"] = widgetFactory.command
+            d[ns_karabo + "key"] = ",".join(self.component.keys)
+        return ElementTree.Element(ns_svg + "rect",
+                                   {k: unicode(v) for k, v in d.iteritems()})
+
+    @staticmethod
+    def load(elem, parent):
+        ks = "classAlias", "key", "widgetFactory"
+        if elem.get(ns_karabo + "classAlias") == "Command":
+            ks += "command", "allowedStates", "commandText"
+        d = {k: elem.get(ns_karabo + k) for k in ks}
+        d["commandEnabled"] = elem.get(ns_karabo + "commandEnabled") == "True"
+        component = globals()[elem.get(ns_karabo + "componentType")](**d)
+        component.widget.setAttribute(Qt.WA_NoSystemBackground, True)
+        ret = ProxyWidget(parent)
+        ret.set_child(component.widget, component)
+        ret.show()
+        return ret
+
             
-class GraphicsView(QWidget):
+class GraphicsView(QSvgWidget):
     # Enums
     MoveItem, InsertText, InsertLine, InsertRect = range(4)
     # Signals
@@ -154,6 +262,8 @@ class GraphicsView(QWidget):
         self.moving_item = None
         self.selection = [ ]
         self.selection_start = None
+
+        self.tree = ElementTree.ElementTree(ElementTree.Element(ns_svg + "svg"))
 
         # Current mode of the view (move, insert)
         self.__mode = self.MoveItem
@@ -268,7 +378,8 @@ class GraphicsView(QWidget):
 
     # Open saved view from file
     def openSceneLayoutFromFile(self):
-        filename = QFileDialog.getOpenFileName(None, "Open saved view", QDir.tempPath(), "SCENE (*.scene)")
+        filename = QFileDialog.getOpenFileName(None, "Open saved view",
+                                               filter="SVG (*.svg)")
         if len(filename) < 1:
             return
 
@@ -322,19 +433,25 @@ class GraphicsView(QWidget):
     # Helper function opens *.scene file
     # Returns list of tuples containing (internalKey, text) of GraphicsItem of scene
     def openScene(self, filename):
-        file = QFile(filename)
-        if file.open(QIODevice.ReadOnly | QIODevice.Text) == False:
-            return
+        self.tree = ElementTree.parse(filename)
+        root = self.tree.getroot()
+        i = 0
+        while i < len(root):
+            elem = root[i]
+            cls = elem.get(ns_karabo + "class")
+            if cls is None:
+                i += 1
+            else:
+                obj = globals()[cls].load(elem, self.inner)
+                self.layout.addItem(obj, _parse_rect(elem))
+                del root[i]
 
-        xmlContent = str()
-        while file.atEnd() == False:
-            xmlContent += str(file.readLine())
-
-        self.removeItems(self.items())
-        sceneReader = CustomXmlReader(self)
-        sceneReader.read(xmlContent)
-
-        return sceneReader.getInternalKeyTextTuples()
+        ar = QByteArray()
+        buf = QBuffer(ar)
+        buf.open(QIODevice.WriteOnly)
+        self.tree.write(buf)
+        buf.close()
+        self.load(ar)
 
 
     # Helper function opens *.xml configuration file
@@ -344,15 +461,20 @@ class GraphicsView(QWidget):
 
     # Save active view to file
     def saveSceneLayoutToFile(self):
-        filename = QFileDialog.getSaveFileName(None, "Save file as", QDir.tempPath(), "SCENE (*.scene)")
+        filename = QFileDialog.getSaveFileName(None, "Save file as",
+                                               filter="SVG (*.svg)")
         if len(filename) < 1:
             return
 
         fi = QFileInfo(filename)
         if len(fi.suffix()) < 1:
-            filename += ".scene"
+            filename += ".svg"
 
-        CustomXmlWriter(self.__scene).write(filename)
+        root = self.tree.getroot().copy()
+        tree = ElementTree.ElementTree(root)
+        e = self.layout.element()
+        root.extend(ee for ee in e)
+        tree.write(filename)
 
 
     def saveSceneConfigurationsToFile(self):
@@ -767,10 +889,9 @@ class GraphicsView(QWidget):
     # Creates and returns container item
     def createGraphicsItemContainer(self, orientation, items, pos):
         # Initialize layout
-        layout = QBoxLayout(QBoxLayout.LeftToRight if 
+        layout = BoxLayout(QBoxLayout.LeftToRight if
                             orientation == Qt.Horizontal else 
                             QBoxLayout.TopToBottom)
-        layout.setContentsMargins(5,5,5,5)
 
         for item, component in items:
             proxy = ProxyWidget(self.inner)
@@ -778,8 +899,7 @@ class GraphicsView(QWidget):
             layout.addWidget(proxy)
             proxy.show()
             
-        layout.setGeometry(QRect(pos, layout.sizeHint()))
-        self.layout.addItem(layout)
+        self.layout.addItem(layout, QRect(pos, layout.sizeHint()))
         return layout
 
 
@@ -1133,13 +1253,18 @@ class GraphicsView(QWidget):
 
     def paintEvent(self, event):
         painter = QPainter(self)
-        if self.isDesignMode:
-            for item in self.layout.children:
-                if item in self.selection:
-                    painter.setPen(Qt.green)
-                else:
-                    painter.setPen(Qt.black)
-                painter.drawRect(item.geometry())
-        if self.selection_start is not None:
-            painter.setPen(Qt.black)
-            painter.drawRect(QRect(self.selection_start, self.selection_stop))
+        try:
+            #self.renderer().render(painter, QRectF(QRect(QPoint(0, 0), self.renderer().defaultSize())))
+            self.renderer().render(painter, self.renderer().viewBoxF())
+            if self.isDesignMode:
+                for item in self.layout.children:
+                    if item in self.selection:
+                        painter.setPen(Qt.green)
+                    else:
+                        painter.setPen(Qt.black)
+                    painter.drawRect(item.geometry())
+            if self.selection_start is not None:
+                painter.setPen(Qt.black)
+                painter.drawRect(QRect(self.selection_start, self.selection_stop))
+        finally:
+            painter.end()
