@@ -133,6 +133,8 @@ class CustomMiddlePanel(QWidget):
         #self.__tbAddShape.setToolTip(text)
         #self.__tbAddShape.setStatusTip(text)
         #self.__tbAddShape.setPopupMode(QToolButton.InstantPopup)
+
+        self.graphicsactions = list(self.graphicsview.add_actions(self))
         
         text = "Add text"
         self.__acAddText = QAction(QIcon(":text"), text, self)
@@ -169,7 +171,7 @@ class CustomMiddlePanel(QWidget):
         self.__acAddLink.setStatusTip(text)
         self.__acAddLink.setToolTip(text)
         #self.__acAddLink.triggered.connect(self.onAddLink)
-        
+
         # TODO: temporary removed, because works not properly..
         #text = "Add arrow link"
         #self.__acAddArrow = QAction(QIcon(":arrow"), text, self)
