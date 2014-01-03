@@ -39,11 +39,129 @@ from PyQt4.QtGui import *
 from PyQt4.QtSvg import QSvgWidget
 
 from xml.etree import ElementTree
+from functools import partial
 
 ns_svg = "{http://www.w3.org/2000/svg}"
 ns_karabo = "{http://karabo.eu/scene}"
 ElementTree.register_namespace("svg", ns_svg[1:-1])
 ElementTree.register_namespace("krb", ns_karabo[1:-1])
+
+class MetaAction(type):
+    def __new__(self, name, bases, dict):
+        ret = type.__new__(self, name, bases, dict)
+        if "text" in dict:
+            Action.actions.append(ret)
+        return ret
+
+class Action(object):
+    __metaclass__ = MetaAction
+    actions = [ ]
+
+    @classmethod
+    def add_action(cls, source):
+        action = QAction(QIcon(cls.icon), cls.text, source)
+        action.setStatusTip(cls.text)
+        action.setToolTip(cls.text)
+        cls.action = action
+        return action
+
+class Select(Action):
+    text = "Select items"
+    icon = ":line"
+
+
+    def __init__(self):
+        self.selection_start = self.moving_item = None
+
+
+    def mousePressEvent(self, parent, event):
+        item = parent.layout.itemAtPosition(event.pos())
+        if item is None:
+            self.selection_stop = self.selection_start = event.pos()
+            parent.update()
+        else:
+            self.moving_item = item
+            self.moving_pos = (
+                event.pos() - self.moving_item.geometry().topLeft())
+            if event.modifiers() & Qt.ShiftModifier:
+                parent.selection.append(item)
+            else:
+                parent.selection = [item]
+            parent.update()
+            event.accept()
+
+    def mouseMoveEvent(self, parent, event):
+        if self.moving_item is not None:
+            parent.layout.setItemPosition(self.moving_item, event.pos() -
+                                          self.moving_pos)
+            event.accept()
+        elif self.selection_start is not None:
+            self.selection_stop = event.pos()
+            event.accept()
+        parent.update()
+
+
+    def mouseReleaseEvent(self, parent, event):
+        self.moving_item = None
+        if self.selection_start is not None:
+            rect = QRect(self.selection_start, self.selection_stop)
+            if event.modifiers() & Qt.ShiftModifier:
+                sel = parent.selection
+            else:
+                sel = [ ]
+            for c in parent.layout.children:
+                if rect.contains(c.geometry()):
+                    sel.append(c)
+            parent.selection = sel
+            self.selection_start = None
+            event.accept()
+            parent.update()
+
+
+    ready = True # selections can always be drawn
+
+
+    def draw(self, painter):
+        if self.selection_start is not None:
+            painter.setPen(Qt.black)
+            painter.drawRect(QRect(self.selection_start, self.selection_stop))
+
+class Shape(Action):
+    def mousePressEvent(self, parent, event):
+        self.start_pos = event.pos()
+        self.set_points(self.start_pos, self.start_pos)
+        event.accept()
+
+    def mouseMoveEvent(self, parent, event):
+        if hasattr(self, "start_pos"):
+            self.set_points(self.start_pos, event.pos())
+            event.accept()
+            parent.update()
+
+    def mouseReleaseEvent(self, parent, event):
+        if hasattr(self, "start_pos"):
+            parent.current_action = None
+            parent.shapes.append(self)
+
+class Line(Shape):
+    text = "Add Line"
+    icon = ":line"
+
+    def set_points(self, start, end):
+        self.line = QLine(start, end)
+
+    def draw(self, painter):
+        painter.drawLine(self.line)
+
+class Rectangle(Shape):
+    text = "Add rectangle"
+    icon = ":rect"
+
+    def set_points(self, start, end):
+        self.rect = QRect(start, end).normalized()
+
+    def draw(self, painter):
+        painter.drawRect(self.rect)
 
 def _parse_rect(elem):
     if elem.get(ns_karabo + "x") is not None:
@@ -259,9 +377,9 @@ class GraphicsView(QSvgWidget):
         layout = QStackedLayout(self)
         layout.addWidget(self.inner)
         
-        self.moving_item = None
         self.selection = [ ]
-        self.selection_start = None
+        self.shapes = [ ]
+        self.current_action = None
 
         self.tree = ElementTree.ElementTree(ElementTree.Element(ns_svg + "svg"))
 
@@ -274,7 +392,15 @@ class GraphicsView(QSvgWidget):
         self.__copiedItem = QByteArray()
 
         self.setAcceptDrops(True)
-        
+
+    def add_actions(self, source):
+        for v in Action.actions:
+            action = v.add_action(source)
+            action.triggered.connect(partial(self.set_current_action, v))
+            yield action
+
+    def set_current_action(self, Action):
+        self.current_action = Action()
 
     def _getDesignMode(self):
         return self.__isDesignMode
@@ -848,20 +974,8 @@ class GraphicsView(QSvgWidget):
         if not self.isDesignMode:
             return
         if event.button() == Qt.LeftButton:
-            item = self.layout.itemAtPosition(event.pos())
-            if item is None:
-                self.selection_stop = self.selection_start = event.pos()
-                self.update()
-            if item is not None:
-                self.moving_item = item
-                self.moving_pos = (
-                    event.pos() - self.moving_item.geometry().topLeft())
-                if event.modifiers() & Qt.ShiftModifier:
-                    self.selection.append(item)
-                else:
-                    self.selection = [item]
-                self.update()
-                event.accept()
+            if self.current_action is not None:
+                self.current_action.mousePressEvent(self, event)
         else:
             child = self.inner.childAt(event.pos())
             if child is not None:
@@ -881,35 +995,14 @@ class GraphicsView(QSvgWidget):
             child.event(event)
 
     def mouseMoveEvent(self, event):
-        if self.moving_item is not None:
-            self.layout.setItemPosition(self.moving_item, event.pos() - 
-                                        self.moving_pos)
-            event.accept()
-        elif self.selection_start is not None:
-            self.selection_stop = event.pos()
-            event.accept()
-            self.update()
-    
-        self.update()
+        if self.current_action is not None:
+            self.current_action.mouseMoveEvent(self, event)
         QWidget.mouseMoveEvent(self, event)
 
 
     def mouseReleaseEvent(self, event):
-        self.moving_item = None
-        if self.selection_start is not None:
-            rect = QRect(self.selection_start, self.selection_stop)
-            if event.modifiers() & Qt.ShiftModifier:
-                sel = self.selection
-            else:
-                sel = [ ]
-            for c in self.layout.children:
-                if rect.contains(c.geometry()):
-                    sel.append(c)
-            self.selection = sel
-            self.selection_start = None
-            event.accept()
-            self.update()
-
+        if self.current_action is not None:
+            self.current_action.mouseReleaseEvent(self, event)
         QWidget.mouseReleaseEvent(self, event)
 
 
@@ -1156,8 +1249,9 @@ class GraphicsView(QSvgWidget):
                     else:
                         painter.setPen(Qt.black)
                     painter.drawRect(item.geometry())
-            if self.selection_start is not None:
-                painter.setPen(Qt.black)
-                painter.drawRect(QRect(self.selection_start, self.selection_stop))
+            for s in self.shapes:
+                s.draw(painter)
+            if self.current_action is not None:
+                self.current_action.draw(painter)
         finally:
             painter.end()
