@@ -265,35 +265,16 @@ class GraphicsView(QSvgWidget):
 
         self.tree = ElementTree.ElementTree(ElementTree.Element(ns_svg + "svg"))
 
-        # Current mode of the view (move, insert)
-        self.__mode = self.MoveItem
-        
         # Composition mode is either ON/OFFLINE, once set not changeable
         self.__compositionMode = CompositionMode.UNDEFINED
 
-        self.__line = None
-        self.__rect = None
-
         self.setDesignMode(True)
-
-        self.__minZ = 0
-        self.__maxZ = 0
-        self.__seqNumber = 0
-
-        self.__rotAngle = 30
 
         # Describes most recent item to be cut or copied inside the application
         self.__copiedItem = QByteArray()
 
         self.setAcceptDrops(True)
         
-
-    def _getMode(self):
-        return self.__mode
-    def _setMode(self, mode):
-        self.__mode = mode
-    mode = property(fget=_getMode, fset=_setMode)
-
 
     def _getDesignMode(self):
         return self.__isDesignMode
@@ -777,25 +758,6 @@ class GraphicsView(QSvgWidget):
             del item
 
 
-    # Rotates all selected items around 30 degrees
-    def rotate(self):
-        for item in self.selectedItems():
-            #item.rotate(30)
-            item.setRotation(self.__rotAngle)
-            self.__rotAngle += 30
-
-
-    # Scales all selected items up (so far) : TODO use value
-    def scaleSelectedItemsUp(self): # value
-        for item in self.selectedItems():
-            item.scale(1.5, 1.5)
-
-
-    def scaleSelectedItemsDown(self): # value
-        for item in self.selectedItems():
-            item.scale(0.75, 0.75)
-
-
     def groupItems(self):
         items = self.selectedItems()
         if len(items) < 1:
@@ -848,21 +810,7 @@ class GraphicsView(QSvgWidget):
 		    childItem.setSelected(True)
 
 
-    # Increments self.__maxZ value, and then sets the currently selected item's z
-    # value to self.__maxZ
-    def bringToFront(self):
-        self.__maxZ += 1
-        self._setZValue(self.__maxZ)
 
-
-    # Decrements self.__minZ value, and then sets the currently selected item's z
-    # value to self.__minZ
-    def sendToBack(self):
-        self.__minZ -=1
-        self._setZValue(self.__minZ)
-
-
-### private ###
     # Positions a newly added or pasted item in the scene
     # The sequence number ensures that new items are added in different positions
     # rather than on top of each other
@@ -877,13 +825,6 @@ class GraphicsView(QSvgWidget):
         self.__scene.clearSelection()
         item.setSelected(True)
         self.bringToFront()
-
-
-    # Sets the z value of all selected items to z
-    def _setZValue(self, z):
-        items = self.selectedItems()
-        for item in items:
-            item.setZValue(z)
 
 
     # Creates and returns container item
@@ -901,18 +842,6 @@ class GraphicsView(QSvgWidget):
             
         self.layout.addItem(layout, QRect(pos, layout.sizeHint()))
         return layout
-
-
-### protected ###
-    #def wheelEvent(self, event):
-    #    #factor = 1.41 ** (-event.delta() / 240.0)
-    #    factor = 1.0 + (0.2 * qAbs(event.delta()) / 120.0)
-    #    if event.delta() > 0:
-    #        self.scale(factor, factor)
-    #    else:
-    #        factor = 1.0/factor
-    #        self.scale(factor, factor)
-    #    QGraphicsView.wheelEvent(self, event)
 
 
     def mousePressEvent(self, event):
@@ -940,17 +869,6 @@ class GraphicsView(QSvgWidget):
                     child = child.parent()
                 child.mousePressEvent(event)
 
-        # Items are created in origin and must then be moved to the position to
-        # set their position correctly for later purposes!!!
-        if self.__mode == self.InsertLine:
-            self.__line = Line(self.__isDesignMode)
-            self._addItem(self.__line)
-            self.__line.setPos(pos.x(), pos.y())
-        elif self.__mode == self.InsertRect:
-            self.__rect = Rectangle(self.__isDesignMode)
-            self._addItem(self.__rect)
-            self.__rect.setPos(pos.x(), pos.y())
-
         QWidget.mousePressEvent(self, event)
 
     def contextMenuEvent(self, event):
@@ -972,17 +890,6 @@ class GraphicsView(QSvgWidget):
             event.accept()
             self.update()
     
-        if self.__mode == self.InsertLine and self.__line:
-            linePos = self.__line.pos()
-            pos = QPointF(pos.x()-linePos.x(), pos.y()-linePos.y())
-            newLine = QLineF(QPointF(), QPointF(pos))
-            self.__line.setLine(newLine)
-        elif self.__mode == self.InsertRect and self.__rect:
-            rectPos = self.__rect.pos()
-            pos = QPointF(pos.x()-rectPos.x(), pos.y()-rectPos.y())
-            newRect = QRectF(QPointF(), QPointF(pos))
-            self.__rect.setRect(newRect)
-        #elif self.__mode == self.MoveItem:
         self.update()
         QWidget.mouseMoveEvent(self, event)
 
@@ -1003,20 +910,6 @@ class GraphicsView(QSvgWidget):
             event.accept()
             self.update()
 
-        if self.__line and self.__mode == self.InsertLine:
-            centerPos = self.__line.boundingRect().center()
-            self.__line.setTransformOriginPoint(centerPos)
-            self.__line.setSelected(True)
-            self.lineInserted.emit()
-        elif self.__rect and self.__mode == self.InsertRect:
-            rect = self.__rect.boundingRect()
-            centerPos = rect.center()
-            self.__rect.setTransformOriginPoint(centerPos)
-            self.__rect.setSelected(True)
-            self.rectInserted.emit()
-
-        self.__line = None
-        self.__rect = None
         QWidget.mouseReleaseEvent(self, event)
 
 
