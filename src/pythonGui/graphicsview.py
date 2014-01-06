@@ -999,13 +999,6 @@ class GraphicsView(QSvgWidget):
         self._addItem(item)
 
 
-    def _addItem(self, item):
-        self.__scene.addItem(item)
-        self.__scene.clearSelection()
-        item.setSelected(True)
-        self.bringToFront()
-
-
     # Creates and returns container item
     def createGraphicsItemContainer(self, orientation, items, pos):
         # Initialize layout
@@ -1108,9 +1101,9 @@ class GraphicsView(QSvgWidget):
                 customItem = GraphicsCustomItem(configKey, self.__isDesignMode, displayName, schema, (navItemType == NavigationItemTypes.CLASS))
                 tooltipText = "<html><b>Associated key: </b>%s</html>" % configKey
                 customItem.setToolTip(tooltipText)
-                offset = QPointF()
-                # Add created item to scene
-                self._addItem(customItem)
+                customItem.position = event.pos()
+                self.shapes.append(customItem)
+                self.update()
 
                 # Register as visible device - TODO?
                 #Manager().newVisibleDevice(configKey)
