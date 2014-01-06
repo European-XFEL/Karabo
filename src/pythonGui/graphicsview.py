@@ -1295,6 +1295,11 @@ class GraphicsView(QSvgWidget):
         try:
             #self.renderer().render(painter, QRectF(QRect(QPoint(0, 0), self.renderer().defaultSize())))
             self.renderer().render(painter, self.renderer().viewBoxF())
+            for s in self.shapes:
+                painter.save()
+                s.draw(painter)
+                painter.restore()
+            painter.save()
             if self.isDesignMode:
                 for item in self.layout.children:
                     if item in self.selection:
@@ -1302,8 +1307,7 @@ class GraphicsView(QSvgWidget):
                     else:
                         painter.setPen(Qt.black)
                     painter.drawRect(item.geometry())
-            for s in self.shapes:
-                s.draw(painter)
+            painter.restore()
             if self.current_action is not None:
                 self.current_action.draw(painter)
         finally:
