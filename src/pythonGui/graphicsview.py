@@ -51,6 +51,8 @@ class MetaAction(type):
         ret = type.__new__(self, name, bases, dict)
         if "text" in dict:
             Action.actions.append(ret)
+        if "xmltag" in dict:
+            Shape.xmltags[dict["xmltag"]] = ret
         return ret
 
 class Action(object):
@@ -127,6 +129,8 @@ class Select(Action):
             painter.drawRect(QRect(self.selection_start, self.selection_stop))
 
 class Shape(Action):
+    xmltags = { }
+
     def mousePressEvent(self, parent, event):
         self.start_pos = event.pos()
         self.set_points(self.start_pos, self.start_pos)
@@ -143,7 +147,15 @@ class Shape(Action):
             parent.current_action = None
             parent.shapes.append(self)
 
+    @staticmethod
+    def load(element):
+        try:
+            return Shape.xmltags[element.tag].load(element)
+        except KeyError:
+            return
+
 class Line(Shape):
+    xmltag = ns_svg + "line"
     text = "Add Line"
     icon = ":line"
 
@@ -153,7 +165,23 @@ class Line(Shape):
     def draw(self, painter):
         painter.drawLine(self.line)
 
+    def element(self):
+        return ElementTree.Element(
+            ns_svg + "line", x1=unicode(self.line.x1()),
+            x2=unicode(self.line.x2()), y1=unicode(self.line.y1()),
+            y2=unicode(self.line.y2()))
+
+    @staticmethod
+    def load(e):
+        ret = Line()
+        ret.line = QLine(float(e.get("x1")), float(e.get("y1")),
+                         float(e.get("x2")), float(e.get("y2")))
+        ret.loadpen(e)
+        return ret
+
+
 class Rectangle(Shape):
+    xmltag = ns_svg + "rect"
     text = "Add rectangle"
     icon = ":rect"
 
@@ -162,6 +190,19 @@ class Rectangle(Shape):
 
     def draw(self, painter):
         painter.drawRect(self.rect)
+
+    def element(self):
+        return ElementTree.Element(
+            ns_svg + "rect", x=unicode(self.rect.x()),
+            y=unicode(self.rect.y()), width=unicode(self.rect.width()),
+            height=unicode(self.rect.height()))
+
+    @staticmethod
+    def load(e):
+        ret = Rectangle()
+        ret.rect = QRect(float(e.get("x")), float(e.get("y")),
+                         float(e.get("width")), float(e.get("height")))
+        return ret
 
 def _parse_rect(elem):
     if elem.get(ns_karabo + "x") is not None:
@@ -553,6 +594,17 @@ class GraphicsView(QSvgWidget):
                 self.layout.addItem(obj, _parse_rect(elem))
                 del root[i]
 
+        shapes = [ ]
+        for e in root[::-1]:
+            s = Shape.load(e)
+            if s is None:
+                break
+            else:
+                shapes.append(s)
+        if len(shapes) > 0:
+            del root[-len(shapes):]
+        self.shapes = shapes[::-1]
+
         ar = QByteArray()
         buf = QBuffer(ar)
         buf.open(QIODevice.WriteOnly)
@@ -580,6 +632,7 @@ class GraphicsView(QSvgWidget):
         root = self.tree.getroot().copy()
         tree = ElementTree.ElementTree(root)
         e = self.layout.element()
+        root.extend(s.element() for s in self.shapes)
         root.extend(ee for ee in e)
         tree.write(filename)
 
