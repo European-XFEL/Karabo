@@ -22,7 +22,7 @@ from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 
 
-class GraphicsCustomItem(NodeBase, QGraphicsObject):
+class GraphicsCustomItem(NodeBase):
     # signals
     signalValueChanged = pyqtSignal(str, object) # key, value
 
@@ -47,6 +47,7 @@ class GraphicsCustomItem(NodeBase, QGraphicsObject):
         
         self.__inputChannelItems = [] # List contains GraphicsInputChannelItem
         self.__outputChannelItems = [] # List contains GraphicsOutputChannelItem
+        self.position = QPoint()
         
         if schema:
             schemaReader = PrivateSchemaReader(schema)
@@ -56,11 +57,11 @@ class GraphicsCustomItem(NodeBase, QGraphicsObject):
             # Update channel graphics representation
             self._updateChannelItems()
 
-        self.setFlags(QGraphicsItem.ItemIsMovable | QGraphicsItem.ItemIsSelectable | QGraphicsItem.ItemSendsGeometryChanges)
-
-
     def internalKey(self):
         return self.__internalKey
+
+    def setToolTip(self, tip):
+        pass
 
 
     def _getValue(self):
@@ -104,11 +105,6 @@ class GraphicsCustomItem(NodeBase, QGraphicsObject):
         return self.__outputChannelItems
 
 
-    def boundingRect(self):
-        margin = 80 # 1, TODO: consider channels as well..
-        return self._outlineRect().adjusted(-margin, -margin, +margin, +margin)
-
-
     def shape(self):
         rect = self._outlineRect()
         path = QPainterPath()
@@ -116,19 +112,17 @@ class GraphicsCustomItem(NodeBase, QGraphicsObject):
         return path
 
 
-    def paint(self, painter, option, widget):
-        #pen = QPen(self.__outlineColor)
+    def draw(self, painter):
         pen = painter.pen()
-        if self.isSelected():
-            pen.setStyle(Qt.DotLine)
-            pen.setWidth(2)
+        #if self.isSelected():
+        #    pen.setStyle(Qt.DotLine)
+        #    pen.setWidth(2)
         
         painter.setFont(self.__textFont)
         painter.setPen(pen)
         painter.setBrush(QColor(224,240,255)) # light blue
         rect = self._outlineRect()
         painter.drawRoundRect(rect, self._roundness(rect.width()), self._roundness(rect.height()))
-        #painter.setPen(self.__textColor)
         painter.drawText(rect, Qt.AlignCenter, self.__compositeText)
 
 
@@ -211,10 +205,11 @@ class GraphicsCustomItem(NodeBase, QGraphicsObject):
 
     def _outlineRect(self):
         padding = 10
-        metrics = QFontMetricsF(self.__textFont) #qApp.fontMetrics())
+        metrics = QFontMetrics(self.__textFont) #qApp.fontMetrics())
         rect = metrics.boundingRect(self.__compositeText)
         rect.adjust(-padding, -padding, +padding, +padding)
         rect.translate(-rect.center())
+        rect.translate(self.position)
         return rect
 
 
