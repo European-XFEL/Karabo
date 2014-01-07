@@ -22,18 +22,16 @@ __all__ = ["DisplaySpinBox"]
 
 import globals
 
-from displaywidget import DisplayWidget
+from widget import DisplayWidget
 
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 
 
-def getCategoryAliasClassName():
-    return ["Digit","Integer Field","DisplaySpinBox"]
-
-
 class DisplaySpinBox(DisplayWidget):
-    
+    category = "Digit"
+    alias = "Integer Field"
+
     def __init__(self, **params):
         super(DisplaySpinBox, self).__init__(**params)
 
@@ -56,12 +54,6 @@ class DisplaySpinBox(DisplayWidget):
         #    unitLabel += unitSymbol
         #if len(unitLabel) > 0:
         #    self.__spinBox.setSuffix(" %s" %unitLabel)
-
-
-    def _getCategory(self):
-        category, alias, className = getCategoryAliasClassName()
-        return category
-    category = property(fget=_getCategory)
 
 
     # Returns the actual widget which is part of the composition
@@ -117,9 +109,3 @@ class DisplaySpinBox(DisplayWidget):
             self.__spinBox.blockSignals(True)
             self.__spinBox.setValue(value)
             self.__spinBox.blockSignals(False)
-
-
-    class Maker:
-        def make(self, **params):
-            return DisplaySpinBox(**params)
-

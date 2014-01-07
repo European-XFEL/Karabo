@@ -22,7 +22,7 @@ __all__ = ["DisplayHistogram", "HistogramItem"]
 
 
 import sys
-from displaywidget import DisplayWidget
+from widget import DisplayWidget
 from randomcolor import RandomColor
 
 from PyQt4.QtCore import *
@@ -39,12 +39,10 @@ except:
     useGuiQwt = False
 
 
-def getCategoryAliasClassName():
-    return ["List","Histogram","DisplayHistogram"]
-
-
 class DisplayHistogram(DisplayWidget):
-    
+    category = "List"
+    alias = "Histogram"
+
     def __init__(self, **params):
         super(DisplayHistogram, self).__init__(**params)
         
@@ -73,12 +71,6 @@ class DisplayHistogram(DisplayWidget):
         key = params.get('key')
         # Stores key/value pair
         self.__keys = {str(key):None}
-
-
-    def _getCategory(self):
-        category, alias, className = getCategoryAliasClassName()
-        return category
-    category = property(fget=_getCategory)
 
 
     # Returns the actual widget which is part of the composition
@@ -171,11 +163,6 @@ class DisplayHistogram(DisplayWidget):
                 self.__plotCurves.append(histogram)
             
             self.__histogramWidget.replot()
-
-
-    class Maker:
-        def make(self, **params):
-            return DisplayHistogram(**params)
 
 
 class HistogramItem(QwtPlotItem):

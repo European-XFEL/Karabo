@@ -21,18 +21,16 @@
 __all__ = ["MotorWidget"]
 
 
-from vacuumwidget import VacuumWidget
+from widget import VacuumWidget
 
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 
 
-def getCategoryAliasClassName():
-    return ["State","Motor","MotorWidget"]
-
-
 class MotorWidget(VacuumWidget):
-  
+    category = "State"
+    alias = "Motor"
+
     def __init__(self, **params):
         super(MotorWidget, self).__init__(**params)
         
@@ -52,12 +50,6 @@ class MotorWidget(VacuumWidget):
         value = params.get('value')
         if value is not None:
             self.valueChanged(self.__key, value)
-
-
-    def _getCategory(self):
-        category, alias, className = getCategoryAliasClassName()
-        return category
-    category = property(fget=_getCategory)
 
 
     # Returns the actual widget which is part of the composition
@@ -116,9 +108,3 @@ class MotorWidget(VacuumWidget):
             self._setPixmap(QPixmap(":motor-red"))
         else:
             self._setPixmap(QPixmap(":motor"))
-
-
-    class Maker:
-        def make(self, **params):
-            return MotorWidget(**params)
-

@@ -22,18 +22,15 @@ __all__ = ["EditableDoubleSpinBox"]
 
 import sys
 
-from editablewidget import EditableWidget
+from widget import EditableWidget
 
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 
 
-def getCategoryAliasClassName():
-    return ["Digit","Float Field","EditableDoubleSpinBox"]
-
-
 class EditableDoubleSpinBox(EditableWidget):
-
+    category = "Digit"
+    alias = "Float Field"
     
     def __init__(self, **params):
         super(EditableDoubleSpinBox, self).__init__(**params)
@@ -54,12 +51,6 @@ class EditableDoubleSpinBox(EditableWidget):
         # Set value
         value = params.get('value')
         self.valueChanged(self.__key, value)
-
-
-    def _getCategory(self):
-        category, alias, className = getCategoryAliasClassName()
-        return category
-    category = property(fget=_getCategory)
 
 
     # Returns the actual widget which is part of the composition
@@ -122,9 +113,3 @@ class EditableDoubleSpinBox(EditableWidget):
     def onEditingFinished(self, value):
         self.__lastCursorPos = self.__leDblValue.cursorPosition()
         self.valueEditingFinished(self.__key, value)
-
-
-    class Maker:
-        def make(self, **params):
-            return EditableDoubleSpinBox(**params)
-

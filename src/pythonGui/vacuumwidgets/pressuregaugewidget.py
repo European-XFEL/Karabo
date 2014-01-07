@@ -21,18 +21,16 @@
 __all__ = ["PressureGaugeWidget"]
 
 
-from vacuumwidget import VacuumWidget
+from widget import VacuumWidget
 
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 
 
-def getCategoryAliasClassName():
-    return ["State","Pressure gauge","PressureGaugeWidget"]
-
-
 class PressureGaugeWidget(VacuumWidget):
-  
+    category = "State"
+    alias = "Pressure gauge"
+
     def __init__(self, **params):
         super(PressureGaugeWidget, self).__init__(**params)
         
@@ -52,12 +50,6 @@ class PressureGaugeWidget(VacuumWidget):
         value = params.get('value')
         if value is not None:
             self.valueChanged(self.__key, value)
-
-
-    def _getCategory(self):
-        category, alias, className = getCategoryAliasClassName()
-        return category
-    category = property(fget=_getCategory)
 
 
     # Returns the actual widget which is part of the composition
@@ -116,9 +108,3 @@ class PressureGaugeWidget(VacuumWidget):
             self._setPixmap(QPixmap(":pressuregauge-red"))
         else:
             self._setPixmap(QPixmap(":pressuregauge"))
-
-
-    class Maker:
-        def make(self, **params):
-            return PressureGaugeWidget(**params)
-

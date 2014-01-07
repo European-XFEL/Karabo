@@ -21,18 +21,16 @@
 __all__ = ["EditableFilePath"]
 
 
-from editablewidget import EditableWidget
+from widget import EditableWidget
 
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 
 
-def getCategoryAliasClassName():
-    return ["FilePath","File Path","EditableFilePath"]
-
-
 class EditableFilePath(EditableWidget):
-    
+    category = "FilePath"
+    alias = "File Path"
+
     def __init__(self, **params):
         super(EditableFilePath, self).__init__(**params)
 
@@ -51,12 +49,6 @@ class EditableFilePath(EditableWidget):
         # Set value
         value = params.get('value')
         self.valueChanged(self.__key, value)
-
-
-    def _getCategory(self):
-        category, alias, className = getCategoryAliasClassName()
-        return category
-    category = property(fget=_getCategory)
 
 
     # Returns the actual widget which is part of the composition
@@ -116,9 +108,3 @@ class EditableFilePath(EditableWidget):
         
         self._setValue(filePath)
         self.onEditingFinished()
-
-
-    class Maker:
-        def make(self, **params):
-            return EditableFilePath(**params)
-

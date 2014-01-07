@@ -22,18 +22,16 @@ __all__ = ["EditableList"]
 
 
 from label import Label
-from editablewidget import EditableWidget
+from widget import EditableWidget
 
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 
 
-def getCategoryAliasClassName():
-    return ["List","Histogram","EditableList"]
-
-
 class EditableList(EditableWidget):
-    
+    category = "List"
+    alias = "Histogram"
+
     def __init__(self, **params):
         super(EditableList, self).__init__(**params)
         
@@ -51,12 +49,6 @@ class EditableList(EditableWidget):
         # Set value
         value = params.get('value')
         self.valueChanged(self.__key, value)
-
-
-    def _getCategory(self):
-        category, alias, className = getCategoryAliasClassName()
-        return category
-    category = property(fget=_getCategory)
 
 
     # Returns the actual widget which is part of the composition
@@ -127,9 +119,3 @@ class EditableList(EditableWidget):
     def onEditingFinished(self, value):
         self.__label.value = value
         self.valueEditingFinished(self.__key, value)
-
-
-    class Maker:
-        def make(self, **params):
-            return EditableList(**params)
-

@@ -13,7 +13,7 @@ __all__ = ["EditableApplyLaterComponent"]
 
 
 from basecomponent import BaseComponent
-from editablewidget import EditableWidget
+from widget import EditableWidget
 from manager import Manager
 from messagebox import MessageBox
 
@@ -40,7 +40,7 @@ class EditableApplyLaterComponent(BaseComponent):
         hLayout = QHBoxLayout(self.__compositeWidget)
         hLayout.setContentsMargins(0,0,0,0)
 
-        self.__editableWidget = EditableWidget.create(classAlias, **params)
+        self.__editableWidget = EditableWidget.get_class(classAlias)(**params)
         self.__editableWidget.signalEditingFinished.connect(self.onEditingFinished)
         hLayout.addWidget(self.__editableWidget.widget)
         
@@ -272,7 +272,8 @@ class EditableApplyLaterComponent(BaseComponent):
         
         # Disconnect signal from old widget
         self.__editableWidget.signalEditingFinished.disconnect(self.onEditingFinished)
-        self.__editableWidget = EditableWidget.create(classAlias, **self.__initParams)
+        self.__editableWidget = EditableWidget.get_class(classAlias)(
+            **self.__initParams)
         # Connect signal to new widget
         self.__editableWidget.signalEditingFinished.connect(self.onEditingFinished)
         layout.insertWidget(index, self.__editableWidget.widget)

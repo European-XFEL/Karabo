@@ -21,18 +21,16 @@
 __all__ = ["DisplayLineEdit"]
 
 
-from displaywidget import DisplayWidget
+from widget import DisplayWidget
 
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 
 
-def getCategoryAliasClassName():
-    return ["String","Text Field","DisplayLineEdit"]
-
-
 class DisplayLineEdit(DisplayWidget):
-  
+    category = "String"
+    alias = "Text Field"
+
     def __init__(self, **params):
         super(DisplayLineEdit, self).__init__(**params)
         
@@ -44,12 +42,6 @@ class DisplayLineEdit(DisplayWidget):
         self.__lineEdit.setReadOnly(True)
         
         self.__key = params.get('key')
-
-
-    def _getCategory(self):
-        category, alias, className = getCategoryAliasClassName()
-        return category
-    category = property(fget=_getCategory)
 
 
     # Returns the actual widget which is part of the composition
@@ -91,9 +83,3 @@ class DisplayLineEdit(DisplayWidget):
             self.__lineEdit.blockSignals(True)
             self.__lineEdit.setText(value)
             self.__lineEdit.blockSignals(False)
-
-
-    class Maker:
-        def make(self, **params):
-            return DisplayLineEdit(**params)
-

@@ -21,7 +21,7 @@
 __all__ = ["DisplayPyCode"]
 
 
-from displaywidget import DisplayWidget
+from widget import DisplayWidget
 
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
@@ -34,12 +34,10 @@ from base64 import decodestring
 import time
 import thread
 
-def getCategoryAliasClassName():
-    return ["String","Code Field","DisplayPyCode"]
-
-
 class DisplayPyCode(DisplayWidget):
-  
+    category = "String"
+    alias = "Code Field"
+
     def __init__(self, **params):
         super(DisplayPyCode, self).__init__(**params)
         
@@ -467,12 +465,6 @@ class DisplayPyCode(DisplayWidget):
         format.setName(name)
         return format
 
-    def _getCategory(self):
-        category, alias, className = getCategoryAliasClassName()
-        return category
-    category = property(fget=_getCategory)
-
-
     # Returns the actual widget which is part of the composition
     def _getWidget(self):
         return self.__compositeWidget
@@ -517,9 +509,3 @@ class DisplayPyCode(DisplayWidget):
                     self.onExecuteClicked()
                 except:
                     print "A problem with IPython execution occured!"
-                
-
-    class Maker:
-        def make(self, **params):
-            return DisplayPyCode(**params)
-
