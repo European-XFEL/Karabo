@@ -79,6 +79,11 @@ class Select(Action):
     def mousePressEvent(self, parent, event):
         item = parent.layout.itemAtPosition(event.pos())
         if item is None:
+            for s in parent.shapes:
+                if s.contains(event.pos()):
+                    item = s
+                    break
+        if item is None:
             self.selection_stop = self.selection_start = event.pos()
             parent.update()
         else:
@@ -86,16 +91,16 @@ class Select(Action):
             self.moving_pos = (
                 event.pos() - self.moving_item.geometry().topLeft())
             if event.modifiers() & Qt.ShiftModifier:
-                parent.selection.append(item)
+                item.selected = not item.selected
             else:
-                parent.selection = [item]
+                parent.clear_selection()
+                item.selected = True
             parent.update()
             event.accept()
 
     def mouseMoveEvent(self, parent, event):
         if self.moving_item is not None:
-            parent.layout.setItemPosition(self.moving_item, event.pos() -
-                                          self.moving_pos)
+            self.moving_item.set_position(event.pos() - self.moving_pos)
             event.accept()
         elif self.selection_start is not None:
             self.selection_stop = event.pos()
@@ -107,14 +112,11 @@ class Select(Action):
         self.moving_item = None
         if self.selection_start is not None:
             rect = QRect(self.selection_start, self.selection_stop)
-            if event.modifiers() & Qt.ShiftModifier:
-                sel = parent.selection
-            else:
-                sel = [ ]
+            if not event.modifiers() & Qt.ShiftModifier:
+                parent.clear_selection()
             for c in parent.layout.children:
                 if rect.contains(c.geometry()):
-                    sel.append(c)
-            parent.selection = sel
+                    c.selected = True
             self.selection_start = None
             event.accept()
             parent.update()
@@ -130,6 +132,11 @@ class Select(Action):
 
 class Shape(Action):
     xmltags = { }
+    fuzzy = 3
+
+    def __init__(self):
+        Action.__init__(self)
+        self.selected = False
 
     def mousePressEvent(self, parent, event):
         self.start_pos = event.pos()
@@ -154,6 +161,11 @@ class Shape(Action):
         except KeyError:
             return
 
+    def draw(self, painter):
+        if self.selected:
+            painter.setPen(Qt.DashLine)
+            painter.drawRect(self.geometry())
+
 class Line(Shape):
     xmltag = ns_svg + "line"
     text = "Add Line"
@@ -163,7 +175,22 @@ class Line(Shape):
         self.line = QLine(start, end)
 
     def draw(self, painter):
+        Shape.draw(self, painter)
         painter.drawLine(self.line)
+
+    def contains(self, p):
+        x1, x2 = self.line.x1(), self.line.x2()
+        y1, y2 = self.line.y1(), self.line.y2()
+        return (min(x1, x2) - self.fuzzy < p.x() < max(x1, x2) + self.fuzzy and
+                min(y1, y2) - self.fuzzy < p.y() < max(y1, y2) + self.fuzzy and
+                ((x2 - x1) * (p.y() - y1) - (y2 - y1) * (p.x() - x1)) ** 2 <
+                self.fuzzy ** 2 * ((x1 - x2) ** 2 + (y1 - y2) ** 2))
+
+    def geometry(self):
+        return QRect(self.line.p1(), self.line.p2())
+
+    def set_position(self, p):
+        self.line.translate(p - self.geometry().topLeft())
 
     def element(self):
         return ElementTree.Element(
@@ -189,6 +216,7 @@ class Rectangle(Shape):
         self.rect = QRect(start, end).normalized()
 
     def draw(self, painter):
+        Shape.draw(self, painter)
         painter.drawRect(self.rect)
 
     def element(self):
@@ -196,6 +224,19 @@ class Rectangle(Shape):
             ns_svg + "rect", x=unicode(self.rect.x()),
             y=unicode(self.rect.y()), width=unicode(self.rect.width()),
             height=unicode(self.rect.height()))
+
+    def contains(self, p):
+        l, r = self.rect.left(), self.rect.right()
+        t, b = self.rect.top(), self.rect.bottom()
+        x, y = p.x(), p.y()
+        return (l < x < r and min(abs(t - y), abs(b - y)) < self.fuzzy or
+                t < y < b and min(abs(l - x), abs(r - x)) < self.fuzzy)
+
+    def geometry(self):
+        return self.rect
+
+    def set_position(self, p):
+        self.rect.moveTo(p)
 
     @staticmethod
     def load(e):
@@ -242,16 +283,20 @@ class FixedLayout(QLayout, Layout):
     def __init__(self, parent):
         QLayout.__init__(self, parent)
         self.children = [ ]
-        self.geometries = { }
+        self.positions = { }
 
     def addItem(self, item, geometry=None):
         if geometry is None:
             self._item = item
+            return
         if isinstance(item, QWidget):
             self.addWidget(item)
             item = self._item
+        else:
+            self.addChildLayout(item)
         self.children.append(item)
-        self.geometries[item] = geometry
+        self.positions[item] = geometry.topLeft()
+        item.setGeometry(geometry)
         self.update()
 
     def itemAt(self, index):
@@ -262,7 +307,8 @@ class FixedLayout(QLayout, Layout):
 
     def takeAt(self, index):
         try:
-            return self.children.pop(index)
+            ret = self.children.pop(index)
+            del self.positions[ret]
         except IndexError:
             return
         
@@ -271,12 +317,11 @@ class FixedLayout(QLayout, Layout):
 
     def setGeometry(self, geometry):
         for item in self.children:
-            item.setGeometry(self.geometries[item])
+            item.setGeometry(QRect(self.positions[item], item.sizeHint()))
 
     def setItemPosition(self, item, pos):
-        rect = QRect(pos, item.geometry().size())
-        self.geometries[item] = rect
-        item.setGeometry(rect)
+        self.positions[item] = pos
+        self.setGeometry(None)
 
     def sizeHint(self):
         return QSize(10, 10)
@@ -303,10 +348,7 @@ class FixedLayout(QLayout, Layout):
                 break
         if ret is None:
             return
-        print c.sizeHint()
-        g = QRect(self.geometries[c].topLeft(), c.sizeHint())
-        self.geometries[c] = g
-        c.setGeometry(g)
+        c.setGeormetry(QRect(self.positions[c], c.sizeHint()))
 
     def save(self):
         return { }
@@ -314,7 +356,11 @@ class FixedLayout(QLayout, Layout):
 class BoxLayout(QBoxLayout, Layout):
     def __init__(self, dir):
         QBoxLayout.__init__(self, dir)
+        self.selected = False
         self.setContentsMargins(5, 5, 5, 5)
+
+    def set_position(self, pos):
+        self.parent().setItemPosition(self, pos)
 
     @staticmethod
     def load(elem, parent):
@@ -337,6 +383,7 @@ class ProxyWidget(QStackedWidget):
         #self.setContextMenuPolicy(Qt.ActionsContextMenu)
         self.change_widget = QAction("Change widget", self)
         self.addAction(self.change_widget)
+        self.selected = False
 
     def set_child(self, child, component):
         if self.count() > 0:
@@ -356,7 +403,6 @@ class ProxyWidget(QStackedWidget):
         action = self.sender()
         self.component.changeWidget(action.text())
         self.adjustSize()
-        self.parent().layout().relayout(self)
         
     def contextMenuEvent(self, event):
         if not self.parent().parent().isDesignMode:
@@ -418,7 +464,6 @@ class GraphicsView(QSvgWidget):
         layout = QStackedLayout(self)
         layout.addWidget(self.inner)
         
-        self.selection = [ ]
         self.shapes = [ ]
         self.current_action = None
 
@@ -1015,6 +1060,11 @@ class GraphicsView(QSvgWidget):
         self.layout.addItem(layout, QRect(pos, layout.sizeHint()))
         return layout
 
+    def clear_selection(self):
+        for s in self.shapes:
+            s.selected = False
+        for c in self.layout.children:
+            c.selected = False
 
     def mousePressEvent(self, event):
         if not self.isDesignMode:
@@ -1295,7 +1345,7 @@ class GraphicsView(QSvgWidget):
             painter.save()
             if self.isDesignMode:
                 for item in self.layout.children:
-                    if item in self.selection:
+                    if item.selected:
                         painter.setPen(Qt.green)
                     else:
                         painter.setPen(Qt.black)
