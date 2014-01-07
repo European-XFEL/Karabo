@@ -21,19 +21,17 @@
 __all__ = ["EditableChoiceElement"]
 
 
-from editablewidget import EditableWidget
+from widget import EditableWidget
 from karabo.karathon import *
 
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 
 
-def getCategoryAliasClassName():
-    return ["Choice","Choice Element","EditableChoiceElement"]
-
-
 class EditableChoiceElement(EditableWidget):
-    
+    category = "Choice"
+    alias = "Choice Element"
+
     def __init__(self, **params):
         super(EditableChoiceElement, self).__init__(**params)
         
@@ -60,12 +58,6 @@ class EditableChoiceElement(EditableWidget):
         if event.type() == QEvent.Wheel and object == self.__comboBox:
             return True
         return False
-
-
-    def _getCategory(self):
-        category, alias, className = getCategoryAliasClassName()
-        return category
-    category = property(fget=_getCategory)
 
 
     # Returns the actual widget which is part of the composition
@@ -173,9 +165,3 @@ class EditableChoiceElement(EditableWidget):
                 copyWidget.comboBox.addItem(self.__comboBox.itemText(i))
 
         return copyWidget
-
-
-    class Maker:
-        def make(self, **params):
-            return EditableChoiceElement(**params)
-

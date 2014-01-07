@@ -13,7 +13,7 @@ __all__ = ["DisplayComponent"]
 
 
 from basecomponent import BaseComponent
-from displaywidget import DisplayWidget
+from widget import DisplayWidget
 from manager import Manager
 from vacuumwidget import VacuumWidget
 
@@ -32,9 +32,9 @@ class DisplayComponent(BaseComponent):
         widgetFactory = params.get('widgetFactory')
         
         if widgetFactory is None or (widgetFactory == "DisplayWidget"):
-            self.__displayWidget = DisplayWidget.create(classAlias, **params)
+            self.__displayWidget = DisplayWidget.get_class(classAlias)(**params)
         elif widgetFactory == "VacuumWidget":
-            self.__displayWidget = VacuumWidget.create(classAlias, **params)
+            self.__displayWidget = VacuumWidget.get_class(classAlias)(**params)
         
         # Use path to register component to manager
         key = params.get('key')
@@ -106,7 +106,8 @@ class DisplayComponent(BaseComponent):
         
         oldWidget = self.__displayWidget.widget
         oldWidget.deleteLater()
-        self.__displayWidget = DisplayWidget.create(classAlias, **self.__initParams)
+        self.__displayWidget = DisplayWidget.get_class(classAlias)(
+            **self.__initParams)
         self.__displayWidget.widget.setWindowFlags(Qt.BypassGraphicsProxyWidget)
         self.__displayWidget.widget.setAttribute(Qt.WA_NoSystemBackground, True)
         proxyWidget.setWidget(self.__displayWidget.widget)

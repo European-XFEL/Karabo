@@ -25,7 +25,7 @@ import datetime
 import sys
 import time
 
-from displaywidget import DisplayWidget
+from widget import DisplayWidget
 
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
@@ -41,10 +41,6 @@ except:
     useGuiQwt = False
 
 from karabo.karathon import Timestamp
-
-
-def getCategoryAliasClassName():
-    return ["Digit","Trendline","DisplayTrendline"]
 
 
 class DateTimeScaleDraw( Qwt5.Qwt.QwtScaleDraw ):
@@ -67,7 +63,9 @@ class DateTimeScaleDraw( Qwt5.Qwt.QwtScaleDraw ):
         
 
 class DisplayTrendline(DisplayWidget):
-    
+    category = "Digit"
+    alias = "Trendline"
+ 
     def __init__(self, **params):
         super(DisplayTrendline, self).__init__(**params)
         
@@ -115,12 +113,6 @@ class DisplayTrendline(DisplayWidget):
         key = params.get('key')
         # Stores key/value pair
         self.__keys = {str(key):None}
-
-
-    def _getCategory(self):
-        category, alias, className = getCategoryAliasClassName()
-        return category
-    category = property(fget=_getCategory)
 
 
     # Returns the actual widget which is part of the composition
@@ -173,10 +165,3 @@ class DisplayTrendline(DisplayWidget):
         # Set the data to the curve and update the plot
         self.__curve.set_data( map( lambda x: x[ 1 ], self.__data ), map( lambda x: x[ 0 ], self.__data ) )
         self.__plot.replot()        
-
-
-    
-
-    class Maker:
-        def make(self, **params):
-            return DisplayTrendline(**params)

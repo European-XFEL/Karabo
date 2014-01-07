@@ -21,7 +21,7 @@
 __all__ = ["DisplayPyCodeHist"]
 
 
-from displaywidget import DisplayWidget
+from widget import DisplayWidget
 
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
@@ -35,12 +35,11 @@ import time
 import thread
 import datetime
 
-def getCategoryAliasClassName():
-    return ["Digit","Matplotlib Plot","DisplayPyCodeHist"]
-
 
 class DisplayPyCodeHist(DisplayWidget):
-  
+    category = "Digit"
+    alias = "Matplotlib Plot"
+
     def __init__(self, **params):
         super(DisplayPyCodeHist, self).__init__(**params)
         
@@ -533,12 +532,6 @@ class DisplayPyCodeHist(DisplayWidget):
         format.setName(name)
         return format
 
-    def _getCategory(self):
-        category, alias, className = getCategoryAliasClassName()
-        return category
-    category = property(fget=_getCategory)
-
-
     # Returns the actual widget which is part of the composition
     def _getWidget(self):
         return self.__compositeWidget
@@ -676,15 +669,4 @@ class DisplayPyCodeHist(DisplayWidget):
         print center
         print self.__minTimeBound
         print self.__maxTimeBound
-        
-
-    class Maker:
-        def make(self, **params):
-            return DisplayPyCodeHist(**params)
-
-
-
-
-    
-   
         

@@ -21,18 +21,17 @@
 __all__ = ["DisplayImageElement"]
 
 
-from displaywidget import DisplayWidget
+from widget import DisplayWidget
 import copy
 
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 
-def getCategoryAliasClassName():
-    return ["ImageElement","Image Element","DisplayImageElement"]
-
 
 class DisplayImageElement(DisplayWidget):
-  
+    category = "ImageElement"
+    alias = "Image Element"
+
     def __init__(self, **params):
         super(DisplayImageElement, self).__init__(**params)
         
@@ -51,12 +50,6 @@ class DisplayImageElement(DisplayWidget):
         self.setErrorState(False)
         
         self.__key = params.get('key')
-
-
-    def _getCategory(self):
-        category, alias, className = getCategoryAliasClassName()
-        return category
-    category = property(fget=_getCategory)
 
 
     # Returns the actual widget which is part of the composition
@@ -126,8 +119,3 @@ class DisplayImageElement(DisplayWidget):
                 pixmap = pixmap.scaledToHeight(125)
                 
             self.__image.setPixmap(pixmap)
-            
-    class Maker:
-        def make(self, **params):
-            return DisplayImageElement(**params)
-

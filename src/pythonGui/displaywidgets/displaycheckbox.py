@@ -21,17 +21,15 @@
 __all__ = ["DisplayCheckBox"]
 
 
-from displaywidget import DisplayWidget
+from widget import DisplayWidget
 
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 
 
-def getCategoryAliasClassName():
-    return ["Switch","Toggle Field","DisplayCheckBox"]
-
-
 class DisplayCheckBox(DisplayWidget):
+    category = "Switch"
+    alias = "Toggle Field"
     
     def __init__(self, **params):
         super(DisplayCheckBox, self).__init__(**params)
@@ -43,12 +41,6 @@ class DisplayCheckBox(DisplayWidget):
         self.__checkBox.setEnabled(False)
 
         self.__key = params.get('key')
-
-
-    def _getCategory(self):
-        category, alias, className = getCategoryAliasClassName()
-        return category
-    category = property(fget=_getCategory)
 
 
     # Returns the actual widget which is part of the composition
@@ -100,9 +92,3 @@ class DisplayCheckBox(DisplayWidget):
         self.__checkBox.blockSignals(True)
         self.__checkBox.setCheckState(checkState)
         self.__checkBox.blockSignals(False)
-
-
-    class Maker:
-        def make(self, **params):
-            return DisplayCheckBox(**params)
-

@@ -10,17 +10,15 @@
 __all__ = ["TaurusLabelWrapper"]
 
 
-from displaywidget import DisplayWidget
+from widget import DisplayWidget
 # not yet working under ubuntu 12.04
 #from taurus.qt.qtgui.display import TaurusLabel
 
 
-def getCategoryAliasClassName():
-    return ["TaurusWidget","Taurus Label","TaurusLabelWrapper"]
-
-
 class TaurusLabelWrapper(DisplayWidget):
-  
+    category = "TaurusWidget"
+    alias = "Taurus Label"
+
     def __init__(self, **params):
         super(TaurusLabelWrapper, self).__init__(**params)
         
@@ -30,12 +28,6 @@ class TaurusLabelWrapper(DisplayWidget):
         self.__label = TaurusLabel()
         
         self.__key = params.get('key')
-
-
-    def _getCategory(self):
-        category, alias, className = getCategoryAliasClassName()
-        return category
-    category = property(fget=_getCategory)
 
 
     # Returns the actual widget which is part of the composition
@@ -72,9 +64,3 @@ class TaurusLabelWrapper(DisplayWidget):
     def valueChanged(self, key, value, timestamp=None):
         if value is None:
             return
-
-
-    class Maker:
-        def make(self, **params):
-            return TaurusLabelWrapper(**params)
-

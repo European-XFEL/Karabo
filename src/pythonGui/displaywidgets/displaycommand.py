@@ -22,17 +22,15 @@ __all__ = ["DisplayCommand"]
 
 
 from manager import Manager
-from displaywidget import DisplayWidget
+from widget import DisplayWidget
 
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 
 
-def getCategoryAliasClassName():
-    return ["Slot","Command","DisplayCommand"]
-
-
 class DisplayCommand(DisplayWidget):
+    category = "Slot"
+    alias = "Command"
   
     def __init__(self, **params):
         super(DisplayCommand, self).__init__(**params)
@@ -52,12 +50,6 @@ class DisplayCommand(DisplayWidget):
         
         # TODO: better solution
         Manager().notifier.signalDeviceStateChanged.connect(self.onDeviceStateChanged)
-
-
-    def _getCategory(self):
-        category, alias, className = getCategoryAliasClassName()
-        return category
-    category = property(fget=_getCategory)
 
 
     # Returns the actual widget which is part of the composition
@@ -132,9 +124,3 @@ class DisplayCommand(DisplayWidget):
         args = [] # TODO slot arguments
         for key in self.keys:
             Manager().executeCommand(dict(path=key, command=self.__command, args=args))
-
-
-    class Maker:
-        def make(self, **params):
-            return DisplayCommand(**params)
-

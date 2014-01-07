@@ -21,18 +21,16 @@
 __all__ = ["EditableComboBox"]
 
 
-from editablewidget import EditableWidget
+from widget import EditableWidget
 
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 
 
-def getCategoryAliasClassName():
-    return ["Selection","Selection Field","EditableComboBox"]
-
-
 class EditableComboBox(EditableWidget):
-    
+    category = "Selection"
+    alias = "Selection Field"
+
     def __init__(self, **params):
         super(EditableComboBox, self).__init__(**params)
         
@@ -62,12 +60,6 @@ class EditableComboBox(EditableWidget):
         if event.type() == QEvent.Wheel and object == self.__comboBox:
             return True
         return False
-
-
-    def _getCategory(self):
-        category, alias, className = getCategoryAliasClassName()
-        return category
-    category = property(fget=_getCategory)
 
 
     # Returns the actual widget which is part of the composition
@@ -135,9 +127,3 @@ class EditableComboBox(EditableWidget):
 ### slots ###
     def onEditingFinished(self, value):
         self.valueEditingFinished(self.__key, value)
-
-
-    class Maker:
-        def make(self, **params):
-            return EditableComboBox(**params)
-

@@ -21,18 +21,16 @@
 __all__ = ["ValveWidget"]
 
 
-from vacuumwidget import VacuumWidget
+from widget import VacuumWidget
 
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 
 
-def getCategoryAliasClassName():
-    return ["State","Valve","ValveWidget"]
-
-
 class ValveWidget(VacuumWidget):
-  
+    category = "State"
+    alias = "Valve"
+
     def __init__(self, **params):
         super(ValveWidget, self).__init__(**params)
         
@@ -52,12 +50,6 @@ class ValveWidget(VacuumWidget):
         value = params.get('value')
         if value is not None:
             self.valueChanged(self.__key, value)
-
-
-    def _getCategory(self):
-        category, alias, className = getCategoryAliasClassName()
-        return category
-    category = property(fget=_getCategory)
 
 
     # Returns the actual widget which is part of the composition
@@ -116,9 +108,3 @@ class ValveWidget(VacuumWidget):
             self._setPixmap(QPixmap(":valve-red"))
         else:
             self._setPixmap(QPixmap(":valve"))
-
-
-    class Maker:
-        def make(self, **params):
-            return ValveWidget(**params)
-

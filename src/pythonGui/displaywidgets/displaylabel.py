@@ -21,7 +21,7 @@
 __all__ = ["DisplayLabel"]
 
 
-from displaywidget import DisplayWidget
+from widget import DisplayWidget
 from karabo.karathon import *
 import decimal
 import re
@@ -30,11 +30,9 @@ from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 
 
-def getCategoryAliasClassName():
-    return ["Value","Value Field","DisplayLabel"]
-
-
 class DisplayLabel(DisplayWidget):
+    category = "Value"
+    alias = "Value Field"
   
     def __init__(self, **params):
         super(DisplayLabel, self).__init__(**params)
@@ -53,12 +51,6 @@ class DisplayLabel(DisplayWidget):
         self.setErrorState(False)
         
         self.__key = params.get('key')
-
-
-    def _getCategory(self):
-        category, alias, className = getCategoryAliasClassName()
-        return category
-    category = property(fget=_getCategory)
 
 
     # Returns the actual widget which is part of the composition
@@ -154,8 +146,3 @@ class DisplayLabel(DisplayWidget):
                 strvalue.remove(locale.groupSeparator())
             return strvalue
         else: return strvalue
-
-    class Maker:
-        def make(self, **params):
-            return DisplayLabel(**params)
-

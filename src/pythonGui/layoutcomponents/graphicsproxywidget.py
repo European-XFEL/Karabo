@@ -12,16 +12,12 @@ __all__ = ["GraphicsProxyWidget"]
 
 
 import displaycomponent
-import displaywidget
-from displaywidget import DisplayWidget
+from widget import DisplayWidget, EditableWidget, VacuumWidget
 
 from editableapplylatercomponent import EditableApplyLaterComponent
 from editablenoapplycomponent import EditableNoApplyComponent
-from editablewidget import EditableWidget
 
 from layoutcomponents.nodebase import NodeBase
-import vacuumwidget
-from vacuumwidget import VacuumWidget
 
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
@@ -80,10 +76,12 @@ class GraphicsProxyWidget(NodeBase, QGraphicsProxyWidget):
         if isinstance(self.__component, displaycomponent.DisplayComponent):
             widgetAliases = None
             widgetFactory = self.__component.widgetFactory
-            if isinstance(widgetFactory, displaywidget.DisplayWidget):
-                widgetAliases = DisplayWidget.getAliasesViaCategory(self, self.__component.widgetCategory)
-            elif isinstance(widgetFactory, vacuumwidget.VacuumWidget):
-                widgetAliases = VacuumWidget.getAliasesViaCategory(self, self.__component.widgetCategory)
+            if isinstance(widgetFactory, DisplayWidget):
+                widgetAliases = DisplayWidget.getAliasesViaCategory(
+                    self.__component.widgetCategory)
+            elif isinstance(widgetFactory, VacuumWidget):
+                widgetAliases = VacuumWidget.getAliasesViaCategory(
+                    self.__component.widgetCategory)
             
             for i in range(len(widgetAliases)):
                 acChangeWidget = self.__mChangeWidget.addAction(widgetAliases[i])
@@ -96,13 +94,14 @@ class GraphicsProxyWidget(NodeBase, QGraphicsProxyWidget):
 
                 # Sub menu for widget type change
                 self.__mChangeVacuum = QMenu("Change vacuum widget")
-                widgetAliases = VacuumWidget.getAliasesViaCategory(self, "State")
+                widgetAliases = VacuumWidget.getAliasesViaCategory("State")
                 for i in range(len(widgetAliases)):
                     acChangeVacuum = self.__mChangeVacuum.addAction(widgetAliases[i])
                     acChangeVacuum.triggered.connect(self.onChangeVacuumWidget)
                 self.__contextMenu.addMenu(self.__mChangeVacuum)
         else:
-            widgetAliases = EditableWidget.getAliasesViaCategory(self, self.__component.widgetCategory)
+            widgetAliases = EditableWidget.getAliasesViaCategory(
+                self.__component.widgetCategory)
             for i in range(len(widgetAliases)):
                 acChangeWidget = self.__mChangeWidget.addAction(widgetAliases[i])
                 acChangeWidget.triggered.connect(self.onChangeWidget)

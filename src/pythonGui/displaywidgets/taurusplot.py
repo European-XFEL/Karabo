@@ -10,7 +10,7 @@
 __all__ = ["TaurusPlotWrapper"]
 
 
-from displaywidget import DisplayWidget
+from widget import DisplayWidget
 
 #from ..extern.taurus import TaurusCustomSettings
 #from ..extern.taurus.qt.qtgui.plot import *
@@ -20,12 +20,10 @@ from displaywidget import DisplayWidget
 #from taurus.qt.qtgui.plot import TaurusPlot
 
 
-def getCategoryAliasClassName():
-    return ["TaurusWidget","Taurus Plot","TaurusPlotWrapper"]
-
-
 class TaurusPlotWrapper(DisplayWidget):
-  
+    category = "TaurusWidget"
+    alias = "Taurus Plot"
+
     def __init__(self, **params):
         super(TaurusPlotWrapper, self).__init__(**params)
         
@@ -35,12 +33,6 @@ class TaurusPlotWrapper(DisplayWidget):
         self.__plot = TaurusPlot()
         
         self.__key = params.get('key')
-
-
-    def _getCategory(self):
-        category, alias, className = getCategoryAliasClassName()
-        return category
-    category = property(fget=_getCategory)
 
 
     # Returns the actual widget which is part of the composition
@@ -77,9 +69,3 @@ class TaurusPlotWrapper(DisplayWidget):
     def valueChanged(self, key, value, timestamp=None):
         if value is None:
             return
-
-
-    class Maker:
-        def make(self, **params):
-            return TaurusPlotWrapper(**params)
-

@@ -21,18 +21,16 @@
 __all__ = ["EditableLineEdit"]
 
 
-from editablewidget import EditableWidget
+from widget import EditableWidget
 
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 
 
-def getCategoryAliasClassName():
-    return ["String","Text Field","EditableLineEdit"]
-
-
 class EditableLineEdit(EditableWidget):
-  
+    category = "String"
+    alias = "Text Field"
+
     def __init__(self, **params):
         super(EditableLineEdit, self).__init__(**params)
         
@@ -50,12 +48,6 @@ class EditableLineEdit(EditableWidget):
         # Set value
         value = params.get('value')
         self.valueChanged(self.__key, value)
-
-
-    def _getCategory(self):
-        category, alias, className = getCategoryAliasClassName()
-        return category
-    category = property(fget=_getCategory)
 
 
     # Returns the actual widget which is part of the composition
@@ -116,9 +108,3 @@ class EditableLineEdit(EditableWidget):
          #   return
         self.__lastCursorPos = self.__lineEdit.cursorPosition()
         self.valueEditingFinished(self.__key, value)
-
-
-    class Maker:
-        def make(self, **params):
-            return EditableLineEdit(**params)
-
