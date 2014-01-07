@@ -21,7 +21,7 @@
 __all__ = ["DisplayImage"]
 
 
-from displaywidget import DisplayWidget
+from widget import DisplayWidget
 import copy
 
 try:
@@ -37,12 +37,10 @@ from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 
 
-def getCategoryAliasClassName():
-    return ["Image","Image View","DisplayImage"]
-
-
 class DisplayImage(DisplayWidget):
-  
+    category = "Image"
+    alias = "Image View"
+
     def __init__(self, **params):
         super(DisplayImage, self).__init__(**params)
         
@@ -61,12 +59,6 @@ class DisplayImage(DisplayWidget):
             self.__imageWidget = QLabel()
 
     
-    def _getCategory(self):
-        category, alias, className = getCategoryAliasClassName()
-        return category
-    category = property(fget=_getCategory)
-
-
     # Returns the actual widget which is part of the composition
     def _getWidget(self):
         return self.__imageWidget
@@ -134,10 +126,3 @@ class DisplayImage(DisplayWidget):
             else:
                 pixmap = QPixmap.fromImage(image)
                 self.__imageWidget.setPixmap(pixmap)
-
-
-
-    class Maker:
-        def make(self, **params):
-            return DisplayImage(**params)
-

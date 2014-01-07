@@ -21,18 +21,16 @@
 __all__ = ["DisplayFilePath"]
 
 
-from displaywidget import DisplayWidget
+from widget import DisplayWidget
 
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 
 
-def getCategoryAliasClassName():
-    return ["FilePath","File Path","DisplayFilePath"]
-
-
 class DisplayFilePath(DisplayWidget):
-    
+    category = "FilePath"
+    alias = "File Path"
+
     def __init__(self, **params):
         super(DisplayFilePath, self).__init__(**params)
 
@@ -47,12 +45,6 @@ class DisplayFilePath(DisplayWidget):
         self.__pbSelectPath.setReadOnly(True)
         
         self.__key = params.get('key')
-
-
-    def _getCategory(self):
-        category, alias, className = getCategoryAliasClassName()
-        return category
-    category = property(fget=_getCategory)
 
 
     # Returns the actual widget which is part of the composition
@@ -103,9 +95,3 @@ class DisplayFilePath(DisplayWidget):
             return
         self._setValue(filePath)
         self.onEditingFinished()
-
-
-    class Maker:
-        def make(self, **params):
-            return DisplayFilePath(**params)
-

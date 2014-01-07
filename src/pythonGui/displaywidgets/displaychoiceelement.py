@@ -21,17 +21,15 @@
 __all__ = ["DisplayChoiceElement"]
 
 
-from displaywidget import DisplayWidget
+from widget import DisplayWidget
 
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 
 
-def getCategoryAliasClassName():
-    return ["Choice","Choice Element","DisplayChoiceElement"]
-
-
 class DisplayChoiceElement(DisplayWidget):
+    category = "Choice"
+    alias = "Choice Element"
     
     def __init__(self, **params):
         super(DisplayChoiceElement, self).__init__(**params)
@@ -46,12 +44,6 @@ class DisplayChoiceElement(DisplayWidget):
         self.childItemList = []
         
         self.__key = params.get('key')
-
-
-    def _getCategory(self):
-        category, alias, className = getCategoryAliasClassName()
-        return category
-    category = property(fget=_getCategory)
 
 
     # Returns the actual widget which is part of the composition
@@ -146,9 +138,3 @@ class DisplayChoiceElement(DisplayWidget):
             selectedItem.setHidden(False)
             selectedItem.updateNeeded = True
             self._r_updateChildItems(selectedItem)
-
-
-    class Maker:
-        def make(self, **params):
-            return DisplayChoiceElement(**params)
-

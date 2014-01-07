@@ -21,18 +21,16 @@
 __all__ = ["MaxiGaugeWidget"]
 
 
-from vacuumwidget import VacuumWidget
+from widget import VacuumWidget
 
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 
 
-def getCategoryAliasClassName():
-    return ["State","Maxi gauge","MaxiGaugeWidget"]
-
-
 class MaxiGaugeWidget(VacuumWidget):
-  
+    category = "State"
+    alias = "Maxi gauge"
+
     def __init__(self, **params):
         super(MaxiGaugeWidget, self).__init__(**params)
         
@@ -52,12 +50,6 @@ class MaxiGaugeWidget(VacuumWidget):
         value = params.get('value')
         if value is not None:
             self.valueChanged(self.__key, value)
-
-
-    def _getCategory(self):
-        category, alias, className = getCategoryAliasClassName()
-        return category
-    category = property(fget=_getCategory)
 
 
     # Returns the actual widget which is part of the composition
@@ -116,9 +108,3 @@ class MaxiGaugeWidget(VacuumWidget):
             self._setPixmap(QPixmap(":maxigauge-red"))
         else:
             self._setPixmap(QPixmap(":maxigauge"))
-
-
-    class Maker:
-        def make(self, **params):
-            return MaxiGaugeWidget(**params)
-

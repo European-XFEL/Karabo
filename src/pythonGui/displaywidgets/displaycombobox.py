@@ -21,17 +21,15 @@
 __all__ = ["DisplayComboBox"]
 
 
-from displaywidget import DisplayWidget
+from widget import DisplayWidget
 
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 
 
-def getCategoryAliasClassName():
-    return ["Selection","Selection Field","DisplayComboBox"]
-
-
 class DisplayComboBox(DisplayWidget):
+    category = "Selection"
+    alias = "Selection Field"
     
     def __init__(self, **params):
         super(DisplayComboBox, self).__init__(**params)
@@ -46,12 +44,6 @@ class DisplayComboBox(DisplayWidget):
         self.__key = params.get('key')
         enumeration = params.get('enumeration')
         self.addItems(enumeration)
-
-
-    def _getCategory(self):
-        category, alias, className = getCategoryAliasClassName()
-        return category
-    category = property(fget=_getCategory)
 
 
     # Returns the actual widget which is part of the composition
@@ -103,9 +95,3 @@ class DisplayComboBox(DisplayWidget):
             self.__comboBox.blockSignals(True)
             self.__comboBox.setCurrentIndex(index)
             self.__comboBox.blockSignals(False)
-
-
-    class Maker:
-        def make(self, **params):
-            return DisplayComboBox(**params)
-

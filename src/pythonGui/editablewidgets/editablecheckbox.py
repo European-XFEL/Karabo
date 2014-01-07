@@ -21,18 +21,16 @@
 __all__ = ["EditableCheckBox"]
 
 
-from editablewidget import EditableWidget
+from widget import EditableWidget
 
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 
 
-def getCategoryAliasClassName():
-    return ["Switch","Toggle Field","EditableCheckBox"]
-
-
 class EditableCheckBox(EditableWidget):
-    
+    category = "Switch"
+    alias = "Toggle Field"
+
     def __init__(self, **params):
         super(EditableCheckBox, self).__init__(**params)
         
@@ -47,12 +45,6 @@ class EditableCheckBox(EditableWidget):
         # Set value
         value = params.get('value')
         self.valueChanged(self.__key, value)
-
-
-    def _getCategory(self):
-        category, alias, className = getCategoryAliasClassName()
-        return category
-    category = property(fget=_getCategory)
 
 
     # Returns the actual widget which is part of the composition
@@ -118,9 +110,3 @@ class EditableCheckBox(EditableWidget):
             self.valueEditingFinished(self.__key, True)
         else:
             self.valueEditingFinished(self.__key, False)
-
-
-    class Maker:
-        def make(self, **params):
-            return EditableCheckBox(**params)
-

@@ -22,18 +22,16 @@ __all__ = ["EditableSpinBox"]
 
 import globals
 
-from editablewidget import EditableWidget
+from widget import EditableWidget
 
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 
 
-def getCategoryAliasClassName():
-    return ["Digit","Integer Field","EditableSpinBox"]
-
-
 class EditableSpinBox(EditableWidget):
-    
+    category = "Digit"
+    alias = "Integer Field"
+
     def __init__(self, **params):
         super(EditableSpinBox, self).__init__(**params)
 
@@ -70,12 +68,6 @@ class EditableSpinBox(EditableWidget):
         if event.type() == QEvent.Wheel and object == self.__spinBox:
             return True
         return False
-
-
-    def _getCategory(self):
-        category, alias, className = getCategoryAliasClassName()
-        return category
-    category = property(fget=_getCategory)
 
 
     # Returns the actual widget which is part of the composition
@@ -153,9 +145,3 @@ class EditableSpinBox(EditableWidget):
 ### slots ###
     def onEditingFinished(self, value):
         self.valueEditingFinished(self.__key, value)
-
-
-    class Maker:
-        def make(self, **params):
-            return EditableSpinBox(**params)
-

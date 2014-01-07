@@ -10,17 +10,15 @@
 __all__ = ["TaurusWheelEditWrapper"]
 
 
-from editablewidget import EditableWidget
+from widget import EditableWidget
 # not yet working under ubuntu 12.04
 #from taurus.qt.qtgui.input import TaurusWheelEdit
 
 
-def getCategoryAliasClassName():
-    return ["TaurusWidget","Taurus WheelEdit","TaurusWheelEditWrapper"]
-
-
 class TaurusWheelEditWrapper(EditableWidget):
-  
+    category = "TaurusWidget"
+    alias = "Taurus WheelEdit"
+
     def __init__(self, **params):
         super(TaurusWheelEditWrapper, self).__init__(**params)
         
@@ -34,12 +32,6 @@ class TaurusWheelEditWrapper(EditableWidget):
         # Set value
         value = params.get('value')
         self.valueChanged(self.__key, value)
-
-
-    def _getCategory(self):
-        category, alias, className = getCategoryAliasClassName()
-        return category
-    category = property(fget=_getCategory)
 
 
     # Returns the actual widget which is part of the composition
@@ -80,9 +72,3 @@ class TaurusWheelEditWrapper(EditableWidget):
     def valueChanged(self, key, value, timestamp=None, forceRefresh=False):
         if value is None:
             return
-
-
-    class Maker:
-        def make(self, **params):
-            return TaurusWheelEditWrapper(**params)
-

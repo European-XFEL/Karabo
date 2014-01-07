@@ -21,7 +21,7 @@
 __all__ = ["EditableListElement"]
 
 
-from editablewidget import EditableWidget
+from widget import EditableWidget
 from karabo.karathon import *
 from manager import Manager
 from stringlistedit import StringListEdit
@@ -30,12 +30,9 @@ from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 
 
-def getCategoryAliasClassName():
-    return ["SelectionList","List Element Field","EditableListElement"]
-
-
 class EditableListElement(EditableWidget):
-    # signals
+    category = "SelectionList"
+    alias = "List Element Field"
     signalValueChanged = pyqtSignal(str, object) # key, value
     
     def __init__(self, **params):
@@ -67,12 +64,6 @@ class EditableListElement(EditableWidget):
         # Set value
         value = params.get('value')
         self.valueChanged(self.__key, value)
-
-
-    def _getCategory(self):
-        category, alias, className = getCategoryAliasClassName()
-        return category
-    category = property(fget=_getCategory)
 
 
     # Returns the actual widget which is part of the composition
@@ -177,9 +168,3 @@ class EditableListElement(EditableWidget):
 
                 # TODO: don't copy already existing item..
                 self.copyListItem(listEdit.getListElementAt(i), i)
-
-
-    class Maker:
-        def make(self, **params):
-            return EditableListElement(**params)
-
