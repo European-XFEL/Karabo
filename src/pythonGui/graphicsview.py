@@ -137,6 +137,8 @@ class Shape(Action):
     def __init__(self):
         Action.__init__(self)
         self.selected = False
+        self.pen = QPen()
+        self.brush = QBrush()
 
     def mousePressEvent(self, parent, event):
         self.start_pos = event.pos()
@@ -153,6 +155,61 @@ class Shape(Action):
         if hasattr(self, "start_pos"):
             parent.current_action = None
             parent.shapes.append(self)
+
+    def loadpen(self, e):
+        def ununit(x):
+            try:
+                f = {"px": 1, "pt": 1.25, "pc": 15, "mm": 3.543307,
+                     "cm": 35.43307, "in": 90}[x[-2:]]
+                return f * float(x[:-2])
+            except KeyError:
+                return float(x)
+
+        d = e.attrib.copy()
+        if "style" in d:
+            d.update(s.split(":") for s in d["style"].split(";"))
+        pen = QPen()
+        c = QColor(d.get("stroke", "black"))
+        c.setAlphaF(float(d.get("stroke-opacity", 1)))
+        pen.setColor(c)
+        pen.setCapStyle(dict(
+            butt=Qt.FlatCap, square=Qt.SquareCap, round=Qt.RoundCap)
+            [d.get("stroke-linecap", "butt")])
+        s = d.get("fill", "black")
+        if s == "none":
+            self.brush = QBrush()
+        else:
+            c = QColor(s)
+            c.setAlphaF(float(d.get("fill-opacity", 1)))
+            self.brush = QBrush(c)
+        pen.setDashOffset(ununit(d.get("stroke-dashoffset", "0")))
+        s = d.get("stroke-dasharray", "none")
+        if s != "none":
+            v = s.split(",") if "," in s else s.split()
+            pen.setDashPattern([ununit(s) for s in v])
+        pen.setJoinStyle(dict(
+            miter=Qt.SvgMiterJoin, round=Qt.RoundJoin, bevel=Qt.BevelJoin)
+            [d.get("storke-linejoin", "miter")])
+        pen.setMiterLimit(float(d.get("stroke-miterlimit", 4)))
+        pen.setWidthF(ununit(d.get("stroke-width", "1")))
+        self.pen = pen
+
+    def savepen(self, e):
+        d = e.attrib
+        d["stroke"] = "#{:06x}".format(self.pen.color().rgb() & 0xffffff)
+        d["stroke-opacity"] = unicode(self.pen.color().alphaF())
+        d["stroke-linecap"] = {Qt.FlatCap: "butt", Qt.SquareCap: "square",
+                               Qt.RoundCap: "round"}[self.pen.capStyle()]
+        d["fill"] = "#{:06x}".format(self.brush.color().rgb() & 0xffffff)
+        d["fill-opacity"] = unicode(self.brush.color().alphaF())
+        d["stroke-dashoffset"] = unicode(self.pen.dashOffset())
+        d["stroke-dasharray"] = " ".join(unicode(x)
+                                         for x in self.pen.dashPattern())
+        d["stroke-linejoin"] = {
+            Qt.SvgMiterJoin: "miter", Qt.MiterJoin: "miter",
+            Qt.BevelJoin: "bevel", Qt.RoundJoin: "round"}[self.pen.joinStyle()]
+        d["stroke-miterlimit"] = unicode(self.pen.miterLimit())
+        d["stroke-width"] = unicode(self.pen.widthF())
 
     @staticmethod
     def load(element):
@@ -175,8 +232,9 @@ class Line(Shape):
         self.line = QLine(start, end)
 
     def draw(self, painter):
-        Shape.draw(self, painter)
+        painter.setPen(self.pen)
         painter.drawLine(self.line)
+        Shape.draw(self, painter)
 
     def contains(self, p):
         x1, x2 = self.line.x1(), self.line.x2()
@@ -193,10 +251,12 @@ class Line(Shape):
         self.line.translate(p - self.geometry().topLeft())
 
     def element(self):
-        return ElementTree.Element(
+        ret = ElementTree.Element(
             ns_svg + "line", x1=unicode(self.line.x1()),
             x2=unicode(self.line.x2()), y1=unicode(self.line.y1()),
             y2=unicode(self.line.y2()))
+        self.savepen(ret)
+        return ret
 
     @staticmethod
     def load(e):
@@ -216,14 +276,18 @@ class Rectangle(Shape):
         self.rect = QRect(start, end).normalized()
 
     def draw(self, painter):
-        Shape.draw(self, painter)
+        painter.setPen(self.pen)
+        painter.setBrush(self.brush)
         painter.drawRect(self.rect)
+        Shape.draw(self, painter)
 
     def element(self):
-        return ElementTree.Element(
+        ret = ElementTree.Element(
             ns_svg + "rect", x=unicode(self.rect.x()),
             y=unicode(self.rect.y()), width=unicode(self.rect.width()),
             height=unicode(self.rect.height()))
+        self.savepen(ret)
+        return ret
 
     def contains(self, p):
         l, r = self.rect.left(), self.rect.right()
@@ -243,6 +307,7 @@ class Rectangle(Shape):
         ret = Rectangle()
         ret.rect = QRect(float(e.get("x")), float(e.get("y")),
                          float(e.get("width")), float(e.get("height")))
+        ret.loadpen(e)
         return ret
 
 def _parse_rect(elem):
