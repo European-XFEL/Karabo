@@ -30,51 +30,23 @@ from PyQt4.QtGui import *
 class DisplayCheckBox(DisplayWidget):
     category = "Switch"
     alias = "Toggle Field"
+
     
     def __init__(self, **params):
         super(DisplayCheckBox, self).__init__(**params)
         
-        # Minimum and maximum number of associated keys, 1 by default for each
-        self.__minMaxAssociatedKeys = (1,1) # tuple<min,max>
-        
         self.__checkBox = QCheckBox()
         self.__checkBox.setEnabled(False)
 
-        self.__key = params.get('key')
 
-
-    # Returns the actual widget which is part of the composition
-    def _getWidget(self):
+    @property
+    def widget(self):
         return self.__checkBox
-    widget = property(fget=_getWidget)
 
 
-    # Returns a tuple of min and max number of associated keys with this component
-    def _getMinMaxAssociatedKeys(self):
-        return self.__minMaxAssociatedKeys
-    minMaxAssociatedKeys = property(fget=_getMinMaxAssociatedKeys)
-
-
-    def _getKeys(self):
-        return [self.__key]
-    keys = property(fget=_getKeys)
-
-
-    def _value(self):
-        if self.__checkBox.checkState() == Qt.Checked:
-            return True
-        else:
-            return False
-    value = property(fget=_value)
-
-
-    def addKeyValue(self, key, value):
-        self.__key = key # TODO: Overwritten - unregistering in Manager...
-        self.valueChanged(key, value)
-
-
-    def removeKey(self, key):
-        self.__key = None
+    @property
+    def value(self):
+        return self.__checkBox.checkState() == Qt.Checked
 
 
     def valueChanged(self, key, value, timestamp=None):

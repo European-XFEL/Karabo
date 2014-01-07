@@ -35,14 +35,9 @@ class DisplaySpinBox(DisplayWidget):
     def __init__(self, **params):
         super(DisplaySpinBox, self).__init__(**params)
 
-        # Minimum and maximum number of associated keys, 1 by default for each
-        self.__minMaxAssociatedKeys = (1,1) # tuple<min,max>
-
         self.__spinBox = QSpinBox()
         self.__spinBox.setRange(globals.MIN_INT32, globals.MAX_INT32)
         self.__spinBox.setReadOnly(True)
-        
-        self.__key = params.get('key')
         
         #metricPrefixSymbol = params.get('metricPrefixSymbol')
         #unitSymbol = params.get('unitSymbol')
@@ -56,26 +51,14 @@ class DisplaySpinBox(DisplayWidget):
         #    self.__spinBox.setSuffix(" %s" %unitLabel)
 
 
-    # Returns the actual widget which is part of the composition
-    def _getWidget(self):
+    @property
+    def widget(self):
         return self.__spinBox
-    widget = property(fget=_getWidget)
 
 
-    # Returns a tuple of min and max number of associated keys with this component
-    def _getMinMaxAssociatedKeys(self):
-        return self.__minMaxAssociatedKeys
-    minMaxAssociatedKeys = property(fget=_getMinMaxAssociatedKeys)
-
-
-    def _getKeys(self):
-        return [self.__key]
-    keys = property(fget=_getKeys)
-
-
-    def _value(self):
+    @property
+    def value(self):
         return self.__spinBox.value()
-    value = property(fget=_value)
 
 
     def _setMinimum(self, min):
@@ -90,15 +73,6 @@ class DisplaySpinBox(DisplayWidget):
         self.__spinBox.setMaximum(max)
         self.__spinBox.blockSignals(False)
     maximum = property(fset=_setMaximum)
-
-
-    def addKeyValue(self, key, value):
-        self.__key = key # TODO: Overwritten - unregistering in Manager...
-        self.valueChanged(key, value)
-
-
-    def removeKey(self, key):
-        self.__key = None
 
 
     def valueChanged(self, key, value, timestamp=None):
