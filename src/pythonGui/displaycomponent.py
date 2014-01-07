@@ -90,7 +90,7 @@ class DisplayComponent(BaseComponent):
             self.removeKey(key)
 
 
-    def changeWidget(self, factory, proxyWidget, alias):
+    def changeWidget(self, factory, alias):
         self.classAlias = alias
         self.__initParams['value'] = self.value
         
@@ -99,7 +99,6 @@ class DisplayComponent(BaseComponent):
         self.__displayWidget = factory.get_class(alias)(**self.__initParams)
         self.__displayWidget.widget.setWindowFlags(Qt.BypassGraphicsProxyWidget)
         self.__displayWidget.widget.setAttribute(Qt.WA_NoSystemBackground, True)
-        proxyWidget.setWidget(self.__displayWidget.widget)
         self.__displayWidget.widget.show()
         
         # Refresh new widget...
