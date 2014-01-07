@@ -34,37 +34,18 @@ class DisplayChoiceElement(DisplayWidget):
     def __init__(self, **params):
         super(DisplayChoiceElement, self).__init__(**params)
 
-        # Minimum and maximum number of associated keys, 1 by default for each
-        self.__minMaxAssociatedKeys = (1,1) # tuple<min,max>
-
         self.__comboBox = QComboBox()
         self.__comboBox.setFrame(False)
         self.__comboBox.currentIndexChanged.connect(self.onEditingFinished)
         
         self.childItemList = []
-        
-        self.__key = params.get('key')
 
-
-    # Returns the actual widget which is part of the composition
-    def _getWidget(self):
+    @property
+    def widget(self):
         return self.__comboBox
-    widget = property(fget=_getWidget)
 
 
-    # Returns a tuple of min and max number of associated keys with this component
-    def _getMinMaxAssociatedKeys(self):
-        return self.__minMaxAssociatedKeys
-    minMaxAssociatedKeys = property(fget=_getMinMaxAssociatedKeys)
-
-
-    def _getKeys(self):
-        return [self.__key]
-    keys = property(fget=_getKeys)
-
-
-    def addParameters(self, **params):
-        item = params.get('itemToBeAdded')
+    def addParameters(self, item=None, **params):
         if item is not None:
             self.__comboBox.blockSignals(True)
             self.__comboBox.addItem(item.text(0))
@@ -72,9 +53,9 @@ class DisplayChoiceElement(DisplayWidget):
             self.__comboBox.blockSignals(False)
 
 
-    def _value(self):
-        return str(self.__comboBox.currentText())
-    value = property(fget=_value)
+    @property
+    def value(self):
+        return self.__comboBox.currentText()
 
 
     def _r_updateChildItems(self, parentItem):
@@ -95,15 +76,6 @@ class DisplayChoiceElement(DisplayWidget):
             else :
                 childItem.updateNeeded = False
             self._r_updateChildItems(childItem)
-
-
-    def addKeyValue(self, key, value):
-        self.__key = key # TODO: Overwritten - unregistering in Manager...
-        self.valueChanged(key, value)
-
-
-    def removeKey(self, key):
-        self.__key = None
 
 
     def valueChanged(self, key, value, timestamp=None):
