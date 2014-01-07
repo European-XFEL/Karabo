@@ -95,10 +95,13 @@ class DisplayComponent(BaseComponent):
         self.__initParams['value'] = self.value
         
         oldWidget = self.__displayWidget.widget
-        oldWidget.deleteLater()
         self.__displayWidget = factory.get_class(alias)(**self.__initParams)
         self.__displayWidget.widget.setWindowFlags(Qt.BypassGraphicsProxyWidget)
         self.__displayWidget.widget.setAttribute(Qt.WA_NoSystemBackground, True)
+        oldWidget.parent().addWidget(self.__displayWidget.widget)
+        oldWidget.parent().removeWidget(oldWidget)
+        oldWidget.parent().setCurrentWidget(self.__displayWidget.widget)
+        oldWidget.setParent(None)
         self.__displayWidget.widget.show()
         
         # Refresh new widget...
