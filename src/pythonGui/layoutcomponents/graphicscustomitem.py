@@ -22,7 +22,7 @@ from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 
 
-class GraphicsCustomItem(NodeBase):
+class GraphicsCustomItem(NodeBase, QObject):
     # signals
     signalValueChanged = pyqtSignal(str, object) # key, value
 
@@ -48,6 +48,7 @@ class GraphicsCustomItem(NodeBase):
         self.__inputChannelItems = [] # List contains GraphicsInputChannelItem
         self.__outputChannelItems = [] # List contains GraphicsOutputChannelItem
         self.position = QPoint()
+        self.selected = False
         
         if schema:
             schemaReader = PrivateSchemaReader(schema)
@@ -63,6 +64,8 @@ class GraphicsCustomItem(NodeBase):
     def setToolTip(self, tip):
         pass
 
+    def set_position(self, pos):
+        self.position = pos - self.geometry().topLeft() + self.position
 
     def _getValue(self):
         return self.__deviceId
@@ -111,12 +114,18 @@ class GraphicsCustomItem(NodeBase):
         path.addRoundRect(rect, self._roundness(rect.width()), self._roundness(rect.height()))
         return path
 
+    def contains(self, pos):
+        return self._outlineRect().contains(pos)
+
+    def geometry(self):
+        return self._outlineRect()
+
 
     def draw(self, painter):
         pen = painter.pen()
-        #if self.isSelected():
-        #    pen.setStyle(Qt.DotLine)
-        #    pen.setWidth(2)
+        if self.selected:
+            pen.setStyle(Qt.DotLine)
+            pen.setWidth(2)
         
         painter.setFont(self.__textFont)
         painter.setPen(pen)
