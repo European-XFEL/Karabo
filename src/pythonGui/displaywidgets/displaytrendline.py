@@ -115,35 +115,11 @@ class DisplayTrendline(DisplayWidget):
         self.__keys = {str(key):None}
 
 
-    # Returns the actual widget which is part of the composition
-    def _getWidget(self):
+    @property
+    def widget(self):
         return self.__dialog
-    widget = property(fget=_getWidget)
 
-
-    # Returns a tuple of min and max number of associated keys with this component
-    def _getMinMaxAssociatedKeys(self):
-        return self.__minMaxAssociatedKeys
-    minMaxAssociatedKeys = property(fget=_getMinMaxAssociatedKeys)
-
-
-    def _getKeys(self):
-        return self.__keys.keys()
-    keys = property(fget=_getKeys)
-
-
-    def _value(self):
-        return None
-    value = property(fget=_value)
-
-
-    def addKeyValue(self, key, value):
-        self.valueChanged(key, value)
-
-
-    def removeKey(self, key):
-        if key in self.__keys:
-            self.__keys.pop(key)
+    value = None
 
 
     def valueChanged(self, key, value, timestamp=None):

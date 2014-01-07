@@ -49,9 +49,16 @@ class Widget(QObject):
 
 
 class DisplayWidget(Widget):
-    def __init__(self, **kwargs):
+    def __init__(self, key=None, **kwargs):
         Widget.__init__(self, **kwargs)
         self.valueType = None
+        if key is not None:
+            self.keys = [key]
+
+    def removeKey(self, key):
+        if key in self.keys:
+            self.keys = [ ]
+
 
 class VacuumWidget(Widget):
     pass
