@@ -47,6 +47,8 @@ class ParameterTreeWidget(QTreeWidget):
         self.__mContext = QMenu(self) # Actions from configurationPanel are added via addContextAction
         self.customContextMenuRequested.connect(self.onCustomContextMenuRequested)
 
+        self.model().setSupportedDragActions(Qt.CopyAction)
+        self.setDragEnabled(True)
 
 ### protected ###
     def mousePressEvent(self, event):
@@ -83,21 +85,9 @@ class ParameterTreeWidget(QTreeWidget):
             
         QTreeWidget.mousePressEvent(self, event)
 
+    def mimeData(self, items):
+        item = items[0]
 
-    def mouseMoveEvent(self, event):
-        QTreeWidget.mouseMoveEvent(self, event)
-        
-        if event.buttons() != Qt.LeftButton:
-            return
-        
-        self._performDrag()
-
-
-    def _performDrag(self):
-        item = self.currentItem()
-        if item is None:
-            return
-        
         # Attributes can not be dropped
         if isinstance(item, treewidgetitems.attributetreewidgetitem.AttributeTreeWidgetItem):
             return
@@ -151,11 +141,7 @@ class ParameterTreeWidget(QTreeWidget):
         if item.classAlias:
             mimeData.setData("classAlias", "{}".format(item.classAlias))
 
-        drag = QDrag(self)
-        drag.setMimeData(mimeData)
-        if drag.exec_(Qt.MoveAction) == Qt.MoveAction:
-            pass
-
+        return mimeData
 
 ### getter & setter functions ###
     def _getInstanceKey(self):
