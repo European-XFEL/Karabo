@@ -13,11 +13,12 @@ __all__ = ["DisplayWidget"]
 
 
 from PyQt4.QtCore import QObject, pyqtSignal
+from PyQt4.QtGui import QLabel
 
 class MetaWidget(QObject.__class__):
     def __new__(self, name, bases, dict):
         ret = QObject.__class__.__new__(self, name, bases, dict)
-        if "category" not in dict:
+        if "alias" not in dict:
             ret.categoryToAliases = { } # <category, [alias1,alias2,..]>
             ret.aliasToCategory = { } # <alias, category>
             ret.aliasConcreteClass = { } # dict of actual classes
@@ -60,8 +61,40 @@ class DisplayWidget(Widget):
             self.keys = [ ]
 
 
-class VacuumWidget(Widget):
-    pass
+class VacuumWidget(DisplayWidget):
+    category = "State"
+
+    def __init__(self, value=None, **params):
+        super(VacuumWidget, self).__init__(**params)
+
+        self.label = QLabel()
+        self.setErrorState(False)
+        if value is not None:
+            self.valueChanged(self.keys[0], value)
+
+
+    @property
+    def widget(self):
+        return self.label
+
+
+    value = None
+
+
+    def _setPixmap(self, pixmap):
+        self.label.setPixmap(pixmap)
+        self.label.setMaximumWidth(pixmap.width())
+        self.label.setMaximumHeight(pixmap.height())
+
+
+    def setErrorState(self, isError):
+        if isError is True:
+            self.label.setStyleSheet( # light red
+                "QLabel { background-color : rgba(255,155,155,128); }")
+        else:
+            self.label.setStyleSheet( # light green
+                "QLabel { background-color : rgba(225,242,225,128); }")
+
 
 class EditableWidget(Widget):
     def __init__(self, key=None, **kwargs):

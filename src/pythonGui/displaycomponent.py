@@ -15,7 +15,7 @@ __all__ = ["DisplayComponent"]
 from basecomponent import BaseComponent
 from widget import DisplayWidget
 from manager import Manager
-from vacuumwidget import VacuumWidget
+from widget import VacuumWidget
 
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
@@ -124,7 +124,8 @@ class DisplayComponent(BaseComponent):
         
         oldWidget = self.__displayWidget.widget
         oldWidget.deleteLater()
-        self.__displayWidget = VacuumWidget.create(classAlias, **self.__initParams)
+        self.__displayWidget = VacuumWidget.get_class(classAlias)(
+            **self.__initParams)
         self.__displayWidget.widget.setWindowFlags(Qt.BypassGraphicsProxyWidget)
         self.__displayWidget.widget.setAttribute(Qt.WA_NoSystemBackground, True)
         proxyWidget.setWidget(self.__displayWidget.widget)
