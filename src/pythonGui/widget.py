@@ -64,6 +64,12 @@ class VacuumWidget(Widget):
     pass
 
 class EditableWidget(Widget):
+    def __init__(self, key=None, **kwargs):
+        Widget.__init__(self, **kwargs)
+        self.valueType = None
+        if key is not None:
+            self.keys = [key]
+
     signalEditingFinished = pyqtSignal(str, object)
 
     def valueEditingFinished(self, key, value):
