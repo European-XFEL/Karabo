@@ -15,7 +15,7 @@ __all__ = ["DisplayComponent"]
 from basecomponent import BaseComponent
 from widget import DisplayWidget
 from manager import Manager
-from widget import VacuumWidget
+from widget import Widget
 
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
@@ -24,23 +24,14 @@ from PyQt4.QtGui import *
 class DisplayComponent(BaseComponent):
 
 
-    def __init__(self, classAlias, **params):
+    def __init__(self, classAlias, widgetFactory="DisplayWidget", **params):
         super(DisplayComponent, self).__init__(classAlias)
         
         self.__initParams = params
-
-        widgetFactory = params.get('widgetFactory')
+        self.__displayWidget = DisplayWidget.factories[widgetFactory].get_class(
+            classAlias)(**params)
         
-        if widgetFactory is None or (widgetFactory == "DisplayWidget"):
-            self.__displayWidget = DisplayWidget.get_class(classAlias)(**params)
-        elif widgetFactory == "VacuumWidget":
-            self.__displayWidget = VacuumWidget.get_class(classAlias)(**params)
-        
-        # Use path to register component to manager
-        key = params.get('key')
-            
-        #print "### Registering key: ", key
-        Manager().registerDisplayComponent(key, self)
+        Manager().registerDisplayComponent(params.get("key"), self)
 
 
 ### getter and setter functions ###
@@ -100,35 +91,17 @@ class DisplayComponent(BaseComponent):
             self.removeKey(key)
 
 
-    def changeWidget(self, proxyWidget, classAlias):
-        self.classAlias = classAlias
+    def changeWidget(self, factory, proxyWidget, alias):
+        self.classAlias = alias
         self.__initParams['value'] = self.value
         
         oldWidget = self.__displayWidget.widget
         oldWidget.deleteLater()
-        self.__displayWidget = DisplayWidget.get_class(classAlias)(
-            **self.__initParams)
+        self.__displayWidget = factory.get_class(alias)(**self.__initParams)
         self.__displayWidget.widget.setWindowFlags(Qt.BypassGraphicsProxyWidget)
         self.__displayWidget.widget.setAttribute(Qt.WA_NoSystemBackground, True)
         proxyWidget.setWidget(self.__displayWidget.widget)
         self.__displayWidget.widget.show()
-        
-        # Refresh new widget...
-        for key in self.__displayWidget.keys:
-            Manager().onRefreshInstance(key)
-
-
-    def changeToVacuumWidget(self, proxyWidget, classAlias):
-        self.classAlias = classAlias
-        self.__initParams['value'] = self.value
-        
-        oldWidget = self.__displayWidget.widget
-        oldWidget.deleteLater()
-        self.__displayWidget = VacuumWidget.get_class(classAlias)(
-            **self.__initParams)
-        self.__displayWidget.widget.setWindowFlags(Qt.BypassGraphicsProxyWidget)
-        self.__displayWidget.widget.setAttribute(Qt.WA_NoSystemBackground, True)
-        proxyWidget.setWidget(self.__displayWidget.widget)
         
         # Refresh new widget...
         for key in self.__displayWidget.keys:

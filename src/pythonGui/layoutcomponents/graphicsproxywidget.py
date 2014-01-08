@@ -11,8 +11,8 @@
 __all__ = ["GraphicsProxyWidget"]
 
 
-import displaycomponent
-from widget import DisplayWidget, EditableWidget, VacuumWidget
+from displaycomponent import DisplayComponent
+from widget import DisplayWidget, EditableWidget
 
 from editableapplylatercomponent import EditableApplyLaterComponent
 from editablenoapplycomponent import EditableNoApplyComponent
@@ -21,6 +21,8 @@ from layoutcomponents.nodebase import NodeBase
 
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
+
+from functools import partial
 
 
 class GraphicsProxyWidget(NodeBase, QGraphicsProxyWidget):
@@ -71,50 +73,22 @@ class GraphicsProxyWidget(NodeBase, QGraphicsProxyWidget):
         # Populate context menu
         self.__contextMenu = QMenu()
 
-        # Sub menu for widget type change
-        self.__mChangeWidget = QMenu("Change widget")
-        if isinstance(self.__component, displaycomponent.DisplayComponent):
-            widgetAliases = None
-            widgetFactory = self.__component.widgetFactory
-            if isinstance(widgetFactory, DisplayWidget):
-                widgetAliases = DisplayWidget.getAliasesViaCategory(
-                    self.__component.widgetCategory)
-            elif isinstance(widgetFactory, VacuumWidget):
-                widgetAliases = VacuumWidget.getAliasesViaCategory(
-                    self.__component.widgetCategory)
-            
-            for i in range(len(widgetAliases)):
-                acChangeWidget = self.__mChangeWidget.addAction(widgetAliases[i])
-                acChangeWidget.triggered.connect(self.onChangeWidget)
-            self.__contextMenu.addMenu(self.__mChangeWidget)
-            
-            # Only if state property is displayed...
-            if isStateToDisplay:
-                self.__contextMenu.addSeparator()
-
-                # Sub menu for widget type change
-                self.__mChangeVacuum = QMenu("Change vacuum widget")
-                widgetAliases = VacuumWidget.getAliasesViaCategory("State")
-                for i in range(len(widgetAliases)):
-                    acChangeVacuum = self.__mChangeVacuum.addAction(widgetAliases[i])
-                    acChangeVacuum.triggered.connect(self.onChangeVacuumWidget)
-                self.__contextMenu.addMenu(self.__mChangeVacuum)
+        if isinstance(self.__component, DisplayComponent):
+            Widget = DisplayWidget
         else:
-            widgetAliases = EditableWidget.getAliasesViaCategory(
+            Widget = EditableWidget
+
+        for text, factory in Widget.factories.iteritems():
+            aliases = factory.getAliasesViaCategory(
                 self.__component.widgetCategory)
-            for i in range(len(widgetAliases)):
-                acChangeWidget = self.__mChangeWidget.addAction(widgetAliases[i])
-                acChangeWidget.triggered.connect(self.onChangeWidget)
-            self.__contextMenu.addMenu(self.__mChangeWidget)
-        
-        #self.__contextMenu.addSeparator()
-        
-        #text = "Remove widget"
-        #self.__acRemove = QAction(QIcon(":no"), text, self)
-        #self.__acRemove.setStatusTip(text)
-        #self.__acRemove.setToolTip(text)
-        #self.__acRemove.triggered.connect(self.onRemove)
-        #self.__contextMenu.addAction(self.__acRemove)
+            if isStateToDisplay:
+                aliases += factory.getAliasesViaCategory("State")
+            if aliases:
+                menu = QMenu(text, self.__contextMenu)
+                for a in aliases:
+                    menu.addAction(a).triggered.connect(
+                        partial(self.onChangeWidget, factory, a))
+                self.__contextMenu.addMenu(menu)
 
 
 ### protected ###
@@ -189,35 +163,12 @@ class GraphicsProxyWidget(NodeBase, QGraphicsProxyWidget):
                 self.__contextMenu.exec_(event.screenPos())
 
 
-### Slots ###
-    def onChangeWidget(self):
+    def onChangeWidget(self, factory, alias):
         if self.__component is None:
             return
-        
-        action = self.sender()
-        # Change display or editable widget
-        self.__component.changeWidget(self, action.text())
+        self.__component.changeWidget(factory, self, alias)
         self.adjustSize()
                 
         parentWidget = self.parentWidget()
         if parentWidget:
             parentWidget.adjustSize()
-
-
-    def onChangeVacuumWidget(self):
-        if self.__component is None:
-            return
-        
-        action = self.sender()
-        # Change vacuum widget
-        self.__component.changeToVacuumWidget(self, action.text())
-        self.adjustSize()
-        
-        parentWidget = self.parentWidget()
-        if parentWidget:
-            parentWidget.adjustSize()
-
-
-    #def onRemove(self):
-    #    print "onRemove"
-

@@ -210,20 +210,14 @@ class CustomXmlWriter(QXmlStreamWriter):
                 self._writeItemTransformation(proxyItem)
             
             widgetFactory = component.widgetFactory
+            self.writeTextElement("widgetFactory",
+                                  widgetFactory.__class__.__name__)
             if isinstance(component, displaycomponent.DisplayComponent):
                 self.writeTextElement("componentType", "DisplayComponent")
-                if isinstance(widgetFactory, widget.DisplayWidget):
-                    self.writeTextElement("widgetFactory", "DisplayWidget")
-                elif isinstance(widgetFactory, widget.VacuumWidget):
-                    self.writeTextElement("widgetFactory", "VacuumWidget")
             elif isinstance(component, editablenoapplycomponent.EditableNoApplyComponent):
                 self.writeTextElement("componentType", "EditableNoApplyComponent")
-                if isinstance(widgetFactory, widget.EditableWidget):
-                    self.writeTextElement("widgetFactory", "EditableWidget")
             elif isinstance(component, editableapplylatercomponent.EditableApplyLaterComponent):
                 self.writeTextElement("componentType", "EditableApplyLaterComponent")
-                if isinstance(widgetFactory, widget.EditableWidget):
-                    self.writeTextElement("widgetFactory", "EditableWidget")
 
             self.writeTextElement("classAlias", component.classAlias)
             

@@ -18,17 +18,18 @@ from PyQt4.QtGui import QLabel
 class MetaWidget(QObject.__class__):
     def __new__(self, name, bases, dict):
         ret = QObject.__class__.__new__(self, name, bases, dict)
-        if "alias" not in dict:
+        if "factory" in dict:
+            ret.factories[name] = ret
             ret.categoryToAliases = { } # <category, [alias1,alias2,..]>
             ret.aliasToCategory = { } # <alias, category>
             ret.aliasConcreteClass = { } # dict of actual classes
-            return ret
-        if ret.category in ret.categoryToAliases:
-            ret.categoryToAliases[ret.category].append(ret.alias)
-        else:
-            ret.categoryToAliases[ret.category] = [ret.alias]
-        ret.aliasToCategory[ret.alias] = ret.category
-        ret.aliasConcreteClass[ret.alias] = ret
+        elif "alias" in dict:
+            if ret.category in ret.categoryToAliases:
+                ret.categoryToAliases[ret.category].append(ret.alias)
+            else:
+                ret.categoryToAliases[ret.category] = [ret.alias]
+            ret.aliasToCategory[ret.alias] = ret.category
+            ret.aliasConcreteClass[ret.alias] = ret
         return ret
 
 class Widget(QObject):
@@ -46,10 +47,13 @@ class Widget(QObject):
     
     @classmethod
     def getAliasesViaCategory(cls, category):
-        return cls.categoryToAliases[category]
+        return cls.categoryToAliases.get(category, [ ])
 
 
 class DisplayWidget(Widget):
+    factory = "Change display widget"
+    factories = { }
+
     def __init__(self, key=None, **kwargs):
         Widget.__init__(self, **kwargs)
         self.valueType = None
@@ -62,6 +66,7 @@ class DisplayWidget(Widget):
 
 
 class VacuumWidget(DisplayWidget):
+    factory = "Change vacuum widget"
     category = "State"
 
     def __init__(self, value=None, **params):
@@ -97,6 +102,9 @@ class VacuumWidget(DisplayWidget):
 
 
 class EditableWidget(Widget):
+    factory = "Change widget"
+    factories = { }
+
     def __init__(self, key=None, **kwargs):
         Widget.__init__(self, **kwargs)
         self.valueType = None
