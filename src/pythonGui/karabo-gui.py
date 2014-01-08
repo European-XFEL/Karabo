@@ -15,7 +15,6 @@ sip.setapi("QVariant", 2)
 import sys
 
 from mainwindow import MainWindow
-from vacuumwidget import VacuumWidget
 
 from PyQt4.QtGui import *
 
