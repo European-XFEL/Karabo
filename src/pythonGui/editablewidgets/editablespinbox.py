@@ -32,7 +32,7 @@ class EditableSpinBox(EditableWidget):
     category = "Digit"
     alias = "Integer Field"
 
-    def __init__(self, **params):
+    def __init__(self, value=None, **params):
         super(EditableSpinBox, self).__init__(**params)
 
         self.__spinBox = QSpinBox()
@@ -42,14 +42,7 @@ class EditableSpinBox(EditableWidget):
         self.__spinBox.installEventFilter(self)
         self.__spinBox.valueChanged.connect(self.onEditingFinished)
         
-        # Minimum and maximum number of associated keys, 1 by default for each
-        self.__minMaxAssociatedKeys = (1,1) # tuple<min,max>
-        
-        # Set key
-        self.__key = params.get('key')
-        # Set value
-        value = params.get('value')
-        self.valueChanged(self.__key, value)
+        self.valueChanged(self.keys[0], value)
 
         #metricPrefixSymbol = params.get('metricPrefixSymbol')
         #unitSymbol = params.get('unitSymbol')
@@ -65,45 +58,29 @@ class EditableSpinBox(EditableWidget):
 
     def eventFilter(self, object, event):
         # Block wheel event on QSpinBox
-        if event.type() == QEvent.Wheel and object == self.__spinBox:
-            return True
-        return False
+        return event.type() == QEvent.Wheel and object == self.__spinBox
 
 
-    # Returns the actual widget which is part of the composition
-    def _getWidget(self):
+    @property
+    def widget(self):
         return self.__spinBox
-    widget = property(fget=_getWidget)
 
 
-    # Returns a tuple of min and max number of associated keys with this component
-    def _getMinMaxAssociatedKeys(self):
-        return self.__minMaxAssociatedKeys
-    minMaxAssociatedKeys = property(fget=_getMinMaxAssociatedKeys)
-
-
-    def _getKeys(self):
-        return [self.__key]
-    keys = property(fget=_getKeys)
-
-
-    def addParameters(self, **params):
-        minInc = params.get('minInc')
-        if minInc:
+    def addParameters(self, minInc=None, maxInc=None, **params):
+        if minInc is not None:
             self.__spinBox.blockSignals(True)
             self.__spinBox.setMinimum(minInc)
             self.__spinBox.blockSignals(False)
 
-        maxInc = params.get('maxInc')
-        if maxInc:
+        if maxInc is not None:
             self.__spinBox.blockSignals(True)
             self.__spinBox.setMaximum(maxInc)
             self.__spinBox.blockSignals(False)
 
 
-    def _value(self):
+    @property
+    def value(self):
         return self.__spinBox.value()
-    value = property(fget=_value)
 
 
     def _setMinimum(self, min):
@@ -111,15 +88,6 @@ class EditableSpinBox(EditableWidget):
         self.__spinBox.setMinimum(min)
         self.__spinBox.blockSignals(False)
     minimum = property(fset=_setMinimum)
-
-
-    def addKeyValue(self, key, value):
-        self.__key = key # TODO: Overwritten - unregistering in Manager...
-        self.valueChanged(key, value)
-
-
-    def removeKey(self, key):
-        self.__key = None
 
 
     def _setMaximum(self, max):
@@ -144,4 +112,4 @@ class EditableSpinBox(EditableWidget):
 
 ### slots ###
     def onEditingFinished(self, value):
-        self.valueEditingFinished(self.__key, value)
+        self.valueEditingFinished(self.keys[0], value)

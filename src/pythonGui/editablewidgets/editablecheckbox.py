@@ -31,58 +31,27 @@ class EditableCheckBox(EditableWidget):
     category = "Switch"
     alias = "Toggle Field"
 
-    def __init__(self, **params):
+    def __init__(self, value=None, **params):
         super(EditableCheckBox, self).__init__(**params)
         
         self.__checkBox = QCheckBox()
         self.__checkBox.stateChanged.connect(self.onEditingFinished)
         
-        # Minimum and maximum number of associated keys, 1 by default for each
-        self.__minMaxAssociatedKeys = (1,1) # tuple<min,max>
-        
-        # Set key
-        self.__key = params.get('key')
-        # Set value
-        value = params.get('value')
-        self.valueChanged(self.__key, value)
+        self.valueChanged(self.keys[0], value)
 
 
-    # Returns the actual widget which is part of the composition
-    def _getWidget(self):
+    @property
+    def widget(self):
         return self.__checkBox
-    widget = property(fget=_getWidget)
-
-
-    # Returns a tuple of min and max number of associated keys with this component
-    def _getMinMaxAssociatedKeys(self):
-        return self.__minMaxAssociatedKeys
-    minMaxAssociatedKeys = property(fget=_getMinMaxAssociatedKeys)
-
-
-    def _getKeys(self):
-        return [self.__key]
-    keys = property(fget=_getKeys)
 
 
     def addParameters(self, **params):
         print "addParameters", params
 
 
-    def _value(self):
-        if self.__checkBox.checkState() == Qt.Checked:
-            return True
-        else:
-            return False
-    value = property(fget=_value)
-
-
-    def addKeyValue(self, key, value):
-        self.__key = key # TODO: Overwritten - unregistering in Manager...
-        self.valueChanged(key, value)
-
-
-    def removeKey(self, key):
-        self.__key = None
+    @property
+    def value(self):
+        return self.__checkBox.checkState() == Qt.Checked
 
 
     def valueChanged(self, key, value, timestamp=None, forceRefresh=False):
@@ -106,7 +75,4 @@ class EditableCheckBox(EditableWidget):
 
 ### slots ###
     def onEditingFinished(self, value):
-        if value == Qt.Checked:
-            self.valueEditingFinished(self.__key, True)
-        else:
-            self.valueEditingFinished(self.__key, False)
+        self.valueEditingFinished(self.keys[0], value == Qt.Checked)

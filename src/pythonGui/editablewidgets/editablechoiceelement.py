@@ -32,7 +32,7 @@ class EditableChoiceElement(EditableWidget):
     category = "Choice"
     alias = "Choice Element"
 
-    def __init__(self, **params):
+    def __init__(self, value=None, **params):
         super(EditableChoiceElement, self).__init__(**params)
         
         self.__comboBox = QComboBox()
@@ -43,14 +43,7 @@ class EditableChoiceElement(EditableWidget):
         
         self.childItemList = []
         
-        # Minimum and maximum number of associated keys, 1 by default for each
-        self.__minMaxAssociatedKeys = (1,1) # tuple<min,max>
-        
-        # Set key
-        self.__key = params.get('key')
-        # Set value
-        value = params.get('value')
-        self.valueChanged(self.__key, value)
+        self.valueChanged(self.keys[0], value)
 
 
     def eventFilter(self, object, event):
@@ -60,21 +53,9 @@ class EditableChoiceElement(EditableWidget):
         return False
 
 
-    # Returns the actual widget which is part of the composition
-    def _getWidget(self):
+    @property
+    def widget(self):
         return self.__comboBox
-    widget = property(fget=_getWidget)
-
-
-    # Returns a tuple of min and max number of associated keys with this component
-    def _getMinMaxAssociatedKeys(self):
-        return self.__minMaxAssociatedKeys
-    minMaxAssociatedKeys = property(fget=_getMinMaxAssociatedKeys)
-
-
-    def _getKeys(self):
-        return [self.__key]
-    keys = property(fget=_getKeys)
 
 
     def addParameters(self, **params):
@@ -87,18 +68,9 @@ class EditableChoiceElement(EditableWidget):
             self.__comboBox.blockSignals(False)
 
 
-    def _value(self):
+    @property
+    def value(self):
         return Hash(str(self.__comboBox.currentText()))
-    value = property(fget=_value)
-
-
-    def addKeyValue(self, key, value):
-        self.__key = key # TODO: Overwritten - unregistering in Manager...
-        self.valueChanged(key, value)
-
-
-    def removeKey(self, key):
-        self.__key = None
 
 
     def _updateChoiceItems(self, index):
@@ -154,7 +126,7 @@ class EditableChoiceElement(EditableWidget):
     def onEditingFinished(self, index):
         if index > -1 and index < len(self.childItemList):
             self._updateChoiceItems(index)
-        self.valueEditingFinished(self.__key, self.value)
+        self.valueEditingFinished(self.keys[0], self.value)
 
 
     def copy(self, item):
