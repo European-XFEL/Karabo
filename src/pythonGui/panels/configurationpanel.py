@@ -750,7 +750,7 @@ class ConfigurationPanel(QWidget):
 
 
     def onKillInstance(self):
-        itemInfo = self.__twNavigation.currentIndexInfo()
+        itemInfo = self.__twNavigation.indexInfo()
         
         type = itemInfo.get('type')
         
@@ -763,7 +763,7 @@ class ConfigurationPanel(QWidget):
 
 
     def onInitDevice(self):
-        itemInfo = self.__twNavigation.currentIndexInfo()
+        itemInfo = self.__twNavigation.indexInfo()
         if len(itemInfo) == 0:
             return
         
@@ -798,7 +798,7 @@ class ConfigurationPanel(QWidget):
 
 
     def onFileOpen(self):
-        info = self.__twNavigation.currentIndexInfo()
+        info = self.__twNavigation.indexInfo()
         
         path = info.get('key')
         type = info.get('type')
@@ -822,7 +822,7 @@ class ConfigurationPanel(QWidget):
 
 
     def onFileSaveAs(self):
-        info = self.__twNavigation.currentIndexInfo()
+        info = self.__twNavigation.indexInfo()
         
         path = info.get('key')
         type = info.get('type')
