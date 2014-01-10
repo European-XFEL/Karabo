@@ -23,11 +23,14 @@ namespace karabo {
 
 
         DeviceClient::DeviceClient(const std::string& brokerType, const karabo::util::Hash& brokerConfiguration) :
-        m_isShared(false), m_internalTimeout(2000), m_isAdvancedMode(false) {
+        m_isShared(false), m_internalTimeout(2000), m_isAdvancedMode(false), m_getOlder(true) {
 
             std::string ownInstanceId = generateOwnInstanceId();
             m_signalSlotable = boost::shared_ptr<SignalSlotable > (new SignalSlotable(ownInstanceId, brokerType, brokerConfiguration));
             m_eventThread = boost::thread(boost::bind(&karabo::xms::SignalSlotable::runEventLoop, m_signalSlotable, 20, Hash()));
+
+            // TODO Comment in to activate aging
+            //m_ageingThread = boost::thread(boost::bind(&karabo::core::DeviceClient::age, this));
 
             this->setupSlots();
             this->checkMaster();
@@ -37,11 +40,15 @@ namespace karabo {
 
 
         DeviceClient::DeviceClient(const boost::shared_ptr<SignalSlotable>& signalSlotable) :
-        m_signalSlotable(signalSlotable), m_isShared(true), m_internalTimeout(2000), m_isAdvancedMode(false) {
+        m_signalSlotable(signalSlotable), m_isShared(true), m_internalTimeout(2000), m_isAdvancedMode(false), m_getOlder(true) {
+            
+            // TODO Comment in to activate aging
+            //m_ageingThread = boost::thread(boost::bind(&karabo::core::DeviceClient::age, this));
 
             this->setupSlots();
             this->checkMaster();
             this->cacheAvailableInstances();
+
         }
 
 
@@ -152,12 +159,15 @@ namespace karabo {
 
         void DeviceClient::slotChanged(const karabo::util::Hash& hash, const std::string & instanceId) {
             boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
-            Hash& tmp = m_runtimeSystemDescription.get<Hash>("device." + instanceId + ".configuration");
-            tmp.merge(hash);
-            // NOTE: This will block us here, i.e. we are deaf for other changes...
-            // NOTE: Monitors could be implemented as additional slots or in separate threads, too.
-            notifyDeviceChangedMonitors(hash, instanceId);
-            notifyPropertyChangedMonitors(hash, instanceId);
+            //cout << "Got update for " << instanceId << endl;
+            if (m_runtimeSystemDescription.has("device." + instanceId + ".configuration")) {
+                Hash& tmp = m_runtimeSystemDescription.get<Hash>("device." + instanceId + ".configuration");
+                tmp.merge(hash);
+                // NOTE: This will block us here, i.e. we are deaf for other changes...
+                // NOTE: Monitors could be implemented as additional slots or in separate threads, too.
+                notifyDeviceChangedMonitors(hash, instanceId);
+                notifyPropertyChangedMonitors(hash, instanceId);
+            }
         }
 
 
@@ -253,6 +263,9 @@ namespace karabo {
 
 
         DeviceClient::~DeviceClient() {
+            m_getOlder = false;
+            m_ageingThread.join();
+
             if (!m_isShared) {
                 m_signalSlotable->stopEventLoop();
                 m_eventThread.join();
@@ -671,8 +684,8 @@ namespace karabo {
         void DeviceClient::get(const std::string& instanceId, karabo::util::Hash& hash) {
             hash = cacheAndGetConfiguration(instanceId);
         }
-        
-        
+
+
         std::vector<karabo::util::Hash> DeviceClient::getFromPast(const std::string& deviceId, const std::string& key, const std::string& from, std::string to) {
             if (to.empty()) to = karabo::util::Epochstamp().toIso8601();
             vector<Hash> result;
@@ -707,6 +720,7 @@ namespace karabo {
             // Make sure we are caching this instanceId
             this->cacheAndGetConfiguration(instanceId);
             m_deviceChangedHandlers.set(instanceId + "._function", callbackFunction);
+            immortalize(instanceId);
         }
 
 
@@ -722,6 +736,7 @@ namespace karabo {
                 if (tmp.empty()) {
                     m_propertyChangedHandlers.erase(node->getKey());
                 }
+                mortalize(instanceId);
             }
         }
 
@@ -729,6 +744,7 @@ namespace karabo {
         void DeviceClient::unregisterDeviceMonitor(const std::string& instanceId) {
             boost::mutex::scoped_lock lock(m_deviceChangedHandlersMutex);
             m_deviceChangedHandlers.erase(instanceId);
+            mortalize(instanceId);
         }
 
 
@@ -771,14 +787,17 @@ namespace karabo {
             boost::mutex::scoped_lock lock(m_instanceUsageMutex);
             if (m_instanceUsage.find(instanceId) == m_instanceUsage.end()) { // Not there yet
                 m_signalSlotable->connectT(instanceId, "signalChanged", "", "slotChanged");
+            } else if (m_instanceUsage[instanceId] >= CONNECTION_KEEP_ALIVE) { // Died before
+                m_signalSlotable->connectT(instanceId, "signalChanged", "", "slotChanged");
             }
-            m_instanceUsage[instanceId] = 0;
+            if (m_instanceUsage[instanceId] != -1) m_instanceUsage[instanceId] = 0;
         }
-        
+
+
         void DeviceClient::disconnect(const std::string& instanceId) {
             boost::mutex::scoped_lock lock(m_instanceUsageMutex);
             m_signalSlotable->disconnect(instanceId, "signalChanged", "", "slotChanged", false);
-            m_instanceUsage.erase(instanceId);
+            m_instanceUsage[instanceId] = 11;
         }
 
 
@@ -917,5 +936,35 @@ if (nodeData) {\
         }
 
 
+        void DeviceClient::age() {
+            while (m_getOlder) {
+                m_instanceUsageMutex.lock();
+                for (InstanceUsage::iterator it = m_instanceUsage.begin(); it != m_instanceUsage.end(); ++it) {
+                    if (it->second == -1) continue; // Immortal! Monitored devices will have this status
+                    it->second++; // Others just age
+                    if (it->second == CONNECTION_KEEP_ALIVE) { // Too old
+                        boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
+                        cout << "Instance " << it->first << " got too old. It will die a natural death." << endl;
+                        m_signalSlotable->disconnect(it->first, "signalChanged", "", "slotChanged", false);
+                        std::string path("device." + it->first + ".configuration");
+                        if (m_runtimeSystemDescription.has(path)) m_runtimeSystemDescription.erase(path);
+                    }
+                }
+                m_instanceUsageMutex.unlock();
+                boost::this_thread::sleep(boost::posix_time::seconds(1));
+            }
+        }
+
+
+        void DeviceClient::immortalize(const std::string& deviceId) {
+            boost::mutex::scoped_lock lock(m_instanceUsageMutex);
+            m_instanceUsage[deviceId] = -1;
+        }
+
+
+        void DeviceClient::mortalize(const std::string& deviceId) {
+            boost::mutex::scoped_lock lock(m_instanceUsageMutex);
+            m_instanceUsage[deviceId] = 0;
+        }
     }
 }
