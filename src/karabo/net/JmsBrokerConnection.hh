@@ -86,7 +86,7 @@ namespace karabo {
             void setConnectionProperties(const MQPropertiesHandle& propertiesHandle);
 
             static void onException(const MQConnectionHandle connectionHandle, MQStatus status, void* callbackData);
-
+            
         };
 
 
