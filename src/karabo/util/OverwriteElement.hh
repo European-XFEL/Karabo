@@ -134,6 +134,11 @@ namespace karabo {
                 m_node->setAttribute(KARABO_SCHEMA_OPTIONS, opts);
                 return *this;
             }
+            
+            OverwriteElement& setNewAllowedState(const std::string& states, const std::string& sep = " ,;") {
+                m_node->setAttribute(KARABO_SCHEMA_ALLOWED_STATES, karabo::util::fromString<std::string, std::vector > (states, sep));
+                return *this;
+            }
 
             OverwriteElement& setNowObserverAccess() {
                 m_node->setAttribute<int>(KARABO_SCHEMA_REQUIRED_ACCESS_LEVEL, Schema::OBSERVER);
