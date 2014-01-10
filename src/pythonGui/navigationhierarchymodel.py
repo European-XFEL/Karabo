@@ -29,6 +29,7 @@ class NavigationHierarchyModel(QAbstractItemModel):
         self.__currentConfig = None
         self.setSupportedDragActions(Qt.CopyAction)
 
+
     def _currentConfig(self):
         return self.__currentConfig
     currentConfig = property(fget=_currentConfig)
@@ -266,6 +267,7 @@ class NavigationHierarchyModel(QAbstractItemModel):
 
         return self.createIndex(parentItem.row(), 0, parentItem)
 
+
     def indexInfo(self, index):
         if not index.isValid():
             return { }
@@ -296,6 +298,7 @@ class NavigationHierarchyModel(QAbstractItemModel):
             path = "device." + deviceId
             return dict(key=path + ".configuration", type=type,
                         classId=classId, deviceId=deviceId)
+
 
     def mimeData(self, items):
         itemInfo = self.indexInfo(items[0])

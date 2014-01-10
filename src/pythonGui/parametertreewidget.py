@@ -50,6 +50,7 @@ class ParameterTreeWidget(QTreeWidget):
         self.model().setSupportedDragActions(Qt.CopyAction)
         self.setDragEnabled(True)
 
+
 ### protected ###
     def mousePressEvent(self, event):
         item = self.itemAt(event.pos())
@@ -84,6 +85,7 @@ class ParameterTreeWidget(QTreeWidget):
             self.__currentItem.setToolTipDialogVisible(True)
             
         QTreeWidget.mousePressEvent(self, event)
+
 
     def mimeData(self, items):
         item = items[0]
@@ -142,6 +144,7 @@ class ParameterTreeWidget(QTreeWidget):
             mimeData.setData("classAlias", "{}".format(item.classAlias))
 
         return mimeData
+
 
 ### getter & setter functions ###
     def _getInstanceKey(self):

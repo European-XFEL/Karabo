@@ -42,6 +42,7 @@ class NavigationTreeView(QTreeView):
         self.customContextMenuRequested.connect(self.onCustomContextMenuRequested)
         self.setDragEnabled(True)
 
+
     def _lastSelectionPath(self):
         return self.__lastSelectionPath
     def _setLastSelectionPath(self, lastSelectionPath):
@@ -119,7 +120,7 @@ class NavigationTreeView(QTreeView):
         Defaults to the current index if index is None."""
         if index is None:
             index = self.currentIndex()
-        return self.model.indexInfo(index)
+        return self.model().indexInfo(index)
 
 
     def findIndex(self, path):
