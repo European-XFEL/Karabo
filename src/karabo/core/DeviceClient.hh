@@ -51,7 +51,7 @@ namespace karabo {
          * 
          */
         class DeviceClient {
-            
+                                    
             template<class T>
             friend class Device;
             
@@ -60,7 +60,8 @@ namespace karabo {
             typedef boost::function<void (const karabo::util::Hash& /*topologyEntry*/) > InstanceUpdatedHandler;
             typedef boost::function<void (const std::string& /*instanceId*/) > InstanceGoneHandler;
             typedef boost::function<void (const karabo::util::Schema& /*schema*/, const std::string& /*deviceId*/) > SchemaUpdatedHandler;
-
+            
+            static const int CONNECTION_KEEP_ALIVE = 30;
            
         protected: // members
 
@@ -115,9 +116,13 @@ namespace karabo {
 
             std::string m_masterDeviceId;
 
-            bool m_isAdvancedMode;
+            bool m_isAdvancedMode;  // DEPRECATED
 
             MasterMode m_masterMode;
+
+            boost::thread m_ageingThread;
+            
+            bool m_getOlder;
 
             InstanceNewHandler m_instanceNewHandler;
             InstanceUpdatedHandler m_instanceUpdatedHandler;
@@ -317,6 +322,7 @@ namespace karabo {
                     boost::mutex::scoped_lock lock(m_propertyChangedHandlersMutex);
                     this->cacheAndGetConfiguration(instanceId);
                     m_propertyChangedHandlers.set(instanceId + "." + key + "._function", callbackFunction);
+                    immortalize(instanceId);
                     return true;
                 } else {
                     return false;
@@ -334,6 +340,7 @@ namespace karabo {
                     this->cacheAndGetConfiguration(instanceId);
                     m_propertyChangedHandlers.set(instanceId + "." + key + "._function", callbackFunction);
                     m_propertyChangedHandlers.set(instanceId + "." + key + "._userData", userData);
+                    immortalize(instanceId);
                     return true;
                 } else {
                     return false;
@@ -344,6 +351,7 @@ namespace karabo {
 
             void registerDeviceMonitor(const std::string& instanceId, const boost::function<void (const std::string&, const karabo::util::Hash&)>& callbackFunction);
 
+            // TODO Adapt function to above style (i.e. add return value)
             template <class UserDataType>
             void registerDeviceMonitor(const std::string& instanceId, const boost::function<void (const std::string&, const karabo::util::Hash&, const boost::any&)>& callbackFunction,
                                        const UserDataType& userData) {
@@ -353,6 +361,7 @@ namespace karabo {
                 this->cacheAndGetConfiguration(instanceId);
                 m_deviceChangedHandlers.set(instanceId + "._function", callbackFunction);
                 m_deviceChangedHandlers.set(instanceId + "._userData", userData);
+                immortalize(instanceId);
             }
 
             void unregisterDeviceMonitor(const std::string& instanceId);
@@ -553,6 +562,12 @@ namespace karabo {
 
             virtual void slotProvideSystemTopology();
 
+            void age();
+            
+            void immortalize(const std::string& deviceId);
+            
+            void mortalize(const std::string& deviceId);
+            
         };
     }
 }
