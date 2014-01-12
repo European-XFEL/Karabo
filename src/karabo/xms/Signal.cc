@@ -44,18 +44,30 @@ namespace karabo {
 
 
         void Signal::registerSlot(const std::string& slotInstanceId, const std::string& slotFunction) {
-            m_registeredSlotInstanceIds[slotInstanceId]++;
-            m_registeredSlotFunctions[slotFunction]++;
+            std::map<std::string, size_t>::iterator itI = m_registeredSlotInstanceIds.find(slotInstanceId);
+            std::map<std::string, size_t>::iterator itF = m_registeredSlotFunctions.find(slotFunction);
+            if ((itI == m_registeredSlotInstanceIds.end()) || (itF == m_registeredSlotFunctions.end())) {
+                m_registeredSlotInstanceIds[slotInstanceId]++;
+                m_registeredSlotFunctions[slotFunction]++;
+            }
             updateConnectedSlotsString();
         }
 
 
-        bool Signal::unregisterSlot(const std::string& slotInstanceId, const std::string& slotFunction) {
+        bool Signal::unregisterSlot(const std::string& slotInstanceId, const std::string& slotFunction) {            
             std::map<std::string, size_t>::iterator itI = m_registeredSlotInstanceIds.find(slotInstanceId);
             std::map<std::string, size_t>::iterator itF = m_registeredSlotFunctions.find(slotFunction);
-            if (itI != m_registeredSlotInstanceIds.end() && itF != m_registeredSlotFunctions.end()) {
-                if (--(itI->second) == 0) m_registeredSlotInstanceIds.erase(itI);
-                if (--(itF->second) == 0) m_registeredSlotFunctions.erase(itF);
+            if ((itI != m_registeredSlotInstanceIds.end()) && (itF != m_registeredSlotFunctions.end())) {
+                std::cout << "Unregistering " << slotInstanceId << ":" << slotFunction << std::endl;
+                std::cout << itI->second << " " << itF->second << std::endl;
+                if (--(itI->second) == 0) {
+                    m_registeredSlotInstanceIds.erase(itI);
+                    std::cout << "Removing instance..." << std::endl;
+                }
+                if (--(itF->second) == 0) {
+                    m_registeredSlotFunctions.erase(itF);
+                    std::cout << "Removing function..." << std::endl;
+                }
                 updateConnectedSlotsString();
                 return true;
             } else {
