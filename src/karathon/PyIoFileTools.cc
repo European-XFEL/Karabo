@@ -318,6 +318,12 @@ public:
             T object;
             s.load(object, data, size);
             return bp::object(object);
+            // TODO: Check whether there is a better way to go from python string to vector<char> or the like...
+        } else if (bp::extract<std::string>(obj).check()) {
+            T object;
+            const string& tmp = bp::extract<std::string>(obj);
+            s.load(object, tmp.c_str(), tmp.size() - 1);
+            return bp::object(object);
         }
         throw KARABO_PYTHON_EXCEPTION("Python object type is not a bytearray!");
     }
