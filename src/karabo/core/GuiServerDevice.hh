@@ -30,14 +30,14 @@ namespace karabo {
             karabo::net::IOService::Pointer m_ioService;
             karabo::net::Connection::Pointer m_dataConnection;
 
-            karabo::io::TextSerializer<karabo::util::Hash>::Pointer m_textSerializer;
-            karabo::io::BinarySerializer<karabo::util::Hash>::Pointer m_binarySerializer;
+            karabo::io::BinarySerializer<karabo::util::Hash>::Pointer m_serializer;
             std::map<karabo::net::Channel::Pointer, std::set<std::string> > m_channels;
             boost::mutex m_channelMutex;
 
             karabo::net::BrokerConnection::Pointer m_loggerConnection;
             karabo::net::BrokerIOService::Pointer m_loggerIoService;
             karabo::net::BrokerChannel::Pointer m_loggerChannel;
+            std::map<std::string, int> m_visibleDevices;
 
         public:
 
@@ -60,29 +60,29 @@ namespace karabo {
 
             void onConnect(karabo::net::Channel::Pointer channel);
 
-            void onRead(karabo::net::Channel::Pointer channel, const karabo::util::Hash& header, const std::string& body);
+            void onRead(karabo::net::Channel::Pointer channel, const karabo::util::Hash& header, const std::vector<char>& body);
 
-            void onLogin(karabo::net::Channel::Pointer channel, const std::string& body);
+            void onLogin(karabo::net::Channel::Pointer channel, const std::vector<char>& body);
 
-            void onReconfigure(const karabo::util::Hash& header, const std::string& body);
+            void onReconfigure(const karabo::util::Hash& header, const std::vector<char>& body);
 
-            void onExecute(const karabo::util::Hash& header, const std::string& body);
+            void onExecute(const karabo::util::Hash& header, const std::vector<char>& body);
 
             void onRefreshInstance(karabo::net::Channel::Pointer channel, const karabo::util::Hash& header);
 
-            void onInitDevice(const karabo::util::Hash& header, const std::string& body);
+            void onInitDevice(const karabo::util::Hash& header, const std::vector<char>& body);
 
-            void onKillServer(const karabo::util::Hash& header, const std::string& body);
+            void onKillServer(const karabo::util::Hash& header, const std::vector<char>& body);
 
-            void onKillDevice(const karabo::util::Hash& header, const std::string& body);
+            void onKillDevice(const karabo::util::Hash& header, const std::vector<char>& body);
 
             void onNewVisibleDevice(karabo::net::Channel::Pointer channel, const karabo::util::Hash& header);
 
             void onRemoveVisibleDevice(karabo::net::Channel::Pointer channel, const karabo::util::Hash& header);
             
-            void onGetClassSchema(karabo::net::Channel::Pointer channel, const karabo::util::Hash& header, const std::string& body);
+            void onGetClassSchema(karabo::net::Channel::Pointer channel, const karabo::util::Hash& header, const std::vector<char>& body);
 
-            void onGetDeviceSchema(karabo::net::Channel::Pointer channel, const karabo::util::Hash& header, const std::string& body);
+            void onGetDeviceSchema(karabo::net::Channel::Pointer channel, const karabo::util::Hash& header, const std::vector<char>& body);
 
 
             void sendSystemTopology(karabo::net::Channel::Pointer channel);
@@ -96,10 +96,9 @@ namespace karabo {
 
             void instanceGoneHandler(const std::string& instanceId);
 
-
             void preprocessImageData(karabo::util::Hash& modified);
 
-            void slotChanged(const karabo::util::Hash& what, const std::string& instanceId);
+            void deviceChangedHandler(const std::string& instanceId, const karabo::util::Hash& what);
             
             void slotSchemaUpdated(const karabo::util::Schema& description, const std::string& deviceId);
 

@@ -34,7 +34,7 @@ class Network(QObject):
     def __init__(self):
         super(Network, self).__init__()
         
-        self.__serializer = TextSerializerHash.create("Xml")
+        self.__serializer = BinarySerializerHash.create("Bin")
                 
         self.__auth = None
         self.__username = str()
@@ -176,6 +176,8 @@ class Network(QObject):
                 
                 self.__headerBytes = bytearray(self.__headerSize)
                 self.__headerBytes = input.readRawData(self.__headerSize)
+                # TODO How to do this nicely?
+                self.__headerBytes = bytearray(self.__headerBytes)
                 
             if self.__bodySize == 0:
             
@@ -191,6 +193,8 @@ class Network(QObject):
                 
                 self.__bodyBytes = bytearray(self.__bodySize)
                 self.__bodyBytes = input.readRawData(self.__bodySize)
+                # TODO How to do this nicely?
+                self.__bodyBytes = bytearray(self.__bodyBytes)
                 
                     
             # Fork on responseType
