@@ -772,7 +772,7 @@ namespace karabo {
                 SignalInstancesConstIt it = m_signalInstances.find(signalFunction);
                 if (it != m_signalInstances.end()) { // Signal found
                     signalExists = true;
-                    // Register new slotId to local signal
+                    // Unregister slotId from local signal
                     it->second->unregisterSlot(slotInstanceId, slotFunction);
                 } else {
                     signalExists = false;
