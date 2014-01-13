@@ -13,7 +13,7 @@ __all__ = ["ChoiceComponent"]
 
 
 from basecomponent import BaseComponent
-from editablewidget import EditableWidget
+from widget import EditableWidget
 from manager import Manager
 
 from PyQt4.QtCore import *
@@ -33,7 +33,7 @@ class ChoiceComponent(BaseComponent):
         self.__classAlias = classAlias
         self.__initParams = params
         
-        self.__choiceWidget = EditableWidget.create(classAlias, **params)
+        self.__choiceWidget = EditableWidget.get_class(classAlias)(**params)
         self.widget.setEnabled(False)
 
 

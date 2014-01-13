@@ -21,25 +21,21 @@
 __all__ = ["DisplayImageElement"]
 
 
-from displaywidget import DisplayWidget
+from widget import DisplayWidget
 import copy
 
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 
-def getCategoryAliasClassName():
-    return ["ImageElement","Image Element","DisplayImageElement"]
-
 
 class DisplayImageElement(DisplayWidget):
-  
+    category = "ImageElement"
+    alias = "Image Element"
+
     def __init__(self, **params):
         super(DisplayImageElement, self).__init__(**params)
         
-        # Minimum and maximum number of associated keys, 1 by default for each
-        self.__minMaxAssociatedKeys = (1,1) # tuple<min,max>
-        
-        self.__value = None
+        self.value = None
         
         self.__image = QLabel()
         self.__image.setAutoFillBackground(True)
@@ -50,35 +46,10 @@ class DisplayImageElement(DisplayWidget):
         self.__image.setWordWrap(True)
         self.setErrorState(False)
         
-        self.__key = params.get('key')
 
-
-    def _getCategory(self):
-        category, alias, className = getCategoryAliasClassName()
-        return category
-    category = property(fget=_getCategory)
-
-
-    # Returns the actual widget which is part of the composition
-    def _getWidget(self):
+    @property
+    def widget(self):
         return self.__image
-    widget = property(fget=_getWidget)
-
-
-    # Returns a tuple of min and max number of associated keys with this component
-    def _getMinMaxAssociatedKeys(self):
-        return self.__minMaxAssociatedKeys
-    minMaxAssociatedKeys = property(fget=_getMinMaxAssociatedKeys)
-
-
-    def _getKeys(self):
-        return [self.__key]
-    keys = property(fget=_getKeys)
-
-
-    def _value(self):
-        return self.__value
-    value = property(fget=_value)
 
 
     def setErrorState(self, isError):
@@ -88,21 +59,12 @@ class DisplayImageElement(DisplayWidget):
             self.__image.setStyleSheet("QLabel { background-color : rgba(225,242,225,128); }") # light green
 
 
-    def addKeyValue(self, key, value):
-        self.__key = key # TODO: Overwritten - unregistering in Manager...
-        self.valueChanged(key, value)
-
-
-    def removeKey(self, key):
-        self.__key = None
-
-
     def valueChanged(self, key, value, timestamp=None):
         if value is None: return
         
-        if self.__value is None or value is not self.__value:
+        if self.value is None or value is not self.value:
             # Store original value with type
-            self.__value = copy.copy(value)
+            self.value = copy.copy(value)
             
             if value.has('dims')==False: return
             if value.has('data')==False: return
@@ -126,8 +88,3 @@ class DisplayImageElement(DisplayWidget):
                 pixmap = pixmap.scaledToHeight(125)
                 
             self.__image.setPixmap(pixmap)
-            
-    class Maker:
-        def make(self, **params):
-            return DisplayImageElement(**params)
-

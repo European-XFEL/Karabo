@@ -21,7 +21,7 @@
 __all__ = ["DisplayPyCode"]
 
 
-from displaywidget import DisplayWidget
+from widget import DisplayWidget
 
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
@@ -34,17 +34,12 @@ from base64 import decodestring
 import time
 import thread
 
-def getCategoryAliasClassName():
-    return ["String","Code Field","DisplayPyCode"]
-
-
 class DisplayPyCode(DisplayWidget):
-  
+    category = "String"
+    alias = "Code Field"
+
     def __init__(self, **params):
         super(DisplayPyCode, self).__init__(**params)
-        
-        # Minimum and maximum number of associated keys, 1 by default for each
-        self.__minMaxAssociatedKeys = (1,1) # tuple<min,max>
         
         self.__compositeWidget = QWidget()
         vLayout = QVBoxLayout(self.__compositeWidget)
@@ -209,8 +204,6 @@ class DisplayPyCode(DisplayWidget):
         
         vLayout.addWidget(self.__codeToolWidget);
         
-        self.__key = params.get('key')
-            
         #init kernel managment class
         self.__kernel_manager_class = QtKernelManager
         self.__kernel_initiated = False
@@ -467,41 +460,14 @@ class DisplayPyCode(DisplayWidget):
         format.setName(name)
         return format
 
-    def _getCategory(self):
-        category, alias, className = getCategoryAliasClassName()
-        return category
-    category = property(fget=_getCategory)
-
-
-    # Returns the actual widget which is part of the composition
-    def _getWidget(self):
+    @property
+    def widget(self):
         return self.__compositeWidget
-    widget = property(fget=_getWidget)
 
 
-    # Returns a tuple of min and max number of associated keys with this component
-    def _getMinMaxAssociatedKeys(self):
-        return self.__minMaxAssociatedKeys
-    minMaxAssociatedKeys = property(fget=_getMinMaxAssociatedKeys)
-
-
-    def _getKeys(self):
-        return [self.__key]
-    keys = property(fget=_getKeys)
-
-
-    def _value(self):
-        return str(self.__lineEdit.toPlainText())
-    value = property(fget=_value)
-
-
-    def addKeyValue(self, key, value):
-        self.__key = key # TODO: Overwritten - unregistering in Manager...
-        self.valueChanged(key, value)
-
-
-    def removeKey(self, key):
-        self.__key = None
+    @property
+    def value(self):
+        return self.__lineEdit.toPlainText()
 
 
     def valueChanged(self, key, value, timestamp=None):
@@ -517,9 +483,3 @@ class DisplayPyCode(DisplayWidget):
                     self.onExecuteClicked()
                 except:
                     print "A problem with IPython execution occured!"
-                
-
-    class Maker:
-        def make(self, **params):
-            return DisplayPyCode(**params)
-

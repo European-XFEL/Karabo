@@ -21,19 +21,17 @@
 __all__ = ["EditableFilePath"]
 
 
-from editablewidget import EditableWidget
+from widget import EditableWidget
 
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 
 
-def getCategoryAliasClassName():
-    return ["FilePath","File Path","EditableFilePath"]
-
-
 class EditableFilePath(EditableWidget):
-    
-    def __init__(self, **params):
+    category = "FilePath"
+    alias = "File Path"
+
+    def __init__(self, value=None, **params):
         super(EditableFilePath, self).__init__(**params)
 
         self.__pbSelectPath = QPushButton("...")
@@ -43,55 +41,17 @@ class EditableFilePath(EditableWidget):
         self.__leFilePath.textChanged.connect(self.onEditingFinished)
         self.__pbSelectPath.clicked.connect(self.onSelectFilePath)
         
-        # Minimum and maximum number of associated keys, 1 by default for each
-        self.__minMaxAssociatedKeys = (1,1) # tuple<min,max>
-        
-        # Set key
-        self.__key = params.get('key')
-        # Set value
-        value = params.get('value')
-        self.valueChanged(self.__key, value)
+        self.valueChanged(self.keys[0], value)
 
 
-    def _getCategory(self):
-        category, alias, className = getCategoryAliasClassName()
-        return category
-    category = property(fget=_getCategory)
-
-
-    # Returns the actual widget which is part of the composition
-    def _getWidget(self):
+    @property
+    def widget(self):
         return self.__leFilePath
-    widget = property(fget=_getWidget)
 
 
-    # Returns a tuple of min and max number of associated keys with this component
-    def _getMinMaxAssociatedKeys(self):
-        return self.__minMaxAssociatedKeys
-    minMaxAssociatedKeys = property(fget=_getMinMaxAssociatedKeys)
-
-
-    def _getKeys(self):
-        return [self.__key]
-    keys = property(fget=_getKeys)
-
-
-    def addParameters(self, **params):
-        print "addParameters", params
-
-
-    def _value(self):
-        return str(self.__leFilePath.text())
-    value = property(fget=_value)
-
-
-    def addKeyValue(self, key, value):
-        self.__key = key # TODO: Overwritten - unregistering in Manager...
-        self.valueChanged(key, value)
-
-
-    def removeKey(self, key):
-        self.__key = None
+    @property
+    def value(self):
+        return self.__leFilePath.text()
 
 
     def valueChanged(self, key, value, timestamp=None, forceRefresh=False):
@@ -105,7 +65,7 @@ class EditableFilePath(EditableWidget):
 
 ### slots ###
     def onEditingFinished(self, value):
-        self.valueEditingFinished(self.__key, value)
+        self.valueEditingFinished(self.keys[0], value)
 
 
     def onSelectFilePath(self):
@@ -116,9 +76,3 @@ class EditableFilePath(EditableWidget):
         
         self._setValue(filePath)
         self.onEditingFinished()
-
-
-    class Maker:
-        def make(self, **params):
-            return EditableFilePath(**params)
-
