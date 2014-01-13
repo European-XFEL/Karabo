@@ -1123,6 +1123,7 @@ class GraphicsView(QSvgWidget):
             proxy.show()
             
         self.layout.addItem(layout, QRect(pos, layout.sizeHint()))
+        layout.selected = True
         return layout
 
     def clear_selection(self):
@@ -1401,7 +1402,6 @@ class GraphicsView(QSvgWidget):
     def paintEvent(self, event):
         painter = QPainter(self)
         try:
-            #self.renderer().render(painter, QRectF(QRect(QPoint(0, 0), self.renderer().defaultSize())))
             self.renderer().render(painter, self.renderer().viewBoxF())
             for s in self.shapes:
                 painter.save()
@@ -1409,12 +1409,10 @@ class GraphicsView(QSvgWidget):
                 painter.restore()
             painter.save()
             if self.isDesignMode:
+                painter.setPen(Qt.DashLine)
                 for item in self.layout.children:
                     if item.selected:
-                        painter.setPen(Qt.green)
-                    else:
-                        painter.setPen(Qt.black)
-                    painter.drawRect(item.geometry())
+                        painter.drawRect(item.geometry())
             painter.restore()
             if self.current_action is not None:
                 self.current_action.draw(painter)
