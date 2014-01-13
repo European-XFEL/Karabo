@@ -22,20 +22,17 @@ __all__ = ["EditableDoubleSpinBox"]
 
 import sys
 
-from editablewidget import EditableWidget
+from widget import EditableWidget
 
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 
 
-def getCategoryAliasClassName():
-    return ["Digit","Float Field","EditableDoubleSpinBox"]
-
-
 class EditableDoubleSpinBox(EditableWidget):
-
+    category = "Digit"
+    alias = "Float Field"
     
-    def __init__(self, **params):
+    def __init__(self, value=None, **params):
         super(EditableDoubleSpinBox, self).__init__(**params)
 
         self.__leDblValue = QLineEdit()
@@ -46,61 +43,25 @@ class EditableDoubleSpinBox(EditableWidget):
         # Needed for updates during input, otherwise cursor jumps to end of input
         self.__lastCursorPos = 0
         
-        # Minimum and maximum number of associated keys, 1 by default for each
-        self.__minMaxAssociatedKeys = (1,1) # tuple<min,max>
-        
-        # Set key
-        self.__key = params.get('key')
-        # Set value
-        value = params.get('value')
-        self.valueChanged(self.__key, value)
+        self.valueChanged(self.keys[0], value)
 
 
-    def _getCategory(self):
-        category, alias, className = getCategoryAliasClassName()
-        return category
-    category = property(fget=_getCategory)
-
-
-    # Returns the actual widget which is part of the composition
-    def _getWidget(self):
+    @property
+    def widget(self):
         return self.__leDblValue
-    widget = property(fget=_getWidget)
 
 
-    # Returns a tuple of min and max number of associated keys with this component
-    def _getMinMaxAssociatedKeys(self):
-        return self.__minMaxAssociatedKeys
-    minMaxAssociatedKeys = property(fget=_getMinMaxAssociatedKeys)
-
-
-    def _getKeys(self):
-        return [self.__key]
-    keys = property(fget=_getKeys)
-
-
-    def addParameters(self, **params):
-        minInc = params.get('minInc')
-        if minInc:
+    def addParameters(self,minInc=None, maxInc=None, **params):
+        if minInc is not None:
             self.__validator.setBottom(minInc)
 
-        maxInc = params.get('maxInc')
-        if maxInc:
+        if maxInc is not None:
             self.__validator.setTop(maxInc)
 
 
-    def _value(self):
+    @property
+    def value(self):
         return float(self.__leDblValue.text())
-    value = property(fget=_value)
-
-
-    def addKeyValue(self, key, value):
-        self.__key = key # TODO: Overwritten - unregistering in Manager...
-        self.valueChanged(key, value)
-
-
-    def removeKey(self, key):
-        self.__key = None
 
 
     def valueChanged(self, key, value, timestamp=None, forceRefresh=False):
@@ -121,10 +82,4 @@ class EditableDoubleSpinBox(EditableWidget):
 ### slots ###
     def onEditingFinished(self, value):
         self.__lastCursorPos = self.__leDblValue.cursorPosition()
-        self.valueEditingFinished(self.__key, value)
-
-
-    class Maker:
-        def make(self, **params):
-            return EditableDoubleSpinBox(**params)
-
+        self.valueEditingFinished(self.keys[0], value)
