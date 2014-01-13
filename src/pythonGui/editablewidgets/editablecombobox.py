@@ -21,92 +21,47 @@
 __all__ = ["EditableComboBox"]
 
 
-from editablewidget import EditableWidget
+from widget import EditableWidget
 
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 
 
-def getCategoryAliasClassName():
-    return ["Selection","Selection Field","EditableComboBox"]
-
-
 class EditableComboBox(EditableWidget):
-    
-    def __init__(self, **params):
+    category = "Selection"
+    alias = "Selection Field"
+
+    def __init__(self, value=None, valueType=None, enumeration=None, **params):
         super(EditableComboBox, self).__init__(**params)
         
         self.__comboBox = QComboBox()
         self.__comboBox.setFrame(False)
         
-        enumeration = params.get('enumeration')
         self.addItems(enumeration)
-        
-        self.__valueType = params.get('valueType')
         
         self.__comboBox.installEventFilter(self)
         self.__comboBox.currentIndexChanged[str].connect(self.onEditingFinished)
         
-        # Minimum and maximum number of associated keys, 1 by default for each
-        self.__minMaxAssociatedKeys = (1,1) # tuple<min,max>
-        
-        # Set key
-        self.__key = params.get('key')
-        # Set value
-        value = params.get('value')
-        self.valueChanged(self.__key, value)
+        self.valueChanged(self.keys[0], value)
 
 
     def eventFilter(self, object, event):
         # Block wheel event on QComboBox
-        if event.type() == QEvent.Wheel and object == self.__comboBox:
-            return True
-        return False
+        return event.type() == QEvent.Wheel and object == self.__comboBox
 
 
-    def _getCategory(self):
-        category, alias, className = getCategoryAliasClassName()
-        return category
-    category = property(fget=_getCategory)
-
-
-    # Returns the actual widget which is part of the composition
-    def _getWidget(self):
+    @property
+    def widget(self):
         return self.__comboBox
-    widget = property(fget=_getWidget)
 
 
-    # Returns a tuple of min and max number of associated keys with this component
-    def _getMinMaxAssociatedKeys(self):
-        return self.__minMaxAssociatedKeys
-    minMaxAssociatedKeys = property(fget=_getMinMaxAssociatedKeys)
-
-
-    def _getKeys(self):
-        return [self.__key]
-    keys = property(fget=_getKeys)
-
-
-    def addParameters(self, **params):
-        print "addParameters", params
-
-
-    def _value(self):
+    @property
+    def value(self):
         if self.__valueType == "int":
             return int(self.__comboBox.currentText())
         elif (self.__valueType == "float") or (self.__valueType == "double"):
             return float(self.__comboBox.currentText())
         return str(self.__comboBox.currentText())
-    value = property(fget=_value)
-
-
-    def addKeyValue(self, key, value):
-        self.__key = key # TODO: Overwritten - unregistering in Manager...
-        self.valueChanged(key, value)
-
-
-    def removeKey(self, key):
-        self.__key = None
 
 
     def addItems(self, texts):
@@ -134,10 +89,4 @@ class EditableComboBox(EditableWidget):
 
 ### slots ###
     def onEditingFinished(self, value):
-        self.valueEditingFinished(self.__key, value)
-
-
-    class Maker:
-        def make(self, **params):
-            return EditableComboBox(**params)
-
+        self.valueEditingFinished(self.keys[0], value)

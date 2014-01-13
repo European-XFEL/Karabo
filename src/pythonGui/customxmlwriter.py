@@ -11,11 +11,9 @@
 __all__ = ["CustomXmlWriter"]
 
 import displaycomponent
-import displaywidget
-import editablewidget
+import widget
 import editableapplylatercomponent
 import editablenoapplycomponent
-import vacuumwidget
 
 from layoutcomponents.arrow import Arrow
 from layoutcomponents.graphicscustomitem import GraphicsCustomItem
@@ -212,20 +210,14 @@ class CustomXmlWriter(QXmlStreamWriter):
                 self._writeItemTransformation(proxyItem)
             
             widgetFactory = component.widgetFactory
+            self.writeTextElement("widgetFactory",
+                                  widgetFactory.factory.__name__)
             if isinstance(component, displaycomponent.DisplayComponent):
                 self.writeTextElement("componentType", "DisplayComponent")
-                if isinstance(widgetFactory, displaywidget.DisplayWidget):
-                    self.writeTextElement("widgetFactory", "DisplayWidget")
-                elif isinstance(widgetFactory, vacuumwidget.VacuumWidget):
-                    self.writeTextElement("widgetFactory", "VacuumWidget")
             elif isinstance(component, editablenoapplycomponent.EditableNoApplyComponent):
                 self.writeTextElement("componentType", "EditableNoApplyComponent")
-                if isinstance(widgetFactory, editablewidget.EditableWidget):
-                    self.writeTextElement("widgetFactory", "EditableWidget")
             elif isinstance(component, editableapplylatercomponent.EditableApplyLaterComponent):
                 self.writeTextElement("componentType", "EditableApplyLaterComponent")
-                if isinstance(widgetFactory, editablewidget.EditableWidget):
-                    self.writeTextElement("widgetFactory", "EditableWidget")
 
             self.writeTextElement("classAlias", component.classAlias)
             

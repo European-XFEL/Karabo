@@ -22,89 +22,42 @@ __all__ = ["DisplayCommand"]
 
 
 from manager import Manager
-from displaywidget import DisplayWidget
+from widget import DisplayWidget
 
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 
 
-def getCategoryAliasClassName():
-    return ["Slot","Command","DisplayCommand"]
-
-
 class DisplayCommand(DisplayWidget):
+    category = "Slot"
+    alias = "Command"
   
-    def __init__(self, **params):
+    def __init__(self, command, commandEnabled, commandText, allowedStates, **params):
         super(DisplayCommand, self).__init__(**params)
 
-        # Minimum and maximum number of associated keys, 1 by default for each
-        self.__minMaxAssociatedKeys = (1,1) # tuple<min,max>
-        
-        self.__allowedStates = params.get('allowedStates')
-        commandText = params.get('commandText')
-        commandEnabled = params.get('commandEnabled')
-        self.__command = params.get('command')
-            
+        self.command = command
+
+        self.__allowedStates = allowedStates
         self.__pbCommand = QPushButton(commandText)
         self.__pbCommand.setEnabled(commandEnabled)
         self.__pbCommand.clicked.connect(self.onCommandClicked)
-        self.__key = params.get('key')
         
         # TODO: better solution
         Manager().notifier.signalDeviceStateChanged.connect(self.onDeviceStateChanged)
 
 
-    def _getCategory(self):
-        category, alias, className = getCategoryAliasClassName()
-        return category
-    category = property(fget=_getCategory)
-
-
-    # Returns the actual widget which is part of the composition
-    def _getWidget(self):
+    @property
+    def widget(self):
         return self.__pbCommand
-    widget = property(fget=_getWidget)
     
     
-    def _getAllowedStates(self):
-        als = []
-        for state in self.__allowedStates:
-            als.append(str(state))
-        return als
-    allowedStates = property(fget=_getAllowedStates)
-    
-    def _getCommand(self):
-        return self.__command
-    command = property(fget=_getCommand)
+    @property
+    def allowedStates(self):
+        return [s for s in self.__allowedStates]
 
-
-    # Returns a tuple of min and max number of associated keys with this component
-    def _getMinMaxAssociatedKeys(self):
-        return self.__minMaxAssociatedKeys
-    minMaxAssociatedKeys = property(fget=_getMinMaxAssociatedKeys)
-
-
-    def _getKeys(self):
-        return [self.__key]
-    keys = property(fget=_getKeys)
-
-
-    def _value(self):
-        return None
-    value = property(fget=_value)
-
-
-    def addKeyValue(self, key, value):
-        self.__key = key # TODO: Overwritten - unregistering in Manager...
-        self.valueChanged(key, value)
-
-
-    def removeKey(self, key):
-        self.__key = None
-
+    value = None
 
     def valueChanged(self, key, value, timestamp=None):
-       
         pass
 
 
@@ -131,10 +84,5 @@ class DisplayCommand(DisplayWidget):
     def onCommandClicked(self):
         args = [] # TODO slot arguments
         for key in self.keys:
-            Manager().executeCommand(dict(path=key, command=self.__command, args=args))
-
-
-    class Maker:
-        def make(self, **params):
-            return DisplayCommand(**params)
-
+            Manager().executeCommand(dict(path=key, command=self.command,
+                                          args=args))

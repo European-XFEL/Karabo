@@ -14,25 +14,9 @@ sip.setapi("QVariant", 2)
 
 import sys
 
-from displaywidget import DisplayWidget
-from editablewidget import EditableWidget
 from mainwindow import MainWindow
-from vacuumwidget import VacuumWidget
 
 from PyQt4.QtGui import *
-
-def scanWidgetPlugins():
-    #TODO: start in thread
-    
-    #while True:
-    # Register available widgets
-    # DisplayWidgets
-    DisplayWidget.registerAvailableWidgets()
-    # EditableWidgets
-    EditableWidget.registerAvailableWidgets()
-    # VacuumWidgets
-    VacuumWidget.registerAvailableWidgets()
-    
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
@@ -49,7 +33,9 @@ if __name__ == '__main__':
 #        "margin-bottom: 0px;"
 #        "}")
     
-    scanWidgetPlugins()
+    from displaywidgets import *
+    from editablewidgets import *
+    from vacuumwidgets import *
         
     window = MainWindow()
     sys.exit(app.exec_())
