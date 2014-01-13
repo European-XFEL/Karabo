@@ -34,6 +34,8 @@ from layoutcomponents.textdialog import TextDialog
 
 from manager import Manager
 
+from widget import DisplayWidget, EditableWidget
+
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 from PyQt4.QtSvg import QSvgWidget
@@ -446,8 +448,6 @@ class ProxyWidget(QStackedWidget):
     def __init__(self, parent):
         QStackedWidget.__init__(self, parent)
         #self.setContextMenuPolicy(Qt.ActionsContextMenu)
-        self.change_widget = QAction("Change widget", self)
-        self.addAction(self.change_widget)
         self.selected = False
 
     def set_child(self, child, component):
@@ -455,18 +455,32 @@ class ProxyWidget(QStackedWidget):
             self.removeWidget(self.widget(0))
         self.addWidget(child)
         self.component = component
-        if component is not None:
-            aliases = component.widgetFactory.getAliasesViaCategory(
-                            None, self.component.widgetCategory)
-            menu = QMenu(self)
-            for a in aliases:
-                menu.addAction(a).triggered.connect(self.on_changeWidget)
-            self.change_widget.setMenu(menu)
+        if component is None:
+            return
+
+        if isinstance(component, DisplayComponent):
+            Widget = DisplayWidget
+        else:
+            Widget = EditableWidget
+
+        for text, factory in Widget.factories.iteritems():
+            aliases = factory.getAliasesViaCategory(
+                component.widgetCategory)
+            keys = component.keys[0].split('.configuration.')
+            if keys[1] == "state":
+                aliases += factory.getAliasesViaCategory("State")
+            if aliases:
+                aa = QAction(text, self)
+                menu = QMenu(self)
+                for a in aliases:
+                    menu.addAction(a).triggered.connect(
+                        partial(self.on_changeWidget, factory, a))
+                aa.setMenu(menu)
+                self.addAction(aa)
 
     @pyqtSlot()
-    def on_changeWidget(self):
-        action = self.sender()
-        self.component.changeWidget(action.text())
+    def on_changeWidget(self, factory, alias):
+        self.component.changeWidget(factory, alias)
         self.adjustSize()
         
     def contextMenuEvent(self, event):
