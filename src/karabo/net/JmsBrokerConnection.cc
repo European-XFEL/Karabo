@@ -30,7 +30,7 @@ namespace karabo {
         void JmsBrokerConnection::expectedParameters(Schema& expected) {
 
             // Some tricks with environment here
-            string defaultHostname = "exfl-broker";
+            string defaultHostname = "exfl-broker.desy.de";
             char* env = getenv("KARABO_BROKER_HOST");
             if (env != 0) defaultHostname = string(env);
 
