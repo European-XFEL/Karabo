@@ -18,8 +18,9 @@ from PyQt4.QtGui import QLabel
 class MetaWidget(QObject.__class__):
     def __new__(self, name, bases, dict):
         ret = QObject.__class__.__new__(self, name, bases, dict)
-        if "factory" in dict:
+        if "menu" in dict:
             ret.factories[name] = ret
+            ret.factory = ret
             ret.categoryToAliases = { } # <category, [alias1,alias2,..]>
             ret.aliasToCategory = { } # <alias, category>
             ret.aliasConcreteClass = { } # dict of actual classes
@@ -51,7 +52,7 @@ class Widget(QObject):
 
 
 class DisplayWidget(Widget):
-    factory = "Change display widget"
+    menu = "Change display widget"
     factories = { }
 
     def __init__(self, key=None, **kwargs):
@@ -66,7 +67,7 @@ class DisplayWidget(Widget):
 
 
 class VacuumWidget(DisplayWidget):
-    factory = "Change vacuum widget"
+    menu = "Change vacuum widget"
     category = "State"
 
     def __init__(self, value=None, **params):
@@ -102,7 +103,7 @@ class VacuumWidget(DisplayWidget):
 
 
 class EditableWidget(Widget):
-    factory = "Change widget"
+    menu = "Change widget"
     factories = { }
 
     def __init__(self, key=None, **kwargs):

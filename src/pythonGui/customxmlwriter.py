@@ -211,7 +211,7 @@ class CustomXmlWriter(QXmlStreamWriter):
             
             widgetFactory = component.widgetFactory
             self.writeTextElement("widgetFactory",
-                                  widgetFactory.__class__.__name__)
+                                  widgetFactory.factory.__name__)
             if isinstance(component, displaycomponent.DisplayComponent):
                 self.writeTextElement("componentType", "DisplayComponent")
             elif isinstance(component, editablenoapplycomponent.EditableNoApplyComponent):
