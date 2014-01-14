@@ -61,7 +61,7 @@ namespace karabo {
             typedef boost::function<void (const std::string& /*instanceId*/) > InstanceGoneHandler;
             typedef boost::function<void (const karabo::util::Schema& /*schema*/, const std::string& /*deviceId*/) > SchemaUpdatedHandler;
             
-            static const int CONNECTION_KEEP_ALIVE = 30;
+            static const int CONNECTION_KEEP_ALIVE = 15;
            
         protected: // members
 
@@ -129,6 +129,9 @@ namespace karabo {
             InstanceGoneHandler m_instanceGoneHandler;
             SchemaUpdatedHandler m_schemaUpdatedHandler;
 
+            std::set<std::string> m_immortals;
+            mutable boost::mutex m_immortalsMutex;
+            
         public:
 
             KARABO_CLASSINFO(DeviceClient, "DeviceClient", "1.0");
@@ -548,8 +551,6 @@ namespace karabo {
 
             void castAndCall(const std::string& instanceId, const karabo::util::Hash& registered, const karabo::util::Hash& current, std::string path = "") const;
 
-            virtual void clearCacheAndDisconnect(const std::string& instanceId);
-
             void extractCommands(const karabo::util::Schema& schema, const std::string& parentKey, std::vector<std::string>& commands);
 
             std::vector<std::string> filterProperties(const karabo::util::Schema& schema, const int accessLevel);
@@ -567,6 +568,8 @@ namespace karabo {
             void immortalize(const std::string& deviceId);
             
             void mortalize(const std::string& deviceId);
+            
+            bool isImmortal(const std::string& deviceId) const;
             
         };
     }
