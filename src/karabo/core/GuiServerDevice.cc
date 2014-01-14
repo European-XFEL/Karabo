@@ -277,18 +277,15 @@ namespace karabo {
                 // Increase count of device in visible devices map
                 m_visibleDevices[deviceId]++;
                 
+                 
                 if (m_visibleDevices[deviceId] == 1) { // Fresh device on the shelf
                     remote().registerDeviceMonitor(deviceId, boost::bind(&karabo::core::GuiServerDevice::deviceChangedHandler, this, _1, _2));
                 }
-              
                 
+                // Send back fresh information about device
+                // TODO This could check a dirty-flag whether the device changed since last time seen
+                onRefreshInstance(channel, header);
                 
-//                Hash h("type", "configurationChanged", "deviceId", deviceId);
-//                Hash b;
-//                Hash& tmp = b.bindReference<Hash>("device." + deviceId + ".configuration");
-//                tmp = remote().get(deviceId);
-//                preprocessImageData(tmp);
-//                channel->write(h, b);
             } catch (const Exception& e) {
                 KARABO_LOG_ERROR << "Problem in onNewVisibleDevice(): " << e.userFriendlyMsg();
             }
@@ -433,9 +430,7 @@ namespace karabo {
                 typedef std::map< karabo::net::Channel::Pointer, std::set<std::string> >::const_iterator channelIterator;
                 for (channelIterator it = m_channels.begin(); it != m_channels.end(); ++it) {
                     // Optimization: broadcast only to visible DeviceInstances
-                    //std::string body;
                     if (it->second.find(deviceId) != it->second.end()) {
-                        //m_textSerializer->save(modified, body);
                         it->first->write(header, body);
                     }
                 }
@@ -488,7 +483,7 @@ namespace karabo {
                 // Broadcast to all GUIs
                 typedef std::map< karabo::net::Channel::Pointer, std::set<std::string> >::const_iterator channelIterator;
                 for (channelIterator it = m_channels.begin(); it != m_channels.end(); ++it) {
-                    //it->first->write(h, logMessage);
+                    it->first->write(h, logMessage);
                 }
             } catch (const Exception& e) {
                 KARABO_LOG_ERROR << "Problem in logHandler(): " << e.userFriendlyMsg();
