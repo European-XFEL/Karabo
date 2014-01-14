@@ -360,9 +360,7 @@ class CustomXmlReader(QXmlStreamReader):
             Manager().selectNavigationItemByKey(internalKey)
             # Register as visible device
             Manager().newVisibleDevice(internalKey)
-            # Refresh over network needed
-            Manager().onRefreshInstance(internalKey)
-        
+                    
         #proxyItem.setPos(QPointF(posX, posY))
         if transform:
             # Set transformation matrix for this item

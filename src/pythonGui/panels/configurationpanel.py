@@ -541,8 +541,7 @@ class ConfigurationPanel(QWidget):
             if (type is NavigationItemTypes.DEVICE) and (self.__prevDevicePath != path):
                 # Visible deviceId has changed
                 Manager().newVisibleDevice(path)
-                # Refresh over network needed
-                Manager().onRefreshInstance(path)               
+                                            
                 self.__prevDevicePath = path
         else:
             self._setParameterEditorIndex(0)
