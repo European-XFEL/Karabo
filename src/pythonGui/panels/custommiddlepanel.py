@@ -325,10 +325,10 @@ class CustomMiddlePanel(QWidget):
         self.__acAddLine.setEnabled(True)
         self.__acAddRect.setEnabled(True)
         
-        hasSelection = len(self.graphicsview.selectedItems()) > 0
-        isLink = self.graphicsview.selectedLinks() is not None
-        isItemPair = self.graphicsview.selectedItemPair() is not None
-        isItemGroup = self.graphicsview.selectedItemGroup() is not None
+        hasSelection = False #len(self.graphicsview.selectedItems()) > 0
+        isLink = False #self.graphicsview.selectedLinks() is not None
+        isItemPair = False #self.graphicsview.selectedItemPair() is not None
+        isItemGroup = False #self.graphicsview.selectedItemGroup() is not None
         
         if hasSelection:
             self.__acAddLink.setDisabled(not isItemPair)
@@ -360,7 +360,7 @@ class CustomMiddlePanel(QWidget):
         self.__acPaste.setDisabled(not self.graphicsview.hasCopy())
         self.__acRemove.setDisabled(not hasSelection)
         
-        self.__tbGroup.setDisabled(not isItemGroup and len(self.graphicsview.selectedItems()) < 2)
+        #self.__tbGroup.setDisabled(not isItemGroup and len(self.graphicsview.selectedItems()) < 2)
         self.__acGroupItems.setDisabled(isItemGroup)
         self.__mGroupInLayout.setDisabled(isItemGroup)
         self.__acUnGroupItems.setDisabled(not isItemGroup)
@@ -405,7 +405,7 @@ class CustomMiddlePanel(QWidget):
             text = "Change to design mode"
         self.__acDesignMode.setToolTip(text)
         self.__acDesignMode.setStatusTip(text)
-        self.graphicsview.setDesignMode(isChecked)
+        self.graphicsview.designMode = isChecked
 
 
     def onCut(self):
