@@ -16,22 +16,21 @@ from PyQt4.QtCore import QObject, pyqtSignal
 from PyQt4.QtGui import QLabel
 
 class MetaWidget(QObject.__class__):
-    def __new__(self, name, bases, dict):
-        ret = QObject.__class__.__new__(self, name, bases, dict)
+    def __init__(self, name, bases, dict):
+        super(MetaWidget, self).__init__(name, bases, dict)
         if "menu" in dict:
-            ret.factories[name] = ret
-            ret.factory = ret
-            ret.categoryToAliases = { } # <category, [alias1,alias2,..]>
-            ret.aliasToCategory = { } # <alias, category>
-            ret.aliasConcreteClass = { } # dict of actual classes
+            self.factories[name] = self
+            self.factory = self
+            self.categoryToAliases = { } # <category, [alias1,alias2,..]>
+            self.aliasToCategory = { } # <alias, category>
+            self.aliasConcreteClass = { } # dict of actual classes
         elif "alias" in dict:
-            if ret.category in ret.categoryToAliases:
-                ret.categoryToAliases[ret.category].append(ret.alias)
+            if self.category in self.categoryToAliases:
+                self.categoryToAliases[self.category].append(self.alias)
             else:
-                ret.categoryToAliases[ret.category] = [ret.alias]
-            ret.aliasToCategory[ret.alias] = ret.category
-            ret.aliasConcreteClass[ret.alias] = ret
-        return ret
+                self.categoryToAliases[self.category] = [self.alias]
+            self.aliasToCategory[self.alias] = self.category
+            self.aliasConcreteClass[self.alias] = self
 
 class Widget(QObject):
     __metaclass__ = MetaWidget
