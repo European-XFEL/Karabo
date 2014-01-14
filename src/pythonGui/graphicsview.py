@@ -66,12 +66,13 @@ class Action(object):
         action = QAction(QIcon(cls.icon), cls.text, source)
         action.setStatusTip(cls.text)
         action.setToolTip(cls.text)
+        action.setCheckable(True)
         cls.action = action
         return action
 
 class Select(Action):
-    text = "Select items"
-    icon = ":line"
+    """ This is the default action. It has no icon nor text since
+    it is selected if nothing else is selected. """
 
 
     def __init__(self):
@@ -148,15 +149,22 @@ class Shape(Action):
         event.accept()
 
     def mouseMoveEvent(self, parent, event):
-        if hasattr(self, "start_pos"):
+        if self.ready:
             self.set_points(self.start_pos, event.pos())
             event.accept()
             parent.update()
 
     def mouseReleaseEvent(self, parent, event):
-        if hasattr(self, "start_pos"):
-            parent.current_action = None
+        if self.ready:
+            parent.set_current_action(None)
             parent.shapes.append(self)
+
+
+    @property
+    def ready(self):
+        "returns whether this shape is already well-defined"
+        return hasattr(self, "start_pos")
+
 
     def loadpen(self, e):
         def ununit(x):
@@ -537,7 +545,8 @@ class GraphicsView(QSvgWidget):
         layout.addWidget(self.inner)
         
         self.shapes = [ ]
-        self.current_action = None
+        self.current_action = self.default_action = Select()
+        self.current_action.action = QAction(self) # never displayed
 
         self.tree = ElementTree.ElementTree(ElementTree.Element(ns_svg + "svg"))
 
@@ -558,7 +567,12 @@ class GraphicsView(QSvgWidget):
             yield action
 
     def set_current_action(self, Action):
-        self.current_action = Action()
+        self.current_action.action.setChecked(False)
+        if Action is None:
+            self.current_action = self.default_action
+        else:
+            self.current_action = Action()
+        self.current_action.action.setChecked(True)
 
 
     @property
@@ -1077,8 +1091,7 @@ class GraphicsView(QSvgWidget):
         if not self.designMode:
             return
         if event.button() == Qt.LeftButton:
-            if self.current_action is not None:
-                self.current_action.mousePressEvent(self, event)
+            self.current_action.mousePressEvent(self, event)
         else:
             child = self.inner.childAt(event.pos())
             if child is not None:
@@ -1098,14 +1111,12 @@ class GraphicsView(QSvgWidget):
             child.event(event)
 
     def mouseMoveEvent(self, event):
-        if self.current_action is not None:
-            self.current_action.mouseMoveEvent(self, event)
+        self.current_action.mouseMoveEvent(self, event)
         QWidget.mouseMoveEvent(self, event)
 
 
     def mouseReleaseEvent(self, event):
-        if self.current_action is not None:
-            self.current_action.mouseReleaseEvent(self, event)
+        self.current_action.mouseReleaseEvent(self, event)
         QWidget.mouseReleaseEvent(self, event)
 
 
@@ -1357,7 +1368,7 @@ class GraphicsView(QSvgWidget):
                     if item.selected:
                         painter.drawRect(item.geometry())
             painter.restore()
-            if self.current_action is not None:
+            if self.current_action.ready:
                 self.current_action.draw(painter)
         finally:
             painter.end()
