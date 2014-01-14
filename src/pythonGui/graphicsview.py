@@ -484,7 +484,7 @@ class ProxyWidget(QStackedWidget):
         self.adjustSize()
         
     def contextMenuEvent(self, event):
-        if not self.parent().parent().isDesignMode:
+        if not self.parent().parent().designMode:
             return
         QMenu.exec_(self.actions(), event.globalPos(), None, self)
 
@@ -527,13 +527,6 @@ class ProxyWidget(QStackedWidget):
 
             
 class GraphicsView(QSvgWidget):
-    # Enums
-    MoveItem, InsertText, InsertLine, InsertRect = range(4)
-    # Signals
-    lineInserted = pyqtSignal()
-    rectInserted = pyqtSignal()
-    sceneSelectionChanged = pyqtSignal()
-
     def __init__(self, parent):
         super(GraphicsView, self).__init__(parent)
         
@@ -551,7 +544,7 @@ class GraphicsView(QSvgWidget):
         # Composition mode is either ON/OFFLINE, once set not changeable
         self.__compositionMode = CompositionMode.UNDEFINED
 
-        self.setDesignMode(True)
+        self.designMode = True
 
         # Describes most recent item to be cut or copied inside the application
         self.__copiedItem = QByteArray()
@@ -567,85 +560,19 @@ class GraphicsView(QSvgWidget):
     def set_current_action(self, Action):
         self.current_action = Action()
 
-    def _getDesignMode(self):
-        return self.__isDesignMode
-    isDesignMode = property(fget=_getDesignMode)
+
+    @property
+    def designMode(self):
+        return self.inner.testAttribute(Qt.WA_TransparentForMouseEvents)
 
 
-    # Sets all items in design or control mode
-    def setDesignMode(self, isDesignMode):
-        self.__isDesignMode = isDesignMode
-        self.inner.setAttribute(Qt.WA_TransparentForMouseEvents, 
-                                      isDesignMode)
-
+    @designMode.setter
+    def designMode(self, value):
+        self.inner.setAttribute(Qt.WA_TransparentForMouseEvents, value)
 
     # Returns true, when items has been copied; otherwise false
     def hasCopy(self):
         return (len(self.__copiedItem) > 0)
-
-
-    # All selected items of the scene are returned
-    def selectedItems(self):
-        return [ ]
-
-
-    # If there are exactely 2 selected items (not of type Link) they are returned
-    # as a pair; otherwise None is returned
-    def selectedItemPair(self):
-        items = self.selectedItems()
-        if len(items) == 2:
-            firstItem = items[0]
-            secondItem = items[1]
-
-            if isinstance(firstItem, Link):
-                firstItem = None
-            if isinstance(secondItem, Link):
-                secondItem = None
-
-            if firstItem and secondItem:
-                return (firstItem, secondItem)
-
-        return None
-
-
-    # All selected items of type Text are returned
-    def selectedTextItems(self):
-        items = self.selectedItems()
-
-        if len(items) > 0:
-            textItems = []
-            for item in items:
-                if isinstance(item, Text):
-                    textItems.append(item)
-            return textItems
-        return None
-
-
-    # All selected items of type Link are returned
-    def selectedLinks(self):
-        items = self.selectedItems()
-
-        if len(items) > 0:
-            linkItems = []
-            for item in items:
-                if isinstance(item, LinkBase):
-                    linkItems.append(item)
-            if len(linkItems) > 0:
-                return linkItems
-        return None
-
-
-    def selectedItemGroup(self):
-        items = self.selectedItems()
-
-        if len(items) > 0:
-            groupItems = []
-            for item in items:
-                if isinstance(item, QGraphicsItemGroup):
-                    groupItems.append(item)
-            if len(groupItems) > 0:
-                return groupItems
-        return None
 
 
     # Open saved view from file
@@ -1147,7 +1074,7 @@ class GraphicsView(QSvgWidget):
             c.selected = False
 
     def mousePressEvent(self, event):
-        if not self.isDesignMode:
+        if not self.designMode:
             return
         if event.button() == Qt.LeftButton:
             if self.current_action is not None:
@@ -1162,7 +1089,7 @@ class GraphicsView(QSvgWidget):
         QWidget.mousePressEvent(self, event)
 
     def contextMenuEvent(self, event):
-        if not self.isDesignMode:
+        if not self.designMode:
             return
         child = self.inner.childAt(event.pos())
         if child is not None:
@@ -1228,7 +1155,9 @@ class GraphicsView(QSvgWidget):
                 configKey, configCount = Manager().createNewConfigKeyAndCount(displayName)
                 
                 # Create graphical item
-                customItem = GraphicsCustomItem(configKey, self.__isDesignMode, displayName, schema, (navItemType == NavigationItemTypes.CLASS))
+                customItem = GraphicsCustomItem(
+                    configKey, self.designMode, displayName, schema,
+                    (navItemType == NavigationItemTypes.CLASS))
                 tooltipText = "<html><b>Associated key: </b>%s</html>" % configKey
                 customItem.setToolTip(tooltipText)
                 customItem.position = event.pos()
@@ -1422,7 +1351,7 @@ class GraphicsView(QSvgWidget):
                 s.draw(painter)
                 painter.restore()
             painter.save()
-            if self.isDesignMode:
+            if self.designMode:
                 painter.setPen(Qt.DashLine)
                 for item in self.layout.children:
                     if item.selected:
