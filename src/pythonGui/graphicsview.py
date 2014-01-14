@@ -49,13 +49,12 @@ ElementTree.register_namespace("svg", ns_svg[1:-1])
 ElementTree.register_namespace("krb", ns_karabo[1:-1])
 
 class MetaAction(type):
-    def __new__(self, name, bases, dict):
-        ret = type.__new__(self, name, bases, dict)
+    def __init__(self, name, bases, dict):
+        super(MetaAction, self).__init__(name, bases, dict)
         if "text" in dict:
-            Action.actions.append(ret)
+            Action.actions.append(self)
         if "xmltag" in dict:
-            Shape.xmltags[dict["xmltag"]] = ret
-        return ret
+            Shape.xmltags[self.xmltag] = self
 
 class Action(object):
     __metaclass__ = MetaAction
