@@ -62,15 +62,38 @@ class Action(object):
     actions = [ ]
 
     @classmethod
-    def add_action(cls, source):
+    def add_action(cls, source, parent):
         action = QAction(QIcon(cls.icon), cls.text, source)
         action.setStatusTip(cls.text)
         action.setToolTip(cls.text)
-        action.setCheckable(True)
         cls.action = action
         return action
 
-class Select(Action):
+
+class CheckableAction(Action):
+    @classmethod
+    def add_action(cls, source, parent):
+        action = super(CheckableAction, cls).add_action(source, parent)
+        action.setCheckable(True)
+        action.triggered.connect(partial(parent.set_current_action, cls))
+        return action
+
+
+class SimpleAction(Action):
+    def __init__(self, parent):
+        self.parent = parent
+
+
+    @classmethod
+    def add_action(cls, source, parent):
+        action = super(SimpleAction, cls).add_action(source, parent)
+        o = cls(parent)
+        parent.simple_actions.append(o)
+        action.triggered.connect(o.run)
+        return action
+
+
+class Select(CheckableAction):
     """ This is the default action. It has no icon nor text since
     it is selected if nothing else is selected. """
 
@@ -82,7 +105,7 @@ class Select(Action):
     def mousePressEvent(self, parent, event):
         item = parent.layout.itemAtPosition(event.pos())
         if item is None:
-            for s in parent.shapes:
+            for s in parent.layout.shapes:
                 if s.contains(event.pos()):
                     item = s
                     break
@@ -133,7 +156,40 @@ class Select(Action):
             painter.setPen(Qt.black)
             painter.drawRect(QRect(self.selection_start, self.selection_stop))
 
-class Shape(Action):
+
+class Group(SimpleAction):
+    "Group several items into one group"
+
+    text = "Group"
+    icon = ":line"
+
+    def run(self):
+        children = self.parent.layout.children
+        newchildren = [c for c in children if not c.selected]
+        rect = None
+        g = BoxLayout(BoxLayout.TopToBottom)
+        for c in children:
+            if c.selected:
+                c.selected = False
+                c.invalidate()
+                g.addItem(c)
+                if rect is None:
+                    rect = c.geometry()
+                else:
+                    rect = rect.united(c.geometry())
+                del self.parent.layout.positions[c]
+        if rect is None:
+            return
+        self.parent.layout.children = newchildren
+        shapes = self.parent.layout.shapes
+        g.shapes = [s for s in shapes if s.selected]
+        self.parent.layout.shapes = [s for s in shapes if not s.selected]
+        for s in g.shapes:
+            s.selected = False
+        self.parent.layout.add_item(g, rect)
+
+
+class Shape(CheckableAction):
     xmltags = { }
     fuzzy = 3
 
@@ -157,7 +213,7 @@ class Shape(Action):
     def mouseReleaseEvent(self, parent, event):
         if self.ready:
             parent.set_current_action(None)
-            parent.shapes.append(self)
+            parent.layout.shapes.append(self)
 
 
     @property
@@ -339,6 +395,46 @@ class Label(object):
         return ret
 
 class Layout(object):
+    def __init__(self):
+        self.shapes = [ ]
+        self.topLeft = None
+
+
+    def load(self, element):
+        i = 0
+        while i < len(element):
+            elem = element[i]
+            cls = elem.get(ns_karabo + "class")
+            if cls is None:
+                i += 1
+            else:
+                obj = globals()[cls].load(elem, self.parentWidget())
+                self.add_item(obj, _parse_rect(elem))
+                del root[i]
+
+        shapes = [ ]
+        for e in element[::-1]:
+            s = Shape.load(e)
+            if s is None:
+                break
+            else:
+                shapes.append(s)
+        if len(shapes) > 0:
+            del root[-len(shapes):]
+        self.shapes = shapes[::-1]
+
+
+    def draw(self, painter):
+        for s in self.shapes:
+            painter.save()
+            s.draw(painter)
+            painter.restore()
+        for i in range(self.count()):
+            item = self.itemAt(i)
+            if isinstance(item, Layout):
+                item.draw(painter)
+
+
     def element(self):
         g = self.geometry()
         d = { ns_karabo + "x": g.x(), ns_karabo + "y": g.y(),
@@ -354,22 +450,36 @@ class Layout(object):
         return e
 
 
-class FixedLayout(QLayout, Layout):
+    def setPosition(self, pos):
+        if self.topLeft is not None:
+            for s in self.shapes:
+                s.set_position(s.geometry().topLeft() + pos - self.topLeft)
+        self.topLeft = pos
+        self.setGeometry(QRect(pos, self.sizeHint()))
+
+
+class FixedLayout(Layout, QLayout):
     def __init__(self, parent):
         QLayout.__init__(self, parent)
+        Layout.__init__(self)
+
         self.children = [ ]
         self.positions = { }
 
-    def addItem(self, item, geometry=None):
-        if geometry is None:
-            self._item = item
-            return
+
+    def addItem(self, item):
+        "only to be used by Qt, don't use directly!"
+        self._item = item
+        self.children.append(item)
+
+
+    def add_item(self, item, geometry):
         if isinstance(item, QWidget):
             self.addWidget(item)
             item = self._item
         else:
             self.addChildLayout(item)
-        self.children.append(item)
+            self.children.append(item)
         self.positions[item] = geometry.topLeft()
         item.setGeometry(geometry)
         self.update()
@@ -392,7 +502,7 @@ class FixedLayout(QLayout, Layout):
 
     def setGeometry(self, geometry):
         for item in self.children:
-            item.setGeometry(QRect(self.positions[item], item.sizeHint()))
+            item.setPosition(self.positions[item])
 
     def setItemPosition(self, item, pos):
         self.positions[item] = pos
@@ -428,9 +538,10 @@ class FixedLayout(QLayout, Layout):
     def save(self):
         return { }
 
-class BoxLayout(QBoxLayout, Layout):
+class BoxLayout(Layout, QBoxLayout):
     def __init__(self, dir):
         QBoxLayout.__init__(self, dir)
+        Layout.__init__(self)
         self.selected = False
         self.setContentsMargins(5, 5, 5, 5)
 
@@ -533,6 +644,10 @@ class ProxyWidget(QStackedWidget):
         ret.show()
         return ret
 
+
+    def setPosition(self, pos):
+        self.setGeometry(QRect(pos, self.sizeHint()))
+
             
 class GraphicsView(QSvgWidget):
     def __init__(self, parent):
@@ -544,9 +659,9 @@ class GraphicsView(QSvgWidget):
         layout = QStackedLayout(self)
         layout.addWidget(self.inner)
         
-        self.shapes = [ ]
         self.current_action = self.default_action = Select()
         self.current_action.action = QAction(self) # never displayed
+        self.simple_actions = [ ]
 
         self.tree = ElementTree.ElementTree(ElementTree.Element(ns_svg + "svg"))
 
@@ -562,8 +677,7 @@ class GraphicsView(QSvgWidget):
 
     def add_actions(self, source):
         for v in Action.actions:
-            action = v.add_action(source)
-            action.triggered.connect(partial(self.set_current_action, v))
+            action = v.add_action(source, self)
             yield action
 
     def set_current_action(self, Action):
@@ -572,6 +686,8 @@ class GraphicsView(QSvgWidget):
             self.current_action = self.default_action
         else:
             self.current_action = Action()
+        if self.current_action is None:
+            self.current_action = self.default_action
         self.current_action.action.setChecked(True)
 
 
@@ -648,27 +764,7 @@ class GraphicsView(QSvgWidget):
     def openScene(self, filename):
         self.tree = ElementTree.parse(filename)
         root = self.tree.getroot()
-        i = 0
-        while i < len(root):
-            elem = root[i]
-            cls = elem.get(ns_karabo + "class")
-            if cls is None:
-                i += 1
-            else:
-                obj = globals()[cls].load(elem, self.inner)
-                self.layout.addItem(obj, _parse_rect(elem))
-                del root[i]
-
-        shapes = [ ]
-        for e in root[::-1]:
-            s = Shape.load(e)
-            if s is None:
-                break
-            else:
-                shapes.append(s)
-        if len(shapes) > 0:
-            del root[-len(shapes):]
-        self.shapes = shapes[::-1]
+        self.layout.load(root)
 
         ar = QByteArray()
         buf = QBuffer(ar)
@@ -1077,12 +1173,12 @@ class GraphicsView(QSvgWidget):
             layout.addWidget(proxy)
             proxy.show()
             
-        self.layout.addItem(layout, QRect(pos, layout.sizeHint()))
+        self.layout.add_item(layout, QRect(pos, layout.sizeHint()))
         layout.selected = True
         return layout
 
     def clear_selection(self):
-        for s in self.shapes:
+        for s in self.layout.shapes:
             s.selected = False
         for c in self.layout.children:
             c.selected = False
@@ -1357,10 +1453,7 @@ class GraphicsView(QSvgWidget):
         painter = QPainter(self)
         try:
             self.renderer().render(painter, self.renderer().viewBoxF())
-            for s in self.shapes:
-                painter.save()
-                s.draw(painter)
-                painter.restore()
+            self.layout.draw(painter)
             painter.save()
             if self.designMode:
                 painter.setPen(Qt.DashLine)
