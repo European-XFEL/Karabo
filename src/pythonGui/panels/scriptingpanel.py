@@ -21,14 +21,19 @@
         pass
 """
 
-__all__ = ["ScriptingPanel", "PythonConsole"]
+__all__ = ["ScriptingPanel"]
 
-import re
-import sys
-import code
+import atexit
 
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+from IPython.zmq.ipkernel import IPKernelApp
+from IPython.lib.kernel import find_connection_file
+from IPython.frontend.qt.kernelmanager import QtKernelManager
+from IPython.frontend.qt.console.rich_ipython_widget import RichIPythonWidget
+from IPython.utils.traitlets import TraitError
+
+from PyQt4.QtCore import QTimer
+from PyQt4.QtGui import QVBoxLayout, QWidget
+
 
 class ScriptingPanel(QWidget):
 
@@ -36,11 +41,58 @@ class ScriptingPanel(QWidget):
     def __init__(self):
         super(ScriptingPanel, self).__init__()
         
-        self.__teConsole = QTextEdit(self)#PythonConsole(self)
+        # Create IPython widget
+        self.__console = self._consoleWidget()
         
         mainLayout = QVBoxLayout(self)
         mainLayout.setContentsMargins(5,5,5,5)
-        mainLayout.addWidget(self.__teConsole)
+        mainLayout.addWidget(self.__console)
+
+
+    def _consoleWidget(self, **kwargs):
+        """
+        Returns the widget with embedded IPython console.
+        """
+        kernel_app = self._default_kernel_app()
+        manager = self._default_manager(kernel_app)
+        widget = self._console_widget(manager)
+
+        # Update namespace                                                           
+        kernel_app.shell.user_ns.update(kwargs)
+
+        kernel_app.start()
+        return widget
+
+
+    def _default_kernel_app(self):
+        app = IPKernelApp.instance()
+        app.initialize(['python', '--pylab=qt'])
+        app.kernel.eventloop = self._event_loop
+        return app
+
+
+    def _default_manager(self, kernel):
+        connection_file = find_connection_file(kernel.connection_file)
+        manager = QtKernelManager(connection_file=connection_file)
+        manager.load_connection_file()
+        manager.start_channels()
+        atexit.register(manager.cleanup_connection_file)
+        return manager
+
+
+    def _console_widget(self, manager):
+        try: # Ipython v0.13
+            widget = RichIPythonWidget(gui_completion='droplist')
+        except TraitError:  # IPython v0.12
+            widget = RichIPythonWidget(gui_completion=True)
+        widget.kernel_manager = manager
+        return widget
+
+
+    def _event_loop(self, kernel):
+        kernel.timer = QTimer()
+        kernel.timer.timeout.connect(kernel.do_one_iteration)
+        kernel.timer.start(1000*kernel._poll_interval)
 
 
     def setupActions(self):
@@ -59,237 +111,4 @@ class ScriptingPanel(QWidget):
     # virtual function
     def onDock(self):
         pass
-
-
-
-class PythonConsole(QTextEdit):
-
-
-    class InteractiveInterpreter(code.InteractiveInterpreter):
-
-
-        def __init__(self, locals):
-            code.InteractiveInterpreter.__init__(self, locals)
-
-
-        def runIt(self, command):
-            code.InteractiveInterpreter.runsource(self, command)
-
-
-    def __init__(self, parent):
-        super(PythonConsole, self).__init__(parent)
-
-        sys.stdout = self
-        sys.stderr = self
-        self.__multiLine = False # code spans more than one line
-        self.__command = '' # command to be ran
-        self.__hasLine = False
-        
-        self.__history = [] # list of commands entered
-        self.__historyIndex = -1
-        self.__interpreterLocals = {}
-
-        self.printBanner() # print sys info
-        self.marker() # make the >>> or ... marker
-
-        # Setting the font
-        self.setFont(QFont('Courier', 12))
-
-        # Initialize interpreter with self locals
-        self.initInterpreter(locals())
-        
-        # Import stuff from pyexfel
-        self.interpreter.runIt("from karabo.karathon import *")
-
-
-    def printBanner(self):
-        self.write(sys.version + '\n')
-        #self.write(' on ' + sys.platform + '\n')
-        self.write('PyQt4 ' + PYQT_VERSION_STR + '\n')
-        msg = 'Type !hist for a history view and !hist(n) history index recall'
-        self.write(msg + '\n')
-        
-
-    def marker(self):
-        if self.__multiLine:
-            self.insertPlainText('... ')
-        else:
-            self.insertPlainText('>>> ')
-
-
-    def initInterpreter(self, interpreterLocals=None):
-        if interpreterLocals:
-            # when we pass in locals, we don't want it to be named "self"
-            # so we rename it with the name of the class that did the passing
-            # and reinsert the locals back into the interpreter dictionary
-            selfName = interpreterLocals['self'].__class__.__name__
-            interpreterLocalVars = interpreterLocals.pop('self')
-            self.__interpreterLocals[selfName] = interpreterLocalVars
-        else:
-            self.__interpreterLocals = interpreterLocals
-        self.interpreter = self.InteractiveInterpreter(self.__interpreterLocals)
-
-
-    def updateInterpreterLocals(self, newLocals):
-        className = newLocals.__class__.__name__
-        self.__interpreterLocals[className] = newLocals
-
-
-    def write(self, line):
-        self.insertPlainText(line)
-        self.ensureCursorVisible()
-
-
-    def clearCurrentBlock(self):
-        # block being current row
-        length = len(self.document().lastBlock().text()[4:])
-        if length == 0:
-            return None
-        else:
-            # should have a better way of doing this but I can't find it
-            [self.textCursor().deletePreviousChar() for x in xrange(length)]
-        return True
-
-
-    def recallHistory(self):
-        # used when using the arrow keys to scroll through history
-        self.clearCurrentBlock()
-        if self.__historyIndex <> -1:
-            self.insertPlainText(self.__history[self.__historyIndex])
-        return True
-
-
-    def customCommands(self, command):
-        
-        if command == '!hist': # display history
-            self.append('') # move down one line
-            # vars that are in the command are prefixed with ____CC and deleted
-            # once the command is done so they don't show up in dir()
-            backup = self.__interpreterLocals.copy()
-            history = self.__history[:]
-            history.reverse()
-            for i, x in enumerate(history):
-                iSize = len(str(i))
-                delta = len(str(len(history))) - iSize
-                line = line = ' ' * delta + '%i: %s' % (i, x) + '\n'
-                self.write(line)
-            self.updateInterpreterLocals(backup)
-            self.marker()
-            return True
-
-        if re.match('!hist\(\d+\)', command): # recall command from history
-            backup = self.__interpreterLocals.copy()
-            history = self.__history[:]
-            history.reverse()
-            index = int(command[6:-1])
-            self.clearCurrentBlock()
-            command = history[index]
-            if command[-1] == ':':
-                self.__multiLine = True
-            self.write(command)
-            self.updateInterpreterLocals(backup)
-            return True
-
-        return False
-
-
-    def keyPressEvent(self, event):
-
-        if event.key() == Qt.Key_Escape:
-            # proper exit
-            self.interpreter.runIt('exit()')
-
-        if event.key() == Qt.Key_Down:
-            if self.__historyIndex == len(self.__history):
-                self.__historyIndex -= 1
-            try:
-                if self.__historyIndex > -1:
-                    self.__historyIndex -= 1
-                    self.recallHistory()
-                else:
-                    self.clearCurrentBlock()
-            except:
-                pass
-            return None
-
-        if event.key() == Qt.Key_Up:
-            try:
-                if len(self.__history) - 1 > self.__historyIndex:
-                    self.__historyIndex += 1
-                    self.recallHistory()
-                else:
-                    self.__historyIndex = len(self.__history)
-            except:
-                pass
-            return None
-
-        if event.key() == Qt.Key_Home:
-            # set cursor to position 4 in current block. 4 because that's where
-            # the marker stops
-            blockLength = len(self.document().lastBlock().text()[4:])
-            lineLength = len(self.document().toPlainText())
-            position = lineLength - blockLength
-            textCursor = self.textCursor()
-            textCursor.setPosition(position)
-            self.setTextCursor(textCursor)
-            return None
-
-        if event.key() in [Qt.Key_Left, Qt.Key_Backspace]:
-            # don't allow deletion of marker
-            if self.textCursor().positionInBlock() == 4:
-                return None
-
-        if event.key() in [Qt.Key_Return, Qt.Key_Enter]:
-            # set cursor to end of line to avoid line splitting
-            textCursor = self.textCursor()
-            position = len(self.document().toPlainText())
-            textCursor.setPosition(position)
-            self.setTextCursor(textCursor)
-
-            line = str(self.document().lastBlock().text())[4:] # remove marker
-            line.rstrip()
-            self.__historyIndex = -1
-
-            if self.customCommands(line):
-                return None
-            else:
-                try:
-                    line[-1]
-                    self.__hasLine = True
-                    if line[-1] == ':':
-                        self.__multiLine = True
-                    self.__history.insert(0, line)
-                except:
-                    self.__hasLine = False
-
-                if self.__hasLine and self.__multiLine: # multi line command
-                    self.__command += line + '\n' # + command and line
-                    self.append('') # move down one line
-                    self.marker() # handle marker style
-                    return None
-
-                if self.__hasLine and not self.__multiLine: # one line command
-                    self.__command = line # line is the command
-                    self.append('') # move down one line
-                    self.interpreter.runIt(self.__command)
-                    self.__command = '' # clear command
-                    self.marker() # handle marker style
-                    return None
-
-                if self.__multiLine and not self.__hasLine: # multi line done
-                    self.append('') # move down one line
-                    self.interpreter.runIt(self.__command)
-                    self.__command = '' # clear command
-                    self.__multiLine = False # back to single line
-                    self.marker() # handle marker style
-                    return None
-
-                if not self.__hasLine and not self.__multiLine: # just enter
-                    self.append('')
-                    self.marker()
-                    return None
-                return None
-                
-        # Allow all other key events
-        super(PythonConsole, self).keyPressEvent(event)
 
