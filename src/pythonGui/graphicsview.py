@@ -948,9 +948,7 @@ class GraphicsView(QGraphicsView):
                     items.append(editableProxyWidget)
                     
                     # Register as visible device
-                    Manager().newVisibleDevice(internalKey)
-                    # Refresh to get current values on device
-                    Manager().onRefreshInstance(internalKey)
+                    Manager().newVisibleDevice(internalKey)                   
 
                 customTuple = self.createGraphicsItemContainer(Qt.Horizontal, items)
                 customItem = customTuple[0]
