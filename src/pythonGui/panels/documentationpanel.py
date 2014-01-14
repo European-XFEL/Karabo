@@ -101,27 +101,25 @@ class DocumentationPanel(QWidget):
 
 
     def setupToolBar(self, toolBar):
-        self.__toolBar = toolBar
-        
         self.__acBackWiki = self.__wikiView.pageAction(QWebPage.Back)
         self.__acForwardWiki = self.__wikiView.pageAction(QWebPage.Forward)
         self.__acReloadWiki = self.__wikiView.pageAction(QWebPage.Reload)
         self.__acStopWiki = self.__wikiView.pageAction(QWebPage.Stop)
         
-        self.__toolBar.addAction(self.__acBackWiki)
-        self.__toolBar.addAction(self.__acForwardWiki)
-        self.__toolBar.addAction(self.__acReloadWiki)
-        self.__toolBar.addAction(self.__acStopWiki)
+        toolBar.addAction(self.__acBackWiki)
+        toolBar.addAction(self.__acForwardWiki)
+        toolBar.addAction(self.__acReloadWiki)
+        toolBar.addAction(self.__acStopWiki)
         
         self.__acBackReport = self.__reportView.pageAction(QWebPage.Back)
         self.__acForwardReport = self.__reportView.pageAction(QWebPage.Forward)
         self.__acReloadReport = self.__reportView.pageAction(QWebPage.Reload)
         self.__acStopReport = self.__reportView.pageAction(QWebPage.Stop)
         
-        self.__toolBar.addAction(self.__acBackReport)
-        self.__toolBar.addAction(self.__acForwardReport)
-        self.__toolBar.addAction(self.__acReloadReport)
-        self.__toolBar.addAction(self.__acStopReport)
+        toolBar.addAction(self.__acBackReport)
+        toolBar.addAction(self.__acForwardReport)
+        toolBar.addAction(self.__acReloadReport)
+        toolBar.addAction(self.__acStopReport)
         
         self._setWikiActionsVisible(True)
         self._setReportActionsVisible(False)
