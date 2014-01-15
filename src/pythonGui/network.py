@@ -71,13 +71,11 @@ class Network(QObject):
         self.__bodyBytes = bytearray()
 
 
-    def login(self):
+    def _login(self):
        
         # System variables definition
         #ipAddress = socket.gethostbyname(socket.gethostname()); #IP
         ipAddress = socket.gethostname(); #Machine Name
-        
-        print "Trying to login now..."
         
         # Easteregg
         if self.__username == "god":
@@ -89,12 +87,11 @@ class Network(QObject):
                 globals.GLOBAL_ACCESS_LEVEL = AccessLevel.OBSERVER
                 
         else:
-        
             # Construct Authenticator class
             try:
                 self.__auth = Authenticator(self.__username, self.__password, self.__provider, ipAddress, self.__brokerHost, self.__brokerPort, self.__brokerTopic)
             except Exception, e:
-                print "Authenticator exception " + str(e)
+                raise RuntimeError("Authentication exception " + str(e))
 
             # Execute Login
             ok = False
@@ -103,7 +100,7 @@ class Network(QObject):
             except Exception, e:
                 # TODO Fall back to inbuild access level
                 globals.GLOBAL_ACCESS_LEVEL = globals.KARABO_DEFAULT_ACCESS_LEVEL
-                print "Login exception. Please verify if Service is running!!!" + str(e)
+                raise RuntimeError("Login exception. Please verify, if service is running. " + str(e))
                 
                 # Inform the mainwindow to change correspondingly the allowed level-downgrade
                 self.signalUserChanged.emit()
@@ -111,7 +108,6 @@ class Network(QObject):
                 return
             
             if ok:
-                print "Login successful"
                 globals.GLOBAL_ACCESS_LEVEL = self.__auth.getDefaultAccessLevelId()
             else:
                 print "Login failed"
@@ -127,7 +123,7 @@ class Network(QObject):
         try:
             return self.__auth.logout()
         except Exception, e:
-            print "Logout exception. Please verify if Service is running!!!" + str(e)
+            raise RuntimeError("Logout exception. Please verify, if service is running. " + str(e))
 
 
 ### Slots ###
@@ -144,15 +140,12 @@ class Network(QObject):
 
     def onEndConnection(self):
         if self._logout():
-            print "LMAIA: Logout successful!!!"
             Manager().closeDatabaseConnection()
             self.__tcpSocket.disconnectFromHost()
             if self.__tcpSocket.state() == QAbstractSocket.UnconnectedState or self.__tcpSocket.waitForDisconnected(1000):
                 print "Disconnected from server"
             else:
                 print "Disconnect failed:", self.__tcpSocket.errorString()
-        else:
-            print "LMAIA: Logout error!!!"
 
                 
     def onReadServerData(self):
@@ -265,12 +258,10 @@ class Network(QObject):
 
 
     def onConnected(self):
-        print "Connected to server"
-        #self._sendLoginInformation(self.__username, self.__password, self.__provider, self.__sessionToken)
+        pass
         
         
     def onDisconnected(self):
-        print "Disconnected from server"
         pass
 
 
@@ -435,7 +426,7 @@ class Network(QObject):
         self.__brokerHost = bodyHash.get("host")
         self.__brokerPort = str(bodyHash.get("port"))
         self.__brokerTopic = bodyHash.get("topic")
-        self.login()
+        self._login()
 
 
     def _handleNotification(self, headerHash, bodyHash):
