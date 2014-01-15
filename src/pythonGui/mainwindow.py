@@ -252,7 +252,10 @@ class MainWindow(QMainWindow):
                                                  str(dialog.provider), dialog.hostname, dialog.port)
             else:
                 checked = False
+                self.__acRemote.blockSignals(True)
                 self.__acRemote.setChecked(False)
+                self.__acRemote.blockSignals(False)
+                return
         else:
             self.__network.onEndConnection()
             self.__configurationPanel.clearParameterEditorContent()

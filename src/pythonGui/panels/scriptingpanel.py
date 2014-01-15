@@ -51,27 +51,38 @@ class ScriptingPanel(QWidget):
 
     def _consoleWidget(self, **kwargs):
         """
-        Returns the widget with embedded IPython console.
+        Return the embedded IPython console widget.
         """
-        kernel_app = self._default_kernel_app()
-        manager = self._default_manager(kernel_app)
-        widget = self._console_widget(manager)
+        kernelApp = self._defaultKernelApp()
+        manager = self._defaultKernelManager(kernelApp)
+        
+        # Include karabo lib into console
+        cmd = "from karabo.deviceClient import *\n"
+        manager.shell_channel.execute(cmd, False)
+        
+        widget = self._iPythonWidget(manager)
 
         # Update namespace                                                           
-        kernel_app.shell.user_ns.update(kwargs)
-
-        kernel_app.start()
+        kernelApp.shell.user_ns.update(kwargs)
+        kernelApp.start()
+        
         return widget
 
 
-    def _default_kernel_app(self):
+    def _defaultKernelApp(self):
+        """
+        Create and return a default IPython kernel application.
+        """
         app = IPKernelApp.instance()
-        app.initialize(['python', '--pylab=qt'])
-        app.kernel.eventloop = self._event_loop
+        app.initialize(['--pylab=inline'])
+        app.kernel.eventloop = self._eventLoop
         return app
 
 
-    def _default_manager(self, kernel):
+    def _defaultKernelManager(self, kernel):
+        """
+        Create and return a kernel manager.
+        """
         connection_file = find_connection_file(kernel.connection_file)
         manager = QtKernelManager(connection_file=connection_file)
         manager.load_connection_file()
@@ -80,7 +91,10 @@ class ScriptingPanel(QWidget):
         return manager
 
 
-    def _console_widget(self, manager):
+    def _iPythonWidget(self, manager):
+        """
+        Create and return a IPython console widget.
+        """
         try: # Ipython v0.13
             widget = RichIPythonWidget(gui_completion='droplist')
         except TraitError:  # IPython v0.12
@@ -89,7 +103,7 @@ class ScriptingPanel(QWidget):
         return widget
 
 
-    def _event_loop(self, kernel):
+    def _eventLoop(self, kernel):
         kernel.timer = QTimer()
         kernel.timer.timeout.connect(kernel.do_one_iteration)
         kernel.timer.start(1000*kernel._poll_interval)
