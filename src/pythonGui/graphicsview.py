@@ -139,7 +139,7 @@ class Select(CheckableAction):
             rect = QRect(self.selection_start, self.selection_stop)
             if not event.modifiers() & Qt.ShiftModifier:
                 parent.clear_selection()
-            for c in parent.layout.children:
+            for c in parent.layout:
                 if rect.contains(c.geometry()):
                     c.selected = True
             self.selection_start = None
@@ -163,29 +163,54 @@ class Group(SimpleAction):
     icon = ":line"
 
     def run(self):
-        children = self.parent.layout.children
-        newchildren = [c for c in children if not c.selected]
-        rect = None
+        i = 0
         g = BoxLayout(BoxLayout.TopToBottom)
-        for c in children:
+        rect = None
+        while i < len(self.parent.layout):
+            c = self.parent.layout[i]
             if c.selected:
                 c.selected = False
-                c.invalidate()
-                g.addItem(c)
+                if isinstance(c, ProxyWidget):
+                    g.addWidget(c)
+                else:
+                    g.addItem(c)
+                    del self.parent.layout[i]
                 if rect is None:
                     rect = c.geometry()
                 else:
                     rect = rect.united(c.geometry())
-                del self.parent.layout.positions[c]
+            else:
+                i += 1
         if rect is None:
             return
-        self.parent.layout.children = newchildren
         shapes = self.parent.layout.shapes
         g.shapes = [s for s in shapes if s.selected]
         self.parent.layout.shapes = [s for s in shapes if not s.selected]
         for s in g.shapes:
             s.selected = False
-        self.parent.layout.add_item(g, rect)
+        g.fixed_geometry = QRect(rect.topLeft(), g.sizeHint())
+        self.parent.layout.add_item(g)
+
+
+class Ungroup(SimpleAction):
+    "Ungroup items"
+
+    text = "Ungroup"
+    icon = ":line"
+
+    def run(self):
+        i = 0
+        while i < len(self.parent.layout):
+            child = self.parent.layout[i]
+            if child.selected and isinstance(child, Layout):
+                cl = list(child)
+                for c in cl:
+                    c.fixed_geometry = c.geometry()
+                self.parent.layout[i:i + 1] = cl
+                self.parent.layout.shapes.extend(child.shapes)
+                i += len(cl)
+            else:
+                i += 1
 
 
 class Shape(CheckableAction):
@@ -396,7 +421,30 @@ class Label(object):
 class Layout(object):
     def __init__(self):
         self.shapes = [ ]
-        self.topLeft = None
+        self.shape_geometry = None
+
+
+    def __len__(self):
+        return self.count()
+
+
+    def __getitem__(self, i):
+        if isinstance(i, slice):
+            r = (self.itemAt(j) for j in range(i.start, i.stop, i.step))
+            return [rr.widget() if rr.widget() else rr for rr in r
+                    if rr is not None]
+        r = self.itemAt(i)
+        if r is None:
+            raise IndexError("index out of range")
+        return r.widget() if r.widget() else r
+
+
+    def __delitem__(self, i):
+        if isinstance(i, slice):
+            for j in range(i.start, i.stop, i.step):
+                self.takeAt(j)
+        else:
+                self.takeAt(i)
 
 
     def load(self, element):
@@ -408,7 +456,8 @@ class Layout(object):
                 i += 1
             else:
                 obj = globals()[cls].load(elem, self.parentWidget())
-                self.add_item(obj, _parse_rect(elem))
+                obj.fixed_geometry = _parse_rect(elem)
+                self.add_item(obj)
                 del root[i]
 
         shapes = [ ]
@@ -449,72 +498,94 @@ class Layout(object):
         return e
 
 
-    def setPosition(self, pos):
-        if self.topLeft is not None:
-            for s in self.shapes:
-                s.set_position(s.geometry().topLeft() + pos - self.topLeft)
-        self.topLeft = pos
-        self.setGeometry(QRect(pos, self.sizeHint()))
+    def set_position(self, pos):
+        self.fixed_geometry.moveTo(pos)
+        self.update()
+
+
+    def update_shapes(self, rect):
+        if self.shape_geometry is None:
+            self.shape_geometry = QRect(self.fixed_geometry)
+        for s in self.shapes:
+            s.set_position(s.geometry().topLeft() + rect.topLeft() -
+                           self.shape_geometry.topLeft())
+        self.shape_geometry = QRect(rect)
 
 
 class FixedLayout(Layout, QLayout):
     def __init__(self, parent):
         QLayout.__init__(self, parent)
         Layout.__init__(self)
+        self._children = [ ] # contains only QLayoutItems
 
-        self.children = [ ]
-        self.positions = { }
+
+    def __setitem__(self, key, value):
+        if not isinstance(key, slice):
+            key = slice(key, key + 1)
+            value = [value]
+        values = [ ]
+        for v in value:
+            if isinstance(v, ProxyWidget):
+                self.addWidget(v)
+                values.append(self._item)
+            elif isinstance(v, Layout):
+                self.addChildLayout(v)
+                values.append(v)
+        self._children[key] = values
+        self.update()
 
 
     def addItem(self, item):
         "only to be used by Qt, don't use directly!"
         self._item = item
-        self.children.append(item)
 
 
-    def add_item(self, item, geometry):
-        if isinstance(item, QWidget):
-            self.addWidget(item)
-            item = self._item
-        else:
-            self.addChildLayout(item)
-            self.children.append(item)
-        self.positions[item] = geometry.topLeft()
-        item.setGeometry(geometry)
-        self.update()
+    def add_item(self, item):
+        """add ProxyWidgets or Layouts"""
+        self[len(self):len(self)] = [item]
+
 
     def itemAt(self, index):
+        "only to be used by Qt, don't use directly!"
         try:
-            return self.children[index]
+            return self._children[index]
         except IndexError:
             return
 
+
     def takeAt(self, index):
+        "only to be used by Qt, don't use directly!"
         try:
-            ret = self.children.pop(index)
-            del self.positions[ret]
+            ret = self._children.pop(index)
         except IndexError:
             return
         
+
     def count(self):
-        return len(self.children)
+        "only to be used by Qt, don't use directly!"
+        return len(self._children)
+
 
     def setGeometry(self, geometry):
-        for item in self.children:
-            item.setPosition(self.positions[item])
+        "only to be used by Qt, don't use directly!"
+        for item in self._children:
+            i = item.widget() if item.widget() else item
+            i.setGeometry(i.fixed_geometry)
 
-    def setItemPosition(self, item, pos):
-        self.positions[item] = pos
-        self.setGeometry(None)
 
     def sizeHint(self):
         return QSize(10, 10)
 
+
     def itemAtPosition(self, pos):
-        for item in self.children:
+        for item in self._children:
             if item.geometry().contains(pos):
-                return item
+                if item.widget():
+                    return item.widget()
+                else:
+                    return item
             
+
     def relayout(self, widget):
         for c in self.children:
             ll = [c]
@@ -534,18 +605,17 @@ class FixedLayout(Layout, QLayout):
             return
         c.setGeormetry(QRect(self.positions[c], c.sizeHint()))
 
+
     def save(self):
         return { }
 
-class BoxLayout(Layout, QBoxLayout):
+
+class BoxLayout(QBoxLayout, Layout):
     def __init__(self, dir):
         QBoxLayout.__init__(self, dir)
         Layout.__init__(self)
         self.selected = False
         self.setContentsMargins(5, 5, 5, 5)
-
-    def set_position(self, pos):
-        self.parent().setItemPosition(self, pos)
 
     @staticmethod
     def load(elem, parent):
@@ -561,6 +631,12 @@ class BoxLayout(Layout, QBoxLayout):
 
     def save(self):
         return {ns_karabo + "Direction": self.direction()}
+
+
+    def setGeometry(self, rect):
+        QBoxLayout.setGeometry(self, rect)
+        self.update_shapes(rect)
+
 
 class ProxyWidget(QStackedWidget):
     def __init__(self, parent):
@@ -643,11 +719,11 @@ class ProxyWidget(QStackedWidget):
         ret.show()
         return ret
 
+    def set_position(self, pos):
+        self.fixed_geometry.moveTo(pos)
+        self.parent().layout().update()
 
-    def setPosition(self, pos):
-        self.setGeometry(QRect(pos, self.sizeHint()))
 
-            
 class GraphicsView(QSvgWidget):
     def __init__(self, parent):
         super(GraphicsView, self).__init__(parent)
@@ -1171,15 +1247,16 @@ class GraphicsView(QSvgWidget):
             proxy.set_child(item, component)
             layout.addWidget(proxy)
             proxy.show()
-            
-        self.layout.add_item(layout, QRect(pos, layout.sizeHint()))
+
+        layout.fixed_geometry = QRect(pos, layout.sizeHint())
+        self.layout.add_item(layout)
         layout.selected = True
         return layout
 
     def clear_selection(self):
         for s in self.layout.shapes:
             s.selected = False
-        for c in self.layout.children:
+        for c in self.layout:
             c.selected = False
 
     def mousePressEvent(self, event):
@@ -1267,7 +1344,7 @@ class GraphicsView(QSvgWidget):
                 tooltipText = "<html><b>Associated key: </b>%s</html>" % configKey
                 customItem.setToolTip(tooltipText)
                 customItem.position = event.pos()
-                self.shapes.append(customItem)
+                self.layout.shapes.append(customItem)
                 self.update()
 
                 # Register as visible device - TODO?
@@ -1456,7 +1533,7 @@ class GraphicsView(QSvgWidget):
             painter.save()
             if self.designMode:
                 painter.setPen(Qt.DashLine)
-                for item in self.layout.children:
+                for item in self.layout:
                     if item.selected:
                         painter.drawRect(item.geometry())
             painter.restore()
