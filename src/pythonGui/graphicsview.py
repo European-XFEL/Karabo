@@ -290,8 +290,11 @@ class Shape(CheckableAction):
         d["stroke-opacity"] = unicode(self.pen.color().alphaF())
         d["stroke-linecap"] = {Qt.FlatCap: "butt", Qt.SquareCap: "square",
                                Qt.RoundCap: "round"}[self.pen.capStyle()]
-        d["fill"] = "#{:06x}".format(self.brush.color().rgb() & 0xffffff)
-        d["fill-opacity"] = unicode(self.brush.color().alphaF())
+        if self.brush.style() == Qt.SolidPattern:
+            d["fill"] = "#{:06x}".format(self.brush.color().rgb() & 0xffffff)
+            d["fill-opacity"] = unicode(self.brush.color().alphaF())
+        else:
+            d["fill"] = "none"
         d["stroke-dashoffset"] = unicode(self.pen.dashOffset())
         d["stroke-dasharray"] = " ".join(unicode(x)
                                          for x in self.pen.dashPattern())
