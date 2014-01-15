@@ -32,8 +32,6 @@ class LoginDialog(QDialog):
         self.__cbSelectConnection.addItem("Direct broker connection")
         hLayout.addWidget(self.__leSelectConnection)
         hLayout.addWidget(self.__cbSelectConnection)
-        self.__cbSelectConnection.currentIndexChanged[str].connect(
-            self.onSelectConnectionChanged)
         
         self.__hLine = QFrame(self)
         #self.__hLine.setGeometry(QRect(320, 150, 118, 3))
@@ -59,8 +57,6 @@ class LoginDialog(QDialog):
         self.__leProvider.setEditable(False)
         self.__leProvider.addItems(["LOCAL", "KERBEROS"])
         formLayout.addRow("Provider:", self.__leProvider)
-        self.__leProvider.currentIndexChanged[str].connect(
-            self.onSelectConnectionChanged)
         
         self.__leHostname = QLineEdit("localhost")#("131.169.212.42")
         formLayout.addRow("Hostname:", self.__leHostname)
@@ -110,7 +106,7 @@ class LoginDialog(QDialog):
     port = property(fget=_getPort)
 
 
-    def _showEasterEgg(self, show):
+    def _showConnectionSelection(self, show):
         self.__leSelectConnection.setVisible(show)
         self.__cbSelectConnection.setVisible(show)
         self.__hLine.setVisible(show)
@@ -121,16 +117,8 @@ class LoginDialog(QDialog):
         # Here comes the easter egg...
         text = text.lower()
         if text == "admin":
-            self._showEasterEgg(True)
+            self._showConnectionSelection(True)
         else:
-            self._showEasterEgg(False)
-
-
-    def onSelectConnectionChanged(self, value):
-        print "onSelectConnectionChanged", value
-    
-    
-    def onSelectProviderChanged(self, value):
-        print "onSelectProviderChanged", value
+            self._showConnectionSelection(False)
     
     
