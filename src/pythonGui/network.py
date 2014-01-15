@@ -120,6 +120,8 @@ class Network(QObject):
     
     def _logout(self):
         # Execute Logout
+        if self.__auth is None: return
+        
         try:
             return self.__auth.logout()
         except Exception, e:
