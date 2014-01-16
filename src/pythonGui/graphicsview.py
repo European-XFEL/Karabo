@@ -221,6 +221,8 @@ class Ungroup(SimpleAction):
             if child.selected and isinstance(child, Layout):
                 cl = list(child)
                 for c in cl:
+                    if isinstance(c, QLayout):
+                        c.setParent(None)
                     c.fixed_geometry = c.geometry()
                 self.parent.ilayout[i:i + 1] = cl
                 self.parent.ilayout.shapes.extend(child.shapes)
