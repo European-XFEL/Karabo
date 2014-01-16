@@ -443,6 +443,45 @@ class Ungroup(SimpleAction):
 Action.separator()
 
 
+class Cut(SimpleAction):
+    text = "Cut"
+    icon = ":edit-cut"
+
+
+    def run(self):
+        QApplication.clipboard().setMimeData(self.parent.mimeData())
+        self.parent.ilayout.delete_selected()
+        self.parent.update()
+
+
+class Copy(SimpleAction):
+    text = "Copy"
+    icon = ":edit-copy"
+
+
+    def run(self):
+        QApplication.clipboard().setMimeData(self.parent.mimeData())
+
+
+class Paste(SimpleAction):
+    text = "Paste"
+    icon = ":edit-paste"
+
+
+    def run(self):
+        root = ElementTree.fromstring(QApplication.clipboard().mimeData().
+                                      data("image/svg+xml"))
+        self.parent.ilayout.load_element(root)
+        self.parent.tree.getroot().extend(root)
+        ar = QByteArray()
+        buf = QBuffer(ar)
+        buf.open(QIODevice.WriteOnly)
+        self.parent.tree.write(buf)
+        buf.close()
+        self.parent.load(ar)
+        self.parent.update()
+
+
 class MetaLayout(MetaAction, QLayout.__class__):
     pass
 
@@ -483,9 +522,13 @@ class Layout(Loadable):
 
     @staticmethod
     def load(element, layout):
-        i = 0
         cls = element.get(ns_karabo + "class", "FixedLayout")
         self = Layout.subclasses[cls].load(element, layout)
+        self.load_element(element)
+        return self
+
+    def load_element(self, element):
+        i = 0
         while i < len(element):
             elem = element[i]
             r = Loadable.load(elem, self)
@@ -498,7 +541,6 @@ class Layout(Loadable):
                 self.load_item(element[i], r)
                 r.fixed_geometry = _parse_rect(elem)
                 del element[i]
-        return self
 
 
     def draw(self, painter):
@@ -512,7 +554,9 @@ class Layout(Loadable):
                 item.draw(painter)
 
 
-    def element(self):
+    def element(self, selected=False):
+        """ save this layout to an element. if selected is True,
+        only selected elements are saved, for cut&paste support """
         g = self.geometry()
         d = { ns_karabo + "x": g.x(), ns_karabo + "y": g.y(),
               ns_karabo + "width": g.width(), ns_karabo + "height": g.height(),
@@ -521,8 +565,8 @@ class Layout(Loadable):
 
         e = ElementTree.Element(ns_svg + "g",
                                 {k: unicode(v) for k, v in d.iteritems()})
-        e.extend(e.element() for e in self)
-        e.extend(s.element() for s in self.shapes)
+        e.extend(e.element() for e in self if not selected or e.selected)
+        e.extend(s.element() for s in self.shapes if not selected or s.selected)
         return e
 
 
@@ -595,6 +639,14 @@ class FixedLayout(Layout, QLayout):
         if ret is None:
             return
         c.fixed_geometry = QRect(c.fixed_geometry.topLeft(), c.sizeHint())
+
+
+    def delete_selected(self):
+        i = 0
+        while i < len(self):
+            if self[i].selected:
+                del self[i]
+        self.shapes = [s for s in self.shapes if not s.selected]
 
 
     def save(self):
@@ -917,6 +969,20 @@ class GraphicsView(QSvgWidget):
         e = self.ilayout.element()
         root.extend(ee for ee in e)
         tree.write(filename)
+
+
+    def mimeData(self):
+        e = self.ilayout.element(selected=True)
+        e.tag = ns_svg + "svg"
+        tree = ElementTree.ElementTree(e)
+        ar = QByteArray()
+        buf = QBuffer(ar)
+        buf.open(QIODevice.WriteOnly)
+        tree.write(buf)
+        buf.close()
+        mime = QMimeData()
+        mime.setData("image/svg+xml", ar)
+        return mime
 
 
     def saveSceneConfigurationsToFile(self):

@@ -179,24 +179,6 @@ class CustomMiddlePanel(QWidget):
         #self.__acAddArrow.setToolTip(text)
         #self.__acAddArrow.triggered.connect(self.onAddArrowLink)
         
-        text = "Cut"
-        self.__acCut = QAction(QIcon(":edit-cut"), text, self)
-        self.__acCut.setStatusTip(text)
-        self.__acCut.setToolTip(text)
-        self.__acCut.triggered.connect(self.onCut)
-        
-        text = "Copy"
-        self.__acCopy = QAction(QIcon(":edit-copy"), text, self)
-        self.__acCopy.setStatusTip(text)
-        self.__acCopy.setToolTip(text)
-        self.__acCopy.triggered.connect(self.onCopy)
-        
-        text = "Paste"
-        self.__acPaste = QAction(QIcon(":edit-paste"), text, self)
-        self.__acPaste.setStatusTip(text)
-        self.__acPaste.setToolTip(text)
-        self.__acPaste.triggered.connect(self.onPaste)
-        
         text = "Remove"
         self.__acRemove = QAction(QIcon(":edit-remove"), text, self)
         self.__acRemove.setStatusTip(text)
@@ -296,14 +278,10 @@ class CustomMiddlePanel(QWidget):
             toolBar.addAction(a)
         self.drawingToolBar = toolBar
         
-        toolBar.addSeparator()
         toolBar.addAction(self.__acAddLink)
         #toolBar.addAction(self.__acAddArrow)
         
         toolBar.addSeparator()
-        toolBar.addAction(self.__acCut)
-        toolBar.addAction(self.__acCopy)
-        toolBar.addAction(self.__acPaste)
         toolBar.addAction(self.__acRemove)
         
         toolBar.addSeparator()
@@ -334,9 +312,6 @@ class CustomMiddlePanel(QWidget):
             self.__acAddLink.setDisabled(not isItemPair)
             #self.__acAddArrow.setDisabled(not isItemPair)
             
-            self.__acCut.setDisabled(isLink)
-            self.__acCopy.setDisabled(isLink)
-
             self.__acRotate.setDisabled(isLink)
             self.__acScaleUp.setDisabled(isLink)
             self.__acScaleDown.setDisabled(isLink)
@@ -347,9 +322,6 @@ class CustomMiddlePanel(QWidget):
             self.__acAddLink.setDisabled(True)
             #self.__acAddArrow.setDisabled(True)
             
-            self.__acCut.setDisabled(True)
-            self.__acCopy.setDisabled(True)
-
             self.__acRotate.setDisabled(True)
             self.__acScaleUp.setDisabled(True)
             self.__acScaleDown.setDisabled(True)
@@ -357,7 +329,6 @@ class CustomMiddlePanel(QWidget):
             self.__acBringToFront.setDisabled(True)
             self.__acSendToBack.setDisabled(True)
         
-        self.__acPaste.setDisabled(not self.graphicsview.hasCopy())
         self.__acRemove.setDisabled(not hasSelection)
         
         #self.__tbGroup.setDisabled(not isItemGroup and len(self.graphicsview.selectedItems()) < 2)
