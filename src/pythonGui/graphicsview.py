@@ -84,6 +84,18 @@ class Action(object):
         cls.action = action
         return action
 
+    @staticmethod
+    def separator():
+        Action.actions.append(Separator())
+
+
+class Separator(Action):
+    @classmethod
+    def add_action(cls, source, parent):
+        action = QAction(source)
+        action.setSeparator(True)
+        return action
+
 
 class CheckableAction(Action):
     @classmethod
@@ -108,127 +120,9 @@ class SimpleAction(Action):
         return action
 
 
-class Select(CheckableAction):
-    """ This is the default action. It has no icon nor text since
-    it is selected if nothing else is selected. """
 
 
-    def __init__(self):
-        self.selection_start = self.moving_item = None
 
-
-    def mousePressEvent(self, parent, event):
-        item = parent.ilayout.itemAtPosition(event.pos())
-        if item is None:
-            for s in parent.ilayout.shapes:
-                if s.contains(event.pos()):
-                    item = s
-                    break
-        if item is None:
-            self.selection_stop = self.selection_start = event.pos()
-            parent.update()
-        else:
-            self.moving_item = item
-            self.moving_pos = (
-                event.pos() - self.moving_item.geometry().topLeft())
-            if event.modifiers() & Qt.ShiftModifier:
-                item.selected = not item.selected
-            else:
-                parent.clear_selection()
-                item.selected = True
-            parent.update()
-            event.accept()
-
-    def mouseMoveEvent(self, parent, event):
-        if self.moving_item is not None:
-            self.moving_item.set_position(event.pos() - self.moving_pos)
-            event.accept()
-        elif self.selection_start is not None:
-            self.selection_stop = event.pos()
-            event.accept()
-        parent.update()
-
-
-    def mouseReleaseEvent(self, parent, event):
-        self.moving_item = None
-        if self.selection_start is not None:
-            rect = QRect(self.selection_start, self.selection_stop)
-            if not event.modifiers() & Qt.ShiftModifier:
-                parent.clear_selection()
-            for c in parent.ilayout:
-                if rect.contains(c.geometry()):
-                    c.selected = True
-            self.selection_start = None
-            event.accept()
-            parent.update()
-
-
-    ready = True # selections can always be drawn
-
-
-    def draw(self, painter):
-        if self.selection_start is not None:
-            painter.setPen(Qt.black)
-            painter.drawRect(QRect(self.selection_start, self.selection_stop))
-
-
-class Group(SimpleAction):
-    "Group several items into one group"
-
-    text = "Group"
-    icon = ":line"
-
-    def run(self):
-        i = 0
-        g = BoxLayout(BoxLayout.TopToBottom)
-        rect = None
-        while i < len(self.parent.ilayout):
-            c = self.parent.ilayout[i]
-            if c.selected:
-                c.selected = False
-                if isinstance(c, ProxyWidget):
-                    g.addWidget(c)
-                else:
-                    g.addItem(c)
-                    del self.parent.ilayout[i]
-                if rect is None:
-                    rect = c.geometry()
-                else:
-                    rect = rect.united(c.geometry())
-            else:
-                i += 1
-        if rect is None:
-            return
-        shapes = self.parent.ilayout.shapes
-        g.shapes = [s for s in shapes if s.selected]
-        self.parent.ilayout.shapes = [s for s in shapes if not s.selected]
-        for s in g.shapes:
-            s.selected = False
-        g.fixed_geometry = QRect(rect.topLeft(), g.sizeHint())
-        self.parent.ilayout.add_item(g)
-
-
-class Ungroup(SimpleAction):
-    "Ungroup items"
-
-    text = "Ungroup"
-    icon = ":line"
-
-    def run(self):
-        i = 0
-        while i < len(self.parent.ilayout):
-            child = self.parent.ilayout[i]
-            if child.selected and isinstance(child, Layout):
-                cl = list(child)
-                for c in cl:
-                    if isinstance(c, QLayout):
-                        c.setParent(None)
-                    c.fixed_geometry = c.geometry()
-                self.parent.ilayout[i:i + 1] = cl
-                self.parent.ilayout.shapes.extend(child.shapes)
-                i += len(cl)
-            else:
-                i += 1
 
 
 class Shape(CheckableAction, Loadable):
@@ -327,6 +221,65 @@ class Shape(CheckableAction, Loadable):
             painter.setPen(Qt.DashLine)
             painter.drawRect(self.geometry())
 
+class Select(CheckableAction):
+    """ This is the default action. It has no icon nor text since
+    it is selected if nothing else is selected. """
+
+    def __init__(self):
+        self.selection_start = self.moving_item = None
+
+    def mousePressEvent(self, parent, event):
+        item = parent.ilayout.itemAtPosition(event.pos())
+        if item is None:
+            for s in parent.ilayout.shapes:
+                if s.contains(event.pos()):
+                    item = s
+                    break
+        if item is None:
+            self.selection_stop = self.selection_start = event.pos()
+            parent.update()
+        else:
+            self.moving_item = item
+            self.moving_pos = (
+                event.pos() - self.moving_item.geometry().topLeft())
+            if event.modifiers() & Qt.ShiftModifier:
+                item.selected = not item.selected
+            else:
+                parent.clear_selection()
+                item.selected = True
+            parent.update()
+            event.accept()
+
+    def mouseMoveEvent(self, parent, event):
+        if self.moving_item is not None:
+            self.moving_item.set_position(event.pos() - self.moving_pos)
+            event.accept()
+        elif self.selection_start is not None:
+            self.selection_stop = event.pos()
+            event.accept()
+        parent.update()
+
+    def mouseReleaseEvent(self, parent, event):
+        self.moving_item = None
+        if self.selection_start is not None:
+            rect = QRect(self.selection_start, self.selection_stop)
+            if not event.modifiers() & Qt.ShiftModifier:
+                parent.clear_selection()
+            for c in parent.ilayout:
+                if rect.contains(c.geometry()):
+                    c.selected = True
+            self.selection_start = None
+            event.accept()
+            parent.update()
+
+    ready = True # selections can always be drawn
+
+    def draw(self, painter):
+        if self.selection_start is not None:
+            painter.setPen(Qt.black)
+            painter.drawRect(QRect(self.selection_start, self.selection_stop))
+
+
 class Line(Shape):
     xmltag = ns_svg + "line"
     text = "Add Line"
@@ -423,6 +376,71 @@ def _parse_rect(elem):
         ns = ""
     return QRect(float(elem.get(ns + "x")), float(elem.get(ns + "y")),
                  float(elem.get(ns + "width")), float(elem.get(ns + "height")))
+
+
+Action.separator()
+
+
+class Group(SimpleAction):
+    "Group several items into one group"
+
+    text = "Group"
+    icon = ":line"
+
+    def run(self):
+        i = 0
+        g = BoxLayout(BoxLayout.TopToBottom)
+        rect = None
+        while i < len(self.parent.ilayout):
+            c = self.parent.ilayout[i]
+            if c.selected:
+                c.selected = False
+                if isinstance(c, ProxyWidget):
+                    g.addWidget(c)
+                else:
+                    g.addItem(c)
+                    del self.parent.ilayout[i]
+                if rect is None:
+                    rect = c.geometry()
+                else:
+                    rect = rect.united(c.geometry())
+            else:
+                i += 1
+        if rect is None:
+            return
+        shapes = self.parent.ilayout.shapes
+        g.shapes = [s for s in shapes if s.selected]
+        self.parent.ilayout.shapes = [s for s in shapes if not s.selected]
+        for s in g.shapes:
+            s.selected = False
+        g.fixed_geometry = QRect(rect.topLeft(), g.sizeHint())
+        self.parent.ilayout.add_item(g)
+
+
+class Ungroup(SimpleAction):
+    "Ungroup items"
+
+    text = "Ungroup"
+    icon = ":line"
+
+    def run(self):
+        i = 0
+        while i < len(self.parent.ilayout):
+            child = self.parent.ilayout[i]
+            if child.selected and isinstance(child, Layout):
+                cl = list(child)
+                for c in cl:
+                    if isinstance(c, QLayout):
+                        c.setParent(None)
+                    c.fixed_geometry = c.geometry()
+                self.parent.ilayout[i:i + 1] = cl
+                self.parent.ilayout.shapes.extend(child.shapes)
+                i += len(cl)
+            else:
+                i += 1
+
+
+Action.separator()
 
 
 class MetaLayout(MetaAction, QLayout.__class__):
