@@ -1025,7 +1025,7 @@ class GraphicsView(QSvgWidget):
         #print "GraphicsView.dragEnterEvent"
 
         source = event.source()
-        if (source is not None) and (source is not self):
+        if source is not None and source is not self and self.designMode:
             event.accept()
 
         QWidget.dragEnterEvent(self, event)
