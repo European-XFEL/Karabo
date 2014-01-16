@@ -32,7 +32,7 @@ from IPython.frontend.qt.console.rich_ipython_widget import RichIPythonWidget
 from IPython.utils.traitlets import TraitError
 
 from PyQt4.QtCore import QTimer
-from PyQt4.QtGui import QVBoxLayout, QWidget
+from PyQt4.QtGui import QAction, QVBoxLayout, QWidget
 
 
 class ScriptingPanel(QWidget):
@@ -41,12 +41,25 @@ class ScriptingPanel(QWidget):
     def __init__(self):
         super(ScriptingPanel, self).__init__()
         
-        # Create IPython widget
-        self.__console = self._consoleWidget()
+        self.__console = None
         
-        mainLayout = QVBoxLayout(self)
-        mainLayout.setContentsMargins(5,5,5,5)
-        mainLayout.addWidget(self.__console)
+        self._setupActions()
+                
+        self.__mainLayout = QVBoxLayout(self)
+        self.__mainLayout.setContentsMargins(5,5,5,5)
+
+
+    def _setupActions(self):
+        text = "Start IPython console"
+        self.__acStartIPython = QAction("IP[y]:", self)
+        self.__acStartIPython.setToolTip(text)
+        self.__acStartIPython.setStatusTip(text)
+        #self.__acStartIPython.setCheckable(True)
+        self.__acStartIPython.triggered.connect(self.onStartIPython)
+
+
+    def setupToolBar(self, toolBar):
+        toolBar.addAction(self.__acStartIPython)
 
 
     def _consoleWidget(self, **kwargs):
@@ -109,12 +122,12 @@ class ScriptingPanel(QWidget):
         kernel.timer.start(1000*kernel._poll_interval)
 
 
-    def setupActions(self):
-        pass
-
-
-    def setupToolBar(self, toolBar):
-        pass
+    def onStartIPython(self):#, isChecked):
+        if self.__console: return
+        
+        # Create IPython widget
+        self.__console = self._consoleWidget()
+        self.__mainLayout.addWidget(self.__console)
 
 
     # virtual function
